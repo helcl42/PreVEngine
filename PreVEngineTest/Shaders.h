@@ -1,0 +1,131 @@
+#ifndef __SHADERS_H__
+#define __SHADERS_H__
+
+#include <map>
+#include <set>
+
+#include "Window.h"
+#include "Buffers.h"
+#include "spirv_reflect.h"
+
+
+class Shaders
+{
+private:
+	struct DescriptorSetInfo
+	{
+		std::string name;
+
+		union
+		{
+			VkDescriptorBufferInfo bufferInfo;
+
+			VkDescriptorImageInfo  imageInfo;
+		};
+	};
+
+private:
+	const std::string m_shadersEntryPointName = "main";
+
+	const std::set<VkShaderStageFlagBits> m_validShaderStages = {
+		VK_SHADER_STAGE_VERTEX_BIT,
+		VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT,
+		VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT,
+		VK_SHADER_STAGE_GEOMETRY_BIT,
+		VK_SHADER_STAGE_FRAGMENT_BIT,
+		VK_SHADER_STAGE_COMPUTE_BIT // TODO: should be really here??
+	};
+
+private:
+	VkDevice m_device;
+
+	// Shader Stages
+	std::map<VkShaderStageFlagBits, VkShaderModule> m_shaderModules;
+
+	std::vector<VkPipelineShaderStageCreateInfo> m_shaderStages;
+
+	// Descriptor Sets
+	uint32_t m_poolCapacity = 0;
+
+	VkDescriptorPool m_descriptorPool;
+
+	std::vector<VkDescriptorSet> m_descriptorSets;
+
+	std::vector<VkDescriptorSetLayoutBinding> m_layoutBindings;
+
+	std::vector<VkWriteDescriptorSet> m_descriptorWrites;
+
+	VkDescriptorSetLayout m_descriptorSetLayout;
+
+	std::vector<DescriptorSetInfo> m_descriptorSetInfos;
+
+	std::map<std::string, size_t> m_descriptorInfoNameToIndexMapping;
+
+	//Vertex Inputs
+	VkVertexInputBindingDescription m_inputBindingDescription;
+
+	std::vector<VkVertexInputAttributeDescription> m_inputAttributeDescriptions;
+
+	VkPipelineVertexInputStateCreateInfo m_vertexInputState;
+
+private:
+	static void PrintModuleInfo(const SpvReflectShaderModule& module);
+
+	static void PrintDescriptorSet(const SpvReflectDescriptorSet& set);
+
+	static std::string ToStringDescriptorType(const SpvReflectDescriptorType& value);
+
+	static std::string ToStringGLSLType(const SpvReflectTypeDescription& type);
+
+private:
+	std::vector<char> LoadShader(const std::string& filename) const;
+
+	VkShaderModule CreateShaderModule(const std::vector<char>& spirv) const;
+
+	void Parse(const std::vector<char>& spirv);
+
+	void ParseInputs(SpvReflectShaderModule& module);
+
+	void CheckBindings() const;
+
+	VkDescriptorSetLayout CreateDescriptorSetLayout() const;
+
+	VkDescriptorPool CreateDescriptorPool(const uint32_t size) const;
+
+	void RecreateDescriptorPool(const uint32_t size);
+
+	void RecreateDescriptorSets(const uint32_t size);
+
+	bool ShouldAdjustCapacity(const uint32_t size);
+
+public:
+	Shaders(VkDevice device);
+
+	~Shaders();
+
+public:
+	bool Init();
+
+	void ShutDown();
+
+	bool AdjustDescriptorsSetsCapacity(const uint32_t desiredCount);
+
+	bool AddShaderModule(const VkShaderStageFlagBits stage, const std::string& filename);
+
+	void Bind(const std::string& name, const UBO& ubo);
+
+	void Bind(const std::string& name, const VkImageView imageView, const VkSampler sampler);
+
+	void Bind(const std::string& name, const ImageBuffer& image);
+
+	VkDescriptorSet UpdateDescriptorSet(const uint32_t index);
+
+public:
+	const VkDescriptorSetLayout* GetDescriptorSetLayout() const;
+
+	const VkPipelineVertexInputStateCreateInfo* GetVertextInputState() const;
+
+	const std::vector<VkPipelineShaderStageCreateInfo>& GetShaderStages() const;
+};
+
+#endif
