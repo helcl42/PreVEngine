@@ -88,7 +88,7 @@ public:
 
 	void UpdateExtent();
 
-	bool BeginFrame(VkCommandBuffer& buffer);
+	bool BeginFrame(VkCommandBuffer& buffer, uint32_t& acquiredIndex);
 	
 	void EndFrame();
 

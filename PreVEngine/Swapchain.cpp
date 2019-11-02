@@ -441,13 +441,15 @@ void Swapchain::Present()
 }
 //---------------------------------------------------------------------------------
 
-bool Swapchain::BeginFrame(VkCommandBuffer& buffer)
+bool Swapchain::BeginFrame(VkCommandBuffer& buffer, uint32_t& acquiredIndex)
 {
 	SwapchainBuffer swapchainBuffer; 
 	if(!AcquireNext(swapchainBuffer))
 	{
 		return false;
 	}
+
+	acquiredIndex = m_acquiredIndex;
 	
 	VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
