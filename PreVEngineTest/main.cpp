@@ -7,6 +7,7 @@
 #include <Pipeline.h>
 #include <Buffers.h>
 #include <Image.h>
+#include <Utils.h>
 
 #include "matrix.h"
 #include "Shaders.h"
@@ -219,6 +220,9 @@ int main(int argc, char *argv[])
 {
 	setvbuf(stdout, NULL, _IONBF, 0);										// avoid buffering
 	
+	std::unique_ptr<IClock<float>> clock = std::make_unique<Clock<float>>();
+	std::unique_ptr<FPSService> fpsService = std::make_unique<FPSService>();
+
 	Instance instance(true);
 
 	CWindow Window("PreVEngine", 1280, 960);
@@ -259,6 +263,7 @@ int main(int argc, char *argv[])
 	renderpass.AddSubpass({ 0, 1 });
 	
 	Swapchain swapchain(renderpass, presenQueue, graphicsQueue);
+	swapchain.SetPresentMode(VK_PRESENT_MODE_IMMEDIATE_KHR);
 	swapchain.SetImageCount(BUFFERS_IN_FLIGHT);
 	swapchain.Print();
 
@@ -319,6 +324,11 @@ int main(int argc, char *argv[])
 
 	while (Window.ProcessEvents()) // Main event loop, runs until window is closed.
 	{
+		clock->UpdateClock();
+		float deltaTime = clock->GetDelta();
+
+		fpsService->Update(deltaTime);
+
 		if (windowResized)
 		{
 			swapchain.UpdateExtent();
