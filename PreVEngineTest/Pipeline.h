@@ -1,9 +1,8 @@
 #ifndef __PIPELINE_H__
 #define __PIPELINE_H__
 
-#include "Window.h"
-#include "Swapchain.h"
-#include "Shader.h"
+#include <RenderPass.h>
+#include <Shader.h>
 
 class Pipeline
 {

@@ -1,5 +1,4 @@
 #include "Pipeline.h"
-#include "Window.h"
 
 Pipeline::Pipeline(VkDevice device, VkRenderPass renderpass, Shader& shaders) 
 	: device(device), renderpass(renderpass), pipelineLayout(), graphicsPipeline()
