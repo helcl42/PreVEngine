@@ -1,7 +1,7 @@
 #include "Pipeline.h"
 #include "Window.h"
 
-Pipeline::Pipeline(VkDevice device, VkRenderPass renderpass, Shaders& shaders) 
+Pipeline::Pipeline(VkDevice device, VkRenderPass renderpass, Shader& shaders) 
 	: device(device), renderpass(renderpass), pipelineLayout(), graphicsPipeline()
 {
 	this->shaders = &shaders;

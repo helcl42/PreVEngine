@@ -1,4 +1,4 @@
-#include "Shaders.h"
+#include "Shader.h"
 #include "Formats.h"
 
 #include <iostream>
@@ -6,17 +6,17 @@
 #include <fstream>
 #include <sstream>
 
-Shaders::Shaders(VkDevice device)
+Shader::Shader(VkDevice device)
 	: m_device(device), m_descriptorSetLayout(VK_NULL_HANDLE), m_descriptorPool(VK_NULL_HANDLE)
 {
 }
 
-Shaders::~Shaders()
+Shader::~Shader()
 {
 	ShutDown();
 }
 
-bool Shaders::Init()
+bool Shader::Init()
 {
 	if (m_descriptorSetLayout == VK_NULL_HANDLE)
 	{
@@ -30,7 +30,7 @@ bool Shaders::Init()
 	return false;
 }
 
-void Shaders::ShutDown()
+void Shader::ShutDown()
 {
 	if (m_device)
 	{
@@ -53,7 +53,7 @@ void Shaders::ShutDown()
 	}
 }
 
-void Shaders::RecreateDescriptorPool(const uint32_t size)
+void Shader::RecreateDescriptorPool(const uint32_t size)
 {
 	if (m_descriptorPool != VK_NULL_HANDLE)
 	{
@@ -63,7 +63,7 @@ void Shaders::RecreateDescriptorPool(const uint32_t size)
 	m_descriptorPool = CreateDescriptorPool(size);
 }
 
-void Shaders::RecreateDescriptorSets(const uint32_t size)
+void Shader::RecreateDescriptorSets(const uint32_t size)
 {
 	m_descriptorSets.resize(size);
 
@@ -81,7 +81,7 @@ void Shaders::RecreateDescriptorSets(const uint32_t size)
 	}
 }
 
-bool Shaders::ShouldAdjustCapacity(const uint32_t size)
+bool Shader::ShouldAdjustCapacity(const uint32_t size)
 {
 	const float MIN_CAPACITY_RATIO_TO_SHRINK = 0.5f;
 
@@ -97,7 +97,7 @@ bool Shaders::ShouldAdjustCapacity(const uint32_t size)
 	return shouldAdjust;
 }
 
-bool Shaders::AdjustDescriptorsSetsCapacity(const uint32_t desiredCount)
+bool Shader::AdjustDescriptorsSetsCapacity(const uint32_t desiredCount)
 {
 	bool shouldRecreate = ShouldAdjustCapacity(desiredCount);
 
@@ -112,44 +112,20 @@ bool Shaders::AdjustDescriptorsSetsCapacity(const uint32_t desiredCount)
 	return false;
 }
 
-bool Shaders::AddShaderModule(const VkShaderStageFlagBits stage, const std::string& filename)
+bool Shader::AddShaderModule(const VkShaderStageFlagBits stage, const std::vector<char>& spirv)
 {
 	assert(!(m_validShaderStages.find(stage) == m_validShaderStages.cend()) && "Invalid shader stage provided.");
 
 	assert(!m_shaderModules[stage] && "Shader stage already loaded.");
 
-	auto spirv = LoadShader(filename);
 	m_shaderModules[stage] = CreateShaderModule(spirv);
+
 	Parse(spirv);
 
 	return !!m_shaderModules[stage];
 }
 
-std::vector<char> Shaders::LoadShader(const std::string& filename) const
-{
-	printf("Load Shader: %s... ", filename.c_str());
-
-	std::ifstream fileStream(filename, std::ios_base::binary);
-
-	assert(fileStream.good() && "Could not open shader file.");
-
-	fileStream.seekg(0, fileStream.end);
-	size_t length = fileStream.tellg();
-	fileStream.seekg(0, fileStream.beg);
-
-	assert(length > 0 && "Could not read file content");
-
-	std::vector<char> buffer;
-
-	buffer.resize(length);
-	fileStream.read(&buffer[0], length);
-
-	fileStream.close();
-
-	return buffer;
-}
-
-VkShaderModule Shaders::CreateShaderModule(const std::vector<char>& spirv) const
+VkShaderModule Shader::CreateShaderModule(const std::vector<char>& spirv) const
 {
 	VkShaderModuleCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -165,7 +141,7 @@ VkShaderModule Shaders::CreateShaderModule(const std::vector<char>& spirv) const
 	return shaderModule;
 }
 
-void Shaders::Parse(const std::vector<char>& spirv)
+void Shader::Parse(const std::vector<char>& spirv)
 {
 	SpvReflectResult result;
 
@@ -248,7 +224,7 @@ void Shaders::Parse(const std::vector<char>& spirv)
 	spvReflectDestroyShaderModule(&module);
 }
 
-void Shaders::ParseInputs(SpvReflectShaderModule& module)
+void Shader::ParseInputs(SpvReflectShaderModule& module)
 {
 	SpvReflectResult result;
 
@@ -304,7 +280,7 @@ void Shaders::ParseInputs(SpvReflectShaderModule& module)
 #endif
 }
 
-VkDescriptorSetLayout Shaders::CreateDescriptorSetLayout() const
+VkDescriptorSetLayout Shader::CreateDescriptorSetLayout() const
 {
 	VkDescriptorSetLayout descriptorSetLayout;
 
@@ -317,7 +293,7 @@ VkDescriptorSetLayout Shaders::CreateDescriptorSetLayout() const
 	return descriptorSetLayout;
 }
 
-VkDescriptorPool Shaders::CreateDescriptorPool(const uint32_t size) const
+VkDescriptorPool Shader::CreateDescriptorPool(const uint32_t size) const
 {
 	VkDescriptorPool descriptorPool;
 
@@ -342,7 +318,7 @@ VkDescriptorPool Shaders::CreateDescriptorPool(const uint32_t size) const
 	return descriptorPool;
 }
 
-VkDescriptorSet Shaders::UpdateDescriptorSet(const uint32_t index)
+VkDescriptorSet Shader::UpdateDescriptorSet(const uint32_t index)
 {
 	CheckBindings();
 
@@ -364,7 +340,7 @@ VkDescriptorSet Shaders::UpdateDescriptorSet(const uint32_t index)
 }
 
 
-void Shaders::Bind(const std::string& name, const UBO& ubo)
+void Shader::Bind(const std::string& name, const UBO& ubo)
 {
 	auto& nameIndex = m_descriptorInfoNameToIndexMapping.find(name);
 	if (nameIndex == m_descriptorInfoNameToIndexMapping.cend())
@@ -381,7 +357,7 @@ void Shaders::Bind(const std::string& name, const UBO& ubo)
 	//LOGI("Bind UBO   to shader-in: \"%s\"\n", name.c_str());
 }
 
-void Shaders::Bind(const std::string& name, const VkImageView imageView, const VkSampler sampler)
+void Shader::Bind(const std::string& name, const VkImageView imageView, const VkSampler sampler)
 {
 	auto& nameIndex = m_descriptorInfoNameToIndexMapping.find(name);
 	if (nameIndex == m_descriptorInfoNameToIndexMapping.cend())
@@ -398,12 +374,12 @@ void Shaders::Bind(const std::string& name, const VkImageView imageView, const V
 	//LOGI("Bind UBO   to shader-in: \"%s\"\n", name.c_str());
 }
 
-void Shaders::Bind(const std::string& name, const ImageBuffer& image)
+void Shader::Bind(const std::string& name, const ImageBuffer& image)
 {
 	Bind(name, image.GetImageView(), image.GetSampler());
 }
 
-void Shaders::CheckBindings() const
+void Shader::CheckBindings() const
 {
 	for (auto& item : m_descriptorSetInfos)
 	{
@@ -416,22 +392,22 @@ void Shaders::CheckBindings() const
 	}
 }
 
-const VkDescriptorSetLayout* Shaders::GetDescriptorSetLayout() const
+const VkDescriptorSetLayout* Shader::GetDescriptorSetLayout() const
 {
 	return &m_descriptorSetLayout;
 }
 
-const VkPipelineVertexInputStateCreateInfo* Shaders::GetVertextInputState() const
+const VkPipelineVertexInputStateCreateInfo* Shader::GetVertextInputState() const
 {
 	return &m_vertexInputState;
 }
 
-const std::vector<VkPipelineShaderStageCreateInfo>& Shaders::GetShaderStages() const
+const std::vector<VkPipelineShaderStageCreateInfo>& Shader::GetShaderStages() const
 {
 	return m_shaderStages;
 }
 
-void Shaders::PrintModuleInfo(const SpvReflectShaderModule& module)
+void Shader::PrintModuleInfo(const SpvReflectShaderModule& module)
 {
 	printf("  Source language : %s\n", spvReflectSourceLanguage(module.source_language));
 	printf("  Entry Point     : %s\n", module.entry_point_name);
@@ -464,7 +440,7 @@ void Shaders::PrintModuleInfo(const SpvReflectShaderModule& module)
 	printf("  Shader stage    : %s\n", stage);
 }
 
-void Shaders::PrintDescriptorSet(const SpvReflectDescriptorSet& set)
+void Shader::PrintDescriptorSet(const SpvReflectDescriptorSet& set)
 {
 	printf("  Descriptor set  : %d\n", set.set);
 	for (uint32_t i = 0; i < set.binding_count; ++i)
@@ -477,7 +453,7 @@ void Shaders::PrintDescriptorSet(const SpvReflectDescriptorSet& set)
 	printf("\n");
 }
 
-std::string Shaders::ToStringDescriptorType(const SpvReflectDescriptorType& value)
+std::string Shader::ToStringDescriptorType(const SpvReflectDescriptorType& value)
 {
 	switch (value)
 	{
@@ -508,7 +484,7 @@ std::string Shaders::ToStringDescriptorType(const SpvReflectDescriptorType& valu
 	}
 }
 
-std::string Shaders::ToStringGLSLType(const SpvReflectTypeDescription& type)
+std::string Shader::ToStringGLSLType(const SpvReflectTypeDescription& type)
 {
 	switch (type.op)
 	{
@@ -544,4 +520,55 @@ std::string Shaders::ToStringGLSLType(const SpvReflectTypeDescription& type)
 			break;
 	}
 	return "UNKNOWN TYPE";
+}
+
+
+std::vector<char> ShaderFactory::LoadByteCodeFromFile(const std::string& filename) const
+{
+	printf("Load Shader: %s... ", filename.c_str());
+
+	std::ifstream fileStream(filename, std::ios_base::binary);
+
+	assert(fileStream.good() && "Could not open shader file.");
+
+	fileStream.seekg(0, fileStream.end);
+	size_t length = fileStream.tellg();
+	fileStream.seekg(0, fileStream.beg);
+
+	assert(length > 0 && "Could not read file content");
+
+	std::vector<char> buffer;
+
+	buffer.resize(length);
+	fileStream.read(&buffer[0], length);
+
+	fileStream.close();
+
+	return buffer;
+}
+
+std::shared_ptr<Shader> ShaderFactory::CreateShaderFromFiles(VkDevice device, const std::map<VkShaderStageFlagBits, std::string>& stagePaths) const
+{
+	std::map<VkShaderStageFlagBits, std::vector<char>> byteCodes;
+	for (const auto& stagePath : stagePaths)
+	{
+		const auto spirv = LoadByteCodeFromFile(stagePath.second);
+		byteCodes.insert(std::make_pair(stagePath.first, spirv));
+	}
+
+	return CreateShaderFromByteCodes(device, byteCodes);
+}
+
+std::shared_ptr<Shader> ShaderFactory::CreateShaderFromByteCodes(VkDevice device, const std::map<VkShaderStageFlagBits, std::vector<char>>& byteCodes) const
+{
+	std::shared_ptr<Shader> shaders = std::make_shared<Shader>(device);
+
+	for (const auto& byteCode : byteCodes)
+	{
+		shaders->AddShaderModule(byteCode.first, byteCode.second);
+	}
+
+	shaders->Init();
+
+	return shaders;
 }

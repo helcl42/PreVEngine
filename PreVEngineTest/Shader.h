@@ -1,15 +1,16 @@
-#ifndef __SHADERS_H__
-#define __SHADERS_H__
+#ifndef __SHADER_H__
+#define __SHADER_H__
 
 #include <map>
 #include <set>
 
 #include "Window.h"
 #include "Buffers.h"
+
 #include "spirv_reflect.h"
 
 
-class Shaders
+class Shader
 {
 private:
 	struct DescriptorSetInfo
@@ -78,8 +79,6 @@ private:
 	static std::string ToStringGLSLType(const SpvReflectTypeDescription& type);
 
 private:
-	std::vector<char> LoadShader(const std::string& filename) const;
-
 	VkShaderModule CreateShaderModule(const std::vector<char>& spirv) const;
 
 	void Parse(const std::vector<char>& spirv);
@@ -99,9 +98,9 @@ private:
 	bool ShouldAdjustCapacity(const uint32_t size);
 
 public:
-	Shaders(VkDevice device);
+	Shader(VkDevice device);
 
-	~Shaders();
+	~Shader();
 
 public:
 	bool Init();
@@ -110,7 +109,7 @@ public:
 
 	bool AdjustDescriptorsSetsCapacity(const uint32_t desiredCount);
 
-	bool AddShaderModule(const VkShaderStageFlagBits stage, const std::string& filename);
+	bool AddShaderModule(const VkShaderStageFlagBits stage, const std::vector<char>& spirv);
 
 	void Bind(const std::string& name, const UBO& ubo);
 
@@ -126,6 +125,17 @@ public:
 	const VkPipelineVertexInputStateCreateInfo* GetVertextInputState() const;
 
 	const std::vector<VkPipelineShaderStageCreateInfo>& GetShaderStages() const;
+};
+
+class ShaderFactory
+{
+private:
+	std::vector<char> LoadByteCodeFromFile(const std::string& filename) const;
+
+public:
+	std::shared_ptr<Shader> CreateShaderFromFiles(VkDevice device, const std::map<VkShaderStageFlagBits, std::string>& stagePaths) const;
+
+	std::shared_ptr<Shader> CreateShaderFromByteCodes(VkDevice device, const std::map<VkShaderStageFlagBits, std::vector<char>>& byteCodes) const;
 };
 
 #endif

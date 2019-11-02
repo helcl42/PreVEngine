@@ -3,19 +3,19 @@
 
 #include "Window.h"
 #include "Swapchain.h"
-#include "Shaders.h"
+#include "Shader.h"
 
 class Pipeline
 {
 	VkDevice     device;
 	VkRenderPass renderpass;
 	VkPipeline   graphicsPipeline;
-	Shaders*    shaders;
+	Shader*    shaders;
 
 public:
 	VkPipelineLayout pipelineLayout;
 
-	Pipeline(VkDevice device, VkRenderPass renderpass, Shaders& shaders);
+	Pipeline(VkDevice device, VkRenderPass renderpass, Shader& shaders);
 	~Pipeline();
 
 	VkPipeline CreateGraphicsPipeline();

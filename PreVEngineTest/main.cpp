@@ -11,7 +11,7 @@
 #include <Utils.h>
 
 #include "matrix.h"
-#include "Shaders.h"
+#include "Shader.h"
 
 float dx = 0.1f;
 float dy = 0.2f;
@@ -309,13 +309,15 @@ int main(int argc, char *argv[])
 		printf("UBO %zd created\n", i);
 	}
 
-	Shaders shaders(device);
-	shaders.AddShaderModule(VK_SHADER_STAGE_VERTEX_BIT, "shaders/vert.spv");
-	shaders.AddShaderModule(VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/frag.spv");
-	shaders.Init();
-	shaders.AdjustDescriptorsSetsCapacity(COUNT_OF_MODELS * BUFFERS_IN_FLIGHT);
+	ShaderFactory shaderFactory;
+	std::shared_ptr<Shader> shader = shaderFactory.CreateShaderFromFiles(device, {
+											{ VK_SHADER_STAGE_VERTEX_BIT, "shaders/vert.spv" },
+											{ VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/frag.spv" }
+										});
 
-	Pipeline pipeline(device, renderpass, shaders);
+	shader->AdjustDescriptorsSetsCapacity(COUNT_OF_MODELS * BUFFERS_IN_FLIGHT);
+
+	Pipeline pipeline(device, renderpass, *shader);
 	pipeline.CreateGraphicsPipeline();
 	printf("Pipeline created\n");
 
@@ -372,9 +374,9 @@ int main(int argc, char *argv[])
 				model->transform = uniforms.model;
 				ubo->Update(&uniforms);
 
-				shaders.Bind("texSampler", *model->imageBuffer);
-				shaders.Bind("ubo", *ubo);
-				VkDescriptorSet descriptorSet = shaders.UpdateDescriptorSet(descriptorSetIndex);
+				shader->Bind("texSampler", *model->imageBuffer);
+				shader->Bind("ubo", *ubo);
+				VkDescriptorSet descriptorSet = shader->UpdateDescriptorSet(descriptorSetIndex);
 				descriptorSetIndex++;
 
 				vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
