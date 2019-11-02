@@ -293,8 +293,8 @@ int main(int argc, char *argv[])
 	Uniforms uniforms;
 	uniforms.view.Translate(0, 0, -4);
 
-	std::vector<std::shared_ptr<UBO>> uniformBuffers(models.size());
-	for (size_t i = 0; i < models.size(); i++)
+	std::vector<std::shared_ptr<UBO>> uniformBuffers(models.size() * BUFFERS_IN_FLIGHT);
+	for (size_t i = 0; i < models.size() * BUFFERS_IN_FLIGHT; i++)
 	{
 		uniformBuffers[i] = std::make_shared<UBO>(allocator);
 		uniformBuffers[i]->Allocate(sizeof(Uniforms));
@@ -334,7 +334,8 @@ int main(int argc, char *argv[])
 		// Call Update
 
 		VkCommandBuffer commandBuffer;
-		if (swapchain.BeginFrame(commandBuffer))
+		uint32_t frameInFlightIndex;
+		if (swapchain.BeginFrame(commandBuffer, frameInFlightIndex))
 		{			
 			// Call Render
 
@@ -349,7 +350,7 @@ int main(int argc, char *argv[])
 				VkBuffer vertexBuffers[] = { *model->vertexBuffer };
 				VkDeviceSize offsets[] = { 0 };
 
-				auto& ubo = uniformBuffers.at(modelIndex);
+				auto& ubo = uniformBuffers.at(descriptorSetIndex);
 
 				uniforms.proj.SetProjection(aspect, 40.f, 1, 1000);
 				uniforms.model = model->transform;
