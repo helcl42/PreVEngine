@@ -222,13 +222,13 @@ DeviceExtensions::DeviceExtensions(const DeviceExtensions& other)
 	RefreshPickList();
 }
 
-void DeviceExtensions::Init(VkPhysicalDevice phy, const char* layer_name)
+void DeviceExtensions::Init(VkPhysicalDevice phy, const char* layerName)
 {
 	uint32_t count = 0;
-	VKERRCHECK(vkEnumerateDeviceExtensionProperties(phy, layer_name, &count, nullptr));
+	VKERRCHECK(vkEnumerateDeviceExtensionProperties(phy, layerName, &count, nullptr));
 	                                            
 	item_list.resize(count);																	  // Resize buffer
-	VKERRCHECK(vkEnumerateDeviceExtensionProperties(phy, layer_name, &count, item_list.data()));  // Fetch list
+	VKERRCHECK(vkEnumerateDeviceExtensionProperties(phy, layerName, &count, item_list.data()));  // Fetch list
 }
 
 const char* DeviceExtensions::Name(uint32_t inx) const
@@ -247,11 +247,11 @@ std::string DeviceExtensions::PickListName() const
 }
 
 
-Instance::Instance(const bool enable_validation, const char* app_name, const char* engine_name)
+Instance::Instance(const bool enableValidation, const char* appName, const char* engineName)
 {
 	Layers layers;
 #ifdef ENABLE_VALIDATION
-	if (enable_validation)
+	if (enableValidation)
 	{
 		layers.Pick({ "VK_LAYER_KHRONOS_validation" });
 	}
@@ -286,7 +286,7 @@ Instance::Instance(const bool enable_validation, const char* app_name, const cha
 #endif
 	assert(extensions.PickCount() >= 2);
 
-	Create(layers, extensions, app_name, engine_name);
+	Create(layers, extensions, appName, engineName);
 }
 
 Instance::Instance(const Layers& layers, const Extensions& extensions, const char* appName, const char* engineName)
@@ -296,26 +296,26 @@ Instance::Instance(const Layers& layers, const Extensions& extensions, const cha
 
 void Instance::Create(const Layers& layers, const Extensions& extensions, const char* appName, const char* engineName)
 {
-	// initialize the VkApplicationInfo structure
-	VkApplicationInfo app_info = { VK_STRUCTURE_TYPE_APPLICATION_INFO };
-	app_info.pNext = nullptr;
-	app_info.pApplicationName = appName;
-	app_info.applicationVersion = 1;
-	app_info.pEngineName = engineName;
-	app_info.engineVersion = 1;
-	app_info.apiVersion = VK_API_VERSION_1_0;
+	VkApplicationInfo appInfo = { VK_STRUCTURE_TYPE_APPLICATION_INFO };
+	appInfo.pNext = nullptr;
+	appInfo.pApplicationName = appName;
+	appInfo.applicationVersion = 1;
+	appInfo.pEngineName = engineName;
+	appInfo.engineVersion = 1;
+	appInfo.apiVersion = VK_API_VERSION_1_0;
 
 	// initialize the VkInstanceCreateInfo structure
-	VkInstanceCreateInfo inst_info = { VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
-	inst_info.pNext = nullptr;
-	inst_info.flags = 0;
-	inst_info.pApplicationInfo = &app_info;
-	inst_info.enabledExtensionCount = extensions.PickCount();
-	inst_info.ppEnabledExtensionNames = extensions.GetPickList();
-	inst_info.enabledLayerCount = layers.PickCount();
-	inst_info.ppEnabledLayerNames = layers.GetPickList();
+	VkInstanceCreateInfo instanceInfo = { VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
+	instanceInfo.pNext = nullptr;
+	instanceInfo.flags = 0;
+	instanceInfo.pApplicationInfo = &appInfo;
+	instanceInfo.enabledExtensionCount = extensions.PickCount();
+	instanceInfo.ppEnabledExtensionNames = extensions.GetPickList();
+	instanceInfo.enabledLayerCount = layers.PickCount();
+	instanceInfo.ppEnabledLayerNames = layers.GetPickList();
 
-	VKERRCHECK(vkCreateInstance(&inst_info, nullptr, &m_instance));
+	VKERRCHECK(vkCreateInstance(&instanceInfo, nullptr, &m_instance));
+
 	LOGI("Vulkan Instance created\n");
 
 #ifdef ENABLE_VALIDATION

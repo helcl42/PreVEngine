@@ -52,47 +52,45 @@ void Window::InitWindow(const char* title, const uint32_t width, const uint32_t 
 	//    #ifdef VK_USE_PLATFORM_WAYLAND_KHR
 }
 
-CSurface& Window::GetSurface(VkInstance instance)
+Surface& Window::GetSurface(VkInstance instance)
 {
 	m_windowImpl->CreateSurface(instance);
 
 	return *m_windowImpl;
 }
 
-bool Window::CanPresent(VkPhysicalDevice gpu, uint32_t queue_family) const
+bool Window::CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const
 {
-	return m_windowImpl->CanPresent(gpu, queue_family);
+	return m_windowImpl->CanPresent(gpu, queueFamily);
 }
 
-void Window::GetPosition(int16_t& x, int16_t& y) const
+Position Window::GetPosition() const
 {
 	const auto& shape = m_windowImpl->GetShape();
 	
-	x = shape.x; 
-	y = shape.y;
+	return Position{ shape.x, shape.y };
 }
 
-void Window::GetSize(int16_t& width, int16_t& height) const
+Size Window::GetSize() const
 {
 	const auto& shape = m_windowImpl->GetShape();
 
-	width = shape.width; 
-	height = shape.height;
+	return Size{ shape.width, shape.height };
 }
 
-bool Window::GetKeyState(const eKeycode key) const
+bool Window::IsKeyPressed(const KeyCode key) const
 {
-	return m_windowImpl->KeyState(key);
+	return m_windowImpl->IsKeyPressed(key);
 }
 
-bool Window::GetBtnState(const eMouseButton btn) const
+bool Window::IsMouseButtonPressed(const MouseButtonType btn) const
 {
-	return m_windowImpl->BtnState(btn);
+	return m_windowImpl->IsMouseButtonPressed(btn);
 }
 
-void Window::GetMousePos(int16_t& x, int16_t& y) const
+Position Window::GetMousePosition() const
 {
-	m_windowImpl->MousePos(x, y);
+	return m_windowImpl->GetMousePosition();
 }
 
 bool Window::HasFocus() const
@@ -105,14 +103,14 @@ void Window::SetTitle(const char* title)
 	m_windowImpl->SetTitle(title);
 }
 
-void Window::SetWinPos(uint16_t x, uint16_t y)
+void Window::SetPosition(const Position& position)
 {
-	m_windowImpl->SetWinPos(x, y);
+	m_windowImpl->SetPosition(position.x, position.y);
 }
 
-void Window::SetWinSize(uint16_t w, uint16_t h)
+void Window::SetSize(const Size& size)
 {
-	m_windowImpl->SetWinSize(w, h);
+	m_windowImpl->SetSize(size.width, size.height);
 }
 
 void Window::ShowKeyboard(bool enabled) // On Android, show the soft-keyboard.

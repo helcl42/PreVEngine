@@ -1,4 +1,5 @@
 #include "Swapchain.h"
+#include "Utils.h"
 
 #include <algorithm>
 
@@ -32,6 +33,7 @@ Swapchain::~Swapchain()
 	if (m_swapChainSync)
 	{
 		m_swapChainSync->ShutDown();
+		delete m_swapChainSync;
 	}
 
 	if (m_swapchain != VK_NULL_HANDLE)
@@ -58,7 +60,7 @@ void Swapchain::Init(const Queue* presentQueue, const Queue* graphicsQueue)
 	m_presentQueue = *presentQueue;
 	m_graphicsQueue = *graphicsQueue;
 
-	m_swapChainSync = std::make_unique<SwapcChainSync>(m_device);
+	m_swapChainSync = new SwapcChainSync(m_device);
 
 	VkSurfaceCapabilitiesKHR surfaceCapabilities = GetSurfaceCapabilities();
 	assert(surfaceCapabilities.supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
@@ -93,12 +95,6 @@ void Swapchain::Init(const Queue* presentQueue, const Queue* graphicsQueue)
 	UpdateExtent();
 
 	SetImageCount(2);
-}
-
-template <typename Type>
-int Clamp(Type val, Type min, Type max)
-{
-	return (val < min ? min : val > max ? max : val);
 }
 
 void Swapchain::UpdateExtent()

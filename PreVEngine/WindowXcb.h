@@ -89,7 +89,7 @@ private:
 	//------------------
 
 	//---Touch Device---
-	CMTouch m_MTouch;
+	MultiTouch m_MTouch;
 
 	int m_xiOpcode;  // 131
 	
@@ -99,9 +99,9 @@ private:
 private:
 	void SetTitle(const char* title);
 
-	void SetWinPos(uint32_t x, uint32_t y);
+	void SetPosition(uint32_t x, uint32_t y);
 
-	void SetWinSize(uint32_t w, uint32_t h);
+	void SetSize(uint32_t w, uint32_t h);
 
 	void CreateSurface(VkInstance instance);
 
@@ -236,14 +236,14 @@ void WindowXcb::SetTitle(const char* title)
 	xcb_flush(m_xcbConnection);
 }
 
-void WindowXcb::SetWinPos(uint32_t x, uint32_t y)
+void WindowXcb::SetPosition(uint32_t x, uint32_t y)
 {
 	uint32_t values[] = { x, y };
 	xcb_configure_window(m_xcbConnection, m_xcbWindow, XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, values);
 	xcb_flush(m_xcbConnection);
 }
 
-void WindowXcb::SetWinSize(uint32_t w, uint32_t h)
+void WindowXcb::SetSize(uint32_t w, uint32_t h)
 {
 	uint32_t values[] = { w, h };
 	xcb_configure_window(m_xcbConnection, m_xcbWindow, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, values);
@@ -332,8 +332,8 @@ EventType WindowXcb::TranslateEvent(xcb_generic_event_t* x_event)
 	xcb_button_press_event_t& e = *(xcb_button_press_event_t*)x_event;  // xcb_motion_notify_event_t
 	int16_t mx = e.event_x;
 	int16_t my = e.event_y;
-	eMouseButton btn = e.detail < 4 ? (eMouseButton)e.detail : eMouseButton::eNone;
-	eMouseButton bestBtn = eMouseButton(BtnState(eMouseButton::eLeft) ? 1 : BtnState(eMouseButton::eMiddle) ? 2 : BtnState(eMouseButton::eRight) ? 3 : 0);  // If multiple buttons pressed, pick left one.
+	MouseButtonType btn = e.detail < 4 ? (MouseButtonType)e.detail : MouseButtonType::eNone;
+	MouseButtonType bestBtn = MouseButtonType(IsMouseButtonPressed(MouseButtonType::eLeft) ? 1 : IsMouseButtonPressed(MouseButtonType::eMiddle) ? 2 : IsMouseButtonPressed(MouseButtonType::eRight) ? 3 : 0);  // If multiple buttons pressed, pick left one.
 
 	switch (x_event->response_type & ~0x80)
 	{

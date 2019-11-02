@@ -4,12 +4,12 @@
 #include "Instance.h"
 #include "KeyCodes.h"
 
-enum eAction  // keyboard / mouse / touchscreen actions
+enum ActionType  // keyboard / mouse / touchscreen actions
 {
 	eUP, eDOWN, eMOVE
 };
 
-enum eMouseButton
+enum MouseButtonType
 {
 	eNone = 0, eLeft = 1, eMiddle = 2, eRight = 3
 };
@@ -26,10 +26,10 @@ struct EventType
 	{
 		struct // mouse move/click
 		{
-			eAction action;
+			ActionType action;
 			int16_t x;
 			int16_t y;
-			eMouseButton btn;
+			MouseButtonType btn;
 		}
 		mouse;
 
@@ -43,8 +43,8 @@ struct EventType
 
 		struct // Keyboard key state
 		{
-			eAction action;
-			eKeycode keycode;
+			ActionType action;
+			KeyCode keycode;
 		}
 		key;
 
@@ -76,7 +76,7 @@ struct EventType
 
 		struct // multi-touch display
 		{
-			eAction action; float x; float y; uint8_t id;
+			ActionType action; float x; float y; uint8_t id;
 		}
 		touch;
 
@@ -141,10 +141,10 @@ public:
 	}
 };
 
-class CMTouch
+class MultiTouch
 {
 private:
-	struct CPointer
+	struct Pointer
 	{
 		bool active;
 
@@ -158,7 +158,7 @@ private:
 private:
 	uint32_t m_touchID[MAX_POINTERS] = {};    // finger-id lookup table (Desktop)
 
-	CPointer m_pointers[MAX_POINTERS] = {};
+	Pointer m_pointers[MAX_POINTERS] = {};
 
 	int m_count;  // number of active touch-id's (Android only)
 
@@ -179,7 +179,7 @@ public:
 	}
 
 	// Convert desktop-style touch-id's to an android-style finger-id.
-	EventType OnEventById(eAction action, float x, float y, uint32_t findval, uint32_t setval)
+	EventType OnEventById(ActionType action, float x, float y, uint32_t findval, uint32_t setval)
 	{
 		for (uint32_t i = 0; i < MAX_POINTERS; ++i)
 		{
@@ -193,14 +193,14 @@ public:
 		return { EventType::UNKNOWN };
 	}
 
-	EventType OnEvent(eAction action, float x, float y, uint8_t id)
+	EventType OnEvent(ActionType action, float x, float y, uint8_t id)
 	{
 		if (id >= MAX_POINTERS)
 		{
 			return EventType{};  // Exit if too many fingers
 		}
 
-		CPointer& P = m_pointers[id];
+		Pointer& P = m_pointers[id];
 		if (action != eMOVE)
 		{
 			P.active = (action == eDOWN);
@@ -215,7 +215,7 @@ public:
 	}
 };
 
-class CSurface
+class Surface
 {                                                               // Vulkan Surface
 protected:
 	VkInstance  m_vkInstance = VK_NULL_HANDLE;
@@ -223,9 +223,9 @@ protected:
 	VkSurfaceKHR m_vkSurface = VK_NULL_HANDLE;
 
 public:
-	CSurface();
+	Surface();
 
-	virtual ~CSurface();
+	virtual ~Surface();
 
 public:
 	operator VkSurfaceKHR () const;
@@ -246,16 +246,23 @@ struct WindowShape
 	bool fullscreen;
 };
 
-struct MousePosition
+struct Position
 {
 	int16_t x;
 
 	int16_t y;
 };
 
-class WindowImpl : public CSurface
+struct Size
 {
-	MousePosition m_mousePosition;
+	uint16_t width;
+
+	uint16_t height;
+};
+
+class WindowImpl : public Surface
+{
+	Position m_mousePosition;
 
 	bool m_mouseButonsState[4] = {};
 
@@ -273,11 +280,11 @@ protected:
 	WindowShape m_shape;
 
 protected:
-	EventType OnMouseEvent(eAction action, int16_t x, int16_t y, eMouseButton btn);  // Mouse event
+	EventType OnMouseEvent(ActionType action, int16_t x, int16_t y, MouseButtonType btn);  // Mouse event
 
 	EventType OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y);
 
-	EventType OnKeyEvent(eAction action, uint8_t key);                          // Keyboard event
+	EventType OnKeyEvent(ActionType action, uint8_t key);                          // Keyboard event
 
 	EventType OnTextEvent(const char* str);                                     // Text event
 
@@ -297,11 +304,11 @@ public:
 	virtual ~WindowImpl();
 
 public:
-	bool KeyState(const eKeycode key) const;
+	bool IsKeyPressed(const KeyCode key) const;
 
-	bool BtnState(const eMouseButton btn) const;
+	bool IsMouseButtonPressed(const MouseButtonType btn) const;
 
-	void MousePos(int16_t& x, int16_t& y) const;
+	Position GetMousePosition() const;
 
 	bool HasFocus() const;
 
@@ -325,9 +332,9 @@ public:
 
 	virtual void SetTitle(const char* title) = 0;
 
-	virtual void SetWinPos(uint32_t x, uint32_t y) = 0;
+	virtual void SetPosition(uint32_t x, uint32_t y) = 0;
 
-	virtual void SetWinSize(uint32_t w, uint32_t h) = 0;
+	virtual void SetSize(uint32_t w, uint32_t h) = 0;
 };
 //==============================================================
 

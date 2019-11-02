@@ -34,14 +34,14 @@ private:
 
 	HWND m_hWnd;
 
-	CMTouch m_MTouch;  // Multi-Touch device
+	MultiTouch m_MTouch;  // Multi-Touch device
 
 private:
 	void SetTitle(const char* title);
 
-	void SetWinPos(uint32_t x, uint32_t y);
+	void SetPosition(uint32_t x, uint32_t y);
 
-	void SetWinSize(uint32_t w, uint32_t h);
+	void SetSize(uint32_t w, uint32_t h);
 
 	void CreateSurface(VkInstance instance);
 
@@ -60,9 +60,9 @@ public:
 	virtual ~WindowWin32();
 
 public:
-	EventType GetEvent(bool wait_for_event = false);
+	EventType GetEvent(bool waitForEvent = false);
 
-	bool CanPresent(VkPhysicalDevice phy, uint32_t queue_family) const;
+	bool CanPresent(VkPhysicalDevice phy, uint32_t queueFamily) const;
 };
 
 #endif
@@ -194,7 +194,7 @@ void WindowWin32::SetTitle(const char* title)
 	SetWindowText(m_hWnd, title);
 }
 
-void WindowWin32::SetWinPos(uint32_t x, uint32_t y)
+void WindowWin32::SetPosition(uint32_t x, uint32_t y)
 {
 	SetWindowPos(m_hWnd, NULL, x, y, 0, 0, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE);
 	
@@ -204,7 +204,7 @@ void WindowWin32::SetWinPos(uint32_t x, uint32_t y)
 	}
 }
 
-void WindowWin32::SetWinSize(uint32_t w, uint32_t h)
+void WindowWin32::SetSize(uint32_t w, uint32_t h)
 {
 	if (m_shape.fullscreen)
 	{
@@ -244,7 +244,7 @@ void WindowWin32::CreateSurface(VkInstance instance)
 #define WM_RESHAPE (WM_USER + 0)
 #define WM_ACTIVE  (WM_USER + 1)
 
-EventType WindowWin32::GetEvent(bool wait_for_event)
+EventType WindowWin32::GetEvent(bool waitForEvent)
 {
 	// EventType event;
 	if (!m_eventQueue.IsEmpty())
@@ -253,7 +253,7 @@ EventType WindowWin32::GetEvent(bool wait_for_event)
 	}
 
 	MSG msg = {};
-	if (wait_for_event)
+	if (waitForEvent)
 	{
 		m_isRunning = (GetMessage(&msg, NULL, 16, 0) > 0);             // Blocking mode
 	}
@@ -278,12 +278,12 @@ EventType WindowWin32::GetEvent(bool wait_for_event)
 
 			if (msg.wParam == VK_SHIFT)
 			{
-				if (!!(GetKeyState(VK_LSHIFT) & 128) != KeyState(KEY_LeftShift))
+				if (!!(GetKeyState(VK_LSHIFT) & 128) != IsKeyPressed(KEY_LeftShift))
 				{
 					PostMessage(m_hWnd, msg.message, VK_LSHIFT, 0);
 				}
 
-				if (!!(GetKeyState(VK_RSHIFT) & 128) != KeyState(KEY_RightShift))
+				if (!!(GetKeyState(VK_RSHIFT) & 128) != IsKeyPressed(KEY_RightShift))
 				{
 					PostMessage(m_hWnd, msg.message, VK_RSHIFT, 0);
 				}
@@ -301,7 +301,7 @@ EventType WindowWin32::GetEvent(bool wait_for_event)
 		//-----------------------------------------------------------------------------------------------------------------
 
 		static char buf[4] = {};
-		eMouseButton bestBtn = eMouseButton(BtnState(eMouseButton::eLeft) ? 1 : BtnState(eMouseButton::eMiddle) ? 2 : BtnState(eMouseButton::eRight) ? 3 : 0);
+		MouseButtonType bestBtn = MouseButtonType(IsMouseButtonPressed(MouseButtonType::eLeft) ? 1 : IsMouseButtonPressed(MouseButtonType::eMiddle) ? 2 : IsMouseButtonPressed(MouseButtonType::eRight) ? 3 : 0);
 
 		switch (msg.message)
 		{
@@ -309,17 +309,17 @@ EventType WindowWin32::GetEvent(bool wait_for_event)
 			case WM_MOUSEMOVE: 
 				return OnMouseEvent(eMOVE, x, y, bestBtn);
 			case WM_LBUTTONDOWN: 
-				return OnMouseEvent(eDOWN, x, y, eMouseButton::eLeft);
+				return OnMouseEvent(eDOWN, x, y, MouseButtonType::eLeft);
 			case WM_MBUTTONDOWN: 
-				return OnMouseEvent(eDOWN, x, y, eMouseButton::eMiddle);
+				return OnMouseEvent(eDOWN, x, y, MouseButtonType::eMiddle);
 			case WM_RBUTTONDOWN: 
-				return OnMouseEvent(eDOWN, x, y, eMouseButton::eRight);
+				return OnMouseEvent(eDOWN, x, y, MouseButtonType::eRight);
 			case WM_LBUTTONUP: 
-				return OnMouseEvent(eUP, x, y, eMouseButton::eLeft);
+				return OnMouseEvent(eUP, x, y, MouseButtonType::eLeft);
 			case WM_MBUTTONUP: 
-				return  OnMouseEvent(eUP, x, y, eMouseButton::eMiddle);
+				return  OnMouseEvent(eUP, x, y, MouseButtonType::eMiddle);
 			case WM_RBUTTONUP: 
-				return OnMouseEvent(eUP, x, y, eMouseButton::eRight);
+				return OnMouseEvent(eUP, x, y, MouseButtonType::eRight);
 
 			//--Mouse wheel events--
 			case WM_MOUSEWHEEL:

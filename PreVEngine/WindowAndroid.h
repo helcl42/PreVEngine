@@ -31,18 +31,18 @@ class WindowAndroid : public WindowImpl
 private:
 	android_app* m_app = 0;
 
-	CMTouch m_MTouch;
+	MultiTouch m_MTouch;
 
 private:
 	void SetTitle(const char* title)
 	{
 	}
 
-	void SetWinPos(uint32_t x, uint32_t y)
+	void SetPosition(uint32_t x, uint32_t y)
 	{
 	}
 
-	void SetWinSize(uint32_t w, uint32_t h)
+	void SetSize(uint32_t w, uint32_t h)
 	{
 	}
 

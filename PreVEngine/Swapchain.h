@@ -42,7 +42,6 @@ struct SwapcChainSync
 
 	~SwapcChainSync()
 	{
-		ShutDown();
 	}
 
 	void Init(const uint32_t framesInFlightCount)
@@ -107,7 +106,7 @@ private:
 	
 	bool m_isAcquired;
 
-	std::unique_ptr<SwapcChainSync> m_swapChainSync;
+	SwapcChainSync* m_swapChainSync;
 
 	uint32_t m_currentFrameIndex;
 

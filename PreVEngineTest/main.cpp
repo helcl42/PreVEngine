@@ -16,11 +16,10 @@ float dx = 0.1f;
 float dy = 0.2f;
 float translateX = 0.0f;
 
-int windowWidth = 1280;
-int windowHeight = 960;
+uint16_t windowWidth = 1280;
+uint16_t windowHeight = 960;
 bool windowResized = false;
 
-//-- EVENT HANDLERS --
 class CWindow : public Window
 {
 	float mx = 0;
@@ -46,7 +45,7 @@ public:
 		windowResized = true;
 	}
 
-	void OnKeyEvent(eAction action, eKeycode keycode)
+	void OnKeyEvent(ActionType action, KeyCode keycode)
 	{
 		if (action == eDOWN)
 		{
@@ -72,7 +71,7 @@ public:
 		}
 	}
 
-	void OnMouseEvent(eAction action, int16_t x, int16_t y, uint8_t btn)
+	void OnMouseEvent(ActionType action, int16_t x, int16_t y, uint8_t btn)
 	{
 		if (action == eMOVE && btn == 1)
 		{
@@ -84,7 +83,7 @@ public:
 		my = y;
 	}
 
-	void OnTouchEvent(eAction action, float x, float y, uint8_t id)
+	void OnTouchEvent(ActionType action, float x, float y, uint8_t id)
 	{
 		if (action == eMOVE)
 		{
@@ -227,8 +226,8 @@ int main(int argc, char *argv[])
 
 	CWindow Window("PreVEngine", 1280, 960);
 	Window.SetTitle("PreVEngine Demo");
-	Window.SetWinSize(windowWidth, windowHeight);
-	Window.SetWinPos(40, 40);
+	Window.SetSize(Size{ windowWidth, windowHeight });
+	Window.SetPosition(Position{ 40, 40 });
 
 	PhysicalDevices gpus(instance);
 	gpus.Print();

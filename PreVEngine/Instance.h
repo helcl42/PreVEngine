@@ -128,12 +128,12 @@ private:
 	DebugReport m_debugReport;  // Configure debug report flags here.
 
 private:
-	void Create(const Layers& layers, const Extensions& extensions, const char* app_name, const char* engine_name);
+	void Create(const Layers& layers, const Extensions& extensions, const char* appName, const char* engineName);
 
 public:
-	Instance(const Layers& layers, const Extensions& extensions, const char* app_name = "PreVEngineApp", const char* engine_name = "PreVEngine");
+	Instance(const Layers& layers, const Extensions& extensions, const char* appName = "PreVEngineApp", const char* engineName = "PreVEngine");
 	
-	Instance(const bool enable_validation = true, const char* app_name = "PreVEngineApp", const char* engine_name = "PreVEngine");
+	Instance(const bool enableValidation = true, const char* appName = "PreVEngineApp", const char* engineName = "PreVEngine");
 
 	~Instance();
 	

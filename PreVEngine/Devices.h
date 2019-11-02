@@ -34,11 +34,11 @@ public:
 
 	std::vector<VkSurfaceFormatKHR> SurfaceFormats(VkSurfaceKHR surface) const;     // Returns list of supported surface formats.
 
-	VkFormat FindSurfaceFormat(VkSurfaceKHR surface, std::vector<VkFormat> preferred_formats = {
+	VkFormat FindSurfaceFormat(VkSurfaceKHR surface, std::vector<VkFormat> preferredFormats = {
 																		   VK_FORMAT_B8G8R8A8_UNORM,	// Returns first supported format from given list, or VK_FORMAT_UNDEFINED if no match was found.
 																		   VK_FORMAT_R8G8B8A8_UNORM }) const;
 
-	VkFormat FindDepthFormat(std::vector<VkFormat> preferred_formats = {
+	VkFormat FindDepthFormat(std::vector<VkFormat> preferredFormats = {
 												   VK_FORMAT_D32_SFLOAT,          // Returns first supported depth format from list,
 												   VK_FORMAT_D32_SFLOAT_S8_UINT,  // or VK_FORMAT_UNDEFINED if no match was found.
 												   VK_FORMAT_D24_UNORM_S8_UINT,
@@ -99,7 +99,7 @@ struct Queue
 	PhysicalDevice gpu;     // (used by Swapchain)
 
 public:
-	VkCommandPool   CreateCommandPool() const;
+	VkCommandPool CreateCommandPool() const;
 
 	VkCommandBuffer CreateCommandBuffer(VkCommandPool command_pool) const;
 

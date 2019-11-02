@@ -5,6 +5,12 @@
 #include <chrono>
 #include <iostream>
 
+template <typename Type>
+int Clamp(Type val, Type min, Type max)
+{
+	return (val < min ? min : val > max ? max : val);
+}
+
 class FPSService
 {
 private:
@@ -17,62 +23,52 @@ private:
 	float m_averageDeltaTime = 0.0f;
 
 public:
-	FPSService(float refreshTimeInS = 1.0f);
+	FPSService(float refreshTimeInS = 1.0f)
+		: m_refreshTimeout(refreshTimeInS)
+	{
+	}
 
-	virtual ~FPSService();
+	virtual ~FPSService()
+	{
+	}
 
 public:
-	void Update(float deltaTime);
-
-	float GetAverageDeltaTime() const;
-
-	float GetAverageFPS() const;
-};
-
-FPSService::FPSService(float refreshTimeInS)
-	: m_refreshTimeout(refreshTimeInS)
-{
-}
-
-FPSService::~FPSService()
-{
-}
-
-void FPSService::Update(float deltaTime)
-{
-	m_elpasedTime += deltaTime;
-
-	m_deltaTimeSnapshots.push_back(deltaTime);
-
-	if (m_elpasedTime > m_refreshTimeout)
+	void Update(float deltaTime)
 	{
-		float deltasSum = 0.0f;
-		for (auto & snapshot : m_deltaTimeSnapshots)
+		m_elpasedTime += deltaTime;
+
+		m_deltaTimeSnapshots.push_back(deltaTime);
+
+		if (m_elpasedTime > m_refreshTimeout)
 		{
-			deltasSum += snapshot;
+			float deltasSum = 0.0f;
+			for (auto & snapshot : m_deltaTimeSnapshots)
+			{
+				deltasSum += snapshot;
+			}
+			m_averageDeltaTime = deltasSum / m_deltaTimeSnapshots.size();
+			m_elpasedTime = 0.0f;
+
+			m_deltaTimeSnapshots.clear();
+
+			std::cout << "FPS: " << GetAverageFPS() << std::endl;
 		}
-		m_averageDeltaTime = deltasSum / m_deltaTimeSnapshots.size();
-		m_elpasedTime = 0.0f;
-
-		m_deltaTimeSnapshots.clear();
-
-		std::cout << "FPS: " << GetAverageFPS() << std::endl;
 	}
-}
 
-float FPSService::GetAverageDeltaTime() const
-{
-	return m_averageDeltaTime;
-}
-
-float FPSService::GetAverageFPS() const
-{
-	if (m_averageDeltaTime > 0.0f)
+	float GetAverageDeltaTime() const
 	{
-		return (1.0f / m_averageDeltaTime);
+		return m_averageDeltaTime;
 	}
-	return 0.0f;
-}
+
+	float GetAverageFPS() const
+	{
+		if (m_averageDeltaTime > 0.0f)
+		{
+			return (1.0f / m_averageDeltaTime);
+		}
+		return 0.0f;
+	}
+};
 
 template <class Type>
 class IClock

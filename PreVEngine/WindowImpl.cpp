@@ -14,7 +14,7 @@ WindowImpl::~WindowImpl()
 	}
 }
 
-EventType WindowImpl::OnMouseEvent(eAction action, int16_t x, int16_t y, eMouseButton btn)
+EventType WindowImpl::OnMouseEvent(ActionType action, int16_t x, int16_t y, MouseButtonType btn)
 {
 	m_mousePosition = { x, y };
 	if (action != eMOVE)
@@ -37,12 +37,12 @@ EventType WindowImpl::OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y)
 	return e;
 }
 
-EventType WindowImpl::OnKeyEvent(eAction action, uint8_t key)
+EventType WindowImpl::OnKeyEvent(ActionType action, uint8_t key)
 {
 	m_keyboardKeysState[key] = (action == eDOWN);
 
 	EventType e = { EventType::KEY };
-	e.key = { action, (eKeycode)key };
+	e.key = { action, (KeyCode)key };
 	return e;
 }
 
@@ -119,20 +119,19 @@ bool WindowImpl::IsRunning() const
 	return m_isRunning;
 }
 
-bool WindowImpl::KeyState(const eKeycode key) const
+bool WindowImpl::IsKeyPressed(const KeyCode key) const
 {
 	return m_keyboardKeysState[key];
 }
 
-bool WindowImpl::BtnState(const eMouseButton btn) const
+bool WindowImpl::IsMouseButtonPressed(const MouseButtonType btn) const
 {
 	return m_mouseButonsState[btn];
 }
 
-void WindowImpl::MousePos(int16_t& x, int16_t& y) const
+Position WindowImpl::GetMousePosition() const
 {
-	x = m_mousePosition.x;
-	y = m_mousePosition.y;
+	return m_mousePosition;
 }
 
 bool WindowImpl::HasFocus() const
@@ -141,20 +140,20 @@ bool WindowImpl::HasFocus() const
 }
 
 
-CSurface::CSurface()
+Surface::Surface()
 {
 }
 
-CSurface::~CSurface()
+Surface::~Surface()
 {
 }
 
-CSurface::operator VkSurfaceKHR () const // Use *this as a VkSurfaceKHR
+Surface::operator VkSurfaceKHR () const // Use *this as a VkSurfaceKHR
 {
 	return m_vkSurface;
 }
 
-bool CSurface::CanPresent(VkPhysicalDevice gpu, uint32_t queue_family) const
+bool Surface::CanPresent(VkPhysicalDevice gpu, uint32_t queue_family) const
 {
 	VkBool32 can_present = false;
 	VKERRCHECK(vkGetPhysicalDeviceSurfaceSupportKHR(gpu, queue_family, m_vkSurface, &can_present));

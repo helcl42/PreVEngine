@@ -191,7 +191,7 @@ PhysicalDevice* PhysicalDevices::FindPresentable(VkSurfaceKHR surface)
 	return nullptr;
 }
 
-void PhysicalDevices::Print(bool show_queues)
+void PhysicalDevices::Print(bool showQueues)
 {
 	printf("Physical Devices: %zd\n", GetCount());
 
@@ -203,7 +203,7 @@ void PhysicalDevices::Print(bool show_queues)
 		std::string vendor = gpu.GetVendorName();
 		printf("\t%zd: %s %s %s\n", j, devType[props.deviceType].c_str(), vendor.c_str(), props.deviceName);
 
-		if (show_queues)
+		if (showQueues)
 		{
 			const auto queueFamilies = gpu.GetQueueFamilies();
 			for (size_t i = 0; i < queueFamilies.size(); i++)
@@ -233,25 +233,25 @@ Queue* Device::AddQueue(VkQueueFlags flags, VkSurfaceKHR surface)
 {
 	ASSERT(!m_handle, "Can't add queues after device is already in use. ");
 
-	uint32_t f_inx = m_gpu.FindQueueFamily(flags, surface);
-	if (f_inx < 0)
+	uint32_t familyIndex = m_gpu.FindQueueFamily(flags, surface);
+	if (familyIndex < 0)
 	{
 		LOGW("Could not create queue with requested properties.");
 		return nullptr;
 	}
 
-	uint32_t max = m_gpu.GetQueueFamilies().at(f_inx).queueCount;
-	uint32_t q_inx = FamilyQueueCount(f_inx);
-	if (q_inx == max)
+	uint32_t max = m_gpu.GetQueueFamilies().at(familyIndex).queueCount;
+	uint32_t queueIndex = FamilyQueueCount(familyIndex);
+	if (queueIndex == max)
 	{
 		LOGW("No more queues available from this family.");
 		return nullptr;
 	}
 
-	Queue queue = { VK_NULL_HANDLE, f_inx, q_inx, flags, surface, m_handle, m_gpu };
+	Queue queue{ VK_NULL_HANDLE, familyIndex, queueIndex, flags, surface, m_handle, m_gpu };
 	m_queues.push_back(queue);
 
-	LOGI("Queue: %d  flags: [ %s%s%s%s]%s\n", q_inx, (flags & 1) ? "GRAPHICS " : "", (flags & 2) ? "COMPUTE " : "", (flags & 4) ? "TRANSFER " : "", (flags & 8) ? "SPARSE " : "", surface ? " (can present)" : "");
+	LOGI("Queue: %d  flags: [ %s%s%s%s]%s\n", queueIndex, (flags & 1) ? "GRAPHICS " : "", (flags & 2) ? "COMPUTE " : "", (flags & 4) ? "TRANSFER " : "", (flags & 8) ? "SPARSE " : "", surface ? " (can present)" : "");
 
 	return &m_queues.back();
 }

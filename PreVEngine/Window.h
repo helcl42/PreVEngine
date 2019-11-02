@@ -23,63 +23,59 @@ private:
 	virtual ~Window();
 
 public:
-    CSurface& GetSurface(VkInstance instance);							// Returns Vulkan Surface (VkSurfaceKHR).
+    Surface& GetSurface(VkInstance instance);
     
-	bool CanPresent(VkPhysicalDevice gpu, uint32_t queue_family) const; // Returns true if this window can present the given queue type.
+	bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const;
 
 public:
-    //--State query functions--
-    void GetPosition(int16_t& x, int16_t& y) const;			// Get the window's x,y position, relative to top-left
+    Position GetPosition() const;
 
-    void GetSize(int16_t& width, int16_t& height) const;	// Get the window's width and height
+	Size GetSize() const;
 
-    bool GetKeyState(const eKeycode key) const;             // Returns true if specified key is pressed. (see keycodes.h)
+    bool IsKeyPressed(const KeyCode key) const;
 
-    bool GetBtnState(const eMouseButton btn) const;         // Returns true if specified mouse button is pressed (button 1-3)
+    bool IsMouseButtonPressed(const MouseButtonType btn) const;
 
-    void GetMousePos(int16_t& x, int16_t& y) const;         // Get mouse (x,y) coordinate within window client area
+    Position GetMousePosition() const;
 
     bool HasFocus() const;
 
 public:
-    //--Control functions--
-    void SetTitle(const char* title);                   // Set window title
+    void SetTitle(const char* title);
 
-    void SetWinPos (uint16_t x, uint16_t y);            // Set window position
+    void SetPosition(const Position& position);
 
-    void SetWinSize(uint16_t w, uint16_t h);            // Set window client-area size (Excludes title bar and borders.)
+    void SetSize(const Size& size);
 
-    void ShowKeyboard(bool enabled);                    // on Android, show the soft-keyboard.
+    void ShowKeyboard(bool enabled);
 
-    void Close();                                       // Close the window
-
-public:
-    //--Event loop--
-    EventType GetEvent(bool wait_for_event = false);  // Return a single event from the queue (Alternative to using ProcessEvents.)
-
-    bool ProcessEvents(bool wait_for_event = false);  // Poll events, and call event handlers. Returns false if window is closing.
+    void Close();
 
 public:
-    //-- Virtual Functions as event handlers --
-    virtual void OnMouseEvent(eAction action, int16_t x, int16_t y, uint8_t btn) {}  // Callback for mouse events
+    EventType GetEvent(bool waitForEvent = false);  // Return a single event from the queue (Alternative to using ProcessEvents.)
 
-	virtual void OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y) {}			 // Callback for mouse scroll
+    bool ProcessEvents(bool waitForEvent = false);  // Poll events, and call event handlers. Returns false if window is closing.
 
-    virtual void OnKeyEvent(eAction action, eKeycode keycode) {}                     // Callback for keyboard events (keycodes)
+public:
+	virtual void OnMouseEvent(ActionType action, int16_t x, int16_t y, MouseButtonType btn) {}
 
-    virtual void OnTextEvent(const char *str) {}                                     // Callback for text typed events (text)
+	virtual void OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y) {}
 
-    virtual void OnMoveEvent(int16_t x, int16_t y) {}                                // Callback for window move events
+    virtual void OnKeyEvent(ActionType action, KeyCode keycode) {}
 
-    virtual void OnResizeEvent(uint16_t width, uint16_t height) {}                   // Callback for window resize events
+    virtual void OnTextEvent(const char *str) {}
 
-    virtual void OnFocusEvent(bool hasFocus) {}                                      // Callback for window gain/lose focus events
+    virtual void OnMoveEvent(int16_t x, int16_t y) {}
 
-    virtual void OnTouchEvent(eAction action, float x, float y, uint8_t id) {}       // Callback for Multi-touch events
+    virtual void OnResizeEvent(uint16_t width, uint16_t height) {}
+
+    virtual void OnFocusEvent(bool hasFocus) {}
+
+    virtual void OnTouchEvent(ActionType action, float x, float y, uint8_t id) {}
     
-	virtual void OnInitEvent() {}													 // Callback for window init event
+	virtual void OnInitEvent() {}
 
-	virtual void OnCloseEvent() {}                                                   // Callback for window closing event
+	virtual void OnCloseEvent() {}
 };
 
 #endif

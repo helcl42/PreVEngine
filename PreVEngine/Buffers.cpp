@@ -658,7 +658,7 @@ void ImageBuffer::Data(const void* data, VkExtent3D extent, VkFormat format, boo
 	uint32_t mipLevels = 1;
 	if (mipmap)
 	{
-		mipLevels = (uint32_t)(Log2(std::max(extent.width, extent.height))) + 1;
+		mipLevels = Log2(std::max(extent.width, extent.height)) + 1;
 	}
 
 	m_allocator->CreateImage(data, extent, format, mipLevels, m_image, m_allocation, m_imageView);
