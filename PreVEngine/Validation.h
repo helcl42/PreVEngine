@@ -118,25 +118,24 @@ namespace PreVEngine
 	{
 	private:
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
-		PFN_vkCreateDebugReportCallbackEXT  vkCreateDebugCallbackEXT;
+		PFN_vkCreateDebugReportCallbackEXT m_vkCreateDebugCallbackEXT;
 
-		PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugCallbackEXT;
+		PFN_vkDestroyDebugReportCallbackEXT m_vkDestroyDebugCallbackEXT;
 
-		VkDebugReportCallbackEXT            debugCallback;
+		VkDebugReportCallbackEXT m_debugCallback;
 
-		VkDebugReportFlagsEXT               flags;
+		VkDebugReportFlagsEXT m_flags;
 #else
-		PFN_vkCreateDebugUtilsMessengerEXT		vkCreateDebugCallbackEXT;
+		PFN_vkCreateDebugUtilsMessengerEXT m_vkCreateDebugCallbackEXT;
 
-		PFN_vkDestroyDebugUtilsMessengerEXT		vkDestroyDebugCallbackEXT;
+		PFN_vkDestroyDebugUtilsMessengerEXT m_vkDestroyDebugCallbackEXT;
 
-		VkDebugUtilsMessengerEXT				debugCallback;
+		VkDebugUtilsMessengerEXT m_debugCallback;
 
-		VkDebugUtilsMessageSeverityFlagsEXT		flags;
+		VkDebugUtilsMessageSeverityFlagsEXT m_flags;
 
 #endif
-
-		VkInstance								instance;
+		VkInstance m_instance;
 
 	public:
 		DebugReport();

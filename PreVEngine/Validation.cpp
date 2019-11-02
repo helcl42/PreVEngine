@@ -155,15 +155,15 @@ namespace PreVEngine
 	{
 		assert(!!inst);
 
-		instance = inst;
+		m_instance = inst;
 
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
-		vkCreateDebugCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(inst, "vkCreateDebugReportCallbackEXT");
-		vkDestroyDebugCallbackEXT = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(inst, "vkDestroyDebugReportCallbackEXT");
+		m_vkCreateDebugCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(inst, "vkCreateDebugReportCallbackEXT");
+		m_vkDestroyDebugCallbackEXT = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(inst, "vkDestroyDebugReportCallbackEXT");
 
 		Destroy(); // Destroy old report before creating new one
 
-		flags = VK_DEBUG_REPORT_INFORMATION_BIT_EXT |  // 1
+		m_flags = VK_DEBUG_REPORT_INFORMATION_BIT_EXT |  // 1
 			VK_DEBUG_REPORT_WARNING_BIT_EXT |  // 2
 			VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |  // 4
 			VK_DEBUG_REPORT_ERROR_BIT_EXT |  // 8
@@ -176,14 +176,14 @@ namespace PreVEngine
 		createInfo.flags = flags;
 		createInfo.pfnCallback = DebugCallback; // Callback function to call
 		createInfo.pUserData = nullptr;
-		VKERRCHECK(vkCreateDebugCallbackEXT(instance, &createInfo, nullptr, &debugCallback));
+		VKERRCHECK(m_vkCreateDebugCallbackEXT(instance, &createInfo, nullptr, &m_debugCallback));
 #else
-		vkCreateDebugCallbackEXT = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(inst, "vkCreateDebugUtilsMessengerEXT");
-		vkDestroyDebugCallbackEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(inst, "vkDestroyDebugUtilsMessengerEXT");
+		m_vkCreateDebugCallbackEXT = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(inst, "vkCreateDebugUtilsMessengerEXT");
+		m_vkDestroyDebugCallbackEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(inst, "vkDestroyDebugUtilsMessengerEXT");
 
 		Destroy(); // Destroy old report before creating new one
 
-		flags = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
+		m_flags = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
 			| VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
 			| VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT
 			| 0;
@@ -192,17 +192,17 @@ namespace PreVEngine
 		createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 		createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 		createInfo.flags = 0;
-		createInfo.messageSeverity = flags;
+		createInfo.messageSeverity = m_flags;
 		createInfo.pfnUserCallback = DebugCallback;
-		VKERRCHECK(vkCreateDebugCallbackEXT(instance, &createInfo, nullptr, &debugCallback));
+		VKERRCHECK(m_vkCreateDebugCallbackEXT(m_instance, &createInfo, nullptr, &m_debugCallback));
 #endif
 	}
 
 	void DebugReport::Destroy()
 	{
-		if (debugCallback)
+		if (m_debugCallback)
 		{
-			vkDestroyDebugCallbackEXT(instance, debugCallback, nullptr);
+			m_vkDestroyDebugCallbackEXT(m_instance, m_debugCallback, nullptr);
 		}
 	}
 
@@ -211,7 +211,7 @@ namespace PreVEngine
 #endif  // ENABLE_VALIDATION
 
 	DebugReport::DebugReport()
-		: vkCreateDebugCallbackEXT(VK_NULL_HANDLE), vkDestroyDebugCallbackEXT(VK_NULL_HANDLE), debugCallback(VK_NULL_HANDLE), instance(nullptr), flags(0)
+		: m_vkCreateDebugCallbackEXT(VK_NULL_HANDLE), m_vkDestroyDebugCallbackEXT(VK_NULL_HANDLE), m_debugCallback(VK_NULL_HANDLE), m_instance(nullptr), m_flags(0)
 	{
 	}
 }
