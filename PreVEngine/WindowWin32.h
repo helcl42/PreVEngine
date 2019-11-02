@@ -301,7 +301,7 @@ EventType WindowWin32::GetEvent(bool waitForEvent)
 		//-----------------------------------------------------------------------------------------------------------------
 
 		static char buf[4] = {};
-		MouseButtonType bestBtn = MouseButtonType(IsMouseButtonPressed(MouseButtonType::eLeft) ? 1 : IsMouseButtonPressed(MouseButtonType::eMiddle) ? 2 : IsMouseButtonPressed(MouseButtonType::eRight) ? 3 : 0);
+		MouseButtonType bestBtn = MouseButtonType(IsMouseButtonPressed(MouseButtonType::LEFT) ? 1 : IsMouseButtonPressed(MouseButtonType::MIDDLE) ? 2 : IsMouseButtonPressed(MouseButtonType::RIGHT) ? 3 : 0);
 
 		switch (msg.message)
 		{
@@ -309,17 +309,17 @@ EventType WindowWin32::GetEvent(bool waitForEvent)
 			case WM_MOUSEMOVE: 
 				return OnMouseEvent(ActionType::MOVE, x, y, bestBtn);
 			case WM_LBUTTONDOWN: 
-				return OnMouseEvent(ActionType::DOWN, x, y, MouseButtonType::eLeft);
+				return OnMouseEvent(ActionType::DOWN, x, y, MouseButtonType::LEFT);
 			case WM_MBUTTONDOWN: 
-				return OnMouseEvent(ActionType::DOWN, x, y, MouseButtonType::eMiddle);
+				return OnMouseEvent(ActionType::DOWN, x, y, MouseButtonType::MIDDLE);
 			case WM_RBUTTONDOWN: 
-				return OnMouseEvent(ActionType::DOWN, x, y, MouseButtonType::eRight);
+				return OnMouseEvent(ActionType::DOWN, x, y, MouseButtonType::RIGHT);
 			case WM_LBUTTONUP: 
-				return OnMouseEvent(ActionType::UP, x, y, MouseButtonType::eLeft);
+				return OnMouseEvent(ActionType::UP, x, y, MouseButtonType::LEFT);
 			case WM_MBUTTONUP: 
-				return  OnMouseEvent(ActionType::UP, x, y, MouseButtonType::eMiddle);
+				return  OnMouseEvent(ActionType::UP, x, y, MouseButtonType::MIDDLE);
 			case WM_RBUTTONUP: 
-				return OnMouseEvent(ActionType::UP, x, y, MouseButtonType::eRight);
+				return OnMouseEvent(ActionType::UP, x, y, MouseButtonType::RIGHT);
 
 			//--Mouse wheel events--
 			case WM_MOUSEWHEEL:

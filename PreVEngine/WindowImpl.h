@@ -11,9 +11,12 @@ enum class ActionType  // keyboard / mouse / touchscreen actions
 	MOVE
 };
 
-enum MouseButtonType
+enum class MouseButtonType
 {
-	eNone = 0, eLeft = 1, eMiddle = 2, eRight = 3
+	NONE = 0, 
+	LEFT = 1, 
+	MIDDLE = 2, 
+	RIGHT = 3
 };
 
 struct EventType

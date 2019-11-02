@@ -332,8 +332,8 @@ EventType WindowXcb::TranslateEvent(xcb_generic_event_t* x_event)
 	xcb_button_press_event_t& e = *(xcb_button_press_event_t*)x_event;  // xcb_motion_notify_event_t
 	int16_t mx = e.event_x;
 	int16_t my = e.event_y;
-	MouseButtonType btn = e.detail < 4 ? (MouseButtonType)e.detail : MouseButtonType::eNone;
-	MouseButtonType bestBtn = MouseButtonType(IsMouseButtonPressed(MouseButtonType::eLeft) ? 1 : IsMouseButtonPressed(MouseButtonType::eMiddle) ? 2 : IsMouseButtonPressed(MouseButtonType::eRight) ? 3 : 0);  // If multiple buttons pressed, pick left one.
+	MouseButtonType btn = e.detail < 4 ? (MouseButtonType)e.detail : MouseButtonType::NONE;
+	MouseButtonType bestBtn = MouseButtonType(IsMouseButtonPressed(MouseButtonType::LEFT) ? 1 : IsMouseButtonPressed(MouseButtonType::MIDDLE) ? 2 : IsMouseButtonPressed(MouseButtonType::RIGHT) ? 3 : 0);  // If multiple buttons pressed, pick left one.
 
 	switch (x_event->response_type & ~0x80)
 	{

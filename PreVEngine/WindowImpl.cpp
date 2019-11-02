@@ -19,7 +19,8 @@ EventType WindowImpl::OnMouseEvent(ActionType action, int16_t x, int16_t y, Mous
 	m_mousePosition = { x, y };
 	if (action != ActionType::MOVE)
 	{
-		m_mouseButonsState[btn] = (action == ActionType::DOWN);  // Keep track of button state
+		uint32_t buttonIndex = static_cast<uint32_t>(btn);
+		m_mouseButonsState[buttonIndex] = (action == ActionType::DOWN);  // Keep track of button state
 	}
 
 	EventType e = { EventType::MOUSE, {action, x, y, btn} };
@@ -126,7 +127,8 @@ bool WindowImpl::IsKeyPressed(const KeyCode key) const
 
 bool WindowImpl::IsMouseButtonPressed(const MouseButtonType btn) const
 {
-	return m_mouseButonsState[btn];
+	uint32_t buttonIndex = static_cast<uint32_t>(btn);
+	return m_mouseButonsState[buttonIndex];
 }
 
 Position WindowImpl::GetMousePosition() const
