@@ -29,22 +29,12 @@ Swapchain::~Swapchain()
 		vkDestroyCommandPool(m_device, m_commandPool, nullptr);
 	}
 
-	for (auto& semaphore : m_acquireSemaphores)
+	if (m_swapChainSync)
 	{
-		vkDestroySemaphore(m_device, semaphore, nullptr);
+		m_swapChainSync->ShutDown();
 	}
 
-	for (auto& semaphore : m_submitSemaphores)
-	{
-		vkDestroySemaphore(m_device, semaphore, nullptr);
-	}
-
-	for (auto& fence : m_fences)
-	{
-		vkDestroyFence(m_device, fence, nullptr);
-	}
-
-	if (m_swapchain)
+	if (m_swapchain != VK_NULL_HANDLE)
 	{
 		for (auto& swapchainBuffer : m_swapchainBuffers)
 		{
@@ -67,6 +57,8 @@ void Swapchain::Init(const Queue* presentQueue, const Queue* graphicsQueue)
 	m_surface = presentQueue->surface;
 	m_presentQueue = *presentQueue;
 	m_graphicsQueue = *graphicsQueue;
+
+	m_swapChainSync = std::make_unique<SwapcChainSync>(m_device);
 
 	VkSurfaceCapabilitiesKHR surfaceCapabilities = GetSurfaceCapabilities();
 	assert(surfaceCapabilities.supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
@@ -277,6 +269,11 @@ VkExtent2D Swapchain::GetExtent() const
 	return m_swapchainCreateInfo.imageExtent;
 }
 
+uint32_t Swapchain::GetmageCount() const
+{
+	return m_swapchainImagesCount;
+}
+
 void Swapchain::Apply()
 {
 	m_swapchainCreateInfo.oldSwapchain = m_swapchain;
@@ -286,20 +283,7 @@ void Swapchain::Apply()
 	{
 		vkDeviceWaitIdle(m_device);
 
-		for (auto& semaphore : m_acquireSemaphores)
-		{
-			vkDestroySemaphore(m_device, semaphore, nullptr);
-		}
-
-		for (auto& semaphore : m_submitSemaphores)
-		{
-			vkDestroySemaphore(m_device, semaphore, nullptr);
-		}
-
-		for (auto& fence : m_fences)
-		{
-			vkDestroyFence(m_device, fence, nullptr);
-		}
+		m_swapChainSync->ShutDown();
 
 		for (auto& swapchainBuffer : m_swapchainBuffers)
 		{
@@ -318,13 +302,12 @@ void Swapchain::Apply()
 
 	m_depthBuffer.Resize(m_swapchainCreateInfo.imageExtent);  //resize depth buffer
 
+	m_swapchainImagesCount = swapchainImagesCount;
 	m_currentFrameIndex = 0;
 
-	m_swapchainBuffers.resize(swapchainImagesCount);
-	m_acquireSemaphores.resize(swapchainImagesCount);
-	m_submitSemaphores.resize(swapchainImagesCount);
-	m_fences.resize(swapchainImagesCount);
+	m_swapChainSync->Init(swapchainImagesCount);
 
+	m_swapchainBuffers.resize(swapchainImagesCount);
 	for (uint32_t i = 0; i < swapchainImagesCount; i++)
 	{
 		SwapchainBuffer& swapchainBuffer = m_swapchainBuffers[i];
@@ -368,14 +351,6 @@ void Swapchain::Apply()
 		commandBufferAllocInfo.commandBufferCount = 1;
 		VKERRCHECK(vkAllocateCommandBuffers(m_device, &commandBufferAllocInfo, &swapchainBuffer.commandBuffer));
 
-		VkFenceCreateInfo fenceCreateInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
-		fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-		vkCreateFence(m_device, &fenceCreateInfo, nullptr, &m_fences[i]);
-
-		VkSemaphoreCreateInfo semaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
-		VKERRCHECK(vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_acquireSemaphores[i]));
-		VKERRCHECK(vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_submitSemaphores[i]));
-
 		printf("---Extent = %d x %d\n", m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height);
 	}
 
@@ -398,7 +373,7 @@ bool Swapchain::AcquireNext(SwapchainBuffer& next)
 	ASSERT(!m_isAcquired, "CSwapchain: Previous swapchain buffer has not yet been presented.\n");
 
 	uint32_t acquireIndex;	
-	VkResult result = vkAcquireNextImageKHR(m_device, m_swapchain, UINT64_MAX, m_acquireSemaphores[m_currentFrameIndex], VK_NULL_HANDLE, &acquireIndex);
+	VkResult result = vkAcquireNextImageKHR(m_device, m_swapchain, UINT64_MAX, m_swapChainSync->acquireSemaphores[m_currentFrameIndex], VK_NULL_HANDLE, &acquireIndex);
 	if (result == VK_ERROR_OUT_OF_DATE_KHR)
 	{
 		UpdateExtent();
@@ -413,7 +388,7 @@ bool Swapchain::AcquireNext(SwapchainBuffer& next)
 
 	SwapchainBuffer& swapchainBuffer = m_swapchainBuffers[m_acquiredIndex];
 	swapchainBuffer.extent = m_swapchainCreateInfo.imageExtent;
-	vkWaitForFences(m_device, 1, &m_fences[m_currentFrameIndex], VK_TRUE, UINT64_MAX);
+	vkWaitForFences(m_device, 1, &m_swapChainSync->fences[m_currentFrameIndex], VK_TRUE, UINT64_MAX);
 	m_isAcquired = true;
 
 	next = swapchainBuffer;
@@ -430,16 +405,16 @@ void Swapchain::Submit()
 
 	VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pWaitSemaphores = &m_acquireSemaphores[m_currentFrameIndex];
+	submitInfo.pWaitSemaphores = &m_swapChainSync->acquireSemaphores[m_currentFrameIndex];
 	submitInfo.pWaitDstStageMask = waitStages;
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &buffer.commandBuffer;
 	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = &m_submitSemaphores[m_currentFrameIndex];
+	submitInfo.pSignalSemaphores = &m_swapChainSync->submitSemaphores[m_currentFrameIndex];
 
-	vkResetFences(m_device, 1, &m_fences[m_currentFrameIndex]);
+	vkResetFences(m_device, 1, &m_swapChainSync->fences[m_currentFrameIndex]);
 	
-	VKERRCHECK(vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_fences[m_currentFrameIndex]));
+	VKERRCHECK(vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_swapChainSync->fences[m_currentFrameIndex]));
 }
 
 void Swapchain::Present()
@@ -448,7 +423,7 @@ void Swapchain::Present()
 
 	VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pWaitSemaphores = &m_submitSemaphores[m_currentFrameIndex];
+	presentInfo.pWaitSemaphores = &m_swapChainSync->submitSemaphores[m_currentFrameIndex];
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = &m_swapchain;
 	presentInfo.pImageIndices = &m_acquiredIndex;
@@ -504,5 +479,5 @@ void Swapchain::EndFrame()
 	Submit();
 	Present();
 
-	m_currentFrameIndex = (m_currentFrameIndex + 1) % m_swapchainCreateInfo.minImageCount;
+	m_currentFrameIndex = (m_currentFrameIndex + 1) % m_swapchainImagesCount;
 }

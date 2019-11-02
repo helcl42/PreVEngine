@@ -263,7 +263,7 @@ int main(int argc, char *argv[])
 	renderpass.AddSubpass({ 0, 1 });
 	
 	Swapchain swapchain(renderpass, presenQueue, graphicsQueue);
-	swapchain.SetPresentMode(VK_PRESENT_MODE_IMMEDIATE_KHR);
+	swapchain.SetPresentMode(VK_PRESENT_MODE_MAILBOX_KHR);
 	swapchain.SetImageCount(BUFFERS_IN_FLIGHT);
 	swapchain.Print();
 
