@@ -1,4 +1,5 @@
 #include <iostream>
+#include <random>
 
 #include <Window.h>
 #include <Devices.h>
@@ -168,6 +169,13 @@ struct Mesh
 	};
 };
 
+struct Uniforms
+{
+	mat4 model;
+	mat4 view;
+	mat4 proj;
+};
+
 struct TexturedModel
 {
 	std::shared_ptr<Mesh> mesh;
@@ -273,26 +281,22 @@ int main(int argc, char *argv[])
 	Allocator allocator(*graphicsQueue);                                        // Create "Vulkan Memory Aloocator"
 	printf("Allocator created\n");
 
-	const uint32_t COUNT_OF_MODELS = 10;
-	std::vector<std::shared_ptr<TexturedModel>> models(COUNT_OF_MODELS);
+	std::random_device r;
+	std::default_random_engine gen(r());
+	std::uniform_real_distribution<float> dist(-2.0, 2.0f);
+	std::uniform_real_distribution<float> scaleDist(0.1f, 1.0f);
 
-	mat4 trasform;
-	trasform.Translate(-(0.1f * COUNT_OF_MODELS), 0.0f, 0.0f);
+	const uint32_t COUNT_OF_MODELS = 25;
+	std::vector<std::shared_ptr<TexturedModel>> models(COUNT_OF_MODELS);
 
 	ModelFactory modelFactory;
 	for (uint32_t i = 0; i < COUNT_OF_MODELS; i++)
 	{
-		trasform.Translate(0.2f, 0.0f, 0.0f);
+		mat4 trasform;
+		trasform.Translate(dist(gen), dist(gen), dist(gen));
+		trasform.Scale(scaleDist(gen));
 		models[i] = modelFactory.CreateTexturedModel(allocator, i % 2 == 0 ? "vulkan.png" : "texture.jpg", trasform);
 	}
-
-	// Uniform Buffer Object
-	struct Uniforms
-	{
-		mat4 model;
-		mat4 view;
-		mat4 proj;
-	};
 
 	Uniforms uniforms;
 	uniforms.view.Translate(0, 0, -4);
@@ -361,14 +365,13 @@ int main(int argc, char *argv[])
 
 				auto& ubo = uniformBuffers.at(descriptorSetIndex);
 
-				uniforms.proj.SetProjection(aspect, 40.f, 1, 1000);
+				uniforms.proj.SetProjection(aspect, 66.0f, 0.01f, 100.0f);
 				uniforms.model = model->transform;
 				uniforms.model.RotateX(dx);
 				uniforms.model.RotateY(dy);
 				model->transform = uniforms.model;
 				ubo->Update(&uniforms);
 
-				// descriptor set for Cube 1
 				shaders.Bind("texSampler", *model->imageBuffer);
 				shaders.Bind("ubo", *ubo);
 				VkDescriptorSet descriptorSet = shaders.UpdateDescriptorSet(descriptorSetIndex);
@@ -389,6 +392,5 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	//-----------------
 	return 0;
 }
