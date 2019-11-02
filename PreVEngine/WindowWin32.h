@@ -60,7 +60,7 @@ public:
 	virtual ~WindowWin32();
 
 public:
-	EventType GetEvent(bool waitForEvent = false);
+	Event GetEvent(bool waitForEvent = false);
 
 	bool CanPresent(VkPhysicalDevice phy, uint32_t queueFamily) const;
 };
@@ -244,9 +244,9 @@ void WindowWin32::CreateSurface(VkInstance instance)
 #define WM_RESHAPE (WM_USER + 0)
 #define WM_ACTIVE  (WM_USER + 1)
 
-EventType WindowWin32::GetEvent(bool waitForEvent)
+Event WindowWin32::GetEvent(bool waitForEvent)
 {
-	// EventType event;
+	// Event event;
 	if (!m_eventQueue.IsEmpty())
 	{
 		return *m_eventQueue.Pop();
@@ -288,7 +288,7 @@ EventType WindowWin32::GetEvent(bool waitForEvent)
 					PostMessage(m_hWnd, msg.message, VK_RSHIFT, 0);
 				}
 				
-				return { EventType::NONE };
+				return { Event::NONE };
 			}
 		}
 		else if (msg.message == WM_SYSKEYDOWN || msg.message == WM_SYSKEYUP)
@@ -410,7 +410,7 @@ EventType WindowWin32::GetEvent(bool waitForEvent)
 		}
 		DispatchMessage(&msg);
 	}
-	return { EventType::NONE };
+	return { Event::NONE };
 }
 
 LRESULT CALLBACK WindowWin32::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)

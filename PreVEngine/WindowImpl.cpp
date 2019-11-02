@@ -14,7 +14,7 @@ WindowImpl::~WindowImpl()
 	}
 }
 
-EventType WindowImpl::OnMouseEvent(ActionType action, int16_t x, int16_t y, MouseButtonType btn)
+Event WindowImpl::OnMouseEvent(ActionType action, int16_t x, int16_t y, MouseButtonType btn)
 {
 	m_mousePosition = { x, y };
 	if (action != ActionType::MOVE)
@@ -23,76 +23,76 @@ EventType WindowImpl::OnMouseEvent(ActionType action, int16_t x, int16_t y, Mous
 		m_mouseButonsState[buttonIndex] = (action == ActionType::DOWN);  // Keep track of button state
 	}
 
-	EventType e = { EventType::MOUSE, {action, x, y, btn} };
+	Event e = { Event::MOUSE, {action, x, y, btn} };
 	return e;
 }
 
-EventType WindowImpl::OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y)
+Event WindowImpl::OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y)
 {
 	m_mousePosition = { x, y };
 
-	EventType e = { EventType::MOUSE_SCROLL };
+	Event e = { Event::MOUSE_SCROLL };
 	e.scroll.delta = delta;
 	e.scroll.x = x;
 	e.scroll.y = y;
 	return e;
 }
 
-EventType WindowImpl::OnKeyEvent(ActionType action, uint8_t key)
+Event WindowImpl::OnKeyEvent(ActionType action, uint8_t key)
 {
 	m_keyboardKeysState[key] = (action == ActionType::DOWN);
 
-	EventType e = { EventType::KEY };
+	Event e = { Event::KEY };
 	e.key = { action, (KeyCode)key };
 	return e;
 }
 
-EventType WindowImpl::OnTextEvent(const char* str)
+Event WindowImpl::OnTextEvent(const char* str)
 {
-	EventType e = { EventType::TEXT };
+	Event e = { Event::TEXT };
 	e.text.str = str;
 	return e;
 }
 
-EventType WindowImpl::OnMoveEvent(int16_t x, int16_t y)
+Event WindowImpl::OnMoveEvent(int16_t x, int16_t y)
 {
 	m_shape.x = x;
 	m_shape.y = y;
 
-	EventType e = { EventType::MOVE };
+	Event e = { Event::MOVE };
 	e.move = { x, y };
 	return e;
 }
 
-EventType WindowImpl::OnResizeEvent(uint16_t width, uint16_t height)
+Event WindowImpl::OnResizeEvent(uint16_t width, uint16_t height)
 {
 	m_shape.width = width;
 	m_shape.height = height;
 
-	EventType e = { EventType::RESIZE };
+	Event e = { Event::RESIZE };
 	e.resize = { width, height };
 	return e;
 }
 
-EventType WindowImpl::OnFocusEvent(bool hasFocus)
+Event WindowImpl::OnFocusEvent(bool hasFocus)
 {
 	m_hasFocus = hasFocus;
 
-	EventType e = { EventType::FOCUS };
+	Event e = { Event::FOCUS };
 	e.focus.hasFocus = hasFocus;
 	return e;
 }
 
-EventType WindowImpl::OnInitEvent()
+Event WindowImpl::OnInitEvent()
 {
 	m_isRunning = true;
-	return { EventType::INIT };
+	return { Event::INIT };
 }
 
-EventType WindowImpl::OnCloseEvent()
+Event WindowImpl::OnCloseEvent()
 {
 	m_isRunning = false;
-	return { EventType::CLOSE };
+	return { Event::CLOSE };
 }
 
 void WindowImpl::SetTextInput(bool enabled)

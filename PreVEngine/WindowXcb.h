@@ -107,7 +107,7 @@ private:
 
 	bool InitTouch();                                        // Returns false if no touch-device was found.
 
-	EventType TranslateEvent(xcb_generic_event_t* x_event);  // Convert x_event to Window event
+	Event TranslateEvent(xcb_generic_event_t* x_event);  // Convert x_event to Window event
 
 	void Init(const char* title, const uint32_t width, const uint32_t height, bool tryFullscreen);
 
@@ -119,7 +119,7 @@ public:
 	virtual ~WindowXcb();
 
 public:
-	EventType GetEvent(bool wait_for_event = false);
+	Event GetEvent(bool wait_for_event = false);
 
 	bool CanPresent(VkPhysicalDevice phy, uint32_t queue_family) const;  // check if this window can present this queue type
 };
@@ -325,7 +325,7 @@ bool WindowXcb::InitTouch()
 }
 //---------------------------------------------------------------------------
 
-EventType WindowXcb::TranslateEvent(xcb_generic_event_t* x_event)
+Event WindowXcb::TranslateEvent(xcb_generic_event_t* x_event)
 {
 	static char buf[4] = {};                                            // store char for text event
 	
@@ -432,17 +432,17 @@ EventType WindowXcb::TranslateEvent(xcb_generic_event_t* x_event)
 				}
 			}
 #endif
-			return { EventType::UNKNOWN };
+			return { Event::UNKNOWN };
 		}
 		default:
 			// printf("EVENT: %d\n",(x_event->response_type & ~0x80));  //get event numerical value
 			break;
 	}
 
-	return { EventType::NONE };
+	return { Event::NONE };
 }
 
-EventType WindowXcb::GetEvent(bool wait_for_event)
+Event WindowXcb::GetEvent(bool wait_for_event)
 {
 	if (!m_eventQueue.IsEmpty())
 	{
@@ -462,10 +462,10 @@ EventType WindowXcb::GetEvent(bool wait_for_event)
 
 	while (x_event)
 	{
-		EventType event = TranslateEvent(x_event);
+		Event event = TranslateEvent(x_event);
 		free(x_event);
 		
-		if (event.tag == EventType::UNKNOWN)
+		if (event.tag == Event::UNKNOWN)
 		{
 			x_event = xcb_poll_for_event(m_xcbConnection);  // Discard unknown events (Intel Mesa drivers spams event 35)
 		}
@@ -475,7 +475,7 @@ EventType WindowXcb::GetEvent(bool wait_for_event)
 		}
 	}
 
-	return { EventType::NONE };
+	return { Event::NONE };
 }
 
 // Return true if this window can present the given queue type

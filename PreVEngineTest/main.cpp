@@ -37,7 +37,7 @@ public:
 	}
 
 public:
-	void OnResizeEvent(uint16_t width, uint16_t height)
+	void OnResizeEvent(uint16_t width, uint16_t height) override
 	{
 		printf("OnResizeEvent: %d x %d\n", width, height);
 		windowWidth = width;
@@ -45,7 +45,7 @@ public:
 		windowResized = true;
 	}
 
-	void OnKeyEvent(ActionType action, KeyCode keycode)
+	void OnKeyEvent(ActionType action, KeyCode keycode) override
 	{
 		if (action == ActionType::DOWN)
 		{
@@ -71,9 +71,9 @@ public:
 		}
 	}
 
-	void OnMouseEvent(ActionType action, int16_t x, int16_t y, uint8_t btn)
+	void OnMouseEvent(ActionType action, int16_t x, int16_t y, MouseButtonType btn) override
 	{
-		if (action == ActionType::MOVE && btn == 1)
+		if (action == ActionType::MOVE && btn == MouseButtonType::LEFT)
 		{
 			dy = x - mx;
 			dx = my - y;
@@ -83,7 +83,7 @@ public:
 		my = y;
 	}
 
-	void OnTouchEvent(ActionType action, float x, float y, uint8_t id)
+	void OnTouchEvent(ActionType action, float x, float y, uint8_t id) override
 	{
 		if (action == ActionType::MOVE)
 		{
@@ -95,22 +95,22 @@ public:
 		my = y;
 	}
 
-	void OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y)
+	void OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y) override
 	{
 		std::cout << "Mouse scroll: " << delta << std::endl;
 	}
 
-	void OnFocusEvent(bool hasFocus)
+	void OnFocusEvent(bool hasFocus) override
 	{
 		std::cout << "Window Focus changed to: " << (hasFocus ? "YES" : "NO") << std::endl;
 	}
 
-	void OnInitEvent()
+	void OnInitEvent() override
 	{
 		std::cout << "Window initialized" << std::endl;
 	}
 
-	void OnCloseEvent()
+	void OnCloseEvent() override
 	{
 		std::cout << "Window closed" << std::endl;
 	}

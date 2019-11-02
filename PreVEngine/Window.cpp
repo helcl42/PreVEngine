@@ -123,46 +123,46 @@ void Window::Close()
 	m_windowImpl->Close();
 }
 
-EventType Window::GetEvent(bool waitForEvent)
+Event Window::GetEvent(bool waitForEvent)
 {
 	return m_windowImpl->GetEvent(waitForEvent);
 }
 
 bool Window::ProcessEvents(bool waitForEvent)
 {
-	EventType e = m_windowImpl->GetEvent(waitForEvent);
-	while (e.tag != EventType::NONE)
+	Event e = m_windowImpl->GetEvent(waitForEvent);
+	while (e.tag != Event::NONE)
 	{
 		// Calling the event handlers
 		switch (e.tag)
 		{
-			case EventType::MOUSE:
+			case Event::MOUSE:
 				OnMouseEvent(e.mouse.action, e.mouse.x, e.mouse.y, e.mouse.btn);
 				break;
-			case EventType::MOUSE_SCROLL:
+			case Event::MOUSE_SCROLL:
 				OnMouseScrollEvent(e.scroll.delta, e.scroll.x, e.scroll.y);
-			case EventType::KEY: 
+			case Event::KEY: 
 				OnKeyEvent(e.key.action, e.key.keycode);                        
 				break;
-			case EventType::TEXT: 
+			case Event::TEXT: 
 				OnTextEvent(e.text.str);                                         
 				break;
-			case EventType::MOVE: 
+			case Event::MOVE: 
 				OnMoveEvent(e.move.x, e.move.y);                                 
 				break;
-			case EventType::RESIZE: 
+			case Event::RESIZE: 
 				OnResizeEvent(e.resize.width, e.resize.height);                    
 				break;
-			case EventType::FOCUS: 
+			case Event::FOCUS: 
 				OnFocusEvent(e.focus.hasFocus);                                  
 				break;
-			case EventType::TOUCH: 
+			case Event::TOUCH: 
 				OnTouchEvent(e.touch.action, e.touch.x, e.touch.y, e.touch.id);   
 				break;
-			case EventType::INIT:
+			case Event::INIT:
  				OnInitEvent();
 				break;
-			case EventType::CLOSE: 
+			case Event::CLOSE: 
 				OnCloseEvent(); 
 				return false;
 			default: 

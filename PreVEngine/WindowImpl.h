@@ -19,7 +19,7 @@ enum class MouseButtonType
 	RIGHT = 3
 };
 
-struct EventType
+struct Event
 {
 	enum // event type
 	{
@@ -116,14 +116,14 @@ struct EventType
 class EventFIFO
 {
 private:
-	static const char SIZE = 10;  // The queue never contains more than 2 items.
+	static const char SIZE = 10;  // The queue should never contains more than 2 items.
 
 private:
 	int m_head;
 
 	int m_tail;
 
-	EventType m_eventBuffer[SIZE] = {};
+	Event m_eventBuffer[SIZE] = {};
 
 public:
 	EventFIFO()
@@ -137,14 +137,14 @@ public:
 		return m_head == m_tail;
 	}
 
-	void Push(EventType const& item)
+	void Push(Event const& item)
 	{
 		++m_head;
 
 		m_eventBuffer[m_head %= SIZE] = item;
 	}
 
-	EventType* Pop()
+	Event* Pop()
 	{
 		if (IsEmpty())
 		{
@@ -195,7 +195,7 @@ public:
 	}
 
 	// Convert desktop-style touch-id's to an android-style finger-id.
-	EventType OnEventById(ActionType action, float x, float y, uint32_t findval, uint32_t setval)
+	Event OnEventById(ActionType action, float x, float y, uint32_t findval, uint32_t setval)
 	{
 		for (uint32_t i = 0; i < MAX_POINTERS; ++i)
 		{
@@ -206,14 +206,14 @@ public:
 				return OnEvent(action, x, y, i);
 			}
 		}
-		return { EventType::UNKNOWN };
+		return { Event::UNKNOWN };
 	}
 
-	EventType OnEvent(ActionType action, float x, float y, uint8_t id)
+	Event OnEvent(ActionType action, float x, float y, uint8_t id)
 	{
 		if (id >= MAX_POINTERS)
 		{
-			return EventType{};  // Exit if too many fingers
+			return Event{};  // Exit if too many fingers
 		}
 
 		Pointer& P = m_pointers[id];
@@ -225,7 +225,7 @@ public:
 		P.x = x;
 		P.y = y;
 
-		EventType e = { EventType::TOUCH };
+		Event e = { Event::TOUCH };
 		e.touch = { action, x, y, id };
 		return e;
 	}
@@ -296,23 +296,23 @@ protected:
 	WindowShape m_shape;
 
 protected:
-	EventType OnMouseEvent(ActionType action, int16_t x, int16_t y, MouseButtonType btn);  // Mouse event
+	Event OnMouseEvent(ActionType action, int16_t x, int16_t y, MouseButtonType btn);  // Mouse event
 
-	EventType OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y);
+	Event OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y);
 
-	EventType OnKeyEvent(ActionType action, uint8_t key);                          // Keyboard event
+	Event OnKeyEvent(ActionType action, uint8_t key);                          // Keyboard event
 
-	EventType OnTextEvent(const char* str);                                     // Text event
+	Event OnTextEvent(const char* str);                                     // Text event
 
-	EventType OnMoveEvent(int16_t x, int16_t y);                                // Window moved
+	Event OnMoveEvent(int16_t x, int16_t y);                                // Window moved
 
-	EventType OnResizeEvent(uint16_t width, uint16_t height);                   // Window resized
+	Event OnResizeEvent(uint16_t width, uint16_t height);                   // Window resized
 
-	EventType OnFocusEvent(bool hasFocus);                                      // Window gained/lost focus
+	Event OnFocusEvent(bool hasFocus);                                      // Window gained/lost focus
 
-	EventType OnInitEvent();                                                    // Window was initialized
+	Event OnInitEvent();                                                    // Window was initialized
 
-	EventType OnCloseEvent();                                                   // Window closing
+	Event OnCloseEvent();                                                   // Window closing
 
 public:
 	WindowImpl();
@@ -344,7 +344,7 @@ public:
 
 	virtual bool CanPresent(VkPhysicalDevice gpu, uint32_t queue_family) const = 0;  // Checks if window can present the given queue type.
 
-	virtual EventType GetEvent(bool wait_for_event = false) = 0;  // Fetch one event from the queue.
+	virtual Event GetEvent(bool wait_for_event = false) = 0;  // Fetch one event from the queue.
 
 	virtual void SetTitle(const char* title) = 0;
 

@@ -52,7 +52,7 @@ public:
     void Close();
 
 public:
-    EventType GetEvent(bool waitForEvent = false);  // Return a single event from the queue (Alternative to using ProcessEvents.)
+    Event GetEvent(bool waitForEvent = false);  // Return a single event from the queue (Alternative to using ProcessEvents.)
 
     bool ProcessEvents(bool waitForEvent = false);  // Poll events, and call event handlers. Returns false if window is closing.
 

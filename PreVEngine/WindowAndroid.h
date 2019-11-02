@@ -118,9 +118,9 @@ public:
 	{
 	}
 
-	EventType GetEvent(bool wait_for_event = false)
+	Event GetEvent(bool wait_for_event = false)
 	{
-		EventType event = {};
+		Event event = {};
 		static char buf[4] = {};      // store char for text event
 		if (!m_eventQueue.IsEmpty())
 		{
@@ -251,7 +251,7 @@ public:
 						}
 					}
 					//-------------------------Emulate mouse from touch events--------------------------
-					// if(event.tag==EventType::TOUCH && event.touch.id==0){  //if one-finger touch
+					// if(event.tag==Event::TOUCH && event.touch.id==0){  //if one-finger touch
 					//     m_eventQueue.push(OnMouseEvent(event.touch.action, event.touch.x, event.touch.y, 1));
 					// }
 					//----------------------------------------------------------------------------------
@@ -272,10 +272,10 @@ public:
 		if (m_app->destroyRequested)
 		{
 			LOGI("destroyRequested");
-			return { EventType::CLOSE };
+			return { Event::CLOSE };
 		}
 
-		return { EventType::NONE };
+		return { Event::NONE };
 	}
 
 	//--Show / Hide keyboard--
