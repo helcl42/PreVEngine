@@ -8,141 +8,145 @@
 #include <string>
 #include <vector>
 
-class PickList
+namespace PreVEngine
 {
-protected:
-	std::vector<uint32_t> pick_list_indices;
+	class PickList
+	{
+	protected:
+		std::vector<uint32_t> pick_list_indices;
 
-	std::vector<std::string> pick_list_names;
+		std::vector<std::string> pick_list_names;
 
-	std::vector<const char*> pick_list_names_ptrs;
+		std::vector<const char*> pick_list_names_ptrs;
 
-public:
-	PickList();
+	public:
+		PickList();
 
-	virtual ~PickList();
+		virtual ~PickList();
 
-protected:
-	void RefreshPickList();
+	protected:
+		void RefreshPickList();
 
-public:
-	virtual const char* Name(uint32_t inx) const = 0;
-	
-	virtual uint32_t Count() const = 0;
+	public:
+		virtual const char* Name(uint32_t inx) const = 0;
 
-	virtual std::string PickListName() const = 0;
+		virtual uint32_t Count() const = 0;
 
-public:
-	bool Pick(std::initializer_list<const char*> list);
+		virtual std::string PickListName() const = 0;
 
-	bool Pick(const char* name);
+	public:
+		bool Pick(std::initializer_list<const char*> list);
 
-	bool Pick(const uint32_t inx);
+		bool Pick(const char* name);
 
-	void UnPick(const char* name);
-	
-	void PickAll();
-	
-	void Clear();
-	
-	int IndexOf(const char* name) const;
+		bool Pick(const uint32_t inx);
 
-	bool IsPicked(const char* name) const;
+		void UnPick(const char* name);
 
-	const char* const* GetPickList() const;
+		void PickAll();
 
-	uint32_t PickCount() const;
+		void Clear();
 
-	void Print() const;
-};
-//----------------------------------------------------------------
+		int IndexOf(const char* name) const;
 
-//----------------------------Layers-----------------------------
-class Layers : public PickList
-{
-private:
-	std::vector<VkLayerProperties> item_list;
+		bool IsPicked(const char* name) const;
 
-public:
-	Layers();
-	
-public:
-	const char* Name(uint32_t inx) const override;
+		const char* const* GetPickList() const;
 
-	uint32_t Count() const override;
+		uint32_t PickCount() const;
 
-	std::string PickListName() const override;
-};
-//----------------------------------------------------------------
+		void Print() const;
+	};
+	//----------------------------------------------------------------
 
-//--------------------------Extensions---------------------------
-class Extensions : public PickList
-{
-private:
-	std::vector<VkExtensionProperties> item_list;
+	//----------------------------Layers-----------------------------
+	class Layers : public PickList
+	{
+	private:
+		std::vector<VkLayerProperties> item_list;
 
-public:
-	Extensions(const char* layerName = nullptr);
+	public:
+		Layers();
 
-public:
-	const char* Name(uint32_t inx) const override;
+	public:
+		const char* Name(uint32_t inx) const override;
 
-	uint32_t Count() const override;
+		uint32_t Count() const override;
 
-	std::string PickListName() const override;
-};
-//----------------------------------------------------------------
+		std::string PickListName() const override;
+	};
+	//----------------------------------------------------------------
 
-//----------------------Device Extensions-------------------------
-class DeviceExtensions : public PickList
-{
-private:
-	std::vector<VkExtensionProperties> item_list;
+	//--------------------------Extensions---------------------------
+	class Extensions : public PickList
+	{
+	private:
+		std::vector<VkExtensionProperties> item_list;
 
-public:
-	DeviceExtensions();
+	public:
+		Extensions(const char* layerName = nullptr);
 
-	DeviceExtensions& operator=(const DeviceExtensions& other);
+	public:
+		const char* Name(uint32_t inx) const override;
 
-	DeviceExtensions(const DeviceExtensions& other);
+		uint32_t Count() const override;
 
-public:
-	void Init(VkPhysicalDevice phy, const char* layerName = nullptr);
+		std::string PickListName() const override;
+	};
+	//----------------------------------------------------------------
 
-public:
-	const char* Name(uint32_t inx) const override;
+	//----------------------Device Extensions-------------------------
+	class DeviceExtensions : public PickList
+	{
+	private:
+		std::vector<VkExtensionProperties> item_list;
 
-	uint32_t Count() const override;
+	public:
+		DeviceExtensions();
 
-	std::string PickListName() const override;
+		DeviceExtensions& operator=(const DeviceExtensions& other);
 
-};
-//----------------------------------------------------------------
+		DeviceExtensions(const DeviceExtensions& other);
 
-//---------------------------Instance----------------------------
-class Instance
-{
-private:
-	VkInstance m_instance;
-	
-	DebugReport m_debugReport;  // Configure debug report flags here.
+	public:
+		void Init(VkPhysicalDevice phy, const char* layerName = nullptr);
 
-private:
-	void Create(const Layers& layers, const Extensions& extensions, const char* appName, const char* engineName);
+	public:
+		const char* Name(uint32_t inx) const override;
 
-public:
-	Instance(const Layers& layers, const Extensions& extensions, const char* appName = "PreVEngineApp", const char* engineName = "PreVEngine");
-	
-	Instance(const bool enableValidation = true, const char* appName = "PreVEngineApp", const char* engineName = "PreVEngine");
+		uint32_t Count() const override;
 
-	~Instance();
-	
-public:	
-	void Print() const;
+		std::string PickListName() const override;
 
-	DebugReport& GetDebugReport();
+	};
+	//----------------------------------------------------------------
 
-	operator VkInstance() const;
-};
-//----------------------------------------------------------------
+	//---------------------------Instance----------------------------
+	class Instance
+	{
+	private:
+		VkInstance m_instance;
+
+		DebugReport m_debugReport;  // Configure debug report flags here.
+
+	private:
+		void Create(const Layers& layers, const Extensions& extensions, const char* appName, const char* engineName);
+
+	public:
+		Instance(const Layers& layers, const Extensions& extensions, const char* appName = "PreVEngineApp", const char* engineName = "PreVEngine");
+
+		Instance(const bool enableValidation = true, const char* appName = "PreVEngineApp", const char* engineName = "PreVEngine");
+
+		~Instance();
+
+	public:
+		void Print() const;
+
+		DebugReport& GetDebugReport();
+
+		operator VkInstance() const;
+	};
+	//----------------------------------------------------------------
+}
+
 #endif

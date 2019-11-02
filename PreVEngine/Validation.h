@@ -16,16 +16,6 @@
 //#define NDEBUG               //cuts 4kb off apk size
 #endif
 
-#ifdef NDEBUG
-#define VKERRCHECK(VKFN) { (void)VKFN; }
-#else
-#define VKERRCHECK(VKFN) { VkResult VKRESULT = VKFN;                            \
-                           ShowVkResult(VKRESULT);                              \
-                           assert(VKRESULT >= 0);                               \
-                           if (VKRESULT) printf("%s:%d\n", __FILE__, __LINE__); \
-                         }
-#endif
-
 #ifdef _WIN32
 #define NOMINMAX
 //#define WIN32_LEAN_AND_MEAN
@@ -42,15 +32,15 @@
 #define PAUSE
 #endif
 
-enum eColor
+enum class ConsoleColor
 {
-	eRESET, eRED, eGREEN, eYELLOW, eBLUE, eMAGENTA, eCYAN, eWHITE,       // normal colors
-	eFAINT, eBRED, eBGREEN, eBYELLOW, eBBLUE, eBMAGENTA, eBCYAN, eBRIGHT // bright colors
+	RESET, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE,       // normal colors
+	FAINT, BRED, BGREEN, BYELLOW, BBLUE, BMAGENTA, BCYAN, BRIGHT // bright colors
 };
 
-void SetConsoleTextColor(const eColor color);
+void SetConsoleTextColor(const ConsoleColor color);
 
-#define print(COLOR,...) { SetConsoleTextColor(COLOR); printf(__VA_ARGS__);  SetConsoleTextColor(eRESET); }
+#define print(COLOR,...) { SetConsoleTextColor(COLOR); printf(__VA_ARGS__);  SetConsoleTextColor(ConsoleColor::RESET); }
 
 #ifdef ANDROID
 #include <jni.h>
@@ -62,14 +52,14 @@ void SetConsoleTextColor(const eColor color);
 #define _LOGI(...)   __android_log_print(ANDROID_LOG_INFO   ,LOG_TAG,__VA_ARGS__)
 #define _LOGW(...)   __android_log_print(ANDROID_LOG_WARN   ,LOG_TAG,__VA_ARGS__)
 #define _LOGE(...)   __android_log_print(ANDROID_LOG_ERROR  ,LOG_TAG,__VA_ARGS__)
-//#define printf(...)  __android_log_print(ANDROID_LOG_INFO   ,LOG_TAG,__VA_ARGS__)
+	//#define printf(...)  __android_log_print(ANDROID_LOG_INFO   ,LOG_TAG,__VA_ARGS__)
 #else
-#define _LOG(...)  {                            printf(__VA_ARGS__);}
-#define _LOGV(...) {print(eCYAN,  "PERF : "  ); printf(__VA_ARGS__);}
-#define _LOGD(...) {print(eBLUE,  "DEBUG: "  ); printf(__VA_ARGS__);}
-#define _LOGI(...) {print(eGREEN, "INFO : "  ); printf(__VA_ARGS__);}
-#define _LOGW(...) {print(eYELLOW,"WARNING: "); printf(__VA_ARGS__);}
-#define _LOGE(...) {print(eRED,   "ERROR: "  ); printf(__VA_ARGS__);}
+#define _LOG(...)  { printf(__VA_ARGS__);}
+#define _LOGV(...) { print(ConsoleColor::CYAN,  "PERF : "  ); printf(__VA_ARGS__);}
+#define _LOGD(...) { print(ConsoleColor::BLUE,  "DEBUG: "  ); printf(__VA_ARGS__);}
+#define _LOGI(...) { print(ConsoleColor::GREEN, "INFO : "  ); printf(__VA_ARGS__);}
+#define _LOGW(...) { print(ConsoleColor::YELLOW,"WARNING: "); printf(__VA_ARGS__);}
+#define _LOGE(...) { print(ConsoleColor::RED,   "ERROR: "  ); printf(__VA_ARGS__);}
 #endif
 #ifdef ENABLE_LOGGING
 #define  LOG(...)  _LOG( __VA_ARGS__)
@@ -109,39 +99,53 @@ void SetConsoleTextColor(const eColor color);
 #include <vulkan/vulkan.h>   // Android: This must be included AFTER native.h
 #endif
 
+
 void ShowVkResult(VkResult err);
 
-class DebugReport
-{
-private:
-#ifdef VK_USE_PLATFORM_ANDROID_KHR
-	PFN_vkCreateDebugReportCallbackEXT  vkCreateDebugCallbackEXT;
-
-	PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugCallbackEXT;
-
-	VkDebugReportCallbackEXT            debugCallback;
-
-	VkDebugReportFlagsEXT               flags;
+#ifdef NDEBUG
+#define VKERRCHECK(VKFN) { (void)VKFN; }
 #else
-	PFN_vkCreateDebugUtilsMessengerEXT		vkCreateDebugCallbackEXT;
+#define VKERRCHECK(VKFN) { VkResult VKRESULT = VKFN;                            \
+                           ShowVkResult(VKRESULT);                              \
+                           assert(VKRESULT >= 0);                               \
+                           if (VKRESULT) printf("%s:%d\n", __FILE__, __LINE__); \
+                         }
+#endif
 
-	PFN_vkDestroyDebugUtilsMessengerEXT		vkDestroyDebugCallbackEXT;
+namespace PreVEngine
+{
+	class DebugReport
+	{
+	private:
+#ifdef VK_USE_PLATFORM_ANDROID_KHR
+		PFN_vkCreateDebugReportCallbackEXT  vkCreateDebugCallbackEXT;
 
-	VkDebugUtilsMessengerEXT				debugCallback;
+		PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugCallbackEXT;
 
-	VkDebugUtilsMessageSeverityFlagsEXT		flags;
+		VkDebugReportCallbackEXT            debugCallback;
+
+		VkDebugReportFlagsEXT               flags;
+#else
+		PFN_vkCreateDebugUtilsMessengerEXT		vkCreateDebugCallbackEXT;
+
+		PFN_vkDestroyDebugUtilsMessengerEXT		vkDestroyDebugCallbackEXT;
+
+		VkDebugUtilsMessengerEXT				debugCallback;
+
+		VkDebugUtilsMessageSeverityFlagsEXT		flags;
 
 #endif
 
-	VkInstance								instance;
+		VkInstance								instance;
 
-public:
-	DebugReport();
+	public:
+		DebugReport();
 
-public:
-	void Init(VkInstance inst);
+	public:
+		void Init(VkInstance inst);
 
-	void Destroy();
-};
+		void Destroy();
+	};
+}
 
 #endif

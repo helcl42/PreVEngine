@@ -5,13 +5,15 @@
 #include <Devices.h>
 #include <RenderPass.h>
 #include <Swapchain.h>
-#include <Pipeline.h>
 #include <Buffers.h>
 #include <Image.h>
 #include <Shader.h>
 #include <Utils.h>
 
 #include "matrix.h"
+#include "Pipeline.h"
+
+using namespace PreVEngine;
 
 float dx = 0.1f;
 float dy = 0.2f;
@@ -50,22 +52,22 @@ public:
 	{
 		if (action == ActionType::DOWN)
 		{
-			if (keycode == KEY_Left)
+			if (keycode == KeyCode::KEY_Left)
 			{
 				dy -= 0.1f;
 			}
 
-			if (keycode == KEY_Right)
+			if (keycode == KeyCode::KEY_Right)
 			{
 				dy += 0.1f;
 			}
 
-			if (keycode == KEY_Up)
+			if (keycode == KeyCode::KEY_Up)
 			{
 				dx += 0.1f;
 			}
 
-			if (keycode == KEY_Down)
+			if (keycode == KeyCode::KEY_Down)
 			{
 				dx -= 0.1f;
 			}

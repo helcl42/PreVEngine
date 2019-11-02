@@ -9,12 +9,12 @@ class Pipeline
 	VkDevice     device;
 	VkRenderPass renderpass;
 	VkPipeline   graphicsPipeline;
-	Shader*    shaders;
+	PreVEngine::Shader*    shaders;
 
 public:
 	VkPipelineLayout pipelineLayout;
 
-	Pipeline(VkDevice device, VkRenderPass renderpass, Shader& shaders);
+	Pipeline(VkDevice device, VkRenderPass renderpass, PreVEngine::Shader& shaders);
 	~Pipeline();
 
 	VkPipeline CreateGraphicsPipeline();

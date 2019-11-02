@@ -6,213 +6,216 @@
 
 #include "External/vk_mem_alloc.h"
 
-//----------------------------------Depth Buffer----------------------------------
-class DepthBuffer
+namespace PreVEngine
 {
-private:
-	VkPhysicalDevice m_gpu;
+	//----------------------------------Depth Buffer----------------------------------
+	class DepthBuffer
+	{
+	private:
+		VkPhysicalDevice m_gpu;
 
-	VkDevice m_device;
+		VkDevice m_device;
 
-	VkFormat m_format;
+		VkFormat m_format;
 
-	VkImage m_image;
+		VkImage m_image;
 
-	VkDeviceMemory m_imageMemory;
+		VkDeviceMemory m_imageMemory;
 
-	VkImageView m_imageView;
+		VkImageView m_imageView;
 
-public:
-	DepthBuffer();
+	public:
+		DepthBuffer();
 
-	virtual ~DepthBuffer();
+		virtual ~DepthBuffer();
 
-public:
-	void Create(VkPhysicalDevice gpu, VkDevice device, VkExtent2D extent, VkFormat format = VK_FORMAT_D32_SFLOAT);
+	public:
+		void Create(VkPhysicalDevice gpu, VkDevice device, VkExtent2D extent, VkFormat format = VK_FORMAT_D32_SFLOAT);
 
-	void Destroy();
+		void Destroy();
 
-	void Resize(VkExtent2D extent);
+		void Resize(VkExtent2D extent);
 
-public:
-	VkFormat GetFormat() const;
+	public:
+		VkFormat GetFormat() const;
 
-	VkImage GetImage() const;
+		VkImage GetImage() const;
 
-	VkImageView GetImageView() const;
-};
-//--------------------------------------------------------------------------------
+		VkImageView GetImageView() const;
+	};
+	//--------------------------------------------------------------------------------
 
-//------------------------------------Allocator-----------------------------------
-class Allocator
-{
-private:
-	VmaAllocator m_allocator;
-	
-	VkPhysicalDevice m_gpu;
-	
-	VkDevice m_device;
-	
-	VkQueue m_queue;
-	
-	VkCommandPool m_commandPool;
-	
-	VkCommandBuffer m_commandBuffer;
+	//------------------------------------Allocator-----------------------------------
+	class Allocator
+	{
+	private:
+		VmaAllocator m_allocator;
 
-public:
-	Allocator(const Queue& queue, VkDeviceSize blockSize = 256);
+		VkPhysicalDevice m_gpu;
 
-	virtual ~Allocator();
+		VkDevice m_device;
 
-public:
-	void BeginCmd();
+		VkQueue m_queue;
 
-	void EndCmd();
+		VkCommandPool m_commandPool;
 
-	void TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels = 1);
+		VkCommandBuffer m_commandBuffer;
 
-	void CreateBuffer(const void* data, uint64_t size, VkBufferUsageFlags usage, VmaMemoryUsage memtype, VkBuffer& buffer, VmaAllocation& alloc, void** mapped = 0);
+	public:
+		Allocator(const Queue& queue, VkDeviceSize blockSize = 256);
 
-	void DestroyBuffer(VkBuffer buffer, VmaAllocation alloc);
+		virtual ~Allocator();
 
-	void CreateImage(const void* data, VkExtent3D extent, VkFormat format, uint32_t mipLevels, VkImage& image, VmaAllocation& alloc, VkImageView& view);
+	public:
+		void BeginCmd();
 
-	void DestroyImage(VkImage image, VkImageView view, VmaAllocation alloc);
+		void EndCmd();
 
-	void GenerateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
+		void TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels = 1);
 
-public:
-	VkPhysicalDevice GetPhysicalDevice() const;
+		void CreateBuffer(const void* data, uint64_t size, VkBufferUsageFlags usage, VmaMemoryUsage memtype, VkBuffer& buffer, VmaAllocation& alloc, void** mapped = 0);
 
-	VkDevice GetDevice() const;
+		void DestroyBuffer(VkBuffer buffer, VmaAllocation alloc);
 
-	VkQueue GetQueue() const;
-};
-//--------------------------------------------------------------------------------
+		void CreateImage(const void* data, VkExtent3D extent, VkFormat format, uint32_t mipLevels, VkImage& image, VmaAllocation& alloc, VkImageView& view);
 
-//-------------------------------------Buffers------------------------------------
-class Buffer
-{
-private:
-	Allocator* m_allocator;
+		void DestroyImage(VkImage image, VkImageView view, VmaAllocation alloc);
 
-	VmaAllocation m_allocation;
-	
-	VkBuffer m_buffer;
-	
-	uint32_t m_count;
+		void GenerateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
 
-protected:
-	uint32_t m_stride;
-	
-public:
-	Buffer(Allocator& allocator);
-	
-	virtual ~Buffer();
+	public:
+		VkPhysicalDevice GetPhysicalDevice() const;
 
-public:
-	void Clear();
+		VkDevice GetDevice() const;
 
-	void Data(const void* data, uint32_t count, uint32_t stride, VkBufferUsageFlagBits usage, VmaMemoryUsage memtype = VMA_MEMORY_USAGE_GPU_ONLY, void** mapped = nullptr);
+		VkQueue GetQueue() const;
+	};
+	//--------------------------------------------------------------------------------
 
-public:
-	uint32_t GetCount() const;
+	//-------------------------------------Buffers------------------------------------
+	class Buffer
+	{
+	private:
+		Allocator* m_allocator;
 
-public:
-	operator VkBuffer() const;
-};
+		VmaAllocation m_allocation;
 
-class VBO : public Buffer
-{
-public:
-	using Buffer::Buffer;
+		VkBuffer m_buffer;
 
-public:
-	void Data(void* data, uint32_t count, uint32_t stride);
-};
+		uint32_t m_count;
 
-class IBO : public Buffer
-{
-public:
-	using Buffer::Buffer;
+	protected:
+		uint32_t m_stride;
 
-public:
-	void Data(const uint16_t* data, uint32_t count);
+	public:
+		Buffer(Allocator& allocator);
 
-	void Data(const uint32_t* data, uint32_t count);
-};
+		virtual ~Buffer();
 
-class UBO : public Buffer
-{
-private:
-	void* m_mapped = nullptr;
+	public:
+		void Clear();
 
-public:
-	using Buffer::Buffer;
+		void Data(const void* data, uint32_t count, uint32_t stride, VkBufferUsageFlagBits usage, VmaMemoryUsage memtype = VMA_MEMORY_USAGE_GPU_ONLY, void** mapped = nullptr);
 
-public:
-	//void Data(void* data, uint32_t size);
-	
-	void Allocate(uint32_t size);
-	
-	void Update(void* data);
+	public:
+		uint32_t GetCount() const;
 
-public:
-	uint32_t GetSize() const;
-};
-//--------------------------------------------------------------------------------
+	public:
+		operator VkBuffer() const;
+	};
 
-//-------------------------------------Images-------------------------------------
-class ImageBuffer
-{
-private:
-	Allocator* m_allocator;
+	class VBO : public Buffer
+	{
+	public:
+		using Buffer::Buffer;
 
-	VmaAllocation m_allocation;
-	
-	VkImage m_image;
-	
-	VkExtent2D m_extent;
-	
-	VkFormat m_format;
-	
-	VkImageView m_imageView;
-	
-	VkSampler m_sampler;
-	
-public:
-	ImageBuffer(Allocator& allocator);
-	
-	virtual ~ImageBuffer();
-	
-private:
-	void CreateSampler(float maxLod = 0);
+	public:
+		void Data(void* data, uint32_t count, uint32_t stride);
+	};
 
-public:
-	void Clear();
-	
-	void Data(const void* data, VkExtent3D extent, VkFormat format = VK_FORMAT_R8G8B8A8_UNORM, bool mipmap = false);
-	
-	void UpdateSampler(VkSamplerCreateInfo& samplerInfo); // Update sampler settings
+	class IBO : public Buffer
+	{
+	public:
+		using Buffer::Buffer;
 
-public:
-	VkImage GetImage() const;
+	public:
+		void Data(const uint16_t* data, uint32_t count);
 
-	VkImageView GetImageView() const;
+		void Data(const uint32_t* data, uint32_t count);
+	};
 
-	VkSampler GetSampler() const;
+	class UBO : public Buffer
+	{
+	private:
+		void* m_mapped = nullptr;
 
-	VkFormat GetFormat() const;
+	public:
+		using Buffer::Buffer;
 
-	VkExtent2D GetExtent() const;
+	public:
+		//void Data(void* data, uint32_t size);
 
-public:
-	//operator VkImage() { return image; }
+		void Allocate(uint32_t size);
 
-	//operator VkImageView() { return view; }
-	
-	//operator VkSampler() { return sampler; }
-};
-//--------------------------------------------------------------------------------
+		void Update(void* data);
+
+	public:
+		uint32_t GetSize() const;
+	};
+	//--------------------------------------------------------------------------------
+
+	//-------------------------------------Images-------------------------------------
+	class ImageBuffer
+	{
+	private:
+		Allocator* m_allocator;
+
+		VmaAllocation m_allocation;
+
+		VkImage m_image;
+
+		VkExtent2D m_extent;
+
+		VkFormat m_format;
+
+		VkImageView m_imageView;
+
+		VkSampler m_sampler;
+
+	public:
+		ImageBuffer(Allocator& allocator);
+
+		virtual ~ImageBuffer();
+
+	private:
+		void CreateSampler(float maxLod = 0);
+
+	public:
+		void Clear();
+
+		void Data(const void* data, VkExtent3D extent, VkFormat format = VK_FORMAT_R8G8B8A8_UNORM, bool mipmap = false);
+
+		void UpdateSampler(VkSamplerCreateInfo& samplerInfo); // Update sampler settings
+
+	public:
+		VkImage GetImage() const;
+
+		VkImageView GetImageView() const;
+
+		VkSampler GetSampler() const;
+
+		VkFormat GetFormat() const;
+
+		VkExtent2D GetExtent() const;
+
+	public:
+		//operator VkImage() { return image; }
+
+		//operator VkImageView() { return view; }
+
+		//operator VkSampler() { return sampler; }
+	};
+	//--------------------------------------------------------------------------------
+}
 
 #endif

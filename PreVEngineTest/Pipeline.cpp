@@ -1,6 +1,6 @@
 #include "Pipeline.h"
 
-Pipeline::Pipeline(VkDevice device, VkRenderPass renderpass, Shader& shaders) 
+Pipeline::Pipeline(VkDevice device, VkRenderPass renderpass, PreVEngine::Shader& shaders)
 	: device(device), renderpass(renderpass), pipelineLayout(), graphicsPipeline()
 {
 	this->shaders = &shaders;

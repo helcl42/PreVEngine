@@ -7,75 +7,98 @@
 
 #include "WindowImpl.h"
 
-class Window 
+namespace PreVEngine
 {
-private:
-    WindowImpl* m_windowImpl;
+	class Window
+	{
+	private:
+		WindowImpl* m_windowImpl;
 
-private:
-	void InitWindow(const char* title, const uint32_t width, const uint32_t height, bool tryFullscreen);
+	private:
+		void InitWindow(const char* title, const uint32_t width, const uint32_t height, bool tryFullscreen);
 
-  public:
-	Window(const char* title);
+	public:
+		Window(const char* title);
 
-    Window(const char* title, const uint32_t width, const uint32_t height);
-    
-	virtual ~Window();
+		Window(const char* title, const uint32_t width, const uint32_t height);
 
-public:
-    Surface& GetSurface(VkInstance instance);
-    
-	bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const;
+		virtual ~Window();
 
-public:
-    Position GetPosition() const;
+	public:
+		Surface& GetSurface(VkInstance instance);
 
-	Size GetSize() const;
+		bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const;
 
-    bool IsKeyPressed(const KeyCode key) const;
+	public:
+		Position GetPosition() const;
 
-    bool IsMouseButtonPressed(const MouseButtonType btn) const;
+		Size GetSize() const;
 
-    Position GetMousePosition() const;
+		bool IsKeyPressed(const KeyCode key) const;
 
-    bool HasFocus() const;
+		bool IsMouseButtonPressed(const MouseButtonType btn) const;
 
-public:
-    void SetTitle(const char* title);
+		Position GetMousePosition() const;
 
-    void SetPosition(const Position& position);
+		bool HasFocus() const;
 
-    void SetSize(const Size& size);
+	public:
+		void SetTitle(const char* title);
 
-    void ShowKeyboard(bool enabled);
+		void SetPosition(const Position& position);
 
-    void Close();
+		void SetSize(const Size& size);
 
-public:
-    Event GetEvent(bool waitForEvent = false);  // Return a single event from the queue (Alternative to using ProcessEvents.)
+		void ShowKeyboard(bool enabled);
 
-    bool ProcessEvents(bool waitForEvent = false);  // Poll events, and call event handlers. Returns false if window is closing.
+		void Close();
 
-public:
-	virtual void OnMouseEvent(ActionType action, int16_t x, int16_t y, MouseButtonType btn) {}
+	public:
+		Event GetEvent(bool waitForEvent = false);  // Return a single event from the queue (Alternative to using ProcessEvents.)
 
-	virtual void OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y) {}
+		bool ProcessEvents(bool waitForEvent = false);  // Poll events, and call event handlers. Returns false if window is closing.
 
-    virtual void OnKeyEvent(ActionType action, KeyCode keycode) {}
+	public:
+		virtual void OnMouseEvent(ActionType action, int16_t x, int16_t y, MouseButtonType btn)
+		{
+		}
 
-    virtual void OnTextEvent(const char *str) {}
+		virtual void OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y)
+		{
+		}
 
-    virtual void OnMoveEvent(int16_t x, int16_t y) {}
+		virtual void OnKeyEvent(ActionType action, KeyCode keycode)
+		{
+		}
 
-    virtual void OnResizeEvent(uint16_t width, uint16_t height) {}
+		virtual void OnTextEvent(const char *str)
+		{
+		}
 
-    virtual void OnFocusEvent(bool hasFocus) {}
+		virtual void OnMoveEvent(int16_t x, int16_t y)
+		{
+		}
 
-    virtual void OnTouchEvent(ActionType action, float x, float y, uint8_t id) {}
-    
-	virtual void OnInitEvent() {}
+		virtual void OnResizeEvent(uint16_t width, uint16_t height)
+		{
+		}
 
-	virtual void OnCloseEvent() {}
-};
+		virtual void OnFocusEvent(bool hasFocus)
+		{
+		}
+
+		virtual void OnTouchEvent(ActionType action, float x, float y, uint8_t id)
+		{
+		}
+
+		virtual void OnInitEvent()
+		{
+		}
+
+		virtual void OnCloseEvent()
+		{
+		}
+	};
+}
 
 #endif

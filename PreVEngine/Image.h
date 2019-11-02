@@ -4,79 +4,82 @@
 #include <stdint.h>
 #include <string>
 
-struct RGBA
+namespace PreVEngine
 {
-	uint8_t R;
-	uint8_t G;
-	uint8_t B;
-	uint8_t A;
+	struct RGBA
+	{
+		uint8_t R;
+		uint8_t G;
+		uint8_t B;
+		uint8_t A;
 
-	RGBA();
+		RGBA();
 
-	RGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255);
+		RGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255);
 
-	void Set(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255);
+		void Set(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255);
 
-	RGBA Lerp(const RGBA& c, const float f);
-};
+		RGBA Lerp(const RGBA& c, const float f);
+	};
 
-class Image
-{
-private:
-	uint32_t m_width{ 0 };
+	class Image
+	{
+	private:
+		uint32_t m_width{ 0 };
 
-	uint32_t m_height{ 0 };
+		uint32_t m_height{ 0 };
 
-	RGBA* m_buffer{ nullptr };
+		RGBA* m_buffer{ nullptr };
 
-public:
-	Image();
+	public:
+		Image();
 
-	Image(const int width, const int height);
+		Image(const int width, const int height);
 
-	Image(const int width, const int height, const uint8_t* bytes);
+		Image(const int width, const int height, const uint8_t* bytes);
 
-	Image(const int width, const int height, const RGBA* pixels);
+		Image(const int width, const int height, const RGBA* pixels);
 
-	~Image();
+		~Image();
 
-public:
-	Image(const Image& other);
-	
-	Image& operator=(const Image& other);
-	
-	Image(Image&& other);
+	public:
+		Image(const Image& other);
 
-	Image& operator=(Image&& other);
+		Image& operator=(const Image& other);
 
-private:
-	void CleanUp();
+		Image(Image&& other);
 
-public:
-	void SetSize(const int width, const int height);
-	
-	uint32_t GetWidth() const;
+		Image& operator=(Image&& other);
 
-	uint32_t GetHeight() const;
+	private:
+		void CleanUp();
 
-	RGBA* GetBuffer() const;
+	public:
+		void SetSize(const int width, const int height);
 
-	void Clear();
-	
-	void Clear(const RGBA& color);
-};
+		uint32_t GetWidth() const;
 
-class ImageFactory
-{
-private:
-	static bool FileExists(const std::string& fileName);
+		uint32_t GetHeight() const;
 
-public:
-	std::shared_ptr<Image> CreateImage(const std::string& filename, bool flipVertically = false) const;
+		RGBA* GetBuffer() const;
 
-	std::shared_ptr<Image> CreateImageWithPattern(const uint32_t width, const uint32_t height, const bool gradient = true, const int checkers = 64) const;
+		void Clear();
 
-	std::shared_ptr<Image> CreateImageWithColor(const uint32_t width, const uint32_t height, const RGBA& color) const;
-};
+		void Clear(const RGBA& color);
+	};
+
+	class ImageFactory
+	{
+	private:
+		static bool FileExists(const std::string& fileName);
+
+	public:
+		std::shared_ptr<Image> CreateImage(const std::string& filename, bool flipVertically = false) const;
+
+		std::shared_ptr<Image> CreateImageWithPattern(const uint32_t width, const uint32_t height, const bool gradient = true, const int checkers = 64) const;
+
+		std::shared_ptr<Image> CreateImageWithColor(const uint32_t width, const uint32_t height, const RGBA& color) const;
+	};
+}
 
 #endif

@@ -12,144 +12,147 @@
 #define IS_ANDROID false // PC: default to low-latency (no fps limit)
 #endif
 
-struct SwapchainBuffer
+namespace PreVEngine
 {
-	VkImage image;
-
-	VkImageView view;  // TODO: MRT?
-
-	VkExtent2D extent;
-
-	VkFramebuffer framebuffer;
-
-	VkCommandBuffer commandBuffer;
-};
-
-struct SwapcChainSync
-{
-	const VkDevice device;
-
-	std::vector<VkSemaphore> acquireSemaphores;
-
-	std::vector<VkSemaphore> submitSemaphores;
-
-	std::vector<VkFence> fences;
-
-	SwapcChainSync(const VkDevice dev)
-		: device(dev)
+	struct SwapchainBuffer
 	{
-	}
+		VkImage image;
 
-	~SwapcChainSync()
+		VkImageView view;  // TODO: MRT?
+
+		VkExtent2D extent;
+
+		VkFramebuffer framebuffer;
+
+		VkCommandBuffer commandBuffer;
+	};
+
+	struct SwapcChainSync
 	{
-	}
+		const VkDevice device;
 
-	void Init(const uint32_t framesInFlightCount)
-	{
-		acquireSemaphores.resize(framesInFlightCount);
-		submitSemaphores.resize(framesInFlightCount);
-		fences.resize(framesInFlightCount);
+		std::vector<VkSemaphore> acquireSemaphores;
 
-		for (uint32_t i = 0; i < framesInFlightCount; i++)
+		std::vector<VkSemaphore> submitSemaphores;
+
+		std::vector<VkFence> fences;
+
+		SwapcChainSync(const VkDevice dev)
+			: device(dev)
 		{
-			VkFenceCreateInfo fenceCreateInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
-			fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-			vkCreateFence(device, &fenceCreateInfo, nullptr, &fences[i]);
-
-			VkSemaphoreCreateInfo semaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
-			VKERRCHECK(vkCreateSemaphore(device, &semaphoreInfo, nullptr, &acquireSemaphores[i]));
-			VKERRCHECK(vkCreateSemaphore(device, &semaphoreInfo, nullptr, &submitSemaphores[i]));
 		}
-	}
 
-	void ShutDown()
-	{
-		for (uint32_t i = 0; i < static_cast<uint32_t>(submitSemaphores.size()); i++)
+		~SwapcChainSync()
 		{
-			vkDestroySemaphore(device, submitSemaphores[i], nullptr);
-			vkDestroySemaphore(device, acquireSemaphores[i], nullptr);
-			vkDestroyFence(device, fences[i], nullptr);
 		}
-		
-		acquireSemaphores.clear();
-		submitSemaphores.clear();
-		fences.clear();
-	}
-};
 
-class Swapchain
-{
-private:
-	VkPhysicalDevice m_gpu;
+		void Init(const uint32_t framesInFlightCount)
+		{
+			acquireSemaphores.resize(framesInFlightCount);
+			submitSemaphores.resize(framesInFlightCount);
+			fences.resize(framesInFlightCount);
 
-	VkDevice m_device;
+			for (uint32_t i = 0; i < framesInFlightCount; i++)
+			{
+				VkFenceCreateInfo fenceCreateInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
+				fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+				vkCreateFence(device, &fenceCreateInfo, nullptr, &fences[i]);
 
-	VkQueue m_graphicsQueue;
+				VkSemaphoreCreateInfo semaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
+				VKERRCHECK(vkCreateSemaphore(device, &semaphoreInfo, nullptr, &acquireSemaphores[i]));
+				VKERRCHECK(vkCreateSemaphore(device, &semaphoreInfo, nullptr, &submitSemaphores[i]));
+			}
+		}
 
-	VkQueue m_presentQueue;
+		void ShutDown()
+		{
+			for (uint32_t i = 0; i < static_cast<uint32_t>(submitSemaphores.size()); i++)
+			{
+				vkDestroySemaphore(device, submitSemaphores[i], nullptr);
+				vkDestroySemaphore(device, acquireSemaphores[i], nullptr);
+				vkDestroyFence(device, fences[i], nullptr);
+			}
 
-	VkSurfaceKHR m_surface;
+			acquireSemaphores.clear();
+			submitSemaphores.clear();
+			fences.clear();
+		}
+	};
 
-	VkSwapchainKHR m_swapchain;
+	class Swapchain
+	{
+	private:
+		VkPhysicalDevice m_gpu;
 
-	VkSwapchainCreateInfoKHR m_swapchainCreateInfo;
+		VkDevice m_device;
 
-	VkCommandPool m_commandPool;
+		VkQueue m_graphicsQueue;
 
-	RenderPass* m_renderPass;
+		VkQueue m_presentQueue;
 
-	DepthBuffer m_depthBuffer;
+		VkSurfaceKHR m_surface;
 
-	std::vector<SwapchainBuffer> m_swapchainBuffers;
-	
-	uint32_t m_acquiredIndex;  // index of last acquired image
-	
-	bool m_isAcquired;
+		VkSwapchainKHR m_swapchain;
 
-	SwapcChainSync* m_swapChainSync;
+		VkSwapchainCreateInfoKHR m_swapchainCreateInfo;
 
-	uint32_t m_currentFrameIndex;
+		VkCommandPool m_commandPool;
 
-	uint32_t m_swapchainImagesCount;
+		RenderPass* m_renderPass;
 
-private:
-	void Init(const Queue* presentQueue, const Queue* graphicsQueue = 0);
+		DepthBuffer m_depthBuffer;
 
-	void Apply();
-	
-	bool AcquireNext(SwapchainBuffer& next);
+		std::vector<SwapchainBuffer> m_swapchainBuffers;
 
-	void Submit();
+		uint32_t m_acquiredIndex;  // index of last acquired image
 
-	void Present();
+		bool m_isAcquired;
 
-	VkSurfaceCapabilitiesKHR GetSurfaceCapabilities() const;
+		SwapcChainSync* m_swapChainSync;
 
-public:
-	Swapchain(RenderPass& renderPass, const Queue* presentQueue, const Queue* graphicsQueue);
+		uint32_t m_currentFrameIndex;
 
-	~Swapchain();
+		uint32_t m_swapchainImagesCount;
 
-public:
-	bool SetPresentMode(bool noTearing, bool poweSave = IS_ANDROID);  // ANDROID: default to power-save mode (limit to 60fps)
-	
-	bool SetPresentMode(VkPresentModeKHR preferredMode);
-	
-	bool SetImageCount(uint32_t imageCount = 2);
+	private:
+		void Init(const Queue* presentQueue, const Queue* graphicsQueue = 0);
 
-	void UpdateExtent();
+		void Apply();
 
-	bool BeginFrame(VkCommandBuffer& buffer, uint32_t& acquiredIndex);
-	
-	void EndFrame();
+		bool AcquireNext(SwapchainBuffer& next);
 
-	void Print() const;
+		void Submit();
 
-public:
-	VkExtent2D GetExtent() const;
+		void Present();
 
-	uint32_t GetmageCount() const;
-};
+		VkSurfaceCapabilitiesKHR GetSurfaceCapabilities() const;
+
+	public:
+		Swapchain(RenderPass& renderPass, const Queue* presentQueue, const Queue* graphicsQueue);
+
+		~Swapchain();
+
+	public:
+		bool SetPresentMode(bool noTearing, bool poweSave = IS_ANDROID);  // ANDROID: default to power-save mode (limit to 60fps)
+
+		bool SetPresentMode(VkPresentModeKHR preferredMode);
+
+		bool SetImageCount(uint32_t imageCount = 2);
+
+		void UpdateExtent();
+
+		bool BeginFrame(VkCommandBuffer& buffer, uint32_t& acquiredIndex);
+
+		void EndFrame();
+
+		void Print() const;
+
+	public:
+		VkExtent2D GetExtent() const;
+
+		uint32_t GetmageCount() const;
+	};
+}
 
 #endif
 
