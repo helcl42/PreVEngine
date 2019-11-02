@@ -23,8 +23,6 @@ struct SwapchainBuffer
 	VkFramebuffer framebuffer;
 
 	VkCommandBuffer commandBuffer;
-
-	VkFence fence;
 };
 
 
@@ -57,9 +55,13 @@ private:
 	
 	bool m_isAcquired;
 
-	VkSemaphore m_acquireSemaphore;
+	std::vector<VkSemaphore> m_acquireSemaphores;
 
-	VkSemaphore m_submitSemaphore;
+	std::vector<VkSemaphore> m_submitSemaphores;
+
+	std::vector<VkFence> m_fences;
+
+	uint32_t m_currentFrameIndex;
 
 private:
 	void Init(const Queue* presentQueue, const Queue* graphicsQueue = 0);
