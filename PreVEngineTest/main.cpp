@@ -47,7 +47,7 @@ public:
 
 	void OnKeyEvent(ActionType action, KeyCode keycode)
 	{
-		if (action == eDOWN)
+		if (action == ActionType::DOWN)
 		{
 			if (keycode == KEY_Left)
 			{
@@ -73,7 +73,7 @@ public:
 
 	void OnMouseEvent(ActionType action, int16_t x, int16_t y, uint8_t btn)
 	{
-		if (action == eMOVE && btn == 1)
+		if (action == ActionType::MOVE && btn == 1)
 		{
 			dy = x - mx;
 			dx = my - y;
@@ -85,7 +85,7 @@ public:
 
 	void OnTouchEvent(ActionType action, float x, float y, uint8_t id)
 	{
-		if (action == eMOVE)
+		if (action == ActionType::MOVE)
 		{
 			dy = x - mx;
 			dx = my - y;

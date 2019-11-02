@@ -345,13 +345,13 @@ EventType WindowXcb::TranslateEvent(xcb_generic_event_t* x_event)
 			}
 			else
 			{
-				return OnMouseEvent(eMOVE, mx, my, bestBtn);     // mouse move
+				return OnMouseEvent(ActionType::MOVE, mx, my, bestBtn);     // mouse move
 			}
 		}
 		case XCB_BUTTON_PRESS: 
-			return OnMouseEvent(eDOWN, mx, my, btn);         // mouse btn press
+			return OnMouseEvent(ActionType::DOWN, mx, my, btn);         // mouse btn press
 		case XCB_BUTTON_RELEASE: 
-			return OnMouseEvent(eUP, mx, my, btn);         // mouse btn release
+			return OnMouseEvent(ActionType::UP, mx, my, btn);         // mouse btn release
 		case XCB_KEY_PRESS:
 		{
 			uint8_t keycode = EVDEV_TO_HID[btn];
@@ -364,14 +364,14 @@ EventType WindowXcb::TranslateEvent(xcb_generic_event_t* x_event)
 				m_eventQueue.Push(OnTextEvent(buf));                          // text typed event (store in FIFO for next run)
 			}
 			
-			return OnKeyEvent(eDOWN, keycode);                                    // key pressed event
+			return OnKeyEvent(ActionType::DOWN, keycode);                                    // key pressed event
 		}
 		case XCB_KEY_RELEASE:
 		{
 			xkb_state_update_key(m_keyboardState, btn, XKB_KEY_UP);
 			uint8_t keycode = EVDEV_TO_HID[btn];
 
-			return OnKeyEvent(eUP, keycode);                                      // key released event
+			return OnKeyEvent(UP, keycode);                                      // key released event
 		}
 		case XCB_CLIENT_MESSAGE:
 		{                                              // window close event
@@ -422,11 +422,11 @@ EventType WindowXcb::TranslateEvent(xcb_generic_event_t* x_event)
 				switch (te.event_type)
 				{
 					case XI_TouchBegin: 
-						return m_MTouch.OnEventById(eDOWN, x, y, 0, id); // touch down event
+						return m_MTouch.OnEventById(ActionType::DOWN, x, y, 0, id); // touch down event
 					case XI_TouchUpdate: 
-						return m_MTouch.OnEventById(eMOVE, x, y, id, id); // touch move event
+						return m_MTouch.OnEventById(ActionType::MOVE, x, y, id, id); // touch move event
 					case XI_TouchEnd: 
-						return m_MTouch.OnEventById(eUP, x, y, id, 0); // touch up event
+						return m_MTouch.OnEventById(ActionType::UP, x, y, id, 0); // touch up event
 					default: 
 						break;
 				}

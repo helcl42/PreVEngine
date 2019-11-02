@@ -17,9 +17,9 @@ WindowImpl::~WindowImpl()
 EventType WindowImpl::OnMouseEvent(ActionType action, int16_t x, int16_t y, MouseButtonType btn)
 {
 	m_mousePosition = { x, y };
-	if (action != eMOVE)
+	if (action != ActionType::MOVE)
 	{
-		m_mouseButonsState[btn] = (action == eDOWN);  // Keep track of button state
+		m_mouseButonsState[btn] = (action == ActionType::DOWN);  // Keep track of button state
 	}
 
 	EventType e = { EventType::MOUSE, {action, x, y, btn} };
@@ -39,7 +39,7 @@ EventType WindowImpl::OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y)
 
 EventType WindowImpl::OnKeyEvent(ActionType action, uint8_t key)
 {
-	m_keyboardKeysState[key] = (action == eDOWN);
+	m_keyboardKeysState[key] = (action == ActionType::DOWN);
 
 	EventType e = { EventType::KEY };
 	e.key = { action, (KeyCode)key };

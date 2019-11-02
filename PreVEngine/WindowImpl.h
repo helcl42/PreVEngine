@@ -4,9 +4,11 @@
 #include "Instance.h"
 #include "KeyCodes.h"
 
-enum ActionType  // keyboard / mouse / touchscreen actions
+enum class ActionType  // keyboard / mouse / touchscreen actions
 {
-	eUP, eDOWN, eMOVE
+	UP,
+	DOWN, 
+	MOVE
 };
 
 enum MouseButtonType
@@ -18,7 +20,18 @@ struct EventType
 {
 	enum // event type
 	{
-		NONE, MOUSE, MOUSE_SCROLL, KEY, TEXT, MOVE, RESIZE, FOCUS, TOUCH, CLOSE, INIT, UNKNOWN
+		NONE, 
+		MOUSE, 
+		MOUSE_SCROLL, 
+		KEY, 
+		TEXT, 
+		MOVE, 
+		RESIZE, 
+		FOCUS, 
+		TOUCH, 
+		CLOSE, 
+		INIT, 
+		UNKNOWN
 	}
 	tag;
 
@@ -201,9 +214,9 @@ public:
 		}
 
 		Pointer& P = m_pointers[id];
-		if (action != eMOVE)
+		if (action != ActionType::MOVE)
 		{
-			P.active = (action == eDOWN);
+			P.active = (action == ActionType::DOWN);
 		}
 
 		P.x = x;

@@ -307,19 +307,19 @@ EventType WindowWin32::GetEvent(bool waitForEvent)
 		{
 			//--Mouse events--
 			case WM_MOUSEMOVE: 
-				return OnMouseEvent(eMOVE, x, y, bestBtn);
+				return OnMouseEvent(ActionType::MOVE, x, y, bestBtn);
 			case WM_LBUTTONDOWN: 
-				return OnMouseEvent(eDOWN, x, y, MouseButtonType::eLeft);
+				return OnMouseEvent(ActionType::DOWN, x, y, MouseButtonType::eLeft);
 			case WM_MBUTTONDOWN: 
-				return OnMouseEvent(eDOWN, x, y, MouseButtonType::eMiddle);
+				return OnMouseEvent(ActionType::DOWN, x, y, MouseButtonType::eMiddle);
 			case WM_RBUTTONDOWN: 
-				return OnMouseEvent(eDOWN, x, y, MouseButtonType::eRight);
+				return OnMouseEvent(ActionType::DOWN, x, y, MouseButtonType::eRight);
 			case WM_LBUTTONUP: 
-				return OnMouseEvent(eUP, x, y, MouseButtonType::eLeft);
+				return OnMouseEvent(ActionType::UP, x, y, MouseButtonType::eLeft);
 			case WM_MBUTTONUP: 
-				return  OnMouseEvent(eUP, x, y, MouseButtonType::eMiddle);
+				return  OnMouseEvent(ActionType::UP, x, y, MouseButtonType::eMiddle);
 			case WM_RBUTTONUP: 
-				return OnMouseEvent(eUP, x, y, MouseButtonType::eRight);
+				return OnMouseEvent(ActionType::UP, x, y, MouseButtonType::eRight);
 
 			//--Mouse wheel events--
 			case WM_MOUSEWHEEL:
@@ -330,16 +330,16 @@ EventType WindowWin32::GetEvent(bool waitForEvent)
 
 			//--Keyboard events--
 			case WM_KEYDOWN: 
-				return OnKeyEvent(eDOWN, WIN32_TO_HID[msg.wParam]);
+				return OnKeyEvent(ActionType::DOWN, WIN32_TO_HID[msg.wParam]);
 			case WM_KEYUP: 
-				return OnKeyEvent(eUP, WIN32_TO_HID[msg.wParam]);
+				return OnKeyEvent(ActionType::UP, WIN32_TO_HID[msg.wParam]);
 			case WM_SYSKEYDOWN:
 			{
 				MSG discard; GetMessage(&discard, NULL, 0, 0);     // Alt-key triggers a WM_MOUSEMOVE message... Discard it.
-				return OnKeyEvent(eDOWN, WIN32_TO_HID[msg.wParam]);
+				return OnKeyEvent(ActionType::DOWN, WIN32_TO_HID[msg.wParam]);
 			} // +alt key
 			case WM_SYSKEYUP: 
-				return OnKeyEvent(eUP, WIN32_TO_HID[msg.wParam]);   // +alt key
+				return OnKeyEvent(ActionType::UP, WIN32_TO_HID[msg.wParam]);   // +alt key
 
 			//--Char event--
 			case WM_CHAR:
@@ -398,11 +398,11 @@ EventType WindowWin32::GetEvent(bool waitForEvent)
 					switch (msg.message)
 					{
 						case WM_POINTERDOWN: 
-							return m_MTouch.OnEventById(eDOWN, x, y, 0, id);  // touch down event
+							return m_MTouch.OnEventById(DOWN, x, y, 0, id);  // touch down event
 						case WM_POINTERUPDATE: 
-							return m_MTouch.OnEventById(eMOVE, x, y, id, id);  // touch move event
+							return m_MTouch.OnEventById(MOVE, x, y, id, id);  // touch move event
 						case WM_POINTERUP: 
-							return m_MTouch.OnEventById(eUP, x, y, id, 0);  // touch up event
+							return m_MTouch.OnEventById(UP, x, y, id, 0);  // touch up event
 					}
 				}
 			}

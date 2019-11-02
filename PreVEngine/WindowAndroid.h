@@ -192,7 +192,7 @@ public:
 							int metaState = AKeyEvent_getMetaState(a_event);
 							int unicode = GetUnicodeChar(AKEY_EVENT_ACTION_DOWN, keycode, metaState);
 
-							event = OnKeyEvent(eDOWN, hidcode);            // key pressed event (returned on this run)
+							event = OnKeyEvent(ActionType::DOWN, hidcode);            // key pressed event (returned on this run)
 
 							(int&)buf = unicode;
 							if (buf[0]) m_eventQueue.Push(OnTextEvent(buf));  // text typed event (store in FIFO for next run)
@@ -201,7 +201,7 @@ public:
 						}
 						case AKEY_EVENT_ACTION_UP:
 						{
-							event = OnKeyEvent(eUP, hidcode);
+							event = OnKeyEvent(ActionType::UP, hidcode);
 							break;
 						}
 						default: 
@@ -223,7 +223,7 @@ public:
 							float x = AMotionEvent_getX(a_event, i);
 							float y = AMotionEvent_getY(a_event, i);
 
-							event = m_MTouch.OnEvent(eMOVE, x, y, finger_id);
+							event = m_MTouch.OnEvent(ActionType::MOVE, x, y, finger_id);
 						}
 					}
 					else
@@ -237,11 +237,11 @@ public:
 						{
 							case AMOTION_EVENT_ACTION_POINTER_DOWN:
 							case AMOTION_EVENT_ACTION_DOWN:  
-								event = m_MTouch.OnEvent(eDOWN, x, y, finger_id);  
+								event = m_MTouch.OnEvent(ActionType::DOWN, x, y, finger_id);
 								break;
 							case AMOTION_EVENT_ACTION_POINTER_UP:
 							case AMOTION_EVENT_ACTION_UP:  
-								event = m_MTouch.OnEvent(eUP, x, y, finger_id);  
+								event = m_MTouch.OnEvent(ActionType::UP, x, y, finger_id);
 								break;
 							case AMOTION_EVENT_ACTION_CANCEL:  
 								m_MTouch.Clear();                                
