@@ -349,6 +349,8 @@ namespace PreVEngine
 			commandBufferAllocInfo.commandBufferCount = 1;
 			VKERRCHECK(vkAllocateCommandBuffers(m_device, &commandBufferAllocInfo, &swapchainBuffer.commandBuffer));
 
+			swapchainBuffer.extent = m_swapchainCreateInfo.imageExtent;
+
 			printf("---Extent = %d x %d\n", m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height);
 		}
 
@@ -382,14 +384,12 @@ namespace PreVEngine
 			ASSERT(true, "failed to acquire swap chain image!");
 		}
 
-		m_acquiredIndex = acquireIndex;
-
-		SwapchainBuffer& swapchainBuffer = m_swapchainBuffers[m_acquiredIndex];
-		swapchainBuffer.extent = m_swapchainCreateInfo.imageExtent;
 		vkWaitForFences(m_device, 1, &m_swapChainSync->fences[m_currentFrameIndex], VK_TRUE, UINT64_MAX);
+
+		m_acquiredIndex = acquireIndex;
 		m_isAcquired = true;
 
-		next = swapchainBuffer;
+		next = m_swapchainBuffers[m_acquiredIndex];
 		return true;
 	}
 
