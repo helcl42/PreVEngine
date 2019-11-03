@@ -261,7 +261,7 @@ int main(int argc, char *argv[])
 
 	device.Print();
 	
-	const uint32_t BUFFERS_IN_FLIGHT = 3;									// use tripple-buffering
+	const uint32_t SWAPCHAIN_FRAMES_IN_FLIGHT = 3;									// use tripple-buffering
 
 	VkFormat colorFormat = gpu->FindSurfaceFormat(surface);
 	VkFormat depthFormat = gpu->FindDepthFormat();
@@ -273,7 +273,7 @@ int main(int argc, char *argv[])
 	
 	Swapchain swapchain(renderpass, presenQueue, graphicsQueue);
 	swapchain.SetPresentMode(VK_PRESENT_MODE_MAILBOX_KHR);
-	swapchain.SetImageCount(BUFFERS_IN_FLIGHT);
+	swapchain.SetImageCount(SWAPCHAIN_FRAMES_IN_FLIGHT);
 	swapchain.Print();
 
 	////////////////////////////////////////////////////////
@@ -297,17 +297,19 @@ int main(int argc, char *argv[])
 		mat4 trasform;
 		trasform.Translate(dist(gen), dist(gen), dist(gen));
 		trasform.Scale(scaleDist(gen));
+
 		models[i] = modelFactory.CreateTexturedModel(allocator, i % 2 == 0 ? "vulkan.png" : "texture.jpg", trasform);
 	}
 
 	Uniforms uniforms;
-	uniforms.view.Translate(0, 0, -4);
+	uniforms.view.Translate(0.0f, 0.0f, -4.0f);
 
-	std::vector<std::shared_ptr<UBO>> uniformBuffers(models.size() * BUFFERS_IN_FLIGHT);
-	for (size_t i = 0; i < models.size() * BUFFERS_IN_FLIGHT; i++)
+	std::vector<std::shared_ptr<UBO>> uniformBuffers(models.size() * SWAPCHAIN_FRAMES_IN_FLIGHT);
+	for (size_t i = 0; i < models.size() * SWAPCHAIN_FRAMES_IN_FLIGHT; i++)
 	{
 		uniformBuffers[i] = std::make_shared<UBO>(allocator);
 		uniformBuffers[i]->Allocate(sizeof(Uniforms));
+
 		printf("UBO %zd created\n", i);
 	}
 
@@ -317,13 +319,14 @@ int main(int argc, char *argv[])
 											{ VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/frag.spv" }
 										});
 
-	shader->AdjustDescriptorsSetsCapacity(COUNT_OF_MODELS * BUFFERS_IN_FLIGHT);
+	shader->AdjustDescriptorsSetsCapacity(COUNT_OF_MODELS * SWAPCHAIN_FRAMES_IN_FLIGHT);
 
 	Pipeline pipeline(device, renderpass, *shader);
 	pipeline.CreateGraphicsPipeline();
 	printf("Pipeline created\n");
 
-	int descriptorSetIndex = 0;	
+	uint32_t descriptorSetIndex = 0;
+	uint32_t swapChainFrameIndex = 0;
 
 	////////////////////////////////////////////////////////
 	// Client Init Code: ends here
@@ -350,12 +353,14 @@ int main(int argc, char *argv[])
 
 		// Call Update
 
+		// Call PreRender ??
+
+		// Call Render
+
 		VkCommandBuffer commandBuffer;
 		uint32_t frameInFlightIndex;
 		if (swapchain.BeginFrame(commandBuffer, frameInFlightIndex))
 		{			
-			// Call Render
-
 			// Common
 			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
@@ -392,8 +397,12 @@ int main(int argc, char *argv[])
 
 			swapchain.EndFrame();
 
-			descriptorSetIndex %= COUNT_OF_MODELS * BUFFERS_IN_FLIGHT;
+			descriptorSetIndex %= COUNT_OF_MODELS * SWAPCHAIN_FRAMES_IN_FLIGHT;
 		}
+
+		swapChainFrameIndex = (swapChainFrameIndex + 1) % SWAPCHAIN_FRAMES_IN_FLIGHT;
+
+		// Call PostRender ??
 	}
 
 	return 0;
