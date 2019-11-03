@@ -47,7 +47,7 @@ namespace PreVEngine
 		std::vector<VkPipelineShaderStageCreateInfo> m_shaderStages;
 
 		// Descriptor Sets
-		uint32_t m_poolCapacity = 0;
+		uint32_t m_poolCapacity;
 
 		VkDescriptorPool m_descriptorPool;
 

@@ -9,7 +9,7 @@
 namespace PreVEngine
 {
 	Shader::Shader(VkDevice device)
-		: m_device(device), m_descriptorSetLayout(VK_NULL_HANDLE), m_descriptorPool(VK_NULL_HANDLE)
+		: m_device(device), m_descriptorSetLayout(VK_NULL_HANDLE), m_descriptorPool(VK_NULL_HANDLE), m_poolCapacity(0)
 	{
 	}
 
@@ -24,7 +24,8 @@ namespace PreVEngine
 		{
 			m_descriptorSetLayout = CreateDescriptorSetLayout();
 
-			m_descriptorPool = CreateDescriptorPool(1);
+			m_poolCapacity = 1;
+			m_descriptorPool = CreateDescriptorPool(m_poolCapacity);
 
 			return true;
 		}
@@ -63,6 +64,7 @@ namespace PreVEngine
 		}
 
 		m_descriptorPool = CreateDescriptorPool(size);
+		m_poolCapacity = size;
 	}
 
 	void Shader::RecreateDescriptorSets(const uint32_t size)
