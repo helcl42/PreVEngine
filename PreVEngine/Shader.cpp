@@ -22,11 +22,12 @@ namespace PreVEngine
 	{
 		if (m_descriptorSetLayout == VK_NULL_HANDLE)
 		{
+			m_currentDescriptorSetIndex = 0;
+
 			m_descriptorSetLayout = CreateDescriptorSetLayout();
 
-			m_poolCapacity = 1;
-			m_descriptorPool = CreateDescriptorPool(m_poolCapacity);
-
+			AdjustDescriptorPoolCapacity(20);
+		
 			return true;
 		}
 
@@ -101,7 +102,7 @@ namespace PreVEngine
 		return shouldAdjust;
 	}
 
-	bool Shader::AdjustDescriptorsSetsCapacity(const uint32_t desiredCount)
+	bool Shader::AdjustDescriptorPoolCapacity(const uint32_t desiredCount)
 	{
 		bool shouldRecreate = ShouldAdjustCapacity(desiredCount);
 
@@ -321,11 +322,11 @@ namespace PreVEngine
 		return descriptorPool;
 	}
 
-	VkDescriptorSet Shader::UpdateDescriptorSet(const uint32_t index)
+	VkDescriptorSet Shader::UpdateNextDescriptorSet()
 	{
 		CheckBindings();
 
-		VkDescriptorSet descriptorSet = m_descriptorSets[index];
+		VkDescriptorSet descriptorSet = m_descriptorSets[m_currentDescriptorSetIndex];
 
 		uint32_t descriptorSetsCount = static_cast<uint32_t>(m_descriptorWrites.size());
 		for (uint32_t writeIndex = 0; writeIndex < descriptorSetsCount; ++writeIndex)
@@ -338,6 +339,8 @@ namespace PreVEngine
 		}
 
 		vkUpdateDescriptorSets(m_device, static_cast<uint32_t>(m_descriptorWrites.size()), m_descriptorWrites.data(), 0, nullptr);
+
+		m_currentDescriptorSetIndex = (m_currentDescriptorSetIndex + 1) % m_poolCapacity;
 
 		return descriptorSet;
 	}

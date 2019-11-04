@@ -317,15 +317,11 @@ int main(int argc, char *argv[])
 											{ VK_SHADER_STAGE_VERTEX_BIT, "shaders/vert.spv" },
 											{ VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/frag.spv" }
 										});
+	shader->AdjustDescriptorPoolCapacity(COUNT_OF_MODELS * SWAPCHAIN_FRAMES_IN_FLIGHT * 100);
 
 	Pipeline pipeline(device, renderpass, *shader);
 	pipeline.CreateGraphicsPipeline();
 	printf("Pipeline created\n");
-
-	uint32_t descriptorSetIndex = 0;
-	uint32_t swapChainFrameIndex = 0;
-
-	shader->AdjustDescriptorsSetsCapacity(COUNT_OF_MODELS * SWAPCHAIN_FRAMES_IN_FLIGHT);
 
 	////////////////////////////////////////////////////////
 	// Client Init Code: ends here
@@ -356,11 +352,6 @@ int main(int argc, char *argv[])
 
 		// Call Render
 
-		//if (swapChainFrameIndex == 0)
-		//{
-		//	shader->AdjustDescriptorsSetsCapacity(COUNT_OF_MODELS * SWAPCHAIN_FRAMES_IN_FLIGHT);
-		//}
-
 		VkCommandBuffer commandBuffer;
 		uint32_t frameInFlightIndex;
 		if (swapchain.BeginFrame(commandBuffer, frameInFlightIndex))
@@ -376,7 +367,7 @@ int main(int argc, char *argv[])
 				VkBuffer vertexBuffers[] = { *model->vertexBuffer };
 				VkDeviceSize offsets[] = { 0 };
 
-				auto& ubo = uniformBuffers.at(descriptorSetIndex);
+				auto& ubo = uniformBuffers.at(modelIndex);
 
 				uniforms.proj.SetProjection(aspect, 66.0f, 0.01f, 100.0f);
 				uniforms.model = model->transform;
@@ -387,9 +378,8 @@ int main(int argc, char *argv[])
 
 				shader->Bind("texSampler", *model->imageBuffer);
 				shader->Bind("ubo", *ubo);
-				VkDescriptorSet descriptorSet = shader->UpdateDescriptorSet(descriptorSetIndex);
-				descriptorSetIndex++;
-
+				VkDescriptorSet descriptorSet = shader->UpdateNextDescriptorSet();
+				
 				vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 				vkCmdBindIndexBuffer(commandBuffer, *model->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
@@ -400,11 +390,7 @@ int main(int argc, char *argv[])
 			}
 
 			swapchain.EndFrame();
-
-			descriptorSetIndex %= COUNT_OF_MODELS * SWAPCHAIN_FRAMES_IN_FLIGHT;
 		}
-
-		swapChainFrameIndex = (swapChainFrameIndex + 1) % SWAPCHAIN_FRAMES_IN_FLIGHT;
 
 		// Call PostRender ??
 	}

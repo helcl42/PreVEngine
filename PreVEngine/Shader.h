@@ -49,6 +49,8 @@ namespace PreVEngine
 		// Descriptor Sets
 		uint32_t m_poolCapacity;
 
+		uint32_t m_currentDescriptorSetIndex;
+
 		VkDescriptorPool m_descriptorPool;
 
 		std::vector<VkDescriptorSet> m_descriptorSets;
@@ -108,7 +110,7 @@ namespace PreVEngine
 
 		void ShutDown();
 
-		bool AdjustDescriptorsSetsCapacity(const uint32_t desiredCount);
+		bool AdjustDescriptorPoolCapacity(const uint32_t desiredCount);
 
 		bool AddShaderModule(const VkShaderStageFlagBits stage, const std::vector<char>& spirv);
 
@@ -118,7 +120,7 @@ namespace PreVEngine
 
 		void Bind(const std::string& name, const ImageBuffer& image);
 
-		VkDescriptorSet UpdateDescriptorSet(const uint32_t index);
+		VkDescriptorSet UpdateNextDescriptorSet();
 
 	public:
 		const VkDescriptorSetLayout* GetDescriptorSetLayout() const;
