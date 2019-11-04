@@ -131,8 +131,7 @@ namespace PreVEngine
 
 	VkShaderModule Shader::CreateShaderModule(const std::vector<char>& spirv) const
 	{
-		VkShaderModuleCreateInfo createInfo = {};
-		createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+		VkShaderModuleCreateInfo createInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
 		createInfo.codeSize = spirv.size();
 
 		std::vector<uint32_t> codeAligned(spirv.size() / 4 + 1);

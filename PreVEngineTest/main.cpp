@@ -119,7 +119,6 @@ public:
 	}
 };
 
-
 struct Vertex
 {
 	vec3 pos;
@@ -304,10 +303,10 @@ int main(int argc, char *argv[])
 	Uniforms uniforms;
 	uniforms.view.Translate(0.0f, 0.0f, -4.0f);
 
-	std::vector<std::shared_ptr<UBO>> uniformBuffers(models.size() * SWAPCHAIN_FRAMES_IN_FLIGHT);
+	std::vector<std::unique_ptr<UBO>> uniformBuffers(models.size() * SWAPCHAIN_FRAMES_IN_FLIGHT);
 	for (size_t i = 0; i < models.size() * SWAPCHAIN_FRAMES_IN_FLIGHT; i++)
 	{
-		uniformBuffers[i] = std::make_shared<UBO>(allocator);
+		uniformBuffers[i] = std::make_unique<UBO>(allocator);
 		uniformBuffers[i]->Allocate(sizeof(Uniforms));
 
 		printf("UBO %zd created\n", i);
@@ -319,14 +318,14 @@ int main(int argc, char *argv[])
 											{ VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/frag.spv" }
 										});
 
-	shader->AdjustDescriptorsSetsCapacity(COUNT_OF_MODELS * SWAPCHAIN_FRAMES_IN_FLIGHT);
-
 	Pipeline pipeline(device, renderpass, *shader);
 	pipeline.CreateGraphicsPipeline();
 	printf("Pipeline created\n");
 
 	uint32_t descriptorSetIndex = 0;
 	uint32_t swapChainFrameIndex = 0;
+
+	shader->AdjustDescriptorsSetsCapacity(COUNT_OF_MODELS * SWAPCHAIN_FRAMES_IN_FLIGHT);
 
 	////////////////////////////////////////////////////////
 	// Client Init Code: ends here
@@ -346,7 +345,7 @@ int main(int argc, char *argv[])
 		}
 
 		VkExtent2D ext = swapchain.GetExtent();
-		VkRect2D   scissor = { {0, 0}, ext };
+		VkRect2D scissor = { {0, 0}, ext };
 		VkViewport viewport = { 0, 0, (float)ext.width, (float)ext.height, 0, 1 };
 
 		float aspect = (float)ext.width / (float)ext.height;
@@ -356,6 +355,11 @@ int main(int argc, char *argv[])
 		// Call PreRender ??
 
 		// Call Render
+
+		//if (swapChainFrameIndex == 0)
+		//{
+		//	shader->AdjustDescriptorsSetsCapacity(COUNT_OF_MODELS * SWAPCHAIN_FRAMES_IN_FLIGHT);
+		//}
 
 		VkCommandBuffer commandBuffer;
 		uint32_t frameInFlightIndex;
