@@ -2,7 +2,7 @@ project(PreVEngineTest)
 cmake_minimum_required(VERSION 2.8)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    add_definitions(-std=c++11)
+    add_definitions(-std=c++17)
 endif()
 
 include_directories("${PROJECT_SOURCE_DIR}")

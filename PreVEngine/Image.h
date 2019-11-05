@@ -2,7 +2,8 @@
 #define __IMAGE_H__
 
 #include <stdint.h>
-#include <string>
+#include <memory>
+#include <cstring>
 
 namespace PreVEngine
 {

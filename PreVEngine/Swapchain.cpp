@@ -372,6 +372,8 @@ namespace PreVEngine
 	{
 		ASSERT(!m_isAcquired, "CSwapchain: Previous swapchain buffer has not yet been presented.\n");
 
+		vkWaitForFences(m_device, 1, &m_swapChainSync->fences[m_currentFrameIndex], VK_TRUE, UINT64_MAX);
+
 		uint32_t acquireIndex;
 		VkResult result = vkAcquireNextImageKHR(m_device, m_swapchain, UINT64_MAX, m_swapChainSync->acquireSemaphores[m_currentFrameIndex], VK_NULL_HANDLE, &acquireIndex);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR)
@@ -383,8 +385,6 @@ namespace PreVEngine
 		{
 			ASSERT(true, "failed to acquire swap chain image!");
 		}
-
-		vkWaitForFences(m_device, 1, &m_swapChainSync->fences[m_currentFrameIndex], VK_TRUE, UINT64_MAX);
 
 		m_acquiredIndex = acquireIndex;
 		m_isAcquired = true;

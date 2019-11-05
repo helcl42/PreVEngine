@@ -1,5 +1,7 @@
 #include <iostream>
 #include <random>
+#include <memory>
+#include <cstring>
 
 #include <Window.h>
 #include <Devices.h>

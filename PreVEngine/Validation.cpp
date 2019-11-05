@@ -30,10 +30,10 @@ struct INITVULKAN
 			printf("\033[37m\033[2m");				// set faint white
 			return;
 		}
-		printf("\033[%dm", (color & 8) ? 1 : 0);    // bright or normal
-		if (color)
+		printf("\033[%dm", (int(color) & 8) ? 1 : 0);    // bright or normal
+		if (bool(color))
 		{
-			printf("\033[3%dm", color & 7);			// set text color
+			printf("\033[3%dm", int(color) & 7);			// set text color
 		}
 #endif
 	}

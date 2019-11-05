@@ -42,7 +42,7 @@ endif()
 #=================================================================
 #==============================LINUX==============================
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    add_definitions(-std=c++11)
+    add_definitions(-std=c++17)
     set(BUILD_PREVENGINE_XCB_SUPPORT ON)  #Other options are not yet supported.
     #option(BUILD_PREVENGINE_XCB_SUPPORT     "Build XCB PREVENGINE support"      ON)
     #option(BUILD_PREVENGINE_XLIB_SUPPORT    "Build Xlib PREVENGINE support"    OFF)

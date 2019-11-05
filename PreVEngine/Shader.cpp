@@ -348,7 +348,7 @@ namespace PreVEngine
 
 	void Shader::Bind(const std::string& name, const UBO& ubo)
 	{
-		auto& nameIndex = m_descriptorInfoNameToIndexMapping.find(name);
+		const auto& nameIndex = m_descriptorInfoNameToIndexMapping.find(name);
 		if (nameIndex == m_descriptorInfoNameToIndexMapping.cend())
 		{
 			LOGE("Could not find uniform with name: %s", name.c_str());
@@ -365,7 +365,7 @@ namespace PreVEngine
 
 	void Shader::Bind(const std::string& name, const VkImageView imageView, const VkSampler sampler)
 	{
-		auto& nameIndex = m_descriptorInfoNameToIndexMapping.find(name);
+		const auto& nameIndex = m_descriptorInfoNameToIndexMapping.find(name);
 		if (nameIndex == m_descriptorInfoNameToIndexMapping.cend())
 		{
 			LOGE("Could not find uniform with name: %s", name.c_str());

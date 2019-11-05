@@ -46,9 +46,12 @@ namespace PreVEngine
 		// xcb_input_modifier_info_t mods;
 		// xcb_input_group_info_t    group;
 	} xcb_input_touch_begin_event_t;
+}
 
 #endif
 
+namespace PreVEngine
+{
 	// Convert native EVDEV key-code to cross-platform USB HID code.
 	const unsigned char EVDEV_TO_HID[256] = {
 	  0,  0,  0,  0,  0,  0,  0,  0,  0, 41, 30, 31, 32, 33, 34, 35,
@@ -356,10 +359,10 @@ namespace PreVEngine
 				return OnMouseEvent(ActionType::UP, mx, my, btn);         // mouse btn release
 			case XCB_KEY_PRESS:
 			{
-				uint8_t keycode = EVDEV_TO_HID[btn];
+				uint8_t keycode = EVDEV_TO_HID[int(btn)];
 
-				xkb_state_key_get_utf8(m_keyboardState, btn, buf, sizeof(buf));
-				xkb_state_update_key(m_keyboardState, btn, XKB_KEY_DOWN);
+				xkb_state_key_get_utf8(m_keyboardState, int(btn), buf, sizeof(buf));
+				xkb_state_update_key(m_keyboardState, int(btn), XKB_KEY_DOWN);
 
 				if (buf[0])
 				{
@@ -370,10 +373,10 @@ namespace PreVEngine
 			}
 			case XCB_KEY_RELEASE:
 			{
-				xkb_state_update_key(m_keyboardState, btn, XKB_KEY_UP);
-				uint8_t keycode = EVDEV_TO_HID[btn];
+				xkb_state_update_key(m_keyboardState, int(btn), XKB_KEY_UP);
+				uint8_t keycode = EVDEV_TO_HID[int(btn)];
 
-				return OnKeyEvent(UP, keycode);                                      // key released event
+				return OnKeyEvent(ActionType::UP, keycode);                                      // key released event
 			}
 			case XCB_CLIENT_MESSAGE:
 			{                                              // window close event

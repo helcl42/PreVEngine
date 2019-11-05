@@ -3,6 +3,7 @@
 
 #include <map>
 #include <set>
+#include <memory>
 
 #include "Window.h"
 #include "Buffers.h"
