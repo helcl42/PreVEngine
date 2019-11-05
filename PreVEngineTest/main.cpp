@@ -649,6 +649,7 @@ int main(int argc, char *argv[])
 
 	EngineConfig config;
 	App app(config);
+	app.Init();
 	app.Run();
 
 	return 0;
