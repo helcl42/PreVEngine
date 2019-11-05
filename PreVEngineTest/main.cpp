@@ -585,7 +585,7 @@ public:
 		m_renderPass->AddSubpass({ 0, 1 });
 
 		m_swapchain = std::make_shared<Swapchain>(*m_renderPass, m_graphicsQueue, m_graphicsQueue);
-		m_swapchain->SetPresentMode(m_config.VSync ? VK_PRESENT_MODE_MAILBOX_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
+		m_swapchain->SetPresentMode(m_config.VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
 		m_swapchain->SetImageCount(m_config.framesInFlight);
 		m_swapchain->Print();
 
