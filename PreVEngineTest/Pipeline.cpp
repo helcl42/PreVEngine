@@ -1,7 +1,7 @@
 #include "Pipeline.h"
 
 Pipeline::Pipeline(VkDevice device, VkRenderPass renderpass, PreVEngine::Shader& shaders)
-	: device(device), renderpass(renderpass), pipelineLayout(), graphicsPipeline()
+	: device(device), renderpass(renderpass), graphicsPipeline(), pipelineLayout()
 {
 	this->shaders = &shaders;
 }

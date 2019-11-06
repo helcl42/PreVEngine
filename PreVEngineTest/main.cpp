@@ -320,9 +320,9 @@ private:
 
 	Swapchain& m_swapchain;
 
-	Allocator& m_allocator;
+    RenderPass& m_renderPass;
 
-	RenderPass& m_renderPass;
+	Allocator& m_allocator;
 
 	std::shared_ptr<Shader> m_shader;
 

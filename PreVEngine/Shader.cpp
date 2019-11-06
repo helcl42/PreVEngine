@@ -9,7 +9,7 @@
 namespace PreVEngine
 {
 	Shader::Shader(VkDevice device)
-		: m_device(device), m_descriptorSetLayout(VK_NULL_HANDLE), m_descriptorPool(VK_NULL_HANDLE), m_poolCapacity(0)
+		: m_device(device), m_descriptorPool(VK_NULL_HANDLE), m_descriptorSetLayout(VK_NULL_HANDLE), m_poolCapacity(0)
 	{
 	}
 

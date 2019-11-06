@@ -117,6 +117,8 @@ namespace PreVEngine
 	class DebugReport
 	{
 	private:
+		VkInstance m_instance;
+
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 		PFN_vkCreateDebugReportCallbackEXT m_vkCreateDebugCallbackEXT;
 
@@ -135,8 +137,6 @@ namespace PreVEngine
 		VkDebugUtilsMessageSeverityFlagsEXT m_flags;
 
 #endif
-		VkInstance m_instance;
-
 	public:
 		DebugReport();
 

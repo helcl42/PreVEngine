@@ -173,10 +173,10 @@ namespace PreVEngine
 		VkDebugReportCallbackCreateInfoEXT createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
 		createInfo.pNext = nullptr;
-		createInfo.flags = flags;
+		createInfo.flags = m_flags;
 		createInfo.pfnCallback = DebugCallback; // Callback function to call
 		createInfo.pUserData = nullptr;
-		VKERRCHECK(m_vkCreateDebugCallbackEXT(instance, &createInfo, nullptr, &m_debugCallback));
+		VKERRCHECK(m_vkCreateDebugCallbackEXT(m_instance, &createInfo, nullptr, &m_debugCallback));
 #else
 		m_vkCreateDebugCallbackEXT = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(inst, "vkCreateDebugUtilsMessengerEXT");
 		m_vkDestroyDebugCallbackEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(inst, "vkDestroyDebugUtilsMessengerEXT");
