@@ -1,6 +1,6 @@
 # PreVEngine
 
-## Build in generaal
+## Build in general
 
  - do not forget to set up `USE_VULKAN_WRAPPER` to `ON` or `OFF`
 
