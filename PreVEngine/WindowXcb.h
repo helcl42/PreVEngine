@@ -134,7 +134,7 @@ namespace PreVEngine
 	static inline xcb_intern_atom_reply_t* intern_atom_helper(xcb_connection_t *conn, bool only_if_exists, const char *str)
 	{
 		xcb_intern_atom_cookie_t cookie = xcb_intern_atom(conn, only_if_exists, strlen(str), str);
-		return xcb_intern_atom_reply(conn, cookie, nullptr);
+		return xcb_intern_atom_reply(conn, cookie, 0);
 	}
 
 	WindowXcb::WindowXcb(const char* title)
@@ -164,10 +164,10 @@ namespace PreVEngine
 
 		XSetEventQueueOwner(m_display, XCBOwnsEventQueue);
 
-		uint32_t value_mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
-		uint32_t value_list[2];
-		value_list[0] = m_xcbScreen->black_pixel;
-		value_list[1] =
+		uint32_t valueMask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
+		uint32_t valueList[2];
+		valueList[0] = m_xcbScreen->black_pixel;
+		valueList[1] =
 			XCB_EVENT_MASK_KEY_PRESS |			// 1
 			XCB_EVENT_MASK_KEY_RELEASE |        // 2
 			XCB_EVENT_MASK_BUTTON_PRESS |       // 4
@@ -195,7 +195,7 @@ namespace PreVEngine
 		}
 
 		m_xcbWindow = xcb_generate_id(m_xcbConnection);
-		xcb_create_window(m_xcbConnection, XCB_COPY_FROM_PARENT, m_xcbWindow, m_xcbScreen->root, 0, 0, width, height, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT, m_xcbScreen->root_visual, value_mask, value_list);
+		xcb_create_window(m_xcbConnection, XCB_COPY_FROM_PARENT, m_xcbWindow, m_xcbScreen->root, 0, 0, width, height, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT, m_xcbScreen->root_visual, valueMask, valueList);
 
 		xcb_intern_atom_reply_t* reply = intern_atom_helper(m_xcbConnection, true, "WM_PROTOCOLS");
 
@@ -337,6 +337,7 @@ namespace PreVEngine
 		xcb_button_press_event_t& e = *(xcb_button_press_event_t*)x_event;  // xcb_motion_notify_event_t
 		int16_t mx = e.event_x;
 		int16_t my = e.event_y;
+		uint8_t key = e.detail;
 		MouseButtonType btn = e.detail < 4 ? (MouseButtonType)e.detail : MouseButtonType::NONE;
 		MouseButtonType bestBtn = MouseButtonType(IsMouseButtonPressed(MouseButtonType::LEFT) ? 1 : IsMouseButtonPressed(MouseButtonType::MIDDLE) ? 2 : IsMouseButtonPressed(MouseButtonType::RIGHT) ? 3 : 0);  // If multiple buttons pressed, pick left one.
 
@@ -359,10 +360,10 @@ namespace PreVEngine
 				return OnMouseEvent(ActionType::UP, mx, my, btn);         // mouse btn release
 			case XCB_KEY_PRESS:
 			{
-				uint8_t keycode = EVDEV_TO_HID[int(btn)];
+				uint8_t keycode = EVDEV_TO_HID[key];
 
-				xkb_state_key_get_utf8(m_keyboardState, int(btn), buf, sizeof(buf));
-				xkb_state_update_key(m_keyboardState, int(btn), XKB_KEY_DOWN);
+				xkb_state_key_get_utf8(m_keyboardState, key, buf, sizeof(buf));
+				xkb_state_update_key(m_keyboardState, key, XKB_KEY_DOWN);
 
 				if (buf[0])
 				{
@@ -373,8 +374,8 @@ namespace PreVEngine
 			}
 			case XCB_KEY_RELEASE:
 			{
-				xkb_state_update_key(m_keyboardState, int(btn), XKB_KEY_UP);
-				uint8_t keycode = EVDEV_TO_HID[int(btn)];
+				xkb_state_update_key(m_keyboardState, key, XKB_KEY_UP);
+				uint8_t keycode = EVDEV_TO_HID[key];
 
 				return OnKeyEvent(ActionType::UP, keycode);                                      // key released event
 			}
