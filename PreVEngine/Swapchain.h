@@ -25,58 +25,8 @@ namespace PreVEngine
 		VkFramebuffer framebuffer;
 
 		VkCommandBuffer commandBuffer;
-	};
 
-	struct SwapcChainSync
-	{
-		const VkDevice device;
-
-		std::vector<VkSemaphore> acquireSemaphores;
-
-		std::vector<VkSemaphore> submitSemaphores;
-
-		std::vector<VkFence> fences;
-
-		SwapcChainSync(const VkDevice dev)
-			: device(dev)
-		{
-		}
-
-		~SwapcChainSync()
-		{
-		}
-
-		void Init(const uint32_t framesInFlightCount)
-		{
-			acquireSemaphores.resize(framesInFlightCount);
-			submitSemaphores.resize(framesInFlightCount);
-			fences.resize(framesInFlightCount);
-
-			for (uint32_t i = 0; i < framesInFlightCount; i++)
-			{
-				VkFenceCreateInfo fenceCreateInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
-				fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-				vkCreateFence(device, &fenceCreateInfo, nullptr, &fences[i]);
-
-				VkSemaphoreCreateInfo semaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
-				VKERRCHECK(vkCreateSemaphore(device, &semaphoreInfo, nullptr, &acquireSemaphores[i]));
-				VKERRCHECK(vkCreateSemaphore(device, &semaphoreInfo, nullptr, &submitSemaphores[i]));
-			}
-		}
-
-		void ShutDown()
-		{
-			for (uint32_t i = 0; i < static_cast<uint32_t>(submitSemaphores.size()); i++)
-			{
-				vkDestroySemaphore(device, submitSemaphores[i], nullptr);
-				vkDestroySemaphore(device, acquireSemaphores[i], nullptr);
-				vkDestroyFence(device, fences[i], nullptr);
-			}
-
-			acquireSemaphores.clear();
-			submitSemaphores.clear();
-			fences.clear();
-		}
+		VkFence fence;
 	};
 
 	class Swapchain
@@ -107,8 +57,10 @@ namespace PreVEngine
 		uint32_t m_acquiredIndex;  // index of last acquired image
 
 		bool m_isAcquired;
+		
+		VkSemaphore m_acquireSemaphore;
 
-		SwapcChainSync* m_swapChainSync;
+		VkSemaphore m_submitSemaphore;
 
 		uint32_t m_currentFrameIndex;
 

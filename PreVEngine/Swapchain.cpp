@@ -20,6 +20,10 @@ namespace PreVEngine
 
 		m_depthBuffer.Create(m_gpu, m_device, m_swapchainCreateInfo.imageExtent, renderPass.GetDepthFormat());
 
+		VkSemaphoreCreateInfo semaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
+		VKERRCHECK(vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_acquireSemaphore));
+		VKERRCHECK(vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_submitSemaphore));
+
 		Apply();
 	}
 
@@ -32,16 +36,21 @@ namespace PreVEngine
 			vkDestroyCommandPool(m_device, m_commandPool, nullptr);
 		}
 
-		if (m_swapChainSync)
+		if (m_acquireSemaphore != VK_NULL_HANDLE)
 		{
-			m_swapChainSync->ShutDown();
-			delete m_swapChainSync;
+			vkDestroySemaphore(m_device, m_submitSemaphore, nullptr);
+		}
+
+		if (m_acquireSemaphore != VK_NULL_HANDLE)
+		{
+			vkDestroySemaphore(m_device, m_acquireSemaphore, nullptr);
 		}
 
 		if (m_swapchain != VK_NULL_HANDLE)
 		{
 			for (auto& swapchainBuffer : m_swapchainBuffers)
 			{
+				vkDestroyFence(m_device, swapchainBuffer.fence, nullptr);
 				vkDestroyFramebuffer(m_device, swapchainBuffer.framebuffer, nullptr);
 				vkDestroyImageView(m_device, swapchainBuffer.view, nullptr);
 			}
@@ -61,8 +70,6 @@ namespace PreVEngine
 		m_surface = presentQueue->surface;
 		m_presentQueue = *presentQueue;
 		m_graphicsQueue = *graphicsQueue;
-
-		m_swapChainSync = new SwapcChainSync(m_device);
 
 		VkSurfaceCapabilitiesKHR surfaceCapabilities = GetSurfaceCapabilities();
 		assert(surfaceCapabilities.supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
@@ -281,10 +288,9 @@ namespace PreVEngine
 		{
 			vkDeviceWaitIdle(m_device);
 
-			m_swapChainSync->ShutDown();
-
 			for (auto& swapchainBuffer : m_swapchainBuffers)
 			{
+				vkDestroyFence(m_device, swapchainBuffer.fence, nullptr);
 				vkDestroyFramebuffer(m_device, swapchainBuffer.framebuffer, nullptr);
 				vkDestroyImageView(m_device, swapchainBuffer.view, nullptr);
 			}
@@ -302,8 +308,6 @@ namespace PreVEngine
 
 		m_swapchainImagesCount = swapchainImagesCount;
 		m_currentFrameIndex = 0;
-
-		m_swapChainSync->Init(swapchainImagesCount);
 
 		m_swapchainBuffers.resize(swapchainImagesCount);
 		for (uint32_t i = 0; i < swapchainImagesCount; i++)
@@ -349,6 +353,10 @@ namespace PreVEngine
 			commandBufferAllocInfo.commandBufferCount = 1;
 			VKERRCHECK(vkAllocateCommandBuffers(m_device, &commandBufferAllocInfo, &swapchainBuffer.commandBuffer));
 
+			VkFenceCreateInfo createInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
+			createInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+			vkCreateFence(m_device, &createInfo, nullptr, &swapchainBuffer.fence);
+
 			swapchainBuffer.extent = m_swapchainCreateInfo.imageExtent;
 
 			printf("---Extent = %d x %d\n", m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height);
@@ -372,10 +380,8 @@ namespace PreVEngine
 	{
 		ASSERT(!m_isAcquired, "CSwapchain: Previous swapchain buffer has not yet been presented.\n");
 
-		vkWaitForFences(m_device, 1, &m_swapChainSync->fences[m_currentFrameIndex], VK_TRUE, UINT64_MAX);
-
 		uint32_t acquireIndex;
-		VkResult result = vkAcquireNextImageKHR(m_device, m_swapchain, UINT64_MAX, m_swapChainSync->acquireSemaphores[m_currentFrameIndex], VK_NULL_HANDLE, &acquireIndex);
+		VkResult result = vkAcquireNextImageKHR(m_device, m_swapchain, UINT64_MAX, m_acquireSemaphore, VK_NULL_HANDLE, &acquireIndex);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR)
 		{
 			UpdateExtent();
@@ -389,7 +395,12 @@ namespace PreVEngine
 		m_acquiredIndex = acquireIndex;
 		m_isAcquired = true;
 
-		next = m_swapchainBuffers[m_acquiredIndex];
+		SwapchainBuffer& swapchainBuffer = m_swapchainBuffers.at(m_acquiredIndex);
+
+		vkWaitForFences(m_device, 1, &swapchainBuffer.fence, VK_TRUE, UINT64_MAX);
+
+		next = swapchainBuffer;
+
 		return true;
 	}
 
@@ -397,22 +408,22 @@ namespace PreVEngine
 	{
 		ASSERT(!!m_isAcquired, "CSwapchain: A buffer must be acquired before submitting.\n");
 
-		SwapchainBuffer& buffer = m_swapchainBuffers[m_acquiredIndex];
+		SwapchainBuffer& swapchainBuffer = m_swapchainBuffers[m_acquiredIndex];
 
 		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
 		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &m_swapChainSync->acquireSemaphores[m_currentFrameIndex];
+		submitInfo.pWaitSemaphores = &m_acquireSemaphore;
 		submitInfo.pWaitDstStageMask = waitStages;
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &buffer.commandBuffer;
+		submitInfo.pCommandBuffers = &swapchainBuffer.commandBuffer;
 		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &m_swapChainSync->submitSemaphores[m_currentFrameIndex];
+		submitInfo.pSignalSemaphores = &m_submitSemaphore;
 
-		vkResetFences(m_device, 1, &m_swapChainSync->fences[m_currentFrameIndex]);
+		vkResetFences(m_device, 1, &swapchainBuffer.fence);
 
-		VKERRCHECK(vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_swapChainSync->fences[m_currentFrameIndex]));
+		VKERRCHECK(vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, swapchainBuffer.fence));
 	}
 
 	void Swapchain::Present()
@@ -421,7 +432,7 @@ namespace PreVEngine
 
 		VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = &m_swapChainSync->submitSemaphores[m_currentFrameIndex];
+		presentInfo.pWaitSemaphores = &m_submitSemaphore;
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = &m_swapchain;
 		presentInfo.pImageIndices = &m_acquiredIndex;
