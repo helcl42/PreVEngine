@@ -434,16 +434,8 @@ public:
 		VkRect2D scissor = { {0, 0}, ext };
 		VkViewport viewport = { 0, 0, (float)ext.width, (float)ext.height, 0, 1 };
 
-		float aspect;
-		if(ext.width < ext.height)
-		{
-            aspect = (float)ext.width / (float)ext.height;
-		}
-		else
-		{
-            aspect = (float)ext.height / (float)ext.width;
-		}
-
+		float aspect = (float)ext.width / (float)ext.height;
+		
 		VkCommandBuffer commandBuffer;
 		uint32_t frameInFlightIndex;
 		if (m_swapchain.BeginFrame(commandBuffer, frameInFlightIndex))
