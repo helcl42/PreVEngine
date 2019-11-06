@@ -133,7 +133,7 @@ public:
 	}
 };
 
-class FancyWindow : public Window
+class EngineWindow : public Window
 {
 private:
 	float mx = 0;
@@ -141,12 +141,12 @@ private:
 	float my = 0;
 
 public:
-	FancyWindow(const char* title)
+	EngineWindow(const char* title)
 		: Window(title)
 	{
 	}
 
-	FancyWindow(const char* title, const uint32_t width, const uint32_t height)
+	EngineWindow(const char* title, const uint32_t width, const uint32_t height)
 		: Window(title, width, height)
 	{
 	}
@@ -514,7 +514,7 @@ private:
 
 	std::shared_ptr<Instance> m_instance;
 
-	std::shared_ptr<FancyWindow> m_window;
+	std::shared_ptr<EngineWindow> m_window;
 
 	std::shared_ptr<PhysicalDevices> m_physicalDevices;
 
@@ -552,7 +552,7 @@ public:
 
 		m_instance = std::make_shared<Instance>(m_config.validation);
 
-		m_window = std::make_shared<FancyWindow>(m_config.appName.c_str(), m_config.windowSize.width, m_config.windowSize.height);
+		m_window = std::make_shared<EngineWindow>(m_config.appName.c_str(), m_config.windowSize.width, m_config.windowSize.height);
 		m_window->SetPosition(m_config.windowPosition);
 
 		m_physicalDevices = std::make_shared<PhysicalDevices>(*m_instance);
