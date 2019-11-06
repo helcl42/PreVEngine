@@ -14,6 +14,7 @@
 
 #include "matrix.h"
 #include "Pipeline.h"
+#include "../PreVEngine/VulkanWrapper/vulkan/vulkan.h"
 
 using namespace PreVEngine;
 
@@ -433,7 +434,15 @@ public:
 		VkRect2D scissor = { {0, 0}, ext };
 		VkViewport viewport = { 0, 0, (float)ext.width, (float)ext.height, 0, 1 };
 
-		float aspect = (float)ext.width / (float)ext.height;
+		float aspect;
+		if(ext.width < ext.height)
+		{
+            aspect = (float)ext.width / (float)ext.height;
+		}
+		else
+		{
+            aspect = (float)ext.height / (float)ext.width;
+		}
 
 		VkCommandBuffer commandBuffer;
 		uint32_t frameInFlightIndex;
