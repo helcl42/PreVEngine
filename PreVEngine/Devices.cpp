@@ -358,8 +358,7 @@ namespace PreVEngine
 
 	VkCommandPool Queue::CreateCommandPool() const
 	{
-		VkCommandPoolCreateInfo poolInfo = {};
-		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		VkCommandPoolCreateInfo poolInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
 		poolInfo.queueFamilyIndex = family;
 		poolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
@@ -368,10 +367,10 @@ namespace PreVEngine
 		return commandPool;
 	}
 
-	VkCommandBuffer Queue::CreateCommandBuffer(VkCommandPool command_pool) const
+	VkCommandBuffer Queue::CreateCommandBuffer(VkCommandPool commandPool) const
 	{
 		VkCommandBufferAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
-		allocInfo.commandPool = command_pool;
+		allocInfo.commandPool = commandPool;
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 		allocInfo.commandBufferCount = 1;
 

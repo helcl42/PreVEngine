@@ -8,43 +8,6 @@
 
 namespace PreVEngine
 {
-	//----------------------------------Depth Buffer----------------------------------
-	class DepthBuffer
-	{
-	private:
-		VkPhysicalDevice m_gpu;
-
-		VkDevice m_device;
-
-		VkFormat m_format;
-
-		VkImage m_image;
-
-		VkDeviceMemory m_imageMemory;
-
-		VkImageView m_imageView;
-
-	public:
-		DepthBuffer();
-
-		virtual ~DepthBuffer();
-
-	public:
-		void Create(VkPhysicalDevice gpu, VkDevice device, VkExtent2D extent, VkFormat format = VK_FORMAT_D32_SFLOAT);
-
-		void Destroy();
-
-		void Resize(VkExtent2D extent);
-
-	public:
-		VkFormat GetFormat() const;
-
-		VkImage GetImage() const;
-
-		VkImageView GetImageView() const;
-	};
-	//--------------------------------------------------------------------------------
-
 	//------------------------------------Allocator-----------------------------------
 	class Allocator
 	{
@@ -62,26 +25,27 @@ namespace PreVEngine
 		VkCommandBuffer m_commandBuffer;
 
 	public:
-		Allocator(const Queue& queue, VkDeviceSize blockSize = 256);
+		Allocator(const Queue& queue, const VkDeviceSize blockSize = 256);
 
 		virtual ~Allocator();
 
 	public:
-		void BeginCmd();
+		void BeginCommandBuffer();
 
-		void EndCmd();
+		void EndCommandBuffer();
 
-		void TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels = 1);
+	public:
+		void TransitionImageLayout(const VkImage image, const VkImageLayout oldLayout, const VkImageLayout newLayout, const uint32_t mipLevels = 1);
 
 		void CreateBuffer(const void* data, uint64_t size, VkBufferUsageFlags usage, VmaMemoryUsage memtype, VkBuffer& buffer, VmaAllocation& alloc, void** mapped = 0);
 
 		void DestroyBuffer(VkBuffer buffer, VmaAllocation alloc);
 
-		void CreateImage(const void* data, VkExtent3D extent, VkFormat format, uint32_t mipLevels, VkImage& image, VmaAllocation& alloc, VkImageView& view);
+		void CreateImage(const void* data, const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, VkImage& image, VmaAllocation& alloc, VkImageView& view);
 
 		void DestroyImage(VkImage image, VkImageView view, VmaAllocation alloc);
 
-		void GenerateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
+		void GenerateMipmaps(const VkImage image, const VkFormat imageFormat, const int32_t texWidth, const int32_t texHeight, const uint32_t mipLevels);
 
 	public:
 		VkPhysicalDevice GetPhysicalDevice() const;
@@ -115,7 +79,7 @@ namespace PreVEngine
 	public:
 		void Clear();
 
-		void Data(const void* data, uint32_t count, uint32_t stride, VkBufferUsageFlagBits usage, VmaMemoryUsage memtype = VMA_MEMORY_USAGE_GPU_ONLY, void** mapped = nullptr);
+		void Data(const void* data, const uint32_t count, const uint32_t stride, const VkBufferUsageFlagBits usage, const VmaMemoryUsage memtype = VMA_MEMORY_USAGE_GPU_ONLY, void** mapped = nullptr);
 
 	public:
 		uint32_t GetCount() const;
@@ -130,7 +94,7 @@ namespace PreVEngine
 		using Buffer::Buffer;
 
 	public:
-		void Data(void* data, uint32_t count, uint32_t stride);
+		void Data(const void* data, const uint32_t count, const uint32_t stride);
 	};
 
 	class IBO : public Buffer
@@ -139,9 +103,9 @@ namespace PreVEngine
 		using Buffer::Buffer;
 
 	public:
-		void Data(const uint16_t* data, uint32_t count);
+		void Data(const uint16_t* data, const uint32_t count);
 
-		void Data(const uint32_t* data, uint32_t count);
+		void Data(const uint32_t* data, const uint32_t count);
 	};
 
 	class UBO : public Buffer
@@ -153,11 +117,9 @@ namespace PreVEngine
 		using Buffer::Buffer;
 
 	public:
-		//void Data(void* data, uint32_t size);
+		void Allocate(const uint32_t size);
 
-		void Allocate(uint32_t size);
-
-		void Update(void* data);
+		void Update(const void* data);
 
 	public:
 		uint32_t GetSize() const;
@@ -188,14 +150,14 @@ namespace PreVEngine
 		virtual ~ImageBuffer();
 
 	private:
-		void CreateSampler(float maxLod = 0);
+		void CreateSampler(const float maxLod = 0);
 
 	public:
-		void Clear();
+		void Destroy();
 
-		void Data(const void* data, VkExtent3D extent, VkFormat format = VK_FORMAT_R8G8B8A8_UNORM, bool mipmap = false);
+		void Data(const void* data, const VkExtent3D& extent, const VkFormat format = VK_FORMAT_R8G8B8A8_UNORM, const bool mipmap = false);
 
-		void UpdateSampler(VkSamplerCreateInfo& samplerInfo); // Update sampler settings
+		void UpdateSampler(const VkSamplerCreateInfo& samplerInfo); // Update sampler settings
 
 	public:
 		VkImage GetImage() const;
@@ -207,15 +169,47 @@ namespace PreVEngine
 		VkFormat GetFormat() const;
 
 		VkExtent2D GetExtent() const;
-
-	public:
-		//operator VkImage() { return image; }
-
-		//operator VkImageView() { return view; }
-
-		//operator VkSampler() { return sampler; }
 	};
 	//--------------------------------------------------------------------------------
+
+	//----------------------------------Depth Buffer----------------------------------
+	class DepthBuffer
+	{
+	private:
+		VkPhysicalDevice m_gpu;
+
+
+		VkDevice m_device;
+
+		VkFormat m_format;
+
+		VkImage m_image;
+
+		VkDeviceMemory m_imageMemory;
+
+		VkImageView m_imageView;
+
+	public:
+		DepthBuffer();
+
+		virtual ~DepthBuffer();
+
+	public:
+		void Create(const VkPhysicalDevice gpu, const VkDevice device, const VkExtent2D& extent, const VkFormat format = VK_FORMAT_D32_SFLOAT);
+
+		void Destroy();
+
+		void Resize(const VkExtent2D& extent);
+
+	public:
+		VkFormat GetFormat() const;
+
+		VkImage GetImage() const;
+
+		VkImageView GetImageView() const;
+	};
+	//--------------------------------------------------------------------------------
+
 }
 
 #endif

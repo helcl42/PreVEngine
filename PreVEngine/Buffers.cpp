@@ -14,12 +14,12 @@
 
 namespace PreVEngine
 {
-	static uint32_t Log2(uint32_t x)
+	static uint32_t Log2(const uint32_t x)
 	{
 		return (uint32_t)(log(x) / log(2));
 	}
 
-	static uint32_t FindMemoryType(VkPhysicalDevice gpu, uint32_t typeFilter, VkMemoryPropertyFlags properties)
+	static uint32_t FindMemoryType(const VkPhysicalDevice gpu, const uint32_t typeFilter, const VkMemoryPropertyFlags properties)
 	{
 		VkPhysicalDeviceMemoryProperties memProperties;
 		vkGetPhysicalDeviceMemoryProperties(gpu, &memProperties);
@@ -37,35 +37,35 @@ namespace PreVEngine
 		return 0;
 	}
 
-	static void CreateImage(VkPhysicalDevice gpu, VkDevice device, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory)
+	static void CreateImage(const VkPhysicalDevice gpu, const VkDevice device, const VkExtent2D& extent, const VkFormat format, const VkImageTiling tiling, const VkImageUsageFlags usage, const VkMemoryPropertyFlags properties, VkImage& outImage, VkDeviceMemory& outImageMemory)
 	{
 		VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 		imageInfo.imageType = VK_IMAGE_TYPE_2D;
-		imageInfo.format = format;  //VK_FORMAT_D32_SFLOAT
-		imageInfo.extent = { width, height, 1 };
+		imageInfo.format = format;
+		imageInfo.extent = { extent.width, extent.height, 1 };
 		imageInfo.mipLevels = 1;
 		imageInfo.arrayLayers = 1;
 		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-		imageInfo.tiling = tiling;  //VK_IMAGE_TILING_OPTIMAL
-		imageInfo.usage = usage;    //VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+		imageInfo.tiling = tiling;
+		imageInfo.usage = usage;
 		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		imageInfo.queueFamilyIndexCount = 0;
 		imageInfo.pQueueFamilyIndices = nullptr;
 		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		VKERRCHECK(vkCreateImage(device, &imageInfo, nullptr, &image));
+		VKERRCHECK(vkCreateImage(device, &imageInfo, nullptr, &outImage));
 
 		VkMemoryRequirements memRequirements;
-		vkGetImageMemoryRequirements(device, image, &memRequirements);
+		vkGetImageMemoryRequirements(device, outImage, &memRequirements);
 
-		VkMemoryAllocateInfo allocInfo = {};
-		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		VkMemoryAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
 		allocInfo.allocationSize = memRequirements.size;
 		allocInfo.memoryTypeIndex = FindMemoryType(gpu, memRequirements.memoryTypeBits, properties);
-		VKERRCHECK(vkAllocateMemory(device, &allocInfo, nullptr, &imageMemory));
-		VKERRCHECK(vkBindImageMemory(device, image, imageMemory, 0));
+		VKERRCHECK(vkAllocateMemory(device, &allocInfo, nullptr, &outImageMemory));
+
+		VKERRCHECK(vkBindImageMemory(device, outImage, outImageMemory, 0));
 	}
 
-	static VkImageView CreateImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
+	static VkImageView CreateImageView(const VkDevice device, const VkImage image, const VkFormat format, const VkImageAspectFlags aspectFlags)
 	{
 		VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 		viewInfo.image = image;
@@ -88,73 +88,7 @@ namespace PreVEngine
 
 	//------------------------------------------------------------------------------------------------
 
-	DepthBuffer::DepthBuffer()
-		: m_gpu(VK_NULL_HANDLE), m_device(VK_NULL_HANDLE), m_format(VK_FORMAT_UNDEFINED), m_image(VK_NULL_HANDLE), m_imageMemory(VK_NULL_HANDLE), m_imageView(VK_NULL_HANDLE)
-	{
-	}
-	DepthBuffer::~DepthBuffer()
-	{
-		Destroy();
-	}
-
-	void DepthBuffer::Create(VkPhysicalDevice gpu, VkDevice device, VkExtent2D extent, VkFormat format)
-	{
-		this->m_gpu = gpu;
-		this->m_device = device;
-		this->m_format = format;
-
-		Resize(extent);
-	}
-
-	void DepthBuffer::Destroy()
-	{
-		if (m_imageView)
-		{
-			vkDestroyImageView(m_device, m_imageView, nullptr);
-		}
-
-		if (m_image)
-		{
-			vkDestroyImage(m_device, m_image, nullptr);
-		}
-
-		if (m_imageMemory)
-		{
-			vkFreeMemory(m_device, m_imageMemory, nullptr);
-		}
-	}
-
-	void DepthBuffer::Resize(VkExtent2D extent)
-	{
-		Destroy();
-
-		if (m_format == VK_FORMAT_UNDEFINED)
-		{
-			return;
-		}
-
-		CreateImage(m_gpu, m_device, extent.width, extent.height, m_format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_image, m_imageMemory);
-
-		m_imageView = CreateImageView(m_device, m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
-	}
-
-	VkFormat DepthBuffer::GetFormat() const
-	{
-		return m_format;
-	}
-
-	VkImage DepthBuffer::GetImage() const
-	{
-		return m_image;
-	}
-
-	VkImageView DepthBuffer::GetImageView() const
-	{
-		return m_imageView;
-	}
-
-
-	Allocator::Allocator(const Queue& q, VkDeviceSize blockSize)
+	Allocator::Allocator(const Queue& q, const VkDeviceSize blockSize)
 		: m_allocator(VK_NULL_HANDLE)
 	{
 		m_gpu = q.gpu;
@@ -211,16 +145,17 @@ namespace PreVEngine
 		}
 	}
 
-	void Allocator::BeginCmd()
+	void Allocator::BeginCommandBuffer()
 	{
 		VkCommandBufferBeginInfo cmdBufBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 		cmdBufBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 		VKERRCHECK(vkBeginCommandBuffer(m_commandBuffer, &cmdBufBeginInfo));
 	}
 
-	void Allocator::EndCmd()
+	void Allocator::EndCommandBuffer()
 	{
 		VKERRCHECK(vkEndCommandBuffer(m_commandBuffer));
+
 		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &m_commandBuffer;
@@ -275,13 +210,13 @@ namespace PreVEngine
 		allocCreateInfo.flags = 0;
 		VKERRCHECK(vmaCreateBuffer(m_allocator, &bufInfo, &allocCreateInfo, &buffer, &alloc, nullptr));
 
-		BeginCmd();
+		BeginCommandBuffer();
 		VkBufferCopy bufCopyRegion = {};
 		bufCopyRegion.srcOffset = 0;
 		bufCopyRegion.dstOffset = 0;
 		bufCopyRegion.size = bufInfo.size;
 		vkCmdCopyBuffer(m_commandBuffer, stageBuffer, buffer, 1, &bufCopyRegion);
-		EndCmd();
+		EndCommandBuffer();
 
 		vmaDestroyBuffer(m_allocator, stageBuffer, stageBufferAlloc);
 	}
@@ -291,12 +226,12 @@ namespace PreVEngine
 		vmaDestroyBuffer(m_allocator, buffer, alloc);
 	}
 
-	void Allocator::CreateImage(const void* data, VkExtent3D extent, VkFormat format, uint32_t mipLevels, VkImage& image, VmaAllocation& alloc, VkImageView& view)
+	void Allocator::CreateImage(const void* data, const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, VkImage& image, VmaAllocation& alloc, VkImageView& view)
 	{
-		uint32_t fmt_size = FormatSize(format);
+		uint32_t formatSize = FormatSize(format);
 
 		// Copy image data to staging buffer in CPU memory
-		uint64_t size = extent.width * extent.height * extent.depth * fmt_size;
+		uint64_t size = extent.width * extent.height * extent.depth * formatSize;
 
 		VkBufferCreateInfo bufInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
 		bufInfo.size = size;
@@ -311,54 +246,54 @@ namespace PreVEngine
 		VkBuffer stageBuffer = VK_NULL_HANDLE;
 		VmaAllocation stageBufferAlloc = VK_NULL_HANDLE;
 		VKERRCHECK(vmaCreateBuffer(m_allocator, &bufInfo, &allocCreateInfo, &stageBuffer, &stageBufferAlloc, &allocInfo));
-		memcpy(allocInfo.pMappedData, data, size);
-
-		// Create image in GPU memory
-		//uint32_t mipLevels = 1;
-		//if(mipmap) mipLevels = (uint32_t)(Log2(std::max(extent.width, extent.height))) + 1;
+		if (data != nullptr)
+		{
+			memcpy(allocInfo.pMappedData, data, size);
+		}
 
 		VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 		imageInfo.flags = 0;
 		imageInfo.imageType = VK_IMAGE_TYPE_2D;
-		imageInfo.format = format; //VK_FORMAT_R8G8B8A8_UNORM;
+		imageInfo.format = format;
 		imageInfo.extent = extent;
-		imageInfo.mipLevels = mipLevels; //1;
+		imageInfo.mipLevels = mipLevels;
 		imageInfo.arrayLayers = 1;
 		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 		imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 		imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		//imageInfo.queueFamilyIndexCount = 0;
-		//imageInfo.pQueueFamilyIndices = 0;
 		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-		allocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;  //memtype
+		allocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 		allocCreateInfo.flags = 0;
 		vmaCreateImage(m_allocator, &imageInfo, &allocCreateInfo, &image, &alloc, nullptr);
 
 		//  Copy image from staging buffer to image
-		BeginCmd();
+		BeginCommandBuffer();
 
 		TransitionImageLayout(image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels);
 
-		VkBufferImageCopy region = {};
-		region.bufferOffset = 0;
-		region.bufferRowLength = 0;
-		region.bufferImageHeight = 0;
-		region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		region.imageSubresource.mipLevel = 0;
-		region.imageSubresource.baseArrayLayer = 0;
-		region.imageSubresource.layerCount = 1;
-		region.imageOffset = { 0, 0, 0 };
-		region.imageExtent = extent;  // { width, height, 1};
-		vkCmdCopyBufferToImage(m_commandBuffer, stageBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+		if (data != nullptr)
+		{
+			VkBufferImageCopy region = {};
+			region.bufferOffset = 0;
+			region.bufferRowLength = 0;
+			region.bufferImageHeight = 0;
+			region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			region.imageSubresource.mipLevel = 0;
+			region.imageSubresource.baseArrayLayer = 0;
+			region.imageSubresource.layerCount = 1;
+			region.imageOffset = { 0, 0, 0 };
+			region.imageExtent = extent;
+			vkCmdCopyBufferToImage(m_commandBuffer, stageBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+		}
 
 		if (mipLevels <= 1)
 		{
 			TransitionImageLayout(image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mipLevels);
 		}
 
-		EndCmd();
+		EndCommandBuffer();
 
 		vmaDestroyBuffer(m_allocator, stageBuffer, stageBufferAlloc);
 
@@ -371,16 +306,16 @@ namespace PreVEngine
 		VkImageViewCreateInfo imageViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 		imageViewInfo.image = image;
 		imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		imageViewInfo.format = format;  //VK_FORMAT_R8G8B8A8_UNORM;
+		imageViewInfo.format = format;
 		imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		imageViewInfo.subresourceRange.baseMipLevel = 0;
-		imageViewInfo.subresourceRange.levelCount = mipLevels; //1;
+		imageViewInfo.subresourceRange.levelCount = mipLevels;
 		imageViewInfo.subresourceRange.baseArrayLayer = 0;
 		imageViewInfo.subresourceRange.layerCount = 1;
 		VKERRCHECK(vkCreateImageView(m_device, &imageViewInfo, nullptr, &view));
 	}
 
-	void Allocator::GenerateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels)
+	void Allocator::GenerateMipmaps(const VkImage image, const VkFormat imageFormat, const int32_t texWidth, const int32_t texHeight, const uint32_t mipLevels)
 	{
 		// Check if image format supports linear blitting
 		VkFormatProperties formatProperties;
@@ -392,8 +327,7 @@ namespace PreVEngine
 			exit(0);
 		}
 
-		//VkCommandBuffer command_buffer = beginSingleTimeCommands();
-		BeginCmd();
+		BeginCommandBuffer();
 
 		VkImageMemoryBarrier barrier = {};
 		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -453,13 +387,11 @@ namespace PreVEngine
 
 		vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
-		//endSingleTimeCommands(command_buffer);
-		EndCmd();
+		EndCommandBuffer();
 	}
 
-	void Allocator::TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels)
+	void Allocator::TransitionImageLayout(const VkImage image, const VkImageLayout oldLayout, const VkImageLayout newLayout, const uint32_t mipLevels)
 	{
-		//BeginCmd();
 		VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		barrier.oldLayout = oldLayout;
 		barrier.newLayout = newLayout;
@@ -505,7 +437,6 @@ namespace PreVEngine
 		}
 
 		vkCmdPipelineBarrier(m_commandBuffer, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
-		//EndCmd();
 	}
 
 	void Allocator::DestroyImage(VkImage image, VkImageView view, VmaAllocation alloc)
@@ -558,7 +489,7 @@ namespace PreVEngine
 		m_stride = 0;
 	}
 
-	void Buffer::Data(const void* data, uint32_t count, uint32_t stride, VkBufferUsageFlagBits usage, VmaMemoryUsage memtype, void** mapped)
+	void Buffer::Data(const void* data, const uint32_t count, const uint32_t stride, const VkBufferUsageFlagBits usage, const VmaMemoryUsage memtype, void** mapped)
 	{
 		Clear();
 
@@ -584,36 +515,31 @@ namespace PreVEngine
 	}
 
 
-	void VBO::Data(void* data, uint32_t count, uint32_t stride)
+	void VBO::Data(const void* data, const uint32_t count, const uint32_t stride)
 	{
 		Buffer::Data(data, count, stride, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
 	}
 	//----------------------------------------------------
 
 	//--------------------------IBO-----------------------
-	void IBO::Data(const uint16_t* data, uint32_t count)
+	void IBO::Data(const uint16_t* data, const uint32_t count)
 	{
 		Buffer::Data(data, count, 2, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
 	}
 
-	void IBO::Data(const uint32_t* data, uint32_t count)
+	void IBO::Data(const uint32_t* data, const uint32_t count)
 	{
 		Buffer::Data(data, count, 4, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
 	}
 
 
 
-	//void UBO::Data(void* data, uint32_t size) 
-	//{
-	//	Buffer::Data(data, 1, size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &m_mapped);
-	//}
-
-	void UBO::Allocate(uint32_t size)
+	void UBO::Allocate(const uint32_t size)
 	{
 		Buffer::Data(0, 1, size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &m_mapped);
 	}
 
-	void UBO::Update(void* data)
+	void UBO::Update(const void* data)
 	{
 		memcpy(m_mapped, data, m_stride);
 	}
@@ -631,10 +557,10 @@ namespace PreVEngine
 
 	ImageBuffer::~ImageBuffer()
 	{
-		Clear();
+		Destroy();
 	}
 
-	void ImageBuffer::Clear()
+	void ImageBuffer::Destroy()
 	{
 		vkQueueWaitIdle(m_allocator->GetQueue());
 
@@ -653,9 +579,9 @@ namespace PreVEngine
 		m_format = VK_FORMAT_UNDEFINED;
 	}
 
-	void ImageBuffer::Data(const void* data, VkExtent3D extent, VkFormat format, bool mipmap)
+	void ImageBuffer::Data(const void* data, const VkExtent3D& extent, const VkFormat format, const bool mipmap)
 	{
-		Clear();
+		Destroy();
 
 		uint32_t mipLevels = 1;
 		if (mipmap)
@@ -675,7 +601,7 @@ namespace PreVEngine
 		CreateSampler((float)mipLevels);
 	}
 
-	void ImageBuffer::CreateSampler(float maxLod)
+	void ImageBuffer::CreateSampler(const float maxLod)
 	{
 		if (m_sampler)
 		{
@@ -699,13 +625,13 @@ namespace PreVEngine
 		samplerInfo.compareEnable = VK_FALSE;
 		samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
 		samplerInfo.minLod = 0;
-		samplerInfo.maxLod = maxLod; //mipLevels;
+		samplerInfo.maxLod = maxLod;
 		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 		samplerInfo.unnormalizedCoordinates = VK_FALSE;
 		VKERRCHECK(vkCreateSampler(m_allocator->GetDevice(), &samplerInfo, nullptr, &m_sampler));
 	}
 
-	void ImageBuffer::UpdateSampler(VkSamplerCreateInfo& samplerInfo)
+	void ImageBuffer::UpdateSampler(const VkSamplerCreateInfo& samplerInfo)
 	{
 		if (m_sampler)
 		{
@@ -739,4 +665,72 @@ namespace PreVEngine
 	{
 		return m_extent;
 	}
+
+
+	//--------------------------------------------------------------------------------
+	DepthBuffer::DepthBuffer()
+		: m_gpu(VK_NULL_HANDLE), m_device(VK_NULL_HANDLE), m_format(VK_FORMAT_UNDEFINED), m_image(VK_NULL_HANDLE), m_imageMemory(VK_NULL_HANDLE), m_imageView(VK_NULL_HANDLE)
+	{
+	}
+	DepthBuffer::~DepthBuffer()
+	{
+		Destroy();
+	}
+
+	void DepthBuffer::Create(const VkPhysicalDevice gpu, const VkDevice device, const VkExtent2D& extent, const VkFormat format)
+	{
+		this->m_gpu = gpu;
+		this->m_device = device;
+		this->m_format = format;
+
+		Resize(extent);
+	}
+
+	void DepthBuffer::Destroy()
+	{
+		if (m_imageView)
+		{
+			vkDestroyImageView(m_device, m_imageView, nullptr);
+		}
+
+		if (m_image)
+		{
+			vkDestroyImage(m_device, m_image, nullptr);
+		}
+
+		if (m_imageMemory)
+		{
+			vkFreeMemory(m_device, m_imageMemory, nullptr);
+		}
+	}
+
+	void DepthBuffer::Resize(const VkExtent2D& extent)
+	{
+		Destroy();
+
+		if (m_format == VK_FORMAT_UNDEFINED)
+		{
+			return;
+		}
+
+		CreateImage(m_gpu, m_device, extent, m_format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_image, m_imageMemory);
+
+		m_imageView = CreateImageView(m_device, m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
+	}
+
+	VkFormat DepthBuffer::GetFormat() const
+	{
+		return m_format;
+	}
+
+	VkImage DepthBuffer::GetImage() const
+	{
+		return m_image;
+	}
+
+	VkImageView DepthBuffer::GetImageView() const
+	{
+		return m_imageView;
+	}
+
 }

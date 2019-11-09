@@ -112,10 +112,10 @@ public:
 
 		resultModel->texture = imageFactory.CreateImage(textureFilename);
 
-		VkExtent3D extent1 = { resultModel->texture->GetWidth(), resultModel->texture->GetHeight(), 1 };
+		VkExtent3D extent = { resultModel->texture->GetWidth(), resultModel->texture->GetHeight(), 1 };
 
 		resultModel->imageBuffer = std::make_shared<ImageBuffer>(allocator);
-		resultModel->imageBuffer->Data(resultModel->texture->GetBuffer(), extent1, VK_FORMAT_R8G8B8A8_UNORM, true);
+		resultModel->imageBuffer->Data(resultModel->texture->GetBuffer(), extent, VK_FORMAT_R8G8B8A8_UNORM, true);
 
 		resultModel->mesh = std::make_shared<Mesh>();
 
