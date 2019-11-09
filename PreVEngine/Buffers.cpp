@@ -466,7 +466,7 @@ namespace PreVEngine
 
 
 	Buffer::Buffer(Allocator& allocator)
-		: m_allocator(&allocator), m_allocation(), m_buffer(), m_count(), m_stride()
+		: m_allocator(allocator), m_allocation(), m_buffer(), m_count(), m_stride()
 	{
 	}
 
@@ -477,11 +477,11 @@ namespace PreVEngine
 
 	void Buffer::Clear()
 	{
-		vkQueueWaitIdle(m_allocator->GetQueue());
+		vkQueueWaitIdle(m_allocator.GetQueue());
 
 		if (m_buffer)
 		{
-			m_allocator->DestroyBuffer(m_buffer, m_allocation);
+			m_allocator.DestroyBuffer(m_buffer, m_allocation);
 		}
 
 		m_buffer = 0;
@@ -493,7 +493,7 @@ namespace PreVEngine
 	{
 		Clear();
 
-		m_allocator->CreateBuffer(data, count * stride, usage, memtype, m_buffer, m_allocation, mapped);
+		m_allocator.CreateBuffer(data, count * stride, usage, memtype, m_buffer, m_allocation, mapped);
 
 		if (!m_buffer)
 		{
@@ -551,7 +551,7 @@ namespace PreVEngine
 
 
 	ImageBuffer::ImageBuffer(Allocator& allocator)
-		: m_allocator(&allocator), m_allocation(), m_image(), m_imageView(), m_sampler(), m_extent(), m_format()
+		: m_allocator(allocator), m_allocation(), m_image(), m_imageView(), m_sampler(), m_extent(), m_format()
 	{
 	}
 
@@ -562,16 +562,16 @@ namespace PreVEngine
 
 	void ImageBuffer::Destroy()
 	{
-		vkQueueWaitIdle(m_allocator->GetQueue());
+		vkQueueWaitIdle(m_allocator.GetQueue());
 
 		if (m_sampler)
 		{
-			vkDestroySampler(m_allocator->GetDevice(), m_sampler, nullptr);
+			vkDestroySampler(m_allocator.GetDevice(), m_sampler, nullptr);
 		}
 
 		if (m_image)
 		{
-			m_allocator->DestroyImage(m_image, m_imageView, m_allocation);
+			m_allocator.DestroyImage(m_image, m_imageView, m_allocation);
 		}
 
 		m_image = 0;
@@ -589,7 +589,7 @@ namespace PreVEngine
 			mipLevels = Log2(std::max(extent.width, extent.height)) + 1;
 		}
 
-		m_allocator->CreateImage(data, extent, format, mipLevels, m_image, m_allocation, m_imageView);
+		m_allocator.CreateImage(data, extent, format, mipLevels, m_image, m_allocation, m_imageView);
 
 		if (!m_image)
 		{
@@ -605,7 +605,7 @@ namespace PreVEngine
 	{
 		if (m_sampler)
 		{
-			vkDestroySampler(m_allocator->GetDevice(), m_sampler, nullptr);
+			vkDestroySampler(m_allocator.GetDevice(), m_sampler, nullptr);
 		}
 
 		VkSamplerCreateInfo samplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
@@ -628,17 +628,17 @@ namespace PreVEngine
 		samplerInfo.maxLod = maxLod;
 		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 		samplerInfo.unnormalizedCoordinates = VK_FALSE;
-		VKERRCHECK(vkCreateSampler(m_allocator->GetDevice(), &samplerInfo, nullptr, &m_sampler));
+		VKERRCHECK(vkCreateSampler(m_allocator.GetDevice(), &samplerInfo, nullptr, &m_sampler));
 	}
 
 	void ImageBuffer::UpdateSampler(const VkSamplerCreateInfo& samplerInfo)
 	{
 		if (m_sampler)
 		{
-			vkDestroySampler(m_allocator->GetDevice(), m_sampler, nullptr);
+			vkDestroySampler(m_allocator.GetDevice(), m_sampler, nullptr);
 		}
 
-		VKERRCHECK(vkCreateSampler(m_allocator->GetDevice(), &samplerInfo, nullptr, &m_sampler));
+		VKERRCHECK(vkCreateSampler(m_allocator.GetDevice(), &samplerInfo, nullptr, &m_sampler));
 	}
 
 	VkImage ImageBuffer::GetImage() const

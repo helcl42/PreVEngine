@@ -60,8 +60,8 @@ namespace PreVEngine
 	class Buffer
 	{
 	private:
-		Allocator* m_allocator;
-
+		Allocator& m_allocator;
+		
 		VmaAllocation m_allocation;
 
 		VkBuffer m_buffer;
@@ -130,7 +130,7 @@ namespace PreVEngine
 	class ImageBuffer
 	{
 	private:
-		Allocator* m_allocator;
+		Allocator& m_allocator;
 
 		VmaAllocation m_allocation;
 
