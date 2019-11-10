@@ -608,10 +608,10 @@ namespace PreVEngine
 		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 		samplerInfo.mipLodBias = 0;
 
-		//samplerInfo.anisotropyEnable = VK_TRUE;
-		//samplerInfo.maxAnisotropy = 16;
-		samplerInfo.anisotropyEnable = VK_FALSE;
-		samplerInfo.maxAnisotropy = 1;
+		samplerInfo.anisotropyEnable = VK_TRUE;
+		samplerInfo.maxAnisotropy = 16;
+		//samplerInfo.anisotropyEnable = VK_FALSE;
+		//samplerInfo.maxAnisotropy = 1;
 
 		samplerInfo.compareEnable = VK_FALSE;
 		samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;

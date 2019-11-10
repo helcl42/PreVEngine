@@ -13,6 +13,9 @@ namespace PreVEngine
 		vkGetPhysicalDeviceFeatures(gpu, &m_availableFeatures);
 		vkGetPhysicalDeviceProperties(gpu, &m_availableProperties);
 
+		// enable features here ??
+		m_enabledFeatures.samplerAnisotropy = VK_TRUE;
+
 		uint32_t familyCount = 0;
 		vkGetPhysicalDeviceQueueFamilyProperties(gpu, &familyCount, nullptr);
 		m_queueFamilies.resize(familyCount);
