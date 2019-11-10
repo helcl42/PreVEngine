@@ -184,37 +184,42 @@ namespace PreVEngine
 	class DepthBuffer
 	{
 	private:
-		VkPhysicalDevice m_gpu;
+		Allocator& m_allocator;
 
-
-		VkDevice m_device;
-
-		VkFormat m_format;
+		VmaAllocation m_allocation;
 
 		VkImage m_image;
 
-		VkDeviceMemory m_imageMemory;
+		VkExtent2D m_extent;
+
+		VkFormat m_format;
 
 		VkImageView m_imageView;
 
+		VkSampler m_sampler;
+
 	public:
-		DepthBuffer();
+		DepthBuffer(Allocator& allocator);
 
 		virtual ~DepthBuffer();
 
 	public:
-		void Create(const VkPhysicalDevice gpu, const VkDevice device, const VkExtent2D& extent, const VkFormat format = VK_FORMAT_D32_SFLOAT);
+		void Create(const VkExtent3D& extent, const VkFormat format = VK_FORMAT_D32_SFLOAT);
 
 		void Destroy();
 
-		void Resize(const VkExtent2D& extent);
+		void Resize(const VkExtent3D& extent);
 
 	public:
-		VkFormat GetFormat() const;
-
 		VkImage GetImage() const;
 
 		VkImageView GetImageView() const;
+
+		VkSampler GetSampler() const;
+
+		VkFormat GetFormat() const;
+
+		VkExtent2D GetExtent() const;
 	};
 	//--------------------------------------------------------------------------------
 

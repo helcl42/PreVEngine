@@ -5,7 +5,8 @@
 
 namespace PreVEngine
 {
-	Swapchain::Swapchain(RenderPass& renderPass, const Queue* presentQueue, const Queue* graphicsQueue)
+	Swapchain::Swapchain(Allocator& allocator, RenderPass& renderPass, const Queue* presentQueue, const Queue* graphicsQueue)
+		: m_allocator(allocator)
 	{
 		m_renderPass = &renderPass;
 
@@ -18,7 +19,8 @@ namespace PreVEngine
 
 		m_commandPool = graphicsQueue->CreateCommandPool();
 
-		m_depthBuffer.Create(m_gpu, m_device, m_swapchainCreateInfo.imageExtent, renderPass.GetDepthFormat());
+		m_depthBuffer = new DepthBuffer(allocator);
+		m_depthBuffer->Create(VkExtent3D{ m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height, 1 }, renderPass.GetDepthFormat());
 
 		VkSemaphoreCreateInfo semaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 		VKERRCHECK(vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_acquireSemaphore));
@@ -44,6 +46,11 @@ namespace PreVEngine
 		if (m_acquireSemaphore != VK_NULL_HANDLE)
 		{
 			vkDestroySemaphore(m_device, m_acquireSemaphore, nullptr);
+		}
+
+		if (m_depthBuffer)
+		{
+			delete m_depthBuffer;
 		}
 
 		if (m_swapchain != VK_NULL_HANDLE)
@@ -254,7 +261,7 @@ namespace PreVEngine
 		printf("Swapchain:\n");
 
 		printf("\tFormat  = %3d : %s\n", m_swapchainCreateInfo.imageFormat, FormatStr(m_swapchainCreateInfo.imageFormat));
-		printf("\tDepth   = %3d : %s\n", m_depthBuffer.GetFormat(), FormatStr(m_depthBuffer.GetFormat()));
+		printf("\tDepth   = %3d : %s\n", m_depthBuffer->GetFormat(), FormatStr(m_depthBuffer->GetFormat()));
 
 		const VkExtent2D& extent = m_swapchainCreateInfo.imageExtent;
 		printf("\tExtent  = %d x %d\n", extent.width, extent.height);
@@ -304,7 +311,7 @@ namespace PreVEngine
 		swapchainImages.resize(swapchainImagesCount);
 		VKERRCHECK(vkGetSwapchainImagesKHR(m_device, m_swapchain, &swapchainImagesCount, swapchainImages.data()));
 
-		m_depthBuffer.Resize(m_swapchainCreateInfo.imageExtent);  //resize depth buffer
+		m_depthBuffer->Resize(VkExtent3D{ m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height, 1 });  //resize depth buffer
 
 		m_swapchainImagesCount = swapchainImagesCount;
 		m_currentFrameIndex = 0;
@@ -332,7 +339,7 @@ namespace PreVEngine
 			std::vector<VkImageView> views;
 			views.push_back(swapchainBuffer.view); // Add color buffer (unique)
 
-			VkImageView depthBufferImageView = m_depthBuffer.GetImageView();
+			VkImageView depthBufferImageView = m_depthBuffer->GetImageView();
 			if (depthBufferImageView != VK_NULL_HANDLE)
 			{
 				views.push_back(depthBufferImageView); // Add depth buffer (shared)

@@ -32,6 +32,8 @@ namespace PreVEngine
 	class Swapchain
 	{
 	private:
+		Allocator& m_allocator;
+
 		VkPhysicalDevice m_gpu;
 
 		VkDevice m_device;
@@ -50,7 +52,7 @@ namespace PreVEngine
 
 		RenderPass* m_renderPass;
 
-		DepthBuffer m_depthBuffer;
+		DepthBuffer* m_depthBuffer;
 
 		std::vector<SwapchainBuffer> m_swapchainBuffers;
 
@@ -80,7 +82,7 @@ namespace PreVEngine
 		VkSurfaceCapabilitiesKHR GetSurfaceCapabilities() const;
 
 	public:
-		Swapchain(RenderPass& renderPass, const Queue* presentQueue, const Queue* graphicsQueue);
+		Swapchain(Allocator& allocator, RenderPass& renderPass, const Queue* presentQueue, const Queue* graphicsQueue);
 
 		~Swapchain();
 

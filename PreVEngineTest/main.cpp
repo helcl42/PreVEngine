@@ -528,9 +528,9 @@ private:
 
 	std::shared_ptr<RenderPass> m_renderPass;
 
-	std::shared_ptr<Swapchain> m_swapchain;
-
 	std::shared_ptr<Allocator> m_allocator;
+
+	std::shared_ptr<Swapchain> m_swapchain;
 
 	std::shared_ptr<Scene> m_scene;
 
@@ -585,13 +585,13 @@ public:
 		m_renderPass->AddDepthAttachment(depthFormat);
 		m_renderPass->AddSubpass({ 0, 1 });
 
-		m_swapchain = std::make_shared<Swapchain>(*m_renderPass, m_graphicsQueue, m_graphicsQueue);
+		m_allocator = std::make_shared<Allocator>(*m_graphicsQueue);                   // Create "Vulkan Memory Aloocator"
+		printf("Allocator created\n");
+
+		m_swapchain = std::make_shared<Swapchain>(*m_allocator ,*m_renderPass, m_graphicsQueue, m_graphicsQueue);
 		m_swapchain->SetPresentMode(m_config.VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
 		m_swapchain->SetImageCount(m_config.framesInFlight);
 		m_swapchain->Print();
-
-		m_allocator = std::make_shared<Allocator>(*m_graphicsQueue);                   // Create "Vulkan Memory Aloocator"
-		printf("Allocator created\n");
 
 		m_scene = std::make_shared<Scene>(*m_device, *m_swapchain, *m_renderPass, *m_allocator);
 		m_scene->Init();

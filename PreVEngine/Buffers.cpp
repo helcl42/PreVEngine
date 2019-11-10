@@ -706,8 +706,8 @@ namespace PreVEngine
 
 
 	//--------------------------------------------------------------------------------
-	DepthBuffer::DepthBuffer()
-		: m_gpu(VK_NULL_HANDLE), m_device(VK_NULL_HANDLE), m_format(VK_FORMAT_UNDEFINED), m_image(VK_NULL_HANDLE), m_imageMemory(VK_NULL_HANDLE), m_imageView(VK_NULL_HANDLE)
+	DepthBuffer::DepthBuffer(Allocator& allocator)
+		: m_allocator(allocator), m_allocation(), m_image(), m_imageView(), m_sampler(), m_extent(), m_format()
 	{
 	}
 	DepthBuffer::~DepthBuffer()
@@ -715,50 +715,38 @@ namespace PreVEngine
 		Destroy();
 	}
 
-	void DepthBuffer::Create(const VkPhysicalDevice gpu, const VkDevice device, const VkExtent2D& extent, const VkFormat format)
+	void DepthBuffer::Create(const VkExtent3D& extent, const VkFormat format)
 	{
-		this->m_gpu = gpu;
-		this->m_device = device;
-		this->m_format = format;
+		m_format = format;
 
 		Resize(extent);
 	}
 
 	void DepthBuffer::Destroy()
 	{
-		if (m_imageView)
+		vkQueueWaitIdle(m_allocator.GetQueue());
+
+		if (m_sampler)
 		{
-			vkDestroyImageView(m_device, m_imageView, nullptr);
+			vkDestroySampler(m_allocator.GetDevice(), m_sampler, nullptr);
 		}
 
 		if (m_image)
 		{
-			vkDestroyImage(m_device, m_image, nullptr);
+			m_allocator.DestroyImage(m_image, m_imageView, m_allocation);
 		}
 
-		if (m_imageMemory)
-		{
-			vkFreeMemory(m_device, m_imageMemory, nullptr);
-		}
+		m_image = VK_NULL_HANDLE;
 	}
 
-	void DepthBuffer::Resize(const VkExtent2D& extent)
+	void DepthBuffer::Resize(const VkExtent3D& extent)
 	{
 		Destroy();
 
-		if (m_format == VK_FORMAT_UNDEFINED)
-		{
-			return;
-		}
+	 	m_allocator.CreateImage(extent, m_format, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, m_image, m_allocation);
+		m_allocator.CreateImageView(m_image, m_format, 1, VK_IMAGE_ASPECT_DEPTH_BIT, m_imageView);
 
-		CreateImage(m_gpu, m_device, extent, m_format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_image, m_imageMemory);
-
-		m_imageView = CreateImageView(m_device, m_image, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
-	}
-
-	VkFormat DepthBuffer::GetFormat() const
-	{
-		return m_format;
+		m_extent = VkExtent2D{ extent.width, extent.height };
 	}
 
 	VkImage DepthBuffer::GetImage() const
@@ -769,6 +757,21 @@ namespace PreVEngine
 	VkImageView DepthBuffer::GetImageView() const
 	{
 		return m_imageView;
+	}
+
+	VkSampler DepthBuffer::GetSampler() const
+	{
+		return m_sampler;
+	}
+
+	VkFormat DepthBuffer::GetFormat() const
+	{
+		return m_format;
+	}
+
+	VkExtent2D DepthBuffer::GetExtent() const
+	{
+		return m_extent;
 	}
 
 }
