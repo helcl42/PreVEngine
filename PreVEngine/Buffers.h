@@ -163,7 +163,7 @@ namespace PreVEngine
 	public:
 		void Destroy();
 
-		void Data(const void* data, const VkExtent3D& extent, const VkFormat format = VK_FORMAT_R8G8B8A8_UNORM, const bool mipmap = false);
+		void Data(const void* data, const VkExtent2D& extent, const VkFormat format = VK_FORMAT_R8G8B8A8_UNORM, const bool mipmap = false);
 
 		void UpdateSampler(const VkSamplerCreateInfo& samplerInfo); // Update sampler settings
 
@@ -204,11 +204,11 @@ namespace PreVEngine
 		virtual ~DepthBuffer();
 
 	public:
-		void Create(const VkExtent3D& extent, const VkFormat format = VK_FORMAT_D32_SFLOAT);
+		void Create(const VkExtent2D& extent, const VkFormat format = VK_FORMAT_D32_SFLOAT);
 
 		void Destroy();
 
-		void Resize(const VkExtent3D& extent);
+		void Resize(const VkExtent2D& extent);
 
 	public:
 		VkImage GetImage() const;

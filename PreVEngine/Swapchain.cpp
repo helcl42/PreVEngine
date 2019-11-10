@@ -17,7 +17,7 @@ namespace PreVEngine
 
 		m_commandPool = graphicsQueue->CreateCommandPool();
 
-		m_depthBuffer.Create(VkExtent3D{ m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height, 1 }, renderPass.GetDepthFormat());
+		m_depthBuffer.Create(m_swapchainCreateInfo.imageExtent, renderPass.GetDepthFormat());
 
 		VkSemaphoreCreateInfo semaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 		VKERRCHECK(vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_acquireSemaphore));
@@ -303,7 +303,7 @@ namespace PreVEngine
 		swapchainImages.resize(swapchainImagesCount);
 		VKERRCHECK(vkGetSwapchainImagesKHR(m_device, m_swapchain, &swapchainImagesCount, swapchainImages.data()));
 
-		m_depthBuffer.Resize(VkExtent3D{ m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height, 1 });  //resize depth buffer
+		m_depthBuffer.Resize(m_swapchainCreateInfo.imageExtent);  //resize depth buffer
 
 		m_swapchainImagesCount = swapchainImagesCount;
 		m_currentFrameIndex = 0;

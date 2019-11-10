@@ -610,7 +610,7 @@ namespace PreVEngine
 		m_format = VK_FORMAT_UNDEFINED;
 	}
 
-	void ImageBuffer::Data(const void* data, const VkExtent3D& extent, const VkFormat format, const bool mipmap)
+	void ImageBuffer::Data(const void* data, const VkExtent2D& extent, const VkFormat format, const bool mipmap)
 	{
 		Destroy();
 
@@ -620,8 +620,10 @@ namespace PreVEngine
 			mipLevels = Log2(std::max(extent.width, extent.height)) + 1;
 		}
 
-		m_allocator.CreateImage(extent, format, mipLevels, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_image, m_allocation);
-		m_allocator.CopyDataToImage(extent, format, mipLevels, data, m_image, m_allocation);
+		VkExtent3D ext3D{ extent.width, extent.width, 1 };
+
+		m_allocator.CreateImage(ext3D, format, mipLevels, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_image, m_allocation);
+		m_allocator.CopyDataToImage(ext3D, format, mipLevels, data, m_image, m_allocation);
 
 		if (mipLevels > 1)
 		{
@@ -715,7 +717,7 @@ namespace PreVEngine
 		Destroy();
 	}
 
-	void DepthBuffer::Create(const VkExtent3D& extent, const VkFormat format)
+	void DepthBuffer::Create(const VkExtent2D& extent, const VkFormat format)
 	{
 		m_format = format;
 
@@ -739,11 +741,13 @@ namespace PreVEngine
 		m_image = VK_NULL_HANDLE;
 	}
 
-	void DepthBuffer::Resize(const VkExtent3D& extent)
+	void DepthBuffer::Resize(const VkExtent2D& extent)
 	{
 		Destroy();
 
-	 	m_allocator.CreateImage(extent, m_format, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, m_image, m_allocation);
+		VkExtent3D ext3D{ extent.width, extent.width, 1 };
+
+		m_allocator.CreateImage(ext3D, m_format, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, m_image, m_allocation);
 		m_allocator.CreateImageView(m_image, m_format, 1, VK_IMAGE_ASPECT_DEPTH_BIT, m_imageView);
 
 		m_extent = VkExtent2D{ extent.width, extent.height };
