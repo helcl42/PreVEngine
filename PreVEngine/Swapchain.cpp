@@ -38,7 +38,7 @@ namespace PreVEngine
 			vkDestroyCommandPool(m_device, m_commandPool, nullptr);
 		}
 
-		if (m_acquireSemaphore != VK_NULL_HANDLE)
+		if (m_submitSemaphore != VK_NULL_HANDLE)
 		{
 			vkDestroySemaphore(m_device, m_submitSemaphore, nullptr);
 		}
