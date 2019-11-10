@@ -683,54 +683,48 @@ namespace PreVEngine
 
 
 	//--------------------------------------------------------------------------------
-	ImageBuffer::ImageBuffer(Allocator& allocator, const void* data, const VkExtent2D& extent, const VkFormat format, const bool mipMap)
+	ImageBuffer::ImageBuffer(Allocator& allocator)
 		: AbstractImageBuffer(allocator)
 	{
-		Data(data, extent, format, mipMap);
 	}
 
 	ImageBuffer::~ImageBuffer()
 	{
 	}
 
-	void ImageBuffer::Create(const VkExtent2D& extent, const VkFormat format)
+	void ImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
 	{
-		throw std::runtime_error("Texture can not be created without data -> Use Data method instead.");
-	}
-
-	void ImageBuffer::Resize(const VkExtent2D& extent)
-	{
-		throw std::runtime_error("Texture can not be resized -> Use Data method instead");
-	}
-
-	void ImageBuffer::Data(const void* data, const VkExtent2D& extent, const VkFormat format, const bool mipmap)
-	{
-		m_mipMaps = mipmap;
-		m_format = format;
+		m_mipMaps = createInfo.mipMap;
+		m_format = createInfo.format;
 
 		uint32_t mipLevels = 1;
-		if (mipmap)
+		if (createInfo.mipMap)
 		{
-			mipLevels = Log2(std::max(extent.width, extent.height)) + 1;
+			mipLevels = Log2(std::max(createInfo.extent.width, createInfo.extent.height)) + 1;
 		}
 
-		VkExtent3D ext3D{ extent.width, extent.width, 1 };
+		VkExtent3D ext3D{ createInfo.extent.width, createInfo.extent.width, 1 };
 
-		m_allocator.CreateImage(ext3D, format, mipLevels, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_image, m_allocation);
-		m_allocator.CopyDataToImage(ext3D, format, mipLevels, data, m_image, m_allocation);
+		m_allocator.CreateImage(ext3D, createInfo.format, mipLevels, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_image, m_allocation);
+		m_allocator.CopyDataToImage(ext3D, createInfo.format, mipLevels, createInfo.data, m_image, m_allocation);
 
 		if (mipLevels > 1)
 		{
-			m_allocator.GenerateMipmaps(m_image, format, extent.width, extent.height, mipLevels);
+			m_allocator.GenerateMipmaps(m_image, createInfo.format, createInfo.extent.width, createInfo.extent.height, mipLevels);
 		}
 		else
 		{
 			m_allocator.TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mipLevels);
 		}
 
-		m_allocator.CreateImageView(m_image, format, mipLevels, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
+		m_allocator.CreateImageView(m_image, createInfo.format, mipLevels, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
 
 		CreateSampler((float)mipLevels);
+	}
+
+	void ImageBuffer::Resize(const VkExtent2D& extent)
+	{
+		LOGW("Texture can not be resized - it has fixed size");
 	}
 
 
@@ -744,13 +738,13 @@ namespace PreVEngine
 	{
 	}
 
-	void DepthImageBuffer::Create(const VkExtent2D& extent, const VkFormat format)
+	void DepthImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
 	{
-		m_format = format;
-		m_mipMaps = false;
+		m_format = createInfo.format;
+		m_mipMaps = createInfo.mipMap;
 		m_sampler = VK_NULL_HANDLE;
 
-		Resize(extent);
+		Resize(createInfo.extent);
 	}
 
 	void DepthImageBuffer::Resize(const VkExtent2D& extent)
@@ -776,13 +770,13 @@ namespace PreVEngine
 	{
 	}
 
-	void ColorImageBuffer::Create(const VkExtent2D& extent, const VkFormat format)
+	void ColorImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
 	{
-		m_format = format;
-		m_mipMaps = false;
+		m_format = createInfo.format;
+		m_mipMaps = createInfo.mipMap;
 		m_sampler = VK_NULL_HANDLE;
 
-		Resize(extent);
+		Resize(createInfo.extent);
 	}
 
 	void ColorImageBuffer::Resize(const VkExtent2D& extent)

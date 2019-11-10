@@ -114,7 +114,9 @@ public:
 
 		VkExtent2D extent = { resultModel->texture->GetWidth(), resultModel->texture->GetHeight() };
 
-		resultModel->imageBuffer = std::make_shared<ImageBuffer>(allocator, resultModel->texture->GetBuffer(), extent, VK_FORMAT_R8G8B8A8_UNORM, true);
+		auto imageBuffer = std::make_shared<ImageBuffer>(allocator);
+		imageBuffer->Create(ImageBufferCreateInfo{ extent, VK_FORMAT_R8G8B8A8_UNORM, true, resultModel->texture->GetBuffer() });
+		resultModel->imageBuffer = imageBuffer;
 
 		resultModel->mesh = std::make_shared<Mesh>();
 

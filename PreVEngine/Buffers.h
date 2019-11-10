@@ -135,6 +135,26 @@ namespace PreVEngine
 	//--------------------------------------------------------------------------------
 
 	//-------------------------------------AbstractImageBuffer-------------------------------------
+	struct ImageBufferCreateInfo
+	{
+		VkExtent2D extent;
+
+		VkFormat format;
+
+		bool mipMap;
+
+		const void* data;
+
+		ImageBufferCreateInfo(const VkExtent2D& ext, const VkFormat fmt, const bool mipmap = false, const void* imageData = nullptr)
+			: extent(ext), format(fmt), mipMap(mipmap), data(imageData)
+		{
+		}
+
+		~ImageBufferCreateInfo()
+		{
+		}
+	};
+
 	class AbstractImageBuffer
 	{
 	protected:
@@ -168,7 +188,7 @@ namespace PreVEngine
 		void Destroy();
 
 	public:
-		virtual void Create(const VkExtent2D& extent, const VkFormat format) = 0;
+		virtual void Create(const ImageBufferCreateInfo& createInfo) = 0;
 
 		virtual void Resize(const VkExtent2D& extent) = 0;
 
@@ -190,15 +210,12 @@ namespace PreVEngine
 	class ImageBuffer : public AbstractImageBuffer
 	{
 	public:
-		ImageBuffer(Allocator& allocator, const void* data, const VkExtent2D& extent, const VkFormat format = VK_FORMAT_R8G8B8A8_UNORM, const bool mipmap = false);
+		ImageBuffer(Allocator& allocator);
 
 		~ImageBuffer();
 
-	private:
-		void Data(const void* data, const VkExtent2D& extent, const VkFormat format, const bool mipmap);
-
 	public:
-		void Create(const VkExtent2D& extent, const VkFormat format) override;
+		void Create(const ImageBufferCreateInfo& createInfo) override;
 
 		void Resize(const VkExtent2D& extent) override;
 	};
@@ -213,7 +230,7 @@ namespace PreVEngine
 		~DepthImageBuffer();
 
 	public:
-		void Create(const VkExtent2D& extent, const VkFormat format = VK_FORMAT_D32_SFLOAT) override;
+		void Create(const ImageBufferCreateInfo& createInfo) override;
 
 		void Resize(const VkExtent2D& extent) override;
 	};
@@ -228,7 +245,7 @@ namespace PreVEngine
 		~ColorImageBuffer();
 
 	public:
-		void Create(const VkExtent2D& extent, const VkFormat format = VK_FORMAT_R8G8B8A8_UNORM) override;
+		void Create(const ImageBufferCreateInfo& createInfo) override;
 
 		void Resize(const VkExtent2D& extent) override;
 	};
