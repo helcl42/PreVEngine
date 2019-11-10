@@ -165,22 +165,20 @@ namespace PreVEngine
 
 	void Allocator::CreateBuffer(const void* data, uint64_t size, VkBufferUsageFlags usage, VmaMemoryUsage memtype, VkBuffer& buffer, VmaAllocation& alloc, void** mapped)
 	{
-		VkBufferCreateInfo bufInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-		bufInfo.size = size;
-		bufInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-		bufInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-		VmaAllocationCreateInfo allocCreateInfo = {};
-		allocCreateInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
-		allocCreateInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
-
-		VmaAllocationInfo allocInfo = {};
-
-		// For CPU-visible memory, skip staging buffer
-		if (memtype != VMA_MEMORY_USAGE_GPU_ONLY)
+		if (memtype != VMA_MEMORY_USAGE_GPU_ONLY) // For CPU-visible memory, skip staging buffer
 		{
+			VkBufferCreateInfo bufInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+			bufInfo.size = size;
 			bufInfo.usage = usage;
+			bufInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+			VmaAllocationCreateInfo allocCreateInfo = {};
+			allocCreateInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+			allocCreateInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+			VmaAllocationInfo allocInfo = {};
 			VKERRCHECK(vmaCreateBuffer(m_allocator, &bufInfo, &allocCreateInfo, &buffer, &alloc, &allocInfo));
+
 			if (data)
 			{
 				memcpy(allocInfo.pMappedData, data, size);
@@ -194,25 +192,42 @@ namespace PreVEngine
 			{
 				*mapped = allocInfo.pMappedData;
 			}
-
-			return;
 		}
+		else // For GPU-only memory, copy via staging buffer.  
+		{
+			// TODO: Also skip staging buffer on integrated gpus.
+			
+			VkBufferCreateInfo stagingBufferCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+			stagingBufferCreateInfo.size = size;
+			stagingBufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+			stagingBufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		// For GPU-only memory, copy via staging buffer.  // TODO: Also skip staging buffer on integrated gpus.
-		VkBuffer stageBuffer = VK_NULL_HANDLE;
-		VmaAllocation stageBufferAlloc = VK_NULL_HANDLE;
+			VmaAllocationCreateInfo stagingAllocCreateInfo = {};
+			stagingAllocCreateInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+			stagingAllocCreateInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
-		VKERRCHECK(vmaCreateBuffer(m_allocator, &bufInfo, &allocCreateInfo, &stageBuffer, &stageBufferAlloc, &allocInfo));
-		memcpy(allocInfo.pMappedData, data, size);
+			VkBuffer stageBuffer = VK_NULL_HANDLE;
+			VmaAllocation stageBufferAlloc = VK_NULL_HANDLE;
 
-		bufInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage;  // | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-		allocCreateInfo.usage = memtype;                           // VMA_MEMORY_USAGE_GPU_ONLY;
-		allocCreateInfo.flags = 0;
-		VKERRCHECK(vmaCreateBuffer(m_allocator, &bufInfo, &allocCreateInfo, &buffer, &alloc, nullptr));
+			VmaAllocationInfo allocInfo = {};
+			VKERRCHECK(vmaCreateBuffer(m_allocator, &stagingBufferCreateInfo, &stagingAllocCreateInfo, &stageBuffer, &stageBufferAlloc, &allocInfo));
 
-		CopyBuffer(stageBuffer, bufInfo.size, buffer);
+			memcpy(allocInfo.pMappedData, data, size);
 
-		vmaDestroyBuffer(m_allocator, stageBuffer, stageBufferAlloc);
+			VkBufferCreateInfo bufferCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+			bufferCreateInfo.size = size;
+			bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+			bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage;  // | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+
+			VmaAllocationCreateInfo allocCreateInfo = {};
+			allocCreateInfo.usage = memtype;
+			allocCreateInfo.flags = 0;
+			VKERRCHECK(vmaCreateBuffer(m_allocator, &bufferCreateInfo, &allocCreateInfo, &buffer, &alloc, nullptr));
+
+			CopyBuffer(stageBuffer, bufferCreateInfo.size, buffer);
+
+			vmaDestroyBuffer(m_allocator, stageBuffer, stageBufferAlloc);
+		}
 	}
 
 	void Allocator::CopyBuffer(const VkBuffer srcBuffer, const VkDeviceSize size, VkBuffer dstBuffer)
@@ -308,25 +323,23 @@ namespace PreVEngine
 		vmaDestroyBuffer(m_allocator, stageBuffer, stageBufferAlloc);
 	}
 
-	VkImageView Allocator::CreateImageView(const VkImage image, const VkFormat format, const uint32_t mipLevels, const VkImageAspectFlags aspectFlags)
+	void Allocator::CreateImageView(const VkImage image, const VkFormat format, const uint32_t mipLevels, const VkImageAspectFlags aspectFlags, VkImageView& outImagaView)
 	{
-		VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-		viewInfo.image = image;
-		viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		viewInfo.format = format;
-		viewInfo.components.r = VK_COMPONENT_SWIZZLE_R;
-		viewInfo.components.g = VK_COMPONENT_SWIZZLE_G;
-		viewInfo.components.b = VK_COMPONENT_SWIZZLE_B;
-		viewInfo.components.a = VK_COMPONENT_SWIZZLE_A;
-		viewInfo.subresourceRange.aspectMask = aspectFlags;
-		viewInfo.subresourceRange.baseMipLevel = 0;
-		viewInfo.subresourceRange.levelCount = mipLevels;
-		viewInfo.subresourceRange.baseArrayLayer = 0;
-		viewInfo.subresourceRange.layerCount = 1;
+		VkImageViewCreateInfo imageViewCreateInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+		imageViewCreateInfo.image = image;
+		imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		imageViewCreateInfo.format = format;
+		imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_R;
+		imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_G;
+		imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_B;
+		imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_A;
+		imageViewCreateInfo.subresourceRange.aspectMask = aspectFlags;
+		imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
+		imageViewCreateInfo.subresourceRange.levelCount = mipLevels;
+		imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
+		imageViewCreateInfo.subresourceRange.layerCount = 1;
 
-		VkImageView imageView;
-		VKERRCHECK(vkCreateImageView(m_device, &viewInfo, nullptr, &imageView));
-		return imageView;
+		VKERRCHECK(vkCreateImageView(m_device, &imageViewCreateInfo, nullptr, &outImagaView));
 	}
 
 	void Allocator::GenerateMipmaps(const VkImage image, const VkFormat imageFormat, const int32_t texWidth, const int32_t texHeight, const uint32_t mipLevels)
@@ -619,7 +632,7 @@ namespace PreVEngine
 			m_allocator.TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mipLevels);
 		}
 
-		m_imageView = m_allocator.CreateImageView(m_image, format, mipLevels, VK_IMAGE_ASPECT_COLOR_BIT);
+		m_allocator.CreateImageView(m_image, format, mipLevels, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
 
 		m_format = format;
 
