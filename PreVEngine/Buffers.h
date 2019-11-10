@@ -190,16 +190,17 @@ namespace PreVEngine
 	class ImageBuffer : public AbstractImageBuffer
 	{
 	public:
-		ImageBuffer(Allocator& allocator);
+		ImageBuffer(Allocator& allocator, const void* data, const VkExtent2D& extent, const VkFormat format = VK_FORMAT_R8G8B8A8_UNORM, const bool mipmap = false);
 
 		~ImageBuffer();
+
+	private:
+		void Data(const void* data, const VkExtent2D& extent, const VkFormat format, const bool mipmap);
 
 	public:
 		void Create(const VkExtent2D& extent, const VkFormat format) override;
 
 		void Resize(const VkExtent2D& extent) override;
-
-		void Data(const void* data, const VkExtent2D& extent, const VkFormat format = VK_FORMAT_R8G8B8A8_UNORM, const bool mipmap = false);
 	};
 	//--------------------------------------------------------------------------------
 

@@ -683,9 +683,10 @@ namespace PreVEngine
 
 
 	//--------------------------------------------------------------------------------
-	ImageBuffer::ImageBuffer(Allocator& allocator)
+	ImageBuffer::ImageBuffer(Allocator& allocator, const void* data, const VkExtent2D& extent, const VkFormat format, const bool mipMap)
 		: AbstractImageBuffer(allocator)
 	{
+		Data(data, extent, format, mipMap);
 	}
 
 	ImageBuffer::~ImageBuffer()
@@ -702,15 +703,13 @@ namespace PreVEngine
 		throw std::runtime_error("Texture can not be resized -> Use Data method instead");
 	}
 
-	void ImageBuffer::Data(const void* data, const VkExtent2D& extent, const VkFormat format, const bool mipMap)
+	void ImageBuffer::Data(const void* data, const VkExtent2D& extent, const VkFormat format, const bool mipmap)
 	{
-		Destroy();
-
-		m_mipMaps = mipMap;
+		m_mipMaps = mipmap;
 		m_format = format;
 
 		uint32_t mipLevels = 1;
-		if (mipMap)
+		if (mipmap)
 		{
 			mipLevels = Log2(std::max(extent.width, extent.height)) + 1;
 		}
