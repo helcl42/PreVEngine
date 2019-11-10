@@ -1,36 +1,33 @@
 #include "Pipeline.h"
 
 Pipeline::Pipeline(VkDevice device, VkRenderPass renderpass, PreVEngine::Shader& shaders)
-	: device(device), renderpass(renderpass), graphicsPipeline(), pipelineLayout()
+	: m_device(device), m_renderPass(renderpass), m_shaders(shaders), m_graphicsPipeline(VK_NULL_HANDLE), m_pipelineLayout(VK_NULL_HANDLE)
 {
-	this->shaders = &shaders;
 }
 
 Pipeline::~Pipeline()
 {
-	if (device)
+	if (m_device)
 	{
-		vkDeviceWaitIdle(device);
+		vkDeviceWaitIdle(m_device);
 	}
 
-	if (pipelineLayout)
+	if (m_pipelineLayout)
 	{
-		vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+		vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
 	}
 
-	if (graphicsPipeline)
+	if (m_graphicsPipeline)
 	{
-		vkDestroyPipeline(device, graphicsPipeline, nullptr);
+		vkDestroyPipeline(m_device, m_graphicsPipeline, nullptr);
 	}
 }
 
-VkPipeline Pipeline::CreateGraphicsPipeline()
+VkPipeline Pipeline::CreateGraphicsPipeline(const VkExtent2D& extent)
 {
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
 	inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 	inputAssembly.primitiveRestartEnable = VK_FALSE;
-
-	VkExtent2D extent = { 64,64 };
 
 	VkViewport viewport = {};
 	viewport.x = 0.0f;
@@ -69,14 +66,14 @@ VkPipeline Pipeline::CreateGraphicsPipeline()
 	depthStencilState.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
 	depthStencilState.depthBoundsTestEnable = VK_FALSE;
 	depthStencilState.stencilTestEnable = VK_FALSE;
-	//depthStencilState.front.failOp          = VK_STENCIL_OP_KEEP;
-	//depthStencilState.front.passOp          = VK_STENCIL_OP_KEEP;
-	//depthStencilState.front.compareOp       = VK_COMPARE_OP_ALWAYS;
-	//depthStencilState.back.failOp           = VK_STENCIL_OP_KEEP;
-	//depthStencilState.back.passOp           = VK_STENCIL_OP_KEEP;
-	//depthStencilState.back.compareOp        = VK_COMPARE_OP_ALWAYS;
-	//depthStencilState.minDepthBounds        = 0;
-	//depthStencilState.maxDepthBounds        = MAXFLOAT;
+	//depthStencilState.front.failOp = VK_STENCIL_OP_KEEP;
+	//depthStencilState.front.passOp = VK_STENCIL_OP_KEEP;
+	//depthStencilState.front.compareOp = VK_COMPARE_OP_ALWAYS;
+	//depthStencilState.back.failOp = VK_STENCIL_OP_KEEP;
+	//depthStencilState.back.passOp = VK_STENCIL_OP_KEEP;
+	//depthStencilState.back.compareOp = VK_COMPARE_OP_ALWAYS;
+	//depthStencilState.minDepthBounds = 0;
+	//depthStencilState.maxDepthBounds = MAXFLOAT;
 
 	VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
 	colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
@@ -110,14 +107,14 @@ VkPipeline Pipeline::CreateGraphicsPipeline()
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pipelineLayoutInfo.setLayoutCount = 1;
-	pipelineLayoutInfo.pSetLayouts = shaders->GetDescriptorSetLayout();
+	pipelineLayoutInfo.pSetLayouts = m_shaders.GetDescriptorSetLayout();
 	pipelineLayoutInfo.pushConstantRangeCount = 0;
-	VKERRCHECK(vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout));
+	VKERRCHECK(vkCreatePipelineLayout(m_device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout));
 
 	VkGraphicsPipelineCreateInfo pipelineInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
-	pipelineInfo.stageCount = static_cast<uint32_t>(shaders->GetShaderStages().size());
-	pipelineInfo.pStages = shaders->GetShaderStages().data();
-	pipelineInfo.pVertexInputState = shaders->GetVertextInputState();
+	pipelineInfo.stageCount = static_cast<uint32_t>(m_shaders.GetShaderStages().size());
+	pipelineInfo.pStages = m_shaders.GetShaderStages().data();
+	pipelineInfo.pVertexInputState = m_shaders.GetVertextInputState();
 	pipelineInfo.pInputAssemblyState = &inputAssembly;
 	//pipelineInfo.pTessellationState = 0;
 	pipelineInfo.pViewportState = &viewportState;
@@ -126,12 +123,22 @@ VkPipeline Pipeline::CreateGraphicsPipeline()
 	pipelineInfo.pDepthStencilState = &depthStencilState;
 	pipelineInfo.pColorBlendState = &colorBlending;
 	pipelineInfo.pDynamicState = &dynamicState;
-	pipelineInfo.layout = pipelineLayout;
-	pipelineInfo.renderPass = renderpass;
+	pipelineInfo.layout = m_pipelineLayout;
+	pipelineInfo.renderPass = m_renderPass;
 	pipelineInfo.subpass = 0;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 	//pipelineInfo.basePipelineIndex = 0;
+	VKERRCHECK(vkCreateGraphicsPipelines(m_device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_graphicsPipeline));
 
-	VKERRCHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline));
-	return graphicsPipeline;
+	return m_graphicsPipeline;
+}
+
+VkPipelineLayout Pipeline::GetPipelineLayout() const
+{
+	return m_pipelineLayout;
+}
+
+Pipeline::operator VkPipeline() const
+{
+	return m_graphicsPipeline;
 }

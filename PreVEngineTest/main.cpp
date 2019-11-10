@@ -404,7 +404,8 @@ public:
 		m_shader->AdjustDescriptorPoolCapacity(10000);
 
 		m_pipeline = std::make_shared<Pipeline>(m_device, m_renderPass, *m_shader);
-		m_pipeline->CreateGraphicsPipeline();
+		m_pipeline->CreateGraphicsPipeline(m_swapchain.GetExtent());
+
 		printf("Pipeline created\n");
 	}
 
@@ -468,7 +469,7 @@ public:
 
 				vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 				vkCmdBindIndexBuffer(commandBuffer, *model->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetPipelineLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
 				vkCmdDrawIndexed(commandBuffer, model->indexBuffer->GetCount(), 1, 0, 0, 0);
 

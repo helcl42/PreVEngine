@@ -6,23 +6,29 @@
 
 class Pipeline
 {
-	VkDevice     device;
-	VkRenderPass renderpass;
-	VkPipeline   graphicsPipeline;
-	PreVEngine::Shader*    shaders;
+private:
+	VkDevice m_device;
+
+	VkRenderPass m_renderPass;
+
+	PreVEngine::Shader& m_shaders;
+
+	VkPipeline m_graphicsPipeline;
+
+	VkPipelineLayout m_pipelineLayout;
 
 public:
-	VkPipelineLayout pipelineLayout;
-
 	Pipeline(VkDevice device, VkRenderPass renderpass, PreVEngine::Shader& shaders);
+
 	~Pipeline();
 
-	VkPipeline CreateGraphicsPipeline();
+public:
+	VkPipeline CreateGraphicsPipeline(const VkExtent2D& extent);
 
-	operator VkPipeline() const
-	{
-		return graphicsPipeline;
-	}
+public:
+	VkPipelineLayout GetPipelineLayout() const;
+
+	operator VkPipeline() const;
 };
 
 #endif
