@@ -210,15 +210,45 @@ namespace PreVEngine
 		allocCreateInfo.flags = 0;
 		VKERRCHECK(vmaCreateBuffer(m_allocator, &bufInfo, &allocCreateInfo, &buffer, &alloc, nullptr));
 
+		CopyBuffer(stageBuffer, bufInfo.size, buffer);
+
+		vmaDestroyBuffer(m_allocator, stageBuffer, stageBufferAlloc);
+	}
+
+	void Allocator::CopyBuffer(const VkBuffer srcBuffer, const VkDeviceSize size, VkBuffer dstBuffer)
+	{
 		BeginCommandBuffer();
+
 		VkBufferCopy bufCopyRegion = {};
 		bufCopyRegion.srcOffset = 0;
 		bufCopyRegion.dstOffset = 0;
-		bufCopyRegion.size = bufInfo.size;
-		vkCmdCopyBuffer(m_commandBuffer, stageBuffer, buffer, 1, &bufCopyRegion);
-		EndCommandBuffer();
+		bufCopyRegion.size = size;
 
-		vmaDestroyBuffer(m_allocator, stageBuffer, stageBufferAlloc);
+		vkCmdCopyBuffer(m_commandBuffer, srcBuffer, dstBuffer, 1, &bufCopyRegion);
+
+		EndCommandBuffer();
+	}
+
+	void Allocator::CopyBufferToImage(const VkExtent3D& extent, const VkBuffer buffer, VkImage image)
+	{
+		BeginCommandBuffer();
+
+		VkBufferImageCopy region = {};
+		region.bufferOffset = 0;
+		region.bufferRowLength = 0;
+		region.bufferImageHeight = 0;
+
+		region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		region.imageSubresource.mipLevel = 0;
+		region.imageSubresource.baseArrayLayer = 0;
+		region.imageSubresource.layerCount = 1;
+
+		region.imageOffset = { 0, 0, 0 };
+		region.imageExtent = extent;
+
+		vkCmdCopyBufferToImage(m_commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+		EndCommandBuffer();
 	}
 
 	void Allocator::DestroyBuffer(VkBuffer buffer, VmaAllocation alloc)
@@ -226,31 +256,8 @@ namespace PreVEngine
 		vmaDestroyBuffer(m_allocator, buffer, alloc);
 	}
 
-	void Allocator::CreateImage(const void* data, const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, VkImage& image, VmaAllocation& alloc, VkImageView& view)
+	void Allocator::CreateImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const VkImageTiling tiling, const VkImageUsageFlags usage, VkImage& image, VmaAllocation& alloc)
 	{
-		uint32_t formatSize = FormatSize(format);
-
-		// Copy image data to staging buffer in CPU memory
-		uint64_t size = extent.width * extent.height * extent.depth * formatSize;
-
-		VkBufferCreateInfo bufInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-		bufInfo.size = size;
-		bufInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-		bufInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-		VmaAllocationCreateInfo allocCreateInfo = {};
-		allocCreateInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
-		allocCreateInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
-
-		VmaAllocationInfo allocInfo = {};
-		VkBuffer stageBuffer = VK_NULL_HANDLE;
-		VmaAllocation stageBufferAlloc = VK_NULL_HANDLE;
-		VKERRCHECK(vmaCreateBuffer(m_allocator, &bufInfo, &allocCreateInfo, &stageBuffer, &stageBufferAlloc, &allocInfo));
-		if (data != nullptr)
-		{
-			memcpy(allocInfo.pMappedData, data, size);
-		}
-
 		VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 		imageInfo.flags = 0;
 		imageInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -259,60 +266,67 @@ namespace PreVEngine
 		imageInfo.mipLevels = mipLevels;
 		imageInfo.arrayLayers = 1;
 		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-		imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-		imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+		imageInfo.tiling = tiling;
+		imageInfo.usage = usage;
 		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-		allocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-		allocCreateInfo.flags = 0;
-		vmaCreateImage(m_allocator, &imageInfo, &allocCreateInfo, &image, &alloc, nullptr);
+		VmaAllocationCreateInfo allocGpuOnlyCreateInfo = {};
+		allocGpuOnlyCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+		allocGpuOnlyCreateInfo.flags = 0;
+		vmaCreateImage(m_allocator, &imageInfo, &allocGpuOnlyCreateInfo, &image, &alloc, nullptr);
+	}
 
-		//  Copy image from staging buffer to image
-		BeginCommandBuffer();
+	void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const void* data, VkImage& image, VmaAllocation& alloc)
+	{
+		// Copy image data to staging buffer in CPU memory
+		uint32_t formatSize = FormatSize(format);
+		uint64_t size = extent.width * extent.height * extent.depth * formatSize;
 
+		VkBufferCreateInfo bufferCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+		bufferCreateInfo.size = size;
+		bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+		bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+		VmaAllocationCreateInfo allocStagingMemoryCreateInfo = {};
+		allocStagingMemoryCreateInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+		allocStagingMemoryCreateInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+		VmaAllocationInfo allocStagingBufferInfo = {};
+		VkBuffer stageBuffer = VK_NULL_HANDLE;
+		VmaAllocation stageBufferAlloc = VK_NULL_HANDLE;
+		VKERRCHECK(vmaCreateBuffer(m_allocator, &bufferCreateInfo, &allocStagingMemoryCreateInfo, &stageBuffer, &stageBufferAlloc, &allocStagingBufferInfo));
+
+		// copy image data to staging memory
+		memcpy(allocStagingBufferInfo.pMappedData, data, size);
+
+		//  Copy image from staging buffer to image		
 		TransitionImageLayout(image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels);
 
-		if (data != nullptr)
-		{
-			VkBufferImageCopy region = {};
-			region.bufferOffset = 0;
-			region.bufferRowLength = 0;
-			region.bufferImageHeight = 0;
-			region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			region.imageSubresource.mipLevel = 0;
-			region.imageSubresource.baseArrayLayer = 0;
-			region.imageSubresource.layerCount = 1;
-			region.imageOffset = { 0, 0, 0 };
-			region.imageExtent = extent;
-			vkCmdCopyBufferToImage(m_commandBuffer, stageBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
-		}
-
-		if (mipLevels <= 1)
-		{
-			TransitionImageLayout(image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mipLevels);
-		}
-
-		EndCommandBuffer();
+		CopyBufferToImage(extent, stageBuffer, image);
 
 		vmaDestroyBuffer(m_allocator, stageBuffer, stageBufferAlloc);
+	}
 
-		if (mipLevels > 1)
-		{
-			GenerateMipmaps(image, format, extent.width, extent.height, mipLevels);
-		}
+	VkImageView Allocator::CreateImageView(const VkImage image, const VkFormat format, const uint32_t mipLevels, const VkImageAspectFlags aspectFlags)
+	{
+		VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+		viewInfo.image = image;
+		viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		viewInfo.format = format;
+		viewInfo.components.r = VK_COMPONENT_SWIZZLE_R;
+		viewInfo.components.g = VK_COMPONENT_SWIZZLE_G;
+		viewInfo.components.b = VK_COMPONENT_SWIZZLE_B;
+		viewInfo.components.a = VK_COMPONENT_SWIZZLE_A;
+		viewInfo.subresourceRange.aspectMask = aspectFlags;
+		viewInfo.subresourceRange.baseMipLevel = 0;
+		viewInfo.subresourceRange.levelCount = mipLevels;
+		viewInfo.subresourceRange.baseArrayLayer = 0;
+		viewInfo.subresourceRange.layerCount = 1;
 
-		// Create ImageView
-		VkImageViewCreateInfo imageViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-		imageViewInfo.image = image;
-		imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		imageViewInfo.format = format;
-		imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		imageViewInfo.subresourceRange.baseMipLevel = 0;
-		imageViewInfo.subresourceRange.levelCount = mipLevels;
-		imageViewInfo.subresourceRange.baseArrayLayer = 0;
-		imageViewInfo.subresourceRange.layerCount = 1;
-		VKERRCHECK(vkCreateImageView(m_device, &imageViewInfo, nullptr, &view));
+		VkImageView imageView;
+		VKERRCHECK(vkCreateImageView(m_device, &viewInfo, nullptr, &imageView));
+		return imageView;
 	}
 
 	void Allocator::GenerateMipmaps(const VkImage image, const VkFormat imageFormat, const int32_t texWidth, const int32_t texHeight, const uint32_t mipLevels)
@@ -392,6 +406,8 @@ namespace PreVEngine
 
 	void Allocator::TransitionImageLayout(const VkImage image, const VkImageLayout oldLayout, const VkImageLayout newLayout, const uint32_t mipLevels)
 	{
+		BeginCommandBuffer();
+
 		VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
 		barrier.oldLayout = oldLayout;
 		barrier.newLayout = newLayout;
@@ -400,7 +416,7 @@ namespace PreVEngine
 		barrier.image = image;
 		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;  // NOTE: subresourceRange is same as the one in ImageView
 		barrier.subresourceRange.baseMipLevel = 0;
-		barrier.subresourceRange.levelCount = mipLevels; //1;
+		barrier.subresourceRange.levelCount = mipLevels;
 		barrier.subresourceRange.baseArrayLayer = 0;
 		barrier.subresourceRange.layerCount = 1;
 
@@ -437,6 +453,8 @@ namespace PreVEngine
 		}
 
 		vkCmdPipelineBarrier(m_commandBuffer, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+		EndCommandBuffer();
 	}
 
 	void Allocator::DestroyImage(VkImage image, VkImageView view, VmaAllocation alloc)
@@ -589,12 +607,19 @@ namespace PreVEngine
 			mipLevels = Log2(std::max(extent.width, extent.height)) + 1;
 		}
 
-		m_allocator.CreateImage(data, extent, format, mipLevels, m_image, m_allocation, m_imageView);
+		m_allocator.CreateImage(extent, format, mipLevels, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_image, m_allocation);
+		m_allocator.CopyDataToImage(extent, format, mipLevels, data, m_image, m_allocation);
 
-		if (!m_image)
+		if (mipLevels > 1)
 		{
-			return;
+			m_allocator.GenerateMipmaps(m_image, format, extent.width, extent.height, mipLevels);
 		}
+		else
+		{
+			m_allocator.TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mipLevels);
+		}
+
+		m_imageView = m_allocator.CreateImageView(m_image, format, mipLevels, VK_IMAGE_ASPECT_COLOR_BIT);
 
 		m_format = format;
 

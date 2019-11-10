@@ -41,7 +41,15 @@ namespace PreVEngine
 
 		void DestroyBuffer(VkBuffer buffer, VmaAllocation alloc);
 
-		void CreateImage(const void* data, const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, VkImage& image, VmaAllocation& alloc, VkImageView& view);
+		void CopyBuffer(const VkBuffer srcBuffer, const VkDeviceSize size, VkBuffer dstBuffer);
+
+		void CopyBufferToImage(const VkExtent3D& extent, const VkBuffer buffer, VkImage image);
+
+		void CreateImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const VkImageTiling tiling, const VkImageUsageFlags usage, VkImage& image, VmaAllocation& alloc);
+
+		void CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const void* data, VkImage& image, VmaAllocation& alloc);
+
+		VkImageView CreateImageView(const VkImage image, const VkFormat format, const uint32_t mipLevels, const VkImageAspectFlags aspectFlags);
 
 		void DestroyImage(VkImage image, VkImageView view, VmaAllocation alloc);
 
