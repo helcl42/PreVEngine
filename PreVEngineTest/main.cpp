@@ -335,7 +335,7 @@ private:
 	std::vector<std::shared_ptr<UBO>> m_uniformBuffers;
 
 public:
-	Scene(Device& dev, Swapchain& swapCh, RenderPass& renderPass, Allocator& alloc)
+	Scene(Allocator& alloc, Device& dev, Swapchain& swapCh, RenderPass& renderPass)
 		: m_device(dev), m_swapchain(swapCh), m_renderPass(renderPass), m_allocator(alloc)
 	{
 	}
@@ -593,7 +593,7 @@ public:
 		m_swapchain->SetImageCount(m_config.framesInFlight);
 		m_swapchain->Print();
 
-		m_scene = std::make_shared<Scene>(*m_device, *m_swapchain, *m_renderPass, *m_allocator);
+		m_scene = std::make_shared<Scene>(*m_allocator, *m_device, *m_swapchain, *m_renderPass);
 		m_scene->Init();
 	}
 

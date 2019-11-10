@@ -50,9 +50,9 @@ namespace PreVEngine
 
 		VkCommandPool m_commandPool;
 
-		RenderPass* m_renderPass;
+		RenderPass& m_renderPass;
 
-		DepthBuffer* m_depthBuffer;
+		DepthBuffer m_depthBuffer;
 
 		std::vector<SwapchainBuffer> m_swapchainBuffers;
 

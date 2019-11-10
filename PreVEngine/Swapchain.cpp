@@ -6,10 +6,8 @@
 namespace PreVEngine
 {
 	Swapchain::Swapchain(Allocator& allocator, RenderPass& renderPass, const Queue* presentQueue, const Queue* graphicsQueue)
-		: m_allocator(allocator)
+		: m_allocator(allocator), m_renderPass(renderPass), m_depthBuffer(DepthBuffer(allocator))
 	{
-		m_renderPass = &renderPass;
-
 		if (graphicsQueue == nullptr)
 		{
 			graphicsQueue = presentQueue;
@@ -19,8 +17,7 @@ namespace PreVEngine
 
 		m_commandPool = graphicsQueue->CreateCommandPool();
 
-		m_depthBuffer = new DepthBuffer(allocator);
-		m_depthBuffer->Create(VkExtent3D{ m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height, 1 }, renderPass.GetDepthFormat());
+		m_depthBuffer.Create(VkExtent3D{ m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height, 1 }, renderPass.GetDepthFormat());
 
 		VkSemaphoreCreateInfo semaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 		VKERRCHECK(vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_acquireSemaphore));
@@ -46,11 +43,6 @@ namespace PreVEngine
 		if (m_acquireSemaphore != VK_NULL_HANDLE)
 		{
 			vkDestroySemaphore(m_device, m_acquireSemaphore, nullptr);
-		}
-
-		if (m_depthBuffer)
-		{
-			delete m_depthBuffer;
 		}
 
 		if (m_swapchain != VK_NULL_HANDLE)
@@ -85,7 +77,7 @@ namespace PreVEngine
 
 		m_swapchainCreateInfo = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
 		m_swapchainCreateInfo.surface = m_surface;
-		m_swapchainCreateInfo.imageFormat = m_renderPass->GetSurfaceFormat();
+		m_swapchainCreateInfo.imageFormat = m_renderPass.GetSurfaceFormat();
 		m_swapchainCreateInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
 		m_swapchainCreateInfo.imageArrayLayers = 1;  // 2 for stereo
 		m_swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
@@ -261,7 +253,7 @@ namespace PreVEngine
 		printf("Swapchain:\n");
 
 		printf("\tFormat  = %3d : %s\n", m_swapchainCreateInfo.imageFormat, FormatStr(m_swapchainCreateInfo.imageFormat));
-		printf("\tDepth   = %3d : %s\n", m_depthBuffer->GetFormat(), FormatStr(m_depthBuffer->GetFormat()));
+		printf("\tDepth   = %3d : %s\n", m_depthBuffer.GetFormat(), FormatStr(m_depthBuffer.GetFormat()));
 
 		const VkExtent2D& extent = m_swapchainCreateInfo.imageExtent;
 		printf("\tExtent  = %d x %d\n", extent.width, extent.height);
@@ -311,7 +303,7 @@ namespace PreVEngine
 		swapchainImages.resize(swapchainImagesCount);
 		VKERRCHECK(vkGetSwapchainImagesKHR(m_device, m_swapchain, &swapchainImagesCount, swapchainImages.data()));
 
-		m_depthBuffer->Resize(VkExtent3D{ m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height, 1 });  //resize depth buffer
+		m_depthBuffer.Resize(VkExtent3D{ m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height, 1 });  //resize depth buffer
 
 		m_swapchainImagesCount = swapchainImagesCount;
 		m_currentFrameIndex = 0;
@@ -339,14 +331,14 @@ namespace PreVEngine
 			std::vector<VkImageView> views;
 			views.push_back(swapchainBuffer.view); // Add color buffer (unique)
 
-			VkImageView depthBufferImageView = m_depthBuffer->GetImageView();
+			VkImageView depthBufferImageView = m_depthBuffer.GetImageView();
 			if (depthBufferImageView != VK_NULL_HANDLE)
 			{
 				views.push_back(depthBufferImageView); // Add depth buffer (shared)
 			}
 
 			VkFramebufferCreateInfo frameBufferCreateInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
-			frameBufferCreateInfo.renderPass = *m_renderPass;
+			frameBufferCreateInfo.renderPass = m_renderPass;
 			frameBufferCreateInfo.attachmentCount = static_cast<uint32_t>(views.size());
 			frameBufferCreateInfo.pAttachments = views.data();
 			frameBufferCreateInfo.width = m_swapchainCreateInfo.imageExtent.width;
@@ -473,12 +465,12 @@ namespace PreVEngine
 		VKERRCHECK(vkBeginCommandBuffer(swapchainBuffer.commandBuffer, &beginInfo));
 
 		VkRenderPassBeginInfo renderPassInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-		renderPassInfo.renderPass = *m_renderPass;
+		renderPassInfo.renderPass = m_renderPass;
 		renderPassInfo.framebuffer = swapchainBuffer.framebuffer;
 		renderPassInfo.renderArea.offset = { 0, 0 };
 		renderPassInfo.renderArea.extent = swapchainBuffer.extent;
-		renderPassInfo.clearValueCount = static_cast<uint32_t>(m_renderPass->GetClearValues().size());
-		renderPassInfo.pClearValues = m_renderPass->GetClearValues().data();
+		renderPassInfo.clearValueCount = static_cast<uint32_t>(m_renderPass.GetClearValues().size());
+		renderPassInfo.pClearValues = m_renderPass.GetClearValues().data();
 
 		vkCmdBeginRenderPass(swapchainBuffer.commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
