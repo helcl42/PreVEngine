@@ -47,13 +47,14 @@ namespace PreVEngine
 
 		if (m_swapchain != VK_NULL_HANDLE)
 		{
+			vkDestroySwapchainKHR(m_device, m_swapchain, 0);
+
 			for (auto& swapchainBuffer : m_swapchainBuffers)
 			{
 				vkDestroyFence(m_device, swapchainBuffer.fence, nullptr);
 				vkDestroyFramebuffer(m_device, swapchainBuffer.framebuffer, nullptr);
 				vkDestroyImageView(m_device, swapchainBuffer.view, nullptr);
 			}
-			vkDestroySwapchainKHR(m_device, m_swapchain, 0);
 
 			LOGI("Swapchain destroyed\n");
 		}
@@ -287,14 +288,14 @@ namespace PreVEngine
 		{
 			vkDeviceWaitIdle(m_device);
 
+			vkDestroySwapchainKHR(m_device, m_swapchainCreateInfo.oldSwapchain, 0);
+
 			for (auto& swapchainBuffer : m_swapchainBuffers)
 			{
 				vkDestroyFence(m_device, swapchainBuffer.fence, nullptr);
 				vkDestroyFramebuffer(m_device, swapchainBuffer.framebuffer, nullptr);
 				vkDestroyImageView(m_device, swapchainBuffer.view, nullptr);
 			}
-
-			vkDestroySwapchainKHR(m_device, m_swapchainCreateInfo.oldSwapchain, 0);
 		}
 
 		std::vector<VkImage> swapchainImages;
