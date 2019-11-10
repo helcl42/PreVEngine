@@ -271,7 +271,7 @@ namespace PreVEngine
 		vmaDestroyBuffer(m_allocator, buffer, alloc);
 	}
 
-	void Allocator::CreateImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const VkImageTiling tiling, const VkImageUsageFlags usage, VkImage& image, VmaAllocation& alloc)
+	void Allocator::CreateImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const VkImageTiling tiling, const VkImageUsageFlags usage, VkImage& outImage, VmaAllocation& outAlloc)
 	{
 		VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 		imageInfo.flags = 0;
@@ -289,7 +289,7 @@ namespace PreVEngine
 		VmaAllocationCreateInfo allocGpuOnlyCreateInfo = {};
 		allocGpuOnlyCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 		allocGpuOnlyCreateInfo.flags = 0;
-		vmaCreateImage(m_allocator, &imageInfo, &allocGpuOnlyCreateInfo, &image, &alloc, nullptr);
+		vmaCreateImage(m_allocator, &imageInfo, &allocGpuOnlyCreateInfo, &outImage, &outAlloc, nullptr);
 	}
 
 	void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const void* data, VkImage& image, VmaAllocation& alloc)
