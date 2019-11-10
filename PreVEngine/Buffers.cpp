@@ -581,67 +581,18 @@ namespace PreVEngine
 	}
 
 
-	ImageBuffer::ImageBuffer(Allocator& allocator)
+	//--------------------------------------------------------------------------------
+	AbstractImageBuffer::AbstractImageBuffer(Allocator& allocator)
 		: m_allocator(allocator), m_allocation(), m_image(), m_imageView(), m_sampler(), m_extent(), m_format()
 	{
 	}
 
-	ImageBuffer::~ImageBuffer()
+	AbstractImageBuffer::~AbstractImageBuffer()
 	{
 		Destroy();
 	}
 
-	void ImageBuffer::Destroy()
-	{
-		vkQueueWaitIdle(m_allocator.GetQueue());
-
-		if (m_sampler)
-		{
-			vkDestroySampler(m_allocator.GetDevice(), m_sampler, nullptr);
-		}
-
-		if (m_image)
-		{
-			m_allocator.DestroyImage(m_image, m_imageView, m_allocation);
-		}
-
-		m_image = 0;
-		m_extent = {};
-		m_format = VK_FORMAT_UNDEFINED;
-	}
-
-	void ImageBuffer::Data(const void* data, const VkExtent2D& extent, const VkFormat format, const bool mipmap)
-	{
-		Destroy();
-
-		uint32_t mipLevels = 1;
-		if (mipmap)
-		{
-			mipLevels = Log2(std::max(extent.width, extent.height)) + 1;
-		}
-
-		VkExtent3D ext3D{ extent.width, extent.width, 1 };
-
-		m_allocator.CreateImage(ext3D, format, mipLevels, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_image, m_allocation);
-		m_allocator.CopyDataToImage(ext3D, format, mipLevels, data, m_image, m_allocation);
-
-		if (mipLevels > 1)
-		{
-			m_allocator.GenerateMipmaps(m_image, format, extent.width, extent.height, mipLevels);
-		}
-		else
-		{
-			m_allocator.TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mipLevels);
-		}
-
-		m_allocator.CreateImageView(m_image, format, mipLevels, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
-
-		m_format = format;
-
-		CreateSampler((float)mipLevels);
-	}
-
-	void ImageBuffer::CreateSampler(const float maxLod)
+	void AbstractImageBuffer::CreateSampler(const float maxLod)
 	{
 		if (m_sampler)
 		{
@@ -671,7 +622,7 @@ namespace PreVEngine
 		VKERRCHECK(vkCreateSampler(m_allocator.GetDevice(), &samplerInfo, nullptr, &m_sampler));
 	}
 
-	void ImageBuffer::UpdateSampler(const VkSamplerCreateInfo& samplerInfo)
+	void AbstractImageBuffer::UpdateSampler(const VkSamplerCreateInfo& samplerInfo)
 	{
 		if (m_sampler)
 		{
@@ -681,50 +632,7 @@ namespace PreVEngine
 		VKERRCHECK(vkCreateSampler(m_allocator.GetDevice(), &samplerInfo, nullptr, &m_sampler));
 	}
 
-	VkImage ImageBuffer::GetImage() const
-	{
-		return m_image;
-	}
-
-	VkImageView ImageBuffer::GetImageView() const
-	{
-		return m_imageView;
-	}
-
-	VkSampler ImageBuffer::GetSampler() const
-	{
-		return m_sampler;
-	}
-
-	VkFormat ImageBuffer::GetFormat() const
-	{
-		return m_format;
-	}
-
-	VkExtent2D ImageBuffer::GetExtent() const
-	{
-		return m_extent;
-	}
-
-
-	//--------------------------------------------------------------------------------
-	DepthBuffer::DepthBuffer(Allocator& allocator)
-		: m_allocator(allocator), m_allocation(), m_image(), m_imageView(), m_sampler(), m_extent(), m_format()
-	{
-	}
-	DepthBuffer::~DepthBuffer()
-	{
-		Destroy();
-	}
-
-	void DepthBuffer::Create(const VkExtent2D& extent, const VkFormat format)
-	{
-		m_format = format;
-
-		Resize(extent);
-	}
-
-	void DepthBuffer::Destroy()
+	void AbstractImageBuffer::Destroy()
 	{
 		vkQueueWaitIdle(m_allocator.GetQueue());
 
@@ -739,9 +647,114 @@ namespace PreVEngine
 		}
 
 		m_image = VK_NULL_HANDLE;
+		m_sampler = VK_NULL_HANDLE;
+		m_extent = {};
 	}
 
-	void DepthBuffer::Resize(const VkExtent2D& extent)
+	VkImage AbstractImageBuffer::GetImage() const
+	{
+		return m_image;
+	}
+
+	VkImageView AbstractImageBuffer::GetImageView() const
+	{
+		return m_imageView;
+	}
+
+	VkSampler AbstractImageBuffer::GetSampler() const
+	{
+		return m_sampler;
+	}
+
+	VkFormat AbstractImageBuffer::GetFormat() const
+	{
+		return m_format;
+	}
+
+	VkExtent2D AbstractImageBuffer::GetExtent() const
+	{
+		return m_extent;
+	}
+
+	bool AbstractImageBuffer::HasMipMaps() const
+	{
+		return m_mipMaps;
+	}
+
+
+	//--------------------------------------------------------------------------------
+	ImageBuffer::ImageBuffer(Allocator& allocator)
+		: AbstractImageBuffer(allocator)
+	{
+	}
+
+	ImageBuffer::~ImageBuffer()
+	{
+	}
+
+	void ImageBuffer::Create(const VkExtent2D& extent, const VkFormat format)
+	{
+		throw std::runtime_error("Texture can not be created without data -> Use Data method instead.");
+	}
+
+	void ImageBuffer::Resize(const VkExtent2D& extent)
+	{
+		throw std::runtime_error("Texture can not be resized -> Use Data method instead");
+	}
+
+	void ImageBuffer::Data(const void* data, const VkExtent2D& extent, const VkFormat format, const bool mipMap)
+	{
+		Destroy();
+
+		m_mipMaps = mipMap;
+		m_format = format;
+
+		uint32_t mipLevels = 1;
+		if (mipMap)
+		{
+			mipLevels = Log2(std::max(extent.width, extent.height)) + 1;
+		}
+
+		VkExtent3D ext3D{ extent.width, extent.width, 1 };
+
+		m_allocator.CreateImage(ext3D, format, mipLevels, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_image, m_allocation);
+		m_allocator.CopyDataToImage(ext3D, format, mipLevels, data, m_image, m_allocation);
+
+		if (mipLevels > 1)
+		{
+			m_allocator.GenerateMipmaps(m_image, format, extent.width, extent.height, mipLevels);
+		}
+		else
+		{
+			m_allocator.TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mipLevels);
+		}
+
+		m_allocator.CreateImageView(m_image, format, mipLevels, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
+
+		CreateSampler((float)mipLevels);
+	}
+
+
+	//--------------------------------------------------------------------------------
+	DepthImageBuffer::DepthImageBuffer(Allocator& allocator)
+		: AbstractImageBuffer(allocator)
+	{
+	}
+
+	DepthImageBuffer::~DepthImageBuffer()
+	{
+	}
+
+	void DepthImageBuffer::Create(const VkExtent2D& extent, const VkFormat format)
+	{
+		m_format = format;
+		m_mipMaps = false;
+		m_sampler = VK_NULL_HANDLE;
+
+		Resize(extent);
+	}
+
+	void DepthImageBuffer::Resize(const VkExtent2D& extent)
 	{
 		Destroy();
 
@@ -750,32 +763,38 @@ namespace PreVEngine
 		m_allocator.CreateImage(ext3D, m_format, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, m_image, m_allocation);
 		m_allocator.CreateImageView(m_image, m_format, 1, VK_IMAGE_ASPECT_DEPTH_BIT, m_imageView);
 
-		m_extent = VkExtent2D{ extent.width, extent.height };
+		m_extent = extent;
 	}
 
-	VkImage DepthBuffer::GetImage() const
+
+	//--------------------------------------------------------------------------------
+	ColorImageBuffer::ColorImageBuffer(Allocator& allocator)
+		: AbstractImageBuffer(allocator)
 	{
-		return m_image;
 	}
 
-	VkImageView DepthBuffer::GetImageView() const
+	ColorImageBuffer::~ColorImageBuffer()
 	{
-		return m_imageView;
 	}
 
-	VkSampler DepthBuffer::GetSampler() const
+	void ColorImageBuffer::Create(const VkExtent2D& extent, const VkFormat format)
 	{
-		return m_sampler;
+		m_format = format;
+		m_mipMaps = false;
+		m_sampler = VK_NULL_HANDLE;
+
+		Resize(extent);
 	}
 
-	VkFormat DepthBuffer::GetFormat() const
+	void ColorImageBuffer::Resize(const VkExtent2D& extent)
 	{
-		return m_format;
-	}
+		Destroy();
 
-	VkExtent2D DepthBuffer::GetExtent() const
-	{
-		return m_extent;
-	}
+		VkExtent3D ext3D{ extent.width, extent.width, 1 };
 
+		m_allocator.CreateImage(ext3D, m_format, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, m_image, m_allocation);
+		m_allocator.CreateImageView(m_image, m_format, 1, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
+
+		m_extent = extent;
+	}
 }

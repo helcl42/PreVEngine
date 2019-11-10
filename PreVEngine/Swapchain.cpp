@@ -6,7 +6,7 @@
 namespace PreVEngine
 {
 	Swapchain::Swapchain(Allocator& allocator, RenderPass& renderPass, const Queue* presentQueue, const Queue* graphicsQueue)
-		: m_allocator(allocator), m_renderPass(renderPass), m_depthBuffer(DepthBuffer(allocator))
+		: m_allocator(allocator), m_renderPass(renderPass), m_depthBuffer(DepthImageBuffer(allocator))
 	{
 		if (graphicsQueue == nullptr)
 		{

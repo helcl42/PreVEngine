@@ -134,10 +134,10 @@ namespace PreVEngine
 	};
 	//--------------------------------------------------------------------------------
 
-	//-------------------------------------Images-------------------------------------
-	class ImageBuffer
+	//-------------------------------------AbstractImageBuffer-------------------------------------
+	class AbstractImageBuffer
 	{
-	private:
+	protected:
 		Allocator& m_allocator;
 
 		VmaAllocation m_allocation;
@@ -152,20 +152,25 @@ namespace PreVEngine
 
 		VkSampler m_sampler;
 
+		bool m_mipMaps;
+
 	public:
-		ImageBuffer(Allocator& allocator);
+		AbstractImageBuffer(Allocator& allocator);
 
-		virtual ~ImageBuffer();
+		virtual ~AbstractImageBuffer();
 
-	private:
+	protected:
 		void CreateSampler(const float maxLod = 0);
 
 	public:
+		void UpdateSampler(const VkSamplerCreateInfo& samplerInfo); // Update sampler settings
+
 		void Destroy();
 
-		void Data(const void* data, const VkExtent2D& extent, const VkFormat format = VK_FORMAT_R8G8B8A8_UNORM, const bool mipmap = false);
+	public:
+		virtual void Create(const VkExtent2D& extent, const VkFormat format) = 0;
 
-		void UpdateSampler(const VkSamplerCreateInfo& samplerInfo); // Update sampler settings
+		virtual void Resize(const VkExtent2D& extent) = 0;
 
 	public:
 		VkImage GetImage() const;
@@ -177,52 +182,56 @@ namespace PreVEngine
 		VkFormat GetFormat() const;
 
 		VkExtent2D GetExtent() const;
+
+		bool HasMipMaps() const;
+	};
+
+	//----------------------------------Image Buffer----------------------------------
+	class ImageBuffer : public AbstractImageBuffer
+	{
+	public:
+		ImageBuffer(Allocator& allocator);
+
+		~ImageBuffer();
+
+	public:
+		void Create(const VkExtent2D& extent, const VkFormat format) override;
+
+		void Resize(const VkExtent2D& extent) override;
+
+		void Data(const void* data, const VkExtent2D& extent, const VkFormat format = VK_FORMAT_R8G8B8A8_UNORM, const bool mipmap = false);
 	};
 	//--------------------------------------------------------------------------------
 
 	//----------------------------------Depth Buffer----------------------------------
-	class DepthBuffer
+	class DepthImageBuffer : public AbstractImageBuffer
 	{
-	private:
-		Allocator& m_allocator;
+	public:
+		DepthImageBuffer(Allocator& allocator);
 
-		VmaAllocation m_allocation;
-
-		VkImage m_image;
-
-		VkExtent2D m_extent;
-
-		VkFormat m_format;
-
-		VkImageView m_imageView;
-
-		VkSampler m_sampler;
+		~DepthImageBuffer();
 
 	public:
-		DepthBuffer(Allocator& allocator);
+		void Create(const VkExtent2D& extent, const VkFormat format = VK_FORMAT_D32_SFLOAT) override;
 
-		virtual ~DepthBuffer();
-
-	public:
-		void Create(const VkExtent2D& extent, const VkFormat format = VK_FORMAT_D32_SFLOAT);
-
-		void Destroy();
-
-		void Resize(const VkExtent2D& extent);
-
-	public:
-		VkImage GetImage() const;
-
-		VkImageView GetImageView() const;
-
-		VkSampler GetSampler() const;
-
-		VkFormat GetFormat() const;
-
-		VkExtent2D GetExtent() const;
+		void Resize(const VkExtent2D& extent) override;
 	};
 	//--------------------------------------------------------------------------------
 
+	//----------------------------------Color Buffer----------------------------------
+	class ColorImageBuffer : public AbstractImageBuffer
+	{
+	public:
+		ColorImageBuffer(Allocator& allocator);
+
+		~ColorImageBuffer();
+
+	public:
+		void Create(const VkExtent2D& extent, const VkFormat format = VK_FORMAT_R8G8B8A8_UNORM) override;
+
+		void Resize(const VkExtent2D& extent) override;
+	};
+	//--------------------------------------------------------------------------------
 }
 
 #endif

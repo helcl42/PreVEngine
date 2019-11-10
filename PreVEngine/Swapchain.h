@@ -52,7 +52,7 @@ namespace PreVEngine
 
 		RenderPass& m_renderPass;
 
-		DepthBuffer m_depthBuffer;
+		DepthImageBuffer m_depthBuffer;
 
 		std::vector<SwapchainBuffer> m_swapchainBuffers;
 
