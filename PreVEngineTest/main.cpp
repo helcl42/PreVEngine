@@ -404,7 +404,7 @@ public:
 		m_shader->AdjustDescriptorPoolCapacity(10000);
 
 		m_pipeline = std::make_shared<Pipeline>(m_device, m_renderPass, *m_shader);
-		m_pipeline->CreateGraphicsPipeline(m_swapchain.GetExtent());
+		m_pipeline->CreateGraphicsPipeline();
 
 		printf("Pipeline created\n");
 	}

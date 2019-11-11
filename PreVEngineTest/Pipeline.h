@@ -23,7 +23,7 @@ public:
 	~Pipeline();
 
 public:
-	VkPipeline CreateGraphicsPipeline(const VkExtent2D& extent);
+	VkPipeline CreateGraphicsPipeline();
 
 public:
 	VkPipelineLayout GetPipelineLayout() const;
