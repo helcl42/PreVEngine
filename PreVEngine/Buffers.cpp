@@ -1,5 +1,6 @@
 #include "Buffers.h"
 #include "Formats.h"
+#include "Utils.h"
 
 #define NOMINMAX
 //#define VMA_RECORDING_ENABLED   0
@@ -10,84 +11,8 @@
 #define VMA_IMPLEMENTATION
 #include "External/vk_mem_alloc.h"
 
-#include <math.h>
-
 namespace PreVEngine
 {
-	static uint32_t Log2(const uint32_t x)
-	{
-		return (uint32_t)(log(x) / log(2));
-	}
-
-	static uint32_t FindMemoryType(const VkPhysicalDevice gpu, const uint32_t typeFilter, const VkMemoryPropertyFlags properties)
-	{
-		VkPhysicalDeviceMemoryProperties memProperties;
-		vkGetPhysicalDeviceMemoryProperties(gpu, &memProperties);
-
-		for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
-		{
-			if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
-			{
-				return i;
-			}
-		}
-
-		LOGE("failed to find suitable memory type!");
-
-		return 0;
-	}
-
-	static void CreateImage(const VkPhysicalDevice gpu, const VkDevice device, const VkExtent2D& extent, const VkFormat format, const VkImageTiling tiling, const VkImageUsageFlags usage, const VkMemoryPropertyFlags properties, VkImage& outImage, VkDeviceMemory& outImageMemory)
-	{
-		VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
-		imageInfo.imageType = VK_IMAGE_TYPE_2D;
-		imageInfo.format = format;
-		imageInfo.extent = { extent.width, extent.height, 1 };
-		imageInfo.mipLevels = 1;
-		imageInfo.arrayLayers = 1;
-		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-		imageInfo.tiling = tiling;
-		imageInfo.usage = usage;
-		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		imageInfo.queueFamilyIndexCount = 0;
-		imageInfo.pQueueFamilyIndices = nullptr;
-		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		VKERRCHECK(vkCreateImage(device, &imageInfo, nullptr, &outImage));
-
-		VkMemoryRequirements memRequirements;
-		vkGetImageMemoryRequirements(device, outImage, &memRequirements);
-
-		VkMemoryAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
-		allocInfo.allocationSize = memRequirements.size;
-		allocInfo.memoryTypeIndex = FindMemoryType(gpu, memRequirements.memoryTypeBits, properties);
-		VKERRCHECK(vkAllocateMemory(device, &allocInfo, nullptr, &outImageMemory));
-
-		VKERRCHECK(vkBindImageMemory(device, outImage, outImageMemory, 0));
-	}
-
-	static VkImageView CreateImageView(const VkDevice device, const VkImage image, const VkFormat format, const VkImageAspectFlags aspectFlags)
-	{
-		VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-		viewInfo.image = image;
-		viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		viewInfo.format = format;
-		viewInfo.components.r = VK_COMPONENT_SWIZZLE_R;
-		viewInfo.components.g = VK_COMPONENT_SWIZZLE_G;
-		viewInfo.components.b = VK_COMPONENT_SWIZZLE_B;
-		viewInfo.components.a = VK_COMPONENT_SWIZZLE_A;
-		viewInfo.subresourceRange.aspectMask = aspectFlags;
-		viewInfo.subresourceRange.baseMipLevel = 0;
-		viewInfo.subresourceRange.levelCount = 1;
-		viewInfo.subresourceRange.baseArrayLayer = 0;
-		viewInfo.subresourceRange.layerCount = 1;
-
-		VkImageView imageView;
-		VKERRCHECK(vkCreateImageView(device, &viewInfo, nullptr, &imageView));
-		return imageView;
-	}
-
-	//------------------------------------------------------------------------------------------------
-
 	Allocator::Allocator(const Queue& q, const VkDeviceSize blockSize)
 		: m_allocator(VK_NULL_HANDLE)
 	{

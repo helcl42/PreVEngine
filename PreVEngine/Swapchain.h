@@ -81,6 +81,8 @@ namespace PreVEngine
 
 		VkSurfaceCapabilitiesKHR GetSurfaceCapabilities() const;
 
+		std::vector<VkImage> GetSwapchainImages() const;
+
 	public:
 		Swapchain(Allocator& allocator, RenderPass& renderPass, const Queue* presentQueue, const Queue* graphicsQueue);
 

@@ -4,6 +4,7 @@
 #include <vector>
 #include <chrono>
 #include <iostream>
+#include <cmath>
 
 namespace PreVEngine
 {
@@ -137,6 +138,123 @@ namespace PreVEngine
 	{
 		return m_frameInterval;
 	}
+
+	// Global functions !!!
+	static uint32_t Log2(const uint32_t x)
+	{
+		return (uint32_t)(log(x) / log(2));
+	}
+
+	static uint32_t FindMemoryType(const VkPhysicalDevice gpu, const uint32_t typeFilter, const VkMemoryPropertyFlags properties)
+	{
+		VkPhysicalDeviceMemoryProperties memProperties;
+		vkGetPhysicalDeviceMemoryProperties(gpu, &memProperties);
+
+		for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+		{
+			if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+			{
+				return i;
+			}
+		}
+
+		LOGE("failed to find suitable memory type!");
+
+		return 0;
+	}
+
+	class VkUtils
+	{
+	public:
+		static void CreateImage(const VkPhysicalDevice gpu, const VkDevice device, const VkExtent2D& extent, const VkFormat format, const uint32_t mipLevels, const VkImageTiling tiling, const VkImageUsageFlags usage, const VkMemoryPropertyFlags properties, VkImage& outImage, VkDeviceMemory& outImageMemory)
+		{
+			VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+			imageInfo.imageType = VK_IMAGE_TYPE_2D;
+			imageInfo.format = format;
+			imageInfo.extent = { extent.width, extent.height, 1 };
+			imageInfo.mipLevels = mipLevels;
+			imageInfo.arrayLayers = 1;
+			imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+			imageInfo.tiling = tiling;
+			imageInfo.usage = usage;
+			imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+			imageInfo.queueFamilyIndexCount = 0;
+			imageInfo.pQueueFamilyIndices = nullptr;
+			imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			VKERRCHECK(vkCreateImage(device, &imageInfo, nullptr, &outImage));
+
+			VkMemoryRequirements memRequirements;
+			vkGetImageMemoryRequirements(device, outImage, &memRequirements);
+
+			VkMemoryAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
+			allocInfo.allocationSize = memRequirements.size;
+			allocInfo.memoryTypeIndex = FindMemoryType(gpu, memRequirements.memoryTypeBits, properties);
+			VKERRCHECK(vkAllocateMemory(device, &allocInfo, nullptr, &outImageMemory));
+
+			VKERRCHECK(vkBindImageMemory(device, outImage, outImageMemory, 0));
+		}
+
+		static VkImageView CreateImageView(const VkDevice device, const VkImage image, const VkFormat format, const uint32_t mipLevels, const VkImageAspectFlags aspectFlags)
+		{
+			VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+			viewInfo.image = image;
+			viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+			viewInfo.format = format;
+			viewInfo.components.r = VK_COMPONENT_SWIZZLE_R;
+			viewInfo.components.g = VK_COMPONENT_SWIZZLE_G;
+			viewInfo.components.b = VK_COMPONENT_SWIZZLE_B;
+			viewInfo.components.a = VK_COMPONENT_SWIZZLE_A;
+			viewInfo.subresourceRange.aspectMask = aspectFlags;
+			viewInfo.subresourceRange.baseMipLevel = 0;
+			viewInfo.subresourceRange.levelCount = mipLevels;
+			viewInfo.subresourceRange.baseArrayLayer = 0;
+			viewInfo.subresourceRange.layerCount = 1;
+
+			VkImageView imageView;
+			VKERRCHECK(vkCreateImageView(device, &viewInfo, nullptr, &imageView));
+			return imageView;
+		}
+
+		static VkFramebuffer CreateFrameBuffer(const VkDevice device, const VkRenderPass& renderPass, const std::vector<VkImageView>& imageViews, const VkExtent2D& extent)
+		{
+			VkFramebuffer frameBuffer;
+
+			VkFramebufferCreateInfo frameBufferCreateInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
+			frameBufferCreateInfo.renderPass = renderPass;
+			frameBufferCreateInfo.attachmentCount = static_cast<uint32_t>(imageViews.size());
+			frameBufferCreateInfo.pAttachments = imageViews.data();
+			frameBufferCreateInfo.width = extent.width;
+			frameBufferCreateInfo.height = extent.height;
+			frameBufferCreateInfo.layers = 1;
+			VKERRCHECK(vkCreateFramebuffer(device, &frameBufferCreateInfo, nullptr, &frameBuffer));
+
+			return frameBuffer;
+		}
+
+		static VkCommandBuffer CreatePrimaryCommandBuffer(const VkDevice device, const VkCommandPool commandPool)
+		{
+			VkCommandBuffer commandBuffer;
+
+			VkCommandBufferAllocateInfo commandBufferAllocInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
+			commandBufferAllocInfo.commandPool = commandPool;
+			commandBufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+			commandBufferAllocInfo.commandBufferCount = 1;
+			VKERRCHECK(vkAllocateCommandBuffers(device, &commandBufferAllocInfo, &commandBuffer));
+
+			return commandBuffer;
+		}
+
+		static VkFence CreateFence(const VkDevice device)
+		{
+			VkFence fence;
+
+			VkFenceCreateInfo createInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
+			createInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+			VKERRCHECK(vkCreateFence(device, &createInfo, nullptr, &fence));
+
+			return fence;
+		}
+	};
 }
 
 #endif

@@ -125,8 +125,6 @@ namespace PreVEngine
 		else
 		{
 			m_swapchainCreateInfo.imageExtent = currentSurfaceExtent;
-
-			std::cout << "UpdateExtent from " << m_swapchainCreateInfo.imageExtent.width << " x " << m_swapchainCreateInfo.imageExtent.height << " to " << currentSurfaceExtent.width << " x " << currentSurfaceExtent.height << std::endl;
 		}
 
 		if (!!m_swapchain)
@@ -299,36 +297,20 @@ namespace PreVEngine
 			}
 		}
 
-		std::vector<VkImage> swapchainImages;
-		uint32_t swapchainImagesCount = 0;
-		VKERRCHECK(vkGetSwapchainImagesKHR(m_device, m_swapchain, &swapchainImagesCount, nullptr));
-		swapchainImages.resize(swapchainImagesCount);
-		VKERRCHECK(vkGetSwapchainImagesKHR(m_device, m_swapchain, &swapchainImagesCount, swapchainImages.data()));
+		m_currentFrameIndex = 0;
 
 		m_depthBuffer.Resize(m_swapchainCreateInfo.imageExtent);  //resize depth buffer
 
-		m_swapchainImagesCount = swapchainImagesCount;
-		m_currentFrameIndex = 0;
+		std::vector<VkImage> swapchainImages = GetSwapchainImages();		
+		m_swapchainImagesCount = static_cast<uint32_t>(swapchainImages.size());
 
-		m_swapchainBuffers.resize(swapchainImagesCount);
-		for (uint32_t i = 0; i < swapchainImagesCount; i++)
+		m_swapchainBuffers.resize(m_swapchainImagesCount);
+		for (uint32_t i = 0; i < m_swapchainImagesCount; i++)
 		{
 			SwapchainBuffer& swapchainBuffer = m_swapchainBuffers[i];
-			swapchainBuffer.image = swapchainImages[i];
 
-			VkImageViewCreateInfo imageVIewCreateInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-			imageVIewCreateInfo.pNext = nullptr;
-			imageVIewCreateInfo.flags = 0;
-			imageVIewCreateInfo.image = swapchainImages[i];
-			imageVIewCreateInfo.format = m_swapchainCreateInfo.imageFormat;
-			imageVIewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-			imageVIewCreateInfo.components = {};
-			imageVIewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			imageVIewCreateInfo.subresourceRange.baseMipLevel = 0;
-			imageVIewCreateInfo.subresourceRange.levelCount = 1;
-			imageVIewCreateInfo.subresourceRange.baseArrayLayer = 0;
-			imageVIewCreateInfo.subresourceRange.layerCount = 1;
-			VKERRCHECK(vkCreateImageView(m_device, &imageVIewCreateInfo, nullptr, &swapchainBuffer.view));
+			swapchainBuffer.image = swapchainImages[i];
+			swapchainBuffer.view = VkUtils::CreateImageView(m_device, swapchainImages[i], m_swapchainCreateInfo.imageFormat, 1, VK_IMAGE_ASPECT_COLOR_BIT);
 
 			std::vector<VkImageView> views;
 			views.push_back(swapchainBuffer.view); // Add color buffer (unique)
@@ -339,31 +321,13 @@ namespace PreVEngine
 				views.push_back(depthBufferImageView); // Add depth buffer (shared)
 			}
 
-			std::cout << "Setting FrameBuffer size: " << m_swapchainCreateInfo.imageExtent.width << " x " << m_swapchainCreateInfo.imageExtent.height << std::endl;
-
-			VkFramebufferCreateInfo frameBufferCreateInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
-			frameBufferCreateInfo.renderPass = m_renderPass;
-			frameBufferCreateInfo.attachmentCount = static_cast<uint32_t>(views.size());
-			frameBufferCreateInfo.pAttachments = views.data();
-			frameBufferCreateInfo.width = m_swapchainCreateInfo.imageExtent.width;
-			frameBufferCreateInfo.height = m_swapchainCreateInfo.imageExtent.height;
-			frameBufferCreateInfo.layers = 1;
-			VKERRCHECK(vkCreateFramebuffer(m_device, &frameBufferCreateInfo, nullptr, &swapchainBuffer.framebuffer));
-
-			VkCommandBufferAllocateInfo commandBufferAllocInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
-			commandBufferAllocInfo.commandPool = m_commandPool;
-			commandBufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-			commandBufferAllocInfo.commandBufferCount = 1;
-			VKERRCHECK(vkAllocateCommandBuffers(m_device, &commandBufferAllocInfo, &swapchainBuffer.commandBuffer));
-
-			VkFenceCreateInfo createInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
-			createInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-			vkCreateFence(m_device, &createInfo, nullptr, &swapchainBuffer.fence);
-
+			swapchainBuffer.framebuffer = VkUtils::CreateFrameBuffer(m_device, m_renderPass, views, m_swapchainCreateInfo.imageExtent);
+			swapchainBuffer.commandBuffer = VkUtils::CreatePrimaryCommandBuffer(m_device, m_commandPool);
+			swapchainBuffer.fence = VkUtils::CreateFence(m_device);
 			swapchainBuffer.extent = m_swapchainCreateInfo.imageExtent;
-
-			printf("---Extent = %d x %d\n", m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height);
 		}
+
+		printf("---Extent = %d x %d\n", m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height);
 
 		if (m_swapchainCreateInfo.oldSwapchain == VK_NULL_HANDLE)
 		{
@@ -377,6 +341,18 @@ namespace PreVEngine
 		VkSurfaceCapabilitiesKHR surfaceCapabilities;
 		VKERRCHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_gpu, m_surface, &surfaceCapabilities));
 		return surfaceCapabilities;
+	}
+
+	std::vector<VkImage> Swapchain::GetSwapchainImages() const
+	{
+		std::vector<VkImage> swapchainImages;
+		
+		uint32_t swapchainImagesCount = 0;
+		VKERRCHECK(vkGetSwapchainImagesKHR(m_device, m_swapchain, &swapchainImagesCount, nullptr));
+		swapchainImages.resize(swapchainImagesCount);
+		VKERRCHECK(vkGetSwapchainImagesKHR(m_device, m_swapchain, &swapchainImagesCount, swapchainImages.data()));
+
+		return swapchainImages;
 	}
 
 	bool Swapchain::AcquireNext(SwapchainBuffer& next)
