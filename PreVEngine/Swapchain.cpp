@@ -112,20 +112,21 @@ namespace PreVEngine
 		VkExtent2D& currentSurfaceExtent = surfaceCapabilities.currentExtent;
 		VkExtent2D& swapchainExtent = m_swapchainCreateInfo.imageExtent;
 
-		//printf("swapchain: w=%d h=%d curr_w=%d curr_h=%d\n", width, height, currentSurfaceExtent.width, currentSurfaceExtent.height);
-
 		if (currentSurfaceExtent.width == 0xFFFFFFFF)  // 0xFFFFFFFF indicates surface size is set from extent
 		{
 			const uint32_t defaultWidth = 256;
 			const uint32_t defaultHeight = 256;
 
 			LOGW("Can't determine current window surface extent from surface caps. Using defaults instead. (%d x %d)\n", defaultWidth, defaultHeight);
-			swapchainExtent.width = Clamp(defaultWidth, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width);
-			swapchainExtent.height = Clamp(defaultHeight, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
+			
+			m_swapchainCreateInfo.imageExtent.width = Clamp(defaultWidth, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width);
+			m_swapchainCreateInfo.imageExtent.height = Clamp(defaultHeight, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
 		}
 		else
 		{
-			swapchainExtent = currentSurfaceExtent;
+			m_swapchainCreateInfo.imageExtent = currentSurfaceExtent;
+
+			std::cout << "UpdateExtent from " << m_swapchainCreateInfo.imageExtent.width << " x " << m_swapchainCreateInfo.imageExtent.height << " to " << currentSurfaceExtent.width << " x " << currentSurfaceExtent.height << std::endl;
 		}
 
 		if (!!m_swapchain)
@@ -337,6 +338,8 @@ namespace PreVEngine
 			{
 				views.push_back(depthBufferImageView); // Add depth buffer (shared)
 			}
+
+			std::cout << "Setting FrameBuffer size: " << m_swapchainCreateInfo.imageExtent.width << " x " << m_swapchainCreateInfo.imageExtent.height << std::endl;
 
 			VkFramebufferCreateInfo frameBufferCreateInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 			frameBufferCreateInfo.renderPass = m_renderPass;
