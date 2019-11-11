@@ -703,7 +703,7 @@ namespace PreVEngine
 			mipLevels = Log2(std::max(createInfo.extent.width, createInfo.extent.height)) + 1;
 		}
 
-		VkExtent3D ext3D{ createInfo.extent.width, createInfo.extent.width, 1 };
+		VkExtent3D ext3D{ createInfo.extent.width, createInfo.extent.height, 1 };
 
 		m_allocator.CreateImage(ext3D, createInfo.format, mipLevels, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_image, m_allocation);
 		m_allocator.CopyDataToImage(ext3D, createInfo.format, mipLevels, createInfo.data, m_image, m_allocation);
@@ -751,7 +751,7 @@ namespace PreVEngine
 	{
 		Destroy();
 
-		VkExtent3D ext3D{ extent.width, extent.width, 1 };
+		VkExtent3D ext3D{ extent.width, extent.height, 1 };
 
 		m_allocator.CreateImage(ext3D, m_format, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, m_image, m_allocation);
 		m_allocator.CreateImageView(m_image, m_format, 1, VK_IMAGE_ASPECT_DEPTH_BIT, m_imageView);
@@ -783,7 +783,7 @@ namespace PreVEngine
 	{
 		Destroy();
 
-		VkExtent3D ext3D{ extent.width, extent.width, 1 };
+		VkExtent3D ext3D{ extent.width, extent.height, 1 };
 
 		m_allocator.CreateImage(ext3D, m_format, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, m_image, m_allocation);
 		m_allocator.CreateImageView(m_image, m_format, 1, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
