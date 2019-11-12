@@ -361,13 +361,10 @@ private:
 
 		m_models.emplace_back(modelFactory.CreateTexturedModel(m_allocator, dist(gen) > 0.0f ? "vulkan.png" : "texture.jpg", trasform));
 
-		for (size_t i = 0; i < m_swapchain.GetmageCount(); i++)
-		{
-			auto ubo = std::make_shared<UBO>(m_allocator);
-			ubo->Allocate(sizeof(Uniforms));
+		auto ubo = std::make_shared<UBO>(m_allocator);
+		ubo->Allocate(sizeof(Uniforms));
 
-			m_uniformBuffers.emplace_back(ubo);
-		}
+		m_uniformBuffers.emplace_back(ubo);
 
 		printf("Model %zd created\n", m_models.size());
 	}
@@ -379,9 +376,9 @@ private:
 			m_models.erase(m_models.begin());
 		}
 
-		if (m_uniformBuffers.size() >= m_swapchain.GetmageCount())
+		if (m_uniformBuffers.size() > 0)
 		{
-			m_uniformBuffers.erase(m_uniformBuffers.begin(), m_uniformBuffers.begin() + m_swapchain.GetmageCount());
+			m_uniformBuffers.erase(m_uniformBuffers.begin(), m_uniformBuffers.begin() + 1);
 		}
 
 		printf("Model deleted %zd\n", m_models.size());
@@ -518,8 +515,6 @@ private:
 
 	std::shared_ptr<EngineWindow> m_window;
 
-	std::shared_ptr<PhysicalDevices> m_physicalDevices;
-
 	PhysicalDevice *m_physicalDevice;
 
 	std::shared_ptr<Device> m_device;
@@ -557,11 +552,11 @@ public:
 		m_window = std::make_shared<EngineWindow>(m_config.appName.c_str(), m_config.windowSize.width, m_config.windowSize.height);
 		m_window->SetPosition(m_config.windowPosition);
 
-		m_physicalDevices = std::make_shared<PhysicalDevices>(*m_instance);
-		m_physicalDevices->Print();
+		auto physicalDevices = std::make_shared<PhysicalDevices>(*m_instance);
+		physicalDevices->Print();
 
 		VkSurfaceKHR surface = m_window->GetSurface(*m_instance);
-		m_physicalDevice = m_physicalDevices->FindPresentable(surface);					// get presenting GPU?
+		m_physicalDevice = physicalDevices->FindPresentable(surface);					// get presenting GPU?
 		if (!m_physicalDevice)
 		{
 			throw std::runtime_error("No GPU found?!");
@@ -607,6 +602,8 @@ public:
 			float deltaTime = m_clock->GetDelta();
 
 			m_scene->Update(deltaTime);
+
+
 			m_scene->Render();
 
 			m_fpsService->Update(deltaTime);
