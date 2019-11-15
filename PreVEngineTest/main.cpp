@@ -423,11 +423,17 @@ public:
 
 	void Render()
 	{
-		if (windowResized)
+		// This should be part of Scene InEngine
+
+
+		///////////////////////////////////////////
+		// handle channel event and post default info about fov, width, height, nearClipping, farClipping
+		if (windowResized) 
 		{
 			m_swapchain.UpdateExtent();
 			windowResized = false;
 		}
+		///////////////////////////////////////////
 
 		VkExtent2D ext = m_swapchain.GetExtent();
 		VkRect2D scissor = { {0, 0}, ext };
@@ -442,6 +448,9 @@ public:
 			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
 			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+			// ~This should be part of Scene InEngine
+
 
 			size_t modelIndex = 0;
 			for (const auto& model : m_models)
@@ -473,8 +482,12 @@ public:
 				modelIndex++;
 			}
 
+			// This should be part of Scene InEngine
+
 			m_swapchain.EndFrame();
 		}
+
+		// ~This should be part of Scene InEngine
 	}
 
 	void ShutDown()
@@ -549,8 +562,15 @@ public:
 
 		m_instance = std::make_shared<Instance>(m_config.validation);
 
-		m_window = std::make_shared<EngineWindow>(m_config.appName.c_str(), m_config.windowSize.width, m_config.windowSize.height);
-		m_window->SetPosition(m_config.windowPosition);
+		if (m_config.fullScreen)
+		{
+			m_window = std::make_shared<EngineWindow>(m_config.appName.c_str());
+		}
+		else
+		{
+			m_window = std::make_shared<EngineWindow>(m_config.appName.c_str(), m_config.windowSize.width, m_config.windowSize.height);
+			m_window->SetPosition(m_config.windowPosition);
+		}
 
 		auto physicalDevices = std::make_shared<PhysicalDevices>(*m_instance);
 		physicalDevices->Print();
