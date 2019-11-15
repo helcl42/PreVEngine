@@ -85,6 +85,7 @@ namespace PreVEngine
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &m_commandBuffer;
 		VKERRCHECK(vkQueueSubmit(m_queue, 1, &submitInfo, VK_NULL_HANDLE));
+
 		VKERRCHECK(vkQueueWaitIdle(m_queue));
 	}
 
