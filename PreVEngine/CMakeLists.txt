@@ -12,6 +12,8 @@ add_library (${LIBRARY_NAME} STATIC ${SRC_LIST} ${EXT_LIST})    # and add them t
 
 target_include_directories (${LIBRARY_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
+include_directories("../Libs/glm")
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")  #for find_package
 
 #=========================VULKAN_WRAPPER==========================

@@ -7,6 +7,7 @@ endif()
 
 include_directories("${PROJECT_SOURCE_DIR}")
 include_directories("../PreVEngine/External")
+include_directories("../Libs/glm")
 
 file(GLOB SRC_LIST "*.h" "*.cpp")  
 add_executable(${PROJECT_NAME} ${SRC_LIST})
