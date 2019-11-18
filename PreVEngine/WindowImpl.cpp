@@ -16,7 +16,7 @@ namespace PreVEngine
 		}
 	}
 
-	Event WindowImpl::OnMouseEvent(ActionType action, int16_t x, int16_t y, MouseButtonType btn)
+	Event WindowImpl::OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType btn)
 	{
 		m_mousePosition = { x, y };
 		if (action != ActionType::MOVE)
@@ -128,7 +128,7 @@ namespace PreVEngine
 		return m_keyboardKeysState[keyIndex];
 	}
 
-	bool WindowImpl::IsMouseButtonPressed(const MouseButtonType btn) const
+	bool WindowImpl::IsMouseButtonPressed(const ButtonType btn) const
 	{
 		uint32_t buttonIndex = static_cast<uint32_t>(btn);
 		return m_mouseButonsState[buttonIndex];

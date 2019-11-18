@@ -85,7 +85,7 @@ namespace PreVEngine
 		return m_windowImpl->IsKeyPressed(key);
 	}
 
-	bool Window::IsMouseButtonPressed(const MouseButtonType btn) const
+	bool Window::IsMouseButtonPressed(const ButtonType btn) const
 	{
 		return m_windowImpl->IsMouseButtonPressed(btn);
 	}

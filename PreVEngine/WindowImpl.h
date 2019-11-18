@@ -13,7 +13,7 @@ namespace PreVEngine
 		MOVE
 	};
 
-	enum class MouseButtonType
+	enum class ButtonType
 	{
 		NONE = 0,
 		LEFT = 1,
@@ -47,7 +47,7 @@ namespace PreVEngine
 				ActionType action;
 				int16_t x;
 				int16_t y;
-				MouseButtonType btn;
+				ButtonType btn;
 			}
 			mouse;
 
@@ -298,7 +298,7 @@ namespace PreVEngine
 		WindowShape m_shape;
 
 	protected:
-		Event OnMouseEvent(ActionType action, int16_t x, int16_t y, MouseButtonType btn);  // Mouse event
+		Event OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType btn);  // Mouse event
 
 		Event OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y);
 
@@ -324,7 +324,7 @@ namespace PreVEngine
 	public:
 		bool IsKeyPressed(const KeyCode key) const;
 
-		bool IsMouseButtonPressed(const MouseButtonType btn) const;
+		bool IsMouseButtonPressed(const ButtonType btn) const;
 
 		Position GetMousePosition() const;
 

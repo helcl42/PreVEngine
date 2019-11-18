@@ -338,8 +338,8 @@ namespace PreVEngine
 		int16_t mx = e.event_x;
 		int16_t my = e.event_y;
 		uint8_t key = e.detail;
-		MouseButtonType btn = e.detail < 4 ? (MouseButtonType)e.detail : MouseButtonType::NONE;
-		MouseButtonType bestBtn = MouseButtonType(IsMouseButtonPressed(MouseButtonType::LEFT) ? 1 : IsMouseButtonPressed(MouseButtonType::MIDDLE) ? 2 : IsMouseButtonPressed(MouseButtonType::RIGHT) ? 3 : 0);  // If multiple buttons pressed, pick left one.
+		ButtonType btn = e.detail < 4 ? (ButtonType)e.detail : ButtonType::NONE;
+		ButtonType bestBtn = ButtonType(IsMouseButtonPressed(ButtonType::LEFT) ? 1 : IsMouseButtonPressed(ButtonType::MIDDLE) ? 2 : IsMouseButtonPressed(ButtonType::RIGHT) ? 3 : 0);  // If multiple buttons pressed, pick left one.
 
 		switch (x_event->response_type & ~0x80)
 		{

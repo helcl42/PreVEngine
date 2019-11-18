@@ -5,11 +5,45 @@
 #include <native.h>
 #endif
 
+#include "Common.h"
 #include "WindowImpl.h"
 
 namespace PreVEngine
 {
-	class Window
+	class IWindow
+	{
+	public:
+		virtual Surface& GetSurface(VkInstance instance) = 0;
+
+		virtual bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const = 0;
+
+		virtual Position GetPosition() const = 0;
+
+		virtual Size GetSize() const = 0;
+
+		virtual bool IsKeyPressed(const KeyCode key) const = 0;
+
+		virtual bool IsMouseButtonPressed(const ButtonType btn) const = 0;
+
+		virtual Position GetMousePosition() const = 0;
+
+		virtual bool HasFocus() const = 0;
+
+		virtual void SetTitle(const char* title) = 0;
+
+		virtual void SetPosition(const Position& position) = 0;
+
+		virtual void SetSize(const Size& size) = 0;
+
+		virtual void ShowKeyboard(bool enabled) = 0;
+
+		virtual void Close() = 0;
+
+	public:
+		virtual ~IWindow() = default;
+	};
+
+	class Window : public IWindow
 	{
 	private:
 		WindowImpl* m_windowImpl;
@@ -36,7 +70,7 @@ namespace PreVEngine
 
 		bool IsKeyPressed(const KeyCode key) const;
 
-		bool IsMouseButtonPressed(const MouseButtonType btn) const;
+		bool IsMouseButtonPressed(const ButtonType btn) const;
 
 		Position GetMousePosition() const;
 
@@ -59,7 +93,27 @@ namespace PreVEngine
 		bool ProcessEvents(bool waitForEvent = false);  // Poll events, and call event handlers. Returns false if window is closing.
 
 	public:
-		virtual void OnMouseEvent(ActionType action, int16_t x, int16_t y, MouseButtonType btn)
+		virtual void OnInitEvent()
+		{
+		}
+
+		virtual void OnCloseEvent()
+		{
+		}
+
+		virtual void OnResizeEvent(uint16_t width, uint16_t height)
+		{
+		}
+
+		virtual void OnMoveEvent(int16_t x, int16_t y)
+		{
+		}
+
+		virtual void OnFocusEvent(bool hasFocus)
+		{
+		}
+
+		virtual void OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType btn)
 		{
 		}
 
@@ -75,27 +129,7 @@ namespace PreVEngine
 		{
 		}
 
-		virtual void OnMoveEvent(int16_t x, int16_t y)
-		{
-		}
-
-		virtual void OnResizeEvent(uint16_t width, uint16_t height)
-		{
-		}
-
-		virtual void OnFocusEvent(bool hasFocus)
-		{
-		}
-
 		virtual void OnTouchEvent(ActionType action, float x, float y, uint8_t id)
-		{
-		}
-
-		virtual void OnInitEvent()
-		{
-		}
-
-		virtual void OnCloseEvent()
 		{
 		}
 	};

@@ -10,6 +10,7 @@
 #include <Buffers.h>
 #include <Image.h>
 #include <Shader.h>
+#include <Events.h>
 #include <Utils.h>
 
 #include "matrix.h"
@@ -17,16 +18,6 @@
 #include "../PreVEngine/VulkanWrapper/vulkan/vulkan.h"
 
 using namespace PreVEngine;
-
-uint16_t windowWidth = 1280;
-uint16_t windowHeight = 960;
-bool windowResized = false;
-bool shouldAdd = false;
-bool shouldDelete = false;
-
-float dx = 0.1f;
-float dy = 0.2f;
-
 
 struct Vertex
 {
@@ -134,13 +125,716 @@ public:
 	}
 };
 
-class EngineWindow : public Window
+//////////////////////////////////////
+// Window
+//////////////////////////////////////
+struct WindowCreatedEvent
+{
+	IWindow* window;
+};
+
+struct WindowDestroyedEvent
+{
+	IWindow* window;
+};
+
+struct WindowResizeEvent
+{
+	IWindow* window;
+
+	uint32_t width;
+
+	uint32_t height;
+};
+
+struct WindowMovedEvent
+{
+	IWindow* window;
+
+	glm::vec2 position;
+};
+
+struct WindowFocusChangeEvent
+{
+	IWindow* window;
+
+	bool hasFocus;
+};
+//////////////////////////////////////
+
+
+//////////////////////////////////////
+// Keyboard
+//////////////////////////////////////
+enum class KeyActionType : uint32_t
+{
+	PRESS,
+	RELEASE
+};
+
+struct KeyEvent
+{
+	KeyActionType action;
+
+	KeyCode keyCode;
+};
+//////////////////////////////////////
+
+
+//////////////////////////////////////
+// Mouse
+//////////////////////////////////////
+enum class MouseActionType : uint32_t
+{
+	PRESS,
+	RELEASE,
+	MOVE
+};
+
+enum class MouseButtonType : uint32_t
+{
+	NONE = 0,
+	LEFT,
+	MIDDLE,
+	RIGHT
+};
+
+struct MouseEvent
+{
+	MouseActionType action;
+
+	MouseButtonType button;
+
+	glm::vec2 position;
+};
+
+struct MouseScrollEvent
+{
+	int32_t delta;
+
+	glm::vec2 position;
+};
+//////////////////////////////////////
+
+
+//////////////////////////////////////
+// Touch
+//////////////////////////////////////
+enum class TouchActionType
+{
+	DOWN,
+	UP,
+	MOVE
+};
+
+struct TouchEvent
+{
+	TouchActionType action;
+	
+	uint8_t pointerId;
+
+	glm::vec2 position;
+};
+//////////////////////////////////////
+
+
+//////////////////////////////////////
+// Text
+//////////////////////////////////////
+struct TextEvent
+{
+	std::string text;
+};
+//////////////////////////////////////
+
+class InputsMapping
+{
+public:
+	static KeyActionType GetKeyActionType(const ActionType action)
+	{
+		switch (action)
+		{
+			case ActionType::DOWN:
+				return KeyActionType::PRESS;
+			case ActionType::UP:
+				return KeyActionType::RELEASE;
+			default:
+				throw std::runtime_error("Invalid key action");
+		}
+	}
+
+	static MouseActionType GetMouseActionType(const ActionType action)
+	{
+		switch (action)
+		{
+			case ActionType::DOWN:
+				return MouseActionType::PRESS;
+			case ActionType::UP:
+				return MouseActionType::RELEASE;
+			case ActionType::MOVE:
+				return MouseActionType::MOVE;
+			default:
+				throw std::runtime_error("Invalid mouse button action");
+		}
+	}
+
+	static MouseButtonType GetMouseButtonType(const ButtonType button)
+	{
+		switch (button)
+		{
+			case ButtonType::NONE:
+				return MouseButtonType::NONE;
+			case ButtonType::LEFT:
+				return MouseButtonType::LEFT;
+			case ButtonType::MIDDLE:
+				return MouseButtonType::MIDDLE;
+			case ButtonType::RIGHT:
+				return MouseButtonType::RIGHT;
+			default:
+				throw std::runtime_error("Invalid mouse button type");
+		}
+	}
+
+	static TouchActionType GetTouchActionType(const ActionType action)
+	{
+		switch (action)
+		{
+			case ActionType::DOWN:
+				return TouchActionType::DOWN;
+			case ActionType::UP:
+				return TouchActionType::UP;
+			case ActionType::MOVE:
+				return TouchActionType::MOVE;
+			default:
+				throw std::runtime_error("Invalid touch action");
+		}
+	}
+};
+
+
+class IMouseActionListener
+{
+public:
+	virtual void OnMouseAction(const MouseEvent& mouseAction) = 0;
+
+public:
+	virtual ~IMouseActionListener() = default;
+};
+
+class IMouseScrollListener
+{
+public:
+	virtual void OnMouseScroll(const MouseScrollEvent& scroll) = 0;
+
+public:
+	virtual ~IMouseScrollListener() = default;
+};
+
+class MouseInputComponent final
 {
 private:
-	float mx = 0;
+	EventHandler<MouseInputComponent, MouseEvent> m_mouseActionsHandler{ *this };
 
-	float my = 0;
+	EventHandler<MouseInputComponent, MouseScrollEvent> m_mouseScrollsHandler{ *this };
 
+private:
+	Observer<IMouseActionListener> m_mouseActionObservers;
+
+	Observer<IMouseScrollListener> m_mouseScrollObservers;
+
+private:
+	mutable std::mutex m_mutex;
+
+	std::set<MouseButtonType> m_pressedButtons;
+
+	glm::vec2 m_mousePosition{ 0, 0 };
+
+public:
+	MouseInputComponent() = default;
+
+	~MouseInputComponent() = default;
+
+	MouseInputComponent(const MouseInputComponent& other) = default;
+
+	MouseInputComponent& operator=(const MouseInputComponent& other) = default;
+
+	MouseInputComponent(MouseInputComponent&& other) = default;
+
+	MouseInputComponent& operator=(MouseInputComponent&& other) = default;
+
+public:
+	bool RegisterMouseActionListener(IMouseActionListener& listener)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		return m_mouseActionObservers.RegisterListener(listener);
+	}
+
+	bool UnregisterMouseActionListener(IMouseActionListener& listener)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		return m_mouseActionObservers.UnregisterListener(listener);
+	}
+
+	bool IsMouseActionListenerRegistered(IMouseActionListener& listener) const
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		return m_mouseActionObservers.IsListenerRegistered(listener);
+	}
+
+	bool RegisterMouseScrollListener(IMouseScrollListener& listener)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		return m_mouseScrollObservers.RegisterListener(listener);
+	}
+
+	bool UnregisterMouseScrollListener(IMouseScrollListener& listener)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		return m_mouseScrollObservers.UnregisterListener(listener);
+	}
+
+	bool IsMouseScrollListenerRegistered(IMouseScrollListener& listener) const
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		return m_mouseScrollObservers.IsListenerRegistered(listener);
+	}
+
+public:
+	const std::set<MouseButtonType>& GetPressedButtons() const
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		return m_pressedButtons;
+	}
+
+	glm::vec2 GetMousePosition() const
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		return m_mousePosition;
+	}
+
+	bool IsButtonPressed(const MouseButtonType button) const
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		return m_pressedButtons.find(button) != m_pressedButtons.cend();
+	}
+
+public:
+	void operator() (const MouseEvent& action)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		m_mousePosition = action.position;
+
+		if (action.action == MouseActionType::PRESS)
+		{
+			m_pressedButtons.insert(action.button);
+		}
+		else if (action.action == MouseActionType::RELEASE)
+		{
+			m_pressedButtons.erase(action.button);
+		}
+
+		for (auto listener : m_mouseActionObservers.GetObservers())
+		{
+			listener->OnMouseAction(action);
+		}
+	}
+
+	void operator() (const MouseScrollEvent& scrollAction)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		for (auto& listener : m_mouseScrollObservers.GetObservers())
+		{
+			listener->OnMouseScroll(scrollAction);
+		}
+	}
+};
+
+
+class IKeyboardActionListener
+{
+public:
+	virtual void OnKeyAction(const KeyEvent& keyEvent) = 0;
+
+public:
+	virtual ~IKeyboardActionListener() = default;
+};
+
+class ITextListener
+{
+public:
+	virtual void OnText(const TextEvent& textEvent) = 0;
+
+public:
+	virtual ~ITextListener() = default;
+};
+
+class KeyboardInputComponnet final
+{
+private:
+	EventHandler<KeyboardInputComponnet, KeyEvent> m_keyEventsHandler{ *this };
+
+	EventHandler<KeyboardInputComponnet, TextEvent> m_textEventHandler{ *this };
+
+private:
+	Observer<IKeyboardActionListener> m_keyActionObservers;
+
+	Observer<ITextListener> m_textObservers;
+
+private:
+	mutable std::mutex m_mutex;
+
+	std::set<KeyCode> m_pressedKeys;
+
+public:
+	KeyboardInputComponnet() = default;
+
+	~KeyboardInputComponnet() = default;
+
+	KeyboardInputComponnet(const KeyboardInputComponnet& other) = default;
+
+	KeyboardInputComponnet& operator=(const KeyboardInputComponnet& other) = default;
+
+	KeyboardInputComponnet(KeyboardInputComponnet&& other) = default;
+
+	KeyboardInputComponnet& operator=(KeyboardInputComponnet&& other) = default;
+
+public:
+	bool RegisterKeyboardActionListener(IKeyboardActionListener& listener)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		return m_keyActionObservers.RegisterListener(listener);
+	}
+
+	bool UnregisterKeyboardActionListener(IKeyboardActionListener& listener)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		return m_keyActionObservers.UnregisterListener(listener);
+	}
+
+	bool IsKeyboardActionListenerRegistered(IKeyboardActionListener& listener) const
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		return m_keyActionObservers.IsListenerRegistered(listener);
+	}
+
+	bool RegisterTextListener(ITextListener& listener)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		return m_textObservers.RegisterListener(listener);
+	}
+
+	bool UnregisterTextListener(ITextListener& listener)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		return m_textObservers.UnregisterListener(listener);
+	}
+
+	bool IsTextListenerRegistered(ITextListener& listener) const
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		return m_textObservers.IsListenerRegistered(listener);
+	}
+
+public:
+	bool IsKeyPressed(const KeyCode keyCode) const
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		return m_pressedKeys.find(keyCode) != m_pressedKeys.cend();
+	}
+
+	const std::set<KeyCode> GetPressedKeys() const
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		return m_pressedKeys;
+	}
+
+public:
+	void operator() (const KeyEvent& keyEvent)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		if (keyEvent.action == KeyActionType::PRESS)
+		{
+			m_pressedKeys.insert(keyEvent.keyCode);
+		}
+		else if (keyEvent.action == KeyActionType::RELEASE)
+		{
+			m_pressedKeys.erase(keyEvent.keyCode);
+		}
+
+		for (auto& listener : m_keyActionObservers.GetObservers())
+		{
+			listener->OnKeyAction(keyEvent);
+		}
+	}
+
+	void operator() (const TextEvent& textEvent)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		for (auto& listener : m_textObservers.GetObservers())
+		{
+			listener->OnText(textEvent);
+		}
+	}
+};
+
+struct Touch
+{
+	uint8_t pointerId;
+
+	glm::vec2 position;
+};
+
+class ITouchActionListener
+{
+public:
+	virtual void OnTouchAction(const TouchEvent& textEvent) = 0;
+
+public:
+	virtual ~ITouchActionListener() = default;
+};
+
+class TouchInputComponent final
+{
+private:
+	EventHandler<TouchInputComponent, TouchEvent> m_touchEventsHandler{ *this };
+
+private:
+	Observer<ITouchActionListener> m_touchObservers;
+
+private:
+	mutable std::mutex m_mutex;
+
+	std::map<uint8_t, Touch> m_touchedDownPointers;
+
+public:
+	TouchInputComponent() = default;
+
+	~TouchInputComponent() = default;
+
+	TouchInputComponent(const TouchInputComponent& other) = default;
+
+	TouchInputComponent& operator=(const TouchInputComponent& other) = default;
+
+	TouchInputComponent(TouchInputComponent&& other) = default;
+
+	TouchInputComponent& operator=(TouchInputComponent&& other) = default;
+
+public:
+	bool RegisterTouchActionListener(ITouchActionListener& listener)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		return m_touchObservers.RegisterListener(listener);
+	}
+
+	bool UnregisterTouchActionListener(ITouchActionListener& listener)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		return m_touchObservers.UnregisterListener(listener);
+	}
+
+	bool IsTouchActionListenerRegistered(ITouchActionListener& listener) const
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		return m_touchObservers.IsListenerRegistered(listener);
+	}
+
+public:
+	std::map<uint8_t, Touch> GetTouches() const
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		return m_touchedDownPointers;
+	}
+
+	bool IsPointerTouched(const uint8_t pointerId) const
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		return m_touchedDownPointers.find(pointerId) != m_touchedDownPointers.cend();
+	}
+
+public:
+	void operator() (const TouchEvent& touchEvent)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		if (touchEvent.action == TouchActionType::DOWN)
+		{
+			m_touchedDownPointers[touchEvent.pointerId] = Touch{ touchEvent.pointerId, touchEvent.position };
+		}
+		else if (touchEvent.action == TouchActionType::UP)
+		{
+			m_touchedDownPointers.erase(touchEvent.pointerId);
+		}
+
+		for (auto& listener : m_touchObservers.GetObservers())
+		{
+			listener->OnTouchAction(touchEvent);
+		}
+	}
+};
+
+class InputsFacade
+{
+private:
+	KeyboardInputComponnet m_keyboardInputComponent;
+
+	MouseInputComponent m_mouseInputComponent;
+
+	TouchInputComponent m_touchInuptComponent;
+
+public:
+	InputsFacade() = default;
+
+	~InputsFacade() = default;
+
+	InputsFacade(const InputsFacade& other) = default;
+
+	InputsFacade& operator=(const InputsFacade& other) = default;
+
+	InputsFacade(InputsFacade&& other) = default;
+
+	InputsFacade& operator=(InputsFacade&& other) = default;
+
+public:
+	bool RegisterKeyboardActionListener(IKeyboardActionListener& listener)
+	{
+		return m_keyboardInputComponent.RegisterKeyboardActionListener(listener);
+	}
+
+	bool UnregisterKeyboardActionListener(IKeyboardActionListener& listener)
+	{
+		return m_keyboardInputComponent.UnregisterKeyboardActionListener(listener);
+	}
+
+	bool IsKeyboardActionListenerRegistered(IKeyboardActionListener& listener) const
+	{
+		return m_keyboardInputComponent.IsKeyboardActionListenerRegistered(listener);
+	}
+
+	bool RegisterTextListener(ITextListener& listener)
+	{
+		return m_keyboardInputComponent.RegisterTextListener(listener);
+	}
+
+	bool UnregisterTextListener(ITextListener& listener)
+	{
+		return m_keyboardInputComponent.UnregisterTextListener(listener);
+	}
+
+	bool IsTextListenerRegistered(ITextListener& listener) const
+	{
+		return m_keyboardInputComponent.IsTextListenerRegistered(listener);
+	}
+
+	bool RegisterMouseActionListener(IMouseActionListener& listener)
+	{
+		return m_mouseInputComponent.RegisterMouseActionListener(listener);
+	}
+
+	bool UnregisterMouseActionListener(IMouseActionListener& listener)
+	{
+		return m_mouseInputComponent.UnregisterMouseActionListener(listener);
+	}
+
+	bool IsMouseActionListenerRegistered(IMouseActionListener& listener) const
+	{
+		return m_mouseInputComponent.IsMouseActionListenerRegistered(listener);
+	}
+
+	bool RegisterMouseScrollListener(IMouseScrollListener& listener)
+	{
+		return m_mouseInputComponent.RegisterMouseScrollListener(listener);
+	}
+
+	bool UnregisterMouseScrollListener(IMouseScrollListener& listener)
+	{
+		return m_mouseInputComponent.UnregisterMouseScrollListener(listener);
+	}
+
+	bool IsMouseScrollListenerRegistered(IMouseScrollListener& listener) const
+	{
+		return m_mouseInputComponent.IsMouseScrollListenerRegistered(listener);
+	}
+
+	bool RegisterTouchActionListener(ITouchActionListener& listener)
+	{
+		return m_touchInuptComponent.RegisterTouchActionListener(listener);
+	}
+
+	bool UnregisterTouchActionListener(ITouchActionListener& listener)
+	{
+		return m_touchInuptComponent.UnregisterTouchActionListener(listener);
+	}
+
+	bool IsTouchActionListenerRegistered(ITouchActionListener& listener) const
+	{
+		return m_touchInuptComponent.IsTouchActionListenerRegistered(listener);
+	}
+
+public:
+	bool IsKeyPressed(const KeyCode keyCode) const
+	{
+		return m_keyboardInputComponent.IsKeyPressed(keyCode);
+	}
+
+	const std::set<KeyCode> GetPressedKeys() const
+	{
+		return m_keyboardInputComponent.GetPressedKeys();
+	}
+
+	const std::set<MouseButtonType>& GetPressedButtons() const
+	{
+		return m_mouseInputComponent.GetPressedButtons();
+	}
+
+	glm::vec2 GetMousePosition() const
+	{
+		return m_mouseInputComponent.GetMousePosition();
+	}
+
+	bool IsButtonPressed(const MouseButtonType button) const
+	{
+		return m_mouseInputComponent.IsButtonPressed(button);
+	}
+
+	std::map<uint8_t, Touch> GetTouches() const
+	{
+		return m_touchInuptComponent.GetTouches();
+	}
+
+	bool IsPointerTouched(const uint8_t pointerId) const
+	{
+		return m_touchInuptComponent.IsPointerTouched(pointerId);
+	}
+};
+
+class EngineWindow : public Window
+{
 public:
 	EngineWindow(const char* title)
 		: Window(title)
@@ -152,108 +846,55 @@ public:
 	{
 	}
 
-private:
-	void Update(float deltaTime)
-	{
-	}
-
-	void Render()
-	{
-	}
-
 public:
-	void Run()
+	virtual void OnInitEvent()
 	{
-
+		EventChannel::Broadcast(WindowCreatedEvent{ this });
 	}
 
-public:
-	void OnResizeEvent(uint16_t width, uint16_t height) override
+	virtual void OnCloseEvent()
 	{
-		printf("OnResizeEvent: %d x %d\n", width, height);
-		windowResized = true;
-		windowWidth = width;
-		windowHeight = height;
+		EventChannel::Broadcast(WindowDestroyedEvent{ this });
+	}
+
+	virtual void OnResizeEvent(uint16_t width, uint16_t height)
+	{
+		EventChannel::Broadcast(WindowResizeEvent{ this, width, height });
+	}
+
+	virtual void OnMoveEvent(int16_t x, int16_t y)
+	{
+		EventChannel::Broadcast(WindowMovedEvent{ this, glm::vec2(x, y) });
+	}
+
+	virtual void OnFocusEvent(bool hasFocus)
+	{
+		EventChannel::Broadcast(WindowFocusChangeEvent{ this, hasFocus });
 	}
 
 	void OnKeyEvent(ActionType action, KeyCode keyCode) override
 	{
-		if (action == ActionType::DOWN)
-		{
-			if (keyCode == KeyCode::KEY_Left)
-			{
-				dy -= 0.1f;
-			}
-
-			if (keyCode == KeyCode::KEY_Right)
-			{
-				dy += 0.1f;
-			}
-
-			if (keyCode == KeyCode::KEY_Up)
-			{
-				dx += 0.1f;
-			}
-
-			if (keyCode == KeyCode::KEY_Down)
-			{
-				dx -= 0.1f;
-			}
-
-			if (keyCode == KeyCode::KEY_A)
-			{
-				shouldAdd = true;
-			}
-
-			if (keyCode == KeyCode::KEY_D)
-			{
-				shouldDelete = true;
-			}
-		}
+		EventChannel::Broadcast(KeyEvent{ InputsMapping::GetKeyActionType(action), keyCode });
 	}
 
-	void OnMouseEvent(ActionType action, int16_t x, int16_t y, MouseButtonType button) override
+	void OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType button) override
 	{
-		if (action == ActionType::MOVE && button == MouseButtonType::LEFT)
-		{
-			dy = x - mx;
-			dx = my - y;
-		}
-
-		mx = x;
-		my = y;
-	}
-
-	void OnTouchEvent(ActionType action, float x, float y, uint8_t id) override
-	{
-		if (action == ActionType::MOVE)
-		{
-			dy = x - mx;
-			dx = my - y;
-		}
-
-		mx = x;
-		my = y;
+		EventChannel::Broadcast(MouseEvent{ InputsMapping::GetMouseActionType(action), InputsMapping::GetMouseButtonType(button), glm::vec2(x, y) });
 	}
 
 	void OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y) override
 	{
-		std::cout << "Mouse scroll: " << delta << std::endl;
+		EventChannel::Broadcast(MouseScrollEvent{ delta, glm::vec2(x, y) });
 	}
 
-	void OnFocusEvent(bool hasFocus) override
+	void OnTouchEvent(ActionType action, float x, float y, uint8_t pointerId) override
 	{
-		std::cout << "Window Focus changed to: " << (hasFocus ? "YES" : "NO") << std::endl;
+		EventChannel::Broadcast(TouchEvent{ InputsMapping::GetTouchActionType(action), pointerId, glm::vec2(x, y)});
 	}
 
-	void OnInitEvent() override
+	void OnTextEvent(const char *str)
 	{
-		std::cout << "Window initialized" << std::endl;
-	}
-
-	void OnCloseEvent() override
-	{
-		std::cout << "Window closed" << std::endl;
+		EventChannel::Broadcast(TextEvent{ str });
 	}
 };
 
@@ -318,11 +959,14 @@ public:
 class Scene
 {
 private:
+	EventHandler<Scene, WindowResizeEvent> m_windowResizeEvent{ *this };
+
+private:
 	Device& m_device;
 
 	Swapchain& m_swapchain;
 
-    RenderPass& m_renderPass;
+	RenderPass& m_renderPass;
 
 	Allocator& m_allocator;
 
@@ -334,6 +978,22 @@ private:
 	std::vector<std::shared_ptr<TexturedModel>> m_models;
 
 	std::vector<std::shared_ptr<UBO>> m_uniformBuffers;
+
+private:
+	// temp bullshit
+	EventHandler<Scene, KeyEvent> m_keyEvent{ *this };
+
+	EventHandler<Scene, MouseEvent> m_mouseEvent{ *this };
+
+	EventHandler<Scene, TouchEvent> m_touchEvent{ *this };
+
+	bool shouldAdd = false;
+
+	bool shouldDelete = false;
+
+	glm::vec2 d{ 0.1f, 0.1f };
+	
+	glm::vec2 m{ 0.0f, 0.0f };
 
 public:
 	Scene(Allocator& alloc, Device& dev, Swapchain& swapCh, RenderPass& renderPass)
@@ -425,22 +1085,12 @@ public:
 	{
 		// This should be part of Scene InEngine
 
-
-		///////////////////////////////////////////
-		// handle channel event and post default info about fov, width, height, nearClipping, farClipping
-		if (windowResized) 
-		{
-			m_swapchain.UpdateExtent();
-			windowResized = false;
-		}
-		///////////////////////////////////////////
-
 		VkExtent2D ext = m_swapchain.GetExtent();
 		VkRect2D scissor = { {0, 0}, ext };
 		VkViewport viewport = { 0, 0, (float)ext.width, (float)ext.height, 0, 1 };
 
 		float aspect = (float)ext.width / (float)ext.height;
-		
+
 		VkCommandBuffer commandBuffer;
 		uint32_t frameInFlightIndex;
 		if (m_swapchain.BeginFrame(commandBuffer, frameInFlightIndex))
@@ -464,8 +1114,8 @@ public:
 				uniforms.proj.SetProjection(aspect, 66.0f, 0.01f, 100.0f);
 				uniforms.view.Translate(0.0f, 0.0f, -4.0f);
 				uniforms.model = model->transform;
-				uniforms.model.RotateX(dx);
-				uniforms.model.RotateY(dy);
+				uniforms.model.RotateX(d.x);
+				uniforms.model.RotateY(d.y);
 				model->transform = uniforms.model;
 				ubo->Update(&uniforms);
 
@@ -492,6 +1142,68 @@ public:
 
 	void ShutDown()
 	{
+	}
+
+public:
+	void operator() (const WindowResizeEvent& resizeEvent)
+	{
+		m_swapchain.UpdateExtent();
+	}
+
+	void operator() (const KeyEvent& keyEvent)
+	{
+		if (keyEvent.action == KeyActionType::PRESS)
+		{
+			if (keyEvent.keyCode == KeyCode::KEY_A)
+			{
+				shouldAdd = true;
+			}
+
+			if (keyEvent.keyCode == KeyCode::KEY_D)
+			{
+				shouldDelete = true;
+			}
+
+			if (keyEvent.keyCode == KeyCode::KEY_Left)
+			{
+				d.y -= 0.1f;
+			}
+
+			if (keyEvent.keyCode == KeyCode::KEY_Right)
+			{
+				d.y += 0.1f;
+			}
+
+			if (keyEvent.keyCode == KeyCode::KEY_Up)
+			{
+				d.x += 0.1f;
+			}
+
+			if (keyEvent.keyCode == KeyCode::KEY_Down)
+			{
+				d.x -= 0.1f;
+			}
+		}
+	}
+
+	void operator() (const MouseEvent& mouseEvent)
+	{
+		if (mouseEvent.action == MouseActionType::MOVE && mouseEvent.button == MouseButtonType::LEFT)
+		{
+			d = glm::vec2(mouseEvent.position.x - m.x, m.y - mouseEvent.position.y);
+		}
+
+		m = mouseEvent.position;
+	}
+
+	void operator() (const TouchEvent& touchEvent)
+	{
+		if (touchEvent.action == TouchActionType::MOVE)
+		{
+			d = glm::vec2(touchEvent.position.x - m.x, m.y - touchEvent.position.y);
+		}
+
+		m = touchEvent.position;
 	}
 };
 
@@ -605,7 +1317,7 @@ public:
 		m_allocator = std::make_shared<Allocator>(*m_graphicsQueue);                   // Create "Vulkan Memory Aloocator"
 		printf("Allocator created\n");
 
-		m_swapchain = std::make_shared<Swapchain>(*m_allocator ,*m_renderPass, m_graphicsQueue, m_graphicsQueue);
+		m_swapchain = std::make_shared<Swapchain>(*m_allocator, *m_renderPass, m_graphicsQueue, m_graphicsQueue);
 		m_swapchain->SetPresentMode(m_config.VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
 		m_swapchain->SetImageCount(m_config.framesInFlight);
 		m_swapchain->Print();
@@ -618,6 +1330,8 @@ public:
 	{
 		while (m_window->ProcessEvents()) // Main event loop, runs until window is closed.
 		{
+			EventChannel::DispatchAll();
+
 			m_clock->UpdateClock();
 			float deltaTime = m_clock->GetDelta();
 

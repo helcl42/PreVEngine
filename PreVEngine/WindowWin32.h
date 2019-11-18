@@ -303,7 +303,7 @@ namespace PreVEngine
 			//-----------------------------------------------------------------------------------------------------------------
 
 			static char buf[4] = {};
-			MouseButtonType bestBtn = MouseButtonType(IsMouseButtonPressed(MouseButtonType::LEFT) ? 1 : IsMouseButtonPressed(MouseButtonType::MIDDLE) ? 2 : IsMouseButtonPressed(MouseButtonType::RIGHT) ? 3 : 0);
+			ButtonType bestBtn = ButtonType(IsMouseButtonPressed(ButtonType::LEFT) ? 1 : IsMouseButtonPressed(ButtonType::MIDDLE) ? 2 : IsMouseButtonPressed(ButtonType::RIGHT) ? 3 : 0);
 
 			switch (msg.message)
 			{
@@ -311,17 +311,17 @@ namespace PreVEngine
 				case WM_MOUSEMOVE:
 					return OnMouseEvent(ActionType::MOVE, x, y, bestBtn);
 				case WM_LBUTTONDOWN:
-					return OnMouseEvent(ActionType::DOWN, x, y, MouseButtonType::LEFT);
+					return OnMouseEvent(ActionType::DOWN, x, y, ButtonType::LEFT);
 				case WM_MBUTTONDOWN:
-					return OnMouseEvent(ActionType::DOWN, x, y, MouseButtonType::MIDDLE);
+					return OnMouseEvent(ActionType::DOWN, x, y, ButtonType::MIDDLE);
 				case WM_RBUTTONDOWN:
-					return OnMouseEvent(ActionType::DOWN, x, y, MouseButtonType::RIGHT);
+					return OnMouseEvent(ActionType::DOWN, x, y, ButtonType::RIGHT);
 				case WM_LBUTTONUP:
-					return OnMouseEvent(ActionType::UP, x, y, MouseButtonType::LEFT);
+					return OnMouseEvent(ActionType::UP, x, y, ButtonType::LEFT);
 				case WM_MBUTTONUP:
-					return  OnMouseEvent(ActionType::UP, x, y, MouseButtonType::MIDDLE);
+					return  OnMouseEvent(ActionType::UP, x, y, ButtonType::MIDDLE);
 				case WM_RBUTTONUP:
-					return OnMouseEvent(ActionType::UP, x, y, MouseButtonType::RIGHT);
+					return OnMouseEvent(ActionType::UP, x, y, ButtonType::RIGHT);
 
 					//--Mouse wheel events--
 				case WM_MOUSEWHEEL:
