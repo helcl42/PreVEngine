@@ -833,66 +833,66 @@ public:
 	}
 };
 
-class EngineWindow : public Window
+class Window : public AbstractWindow
 {
 public:
-	EngineWindow(const char* title)
-		: Window(title)
+	Window(const char* title)
+		: AbstractWindow(title)
 	{
 	}
 
-	EngineWindow(const char* title, const uint32_t width, const uint32_t height)
-		: Window(title, width, height)
+	Window(const char* title, const uint32_t width, const uint32_t height)
+		: AbstractWindow(title, width, height)
 	{
 	}
 
 public:
-	virtual void OnInitEvent()
+	virtual void OnInitEvent() override
 	{
 		EventChannel::Broadcast(WindowCreatedEvent{ this });
 	}
 
-	virtual void OnCloseEvent()
+	virtual void OnCloseEvent() override
 	{
 		EventChannel::Broadcast(WindowDestroyedEvent{ this });
 	}
 
-	virtual void OnResizeEvent(uint16_t width, uint16_t height)
+	virtual void OnResizeEvent(uint16_t width, uint16_t height) override
 	{
 		EventChannel::Broadcast(WindowResizeEvent{ this, width, height });
 	}
 
-	virtual void OnMoveEvent(int16_t x, int16_t y)
+	virtual void OnMoveEvent(int16_t x, int16_t y) override
 	{
 		EventChannel::Broadcast(WindowMovedEvent{ this, glm::vec2(x, y) });
 	}
 
-	virtual void OnFocusEvent(bool hasFocus)
+	virtual void OnFocusEvent(bool hasFocus) override
 	{
 		EventChannel::Broadcast(WindowFocusChangeEvent{ this, hasFocus });
 	}
 
-	void OnKeyEvent(ActionType action, KeyCode keyCode) override
+	virtual void OnKeyEvent(ActionType action, KeyCode keyCode) override
 	{
 		EventChannel::Broadcast(KeyEvent{ InputsMapping::GetKeyActionType(action), keyCode });
 	}
 
-	void OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType button) override
+	virtual void OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType button) override
 	{
 		EventChannel::Broadcast(MouseEvent{ InputsMapping::GetMouseActionType(action), InputsMapping::GetMouseButtonType(button), glm::vec2(x, y) });
 	}
 
-	void OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y) override
+	virtual void OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y) override
 	{
 		EventChannel::Broadcast(MouseScrollEvent{ delta, glm::vec2(x, y) });
 	}
 
-	void OnTouchEvent(ActionType action, float x, float y, uint8_t pointerId) override
+	virtual void OnTouchEvent(ActionType action, float x, float y, uint8_t pointerId) override
 	{
 		EventChannel::Broadcast(TouchEvent{ InputsMapping::GetTouchActionType(action), pointerId, glm::vec2(x, y)});
 	}
 
-	void OnTextEvent(const char *str)
+	virtual void OnTextEvent(const char *str) override
 	{
 		EventChannel::Broadcast(TextEvent{ str });
 	}
@@ -1238,7 +1238,7 @@ private:
 
 	std::shared_ptr<Instance> m_instance;
 
-	std::shared_ptr<EngineWindow> m_window;
+	std::shared_ptr<Window> m_window;
 
 	PhysicalDevice *m_physicalDevice;
 
@@ -1276,11 +1276,11 @@ public:
 
 		if (m_config.fullScreen)
 		{
-			m_window = std::make_shared<EngineWindow>(m_config.appName.c_str());
+			m_window = std::make_shared<Window>(m_config.appName.c_str());
 		}
 		else
 		{
-			m_window = std::make_shared<EngineWindow>(m_config.appName.c_str(), m_config.windowSize.width, m_config.windowSize.height);
+			m_window = std::make_shared<Window>(m_config.appName.c_str(), m_config.windowSize.width, m_config.windowSize.height);
 			m_window->SetPosition(m_config.windowPosition);
 		}
 

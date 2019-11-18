@@ -43,7 +43,7 @@ namespace PreVEngine
 		virtual ~IWindow() = default;
 	};
 
-	class Window : public IWindow
+	class AbstractWindow : public IWindow
 	{
 	private:
 		WindowImpl* m_windowImpl;
@@ -52,11 +52,11 @@ namespace PreVEngine
 		void InitWindow(const char* title, const uint32_t width, const uint32_t height, bool tryFullscreen);
 
 	public:
-		Window(const char* title);
+		AbstractWindow(const char* title);
 
-		Window(const char* title, const uint32_t width, const uint32_t height);
+		AbstractWindow(const char* title, const uint32_t width, const uint32_t height);
 
-		virtual ~Window();
+		virtual ~AbstractWindow();
 
 	public:
 		Surface& GetSurface(VkInstance instance);
@@ -93,45 +93,25 @@ namespace PreVEngine
 		bool ProcessEvents(bool waitForEvent = false);  // Poll events, and call event handlers. Returns false if window is closing.
 
 	public:
-		virtual void OnInitEvent()
-		{
-		}
+		virtual void OnInitEvent() = 0;
+		
+		virtual void OnCloseEvent() = 0;
+		
+		virtual void OnResizeEvent(uint16_t width, uint16_t height) = 0;
+		
+		virtual void OnMoveEvent(int16_t x, int16_t y) = 0;
 
-		virtual void OnCloseEvent()
-		{
-		}
+		virtual void OnFocusEvent(bool hasFocus) = 0;
 
-		virtual void OnResizeEvent(uint16_t width, uint16_t height)
-		{
-		}
+		virtual void OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType btn) = 0;
 
-		virtual void OnMoveEvent(int16_t x, int16_t y)
-		{
-		}
+		virtual void OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y) = 0;
 
-		virtual void OnFocusEvent(bool hasFocus)
-		{
-		}
+		virtual void OnKeyEvent(ActionType action, KeyCode keycode) = 0;
 
-		virtual void OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType btn)
-		{
-		}
+		virtual void OnTextEvent(const char *str) = 0;
 
-		virtual void OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y)
-		{
-		}
-
-		virtual void OnKeyEvent(ActionType action, KeyCode keycode)
-		{
-		}
-
-		virtual void OnTextEvent(const char *str)
-		{
-		}
-
-		virtual void OnTouchEvent(ActionType action, float x, float y, uint8_t id)
-		{
-		}
+		virtual void OnTouchEvent(ActionType action, float x, float y, uint8_t id) = 0;
 	};
 }
 

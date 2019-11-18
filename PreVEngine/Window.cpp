@@ -5,22 +5,22 @@
 
 namespace PreVEngine
 {
-	Window::Window(const char* title)
+	AbstractWindow::AbstractWindow(const char* title)
 	{
 		InitWindow(title, 640, 480, true);
 	}
 
-	Window::Window(const char* title, const uint32_t width, const uint32_t height)
+	AbstractWindow::AbstractWindow(const char* title, const uint32_t width, const uint32_t height)
 	{
 		InitWindow(title, width, height, false);
 	}
 
-	Window::~Window()
+	AbstractWindow::~AbstractWindow()
 	{
 		delete (m_windowImpl);
 	}
 
-	void Window::InitWindow(const char* title, const uint32_t width, const uint32_t height, bool tryFullscreen)
+	void AbstractWindow::InitWindow(const char* title, const uint32_t width, const uint32_t height, bool tryFullscreen)
 	{
 #ifdef VK_USE_PLATFORM_XCB_KHR
 		LOGI("PLATFORM: XCB\n");
@@ -54,83 +54,83 @@ namespace PreVEngine
 		//    #ifdef VK_USE_PLATFORM_WAYLAND_KHR
 	}
 
-	Surface& Window::GetSurface(VkInstance instance)
+	Surface& AbstractWindow::GetSurface(VkInstance instance)
 	{
 		m_windowImpl->CreateSurface(instance);
 
 		return *m_windowImpl;
 	}
 
-	bool Window::CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const
+	bool AbstractWindow::CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const
 	{
 		return m_windowImpl->CanPresent(gpu, queueFamily);
 	}
 
-	Position Window::GetPosition() const
+	Position AbstractWindow::GetPosition() const
 	{
 		const auto& shape = m_windowImpl->GetShape();
 
 		return Position{ shape.x, shape.y };
 	}
 
-	Size Window::GetSize() const
+	Size AbstractWindow::GetSize() const
 	{
 		const auto& shape = m_windowImpl->GetShape();
 
 		return Size{ shape.width, shape.height };
 	}
 
-	bool Window::IsKeyPressed(const KeyCode key) const
+	bool AbstractWindow::IsKeyPressed(const KeyCode key) const
 	{
 		return m_windowImpl->IsKeyPressed(key);
 	}
 
-	bool Window::IsMouseButtonPressed(const ButtonType btn) const
+	bool AbstractWindow::IsMouseButtonPressed(const ButtonType btn) const
 	{
 		return m_windowImpl->IsMouseButtonPressed(btn);
 	}
 
-	Position Window::GetMousePosition() const
+	Position AbstractWindow::GetMousePosition() const
 	{
 		return m_windowImpl->GetMousePosition();
 	}
 
-	bool Window::HasFocus() const
+	bool AbstractWindow::HasFocus() const
 	{
 		return m_windowImpl->HasFocus();
 	}
 
-	void Window::SetTitle(const char* title)
+	void AbstractWindow::SetTitle(const char* title)
 	{
 		m_windowImpl->SetTitle(title);
 	}
 
-	void Window::SetPosition(const Position& position)
+	void AbstractWindow::SetPosition(const Position& position)
 	{
 		m_windowImpl->SetPosition(position.x, position.y);
 	}
 
-	void Window::SetSize(const Size& size)
+	void AbstractWindow::SetSize(const Size& size)
 	{
 		m_windowImpl->SetSize(size.width, size.height);
 	}
 
-	void Window::ShowKeyboard(bool enabled) // On Android, show the soft-keyboard.
+	void AbstractWindow::ShowKeyboard(bool enabled) // On Android, show the soft-keyboard.
 	{
 		m_windowImpl->SetTextInput(enabled);
 	}
 
-	void Window::Close()
+	void AbstractWindow::Close()
 	{
 		m_windowImpl->Close();
 	}
 
-	Event Window::GetEvent(bool waitForEvent)
+	Event AbstractWindow::GetEvent(bool waitForEvent)
 	{
 		return m_windowImpl->GetEvent(waitForEvent);
 	}
 
-	bool Window::ProcessEvents(bool waitForEvent)
+	bool AbstractWindow::ProcessEvents(bool waitForEvent)
 	{
 		Event e = m_windowImpl->GetEvent(waitForEvent);
 		while (e.tag != Event::NONE)
