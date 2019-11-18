@@ -7,42 +7,12 @@
 
 #include "Common.h"
 #include "WindowImpl.h"
+#include "EventsChannel.h"
+#include "IWindow.h"
+#include "Events.h"
 
 namespace PreVEngine
 {
-	class IWindow
-	{
-	public:
-		virtual Surface& GetSurface(VkInstance instance) = 0;
-
-		virtual bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const = 0;
-
-		virtual Position GetPosition() const = 0;
-
-		virtual Size GetSize() const = 0;
-
-		virtual bool IsKeyPressed(const KeyCode key) const = 0;
-
-		virtual bool IsMouseButtonPressed(const ButtonType btn) const = 0;
-
-		virtual Position GetMousePosition() const = 0;
-
-		virtual bool HasFocus() const = 0;
-
-		virtual void SetTitle(const char* title) = 0;
-
-		virtual void SetPosition(const Position& position) = 0;
-
-		virtual void SetSize(const Size& size) = 0;
-
-		virtual void ShowKeyboard(bool enabled) = 0;
-
-		virtual void Close() = 0;
-
-	public:
-		virtual ~IWindow() = default;
-	};
-
 	class AbstractWindow : public IWindow
 	{
 	private:
@@ -113,6 +83,72 @@ namespace PreVEngine
 
 		virtual void OnTouchEvent(ActionType action, float x, float y, uint8_t id) = 0;
 	};
+
+	class Window : public AbstractWindow
+	{
+	public:
+		Window(const char* title)
+			: AbstractWindow(title)
+		{
+		}
+
+		Window(const char* title, const uint32_t width, const uint32_t height)
+			: AbstractWindow(title, width, height)
+		{
+		}
+
+	public:
+		virtual void OnInitEvent() override
+		{
+			EventChannel::Broadcast(WindowCreatedEvent{ this });
+		}
+
+		virtual void OnCloseEvent() override
+		{
+			EventChannel::Broadcast(WindowDestroyedEvent{ this });
+		}
+
+		virtual void OnResizeEvent(uint16_t width, uint16_t height) override
+		{
+			EventChannel::Broadcast(WindowResizeEvent{ this, width, height });
+		}
+
+		virtual void OnMoveEvent(int16_t x, int16_t y) override
+		{
+			EventChannel::Broadcast(WindowMovedEvent{ this, glm::vec2(x, y) });
+		}
+
+		virtual void OnFocusEvent(bool hasFocus) override
+		{
+			EventChannel::Broadcast(WindowFocusChangeEvent{ this, hasFocus });
+		}
+
+		virtual void OnKeyEvent(ActionType action, KeyCode keyCode) override
+		{
+			EventChannel::Broadcast(KeyEvent{ InputsMapping::GetKeyActionType(action), keyCode });
+		}
+
+		virtual void OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType button) override
+		{
+			EventChannel::Broadcast(MouseEvent{ InputsMapping::GetMouseActionType(action), InputsMapping::GetMouseButtonType(button), glm::vec2(x, y) });
+		}
+
+		virtual void OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y) override
+		{
+			EventChannel::Broadcast(MouseScrollEvent{ delta, glm::vec2(x, y) });
+		}
+
+		virtual void OnTouchEvent(ActionType action, float x, float y, uint8_t pointerId) override
+		{
+			EventChannel::Broadcast(TouchEvent{ InputsMapping::GetTouchActionType(action), pointerId, glm::vec2(x, y) });
+		}
+
+		virtual void OnTextEvent(const char *str) override
+		{
+			EventChannel::Broadcast(TextEvent{ str });
+		}
+	};
+
 }
 
 #endif
