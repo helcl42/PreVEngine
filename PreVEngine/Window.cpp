@@ -143,6 +143,7 @@ namespace PreVEngine
 					break;
 				case Event::MOUSE_SCROLL:
 					OnMouseScrollEvent(e.scroll.delta, e.scroll.x, e.scroll.y);
+					break;
 				case Event::KEY:
 					OnKeyEvent(e.key.action, e.key.keycode);
 					break;
