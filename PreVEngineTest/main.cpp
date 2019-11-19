@@ -19,6 +19,138 @@
 
 using namespace PreVEngine;
 
+////////////////////////////////////////////////////////////////////////
+// Move to engine
+////////////////////////////////////////////////////////////////////////
+
+// TODO
+struct RenderState
+{
+	VkCommandBuffer commandBuffer;
+
+	uint32_t frameInFlightIndex;
+
+	VkExtent2D fullExtent;
+};
+
+class ISceneNode
+{
+public:
+	virtual void Init() = 0;
+
+	virtual void ShutDown() = 0;
+
+	virtual void Update(float deltaTime) = 0;
+
+	virtual void Render(RenderState& renderState) = 0;
+
+	virtual const std::vector<ISceneNode*>& GetChildren() const = 0;
+
+	virtual void AddChild(ISceneNode* child) = 0;
+
+	virtual void SetParent(ISceneNode* parent) = 0;
+
+	virtual ISceneNode* GetParent() const = 0;
+
+	virtual glm::mat4 GetTransform() const = 0;
+
+	virtual glm::mat4 GetWorldTransform() const = 0;
+
+public:
+	virtual ~ISceneNode() = default;
+};
+
+class AbstractSceneNode : public ISceneNode
+{
+protected:
+	ISceneNode* m_parent;
+
+	std::vector<ISceneNode*> m_children;
+
+	glm::mat4 m_transform;
+
+	glm::mat4 m_worldTransform;
+
+public:
+	AbstractSceneNode()
+		: m_parent(nullptr), m_transform(glm::mat4(1.0f)), m_worldTransform(glm::mat4(1.0f))
+	{
+	}
+
+	virtual ~AbstractSceneNode()
+	{
+		for (auto child : m_children)
+		{
+			delete child;
+		}
+	}
+
+public:
+	virtual void Init() override
+	{
+	}
+
+	virtual void ShutDown() override
+	{
+	}
+
+	virtual void Update(float deltaTime) override
+	{
+		if (m_parent) //This node has a parent... 
+		{
+			m_worldTransform = m_parent->GetWorldTransform() * m_transform;
+		}
+		else //Root node, world transform is local transform! 
+		{
+			m_worldTransform = m_transform;
+		}
+
+		for (auto& child : m_children)
+		{
+			child->Update(deltaTime);
+		}
+	}
+
+	virtual void Render(RenderState& renderState) override
+	{
+	}
+
+public:
+	const std::vector<ISceneNode*>& GetChildren() const override
+	{
+		return m_children;
+	}
+
+	void AddChild(ISceneNode* child) override
+	{
+		child->SetParent(this);
+
+		m_children.emplace_back(child);
+	}
+
+	void SetParent(ISceneNode* parent)
+	{
+		m_parent = parent;
+	}
+
+	ISceneNode* GetParent() const
+	{
+		return m_parent;
+	}
+
+	glm::mat4 GetTransform() const
+	{
+		return m_transform;
+	}
+
+	glm::mat4 GetWorldTransform() const
+	{
+		return m_worldTransform;
+	}
+};
+
+////////////////////////////////////////////////////////////////////////
+
 struct Vertex
 {
 	vec3 pos;
@@ -125,63 +257,122 @@ public:
 	}
 };
 
-class ISceneNode
-{
-public:
-	virtual void Init() = 0;
 
-	virtual void Update(float DeltaTime) = 0;
-
-	virtual void Render() = 0;
-
-	virtual void ShutDown() = 0;
-
-	virtual std::vector<std::shared_ptr<ISceneNode>> GetChildren() const = 0;
-
-	virtual void AddChild(const std::shared_ptr<ISceneNode> child) = 0;
-
-public:
-	virtual ~ISceneNode()
-	{
-	}
-};
-
-class AbstractSceneNode : public ISceneNode
-{
-protected:
-	std::vector<std::shared_ptr<ISceneNode>> m_children;
-
-public:
-	std::vector<std::shared_ptr<ISceneNode>> GetChildren() const override
-	{
-		return m_children;
-	}
-
-	void AddChild(const std::shared_ptr<ISceneNode> child) override
-	{
-		m_children.emplace_back(child);
-	}
-};
-
-class RootSceneNode : public AbstractSceneNode
-{
-public:
-	void Init() override
-	{
-	}
-
-	void Update(float deltaTime) override
-	{
-	}
-
-	void Render() override
-	{
-	}
-
-	void ShutDown() override
-	{
-	}
-};
+//class IScene
+//{
+//public:
+//	// TODO
+//
+//public:
+//	virtual ~IScene() = default;
+//};
+//
+//class AbstractScene : public IScene
+//{
+//private:
+//	EventHandler<AbstractScene, WindowResizeEvent> m_windowResizeEvent{ *this };
+//
+//protected:
+//	Device& m_device;
+//
+//	Swapchain& m_swapchain;
+//
+//	RenderPass& m_renderPass;
+//
+//	Allocator& m_allocator;
+//
+//	ISceneNode* m_rootNode;
+//
+//public:
+//	AbstractScene(Allocator& alloc, Device& dev, Swapchain& swapCh, RenderPass& renderPass)
+//		: m_device(dev), m_swapchain(swapCh), m_renderPass(renderPass), m_allocator(alloc)
+//	{
+//	}
+//
+//	virtual ~AbstractScene()
+//	{
+//	}
+//
+//public:
+//	void Init()
+//	{
+//		m_rootNode->Init();
+//	}
+//
+//	void Update(float deltaTime)
+//	{
+//		m_rootNode->Update(deltaTime);
+//	}
+//
+//	void Render()
+//	{
+//		VkCommandBuffer commandBuffer;
+//		uint32_t frameInFlightIndex;
+//
+//		if (m_swapchain.BeginFrame(commandBuffer, frameInFlightIndex))
+//		{
+//			RenderState renderState;
+//			renderState.commandBuffer = commandBuffer;
+//			renderState.frameInFlightIndex = frameInFlightIndex;
+//			renderState.fullExtent = m_swapchain.GetExtent();
+//
+//			m_rootNode->Render(renderState);
+//
+//			VkExtent2D extent = m_swapchain.GetExtent();
+//			VkRect2D scissor = { { 0, 0 }, extent };
+//			VkViewport viewport = { 0, 0, (float)extent.width, (float)extent.height, 0, 1 };
+//
+//			float aspect = (float)extent.width / (float)extent.height;
+//
+//			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+//			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+//			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+//
+//			size_t modelIndex = 0;
+//			for (const auto& model : m_models)
+//			{
+//				VkBuffer vertexBuffers[] = { *model->vertexBuffer };
+//				VkDeviceSize offsets[] = { 0 };
+//
+//				auto& ubo = m_uniformBuffers.at(modelIndex);
+//
+//				Uniforms uniforms;
+//				uniforms.proj.SetProjection(aspect, 66.0f, 0.01f, 100.0f);
+//				uniforms.view.Translate(0.0f, 0.0f, -4.0f);
+//				uniforms.model = model->transform;
+//				uniforms.model.RotateX(d.x);
+//				uniforms.model.RotateY(d.y);
+//				model->transform = uniforms.model;
+//				ubo->Update(&uniforms);
+//
+//				m_shader->Bind("texSampler", *model->imageBuffer);
+//				m_shader->Bind("ubo", *ubo);
+//				VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+//
+//				vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+//				vkCmdBindIndexBuffer(commandBuffer, *model->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+//				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetPipelineLayout(), 0, 1, &descriptorSet, 0, nullptr);
+//
+//				vkCmdDrawIndexed(commandBuffer, model->indexBuffer->GetCount(), 1, 0, 0, 0);
+//
+//				modelIndex++;
+//			}
+//
+//			m_swapchain.EndFrame();
+//		}
+//	}
+//
+//	void ShutDown()
+//	{
+//		m_rootNode->ShutDown();
+//	}
+//
+//public:
+//	void operator() (const WindowResizeEvent& resizeEvent)
+//	{
+//		m_swapchain.UpdateExtent();
+//	}
+//};
 
 class Scene
 {
@@ -197,6 +388,7 @@ private:
 
 	Allocator& m_allocator;
 
+private: // the rest should ne in derived class
 	std::shared_ptr<Shader> m_shader;
 
 	std::shared_ptr<Pipeline> m_pipeline;
@@ -206,7 +398,6 @@ private:
 
 	std::vector<std::shared_ptr<UBO>> m_uniformBuffers;
 
-private:
 	// temp bullshit
 	EventHandler<Scene, KeyEvent> m_keyEvent{ *this };
 
@@ -214,12 +405,8 @@ private:
 
 	EventHandler<Scene, TouchEvent> m_touchEvent{ *this };
 
-	bool shouldAdd = false;
-
-	bool shouldDelete = false;
-
 	glm::vec2 d{ 0.1f, 0.1f };
-	
+
 	glm::vec2 m{ 0.0f, 0.0f };
 
 public:
@@ -295,28 +482,17 @@ public:
 
 	void Update(float deltaTime)
 	{
-		if (shouldAdd)
-		{
-			AddModel();
-			shouldAdd = false;
-		}
-
-		if (shouldDelete)
-		{
-			DeleteModel();
-			shouldDelete = false;
-		}
 	}
 
 	void Render()
 	{
 		// This should be part of Scene InEngine
 
-		VkExtent2D ext = m_swapchain.GetExtent();
-		VkRect2D scissor = { {0, 0}, ext };
-		VkViewport viewport = { 0, 0, (float)ext.width, (float)ext.height, 0, 1 };
+		VkExtent2D extent = m_swapchain.GetExtent();
+		VkRect2D scissor = { {0, 0}, extent };
+		VkViewport viewport = { 0, 0, (float)extent.width, (float)extent.height, 0, 1 };
 
-		float aspect = (float)ext.width / (float)ext.height;
+		float aspect = (float)extent.width / (float)extent.height;
 
 		VkCommandBuffer commandBuffer;
 		uint32_t frameInFlightIndex;
@@ -383,12 +559,12 @@ public:
 		{
 			if (keyEvent.keyCode == KeyCode::KEY_A)
 			{
-				shouldAdd = true;
+				AddModel();
 			}
 
 			if (keyEvent.keyCode == KeyCode::KEY_D)
 			{
-				shouldDelete = true;
+				DeleteModel();
 			}
 
 			if (keyEvent.keyCode == KeyCode::KEY_Left)
