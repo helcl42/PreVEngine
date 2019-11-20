@@ -7,20 +7,7 @@ Pipeline::Pipeline(VkDevice device, VkRenderPass renderpass, PreVEngine::Shader&
 
 Pipeline::~Pipeline()
 {
-	if (m_device)
-	{
-		vkDeviceWaitIdle(m_device);
-	}
-
-	if (m_pipelineLayout)
-	{
-		vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
-	}
-
-	if (m_graphicsPipeline)
-	{
-		vkDestroyPipeline(m_device, m_graphicsPipeline, nullptr);
-	}
+	ShutDown();
 }
 
 VkPipeline Pipeline::CreateGraphicsPipeline()
@@ -133,6 +120,26 @@ VkPipeline Pipeline::CreateGraphicsPipeline()
 	VKERRCHECK(vkCreateGraphicsPipelines(m_device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_graphicsPipeline));
 
 	return m_graphicsPipeline;
+}
+
+void Pipeline::ShutDown()
+{
+	if (m_device)
+	{
+		vkDeviceWaitIdle(m_device);
+	}
+
+	if (m_pipelineLayout)
+	{
+		vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
+		m_pipelineLayout = VK_NULL_HANDLE;
+	}
+
+	if (m_graphicsPipeline)
+	{
+		vkDestroyPipeline(m_device, m_graphicsPipeline, nullptr);
+		m_graphicsPipeline = VK_NULL_HANDLE;
+	}
 }
 
 VkPipelineLayout Pipeline::GetPipelineLayout() const

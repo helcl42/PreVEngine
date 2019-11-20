@@ -25,6 +25,8 @@ public:
 public:
 	VkPipeline CreateGraphicsPipeline();
 
+	void ShutDown();
+
 public:
 	VkPipelineLayout GetPipelineLayout() const;
 

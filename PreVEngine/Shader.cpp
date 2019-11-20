@@ -44,17 +44,20 @@ namespace PreVEngine
 		if (m_descriptorPool)
 		{
 			vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
+			m_descriptorPool = VK_NULL_HANDLE;
 		}
 
 		if (m_descriptorSetLayout)
 		{
 			vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
+			m_descriptorSetLayout = VK_NULL_HANDLE;
 		}
 
 		for (auto& shaderModule : m_shaderModules)
 		{
 			vkDestroyShaderModule(m_device, shaderModule.second, nullptr);
 		}
+		m_shaderModules.clear();
 	}
 
 	void Shader::RecreateDescriptorPool(const uint32_t size)
