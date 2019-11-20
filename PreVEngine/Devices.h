@@ -128,12 +128,14 @@ namespace PreVEngine
 		void Destroy();
 
 	public:
-		Device(PhysicalDevice gpu);
+		Device(PhysicalDevice& gpu);
 
 		~Device();
 
 	public:
 		Queue* AddQueue(VkQueueFlags flags, VkSurfaceKHR surface = 0);
+
+		PhysicalDevice& GetGPU();
 
 		void Print() const;
 

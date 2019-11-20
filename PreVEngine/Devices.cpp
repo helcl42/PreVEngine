@@ -261,6 +261,11 @@ namespace PreVEngine
 		return &m_queues.back();
 	}
 
+	PhysicalDevice& Device::GetGPU()
+	{
+		return m_gpu;
+	}
+
 	Device::operator VkDevice()
 	{
 		if (m_handle == VK_NULL_HANDLE) // make it lazy or const ??!
@@ -340,7 +345,7 @@ namespace PreVEngine
 		m_handle = VK_NULL_HANDLE;
 	}
 
-	Device::Device(PhysicalDevice inGpu)
+	Device::Device(PhysicalDevice& inGpu)
 		: m_handle(VK_NULL_HANDLE), m_gpu(inGpu)
 	{
 		m_queues.reserve(16);
