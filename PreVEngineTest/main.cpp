@@ -23,7 +23,6 @@ using namespace PreVEngine;
 // Move to engine
 ////////////////////////////////////////////////////////////////////////
 
-// TODO
 struct RenderState
 {
 	VkCommandBuffer commandBuffer;
@@ -90,10 +89,6 @@ public:
 	{
 	}
 
-	virtual void ShutDown() override
-	{
-	}
-
 	virtual void Update(float deltaTime) override
 	{
 		if (m_parent) //This node has a parent... 
@@ -112,6 +107,10 @@ public:
 	}
 
 	virtual void Render(RenderState& renderState) override
+	{
+	}
+
+	virtual void ShutDown() override
 	{
 	}
 
@@ -146,6 +145,350 @@ public:
 	glm::mat4 GetWorldTransform() const
 	{
 		return m_worldTransform;
+	}
+};
+
+
+struct SceneConfig
+{
+	// swapchain
+	bool VSync = true;
+
+	uint32_t framesInFlight = 3;
+};
+
+
+struct EngineConfig
+{
+	// general
+	bool validation = true;
+
+	// window
+	std::string appName = "PreVEngine - Demo";
+
+	bool fullScreen = false;
+
+	Size windowSize = { 1280, 960 };
+
+	Position windowPosition = { 40, 40 };
+
+	std::shared_ptr<SceneConfig> sceneCongig = std::make_shared<SceneConfig>();
+};
+
+
+class IScene
+{
+public:
+	virtual void Init() = 0;
+
+	virtual void InitSceneGraph() = 0;
+
+	virtual void Update(float deltaTime) = 0;
+
+	virtual void Render() = 0;
+
+	virtual void ShutDown() = 0;
+
+	virtual std::shared_ptr<Device> GetDevice() = 0;
+
+	virtual std::shared_ptr<Swapchain> GetSwapchain() = 0;
+
+	virtual std::shared_ptr<RenderPass> GetRenderPass() = 0;
+
+	virtual std::shared_ptr<Allocator> GetAllocator() = 0;
+
+	virtual ISceneNode* GetRootNode() = 0; // TODO
+
+	virtual void SetSceneRoot(ISceneNode* root) = 0; // TODO
+
+public:
+	virtual ~IScene() = default;
+};
+
+class Scene : public IScene
+{
+private:
+	EventHandler<Scene, WindowResizeEvent> m_windowResizeEvent{ *this };
+
+protected:
+	std::shared_ptr<SceneConfig> m_config;
+
+	std::shared_ptr<Device> m_device;
+
+	Queue* m_presentQueue;
+
+	Queue* m_graphicsQueue;
+
+	VkSurfaceKHR m_surface;
+
+protected:
+	std::shared_ptr<Allocator> m_allocator;
+
+	std::shared_ptr<RenderPass> m_renderPass;
+
+	std::shared_ptr<Swapchain> m_swapchain;
+
+	ISceneNode* m_rootNode;
+
+public:
+	Scene(std::shared_ptr<SceneConfig> sceneConfig, std::shared_ptr<Device> device, VkSurfaceKHR surface)
+		: m_config(sceneConfig), m_device(device), m_surface(surface)
+	{
+	}
+
+	virtual ~Scene()
+	{
+		delete m_rootNode;
+	}
+
+public:
+	void Init()
+	{
+		m_presentQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT, m_surface);   // graphics + present-queue
+		m_graphicsQueue = m_presentQueue;                                     // they might be the same or not
+		if (!m_presentQueue)
+		{
+			m_presentQueue = m_device->AddQueue(0, m_surface);                          // create present-queue
+			m_graphicsQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT);             // create graphics queue
+		}
+
+		VkFormat colorFormat = m_device->GetGPU().FindSurfaceFormat(m_surface);
+		VkFormat depthFormat = m_device->GetGPU().FindDepthFormat();
+
+		m_renderPass = std::make_shared<RenderPass>(*m_device);
+		m_renderPass->AddColorAttachment(colorFormat, { 0.0f, 0.0f, 0.3f, 1.0f });	// color buffer, clear to blue
+		m_renderPass->AddDepthAttachment(depthFormat);
+		m_renderPass->AddSubpass({ 0, 1 });
+
+		m_allocator = std::make_shared<Allocator>(*m_graphicsQueue);                   // Create "Vulkan Memory Aloocator"
+		printf("Allocator created\n");
+
+		m_swapchain = std::make_shared<Swapchain>(*m_allocator, *m_renderPass, m_graphicsQueue, m_graphicsQueue);
+		m_swapchain->SetPresentMode(m_config->VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
+		m_swapchain->SetImageCount(m_config->framesInFlight);
+		m_swapchain->Print();
+	}
+
+	void InitSceneGraph()
+	{
+		m_rootNode->Init();
+	}
+
+	void Update(float deltaTime)
+	{
+		m_rootNode->Update(deltaTime);
+	}
+
+	void Render()
+	{
+		VkCommandBuffer commandBuffer;
+		uint32_t frameInFlightIndex;
+		if (m_swapchain->BeginFrame(commandBuffer, frameInFlightIndex))
+		{
+			RenderState renderState;
+			renderState.commandBuffer = commandBuffer;
+			renderState.frameInFlightIndex = frameInFlightIndex;
+			renderState.fullExtent = m_swapchain->GetExtent();
+
+			m_rootNode->Render(renderState);
+
+			m_swapchain->EndFrame();
+		}
+	}
+
+	void ShutDownSceneGraph()
+	{
+		m_rootNode->ShutDown();
+	}
+
+	void ShutDown()
+	{
+	}
+
+public:
+	std::shared_ptr<Device> GetDevice() override
+	{
+		return m_device;
+	}
+
+	std::shared_ptr<Swapchain> GetSwapchain() override
+	{
+		return m_swapchain;
+	}
+
+	std::shared_ptr<RenderPass> GetRenderPass() override
+	{
+		return m_renderPass;
+	}
+
+	std::shared_ptr<Allocator> GetAllocator() override
+	{
+		return m_allocator;
+	}
+
+	ISceneNode* GetRootNode() override
+	{
+		return m_rootNode;
+	}
+
+	void SetSceneRoot(ISceneNode* root) override
+	{
+		m_rootNode = root;
+	}
+
+public:
+	void operator() (const WindowResizeEvent& resizeEvent)
+	{
+		m_swapchain->UpdateExtent();
+	}
+};
+
+class Engine
+{
+private:
+	std::shared_ptr<EngineConfig> m_config;
+
+	std::shared_ptr<IClock<float>> m_clock;
+
+	std::shared_ptr<FPSService> m_fpsService;
+
+	std::shared_ptr<Instance> m_instance;
+
+	std::shared_ptr<Window> m_window;
+
+	std::shared_ptr<Device> m_device;
+
+	std::shared_ptr<IScene> m_scene;
+
+	VkSurfaceKHR m_surface;
+
+public:
+	Engine(std::shared_ptr<EngineConfig> config)
+		: m_config(config)
+	{
+	}
+
+	virtual ~Engine()
+	{
+	}
+
+public:
+	void Init()
+	{
+		m_clock = std::make_shared<Clock<float>>();
+		m_fpsService = std::make_shared<FPSService>();
+
+		m_instance = std::make_shared<Instance>(m_config->validation);
+
+		if (m_config->fullScreen)
+		{
+			m_window = std::make_shared<Window>(m_config->appName.c_str());
+		}
+		else
+		{
+			m_window = std::make_shared<Window>(m_config->appName.c_str(), m_config->windowSize.width, m_config->windowSize.height);
+			m_window->SetPosition(m_config->windowPosition);
+		}
+
+		auto physicalDevices = std::make_shared<PhysicalDevices>(*m_instance);
+		physicalDevices->Print();
+
+		m_surface = m_window->GetSurface(*m_instance);
+		PhysicalDevice* physicalDevice = physicalDevices->FindPresentable(m_surface);					// get presenting GPU?
+		if (!physicalDevice)
+		{
+			throw std::runtime_error("No GPU found?!");
+		}
+
+		m_device = std::make_shared<Device>(*physicalDevice);
+		m_device->Print();
+	}
+
+	void InitScene()
+	{
+		m_scene = std::make_shared<Scene>(m_config->sceneCongig, m_device, m_surface);
+		m_scene->Init();
+	}
+
+	void InitSceneGraph()
+	{
+		m_scene->InitSceneGraph();
+	}
+
+	void MainLoop()
+	{
+		while (m_window->ProcessEvents()) // Main event loop, runs until window is closed.
+		{
+			EventChannel::DispatchAll();
+
+			m_clock->UpdateClock();
+			float deltaTime = m_clock->GetDelta();
+
+			m_scene->Update(deltaTime);
+			m_scene->Render();
+
+			m_fpsService->Update(deltaTime);
+		}
+	}
+
+	void ShutDown()
+	{
+		m_scene->ShutDown();
+	}
+
+public:
+	std::shared_ptr<IScene> GetScene() const
+	{
+		return m_scene;
+	}
+};
+
+class App
+{
+protected:
+	std::unique_ptr<Engine> m_engine;
+
+public:
+	App(std::shared_ptr<EngineConfig> config)
+		: m_engine(std::make_unique<Engine>(config))
+	{
+	}
+
+	virtual ~App()
+	{
+	}
+
+protected:
+	virtual void OnEngineInit() = 0;
+
+	virtual void OnSceneInit() = 0;
+
+	virtual void OnSceneGraphInit() = 0;
+
+public:
+	void Init()
+	{
+		m_engine->Init();
+
+		OnEngineInit();
+
+		m_engine->InitScene();
+
+		OnSceneInit();
+
+		m_engine->InitSceneGraph();
+
+		OnSceneGraphInit();
+	}
+
+	void Run()
+	{
+		m_engine->MainLoop();
+	}
+
+	void ShutDown()
+	{
+		m_engine->ShutDown();
 	}
 };
 
@@ -257,22 +600,12 @@ public:
 	}
 };
 
-
-//class IScene
-//{
-//public:
-//	// TODO
-//
-//public:
-//	virtual ~IScene() = default;
-//};
-//
-//class AbstractScene : public IScene
+//class Scene
 //{
 //private:
-//	EventHandler<AbstractScene, WindowResizeEvent> m_windowResizeEvent{ *this };
+//	EventHandler<Scene, WindowResizeEvent> m_windowResizeEvent{ *this };
 //
-//protected:
+//private:
 //	Device& m_device;
 //
 //	Swapchain& m_swapchain;
@@ -281,52 +614,122 @@ public:
 //
 //	Allocator& m_allocator;
 //
-//	ISceneNode* m_rootNode;
+//private: // the rest should ne in derived class
+//	std::shared_ptr<Shader> m_shader;
+//
+//	std::shared_ptr<Pipeline> m_pipeline;
+//
+//	// content
+//	std::vector<std::shared_ptr<TexturedModel>> m_models;
+//
+//	std::vector<std::shared_ptr<UBO>> m_uniformBuffers;
+//
+//	// temp bullshit
+//	EventHandler<Scene, KeyEvent> m_keyEvent{ *this };
+//
+//	EventHandler<Scene, MouseEvent> m_mouseEvent{ *this };
+//
+//	EventHandler<Scene, TouchEvent> m_touchEvent{ *this };
+//
+//	glm::vec2 d{ 0.1f, 0.1f };
+//
+//	glm::vec2 m{ 0.0f, 0.0f };
 //
 //public:
-//	AbstractScene(Allocator& alloc, Device& dev, Swapchain& swapCh, RenderPass& renderPass)
+//	Scene(Allocator& alloc, Device& dev, Swapchain& swapCh, RenderPass& renderPass)
 //		: m_device(dev), m_swapchain(swapCh), m_renderPass(renderPass), m_allocator(alloc)
 //	{
 //	}
 //
-//	virtual ~AbstractScene()
+//	virtual ~Scene()
 //	{
+//	}
+//
+//private:
+//	void AddModel()
+//	{
+//		std::random_device r;
+//		std::default_random_engine gen(r());
+//		std::uniform_real_distribution<float> dist(-2.0, 2.0f);
+//		std::uniform_real_distribution<float> scaleDist(0.1f, 1.0f);
+//
+//		ModelFactory modelFactory;
+//
+//		mat4 trasform;
+//		trasform.Translate(dist(gen), dist(gen), dist(gen));
+//		trasform.Scale(scaleDist(gen));
+//
+//		m_models.emplace_back(modelFactory.CreateTexturedModel(m_allocator, dist(gen) > 0.0f ? "vulkan.png" : "texture.jpg", trasform));
+//
+//		auto ubo = std::make_shared<UBO>(m_allocator);
+//		ubo->Allocate(sizeof(Uniforms));
+//
+//		m_uniformBuffers.emplace_back(ubo);
+//
+//		printf("Model %zd created\n", m_models.size());
+//	}
+//
+//	void DeleteModel()
+//	{
+//		if (m_models.size() > 0)
+//		{
+//			m_models.erase(m_models.begin());
+//		}
+//
+//		if (m_uniformBuffers.size() > 0)
+//		{
+//			m_uniformBuffers.erase(m_uniformBuffers.begin(), m_uniformBuffers.begin() + 1);
+//		}
+//
+//		printf("Model deleted %zd\n", m_models.size());
 //	}
 //
 //public:
 //	void Init()
 //	{
-//		m_rootNode->Init();
+//		const uint32_t COUNT_OF_MODELS = 25;
+//		for (uint32_t i = 0; i < COUNT_OF_MODELS; i++)
+//		{
+//			AddModel();
+//		}
+//
+//		ShaderFactory shaderFactory;
+//		m_shader = shaderFactory.CreateShaderFromFiles(m_device, {
+//												{ VK_SHADER_STAGE_VERTEX_BIT, "shaders/vert.spv" },
+//												{ VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/frag.spv" }
+//			});
+//		m_shader->AdjustDescriptorPoolCapacity(10000);
+//
+//		m_pipeline = std::make_shared<Pipeline>(m_device, m_renderPass, *m_shader);
+//		m_pipeline->CreateGraphicsPipeline();
+//
+//		printf("Pipeline created\n");
 //	}
 //
 //	void Update(float deltaTime)
 //	{
-//		m_rootNode->Update(deltaTime);
 //	}
 //
 //	void Render()
 //	{
+//		// This should be part of Scene InEngine
+//
+//		VkExtent2D extent = m_swapchain.GetExtent();
+//		VkRect2D scissor = { {0, 0}, extent };
+//		VkViewport viewport = { 0, 0, (float)extent.width, (float)extent.height, 0, 1 };
+//
+//		float aspect = (float)extent.width / (float)extent.height;
+//
 //		VkCommandBuffer commandBuffer;
 //		uint32_t frameInFlightIndex;
-//
 //		if (m_swapchain.BeginFrame(commandBuffer, frameInFlightIndex))
 //		{
-//			RenderState renderState;
-//			renderState.commandBuffer = commandBuffer;
-//			renderState.frameInFlightIndex = frameInFlightIndex;
-//			renderState.fullExtent = m_swapchain.GetExtent();
-//
-//			m_rootNode->Render(renderState);
-//
-//			VkExtent2D extent = m_swapchain.GetExtent();
-//			VkRect2D scissor = { { 0, 0 }, extent };
-//			VkViewport viewport = { 0, 0, (float)extent.width, (float)extent.height, 0, 1 };
-//
-//			float aspect = (float)extent.width / (float)extent.height;
-//
 //			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
 //			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 //			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+//
+//			// ~This should be part of Scene InEngine
+//
 //
 //			size_t modelIndex = 0;
 //			for (const auto& model : m_models)
@@ -358,13 +761,16 @@ public:
 //				modelIndex++;
 //			}
 //
+//			// This should be part of Scene InEngine
+//
 //			m_swapchain.EndFrame();
 //		}
+//
+//		// ~This should be part of Scene InEngine
 //	}
 //
 //	void ShutDown()
 //	{
-//		m_rootNode->ShutDown();
 //	}
 //
 //public:
@@ -372,23 +778,74 @@ public:
 //	{
 //		m_swapchain.UpdateExtent();
 //	}
+//
+//	void operator() (const KeyEvent& keyEvent)
+//	{
+//		if (keyEvent.action == KeyActionType::PRESS)
+//		{
+//			if (keyEvent.keyCode == KeyCode::KEY_A)
+//			{
+//				AddModel();
+//			}
+//
+//			if (keyEvent.keyCode == KeyCode::KEY_D)
+//			{
+//				DeleteModel();
+//			}
+//
+//			if (keyEvent.keyCode == KeyCode::KEY_Left)
+//			{
+//				d.y -= 0.1f;
+//			}
+//
+//			if (keyEvent.keyCode == KeyCode::KEY_Right)
+//			{
+//				d.y += 0.1f;
+//			}
+//
+//			if (keyEvent.keyCode == KeyCode::KEY_Up)
+//			{
+//				d.x += 0.1f;
+//			}
+//
+//			if (keyEvent.keyCode == KeyCode::KEY_Down)
+//			{
+//				d.x -= 0.1f;
+//			}
+//		}
+//	}
+//
+//	void operator() (const MouseEvent& mouseEvent)
+//	{
+//		if (mouseEvent.action == MouseActionType::MOVE && mouseEvent.button == MouseButtonType::LEFT)
+//		{
+//			d = glm::vec2(mouseEvent.position.x - m.x, m.y - mouseEvent.position.y);
+//		}
+//
+//		m = mouseEvent.position;
+//	}
+//
+//	void operator() (const TouchEvent& touchEvent)
+//	{
+//		if (touchEvent.action == TouchActionType::MOVE)
+//		{
+//			d = glm::vec2(touchEvent.position.x - m.x, m.y - touchEvent.position.y);
+//		}
+//
+//		m = touchEvent.position;
+//	}
 //};
 
-class Scene
+class TestRootSceneNode : public AbstractSceneNode
 {
 private:
-	EventHandler<Scene, WindowResizeEvent> m_windowResizeEvent{ *this };
+	std::shared_ptr<Device> m_device;
+
+	std::shared_ptr<RenderPass> m_renderPass;
+
+	std::shared_ptr<Allocator> m_allocator;
 
 private:
-	Device& m_device;
-
-	Swapchain& m_swapchain;
-
-	RenderPass& m_renderPass;
-
-	Allocator& m_allocator;
-
-private: // the rest should ne in derived class
 	std::shared_ptr<Shader> m_shader;
 
 	std::shared_ptr<Pipeline> m_pipeline;
@@ -398,24 +855,23 @@ private: // the rest should ne in derived class
 
 	std::vector<std::shared_ptr<UBO>> m_uniformBuffers;
 
-	// temp bullshit
-	EventHandler<Scene, KeyEvent> m_keyEvent{ *this };
+	EventHandler<TestRootSceneNode, KeyEvent> m_keyEvent{ *this };
 
-	EventHandler<Scene, MouseEvent> m_mouseEvent{ *this };
+	EventHandler<TestRootSceneNode, MouseEvent> m_mouseEvent{ *this };
 
-	EventHandler<Scene, TouchEvent> m_touchEvent{ *this };
+	EventHandler<TestRootSceneNode, TouchEvent> m_touchEvent{ *this };
 
 	glm::vec2 d{ 0.1f, 0.1f };
 
 	glm::vec2 m{ 0.0f, 0.0f };
 
 public:
-	Scene(Allocator& alloc, Device& dev, Swapchain& swapCh, RenderPass& renderPass)
-		: m_device(dev), m_swapchain(swapCh), m_renderPass(renderPass), m_allocator(alloc)
+	TestRootSceneNode(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass)
+		: m_device(dev), m_renderPass(renderPass), m_allocator(alloc)
 	{
 	}
 
-	virtual ~Scene()
+	virtual ~TestRootSceneNode()
 	{
 	}
 
@@ -433,9 +889,9 @@ private:
 		trasform.Translate(dist(gen), dist(gen), dist(gen));
 		trasform.Scale(scaleDist(gen));
 
-		m_models.emplace_back(modelFactory.CreateTexturedModel(m_allocator, dist(gen) > 0.0f ? "vulkan.png" : "texture.jpg", trasform));
+		m_models.emplace_back(modelFactory.CreateTexturedModel(*m_allocator, dist(gen) > 0.0f ? "vulkan.png" : "texture.jpg", trasform));
 
-		auto ubo = std::make_shared<UBO>(m_allocator);
+		auto ubo = std::make_shared<UBO>(*m_allocator);
 		ubo->Allocate(sizeof(Uniforms));
 
 		m_uniformBuffers.emplace_back(ubo);
@@ -459,7 +915,7 @@ private:
 	}
 
 public:
-	void Init()
+	void Init() override
 	{
 		const uint32_t COUNT_OF_MODELS = 25;
 		for (uint32_t i = 0; i < COUNT_OF_MODELS; i++)
@@ -468,91 +924,74 @@ public:
 		}
 
 		ShaderFactory shaderFactory;
-		m_shader = shaderFactory.CreateShaderFromFiles(m_device, {
-												{ VK_SHADER_STAGE_VERTEX_BIT, "shaders/vert.spv" },
-												{ VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/frag.spv" }
+		m_shader = shaderFactory.CreateShaderFromFiles(*m_device, {
+			{ VK_SHADER_STAGE_VERTEX_BIT, "shaders/vert.spv" },
+			{ VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/frag.spv" }
 			});
 		m_shader->AdjustDescriptorPoolCapacity(10000);
 
-		m_pipeline = std::make_shared<Pipeline>(m_device, m_renderPass, *m_shader);
+		m_pipeline = std::make_shared<Pipeline>(*m_device, *m_renderPass, *m_shader);
 		m_pipeline->CreateGraphicsPipeline();
 
 		printf("Pipeline created\n");
 	}
 
-	void Update(float deltaTime)
+	void Update(float deltaTime) override
 	{
+		// TODO
 	}
 
-	void Render()
+	void Render(RenderState& renderState) override
 	{
-		// This should be part of Scene InEngine
+		VkRect2D scissor = { { 0, 0 }, renderState.fullExtent };
+		VkViewport viewport = { 0, 0, (float)renderState.fullExtent.width, (float)renderState.fullExtent.height, 0, 1 };
 
-		VkExtent2D extent = m_swapchain.GetExtent();
-		VkRect2D scissor = { {0, 0}, extent };
-		VkViewport viewport = { 0, 0, (float)extent.width, (float)extent.height, 0, 1 };
+		float aspect = (float)renderState.fullExtent.width / (float)renderState.fullExtent.height;
 
-		float aspect = (float)extent.width / (float)extent.height;
+		vkCmdBindPipeline(renderState.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+		vkCmdSetViewport(renderState.commandBuffer, 0, 1, &viewport);
+		vkCmdSetScissor(renderState.commandBuffer, 0, 1, &scissor);
 
-		VkCommandBuffer commandBuffer;
-		uint32_t frameInFlightIndex;
-		if (m_swapchain.BeginFrame(commandBuffer, frameInFlightIndex))
+		size_t modelIndex = 0;
+		for (const auto& model : m_models)
 		{
-			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+			VkBuffer vertexBuffers[] = { *model->vertexBuffer };
+			VkDeviceSize offsets[] = { 0 };
 
-			// ~This should be part of Scene InEngine
+			auto& ubo = m_uniformBuffers.at(modelIndex);
 
+			Uniforms uniforms;
+			uniforms.proj.SetProjection(aspect, 66.0f, 0.01f, 100.0f);
+			uniforms.view.Translate(0.0f, 0.0f, -4.0f);
+			uniforms.model = model->transform;
+			uniforms.model.RotateX(d.x);
+			uniforms.model.RotateY(d.y);
+			model->transform = uniforms.model;
+			ubo->Update(&uniforms);
 
-			size_t modelIndex = 0;
-			for (const auto& model : m_models)
-			{
-				VkBuffer vertexBuffers[] = { *model->vertexBuffer };
-				VkDeviceSize offsets[] = { 0 };
+			m_shader->Bind("texSampler", *model->imageBuffer);
+			m_shader->Bind("ubo", *ubo);
+			VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
 
-				auto& ubo = m_uniformBuffers.at(modelIndex);
+			vkCmdBindVertexBuffers(renderState.commandBuffer, 0, 1, vertexBuffers, offsets);
+			vkCmdBindIndexBuffer(renderState.commandBuffer, *model->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+			vkCmdBindDescriptorSets(renderState.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetPipelineLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-				Uniforms uniforms;
-				uniforms.proj.SetProjection(aspect, 66.0f, 0.01f, 100.0f);
-				uniforms.view.Translate(0.0f, 0.0f, -4.0f);
-				uniforms.model = model->transform;
-				uniforms.model.RotateX(d.x);
-				uniforms.model.RotateY(d.y);
-				model->transform = uniforms.model;
-				ubo->Update(&uniforms);
+			vkCmdDrawIndexed(renderState.commandBuffer, model->indexBuffer->GetCount(), 1, 0, 0, 0);
 
-				m_shader->Bind("texSampler", *model->imageBuffer);
-				m_shader->Bind("ubo", *ubo);
-				VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-
-				vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-				vkCmdBindIndexBuffer(commandBuffer, *model->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetPipelineLayout(), 0, 1, &descriptorSet, 0, nullptr);
-
-				vkCmdDrawIndexed(commandBuffer, model->indexBuffer->GetCount(), 1, 0, 0, 0);
-
-				modelIndex++;
-			}
-
-			// This should be part of Scene InEngine
-
-			m_swapchain.EndFrame();
+			modelIndex++;
 		}
-
-		// ~This should be part of Scene InEngine
 	}
 
-	void ShutDown()
+	void ShutDown() override
 	{
+		m_pipeline->ShutDown();
+
+		m_shader->ShutDown();
+		// TODO cleanup
 	}
 
-public:
-	void operator() (const WindowResizeEvent& resizeEvent)
-	{
-		m_swapchain.UpdateExtent();
-	}
-
+public:	
 	void operator() (const KeyEvent& keyEvent)
 	{
 		if (keyEvent.action == KeyActionType::PRESS)
@@ -610,174 +1049,36 @@ public:
 	}
 };
 
-struct EngineConfig
+class TestApp : public App
 {
-	// general
-	bool validation = true;
-
-	// swapchain
-	bool VSync = true;
-
-	uint32_t framesInFlight = 3;
-
-	// window
-	std::string appName = "PreVEngine - Demo";
-
-	bool fullScreen = false;
-
-	Size windowSize = { 1280, 960 };
-
-	Position windowPosition = { 40, 40 };
-};
-
-class Engine
-{
-private:
-	EngineConfig m_config;
-
-	std::shared_ptr<IClock<float>> m_clock;
-
-	std::shared_ptr<FPSService> m_fpsService;
-
-	std::shared_ptr<Instance> m_instance;
-
-	std::shared_ptr<Window> m_window;
-
-	PhysicalDevice *m_physicalDevice;
-
-	std::shared_ptr<Device> m_device;
-
-	Queue* m_presentQueue;
-
-	Queue* m_graphicsQueue;
-
-	std::shared_ptr<RenderPass> m_renderPass;
-
-	std::shared_ptr<Allocator> m_allocator;
-
-	std::shared_ptr<Swapchain> m_swapchain;
-
-	std::shared_ptr<Scene> m_scene;
-
 public:
-	Engine(const EngineConfig& config)
-		: m_config(config)
+	TestApp(std::shared_ptr<EngineConfig> config)
+		: App(config)
 	{
 	}
 
-	virtual ~Engine()
+	virtual ~TestApp()
 	{
 	}
 
-public:
-	void Init()
-	{
-		m_clock = std::make_shared<Clock<float>>();
-		m_fpsService = std::make_shared<FPSService>();
-
-		m_instance = std::make_shared<Instance>(m_config.validation);
-
-		if (m_config.fullScreen)
-		{
-			m_window = std::make_shared<Window>(m_config.appName.c_str());
-		}
-		else
-		{
-			m_window = std::make_shared<Window>(m_config.appName.c_str(), m_config.windowSize.width, m_config.windowSize.height);
-			m_window->SetPosition(m_config.windowPosition);
-		}
-
-		auto physicalDevices = std::make_shared<PhysicalDevices>(*m_instance);
-		physicalDevices->Print();
-
-		VkSurfaceKHR surface = m_window->GetSurface(*m_instance);
-		m_physicalDevice = physicalDevices->FindPresentable(surface);					// get presenting GPU?
-		if (!m_physicalDevice)
-		{
-			throw std::runtime_error("No GPU found?!");
-		}
-
-		m_device = std::make_shared<Device>(*m_physicalDevice);
-
-		m_presentQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT, surface);   // graphics + present-queue
-		m_graphicsQueue = m_presentQueue;                                     // they might be the same or not
-		if (!m_presentQueue)
-		{
-			m_presentQueue = m_device->AddQueue(0, surface);                          // create present-queue
-			m_graphicsQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT);             // create graphics queue
-		}
-
-		m_device->Print();
-
-		VkFormat colorFormat = m_physicalDevice->FindSurfaceFormat(surface);
-		VkFormat depthFormat = m_physicalDevice->FindDepthFormat();
-
-		m_renderPass = std::make_shared<RenderPass>(*m_device);
-		m_renderPass->AddColorAttachment(colorFormat, { 0.0f, 0.0f, 0.3f, 1.0f });	// color buffer, clear to blue
-		m_renderPass->AddDepthAttachment(depthFormat);
-		m_renderPass->AddSubpass({ 0, 1 });
-
-		m_allocator = std::make_shared<Allocator>(*m_graphicsQueue);                   // Create "Vulkan Memory Aloocator"
-		printf("Allocator created\n");
-
-		m_swapchain = std::make_shared<Swapchain>(*m_allocator, *m_renderPass, m_graphicsQueue, m_graphicsQueue);
-		m_swapchain->SetPresentMode(m_config.VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
-		m_swapchain->SetImageCount(m_config.framesInFlight);
-		m_swapchain->Print();
-
-		m_scene = std::make_shared<Scene>(*m_allocator, *m_device, *m_swapchain, *m_renderPass);
-		m_scene->Init();
-	}
-
-	void MainLoop()
-	{
-		while (m_window->ProcessEvents()) // Main event loop, runs until window is closed.
-		{
-			EventChannel::DispatchAll();
-
-			m_clock->UpdateClock();
-			float deltaTime = m_clock->GetDelta();
-
-			m_scene->Update(deltaTime);
-
-
-			m_scene->Render();
-
-			m_fpsService->Update(deltaTime);
-		}
-	}
-
-	void ShutDown()
-	{
-		m_scene->ShutDown();
-	}
-};
-
-class App
-{
-private:
-	std::unique_ptr<Engine> m_engine;
-
-public:
-	App(const EngineConfig& config)
-		: m_engine(std::make_unique<Engine>(config))
+protected:
+	void OnEngineInit() override
 	{
 	}
 
-	virtual ~App()
+	void OnSceneInit() override
 	{
+		std::shared_ptr<IScene> scene = m_engine->GetScene();
+
+		ISceneNode* rootNode = new TestRootSceneNode(scene->GetAllocator(), scene->GetDevice(), scene->GetRenderPass());
+
+		// add all other scene nodes here or inside?
+
+		scene->SetSceneRoot(rootNode);
 	}
 
-public:
-	void Init()
+	void OnSceneGraphInit() override
 	{
-	}
-
-	void Run()
-	{
-		m_engine->Init();
-		m_engine->MainLoop();
-		m_engine->ShutDown();
 	}
 };
 
@@ -786,10 +1087,11 @@ int main(int argc, char *argv[])
 {
 	setvbuf(stdout, NULL, _IONBF, 0); // avoid buffering
 
-	EngineConfig config;
-	App app(config);
+	auto config = std::make_shared<EngineConfig>();
+	TestApp app(config);
 	app.Init();
 	app.Run();
+	app.ShutDown();
 
 	return 0;
 }
