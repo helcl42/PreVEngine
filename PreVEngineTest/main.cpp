@@ -45,7 +45,7 @@ public:
 
 	virtual const std::vector<std::shared_ptr<ISceneNode>>& GetChildren() const = 0;
 
-	virtual void AddChild(std::shared_ptr<ISceneNode> child) = 0;
+	virtual void AddChild(std::shared_ptr<ISceneNode>& child) = 0;
 
 	virtual void SetParent(ISceneNode* parent) = 0;
 
@@ -120,7 +120,7 @@ public:
 		return m_children;
 	}
 
-	void AddChild(std::shared_ptr<ISceneNode> child) override
+	void AddChild(std::shared_ptr<ISceneNode>& child) override
 	{
 		child->SetParent(this);
 
