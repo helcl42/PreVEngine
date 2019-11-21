@@ -43,9 +43,9 @@ public:
 
 	virtual void Render(RenderState& renderState) = 0;
 
-	virtual const std::vector<ISceneNode*>& GetChildren() const = 0;
+	virtual const std::vector<std::shared_ptr<ISceneNode>>& GetChildren() const = 0;
 
-	virtual void AddChild(ISceneNode* child) = 0;
+	virtual void AddChild(std::shared_ptr<ISceneNode> child) = 0;
 
 	virtual void SetParent(ISceneNode* parent) = 0;
 
@@ -54,6 +54,10 @@ public:
 	virtual glm::mat4 GetTransform() const = 0;
 
 	virtual glm::mat4 GetWorldTransform() const = 0;
+
+	virtual bool IsRoot() const = 0;
+
+	virtual ISceneNode* GetRoot() const = 0;
 
 public:
 	virtual ~ISceneNode() = default;
@@ -64,7 +68,7 @@ class AbstractSceneNode : public ISceneNode
 protected:
 	ISceneNode* m_parent;
 
-	std::vector<ISceneNode*> m_children;
+	std::vector<std::shared_ptr<ISceneNode>> m_children;
 
 	glm::mat4 m_transform;
 
@@ -78,10 +82,6 @@ public:
 
 	virtual ~AbstractSceneNode()
 	{
-		for (auto child : m_children)
-		{
-			delete child;
-		}
 	}
 
 public:
@@ -115,12 +115,12 @@ public:
 	}
 
 public:
-	const std::vector<ISceneNode*>& GetChildren() const override
+	const std::vector<std::shared_ptr<ISceneNode>>& GetChildren() const override
 	{
 		return m_children;
 	}
 
-	void AddChild(ISceneNode* child) override
+	void AddChild(std::shared_ptr<ISceneNode> child) override
 	{
 		child->SetParent(this);
 
@@ -145,6 +145,21 @@ public:
 	glm::mat4 GetWorldTransform() const
 	{
 		return m_worldTransform;
+	}
+
+	bool IsRoot() const
+	{
+		return m_parent == nullptr;
+	}
+
+	ISceneNode* GetRoot() const
+	{
+		ISceneNode* parent = m_parent;
+		while (parent != nullptr)
+		{
+			parent = parent->GetParent();
+		}
+		return parent;
 	}
 };
 
@@ -189,6 +204,10 @@ public:
 
 	virtual void ShutDown() = 0;
 
+	virtual std::shared_ptr<ISceneNode> GetRootNode() = 0;
+
+	virtual void SetSceneRoot(std::shared_ptr<ISceneNode> root) = 0;
+
 	virtual std::shared_ptr<Device> GetDevice() = 0;
 
 	virtual std::shared_ptr<Swapchain> GetSwapchain() = 0;
@@ -196,10 +215,6 @@ public:
 	virtual std::shared_ptr<RenderPass> GetRenderPass() = 0;
 
 	virtual std::shared_ptr<Allocator> GetAllocator() = 0;
-
-	virtual ISceneNode* GetRootNode() = 0; // TODO
-
-	virtual void SetSceneRoot(ISceneNode* root) = 0; // TODO
 
 public:
 	virtual ~IScene() = default;
@@ -228,7 +243,7 @@ protected:
 
 	std::shared_ptr<Swapchain> m_swapchain;
 
-	ISceneNode* m_rootNode;
+	std::shared_ptr<ISceneNode> m_rootNode;
 
 public:
 	Scene(std::shared_ptr<SceneConfig> sceneConfig, std::shared_ptr<Device> device, VkSurfaceKHR surface)
@@ -238,7 +253,6 @@ public:
 
 	virtual ~Scene()
 	{
-		delete m_rootNode;
 	}
 
 public:
@@ -326,12 +340,12 @@ public:
 		return m_allocator;
 	}
 
-	ISceneNode* GetRootNode() override
+	std::shared_ptr<ISceneNode> GetRootNode() override
 	{
 		return m_rootNode;
 	}
 
-	void SetSceneRoot(ISceneNode* root) override
+	void SetSceneRoot(std::shared_ptr<ISceneNode> root) override
 	{
 		m_rootNode = root;
 	}
@@ -751,7 +765,7 @@ public:
 	{
 	}
 
-public:	
+public:
 	void operator() (const KeyEvent& keyEvent)
 	{
 		if (keyEvent.action == KeyActionType::PRESS)
@@ -830,7 +844,7 @@ protected:
 	{
 		std::shared_ptr<IScene> scene = m_engine->GetScene();
 
-		ISceneNode* rootNode = new TestRootSceneNode(scene->GetAllocator(), scene->GetDevice(), scene->GetRenderPass());
+		auto rootNode = std::make_shared<TestRootSceneNode>(scene->GetAllocator(), scene->GetDevice(), scene->GetRenderPass());
 
 		// add all other scene nodes here or inside?
 
