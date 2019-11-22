@@ -8,6 +8,12 @@
 
 namespace PreVEngine
 {
+	template<typename Type, ptrdiff_t n>
+	ptrdiff_t ArraySize(Type(&)[n])
+	{
+		return n;
+	}
+
 	template <typename Type>
 	int Clamp(Type val, Type min, Type max)
 	{

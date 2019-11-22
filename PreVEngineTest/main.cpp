@@ -2,6 +2,7 @@
 #include <random>
 #include <memory>
 #include <cstring>
+#include <array>
 
 #include <Window.h>
 #include <Devices.h>
@@ -13,9 +14,7 @@
 #include <Events.h>
 #include <Utils.h>
 
-#include "matrix.h"
 #include "Pipeline.h"
-#include "../PreVEngine/VulkanWrapper/vulkan/vulkan.h"
 
 using namespace PreVEngine;
 
@@ -23,7 +22,36 @@ using namespace PreVEngine;
 // Move to engine
 ////////////////////////////////////////////////////////////////////////
 
-struct RenderState
+class MathUtil
+{
+public:
+	static glm::mat4 CreateTransformationMatrix(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
+	{
+		glm::mat4 resultTransform(1.0f);
+		resultTransform = glm::translate(resultTransform, position);
+		resultTransform *= glm::mat4_cast(glm::normalize(orientation));
+		resultTransform = glm::scale(resultTransform, scale);
+		return resultTransform;
+	}
+
+	static glm::mat4 CreateTransformationMatrix(const glm::vec3& position, const glm::quat& orientation, const float scale)
+	{
+		return MathUtil::CreateTransformationMatrix(position, orientation, glm::vec3(scale));
+	}
+
+	static glm::mat4 CreateTransformationMatrix(const glm::vec3& position, const glm::vec3& orientationInEulerAngles, const glm::vec3& scale)
+	{
+		glm::quat orientation = glm::normalize(glm::quat(glm::vec3(glm::radians(orientationInEulerAngles.x), glm::radians(orientationInEulerAngles.y), glm::radians(orientationInEulerAngles.z))));
+		return MathUtil::CreateTransformationMatrix(position, orientation, scale);
+	}
+
+	static glm::mat4 CreateTransformationMatrix(const glm::vec3& position, const glm::vec3& orientation, const float scale)
+	{
+		return MathUtil::CreateTransformationMatrix(position, orientation, glm::vec3(scale));
+	}
+};
+
+struct RenderContext
 {
 	VkCommandBuffer commandBuffer;
 
@@ -41,15 +69,17 @@ public:
 
 	virtual void Update(float deltaTime) = 0;
 
-	virtual void Render(RenderState& renderState) = 0;
+	virtual void Render(RenderContext& renderState) = 0;
 
 	virtual const std::vector<std::shared_ptr<ISceneNode>>& GetChildren() const = 0;
 
-	virtual void AddChild(std::shared_ptr<ISceneNode>& child) = 0;
+	virtual void AddChild(std::shared_ptr<ISceneNode> child) = 0;
 
 	virtual void SetParent(ISceneNode* parent) = 0;
 
 	virtual ISceneNode* GetParent() const = 0;
+
+	virtual void SetTransform(const glm::mat4& transform) = 0;
 
 	virtual glm::mat4 GetTransform() const = 0;
 
@@ -87,6 +117,10 @@ public:
 public:
 	virtual void Init() override
 	{
+		for (auto& child : m_children)
+		{
+			child->Init();
+		}
 	}
 
 	virtual void Update(float deltaTime) override
@@ -106,12 +140,16 @@ public:
 		}
 	}
 
-	virtual void Render(RenderState& renderState) override
+	virtual void Render(RenderContext& renderState) override
 	{
 	}
 
 	virtual void ShutDown() override
 	{
+		for (auto& child : m_children)
+		{
+			child->ShutDown();
+		}
 	}
 
 public:
@@ -120,7 +158,7 @@ public:
 		return m_children;
 	}
 
-	void AddChild(std::shared_ptr<ISceneNode>& child) override
+	void AddChild(std::shared_ptr<ISceneNode> child) override
 	{
 		child->SetParent(this);
 
@@ -135,6 +173,11 @@ public:
 	ISceneNode* GetParent() const
 	{
 		return m_parent;
+	}
+
+	void SetTransform(const glm::mat4& transform)
+	{
+		m_transform = transform;
 	}
 
 	glm::mat4 GetTransform() const
@@ -299,10 +342,7 @@ public:
 		uint32_t frameInFlightIndex;
 		if (m_swapchain->BeginFrame(commandBuffer, frameInFlightIndex))
 		{
-			RenderState renderState;
-			renderState.commandBuffer = commandBuffer;
-			renderState.frameInFlightIndex = frameInFlightIndex;
-			renderState.fullExtent = m_swapchain->GetExtent();
+			RenderContext renderState{ commandBuffer, frameInFlightIndex, m_swapchain->GetExtent() };
 
 			m_rootNode->Render(renderState);
 
@@ -510,60 +550,66 @@ public:
 
 struct Vertex
 {
-	vec3 pos;
-	vec2 tc;
+	glm::vec3 position;
+	glm::vec2 texCoord;
+	glm::vec3 normal;
 };
 
 struct Mesh
 {
 	const std::vector<Vertex> vertices = {
-		//front
-		{{-0.5f,-0.5f, 0.5f}, {0.0f, 0.0f}},
-		{{ 0.5f,-0.5f, 0.5f}, {1.0f, 0.0f}},
-		{{ 0.5f, 0.5f, 0.5f}, {1.0f, 1.0f}},
-		{{-0.5f, 0.5f, 0.5f}, {0.0f, 1.0f}},
-		//back
-		{{ 0.5f,-0.5f,-0.5f}, {0.0f, 0.0f}},
-		{{-0.5f,-0.5f,-0.5f}, {1.0f, 0.0f}},
-		{{-0.5f, 0.5f,-0.5f}, {1.0f, 1.0f}},
-		{{ 0.5f, 0.5f,-0.5f}, {0.0f, 1.0f}},
-		//left
-		{{-0.5f,-0.5f,-0.5f}, {0.0f, 0.0f}},
-		{{-0.5f,-0.5f, 0.5f}, {1.0f, 0.0f}},
-		{{-0.5f, 0.5f, 0.5f}, {1.0f, 1.0f}},
-		{{-0.5f, 0.5f,-0.5f}, {0.0f, 1.0f}},
-		//right
-		{{ 0.5f,-0.5f, 0.5f}, {0.0f, 0.0f}},
-		{{ 0.5f,-0.5f,-0.5f}, {1.0f, 0.0f}},
-		{{ 0.5f, 0.5f,-0.5f}, {1.0f, 1.0f}},
-		{{ 0.5f, 0.5f, 0.5f}, {0.0f, 1.0f}},
-		//top
-		{{-0.5f,-0.5f,-0.5f}, {0.0f, 0.0f}},
-		{{ 0.5f,-0.5f,-0.5f}, {1.0f, 0.0f}},
-		{{ 0.5f,-0.5f, 0.5f}, {1.0f, 1.0f}},
-		{{-0.5f,-0.5f, 0.5f}, {0.0f, 1.0f}},
-		//bottom
-		{{-0.5f, 0.5f, 0.5f}, {0.0f, 0.0f}},
-		{{ 0.5f, 0.5f, 0.5f}, {1.0f, 0.0f}},
-		{{ 0.5f, 0.5f,-0.5f}, {1.0f, 1.0f}},
-		{{-0.5f, 0.5f,-0.5f}, {0.0f, 1.0f}},
+		// FROMT
+		{ { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+		{ { 0.5f, -0.5f, 0.5f }, { 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
+		{ { 0.5f, 0.5f, 0.5f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ { -0.5f, 0.5f, 0.5f }, { 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f } },
+
+		// BACK
+		{ { -0.5f, -0.5f, -0.5f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+		{ { 0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
+		{ { 0.5f, 0.5f, -0.5f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ { -0.5f, 0.5f, -0.5f }, { 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f } },
+
+		// TOP
+		{ { -0.5f, 0.5f, 0.5f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+		{ { 0.5f, 0.5f, 0.5f }, { 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
+		{ { 0.5f, 0.5f, -0.5f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ { -0.5f, 0.5f, -0.5f }, { 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f } },
+
+		// BOTTOM
+		{ { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+		{ { 0.5f, -0.5f, 0.5f }, { 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
+		{ { 0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ { -0.5f, -0.5f, -0.5f }, { 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f } },
+
+		// LEFT
+		{ { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+		{ { -0.5f, 0.5f, 0.5f }, { 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
+		{ { -0.5f, 0.5f, -0.5f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ { -0.5f, -0.5f, -0.5f }, { 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f } },
+
+		// RIGHT
+		{ { 0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+		{ { 0.5f, 0.5f, 0.5f }, { 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
+		{ { 0.5f, 0.5f, -0.5f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ { 0.5f, -0.5f, -0.5f }, { 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f } }
 	};
 
 	const std::vector<uint16_t> indices = {
-		0, 1, 2,  2, 3, 0,
-		4, 5, 6,  6, 7, 4,
-		8, 9,10, 10,11, 8,
-	   12,13,14, 14,15,12,
-	   16,17,18, 18,19,16,
-	   20,21,22, 22,23,20
+		0, 1, 2, 2, 3, 0,
+		4, 5, 6, 6, 7, 4,
+		8, 9, 10, 10, 11, 8,
+		12, 13, 14, 14, 15, 12,
+		16, 17, 18, 18, 19, 16,
+		20, 21, 22, 22, 23, 20
 	};
 };
 
 struct Uniforms
 {
-	mat4 model;
-	mat4 view;
-	mat4 proj;
+	alignas(16) glm::mat4 model;
+	alignas(16) glm::mat4 view;
+	alignas(16) glm::mat4 proj;
 };
 
 struct TexturedModel
@@ -577,14 +623,12 @@ struct TexturedModel
 	std::shared_ptr<VBO> vertexBuffer;
 
 	std::shared_ptr<IBO> indexBuffer;
-
-	mat4 transform;
 };
 
 class ModelFactory
 {
 public:
-	std::shared_ptr<TexturedModel> CreateTexturedModel(Allocator& allocator, const std::string& textureFilename, const mat4& transform)
+	std::shared_ptr<TexturedModel> CreateTexturedModel(Allocator& allocator, const std::string& textureFilename)
 	{
 		ImageFactory imageFactory;
 
@@ -600,168 +644,164 @@ public:
 
 		resultModel->mesh = std::make_shared<Mesh>();
 
-		resultModel->vertexBuffer = std::make_shared<VBO>(allocator);                                                          // Create vertex buffer
-		resultModel->vertexBuffer->Data((void*)resultModel->mesh->vertices.data(), (uint32_t)resultModel->mesh->vertices.size(), sizeof(Vertex));  // load vertex data
+		resultModel->vertexBuffer = std::make_shared<VBO>(allocator);
+		resultModel->vertexBuffer->Data((void*)resultModel->mesh->vertices.data(), (uint32_t)resultModel->mesh->vertices.size(), sizeof(Vertex));
 		printf("VBO created\n");
 
 		resultModel->indexBuffer = std::make_shared<IBO>(allocator);
 		resultModel->indexBuffer->Data(resultModel->mesh->indices.data(), (uint32_t)resultModel->mesh->indices.size());
 		printf("IBO created\n");
 
-		resultModel->transform = transform;
-
 		return resultModel;
 	}
 };
 
-class TestRootSceneNode : public AbstractSceneNode
+class AbstractCubeRobotSceneNode : public AbstractSceneNode
 {
-private:
-	std::shared_ptr<Device> m_device;
-
-	std::shared_ptr<RenderPass> m_renderPass;
-
+protected:
 	std::shared_ptr<Allocator> m_allocator;
 
+protected:
+	glm::vec3 m_position;
+
+	glm::quat m_orientation;
+
+	glm::vec3 m_scale;
+
+	const std::string m_texturePath;
+
+	std::shared_ptr<TexturedModel> m_texturedModel;
+
+public:
+	AbstractCubeRobotSceneNode(std::shared_ptr<Allocator>& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
+		: AbstractSceneNode(), m_allocator(allocator), m_position(position), m_orientation(orientation), m_scale(scale), m_texturePath(texturePath)
+	{
+	}
+
+	virtual ~AbstractCubeRobotSceneNode()
+	{
+	}
+
+public:
+	void Init() override
+	{
+		m_transform = MathUtil::CreateTransformationMatrix(m_position, m_orientation, glm::vec3(1, 1, 1));
+
+		ModelFactory modelFactory;
+		m_texturedModel = modelFactory.CreateTexturedModel(*m_allocator, m_texturePath);
+
+		AbstractSceneNode::Init();
+	}
+
+	void Update(float deltaTime) override
+	{
+		AbstractSceneNode::Update(deltaTime);
+	}
+
+public:
+	std::shared_ptr<TexturedModel> GetModel() const
+	{
+		return m_texturedModel;
+	}
+
+	glm::vec3 GetScaler() const
+	{
+		return m_scale;
+	}
+};
+
+class CubeRobotPart : public AbstractCubeRobotSceneNode
+{
+public:
+	CubeRobotPart(std::shared_ptr<Allocator>& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
+		: AbstractCubeRobotSceneNode(allocator, position, orientation, scale, texturePath)
+	{
+	}
+
+	virtual ~CubeRobotPart()
+	{
+	}
+};
+
+class CubeRobot : public AbstractCubeRobotSceneNode // origin without model ?
+{
 private:
-	std::shared_ptr<Shader> m_shader;
+	std::shared_ptr<CubeRobotPart> m_body;
 
-	std::shared_ptr<Pipeline> m_pipeline;
+	std::shared_ptr<CubeRobotPart> m_head;
 
-	// content
-	std::vector<std::shared_ptr<TexturedModel>> m_models;
+	std::shared_ptr<CubeRobotPart> m_leftArm;
 
-	std::vector<std::shared_ptr<UBO>> m_uniformBuffers;
+	std::shared_ptr<CubeRobotPart> m_rightArm;
 
-	EventHandler<TestRootSceneNode, KeyEvent> m_keyEvent{ *this };
+	std::shared_ptr<CubeRobotPart> m_leftLeg;
 
-	EventHandler<TestRootSceneNode, MouseEvent> m_mouseEvent{ *this };
+	std::shared_ptr<CubeRobotPart> m_rightLeg;
 
-	EventHandler<TestRootSceneNode, TouchEvent> m_touchEvent{ *this };
+private:
+	EventHandler<CubeRobot, KeyEvent> m_keyEvent{ *this };
+
+	EventHandler<CubeRobot, MouseEvent> m_mouseEvent{ *this };
+
+	EventHandler<CubeRobot, TouchEvent> m_touchEvent{ *this };
 
 	glm::vec2 d{ 0.1f, 0.1f };
 
 	glm::vec2 m{ 0.0f, 0.0f };
 
 public:
-	TestRootSceneNode(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass)
-		: m_device(dev), m_renderPass(renderPass), m_allocator(alloc)
+	CubeRobot(std::shared_ptr<Allocator>& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
+		: AbstractCubeRobotSceneNode(allocator, position, orientation, scale, texturePath)
 	{
 	}
 
-	virtual ~TestRootSceneNode()
+	virtual ~CubeRobot()
 	{
-	}
-
-private:
-	void AddModel()
-	{
-		std::random_device r;
-		std::default_random_engine gen(r());
-		std::uniform_real_distribution<float> dist(-2.0, 2.0f);
-		std::uniform_real_distribution<float> scaleDist(0.1f, 1.0f);
-
-		ModelFactory modelFactory;
-
-		mat4 trasform;
-		trasform.Translate(dist(gen), dist(gen), dist(gen));
-		trasform.Scale(scaleDist(gen));
-
-		m_models.emplace_back(modelFactory.CreateTexturedModel(*m_allocator, dist(gen) > 0.0f ? "vulkan.png" : "texture.jpg", trasform));
-
-		auto ubo = std::make_shared<UBO>(*m_allocator);
-		ubo->Allocate(sizeof(Uniforms));
-
-		m_uniformBuffers.emplace_back(ubo);
-
-		printf("Model %zd created\n", m_models.size());
-	}
-
-	void DeleteModel()
-	{
-		if (m_models.size() > 0)
-		{
-			m_models.erase(m_models.begin());
-		}
-
-		if (m_uniformBuffers.size() > 0)
-		{
-			m_uniformBuffers.erase(m_uniformBuffers.begin(), m_uniformBuffers.begin() + 1);
-		}
-
-		printf("Model deleted %zd\n", m_models.size());
 	}
 
 public:
 	void Init() override
 	{
-		const uint32_t COUNT_OF_MODELS = 25;
-		for (uint32_t i = 0; i < COUNT_OF_MODELS; i++)
-		{
-			AddModel();
-		}
+		m_body = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(0, 35, 0), glm::quat(1, 0, 0, 0), glm::vec3(10, 15, 5), "vulkan.png");
 
-		ShaderFactory shaderFactory;
-		m_shader = shaderFactory.CreateShaderFromFiles(*m_device, {
-			{ VK_SHADER_STAGE_VERTEX_BIT, "shaders/vert.spv" },
-			{ VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/frag.spv" }
-			});
-		m_shader->AdjustDescriptorPoolCapacity(10000);
+		m_head = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(0, 10, 0), glm::quat(1, 0, 0, 0), glm::vec3(5, 5, 5), "texture.jpg");
+		m_leftArm = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(-8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), "texture.jpg");
+		m_rightArm = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), "texture.jpg");
+		m_leftLeg = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(-4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(3, 17.5f, 5), "texture.jpg");
+		m_rightLeg = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(3, 17.5f, 5), "texture.jpg");
 
-		m_pipeline = std::make_shared<Pipeline>(*m_device, *m_renderPass, *m_shader);
-		m_pipeline->CreateGraphicsPipeline();
+		m_body->AddChild(m_head);
+		m_body->AddChild(m_leftArm);
+		m_body->AddChild(m_rightArm);
+		m_body->AddChild(m_leftLeg);
+		m_body->AddChild(m_rightLeg);
 
-		printf("Pipeline created\n");
+		AddChild(m_body);
+
+		AbstractCubeRobotSceneNode::Init();
 	}
 
 	void Update(float deltaTime) override
 	{
-		// TODO
+		auto bodyTransform = m_body->GetTransform();
+		bodyTransform = glm::rotate(bodyTransform, glm::radians(d.x), glm::vec3(1.0f, 0.0f, 0.0f));
+		bodyTransform = glm::rotate(bodyTransform, glm::radians(d.y), glm::vec3(0.0f, 1.0f, 0.0f));
+		m_body->SetTransform(bodyTransform);
+
+		auto headTransform = m_head->GetTransform();
+		headTransform = glm::rotate(headTransform, glm::radians(20.0f) * deltaTime, glm::vec3(0, 1, 0));
+		m_head->SetTransform(headTransform);
+
+		auto leftArmTransform = m_leftArm->GetTransform();
+		leftArmTransform = glm::translate(leftArmTransform, glm::vec3(0, -4.5, 0));
+		leftArmTransform = leftArmTransform * glm::rotate(glm::mat4(1.0f), glm::radians(20.0f) * deltaTime, glm::vec3(1, 0, 0));
+		leftArmTransform = glm::translate(leftArmTransform, glm::vec3(0, 4.5, 0));
+		m_leftArm->SetTransform(leftArmTransform);
+
+		AbstractCubeRobotSceneNode::Update(deltaTime);
 	}
 
-	void Render(RenderState& renderState) override
-	{
-		VkRect2D scissor = { { 0, 0 }, renderState.fullExtent };
-		VkViewport viewport = { 0, 0, (float)renderState.fullExtent.width, (float)renderState.fullExtent.height, 0, 1 };
-
-		float aspect = (float)renderState.fullExtent.width / (float)renderState.fullExtent.height;
-
-		vkCmdBindPipeline(renderState.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-		vkCmdSetViewport(renderState.commandBuffer, 0, 1, &viewport);
-		vkCmdSetScissor(renderState.commandBuffer, 0, 1, &scissor);
-
-		size_t modelIndex = 0;
-		for (const auto& model : m_models)
-		{
-			VkBuffer vertexBuffers[] = { *model->vertexBuffer };
-			VkDeviceSize offsets[] = { 0 };
-
-			auto& ubo = m_uniformBuffers.at(modelIndex);
-
-			Uniforms uniforms;
-			uniforms.proj.SetProjection(aspect, 66.0f, 0.01f, 100.0f);
-			uniforms.view.Translate(0.0f, 0.0f, -4.0f);
-			uniforms.model = model->transform;
-			uniforms.model.RotateX(d.x);
-			uniforms.model.RotateY(d.y);
-			model->transform = uniforms.model;
-			ubo->Update(&uniforms);
-
-			m_shader->Bind("texSampler", *model->imageBuffer);
-			m_shader->Bind("ubo", *ubo);
-			VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-
-			vkCmdBindVertexBuffers(renderState.commandBuffer, 0, 1, vertexBuffers, offsets);
-			vkCmdBindIndexBuffer(renderState.commandBuffer, *model->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
-			vkCmdBindDescriptorSets(renderState.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetPipelineLayout(), 0, 1, &descriptorSet, 0, nullptr);
-
-			vkCmdDrawIndexed(renderState.commandBuffer, model->indexBuffer->GetCount(), 1, 0, 0, 0);
-
-			modelIndex++;
-		}
-	}
-
-	void ShutDown() override
+	void ShutDown()
 	{
 	}
 
@@ -770,16 +810,6 @@ public:
 	{
 		if (keyEvent.action == KeyActionType::PRESS)
 		{
-			if (keyEvent.keyCode == KeyCode::KEY_A)
-			{
-				AddModel();
-			}
-
-			if (keyEvent.keyCode == KeyCode::KEY_D)
-			{
-				DeleteModel();
-			}
-
 			if (keyEvent.keyCode == KeyCode::KEY_Left)
 			{
 				d.y -= 0.1f;
@@ -823,6 +853,244 @@ public:
 	}
 };
 
+class IRenderer
+{
+public:
+	virtual void Init() = 0;
+
+	virtual void PreRender(RenderContext& renderContext) = 0;
+
+	virtual void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode> node) = 0;
+
+	virtual void PostRender(RenderContext& renderContext) = 0;
+
+	virtual void ShutDown() = 0;
+
+public:
+	virtual ~IRenderer() = default;
+};
+
+
+template <typename ItemType>
+class UBOPool
+{
+private:
+	std::shared_ptr<Allocator> m_allocator;
+
+	std::vector<std::shared_ptr<UBO>> m_uniformBuffers;
+
+	uint32_t m_index = 0;
+
+public:
+	UBOPool(std::shared_ptr<Allocator> allocator)
+		: m_allocator(allocator)
+	{
+	}
+
+	virtual ~UBOPool()
+	{
+	}
+
+public:
+	void AdjustCapactity(uint32_t capacity)
+	{
+		m_index = 0;
+		m_uniformBuffers.clear();
+
+		for (uint32_t i = 0; i < capacity; i++)
+		{
+			auto ubo = std::make_shared<UBO>(*m_allocator);
+			ubo->Allocate(sizeof(ItemType));
+			m_uniformBuffers.emplace_back(ubo);
+		}
+	}
+
+	std::shared_ptr<UBO> GetNext()
+	{
+		m_index = (m_index + 1) % m_uniformBuffers.size();
+		return m_uniformBuffers.at(m_index);
+	}
+};
+
+class TestNodesRenderer : public IRenderer
+{
+private:
+	std::shared_ptr<Device> m_device;
+
+	std::shared_ptr<RenderPass> m_renderPass;
+
+	std::shared_ptr<Allocator> m_allocator;
+
+private:
+	std::shared_ptr<Shader> m_shader;
+
+	std::shared_ptr<Pipeline> m_pipeline;
+
+	std::shared_ptr<UBOPool<Uniforms>> m_uniformsPool;
+
+public:
+	TestNodesRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass)
+		: m_device(dev), m_renderPass(renderPass), m_allocator(alloc)
+	{
+	}
+
+	virtual ~TestNodesRenderer()
+	{
+	}
+
+public:
+	void Init() override
+	{
+		ShaderFactory shaderFactory;
+		m_shader = shaderFactory.CreateShaderFromFiles(*m_device, {
+			{ VK_SHADER_STAGE_VERTEX_BIT, "shaders/vert.spv" },
+			{ VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/frag.spv" }
+			});
+		m_shader->AdjustDescriptorPoolCapacity(10000);
+
+		printf("Shader created\n");
+
+		m_pipeline = std::make_shared<Pipeline>(*m_device, *m_renderPass, *m_shader);
+		m_pipeline->CreateGraphicsPipeline();
+
+		printf("Pipeline created\n");
+
+		m_uniformsPool = std::make_shared<UBOPool<Uniforms>>(m_allocator);
+		m_uniformsPool->AdjustCapactity(100);
+	}
+
+	void PreRender(RenderContext& renderContext) override
+	{
+		VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+		VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
+
+		vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+		vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+		vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
+	}
+
+	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode> abstractNode) override
+	{
+		auto node = std::dynamic_pointer_cast<AbstractCubeRobotSceneNode>(abstractNode); // TODO avoid casting here??
+
+		auto model = node->GetModel();
+		if (model)
+		{
+			const float aspectRatio = static_cast<float>(renderContext.fullExtent.width) / static_cast<float>(renderContext.fullExtent.height);
+
+			auto& ubo = m_uniformsPool->GetNext();
+
+			Uniforms uniforms;
+			uniforms.proj = glm::perspective(glm::radians(70.0f), aspectRatio, 0.01f, 200.0f);
+			uniforms.proj[1][1] *= -1; // invert Y in clip coordinates
+
+			uniforms.view = glm::lookAt(glm::vec3(0.0f, 80.0f, 60.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+			uniforms.model = node->GetWorldTransform() * glm::scale(glm::mat4(1.0f), node->GetScaler());
+			ubo->Update(&uniforms);
+
+			m_shader->Bind("texSampler", *model->imageBuffer);
+			m_shader->Bind("ubo", *ubo);
+
+			VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+			VkBuffer vertexBuffers[] = { *model->vertexBuffer };
+			VkDeviceSize offsets[] = { 0 };
+
+			vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+			vkCmdBindIndexBuffer(renderContext.commandBuffer, *model->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+			vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetPipelineLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+			vkCmdDrawIndexed(renderContext.commandBuffer, model->indexBuffer->GetCount(), 1, 0, 0, 0);
+		}
+
+		for (auto child : node->GetChildren())
+		{
+			Render(renderContext, child);
+		}
+	}
+
+	void PostRender(RenderContext& renderContext) override
+	{
+	}
+
+	void ShutDown() override
+	{
+	}
+};
+
+class RootSceneNode : public AbstractSceneNode
+{
+private:
+	std::shared_ptr<Device> m_device;
+
+	std::shared_ptr<RenderPass> m_renderPass;
+
+	std::shared_ptr<Allocator> m_allocator;
+
+private:
+	std::shared_ptr<IRenderer> m_renderer;
+
+public:
+	RootSceneNode(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass)
+		: AbstractSceneNode(), m_device(dev), m_renderPass(renderPass), m_allocator(alloc)
+	{
+	}
+
+	virtual ~RootSceneNode()
+	{
+	}
+
+public:
+	void Init() override
+	{
+		m_renderer = std::make_shared<TestNodesRenderer>(m_allocator, m_device, m_renderPass);
+		m_renderer->Init();
+
+		auto robot1 = std::make_shared<CubeRobot>(m_allocator, glm::vec3(0, 0, 0), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), "texture.jpg");
+		AddChild(robot1);
+
+		auto robot2 = std::make_shared<CubeRobot>(m_allocator, glm::vec3(40, 0, 0), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), "texture.jpg");
+		AddChild(robot2);
+
+		auto robot3 = std::make_shared<CubeRobot>(m_allocator, glm::vec3(-40, 0, 0), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), "texture.jpg");
+		AddChild(robot3);
+
+		auto robot4 = std::make_shared<CubeRobot>(m_allocator, glm::vec3(0, 0, 40), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), "texture.jpg");
+		AddChild(robot4);
+
+		for (auto child : m_children)
+		{
+			child->Init();
+		}
+	}
+
+	void Update(float deltaTime) override
+	{
+		for (auto child : m_children)
+		{
+			child->Update(deltaTime);
+		}
+	}
+
+	void Render(RenderContext& renderState) override
+	{
+		m_renderer->PreRender(renderState);
+
+		for (auto child : m_children)
+		{
+			m_renderer->Render(renderState, child);
+		}
+
+		m_renderer->PostRender(renderState);
+	}
+
+	void ShutDown() override
+	{
+		m_renderer->ShutDown();
+	}
+};
+
+
 class TestApp : public App
 {
 public:
@@ -844,9 +1112,9 @@ protected:
 	{
 		std::shared_ptr<IScene> scene = m_engine->GetScene();
 
-		auto rootNode = std::make_shared<TestRootSceneNode>(scene->GetAllocator(), scene->GetDevice(), scene->GetRenderPass());
+		auto rootNode = std::make_shared<RootSceneNode>(scene->GetAllocator(), scene->GetDevice(), scene->GetRenderPass());
 
-		// add all other scene nodes here or inside?
+		// TODO add all other scene nodes here or inside?
 
 		scene->SetSceneRoot(rootNode);
 	}
