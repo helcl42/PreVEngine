@@ -767,8 +767,8 @@ public:
 		m_head = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(0, 10, 0), glm::quat(1, 0, 0, 0), glm::vec3(5, 5, 5), "texture.jpg");
 		m_leftArm = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(-8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), "texture.jpg");
 		m_rightArm = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), "texture.jpg");
-		m_leftLeg = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(-4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(3, 17.5f, 5), "texture.jpg");
-		m_rightLeg = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(3, 17.5f, 5), "texture.jpg");
+		m_leftLeg = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(-4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(3, 17.5f, 4.8f), "texture.jpg");
+		m_rightLeg = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(3, 17.5f, 4.8f), "texture.jpg");
 
 		m_body->AddChild(m_head);
 		m_body->AddChild(m_leftArm);
@@ -789,7 +789,7 @@ public:
 		m_body->SetTransform(bodyTransform);
 
 		auto headTransform = m_head->GetTransform();
-		headTransform = glm::rotate(headTransform, glm::radians(20.0f) * deltaTime, glm::vec3(0, 1, 0));
+		headTransform = glm::rotate(headTransform, -glm::radians(25.0f) * deltaTime, glm::vec3(0, 1, 0));
 		m_head->SetTransform(headTransform);
 
 		auto leftArmTransform = m_leftArm->GetTransform();
@@ -995,7 +995,7 @@ public:
 			VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
 			VkBuffer vertexBuffers[] = { *model->vertexBuffer };
 			VkDeviceSize offsets[] = { 0 };
-
+			
 			vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
 			vkCmdBindIndexBuffer(renderContext.commandBuffer, *model->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 			vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetPipelineLayout(), 0, 1, &descriptorSet, 0, nullptr);
