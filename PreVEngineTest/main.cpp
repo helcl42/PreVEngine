@@ -165,37 +165,37 @@ public:
 		m_children.emplace_back(child);
 	}
 
-	void SetParent(ISceneNode* parent)
+	void SetParent(ISceneNode* parent) override
 	{
 		m_parent = parent;
 	}
 
-	ISceneNode* GetParent() const
+	ISceneNode* GetParent() const override
 	{
 		return m_parent;
 	}
 
-	void SetTransform(const glm::mat4& transform)
+	void SetTransform(const glm::mat4& transform) override
 	{
 		m_transform = transform;
 	}
 
-	glm::mat4 GetTransform() const
+	glm::mat4 GetTransform() const override
 	{
 		return m_transform;
 	}
 
-	glm::mat4 GetWorldTransform() const
+	glm::mat4 GetWorldTransform() const override
 	{
 		return m_worldTransform;
 	}
 
-	bool IsRoot() const
+	bool IsRoot() const override
 	{
 		return m_parent == nullptr;
 	}
 
-	ISceneNode* GetRoot() const
+	ISceneNode* GetRoot() const override
 	{
 		ISceneNode* parent = m_parent;
 		while (parent != nullptr)
@@ -244,6 +244,8 @@ public:
 	virtual void Update(float deltaTime) = 0;
 
 	virtual void Render() = 0;
+
+	virtual void ShutDownSceneGraph() = 0;
 
 	virtual void ShutDown() = 0;
 
@@ -299,7 +301,7 @@ public:
 	}
 
 public:
-	void Init()
+	void Init() override
 	{
 		m_presentQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT, m_surface);   // graphics + present-queue
 		m_graphicsQueue = m_presentQueue;                                     // they might be the same or not
@@ -326,17 +328,17 @@ public:
 		m_swapchain->Print();
 	}
 
-	void InitSceneGraph()
+	void InitSceneGraph() override
 	{
 		m_rootNode->Init();
 	}
 
-	void Update(float deltaTime)
+	void Update(float deltaTime) override
 	{
 		m_rootNode->Update(deltaTime);
 	}
 
-	void Render()
+	void Render() override
 	{
 		VkCommandBuffer commandBuffer;
 		uint32_t frameInFlightIndex;
@@ -350,12 +352,12 @@ public:
 		}
 	}
 
-	void ShutDownSceneGraph()
+	void ShutDownSceneGraph() override
 	{
 		m_rootNode->ShutDown();
 	}
 
-	void ShutDown()
+	void ShutDown() override
 	{
 	}
 
@@ -487,6 +489,7 @@ public:
 
 	void ShutDown()
 	{
+		m_scene->ShutDownSceneGraph();
 		m_scene->ShutDown();
 	}
 
@@ -801,7 +804,7 @@ public:
 		AbstractCubeRobotSceneNode::Update(deltaTime);
 	}
 
-	void ShutDown()
+	void ShutDown() override
 	{
 	}
 
@@ -978,7 +981,7 @@ public:
 		{
 			const float aspectRatio = static_cast<float>(renderContext.fullExtent.width) / static_cast<float>(renderContext.fullExtent.height);
 
-			auto& ubo = m_uniformsPool->GetNext();
+			auto ubo = m_uniformsPool->GetNext();
 
 			Uniforms uniforms;
 			uniforms.proj = glm::perspective(glm::radians(70.0f), aspectRatio, 0.01f, 200.0f);
