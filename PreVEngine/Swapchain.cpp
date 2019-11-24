@@ -82,10 +82,9 @@ namespace PreVEngine
 		m_swapchainCreateInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
 		m_swapchainCreateInfo.imageArrayLayers = 1;  // 2 for stereo
 		m_swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-		m_swapchainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
 		m_swapchainCreateInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
 		m_swapchainCreateInfo.clipped = VK_TRUE;
-		m_swapchainCreateInfo.preTransform = surfaceCapabilities.currentTransform;
+		m_swapchainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
 
 		if (presentQueue->family != graphicsQueue->family)
 		{
@@ -124,6 +123,12 @@ namespace PreVEngine
 		}
 		else
 		{
+			// because of android notifies about SUBOPTIMAL presence -> it internaly transforms image(rotates) because we use preTransform == VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
+			if(currentSurfaceExtent.width == m_swapchainCreateInfo.imageExtent.width && currentSurfaceExtent.height == m_swapchainCreateInfo.imageExtent.height)
+			{
+				return;
+			}
+
 			m_swapchainCreateInfo.imageExtent = currentSurfaceExtent;
 		}
 
