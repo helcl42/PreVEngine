@@ -15,6 +15,7 @@ message("Platform = ${ANDROID_PLATFORM}")
   include_directories( ../../../../../../PreVEngine/External          )
   include_directories( ../../../../../../PreVEngine/android           )
   include_directories( ../../../../../../PreVEngine/VulkanWrapper     )
+  include_directories( ../../../../../../Libs/glm     )
 
 # Set path to source files.
   aux_source_directory( ${ANDROID_NDK}/sources/android/native_app_glue SRC_LIST)

@@ -45,7 +45,7 @@ struct printBuf {
     printBuf& operator+=(const char* c) {strncat(buf, c, SIZE - len() - 1); if(len() >= SIZE - 1) flush(); return *this;}
     int len() {return strlen(buf);}
     void clear(){ memset(buf, 0, SIZE); }
-    void flush() {__android_log_print(ANDROID_LOG_INFO, "WSIWindow", "%s", buf); clear();}
+    void flush() {__android_log_print(ANDROID_LOG_INFO, "PreVEngine", "%s", buf); clear();}
 }printBuf;
 
 int printf(const char* format, ...) {  // printf for Android
