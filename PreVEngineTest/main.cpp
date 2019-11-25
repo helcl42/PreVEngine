@@ -51,6 +51,33 @@ public:
 	}
 };
 
+class IDGenerator final : public Singleton<IDGenerator>
+{
+private:
+	friend class Singleton<IDGenerator>;
+
+private:
+	uint64_t m_id = 0;
+
+	std::mutex m_mutex;
+
+private:
+	IDGenerator() = default;
+	
+public:
+	~IDGenerator() = default;
+
+public:
+	uint64_t GenrateNewId()
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		m_id++;
+
+		return m_id;
+	}
+};
+
 struct RenderContext
 {
 	VkCommandBuffer commandBuffer;
@@ -75,6 +102,8 @@ public:
 
 	virtual void AddChild(std::shared_ptr<ISceneNode> child) = 0;
 
+	virtual void RemoveChild(std::shared_ptr<ISceneNode> child) = 0;
+
 	virtual void SetParent(ISceneNode* parent) = 0;
 
 	virtual ISceneNode* GetParent() const = 0;
@@ -89,6 +118,8 @@ public:
 
 	virtual ISceneNode* GetRoot() const = 0;
 
+	virtual uint64_t GetId() const = 0;
+
 public:
 	virtual ~ISceneNode() = default;
 };
@@ -96,6 +127,8 @@ public:
 class AbstractSceneNode : public ISceneNode
 {
 protected:
+	uint64_t m_id;
+
 	ISceneNode* m_parent;
 
 	std::vector<std::shared_ptr<ISceneNode>> m_children;
@@ -106,7 +139,7 @@ protected:
 
 public:
 	AbstractSceneNode()
-		: m_parent(nullptr), m_transform(glm::mat4(1.0f)), m_worldTransform(glm::mat4(1.0f))
+		: m_id(IDGenerator::GetInstance().GenrateNewId()), m_parent(nullptr), m_transform(glm::mat4(1.0f)), m_worldTransform(glm::mat4(1.0f))
 	{
 	}
 
@@ -165,6 +198,19 @@ public:
 		m_children.emplace_back(child);
 	}
 
+	void RemoveChild(std::shared_ptr<ISceneNode> child)
+	{
+		child->SetParent(nullptr);
+
+		for (auto it = m_children.begin(); it != m_children.end(); ++it)
+		{
+			if (*it == child)
+			{
+				m_children.erase(it);
+			}
+		}
+	}
+
 	void SetParent(ISceneNode* parent) override
 	{
 		m_parent = parent;
@@ -203,6 +249,11 @@ public:
 			parent = parent->GetParent();
 		}
 		return parent;
+	}
+
+	uint64_t GetId() const
+	{
+		return m_id;
 	}
 };
 
