@@ -120,6 +120,8 @@ public:
 
 	virtual uint64_t GetId() const = 0;
 
+	virtual uint64_t GetFlags() const = 0;
+
 public:
 	virtual ~ISceneNode() = default;
 };
@@ -128,6 +130,8 @@ class AbstractSceneNode : public ISceneNode
 {
 protected:
 	uint64_t m_id;
+
+	uint64_t m_flags;
 
 	ISceneNode* m_parent;
 
@@ -251,9 +255,14 @@ public:
 		return parent;
 	}
 
-	uint64_t GetId() const
+	uint64_t GetId() const override
 	{
 		return m_id;
+	}
+
+	uint64_t GetFlags() const
+	{
+		return m_flags;
 	}
 };
 
@@ -1010,7 +1019,7 @@ public:
 		printf("Pipeline created\n");
 
 		m_uniformsPool = std::make_shared<UBOPool<Uniforms>>(m_allocator);
-		m_uniformsPool->AdjustCapactity(100);
+		m_uniformsPool->AdjustCapactity(10000);
 	}
 
 	void PreRender(RenderContext& renderContext) override
@@ -1100,17 +1109,20 @@ public:
 		m_renderer = std::make_shared<TestNodesRenderer>(m_allocator, m_device, m_renderPass);
 		m_renderer->Init();
 
-		auto robot1 = std::make_shared<CubeRobot>(m_allocator, glm::vec3(0, 0, 0), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), "texture.jpg");
-		AddChild(robot1);
+		const int32_t CUBE_SIZE_HALF = 2;
+		const float DISTANCE = 40.0f;
 
-		auto robot2 = std::make_shared<CubeRobot>(m_allocator, glm::vec3(40, 0, 0), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), "texture.jpg");
-		AddChild(robot2);
-
-		auto robot3 = std::make_shared<CubeRobot>(m_allocator, glm::vec3(-40, 0, 0), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), "texture.jpg");
-		AddChild(robot3);
-
-		auto robot4 = std::make_shared<CubeRobot>(m_allocator, glm::vec3(0, 0, 40), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), "texture.jpg");
-		AddChild(robot4);
+		for (int32_t i = -CUBE_SIZE_HALF; i < CUBE_SIZE_HALF; i++)
+		{
+			for (int32_t j = -CUBE_SIZE_HALF; j < CUBE_SIZE_HALF; j++)
+			{
+				for (int32_t k = -CUBE_SIZE_HALF; k < CUBE_SIZE_HALF; k++)
+				{
+					auto robot = std::make_shared<CubeRobot>(m_allocator, glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), "texture.jpg");
+					AddChild(robot);
+				}
+			}
+		}
 
 		for (auto child : m_children)
 		{
