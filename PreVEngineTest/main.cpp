@@ -49,6 +49,33 @@ public:
 	{
 		return MathUtil::CreateTransformationMatrix(position, orientation, glm::vec3(scale));
 	}
+
+	static glm::vec3 GetForwardVector(const glm::quat& q)
+	{
+		glm::vec3 v;
+		v.x = 2 * (q.x * q.z + q.w * q.y);
+		v.y = 2 * (q.y * q.z - q.w * q.x);
+		v.z = 1 - 2 * (q.x * q.x + q.y * q.y);
+		return v;
+	}
+
+	static glm::vec3 GetUpVector(const glm::quat& q)
+	{
+		glm::vec3 v;
+		v.x = 2 * (q.x * q.y - q.w * q.z);
+		v.y = 1 - 2 * (q.x * q.x + q.z * q.z);
+		v.z = 2 * (q.y * q.z + q.w * q.x);
+		return v;
+	}
+
+	static glm::vec3 GetLeftVector(const glm::quat& q)
+	{
+		glm::vec3 v;
+		v.x = 1 - 2 * (q.y * q.y + q.z * q.z);
+		v.y = 2 * (q.x * q.y + q.w * q.z);
+		v.z = 2 * (q.x * q.z - q.w * q.y);
+		return v;
+	}
 };
 
 class IDGenerator final : public Singleton<IDGenerator>
@@ -63,7 +90,7 @@ private:
 
 private:
 	IDGenerator() = default;
-	
+
 public:
 	~IDGenerator() = default;
 
@@ -1058,7 +1085,7 @@ public:
 			VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
 			VkBuffer vertexBuffers[] = { *model->vertexBuffer };
 			VkDeviceSize offsets[] = { 0 };
-			
+
 			vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
 			vkCmdBindIndexBuffer(renderContext.commandBuffer, *model->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 			vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetPipelineLayout(), 0, 1, &descriptorSet, 0, nullptr);
@@ -1109,14 +1136,14 @@ public:
 		m_renderer = std::make_shared<TestNodesRenderer>(m_allocator, m_device, m_renderPass);
 		m_renderer->Init();
 
-		const int32_t CUBE_SIZE_HALF = 2;
+		const int32_t CUBE_SIZE_HALF = 1;
 		const float DISTANCE = 40.0f;
 
-		for (int32_t i = -CUBE_SIZE_HALF; i < CUBE_SIZE_HALF; i++)
+		for (int32_t i = -CUBE_SIZE_HALF; i <= CUBE_SIZE_HALF; i++)
 		{
-			for (int32_t j = -CUBE_SIZE_HALF; j < CUBE_SIZE_HALF; j++)
+			for (int32_t j = -CUBE_SIZE_HALF; j <= CUBE_SIZE_HALF; j++)
 			{
-				for (int32_t k = -CUBE_SIZE_HALF; k < CUBE_SIZE_HALF; k++)
+				for (int32_t k = -CUBE_SIZE_HALF; k <= CUBE_SIZE_HALF; k++)
 				{
 					auto robot = std::make_shared<CubeRobot>(m_allocator, glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), "texture.jpg");
 					AddChild(robot);
@@ -1189,7 +1216,6 @@ protected:
 	{
 	}
 };
-
 
 int main(int argc, char *argv[])
 {
