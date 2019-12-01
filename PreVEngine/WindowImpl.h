@@ -297,6 +297,10 @@ namespace PreVEngine
 
 		WindowShape m_shape;
 
+		bool m_mouseLocked;
+
+		bool m_mouseCursorVisible;
+
 	protected:
 		Event OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType btn);  // Mouse event
 
@@ -334,6 +338,12 @@ namespace PreVEngine
 
 		const WindowShape& GetShape() const;
 
+		bool IsMouseLocked() const;
+
+		void SetMouseLocked(bool locked);
+
+		bool IsMouseCursorVisible() const;
+
 	public:
 		virtual void SetTextInput(bool enabled); // Shows the Android soft-keyboard. //TODO: Enable OnTextEvent?
 
@@ -353,6 +363,8 @@ namespace PreVEngine
 		virtual void SetPosition(uint32_t x, uint32_t y) = 0;
 
 		virtual void SetSize(uint32_t w, uint32_t h) = 0;
+
+		virtual void SetMouseCursorVisible(bool visible) = 0;
 	};
 	//==============================================================
 }

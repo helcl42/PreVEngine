@@ -48,6 +48,10 @@ namespace PreVEngine
 		{
 		}
 
+		void SetMouseCursorVisible(bool visible)
+		{
+		}
+
 		bool CanPresent(VkPhysicalDevice gpu, uint32_t queue_family) const
 		{
 			return true;

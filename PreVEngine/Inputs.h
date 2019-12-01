@@ -45,6 +45,10 @@ namespace PreVEngine
 
 		glm::vec2 m_mousePosition{ 0, 0 };
 
+		bool m_locked = false;
+
+		bool m_cursorVisible = true;
+
 	public:
 		MouseInputComponent() = default;
 
@@ -121,6 +125,38 @@ namespace PreVEngine
 			std::lock_guard<std::mutex> lock(m_mutex);
 
 			return m_pressedButtons.find(button) != m_pressedButtons.cend();
+		}
+
+		bool IsLocked() const
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+
+			return m_locked;
+		}
+
+		void SetLocked(bool locked)
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+
+			m_locked = locked;
+
+			EventChannel::Broadcast(MouseLockRequest{ locked });
+		}
+
+		bool IsCursorVisible() const
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+
+			return m_cursorVisible;
+		}
+
+		void SetCursorVisible(bool visible)
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+
+			m_cursorVisible = visible;
+
+			EventChannel::Broadcast(MouseCursorVisibilityRequest{ visible });
 		}
 
 	public:
@@ -518,6 +554,16 @@ namespace PreVEngine
 			return m_mouseInputComponent.IsButtonPressed(button);
 		}
 
+		bool IsMouseLocked() const
+		{
+			return m_mouseInputComponent.IsLocked();
+		}
+
+		void SetMouseLocked(bool locked)
+		{
+			m_mouseInputComponent.SetLocked(locked);
+		}
+
 		std::map<uint8_t, Touch> GetTouches() const
 		{
 			return m_touchInuptComponent.GetTouches();
@@ -526,6 +572,16 @@ namespace PreVEngine
 		bool IsPointerTouched(const uint8_t pointerId) const
 		{
 			return m_touchInuptComponent.IsPointerTouched(pointerId);
+		}
+
+		bool IsMouseCursorVisible() const
+		{
+			return m_mouseInputComponent.IsCursorVisible();
+		}
+
+		void SetMouseCursorVisible(bool visible)
+		{
+			m_mouseInputComponent.SetCursorVisible(visible);
 		}
 	};
 

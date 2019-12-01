@@ -46,6 +46,10 @@ namespace PreVEngine
 
 		bool HasFocus() const;
 
+		bool IsMouseLocked() const;
+
+		bool IsMouseCursorVisible() const;
+
 	public:
 		void SetTitle(const char* title);
 
@@ -54,6 +58,10 @@ namespace PreVEngine
 		void SetSize(const Size& size);
 
 		void ShowKeyboard(bool enabled);
+
+		void SetMouseLocked(bool locked);
+
+		void SetMouseCursorVisible(bool visible);
 
 		void Close();
 
@@ -64,11 +72,11 @@ namespace PreVEngine
 
 	public:
 		virtual void OnInitEvent() = 0;
-		
+
 		virtual void OnCloseEvent() = 0;
-		
+
 		virtual void OnResizeEvent(uint16_t width, uint16_t height) = 0;
-		
+
 		virtual void OnMoveEvent(int16_t x, int16_t y) = 0;
 
 		virtual void OnFocusEvent(bool hasFocus) = 0;
@@ -86,6 +94,11 @@ namespace PreVEngine
 
 	class Window : public AbstractWindow
 	{
+	private:
+		EventHandler<Window, MouseLockRequest> m_mouseLockHandler{ *this };
+
+		EventHandler<Window, MouseCursorVisibilityRequest> m_mouseCursorVisibilityHandler{ *this };
+
 	public:
 		Window(const char* title)
 			: AbstractWindow(title)
@@ -146,6 +159,17 @@ namespace PreVEngine
 		virtual void OnTextEvent(const char *str) override
 		{
 			EventChannel::Broadcast(TextEvent{ str });
+		}
+
+	public:
+		void operator() (const MouseLockRequest& mouseLock)
+		{
+			SetMouseLocked(mouseLock.lock);
+		}
+
+		void operator() (const MouseCursorVisibilityRequest& cursorVisibility)
+		{
+			SetMouseCursorVisible(cursorVisibility.visible);
 		}
 	};
 

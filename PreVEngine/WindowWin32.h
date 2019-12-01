@@ -45,6 +45,8 @@ namespace PreVEngine
 
 		void SetSize(uint32_t w, uint32_t h);
 
+		void SetMouseCursorVisible(bool visible);
+
 		void CreateSurface(VkInstance instance);
 
 		void GetDesktopResolution(uint32_t& horizontal, uint32_t& vertical) const;
@@ -226,6 +228,20 @@ namespace PreVEngine
 		}
 	}
 
+	void WindowWin32::SetMouseCursorVisible(bool visible)
+	{
+		m_mouseCursorVisible = visible;
+
+		if (visible)
+		{
+			ShowCursor(true);
+		}
+		else
+		{
+			while (ShowCursor(false) >= 0);
+		}
+	}
+
 	void WindowWin32::CreateSurface(VkInstance instance)
 	{
 		if (m_vkSurface) return;
@@ -269,6 +285,20 @@ namespace PreVEngine
 			TranslateMessage(&msg);
 			int16_t x = GET_X_LPARAM(msg.lParam);
 			int16_t y = GET_Y_LPARAM(msg.lParam);
+
+			if (m_hasFocus && m_mouseLocked)
+			{
+				uint16_t widhtHalf = m_shape.width / 2;
+				uint16_t heightHalf = m_shape.height / 2;
+
+				POINT pt;
+				pt.x = widhtHalf;
+				pt.y = heightHalf;
+				ClientToScreen(m_hWnd, &pt);
+				SetCursorPos(pt.x, pt.y);
+				x -= widhtHalf;
+				y -= heightHalf;
+			}
 
 			//--Convert Shift / Ctrl / Alt key messages to LeftShift / RightShift / LeftCtrl / RightCtrl / LeftAlt / RightAlt--
 			if (msg.message == WM_KEYDOWN || msg.message == WM_KEYUP)

@@ -21,6 +21,10 @@ namespace PreVEngine
 
 		virtual bool IsMouseButtonPressed(const ButtonType btn) const = 0;
 
+		virtual bool IsMouseLocked() const = 0;
+
+		virtual bool IsMouseCursorVisible() const = 0;
+
 		virtual Position GetMousePosition() const = 0;
 
 		virtual bool HasFocus() const = 0;
@@ -32,6 +36,10 @@ namespace PreVEngine
 		virtual void SetSize(const Size& size) = 0;
 
 		virtual void ShowKeyboard(bool enabled) = 0;
+
+		virtual void SetMouseLocked(bool locked) = 0;
+
+		virtual void SetMouseCursorVisible(bool visible) = 0;
 
 		virtual void Close() = 0;
 

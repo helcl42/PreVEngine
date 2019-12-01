@@ -12,6 +12,7 @@
 #include <Image.h>
 #include <Shader.h>
 #include <Events.h>
+#include <Inputs.h>
 #include <Utils.h>
 
 #include "Pipeline.h"
@@ -50,32 +51,47 @@ public:
 		return MathUtil::CreateTransformationMatrix(position, orientation, glm::vec3(scale));
 	}
 
-	static glm::vec3 GetForwardVector(const glm::quat& q)
-	{
-		glm::vec3 v;
-		v.x = 2 * (q.x * q.z + q.w * q.y);
-		v.y = 2 * (q.y * q.z - q.w * q.x);
-		v.z = 1 - 2 * (q.x * q.x + q.y * q.y);
-		return v;
-	}
-
 	static glm::vec3 GetUpVector(const glm::quat& q)
 	{
-		glm::vec3 v;
-		v.x = 2 * (q.x * q.y - q.w * q.z);
-		v.y = 1 - 2 * (q.x * q.x + q.z * q.z);
-		v.z = 2 * (q.y * q.z + q.w * q.x);
-		return v;
+		return glm::normalize(q * glm::vec3(0.0f, 1.0f, 0.0f));
 	}
 
-	static glm::vec3 GetLeftVector(const glm::quat& q)
+	static glm::vec3 GetRightVector(const glm::quat& q)
 	{
-		glm::vec3 v;
-		v.x = 1 - 2 * (q.y * q.y + q.z * q.z);
-		v.y = 2 * (q.x * q.y + q.w * q.z);
-		v.z = 2 * (q.x * q.z - q.w * q.y);
-		return v;
+		return glm::normalize(q * glm::vec3(1.0f, 0.0f, 0.0f));
 	}
+
+	static glm::vec3 GetForwardVector(const glm::quat& q)
+	{
+		return glm::normalize(q * glm::vec3(0.0f, 0.0f, 1.0f));
+	}
+
+	//static glm::vec3 GetForwardVector(const glm::quat& q)
+	//{
+	//	glm::vec3 v;
+	//	v.x = 2 * (q.x * q.z + q.w * q.y);
+	//	v.y = 2 * (q.y * q.z - q.w * q.x);
+	//	v.z = 1 - 2 * (q.x * q.x + q.y * q.y);
+	//	return v;
+	//}
+
+	//static glm::vec3 GetUpVector(const glm::quat& q)
+	//{
+	//	glm::vec3 v;
+	//	v.x = 2 * (q.x * q.y - q.w * q.z);
+	//	v.y = 1 - 2 * (q.x * q.x + q.z * q.z);
+	//	v.z = 2 * (q.y * q.z + q.w * q.x);
+	//	return v;
+	//}
+
+	//static glm::vec3 GetLeftVector(const glm::quat& q)
+	//{
+	//	glm::vec3 v;
+	//	v.x = 1 - 2 * (q.y * q.y + q.z * q.z);
+	//	v.y = 2 * (q.x * q.y + q.w * q.z);
+	//	v.z = 2 * (q.x * q.z - q.w * q.y);
+	//	return v;
+	//}
 };
 
 class IDGenerator final : public Singleton<IDGenerator>
@@ -835,9 +851,9 @@ private:
 
 	EventHandler<CubeRobot, TouchEvent> m_touchEvent{ *this };
 
-	glm::vec2 d{ 0.1f, 0.1f };
+	glm::vec2 m_angularVelocity{ 0.1f, 0.1f };
 
-	glm::vec2 m{ 0.0f, 0.0f };
+	glm::vec2 m_prevMousePosition{ 0.0f, 0.0f };
 
 public:
 	CubeRobot(std::shared_ptr<Allocator>& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
@@ -874,8 +890,8 @@ public:
 	void Update(float deltaTime) override
 	{
 		auto bodyTransform = m_body->GetTransform();
-		bodyTransform = glm::rotate(bodyTransform, glm::radians(d.x), glm::vec3(1.0f, 0.0f, 0.0f));
-		bodyTransform = glm::rotate(bodyTransform, glm::radians(d.y), glm::vec3(0.0f, 1.0f, 0.0f));
+		bodyTransform = glm::rotate(bodyTransform, glm::radians(m_angularVelocity.x), glm::vec3(1.0f, 0.0f, 0.0f));
+		bodyTransform = glm::rotate(bodyTransform, glm::radians(m_angularVelocity.y), glm::vec3(0.0f, 1.0f, 0.0f));
 		m_body->SetTransform(bodyTransform);
 
 		auto headTransform = m_head->GetTransform();
@@ -902,44 +918,44 @@ public:
 		{
 			if (keyEvent.keyCode == KeyCode::KEY_Left)
 			{
-				d.y -= 0.1f;
+				m_angularVelocity.y -= 0.1f;
 			}
 
 			if (keyEvent.keyCode == KeyCode::KEY_Right)
 			{
-				d.y += 0.1f;
+				m_angularVelocity.y += 0.1f;
 			}
 
 			if (keyEvent.keyCode == KeyCode::KEY_Up)
 			{
-				d.x += 0.1f;
+				m_angularVelocity.x += 0.1f;
 			}
 
 			if (keyEvent.keyCode == KeyCode::KEY_Down)
 			{
-				d.x -= 0.1f;
+				m_angularVelocity.x -= 0.1f;
 			}
 		}
 	}
 
 	void operator() (const MouseEvent& mouseEvent)
 	{
-		if (mouseEvent.action == MouseActionType::MOVE && mouseEvent.button == MouseButtonType::LEFT)
+		if (mouseEvent.action == MouseActionType::MOVE && mouseEvent.button == MouseButtonType::RIGHT)
 		{
-			d = glm::vec2(mouseEvent.position.x - m.x, m.y - mouseEvent.position.y);
+			m_angularVelocity = glm::vec2(mouseEvent.position.x - m_prevMousePosition.x, m_prevMousePosition.y - mouseEvent.position.y);
 		}
 
-		m = mouseEvent.position;
+		m_prevMousePosition = mouseEvent.position;
 	}
 
 	void operator() (const TouchEvent& touchEvent)
 	{
 		if (touchEvent.action == TouchActionType::MOVE)
 		{
-			d = glm::vec2(touchEvent.position.x - m.x, m.y - touchEvent.position.y);
+			m_angularVelocity = glm::vec2(touchEvent.position.x - m_prevMousePosition.x, m_prevMousePosition.y - touchEvent.position.y);
 		}
 
-		m = touchEvent.position;
+		m_prevMousePosition = touchEvent.position;
 	}
 };
 
@@ -1002,6 +1018,134 @@ public:
 	}
 };
 
+class FreeCamera : public AbstractSceneNode
+{
+private:
+	EventHandler<FreeCamera, MouseEvent> m_mouseHandler{ *this };
+
+	EventHandler<FreeCamera, KeyEvent> m_keyHandler{ *this };
+
+private:
+	InputsFacade m_inputFacade;
+
+private:
+	glm::vec3 m_position;
+
+	glm::quat m_orientation;
+
+	glm::mat4 m_viewMatrix;
+
+	glm::vec2 m_prevMousePosition;
+
+	float m_pitch;
+
+	float m_yaw;
+
+	const float m_sensitivity = 0.15f;
+
+	const float m_moveSpeed = 5.0f;
+
+	const glm::vec3 m_defaultUp{ 0.0f, 1.0f, 0.0f };
+
+public:
+	FreeCamera()
+	{
+		Reset();
+	}
+
+	virtual ~FreeCamera()
+	{
+	}
+
+public:
+	void Update(float deltaTime)
+	{
+		const glm::vec3 forward = MathUtil::GetForwardVector(m_orientation);
+		const glm::vec3 left = MathUtil::GetRightVector(m_orientation);
+
+		//std::cout << "Forward: " << forward.x << ", " << forward.y << ", " << forward.z << std::endl;
+
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_W)) m_position += forward * deltaTime * m_moveSpeed;
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_S)) m_position -= forward * deltaTime * m_moveSpeed;
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_A)) m_position += left * deltaTime * m_moveSpeed;
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_D)) m_position -= left * deltaTime * m_moveSpeed;
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_Q)) m_position -= m_defaultUp * deltaTime * m_moveSpeed;
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_E)) m_position += m_defaultUp * deltaTime * m_moveSpeed;
+
+		glm::mat4 viewMatrix = glm::lookAt(m_position, m_position + forward, m_defaultUp);
+
+		m_viewMatrix = viewMatrix;
+
+		glm::mat4 transform = glm::mat4(1.0f);
+		transform *= glm::mat4_cast(m_orientation);
+		transform = glm::translate(transform, -m_position);
+		SetTransform(transform);
+
+		AbstractSceneNode::Update(deltaTime);
+	}
+
+	const glm::mat4& LookAt() const
+	{
+		return m_viewMatrix;
+	}
+
+	void Reset()
+	{
+		std::cout << "Resseting camera.." << std::endl;
+
+		m_prevMousePosition = glm::vec2(0.0f, 0.0f);
+		m_position = glm::vec3(0.0f, 0.0f, 0.0f);
+		m_orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+		m_pitch = 0.0f;
+		m_yaw = 0.0f;
+		m_viewMatrix = glm::mat4(1.0f);
+	}
+
+public:
+	void operator() (const MouseEvent& mouseEvent)
+	{
+		if (mouseEvent.action == MouseActionType::MOVE && mouseEvent.button == MouseButtonType::LEFT)
+		{
+			const glm::vec2 positionDiff = mouseEvent.position;// -m_prevMousePosition;
+			const glm::vec2 angleInDegrees = positionDiff * m_sensitivity;
+			
+			const glm::vec3 left = MathUtil::GetRightVector(m_orientation);
+
+			m_pitch += angleInDegrees.y;
+			m_yaw += angleInDegrees.x;
+
+			const float PITCH_THRESHOLD = 80.0f;
+			//if (m_pitch > PITCH_THRESHOLD) m_pitch = PITCH_THRESHOLD;
+			//if (m_pitch < -PITCH_THRESHOLD) m_pitch = -PITCH_THRESHOLD;
+
+			//m_yaw = std::fmodf(m_yaw, 360.0f);
+			
+			m_orientation = glm::rotate(m_orientation, glm::radians(angleInDegrees.y), left);			
+			m_orientation = glm::rotate(m_orientation, glm::radians(angleInDegrees.x), m_defaultUp);
+
+			//std::cout << "Pitch: " << m_pitch << " Yaw: " << m_yaw << std::endl;
+		}
+
+		m_prevMousePosition = mouseEvent.position;
+	}
+
+	void operator() (const KeyEvent& keyEvent)
+	{
+		if (keyEvent.action == KeyActionType::PRESS)
+		{
+			if (keyEvent.keyCode == KeyCode::KEY_R)
+			{
+				Reset();
+			}
+			else if (keyEvent.keyCode == KeyCode::KEY_L)
+			{
+				m_inputFacade.SetMouseLocked(!m_inputFacade.IsMouseLocked());
+				m_inputFacade.SetMouseCursorVisible(!m_inputFacade.IsMouseCursorVisible());
+			}
+		}
+	}
+};
+
 class TestNodesRenderer : public IRenderer
 {
 private:
@@ -1018,9 +1162,11 @@ private:
 
 	std::shared_ptr<UBOPool<Uniforms>> m_uniformsPool;
 
+	std::shared_ptr<FreeCamera> m_freeCamera;
+
 public:
-	TestNodesRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass)
-		: m_device(dev), m_renderPass(renderPass), m_allocator(alloc)
+	TestNodesRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass, std::shared_ptr<FreeCamera> camera)
+		: m_device(dev), m_renderPass(renderPass), m_allocator(alloc), m_freeCamera(camera)
 	{
 	}
 
@@ -1062,38 +1208,41 @@ public:
 	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode> abstractNode) override
 	{
 		auto node = std::dynamic_pointer_cast<AbstractCubeRobotSceneNode>(abstractNode); // TODO avoid casting here??
-
-		auto model = node->GetModel();
-		if (model)
+		if (node)
 		{
-			const float aspectRatio = static_cast<float>(renderContext.fullExtent.width) / static_cast<float>(renderContext.fullExtent.height);
+			auto model = node->GetModel();
+			if (model)
+			{
+				const float aspectRatio = static_cast<float>(renderContext.fullExtent.width) / static_cast<float>(renderContext.fullExtent.height);
 
-			auto ubo = m_uniformsPool->GetNext();
+				auto ubo = m_uniformsPool->GetNext();
 
-			Uniforms uniforms;
-			uniforms.proj = glm::perspective(glm::radians(70.0f), aspectRatio, 0.01f, 200.0f);
-			uniforms.proj[1][1] *= -1; // invert Y in clip coordinates
+				Uniforms uniforms;
+				uniforms.proj = glm::perspective(glm::radians(70.0f), aspectRatio, 0.01f, 200.0f);
+				uniforms.proj[1][1] *= -1; // invert Y in clip coordinates
 
-			uniforms.view = glm::lookAt(glm::vec3(0.0f, 80.0f, 60.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+				//uniforms.view = glm::lookAt(glm::vec3(0.0f, 80.0f, 60.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+				uniforms.view = m_freeCamera->LookAt();
 
-			uniforms.model = node->GetWorldTransform() * glm::scale(glm::mat4(1.0f), node->GetScaler());
-			ubo->Update(&uniforms);
+				uniforms.model = node->GetWorldTransform() * glm::scale(glm::mat4(1.0f), node->GetScaler());
+				ubo->Update(&uniforms);
 
-			m_shader->Bind("texSampler", *model->imageBuffer);
-			m_shader->Bind("ubo", *ubo);
+				m_shader->Bind("texSampler", *model->imageBuffer);
+				m_shader->Bind("ubo", *ubo);
 
-			VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-			VkBuffer vertexBuffers[] = { *model->vertexBuffer };
-			VkDeviceSize offsets[] = { 0 };
+				VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+				VkBuffer vertexBuffers[] = { *model->vertexBuffer };
+				VkDeviceSize offsets[] = { 0 };
 
-			vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-			vkCmdBindIndexBuffer(renderContext.commandBuffer, *model->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
-			vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetPipelineLayout(), 0, 1, &descriptorSet, 0, nullptr);
+				vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+				vkCmdBindIndexBuffer(renderContext.commandBuffer, *model->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+				vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetPipelineLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-			vkCmdDrawIndexed(renderContext.commandBuffer, model->indexBuffer->GetCount(), 1, 0, 0, 0);
+				vkCmdDrawIndexed(renderContext.commandBuffer, model->indexBuffer->GetCount(), 1, 0, 0, 0);
+			}
 		}
 
-		for (auto child : node->GetChildren())
+		for (auto child : abstractNode->GetChildren())
 		{
 			Render(renderContext, child);
 		}
@@ -1120,6 +1269,8 @@ private:
 private:
 	std::shared_ptr<IRenderer> m_renderer;
 
+	std::shared_ptr<FreeCamera> m_freeCamera;
+
 public:
 	RootSceneNode(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass)
 		: AbstractSceneNode(), m_device(dev), m_renderPass(renderPass), m_allocator(alloc)
@@ -1133,7 +1284,10 @@ public:
 public:
 	void Init() override
 	{
-		m_renderer = std::make_shared<TestNodesRenderer>(m_allocator, m_device, m_renderPass);
+		m_freeCamera = std::make_shared<FreeCamera>();
+		AddChild(m_freeCamera);
+
+		m_renderer = std::make_shared<TestNodesRenderer>(m_allocator, m_device, m_renderPass, m_freeCamera);
 		m_renderer->Init();
 
 		const int32_t CUBE_SIZE_HALF = 1;

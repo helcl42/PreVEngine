@@ -100,6 +100,16 @@ namespace PreVEngine
 		return m_windowImpl->HasFocus();
 	}
 
+	bool AbstractWindow::IsMouseLocked() const
+	{
+		return m_windowImpl->IsMouseLocked();
+	}
+
+	bool AbstractWindow::IsMouseCursorVisible() const
+	{
+		return m_windowImpl->IsMouseCursorVisible();
+	}
+
 	void AbstractWindow::SetTitle(const char* title)
 	{
 		m_windowImpl->SetTitle(title);
@@ -118,6 +128,16 @@ namespace PreVEngine
 	void AbstractWindow::ShowKeyboard(bool enabled) // On Android, show the soft-keyboard.
 	{
 		m_windowImpl->SetTextInput(enabled);
+	}
+
+	void AbstractWindow::SetMouseLocked(bool locked)
+	{
+		m_windowImpl->SetMouseLocked(locked);
+	}
+
+	void AbstractWindow::SetMouseCursorVisible(bool visible)
+	{
+		m_windowImpl->SetMouseCursorVisible(visible);
 	}
 
 	void AbstractWindow::Close()

@@ -3,7 +3,7 @@
 namespace PreVEngine
 {
 	WindowImpl::WindowImpl()
-		: m_isRunning(false), m_hasTextInput(false), m_hasFocus(false)
+		: m_isRunning(false), m_hasTextInput(false), m_hasFocus(false), m_mouseLocked(false), m_mouseCursorVisible(true)
 	{
 	}
 
@@ -144,6 +144,20 @@ namespace PreVEngine
 		return m_hasFocus;
 	}
 
+	bool WindowImpl::IsMouseLocked() const
+	{
+		return m_mouseLocked;
+	}
+
+	void WindowImpl::SetMouseLocked(bool locked)
+	{
+		m_mouseLocked = locked;
+	}
+
+	bool WindowImpl::IsMouseCursorVisible() const
+	{
+		return m_mouseCursorVisible;
+	}
 
 	Surface::Surface()
 	{

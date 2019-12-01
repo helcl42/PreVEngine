@@ -96,6 +96,16 @@ namespace PreVEngine
 
 		glm::vec2 position;
 	};
+
+	struct MouseLockRequest
+	{
+		bool lock;
+	};
+
+	struct MouseCursorVisibilityRequest
+	{
+		bool visible;
+	};
 	//////////////////////////////////////
 
 

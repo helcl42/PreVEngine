@@ -108,6 +108,8 @@ namespace PreVEngine
 
 		void SetSize(uint32_t w, uint32_t h);
 
+		void SetMouseCursorVisible(bool visible);
+
 		void CreateSurface(VkInstance instance);
 
 		bool InitTouch();                                        // Returns false if no touch-device was found.
@@ -255,6 +257,13 @@ namespace PreVEngine
 		xcb_flush(m_xcbConnection);
 	}
 
+	void WindowXcb::SetMouseCursorVisible(bool visible)
+	{
+		m_mouseCursorVisible = visible;
+
+		// TODO
+	}
+
 	void WindowXcb::CreateSurface(VkInstance instance)
 	{
 		if (m_vkSurface) return;
@@ -337,6 +346,18 @@ namespace PreVEngine
 		xcb_button_press_event_t& e = *(xcb_button_press_event_t*)x_event;  // xcb_motion_notify_event_t
 		int16_t mx = e.event_x;
 		int16_t my = e.event_y;
+
+		if (m_hasFocus && m_mouseLocked)
+		{
+			uint16_t widhtHalf = m_shape.width / 2;
+			uint16_t heightHalf = m_shape.height / 2;
+
+			// TODO set mouse position here...
+
+			mx -= widhtHalf;
+			my -= heightHalf;
+		}
+
 		uint8_t key = e.detail;
 		ButtonType btn = e.detail < 4 ? (ButtonType)e.detail : ButtonType::NONE;
 		ButtonType bestBtn = ButtonType(IsMouseButtonPressed(ButtonType::LEFT) ? 1 : IsMouseButtonPressed(ButtonType::MIDDLE) ? 2 : IsMouseButtonPressed(ButtonType::RIGHT) ? 3 : 0);  // If multiple buttons pressed, pick left one.
