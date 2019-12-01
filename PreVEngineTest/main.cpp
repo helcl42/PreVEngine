@@ -245,7 +245,7 @@ public:
 		m_children.emplace_back(child);
 	}
 
-	void RemoveChild(std::shared_ptr<ISceneNode> child)
+	void RemoveChild(std::shared_ptr<ISceneNode> child) override
 	{
 		child->SetParent(nullptr);
 
@@ -303,7 +303,7 @@ public:
 		return m_id;
 	}
 
-	uint64_t GetFlags() const
+	uint64_t GetFlags() const override
 	{
 		return m_flags;
 	}

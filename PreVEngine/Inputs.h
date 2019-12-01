@@ -54,13 +54,13 @@ namespace PreVEngine
 
 		~MouseInputComponent() = default;
 
-		MouseInputComponent(const MouseInputComponent& other) = default;
+		MouseInputComponent(const MouseInputComponent& other) = delete;
 
-		MouseInputComponent& operator=(const MouseInputComponent& other) = default;
+		MouseInputComponent& operator=(const MouseInputComponent& other) = delete;
 
-		MouseInputComponent(MouseInputComponent&& other) = default;
+		MouseInputComponent(MouseInputComponent&& other) = delete;
 
-		MouseInputComponent& operator=(MouseInputComponent&& other) = default;
+		MouseInputComponent& operator=(MouseInputComponent&& other) = delete;
 
 	public:
 		bool RegisterMouseActionListener(IMouseActionListener& listener)
@@ -233,13 +233,13 @@ namespace PreVEngine
 
 		~KeyboardInputComponnet() = default;
 
-		KeyboardInputComponnet(const KeyboardInputComponnet& other) = default;
+		KeyboardInputComponnet(const KeyboardInputComponnet& other) = delete;
 
-		KeyboardInputComponnet& operator=(const KeyboardInputComponnet& other) = default;
+		KeyboardInputComponnet& operator=(const KeyboardInputComponnet& other) = delete;
 
-		KeyboardInputComponnet(KeyboardInputComponnet&& other) = default;
+		KeyboardInputComponnet(KeyboardInputComponnet&& other) = delete;
 
-		KeyboardInputComponnet& operator=(KeyboardInputComponnet&& other) = default;
+		KeyboardInputComponnet& operator=(KeyboardInputComponnet&& other) = delete;
 
 	public:
 		bool RegisterKeyboardActionListener(IKeyboardActionListener& listener)
@@ -364,13 +364,13 @@ namespace PreVEngine
 
 		~TouchInputComponent() = default;
 
-		TouchInputComponent(const TouchInputComponent& other) = default;
+		TouchInputComponent(const TouchInputComponent& other) = delete;
 
-		TouchInputComponent& operator=(const TouchInputComponent& other) = default;
+		TouchInputComponent& operator=(const TouchInputComponent& other) = delete;
 
-		TouchInputComponent(TouchInputComponent&& other) = default;
+		TouchInputComponent(TouchInputComponent&& other) = delete;
 
-		TouchInputComponent& operator=(TouchInputComponent&& other) = default;
+		TouchInputComponent& operator=(TouchInputComponent&& other) = delete;
 
 	public:
 		bool RegisterTouchActionListener(ITouchActionListener& listener)
@@ -444,13 +444,13 @@ namespace PreVEngine
 
 		~InputsFacade() = default;
 
-		InputsFacade(const InputsFacade& other) = default;
+		InputsFacade(const InputsFacade& other) = delete;
 
-		InputsFacade& operator=(const InputsFacade& other) = default;
+		InputsFacade& operator=(const InputsFacade& other) = delete;
 
-		InputsFacade(InputsFacade&& other) = default;
+		InputsFacade(InputsFacade&& other) = delete;
 
-		InputsFacade& operator=(InputsFacade&& other) = default;
+		InputsFacade& operator=(InputsFacade&& other) = delete;
 
 	public:
 		bool RegisterKeyboardActionListener(IKeyboardActionListener& listener)
