@@ -8,6 +8,7 @@
 //#include <xcb/xcb.h>            // XCB only
 //#include <X11/Xlib.h>           // XLib only
 #include <X11/Xlib-xcb.h>         // Xlib + XCB
+#include <X11/cursorfont.h>
 #include <xkbcommon/xkbcommon.h>  // Keyboard
 //-------------------------------------------------
 
@@ -261,7 +262,24 @@ namespace PreVEngine
 	{
 		m_mouseCursorVisible = visible;
 
-		// TODO
+		if(visible)
+		{
+			Cursor cursor = XCreateFontCursor(m_display, XC_left_ptr);
+			XDefineCursor(m_display, m_xcbWindow, cursor);
+			XFreeCursor(m_display, cursor);
+		}
+		else
+		{
+			XColor black;
+			black.red = black.green = black.blue = 0;
+			static char noData[] = { 0,0,0,0,0,0,0,0 };
+
+			Pixmap bitmapNoData = XCreateBitmapFromData(m_display, m_xcbWindow, noData, 8, 8);
+			Cursor invisibleCursor = XCreatePixmapCursor(m_display, bitmapNoData, bitmapNoData, &black, &black, 0, 0);
+			XDefineCursor(m_display, m_xcbWindow, invisibleCursor);
+			XFreeCursor(m_display, invisibleCursor);
+			XFreePixmap(m_display, bitmapNoData);
+		}
 	}
 
 	void WindowXcb::CreateSurface(VkInstance instance)
@@ -349,12 +367,12 @@ namespace PreVEngine
 
 		if (m_hasFocus && m_mouseLocked)
 		{
-			uint16_t widhtHalf = m_shape.width / 2;
+			uint16_t widthHalf = m_shape.width / 2;
 			uint16_t heightHalf = m_shape.height / 2;
 
-			// TODO set mouse position here...
+			xcb_warp_pointer(m_xcbConnection, XCB_NONE, m_xcbWindow, 0, 0, 0, 0, widthHalf, heightHalf);
 
-			mx -= widhtHalf;
+			mx -= widthHalf;
 			my -= heightHalf;
 		}
 
