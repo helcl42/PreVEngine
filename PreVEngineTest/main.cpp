@@ -1059,9 +1059,9 @@ private:
 	InputsFacade m_inputFacade;
 
 private:
-	glm::vec3 m_position; // TODO is it duplicated field ??
+	glm::vec3 m_position;
 
-	glm::quat m_orientation;  // TODO is it duplicated field ??
+	glm::quat m_orientation;
 
 	const glm::vec3 m_upDirection{ 0.0f, 1.0f, 0.0f };
 
@@ -1071,11 +1071,13 @@ private:
 
 	glm::vec3 m_pitchYawRoll;
 
+	glm::vec3 m_pitchYawRollDelta;
+
 	glm::mat4 m_viewMatrix;
 
-	const float m_sensitivity = 0.04f;
+	const float m_sensitivity = 0.05f;
 
-	const float m_moveSpeed = 4.0f;
+	const float m_moveSpeed = 5.0f;
 
 
 public:
@@ -1088,34 +1090,78 @@ public:
 	{
 	}
 
-public:
-	void Update(float deltaTime)
+private:
+	float NormalizeUpTo2Phi(float val)
 	{
-		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_W)) m_position += m_forwardDirection * deltaTime * m_moveSpeed;
-		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_S)) m_position -= m_forwardDirection * deltaTime * m_moveSpeed;
-		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_A)) m_position -= m_rightDirection * deltaTime * m_moveSpeed;
-		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_D)) m_position += m_rightDirection * deltaTime * m_moveSpeed;
-		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_Q)) m_position -= m_upDirection * deltaTime * m_moveSpeed;
-		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_E)) m_position += m_upDirection * deltaTime * m_moveSpeed;
+		const float TWO_PHI_IN_DEGS = 360.0f;
+		if (val > TWO_PHI_IN_DEGS)
+		{
+			val -= TWO_PHI_IN_DEGS;
+		}
+		else if (val < -TWO_PHI_IN_DEGS)
+		{
+			val += TWO_PHI_IN_DEGS;
+		}
+		return val;
+	}
 
+	void UpdatePosition(float deltaTime)
+	{
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_W))
+		{
+			m_position += m_forwardDirection * deltaTime * m_moveSpeed;
+		}
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_S))
+		{
+			m_position -= m_forwardDirection * deltaTime * m_moveSpeed;
+		}
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_A))
+		{
+			m_position -= m_rightDirection * deltaTime * m_moveSpeed;
+		}
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_D))
+		{
+			m_position += m_rightDirection * deltaTime * m_moveSpeed;
+		}
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_Q))
+		{
+			m_position -= m_upDirection * deltaTime * m_moveSpeed;
+		}
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_E))
+		{
+			m_position += m_upDirection * deltaTime * m_moveSpeed;
+		}
+	}
+
+	void UpdateOrientation(float deltaTime)
+	{
 		//compute quaternion for pitch based on the camera pitch angle
-		glm::quat pitch_quat = glm::angleAxis(glm::radians(m_pitchYawRoll.x), m_rightDirection);
+		glm::quat pitchQuat = glm::angleAxis(glm::radians(m_pitchYawRollDelta.x), m_rightDirection);
+
 		//determine heading quaternion from the camera up vector and the heading angle
-		glm::quat heading_quat = glm::angleAxis(glm::radians(m_pitchYawRoll.y), m_upDirection);
+		glm::quat headingQuat = glm::angleAxis(glm::radians(m_pitchYawRollDelta.y), m_upDirection);
 
 		//add the two quaternions
-		glm::quat orientation = glm::normalize(pitch_quat * heading_quat);
-		//update the direction from the quaternion
-		m_forwardDirection = orientation * m_forwardDirection;	
+		glm::quat orientation = glm::normalize(pitchQuat * headingQuat);
 
+		// update forward direction from the quaternion
+		m_forwardDirection = orientation * m_forwardDirection;
+
+		// compute right direction from up and formward
 		m_rightDirection = glm::normalize(glm::cross(m_forwardDirection, m_upDirection));
 
 		// TODO should I use damping -> or compute precise movement??
-		m_pitchYawRoll *= 0.5f; // camera movement/orientation change damping
+		//m_pitchYawRollDelta *= 0.5f; // camera movement/orientation change damping
+		m_pitchYawRollDelta = glm::vec3(0.0f, 0.0f, 0.0f);
+	}
 
-		glm::mat4 viewMatrix = glm::lookAt(m_position, m_position + m_forwardDirection, m_upDirection);
+public:
+	void Update(float deltaTime)
+	{
+		UpdatePosition(deltaTime);
+		UpdateOrientation(deltaTime);
 
-		m_viewMatrix = viewMatrix;
+		m_viewMatrix = glm::lookAt(m_position, m_position + m_forwardDirection, m_upDirection);
 
 		glm::mat4 transform = glm::mat4(1.0f);
 		transform *= glm::mat4_cast(m_orientation);
@@ -1137,6 +1183,7 @@ public:
 		m_position = glm::vec3(0.0f, 0.0f, 0.0f);
 		m_orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 		m_pitchYawRoll = glm::vec3(0.0f, 0.0f, 0.0f);
+		m_pitchYawRollDelta = glm::vec3(0.0f, 0.0f, 0.0f);
 		m_viewMatrix = glm::mat4(1.0f);
 
 		m_forwardDirection = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -1145,24 +1192,22 @@ public:
 
 	void AddPitch(float amountInDegrees)
 	{
+		float newFinalPitch = m_pitchYawRoll.x + amountInDegrees;
+		if (newFinalPitch > 89.0f || newFinalPitch < -89.0f)
+		{
+			return;
+		}
+
+		m_pitchYawRollDelta.x += amountInDegrees;
 		m_pitchYawRoll.x += amountInDegrees;
-
-		//This controls how the heading is changed if the camera is pointed straight up or down The heading delta direction changes
-		if (m_pitchYawRoll.x > 90 && m_pitchYawRoll.x < 270 || (m_pitchYawRoll.x < -90 && m_pitchYawRoll.x > -270)) m_pitchYawRoll.x -= amountInDegrees;
-		else m_pitchYawRoll.x += amountInDegrees;
-
-		const float TWO_PHI_IN_DEGS = 360.0f;
-		if (m_pitchYawRoll.x > TWO_PHI_IN_DEGS) m_pitchYawRoll.x -= TWO_PHI_IN_DEGS;
-		else if (m_pitchYawRoll.x < -TWO_PHI_IN_DEGS) m_pitchYawRoll.x += TWO_PHI_IN_DEGS;
 	}
 
 	void AddYaw(float amountInDegrees)
 	{
+		m_pitchYawRollDelta.y += amountInDegrees;
 		m_pitchYawRoll.y += amountInDegrees;
 
-		const float TWO_PHI_IN_DEGS = 360.0f;
-		if (m_pitchYawRoll.y > TWO_PHI_IN_DEGS) m_pitchYawRoll.y -= TWO_PHI_IN_DEGS;
-		else if (m_pitchYawRoll.y < -TWO_PHI_IN_DEGS) m_pitchYawRoll.y += TWO_PHI_IN_DEGS;
+		m_pitchYawRollDelta.y = NormalizeUpTo2Phi(m_pitchYawRollDelta.y);
 	}
 
 public:
