@@ -1018,61 +1018,102 @@ public:
 	}
 };
 
-class FreeCamera : public AbstractSceneNode
+class ViewFrustum
 {
 private:
-	EventHandler<FreeCamera, MouseEvent> m_mouseHandler{ *this };
+	float m_fov;
 
-	EventHandler<FreeCamera, KeyEvent> m_keyHandler{ *this };
+	float m_nearClippingPlane;
+
+	float m_farClippingPlane;
+
+public:
+	ViewFrustum(float fov, float nCp, float fCp)
+		: m_fov(fov), m_nearClippingPlane(nCp), m_farClippingPlane(fCp)
+	{
+	}
+
+	~ViewFrustum()
+	{
+	}
+
+
+public:
+	glm::mat4 CreateProjectionMatrix(const uint32_t w, const uint32_t h)
+	{
+		glm::mat4 projectionMatrix = glm::perspective(m_fov, static_cast<float>(w) / static_cast<float>(h), m_nearClippingPlane, m_farClippingPlane);
+		projectionMatrix[1][1] *= -1; // invert Y in clip coordinates
+
+		return projectionMatrix;
+	}
+};
+
+class Camera : public AbstractSceneNode
+{
+private:
+	EventHandler<Camera, MouseEvent> m_mouseHandler{ *this };
+
+	EventHandler<Camera, KeyEvent> m_keyHandler{ *this };
 
 private:
 	InputsFacade m_inputFacade;
 
 private:
-	glm::vec3 m_position;
+	glm::vec3 m_position; // TODO is it duplicated field ??
 
-	glm::quat m_orientation;
+	glm::quat m_orientation;  // TODO is it duplicated field ??
+
+	const glm::vec3 m_upDirection{ 0.0f, 1.0f, 0.0f };
+
+	glm::vec3 m_forwardDirection;
+
+	glm::vec3 m_rightDirection;
+
+	glm::vec3 m_pitchYawRoll;
 
 	glm::mat4 m_viewMatrix;
 
-	glm::vec2 m_prevMousePosition;
+	const float m_sensitivity = 0.04f;
 
-	float m_pitch;
+	const float m_moveSpeed = 4.0f;
 
-	float m_yaw;
-
-	const float m_sensitivity = 0.15f;
-
-	const float m_moveSpeed = 5.0f;
-
-	const glm::vec3 m_defaultUp{ 0.0f, 1.0f, 0.0f };
 
 public:
-	FreeCamera()
+	Camera()
 	{
 		Reset();
 	}
 
-	virtual ~FreeCamera()
+	virtual ~Camera()
 	{
 	}
 
 public:
 	void Update(float deltaTime)
 	{
-		const glm::vec3 forward = MathUtil::GetForwardVector(m_orientation);
-		const glm::vec3 left = MathUtil::GetRightVector(m_orientation);
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_W)) m_position += m_forwardDirection * deltaTime * m_moveSpeed;
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_S)) m_position -= m_forwardDirection * deltaTime * m_moveSpeed;
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_A)) m_position -= m_rightDirection * deltaTime * m_moveSpeed;
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_D)) m_position += m_rightDirection * deltaTime * m_moveSpeed;
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_Q)) m_position -= m_upDirection * deltaTime * m_moveSpeed;
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_E)) m_position += m_upDirection * deltaTime * m_moveSpeed;
 
-		//std::cout << "Forward: " << forward.x << ", " << forward.y << ", " << forward.z << std::endl;
+		//compute quaternion for pitch based on the camera pitch angle
+		glm::quat pitch_quat = glm::angleAxis(glm::radians(m_pitchYawRoll.x), m_rightDirection);
+		//determine heading quaternion from the camera up vector and the heading angle
+		glm::quat heading_quat = glm::angleAxis(glm::radians(m_pitchYawRoll.y), m_upDirection);
 
-		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_W)) m_position += forward * deltaTime * m_moveSpeed;
-		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_S)) m_position -= forward * deltaTime * m_moveSpeed;
-		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_A)) m_position += left * deltaTime * m_moveSpeed;
-		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_D)) m_position -= left * deltaTime * m_moveSpeed;
-		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_Q)) m_position -= m_defaultUp * deltaTime * m_moveSpeed;
-		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_E)) m_position += m_defaultUp * deltaTime * m_moveSpeed;
+		//add the two quaternions
+		glm::quat orientation = glm::normalize(pitch_quat * heading_quat);
+		//update the direction from the quaternion
+		m_forwardDirection = orientation * m_forwardDirection;	
 
-		glm::mat4 viewMatrix = glm::lookAt(m_position, m_position + forward, m_defaultUp);
+		m_rightDirection = glm::normalize(glm::cross(m_forwardDirection, m_upDirection));
+
+		// TODO should I use damping -> or compute precise movement??
+		m_pitchYawRoll *= 0.5f; // camera movement/orientation change damping
+
+		glm::mat4 viewMatrix = glm::lookAt(m_position, m_position + m_forwardDirection, m_upDirection);
 
 		m_viewMatrix = viewMatrix;
 
@@ -1093,12 +1134,35 @@ public:
 	{
 		std::cout << "Resseting camera.." << std::endl;
 
-		m_prevMousePosition = glm::vec2(0.0f, 0.0f);
 		m_position = glm::vec3(0.0f, 0.0f, 0.0f);
 		m_orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-		m_pitch = 0.0f;
-		m_yaw = 0.0f;
+		m_pitchYawRoll = glm::vec3(0.0f, 0.0f, 0.0f);
 		m_viewMatrix = glm::mat4(1.0f);
+
+		m_forwardDirection = glm::vec3(0.0f, 0.0f, -1.0f);
+		m_rightDirection = glm::cross(m_forwardDirection, m_upDirection);
+	}
+
+	void AddPitch(float amountInDegrees)
+	{
+		m_pitchYawRoll.x += amountInDegrees;
+
+		//This controls how the heading is changed if the camera is pointed straight up or down The heading delta direction changes
+		if (m_pitchYawRoll.x > 90 && m_pitchYawRoll.x < 270 || (m_pitchYawRoll.x < -90 && m_pitchYawRoll.x > -270)) m_pitchYawRoll.x -= amountInDegrees;
+		else m_pitchYawRoll.x += amountInDegrees;
+
+		const float TWO_PHI_IN_DEGS = 360.0f;
+		if (m_pitchYawRoll.x > TWO_PHI_IN_DEGS) m_pitchYawRoll.x -= TWO_PHI_IN_DEGS;
+		else if (m_pitchYawRoll.x < -TWO_PHI_IN_DEGS) m_pitchYawRoll.x += TWO_PHI_IN_DEGS;
+	}
+
+	void AddYaw(float amountInDegrees)
+	{
+		m_pitchYawRoll.y += amountInDegrees;
+
+		const float TWO_PHI_IN_DEGS = 360.0f;
+		if (m_pitchYawRoll.y > TWO_PHI_IN_DEGS) m_pitchYawRoll.y -= TWO_PHI_IN_DEGS;
+		else if (m_pitchYawRoll.y < -TWO_PHI_IN_DEGS) m_pitchYawRoll.y += TWO_PHI_IN_DEGS;
 	}
 
 public:
@@ -1106,27 +1170,11 @@ public:
 	{
 		if (mouseEvent.action == MouseActionType::MOVE && mouseEvent.button == MouseButtonType::LEFT)
 		{
-			const glm::vec2 positionDiff = mouseEvent.position;// -m_prevMousePosition;
-			const glm::vec2 angleInDegrees = positionDiff * m_sensitivity;
-			
-			const glm::vec3 left = MathUtil::GetRightVector(m_orientation);
+			const glm::vec2 angleInDegrees = mouseEvent.position * m_sensitivity;
 
-			m_pitch += angleInDegrees.y;
-			m_yaw += angleInDegrees.x;
-
-			const float PITCH_THRESHOLD = 80.0f;
-			//if (m_pitch > PITCH_THRESHOLD) m_pitch = PITCH_THRESHOLD;
-			//if (m_pitch < -PITCH_THRESHOLD) m_pitch = -PITCH_THRESHOLD;
-
-			//m_yaw = std::fmodf(m_yaw, 360.0f);
-			
-			m_orientation = glm::rotate(m_orientation, glm::radians(angleInDegrees.y), left);			
-			m_orientation = glm::rotate(m_orientation, glm::radians(angleInDegrees.x), m_defaultUp);
-
-			//std::cout << "Pitch: " << m_pitch << " Yaw: " << m_yaw << std::endl;
+			AddPitch(angleInDegrees.y);
+			AddYaw(angleInDegrees.x);
 		}
-
-		m_prevMousePosition = mouseEvent.position;
 	}
 
 	void operator() (const KeyEvent& keyEvent)
@@ -1162,10 +1210,12 @@ private:
 
 	std::shared_ptr<UBOPool<Uniforms>> m_uniformsPool;
 
-	std::shared_ptr<FreeCamera> m_freeCamera;
+	std::shared_ptr<Camera> m_freeCamera;
+
+	ViewFrustum m_viewFrustum{ 70.0f, 0.01f, 200.0f };
 
 public:
-	TestNodesRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass, std::shared_ptr<FreeCamera> camera)
+	TestNodesRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass, std::shared_ptr<Camera> camera)
 		: m_device(dev), m_renderPass(renderPass), m_allocator(alloc), m_freeCamera(camera)
 	{
 	}
@@ -1213,13 +1263,10 @@ public:
 			auto model = node->GetModel();
 			if (model)
 			{
-				const float aspectRatio = static_cast<float>(renderContext.fullExtent.width) / static_cast<float>(renderContext.fullExtent.height);
-
 				auto ubo = m_uniformsPool->GetNext();
 
 				Uniforms uniforms;
-				uniforms.proj = glm::perspective(glm::radians(70.0f), aspectRatio, 0.01f, 200.0f);
-				uniforms.proj[1][1] *= -1; // invert Y in clip coordinates
+				uniforms.proj = m_viewFrustum.CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
 
 				//uniforms.view = glm::lookAt(glm::vec3(0.0f, 80.0f, 60.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 				uniforms.view = m_freeCamera->LookAt();
@@ -1269,7 +1316,7 @@ private:
 private:
 	std::shared_ptr<IRenderer> m_renderer;
 
-	std::shared_ptr<FreeCamera> m_freeCamera;
+	std::shared_ptr<Camera> m_freeCamera;
 
 public:
 	RootSceneNode(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass)
@@ -1284,7 +1331,7 @@ public:
 public:
 	void Init() override
 	{
-		m_freeCamera = std::make_shared<FreeCamera>();
+		m_freeCamera = std::make_shared<Camera>();
 		AddChild(m_freeCamera);
 
 		m_renderer = std::make_shared<TestNodesRenderer>(m_allocator, m_device, m_renderPass, m_freeCamera);
