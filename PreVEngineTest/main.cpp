@@ -1061,8 +1061,6 @@ private:
 private:
 	glm::vec3 m_position;
 
-	glm::quat m_orientation;
-
 	const glm::vec3 m_upDirection{ 0.0f, 1.0f, 0.0f };
 
 	glm::vec3 m_forwardDirection;
@@ -1078,7 +1076,6 @@ private:
 	const float m_sensitivity = 0.05f;
 
 	const float m_moveSpeed = 5.0f;
-
 
 public:
 	Camera()
@@ -1145,13 +1142,12 @@ private:
 		glm::quat orientation = glm::normalize(pitchQuat * headingQuat);
 
 		// update forward direction from the quaternion
-		m_forwardDirection = orientation * m_forwardDirection;
+		m_forwardDirection = glm::normalize(orientation * m_forwardDirection);
 
 		// compute right direction from up and formward
 		m_rightDirection = glm::normalize(glm::cross(m_forwardDirection, m_upDirection));
 
-		// TODO should I use damping -> or compute precise movement??
-		//m_pitchYawRollDelta *= 0.5f; // camera movement/orientation change damping
+		// reset current iteration deltas
 		m_pitchYawRollDelta = glm::vec3(0.0f, 0.0f, 0.0f);
 	}
 
@@ -1163,10 +1159,7 @@ public:
 
 		m_viewMatrix = glm::lookAt(m_position, m_position + m_forwardDirection, m_upDirection);
 
-		glm::mat4 transform = glm::mat4(1.0f);
-		transform *= glm::mat4_cast(m_orientation);
-		transform = glm::translate(transform, -m_position);
-		SetTransform(transform);
+		SetTransform(glm::inverse(m_viewMatrix));
 
 		AbstractSceneNode::Update(deltaTime);
 	}
@@ -1181,7 +1174,6 @@ public:
 		std::cout << "Resseting camera.." << std::endl;
 
 		m_position = glm::vec3(0.0f, 0.0f, 0.0f);
-		m_orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 		m_pitchYawRoll = glm::vec3(0.0f, 0.0f, 0.0f);
 		m_pitchYawRollDelta = glm::vec3(0.0f, 0.0f, 0.0f);
 		m_viewMatrix = glm::mat4(1.0f);
@@ -1377,6 +1369,10 @@ public:
 	void Init() override
 	{
 		m_freeCamera = std::make_shared<Camera>();
+
+		auto camRobot = std::make_shared<CubeRobot>(m_allocator, glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), "texture.jpg");
+		m_freeCamera->AddChild(camRobot);
+
 		AddChild(m_freeCamera);
 
 		m_renderer = std::make_shared<TestNodesRenderer>(m_allocator, m_device, m_renderPass, m_freeCamera);
