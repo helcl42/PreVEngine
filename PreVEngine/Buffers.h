@@ -107,6 +107,9 @@ namespace PreVEngine
 
 	class IBO : public Buffer
 	{
+	private:
+		VkIndexType m_indexType = VK_INDEX_TYPE_MAX_ENUM;
+
 	public:
 		using Buffer::Buffer;
 
@@ -114,6 +117,8 @@ namespace PreVEngine
 		void Data(const uint16_t* data, const uint32_t count);
 
 		void Data(const uint32_t* data, const uint32_t count);
+
+		VkIndexType GetIndexType() const;
 	};
 
 	class UBO : public Buffer

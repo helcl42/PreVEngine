@@ -122,7 +122,7 @@ namespace PreVEngine
 		else // For GPU-only memory, copy via staging buffer.  
 		{
 			// TODO: Also skip staging buffer on integrated gpus.
-			
+
 			VkBufferCreateInfo stagingBufferCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
 			stagingBufferCreateInfo.size = size;
 			stagingBufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
@@ -482,13 +482,19 @@ namespace PreVEngine
 	void IBO::Data(const uint16_t* data, const uint32_t count)
 	{
 		Buffer::Data(data, count, 2, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
+		m_indexType = VK_INDEX_TYPE_UINT16;
 	}
 
 	void IBO::Data(const uint32_t* data, const uint32_t count)
 	{
 		Buffer::Data(data, count, 4, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
+		m_indexType = VK_INDEX_TYPE_UINT32;
 	}
 
+	VkIndexType IBO::GetIndexType() const
+	{
+		return m_indexType;
+	}
 
 
 	void UBO::Allocate(const uint32_t size)

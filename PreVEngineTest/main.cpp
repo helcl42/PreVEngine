@@ -94,6 +94,8 @@ public:
 	//}
 };
 
+
+
 class IDGenerator final : public Singleton<IDGenerator>
 {
 private:
@@ -157,6 +159,8 @@ public:
 
 	virtual glm::mat4 GetWorldTransform() const = 0;
 
+	virtual glm::vec3 GetScaler() const = 0;
+
 	virtual bool IsRoot() const = 0;
 
 	virtual ISceneNode* GetRoot() const = 0;
@@ -184,9 +188,11 @@ protected:
 
 	glm::mat4 m_worldTransform;
 
+	glm::vec3 m_scaler;
+
 public:
 	AbstractSceneNode()
-		: m_id(IDGenerator::GetInstance().GenrateNewId()), m_parent(nullptr), m_transform(glm::mat4(1.0f)), m_worldTransform(glm::mat4(1.0f))
+		: m_id(IDGenerator::GetInstance().GenrateNewId()), m_parent(nullptr), m_transform(glm::mat4(1.0f)), m_worldTransform(glm::mat4(1.0f)), m_scaler(glm::vec3(0.0f))
 	{
 	}
 
@@ -281,6 +287,11 @@ public:
 	glm::mat4 GetWorldTransform() const override
 	{
 		return m_worldTransform;
+	}
+
+	glm::vec3 GetScaler() const override
+	{
+		return m_scaler;
 	}
 
 	bool IsRoot() const override
@@ -661,47 +672,102 @@ struct Vertex
 	glm::vec3 normal;
 };
 
-struct Mesh
+// TODO
+//template <typename VertexType>
+class IMesh
 {
-	const std::vector<Vertex> vertices = {
+public:
+	virtual const std::vector<Vertex>& GerVertices() const = 0;
+
+	virtual const std::vector<uint32_t>& GerIndices() const = 0;
+
+	virtual bool HasIndices() const = 0;
+
+public:
+	virtual ~IMesh()
+	{
+	}
+};
+
+class IMaterial
+{
+public:
+	virtual std::shared_ptr<Image> GetImage() const = 0;
+
+	virtual std::shared_ptr<ImageBuffer> GetImageBuffer() const = 0;
+
+	virtual bool HasImage() const = 0;
+
+public:
+	virtual ~IMaterial() {}
+};
+
+class IModel
+{
+public:
+	virtual std::shared_ptr<IMesh> GetMesh() const = 0;
+
+	virtual std::shared_ptr<VBO> GetVertexBuffer() const = 0;
+
+	virtual std::shared_ptr<IBO> GetIndexBuffer() const = 0;
+
+public:
+	virtual ~IModel() {}
+};
+
+class IRenderComponent
+{
+public:
+	virtual std::shared_ptr<IModel> GetModel() const = 0;
+
+	virtual std::shared_ptr<IMaterial> GetMaterial() const = 0;
+
+public:
+	virtual ~IRenderComponent() {}
+};
+
+class CubeMesh : public IMesh
+{
+private:
+	const std::vector<Vertex> m_vertices = {
 		// FROMT
-		{ { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
-		{ { 0.5f, -0.5f, 0.5f }, { 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
+		{ { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ { 0.5f, -0.5f, 0.5f }, { 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } },
 		{ { 0.5f, 0.5f, 0.5f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-		{ { -0.5f, 0.5f, 0.5f }, { 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f } },
+		{ { -0.5f, 0.5f, 0.5f }, { 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
 
 		// BACK
-		{ { -0.5f, -0.5f, -0.5f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
-		{ { 0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
-		{ { 0.5f, 0.5f, -0.5f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-		{ { -0.5f, 0.5f, -0.5f }, { 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f } },
+		{ { -0.5f, -0.5f, -0.5f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f } },
+		{ { 0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f }, { 0.0f, 0.0f, -1.0f } },
+		{ { 0.5f, 0.5f, -0.5f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, -1.0f } },
+		{ { -0.5f, 0.5f, -0.5f }, { 1.0f, 1.0f }, { 0.0f, 0.0f, -1.0f } },
 
 		// TOP
-		{ { -0.5f, 0.5f, 0.5f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+		{ { -0.5f, 0.5f, 0.5f }, { 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
 		{ { 0.5f, 0.5f, 0.5f }, { 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
-		{ { 0.5f, 0.5f, -0.5f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-		{ { -0.5f, 0.5f, -0.5f }, { 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f } },
+		{ { 0.5f, 0.5f, -0.5f }, { 0.0f, 1.0f }, { 0.0f, 1.0f, 0.0f } },
+		{ { -0.5f, 0.5f, -0.5f }, { 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f } },
 
 		// BOTTOM
-		{ { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
-		{ { 0.5f, -0.5f, 0.5f }, { 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
-		{ { 0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-		{ { -0.5f, -0.5f, -0.5f }, { 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f } },
+		{ { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f }, { 0.0f, -1.0f, 0.0f } },
+		{ { 0.5f, -0.5f, 0.5f }, { 0.0f, 0.0f }, { 0.0f, -1.0f, 0.0f } },
+		{ { 0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f }, { 0.0f, -1.0f, 0.0f } },
+		{ { -0.5f, -0.5f, -0.5f }, { 1.0f, 1.0f }, { 0.0f, -1.0f, 0.0f } },
 
 		// LEFT
-		{ { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
-		{ { -0.5f, 0.5f, 0.5f }, { 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
-		{ { -0.5f, 0.5f, -0.5f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-		{ { -0.5f, -0.5f, -0.5f }, { 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f } },
+		{ { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f }, { -1.0f, 0.0f, 0.0f } },
+		{ { -0.5f, 0.5f, 0.5f }, { 0.0f, 0.0f }, { -1.0f, 0.0f, 0.0f } },
+		{ { -0.5f, 0.5f, -0.5f }, { 0.0f, 1.0f }, { -1.0f, 0.0f, 0.0f } },
+		{ { -0.5f, -0.5f, -0.5f }, { 1.0f, 1.0f }, { -1.0f, 0.0f, 0.0f } },
 
 		// RIGHT
 		{ { 0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
-		{ { 0.5f, 0.5f, 0.5f }, { 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
-		{ { 0.5f, 0.5f, -0.5f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-		{ { 0.5f, -0.5f, -0.5f }, { 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f } }
+		{ { 0.5f, 0.5f, 0.5f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+		{ { 0.5f, 0.5f, -0.5f }, { 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f } },
+		{ { 0.5f, -0.5f, -0.5f }, { 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f } }
 	};
 
-	const std::vector<uint16_t> indices = {
+	const std::vector<uint32_t> m_indices = {
 		0, 1, 2, 2, 3, 0,
 		4, 5, 6, 6, 7, 4,
 		8, 9, 10, 10, 11, 8,
@@ -709,56 +775,211 @@ struct Mesh
 		16, 17, 18, 18, 19, 16,
 		20, 21, 22, 22, 23, 20
 	};
+
+public:
+	virtual const std::vector<Vertex>& GerVertices() const override
+	{
+		return m_vertices;
+	}
+
+	const std::vector<uint32_t>& GerIndices() const override
+	{
+		return m_indices;
+	}
+
+	bool HasIndices() const override
+	{
+		return true;
+	}
 };
 
-struct Uniforms
+class CubeMaterial : public IMaterial
 {
-	alignas(16) glm::mat4 model;
-	alignas(16) glm::mat4 view;
-	alignas(16) glm::mat4 proj;
+private:
+	std::shared_ptr<Image> m_image;
+
+	std::shared_ptr<ImageBuffer> m_imageBuffer;
+
+public:
+	CubeMaterial(std::shared_ptr<Image> image, std::shared_ptr<ImageBuffer> imageBuffer)
+		: m_image(image), m_imageBuffer(imageBuffer)
+	{
+	}
+
+	virtual ~CubeMaterial()
+	{
+	}
+
+public:
+	std::shared_ptr<Image> GetImage() const override
+	{
+		return m_image;
+	}
+
+	std::shared_ptr<ImageBuffer> GetImageBuffer() const override
+	{
+		return m_imageBuffer;
+	}
+
+	bool HasImage() const override
+	{
+		return true;
+	}
 };
 
-struct TexturedModel
+class CubeModel : public IModel
 {
-	std::shared_ptr<Mesh> mesh;
+private:
+	std::shared_ptr<IMesh> m_mesh;
 
-	std::shared_ptr<Image> texture;
+	std::shared_ptr<VBO> m_vbo;
 
-	std::shared_ptr<ImageBuffer> imageBuffer;
+	std::shared_ptr<IBO> m_ibo;
 
-	std::shared_ptr<VBO> vertexBuffer;
+public:
+	CubeModel(std::shared_ptr<IMesh> mesh, std::shared_ptr<VBO> vbo, std::shared_ptr<IBO> ibo)
+		: m_mesh(mesh), m_vbo(vbo), m_ibo(ibo)
+	{
+	}
 
-	std::shared_ptr<IBO> indexBuffer;
+	virtual ~CubeModel()
+	{
+	}
+
+public:
+	std::shared_ptr<IMesh> GetMesh() const override
+	{
+		return m_mesh;
+	}
+
+	std::shared_ptr<VBO> GetVertexBuffer() const override
+	{
+		return m_vbo;
+	}
+
+	std::shared_ptr<IBO> GetIndexBuffer() const override
+	{
+		return m_ibo;
+	}
 };
 
-class ModelFactory
+class CubeRenderComponent : public IRenderComponent
+{
+private:
+	std::shared_ptr<IModel> m_model;
+
+	std::shared_ptr<IMaterial> m_material;
+
+public:
+	CubeRenderComponent(std::shared_ptr<IModel> model, std::shared_ptr<IMaterial> material)
+		: m_model(model), m_material(material)
+	{
+	}
+
+	virtual ~CubeRenderComponent()
+	{
+	}
+
+public:
+	std::shared_ptr<IModel> GetModel() const override
+	{
+		return m_model;
+	}
+
+	std::shared_ptr<IMaterial> GetMaterial() const override
+	{
+		return m_material;
+	}
+};
+
+class RenderComponentFactory
 {
 public:
-	std::shared_ptr<TexturedModel> CreateTexturedModel(Allocator& allocator, const std::string& textureFilename)
+	std::shared_ptr<IRenderComponent> CreateCubeRenderCompoentn(Allocator& allocator, const std::string& textureFilename)
 	{
+		// image
 		ImageFactory imageFactory;
+		std::shared_ptr<Image> image = imageFactory.CreateImage(textureFilename);
 
-		auto resultModel = std::make_shared<TexturedModel>();
+		const VkExtent2D imageExtent = { image->GetWidth(), image->GetHeight() };
 
-		resultModel->texture = imageFactory.CreateImage(textureFilename);
+		std::shared_ptr<ImageBuffer> imageBuffer = std::make_shared<ImageBuffer>(allocator);
+		imageBuffer->Create(ImageBufferCreateInfo{ imageExtent, VK_FORMAT_R8G8B8A8_UNORM, true, image->GetBuffer() });
 
-		VkExtent2D extent = { resultModel->texture->GetWidth(), resultModel->texture->GetHeight() };
+		std::shared_ptr<IMaterial> material = std::make_shared<CubeMaterial>(image, imageBuffer);
 
-		auto imageBuffer = std::make_shared<ImageBuffer>(allocator);
-		imageBuffer->Create(ImageBufferCreateInfo{ extent, VK_FORMAT_R8G8B8A8_UNORM, true, resultModel->texture->GetBuffer() });
-		resultModel->imageBuffer = imageBuffer;
+		// mesh
+		std::shared_ptr<IMesh> mesh = std::make_shared<CubeMesh>();
 
-		resultModel->mesh = std::make_shared<Mesh>();
+		// model
+		std::shared_ptr<VBO> vertexBuffer = std::make_shared<VBO>(allocator);
+		vertexBuffer->Data((void*)mesh->GerVertices().data(), (uint32_t)mesh->GerVertices().size(), sizeof(Vertex));
 
-		resultModel->vertexBuffer = std::make_shared<VBO>(allocator);
-		resultModel->vertexBuffer->Data((void*)resultModel->mesh->vertices.data(), (uint32_t)resultModel->mesh->vertices.size(), sizeof(Vertex));
-		printf("VBO created\n");
+		std::shared_ptr<IBO> indexBuffer = std::make_shared<IBO>(allocator);
+		indexBuffer->Data(mesh->GerIndices().data(), (uint32_t)mesh->GerIndices().size());
 
-		resultModel->indexBuffer = std::make_shared<IBO>(allocator);
-		resultModel->indexBuffer->Data(resultModel->mesh->indices.data(), (uint32_t)resultModel->mesh->indices.size());
-		printf("IBO created\n");
+		std::shared_ptr<IModel> model = std::make_shared<CubeModel>(mesh, vertexBuffer, indexBuffer);
 
-		return resultModel;
+		// render componene
+		std::shared_ptr<IRenderComponent> cubeComponent = std::make_shared<CubeRenderComponent>(model, material);
+
+		return cubeComponent;
+	}
+};
+
+template <typename ItemType>
+class ComponentRepository final : public Singleton<ComponentRepository<ItemType>>
+{
+private:
+	friend class Singleton<ComponentRepository<ItemType>>;
+
+private:
+	std::map<uint64_t, std::shared_ptr<ItemType>> m_components;
+
+private:
+	ComponentRepository()
+	{
+	}
+
+public:
+	~ComponentRepository()
+	{
+	}
+
+public:
+	std::shared_ptr<ItemType> Get(const uint64_t id) const
+	{
+		if (!Contains(id))
+		{
+			throw std::runtime_error("Entitity sith id = " + std::to_string(id) + " does not exist in this repository.");
+		}
+
+		return m_components.at(id);
+	}
+
+	void Add(const uint64_t id, std::shared_ptr<ItemType> component)
+	{
+		if (Contains(id))
+		{
+			throw std::runtime_error("Entitity sith id = " + std::to_string(id) + " already exist in this repository.");
+		}
+
+		m_components[id] = component;
+	}
+
+	void Remove(const uint64_t id)
+	{
+		if (!Contains(id))
+		{
+			throw std::runtime_error("Entitity sith id = " + std::to_string(id) + " does not exist in this repository.");
+		}
+
+		m_components.erase(id);
+	}
+
+	bool Contains(const uint64_t id) const
+	{
+		return m_components.find(id) != m_components.cend();
 	}
 };
 
@@ -772,16 +993,13 @@ protected:
 
 	glm::quat m_orientation;
 
-	glm::vec3 m_scale;
-
 	const std::string m_texturePath;
-
-	std::shared_ptr<TexturedModel> m_texturedModel;
 
 public:
 	AbstractCubeRobotSceneNode(std::shared_ptr<Allocator>& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
-		: AbstractSceneNode(), m_allocator(allocator), m_position(position), m_orientation(orientation), m_scale(scale), m_texturePath(texturePath)
+		: AbstractSceneNode(), m_allocator(allocator), m_position(position), m_orientation(orientation), m_texturePath(texturePath)
 	{
+		m_scaler = scale;
 	}
 
 	virtual ~AbstractCubeRobotSceneNode()
@@ -793,8 +1011,10 @@ public:
 	{
 		m_transform = MathUtil::CreateTransformationMatrix(m_position, m_orientation, glm::vec3(1, 1, 1));
 
-		ModelFactory modelFactory;
-		m_texturedModel = modelFactory.CreateTexturedModel(*m_allocator, m_texturePath);
+		RenderComponentFactory renderComponentFactory;
+		auto cubeComponent = renderComponentFactory.CreateCubeRenderCompoentn(*m_allocator, m_texturePath);
+
+		ComponentRepository<IRenderComponent>::GetInstance().Add(m_id, cubeComponent);
 
 		AbstractSceneNode::Init();
 	}
@@ -804,15 +1024,11 @@ public:
 		AbstractSceneNode::Update(deltaTime);
 	}
 
-public:
-	std::shared_ptr<TexturedModel> GetModel() const
+	void ShutDown() override
 	{
-		return m_texturedModel;
-	}
+		ComponentRepository<IRenderComponent>::GetInstance().Remove(m_id);
 
-	glm::vec3 GetScaler() const
-	{
-		return m_scale;
+		AbstractSceneNode::ShutDown();
 	}
 };
 
@@ -829,7 +1045,7 @@ public:
 	}
 };
 
-class CubeRobot : public AbstractCubeRobotSceneNode // origin without model ?
+class CubeRobot : public AbstractCubeRobotSceneNode
 {
 private:
 	std::shared_ptr<CubeRobotPart> m_body;
@@ -905,10 +1121,6 @@ public:
 		m_leftArm->SetTransform(leftArmTransform);
 
 		AbstractCubeRobotSceneNode::Update(deltaTime);
-	}
-
-	void ShutDown() override
-	{
 	}
 
 public:
@@ -1036,7 +1248,6 @@ public:
 	~ViewFrustum()
 	{
 	}
-
 
 public:
 	glm::mat4 CreateProjectionMatrix(const uint32_t w, const uint32_t h)
@@ -1264,6 +1475,14 @@ public:
 class TestNodesRenderer : public IRenderer
 {
 private:
+	struct Uniforms
+	{
+		alignas(16) glm::mat4 model;
+		alignas(16) glm::mat4 view;
+		alignas(16) glm::mat4 proj;
+	};
+
+private:
 	std::shared_ptr<Device> m_device;
 
 	std::shared_ptr<RenderPass> m_renderPass;
@@ -1322,41 +1541,38 @@ public:
 		vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 	}
 
-	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode> abstractNode) override
+	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode> node) override
 	{
-		auto node = std::dynamic_pointer_cast<AbstractCubeRobotSceneNode>(abstractNode); // TODO avoid casting here??
-		if (node)
+		if (ComponentRepository<IRenderComponent>::GetInstance().Contains(node->GetId()))
 		{
-			auto model = node->GetModel();
-			if (model)
-			{
-				auto ubo = m_uniformsPool->GetNext();
+			auto renderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());
 
-				Uniforms uniforms;
-				uniforms.proj = m_viewFrustum.CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
+			auto ubo = m_uniformsPool->GetNext();
 
-				//uniforms.view = glm::lookAt(glm::vec3(0.0f, 80.0f, 60.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-				uniforms.view = m_freeCamera->LookAt();
+			Uniforms uniforms;
+			uniforms.proj = m_viewFrustum.CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
 
-				uniforms.model = node->GetWorldTransform() * glm::scale(glm::mat4(1.0f), node->GetScaler());
-				ubo->Update(&uniforms);
+			//uniforms.view = glm::lookAt(glm::vec3(0.0f, 80.0f, 60.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			uniforms.view = m_freeCamera->LookAt();
 
-				m_shader->Bind("texSampler", *model->imageBuffer);
-				m_shader->Bind("ubo", *ubo);
+			uniforms.model = node->GetWorldTransform() * glm::scale(glm::mat4(1.0f), node->GetScaler());
+			ubo->Update(&uniforms);
 
-				VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-				VkBuffer vertexBuffers[] = { *model->vertexBuffer };
-				VkDeviceSize offsets[] = { 0 };
+			m_shader->Bind("texSampler", *renderComponent->GetMaterial()->GetImageBuffer());
+			m_shader->Bind("ubo", *ubo);
 
-				vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-				vkCmdBindIndexBuffer(renderContext.commandBuffer, *model->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
-				vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetPipelineLayout(), 0, 1, &descriptorSet, 0, nullptr);
+			VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+			VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
+			VkDeviceSize offsets[] = { 0 };
 
-				vkCmdDrawIndexed(renderContext.commandBuffer, model->indexBuffer->GetCount(), 1, 0, 0, 0);
-			}
+			vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+			vkCmdBindIndexBuffer(renderContext.commandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+			vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetPipelineLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+			vkCmdDrawIndexed(renderContext.commandBuffer, renderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
 		}
 
-		for (auto child : abstractNode->GetChildren())
+		for (auto child : node->GetChildren())
 		{
 			Render(renderContext, child);
 		}
@@ -1451,6 +1667,11 @@ public:
 
 	void ShutDown() override
 	{
+		for (auto child : m_children)
+		{
+			child->ShutDown();
+		}
+
 		m_renderer->ShutDown();
 	}
 };
