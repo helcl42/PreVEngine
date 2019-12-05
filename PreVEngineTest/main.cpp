@@ -1551,10 +1551,7 @@ public:
 
 			Uniforms uniforms;
 			uniforms.proj = m_viewFrustum.CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
-
-			//uniforms.view = glm::lookAt(glm::vec3(0.0f, 80.0f, 60.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 			uniforms.view = m_freeCamera->LookAt();
-
 			uniforms.model = node->GetWorldTransform() * glm::scale(glm::mat4(1.0f), node->GetScaler());
 			ubo->Update(&uniforms);
 
