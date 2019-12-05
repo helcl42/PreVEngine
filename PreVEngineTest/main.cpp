@@ -1053,6 +1053,8 @@ class Camera : public AbstractSceneNode
 private:
 	EventHandler<Camera, MouseEvent> m_mouseHandler{ *this };
 
+	EventHandler<Camera, MouseScrollEvent> m_mouseScrollHandler{ *this };
+
 	EventHandler<Camera, KeyEvent> m_keyHandler{ *this };
 
 private:
@@ -1071,9 +1073,13 @@ private:
 
 	glm::vec3 m_pitchYawRollDelta;
 
+	glm::vec3 m_positionDelta;
+
 	glm::mat4 m_viewMatrix;
 
 	const float m_sensitivity = 0.05f;
+
+	const float m_scrollSensitivity = 2.0f;
 
 	const float m_moveSpeed = 5.0f;
 
@@ -1104,6 +1110,8 @@ private:
 
 	void UpdatePosition(float deltaTime)
 	{
+		m_position += m_positionDelta;
+
 		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_W))
 		{
 			m_position += m_forwardDirection * deltaTime * m_moveSpeed;
@@ -1128,6 +1136,8 @@ private:
 		{
 			m_position += m_upDirection * deltaTime * m_moveSpeed;
 		}
+
+		m_positionDelta = glm::vec3(0.0f, 0.0f, 0.0f);
 	}
 
 	void UpdateOrientation(float deltaTime)
@@ -1177,6 +1187,7 @@ public:
 		m_pitchYawRoll = glm::vec3(0.0f, 0.0f, 0.0f);
 		m_pitchYawRollDelta = glm::vec3(0.0f, 0.0f, 0.0f);
 		m_viewMatrix = glm::mat4(1.0f);
+		m_positionDelta = glm::vec3(0.0f, 0.0f, 0.0f);
 
 		m_forwardDirection = glm::vec3(0.0f, 0.0f, -1.0f);
 		m_rightDirection = glm::cross(m_forwardDirection, m_upDirection);
@@ -1228,6 +1239,12 @@ public:
 				m_inputFacade.SetMouseCursorVisible(!m_inputFacade.IsMouseCursorVisible());
 			}
 		}
+	}
+
+	void operator() (const MouseScrollEvent& scrollEvent)
+	{
+		float scaledDelta = scrollEvent.delta * m_scrollSensitivity;
+		m_positionDelta = m_forwardDirection * scaledDelta;
 	}
 };
 
