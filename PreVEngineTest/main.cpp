@@ -1053,6 +1053,8 @@ class Camera : public AbstractSceneNode
 private:
 	EventHandler<Camera, MouseEvent> m_mouseHandler{ *this };
 
+	EventHandler<Camera, TouchEvent> m_touchHandler{ *this };
+
 	EventHandler<Camera, MouseScrollEvent> m_mouseScrollHandler{ *this };
 
 	EventHandler<Camera, KeyEvent> m_keyHandler{ *this };
@@ -1225,6 +1227,17 @@ public:
 		}
 	}
 
+	void operator() (const TouchEvent& touchEvent)
+	{
+		if (touchEvent.action == TouchActionType::MOVE)
+		{
+			const glm::vec2 angleInDegrees = touchEvent.position * m_sensitivity;
+
+			AddPitch(angleInDegrees.y);
+			AddYaw(angleInDegrees.x);
+		}
+	}
+
 	void operator() (const KeyEvent& keyEvent)
 	{
 		if (keyEvent.action == KeyActionType::PRESS)
@@ -1285,7 +1298,7 @@ public:
 		m_shader = shaderFactory.CreateShaderFromFiles(*m_device, {
 			{ VK_SHADER_STAGE_VERTEX_BIT, "shaders/vert.spv" },
 			{ VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/frag.spv" }
-			});
+		});
 		m_shader->AdjustDescriptorPoolCapacity(10000);
 
 		printf("Shader created\n");
