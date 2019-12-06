@@ -1325,6 +1325,9 @@ private:
 
 	glm::mat4 m_viewMatrix;
 
+
+	glm::vec2 m_prevTouchPosition;
+
 public:
 	Camera()
 	{
@@ -1438,6 +1441,8 @@ public:
 
 		m_forwardDirection = glm::vec3(0.0f, 0.0f, -1.0f);
 		m_rightDirection = glm::cross(m_forwardDirection, m_upDirection);
+
+		m_prevTouchPosition = glm::vec2(0.0f, 0.0f);
 	}
 
 	void AddPitch(float amountInDegrees)
@@ -1476,11 +1481,14 @@ public:
 	{
 		if (touchEvent.action == TouchActionType::MOVE)
 		{
-			const glm::vec2 angleInDegrees = touchEvent.position * m_sensitivity;
+			const glm::vec2 angleInDegrees = (touchEvent.position - m_prevTouchPosition) * m_sensitivity;
 
 			AddPitch(angleInDegrees.y);
 			AddYaw(angleInDegrees.x);
 		}
+
+
+		m_prevTouchPosition = touchEvent.position;
 	}
 
 	void operator() (const KeyEvent& keyEvent)
