@@ -908,12 +908,24 @@ public:
 
 class RenderComponentFactory
 {
+private:
+	static std::map<std::string, std::shared_ptr<Image>> s_imagesCache;
+
 public:
-	std::shared_ptr<IRenderComponent> CreateCubeRenderCompoentn(Allocator& allocator, const std::string& textureFilename)
+	std::shared_ptr<IRenderComponent> CreateCubeRenderComponent(Allocator& allocator, const std::string& textureFilename)
 	{
 		// image
-		ImageFactory imageFactory;
-		std::shared_ptr<Image> image = imageFactory.CreateImage(textureFilename);
+		std::shared_ptr<Image> image;
+		if(s_imagesCache.find(textureFilename) != s_imagesCache.cend())
+		{
+			image = s_imagesCache[textureFilename];
+		}
+		else
+		{
+			ImageFactory imageFactory;
+			image = imageFactory.CreateImage(textureFilename);
+			s_imagesCache[textureFilename] = image;
+		}
 
 		const VkExtent2D imageExtent = { image->GetWidth(), image->GetHeight() };
 
@@ -940,6 +952,8 @@ public:
 		return cubeComponent;
 	}
 };
+
+std::map<std::string, std::shared_ptr<Image>> RenderComponentFactory::s_imagesCache;
 
 template <typename ItemType>
 class ComponentRepository final : public Singleton<ComponentRepository<ItemType>>
@@ -1026,7 +1040,7 @@ public:
 		m_transform = MathUtil::CreateTransformationMatrix(m_position, m_orientation, glm::vec3(1, 1, 1));
 
 		RenderComponentFactory renderComponentFactory;
-		auto cubeComponent = renderComponentFactory.CreateCubeRenderCompoentn(*m_allocator, m_texturePath);
+		auto cubeComponent = renderComponentFactory.CreateCubeRenderComponent(*m_allocator, m_texturePath);
 
 		ComponentRepository<IRenderComponent>::GetInstance().Add(m_id, cubeComponent);
 
@@ -1103,8 +1117,8 @@ public:
 		m_head = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(0, 10, 0), glm::quat(1, 0, 0, 0), glm::vec3(5, 5, 5), "texture.jpg");
 		m_leftArm = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(-8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), "texture.jpg");
 		m_rightArm = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), "texture.jpg");
-		m_leftLeg = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(-4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.7, 17.5f, 4.7f), "texture.jpg");
-		m_rightLeg = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.7, 17.5f, 4.7f), "texture.jpg");
+		m_leftLeg = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(-4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.5, 17.5f, 4.7f), "texture.jpg");
+		m_rightLeg = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.5, 17.5f, 4.7f), "texture.jpg");
 
 		m_body->AddChild(m_head);
 		m_body->AddChild(m_leftArm);
@@ -1288,9 +1302,18 @@ private:
 	InputsFacade m_inputFacade;
 
 private:
+	const glm::vec3 m_upDirection{ 0.0f, 1.0f, 0.0f };
+
+	const float m_sensitivity = 0.05f;
+
+	const float m_scrollSensitivity = 2.0f;
+
+	const float m_moveSpeed = 5.0f;
+
+private:
 	glm::vec3 m_position;
 
-	const glm::vec3 m_upDirection{ 0.0f, 1.0f, 0.0f };
+	glm::vec3 m_positionDelta;
 
 	glm::vec3 m_forwardDirection;
 
@@ -1300,15 +1323,7 @@ private:
 
 	glm::vec3 m_pitchYawRollDelta;
 
-	glm::vec3 m_positionDelta;
-
 	glm::mat4 m_viewMatrix;
-
-	const float m_sensitivity = 0.05f;
-
-	const float m_scrollSensitivity = 2.0f;
-
-	const float m_moveSpeed = 5.0f;
 
 public:
 	Camera()
@@ -1413,11 +1428,13 @@ public:
 	{
 		std::cout << "Resseting camera.." << std::endl;
 
-		m_position = glm::vec3(0.0f, 0.0f, 0.0f);
+		m_position = glm::vec3(0.0f, 0.0f, 60.0f);
+		m_positionDelta = glm::vec3(0.0f, 0.0f, 0.0f);
+
 		m_pitchYawRoll = glm::vec3(0.0f, 0.0f, 0.0f);
 		m_pitchYawRollDelta = glm::vec3(0.0f, 0.0f, 0.0f);
+		
 		m_viewMatrix = glm::mat4(1.0f);
-		m_positionDelta = glm::vec3(0.0f, 0.0f, 0.0f);
 
 		m_forwardDirection = glm::vec3(0.0f, 0.0f, -1.0f);
 		m_rightDirection = glm::cross(m_forwardDirection, m_upDirection);
