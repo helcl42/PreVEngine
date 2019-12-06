@@ -157,7 +157,11 @@ public:
 
 	virtual glm::mat4 GetTransform() const = 0;
 
+	virtual glm::mat4 GetTransformScaled() const = 0;
+
 	virtual glm::mat4 GetWorldTransform() const = 0;
+
+	virtual glm::mat4 GetWorldTransformScaled() const = 0;
 
 	virtual glm::vec3 GetScaler() const = 0;
 
@@ -192,7 +196,7 @@ protected:
 
 public:
 	AbstractSceneNode()
-		: m_id(IDGenerator::GetInstance().GenrateNewId()), m_parent(nullptr), m_transform(glm::mat4(1.0f)), m_worldTransform(glm::mat4(1.0f)), m_scaler(glm::vec3(0.0f))
+		: m_id(IDGenerator::GetInstance().GenrateNewId()), m_parent(nullptr), m_transform(glm::mat4(1.0f)), m_worldTransform(glm::mat4(1.0f)), m_scaler(glm::vec3(1.0f))
 	{
 	}
 
@@ -284,9 +288,19 @@ public:
 		return m_transform;
 	}
 
+	glm::mat4 GetTransformScaled() const override
+	{
+		return glm::scale(GetTransform(), m_scaler);
+	}
+
 	glm::mat4 GetWorldTransform() const override
 	{
 		return m_worldTransform;
+	}
+
+	glm::mat4 GetWorldTransformScaled() const override
+	{
+		return glm::scale(GetWorldTransform(), m_scaler);
 	}
 
 	glm::vec3 GetScaler() const override
@@ -1300,6 +1314,9 @@ public:
 	Camera()
 	{
 		Reset();
+
+		m_inputFacade.SetMouseLocked(true);
+		m_inputFacade.SetMouseCursorVisible(false);
 	}
 
 	virtual ~Camera()
@@ -1552,7 +1569,7 @@ public:
 			Uniforms uniforms;
 			uniforms.proj = m_viewFrustum.CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
 			uniforms.view = m_freeCamera->LookAt();
-			uniforms.model = node->GetWorldTransform() * glm::scale(glm::mat4(1.0f), node->GetScaler());
+			uniforms.model = node->GetWorldTransformScaled();
 			ubo->Update(&uniforms);
 
 			m_shader->Bind("texSampler", *renderComponent->GetMaterial()->GetImageBuffer());
