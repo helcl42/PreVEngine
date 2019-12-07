@@ -449,15 +449,7 @@ namespace PreVEngine
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 		VKERRCHECK(vkBeginCommandBuffer(swapchainBuffer.commandBuffer, &beginInfo));
 
-		VkRenderPassBeginInfo renderPassInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-		renderPassInfo.renderPass = m_renderPass;
-		renderPassInfo.framebuffer = swapchainBuffer.framebuffer;
-		renderPassInfo.renderArea.offset = { 0, 0 };
-		renderPassInfo.renderArea.extent = swapchainBuffer.extent;
-		renderPassInfo.clearValueCount = static_cast<uint32_t>(m_renderPass.GetClearValues().size());
-		renderPassInfo.pClearValues = m_renderPass.GetClearValues().data();
-
-		vkCmdBeginRenderPass(swapchainBuffer.commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+		m_renderPass.Begin(swapchainBuffer.framebuffer, swapchainBuffer.commandBuffer, swapchainBuffer.extent);
 
 		buffer = swapchainBuffer.commandBuffer;
 		return true;
@@ -466,7 +458,8 @@ namespace PreVEngine
 	void Swapchain::EndFrame()
 	{
 		auto& swapchainBuffer = m_swapchainBuffers[m_acquiredIndex];
-		vkCmdEndRenderPass(swapchainBuffer.commandBuffer);
+		m_renderPass.End(swapchainBuffer.commandBuffer);
+
 		VKERRCHECK(vkEndCommandBuffer(swapchainBuffer.commandBuffer));
 
 		Submit();

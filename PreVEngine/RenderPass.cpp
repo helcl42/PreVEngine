@@ -182,6 +182,24 @@ namespace PreVEngine
 		LOGI("Renderpass destroyed\n");
 	}
 
+	void RenderPass::Begin(const VkFramebuffer frameBuffer, const VkCommandBuffer commadbuffer, const VkExtent2D& extent)
+	{
+		VkRenderPassBeginInfo renderPassInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+		renderPassInfo.renderPass = m_renderPass;
+		renderPassInfo.framebuffer = frameBuffer;
+		renderPassInfo.renderArea.offset = { 0, 0 };
+		renderPassInfo.renderArea.extent = extent;
+		renderPassInfo.clearValueCount = static_cast<uint32_t>(m_clearValues.size());
+		renderPassInfo.pClearValues = m_clearValues.data();
+
+		vkCmdBeginRenderPass(commadbuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+	}
+
+	void RenderPass::End(const VkCommandBuffer commandBuffer)
+	{
+		vkCmdEndRenderPass(commandBuffer);
+	}
+
 	VkFormat RenderPass::GetSurfaceFormat() const
 	{
 		return m_surfaceFormat;

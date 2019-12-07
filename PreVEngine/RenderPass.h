@@ -77,6 +77,10 @@ namespace PreVEngine
 
 		void Destroy();
 
+		void Begin(const VkFramebuffer frambuffer, const VkCommandBuffer commadBuffer, const VkExtent2D& extent);
+
+		void End(VkCommandBuffer commadBuffer);
+
 	public:
 		VkFormat GetSurfaceFormat() const;
 
@@ -90,6 +94,7 @@ namespace PreVEngine
 
 		const std::vector<VkSubpassDependency>& GetSubPassDependencies() const;
 
+	public:
 		operator VkRenderPass();
 	};
 }
