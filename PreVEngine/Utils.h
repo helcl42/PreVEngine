@@ -14,12 +14,6 @@ namespace PreVEngine
 		return n;
 	}
 
-	template <typename Type>
-	int Clamp(Type val, Type min, Type max)
-	{
-		return (val < min ? min : val > max ? max : val);
-	}
-
 	class FPSService
 	{
 	private:
@@ -261,6 +255,84 @@ namespace PreVEngine
 			return fence;
 		}
 	};
+
+	class MathUtil
+	{
+	public:
+		static glm::mat4 CreateTransformationMatrix(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
+		{
+			glm::mat4 resultTransform(1.0f);
+			resultTransform = glm::translate(resultTransform, position);
+			resultTransform *= glm::mat4_cast(glm::normalize(orientation));
+			resultTransform = glm::scale(resultTransform, scale);
+			return resultTransform;
+		}
+
+		static glm::mat4 CreateTransformationMatrix(const glm::vec3& position, const glm::quat& orientation, const float scale)
+		{
+			return MathUtil::CreateTransformationMatrix(position, orientation, glm::vec3(scale));
+		}
+
+		static glm::mat4 CreateTransformationMatrix(const glm::vec3& position, const glm::vec3& orientationInEulerAngles, const glm::vec3& scale)
+		{
+			glm::quat orientation = glm::normalize(glm::quat(glm::vec3(glm::radians(orientationInEulerAngles.x), glm::radians(orientationInEulerAngles.y), glm::radians(orientationInEulerAngles.z))));
+			return MathUtil::CreateTransformationMatrix(position, orientation, scale);
+		}
+
+		static glm::mat4 CreateTransformationMatrix(const glm::vec3& position, const glm::vec3& orientation, const float scale)
+		{
+			return MathUtil::CreateTransformationMatrix(position, orientation, glm::vec3(scale));
+		}
+
+		static glm::vec3 GetUpVector(const glm::quat& q)
+		{
+			return glm::normalize(q * glm::vec3(0.0f, 1.0f, 0.0f));
+		}
+
+		static glm::vec3 GetRightVector(const glm::quat& q)
+		{
+			return glm::normalize(q * glm::vec3(1.0f, 0.0f, 0.0f));
+		}
+
+		static glm::vec3 GetForwardVector(const glm::quat& q)
+		{
+			return glm::normalize(q * glm::vec3(0.0f, 0.0f, 1.0f));
+		}
+
+		template <typename Type>
+		static int Clamp(Type val, Type min, Type max)
+		{
+			return (val < min ? min : val > max ? max : val);
+		}
+	};
+
+	class IDGenerator final : public Singleton<IDGenerator>
+	{
+	private:
+		friend class Singleton<IDGenerator>;
+
+	private:
+		uint64_t m_id = 0;
+
+		std::mutex m_mutex;
+
+	private:
+		IDGenerator() = default;
+
+	public:
+		~IDGenerator() = default;
+
+	public:
+		uint64_t GenrateNewId()
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+
+			m_id++;
+
+			return m_id;
+		}
+	};
+
 }
 
 #endif

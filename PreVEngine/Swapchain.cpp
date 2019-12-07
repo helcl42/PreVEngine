@@ -118,8 +118,8 @@ namespace PreVEngine
 
 			LOGW("Can't determine current window surface extent from surface caps. Using defaults instead. (%d x %d)\n", defaultWidth, defaultHeight);
 			
-			m_swapchainCreateInfo.imageExtent.width = Clamp(defaultWidth, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width);
-			m_swapchainCreateInfo.imageExtent.height = Clamp(defaultHeight, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
+			m_swapchainCreateInfo.imageExtent.width = MathUtil::Clamp(defaultWidth, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width);
+			m_swapchainCreateInfo.imageExtent.height = MathUtil::Clamp(defaultHeight, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
 		}
 		else
 		{
