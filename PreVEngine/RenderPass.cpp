@@ -133,17 +133,9 @@ namespace PreVEngine
 		return subpass;
 	}
 
-	void RenderPass::AddSubpassDependency(uint32_t srcSubpass, uint32_t dstSubpass)
+	void RenderPass::AddSubpassDependency(const std::vector<VkSubpassDependency>& dependencies)
 	{
-		VkSubpassDependency dependency = {};
-		dependency.srcSubpass = srcSubpass; //VK_SUBPASS_EXTERNAL;
-		dependency.dstSubpass = dstSubpass;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.srcAccessMask = 0;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-		m_dependencies.push_back(dependency);
+		m_dependencies.insert(m_dependencies.end(), dependencies.cbegin(), dependencies.cend());
 	}
 
 	void RenderPass::Create()

@@ -71,7 +71,7 @@ namespace PreVEngine
 
 		SubPass& AddSubpass(const std::vector<uint32_t>& attachmentIndexes = {});
 
-		void AddSubpassDependency(uint32_t srcSubpass, uint32_t dstSubpass);
+		void AddSubpassDependency(const std::vector<VkSubpassDependency>& dependencies);
 
 		void Create();
 
