@@ -4,33 +4,71 @@
 #include <RenderPass.h>
 #include <Shader.h>
 
-class Pipeline
+using namespace PreVEngine;
+
+class IGraphicsPipeline
 {
-private:
+public:
+	virtual VkPipeline Init() = 0;
+
+	virtual void ShutDown() = 0;
+
+	virtual VkPipelineLayout GetLayout() const = 0;
+
+	virtual operator VkPipeline() const = 0;
+
+public:
+	virtual ~IGraphicsPipeline() {}
+};
+
+class AbstractGraphicsPipeline : public IGraphicsPipeline
+{
+protected:
 	VkDevice m_device;
 
 	VkRenderPass m_renderPass;
 
-	PreVEngine::Shader& m_shaders;
+	Shader& m_shaders;
 
 	VkPipeline m_graphicsPipeline;
 
 	VkPipelineLayout m_pipelineLayout;
 
-public:
-	Pipeline(VkDevice device, VkRenderPass renderpass, PreVEngine::Shader& shaders);
+protected:
+	AbstractGraphicsPipeline(VkDevice device, VkRenderPass renderpass, Shader& shaders);
 
-	~Pipeline();
-
-public:
-	VkPipeline CreateGraphicsPipeline();
-
-	void ShutDown();
+	virtual ~AbstractGraphicsPipeline();
 
 public:
-	VkPipelineLayout GetPipelineLayout() const;
+	virtual void ShutDown() override;
+
+public:
+	VkPipelineLayout GetLayout() const;
 
 	operator VkPipeline() const;
+};
+
+class ShadowsPipeline final : public AbstractGraphicsPipeline
+{
+public:
+	ShadowsPipeline(VkDevice device, VkRenderPass renderpass, Shader& shaders);
+
+	~ShadowsPipeline();
+
+public:
+	VkPipeline Init() override;
+};
+
+class DefaultPipeline final : public AbstractGraphicsPipeline
+{
+
+public:
+	DefaultPipeline(VkDevice device, VkRenderPass renderpass, Shader& shaders);
+
+	~DefaultPipeline();
+
+public:
+	VkPipeline Init() override;
 };
 
 #endif

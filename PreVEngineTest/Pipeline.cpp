@@ -1,16 +1,75 @@
 #include "Pipeline.h"
 
-Pipeline::Pipeline(VkDevice device, VkRenderPass renderpass, PreVEngine::Shader& shaders)
+AbstractGraphicsPipeline::AbstractGraphicsPipeline(VkDevice device, VkRenderPass renderpass, PreVEngine::Shader& shaders)
 	: m_device(device), m_renderPass(renderpass), m_shaders(shaders), m_graphicsPipeline(VK_NULL_HANDLE), m_pipelineLayout(VK_NULL_HANDLE)
 {
 }
 
-Pipeline::~Pipeline()
+AbstractGraphicsPipeline::~AbstractGraphicsPipeline()
 {
 	ShutDown();
 }
 
-VkPipeline Pipeline::CreateGraphicsPipeline()
+VkPipelineLayout AbstractGraphicsPipeline::GetLayout() const
+{
+	return m_pipelineLayout;
+}
+
+AbstractGraphicsPipeline::operator VkPipeline() const
+{
+	return m_graphicsPipeline;
+}
+
+void AbstractGraphicsPipeline::ShutDown()
+{
+	if (m_device)
+	{
+		vkDeviceWaitIdle(m_device);
+	}
+
+	if (m_pipelineLayout)
+	{
+		vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
+		m_pipelineLayout = VK_NULL_HANDLE;
+	}
+
+	if (m_graphicsPipeline)
+	{
+		vkDestroyPipeline(m_device, m_graphicsPipeline, nullptr);
+		m_graphicsPipeline = VK_NULL_HANDLE;
+	}
+}
+
+// SHadows Pipeline
+ShadowsPipeline::ShadowsPipeline(VkDevice device, VkRenderPass renderpass, Shader& shaders)
+	: AbstractGraphicsPipeline(device, renderpass, shaders)
+{
+	// TODO
+}
+
+ShadowsPipeline::~ShadowsPipeline()
+{
+	// TODO
+}
+
+VkPipeline ShadowsPipeline::Init()
+{
+	// TODO
+	return nullptr;
+}
+
+
+// Pipeline
+DefaultPipeline::DefaultPipeline(VkDevice device, VkRenderPass renderpass, Shader& shaders)
+	: AbstractGraphicsPipeline(device, renderpass, shaders)
+{
+}
+
+DefaultPipeline::~DefaultPipeline()
+{
+}
+
+VkPipeline DefaultPipeline::Init()
 {
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
 	inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
@@ -128,35 +187,5 @@ VkPipeline Pipeline::CreateGraphicsPipeline()
 	//pipelineInfo.basePipelineIndex = 0;
 	VKERRCHECK(vkCreateGraphicsPipelines(m_device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_graphicsPipeline));
 
-	return m_graphicsPipeline;
-}
-
-void Pipeline::ShutDown()
-{
-	if (m_device)
-	{
-		vkDeviceWaitIdle(m_device);
-	}
-
-	if (m_pipelineLayout)
-	{
-		vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
-		m_pipelineLayout = VK_NULL_HANDLE;
-	}
-
-	if (m_graphicsPipeline)
-	{
-		vkDestroyPipeline(m_device, m_graphicsPipeline, nullptr);
-		m_graphicsPipeline = VK_NULL_HANDLE;
-	}
-}
-
-VkPipelineLayout Pipeline::GetPipelineLayout() const
-{
-	return m_pipelineLayout;
-}
-
-Pipeline::operator VkPipeline() const
-{
 	return m_graphicsPipeline;
 }

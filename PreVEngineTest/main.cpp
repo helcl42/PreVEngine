@@ -622,6 +622,7 @@ public:
 	}
 };
 
+// TODO create decorator -> ControllableCamera
 class Camera : public AbstractSceneNode
 {
 private:
@@ -849,7 +850,47 @@ public:
 	}
 };
 
-class TestNodesRenderer : public IRenderer
+class ShadowsRenderer : public IRenderer
+{
+private:
+
+public:
+	ShadowsRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass)
+	{
+	}
+
+	virtual ~ShadowsRenderer()
+	{
+	}
+
+public:
+	void Init() override
+	{
+		// TODO
+	}
+
+	void PreRender(RenderContext& renderContext) override
+	{
+		// TODO
+	}
+
+	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode> node) override
+	{
+		// TODO
+	}
+
+	void PostRender(RenderContext& renderContext) override
+	{
+		// TODO
+	}
+
+	void ShutDown() override
+	{
+		// TODO
+	}
+};
+
+class DefaultSceneRenderer : public IRenderer
 {
 private:
 	struct Uniforms
@@ -869,7 +910,7 @@ private:
 private:
 	std::shared_ptr<Shader> m_shader;
 
-	std::shared_ptr<Pipeline> m_pipeline;
+	std::shared_ptr<IGraphicsPipeline> m_pipeline;
 
 	std::shared_ptr<UBOPool<Uniforms>> m_uniformsPool;
 
@@ -878,12 +919,12 @@ private:
 	ViewFrustum m_viewFrustum{ 70.0f, 0.01f, 200.0f };
 
 public:
-	TestNodesRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass, std::shared_ptr<Camera> camera)
+	DefaultSceneRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass, std::shared_ptr<Camera> camera)
 		: m_device(dev), m_renderPass(renderPass), m_allocator(alloc), m_freeCamera(camera)
 	{
 	}
 
-	virtual ~TestNodesRenderer()
+	virtual ~DefaultSceneRenderer()
 	{
 	}
 
@@ -899,8 +940,8 @@ public:
 
 		printf("Shader created\n");
 
-		m_pipeline = std::make_shared<Pipeline>(*m_device, *m_renderPass, *m_shader);
-		m_pipeline->CreateGraphicsPipeline();
+		m_pipeline = std::make_shared<DefaultPipeline>(*m_device, *m_renderPass, *m_shader);
+		m_pipeline->Init();
 
 		printf("Pipeline created\n");
 
@@ -943,7 +984,7 @@ public:
 
 			vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
 			vkCmdBindIndexBuffer(renderContext.commandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-			vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetPipelineLayout(), 0, 1, &descriptorSet, 0, nullptr);
+			vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
 			vkCmdDrawIndexed(renderContext.commandBuffer, renderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
 		}
@@ -969,18 +1010,22 @@ class RootSceneNode : public AbstractSceneNode
 private:
 	std::shared_ptr<Device> m_device;
 
-	std::shared_ptr<RenderPass> m_renderPass;
+	std::shared_ptr<RenderPass> m_shadowsRenderPass;
+
+	std::shared_ptr<RenderPass> m_defaultRenderPass;
 
 	std::shared_ptr<Allocator> m_allocator;
 
 private:
-	std::shared_ptr<IRenderer> m_renderer;
+	std::shared_ptr<IRenderer> m_shadowsRenderer;
+
+	std::shared_ptr<IRenderer> m_defaultRenderer;
 
 	std::shared_ptr<Camera> m_freeCamera;
 
 public:
 	RootSceneNode(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass)
-		: AbstractSceneNode(), m_device(dev), m_renderPass(renderPass), m_allocator(alloc)
+		: AbstractSceneNode(), m_device(dev), m_defaultRenderPass(renderPass), m_allocator(alloc)
 	{
 	}
 
@@ -998,8 +1043,11 @@ public:
 
 		AddChild(m_freeCamera);
 
-		m_renderer = std::make_shared<TestNodesRenderer>(m_allocator, m_device, m_renderPass, m_freeCamera);
-		m_renderer->Init();
+		m_shadowsRenderer = std::make_shared<ShadowsRenderer>(m_allocator, m_device, m_shadowsRenderPass); // TODO where to pass light node >>>
+		m_shadowsRenderer->Init();
+
+		m_defaultRenderer = std::make_shared<DefaultSceneRenderer>(m_allocator, m_device, m_defaultRenderPass, m_freeCamera);
+		m_defaultRenderer->Init();
 
 		const int32_t CUBE_SIZE_HALF = 1;
 		const float DISTANCE = 40.0f;
@@ -1032,14 +1080,25 @@ public:
 
 	void Render(RenderContext& renderState) override
 	{
-		m_renderer->PreRender(renderState);
+		// shadows
+		m_shadowsRenderer->PreRender(renderState);
 
 		for (auto child : m_children)
 		{
-			m_renderer->Render(renderState, child);
+			m_shadowsRenderer->Render(renderState, child);
 		}
 
-		m_renderer->PostRender(renderState);
+		m_shadowsRenderer->PostRender(renderState);
+
+		// Default
+		m_defaultRenderer->PreRender(renderState);
+
+		for (auto child : m_children)
+		{
+			m_defaultRenderer->Render(renderState, child);
+		}
+
+		m_defaultRenderer->PostRender(renderState);
 	}
 
 	void ShutDown() override
@@ -1049,7 +1108,8 @@ public:
 			child->ShutDown();
 		}
 
-		m_renderer->ShutDown();
+		m_defaultRenderer->ShutDown();
+		m_shadowsRenderer->ShutDown();
 	}
 };
 
