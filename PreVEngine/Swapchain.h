@@ -97,7 +97,7 @@ namespace PreVEngine
 
 		void UpdateExtent();
 
-		bool BeginFrame(VkCommandBuffer& buffer, uint32_t& acquiredIndex);
+		bool BeginFrame(VkFramebuffer& frmmeBuffer, VkCommandBuffer& buffer, uint32_t& acquiredIndex);
 
 		void EndFrame();
 

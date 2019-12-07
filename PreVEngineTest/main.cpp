@@ -910,6 +910,8 @@ public:
 
 	void PreRender(RenderContext& renderContext) override
 	{
+		m_renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, renderContext.fullExtent);
+
 		VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
 		VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
 
@@ -954,6 +956,7 @@ public:
 
 	void PostRender(RenderContext& renderContext) override
 	{
+		m_renderPass->End(renderContext.commandBuffer);
 	}
 
 	void ShutDown() override

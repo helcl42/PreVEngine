@@ -125,11 +125,12 @@ namespace PreVEngine
 
 		void Render() override
 		{
+			VkFramebuffer fraemBuffer;
 			VkCommandBuffer commandBuffer;
 			uint32_t frameInFlightIndex;
-			if (m_swapchain->BeginFrame(commandBuffer, frameInFlightIndex))
+			if (m_swapchain->BeginFrame(fraemBuffer, commandBuffer, frameInFlightIndex))
 			{
-				RenderContext renderState{ commandBuffer, frameInFlightIndex, m_swapchain->GetExtent() };
+				RenderContext renderState{ fraemBuffer, commandBuffer, frameInFlightIndex, m_swapchain->GetExtent() };
 
 				m_rootNode->Render(renderState);
 

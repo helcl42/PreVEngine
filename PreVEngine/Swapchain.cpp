@@ -435,7 +435,7 @@ namespace PreVEngine
 	}
 	//---------------------------------------------------------------------------------
 
-	bool Swapchain::BeginFrame(VkCommandBuffer& buffer, uint32_t& acquiredIndex)
+	bool Swapchain::BeginFrame(VkFramebuffer& frmmeBuffer, VkCommandBuffer& commandBuffer, uint32_t& acquiredIndex)
 	{
 		SwapchainBuffer swapchainBuffer;
 		if (!AcquireNext(swapchainBuffer))
@@ -443,23 +443,19 @@ namespace PreVEngine
 			return false;
 		}
 
-		acquiredIndex = m_acquiredIndex;
-
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 		VKERRCHECK(vkBeginCommandBuffer(swapchainBuffer.commandBuffer, &beginInfo));
 
-		m_renderPass.Begin(swapchainBuffer.framebuffer, swapchainBuffer.commandBuffer, swapchainBuffer.extent);
-
-		buffer = swapchainBuffer.commandBuffer;
+		frmmeBuffer = swapchainBuffer.framebuffer;
+		commandBuffer = swapchainBuffer.commandBuffer;
+		acquiredIndex = m_acquiredIndex;
 		return true;
 	}
 
 	void Swapchain::EndFrame()
 	{
 		auto& swapchainBuffer = m_swapchainBuffers[m_acquiredIndex];
-		m_renderPass.End(swapchainBuffer.commandBuffer);
-
 		VKERRCHECK(vkEndCommandBuffer(swapchainBuffer.commandBuffer));
 
 		Submit();

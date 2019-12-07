@@ -9,6 +9,8 @@ namespace PreVEngine
 {
 	struct RenderContext
 	{
+		VkFramebuffer frameBuffer;
+
 		VkCommandBuffer commandBuffer;
 
 		uint32_t frameInFlightIndex;
