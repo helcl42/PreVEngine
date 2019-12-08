@@ -366,7 +366,7 @@ namespace PreVEngine
 		//LOGI("Bind UBO   to shader-in: \"%s\"\n", name.c_str());
 	}
 
-	void Shader::Bind(const std::string& name, const VkImageView imageView, const VkSampler sampler)
+	void Shader::Bind(const std::string& name, const VkImageView imageView, const VkSampler sampler, const VkImageLayout imageLayout)
 	{
 		const auto& nameIndex = m_descriptorInfoNameToIndexMapping.find(name);
 		if (nameIndex == m_descriptorInfoNameToIndexMapping.cend())
@@ -378,14 +378,14 @@ namespace PreVEngine
 
 		item.imageInfo.imageView = imageView;
 		item.imageInfo.sampler = sampler;
-		item.imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		item.imageInfo.imageLayout = imageLayout;
 
 		//LOGI("Bind UBO   to shader-in: \"%s\"\n", name.c_str());
 	}
 
-	void Shader::Bind(const std::string& name, const ImageBuffer& image)
+	void Shader::Bind(const std::string& name, const IImageBuffer& image, const VkImageLayout imageLayout)
 	{
-		Bind(name, image.GetImageView(), image.GetSampler());
+		Bind(name, image.GetImageView(), image.GetSampler(), imageLayout);
 	}
 
 	void Shader::CheckBindings() const

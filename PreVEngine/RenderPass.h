@@ -77,7 +77,7 @@ namespace PreVEngine
 
 		void Destroy();
 
-		void Begin(const VkFramebuffer frambuffer, const VkCommandBuffer commadBuffer, const VkExtent2D& extent);
+		void Begin(const VkFramebuffer frambuffer, const VkCommandBuffer commadBuffer, const VkRect2D& renderArea);
 
 		void End(VkCommandBuffer commadBuffer);
 

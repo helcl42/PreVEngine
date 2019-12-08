@@ -8,11 +8,18 @@
 
 namespace PreVEngine
 {
+	// Global functions !!!
 	template<typename Type, ptrdiff_t n>
 	ptrdiff_t ArraySize(Type(&)[n])
 	{
 		return n;
 	}
+
+	static uint32_t Log2(const uint32_t x)
+	{
+		return (uint32_t)(log(x) / log(2));
+	}
+
 
 	class FPSService
 	{
@@ -74,23 +81,7 @@ namespace PreVEngine
 	};
 
 	template <class Type>
-	class IClock
-	{
-	public:
-		virtual void Reset() = 0;
-
-		virtual void UpdateClock() = 0;
-
-		virtual Type GetDelta() = 0;
-
-	public:
-		virtual ~IClock()
-		{
-		}
-	};
-
-	template <class Type>
-	class Clock : public IClock <Type>
+	class Clock
 	{
 	private:
 		std::chrono::time_point<std::chrono::steady_clock> m_lastFrameTimestamp;
@@ -108,64 +99,49 @@ namespace PreVEngine
 		}
 
 	public:
-		void Reset();
-
-		void UpdateClock();
-
-		Type GetDelta();
-	};
-
-	template <class Type>
-	void Clock<Type>::Reset()
-	{
-		m_lastFrameTimestamp = std::chrono::steady_clock::now();
-		m_frameInterval = static_cast<Type>(0.0);
-	}
-
-	template <class Type>
-	void Clock<Type>::UpdateClock()
-	{
-		auto now = std::chrono::steady_clock::now();
-		std::chrono::duration<Type, std::milli> fpMS = now - m_lastFrameTimestamp;
-
-		m_frameInterval = static_cast<Type>(fpMS.count() / 1000.0);
-
-		m_lastFrameTimestamp = now;
-	}
-
-	template <class Type>
-	Type Clock<Type>::GetDelta()
-	{
-		return m_frameInterval;
-	}
-
-	// Global functions !!!
-	static uint32_t Log2(const uint32_t x)
-	{
-		return (uint32_t)(log(x) / log(2));
-	}
-
-	static uint32_t FindMemoryType(const VkPhysicalDevice gpu, const uint32_t typeFilter, const VkMemoryPropertyFlags properties)
-	{
-		VkPhysicalDeviceMemoryProperties memProperties;
-		vkGetPhysicalDeviceMemoryProperties(gpu, &memProperties);
-
-		for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+		void Reset()
 		{
-			if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
-			{
-				return i;
-			}
+			m_lastFrameTimestamp = std::chrono::steady_clock::now();
+			m_frameInterval = static_cast<Type>(0.0);
 		}
 
-		LOGE("failed to find suitable memory type!");
+		void UpdateClock()
+		{
+			auto now = std::chrono::steady_clock::now();
+			std::chrono::duration<Type, std::milli> fpMS = now - m_lastFrameTimestamp;
 
-		return 0;
-	}
+			m_frameInterval = static_cast<Type>(fpMS.count() / 1000.0);
+
+			m_lastFrameTimestamp = now;
+		}
+
+		Type GetDelta() const
+		{
+			return m_frameInterval;
+		}
+	};
 
 	class VkUtils
 	{
 	public:
+		static  uint32_t FindMemoryType(const VkPhysicalDevice gpu, const uint32_t typeFilter, const VkMemoryPropertyFlags properties)
+		{
+			VkPhysicalDeviceMemoryProperties memProperties;
+			vkGetPhysicalDeviceMemoryProperties(gpu, &memProperties);
+
+			for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+			{
+				if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+				{
+					return i;
+				}
+			}
+
+			LOGE("failed to find suitable memory type!");
+
+			return 0;
+		}
+
 		static void CreateImage(const VkPhysicalDevice gpu, const VkDevice device, const VkExtent2D& extent, const VkFormat format, const uint32_t mipLevels, const VkImageTiling tiling, const VkImageUsageFlags usage, const VkMemoryPropertyFlags properties, VkImage& outImage, VkDeviceMemory& outImageMemory)
 		{
 			VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };

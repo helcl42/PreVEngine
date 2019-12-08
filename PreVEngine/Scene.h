@@ -130,9 +130,9 @@ namespace PreVEngine
 			uint32_t frameInFlightIndex;
 			if (m_swapchain->BeginFrame(fraemBuffer, commandBuffer, frameInFlightIndex))
 			{
-				RenderContext renderState{ fraemBuffer, commandBuffer, frameInFlightIndex, m_swapchain->GetExtent() };
+				RenderContext renderContext{ fraemBuffer, commandBuffer, frameInFlightIndex, m_swapchain->GetExtent() };
 
-				m_rootNode->Render(renderState);
+				m_rootNode->Render(renderContext);
 
 				m_swapchain->EndFrame();
 			}

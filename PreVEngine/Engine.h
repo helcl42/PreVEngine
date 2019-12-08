@@ -28,7 +28,7 @@ namespace PreVEngine
 	private:
 		std::shared_ptr<EngineConfig> m_config;
 
-		std::shared_ptr<IClock<float>> m_clock;
+		std::shared_ptr<Clock<float>> m_clock;
 
 		std::shared_ptr<FPSService> m_fpsService;
 

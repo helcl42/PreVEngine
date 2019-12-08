@@ -160,7 +160,36 @@ namespace PreVEngine
 		}
 	};
 
-	class AbstractImageBuffer
+	class IImageBuffer
+	{
+	public:
+		virtual void Create(const ImageBufferCreateInfo& createInfo) = 0;
+
+		virtual void Resize(const VkExtent2D& extent) = 0;
+
+		virtual void Destroy() = 0;
+
+		virtual void CreateSampler(const float maxLod = 1.0f) = 0;
+
+		virtual void UpdateSampler(const VkSamplerCreateInfo& samplerInfo) = 0;
+
+		virtual VkImage GetImage() const = 0;
+
+		virtual VkImageView GetImageView() const = 0;
+
+		virtual VkSampler GetSampler() const = 0;
+
+		virtual VkFormat GetFormat() const = 0;
+
+		virtual VkExtent2D GetExtent() const = 0;
+
+		virtual bool HasMipMaps() const = 0;
+
+	public:
+		virtual ~IImageBuffer() {}
+	};
+
+	class AbstractImageBuffer : public IImageBuffer
 	{
 	protected:
 		Allocator& m_allocator;
@@ -184,31 +213,25 @@ namespace PreVEngine
 
 		virtual ~AbstractImageBuffer();
 
-	protected:
-		void CreateSampler(const float maxLod = 0);
+	public:
+		void UpdateSampler(const VkSamplerCreateInfo& samplerInfo) override;
+
+		void Destroy() override;
+
+		void CreateSampler(const float maxLod = 1.0f) override;
 
 	public:
-		void UpdateSampler(const VkSamplerCreateInfo& samplerInfo); // Update sampler settings
+		VkImage GetImage() const override;
 
-		void Destroy();
+		VkImageView GetImageView() const override;
 
-	public:
-		virtual void Create(const ImageBufferCreateInfo& createInfo) = 0;
+		VkSampler GetSampler() const override;
 
-		virtual void Resize(const VkExtent2D& extent) = 0;
+		VkFormat GetFormat() const override;
 
-	public:
-		VkImage GetImage() const;
+		VkExtent2D GetExtent() const override;
 
-		VkImageView GetImageView() const;
-
-		VkSampler GetSampler() const;
-
-		VkFormat GetFormat() const;
-
-		VkExtent2D GetExtent() const;
-
-		bool HasMipMaps() const;
+		bool HasMipMaps() const override;
 	};
 
 	//----------------------------------Image Buffer----------------------------------

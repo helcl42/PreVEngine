@@ -9,9 +9,9 @@ namespace PreVEngine
 {
 	struct RenderContext
 	{
-		VkFramebuffer frameBuffer;
+		VkFramebuffer defaultFrameBuffer;
 
-		VkCommandBuffer commandBuffer;
+		VkCommandBuffer defaultCommandBuffer;
 
 		uint32_t frameInFlightIndex;
 
@@ -27,7 +27,7 @@ namespace PreVEngine
 
 		virtual void Update(float deltaTime) = 0;
 
-		virtual void Render(RenderContext& renderState) = 0;
+		virtual void Render(RenderContext& renderContext) = 0;
 
 		virtual const std::vector<std::shared_ptr<ISceneNode>>& GetChildren() const = 0;
 
@@ -116,7 +116,7 @@ namespace PreVEngine
 			}
 		}
 
-		virtual void Render(RenderContext& renderState) override
+		virtual void Render(RenderContext& renderContext) override
 		{
 		}
 

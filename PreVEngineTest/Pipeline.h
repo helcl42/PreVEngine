@@ -48,6 +48,7 @@ public:
 	operator VkPipeline() const;
 };
 
+
 class ShadowsPipeline final : public AbstractGraphicsPipeline
 {
 public:
@@ -59,6 +60,7 @@ public:
 	VkPipeline Init() override;
 };
 
+
 class DefaultPipeline final : public AbstractGraphicsPipeline
 {
 
@@ -66,6 +68,19 @@ public:
 	DefaultPipeline(VkDevice device, VkRenderPass renderpass, Shader& shaders);
 
 	~DefaultPipeline();
+
+public:
+	VkPipeline Init() override;
+};
+
+
+class QuadPipeline final : public AbstractGraphicsPipeline
+{
+
+public:
+	QuadPipeline(VkDevice device, VkRenderPass renderpass, Shader& shaders);
+
+	~QuadPipeline();
 
 public:
 	VkPipeline Init() override;

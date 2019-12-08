@@ -685,7 +685,7 @@ namespace PreVEngine
 
 		VkExtent3D ext3D{ extent.width, extent.height, 1 };
 
-		m_allocator.CreateImage(ext3D, m_format, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, m_image, m_allocation);
+		m_allocator.CreateImage(ext3D, m_format, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_image, m_allocation);
 		m_allocator.CreateImageView(m_image, m_format, 1, VK_IMAGE_ASPECT_DEPTH_BIT, m_imageView);
 
 		m_extent = extent;

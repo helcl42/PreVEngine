@@ -142,7 +142,38 @@ public:
 	}
 };
 
-class CubeMaterial : public IMaterial
+class QuadMesh : public IMesh
+{
+private:
+	const std::vector<Vertex> m_vertices = {
+		{ { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ { 0.5f, -0.5f, 0.5f }, { 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ { 0.5f, 0.5f, 0.5f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ { -0.5f, 0.5f, 0.5f }, { 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
+	};
+
+	const std::vector<uint32_t> m_indices = {
+		0, 1, 2, 2, 3, 0
+	};
+
+public:
+	virtual const std::vector<Vertex>& GerVertices() const override
+	{
+		return m_vertices;
+	}
+
+	const std::vector<uint32_t>& GerIndices() const override
+	{
+		return m_indices;
+	}
+
+	bool HasIndices() const override
+	{
+		return true;
+	}
+};
+
+class Material : public IMaterial
 {
 private:
 	std::shared_ptr<Image> m_image;
@@ -150,12 +181,12 @@ private:
 	std::shared_ptr<ImageBuffer> m_imageBuffer;
 
 public:
-	CubeMaterial(std::shared_ptr<Image> image, std::shared_ptr<ImageBuffer> imageBuffer)
+	Material(std::shared_ptr<Image> image, std::shared_ptr<ImageBuffer> imageBuffer)
 		: m_image(image), m_imageBuffer(imageBuffer)
 	{
 	}
 
-	virtual ~CubeMaterial()
+	virtual ~Material()
 	{
 	}
 
@@ -176,7 +207,7 @@ public:
 	}
 };
 
-class CubeModel : public IModel
+class Model : public IModel
 {
 private:
 	std::shared_ptr<IMesh> m_mesh;
@@ -186,12 +217,12 @@ private:
 	std::shared_ptr<IBO> m_ibo;
 
 public:
-	CubeModel(std::shared_ptr<IMesh> mesh, std::shared_ptr<VBO> vbo, std::shared_ptr<IBO> ibo)
+	Model(std::shared_ptr<IMesh> mesh, std::shared_ptr<VBO> vbo, std::shared_ptr<IBO> ibo)
 		: m_mesh(mesh), m_vbo(vbo), m_ibo(ibo)
 	{
 	}
 
-	virtual ~CubeModel()
+	virtual ~Model()
 	{
 	}
 
@@ -267,7 +298,7 @@ public:
 		std::shared_ptr<ImageBuffer> imageBuffer = std::make_shared<ImageBuffer>(allocator);
 		imageBuffer->Create(ImageBufferCreateInfo{ imageExtent, VK_FORMAT_R8G8B8A8_UNORM, true, image->GetBuffer() });
 
-		std::shared_ptr<IMaterial> material = std::make_shared<CubeMaterial>(image, imageBuffer);
+		std::shared_ptr<IMaterial> material = std::make_shared<Material>(image, imageBuffer);
 
 		// mesh
 		std::shared_ptr<IMesh> mesh = std::make_shared<CubeMesh>();
@@ -279,7 +310,7 @@ public:
 		std::shared_ptr<IBO> indexBuffer = std::make_shared<IBO>(allocator);
 		indexBuffer->Data(mesh->GerIndices().data(), (uint32_t)mesh->GerIndices().size());
 
-		std::shared_ptr<IModel> model = std::make_shared<CubeModel>(mesh, vertexBuffer, indexBuffer);
+		std::shared_ptr<IModel> model = std::make_shared<Model>(mesh, vertexBuffer, indexBuffer);
 
 		// render componene
 		std::shared_ptr<IRenderComponent> cubeComponent = std::make_shared<CubeRenderComponent>(model, material);
@@ -850,12 +881,190 @@ public:
 	}
 };
 
+// TODO make it as scene node with sphere model -> disable casting shadows
+class Light
+{
+private:
+	glm::vec3 m_position;
+
+public:
+	Light(const glm::vec3& pos)
+		: m_position(pos)
+	{
+	}
+
+	~Light()
+	{
+	}
+
+public:
+	void Update(float deltaTime)
+	{
+		// TODO -> rotate around look at position ?!
+	}
+
+public:
+	glm::mat4 LookAt() const
+	{
+		return glm::lookAt(m_position, glm::vec3(0.0f), glm::vec3(0, 1, 0));
+	}
+
+	glm::vec3 GetPosition() const
+	{
+		return m_position;
+	}
+};
+
+class Shadows
+{
+private:
+	const VkFormat m_shadowMapFormat = VK_FORMAT_D16_UNORM;
+
+	const uint32_t m_shadowMapDimension = 2048;
+
+	const VkFilter m_shadowMapFilter = VK_FILTER_LINEAR;
+
+private:
+	std::shared_ptr<Allocator> m_allocator;
+
+	std::shared_ptr<Device> m_device;
+
+private:
+	std::shared_ptr<RenderPass> m_renderPass;
+
+	std::shared_ptr<DepthImageBuffer> m_depthBuffer;
+
+	VkFramebuffer m_frameBuffer;
+
+public:
+	Shadows(std::shared_ptr<Allocator> allocator, std::shared_ptr<Device> dev)
+		: m_allocator(allocator), m_device(dev)
+	{
+	}
+
+	virtual ~Shadows()
+	{
+	}
+
+private:
+	void InitRenderPass()
+	{
+		std::vector<VkSubpassDependency> dependencies(2);
+		dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependencies[0].dstSubpass = 0;
+		dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		dependencies[0].dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		dependencies[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		dependencies[0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+		dependencies[1].srcSubpass = 0;
+		dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+		dependencies[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+		dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		dependencies[1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+		m_renderPass = std::make_shared<RenderPass>(*m_device);
+		m_renderPass->AddDepthAttachment(m_shadowMapFormat);
+		m_renderPass->AddSubpass({ 0 });
+		m_renderPass->AddSubpassDependency(dependencies);
+		m_renderPass->Create();
+	}
+
+	void ShutDownRenderPass()
+	{
+		m_renderPass->Destroy();
+	}
+
+	void InitFrameBuffer()
+	{
+		m_depthBuffer = std::make_shared<DepthImageBuffer>(*m_allocator);
+		m_depthBuffer->Create(ImageBufferCreateInfo{ GetExtent(), m_shadowMapFormat });
+		m_depthBuffer->CreateSampler();
+
+		m_frameBuffer = VkUtils::CreateFrameBuffer(*m_device, *m_renderPass, { m_depthBuffer->GetImageView() }, GetExtent());
+	}
+
+	void ShutDownFrameBuffer()
+	{
+		vkDestroyFramebuffer(*m_device, m_frameBuffer, nullptr);
+
+		m_depthBuffer->Destroy();
+	}
+
+public:
+	void Init()
+	{
+		InitRenderPass();
+		InitFrameBuffer();
+	}
+
+	void ShutDown()
+	{
+		ShutDownFrameBuffer();
+		ShutDownRenderPass();
+	}
+
+public:
+	std::shared_ptr<RenderPass> GetRenderPass() const
+	{
+		return m_renderPass;
+	}
+
+	VkFramebuffer GetFrameBuffer() const
+	{
+		return m_frameBuffer;
+	}
+
+	VkExtent2D GetExtent() const
+	{
+		return { m_shadowMapDimension, m_shadowMapDimension };
+	}
+
+	std::shared_ptr<IImageBuffer> GetImageBuffer() const
+	{
+		return m_depthBuffer;
+	}
+};
+
 class ShadowsRenderer : public IRenderer
 {
 private:
+	struct Uniforms
+	{
+		alignas(16) glm::mat4 model;
+		alignas(16) glm::mat4 view;
+		alignas(16) glm::mat4 proj;
+	};
+
+private:
+	// Depth bias (and slope) are used to avoid shadowing artefacts Constant depth bias factor (always applied)
+	const float m_depthBiasConstant = 1.25f;
+
+	// Slope depth bias factor, applied depending on polygon's slope
+	const float m_depthBiasSlope = 1.75f;
+
+private:
+	std::shared_ptr<Allocator> m_allocator;
+
+	std::shared_ptr<Device> m_device;
+
+	std::shared_ptr<Shadows> m_shadows;
+
+	Light m_light{ glm::vec3(200.0f, 200.0f, 200.0f) };
+
+private:
+	std::shared_ptr<Shader> m_shader;
+
+	std::shared_ptr<IGraphicsPipeline> m_pipeline;
+
+	std::shared_ptr<UBOPool<Uniforms>> m_uniformsPool;
 
 public:
-	ShadowsRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass)
+	ShadowsRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<Shadows> shadows, const Light& light)
+		: m_allocator(alloc), m_device(dev), m_shadows(shadows), m_light(light)
 	{
 	}
 
@@ -866,27 +1075,177 @@ public:
 public:
 	void Init() override
 	{
-		// TODO
+		ShaderFactory shaderFactory;
+		m_shader = shaderFactory.CreateShaderFromFiles(*m_device, {
+			{ VK_SHADER_STAGE_VERTEX_BIT, "shaders/shadows_vert.spv" }
+			});
+		m_shader->AdjustDescriptorPoolCapacity(10000);
+
+		printf("Shadows Shader created\n");
+
+		m_pipeline = std::make_shared<ShadowsPipeline>(*m_device, *m_shadows->GetRenderPass(), *m_shader);
+		m_pipeline->Init();
+
+		printf("Shadows Pipeline created\n");
+
+		m_uniformsPool = std::make_shared<UBOPool<Uniforms>>(m_allocator);
+		m_uniformsPool->AdjustCapactity(10000);
 	}
 
 	void PreRender(RenderContext& renderContext) override
 	{
-		// TODO
+		m_shadows->GetRenderPass()->Begin(m_shadows->GetFrameBuffer(), renderContext.defaultCommandBuffer, { { 0, 0 }, m_shadows->GetExtent() });
+
+		VkRect2D scissor = { { 0, 0 }, m_shadows->GetExtent() };
+		VkViewport viewport = { 0, 0, static_cast<float>(m_shadows->GetExtent().width), static_cast<float>(m_shadows->GetExtent().height), 0, 1 };
+
+		vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+		vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
+		vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+
+		vkCmdSetDepthBias(renderContext.defaultCommandBuffer, m_depthBiasConstant, 0.0f, m_depthBiasSlope);
 	}
 
 	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode> node) override
 	{
-		// TODO
+		if (ComponentRepository<IRenderComponent>::GetInstance().Contains(node->GetId()))
+		{
+			auto renderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());
+
+			auto ubo = m_uniformsPool->GetNext();
+
+			Uniforms uniforms;
+			uniforms.proj = glm::ortho(2.5f / (static_cast<float>(m_shadows->GetExtent().width) / static_cast<float>(m_shadows->GetExtent().height)), 0.0f, 0.0f, 2.5f, -1.0f, 1.0f);
+			uniforms.view = m_light.LookAt();
+			uniforms.model = node->GetWorldTransformScaled();
+			ubo->Update(&uniforms);
+
+			m_shader->Bind("ubo", *ubo);
+
+			VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+			VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
+			VkDeviceSize offsets[] = { 0 };
+
+			vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
+			vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+			vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+			vkCmdDrawIndexed(renderContext.defaultCommandBuffer, renderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+		}
+
+		for (auto child : node->GetChildren())
+		{
+			Render(renderContext, child);
+		}
 	}
 
 	void PostRender(RenderContext& renderContext) override
 	{
-		// TODO
+		m_shadows->GetRenderPass()->End(renderContext.defaultCommandBuffer);
 	}
 
 	void ShutDown() override
 	{
-		// TODO
+		m_pipeline->ShutDown();
+
+		m_shader->ShutDown();
+	}
+};
+
+class QuadRenderer : public IRenderer
+{
+private:
+	std::shared_ptr<Device> m_device;
+
+	std::shared_ptr<RenderPass> m_renderPass;
+
+	std::shared_ptr<Allocator> m_allocator;
+
+private:
+	std::shared_ptr<Shader> m_shader;
+
+	std::shared_ptr<IGraphicsPipeline> m_pipeline;
+
+private:
+	std::shared_ptr<IImageBuffer> m_imageBuffer;
+
+	std::shared_ptr<IModel> m_quadModel;
+
+public:
+	QuadRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass, std::shared_ptr<IImageBuffer> imageBuffer)
+		: m_device(dev), m_renderPass(renderPass), m_allocator(alloc), m_imageBuffer(imageBuffer)
+	{
+	}
+
+	virtual ~QuadRenderer()
+	{
+	}
+
+public:
+	void Init() override
+	{
+		ShaderFactory shaderFactory;
+		m_shader = shaderFactory.CreateShaderFromFiles(*m_device, {
+			{ VK_SHADER_STAGE_VERTEX_BIT, "shaders/quad_vert.spv" },
+			{ VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/quad_frag.spv" }
+			});
+		m_shader->AdjustDescriptorPoolCapacity(10000);
+
+		printf("Default Shader created\n");
+
+		m_pipeline = std::make_shared<QuadPipeline>(*m_device, *m_renderPass, *m_shader);
+		m_pipeline->Init();
+
+		// create quad model
+		std::shared_ptr<IMesh> quadMesh = std::make_shared<QuadMesh>();
+
+		std::shared_ptr<VBO> vertexBuffer = std::make_shared<VBO>(*m_allocator);
+		vertexBuffer->Data((void*)quadMesh->GerVertices().data(), (uint32_t)quadMesh->GerVertices().size(), sizeof(Vertex));
+
+		std::shared_ptr<IBO> indexBuffer = std::make_shared<IBO>(*m_allocator);
+		indexBuffer->Data(quadMesh->GerIndices().data(), (uint32_t)quadMesh->GerIndices().size());
+
+		m_quadModel = std::make_shared<Model>(quadMesh, vertexBuffer, indexBuffer);
+	}
+
+	void PreRender(RenderContext& renderContext) override
+	{
+		m_renderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, { { static_cast<int32_t>(renderContext.fullExtent.width / 2), static_cast<int32_t>(renderContext.fullExtent.height / 2) }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 } });
+
+		VkRect2D scissor = { { 0, 0 }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 } };
+		VkViewport viewport = { static_cast<float>(renderContext.fullExtent.width / 2), static_cast<float>(renderContext.fullExtent.height / 2), static_cast<float>(renderContext.fullExtent.width / 2), static_cast<float>(renderContext.fullExtent.height / 2), 0, 1 };
+
+		vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+		vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
+		vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+	}
+
+	// make a node with quad model & shadowMap texture ???
+	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode> node) override
+	{
+		m_shader->Bind("texSampler", *m_imageBuffer, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+		VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+
+		VkBuffer vertexBuffers[] = { *m_quadModel->GetVertexBuffer() };
+		VkDeviceSize offsets[] = { 0 };
+
+		vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
+		vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *m_quadModel->GetIndexBuffer(), 0, m_quadModel->GetIndexBuffer()->GetIndexType());
+		vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+		vkCmdDrawIndexed(renderContext.defaultCommandBuffer, m_quadModel->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+	}
+
+	void PostRender(RenderContext& renderContext) override
+	{
+		m_renderPass->End(renderContext.defaultCommandBuffer);
+	}
+
+	void ShutDown() override
+	{
+		m_shader->ShutDown();
+
+		m_pipeline->ShutDown();
 	}
 };
 
@@ -933,17 +1292,17 @@ public:
 	{
 		ShaderFactory shaderFactory;
 		m_shader = shaderFactory.CreateShaderFromFiles(*m_device, {
-			{ VK_SHADER_STAGE_VERTEX_BIT, "shaders/vert.spv" },
-			{ VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/frag.spv" }
+			{ VK_SHADER_STAGE_VERTEX_BIT, "shaders/scene_vert.spv" },
+			{ VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/scene_frag.spv" }
 		});
 		m_shader->AdjustDescriptorPoolCapacity(10000);
 
-		printf("Shader created\n");
+		printf("Default Shader created\n");
 
 		m_pipeline = std::make_shared<DefaultPipeline>(*m_device, *m_renderPass, *m_shader);
 		m_pipeline->Init();
 
-		printf("Pipeline created\n");
+		printf("Default Pipeline created\n");
 
 		m_uniformsPool = std::make_shared<UBOPool<Uniforms>>(m_allocator);
 		m_uniformsPool->AdjustCapactity(10000);
@@ -951,14 +1310,14 @@ public:
 
 	void PreRender(RenderContext& renderContext) override
 	{
-		m_renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, renderContext.fullExtent);
+		m_renderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, renderContext.fullExtent });
 
 		VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
 		VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
 
-		vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-		vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
-		vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
+		vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+		vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
+		vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
 	}
 
 	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode> node) override
@@ -975,18 +1334,18 @@ public:
 			uniforms.model = node->GetWorldTransformScaled();
 			ubo->Update(&uniforms);
 
-			m_shader->Bind("texSampler", *renderComponent->GetMaterial()->GetImageBuffer());
+			m_shader->Bind("texSampler", *renderComponent->GetMaterial()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 			m_shader->Bind("ubo", *ubo);
 
 			VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
 			VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
 			VkDeviceSize offsets[] = { 0 };
 
-			vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-			vkCmdBindIndexBuffer(renderContext.commandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-			vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+			vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
+			vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+			vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-			vkCmdDrawIndexed(renderContext.commandBuffer, renderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+			vkCmdDrawIndexed(renderContext.defaultCommandBuffer, renderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
 		}
 
 		for (auto child : node->GetChildren())
@@ -997,11 +1356,14 @@ public:
 
 	void PostRender(RenderContext& renderContext) override
 	{
-		m_renderPass->End(renderContext.commandBuffer);
+		m_renderPass->End(renderContext.defaultCommandBuffer);
 	}
 
 	void ShutDown() override
 	{
+		m_shader->ShutDown();
+
+		m_pipeline->ShutDown();
 	}
 };
 
@@ -1021,7 +1383,14 @@ private:
 
 	std::shared_ptr<IRenderer> m_defaultRenderer;
 
+	std::shared_ptr<IRenderer> m_quadRenderer;
+
 	std::shared_ptr<Camera> m_freeCamera;
+
+private:
+	std::shared_ptr<Shadows> m_shadows;
+
+	Light m_light{ glm::vec3(200.0f, 200.0f, 200.0f) };
 
 public:
 	RootSceneNode(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass)
@@ -1036,6 +1405,9 @@ public:
 public:
 	void Init() override
 	{
+		m_shadows = std::make_shared<Shadows>(m_allocator, m_device);
+		m_shadows->Init();
+
 		m_freeCamera = std::make_shared<Camera>();
 
 		auto camRobot = std::make_shared<CubeRobot>(m_allocator, glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), "texture.jpg");
@@ -1043,11 +1415,14 @@ public:
 
 		AddChild(m_freeCamera);
 
-		m_shadowsRenderer = std::make_shared<ShadowsRenderer>(m_allocator, m_device, m_shadowsRenderPass); // TODO where to pass light node >>>
+		m_shadowsRenderer = std::make_shared<ShadowsRenderer>(m_allocator, m_device, m_shadows, m_light);
 		m_shadowsRenderer->Init();
 
 		m_defaultRenderer = std::make_shared<DefaultSceneRenderer>(m_allocator, m_device, m_defaultRenderPass, m_freeCamera);
 		m_defaultRenderer->Init();
+
+		m_quadRenderer = std::make_shared<QuadRenderer>(m_allocator, m_device, m_defaultRenderPass, m_shadows->GetImageBuffer());
+		m_quadRenderer->Init();
 
 		const int32_t CUBE_SIZE_HALF = 1;
 		const float DISTANCE = 40.0f;
@@ -1078,27 +1453,34 @@ public:
 		}
 	}
 
-	void Render(RenderContext& renderState) override
+	void Render(RenderContext& renderContext) override
 	{
 		// shadows
-		m_shadowsRenderer->PreRender(renderState);
+		m_shadowsRenderer->PreRender(renderContext);
 
 		for (auto child : m_children)
 		{
-			m_shadowsRenderer->Render(renderState, child);
+			m_shadowsRenderer->Render(renderContext, child);
 		}
 
-		m_shadowsRenderer->PostRender(renderState);
+		m_shadowsRenderer->PostRender(renderContext);
 
 		// Default
-		m_defaultRenderer->PreRender(renderState);
+		m_defaultRenderer->PreRender(renderContext);
 
 		for (auto child : m_children)
 		{
-			m_defaultRenderer->Render(renderState, child);
+			m_defaultRenderer->Render(renderContext, child);
 		}
 
-		m_defaultRenderer->PostRender(renderState);
+		m_defaultRenderer->PostRender(renderContext);
+
+		// Debug quad with shadowMap
+		m_quadRenderer->PreRender(renderContext);
+		
+		m_quadRenderer->Render(renderContext, nullptr);
+
+		m_quadRenderer->PostRender(renderContext);
 	}
 
 	void ShutDown() override
@@ -1108,8 +1490,11 @@ public:
 			child->ShutDown();
 		}
 
+		m_quadRenderer->ShutDown();
 		m_defaultRenderer->ShutDown();
 		m_shadowsRenderer->ShutDown();
+
+		m_shadows->ShutDown();
 	}
 };
 
