@@ -146,10 +146,10 @@ class QuadMesh : public IMesh
 {
 private:
 	const std::vector<Vertex> m_vertices = {
-		{ { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } },
-		{ { 0.5f, -0.5f, 0.5f }, { 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } },
-		{ { 0.5f, 0.5f, 0.5f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-		{ { -0.5f, 0.5f, 0.5f }, { 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ { 1.0f, 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ { 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
 	};
 
 	const std::vector<uint32_t> m_indices = {
@@ -1053,7 +1053,7 @@ private:
 
 	std::shared_ptr<Shadows> m_shadows;
 
-	Light m_light{ glm::vec3(200.0f, 200.0f, 200.0f) };
+	const Light& m_light;
 
 private:
 	std::shared_ptr<Shader> m_shader;
@@ -1061,6 +1061,8 @@ private:
 	std::shared_ptr<IGraphicsPipeline> m_pipeline;
 
 	std::shared_ptr<UBOPool<Uniforms>> m_uniformsPool;
+
+	ViewFrustum m_viewFrustum{ 70.0f, 0.01f, 300.0f };
 
 public:
 	ShadowsRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<Shadows> shadows, const Light& light)
@@ -1115,7 +1117,7 @@ public:
 			auto ubo = m_uniformsPool->GetNext();
 
 			Uniforms uniforms;
-			uniforms.proj = glm::ortho(2.5f / (static_cast<float>(m_shadows->GetExtent().width) / static_cast<float>(m_shadows->GetExtent().height)), 0.0f, 0.0f, 2.5f, -1.0f, 1.0f);
+			uniforms.proj = m_viewFrustum.CreateProjectionMatrix(m_shadows->GetExtent().width, m_shadows->GetExtent().height);
 			uniforms.view = m_light.LookAt();
 			uniforms.model = node->GetWorldTransformScaled();
 			ubo->Update(&uniforms);
@@ -1210,10 +1212,15 @@ public:
 
 	void PreRender(RenderContext& renderContext) override
 	{
-		m_renderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, { { static_cast<int32_t>(renderContext.fullExtent.width / 2), static_cast<int32_t>(renderContext.fullExtent.height / 2) }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 } });
+		//m_renderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, { { static_cast<int32_t>(renderContext.fullExtent.width / 2), static_cast<int32_t>(renderContext.fullExtent.height / 2) }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 } });
 
-		VkRect2D scissor = { { 0, 0 }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 } };
-		VkViewport viewport = { static_cast<float>(renderContext.fullExtent.width / 2), static_cast<float>(renderContext.fullExtent.height / 2), static_cast<float>(renderContext.fullExtent.width / 2), static_cast<float>(renderContext.fullExtent.height / 2), 0, 1 };
+		m_renderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, renderContext.fullExtent });
+
+		//VkRect2D scissor = { { 0, 0 }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 } };
+		//VkViewport viewport = { static_cast<float>(renderContext.fullExtent.width / 2), static_cast<float>(renderContext.fullExtent.height / 2), static_cast<float>(renderContext.fullExtent.width / 2), static_cast<float>(renderContext.fullExtent.height / 2), 0, 1 };
+
+		VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+		VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
 
 		vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
 		vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
@@ -1223,7 +1230,7 @@ public:
 	// make a node with quad model & shadowMap texture ???
 	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode> node) override
 	{
-		m_shader->Bind("texSampler", *m_imageBuffer, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+		m_shader->Bind("texSampler", *m_imageBuffer, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 		VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
 
 		VkBuffer vertexBuffers[] = { *m_quadModel->GetVertexBuffer() };
@@ -1275,7 +1282,7 @@ private:
 
 	std::shared_ptr<Camera> m_freeCamera;
 
-	ViewFrustum m_viewFrustum{ 70.0f, 0.01f, 200.0f };
+	ViewFrustum m_viewFrustum{ 70.0f, 0.01f, 300.0f };
 
 public:
 	DefaultSceneRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass, std::shared_ptr<Camera> camera)
@@ -1390,7 +1397,7 @@ private:
 private:
 	std::shared_ptr<Shadows> m_shadows;
 
-	Light m_light{ glm::vec3(200.0f, 200.0f, 200.0f) };
+	Light m_light{ glm::vec3(100.0f, 100.0f, 100.0f) };
 
 public:
 	RootSceneNode(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass)
@@ -1466,14 +1473,14 @@ public:
 		m_shadowsRenderer->PostRender(renderContext);
 
 		// Default
-		m_defaultRenderer->PreRender(renderContext);
+		//m_defaultRenderer->PreRender(renderContext);
 
-		for (auto child : m_children)
-		{
-			m_defaultRenderer->Render(renderContext, child);
-		}
+		//for (auto child : m_children)
+		//{
+		//	m_defaultRenderer->Render(renderContext, child);
+		//}
 
-		m_defaultRenderer->PostRender(renderContext);
+		//m_defaultRenderer->PostRender(renderContext);
 
 		// Debug quad with shadowMap
 		m_quadRenderer->PreRender(renderContext);
