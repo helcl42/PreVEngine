@@ -1234,11 +1234,6 @@ public:
 
 	void PreRender(RenderContext& renderContext) override
 	{
-		//m_renderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, { { static_cast<int32_t>(renderContext.fullExtent.width / 2), static_cast<int32_t>(renderContext.fullExtent.height / 2) }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 } });
-
-		//VkRect2D scissor = { { 0, 0 }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 } };
-		//VkViewport viewport = { static_cast<float>(renderContext.fullExtent.width / 2), static_cast<float>(renderContext.fullExtent.height / 2), static_cast<float>(renderContext.fullExtent.width / 2), static_cast<float>(renderContext.fullExtent.height / 2), 0, 1 };
-
 		VkRect2D renderRect;
 		renderRect.extent.width = renderContext.fullExtent.width / 2;
 		renderRect.extent.height = renderContext.fullExtent.height / 2;
@@ -1246,9 +1241,6 @@ public:
 		renderRect.offset.y = 0;
 
 		m_renderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, renderRect);
-
-		//VkRect2D scissor = { { 0, 0 }, { renderContext.fullExtent.width, renderContext.fullExtent.height} };
-		//VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width / 2), static_cast<float>(renderContext.fullExtent.height / 2), 0, 1 };
 
 		VkRect2D scissor;
 		scissor.extent.width = renderContext.fullExtent.width;
