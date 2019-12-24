@@ -1239,10 +1239,30 @@ public:
 		//VkRect2D scissor = { { 0, 0 }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 } };
 		//VkViewport viewport = { static_cast<float>(renderContext.fullExtent.width / 2), static_cast<float>(renderContext.fullExtent.height / 2), static_cast<float>(renderContext.fullExtent.width / 2), static_cast<float>(renderContext.fullExtent.height / 2), 0, 1 };
 
-		m_renderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 }});
+		VkRect2D renderRect;
+		renderRect.extent.width = renderContext.fullExtent.width / 2;
+		renderRect.extent.height = renderContext.fullExtent.height / 2;
+		renderRect.offset.x = 0;
+		renderRect.offset.y = 0;
 
-		VkRect2D scissor = { { 0, 0 }, { renderContext.fullExtent.width, renderContext.fullExtent.height} };
-		VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width / 2), static_cast<float>(renderContext.fullExtent.height / 2), 0, 1 };
+		m_renderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, renderRect);
+
+		//VkRect2D scissor = { { 0, 0 }, { renderContext.fullExtent.width, renderContext.fullExtent.height} };
+		//VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width / 2), static_cast<float>(renderContext.fullExtent.height / 2), 0, 1 };
+
+		VkRect2D scissor;
+		scissor.extent.width = renderContext.fullExtent.width;
+		scissor.extent.height = renderContext.fullExtent.height;
+		scissor.offset.x = 0;
+		scissor.offset.y = 0;
+
+		VkViewport viewport;
+		viewport.width = static_cast<float>(renderContext.fullExtent.width);
+		viewport.height = static_cast<float>(renderContext.fullExtent.height);
+		viewport.x = -static_cast<float>(renderContext.fullExtent.width / 2.0f);
+		viewport.y = -static_cast<float>(renderContext.fullExtent.height / 2.0f);
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
 
 		vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
 		vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
