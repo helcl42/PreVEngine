@@ -646,10 +646,32 @@ public:
 public:
 	glm::mat4 CreateProjectionMatrix(const uint32_t w, const uint32_t h)
 	{
-		glm::mat4 projectionMatrix = glm::perspective(m_fov, static_cast<float>(w) / static_cast<float>(h), m_nearClippingPlane, m_farClippingPlane);
+		const float aspectRatio = static_cast<float>(w) / static_cast<float>(h);
+		return CreateProjectionMatrix(aspectRatio);
+	}
+
+	glm::mat4 CreateProjectionMatrix(const float aspectRatio)
+	{
+		glm::mat4 projectionMatrix = glm::perspective(m_fov, aspectRatio, m_nearClippingPlane, m_farClippingPlane);
 		projectionMatrix[1][1] *= -1; // invert Y in clip coordinates
 
 		return projectionMatrix;
+	}
+
+public:
+	float GetFov() const // vertical
+	{
+		return m_fov;
+	}
+
+	float GetNearClippingPlane() const
+	{
+		return m_nearClippingPlane;
+	}
+
+	float GetFarClippingPlane() const
+	{
+		return m_farClippingPlane;
 	}
 };
 
