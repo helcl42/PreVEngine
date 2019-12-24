@@ -8,8 +8,8 @@ layout (location = 0) out vec4 outFragColor;
 
 float LinearizeDepth(float depth)
 {
-  float n = 1.0; // camera z near
-  float f = 128.0; // camera z far
+  float n = 0.01; // camera z near
+  float f = 300.0; // camera z far
   float z = depth;
   return (2.0 * n) / (f + n - z * (f - n));
 }
@@ -17,5 +17,5 @@ float LinearizeDepth(float depth)
 void main() 
 {
 	float depth = texture(texSampler, textureCoord).r;
-	outFragColor = vec4(vec3(1.0-LinearizeDepth(depth)), 1.0);
+	outFragColor = vec4(vec3(1.0 - LinearizeDepth(depth)), 1.0);
 }

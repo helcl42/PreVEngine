@@ -28,7 +28,7 @@ namespace PreVEngine
 
 	void SubPass::UseAttachment(uint32_t attachmentIndex)
 	{
-		if (m_renderPass.GetAttachments().at(attachmentIndex).finalLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) // depth-stencil attachment
+		if (m_renderPass.GetAttachments().at(attachmentIndex).finalLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL) // depth-stencil attachment
 		{
 			m_depthReference.attachment = attachmentIndex;
 			m_depthReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
@@ -115,7 +115,7 @@ namespace PreVEngine
 		m_clearValues.push_back({});
 		m_clearValues.back().depthStencil = clearVal;
 
-		m_attachments.push_back(CreateAttachmentDescription(format, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL));
+		m_attachments.push_back(CreateAttachmentDescription(format, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL));
 
 		return static_cast<uint32_t>(m_attachments.size() - 1);
 	}

@@ -1214,13 +1214,13 @@ public:
 	{
 		//m_renderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, { { static_cast<int32_t>(renderContext.fullExtent.width / 2), static_cast<int32_t>(renderContext.fullExtent.height / 2) }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 } });
 
-		m_renderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, renderContext.fullExtent });
-
 		//VkRect2D scissor = { { 0, 0 }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 } };
 		//VkViewport viewport = { static_cast<float>(renderContext.fullExtent.width / 2), static_cast<float>(renderContext.fullExtent.height / 2), static_cast<float>(renderContext.fullExtent.width / 2), static_cast<float>(renderContext.fullExtent.height / 2), 0, 1 };
 
-		VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-		VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
+		m_renderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 }});
+
+		VkRect2D scissor = { { 0, 0 }, { renderContext.fullExtent.width, renderContext.fullExtent.height} };
+		VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width / 2), static_cast<float>(renderContext.fullExtent.height / 2), 0, 1 };
 
 		vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
 		vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
@@ -1473,14 +1473,14 @@ public:
 		m_shadowsRenderer->PostRender(renderContext);
 
 		// Default
-		//m_defaultRenderer->PreRender(renderContext);
+		m_defaultRenderer->PreRender(renderContext);
 
-		//for (auto child : m_children)
-		//{
-		//	m_defaultRenderer->Render(renderContext, child);
-		//}
+		for (auto child : m_children)
+		{
+			m_defaultRenderer->Render(renderContext, child);
+		}
 
-		//m_defaultRenderer->PostRender(renderContext);
+		m_defaultRenderer->PostRender(renderContext);
 
 		// Debug quad with shadowMap
 		m_quadRenderer->PreRender(renderContext);
