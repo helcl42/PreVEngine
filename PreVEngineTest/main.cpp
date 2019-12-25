@@ -1065,7 +1065,7 @@ private:
 	{
 		alignas(16) glm::mat4 model;
 		alignas(16) glm::mat4 view;
-		alignas(16) glm::mat4 proj;
+		alignas(16) glm::mat4 projection;
 	};
 
 private:
@@ -1089,7 +1089,7 @@ private:
 
 	std::shared_ptr<UBOPool<Uniforms>> m_uniformsPool;
 
-	ViewFrustum m_viewFrustum{ 70.0f, 0.01f, 300.0f };
+	ViewFrustum m_viewFrustum{ 70.0f, 0.01f, 1000.0f };
 
 public:
 	ShadowsRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<Shadows> shadows)
@@ -1144,7 +1144,7 @@ public:
 			auto ubo = m_uniformsPool->GetNext();
 
 			Uniforms uniforms;
-			uniforms.proj = m_viewFrustum.CreateProjectionMatrix(m_shadows->GetExtent().width, m_shadows->GetExtent().height);
+			uniforms.projection = m_viewFrustum.CreateProjectionMatrix(m_shadows->GetExtent().width, m_shadows->GetExtent().height);
 			uniforms.view = m_shadows->GetLight().LookAt();
 			uniforms.model = node->GetWorldTransformScaled();
 			ubo->Update(&uniforms);
@@ -1302,7 +1302,7 @@ private:
 	{
 		alignas(16) glm::mat4 model;
 		alignas(16) glm::mat4 view;
-		alignas(16) glm::mat4 proj;
+		alignas(16) glm::mat4 projection;
 	};
 
 private:
@@ -1323,7 +1323,7 @@ private:
 
 	std::shared_ptr<Shadows> m_shadows;
 
-	ViewFrustum m_viewFrustum{ 70.0f, 0.01f, 300.0f };
+	ViewFrustum m_viewFrustum{ 70.0f, 0.01f, 1000.0f };
 
 public:
 	DefaultSceneRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass, std::shared_ptr<Shadows> shadows, std::shared_ptr<Camera> camera)
@@ -1377,7 +1377,7 @@ public:
 			auto ubo = m_uniformsPool->GetNext();
 
 			Uniforms uniforms;
-			uniforms.proj = m_viewFrustum.CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
+			uniforms.projection = m_viewFrustum.CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
 			uniforms.view = m_freeCamera->LookAt();
 			uniforms.model = node->GetWorldTransformScaled();
 			ubo->Update(&uniforms);
