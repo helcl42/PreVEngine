@@ -958,6 +958,8 @@ private:
 
 	VkFramebuffer m_frameBuffer;
 
+	Light m_light{ glm::vec3(100.0f, 100.0f, 100.0f) };
+
 public:
 	Shadows(std::shared_ptr<Allocator> allocator, std::shared_ptr<Device> dev)
 		: m_allocator(allocator), m_device(dev)
@@ -1049,6 +1051,11 @@ public:
 	{
 		return m_depthBuffer;
 	}
+
+	const Light& GetLight() const
+	{
+		return m_light;
+	}
 };
 
 class ShadowsRenderer : public IRenderer
@@ -1075,8 +1082,6 @@ private:
 
 	std::shared_ptr<Shadows> m_shadows;
 
-	const Light& m_light;
-
 private:
 	std::shared_ptr<Shader> m_shader;
 
@@ -1087,8 +1092,8 @@ private:
 	ViewFrustum m_viewFrustum{ 70.0f, 0.01f, 300.0f };
 
 public:
-	ShadowsRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<Shadows> shadows, const Light& light)
-		: m_allocator(alloc), m_device(dev), m_shadows(shadows), m_light(light)
+	ShadowsRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<Shadows> shadows)
+		: m_allocator(alloc), m_device(dev), m_shadows(shadows)
 	{
 	}
 
@@ -1140,7 +1145,7 @@ public:
 
 			Uniforms uniforms;
 			uniforms.proj = m_viewFrustum.CreateProjectionMatrix(m_shadows->GetExtent().width, m_shadows->GetExtent().height);
-			uniforms.view = m_light.LookAt();
+			uniforms.view = m_shadows->GetLight().LookAt();
 			uniforms.model = node->GetWorldTransformScaled();
 			ubo->Update(&uniforms);
 
@@ -1316,11 +1321,13 @@ private:
 
 	std::shared_ptr<Camera> m_freeCamera;
 
+	std::shared_ptr<Shadows> m_shadows;
+
 	ViewFrustum m_viewFrustum{ 70.0f, 0.01f, 300.0f };
 
 public:
-	DefaultSceneRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass, std::shared_ptr<Camera> camera)
-		: m_device(dev), m_renderPass(renderPass), m_allocator(alloc), m_freeCamera(camera)
+	DefaultSceneRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass, std::shared_ptr<Shadows> shadows, std::shared_ptr<Camera> camera)
+		: m_device(dev), m_renderPass(renderPass), m_allocator(alloc), m_shadows(shadows), m_freeCamera(camera)
 	{
 	}
 
@@ -1431,8 +1438,6 @@ private:
 private:
 	std::shared_ptr<Shadows> m_shadows;
 
-	Light m_light{ glm::vec3(100.0f, 100.0f, 100.0f) };
-
 public:
 	RootSceneNode(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass)
 		: AbstractSceneNode(), m_device(dev), m_defaultRenderPass(renderPass), m_allocator(alloc)
@@ -1456,10 +1461,10 @@ public:
 
 		AddChild(m_freeCamera);
 
-		m_shadowsRenderer = std::make_shared<ShadowsRenderer>(m_allocator, m_device, m_shadows, m_light);
+		m_shadowsRenderer = std::make_shared<ShadowsRenderer>(m_allocator, m_device, m_shadows);
 		m_shadowsRenderer->Init();
 
-		m_defaultRenderer = std::make_shared<DefaultSceneRenderer>(m_allocator, m_device, m_defaultRenderPass, m_freeCamera);
+		m_defaultRenderer = std::make_shared<DefaultSceneRenderer>(m_allocator, m_device, m_defaultRenderPass, m_shadows, m_freeCamera);
 		m_defaultRenderer->Init();
 
 		m_quadRenderer = std::make_shared<QuadRenderer>(m_allocator, m_device, m_defaultRenderPass, m_shadows->GetImageBuffer());
