@@ -1,6 +1,6 @@
 #version 450
 
-layout (binding = 0) uniform sampler2D texSampler;
+layout (binding = 0) uniform sampler2D textureSampler;
 
 layout (location = 0) in vec2 textureCoord;
 
@@ -16,6 +16,6 @@ float LinearizeDepth(float depth)
 
 void main() 
 {
-	float depth = texture(texSampler, textureCoord).r;
+	float depth = texture(textureSampler, textureCoord).r;
 	outFragColor = vec4(vec3(1.0 - LinearizeDepth(depth)), 1.0);
 }

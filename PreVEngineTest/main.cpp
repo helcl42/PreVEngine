@@ -644,13 +644,13 @@ public:
 	}
 
 public:
-	glm::mat4 CreateProjectionMatrix(const uint32_t w, const uint32_t h)
+	glm::mat4 CreateProjectionMatrix(const uint32_t w, const uint32_t h) const
 	{
 		const float aspectRatio = static_cast<float>(w) / static_cast<float>(h);
 		return CreateProjectionMatrix(aspectRatio);
 	}
 
-	glm::mat4 CreateProjectionMatrix(const float aspectRatio)
+	glm::mat4 CreateProjectionMatrix(const float aspectRatio) const
 	{
 		glm::mat4 projectionMatrix = glm::perspective(m_fov, aspectRatio, m_nearClippingPlane, m_farClippingPlane);
 		projectionMatrix[1][1] *= -1; // invert Y in clip coordinates
@@ -960,6 +960,8 @@ private:
 
 	Light m_light{ glm::vec3(100.0f, 100.0f, 100.0f) };
 
+	ViewFrustum m_viewFrustum{ 70.0f, 0.01f, 1000.0f };
+
 public:
 	Shadows(std::shared_ptr<Allocator> allocator, std::shared_ptr<Device> dev)
 		: m_allocator(allocator), m_device(dev)
@@ -1056,6 +1058,16 @@ public:
 	{
 		return m_light;
 	}
+
+	glm::mat4 GetProjectionMatrix() const
+	{
+		return m_viewFrustum.CreateProjectionMatrix(m_shadowMapDimension, m_shadowMapDimension);
+	}
+
+	glm::mat4 GetViewMartix() const
+	{
+		return m_light.LookAt();
+	}
 };
 
 class ShadowsRenderer : public IRenderer
@@ -1088,8 +1100,6 @@ private:
 	std::shared_ptr<IGraphicsPipeline> m_pipeline;
 
 	std::shared_ptr<UBOPool<Uniforms>> m_uniformsPool;
-
-	ViewFrustum m_viewFrustum{ 70.0f, 0.01f, 1000.0f };
 
 public:
 	ShadowsRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<Shadows> shadows)
@@ -1144,7 +1154,7 @@ public:
 			auto ubo = m_uniformsPool->GetNext();
 
 			Uniforms uniforms;
-			uniforms.projection = m_viewFrustum.CreateProjectionMatrix(m_shadows->GetExtent().width, m_shadows->GetExtent().height);
+			uniforms.projection = m_shadows->GetProjectionMatrix();
 			uniforms.view = m_shadows->GetLight().LookAt();
 			uniforms.model = node->GetWorldTransformScaled();
 			ubo->Update(&uniforms);
@@ -1269,7 +1279,7 @@ public:
 	// make a node with quad model & shadowMap texture ???
 	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode> node) override
 	{
-		m_shader->Bind("texSampler", *m_imageBuffer, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+		m_shader->Bind("textureSampler", *m_imageBuffer, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 		VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
 
 		VkBuffer vertexBuffers[] = { *m_quadModel->GetVertexBuffer() };
@@ -1300,9 +1310,13 @@ class DefaultSceneRenderer : public IRenderer
 private:
 	struct Uniforms
 	{
-		alignas(16) glm::mat4 model;
-		alignas(16) glm::mat4 view;
-		alignas(16) glm::mat4 projection;
+		alignas(16) glm::mat4 modelMatrix;
+		alignas(16) glm::mat4 viewMatrix;
+		alignas(16) glm::mat4 projectionMatrix;
+		alignas(16) glm::mat4 normalMatrix;
+
+		alignas(16) glm::mat4 lightViewProjectionMatrix;
+		alignas(16) glm::vec3 lightPosition;
 	};
 
 private:
@@ -1377,12 +1391,17 @@ public:
 			auto ubo = m_uniformsPool->GetNext();
 
 			Uniforms uniforms;
-			uniforms.projection = m_viewFrustum.CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
-			uniforms.view = m_freeCamera->LookAt();
-			uniforms.model = node->GetWorldTransformScaled();
+			uniforms.projectionMatrix = m_viewFrustum.CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
+			uniforms.viewMatrix = m_freeCamera->LookAt();
+			uniforms.modelMatrix = node->GetWorldTransformScaled();
+			uniforms.normalMatrix = glm::inverse(node->GetWorldTransformScaled());
+			uniforms.lightViewProjectionMatrix = m_shadows->GetProjectionMatrix() * m_shadows->GetViewMartix();
+			uniforms.lightPosition = m_shadows->GetLight().GetPosition();
+
 			ubo->Update(&uniforms);
 
-			m_shader->Bind("texSampler", *renderComponent->GetMaterial()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			m_shader->Bind("textureSampler", *renderComponent->GetMaterial()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			m_shader->Bind("depthSampler", *m_shadows->GetImageBuffer(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 			m_shader->Bind("ubo", *ubo);
 
 			VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
