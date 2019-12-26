@@ -148,10 +148,12 @@ namespace PreVEngine
 
 		bool mipMap;
 
+		VkSamplerAddressMode addressMode;
+
 		const void* data;
 
-		ImageBufferCreateInfo(const VkExtent2D& ext, const VkFormat fmt, const bool mipmap = false, const void* imageData = nullptr)
-			: extent(ext), format(fmt), mipMap(mipmap), data(imageData)
+		ImageBufferCreateInfo(const VkExtent2D& ext, const VkFormat fmt, const bool mipmap = false, const VkSamplerAddressMode mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, const void* imageData = nullptr)
+			: extent(ext), format(fmt), mipMap(mipmap), addressMode(mode), data(imageData)
 		{
 		}
 
@@ -169,7 +171,7 @@ namespace PreVEngine
 
 		virtual void Destroy() = 0;
 
-		virtual void CreateSampler(const float maxLod = 1.0f) = 0;
+		virtual void CreateSampler(const float maxLod = 1.0f, const VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE) = 0;
 
 		virtual void UpdateSampler(const VkSamplerCreateInfo& samplerInfo) = 0;
 
@@ -218,7 +220,7 @@ namespace PreVEngine
 
 		void Destroy() override;
 
-		void CreateSampler(const float maxLod = 1.0f) override;
+		void CreateSampler(const float maxLod = 1.0f, const VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE) override;
 
 	public:
 		VkImage GetImage() const override;

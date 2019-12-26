@@ -32,6 +32,17 @@ public:
 
 	virtual bool HasIndices() const = 0;
 
+	// TODO add flags 
+	// has boTangent data
+	// has indices
+	// has positions
+	// has texture coords
+
+	// TODO create something like dynamic vertexLayout
+	//{
+	//  map<VertexAttributeIndex, ItemType>
+	//}
+
 public:
 	virtual ~IMesh()
 	{
@@ -126,7 +137,7 @@ private:
 	};
 
 public:
-	virtual const std::vector<Vertex>& GerVertices() const override
+	const std::vector<Vertex>& GerVertices() const override
 	{
 		return m_vertices;
 	}
@@ -157,7 +168,86 @@ private:
 	};
 
 public:
-	virtual const std::vector<Vertex>& GerVertices() const override
+	const std::vector<Vertex>& GerVertices() const override
+	{
+		return m_vertices;
+	}
+
+	const std::vector<uint32_t>& GerIndices() const override
+	{
+		return m_indices;
+	}
+
+	bool HasIndices() const override
+	{
+		return true;
+	}
+};
+
+class PlaneMesh : public IMesh
+{
+private:
+	std::vector<Vertex> m_vertices;
+	
+	std::vector<uint32_t> m_indices;
+
+public:
+	PlaneMesh(const float xSize, const float zSize, const uint32_t xDivs, const uint32_t zDivs, const float sMax = 1.0f, const float tMax = 1.0f)
+	{
+		const float x2 = xSize / 2.0f;
+		const float z2 = zSize / 2.0f;
+		const float iFactor = (float)zSize / zDivs;
+		const float jFactor = (float)xSize / xDivs;
+		const float texi = (float)sMax / zDivs;
+		const float texj = (float)tMax / xDivs;
+
+		for (uint32_t i = 0; i <= zDivs; i++)
+		{
+			float z = iFactor * i - z2;
+
+			for (uint32_t j = 0; j <= xDivs; j++)
+			{
+				float x = jFactor * j - x2;
+
+				glm::vec3 vertex(x, 0.0f, z);
+				glm::vec2 textureCoord(j * texi, i * texj);
+				glm::vec3 normal(0.0f, 1.0f, 0.0f);
+
+				m_vertices.emplace_back(Vertex{ vertex, textureCoord, normal });
+			}
+		}
+
+		for (uint32_t i = 0; i < zDivs; i++)
+		{
+			const uint32_t rowStart = i * (xDivs + 1);
+			const uint32_t nextRowStart = (i + 1) * (xDivs + 1);
+
+			for (uint32_t j = 0; j < xDivs; j++)
+			{
+				const uint32_t indices[] =
+				{
+					rowStart + j,
+					nextRowStart + j,
+					nextRowStart + j + 1,
+					rowStart + j,
+					nextRowStart + j + 1,
+					rowStart + j + 1
+				};
+
+				for (const auto index : indices)
+				{
+					m_indices.emplace_back(index);
+				}
+			}
+		}
+	}
+
+	virtual ~PlaneMesh()
+	{
+	}
+
+public:
+	const std::vector<Vertex>& GerVertices() const override
 	{
 		return m_vertices;
 	}
@@ -243,7 +333,7 @@ public:
 	}
 };
 
-class CubeRenderComponent : public IRenderComponent
+class DefaultRenderComponent : public IRenderComponent
 {
 private:
 	std::shared_ptr<IModel> m_model;
@@ -251,12 +341,12 @@ private:
 	std::shared_ptr<IMaterial> m_material;
 
 public:
-	CubeRenderComponent(std::shared_ptr<IModel> model, std::shared_ptr<IMaterial> material)
+	DefaultRenderComponent(std::shared_ptr<IModel> model, std::shared_ptr<IMaterial> material)
 		: m_model(model), m_material(material)
 	{
 	}
 
-	virtual ~CubeRenderComponent()
+	virtual ~DefaultRenderComponent()
 	{
 	}
 
@@ -277,12 +367,12 @@ class RenderComponentFactory
 private:
 	static std::map<std::string, std::shared_ptr<Image>> s_imagesCache;
 
-public:
-	std::shared_ptr<IRenderComponent> CreateCubeRenderComponent(Allocator& allocator, const std::string& textureFilename)
+private:
+	std::shared_ptr<Image> CreateImage(const std::string& textureFilename) const
 	{
 		// image
 		std::shared_ptr<Image> image;
-		if(s_imagesCache.find(textureFilename) != s_imagesCache.cend())
+		if (s_imagesCache.find(textureFilename) != s_imagesCache.cend())
 		{
 			image = s_imagesCache[textureFilename];
 		}
@@ -292,30 +382,58 @@ public:
 			image = imageFactory.CreateImage(textureFilename);
 			s_imagesCache[textureFilename] = image;
 		}
+		return image;
+	}
 
+	std::shared_ptr<ImageBuffer> CreateImageBuffer(Allocator& allocator, const std::shared_ptr<Image> image, const bool repeatAddressMode) const
+	{
 		const VkExtent2D imageExtent = { image->GetWidth(), image->GetHeight() };
 
 		std::shared_ptr<ImageBuffer> imageBuffer = std::make_shared<ImageBuffer>(allocator);
-		imageBuffer->Create(ImageBufferCreateInfo{ imageExtent, VK_FORMAT_R8G8B8A8_UNORM, true, image->GetBuffer() });
+		imageBuffer->Create(ImageBufferCreateInfo{ imageExtent, VK_FORMAT_R8G8B8A8_UNORM, true, repeatAddressMode ? VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT : VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, image->GetBuffer() });
 
-		std::shared_ptr<IMaterial> material = std::make_shared<Material>(image, imageBuffer);
+		return imageBuffer;
+	}
 
-		// mesh
-		std::shared_ptr<IMesh> mesh = std::make_shared<CubeMesh>();
+	std::shared_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& textureFilename, bool repeatAddressMode) const
+	{
+		std::shared_ptr<Image> image = CreateImage(textureFilename);
 
-		// model
+		std::shared_ptr<ImageBuffer> imageBuffer = CreateImageBuffer(allocator, image, repeatAddressMode);
+
+		return std::make_shared<Material>(image, imageBuffer);
+	}
+
+	std::shared_ptr<IModel> CreateModel(Allocator& allocator, const std::shared_ptr<IMesh> mesh) const
+	{
 		std::shared_ptr<VBO> vertexBuffer = std::make_shared<VBO>(allocator);
 		vertexBuffer->Data((void*)mesh->GerVertices().data(), (uint32_t)mesh->GerVertices().size(), sizeof(Vertex));
 
 		std::shared_ptr<IBO> indexBuffer = std::make_shared<IBO>(allocator);
 		indexBuffer->Data(mesh->GerIndices().data(), (uint32_t)mesh->GerIndices().size());
 
-		std::shared_ptr<IModel> model = std::make_shared<Model>(mesh, vertexBuffer, indexBuffer);
+		return std::make_shared<Model>(mesh, vertexBuffer, indexBuffer);
+	}
 
-		// render componene
-		std::shared_ptr<IRenderComponent> cubeComponent = std::make_shared<CubeRenderComponent>(model, material);
+public:
+	std::shared_ptr<IRenderComponent> CreateCubeRenderComponent(Allocator& allocator, const std::string& textureFilename) const
+	{
+		std::shared_ptr<IMaterial> material = CreateMaterial(allocator, textureFilename, false);
 
-		return cubeComponent;
+		std::shared_ptr<IMesh> mesh = std::make_shared<CubeMesh>();
+		std::shared_ptr<IModel> model = CreateModel(allocator, mesh);
+
+		return std::make_shared<DefaultRenderComponent>(model, material);
+	}
+
+	std::shared_ptr<IRenderComponent> CreatePlaneRenderComponent(Allocator& allocator, const std::string& textureFilename) const
+	{
+		std::shared_ptr<IMaterial> material = CreateMaterial(allocator, textureFilename, true);
+
+		std::shared_ptr<IMesh> mesh = std::make_shared<PlaneMesh>(40.0f, 40.0f, 1, 1, 10, 10);
+		std::shared_ptr<IModel> model = CreateModel(allocator, mesh);
+
+		return std::make_shared<DefaultRenderComponent>(model, material);
 	}
 };
 
@@ -442,6 +560,13 @@ public:
 class CubeRobot : public AbstractCubeRobotSceneNode
 {
 private:
+	EventHandler<CubeRobot, KeyEvent> m_keyEvent{ *this };
+
+	EventHandler<CubeRobot, MouseEvent> m_mouseEvent{ *this };
+
+	EventHandler<CubeRobot, TouchEvent> m_touchEvent{ *this };
+
+private:
 	std::shared_ptr<CubeRobotPart> m_body;
 
 	std::shared_ptr<CubeRobotPart> m_head;
@@ -455,12 +580,6 @@ private:
 	std::shared_ptr<CubeRobotPart> m_rightLeg;
 
 private:
-	EventHandler<CubeRobot, KeyEvent> m_keyEvent{ *this };
-
-	EventHandler<CubeRobot, MouseEvent> m_mouseEvent{ *this };
-
-	EventHandler<CubeRobot, TouchEvent> m_touchEvent{ *this };
-
 	glm::vec2 m_angularVelocity{ 0.1f, 0.1f };
 
 	glm::vec2 m_prevMousePosition{ 0.0f, 0.0f };
@@ -562,6 +681,55 @@ public:
 		}
 
 		m_prevMousePosition = touchEvent.position;
+	}
+};
+
+class Plane : public AbstractSceneNode
+{
+protected:
+	std::shared_ptr<Allocator> m_allocator;
+
+protected:
+	glm::vec3 m_position;
+
+	glm::quat m_orientation;
+
+	const std::string m_texturePath;
+
+public:
+	Plane(std::shared_ptr<Allocator>& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
+		: AbstractSceneNode(), m_allocator(allocator), m_position(position), m_orientation(orientation), m_texturePath(texturePath)
+	{
+		m_scaler = scale;
+	}
+
+	virtual ~Plane()
+	{
+	}
+
+public:
+	void Init() override
+	{
+		m_transform = MathUtil::CreateTransformationMatrix(m_position, m_orientation);
+
+		RenderComponentFactory renderComponentFactory;
+		auto renderComponent = renderComponentFactory.CreatePlaneRenderComponent(*m_allocator, m_texturePath);
+
+		ComponentRepository<IRenderComponent>::GetInstance().Add(m_id, renderComponent);
+
+		AbstractSceneNode::Init();
+	}
+
+	void Update(float deltaTime) override
+	{
+		AbstractSceneNode::Update(deltaTime);
+	}
+
+	void ShutDown() override
+	{
+		ComponentRepository<IRenderComponent>::GetInstance().Remove(m_id);
+
+		AbstractSceneNode::ShutDown();
 	}
 };
 
@@ -697,7 +865,7 @@ private:
 
 	const float m_scrollSensitivity = 2.0f;
 
-	const float m_moveSpeed = 5.0f;
+	const float m_moveSpeed = 25.0f;
 
 private:
 	glm::vec3 m_position;
@@ -940,7 +1108,7 @@ public:
 class Shadows
 {
 private:
-	const VkFormat m_shadowMapFormat = VK_FORMAT_D16_UNORM;
+	const VkFormat m_shadowMapFormat = VK_FORMAT_D24_UNORM_S8_UINT;
 
 	const uint32_t m_shadowMapDimension = 2048;
 
@@ -958,9 +1126,9 @@ private:
 
 	VkFramebuffer m_frameBuffer;
 
-	Light m_light{ glm::vec3(100.0f, 100.0f, 100.0f) };
+	Light m_light{ glm::vec3(150.0f, 150.0f, 150.0f) };
 
-	ViewFrustum m_viewFrustum{ 70.0f, 0.01f, 1000.0f };
+	ViewFrustum m_viewFrustum{ 70.0f, 1.0f, 1000.0f };
 
 public:
 	Shadows(std::shared_ptr<Allocator> allocator, std::shared_ptr<Device> dev)
@@ -1068,6 +1236,11 @@ public:
 	{
 		return m_light.LookAt();
 	}
+
+	const ViewFrustum& GetViewFrustum() const
+	{
+		return m_viewFrustum;
+	}
 };
 
 class ShadowsRenderer : public IRenderer
@@ -1075,9 +1248,9 @@ class ShadowsRenderer : public IRenderer
 private:
 	struct Uniforms
 	{
-		alignas(16) glm::mat4 model;
-		alignas(16) glm::mat4 view;
-		alignas(16) glm::mat4 projection;
+		alignas(16) glm::mat4 modelMatrix;
+		alignas(16) glm::mat4 viewMatrix;
+		alignas(16) glm::mat4 projectionMatrix;
 	};
 
 private:
@@ -1154,9 +1327,9 @@ public:
 			auto ubo = m_uniformsPool->GetNext();
 
 			Uniforms uniforms;
-			uniforms.projection = m_shadows->GetProjectionMatrix();
-			uniforms.view = m_shadows->GetLight().LookAt();
-			uniforms.model = node->GetWorldTransformScaled();
+			uniforms.projectionMatrix = m_shadows->GetProjectionMatrix();
+			uniforms.viewMatrix = m_shadows->GetLight().LookAt();
+			uniforms.modelMatrix = node->GetWorldTransformScaled();
 			ubo->Update(&uniforms);
 
 			m_shader->Bind("ubo", *ubo);
@@ -1470,6 +1643,7 @@ public:
 public:
 	void Init() override
 	{
+		// Init scene nodes
 		m_shadows = std::make_shared<Shadows>(m_allocator, m_device);
 		m_shadows->Init();
 
@@ -1480,6 +1654,30 @@ public:
 
 		AddChild(m_freeCamera);
 
+		const int32_t MAX_GENERATED_HEIGHT = 1;
+		const float DISTANCE = 40.0f;
+
+		for (int32_t i = 0; i <= MAX_GENERATED_HEIGHT; i++)
+		{
+			for (int32_t j = 0; j <= MAX_GENERATED_HEIGHT; j++)
+			{
+				for (int32_t k = 0; k <= MAX_GENERATED_HEIGHT; k++)
+				{
+					auto robot = std::make_shared<CubeRobot>(m_allocator, glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), "texture.jpg");
+					AddChild(robot);
+				}
+			}
+		}
+
+		auto groundPlane = std::make_shared<Plane>(m_allocator, glm::vec3(0.0f, 0.0f, 0.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(12.0f), "cement.jpg");
+		AddChild(groundPlane);
+
+		for (auto child : m_children)
+		{
+			child->Init();
+		}
+
+		// Init renderera
 		m_shadowsRenderer = std::make_shared<ShadowsRenderer>(m_allocator, m_device, m_shadows);
 		m_shadowsRenderer->Init();
 
@@ -1488,26 +1686,6 @@ public:
 
 		m_quadRenderer = std::make_shared<QuadRenderer>(m_allocator, m_device, m_defaultRenderPass, m_shadows->GetImageBuffer());
 		m_quadRenderer->Init();
-
-		const int32_t CUBE_SIZE_HALF = 1;
-		const float DISTANCE = 40.0f;
-
-		for (int32_t i = -CUBE_SIZE_HALF; i <= CUBE_SIZE_HALF; i++)
-		{
-			for (int32_t j = -CUBE_SIZE_HALF; j <= CUBE_SIZE_HALF; j++)
-			{
-				for (int32_t k = -CUBE_SIZE_HALF; k <= CUBE_SIZE_HALF; k++)
-				{
-					auto robot = std::make_shared<CubeRobot>(m_allocator, glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), "texture.jpg");
-					AddChild(robot);
-				}
-			}
-		}
-
-		for (auto child : m_children)
-		{
-			child->Init();
-		}
 	}
 
 	void Update(float deltaTime) override

@@ -524,7 +524,7 @@ namespace PreVEngine
 		Destroy();
 	}
 
-	void AbstractImageBuffer::CreateSampler(const float maxLod)
+	void AbstractImageBuffer::CreateSampler(const float maxLod, const VkSamplerAddressMode addressMode)
 	{
 		if (m_sampler)
 		{
@@ -535,9 +535,9 @@ namespace PreVEngine
 		samplerInfo.magFilter = VK_FILTER_LINEAR;
 		samplerInfo.minFilter = VK_FILTER_LINEAR;
 		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeU = addressMode;
+		samplerInfo.addressModeV = addressMode;
+		samplerInfo.addressModeW = addressMode;
 		samplerInfo.mipLodBias = 0;
 
 		samplerInfo.anisotropyEnable = VK_TRUE;
@@ -651,7 +651,7 @@ namespace PreVEngine
 
 		m_allocator.CreateImageView(m_image, createInfo.format, mipLevels, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
 
-		CreateSampler((float)mipLevels);
+		CreateSampler((float)mipLevels, createInfo.addressMode);
 	}
 
 	void ImageBuffer::Resize(const VkExtent2D& extent)

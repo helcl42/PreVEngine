@@ -260,6 +260,16 @@ namespace PreVEngine
 			return MathUtil::CreateTransformationMatrix(position, orientation, glm::vec3(scale));
 		}
 
+		static glm::mat4 CreateTransformationMatrix(const glm::vec3& position, const glm::vec3& orientation)
+		{
+			return MathUtil::CreateTransformationMatrix(position, orientation, glm::vec3(1.0f));
+		}
+		
+		static glm::mat4 CreateTransformationMatrix(const glm::vec3& position, const glm::quat& orientation)
+		{
+			return MathUtil::CreateTransformationMatrix(position, orientation, glm::vec3(1.0f));
+		}
+
 		static glm::vec3 GetUpVector(const glm::quat& q)
 		{
 			return glm::normalize(q * glm::vec3(0.0f, 1.0f, 0.0f));
