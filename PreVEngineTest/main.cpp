@@ -1071,8 +1071,7 @@ public:
 	}
 };
 
-// TODO make it as scene node with sphere model -> disable casting shadows
-class Light
+class Light : public AbstractSceneNode
 {
 private:
 	glm::vec3 m_position;
@@ -1105,7 +1104,7 @@ public:
 	}
 };
 
-class Shadows
+class Shadows : public AbstractSceneNode
 {
 private:
 	const VkFormat m_shadowMapFormat = VK_FORMAT_D24_UNORM_S8_UINT;
@@ -1126,8 +1125,8 @@ private:
 
 	VkFramebuffer m_frameBuffer;
 
-	Light m_light{ glm::vec3(150.0f, 150.0f, 150.0f) };
-
+	std::shared_ptr<Light> m_light;
+	
 	ViewFrustum m_viewFrustum{ 70.0f, 1.0f, 1000.0f };
 
 public:
@@ -1189,14 +1188,21 @@ private:
 	}
 
 public:
-	void Init()
+	void Init() override
 	{
+		m_light = std::make_shared<Light>(glm::vec3(150.0f, 150.0f, 150.0f));
+		AddChild(m_light);
+
 		InitRenderPass();
 		InitFrameBuffer();
+
+		AbstractSceneNode::Init();
 	}
 
-	void ShutDown()
+	void ShutDown() override
 	{
+		AbstractSceneNode::ShutDown();
+
 		ShutDownFrameBuffer();
 		ShutDownRenderPass();
 	}
@@ -1222,7 +1228,7 @@ public:
 		return m_depthBuffer;
 	}
 
-	const Light& GetLight() const
+	std::shared_ptr<Light> GetLight() const
 	{
 		return m_light;
 	}
@@ -1234,7 +1240,7 @@ public:
 
 	glm::mat4 GetViewMartix() const
 	{
-		return m_light.LookAt();
+		return m_light->LookAt();
 	}
 
 	const ViewFrustum& GetViewFrustum() const
@@ -1328,7 +1334,7 @@ public:
 
 			Uniforms uniforms;
 			uniforms.projectionMatrix = m_shadows->GetProjectionMatrix();
-			uniforms.viewMatrix = m_shadows->GetLight().LookAt();
+			uniforms.viewMatrix = m_shadows->GetLight()->LookAt();
 			uniforms.modelMatrix = node->GetWorldTransformScaled();
 			ubo->Update(&uniforms);
 
@@ -1569,7 +1575,7 @@ public:
 			uniforms.modelMatrix = node->GetWorldTransformScaled();
 			uniforms.normalMatrix = glm::inverse(node->GetWorldTransformScaled());
 			uniforms.lightViewProjectionMatrix = m_shadows->GetProjectionMatrix() * m_shadows->GetViewMartix();
-			uniforms.lightPosition = m_shadows->GetLight().GetPosition();
+			uniforms.lightPosition = m_shadows->GetLight()->GetPosition();
 
 			ubo->Update(&uniforms);
 
@@ -1625,11 +1631,6 @@ private:
 
 	std::shared_ptr<IRenderer> m_quadRenderer;
 
-	std::shared_ptr<Camera> m_freeCamera;
-
-private:
-	std::shared_ptr<Shadows> m_shadows;
-
 public:
 	RootSceneNode(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass)
 		: AbstractSceneNode(), m_device(dev), m_defaultRenderPass(renderPass), m_allocator(alloc)
@@ -1644,15 +1645,14 @@ public:
 	void Init() override
 	{
 		// Init scene nodes
-		m_shadows = std::make_shared<Shadows>(m_allocator, m_device);
-		m_shadows->Init();
+		std::shared_ptr<Shadows> shadows = std::make_shared<Shadows>(m_allocator, m_device);
+		AddChild(shadows);
 
-		m_freeCamera = std::make_shared<Camera>();
+		std::shared_ptr<Camera> freeCamera = std::make_shared<Camera>();
+		AddChild(freeCamera);
 
 		auto camRobot = std::make_shared<CubeRobot>(m_allocator, glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), "texture.jpg");
-		m_freeCamera->AddChild(camRobot);
-
-		AddChild(m_freeCamera);
+		freeCamera->AddChild(camRobot);
 
 		const int32_t MAX_GENERATED_HEIGHT = 1;
 		const float DISTANCE = 40.0f;
@@ -1678,13 +1678,13 @@ public:
 		}
 
 		// Init renderera
-		m_shadowsRenderer = std::make_shared<ShadowsRenderer>(m_allocator, m_device, m_shadows);
+		m_shadowsRenderer = std::make_shared<ShadowsRenderer>(m_allocator, m_device, shadows);
 		m_shadowsRenderer->Init();
 
-		m_defaultRenderer = std::make_shared<DefaultSceneRenderer>(m_allocator, m_device, m_defaultRenderPass, m_shadows, m_freeCamera);
+		m_defaultRenderer = std::make_shared<DefaultSceneRenderer>(m_allocator, m_device, m_defaultRenderPass, shadows, freeCamera);
 		m_defaultRenderer->Init();
 
-		m_quadRenderer = std::make_shared<QuadRenderer>(m_allocator, m_device, m_defaultRenderPass, m_shadows->GetImageBuffer());
+		m_quadRenderer = std::make_shared<QuadRenderer>(m_allocator, m_device, m_defaultRenderPass, shadows->GetImageBuffer());
 		m_quadRenderer->Init();
 	}
 
@@ -1736,8 +1736,6 @@ public:
 		m_quadRenderer->ShutDown();
 		m_defaultRenderer->ShutDown();
 		m_shadowsRenderer->ShutDown();
-
-		m_shadows->ShutDown();
 	}
 };
 
