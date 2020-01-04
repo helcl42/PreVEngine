@@ -988,7 +988,7 @@ public:
 	{
 		std::cout << "Resseting camera.." << std::endl;
 
-		m_position = glm::vec3(0.0f, 0.0f, 60.0f);
+		m_position = glm::vec3(0.0f, 60.0f, 180.0f);
 		m_positionDelta = glm::vec3(0.0f, 0.0f, 0.0f);
 
 		m_pitchYawRoll = glm::vec3(0.0f, 0.0f, 0.0f);
