@@ -1074,7 +1074,7 @@ public:
 class Light : public AbstractSceneNode
 {
 private:
-	glm::vec3 m_lookAtPosition{ 0.0f };
+	glm::vec3 m_lookAtPosition{ 50.0f, 0.0f, 50.0f };
 
 	glm::vec3 m_upDirection{ 0.0f, 1.0f, 0.0f };
 
@@ -1096,13 +1096,12 @@ public:
 	void Update(float deltaTime)
 	{
 		const float ROTATION_SPEED_DEG_PER_SEC = 7.5f;
-
-		float rotationAngle = ROTATION_SPEED_DEG_PER_SEC * deltaTime;
+		const float ROTATION_ANGLE = ROTATION_SPEED_DEG_PER_SEC * deltaTime;
 
 		glm::mat4 transform(1.0f);
-		transform = glm::rotate(transform, glm::radians(rotationAngle), m_upDirection);
+		transform = glm::rotate(transform, glm::radians(ROTATION_ANGLE), m_upDirection);
 		transform = glm::translate(transform, m_position);
-		
+
 		m_position = glm::vec3(transform[3][0], transform[3][1], transform[3][2]);
 	}
 
@@ -1128,9 +1127,9 @@ class Shadows : public AbstractSceneNode
 private:
 	const VkFormat m_shadowMapFormat = VK_FORMAT_D24_UNORM_S8_UINT;
 
-	const uint32_t m_shadowMapDimension = 2048;
+	const uint32_t m_shadowMapDimension = 4096;
 
-	const VkFilter m_shadowMapFilter = VK_FILTER_LINEAR;
+	const VkFilter m_shadowMapFilter = VK_FILTER_NEAREST;
 
 private:
 	std::shared_ptr<Allocator> m_allocator;
