@@ -14,39 +14,75 @@
 
 using namespace PreVEngine;
 
-struct Vertex
+enum class VertexLayoutComponent
 {
-	glm::vec3 position;
-	glm::vec2 texCoord;
-	glm::vec3 normal;
+	FLOAT = 0x0,
+	VEC2 = 0x1,
+	VEC3 = 0x2,
+	VEC4 = 0x3
 };
 
-// TODO
-//template <typename VertexType>
+struct VertexLayout
+{
+private:
+	std::vector<VertexLayoutComponent> m_components;
+
+public:
+	VertexLayout()
+	{
+	}
+
+	VertexLayout(const std::vector<VertexLayoutComponent>& components)
+		: m_components(components)
+	{
+	}
+
+public:
+	const std::vector<VertexLayoutComponent>& GetComponents() const
+	{
+		return m_components;
+	}
+
+	uint32_t GetStride() const
+	{
+		uint32_t singleVertexPackSizeInBytes = 0;
+		for (auto& component : m_components)
+		{
+			switch (component)
+			{
+				case VertexLayoutComponent::FLOAT:
+					singleVertexPackSizeInBytes += 1 * sizeof(float);
+					break;
+				case VertexLayoutComponent::VEC2:
+					singleVertexPackSizeInBytes += 2 * sizeof(float);
+					break;
+				case VertexLayoutComponent::VEC4:
+					singleVertexPackSizeInBytes += 4 * sizeof(float);
+					break;
+				default:
+					singleVertexPackSizeInBytes += 3 * sizeof(float);
+					break;
+			}
+		}
+		return singleVertexPackSizeInBytes;
+	}
+};
+
 class IMesh
 {
 public:
-	virtual const std::vector<Vertex>& GerVertices() const = 0;
+	virtual const VertexLayout& GetVertextLayout() const = 0;
+
+	virtual const void* GetVertices() const = 0;
+
+	virtual uint32_t GerVerticesCount() const = 0;
 
 	virtual const std::vector<uint32_t>& GerIndices() const = 0;
 
 	virtual bool HasIndices() const = 0;
 
-	// TODO add flags 
-	// has boTangent data
-	// has indices
-	// has positions
-	// has texture coords
-
-	// TODO create something like dynamic vertexLayout
-	//{
-	//  map<VertexAttributeIndex, ItemType>
-	//}
-
 public:
-	virtual ~IMesh()
-	{
-	}
+	virtual ~IMesh() {}
 };
 
 class IMaterial
@@ -89,6 +125,16 @@ public:
 class CubeMesh : public IMesh
 {
 private:
+	struct Vertex
+	{
+		glm::vec3 pos;
+		glm::vec2 tc;
+		glm::vec3 normal;
+	};
+
+private:
+	const VertexLayout m_vertexLayout{ { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
+
 	const std::vector<Vertex> m_vertices = {
 		// FROMT
 		{ { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } },
@@ -137,9 +183,19 @@ private:
 	};
 
 public:
-	const std::vector<Vertex>& GerVertices() const override
+	const VertexLayout& GetVertextLayout() const override
 	{
-		return m_vertices;
+		return m_vertexLayout;
+	}
+
+	const void* GetVertices() const override
+	{
+		return (const void*)m_vertices.data();
+	}
+
+	uint32_t GerVerticesCount() const override
+	{
+		return static_cast<uint32_t>(m_vertices.size());
 	}
 
 	const std::vector<uint32_t>& GerIndices() const override
@@ -156,6 +212,16 @@ public:
 class QuadMesh : public IMesh
 {
 private:
+	struct Vertex
+	{
+		glm::vec3 pos;
+		glm::vec2 tc;
+		glm::vec3 normal;
+	};
+
+private:
+	const VertexLayout m_vertexLayout{ { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
+
 	const std::vector<Vertex> m_vertices = {
 		{ { 1.0f, 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
 		{ { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
@@ -168,9 +234,19 @@ private:
 	};
 
 public:
-	const std::vector<Vertex>& GerVertices() const override
+	const VertexLayout& GetVertextLayout() const override
 	{
-		return m_vertices;
+		return m_vertexLayout;
+	}
+
+	const void* GetVertices() const override
+	{
+		return (const void*)m_vertices.data();
+	}
+
+	uint32_t GerVerticesCount() const override
+	{
+		return static_cast<uint32_t>(m_vertices.size());
 	}
 
 	const std::vector<uint32_t>& GerIndices() const override
@@ -187,6 +263,16 @@ public:
 class PlaneMesh : public IMesh
 {
 private:
+	struct Vertex
+	{
+		glm::vec3 pos;
+		glm::vec2 tc;
+		glm::vec3 normal;
+	};
+
+private:
+	const VertexLayout m_vertexLayout{ { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
+
 	std::vector<Vertex> m_vertices;
 	
 	std::vector<uint32_t> m_indices;
@@ -247,9 +333,19 @@ public:
 	}
 
 public:
-	const std::vector<Vertex>& GerVertices() const override
+	const VertexLayout& GetVertextLayout() const override
 	{
-		return m_vertices;
+		return m_vertexLayout;
+	}
+
+	const void* GetVertices() const override
+	{
+		return (const void*)m_vertices.data();
+	}
+
+	uint32_t GerVerticesCount() const override
+	{
+		return static_cast<uint32_t>(m_vertices.size());
 	}
 
 	const std::vector<uint32_t>& GerIndices() const override
@@ -407,7 +503,7 @@ private:
 	std::shared_ptr<IModel> CreateModel(Allocator& allocator, const std::shared_ptr<IMesh> mesh) const
 	{
 		std::shared_ptr<VBO> vertexBuffer = std::make_shared<VBO>(allocator);
-		vertexBuffer->Data((void*)mesh->GerVertices().data(), (uint32_t)mesh->GerVertices().size(), sizeof(Vertex));
+		vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertextLayout().GetStride());
 
 		std::shared_ptr<IBO> indexBuffer = std::make_shared<IBO>(allocator);
 		indexBuffer->Data(mesh->GerIndices().data(), (uint32_t)mesh->GerIndices().size());
@@ -1413,7 +1509,7 @@ public:
 		std::shared_ptr<IMesh> quadMesh = std::make_shared<QuadMesh>();
 
 		std::shared_ptr<VBO> vertexBuffer = std::make_shared<VBO>(*m_allocator);
-		vertexBuffer->Data((void*)quadMesh->GerVertices().data(), (uint32_t)quadMesh->GerVertices().size(), sizeof(Vertex));
+		vertexBuffer->Data(quadMesh->GetVertices(), quadMesh->GerVerticesCount(), quadMesh->GetVertextLayout().GetStride());
 
 		std::shared_ptr<IBO> indexBuffer = std::make_shared<IBO>(*m_allocator);
 		indexBuffer->Data(quadMesh->GerIndices().data(), (uint32_t)quadMesh->GerIndices().size());
