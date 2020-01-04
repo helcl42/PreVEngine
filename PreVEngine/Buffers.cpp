@@ -218,7 +218,7 @@ namespace PreVEngine
 		vmaCreateImage(m_allocator, &imageInfo, &allocGpuOnlyCreateInfo, &outImage, &outAlloc, nullptr);
 	}
 
-	void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const void* data, VkImage& image, VmaAllocation& alloc)
+	void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const void* data, VkImage& image)
 	{
 		// Copy image data to staging buffer in CPU memory
 		uint32_t formatSize = FormatSize(format);
@@ -638,7 +638,7 @@ namespace PreVEngine
 		VkExtent3D ext3D{ createInfo.extent.width, createInfo.extent.height, 1 };
 
 		m_allocator.CreateImage(ext3D, createInfo.format, mipLevels, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_image, m_allocation);
-		m_allocator.CopyDataToImage(ext3D, createInfo.format, mipLevels, createInfo.data, m_image, m_allocation);
+		m_allocator.CopyDataToImage(ext3D, createInfo.format, mipLevels, createInfo.data, m_image);
 
 		if (mipLevels > 1)
 		{
