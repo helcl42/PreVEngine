@@ -68,6 +68,58 @@ public:
 	}
 };
 
+class VertexDataBuffer
+{
+private:
+	std::vector<uint8_t> m_buffer;
+
+public:
+	VertexDataBuffer()
+	{
+	}
+
+	VertexDataBuffer(const size_t initialSize)
+	{
+		m_buffer.reserve(initialSize);
+	}
+
+public:
+	void Add(const void* data, const unsigned int size)
+	{
+		m_buffer.insert(m_buffer.end(), (const uint8_t*)data, (const uint8_t*)data + size);
+	}
+
+	void Add(float data)
+	{
+		Add(&data, sizeof(float));
+	}
+
+	void Add(const glm::vec2& data)
+	{
+		Add(&data, sizeof(glm::vec2));
+	}
+
+	void Add(const glm::vec3& data)
+	{
+		Add(&data, sizeof(glm::vec3));
+	}
+
+	void Add(const glm::vec4& data)
+	{
+		Add(&data, sizeof(glm::vec4));
+	}
+
+	void Reset()
+	{
+		m_buffer.clear();
+	}
+
+	const uint8_t* GetData() const
+	{
+		return m_buffer.data();
+	}
+};
+
 class IMesh
 {
 public:
@@ -263,18 +315,12 @@ public:
 class PlaneMesh : public IMesh
 {
 private:
-	struct Vertex
-	{
-		glm::vec3 pos;
-		glm::vec2 tc;
-		glm::vec3 normal;
-	};
-
-private:
 	const VertexLayout m_vertexLayout{ { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
 
-	std::vector<Vertex> m_vertices;
-	
+	VertexDataBuffer m_vertexDataBuffer;
+
+	uint32_t m_verticesCount = 0;
+
 	std::vector<uint32_t> m_indices;
 
 public:
@@ -299,7 +345,10 @@ public:
 				glm::vec2 textureCoord(j * texi, i * texj);
 				glm::vec3 normal(0.0f, 1.0f, 0.0f);
 
-				m_vertices.emplace_back(Vertex{ vertex, textureCoord, normal });
+				m_vertexDataBuffer.Add(vertex);
+				m_vertexDataBuffer.Add(textureCoord);
+				m_vertexDataBuffer.Add(normal);
+				m_verticesCount++;
 			}
 		}
 
@@ -340,12 +389,12 @@ public:
 
 	const void* GetVertices() const override
 	{
-		return (const void*)m_vertices.data();
+		return m_vertexDataBuffer.GetData();
 	}
 
 	uint32_t GerVerticesCount() const override
 	{
-		return static_cast<uint32_t>(m_vertices.size());
+		return m_verticesCount;
 	}
 
 	const std::vector<uint32_t>& GerIndices() const override
