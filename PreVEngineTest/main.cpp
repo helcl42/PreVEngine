@@ -1074,9 +1074,13 @@ public:
 class Light : public AbstractSceneNode
 {
 private:
-	glm::vec3 m_position;
+	glm::vec3 m_lookAtPosition{ 0.0f };
+
+	glm::vec3 m_upDirection{ 0.0f, 1.0f, 0.0f };
 
 	ViewFrustum m_viewFrustum{ 70.0f, 1.0f, 1000.0f };
+
+	glm::vec3 m_position;
 
 public:
 	Light(const glm::vec3& pos)
@@ -1091,13 +1095,21 @@ public:
 public:
 	void Update(float deltaTime)
 	{
-		// TODO -> rotate around look at position ?!
+		const float ROTATION_SPEED_DEG_PER_SEC = 7.5f;
+
+		float rotationAngle = ROTATION_SPEED_DEG_PER_SEC * deltaTime;
+
+		glm::mat4 transform(1.0f);
+		transform = glm::rotate(transform, glm::radians(rotationAngle), m_upDirection);
+		transform = glm::translate(transform, m_position);
+		
+		m_position = glm::vec3(transform[3][0], transform[3][1], transform[3][2]);
 	}
 
 public:
 	glm::mat4 LookAt() const
 	{
-		return glm::lookAt(m_position, glm::vec3(0.0f), glm::vec3(0, 1, 0));
+		return glm::lookAt(m_position, m_lookAtPosition, m_upDirection);
 	}
 
 	glm::mat4 GetProjectionMatrix() const
