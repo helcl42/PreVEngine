@@ -1196,6 +1196,8 @@ private:
 
 	void ShutDownFrameBuffer()
 	{
+		vkDeviceWaitIdle(*m_device);
+
 		vkDestroyFramebuffer(*m_device, m_frameBuffer, nullptr);
 
 		m_depthBuffer->Destroy();

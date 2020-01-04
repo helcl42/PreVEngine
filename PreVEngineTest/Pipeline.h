@@ -43,9 +43,9 @@ public:
 	virtual void ShutDown() override;
 
 public:
-	VkPipelineLayout GetLayout() const;
+	VkPipelineLayout GetLayout() const override;
 
-	operator VkPipeline() const;
+	operator VkPipeline() const override;
 };
 
 
