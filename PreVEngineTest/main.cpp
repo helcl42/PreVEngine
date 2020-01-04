@@ -1076,6 +1076,8 @@ class Light : public AbstractSceneNode
 private:
 	glm::vec3 m_position;
 
+	ViewFrustum m_viewFrustum{ 70.0f, 1.0f, 1000.0f };
+
 public:
 	Light(const glm::vec3& pos)
 		: m_position(pos)
@@ -1096,6 +1098,11 @@ public:
 	glm::mat4 LookAt() const
 	{
 		return glm::lookAt(m_position, glm::vec3(0.0f), glm::vec3(0, 1, 0));
+	}
+
+	glm::mat4 GetProjectionMatrix() const
+	{
+		return m_viewFrustum.CreateProjectionMatrix(1.0f); // we expect that light will shine in square frustum(should be it more like a cone-like shape?)
 	}
 
 	glm::vec3 GetPosition() const
@@ -1124,10 +1131,6 @@ private:
 	std::shared_ptr<DepthImageBuffer> m_depthBuffer;
 
 	VkFramebuffer m_frameBuffer;
-
-	std::shared_ptr<Light> m_light;
-	
-	ViewFrustum m_viewFrustum{ 70.0f, 1.0f, 1000.0f };
 
 public:
 	Shadows(std::shared_ptr<Allocator> allocator, std::shared_ptr<Device> dev)
@@ -1190,9 +1193,6 @@ private:
 public:
 	void Init() override
 	{
-		m_light = std::make_shared<Light>(glm::vec3(150.0f, 150.0f, 150.0f));
-		AddChild(m_light);
-
 		InitRenderPass();
 		InitFrameBuffer();
 
@@ -1227,26 +1227,6 @@ public:
 	{
 		return m_depthBuffer;
 	}
-
-	std::shared_ptr<Light> GetLight() const
-	{
-		return m_light;
-	}
-
-	glm::mat4 GetProjectionMatrix() const
-	{
-		return m_viewFrustum.CreateProjectionMatrix(m_shadowMapDimension, m_shadowMapDimension);
-	}
-
-	glm::mat4 GetViewMartix() const
-	{
-		return m_light->LookAt();
-	}
-
-	const ViewFrustum& GetViewFrustum() const
-	{
-		return m_viewFrustum;
-	}
 };
 
 class ShadowsRenderer : public IRenderer
@@ -1271,6 +1251,8 @@ private:
 
 	std::shared_ptr<Device> m_device;
 
+	std::shared_ptr<Light> m_light;
+
 	std::shared_ptr<Shadows> m_shadows;
 
 private:
@@ -1281,8 +1263,8 @@ private:
 	std::shared_ptr<UBOPool<Uniforms>> m_uniformsPool;
 
 public:
-	ShadowsRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<Shadows> shadows)
-		: m_allocator(alloc), m_device(dev), m_shadows(shadows)
+	ShadowsRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<Light> light, std::shared_ptr<Shadows> shadows)
+		: m_allocator(alloc), m_device(dev), m_light(light), m_shadows(shadows)
 	{
 	}
 
@@ -1333,8 +1315,8 @@ public:
 			auto ubo = m_uniformsPool->GetNext();
 
 			Uniforms uniforms;
-			uniforms.projectionMatrix = m_shadows->GetProjectionMatrix();
-			uniforms.viewMatrix = m_shadows->GetLight()->LookAt();
+			uniforms.projectionMatrix = m_light->GetProjectionMatrix();
+			uniforms.viewMatrix = m_light->LookAt();
 			uniforms.modelMatrix = node->GetWorldTransformScaled();
 			ubo->Update(&uniforms);
 
@@ -1514,13 +1496,15 @@ private:
 
 	std::shared_ptr<Camera> m_freeCamera;
 
+	std::shared_ptr<Light> m_light;
+
 	std::shared_ptr<Shadows> m_shadows;
 
 	ViewFrustum m_viewFrustum{ 70.0f, 0.01f, 1000.0f };
 
 public:
-	DefaultSceneRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass, std::shared_ptr<Shadows> shadows, std::shared_ptr<Camera> camera)
-		: m_device(dev), m_renderPass(renderPass), m_allocator(alloc), m_shadows(shadows), m_freeCamera(camera)
+	DefaultSceneRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass, std::shared_ptr<Light> light, std::shared_ptr<Shadows> shadows, std::shared_ptr<Camera> camera)
+		: m_device(dev), m_renderPass(renderPass), m_allocator(alloc), m_light(light), m_shadows(shadows), m_freeCamera(camera)
 	{
 	}
 
@@ -1574,8 +1558,8 @@ public:
 			uniforms.viewMatrix = m_freeCamera->LookAt();
 			uniforms.modelMatrix = node->GetWorldTransformScaled();
 			uniforms.normalMatrix = glm::inverse(node->GetWorldTransformScaled());
-			uniforms.lightViewProjectionMatrix = m_shadows->GetProjectionMatrix() * m_shadows->GetViewMartix();
-			uniforms.lightPosition = m_shadows->GetLight()->GetPosition();
+			uniforms.lightViewProjectionMatrix = m_light->GetProjectionMatrix() * m_light->LookAt();
+			uniforms.lightPosition = m_light->GetPosition();
 
 			ubo->Update(&uniforms);
 
@@ -1645,6 +1629,9 @@ public:
 	void Init() override
 	{
 		// Init scene nodes
+		std::shared_ptr<Light> light = std::make_shared<Light>(glm::vec3(150.0f, 150.0f, 150.0f));
+		AddChild(light);
+
 		std::shared_ptr<Shadows> shadows = std::make_shared<Shadows>(m_allocator, m_device);
 		AddChild(shadows);
 
@@ -1678,10 +1665,10 @@ public:
 		}
 
 		// Init renderera
-		m_shadowsRenderer = std::make_shared<ShadowsRenderer>(m_allocator, m_device, shadows);
+		m_shadowsRenderer = std::make_shared<ShadowsRenderer>(m_allocator, m_device, light, shadows);
 		m_shadowsRenderer->Init();
 
-		m_defaultRenderer = std::make_shared<DefaultSceneRenderer>(m_allocator, m_device, m_defaultRenderPass, shadows, freeCamera);
+		m_defaultRenderer = std::make_shared<DefaultSceneRenderer>(m_allocator, m_device, m_defaultRenderPass, light, shadows, freeCamera);
 		m_defaultRenderer->Init();
 
 		m_quadRenderer = std::make_shared<QuadRenderer>(m_allocator, m_device, m_defaultRenderPass, shadows->GetImageBuffer());
