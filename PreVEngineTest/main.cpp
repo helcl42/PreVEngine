@@ -1074,7 +1074,7 @@ public:
 class Light : public AbstractSceneNode
 {
 private:
-	glm::vec3 m_lookAtPosition{ 50.0f, 0.0f, 50.0f };
+	glm::vec3 m_lookAtPosition{ 0.0f, 0.0f, 0.0f };
 
 	glm::vec3 m_upDirection{ 0.0f, 1.0f, 0.0f };
 
