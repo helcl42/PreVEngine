@@ -45,7 +45,7 @@ namespace PreVEngine
 
 		void CopyBufferToImage(const VkExtent3D& extent, const VkBuffer buffer, VkImage image);
 
-		void CreateImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const VkImageTiling tiling, const VkImageUsageFlags usage, VkImage& outImage, VmaAllocation& outAlloc);
+		void CreateImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const uint32_t layerCount, const VkImageTiling tiling, const VkImageUsageFlags usage, VkImage& outImage, VmaAllocation& outAlloc);
 
 		void CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const void* data, VkImage& image);
 
@@ -148,12 +148,14 @@ namespace PreVEngine
 
 		bool mipMap;
 
+		uint32_t layerCount;
+
 		VkSamplerAddressMode addressMode;
 
 		const void* data;
 
-		ImageBufferCreateInfo(const VkExtent2D& ext, const VkFormat fmt, const bool mipmap = false, const VkSamplerAddressMode mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, const void* imageData = nullptr)
-			: extent(ext), format(fmt), mipMap(mipmap), addressMode(mode), data(imageData)
+		ImageBufferCreateInfo(const VkExtent2D& ext, const VkFormat fmt, const bool mipmap = false, const uint32_t lrCount = 1, const VkSamplerAddressMode mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, const void* imageData = nullptr)
+			: extent(ext), format(fmt), mipMap(mipmap), layerCount(lrCount), addressMode(mode), data(imageData)
 		{
 		}
 
@@ -187,6 +189,8 @@ namespace PreVEngine
 
 		virtual bool HasMipMaps() const = 0;
 
+		virtual uint32_t GetLayerCount() const = 0;
+
 	public:
 		virtual ~IImageBuffer() {}
 	};
@@ -209,6 +213,8 @@ namespace PreVEngine
 		VkSampler m_sampler;
 
 		bool m_mipMaps;
+
+		uint32_t m_layerCount;
 
 	public:
 		AbstractImageBuffer(Allocator& allocator);
@@ -234,6 +240,8 @@ namespace PreVEngine
 		VkExtent2D GetExtent() const override;
 
 		bool HasMipMaps() const override;
+
+		uint32_t GetLayerCount() const override;
 	};
 
 	//----------------------------------Image Buffer----------------------------------
