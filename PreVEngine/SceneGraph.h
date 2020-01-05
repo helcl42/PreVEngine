@@ -237,8 +237,14 @@ namespace PreVEngine
 
 			while (parent != nullptr)
 			{
-				parent = parent->GetParent();
+				auto tempParent = parent->GetParent();
+				if (tempParent == nullptr)
+				{
+					break;
+				}
+				parent = tempParent;
 			}
+
 			return parent;
 		}
 
