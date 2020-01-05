@@ -187,7 +187,7 @@ namespace PreVEngine
 
 		virtual VkExtent2D GetExtent() const = 0;
 
-		virtual bool HasMipMaps() const = 0;
+		virtual uint32_t GetMipLevels() const = 0;
 
 		virtual uint32_t GetLayerCount() const = 0;
 
@@ -212,7 +212,7 @@ namespace PreVEngine
 
 		VkSampler m_sampler;
 
-		bool m_mipMaps;
+		uint32_t m_mipLevels;
 
 		uint32_t m_layerCount;
 
@@ -239,7 +239,7 @@ namespace PreVEngine
 
 		VkExtent2D GetExtent() const override;
 
-		bool HasMipMaps() const override;
+		uint32_t GetMipLevels() const override;
 
 		uint32_t GetLayerCount() const override;
 	};

@@ -608,9 +608,9 @@ namespace PreVEngine
 		return m_extent;
 	}
 
-	bool AbstractImageBuffer::HasMipMaps() const
+	uint32_t AbstractImageBuffer::GetMipLevels() const
 	{
-		return m_mipMaps;
+		return m_mipLevels;
 	}
 
 	uint32_t AbstractImageBuffer::GetLayerCount() const
@@ -630,32 +630,32 @@ namespace PreVEngine
 
 	void ImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
 	{
-		m_mipMaps = createInfo.mipMap;
 		m_format = createInfo.format;
+		m_layerCount = createInfo.layerCount;
 
-		uint32_t mipLevels = 1;
+		m_mipLevels = 1;
 		if (createInfo.mipMap)
 		{
-			mipLevels = Log2(std::max(createInfo.extent.width, createInfo.extent.height)) + 1;
+			m_mipLevels = Log2(std::max(createInfo.extent.width, createInfo.extent.height)) + 1;
 		}
 
 		VkExtent3D ext3D{ createInfo.extent.width, createInfo.extent.height, 1 };
 
-		m_allocator.CreateImage(ext3D, createInfo.format, mipLevels, createInfo.layerCount, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_image, m_allocation);
-		m_allocator.CopyDataToImage(ext3D, createInfo.format, mipLevels, createInfo.data, m_image);
+		m_allocator.CreateImage(ext3D, createInfo.format, m_mipLevels, createInfo.layerCount, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_image, m_allocation);
+		m_allocator.CopyDataToImage(ext3D, createInfo.format, m_mipLevels, createInfo.data, m_image);
 
-		if (mipLevels > 1)
+		if (m_mipLevels > 1)
 		{
-			m_allocator.GenerateMipmaps(m_image, createInfo.format, createInfo.extent.width, createInfo.extent.height, mipLevels);
+			m_allocator.GenerateMipmaps(m_image, createInfo.format, createInfo.extent.width, createInfo.extent.height, m_mipLevels);
 		}
 		else
 		{
-			m_allocator.TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mipLevels);
+			m_allocator.TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, m_mipLevels);
 		}
 
-		m_allocator.CreateImageView(m_image, createInfo.format, mipLevels, createInfo.layerCount, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
+		m_allocator.CreateImageView(m_image, createInfo.format, m_mipLevels, createInfo.layerCount, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
 
-		CreateSampler((float)mipLevels, createInfo.addressMode);
+		CreateSampler((float)m_mipLevels, createInfo.addressMode);
 	}
 
 	void ImageBuffer::Resize(const VkExtent2D& extent)
@@ -677,7 +677,7 @@ namespace PreVEngine
 	void DepthImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
 	{
 		m_format = createInfo.format;
-		m_mipMaps = createInfo.mipMap;
+		m_mipLevels = 1;
 		m_layerCount = createInfo.layerCount;
 		m_sampler = VK_NULL_HANDLE;
 
@@ -690,8 +690,8 @@ namespace PreVEngine
 
 		VkExtent3D ext3D{ extent.width, extent.height, 1 };
 
-		m_allocator.CreateImage(ext3D, m_format, 1,m_layerCount,  VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_image, m_allocation);
-		m_allocator.CreateImageView(m_image, m_format, 1, m_layerCount, VK_IMAGE_ASPECT_DEPTH_BIT, m_imageView);
+		m_allocator.CreateImage(ext3D, m_format, m_mipLevels, m_layerCount,  VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_image, m_allocation);
+		m_allocator.CreateImageView(m_image, m_format, m_mipLevels, m_layerCount, VK_IMAGE_ASPECT_DEPTH_BIT, m_imageView);
 
 		m_extent = extent;
 	}
@@ -710,7 +710,7 @@ namespace PreVEngine
 	void ColorImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
 	{
 		m_format = createInfo.format;
-		m_mipMaps = createInfo.mipMap;
+		m_mipLevels = 1;
 		m_layerCount = createInfo.layerCount;
 		m_sampler = VK_NULL_HANDLE;
 
@@ -723,8 +723,8 @@ namespace PreVEngine
 
 		VkExtent3D ext3D{ extent.width, extent.height, 1 };
 
-		m_allocator.CreateImage(ext3D, m_format, 1, m_layerCount, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, m_image, m_allocation);
-		m_allocator.CreateImageView(m_image, m_format, 1, m_layerCount, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
+		m_allocator.CreateImage(ext3D, m_format, m_mipLevels, m_layerCount, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, m_image, m_allocation);
+		m_allocator.CreateImageView(m_image, m_format, m_mipLevels, m_layerCount, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
 
 		m_extent = extent;
 	}
