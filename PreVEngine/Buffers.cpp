@@ -249,7 +249,7 @@ namespace PreVEngine
 		vmaDestroyBuffer(m_allocator, stageBuffer, stageBufferAlloc);
 	}
 
-	void Allocator::CreateImageView(const VkImage image, const VkFormat format, const uint32_t mipLevels, const VkImageAspectFlags aspectFlags, VkImageView& outImagaView)
+	void Allocator::CreateImageView(const VkImage image, const VkFormat format, const uint32_t mipLevels, const uint32_t layerCount, const VkImageAspectFlags aspectFlags, VkImageView& outImagaView)
 	{
 		VkImageViewCreateInfo imageViewCreateInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 		imageViewCreateInfo.image = image;
@@ -263,7 +263,7 @@ namespace PreVEngine
 		imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
 		imageViewCreateInfo.subresourceRange.levelCount = mipLevels;
 		imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-		imageViewCreateInfo.subresourceRange.layerCount = 1;
+		imageViewCreateInfo.subresourceRange.layerCount = layerCount;
 
 		VKERRCHECK(vkCreateImageView(m_device, &imageViewCreateInfo, nullptr, &outImagaView));
 	}
@@ -653,7 +653,7 @@ namespace PreVEngine
 			m_allocator.TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mipLevels);
 		}
 
-		m_allocator.CreateImageView(m_image, createInfo.format, mipLevels, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
+		m_allocator.CreateImageView(m_image, createInfo.format, mipLevels, createInfo.layerCount, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
 
 		CreateSampler((float)mipLevels, createInfo.addressMode);
 	}
@@ -691,7 +691,7 @@ namespace PreVEngine
 		VkExtent3D ext3D{ extent.width, extent.height, 1 };
 
 		m_allocator.CreateImage(ext3D, m_format, 1,m_layerCount,  VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_image, m_allocation);
-		m_allocator.CreateImageView(m_image, m_format, 1, VK_IMAGE_ASPECT_DEPTH_BIT, m_imageView);
+		m_allocator.CreateImageView(m_image, m_format, 1, m_layerCount, VK_IMAGE_ASPECT_DEPTH_BIT, m_imageView);
 
 		m_extent = extent;
 	}
@@ -724,7 +724,7 @@ namespace PreVEngine
 		VkExtent3D ext3D{ extent.width, extent.height, 1 };
 
 		m_allocator.CreateImage(ext3D, m_format, 1, m_layerCount, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, m_image, m_allocation);
-		m_allocator.CreateImageView(m_image, m_format, 1, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
+		m_allocator.CreateImageView(m_image, m_format, 1, m_layerCount, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
 
 		m_extent = extent;
 	}

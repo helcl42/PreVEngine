@@ -49,7 +49,7 @@ namespace PreVEngine
 
 		void CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const void* data, VkImage& image);
 
-		void CreateImageView(const VkImage image, const VkFormat format, const uint32_t mipLevels, const VkImageAspectFlags aspectFlags, VkImageView& outImagaView);
+		void CreateImageView(const VkImage image, const VkFormat format, const uint32_t mipLevels, const uint32_t layerCount, const VkImageAspectFlags aspectFlags, VkImageView& outImagaView);
 
 		void DestroyImage(VkImage image, VkImageView view, VmaAllocation alloc);
 
