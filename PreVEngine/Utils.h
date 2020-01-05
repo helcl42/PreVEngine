@@ -142,14 +142,14 @@ namespace PreVEngine
 			return 0;
 		}
 
-		static void CreateImage(const VkPhysicalDevice gpu, const VkDevice device, const VkExtent2D& extent, const VkFormat format, const uint32_t mipLevels, const VkImageTiling tiling, const VkImageUsageFlags usage, const VkMemoryPropertyFlags properties, VkImage& outImage, VkDeviceMemory& outImageMemory)
+		static void CreateImage(const VkPhysicalDevice gpu, const VkDevice device, const VkExtent2D& extent, const VkFormat format, const uint32_t mipLevels, const uint32_t arrayLayers, const VkImageTiling tiling, const VkImageUsageFlags usage, const VkMemoryPropertyFlags properties, VkImage& outImage, VkDeviceMemory& outImageMemory)
 		{
 			VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 			imageInfo.imageType = VK_IMAGE_TYPE_2D;
 			imageInfo.format = format;
 			imageInfo.extent = { extent.width, extent.height, 1 };
 			imageInfo.mipLevels = mipLevels;
-			imageInfo.arrayLayers = 1;
+			imageInfo.arrayLayers = arrayLayers;
 			imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 			imageInfo.tiling = tiling;
 			imageInfo.usage = usage;
@@ -170,7 +170,7 @@ namespace PreVEngine
 			VKERRCHECK(vkBindImageMemory(device, outImage, outImageMemory, 0));
 		}
 
-		static VkImageView CreateImageView(const VkDevice device, const VkImage image, const VkFormat format, const uint32_t mipLevels, const VkImageAspectFlags aspectFlags)
+		static VkImageView CreateImageView(const VkDevice device, const VkImage image, const VkFormat format, const uint32_t mipLevels, const VkImageAspectFlags aspectFlags, const uint32_t arrayLayers = 1, const uint32_t baseArrayLayer = 0)
 		{
 			VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 			viewInfo.image = image;
@@ -183,8 +183,8 @@ namespace PreVEngine
 			viewInfo.subresourceRange.aspectMask = aspectFlags;
 			viewInfo.subresourceRange.baseMipLevel = 0;
 			viewInfo.subresourceRange.levelCount = mipLevels;
-			viewInfo.subresourceRange.baseArrayLayer = 0;
-			viewInfo.subresourceRange.layerCount = 1;
+			viewInfo.subresourceRange.baseArrayLayer = baseArrayLayer;
+			viewInfo.subresourceRange.layerCount = arrayLayers;
 
 			VkImageView imageView;
 			VKERRCHECK(vkCreateImageView(device, &viewInfo, nullptr, &imageView));
