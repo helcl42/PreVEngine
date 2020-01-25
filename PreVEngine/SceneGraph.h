@@ -298,159 +298,159 @@ namespace PreVEngine
 
 			return true;
 		}
+	};
 
-		class GraphTraversal
+	class GraphTraversal
+	{
+	public:
+		enum class FlagsOperation
 		{
-		public:
-			enum class FlagsOperation
-			{
-				OR,
-				AND
-			};
-
-		private:
-			bool HasFlags(const std::shared_ptr<ISceneNode> node, const uint64_t flagsToCheck, const FlagsOperation operation) const
-			{
-				if (operation == FlagsOperation::AND)
-				{
-					return node->HasAllFlags(flagsToCheck);
-				}
-				else if (operation == FlagsOperation::OR)
-				{
-					return node->HasAnyFlag(flagsToCheck);
-				}
-				return false;
-			}
-
-			std::shared_ptr<ISceneNode> FindByIdInternal(const std::shared_ptr<ISceneNode>& parent, const uint64_t id) const
-			{
-				if (parent->GetId() == id)
-				{
-					return parent;
-				}
-
-				auto& children = parent->GetChildren();
-				for (auto& child : children)
-				{
-					auto result = FindByIdInternal(child, id);
-					if (result != nullptr)
-					{
-						return result;
-					}
-				}
-			}
-
-			std::shared_ptr<ISceneNode> FindOneWithFlagsInternal(const std::shared_ptr<ISceneNode>& parent, const uint64_t flags, const FlagsOperation flagsOperation) const
-			{
-				if (HasFlags(parent, flags, flagsOperation))
-				{
-					return parent;
-				}
-
-				auto& children = parent->GetChildren();
-				for (auto& child : children)
-				{
-					auto result = FindOneWithFlagsInternal(child, flags, flagsOperation);
-					if (result != nullptr)
-					{
-						return result;
-					}
-				}
-
-				return nullptr;
-			}
-
-			void FindAllWithFlagsInternal(const std::shared_ptr<ISceneNode>& parent, const uint64_t flags, const FlagsOperation flagsOperation, std::vector<std::shared_ptr<ISceneNode>>& result) const
-			{
-				if (HasFlags(parent, flags, flagsOperation))
-				{
-					result.emplace_back(parent);
-				}
-
-				auto& children = parent->GetChildren();
-				for (auto& child : children)
-				{
-					auto node = FindOneWithFlagsInternal(child, flags, flagsOperation);
-					if (node != nullptr)
-					{
-						result.emplace_back(node);
-					}
-				}
-			}
-
-			std::shared_ptr<ISceneNode> FindOneWithTagInternal(const std::shared_ptr<ISceneNode>& parent, const std::string& tag) const
-			{
-				if (parent->GetTag() == tag)
-				{
-					return parent;
-				}
-
-				auto& children = parent->GetChildren();
-				for (auto& child : children)
-				{
-					auto result = FindOneWithTagInternal(child, tag);
-					if (result != nullptr)
-					{
-						return result;
-					}
-				}
-
-				return nullptr;
-			}
-
-			void FindAllWithTagInternal(const std::shared_ptr<ISceneNode>& parent, const std::string& tag, std::vector<std::shared_ptr<ISceneNode>>& result) const
-			{
-				if (parent->GetTag() == tag)
-				{
-					result.emplace_back(parent);
-				}
-
-				auto& children = parent->GetChildren();
-				for (auto& child : children)
-				{
-					auto node = FindOneWithTagInternal(child, tag);
-					if (node != nullptr)
-					{
-						result.emplace_back(node);
-					}
-				}
-			}
-
-		public:
-			std::shared_ptr<ISceneNode> FindById(const std::shared_ptr<ISceneNode>& aNode, const uint64_t id) const
-			{
-				auto root = aNode->GetRoot();
-				return FindByIdInternal(root, id);
-			}
-
-			std::shared_ptr<ISceneNode> FindOneWthFlags(const std::shared_ptr<ISceneNode>& aNode, const uint64_t flags, const FlagsOperation flagsOperation) const
-			{
-				auto root = aNode->GetRoot();
-				return FindOneWithFlagsInternal(root, flags, flagsOperation);
-			}
-
-			std::vector<std::shared_ptr<ISceneNode>> FindAllWithFlags(const std::shared_ptr<ISceneNode>& aNode, const uint64_t flags, const FlagsOperation flagsOperation) const
-			{
-				auto root = aNode->GetRoot();
-				std::vector<std::shared_ptr<ISceneNode>> result;
-				FindAllWithFlagsInternal(root, flags, flagsOperation, result);
-				return result;
-			}
-
-			std::shared_ptr<ISceneNode> FindOneWithTag(const std::shared_ptr<ISceneNode>& aNode, const std::string& tag) const
-			{
-				auto root = aNode->GetRoot();
-				return FindOneWithTagInternal(root, tag);
-			}
-
-			std::vector<std::shared_ptr<ISceneNode>> FindAllWthTag(const std::shared_ptr<ISceneNode>& aNode, const std::string& tag) const
-			{
-				auto root = aNode->GetRoot();
-				std::vector<std::shared_ptr<ISceneNode>> result;
-				FindAllWithTagInternal(root, tag, result);
-				return result;
-			}
+			OR,
+			AND
 		};
+
+	private:
+		bool HasFlags(const std::shared_ptr<ISceneNode> node, const uint64_t flagsToCheck, const FlagsOperation operation) const
+		{
+			if (operation == FlagsOperation::AND)
+			{
+				return node->HasAllFlags(flagsToCheck);
+			}
+			else if (operation == FlagsOperation::OR)
+			{
+				return node->HasAnyFlag(flagsToCheck);
+			}
+			return false;
+		}
+
+		std::shared_ptr<ISceneNode> FindByIdInternal(const std::shared_ptr<ISceneNode>& parent, const uint64_t id) const
+		{
+			if (parent->GetId() == id)
+			{
+				return parent;
+			}
+
+			auto& children = parent->GetChildren();
+			for (auto& child : children)
+			{
+				auto result = FindByIdInternal(child, id);
+				if (result != nullptr)
+				{
+					return result;
+				}
+			}
+		}
+
+		std::shared_ptr<ISceneNode> FindOneWithFlagsInternal(const std::shared_ptr<ISceneNode>& parent, const uint64_t flags, const FlagsOperation flagsOperation) const
+		{
+			if (HasFlags(parent, flags, flagsOperation))
+			{
+				return parent;
+			}
+
+			auto& children = parent->GetChildren();
+			for (auto& child : children)
+			{
+				auto result = FindOneWithFlagsInternal(child, flags, flagsOperation);
+				if (result != nullptr)
+				{
+					return result;
+				}
+			}
+
+			return nullptr;
+		}
+
+		void FindAllWithFlagsInternal(const std::shared_ptr<ISceneNode>& parent, const uint64_t flags, const FlagsOperation flagsOperation, std::vector<std::shared_ptr<ISceneNode>>& result) const
+		{
+			if (HasFlags(parent, flags, flagsOperation))
+			{
+				result.emplace_back(parent);
+			}
+
+			auto& children = parent->GetChildren();
+			for (auto& child : children)
+			{
+				auto node = FindOneWithFlagsInternal(child, flags, flagsOperation);
+				if (node != nullptr)
+				{
+					result.emplace_back(node);
+				}
+			}
+		}
+
+		std::shared_ptr<ISceneNode> FindOneWithTagInternal(const std::shared_ptr<ISceneNode>& parent, const std::string& tag) const
+		{
+			if (parent->GetTag() == tag)
+			{
+				return parent;
+			}
+
+			auto& children = parent->GetChildren();
+			for (auto& child : children)
+			{
+				auto result = FindOneWithTagInternal(child, tag);
+				if (result != nullptr)
+				{
+					return result;
+				}
+			}
+
+			return nullptr;
+		}
+
+		void FindAllWithTagInternal(const std::shared_ptr<ISceneNode>& parent, const std::string& tag, std::vector<std::shared_ptr<ISceneNode>>& result) const
+		{
+			if (parent->GetTag() == tag)
+			{
+				result.emplace_back(parent);
+			}
+
+			auto& children = parent->GetChildren();
+			for (auto& child : children)
+			{
+				auto node = FindOneWithTagInternal(child, tag);
+				if (node != nullptr)
+				{
+					result.emplace_back(node);
+				}
+			}
+		}
+
+	public:
+		std::shared_ptr<ISceneNode> FindById(const std::shared_ptr<ISceneNode>& aNode, const uint64_t id) const
+		{
+			auto root = aNode->GetRoot();
+			return FindByIdInternal(root, id);
+		}
+
+		std::shared_ptr<ISceneNode> FindOneWthFlags(const std::shared_ptr<ISceneNode>& aNode, const uint64_t flags, const FlagsOperation flagsOperation) const
+		{
+			auto root = aNode->GetRoot();
+			return FindOneWithFlagsInternal(root, flags, flagsOperation);
+		}
+
+		std::vector<std::shared_ptr<ISceneNode>> FindAllWithFlags(const std::shared_ptr<ISceneNode>& aNode, const uint64_t flags, const FlagsOperation flagsOperation) const
+		{
+			auto root = aNode->GetRoot();
+			std::vector<std::shared_ptr<ISceneNode>> result;
+			FindAllWithFlagsInternal(root, flags, flagsOperation, result);
+			return result;
+		}
+
+		std::shared_ptr<ISceneNode> FindOneWithTag(const std::shared_ptr<ISceneNode>& aNode, const std::string& tag) const
+		{
+			auto root = aNode->GetRoot();
+			return FindOneWithTagInternal(root, tag);
+		}
+
+		std::vector<std::shared_ptr<ISceneNode>> FindAllWthTag(const std::shared_ptr<ISceneNode>& aNode, const std::string& tag) const
+		{
+			auto root = aNode->GetRoot();
+			std::vector<std::shared_ptr<ISceneNode>> result;
+			FindAllWithTagInternal(root, tag, result);
+			return result;
+		}
 	};
 }
 
