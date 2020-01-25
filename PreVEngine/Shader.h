@@ -66,6 +66,8 @@ namespace PreVEngine
 
 		std::map<std::string, size_t> m_descriptorInfoNameToIndexMapping;
 
+		std::vector<VkPushConstantRange> m_pushConstantRanges;
+
 		//Vertex Inputs
 		VkVertexInputBindingDescription m_inputBindingDescription;
 
@@ -77,6 +79,8 @@ namespace PreVEngine
 		static void PrintModuleInfo(const SpvReflectShaderModule& module);
 
 		static void PrintDescriptorSet(const SpvReflectDescriptorSet& set);
+
+		static void PrintPushConstBlock(const SpvReflectBlockVariable& constBlock);
 
 		static std::string ToStringDescriptorType(const SpvReflectDescriptorType& value);
 
@@ -125,6 +129,8 @@ namespace PreVEngine
 
 	public:
 		const VkDescriptorSetLayout* GetDescriptorSetLayout() const;
+		
+		const std::vector<VkPushConstantRange>& GetPushConstantsRanges() const;
 
 		const VkPipelineVertexInputStateCreateInfo* GetVertextInputState() const;
 

@@ -164,6 +164,14 @@ namespace PreVEngine
 		result = spvReflectEnumerateDescriptorSets(&module, &count, sets.data());
 		assert(result == SPV_REFLECT_RESULT_SUCCESS);
 
+		uint32_t pushConstantsCount = 0;
+		result = spvReflectEnumeratePushConstantBlocks(&module, &pushConstantsCount, nullptr);
+		assert(result == SPV_REFLECT_RESULT_SUCCESS);
+
+		std::vector<SpvReflectBlockVariable*> pushConstants(pushConstantsCount);
+		result = spvReflectEnumeratePushConstantBlocks(&module, &pushConstantsCount, pushConstants.data());
+		assert(result == SPV_REFLECT_RESULT_SUCCESS);
+
 		VkShaderStageFlagBits stage = (VkShaderStageFlagBits)module.shader_stage;
 
 		for (const auto& set : sets)
@@ -208,6 +216,15 @@ namespace PreVEngine
 			}
 		}
 
+		for (const auto& constBlock : pushConstants)
+		{
+			VkPushConstantRange pushConstantRange = {};
+			pushConstantRange.stageFlags = stage;
+			pushConstantRange.offset = constBlock->offset;
+			pushConstantRange.size = constBlock->size;
+			m_pushConstantRanges.emplace_back(pushConstantRange);
+		}
+
 		VkPipelineShaderStageCreateInfo stageInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
 		stageInfo.stage = stage;
 		stageInfo.module = m_shaderModules[stage];
@@ -220,6 +237,11 @@ namespace PreVEngine
 		for (auto& set : sets)
 		{
 			PrintDescriptorSet(*set);
+		}
+
+		for (auto& constBlock : pushConstants)
+		{
+			PrintPushConstBlock(*constBlock);
 		}
 #endif
 
@@ -406,6 +428,11 @@ namespace PreVEngine
 		return &m_descriptorSetLayout;
 	}
 
+	const std::vector<VkPushConstantRange>& Shader::GetPushConstantsRanges() const
+	{
+		return m_pushConstantRanges;
+	}
+
 	const VkPipelineVertexInputStateCreateInfo* Shader::GetVertextInputState() const
 	{
 		return &m_vertexInputState;
@@ -458,6 +485,18 @@ namespace PreVEngine
 			printf("         binding  : %d\n", binding.binding);
 			printf("         name     : %s\n", binding.name);
 			printf("         type     : %s\n", ToStringDescriptorType(binding.descriptor_type).c_str());
+		}
+		printf("\n");
+	}
+
+	void Shader::PrintPushConstBlock(const SpvReflectBlockVariable& constBlock)
+	{
+		printf("  Const block  : name: %s - size: %d\n", constBlock.name, constBlock.padded_size);
+		for (uint32_t i = 0; i < constBlock.member_count; ++i)
+		{
+			const SpvReflectBlockVariable& member = constBlock.members[i];
+			printf("         name     : %s\n", member.name);
+			printf("         offset   : %d\n", member.offset);
 		}
 		printf("\n");
 	}
