@@ -22,6 +22,19 @@ namespace PreVEngine
 	{
 		if (m_descriptorSetLayout == VK_NULL_HANDLE)
 		{
+			for (const auto& module : m_shaderModules)
+			{
+				VkPipelineShaderStageCreateInfo stageInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
+				stageInfo.stage = module.first;
+				stageInfo.module = m_shaderModules[module.first];
+				stageInfo.pName = m_shadersEntryPointName.c_str();
+				m_shaderStages.push_back(stageInfo);
+			}
+
+			InitVertexInputs();
+			InitDescriptorSets();
+			InitPushConstantsBlocks();
+
 			m_currentDescriptorSetIndex = 0;
 
 			m_descriptorSetLayout = CreateDescriptorSetLayout();
@@ -128,8 +141,6 @@ namespace PreVEngine
 
 		m_shaderModules[stage] = CreateShaderModule(spirv);
 
-		Parse(spirv);
-
 		return !!m_shaderModules[stage];
 	}
 
@@ -146,167 +157,6 @@ namespace PreVEngine
 		VKERRCHECK(vkCreateShaderModule(m_device, &createInfo, nullptr, &shaderModule));
 
 		return shaderModule;
-	}
-
-	void Shader::Parse(const std::vector<char>& spirv)
-	{
-		SpvReflectResult result;
-
-		SpvReflectShaderModule module = {};
-		result = spvReflectCreateShaderModule(spirv.size(), spirv.data(), &module);
-		assert(result == SPV_REFLECT_RESULT_SUCCESS);
-
-		uint32_t count = 0;
-		result = spvReflectEnumerateDescriptorSets(&module, &count, nullptr);
-		assert(result == SPV_REFLECT_RESULT_SUCCESS);
-
-		std::vector<SpvReflectDescriptorSet*> sets(count);
-		result = spvReflectEnumerateDescriptorSets(&module, &count, sets.data());
-		assert(result == SPV_REFLECT_RESULT_SUCCESS);
-
-		uint32_t pushConstantsCount = 0;
-		result = spvReflectEnumeratePushConstantBlocks(&module, &pushConstantsCount, nullptr);
-		assert(result == SPV_REFLECT_RESULT_SUCCESS);
-
-		std::vector<SpvReflectBlockVariable*> pushConstants(pushConstantsCount);
-		result = spvReflectEnumeratePushConstantBlocks(&module, &pushConstantsCount, pushConstants.data());
-		assert(result == SPV_REFLECT_RESULT_SUCCESS);
-
-		VkShaderStageFlagBits stage = (VkShaderStageFlagBits)module.shader_stage;
-
-		for (const auto& set : sets)
-		{
-			for (uint32_t j = 0; j < set->binding_count; ++j)
-			{
-				const SpvReflectDescriptorBinding* setBinding = set->bindings[j];
-
-				VkDescriptorSetLayoutBinding layoutBinding = {};
-				layoutBinding.binding = setBinding->binding;
-				layoutBinding.descriptorType = (VkDescriptorType)setBinding->descriptor_type;
-				layoutBinding.descriptorCount = 1;
-				layoutBinding.stageFlags = stage;
-				layoutBinding.pImmutableSamplers = nullptr; // Optional
-				for (uint32_t dimensionIndex = 0; dimensionIndex < setBinding->array.dims_count; ++dimensionIndex)
-				{
-					layoutBinding.descriptorCount *= setBinding->array.dims[dimensionIndex];
-				}
-
-				m_layoutBindings.emplace_back(layoutBinding);
-			}
-		}
-
-		for (const auto& set : sets)
-		{
-			for (uint32_t i = 0; i < set->binding_count; ++i)
-			{
-				const SpvReflectDescriptorBinding* binding = set->bindings[i];
-				VkDescriptorType type = (VkDescriptorType)binding->descriptor_type;
-
-				m_descriptorSetInfos.push_back({ binding->name });
-
-				VkWriteDescriptorSet writeDescriptorSet = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
-				writeDescriptorSet.dstBinding = binding->binding;
-				writeDescriptorSet.dstArrayElement = 0;
-				writeDescriptorSet.descriptorType = type;
-				writeDescriptorSet.descriptorCount = 1;
-
-				m_descriptorWrites.emplace_back(writeDescriptorSet);
-
-				m_descriptorInfoNameToIndexMapping[binding->name] = m_descriptorWrites.size() - 1;
-			}
-		}
-
-		for (const auto& constBlock : pushConstants)
-		{
-			VkPushConstantRange pushConstantRange = {};
-			pushConstantRange.stageFlags = stage;
-			pushConstantRange.offset = constBlock->offset;
-			pushConstantRange.size = constBlock->size;
-			m_pushConstantRanges.emplace_back(pushConstantRange);
-		}
-
-		VkPipelineShaderStageCreateInfo stageInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
-		stageInfo.stage = stage;
-		stageInfo.module = m_shaderModules[stage];
-		stageInfo.pName = m_shadersEntryPointName.c_str();
-
-		m_shaderStages.push_back(stageInfo);
-
-#ifdef ENABLE_LOGGING
-		PrintModuleInfo(module);
-		for (auto& set : sets)
-		{
-			PrintDescriptorSet(*set);
-		}
-
-		for (auto& constBlock : pushConstants)
-		{
-			PrintPushConstBlock(*constBlock);
-		}
-#endif
-
-		if (stage == VK_SHADER_STAGE_VERTEX_BIT)
-		{
-			ParseInputs(module);
-		}
-
-		spvReflectDestroyShaderModule(&module);
-	}
-
-	void Shader::ParseInputs(SpvReflectShaderModule& module)
-	{
-		SpvReflectResult result;
-
-		uint32_t count = 0;
-		result = spvReflectEnumerateInputVariables(&module, &count, nullptr);
-		assert(result == SPV_REFLECT_RESULT_SUCCESS);
-
-		std::vector<SpvReflectInterfaceVariable*> inputVars(count);
-		result = spvReflectEnumerateInputVariables(&module, &count, inputVars.data());
-		assert(result == SPV_REFLECT_RESULT_SUCCESS);
-
-		// Sort attributes by location
-		std::sort(std::begin(inputVars), std::end(inputVars), [](const SpvReflectInterfaceVariable* a, const SpvReflectInterfaceVariable* b) { return a->location < b->location; });
-
-		m_inputBindingDescription = {};
-		m_inputBindingDescription.binding = 0;
-		m_inputBindingDescription.stride = 0;  // computed below
-		m_inputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-		m_inputAttributeDescriptions.resize(inputVars.size());
-		for (size_t varIndex = 0; varIndex < inputVars.size(); ++varIndex)
-		{
-			const SpvReflectInterfaceVariable* reflVar = inputVars[varIndex];
-
-			VkVertexInputAttributeDescription& attrDescription = m_inputAttributeDescriptions[varIndex];
-			attrDescription.location = reflVar->location;
-			attrDescription.binding = m_inputBindingDescription.binding;
-			attrDescription.format = static_cast<VkFormat>(reflVar->format);
-			attrDescription.offset = 0;  // final offset computed below after sorting.
-		}
-
-		// Compute final offsets of each attribute, and total vertex stride.
-		for (auto& attribute : m_inputAttributeDescriptions)
-		{
-			uint32_t formatSize = FormatSize(attribute.format);
-			attribute.offset = m_inputBindingDescription.stride;
-			m_inputBindingDescription.stride += formatSize;
-		}
-
-		m_vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
-		m_vertexInputState.vertexBindingDescriptionCount = 1;
-		m_vertexInputState.pVertexBindingDescriptions = &m_inputBindingDescription;
-		m_vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(m_inputAttributeDescriptions.size());
-		m_vertexInputState.pVertexAttributeDescriptions = m_inputAttributeDescriptions.data();
-
-#ifdef ENABLE_LOGGING
-		printf("  Vertex Input attributes:\n");
-		for (auto& var : inputVars)
-		{
-			printf("    %d : %s %s\n", var->location, ToStringGLSLType(*var->type_description).c_str(), var->name);
-		}
-		printf("\n");
-#endif
 	}
 
 	VkDescriptorSetLayout Shader::CreateDescriptorSetLayout() const
@@ -353,14 +203,13 @@ namespace PreVEngine
 
 		VkDescriptorSet descriptorSet = m_descriptorSets[m_currentDescriptorSetIndex];
 
-		uint32_t descriptorSetsCount = static_cast<uint32_t>(m_descriptorWrites.size());
-		for (uint32_t writeIndex = 0; writeIndex < descriptorSetsCount; ++writeIndex)
+		for (const auto& info : m_descriptorSetInfos)
 		{
-			auto& write = m_descriptorWrites[writeIndex];
+			auto& write = m_descriptorWrites[info.second.writeIndex];
 
 			write.dstSet = descriptorSet;
-			write.pBufferInfo = &m_descriptorSetInfos[writeIndex].bufferInfo;
-			write.pImageInfo = &m_descriptorSetInfos[writeIndex].imageInfo;
+			write.pBufferInfo = &info.second.bufferInfo;
+			write.pImageInfo = &info.second.imageInfo;
 		}
 
 		vkUpdateDescriptorSets(m_device, static_cast<uint32_t>(m_descriptorWrites.size()), m_descriptorWrites.data(), 0, nullptr);
@@ -373,13 +222,12 @@ namespace PreVEngine
 
 	void Shader::Bind(const std::string& name, const UBO& ubo)
 	{
-		const auto& nameIndex = m_descriptorInfoNameToIndexMapping.find(name);
-		if (nameIndex == m_descriptorInfoNameToIndexMapping.cend())
+		if (m_descriptorSetInfos.find(name) == m_descriptorSetInfos.cend())
 		{
 			LOGE("Could not find uniform with name: %s", name.c_str());
 		}
 
-		auto& item = m_descriptorSetInfos[(*nameIndex).second];
+		auto& item = m_descriptorSetInfos[name];
 
 		item.bufferInfo.buffer = ubo;
 		item.bufferInfo.offset = 0;
@@ -390,13 +238,12 @@ namespace PreVEngine
 
 	void Shader::Bind(const std::string& name, const VkImageView imageView, const VkSampler sampler, const VkImageLayout imageLayout)
 	{
-		const auto& nameIndex = m_descriptorInfoNameToIndexMapping.find(name);
-		if (nameIndex == m_descriptorInfoNameToIndexMapping.cend())
+		if (m_descriptorSetInfos.find(name) == m_descriptorSetInfos.cend())
 		{
 			LOGE("Could not find uniform with name: %s", name.c_str());
 		}
 
-		auto& item = m_descriptorSetInfos[(*nameIndex).second];
+		auto& item = m_descriptorSetInfos[name];
 
 		item.imageInfo.imageView = imageView;
 		item.imageInfo.sampler = sampler;
@@ -414,9 +261,9 @@ namespace PreVEngine
 	{
 		for (auto& item : m_descriptorSetInfos)
 		{
-			if (item.bufferInfo.buffer == 0)
+			if (item.second.bufferInfo.buffer == 0)
 			{
-				LOGE("Shader item: \"%s\" was not bound. Set a binding before creating the DescriptorSet.\n", item.name.c_str());
+				LOGE("Shader item: \"%s\" was not bound. Set a binding before creating the DescriptorSet.\n", item.first.c_str());
 				PAUSE;
 				exit(0);
 			}
@@ -433,143 +280,20 @@ namespace PreVEngine
 		return m_pushConstantRanges;
 	}
 
-	const VkPipelineVertexInputStateCreateInfo* Shader::GetVertextInputState() const
+	const VkVertexInputBindingDescription* Shader::GetVertexInputBindingDescription() const
 	{
-		return &m_vertexInputState;
+		return &m_inputBindingDescription;
+	}
+
+	const std::vector<VkVertexInputAttributeDescription>& Shader::GetVertexInputAttributeDewcriptions() const
+	{
+		return m_inputAttributeDescriptions;
 	}
 
 	const std::vector<VkPipelineShaderStageCreateInfo>& Shader::GetShaderStages() const
 	{
 		return m_shaderStages;
 	}
-
-	void Shader::PrintModuleInfo(const SpvReflectShaderModule& module)
-	{
-		printf("  Source language : %s\n", spvReflectSourceLanguage(module.source_language));
-		printf("  Entry Point     : %s\n", module.entry_point_name);
-
-		const char* stage = "";
-		switch (module.shader_stage)
-		{
-			case SPV_REFLECT_SHADER_STAGE_VERTEX_BIT:
-				stage = "VERTEX";
-				break;
-			case SPV_REFLECT_SHADER_STAGE_TESSELLATION_CONTROL_BIT:
-				stage = "TESSELLATION_CONTROL";
-				break;
-			case SPV_REFLECT_SHADER_STAGE_TESSELLATION_EVALUATION_BIT:
-				stage = "TESSELLATION_EVALUATION";
-				break;
-			case SPV_REFLECT_SHADER_STAGE_GEOMETRY_BIT:
-				stage = "GEOMETRY";
-				break;
-			case SPV_REFLECT_SHADER_STAGE_FRAGMENT_BIT:
-				stage = "FRAGMENT";
-				break;
-			case SPV_REFLECT_SHADER_STAGE_COMPUTE_BIT:
-				stage = "COMPUTE";
-				break;
-			default:
-				stage = "UNKNOWN";
-				break;
-		}
-		printf("  Shader stage    : %s\n", stage);
-	}
-
-	void Shader::PrintDescriptorSet(const SpvReflectDescriptorSet& set)
-	{
-		printf("  Descriptor set  : %d\n", set.set);
-		for (uint32_t i = 0; i < set.binding_count; ++i)
-		{
-			const SpvReflectDescriptorBinding& binding = *set.bindings[i];
-			printf("         binding  : %d\n", binding.binding);
-			printf("         name     : %s\n", binding.name);
-			printf("         type     : %s\n", ToStringDescriptorType(binding.descriptor_type).c_str());
-		}
-		printf("\n");
-	}
-
-	void Shader::PrintPushConstBlock(const SpvReflectBlockVariable& constBlock)
-	{
-		printf("  Const block  : name: %s - size: %d\n", constBlock.name, constBlock.padded_size);
-		for (uint32_t i = 0; i < constBlock.member_count; ++i)
-		{
-			const SpvReflectBlockVariable& member = constBlock.members[i];
-			printf("         name     : %s\n", member.name);
-			printf("         offset   : %d\n", member.offset);
-		}
-		printf("\n");
-	}
-
-	std::string Shader::ToStringDescriptorType(const SpvReflectDescriptorType& value)
-	{
-		switch (value)
-		{
-			case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER:
-				return "VK_DESCRIPTOR_TYPE_SAMPLER";
-			case SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
-				return "VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER";
-			case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
-				return "VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE";
-			case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE:
-				return "VK_DESCRIPTOR_TYPE_STORAGE_IMAGE";
-			case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
-				return "VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER";
-			case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
-				return "VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER";
-			case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
-				return "VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER";
-			case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER:
-				return "VK_DESCRIPTOR_TYPE_STORAGE_BUFFER";
-			case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
-				return "VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC";
-			case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
-				return "VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC";
-			case SPV_REFLECT_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
-				return "VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT";
-			default:
-				return "VK_DESCRIPTOR_TYPE_???";
-		}
-	}
-
-	std::string Shader::ToStringGLSLType(const SpvReflectTypeDescription& type)
-	{
-		switch (type.op)
-		{
-			case SpvOpTypeVector:
-			{
-				switch (type.traits.numeric.scalar.width)
-				{
-					case 32:
-					{
-						switch (type.traits.numeric.vector.component_count)
-						{
-							case 2: return "vec2";
-							case 3: return "vec3";
-							case 4: return "vec4";
-						}
-					}
-					break;
-					case 64:
-					{
-						switch (type.traits.numeric.vector.component_count)
-						{
-							case 2: return "dvec2";
-							case 3: return "dvec3";
-							case 4: return "dvec4";
-						}
-					}
-					break;
-				}
-			}
-			break;
-
-			default:
-				break;
-		}
-		return "UNKNOWN TYPE";
-	}
-
 
 	std::vector<char> ShaderFactory::LoadByteCodeFromFile(const std::string& filename) const
 	{
@@ -593,31 +317,5 @@ namespace PreVEngine
 		fileStream.close();
 
 		return buffer;
-	}
-
-	std::shared_ptr<Shader> ShaderFactory::CreateShaderFromFiles(VkDevice device, const std::map<VkShaderStageFlagBits, std::string>& stagePaths) const
-	{
-		std::map<VkShaderStageFlagBits, std::vector<char>> byteCodes;
-		for (const auto& stagePath : stagePaths)
-		{
-			const auto spirv = LoadByteCodeFromFile(stagePath.second);
-			byteCodes.insert(std::make_pair(stagePath.first, spirv));
-		}
-
-		return CreateShaderFromByteCodes(device, byteCodes);
-	}
-
-	std::shared_ptr<Shader> ShaderFactory::CreateShaderFromByteCodes(VkDevice device, const std::map<VkShaderStageFlagBits, std::vector<char>>& byteCodes) const
-	{
-		std::shared_ptr<Shader> shaders = std::make_shared<Shader>(device);
-
-		for (const auto& byteCode : byteCodes)
-		{
-			shaders->AddShaderModule(byteCode.first, byteCode.second);
-		}
-
-		shaders->Init();
-
-		return shaders;
 	}
 }

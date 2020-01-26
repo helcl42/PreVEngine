@@ -170,11 +170,11 @@ namespace PreVEngine
 			VKERRCHECK(vkBindImageMemory(device, outImage, outImageMemory, 0));
 		}
 
-		static VkImageView CreateImageView(const VkDevice device, const VkImage image, const VkFormat format, const uint32_t mipLevels, const VkImageAspectFlags aspectFlags, const uint32_t arrayLayers = 1, const uint32_t baseArrayLayer = 0)
+		static VkImageView CreateImageView(const VkDevice device, const VkImage image, const VkFormat format, const VkImageViewType viewType, const uint32_t mipLevels, const VkImageAspectFlags aspectFlags, const uint32_t arrayLayers = 1, const uint32_t baseArrayLayer = 0)
 		{
 			VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 			viewInfo.image = image;
-			viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+			viewInfo.viewType = viewType;
 			viewInfo.format = format;
 			viewInfo.components.r = VK_COMPONENT_SWIZZLE_R;
 			viewInfo.components.g = VK_COMPONENT_SWIZZLE_G;
@@ -229,6 +229,46 @@ namespace PreVEngine
 			VKERRCHECK(vkCreateFence(device, &createInfo, nullptr, &fence));
 
 			return fence;
+		}
+
+		static VkDescriptorSetLayoutBinding CreteDescriptorSetLayoutBinding(const uint32_t binding, const VkDescriptorType descType, const uint32_t descCount, const VkShaderStageFlags stageFlags, const VkSampler* immutableSamplers = nullptr)
+		{
+			VkDescriptorSetLayoutBinding vertexZeroLayoutBinding = {};
+			vertexZeroLayoutBinding.binding = binding;
+			vertexZeroLayoutBinding.descriptorType = descType;
+			vertexZeroLayoutBinding.descriptorCount = descCount;
+			vertexZeroLayoutBinding.stageFlags = stageFlags;
+			vertexZeroLayoutBinding.pImmutableSamplers = immutableSamplers;
+			return vertexZeroLayoutBinding;
+		}
+
+		static VkWriteDescriptorSet CreateWriteDescriptorSet(const uint32_t dstBinding, const VkDescriptorType descType, const uint32_t descCount, const uint32_t dstArrayElement = 0)
+		{
+			VkWriteDescriptorSet vertexZeroWriteDescriptorSet = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
+			vertexZeroWriteDescriptorSet.dstBinding = dstBinding;
+			vertexZeroWriteDescriptorSet.descriptorType = descType;
+			vertexZeroWriteDescriptorSet.descriptorCount = descCount;
+			vertexZeroWriteDescriptorSet.dstArrayElement = dstArrayElement;
+			return vertexZeroWriteDescriptorSet;
+		}
+
+		static VkVertexInputBindingDescription CreateVertexInputBindingDescription(const uint32_t binding, const uint32_t stride, const VkVertexInputRate inputRate)
+		{
+			VkVertexInputBindingDescription inputBinding = {};
+			inputBinding.binding = binding;
+			inputBinding.stride = stride;
+			inputBinding.inputRate = inputRate;
+			return inputBinding;
+		}
+
+		static VkVertexInputAttributeDescription CreateVertexInputAttributeDescription(const uint32_t binding, const uint32_t location, const VkFormat format, const uint32_t offset)
+		{
+			VkVertexInputAttributeDescription inputAttrDescription = {};
+			inputAttrDescription.binding = binding;
+			inputAttrDescription.location = location;
+			inputAttrDescription.format = format;
+			inputAttrDescription.offset = offset;
+			return inputAttrDescription;
 		}
 	};
 

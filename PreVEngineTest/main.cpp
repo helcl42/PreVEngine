@@ -4,16 +4,22 @@
 #include <cstring>
 #include <array>
 
+#include <Common.h>
 #include <App.h>
 #include <Image.h>
 #include <Shader.h>
 #include <Inputs.h>
 #include <Utils.h>
+#include <SceneGraph.h>
 
 #include "Pipeline.h"
 #include "Mesh.h"
 
 using namespace PreVEngine;
+
+static const std::string TAG_LIGHT = "Light";
+static const std::string TAG_SHADOW = "Shadow";
+static const std::string TAG_CAMERA = "Camera";
 
 class IMaterial
 {
@@ -25,7 +31,9 @@ public:
 	virtual bool HasImage() const = 0;
 
 public:
-	virtual ~IMaterial() {}
+	virtual ~IMaterial()
+	{
+	}
 };
 
 class IModel
@@ -38,7 +46,9 @@ public:
 	virtual std::shared_ptr<IBO> GetIndexBuffer() const = 0;
 
 public:
-	virtual ~IModel() {}
+	virtual ~IModel()
+	{
+	}
 };
 
 class IRenderComponent
@@ -49,7 +59,9 @@ public:
 	virtual std::shared_ptr<IMaterial> GetMaterial() const = 0;
 
 public:
-	virtual ~IRenderComponent() {}
+	virtual ~IRenderComponent()
+	{
+	}
 };
 
 class Material : public IMaterial
@@ -179,7 +191,7 @@ private:
 		const VkExtent2D imageExtent = { image->GetWidth(), image->GetHeight() };
 
 		std::shared_ptr<ImageBuffer> imageBuffer = std::make_shared<ImageBuffer>(allocator);
-		imageBuffer->Create(ImageBufferCreateInfo{ imageExtent, VK_FORMAT_R8G8B8A8_UNORM, true, 1, repeatAddressMode ? VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT : VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, image->GetBuffer() });
+		imageBuffer->Create(ImageBufferCreateInfo{ imageExtent, VK_FORMAT_R8G8B8A8_UNORM, true, VK_IMAGE_VIEW_TYPE_2D, 1, repeatAddressMode ? VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT : VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, image->GetBuffer() });
 
 		return imageBuffer;
 	}
@@ -228,6 +240,39 @@ public:
 
 std::map<std::string, std::shared_ptr<Image>> RenderComponentFactory::s_imagesCache;
 
+class ICameraComponent
+{
+public:
+	// TODO
+
+public:
+	virtual ~ICameraComponent()
+	{
+	}
+};
+
+class ILightComponent
+{
+public:
+	// TODO
+
+public:
+	virtual ~ILightComponent()
+	{
+	}
+};
+
+class IShadowsComponent
+{
+public:
+	// TODO
+
+public:
+	virtual ~IShadowsComponent()
+	{
+	}
+};
+
 template <typename ItemType>
 class ComponentRepository final : public Singleton<ComponentRepository<ItemType>>
 {
@@ -238,14 +283,10 @@ private:
 	std::map<uint64_t, std::shared_ptr<ItemType>> m_components;
 
 private:
-	ComponentRepository()
-	{
-	}
+	ComponentRepository() = default;
 
 public:
-	~ComponentRepository()
-	{
-	}
+	~ComponentRepository() = default;
 
 public:
 	std::shared_ptr<ItemType> Get(const uint64_t id) const
@@ -671,8 +712,9 @@ private:
 
 	glm::mat4 m_viewMatrix;
 
-
 	glm::vec2 m_prevTouchPosition;
+
+	ViewFrustum m_viewFrustum{ 70.0f, 0.01f, 1000.0f };
 
 public:
 	Camera()
@@ -782,7 +824,7 @@ public:
 
 		m_pitchYawRoll = glm::vec3(0.0f, 0.0f, 0.0f);
 		m_pitchYawRollDelta = glm::vec3(0.0f, 0.0f, 0.0f);
-		
+
 		m_viewMatrix = glm::mat4(1.0f);
 
 		m_forwardDirection = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -811,6 +853,11 @@ public:
 		m_pitchYawRollDelta.y = NormalizeUpTo2Phi(m_pitchYawRollDelta.y);
 	}
 
+	const ViewFrustum& GetViewFrustum() const
+	{
+		return m_viewFrustum;
+	}
+
 public:
 	void operator() (const MouseEvent& mouseEvent)
 	{
@@ -832,7 +879,6 @@ public:
 			AddPitch(angleInDegrees.y);
 			AddYaw(angleInDegrees.x);
 		}
-
 
 		m_prevTouchPosition = touchEvent.position;
 	}
@@ -867,7 +913,7 @@ private:
 
 	glm::vec3 m_upDirection{ 0.0f, 1.0f, 0.0f };
 
-	ViewFrustum m_viewFrustum{ 70.0f, 1.0f, 1000.0f };
+	ViewFrustum m_viewFrustum{ 70.0f, 0.01f, 1000.0f };
 
 	glm::vec3 m_position;
 
@@ -909,16 +955,47 @@ public:
 	{
 		return m_position;
 	}
+
+	const ViewFrustum& GetViewFrustum() const
+	{
+		return m_viewFrustum;
+	}
 };
 
 class Shadows : public AbstractSceneNode
 {
+public:
+	static const VkFormat DEPTH_FORMAT;
+
+	static const uint32_t SHADOW_MAP_DIMENSIONS;
+
+	static const VkFilter SHADOW_MAP_FILTER;
+
+	static const uint32_t CASCADES_COUNT;
+
+	static const float CASCADES_SPLIT_LAMBDA;
+
 private:
-	const VkFormat m_shadowMapFormat = VK_FORMAT_D24_UNORM_S8_UINT;
+	struct Cascade
+	{
+		VkFramebuffer frameBuffer;
 
-	const uint32_t m_shadowMapDimension = 4096;
+		VkImageView imageView;
 
-	const VkFilter m_shadowMapFilter = VK_FILTER_NEAREST;
+		float startSplitDepth;
+
+		float endSplitDepth;
+
+		glm::mat4 viewMatrix;
+
+		glm::mat4 projectionMatrix;
+
+		void Destroy(VkDevice device)
+		{
+			vkDestroyImageView(device, imageView, nullptr);
+			vkDestroyFramebuffer(device, frameBuffer, nullptr);
+		}
+	};
 
 private:
 	std::shared_ptr<Allocator> m_allocator;
@@ -930,7 +1007,7 @@ private:
 
 	std::shared_ptr<DepthImageBuffer> m_depthBuffer;
 
-	VkFramebuffer m_frameBuffer;
+	std::vector<Cascade> m_cascades;
 
 public:
 	Shadows(std::shared_ptr<Allocator> allocator, std::shared_ptr<Device> dev)
@@ -963,7 +1040,7 @@ private:
 		dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
 		m_renderPass = std::make_shared<RenderPass>(*m_device);
-		m_renderPass->AddDepthAttachment(m_shadowMapFormat);
+		m_renderPass->AddDepthAttachment(DEPTH_FORMAT);
 		m_renderPass->AddSubpass({ 0 });
 		m_renderPass->AddSubpassDependency(dependencies);
 		m_renderPass->Create();
@@ -974,38 +1051,147 @@ private:
 		m_renderPass->Destroy();
 	}
 
-	void InitFrameBuffer()
+	void InitCascades()
 	{
 		m_depthBuffer = std::make_shared<DepthImageBuffer>(*m_allocator);
-		m_depthBuffer->Create(ImageBufferCreateInfo{ GetExtent(), m_shadowMapFormat });
+		m_depthBuffer->Create(ImageBufferCreateInfo{ GetExtent(), DEPTH_FORMAT, false, VK_IMAGE_VIEW_TYPE_2D_ARRAY, CASCADES_COUNT });
 		m_depthBuffer->CreateSampler();
 
-		m_frameBuffer = VkUtils::CreateFrameBuffer(*m_device, *m_renderPass, { m_depthBuffer->GetImageView() }, GetExtent());
+		m_cascades.resize(CASCADES_COUNT);
+		for (uint32_t i = 0; i < CASCADES_COUNT; i++)
+		{
+			auto& cascade = m_cascades.at(i);
+
+			cascade.imageView = VkUtils::CreateImageView(*m_device, m_depthBuffer->GetImage(), m_depthBuffer->GetFormat(), VK_IMAGE_VIEW_TYPE_2D_ARRAY, m_depthBuffer->GetMipLevels(), VK_IMAGE_ASPECT_DEPTH_BIT, 1, i);
+			cascade.frameBuffer = VkUtils::CreateFrameBuffer(*m_device, *m_renderPass, { cascade.imageView }, GetExtent());
+		}
 	}
 
-	void ShutDownFrameBuffer()
+	void ShutDownCascades()
 	{
 		vkDeviceWaitIdle(*m_device);
 
-		vkDestroyFramebuffer(*m_device, m_frameBuffer, nullptr);
+		for (uint32_t i = 0; i < CASCADES_COUNT; i++)
+		{
+			auto& cascade = m_cascades.at(i);
+			cascade.Destroy(*m_device);
+		}
 
 		m_depthBuffer->Destroy();
+	}
+
+	void UpdateCascades(float deltaTime)
+	{
+		// TODO here should be camera -> instead of light ??? -> check VK samples !!!
+		auto light = std::dynamic_pointer_cast<Light>(GraphTraversal{}.FindOneWithTag(GetThis(), TAG_LIGHT));
+		auto camera = std::dynamic_pointer_cast<Camera>(GraphTraversal{}.FindOneWithTag(GetThis(), TAG_CAMERA));
+
+		std::vector<float> cascadeSplits(CASCADES_COUNT);
+
+		float nearClip = camera->GetViewFrustum().GetNearClippingPlane();
+		float farClip = camera->GetViewFrustum().GetFarClippingPlane();
+		float clipRange = farClip - nearClip;
+
+		float minZ = nearClip;
+		float maxZ = nearClip + clipRange;
+
+		float range = maxZ - minZ;
+		float ratio = maxZ / minZ;
+
+		// Calculate split depths based on view camera furstum
+		for (uint32_t i = 0; i < CASCADES_COUNT; i++)
+		{
+			float p = (i + 1) / static_cast<float>(CASCADES_COUNT);
+			float log = minZ * std::pow(ratio, p);
+			float uniform = minZ + range * p;
+			float d = CASCADES_SPLIT_LAMBDA * (log - uniform) + uniform;
+			cascadeSplits[i] = (d - nearClip) / clipRange;
+		}
+
+		// Calculate orthographic projection matrix for each cascade
+		float lastSplitDist = 0.0;
+		for (uint32_t i = 0; i < CASCADES_COUNT; i++)
+		{
+			const float splitDist = cascadeSplits[i];
+
+			glm::vec3 frustumCorners[] = {
+				glm::vec3(-1.0f,  1.0f, -1.0f),
+				glm::vec3(1.0f,  1.0f, -1.0f),
+				glm::vec3(1.0f, -1.0f, -1.0f),
+				glm::vec3(-1.0f, -1.0f, -1.0f),
+				glm::vec3(-1.0f,  1.0f,  1.0f),
+				glm::vec3(1.0f,  1.0f,  1.0f),
+				glm::vec3(1.0f, -1.0f,  1.0f),
+				glm::vec3(-1.0f, -1.0f,  1.0f),
+			};
+
+			// Project frustum corners into world space
+			glm::mat4 inverseCameraTransform = glm::inverse(camera->GetViewFrustum().CreateProjectionMatrix(1280.0f / 960.0f) * camera->LookAt());
+			for (uint32_t i = 0; i < 8; i++)
+			{
+				glm::vec4 invCorner = inverseCameraTransform * glm::vec4(frustumCorners[i], 1.0f);
+				frustumCorners[i] = invCorner / invCorner.w;
+			}
+
+			for (uint32_t i = 0; i < 4; i++)
+			{
+				glm::vec3 dist = frustumCorners[i + 4] - frustumCorners[i];
+				frustumCorners[i + 4] = frustumCorners[i] + (dist * splitDist);
+				frustumCorners[i] = frustumCorners[i] + (dist * lastSplitDist);
+			}
+
+			// Get frustum center
+			glm::vec3 frustumCenter = glm::vec3(0.0f);
+			for (uint32_t i = 0; i < 8; i++)
+			{
+				frustumCenter += frustumCorners[i];
+			}
+			frustumCenter /= 8.0f;
+
+			float radius = 0.0f;
+			for (uint32_t i = 0; i < 8; i++)
+			{
+				float distance = glm::length(frustumCorners[i] - frustumCenter);
+				radius = glm::max(radius, distance);
+			}
+			radius = std::ceil(radius * 16.0f) / 16.0f;
+
+			const glm::vec3 maxExtents = glm::vec3(radius);
+			const glm::vec3 minExtents = -maxExtents;
+
+			const glm::vec3 lightDirection = normalize(-light->GetPosition());
+			const glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDirection * -minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+			const glm::mat4 lightOrthoProjectionMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f, maxExtents.z - minExtents.z);
+
+			// Store split distance and matrix in cascade
+			m_cascades[i].startSplitDepth = (nearClip + lastSplitDist * clipRange) * -1.0f;
+			m_cascades[i].endSplitDepth = (nearClip + splitDist * clipRange) * -1.0f;
+			m_cascades[i].viewMatrix = lightViewMatrix;
+			m_cascades[i].projectionMatrix = lightOrthoProjectionMatrix;
+
+			lastSplitDist = splitDist;
+		}
 	}
 
 public:
 	void Init() override
 	{
 		InitRenderPass();
-		InitFrameBuffer();
+		InitCascades();
 
 		AbstractSceneNode::Init();
+	}
+
+	void Update(float deltaTime) override
+	{
+		UpdateCascades(deltaTime);
 	}
 
 	void ShutDown() override
 	{
 		AbstractSceneNode::ShutDown();
 
-		ShutDownFrameBuffer();
+		ShutDownCascades();
 		ShutDownRenderPass();
 	}
 
@@ -1015,19 +1201,45 @@ public:
 		return m_renderPass;
 	}
 
-	VkFramebuffer GetFrameBuffer() const
+	const Cascade& GetCascade(const uint32_t cascadeIndex) const
 	{
-		return m_frameBuffer;
+		return m_cascades.at(cascadeIndex);
 	}
 
 	VkExtent2D GetExtent() const
 	{
-		return { m_shadowMapDimension, m_shadowMapDimension };
+		return { SHADOW_MAP_DIMENSIONS, SHADOW_MAP_DIMENSIONS };
 	}
 
 	std::shared_ptr<IImageBuffer> GetImageBuffer() const
 	{
 		return m_depthBuffer;
+	}
+
+	uint32_t GetCascadesCount() const
+	{
+		return CASCADES_COUNT;
+	}
+};
+
+const VkFormat Shadows::DEPTH_FORMAT = VK_FORMAT_D32_SFLOAT;
+
+const uint32_t Shadows::SHADOW_MAP_DIMENSIONS = 2048;
+
+const VkFilter Shadows::SHADOW_MAP_FILTER = VK_FILTER_NEAREST;
+
+const uint32_t Shadows::CASCADES_COUNT = 4;
+
+const float Shadows::CASCADES_SPLIT_LAMBDA = 0.85f;
+
+
+struct ShadowsRenderContextUserData : RenderContextUserData
+{
+	const uint32_t cascadeIndex;
+
+	ShadowsRenderContextUserData(const uint32_t index)
+		: cascadeIndex(index)
+	{
 	}
 };
 
@@ -1043,10 +1255,10 @@ private:
 
 private:
 	// Depth bias (and slope) are used to avoid shadowing artefacts Constant depth bias factor (always applied)
-	const float m_depthBiasConstant = 1.25f;
+	//const float m_depthBiasConstant = 1.25f;
 
 	// Slope depth bias factor, applied depending on polygon's slope
-	const float m_depthBiasSlope = 1.75f;
+	//const float m_depthBiasSlope = 1.75f;
 
 private:
 	std::shared_ptr<Allocator> m_allocator;
@@ -1078,7 +1290,7 @@ public:
 	void Init() override
 	{
 		ShaderFactory shaderFactory;
-		m_shader = shaderFactory.CreateShaderFromFiles(*m_device, {
+		m_shader = shaderFactory.CreateShaderFromFiles<ShadowsShader>(*m_device, {
 			{ VK_SHADER_STAGE_VERTEX_BIT, "shaders/shadows_vert.spv" }
 			});
 		m_shader->AdjustDescriptorPoolCapacity(10000);
@@ -1096,7 +1308,10 @@ public:
 
 	void PreRender(RenderContext& renderContext) override
 	{
-		m_shadows->GetRenderPass()->Begin(m_shadows->GetFrameBuffer(), renderContext.defaultCommandBuffer, { { 0, 0 }, m_shadows->GetExtent() });
+		auto userData = std::dynamic_pointer_cast<ShadowsRenderContextUserData>(renderContext.userData);
+		auto cascade = m_shadows->GetCascade(userData->cascadeIndex);
+
+		m_shadows->GetRenderPass()->Begin(cascade.frameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, m_shadows->GetExtent() });
 
 		VkRect2D scissor = { { 0, 0 }, m_shadows->GetExtent() };
 		VkViewport viewport = { 0, 0, static_cast<float>(m_shadows->GetExtent().width), static_cast<float>(m_shadows->GetExtent().height), 0, 1 };
@@ -1105,7 +1320,7 @@ public:
 		vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
 		vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
 
-		vkCmdSetDepthBias(renderContext.defaultCommandBuffer, m_depthBiasConstant, 0.0f, m_depthBiasSlope);
+		//vkCmdSetDepthBias(renderContext.defaultCommandBuffer, m_depthBiasConstant, 0.0f, m_depthBiasSlope);
 	}
 
 	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode> node) override
@@ -1114,11 +1329,14 @@ public:
 		{
 			auto renderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());
 
+			auto userData = std::dynamic_pointer_cast<ShadowsRenderContextUserData>(renderContext.userData);
+			auto cascade = m_shadows->GetCascade(userData->cascadeIndex);
+
 			auto ubo = m_uniformsPool->GetNext();
 
 			Uniforms uniforms;
-			uniforms.projectionMatrix = m_light->GetProjectionMatrix();
-			uniforms.viewMatrix = m_light->LookAt();
+			uniforms.projectionMatrix = cascade.projectionMatrix;
+			uniforms.viewMatrix = cascade.viewMatrix;
 			uniforms.modelMatrix = node->GetWorldTransformScaled();
 			ubo->Update(&uniforms);
 
@@ -1157,6 +1375,17 @@ public:
 class QuadRenderer : public IRenderer
 {
 private:
+	struct PushConstantBlock
+	{
+		uint32_t imageIndex;
+		float nearClippingPlane;
+		float farClippingPlane;
+	};
+
+private:
+	EventHandler<QuadRenderer, KeyEvent> m_keyEvent{ *this };
+
+private:
 	std::shared_ptr<Device> m_device;
 
 	std::shared_ptr<RenderPass> m_renderPass;
@@ -1169,13 +1398,14 @@ private:
 	std::shared_ptr<IGraphicsPipeline> m_pipeline;
 
 private:
-	std::shared_ptr<IImageBuffer> m_imageBuffer;
-
 	std::shared_ptr<IModel> m_quadModel;
 
+private:
+	int32_t m_cascadeIndex = 0;
+
 public:
-	QuadRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass, std::shared_ptr<IImageBuffer> imageBuffer)
-		: m_device(dev), m_renderPass(renderPass), m_allocator(alloc), m_imageBuffer(imageBuffer)
+	QuadRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass)
+		: m_device(dev), m_renderPass(renderPass), m_allocator(alloc)
 	{
 	}
 
@@ -1187,7 +1417,7 @@ public:
 	void Init() override
 	{
 		ShaderFactory shaderFactory;
-		m_shader = shaderFactory.CreateShaderFromFiles(*m_device, {
+		m_shader = shaderFactory.CreateShaderFromFiles<QuadShader>(*m_device, {
 			{ VK_SHADER_STAGE_VERTEX_BIT, "shaders/quad_vert.spv" },
 			{ VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/quad_frag.spv" }
 			});
@@ -1242,7 +1472,19 @@ public:
 	// make a node with quad model & shadowMap texture ???
 	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode> node) override
 	{
-		m_shader->Bind("textureSampler", *m_imageBuffer, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+		auto shadows = std::dynamic_pointer_cast<Shadows>(GraphTraversal{}.FindOneWithTag(node, TAG_SHADOW));
+
+		const auto& cascade = shadows->GetCascade(m_cascadeIndex);
+		PushConstantBlock pushConstBlock{ static_cast<uint32_t>(m_cascadeIndex), -cascade.startSplitDepth, -cascade.endSplitDepth };
+		vkCmdPushConstants(renderContext.defaultCommandBuffer, m_pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantBlock), &pushConstBlock);
+
+		m_shader->Bind("depthSampler", shadows->GetImageBuffer()->GetImageView(), shadows->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+		//for (uint32_t i = 0; i < Shadows::CASCADES_COUNT; i++)
+		//{
+		//	auto& c = shadows->GetCascade(i);
+		//	m_shader->Bind("depthSampler_" + std::to_string(i), c.imageView, shadows->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+		//}
+
 		VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
 
 		VkBuffer vertexBuffers[] = { *m_quadModel->GetVertexBuffer() };
@@ -1266,20 +1508,42 @@ public:
 
 		m_pipeline->ShutDown();
 	}
+
+public:
+	void operator() (const KeyEvent& keyEvent)
+	{
+		if (keyEvent.action == KeyActionType::PRESS)
+		{
+			if (keyEvent.keyCode == KeyCode::KEY_O)
+			{
+				m_cascadeIndex = (m_cascadeIndex - 1) < 0 ? Shadows::CASCADES_COUNT - 1 : m_cascadeIndex - 1;
+				std::cout << "New Cascade Index = " << m_cascadeIndex << std::endl;
+			}
+			else if (keyEvent.keyCode == KeyCode::KEY_P)
+			{
+				m_cascadeIndex = (m_cascadeIndex + 1) % Shadows::CASCADES_COUNT;
+				std::cout << "New Cascade Index = " << m_cascadeIndex << std::endl;
+			}
+		}
+	}
 };
 
 class DefaultSceneRenderer : public IRenderer
 {
 private:
-	struct Uniforms
+	struct UniformsVS
 	{
 		alignas(16) glm::mat4 modelMatrix;
 		alignas(16) glm::mat4 viewMatrix;
 		alignas(16) glm::mat4 projectionMatrix;
 		alignas(16) glm::mat4 normalMatrix;
+	};
 
-		alignas(16) glm::mat4 lightViewProjectionMatrix;
-		alignas(16) glm::vec3 lightPosition;
+	struct UniformsFS
+	{
+		alignas(16) float cascadeSplits[Shadows::CASCADES_COUNT];
+		alignas(16) glm::mat4 lightViewProjectionMatrix[Shadows::CASCADES_COUNT];
+		alignas(16) glm::vec3 lightDirection;
 	};
 
 private:
@@ -1294,15 +1558,15 @@ private:
 
 	std::shared_ptr<IGraphicsPipeline> m_pipeline;
 
-	std::shared_ptr<UBOPool<Uniforms>> m_uniformsPool;
+	std::shared_ptr<UBOPool<UniformsVS>> m_uniformsPoolVS;
+
+	std::shared_ptr<UBOPool<UniformsFS>> m_uniformsPoolFS;
 
 	std::shared_ptr<Camera> m_freeCamera;
 
 	std::shared_ptr<Light> m_light;
 
 	std::shared_ptr<Shadows> m_shadows;
-
-	ViewFrustum m_viewFrustum{ 70.0f, 0.01f, 1000.0f };
 
 public:
 	DefaultSceneRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass, std::shared_ptr<Light> light, std::shared_ptr<Shadows> shadows, std::shared_ptr<Camera> camera)
@@ -1318,10 +1582,10 @@ public:
 	void Init() override
 	{
 		ShaderFactory shaderFactory;
-		m_shader = shaderFactory.CreateShaderFromFiles(*m_device, {
+		m_shader = shaderFactory.CreateShaderFromFiles<DefaultShader>(*m_device, {
 			{ VK_SHADER_STAGE_VERTEX_BIT, "shaders/scene_vert.spv" },
 			{ VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/scene_frag.spv" }
-		});
+			});
 		m_shader->AdjustDescriptorPoolCapacity(10000);
 
 		printf("Default Shader created\n");
@@ -1331,8 +1595,11 @@ public:
 
 		printf("Default Pipeline created\n");
 
-		m_uniformsPool = std::make_shared<UBOPool<Uniforms>>(m_allocator);
-		m_uniformsPool->AdjustCapactity(10000);
+		m_uniformsPoolVS = std::make_shared<UBOPool<UniformsVS>>(m_allocator);
+		m_uniformsPoolVS->AdjustCapactity(10000);
+
+		m_uniformsPoolFS = std::make_shared<UBOPool<UniformsFS>>(m_allocator);
+		m_uniformsPoolFS->AdjustCapactity(10000);
 	}
 
 	void PreRender(RenderContext& renderContext) override
@@ -1353,21 +1620,38 @@ public:
 		{
 			auto renderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());
 
-			auto ubo = m_uniformsPool->GetNext();
+			auto uboVS = m_uniformsPoolVS->GetNext();
 
-			Uniforms uniforms;
-			uniforms.projectionMatrix = m_viewFrustum.CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
-			uniforms.viewMatrix = m_freeCamera->LookAt();
-			uniforms.modelMatrix = node->GetWorldTransformScaled();
-			uniforms.normalMatrix = glm::inverse(node->GetWorldTransformScaled());
-			uniforms.lightViewProjectionMatrix = m_light->GetProjectionMatrix() * m_light->LookAt();
-			uniforms.lightPosition = m_light->GetPosition();
+			UniformsVS uniformsVS;
+			uniformsVS.projectionMatrix = m_freeCamera->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
+			uniformsVS.viewMatrix = m_freeCamera->LookAt();
+			uniformsVS.modelMatrix = node->GetWorldTransformScaled();
+			uniformsVS.normalMatrix = glm::inverse(node->GetWorldTransformScaled());
 
-			ubo->Update(&uniforms);
+			uboVS->Update(&uniformsVS);
 
+			auto uboFS = m_uniformsPoolFS->GetNext();
+
+			UniformsFS uniformsFS;
+			for (uint32_t i = 0; i < Shadows::CASCADES_COUNT; i++)
+			{
+				auto& cascade = m_shadows->GetCascade(i);
+				uniformsFS.cascadeSplits[i] = cascade.endSplitDepth;
+				uniformsFS.lightViewProjectionMatrix[i] = cascade.projectionMatrix * cascade.viewMatrix;
+			}
+			uniformsFS.lightDirection = glm::normalize(-m_light->GetPosition());
+
+			uboFS->Update(&uniformsFS);
+
+			m_shader->Bind("depthSampler", m_shadows->GetImageBuffer()->GetImageView(), m_shadows->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+			//for (uint32_t i = 0; i < Shadows::CASCADES_COUNT; i++)
+			//{
+			//	auto& cascade = m_shadows->GetCascade(i);
+			//	m_shader->Bind("depthSampler_" + std::to_string(i), cascade.imageView, m_shadows->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+			//}
 			m_shader->Bind("textureSampler", *renderComponent->GetMaterial()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			m_shader->Bind("depthSampler", *m_shadows->GetImageBuffer(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-			m_shader->Bind("ubo", *ubo);
+			m_shader->Bind("uboVS", *uboVS);
+			m_shader->Bind("uboFS", *uboFS);
 
 			VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
 			VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
@@ -1432,12 +1716,15 @@ public:
 	{
 		// Init scene nodes
 		std::shared_ptr<Light> light = std::make_shared<Light>(glm::vec3(150.0f, 150.0f, 150.0f));
+		light->SetTag(TAG_LIGHT);
 		AddChild(light);
 
 		std::shared_ptr<Shadows> shadows = std::make_shared<Shadows>(m_allocator, m_device);
+		shadows->SetTag(TAG_SHADOW);
 		AddChild(shadows);
 
 		std::shared_ptr<Camera> freeCamera = std::make_shared<Camera>();
+		freeCamera->SetTag(TAG_CAMERA);
 		AddChild(freeCamera);
 
 		auto camRobot = std::make_shared<CubeRobot>(m_allocator, glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), "texture.jpg");
@@ -1473,7 +1760,7 @@ public:
 		m_defaultRenderer = std::make_shared<DefaultSceneRenderer>(m_allocator, m_device, m_defaultRenderPass, light, shadows, freeCamera);
 		m_defaultRenderer->Init();
 
-		m_quadRenderer = std::make_shared<QuadRenderer>(m_allocator, m_device, m_defaultRenderPass, shadows->GetImageBuffer());
+		m_quadRenderer = std::make_shared<QuadRenderer>(m_allocator, m_device, m_defaultRenderPass);
 		m_quadRenderer->Init();
 	}
 
@@ -1488,14 +1775,22 @@ public:
 	void Render(RenderContext& renderContext) override
 	{
 		// shadows
-		m_shadowsRenderer->PreRender(renderContext);
 
-		for (auto child : m_children)
+		// TODO - find shadows node here -> move content to IShadowsComponent and it prevets this horrible narrowcasting !!!!	
+		auto shadows = std::dynamic_pointer_cast<Shadows>(GraphTraversal{}.FindOneWithTag(GetThis(), TAG_SHADOW));
+		for (uint32_t cascadeIndex = 0; cascadeIndex < shadows->GetCascadesCount(); cascadeIndex++)
 		{
-			m_shadowsRenderer->Render(renderContext, child);
-		}
+			renderContext.userData = std::make_shared<ShadowsRenderContextUserData>(cascadeIndex);
 
-		m_shadowsRenderer->PostRender(renderContext);
+			m_shadowsRenderer->PreRender(renderContext);
+
+			for (auto child : m_children)
+			{
+				m_shadowsRenderer->Render(renderContext, child);
+			}
+
+			m_shadowsRenderer->PostRender(renderContext);
+		}
 
 		// Default
 		m_defaultRenderer->PreRender(renderContext);
@@ -1509,8 +1804,8 @@ public:
 
 		// Debug quad with shadowMap
 		m_quadRenderer->PreRender(renderContext);
-		
-		m_quadRenderer->Render(renderContext, nullptr);
+
+		m_quadRenderer->Render(renderContext, GetThis());
 
 		m_quadRenderer->PostRender(renderContext);
 	}

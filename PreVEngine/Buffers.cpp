@@ -249,11 +249,11 @@ namespace PreVEngine
 		vmaDestroyBuffer(m_allocator, stageBuffer, stageBufferAlloc);
 	}
 
-	void Allocator::CreateImageView(const VkImage image, const VkFormat format, const uint32_t mipLevels, const uint32_t layerCount, const VkImageAspectFlags aspectFlags, VkImageView& outImagaView)
+	void Allocator::CreateImageView(const VkImage image, const VkFormat format, const VkImageViewType viewType, const uint32_t mipLevels, const uint32_t layerCount, const VkImageAspectFlags aspectFlags, VkImageView& outImagaView)
 	{
 		VkImageViewCreateInfo imageViewCreateInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 		imageViewCreateInfo.image = image;
-		imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		imageViewCreateInfo.viewType = viewType;
 		imageViewCreateInfo.format = format;
 		imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_R;
 		imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_G;
@@ -618,6 +618,11 @@ namespace PreVEngine
 		return m_layerCount;
 	}
 
+	VkImageViewType AbstractImageBuffer::GetViewType() const
+	{
+		return m_imageViewType;
+	}
+
 	//--------------------------------------------------------------------------------
 	ImageBuffer::ImageBuffer(Allocator& allocator)
 		: AbstractImageBuffer(allocator)
@@ -632,6 +637,7 @@ namespace PreVEngine
 	{
 		m_format = createInfo.format;
 		m_layerCount = createInfo.layerCount;
+		m_imageViewType = createInfo.viewType;
 
 		m_mipLevels = 1;
 		if (createInfo.mipMap)
@@ -653,7 +659,7 @@ namespace PreVEngine
 			m_allocator.TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, m_mipLevels);
 		}
 
-		m_allocator.CreateImageView(m_image, createInfo.format, m_mipLevels, createInfo.layerCount, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
+		m_allocator.CreateImageView(m_image, createInfo.format, createInfo.viewType, m_mipLevels, createInfo.layerCount, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
 
 		CreateSampler((float)m_mipLevels, createInfo.addressMode);
 	}
@@ -679,6 +685,7 @@ namespace PreVEngine
 		m_format = createInfo.format;
 		m_mipLevels = 1;
 		m_layerCount = createInfo.layerCount;
+		m_imageViewType = createInfo.viewType;
 		m_sampler = VK_NULL_HANDLE;
 
 		Resize(createInfo.extent);
@@ -691,7 +698,7 @@ namespace PreVEngine
 		VkExtent3D ext3D{ extent.width, extent.height, 1 };
 
 		m_allocator.CreateImage(ext3D, m_format, m_mipLevels, m_layerCount,  VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_image, m_allocation);
-		m_allocator.CreateImageView(m_image, m_format, m_mipLevels, m_layerCount, VK_IMAGE_ASPECT_DEPTH_BIT, m_imageView);
+		m_allocator.CreateImageView(m_image, m_format, m_imageViewType, m_mipLevels, m_layerCount, VK_IMAGE_ASPECT_DEPTH_BIT, m_imageView);
 
 		m_extent = extent;
 	}
@@ -712,6 +719,7 @@ namespace PreVEngine
 		m_format = createInfo.format;
 		m_mipLevels = 1;
 		m_layerCount = createInfo.layerCount;
+		m_imageViewType = createInfo.viewType;
 		m_sampler = VK_NULL_HANDLE;
 
 		Resize(createInfo.extent);
@@ -724,7 +732,7 @@ namespace PreVEngine
 		VkExtent3D ext3D{ extent.width, extent.height, 1 };
 
 		m_allocator.CreateImage(ext3D, m_format, m_mipLevels, m_layerCount, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, m_image, m_allocation);
-		m_allocator.CreateImageView(m_image, m_format, m_mipLevels, m_layerCount, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
+		m_allocator.CreateImageView(m_image, m_format, m_imageViewType, m_mipLevels, m_layerCount, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
 
 		m_extent = extent;
 	}

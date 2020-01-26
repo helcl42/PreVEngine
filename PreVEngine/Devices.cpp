@@ -97,7 +97,7 @@ namespace PreVEngine
 	}
 
 	//--Returns the first supported surface color format from the preferredFormats list, or VK_FORMAT_UNDEFINED if no match found.
-	VkFormat PhysicalDevice::FindSurfaceFormat(VkSurfaceKHR surface, std::vector<VkFormat> preferredFormats) const
+	VkFormat PhysicalDevice::FindSurfaceFormat(VkSurfaceKHR surface, const std::vector<VkFormat>& preferredFormats) const
 	{
 		auto formats = SurfaceFormats(surface);  // get list of supported surface formats
 		for (auto& pf : preferredFormats)
@@ -115,9 +115,9 @@ namespace PreVEngine
 		return VK_FORMAT_UNDEFINED;
 	}
 
-	VkFormat PhysicalDevice::FindDepthFormat(std::vector<VkFormat> preferred_formats) const
+	VkFormat PhysicalDevice::FindDepthFormat(const std::vector<VkFormat>& preferredFormats) const
 	{
-		for (auto& format : preferred_formats)
+		for (auto& format : preferredFormats)
 		{
 			VkFormatProperties formatProps;
 			vkGetPhysicalDeviceFormatProperties(m_handle, format, &formatProps);

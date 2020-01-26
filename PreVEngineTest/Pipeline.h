@@ -81,6 +81,45 @@ public:
 };
 
 
+class ShadowsShader final : public Shader
+{
+private:
+
+public:
+	ShadowsShader(VkDevice device)
+		: Shader(device)
+	{
+	}
+
+	~ShadowsShader()
+	{
+	}
+
+private:
+	void InitVertexInputs() override
+	{
+		m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, sizeof(float) * 3 + sizeof(float) * 2 + sizeof(float) * 3, VK_VERTEX_INPUT_RATE_VERTEX);
+
+		m_inputAttributeDescriptions = {
+			VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
+			VkUtils::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, sizeof(float) * 3),
+			VkUtils::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, sizeof(float) * 3 + sizeof(float) * 2)
+		};
+	}
+
+	void InitDescriptorSets() override
+	{
+		// vertex shader
+		m_layoutBindings.emplace_back(VkUtils::CreteDescriptorSetLayoutBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT));
+		m_descriptorWrites.emplace_back(VkUtils::CreateWriteDescriptorSet(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1));
+		m_descriptorSetInfos["ubo"] = { m_descriptorWrites.size() - 1 };
+	}
+
+	void InitPushConstantsBlocks() override
+	{
+	}
+};
+
 class ShadowsPipeline final : public AbstractGraphicsPipeline
 {
 public:
@@ -108,6 +147,12 @@ public:
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
 		inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 		inputAssembly.primitiveRestartEnable = VK_FALSE;
+
+		VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
+		vertexInputState.vertexBindingDescriptionCount = 1;
+		vertexInputState.pVertexBindingDescriptions = m_shaders.GetVertexInputBindingDescription();
+		vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(m_shaders.GetVertexInputAttributeDewcriptions().size());
+		vertexInputState.pVertexAttributeDescriptions = m_shaders.GetVertexInputAttributeDewcriptions().data();
 
 		const VkExtent2D initialExtent{ 640, 480 };
 
@@ -166,7 +211,7 @@ public:
 		VkGraphicsPipelineCreateInfo pipelineInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
 		pipelineInfo.stageCount = static_cast<uint32_t>(m_shaders.GetShaderStages().size());
 		pipelineInfo.pStages = m_shaders.GetShaderStages().data();
-		pipelineInfo.pVertexInputState = m_shaders.GetVertextInputState();
+		pipelineInfo.pVertexInputState = &vertexInputState;
 		pipelineInfo.pInputAssemblyState = &inputAssembly;
 		pipelineInfo.pViewportState = &viewportState;
 		pipelineInfo.pRasterizationState = &rasterizer;
@@ -183,10 +228,65 @@ public:
 	}
 };
 
+class DefaultShader final : public Shader
+{
+private:
+
+public:
+	DefaultShader(VkDevice device)
+		: Shader(device)
+	{
+	}
+
+	~DefaultShader()
+	{
+	}
+
+private:
+	void InitVertexInputs() override
+	{
+		m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, sizeof(float) * 3 + sizeof(float) * 2 + sizeof(float) * 3, VK_VERTEX_INPUT_RATE_VERTEX);
+
+		m_inputAttributeDescriptions = {
+			VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
+			VkUtils::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, sizeof(float) * 3),
+			VkUtils::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, sizeof(float) * 3 + sizeof(float) * 2)
+		};
+	}
+
+	void InitDescriptorSets() override
+	{
+		// vertex shader
+		m_layoutBindings.emplace_back(VkUtils::CreteDescriptorSetLayoutBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT));
+		m_descriptorWrites.emplace_back(VkUtils::CreateWriteDescriptorSet(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1));
+		m_descriptorSetInfos["uboVS"] = { m_descriptorWrites.size() - 1 };
+
+		// fragment shader
+		m_layoutBindings.emplace_back(VkUtils::CreteDescriptorSetLayoutBinding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT));
+		m_descriptorWrites.emplace_back(VkUtils::CreateWriteDescriptorSet(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1));		
+		m_descriptorSetInfos["uboFS"] = { m_descriptorWrites.size() - 1 };
+
+		m_layoutBindings.emplace_back(VkUtils::CreteDescriptorSetLayoutBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT));
+		m_descriptorWrites.emplace_back(VkUtils::CreateWriteDescriptorSet(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1));
+		m_descriptorSetInfos["textureSampler"] = { m_descriptorWrites.size() - 1 };
+		
+		m_layoutBindings.emplace_back(VkUtils::CreteDescriptorSetLayoutBinding(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT));
+		m_descriptorWrites.emplace_back(VkUtils::CreateWriteDescriptorSet(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1));
+		m_descriptorSetInfos["depthSampler"] = { m_descriptorWrites.size() - 1 };
+		//for (uint32_t i = 0; i < 4; i++)
+		//{
+		//	m_descriptorWrites.emplace_back(VkUtils::CreateWriteDescriptorSet(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, i));
+		//	m_descriptorSetInfos["depthSampler_" + std::to_string(i)] = { m_descriptorWrites.size() - 1 };
+		//}
+	}
+
+	void InitPushConstantsBlocks() override
+	{
+	}
+};
 
 class DefaultPipeline final : public AbstractGraphicsPipeline
 {
-
 public:
 	DefaultPipeline(VkDevice device, VkRenderPass renderpass, Shader& shaders)
 		: AbstractGraphicsPipeline(device, renderpass, shaders)
@@ -212,6 +312,12 @@ public:
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
 		inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 		inputAssembly.primitiveRestartEnable = VK_FALSE;
+
+		VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
+		vertexInputState.vertexBindingDescriptionCount = 1;
+		vertexInputState.pVertexBindingDescriptions = m_shaders.GetVertexInputBindingDescription();
+		vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(m_shaders.GetVertexInputAttributeDewcriptions().size());
+		vertexInputState.pVertexAttributeDescriptions = m_shaders.GetVertexInputAttributeDewcriptions().data();
 
 		const VkExtent2D initialExtent{ 640, 480 };
 
@@ -281,7 +387,7 @@ public:
 		VkGraphicsPipelineCreateInfo pipelineInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
 		pipelineInfo.stageCount = static_cast<uint32_t>(m_shaders.GetShaderStages().size());
 		pipelineInfo.pStages = m_shaders.GetShaderStages().data();
-		pipelineInfo.pVertexInputState = m_shaders.GetVertextInputState();
+		pipelineInfo.pVertexInputState = &vertexInputState;
 		pipelineInfo.pInputAssemblyState = &inputAssembly;
 		pipelineInfo.pViewportState = &viewportState;
 		pipelineInfo.pRasterizationState = &rasterizer;
@@ -298,6 +404,53 @@ public:
 	}
 };
 
+class QuadShader final : public Shader
+{
+private:
+
+public:
+	QuadShader(VkDevice device)
+		: Shader(device)
+	{
+	}
+
+	~QuadShader()
+	{
+	}
+
+private:
+	void InitVertexInputs() override
+	{
+		m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, sizeof(float) * 3 + sizeof(float) * 2 + sizeof(float) * 3, VK_VERTEX_INPUT_RATE_VERTEX);
+
+		m_inputAttributeDescriptions = {
+			VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
+			VkUtils::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, sizeof(float) * 3),
+			VkUtils::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, sizeof(float) * 3 + sizeof(float) * 2)
+		};
+	}
+
+	void InitDescriptorSets() override
+	{
+		m_layoutBindings.emplace_back(VkUtils::CreteDescriptorSetLayoutBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT));
+		m_descriptorWrites.emplace_back(VkUtils::CreateWriteDescriptorSet(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1));
+		m_descriptorSetInfos["depthSampler"] = { m_descriptorWrites.size() - 1 };
+		//for (uint32_t i = 0; i < 4; i++)
+		//{
+		//	m_descriptorWrites.emplace_back(VkUtils::CreateWriteDescriptorSet(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1));
+		//	m_descriptorSetInfos["depthSampler_" + std::to_string(i)] = { m_descriptorWrites.size() - 1 };
+		//}
+	}
+
+	void InitPushConstantsBlocks() override
+	{
+		VkPushConstantRange pushConstantRange = {};
+		pushConstantRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		pushConstantRange.offset = 0;
+		pushConstantRange.size = sizeof(float) * 3;
+		m_pushConstantRanges.emplace_back(pushConstantRange);
+	}
+};
 
 class QuadPipeline final : public AbstractGraphicsPipeline
 {
@@ -327,6 +480,12 @@ public:
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
 		inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 		inputAssembly.primitiveRestartEnable = VK_FALSE;
+
+		VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
+		vertexInputState.vertexBindingDescriptionCount = 1;
+		vertexInputState.pVertexBindingDescriptions = m_shaders.GetVertexInputBindingDescription();
+		vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(m_shaders.GetVertexInputAttributeDewcriptions().size());
+		vertexInputState.pVertexAttributeDescriptions = m_shaders.GetVertexInputAttributeDewcriptions().data();
 
 		const VkExtent2D initialExtent{ 640, 480 };
 
@@ -396,7 +555,7 @@ public:
 		VkGraphicsPipelineCreateInfo pipelineInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
 		pipelineInfo.stageCount = static_cast<uint32_t>(m_shaders.GetShaderStages().size());
 		pipelineInfo.pStages = m_shaders.GetShaderStages().data();
-		pipelineInfo.pVertexInputState = m_shaders.GetVertextInputState();
+		pipelineInfo.pVertexInputState = &vertexInputState;
 		pipelineInfo.pInputAssemblyState = &inputAssembly;
 		pipelineInfo.pViewportState = &viewportState;
 		pipelineInfo.pRasterizationState = &rasterizer;

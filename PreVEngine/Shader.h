@@ -8,8 +8,6 @@
 #include "Window.h"
 #include "Buffers.h"
 
-#include "External/spirv_reflect.h"
-
 namespace PreVEngine
 {
 	class Shader
@@ -17,7 +15,7 @@ namespace PreVEngine
 	private:
 		struct DescriptorSetInfo
 		{
-			std::string name;
+			size_t writeIndex;
 
 			union
 			{
@@ -39,7 +37,7 @@ namespace PreVEngine
 			VK_SHADER_STAGE_COMPUTE_BIT // TODO: should be really here??
 		};
 
-	private:
+	protected:
 		VkDevice m_device;
 
 		// Shader Stages
@@ -62,9 +60,7 @@ namespace PreVEngine
 
 		VkDescriptorSetLayout m_descriptorSetLayout;
 
-		std::vector<DescriptorSetInfo> m_descriptorSetInfos;
-
-		std::map<std::string, size_t> m_descriptorInfoNameToIndexMapping;
+		std::map<std::string, DescriptorSetInfo> m_descriptorSetInfos;
 
 		std::vector<VkPushConstantRange> m_pushConstantRanges;
 
@@ -73,25 +69,8 @@ namespace PreVEngine
 
 		std::vector<VkVertexInputAttributeDescription> m_inputAttributeDescriptions;
 
-		VkPipelineVertexInputStateCreateInfo m_vertexInputState;
-
-	private:
-		static void PrintModuleInfo(const SpvReflectShaderModule& module);
-
-		static void PrintDescriptorSet(const SpvReflectDescriptorSet& set);
-
-		static void PrintPushConstBlock(const SpvReflectBlockVariable& constBlock);
-
-		static std::string ToStringDescriptorType(const SpvReflectDescriptorType& value);
-
-		static std::string ToStringGLSLType(const SpvReflectTypeDescription& type);
-
 	private:
 		VkShaderModule CreateShaderModule(const std::vector<char>& spirv) const;
-
-		void Parse(const std::vector<char>& spirv);
-
-		void ParseInputs(SpvReflectShaderModule& module);
 
 		void CheckBindings() const;
 
@@ -104,6 +83,13 @@ namespace PreVEngine
 		void RecreateDescriptorSets(const uint32_t size);
 
 		bool ShouldAdjustCapacity(const uint32_t size);
+
+	protected:
+		virtual void InitVertexInputs() = 0;
+
+		virtual void InitDescriptorSets() = 0;
+
+		virtual void InitPushConstantsBlocks() = 0;
 
 	public:
 		Shader(VkDevice device);
@@ -132,9 +118,11 @@ namespace PreVEngine
 		
 		const std::vector<VkPushConstantRange>& GetPushConstantsRanges() const;
 
-		const VkPipelineVertexInputStateCreateInfo* GetVertextInputState() const;
-
 		const std::vector<VkPipelineShaderStageCreateInfo>& GetShaderStages() const;
+
+		const VkVertexInputBindingDescription* GetVertexInputBindingDescription() const;
+
+		const std::vector<VkVertexInputAttributeDescription>& GetVertexInputAttributeDewcriptions() const;
 	};
 
 	class ShaderFactory
@@ -143,9 +131,33 @@ namespace PreVEngine
 		std::vector<char> LoadByteCodeFromFile(const std::string& filename) const;
 
 	public:
-		std::shared_ptr<Shader> CreateShaderFromFiles(VkDevice device, const std::map<VkShaderStageFlagBits, std::string>& stagePaths) const;
+		template <typename ShaderType>
+		std::shared_ptr<Shader> CreateShaderFromFiles(VkDevice device, const std::map<VkShaderStageFlagBits, std::string>& stagePaths) const
+		{
+			std::map<VkShaderStageFlagBits, std::vector<char>> byteCodes;
+			for (const auto& stagePath : stagePaths)
+			{
+				const auto spirv = LoadByteCodeFromFile(stagePath.second);
+				byteCodes.insert(std::make_pair(stagePath.first, spirv));
+			}
 
-		std::shared_ptr<Shader> CreateShaderFromByteCodes(VkDevice device, const std::map<VkShaderStageFlagBits, std::vector<char>>& byteCodes) const;
+			return CreateShaderFromByteCodes<ShaderType>(device, byteCodes);
+		}
+
+		template <typename ShaderType>
+		std::shared_ptr<Shader> CreateShaderFromByteCodes(VkDevice device, const std::map<VkShaderStageFlagBits, std::vector<char>>& byteCodes) const
+		{
+			std::shared_ptr<Shader> shaders = std::make_shared<ShaderType>(device);
+
+			for (const auto& byteCode : byteCodes)
+			{
+				shaders->AddShaderModule(byteCode.first, byteCode.second);
+			}
+
+			shaders->Init();
+
+			return shaders;
+		}
 	};
 }
 

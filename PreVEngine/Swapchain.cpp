@@ -315,7 +315,7 @@ namespace PreVEngine
 			SwapchainBuffer& swapchainBuffer = m_swapchainBuffers[i];
 
 			swapchainBuffer.image = swapchainImages[i];
-			swapchainBuffer.view = VkUtils::CreateImageView(m_device, swapchainImages[i], m_swapchainCreateInfo.imageFormat, 1, VK_IMAGE_ASPECT_COLOR_BIT);
+			swapchainBuffer.view = VkUtils::CreateImageView(m_device, swapchainImages[i], m_swapchainCreateInfo.imageFormat, VK_IMAGE_VIEW_TYPE_2D, 1, VK_IMAGE_ASPECT_COLOR_BIT);
 
 			std::vector<VkImageView> views;
 			views.push_back(swapchainBuffer.view); // Add color buffer (unique)

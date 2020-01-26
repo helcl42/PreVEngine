@@ -49,7 +49,7 @@ namespace PreVEngine
 
 		void CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const void* data, VkImage& image);
 
-		void CreateImageView(const VkImage image, const VkFormat format, const uint32_t mipLevels, const uint32_t layerCount, const VkImageAspectFlags aspectFlags, VkImageView& outImagaView);
+		void CreateImageView(const VkImage image, const VkFormat format, const VkImageViewType viewType, const uint32_t mipLevels, const uint32_t layerCount, const VkImageAspectFlags aspectFlags, VkImageView& outImagaView);
 
 		void DestroyImage(VkImage image, VkImageView view, VmaAllocation alloc);
 
@@ -148,14 +148,16 @@ namespace PreVEngine
 
 		bool mipMap;
 
+		VkImageViewType viewType;
+
 		uint32_t layerCount;
 
 		VkSamplerAddressMode addressMode;
 
 		const void* data;
 
-		ImageBufferCreateInfo(const VkExtent2D& ext, const VkFormat fmt, const bool mipmap = false, const uint32_t lrCount = 1, const VkSamplerAddressMode mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, const void* imageData = nullptr)
-			: extent(ext), format(fmt), mipMap(mipmap), layerCount(lrCount), addressMode(mode), data(imageData)
+		ImageBufferCreateInfo(const VkExtent2D& ext, const VkFormat fmt, const bool mipmap = false, const VkImageViewType vwType = VK_IMAGE_VIEW_TYPE_2D, const uint32_t lrCount = 1, const VkSamplerAddressMode mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, const void* imageData = nullptr)
+			: extent(ext), format(fmt), mipMap(mipmap), viewType(vwType), layerCount(lrCount), addressMode(mode), data(imageData)
 		{
 		}
 
@@ -191,6 +193,8 @@ namespace PreVEngine
 
 		virtual uint32_t GetLayerCount() const = 0;
 
+		virtual VkImageViewType GetViewType() const = 0;
+
 	public:
 		virtual ~IImageBuffer() {}
 	};
@@ -215,6 +219,8 @@ namespace PreVEngine
 		uint32_t m_mipLevels;
 
 		uint32_t m_layerCount;
+
+		VkImageViewType m_imageViewType;
 
 	public:
 		AbstractImageBuffer(Allocator& allocator);
@@ -242,6 +248,8 @@ namespace PreVEngine
 		uint32_t GetMipLevels() const override;
 
 		uint32_t GetLayerCount() const override;
+
+		VkImageViewType GetViewType() const override;
 	};
 
 	//----------------------------------Image Buffer----------------------------------
