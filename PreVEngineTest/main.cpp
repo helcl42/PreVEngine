@@ -1254,13 +1254,6 @@ private:
 	};
 
 private:
-	// Depth bias (and slope) are used to avoid shadowing artefacts Constant depth bias factor (always applied)
-	//const float m_depthBiasConstant = 1.25f;
-
-	// Slope depth bias factor, applied depending on polygon's slope
-	//const float m_depthBiasSlope = 1.75f;
-
-private:
 	std::shared_ptr<Allocator> m_allocator;
 
 	std::shared_ptr<Device> m_device;
@@ -1479,12 +1472,7 @@ public:
 		vkCmdPushConstants(renderContext.defaultCommandBuffer, m_pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantBlock), &pushConstBlock);
 
 		m_shader->Bind("depthSampler", shadows->GetImageBuffer()->GetImageView(), shadows->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-		//for (uint32_t i = 0; i < Shadows::CASCADES_COUNT; i++)
-		//{
-		//	auto& c = shadows->GetCascade(i);
-		//	m_shader->Bind("depthSampler_" + std::to_string(i), c.imageView, shadows->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-		//}
-
+		
 		VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
 
 		VkBuffer vertexBuffers[] = { *m_quadModel->GetVertexBuffer() };
@@ -1644,11 +1632,6 @@ public:
 			uboFS->Update(&uniformsFS);
 
 			m_shader->Bind("depthSampler", m_shadows->GetImageBuffer()->GetImageView(), m_shadows->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-			//for (uint32_t i = 0; i < Shadows::CASCADES_COUNT; i++)
-			//{
-			//	auto& cascade = m_shadows->GetCascade(i);
-			//	m_shader->Bind("depthSampler_" + std::to_string(i), cascade.imageView, m_shadows->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-			//}
 			m_shader->Bind("textureSampler", *renderComponent->GetMaterial()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 			m_shader->Bind("uboVS", *uboVS);
 			m_shader->Bind("uboFS", *uboFS);

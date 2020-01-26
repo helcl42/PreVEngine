@@ -273,11 +273,6 @@ private:
 		m_layoutBindings.emplace_back(VkUtils::CreteDescriptorSetLayoutBinding(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT));
 		m_descriptorWrites.emplace_back(VkUtils::CreateWriteDescriptorSet(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1));
 		m_descriptorSetInfos["depthSampler"] = { m_descriptorWrites.size() - 1 };
-		//for (uint32_t i = 0; i < 4; i++)
-		//{
-		//	m_descriptorWrites.emplace_back(VkUtils::CreateWriteDescriptorSet(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, i));
-		//	m_descriptorSetInfos["depthSampler_" + std::to_string(i)] = { m_descriptorWrites.size() - 1 };
-		//}
 	}
 
 	void InitPushConstantsBlocks() override
@@ -435,11 +430,6 @@ private:
 		m_layoutBindings.emplace_back(VkUtils::CreteDescriptorSetLayoutBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT));
 		m_descriptorWrites.emplace_back(VkUtils::CreateWriteDescriptorSet(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1));
 		m_descriptorSetInfos["depthSampler"] = { m_descriptorWrites.size() - 1 };
-		//for (uint32_t i = 0; i < 4; i++)
-		//{
-		//	m_descriptorWrites.emplace_back(VkUtils::CreateWriteDescriptorSet(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1));
-		//	m_descriptorSetInfos["depthSampler_" + std::to_string(i)] = { m_descriptorWrites.size() - 1 };
-		//}
 	}
 
 	void InitPushConstantsBlocks() override
