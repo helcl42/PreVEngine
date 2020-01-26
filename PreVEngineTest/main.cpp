@@ -714,7 +714,7 @@ private:
 
 	glm::vec2 m_prevTouchPosition;
 
-	ViewFrustum m_viewFrustum{ 70.0f, 0.01f, 1000.0f };
+	ViewFrustum m_viewFrustum{ 45.0f, 0.1f, 1000.0f };
 
 public:
 	Camera()
@@ -913,7 +913,7 @@ private:
 
 	glm::vec3 m_upDirection{ 0.0f, 1.0f, 0.0f };
 
-	ViewFrustum m_viewFrustum{ 70.0f, 0.01f, 1000.0f };
+	ViewFrustum m_viewFrustum{ 45.0f, 0.1f, 1000.0f };
 
 	glm::vec3 m_position;
 
@@ -1329,8 +1329,8 @@ public:
 		{
 			auto renderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());
 
-			auto userData = std::dynamic_pointer_cast<ShadowsRenderContextUserData>(renderContext.userData);
-			auto cascade = m_shadows->GetCascade(userData->cascadeIndex);
+			const auto& userData = std::dynamic_pointer_cast<ShadowsRenderContextUserData>(renderContext.userData);
+			const auto& cascade = m_shadows->GetCascade(userData->cascadeIndex);
 
 			auto ubo = m_uniformsPool->GetNext();
 
