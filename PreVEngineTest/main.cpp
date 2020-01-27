@@ -748,7 +748,6 @@ private:
 	{
 		m_position += m_positionDelta;
 
-#ifndef ANDROID
 		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_W))
 		{
 			m_position += m_forwardDirection * deltaTime * m_moveSpeed;
@@ -773,9 +772,6 @@ private:
 		{
 			m_position += m_upDirection * deltaTime * m_moveSpeed;
 		}
-#else
-		m_position += m_forwardDirection * deltaTime * m_moveSpeed;
-#endif
 
 		m_positionDelta = glm::vec3(0.0f, 0.0f, 0.0f);
 	}
@@ -804,8 +800,9 @@ private:
 public:
 	void Update(float deltaTime)
 	{
-		UpdatePosition(deltaTime);
+	
 		UpdateOrientation(deltaTime);
+		UpdatePosition(deltaTime);
 
 		m_viewMatrix = glm::lookAt(m_position, m_position + m_forwardDirection, m_upDirection);
 
