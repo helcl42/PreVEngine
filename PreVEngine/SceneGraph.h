@@ -339,6 +339,7 @@ namespace PreVEngine
 					return result;
 				}
 			}
+			return nullptr;
 		}
 
 		std::shared_ptr<ISceneNode> FindOneWithFlagsInternal(const std::shared_ptr<ISceneNode>& parent, const uint64_t flags, const FlagsOperation flagsOperation) const
