@@ -58,6 +58,10 @@ public:
 
 	virtual std::shared_ptr<IMaterial> GetMaterial() const = 0;
 
+	virtual bool CastsShadows() const = 0;
+
+	virtual bool IsCastedByShadows() const = 0;
+
 public:
 	virtual ~IRenderComponent()
 	{
@@ -141,9 +145,13 @@ private:
 
 	std::shared_ptr<IMaterial> m_material;
 
+	bool m_castsShadows;
+
+	bool m_isCastedByShadows;
+
 public:
-	DefaultRenderComponent(std::shared_ptr<IModel> model, std::shared_ptr<IMaterial> material)
-		: m_model(model), m_material(material)
+	DefaultRenderComponent(std::shared_ptr<IModel> model, std::shared_ptr<IMaterial> material, bool castsShadows, bool isCastedByShadows)
+		: m_model(model), m_material(material), m_castsShadows(castsShadows), m_isCastedByShadows(isCastedByShadows)
 	{
 	}
 
@@ -160,6 +168,16 @@ public:
 	std::shared_ptr<IMaterial> GetMaterial() const override
 	{
 		return m_material;
+	}
+	
+	bool CastsShadows() const
+	{
+		return m_castsShadows;
+	}
+
+	bool IsCastedByShadows() const
+	{
+		return m_isCastedByShadows;
 	}
 };
 
@@ -217,24 +235,24 @@ private:
 	}
 
 public:
-	std::shared_ptr<IRenderComponent> CreateCubeRenderComponent(Allocator& allocator, const std::string& textureFilename) const
+	std::shared_ptr<IRenderComponent> CreateCubeRenderComponent(Allocator& allocator, const std::string& textureFilename, const bool castsShadows, const bool isCastedByShadows) const
 	{
 		std::shared_ptr<IMaterial> material = CreateMaterial(allocator, textureFilename, false);
 
 		std::shared_ptr<IMesh> mesh = std::make_shared<CubeMesh>();
 		std::shared_ptr<IModel> model = CreateModel(allocator, mesh);
 
-		return std::make_shared<DefaultRenderComponent>(model, material);
+		return std::make_shared<DefaultRenderComponent>(model, material, castsShadows, isCastedByShadows);
 	}
 
-	std::shared_ptr<IRenderComponent> CreatePlaneRenderComponent(Allocator& allocator, const std::string& textureFilename) const
+	std::shared_ptr<IRenderComponent> CreatePlaneRenderComponent(Allocator& allocator, const std::string& textureFilename, const bool castsShadows, const bool isCastedByShadows) const
 	{
 		std::shared_ptr<IMaterial> material = CreateMaterial(allocator, textureFilename, true);
 
 		std::shared_ptr<IMesh> mesh = std::make_shared<PlaneMesh>(40.0f, 40.0f, 1, 1, 10, 10);
 		std::shared_ptr<IModel> model = CreateModel(allocator, mesh);
 
-		return std::make_shared<DefaultRenderComponent>(model, material);
+		return std::make_shared<DefaultRenderComponent>(model, material, castsShadows, isCastedByShadows);
 	}
 };
 
@@ -354,7 +372,7 @@ public:
 		m_transform = MathUtil::CreateTransformationMatrix(m_position, m_orientation, glm::vec3(1, 1, 1));
 
 		RenderComponentFactory renderComponentFactory;
-		auto cubeComponent = renderComponentFactory.CreateCubeRenderComponent(*m_allocator, m_texturePath);
+		auto cubeComponent = renderComponentFactory.CreateCubeRenderComponent(*m_allocator, m_texturePath, true, true);
 
 		ComponentRepository<IRenderComponent>::GetInstance().Add(m_id, cubeComponent);
 
@@ -543,7 +561,7 @@ public:
 		m_transform = MathUtil::CreateTransformationMatrix(m_position, m_orientation);
 
 		RenderComponentFactory renderComponentFactory;
-		auto renderComponent = renderComponentFactory.CreatePlaneRenderComponent(*m_allocator, m_texturePath);
+		auto renderComponent = renderComponentFactory.CreatePlaneRenderComponent(*m_allocator, m_texturePath, false, true);
 
 		ComponentRepository<IRenderComponent>::GetInstance().Add(m_id, renderComponent);
 
@@ -800,7 +818,6 @@ private:
 public:
 	void Update(float deltaTime)
 	{
-	
 		UpdateOrientation(deltaTime);
 		UpdatePosition(deltaTime);
 
@@ -1223,15 +1240,15 @@ public:
 	}
 };
 
-const VkFormat Shadows::DEPTH_FORMAT = VK_FORMAT_D32_SFLOAT;
+const VkFormat Shadows::DEPTH_FORMAT = VK_FORMAT_D24_UNORM_S8_UINT;
 
 const uint32_t Shadows::SHADOW_MAP_DIMENSIONS = 2048;
 
-const VkFilter Shadows::SHADOW_MAP_FILTER = VK_FILTER_NEAREST;
+const VkFilter Shadows::SHADOW_MAP_FILTER = VK_FILTER_LINEAR;
 
 const uint32_t Shadows::CASCADES_COUNT = 4;
 
-const float Shadows::CASCADES_SPLIT_LAMBDA = 0.85f;
+const float Shadows::CASCADES_SPLIT_LAMBDA = 0.86f;
 
 
 struct ShadowsRenderContextUserData : RenderContextUserData
@@ -1322,29 +1339,31 @@ public:
 		if (ComponentRepository<IRenderComponent>::GetInstance().Contains(node->GetId()))
 		{
 			auto renderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());
+			if (renderComponent->CastsShadows())
+			{
+				const auto& userData = std::dynamic_pointer_cast<ShadowsRenderContextUserData>(renderContext.userData);
+				const auto& cascade = m_shadows->GetCascade(userData->cascadeIndex);
 
-			const auto& userData = std::dynamic_pointer_cast<ShadowsRenderContextUserData>(renderContext.userData);
-			const auto& cascade = m_shadows->GetCascade(userData->cascadeIndex);
+				auto ubo = m_uniformsPool->GetNext();
 
-			auto ubo = m_uniformsPool->GetNext();
+				Uniforms uniforms;
+				uniforms.projectionMatrix = cascade.projectionMatrix;
+				uniforms.viewMatrix = cascade.viewMatrix;
+				uniforms.modelMatrix = node->GetWorldTransformScaled();
+				ubo->Update(&uniforms);
 
-			Uniforms uniforms;
-			uniforms.projectionMatrix = cascade.projectionMatrix;
-			uniforms.viewMatrix = cascade.viewMatrix;
-			uniforms.modelMatrix = node->GetWorldTransformScaled();
-			ubo->Update(&uniforms);
+				m_shader->Bind("ubo", *ubo);
 
-			m_shader->Bind("ubo", *ubo);
+				VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+				VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
+				VkDeviceSize offsets[] = { 0 };
 
-			VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-			VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
-			VkDeviceSize offsets[] = { 0 };
+				vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
+				vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+				vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-			vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
-			vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-			vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-
-			vkCmdDrawIndexed(renderContext.defaultCommandBuffer, renderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+				vkCmdDrawIndexed(renderContext.defaultCommandBuffer, renderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+			}
 		}
 
 		for (auto child : node->GetChildren())
@@ -1533,6 +1552,7 @@ private:
 		alignas(16) float cascadeSplits[Shadows::CASCADES_COUNT];
 		alignas(16) glm::mat4 lightViewProjectionMatrix[Shadows::CASCADES_COUNT];
 		alignas(16) glm::vec3 lightDirection;
+		alignas(16) bool isCastedByShadows;
 	};
 
 private:
@@ -1629,6 +1649,7 @@ public:
 				uniformsFS.lightViewProjectionMatrix[i] = cascade.projectionMatrix * cascade.viewMatrix;
 			}
 			uniformsFS.lightDirection = glm::normalize(-m_light->GetPosition());
+			uniformsFS.isCastedByShadows = renderComponent->IsCastedByShadows();
 
 			uboFS->Update(&uniformsFS);
 

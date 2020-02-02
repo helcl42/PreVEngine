@@ -7,6 +7,7 @@ layout(binding = 1) uniform UniformBufferObject {
     vec4 cascadeSplits;
 	mat4 cascadeViewProjecionMatrix[SHADOW_MAP_CASCADE_COUNT];
 	vec3 lightDirection;
+	bool isCastedByShadows;
 } uboFS;
 
 layout(binding = 2) uniform sampler2D textureSampler;
@@ -93,13 +94,16 @@ void main()
 	vec4 normalizedShadowCoord = shadowCoord / shadowCoord.w;
 
 	float shadow = 1.0f;
-	if(enablePCF)
+	if(uboFS.isCastedByShadows)
 	{
-		shadow = getShadowPCF(normalizedShadowCoord, cascadeIndex);
-	}
-	else
-	{
-		shadow = getShadow(normalizedShadowCoord, vec2(0.0), cascadeIndex);
+		if(enablePCF)
+		{
+			shadow = getShadowPCF(normalizedShadowCoord, cascadeIndex);
+		}
+		else
+		{
+			shadow = getShadow(normalizedShadowCoord, vec2(0.0), cascadeIndex);
+		}
 	}
 
 	const vec3 N = normalize(inNormal);
