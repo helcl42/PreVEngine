@@ -5,14 +5,15 @@
 
 namespace PreVEngine
 {
+	template <typename NodeFlagsType>
 	class App
 	{
 	protected:
-		std::unique_ptr<Engine> m_engine;
+		std::unique_ptr<Engine<NodeFlagsType>> m_engine;
 
 	public:
 		App(std::shared_ptr<EngineConfig> config)
-			: m_engine(std::make_unique<Engine>(config))
+			: m_engine(std::make_unique<Engine<NodeFlagsType>>(config))
 		{
 		}
 

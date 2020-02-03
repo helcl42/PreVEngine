@@ -19,6 +19,7 @@ namespace PreVEngine
 		uint32_t framesInFlight = 3;
 	};
 
+	template <typename NodeFlagsType>
 	class IScene
 	{
 	public:
@@ -34,9 +35,9 @@ namespace PreVEngine
 
 		virtual void ShutDown() = 0;
 
-		virtual std::shared_ptr<ISceneNode> GetRootNode() = 0;
+		virtual std::shared_ptr<ISceneNode<NodeFlagsType>> GetRootNode() = 0;
 
-		virtual void SetSceneRoot(std::shared_ptr<ISceneNode> root) = 0;
+		virtual void SetSceneRoot(std::shared_ptr<ISceneNode<NodeFlagsType>> root) = 0;
 
 		virtual std::shared_ptr<Device> GetDevice() = 0;
 
@@ -50,7 +51,8 @@ namespace PreVEngine
 		virtual ~IScene() = default;
 	};
 
-	class Scene : public IScene
+	template <typename NodeFlagsType>
+	class Scene : public IScene<NodeFlagsType>
 	{
 	private:
 		EventHandler<Scene, WindowResizeEvent> m_windowResizeEvent{ *this };
@@ -73,7 +75,7 @@ namespace PreVEngine
 
 		std::shared_ptr<Swapchain> m_swapchain;
 
-		std::shared_ptr<ISceneNode> m_rootNode;
+		std::shared_ptr<ISceneNode<NodeFlagsType>> m_rootNode;
 
 	public:
 		Scene(std::shared_ptr<SceneConfig> sceneConfig, std::shared_ptr<Device> device, VkSurfaceKHR surface)
@@ -168,12 +170,12 @@ namespace PreVEngine
 			return m_allocator;
 		}
 
-		std::shared_ptr<ISceneNode> GetRootNode() override
+		std::shared_ptr<ISceneNode<NodeFlagsType>> GetRootNode() override
 		{
 			return m_rootNode;
 		}
 
-		void SetSceneRoot(std::shared_ptr<ISceneNode> root) override
+		void SetSceneRoot(std::shared_ptr<ISceneNode<NodeFlagsType>> root) override
 		{
 			m_rootNode = root;
 		}

@@ -4,6 +4,7 @@
 #include "Window.h"
 #include "Common.h"
 #include "Utils.h"
+#include "FlagSet.h"
 
 namespace PreVEngine
 {
@@ -27,6 +28,7 @@ namespace PreVEngine
 		std::shared_ptr<RenderContextUserData> userData;
 	};
 
+	template <typename NodeFlagsType>
 	class ISceneNode
 	{
 	public:
@@ -68,28 +70,25 @@ namespace PreVEngine
 
 		virtual uint64_t GetId() const = 0;
 
-		virtual void SetFlags(const uint64_t flags) = 0;
+		virtual void SetFlags(const FlagSet<NodeFlagsType>& flags) = 0;
 
-		virtual uint64_t GetFlags() const = 0;
+		virtual const FlagSet<NodeFlagsType>& GetFlags() const = 0;
 
 		virtual void SetTag(const std::string& tag) = 0;
 
 		virtual std::string GetTag() const = 0;
 
-		virtual bool HasAnyFlag(const uint64_t flagsToCheck) const = 0;
-
-		virtual bool HasAllFlags(const uint64_t flagsToCheck) const = 0;
-
 	public:
 		virtual ~ISceneNode() = default;
 	};
 
-	class AbstractSceneNode : public std::enable_shared_from_this<ISceneNode>, public ISceneNode
+	template <typename NodeFlagsType>
+	class AbstractSceneNode : public std::enable_shared_from_this<ISceneNode<NodeFlagsType>>, public ISceneNode<NodeFlagsType>
 	{
 	protected:
 		uint64_t m_id;
 
-		uint64_t m_flags;
+		FlagSet<NodeFlagsType> m_flags;
 
 		std::string m_tag;
 
@@ -106,6 +105,11 @@ namespace PreVEngine
 	public:
 		AbstractSceneNode()
 			: m_id(IDGenerator::GetInstance().GenrateNewId()), m_transform(glm::mat4(1.0f)), m_worldTransform(glm::mat4(1.0f)), m_scaler(glm::vec3(1.0f))
+		{
+		}
+
+		AbstractSceneNode(const FlagSet<NodeFlagsType>& flags)
+			: m_id(IDGenerator::GetInstance().GenrateNewId()), m_flags(flags), m_transform(glm::mat4(1.0f)), m_worldTransform(glm::mat4(1.0f)), m_scaler(glm::vec3(1.0f))
 		{
 		}
 
@@ -253,12 +257,12 @@ namespace PreVEngine
 			return m_id;
 		}
 
-		void SetFlags(const uint64_t flags) override
+		void SetFlags(const FlagSet<NodeFlagsType>& flags) override
 		{
 			m_flags = flags;
 		}
 
-		uint64_t GetFlags() const override
+		const FlagSet<NodeFlagsType>& GetFlags() const override
 		{
 			return m_flags;
 		}
@@ -272,34 +276,9 @@ namespace PreVEngine
 		{
 			return m_tag;
 		}
-
-		bool HasAnyFlag(const uint64_t flagsToCheck) const override
-		{
-			for (uint32_t i = 0; i < 64; i++)
-			{
-				if (m_flags & (1 << 1))
-				{
-					return true;
-				}
-			}
-
-			return false;
-		}
-
-		bool HasAllFlags(const uint64_t flagsToCheck) const override
-		{
-			for (uint32_t i = 0; i < 64; i++)
-			{
-				if (!(m_flags & (1 << 1)))
-				{
-					return false;
-				}
-			}
-
-			return true;
-		}
 	};
 
+	template <typename NodeFlagsType>
 	class GraphTraversal
 	{
 	public:
@@ -310,20 +289,20 @@ namespace PreVEngine
 		};
 
 	private:
-		bool HasFlags(const std::shared_ptr<ISceneNode> node, const uint64_t flagsToCheck, const FlagsOperation operation) const
+		bool HasFlags(const std::shared_ptr<ISceneNode<NodeFlagsType>> node, const FlagSet<NodeFlagsType>& flagsToCheck, const FlagsOperation operation) const
 		{
 			if (operation == FlagsOperation::AND)
 			{
-				return node->HasAllFlags(flagsToCheck);
+				return node->GetFlags().HasAll(flagsToCheck);
 			}
 			else if (operation == FlagsOperation::OR)
 			{
-				return node->HasAnyFlag(flagsToCheck);
+				return node->GetFlags().HasAny(flagsToCheck);
 			}
 			return false;
 		}
 
-		std::shared_ptr<ISceneNode> FindByIdInternal(const std::shared_ptr<ISceneNode>& parent, const uint64_t id) const
+		std::shared_ptr<ISceneNode<NodeFlagsType>> FindByIdInternal(const std::shared_ptr<ISceneNode<NodeFlagsType>>& parent, const uint64_t id) const
 		{
 			if (parent->GetId() == id)
 			{
@@ -342,7 +321,7 @@ namespace PreVEngine
 			return nullptr;
 		}
 
-		std::shared_ptr<ISceneNode> FindOneWithFlagsInternal(const std::shared_ptr<ISceneNode>& parent, const uint64_t flags, const FlagsOperation flagsOperation) const
+		std::shared_ptr<ISceneNode<NodeFlagsType>> FindOneWithFlagsInternal(const std::shared_ptr<ISceneNode<NodeFlagsType>>& parent, const FlagSet<NodeFlagsType>& flags, const FlagsOperation flagsOperation) const
 		{
 			if (HasFlags(parent, flags, flagsOperation))
 			{
@@ -362,7 +341,7 @@ namespace PreVEngine
 			return nullptr;
 		}
 
-		void FindAllWithFlagsInternal(const std::shared_ptr<ISceneNode>& parent, const uint64_t flags, const FlagsOperation flagsOperation, std::vector<std::shared_ptr<ISceneNode>>& result) const
+		void FindAllWithFlagsInternal(const std::shared_ptr<ISceneNode<NodeFlagsType>>& parent, const FlagSet<NodeFlagsType>& flags, const FlagsOperation flagsOperation, std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>>& result) const
 		{
 			if (HasFlags(parent, flags, flagsOperation))
 			{
@@ -380,7 +359,7 @@ namespace PreVEngine
 			}
 		}
 
-		std::shared_ptr<ISceneNode> FindOneWithTagInternal(const std::shared_ptr<ISceneNode>& parent, const std::string& tag) const
+		std::shared_ptr<ISceneNode<NodeFlagsType>> FindOneWithTagInternal(const std::shared_ptr<ISceneNode<NodeFlagsType>>& parent, const std::string& tag) const
 		{
 			if (parent->GetTag() == tag)
 			{
@@ -400,7 +379,7 @@ namespace PreVEngine
 			return nullptr;
 		}
 
-		void FindAllWithTagInternal(const std::shared_ptr<ISceneNode>& parent, const std::string& tag, std::vector<std::shared_ptr<ISceneNode>>& result) const
+		void FindAllWithTagInternal(const std::shared_ptr<ISceneNode<NodeFlagsType>>& parent, const std::string& tag, std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>>& result) const
 		{
 			if (parent->GetTag() == tag)
 			{
@@ -419,35 +398,35 @@ namespace PreVEngine
 		}
 
 	public:
-		std::shared_ptr<ISceneNode> FindById(const std::shared_ptr<ISceneNode>& aNode, const uint64_t id) const
+		std::shared_ptr<ISceneNode<NodeFlagsType>> FindById(const std::shared_ptr<ISceneNode<NodeFlagsType>>& aNode, const uint64_t id) const
 		{
-			auto root = aNode->GetRoot();
+			const auto root = aNode->GetRoot();
 			return FindByIdInternal(root, id);
 		}
 
-		std::shared_ptr<ISceneNode> FindOneWthFlags(const std::shared_ptr<ISceneNode>& aNode, const uint64_t flags, const FlagsOperation flagsOperation) const
+		std::shared_ptr<ISceneNode<NodeFlagsType>> FindOneWthFlags(const std::shared_ptr<ISceneNode<NodeFlagsType>>& aNode, const FlagSet<NodeFlagsType>& flags, const FlagsOperation flagsOperation) const
 		{
-			auto root = aNode->GetRoot();
+			const auto root = aNode->GetRoot();
 			return FindOneWithFlagsInternal(root, flags, flagsOperation);
 		}
 
-		std::vector<std::shared_ptr<ISceneNode>> FindAllWithFlags(const std::shared_ptr<ISceneNode>& aNode, const uint64_t flags, const FlagsOperation flagsOperation) const
+		std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>> FindAllWithFlags(const std::shared_ptr<ISceneNode<NodeFlagsType>>& aNode, const FlagSet<NodeFlagsType>& flags, const FlagsOperation flagsOperation) const
 		{
-			auto root = aNode->GetRoot();
+			const auto root = aNode->GetRoot();
 			std::vector<std::shared_ptr<ISceneNode>> result;
 			FindAllWithFlagsInternal(root, flags, flagsOperation, result);
 			return result;
 		}
 
-		std::shared_ptr<ISceneNode> FindOneWithTag(const std::shared_ptr<ISceneNode>& aNode, const std::string& tag) const
+		std::shared_ptr<ISceneNode<NodeFlagsType>> FindOneWithTag(const std::shared_ptr<ISceneNode<NodeFlagsType>>& aNode, const std::string& tag) const
 		{
-			auto root = aNode->GetRoot();
+			const auto root = aNode->GetRoot();
 			return FindOneWithTagInternal(root, tag);
 		}
 
-		std::vector<std::shared_ptr<ISceneNode>> FindAllWthTag(const std::shared_ptr<ISceneNode>& aNode, const std::string& tag) const
+		std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>> FindAllWthTag(const std::shared_ptr<ISceneNode<NodeFlagsType>>& aNode, const std::string& tag) const
 		{
-			auto root = aNode->GetRoot();
+			const auto root = aNode->GetRoot();
 			std::vector<std::shared_ptr<ISceneNode>> result;
 			FindAllWithTagInternal(root, tag, result);
 			return result;

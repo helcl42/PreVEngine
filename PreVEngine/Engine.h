@@ -22,7 +22,7 @@ namespace PreVEngine
 		std::shared_ptr<SceneConfig> sceneCongig = std::make_shared<SceneConfig>();
 	};
 
-
+	template <typename NodeFlagsType>
 	class Engine
 	{
 	private:
@@ -38,7 +38,7 @@ namespace PreVEngine
 
 		std::shared_ptr<Device> m_device;
 
-		std::shared_ptr<IScene> m_scene;
+		std::shared_ptr<IScene<NodeFlagsType>> m_scene;
 
 		VkSurfaceKHR m_surface;
 
@@ -86,7 +86,7 @@ namespace PreVEngine
 
 		void InitScene()
 		{
-			m_scene = std::make_shared<Scene>(m_config->sceneCongig, m_device, m_surface);
+			m_scene = std::make_shared<Scene<NodeFlagsType>>(m_config->sceneCongig, m_device, m_surface);
 			m_scene->Init();
 		}
 
@@ -118,7 +118,7 @@ namespace PreVEngine
 		}
 
 	public:
-		std::shared_ptr<IScene> GetScene() const
+		std::shared_ptr<IScene<NodeFlagsType>> GetScene() const
 		{
 			return m_scene;
 		}

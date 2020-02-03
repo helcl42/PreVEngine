@@ -359,6 +359,46 @@ namespace PreVEngine
 		}
 	};
 
+	template <typename ItemType>
+	class UBOPool
+	{
+	private:
+		std::shared_ptr<Allocator> m_allocator;
+
+		std::vector<std::shared_ptr<UBO>> m_uniformBuffers;
+
+		uint32_t m_index = 0;
+
+	public:
+		UBOPool(std::shared_ptr<Allocator> allocator)
+			: m_allocator(allocator)
+		{
+		}
+
+		virtual ~UBOPool()
+		{
+		}
+
+	public:
+		void AdjustCapactity(uint32_t capacity)
+		{
+			m_index = 0;
+			m_uniformBuffers.clear();
+
+			for (uint32_t i = 0; i < capacity; i++)
+			{
+				auto ubo = std::make_shared<UBO>(*m_allocator);
+				ubo->Allocate(sizeof(ItemType));
+				m_uniformBuffers.emplace_back(ubo);
+			}
+		}
+
+		std::shared_ptr<UBO> GetNext()
+		{
+			m_index = (m_index + 1) % m_uniformBuffers.size();
+			return m_uniformBuffers.at(m_index);
+		}
+	};
 }
 
 #endif

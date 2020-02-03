@@ -21,6 +21,15 @@ static const std::string TAG_LIGHT = "Light";
 static const std::string TAG_SHADOW = "Shadow";
 static const std::string TAG_CAMERA = "Camera";
 
+enum class SceneNodeFlags : uint64_t
+{
+	HAS_RENDER_COMPONENT,
+	HAS_CAMERA_COMPONENT,
+	HAS_SHADOWS_COMPONENT,
+	HAS_LIGHT_COMPONENT,
+	_
+};
+
 class IMaterial
 {
 public:
@@ -343,7 +352,7 @@ public:
 	}
 };
 
-class AbstractCubeRobotSceneNode : public AbstractSceneNode
+class AbstractCubeRobotSceneNode : public AbstractSceneNode<SceneNodeFlags>
 {
 protected:
 	std::shared_ptr<Allocator> m_allocator;
@@ -357,7 +366,7 @@ protected:
 
 public:
 	AbstractCubeRobotSceneNode(std::shared_ptr<Allocator>& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
-		: AbstractSceneNode(), m_allocator(allocator), m_position(position), m_orientation(orientation), m_texturePath(texturePath)
+		: AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT }), m_allocator(allocator), m_position(position), m_orientation(orientation), m_texturePath(texturePath)
 	{
 		m_scaler = scale;
 	}
@@ -532,7 +541,7 @@ public:
 	}
 };
 
-class Plane : public AbstractSceneNode
+class Plane : public AbstractSceneNode<SceneNodeFlags>
 {
 protected:
 	std::shared_ptr<Allocator> m_allocator;
@@ -546,7 +555,7 @@ protected:
 
 public:
 	Plane(std::shared_ptr<Allocator>& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
-		: AbstractSceneNode(), m_allocator(allocator), m_position(position), m_orientation(orientation), m_texturePath(texturePath)
+		: AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT }), m_allocator(allocator), m_position(position), m_orientation(orientation), m_texturePath(texturePath)
 	{
 		m_scaler = scale;
 	}
@@ -588,7 +597,7 @@ public:
 
 	virtual void PreRender(RenderContext& renderContext) = 0;
 
-	virtual void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode> node) = 0;
+	virtual void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode<SceneNodeFlags>> node) = 0;
 
 	virtual void PostRender(RenderContext& renderContext) = 0;
 
@@ -596,48 +605,6 @@ public:
 
 public:
 	virtual ~IRenderer() = default;
-};
-
-
-template <typename ItemType>
-class UBOPool
-{
-private:
-	std::shared_ptr<Allocator> m_allocator;
-
-	std::vector<std::shared_ptr<UBO>> m_uniformBuffers;
-
-	uint32_t m_index = 0;
-
-public:
-	UBOPool(std::shared_ptr<Allocator> allocator)
-		: m_allocator(allocator)
-	{
-	}
-
-	virtual ~UBOPool()
-	{
-	}
-
-public:
-	void AdjustCapactity(uint32_t capacity)
-	{
-		m_index = 0;
-		m_uniformBuffers.clear();
-
-		for (uint32_t i = 0; i < capacity; i++)
-		{
-			auto ubo = std::make_shared<UBO>(*m_allocator);
-			ubo->Allocate(sizeof(ItemType));
-			m_uniformBuffers.emplace_back(ubo);
-		}
-	}
-
-	std::shared_ptr<UBO> GetNext()
-	{
-		m_index = (m_index + 1) % m_uniformBuffers.size();
-		return m_uniformBuffers.at(m_index);
-	}
 };
 
 class ViewFrustum
@@ -692,7 +659,7 @@ public:
 };
 
 // TODO create decorator -> ControllableCamera
-class Camera : public AbstractSceneNode
+class Camera : public AbstractSceneNode<SceneNodeFlags>
 {
 private:
 	EventHandler<Camera, MouseEvent> m_mouseHandler{ *this };
@@ -736,6 +703,7 @@ private:
 
 public:
 	Camera()
+		: AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_CAMERA_COMPONENT })
 	{
 		Reset();
 
@@ -924,7 +892,7 @@ public:
 	}
 };
 
-class Light : public AbstractSceneNode
+class Light : public AbstractSceneNode<SceneNodeFlags>
 {
 private:
 	glm::vec3 m_lookAtPosition{ 0.0f, 0.0f, 0.0f };
@@ -937,7 +905,7 @@ private:
 
 public:
 	Light(const glm::vec3& pos)
-		: m_position(pos)
+		: AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_LIGHT_COMPONENT }), m_position(pos)
 	{
 	}
 
@@ -974,13 +942,18 @@ public:
 		return m_position;
 	}
 
+	glm::vec3 GetDirection() const
+	{
+		return glm::normalize(-m_position);
+	}
+
 	const ViewFrustum& GetViewFrustum() const
 	{
 		return m_viewFrustum;
 	}
 };
 
-class Shadows : public AbstractSceneNode
+class Shadows : public AbstractSceneNode<SceneNodeFlags>
 {
 public:
 	static const VkFormat DEPTH_FORMAT;
@@ -1029,7 +1002,7 @@ private:
 
 public:
 	Shadows(std::shared_ptr<Allocator> allocator, std::shared_ptr<Device> dev)
-		: m_allocator(allocator), m_device(dev)
+		: AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SHADOWS_COMPONENT }), m_allocator(allocator), m_device(dev)
 	{
 	}
 
@@ -1101,8 +1074,8 @@ private:
 	void UpdateCascades(float deltaTime)
 	{
 		// TODO here should be camera -> instead of light ??? -> check VK samples !!!
-		auto light = std::dynamic_pointer_cast<Light>(GraphTraversal{}.FindOneWithTag(GetThis(), TAG_LIGHT));
-		auto camera = std::dynamic_pointer_cast<Camera>(GraphTraversal{}.FindOneWithTag(GetThis(), TAG_CAMERA));
+		auto light = std::dynamic_pointer_cast<Light>(GraphTraversal<SceneNodeFlags>{}.FindOneWithTag(GetThis(), TAG_LIGHT));
+		auto camera = std::dynamic_pointer_cast<Camera>(GraphTraversal<SceneNodeFlags>{}.FindOneWithTag(GetThis(), TAG_CAMERA));
 
 		std::vector<float> cascadeSplits(CASCADES_COUNT);
 
@@ -1177,7 +1150,7 @@ private:
 			const glm::vec3 maxExtents = glm::vec3(radius);
 			const glm::vec3 minExtents = -maxExtents;
 
-			const glm::vec3 lightDirection = normalize(-light->GetPosition());
+			const glm::vec3 lightDirection = light->GetDirection();
 			const glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDirection * -minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
 			const glm::mat4 lightOrthoProjectionMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f, maxExtents.z - minExtents.z);
 
@@ -1334,7 +1307,7 @@ public:
 		//vkCmdSetDepthBias(renderContext.defaultCommandBuffer, m_depthBiasConstant, 0.0f, m_depthBiasSlope);
 	}
 
-	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode> node) override
+	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode<SceneNodeFlags>> node) override
 	{
 		if (ComponentRepository<IRenderComponent>::GetInstance().Contains(node->GetId()))
 		{
@@ -1483,9 +1456,9 @@ public:
 	}
 
 	// make a node with quad model & shadowMap texture ???
-	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode> node) override
+	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode<SceneNodeFlags>> node) override
 	{
-		auto shadows = std::dynamic_pointer_cast<Shadows>(GraphTraversal{}.FindOneWithTag(node, TAG_SHADOW));
+		auto shadows = std::dynamic_pointer_cast<Shadows>(GraphTraversal<SceneNodeFlags>{}.FindOneWithTag(node, TAG_SHADOW));
 
 		const auto& cascade = shadows->GetCascade(m_cascadeIndex);
 		PushConstantBlock pushConstBlock{ static_cast<uint32_t>(m_cascadeIndex), -cascade.startSplitDepth, -cascade.endSplitDepth };
@@ -1623,7 +1596,7 @@ public:
 		vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
 	}
 
-	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode> node) override
+	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode<SceneNodeFlags>> node) override
 	{
 		if (ComponentRepository<IRenderComponent>::GetInstance().Contains(node->GetId()))
 		{
@@ -1648,7 +1621,7 @@ public:
 				uniformsFS.cascadeSplits[i] = cascade.endSplitDepth;
 				uniformsFS.lightViewProjectionMatrix[i] = cascade.projectionMatrix * cascade.viewMatrix;
 			}
-			uniformsFS.lightDirection = glm::normalize(-m_light->GetPosition());
+			uniformsFS.lightDirection = m_light->GetDirection();
 			uniformsFS.isCastedByShadows = renderComponent->IsCastedByShadows();
 
 			uboFS->Update(&uniformsFS);
@@ -1688,7 +1661,7 @@ public:
 	}
 };
 
-class RootSceneNode : public AbstractSceneNode
+class RootSceneNode : public AbstractSceneNode<SceneNodeFlags>
 {
 private:
 	std::shared_ptr<Device> m_device;
@@ -1782,7 +1755,7 @@ public:
 		// shadows
 
 		// TODO - find shadows node here -> move content to IShadowsComponent and it prevets this horrible narrowcasting !!!!	
-		auto shadows = std::dynamic_pointer_cast<Shadows>(GraphTraversal{}.FindOneWithTag(GetThis(), TAG_SHADOW));
+		auto shadows = std::dynamic_pointer_cast<Shadows>(GraphTraversal<SceneNodeFlags>{}.FindOneWithTag(GetThis(), TAG_SHADOW));
 		for (uint32_t cascadeIndex = 0; cascadeIndex < shadows->GetCascadesCount(); cascadeIndex++)
 		{
 			renderContext.userData = std::make_shared<ShadowsRenderContextUserData>(cascadeIndex);
@@ -1831,7 +1804,8 @@ public:
 };
 
 
-class TestApp : public App
+template <typename NodeFlagsType>
+class TestApp : public App<NodeFlagsType>
 {
 public:
 	TestApp(std::shared_ptr<EngineConfig> config)
@@ -1850,7 +1824,7 @@ protected:
 
 	void OnSceneInit() override
 	{
-		std::shared_ptr<IScene> scene = m_engine->GetScene();
+		auto scene = m_engine->GetScene();
 
 		auto rootNode = std::make_shared<RootSceneNode>(scene->GetAllocator(), scene->GetDevice(), scene->GetRenderPass());
 
@@ -1867,7 +1841,8 @@ int main(int argc, char *argv[])
 	setvbuf(stdout, NULL, _IONBF, 0); // avoid buffering
 
 	auto config = std::make_shared<EngineConfig>();
-	TestApp app(config);
+
+	TestApp<SceneNodeFlags> app(config);
 	app.Init();
 	app.Run();
 	app.ShutDown();
