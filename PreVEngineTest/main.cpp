@@ -1074,8 +1074,8 @@ private:
 	void UpdateCascades(float deltaTime)
 	{
 		// TODO here should be camera -> instead of light ??? -> check VK samples !!!
-		auto light = std::dynamic_pointer_cast<Light>(GraphTraversal<SceneNodeFlags>{}.FindOneWithTag(GetThis(), TAG_LIGHT));
-		auto camera = std::dynamic_pointer_cast<Camera>(GraphTraversal<SceneNodeFlags>{}.FindOneWithTag(GetThis(), TAG_CAMERA));
+		auto light = std::dynamic_pointer_cast<Light>(GraphTraversal<SceneNodeFlags>{}.FindOneWithTags(GetThis(), { TAG_LIGHT }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR));
+		auto camera = std::dynamic_pointer_cast<Camera>(GraphTraversal<SceneNodeFlags>{}.FindOneWithTags(GetThis(), { TAG_CAMERA }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR));
 
 		std::vector<float> cascadeSplits(CASCADES_COUNT);
 
@@ -1458,7 +1458,7 @@ public:
 	// make a node with quad model & shadowMap texture ???
 	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode<SceneNodeFlags>> node) override
 	{
-		auto shadows = std::dynamic_pointer_cast<Shadows>(GraphTraversal<SceneNodeFlags>{}.FindOneWithTag(node, TAG_SHADOW));
+		auto shadows = std::dynamic_pointer_cast<Shadows>(GraphTraversal<SceneNodeFlags>{}.FindOneWithTags(node, { TAG_SHADOW }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR));
 
 		const auto& cascade = shadows->GetCascade(m_cascadeIndex);
 		PushConstantBlock pushConstBlock{ static_cast<uint32_t>(m_cascadeIndex), -cascade.startSplitDepth, -cascade.endSplitDepth };
@@ -1694,15 +1694,15 @@ public:
 	{
 		// Init scene nodes
 		std::shared_ptr<Light> light = std::make_shared<Light>(glm::vec3(150.0f, 150.0f, 150.0f));
-		light->SetTag(TAG_LIGHT);
+		light->SetTags({ TAG_LIGHT });
 		AddChild(light);
 
 		std::shared_ptr<Shadows> shadows = std::make_shared<Shadows>(m_allocator, m_device);
-		shadows->SetTag(TAG_SHADOW);
+		shadows->SetTags({ TAG_SHADOW });
 		AddChild(shadows);
 
 		std::shared_ptr<Camera> freeCamera = std::make_shared<Camera>();
-		freeCamera->SetTag(TAG_CAMERA);
+		freeCamera->SetTags({ TAG_CAMERA });
 		AddChild(freeCamera);
 
 		auto camRobot = std::make_shared<CubeRobot>(m_allocator, glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), "texture.jpg");
@@ -1755,7 +1755,7 @@ public:
 		// shadows
 
 		// TODO - find shadows node here -> move content to IShadowsComponent and it prevets this horrible narrowcasting !!!!	
-		auto shadows = std::dynamic_pointer_cast<Shadows>(GraphTraversal<SceneNodeFlags>{}.FindOneWithTag(GetThis(), TAG_SHADOW));
+		auto shadows = std::dynamic_pointer_cast<Shadows>(GraphTraversal<SceneNodeFlags>{}.FindOneWithTags(GetThis(), { TAG_SHADOW }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR));
 		for (uint32_t cascadeIndex = 0; cascadeIndex < shadows->GetCascadesCount(); cascadeIndex++)
 		{
 			renderContext.userData = std::make_shared<ShadowsRenderContextUserData>(cascadeIndex);

@@ -8,6 +8,79 @@
 
 namespace PreVEngine
 {
+	class TagSet
+	{
+	public:
+		TagSet() = default;
+
+		TagSet(const std::set<std::string>& tags)
+			: m_tags(tags)
+		{
+		}
+
+		TagSet(const std::initializer_list<std::string>& tags)
+			: m_tags(tags)
+		{
+		}
+
+		void Set(const std::set<std::string>& tags)
+		{
+			m_tags = tags;
+		}
+
+		void Set(const std::initializer_list<std::string>& tags)
+		{
+			m_tags = tags;
+		}
+
+		void Add(const std::string& tag)
+		{
+			m_tags.insert(tag);
+		}
+
+		void Remove(const std::string& tag)
+		{
+			m_tags.erase(tag);
+		}
+
+		bool Has(const std::string& tag) const
+		{
+			return m_tags.find(tag) != m_tags.cend();
+		}
+
+		bool HasAny(const TagSet& tags) const
+		{
+			for (const auto& testedTag : tags.m_tags)
+			{
+				if (m_tags.find(testedTag) != m_tags.cend())
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		bool HasAll(const TagSet& tags) const
+		{
+			for (const auto& testedTag : tags.m_tags)
+			{
+				if (m_tags.find(testedTag) == m_tags.cend())
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
+		bool operator[](const std::string& val) const
+		{
+			return m_tags.find(val) != m_tags.cend();
+		}
+
+	private:
+		std::set<std::string> m_tags;
+	};
+
 	template <typename T>
 	class FlagSet
 	{

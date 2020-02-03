@@ -74,9 +74,9 @@ namespace PreVEngine
 
 		virtual const FlagSet<NodeFlagsType>& GetFlags() const = 0;
 
-		virtual void SetTag(const std::string& tag) = 0;
+		virtual void SetTags(const TagSet& tags) = 0;
 
-		virtual std::string GetTag() const = 0;
+		virtual const TagSet& GetTags() const = 0;
 
 	public:
 		virtual ~ISceneNode() = default;
@@ -90,7 +90,7 @@ namespace PreVEngine
 
 		FlagSet<NodeFlagsType> m_flags;
 
-		std::string m_tag;
+		TagSet m_tags;
 
 		std::weak_ptr<ISceneNode> m_parent;
 
@@ -267,14 +267,14 @@ namespace PreVEngine
 			return m_flags;
 		}
 
-		void SetTag(const std::string& tag) override
+		void SetTags(const TagSet& tagSet) override
 		{
-			m_tag = tag;
+			m_tags = tagSet;
 		}
 
-		std::string GetTag() const override
+		const TagSet& GetTags() const override
 		{
-			return m_tag;
+			return m_tags;
 		}
 	};
 
@@ -282,22 +282,35 @@ namespace PreVEngine
 	class GraphTraversal
 	{
 	public:
-		enum class FlagsOperation
+		enum class LogicOperation
 		{
 			OR,
 			AND
 		};
 
 	private:
-		bool HasFlags(const std::shared_ptr<ISceneNode<NodeFlagsType>> node, const FlagSet<NodeFlagsType>& flagsToCheck, const FlagsOperation operation) const
+		bool HasFlags(const std::shared_ptr<ISceneNode<NodeFlagsType>> node, const FlagSet<NodeFlagsType>& flagsToCheck, const LogicOperation operation) const
 		{
-			if (operation == FlagsOperation::AND)
+			if (operation == LogicOperation::AND)
 			{
 				return node->GetFlags().HasAll(flagsToCheck);
 			}
-			else if (operation == FlagsOperation::OR)
+			else if (operation == LogicOperation::OR)
 			{
 				return node->GetFlags().HasAny(flagsToCheck);
+			}
+			return false;
+		}
+
+		bool HasTags(const std::shared_ptr<ISceneNode<NodeFlagsType>> node, const TagSet& tagsToCheck, const LogicOperation operation) const
+		{
+			if (operation == LogicOperation::AND)
+			{
+				return node->GetTags().HasAll(tagsToCheck);
+			}
+			else if (operation == LogicOperation::OR)
+			{
+				return node->GetTags().HasAny(tagsToCheck);
 			}
 			return false;
 		}
@@ -321,9 +334,9 @@ namespace PreVEngine
 			return nullptr;
 		}
 
-		std::shared_ptr<ISceneNode<NodeFlagsType>> FindOneWithFlagsInternal(const std::shared_ptr<ISceneNode<NodeFlagsType>>& parent, const FlagSet<NodeFlagsType>& flags, const FlagsOperation flagsOperation) const
+		std::shared_ptr<ISceneNode<NodeFlagsType>> FindOneWithFlagsInternal(const std::shared_ptr<ISceneNode<NodeFlagsType>>& parent, const FlagSet<NodeFlagsType>& flags, const LogicOperation operation) const
 		{
-			if (HasFlags(parent, flags, flagsOperation))
+			if (HasFlags(parent, flags, operation))
 			{
 				return parent;
 			}
@@ -331,7 +344,7 @@ namespace PreVEngine
 			auto& children = parent->GetChildren();
 			for (auto& child : children)
 			{
-				auto result = FindOneWithFlagsInternal(child, flags, flagsOperation);
+				auto result = FindOneWithFlagsInternal(child, flags, operation);
 				if (result != nullptr)
 				{
 					return result;
@@ -341,9 +354,9 @@ namespace PreVEngine
 			return nullptr;
 		}
 
-		void FindAllWithFlagsInternal(const std::shared_ptr<ISceneNode<NodeFlagsType>>& parent, const FlagSet<NodeFlagsType>& flags, const FlagsOperation flagsOperation, std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>>& result) const
+		void FindAllWithFlagsInternal(const std::shared_ptr<ISceneNode<NodeFlagsType>>& parent, const FlagSet<NodeFlagsType>& flags, const LogicOperation operation, std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>>& result) const
 		{
-			if (HasFlags(parent, flags, flagsOperation))
+			if (HasFlags(parent, flags, operation))
 			{
 				result.emplace_back(parent);
 			}
@@ -351,7 +364,7 @@ namespace PreVEngine
 			auto& children = parent->GetChildren();
 			for (auto& child : children)
 			{
-				auto node = FindOneWithFlagsInternal(child, flags, flagsOperation);
+				auto node = FindOneWithFlagsInternal(child, flags, operation);
 				if (node != nullptr)
 				{
 					result.emplace_back(node);
@@ -359,9 +372,9 @@ namespace PreVEngine
 			}
 		}
 
-		std::shared_ptr<ISceneNode<NodeFlagsType>> FindOneWithTagInternal(const std::shared_ptr<ISceneNode<NodeFlagsType>>& parent, const std::string& tag) const
+		std::shared_ptr<ISceneNode<NodeFlagsType>> FindOneWithTagsInternal(const std::shared_ptr<ISceneNode<NodeFlagsType>>& parent, const TagSet& tags, const LogicOperation operation) const
 		{
-			if (parent->GetTag() == tag)
+			if (HasTags(parent, tags, operation))
 			{
 				return parent;
 			}
@@ -369,7 +382,7 @@ namespace PreVEngine
 			auto& children = parent->GetChildren();
 			for (auto& child : children)
 			{
-				auto result = FindOneWithTagInternal(child, tag);
+				auto result = FindOneWithTagsInternal(child, tags, operation);
 				if (result != nullptr)
 				{
 					return result;
@@ -379,9 +392,9 @@ namespace PreVEngine
 			return nullptr;
 		}
 
-		void FindAllWithTagInternal(const std::shared_ptr<ISceneNode<NodeFlagsType>>& parent, const std::string& tag, std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>>& result) const
+		void FindAllWithTagsInternal(const std::shared_ptr<ISceneNode<NodeFlagsType>>& parent, const TagSet& tags, const LogicOperation operation, std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>>& result) const
 		{
-			if (parent->GetTag() == tag)
+			if (HasTags(parent, tags, operation))
 			{
 				result.emplace_back(parent);
 			}
@@ -389,7 +402,7 @@ namespace PreVEngine
 			auto& children = parent->GetChildren();
 			for (auto& child : children)
 			{
-				auto node = FindOneWithTagInternal(child, tag);
+				auto node = FindOneWithTagsInternal(child, tags, operation);
 				if (node != nullptr)
 				{
 					result.emplace_back(node);
@@ -404,31 +417,31 @@ namespace PreVEngine
 			return FindByIdInternal(root, id);
 		}
 
-		std::shared_ptr<ISceneNode<NodeFlagsType>> FindOneWthFlags(const std::shared_ptr<ISceneNode<NodeFlagsType>>& aNode, const FlagSet<NodeFlagsType>& flags, const FlagsOperation flagsOperation) const
+		std::shared_ptr<ISceneNode<NodeFlagsType>> FindOneWthFlags(const std::shared_ptr<ISceneNode<NodeFlagsType>>& aNode, const FlagSet<NodeFlagsType>& flags, const LogicOperation operation) const
 		{
 			const auto root = aNode->GetRoot();
-			return FindOneWithFlagsInternal(root, flags, flagsOperation);
+			return FindOneWithFlagsInternal(root, flags, operation);
 		}
 
-		std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>> FindAllWithFlags(const std::shared_ptr<ISceneNode<NodeFlagsType>>& aNode, const FlagSet<NodeFlagsType>& flags, const FlagsOperation flagsOperation) const
+		std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>> FindAllWithFlags(const std::shared_ptr<ISceneNode<NodeFlagsType>>& aNode, const FlagSet<NodeFlagsType>& flags, const LogicOperation operation) const
 		{
 			const auto root = aNode->GetRoot();
-			std::vector<std::shared_ptr<ISceneNode>> result;
-			FindAllWithFlagsInternal(root, flags, flagsOperation, result);
+			std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>> result;
+			FindAllWithFlagsInternal(root, flags, operation, result);
 			return result;
 		}
 
-		std::shared_ptr<ISceneNode<NodeFlagsType>> FindOneWithTag(const std::shared_ptr<ISceneNode<NodeFlagsType>>& aNode, const std::string& tag) const
+		std::shared_ptr<ISceneNode<NodeFlagsType>> FindOneWithTags(const std::shared_ptr<ISceneNode<NodeFlagsType>>& aNode, const TagSet& tags, const LogicOperation operation) const
 		{
 			const auto root = aNode->GetRoot();
-			return FindOneWithTagInternal(root, tag);
+			return FindOneWithTagsInternal(root, tags, operation);
 		}
 
-		std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>> FindAllWthTag(const std::shared_ptr<ISceneNode<NodeFlagsType>>& aNode, const std::string& tag) const
+		std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>> FindAllWthTags(const std::shared_ptr<ISceneNode<NodeFlagsType>>& aNode, const TagSet& tags, const LogicOperation operation) const
 		{
 			const auto root = aNode->GetRoot();
-			std::vector<std::shared_ptr<ISceneNode>> result;
-			FindAllWithTagInternal(root, tag, result);
+			std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>> result;
+			FindAllWithTagsInternal(root, tags, operation, result);
 			return result;
 		}
 	};
