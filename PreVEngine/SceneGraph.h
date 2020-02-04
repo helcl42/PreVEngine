@@ -279,8 +279,20 @@ namespace PreVEngine
 	};
 
 	template <typename NodeFlagsType>
-	class GraphTraversal
+	class GraphTraversal final : public Singleton<GraphTraversal<NodeFlagsType>>
 	{
+	private:
+		friend class Singleton<GraphTraversal<NodeFlagsType>>;
+
+	private:
+		std::shared_ptr<ISceneNode<NodeFlagsType>> m_root;
+
+	private:
+		GraphTraversal() = default;
+
+	public:
+		~GraphTraversal() = default;
+
 	public:
 		enum class LogicOperation
 		{
@@ -411,37 +423,42 @@ namespace PreVEngine
 		}
 
 	public:
-		std::shared_ptr<ISceneNode<NodeFlagsType>> FindById(const std::shared_ptr<ISceneNode<NodeFlagsType>>& aNode, const uint64_t id) const
+		void SetRootNode(std::shared_ptr<ISceneNode<NodeFlagsType>> root)
 		{
-			const auto root = aNode->GetRoot();
-			return FindByIdInternal(root, id);
+			m_root = root;
 		}
 
-		std::shared_ptr<ISceneNode<NodeFlagsType>> FindOneWthFlags(const std::shared_ptr<ISceneNode<NodeFlagsType>>& aNode, const FlagSet<NodeFlagsType>& flags, const LogicOperation operation) const
+		std::shared_ptr<ISceneNode<NodeFlagsType>> GetRootNode() const
 		{
-			const auto root = aNode->GetRoot();
-			return FindOneWithFlagsInternal(root, flags, operation);
+			return m_root;
 		}
 
-		std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>> FindAllWithFlags(const std::shared_ptr<ISceneNode<NodeFlagsType>>& aNode, const FlagSet<NodeFlagsType>& flags, const LogicOperation operation) const
+		std::shared_ptr<ISceneNode<NodeFlagsType>> FindById(const uint64_t id) const
 		{
-			const auto root = aNode->GetRoot();
+			return FindByIdInternal(m_root, id);
+		}
+
+		std::shared_ptr<ISceneNode<NodeFlagsType>> FindOneWthFlags(const FlagSet<NodeFlagsType>& flags, const LogicOperation operation) const
+		{
+			return FindOneWithFlagsInternal(m_root, flags, operation);
+		}
+
+		std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>> FindAllWithFlags(const FlagSet<NodeFlagsType>& flags, const LogicOperation operation) const
+		{
 			std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>> result;
-			FindAllWithFlagsInternal(root, flags, operation, result);
+			FindAllWithFlagsInternal(m_root, flags, operation, result);
 			return result;
 		}
 
-		std::shared_ptr<ISceneNode<NodeFlagsType>> FindOneWithTags(const std::shared_ptr<ISceneNode<NodeFlagsType>>& aNode, const TagSet& tags, const LogicOperation operation) const
+		std::shared_ptr<ISceneNode<NodeFlagsType>> FindOneWithTags(const TagSet& tags, const LogicOperation operation) const
 		{
-			const auto root = aNode->GetRoot();
-			return FindOneWithTagsInternal(root, tags, operation);
+			return FindOneWithTagsInternal(m_root, tags, operation);
 		}
 
-		std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>> FindAllWthTags(const std::shared_ptr<ISceneNode<NodeFlagsType>>& aNode, const TagSet& tags, const LogicOperation operation) const
+		std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>> FindAllWthTags(const TagSet& tags, const LogicOperation operation) const
 		{
-			const auto root = aNode->GetRoot();
 			std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>> result;
-			FindAllWithTagsInternal(root, tags, operation, result);
+			FindAllWithTagsInternal(m_root, tags, operation, result);
 			return result;
 		}
 	};

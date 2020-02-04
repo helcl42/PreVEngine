@@ -143,6 +143,8 @@ namespace PreVEngine
 		void ShutDownSceneGraph() override
 		{
 			m_rootNode->ShutDown();
+
+			GraphTraversal<NodeFlagsType>::GetInstance().SetRootNode(nullptr);
 		}
 
 		void ShutDown() override
@@ -177,6 +179,8 @@ namespace PreVEngine
 
 		void SetSceneRoot(std::shared_ptr<ISceneNode<NodeFlagsType>> root) override
 		{
+			GraphTraversal<NodeFlagsType>::GetInstance().SetRootNode(root);
+
 			m_rootNode = root;
 		}
 

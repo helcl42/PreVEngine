@@ -81,6 +81,78 @@ public:
 	}
 };
 
+template <typename ItemType>
+class ComponentRepository final : public Singleton<ComponentRepository<ItemType>>
+{
+private:
+	friend class Singleton<ComponentRepository<ItemType>>;
+
+private:
+	std::map<uint64_t, std::shared_ptr<ItemType>> m_components;
+
+private:
+	ComponentRepository() = default;
+
+public:
+	~ComponentRepository() = default;
+
+public:
+	std::shared_ptr<ItemType> Get(const uint64_t id) const
+	{
+		if (!Contains(id))
+		{
+			throw std::runtime_error("Entitity sith id = " + std::to_string(id) + " does not exist in this repository.");
+		}
+
+		return m_components.at(id);
+	}
+
+	void Add(const uint64_t id, std::shared_ptr<ItemType> component)
+	{
+		if (Contains(id))
+		{
+			throw std::runtime_error("Entitity sith id = " + std::to_string(id) + " already exist in this repository.");
+		}
+
+		m_components[id] = component;
+	}
+
+	void Remove(const uint64_t id)
+	{
+		if (!Contains(id))
+		{
+			throw std::runtime_error("Entitity sith id = " + std::to_string(id) + " does not exist in this repository.");
+		}
+
+		m_components.erase(id);
+	}
+
+	bool Contains(const uint64_t id) const
+	{
+		return m_components.find(id) != m_components.cend();
+	}
+};
+
+class IRenderer
+{
+public:
+	virtual void Init() = 0;
+
+	virtual void PreRender(RenderContext& renderContext) = 0;
+
+	virtual void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode<SceneNodeFlags>> node) = 0;
+
+	virtual void PostRender(RenderContext& renderContext) = 0;
+
+	virtual void ShutDown() = 0;
+
+public:
+	virtual ~IRenderer() = default;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+// RENDER COMPONENT
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 class IMaterial
 {
 public:
@@ -318,17 +390,225 @@ public:
 
 std::map<std::string, std::shared_ptr<Image>> RenderComponentFactory::s_imagesCache;
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+// CAMERA COMPONENT
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct CameraMoveState
+{
+	bool forward = false;
+	bool back = false;
+	bool left = false;
+	bool right = false;
+	bool up = false;
+	bool down = false;
+};
+
 class ICameraComponent
 {
 public:
-	// TODO
+	virtual void Update(float deltaTime, const CameraMoveState& inputState) = 0;
+	
+	virtual const glm::mat4& LookAt() const = 0;
+
+	virtual void Reset() = 0;
+	
+	virtual void AddPitch(float amountInDegrees) = 0;
+
+	virtual void AddYaw(float amountInDegrees) = 0;
+
+	virtual const ViewFrustum& GetViewFrustum() const = 0;
+	
+public:
+	virtual ~ICameraComponent() = default;
+};
+
+class CameraComponent : public ICameraComponent
+{
+private:
+	const glm::vec3 m_upDirection{ 0.0f, 1.0f, 0.0f };
+
+	const float m_sensitivity = 0.05f;
+
+	const float m_scrollSensitivity = 2.0f;
+
+	const float m_moveSpeed = 25.0f;
+
+private:
+	glm::vec3 m_position;
+
+	glm::vec3 m_positionDelta;
+
+	glm::vec3 m_forwardDirection;
+
+	glm::vec3 m_rightDirection;
+
+	glm::vec3 m_pitchYawRoll;
+
+	glm::vec3 m_pitchYawRollDelta;
+
+	glm::mat4 m_viewMatrix;
+
+	glm::vec2 m_prevTouchPosition;
+
+	ViewFrustum m_viewFrustum{ 45.0f, 0.1f, 1000.0f };
 
 public:
-	virtual ~ICameraComponent()
+	CameraComponent()
 	{
+		Reset();
+	}
+
+	virtual ~CameraComponent()
+	{
+	}
+
+private:
+	float NormalizeUpTo2Phi(float val)
+	{
+		const float TWO_PHI_IN_DEGS = 360.0f;
+		if (val > TWO_PHI_IN_DEGS)
+		{
+			val -= TWO_PHI_IN_DEGS;
+		}
+		else if (val < -TWO_PHI_IN_DEGS)
+		{
+			val += TWO_PHI_IN_DEGS;
+		}
+		return val;
+	}
+
+	void UpdatePosition(float deltaTime, const CameraMoveState& inputState)
+	{
+		m_position += m_positionDelta;
+
+		if (inputState.forward)
+		{
+			m_position += m_forwardDirection * deltaTime * m_moveSpeed;
+		}
+
+		if (inputState.back)
+		{
+			m_position -= m_forwardDirection * deltaTime * m_moveSpeed;
+		}
+
+		if (inputState.left)
+		{
+			m_position -= m_rightDirection * deltaTime * m_moveSpeed;
+		}
+
+		if (inputState.right)
+		{
+			m_position += m_rightDirection * deltaTime * m_moveSpeed;
+		}
+
+		if (inputState.down)
+		{
+			m_position -= m_upDirection * deltaTime * m_moveSpeed;
+		}
+
+		if (inputState.up)
+		{
+			m_position += m_upDirection * deltaTime * m_moveSpeed;
+		}
+
+		m_positionDelta = glm::vec3(0.0f, 0.0f, 0.0f);
+	}
+
+	void UpdateOrientation(float deltaTime)
+	{
+		//compute quaternion for pitch based on the camera pitch angle
+		glm::quat pitchQuat = glm::angleAxis(glm::radians(m_pitchYawRollDelta.x), m_rightDirection);
+
+		//determine heading quaternion from the camera up vector and the heading angle
+		glm::quat headingQuat = glm::angleAxis(glm::radians(m_pitchYawRollDelta.y), m_upDirection);
+
+		//add the two quaternions
+		glm::quat orientation = glm::normalize(pitchQuat * headingQuat);
+
+		// update forward direction from the quaternion
+		m_forwardDirection = glm::normalize(orientation * m_forwardDirection);
+
+		// compute right direction from up and formward
+		m_rightDirection = glm::normalize(glm::cross(m_forwardDirection, m_upDirection));
+
+		// reset current iteration deltas
+		m_pitchYawRollDelta = glm::vec3(0.0f, 0.0f, 0.0f);
+	}
+
+public:
+	void Update(float deltaTime, const CameraMoveState& inputState)
+	{
+		UpdateOrientation(deltaTime);
+		UpdatePosition(deltaTime, inputState);
+
+		m_viewMatrix = glm::lookAt(m_position, m_position + m_forwardDirection, m_upDirection);
+	}
+
+	const glm::mat4& LookAt() const
+	{
+		return m_viewMatrix;
+	}
+
+	void Reset()
+	{
+		std::cout << "Resseting camera.." << std::endl;
+
+		m_position = glm::vec3(0.0f, 60.0f, 180.0f);
+		m_positionDelta = glm::vec3(0.0f, 0.0f, 0.0f);
+
+		m_pitchYawRoll = glm::vec3(0.0f, 0.0f, 0.0f);
+		m_pitchYawRollDelta = glm::vec3(0.0f, 0.0f, 0.0f);
+
+		m_viewMatrix = glm::mat4(1.0f);
+
+		m_forwardDirection = glm::vec3(0.0f, 0.0f, -1.0f);
+		m_rightDirection = glm::cross(m_forwardDirection, m_upDirection);
+
+		m_prevTouchPosition = glm::vec2(0.0f, 0.0f);
+	}
+
+	void AddPitch(float amountInDegrees)
+	{
+		amountInDegrees *= m_sensitivity;
+
+		float newFinalPitch = m_pitchYawRoll.x + amountInDegrees;
+		if (newFinalPitch > 89.0f || newFinalPitch < -89.0f)
+		{
+			return;
+		}
+
+		m_pitchYawRollDelta.x += amountInDegrees;
+		m_pitchYawRoll.x += amountInDegrees;
+	}
+
+	void AddYaw(float amountInDegrees)
+	{
+		amountInDegrees *= m_sensitivity;
+
+		m_pitchYawRollDelta.y += amountInDegrees;
+		m_pitchYawRoll.y += amountInDegrees;
+
+		m_pitchYawRollDelta.y = NormalizeUpTo2Phi(m_pitchYawRollDelta.y);
+	}
+
+	const ViewFrustum& GetViewFrustum() const
+	{
+		return m_viewFrustum;
 	}
 };
 
+class CameraComponentFactory
+{
+public:
+	std::shared_ptr<ICameraComponent> Create() const
+	{
+		return std::make_shared<CameraComponent>();
+	}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+// LIGHT COMPONENT
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ILightComponent
 {
 public:
@@ -418,69 +698,297 @@ public:
 	}
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SHADOWS COMPONENT
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct ShadowsCascade
+{
+	VkFramebuffer frameBuffer;
+
+	VkImageView imageView;
+
+	float startSplitDepth;
+
+	float endSplitDepth;
+
+	glm::mat4 viewMatrix;
+
+	glm::mat4 projectionMatrix;
+
+	void Destroy(VkDevice device)
+	{
+		vkDestroyImageView(device, imageView, nullptr);
+		vkDestroyFramebuffer(device, frameBuffer, nullptr);
+	}
+};
+
 class IShadowsComponent
 {
 public:
-	// TODO
+	virtual void Init() = 0;
+
+	virtual void Update(float deltaTime, std::shared_ptr<ILightComponent> light, std::shared_ptr<ICameraComponent> camera) = 0;
+
+	virtual void ShutDown() = 0;
+
+	virtual std::shared_ptr<RenderPass> GetRenderPass() const = 0;
+
+	virtual const ShadowsCascade& GetCascade(const uint32_t cascadeIndex) const = 0;
+
+	virtual VkExtent2D GetExtent() const = 0;
+
+	virtual std::shared_ptr<IImageBuffer> GetImageBuffer() const = 0;
 
 public:
-	virtual ~IShadowsComponent()
-	{
-	}
+	virtual ~IShadowsComponent() = default;
 };
 
-template <typename ItemType>
-class ComponentRepository final : public Singleton<ComponentRepository<ItemType>>
+class ShadowsComponent : public IShadowsComponent
 {
-private:
-	friend class Singleton<ComponentRepository<ItemType>>;
+public:
+	static const VkFormat DEPTH_FORMAT;
+
+	static const uint32_t SHADOW_MAP_DIMENSIONS;
+
+	static const VkFilter SHADOW_MAP_FILTER;
+
+	static const uint32_t CASCADES_COUNT;
+
+	static const float CASCADES_SPLIT_LAMBDA;
 
 private:
-	std::map<uint64_t, std::shared_ptr<ItemType>> m_components;
+	std::shared_ptr<Allocator> m_allocator;
+
+	std::shared_ptr<Device> m_device;
 
 private:
-	ComponentRepository() = default;
+	std::shared_ptr<RenderPass> m_renderPass;
+
+	std::shared_ptr<DepthImageBuffer> m_depthBuffer;
+
+	std::vector<ShadowsCascade> m_cascades;
 
 public:
-	~ComponentRepository() = default;
+	ShadowsComponent(std::shared_ptr<Allocator> allocator, std::shared_ptr<Device> dev)
+		: m_allocator(allocator), m_device(dev)
+	{
+	}
+
+	virtual ~ShadowsComponent()
+	{
+	}
+
+private:
+	void InitRenderPass()
+	{
+		std::vector<VkSubpassDependency> dependencies(2);
+		dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependencies[0].dstSubpass = 0;
+		dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		dependencies[0].dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		dependencies[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		dependencies[0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+		dependencies[1].srcSubpass = 0;
+		dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+		dependencies[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+		dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		dependencies[1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+		m_renderPass = std::make_shared<RenderPass>(*m_device);
+		m_renderPass->AddDepthAttachment(DEPTH_FORMAT);
+		m_renderPass->AddSubpass({ 0 });
+		m_renderPass->AddSubpassDependency(dependencies);
+		m_renderPass->Create();
+	}
+
+	void ShutDownRenderPass()
+	{
+		m_renderPass->Destroy();
+	}
+
+	void InitCascades()
+	{
+		m_depthBuffer = std::make_shared<DepthImageBuffer>(*m_allocator);
+		m_depthBuffer->Create(ImageBufferCreateInfo{ GetExtent(), DEPTH_FORMAT, false, VK_IMAGE_VIEW_TYPE_2D_ARRAY, CASCADES_COUNT });
+		m_depthBuffer->CreateSampler();
+
+		m_cascades.resize(CASCADES_COUNT);
+		for (uint32_t i = 0; i < CASCADES_COUNT; i++)
+		{
+			auto& cascade = m_cascades.at(i);
+
+			cascade.imageView = VkUtils::CreateImageView(*m_device, m_depthBuffer->GetImage(), m_depthBuffer->GetFormat(), VK_IMAGE_VIEW_TYPE_2D_ARRAY, m_depthBuffer->GetMipLevels(), VK_IMAGE_ASPECT_DEPTH_BIT, 1, i);
+			cascade.frameBuffer = VkUtils::CreateFrameBuffer(*m_device, *m_renderPass, { cascade.imageView }, GetExtent());
+		}
+	}
+
+	void ShutDownCascades()
+	{
+		vkDeviceWaitIdle(*m_device);
+
+		for (uint32_t i = 0; i < CASCADES_COUNT; i++)
+		{
+			auto& cascade = m_cascades.at(i);
+			cascade.Destroy(*m_device);
+		}
+
+		m_depthBuffer->Destroy();
+	}
+
+	void UpdateCascades(float deltaTime, std::shared_ptr<ILightComponent> light, std::shared_ptr<ICameraComponent> camera)
+	{
+		std::vector<float> cascadeSplits(CASCADES_COUNT);
+
+		float nearClip = camera->GetViewFrustum().GetNearClippingPlane();
+		float farClip = camera->GetViewFrustum().GetFarClippingPlane();
+		float clipRange = farClip - nearClip;
+
+		float minZ = nearClip;
+		float maxZ = nearClip + clipRange;
+
+		float range = maxZ - minZ;
+		float ratio = maxZ / minZ;
+
+		// Calculate split depths based on view camera furstum
+		for (uint32_t i = 0; i < CASCADES_COUNT; i++)
+		{
+			float p = (i + 1) / static_cast<float>(CASCADES_COUNT);
+			float log = minZ * std::pow(ratio, p);
+			float uniform = minZ + range * p;
+			float d = CASCADES_SPLIT_LAMBDA * (log - uniform) + uniform;
+			cascadeSplits[i] = (d - nearClip) / clipRange;
+		}
+
+		// Calculate orthographic projection matrix for each cascade
+		float lastSplitDist = 0.0;
+		for (uint32_t i = 0; i < CASCADES_COUNT; i++)
+		{
+			const float splitDist = cascadeSplits[i];
+
+			glm::vec3 frustumCorners[] = {
+				glm::vec3(-1.0f,  1.0f, -1.0f),
+				glm::vec3(1.0f,  1.0f, -1.0f),
+				glm::vec3(1.0f, -1.0f, -1.0f),
+				glm::vec3(-1.0f, -1.0f, -1.0f),
+				glm::vec3(-1.0f,  1.0f,  1.0f),
+				glm::vec3(1.0f,  1.0f,  1.0f),
+				glm::vec3(1.0f, -1.0f,  1.0f),
+				glm::vec3(-1.0f, -1.0f,  1.0f),
+			};
+
+			// Project frustum corners into world space
+			glm::mat4 inverseCameraTransform = glm::inverse(camera->GetViewFrustum().CreateProjectionMatrix(1280.0f / 960.0f) * camera->LookAt());
+			for (uint32_t i = 0; i < 8; i++)
+			{
+				glm::vec4 invCorner = inverseCameraTransform * glm::vec4(frustumCorners[i], 1.0f);
+				frustumCorners[i] = invCorner / invCorner.w;
+			}
+
+			for (uint32_t i = 0; i < 4; i++)
+			{
+				glm::vec3 dist = frustumCorners[i + 4] - frustumCorners[i];
+				frustumCorners[i + 4] = frustumCorners[i] + (dist * splitDist);
+				frustumCorners[i] = frustumCorners[i] + (dist * lastSplitDist);
+			}
+
+			// Get frustum center
+			glm::vec3 frustumCenter = glm::vec3(0.0f);
+			for (uint32_t i = 0; i < 8; i++)
+			{
+				frustumCenter += frustumCorners[i];
+			}
+			frustumCenter /= 8.0f;
+
+			float radius = 0.0f;
+			for (uint32_t i = 0; i < 8; i++)
+			{
+				float distance = glm::length(frustumCorners[i] - frustumCenter);
+				radius = glm::max(radius, distance);
+			}
+			radius = std::ceil(radius * 16.0f) / 16.0f;
+
+			const glm::vec3 maxExtents = glm::vec3(radius);
+			const glm::vec3 minExtents = -maxExtents;
+
+			const glm::vec3 lightDirection = light->GetDirection();
+			const glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDirection * -minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+			const glm::mat4 lightOrthoProjectionMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f, maxExtents.z - minExtents.z);
+
+			// Store split distance and matrix in cascade
+			m_cascades[i].startSplitDepth = (nearClip + lastSplitDist * clipRange) * -1.0f;
+			m_cascades[i].endSplitDepth = (nearClip + splitDist * clipRange) * -1.0f;
+			m_cascades[i].viewMatrix = lightViewMatrix;
+			m_cascades[i].projectionMatrix = lightOrthoProjectionMatrix;
+
+			lastSplitDist = splitDist;
+		}
+	}
 
 public:
-	std::shared_ptr<ItemType> Get(const uint64_t id) const
+	void Init()
 	{
-		if (!Contains(id))
-		{
-			throw std::runtime_error("Entitity sith id = " + std::to_string(id) + " does not exist in this repository.");
-		}
-
-		return m_components.at(id);
+		InitRenderPass();
+		InitCascades();
 	}
 
-	void Add(const uint64_t id, std::shared_ptr<ItemType> component)
+	void Update(float deltaTime, std::shared_ptr<ILightComponent> light, std::shared_ptr<ICameraComponent> camera)
 	{
-		if (Contains(id))
-		{
-			throw std::runtime_error("Entitity sith id = " + std::to_string(id) + " already exist in this repository.");
-		}
-
-		m_components[id] = component;
+		UpdateCascades(deltaTime, light, camera);
 	}
 
-	void Remove(const uint64_t id)
+	void ShutDown()
 	{
-		if (!Contains(id))
-		{
-			throw std::runtime_error("Entitity sith id = " + std::to_string(id) + " does not exist in this repository.");
-		}
-
-		m_components.erase(id);
+		ShutDownCascades();
+		ShutDownRenderPass();
 	}
 
-	bool Contains(const uint64_t id) const
+	std::shared_ptr<RenderPass> GetRenderPass() const
 	{
-		return m_components.find(id) != m_components.cend();
+		return m_renderPass;
+	}
+
+	const ShadowsCascade& GetCascade(const uint32_t cascadeIndex) const
+	{
+		return m_cascades.at(cascadeIndex);
+	}
+
+	VkExtent2D GetExtent() const
+	{
+		return { SHADOW_MAP_DIMENSIONS, SHADOW_MAP_DIMENSIONS };
+	}
+
+	std::shared_ptr<IImageBuffer> GetImageBuffer() const
+	{
+		return m_depthBuffer;
 	}
 };
 
+const VkFormat ShadowsComponent::DEPTH_FORMAT = VK_FORMAT_D24_UNORM_S8_UINT;
+
+const uint32_t ShadowsComponent::SHADOW_MAP_DIMENSIONS = 2048;
+
+const VkFilter ShadowsComponent::SHADOW_MAP_FILTER = VK_FILTER_LINEAR;
+
+const uint32_t ShadowsComponent::CASCADES_COUNT = 4;
+
+const float ShadowsComponent::CASCADES_SPLIT_LAMBDA = 0.86f;
+
+class ShadowsComponentFactory
+{
+public:
+	std::shared_ptr<IShadowsComponent> Create(std::shared_ptr<Allocator> allocator, std::shared_ptr<Device> dev) const
+	{
+		return std::make_shared<ShadowsComponent>(allocator, dev);
+	}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SCENE
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 class AbstractCubeRobotSceneNode : public AbstractSceneNode<SceneNodeFlags>
 {
 protected:
@@ -524,9 +1032,9 @@ public:
 
 	void ShutDown() override
 	{
-		ComponentRepository<IRenderComponent>::GetInstance().Remove(m_id);
-
 		AbstractSceneNode::ShutDown();
+
+		ComponentRepository<IRenderComponent>::GetInstance().Remove(m_id);
 	}
 };
 
@@ -713,30 +1221,12 @@ public:
 
 	void ShutDown() override
 	{
-		ComponentRepository<IRenderComponent>::GetInstance().Remove(m_id);
-
 		AbstractSceneNode::ShutDown();
+
+		ComponentRepository<IRenderComponent>::GetInstance().Remove(m_id);
 	}
 };
 
-class IRenderer
-{
-public:
-	virtual void Init() = 0;
-
-	virtual void PreRender(RenderContext& renderContext) = 0;
-
-	virtual void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode<SceneNodeFlags>> node) = 0;
-
-	virtual void PostRender(RenderContext& renderContext) = 0;
-
-	virtual void ShutDown() = 0;
-
-public:
-	virtual ~IRenderer() = default;
-};
-
-// TODO create decorator -> ControllableCamera
 class Camera : public AbstractSceneNode<SceneNodeFlags>
 {
 private:
@@ -744,47 +1234,19 @@ private:
 
 	EventHandler<Camera, TouchEvent> m_touchHandler{ *this };
 
-	EventHandler<Camera, MouseScrollEvent> m_mouseScrollHandler{ *this };
-
 	EventHandler<Camera, KeyEvent> m_keyHandler{ *this };
 
 private:
 	InputsFacade m_inputFacade;
 
-private:
-	const glm::vec3 m_upDirection{ 0.0f, 1.0f, 0.0f };
-
-	const float m_sensitivity = 0.05f;
-
-	const float m_scrollSensitivity = 2.0f;
-
-	const float m_moveSpeed = 25.0f;
-
-private:
-	glm::vec3 m_position;
-
-	glm::vec3 m_positionDelta;
-
-	glm::vec3 m_forwardDirection;
-
-	glm::vec3 m_rightDirection;
-
-	glm::vec3 m_pitchYawRoll;
-
-	glm::vec3 m_pitchYawRollDelta;
-
-	glm::mat4 m_viewMatrix;
+	std::shared_ptr<ICameraComponent> m_cameraComponent;
 
 	glm::vec2 m_prevTouchPosition;
-
-	ViewFrustum m_viewFrustum{ 45.0f, 0.1f, 1000.0f };
 
 public:
 	Camera()
 		: AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_CAMERA_COMPONENT })
 	{
-		Reset();
-
 		m_inputFacade.SetMouseLocked(true);
 		m_inputFacade.SetMouseCursorVisible(false);
 	}
@@ -794,132 +1256,66 @@ public:
 	}
 
 private:
-	float NormalizeUpTo2Phi(float val)
-	{
-		const float TWO_PHI_IN_DEGS = 360.0f;
-		if (val > TWO_PHI_IN_DEGS)
-		{
-			val -= TWO_PHI_IN_DEGS;
-		}
-		else if (val < -TWO_PHI_IN_DEGS)
-		{
-			val += TWO_PHI_IN_DEGS;
-		}
-		return val;
-	}
-
-	void UpdatePosition(float deltaTime)
-	{
-		m_position += m_positionDelta;
-
-		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_W))
-		{
-			m_position += m_forwardDirection * deltaTime * m_moveSpeed;
-		}
-		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_S))
-		{
-			m_position -= m_forwardDirection * deltaTime * m_moveSpeed;
-		}
-		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_A))
-		{
-			m_position -= m_rightDirection * deltaTime * m_moveSpeed;
-		}
-		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_D))
-		{
-			m_position += m_rightDirection * deltaTime * m_moveSpeed;
-		}
-		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_Q))
-		{
-			m_position -= m_upDirection * deltaTime * m_moveSpeed;
-		}
-		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_E))
-		{
-			m_position += m_upDirection * deltaTime * m_moveSpeed;
-		}
-
-		m_positionDelta = glm::vec3(0.0f, 0.0f, 0.0f);
-	}
-
-	void UpdateOrientation(float deltaTime)
-	{
-		//compute quaternion for pitch based on the camera pitch angle
-		glm::quat pitchQuat = glm::angleAxis(glm::radians(m_pitchYawRollDelta.x), m_rightDirection);
-
-		//determine heading quaternion from the camera up vector and the heading angle
-		glm::quat headingQuat = glm::angleAxis(glm::radians(m_pitchYawRollDelta.y), m_upDirection);
-
-		//add the two quaternions
-		glm::quat orientation = glm::normalize(pitchQuat * headingQuat);
-
-		// update forward direction from the quaternion
-		m_forwardDirection = glm::normalize(orientation * m_forwardDirection);
-
-		// compute right direction from up and formward
-		m_rightDirection = glm::normalize(glm::cross(m_forwardDirection, m_upDirection));
-
-		// reset current iteration deltas
-		m_pitchYawRollDelta = glm::vec3(0.0f, 0.0f, 0.0f);
-	}
-
-public:
-	void Update(float deltaTime)
-	{
-		UpdateOrientation(deltaTime);
-		UpdatePosition(deltaTime);
-
-		m_viewMatrix = glm::lookAt(m_position, m_position + m_forwardDirection, m_upDirection);
-
-		SetTransform(glm::inverse(m_viewMatrix));
-
-		AbstractSceneNode::Update(deltaTime);
-	}
-
-	const glm::mat4& LookAt() const
-	{
-		return m_viewMatrix;
-	}
-
 	void Reset()
 	{
-		std::cout << "Resseting camera.." << std::endl;
-
-		m_position = glm::vec3(0.0f, 60.0f, 180.0f);
-		m_positionDelta = glm::vec3(0.0f, 0.0f, 0.0f);
-
-		m_pitchYawRoll = glm::vec3(0.0f, 0.0f, 0.0f);
-		m_pitchYawRollDelta = glm::vec3(0.0f, 0.0f, 0.0f);
-
-		m_viewMatrix = glm::mat4(1.0f);
-
-		m_forwardDirection = glm::vec3(0.0f, 0.0f, -1.0f);
-		m_rightDirection = glm::cross(m_forwardDirection, m_upDirection);
+		m_cameraComponent->Reset();
 
 		m_prevTouchPosition = glm::vec2(0.0f, 0.0f);
 	}
 
-	void AddPitch(float amountInDegrees)
+public:
+	void Init() override
 	{
-		float newFinalPitch = m_pitchYawRoll.x + amountInDegrees;
-		if (newFinalPitch > 89.0f || newFinalPitch < -89.0f)
+		CameraComponentFactory cameraFactory;
+		m_cameraComponent = cameraFactory.Create();
+		ComponentRepository<ICameraComponent>::GetInstance().Add(m_id, m_cameraComponent);
+
+		AbstractSceneNode::Init();
+
+		Reset();
+	}
+
+	void Update(float deltaTime) override
+	{
+		CameraMoveState moveState;
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_W)) 
 		{
-			return;
+			moveState.forward = true;
 		}
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_S))
+		{
+			moveState.back = true;
+		}
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_A))
+		{
+			moveState.left = true;
+		}
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_D))
+		{
+			moveState.right = true;
+		}
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_Q))
+		{
+			moveState.down = true;
+		}
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_E))
+		{
+			moveState.up = true;
+		}
+		m_cameraComponent->Update(deltaTime, moveState);
 
-		m_pitchYawRollDelta.x += amountInDegrees;
-		m_pitchYawRoll.x += amountInDegrees;
+		glm::mat4 viewMatrix = m_cameraComponent->LookAt();
+
+		SetTransform(glm::inverse(viewMatrix));
+
+		AbstractSceneNode::Update(deltaTime);
 	}
 
-	void AddYaw(float amountInDegrees)
+	void ShutDown() override
 	{
-		m_pitchYawRollDelta.y += amountInDegrees;
-		m_pitchYawRoll.y += amountInDegrees;
+		AbstractSceneNode::ShutDown();
 
-		m_pitchYawRollDelta.y = NormalizeUpTo2Phi(m_pitchYawRollDelta.y);
-	}
-
-	const ViewFrustum& GetViewFrustum() const
-	{
-		return m_viewFrustum;
+		ComponentRepository<ICameraComponent>::GetInstance().Remove(m_id);
 	}
 
 public:
@@ -927,10 +1323,10 @@ public:
 	{
 		if (mouseEvent.action == MouseActionType::MOVE && mouseEvent.button == MouseButtonType::LEFT)
 		{
-			const glm::vec2 angleInDegrees = mouseEvent.position * m_sensitivity;
+			const glm::vec2 angleInDegrees = mouseEvent.position;
 
-			AddPitch(angleInDegrees.y);
-			AddYaw(angleInDegrees.x);
+			m_cameraComponent->AddPitch(angleInDegrees.y);
+			m_cameraComponent->AddYaw(angleInDegrees.x);
 		}
 	}
 
@@ -938,10 +1334,10 @@ public:
 	{
 		if (touchEvent.action == TouchActionType::MOVE)
 		{
-			const glm::vec2 angleInDegrees = (touchEvent.position - m_prevTouchPosition) * m_sensitivity;
+			const glm::vec2 angleInDegrees = (touchEvent.position - m_prevTouchPosition);
 
-			AddPitch(angleInDegrees.y);
-			AddYaw(angleInDegrees.x);
+			m_cameraComponent->AddPitch(angleInDegrees.y);
+			m_cameraComponent->AddYaw(angleInDegrees.x);
 		}
 
 		m_prevTouchPosition = touchEvent.position;
@@ -961,12 +1357,6 @@ public:
 				m_inputFacade.SetMouseCursorVisible(!m_inputFacade.IsMouseCursorVisible());
 			}
 		}
-	}
-
-	void operator() (const MouseScrollEvent& scrollEvent)
-	{
-		float scaledDelta = scrollEvent.delta * m_scrollSensitivity;
-		m_positionDelta = m_forwardDirection * scaledDelta;
 	}
 };
 
@@ -1015,50 +1405,13 @@ public:
 
 class Shadows : public AbstractSceneNode<SceneNodeFlags>
 {
-public:
-	static const VkFormat DEPTH_FORMAT;
-
-	static const uint32_t SHADOW_MAP_DIMENSIONS;
-
-	static const VkFilter SHADOW_MAP_FILTER;
-
-	static const uint32_t CASCADES_COUNT;
-
-	static const float CASCADES_SPLIT_LAMBDA;
-
-private:
-	struct Cascade
-	{
-		VkFramebuffer frameBuffer;
-
-		VkImageView imageView;
-
-		float startSplitDepth;
-
-		float endSplitDepth;
-
-		glm::mat4 viewMatrix;
-
-		glm::mat4 projectionMatrix;
-
-		void Destroy(VkDevice device)
-		{
-			vkDestroyImageView(device, imageView, nullptr);
-			vkDestroyFramebuffer(device, frameBuffer, nullptr);
-		}
-	};
-
 private:
 	std::shared_ptr<Allocator> m_allocator;
 
 	std::shared_ptr<Device> m_device;
 
 private:
-	std::shared_ptr<RenderPass> m_renderPass;
-
-	std::shared_ptr<DepthImageBuffer> m_depthBuffer;
-
-	std::vector<Cascade> m_cascades;
+	std::shared_ptr<IShadowsComponent> m_shadowsCompoent;
 
 public:
 	Shadows(std::shared_ptr<Allocator> allocator, std::shared_ptr<Device> dev)
@@ -1070,221 +1423,40 @@ public:
 	{
 	}
 
-private:
-	void InitRenderPass()
-	{
-		std::vector<VkSubpassDependency> dependencies(2);
-		dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-		dependencies[0].dstSubpass = 0;
-		dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-		dependencies[0].dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-		dependencies[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-		dependencies[0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-		dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
-		dependencies[1].srcSubpass = 0;
-		dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-		dependencies[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-		dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-		dependencies[1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-		dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-		dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
-		m_renderPass = std::make_shared<RenderPass>(*m_device);
-		m_renderPass->AddDepthAttachment(DEPTH_FORMAT);
-		m_renderPass->AddSubpass({ 0 });
-		m_renderPass->AddSubpassDependency(dependencies);
-		m_renderPass->Create();
-	}
-
-	void ShutDownRenderPass()
-	{
-		m_renderPass->Destroy();
-	}
-
-	void InitCascades()
-	{
-		m_depthBuffer = std::make_shared<DepthImageBuffer>(*m_allocator);
-		m_depthBuffer->Create(ImageBufferCreateInfo{ GetExtent(), DEPTH_FORMAT, false, VK_IMAGE_VIEW_TYPE_2D_ARRAY, CASCADES_COUNT });
-		m_depthBuffer->CreateSampler();
-
-		m_cascades.resize(CASCADES_COUNT);
-		for (uint32_t i = 0; i < CASCADES_COUNT; i++)
-		{
-			auto& cascade = m_cascades.at(i);
-
-			cascade.imageView = VkUtils::CreateImageView(*m_device, m_depthBuffer->GetImage(), m_depthBuffer->GetFormat(), VK_IMAGE_VIEW_TYPE_2D_ARRAY, m_depthBuffer->GetMipLevels(), VK_IMAGE_ASPECT_DEPTH_BIT, 1, i);
-			cascade.frameBuffer = VkUtils::CreateFrameBuffer(*m_device, *m_renderPass, { cascade.imageView }, GetExtent());
-		}
-	}
-
-	void ShutDownCascades()
-	{
-		vkDeviceWaitIdle(*m_device);
-
-		for (uint32_t i = 0; i < CASCADES_COUNT; i++)
-		{
-			auto& cascade = m_cascades.at(i);
-			cascade.Destroy(*m_device);
-		}
-
-		m_depthBuffer->Destroy();
-	}
-
-	void UpdateCascades(float deltaTime)
-	{
-		// TODO here should be camera -> instead of light ??? -> check VK samples !!!
-		auto lightNode = GraphTraversal<SceneNodeFlags>{}.FindOneWithTags(GetThis(), { TAG_LIGHT }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
-		auto light = ComponentRepository<ILightComponent>::GetInstance().Get(lightNode->GetId());
-
-		auto camera = std::dynamic_pointer_cast<Camera>(GraphTraversal<SceneNodeFlags>{}.FindOneWithTags(GetThis(), { TAG_CAMERA }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR));
-
-		std::vector<float> cascadeSplits(CASCADES_COUNT);
-
-		float nearClip = camera->GetViewFrustum().GetNearClippingPlane();
-		float farClip = camera->GetViewFrustum().GetFarClippingPlane();
-		float clipRange = farClip - nearClip;
-
-		float minZ = nearClip;
-		float maxZ = nearClip + clipRange;
-
-		float range = maxZ - minZ;
-		float ratio = maxZ / minZ;
-
-		// Calculate split depths based on view camera furstum
-		for (uint32_t i = 0; i < CASCADES_COUNT; i++)
-		{
-			float p = (i + 1) / static_cast<float>(CASCADES_COUNT);
-			float log = minZ * std::pow(ratio, p);
-			float uniform = minZ + range * p;
-			float d = CASCADES_SPLIT_LAMBDA * (log - uniform) + uniform;
-			cascadeSplits[i] = (d - nearClip) / clipRange;
-		}
-
-		// Calculate orthographic projection matrix for each cascade
-		float lastSplitDist = 0.0;
-		for (uint32_t i = 0; i < CASCADES_COUNT; i++)
-		{
-			const float splitDist = cascadeSplits[i];
-
-			glm::vec3 frustumCorners[] = {
-				glm::vec3(-1.0f,  1.0f, -1.0f),
-				glm::vec3(1.0f,  1.0f, -1.0f),
-				glm::vec3(1.0f, -1.0f, -1.0f),
-				glm::vec3(-1.0f, -1.0f, -1.0f),
-				glm::vec3(-1.0f,  1.0f,  1.0f),
-				glm::vec3(1.0f,  1.0f,  1.0f),
-				glm::vec3(1.0f, -1.0f,  1.0f),
-				glm::vec3(-1.0f, -1.0f,  1.0f),
-			};
-
-			// Project frustum corners into world space
-			glm::mat4 inverseCameraTransform = glm::inverse(camera->GetViewFrustum().CreateProjectionMatrix(1280.0f / 960.0f) * camera->LookAt());
-			for (uint32_t i = 0; i < 8; i++)
-			{
-				glm::vec4 invCorner = inverseCameraTransform * glm::vec4(frustumCorners[i], 1.0f);
-				frustumCorners[i] = invCorner / invCorner.w;
-			}
-
-			for (uint32_t i = 0; i < 4; i++)
-			{
-				glm::vec3 dist = frustumCorners[i + 4] - frustumCorners[i];
-				frustumCorners[i + 4] = frustumCorners[i] + (dist * splitDist);
-				frustumCorners[i] = frustumCorners[i] + (dist * lastSplitDist);
-			}
-
-			// Get frustum center
-			glm::vec3 frustumCenter = glm::vec3(0.0f);
-			for (uint32_t i = 0; i < 8; i++)
-			{
-				frustumCenter += frustumCorners[i];
-			}
-			frustumCenter /= 8.0f;
-
-			float radius = 0.0f;
-			for (uint32_t i = 0; i < 8; i++)
-			{
-				float distance = glm::length(frustumCorners[i] - frustumCenter);
-				radius = glm::max(radius, distance);
-			}
-			radius = std::ceil(radius * 16.0f) / 16.0f;
-
-			const glm::vec3 maxExtents = glm::vec3(radius);
-			const glm::vec3 minExtents = -maxExtents;
-
-			const glm::vec3 lightDirection = light->GetDirection();
-			const glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDirection * -minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
-			const glm::mat4 lightOrthoProjectionMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f, maxExtents.z - minExtents.z);
-
-			// Store split distance and matrix in cascade
-			m_cascades[i].startSplitDepth = (nearClip + lastSplitDist * clipRange) * -1.0f;
-			m_cascades[i].endSplitDepth = (nearClip + splitDist * clipRange) * -1.0f;
-			m_cascades[i].viewMatrix = lightViewMatrix;
-			m_cascades[i].projectionMatrix = lightOrthoProjectionMatrix;
-
-			lastSplitDist = splitDist;
-		}
-	}
-
 public:
 	void Init() override
 	{
-		InitRenderPass();
-		InitCascades();
+		ShadowsComponentFactory shadowsFacory;
+		m_shadowsCompoent = shadowsFacory.Create(m_allocator, m_device);
+		m_shadowsCompoent->Init();
+
+		ComponentRepository<IShadowsComponent>::GetInstance().Add(m_id, m_shadowsCompoent);
 
 		AbstractSceneNode::Init();
 	}
 
 	void Update(float deltaTime) override
 	{
-		UpdateCascades(deltaTime);
+		auto lightNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_LIGHT }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
+		auto light = ComponentRepository<ILightComponent>::GetInstance().Get(lightNode->GetId());
+
+		auto cameraNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_CAMERA }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
+		auto camera = ComponentRepository<ICameraComponent>::GetInstance().Get(cameraNode->GetId());
+
+		m_shadowsCompoent->Update(deltaTime, light, camera);
+
+		AbstractSceneNode::Update(deltaTime);
 	}
 
 	void ShutDown() override
 	{
 		AbstractSceneNode::ShutDown();
 
-		ShutDownCascades();
-		ShutDownRenderPass();
-	}
+		ComponentRepository<IShadowsComponent>::GetInstance().Remove(m_id);
 
-public:
-	std::shared_ptr<RenderPass> GetRenderPass() const
-	{
-		return m_renderPass;
-	}
-
-	const Cascade& GetCascade(const uint32_t cascadeIndex) const
-	{
-		return m_cascades.at(cascadeIndex);
-	}
-
-	VkExtent2D GetExtent() const
-	{
-		return { SHADOW_MAP_DIMENSIONS, SHADOW_MAP_DIMENSIONS };
-	}
-
-	std::shared_ptr<IImageBuffer> GetImageBuffer() const
-	{
-		return m_depthBuffer;
-	}
-
-	uint32_t GetCascadesCount() const
-	{
-		return CASCADES_COUNT;
+		m_shadowsCompoent->ShutDown();
 	}
 };
-
-const VkFormat Shadows::DEPTH_FORMAT = VK_FORMAT_D24_UNORM_S8_UINT;
-
-const uint32_t Shadows::SHADOW_MAP_DIMENSIONS = 2048;
-
-const VkFilter Shadows::SHADOW_MAP_FILTER = VK_FILTER_LINEAR;
-
-const uint32_t Shadows::CASCADES_COUNT = 4;
-
-const float Shadows::CASCADES_SPLIT_LAMBDA = 0.86f;
-
 
 struct ShadowsRenderContextUserData : RenderContextUserData
 {
@@ -1311,7 +1483,7 @@ private:
 
 	std::shared_ptr<Device> m_device;
 
-	std::shared_ptr<Shadows> m_shadows;
+	std::shared_ptr<RenderPass> m_renderPass;
 
 private:
 	std::shared_ptr<Shader> m_shader;
@@ -1321,8 +1493,8 @@ private:
 	std::shared_ptr<UBOPool<Uniforms>> m_uniformsPool;
 
 public:
-	ShadowsRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<Shadows> shadows)
-		: m_allocator(alloc), m_device(dev), m_shadows(shadows)
+	ShadowsRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass)
+		: m_allocator(alloc), m_device(dev), m_renderPass(renderPass)
 	{
 	}
 
@@ -1341,7 +1513,7 @@ public:
 
 		printf("Shadows Shader created\n");
 
-		m_pipeline = std::make_shared<ShadowsPipeline>(*m_device, *m_shadows->GetRenderPass(), *m_shader);
+		m_pipeline = std::make_shared<ShadowsPipeline>(*m_device, *m_renderPass, *m_shader);
 		m_pipeline->Init();
 
 		printf("Shadows Pipeline created\n");
@@ -1352,19 +1524,21 @@ public:
 
 	void PreRender(RenderContext& renderContext) override
 	{
+		auto shadowsNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_SHADOW }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
+		auto shadows = ComponentRepository<IShadowsComponent>::GetInstance().Get(shadowsNode->GetId());
+		const auto shadowsExtent = shadows->GetExtent();
+
 		auto userData = std::dynamic_pointer_cast<ShadowsRenderContextUserData>(renderContext.userData);
-		auto cascade = m_shadows->GetCascade(userData->cascadeIndex);
+		auto cascade = shadows->GetCascade(userData->cascadeIndex);
 
-		m_shadows->GetRenderPass()->Begin(cascade.frameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, m_shadows->GetExtent() });
+		m_renderPass->Begin(cascade.frameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, shadowsExtent });
 
-		VkRect2D scissor = { { 0, 0 }, m_shadows->GetExtent() };
-		VkViewport viewport = { 0, 0, static_cast<float>(m_shadows->GetExtent().width), static_cast<float>(m_shadows->GetExtent().height), 0, 1 };
+		VkRect2D scissor = { { 0, 0 }, shadows->GetExtent() };
+		VkViewport viewport = { 0, 0, static_cast<float>(shadowsExtent.width), static_cast<float>(shadowsExtent.height), 0, 1 };
 
 		vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
 		vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
 		vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
-
-		//vkCmdSetDepthBias(renderContext.defaultCommandBuffer, m_depthBiasConstant, 0.0f, m_depthBiasSlope);
 	}
 
 	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode<SceneNodeFlags>> node) override
@@ -1374,8 +1548,11 @@ public:
 			auto renderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());
 			if (renderComponent->CastsShadows())
 			{
+				auto shadowsNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_SHADOW }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
+				auto shadows = ComponentRepository<IShadowsComponent>::GetInstance().Get(shadowsNode->GetId());
+
 				const auto& userData = std::dynamic_pointer_cast<ShadowsRenderContextUserData>(renderContext.userData);
-				const auto& cascade = m_shadows->GetCascade(userData->cascadeIndex);
+				const auto& cascade = shadows->GetCascade(userData->cascadeIndex);
 
 				auto ubo = m_uniformsPool->GetNext();
 
@@ -1407,7 +1584,7 @@ public:
 
 	void PostRender(RenderContext& renderContext) override
 	{
-		m_shadows->GetRenderPass()->End(renderContext.defaultCommandBuffer);
+		m_renderPass->End(renderContext.defaultCommandBuffer);
 	}
 
 	void ShutDown() override
@@ -1518,7 +1695,8 @@ public:
 	// make a node with quad model & shadowMap texture ???
 	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode<SceneNodeFlags>> node) override
 	{
-		auto shadows = std::dynamic_pointer_cast<Shadows>(GraphTraversal<SceneNodeFlags>{}.FindOneWithTags(node, { TAG_SHADOW }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR));
+		auto shadowsNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_SHADOW }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
+		auto shadows = ComponentRepository<IShadowsComponent>::GetInstance().Get(shadowsNode->GetId());
 
 		const auto& cascade = shadows->GetCascade(m_cascadeIndex);
 		PushConstantBlock pushConstBlock{ static_cast<uint32_t>(m_cascadeIndex), -cascade.startSplitDepth, -cascade.endSplitDepth };
@@ -1557,12 +1735,12 @@ public:
 		{
 			if (keyEvent.keyCode == KeyCode::KEY_O)
 			{
-				m_cascadeIndex = (m_cascadeIndex - 1) < 0 ? Shadows::CASCADES_COUNT - 1 : m_cascadeIndex - 1;
+				m_cascadeIndex = (m_cascadeIndex - 1) < 0 ? ShadowsComponent::CASCADES_COUNT - 1 : m_cascadeIndex - 1;
 				std::cout << "New Cascade Index = " << m_cascadeIndex << std::endl;
 			}
 			else if (keyEvent.keyCode == KeyCode::KEY_P)
 			{
-				m_cascadeIndex = (m_cascadeIndex + 1) % Shadows::CASCADES_COUNT;
+				m_cascadeIndex = (m_cascadeIndex + 1) % ShadowsComponent::CASCADES_COUNT;
 				std::cout << "New Cascade Index = " << m_cascadeIndex << std::endl;
 			}
 		}
@@ -1582,8 +1760,8 @@ private:
 
 	struct UniformsFS
 	{
-		alignas(16) float cascadeSplits[Shadows::CASCADES_COUNT];
-		alignas(16) glm::mat4 lightViewProjectionMatrix[Shadows::CASCADES_COUNT];
+		alignas(16) float cascadeSplits[ShadowsComponent::CASCADES_COUNT];
+		alignas(16) glm::mat4 lightViewProjectionMatrix[ShadowsComponent::CASCADES_COUNT];
 		alignas(16) glm::vec3 lightDirection;
 		alignas(16) bool isCastedByShadows;
 	};
@@ -1604,13 +1782,9 @@ private:
 
 	std::shared_ptr<UBOPool<UniformsFS>> m_uniformsPoolFS;
 
-	std::shared_ptr<Camera> m_freeCamera;
-
-	std::shared_ptr<Shadows> m_shadows;
-
 public:
-	DefaultSceneRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass, std::shared_ptr<Shadows> shadows, std::shared_ptr<Camera> camera)
-		: m_device(dev), m_renderPass(renderPass), m_allocator(alloc), m_shadows(shadows), m_freeCamera(camera)
+	DefaultSceneRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass)
+		: m_device(dev), m_renderPass(renderPass), m_allocator(alloc)
 	{
 	}
 
@@ -1658,16 +1832,22 @@ public:
 	{
 		if (ComponentRepository<IRenderComponent>::GetInstance().Contains(node->GetId()))
 		{
-			auto lightNode = GraphTraversal<SceneNodeFlags>{}.FindOneWithTags(node, { TAG_LIGHT }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
+			auto lightNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_LIGHT }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
 			auto light = ComponentRepository<ILightComponent>::GetInstance().Get(lightNode->GetId());
+
+			auto shadowsNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_SHADOW }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
+			auto shadows = ComponentRepository<IShadowsComponent>::GetInstance().Get(shadowsNode->GetId());
+
+			auto cameeraNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_CAMERA }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
+			auto camera = ComponentRepository<ICameraComponent>::GetInstance().Get(cameeraNode->GetId());
 
 			auto renderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());
 
 			auto uboVS = m_uniformsPoolVS->GetNext();
 
 			UniformsVS uniformsVS;
-			uniformsVS.projectionMatrix = m_freeCamera->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
-			uniformsVS.viewMatrix = m_freeCamera->LookAt();
+			uniformsVS.projectionMatrix = camera->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
+			uniformsVS.viewMatrix = camera->LookAt();
 			uniformsVS.modelMatrix = node->GetWorldTransformScaled();
 			uniformsVS.normalMatrix = glm::inverse(node->GetWorldTransformScaled());
 
@@ -1676,9 +1856,9 @@ public:
 			auto uboFS = m_uniformsPoolFS->GetNext();
 
 			UniformsFS uniformsFS;
-			for (uint32_t i = 0; i < Shadows::CASCADES_COUNT; i++)
+			for (uint32_t i = 0; i < ShadowsComponent::CASCADES_COUNT; i++)
 			{
-				auto& cascade = m_shadows->GetCascade(i);
+				auto& cascade = shadows->GetCascade(i);
 				uniformsFS.cascadeSplits[i] = cascade.endSplitDepth;
 				uniformsFS.lightViewProjectionMatrix[i] = cascade.projectionMatrix * cascade.viewMatrix;
 			}
@@ -1687,7 +1867,7 @@ public:
 
 			uboFS->Update(&uniformsFS);
 
-			m_shader->Bind("depthSampler", m_shadows->GetImageBuffer()->GetImageView(), m_shadows->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+			m_shader->Bind("depthSampler", shadows->GetImageBuffer()->GetImageView(), shadows->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 			m_shader->Bind("textureSampler", *renderComponent->GetMaterial()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 			m_shader->Bind("uboVS", *uboVS);
 			m_shader->Bind("uboFS", *uboFS);
@@ -1754,15 +1934,15 @@ public:
 	void Init() override
 	{
 		// Init scene nodes
-		std::shared_ptr<Light> light = std::make_shared<Light>(glm::vec3(150.0f, 150.0f, 150.0f));
+		auto light = std::make_shared<Light>(glm::vec3(150.0f, 150.0f, 150.0f));
 		light->SetTags({ TAG_LIGHT });
 		AddChild(light);
 
-		std::shared_ptr<Shadows> shadows = std::make_shared<Shadows>(m_allocator, m_device);
+		auto shadows = std::make_shared<Shadows>(m_allocator, m_device);
 		shadows->SetTags({ TAG_SHADOW });
 		AddChild(shadows);
 
-		std::shared_ptr<Camera> freeCamera = std::make_shared<Camera>();
+		auto freeCamera = std::make_shared<Camera>();
 		freeCamera->SetTags({ TAG_CAMERA });
 		AddChild(freeCamera);
 
@@ -1793,10 +1973,11 @@ public:
 		}
 
 		// Init renderera
-		m_shadowsRenderer = std::make_shared<ShadowsRenderer>(m_allocator, m_device, shadows);
+		auto shadowsComponent = ComponentRepository<IShadowsComponent>::GetInstance().Get(shadows->GetId());
+		m_shadowsRenderer = std::make_shared<ShadowsRenderer>(m_allocator, m_device, shadowsComponent->GetRenderPass());
 		m_shadowsRenderer->Init();
 
-		m_defaultRenderer = std::make_shared<DefaultSceneRenderer>(m_allocator, m_device, m_defaultRenderPass, shadows, freeCamera);
+		m_defaultRenderer = std::make_shared<DefaultSceneRenderer>(m_allocator, m_device, m_defaultRenderPass);
 		m_defaultRenderer->Init();
 
 		m_quadRenderer = std::make_shared<QuadRenderer>(m_allocator, m_device, m_defaultRenderPass);
@@ -1814,10 +1995,7 @@ public:
 	void Render(RenderContext& renderContext) override
 	{
 		// shadows
-
-		// TODO - find shadows node here -> move content to IShadowsComponent and it prevets this horrible narrowcasting !!!!	
-		auto shadows = std::dynamic_pointer_cast<Shadows>(GraphTraversal<SceneNodeFlags>{}.FindOneWithTags(GetThis(), { TAG_SHADOW }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR));
-		for (uint32_t cascadeIndex = 0; cascadeIndex < shadows->GetCascadesCount(); cascadeIndex++)
+		for (uint32_t cascadeIndex = 0; cascadeIndex < ShadowsComponent::CASCADES_COUNT; cascadeIndex++)
 		{
 			renderContext.userData = std::make_shared<ShadowsRenderContextUserData>(cascadeIndex);
 
