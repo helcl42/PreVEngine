@@ -30,6 +30,57 @@ enum class SceneNodeFlags : uint64_t
 	_
 };
 
+class ViewFrustum
+{
+private:
+	float m_fov;
+
+	float m_nearClippingPlane;
+
+	float m_farClippingPlane;
+
+public:
+	ViewFrustum(float fov, float nCp, float fCp)
+		: m_fov(fov), m_nearClippingPlane(nCp), m_farClippingPlane(fCp)
+	{
+	}
+
+	~ViewFrustum()
+	{
+	}
+
+public:
+	glm::mat4 CreateProjectionMatrix(const uint32_t w, const uint32_t h) const
+	{
+		const float aspectRatio = static_cast<float>(w) / static_cast<float>(h);
+		return CreateProjectionMatrix(aspectRatio);
+	}
+
+	glm::mat4 CreateProjectionMatrix(const float aspectRatio) const
+	{
+		glm::mat4 projectionMatrix = glm::perspective(m_fov, aspectRatio, m_nearClippingPlane, m_farClippingPlane);
+		projectionMatrix[1][1] *= -1; // invert Y in clip coordinates
+
+		return projectionMatrix;
+	}
+
+public:
+	float GetFov() const // vertical
+	{
+		return m_fov;
+	}
+
+	float GetNearClippingPlane() const
+	{
+		return m_nearClippingPlane;
+	}
+
+	float GetFarClippingPlane() const
+	{
+		return m_farClippingPlane;
+	}
+};
+
 class IMaterial
 {
 public:
@@ -281,11 +332,89 @@ public:
 class ILightComponent
 {
 public:
-	// TODO
+	virtual void Update(float deltaTime) = 0;
+	
+	virtual glm::mat4 LookAt() const = 0;
+
+	virtual glm::mat4 GetProjectionMatrix() const = 0;
+	
+	virtual glm::vec3 GetPosition() const = 0;
+
+	virtual glm::vec3 GetDirection() const = 0;
+	
+	virtual const ViewFrustum& GetViewFrustum() const = 0;
 
 public:
-	virtual ~ILightComponent()
+	virtual ~ILightComponent() = default;
+};
+
+class LightComponent : public ILightComponent
+{
+private:
+	glm::vec3 m_lookAtPosition{ 0.0f, 0.0f, 0.0f };
+
+	glm::vec3 m_upDirection{ 0.0f, 1.0f, 0.0f };
+
+	ViewFrustum m_viewFrustum{ 45.0f, 0.1f, 1000.0f };
+
+	glm::vec3 m_position;
+
+public:
+	LightComponent(const glm::vec3& pos)
+		: m_position(pos)
 	{
+	}
+
+	~LightComponent()
+	{
+	}
+
+public:
+	void Update(float deltaTime)
+	{
+		const float ROTATION_SPEED_DEG_PER_SEC = 7.5f;
+		const float ROTATION_ANGLE = ROTATION_SPEED_DEG_PER_SEC * deltaTime;
+
+		glm::mat4 transform(1.0f);
+		transform = glm::rotate(transform, glm::radians(ROTATION_ANGLE), m_upDirection);
+		transform = glm::translate(transform, m_position);
+
+		m_position = glm::vec3(transform[3][0], transform[3][1], transform[3][2]);
+	}
+
+public:
+	glm::mat4 LookAt() const
+	{
+		return glm::lookAt(m_position, m_lookAtPosition, m_upDirection);
+	}
+
+	glm::mat4 GetProjectionMatrix() const
+	{
+		return m_viewFrustum.CreateProjectionMatrix(1.0f); // we expect that light will shine in square frustum(should be it more like a cone-like shape?)
+	}
+
+	glm::vec3 GetPosition() const
+	{
+		return m_position;
+	}
+
+	glm::vec3 GetDirection() const
+	{
+		return glm::normalize(-m_position);
+	}
+
+	const ViewFrustum& GetViewFrustum() const
+	{
+		return m_viewFrustum;
+	}
+};
+
+class LightComponentFactory
+{
+public:
+	std::shared_ptr<ILightComponent> CreateLightCompoennt(const glm::vec3& position) const
+	{
+		return std::make_shared<LightComponent>(position);
 	}
 };
 
@@ -607,57 +736,6 @@ public:
 	virtual ~IRenderer() = default;
 };
 
-class ViewFrustum
-{
-private:
-	float m_fov;
-
-	float m_nearClippingPlane;
-
-	float m_farClippingPlane;
-
-public:
-	ViewFrustum(float fov, float nCp, float fCp)
-		: m_fov(fov), m_nearClippingPlane(nCp), m_farClippingPlane(fCp)
-	{
-	}
-
-	~ViewFrustum()
-	{
-	}
-
-public:
-	glm::mat4 CreateProjectionMatrix(const uint32_t w, const uint32_t h) const
-	{
-		const float aspectRatio = static_cast<float>(w) / static_cast<float>(h);
-		return CreateProjectionMatrix(aspectRatio);
-	}
-
-	glm::mat4 CreateProjectionMatrix(const float aspectRatio) const
-	{
-		glm::mat4 projectionMatrix = glm::perspective(m_fov, aspectRatio, m_nearClippingPlane, m_farClippingPlane);
-		projectionMatrix[1][1] *= -1; // invert Y in clip coordinates
-
-		return projectionMatrix;
-	}
-
-public:
-	float GetFov() const // vertical
-	{
-		return m_fov;
-	}
-
-	float GetNearClippingPlane() const
-	{
-		return m_nearClippingPlane;
-	}
-
-	float GetFarClippingPlane() const
-	{
-		return m_farClippingPlane;
-	}
-};
-
 // TODO create decorator -> ControllableCamera
 class Camera : public AbstractSceneNode<SceneNodeFlags>
 {
@@ -895,17 +973,13 @@ public:
 class Light : public AbstractSceneNode<SceneNodeFlags>
 {
 private:
-	glm::vec3 m_lookAtPosition{ 0.0f, 0.0f, 0.0f };
+	std::shared_ptr<ILightComponent> m_lightComponent;
 
-	glm::vec3 m_upDirection{ 0.0f, 1.0f, 0.0f };
-
-	ViewFrustum m_viewFrustum{ 45.0f, 0.1f, 1000.0f };
-
-	glm::vec3 m_position;
+	glm::vec3 m_initialPosition;
 
 public:
 	Light(const glm::vec3& pos)
-		: AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_LIGHT_COMPONENT }), m_position(pos)
+		: AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_LIGHT_COMPONENT }), m_initialPosition(pos)
 	{
 	}
 
@@ -914,42 +988,28 @@ public:
 	}
 
 public:
-	void Update(float deltaTime)
+	void Init() override
 	{
-		const float ROTATION_SPEED_DEG_PER_SEC = 7.5f;
-		const float ROTATION_ANGLE = ROTATION_SPEED_DEG_PER_SEC * deltaTime;
+		LightComponentFactory lightFactory;
+		m_lightComponent = lightFactory.CreateLightCompoennt(m_initialPosition);
 
-		glm::mat4 transform(1.0f);
-		transform = glm::rotate(transform, glm::radians(ROTATION_ANGLE), m_upDirection);
-		transform = glm::translate(transform, m_position);
+		ComponentRepository<ILightComponent>::GetInstance().Add(m_id, m_lightComponent);
 
-		m_position = glm::vec3(transform[3][0], transform[3][1], transform[3][2]);
+		AbstractSceneNode::Init();
 	}
 
-public:
-	glm::mat4 LookAt() const
+	void Update(float deltaTime) override
 	{
-		return glm::lookAt(m_position, m_lookAtPosition, m_upDirection);
+		m_lightComponent->Update(deltaTime);
+
+		AbstractSceneNode::Update(deltaTime);
 	}
 
-	glm::mat4 GetProjectionMatrix() const
+	void ShutDown() override
 	{
-		return m_viewFrustum.CreateProjectionMatrix(1.0f); // we expect that light will shine in square frustum(should be it more like a cone-like shape?)
-	}
+		AbstractSceneNode::ShutDown();
 
-	glm::vec3 GetPosition() const
-	{
-		return m_position;
-	}
-
-	glm::vec3 GetDirection() const
-	{
-		return glm::normalize(-m_position);
-	}
-
-	const ViewFrustum& GetViewFrustum() const
-	{
-		return m_viewFrustum;
+		ComponentRepository<ILightComponent>::GetInstance().Remove(m_id);
 	}
 };
 
@@ -1074,7 +1134,9 @@ private:
 	void UpdateCascades(float deltaTime)
 	{
 		// TODO here should be camera -> instead of light ??? -> check VK samples !!!
-		auto light = std::dynamic_pointer_cast<Light>(GraphTraversal<SceneNodeFlags>{}.FindOneWithTags(GetThis(), { TAG_LIGHT }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR));
+		auto lightNode = GraphTraversal<SceneNodeFlags>{}.FindOneWithTags(GetThis(), { TAG_LIGHT }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
+		auto light = ComponentRepository<ILightComponent>::GetInstance().Get(lightNode->GetId());
+
 		auto camera = std::dynamic_pointer_cast<Camera>(GraphTraversal<SceneNodeFlags>{}.FindOneWithTags(GetThis(), { TAG_CAMERA }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR));
 
 		std::vector<float> cascadeSplits(CASCADES_COUNT);
@@ -1600,6 +1662,9 @@ public:
 	{
 		if (ComponentRepository<IRenderComponent>::GetInstance().Contains(node->GetId()))
 		{
+			auto lightNode = GraphTraversal<SceneNodeFlags>{}.FindOneWithTags(node, { TAG_LIGHT }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
+			auto light = ComponentRepository<ILightComponent>::GetInstance().Get(lightNode->GetId());
+
 			auto renderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());
 
 			auto uboVS = m_uniformsPoolVS->GetNext();
@@ -1621,7 +1686,7 @@ public:
 				uniformsFS.cascadeSplits[i] = cascade.endSplitDepth;
 				uniformsFS.lightViewProjectionMatrix[i] = cascade.projectionMatrix * cascade.viewMatrix;
 			}
-			uniformsFS.lightDirection = m_light->GetDirection();
+			uniformsFS.lightDirection = light->GetDirection();
 			uniformsFS.isCastedByShadows = renderComponent->IsCastedByShadows();
 
 			uboFS->Update(&uniformsFS);
