@@ -1311,8 +1311,6 @@ private:
 
 	std::shared_ptr<Device> m_device;
 
-	std::shared_ptr<Light> m_light;
-
 	std::shared_ptr<Shadows> m_shadows;
 
 private:
@@ -1323,8 +1321,8 @@ private:
 	std::shared_ptr<UBOPool<Uniforms>> m_uniformsPool;
 
 public:
-	ShadowsRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<Light> light, std::shared_ptr<Shadows> shadows)
-		: m_allocator(alloc), m_device(dev), m_light(light), m_shadows(shadows)
+	ShadowsRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<Shadows> shadows)
+		: m_allocator(alloc), m_device(dev), m_shadows(shadows)
 	{
 	}
 
@@ -1608,13 +1606,11 @@ private:
 
 	std::shared_ptr<Camera> m_freeCamera;
 
-	std::shared_ptr<Light> m_light;
-
 	std::shared_ptr<Shadows> m_shadows;
 
 public:
-	DefaultSceneRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass, std::shared_ptr<Light> light, std::shared_ptr<Shadows> shadows, std::shared_ptr<Camera> camera)
-		: m_device(dev), m_renderPass(renderPass), m_allocator(alloc), m_light(light), m_shadows(shadows), m_freeCamera(camera)
+	DefaultSceneRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass, std::shared_ptr<Shadows> shadows, std::shared_ptr<Camera> camera)
+		: m_device(dev), m_renderPass(renderPass), m_allocator(alloc), m_shadows(shadows), m_freeCamera(camera)
 	{
 	}
 
@@ -1797,10 +1793,10 @@ public:
 		}
 
 		// Init renderera
-		m_shadowsRenderer = std::make_shared<ShadowsRenderer>(m_allocator, m_device, light, shadows);
+		m_shadowsRenderer = std::make_shared<ShadowsRenderer>(m_allocator, m_device, shadows);
 		m_shadowsRenderer->Init();
 
-		m_defaultRenderer = std::make_shared<DefaultSceneRenderer>(m_allocator, m_device, m_defaultRenderPass, light, shadows, freeCamera);
+		m_defaultRenderer = std::make_shared<DefaultSceneRenderer>(m_allocator, m_device, m_defaultRenderPass, shadows, freeCamera);
 		m_defaultRenderer->Init();
 
 		m_quadRenderer = std::make_shared<QuadRenderer>(m_allocator, m_device, m_defaultRenderPass);
