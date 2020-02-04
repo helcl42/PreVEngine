@@ -1907,8 +1907,6 @@ class RootSceneNode : public AbstractSceneNode<SceneNodeFlags>
 private:
 	std::shared_ptr<Device> m_device;
 
-	std::shared_ptr<RenderPass> m_shadowsRenderPass;
-
 	std::shared_ptr<RenderPass> m_defaultRenderPass;
 
 	std::shared_ptr<Allocator> m_allocator;
