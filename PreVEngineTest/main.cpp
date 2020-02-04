@@ -769,18 +769,15 @@ private:
 	std::vector<ShadowsCascade> m_cascades;
 
 public:
-	ShadowsComponent(std::shared_ptr<Allocator> allocator, std::shared_ptr<Device> dev)
-		: m_allocator(allocator), m_device(dev)
-	{
-	}
+	ShadowsComponent() = default;
 
-	virtual ~ShadowsComponent()
-	{
-	}
+	virtual ~ShadowsComponent() = default;
 
 private:
 	void InitRenderPass()
 	{
+		auto device = DeviceProvider::GetInstance().GetDevice();
+
 		std::vector<VkSubpassDependency> dependencies(2);
 		dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
 		dependencies[0].dstSubpass = 0;
@@ -798,7 +795,7 @@ private:
 		dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 		dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-		m_renderPass = std::make_shared<RenderPass>(*m_device);
+		m_renderPass = std::make_shared<RenderPass>(*device);
 		m_renderPass->AddDepthAttachment(DEPTH_FORMAT);
 		m_renderPass->AddSubpass({ 0 });
 		m_renderPass->AddSubpassDependency(dependencies);
@@ -812,7 +809,10 @@ private:
 
 	void InitCascades()
 	{
-		m_depthBuffer = std::make_shared<DepthImageBuffer>(*m_allocator);
+		auto device = DeviceProvider::GetInstance().GetDevice();
+		auto allocator = AllocatorProvider::GetInstance().GetAlocator();
+
+		m_depthBuffer = std::make_shared<DepthImageBuffer>(*allocator);
 		m_depthBuffer->Create(ImageBufferCreateInfo{ GetExtent(), DEPTH_FORMAT, false, VK_IMAGE_VIEW_TYPE_2D_ARRAY, CASCADES_COUNT });
 		m_depthBuffer->CreateSampler();
 
@@ -821,19 +821,21 @@ private:
 		{
 			auto& cascade = m_cascades.at(i);
 
-			cascade.imageView = VkUtils::CreateImageView(*m_device, m_depthBuffer->GetImage(), m_depthBuffer->GetFormat(), VK_IMAGE_VIEW_TYPE_2D_ARRAY, m_depthBuffer->GetMipLevels(), VK_IMAGE_ASPECT_DEPTH_BIT, 1, i);
-			cascade.frameBuffer = VkUtils::CreateFrameBuffer(*m_device, *m_renderPass, { cascade.imageView }, GetExtent());
+			cascade.imageView = VkUtils::CreateImageView(*device, m_depthBuffer->GetImage(), m_depthBuffer->GetFormat(), VK_IMAGE_VIEW_TYPE_2D_ARRAY, m_depthBuffer->GetMipLevels(), VK_IMAGE_ASPECT_DEPTH_BIT, 1, i);
+			cascade.frameBuffer = VkUtils::CreateFrameBuffer(*device, *m_renderPass, { cascade.imageView }, GetExtent());
 		}
 	}
 
 	void ShutDownCascades()
 	{
-		vkDeviceWaitIdle(*m_device);
+		auto device = DeviceProvider::GetInstance().GetDevice();
+
+		vkDeviceWaitIdle(*device);
 
 		for (uint32_t i = 0; i < CASCADES_COUNT; i++)
 		{
 			auto& cascade = m_cascades.at(i);
-			cascade.Destroy(*m_device);
+			cascade.Destroy(*device);
 		}
 
 		m_depthBuffer->Destroy();
@@ -980,9 +982,9 @@ const float ShadowsComponent::CASCADES_SPLIT_LAMBDA = 0.86f;
 class ShadowsComponentFactory
 {
 public:
-	std::shared_ptr<IShadowsComponent> Create(std::shared_ptr<Allocator> allocator, std::shared_ptr<Device> dev) const
+	std::shared_ptr<IShadowsComponent> Create() const
 	{
-		return std::make_shared<ShadowsComponent>(allocator, dev);
+		return std::make_shared<ShadowsComponent>();
 	}
 };
 
@@ -992,9 +994,6 @@ public:
 class AbstractCubeRobotSceneNode : public AbstractSceneNode<SceneNodeFlags>
 {
 protected:
-	std::shared_ptr<Allocator> m_allocator;
-
-protected:
 	glm::vec3 m_position;
 
 	glm::quat m_orientation;
@@ -1002,8 +1001,8 @@ protected:
 	const std::string m_texturePath;
 
 public:
-	AbstractCubeRobotSceneNode(std::shared_ptr<Allocator>& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
-		: AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT }), m_allocator(allocator), m_position(position), m_orientation(orientation), m_texturePath(texturePath)
+	AbstractCubeRobotSceneNode(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
+		: AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT }), m_position(position), m_orientation(orientation), m_texturePath(texturePath)
 	{
 		m_scaler = scale;
 	}
@@ -1015,10 +1014,12 @@ public:
 public:
 	void Init() override
 	{
+		auto allocator = AllocatorProvider::GetInstance().GetAlocator();
+
 		m_transform = MathUtil::CreateTransformationMatrix(m_position, m_orientation, glm::vec3(1, 1, 1));
 
 		RenderComponentFactory renderComponentFactory;
-		auto cubeComponent = renderComponentFactory.CreateCubeRenderComponent(*m_allocator, m_texturePath, true, true);
+		auto cubeComponent = renderComponentFactory.CreateCubeRenderComponent(*allocator, m_texturePath, true, true);
 
 		ComponentRepository<IRenderComponent>::GetInstance().Add(m_id, cubeComponent);
 
@@ -1041,8 +1042,8 @@ public:
 class CubeRobotPart : public AbstractCubeRobotSceneNode
 {
 public:
-	CubeRobotPart(std::shared_ptr<Allocator>& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
-		: AbstractCubeRobotSceneNode(allocator, position, orientation, scale, texturePath)
+	CubeRobotPart(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
+		: AbstractCubeRobotSceneNode(position, orientation, scale, texturePath)
 	{
 	}
 
@@ -1079,8 +1080,8 @@ private:
 	glm::vec2 m_prevMousePosition{ 0.0f, 0.0f };
 
 public:
-	CubeRobot(std::shared_ptr<Allocator>& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
-		: AbstractCubeRobotSceneNode(allocator, position, orientation, scale, texturePath)
+	CubeRobot(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
+		: AbstractCubeRobotSceneNode(position, orientation, scale, texturePath)
 	{
 	}
 
@@ -1091,13 +1092,13 @@ public:
 public:
 	void Init() override
 	{
-		m_body = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(0, 35, 0), glm::quat(1, 0, 0, 0), glm::vec3(10, 15, 5), "vulkan.png");
+		m_body = std::make_shared<CubeRobotPart>(glm::vec3(0, 35, 0), glm::quat(1, 0, 0, 0), glm::vec3(10, 15, 5), "vulkan.png");
 
-		m_head = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(0, 10, 0), glm::quat(1, 0, 0, 0), glm::vec3(5, 5, 5), "texture.jpg");
-		m_leftArm = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(-8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), "texture.jpg");
-		m_rightArm = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), "texture.jpg");
-		m_leftLeg = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(-4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.5, 17.5f, 4.7f), "texture.jpg");
-		m_rightLeg = std::make_shared<CubeRobotPart>(m_allocator, glm::vec3(4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.5, 17.5f, 4.7f), "texture.jpg");
+		m_head = std::make_shared<CubeRobotPart>(glm::vec3(0, 10, 0), glm::quat(1, 0, 0, 0), glm::vec3(5, 5, 5), "texture.jpg");
+		m_leftArm = std::make_shared<CubeRobotPart>(glm::vec3(-8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), "texture.jpg");
+		m_rightArm = std::make_shared<CubeRobotPart>(glm::vec3(8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), "texture.jpg");
+		m_leftLeg = std::make_shared<CubeRobotPart>(glm::vec3(-4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.5, 17.5f, 4.7f), "texture.jpg");
+		m_rightLeg = std::make_shared<CubeRobotPart>(glm::vec3(4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.5, 17.5f, 4.7f), "texture.jpg");
 
 		m_body->AddChild(m_head);
 		m_body->AddChild(m_leftArm);
@@ -1181,9 +1182,6 @@ public:
 class Plane : public AbstractSceneNode<SceneNodeFlags>
 {
 protected:
-	std::shared_ptr<Allocator> m_allocator;
-
-protected:
 	glm::vec3 m_position;
 
 	glm::quat m_orientation;
@@ -1191,8 +1189,8 @@ protected:
 	const std::string m_texturePath;
 
 public:
-	Plane(std::shared_ptr<Allocator>& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
-		: AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT }), m_allocator(allocator), m_position(position), m_orientation(orientation), m_texturePath(texturePath)
+	Plane(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
+		: AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT }), m_position(position), m_orientation(orientation), m_texturePath(texturePath)
 	{
 		m_scaler = scale;
 	}
@@ -1204,10 +1202,12 @@ public:
 public:
 	void Init() override
 	{
+		auto allocator = AllocatorProvider::GetInstance().GetAlocator();
+
 		m_transform = MathUtil::CreateTransformationMatrix(m_position, m_orientation);
 
 		RenderComponentFactory renderComponentFactory;
-		auto renderComponent = renderComponentFactory.CreatePlaneRenderComponent(*m_allocator, m_texturePath, false, true);
+		auto renderComponent = renderComponentFactory.CreatePlaneRenderComponent(*allocator, m_texturePath, false, true);
 
 		ComponentRepository<IRenderComponent>::GetInstance().Add(m_id, renderComponent);
 
@@ -1406,16 +1406,11 @@ public:
 class Shadows : public AbstractSceneNode<SceneNodeFlags>
 {
 private:
-	std::shared_ptr<Allocator> m_allocator;
-
-	std::shared_ptr<Device> m_device;
-
-private:
 	std::shared_ptr<IShadowsComponent> m_shadowsCompoent;
 
 public:
-	Shadows(std::shared_ptr<Allocator> allocator, std::shared_ptr<Device> dev)
-		: AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SHADOWS_COMPONENT }), m_allocator(allocator), m_device(dev)
+	Shadows()
+		: AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SHADOWS_COMPONENT })
 	{
 	}
 
@@ -1427,7 +1422,7 @@ public:
 	void Init() override
 	{
 		ShadowsComponentFactory shadowsFacory;
-		m_shadowsCompoent = shadowsFacory.Create(m_allocator, m_device);
+		m_shadowsCompoent = shadowsFacory.Create();
 		m_shadowsCompoent->Init();
 
 		ComponentRepository<IShadowsComponent>::GetInstance().Add(m_id, m_shadowsCompoent);
@@ -1479,10 +1474,6 @@ private:
 	};
 
 private:
-	std::shared_ptr<Allocator> m_allocator;
-
-	std::shared_ptr<Device> m_device;
-
 	std::shared_ptr<RenderPass> m_renderPass;
 
 private:
@@ -1493,8 +1484,8 @@ private:
 	std::shared_ptr<UBOPool<Uniforms>> m_uniformsPool;
 
 public:
-	ShadowsRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass)
-		: m_allocator(alloc), m_device(dev), m_renderPass(renderPass)
+	ShadowsRenderer(std::shared_ptr<RenderPass> renderPass)
+		: m_renderPass(renderPass)
 	{
 	}
 
@@ -1505,20 +1496,23 @@ public:
 public:
 	void Init() override
 	{
+		auto device = DeviceProvider::GetInstance().GetDevice();
+		auto allocator = AllocatorProvider::GetInstance().GetAlocator();
+
 		ShaderFactory shaderFactory;
-		m_shader = shaderFactory.CreateShaderFromFiles<ShadowsShader>(*m_device, {
+		m_shader = shaderFactory.CreateShaderFromFiles<ShadowsShader>(*device, {
 			{ VK_SHADER_STAGE_VERTEX_BIT, "shaders/shadows_vert.spv" }
 			});
 		m_shader->AdjustDescriptorPoolCapacity(10000);
 
 		printf("Shadows Shader created\n");
 
-		m_pipeline = std::make_shared<ShadowsPipeline>(*m_device, *m_renderPass, *m_shader);
+		m_pipeline = std::make_shared<ShadowsPipeline>(*device, *m_renderPass, *m_shader);
 		m_pipeline->Init();
 
 		printf("Shadows Pipeline created\n");
 
-		m_uniformsPool = std::make_shared<UBOPool<Uniforms>>(m_allocator);
+		m_uniformsPool = std::make_shared<UBOPool<Uniforms>>(*allocator);
 		m_uniformsPool->AdjustCapactity(10000);
 	}
 
@@ -1609,11 +1603,7 @@ private:
 	EventHandler<QuadRenderer, KeyEvent> m_keyEvent{ *this };
 
 private:
-	std::shared_ptr<Device> m_device;
-
 	std::shared_ptr<RenderPass> m_renderPass;
-
-	std::shared_ptr<Allocator> m_allocator;
 
 private:
 	std::shared_ptr<Shader> m_shader;
@@ -1623,12 +1613,11 @@ private:
 private:
 	std::shared_ptr<IModel> m_quadModel;
 
-private:
 	int32_t m_cascadeIndex = 0;
 
 public:
-	QuadRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass)
-		: m_device(dev), m_renderPass(renderPass), m_allocator(alloc)
+	QuadRenderer(std::shared_ptr<RenderPass> renderPass)
+		: m_renderPass(renderPass)
 	{
 	}
 
@@ -1639,8 +1628,11 @@ public:
 public:
 	void Init() override
 	{
+		auto device = DeviceProvider::GetInstance().GetDevice();
+		auto allocator = AllocatorProvider::GetInstance().GetAlocator();
+
 		ShaderFactory shaderFactory;
-		m_shader = shaderFactory.CreateShaderFromFiles<QuadShader>(*m_device, {
+		m_shader = shaderFactory.CreateShaderFromFiles<QuadShader>(*device, {
 			{ VK_SHADER_STAGE_VERTEX_BIT, "shaders/quad_vert.spv" },
 			{ VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/quad_frag.spv" }
 			});
@@ -1648,16 +1640,16 @@ public:
 
 		printf("Default Shader created\n");
 
-		m_pipeline = std::make_shared<QuadPipeline>(*m_device, *m_renderPass, *m_shader);
+		m_pipeline = std::make_shared<QuadPipeline>(*device, *m_renderPass, *m_shader);
 		m_pipeline->Init();
 
 		// create quad model
 		std::shared_ptr<IMesh> quadMesh = std::make_shared<QuadMesh>();
 
-		std::shared_ptr<VBO> vertexBuffer = std::make_shared<VBO>(*m_allocator);
+		std::shared_ptr<VBO> vertexBuffer = std::make_shared<VBO>(*allocator);
 		vertexBuffer->Data(quadMesh->GetVertices(), quadMesh->GerVerticesCount(), quadMesh->GetVertextLayout().GetStride());
 
-		std::shared_ptr<IBO> indexBuffer = std::make_shared<IBO>(*m_allocator);
+		std::shared_ptr<IBO> indexBuffer = std::make_shared<IBO>(*allocator);
 		indexBuffer->Data(quadMesh->GerIndices().data(), (uint32_t)quadMesh->GerIndices().size());
 
 		m_quadModel = std::make_shared<Model>(quadMesh, vertexBuffer, indexBuffer);
@@ -1767,11 +1759,7 @@ private:
 	};
 
 private:
-	std::shared_ptr<Device> m_device;
-
 	std::shared_ptr<RenderPass> m_renderPass;
-
-	std::shared_ptr<Allocator> m_allocator;
 
 private:
 	std::shared_ptr<Shader> m_shader;
@@ -1783,8 +1771,8 @@ private:
 	std::shared_ptr<UBOPool<UniformsFS>> m_uniformsPoolFS;
 
 public:
-	DefaultSceneRenderer(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass)
-		: m_device(dev), m_renderPass(renderPass), m_allocator(alloc)
+	DefaultSceneRenderer(std::shared_ptr<RenderPass> renderPass)
+		: m_renderPass(renderPass)
 	{
 	}
 
@@ -1795,8 +1783,11 @@ public:
 public:
 	void Init() override
 	{
+		auto device = DeviceProvider::GetInstance().GetDevice();
+		auto allocator = AllocatorProvider::GetInstance().GetAlocator();
+
 		ShaderFactory shaderFactory;
-		m_shader = shaderFactory.CreateShaderFromFiles<DefaultShader>(*m_device, {
+		m_shader = shaderFactory.CreateShaderFromFiles<DefaultShader>(*device, {
 			{ VK_SHADER_STAGE_VERTEX_BIT, "shaders/scene_vert.spv" },
 			{ VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/scene_frag.spv" }
 			});
@@ -1804,15 +1795,15 @@ public:
 
 		printf("Default Shader created\n");
 
-		m_pipeline = std::make_shared<DefaultPipeline>(*m_device, *m_renderPass, *m_shader);
+		m_pipeline = std::make_shared<DefaultPipeline>(*device, *m_renderPass, *m_shader);
 		m_pipeline->Init();
 
 		printf("Default Pipeline created\n");
 
-		m_uniformsPoolVS = std::make_shared<UBOPool<UniformsVS>>(m_allocator);
+		m_uniformsPoolVS = std::make_shared<UBOPool<UniformsVS>>(*allocator);
 		m_uniformsPoolVS->AdjustCapactity(10000);
 
-		m_uniformsPoolFS = std::make_shared<UBOPool<UniformsFS>>(m_allocator);
+		m_uniformsPoolFS = std::make_shared<UBOPool<UniformsFS>>(*allocator);
 		m_uniformsPoolFS->AdjustCapactity(10000);
 	}
 
@@ -1905,11 +1896,7 @@ public:
 class RootSceneNode : public AbstractSceneNode<SceneNodeFlags>
 {
 private:
-	std::shared_ptr<Device> m_device;
-
 	std::shared_ptr<RenderPass> m_defaultRenderPass;
-
-	std::shared_ptr<Allocator> m_allocator;
 
 private:
 	std::shared_ptr<IRenderer> m_shadowsRenderer;
@@ -1919,8 +1906,8 @@ private:
 	std::shared_ptr<IRenderer> m_quadRenderer;
 
 public:
-	RootSceneNode(std::shared_ptr<Allocator> alloc, std::shared_ptr<Device> dev, std::shared_ptr<RenderPass> renderPass)
-		: AbstractSceneNode(), m_device(dev), m_defaultRenderPass(renderPass), m_allocator(alloc)
+	RootSceneNode(std::shared_ptr<RenderPass> renderPass)
+		: AbstractSceneNode(), m_defaultRenderPass(renderPass)
 	{
 	}
 
@@ -1936,7 +1923,7 @@ public:
 		light->SetTags({ TAG_LIGHT });
 		AddChild(light);
 
-		auto shadows = std::make_shared<Shadows>(m_allocator, m_device);
+		auto shadows = std::make_shared<Shadows>();
 		shadows->SetTags({ TAG_SHADOW });
 		AddChild(shadows);
 
@@ -1944,7 +1931,7 @@ public:
 		freeCamera->SetTags({ TAG_CAMERA });
 		AddChild(freeCamera);
 
-		auto camRobot = std::make_shared<CubeRobot>(m_allocator, glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), "texture.jpg");
+		auto camRobot = std::make_shared<CubeRobot>(glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), "texture.jpg");
 		freeCamera->AddChild(camRobot);
 
 		const int32_t MAX_GENERATED_HEIGHT = 1;
@@ -1956,13 +1943,13 @@ public:
 			{
 				for (int32_t k = 0; k <= MAX_GENERATED_HEIGHT; k++)
 				{
-					auto robot = std::make_shared<CubeRobot>(m_allocator, glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), "texture.jpg");
+					auto robot = std::make_shared<CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), "texture.jpg");
 					AddChild(robot);
 				}
 			}
 		}
 
-		auto groundPlane = std::make_shared<Plane>(m_allocator, glm::vec3(0.0f, 0.0f, 0.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(12.0f), "cement.jpg");
+		auto groundPlane = std::make_shared<Plane>(glm::vec3(0.0f, 0.0f, 0.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(12.0f), "cement.jpg");
 		AddChild(groundPlane);
 
 		for (auto child : m_children)
@@ -1972,13 +1959,13 @@ public:
 
 		// Init renderera
 		auto shadowsComponent = ComponentRepository<IShadowsComponent>::GetInstance().Get(shadows->GetId());
-		m_shadowsRenderer = std::make_shared<ShadowsRenderer>(m_allocator, m_device, shadowsComponent->GetRenderPass());
+		m_shadowsRenderer = std::make_shared<ShadowsRenderer>(shadowsComponent->GetRenderPass());
 		m_shadowsRenderer->Init();
 
-		m_defaultRenderer = std::make_shared<DefaultSceneRenderer>(m_allocator, m_device, m_defaultRenderPass);
+		m_defaultRenderer = std::make_shared<DefaultSceneRenderer>(m_defaultRenderPass);
 		m_defaultRenderer->Init();
 
-		m_quadRenderer = std::make_shared<QuadRenderer>(m_allocator, m_device, m_defaultRenderPass);
+		m_quadRenderer = std::make_shared<QuadRenderer>(m_defaultRenderPass);
 		m_quadRenderer->Init();
 	}
 
@@ -2063,7 +2050,7 @@ protected:
 	{
 		auto scene = m_engine->GetScene();
 
-		auto rootNode = std::make_shared<RootSceneNode>(scene->GetAllocator(), scene->GetDevice(), scene->GetRenderPass());
+		auto rootNode = std::make_shared<RootSceneNode>(scene->GetRenderPass());
 
 		scene->SetSceneRoot(rootNode);
 	}

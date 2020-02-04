@@ -20,6 +20,39 @@ namespace PreVEngine
 	};
 
 	template <typename NodeFlagsType>
+	class Scene;
+
+	class AllocatorProvider final : public Singleton<AllocatorProvider>
+	{
+	private:
+		friend class Singleton<AllocatorProvider>;
+
+		template <typename NodeFlagsType>
+		friend class Scene;
+
+	private:
+		std::shared_ptr<Allocator> m_allocator;
+
+	private:
+		AllocatorProvider() = default;
+
+	public:
+		~AllocatorProvider() = default;
+
+	private:
+		void SetAllocator(const std::shared_ptr<Allocator>& device)
+		{
+			m_allocator = device;
+		}
+
+	public:
+		std::shared_ptr<Allocator> GetAlocator() const
+		{
+			return m_allocator;
+		}
+	};
+
+	template <typename NodeFlagsType>
 	class IScene
 	{
 	public:
@@ -113,6 +146,8 @@ namespace PreVEngine
 			m_swapchain->SetPresentMode(m_config->VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
 			m_swapchain->SetImageCount(m_config->framesInFlight);
 			m_swapchain->Print();
+
+			AllocatorProvider::GetInstance().SetAllocator(m_allocator);
 		}
 
 		void InitSceneGraph() override
@@ -149,6 +184,7 @@ namespace PreVEngine
 
 		void ShutDown() override
 		{
+			AllocatorProvider::GetInstance().SetAllocator(nullptr);
 		}
 
 	public:

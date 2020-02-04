@@ -363,14 +363,14 @@ namespace PreVEngine
 	class UBOPool
 	{
 	private:
-		std::shared_ptr<Allocator> m_allocator;
+		Allocator& m_allocator;
 
 		std::vector<std::shared_ptr<UBO>> m_uniformBuffers;
 
 		uint32_t m_index = 0;
 
 	public:
-		UBOPool(std::shared_ptr<Allocator> allocator)
+		UBOPool(Allocator& allocator)
 			: m_allocator(allocator)
 		{
 		}
@@ -387,7 +387,7 @@ namespace PreVEngine
 
 			for (uint32_t i = 0; i < capacity; i++)
 			{
-				auto ubo = std::make_shared<UBO>(*m_allocator);
+				auto ubo = std::make_shared<UBO>(m_allocator);
 				ubo->Allocate(sizeof(ItemType));
 				m_uniformBuffers.emplace_back(ubo);
 			}

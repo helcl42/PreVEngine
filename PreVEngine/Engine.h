@@ -23,6 +23,39 @@ namespace PreVEngine
 	};
 
 	template <typename NodeFlagsType>
+	class Engine;
+
+	class DeviceProvider final : public Singleton<DeviceProvider>
+	{
+	private:
+		friend class Singleton<DeviceProvider>;
+
+		template <typename NodeFlagsType>
+		friend class Engine;
+
+	private:
+		std::shared_ptr<Device> m_device;
+
+	private:
+		DeviceProvider() = default;
+
+	public:
+		~DeviceProvider() = default;
+
+	private:
+		void SetDevice(const std::shared_ptr<Device>& device)
+		{
+			m_device = device;
+		}
+
+	public:
+		std::shared_ptr<Device> GetDevice() const
+		{
+			return m_device;
+		}
+	};
+
+	template <typename NodeFlagsType>
 	class Engine
 	{
 	private:
@@ -82,6 +115,8 @@ namespace PreVEngine
 
 			m_device = std::make_shared<Device>(*physicalDevice);
 			m_device->Print();
+
+			DeviceProvider::GetInstance().SetDevice(m_device);
 		}
 
 		void InitScene()
@@ -115,6 +150,8 @@ namespace PreVEngine
 		{
 			m_scene->ShutDownSceneGraph();
 			m_scene->ShutDown();
+
+			DeviceProvider::GetInstance().SetDevice(nullptr);
 		}
 
 	public:
