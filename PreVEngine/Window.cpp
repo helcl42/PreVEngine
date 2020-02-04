@@ -153,39 +153,39 @@ namespace PreVEngine
 	bool AbstractWindow::ProcessEvents(bool waitForEvent)
 	{
 		Event e = m_windowImpl->GetEvent(waitForEvent);
-		while (e.tag != Event::NONE)
+		while (e.tag != Event::EventType::NONE)
 		{
 			// Calling the event handlers
 			switch (e.tag)
 			{
-				case Event::MOUSE:
+				case Event::EventType::MOUSE:
 					OnMouseEvent(e.mouse.action, e.mouse.x, e.mouse.y, e.mouse.btn);
 					break;
-				case Event::MOUSE_SCROLL:
+				case Event::EventType::MOUSE_SCROLL:
 					OnMouseScrollEvent(e.scroll.delta, e.scroll.x, e.scroll.y);
 					break;
-				case Event::KEY:
+				case Event::EventType::KEY:
 					OnKeyEvent(e.key.action, e.key.keycode);
 					break;
-				case Event::TEXT:
+				case Event::EventType::TEXT:
 					OnTextEvent(e.text.str);
 					break;
-				case Event::MOVE:
+				case Event::EventType::MOVE:
 					OnMoveEvent(e.move.x, e.move.y);
 					break;
-				case Event::RESIZE:
+				case Event::EventType::RESIZE:
 					OnResizeEvent(e.resize.width, e.resize.height);
 					break;
-				case Event::FOCUS:
+				case Event::EventType::FOCUS:
 					OnFocusEvent(e.focus.hasFocus);
 					break;
-				case Event::TOUCH:
+				case Event::EventType::TOUCH:
 					OnTouchEvent(e.touch.action, e.touch.x, e.touch.y, e.touch.id);
 					break;
-				case Event::INIT:
+				case Event::EventType::INIT:
 					OnInitEvent();
 					break;
-				case Event::CLOSE:
+				case Event::EventType::CLOSE:
 					OnCloseEvent();
 					return false;
 				default:

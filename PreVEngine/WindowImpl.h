@@ -23,7 +23,7 @@ namespace PreVEngine
 
 	struct Event
 	{
-		enum // event type
+		enum class EventType // event type
 		{
 			NONE,
 			MOUSE,
@@ -37,8 +37,9 @@ namespace PreVEngine
 			CLOSE,
 			INIT,
 			UNKNOWN
-		}
-		tag;
+		};
+
+		EventType tag;
 
 		union
 		{
@@ -94,7 +95,10 @@ namespace PreVEngine
 
 			struct // multi-touch display
 			{
-				ActionType action; float x; float y; uint8_t id;
+				ActionType action; 
+				float x; 
+				float y; 
+				uint8_t id;
 			}
 			touch;
 
@@ -111,7 +115,7 @@ namespace PreVEngine
 
 		void Clear()
 		{
-			tag = NONE;
+			tag = EventType::NONE;
 		}
 	};
 
@@ -208,7 +212,7 @@ namespace PreVEngine
 					return OnEvent(action, x, y, i);
 				}
 			}
-			return { Event::UNKNOWN };
+			return { Event::EventType::UNKNOWN };
 		}
 
 		Event OnEvent(ActionType action, float x, float y, uint8_t id)
@@ -227,7 +231,7 @@ namespace PreVEngine
 			P.x = x;
 			P.y = y;
 
-			Event e = { Event::TOUCH };
+			Event e = { Event::EventType::TOUCH };
 			e.touch = { action, x, y, id };
 			return e;
 		}

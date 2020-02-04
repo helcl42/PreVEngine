@@ -320,7 +320,7 @@ namespace PreVEngine
 						PostMessage(m_hWnd, msg.message, VK_RSHIFT, 0);
 					}
 
-					return { Event::NONE };
+					return { Event::EventType::NONE };
 				}
 			}
 			else if (msg.message == WM_SYSKEYDOWN || msg.message == WM_SYSKEYUP)
@@ -442,7 +442,7 @@ namespace PreVEngine
 			}
 			DispatchMessage(&msg);
 		}
-		return { Event::NONE };
+		return { Event::EventType::NONE };
 	}
 
 	LRESULT CALLBACK WindowWin32::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)

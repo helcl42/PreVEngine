@@ -25,7 +25,7 @@ namespace PreVEngine
 			m_mouseButonsState[buttonIndex] = (action == ActionType::DOWN);  // Keep track of button state
 		}
 
-		Event e = { Event::MOUSE, {action, x, y, btn} };
+		Event e = { Event::EventType::MOUSE, {action, x, y, btn} };
 		return e;
 	}
 
@@ -33,7 +33,7 @@ namespace PreVEngine
 	{
 		m_mousePosition = { x, y };
 
-		Event e = { Event::MOUSE_SCROLL };
+		Event e{ Event::EventType::MOUSE_SCROLL };
 		e.scroll.delta = delta;
 		e.scroll.x = x;
 		e.scroll.y = y;
@@ -44,14 +44,14 @@ namespace PreVEngine
 	{
 		m_keyboardKeysState[key] = (action == ActionType::DOWN);
 
-		Event e = { Event::KEY };
+		Event e{ Event::EventType::KEY };
 		e.key = { action, (KeyCode)key };
 		return e;
 	}
 
 	Event WindowImpl::OnTextEvent(const char* str)
 	{
-		Event e = { Event::TEXT };
+		Event e{ Event::EventType::TEXT };
 		e.text.str = str;
 		return e;
 	}
@@ -61,7 +61,7 @@ namespace PreVEngine
 		m_shape.x = x;
 		m_shape.y = y;
 
-		Event e = { Event::MOVE };
+		Event e{ Event::EventType::MOVE };
 		e.move = { x, y };
 		return e;
 	}
@@ -71,7 +71,7 @@ namespace PreVEngine
 		m_shape.width = width;
 		m_shape.height = height;
 
-		Event e = { Event::RESIZE };
+		Event e{ Event::EventType::RESIZE };
 		e.resize = { width, height };
 		return e;
 	}
@@ -80,7 +80,7 @@ namespace PreVEngine
 	{
 		m_hasFocus = hasFocus;
 
-		Event e = { Event::FOCUS };
+		Event e{ Event::EventType::FOCUS };
 		e.focus.hasFocus = hasFocus;
 		return e;
 	}
@@ -88,13 +88,13 @@ namespace PreVEngine
 	Event WindowImpl::OnInitEvent()
 	{
 		m_isRunning = true;
-		return { Event::INIT };
+		return { Event::EventType::INIT };
 	}
 
 	Event WindowImpl::OnCloseEvent()
 	{
 		m_isRunning = false;
-		return { Event::CLOSE };
+		return { Event::EventType::CLOSE };
 	}
 
 	void WindowImpl::SetTextInput(bool enabled)
