@@ -12,7 +12,7 @@ namespace PreVEngine
 		std::unique_ptr<Engine<NodeFlagsType>> m_engine;
 
 	public:
-		App(std::shared_ptr<EngineConfig> config)
+		App(const std::shared_ptr<EngineConfig>& config)
 			: m_engine(std::make_unique<Engine<NodeFlagsType>>(config))
 		{
 		}

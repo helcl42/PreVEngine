@@ -92,7 +92,7 @@ namespace PreVEngine
 		virtual void InitPushConstantsBlocks() = 0;
 
 	public:
-		Shader(VkDevice device);
+		Shader(const VkDevice device);
 
 		~Shader();
 
@@ -132,7 +132,7 @@ namespace PreVEngine
 
 	public:
 		template <typename ShaderType>
-		std::shared_ptr<Shader> CreateShaderFromFiles(VkDevice device, const std::map<VkShaderStageFlagBits, std::string>& stagePaths) const
+		std::shared_ptr<Shader> CreateShaderFromFiles(const VkDevice device, const std::map<VkShaderStageFlagBits, std::string>& stagePaths) const
 		{
 			std::map<VkShaderStageFlagBits, std::vector<char>> byteCodes;
 			for (const auto& stagePath : stagePaths)
@@ -145,7 +145,7 @@ namespace PreVEngine
 		}
 
 		template <typename ShaderType>
-		std::shared_ptr<Shader> CreateShaderFromByteCodes(VkDevice device, const std::map<VkShaderStageFlagBits, std::vector<char>>& byteCodes) const
+		std::shared_ptr<Shader> CreateShaderFromByteCodes(const VkDevice device, const std::map<VkShaderStageFlagBits, std::vector<char>>& byteCodes) const
 		{
 			std::shared_ptr<Shader> shaders = std::make_shared<ShaderType>(device);
 

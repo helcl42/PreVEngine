@@ -26,18 +26,18 @@ public:
 class AbstractGraphicsPipeline : public IGraphicsPipeline
 {
 protected:
-	VkDevice m_device;
+	const VkDevice m_device;
 
-	VkRenderPass m_renderPass;
+	const VkRenderPass m_renderPass;
 
-	Shader& m_shaders;
+	const Shader& m_shaders;
 
 	VkPipeline m_graphicsPipeline;
 
 	VkPipelineLayout m_pipelineLayout;
 
 protected:
-	AbstractGraphicsPipeline(VkDevice device, VkRenderPass renderpass, PreVEngine::Shader& shaders)
+	AbstractGraphicsPipeline(const VkDevice device, const VkRenderPass renderpass, const PreVEngine::Shader& shaders)
 		: m_device(device), m_renderPass(renderpass), m_shaders(shaders), m_graphicsPipeline(VK_NULL_HANDLE), m_pipelineLayout(VK_NULL_HANDLE)
 	{
 	}
@@ -86,7 +86,7 @@ class ShadowsShader final : public Shader
 private:
 
 public:
-	ShadowsShader(VkDevice device)
+	ShadowsShader(const VkDevice device)
 		: Shader(device)
 	{
 	}
@@ -123,7 +123,7 @@ private:
 class ShadowsPipeline final : public AbstractGraphicsPipeline
 {
 public:
-	ShadowsPipeline(VkDevice device, VkRenderPass renderpass, Shader& shaders)
+	ShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
 		: AbstractGraphicsPipeline(device, renderpass, shaders)
 	{
 	}
@@ -233,7 +233,7 @@ class DefaultShader final : public Shader
 private:
 
 public:
-	DefaultShader(VkDevice device)
+	DefaultShader(const VkDevice device)
 		: Shader(device)
 	{
 	}
@@ -283,7 +283,7 @@ private:
 class DefaultPipeline final : public AbstractGraphicsPipeline
 {
 public:
-	DefaultPipeline(VkDevice device, VkRenderPass renderpass, Shader& shaders)
+	DefaultPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
 		: AbstractGraphicsPipeline(device, renderpass, shaders)
 	{
 	}
@@ -404,7 +404,7 @@ class QuadShader final : public Shader
 private:
 
 public:
-	QuadShader(VkDevice device)
+	QuadShader(const VkDevice device)
 		: Shader(device)
 	{
 	}
@@ -446,7 +446,7 @@ class QuadPipeline final : public AbstractGraphicsPipeline
 {
 
 public:
-	QuadPipeline(VkDevice device, VkRenderPass renderpass, Shader& shaders)
+	QuadPipeline(const VkDevice device, const VkRenderPass renderpass, Shader& shaders)
 		: AbstractGraphicsPipeline(device, renderpass, shaders)
 	{
 	}

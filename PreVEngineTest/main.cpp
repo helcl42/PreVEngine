@@ -107,7 +107,7 @@ public:
 		return m_components.at(id);
 	}
 
-	void Add(const uint64_t id, std::shared_ptr<ItemType> component)
+	void Add(const uint64_t id, const std::shared_ptr<ItemType>& component)
 	{
 		if (Contains(id))
 		{
@@ -140,7 +140,7 @@ public:
 
 	virtual void PreRender(RenderContext& renderContext) = 0;
 
-	virtual void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode<SceneNodeFlags>> node) = 0;
+	virtual void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags>>& node) = 0;
 
 	virtual void PostRender(RenderContext& renderContext) = 0;
 
@@ -208,7 +208,7 @@ private:
 	std::shared_ptr<ImageBuffer> m_imageBuffer;
 
 public:
-	Material(std::shared_ptr<Image> image, std::shared_ptr<ImageBuffer> imageBuffer)
+	Material(const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer)
 		: m_image(image), m_imageBuffer(imageBuffer)
 	{
 	}
@@ -244,7 +244,7 @@ private:
 	std::shared_ptr<IBO> m_ibo;
 
 public:
-	Model(std::shared_ptr<IMesh> mesh, std::shared_ptr<VBO> vbo, std::shared_ptr<IBO> ibo)
+	Model(const std::shared_ptr<IMesh>& mesh, const std::shared_ptr<VBO>& vbo, const std::shared_ptr<IBO>& ibo)
 		: m_mesh(mesh), m_vbo(vbo), m_ibo(ibo)
 	{
 	}
@@ -282,7 +282,7 @@ private:
 	bool m_isCastedByShadows;
 
 public:
-	DefaultRenderComponent(std::shared_ptr<IModel> model, std::shared_ptr<IMaterial> material, bool castsShadows, bool isCastedByShadows)
+	DefaultRenderComponent(const std::shared_ptr<IModel>& model, const std::shared_ptr<IMaterial>& material, const bool castsShadows, const bool isCastedByShadows)
 		: m_model(model), m_material(material), m_castsShadows(castsShadows), m_isCastedByShadows(isCastedByShadows)
 	{
 	}
@@ -336,7 +336,7 @@ private:
 		return image;
 	}
 
-	std::shared_ptr<ImageBuffer> CreateImageBuffer(Allocator& allocator, const std::shared_ptr<Image> image, const bool repeatAddressMode) const
+	std::shared_ptr<ImageBuffer> CreateImageBuffer(Allocator& allocator, const std::shared_ptr<Image>& image, const bool repeatAddressMode) const
 	{
 		const VkExtent2D imageExtent = { image->GetWidth(), image->GetHeight() };
 
@@ -355,7 +355,7 @@ private:
 		return std::make_shared<Material>(image, imageBuffer);
 	}
 
-	std::shared_ptr<IModel> CreateModel(Allocator& allocator, const std::shared_ptr<IMesh> mesh) const
+	std::shared_ptr<IModel> CreateModel(Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const
 	{
 		std::shared_ptr<VBO> vertexBuffer = std::make_shared<VBO>(allocator);
 		vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertextLayout().GetStride());
@@ -727,7 +727,7 @@ class IShadowsComponent
 public:
 	virtual void Init() = 0;
 
-	virtual void Update(float deltaTime, std::shared_ptr<ILightComponent> light, std::shared_ptr<ICameraComponent> camera) = 0;
+	virtual void Update(const float deltaTime, const std::shared_ptr<ILightComponent>& light, const std::shared_ptr<ICameraComponent>& camera) = 0;
 
 	virtual void ShutDown() = 0;
 
@@ -841,7 +841,7 @@ private:
 		m_depthBuffer->Destroy();
 	}
 
-	void UpdateCascades(float deltaTime, std::shared_ptr<ILightComponent> light, std::shared_ptr<ICameraComponent> camera)
+	void UpdateCascades(const float deltaTime, const std::shared_ptr<ILightComponent>& light, const std::shared_ptr<ICameraComponent>& camera)
 	{
 		std::vector<float> cascadeSplits(CASCADES_COUNT);
 
@@ -937,7 +937,7 @@ public:
 		InitCascades();
 	}
 
-	void Update(float deltaTime, std::shared_ptr<ILightComponent> light, std::shared_ptr<ICameraComponent> camera)
+	void Update(const float deltaTime, const std::shared_ptr<ILightComponent>& light, const std::shared_ptr<ICameraComponent>& camera)
 	{
 		UpdateCascades(deltaTime, light, camera);
 	}
@@ -1484,7 +1484,7 @@ private:
 	std::shared_ptr<UBOPool<Uniforms>> m_uniformsPool;
 
 public:
-	ShadowsRenderer(std::shared_ptr<RenderPass> renderPass)
+	ShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
 		: m_renderPass(renderPass)
 	{
 	}
@@ -1535,7 +1535,7 @@ public:
 		vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
 	}
 
-	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode<SceneNodeFlags>> node) override
+	void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags>>& node) override
 	{
 		if (ComponentRepository<IRenderComponent>::GetInstance().Contains(node->GetId()))
 		{
@@ -1616,7 +1616,7 @@ private:
 	int32_t m_cascadeIndex = 0;
 
 public:
-	QuadRenderer(std::shared_ptr<RenderPass> renderPass)
+	QuadRenderer(const std::shared_ptr<RenderPass>& renderPass)
 		: m_renderPass(renderPass)
 	{
 	}
@@ -1644,12 +1644,12 @@ public:
 		m_pipeline->Init();
 
 		// create quad model
-		std::shared_ptr<IMesh> quadMesh = std::make_shared<QuadMesh>();
+		auto quadMesh = std::make_shared<QuadMesh>();
 
-		std::shared_ptr<VBO> vertexBuffer = std::make_shared<VBO>(*allocator);
+		auto vertexBuffer = std::make_shared<VBO>(*allocator);
 		vertexBuffer->Data(quadMesh->GetVertices(), quadMesh->GerVerticesCount(), quadMesh->GetVertextLayout().GetStride());
 
-		std::shared_ptr<IBO> indexBuffer = std::make_shared<IBO>(*allocator);
+		auto indexBuffer = std::make_shared<IBO>(*allocator);
 		indexBuffer->Data(quadMesh->GerIndices().data(), (uint32_t)quadMesh->GerIndices().size());
 
 		m_quadModel = std::make_shared<Model>(quadMesh, vertexBuffer, indexBuffer);
@@ -1685,7 +1685,7 @@ public:
 	}
 
 	// make a node with quad model & shadowMap texture ???
-	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode<SceneNodeFlags>> node) override
+	void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags>>& node) override
 	{
 		auto shadowsNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_SHADOW }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
 		auto shadows = ComponentRepository<IShadowsComponent>::GetInstance().Get(shadowsNode->GetId());
@@ -1771,7 +1771,7 @@ private:
 	std::shared_ptr<UBOPool<UniformsFS>> m_uniformsPoolFS;
 
 public:
-	DefaultSceneRenderer(std::shared_ptr<RenderPass> renderPass)
+	DefaultSceneRenderer(const std::shared_ptr<RenderPass>& renderPass)
 		: m_renderPass(renderPass)
 	{
 	}
@@ -1819,7 +1819,7 @@ public:
 		vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
 	}
 
-	void Render(RenderContext& renderContext, std::shared_ptr<ISceneNode<SceneNodeFlags>> node) override
+	void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags>>& node) override
 	{
 		if (ComponentRepository<IRenderComponent>::GetInstance().Contains(node->GetId()))
 		{
@@ -1906,7 +1906,7 @@ private:
 	std::shared_ptr<IRenderer> m_quadRenderer;
 
 public:
-	RootSceneNode(std::shared_ptr<RenderPass> renderPass)
+	RootSceneNode(const std::shared_ptr<RenderPass>& renderPass)
 		: AbstractSceneNode(), m_defaultRenderPass(renderPass)
 	{
 	}
@@ -2032,7 +2032,7 @@ template <typename NodeFlagsType>
 class TestApp : public App<NodeFlagsType>
 {
 public:
-	TestApp(std::shared_ptr<EngineConfig> config)
+	TestApp(const std::shared_ptr<EngineConfig>& config)
 		: App(config)
 	{
 	}

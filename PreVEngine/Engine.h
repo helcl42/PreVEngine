@@ -76,7 +76,7 @@ namespace PreVEngine
 		VkSurfaceKHR m_surface;
 
 	public:
-		Engine(std::shared_ptr<EngineConfig> config)
+		Engine(const std::shared_ptr<EngineConfig>& config)
 			: m_config(config)
 		{
 		}

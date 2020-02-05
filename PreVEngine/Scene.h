@@ -70,7 +70,7 @@ namespace PreVEngine
 
 		virtual std::shared_ptr<ISceneNode<NodeFlagsType>> GetRootNode() = 0;
 
-		virtual void SetSceneRoot(std::shared_ptr<ISceneNode<NodeFlagsType>> root) = 0;
+		virtual void SetSceneRoot(const std::shared_ptr<ISceneNode<NodeFlagsType>>& root) = 0;
 
 		virtual std::shared_ptr<Device> GetDevice() = 0;
 
@@ -111,7 +111,7 @@ namespace PreVEngine
 		std::shared_ptr<ISceneNode<NodeFlagsType>> m_rootNode;
 
 	public:
-		Scene(std::shared_ptr<SceneConfig> sceneConfig, std::shared_ptr<Device> device, VkSurfaceKHR surface)
+		Scene(const std::shared_ptr<SceneConfig>& sceneConfig, const std::shared_ptr<Device>& device, VkSurfaceKHR surface)
 			: m_config(sceneConfig), m_device(device), m_surface(surface)
 		{
 		}
@@ -213,7 +213,7 @@ namespace PreVEngine
 			return m_rootNode;
 		}
 
-		void SetSceneRoot(std::shared_ptr<ISceneNode<NodeFlagsType>> root) override
+		void SetSceneRoot(const std::shared_ptr<ISceneNode<NodeFlagsType>>& root) override
 		{
 			GraphTraversal<NodeFlagsType>::GetInstance().SetRootNode(root);
 

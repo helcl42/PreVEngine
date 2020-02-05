@@ -42,11 +42,11 @@ namespace PreVEngine
 
 		virtual const std::vector<std::shared_ptr<ISceneNode>>& GetChildren() const = 0;
 
-		virtual void AddChild(std::shared_ptr<ISceneNode> child) = 0;
+		virtual void AddChild(const std::shared_ptr<ISceneNode>& child) = 0;
 
-		virtual void RemoveChild(std::shared_ptr<ISceneNode> child) = 0;
+		virtual void RemoveChild(const std::shared_ptr<ISceneNode>& child) = 0;
 
-		virtual void SetParent(std::shared_ptr<ISceneNode> parent) = 0;
+		virtual void SetParent(const std::shared_ptr<ISceneNode>& parent) = 0;
 
 		virtual std::shared_ptr<ISceneNode> GetParent() const = 0;
 
@@ -161,14 +161,14 @@ namespace PreVEngine
 			return m_children;
 		}
 
-		void AddChild(std::shared_ptr<ISceneNode> child) override
+		void AddChild(const std::shared_ptr<ISceneNode>& child) override
 		{
 			child->SetParent(shared_from_this());
 
 			m_children.emplace_back(child);
 		}
 
-		void RemoveChild(std::shared_ptr<ISceneNode> child) override
+		void RemoveChild(const std::shared_ptr<ISceneNode>& child) override
 		{
 			child->SetParent(nullptr);
 
@@ -186,7 +186,7 @@ namespace PreVEngine
 			return shared_from_this();
 		}
 
-		void SetParent(std::shared_ptr<ISceneNode> parent) override
+		void SetParent(const std::shared_ptr<ISceneNode>& parent) override
 		{
 			m_parent = parent;
 		}
@@ -301,7 +301,7 @@ namespace PreVEngine
 		};
 
 	private:
-		bool HasFlags(const std::shared_ptr<ISceneNode<NodeFlagsType>> node, const FlagSet<NodeFlagsType>& flagsToCheck, const LogicOperation operation) const
+		bool HasFlags(const std::shared_ptr<ISceneNode<NodeFlagsType>>& node, const FlagSet<NodeFlagsType>& flagsToCheck, const LogicOperation operation) const
 		{
 			if (operation == LogicOperation::AND)
 			{
@@ -314,7 +314,7 @@ namespace PreVEngine
 			return false;
 		}
 
-		bool HasTags(const std::shared_ptr<ISceneNode<NodeFlagsType>> node, const TagSet& tagsToCheck, const LogicOperation operation) const
+		bool HasTags(const std::shared_ptr<ISceneNode<NodeFlagsType>>& node, const TagSet& tagsToCheck, const LogicOperation operation) const
 		{
 			if (operation == LogicOperation::AND)
 			{
