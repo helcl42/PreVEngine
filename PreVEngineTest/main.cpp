@@ -417,6 +417,10 @@ public:
 	virtual void AddYaw(float amountInDegrees) = 0;
 
 	virtual const ViewFrustum& GetViewFrustum() const = 0;
+
+	virtual float GetSensitivity() const = 0;
+	
+	virtual float GetMoveSpeed() const = 0;
 	
 public:
 	virtual ~ICameraComponent() = default;
@@ -428,8 +432,6 @@ private:
 	const glm::vec3 m_upDirection{ 0.0f, 1.0f, 0.0f };
 
 	const float m_sensitivity = 0.05f;
-
-	const float m_scrollSensitivity = 2.0f;
 
 	const float m_moveSpeed = 25.0f;
 
@@ -536,7 +538,7 @@ private:
 	}
 
 public:
-	void Update(float deltaTime, const CameraMoveState& inputState)
+	void Update(float deltaTime, const CameraMoveState& inputState) override
 	{
 		UpdateOrientation(deltaTime);
 		UpdatePosition(deltaTime, inputState);
@@ -544,12 +546,12 @@ public:
 		m_viewMatrix = glm::lookAt(m_position, m_position + m_forwardDirection, m_upDirection);
 	}
 
-	const glm::mat4& LookAt() const
+	const glm::mat4& LookAt() const override
 	{
 		return m_viewMatrix;
 	}
 
-	void Reset()
+	void Reset() override
 	{
 		std::cout << "Resseting camera.." << std::endl;
 
@@ -567,10 +569,8 @@ public:
 		m_prevTouchPosition = glm::vec2(0.0f, 0.0f);
 	}
 
-	void AddPitch(float amountInDegrees)
+	void AddPitch(float amountInDegrees) override
 	{
-		amountInDegrees *= m_sensitivity;
-
 		float newFinalPitch = m_pitchYawRoll.x + amountInDegrees;
 		if (newFinalPitch > 89.0f || newFinalPitch < -89.0f)
 		{
@@ -581,19 +581,27 @@ public:
 		m_pitchYawRoll.x += amountInDegrees;
 	}
 
-	void AddYaw(float amountInDegrees)
+	void AddYaw(float amountInDegrees) override
 	{
-		amountInDegrees *= m_sensitivity;
-
 		m_pitchYawRollDelta.y += amountInDegrees;
 		m_pitchYawRoll.y += amountInDegrees;
 
 		m_pitchYawRollDelta.y = NormalizeUpTo2Phi(m_pitchYawRollDelta.y);
 	}
 
-	const ViewFrustum& GetViewFrustum() const
+	const ViewFrustum& GetViewFrustum() const override
 	{
 		return m_viewFrustum;
+	}
+
+	float GetSensitivity() const override
+	{
+		return m_sensitivity;
+	}
+
+	float GetMoveSpeed() const override
+	{
+		return m_moveSpeed;
 	}
 };
 
@@ -650,7 +658,7 @@ public:
 	}
 
 public:
-	void Update(float deltaTime)
+	void Update(float deltaTime) override
 	{
 		const float ROTATION_SPEED_DEG_PER_SEC = 7.5f;
 		const float ROTATION_ANGLE = ROTATION_SPEED_DEG_PER_SEC * deltaTime;
@@ -662,28 +670,27 @@ public:
 		m_position = glm::vec3(transform[3][0], transform[3][1], transform[3][2]);
 	}
 
-public:
-	glm::mat4 LookAt() const
+	glm::mat4 LookAt() const override
 	{
 		return glm::lookAt(m_position, m_lookAtPosition, m_upDirection);
 	}
 
-	glm::mat4 GetProjectionMatrix() const
+	glm::mat4 GetProjectionMatrix() const override
 	{
 		return m_viewFrustum.CreateProjectionMatrix(1.0f); // we expect that light will shine in square frustum(should be it more like a cone-like shape?)
 	}
 
-	glm::vec3 GetPosition() const
+	glm::vec3 GetPosition() const override
 	{
 		return m_position;
 	}
 
-	glm::vec3 GetDirection() const
+	glm::vec3 GetDirection() const override
 	{
 		return glm::normalize(-m_position);
 	}
 
-	const ViewFrustum& GetViewFrustum() const
+	const ViewFrustum& GetViewFrustum() const override
 	{
 		return m_viewFrustum;
 	}
@@ -931,39 +938,39 @@ private:
 	}
 
 public:
-	void Init()
+	void Init() override
 	{
 		InitRenderPass();
 		InitCascades();
 	}
 
-	void Update(const float deltaTime, const std::shared_ptr<ILightComponent>& light, const std::shared_ptr<ICameraComponent>& camera)
+	void Update(const float deltaTime, const std::shared_ptr<ILightComponent>& light, const std::shared_ptr<ICameraComponent>& camera) override
 	{
 		UpdateCascades(deltaTime, light, camera);
 	}
 
-	void ShutDown()
+	void ShutDown() override
 	{
 		ShutDownCascades();
 		ShutDownRenderPass();
 	}
 
-	std::shared_ptr<RenderPass> GetRenderPass() const
+	std::shared_ptr<RenderPass> GetRenderPass() const override
 	{
 		return m_renderPass;
 	}
 
-	const ShadowsCascade& GetCascade(const uint32_t cascadeIndex) const
+	const ShadowsCascade& GetCascade(const uint32_t cascadeIndex) const override
 	{
 		return m_cascades.at(cascadeIndex);
 	}
 
-	VkExtent2D GetExtent() const
+	VkExtent2D GetExtent() const override
 	{
 		return { SHADOW_MAP_DIMENSIONS, SHADOW_MAP_DIMENSIONS };
 	}
 
-	std::shared_ptr<IImageBuffer> GetImageBuffer() const
+	std::shared_ptr<IImageBuffer> GetImageBuffer() const override
 	{
 		return m_depthBuffer;
 	}
@@ -1131,6 +1138,11 @@ public:
 		AbstractCubeRobotSceneNode::Update(deltaTime);
 	}
 
+	void ShutDown() override
+	{
+		AbstractCubeRobotSceneNode::ShutDown();
+	}
+
 public:
 	void operator() (const KeyEvent& keyEvent)
 	{
@@ -1241,7 +1253,7 @@ private:
 
 	std::shared_ptr<ICameraComponent> m_cameraComponent;
 
-	glm::vec2 m_prevTouchPosition;
+	glm::vec2 m_prevTouchPosition{ 0.0f, 0.0f };
 
 public:
 	Camera()
@@ -1323,7 +1335,7 @@ public:
 	{
 		if (mouseEvent.action == MouseActionType::MOVE && mouseEvent.button == MouseButtonType::LEFT)
 		{
-			const glm::vec2 angleInDegrees = mouseEvent.position;
+			const glm::vec2 angleInDegrees = mouseEvent.position * m_cameraComponent->GetSensitivity();
 
 			m_cameraComponent->AddPitch(angleInDegrees.y);
 			m_cameraComponent->AddYaw(angleInDegrees.x);
@@ -1334,7 +1346,7 @@ public:
 	{
 		if (touchEvent.action == TouchActionType::MOVE)
 		{
-			const glm::vec2 angleInDegrees = (touchEvent.position - m_prevTouchPosition);
+			const glm::vec2 angleInDegrees = (touchEvent.position - m_prevTouchPosition) * m_cameraComponent->GetSensitivity();
 
 			m_cameraComponent->AddPitch(angleInDegrees.y);
 			m_cameraComponent->AddYaw(angleInDegrees.x);
@@ -2060,6 +2072,55 @@ protected:
 	}
 };
 
+
+class UUIDGenerator
+{
+private:
+	static char GetRandomSymbol()
+	{
+		static const std::string validSymbols = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_int_distribution<> dis(0, validSymbols.size() - 1);
+		const auto index = dis(gen);
+		return validSymbols[index];
+	}
+
+public:
+	static std::string GenerateNew()
+	{
+		std::string uuid = std::string(36, ' ');
+
+		uuid[8] = '-';
+		uuid[13] = '-';
+		uuid[18] = '-';
+		uuid[23] = '-';
+
+		for (uint32_t i = 0; i < 36; i++) 
+		{
+			if (i != 8 && i != 13 && i != 18 && i != 23) 
+			{
+				uuid[i] = GetRandomSymbol();
+			}
+		}
+
+		return uuid;
+	}
+
+	static std::string GenerateEmpty()
+	{
+		std::string uuid = std::string(36, '0');
+
+		uuid[8] = '-';
+		uuid[13] = '-';
+		uuid[18] = '-';
+		uuid[23] = '-';
+
+		return uuid;
+	}
+};
+
 int main(int argc, char *argv[])
 {
 	setvbuf(stdout, NULL, _IONBF, 0); // avoid buffering
@@ -2070,6 +2131,13 @@ int main(int argc, char *argv[])
 	app.Init();
 	app.Run();
 	app.ShutDown();
+
+	//for (uint32_t i = 0; i < 100; i++)
+	//{
+	//	std::cout << UUIDGenerator::GenerateNew() << std::endl;
+	//}
+
+	//std::cout << UUIDGenerator::GenerateEmpty() << std::endl;
 
 	return 0;
 }
