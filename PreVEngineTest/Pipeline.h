@@ -159,8 +159,8 @@ public:
 		VkViewport viewport = {};
 		viewport.x = 0.0f;
 		viewport.y = 0.0f;
-		viewport.width = (float)initialExtent.width;
-		viewport.height = (float)initialExtent.height;
+		viewport.width = static_cast<float>(initialExtent.width);
+		viewport.height = static_cast<float>(initialExtent.height);
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 
@@ -319,8 +319,8 @@ public:
 		VkViewport viewport = {};
 		viewport.x = 0.0f;
 		viewport.y = 0.0f;
-		viewport.width = (float)initialExtent.width;
-		viewport.height = (float)initialExtent.height;
+		viewport.width = static_cast<float>(initialExtent.width);
+		viewport.height = static_cast<float>(initialExtent.height);
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 
@@ -482,8 +482,8 @@ public:
 		VkViewport viewport = {};
 		viewport.x = 0.0f;
 		viewport.y = 0.0f;
-		viewport.width = (float)initialExtent.width;
-		viewport.height = (float)initialExtent.height;
+		viewport.width = static_cast<float>(initialExtent.width);
+		viewport.height = static_cast<float>(initialExtent.height);
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 

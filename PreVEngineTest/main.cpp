@@ -805,7 +805,7 @@ private:
 	void InitCascades()
 	{
 		auto device = DeviceProvider::GetInstance().GetDevice();
-		auto allocator = AllocatorProvider::GetInstance().GetAlocator();
+		auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
 		m_depthBuffer = std::make_shared<DepthImageBuffer>(*allocator);
 		m_depthBuffer->Create(ImageBufferCreateInfo{ GetExtent(), DEPTH_FORMAT, false, VK_IMAGE_VIEW_TYPE_2D_ARRAY, CASCADES_COUNT });
@@ -1009,7 +1009,7 @@ public:
 public:
 	void Init() override
 	{
-		auto allocator = AllocatorProvider::GetInstance().GetAlocator();
+		auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
 		m_transform = MathUtil::CreateTransformationMatrix(m_position, m_orientation, glm::vec3(1, 1, 1));
 
@@ -1202,7 +1202,7 @@ public:
 public:
 	void Init() override
 	{
-		auto allocator = AllocatorProvider::GetInstance().GetAlocator();
+		auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
 		m_transform = MathUtil::CreateTransformationMatrix(m_position, m_orientation);
 
@@ -1497,7 +1497,7 @@ public:
 	void Init() override
 	{
 		auto device = DeviceProvider::GetInstance().GetDevice();
-		auto allocator = AllocatorProvider::GetInstance().GetAlocator();
+		auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
 		ShaderFactory shaderFactory;
 		m_shader = shaderFactory.CreateShaderFromFiles<ShadowsShader>(*device, {
@@ -1629,7 +1629,7 @@ public:
 	void Init() override
 	{
 		auto device = DeviceProvider::GetInstance().GetDevice();
-		auto allocator = AllocatorProvider::GetInstance().GetAlocator();
+		auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
 		ShaderFactory shaderFactory;
 		m_shader = shaderFactory.CreateShaderFromFiles<QuadShader>(*device, {
@@ -1784,7 +1784,7 @@ public:
 	void Init() override
 	{
 		auto device = DeviceProvider::GetInstance().GetDevice();
-		auto allocator = AllocatorProvider::GetInstance().GetAlocator();
+		auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
 		ShaderFactory shaderFactory;
 		m_shader = shaderFactory.CreateShaderFromFiles<DefaultShader>(*device, {

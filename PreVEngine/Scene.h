@@ -46,7 +46,7 @@ namespace PreVEngine
 		}
 
 	public:
-		std::shared_ptr<Allocator> GetAlocator() const
+		std::shared_ptr<Allocator> GetAllocator() const
 		{
 			return m_allocator;
 		}
