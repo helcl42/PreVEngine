@@ -163,9 +163,7 @@ public:
 	virtual bool HasImage() const = 0;
 
 public:
-	virtual ~IMaterial()
-	{
-	}
+	virtual ~IMaterial() = default;
 };
 
 class IModel
@@ -178,9 +176,7 @@ public:
 	virtual std::shared_ptr<IBO> GetIndexBuffer() const = 0;
 
 public:
-	virtual ~IModel()
-	{
-	}
+	virtual ~IModel() = default;
 };
 
 class IRenderComponent
@@ -195,9 +191,7 @@ public:
 	virtual bool IsCastedByShadows() const = 0;
 
 public:
-	virtual ~IRenderComponent()
-	{
-	}
+	virtual ~IRenderComponent() = default;
 };
 
 class Material : public IMaterial
@@ -213,9 +207,7 @@ public:
 	{
 	}
 
-	virtual ~Material()
-	{
-	}
+	virtual ~Material() = default;
 
 public:
 	std::shared_ptr<Image> GetImage() const override
@@ -249,9 +241,7 @@ public:
 	{
 	}
 
-	virtual ~Model()
-	{
-	}
+	virtual ~Model() = default;
 
 public:
 	std::shared_ptr<IMesh> GetMesh() const override
@@ -287,10 +277,8 @@ public:
 	{
 	}
 
-	virtual ~DefaultRenderComponent()
-	{
-	}
-
+	virtual ~DefaultRenderComponent() = default;
+	 
 public:
 	std::shared_ptr<IModel> GetModel() const override
 	{
@@ -2072,55 +2060,6 @@ protected:
 	}
 };
 
-
-class UUIDGenerator
-{
-private:
-	static char GetRandomSymbol()
-	{
-		static const std::string validSymbols = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-
-		std::random_device rd;
-		std::mt19937 gen(rd());
-		std::uniform_int_distribution<> dis(0, validSymbols.size() - 1);
-		const auto index = dis(gen);
-		return validSymbols[index];
-	}
-
-public:
-	static std::string GenerateNew()
-	{
-		std::string uuid = std::string(36, ' ');
-
-		uuid[8] = '-';
-		uuid[13] = '-';
-		uuid[18] = '-';
-		uuid[23] = '-';
-
-		for (uint32_t i = 0; i < 36; i++) 
-		{
-			if (i != 8 && i != 13 && i != 18 && i != 23) 
-			{
-				uuid[i] = GetRandomSymbol();
-			}
-		}
-
-		return uuid;
-	}
-
-	static std::string GenerateEmpty()
-	{
-		std::string uuid = std::string(36, '0');
-
-		uuid[8] = '-';
-		uuid[13] = '-';
-		uuid[18] = '-';
-		uuid[23] = '-';
-
-		return uuid;
-	}
-};
-
 int main(int argc, char *argv[])
 {
 	setvbuf(stdout, NULL, _IONBF, 0); // avoid buffering
@@ -2131,13 +2070,6 @@ int main(int argc, char *argv[])
 	app.Init();
 	app.Run();
 	app.ShutDown();
-
-	//for (uint32_t i = 0; i < 100; i++)
-	//{
-	//	std::cout << UUIDGenerator::GenerateNew() << std::endl;
-	//}
-
-	//std::cout << UUIDGenerator::GenerateEmpty() << std::endl;
 
 	return 0;
 }

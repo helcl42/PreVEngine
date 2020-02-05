@@ -5,6 +5,7 @@
 #include <chrono>
 #include <iostream>
 #include <cmath>
+#include <random>
 
 namespace PreVEngine
 {
@@ -356,6 +357,54 @@ namespace PreVEngine
 			m_id++;
 
 			return m_id;
+		}
+	};
+
+	class UUIDGenerator
+	{
+	private:
+		static char GetRandomSymbol()
+		{
+			static const std::string validSymbols = "0123456789abcdef";
+
+			std::random_device rd;
+			std::mt19937 gen(rd());
+			std::uniform_int_distribution<> dis(0, validSymbols.size() - 1);
+			const auto index = dis(gen);
+			return validSymbols[index];
+		}
+
+	public:
+		static std::string GenerateNew()
+		{
+			std::string uuid = std::string(36, ' ');
+
+			uuid[8] = '-';
+			uuid[13] = '-';
+			uuid[18] = '-';
+			uuid[23] = '-';
+
+			for (uint32_t i = 0; i < 36; i++)
+			{
+				if (i != 8 && i != 13 && i != 18 && i != 23)
+				{
+					uuid[i] = GetRandomSymbol();
+				}
+			}
+
+			return uuid;
+		}
+
+		static std::string GenerateEmpty()
+		{
+			std::string uuid = std::string(36, '0');
+
+			uuid[8] = '-';
+			uuid[13] = '-';
+			uuid[18] = '-';
+			uuid[23] = '-';
+
+			return uuid;
 		}
 	};
 
