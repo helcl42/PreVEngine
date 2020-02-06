@@ -758,6 +758,10 @@ public:
 
 	virtual glm::vec3 GetDirection() const = 0;
 
+	virtual glm::vec3 GetColor() = 0;
+
+	virtual glm::vec3 GetAttenuation() const = 0;
+
 	virtual const ViewFrustum& GetViewFrustum() const = 0;
 
 public:
@@ -775,9 +779,18 @@ private:
 
 	glm::vec3 m_position;
 
+	glm::vec3 m_color{ 1.0f, 1.0f, 1.0f };
+
+	glm::vec3 m_attenuation{ 1.0f, 0.0f, 0.0f };
+
 public:
 	LightComponent(const glm::vec3& pos)
 		: m_position(pos)
+	{
+	}
+	
+	LightComponent(const glm::vec3& pos, const glm::vec3& color, const glm::vec3& attenuation)
+		: m_position(pos), m_color(color), m_attenuation(attenuation)
 	{
 	}
 
@@ -816,6 +829,16 @@ public:
 	glm::vec3 GetDirection() const override
 	{
 		return glm::normalize(-m_position);
+	}
+
+	glm::vec3 GetColor() override
+	{
+		return m_color;
+	}
+
+	glm::vec3 GetAttenuation() const override
+	{
+		return m_attenuation;
 	}
 
 	const ViewFrustum& GetViewFrustum() const override
