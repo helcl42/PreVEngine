@@ -989,17 +989,12 @@ public:
 class AbstractCubeRobotSceneNode : public AbstractSceneNode<SceneNodeFlags>
 {
 protected:
-	glm::vec3 m_position;
-
-	glm::quat m_orientation;
-
 	const std::string m_texturePath;
 
 public:
 	AbstractCubeRobotSceneNode(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
-		: AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT }), m_position(position), m_orientation(orientation), m_texturePath(texturePath)
+		: AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT }, position, orientation, scale), m_texturePath(texturePath)
 	{
-		m_scaler = scale;
 	}
 
 	virtual ~AbstractCubeRobotSceneNode()
@@ -1010,8 +1005,6 @@ public:
 	void Init() override
 	{
 		auto allocator = AllocatorProvider::GetInstance().GetAllocator();
-
-		m_transform = MathUtil::CreateTransformationMatrix(m_position, m_orientation, glm::vec3(1, 1, 1));
 
 		RenderComponentFactory renderComponentFactory;
 		auto cubeComponent = renderComponentFactory.CreateCubeRenderComponent(*allocator, m_texturePath, true, true);
@@ -1108,20 +1101,14 @@ public:
 
 	void Update(float deltaTime) override
 	{
-		auto bodyTransform = m_body->GetTransform();
-		bodyTransform = glm::rotate(bodyTransform, glm::radians(m_angularVelocity.x), glm::vec3(1.0f, 0.0f, 0.0f));
-		bodyTransform = glm::rotate(bodyTransform, glm::radians(m_angularVelocity.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		m_body->SetTransform(bodyTransform);
+		m_body->Rotate(glm::rotate(glm::mat4(1.0f), glm::radians(m_angularVelocity.x), glm::vec3(1.0f, 0.0f, 0.0f)));
+		m_body->Rotate(glm::rotate(glm::mat4(1.0f), glm::radians(m_angularVelocity.y), glm::vec3(0.0f, 1.0f, 0.0f)));
 
-		auto headTransform = m_head->GetTransform();
-		headTransform = glm::rotate(headTransform, -glm::radians(25.0f) * deltaTime, glm::vec3(0, 1, 0));
-		m_head->SetTransform(headTransform);
+		m_head->Rotate(glm::rotate(glm::mat4(1.0f), -glm::radians(25.0f) * deltaTime, glm::vec3(0, 1, 0)));
 
-		auto leftArmTransform = m_leftArm->GetTransform();
-		leftArmTransform = glm::translate(leftArmTransform, glm::vec3(0, -4.5, 0));
-		leftArmTransform = leftArmTransform * glm::rotate(glm::mat4(1.0f), glm::radians(20.0f) * deltaTime, glm::vec3(1, 0, 0));
-		leftArmTransform = glm::translate(leftArmTransform, glm::vec3(0, 4.5, 0));
-		m_leftArm->SetTransform(leftArmTransform);
+		m_leftArm->Translate(glm::vec3(0, -4.5, 0));
+		m_leftArm->Rotate(glm::rotate(glm::mat4(1.0f), glm::radians(20.0f) * deltaTime, glm::vec3(1, 0, 0)));
+		m_leftArm->Translate(glm::vec3(0, 4.5, 0));
 
 		AbstractCubeRobotSceneNode::Update(deltaTime);
 	}
@@ -1182,17 +1169,12 @@ public:
 class Plane : public AbstractSceneNode<SceneNodeFlags>
 {
 protected:
-	glm::vec3 m_position;
-
-	glm::quat m_orientation;
-
 	const std::string m_texturePath;
 
 public:
 	Plane(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
-		: AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT }), m_position(position), m_orientation(orientation), m_texturePath(texturePath)
+		: AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT }, position, orientation, scale), m_texturePath(texturePath)
 	{
-		m_scaler = scale;
 	}
 
 	virtual ~Plane()
@@ -1203,8 +1185,6 @@ public:
 	void Init() override
 	{
 		auto allocator = AllocatorProvider::GetInstance().GetAllocator();
-
-		m_transform = MathUtil::CreateTransformationMatrix(m_position, m_orientation);
 
 		RenderComponentFactory renderComponentFactory;
 		auto renderComponent = renderComponentFactory.CreatePlaneRenderComponent(*allocator, m_texturePath, false, true);
@@ -1305,9 +1285,11 @@ public:
 		m_cameraComponent->Update(deltaTime, moveState);
 
 		glm::mat4 viewMatrix = m_cameraComponent->LookAt();
+		glm::mat4 cameraTransformInWorldSpace = glm::inverse(viewMatrix);
 
-		SetTransform(glm::inverse(viewMatrix));
-
+		SetPosition(glm::vec3(cameraTransformInWorldSpace[3][0], cameraTransformInWorldSpace[3][1], cameraTransformInWorldSpace[3][2]));
+		SetOrientation(glm::quat_cast(cameraTransformInWorldSpace));
+		
 		AbstractSceneNode::Update(deltaTime);
 	}
 
