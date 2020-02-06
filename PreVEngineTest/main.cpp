@@ -162,6 +162,36 @@ public:
 
 	virtual bool HasImage() const = 0;
 
+	virtual std::shared_ptr<Image> GetNormalImage() const = 0;
+
+	virtual std::shared_ptr<ImageBuffer> GetINormalmageBuffer() const = 0;
+
+	virtual bool HasNormalImage() const = 0;
+
+	virtual std::shared_ptr<Image> GetExtraInfImage() const = 0;
+
+	virtual std::shared_ptr<ImageBuffer> GetIExtraInfoImageBuffer() const = 0;
+
+	virtual bool HasExtraInfoImage() const = 0;
+
+	virtual float GetShineDamper() const = 0;
+
+	virtual float GetReflectivity() const = 0;
+
+	virtual bool HasTransparency() const = 0;
+
+	virtual void SetHasTransparency(bool transparency) = 0;
+
+	virtual bool UsesFakeLightning() const = 0;
+
+	virtual void SetUsesFakeLightning(bool fake) = 0;
+
+	virtual unsigned int GetAtlasNumberOfRows() const = 0;
+
+	virtual void SetAtlasNumberOfRows(unsigned int rows) = 0;
+
+	virtual const glm::vec3& GetColor() const = 0;
+
 public:
 	virtual ~IMaterial() = default;
 };
@@ -197,13 +227,48 @@ public:
 class Material : public IMaterial
 {
 private:
-	std::shared_ptr<Image> m_image;
+	glm::vec3 m_color{ 1.0f, 1.0f, 1.0f };
 
-	std::shared_ptr<ImageBuffer> m_imageBuffer;
+	std::shared_ptr<Image> m_image{ nullptr };
+
+	std::shared_ptr<ImageBuffer> m_imageBuffer{ nullptr };
+
+	std::shared_ptr<Image> m_normalImage{ nullptr };
+
+	std::shared_ptr<ImageBuffer> m_normalImageBuffer{ nullptr };
+
+	std::shared_ptr<Image> m_extraImage{ nullptr };
+
+	std::shared_ptr<ImageBuffer> m_extraImageBuffer{ nullptr };
+
+	float m_shineDamper = 10.0f;
+
+	float m_reflectivity = 1.0f;
+
+	bool m_hasTransparency{ false };
+
+	bool m_usesFakeLightning{ false };
+
+	unsigned int m_atlasNuumberOfRows{ 1 };
 
 public:
-	Material(const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer)
-		: m_image(image), m_imageBuffer(imageBuffer)
+	Material(const glm::vec3& color, const float shineDamper, const float reflectivity)
+		: m_color(color), m_shineDamper(shineDamper), m_reflectivity(reflectivity)
+	{
+	}
+
+	Material(const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const float shineDamper, const float reflectivity)
+		: m_image(image), m_imageBuffer(imageBuffer), m_shineDamper(shineDamper), m_reflectivity(reflectivity)
+	{
+	}
+
+	Material(const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<ImageBuffer>& normalImageBuffer, const float shineDamper, const float reflectivity)
+		: m_image(image), m_imageBuffer(imageBuffer), m_normalImage(normalImage), m_normalImageBuffer(normalImageBuffer), m_shineDamper(shineDamper), m_reflectivity(reflectivity)
+	{
+	}
+
+	Material(const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<ImageBuffer>& normalImageBuffer, const std::shared_ptr<Image>& extraImage, const std::shared_ptr<ImageBuffer>& extraImageBuffer, const float shineDamper, const float reflectivity)
+		: m_image(image), m_imageBuffer(imageBuffer), m_normalImage(normalImage), m_normalImageBuffer(normalImageBuffer), m_extraImage(extraImage), m_extraImageBuffer(extraImageBuffer), m_shineDamper(shineDamper), m_reflectivity(reflectivity)
 	{
 	}
 
@@ -222,7 +287,82 @@ public:
 
 	bool HasImage() const override
 	{
-		return true;
+		return m_image != nullptr;
+	}
+
+	const glm::vec3& GetColor() const override
+	{
+		return m_color;
+	}
+
+	std::shared_ptr<Image> GetNormalImage() const override
+	{
+		return m_normalImage;
+	}
+
+	std::shared_ptr<ImageBuffer> GetINormalmageBuffer() const override
+	{
+		return m_normalImageBuffer;
+	}
+
+	bool HasNormalImage() const override
+	{
+		return m_normalImage != nullptr;
+	}
+
+	std::shared_ptr<Image> GetExtraInfImage() const override
+	{
+		return m_extraImage;
+	}
+
+	std::shared_ptr<ImageBuffer> GetIExtraInfoImageBuffer() const override
+	{
+		return m_extraImageBuffer;
+	}
+
+	bool HasExtraInfoImage() const override
+	{
+		return m_extraImage != nullptr;
+	}
+
+	float GetShineDamper() const override
+	{
+		return m_shineDamper;
+	}
+
+	float GetReflectivity() const override
+	{
+		return m_reflectivity;
+	}
+
+	bool HasTransparency() const override
+	{
+		return m_hasTransparency;
+	}
+
+	void SetHasTransparency(bool transparency) override
+	{
+		m_hasTransparency = transparency;
+	}
+
+	bool UsesFakeLightning() const override
+	{
+		return m_usesFakeLightning;
+	}
+
+	void SetUsesFakeLightning(bool fake) override
+	{
+		m_usesFakeLightning = fake;
+	}
+
+	unsigned int GetAtlasNumberOfRows() const override
+	{
+		return m_atlasNuumberOfRows;
+	}
+
+	void SetAtlasNumberOfRows(unsigned int rows) override
+	{
+		m_atlasNuumberOfRows = rows;
 	}
 };
 
@@ -278,7 +418,7 @@ public:
 	}
 
 	virtual ~DefaultRenderComponent() = default;
-	 
+
 public:
 	std::shared_ptr<IModel> GetModel() const override
 	{
@@ -289,7 +429,7 @@ public:
 	{
 		return m_material;
 	}
-	
+
 	bool CastsShadows() const
 	{
 		return m_castsShadows;
@@ -334,13 +474,13 @@ private:
 		return imageBuffer;
 	}
 
-	std::shared_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& textureFilename, bool repeatAddressMode) const
+	std::shared_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& textureFilename, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
 	{
 		std::shared_ptr<Image> image = CreateImage(textureFilename);
 
 		std::shared_ptr<ImageBuffer> imageBuffer = CreateImageBuffer(allocator, image, repeatAddressMode);
 
-		return std::make_shared<Material>(image, imageBuffer);
+		return std::make_shared<Material>(image, imageBuffer, shineDamper, reflectivity);
 	}
 
 	std::shared_ptr<IModel> CreateModel(Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const
@@ -357,7 +497,7 @@ private:
 public:
 	std::shared_ptr<IRenderComponent> CreateCubeRenderComponent(Allocator& allocator, const std::string& textureFilename, const bool castsShadows, const bool isCastedByShadows) const
 	{
-		std::shared_ptr<IMaterial> material = CreateMaterial(allocator, textureFilename, false);
+		std::shared_ptr<IMaterial> material = CreateMaterial(allocator, textureFilename, false, 10.0f, 1.0f);
 
 		std::shared_ptr<IMesh> mesh = std::make_shared<CubeMesh>();
 		std::shared_ptr<IModel> model = CreateModel(allocator, mesh);
@@ -367,7 +507,7 @@ public:
 
 	std::shared_ptr<IRenderComponent> CreatePlaneRenderComponent(Allocator& allocator, const std::string& textureFilename, const bool castsShadows, const bool isCastedByShadows) const
 	{
-		std::shared_ptr<IMaterial> material = CreateMaterial(allocator, textureFilename, true);
+		std::shared_ptr<IMaterial> material = CreateMaterial(allocator, textureFilename, true, 2.0f, 0.3f);
 
 		std::shared_ptr<IMesh> mesh = std::make_shared<PlaneMesh>(40.0f, 40.0f, 1, 1, 10, 10);
 		std::shared_ptr<IModel> model = CreateModel(allocator, mesh);
@@ -395,11 +535,11 @@ class ICameraComponent
 {
 public:
 	virtual void Update(float deltaTime, const CameraMoveState& inputState) = 0;
-	
+
 	virtual const glm::mat4& LookAt() const = 0;
 
 	virtual void Reset() = 0;
-	
+
 	virtual void AddPitch(float amountInDegrees) = 0;
 
 	virtual void AddYaw(float amountInDegrees) = 0;
@@ -407,9 +547,9 @@ public:
 	virtual const ViewFrustum& GetViewFrustum() const = 0;
 
 	virtual float GetSensitivity() const = 0;
-	
+
 	virtual float GetMoveSpeed() const = 0;
-	
+
 public:
 	virtual ~ICameraComponent() = default;
 };
@@ -609,15 +749,15 @@ class ILightComponent
 {
 public:
 	virtual void Update(float deltaTime) = 0;
-	
+
 	virtual glm::mat4 LookAt() const = 0;
 
 	virtual glm::mat4 GetProjectionMatrix() const = 0;
-	
+
 	virtual glm::vec3 GetPosition() const = 0;
 
 	virtual glm::vec3 GetDirection() const = 0;
-	
+
 	virtual const ViewFrustum& GetViewFrustum() const = 0;
 
 public:
@@ -1258,7 +1398,7 @@ public:
 	void Update(float deltaTime) override
 	{
 		CameraMoveState moveState;
-		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_W)) 
+		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_W))
 		{
 			moveState.forward = true;
 		}
@@ -1289,7 +1429,7 @@ public:
 
 		SetPosition(glm::vec3(cameraTransformInWorldSpace[3][0], cameraTransformInWorldSpace[3][1], cameraTransformInWorldSpace[3][2]));
 		SetOrientation(glm::quat_cast(cameraTransformInWorldSpace));
-		
+
 		AbstractSceneNode::Update(deltaTime);
 	}
 
@@ -1677,7 +1817,7 @@ public:
 		vkCmdPushConstants(renderContext.defaultCommandBuffer, m_pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantBlock), &pushConstBlock);
 
 		m_shader->Bind("depthSampler", shadows->GetImageBuffer()->GetImageView(), shadows->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-		
+
 		VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
 
 		VkBuffer vertexBuffers[] = { *m_quadModel->GetVertexBuffer() };
@@ -2042,7 +2182,7 @@ protected:
 	}
 };
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
 	setvbuf(stdout, NULL, _IONBF, 0); // avoid buffering
 
