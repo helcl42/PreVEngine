@@ -522,20 +522,10 @@ std::map<std::string, std::shared_ptr<Image>> RenderComponentFactory::s_imagesCa
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CAMERA COMPONENT
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct CameraMoveState
-{
-	bool forward = false;
-	bool back = false;
-	bool left = false;
-	bool right = false;
-	bool up = false;
-	bool down = false;
-};
-
 class ICameraComponent
 {
 public:
-	virtual void Update(float deltaTime, const CameraMoveState& inputState) = 0;
+	virtual void Update(float deltaTime) = 0;
 
 	virtual const glm::mat4& LookAt() const = 0;
 
@@ -545,11 +535,19 @@ public:
 
 	virtual void AddYaw(float amountInDegrees) = 0;
 
+	virtual void AddOrientation(const glm::quat& orientationDiff) = 0;
+
+	virtual void AddPosition(const glm::vec3& positionDiff) = 0;
+
+	virtual glm::vec3 GetForwardDirection() const = 0;
+
+	virtual glm::vec3 GetRightDirection() const = 0;
+
+	virtual glm::vec3 GetUpDirection() const = 0;
+
 	virtual const ViewFrustum& GetViewFrustum() const = 0;
 
-	virtual float GetSensitivity() const = 0;
-
-	virtual float GetMoveSpeed() const = 0;
+	virtual void SetViewFrustum(const ViewFrustum& viewFrustum) = 0;
 
 public:
 	virtual ~ICameraComponent() = default;
@@ -559,10 +557,6 @@ class CameraComponent : public ICameraComponent
 {
 private:
 	const glm::vec3 m_upDirection{ 0.0f, 1.0f, 0.0f };
-
-	const float m_sensitivity = 0.05f;
-
-	const float m_moveSpeed = 25.0f;
 
 private:
 	glm::vec3 m_position;
@@ -576,6 +570,8 @@ private:
 	glm::vec3 m_pitchYawRoll;
 
 	glm::vec3 m_pitchYawRollDelta;
+
+	glm::quat m_orientationDelta;
 
 	glm::mat4 m_viewMatrix;
 
@@ -608,39 +604,9 @@ private:
 		return val;
 	}
 
-	void UpdatePosition(float deltaTime, const CameraMoveState& inputState)
+	void UpdatePosition(float deltaTime)
 	{
 		m_position += m_positionDelta;
-
-		if (inputState.forward)
-		{
-			m_position += m_forwardDirection * deltaTime * m_moveSpeed;
-		}
-
-		if (inputState.back)
-		{
-			m_position -= m_forwardDirection * deltaTime * m_moveSpeed;
-		}
-
-		if (inputState.left)
-		{
-			m_position -= m_rightDirection * deltaTime * m_moveSpeed;
-		}
-
-		if (inputState.right)
-		{
-			m_position += m_rightDirection * deltaTime * m_moveSpeed;
-		}
-
-		if (inputState.down)
-		{
-			m_position -= m_upDirection * deltaTime * m_moveSpeed;
-		}
-
-		if (inputState.up)
-		{
-			m_position += m_upDirection * deltaTime * m_moveSpeed;
-		}
 
 		m_positionDelta = glm::vec3(0.0f, 0.0f, 0.0f);
 	}
@@ -654,7 +620,7 @@ private:
 		glm::quat headingQuat = glm::angleAxis(glm::radians(m_pitchYawRollDelta.y), m_upDirection);
 
 		//add the two quaternions
-		glm::quat orientation = glm::normalize(pitchQuat * headingQuat);
+		glm::quat orientation = glm::normalize(pitchQuat * headingQuat * m_orientationDelta);
 
 		// update forward direction from the quaternion
 		m_forwardDirection = glm::normalize(orientation * m_forwardDirection);
@@ -664,13 +630,14 @@ private:
 
 		// reset current iteration deltas
 		m_pitchYawRollDelta = glm::vec3(0.0f, 0.0f, 0.0f);
+		m_orientationDelta = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 	}
 
 public:
-	void Update(float deltaTime, const CameraMoveState& inputState) override
+	void Update(float deltaTime) override
 	{
 		UpdateOrientation(deltaTime);
-		UpdatePosition(deltaTime, inputState);
+		UpdatePosition(deltaTime);
 
 		m_viewMatrix = glm::lookAt(m_position, m_position + m_forwardDirection, m_upDirection);
 	}
@@ -689,6 +656,7 @@ public:
 
 		m_pitchYawRoll = glm::vec3(0.0f, 0.0f, 0.0f);
 		m_pitchYawRollDelta = glm::vec3(0.0f, 0.0f, 0.0f);
+		m_orientationDelta = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 
 		m_viewMatrix = glm::mat4(1.0f);
 
@@ -718,19 +686,39 @@ public:
 		m_pitchYawRollDelta.y = NormalizeUpTo2Phi(m_pitchYawRollDelta.y);
 	}
 
+	void AddOrientation(const glm::quat& orientationDiff) override
+	{
+		m_orientationDelta = orientationDiff;
+	}
+
+	void AddPosition(const glm::vec3& positionDiff) override
+	{
+		m_positionDelta = positionDiff;
+	}
+
+	glm::vec3 GetForwardDirection() const override
+	{
+		return m_forwardDirection;
+	}
+
+	glm::vec3 GetRightDirection() const override
+	{
+		return m_rightDirection;
+	}
+
+	glm::vec3 GetUpDirection() const override
+	{
+		return m_upDirection;
+	}
+
 	const ViewFrustum& GetViewFrustum() const override
 	{
 		return m_viewFrustum;
 	}
 
-	float GetSensitivity() const override
+	void SetViewFrustum(const ViewFrustum& viewFrustum) override
 	{
-		return m_sensitivity;
-	}
-
-	float GetMoveSpeed() const override
-	{
-		return m_moveSpeed;
+		m_viewFrustum = viewFrustum;
 	}
 };
 
@@ -793,7 +781,7 @@ public:
 		: m_position(pos)
 	{
 	}
-	
+
 	LightComponent(const glm::vec3& pos, const glm::vec3& color, const glm::vec3& attenuation)
 		: m_position(pos), m_color(color), m_attenuation(attenuation)
 	{
@@ -1380,6 +1368,11 @@ private:
 	EventHandler<Camera, KeyEvent> m_keyHandler{ *this };
 
 private:
+	const float m_sensitivity = 0.05f;
+
+	const float m_moveSpeed = 25.0f;
+
+private:
 	InputsFacade m_inputFacade;
 
 	std::shared_ptr<ICameraComponent> m_cameraComponent;
@@ -1420,32 +1413,34 @@ public:
 
 	void Update(float deltaTime) override
 	{
-		CameraMoveState moveState;
+		glm::vec3 positionDelta{ 0.0f, 0.0f, 0.0f };
 		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_W))
 		{
-			moveState.forward = true;
+			positionDelta += m_cameraComponent->GetForwardDirection() * deltaTime * m_moveSpeed;
 		}
 		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_S))
 		{
-			moveState.back = true;
+			positionDelta -= m_cameraComponent->GetForwardDirection() * deltaTime * m_moveSpeed;
 		}
 		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_A))
 		{
-			moveState.left = true;
+			positionDelta -= m_cameraComponent->GetRightDirection() * deltaTime * m_moveSpeed;
 		}
 		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_D))
 		{
-			moveState.right = true;
+			positionDelta += m_cameraComponent->GetRightDirection() * deltaTime * m_moveSpeed;
 		}
 		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_Q))
 		{
-			moveState.down = true;
+			positionDelta -= m_cameraComponent->GetUpDirection() * deltaTime * m_moveSpeed;
 		}
 		if (m_inputFacade.IsKeyPressed(KeyCode::KEY_E))
 		{
-			moveState.up = true;
+			positionDelta += m_cameraComponent->GetUpDirection() * deltaTime * m_moveSpeed;
 		}
-		m_cameraComponent->Update(deltaTime, moveState);
+		m_cameraComponent->AddPosition(positionDelta);
+
+		m_cameraComponent->Update(deltaTime);
 
 		glm::mat4 viewMatrix = m_cameraComponent->LookAt();
 		glm::mat4 cameraTransformInWorldSpace = glm::inverse(viewMatrix);
@@ -1468,7 +1463,7 @@ public:
 	{
 		if (mouseEvent.action == MouseActionType::MOVE && mouseEvent.button == MouseButtonType::LEFT)
 		{
-			const glm::vec2 angleInDegrees = mouseEvent.position * m_cameraComponent->GetSensitivity();
+			const glm::vec2 angleInDegrees = mouseEvent.position * m_sensitivity;
 
 			m_cameraComponent->AddPitch(angleInDegrees.y);
 			m_cameraComponent->AddYaw(angleInDegrees.x);
@@ -1479,7 +1474,7 @@ public:
 	{
 		if (touchEvent.action == TouchActionType::MOVE)
 		{
-			const glm::vec2 angleInDegrees = (touchEvent.position - m_prevTouchPosition) * m_cameraComponent->GetSensitivity();
+			const glm::vec2 angleInDegrees = (touchEvent.position - m_prevTouchPosition) * m_sensitivity;
 
 			m_cameraComponent->AddPitch(angleInDegrees.y);
 			m_cameraComponent->AddYaw(angleInDegrees.x);
