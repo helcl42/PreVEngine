@@ -748,19 +748,23 @@ public:
 class ILightComponent
 {
 public:
-	virtual void Update(float deltaTime) = 0;
-
 	virtual glm::mat4 LookAt() const = 0;
 
 	virtual glm::mat4 GetProjectionMatrix() const = 0;
 
 	virtual glm::vec3 GetPosition() const = 0;
 
+	virtual void SetPosition(const glm::vec3& position) = 0;
+
 	virtual glm::vec3 GetDirection() const = 0;
 
-	virtual glm::vec3 GetColor() = 0;
+	virtual glm::vec3 GetColor() const = 0;
+
+	virtual void SetColor(const glm::vec3& color) = 0;
 
 	virtual glm::vec3 GetAttenuation() const = 0;
+
+	virtual void SetAttenuation(const glm::vec3& attenuation) = 0;
 
 	virtual const ViewFrustum& GetViewFrustum() const = 0;
 
@@ -799,18 +803,6 @@ public:
 	}
 
 public:
-	void Update(float deltaTime) override
-	{
-		const float ROTATION_SPEED_DEG_PER_SEC = 7.5f;
-		const float ROTATION_ANGLE = ROTATION_SPEED_DEG_PER_SEC * deltaTime;
-
-		glm::mat4 transform(1.0f);
-		transform = glm::rotate(transform, glm::radians(ROTATION_ANGLE), m_upDirection);
-		transform = glm::translate(transform, m_position);
-
-		m_position = glm::vec3(transform[3][0], transform[3][1], transform[3][2]);
-	}
-
 	glm::mat4 LookAt() const override
 	{
 		return glm::lookAt(m_position, m_lookAtPosition, m_upDirection);
@@ -826,19 +818,34 @@ public:
 		return m_position;
 	}
 
+	void SetPosition(const glm::vec3& position)
+	{
+		m_position = position;
+	}
+
 	glm::vec3 GetDirection() const override
 	{
 		return glm::normalize(-m_position);
 	}
 
-	glm::vec3 GetColor() override
+	glm::vec3 GetColor() const override
 	{
 		return m_color;
+	}
+
+	void SetColor(const glm::vec3& color) override
+	{
+		m_color = color;
 	}
 
 	glm::vec3 GetAttenuation() const override
 	{
 		return m_attenuation;
+	}
+
+	void SetAttenuation(const glm::vec3& attenuation) override
+	{
+		m_attenuation = attenuation;
 	}
 
 	const ViewFrustum& GetViewFrustum() const override
@@ -1450,8 +1457,8 @@ public:
 		glm::mat4 viewMatrix = m_cameraComponent->LookAt();
 		glm::mat4 cameraTransformInWorldSpace = glm::inverse(viewMatrix);
 
-		SetPosition(glm::vec3(cameraTransformInWorldSpace[3][0], cameraTransformInWorldSpace[3][1], cameraTransformInWorldSpace[3][2]));
-		SetOrientation(glm::quat_cast(cameraTransformInWorldSpace));
+		SetPosition(MathUtil::ExtractTranslation(cameraTransformInWorldSpace));
+		SetOrientation(MathUtil::ExtractOrientation(cameraTransformInWorldSpace));
 
 		AbstractSceneNode::Update(deltaTime);
 	}
@@ -1535,7 +1542,23 @@ public:
 
 	void Update(float deltaTime) override
 	{
-		m_lightComponent->Update(deltaTime);
+		const float ROTATION_SPEED_DEG_PER_SEC = 7.5f;
+		const float ROTATION_ANGLE = ROTATION_SPEED_DEG_PER_SEC * deltaTime;
+
+		glm::mat4 transform(1.0f);
+		transform = glm::rotate(transform, glm::radians(ROTATION_ANGLE), glm::vec3(0.0f, 1.0f, 0.0f));
+		transform = glm::translate(transform, m_lightComponent->GetPosition());
+
+		glm::vec3 position{ transform[3][0], transform[3][1], transform[3][2] };
+
+		m_lightComponent->SetPosition(position);
+
+		auto lightTransformInWorldSpace = glm::inverse(m_lightComponent->LookAt());
+
+		SetPosition(MathUtil::ExtractTranslation(lightTransformInWorldSpace));
+		SetOrientation(MathUtil::ExtractOrientation(lightTransformInWorldSpace));
+
+		SetPosition(position);
 
 		AbstractSceneNode::Update(deltaTime);
 	}

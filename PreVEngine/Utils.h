@@ -331,6 +331,16 @@ namespace PreVEngine
 		{
 			return (val < min ? min : val > max ? max : val);
 		}
+
+		static glm::vec3 ExtractTranslation(const glm::mat4& transform)
+		{
+			return glm::vec3(transform[3][0], transform[3][1], transform[3][2]);
+		}
+
+		static glm::quat ExtractOrientation(const glm::mat4& transform)
+		{
+			return glm::quat_cast(transform);
+		}
 	};
 
 	class IDGenerator final : public Singleton<IDGenerator>
