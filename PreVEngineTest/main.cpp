@@ -18,6 +18,7 @@
 using namespace PreVEngine;
 
 static const std::string TAG_LIGHT = "Light";
+static const std::string TAG_MAIN_LIGHT = "MainLight";
 static const std::string TAG_SHADOW = "Shadow";
 static const std::string TAG_CAMERA = "Camera";
 
@@ -892,7 +893,7 @@ class IShadowsComponent
 public:
 	virtual void Init() = 0;
 
-	virtual void Update(const float deltaTime, const std::shared_ptr<ILightComponent>& light, const std::shared_ptr<ICameraComponent>& camera) = 0;
+	virtual void Update(const glm::vec3& lightDirection, const float nearClippingPlane, const float farClippingPlane, const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix) = 0;
 
 	virtual void ShutDown() = 0;
 
@@ -1006,19 +1007,24 @@ private:
 		m_depthBuffer->Destroy();
 	}
 
-	void UpdateCascades(const float deltaTime, const std::shared_ptr<ILightComponent>& light, const std::shared_ptr<ICameraComponent>& camera)
+public:
+	void Init() override
+	{
+		InitRenderPass();
+		InitCascades();
+	}
+
+	void Update(const glm::vec3& lightDirection, const float nearClippingPlane, const float farClippingPlane, const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix) override
 	{
 		std::vector<float> cascadeSplits(CASCADES_COUNT);
 
-		float nearClip = camera->GetViewFrustum().GetNearClippingPlane();
-		float farClip = camera->GetViewFrustum().GetFarClippingPlane();
-		float clipRange = farClip - nearClip;
+		const float clipRange = farClippingPlane - nearClippingPlane;
 
-		float minZ = nearClip;
-		float maxZ = nearClip + clipRange;
+		const float minZ = nearClippingPlane;
+		const float maxZ = nearClippingPlane + clipRange;
 
-		float range = maxZ - minZ;
-		float ratio = maxZ / minZ;
+		const float range = maxZ - minZ;
+		const float ratio = maxZ / minZ;
 
 		// Calculate split depths based on view camera furstum
 		for (uint32_t i = 0; i < CASCADES_COUNT; i++)
@@ -1027,7 +1033,7 @@ private:
 			float log = minZ * std::pow(ratio, p);
 			float uniform = minZ + range * p;
 			float d = CASCADES_SPLIT_LAMBDA * (log - uniform) + uniform;
-			cascadeSplits[i] = (d - nearClip) / clipRange;
+			cascadeSplits[i] = (d - nearClippingPlane) / clipRange;
 		}
 
 		// Calculate orthographic projection matrix for each cascade
@@ -1048,7 +1054,7 @@ private:
 			};
 
 			// Project frustum corners into world space
-			glm::mat4 inverseCameraTransform = glm::inverse(camera->GetViewFrustum().CreateProjectionMatrix(1280.0f / 960.0f) * camera->LookAt());
+			glm::mat4 inverseCameraTransform = glm::inverse(projectionMatrix * viewMatrix);
 			for (uint32_t i = 0; i < 8; i++)
 			{
 				glm::vec4 invCorner = inverseCameraTransform * glm::vec4(frustumCorners[i], 1.0f);
@@ -1081,30 +1087,17 @@ private:
 			const glm::vec3 maxExtents = glm::vec3(radius);
 			const glm::vec3 minExtents = -maxExtents;
 
-			const glm::vec3 lightDirection = light->GetDirection();
 			const glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDirection * -minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
 			const glm::mat4 lightOrthoProjectionMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f, maxExtents.z - minExtents.z);
 
 			// Store split distance and matrix in cascade
-			m_cascades[i].startSplitDepth = (nearClip + lastSplitDist * clipRange) * -1.0f;
-			m_cascades[i].endSplitDepth = (nearClip + splitDist * clipRange) * -1.0f;
+			m_cascades[i].startSplitDepth = (nearClippingPlane + lastSplitDist * clipRange) * -1.0f;
+			m_cascades[i].endSplitDepth = (nearClippingPlane + splitDist * clipRange) * -1.0f;
 			m_cascades[i].viewMatrix = lightViewMatrix;
 			m_cascades[i].projectionMatrix = lightOrthoProjectionMatrix;
 
 			lastSplitDist = splitDist;
 		}
-	}
-
-public:
-	void Init() override
-	{
-		InitRenderPass();
-		InitCascades();
-	}
-
-	void Update(const float deltaTime, const std::shared_ptr<ILightComponent>& light, const std::shared_ptr<ICameraComponent>& camera) override
-	{
-		UpdateCascades(deltaTime, light, camera);
 	}
 
 	void ShutDown() override
@@ -1600,13 +1593,13 @@ public:
 
 	void Update(float deltaTime) override
 	{
-		auto lightNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_LIGHT }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
-		auto light = ComponentRepository<ILightComponent>::GetInstance().Get(lightNode->GetId());
+		const auto lightNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_MAIN_LIGHT }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
+		const auto light = ComponentRepository<ILightComponent>::GetInstance().Get(lightNode->GetId());
 
-		auto cameraNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_CAMERA }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
-		auto camera = ComponentRepository<ICameraComponent>::GetInstance().Get(cameraNode->GetId());
+		const auto cameraNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_CAMERA }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
+		const auto camera = ComponentRepository<ICameraComponent>::GetInstance().Get(cameraNode->GetId());
 
-		m_shadowsCompoent->Update(deltaTime, light, camera);
+		m_shadowsCompoent->Update(light->GetDirection(), light->GetViewFrustum().GetNearClippingPlane(), light->GetViewFrustum().GetFarClippingPlane(), light->GetViewFrustum().CreateProjectionMatrix(1.0f), camera->LookAt());
 
 		AbstractSceneNode::Update(deltaTime);
 	}
@@ -1991,7 +1984,7 @@ public:
 	{
 		if (ComponentRepository<IRenderComponent>::GetInstance().Contains(node->GetId()))
 		{
-			auto lightNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_LIGHT }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
+			auto lightNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_MAIN_LIGHT }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
 			auto light = ComponentRepository<ILightComponent>::GetInstance().Get(lightNode->GetId());
 
 			auto shadowsNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_SHADOW }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
@@ -2088,7 +2081,7 @@ public:
 	{
 		// Init scene nodes
 		auto light = std::make_shared<Light>(glm::vec3(150.0f, 150.0f, 150.0f));
-		light->SetTags({ TAG_LIGHT });
+		light->SetTags({ TAG_MAIN_LIGHT });
 		AddChild(light);
 
 		auto shadows = std::make_shared<Shadows>();
