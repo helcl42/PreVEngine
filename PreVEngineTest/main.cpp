@@ -59,16 +59,21 @@ public:
 
 	glm::mat4 CreateProjectionMatrix(const float aspectRatio) const
 	{
-		glm::mat4 projectionMatrix = glm::perspective(m_fov, aspectRatio, m_nearClippingPlane, m_farClippingPlane);
+		glm::mat4 projectionMatrix = glm::perspective(glm::radians(m_fov), aspectRatio, m_nearClippingPlane, m_farClippingPlane);
 		projectionMatrix[1][1] *= -1; // invert Y in clip coordinates
 
 		return projectionMatrix;
 	}
 
 public:
-	float GetFov() const // vertical
+	float GetFov() const // vertical in degs
 	{
 		return m_fov;
+	}
+
+	void SetFov(float fov) // vertical in degs
+	{
+		m_fov = fov;
 	}
 
 	float GetNearClippingPlane() const
@@ -76,9 +81,19 @@ public:
 		return m_nearClippingPlane;
 	}
 
+	void SetNearClippingPlane(float nearCP)
+	{
+		m_nearClippingPlane = nearCP;
+	}
+
 	float GetFarClippingPlane() const
 	{
 		return m_farClippingPlane;
+	}
+
+	void SetFarClippingPlane(float farCP)
+	{
+		m_farClippingPlane = farCP;
 	}
 };
 
@@ -757,6 +772,8 @@ public:
 
 	virtual const ViewFrustum& GetViewFrustum() const = 0;
 
+	virtual void SetViewFrustum(const ViewFrustum& viewFrustum) = 0;
+
 public:
 	virtual ~ILightComponent() = default;
 };
@@ -840,6 +857,11 @@ public:
 	const ViewFrustum& GetViewFrustum() const override
 	{
 		return m_viewFrustum;
+	}
+
+	void SetViewFrustum(const ViewFrustum& viewFrustum) override
+	{
+		m_viewFrustum = viewFrustum;
 	}
 };
 
@@ -1404,6 +1426,7 @@ public:
 	{
 		CameraComponentFactory cameraFactory;
 		m_cameraComponent = cameraFactory.Create();
+
 		ComponentRepository<ICameraComponent>::GetInstance().Add(m_id, m_cameraComponent);
 
 		AbstractSceneNode::Init();
