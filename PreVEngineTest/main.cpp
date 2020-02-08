@@ -1611,10 +1611,10 @@ public:
 
 	void Update(float deltaTime) override
 	{
-		const auto lightNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_MAIN_LIGHT }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
+		const auto lightNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_MAIN_LIGHT });
 		const auto light = ComponentRepository<ILightComponent>::GetInstance().Get(lightNode->GetId());
 
-		const auto cameraNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_CAMERA }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
+		const auto cameraNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_CAMERA });
 		const auto camera = ComponentRepository<ICameraComponent>::GetInstance().Get(cameraNode->GetId());
 
 		m_shadowsCompoent->Update(light->GetDirection(), light->GetViewFrustum().GetNearClippingPlane(), light->GetViewFrustum().GetFarClippingPlane(), light->GetViewFrustum().CreateProjectionMatrix(1.0f), camera->LookAt());
@@ -1697,7 +1697,7 @@ public:
 
 	void PreRender(RenderContext& renderContext) override
 	{
-		auto shadowsNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_SHADOW }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
+		auto shadowsNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_SHADOW });
 		auto shadows = ComponentRepository<IShadowsComponent>::GetInstance().Get(shadowsNode->GetId());
 		const auto shadowsExtent = shadows->GetExtent();
 
@@ -1721,7 +1721,7 @@ public:
 			auto renderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());
 			if (renderComponent->CastsShadows())
 			{
-				auto shadowsNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_SHADOW }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
+				auto shadowsNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_SHADOW });
 				auto shadows = ComponentRepository<IShadowsComponent>::GetInstance().Get(shadowsNode->GetId());
 
 				const auto& userData = std::dynamic_pointer_cast<ShadowsRenderContextUserData>(renderContext.userData);
@@ -1866,7 +1866,7 @@ public:
 	// make a node with quad model & shadowMap texture ???
 	void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags>>& node) override
 	{
-		auto shadowsNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_SHADOW }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
+		auto shadowsNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_SHADOW });
 		auto shadows = ComponentRepository<IShadowsComponent>::GetInstance().Get(shadowsNode->GetId());
 
 		const auto& cascade = shadows->GetCascade(m_cascadeIndex);
@@ -2002,13 +2002,13 @@ public:
 	{
 		if (ComponentRepository<IRenderComponent>::GetInstance().Contains(node->GetId()))
 		{
-			auto lightNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_MAIN_LIGHT }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
+			auto lightNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_MAIN_LIGHT });
 			auto light = ComponentRepository<ILightComponent>::GetInstance().Get(lightNode->GetId());
 
-			auto shadowsNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_SHADOW }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
+			auto shadowsNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_SHADOW });
 			auto shadows = ComponentRepository<IShadowsComponent>::GetInstance().Get(shadowsNode->GetId());
 
-			auto cameeraNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_CAMERA }, GraphTraversal<SceneNodeFlags>::LogicOperation::OR);
+			auto cameeraNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_CAMERA });
 			auto camera = ComponentRepository<ICameraComponent>::GetInstance().Get(cameeraNode->GetId());
 
 			auto renderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());

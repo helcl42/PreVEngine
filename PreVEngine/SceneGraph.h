@@ -506,24 +506,24 @@ namespace PreVEngine
 			return FindByIdInternal(m_root, id);
 		}
 
-		std::shared_ptr<ISceneNode<NodeFlagsType>> FindOneWthFlags(const FlagSet<NodeFlagsType>& flags, const LogicOperation operation) const
+		std::shared_ptr<ISceneNode<NodeFlagsType>> FindOneWthFlags(const FlagSet<NodeFlagsType>& flags, const LogicOperation operation = LogicOperation::OR) const
 		{
 			return FindOneWithFlagsInternal(m_root, flags, operation);
 		}
 
-		std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>> FindAllWithFlags(const FlagSet<NodeFlagsType>& flags, const LogicOperation operation) const
+		std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>> FindAllWithFlags(const FlagSet<NodeFlagsType>& flags, const LogicOperation operation = LogicOperation::OR) const
 		{
 			std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>> result;
 			FindAllWithFlagsInternal(m_root, flags, operation, result);
 			return result;
 		}
 
-		std::shared_ptr<ISceneNode<NodeFlagsType>> FindOneWithTags(const TagSet& tags, const LogicOperation operation) const
+		std::shared_ptr<ISceneNode<NodeFlagsType>> FindOneWithTags(const TagSet& tags, const LogicOperation operation = LogicOperation::OR) const
 		{
 			return FindOneWithTagsInternal(m_root, tags, operation);
 		}
 
-		std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>> FindAllWthTags(const TagSet& tags, const LogicOperation operation) const
+		std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>> FindAllWthTags(const TagSet& tags, const LogicOperation operation = LogicOperation::OR) const
 		{
 			std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>> result;
 			FindAllWithTagsInternal(m_root, tags, operation, result);
