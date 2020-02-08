@@ -85,6 +85,11 @@ namespace PreVEngine
 		bool ShouldAdjustCapacity(const uint32_t size);
 
 	protected:
+		void AddDescriptorSet(const std::string& name, const uint32_t binding, const VkDescriptorType descType, const uint32_t descCount, const VkShaderStageFlags stageFlags);
+
+		void AddPushConstantBlock(const VkShaderStageFlags stageFlags, const uint32_t offset, const uint32_t size);
+
+	protected:
 		virtual void InitVertexInputs() = 0;
 
 		virtual void InitDescriptorSets() = 0;

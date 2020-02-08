@@ -110,9 +110,7 @@ private:
 	void InitDescriptorSets() override
 	{
 		// vertex shader
-		m_layoutBindings.emplace_back(VkUtils::CreteDescriptorSetLayoutBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT));
-		m_descriptorWrites.emplace_back(VkUtils::CreateWriteDescriptorSet(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1));
-		m_descriptorSetInfos["ubo"] = { m_descriptorWrites.size() - 1 };
+		AddDescriptorSet("ubo", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT);
 	}
 
 	void InitPushConstantsBlocks() override
@@ -257,22 +255,12 @@ private:
 	void InitDescriptorSets() override
 	{
 		// vertex shader
-		m_layoutBindings.emplace_back(VkUtils::CreteDescriptorSetLayoutBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT));
-		m_descriptorWrites.emplace_back(VkUtils::CreateWriteDescriptorSet(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1));
-		m_descriptorSetInfos["uboVS"] = { m_descriptorWrites.size() - 1 };
+		AddDescriptorSet("uboVS", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT);
 
 		// fragment shader
-		m_layoutBindings.emplace_back(VkUtils::CreteDescriptorSetLayoutBinding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT));
-		m_descriptorWrites.emplace_back(VkUtils::CreateWriteDescriptorSet(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1));		
-		m_descriptorSetInfos["uboFS"] = { m_descriptorWrites.size() - 1 };
-
-		m_layoutBindings.emplace_back(VkUtils::CreteDescriptorSetLayoutBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT));
-		m_descriptorWrites.emplace_back(VkUtils::CreateWriteDescriptorSet(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1));
-		m_descriptorSetInfos["textureSampler"] = { m_descriptorWrites.size() - 1 };
-		
-		m_layoutBindings.emplace_back(VkUtils::CreteDescriptorSetLayoutBinding(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT));
-		m_descriptorWrites.emplace_back(VkUtils::CreateWriteDescriptorSet(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1));
-		m_descriptorSetInfos["depthSampler"] = { m_descriptorWrites.size() - 1 };
+		AddDescriptorSet("uboFS", 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
+		AddDescriptorSet("textureSampler", 2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
+		AddDescriptorSet("depthSampler", 3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
 	}
 
 	void InitPushConstantsBlocks() override
@@ -427,18 +415,12 @@ private:
 
 	void InitDescriptorSets() override
 	{
-		m_layoutBindings.emplace_back(VkUtils::CreteDescriptorSetLayoutBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT));
-		m_descriptorWrites.emplace_back(VkUtils::CreateWriteDescriptorSet(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1));
-		m_descriptorSetInfos["depthSampler"] = { m_descriptorWrites.size() - 1 };
+		AddDescriptorSet("depthSampler", 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
 	}
 
 	void InitPushConstantsBlocks() override
 	{
-		VkPushConstantRange pushConstantRange = {};
-		pushConstantRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-		pushConstantRange.offset = 0;
-		pushConstantRange.size = sizeof(float) * 3;
-		m_pushConstantRanges.emplace_back(pushConstantRange);
+		AddPushConstantBlock(VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(float) * 3);
 	}
 };
 

@@ -1,5 +1,6 @@
 #include "Shader.h"
 #include "Formats.h"
+#include "Utils.h"
 
 #include <iostream>
 #include <algorithm>
@@ -131,6 +132,22 @@ namespace PreVEngine
 		}
 
 		return false;
+	}
+
+	void Shader::AddDescriptorSet(const std::string& name, const uint32_t binding, const VkDescriptorType descType, const uint32_t descCount, const VkShaderStageFlags stageFlags)
+	{
+		m_layoutBindings.emplace_back(VkUtils::CreteDescriptorSetLayoutBinding(binding, descType, descCount, stageFlags));
+		m_descriptorWrites.emplace_back(VkUtils::CreateWriteDescriptorSet(binding, descType, descCount));
+		m_descriptorSetInfos[name] = { m_descriptorWrites.size() - 1 };
+	}
+
+	void Shader::AddPushConstantBlock(const VkShaderStageFlags stageFlags, const uint32_t offset, const uint32_t size)
+	{
+		VkPushConstantRange pushConstantRange = {};
+		pushConstantRange.stageFlags = stageFlags;
+		pushConstantRange.offset = offset;
+		pushConstantRange.size = size;
+		m_pushConstantRanges.emplace_back(pushConstantRange);
 	}
 
 	bool Shader::AddShaderModule(const VkShaderStageFlagBits stage, const std::vector<char>& spirv)
