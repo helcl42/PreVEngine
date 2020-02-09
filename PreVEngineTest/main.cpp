@@ -896,6 +896,18 @@ struct ShadowsCascade
 		vkDestroyImageView(device, imageView, nullptr);
 		vkDestroyFramebuffer(device, frameBuffer, nullptr);
 	}
+
+	glm::mat4 GetFinalViewProjectionMatrix() const
+	{
+		static const glm::mat4 biasMat(
+			0.5, 0.0, 0.0, 0.0,
+			0.0, 0.5, 0.0, 0.0,
+			0.0, 0.0, 1.0, 0.0,
+			0.5, 0.5, 0.0, 1.0
+		);
+
+		return biasMat * (projectionMatrix * viewMatrix);
+	}
 };
 
 class IShadowsComponent
@@ -2030,7 +2042,7 @@ public:
 			{
 				auto& cascade = shadows->GetCascade(i);
 				uniformsFS.cascadeSplits[i] = glm::vec4(cascade.endSplitDepth);
-				uniformsFS.lightViewProjectionMatrix[i] = cascade.projectionMatrix * cascade.viewMatrix;
+				uniformsFS.lightViewProjectionMatrix[i] = cascade.GetFinalViewProjectionMatrix();
 			}
 			uniformsFS.lightDirection = glm::vec4(light->GetDirection(), 0.0f);
 			uniformsFS.isCastedByShadows = renderComponent->IsCastedByShadows();

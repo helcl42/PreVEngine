@@ -24,12 +24,6 @@ const float ambient = 0.2;
 const vec3 lightColor = vec3(1.0);
 
 const bool enablePCF = true;
-const mat4 biasMat = mat4( 
-	0.5, 0.0, 0.0, 0.0,
-	0.0, 0.5, 0.0, 0.0,
-	0.0, 0.0, 1.0, 0.0,
-	0.5, 0.5, 0.0, 1.0 
-);
 
 float getShadowInternal(const vec4 shadowCoord, const vec2 shadowCoordOffset, const uint cascadeIndex)
 {
@@ -102,8 +96,7 @@ void main()
 	}
 
 	// Depth compare for shadowing
-	vec4 shadowCoord = (biasMat * uboFS.cascadeViewProjecionMatrix[cascadeIndex]) * vec4(inWorldPosition, 1.0);
-
+	vec4 shadowCoord = uboFS.cascadeViewProjecionMatrix[cascadeIndex] * vec4(inWorldPosition, 1.0);
 	vec4 normalizedShadowCoord = shadowCoord / shadowCoord.w;
 
 	float shadow = 1.0f;
