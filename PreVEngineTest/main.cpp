@@ -1933,7 +1933,7 @@ private:
 	{
 		alignas(16) glm::vec4 cascadeSplits[ShadowsComponent::CASCADES_COUNT];
 		alignas(16) glm::mat4 lightViewProjectionMatrix[ShadowsComponent::CASCADES_COUNT];
-		alignas(16) glm::vec3 lightDirection;
+		alignas(16) glm::vec4 lightDirection;
 		alignas(16) bool isCastedByShadows;
 	};
 
@@ -2032,7 +2032,7 @@ public:
 				uniformsFS.cascadeSplits[i] = glm::vec4(cascade.endSplitDepth);
 				uniformsFS.lightViewProjectionMatrix[i] = cascade.projectionMatrix * cascade.viewMatrix;
 			}
-			uniformsFS.lightDirection = light->GetDirection();
+			uniformsFS.lightDirection = glm::vec4(light->GetDirection(), 0.0f);
 			uniformsFS.isCastedByShadows = renderComponent->IsCastedByShadows();
 
 			uboFS->Update(&uniformsFS);

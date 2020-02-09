@@ -4,9 +4,9 @@
 #define SHADOW_MAP_CASCADE_COUNT 4
 
 layout(std140, binding = 1) uniform UniformBufferObject {
-    float cascadeSplits[SHADOW_MAP_CASCADE_COUNT];
+    vec4 cascadeSplits[SHADOW_MAP_CASCADE_COUNT];
 	mat4 cascadeViewProjecionMatrix[SHADOW_MAP_CASCADE_COUNT];
-	vec3 lightDirection;
+	vec4 lightDirection;
 	bool isCastedByShadows;
 } uboFS;
 
@@ -31,7 +31,7 @@ const mat4 biasMat = mat4(
 	0.5, 0.5, 0.0, 1.0 
 );
 
-float getShadow(const vec4 shadowCoord, const vec2 shadowCoordOffset, const uint cascadeIndex)
+float getShadowInternal(const vec4 shadowCoord, const vec2 shadowCoordOffset, const uint cascadeIndex)
 {
 	const float bias = 0.005;
 	float shadow = 1.0;
@@ -46,7 +46,7 @@ float getShadow(const vec4 shadowCoord, const vec2 shadowCoordOffset, const uint
 	return shadow;
 }
 
-float getShadowPCF(const vec4 shadowCoord, const uint cascadeIndex)
+float getShadowPCFInternal(const vec4 shadowCoord, const uint cascadeIndex)
 {
 	const ivec2 texDim = textureSize(depthSampler, 0).xy;
 	const float scale = 0.75;
@@ -60,13 +60,26 @@ float getShadowPCF(const vec4 shadowCoord, const uint cascadeIndex)
 	{
 		for (int y = -range; y <= range; y++)
 		{
-			shadowFactor += getShadow(shadowCoord, vec2(dx * x, dy * y), cascadeIndex);
+			shadowFactor += getShadowInternal(shadowCoord, vec2(dx * x, dy * y), cascadeIndex);
 			count++;
 		}
 	
 	}
-
 	return shadowFactor / count;
+}
+
+float getShadow(const vec4 shadowCoord, const uint cascadeIndex)
+{
+	float shadow = 1.0f;
+	if(enablePCF)
+	{
+		shadow = getShadowPCFInternal(shadowCoord, cascadeIndex);
+	}
+	else
+	{
+		shadow = getShadowInternal(shadowCoord, vec2(0.0), cascadeIndex);
+	}
+	return shadow;
 }
 
 void main() 
@@ -94,20 +107,13 @@ void main()
 	vec4 normalizedShadowCoord = shadowCoord / shadowCoord.w;
 
 	float shadow = 1.0f;
-	if(uboFS.isCastedByShadows)
+	 if(uboFS.isCastedByShadows)
 	{
-		if(enablePCF)
-		{
-			shadow = getShadowPCF(normalizedShadowCoord, cascadeIndex);
-		}
-		else
-		{
-			shadow = getShadow(normalizedShadowCoord, vec2(0.0), cascadeIndex);
-		}
+		shadow = getShadow(normalizedShadowCoord, cascadeIndex);
 	}
 
 	const vec3 N = normalize(inNormal);
-	const vec3 L = normalize(-uboFS.lightDirection);
+	const vec3 L = normalize(-uboFS.lightDirection.xyz);
 	const vec3 diffuse = max(dot(N, L), ambient) * textureColor.rgb;
 
 	outColor = vec4(diffuse * lightColor, 1.0);
