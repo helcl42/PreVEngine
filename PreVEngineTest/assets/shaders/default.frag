@@ -4,8 +4,8 @@
 #define SHADOW_MAP_CASCADE_COUNT 4
 
 layout(std140, binding = 1) uniform UniformBufferObject {
+	mat4 cascadeViewProjecionMatrices[SHADOW_MAP_CASCADE_COUNT];
     vec4 cascadeSplits[SHADOW_MAP_CASCADE_COUNT];
-	mat4 cascadeViewProjecionMatrix[SHADOW_MAP_CASCADE_COUNT];
 	vec4 lightDirection;
 	bool isCastedByShadows;
 } uboFS;
@@ -96,7 +96,7 @@ void main()
 	}
 
 	// Depth compare for shadowing
-	vec4 shadowCoord = uboFS.cascadeViewProjecionMatrix[cascadeIndex] * vec4(inWorldPosition, 1.0);
+	vec4 shadowCoord = uboFS.cascadeViewProjecionMatrices[cascadeIndex] * vec4(inWorldPosition, 1.0);
 	vec4 normalizedShadowCoord = shadowCoord / shadowCoord.w;
 
 	float shadow = 1.0f;
