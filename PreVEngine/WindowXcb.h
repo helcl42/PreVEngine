@@ -477,14 +477,14 @@ namespace PreVEngine
 					}
 				}
 #endif
-				return { Event::UNKNOWN };
+				return { Event::EventType::UNKNOWN };
 			}
 			default:
 				// printf("EVENT: %d\n",(x_event->response_type & ~0x80));  //get event numerical value
 				break;
 		}
 
-		return { Event::NONE };
+		return { Event::EventType::NONE };
 	}
 
 	Event WindowXcb::GetEvent(bool wait_for_event)
@@ -510,7 +510,7 @@ namespace PreVEngine
 			Event event = TranslateEvent(x_event);
 			free(x_event);
 
-			if (event.tag == Event::UNKNOWN)
+			if (event.tag == Event::EventType::UNKNOWN)
 			{
 				x_event = xcb_poll_for_event(m_xcbConnection);  // Discard unknown events (Intel Mesa drivers spams event 35)
 			}
@@ -520,7 +520,7 @@ namespace PreVEngine
 			}
 		}
 
-		return { Event::NONE };
+		return { Event::EventType::NONE };
 	}
 
 	// Return true if this window can present the given queue type

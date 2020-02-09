@@ -1,6 +1,7 @@
 #ifndef __APP_H__
 #define __APP_H__
 
+#include "Common.h"
 #include "Engine.h"
 
 namespace PreVEngine

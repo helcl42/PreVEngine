@@ -99,9 +99,9 @@ namespace PreVEngine
 
 		TagSet m_tags;
 
-		std::weak_ptr<ISceneNode> m_parent;
+		std::weak_ptr<ISceneNode<NodeFlagsType>> m_parent;
 
-		std::vector<std::shared_ptr<ISceneNode>> m_children;
+		std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>> m_children;
 
 		glm::mat4 m_worldTransform;
 
@@ -175,19 +175,19 @@ namespace PreVEngine
 		}
 
 	public:
-		const std::vector<std::shared_ptr<ISceneNode>>& GetChildren() const override
+		const std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>>>& GetChildren() const override
 		{
 			return m_children;
 		}
 
-		void AddChild(const std::shared_ptr<ISceneNode>& child) override
+		void AddChild(const std::shared_ptr<ISceneNode<NodeFlagsType>>& child) override
 		{
-			child->SetParent(shared_from_this());
+			child->SetParent(this->shared_from_this());
 
 			m_children.emplace_back(child);
 		}
 
-		void RemoveChild(const std::shared_ptr<ISceneNode>& child) override
+		void RemoveChild(const std::shared_ptr<ISceneNode<NodeFlagsType>>& child) override
 		{
 			child->SetParent(nullptr);
 
@@ -200,17 +200,17 @@ namespace PreVEngine
 			}
 		}
 
-		std::shared_ptr<ISceneNode> GetThis() override
+		std::shared_ptr<ISceneNode<NodeFlagsType>> GetThis() override
 		{
-			return shared_from_this();
+			return this->shared_from_this();
 		}
 
-		void SetParent(const std::shared_ptr<ISceneNode>& parent) override
+		void SetParent(const std::shared_ptr<ISceneNode<NodeFlagsType>>& parent) override
 		{
 			m_parent = parent;
 		}
 
-		std::shared_ptr<ISceneNode> GetParent() const override
+		std::shared_ptr<ISceneNode<NodeFlagsType>> GetParent() const override
 		{
 			return m_parent.lock();
 		}
@@ -290,9 +290,9 @@ namespace PreVEngine
 			return !m_parent.lock();
 		}
 
-		std::shared_ptr<ISceneNode> GetRoot() override
+		std::shared_ptr<ISceneNode<NodeFlagsType>> GetRoot() override
 		{
-			std::shared_ptr<ISceneNode> parent = m_parent.lock();
+			auto parent = m_parent.lock();
 			if (parent == nullptr)
 			{
 				return GetThis();

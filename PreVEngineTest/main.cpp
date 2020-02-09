@@ -479,12 +479,12 @@ public:
 		return m_material;
 	}
 
-	bool CastsShadows() const
+	bool CastsShadows() const override
 	{
 		return m_castsShadows;
 	}
 
-	bool IsCastedByShadows() const
+	bool IsCastedByShadows() const override
 	{
 		return m_isCastedByShadows;
 	}
@@ -857,7 +857,7 @@ public:
 		return m_position;
 	}
 
-	void SetPosition(const glm::vec3& position)
+	void SetPosition(const glm::vec3& position) override
 	{
 		m_position = position;
 	}
@@ -2244,7 +2244,7 @@ class TestApp : public App<NodeFlagsType>
 {
 public:
 	TestApp(const std::shared_ptr<EngineConfig>& config)
-		: App(config)
+		: App<NodeFlagsType>(config)
 	{
 	}
 
@@ -2259,7 +2259,7 @@ protected:
 
 	void OnSceneInit() override
 	{
-		auto scene = m_engine->GetScene();
+		auto scene = this->m_engine->GetScene();
 
 		auto rootNode = std::make_shared<RootSceneNode>(scene->GetRenderPass());
 
