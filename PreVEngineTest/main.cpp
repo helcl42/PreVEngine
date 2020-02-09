@@ -21,6 +21,7 @@ static const std::string TAG_LIGHT = "Light";
 static const std::string TAG_MAIN_LIGHT = "MainLight";
 static const std::string TAG_SHADOW = "Shadow";
 static const std::string TAG_CAMERA = "Camera";
+static const std::string TAG_MAIN_CAMERA = "MainCamera";
 
 enum class SceneNodeFlags : uint64_t
 {
@@ -149,16 +150,48 @@ public:
 	}
 };
 
+class GraphTraversalHelper
+{
+public:
+	template <typename NodeFlagsType, typename ComponentType>
+	static std::shared_ptr<ComponentType> GetNodeComponent(const TagSet& tagSet, const LogicOperation operation = LogicOperation::OR)
+	{
+		auto node = GraphTraversal<NodeFlagsType>::GetInstance().FindOneWithTags(tagSet);
+		if (node == nullptr)
+		{
+			throw std::runtime_error("There is no such node..");
+		}
+		return ComponentRepository<ComponentType>::GetInstance().Get(node->GetId());
+	}
+
+	template <typename NodeFlagsType, typename ComponentType>
+	static std::shared_ptr<ComponentType> GetNodeComponent(const FlagSet<NodeFlagsType>& flagSet, const LogicOperation operation = LogicOperation::OR)
+	{
+		auto node = GraphTraversal<NodeFlagsType>::GetInstance().FindOneWithFlags(flagSet);
+		if (node == nullptr)
+		{
+			throw std::runtime_error("There is no such node..");
+		}
+		return ComponentRepository<ComponentType>::GetInstance().Get(node->GetId());
+	}
+};
+
+
+struct DefaultRenderContextUserData // inherit this in case you need any special data while rendering scene graph
+{
+};
+
+template <typename UserDataType = DefaultRenderContextUserData>
 class IRenderer
 {
 public:
 	virtual void Init() = 0;
 
-	virtual void PreRender(RenderContext& renderContext) = 0;
+	virtual void PreRender(RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
-	virtual void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags>>& node) = 0;
+	virtual void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags>>& node, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
-	virtual void PostRender(RenderContext& renderContext) = 0;
+	virtual void PostRender(RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
 	virtual void ShutDown() = 0;
 
@@ -897,7 +930,7 @@ struct ShadowsCascade
 		vkDestroyFramebuffer(device, frameBuffer, nullptr);
 	}
 
-	glm::mat4 GetFinalViewProjectionMatrix() const
+	glm::mat4 GetBiasedViewProjectionMatrix() const
 	{
 		static const glm::mat4 biasMat(
 			0.5, 0.0, 0.0, 0.0,
@@ -1623,13 +1656,10 @@ public:
 
 	void Update(float deltaTime) override
 	{
-		const auto lightNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_MAIN_LIGHT });
-		const auto light = ComponentRepository<ILightComponent>::GetInstance().Get(lightNode->GetId());
+		const auto lightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+		const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
-		const auto cameraNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_CAMERA });
-		const auto camera = ComponentRepository<ICameraComponent>::GetInstance().Get(cameraNode->GetId());
-
-		m_shadowsCompoent->Update(light->GetDirection(), light->GetViewFrustum().GetNearClippingPlane(), light->GetViewFrustum().GetFarClippingPlane(), light->GetViewFrustum().CreateProjectionMatrix(1.0f), camera->LookAt());
+		m_shadowsCompoent->Update(lightComponent->GetDirection(), lightComponent->GetViewFrustum().GetNearClippingPlane(), lightComponent->GetViewFrustum().GetFarClippingPlane(), lightComponent->GetViewFrustum().CreateProjectionMatrix(1.0f), cameraComponent->LookAt());
 
 		AbstractSceneNode::Update(deltaTime);
 	}
@@ -1644,7 +1674,7 @@ public:
 	}
 };
 
-struct ShadowsRenderContextUserData : RenderContextUserData
+struct ShadowsRenderContextUserData : DefaultRenderContextUserData
 {
 	const uint32_t cascadeIndex;
 
@@ -1654,7 +1684,7 @@ struct ShadowsRenderContextUserData : RenderContextUserData
 	}
 };
 
-class ShadowsRenderer : public IRenderer
+class ShadowsRenderer : public IRenderer<ShadowsRenderContextUserData>
 {
 private:
 	struct Uniforms
@@ -1707,14 +1737,13 @@ public:
 		m_uniformsPool->AdjustCapactity(10000);
 	}
 
-	void PreRender(RenderContext& renderContext) override
+	void PreRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
 	{
-		auto shadowsNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_SHADOW });
-		auto shadows = ComponentRepository<IShadowsComponent>::GetInstance().Get(shadowsNode->GetId());
+		const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+
 		const auto shadowsExtent = shadows->GetExtent();
 
-		auto userData = std::dynamic_pointer_cast<ShadowsRenderContextUserData>(renderContext.userData);
-		auto cascade = shadows->GetCascade(userData->cascadeIndex);
+		auto cascade = shadows->GetCascade(shadowsRenderContext.cascadeIndex);
 
 		m_renderPass->Begin(cascade.frameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, shadowsExtent });
 
@@ -1726,18 +1755,16 @@ public:
 		vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
 	}
 
-	void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags>>& node) override
+	void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags>>& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
 	{
 		if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT }))
 		{
 			auto renderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());
 			if (renderComponent->CastsShadows())
 			{
-				auto shadowsNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_SHADOW });
-				auto shadows = ComponentRepository<IShadowsComponent>::GetInstance().Get(shadowsNode->GetId());
+				const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
-				const auto& userData = std::dynamic_pointer_cast<ShadowsRenderContextUserData>(renderContext.userData);
-				const auto& cascade = shadows->GetCascade(userData->cascadeIndex);
+				const auto& cascade = shadows->GetCascade(shadowsRenderContext.cascadeIndex);
 
 				auto ubo = m_uniformsPool->GetNext();
 
@@ -1763,11 +1790,11 @@ public:
 
 		for (auto child : node->GetChildren())
 		{
-			Render(renderContext, child);
+			Render(renderContext, child, shadowsRenderContext);
 		}
 	}
 
-	void PostRender(RenderContext& renderContext) override
+	void PostRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
 	{
 		m_renderPass->End(renderContext.defaultCommandBuffer);
 	}
@@ -1780,7 +1807,7 @@ public:
 	}
 };
 
-class QuadRenderer : public IRenderer
+class QuadRenderer : public IRenderer<DefaultRenderContextUserData>
 {
 private:
 	struct PushConstantBlock
@@ -1846,7 +1873,7 @@ public:
 		m_quadModel = std::make_shared<Model>(quadMesh, vertexBuffer, indexBuffer);
 	}
 
-	void PreRender(RenderContext& renderContext) override
+	void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
 	{
 		VkRect2D renderRect{};
 		renderRect.extent.width = renderContext.fullExtent.width / 2;
@@ -1876,10 +1903,9 @@ public:
 	}
 
 	// make a node with quad model & shadowMap texture ???
-	void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags>>& node) override
+	void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags>>& node, const DefaultRenderContextUserData& renderContextUserData) override
 	{
-		auto shadowsNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_SHADOW });
-		auto shadows = ComponentRepository<IShadowsComponent>::GetInstance().Get(shadowsNode->GetId());
+		const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
 		const auto& cascade = shadows->GetCascade(m_cascadeIndex);
 		PushConstantBlock pushConstBlock{ static_cast<uint32_t>(m_cascadeIndex), -cascade.startSplitDepth, -cascade.endSplitDepth };
@@ -1899,7 +1925,7 @@ public:
 		vkCmdDrawIndexed(renderContext.defaultCommandBuffer, m_quadModel->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
 	}
 
-	void PostRender(RenderContext& renderContext) override
+	void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
 	{
 		m_renderPass->End(renderContext.defaultCommandBuffer);
 	}
@@ -1930,7 +1956,7 @@ public:
 	}
 };
 
-class DefaultSceneRenderer : public IRenderer
+class DefaultSceneRenderer : public IRenderer<DefaultRenderContextUserData>
 {
 private:
 	struct UniformsVS
@@ -1943,8 +1969,8 @@ private:
 
 	struct UniformsFS
 	{
+		alignas(16) glm::mat4 cascadeViewProjecionMatrices[ShadowsComponent::CASCADES_COUNT];
 		alignas(16) glm::vec4 cascadeSplits[ShadowsComponent::CASCADES_COUNT];
-		alignas(16) glm::mat4 lightViewProjectionMatrix[ShadowsComponent::CASCADES_COUNT];
 		alignas(16) glm::vec4 lightDirection;
 		alignas(16) bool isCastedByShadows;
 	};
@@ -1998,7 +2024,7 @@ public:
 		m_uniformsPoolFS->AdjustCapactity(10000);
 	}
 
-	void PreRender(RenderContext& renderContext) override
+	void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
 	{
 		m_renderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, renderContext.fullExtent });
 
@@ -2010,29 +2036,24 @@ public:
 		vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
 	}
 
-	void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags>>& node) override
+	void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags>>& node, const DefaultRenderContextUserData& renderContextUserData) override
 	{
 		if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT }))
 		{
-			auto lightNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_MAIN_LIGHT });
-			auto light = ComponentRepository<ILightComponent>::GetInstance().Get(lightNode->GetId());
-
-			auto shadowsNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_SHADOW });
-			auto shadows = ComponentRepository<IShadowsComponent>::GetInstance().Get(shadowsNode->GetId());
-
-			auto cameeraNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_CAMERA });
-			auto camera = ComponentRepository<ICameraComponent>::GetInstance().Get(cameeraNode->GetId());
-
-			auto renderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());
+			const auto lightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+			const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+			const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+			
+			const auto nodeRenderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());
 
 			auto uboVS = m_uniformsPoolVS->GetNext();
 
 			UniformsVS uniformsVS{};
-			uniformsVS.projectionMatrix = camera->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
-			uniformsVS.viewMatrix = camera->LookAt();
+			uniformsVS.projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
+			uniformsVS.viewMatrix = cameraComponent->LookAt();
 			uniformsVS.modelMatrix = node->GetWorldTransformScaled();
 			uniformsVS.normalMatrix = glm::inverse(node->GetWorldTransformScaled());
-
+			
 			uboVS->Update(&uniformsVS);
 
 			auto uboFS = m_uniformsPoolFS->GetNext();
@@ -2040,38 +2061,38 @@ public:
 			UniformsFS uniformsFS{};
 			for (uint32_t i = 0; i < ShadowsComponent::CASCADES_COUNT; i++)
 			{
-				auto& cascade = shadows->GetCascade(i);
+				auto& cascade = shadowsComponent->GetCascade(i);
 				uniformsFS.cascadeSplits[i] = glm::vec4(cascade.endSplitDepth);
-				uniformsFS.lightViewProjectionMatrix[i] = cascade.GetFinalViewProjectionMatrix();
+				uniformsFS.cascadeViewProjecionMatrices[i] = cascade.GetBiasedViewProjectionMatrix();
 			}
-			uniformsFS.lightDirection = glm::vec4(light->GetDirection(), 0.0f);
-			uniformsFS.isCastedByShadows = renderComponent->IsCastedByShadows();
+			uniformsFS.lightDirection = glm::vec4(lightComponent->GetDirection(), 0.0f);
+			uniformsFS.isCastedByShadows = nodeRenderComponent->IsCastedByShadows();
 
 			uboFS->Update(&uniformsFS);
 
-			m_shader->Bind("depthSampler", shadows->GetImageBuffer()->GetImageView(), shadows->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-			m_shader->Bind("textureSampler", *renderComponent->GetMaterial()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), shadowsComponent->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+			m_shader->Bind("textureSampler", *nodeRenderComponent->GetMaterial()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 			m_shader->Bind("uboVS", *uboVS);
 			m_shader->Bind("uboFS", *uboFS);
 
 			VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-			VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
+			VkBuffer vertexBuffers[] = { *nodeRenderComponent->GetModel()->GetVertexBuffer() };
 			VkDeviceSize offsets[] = { 0 };
 
 			vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
-			vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+			vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *nodeRenderComponent->GetModel()->GetIndexBuffer(), 0, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
 			vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-			vkCmdDrawIndexed(renderContext.defaultCommandBuffer, renderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+			vkCmdDrawIndexed(renderContext.defaultCommandBuffer, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
 		}
 
 		for (auto child : node->GetChildren())
 		{
-			Render(renderContext, child);
+			Render(renderContext, child, renderContextUserData);
 		}
 	}
 
-	void PostRender(RenderContext& renderContext) override
+	void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
 	{
 		m_renderPass->End(renderContext.defaultCommandBuffer);
 	}
@@ -2090,11 +2111,11 @@ private:
 	std::shared_ptr<RenderPass> m_defaultRenderPass;
 
 private:
-	std::shared_ptr<IRenderer> m_shadowsRenderer;
+	std::shared_ptr<IRenderer<ShadowsRenderContextUserData>> m_shadowsRenderer;
 
-	std::shared_ptr<IRenderer> m_defaultRenderer;
+	std::shared_ptr<IRenderer<DefaultRenderContextUserData>> m_defaultRenderer;
 
-	std::shared_ptr<IRenderer> m_quadRenderer;
+	std::shared_ptr<IRenderer<DefaultRenderContextUserData>> m_quadRenderer;
 
 public:
 	RootSceneNode(const std::shared_ptr<RenderPass>& renderPass)
@@ -2119,7 +2140,7 @@ public:
 		AddChild(shadows);
 
 		auto freeCamera = std::make_shared<Camera>();
-		freeCamera->SetTags({ TAG_CAMERA });
+		freeCamera->SetTags({ TAG_MAIN_CAMERA });
 		AddChild(freeCamera);
 
 		auto camRobot = std::make_shared<CubeRobot>(glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), "texture.jpg");
@@ -2173,16 +2194,15 @@ public:
 		// shadows
 		for (uint32_t cascadeIndex = 0; cascadeIndex < ShadowsComponent::CASCADES_COUNT; cascadeIndex++)
 		{
-			renderContext.userData = std::make_shared<ShadowsRenderContextUserData>(cascadeIndex);
-
-			m_shadowsRenderer->PreRender(renderContext);
+			ShadowsRenderContextUserData useData{ cascadeIndex };
+			m_shadowsRenderer->PreRender(renderContext, useData);
 
 			for (auto child : m_children)
 			{
-				m_shadowsRenderer->Render(renderContext, child);
+				m_shadowsRenderer->Render(renderContext, child, useData);
 			}
 
-			m_shadowsRenderer->PostRender(renderContext);
+			m_shadowsRenderer->PostRender(renderContext, useData);
 		}
 
 		// Default

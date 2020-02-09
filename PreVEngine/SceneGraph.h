@@ -8,13 +8,6 @@
 
 namespace PreVEngine
 {
-	struct RenderContextUserData
-	{
-		virtual ~RenderContextUserData()
-		{
-		}
-	};
-
 	struct RenderContext
 	{
 		VkFramebuffer defaultFrameBuffer;
@@ -24,8 +17,6 @@ namespace PreVEngine
 		uint32_t frameInFlightIndex;
 
 		VkExtent2D fullExtent;
-
-		std::shared_ptr<RenderContextUserData> userData;
 	};
 
 	template <typename NodeFlagsType>
@@ -346,6 +337,12 @@ namespace PreVEngine
 		}
 	};
 
+	enum class LogicOperation
+	{
+		OR,
+		AND
+	};
+
 	template <typename NodeFlagsType>
 	class GraphTraversal final : public Singleton<GraphTraversal<NodeFlagsType>>
 	{
@@ -360,13 +357,6 @@ namespace PreVEngine
 
 	public:
 		~GraphTraversal() = default;
-
-	public:
-		enum class LogicOperation
-		{
-			OR,
-			AND
-		};
 
 	private:
 		bool HasFlags(const std::shared_ptr<ISceneNode<NodeFlagsType>>& node, const FlagSet<NodeFlagsType>& flagsToCheck, const LogicOperation operation) const
