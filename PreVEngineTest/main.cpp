@@ -1179,7 +1179,7 @@ public:
 	{
 		auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
-		RenderComponentFactory renderComponentFactory;
+		RenderComponentFactory renderComponentFactory{};
 		auto cubeComponent = renderComponentFactory.CreateCubeRenderComponent(*allocator, m_texturePath, true, true);
 
 		ComponentRepository<IRenderComponent>::GetInstance().Add(m_id, cubeComponent);
@@ -1359,7 +1359,7 @@ public:
 	{
 		auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
-		RenderComponentFactory renderComponentFactory;
+		RenderComponentFactory renderComponentFactory{};
 		auto renderComponent = renderComponentFactory.CreatePlaneRenderComponent(*allocator, m_texturePath, false, true);
 
 		ComponentRepository<IRenderComponent>::GetInstance().Add(m_id, renderComponent);
@@ -1424,7 +1424,7 @@ private:
 public:
 	void Init() override
 	{
-		CameraComponentFactory cameraFactory;
+		CameraComponentFactory cameraFactory{};
 		m_cameraComponent = cameraFactory.Create();
 
 		ComponentRepository<ICameraComponent>::GetInstance().Add(m_id, m_cameraComponent);
@@ -1543,7 +1543,7 @@ public:
 public:
 	void Init() override
 	{
-		LightComponentFactory lightFactory;
+		LightComponentFactory lightFactory{};
 		m_lightComponent = lightFactory.CreateLightCompoennt(m_initialPosition);
 
 		ComponentRepository<ILightComponent>::GetInstance().Add(m_id, m_lightComponent);
@@ -1600,7 +1600,7 @@ public:
 public:
 	void Init() override
 	{
-		ShadowsComponentFactory shadowsFacory;
+		ShadowsComponentFactory shadowsFacory{};
 		m_shadowsCompoent = shadowsFacory.Create();
 		m_shadowsCompoent->Init();
 
@@ -1716,7 +1716,7 @@ public:
 
 	void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags>>& node) override
 	{
-		if (ComponentRepository<IRenderComponent>::GetInstance().Contains(node->GetId()))
+		if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT }))
 		{
 			auto renderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());
 			if (renderComponent->CastsShadows())
@@ -1729,7 +1729,7 @@ public:
 
 				auto ubo = m_uniformsPool->GetNext();
 
-				Uniforms uniforms;
+				Uniforms uniforms{};
 				uniforms.projectionMatrix = cascade.projectionMatrix;
 				uniforms.viewMatrix = cascade.viewMatrix;
 				uniforms.modelMatrix = node->GetWorldTransformScaled();
@@ -1836,7 +1836,7 @@ public:
 
 	void PreRender(RenderContext& renderContext) override
 	{
-		VkRect2D renderRect;
+		VkRect2D renderRect{};
 		renderRect.extent.width = renderContext.fullExtent.width / 2;
 		renderRect.extent.height = renderContext.fullExtent.height / 2;
 		renderRect.offset.x = 0;
@@ -1844,13 +1844,13 @@ public:
 
 		m_renderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, renderRect);
 
-		VkRect2D scissor;
+		VkRect2D scissor{};
 		scissor.extent.width = renderContext.fullExtent.width;
 		scissor.extent.height = renderContext.fullExtent.height;
 		scissor.offset.x = 0;
 		scissor.offset.y = 0;
 
-		VkViewport viewport;
+		VkViewport viewport{};
 		viewport.width = static_cast<float>(renderContext.fullExtent.width);
 		viewport.height = static_cast<float>(renderContext.fullExtent.height);
 		viewport.x = -static_cast<float>(renderContext.fullExtent.width / 2.0f);
@@ -1931,7 +1931,7 @@ private:
 
 	struct UniformsFS
 	{
-		alignas(16) float cascadeSplits[ShadowsComponent::CASCADES_COUNT];
+		alignas(16) glm::vec4 cascadeSplits[ShadowsComponent::CASCADES_COUNT];
 		alignas(16) glm::mat4 lightViewProjectionMatrix[ShadowsComponent::CASCADES_COUNT];
 		alignas(16) glm::vec3 lightDirection;
 		alignas(16) bool isCastedByShadows;
@@ -2000,7 +2000,7 @@ public:
 
 	void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags>>& node) override
 	{
-		if (ComponentRepository<IRenderComponent>::GetInstance().Contains(node->GetId()))
+		if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT }))
 		{
 			auto lightNode = GraphTraversal<SceneNodeFlags>::GetInstance().FindOneWithTags({ TAG_MAIN_LIGHT });
 			auto light = ComponentRepository<ILightComponent>::GetInstance().Get(lightNode->GetId());
@@ -2015,7 +2015,7 @@ public:
 
 			auto uboVS = m_uniformsPoolVS->GetNext();
 
-			UniformsVS uniformsVS;
+			UniformsVS uniformsVS{};
 			uniformsVS.projectionMatrix = camera->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
 			uniformsVS.viewMatrix = camera->LookAt();
 			uniformsVS.modelMatrix = node->GetWorldTransformScaled();
@@ -2025,11 +2025,11 @@ public:
 
 			auto uboFS = m_uniformsPoolFS->GetNext();
 
-			UniformsFS uniformsFS;
+			UniformsFS uniformsFS{};
 			for (uint32_t i = 0; i < ShadowsComponent::CASCADES_COUNT; i++)
 			{
 				auto& cascade = shadows->GetCascade(i);
-				uniformsFS.cascadeSplits[i] = cascade.endSplitDepth;
+				uniformsFS.cascadeSplits[i] = glm::vec4(cascade.endSplitDepth);
 				uniformsFS.lightViewProjectionMatrix[i] = cascade.projectionMatrix * cascade.viewMatrix;
 			}
 			uniformsFS.lightDirection = light->GetDirection();

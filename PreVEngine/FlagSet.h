@@ -224,13 +224,13 @@ namespace PreVEngine
 		bool HasAny(const FlagSet<T>& from) const
 		{
 			auto res = *this & from;
-			return res.count() > 0;
+			return res.GetCount() > 0;
 		}
 
 		bool HasAll(const FlagSet<T>& from) const
 		{
 			auto res = *this & from;
-			return res.count() >= from.count();
+			return res.GetCount() >= from.GetCount();
 		}
 
 		std::string ToString() const

@@ -428,7 +428,7 @@ class QuadPipeline final : public AbstractGraphicsPipeline
 {
 
 public:
-	QuadPipeline(const VkDevice device, const VkRenderPass renderpass, Shader& shaders)
+	QuadPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
 		: AbstractGraphicsPipeline(device, renderpass, shaders)
 	{
 	}

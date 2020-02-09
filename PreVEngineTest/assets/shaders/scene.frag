@@ -3,8 +3,8 @@
 
 #define SHADOW_MAP_CASCADE_COUNT 4
 
-layout(binding = 1) uniform UniformBufferObject {
-    vec4 cascadeSplits;
+layout(std140, binding = 1) uniform UniformBufferObject {
+    float cascadeSplits[SHADOW_MAP_CASCADE_COUNT];
 	mat4 cascadeViewProjecionMatrix[SHADOW_MAP_CASCADE_COUNT];
 	vec3 lightDirection;
 	bool isCastedByShadows;
@@ -82,7 +82,7 @@ void main()
 	uint cascadeIndex = 0;
 	for(uint i = 0; i < SHADOW_MAP_CASCADE_COUNT - 1; i++) 
 	{
-		if(inViewPosition.z < uboFS.cascadeSplits[i]) 
+		if(inViewPosition.z < uboFS.cascadeSplits[i].x) 
 		{	
 			cascadeIndex = i + 1;
 		}
@@ -108,28 +108,9 @@ void main()
 
 	const vec3 N = normalize(inNormal);
 	const vec3 L = normalize(-uboFS.lightDirection);
-	const vec3 H = normalize(L + inViewPosition); // TODO unused 
 	const vec3 diffuse = max(dot(N, L), ambient) * textureColor.rgb;
-	
-	// TODO add specular part
 
 	outColor = vec4(diffuse * lightColor, 1.0);
 	outColor *= shadow;
 	outColor.a = textureColor.a;
-
-	// switch(cascadeIndex) 
-	// {
-	// case 0:
-	// 	outColor.rgb *= vec3(1.0f, 0.25f, 0.25f);
-	// 	break;
-	// case 1: 
-	// 	outColor.rgb *= vec3(0.25f, 1.0f, 0.25f);
-	// 	break;
-	// case 2: 
-	// 	outColor.rgb *= vec3(0.25f, 0.25f, 1.0f);
-	// 	break;
-	// case 3: 
-	// 	outColor.rgb *= vec3(1.0f, 1.0f, 0.25f);
-	// 	break;
-	// }
 }
