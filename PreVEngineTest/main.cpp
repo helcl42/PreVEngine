@@ -1967,8 +1967,8 @@ public:
 
 		ShaderFactory shaderFactory;
 		m_shader = shaderFactory.CreateShaderFromFiles<DefaultShader>(*device, {
-			{ VK_SHADER_STAGE_VERTEX_BIT, "shaders/scene_vert.spv" },
-			{ VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/scene_frag.spv" }
+			{ VK_SHADER_STAGE_VERTEX_BIT, "shaders/default_vert.spv" },
+			{ VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/default_frag.spv" }
 			});
 		m_shader->AdjustDescriptorPoolCapacity(10000);
 
