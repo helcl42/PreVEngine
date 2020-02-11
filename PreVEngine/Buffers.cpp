@@ -454,7 +454,7 @@ namespace PreVEngine
 
 		if (!m_buffer)
 		{
-			return;
+			throw std::runtime_error("Could not allocate buffer: size = " + std::to_string(count * stride));
 		}
 
 		m_count = count;
