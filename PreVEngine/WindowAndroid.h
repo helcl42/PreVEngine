@@ -278,10 +278,10 @@ namespace PreVEngine
 			if (m_app->destroyRequested)
 			{
 				LOGI("destroyRequested");
-				return { Event::CLOSE };
+				return { Event::EventType::CLOSE };
 			}
 
-			return { Event::NONE };
+			return { Event::EventType::NONE };
 		}
 
 		//--Show / Hide keyboard--

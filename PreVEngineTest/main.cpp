@@ -1560,6 +1560,9 @@ private:
 
 	glm::vec2 m_prevTouchPosition{ 0.0f, 0.0f };
 
+#if defined(__ANDROID__)
+	bool m_autoMove = false;
+#endif
 public:
 	Camera()
 		: AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_CAMERA_COMPONENT })
@@ -1578,6 +1581,9 @@ private:
 		m_cameraComponent->Reset();
 
 		m_prevTouchPosition = glm::vec2(0.0f, 0.0f);
+#if defined(__ANDROID__)
+		m_autoMove = false;
+#endif
 	}
 
 public:
@@ -1620,6 +1626,14 @@ public:
 		{
 			positionDelta += m_cameraComponent->GetUpDirection() * deltaTime * m_moveSpeed;
 		}
+
+#if defined(__ANDROID__)
+		if(m_autoMove)
+		{
+			positionDelta += m_cameraComponent->GetForwardDirection() * deltaTime * m_moveSpeed;	
+		}
+#endif
+
 		m_cameraComponent->AddPosition(positionDelta);
 
 		m_cameraComponent->Update(deltaTime);
@@ -1654,6 +1668,9 @@ public:
 
 	void operator() (const TouchEvent& touchEvent)
 	{
+#if defined(__ANDROID__)
+		m_autoMove = touchEvent.action == TouchActionType::MOVE || touchEvent.action == TouchActionType::DOWN;
+#endif
 		if (touchEvent.action == TouchActionType::MOVE)
 		{
 			const glm::vec2 angleInDegrees = (touchEvent.position - m_prevTouchPosition) * m_sensitivity;
