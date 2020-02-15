@@ -1561,7 +1561,9 @@ private:
 	glm::vec2 m_prevTouchPosition{ 0.0f, 0.0f };
 
 #if defined(__ANDROID__)
-	bool m_autoMove = false;
+	bool m_autoMoveForward = false;
+
+	bool m_autoMoveBackward = false;
 #endif
 public:
 	Camera()
@@ -1582,7 +1584,8 @@ private:
 
 		m_prevTouchPosition = glm::vec2(0.0f, 0.0f);
 #if defined(__ANDROID__)
-		m_autoMove = false;
+        m_autoMoveForward = false;
+        m_autoMoveBackward = false;
 #endif
 	}
 
@@ -1628,9 +1631,14 @@ public:
 		}
 
 #if defined(__ANDROID__)
-		if(m_autoMove)
+		if(m_autoMoveForward)
 		{
 			positionDelta += m_cameraComponent->GetForwardDirection() * deltaTime * m_moveSpeed;	
+		}
+
+		if(m_autoMoveBackward)
+		{
+		    positionDelta -= m_cameraComponent->GetForwardDirection() * deltaTime * m_moveSpeed;
 		}
 #endif
 
@@ -1669,7 +1677,26 @@ public:
 	void operator() (const TouchEvent& touchEvent)
 	{
 #if defined(__ANDROID__)
-		m_autoMove = touchEvent.action == TouchActionType::MOVE || touchEvent.action == TouchActionType::DOWN;
+	    const int MAX_X_COORD_TO_MOVE = 250;
+        if(touchEvent.action == TouchActionType::MOVE || touchEvent.action == TouchActionType::DOWN)
+        {
+            if(touchEvent.position.x < MAX_X_COORD_TO_MOVE && touchEvent.position.y < MAX_X_COORD_TO_MOVE)
+            {
+		        m_autoMoveForward = true;
+		        return;
+		    }
+
+            if(touchEvent.position.x < MAX_X_COORD_TO_MOVE && touchEvent.position.y > (1080 - MAX_X_COORD_TO_MOVE))
+            {
+                m_autoMoveBackward = true;
+                return;
+            }
+		}
+        else
+        {
+            m_autoMoveForward = false;
+            m_autoMoveBackward = false;
+        }
 #endif
 		if (touchEvent.action == TouchActionType::MOVE)
 		{
