@@ -2154,9 +2154,9 @@ private:
 		
 		glm::vec4 lightDirection;
 
-		glm::vec4 lightColor[MAX_LIGHT_COUNT];
+		glm::vec4 lightColors[MAX_LIGHT_COUNT];
 
-		glm::vec4 attenuation[MAX_LIGHT_COUNT];
+		glm::vec4 attenuations[MAX_LIGHT_COUNT];
 
 		uint32_t realCountOfLights;
 		float ambientLight;
@@ -2261,8 +2261,8 @@ public:
 			}
 			uniformsVS.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
 			uniformsVS.useFakeLightning = nodeRenderComponent->GetMaterial()->UsesFakeLightning();
-			uniformsVS.density = 0.01f;
-			uniformsVS.gradient = 1.5f;
+			uniformsVS.density = 0.002f;
+			uniformsVS.gradient = 4.4f;
 
 			uboVS->Update(&uniformsVS);
 
@@ -2278,8 +2278,8 @@ public:
 			uniformsFS.lightDirection = glm::vec4(mainLightComponent->GetDirection(), 0.0f);
 			for (size_t i = 0; i < lightComponents.size(); i++)
 			{
-				uniformsFS.lightColor[i] = glm::vec4(lightComponents[i]->GetColor(), 1.0f);
-				uniformsFS.attenuation[i] = glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f);
+				uniformsFS.lightColors[i] = glm::vec4(lightComponents[i]->GetColor(), 1.0f);
+				uniformsFS.attenuations[i] = glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f);
 			}
 			uniformsFS.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
 			uniformsFS.ambientLight = AMBIENT_LIGHT_INTENSITY;
@@ -2365,6 +2365,10 @@ public:
 		auto light2 = std::make_shared<Light>(glm::vec3(-10.0f, 10.0f, 5.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		light2->SetTags({ TAG_LIGHT });
 		AddChild(light2);
+
+		auto light3 = std::make_shared<Light>(glm::vec3(-10.0f, 10.0f, 15.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		light3->SetTags({ TAG_LIGHT });
+		AddChild(light3);
 
 		auto shadows = std::make_shared<Shadows>();
 		shadows->SetTags({ TAG_SHADOW });

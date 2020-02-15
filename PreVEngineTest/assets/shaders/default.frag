@@ -11,9 +11,9 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 
 	vec4 lightDirection;
 
-	vec4 lightColor[MAX_LIGHT_COUNT];
+	vec4 lightColors[MAX_LIGHT_COUNT];
 
-	vec4 attenuation[MAX_LIGHT_COUNT];
+	vec4 attenuations[MAX_LIGHT_COUNT];
 
 	uint realCountOfLights;
 	float ambientLight;
@@ -42,8 +42,6 @@ layout(location = 8) in vec3 inToCameraVector;
 layout(location = 9) in float inVisibility;
 
 layout(location = 0) out vec4 outColor;
-
-const vec3 lightColor = vec3(1.0);
 
 const bool enablePCF = true;
 
@@ -100,38 +98,67 @@ float getShadow(const vec4 shadowCoord, const uint cascadeIndex)
 
 void main() 
 {
-	// Discard too transparent materials
 	vec4 textureColor = texture(textureSampler, inTextureCoord);
 	if (textureColor.a < 0.5) 
 	{
 		discard;
 	}
 
-	// Get cascade index for the current fragment's view position
-	uint cascadeIndex = 0;
-	for(uint i = 0; i < SHADOW_MAP_CASCADE_COUNT - 1; i++) 
+	float shadow = 1.0;	
+	if(uboFS.castedByShadows != 0)
 	{
-		if(inViewPosition.z < uboFS.cascadeSplits[i].x) 
-		{	
-			cascadeIndex = i + 1;
+		uint cascadeIndex = 0;
+		for(uint i = 0; i < SHADOW_MAP_CASCADE_COUNT - 1; i++) 
+		{
+			if(inViewPosition.z < uboFS.cascadeSplits[i].x) 
+			{	
+				cascadeIndex = i + 1;
+			}
 		}
-	}
 
-	// Depth compare for shadowing
-	vec4 shadowCoord = uboFS.cascadeViewProjecionMatrices[cascadeIndex] * vec4(inWorldPosition, 1.0);
-	vec4 normalizedShadowCoord = shadowCoord / shadowCoord.w;
-
-	float shadow = 1.0f;
-	 if(uboFS.castedByShadows != 0)
-	{
+		vec4 shadowCoord = uboFS.cascadeViewProjecionMatrices[cascadeIndex] * vec4(inWorldPosition, 1.0);
+		vec4 normalizedShadowCoord = shadowCoord / shadowCoord.w;
 		shadow = getShadow(normalizedShadowCoord, cascadeIndex);
 	}
 
-	const vec3 N = normalize(inNormal);
-	const vec3 L = normalize(-uboFS.lightDirection.xyz);
-	const vec3 diffuse = max(dot(N, L), uboFS.ambientLight) * textureColor.rgb;
+	vec3 unitNormal = normalize(inNormal);
+	vec3 unitToCameraVector = normalize(inToCameraVector);
 
-	outColor = vec4(diffuse * lightColor, 1.0);
-	outColor *= shadow;
-	outColor.a = textureColor.a;
+	vec3 totalDiffuse = vec3(0.0);
+	vec3 totalSpecular = vec3(0.0);
+
+	for (int i = 0; i < uboFS.realCountOfLights; i++)
+	{
+		float toLightDistance = length(inToLightVectors[i]);
+		float attenuationFactor = uboFS.attenuations[i].x + (uboFS.attenuations[i].y * toLightDistance) + (uboFS.attenuations[i].z * toLightDistance * toLightDistance);
+
+		vec3 unitToLightVector = normalize(inToLightVectors[i]);
+
+		// diffuse
+		float nDotL = dot(unitNormal, unitToLightVector);
+
+		float brightness = max(nDotL, 0.0);
+		totalDiffuse = totalDiffuse + (brightness * uboFS.lightColors[i].xyz) / attenuationFactor;
+
+		// specular
+		vec3 lightDirection = -unitToLightVector;
+		vec3 reflectedLightDirection = reflect(lightDirection, unitNormal);
+		float specularFactor = dot(reflectedLightDirection, unitToCameraVector);
+		specularFactor = max(specularFactor, 0.0);
+		float dampedFactor = pow(specularFactor, uboFS.shineDamper);
+
+		totalSpecular = totalSpecular + (dampedFactor * uboFS.reflectivity * uboFS.lightColors[i].xyz) / attenuationFactor;
+	}
+	totalDiffuse = max(totalDiffuse * shadow, 0.0) + uboFS.ambientLight;
+	totalSpecular = totalSpecular * shadow;
+
+	vec4 baseResultColor = vec4(totalDiffuse, 1.0) * textureColor + vec4(totalSpecular, 1.0);
+	vec4 resultColor = mix(vec4(uboFS.fogColor.xyz, 1.0), baseResultColor, inVisibility);
+
+	if (uboFS.selected != 0)
+	{
+		resultColor = mix(resultColor, uboFS.selectedColor, 0.5);
+	}
+
+	outColor = resultColor;
 }
