@@ -78,8 +78,8 @@ void main()
 	vec3 totalSpecular = vec3(0.0);
 	for (int i = 0; i < uboFS.realCountOfLights; i++)
 	{
-		float attenuationFactor = getAttenuationFactor(uboFS.attenuations[i].xyz, inToLightVectors[i]);
-		vec3 unitToLightVector = normalize(inToLightVectors[i]);
+		const float attenuationFactor = getAttenuationFactor(uboFS.attenuations[i].xyz, inToLightVectors[i]);
+		const vec3 unitToLightVector = normalize(inToLightVectors[i]);
 		totalDiffuse += getDiffuseLight(unitNormal, unitToLightVector, uboFS.lightColors[i].xyz, attenuationFactor);
 		totalSpecular += getSpecularLight(unitNormal, unitToLightVector, unitToCameraVector, uboFS.lightColors[i].xyz, attenuationFactor, uboFS.shineDamper, uboFS.reflectivity);
 	}
