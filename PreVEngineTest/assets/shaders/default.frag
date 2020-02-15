@@ -1,26 +1,48 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-#define SHADOW_MAP_CASCADE_COUNT 4
+const uint SHADOW_MAP_CASCADE_COUNT = 4;
+const uint MAX_LIGHT_COUNT = 4;
 
 layout(std140, binding = 1) uniform UniformBufferObject {
 	mat4 cascadeViewProjecionMatrices[SHADOW_MAP_CASCADE_COUNT];
-    vec4 cascadeSplits[SHADOW_MAP_CASCADE_COUNT];
+    
+	vec4 cascadeSplits[SHADOW_MAP_CASCADE_COUNT];
+
 	vec4 lightDirection;
-	bool isCastedByShadows;
+
+	vec4 lightColor[MAX_LIGHT_COUNT];
+
+	vec4 attenuation[MAX_LIGHT_COUNT];
+
+	uint realCountOfLights;
+	float ambientLight;
+	float shineDamper;
+	float reflectivity;
+
+	vec4 fogColor;
+
+	vec4 selectedColor;
+
+	uint selected;
+	uint castedByShadows;
+	uint shadowsEnabled;
 } uboFS;
 
 layout(binding = 2) uniform sampler2D textureSampler;
 layout(binding = 3) uniform sampler2DArray depthSampler;
+layout(binding = 4) uniform sampler2D extraInfoSampler;
 
 layout(location = 0) in vec2 inTextureCoord;
 layout(location = 1) in vec3 inNormal;
-layout(location = 2) in vec3 inViewPosition;
-layout(location = 3) in vec3 inWorldPosition;
+layout(location = 2) in vec3 inWorldPosition;
+layout(location = 3) in vec3 inViewPosition;
+layout(location = 4) in vec3 inToLightVectors[MAX_LIGHT_COUNT];
+layout(location = 8) in vec3 inToCameraVector;
+layout(location = 9) in float inVisibility;
 
 layout(location = 0) out vec4 outColor;
 
-const float ambient = 0.2;
 const vec3 lightColor = vec3(1.0);
 
 const bool enablePCF = true;
@@ -34,7 +56,7 @@ float getShadowInternal(const vec4 shadowCoord, const vec2 shadowCoordOffset, co
 		float depth = texture(depthSampler, vec3(shadowCoord.xy + shadowCoordOffset, cascadeIndex)).r;
 		if (shadowCoord.w > 0.0 && depth < shadowCoord.z - bias) 
 		{
-			shadow = ambient;
+			shadow = uboFS.ambientLight;
 		}
 	}
 	return shadow;
@@ -100,14 +122,14 @@ void main()
 	vec4 normalizedShadowCoord = shadowCoord / shadowCoord.w;
 
 	float shadow = 1.0f;
-	 if(uboFS.isCastedByShadows)
+	 if(uboFS.castedByShadows != 0)
 	{
 		shadow = getShadow(normalizedShadowCoord, cascadeIndex);
 	}
 
 	const vec3 N = normalize(inNormal);
 	const vec3 L = normalize(-uboFS.lightDirection.xyz);
-	const vec3 diffuse = max(dot(N, L), ambient) * textureColor.rgb;
+	const vec3 diffuse = max(dot(N, L), uboFS.ambientLight) * textureColor.rgb;
 
 	outColor = vec4(diffuse * lightColor, 1.0);
 	outColor *= shadow;

@@ -23,6 +23,12 @@ static const std::string TAG_SHADOW = "Shadow";
 static const std::string TAG_CAMERA = "Camera";
 static const std::string TAG_MAIN_CAMERA = "MainCamera";
 
+static const uint32_t MAX_LIGHT_COUNT{ 4 };
+static const float AMBIENT_LIGHT_INTENSITY{ 0.2f };
+static const glm::vec4 FOG_COLOR{ 0.47f, 0.53f, 0.58f, 1.0f };
+static const bool SHADOWS_ENABLED{ true };
+static const glm::vec4 SELECTED_COLOR{ 1.0f, 0.0f, 0.0f, 1.0f };
+
 enum class SceneNodeFlags : uint64_t
 {
 	HAS_RENDER_COMPONENT,
@@ -156,7 +162,7 @@ public:
 	template <typename NodeFlagsType, typename ComponentType>
 	static std::shared_ptr<ComponentType> GetNodeComponent(const TagSet& tagSet, const LogicOperation operation = LogicOperation::OR)
 	{
-		auto node = GraphTraversal<NodeFlagsType>::GetInstance().FindOneWithTags(tagSet);
+		const auto node = GraphTraversal<NodeFlagsType>::GetInstance().FindOneWithTags(tagSet, operation);
 		if (node == nullptr)
 		{
 			throw std::runtime_error("There is no such node..");
@@ -167,12 +173,38 @@ public:
 	template <typename NodeFlagsType, typename ComponentType>
 	static std::shared_ptr<ComponentType> GetNodeComponent(const FlagSet<NodeFlagsType>& flagSet, const LogicOperation operation = LogicOperation::OR)
 	{
-		auto node = GraphTraversal<NodeFlagsType>::GetInstance().FindOneWithFlags(flagSet);
+		const auto node = GraphTraversal<NodeFlagsType>::GetInstance().FindOneWithFlags(flagSet, operation);
 		if (node == nullptr)
 		{
 			throw std::runtime_error("There is no such node..");
 		}
 		return ComponentRepository<ComponentType>::GetInstance().Get(node->GetId());
+	}
+
+	template <typename NodeFlagsType, typename ComponentType>
+	static std::vector<std::shared_ptr<ComponentType>> GetNodeComponents(const TagSet& tagSet, const LogicOperation operation = LogicOperation::OR)
+	{
+		const auto nodes = GraphTraversal<NodeFlagsType>::GetInstance().FindAllWthTags(tagSet, operation);
+		
+		std::vector<std::shared_ptr<ComponentType>> resultComponents(nodes.size());
+		for (size_t i = 0; i < nodes.size(); i++)
+		{
+			resultComponents[i] = ComponentRepository<ComponentType>::GetInstance().Get(nodes[i]->GetId());
+		}
+		return resultComponents;
+	}
+
+	template <typename NodeFlagsType, typename ComponentType>
+	static std::vector<std::shared_ptr<ComponentType>> GetNodeComponents(const FlagSet<NodeFlagsType>& flagSet, const LogicOperation operation = LogicOperation::OR)
+	{
+		const auto nodes = GraphTraversal<NodeFlagsType>::GetInstance().FindAllWthFlags(flagSet, operation);
+
+		std::vector<std::shared_ptr<ComponentType>> resultComponents(nodes.size());
+		for (size_t i = 0; i < nodes.size(); i++)
+		{
+			resultComponents[i] = ComponentRepository<ComponentType>::GetInstance().Get(nodes[i]->GetId());
+		}
+		return resultComponents;
 	}
 };
 
@@ -239,6 +271,10 @@ public:
 
 	virtual void SetAtlasNumberOfRows(unsigned int rows) = 0;
 
+	virtual glm::vec2 GetTextureOffset() const = 0;
+	
+	virtual void SetTextureOffset(const glm::vec2& textureOffset) = 0;
+
 	virtual const glm::vec3& GetColor() const = 0;
 
 public:
@@ -299,6 +335,8 @@ private:
 	bool m_usesFakeLightning{ false };
 
 	unsigned int m_atlasNuumberOfRows{ 1 };
+
+	glm::vec2 m_textureOffset{ 0.0f, 0.0f };
 
 public:
 	Material(const glm::vec3& color, const float shineDamper, const float reflectivity)
@@ -412,6 +450,16 @@ public:
 	void SetAtlasNumberOfRows(unsigned int rows) override
 	{
 		m_atlasNuumberOfRows = rows;
+	}
+
+	glm::vec2 GetTextureOffset() const override
+	{
+		return m_textureOffset;
+	}
+
+	void SetTextureOffset(const glm::vec2& textureOffset) override
+	{
+		m_textureOffset = textureOffset;
 	}
 };
 
@@ -593,6 +641,10 @@ public:
 
 	virtual glm::vec3 GetUpDirection() const = 0;
 
+	virtual glm::vec3 GetPosition() const = 0;
+
+	virtual glm::quat GetOrientation() const = 0;
+
 	virtual const ViewFrustum& GetViewFrustum() const = 0;
 
 	virtual void SetViewFrustum(const ViewFrustum& viewFrustum) = 0;
@@ -608,6 +660,8 @@ private:
 
 private:
 	glm::vec3 m_position;
+
+	glm::quat m_orientation;
 
 	glm::vec3 m_positionDelta;
 
@@ -668,10 +722,10 @@ private:
 		glm::quat headingQuat = glm::angleAxis(glm::radians(m_pitchYawRollDelta.y), m_upDirection);
 
 		//add the two quaternions
-		glm::quat orientation = glm::normalize(pitchQuat * headingQuat * m_orientationDelta);
+		m_orientation = glm::normalize(pitchQuat * headingQuat * m_orientationDelta);
 
 		// update forward direction from the quaternion
-		m_forwardDirection = glm::normalize(orientation * m_forwardDirection);
+		m_forwardDirection = glm::normalize(m_orientation * m_forwardDirection);
 
 		// compute right direction from up and formward
 		m_rightDirection = glm::normalize(glm::cross(m_forwardDirection, m_upDirection));
@@ -700,6 +754,7 @@ public:
 		std::cout << "Resseting camera.." << std::endl;
 
 		m_position = glm::vec3(0.0f, 60.0f, 180.0f);
+		m_orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 		m_positionDelta = glm::vec3(0.0f, 0.0f, 0.0f);
 
 		m_pitchYawRoll = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -757,6 +812,16 @@ public:
 	glm::vec3 GetUpDirection() const override
 	{
 		return m_upDirection;
+	}
+
+	glm::vec3 GetPosition() const override
+	{
+		return m_position;
+	}
+
+	glm::quat GetOrientation() const override
+	{
+		return m_orientation;
 	}
 
 	const ViewFrustum& GetViewFrustum() const override
@@ -904,6 +969,11 @@ public:
 	std::shared_ptr<ILightComponent> CreateLightCompoennt(const glm::vec3& position) const
 	{
 		return std::make_shared<LightComponent>(position);
+	}
+
+	std::shared_ptr<ILightComponent> CreateLightCompoennt(const glm::vec3& position, const glm::vec3& color, const glm::vec3& attenuation) const
+	{
+		return std::make_shared<LightComponent>(position, color, attenuation);
 	}
 };
 
@@ -1612,7 +1682,7 @@ public:
 	}
 };
 
-class Light : public AbstractSceneNode<SceneNodeFlags>
+class MainLight : public AbstractSceneNode<SceneNodeFlags>
 {
 private:
 	std::shared_ptr<ILightComponent> m_lightComponent;
@@ -1620,12 +1690,12 @@ private:
 	glm::vec3 m_initialPosition;
 
 public:
-	Light(const glm::vec3& pos)
+	MainLight(const glm::vec3& pos)
 		: AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_LIGHT_COMPONENT }), m_initialPosition(pos)
 	{
 	}
 
-	~Light()
+	~MainLight()
 	{
 	}
 
@@ -1670,6 +1740,52 @@ public:
 		ComponentRepository<ILightComponent>::GetInstance().Remove(m_id);
 	}
 };
+
+class Light : public AbstractSceneNode<SceneNodeFlags>
+{
+private:
+	std::shared_ptr<ILightComponent> m_lightComponent;
+
+	glm::vec3 m_initialPosition;
+
+	glm::vec3 m_color;
+
+public:
+	Light(const glm::vec3& position, const glm::vec3& color)
+		: AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_LIGHT_COMPONENT }), m_initialPosition(position), m_color(color)
+	{
+	}
+
+	~Light()
+	{
+	}
+
+public:
+	void Init() override
+	{
+		LightComponentFactory lightFactory{};
+		m_lightComponent = lightFactory.CreateLightCompoennt(m_initialPosition, m_color, glm::vec3(1.0f, 0.05f, 0.01f));
+
+		ComponentRepository<ILightComponent>::GetInstance().Add(m_id, m_lightComponent);
+
+		AbstractSceneNode::Init();
+	}
+
+	void Update(float deltaTime) override
+	{
+		SetPosition(m_lightComponent->GetPosition());
+
+		AbstractSceneNode::Update(deltaTime);
+	}
+
+	void ShutDown() override
+	{
+		AbstractSceneNode::ShutDown();
+
+		ComponentRepository<ILightComponent>::GetInstance().Remove(m_id);
+	}
+};
+
 
 class Shadows : public AbstractSceneNode<SceneNodeFlags>
 {
@@ -2003,20 +2119,58 @@ public:
 class DefaultSceneRenderer : public IRenderer<DefaultRenderContextUserData>
 {
 private:
-	struct UniformsVS
+	struct alignas(16) UniformsVS
 	{
-		alignas(16) glm::mat4 modelMatrix;
-		alignas(16) glm::mat4 viewMatrix;
-		alignas(16) glm::mat4 projectionMatrix;
-		alignas(16) glm::mat4 normalMatrix;
+		glm::mat4 modelMatrix;
+
+		glm::mat4 viewMatrix;
+		
+		glm::mat4 projectionMatrix;
+		
+		glm::mat4 normalMatrix;
+		
+		glm::vec4 textureOffset;
+
+		uint32_t textureNumberOfRows;
+		uint32_t useFakeLightning;
+		float __padding1;
+		float __padding2;
+
+		glm::vec4 cameraPosition;
+		
+		glm::vec4 lightPositions[MAX_LIGHT_COUNT];
+		
+		uint32_t realCountOfLights;
+		float density;
+		float gradient;
+		float __padding3;
 	};
 
-	struct UniformsFS
+	struct alignas(16) UniformsFS
 	{
-		alignas(16) glm::mat4 cascadeViewProjecionMatrices[ShadowsComponent::CASCADES_COUNT];
-		alignas(16) glm::vec4 cascadeSplits[ShadowsComponent::CASCADES_COUNT];
-		alignas(16) glm::vec4 lightDirection;
-		alignas(16) bool isCastedByShadows;
+		glm::mat4 cascadeViewProjecionMatrices[ShadowsComponent::CASCADES_COUNT];
+
+		glm::vec4 cascadeSplits[ShadowsComponent::CASCADES_COUNT];
+		
+		glm::vec4 lightDirection;
+
+		glm::vec4 lightColor[MAX_LIGHT_COUNT];
+
+		glm::vec4 attenuation[MAX_LIGHT_COUNT];
+
+		uint32_t realCountOfLights;
+		float ambientLight;
+		float shineDamper;
+		float reflectivity;
+
+		glm::vec4 fogColor;
+		
+		glm::vec4 selectedColor;
+
+		uint32_t selected;
+		uint32_t shadowsEnabled;
+		uint32_t castedByShadows;
+		float __padding1;
 	};
 
 private:
@@ -2084,10 +2238,11 @@ public:
 	{
 		if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT }))
 		{
-			const auto lightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+			const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
 			const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-			const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
-			
+			const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });			
+			const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
+
 			const auto nodeRenderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());
 
 			auto uboVS = m_uniformsPoolVS->GetNext();
@@ -2097,7 +2252,18 @@ public:
 			uniformsVS.viewMatrix = cameraComponent->LookAt();
 			uniformsVS.modelMatrix = node->GetWorldTransformScaled();
 			uniformsVS.normalMatrix = glm::inverse(node->GetWorldTransformScaled());
-			
+			uniformsVS.textureNumberOfRows = nodeRenderComponent->GetMaterial()->GetAtlasNumberOfRows();
+			uniformsVS.textureOffset = glm::vec4(nodeRenderComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
+			uniformsVS.cameraPosition = glm::vec4(cameraComponent->GetPosition(), 1.0f);
+			for (size_t i = 0; i < lightComponents.size(); i++)
+			{
+				uniformsVS.lightPositions[i] = glm::vec4(lightComponents[i]->GetPosition(), 1.0f);
+			}
+			uniformsVS.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
+			uniformsVS.useFakeLightning = nodeRenderComponent->GetMaterial()->UsesFakeLightning();
+			uniformsVS.density = 0.01f;
+			uniformsVS.gradient = 1.5f;
+
 			uboVS->Update(&uniformsVS);
 
 			auto uboFS = m_uniformsPoolFS->GetNext();
@@ -2109,8 +2275,21 @@ public:
 				uniformsFS.cascadeSplits[i] = glm::vec4(cascade.endSplitDepth);
 				uniformsFS.cascadeViewProjecionMatrices[i] = cascade.GetBiasedViewProjectionMatrix();
 			}
-			uniformsFS.lightDirection = glm::vec4(lightComponent->GetDirection(), 0.0f);
-			uniformsFS.isCastedByShadows = nodeRenderComponent->IsCastedByShadows();
+			uniformsFS.lightDirection = glm::vec4(mainLightComponent->GetDirection(), 0.0f);
+			for (size_t i = 0; i < lightComponents.size(); i++)
+			{
+				uniformsFS.lightColor[i] = glm::vec4(lightComponents[i]->GetColor(), 1.0f);
+				uniformsFS.attenuation[i] = glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f);
+			}
+			uniformsFS.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
+			uniformsFS.ambientLight = AMBIENT_LIGHT_INTENSITY;
+			uniformsFS.shineDamper = nodeRenderComponent->GetMaterial()->GetShineDamper();
+			uniformsFS.reflectivity = nodeRenderComponent->GetMaterial()->GetReflectivity();
+			uniformsFS.fogColor = FOG_COLOR;
+			uniformsFS.shadowsEnabled = SHADOWS_ENABLED;
+			uniformsFS.selectedColor = SELECTED_COLOR;
+			uniformsFS.selected = false;
+			uniformsFS.castedByShadows = nodeRenderComponent->IsCastedByShadows();
 
 			uboFS->Update(&uniformsFS);
 
@@ -2175,9 +2354,17 @@ public:
 	void Init() override
 	{
 		// Init scene nodes
-		auto light = std::make_shared<Light>(glm::vec3(150.0f, 150.0f, 150.0f));
-		light->SetTags({ TAG_MAIN_LIGHT });
-		AddChild(light);
+		auto sunLight = std::make_shared<MainLight>(glm::vec3(150.0f, 150.0f, 150.0f));
+		sunLight->SetTags({ TAG_MAIN_LIGHT, TAG_LIGHT });
+		AddChild(sunLight);
+
+		auto light1 = std::make_shared<Light>(glm::vec3(10.0f, 10.0f, 5.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		light1->SetTags({ TAG_LIGHT });
+		AddChild(light1);
+
+		auto light2 = std::make_shared<Light>(glm::vec3(-10.0f, 10.0f, 5.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		light2->SetTags({ TAG_LIGHT });
+		AddChild(light2);
 
 		auto shadows = std::make_shared<Shadows>();
 		shadows->SetTags({ TAG_SHADOW });
