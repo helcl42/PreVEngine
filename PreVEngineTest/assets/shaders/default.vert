@@ -40,9 +40,6 @@ layout(location = 9) out float outVisibility;
 
 void main() 
 {
-	// outTextureCoord = inTextureCoord;
-	// outNormal = (uboVS.normalMatrix * vec4(inNormal, 0.0)).xyz;
-
 	vec4 worldPosition = uboVS.modelMatrix * vec4(inPosition, 1.0);
 	outWorldPosition = worldPosition.xyz;
 

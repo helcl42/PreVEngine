@@ -1,7 +1,10 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
+#extension GL_GOOGLE_include_directive : enable
 
-const uint SHADOW_MAP_CASCADE_COUNT = 4;
+#include "shadows_use.glsl"
+#include "lights.glsl"
+
 const uint MAX_LIGHT_COUNT = 4;
 
 layout(std140, binding = 1) uniform UniformBufferObject {
@@ -43,59 +46,6 @@ layout(location = 9) in float inVisibility;
 
 layout(location = 0) out vec4 outColor;
 
-const bool enablePCF = true;
-
-float getShadowInternal(const vec4 shadowCoord, const vec2 shadowCoordOffset, const uint cascadeIndex)
-{
-	const float bias = 0.005;
-	float shadow = 1.0;
-	if (shadowCoord.z > -1.0 && shadowCoord.z < 1.0)
-	{
-		float depth = texture(depthSampler, vec3(shadowCoord.xy + shadowCoordOffset, cascadeIndex)).r;
-		if (shadowCoord.w > 0.0 && depth < shadowCoord.z - bias) 
-		{
-			shadow = uboFS.ambientLight;
-		}
-	}
-	return shadow;
-}
-
-float getShadowPCFInternal(const vec4 shadowCoord, const uint cascadeIndex)
-{
-	const ivec2 texDim = textureSize(depthSampler, 0).xy;
-	const float scale = 0.75;
-	const float dx = scale * 1.0 / float(texDim.x);
-	const float dy = scale * 1.0 / float(texDim.y);
-	const int range = 1; // 3 x 3
-
-	float shadowFactor = 0.0;
-	int count = 0;
-	for (int x = -range; x <= range; x++)
-	{
-		for (int y = -range; y <= range; y++)
-		{
-			shadowFactor += getShadowInternal(shadowCoord, vec2(dx * x, dy * y), cascadeIndex);
-			count++;
-		}
-	
-	}
-	return shadowFactor / count;
-}
-
-float getShadow(const vec4 shadowCoord, const uint cascadeIndex)
-{
-	float shadow = 1.0f;
-	if(enablePCF)
-	{
-		shadow = getShadowPCFInternal(shadowCoord, cascadeIndex);
-	}
-	else
-	{
-		shadow = getShadowInternal(shadowCoord, vec2(0.0), cascadeIndex);
-	}
-	return shadow;
-}
-
 void main() 
 {
 	vec4 textureColor = texture(textureSampler, inTextureCoord);
@@ -105,7 +55,7 @@ void main()
 	}
 
 	float shadow = 1.0;	
-	if(uboFS.castedByShadows != 0)
+	if(uboFS.castedByShadows != 0 && uboFS.shadowsEnabled != 0)
 	{
 		uint cascadeIndex = 0;
 		for(uint i = 0; i < SHADOW_MAP_CASCADE_COUNT - 1; i++) 
@@ -118,36 +68,20 @@ void main()
 
 		vec4 shadowCoord = uboFS.cascadeViewProjecionMatrices[cascadeIndex] * vec4(inWorldPosition, 1.0);
 		vec4 normalizedShadowCoord = shadowCoord / shadowCoord.w;
-		shadow = getShadow(normalizedShadowCoord, cascadeIndex);
+		shadow = getShadow(depthSampler, normalizedShadowCoord, cascadeIndex);
 	}
 
-	vec3 unitNormal = normalize(inNormal);
-	vec3 unitToCameraVector = normalize(inToCameraVector);
+	const vec3 unitNormal = normalize(inNormal);
+	const vec3 unitToCameraVector = normalize(inToCameraVector);
 
 	vec3 totalDiffuse = vec3(0.0);
 	vec3 totalSpecular = vec3(0.0);
-
 	for (int i = 0; i < uboFS.realCountOfLights; i++)
 	{
-		float toLightDistance = length(inToLightVectors[i]);
-		float attenuationFactor = uboFS.attenuations[i].x + (uboFS.attenuations[i].y * toLightDistance) + (uboFS.attenuations[i].z * toLightDistance * toLightDistance);
-
+		float attenuationFactor = getAttenuationFactor(uboFS.attenuations[i].xyz, inToLightVectors[i]);
 		vec3 unitToLightVector = normalize(inToLightVectors[i]);
-
-		// diffuse
-		float nDotL = dot(unitNormal, unitToLightVector);
-
-		float brightness = max(nDotL, 0.0);
-		totalDiffuse = totalDiffuse + (brightness * uboFS.lightColors[i].xyz) / attenuationFactor;
-
-		// specular
-		vec3 lightDirection = -unitToLightVector;
-		vec3 reflectedLightDirection = reflect(lightDirection, unitNormal);
-		float specularFactor = dot(reflectedLightDirection, unitToCameraVector);
-		specularFactor = max(specularFactor, 0.0);
-		float dampedFactor = pow(specularFactor, uboFS.shineDamper);
-
-		totalSpecular = totalSpecular + (dampedFactor * uboFS.reflectivity * uboFS.lightColors[i].xyz) / attenuationFactor;
+		totalDiffuse += getDiffuseLight(unitNormal, unitToLightVector, uboFS.lightColors[i].xyz, attenuationFactor);
+		totalSpecular += getSpecularLight(unitNormal, unitToLightVector, unitToCameraVector, uboFS.lightColors[i].xyz, attenuationFactor, uboFS.shineDamper, uboFS.reflectivity);
 	}
 	totalDiffuse = max(totalDiffuse * shadow, 0.0) + uboFS.ambientLight;
 	totalSpecular = totalSpecular * shadow;
