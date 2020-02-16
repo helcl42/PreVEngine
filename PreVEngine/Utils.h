@@ -57,12 +57,12 @@ namespace PreVEngine
 				{
 					deltasSum += snapshot;
 				}
-				m_averageDeltaTime = deltasSum / m_deltaTimeSnapshots.size();
+				m_averageDeltaTime = deltasSum / static_cast<float>(m_deltaTimeSnapshots.size());
 				m_elpasedTime = 0.0f;
 
 				m_deltaTimeSnapshots.clear();
 
-				std::cout << "FPS: " << GetAverageFPS() << std::endl;
+				LOGI("FPS %f\n", GetAverageFPS());
 			}
 		}
 
