@@ -7,28 +7,36 @@
 
 const uint MAX_LIGHT_COUNT = 4;
 
-layout(std140, binding = 1) uniform UniformBufferObject {
-	// shadows
-	mat4 cascadeViewProjecionMatrices[SHADOW_MAP_CASCADE_COUNT];    
-	vec4 cascadeSplits[SHADOW_MAP_CASCADE_COUNT];
+struct Light {
+	vec4 position;
 
-	// light
-	vec4 lightColors[MAX_LIGHT_COUNT];
-	vec4 attenuations[MAX_LIGHT_COUNT];	
-	vec4 lightPositions[MAX_LIGHT_COUNT];	
+	vec4 color;
+
+	vec4 attenuation;
+};
+
+struct Lightning {
+	Light lights[MAX_LIGHT_COUNT];
 
 	uint realCountOfLights;
-	float ambientLight;
-	float shineDamper;
-	float reflectivity;
+
+	float ambientFactor;
+};
+
+
+layout(std140, binding = 1) uniform UniformBufferObject {
+	Shadows shadows;
+
+	Lightning lightning;
 
 	vec4 fogColor;
 
 	vec4 selectedColor;
 
 	uint selected;
-	uint castedByShadows;
-	uint shadowsEnabled;
+	uint castedByShadows;	
+	float shineDamper;
+	float reflectivity;
 } uboFS;
 
 layout(binding = 2) uniform sampler2D textureSampler;
@@ -60,22 +68,9 @@ void main()
 	}
 
 	float shadow = 1.0;	
-	if(uboFS.castedByShadows != 0 && uboFS.shadowsEnabled != 0)
+	if(uboFS.castedByShadows != 0)
 	{
-		uint cascadeIndex = 0;
-		for(uint i = 0; i < SHADOW_MAP_CASCADE_COUNT - 1; i++) 
-		{
-			if(inViewPosition.z < uboFS.cascadeSplits[i].x) 
-			{	
-				cascadeIndex = i + 1;
-			}
-		}
-
-		vec4 shadowCoord = uboFS.cascadeViewProjecionMatrices[cascadeIndex] * vec4(inWorldPosition, 1.0);
-		vec4 normalizedShadowCoord = shadowCoord / shadowCoord.w;
-		shadow = getShadow(depthSampler, normalizedShadowCoord, cascadeIndex);
-
-		//normalizedShadowCoord = GetShadowCoord(uboFS.cascadeViewProjecionMatrices, cascadeIndex, inWorldPosition);
+		shadow = getShadow(depthSampler, uboFS.shadows, inViewPosition, inWorldPosition);
 	}
 
 	const vec3 unitNormal = normalize(inNormal);
@@ -83,18 +78,21 @@ void main()
 
 	vec3 totalDiffuse = vec3(0.0);
 	vec3 totalSpecular = vec3(0.0);
-	for (int i = 0; i < uboFS.realCountOfLights; i++)
+	for (uint i = 0; i < uboFS.lightning.realCountOfLights; i++)
 	{
-		const vec3 toLightVector = uboFS.lightPositions[i].xyz - inWorldPosition.xyz;
-		const float attenuationFactor = getAttenuationFactor(uboFS.attenuations[i].xyz, toLightVector);
+		const Light light = uboFS.lightning.lights[i];
+
+		const vec3 toLightVector = light.position.xyz - inWorldPosition.xyz;
+		const float attenuationFactor = getAttenuationFactor(light.attenuation.xyz, toLightVector);
 		const vec3 unitToLightVector = normalize(toLightVector);
-		totalDiffuse += getDiffuseLight(unitNormal, unitToLightVector, uboFS.lightColors[i].xyz, attenuationFactor);
-		totalSpecular += getSpecularLight(unitNormal, unitToLightVector, unitToCameraVector, uboFS.lightColors[i].xyz, attenuationFactor, uboFS.shineDamper, uboFS.reflectivity);
+		totalDiffuse += getDiffuseLight(unitNormal, unitToLightVector, light.color.xyz, attenuationFactor);
+		totalSpecular += getSpecularLight(unitNormal, unitToLightVector, unitToCameraVector, light.color.xyz, attenuationFactor, uboFS.shineDamper, uboFS.reflectivity);
 	}
-	totalDiffuse = max(totalDiffuse * shadow, 0.0) + uboFS.ambientLight;
+	totalDiffuse = max(totalDiffuse * shadow, 0.0) + uboFS.lightning.ambientFactor;
 	totalSpecular = totalSpecular * shadow;
 
 	vec4 baseResultColor = vec4(totalDiffuse, 1.0) * textureColor + vec4(totalSpecular, 1.0);
+
 	vec4 resultColor = mix(vec4(uboFS.fogColor.xyz, 1.0), baseResultColor, inVisibility);
 
 	if (uboFS.selected != 0)
