@@ -2182,25 +2182,20 @@ private:
 
 		glm::vec4 cameraPosition;
 		
-		glm::vec4 lightPositions[MAX_LIGHT_COUNT];
-		
-		uint32_t realCountOfLights;
 		float density;
 		float gradient;
 		float __padding3;
+		float __padding4;
 	};
 
 	struct alignas(16) UniformsFS
 	{
 		glm::mat4 cascadeViewProjecionMatrices[ShadowsComponent::CASCADES_COUNT];
-
 		glm::vec4 cascadeSplits[ShadowsComponent::CASCADES_COUNT];
 		
-		glm::vec4 lightDirection;
-
 		glm::vec4 lightColors[MAX_LIGHT_COUNT];
-
 		glm::vec4 attenuations[MAX_LIGHT_COUNT];
+		glm::vec4 lightPositions[MAX_LIGHT_COUNT];
 
 		uint32_t realCountOfLights;
 		float ambientLight;
@@ -2299,11 +2294,6 @@ public:
 			uniformsVS.textureNumberOfRows = nodeRenderComponent->GetMaterial()->GetAtlasNumberOfRows();
 			uniformsVS.textureOffset = glm::vec4(nodeRenderComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
 			uniformsVS.cameraPosition = glm::vec4(cameraComponent->GetPosition(), 1.0f);
-			for (size_t i = 0; i < lightComponents.size(); i++)
-			{
-				uniformsVS.lightPositions[i] = glm::vec4(lightComponents[i]->GetPosition(), 1.0f);
-			}
-			uniformsVS.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
 			uniformsVS.useFakeLightning = nodeRenderComponent->GetMaterial()->UsesFakeLightning();
 			uniformsVS.density = 0.002f;
 			uniformsVS.gradient = 4.4f;
@@ -2319,11 +2309,11 @@ public:
 				uniformsFS.cascadeSplits[i] = glm::vec4(cascade.endSplitDepth);
 				uniformsFS.cascadeViewProjecionMatrices[i] = cascade.GetBiasedViewProjectionMatrix();
 			}
-			uniformsFS.lightDirection = glm::vec4(mainLightComponent->GetDirection(), 0.0f);
 			for (size_t i = 0; i < lightComponents.size(); i++)
 			{
 				uniformsFS.lightColors[i] = glm::vec4(lightComponents[i]->GetColor(), 1.0f);
 				uniformsFS.attenuations[i] = glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f);
+				uniformsFS.lightPositions[i] = glm::vec4(lightComponents[i]->GetPosition(), 1.0f);
 			}
 			uniformsFS.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
 			uniformsFS.ambientLight = AMBIENT_LIGHT_INTENSITY;

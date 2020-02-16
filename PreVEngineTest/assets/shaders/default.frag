@@ -8,15 +8,14 @@
 const uint MAX_LIGHT_COUNT = 4;
 
 layout(std140, binding = 1) uniform UniformBufferObject {
-	mat4 cascadeViewProjecionMatrices[SHADOW_MAP_CASCADE_COUNT];
-    
+	// shadows
+	mat4 cascadeViewProjecionMatrices[SHADOW_MAP_CASCADE_COUNT];    
 	vec4 cascadeSplits[SHADOW_MAP_CASCADE_COUNT];
 
-	vec4 lightDirection;
-
+	// light
 	vec4 lightColors[MAX_LIGHT_COUNT];
-
-	vec4 attenuations[MAX_LIGHT_COUNT];
+	vec4 attenuations[MAX_LIGHT_COUNT];	
+	vec4 lightPositions[MAX_LIGHT_COUNT];	
 
 	uint realCountOfLights;
 	float ambientLight;
@@ -40,11 +39,17 @@ layout(location = 0) in vec2 inTextureCoord;
 layout(location = 1) in vec3 inNormal;
 layout(location = 2) in vec3 inWorldPosition;
 layout(location = 3) in vec3 inViewPosition;
-layout(location = 4) in vec3 inToLightVectors[MAX_LIGHT_COUNT];
-layout(location = 8) in vec3 inToCameraVector;
-layout(location = 9) in float inVisibility;
+layout(location = 4) in vec3 inToCameraVector;
+layout(location = 5) in float inVisibility;
 
 layout(location = 0) out vec4 outColor;
+
+// vec4 GetShadowCoord(in mat4 cascadeViewProjecionMatrices[SHADOW_MAP_CASCADE_COUNT], in uint cascadeIndex, in vec3 worldPosition)
+// {
+// 	vec4 shadowCoord = cascadeViewProjecionMatrices[cascadeIndex] * vec4(worldPosition, 1.0);
+// 	vec4 normalizedShadowCoord = shadowCoord / shadowCoord.w;
+// 	return normalizedShadowCoord;
+// }
 
 void main() 
 {
@@ -69,6 +74,8 @@ void main()
 		vec4 shadowCoord = uboFS.cascadeViewProjecionMatrices[cascadeIndex] * vec4(inWorldPosition, 1.0);
 		vec4 normalizedShadowCoord = shadowCoord / shadowCoord.w;
 		shadow = getShadow(depthSampler, normalizedShadowCoord, cascadeIndex);
+
+		//normalizedShadowCoord = GetShadowCoord(uboFS.cascadeViewProjecionMatrices, cascadeIndex, inWorldPosition);
 	}
 
 	const vec3 unitNormal = normalize(inNormal);
@@ -78,8 +85,9 @@ void main()
 	vec3 totalSpecular = vec3(0.0);
 	for (int i = 0; i < uboFS.realCountOfLights; i++)
 	{
-		const float attenuationFactor = getAttenuationFactor(uboFS.attenuations[i].xyz, inToLightVectors[i]);
-		const vec3 unitToLightVector = normalize(inToLightVectors[i]);
+		const vec3 toLightVector = uboFS.lightPositions[i].xyz - inWorldPosition.xyz;
+		const float attenuationFactor = getAttenuationFactor(uboFS.attenuations[i].xyz, toLightVector);
+		const vec3 unitToLightVector = normalize(toLightVector);
 		totalDiffuse += getDiffuseLight(unitNormal, unitToLightVector, uboFS.lightColors[i].xyz, attenuationFactor);
 		totalSpecular += getSpecularLight(unitNormal, unitToLightVector, unitToCameraVector, uboFS.lightColors[i].xyz, attenuationFactor, uboFS.shineDamper, uboFS.reflectivity);
 	}
