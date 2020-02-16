@@ -10,13 +10,13 @@ layout(std140, binding = 0) uniform UniformBufferObject {
     
 	mat4 normalMatrix;
 
+	vec4 cameraPosition;
+	
 	vec4 textureOffset;
 
 	uint textureNumberOfRows;
 	uint useFakeLightning;
 
-	vec4 cameraPosition;
-	
 	float density;
 	float gradient;
 } uboVS;
