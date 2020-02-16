@@ -14,7 +14,7 @@ struct Shadows {
 	uint enabled;
 };
 
-float getShadowRaw(in sampler2DArray depthSampler, in vec4 shadowCoord, in vec2 shadowCoordOffset, in uint cascadeIndex)
+float GetShadowRaw(in sampler2DArray depthSampler, in vec4 shadowCoord, in vec2 shadowCoordOffset, in uint cascadeIndex)
 {
 	const float bias = 0.005;
 	float shadow = 1.0;
@@ -29,7 +29,7 @@ float getShadowRaw(in sampler2DArray depthSampler, in vec4 shadowCoord, in vec2 
 	return shadow;
 }
 
-float getShadowPCF(in sampler2DArray depthSampler, in vec4 shadowCoord, in uint cascadeIndex)
+float GetShadowPCF(in sampler2DArray depthSampler, in vec4 shadowCoord, in uint cascadeIndex)
 {
 	const ivec2 texDim = textureSize(depthSampler, 0).xy;
 	const float scale = 0.75;
@@ -43,7 +43,7 @@ float getShadowPCF(in sampler2DArray depthSampler, in vec4 shadowCoord, in uint 
 	{
 		for (int y = -range; y <= range; y++)
 		{
-			shadowFactor += getShadowRaw(depthSampler, shadowCoord, vec2(dx * x, dy * y), cascadeIndex);
+			shadowFactor += GetShadowRaw(depthSampler, shadowCoord, vec2(dx * x, dy * y), cascadeIndex);
 			count++;
 		}
 	
@@ -51,21 +51,21 @@ float getShadowPCF(in sampler2DArray depthSampler, in vec4 shadowCoord, in uint 
 	return shadowFactor / count;
 }
 
-float getShadowInternal(in sampler2DArray depthSampler, in vec4 shadowCoord, in uint cascadeIndex)
+float GetShadowInternal(in sampler2DArray depthSampler, in vec4 shadowCoord, in uint cascadeIndex)
 {
 	float shadow = 1.0f;
 	if(enablePCF)
 	{
-		shadow = getShadowPCF(depthSampler, shadowCoord, cascadeIndex);
+		shadow = GetShadowPCF(depthSampler, shadowCoord, cascadeIndex);
 	}
 	else
 	{
-		shadow = getShadowRaw(depthSampler, shadowCoord, vec2(0.0), cascadeIndex);
+		shadow = GetShadowRaw(depthSampler, shadowCoord, vec2(0.0), cascadeIndex);
 	}
 	return shadow;
 }
 
-float getShadow(in sampler2DArray depthSampler, in Shadows shadows, in vec3 viewPosition, in vec3 worldPosition)
+float GetShadow(in sampler2DArray depthSampler, in Shadows shadows, in vec3 viewPosition, in vec3 worldPosition)
 {
 	float shadow = 1.0;	
 	if(shadows.enabled != 0)
@@ -81,7 +81,7 @@ float getShadow(in sampler2DArray depthSampler, in Shadows shadows, in vec3 view
 
 	    vec4 shadowCoord = shadows.cascades[cascadeIndex].viewProjectionMatrix * vec4(worldPosition, 1.0);
 		vec4 normalizedShadowCoord = shadowCoord / shadowCoord.w;
-		shadow = getShadowInternal(depthSampler, normalizedShadowCoord, cascadeIndex);
+		shadow = GetShadowInternal(depthSampler, normalizedShadowCoord, cascadeIndex);
 	}
 	return shadow;
 }

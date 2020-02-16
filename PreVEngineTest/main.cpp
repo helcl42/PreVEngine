@@ -2195,6 +2195,13 @@ private:
 		float ambientFactor;
 	};
 
+	struct MaterialUniform
+	{
+		float shineDamper;
+
+		float reflectivity;
+	};
+
 	struct alignas(16) UniformsVS
 	{
 		glm::mat4 modelMatrix;
@@ -2231,14 +2238,18 @@ private:
 		float __padding4;
 		float __padding5;
 
+		MaterialUniform material;
+		float __padding6;
+		float __padding7;
+
 		glm::vec4 fogColor;
 		
 		glm::vec4 selectedColor;
 
 		uint32_t selected;
 		uint32_t castedByShadows;
-		float shineDamper;
-		float reflectivity;
+		float __padding8;
+		float __padding0;
 	};
 
 private:
@@ -2342,7 +2353,7 @@ public:
 			uniformsFS.shadows.enabled = SHADOWS_ENABLED;
 
 			// lightning
-			for (size_t i = 0; i < lightComponents.size(); i++)
+			for (size_t i = 0; i < lightComponents.size(); i++)	
 			{
 				uniformsFS.lightning.lights[i].color = glm::vec4(lightComponents[i]->GetColor(), 1.0f);
 				uniformsFS.lightning.lights[i].attenuation = glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f);
@@ -2351,9 +2362,11 @@ public:
 			uniformsFS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
 			uniformsFS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
 
-			// common			
-			uniformsFS.shineDamper = nodeRenderComponent->GetMaterial()->GetShineDamper();
-			uniformsFS.reflectivity = nodeRenderComponent->GetMaterial()->GetReflectivity();
+			// material			
+			uniformsFS.material.shineDamper = nodeRenderComponent->GetMaterial()->GetShineDamper();
+			uniformsFS.material.reflectivity = nodeRenderComponent->GetMaterial()->GetReflectivity();
+
+			// common
 			uniformsFS.fogColor = FOG_COLOR;
 			uniformsFS.selectedColor = SELECTED_COLOR;
 			uniformsFS.selected = false;
