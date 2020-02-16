@@ -56,10 +56,10 @@ vec3 GetDiffuseColor(in Lightning lightning, in float shadowFactor, in vec3 unit
 		const Light light = lightning.lights[i];
 
 		const vec3 toLightVector = light.position.xyz - worldPosition;
-
+		const vec3 unitToLightVector = normalize(toLightVector);
+		
 		const float attenuationFactor = GetAttenuationFactor(light.attenuation.xyz, toLightVector);
 		
-		const vec3 unitToLightVector = normalize(toLightVector);
 		totalDiffuse += GetDiffuseColor(unitNormal, unitToLightVector, light.color.xyz, attenuationFactor);
 	}
 
@@ -76,10 +76,9 @@ vec3 GetSpecularColor(in Lightning lightning, in Material material, in float sha
 		const Light light = lightning.lights[i];
 
 		const vec3 toLightVector = light.position.xyz - worldPosition.xyz;
-
-		const float attenuationFactor = GetAttenuationFactor(light.attenuation.xyz, toLightVector);
-		
 		const vec3 unitToLightVector = normalize(toLightVector);
+
+		const float attenuationFactor = GetAttenuationFactor(light.attenuation.xyz, toLightVector);	
 
 		totalSpecular += GetSpecularColor(unitNormal, unitToLightVector, unitToCameraVector, light.color.xyz, attenuationFactor, material.shineDamper, material.reflectivity);
 	}
@@ -98,12 +97,10 @@ void GetLightColor(in Lightning lightning, in Material material, in float shadow
 	{
 		const Light light = lightning.lights[i];
 
-		const vec3 toLightVector = light.position.xyz - worldPosition.xyz;
-
-		const float attenuationFactor = GetAttenuationFactor(light.attenuation.xyz, toLightVector);
-		
+		const vec3 toLightVector = light.position.xyz - worldPosition.xyz;		
 		const vec3 unitToLightVector = normalize(toLightVector);
 
+		const float attenuationFactor = GetAttenuationFactor(light.attenuation.xyz, toLightVector);
 		totalSpecular += GetSpecularColor(unitNormal, unitToLightVector, unitToCameraVector, light.color.xyz, attenuationFactor, material.shineDamper, material.reflectivity);
 		totalDiffuse += GetDiffuseColor(unitNormal, unitToLightVector, light.color.xyz, attenuationFactor);
 	}
