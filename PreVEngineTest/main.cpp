@@ -2204,52 +2204,38 @@ private:
 
 	struct alignas(16) UniformsVS
 	{
-		glm::mat4 modelMatrix;
+		alignas(16) glm::mat4 modelMatrix;
 
-		glm::mat4 viewMatrix;
+		alignas(16) glm::mat4 viewMatrix;
 		
-		glm::mat4 projectionMatrix;
+		alignas(16) glm::mat4 projectionMatrix;
 		
-		glm::mat4 normalMatrix;
+		alignas(16) glm::mat4 normalMatrix;
 		
-		glm::vec4 textureOffset;
+		alignas(16) glm::vec4 cameraPosition;
 
-		uint32_t textureNumberOfRows;
-		uint32_t useFakeLightning;
-		float __padding1;
-		float __padding2;
+		alignas(16) glm::vec4 textureOffset;
 
-		glm::vec4 cameraPosition;
-		
-		float density;
-		float gradient;
-		float __padding3;
-		float __padding4;
+		alignas(16) uint32_t textureNumberOfRows;
+					uint32_t useFakeLightning;
+					float density;
+					float gradient;
 	};
 
 	struct alignas(16) UniformsFS
 	{
-		ShadowsUniform shadows;
-		float __padding1;
-		float __padding2;
-		float __padding3;
-
-		LightningUniform lightning;
-		float __padding4;
-		float __padding5;
-
-		MaterialUniform material;
-		float __padding6;
-		float __padding7;
-
-		glm::vec4 fogColor;
+		alignas(16) ShadowsUniform shadows;
 		
-		glm::vec4 selectedColor;
+		alignas(16) LightningUniform lightning;
+		
+		alignas(16) MaterialUniform material;
+		
+		alignas(16) glm::vec4 fogColor;
+		
+		alignas(16) glm::vec4 selectedColor;
 
-		uint32_t selected;
-		uint32_t castedByShadows;
-		float __padding8;
-		float __padding0;
+		alignas(16) uint32_t selected;
+					uint32_t castedByShadows;
 	};
 
 private:
