@@ -20,7 +20,7 @@ namespace PreVEngine
 		IWindow* window;
 	};
 
-	struct WindowResumeEvent
+	struct WindowChangeEvent
 	{
 		IWindow* window;
 	};
@@ -49,6 +49,13 @@ namespace PreVEngine
 	};
 	//////////////////////////////////////
 
+	//////////////////////////////////////
+	// Window
+	//////////////////////////////////////
+	struct SurfaceChanged
+	{
+		VkSurfaceKHR surface;
+	};
 
 	//////////////////////////////////////
 	// Keyboard

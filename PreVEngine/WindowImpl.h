@@ -36,7 +36,7 @@ namespace PreVEngine
 			TOUCH,
 			CLOSE,
 			INIT,
-			RESUME,
+			CHANGE,
 			UNKNOWN
 		};
 
@@ -117,7 +117,7 @@ namespace PreVEngine
 			{
 
 			}
-			resume;
+			change;
 		};
 
 		void Clear()
@@ -259,7 +259,7 @@ namespace PreVEngine
 	public:
 		operator VkSurfaceKHR () const;
 
-		bool CanPresent(VkPhysicalDevice gpu, uint32_t queue_family) const;        // Checks if surface can present given queue type.
+		bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const;        // Checks if surface can present given queue type.
 	};
 
 	struct WindowShape
@@ -332,7 +332,7 @@ namespace PreVEngine
 
 		Event OnCloseEvent();                                                   // Window closing
 
-		Event OnResumeEvent();
+		Event OnChangeEvent();
 
 	public:
 		WindowImpl();
@@ -368,7 +368,7 @@ namespace PreVEngine
 	public:
 		virtual bool CreateSurface(VkInstance instance) = 0;
 
-		virtual bool CanPresent(VkPhysicalDevice gpu, uint32_t queue_family) const = 0;  // Checks if window can present the given queue type.
+		virtual bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const = 0;  // Checks if window can present the given queue type.
 
 		virtual Event GetEvent(bool wait_for_event = false) = 0;  // Fetch one event from the queue.
 

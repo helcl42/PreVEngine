@@ -162,8 +162,7 @@ namespace PreVEngine
 						event = OnFocusEvent(false);
 						break;
 				    case APP_CMD_INIT_WINDOW:
-				        LOGE("Inited again...");
-				        event = OnResumeEvent();
+				        event = OnChangeEvent();
 				        break;
 					case APP_CMD_TERM_WINDOW:
 						//event = OnCloseEvent();

@@ -97,7 +97,7 @@ namespace PreVEngine
 		return { Event::EventType::CLOSE };
 	}
 
-	Event WindowImpl::OnResumeEvent()
+	Event WindowImpl::OnChangeEvent()
 	{
 		if (m_vkSurface != VK_NULL_HANDLE)
 		{
@@ -107,7 +107,7 @@ namespace PreVEngine
 
 		CreateSurface(m_vkInstance);
 
-		return { Event::EventType ::RESUME };
+		return { Event::EventType ::CHANGE };
 	}
 
 	void WindowImpl::SetTextInput(bool enabled)

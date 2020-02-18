@@ -59,7 +59,7 @@ namespace PreVEngine
 	class Engine
 	{
 	private:
-	    EventHandler<Engine, WindowResumeEvent> m_resumeHandler{ *this };
+	    EventHandler<Engine, WindowChangeEvent> m_windowChangedHandler{ *this };
 	private:
 		std::shared_ptr<EngineConfig> m_config;
 
@@ -193,12 +193,13 @@ namespace PreVEngine
 		}
 
 	public:
-	    void operator() (const WindowResumeEvent& resumeEvent)
+	    void operator() (const WindowChangeEvent& windowChangeEvent)
         {
 		    vkDeviceWaitIdle(*m_device);
 
 		    InitSurface();
-		    m_scene->OnResume(m_surface);
+
+		    EventChannel::Broadcast(SurfaceChanged{ m_surface });
         }
 	};
 }

@@ -68,8 +68,6 @@ namespace PreVEngine
 
 		virtual void ShutDown() = 0;
 
-		virtual void OnResume(VkSurfaceKHR surface) = 0;
-
 		virtual std::shared_ptr<ISceneNode<NodeFlagsType>> GetRootNode() = 0;
 
 		virtual void SetSceneRoot(const std::shared_ptr<ISceneNode<NodeFlagsType>>& root) = 0;
@@ -91,6 +89,8 @@ namespace PreVEngine
 	{
 	private:
 		EventHandler<Scene, WindowResizeEvent> m_windowResizeEvent{ *this };
+
+		EventHandler<Scene, SurfaceChanged> m_surfaceChangedEvent{ *this };
 
 	protected:
 		std::shared_ptr<SceneConfig> m_config;
@@ -240,16 +240,16 @@ namespace PreVEngine
 			m_rootNode = root;
 		}
 
-		void OnResume(VkSurfaceKHR surface)
-		{
-            m_surface = surface;
-            InitSwapchain();
-            m_swapchain->UpdateExtent();
-        }
-
 	public:
 		void operator() (const WindowResizeEvent& resizeEvent)
 		{
+			m_swapchain->UpdateExtent();
+		}
+
+		void operator() (const SurfaceChanged& surfaceChangedEvent)
+		{
+			m_surface = surfaceChangedEvent.surface;
+			InitSwapchain();
 			m_swapchain->UpdateExtent();
 		}
 	};
