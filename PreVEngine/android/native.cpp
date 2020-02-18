@@ -1,34 +1,3 @@
-/*
-*--------------------------------------------------------------------------
-* Copyright (c) 2015-2016 Valve Corporation
-* Copyright (c) 2015-2016 LunarG, Inc.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* Author: Rene Lindsay <rene@lunarg.com>
-*
-*/
-
-//----------------------------------------------------------------------------------------------------
-//  The android_main() function is the entry-point for Android, and calls the user's main() function.
-//  But first, it initialises the asset manager, so that fopen can be used to read assets from the APK.
-//
-//  The ShowKeyboard() function displays the Android soft-keyboard.
-//  The GetUnicodeChar() function converts key-stroke input to text.
-//
-//  (Please excuse the uncommented code... This unit is a work in progress.)
-//----------------------------------------------------------------------------------------------------
-
 #include "native.h"
 
 //----------------------------------------printf for Android----------------------------------------
@@ -105,22 +74,42 @@ static int32_t handle_input(struct android_app* app, AInputEvent* event) {
 //====================Main====================
 int main(int argc, char *argv[]);          // Forward declaration of main function
 
+static void activity_force_finish(void) {
+    JavaVM* javaVM = Android_App->activity->vm;
+    JNIEnv* jniEnv = Android_App->activity->env;
+    JavaVMAttachArgs Args = {JNI_VERSION_1_6, "NativeThread", NULL};
+    javaVM->AttachCurrentThread(&jniEnv, &Args);
+
+    jclass classActivity = jniEnv->GetObjectClass(Android_App->activity->clazz);
+    jmethodID activityFinishID = jniEnv->GetMethodID(classActivity, "finish", "()V");
+
+    signal(SIGABRT, SIG_DFL);
+
+    jniEnv->CallVoidMethod(Android_App->activity->clazz, activityFinishID);
+
+    javaVM->DetachCurrentThread();
+
+    pthread_exit(NULL);
+}
+
+
 void android_main(struct android_app* state) {
     printf("Native Activity\n");
-    // app_dummy();                           // Make sure glue isn't stripped
+
     // state->onAppCmd     = handle_cmd;      // Register window event callback  (Temporary)
     // state->onInputEvent = handle_input;    // Register input event callback   (Temporary)
+
     Android_App = state;                     // Pass android app state to window_andoid.cpp
 
     android_fopen_set_asset_manager(state->activity->assetManager);  // Re-direct fopen to read assets from our APK.
-
-    // int success=InitVulkan();
-    // printf("InitVulkan : %s\n",success ? "SUCCESS" : "FAILED");
 
     main(0, NULL);
 
     printf("Exiting.\n");
     ANativeActivity_finish(state->activity);
+
+    activity_force_finish();
+    exit(0);
 }
 //============================================
 
