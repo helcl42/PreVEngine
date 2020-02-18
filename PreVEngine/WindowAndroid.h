@@ -162,6 +162,7 @@ namespace PreVEngine
 						event = OnFocusEvent(false);
 						break;
 				    case APP_CMD_INIT_WINDOW:
+				    case APP_CMD_CONFIG_CHANGED:
 				        event = OnChangeEvent();
 				        break;
 					case APP_CMD_TERM_WINDOW:
@@ -282,11 +283,11 @@ namespace PreVEngine
 				// handle events from other event queues (sensors, ...)
 			}
 
-			if (m_app->destroyRequested)
-			{
-				LOGI("destroyRequested");
-				return { Event::EventType::CLOSE };
-			}
+//			if (m_app->destroyRequested)
+//			{
+//				LOGI("destroyRequested");
+//				return { Event::EventType::CLOSE };
+//			}
 
 			return { Event::EventType::NONE };
 		}

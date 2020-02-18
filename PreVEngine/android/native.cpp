@@ -108,8 +108,8 @@ void android_main(struct android_app* state) {
     printf("Exiting.\n");
     ANativeActivity_finish(state->activity);
 
-    activity_force_finish();
-    exit(0);
+//    activity_force_finish();
+//    exit(0);
 }
 //============================================
 
