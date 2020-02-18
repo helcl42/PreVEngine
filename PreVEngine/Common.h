@@ -11,5 +11,6 @@
 #include <glm/gtx/hash.hpp>
 
 #include <memory>
+#include <thread>
 
 #endif

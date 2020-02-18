@@ -111,7 +111,7 @@ namespace PreVEngine
 
 		void SetMouseCursorVisible(bool visible);
 
-		void CreateSurface(VkInstance instance);
+		bool CreateSurface(VkInstance instance);
 
 		bool InitTouch();                                        // Returns false if no touch-device was found.
 
@@ -282,9 +282,12 @@ namespace PreVEngine
 		}
 	}
 
-	void WindowXcb::CreateSurface(VkInstance instance)
+	bool WindowXcb::CreateSurface(VkInstance instance)
 	{
-		if (m_vkSurface) return;
+		if (m_vkSurface)
+		{
+		    return false;
+		}
 
 		m_vkInstance = instance;
 
@@ -297,6 +300,7 @@ namespace PreVEngine
 		VKERRCHECK(vkCreateXcbSurfaceKHR(instance, &xcbCreateInfo, nullptr, &m_vkSurface));
 
 		LOGI("Vulkan Surface created\n");
+		return true;
 	}
 
 	//---------------------------------------------------------------------------

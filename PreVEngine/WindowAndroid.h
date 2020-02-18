@@ -57,9 +57,12 @@ namespace PreVEngine
 			return true;
 		}
 
-		void CreateSurface(VkInstance instance)
+		bool CreateSurface(VkInstance instance)
 		{
-			if (m_vkSurface) return;
+			if (m_vkSurface) 
+			{
+				return false;
+			}
 
 			m_vkInstance = instance;
 
@@ -71,6 +74,7 @@ namespace PreVEngine
 			VKERRCHECK(vkCreateAndroidSurfaceKHR(instance, &androidCreateInfo, NULL, &m_vkSurface));
 
 			LOGI("Vulkan Surface created\n");
+			return true;
 		}
 
 	public:
@@ -157,8 +161,12 @@ namespace PreVEngine
 					case APP_CMD_LOST_FOCUS:
 						event = OnFocusEvent(false);
 						break;
+				    case APP_CMD_INIT_WINDOW:
+				        LOGE("Inited again...");
+				        event = OnResumeEvent();
+				        break;
 					case APP_CMD_TERM_WINDOW:
-						event = OnCloseEvent();
+						//event = OnCloseEvent();
 						break;
 					default: break;
 				}

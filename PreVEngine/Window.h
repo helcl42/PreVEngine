@@ -75,6 +75,8 @@ namespace PreVEngine
 
 		virtual void OnCloseEvent() = 0;
 
+		virtual void OnResumeEvent() = 0;
+
 		virtual void OnResizeEvent(uint16_t width, uint16_t height) = 0;
 
 		virtual void OnMoveEvent(int16_t x, int16_t y) = 0;
@@ -119,6 +121,11 @@ namespace PreVEngine
 		virtual void OnCloseEvent() override
 		{
 			EventChannel::Broadcast(WindowDestroyedEvent{ this });
+		}
+
+		virtual void OnResumeEvent() override
+		{
+			EventChannel::Broadcast(WindowResumeEvent{ this });
 		}
 
 		virtual void OnResizeEvent(uint16_t width, uint16_t height) override

@@ -59,6 +59,8 @@ namespace PreVEngine
 	class Engine
 	{
 	private:
+	    EventHandler<Engine, WindowResumeEvent> m_resumeHandler{ *this };
+	private:
 		std::shared_ptr<EngineConfig> m_config;
 
 		std::shared_ptr<Clock<float>> m_clock;
@@ -189,6 +191,15 @@ namespace PreVEngine
 		{
 			return m_scene;
 		}
+
+	public:
+	    void operator() (const WindowResumeEvent& resumeEvent)
+        {
+		    vkDeviceWaitIdle(*m_device);
+
+		    InitSurface();
+		    m_scene->OnResume(m_surface);
+        }
 	};
 }
 

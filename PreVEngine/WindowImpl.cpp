@@ -22,7 +22,7 @@ namespace PreVEngine
 		if (action != ActionType::MOVE)
 		{
 			uint32_t buttonIndex = static_cast<uint32_t>(btn);
-			m_mouseButonsState[buttonIndex] = (action == ActionType::DOWN);  // Keep track of button state
+			m_mouseButtonsState[buttonIndex] = (action == ActionType::DOWN);  // Keep track of button state
 		}
 
 		Event e = { Event::EventType::MOUSE, {action, x, y, btn} };
@@ -97,6 +97,19 @@ namespace PreVEngine
 		return { Event::EventType::CLOSE };
 	}
 
+	Event WindowImpl::OnResumeEvent()
+	{
+		if (m_vkSurface != VK_NULL_HANDLE)
+		{
+			vkDestroySurfaceKHR(m_vkInstance, m_vkSurface, nullptr);
+			m_vkSurface = VK_NULL_HANDLE;
+		}
+
+		CreateSurface(m_vkInstance);
+
+		return { Event::EventType ::RESUME };
+	}
+
 	void WindowImpl::SetTextInput(bool enabled)
 	{
 		m_hasTextInput = enabled;
@@ -131,7 +144,7 @@ namespace PreVEngine
 	bool WindowImpl::IsMouseButtonPressed(const ButtonType btn) const
 	{
 		uint32_t buttonIndex = static_cast<uint32_t>(btn);
-		return m_mouseButonsState[buttonIndex];
+		return m_mouseButtonsState[buttonIndex];
 	}
 
 	Position WindowImpl::GetMousePosition() const
@@ -172,10 +185,10 @@ namespace PreVEngine
 		return m_vkSurface;
 	}
 
-	bool Surface::CanPresent(VkPhysicalDevice gpu, uint32_t queue_family) const
+	bool Surface::CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const
 	{
-		VkBool32 can_present = false;
-		VKERRCHECK(vkGetPhysicalDeviceSurfaceSupportKHR(gpu, queue_family, m_vkSurface, &can_present));
-		return !!can_present;
+		VkBool32 canPresent = false;
+		VKERRCHECK(vkGetPhysicalDeviceSurfaceSupportKHR(gpu, queueFamily, m_vkSurface, &canPresent));
+		return !!canPresent;
 	}
 }

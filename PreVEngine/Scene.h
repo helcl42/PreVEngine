@@ -68,6 +68,8 @@ namespace PreVEngine
 
 		virtual void ShutDown() = 0;
 
+		virtual void OnResume(VkSurfaceKHR surface) = 0;
+
 		virtual std::shared_ptr<ISceneNode<NodeFlagsType>> GetRootNode() = 0;
 
 		virtual void SetSceneRoot(const std::shared_ptr<ISceneNode<NodeFlagsType>>& root) = 0;
@@ -237,6 +239,13 @@ namespace PreVEngine
 
 			m_rootNode = root;
 		}
+
+		void OnResume(VkSurfaceKHR surface)
+		{
+            m_surface = surface;
+            InitSwapchain();
+            m_swapchain->UpdateExtent();
+        }
 
 	public:
 		void operator() (const WindowResizeEvent& resizeEvent)

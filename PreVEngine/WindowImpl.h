@@ -36,6 +36,7 @@ namespace PreVEngine
 			TOUCH,
 			CLOSE,
 			INIT,
+			RESUME,
 			UNKNOWN
 		};
 
@@ -111,6 +112,12 @@ namespace PreVEngine
 			{
 			}
 			close; // Window is closing
+
+			struct
+			{
+
+			}
+			resume;
 		};
 
 		void Clear()
@@ -284,9 +291,10 @@ namespace PreVEngine
 
 	class WindowImpl : public Surface
 	{
+	private:
 		Position m_mousePosition;
 
-		bool m_mouseButonsState[4] = {};
+		bool m_mouseButtonsState[4] = {};
 
 		bool m_keyboardKeysState[256] = {};
 
@@ -324,6 +332,8 @@ namespace PreVEngine
 
 		Event OnCloseEvent();                                                   // Window closing
 
+		Event OnResumeEvent();
+
 	public:
 		WindowImpl();
 
@@ -356,7 +366,7 @@ namespace PreVEngine
 		virtual void Close();
 
 	public:
-		virtual void CreateSurface(VkInstance instance) = 0;
+		virtual bool CreateSurface(VkInstance instance) = 0;
 
 		virtual bool CanPresent(VkPhysicalDevice gpu, uint32_t queue_family) const = 0;  // Checks if window can present the given queue type.
 

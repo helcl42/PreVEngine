@@ -20,6 +20,11 @@ namespace PreVEngine
 		IWindow* window;
 	};
 
+	struct WindowResumeEvent
+	{
+		IWindow* window;
+	};
+
 	struct WindowResizeEvent
 	{
 		IWindow* window;

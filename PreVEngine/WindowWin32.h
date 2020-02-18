@@ -47,7 +47,7 @@ namespace PreVEngine
 
 		void SetMouseCursorVisible(bool visible);
 
-		void CreateSurface(VkInstance instance);
+		bool CreateSurface(VkInstance instance);
 
 		void GetDesktopResolution(uint32_t& horizontal, uint32_t& vertical) const;
 
@@ -242,9 +242,12 @@ namespace PreVEngine
 		}
 	}
 
-	void WindowWin32::CreateSurface(VkInstance instance)
+	bool WindowWin32::CreateSurface(VkInstance instance)
 	{
-		if (m_vkSurface) return;
+		if (m_vkSurface)
+		{
+		    return false;
+		}
 
 		m_vkInstance = instance;
 
@@ -257,6 +260,7 @@ namespace PreVEngine
 		VKERRCHECK(vkCreateWin32SurfaceKHR(instance, &win32CreateInfo, nullptr, &m_vkSurface));
 
 		LOGI("Vulkan Surface created\n");
+		return true;
 	}
 
 #define WM_RESHAPE (WM_USER + 0)

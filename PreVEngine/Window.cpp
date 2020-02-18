@@ -185,6 +185,9 @@ namespace PreVEngine
 				case Event::EventType::INIT:
 					OnInitEvent();
 					break;
+				case Event::EventType::RESUME:
+					OnResumeEvent();
+					break;
 				case Event::EventType::CLOSE:
 					OnCloseEvent();
 					return false;
