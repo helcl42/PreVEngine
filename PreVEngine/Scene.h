@@ -120,8 +120,8 @@ namespace PreVEngine
 		{
 		}
 
-	public:
-		void Init() override
+	private:
+		void InitQueues()
 		{
 			m_presentQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT, m_surface);   // graphics + present-queue
 			m_graphicsQueue = m_presentQueue;                                     // they might be the same or not
@@ -130,7 +130,10 @@ namespace PreVEngine
 				m_presentQueue = m_device->AddQueue(0, m_surface);                          // create present-queue
 				m_graphicsQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT);             // create graphics queue
 			}
+		}
 
+		void InitRenderPass()
+		{
 			VkFormat colorFormat = m_device->GetGPU().FindSurfaceFormat(m_surface);
 			VkFormat depthFormat = m_device->GetGPU().FindDepthFormat();
 
@@ -138,14 +141,29 @@ namespace PreVEngine
 			m_renderPass->AddColorAttachment(colorFormat, { 0.0f, 0.0f, 0.3f, 1.0f });	// color buffer, clear to blue
 			m_renderPass->AddDepthAttachment(depthFormat);
 			m_renderPass->AddSubpass({ 0, 1 });
+		}
 
+		void InitAllocator()
+		{
 			m_allocator = std::make_shared<Allocator>(*m_graphicsQueue);                   // Create "Vulkan Memory Aloocator"
 			printf("Allocator created\n");
+		}
 
+		void InitSwapchain()
+		{
 			m_swapchain = std::make_shared<Swapchain>(*m_allocator, *m_renderPass, m_graphicsQueue, m_graphicsQueue);
 			m_swapchain->SetPresentMode(m_config->VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
 			m_swapchain->SetImageCount(m_config->framesInFlight);
 			m_swapchain->Print();
+		}
+
+	public:
+		void Init() override
+		{
+			InitQueues();
+			InitRenderPass();
+			InitAllocator();
+			InitSwapchain();
 
 			AllocatorProvider::GetInstance().SetAllocator(m_allocator);
 		}

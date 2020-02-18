@@ -85,14 +85,20 @@ namespace PreVEngine
 		{
 		}
 
-	public:
-		void Init()
+	private:
+		void InitTiming()
 		{
 			m_clock = std::make_shared<Clock<float>>();
 			m_fpsService = std::make_shared<FPSService>();
+		}
 
+		void InitInstance()
+		{
 			m_instance = std::make_shared<Instance>(m_config->validation);
+		}
 
+		void InitWindow()
+		{
 			if (m_config->fullScreen)
 			{
 				m_window = std::make_shared<Window>(m_config->appName.c_str());
@@ -102,19 +108,36 @@ namespace PreVEngine
 				m_window = std::make_shared<Window>(m_config->appName.c_str(), m_config->windowSize.width, m_config->windowSize.height);
 				m_window->SetPosition(m_config->windowPosition);
 			}
+		}
 
+		void InitSurface()
+		{
+			m_surface = m_window->GetSurface(*m_instance);
+		}
+
+		void InitDevice()
+		{
 			auto physicalDevices = std::make_shared<PhysicalDevices>(*m_instance);
 			physicalDevices->Print();
 
-			m_surface = m_window->GetSurface(*m_instance);
-			PhysicalDevice* physicalDevice = physicalDevices->FindPresentable(m_surface);					// get presenting GPU?
+			PhysicalDevice* physicalDevice = physicalDevices->FindPresentable(m_surface);
 			if (!physicalDevice)
 			{
-				throw std::runtime_error("No GPU found?!");
+				throw std::runtime_error("No suitable GPU found?!");
 			}
 
 			m_device = std::make_shared<Device>(*physicalDevice);
 			m_device->Print();
+		}
+
+	public:
+		void Init()
+		{
+			InitTiming();
+			InitInstance();
+			InitWindow();
+			InitSurface();
+			InitDevice();
 
 			DeviceProvider::GetInstance().SetDevice(m_device);
 		}
@@ -139,8 +162,15 @@ namespace PreVEngine
 				m_clock->UpdateClock();
 				float deltaTime = m_clock->GetDelta();
 
-				m_scene->Update(deltaTime);
-				m_scene->Render();
+				if (m_window->HasFocus()) 
+				{
+					m_scene->Update(deltaTime);
+					m_scene->Render();
+				}
+				else 
+				{
+					std::this_thread::sleep_for(std::chrono::milliseconds(200));
+				}
 
 				m_fpsService->Update(deltaTime);
 			}
