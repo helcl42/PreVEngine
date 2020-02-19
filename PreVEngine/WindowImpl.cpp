@@ -107,7 +107,7 @@ namespace PreVEngine
 
 		CreateSurface(m_vkInstance);
 
-		return { Event::EventType ::CHANGE };
+		return { Event::EventType::CHANGE };
 	}
 
 	void WindowImpl::SetTextInput(bool enabled)

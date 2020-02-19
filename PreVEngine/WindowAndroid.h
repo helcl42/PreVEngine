@@ -64,6 +64,8 @@ namespace PreVEngine
 				return false;
 			}
 
+			LOGE("NativeWindow Ptr: %p", m_app->window);
+
 			m_vkInstance = instance;
 
 			VkAndroidSurfaceCreateInfoKHR androidCreateInfo;
