@@ -193,9 +193,10 @@ namespace PreVEngine
 
 			for (auto it = m_children.begin(); it != m_children.end(); ++it)
 			{
-				if (*it == child)
+				if ((*it)->GetId() == child->GetId())
 				{
 					m_children.erase(it);
+					break;
 				}
 			}
 		}
