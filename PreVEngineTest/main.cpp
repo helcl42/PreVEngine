@@ -1807,7 +1807,7 @@ public:
 	void Init() override
 	{
 		LightComponentFactory lightFactory{};
-		m_lightComponent = lightFactory.CreateLightCompoennt(m_initialPosition, m_color, glm::vec3(1.0f, 0.05f, 0.01f));
+		m_lightComponent = lightFactory.CreateLightCompoennt(m_initialPosition, m_color, glm::vec3(0.1f, 0.005f, 0.001f));
 
 		ComponentRepository<ILightComponent>::GetInstance().Add(m_id, m_lightComponent);
 
@@ -2397,6 +2397,9 @@ public:
 class RootSceneNode : public AbstractSceneNode<SceneNodeFlags>
 {
 private:
+	EventHandler<RootSceneNode, KeyEvent> m_keyEventHnadler{ *this };
+
+private:
 	std::shared_ptr<RenderPass> m_defaultRenderPass;
 
 private:
@@ -2424,15 +2427,15 @@ public:
 		sunLight->SetTags({ TAG_MAIN_LIGHT, TAG_LIGHT });
 		AddChild(sunLight);
 
-		auto light1 = std::make_shared<Light>(glm::vec3(10.0f, 10.0f, 5.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		auto light1 = std::make_shared<Light>(glm::vec3(30.0f, 20.0f, 35.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 		light1->SetTags({ TAG_LIGHT });
 		AddChild(light1);
 
-		auto light2 = std::make_shared<Light>(glm::vec3(-10.0f, 10.0f, 5.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		auto light2 = std::make_shared<Light>(glm::vec3(-30.0f, 20.0f, 35.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		light2->SetTags({ TAG_LIGHT });
 		AddChild(light2);
 
-		auto light3 = std::make_shared<Light>(glm::vec3(-10.0f, 10.0f, 15.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		auto light3 = std::make_shared<Light>(glm::vec3(0.0f, 10.0f, -10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		light3->SetTags({ TAG_LIGHT });
 		AddChild(light3);
 
@@ -2536,6 +2539,37 @@ public:
 		m_quadRenderer->ShutDown();
 		m_defaultRenderer->ShutDown();
 		m_shadowsRenderer->ShutDown();
+	}
+
+public:
+	void operator() (const KeyEvent& keyEvent)
+	{
+		if (keyEvent.action == KeyActionType::PRESS)
+		{
+			if (keyEvent.keyCode == KeyCode::KEY_J)
+			{
+				if (m_children.size() > 0)
+				{
+					auto& child = m_children.back();
+					child->ShutDown();
+					RemoveChild(child);
+				}
+			}
+			else if (keyEvent.keyCode == KeyCode::KEY_K)
+			{
+				const float DISTANCE = 40.0f;
+				std::random_device rd;
+				std::mt19937 gen(rd());
+				std::uniform_int_distribution<> dis(0, 4);
+				const auto i = dis(gen);
+				const auto j = dis(gen);
+				const auto k = dis(gen);
+
+				auto robot = std::make_shared<CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), "texture.jpg");
+				robot->Init();
+				AddChild(robot);
+			}
+		}
 	}
 };
 
