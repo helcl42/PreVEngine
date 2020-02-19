@@ -1677,15 +1677,18 @@ public:
 	void operator() (const TouchEvent& touchEvent)
 	{
 #if defined(__ANDROID__)
-	    const int MAX_X_COORD_TO_MOVE = 350;
+	    const float MAX_RATIO_FOR_MOVE_CONTROL = 0.25; // 
         if(touchEvent.action == TouchActionType::MOVE || touchEvent.action == TouchActionType::DOWN)
         {
-            if(touchEvent.position.x < MAX_X_COORD_TO_MOVE && touchEvent.position.y < MAX_X_COORD_TO_MOVE)
+			const auto MAX_X_COORD_TO_CONTROL = touchEvent.extent.x * MAX_RATIO_FOR_MOVE_CONTROL;
+			const auto MAX_Y_COORD_TO_BACKWARD_CONTROL = touchEvent.extent.y * MAX_RATIO_FOR_MOVE_CONTROL;
+			const auto MIN_Y_COORD_TO_BACKWARD_CONTROL = touchEvent.extent.y - touchEvent.extent.y * MAX_RATIO_FOR_MOVE_CONTROL;
+            if(touchEvent.position.x < MAX_X_COORD_TO_CONTROL && touchEvent.position.y < MAX_Y_COORD_TO_BACKWARD_CONTROL)
             {
 		        m_autoMoveForward = true;
 		    }
 
-            if(touchEvent.position.x < MAX_X_COORD_TO_MOVE && touchEvent.position.y > (1080 - MAX_X_COORD_TO_MOVE))
+            if(touchEvent.position.x < MAX_X_COORD_TO_CONTROL && touchEvent.position.y > MIN_Y_COORD_TO_BACKWARD_CONTROL)
             {
                 m_autoMoveBackward = true;
             }
