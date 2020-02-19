@@ -1705,7 +1705,10 @@ public:
 			m_cameraComponent->AddYaw(angleInDegrees.x);
 		}
 
-		m_prevTouchPosition = touchEvent.position;
+		if(touchEvent.action == TouchActionType::MOVE || touchEvent.action == TouchActionType::DOWN)
+		{
+			m_prevTouchPosition = touchEvent.position;
+		}
 	}
 
 	void operator() (const KeyEvent& keyEvent)
@@ -2399,6 +2402,8 @@ class RootSceneNode : public AbstractSceneNode<SceneNodeFlags>
 private:
 	EventHandler<RootSceneNode, KeyEvent> m_keyEventHnadler{ *this };
 
+	EventHandler<RootSceneNode, TouchEvent> m_touchEventHnadler{ *this };
+
 private:
 	std::shared_ptr<RenderPass> m_defaultRenderPass;
 
@@ -2548,27 +2553,50 @@ public:
 		{
 			if (keyEvent.keyCode == KeyCode::KEY_J)
 			{
-				if (m_children.size() > 0)
-				{
-					auto& child = m_children.back();
-					child->ShutDown();
-					RemoveChild(child);
-				}
+				RemmoveNode();
 			}
 			else if (keyEvent.keyCode == KeyCode::KEY_K)
 			{
-				const float DISTANCE = 40.0f;
-				std::random_device rd;
-				std::mt19937 gen(rd());
-				std::uniform_int_distribution<> dis(0, 4);
-				const auto i = dis(gen);
-				const auto j = dis(gen);
-				const auto k = dis(gen);
-
-				auto robot = std::make_shared<CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), "texture.jpg");
-				robot->Init();
-				AddChild(robot);
+				AddNode();
 			}
+		}
+	}
+
+	void operator() (const TouchEvent& touchEvent)
+	{
+		if (touchEvent.action == TouchActionType::DOWN)
+		{
+			AddNode();
+		}
+		else if (touchEvent.action == TouchActionType::UP)
+		{
+			//RemmoveNode();
+		}
+	}
+
+private:
+	void AddNode()
+	{
+		const float DISTANCE = 40.0f;
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_int_distribution<> dis(0, 4);
+		const auto i = dis(gen);
+		const auto j = dis(gen);
+		const auto k = dis(gen);
+
+		auto robot = std::make_shared<CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), "texture.jpg");
+		robot->Init();
+		AddChild(robot);
+	}
+
+	void RemmoveNode()
+	{
+		if (m_children.size() > 0)
+		{
+			auto& child = m_children.back();
+			child->ShutDown();
+			RemoveChild(child);
 		}
 	}
 };
