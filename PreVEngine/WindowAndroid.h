@@ -164,6 +164,10 @@ namespace PreVEngine
 				    case APP_CMD_INIT_WINDOW:
 				    case APP_CMD_CONFIG_CHANGED:
 				        event = OnChangeEvent();
+				        std::this_thread::sleep_for(std::chrono::milliseconds(150));
+                        m_shape.width = (uint16_t)ANativeWindow_getWidth(m_app->window);
+						m_shape.height = (uint16_t)ANativeWindow_getHeight(m_app->window);
+						m_eventQueue.Push(OnResizeEvent(m_shape.width, m_shape.height));
 				        break;
 					case APP_CMD_TERM_WINDOW:
 						//event = OnCloseEvent();
