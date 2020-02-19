@@ -25,7 +25,7 @@ namespace PreVEngine
 			m_mouseButtonsState[buttonIndex] = (action == ActionType::DOWN);  // Keep track of button state
 		}
 
-		Event e = { Event::EventType::MOUSE, { action, x, y, btn, (int16_t)m_shape.width, (int16_t)m_shape.width } };
+		Event e = { Event::EventType::MOUSE, { action, x, y, btn, (int16_t)m_shape.width, (int16_t)m_shape.height } };
 		return e;
 	}
 

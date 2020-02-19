@@ -243,7 +243,7 @@ namespace PreVEngine
 								float x = AMotionEvent_getX(a_event, i);
 								float y = AMotionEvent_getY(a_event, i);
 
-								event = m_MTouch.OnEvent(ActionType::MOVE, x, y, finger_id, m_shape.width, m_shape.width );
+								event = m_MTouch.OnEvent(ActionType::MOVE, x, y, finger_id, (float)m_shape.width, (float)m_shape.height );
 							}
 						}
 						else
@@ -257,11 +257,11 @@ namespace PreVEngine
 							{
 								case AMOTION_EVENT_ACTION_POINTER_DOWN:
 								case AMOTION_EVENT_ACTION_DOWN:
-									event = m_MTouch.OnEvent(ActionType::DOWN, x, y, finger_id, (float)m_shape.width, (float)m_shape.width );
+									event = m_MTouch.OnEvent(ActionType::DOWN, x, y, finger_id, (float)m_shape.width, (float)m_shape.height);
 									break;
 								case AMOTION_EVENT_ACTION_POINTER_UP:
 								case AMOTION_EVENT_ACTION_UP:
-									event = m_MTouch.OnEvent(ActionType::UP, x, y, finger_id, (float)m_shape.width, (float)m_shape.width );
+									event = m_MTouch.OnEvent(ActionType::UP, x, y, finger_id, (float)m_shape.width, (float)m_shape.height);
 									break;
 								case AMOTION_EVENT_ACTION_CANCEL:
 									m_MTouch.Clear();
