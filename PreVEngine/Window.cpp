@@ -2,6 +2,7 @@
 #include "WindowAndroid.h"
 #include "WindowWin32.h"
 #include "WindowXcb.h"
+#include "WindowImpl.h"
 
 namespace PreVEngine
 {
@@ -159,7 +160,7 @@ namespace PreVEngine
 			switch (e.tag)
 			{
 				case Event::EventType::MOUSE:
-					OnMouseEvent(e.mouse.action, e.mouse.x, e.mouse.y, e.mouse.btn);
+					OnMouseEvent(e.mouse.action, e.mouse.x, e.mouse.y, e.mouse.btn, e.mouse.w, e.mouse.h);
 					break;
 				case Event::EventType::MOUSE_SCROLL:
 					OnMouseScrollEvent(e.scroll.delta, e.scroll.x, e.scroll.y);
@@ -180,7 +181,7 @@ namespace PreVEngine
 					OnFocusEvent(e.focus.hasFocus);
 					break;
 				case Event::EventType::TOUCH:
-					OnTouchEvent(e.touch.action, e.touch.x, e.touch.y, e.touch.id);
+					OnTouchEvent(e.touch.action, e.touch.x, e.touch.y, e.touch.id, e.touch.w, e.touch.h);
 					break;
 				case Event::EventType::INIT:
 					OnInitEvent();

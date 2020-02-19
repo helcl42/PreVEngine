@@ -83,7 +83,7 @@ namespace PreVEngine
 
 		virtual void OnFocusEvent(bool hasFocus) = 0;
 
-		virtual void OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType btn) = 0;
+		virtual void OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType btn, int16_t w, int16_t h) = 0;
 
 		virtual void OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y) = 0;
 
@@ -91,7 +91,7 @@ namespace PreVEngine
 
 		virtual void OnTextEvent(const char *str) = 0;
 
-		virtual void OnTouchEvent(ActionType action, float x, float y, uint8_t id) = 0;
+		virtual void OnTouchEvent(ActionType action, float x, float y, uint8_t id, float w, float h) = 0;
 	};
 
 	class Window : public AbstractWindow
@@ -148,9 +148,9 @@ namespace PreVEngine
 			EventChannel::Broadcast(KeyEvent{ InputsMapping::GetKeyActionType(action), keyCode });
 		}
 
-		virtual void OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType button) override
+		virtual void OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType button, int16_t w, int16_t h) override
 		{
-			EventChannel::Broadcast(MouseEvent{ InputsMapping::GetMouseActionType(action), InputsMapping::GetMouseButtonType(button), glm::vec2(x, y) });
+			EventChannel::Broadcast(MouseEvent{ InputsMapping::GetMouseActionType(action), InputsMapping::GetMouseButtonType(button), glm::vec2(x, y), glm::vec2(w, h) });
 		}
 
 		virtual void OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y) override
@@ -158,9 +158,9 @@ namespace PreVEngine
 			EventChannel::Broadcast(MouseScrollEvent{ delta, glm::vec2(x, y) });
 		}
 
-		virtual void OnTouchEvent(ActionType action, float x, float y, uint8_t pointerId) override
+		virtual void OnTouchEvent(ActionType action, float x, float y, uint8_t pointerId, float w, float h) override
 		{
-			EventChannel::Broadcast(TouchEvent{ InputsMapping::GetTouchActionType(action), pointerId, glm::vec2(x, y) });
+			EventChannel::Broadcast(TouchEvent{ InputsMapping::GetTouchActionType(action), pointerId, glm::vec2(x, y), glm::vec2(w, h) });
 		}
 
 		virtual void OnTextEvent(const char *str) override

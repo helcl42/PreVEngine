@@ -50,6 +50,8 @@ namespace PreVEngine
 				int16_t x;
 				int16_t y;
 				ButtonType btn;
+				int16_t w;
+				int16_t h;
 			}
 			mouse;
 
@@ -100,6 +102,8 @@ namespace PreVEngine
 				float x; 
 				float y; 
 				uint8_t id;
+				float w;
+				float h;
 			}
 			touch;
 
@@ -208,7 +212,7 @@ namespace PreVEngine
 		}
 
 		// Convert desktop-style touch-id's to an android-style finger-id.
-		Event OnEventById(ActionType action, float x, float y, uint32_t findval, uint32_t setval)
+		Event OnEventById(ActionType action, float x, float y, uint32_t findval, uint32_t setval, float w, float h)
 		{
 			for (uint32_t i = 0; i < MAX_POINTERS; ++i)
 			{
@@ -216,13 +220,13 @@ namespace PreVEngine
 				{
 					m_touchID[i] = setval;
 
-					return OnEvent(action, x, y, i);
+					return OnEvent(action, x, y, i, w, h);
 				}
 			}
 			return { Event::EventType::UNKNOWN };
 		}
 
-		Event OnEvent(ActionType action, float x, float y, uint8_t id)
+		Event OnEvent(ActionType action, float x, float y, uint8_t id, float w, float h)
 		{
 			if (id >= MAX_POINTERS)
 			{
@@ -239,7 +243,7 @@ namespace PreVEngine
 			P.y = y;
 
 			Event e = { Event::EventType::TOUCH };
-			e.touch = { action, x, y, id };
+			e.touch = { action, x, y, id, w, h };
 			return e;
 		}
 	};

@@ -471,11 +471,11 @@ namespace PreVEngine
 					switch (te.event_type)
 					{
 						case XI_TouchBegin:
-							return m_MTouch.OnEventById(ActionType::DOWN, x, y, 0, id); // touch down event
+							return m_MTouch.OnEventById(ActionType::DOWN, x, y, 0, id, m_shape.width, m_shape.hegiht); // touch down event
 						case XI_TouchUpdate:
-							return m_MTouch.OnEventById(ActionType::MOVE, x, y, id, id); // touch move event
+							return m_MTouch.OnEventById(ActionType::MOVE, x, y, id, id, m_shape.width, m_shape.hegiht); // touch move event
 						case XI_TouchEnd:
-							return m_MTouch.OnEventById(ActionType::UP, x, y, id, 0); // touch up event
+							return m_MTouch.OnEventById(ActionType::UP, x, y, id, 0, m_shape.width, m_shape.hegiht); // touch up event
 						default:
 							break;
 					}

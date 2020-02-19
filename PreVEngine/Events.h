@@ -100,6 +100,8 @@ namespace PreVEngine
 		MouseButtonType button;
 
 		glm::vec2 position;
+
+        glm::vec2 extent;
 	};
 
 	struct MouseScrollEvent
@@ -138,6 +140,8 @@ namespace PreVEngine
 		uint8_t pointerId;
 
 		glm::vec2 position;
+
+        glm::vec2 extent;
 	};
 	//////////////////////////////////////
 
