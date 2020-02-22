@@ -1,258 +1,253 @@
 #ifndef __SCENE_H__
 #define __SCENE_H__
 
-#include "Window.h"
-#include "Swapchain.h"
 #include "Buffers.h"
 #include "Devices.h"
-#include "RenderPass.h"
 #include "Events.h"
+#include "RenderPass.h"
 #include "SceneGraph.h"
+#include "Swapchain.h"
+#include "Window.h"
 
-namespace PreVEngine
-{
-	struct SceneConfig
-	{
-		// swapchain
-		bool VSync = true;
+namespace PreVEngine {
+struct SceneConfig {
+    // swapchain
+    bool VSync = true;
 
-		uint32_t framesInFlight = 3;
-	};
+    uint32_t framesInFlight = 3;
+};
 
-	template <typename NodeFlagsType>
-	class Scene;
+template <typename NodeFlagsType>
+class Scene;
 
-	class AllocatorProvider final : public Singleton<AllocatorProvider>
-	{
-	private:
-		friend class Singleton<AllocatorProvider>;
+class AllocatorProvider final : public Singleton<AllocatorProvider> {
+private:
+    friend class Singleton<AllocatorProvider>;
 
-		template <typename NodeFlagsType>
-		friend class Scene;
+    template <typename NodeFlagsType>
+    friend class Scene;
 
-	private:
-		std::shared_ptr<Allocator> m_allocator;
+private:
+    std::shared_ptr<Allocator> m_allocator;
 
-	private:
-		AllocatorProvider() = default;
+private:
+    AllocatorProvider() = default;
 
-	public:
-		~AllocatorProvider() = default;
+public:
+    ~AllocatorProvider() = default;
 
-	private:
-		void SetAllocator(const std::shared_ptr<Allocator>& device)
-		{
-			m_allocator = device;
-		}
+private:
+    void SetAllocator(const std::shared_ptr<Allocator>& device)
+    {
+        m_allocator = device;
+    }
 
-	public:
-		std::shared_ptr<Allocator> GetAllocator() const
-		{
-			return m_allocator;
-		}
-	};
+public:
+    std::shared_ptr<Allocator> GetAllocator() const
+    {
+        return m_allocator;
+    }
+};
 
-	template <typename NodeFlagsType>
-	class IScene
-	{
-	public:
-		virtual void Init() = 0;
+template <typename NodeFlagsType>
+class IScene {
+public:
+    virtual void Init() = 0;
 
-		virtual void InitSceneGraph() = 0;
+    virtual void InitSceneGraph() = 0;
 
-		virtual void Update(float deltaTime) = 0;
+    virtual void Update(float deltaTime) = 0;
 
-		virtual void Render() = 0;
+    virtual void Render() = 0;
 
-		virtual void ShutDownSceneGraph() = 0;
+    virtual void ShutDownSceneGraph() = 0;
 
-		virtual void ShutDown() = 0;
+    virtual void ShutDown() = 0;
 
-		virtual std::shared_ptr<ISceneNode<NodeFlagsType>> GetRootNode() = 0;
+    virtual std::shared_ptr<ISceneNode<NodeFlagsType> > GetRootNode() = 0;
 
-		virtual void SetSceneRoot(const std::shared_ptr<ISceneNode<NodeFlagsType>>& root) = 0;
+    virtual void SetSceneRoot(const std::shared_ptr<ISceneNode<NodeFlagsType> >& root) = 0;
 
-		virtual std::shared_ptr<Device> GetDevice() = 0;
+    virtual std::shared_ptr<Device> GetDevice() = 0;
 
-		virtual std::shared_ptr<Swapchain> GetSwapchain() = 0;
+    virtual std::shared_ptr<Swapchain> GetSwapchain() = 0;
 
-		virtual std::shared_ptr<RenderPass> GetRenderPass() = 0;
+    virtual std::shared_ptr<RenderPass> GetRenderPass() = 0;
 
-		virtual std::shared_ptr<Allocator> GetAllocator() = 0;
+    virtual std::shared_ptr<Allocator> GetAllocator() = 0;
 
-	public:
-		virtual ~IScene() = default;
-	};
+public:
+    virtual ~IScene() = default;
+};
 
-	template <typename NodeFlagsType>
-	class Scene : public IScene<NodeFlagsType>
-	{
-	private:
-		EventHandler<Scene, WindowResizeEvent> m_windowResizeEvent{ *this };
+template <typename NodeFlagsType>
+class Scene : public IScene<NodeFlagsType> {
+private:
+    EventHandler<Scene, WindowResizeEvent> m_windowResizeEvent{ *this };
 
-		EventHandler<Scene, SurfaceChanged> m_surfaceChangedEvent{ *this };
+    EventHandler<Scene, SurfaceChanged> m_surfaceChangedEvent{ *this };
 
-	protected:
-		std::shared_ptr<SceneConfig> m_config;
+protected:
+    std::shared_ptr<SceneConfig> m_config;
 
-		std::shared_ptr<Device> m_device;
+    std::shared_ptr<Device> m_device;
 
-		Queue* m_presentQueue;
+    Queue* m_presentQueue;
 
-		Queue* m_graphicsQueue;
+    Queue* m_graphicsQueue;
 
-		VkSurfaceKHR m_surface;
+    VkSurfaceKHR m_surface;
 
-	protected:
-		std::shared_ptr<Allocator> m_allocator;
+protected:
+    std::shared_ptr<Allocator> m_allocator;
 
-		std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<RenderPass> m_renderPass;
 
-		std::shared_ptr<Swapchain> m_swapchain;
+    std::shared_ptr<Swapchain> m_swapchain;
 
-		std::shared_ptr<ISceneNode<NodeFlagsType>> m_rootNode;
+    std::shared_ptr<ISceneNode<NodeFlagsType> > m_rootNode;
 
-	public:
-		Scene(const std::shared_ptr<SceneConfig>& sceneConfig, const std::shared_ptr<Device>& device, VkSurfaceKHR surface)
-			: m_config(sceneConfig), m_device(device), m_surface(surface)
-		{
-		}
+public:
+    Scene(const std::shared_ptr<SceneConfig>& sceneConfig, const std::shared_ptr<Device>& device, VkSurfaceKHR surface)
+        : m_config(sceneConfig)
+        , m_device(device)
+        , m_surface(surface)
+    {
+    }
 
-		virtual ~Scene()
-		{
-		}
+    virtual ~Scene()
+    {
+    }
 
-	private:
-		void InitQueues()
-		{
-			m_presentQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT, m_surface);   // graphics + present-queue
-			m_graphicsQueue = m_presentQueue;                                     // they might be the same or not
-			if (!m_presentQueue)
-			{
-				m_presentQueue = m_device->AddQueue(0, m_surface);                          // create present-queue
-				m_graphicsQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT);             // create graphics queue
-			}
-		}
+private:
+    void InitQueues()
+    {
+        m_presentQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT, m_surface); // graphics + present-queue
+        m_graphicsQueue = m_presentQueue; // they might be the same or not
+        if (!m_presentQueue) {
+            m_presentQueue = m_device->AddQueue(0, m_surface); // create present-queue
+            m_graphicsQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT); // create graphics queue
+        }
+    }
 
-		void InitRenderPass()
-		{
-			VkFormat colorFormat = m_device->GetGPU().FindSurfaceFormat(m_surface);
-			VkFormat depthFormat = m_device->GetGPU().FindDepthFormat();
+    void InitRenderPass()
+    {
+        VkFormat colorFormat = m_device->GetGPU().FindSurfaceFormat(m_surface);
+        VkFormat depthFormat = m_device->GetGPU().FindDepthFormat();
 
-			m_renderPass = std::make_shared<RenderPass>(*m_device);
-			m_renderPass->AddColorAttachment(colorFormat, { 0.0f, 0.0f, 0.3f, 1.0f });	// color buffer, clear to blue
-			m_renderPass->AddDepthAttachment(depthFormat);
-			m_renderPass->AddSubpass({ 0, 1 });
-		}
+        m_renderPass = std::make_shared<RenderPass>(*m_device);
+        m_renderPass->AddColorAttachment(colorFormat, { 0.0f, 0.0f, 0.3f, 1.0f }); // color buffer, clear to blue
+        m_renderPass->AddDepthAttachment(depthFormat);
+        m_renderPass->AddSubpass({ 0, 1 });
+    }
 
-		void InitAllocator()
-		{
-			m_allocator = std::make_shared<Allocator>(*m_graphicsQueue);                   // Create "Vulkan Memory Aloocator"
-			printf("Allocator created\n");
-		}
+    void InitAllocator()
+    {
+        m_allocator = std::make_shared<Allocator>(*m_graphicsQueue); // Create "Vulkan Memory Aloocator"
+        printf("Allocator created\n");
+    }
 
-		void InitSwapchain()
-		{
-			m_swapchain = std::make_shared<Swapchain>(*m_allocator, *m_renderPass, m_graphicsQueue, m_graphicsQueue);
-			m_swapchain->SetPresentMode(m_config->VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
-			m_swapchain->SetImageCount(m_config->framesInFlight);
-			m_swapchain->Print();
-		}
+    void InitSwapchain()
+    {
+        m_swapchain = std::make_shared<Swapchain>(*m_allocator, *m_renderPass, m_graphicsQueue, m_graphicsQueue);
+        m_swapchain->SetPresentMode(m_config->VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
+        m_swapchain->SetImageCount(m_config->framesInFlight);
+        m_swapchain->Print();
+    }
 
-	public:
-		void Init() override
-		{
-			InitQueues();
-			InitRenderPass();
-			InitAllocator();
-			InitSwapchain();
+public:
+    void Init() override
+    {
+        InitQueues();
+        InitRenderPass();
+        InitAllocator();
+        InitSwapchain();
 
-			AllocatorProvider::GetInstance().SetAllocator(m_allocator);
-		}
+        AllocatorProvider::GetInstance().SetAllocator(m_allocator);
+    }
 
-		void InitSceneGraph() override
-		{
-			m_rootNode->Init();
-		}
+    void InitSceneGraph() override
+    {
+        m_rootNode->Init();
+    }
 
-		void Update(float deltaTime) override
-		{
-			m_rootNode->Update(deltaTime);
-		}
+    void Update(float deltaTime) override
+    {
+        m_rootNode->Update(deltaTime);
+    }
 
-		void Render() override
-		{
-			VkFramebuffer fraemBuffer;
-			VkCommandBuffer commandBuffer;
-			uint32_t frameInFlightIndex;
-			if (m_swapchain->BeginFrame(fraemBuffer, commandBuffer, frameInFlightIndex))
-			{
-				RenderContext renderContext{ fraemBuffer, commandBuffer, frameInFlightIndex, m_swapchain->GetExtent() };
+    void Render() override
+    {
+        VkFramebuffer fraemBuffer;
+        VkCommandBuffer commandBuffer;
+        uint32_t frameInFlightIndex;
+        if (m_swapchain->BeginFrame(fraemBuffer, commandBuffer, frameInFlightIndex)) {
+            RenderContext renderContext{ fraemBuffer, commandBuffer, frameInFlightIndex, m_swapchain->GetExtent() };
 
-				m_rootNode->Render(renderContext);
+            m_rootNode->Render(renderContext);
 
-				m_swapchain->EndFrame();
-			}
-		}
+            m_swapchain->EndFrame();
+        }
+    }
 
-		void ShutDownSceneGraph() override
-		{
-			m_rootNode->ShutDown();
+    void ShutDownSceneGraph() override
+    {
+        m_rootNode->ShutDown();
 
-			GraphTraversal<NodeFlagsType>::GetInstance().SetRootNode(nullptr);
-		}
+        GraphTraversal<NodeFlagsType>::GetInstance().SetRootNode(nullptr);
+    }
 
-		void ShutDown() override
-		{
-			AllocatorProvider::GetInstance().SetAllocator(nullptr);
-		}
+    void ShutDown() override
+    {
+        AllocatorProvider::GetInstance().SetAllocator(nullptr);
+    }
 
-	public:
-		std::shared_ptr<Device> GetDevice() override
-		{
-			return m_device;
-		}
+public:
+    std::shared_ptr<Device> GetDevice() override
+    {
+        return m_device;
+    }
 
-		std::shared_ptr<Swapchain> GetSwapchain() override
-		{
-			return m_swapchain;
-		}
+    std::shared_ptr<Swapchain> GetSwapchain() override
+    {
+        return m_swapchain;
+    }
 
-		std::shared_ptr<RenderPass> GetRenderPass() override
-		{
-			return m_renderPass;
-		}
+    std::shared_ptr<RenderPass> GetRenderPass() override
+    {
+        return m_renderPass;
+    }
 
-		std::shared_ptr<Allocator> GetAllocator() override
-		{
-			return m_allocator;
-		}
+    std::shared_ptr<Allocator> GetAllocator() override
+    {
+        return m_allocator;
+    }
 
-		std::shared_ptr<ISceneNode<NodeFlagsType>> GetRootNode() override
-		{
-			return m_rootNode;
-		}
+    std::shared_ptr<ISceneNode<NodeFlagsType> > GetRootNode() override
+    {
+        return m_rootNode;
+    }
 
-		void SetSceneRoot(const std::shared_ptr<ISceneNode<NodeFlagsType>>& root) override
-		{
-			GraphTraversal<NodeFlagsType>::GetInstance().SetRootNode(root);
+    void SetSceneRoot(const std::shared_ptr<ISceneNode<NodeFlagsType> >& root) override
+    {
+        GraphTraversal<NodeFlagsType>::GetInstance().SetRootNode(root);
 
-			m_rootNode = root;
-		}
+        m_rootNode = root;
+    }
 
-	public:
-		void operator() (const WindowResizeEvent& resizeEvent)
-		{
-			m_swapchain->UpdateExtent();
-		}
+public:
+    void operator()(const WindowResizeEvent& resizeEvent)
+    {
+        m_swapchain->UpdateExtent();
+    }
 
-		void operator() (const SurfaceChanged& surfaceChangedEvent)
-		{
-			m_surface = surfaceChangedEvent.surface;
-			InitSwapchain();
-			m_swapchain->UpdateExtent();
-		}
-	};
-}
+    void operator()(const SurfaceChanged& surfaceChangedEvent)
+    {
+        m_surface = surfaceChangedEvent.surface;
+        InitSwapchain();
+        m_swapchain->UpdateExtent();
+    }
+};
+} // namespace PreVEngine
 
 #endif // !__SCENE_H__

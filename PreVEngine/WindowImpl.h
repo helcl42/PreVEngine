@@ -4,387 +4,361 @@
 #include "Instance.h"
 #include "KeyCodes.h"
 
-namespace PreVEngine
+namespace PreVEngine {
+enum class ActionType // keyboard / mouse / touchscreen actions
 {
-	enum class ActionType  // keyboard / mouse / touchscreen actions
-	{
-		UP,
-		DOWN,
-		MOVE
-	};
-
-	enum class ButtonType
-	{
-		NONE = 0,
-		LEFT = 1,
-		MIDDLE = 2,
-		RIGHT = 3
-	};
-
-	struct Event
-	{
-		enum class EventType // event type
-		{
-			NONE,
-			MOUSE,
-			MOUSE_SCROLL,
-			KEY,
-			TEXT,
-			MOVE,
-			RESIZE,
-			FOCUS,
-			TOUCH,
-			CLOSE,
-			INIT,
-			CHANGE,
-			UNKNOWN
-		};
-
-		EventType tag;
-
-		union
-		{
-			struct // mouse move/click
-			{
-				ActionType action;
-				int16_t x;
-				int16_t y;
-				ButtonType btn;
-				int16_t w;
-				int16_t h;
-			}
-			mouse;
-
-			struct // mouse scroll
-			{
-				int16_t delta;
-				int16_t x;
-				int16_t y;
-			}
-			scroll;
-
-			struct // Keyboard key state
-			{
-				ActionType action;
-				KeyCode keycode;
-			}
-			key;
-
-			struct // Text entered
-			{
-				const char* str;
-			}
-			text;
-
-			struct // Window move
-			{
-				int16_t x;
-				int16_t y;
-			}
-			move;
-
-			struct // Window resize
-			{
-				uint16_t width;
-				uint16_t height;
-			}
-			resize;
-
-			struct // Window gained/lost focus
-			{
-				bool hasFocus;
-			}
-			focus;
-
-			struct // multi-touch display
-			{
-				ActionType action; 
-				float x; 
-				float y; 
-				uint8_t id;
-				float w;
-				float h;
-			}
-			touch;
-
-			struct
-			{
-			}
-			init; // window is ready
+    UP,
+    DOWN,
+    MOVE
+};
+
+enum class ButtonType {
+    NONE = 0,
+    LEFT = 1,
+    MIDDLE = 2,
+    RIGHT = 3
+};
+
+struct Event {
+    enum class EventType // event type
+    {
+        NONE,
+        MOUSE,
+        MOUSE_SCROLL,
+        KEY,
+        TEXT,
+        MOVE,
+        RESIZE,
+        FOCUS,
+        TOUCH,
+        CLOSE,
+        INIT,
+        CHANGE,
+        UNKNOWN
+    };
+
+    EventType tag;
+
+    union {
+        struct // mouse move/click
+        {
+            ActionType action;
+            int16_t x;
+            int16_t y;
+            ButtonType btn;
+            int16_t w;
+            int16_t h;
+        } mouse;
+
+        struct // mouse scroll
+        {
+            int16_t delta;
+            int16_t x;
+            int16_t y;
+        } scroll;
+
+        struct // Keyboard key state
+        {
+            ActionType action;
+            KeyCode keycode;
+        } key;
+
+        struct // Text entered
+        {
+            const char* str;
+        } text;
+
+        struct // Window move
+        {
+            int16_t x;
+            int16_t y;
+        } move;
+
+        struct // Window resize
+        {
+            uint16_t width;
+            uint16_t height;
+        } resize;
+
+        struct // Window gained/lost focus
+        {
+            bool hasFocus;
+        } focus;
+
+        struct // multi-touch display
+        {
+            ActionType action;
+            float x;
+            float y;
+            uint8_t id;
+            float w;
+            float h;
+        } touch;
+
+        struct
+        {
+        } init; // window is ready
+
+        struct
+        {
+        } close; // Window is closing
+
+        struct
+        {
+
+        } change;
+    };
+
+    void Clear()
+    {
+        tag = EventType::NONE;
+    }
+};
+
+class EventFIFO {
+private:
+    static const char SIZE = 10; // The queue should never contains more than 2 items.
+
+private:
+    int m_head;
+
+    int m_tail;
+
+    Event m_eventBuffer[SIZE] = {};
+
+public:
+    EventFIFO()
+        : m_head(0)
+        , m_tail(0)
+    {
+    }
+
+public:
+    bool IsEmpty() const
+    {
+        return m_head == m_tail;
+    }
 
-			struct
-			{
-			}
-			close; // Window is closing
-
-			struct
-			{
-
-			}
-			change;
-		};
-
-		void Clear()
-		{
-			tag = EventType::NONE;
-		}
-	};
-
-	class EventFIFO
-	{
-	private:
-		static const char SIZE = 10;  // The queue should never contains more than 2 items.
-
-	private:
-		int m_head;
-
-		int m_tail;
-
-		Event m_eventBuffer[SIZE] = {};
-
-	public:
-		EventFIFO()
-			: m_head(0), m_tail(0)
-		{
-		}
-
-	public:
-		bool IsEmpty() const
-		{
-			return m_head == m_tail;
-		}
-
-		void Push(Event const& item)
-		{
-			++m_head;
-
-			m_eventBuffer[m_head %= SIZE] = item;
-		}
-
-		Event* Pop()
-		{
-			if (IsEmpty())
-			{
-				return nullptr;
-			}
-
-			++m_tail;
-
-			return &m_eventBuffer[m_tail %= SIZE];
-		}
-	};
-
-	class MultiTouch
-	{
-	private:
-		struct Pointer
-		{
-			bool active;
+    void Push(Event const& item)
+    {
+        ++m_head;
 
-			float x;
+        m_eventBuffer[m_head %= SIZE] = item;
+    }
 
-			float y;
-		};
+    Event* Pop()
+    {
+        if (IsEmpty()) {
+            return nullptr;
+        }
 
-		static const int  MAX_POINTERS = 10;  // Max 10 fingers
+        ++m_tail;
 
-	private:
-		uint32_t m_touchID[MAX_POINTERS] = {};    // finger-id lookup table (Desktop)
+        return &m_eventBuffer[m_tail %= SIZE];
+    }
+};
 
-		Pointer m_pointers[MAX_POINTERS] = {};
+class MultiTouch {
+private:
+    struct Pointer {
+        bool active;
 
-		int m_count;  // number of active touch-id's (Android only)
+        float x;
 
-	public:
-		void Clear()
-		{
-			memset(this, 0, sizeof(*this));
-		}
+        float y;
+    };
 
-		int GetCount() const
-		{
-			return m_count;
-		}
+    static const int MAX_POINTERS = 10; // Max 10 fingers
 
-		void SetCount(int cnt)
-		{
-			m_count = cnt;
-		}
+private:
+    uint32_t m_touchID[MAX_POINTERS] = {}; // finger-id lookup table (Desktop)
 
-		// Convert desktop-style touch-id's to an android-style finger-id.
-		Event OnEventById(ActionType action, float x, float y, uint32_t findval, uint32_t setval, float w, float h)
-		{
-			for (uint32_t i = 0; i < MAX_POINTERS; ++i)
-			{
-				if (m_touchID[i] == findval) // lookup finger-id
-				{
-					m_touchID[i] = setval;
+    Pointer m_pointers[MAX_POINTERS] = {};
 
-					return OnEvent(action, x, y, i, w, h);
-				}
-			}
-			return { Event::EventType::UNKNOWN };
-		}
+    int m_count; // number of active touch-id's (Android only)
 
-		Event OnEvent(ActionType action, float x, float y, uint8_t id, float w, float h)
-		{
-			if (id >= MAX_POINTERS)
-			{
-				return Event{};  // Exit if too many fingers
-			}
+public:
+    void Clear()
+    {
+        memset(this, 0, sizeof(*this));
+    }
 
-			Pointer& P = m_pointers[id];
-			if (action != ActionType::MOVE)
-			{
-				P.active = (action == ActionType::DOWN);
-			}
+    int GetCount() const
+    {
+        return m_count;
+    }
 
-			P.x = x;
-			P.y = y;
+    void SetCount(int cnt)
+    {
+        m_count = cnt;
+    }
 
-			Event e = { Event::EventType::TOUCH };
-			e.touch = { action, x, y, id, w, h };
-			return e;
-		}
-	};
+    // Convert desktop-style touch-id's to an android-style finger-id.
+    Event OnEventById(ActionType action, float x, float y, uint32_t findval, uint32_t setval, float w, float h)
+    {
+        for (uint32_t i = 0; i < MAX_POINTERS; ++i) {
+            if (m_touchID[i] == findval) // lookup finger-id
+            {
+                m_touchID[i] = setval;
 
-	class Surface
-	{                                                               // Vulkan Surface
-	protected:
-		VkInstance  m_vkInstance = VK_NULL_HANDLE;
+                return OnEvent(action, x, y, i, w, h);
+            }
+        }
+        return { Event::EventType::UNKNOWN };
+    }
 
-		VkSurfaceKHR m_vkSurface = VK_NULL_HANDLE;
+    Event OnEvent(ActionType action, float x, float y, uint8_t id, float w, float h)
+    {
+        if (id >= MAX_POINTERS) {
+            return Event{}; // Exit if too many fingers
+        }
 
-	public:
-		Surface();
+        Pointer& P = m_pointers[id];
+        if (action != ActionType::MOVE) {
+            P.active = (action == ActionType::DOWN);
+        }
 
-		virtual ~Surface();
+        P.x = x;
+        P.y = y;
 
-	public:
-		operator VkSurfaceKHR () const;
+        Event e = { Event::EventType::TOUCH };
+        e.touch = { action, x, y, id, w, h };
+        return e;
+    }
+};
 
-		bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const;        // Checks if surface can present given queue type.
-	};
+class Surface { // Vulkan Surface
+protected:
+    VkInstance m_vkInstance = VK_NULL_HANDLE;
 
-	struct WindowShape
-	{
-		int16_t x;
+    VkSurfaceKHR m_vkSurface = VK_NULL_HANDLE;
 
-		int16_t y;
+public:
+    Surface();
 
-		uint16_t width;
+    virtual ~Surface();
 
-		uint16_t height;
+public:
+    operator VkSurfaceKHR() const;
 
-		bool fullscreen;
-	};
+    bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const; // Checks if surface can present given queue type.
+};
 
-	struct Position
-	{
-		int16_t x;
+struct WindowShape {
+    int16_t x;
 
-		int16_t y;
-	};
+    int16_t y;
 
-	struct Size
-	{
-		uint16_t width;
+    uint16_t width;
 
-		uint16_t height;
-	};
+    uint16_t height;
 
-	class WindowImpl : public Surface
-	{
-	private:
-		Position m_mousePosition;
+    bool fullscreen;
+};
 
-		bool m_mouseButtonsState[4] = {};
+struct Position {
+    int16_t x;
 
-		bool m_keyboardKeysState[256] = {};
+    int16_t y;
+};
 
-	protected:
-		EventFIFO m_eventQueue;
+struct Size {
+    uint16_t width;
 
-		bool m_isRunning;
+    uint16_t height;
+};
 
-		bool m_hasTextInput;
+class WindowImpl : public Surface {
+private:
+    Position m_mousePosition;
 
-		bool m_hasFocus;
+    bool m_mouseButtonsState[4] = {};
 
-		WindowShape m_shape;
+    bool m_keyboardKeysState[256] = {};
 
-		bool m_mouseLocked;
+protected:
+    EventFIFO m_eventQueue;
 
-		bool m_mouseCursorVisible;
+    bool m_isRunning;
 
-	protected:
-		Event OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType btn);  // Mouse event
+    bool m_hasTextInput;
 
-		Event OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y);
+    bool m_hasFocus;
 
-		Event OnKeyEvent(ActionType action, uint8_t key);                          // Keyboard event
+    WindowShape m_shape;
 
-		Event OnTextEvent(const char* str);                                     // Text event
+    bool m_mouseLocked;
 
-		Event OnMoveEvent(int16_t x, int16_t y);                                // Window moved
+    bool m_mouseCursorVisible;
 
-		Event OnResizeEvent(uint16_t width, uint16_t height);                   // Window resized
+protected:
+    Event OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType btn); // Mouse event
 
-		Event OnFocusEvent(bool hasFocus);                                      // Window gained/lost focus
+    Event OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y);
 
-		Event OnInitEvent();                                                    // Window was initialized
+    Event OnKeyEvent(ActionType action, uint8_t key); // Keyboard event
 
-		Event OnCloseEvent();                                                   // Window closing
+    Event OnTextEvent(const char* str); // Text event
 
-		Event OnChangeEvent();
+    Event OnMoveEvent(int16_t x, int16_t y); // Window moved
 
-	public:
-		WindowImpl();
+    Event OnResizeEvent(uint16_t width, uint16_t height); // Window resized
 
-		virtual ~WindowImpl();
+    Event OnFocusEvent(bool hasFocus); // Window gained/lost focus
 
-	public:
-		bool IsKeyPressed(const KeyCode key) const;
+    Event OnInitEvent(); // Window was initialized
 
-		bool IsMouseButtonPressed(const ButtonType btn) const;
+    Event OnCloseEvent(); // Window closing
 
-		Position GetMousePosition() const;
+    Event OnChangeEvent();
 
-		bool HasFocus() const;
+public:
+    WindowImpl();
 
-		bool IsRunning() const;
+    virtual ~WindowImpl();
 
-		const WindowShape& GetShape() const;
+public:
+    bool IsKeyPressed(const KeyCode key) const;
 
-		bool IsMouseLocked() const;
+    bool IsMouseButtonPressed(const ButtonType btn) const;
 
-		void SetMouseLocked(bool locked);
+    Position GetMousePosition() const;
 
-		bool IsMouseCursorVisible() const;
+    bool HasFocus() const;
 
-	public:
-		virtual void SetTextInput(bool enabled); // Shows the Android soft-keyboard. //TODO: Enable OnTextEvent?
+    bool IsRunning() const;
 
-		virtual bool HasTextInput() const;
+    const WindowShape& GetShape() const;
 
-		virtual void Close();
+    bool IsMouseLocked() const;
 
-	public:
-		virtual bool CreateSurface(VkInstance instance) = 0;
+    void SetMouseLocked(bool locked);
 
-		virtual bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const = 0;  // Checks if window can present the given queue type.
+    bool IsMouseCursorVisible() const;
 
-		virtual Event GetEvent(bool wait_for_event = false) = 0;  // Fetch one event from the queue.
+public:
+    virtual void SetTextInput(bool enabled); // Shows the Android soft-keyboard. //TODO: Enable OnTextEvent?
 
-		virtual void SetTitle(const char* title) = 0;
+    virtual bool HasTextInput() const;
 
-		virtual void SetPosition(uint32_t x, uint32_t y) = 0;
+    virtual void Close();
 
-		virtual void SetSize(uint32_t w, uint32_t h) = 0;
+public:
+    virtual bool CreateSurface(VkInstance instance) = 0;
 
-		virtual void SetMouseCursorVisible(bool visible) = 0;
-	};
-	//==============================================================
-}
+    virtual bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const = 0; // Checks if window can present the given queue type.
+
+    virtual Event GetEvent(bool wait_for_event = false) = 0; // Fetch one event from the queue.
+
+    virtual void SetTitle(const char* title) = 0;
+
+    virtual void SetPosition(uint32_t x, uint32_t y) = 0;
+
+    virtual void SetSize(uint32_t w, uint32_t h) = 0;
+
+    virtual void SetMouseCursorVisible(bool visible) = 0;
+};
+//==============================================================
+} // namespace PreVEngine
 
 #endif

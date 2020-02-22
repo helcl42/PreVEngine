@@ -1,301 +1,295 @@
 #ifndef __BUFFERS_H__
 #define __BUFFERS_H__
 
-#include "Window.h"
 #include "Devices.h"
+#include "Window.h"
 
 #include "External/vk_mem_alloc.h"
 
-namespace PreVEngine
-{
-	//------------------------------------Allocator-----------------------------------
-	class Allocator
-	{
-	private:
-		VmaAllocator m_allocator;
+namespace PreVEngine {
+//------------------------------------Allocator-----------------------------------
+class Allocator {
+private:
+    VmaAllocator m_allocator;
 
-		VkPhysicalDevice m_gpu;
+    VkPhysicalDevice m_gpu;
 
-		VkDevice m_device;
+    VkDevice m_device;
 
-		VkQueue m_queue;
+    VkQueue m_queue;
 
-		VkCommandPool m_commandPool;
+    VkCommandPool m_commandPool;
 
-		VkCommandBuffer m_commandBuffer;
+    VkCommandBuffer m_commandBuffer;
 
-	public:
-		Allocator(const Queue& queue, const VkDeviceSize blockSize = 256);
+public:
+    Allocator(const Queue& queue, const VkDeviceSize blockSize = 256);
 
-		virtual ~Allocator();
+    virtual ~Allocator();
 
-	public:
-		void BeginCommandBuffer();
+public:
+    void BeginCommandBuffer();
 
-		void EndCommandBuffer();
+    void EndCommandBuffer();
 
-	public:
-		void TransitionImageLayout(const VkImage image, const VkImageLayout oldLayout, const VkImageLayout newLayout, const uint32_t mipLevels = 1);
+public:
+    void TransitionImageLayout(const VkImage image, const VkImageLayout oldLayout, const VkImageLayout newLayout, const uint32_t mipLevels = 1);
 
-		void CreateBuffer(const void* data, uint64_t size, VkBufferUsageFlags usage, VmaMemoryUsage memtype, VkBuffer& buffer, VmaAllocation& alloc, void** mapped = 0);
+    void CreateBuffer(const void* data, uint64_t size, VkBufferUsageFlags usage, VmaMemoryUsage memtype, VkBuffer& buffer, VmaAllocation& alloc, void** mapped = 0);
 
-		void DestroyBuffer(VkBuffer buffer, VmaAllocation alloc);
+    void DestroyBuffer(VkBuffer buffer, VmaAllocation alloc);
 
-		void CopyBuffer(const VkBuffer srcBuffer, const VkDeviceSize size, VkBuffer dstBuffer);
+    void CopyBuffer(const VkBuffer srcBuffer, const VkDeviceSize size, VkBuffer dstBuffer);
 
-		void CopyBufferToImage(const VkExtent3D& extent, const VkBuffer buffer, VkImage image);
+    void CopyBufferToImage(const VkExtent3D& extent, const VkBuffer buffer, VkImage image);
 
-		void CreateImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const uint32_t layerCount, const VkImageTiling tiling, const VkImageUsageFlags usage, VkImage& outImage, VmaAllocation& outAlloc);
+    void CreateImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const uint32_t layerCount, const VkImageTiling tiling, const VkImageUsageFlags usage, VkImage& outImage, VmaAllocation& outAlloc);
 
-		void CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const void* data, VkImage& image);
+    void CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const void* data, VkImage& image);
 
-		void CreateImageView(const VkImage image, const VkFormat format, const VkImageViewType viewType, const uint32_t mipLevels, const uint32_t layerCount, const VkImageAspectFlags aspectFlags, VkImageView& outImagaView);
+    void CreateImageView(const VkImage image, const VkFormat format, const VkImageViewType viewType, const uint32_t mipLevels, const uint32_t layerCount, const VkImageAspectFlags aspectFlags, VkImageView& outImagaView);
 
-		void DestroyImage(VkImage image, VkImageView view, VmaAllocation alloc);
+    void DestroyImage(VkImage image, VkImageView view, VmaAllocation alloc);
 
-		void GenerateMipmaps(const VkImage image, const VkFormat imageFormat, const int32_t texWidth, const int32_t texHeight, const uint32_t mipLevels);
+    void GenerateMipmaps(const VkImage image, const VkFormat imageFormat, const int32_t texWidth, const int32_t texHeight, const uint32_t mipLevels);
 
-	public:
-		VkPhysicalDevice GetPhysicalDevice() const;
+public:
+    VkPhysicalDevice GetPhysicalDevice() const;
 
-		VkDevice GetDevice() const;
+    VkDevice GetDevice() const;
 
-		VkQueue GetQueue() const;
-	};
-	//--------------------------------------------------------------------------------
+    VkQueue GetQueue() const;
+};
+//--------------------------------------------------------------------------------
 
-	//-------------------------------------Buffers------------------------------------
-	class Buffer
-	{
-	private:
-		Allocator& m_allocator;
-		
-		VmaAllocation m_allocation;
+//-------------------------------------Buffers------------------------------------
+class Buffer {
+private:
+    Allocator& m_allocator;
 
-		VkBuffer m_buffer;
+    VmaAllocation m_allocation;
 
-		uint32_t m_count;
+    VkBuffer m_buffer;
 
-	protected:
-		uint32_t m_stride;
+    uint32_t m_count;
 
-	public:
-		Buffer(Allocator& allocator);
+protected:
+    uint32_t m_stride;
 
-		virtual ~Buffer();
+public:
+    Buffer(Allocator& allocator);
 
-	public:
-		void Clear();
+    virtual ~Buffer();
 
-		void Data(const void* data, const uint32_t count, const uint32_t stride, const VkBufferUsageFlagBits usage, const VmaMemoryUsage memtype = VMA_MEMORY_USAGE_GPU_ONLY, void** mapped = nullptr);
+public:
+    void Clear();
 
-	public:
-		uint32_t GetCount() const;
+    void Data(const void* data, const uint32_t count, const uint32_t stride, const VkBufferUsageFlagBits usage, const VmaMemoryUsage memtype = VMA_MEMORY_USAGE_GPU_ONLY, void** mapped = nullptr);
 
-	public:
-		operator VkBuffer() const;
-	};
+public:
+    uint32_t GetCount() const;
 
-	class VBO : public Buffer
-	{
-	public:
-		using Buffer::Buffer;
+public:
+    operator VkBuffer() const;
+};
 
-	public:
-		void Data(const void* data, const uint32_t count, const uint32_t stride);
-	};
+class VBO : public Buffer {
+public:
+    using Buffer::Buffer;
 
-	class IBO : public Buffer
-	{
-	private:
-		VkIndexType m_indexType = VK_INDEX_TYPE_MAX_ENUM;
+public:
+    void Data(const void* data, const uint32_t count, const uint32_t stride);
+};
 
-	public:
-		using Buffer::Buffer;
+class IBO : public Buffer {
+private:
+    VkIndexType m_indexType = VK_INDEX_TYPE_MAX_ENUM;
 
-	public:
-		void Data(const uint16_t* data, const uint32_t count);
+public:
+    using Buffer::Buffer;
 
-		void Data(const uint32_t* data, const uint32_t count);
+public:
+    void Data(const uint16_t* data, const uint32_t count);
 
-		VkIndexType GetIndexType() const;
-	};
+    void Data(const uint32_t* data, const uint32_t count);
 
-	class UBO : public Buffer
-	{
-	private:
-		void* m_mapped = nullptr;
+    VkIndexType GetIndexType() const;
+};
 
-	public:
-		using Buffer::Buffer;
+class UBO : public Buffer {
+private:
+    void* m_mapped = nullptr;
 
-	public:
-		void Allocate(const uint32_t size);
+public:
+    using Buffer::Buffer;
 
-		void Update(const void* data);
+public:
+    void Allocate(const uint32_t size);
 
-	public:
-		uint32_t GetSize() const;
-	};
-	//--------------------------------------------------------------------------------
+    void Update(const void* data);
 
-	//-------------------------------------AbstractImageBuffer-------------------------------------
-	struct ImageBufferCreateInfo
-	{
-		VkExtent2D extent;
+public:
+    uint32_t GetSize() const;
+};
+//--------------------------------------------------------------------------------
 
-		VkFormat format;
+//-------------------------------------AbstractImageBuffer-------------------------------------
+struct ImageBufferCreateInfo {
+    VkExtent2D extent;
 
-		bool mipMap;
+    VkFormat format;
 
-		VkImageViewType viewType;
+    bool mipMap;
 
-		uint32_t layerCount;
+    VkImageViewType viewType;
 
-		VkSamplerAddressMode addressMode;
+    uint32_t layerCount;
 
-		const void* data;
+    VkSamplerAddressMode addressMode;
 
-		ImageBufferCreateInfo(const VkExtent2D& ext, const VkFormat fmt, const bool mipmap = false, const VkImageViewType vwType = VK_IMAGE_VIEW_TYPE_2D, const uint32_t lrCount = 1, const VkSamplerAddressMode mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, const void* imageData = nullptr)
-			: extent(ext), format(fmt), mipMap(mipmap), viewType(vwType), layerCount(lrCount), addressMode(mode), data(imageData)
-		{
-		}
+    const void* data;
 
-		~ImageBufferCreateInfo()
-		{
-		}
-	};
+    ImageBufferCreateInfo(const VkExtent2D& ext, const VkFormat fmt, const bool mipmap = false, const VkImageViewType vwType = VK_IMAGE_VIEW_TYPE_2D, const uint32_t lrCount = 1, const VkSamplerAddressMode mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, const void* imageData = nullptr)
+        : extent(ext)
+        , format(fmt)
+        , mipMap(mipmap)
+        , viewType(vwType)
+        , layerCount(lrCount)
+        , addressMode(mode)
+        , data(imageData)
+    {
+    }
 
-	class IImageBuffer
-	{
-	public:
-		virtual void Create(const ImageBufferCreateInfo& createInfo) = 0;
+    ~ImageBufferCreateInfo()
+    {
+    }
+};
 
-		virtual void Resize(const VkExtent2D& extent) = 0;
+class IImageBuffer {
+public:
+    virtual void Create(const ImageBufferCreateInfo& createInfo) = 0;
 
-		virtual void Destroy() = 0;
+    virtual void Resize(const VkExtent2D& extent) = 0;
 
-		virtual void CreateSampler(const float maxLod = 1.0f, const VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE) = 0;
+    virtual void Destroy() = 0;
 
-		virtual void UpdateSampler(const VkSamplerCreateInfo& samplerInfo) = 0;
+    virtual void CreateSampler(const float maxLod = 1.0f, const VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE) = 0;
 
-		virtual VkImage GetImage() const = 0;
+    virtual void UpdateSampler(const VkSamplerCreateInfo& samplerInfo) = 0;
 
-		virtual VkImageView GetImageView() const = 0;
+    virtual VkImage GetImage() const = 0;
 
-		virtual VkSampler GetSampler() const = 0;
+    virtual VkImageView GetImageView() const = 0;
 
-		virtual VkFormat GetFormat() const = 0;
+    virtual VkSampler GetSampler() const = 0;
 
-		virtual VkExtent2D GetExtent() const = 0;
+    virtual VkFormat GetFormat() const = 0;
 
-		virtual uint32_t GetMipLevels() const = 0;
+    virtual VkExtent2D GetExtent() const = 0;
 
-		virtual uint32_t GetLayerCount() const = 0;
+    virtual uint32_t GetMipLevels() const = 0;
 
-		virtual VkImageViewType GetViewType() const = 0;
+    virtual uint32_t GetLayerCount() const = 0;
 
-	public:
-		virtual ~IImageBuffer() {}
-	};
+    virtual VkImageViewType GetViewType() const = 0;
 
-	class AbstractImageBuffer : public IImageBuffer
-	{
-	protected:
-		Allocator& m_allocator;
+public:
+    virtual ~IImageBuffer() {}
+};
 
-		VmaAllocation m_allocation;
+class AbstractImageBuffer : public IImageBuffer {
+protected:
+    Allocator& m_allocator;
 
-		VkImage m_image;
+    VmaAllocation m_allocation;
 
-		VkExtent2D m_extent;
+    VkImage m_image;
 
-		VkFormat m_format;
+    VkExtent2D m_extent;
 
-		VkImageView m_imageView;
+    VkFormat m_format;
 
-		VkSampler m_sampler;
+    VkImageView m_imageView;
 
-		uint32_t m_mipLevels;
+    VkSampler m_sampler;
 
-		uint32_t m_layerCount;
+    uint32_t m_mipLevels;
 
-		VkImageViewType m_imageViewType;
+    uint32_t m_layerCount;
 
-	public:
-		AbstractImageBuffer(Allocator& allocator);
+    VkImageViewType m_imageViewType;
 
-		virtual ~AbstractImageBuffer();
+public:
+    AbstractImageBuffer(Allocator& allocator);
 
-	public:
-		void UpdateSampler(const VkSamplerCreateInfo& samplerInfo) override;
+    virtual ~AbstractImageBuffer();
 
-		void Destroy() override;
+public:
+    void UpdateSampler(const VkSamplerCreateInfo& samplerInfo) override;
 
-		void CreateSampler(const float maxLod = 1.0f, const VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE) override;
+    void Destroy() override;
 
-	public:
-		VkImage GetImage() const override;
+    void CreateSampler(const float maxLod = 1.0f, const VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE) override;
 
-		VkImageView GetImageView() const override;
+public:
+    VkImage GetImage() const override;
 
-		VkSampler GetSampler() const override;
+    VkImageView GetImageView() const override;
 
-		VkFormat GetFormat() const override;
+    VkSampler GetSampler() const override;
 
-		VkExtent2D GetExtent() const override;
+    VkFormat GetFormat() const override;
 
-		uint32_t GetMipLevels() const override;
+    VkExtent2D GetExtent() const override;
 
-		uint32_t GetLayerCount() const override;
+    uint32_t GetMipLevels() const override;
 
-		VkImageViewType GetViewType() const override;
-	};
+    uint32_t GetLayerCount() const override;
 
-	//----------------------------------Image Buffer----------------------------------
-	class ImageBuffer : public AbstractImageBuffer
-	{
-	public:
-		ImageBuffer(Allocator& allocator);
+    VkImageViewType GetViewType() const override;
+};
 
-		~ImageBuffer();
+//----------------------------------Image Buffer----------------------------------
+class ImageBuffer : public AbstractImageBuffer {
+public:
+    ImageBuffer(Allocator& allocator);
 
-	public:
-		void Create(const ImageBufferCreateInfo& createInfo) override;
+    ~ImageBuffer();
 
-		void Resize(const VkExtent2D& extent) override;
-	};
-	//--------------------------------------------------------------------------------
+public:
+    void Create(const ImageBufferCreateInfo& createInfo) override;
 
-	//----------------------------------Depth Buffer----------------------------------
-	class DepthImageBuffer : public AbstractImageBuffer
-	{
-	public:
-		DepthImageBuffer(Allocator& allocator);
+    void Resize(const VkExtent2D& extent) override;
+};
+//--------------------------------------------------------------------------------
 
-		~DepthImageBuffer();
+//----------------------------------Depth Buffer----------------------------------
+class DepthImageBuffer : public AbstractImageBuffer {
+public:
+    DepthImageBuffer(Allocator& allocator);
 
-	public:
-		void Create(const ImageBufferCreateInfo& createInfo) override;
+    ~DepthImageBuffer();
 
-		void Resize(const VkExtent2D& extent) override;
-	};
-	//--------------------------------------------------------------------------------
+public:
+    void Create(const ImageBufferCreateInfo& createInfo) override;
 
-	//----------------------------------Color Buffer----------------------------------
-	class ColorImageBuffer : public AbstractImageBuffer
-	{
-	public:
-		ColorImageBuffer(Allocator& allocator);
+    void Resize(const VkExtent2D& extent) override;
+};
+//--------------------------------------------------------------------------------
 
-		~ColorImageBuffer();
+//----------------------------------Color Buffer----------------------------------
+class ColorImageBuffer : public AbstractImageBuffer {
+public:
+    ColorImageBuffer(Allocator& allocator);
 
-	public:
-		void Create(const ImageBufferCreateInfo& createInfo) override;
+    ~ColorImageBuffer();
 
-		void Resize(const VkExtent2D& extent) override;
-	};
-	//--------------------------------------------------------------------------------
-}
+public:
+    void Create(const ImageBufferCreateInfo& createInfo) override;
+
+    void Resize(const VkExtent2D& extent) override;
+};
+//--------------------------------------------------------------------------------
+} // namespace PreVEngine
 
 #endif

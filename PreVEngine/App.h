@@ -4,57 +4,55 @@
 #include "Common.h"
 #include "Engine.h"
 
-namespace PreVEngine
-{
-	template <typename NodeFlagsType>
-	class App
-	{
-	protected:
-		std::unique_ptr<Engine<NodeFlagsType>> m_engine;
+namespace PreVEngine {
+template <typename NodeFlagsType>
+class App {
+protected:
+    std::unique_ptr<Engine<NodeFlagsType> > m_engine;
 
-	public:
-		App(const std::shared_ptr<EngineConfig>& config)
-			: m_engine(std::make_unique<Engine<NodeFlagsType>>(config))
-		{
-		}
+public:
+    App(const std::shared_ptr<EngineConfig>& config)
+        : m_engine(std::make_unique<Engine<NodeFlagsType> >(config))
+    {
+    }
 
-		virtual ~App()
-		{
-		}
+    virtual ~App()
+    {
+    }
 
-	protected:
-		virtual void OnEngineInit() = 0;
+protected:
+    virtual void OnEngineInit() = 0;
 
-		virtual void OnSceneInit() = 0;
+    virtual void OnSceneInit() = 0;
 
-		virtual void OnSceneGraphInit() = 0;
+    virtual void OnSceneGraphInit() = 0;
 
-	public:
-		void Init()
-		{
-			m_engine->Init();
+public:
+    void Init()
+    {
+        m_engine->Init();
 
-			OnEngineInit();
+        OnEngineInit();
 
-			m_engine->InitScene();
+        m_engine->InitScene();
 
-			OnSceneInit();
+        OnSceneInit();
 
-			m_engine->InitSceneGraph();
+        m_engine->InitSceneGraph();
 
-			OnSceneGraphInit();
-		}
+        OnSceneGraphInit();
+    }
 
-		void Run()
-		{
-			m_engine->MainLoop();
-		}
+    void Run()
+    {
+        m_engine->MainLoop();
+    }
 
-		void ShutDown()
-		{
-			m_engine->ShutDown();
-		}
-	};
-}
+    void ShutDown()
+    {
+        m_engine->ShutDown();
+    }
+};
+} // namespace PreVEngine
 
 #endif

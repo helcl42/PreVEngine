@@ -1,115 +1,110 @@
 #ifndef __SWAPCHAIN_H__
 #define __SWAPCHAIN_H__
 
-#include "Window.h"
+#include "Buffers.h"
 #include "Devices.h"
 #include "RenderPass.h"
-#include "Buffers.h"
+#include "Window.h"
 
 #ifdef ANDROID
-#define IS_ANDROID true  // ANDROID: default to power-save (limit to 60fps)
+#define IS_ANDROID true // ANDROID: default to power-save (limit to 60fps)
 #else
 #define IS_ANDROID false // PC: default to low-latency (no fps limit)
 #endif
 
-namespace PreVEngine
-{
-	struct SwapchainBuffer
-	{
-		VkImage image;
+namespace PreVEngine {
+struct SwapchainBuffer {
+    VkImage image;
 
-		VkImageView view;  // TODO: MRT?
+    VkImageView view; // TODO: MRT?
 
-		VkExtent2D extent;
+    VkExtent2D extent;
 
-		VkFramebuffer framebuffer;
+    VkFramebuffer framebuffer;
 
-		VkCommandBuffer commandBuffer;
+    VkCommandBuffer commandBuffer;
 
-		VkFence fence;
-	};
+    VkFence fence;
+};
 
-	class Swapchain
-	{
-	private:
-		Allocator& m_allocator;
+class Swapchain {
+private:
+    Allocator& m_allocator;
 
-		VkPhysicalDevice m_gpu;
+    VkPhysicalDevice m_gpu;
 
-		VkDevice m_device;
+    VkDevice m_device;
 
-		VkQueue m_graphicsQueue;
+    VkQueue m_graphicsQueue;
 
-		VkQueue m_presentQueue;
+    VkQueue m_presentQueue;
 
-		VkSurfaceKHR m_surface;
+    VkSurfaceKHR m_surface;
 
-		VkSwapchainKHR m_swapchain;
+    VkSwapchainKHR m_swapchain;
 
-		VkSwapchainCreateInfoKHR m_swapchainCreateInfo;
+    VkSwapchainCreateInfoKHR m_swapchainCreateInfo;
 
-		VkCommandPool m_commandPool;
+    VkCommandPool m_commandPool;
 
-		RenderPass& m_renderPass;
+    RenderPass& m_renderPass;
 
-		DepthImageBuffer m_depthBuffer;
+    DepthImageBuffer m_depthBuffer;
 
-		std::vector<SwapchainBuffer> m_swapchainBuffers;
+    std::vector<SwapchainBuffer> m_swapchainBuffers;
 
-		uint32_t m_acquiredIndex;  // index of last acquired image
+    uint32_t m_acquiredIndex; // index of last acquired image
 
-		bool m_isAcquired;
-		
-		VkSemaphore m_acquireSemaphore;
+    bool m_isAcquired;
 
-		VkSemaphore m_submitSemaphore;
+    VkSemaphore m_acquireSemaphore;
 
-		uint32_t m_currentFrameIndex;
+    VkSemaphore m_submitSemaphore;
 
-		uint32_t m_swapchainImagesCount;
+    uint32_t m_currentFrameIndex;
 
-	private:
-		void Init(const Queue* presentQueue, const Queue* graphicsQueue = 0);
+    uint32_t m_swapchainImagesCount;
 
-		void Apply();
+private:
+    void Init(const Queue* presentQueue, const Queue* graphicsQueue = 0);
 
-		bool AcquireNext(SwapchainBuffer& next);
+    void Apply();
 
-		void Submit();
+    bool AcquireNext(SwapchainBuffer& next);
 
-		void Present();
+    void Submit();
 
-		VkSurfaceCapabilitiesKHR GetSurfaceCapabilities() const;
+    void Present();
 
-		std::vector<VkImage> GetSwapchainImages() const;
+    VkSurfaceCapabilitiesKHR GetSurfaceCapabilities() const;
 
-	public:
-		Swapchain(Allocator& allocator, RenderPass& renderPass, const Queue* presentQueue, const Queue* graphicsQueue);
+    std::vector<VkImage> GetSwapchainImages() const;
 
-		~Swapchain();
+public:
+    Swapchain(Allocator& allocator, RenderPass& renderPass, const Queue* presentQueue, const Queue* graphicsQueue);
 
-	public:
-		bool SetPresentMode(bool noTearing, bool poweSave = IS_ANDROID);  // ANDROID: default to power-save mode (limit to 60fps)
+    ~Swapchain();
 
-		bool SetPresentMode(VkPresentModeKHR preferredMode);
+public:
+    bool SetPresentMode(bool noTearing, bool poweSave = IS_ANDROID); // ANDROID: default to power-save mode (limit to 60fps)
 
-		bool SetImageCount(uint32_t imageCount = 2);
+    bool SetPresentMode(VkPresentModeKHR preferredMode);
 
-		void UpdateExtent();
+    bool SetImageCount(uint32_t imageCount = 2);
 
-		bool BeginFrame(VkFramebuffer& frmmeBuffer, VkCommandBuffer& buffer, uint32_t& acquiredIndex);
+    void UpdateExtent();
 
-		void EndFrame();
+    bool BeginFrame(VkFramebuffer& frmmeBuffer, VkCommandBuffer& buffer, uint32_t& acquiredIndex);
 
-		void Print() const;
+    void EndFrame();
 
-	public:
-		VkExtent2D GetExtent() const;
+    void Print() const;
 
-		uint32_t GetmageCount() const;
-	};
-}
+public:
+    VkExtent2D GetExtent() const;
+
+    uint32_t GetmageCount() const;
+};
+} // namespace PreVEngine
 
 #endif
-
-

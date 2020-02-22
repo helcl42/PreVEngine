@@ -3,89 +3,85 @@
 
 #include <set>
 
-namespace PreVEngine
-{
-	////////////////////////////////////////////////////////////
-	// Singleton
-	////////////////////////////////////////////////////////////
-	template <typename ChildType>
-	class Singleton
-	{
-	private:
-		friend ChildType;
+namespace PreVEngine {
+////////////////////////////////////////////////////////////
+// Singleton
+////////////////////////////////////////////////////////////
+template <typename ChildType>
+class Singleton {
+private:
+    friend ChildType;
 
-	private:
-		static ChildType s_instance;
+private:
+    static ChildType s_instance;
 
-	private:
-		Singleton(const Singleton& other) = delete;
+private:
+    Singleton(const Singleton& other) = delete;
 
-		Singleton(Singleton&& other) = delete;
+    Singleton(Singleton&& other) = delete;
 
-		Singleton& operator=(const Singleton& other) = delete;
+    Singleton& operator=(const Singleton& other) = delete;
 
-		Singleton& operator=(Singleton&& other) = delete;
+    Singleton& operator=(Singleton&& other) = delete;
 
-	private:
-		Singleton() = default;
+private:
+    Singleton() = default;
 
-	public:
-		virtual ~Singleton() = default;
+public:
+    virtual ~Singleton() = default;
 
-	public:
-		static ChildType& GetInstance()
-		{
-			return s_instance;
-		}
-	};
+public:
+    static ChildType& GetInstance()
+    {
+        return s_instance;
+    }
+};
 
-	template <typename ChildType>
-	ChildType Singleton<ChildType>::s_instance;
-	////////////////////////////////////////////////////////////
+template <typename ChildType>
+ChildType Singleton<ChildType>::s_instance;
+////////////////////////////////////////////////////////////
 
-	////////////////////////////////////////////////////////////
-	// Observer
-	////////////////////////////////////////////////////////////
-	template <typename ObserverType>
-	class Observer
-	{
-	protected:
-		std::set<ObserverType*> m_observers;
+////////////////////////////////////////////////////////////
+// Observer
+////////////////////////////////////////////////////////////
+template <typename ObserverType>
+class Observer {
+protected:
+    std::set<ObserverType*> m_observers;
 
-	public:
-		Observer() = default;
+public:
+    Observer() = default;
 
-		virtual ~Observer() = default;
+    virtual ~Observer() = default;
 
-	public:
-		bool RegisterListener(ObserverType& listener)
-		{
-			m_observers.insert(&listener);
-			return true;
-		}
+public:
+    bool RegisterListener(ObserverType& listener)
+    {
+        m_observers.insert(&listener);
+        return true;
+    }
 
-		bool UnregisterListener(ObserverType& listener)
-		{
-			auto it = std::find(m_observers.begin(), m_observers.end(), &listener);
-			if (it != m_observers.end())
-			{
-				m_observers.erase(it);
-				return true;
-			}
-			return false;
-		}
+    bool UnregisterListener(ObserverType& listener)
+    {
+        auto it = std::find(m_observers.begin(), m_observers.end(), &listener);
+        if (it != m_observers.end()) {
+            m_observers.erase(it);
+            return true;
+        }
+        return false;
+    }
 
-		bool IsListenerRegistered(ObserverType& listener) const
-		{
-			return m_observers.find(&listener) != m_observers.cend();
-		}
+    bool IsListenerRegistered(ObserverType& listener) const
+    {
+        return m_observers.find(&listener) != m_observers.cend();
+    }
 
-		const std::set<ObserverType*>& GetObservers() const
-		{
-			return m_observers;
-		}
-	};
-	////////////////////////////////////////////////////////////
-}
+    const std::set<ObserverType*>& GetObservers() const
+    {
+        return m_observers;
+    }
+};
+////////////////////////////////////////////////////////////
+} // namespace PreVEngine
 
 #endif

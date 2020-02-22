@@ -6,7 +6,7 @@
 #ifndef __VALIDATION_H__
 #define __VALIDATION_H__
 
-#if defined(__linux__) && !defined(__ANDROID__)  // Linux (desktop only)
+#if defined(__linux__) && !defined(__ANDROID__) // Linux (desktop only)
 #define __LINUX__ 1
 #endif
 
@@ -32,51 +32,114 @@
 #define PAUSE
 #endif
 
-enum class ConsoleColor
-{
-	RESET, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE,       // normal colors
-	FAINT, BRED, BGREEN, BYELLOW, BBLUE, BMAGENTA, BCYAN, BRIGHT // bright colors
+enum class ConsoleColor {
+    RESET,
+    RED,
+    GREEN,
+    YELLOW,
+    BLUE,
+    MAGENTA,
+    CYAN,
+    WHITE, // normal colors
+    FAINT,
+    BRED,
+    BGREEN,
+    BYELLOW,
+    BBLUE,
+    BMAGENTA,
+    BCYAN,
+    BRIGHT // bright colors
 };
 
 void SetConsoleTextColor(const ConsoleColor color);
 
-#define print(COLOR,...) { SetConsoleTextColor(COLOR); printf(__VA_ARGS__);  SetConsoleTextColor(ConsoleColor::RESET); }
+#define print(COLOR, ...)                         \
+    {                                             \
+        SetConsoleTextColor(COLOR);               \
+        printf(__VA_ARGS__);                      \
+        SetConsoleTextColor(ConsoleColor::RESET); \
+    }
 
 #ifdef ANDROID
-#include <jni.h>
 #include <android/log.h>
-#define LOG_TAG    "PreVEngine"
-#define _LOG(...)    __android_log_print(ANDROID_LOG_INFO   ,LOG_TAG,__VA_ARGS__)
-#define _LOGV(...)   __android_log_print(ANDROID_LOG_VERBOSE,LOG_TAG,__VA_ARGS__)
-#define _LOGD(...)   __android_log_print(ANDROID_LOG_DEBUG  ,LOG_TAG,__VA_ARGS__)
-#define _LOGI(...)   __android_log_print(ANDROID_LOG_INFO   ,LOG_TAG,__VA_ARGS__)
-#define _LOGW(...)   __android_log_print(ANDROID_LOG_WARN   ,LOG_TAG,__VA_ARGS__)
-#define _LOGE(...)   __android_log_print(ANDROID_LOG_ERROR  ,LOG_TAG,__VA_ARGS__)
-	//#define printf(...)  __android_log_print(ANDROID_LOG_INFO   ,LOG_TAG,__VA_ARGS__)
+#include <jni.h>
+#define LOG_TAG "PreVEngine"
+#define _LOG(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define _LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, __VA_ARGS__)
+#define _LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+#define _LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define _LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
+#define _LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+//#define printf(...)  __android_log_print(ANDROID_LOG_INFO   ,LOG_TAG,__VA_ARGS__)
 #else
-#define _LOG(...)  { printf(__VA_ARGS__);}
-#define _LOGV(...) { print(ConsoleColor::CYAN,  "PERF : "  ); printf(__VA_ARGS__);}
-#define _LOGD(...) { print(ConsoleColor::BLUE,  "DEBUG: "  ); printf(__VA_ARGS__);}
-#define _LOGI(...) { print(ConsoleColor::GREEN, "INFO : "  ); printf(__VA_ARGS__);}
-#define _LOGW(...) { print(ConsoleColor::YELLOW,"WARNING: "); printf(__VA_ARGS__);}
-#define _LOGE(...) { print(ConsoleColor::RED,   "ERROR: "  ); printf(__VA_ARGS__);}
+#define _LOG(...)            \
+    {                        \
+        printf(__VA_ARGS__); \
+    }
+#define _LOGV(...)                            \
+    {                                         \
+        print(ConsoleColor::CYAN, "PERF : "); \
+        printf(__VA_ARGS__);                  \
+    }
+#define _LOGD(...)                            \
+    {                                         \
+        print(ConsoleColor::BLUE, "DEBUG: "); \
+        printf(__VA_ARGS__);                  \
+    }
+#define _LOGI(...)                             \
+    {                                          \
+        print(ConsoleColor::GREEN, "INFO : "); \
+        printf(__VA_ARGS__);                   \
+    }
+#define _LOGW(...)                                \
+    {                                             \
+        print(ConsoleColor::YELLOW, "WARNING: "); \
+        printf(__VA_ARGS__);                      \
+    }
+#define _LOGE(...)                           \
+    {                                        \
+        print(ConsoleColor::RED, "ERROR: "); \
+        printf(__VA_ARGS__);                 \
+    }
 #endif
 #ifdef ENABLE_LOGGING
-#define  LOG(...)  _LOG( __VA_ARGS__)
-#define  LOGV(...) _LOGV(__VA_ARGS__)
-#define  LOGD(...) _LOGD(__VA_ARGS__)
-#define  LOGI(...) _LOGI(__VA_ARGS__)
-#define  LOGW(...) _LOGW(__VA_ARGS__)
-#define  LOGE(...) _LOGE(__VA_ARGS__)
-#define ASSERT(EXPRESSION, ...) { if(!EXPRESSION) { _LOGE(__VA_ARGS__); printf("%s:%d\n", __FILE__, __LINE__); PAUSE; exit(0); }  }
+#define LOG(...) _LOG(__VA_ARGS__)
+#define LOGV(...) _LOGV(__VA_ARGS__)
+#define LOGD(...) _LOGD(__VA_ARGS__)
+#define LOGI(...) _LOGI(__VA_ARGS__)
+#define LOGW(...) _LOGW(__VA_ARGS__)
+#define LOGE(...) _LOGE(__VA_ARGS__)
+#define ASSERT(EXPRESSION, ...)                    \
+    {                                              \
+        if (!EXPRESSION) {                         \
+            _LOGE(__VA_ARGS__);                    \
+            printf("%s:%d\n", __FILE__, __LINE__); \
+            PAUSE;                                 \
+            exit(0);                               \
+        }                                          \
+    }
 #else
-#define  LOG(...)  {}
-#define  LOGV(...) {}
-#define  LOGD(...) {}
-#define  LOGI(...) {}
-#define  LOGW(...) {}
-#define  LOGE(...) {}
-#define ASSERT(EXPRESSION, ...) {}
+#define LOG(...) \
+    {            \
+    }
+#define LOGV(...) \
+    {             \
+    }
+#define LOGD(...) \
+    {             \
+    }
+#define LOGI(...) \
+    {             \
+    }
+#define LOGW(...) \
+    {             \
+    }
+#define LOGE(...) \
+    {             \
+    }
+#define ASSERT(EXPRESSION, ...) \
+    {                           \
+    }
 #endif
 
 #include <assert.h>
@@ -94,57 +157,60 @@ void SetConsoleTextColor(const ConsoleColor color);
 //#define USE_VULKAN_WRAPPER
 
 #ifdef USE_VULKAN_WRAPPER
-#include <vulkan_wrapper.h>  // PC: Build dispatch table, so we can skip loader trampoline-code
+#include <vulkan_wrapper.h> // PC: Build dispatch table, so we can skip loader trampoline-code
 #else
-#include <vulkan/vulkan.h>   // Android: This must be included AFTER native.h
+#include <vulkan/vulkan.h> // Android: This must be included AFTER native.h
 #endif
-
 
 void ShowVkResult(VkResult err);
 
 #ifdef NDEBUG
-#define VKERRCHECK(VKFN) { (void)VKFN; }
+#define VKERRCHECK(VKFN) \
+    {                    \
+        (void)VKFN;      \
+    }
 #else
-#define VKERRCHECK(VKFN) { VkResult VKRESULT = VKFN;                            \
-                           ShowVkResult(VKRESULT);                              \
-                           assert(VKRESULT >= 0);                               \
-                           if (VKRESULT) printf("%s:%d\n", __FILE__, __LINE__); \
-                         }
+#define VKERRCHECK(VKFN)                           \
+    {                                              \
+        VkResult VKRESULT = VKFN;                  \
+        ShowVkResult(VKRESULT);                    \
+        assert(VKRESULT >= 0);                     \
+        if (VKRESULT)                              \
+            printf("%s:%d\n", __FILE__, __LINE__); \
+    }
 #endif
 
-namespace PreVEngine
-{
-	class DebugReport
-	{
-	private:
-		VkInstance m_instance;
+namespace PreVEngine {
+class DebugReport {
+private:
+    VkInstance m_instance;
 
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
-		PFN_vkCreateDebugReportCallbackEXT m_vkCreateDebugCallbackEXT;
+    PFN_vkCreateDebugReportCallbackEXT m_vkCreateDebugCallbackEXT;
 
-		PFN_vkDestroyDebugReportCallbackEXT m_vkDestroyDebugCallbackEXT;
+    PFN_vkDestroyDebugReportCallbackEXT m_vkDestroyDebugCallbackEXT;
 
-		VkDebugReportCallbackEXT m_debugCallback;
+    VkDebugReportCallbackEXT m_debugCallback;
 
-		VkDebugReportFlagsEXT m_flags;
+    VkDebugReportFlagsEXT m_flags;
 #else
-		PFN_vkCreateDebugUtilsMessengerEXT m_vkCreateDebugCallbackEXT;
+    PFN_vkCreateDebugUtilsMessengerEXT m_vkCreateDebugCallbackEXT;
 
-		PFN_vkDestroyDebugUtilsMessengerEXT m_vkDestroyDebugCallbackEXT;
+    PFN_vkDestroyDebugUtilsMessengerEXT m_vkDestroyDebugCallbackEXT;
 
-		VkDebugUtilsMessengerEXT m_debugCallback;
+    VkDebugUtilsMessengerEXT m_debugCallback;
 
-		VkDebugUtilsMessageSeverityFlagsEXT m_flags;
+    VkDebugUtilsMessageSeverityFlagsEXT m_flags;
 
 #endif
-	public:
-		DebugReport();
+public:
+    DebugReport();
 
-	public:
-		void Init(VkInstance inst);
+public:
+    void Init(VkInstance inst);
 
-		void Destroy();
-	};
-}
+    void Destroy();
+};
+} // namespace PreVEngine
 
 #endif
