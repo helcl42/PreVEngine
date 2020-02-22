@@ -3,6 +3,10 @@
 
 #include <Utils.h>
 
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
+
 enum class VertexLayoutComponent {
     FLOAT = 0x0,
     VEC2 = 0x1,
@@ -342,6 +346,113 @@ public:
     bool HasIndices() const override
     {
         return true;
+    }
+};
+
+struct MeshCreateInfo {
+    std::string modelPath;
+    std::string texturePath;
+    std::string bumpMapTexturePath;
+    std::string specitalMapTexturePath;
+    bool computeTangentAndBitangent;
+    bool hasTexture;
+    bool hasBumpMapTexture;
+    bool hasSpecialTexture;
+};
+
+class AssimpMeshFactory;
+
+class AssimpMesh : public IMesh {
+private:
+    friend AssimpMeshFactory;
+
+private:
+    //const aiScene* m_scene;
+
+    const VertexLayout m_vertexLayout{ { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
+
+    VertexDataBuffer m_vertexDataBuffer;
+
+    uint32_t m_verticesCount = 0;
+
+    std::vector<uint32_t> m_indices;
+
+public:
+    const VertexLayout& GetVertextLayout() const override
+    {
+        return m_vertexLayout;
+    }
+
+    const void* GetVertices() const override
+    {
+        return m_vertexDataBuffer.GetData();
+    }
+
+    uint32_t GerVerticesCount() const override
+    {
+        return m_verticesCount;
+    }
+
+    const std::vector<uint32_t>& GerIndices() const override
+    {
+        return m_indices;
+    }
+
+    bool HasIndices() const override
+    {
+        return true;
+    }
+};
+
+class AssimpMeshFactory {
+public:
+    std::shared_ptr<IMesh> CreateMesh(const MeshCreateInfo& createInfo) const
+    {
+        Assimp::Importer importer{};
+        const aiScene* scene = importer.ReadFile(createInfo.modelPath, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType | aiProcess_GenSmoothNormals | aiProcess_FixInfacingNormals | aiProcess_FindInvalidData);
+        if (!scene) {
+            throw std::runtime_error("Could not load model: " + createInfo.modelPath);
+        }
+
+        std::shared_ptr<AssimpMesh> mesh = std::make_shared<AssimpMesh>();
+
+        ReadMeshes(*scene, mesh);
+
+        return mesh;
+    }
+
+private:
+    void ReadIndices(const aiMesh& mesh, std::shared_ptr<AssimpMesh>& inOutMesh) const
+    {
+        for (unsigned int i = 0; i < mesh.mNumFaces; i++) {
+            const aiFace& face = mesh.mFaces[i];
+            for (unsigned int k = 0; k < face.mNumIndices; k++) {
+                inOutMesh->m_indices.emplace_back(face.mIndices[k]);
+            }
+        }
+    }
+
+    void ReadVertices(const aiMesh& mesh, std::shared_ptr<AssimpMesh>& inOutMesh) const
+    {
+        for (unsigned int i = 0; i < mesh.mNumVertices; i++) {
+            glm::vec3 pos = glm::make_vec3(&mesh.mVertices[i].x);
+            glm::vec2 uv = mesh.mTextureCoords[0] != NULL ? glm::make_vec3(&mesh.mTextureCoords[0][i].x) : glm::vec2(1.0f, 1.0f);
+            glm::vec3 normal = mesh.HasNormals() ? glm::make_vec3(&mesh.mNormals[i].x) : glm::vec3(0.0f, 1.0f, 0.0f);
+
+            inOutMesh->m_vertexDataBuffer.Add(&pos, sizeof(glm::vec3));
+            inOutMesh->m_vertexDataBuffer.Add(&uv, sizeof(glm::vec2));
+            inOutMesh->m_vertexDataBuffer.Add(&normal, sizeof(glm::vec3));
+            inOutMesh->m_verticesCount++;
+        }
+    }
+
+    void ReadMeshes(const aiScene& scene, std::shared_ptr<AssimpMesh>& inOutMesh) const
+    {
+        for (unsigned int i = 0; i < scene.mNumMeshes; i++) {
+            const aiMesh* assMesh = scene.mMeshes[i];
+            ReadVertices(*assMesh, inOutMesh);
+            ReadIndices(*assMesh, inOutMesh);
+        }
     }
 };
 

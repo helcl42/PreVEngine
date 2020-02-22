@@ -8,6 +8,7 @@ endif()
 include_directories("${PROJECT_SOURCE_DIR}")
 include_directories("../PreVEngine/External")
 include_directories("../Libs/glm")
+include_directories("../Libs/assimp/include")
 
 file(GLOB SRC_LIST "*.h" "*.cpp")  
 add_executable(${PROJECT_NAME} ${SRC_LIST})
@@ -18,6 +19,18 @@ if(NOT TARGET PreVEngine)
 endif()
 
 target_link_libraries(${PROJECT_NAME} PreVEngine)
+
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME} "../../Libs/assimp/lib/Release/assimp-vc142-mt")
+endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    # build assimp for LInux
+endif()
+
+if(ANDROID)
+    # build assimp for Android
+endif()
 #-------------------------------------------
 
 #  Copy all files from ./Assets to the binary directory.
