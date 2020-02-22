@@ -12,5 +12,6 @@
 
 #include <memory>
 #include <thread>
+#include <stdexcept>
 
 #endif
