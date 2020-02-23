@@ -93,12 +93,12 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, sizeof(float) * 3 + sizeof(float) * 2 + sizeof(float) * 3, VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
-            VkUtils::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, sizeof(float) * 3),
-            VkUtils::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, sizeof(float) * 3 + sizeof(float) * 2)
+            VkUtils::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
+            VkUtils::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 }))
         };
     }
 
@@ -235,12 +235,12 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, sizeof(float) * 3 + sizeof(float) * 2 + sizeof(float) * 3, VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
-            VkUtils::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, sizeof(float) * 3),
-            VkUtils::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, sizeof(float) * 3 + sizeof(float) * 2)
+            VkUtils::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
+            VkUtils::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 }))
         };
     }
 
@@ -393,12 +393,12 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, sizeof(float) * 3 + sizeof(float) * 2 + sizeof(float) * 3, VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
-            VkUtils::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, sizeof(float) * 3),
-            VkUtils::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, sizeof(float) * 3 + sizeof(float) * 2)
+            VkUtils::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
+            VkUtils::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 }))
         };
     }
 

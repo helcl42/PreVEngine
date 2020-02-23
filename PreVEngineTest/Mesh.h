@@ -36,26 +36,32 @@ public:
         return m_components;
     }
 
-    uint32_t GetStride() const
+    static uint32_t GetComponentSize(const VertexLayoutComponent component)
+    {
+        switch (component) {
+        case VertexLayoutComponent::FLOAT:
+            return 1 * sizeof(float);
+        case VertexLayoutComponent::VEC2:
+            return 2 * sizeof(float);
+        case VertexLayoutComponent::VEC4:
+            return 4 * sizeof(float);
+        default:
+            return 3 * sizeof(float);
+        }
+    }
+
+    static uint32_t GetComponentsSize(const std::vector<VertexLayoutComponent> components)
     {
         uint32_t singleVertexPackSizeInBytes = 0;
-        for (auto& component : m_components) {
-            switch (component) {
-            case VertexLayoutComponent::FLOAT:
-                singleVertexPackSizeInBytes += 1 * sizeof(float);
-                break;
-            case VertexLayoutComponent::VEC2:
-                singleVertexPackSizeInBytes += 2 * sizeof(float);
-                break;
-            case VertexLayoutComponent::VEC4:
-                singleVertexPackSizeInBytes += 4 * sizeof(float);
-                break;
-            default:
-                singleVertexPackSizeInBytes += 3 * sizeof(float);
-                break;
-            }
+        for (auto& component : components) {
+            singleVertexPackSizeInBytes += VertexLayout::GetComponentSize(component);
         }
         return singleVertexPackSizeInBytes;
+    }
+
+    uint32_t GetStride() const
+    {
+        return VertexLayout::GetComponentsSize(m_components);
     }
 };
 
@@ -781,8 +787,8 @@ public:
 class AssimpMeshFactory {
 public:
     enum class AssimpMeshFactoryCreateFlags {
-        Animation,
-        TangentBitangent,
+        ANIMATION,
+        BUMP_MAPPING,
         _
     };
 
@@ -807,11 +813,11 @@ public:
 private:
     VertexLayout GetVertexLayout(const FlagSet<AssimpMeshFactoryCreateFlags>& flags) const
     {
-        if (flags & AssimpMeshFactoryCreateFlags::Animation && flags & AssimpMeshFactoryCreateFlags::TangentBitangent) {
+        if (flags & AssimpMeshFactoryCreateFlags::ANIMATION && flags & AssimpMeshFactoryCreateFlags::BUMP_MAPPING) {
             return { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 } };
-        } else if (flags & AssimpMeshFactoryCreateFlags::Animation) {
+        } else if (flags & AssimpMeshFactoryCreateFlags::ANIMATION) {
             return { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC4 } };
-        } else if (flags & AssimpMeshFactoryCreateFlags::TangentBitangent) {
+        } else if (flags & AssimpMeshFactoryCreateFlags::BUMP_MAPPING) {
             return { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 } };
         } else {
             return { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
@@ -860,11 +866,11 @@ private:
         for (unsigned int i = 0; i < mesh.mNumVertices; i++) {
             AddDefaultVertexData(mesh, i, inOutMesh);
 
-            if (flags & AssimpMeshFactoryCreateFlags::Animation) {
+            if (flags & AssimpMeshFactoryCreateFlags::ANIMATION) {
                 AddAnimationData(vertexBoneData, vertexBaseOffset + i, inOutMesh);
             }
 
-            if (flags & AssimpMeshFactoryCreateFlags::TangentBitangent) {
+            if (flags & AssimpMeshFactoryCreateFlags::BUMP_MAPPING) {
                 AddBumpMappingData(mesh, i, inOutMesh);
             }
 
@@ -909,7 +915,7 @@ private:
     void ReadMeshes(const aiScene& scene, const FlagSet<AssimpMeshFactoryCreateFlags>& flags, std::shared_ptr<AssimpMesh>& inOutMesh) const
     {
         std::vector<VertexBoneData> vertexBoneData;
-        if (flags & AssimpMeshFactoryCreateFlags::Animation) {
+        if (flags & AssimpMeshFactoryCreateFlags::ANIMATION) {
             unsigned int allVertexCount = GetAllVertexCount(scene);
             vertexBoneData.resize(allVertexCount);
 
@@ -918,7 +924,7 @@ private:
                 const aiMesh& assMesh = *scene.mMeshes[i];
                 vertexBoneData = LoadAnimationBones(assMesh, vertexBaseOffset);
                 vertexBaseOffset += assMesh.mNumVertices;
-            }            
+            }
         }
 
         unsigned int vertexBaseOffset = 0;
