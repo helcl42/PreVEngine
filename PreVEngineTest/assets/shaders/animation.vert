@@ -1,7 +1,11 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
+const int MAX_BONES_COUNT = 100;
+
 layout(std140, binding = 0) uniform UniformBufferObject {
+	mat4 bones[MAX_BONES_COUNT];
+
     mat4 modelMatrix;
 
     mat4 viewMatrix;
@@ -36,7 +40,15 @@ layout(location = 5) out float outVisibility;
 
 void main() 
 {
-	vec4 worldPosition = uboVS.modelMatrix * vec4(inPosition, 1.0);
+	mat4 boneTransform = uboVS.bones[inBoneIds[0]] * inWeights[0];
+	boneTransform += uboVS.bones[inBoneIds[1]] * inWeights[1];
+	boneTransform += uboVS.bones[inBoneIds[2]] * inWeights[2];
+	boneTransform += uboVS.bones[inBoneIds[3]] * inWeights[3];
+
+	vec4 positionL = boneTransform * vec4(inPosition, 1.0);
+	vec4 normalL = boneTransform * vec4(inNormal, 0.0);
+
+	vec4 worldPosition = uboVS.modelMatrix * vec4(positionL.xyz, 1.0);
 	outWorldPosition = worldPosition.xyz;
 
 	vec4 viewPosition = uboVS.viewMatrix * worldPosition;
@@ -46,7 +58,7 @@ void main()
 
 	outTextureCoord = (inTextureCoord / uboVS.textureNumberOfRows) + uboVS.textureOffset.xy;
 
-	vec3 normal = inNormal;
+	vec3 normal = normalL.xyz;
 	if (uboVS.useFakeLightning != 0)
 	{
 		normal = vec3(0.0, 1.0, 0.0);

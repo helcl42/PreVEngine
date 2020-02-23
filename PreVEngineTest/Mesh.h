@@ -232,7 +232,7 @@ public:
     }
 };
 
-class AssimpMeshFactory;
+class MeshFactory;
 
 class AssimpGlmConvertor {
 public:
@@ -291,9 +291,9 @@ public:
     }
 };
 
-class AssimpMesh : public IMesh {
+class ModelMesh : public IMesh {
 private:
-    friend AssimpMeshFactory;
+    friend MeshFactory;
 
 private:
     VertexLayout m_vertexLayout;
@@ -384,16 +384,18 @@ struct VertexBoneData {
     }
 };
 
+class AnimationFactory;
+
 class Animation : public IAnimation {
 private:
-    friend AssimpMeshFactory;
+    friend AnimationFactory;
 
 private:
-    float m_elapsedTime;
+    float m_elapsedTime = 0.0f;
 
     std::map<std::string, unsigned int> m_boneMapping; // maps a bone name to its index
 
-    unsigned int m_numBones;
+    unsigned int m_numBones = 0;
 
     std::vector<BoneInfo> m_boneInfos;
 
@@ -403,15 +405,20 @@ private:
 
     const aiScene* m_scene;
 
-    Assimp::Importer m_importer;
+    Assimp::Importer m_importer; // TODO get rid of that
 
-    AnimationStateType m_animationState = AnimationStateType::RUNNING;
+    AnimationState m_animationState = AnimationState::RUNNING;
 
     unsigned int m_animationIndex = 0;
 
     float m_animationSpeed = 1.0f;
 
-private:  
+public:
+    Animation() = default;
+
+    ~Animation() = default;
+
+private:
     unsigned int FindPosition(const float animationTime, const aiNodeAnim* nodeAnimation) const
     {
         for (unsigned int i = 0; i < nodeAnimation->mNumPositionKeys - 1; i++) {
@@ -556,9 +563,9 @@ public:
 
         m_animationIndex %= m_scene->mNumAnimations;
 
-        if (m_animationState == AnimationStateType::RUNNING) {
+        if (m_animationState == AnimationState::RUNNING) {
             m_elapsedTime += scaledDeltaTime;
-        } else if (m_animationState == AnimationStateType::STOPPED) {
+        } else if (m_animationState == AnimationState::STOPPED) {
             m_elapsedTime = 0.0f;
         }
 
@@ -580,48 +587,91 @@ public:
         return m_boneTransforms;
     }
 
-    void SetAnimationState(const AnimationStateType animationState) override
+    void SetState(const AnimationState animationState) override
     {
         m_animationState = animationState;
     }
 
-    AnimationStateType GetAnimationState() const override
+    AnimationState GetState() const override
     {
         return m_animationState;
     }
 
-    void SetAnimationIndex(const unsigned int index) override
+    void SetIndex(const unsigned int index) override
     {
         m_animationIndex = index;
     }
 
-    unsigned int GetAnimationIndex() const override
+    unsigned int GetIndex() const override
     {
         return m_animationIndex;
     }
 
-    void SetAnimationSpeed(const float speed) override
+    void SetSpeed(const float speed) override
     {
         m_animationSpeed = speed;
     }
 
-    float GetAnimationSpeed() const override
+    float GetSpeed() const override
     {
         return m_animationSpeed;
     }
 
-    void SetAnimationTime(const float elapsed) override
+    void SetTime(const float elapsed) override
     {
         m_elapsedTime = elapsed;
     }
 
-    float GetAnimationTime() const override
+    float GetTime() const override
     {
         return m_elapsedTime;
     }
 };
 
-class AssimpMeshFactory {
+class AnimationFactory {
+public:
+    std::shared_ptr<IAnimation> CreateAnimation(const std::string& modelPath) const
+    {
+        // TODO copy asiimp animations to some local structure to avoid storing importer and whole scene !!!
+        std::shared_ptr<Animation> animation = std::make_shared<Animation>();
+
+        const aiScene* scene = animation->m_importer.ReadFile(modelPath, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType | aiProcess_GenSmoothNormals | aiProcess_FixInfacingNormals | aiProcess_FindInvalidData);
+        if (!scene) {
+            throw std::runtime_error("Could not load model: " + modelPath);
+        }
+        
+        animation->m_scene = scene;
+        animation->m_globalInverseTransform = glm::inverse(AssimpGlmConvertor::ToGlmMat4(scene->mRootNode->mTransformation));
+        
+         for (unsigned int meshIndex = 0; meshIndex < scene->mNumMeshes; meshIndex++) {
+            const auto& mesh = *scene->mMeshes[meshIndex];
+            for (unsigned int i = 0; i < mesh.mNumBones; i++) {
+                const std::string boneName{ mesh.mBones[i]->mName.data };
+
+                unsigned int boneIndex;
+                if (animation->m_boneMapping.find(boneName) == animation->m_boneMapping.end()) {
+                    boneIndex = animation->m_numBones;
+                    animation->m_numBones++;
+                    animation->m_boneInfos.push_back(BoneInfo{});
+                    animation->m_boneInfos[boneIndex].boneOffset = AssimpGlmConvertor::ToGlmMat4(mesh.mBones[i]->mOffsetMatrix);
+                    animation->m_boneMapping[boneName] = boneIndex;
+                } else {
+                    boneIndex = animation->m_boneMapping[boneName];
+                }
+            }
+        }
+
+        return animation;
+    }
+
+private:
+    void ReadBones(const aiScene& scene, std::shared_ptr<Animation>& animation) const
+    {
+       
+    }
+};
+
+class MeshFactory {
 public:
     enum class AssimpMeshFactoryCreateFlags {
         ANIMATION,
@@ -630,7 +680,7 @@ public:
     };
 
 public:
-    std::shared_ptr<IMesh> CreateMesh(const std::string& modelPath, const FlagSet<AssimpMeshFactoryCreateFlags>& flags = FlagSet<AssimpMeshFactory::AssimpMeshFactoryCreateFlags>{}) const
+    std::shared_ptr<IMesh> CreateMesh(const std::string& modelPath, const FlagSet<AssimpMeshFactoryCreateFlags>& flags = FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{}) const
     {
         Assimp::Importer importer{};
         const aiScene* scene = importer.ReadFile(modelPath, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType | aiProcess_GenSmoothNormals | aiProcess_FixInfacingNormals | aiProcess_FindInvalidData);
@@ -638,7 +688,7 @@ public:
             throw std::runtime_error("Could not load model: " + modelPath);
         }
 
-        std::shared_ptr<AssimpMesh> mesh = std::make_shared<AssimpMesh>();
+        std::shared_ptr<ModelMesh> mesh = std::make_shared<ModelMesh>();
 
         mesh->m_vertexLayout = GetVertexLayout(flags);
 
@@ -661,7 +711,7 @@ private:
         }
     }
 
-    void ReadIndices(const aiMesh& mesh, std::shared_ptr<AssimpMesh>& inOutMesh) const
+    void ReadIndices(const aiMesh& mesh, std::shared_ptr<ModelMesh>& inOutMesh) const
     {
         for (unsigned int i = 0; i < mesh.mNumFaces; i++) {
             const aiFace& face = mesh.mFaces[i];
@@ -671,7 +721,7 @@ private:
         }
     }
 
-    void AddDefaultVertexData(const aiMesh& mesh, const unsigned int vertexIndex, std::shared_ptr<AssimpMesh>& inOutMesh) const
+    void AddDefaultVertexData(const aiMesh& mesh, const unsigned int vertexIndex, std::shared_ptr<ModelMesh>& inOutMesh) const
     {
         glm::vec3 pos = glm::make_vec3(&mesh.mVertices[vertexIndex].x);
         glm::vec2 uv = mesh.mTextureCoords[0] != NULL ? glm::make_vec3(&mesh.mTextureCoords[0][vertexIndex].x) : glm::vec2(1.0f, 1.0f);
@@ -682,7 +732,7 @@ private:
         inOutMesh->m_vertexDataBuffer.Add(&normal, sizeof(glm::vec3));
     }
 
-    void AddAnimationData(const std::vector<VertexBoneData>& vertexBoneData, const unsigned int vertexIndex, std::shared_ptr<AssimpMesh>& inOutMesh) const
+    void AddAnimationData(const std::vector<VertexBoneData>& vertexBoneData, const unsigned int vertexIndex, std::shared_ptr<ModelMesh>& inOutMesh) const
     {
         const auto& singleVertexBoneData = vertexBoneData[vertexIndex];
 
@@ -690,7 +740,7 @@ private:
         inOutMesh->m_vertexDataBuffer.Add(&singleVertexBoneData.weights, static_cast<unsigned int>(ArraySize(singleVertexBoneData.weights) * sizeof(float)));
     }
 
-    void AddBumpMappingData(const aiMesh& mesh, const unsigned int vertexIndex, std::shared_ptr<AssimpMesh>& inOutMesh) const
+    void AddBumpMappingData(const aiMesh& mesh, const unsigned int vertexIndex, std::shared_ptr<ModelMesh>& inOutMesh) const
     {
         glm::vec3 tangent = glm::make_vec3(&mesh.mTangents[vertexIndex].x);
         glm::vec3 biTangent = glm::make_vec3(&mesh.mBitangents[vertexIndex].x);
@@ -698,7 +748,7 @@ private:
         inOutMesh->m_vertexDataBuffer.Add(&biTangent, sizeof(glm::vec3));
     }
 
-    void ReadVertexData(const aiMesh& mesh, const FlagSet<AssimpMeshFactoryCreateFlags>& flags, const std::vector<VertexBoneData>& vertexBoneData, const unsigned int vertexBaseOffset, std::shared_ptr<AssimpMesh>& inOutMesh) const
+    void ReadVertexData(const aiMesh& mesh, const FlagSet<AssimpMeshFactoryCreateFlags>& flags, const std::vector<VertexBoneData>& vertexBoneData, const unsigned int vertexBaseOffset, std::shared_ptr<ModelMesh>& inOutMesh) const
     {
         for (unsigned int vertexIndex = 0; vertexIndex < mesh.mNumVertices; vertexIndex++) {
             AddDefaultVertexData(mesh, vertexIndex, inOutMesh);
@@ -749,7 +799,7 @@ private:
         return vertexCount;
     }
 
-    void ReadMeshes(const aiScene& scene, const FlagSet<AssimpMeshFactoryCreateFlags>& flags, std::shared_ptr<AssimpMesh>& inOutMesh) const
+    void ReadMeshes(const aiScene& scene, const FlagSet<AssimpMeshFactoryCreateFlags>& flags, std::shared_ptr<ModelMesh>& inOutMesh) const
     {
         std::vector<VertexBoneData> vertexBoneData;
         if (flags & AssimpMeshFactoryCreateFlags::ANIMATION) {

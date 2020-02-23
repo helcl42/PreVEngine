@@ -264,6 +264,57 @@ public:
     }
 };
 
+class DefaultAnimationRenderComponent : public IAnimationRenderComponent {
+private:
+    std::shared_ptr<IModel> m_model;
+
+    std::shared_ptr<IMaterial> m_material;
+
+    std::shared_ptr<IAnimation> m_animation;
+
+    bool m_castsShadows;
+
+    bool m_isCastedByShadows;
+
+public:
+    DefaultAnimationRenderComponent(const std::shared_ptr<IModel>& model, const std::shared_ptr<IMaterial>& material, const std::shared_ptr<IAnimation>& animation, const bool castsShadows, const bool isCastedByShadows)
+        : m_model(model)
+        , m_material(material)
+        , m_animation(animation)
+        , m_castsShadows(castsShadows)
+        , m_isCastedByShadows(isCastedByShadows)
+    {
+    }
+
+    virtual ~DefaultAnimationRenderComponent() = default;
+
+public:
+    std::shared_ptr<IModel> GetModel() const override
+    {
+        return m_model;
+    }
+
+    std::shared_ptr<IMaterial> GetMaterial() const override
+    {
+        return m_material;
+    }
+
+    std::shared_ptr<IAnimation> GetAnimation() const override
+    {
+        return m_animation;
+    }
+
+    bool CastsShadows() const override
+    {
+        return m_castsShadows;
+    }
+
+    bool IsCastedByShadows() const override
+    {
+        return m_isCastedByShadows;
+    }
+};
+
 class RenderComponentFactory {
 private:
     static std::map<std::string, std::shared_ptr<Image> > s_imagesCache;
@@ -338,11 +389,25 @@ public:
     {
         std::shared_ptr<IMaterial> material = CreateMaterial(allocator, textureFilename, true, 2.0f, 0.3f);
 
-        AssimpMeshFactory meshFactory{};
-        std::shared_ptr<IMesh> mesh = meshFactory.CreateMesh(modelPath, FlagSet<AssimpMeshFactory::AssimpMeshFactoryCreateFlags>{ AssimpMeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION });
+        MeshFactory meshFactory{};
+        std::shared_ptr<IMesh> mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION });
         std::shared_ptr<IModel> model = CreateModel(allocator, mesh);
 
         return std::make_shared<DefaultRenderComponent>(model, material, castsShadows, isCastedByShadows);
+    }
+
+    std::shared_ptr<IAnimationRenderComponent> CreateAnimatedModelRenderComponent(Allocator& allocator, const std::string& modelPath, const std::string& textureFilename, const bool castsShadows, const bool isCastedByShadows) const
+    {
+        std::shared_ptr<IMaterial> material = CreateMaterial(allocator, textureFilename, true, 2.0f, 0.3f);
+
+        MeshFactory meshFactory{};
+        std::shared_ptr<IMesh> mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION });
+        std::shared_ptr<IModel> model = CreateModel(allocator, mesh);
+
+        AnimationFactory animationFactory{};
+        std::shared_ptr<IAnimation> animation = animationFactory.CreateAnimation(modelPath);
+
+        return std::make_shared<DefaultAnimationRenderComponent>(model, material, animation, castsShadows, isCastedByShadows);
     }
 };
 
@@ -1244,6 +1309,9 @@ public:
 };
 
 class Goblin : public AbstractSceneNode<SceneNodeFlags> {
+private:
+    std::shared_ptr<IAnimationRenderComponent> m_animatonRenderComponent;
+
 public:
     Goblin(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
         : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_RENDER_COMPONENT }, position, orientation, scale)
@@ -1260,15 +1328,21 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         RenderComponentFactory renderComponentFactory{};
-        auto renderComponent = renderComponentFactory.CreateModelRenderComponent(*allocator, "goblin.dae", "goblin_texture.png", true, true);
+        m_animatonRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(*allocator, "goblin.dae", "goblin_texture.png", true, true);
 
-        ComponentRepository<IRenderComponent>::GetInstance().Add(m_id, renderComponent);
+        ComponentRepository<IAnimationRenderComponent>::GetInstance().Add(m_id, m_animatonRenderComponent);
+
+        m_animatonRenderComponent->GetAnimation()->SetIndex(0);
+        m_animatonRenderComponent->GetAnimation()->SetState(AnimationState::RUNNING);
+        m_animatonRenderComponent->GetAnimation()->SetSpeed(1.0f);
 
         AbstractSceneNode::Init();
     }
 
     void Update(float deltaTime) override
     {
+        m_animatonRenderComponent->GetAnimation()->Update(deltaTime);
+
         AbstractSceneNode::Update(deltaTime);
     }
 
@@ -1276,7 +1350,7 @@ public:
     {
         AbstractSceneNode::ShutDown();
 
-        ComponentRepository<IRenderComponent>::GetInstance().Remove(m_id);
+        ComponentRepository<IAnimationRenderComponent>::GetInstance().Remove(m_id);
     }
 };
 
@@ -1728,6 +1802,7 @@ private:
         alignas(16) glm::mat4 modelMatrix;
         alignas(16) glm::mat4 viewMatrix;
         alignas(16) glm::mat4 projectionMatrix;
+        alignas(16) glm::mat4 bones[MAX_BONES_COUNT];
     };
 
 private:
@@ -1788,7 +1863,7 @@ public:
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_RENDER_COMPONENT })) {
-            auto renderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());
+            auto renderComponent = ComponentRepository<IAnimationRenderComponent>::GetInstance().Get(node->GetId());
             if (renderComponent->CastsShadows()) {
                 const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
@@ -1797,6 +1872,10 @@ public:
                 auto ubo = m_uniformsPool->GetNext();
 
                 Uniforms uniforms{};
+                const auto& bones = renderComponent->GetAnimation()->GetBoneTransforms();
+                for (size_t i = 0; i < bones.size(); i++) {
+                    uniforms.bones[i] = bones[i];
+                }
                 uniforms.projectionMatrix = cascade.projectionMatrix;
                 uniforms.viewMatrix = cascade.viewMatrix;
                 uniforms.modelMatrix = node->GetWorldTransformScaled();
@@ -2230,6 +2309,8 @@ private:
 
     struct alignas(16) UniformsVS
     {
+        alignas(16) glm::mat4 bones[MAX_BONES_COUNT];
+
         alignas(16) glm::mat4 modelMatrix;
 
         alignas(16) glm::mat4 viewMatrix;
@@ -2328,11 +2409,15 @@ public:
             const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
             const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
-            const auto nodeRenderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());
+            const auto nodeRenderComponent = ComponentRepository<IAnimationRenderComponent>::GetInstance().Get(node->GetId());
 
             auto uboVS = m_uniformsPoolVS->GetNext();
 
             UniformsVS uniformsVS{};
+            const auto& bones = nodeRenderComponent->GetAnimation()->GetBoneTransforms();
+            for (size_t i = 0; i < bones.size(); i++) {
+                uniformsVS.bones[i] = bones[i];
+            }
             uniformsVS.projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
             uniformsVS.viewMatrix = cameraComponent->LookAt();
             uniformsVS.modelMatrix = node->GetWorldTransformScaled();
@@ -2488,7 +2573,7 @@ public:
         auto groundPlane = std::make_shared<Plane>(glm::vec3(0.0f, 0.0f, 0.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(12.0f), "cement.jpg");
         AddChild(groundPlane);
 
-        auto goblin = std::make_shared<Goblin>(glm::vec3(-25.0f, 0.5f, 0.0f), glm::quat(glm::radians(glm::vec3(-90.0f, 0.0f, 0.0f))), glm::vec3(0.005f));
+        auto goblin = std::make_shared<Goblin>(glm::vec3(-25.0f, 9.0f, 0.0f), glm::quat(glm::radians(glm::vec3(-90.0f, 0.0f, 0.0f))), glm::vec3(0.005f));
         AddChild(goblin);
 
         for (auto child : m_children) {
@@ -2525,7 +2610,7 @@ public:
         // shadows render pass
         auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
         for (uint32_t cascadeIndex = 0; cascadeIndex < ShadowsComponent::CASCADES_COUNT; cascadeIndex++) {
-            
+
             auto cascade = shadows->GetCascade(cascadeIndex);
             shadows->GetRenderPass()->Begin(cascade.frameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, shadows->GetExtent() });
 

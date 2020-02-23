@@ -14,6 +14,7 @@ static const float AMBIENT_LIGHT_INTENSITY{ 0.2f };
 static const glm::vec4 FOG_COLOR{ 0.47f, 0.53f, 0.58f, 1.0f };
 static const bool SHADOWS_ENABLED{ true };
 static const glm::vec4 SELECTED_COLOR{ 1.0f, 0.0f, 0.0f, 1.0f };
+static const uint32_t MAX_BONES_COUNT{ 100 };
 
 enum class SceneNodeFlags : uint64_t {
     HAS_RENDER_COMPONENT,
@@ -403,7 +404,7 @@ public:
     virtual ~IModel() = default;
 };
 
-enum class AnimationStateType {
+enum class AnimationState {
     RUNNING = 0,
     PAUSED,
     STOPPED
@@ -418,21 +419,21 @@ public:
 
     virtual const std::vector<glm::mat4>& GetBoneTransforms() const = 0;
 
-    virtual void SetAnimationState(const AnimationStateType animationState) = 0;
+    virtual void SetState(const AnimationState animationState) = 0;
 
-    virtual AnimationStateType GetAnimationState() const = 0;
+    virtual AnimationState GetState() const = 0;
 
-    virtual void SetAnimationIndex(const unsigned int index) = 0;
+    virtual void SetIndex(const unsigned int index) = 0;
 
-    virtual unsigned int GetAnimationIndex() const = 0;
+    virtual unsigned int GetIndex() const = 0;
 
-    virtual void SetAnimationSpeed(const float speed) = 0;
+    virtual void SetSpeed(const float speed) = 0;
 
-    virtual float GetAnimationSpeed() const = 0;
+    virtual float GetSpeed() const = 0;
 
-    virtual void SetAnimationTime(const float elapsed) = 0;
+    virtual void SetTime(const float elapsed) = 0;
 
-    virtual float GetAnimationTime() const = 0;
+    virtual float GetTime() const = 0;
 };
 
 class IRenderComponent {
