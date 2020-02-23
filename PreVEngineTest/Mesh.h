@@ -9,145 +9,6 @@
 
 using namespace PreVEngine;
 
-enum class VertexLayoutComponent {
-    FLOAT = 0x0,
-    VEC2 = 0x1,
-    VEC3 = 0x2,
-    VEC4 = 0x3,
-    IVEC = 0x4,
-    IVEC2 = 0x5,
-    IVEC3 = 0x6,
-    IVEC4 = 0x7,
-};
-
-struct VertexLayout {
-private:
-    std::vector<VertexLayoutComponent> m_components;
-
-public:
-    VertexLayout()
-    {
-    }
-
-    VertexLayout(const std::vector<VertexLayoutComponent>& components)
-        : m_components(components)
-    {
-    }
-
-public:
-    const std::vector<VertexLayoutComponent>& GetComponents() const
-    {
-        return m_components;
-    }
-
-    static uint32_t GetComponentSize(const VertexLayoutComponent component)
-    {
-        switch (component) {
-        case VertexLayoutComponent::FLOAT:
-            return 1 * sizeof(float);
-        case VertexLayoutComponent::VEC2:
-            return 2 * sizeof(float);
-        case VertexLayoutComponent::VEC3:
-            return 3 * sizeof(float);
-        case VertexLayoutComponent::VEC4:
-            return 4 * sizeof(float);
-        case VertexLayoutComponent::IVEC:
-            return 1 * sizeof(int32_t);
-        case VertexLayoutComponent::IVEC2:
-            return 2 * sizeof(int32_t);
-        case VertexLayoutComponent::IVEC3:
-            return 3 * sizeof(int32_t);
-        case VertexLayoutComponent::IVEC4:
-            return 4 * sizeof(int32_t);
-        default:
-            throw std::runtime_error("Invalid vertex layout component type.");
-        }
-    }
-
-    static uint32_t GetComponentsSize(const std::vector<VertexLayoutComponent>& components)
-    {
-        uint32_t singleVertexPackSizeInBytes = 0;
-        for (const auto& component : components) {
-            singleVertexPackSizeInBytes += VertexLayout::GetComponentSize(component);
-        }
-        return singleVertexPackSizeInBytes;
-    }
-
-    uint32_t GetStride() const
-    {
-        return VertexLayout::GetComponentsSize(m_components);
-    }
-};
-
-class VertexDataBuffer {
-private:
-    std::vector<uint8_t> m_buffer;
-
-public:
-    VertexDataBuffer()
-    {
-    }
-
-    VertexDataBuffer(const size_t initialSize)
-    {
-        m_buffer.reserve(initialSize);
-    }
-
-public:
-    void Add(const void* data, const unsigned int size)
-    {
-        m_buffer.insert(m_buffer.end(), (const uint8_t*)data, (const uint8_t*)data + size);
-    }
-
-    void Add(float data)
-    {
-        Add(&data, sizeof(float));
-    }
-
-    void Add(const glm::vec2& data)
-    {
-        Add(&data, sizeof(glm::vec2));
-    }
-
-    void Add(const glm::vec3& data)
-    {
-        Add(&data, sizeof(glm::vec3));
-    }
-
-    void Add(const glm::vec4& data)
-    {
-        Add(&data, sizeof(glm::vec4));
-    }
-
-    void Reset()
-    {
-        m_buffer.clear();
-    }
-
-    const uint8_t* GetData() const
-    {
-        return m_buffer.data();
-    }
-};
-
-class IMesh {
-public:
-    virtual const VertexLayout& GetVertextLayout() const = 0;
-
-    virtual const void* GetVertices() const = 0;
-
-    virtual uint32_t GerVerticesCount() const = 0;
-
-    virtual const std::vector<uint32_t>& GerIndices() const = 0;
-
-    virtual bool HasIndices() const = 0;
-
-public:
-    virtual ~IMesh()
-    {
-    }
-};
-
 class CubeMesh : public IMesh {
 private:
     struct Vertex {
@@ -470,12 +331,6 @@ public:
     }
 };
 
-enum class AnimationStateType {
-    RUNNING = 0,
-    PAUSED,
-    STOPPED
-};
-
 struct BoneInfo {
     glm::mat4 boneOffset;
 
@@ -527,32 +382,6 @@ struct VertexBoneData {
             }
         }
     }
-};
-
-class IAnimation {
-public:
-    virtual ~IAnimation() = default;
-
-public:
-    virtual void Update(const float deltaTime) = 0;
-    
-    virtual const std::vector<glm::mat4>& GetBoneTransforms() const = 0;
-    
-    virtual void SetAnimationState(const AnimationStateType animationState) = 0;
-    
-    virtual AnimationStateType GetAnimationState() const = 0;
-    
-    virtual void SetAnimationIndex(const unsigned int index) = 0;
-    
-    virtual unsigned int GetAnimationIndex() const = 0;
-    
-    virtual void SetAnimationSpeed(const float speed) = 0;
-    
-    virtual float GetAnimationSpeed() const = 0;
-    
-    virtual void SetAnimationTime(const float elapsed) = 0;
-    
-    virtual float GetAnimationTime() const = 0;
 };
 
 class Animation : public IAnimation {
