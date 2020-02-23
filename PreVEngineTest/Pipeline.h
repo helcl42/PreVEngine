@@ -78,17 +78,15 @@ public:
     }
 };
 
-class ShadowsShader final : public Shader {
+class DefaultShadowsShader final : public Shader {
 private:
 public:
-    ShadowsShader(const VkDevice device)
+    DefaultShadowsShader(const VkDevice device)
         : Shader(device)
     {
     }
 
-    ~ShadowsShader()
-    {
-    }
+    ~DefaultShadowsShader() = default;
 
 private:
     void InitVertexInputs() override
@@ -113,16 +111,154 @@ private:
     }
 };
 
-class ShadowsPipeline final : public AbstractGraphicsPipeline {
+class DefaultShadowsPipeline final : public AbstractGraphicsPipeline {
 public:
-    ShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    DefaultShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
 
-    ~ShadowsPipeline()
+    ~DefaultShadowsPipeline() = default;
+
+public:
+    VkPipeline Init() override
+    {
+        // Pipeline layout
+        VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+        pipelineLayoutInfo.setLayoutCount = 1;
+        pipelineLayoutInfo.pSetLayouts = m_shaders.GetDescriptorSetLayout();
+        pipelineLayoutInfo.pPushConstantRanges = m_shaders.GetPushConstantsRanges().data();
+        pipelineLayoutInfo.pushConstantRangeCount = static_cast<uint32_t>(m_shaders.GetPushConstantsRanges().size());
+        VKERRCHECK(vkCreatePipelineLayout(m_device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout));
+
+        // Pipeline
+        VkPipelineInputAssemblyStateCreateInfo inputAssembly = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
+        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        inputAssembly.primitiveRestartEnable = VK_FALSE;
+
+        VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
+        vertexInputState.vertexBindingDescriptionCount = 1;
+        vertexInputState.pVertexBindingDescriptions = m_shaders.GetVertexInputBindingDescription();
+        vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(m_shaders.GetVertexInputAttributeDewcriptions().size());
+        vertexInputState.pVertexAttributeDescriptions = m_shaders.GetVertexInputAttributeDewcriptions().data();
+
+        const VkExtent2D initialExtent{ 640, 480 };
+
+        VkViewport viewport = {};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(initialExtent.width);
+        viewport.height = static_cast<float>(initialExtent.height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+
+        VkRect2D scissor = {};
+        scissor.offset = { 0, 0 };
+        scissor.extent = initialExtent;
+
+        VkPipelineViewportStateCreateInfo viewportState = { VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
+        viewportState.viewportCount = 1;
+        viewportState.pViewports = &viewport;
+        viewportState.scissorCount = 1;
+        viewportState.pScissors = &scissor;
+
+        VkPipelineRasterizationStateCreateInfo rasterizer = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
+        rasterizer.depthClampEnable = VK_TRUE;
+        rasterizer.rasterizerDiscardEnable = VK_FALSE;
+        rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+        rasterizer.lineWidth = 1.0f;
+        rasterizer.cullMode = VK_CULL_MODE_NONE;
+        rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+        rasterizer.depthBiasEnable = VK_FALSE;
+
+        VkPipelineMultisampleStateCreateInfo multisampling = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
+        multisampling.sampleShadingEnable = VK_FALSE;
+        multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+
+        VkPipelineDepthStencilStateCreateInfo depthStencilState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
+        depthStencilState.depthTestEnable = VK_TRUE;
+        depthStencilState.depthWriteEnable = VK_TRUE;
+        depthStencilState.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+        depthStencilState.depthBoundsTestEnable = VK_FALSE;
+        depthStencilState.stencilTestEnable = VK_FALSE;
+
+        VkPipelineColorBlendStateCreateInfo colorBlending = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
+        colorBlending.logicOpEnable = VK_FALSE;
+        colorBlending.logicOp = VK_LOGIC_OP_COPY;
+        colorBlending.attachmentCount = 0;
+        colorBlending.blendConstants[0] = 0.0f;
+        colorBlending.blendConstants[1] = 0.0f;
+        colorBlending.blendConstants[2] = 0.0f;
+        colorBlending.blendConstants[3] = 0.0f;
+
+        VkDynamicState dynamicStates[] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR /*, VK_DYNAMIC_STATE_DEPTH_BIAS*/ };
+        VkPipelineDynamicStateCreateInfo dynamicState = { VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
+        dynamicState.pDynamicStates = dynamicStates;
+        dynamicState.dynamicStateCount = static_cast<uint32_t>(ArraySize(dynamicStates));
+
+        VkGraphicsPipelineCreateInfo pipelineInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
+        pipelineInfo.stageCount = static_cast<uint32_t>(m_shaders.GetShaderStages().size());
+        pipelineInfo.pStages = m_shaders.GetShaderStages().data();
+        pipelineInfo.pVertexInputState = &vertexInputState;
+        pipelineInfo.pInputAssemblyState = &inputAssembly;
+        pipelineInfo.pViewportState = &viewportState;
+        pipelineInfo.pRasterizationState = &rasterizer;
+        pipelineInfo.pMultisampleState = &multisampling;
+        pipelineInfo.pDepthStencilState = &depthStencilState;
+        pipelineInfo.pColorBlendState = &colorBlending;
+        pipelineInfo.pDynamicState = &dynamicState;
+        pipelineInfo.layout = m_pipelineLayout;
+        pipelineInfo.renderPass = m_renderPass;
+
+        VKERRCHECK(vkCreateGraphicsPipelines(m_device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_graphicsPipeline));
+
+        return m_graphicsPipeline;
+    }
+};
+
+class AnimatedShadowsShader final : public Shader {
+private:
+public:
+    AnimatedShadowsShader(const VkDevice device)
+        : Shader(device)
     {
     }
+
+    ~AnimatedShadowsShader() = default;
+
+private:
+    void InitVertexInputs() override
+    {
+        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4, VertexLayoutComponent::VEC4 }), VK_VERTEX_INPUT_RATE_VERTEX);
+
+        m_inputAttributeDescriptions = {
+            VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
+            VkUtils::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
+            VkUtils::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })),
+            VkUtils::CreateVertexInputAttributeDescription(0, 3, VK_FORMAT_R32G32B32A32_SINT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 })),
+            VkUtils::CreateVertexInputAttributeDescription(0, 4, VK_FORMAT_R32G32B32A32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4 }))
+        };
+    }
+
+    void InitDescriptorSets() override
+    {
+        // vertex shader
+        AddDescriptorSet("ubo", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT);
+    }
+
+    void InitPushConstantsBlocks() override
+    {
+    }
+};
+
+class AnimatedShadowsPipeline final : public AbstractGraphicsPipeline {
+public:
+    AnimatedShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+        : AbstractGraphicsPipeline(device, renderpass, shaders)
+    {
+    }
+
+    ~AnimatedShadowsPipeline() = default;
 
 public:
     VkPipeline Init() override
@@ -228,9 +364,7 @@ public:
     {
     }
 
-    ~DefaultShader()
-    {
-    }
+    ~DefaultShader() = default;
 
 private:
     void InitVertexInputs() override
@@ -267,9 +401,7 @@ public:
     {
     }
 
-    ~DefaultPipeline()
-    {
-    }
+    ~DefaultPipeline() = default;
 
 public:
     VkPipeline Init() override
@@ -386,9 +518,7 @@ public:
     {
     }
 
-    ~AnimationShader()
-    {
-    }
+    ~AnimationShader() = default;
 
 private:
     void InitVertexInputs() override
@@ -427,9 +557,7 @@ public:
     {
     }
 
-    ~AnimationPipeline()
-    {
-    }
+    ~AnimationPipeline() = default;
 
 public:
     VkPipeline Init() override
@@ -546,9 +674,7 @@ public:
     {
     }
 
-    ~QuadShader()
-    {
-    }
+    ~QuadShader() = default;
 
 private:
     void InitVertexInputs() override
@@ -581,9 +707,7 @@ public:
     {
     }
 
-    ~QuadPipeline()
-    {
-    }
+    ~QuadPipeline() = default;
 
 public:
     VkPipeline Init() override

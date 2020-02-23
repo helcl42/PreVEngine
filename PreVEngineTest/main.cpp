@@ -1891,7 +1891,7 @@ struct ShadowsRenderContextUserData : DefaultRenderContextUserData {
     }
 };
 
-class ShadowsRenderer : public IRenderer<ShadowsRenderContextUserData> {
+class DefaultShadowsRenderer : public IRenderer<ShadowsRenderContextUserData> {
 private:
     struct Uniforms {
         alignas(16) glm::mat4 modelMatrix;
@@ -1910,12 +1910,12 @@ private:
     std::shared_ptr<UBOPool<Uniforms> > m_uniformsPool;
 
 public:
-    ShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    DefaultShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
 
-    virtual ~ShadowsRenderer()
+    virtual ~DefaultShadowsRenderer()
     {
     }
 
@@ -1926,12 +1926,12 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<ShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "shaders/shadows_vert.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<DefaultShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "shaders/default_shadows_vert.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(10000);
 
         printf("Shadows Shader created\n");
 
-        m_pipeline = std::make_shared<ShadowsPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline = std::make_shared<DefaultShadowsPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
         printf("Shadows Pipeline created\n");
@@ -1945,10 +1945,6 @@ public:
         const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
         const auto shadowsExtent = shadows->GetExtent();
-
-        auto cascade = shadows->GetCascade(shadowsRenderContext.cascadeIndex);
-
-        m_renderPass->Begin(cascade.frameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, shadowsExtent });
 
         VkRect2D scissor = { { 0, 0 }, shadows->GetExtent() };
         VkViewport viewport = { 0, 0, static_cast<float>(shadowsExtent.width), static_cast<float>(shadowsExtent.height), 0, 1 };
@@ -1996,7 +1992,117 @@ public:
 
     void PostRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        m_renderPass->End(renderContext.defaultCommandBuffer);
+    }
+
+    void ShutDown() override
+    {
+        m_pipeline->ShutDown();
+
+        m_shader->ShutDown();
+    }
+};
+
+class AnimationShadowsRenderer : public IRenderer<ShadowsRenderContextUserData> {
+private:
+    struct Uniforms {
+        alignas(16) glm::mat4 modelMatrix;
+        alignas(16) glm::mat4 viewMatrix;
+        alignas(16) glm::mat4 projectionMatrix;
+    };
+
+private:
+    std::shared_ptr<RenderPass> m_renderPass;
+
+private:
+    std::shared_ptr<Shader> m_shader;
+
+    std::shared_ptr<IGraphicsPipeline> m_pipeline;
+
+    std::shared_ptr<UBOPool<Uniforms> > m_uniformsPool;
+
+public:
+    AnimationShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
+        : m_renderPass(renderPass)
+    {
+    }
+
+    virtual ~AnimationShadowsRenderer()
+    {
+    }
+
+public:
+    void Init() override
+    {
+        auto device = DeviceProvider::GetInstance().GetDevice();
+        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+
+        ShaderFactory shaderFactory;
+        m_shader = shaderFactory.CreateShaderFromFiles<AnimatedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "shaders/animation_shadows_vert.spv" } });
+        m_shader->AdjustDescriptorPoolCapacity(10000);
+
+        printf("Shadows Shader created\n");
+
+        m_pipeline = std::make_shared<AnimatedShadowsPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline->Init();
+
+        printf("Shadows Pipeline created\n");
+
+        m_uniformsPool = std::make_shared<UBOPool<Uniforms> >(*allocator);
+        m_uniformsPool->AdjustCapactity(10000);
+    }
+
+    void PreRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    {
+        const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+
+        const auto shadowsExtent = shadows->GetExtent();
+
+        VkRect2D scissor = { { 0, 0 }, shadows->GetExtent() };
+        VkViewport viewport = { 0, 0, static_cast<float>(shadowsExtent.width), static_cast<float>(shadowsExtent.height), 0, 1 };
+
+        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+    }
+
+    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_RENDER_COMPONENT })) {
+            auto renderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());
+            if (renderComponent->CastsShadows()) {
+                const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+
+                const auto& cascade = shadows->GetCascade(shadowsRenderContext.cascadeIndex);
+
+                auto ubo = m_uniformsPool->GetNext();
+
+                Uniforms uniforms{};
+                uniforms.projectionMatrix = cascade.projectionMatrix;
+                uniforms.viewMatrix = cascade.viewMatrix;
+                uniforms.modelMatrix = node->GetWorldTransformScaled();
+                ubo->Update(&uniforms);
+
+                m_shader->Bind("ubo", *ubo);
+
+                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
+                VkDeviceSize offsets[] = { 0 };
+
+                vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
+                vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+                vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+                vkCmdDrawIndexed(renderContext.defaultCommandBuffer, renderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+            }
+        }
+
+        for (auto child : node->GetChildren()) {
+            Render(renderContext, child, shadowsRenderContext);
+        }
+    }
+
+    void PostRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    {
     }
 
     void ShutDown() override
@@ -2595,7 +2701,9 @@ private:
     std::shared_ptr<RenderPass> m_defaultRenderPass;
 
 private:
-    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_shadowsRenderer;
+    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_defaultShadowsRenderer;
+
+    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_animationShadowsRenderer;
 
     std::shared_ptr<IRenderer<DefaultRenderContextUserData> > m_defaultRenderer;
 
@@ -2669,8 +2777,11 @@ public:
 
         // Init renderera
         auto shadowsComponent = ComponentRepository<IShadowsComponent>::GetInstance().Get(shadows->GetId());
-        m_shadowsRenderer = std::make_shared<ShadowsRenderer>(shadowsComponent->GetRenderPass());
-        m_shadowsRenderer->Init();
+        m_defaultShadowsRenderer = std::make_shared<DefaultShadowsRenderer>(shadowsComponent->GetRenderPass());
+        m_defaultShadowsRenderer->Init();
+
+        m_animationShadowsRenderer = std::make_shared<AnimationShadowsRenderer>(shadowsComponent->GetRenderPass());
+        m_animationShadowsRenderer->Init();
 
         m_defaultRenderer = std::make_shared<DefaultSceneRenderer>(m_defaultRenderPass);
         m_defaultRenderer->Init();
@@ -2691,18 +2802,37 @@ public:
 
     void Render(RenderContext& renderContext) override
     {
-        // shadows
+        // shadows render pass
+        auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
         for (uint32_t cascadeIndex = 0; cascadeIndex < ShadowsComponent::CASCADES_COUNT; cascadeIndex++) {
-            ShadowsRenderContextUserData useData{ cascadeIndex };
-            m_shadowsRenderer->PreRender(renderContext, useData);
+            
+            auto cascade = shadows->GetCascade(cascadeIndex);
+            shadows->GetRenderPass()->Begin(cascade.frameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, shadows->GetExtent() });
+
+            ShadowsRenderContextUserData userData{ cascadeIndex };
+
+            // default
+            m_defaultShadowsRenderer->PreRender(renderContext, userData);
 
             for (auto child : m_children) {
-                m_shadowsRenderer->Render(renderContext, child, useData);
+                m_defaultShadowsRenderer->Render(renderContext, child, userData);
             }
 
-            m_shadowsRenderer->PostRender(renderContext, useData);
+            m_defaultShadowsRenderer->PostRender(renderContext, userData);
+
+            // animated
+            m_animationShadowsRenderer->PreRender(renderContext, userData);
+
+            for (auto child : m_children) {
+                m_animationShadowsRenderer->Render(renderContext, child, userData);
+            }
+
+            m_animationShadowsRenderer->PostRender(renderContext, userData);
+
+            shadows->GetRenderPass()->End(renderContext.defaultCommandBuffer);
         }
 
+        // normal render pass
         m_defaultRenderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, renderContext.fullExtent });
 
         // Default
@@ -2743,7 +2873,8 @@ public:
 
         m_quadRenderer->ShutDown();
         m_defaultRenderer->ShutDown();
-        m_shadowsRenderer->ShutDown();
+        m_animationShadowsRenderer->ShutDown();
+        m_defaultShadowsRenderer->ShutDown();
     }
 
 public:
