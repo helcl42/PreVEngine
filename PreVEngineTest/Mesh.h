@@ -13,7 +13,11 @@ enum class VertexLayoutComponent {
     FLOAT = 0x0,
     VEC2 = 0x1,
     VEC3 = 0x2,
-    VEC4 = 0x3
+    VEC4 = 0x3,
+    IVEC = 0x4,
+    IVEC2 = 0x5,
+    IVEC3 = 0x6,
+    IVEC4 = 0x7,
 };
 
 struct VertexLayout {
@@ -43,17 +47,27 @@ public:
             return 1 * sizeof(float);
         case VertexLayoutComponent::VEC2:
             return 2 * sizeof(float);
+        case VertexLayoutComponent::VEC3:
+            return 3 * sizeof(float);
         case VertexLayoutComponent::VEC4:
             return 4 * sizeof(float);
+        case VertexLayoutComponent::IVEC:
+            return 1 * sizeof(int32_t);
+        case VertexLayoutComponent::IVEC2:
+            return 2 * sizeof(int32_t);
+        case VertexLayoutComponent::IVEC3:
+            return 3 * sizeof(int32_t);
+        case VertexLayoutComponent::IVEC4:
+            return 4 * sizeof(int32_t);
         default:
-            return 3 * sizeof(float);
+            throw std::runtime_error("Invalid vertex layout component type.");
         }
     }
 
-    static uint32_t GetComponentsSize(const std::vector<VertexLayoutComponent> components)
+    static uint32_t GetComponentsSize(const std::vector<VertexLayoutComponent>& components)
     {
         uint32_t singleVertexPackSizeInBytes = 0;
-        for (auto& component : components) {
+        for (const auto& component : components) {
             singleVertexPackSizeInBytes += VertexLayout::GetComponentSize(component);
         }
         return singleVertexPackSizeInBytes;
@@ -488,7 +502,7 @@ struct VertexBoneData {
         std::memset(weights, 0, sizeof(weights));
     }
 
-    void AddBoneData(unsigned int boneID, float weight)
+    void AddBoneData(const unsigned int boneId, const float weight)
     {
         unsigned int minWeightIndex = 0;
         float minWeight = std::numeric_limits<float>::max();
@@ -499,34 +513,53 @@ struct VertexBoneData {
             }
         }
 
-        ids[minWeightIndex] = boneID;
-        weights[minWeightIndex] = weight;
+        if (minWeight < weight) {
+            ids[minWeightIndex] = boneId;
+            weights[minWeightIndex] = weight;
 
-        float weightSum = 0.0f;
-        for (unsigned int i = 0; i < ArraySize(ids); i++) {
-            weightSum += weights[i];
-        }
+            float weightSum = 0.0f;
+            for (unsigned int i = 0; i < ArraySize(ids); i++) {
+                weightSum += weights[i];
+            }
 
-        for (unsigned int i = 0; i < ArraySize(ids); i++) {
-            weights[i] /= weightSum;
+            for (unsigned int i = 0; i < ArraySize(ids); i++) {
+                weights[i] /= weightSum;
+            }
         }
     }
 };
 
-class AnimatedAssimpMesh : public IMesh {
+class IAnimation {
+public:
+    virtual ~IAnimation() = default;
+
+public:
+    virtual void Update(const float deltaTime) = 0;
+    
+    virtual const std::vector<glm::mat4>& GetBoneTransforms() const = 0;
+    
+    virtual void SetAnimationState(const AnimationStateType animationState) = 0;
+    
+    virtual AnimationStateType GetAnimationState() const = 0;
+    
+    virtual void SetAnimationIndex(const unsigned int index) = 0;
+    
+    virtual unsigned int GetAnimationIndex() const = 0;
+    
+    virtual void SetAnimationSpeed(const float speed) = 0;
+    
+    virtual float GetAnimationSpeed() const = 0;
+    
+    virtual void SetAnimationTime(const float elapsed) = 0;
+    
+    virtual float GetAnimationTime() const = 0;
+};
+
+class Animation : public IAnimation {
 private:
     friend AssimpMeshFactory;
 
 private:
-    VertexLayout m_vertexLayout;
-
-    VertexDataBuffer m_vertexDataBuffer;
-
-    uint32_t m_verticesCount = 0;
-
-    std::vector<uint32_t> m_indices;
-
-    // Animation
     float m_elapsedTime;
 
     std::map<std::string, unsigned int> m_boneMapping; // maps a bone name to its index
@@ -549,33 +582,7 @@ private:
 
     float m_animationSpeed = 1.0f;
 
-public:
-    const VertexLayout& GetVertextLayout() const override
-    {
-        return m_vertexLayout;
-    }
-
-    const void* GetVertices() const override
-    {
-        return m_vertexDataBuffer.GetData();
-    }
-
-    uint32_t GerVerticesCount() const override
-    {
-        return m_verticesCount;
-    }
-
-    const std::vector<uint32_t>& GerIndices() const override
-    {
-        return m_indices;
-    }
-
-    bool HasIndices() const override
-    {
-        return m_indices.size() > 0;
-    }
-
-    // Animation
+private:  
     unsigned int FindPosition(const float animationTime, const aiNodeAnim* nodeAnimation) const
     {
         for (unsigned int i = 0; i < nodeAnimation->mNumPositionKeys - 1; i++) {
@@ -713,14 +720,15 @@ public:
         }
     }
 
-    void Update(float deltaTime)
+public:
+    void Update(const float deltaTime) override
     {
-        deltaTime *= m_animationSpeed;
+        const float scaledDeltaTime = deltaTime * m_animationSpeed;
 
         m_animationIndex %= m_scene->mNumAnimations;
 
         if (m_animationState == AnimationStateType::RUNNING) {
-            m_elapsedTime += deltaTime;
+            m_elapsedTime += scaledDeltaTime;
         } else if (m_animationState == AnimationStateType::STOPPED) {
             m_elapsedTime = 0.0f;
         }
@@ -738,47 +746,47 @@ public:
         }
     }
 
-    const std::vector<glm::mat4>& GetBoneTransforms() const
+    const std::vector<glm::mat4>& GetBoneTransforms() const override
     {
         return m_boneTransforms;
     }
 
-    void SetAnimationState(const AnimationStateType animationState)
+    void SetAnimationState(const AnimationStateType animationState) override
     {
         m_animationState = animationState;
     }
 
-    AnimationStateType GetAnimationState() const
+    AnimationStateType GetAnimationState() const override
     {
         return m_animationState;
     }
 
-    void SetAnimationIndex(const unsigned int index)
+    void SetAnimationIndex(const unsigned int index) override
     {
         m_animationIndex = index;
     }
 
-    unsigned int GetAnimationIndex() const
+    unsigned int GetAnimationIndex() const override
     {
         return m_animationIndex;
     }
 
-    void SetAnimationSpeed(const float speed)
+    void SetAnimationSpeed(const float speed) override
     {
         m_animationSpeed = speed;
     }
 
-    float GetAnimationSpeed() const
+    float GetAnimationSpeed() const override
     {
         return m_animationSpeed;
     }
 
-    void SetAnimationTime(const float elapsed)
+    void SetAnimationTime(const float elapsed) override
     {
         m_elapsedTime = elapsed;
     }
 
-    float GetAnimationTime() const
+    float GetAnimationTime() const override
     {
         return m_elapsedTime;
     }
@@ -849,8 +857,8 @@ private:
     {
         const auto& singleVertexBoneData = vertexBoneData[vertexIndex];
 
-        inOutMesh->m_vertexDataBuffer.Add(&singleVertexBoneData.ids, static_cast<unsigned int>(ArraySize(singleVertexBoneData.ids)));
-        inOutMesh->m_vertexDataBuffer.Add(&singleVertexBoneData.weights, static_cast<unsigned int>(ArraySize(singleVertexBoneData.weights)));
+        inOutMesh->m_vertexDataBuffer.Add(&singleVertexBoneData.ids, static_cast<unsigned int>(ArraySize(singleVertexBoneData.ids) * sizeof(unsigned int)));
+        inOutMesh->m_vertexDataBuffer.Add(&singleVertexBoneData.weights, static_cast<unsigned int>(ArraySize(singleVertexBoneData.weights) * sizeof(float)));
     }
 
     void AddBumpMappingData(const aiMesh& mesh, const unsigned int vertexIndex, std::shared_ptr<AssimpMesh>& inOutMesh) const
@@ -863,15 +871,15 @@ private:
 
     void ReadVertexData(const aiMesh& mesh, const FlagSet<AssimpMeshFactoryCreateFlags>& flags, const std::vector<VertexBoneData>& vertexBoneData, const unsigned int vertexBaseOffset, std::shared_ptr<AssimpMesh>& inOutMesh) const
     {
-        for (unsigned int i = 0; i < mesh.mNumVertices; i++) {
-            AddDefaultVertexData(mesh, i, inOutMesh);
+        for (unsigned int vertexIndex = 0; vertexIndex < mesh.mNumVertices; vertexIndex++) {
+            AddDefaultVertexData(mesh, vertexIndex, inOutMesh);
 
             if (flags & AssimpMeshFactoryCreateFlags::ANIMATION) {
-                AddAnimationData(vertexBoneData, vertexBaseOffset + i, inOutMesh);
+                AddAnimationData(vertexBoneData, vertexBaseOffset + vertexIndex, inOutMesh);
             }
 
             if (flags & AssimpMeshFactoryCreateFlags::BUMP_MAPPING) {
-                AddBumpMappingData(mesh, i, inOutMesh);
+                AddBumpMappingData(mesh, vertexIndex, inOutMesh);
             }
 
             inOutMesh->m_verticesCount++;
@@ -883,8 +891,8 @@ private:
         std::vector<VertexBoneData> bones(mesh.mNumVertices);
         std::map<std::string, unsigned int> boneMapping;
 
-        for (unsigned int i = 0; i < mesh.mNumBones; i++) {
-            const std::string currentBoneName{ mesh.mBones[i]->mName.data };
+        for (unsigned int boneIndex = 0; boneIndex < mesh.mNumBones; boneIndex++) {
+            const std::string currentBoneName{ mesh.mBones[boneIndex]->mName.data };
 
             unsigned int currentBoneIndex = 0;
             if (boneMapping.find(currentBoneName) == boneMapping.end()) {
@@ -894,9 +902,9 @@ private:
                 currentBoneIndex = boneMapping[currentBoneName];
             }
 
-            for (unsigned int j = 0; j < mesh.mBones[i]->mNumWeights; j++) {
-                const unsigned int vertexId = vertexBaseOffset + mesh.mBones[i]->mWeights[j].mVertexId;
-                const float weight = mesh.mBones[i]->mWeights[j].mWeight;
+            for (unsigned int j = 0; j < mesh.mBones[boneIndex]->mNumWeights; j++) {
+                const unsigned int vertexId = vertexBaseOffset + mesh.mBones[boneIndex]->mWeights[j].mVertexId;
+                const float weight = mesh.mBones[boneIndex]->mWeights[j].mWeight;
                 bones[vertexId].AddBoneData(currentBoneIndex, weight);
             }
         }
@@ -906,8 +914,8 @@ private:
     unsigned int GetAllVertexCount(const aiScene& scene) const
     {
         unsigned int vertexCount{ 0 };
-        for (unsigned int i = 0; i < scene.mNumMeshes; i++) {
-            vertexCount += scene.mMeshes[i]->mNumVertices;
+        for (unsigned int meshIndex = 0; meshIndex < scene.mNumMeshes; meshIndex++) {
+            vertexCount += scene.mMeshes[meshIndex]->mNumVertices;
         };
         return vertexCount;
     }
@@ -920,16 +928,19 @@ private:
             vertexBoneData.resize(allVertexCount);
 
             unsigned int vertexBaseOffset = 0;
-            for (unsigned int i = 0; i < scene.mNumMeshes; i++) {
-                const aiMesh& assMesh = *scene.mMeshes[i];
-                vertexBoneData = LoadAnimationBones(assMesh, vertexBaseOffset);
+            for (unsigned int meshIndex = 0; meshIndex < scene.mNumMeshes; meshIndex++) {
+                const aiMesh& assMesh = *scene.mMeshes[meshIndex];
+                const auto vertexBonePart = LoadAnimationBones(assMesh, vertexBaseOffset);
+                for (size_t j = 0; j < vertexBonePart.size(); j++) {
+                    vertexBoneData[j + vertexBaseOffset] = vertexBonePart[j];
+                }
                 vertexBaseOffset += assMesh.mNumVertices;
             }
         }
 
         unsigned int vertexBaseOffset = 0;
-        for (unsigned int i = 0; i < scene.mNumMeshes; i++) {
-            const aiMesh& assMesh = *scene.mMeshes[i];
+        for (unsigned int meshIndex = 0; meshIndex < scene.mNumMeshes; meshIndex++) {
+            const aiMesh& assMesh = *scene.mMeshes[meshIndex];
             ReadVertexData(assMesh, flags, vertexBoneData, vertexBaseOffset, inOutMesh);
             ReadIndices(assMesh, inOutMesh);
             vertexBaseOffset += assMesh.mNumVertices;

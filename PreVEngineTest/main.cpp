@@ -31,6 +31,7 @@ static const glm::vec4 SELECTED_COLOR{ 1.0f, 0.0f, 0.0f, 1.0f };
 
 enum class SceneNodeFlags : uint64_t {
     HAS_RENDER_COMPONENT,
+    HAS_ANIMATION_RENDER_COMPONENT,
     HAS_CAMERA_COMPONENT,
     HAS_SHADOWS_COMPONENT,
     HAS_LIGHT_COMPONENT,
@@ -618,7 +619,7 @@ public:
         std::shared_ptr<IMaterial> material = CreateMaterial(allocator, textureFilename, true, 2.0f, 0.3f);
 
         AssimpMeshFactory meshFactory{};
-        std::shared_ptr<IMesh> mesh = meshFactory.CreateMesh(modelPath/*, FlagSet<AssimpMeshFactory::AssimpMeshFactoryCreateFlags>{ AssimpMeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION }*/);
+        std::shared_ptr<IMesh> mesh = meshFactory.CreateMesh(modelPath, FlagSet<AssimpMeshFactory::AssimpMeshFactoryCreateFlags>{ AssimpMeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION });
         std::shared_ptr<IModel> model = CreateModel(allocator, mesh);
 
         return std::make_shared<DefaultRenderComponent>(model, material, castsShadows, isCastedByShadows);
@@ -1525,7 +1526,7 @@ public:
 class Goblin : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Goblin(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT }, position, orientation, scale)
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_RENDER_COMPONENT }, position, orientation, scale)
     {
     }
 
@@ -2266,8 +2267,6 @@ public:
 
     void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
-        m_renderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, renderContext.fullExtent });
-
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
 
@@ -2357,7 +2356,225 @@ public:
 
     void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
-        m_renderPass->End(renderContext.defaultCommandBuffer);
+    }
+
+    void ShutDown() override
+    {
+        m_shader->ShutDown();
+
+        m_pipeline->ShutDown();
+    }
+};
+
+class AnimationSceneRenderer : public IRenderer<DefaultRenderContextUserData> {
+private:
+    struct ShadowwsCascadeUniform {
+        glm::mat4 viewProjectionMatrix;
+
+        glm::vec4 split;
+    };
+
+    struct ShadowsUniform {
+        ShadowwsCascadeUniform cascades[ShadowsComponent::CASCADES_COUNT];
+
+        uint32_t enabled;
+    };
+
+    struct LightUniform {
+        glm::vec4 position;
+
+        glm::vec4 color;
+
+        glm::vec4 attenuation;
+    };
+
+    struct LightningUniform {
+        LightUniform lights[MAX_LIGHT_COUNT];
+
+        uint32_t realCountOfLights;
+
+        float ambientFactor;
+    };
+
+    struct MaterialUniform {
+        float shineDamper;
+
+        float reflectivity;
+    };
+
+    struct alignas(16) UniformsVS
+    {
+        alignas(16) glm::mat4 modelMatrix;
+
+        alignas(16) glm::mat4 viewMatrix;
+
+        alignas(16) glm::mat4 projectionMatrix;
+
+        alignas(16) glm::mat4 normalMatrix;
+
+        alignas(16) glm::vec4 cameraPosition;
+
+        alignas(16) glm::vec4 textureOffset;
+
+        alignas(16) uint32_t textureNumberOfRows;
+        uint32_t useFakeLightning;
+        float density;
+        float gradient;
+    };
+
+    struct alignas(16) UniformsFS
+    {
+        alignas(16) ShadowsUniform shadows;
+
+        alignas(16) LightningUniform lightning;
+
+        alignas(16) MaterialUniform material;
+
+        alignas(16) glm::vec4 fogColor;
+
+        alignas(16) glm::vec4 selectedColor;
+
+        alignas(16) uint32_t selected;
+        uint32_t castedByShadows;
+    };
+
+private:
+    std::shared_ptr<RenderPass> m_renderPass;
+
+private:
+    std::shared_ptr<Shader> m_shader;
+
+    std::shared_ptr<IGraphicsPipeline> m_pipeline;
+
+    std::shared_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+
+    std::shared_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+
+public:
+    AnimationSceneRenderer(const std::shared_ptr<RenderPass>& renderPass)
+        : m_renderPass(renderPass)
+    {
+    }
+
+    virtual ~AnimationSceneRenderer()
+    {
+    }
+
+public:
+    void Init() override
+    {
+        auto device = DeviceProvider::GetInstance().GetDevice();
+        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+
+        ShaderFactory shaderFactory;
+        m_shader = shaderFactory.CreateShaderFromFiles<AnimationShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "shaders/animation_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/animation_frag.spv" } });
+        m_shader->AdjustDescriptorPoolCapacity(10000);
+
+        printf("Animaition Shader created\n");
+
+        m_pipeline = std::make_shared<AnimationPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline->Init();
+
+        printf("Animaition Pipeline created\n");
+
+        m_uniformsPoolVS = std::make_shared<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS->AdjustCapactity(10000);
+
+        m_uniformsPoolFS = std::make_shared<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS->AdjustCapactity(10000);
+    }
+
+    void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
+
+        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+    }
+
+    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_RENDER_COMPONENT })) {
+            const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+            const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+            const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+            const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
+
+            const auto nodeRenderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());
+
+            auto uboVS = m_uniformsPoolVS->GetNext();
+
+            UniformsVS uniformsVS{};
+            uniformsVS.projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
+            uniformsVS.viewMatrix = cameraComponent->LookAt();
+            uniformsVS.modelMatrix = node->GetWorldTransformScaled();
+            uniformsVS.normalMatrix = glm::inverse(node->GetWorldTransformScaled());
+            uniformsVS.textureNumberOfRows = nodeRenderComponent->GetMaterial()->GetAtlasNumberOfRows();
+            uniformsVS.textureOffset = glm::vec4(nodeRenderComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
+            uniformsVS.cameraPosition = glm::vec4(cameraComponent->GetPosition(), 1.0f);
+            uniformsVS.useFakeLightning = nodeRenderComponent->GetMaterial()->UsesFakeLightning();
+            uniformsVS.density = 0.002f;
+            uniformsVS.gradient = 4.4f;
+
+            uboVS->Update(&uniformsVS);
+
+            auto uboFS = m_uniformsPoolFS->GetNext();
+
+            UniformsFS uniformsFS{};
+            // shadows
+            for (uint32_t i = 0; i < ShadowsComponent::CASCADES_COUNT; i++) {
+                auto& cascade = shadowsComponent->GetCascade(i);
+                uniformsFS.shadows.cascades[i].split = glm::vec4(cascade.endSplitDepth);
+                uniformsFS.shadows.cascades[i].viewProjectionMatrix = cascade.GetBiasedViewProjectionMatrix();
+            }
+            uniformsFS.shadows.enabled = SHADOWS_ENABLED;
+
+            // lightning
+            for (size_t i = 0; i < lightComponents.size(); i++) {
+                uniformsFS.lightning.lights[i].color = glm::vec4(lightComponents[i]->GetColor(), 1.0f);
+                uniformsFS.lightning.lights[i].attenuation = glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f);
+                uniformsFS.lightning.lights[i].position = glm::vec4(lightComponents[i]->GetPosition(), 1.0f);
+            }
+            uniformsFS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
+            uniformsFS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
+
+            // material
+            uniformsFS.material.shineDamper = nodeRenderComponent->GetMaterial()->GetShineDamper();
+            uniformsFS.material.reflectivity = nodeRenderComponent->GetMaterial()->GetReflectivity();
+
+            // common
+            uniformsFS.fogColor = FOG_COLOR;
+            uniformsFS.selectedColor = SELECTED_COLOR;
+            uniformsFS.selected = false;
+            uniformsFS.castedByShadows = nodeRenderComponent->IsCastedByShadows();
+
+            uboFS->Update(&uniformsFS);
+
+            m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), shadowsComponent->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+            m_shader->Bind("textureSampler", *nodeRenderComponent->GetMaterial()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            m_shader->Bind("uboVS", *uboVS);
+            m_shader->Bind("uboFS", *uboFS);
+
+            VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+            VkBuffer vertexBuffers[] = { *nodeRenderComponent->GetModel()->GetVertexBuffer() };
+            VkDeviceSize offsets[] = { 0 };
+
+            vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *nodeRenderComponent->GetModel()->GetIndexBuffer(), 0, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+            vkCmdDrawIndexed(renderContext.defaultCommandBuffer, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+        }
+
+        for (auto child : node->GetChildren()) {
+            Render(renderContext, child, renderContextUserData);
+        }
+    }
+
+    void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
     }
 
     void ShutDown() override
@@ -2381,6 +2598,8 @@ private:
     std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_shadowsRenderer;
 
     std::shared_ptr<IRenderer<DefaultRenderContextUserData> > m_defaultRenderer;
+
+    std::shared_ptr<IRenderer<DefaultRenderContextUserData> > m_animationRenderer;
 
     std::shared_ptr<IRenderer<DefaultRenderContextUserData> > m_quadRenderer;
 
@@ -2456,6 +2675,9 @@ public:
         m_defaultRenderer = std::make_shared<DefaultSceneRenderer>(m_defaultRenderPass);
         m_defaultRenderer->Init();
 
+        m_animationRenderer = std::make_shared<AnimationSceneRenderer>(m_defaultRenderPass);
+        m_animationRenderer->Init();
+
         m_quadRenderer = std::make_shared<QuadRenderer>(m_defaultRenderPass);
         m_quadRenderer->Init();
     }
@@ -2481,6 +2703,8 @@ public:
             m_shadowsRenderer->PostRender(renderContext, useData);
         }
 
+        m_defaultRenderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, renderContext.fullExtent });
+
         // Default
         m_defaultRenderer->PreRender(renderContext);
 
@@ -2489,6 +2713,17 @@ public:
         }
 
         m_defaultRenderer->PostRender(renderContext);
+
+        // Animation
+        m_animationRenderer->PreRender(renderContext);
+
+        for (auto child : m_children) {
+            m_animationRenderer->Render(renderContext, child);
+        }
+
+        m_animationRenderer->PostRender(renderContext);
+
+        m_defaultRenderPass->End(renderContext.defaultCommandBuffer);
 
 #ifndef ANDROID
         // Debug quad with shadowMap
