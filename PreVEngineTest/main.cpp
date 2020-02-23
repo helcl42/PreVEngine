@@ -618,7 +618,7 @@ public:
         std::shared_ptr<IMaterial> material = CreateMaterial(allocator, textureFilename, true, 2.0f, 0.3f);
 
         AssimpMeshFactory meshFactory{};
-        std::shared_ptr<IMesh> mesh = meshFactory.CreateMesh(MeshCreateInfo{ modelPath });
+        std::shared_ptr<IMesh> mesh = meshFactory.CreateMesh(modelPath);
         std::shared_ptr<IModel> model = CreateModel(allocator, mesh);
 
         return std::make_shared<DefaultRenderComponent>(model, material, castsShadows, isCastedByShadows);
@@ -1539,7 +1539,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         RenderComponentFactory renderComponentFactory{};
-        auto renderComponent = renderComponentFactory.CreateModelRenderComponent(*allocator, "goblin.dae", "cement.jpg", true, true);
+        auto renderComponent = renderComponentFactory.CreateModelRenderComponent(*allocator, "goblin.dae", "goblin_texture.png", true, true);
 
         ComponentRepository<IRenderComponent>::GetInstance().Add(m_id, renderComponent);
 
@@ -2441,7 +2441,7 @@ public:
         auto groundPlane = std::make_shared<Plane>(glm::vec3(0.0f, 0.0f, 0.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(12.0f), "cement.jpg");
         AddChild(groundPlane);
 
-        auto goblin = std::make_shared<Goblin>(glm::vec3(-25.0f, 2.0f, 0.0f), glm::quat(glm::radians(glm::vec3(-90.0f, 0.0f, 0.0f))), glm::vec3(0.005f));
+        auto goblin = std::make_shared<Goblin>(glm::vec3(-25.0f, 0.5f, 0.0f), glm::quat(glm::radians(glm::vec3(-90.0f, 0.0f, 0.0f))), glm::vec3(0.005f));
         AddChild(goblin);
 
         for (auto child : m_children) {

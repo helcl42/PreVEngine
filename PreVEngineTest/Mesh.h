@@ -207,7 +207,7 @@ public:
 
     bool HasIndices() const override
     {
-        return true;
+        return m_indices.size() > 0;
     }
 };
 
@@ -256,7 +256,7 @@ public:
 
     bool HasIndices() const override
     {
-        return true;
+        return m_indices.size() > 0;
     }
 };
 
@@ -345,19 +345,8 @@ public:
 
     bool HasIndices() const override
     {
-        return true;
+        return m_indices.size() > 0;
     }
-};
-
-struct MeshCreateInfo {
-    std::string modelPath;
-    std::string texturePath;
-    std::string bumpMapTexturePath;
-    std::string specitalMapTexturePath;
-    bool computeTangentAndBitangent;
-    bool hasTexture;
-    bool hasBumpMapTexture;
-    bool hasSpecialTexture;
 };
 
 class AssimpMeshFactory;
@@ -400,18 +389,18 @@ public:
 
     bool HasIndices() const override
     {
-        return true;
+        return m_indices.size() > 0;
     }
 };
 
 class AssimpMeshFactory {
 public:
-    std::shared_ptr<IMesh> CreateMesh(const MeshCreateInfo& createInfo) const
+    std::shared_ptr<IMesh> CreateMesh(const std::string& modelPath, const bool generateTanAndBitan = false) const
     {
         Assimp::Importer importer{};
-        const aiScene* scene = importer.ReadFile(createInfo.modelPath, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType | aiProcess_GenSmoothNormals | aiProcess_FixInfacingNormals | aiProcess_FindInvalidData);
+        const aiScene* scene = importer.ReadFile(modelPath, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType | aiProcess_GenSmoothNormals | aiProcess_FixInfacingNormals | aiProcess_FindInvalidData);
         if (!scene) {
-            throw std::runtime_error("Could not load model: " + createInfo.modelPath);
+            throw std::runtime_error("Could not load model: " + modelPath);
         }
 
         std::shared_ptr<AssimpMesh> mesh = std::make_shared<AssimpMesh>();
