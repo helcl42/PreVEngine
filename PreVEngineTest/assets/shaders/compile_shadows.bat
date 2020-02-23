@@ -1,5 +1,9 @@
-C:/VulkanSDK/1.1.130.0/Bin/glslangValidator.exe -V shadows.vert
+C:/VulkanSDK/1.2.131.2/Bin/glslangValidator.exe -V default_shadows.vert
 
-move /y vert.spv shadows_vert.spv
+move /y vert.spv default_shadows_vert.spv
+
+C:/VulkanSDK/1.2.131.2/Bin/glslangValidator.exe -V animation_shadows.vert
+
+move /y vert.spv animation_shadows_vert.spv
 
 pause

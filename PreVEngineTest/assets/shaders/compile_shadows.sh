@@ -1,7 +1,11 @@
 #!/bin/bash
 
-glslangValidator -V shadows.vert
+glslangValidator -V default_shadows.vert
 
-mv vert.spv shadows_vert.spv
+mv vert.spv default_shadows_vert.spv
+
+glslangValidator -V animation_shadows.vert
+
+mv vert.spv animation_shadows_vert.spv
 
 exit
