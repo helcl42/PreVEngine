@@ -618,7 +618,7 @@ public:
         std::shared_ptr<IMaterial> material = CreateMaterial(allocator, textureFilename, true, 2.0f, 0.3f);
 
         AssimpMeshFactory meshFactory{};
-        std::shared_ptr<IMesh> mesh = meshFactory.CreateMesh(modelPath);
+        std::shared_ptr<IMesh> mesh = meshFactory.CreateMesh(modelPath/*, FlagSet<AssimpMeshFactory::AssimpMeshFactoryCreateFlags>{ AssimpMeshFactory::AssimpMeshFactoryCreateFlags::Animation }*/);
         std::shared_ptr<IModel> model = CreateModel(allocator, mesh);
 
         return std::make_shared<DefaultRenderComponent>(model, material, castsShadows, isCastedByShadows);
