@@ -358,7 +358,7 @@ private:
 private:
     //const aiScene* m_scene;
 
-    const VertexLayout m_vertexLayout{ { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
+    VertexLayout m_vertexLayout;
 
     VertexDataBuffer m_vertexDataBuffer;
 
@@ -405,7 +405,17 @@ public:
 
         std::shared_ptr<AssimpMesh> mesh = std::make_shared<AssimpMesh>();
 
-        ReadMeshes(*scene, mesh);
+        if (generateTanAndBitan) {
+            mesh->m_vertexLayout = {
+                { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }
+            };
+        } else {
+            mesh->m_vertexLayout = {
+                { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }
+            };
+        }
+
+        ReadMeshes(*scene, generateTanAndBitan, mesh);
 
         return mesh;
     }
@@ -421,7 +431,7 @@ private:
         }
     }
 
-    void ReadVertices(const aiMesh& mesh, std::shared_ptr<AssimpMesh>& inOutMesh) const
+    void ReadVertices(const aiMesh& mesh, const bool addTanBitan, std::shared_ptr<AssimpMesh>& inOutMesh) const
     {
         for (unsigned int i = 0; i < mesh.mNumVertices; i++) {
             glm::vec3 pos = glm::make_vec3(&mesh.mVertices[i].x);
@@ -431,15 +441,23 @@ private:
             inOutMesh->m_vertexDataBuffer.Add(&pos, sizeof(glm::vec3));
             inOutMesh->m_vertexDataBuffer.Add(&uv, sizeof(glm::vec2));
             inOutMesh->m_vertexDataBuffer.Add(&normal, sizeof(glm::vec3));
+
+            if (addTanBitan) {
+                glm::vec3 tangent = glm::make_vec3(&mesh.mTangents[i].x);
+                glm::vec3 biTangent = glm::make_vec3(&mesh.mBitangents[i].x);
+                inOutMesh->m_vertexDataBuffer.Add(&tangent, sizeof(glm::vec3));
+                inOutMesh->m_vertexDataBuffer.Add(&biTangent, sizeof(glm::vec3));
+            }
+
             inOutMesh->m_verticesCount++;
         }
     }
 
-    void ReadMeshes(const aiScene& scene, std::shared_ptr<AssimpMesh>& inOutMesh) const
+    void ReadMeshes(const aiScene& scene, const bool addTanBitan, std::shared_ptr<AssimpMesh>& inOutMesh) const
     {
         for (unsigned int i = 0; i < scene.mNumMeshes; i++) {
             const aiMesh* assMesh = scene.mMeshes[i];
-            ReadVertices(*assMesh, inOutMesh);
+            ReadVertices(*assMesh, addTanBitan, inOutMesh);
             ReadIndices(*assMesh, inOutMesh);
         }
     }
