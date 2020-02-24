@@ -83,7 +83,7 @@ public:
         m_shape.height = 0;
         m_shape.fullscreen = true;
 
-        m_app = Android_App;
+        m_app = g_AndroidApp;
 
         //---Wait for window to be created AND gain focus---
         while (!m_hasFocus) {

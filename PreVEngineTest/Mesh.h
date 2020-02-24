@@ -635,7 +635,7 @@ public:
 		// Meshes are stored inside the apk on Android (compressed)
 		// So they need to be loaded via the asset manager
 
-		AAsset* asset = AAssetManager_open(Android_App->activity->assetManager, modelPath.c_str(), AASSET_MODE_STREAMING);
+		AAsset* asset = AAssetManager_open(g_AndroidApp->activity->assetManager, modelPath.c_str(), AASSET_MODE_STREAMING);
 		assert(asset);
 		size_t size = AAsset_getLength(asset);
 

@@ -30,7 +30,7 @@ int printf(const char* format, ...) {  // printf for Android
 }
 //--------------------------------------------------------------------------------------------------
 
-android_app* Android_App = 0;  // Android native-actvity state
+android_app* g_AndroidApp = 0;  // Android native-actvity state
 /*
 //--------------------TEMP------------------------
 //--Window event handler--
@@ -75,17 +75,17 @@ static int32_t handle_input(struct android_app* app, AInputEvent* event) {
 int main(int argc, char *argv[]);          // Forward declaration of main function
 
 static void activity_force_finish(void) {
-    JavaVM* javaVM = Android_App->activity->vm;
-    JNIEnv* jniEnv = Android_App->activity->env;
+    JavaVM* javaVM = g_AndroidApp->activity->vm;
+    JNIEnv* jniEnv = g_AndroidApp->activity->env;
     JavaVMAttachArgs Args = {JNI_VERSION_1_6, "NativeThread", NULL};
     javaVM->AttachCurrentThread(&jniEnv, &Args);
 
-    jclass classActivity = jniEnv->GetObjectClass(Android_App->activity->clazz);
+    jclass classActivity = jniEnv->GetObjectClass(g_AndroidApp->activity->clazz);
     jmethodID activityFinishID = jniEnv->GetMethodID(classActivity, "finish", "()V");
 
     signal(SIGABRT, SIG_DFL);
 
-    jniEnv->CallVoidMethod(Android_App->activity->clazz, activityFinishID);
+    jniEnv->CallVoidMethod(g_AndroidApp->activity->clazz, activityFinishID);
 
     javaVM->DetachCurrentThread();
 
@@ -99,7 +99,7 @@ void android_main(struct android_app* state) {
     // state->onAppCmd     = handle_cmd;      // Register window event callback  (Temporary)
     // state->onInputEvent = handle_input;    // Register input event callback   (Temporary)
 
-    Android_App = state;                     // Pass android app state to window_andoid.cpp
+    g_AndroidApp = state;                     // Pass android app state to window_andoid.cpp
 
     android_fopen_set_asset_manager(state->activity->assetManager);  // Re-direct fopen to read assets from our APK.
 
@@ -120,13 +120,13 @@ void android_main(struct android_app* state) {
 
 void ShowKeyboard(bool visible,int flags){
     // Attach current thread to the JVM.
-    JavaVM* javaVM = Android_App->activity->vm;
-    JNIEnv* jniEnv = Android_App->activity->env;
+    JavaVM* javaVM = g_AndroidApp->activity->vm;
+    JNIEnv* jniEnv = g_AndroidApp->activity->env;
     JavaVMAttachArgs Args = {JNI_VERSION_1_6, "NativeThread", NULL};
     javaVM->AttachCurrentThread(&jniEnv, &Args);
 
     // Retrieve NativeActivity.
-    jobject lNativeActivity = Android_App->activity->clazz;
+    jobject lNativeActivity = g_AndroidApp->activity->clazz;
 
     // Retrieve Context.INPUT_METHOD_SERVICE.
     jclass ClassContext = jniEnv->FindClass("android/content/Context");
@@ -152,8 +152,8 @@ void ShowKeyboard(bool visible,int flags){
 
 //===============================Get Unicode from Keyboard==============================
 int GetUnicodeChar(int eventType, int keyCode, int metaState){
-    JavaVM* javaVM = Android_App->activity->vm;
-    JNIEnv* jniEnv = Android_App->activity->env;
+    JavaVM* javaVM = g_AndroidApp->activity->vm;
+    JNIEnv* jniEnv = g_AndroidApp->activity->env;
 
     JavaVMAttachArgs Args={JNI_VERSION_1_6, "NativeThread", NULL};
     jint result = javaVM->AttachCurrentThread(&jniEnv, &Args);

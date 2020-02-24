@@ -10,7 +10,7 @@
 #include <vulkan_wrapper.h>                      // Builds dispatch table for Vulkan functions
 #include "android_fopen.h"                       // redirect fopen, to read files from asset folder
 
-extern android_app* Android_App;                 // Native Activity state info
+extern android_app* g_AndroidApp;                 // Native Activity state info
 
 int  printf(const char* format, ...);            // printf for Android (allows multiple printf's per line)
 void ShowKeyboard(bool visible, int flags = 0);  // Show/hide Android keyboard
