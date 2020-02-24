@@ -331,12 +331,6 @@ public:
     }
 };
 
-struct BoneInfo {
-    glm::mat4 boneOffset;
-
-    glm::mat4 finalTransformation;
-};
-
 #define NUM_BONES_PER_VEREX 4
 
 struct VertexBoneData {
@@ -389,6 +383,13 @@ class AnimationFactory;
 class Animation : public IAnimation {
 private:
     friend AnimationFactory;
+
+private:
+    struct BoneInfo {
+        glm::mat4 boneOffset;
+
+        glm::mat4 finalTransformation;
+    };
 
 private:
     float m_elapsedTime = 0.0f;
@@ -678,7 +679,7 @@ public:
                 if (animation->m_boneMapping.find(boneName) == animation->m_boneMapping.end()) {
                     boneIndex = animation->m_numBones;
                     animation->m_numBones++;
-                    animation->m_boneInfos.push_back(BoneInfo{});
+                    animation->m_boneInfos.push_back(Animation::BoneInfo{});
                     animation->m_boneInfos[boneIndex].boneOffset = AssimpGlmConvertor::ToGlmMat4(mesh.mBones[i]->mOffsetMatrix);
                     animation->m_boneMapping[boneName] = boneIndex;
                 } else {
