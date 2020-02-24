@@ -628,6 +628,36 @@ public:
     }
 };
 
+class AssimpSceneLoader {
+public:
+    bool LoadScene(const std::string& modelPath, Assimp::Importer* importer, const aiScene** scene) {
+#if defined(__ANDROID__)
+		// Meshes are stored inside the apk on Android (compressed)
+		// So they need to be loaded via the asset manager
+
+		AAsset* asset = AAssetManager_open(Android_App->activity->assetManager, modelPath.c_str(), AASSET_MODE_STREAMING);
+		assert(asset);
+		size_t size = AAsset_getLength(asset);
+
+		assert(size > 0);
+
+		void *meshData = malloc(size);
+		AAsset_read(asset, meshData, size);
+		AAsset_close(asset);
+
+		*scene = importer->ReadFileFromMemory(meshData, size, 0);
+
+		free(meshData);
+#else
+        *scene = importer->ReadFile(modelPath, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType | aiProcess_GenSmoothNormals | aiProcess_FixInfacingNormals | aiProcess_FindInvalidData);
+#endif
+        if (!scene) {
+            return false;
+        }
+        return true;
+    }
+};
+
 class AnimationFactory {
 public:
     std::shared_ptr<IAnimation> CreateAnimation(const std::string& modelPath) const
@@ -635,16 +665,15 @@ public:
         // TODO copy asiimp animations to some local structure to avoid storing importer and whole scene !!!
         std::shared_ptr<Animation> animation = std::make_shared<Animation>();
 
-        const aiScene* scene = animation->m_importer.ReadFile(modelPath, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType | aiProcess_GenSmoothNormals | aiProcess_FixInfacingNormals | aiProcess_FindInvalidData);
-        if (!scene) {
+        AssimpSceneLoader assimpSceneLoader{};
+        if(!assimpSceneLoader.LoadScene(modelPath, &animation->m_importer, &animation->m_scene)) {
             throw std::runtime_error("Could not load model: " + modelPath);
         }
+
+        animation->m_globalInverseTransform = glm::inverse(AssimpGlmConvertor::ToGlmMat4(animation->m_scene->mRootNode->mTransformation));
         
-        animation->m_scene = scene;
-        animation->m_globalInverseTransform = glm::inverse(AssimpGlmConvertor::ToGlmMat4(scene->mRootNode->mTransformation));
-        
-         for (unsigned int meshIndex = 0; meshIndex < scene->mNumMeshes; meshIndex++) {
-            const auto& mesh = *scene->mMeshes[meshIndex];
+         for (unsigned int meshIndex = 0; meshIndex < animation->m_scene->mNumMeshes; meshIndex++) {
+            const auto& mesh = *animation->m_scene->mMeshes[meshIndex];
             for (unsigned int i = 0; i < mesh.mNumBones; i++) {
                 const std::string boneName{ mesh.mBones[i]->mName.data };
 
@@ -663,12 +692,6 @@ public:
 
         return animation;
     }
-
-private:
-    void ReadBones(const aiScene& scene, std::shared_ptr<Animation>& animation) const
-    {
-       
-    }
 };
 
 class MeshFactory {
@@ -683,8 +706,10 @@ public:
     std::shared_ptr<IMesh> CreateMesh(const std::string& modelPath, const FlagSet<AssimpMeshFactoryCreateFlags>& flags = FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{}) const
     {
         Assimp::Importer importer{};
-        const aiScene* scene = importer.ReadFile(modelPath, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType | aiProcess_GenSmoothNormals | aiProcess_FixInfacingNormals | aiProcess_FindInvalidData);
-        if (!scene) {
+        const aiScene* scene;
+
+        AssimpSceneLoader assimpSceneLoader{};
+        if(!assimpSceneLoader.LoadScene(modelPath, &importer, &scene)) {
             throw std::runtime_error("Could not load model: " + modelPath);
         }
 
