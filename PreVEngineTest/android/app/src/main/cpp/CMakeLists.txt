@@ -16,7 +16,7 @@ message("Platform = ${ANDROID_PLATFORM}")
   include_directories( ../../../../../../PreVEngine/android           )
   include_directories( ../../../../../../PreVEngine/VulkanWrapper     )
   include_directories( ../../../../../../Libs/glm     )
-  include_directories( ../../../../../../Libs/assimp/include     )
+  include_directories( ../../../../../../Libs/assimp_android/include     )
 
 # Set path to source files.
   aux_source_directory( ${ANDROID_NDK}/sources/android/native_app_glue SRC_LIST)
@@ -29,5 +29,12 @@ message("Platform = ${ANDROID_PLATFORM}")
 # Create native shared library
 add_library(native SHARED ${SRC_LIST})
 
+# add external library
+add_library(assimp SHARED IMPORTED)
+set_target_properties(assimp
+        PROPERTIES IMPORTED_LOCATION
+        /home/lubos/Documents/Vulkan/assimp_android/assimp/contrib/android-cmake/code/libassimp.so )
+
 # Link to external libraries
-target_link_libraries(native log android)
+target_link_libraries(native log android assimp)
+

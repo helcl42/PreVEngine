@@ -8,7 +8,6 @@ endif()
 include_directories("${PROJECT_SOURCE_DIR}")
 include_directories("../PreVEngine/External")
 include_directories("../Libs/glm")
-include_directories("../Libs/assimp/include")
 
 file(GLOB SRC_LIST "*.h" "*.cpp")  
 add_executable(${PROJECT_NAME} ${SRC_LIST})
@@ -21,15 +20,18 @@ endif()
 target_link_libraries(${PROJECT_NAME} PreVEngine)
 
 if(WIN32)
+    include_directories("../Libs/assimp/include")
     target_link_libraries(${PROJECT_NAME} "../../Libs/assimp/lib/Release/assimp-vc142-mt")
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    include_directories("../Libs/assimp/include")
     target_link_libraries(${PROJECT_NAME} "/home/lubos/Documents/Vulkan/assimp/assimp/build/code/libassimp.so")
 endif()
 
 if(ANDROID)
-    # build assimp for Android
+    include_directories("../Libs/assimp_android/include")
+    target_link_libraries(${PROJECT_NAME} "/home/lubos/Documents/Vulkan/assimp_android/assimp/contrib/android-cmake/code/libassimp.so")
 endif()
 #-------------------------------------------
 
