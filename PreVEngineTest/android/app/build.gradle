@@ -1,6 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
+    signingConfigs {
+        release {
+            storeFile file('/home/lubos/Documents/Vulkan/prev.keystore')
+            storePassword 'kaktus42'
+            keyAlias = 'prev'
+            keyPassword 'kaktus42'
+        }
+    }
     compileSdkVersion 28
 
     defaultConfig {
@@ -20,6 +28,7 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'),
                     'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
     externalNativeBuild {
