@@ -8,6 +8,8 @@ add_definitions(-DUSE_VULKAN_WRAPPER)
 
 message("Platform = ${ANDROID_PLATFORM}")
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+
 # Set path to header files.
   include_directories( ${ANDROID_NDK}/sources/android/native_app_glue )
   include_directories( ../../../../..                                 )
@@ -33,7 +35,7 @@ add_library(native SHARED ${SRC_LIST})
 add_library(assimp SHARED IMPORTED)
 set_target_properties(assimp
         PROPERTIES IMPORTED_LOCATION
-        /home/lubos/Documents/Vulkan/assimp_android/assimp/contrib/android-cmake/code/libassimp.so )
+        ${CMAKE_CURRENT_SOURCE_DIR}/../libs/arm64-v8a/libassimp.so)
 
 # Link to external libraries
 target_link_libraries(native log android assimp)
