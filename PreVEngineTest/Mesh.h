@@ -632,10 +632,7 @@ class AssimpSceneLoader {
 public:
     bool LoadScene(const std::string& modelPath, Assimp::Importer* importer, const aiScene** scene) {
 #if defined(__ANDROID__)
-		// Meshes are stored inside the apk on Android (compressed)
-		// So they need to be loaded via the asset manager
-
-		AAsset* asset = AAssetManager_open(g_AndroidApp->activity->assetManager, modelPath.c_str(), AASSET_MODE_STREAMING);
+		AAsset* asset = android_open_asset(modelPath.c_str(), AASSET_MODE_STREAMING);
 		assert(asset);
 		size_t size = AAsset_getLength(asset);
 
@@ -651,7 +648,7 @@ public:
 #else
         *scene = importer->ReadFile(modelPath, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType | aiProcess_GenSmoothNormals | aiProcess_FixInfacingNormals | aiProcess_FindInvalidData);
 #endif
-        if (!scene) {
+        if (!*scene) {
             return false;
         }
         return true;

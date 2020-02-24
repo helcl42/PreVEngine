@@ -40,3 +40,7 @@ FILE* android_fopen(const char* fname, const char* mode) {
 
   return funopen(asset, android_read, android_write, android_seek, android_close);
 }
+
+AAsset* android_open_asset(const char* fname, const int mode) {
+  return AAssetManager_open(android_asset_manager, fname, mode);
+}

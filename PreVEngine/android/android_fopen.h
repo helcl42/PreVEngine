@@ -18,6 +18,8 @@ FILE* android_fopen(const char* fname, const char* mode);
 
 #define fopen(name, mode) android_fopen(name, mode)
 
+AAsset* android_open_asset(const char* fname, const int mode);
+
 #ifdef __cplusplus
 }
 #endif
