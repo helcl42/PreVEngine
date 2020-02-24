@@ -1310,6 +1310,35 @@ public:
 
 class Goblin : public AbstractSceneNode<SceneNodeFlags> {
 private:
+    const float RUN_SPEED{ 10.0f };
+
+    const float TURN_SPEED{ 0.7f };
+
+    const float GRAVITY_Y{ -9.81f };
+
+    const float JUMP_POWER{ 2.5f };
+
+    const float MIN_Y_POS{ 9.0f };
+
+private:
+    bool m_shouldGoForward{ false };
+
+    bool m_shouldGoBackward{ false };
+
+    bool m_shouldRotate{ false };
+
+    float m_upwardSpeed{ 0.0f };
+
+    float m_rotationAroundY{ 0.0f };
+
+    bool m_isInTheAir{ false };
+
+private:
+    EventHandler<Goblin, KeyEvent> m_keyboardEventsHandler{ *this };
+
+    EventHandler<Goblin, MouseEvent> m_mouseEventsHandler{ *this };
+
+private:
     std::shared_ptr<IAnimationRenderComponent> m_animatonRenderComponent;
 
 public:
@@ -1341,7 +1370,40 @@ public:
 
     void Update(float deltaTime) override
     {
-        m_animatonRenderComponent->GetAnimation()->Update(deltaTime);
+        if (m_shouldGoForward || m_shouldGoBackward) {
+            m_animatonRenderComponent->GetAnimation()->SetState(AnimationState::RUNNING);
+            m_animatonRenderComponent->GetAnimation()->Update(deltaTime);
+
+            if (m_shouldGoForward || m_shouldGoBackward) {
+                glm::vec3 forwardDirection = MathUtil::GetUpVector(GetOrientation());
+                glm::vec3 positionOffset{ 0.0f };
+                if (m_shouldGoForward) {
+                    positionOffset -= deltaTime * forwardDirection * RUN_SPEED;
+                } else if (m_shouldGoBackward) {
+                    positionOffset += deltaTime * forwardDirection * RUN_SPEED;
+                }
+                Translate(positionOffset);
+            }
+        } else {
+            m_animatonRenderComponent->GetAnimation()->SetTime(0.0f);
+            m_animatonRenderComponent->GetAnimation()->SetState(AnimationState::STOPPED);
+            m_animatonRenderComponent->GetAnimation()->Update(deltaTime);
+        }
+
+        m_upwardSpeed += GRAVITY_Y * deltaTime;
+        Translate(glm::vec3(0.0f, m_upwardSpeed, 0.0f));
+        auto currentPosition = GetPosition();
+        if (currentPosition.y < MIN_Y_POS) {
+            SetPosition(glm::vec3(currentPosition.x, MIN_Y_POS, currentPosition.z));
+            m_upwardSpeed = 0.0f;
+            m_isInTheAir = false;
+        }
+
+        if (m_shouldRotate) {
+            glm::mat4 transform = glm::rotate(glm::mat4(1.0f), glm::radians(TURN_SPEED * -m_rotationAroundY), glm::vec3(0.0f, 0.0f, 1.0f));
+            Rotate(glm::quat_cast(transform));
+            m_rotationAroundY = 0.0f;
+        }
 
         AbstractSceneNode::Update(deltaTime);
     }
@@ -1351,6 +1413,46 @@ public:
         AbstractSceneNode::ShutDown();
 
         ComponentRepository<IAnimationRenderComponent>::GetInstance().Remove(m_id);
+    }
+
+public:
+    void operator()(const KeyEvent& keyEvent)
+    {
+        if (keyEvent.action == KeyActionType::PRESS) {
+            if (keyEvent.keyCode == KeyCode::KEY_W) {
+                m_shouldGoForward = true;
+            }
+            if (keyEvent.keyCode == KeyCode::KEY_S) {
+                m_shouldGoBackward = true;
+            } else if (keyEvent.keyCode == KeyCode::KEY_Space) {
+                if (!m_isInTheAir) {
+                    m_upwardSpeed = JUMP_POWER;
+                    m_isInTheAir = true;
+                }
+            }
+        } else if (keyEvent.action == KeyActionType::RELEASE) {
+            if (keyEvent.keyCode == KeyCode::KEY_W) {
+                m_shouldGoForward = false;
+            }
+            if (keyEvent.keyCode == KeyCode::KEY_S) {
+                m_shouldGoBackward = false;
+            }
+        }
+    }
+
+    void operator()(const MouseEvent& mouseEvent)
+    {
+        if (mouseEvent.button == MouseButtonType::LEFT) {
+            if (mouseEvent.action == MouseActionType::PRESS) {
+                m_shouldRotate = true;
+            } else if (mouseEvent.action == MouseActionType::RELEASE) {
+                m_shouldRotate = false;
+            }
+        }
+
+        if (mouseEvent.action == MouseActionType::MOVE) {
+            m_rotationAroundY = mouseEvent.position.x;
+        }
     }
 };
 
