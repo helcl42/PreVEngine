@@ -1328,10 +1328,14 @@ private:
 
     float m_cameraPitch{ -20.0f };
 
+    glm::vec2 m_prevTouchPosition{ 0.0f, 0.0f };
+
 private:
     EventHandler<Goblin, KeyEvent> m_keyboardEventsHandler{ *this };
 
     EventHandler<Goblin, MouseEvent> m_mouseEventsHandler{ *this };
+
+    EventHandler<Goblin, TouchEvent> m_touchEventsHandler{ *this };
 
 private:
     std::shared_ptr<IAnimationRenderComponent> m_animatonRenderComponent;
@@ -1464,6 +1468,41 @@ public:
                 m_rotationAroundY = mouseEvent.position.x;
                 m_pitchDiff = mouseEvent.position.y;
             }
+        }
+    }
+
+    void operator()(const TouchEvent& touchEvent)
+    {
+#if defined(__ANDROID__)
+        const float MAX_RATIO_FOR_MOVE_CONTROL = 0.25; //
+        if (touchEvent.action == TouchActionType::MOVE || touchEvent.action == TouchActionType::DOWN) {
+            const auto MAX_X_COORD_TO_CONTROL = touchEvent.extent.x * MAX_RATIO_FOR_MOVE_CONTROL;
+            const auto MAX_Y_COORD_TO_BACKWARD_CONTROL = touchEvent.extent.y * MAX_RATIO_FOR_MOVE_CONTROL;
+            const auto MIN_Y_COORD_TO_BACKWARD_CONTROL = touchEvent.extent.y - touchEvent.extent.y * MAX_RATIO_FOR_MOVE_CONTROL;
+            if (touchEvent.position.x < MAX_X_COORD_TO_CONTROL && touchEvent.position.y < MAX_Y_COORD_TO_BACKWARD_CONTROL) {
+                m_shouldGoForward = true;
+            }
+
+            if (touchEvent.position.x < MAX_X_COORD_TO_CONTROL && touchEvent.position.y > MIN_Y_COORD_TO_BACKWARD_CONTROL) {
+                m_shouldGoBackward = true;
+            }
+        } else {
+            m_shouldGoForward = false;
+            m_shouldGoBackward = false;
+            return;
+        }
+#endif
+        if (touchEvent.action == TouchActionType::MOVE) {
+            const glm::vec2 angleInDegrees = (touchEvent.position - m_prevTouchPosition) * 1.0f;
+
+            Rotate(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(angleInDegrees.x), glm::vec3(0.0f, 0.0f, 1.0f))));
+
+            m_cameraComponent->AddYaw(angleInDegrees.x);
+            m_cameraComponent->AddPitch(angleInDegrees.y);
+        }
+
+        if (touchEvent.action == TouchActionType::MOVE || touchEvent.action == TouchActionType::DOWN) {
+            m_prevTouchPosition = touchEvent.position;
         }
     }
 };
