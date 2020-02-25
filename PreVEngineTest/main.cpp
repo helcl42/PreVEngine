@@ -426,11 +426,23 @@ public:
 
     virtual void AddPitch(float amountInDegrees) = 0;
 
+    virtual void SetPitch(float pitch) = 0;
+
+    virtual float GetPitch() const = 0;
+
     virtual void AddYaw(float amountInDegrees) = 0;
+
+    virtual void SetYaw(float yew) = 0;
+
+    virtual float GetYaw() const = 0;
 
     virtual void AddOrientation(const glm::quat& orientationDiff) = 0;
 
+    virtual void SetOrientation(const glm::quat& orientation) = 0;
+
     virtual void AddPosition(const glm::vec3& positionDiff) = 0;
+
+    virtual void SetPosition(const glm::vec3& position) = 0;
 
     virtual glm::vec3 GetForwardDirection() const = 0;
 
@@ -465,9 +477,9 @@ private:
 
     glm::vec3 m_rightDirection;
 
-    glm::vec3 m_pitchYawRoll;
+    glm::vec3 m_eulerAngles;
 
-    glm::vec3 m_pitchYawRollDelta;
+    glm::vec3 m_eulerAnglesDelta;
 
     glm::quat m_orientationDelta;
 
@@ -488,17 +500,6 @@ public:
     }
 
 private:
-    float NormalizeUpTo2Phi(float val)
-    {
-        const float TWO_PHI_IN_DEGS = 360.0f;
-        if (val > TWO_PHI_IN_DEGS) {
-            val -= TWO_PHI_IN_DEGS;
-        } else if (val < -TWO_PHI_IN_DEGS) {
-            val += TWO_PHI_IN_DEGS;
-        }
-        return val;
-    }
-
     void UpdatePosition(float deltaTime)
     {
         m_position += m_positionDelta;
@@ -509,22 +510,22 @@ private:
     void UpdateOrientation(float deltaTime)
     {
         //compute quaternion for pitch based on the camera pitch angle
-        glm::quat pitchQuat = glm::angleAxis(glm::radians(m_pitchYawRollDelta.x), m_rightDirection);
+        glm::quat pitchQuat = glm::angleAxis(glm::radians(m_eulerAnglesDelta.x), m_rightDirection);
 
         //determine heading quaternion from the camera up vector and the heading angle
-        glm::quat headingQuat = glm::angleAxis(glm::radians(m_pitchYawRollDelta.y), m_upDirection);
+        glm::quat headingQuat = glm::angleAxis(glm::radians(m_eulerAnglesDelta.y), m_upDirection);
 
         //add the two quaternions
-        m_orientation = glm::normalize(pitchQuat * headingQuat * m_orientationDelta);
+        glm::quat orientation = glm::normalize(pitchQuat * headingQuat * m_orientationDelta);
 
         // update forward direction from the quaternion
-        m_forwardDirection = glm::normalize(m_orientation * m_forwardDirection);
+        m_forwardDirection = glm::normalize(orientation * m_forwardDirection);
 
         // compute right direction from up and formward
         m_rightDirection = glm::normalize(glm::cross(m_forwardDirection, m_upDirection));
 
         // reset current iteration deltas
-        m_pitchYawRollDelta = glm::vec3(0.0f, 0.0f, 0.0f);
+        m_eulerAnglesDelta = glm::vec3(0.0f, 0.0f, 0.0f);
         m_orientationDelta = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
     }
 
@@ -535,6 +536,7 @@ public:
         UpdatePosition(deltaTime);
 
         m_viewMatrix = glm::lookAt(m_position, m_position + m_forwardDirection, m_upDirection);
+        m_orientation = glm::quat_cast(m_viewMatrix);
     }
 
     const glm::mat4& LookAt() const override
@@ -547,11 +549,10 @@ public:
         std::cout << "Resseting camera.." << std::endl;
 
         m_position = glm::vec3(0.0f, 60.0f, 180.0f);
-        m_orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
         m_positionDelta = glm::vec3(0.0f, 0.0f, 0.0f);
 
-        m_pitchYawRoll = glm::vec3(0.0f, 0.0f, 0.0f);
-        m_pitchYawRollDelta = glm::vec3(0.0f, 0.0f, 0.0f);
+        m_eulerAngles = glm::vec3(0.0f, 0.0f, 0.0f);
+        m_eulerAnglesDelta = glm::vec3(0.0f, 0.0f, 0.0f);
         m_orientationDelta = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 
         m_viewMatrix = glm::mat4(1.0f);
@@ -564,31 +565,61 @@ public:
 
     void AddPitch(float amountInDegrees) override
     {
-        float newFinalPitch = m_pitchYawRoll.x + amountInDegrees;
+        float newFinalPitch = m_eulerAngles.x + amountInDegrees;
         if (newFinalPitch > 89.0f || newFinalPitch < -89.0f) {
             return;
         }
 
-        m_pitchYawRollDelta.x += amountInDegrees;
-        m_pitchYawRoll.x += amountInDegrees;
+        m_eulerAnglesDelta.x += amountInDegrees;
+        m_eulerAngles.x += amountInDegrees;
+    }
+
+    void SetPitch(float pitch) override
+    {
+        m_eulerAnglesDelta.x = -m_eulerAngles.x;
+        m_eulerAnglesDelta.x += pitch;
+    }
+
+    float GetPitch() const override
+    {
+        return m_eulerAngles.x;
     }
 
     void AddYaw(float amountInDegrees) override
     {
-        m_pitchYawRollDelta.y += amountInDegrees;
-        m_pitchYawRoll.y += amountInDegrees;
+        m_eulerAnglesDelta.y += amountInDegrees;
+        m_eulerAngles.y += amountInDegrees;
+    }
 
-        m_pitchYawRollDelta.y = NormalizeUpTo2Phi(m_pitchYawRollDelta.y);
+    void SetYaw(float yaw) override
+    {
+        m_eulerAnglesDelta.y = -m_eulerAngles.y;
+        m_eulerAnglesDelta.y += yaw;
+    }
+
+    float GetYaw() const override
+    {
+        return m_eulerAngles.y;
     }
 
     void AddOrientation(const glm::quat& orientationDiff) override
     {
-        m_orientationDelta = orientationDiff;
+        m_orientationDelta *= orientationDiff;
+    }
+
+    void SetOrientation(const glm::quat& orientation) override
+    {
+        throw std::runtime_error("Not implemented...");
     }
 
     void AddPosition(const glm::vec3& positionDiff) override
     {
         m_positionDelta = positionDiff;
+    }
+
+    void SetPosition(const glm::vec3& position) override
+    {
+        m_position = position;
     }
 
     glm::vec3 GetForwardDirection() const override
@@ -1310,11 +1341,13 @@ public:
 
 class Goblin : public AbstractSceneNode<SceneNodeFlags> {
 private:
-    const float RUN_SPEED{ 10.0f };
+    const float RUN_SPEED{ 14.0f };
 
-    const float TURN_SPEED{ 0.7f };
+    const float YAW_TURN_SPEED{ 3.0f };
 
-    const float GRAVITY_Y{ -9.81f };
+    const float PITCH_TURN_SPEED{ 0.5f };
+
+    const float GRAVITY_Y{ -5.0f };
 
     const float JUMP_POWER{ 2.5f };
 
@@ -1331,7 +1364,11 @@ private:
 
     float m_rotationAroundY{ 0.0f };
 
+    float m_pitchDiff{ 0.0f };
+
     bool m_isInTheAir{ false };
+
+    float m_cameraPitch{ -20.0f };
 
 private:
     EventHandler<Goblin, KeyEvent> m_keyboardEventsHandler{ *this };
@@ -1340,6 +1377,8 @@ private:
 
 private:
     std::shared_ptr<IAnimationRenderComponent> m_animatonRenderComponent;
+
+    std::shared_ptr<ICameraComponent> m_cameraComponent;
 
 public:
     Goblin(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
@@ -1358,12 +1397,18 @@ public:
 
         RenderComponentFactory renderComponentFactory{};
         m_animatonRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(*allocator, "goblin.dae", "goblin_texture.png", true, true);
-
         ComponentRepository<IAnimationRenderComponent>::GetInstance().Add(m_id, m_animatonRenderComponent);
+
+        CameraComponentFactory cameraFactory{};
+        m_cameraComponent = cameraFactory.Create();
+        ComponentRepository<ICameraComponent>::GetInstance().Add(m_id, m_cameraComponent);
 
         m_animatonRenderComponent->GetAnimation()->SetIndex(0);
         m_animatonRenderComponent->GetAnimation()->SetState(AnimationState::RUNNING);
         m_animatonRenderComponent->GetAnimation()->SetSpeed(1.0f);
+
+        m_cameraComponent->AddOrientation(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), m_cameraComponent->GetUpDirection())));
+        m_cameraComponent->AddOrientation(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(m_cameraPitch), m_cameraComponent->GetRightDirection())));
 
         AbstractSceneNode::Init();
     }
@@ -1385,8 +1430,7 @@ public:
                 Translate(positionOffset);
             }
         } else {
-            m_animatonRenderComponent->GetAnimation()->SetTime(0.0f);
-            m_animatonRenderComponent->GetAnimation()->SetState(AnimationState::STOPPED);
+            m_animatonRenderComponent->GetAnimation()->SetState(AnimationState::PAUSED);
             m_animatonRenderComponent->GetAnimation()->Update(deltaTime);
         }
 
@@ -1400,10 +1444,21 @@ public:
         }
 
         if (m_shouldRotate) {
-            glm::mat4 transform = glm::rotate(glm::mat4(1.0f), glm::radians(TURN_SPEED * -m_rotationAroundY), glm::vec3(0.0f, 0.0f, 1.0f));
-            Rotate(glm::quat_cast(transform));
+            const float yawAmount = YAW_TURN_SPEED * m_rotationAroundY * deltaTime;
+            const float pitchAmount = PITCH_TURN_SPEED * m_pitchDiff * deltaTime;
+
+            Rotate(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(yawAmount), glm::vec3(0.0f, 0.0f, 1.0f))));
+
+            m_cameraComponent->AddYaw(yawAmount);
+            m_cameraComponent->AddPitch(pitchAmount);
+
             m_rotationAroundY = 0.0f;
+            m_pitchDiff = 0.0f;
         }
+
+        const glm::vec3 cameraPosition = GetPosition() + (-m_cameraComponent->GetForwardDirection() * 45.0f) + glm::vec3(0.0f, 5.0f, 0.0f);
+        m_cameraComponent->SetPosition(cameraPosition);
+        m_cameraComponent->Update(deltaTime);
 
         AbstractSceneNode::Update(deltaTime);
     }
@@ -1447,11 +1502,10 @@ public:
                 m_shouldRotate = true;
             } else if (mouseEvent.action == MouseActionType::RELEASE) {
                 m_shouldRotate = false;
+            } else if (m_shouldRotate && mouseEvent.action == MouseActionType::MOVE) {
+                m_rotationAroundY = mouseEvent.position.x;
+                m_pitchDiff = mouseEvent.position.y;
             }
-        }
-
-        if (mouseEvent.action == MouseActionType::MOVE) {
-            m_rotationAroundY = mouseEvent.position.x;
         }
     }
 };
@@ -2654,7 +2708,7 @@ public:
         AddChild(shadows);
 
         auto freeCamera = std::make_shared<Camera>();
-        freeCamera->SetTags({ TAG_MAIN_CAMERA });
+        //freeCamera->SetTags({ TAG_MAIN_CAMERA });
         AddChild(freeCamera);
 
         auto camRobot = std::make_shared<CubeRobot>(glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), "texture.jpg");
@@ -2676,6 +2730,7 @@ public:
         AddChild(groundPlane);
 
         auto goblin = std::make_shared<Goblin>(glm::vec3(-25.0f, 9.0f, 0.0f), glm::quat(glm::radians(glm::vec3(-90.0f, 0.0f, 0.0f))), glm::vec3(0.005f));
+        goblin->SetTags({ TAG_MAIN_CAMERA });
         AddChild(goblin);
 
         for (auto child : m_children) {
