@@ -1377,7 +1377,7 @@ public:
 
     void Update(float deltaTime) override
     {
-        if (m_shouldGoForward || m_shouldGoBackward) {
+        if ((m_shouldGoForward || m_shouldGoBackward) && !m_isInTheAir) {
             m_animatonRenderComponent->GetAnimation()->SetState(AnimationState::RUNNING);
             m_animatonRenderComponent->GetAnimation()->Update(deltaTime);
 
@@ -1474,16 +1474,28 @@ public:
     void operator()(const TouchEvent& touchEvent)
     {
 #if defined(__ANDROID__)
-        const float MAX_RATIO_FOR_MOVE_CONTROL = 0.25; //
+        if(touchEvent.action == TouchActionType::DOWN) {
+            const float MAX_RATIO_FOR_JUMP_CONTROL = 0.25f;
+            const auto MAX_X = touchEvent.extent.x * MAX_RATIO_FOR_JUMP_CONTROL;
+            const auto MAX_Y = touchEvent.extent.y * MAX_RATIO_FOR_JUMP_CONTROL;
+            if (touchEvent.position.x < MAX_X && touchEvent.position.y < MAX_Y) {
+                if (!m_isInTheAir) {
+                    m_upwardSpeed = JUMP_POWER;
+                    m_isInTheAir = true;
+                }
+            }
+        }
+
         if (touchEvent.action == TouchActionType::MOVE || touchEvent.action == TouchActionType::DOWN) {
-            const auto MAX_X_COORD_TO_CONTROL = touchEvent.extent.x * MAX_RATIO_FOR_MOVE_CONTROL;
-            const auto MAX_Y_COORD_TO_BACKWARD_CONTROL = touchEvent.extent.y * MAX_RATIO_FOR_MOVE_CONTROL;
-            const auto MIN_Y_COORD_TO_BACKWARD_CONTROL = touchEvent.extent.y - touchEvent.extent.y * MAX_RATIO_FOR_MOVE_CONTROL;
-            if (touchEvent.position.x < MAX_X_COORD_TO_CONTROL && touchEvent.position.y < MAX_Y_COORD_TO_BACKWARD_CONTROL) {
+            const float MAX_RATIO_FOR_MOVE_CONTROL = 0.35f;
+            const auto MIN_X = touchEvent.extent.x - touchEvent.extent.x * MAX_RATIO_FOR_MOVE_CONTROL;
+            const auto MAX_Y = touchEvent.extent.y * MAX_RATIO_FOR_MOVE_CONTROL;
+            const auto MIN_Y = touchEvent.extent.y - touchEvent.extent.y * MAX_RATIO_FOR_MOVE_CONTROL;
+            if (touchEvent.position.x > MIN_X && touchEvent.position.y < MAX_Y) {
                 m_shouldGoForward = true;
             }
 
-            if (touchEvent.position.x < MAX_X_COORD_TO_CONTROL && touchEvent.position.y > MIN_Y_COORD_TO_BACKWARD_CONTROL) {
+            if (touchEvent.position.x > MIN_X && touchEvent.position.y > MIN_Y) {
                 m_shouldGoBackward = true;
             }
         } else {
@@ -1493,7 +1505,7 @@ public:
         }
 #endif
         if (touchEvent.action == TouchActionType::MOVE) {
-            const glm::vec2 angleInDegrees = (touchEvent.position - m_prevTouchPosition) * 1.0f;
+            const glm::vec2 angleInDegrees = (touchEvent.position - m_prevTouchPosition) * 0.1f;
 
             Rotate(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(angleInDegrees.x), glm::vec3(0.0f, 0.0f, 1.0f))));
 
@@ -2712,12 +2724,12 @@ public:
         shadows->SetTags({ TAG_SHADOW });
         AddChild(shadows);
 
-        auto freeCamera = std::make_shared<Camera>();
+        //auto freeCamera = std::make_shared<Camera>();
         //freeCamera->SetTags({ TAG_MAIN_CAMERA });
-        AddChild(freeCamera);
+        //AddChild(freeCamera);
 
-        auto camRobot = std::make_shared<CubeRobot>(glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), "texture.jpg");
-        freeCamera->AddChild(camRobot);
+        //auto camRobot = std::make_shared<CubeRobot>(glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), "texture.jpg");
+        //freeCamera->AddChild(camRobot);
 
         const int32_t MAX_GENERATED_HEIGHT = 1;
         const float DISTANCE = 40.0f;
