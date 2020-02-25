@@ -426,15 +426,7 @@ public:
 
     virtual void AddPitch(float amountInDegrees) = 0;
 
-    virtual void SetPitch(float pitch) = 0;
-
-    virtual float GetPitch() const = 0;
-
     virtual void AddYaw(float amountInDegrees) = 0;
-
-    virtual void SetYaw(float yew) = 0;
-
-    virtual float GetYaw() const = 0;
 
     virtual void AddOrientation(const glm::quat& orientationDiff) = 0;
 
@@ -466,6 +458,12 @@ class CameraComponent : public ICameraComponent {
 private:
     const glm::vec3 m_upDirection{ 0.0f, 1.0f, 0.0f };
 
+    const glm::vec3 m_defaultForwardDirection{ 0.0f, 0.0f, -1.0f };
+
+    const glm::quat m_initialOrientation;
+
+    const glm::vec3 m_initialPosition;
+
 private:
     glm::vec3 m_position;
 
@@ -477,10 +475,6 @@ private:
 
     glm::vec3 m_rightDirection;
 
-    glm::vec3 m_eulerAngles;
-
-    glm::vec3 m_eulerAnglesDelta;
-
     glm::quat m_orientationDelta;
 
     glm::mat4 m_viewMatrix;
@@ -490,7 +484,9 @@ private:
     ViewFrustum m_viewFrustum{ 45.0f, 0.1f, 1000.0f };
 
 public:
-    CameraComponent()
+    CameraComponent(const glm::quat initialOrientation, const glm::vec3& initialPosition)
+        : m_initialOrientation(initialOrientation)
+        , m_initialPosition(initialPosition)
     {
         Reset();
     }
@@ -509,14 +505,8 @@ private:
 
     void UpdateOrientation(float deltaTime)
     {
-        //compute quaternion for pitch based on the camera pitch angle
-        glm::quat pitchQuat = glm::angleAxis(glm::radians(m_eulerAnglesDelta.x), m_rightDirection);
-
-        //determine heading quaternion from the camera up vector and the heading angle
-        glm::quat headingQuat = glm::angleAxis(glm::radians(m_eulerAnglesDelta.y), m_upDirection);
-
         //add the two quaternions
-        glm::quat orientation = glm::normalize(pitchQuat * headingQuat * m_orientationDelta);
+        glm::quat orientation = glm::normalize(m_orientationDelta);
 
         // update forward direction from the quaternion
         m_forwardDirection = glm::normalize(orientation * m_forwardDirection);
@@ -525,7 +515,6 @@ private:
         m_rightDirection = glm::normalize(glm::cross(m_forwardDirection, m_upDirection));
 
         // reset current iteration deltas
-        m_eulerAnglesDelta = glm::vec3(0.0f, 0.0f, 0.0f);
         m_orientationDelta = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
     }
 
@@ -548,59 +537,27 @@ public:
     {
         std::cout << "Resseting camera.." << std::endl;
 
-        m_position = glm::vec3(0.0f, 60.0f, 180.0f);
-        m_positionDelta = glm::vec3(0.0f, 0.0f, 0.0f);
+        m_position = m_initialPosition;
+        m_orientation = m_initialOrientation;
+        m_forwardDirection = m_initialOrientation * m_defaultForwardDirection;
+        m_rightDirection = glm::cross(m_forwardDirection, m_upDirection);
 
-        m_eulerAngles = glm::vec3(0.0f, 0.0f, 0.0f);
-        m_eulerAnglesDelta = glm::vec3(0.0f, 0.0f, 0.0f);
+        m_positionDelta = glm::vec3(0.0f, 0.0f, 0.0f);
         m_orientationDelta = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 
         m_viewMatrix = glm::mat4(1.0f);
-        m_orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-
-        m_forwardDirection = glm::vec3(0.0f, 0.0f, -1.0f);
-        m_rightDirection = glm::cross(m_forwardDirection, m_upDirection);
 
         m_prevTouchPosition = glm::vec2(0.0f, 0.0f);
     }
 
     void AddPitch(float amountInDegrees) override
     {
-        float newFinalPitch = m_eulerAngles.x + amountInDegrees;
-        if (newFinalPitch > 89.0f || newFinalPitch < -89.0f) {
-            return;
-        }
-
-        m_eulerAnglesDelta.x += amountInDegrees;
-        m_eulerAngles.x += amountInDegrees;
-    }
-
-    void SetPitch(float pitch) override
-    {
-        m_eulerAnglesDelta.x = -m_eulerAngles.x;
-        m_eulerAnglesDelta.x += pitch;
-    }
-
-    float GetPitch() const override
-    {
-        return m_eulerAngles.x;
+        m_orientationDelta *= glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(amountInDegrees), m_rightDirection));
     }
 
     void AddYaw(float amountInDegrees) override
     {
-        m_eulerAnglesDelta.y += amountInDegrees;
-        m_eulerAngles.y += amountInDegrees;
-    }
-
-    void SetYaw(float yaw) override
-    {
-        m_eulerAnglesDelta.y = -m_eulerAngles.y;
-        m_eulerAnglesDelta.y += yaw;
-    }
-
-    float GetYaw() const override
-    {
-        return m_eulerAngles.y;
+        m_orientationDelta *= glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(amountInDegrees), m_upDirection));
     }
 
     void AddOrientation(const glm::quat& orientationDiff) override
@@ -610,7 +567,7 @@ public:
 
     void SetOrientation(const glm::quat& orientation) override
     {
-        m_forwardDirection = glm::normalize(orientation * glm::vec3(0.0f, 0.0f, 1.0f)); // Update has to be called
+        m_forwardDirection = glm::normalize(orientation * m_defaultForwardDirection);
     }
 
     void AddPosition(const glm::vec3& positionDiff) override
@@ -661,9 +618,9 @@ public:
 
 class CameraComponentFactory {
 public:
-    std::shared_ptr<ICameraComponent> Create() const
+    std::shared_ptr<ICameraComponent> Create(const glm::quat& orient, const glm::vec3& pos) const
     {
-        return std::make_shared<CameraComponent>();
+        return std::make_shared<CameraComponent>(orient, pos);
     }
 };
 
@@ -1401,7 +1358,7 @@ public:
         ComponentRepository<IAnimationRenderComponent>::GetInstance().Add(m_id, m_animatonRenderComponent);
 
         CameraComponentFactory cameraFactory{};
-        m_cameraComponent = cameraFactory.Create();
+        m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 60.0f, 180.0f));
         ComponentRepository<ICameraComponent>::GetInstance().Add(m_id, m_cameraComponent);
 
         m_animatonRenderComponent->GetAnimation()->SetIndex(0);
@@ -1524,6 +1481,10 @@ private:
 
     const float m_moveSpeed = 25.0f;
 
+    const float m_absMinMaxPitch{ 89.0f };
+
+    float m_pitchAngle = 0.0f;
+
 private:
     InputsFacade m_inputFacade;
 
@@ -1564,7 +1525,7 @@ public:
     void Init() override
     {
         CameraComponentFactory cameraFactory{};
-        m_cameraComponent = cameraFactory.Create();
+        m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 60.0f, 180.0f));
 
         ComponentRepository<ICameraComponent>::GetInstance().Add(m_id, m_cameraComponent);
 
@@ -1631,7 +1592,11 @@ public:
         if (mouseEvent.action == MouseActionType::MOVE && mouseEvent.button == MouseButtonType::LEFT) {
             const glm::vec2 angleInDegrees = mouseEvent.position * m_sensitivity;
 
-            m_cameraComponent->AddPitch(angleInDegrees.y);
+            const float newPitch = m_pitchAngle + angleInDegrees.y;
+            if (newPitch > -m_absMinMaxPitch && newPitch < m_absMinMaxPitch) {
+                m_cameraComponent->AddPitch(angleInDegrees.y);
+                m_pitchAngle += angleInDegrees.y;
+            }
             m_cameraComponent->AddYaw(angleInDegrees.x);
         }
     }
@@ -2709,7 +2674,7 @@ public:
         AddChild(shadows);
 
         auto freeCamera = std::make_shared<Camera>();
-        //freeCamera->SetTags({ TAG_MAIN_CAMERA });
+        freeCamera->SetTags({ TAG_MAIN_CAMERA });
         AddChild(freeCamera);
 
         auto camRobot = std::make_shared<CubeRobot>(glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), "texture.jpg");
@@ -2731,7 +2696,7 @@ public:
         AddChild(groundPlane);
 
         auto goblin = std::make_shared<Goblin>(glm::vec3(-25.0f, 9.0f, 0.0f), glm::quat(glm::radians(glm::vec3(-90.0f, 0.0f, 0.0f))), glm::vec3(0.005f));
-        goblin->SetTags({ TAG_MAIN_CAMERA });
+        //goblin->SetTags({ TAG_MAIN_CAMERA });
         AddChild(goblin);
 
         for (auto child : m_children) {
