@@ -556,6 +556,7 @@ public:
         m_orientationDelta = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 
         m_viewMatrix = glm::mat4(1.0f);
+        m_orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 
         m_forwardDirection = glm::vec3(0.0f, 0.0f, -1.0f);
         m_rightDirection = glm::cross(m_forwardDirection, m_upDirection);
@@ -609,7 +610,7 @@ public:
 
     void SetOrientation(const glm::quat& orientation) override
     {
-        throw std::runtime_error("Not implemented...");
+        m_forwardDirection = glm::normalize(orientation * glm::vec3(0.0f, 0.0f, 1.0f)); // Update has to be called
     }
 
     void AddPosition(const glm::vec3& positionDiff) override
