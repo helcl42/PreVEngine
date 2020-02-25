@@ -2674,7 +2674,7 @@ public:
         AddChild(shadows);
 
         auto freeCamera = std::make_shared<Camera>();
-        freeCamera->SetTags({ TAG_MAIN_CAMERA });
+        //freeCamera->SetTags({ TAG_MAIN_CAMERA });
         AddChild(freeCamera);
 
         auto camRobot = std::make_shared<CubeRobot>(glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), "texture.jpg");
@@ -2696,7 +2696,7 @@ public:
         AddChild(groundPlane);
 
         auto goblin = std::make_shared<Goblin>(glm::vec3(-25.0f, 9.0f, 0.0f), glm::quat(glm::radians(glm::vec3(-90.0f, 0.0f, 0.0f))), glm::vec3(0.005f));
-        //goblin->SetTags({ TAG_MAIN_CAMERA });
+        goblin->SetTags({ TAG_MAIN_CAMERA });
         AddChild(goblin);
 
         for (auto child : m_children) {
