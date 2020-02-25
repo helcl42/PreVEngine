@@ -463,7 +463,7 @@ private:
                 return nodeAnimation;
             }
         }
-        return NULL;
+        return nullptr;
     }
 
     aiVector3D CalculateInterpolatedPosition(const float animationTime, const aiNodeAnim* nodeAnimation) const
@@ -747,7 +747,7 @@ private:
     void AddDefaultVertexData(const aiMesh& mesh, const unsigned int vertexIndex, std::shared_ptr<ModelMesh>& inOutMesh) const
     {
         glm::vec3 pos = glm::make_vec3(&mesh.mVertices[vertexIndex].x);
-        glm::vec2 uv = mesh.mTextureCoords[0] != NULL ? glm::make_vec3(&mesh.mTextureCoords[0][vertexIndex].x) : glm::vec2(1.0f, 1.0f);
+        glm::vec2 uv = mesh.mTextureCoords[0] != nullptr ? glm::make_vec3(&mesh.mTextureCoords[0][vertexIndex].x) : glm::vec2(1.0f, 1.0f);
         glm::vec3 normal = mesh.HasNormals() ? glm::make_vec3(&mesh.mNormals[vertexIndex].x) : glm::vec3(0.0f, 1.0f, 0.0f);
 
         inOutMesh->m_vertexDataBuffer.Add(&pos, sizeof(glm::vec3));
