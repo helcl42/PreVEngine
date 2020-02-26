@@ -5,7 +5,10 @@
 #include <cmath>
 #include <iostream>
 #include <random>
+#include <sstream>
 #include <vector>
+#include <filesystem>
+#include <fstream>
 
 namespace PreVEngine {
 // Global functions !!!
@@ -72,6 +75,105 @@ public:
             return (1.0f / m_averageDeltaTime);
         }
         return 0.0f;
+    }
+};
+
+class StringUtils {
+public:
+    static std::vector<std::string> StringUtils::Split(const std::string& s, const char delim)
+    {
+        std::vector<std::string> elems;
+        std::istringstream ss(s);
+        std::string item;
+        while (std::getline(ss, item, delim)) {
+            elems.push_back(item);
+        }
+        return elems;
+    }
+
+    static std::vector<std::wstring> StringUtils::Split(const std::wstring& s, const wchar_t delim)
+    {
+        std::vector<std::wstring> elems;
+        std::wstringstream ss(s);
+        std::wstring item;
+        while (std::getline(ss, item, delim)) {
+            elems.push_back(item);
+        }
+        return elems;
+    }
+
+    static std::vector<std::string> StringUtils::Split(const std::string& s, const std::string& t)
+    {
+        std::string copy = s;
+        std::vector<std::string> res;
+        while (true) {
+            size_t pos = copy.find(t);
+            if (pos == -1) {
+                res.push_back(copy);
+                break;
+            }
+            res.push_back(copy.substr(0, pos));
+            copy = copy.substr(pos + 1, copy.size() - pos - 1);
+        }
+        return res;
+    }
+
+    static std::vector<std::wstring> StringUtils::Split(const std::wstring& s, const std::wstring& t)
+    {
+        std::wstring copy = s;
+        std::vector<std::wstring> res;
+        while (true) {
+            size_t pos = copy.find(t);
+            if (pos == -1) {
+                res.push_back(copy);
+                break;
+            }
+            res.push_back(copy.substr(0, pos));
+            copy = copy.substr(pos + 1, copy.size() - pos - 1);
+        }
+        return res;
+    }
+
+    static std::string Replace(const std::string& subject, const std::string& search, const std::string& replace)
+    {
+        std::string copy = subject;
+        size_t pos = 0;
+        while ((pos = copy.find(search, pos)) != std::string::npos) {
+            copy.replace(pos, search.length(), replace);
+            pos += replace.length();
+        }
+        return std::string(copy);
+    }
+
+    static std::wstring Replace(const std::wstring& subject, const std::wstring& search, const std::wstring& replace)
+    {
+        std::wstring copy = subject;
+        size_t pos = 0;
+        while ((pos = copy.find(search, pos)) != std::wstring::npos) {
+            copy.replace(pos, search.length(), replace);
+            pos += replace.length();
+        }
+        return std::wstring(copy);
+    }
+};
+
+class File {
+public:
+    static bool Exists(const std::string& filePath)
+    {
+        return std::filesystem::exists(filePath);
+    }
+
+    static bool CreateDirectoryByPath(const std::string& path)
+    {
+        return std::filesystem::create_directories(path);
+    }
+
+    static std::string GetDirectoryPath(const std::string& filePath)
+    {
+        std::filesystem::path p(filePath);
+        std::filesystem::path parent = p.parent_path();
+        return parent.string();
     }
 };
 
