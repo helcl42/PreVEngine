@@ -334,80 +334,80 @@ private:
         return image;
     }
 
-    std::shared_ptr<ImageBuffer> CreateImageBuffer(Allocator& allocator, const std::shared_ptr<Image>& image, const bool repeatAddressMode) const
+    std::unique_ptr<ImageBuffer> CreateImageBuffer(Allocator& allocator, const std::shared_ptr<Image>& image, const bool repeatAddressMode) const
     {
         const VkExtent2D imageExtent = { image->GetWidth(), image->GetHeight() };
 
-        std::shared_ptr<ImageBuffer> imageBuffer = std::make_shared<ImageBuffer>(allocator);
+        auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
         imageBuffer->Create(ImageBufferCreateInfo{ imageExtent, VK_FORMAT_R8G8B8A8_UNORM, true, VK_IMAGE_VIEW_TYPE_2D, 1, repeatAddressMode ? VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT : VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, image->GetBuffer() });
 
         return imageBuffer;
     }
 
-    std::shared_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& textureFilename, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
+    std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& textureFilename, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
     {
-        std::shared_ptr<Image> image = CreateImage(textureFilename);
+        auto image = CreateImage(textureFilename);
 
-        std::shared_ptr<ImageBuffer> imageBuffer = CreateImageBuffer(allocator, image, repeatAddressMode);
+        auto imageBuffer = CreateImageBuffer(allocator, image, repeatAddressMode);
 
-        return std::make_shared<Material>(image, imageBuffer, shineDamper, reflectivity);
+        return std::make_unique<Material>(image, std::move(imageBuffer), shineDamper, reflectivity);
     }
 
-    std::shared_ptr<IModel> CreateModel(Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const
+    std::unique_ptr<IModel> CreateModel(Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const
     {
-        std::shared_ptr<VBO> vertexBuffer = std::make_shared<VBO>(allocator);
+        auto vertexBuffer = std::make_shared<VBO>(allocator);
         vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertextLayout().GetStride());
 
-        std::shared_ptr<IBO> indexBuffer = std::make_shared<IBO>(allocator);
+        auto indexBuffer = std::make_shared<IBO>(allocator);
         indexBuffer->Data(mesh->GerIndices().data(), (uint32_t)mesh->GerIndices().size());
 
-        return std::make_shared<Model>(mesh, vertexBuffer, indexBuffer);
+        return std::make_unique<Model>(mesh, vertexBuffer, indexBuffer);
     }
 
 public:
     std::shared_ptr<IRenderComponent> CreateCubeRenderComponent(Allocator& allocator, const std::string& textureFilename, const bool castsShadows, const bool isCastedByShadows) const
     {
-        std::shared_ptr<IMaterial> material = CreateMaterial(allocator, textureFilename, false, 10.0f, 1.0f);
+        auto material = CreateMaterial(allocator, textureFilename, false, 10.0f, 1.0f);
 
-        std::shared_ptr<IMesh> mesh = std::make_shared<CubeMesh>();
-        std::shared_ptr<IModel> model = CreateModel(allocator, mesh);
+        auto mesh = std::make_shared<CubeMesh>();
+        auto model = CreateModel(allocator, std::move(mesh));
 
-        return std::make_shared<DefaultRenderComponent>(model, material, castsShadows, isCastedByShadows);
+        return std::make_shared<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
     }
 
     std::shared_ptr<IRenderComponent> CreatePlaneRenderComponent(Allocator& allocator, const std::string& textureFilename, const bool castsShadows, const bool isCastedByShadows) const
     {
-        std::shared_ptr<IMaterial> material = CreateMaterial(allocator, textureFilename, true, 2.0f, 0.3f);
+        auto material = CreateMaterial(allocator, textureFilename, true, 2.0f, 0.3f);
 
-        std::shared_ptr<IMesh> mesh = std::make_shared<PlaneMesh>(40.0f, 40.0f, 1, 1, 10, 10);
-        std::shared_ptr<IModel> model = CreateModel(allocator, mesh);
+        auto mesh = std::make_shared<PlaneMesh>(40.0f, 40.0f, 1, 1, 10, 10);
+        auto model = CreateModel(allocator, std::move(mesh));
 
-        return std::make_shared<DefaultRenderComponent>(model, material, castsShadows, isCastedByShadows);
+        return std::make_shared<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
     }
 
     std::shared_ptr<IRenderComponent> CreateModelRenderComponent(Allocator& allocator, const std::string& modelPath, const std::string& textureFilename, const bool castsShadows, const bool isCastedByShadows) const
     {
-        std::shared_ptr<IMaterial> material = CreateMaterial(allocator, textureFilename, true, 2.0f, 0.3f);
+        auto material = CreateMaterial(allocator, textureFilename, true, 2.0f, 0.3f);
 
         MeshFactory meshFactory{};
-        std::shared_ptr<IMesh> mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION });
-        std::shared_ptr<IModel> model = CreateModel(allocator, mesh);
+        auto mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION });
+        auto model = CreateModel(allocator, std::move(mesh));
 
-        return std::make_shared<DefaultRenderComponent>(model, material, castsShadows, isCastedByShadows);
+        return std::make_shared<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
     }
 
     std::shared_ptr<IAnimationRenderComponent> CreateAnimatedModelRenderComponent(Allocator& allocator, const std::string& modelPath, const std::string& textureFilename, const bool castsShadows, const bool isCastedByShadows) const
     {
-        std::shared_ptr<IMaterial> material = CreateMaterial(allocator, textureFilename, true, 2.0f, 0.3f);
+        auto material = CreateMaterial(allocator, textureFilename, true, 2.0f, 0.3f);
 
         MeshFactory meshFactory{};
-        std::shared_ptr<IMesh> mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION });
-        std::shared_ptr<IModel> model = CreateModel(allocator, mesh);
+        auto mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION });
+        auto model = CreateModel(allocator, std::move(mesh));
 
         AnimationFactory animationFactory{};
-        std::shared_ptr<IAnimation> animation = animationFactory.CreateAnimation(modelPath);
+        auto animation = animationFactory.CreateAnimation(modelPath);
 
-        return std::make_shared<DefaultAnimationRenderComponent>(model, material, animation, castsShadows, isCastedByShadows);
+        return std::make_shared<DefaultAnimationRenderComponent>(std::move(model), std::move(material), std::move(animation), castsShadows, isCastedByShadows);
     }
 };
 
@@ -618,9 +618,9 @@ public:
 
 class CameraComponentFactory {
 public:
-    std::shared_ptr<ICameraComponent> Create(const glm::quat& orient, const glm::vec3& pos) const
+    std::unique_ptr<ICameraComponent> Create(const glm::quat& orient, const glm::vec3& pos) const
     {
-        return std::make_shared<CameraComponent>(orient, pos);
+        return std::make_unique<CameraComponent>(orient, pos);
     }
 };
 
@@ -745,14 +745,14 @@ public:
 
 class LightComponentFactory {
 public:
-    std::shared_ptr<ILightComponent> CreateLightCompoennt(const glm::vec3& position) const
+    std::unique_ptr<ILightComponent> CreateLightCompoennt(const glm::vec3& position) const
     {
-        return std::make_shared<LightComponent>(position);
+        return std::make_unique<LightComponent>(position);
     }
 
-    std::shared_ptr<ILightComponent> CreateLightCompoennt(const glm::vec3& position, const glm::vec3& color, const glm::vec3& attenuation) const
+    std::unique_ptr<ILightComponent> CreateLightCompoennt(const glm::vec3& position, const glm::vec3& color, const glm::vec3& attenuation) const
     {
-        return std::make_shared<LightComponent>(position, color, attenuation);
+        return std::make_unique<LightComponent>(position, color, attenuation);
     }
 };
 
@@ -1076,9 +1076,9 @@ const float ShadowsComponent::CASCADES_SPLIT_LAMBDA = 0.86f;
 
 class ShadowsComponentFactory {
 public:
-    std::shared_ptr<IShadowsComponent> Create() const
+    std::unique_ptr<IShadowsComponent> Create() const
     {
-        return std::make_shared<ShadowsComponent>();
+        return std::make_unique<ShadowsComponent>();
     }
 };
 
@@ -2724,12 +2724,12 @@ public:
         shadows->SetTags({ TAG_SHADOW });
         AddChild(shadows);
 
-        //auto freeCamera = std::make_shared<Camera>();
+        auto freeCamera = std::make_shared<Camera>();
         //freeCamera->SetTags({ TAG_MAIN_CAMERA });
-        //AddChild(freeCamera);
+        AddChild(freeCamera);
 
-        //auto camRobot = std::make_shared<CubeRobot>(glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), "texture.jpg");
-        //freeCamera->AddChild(camRobot);
+        auto camRobot = std::make_shared<CubeRobot>(glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), "texture.jpg");
+        freeCamera->AddChild(camRobot);
 
         const int32_t MAX_GENERATED_HEIGHT = 1;
         const float DISTANCE = 40.0f;

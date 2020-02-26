@@ -169,7 +169,7 @@ namespace PreVEngine
 #endif
 	}
 
-	std::shared_ptr<Image> ImageFactory::CreateImage(const std::string& filename, bool flipVertically) const
+	std::unique_ptr<Image> ImageFactory::CreateImage(const std::string& filename, bool flipVertically) const
 	{
 		if (!FileExists(filename))
 		{
@@ -189,16 +189,16 @@ namespace PreVEngine
 
 		LOGI("Load image: %s (%dx%d)\n", filename.c_str(), w, h);
 
-		std::shared_ptr<Image> image = std::make_shared<Image>(w, h, imageBytes);
+		auto image = std::make_unique<Image>(w, h, imageBytes);
 
 		stbi_image_free(imageBytes);
 
 		return image;
 	}
 
-	std::shared_ptr<Image> ImageFactory::CreateImageWithPattern(const uint32_t width, const uint32_t height, const bool gradient, const int checkers) const
+	std::unique_ptr<Image> ImageFactory::CreateImageWithPattern(const uint32_t width, const uint32_t height, const bool gradient, const int checkers) const
 	{
-		std::shared_ptr<Image> image = std::make_shared<Image>(width, height);
+		auto image = std::make_unique<Image>(width, height);
 		if (image == nullptr)
 		{
 			return image;
@@ -232,9 +232,9 @@ namespace PreVEngine
 		return image;
 	}
 
-	std::shared_ptr<Image> ImageFactory::CreateImageWithColor(const uint32_t width, const uint32_t height, const RGBA& color) const
+	std::unique_ptr<Image> ImageFactory::CreateImageWithColor(const uint32_t width, const uint32_t height, const RGBA& color) const
 	{
-		std::shared_ptr<Image> image = std::make_shared<Image>(width, height);
+		auto image = std::make_unique<Image>(width, height);
 		if (image == nullptr)
 		{
 			return image;

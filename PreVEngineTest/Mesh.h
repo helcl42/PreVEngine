@@ -658,10 +658,10 @@ public:
 
 class AnimationFactory {
 public:
-    std::shared_ptr<IAnimation> CreateAnimation(const std::string& modelPath) const
+    std::unique_ptr<IAnimation> CreateAnimation(const std::string& modelPath) const
     {
         // TODO copy asiimp animations to some local structure to avoid storing importer and whole scene !!!
-        std::shared_ptr<Animation> animation = std::make_shared<Animation>();
+        std::unique_ptr<Animation> animation = std::make_unique<Animation>();
 
         AssimpSceneLoader assimpSceneLoader{};
         if(!assimpSceneLoader.LoadScene(modelPath, &animation->m_importer, &animation->m_scene)) {
@@ -701,7 +701,7 @@ public:
     };
 
 public:
-    std::shared_ptr<IMesh> CreateMesh(const std::string& modelPath, const FlagSet<AssimpMeshFactoryCreateFlags>& flags = FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{}) const
+    std::unique_ptr<IMesh> CreateMesh(const std::string& modelPath, const FlagSet<AssimpMeshFactoryCreateFlags>& flags = FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{}) const
     {
         Assimp::Importer importer{};
         const aiScene* scene;
@@ -711,11 +711,10 @@ public:
             throw std::runtime_error("Could not load model: " + modelPath);
         }
 
-        std::shared_ptr<ModelMesh> mesh = std::make_shared<ModelMesh>();
+        std::unique_ptr<ModelMesh> mesh = std::make_unique<ModelMesh>();
 
         mesh->m_vertexLayout = GetVertexLayout(flags);
-
-        ReadMeshes(*scene, flags, mesh);
+        mesh->m_verticesCount = ReadMeshes(*scene, flags, mesh->m_vertexDataBuffer, mesh->m_indices);
 
         return mesh;
     }
@@ -734,57 +733,55 @@ private:
         }
     }
 
-    void ReadIndices(const aiMesh& mesh, std::shared_ptr<ModelMesh>& inOutMesh) const
+    void ReadIndices(const aiMesh& mesh, std::vector<uint32_t>& inOutIndices) const
     {
         for (unsigned int i = 0; i < mesh.mNumFaces; i++) {
             const aiFace& face = mesh.mFaces[i];
             for (unsigned int k = 0; k < face.mNumIndices; k++) {
-                inOutMesh->m_indices.emplace_back(face.mIndices[k]);
+                inOutIndices.emplace_back(face.mIndices[k]);
             }
         }
     }
 
-    void AddDefaultVertexData(const aiMesh& mesh, const unsigned int vertexIndex, std::shared_ptr<ModelMesh>& inOutMesh) const
+    void AddDefaultVertexData(const aiMesh& mesh, const unsigned int vertexIndex, VertexDataBuffer& inOutVertexBuffer) const
     {
         glm::vec3 pos = glm::make_vec3(&mesh.mVertices[vertexIndex].x);
         glm::vec2 uv = mesh.mTextureCoords[0] != nullptr ? glm::make_vec3(&mesh.mTextureCoords[0][vertexIndex].x) : glm::vec2(1.0f, 1.0f);
         glm::vec3 normal = mesh.HasNormals() ? glm::make_vec3(&mesh.mNormals[vertexIndex].x) : glm::vec3(0.0f, 1.0f, 0.0f);
 
-        inOutMesh->m_vertexDataBuffer.Add(&pos, sizeof(glm::vec3));
-        inOutMesh->m_vertexDataBuffer.Add(&uv, sizeof(glm::vec2));
-        inOutMesh->m_vertexDataBuffer.Add(&normal, sizeof(glm::vec3));
+        inOutVertexBuffer.Add(&pos, sizeof(glm::vec3));
+        inOutVertexBuffer.Add(&uv, sizeof(glm::vec2));
+        inOutVertexBuffer.Add(&normal, sizeof(glm::vec3));
     }
 
-    void AddAnimationData(const std::vector<VertexBoneData>& vertexBoneData, const unsigned int vertexIndex, std::shared_ptr<ModelMesh>& inOutMesh) const
+    void AddAnimationData(const std::vector<VertexBoneData>& vertexBoneData, const unsigned int vertexIndex, VertexDataBuffer& inOutVertexBuffer) const
     {
         const auto& singleVertexBoneData = vertexBoneData[vertexIndex];
 
-        inOutMesh->m_vertexDataBuffer.Add(&singleVertexBoneData.ids, static_cast<unsigned int>(ArraySize(singleVertexBoneData.ids) * sizeof(unsigned int)));
-        inOutMesh->m_vertexDataBuffer.Add(&singleVertexBoneData.weights, static_cast<unsigned int>(ArraySize(singleVertexBoneData.weights) * sizeof(float)));
+        inOutVertexBuffer.Add(&singleVertexBoneData.ids, static_cast<unsigned int>(ArraySize(singleVertexBoneData.ids) * sizeof(unsigned int)));
+        inOutVertexBuffer.Add(&singleVertexBoneData.weights, static_cast<unsigned int>(ArraySize(singleVertexBoneData.weights) * sizeof(float)));
     }
 
-    void AddBumpMappingData(const aiMesh& mesh, const unsigned int vertexIndex, std::shared_ptr<ModelMesh>& inOutMesh) const
+    void AddBumpMappingData(const aiMesh& mesh, const unsigned int vertexIndex, VertexDataBuffer& inOutVertexBuffer) const
     {
         glm::vec3 tangent = glm::make_vec3(&mesh.mTangents[vertexIndex].x);
         glm::vec3 biTangent = glm::make_vec3(&mesh.mBitangents[vertexIndex].x);
-        inOutMesh->m_vertexDataBuffer.Add(&tangent, sizeof(glm::vec3));
-        inOutMesh->m_vertexDataBuffer.Add(&biTangent, sizeof(glm::vec3));
+        inOutVertexBuffer.Add(&tangent, sizeof(glm::vec3));
+        inOutVertexBuffer.Add(&biTangent, sizeof(glm::vec3));
     }
 
-    void ReadVertexData(const aiMesh& mesh, const FlagSet<AssimpMeshFactoryCreateFlags>& flags, const std::vector<VertexBoneData>& vertexBoneData, const unsigned int vertexBaseOffset, std::shared_ptr<ModelMesh>& inOutMesh) const
+    void ReadVertexData(const aiMesh& mesh, const FlagSet<AssimpMeshFactoryCreateFlags>& flags, const std::vector<VertexBoneData>& vertexBoneData, const unsigned int vertexBaseOffset, VertexDataBuffer& inOutVertexBuffer) const
     {
         for (unsigned int vertexIndex = 0; vertexIndex < mesh.mNumVertices; vertexIndex++) {
-            AddDefaultVertexData(mesh, vertexIndex, inOutMesh);
+            AddDefaultVertexData(mesh, vertexIndex, inOutVertexBuffer);
 
             if (flags & AssimpMeshFactoryCreateFlags::ANIMATION) {
-                AddAnimationData(vertexBoneData, vertexBaseOffset + vertexIndex, inOutMesh);
+                AddAnimationData(vertexBoneData, vertexBaseOffset + vertexIndex, inOutVertexBuffer);
             }
 
             if (flags & AssimpMeshFactoryCreateFlags::BUMP_MAPPING) {
-                AddBumpMappingData(mesh, vertexIndex, inOutMesh);
+                AddBumpMappingData(mesh, vertexIndex, inOutVertexBuffer);
             }
-
-            inOutMesh->m_verticesCount++;
         }
     }
 
@@ -822,11 +819,11 @@ private:
         return vertexCount;
     }
 
-    void ReadMeshes(const aiScene& scene, const FlagSet<AssimpMeshFactoryCreateFlags>& flags, std::shared_ptr<ModelMesh>& inOutMesh) const
+    unsigned int ReadMeshes(const aiScene& scene, const FlagSet<AssimpMeshFactoryCreateFlags>& flags, VertexDataBuffer& inOutVertexBuffer, std::vector<uint32_t>& inOutIndices) const
     {
+        unsigned int allVertexCount = GetAllVertexCount(scene);
         std::vector<VertexBoneData> vertexBoneData;
         if (flags & AssimpMeshFactoryCreateFlags::ANIMATION) {
-            unsigned int allVertexCount = GetAllVertexCount(scene);
             vertexBoneData.resize(allVertexCount);
 
             unsigned int vertexBaseOffset = 0;
@@ -843,10 +840,12 @@ private:
         unsigned int vertexBaseOffset = 0;
         for (unsigned int meshIndex = 0; meshIndex < scene.mNumMeshes; meshIndex++) {
             const aiMesh& assMesh = *scene.mMeshes[meshIndex];
-            ReadVertexData(assMesh, flags, vertexBoneData, vertexBaseOffset, inOutMesh);
-            ReadIndices(assMesh, inOutMesh);
+            ReadVertexData(assMesh, flags, vertexBoneData, vertexBaseOffset, inOutVertexBuffer);
+            ReadIndices(assMesh, inOutIndices);
             vertexBaseOffset += assMesh.mNumVertices;
         }
+
+        return allVertexCount;
     }
 };
 

@@ -132,7 +132,7 @@ private:
 
 public:
     template <typename ShaderType>
-    std::shared_ptr<Shader> CreateShaderFromFiles(const VkDevice device, const std::map<VkShaderStageFlagBits, std::string>& stagePaths) const
+    std::unique_ptr<Shader> CreateShaderFromFiles(const VkDevice device, const std::map<VkShaderStageFlagBits, std::string>& stagePaths) const
     {
         std::map<VkShaderStageFlagBits, std::vector<char> > byteCodes;
         for (const auto& stagePath : stagePaths) {
@@ -144,9 +144,9 @@ public:
     }
 
     template <typename ShaderType>
-    std::shared_ptr<Shader> CreateShaderFromByteCodes(const VkDevice device, const std::map<VkShaderStageFlagBits, std::vector<char> >& byteCodes) const
+    std::unique_ptr<Shader> CreateShaderFromByteCodes(const VkDevice device, const std::map<VkShaderStageFlagBits, std::vector<char> >& byteCodes) const
     {
-        std::shared_ptr<Shader> shaders = std::make_shared<ShaderType>(device);
+        auto shaders = std::make_unique<ShaderType>(device);
 
         for (const auto& byteCode : byteCodes) {
             shaders->AddShaderModule(byteCode.first, byteCode.second);
