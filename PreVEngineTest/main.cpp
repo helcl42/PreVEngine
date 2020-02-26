@@ -1418,9 +1418,12 @@ public:
             m_pitchDiff = 0.0f;
         }
 
+        m_cameraComponent->Update(deltaTime);
+
         const glm::vec3 cameraPosition = GetPosition() + (-m_cameraComponent->GetForwardDirection() * 45.0f) + glm::vec3(0.0f, 5.0f, 0.0f);
         m_cameraComponent->SetPosition(cameraPosition);
-        m_cameraComponent->Update(deltaTime);
+
+        m_cameraComponent->Update(0.0f); // TODO -> revise camera lifecycle ??
 
         AbstractSceneNode::Update(deltaTime);
     }
