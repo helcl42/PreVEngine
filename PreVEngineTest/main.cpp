@@ -566,14 +566,14 @@ public:
 
     void AddPitch(float amountInDegrees) override
     {
-        m_orientationDelta *= glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(amountInDegrees), m_rightDirection));
+        m_orientationDelta *= glm::angleAxis(glm::radians(amountInDegrees), m_rightDirection);
         m_orientationChanged = true;
         Update();
     }
 
     void AddYaw(float amountInDegrees) override
     {
-        m_orientationDelta *= glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(amountInDegrees), m_upDirection));
+        m_orientationDelta *= glm::angleAxis(glm::radians(amountInDegrees), m_upDirection);
         m_orientationChanged = true;
         Update();
     }
