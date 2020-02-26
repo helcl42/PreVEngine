@@ -418,8 +418,6 @@ std::map<std::string, std::shared_ptr<Image> > RenderComponentFactory::s_imagesC
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ICameraComponent {
 public:
-    virtual void Update(float deltaTime) = 0;
-
     virtual const glm::mat4& LookAt() const = 0;
 
     virtual void Reset() = 0;
@@ -483,6 +481,10 @@ private:
 
     ViewFrustum m_viewFrustum{ 45.0f, 0.1f, 1000.0f };
 
+    bool m_orientationChanged{ false };
+
+    bool m_positionChanged{ false };
+
 public:
     CameraComponent(const glm::quat initialOrientation, const glm::vec3& initialPosition)
         : m_initialOrientation(initialOrientation)
@@ -496,14 +498,14 @@ public:
     }
 
 private:
-    void UpdatePosition(float deltaTime)
+    void UpdatePosition()
     {
         m_position += m_positionDelta;
 
         m_positionDelta = glm::vec3(0.0f, 0.0f, 0.0f);
     }
 
-    void UpdateOrientation(float deltaTime)
+    void UpdateOrientation()
     {
         //add the two quaternions
         glm::quat orientation = glm::normalize(m_orientationDelta);
@@ -517,17 +519,27 @@ private:
         // reset current iteration deltas
         m_orientationDelta = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
     }
-
-public:
-    void Update(float deltaTime) override
+    
+    void Update()
     {
-        UpdateOrientation(deltaTime);
-        UpdatePosition(deltaTime);
+        if (m_orientationChanged) {
+            UpdateOrientation();
+        }
 
-        m_viewMatrix = glm::lookAt(m_position, m_position + m_forwardDirection, m_upDirection);
-        m_orientation = glm::quat_cast(m_viewMatrix);
+        if (m_positionChanged) {
+            UpdatePosition();
+        }
+
+        if (m_orientationChanged || m_positionChanged) {
+            m_viewMatrix = glm::lookAt(m_position, m_position + m_forwardDirection, m_upDirection);
+            m_orientation = glm::quat_cast(m_viewMatrix);
+        }
+
+        m_orientationChanged = false;
+        m_positionChanged = false;
     }
 
+public:
     const glm::mat4& LookAt() const override
     {
         return m_viewMatrix;
@@ -535,8 +547,6 @@ public:
 
     void Reset() override
     {
-        std::cout << "Resseting camera.." << std::endl;
-
         m_position = m_initialPosition;
         m_orientation = m_initialOrientation;
         m_forwardDirection = m_initialOrientation * m_defaultForwardDirection;
@@ -548,36 +558,52 @@ public:
         m_viewMatrix = glm::mat4(1.0f);
 
         m_prevTouchPosition = glm::vec2(0.0f, 0.0f);
+
+        m_positionChanged = true;
+        m_orientationChanged = true;
+        Update();
     }
 
     void AddPitch(float amountInDegrees) override
     {
         m_orientationDelta *= glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(amountInDegrees), m_rightDirection));
+        m_orientationChanged = true;
+        Update();
     }
 
     void AddYaw(float amountInDegrees) override
     {
         m_orientationDelta *= glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(amountInDegrees), m_upDirection));
+        m_orientationChanged = true;
+        Update();
     }
 
     void AddOrientation(const glm::quat& orientationDiff) override
     {
         m_orientationDelta *= orientationDiff;
+        m_orientationChanged = true;
+        Update();
     }
 
     void SetOrientation(const glm::quat& orientation) override
     {
         m_forwardDirection = glm::normalize(orientation * m_defaultForwardDirection);
+        m_orientationChanged = true;
+        Update();
     }
 
     void AddPosition(const glm::vec3& positionDiff) override
     {
         m_positionDelta = positionDiff;
+        m_positionChanged = true;
+        Update();
     }
 
     void SetPosition(const glm::vec3& position) override
     {
         m_position = position;
+        m_positionChanged = true;
+        Update();
     }
 
     glm::vec3 GetForwardDirection() const override
@@ -1418,12 +1444,8 @@ public:
             m_pitchDiff = 0.0f;
         }
 
-        m_cameraComponent->Update(deltaTime);
-
         const glm::vec3 cameraPosition = GetPosition() + (-m_cameraComponent->GetForwardDirection() * 45.0f) + glm::vec3(0.0f, 5.0f, 0.0f);
         m_cameraComponent->SetPosition(cameraPosition);
-
-        m_cameraComponent->Update(0.0f); // TODO -> revise camera lifecycle ??
 
         AbstractSceneNode::Update(deltaTime);
     }
@@ -1621,8 +1643,6 @@ public:
 #endif
 
         m_cameraComponent->AddPosition(positionDelta);
-
-        m_cameraComponent->Update(deltaTime);
 
         glm::mat4 viewMatrix = m_cameraComponent->LookAt();
         glm::mat4 cameraTransformInWorldSpace = glm::inverse(viewMatrix);
