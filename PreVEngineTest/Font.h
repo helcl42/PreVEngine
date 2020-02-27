@@ -838,4 +838,12 @@ private:
     }
 };
 
+class IFontRenderComponent : public IBasicRenderComponent {
+public:
+    virtual std::shared_ptr<FontMetadata> GetFontMetadata() const = 0;
+
+public:
+    virtual ~IFontRenderComponent() = default;
+};
+
 #endif // !__FONT_H__

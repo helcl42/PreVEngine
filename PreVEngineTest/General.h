@@ -21,6 +21,7 @@ static const uint32_t MAX_BONES_COUNT{ 100 };
 enum class SceneNodeFlags : uint64_t {
     HAS_RENDER_COMPONENT,
     HAS_ANIMATION_RENDER_COMPONENT,
+    HAS_TEXT_RENDER_COMPONENT,
     HAS_CAMERA_COMPONENT,
     HAS_SHADOWS_COMPONENT,
     HAS_LIGHT_COMPONENT,
@@ -331,7 +332,6 @@ public:
     virtual ~IRenderer() = default;
 };
 
-
 class IMesh {
 public:
     virtual const VertexLayout& GetVertextLayout() const = 0;
@@ -438,10 +438,16 @@ public:
     virtual float GetTime() const = 0;
 };
 
-class IRenderComponent {
+class IBasicRenderComponent {
 public:
     virtual std::shared_ptr<IModel> GetModel() const = 0;
 
+public:
+    virtual ~IBasicRenderComponent() = default;
+};
+
+class IRenderComponent : public IBasicRenderComponent {
+public:
     virtual std::shared_ptr<IMaterial> GetMaterial() const = 0;
 
     virtual bool CastsShadows() const = 0;

@@ -12,6 +12,7 @@
 #include <Shader.h>
 #include <Utils.h>
 
+#include "Font.h"
 #include "General.h"
 #include "Mesh.h"
 #include "Pipeline.h"
@@ -264,6 +265,33 @@ public:
     }
 };
 
+class DefaultFontRenderComponent : public IFontRenderComponent {
+private:
+    std::shared_ptr<IModel> m_model;
+
+    std::shared_ptr<FontMetadata> m_fontMetaData;
+
+public:
+    DefaultFontRenderComponent(const std::shared_ptr<IModel>& model, const std::shared_ptr<FontMetadata>& fontMetaData)
+        : m_model(model)
+        , m_fontMetaData(fontMetaData)
+    {
+    }
+
+    ~DefaultFontRenderComponent() = default;
+
+public:
+    std::shared_ptr<IModel> GetModel() const override
+    {
+        return m_model;
+    }
+
+    std::shared_ptr<FontMetadata> GetFontMetadata() const override
+    {
+        return m_fontMetaData;
+    }
+};
+
 class DefaultAnimationRenderComponent : public IAnimationRenderComponent {
 private:
     std::shared_ptr<IModel> m_model;
@@ -365,27 +393,27 @@ private:
     }
 
 public:
-    std::shared_ptr<IRenderComponent> CreateCubeRenderComponent(Allocator& allocator, const std::string& textureFilename, const bool castsShadows, const bool isCastedByShadows) const
+    std::unique_ptr<IRenderComponent> CreateCubeRenderComponent(Allocator& allocator, const std::string& textureFilename, const bool castsShadows, const bool isCastedByShadows) const
     {
         auto material = CreateMaterial(allocator, textureFilename, false, 10.0f, 1.0f);
 
         auto mesh = std::make_shared<CubeMesh>();
         auto model = CreateModel(allocator, std::move(mesh));
 
-        return std::make_shared<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
+        return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
     }
 
-    std::shared_ptr<IRenderComponent> CreatePlaneRenderComponent(Allocator& allocator, const std::string& textureFilename, const bool castsShadows, const bool isCastedByShadows) const
+    std::unique_ptr<IRenderComponent> CreatePlaneRenderComponent(Allocator& allocator, const std::string& textureFilename, const bool castsShadows, const bool isCastedByShadows) const
     {
         auto material = CreateMaterial(allocator, textureFilename, true, 2.0f, 0.3f);
 
         auto mesh = std::make_shared<PlaneMesh>(40.0f, 40.0f, 1, 1, 10, 10);
         auto model = CreateModel(allocator, std::move(mesh));
 
-        return std::make_shared<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
+        return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
     }
 
-    std::shared_ptr<IRenderComponent> CreateModelRenderComponent(Allocator& allocator, const std::string& modelPath, const std::string& textureFilename, const bool castsShadows, const bool isCastedByShadows) const
+    std::unique_ptr<IRenderComponent> CreateModelRenderComponent(Allocator& allocator, const std::string& modelPath, const std::string& textureFilename, const bool castsShadows, const bool isCastedByShadows) const
     {
         auto material = CreateMaterial(allocator, textureFilename, true, 2.0f, 0.3f);
 
@@ -393,10 +421,10 @@ public:
         auto mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION });
         auto model = CreateModel(allocator, std::move(mesh));
 
-        return std::make_shared<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
+        return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
     }
 
-    std::shared_ptr<IAnimationRenderComponent> CreateAnimatedModelRenderComponent(Allocator& allocator, const std::string& modelPath, const std::string& textureFilename, const bool castsShadows, const bool isCastedByShadows) const
+    std::unique_ptr<IAnimationRenderComponent> CreateAnimatedModelRenderComponent(Allocator& allocator, const std::string& modelPath, const std::string& textureFilename, const bool castsShadows, const bool isCastedByShadows) const
     {
         auto material = CreateMaterial(allocator, textureFilename, true, 2.0f, 0.3f);
 
@@ -407,7 +435,15 @@ public:
         AnimationFactory animationFactory{};
         auto animation = animationFactory.CreateAnimation(modelPath);
 
-        return std::make_shared<DefaultAnimationRenderComponent>(std::move(model), std::move(material), std::move(animation), castsShadows, isCastedByShadows);
+        return std::make_unique<DefaultAnimationRenderComponent>(std::move(model), std::move(material), std::move(animation), castsShadows, isCastedByShadows);
+    }
+
+    std::unique_ptr<IFontRenderComponent> CreateFontRenderComponent(const std::string& fontPaht) const
+    {
+        FontMetadataFactory fontFactory{};
+        auto fontMetaData = fontFactory.CreateFontMetadata(fontPaht);
+
+        return std::make_unique<DefaultFontRenderComponent>(nullptr, std::move(fontMetaData)); // null for model !!?? -> it will be created at runtime
     }
 };
 
@@ -422,13 +458,15 @@ public:
 
     virtual void Reset() = 0;
 
-    virtual void AddPitch(float amountInDegrees) = 0;
+    virtual void AddPitch(const float amountInDegrees) = 0;
 
-    virtual void AddYaw(float amountInDegrees) = 0;
+    virtual void AddYaw(const float amountInDegrees) = 0;
 
     virtual void AddOrientation(const glm::quat& orientationDiff) = 0;
 
     virtual void SetOrientation(const glm::quat& orientation) = 0;
+
+    virtual void SetOrientation(const float pitch, const float yaw) = 0;
 
     virtual void AddPosition(const glm::vec3& positionDiff) = 0;
 
@@ -519,7 +557,7 @@ private:
         // reset current iteration deltas
         m_orientationDelta = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
     }
-    
+
     void Update()
     {
         if (m_orientationChanged) {
@@ -590,6 +628,13 @@ public:
         m_forwardDirection = glm::normalize(orientation * m_defaultForwardDirection);
         m_orientationChanged = true;
         Update();
+    }
+
+    void SetOrientation(const float pitchAmountInDegrees, const float yawAmountInDeregrees)
+    {
+        glm::quat newOrientation = glm::angleAxis(glm::radians(pitchAmountInDegrees), m_rightDirection);
+        newOrientation *= glm::angleAxis(glm::radians(yawAmountInDeregrees), m_upDirection);
+        SetOrientation(newOrientation);
     }
 
     void AddPosition(const glm::vec3& positionDiff) override
@@ -1134,7 +1179,7 @@ public:
         RenderComponentFactory renderComponentFactory{};
         auto cubeComponent = renderComponentFactory.CreateCubeRenderComponent(*allocator, m_texturePath, true, true);
 
-        ComponentRepository<IRenderComponent>::GetInstance().Add(m_id, cubeComponent);
+        ComponentRepository<IRenderComponent>::GetInstance().Add(m_id, std::move(cubeComponent));
 
         AbstractSceneNode::Init();
     }
@@ -1305,7 +1350,7 @@ public:
         RenderComponentFactory renderComponentFactory{};
         auto renderComponent = renderComponentFactory.CreatePlaneRenderComponent(*allocator, m_texturePath, false, true);
 
-        ComponentRepository<IRenderComponent>::GetInstance().Add(m_id, renderComponent);
+        ComponentRepository<IRenderComponent>::GetInstance().Add(m_id, std::move(renderComponent));
 
         AbstractSceneNode::Init();
     }
@@ -1499,7 +1544,7 @@ public:
     void operator()(const TouchEvent& touchEvent)
     {
 #if defined(__ANDROID__)
-        if(touchEvent.action == TouchActionType::DOWN) {
+        if (touchEvent.action == TouchActionType::DOWN) {
             const float MAX_RATIO_FOR_JUMP_CONTROL = 0.25f;
             const auto MAX_X = touchEvent.extent.x * MAX_RATIO_FOR_JUMP_CONTROL;
             const auto MAX_Y = touchEvent.extent.y * MAX_RATIO_FOR_JUMP_CONTROL;
@@ -2673,6 +2718,137 @@ public:
             vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
             vkCmdDrawIndexed(renderContext.defaultCommandBuffer, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+        }
+
+        for (auto child : node->GetChildren()) {
+            Render(renderContext, child, renderContextUserData);
+        }
+    }
+
+    void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void ShutDown() override
+    {
+        m_shader->ShutDown();
+
+        m_pipeline->ShutDown();
+    }
+};
+
+class FontRenderer : public IRenderer<DefaultRenderContextUserData> {
+private:
+    struct alignas(16) UniformsVS
+    {
+        alignas(16) glm::vec4 translation;
+    };
+
+    struct alignas(16) UniformsFS
+    {
+        alignas(16) glm::vec4 color;
+
+        alignas(16) float width;
+
+        alignas(16) float edge;
+
+        alignas(16) float borderWidth;
+
+        alignas(16) float borderEdge;
+
+        alignas(16) uint32_t hasEffect;
+
+        alignas(16) glm::vec4 outlineColor;
+
+        alignas(16) glm::vec4 outlineOffset;
+    };
+
+private:
+    std::shared_ptr<RenderPass> m_renderPass;
+
+private:
+    std::shared_ptr<Shader> m_shader;
+
+    std::shared_ptr<IGraphicsPipeline> m_pipeline;
+
+    std::shared_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+
+    std::shared_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+
+public:
+    FontRenderer(const std::shared_ptr<RenderPass>& renderPass)
+        : m_renderPass(renderPass)
+    {
+    }
+
+    virtual ~FontRenderer()
+    {
+    }
+
+public:
+    void Init() override
+    {
+        auto device = DeviceProvider::GetInstance().GetDevice();
+        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+
+        ShaderFactory shaderFactory;
+        m_shader = shaderFactory.CreateShaderFromFiles<FonttShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "shaders/fonts_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/fonts_frag.spv" } });
+        m_shader->AdjustDescriptorPoolCapacity(10000);
+
+        printf("Fonts Shader created\n");
+
+        m_pipeline = std::make_shared<FontPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline->Init();
+
+        printf("Fonts Pipeline created\n");
+
+        m_uniformsPoolVS = std::make_shared<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS->AdjustCapactity(10000);
+
+        m_uniformsPoolFS = std::make_shared<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS->AdjustCapactity(10000);
+    }
+
+    void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
+
+        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+    }
+
+    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TEXT_RENDER_COMPONENT })) {
+            const auto nodeFontRenderComponent = ComponentRepository<IFontRenderComponent>::GetInstance().Get(node->GetId());
+
+            // TODO - in every update regenerate model !!
+
+            auto uboVS = m_uniformsPoolVS->GetNext();
+            UniformsVS uniformsVS{};
+            uniformsVS.translation = glm::vec4(); // TODO
+            uboVS->Update(&uniformsVS);
+
+            auto uboFS = m_uniformsPoolFS->GetNext();
+            UniformsFS uniformsFS{};
+            uniformsFS.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f); // TODO
+            uboFS->Update(&uniformsFS);
+
+            m_shader->Bind("textureSampler", *nodeFontRenderComponent->GetFontMetadata()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            m_shader->Bind("uboVS", *uboVS);
+            m_shader->Bind("uboFS", *uboFS);
+
+            VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+            VkBuffer vertexBuffers[] = { *nodeFontRenderComponent->GetModel()->GetVertexBuffer() };
+            VkDeviceSize offsets[] = { 0 };
+
+            vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *nodeFontRenderComponent->GetModel()->GetIndexBuffer(), 0, nodeFontRenderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+            vkCmdDrawIndexed(renderContext.defaultCommandBuffer, nodeFontRenderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
         }
 
         for (auto child : node->GetChildren()) {
