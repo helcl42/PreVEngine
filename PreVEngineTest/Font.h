@@ -676,7 +676,7 @@ private:
 
 public:
     TextMesh(const std::vector<glm::vec2>& vertices, const std::vector<glm::vec2>& textureCoords, const std::vector<uint32_t>& indices)
-        : m_vertexLayout({ { VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC2 } })
+        : m_vertexLayout({ VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC2 })
         , m_verticesCount(static_cast<uint32_t>(vertices.size()))
         , m_indices(indices)
     {

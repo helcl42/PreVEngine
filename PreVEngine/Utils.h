@@ -80,7 +80,7 @@ public:
 
 class StringUtils {
 public:
-    static std::vector<std::string> StringUtils::Split(const std::string& s, const char delim)
+    static std::vector<std::string> Split(const std::string& s, const char delim)
     {
         std::vector<std::string> elems;
         std::istringstream ss(s);
@@ -91,7 +91,7 @@ public:
         return elems;
     }
 
-    static std::vector<std::wstring> StringUtils::Split(const std::wstring& s, const wchar_t delim)
+    static std::vector<std::wstring> Split(const std::wstring& s, const wchar_t delim)
     {
         std::vector<std::wstring> elems;
         std::wstringstream ss(s);
@@ -102,7 +102,7 @@ public:
         return elems;
     }
 
-    static std::vector<std::string> StringUtils::Split(const std::string& s, const std::string& t)
+    static std::vector<std::string> Split(const std::string& s, const std::string& t)
     {
         std::string copy = s;
         std::vector<std::string> res;
@@ -118,7 +118,7 @@ public:
         return res;
     }
 
-    static std::vector<std::wstring> StringUtils::Split(const std::wstring& s, const std::wstring& t)
+    static std::vector<std::wstring> Split(const std::wstring& s, const std::wstring& t)
     {
         std::wstring copy = s;
         std::vector<std::wstring> res;
