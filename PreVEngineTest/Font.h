@@ -808,7 +808,7 @@ private:
         const float properMaxX = (2 * maxX) - 1;
         const float properMaxY = (-2 * maxY) + 1;
 
-        AddQuadData(properX, properY, properMaxX, properMaxY, vertices);
+        AddQuadData(properX, 1.0f - properY, properMaxX, 1.0f - properMaxY, vertices);
     }
 
     void AddQuadData(const float x, const float y, const float maxX, const float maxY, std::vector<glm::vec2>& vertices) const
