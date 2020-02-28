@@ -14,11 +14,10 @@
 class Character;
 class Word;
 class TextLine;
-class TextMeshData;
-class TextMeshCreator;
-class BasicText;
-class TextMaster;
 class FontMetadata;
+class FontMetadataFactory;
+class TextMesh;
+class TextMeshFactory;
 
 class Character {
 private:
@@ -80,8 +79,6 @@ public:
         return m_xAdvance;
     }
 };
-
-class FontMetadataFactory;
 
 class FontMetadata {
 private:
@@ -787,9 +784,9 @@ private:
 
             for (auto word : line.GetWords()) {
                 for (auto letter : word.GetCharacters()) {
+                    AddIndices(vertices.size(), indices);
                     AddVerticesForCharacter(curserX, curserY, letter, text->GetFontSize(), vertices);
                     AddQuadData(letter.GetTextureCoords().x, letter.GetTextureCoords().y, letter.GetMaxTextureCoords().x, letter.GetMaxTextureCoords().y, textureCoords);
-                    AddIndices(indices);
                     curserX += letter.GetXAdvance() * text->GetFontSize();
                 }
                 curserX += fontMetaData->GetSpaceWidth() * text->GetFontSize();
@@ -828,19 +825,27 @@ private:
         }
     }
 
-    void AddIndices(std::vector<uint32_t>& inOutIndices) const
+    void AddIndices(const size_t verticesCount, std::vector<uint32_t>& inOutIndices) const
     {
         const uint32_t indices[] = { 0, 3, 2, 2, 1, 0 };
-        const uint32_t baseIndex = static_cast<uint32_t>(inOutIndices.size());
+        const uint32_t baseIndex = static_cast<uint32_t>(verticesCount);
         for (uint32_t i = 0; i < 6; i++) {
             inOutIndices.push_back(baseIndex + indices[i]);
         }
     }
 };
 
-class IFontRenderComponent : public IBasicRenderComponent {
+class IFontRenderComponent {
 public:
     virtual std::shared_ptr<FontMetadata> GetFontMetadata() const = 0;
+
+    virtual std::shared_ptr<IModel> GetModel() const = 0;
+
+    virtual void SetModel(const std::shared_ptr<IModel>& model) = 0;
+
+    virtual std::shared_ptr<FancyText> GetText() const = 0;
+
+    virtual void SetText(const std::shared_ptr<FancyText>& text) = 0; // TODO change to add => mayba AddTextData(fancyText, model) ??
 
 public:
     virtual ~IFontRenderComponent() = default;

@@ -271,10 +271,11 @@ private:
 
     std::shared_ptr<FontMetadata> m_fontMetaData;
 
+    std::shared_ptr<FancyText> m_text;
+
 public:
-    DefaultFontRenderComponent(const std::shared_ptr<IModel>& model, const std::shared_ptr<FontMetadata>& fontMetaData)
-        : m_model(model)
-        , m_fontMetaData(fontMetaData)
+    DefaultFontRenderComponent(const std::shared_ptr<FontMetadata>& fontMetaData)
+        : m_fontMetaData(fontMetaData)
     {
     }
 
@@ -286,9 +287,24 @@ public:
         return m_model;
     }
 
+    void SetModel(const std::shared_ptr<IModel>& model) override
+    {
+        m_model = model;
+    }
+
     std::shared_ptr<FontMetadata> GetFontMetadata() const override
     {
         return m_fontMetaData;
+    }
+
+    void SetText(const std::shared_ptr<FancyText>& text) override
+    {
+        m_text = text;
+    }
+
+    std::shared_ptr<FancyText> GetText() const override
+    {
+        return m_text;
     }
 };
 
@@ -443,7 +459,7 @@ public:
         FontMetadataFactory fontFactory{};
         auto fontMetaData = fontFactory.CreateFontMetadata(fontPaht);
 
-        return std::make_unique<DefaultFontRenderComponent>(nullptr, std::move(fontMetaData)); // null for model !!?? -> it will be created at runtime
+        return std::make_unique<DefaultFontRenderComponent>(std::move(fontMetaData));
     }
 };
 
@@ -1766,6 +1782,67 @@ public:
     }
 };
 
+class Text : public AbstractSceneNode<SceneNodeFlags> {
+private:
+    std::shared_ptr<IFontRenderComponent> m_fontComponent;
+
+    FPSService m_fpsService{ 0.1f, false };
+
+public:
+    Text()
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_FONT_RENDER_COMPONENT })
+    {
+    }
+
+    ~Text() = default;
+
+public:
+    void Init() override
+    {
+        RenderComponentFactory factory{};
+        m_fontComponent = factory.CreateFontRenderComponent("Verdana.fnt");
+
+        ComponentRepository<IFontRenderComponent>::GetInstance().Add(m_id, m_fontComponent);
+
+        AbstractSceneNode::Init();
+    }
+
+    void Update(float deltaTime) override
+    {
+        m_fpsService.Update(deltaTime);
+
+        std::stringstream fpsString;
+        fpsString << m_fpsService.GetAverageFPS() << " FPS";
+
+        const auto font = m_fontComponent->GetFontMetadata();
+        auto fancyText = std::make_shared<FancyText>(font, fpsString.str(), 1.5f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0), glm::vec2(0.4f, 0.5f), 1.0f, true, 0.5f, 0.005f);
+
+        TextMeshFactory meshFactory;
+        auto mesh = meshFactory.CreateTextMesh(fancyText, font);
+
+        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+        auto vertexBuffer = std::make_shared<VBO>(*allocator);
+        vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertextLayout().GetStride());
+
+        auto indexBuffer = std::make_shared<IBO>(*allocator);
+        indexBuffer->Data(mesh->GerIndices().data(), (uint32_t)mesh->GerIndices().size());
+
+        auto model = std::make_shared<Model>(std::move(mesh), vertexBuffer, indexBuffer);
+
+        m_fontComponent->SetModel(model);
+        m_fontComponent->SetText(fancyText);
+
+        AbstractSceneNode::Update(deltaTime);
+    }
+
+    void ShutDown() override
+    {
+        AbstractSceneNode::ShutDown();
+
+        ComponentRepository<IFontRenderComponent>::GetInstance().Remove(m_id);
+    }
+};
+
 class MainLight : public AbstractSceneNode<SceneNodeFlags> {
 private:
     std::shared_ptr<ILightComponent> m_lightComponent;
@@ -2792,7 +2869,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<FonttShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "shaders/fonts_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/fonts_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<FonttShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "shaders/font_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/font_frag.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(10000);
 
         printf("Fonts Shader created\n");
@@ -2821,19 +2898,24 @@ public:
 
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TEXT_RENDER_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_FONT_RENDER_COMPONENT })) {
             const auto nodeFontRenderComponent = ComponentRepository<IFontRenderComponent>::GetInstance().Get(node->GetId());
-
-            // TODO - in every update regenerate model !!
-
+            
             auto uboVS = m_uniformsPoolVS->GetNext();
             UniformsVS uniformsVS{};
-            uniformsVS.translation = glm::vec4(); // TODO
+            uniformsVS.translation = glm::vec4(nodeFontRenderComponent->GetText()->GetPosition(), 0.0f, 1.0f);
             uboVS->Update(&uniformsVS);
 
             auto uboFS = m_uniformsPoolFS->GetNext();
             UniformsFS uniformsFS{};
-            uniformsFS.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f); // TODO
+            uniformsFS.color = nodeFontRenderComponent->GetText()->GetColor();
+            uniformsFS.width = nodeFontRenderComponent->GetText()->GetWidth();
+            uniformsFS.edge = nodeFontRenderComponent->GetText()->GetEdge();
+            uniformsFS.borderWidth = nodeFontRenderComponent->GetText()->GetBorderWidth();
+            uniformsFS.borderEdge = nodeFontRenderComponent->GetText()->GetBorderEdge();
+            uniformsFS.hasEffect = nodeFontRenderComponent->GetText()->HasEffect();
+            uniformsFS.outlineColor = glm::vec4(nodeFontRenderComponent->GetText()->GetOutlineColor(), 1.0f);
+            uniformsFS.outlineOffset = glm::vec4(nodeFontRenderComponent->GetText()->GetOutlineOffset(), 0.0f, 1.0f);
             uboFS->Update(&uniformsFS);
 
             m_shader->Bind("textureSampler", *nodeFontRenderComponent->GetFontMetadata()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -2887,6 +2969,8 @@ private:
     std::shared_ptr<IRenderer<DefaultRenderContextUserData> > m_animationRenderer;
 
     std::shared_ptr<IRenderer<DefaultRenderContextUserData> > m_quadRenderer;
+
+    std::shared_ptr<IRenderer<DefaultRenderContextUserData> > m_fontRenderer;
 
 public:
     RootSceneNode(const std::shared_ptr<RenderPass>& renderPass)
@@ -2949,6 +3033,9 @@ public:
         goblin->SetTags({ TAG_MAIN_CAMERA });
         AddChild(goblin);
 
+        auto text = std::make_shared<Text>();
+        AddChild(text);
+
         for (auto child : m_children) {
             child->Init();
         }
@@ -2969,6 +3056,9 @@ public:
 
         m_quadRenderer = std::make_shared<QuadRenderer>(m_defaultRenderPass);
         m_quadRenderer->Init();
+
+        m_fontRenderer = std::make_shared<FontRenderer>(m_defaultRenderPass);
+        m_fontRenderer->Init();
     }
 
     void Update(float deltaTime) override
@@ -3031,16 +3121,25 @@ public:
 
         m_animationRenderer->PostRender(renderContext);
 
+        // fonts
+        m_fontRenderer->PreRender(renderContext);
+
+        for (auto child : m_children) {
+            m_fontRenderer->Render(renderContext, child);
+        }
+
+        m_fontRenderer->PostRender(renderContext);
+
         m_defaultRenderPass->End(renderContext.defaultCommandBuffer);
 
-#ifndef ANDROID
-        // Debug quad with shadowMap
-        m_quadRenderer->PreRender(renderContext);
-
-        m_quadRenderer->Render(renderContext, GetThis());
-
-        m_quadRenderer->PostRender(renderContext);
-#endif
+//#ifndef ANDROID
+//        // Debug quad with shadowMap
+//        m_quadRenderer->PreRender(renderContext);
+//
+//        m_quadRenderer->Render(renderContext, GetThis());
+//
+//        m_quadRenderer->PostRender(renderContext);
+//#endif
     }
 
     void ShutDown() override
@@ -3049,7 +3148,9 @@ public:
             child->ShutDown();
         }
 
+        m_fontRenderer->ShutDown();
         m_quadRenderer->ShutDown();
+        m_animationRenderer->ShutDown();
         m_defaultRenderer->ShutDown();
         m_animationShadowsRenderer->ShutDown();
         m_defaultShadowsRenderer->ShutDown();

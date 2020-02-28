@@ -917,8 +917,8 @@ public:
         multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
         VkPipelineDepthStencilStateCreateInfo depthStencilState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
-        depthStencilState.depthTestEnable = VK_TRUE;
-        depthStencilState.depthWriteEnable = VK_TRUE;
+        depthStencilState.depthTestEnable = VK_FALSE;
+        depthStencilState.depthWriteEnable = VK_FALSE;
         depthStencilState.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
         depthStencilState.depthBoundsTestEnable = VK_FALSE;
         depthStencilState.stencilTestEnable = VK_FALSE;

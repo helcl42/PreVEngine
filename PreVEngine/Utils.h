@@ -27,15 +27,20 @@ class FPSService {
 private:
     float m_refreshTimeout = 1.0f;
 
+    bool m_printInfo{ true };
+
     std::vector<float> m_deltaTimeSnapshots;
 
     float m_elpasedTime = 0.0f;
 
     float m_averageDeltaTime = 0.0f;
 
+    mutable std::mutex m_lock;
+
 public:
-    FPSService(float refreshTimeInS = 1.0f)
+    FPSService(float refreshTimeInS = 1.0f, bool printInfo = true)
         : m_refreshTimeout(refreshTimeInS)
+        , m_printInfo(printInfo)
     {
     }
 
@@ -46,6 +51,8 @@ public:
 public:
     void Update(float deltaTime)
     {
+        std::lock_guard<std::mutex> lock(m_lock);
+
         m_elpasedTime += deltaTime;
 
         m_deltaTimeSnapshots.push_back(deltaTime);
@@ -60,17 +67,98 @@ public:
 
             m_deltaTimeSnapshots.clear();
 
-            LOGI("FPS %f\n", GetAverageFPS());
+            if (m_printInfo) {
+                LOGI("FPS %f\n", (1.0f / m_averageDeltaTime));
+            }
         }
     }
 
     float GetAverageDeltaTime() const
     {
+        std::lock_guard<std::mutex> lock(m_lock);
+
         return m_averageDeltaTime;
     }
 
     float GetAverageFPS() const
     {
+        std::lock_guard<std::mutex> lock(m_lock);
+
+        if (m_averageDeltaTime > 0.0f) {
+            return (1.0f / m_averageDeltaTime);
+        }
+        return 0.0f;
+    }
+};
+
+class FPSCounter {
+private:
+    float m_refreshTimeoutInS{ 1.0f };
+
+    bool m_printInfo{ true };
+
+    std::vector<float> m_deltaTimeSnapshots;
+
+    float m_elpasedTimeInS{ 0.0f };
+
+    float m_averageDeltaTime{ 0.0f };
+
+    std::chrono::high_resolution_clock::time_point m_lastTickTimestamp{ std::chrono::high_resolution_clock::time_point::min() };
+
+    mutable std::mutex m_lock;
+
+public:
+    FPSCounter(float refreshTimeInS = 2.0f, bool printInfo = true)
+        : m_refreshTimeoutInS(refreshTimeInS)
+        , m_printInfo(printInfo)
+    {
+    }
+
+    virtual ~FPSCounter() = default;
+
+public:
+    void Tick()
+    {
+        std::lock_guard<std::mutex> lock(m_lock);
+
+        const auto NOW = std::chrono::high_resolution_clock::now();
+        if (m_lastTickTimestamp == std::chrono::high_resolution_clock::time_point::min()) {
+            m_lastTickTimestamp = NOW;
+        }
+
+        float elapsedInS = std::chrono::duration<float>(NOW - m_lastTickTimestamp).count();
+        m_deltaTimeSnapshots.push_back(elapsedInS);
+        m_elpasedTimeInS += elapsedInS;
+
+        if (m_elpasedTimeInS > m_refreshTimeoutInS) {
+            float deltasSum = 0.0f;
+            for (const auto& snapshot : m_deltaTimeSnapshots) {
+                deltasSum += snapshot;
+            }
+            m_averageDeltaTime = deltasSum / m_deltaTimeSnapshots.size();
+
+            if (m_printInfo) {
+                LOGI("FPS %f\n", (1.0f / m_averageDeltaTime));
+            }
+
+            m_elpasedTimeInS = 0.0f;
+            m_deltaTimeSnapshots.clear();
+        }
+
+        m_lastTickTimestamp = NOW;
+    }
+
+    float GetAverageDeltaTime() const
+    {
+        std::lock_guard<std::mutex> lock(m_lock);
+
+        return m_averageDeltaTime;
+    }
+
+    float GetAverageFPS() const
+    {
+        std::lock_guard<std::mutex> lock(m_lock);
+
         if (m_averageDeltaTime > 0.0f) {
             return (1.0f / m_averageDeltaTime);
         }
