@@ -1815,7 +1815,7 @@ public:
         fpsString << m_fpsService.GetAverageFPS() << " FPS";
 
         const auto font = m_fontComponent->GetFontMetadata();
-        auto fancyText = std::make_shared<FancyText>(font, fpsString.str(), 1.5f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0), glm::vec2(0.4f, 0.5f), 1.0f, true, 0.5f, 0.005f);
+        auto fancyText = std::make_shared<FancyText>(font, fpsString.str(), 1.5f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0), glm::vec2(0.4f, -0.4f), 1.0f, true, 0.5f, 0.004f);
 
         TextMeshFactory meshFactory;
         auto mesh = meshFactory.CreateTextMesh(fancyText, font);
