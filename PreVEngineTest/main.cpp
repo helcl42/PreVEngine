@@ -17,211 +17,6 @@
 #include "Mesh.h"
 #include "Pipeline.h"
 
-class Material : public IMaterial {
-private:
-    glm::vec3 m_color{ 1.0f, 1.0f, 1.0f };
-
-    std::shared_ptr<Image> m_image{ nullptr };
-
-    std::shared_ptr<ImageBuffer> m_imageBuffer{ nullptr };
-
-    std::shared_ptr<Image> m_normalImage{ nullptr };
-
-    std::shared_ptr<ImageBuffer> m_normalImageBuffer{ nullptr };
-
-    std::shared_ptr<Image> m_extraImage{ nullptr };
-
-    std::shared_ptr<ImageBuffer> m_extraImageBuffer{ nullptr };
-
-    float m_shineDamper = 10.0f;
-
-    float m_reflectivity = 1.0f;
-
-    bool m_hasTransparency{ false };
-
-    bool m_usesFakeLightning{ false };
-
-    unsigned int m_atlasNuumberOfRows{ 1 };
-
-    glm::vec2 m_textureOffset{ 0.0f, 0.0f };
-
-public:
-    Material(const glm::vec3& color, const float shineDamper, const float reflectivity)
-        : m_color(color)
-        , m_shineDamper(shineDamper)
-        , m_reflectivity(reflectivity)
-    {
-    }
-
-    Material(const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const float shineDamper, const float reflectivity)
-        : m_image(image)
-        , m_imageBuffer(imageBuffer)
-        , m_shineDamper(shineDamper)
-        , m_reflectivity(reflectivity)
-    {
-    }
-
-    Material(const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<ImageBuffer>& normalImageBuffer, const float shineDamper, const float reflectivity)
-        : m_image(image)
-        , m_imageBuffer(imageBuffer)
-        , m_normalImage(normalImage)
-        , m_normalImageBuffer(normalImageBuffer)
-        , m_shineDamper(shineDamper)
-        , m_reflectivity(reflectivity)
-    {
-    }
-
-    Material(const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<ImageBuffer>& normalImageBuffer, const std::shared_ptr<Image>& extraImage, const std::shared_ptr<ImageBuffer>& extraImageBuffer, const float shineDamper, const float reflectivity)
-        : m_image(image)
-        , m_imageBuffer(imageBuffer)
-        , m_normalImage(normalImage)
-        , m_normalImageBuffer(normalImageBuffer)
-        , m_extraImage(extraImage)
-        , m_extraImageBuffer(extraImageBuffer)
-        , m_shineDamper(shineDamper)
-        , m_reflectivity(reflectivity)
-    {
-    }
-
-    virtual ~Material() = default;
-
-public:
-    std::shared_ptr<Image> GetImage() const override
-    {
-        return m_image;
-    }
-
-    std::shared_ptr<ImageBuffer> GetImageBuffer() const override
-    {
-        return m_imageBuffer;
-    }
-
-    bool HasImage() const override
-    {
-        return m_image != nullptr;
-    }
-
-    const glm::vec3& GetColor() const override
-    {
-        return m_color;
-    }
-
-    std::shared_ptr<Image> GetNormalImage() const override
-    {
-        return m_normalImage;
-    }
-
-    std::shared_ptr<ImageBuffer> GetINormalmageBuffer() const override
-    {
-        return m_normalImageBuffer;
-    }
-
-    bool HasNormalImage() const override
-    {
-        return m_normalImage != nullptr;
-    }
-
-    std::shared_ptr<Image> GetExtraInfImage() const override
-    {
-        return m_extraImage;
-    }
-
-    std::shared_ptr<ImageBuffer> GetIExtraInfoImageBuffer() const override
-    {
-        return m_extraImageBuffer;
-    }
-
-    bool HasExtraInfoImage() const override
-    {
-        return m_extraImage != nullptr;
-    }
-
-    float GetShineDamper() const override
-    {
-        return m_shineDamper;
-    }
-
-    float GetReflectivity() const override
-    {
-        return m_reflectivity;
-    }
-
-    bool HasTransparency() const override
-    {
-        return m_hasTransparency;
-    }
-
-    void SetHasTransparency(bool transparency) override
-    {
-        m_hasTransparency = transparency;
-    }
-
-    bool UsesFakeLightning() const override
-    {
-        return m_usesFakeLightning;
-    }
-
-    void SetUsesFakeLightning(bool fake) override
-    {
-        m_usesFakeLightning = fake;
-    }
-
-    unsigned int GetAtlasNumberOfRows() const override
-    {
-        return m_atlasNuumberOfRows;
-    }
-
-    void SetAtlasNumberOfRows(unsigned int rows) override
-    {
-        m_atlasNuumberOfRows = rows;
-    }
-
-    glm::vec2 GetTextureOffset() const override
-    {
-        return m_textureOffset;
-    }
-
-    void SetTextureOffset(const glm::vec2& textureOffset) override
-    {
-        m_textureOffset = textureOffset;
-    }
-};
-
-class Model : public IModel {
-private:
-    std::shared_ptr<IMesh> m_mesh;
-
-    std::shared_ptr<VBO> m_vbo;
-
-    std::shared_ptr<IBO> m_ibo;
-
-public:
-    Model(const std::shared_ptr<IMesh>& mesh, const std::shared_ptr<VBO>& vbo, const std::shared_ptr<IBO>& ibo)
-        : m_mesh(mesh)
-        , m_vbo(vbo)
-        , m_ibo(ibo)
-    {
-    }
-
-    virtual ~Model() = default;
-
-public:
-    std::shared_ptr<IMesh> GetMesh() const override
-    {
-        return m_mesh;
-    }
-
-    std::shared_ptr<VBO> GetVertexBuffer() const override
-    {
-        return m_vbo;
-    }
-
-    std::shared_ptr<IBO> GetIndexBuffer() const override
-    {
-        return m_ibo;
-    }
-};
-
 class DefaultRenderComponent : public IRenderComponent {
 private:
     std::shared_ptr<IModel> m_model;
@@ -262,49 +57,6 @@ public:
     bool IsCastedByShadows() const override
     {
         return m_isCastedByShadows;
-    }
-};
-
-class DefaultFontRenderComponent : public IFontRenderComponent {
-private:
-    std::shared_ptr<IModel> m_model;
-
-    std::shared_ptr<FontMetadata> m_fontMetaData;
-
-    std::shared_ptr<FancyText> m_text;
-
-public:
-    DefaultFontRenderComponent(const std::shared_ptr<FontMetadata>& fontMetaData)
-        : m_fontMetaData(fontMetaData)
-    {
-    }
-
-    ~DefaultFontRenderComponent() = default;
-
-public:
-    std::shared_ptr<IModel> GetModel() const override
-    {
-        return m_model;
-    }
-
-    void SetModel(const std::shared_ptr<IModel>& model) override
-    {
-        m_model = model;
-    }
-
-    std::shared_ptr<FontMetadata> GetFontMetadata() const override
-    {
-        return m_fontMetaData;
-    }
-
-    void SetText(const std::shared_ptr<FancyText>& text) override
-    {
-        m_text = text;
-    }
-
-    std::shared_ptr<FancyText> GetText() const override
-    {
-        return m_text;
     }
 };
 
@@ -442,7 +194,7 @@ public:
 
     std::unique_ptr<IAnimationRenderComponent> CreateAnimatedModelRenderComponent(Allocator& allocator, const std::string& modelPath, const std::string& textureFilename, const bool castsShadows, const bool isCastedByShadows) const
     {
-        auto material = CreateMaterial(allocator, textureFilename, true, 2.0f, 0.3f);
+        auto material = CreateMaterial(allocator, textureFilename, true, 1.0f, 0.3f);
 
         MeshFactory meshFactory{};
         auto mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION });
@@ -452,14 +204,6 @@ public:
         auto animation = animationFactory.CreateAnimation(modelPath);
 
         return std::make_unique<DefaultAnimationRenderComponent>(std::move(model), std::move(material), std::move(animation), castsShadows, isCastedByShadows);
-    }
-
-    std::unique_ptr<IFontRenderComponent> CreateFontRenderComponent(const std::string& fontPaht) const
-    {
-        FontMetadataFactory fontFactory{};
-        auto fontMetaData = fontFactory.CreateFontMetadata(fontPaht);
-
-        return std::make_unique<DefaultFontRenderComponent>(std::move(fontMetaData));
     }
 };
 
@@ -1799,8 +1543,8 @@ public:
 public:
     void Init() override
     {
-        RenderComponentFactory factory{};
-        m_fontComponent = factory.CreateFontRenderComponent("Verdana.fnt");
+        FontRenderComponentsFactory factory{};
+        m_fontComponent = factory.Create("Verdana.fnt");
 
         ComponentRepository<IFontRenderComponent>::GetInstance().Add(m_id, m_fontComponent);
 
@@ -1809,28 +1553,15 @@ public:
 
     void Update(float deltaTime) override
     {
+        m_fontComponent->Reset();
+
         m_fpsService.Update(deltaTime);
 
         std::stringstream fpsString;
         fpsString << m_fpsService.GetAverageFPS() << " FPS";
 
-        const auto font = m_fontComponent->GetFontMetadata();
-        auto fancyText = std::make_shared<FancyText>(font, fpsString.str(), 1.5f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0), glm::vec2(0.4f, -0.4f), 1.0f, true, 0.5f, 0.004f);
-
-        TextMeshFactory meshFactory;
-        auto mesh = meshFactory.CreateTextMesh(fancyText, font);
-
-        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
-        auto vertexBuffer = std::make_shared<VBO>(*allocator);
-        vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertextLayout().GetStride());
-
-        auto indexBuffer = std::make_shared<IBO>(*allocator);
-        indexBuffer->Data(mesh->GerIndices().data(), (uint32_t)mesh->GerIndices().size());
-
-        auto model = std::make_shared<Model>(std::move(mesh), vertexBuffer, indexBuffer);
-
-        m_fontComponent->SetModel(model);
-        m_fontComponent->SetText(fancyText);
+        auto fancyText = std::make_shared<FancyText>(fpsString.str(), 1.5f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0), glm::vec2(0.4f, -0.4f), 1.0f, true, 0.5f, 0.004f);
+        m_fontComponent->AddText(fancyText);
 
         AbstractSceneNode::Update(deltaTime);
     }
@@ -2899,38 +2630,39 @@ public:
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_FONT_RENDER_COMPONENT })) {
-            const auto nodeFontRenderComponent = ComponentRepository<IFontRenderComponent>::GetInstance().Get(node->GetId());
-            
-            auto uboVS = m_uniformsPoolVS->GetNext();
-            UniformsVS uniformsVS{};
-            uniformsVS.translation = glm::vec4(nodeFontRenderComponent->GetText()->GetPosition(), 0.0f, 1.0f);
-            uboVS->Update(&uniformsVS);
+            const auto nodeFontRenderComponent = ComponentRepository<IFontRenderComponent>::GetInstance().Get(node->GetId());            
+            for (const auto& renderableText : nodeFontRenderComponent->GetRenderableTexts()) {
+                auto uboVS = m_uniformsPoolVS->GetNext();
+                UniformsVS uniformsVS{};
+                uniformsVS.translation = glm::vec4(renderableText.text->GetPosition(), 0.0f, 1.0f);
+                uboVS->Update(&uniformsVS);
 
-            auto uboFS = m_uniformsPoolFS->GetNext();
-            UniformsFS uniformsFS{};
-            uniformsFS.color = nodeFontRenderComponent->GetText()->GetColor();
-            uniformsFS.width = nodeFontRenderComponent->GetText()->GetWidth();
-            uniformsFS.edge = nodeFontRenderComponent->GetText()->GetEdge();
-            uniformsFS.borderWidth = nodeFontRenderComponent->GetText()->GetBorderWidth();
-            uniformsFS.borderEdge = nodeFontRenderComponent->GetText()->GetBorderEdge();
-            uniformsFS.hasEffect = nodeFontRenderComponent->GetText()->HasEffect();
-            uniformsFS.outlineColor = glm::vec4(nodeFontRenderComponent->GetText()->GetOutlineColor(), 1.0f);
-            uniformsFS.outlineOffset = glm::vec4(nodeFontRenderComponent->GetText()->GetOutlineOffset(), 0.0f, 1.0f);
-            uboFS->Update(&uniformsFS);
+                auto uboFS = m_uniformsPoolFS->GetNext();
+                UniformsFS uniformsFS{};
+                uniformsFS.color = renderableText.text->GetColor();
+                uniformsFS.width = renderableText.text->GetWidth();
+                uniformsFS.edge = renderableText.text->GetEdge();
+                uniformsFS.borderWidth = renderableText.text->GetBorderWidth();
+                uniformsFS.borderEdge = renderableText.text->GetBorderEdge();
+                uniformsFS.hasEffect = renderableText.text->HasEffect();
+                uniformsFS.outlineColor = glm::vec4(renderableText.text->GetOutlineColor(), 1.0f);
+                uniformsFS.outlineOffset = glm::vec4(renderableText.text->GetOutlineOffset(), 0.0f, 1.0f);
+                uboFS->Update(&uniformsFS);
 
-            m_shader->Bind("textureSampler", *nodeFontRenderComponent->GetFontMetadata()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-            m_shader->Bind("uboVS", *uboVS);
-            m_shader->Bind("uboFS", *uboFS);
+                m_shader->Bind("textureSampler", *nodeFontRenderComponent->GetFontMetadata()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                m_shader->Bind("uboVS", *uboVS);
+                m_shader->Bind("uboFS", *uboFS);
 
-            VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-            VkBuffer vertexBuffers[] = { *nodeFontRenderComponent->GetModel()->GetVertexBuffer() };
-            VkDeviceSize offsets[] = { 0 };
+                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                VkBuffer vertexBuffers[] = { *renderableText.model->GetVertexBuffer() };
+                VkDeviceSize offsets[] = { 0 };
 
-            vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *nodeFontRenderComponent->GetModel()->GetIndexBuffer(), 0, nodeFontRenderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-            vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+                vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
+                vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *renderableText.model->GetIndexBuffer(), 0, renderableText.model->GetIndexBuffer()->GetIndexType());
+                vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-            vkCmdDrawIndexed(renderContext.defaultCommandBuffer, nodeFontRenderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+                vkCmdDrawIndexed(renderContext.defaultCommandBuffer, renderableText.model->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+            }
         }
 
         for (auto child : node->GetChildren()) {

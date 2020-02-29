@@ -466,4 +466,209 @@ public:
     virtual ~IAnimationRenderComponent() = default;
 };
 
+class Material : public IMaterial {
+private:
+    glm::vec3 m_color{ 1.0f, 1.0f, 1.0f };
+
+    std::shared_ptr<Image> m_image{ nullptr };
+
+    std::shared_ptr<ImageBuffer> m_imageBuffer{ nullptr };
+
+    std::shared_ptr<Image> m_normalImage{ nullptr };
+
+    std::shared_ptr<ImageBuffer> m_normalImageBuffer{ nullptr };
+
+    std::shared_ptr<Image> m_extraImage{ nullptr };
+
+    std::shared_ptr<ImageBuffer> m_extraImageBuffer{ nullptr };
+
+    float m_shineDamper = 10.0f;
+
+    float m_reflectivity = 1.0f;
+
+    bool m_hasTransparency{ false };
+
+    bool m_usesFakeLightning{ false };
+
+    unsigned int m_atlasNuumberOfRows{ 1 };
+
+    glm::vec2 m_textureOffset{ 0.0f, 0.0f };
+
+public:
+    Material(const glm::vec3& color, const float shineDamper, const float reflectivity)
+        : m_color(color)
+        , m_shineDamper(shineDamper)
+        , m_reflectivity(reflectivity)
+    {
+    }
+
+    Material(const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const float shineDamper, const float reflectivity)
+        : m_image(image)
+        , m_imageBuffer(imageBuffer)
+        , m_shineDamper(shineDamper)
+        , m_reflectivity(reflectivity)
+    {
+    }
+
+    Material(const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<ImageBuffer>& normalImageBuffer, const float shineDamper, const float reflectivity)
+        : m_image(image)
+        , m_imageBuffer(imageBuffer)
+        , m_normalImage(normalImage)
+        , m_normalImageBuffer(normalImageBuffer)
+        , m_shineDamper(shineDamper)
+        , m_reflectivity(reflectivity)
+    {
+    }
+
+    Material(const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<ImageBuffer>& normalImageBuffer, const std::shared_ptr<Image>& extraImage, const std::shared_ptr<ImageBuffer>& extraImageBuffer, const float shineDamper, const float reflectivity)
+        : m_image(image)
+        , m_imageBuffer(imageBuffer)
+        , m_normalImage(normalImage)
+        , m_normalImageBuffer(normalImageBuffer)
+        , m_extraImage(extraImage)
+        , m_extraImageBuffer(extraImageBuffer)
+        , m_shineDamper(shineDamper)
+        , m_reflectivity(reflectivity)
+    {
+    }
+
+    virtual ~Material() = default;
+
+public:
+    std::shared_ptr<Image> GetImage() const override
+    {
+        return m_image;
+    }
+
+    std::shared_ptr<ImageBuffer> GetImageBuffer() const override
+    {
+        return m_imageBuffer;
+    }
+
+    bool HasImage() const override
+    {
+        return m_image != nullptr;
+    }
+
+    const glm::vec3& GetColor() const override
+    {
+        return m_color;
+    }
+
+    std::shared_ptr<Image> GetNormalImage() const override
+    {
+        return m_normalImage;
+    }
+
+    std::shared_ptr<ImageBuffer> GetINormalmageBuffer() const override
+    {
+        return m_normalImageBuffer;
+    }
+
+    bool HasNormalImage() const override
+    {
+        return m_normalImage != nullptr;
+    }
+
+    std::shared_ptr<Image> GetExtraInfImage() const override
+    {
+        return m_extraImage;
+    }
+
+    std::shared_ptr<ImageBuffer> GetIExtraInfoImageBuffer() const override
+    {
+        return m_extraImageBuffer;
+    }
+
+    bool HasExtraInfoImage() const override
+    {
+        return m_extraImage != nullptr;
+    }
+
+    float GetShineDamper() const override
+    {
+        return m_shineDamper;
+    }
+
+    float GetReflectivity() const override
+    {
+        return m_reflectivity;
+    }
+
+    bool HasTransparency() const override
+    {
+        return m_hasTransparency;
+    }
+
+    void SetHasTransparency(bool transparency) override
+    {
+        m_hasTransparency = transparency;
+    }
+
+    bool UsesFakeLightning() const override
+    {
+        return m_usesFakeLightning;
+    }
+
+    void SetUsesFakeLightning(bool fake) override
+    {
+        m_usesFakeLightning = fake;
+    }
+
+    unsigned int GetAtlasNumberOfRows() const override
+    {
+        return m_atlasNuumberOfRows;
+    }
+
+    void SetAtlasNumberOfRows(unsigned int rows) override
+    {
+        m_atlasNuumberOfRows = rows;
+    }
+
+    glm::vec2 GetTextureOffset() const override
+    {
+        return m_textureOffset;
+    }
+
+    void SetTextureOffset(const glm::vec2& textureOffset) override
+    {
+        m_textureOffset = textureOffset;
+    }
+};
+
+class Model : public IModel {
+private:
+    std::shared_ptr<IMesh> m_mesh;
+
+    std::shared_ptr<VBO> m_vbo;
+
+    std::shared_ptr<IBO> m_ibo;
+
+public:
+    Model(const std::shared_ptr<IMesh>& mesh, const std::shared_ptr<VBO>& vbo, const std::shared_ptr<IBO>& ibo)
+        : m_mesh(mesh)
+        , m_vbo(vbo)
+        , m_ibo(ibo)
+    {
+    }
+
+    virtual ~Model() = default;
+
+public:
+    std::shared_ptr<IMesh> GetMesh() const override
+    {
+        return m_mesh;
+    }
+
+    std::shared_ptr<VBO> GetVertexBuffer() const override
+    {
+        return m_vbo;
+    }
+
+    std::shared_ptr<IBO> GetIndexBuffer() const override
+    {
+        return m_ibo;
+    }
+};
+
 #endif

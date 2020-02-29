@@ -438,8 +438,6 @@ public:
 
 class BaseFancyText {
 protected:
-    std::shared_ptr<FontMetadata> m_font;
-
     std::wstring m_textString;
 
     float m_fontSize;
@@ -467,9 +465,9 @@ protected:
     glm::vec2 m_outlineOffset;
 
 public:
-    explicit BaseFancyText(const std::shared_ptr<FontMetadata>& font, const std::wstring& text, float fontSize, const glm::vec4& color, float maxLineLength, bool centered, float width, float edge)
-        : m_font(font)
-        , m_textString(text)
+    explicit BaseFancyText(const std::wstring& text, float fontSize, const glm::vec4& color, float maxLineLength, bool centered, float width, float edge)
+        :
+        m_textString(text)
         , m_fontSize(fontSize)
         , m_color(color)
         , m_lineMaxSize(maxLineLength)
@@ -480,9 +478,8 @@ public:
     {
     }
 
-    explicit BaseFancyText(const std::shared_ptr<FontMetadata>& font, const std::string& text, float fontSize, const glm::vec4& color, float maxLineLength, bool centered, float width, float edge)
-        : m_font(font)
-        , m_fontSize(fontSize)
+    explicit BaseFancyText(const std::string& text, float fontSize, const glm::vec4& color, float maxLineLength, bool centered, float width, float edge)
+        : m_fontSize(fontSize)
         , m_color(color)
         , m_lineMaxSize(maxLineLength)
         , m_centerText(centered)
@@ -514,11 +511,6 @@ public:
     float GetFontSize() const
     {
         return m_fontSize;
-    }
-
-    std::shared_ptr<FontMetadata> GetFont() const
-    {
-        return m_font;
     }
 
     void SetNumberOfLines(unsigned int number)
@@ -596,14 +588,14 @@ private:
     glm::vec2 m_position;
 
 public:
-    explicit FancyText(const std::shared_ptr<FontMetadata>& font, const std::wstring& text, float fontSize, const glm::vec4& color, const glm::vec2& position, float maxLineLength, bool centered, float width, float edge)
-        : BaseFancyText(font, text, fontSize, color, maxLineLength, centered, width, edge)
+    explicit FancyText(const std::wstring& text, float fontSize, const glm::vec4& color, const glm::vec2& position, float maxLineLength, bool centered, float width, float edge)
+        : BaseFancyText(text, fontSize, color, maxLineLength, centered, width, edge)
         , m_position(position)
     {
     }
 
-    explicit FancyText(const std::shared_ptr<FontMetadata>& font, const std::string& text, float fontSize, const glm::vec4& color, const glm::vec2& position, float maxLineLength, bool centered, float width, float edge)
-        : BaseFancyText(font, text, fontSize, color, maxLineLength, centered, width, edge)
+    explicit FancyText(const std::string& text, float fontSize, const glm::vec4& color, const glm::vec2& position, float maxLineLength, bool centered, float width, float edge)
+        : BaseFancyText(text, fontSize, color, maxLineLength, centered, width, edge)
         , m_position(position)
     {
     }
@@ -626,16 +618,16 @@ private:
     bool m_ignoreOverallRotations = false;
 
 public:
-    explicit FancyTextInSpace(const std::shared_ptr<FontMetadata>& font, const std::wstring& text, float fontSize, const glm::vec4& color, const glm::vec3& position, const glm::vec3& orientation, bool ignoreOverallRotations, float maxLineLength, bool centered, float width, float edge)
-        : BaseFancyText(font, text, fontSize, color, maxLineLength, centered, width, edge)
+    explicit FancyTextInSpace(const std::wstring& text, float fontSize, const glm::vec4& color, const glm::vec3& position, const glm::vec3& orientation, bool ignoreOverallRotations, float maxLineLength, bool centered, float width, float edge)
+        : BaseFancyText(text, fontSize, color, maxLineLength, centered, width, edge)
         , m_position(position)
         , m_orientation(orientation)
         , m_ignoreOverallRotations(ignoreOverallRotations)
     {
     }
 
-    explicit FancyTextInSpace(const std::shared_ptr<FontMetadata>& font, const std::string& text, float fontSize, const glm::vec4& color, const glm::vec3& position, const glm::vec3& orientation, bool ignoreOverallRotations, float maxLineLength, bool centered, float width, float edge)
-        : BaseFancyText(font, text, fontSize, color, maxLineLength, centered, width, edge)
+    explicit FancyTextInSpace(const std::string& text, float fontSize, const glm::vec4& color, const glm::vec3& position, const glm::vec3& orientation, bool ignoreOverallRotations, float maxLineLength, bool centered, float width, float edge)
+        : BaseFancyText(text, fontSize, color, maxLineLength, centered, width, edge)
         , m_position(position)
         , m_orientation(orientation)
         , m_ignoreOverallRotations(ignoreOverallRotations)
@@ -835,20 +827,83 @@ private:
     }
 };
 
+struct RenderableText {
+    std::shared_ptr<FancyText> text;
+
+    std::shared_ptr<IModel> model;
+};
+
 class IFontRenderComponent {
 public:
     virtual std::shared_ptr<FontMetadata> GetFontMetadata() const = 0;
 
-    virtual std::shared_ptr<IModel> GetModel() const = 0;
+    virtual const std::vector<RenderableText>& GetRenderableTexts() const = 0;
 
-    virtual void SetModel(const std::shared_ptr<IModel>& model) = 0;
+    virtual void AddText(const std::shared_ptr<FancyText>& text) = 0;
 
-    virtual std::shared_ptr<FancyText> GetText() const = 0;
-
-    virtual void SetText(const std::shared_ptr<FancyText>& text) = 0; // TODO change to add => mayba AddTextData(fancyText, model) ??
+    virtual void Reset() = 0;
 
 public:
     virtual ~IFontRenderComponent() = default;
+};
+
+class DefaultFontRenderComponent : public IFontRenderComponent {
+private:
+    std::shared_ptr<FontMetadata> m_fontMetaData;
+
+    std::vector<RenderableText> m_renderableTexts;
+
+public:
+    DefaultFontRenderComponent(const std::shared_ptr<FontMetadata>& fontMetaData)
+        : m_fontMetaData(fontMetaData)
+    {
+    }
+
+    ~DefaultFontRenderComponent() = default;
+
+public:
+    const std::vector<RenderableText>& GetRenderableTexts() const override
+    {
+        return m_renderableTexts;
+    }
+
+    std::shared_ptr<FontMetadata> GetFontMetadata() const override
+    {
+        return m_fontMetaData;
+    }
+
+    void AddText(const std::shared_ptr<FancyText>& text) override
+    {
+        TextMeshFactory meshFactory;
+        auto mesh = meshFactory.CreateTextMesh(text, m_fontMetaData);
+
+        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+        auto vertexBuffer = std::make_shared<VBO>(*allocator);
+        vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertextLayout().GetStride());
+
+        auto indexBuffer = std::make_shared<IBO>(*allocator);
+        indexBuffer->Data(mesh->GerIndices().data(), (uint32_t)mesh->GerIndices().size());
+
+        auto model = std::make_shared<Model>(std::move(mesh), vertexBuffer, indexBuffer);
+
+        m_renderableTexts.push_back(RenderableText{ text, model });
+    }
+
+    void Reset() override
+    {
+        m_renderableTexts.clear();
+    }
+};
+
+class FontRenderComponentsFactory {
+public:
+    std::unique_ptr<IFontRenderComponent> Create(const std::string& fontPaht) const
+    {
+        FontMetadataFactory fontFactory{};
+        auto fontMetaData = fontFactory.CreateFontMetadata(fontPaht);
+
+        return std::make_unique<DefaultFontRenderComponent>(std::move(fontMetaData));
+    }
 };
 
 #endif // !__FONT_H__
