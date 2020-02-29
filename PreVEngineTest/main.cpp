@@ -194,7 +194,7 @@ public:
 
     std::unique_ptr<IAnimationRenderComponent> CreateAnimatedModelRenderComponent(Allocator& allocator, const std::string& modelPath, const std::string& textureFilename, const bool castsShadows, const bool isCastedByShadows) const
     {
-        auto material = CreateMaterial(allocator, textureFilename, true, 1.0f, 0.3f);
+        auto material = CreateMaterial(allocator, textureFilename, true, 1.5f, 0.3f);
 
         MeshFactory meshFactory{};
         auto mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION });
@@ -1159,6 +1159,8 @@ private:
 
     float m_cameraPitch{ -20.0f };
 
+    float m_distanceFromPerson{ 45.0f };
+
     glm::vec2 m_prevTouchPosition{ 0.0f, 0.0f };
 
 private:
@@ -1167,6 +1169,8 @@ private:
     EventHandler<Goblin, MouseEvent> m_mouseEventsHandler{ *this };
 
     EventHandler<Goblin, TouchEvent> m_touchEventsHandler{ *this };
+
+    EventHandler<Goblin, MouseScrollEvent> m_mouseScrollsHandler{ *this };
 
 private:
     std::shared_ptr<IAnimationRenderComponent> m_animatonRenderComponent;
@@ -1249,7 +1253,7 @@ public:
             m_pitchDiff = 0.0f;
         }
 
-        const glm::vec3 cameraPosition = GetPosition() + (-m_cameraComponent->GetForwardDirection() * 45.0f) + glm::vec3(0.0f, 5.0f, 0.0f);
+        const glm::vec3 cameraPosition = GetPosition() + (-m_cameraComponent->GetForwardDirection() * m_distanceFromPerson) + glm::vec3(0.0f, 5.0f, 0.0f);
         m_cameraComponent->SetPosition(cameraPosition);
 
         AbstractSceneNode::Update(deltaTime);
@@ -1346,6 +1350,11 @@ public:
         if (touchEvent.action == TouchActionType::MOVE || touchEvent.action == TouchActionType::DOWN) {
             m_prevTouchPosition = touchEvent.position;
         }
+    }
+
+    void operator()(const MouseScrollEvent& scrollEvent)
+    {
+        m_distanceFromPerson += scrollEvent.delta;
     }
 };
 
@@ -2630,7 +2639,7 @@ public:
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_FONT_RENDER_COMPONENT })) {
-            const auto nodeFontRenderComponent = ComponentRepository<IFontRenderComponent>::GetInstance().Get(node->GetId());            
+            const auto nodeFontRenderComponent = ComponentRepository<IFontRenderComponent>::GetInstance().Get(node->GetId());
             for (const auto& renderableText : nodeFontRenderComponent->GetRenderableTexts()) {
                 auto uboVS = m_uniformsPoolVS->GetNext();
                 UniformsVS uniformsVS{};
@@ -2864,14 +2873,14 @@ public:
 
         m_defaultRenderPass->End(renderContext.defaultCommandBuffer);
 
-//#ifndef ANDROID
-//        // Debug quad with shadowMap
-//        m_quadRenderer->PreRender(renderContext);
-//
-//        m_quadRenderer->Render(renderContext, GetThis());
-//
-//        m_quadRenderer->PostRender(renderContext);
-//#endif
+#ifndef ANDROID
+        // Debug quad with shadowMap
+        m_quadRenderer->PreRender(renderContext);
+
+        m_quadRenderer->Render(renderContext, GetThis());
+
+        m_quadRenderer->PostRender(renderContext);
+#endif
     }
 
     void ShutDown() override
