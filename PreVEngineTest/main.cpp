@@ -390,7 +390,7 @@ public:
         Update();
     }
 
-    void SetOrientation(const float pitchAmountInDegrees, const float yawAmountInDeregrees)
+    void SetOrientation(const float pitchAmountInDegrees, const float yawAmountInDeregrees) override
     {
         glm::quat newOrientation = glm::angleAxis(glm::radians(pitchAmountInDegrees), m_rightDirection);
         newOrientation *= glm::angleAxis(glm::radians(yawAmountInDeregrees), m_upDirection);
@@ -1553,7 +1553,7 @@ public:
     void Init() override
     {
         FontRenderComponentsFactory factory{};
-        m_fontComponent = factory.Create("Verdana.fnt");
+        m_fontComponent = factory.Create("verdana.fnt");
 
         ComponentRepository<IFontRenderComponent>::GetInstance().Add(m_id, m_fontComponent);
 
@@ -1779,7 +1779,7 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<DefaultShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "shaders/default_shadows_vert.spv" } });
-        m_shader->AdjustDescriptorPoolCapacity(10000);
+        m_shader->AdjustDescriptorPoolCapacity(300);
 
         printf("Shadows Shader created\n");
 
@@ -1789,7 +1789,7 @@ public:
         printf("Shadows Pipeline created\n");
 
         m_uniformsPool = std::make_shared<UBOPool<Uniforms> >(*allocator);
-        m_uniformsPool->AdjustCapactity(10000);
+        m_uniformsPool->AdjustCapactity(300);
     }
 
     void PreRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
@@ -1891,7 +1891,7 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<AnimatedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "shaders/animation_shadows_vert.spv" } });
-        m_shader->AdjustDescriptorPoolCapacity(10000);
+        m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Shadows Shader created\n");
 
@@ -1901,7 +1901,7 @@ public:
         printf("Shadows Pipeline created\n");
 
         m_uniformsPool = std::make_shared<UBOPool<Uniforms> >(*allocator);
-        m_uniformsPool->AdjustCapactity(10000);
+        m_uniformsPool->AdjustCapactity(100);
     }
 
     void PreRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
@@ -2012,7 +2012,7 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<QuadShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "shaders/quad_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/quad_frag.spv" } });
-        m_shader->AdjustDescriptorPoolCapacity(10000);
+        m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Default Shader created\n");
 
@@ -2212,7 +2212,7 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<DefaultShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "shaders/default_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/default_frag.spv" } });
-        m_shader->AdjustDescriptorPoolCapacity(10000);
+        m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Default Shader created\n");
 
@@ -2222,10 +2222,10 @@ public:
         printf("Default Pipeline created\n");
 
         m_uniformsPoolVS = std::make_shared<UBOPool<UniformsVS> >(*allocator);
-        m_uniformsPoolVS->AdjustCapactity(10000);
+        m_uniformsPoolVS->AdjustCapactity(100);
 
         m_uniformsPoolFS = std::make_shared<UBOPool<UniformsFS> >(*allocator);
-        m_uniformsPoolFS->AdjustCapactity(10000);
+        m_uniformsPoolFS->AdjustCapactity(100);
     }
 
     void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
@@ -2433,7 +2433,7 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<AnimationShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "shaders/animation_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/animation_frag.spv" } });
-        m_shader->AdjustDescriptorPoolCapacity(10000);
+        m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Animaition Shader created\n");
 
@@ -2443,10 +2443,10 @@ public:
         printf("Animaition Pipeline created\n");
 
         m_uniformsPoolVS = std::make_shared<UBOPool<UniformsVS> >(*allocator);
-        m_uniformsPoolVS->AdjustCapactity(10000);
+        m_uniformsPoolVS->AdjustCapactity(100);
 
         m_uniformsPoolFS = std::make_shared<UBOPool<UniformsFS> >(*allocator);
-        m_uniformsPoolFS->AdjustCapactity(10000);
+        m_uniformsPoolFS->AdjustCapactity(100);
     }
 
     void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
@@ -2610,7 +2610,7 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<FonttShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "shaders/font_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/font_frag.spv" } });
-        m_shader->AdjustDescriptorPoolCapacity(10000);
+        m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Fonts Shader created\n");
 
@@ -2620,10 +2620,10 @@ public:
         printf("Fonts Pipeline created\n");
 
         m_uniformsPoolVS = std::make_shared<UBOPool<UniformsVS> >(*allocator);
-        m_uniformsPoolVS->AdjustCapactity(10000);
+        m_uniformsPoolVS->AdjustCapactity(100);
 
         m_uniformsPoolFS = std::make_shared<UBOPool<UniformsFS> >(*allocator);
-        m_uniformsPoolFS->AdjustCapactity(10000);
+        m_uniformsPoolFS->AdjustCapactity(100);
     }
 
     void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override

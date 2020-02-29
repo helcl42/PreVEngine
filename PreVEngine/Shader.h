@@ -95,7 +95,7 @@ protected:
 public:
     Shader(const VkDevice device);
 
-    ~Shader();
+    virtual ~Shader();
 
 public:
     bool Init();
