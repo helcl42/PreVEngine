@@ -15,8 +15,8 @@
 #include "Font.h"
 #include "General.h"
 #include "Mesh.h"
-#include "Terrain.h"
 #include "Pipeline.h"
+#include "Terrain.h"
 
 class DefaultRenderComponent : public IRenderComponent {
 private:
@@ -1235,6 +1235,8 @@ public:
 
     void Update(float deltaTime) override
     {
+        const auto terrain = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ITerrainComponenet>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT });
+
         if ((m_shouldGoForward || m_shouldGoBackward) && !m_isInTheAir) {
             m_animatonRenderComponent->GetAnimation()->SetState(AnimationState::RUNNING);
             m_animatonRenderComponent->GetAnimation()->Update(deltaTime);
@@ -1254,13 +1256,20 @@ public:
             m_animatonRenderComponent->GetAnimation()->Update(deltaTime);
         }
 
-        m_upwardSpeed += GRAVITY_Y * deltaTime;
-        Translate(glm::vec3(0.0f, m_upwardSpeed, 0.0f));
         auto currentPosition = GetPosition();
-        if (currentPosition.y < MIN_Y_POS) {
-            SetPosition(glm::vec3(currentPosition.x, MIN_Y_POS, currentPosition.z));
-            m_upwardSpeed = 0.0f;
-            m_isInTheAir = false;
+        const float height = terrain->GetHeightAt(currentPosition.x, currentPosition.z);
+        const auto currentY = height + MIN_Y_POS;
+
+        if (m_isInTheAir) {
+            m_upwardSpeed += GRAVITY_Y * deltaTime;
+            Translate(glm::vec3(0.0f, m_upwardSpeed, 0.0f));
+            if (currentPosition.y < currentY) {
+                SetPosition(glm::vec3(currentPosition.x, currentY, currentPosition.z));
+                m_upwardSpeed = 0.0f;
+                m_isInTheAir = false;
+            }
+        } else {
+            SetPosition(glm::vec3(currentPosition.x, currentY, currentPosition.z));
         }
 
         if (m_shouldRotate) {
@@ -2010,7 +2019,7 @@ public:
         : m_renderPass(renderPass)
     {
     }
-    
+
     virtual ~QuadRenderer() = default;
 
 public:

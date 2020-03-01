@@ -479,7 +479,7 @@ public:
         return FindByIdInternal(m_root, id);
     }
 
-    std::shared_ptr<ISceneNode<NodeFlagsType> > FindOneWthFlags(const FlagSet<NodeFlagsType>& flags, const LogicOperation operation = LogicOperation::OR) const
+    std::shared_ptr<ISceneNode<NodeFlagsType> > FindOneWithFlags(const FlagSet<NodeFlagsType>& flags, const LogicOperation operation = LogicOperation::OR) const
     {
         return FindOneWithFlagsInternal(m_root, flags, operation);
     }
