@@ -2720,7 +2720,7 @@ public:
             UniformsFS uniformsFS{};
             // shadows
             for (uint32_t i = 0; i < ShadowsComponent::CASCADES_COUNT; i++) {
-                auto& cascade = shadowsComponent->GetCascade(i);
+                const auto& cascade = shadowsComponent->GetCascade(i);
                 uniformsFS.shadows.cascades[i].split = glm::vec4(cascade.endSplitDepth);
                 uniformsFS.shadows.cascades[i].viewProjectionMatrix = cascade.GetBiasedViewProjectionMatrix();
             }
