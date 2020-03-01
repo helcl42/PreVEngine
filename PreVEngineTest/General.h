@@ -22,6 +22,7 @@ enum class SceneNodeFlags : uint64_t {
     HAS_RENDER_COMPONENT,
     HAS_ANIMATION_RENDER_COMPONENT,
     HAS_FONT_RENDER_COMPONENT,
+    HAS_TERRAIN_RENDER_COMPONENT,
     HAS_CAMERA_COMPONENT,
     HAS_SHADOWS_COMPONENT,
     HAS_LIGHT_COMPONENT,
@@ -442,14 +443,14 @@ class IBasicRenderComponent {
 public:
     virtual std::shared_ptr<IModel> GetModel() const = 0;
 
-    virtual std::shared_ptr<IMaterial> GetMaterial() const = 0;
-
 public:
     virtual ~IBasicRenderComponent() = default;
 };
 
 class IRenderComponent : public IBasicRenderComponent {
-public:    
+public:        
+    virtual std::shared_ptr<IMaterial> GetMaterial() const = 0;
+
     virtual bool CastsShadows() const = 0;
 
     virtual bool IsCastedByShadows() const = 0;
@@ -668,6 +669,29 @@ public:
     std::shared_ptr<IBO> GetIndexBuffer() const override
     {
         return m_ibo;
+    }
+};
+
+struct VertexData {
+    std::vector<glm::vec3> vertices;
+
+    std::vector<glm::vec2> textureCoords;
+
+    std::vector<glm::vec3> normals;
+
+    unsigned int size;
+
+    explicit VertexData()
+        : size(0)
+    {
+    }
+
+    explicit VertexData(unsigned int sz)
+        : size(sz)
+    {
+        vertices.reserve(size);
+        textureCoords.reserve(size);
+        normals.reserve(size);
     }
 };
 

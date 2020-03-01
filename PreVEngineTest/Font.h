@@ -321,8 +321,6 @@ private:
 public:
     std::unique_ptr<FontMetadata> CreateFontMetadata(const std::string& metadataFilePath, const int desiredPadding = 0, const float aspectRatio = 16.0f / 9.0f) const
     {
-        std::cout << "MetaDataFile start" << std::endl;
-
         MetaDataFile metaDataFile{ metadataFilePath };
 
         std::map<int, Character> characterMetaData{};
@@ -344,8 +342,6 @@ public:
         metaData->m_imageBuffer = imagwBuffer;
         metaData->m_spaceWidth = state.spaceWidth;
         metaData->m_characterMetaData = characterMetaData;
-
-        std::cout << "MetaDataFile end" << std::endl;
 
         return metaData;
     }

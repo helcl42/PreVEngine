@@ -15,6 +15,7 @@
 #include "Font.h"
 #include "General.h"
 #include "Mesh.h"
+#include "Terrain.h"
 #include "Pipeline.h"
 
 class DefaultRenderComponent : public IRenderComponent {
@@ -151,13 +152,13 @@ private:
 
     std::unique_ptr<IModel> CreateModel(Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const
     {
-        auto vertexBuffer = std::make_shared<VBO>(allocator);
+        auto vertexBuffer = std::make_unique<VBO>(allocator);
         vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertextLayout().GetStride());
 
-        auto indexBuffer = std::make_shared<IBO>(allocator);
+        auto indexBuffer = std::make_unique<IBO>(allocator);
         indexBuffer->Data(mesh->GerIndices().data(), (uint32_t)mesh->GerIndices().size());
 
-        return std::make_unique<Model>(mesh, vertexBuffer, indexBuffer);
+        return std::make_unique<Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));
     }
 
 public:
@@ -165,7 +166,7 @@ public:
     {
         auto material = CreateMaterial(allocator, textureFilename, false, 10.0f, 1.0f);
 
-        auto mesh = std::make_shared<CubeMesh>();
+        auto mesh = std::make_unique<CubeMesh>();
         auto model = CreateModel(allocator, std::move(mesh));
 
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -291,9 +292,7 @@ public:
         Reset();
     }
 
-    virtual ~CameraComponent()
-    {
-    }
+    virtual ~CameraComponent() = default;
 
 private:
     void UpdatePosition()
@@ -513,9 +512,7 @@ public:
     {
     }
 
-    ~LightComponent()
-    {
-    }
+    ~LightComponent() = default;
 
 public:
     glm::mat4 LookAt() const override
@@ -927,9 +924,7 @@ public:
     {
     }
 
-    virtual ~AbstractCubeRobotSceneNode()
-    {
-    }
+    virtual ~AbstractCubeRobotSceneNode() = default;
 
 public:
     void Init() override
@@ -964,9 +959,7 @@ public:
     {
     }
 
-    virtual ~CubeRobotPart()
-    {
-    }
+    virtual ~CubeRobotPart() = default;
 };
 
 class CubeRobot : public AbstractCubeRobotSceneNode {
@@ -1001,9 +994,7 @@ public:
     {
     }
 
-    virtual ~CubeRobot()
-    {
-    }
+    virtual ~CubeRobot() = default;
 
 public:
     void Init() override
@@ -1098,9 +1089,7 @@ public:
     {
     }
 
-    virtual ~Plane()
-    {
-    }
+    virtual ~Plane() = default;
 
 public:
     void Init() override
@@ -1125,6 +1114,42 @@ public:
         AbstractSceneNode::ShutDown();
 
         ComponentRepository<IRenderComponent>::GetInstance().Remove(m_id);
+    }
+};
+
+class Terrain : public AbstractSceneNode<SceneNodeFlags> {
+public:
+    Terrain(const glm::vec3& position)
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT }, position, glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1.0f))
+    {
+    }
+
+    virtual ~Terrain() = default;
+
+public:
+    void Init() override
+    {
+        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+
+        const auto position = GetPosition();
+        TerrainComponentFactory terrainComponentFactory{};
+        auto terrainComponent = terrainComponentFactory.CreateRandomTerrain(position.x, position.z, 240.0f, 40.0f);
+
+        ComponentRepository<ITerrainComponenet>::GetInstance().Add(m_id, std::move(terrainComponent));
+
+        AbstractSceneNode::Init();
+    }
+
+    void Update(float deltaTime) override
+    {
+        AbstractSceneNode::Update(deltaTime);
+    }
+
+    void ShutDown() override
+    {
+        AbstractSceneNode::ShutDown();
+
+        ComponentRepository<ITerrainComponenet>::GetInstance().Remove(m_id);
     }
 };
 
@@ -1183,9 +1208,7 @@ public:
     {
     }
 
-    virtual ~Goblin()
-    {
-    }
+    virtual ~Goblin() = default;
 
 public:
     void Init() override
@@ -1395,9 +1418,7 @@ public:
         m_inputFacade.SetMouseCursorVisible(false);
     }
 
-    virtual ~Camera()
-    {
-    }
+    virtual ~Camera() = default;
 
 private:
     void Reset()
@@ -1596,9 +1617,7 @@ public:
     {
     }
 
-    ~MainLight()
-    {
-    }
+    ~MainLight() = default;
 
 public:
     void Init() override
@@ -1658,9 +1677,7 @@ public:
     {
     }
 
-    ~Light()
-    {
-    }
+    ~Light() = default;
 
 public:
     void Init() override
@@ -1698,9 +1715,7 @@ public:
     {
     }
 
-    virtual ~Shadows()
-    {
-    }
+    virtual ~Shadows() = default;
 
 public:
     void Init() override
@@ -1767,9 +1782,7 @@ public:
     {
     }
 
-    virtual ~DefaultShadowsRenderer()
-    {
-    }
+    virtual ~DefaultShadowsRenderer() = default;
 
 public:
     void Init() override
@@ -1879,9 +1892,7 @@ public:
     {
     }
 
-    virtual ~AnimationShadowsRenderer()
-    {
-    }
+    virtual ~AnimationShadowsRenderer() = default;
 
 public:
     void Init() override
@@ -1999,10 +2010,8 @@ public:
         : m_renderPass(renderPass)
     {
     }
-
-    virtual ~QuadRenderer()
-    {
-    }
+    
+    virtual ~QuadRenderer() = default;
 
 public:
     void Init() override
@@ -2110,7 +2119,7 @@ public:
     }
 };
 
-class DefaultSceneRenderer : public IRenderer<DefaultRenderContextUserData> {
+class DefaultRenderer : public IRenderer<DefaultRenderContextUserData> {
 private:
     struct ShadowwsCascadeUniform {
         glm::mat4 viewProjectionMatrix;
@@ -2195,14 +2204,12 @@ private:
     std::shared_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
-    DefaultSceneRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    DefaultRenderer(const std::shared_ptr<RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
 
-    virtual ~DefaultSceneRenderer()
-    {
-    }
+    virtual ~DefaultRenderer() = default;
 
 public:
     void Init() override
@@ -2421,9 +2428,7 @@ public:
     {
     }
 
-    virtual ~AnimationSceneRenderer()
-    {
-    }
+    virtual ~AnimationSceneRenderer() = default;
 
 public:
     void Init() override
@@ -2554,6 +2559,223 @@ public:
     }
 };
 
+class TerrainRenderer : public IRenderer<DefaultRenderContextUserData> {
+private:
+    struct ShadowwsCascadeUniform {
+        glm::mat4 viewProjectionMatrix;
+
+        glm::vec4 split;
+    };
+
+    struct ShadowsUniform {
+        ShadowwsCascadeUniform cascades[ShadowsComponent::CASCADES_COUNT];
+
+        uint32_t enabled;
+    };
+
+    struct LightUniform {
+        glm::vec4 position;
+
+        glm::vec4 color;
+
+        glm::vec4 attenuation;
+    };
+
+    struct LightningUniform {
+        LightUniform lights[MAX_LIGHT_COUNT];
+
+        uint32_t realCountOfLights;
+
+        float ambientFactor;
+    };
+
+    struct MaterialUniform {
+        float shineDamper;
+
+        float reflectivity;
+    };
+
+    struct alignas(16) UniformsVS
+    {
+        alignas(16) glm::mat4 modelMatrix;
+
+        alignas(16) glm::mat4 viewMatrix;
+
+        alignas(16) glm::mat4 projectionMatrix;
+
+        alignas(16) glm::mat4 normalMatrix;
+
+        alignas(16) glm::vec4 cameraPosition;
+
+        alignas(16) glm::vec4 textureOffset;
+
+        alignas(16) uint32_t textureNumberOfRows;
+        uint32_t useFakeLightning;
+        float density;
+        float gradient;
+    };
+
+    struct alignas(16) UniformsFS
+    {
+        alignas(16) ShadowsUniform shadows;
+
+        alignas(16) LightningUniform lightning;
+
+        alignas(16) MaterialUniform material;
+
+        alignas(16) glm::vec4 fogColor;
+
+        alignas(16) glm::vec4 selectedColor;
+
+        alignas(16) uint32_t selected;
+        uint32_t castedByShadows;
+    };
+
+private:
+    std::shared_ptr<RenderPass> m_renderPass;
+
+private:
+    std::shared_ptr<Shader> m_shader;
+
+    std::shared_ptr<IGraphicsPipeline> m_pipeline;
+
+    std::shared_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+
+    std::shared_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+
+public:
+    TerrainRenderer(const std::shared_ptr<RenderPass>& renderPass)
+        : m_renderPass(renderPass)
+    {
+    }
+
+    virtual ~TerrainRenderer() = default;
+
+public:
+    void Init() override
+    {
+        auto device = DeviceProvider::GetInstance().GetDevice();
+        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+
+        ShaderFactory shaderFactory;
+        m_shader = shaderFactory.CreateShaderFromFiles<TerrainShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "shaders/terrain_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/terrain_frag.spv" } });
+        m_shader->AdjustDescriptorPoolCapacity(100);
+
+        printf("Terrain Shader created\n");
+
+        m_pipeline = std::make_shared<TerrainPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline->Init();
+
+        printf("Terrain Pipeline created\n");
+
+        m_uniformsPoolVS = std::make_shared<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS->AdjustCapactity(100);
+
+        m_uniformsPoolFS = std::make_shared<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS->AdjustCapactity(100);
+    }
+
+    void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
+
+        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+    }
+
+    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT })) {
+            const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+            const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+            const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+            const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
+
+            const auto terrainComponent = ComponentRepository<ITerrainComponenet>::GetInstance().Get(node->GetId());
+
+            auto uboVS = m_uniformsPoolVS->GetNext();
+
+            UniformsVS uniformsVS{};
+            uniformsVS.projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
+            uniformsVS.viewMatrix = cameraComponent->LookAt();
+            uniformsVS.modelMatrix = node->GetWorldTransformScaled();
+            uniformsVS.normalMatrix = glm::inverse(node->GetWorldTransformScaled());
+            uniformsVS.textureNumberOfRows = terrainComponent->GetMaterial()->GetAtlasNumberOfRows();
+            uniformsVS.textureOffset = glm::vec4(terrainComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
+            uniformsVS.cameraPosition = glm::vec4(cameraComponent->GetPosition(), 1.0f);
+            uniformsVS.useFakeLightning = terrainComponent->GetMaterial()->UsesFakeLightning();
+            uniformsVS.density = 0.002f;
+            uniformsVS.gradient = 4.4f;
+
+            uboVS->Update(&uniformsVS);
+
+            auto uboFS = m_uniformsPoolFS->GetNext();
+
+            UniformsFS uniformsFS{};
+            // shadows
+            for (uint32_t i = 0; i < ShadowsComponent::CASCADES_COUNT; i++) {
+                auto& cascade = shadowsComponent->GetCascade(i);
+                uniformsFS.shadows.cascades[i].split = glm::vec4(cascade.endSplitDepth);
+                uniformsFS.shadows.cascades[i].viewProjectionMatrix = cascade.GetBiasedViewProjectionMatrix();
+            }
+            uniformsFS.shadows.enabled = SHADOWS_ENABLED;
+
+            // lightning
+            for (size_t i = 0; i < lightComponents.size(); i++) {
+                uniformsFS.lightning.lights[i].color = glm::vec4(lightComponents[i]->GetColor(), 1.0f);
+                uniformsFS.lightning.lights[i].attenuation = glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f);
+                uniformsFS.lightning.lights[i].position = glm::vec4(lightComponents[i]->GetPosition(), 1.0f);
+            }
+            uniformsFS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
+            uniformsFS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
+
+            // material
+            uniformsFS.material.shineDamper = terrainComponent->GetMaterial()->GetShineDamper();
+            uniformsFS.material.reflectivity = terrainComponent->GetMaterial()->GetReflectivity();
+
+            // common
+            uniformsFS.fogColor = FOG_COLOR;
+            uniformsFS.selectedColor = SELECTED_COLOR;
+            uniformsFS.selected = false;
+            uniformsFS.castedByShadows = true;
+
+            uboFS->Update(&uniformsFS);
+
+            m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), shadowsComponent->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+            m_shader->Bind("textureSampler", *terrainComponent->GetMaterial()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            m_shader->Bind("uboVS", *uboVS);
+            m_shader->Bind("uboFS", *uboFS);
+
+            VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+            VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };
+            VkDeviceSize offsets[] = { 0 };
+
+            vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, terrainComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+            vkCmdDrawIndexed(renderContext.defaultCommandBuffer, terrainComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+        }
+
+        for (auto child : node->GetChildren()) {
+            Render(renderContext, child, renderContextUserData);
+        }
+    }
+
+    void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void ShutDown() override
+    {
+        m_shader->ShutDown();
+
+        m_pipeline->ShutDown();
+    }
+};
+
 class FontRenderer : public IRenderer<DefaultRenderContextUserData> {
 private:
     struct alignas(16) UniformsVS
@@ -2598,9 +2820,7 @@ public:
     {
     }
 
-    virtual ~FontRenderer()
-    {
-    }
+    virtual ~FontRenderer() = default;
 
 public:
     void Init() override
@@ -2707,6 +2927,8 @@ private:
 
     std::shared_ptr<IRenderer<DefaultRenderContextUserData> > m_defaultRenderer;
 
+    std::shared_ptr<IRenderer<DefaultRenderContextUserData> > m_terrainRenderer;
+
     std::shared_ptr<IRenderer<DefaultRenderContextUserData> > m_animationRenderer;
 
     std::shared_ptr<IRenderer<DefaultRenderContextUserData> > m_quadRenderer;
@@ -2767,8 +2989,8 @@ public:
             }
         }
 
-        auto groundPlane = std::make_shared<Plane>(glm::vec3(0.0f, 0.0f, 0.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(12.0f), "cement.jpg");
-        AddChild(groundPlane);
+        //auto groundPlane = std::make_shared<Plane>(glm::vec3(0.0f, 0.0f, 0.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(12.0f), "cement.jpg");
+        //AddChild(groundPlane);
 
         auto goblin = std::make_shared<Goblin>(glm::vec3(-25.0f, 9.0f, 0.0f), glm::quat(glm::radians(glm::vec3(-90.0f, 0.0f, 0.0f))), glm::vec3(0.005f));
         goblin->SetTags({ TAG_MAIN_CAMERA });
@@ -2776,6 +2998,9 @@ public:
 
         auto text = std::make_shared<Text>();
         AddChild(text);
+
+        auto terrain = std::make_shared<Terrain>(glm::vec3(0.0f, 0.0f, 0.0f));
+        AddChild(terrain);
 
         for (auto child : m_children) {
             child->Init();
@@ -2789,8 +3014,11 @@ public:
         m_animationShadowsRenderer = std::make_shared<AnimationShadowsRenderer>(shadowsComponent->GetRenderPass());
         m_animationShadowsRenderer->Init();
 
-        m_defaultRenderer = std::make_shared<DefaultSceneRenderer>(m_defaultRenderPass);
+        m_defaultRenderer = std::make_shared<DefaultRenderer>(m_defaultRenderPass);
         m_defaultRenderer->Init();
+
+        m_terrainRenderer = std::make_shared<TerrainRenderer>(m_defaultRenderPass);
+        m_terrainRenderer->Init();
 
         m_animationRenderer = std::make_shared<AnimationSceneRenderer>(m_defaultRenderPass);
         m_animationRenderer->Init();
@@ -2853,6 +3081,15 @@ public:
 
         m_defaultRenderer->PostRender(renderContext);
 
+        // Terrain
+        m_terrainRenderer->PreRender(renderContext);
+
+        for (auto child : m_children) {
+            m_terrainRenderer->Render(renderContext, child);
+        }
+
+        m_terrainRenderer->PostRender(renderContext);
+
         // Animation
         m_animationRenderer->PreRender(renderContext);
 
@@ -2893,6 +3130,7 @@ public:
         m_quadRenderer->ShutDown();
         m_animationRenderer->ShutDown();
         m_defaultRenderer->ShutDown();
+        m_terrainRenderer->ShutDown();
         m_animationShadowsRenderer->ShutDown();
         m_defaultShadowsRenderer->ShutDown();
     }
