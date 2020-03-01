@@ -161,6 +161,16 @@ struct HeightMapInfo {
     {
         return heights.size();
     }
+
+    float GetMinHeight() const
+    {
+        return minHeight;
+    }
+
+    float GetMaxHeight() const
+    {
+        return maxHeight;
+    }
 };
 
 class ITerrainComponenet : public IBasicRenderComponent {

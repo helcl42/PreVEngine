@@ -2626,7 +2626,7 @@ private:
 
         alignas(16) LightningUniform lightning;
 
-        alignas(16) MaterialUniform materials[2];
+        alignas(16) MaterialUniform material;
 
         alignas(16) glm::vec4 fogColor;
 
@@ -2634,6 +2634,8 @@ private:
 
         alignas(16) uint32_t selected;
         uint32_t castedByShadows;
+        float minHeight;
+        float maxHeight;
     };
 
 private:
@@ -2734,16 +2736,16 @@ public:
             uniformsFS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
 
             // material
-            for (size_t i = 0; i < 2; i++) {
-                uniformsFS.materials[i].shineDamper = terrainComponent->GetMaterials().at(i)->GetShineDamper();
-                uniformsFS.materials[i].reflectivity = terrainComponent->GetMaterials().at(i)->GetReflectivity(); 
-            }
+            uniformsFS.material.shineDamper = terrainComponent->GetMaterials().at(0)->GetShineDamper();
+            uniformsFS.material.reflectivity = terrainComponent->GetMaterials().at(0)->GetReflectivity(); 
             
             // common
             uniformsFS.fogColor = FOG_COLOR;
             uniformsFS.selectedColor = SELECTED_COLOR;
             uniformsFS.selected = false;
             uniformsFS.castedByShadows = true;
+            uniformsFS.minHeight = terrainComponent->GetHeightMapInfo()->GetMinHeight();
+            uniformsFS.maxHeight = terrainComponent->GetHeightMapInfo()->GetMaxHeight();
 
             uboFS->Update(&uniformsFS);
 
