@@ -133,7 +133,7 @@ public:
     }
 };
 
-const float HeightGenerator::AMPLITUDE = 20.0f;
+const float HeightGenerator::AMPLITUDE = 30.0f;
 
 const int HeightGenerator::OCTAVES = 3;
 
@@ -141,6 +141,10 @@ const float HeightGenerator::ROUGHNESS = 0.3f;
 
 struct HeightMapInfo {
     std::vector<std::vector<float> > heights;
+
+    float minHeight{ 0.0f };
+
+    float maxHeight{ 0.0f };
 
     HeightMapInfo() = default;
 
@@ -152,7 +156,7 @@ struct HeightMapInfo {
         }
     }
 
-    float GetHeightAt(const float x, const float z) const
+    float GetHeightAt(const uint32_t x, const uint32_t z) const
     {
         return heights[x][z];
     }
@@ -165,7 +169,7 @@ struct HeightMapInfo {
 
 class ITerrainComponenet : public IBasicRenderComponent {
 public:
-    virtual std::vector<std::shared_ptr<IMaterial>> GetMaterials() const = 0; // TODO make pack of materials controlled by height
+    virtual std::vector<std::shared_ptr<IMaterial> > GetMaterials() const = 0; // TODO make pack of materials controlled by height
 
     virtual float GetHeightAt(const float worldX, const float worldZ) const = 0;
 
@@ -179,11 +183,10 @@ class TerrainComponentFactory;
 
 class TerrainComponent : public ITerrainComponenet {
 public:
-    TerrainComponent(const float x, const float z, const float size, const float maxHeight)
+    TerrainComponent(const float x, const float z, const float size)
         : m_x(x)
         , m_z(z)
         , m_size(size)
-        , m_maxHeight(maxHeight)
     {
     }
 
@@ -195,7 +198,7 @@ public:
         return m_model;
     }
 
-    std::vector<std::shared_ptr<IMaterial>> GetMaterials() const override
+    std::vector<std::shared_ptr<IMaterial> > GetMaterials() const override
     {
         return m_materials;
     }
@@ -234,11 +237,6 @@ public:
         return m_size;
     }
 
-    float GetMaxHeight() const
-    {
-        return m_maxHeight;
-    }
-
 private:
     friend class TerrainComponentFactory;
 
@@ -249,15 +247,13 @@ private:
 
     const float m_size;
 
-    const float m_maxHeight;
-
     std::shared_ptr<HeightMapInfo> m_heightsInfo;
 
     std::shared_ptr<VertexData> m_vertexData;
 
     std::shared_ptr<IModel> m_model;
 
-    std::vector<std::shared_ptr<IMaterial>> m_materials;
+    std::vector<std::shared_ptr<IMaterial> > m_materials;
 };
 
 class TerrainMesh : public IMesh {
@@ -308,7 +304,7 @@ public:
     {
     }
 
-    std::unique_ptr<ITerrainComponenet> CreateRandomTerrain(const float x, const float z, const float size, const float maxHeight) const
+    std::unique_ptr<ITerrainComponenet> CreateRandomTerrain(const float x, const float z, const float size) const
     {
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
@@ -324,7 +320,7 @@ public:
         auto material1 = CreateMaterial(*allocator, "vulkan.png", 3.0f, 0.1f);
         auto material2 = CreateMaterial(*allocator, "texture.jpg", 3.0f, 0.4f);
 
-        auto result = std::make_unique<TerrainComponent>(x, z, size, maxHeight);
+        auto result = std::make_unique<TerrainComponent>(x, z, size);
         result->m_model = std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
         result->m_heightsInfo = CreateHeightMap(heightGenerator);
         result->m_vertexData = GenerateVertexData(heightGenerator, size);
@@ -432,13 +428,23 @@ private:
 
     std::unique_ptr<HeightMapInfo> CreateHeightMap(const std::shared_ptr<HeightGenerator>& generator) const
     {
+        float minHeight = std::numeric_limits<float>::max();
+        float maxHeight = std::numeric_limits<float>::min();
         auto heightMapInfo = std::make_unique<HeightMapInfo>(m_vertexCount);
         for (unsigned int z = 0; z < m_vertexCount; z++) {
             for (unsigned int x = 0; x < m_vertexCount; x++) {
                 float height = generator->GenerateHeight(x, z);
                 heightMapInfo->heights[x][z] = height;
+                if (minHeight > height) {
+                    minHeight = height;
+                }
+                if (maxHeight < height) {
+                    maxHeight = height;
+                }
             }
         }
+        heightMapInfo->minHeight = minHeight;
+        heightMapInfo->maxHeight = maxHeight;
         return heightMapInfo;
     }
 
