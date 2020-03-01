@@ -165,7 +165,7 @@ struct HeightMapInfo {
 
 class ITerrainComponenet : public IBasicRenderComponent {
 public:
-    virtual std::shared_ptr<IMaterial> GetMaterial() const = 0; // TODO make pack of materials controlled by height
+    virtual std::vector<std::shared_ptr<IMaterial>> GetMaterials() const = 0; // TODO make pack of materials controlled by height
 
     virtual float GetHeightAt(const float worldX, const float worldZ) const = 0;
 
@@ -195,9 +195,9 @@ public:
         return m_model;
     }
 
-    std::shared_ptr<IMaterial> GetMaterial() const override
+    std::vector<std::shared_ptr<IMaterial>> GetMaterials() const override
     {
-        return m_material;
+        return m_materials;
     }
 
     float GetHeightAt(const float worldX, const float worldZ) const override
@@ -257,7 +257,7 @@ private:
 
     std::shared_ptr<IModel> m_model;
 
-    std::shared_ptr<IMaterial> m_material;
+    std::vector<std::shared_ptr<IMaterial>> m_materials;
 };
 
 class TerrainMesh : public IMesh {
@@ -321,13 +321,15 @@ public:
         indexBuffer->Data(mesh->GerIndices().data(), static_cast<uint32_t>(mesh->GerIndices().size()));
 
         // TODO - temporary
-        auto material = CreateMaterial(*allocator, "vulkan.png", 3.0f, 0.1f);
+        auto material1 = CreateMaterial(*allocator, "vulkan.png", 3.0f, 0.1f);
+        auto material2 = CreateMaterial(*allocator, "texture.jpg", 3.0f, 0.4f);
 
         auto result = std::make_unique<TerrainComponent>(x, z, size, maxHeight);
         result->m_model = std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
         result->m_heightsInfo = CreateHeightMap(heightGenerator);
         result->m_vertexData = GenerateVertexData(heightGenerator, size);
-        result->m_material = std::move(material);
+        result->m_materials.push_back(std::move(material1));
+        result->m_materials.push_back(std::move(material2));
         return result;
     }
 

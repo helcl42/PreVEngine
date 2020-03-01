@@ -2616,11 +2616,7 @@ private:
 
         alignas(16) glm::vec4 cameraPosition;
 
-        alignas(16) glm::vec4 textureOffset;
-
-        alignas(16) uint32_t textureNumberOfRows;
-        uint32_t useFakeLightning;
-        float density;
+        alignas(16) float density;
         float gradient;
     };
 
@@ -2630,7 +2626,7 @@ private:
 
         alignas(16) LightningUniform lightning;
 
-        alignas(16) MaterialUniform material;
+        alignas(16) MaterialUniform materials[2];
 
         alignas(16) glm::vec4 fogColor;
 
@@ -2711,10 +2707,7 @@ public:
             uniformsVS.viewMatrix = cameraComponent->LookAt();
             uniformsVS.modelMatrix = node->GetWorldTransformScaled();
             uniformsVS.normalMatrix = glm::inverse(node->GetWorldTransformScaled());
-            uniformsVS.textureNumberOfRows = terrainComponent->GetMaterial()->GetAtlasNumberOfRows();
-            uniformsVS.textureOffset = glm::vec4(terrainComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
             uniformsVS.cameraPosition = glm::vec4(cameraComponent->GetPosition(), 1.0f);
-            uniformsVS.useFakeLightning = terrainComponent->GetMaterial()->UsesFakeLightning();
             uniformsVS.density = 0.002f;
             uniformsVS.gradient = 4.4f;
 
@@ -2741,9 +2734,11 @@ public:
             uniformsFS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
 
             // material
-            uniformsFS.material.shineDamper = terrainComponent->GetMaterial()->GetShineDamper();
-            uniformsFS.material.reflectivity = terrainComponent->GetMaterial()->GetReflectivity();
-
+            for (size_t i = 0; i < 2; i++) {
+                uniformsFS.materials[i].shineDamper = terrainComponent->GetMaterials().at(i)->GetShineDamper();
+                uniformsFS.materials[i].reflectivity = terrainComponent->GetMaterials().at(i)->GetReflectivity(); 
+            }
+            
             // common
             uniformsFS.fogColor = FOG_COLOR;
             uniformsFS.selectedColor = SELECTED_COLOR;
@@ -2753,7 +2748,9 @@ public:
             uboFS->Update(&uniformsFS);
 
             m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), shadowsComponent->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-            m_shader->Bind("textureSampler", *terrainComponent->GetMaterial()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            for (uint32_t i = 0; i < 2; i++) {
+                m_shader->Bind("textureSampler[" + std::to_string(i) + "]", *terrainComponent->GetMaterials().at(i)->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            }
             m_shader->Bind("uboVS", *uboVS);
             m_shader->Bind("uboFS", *uboFS);
 
