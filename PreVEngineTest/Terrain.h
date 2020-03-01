@@ -95,23 +95,19 @@ public:
     static const float ROUGHNESS;
 
 public:
-    const int m_xOffset;
-
-    const int m_zOffset;
+    const glm::vec3 m_offset;
 
     const std::shared_ptr<PerlinNoiseGenerator> m_noiseGenerator;
 
 public:
     explicit HeightGenerator()
-        : m_xOffset(0)
-        , m_zOffset(0)
+        : m_offset(glm::vec3(0.0f, 0.0f, 0.0f))
         , m_noiseGenerator(std::make_shared<PerlinNoiseGenerator>(HeightGenerator::ROUGHNESS, HeightGenerator::AMPLITUDE, HeightGenerator::OCTAVES))
     {
     }
 
-    explicit HeightGenerator(const int gridX, const int gridZ, const int size, const unsigned int seed)
-        : m_xOffset(gridX * (size - 1))
-        , m_zOffset(gridZ * (size - 1))
+    explicit HeightGenerator(const glm::vec3& position, const int size, const unsigned int seed)
+        : m_offset(position.x * (size - 1), position.y, position.z * (size - 1))
         , m_noiseGenerator(std::make_shared<PerlinNoiseGenerator>(seed, HeightGenerator::ROUGHNESS, HeightGenerator::AMPLITUDE, HeightGenerator::OCTAVES))
     {
     }
@@ -123,11 +119,11 @@ public:
     {
         const float d = static_cast<float>(std::powf(2.0f, static_cast<float>(HeightGenerator::OCTAVES - 1)));
 
-        float total = 0;
+        float total = m_offset.y;
         for (int i = 0; i < HeightGenerator::OCTAVES; i++) {
             float freq = static_cast<float>(std::powf(2, static_cast<float>(i)) / d);
             float amp = static_cast<float>(std::powf(HeightGenerator::ROUGHNESS, static_cast<float>(i))) * static_cast<float>(HeightGenerator::AMPLITUDE);
-            total += m_noiseGenerator->GetInterpolatedNoise((x + m_xOffset) * freq, (z + m_zOffset) * freq) * amp;
+            total += m_noiseGenerator->GetInterpolatedNoise((x + m_offset.x) * freq, (z + m_offset.z) * freq) * amp;
         }
         return total;
     }
@@ -175,6 +171,12 @@ public:
 
     virtual std::shared_ptr<VertexData> GetVertexData() const = 0;
 
+    virtual std::shared_ptr<HeightMapInfo> GetHeightMapInfo() const = 0;
+
+    virtual float GetSize() const = 0;
+
+    virtual const glm::vec3& GetPosition() const = 0;
+
 public:
     virtual ~ITerrainComponenet() = default;
 };
@@ -183,9 +185,8 @@ class TerrainComponentFactory;
 
 class TerrainComponent : public ITerrainComponenet {
 public:
-    TerrainComponent(const float x, const float z, const float size)
-        : m_x(x)
-        , m_z(z)
+    TerrainComponent(const glm::vec3& position, const float size)
+        : m_position(position)
         , m_size(size)
     {
     }
@@ -205,8 +206,8 @@ public:
 
     float GetHeightAt(const float worldX, const float worldZ) const override
     {
-        const float terrainX = worldX - m_x;
-        const float terrainZ = worldZ - m_z;
+        const float terrainX = worldX - m_position.x;
+        const float terrainZ = worldZ - m_position.z;
         const float gridSquareSize = m_size / ((float)m_heightsInfo->GetSize() - 1.0f);
         const int gridX = static_cast<int>(std::floorf(terrainX / gridSquareSize));
         const int gridZ = static_cast<int>(std::floorf(terrainZ / gridSquareSize));
@@ -232,18 +233,26 @@ public:
         return m_vertexData;
     }
 
-    float GetSize() const
+    float GetSize() const override
     {
         return m_size;
+    }
+
+    const glm::vec3& GetPosition() const
+    {
+        return m_position;
+    }
+
+    std::shared_ptr<HeightMapInfo> GetHeightMapInfo() const override
+    {
+        return m_heightsInfo;
     }
 
 private:
     friend class TerrainComponentFactory;
 
 private:
-    const float m_x;
-
-    const float m_z;
+    const glm::vec3 m_position;
 
     const float m_size;
 
@@ -304,11 +313,11 @@ public:
     {
     }
 
-    std::unique_ptr<ITerrainComponenet> CreateRandomTerrain(const float x, const float z, const float size) const
+    std::unique_ptr<ITerrainComponenet> CreateRandomTerrain(const glm::vec3& position, const float size) const
     {
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
-        const auto heightGenerator = std::make_shared<HeightGenerator>(x, z, m_vertexCount, m_seed);
+        const auto heightGenerator = std::make_shared<HeightGenerator>(position, m_vertexCount, m_seed);
 
         auto mesh = GenerateMesh(heightGenerator, size);
         auto vertexBuffer = std::make_unique<VBO>(*allocator);
@@ -320,7 +329,7 @@ public:
         auto material1 = CreateMaterial(*allocator, "vulkan.png", 3.0f, 0.1f);
         auto material2 = CreateMaterial(*allocator, "texture.jpg", 3.0f, 0.4f);
 
-        auto result = std::make_unique<TerrainComponent>(x, z, size);
+        auto result = std::make_unique<TerrainComponent>(position, size);
         result->m_model = std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
         result->m_heightsInfo = CreateHeightMap(heightGenerator);
         result->m_vertexData = GenerateVertexData(heightGenerator, size);

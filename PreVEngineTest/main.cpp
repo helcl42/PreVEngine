@@ -1133,7 +1133,7 @@ public:
 
         const auto position = GetPosition();
         TerrainComponentFactory terrainComponentFactory{};
-        auto terrainComponent = terrainComponentFactory.CreateRandomTerrain(position.x, position.z, 240.0f);
+        auto terrainComponent = terrainComponentFactory.CreateRandomTerrain(glm::vec3(0.0f, 0.0f, 0.0f), 240.0f);
 
         ComponentRepository<ITerrainComponenet>::GetInstance().Add(m_id, std::move(terrainComponent));
 
