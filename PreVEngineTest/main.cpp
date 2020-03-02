@@ -1876,6 +1876,113 @@ public:
     }
 };
 
+class TerrainShadowsRenderer : public IRenderer<ShadowsRenderContextUserData> {
+private:
+    struct Uniforms {
+        alignas(16) glm::mat4 modelMatrix;
+        alignas(16) glm::mat4 viewMatrix;
+        alignas(16) glm::mat4 projectionMatrix;
+    };
+
+private:
+    std::shared_ptr<RenderPass> m_renderPass;
+
+private:
+    std::shared_ptr<Shader> m_shader;
+
+    std::shared_ptr<IGraphicsPipeline> m_pipeline;
+
+    std::shared_ptr<UBOPool<Uniforms> > m_uniformsPool;
+
+public:
+    TerrainShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
+        : m_renderPass(renderPass)
+    {
+    }
+
+    virtual ~TerrainShadowsRenderer() = default;
+
+public:
+    void Init() override
+    {
+        auto device = DeviceProvider::GetInstance().GetDevice();
+        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+
+        ShaderFactory shaderFactory;
+        m_shader = shaderFactory.CreateShaderFromFiles<TerrainShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "shaders/terrain_shadows_vert.spv" } });
+        m_shader->AdjustDescriptorPoolCapacity(300);
+
+        printf("Terrain Shadows Shader created\n");
+
+        m_pipeline = std::make_shared<TerrainShadowsPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline->Init();
+
+        printf("Terrain Shadows Pipeline created\n");
+
+        m_uniformsPool = std::make_shared<UBOPool<Uniforms> >(*allocator);
+        m_uniformsPool->AdjustCapactity(300);
+    }
+
+    void PreRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    {
+        const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+
+        const auto shadowsExtent = shadows->GetExtent();
+
+        VkRect2D scissor = { { 0, 0 }, shadows->GetExtent() };
+        VkViewport viewport = { 0, 0, static_cast<float>(shadowsExtent.width), static_cast<float>(shadowsExtent.height), 0, 1 };
+
+        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+    }
+
+    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT })) {
+            auto renderComponent = ComponentRepository<ITerrainComponenet>::GetInstance().Get(node->GetId());
+            const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+
+            const auto& cascade = shadows->GetCascade(shadowsRenderContext.cascadeIndex);
+
+            auto ubo = m_uniformsPool->GetNext();
+
+            Uniforms uniforms{};
+            uniforms.projectionMatrix = cascade.projectionMatrix;
+            uniforms.viewMatrix = cascade.viewMatrix;
+            uniforms.modelMatrix = node->GetWorldTransformScaled();
+            ubo->Update(&uniforms);
+
+            m_shader->Bind("ubo", *ubo);
+
+            VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+            VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
+            VkDeviceSize offsets[] = { 0 };
+
+            vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+            vkCmdDrawIndexed(renderContext.defaultCommandBuffer, renderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+        }
+
+        for (auto child : node->GetChildren()) {
+            Render(renderContext, child, shadowsRenderContext);
+        }
+    }
+
+    void PostRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    {
+    }
+
+    void ShutDown() override
+    {
+        m_pipeline->ShutDown();
+
+        m_shader->ShutDown();
+    }
+};
+
 class AnimationShadowsRenderer : public IRenderer<ShadowsRenderContextUserData> {
 private:
     struct Uniforms {
@@ -2750,7 +2857,7 @@ public:
             uboFS->Update(&uniformsFS);
 
             m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), shadowsComponent->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-            for (uint32_t i = 0; i < 2; i++) {
+            for (uint32_t i = 0; i < 4; i++) {
                 m_shader->Bind("textureSampler[" + std::to_string(i) + "]", *terrainComponent->GetMaterials().at(i)->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             }
             m_shader->Bind("uboVS", *uboVS);
@@ -2931,6 +3038,8 @@ private:
 private:
     std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_defaultShadowsRenderer;
 
+    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_terrainShadowsRenderer;
+
     std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_animationShadowsRenderer;
 
     std::shared_ptr<IRenderer<DefaultRenderContextUserData> > m_defaultRenderer;
@@ -3019,6 +3128,9 @@ public:
         m_defaultShadowsRenderer = std::make_shared<DefaultShadowsRenderer>(shadowsComponent->GetRenderPass());
         m_defaultShadowsRenderer->Init();
 
+        m_terrainShadowsRenderer = std::make_shared<TerrainShadowsRenderer>(shadowsComponent->GetRenderPass());
+        m_terrainShadowsRenderer->Init();
+
         m_animationShadowsRenderer = std::make_shared<AnimationShadowsRenderer>(shadowsComponent->GetRenderPass());
         m_animationShadowsRenderer->Init();
 
@@ -3064,6 +3176,15 @@ public:
             }
 
             m_defaultShadowsRenderer->PostRender(renderContext, userData);
+
+            // terrain
+            m_terrainShadowsRenderer->PreRender(renderContext, userData);
+
+            for (auto child : m_children) {
+                m_terrainShadowsRenderer->Render(renderContext, child, userData);
+            }
+
+            m_terrainShadowsRenderer->PostRender(renderContext, userData);
 
             // animated
             m_animationShadowsRenderer->PreRender(renderContext, userData);
@@ -3140,6 +3261,7 @@ public:
         m_defaultRenderer->ShutDown();
         m_terrainRenderer->ShutDown();
         m_animationShadowsRenderer->ShutDown();
+        m_terrainShadowsRenderer->ShutDown();
         m_defaultShadowsRenderer->ShutDown();
     }
 

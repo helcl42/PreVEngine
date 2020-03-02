@@ -338,6 +338,8 @@ public:
         // TODO - temporary
         auto material1 = CreateMaterial(*allocator, "vulkan.png", 3.0f, 0.1f);
         auto material2 = CreateMaterial(*allocator, "texture.jpg", 3.0f, 0.4f);
+        auto material3 = CreateMaterial(*allocator, "vulkan.png", 3.0f, 0.1f);
+        auto material4 = CreateMaterial(*allocator, "texture.jpg", 3.0f, 0.4f);
 
         auto result = std::make_unique<TerrainComponent>(position, size);
         result->m_model = std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
@@ -345,6 +347,8 @@ public:
         result->m_vertexData = GenerateVertexData(heightGenerator, size);
         result->m_materials.push_back(std::move(material1));
         result->m_materials.push_back(std::move(material2));
+        result->m_materials.push_back(std::move(material3));
+        result->m_materials.push_back(std::move(material4));
         return result;
     }
 

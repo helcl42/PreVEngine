@@ -5,7 +5,7 @@
 #include "shadows_use.glsl"
 #include "lights.glsl"
 
-const uint MATERIAL_COUNT = 2;
+const uint MATERIAL_COUNT = 4;
 
 layout(std140, binding = 1) uniform UniformBufferObject {
 	Shadows shadows;
@@ -39,14 +39,57 @@ layout(location = 0) out vec4 outColor;
 
 void main() 
 {
-    const float scale = uboFS.maxHeight - uboFS.minHeight;
-    const float scaleStep = scale / MATERIAL_COUNT;
 
-    vec4 textureColor;
-    if(inWorldPosition.y > scaleStep + uboFS.minHeight) {
-        textureColor = texture(textureSampler[1], inTextureCoord);
-    } else {
-        textureColor = texture(textureSampler[0], inTextureCoord);
+    const vec4 colors[] = {
+      vec4(1.0, 1.0, 1.0, 1.0),
+      vec4(1.0, 0.0, 0.0, 1.0),
+      vec4(0.0, 1.0, 0.0, 1.0),
+      vec4(0.0, 0.0, 1.0, 1.0)
+    };
+
+    const float steps[] = {
+        0.2, 
+        0.4,
+        0.6,
+        0.8
+    };
+
+    const float transitionWidth = 0.1;
+
+    const float heightRange = abs(uboFS.maxHeight) + abs(uboFS.minHeight);
+    float normalizedHeight = (inWorldPosition.y + abs(uboFS.minHeight)) / heightRange;
+
+    vec4 textureColor = vec4(1.0, 1.0, 0.0, 1.0);
+    for(uint i = 0; i < MATERIAL_COUNT; i++) 
+    {
+        if(i < MATERIAL_COUNT - 1)
+        {
+            if(normalizedHeight > steps[i] - transitionWidth && normalizedHeight < steps[i] + transitionWidth)
+            {
+                float ratio = (normalizedHeight - steps[i] + transitionWidth) / (2 * transitionWidth);
+                //vec4 color1 = texture(textureSampler[i - 1], inTextureCoord);
+                //vec4 color2 = texture(textureSampler[i], inTextureCoord);
+                vec4 color1 = colors[i];
+                vec4 color2 = colors[i + 1];
+                textureColor = mix(color1, color2, ratio);
+                break;
+            }
+            else if(normalizedHeight > steps[i] + transitionWidth && normalizedHeight < steps[i + 1] - transitionWidth)
+            {
+                textureColor = colors[i];
+                break;
+            }
+			else if(normalizedHeight < steps[i] - transitionWidth)
+			{
+				textureColor = colors[i];
+				break;
+			}
+        }
+        else
+        {
+            textureColor = colors[i];
+            break;
+        }
     }
 
 	if (textureColor.a < 0.5) 
