@@ -55,7 +55,7 @@ private:
     static float Interpolate(const float a, const float b, const float blend)
     {
         const float theta = blend * glm::pi<float>();
-        const float factor = (1.0f - std::cosf(theta)) * 0.5f;
+        const float factor = (1.0f - cosf(theta)) * 0.5f;
         return a * (1.0f - factor) + b * factor;
     }
 
@@ -117,12 +117,12 @@ public:
 public:
     float GenerateHeight(const int x, const int z) const
     {
-        const float d = static_cast<float>(std::powf(2.0f, static_cast<float>(HeightGenerator::OCTAVES - 1)));
+        const float d = static_cast<float>(powf(2.0f, static_cast<float>(HeightGenerator::OCTAVES - 1)));
 
         float total = m_offset.y;
         for (int i = 0; i < HeightGenerator::OCTAVES; i++) {
-            float freq = static_cast<float>(std::powf(2, static_cast<float>(i)) / d);
-            float amp = static_cast<float>(std::powf(HeightGenerator::ROUGHNESS, static_cast<float>(i))) * static_cast<float>(HeightGenerator::AMPLITUDE);
+            float freq = static_cast<float>(powf(2, static_cast<float>(i)) / d);
+            float amp = static_cast<float>(powf(HeightGenerator::ROUGHNESS, static_cast<float>(i))) * static_cast<float>(HeightGenerator::AMPLITUDE);
             total += m_noiseGenerator->GetInterpolatedNoise((x + m_offset.x) * freq, (z + m_offset.z) * freq) * amp;
         }
         return total;
@@ -219,15 +219,15 @@ public:
         const float terrainX = worldX - m_position.x;
         const float terrainZ = worldZ - m_position.z;
         const float gridSquareSize = m_size / ((float)m_heightsInfo->GetSize() - 1.0f);
-        const int gridX = static_cast<int>(std::floorf(terrainX / gridSquareSize));
-        const int gridZ = static_cast<int>(std::floorf(terrainZ / gridSquareSize));
+        const int gridX = static_cast<int>(floorf(terrainX / gridSquareSize));
+        const int gridZ = static_cast<int>(floorf(terrainZ / gridSquareSize));
 
         if (gridX >= static_cast<int>(m_heightsInfo->GetSize()) - 1 || gridX < 0 || gridZ >= static_cast<int>(m_heightsInfo->GetSize()) - 1 || gridZ < 0) {
             return 0.0f;
         }
 
-        const float xCoord = std::fmodf(terrainX, gridSquareSize) / gridSquareSize;
-        const float zCoord = std::fmodf(terrainZ, gridSquareSize) / gridSquareSize;
+        const float xCoord = fmodf(terrainX, gridSquareSize) / gridSquareSize;
+        const float zCoord = fmodf(terrainZ, gridSquareSize) / gridSquareSize;
 
         float answer;
         if (xCoord <= (1 - zCoord)) {
@@ -248,7 +248,7 @@ public:
         return m_size;
     }
 
-    const glm::vec3& GetPosition() const
+    const glm::vec3& GetPosition() const override
     {
         return m_position;
     }

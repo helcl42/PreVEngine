@@ -14,5 +14,6 @@
 #include <memory>
 #include <stdexcept>
 #include <thread>
+#include <cmath>
 
 #endif
