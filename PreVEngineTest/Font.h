@@ -94,15 +94,15 @@ private:
     std::shared_ptr<ImageBuffer> m_imageBuffer;
 
 public:
-    static const float LINE_HEIGHT;
+    inline static const float LINE_HEIGHT = 0.03f;
 
-    static const int NULL_CODE = 0;
+    inline static const int NULL_CODE = 0;
 
-    static const int SPACE_CODE = ' ';
+    inline static const int SPACE_CODE = ' ';
 
-    static const int NEW_LINE_CODE = '\n';
+    inline static const int NEW_LINE_CODE = '\n';
 
-    static const int FALLBACK_CODE = '?';
+    inline static const int FALLBACK_CODE = '?';
 
 public:
     float GetSpaceWidth() const
@@ -129,8 +129,6 @@ public:
         return false;
     }
 };
-
-const float FontMetadata::LINE_HEIGHT = 0.03f;
 
 class MetaDataFile {
 public:
@@ -224,10 +222,10 @@ private:
 
 class FontMetadataFactory {
 private:
-    static const int PADDING_TOP_INDEX = 0;
-    static const int PADDING_LEFT_INDEX = 1;
-    static const int PADDING_BOTTOM_INDEX = 2;
-    static const int PADDING_RIGHT_INDEX = 3;
+    inline static const int PADDING_TOP_INDEX = 0;
+    inline static const int PADDING_LEFT_INDEX = 1;
+    inline static const int PADDING_BOTTOM_INDEX = 2;
+    inline static const int PADDING_RIGHT_INDEX = 3;
 
     struct FontMetaDataState {
         float aspectRatio;

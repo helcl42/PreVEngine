@@ -44,9 +44,7 @@ public:
     {
     }
 
-    virtual ~FPSService()
-    {
-    }
+    virtual ~FPSService() = default;
 
 public:
     void Update(float deltaTime)
@@ -617,9 +615,7 @@ public:
     {
     }
 
-    virtual ~UBOPool()
-    {
-    }
+    virtual ~UBOPool() = default;
 
 public:
     void AdjustCapactity(uint32_t capacity)

@@ -28,7 +28,7 @@ bool Shader::Init()
             VkPipelineShaderStageCreateInfo stageInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
             stageInfo.stage = module.first;
             stageInfo.module = m_shaderModules[module.first];
-            stageInfo.pName = m_shadersEntryPointName.c_str();
+            stageInfo.pName = DEFAULT_ENTRY_POINT_NAME.c_str();
             m_shaderStages.push_back(stageInfo);
         }
 
@@ -148,7 +148,7 @@ void Shader::AddPushConstantBlock(const VkShaderStageFlags stageFlags, const uin
 
 bool Shader::AddShaderModule(const VkShaderStageFlagBits stage, const std::vector<char>& spirv)
 {
-    assert(!(m_validShaderStages.find(stage) == m_validShaderStages.cend()) && "Invalid shader stage provided.");
+    assert(!(VALID_SHADER_STAGES.find(stage) == VALID_SHADER_STAGES.cend()) && "Invalid shader stage provided.");
 
     assert(!m_shaderModules[stage] && "Shader stage already loaded.");
 

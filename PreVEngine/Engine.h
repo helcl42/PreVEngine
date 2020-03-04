@@ -80,9 +80,7 @@ public:
     {
     }
 
-    virtual ~Engine()
-    {
-    }
+    virtual ~Engine() = default;
 
 private:
     void InitTiming()

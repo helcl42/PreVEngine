@@ -19,7 +19,7 @@ private:
 public:
     SubPass(RenderPass& renderpass);
 
-    virtual ~SubPass();
+    virtual ~SubPass() = default;
 
 public:
     void UseAttachment(uint32_t attachmentIndex); // for write

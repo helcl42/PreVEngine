@@ -16,36 +16,31 @@ namespace PreVEngine
 		InitWindow(title, width, height, false);
 	}
 
-	AbstractWindow::~AbstractWindow()
-	{
-		delete (m_windowImpl);
-	}
-
 	void AbstractWindow::InitWindow(const char* title, const uint32_t width, const uint32_t height, bool tryFullscreen)
 	{
 #ifdef VK_USE_PLATFORM_XCB_KHR
 		LOGI("PLATFORM: XCB\n");
 		if (tryFullscreen)
 		{
-			m_windowImpl = new WindowXcb(title);
+			m_windowImpl = std::make_shared<WindowXcb>(title);
 		}
 		else
 		{
-			m_windowImpl = new WindowXcb(title, width, height);
+			m_windowImpl = std::make_shared<WindowXcb>(title, width, height);
 		}
 #elif VK_USE_PLATFORM_WIN32_KHR
 		LOGI("PLATFORM: WIN32\n");
 		if (tryFullscreen)
 		{
-			m_windowImpl = new WindowWin32(title);
+			m_windowImpl = std::make_shared<WindowWin32>(title);
 		}
 		else
 		{
-			m_windowImpl = new WindowWin32(title, width, height);
+			m_windowImpl = std::make_shared<WindowWin32>(title, width, height);
 		}
 #elif VK_USE_PLATFORM_ANDROID_KHR
 		LOGI("PLATFORM: ANDROID\n");
-		m_windowImpl = new WindowAndroid(title, width, height);
+		m_windowImpl = std::make_shared<WindowAndroid>(title, width, height);
 #else 
 #error NOT IMPLEMENTED PLATFORM
 #endif

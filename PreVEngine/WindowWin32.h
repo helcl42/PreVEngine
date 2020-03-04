@@ -223,8 +223,7 @@ void WindowWin32::SetMouseCursorVisible(bool visible)
     if (visible) {
         ShowCursor(true);
     } else {
-        while (ShowCursor(false) >= 0)
-            ;
+        while (ShowCursor(false) >= 0);
     }
 }
 

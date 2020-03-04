@@ -7,10 +7,6 @@ namespace PreVEngine
 	{
 	}
 
-	SubPass::~SubPass()
-	{
-	}
-
 	SubPass::operator VkSubpassDescription()
 	{
 		VkSubpassDescription subPass = {};

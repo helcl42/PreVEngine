@@ -2,14 +2,6 @@
 
 namespace PreVEngine
 {
-	PickList::PickList()
-	{
-	}
-
-	PickList::~PickList()
-	{
-	}
-
 	bool PickList::IsPicked(const char* name) const
 	{
 		for (auto index : pick_list_indices)

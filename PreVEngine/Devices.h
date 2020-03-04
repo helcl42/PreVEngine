@@ -25,7 +25,7 @@ public:
 
     PhysicalDevice(VkPhysicalDevice gpu);
 
-    virtual ~PhysicalDevice();
+    virtual ~PhysicalDevice() = default;
 
 public:
     std::string GetVendorName() const;
@@ -98,7 +98,7 @@ struct Queue {
 public:
     VkCommandPool CreateCommandPool() const;
 
-    VkCommandBuffer CreateCommandBuffer(VkCommandPool command_pool) const;
+    VkCommandBuffer CreateCommandBuffer(VkCommandPool commandPool) const;
 
 public:
     operator VkQueue() const;

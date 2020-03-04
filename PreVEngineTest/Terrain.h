@@ -88,11 +88,11 @@ private:
 
 class HeightGenerator {
 public:
-    static const float AMPLITUDE;
+    inline static const float AMPLITUDE = 30.0f;
 
-    static const int OCTAVES;
+    inline static const int OCTAVES = 3;
 
-    static const float ROUGHNESS;
+    inline static const float ROUGHNESS = 0.3f;
 
 public:
     const glm::vec3 m_offset;
@@ -128,12 +128,6 @@ public:
         return total;
     }
 };
-
-const float HeightGenerator::AMPLITUDE = 30.0f;
-
-const int HeightGenerator::OCTAVES = 3;
-
-const float HeightGenerator::ROUGHNESS = 0.3f;
 
 struct HeightMapInfo {
     std::vector<std::vector<float> > heights;

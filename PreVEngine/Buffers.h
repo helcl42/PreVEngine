@@ -160,9 +160,7 @@ struct ImageBufferCreateInfo {
     {
     }
 
-    ~ImageBufferCreateInfo()
-    {
-    }
+    ~ImageBufferCreateInfo() = default;
 };
 
 class IImageBuffer {
@@ -194,7 +192,7 @@ public:
     virtual VkImageViewType GetViewType() const = 0;
 
 public:
-    virtual ~IImageBuffer() {}
+    virtual ~IImageBuffer() = default;
 };
 
 class AbstractImageBuffer : public IImageBuffer {
@@ -254,7 +252,7 @@ class ImageBuffer : public AbstractImageBuffer {
 public:
     ImageBuffer(Allocator& allocator);
 
-    ~ImageBuffer();
+    ~ImageBuffer() = default;
 
 public:
     void Create(const ImageBufferCreateInfo& createInfo) override;
@@ -268,7 +266,7 @@ class DepthImageBuffer : public AbstractImageBuffer {
 public:
     DepthImageBuffer(Allocator& allocator);
 
-    ~DepthImageBuffer();
+    ~DepthImageBuffer() = default;
 
 public:
     void Create(const ImageBufferCreateInfo& createInfo) override;
@@ -282,7 +280,7 @@ class ColorImageBuffer : public AbstractImageBuffer {
 public:
     ColorImageBuffer(Allocator& allocator);
 
-    ~ColorImageBuffer();
+    ~ColorImageBuffer() = default;
 
 public:
     void Create(const ImageBufferCreateInfo& createInfo) override;

@@ -171,14 +171,14 @@ private:
     std::vector<uint8_t> m_buffer;
 
 public:
-    VertexDataBuffer()
-    {
-    }
+    VertexDataBuffer() = default;
 
     VertexDataBuffer(const size_t initialSize)
     {
         m_buffer.reserve(initialSize);
     }
+
+    ~VertexDataBuffer() = default;
 
 public:
     void Add(const void* data, const unsigned int size)

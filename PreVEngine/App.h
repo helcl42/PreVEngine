@@ -16,9 +16,7 @@ public:
     {
     }
 
-    virtual ~App()
-    {
-    }
+    virtual ~App() = default;
 
 protected:
     virtual void OnEngineInit() = 0;

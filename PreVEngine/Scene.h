@@ -115,9 +115,7 @@ public:
     {
     }
 
-    virtual ~Scene()
-    {
-    }
+    virtual ~Scene() = default;
 
 private:
     void InitQueues()

@@ -18,9 +18,9 @@ protected:
     std::vector<const char*> pick_list_names_ptrs;
 
 public:
-    PickList();
+    PickList() = default;
 
-    virtual ~PickList();
+    virtual ~PickList() = default;
 
 protected:
     void RefreshPickList();

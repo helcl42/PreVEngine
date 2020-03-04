@@ -629,10 +629,6 @@ namespace PreVEngine
 	{
 	}
 
-	ImageBuffer::~ImageBuffer()
-	{
-	}
-
 	void ImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
 	{
 		m_format = createInfo.format;
@@ -676,10 +672,6 @@ namespace PreVEngine
 	{
 	}
 
-	DepthImageBuffer::~DepthImageBuffer()
-	{
-	}
-
 	void DepthImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
 	{
 		m_format = createInfo.format;
@@ -707,10 +699,6 @@ namespace PreVEngine
 	//--------------------------------------------------------------------------------
 	ColorImageBuffer::ColorImageBuffer(Allocator& allocator)
 		: AbstractImageBuffer(allocator)
-	{
-	}
-
-	ColorImageBuffer::~ColorImageBuffer()
 	{
 	}
 

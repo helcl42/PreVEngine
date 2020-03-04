@@ -14,7 +14,7 @@
 namespace PreVEngine {
 class AbstractWindow : public IWindow {
 private:
-    WindowImpl* m_windowImpl;
+    std::shared_ptr<WindowImpl> m_windowImpl;
 
 private:
     void InitWindow(const char* title, const uint32_t width, const uint32_t height, bool tryFullscreen);
@@ -24,7 +24,7 @@ public:
 
     AbstractWindow(const char* title, const uint32_t width, const uint32_t height);
 
-    virtual ~AbstractWindow();
+    virtual ~AbstractWindow() = default; 
 
 public:
     Surface& GetSurface(VkInstance instance);

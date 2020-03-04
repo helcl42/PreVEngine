@@ -331,12 +331,12 @@ public:
     }
 };
 
-#define NUM_BONES_PER_VEREX 4
-
 struct VertexBoneData {
-    unsigned int ids[NUM_BONES_PER_VEREX];
+    inline static const int BONES_PER_VERTEX_COUNT = 4;
 
-    float weights[NUM_BONES_PER_VEREX];
+    unsigned int ids[BONES_PER_VERTEX_COUNT];
+
+    float weights[BONES_PER_VERTEX_COUNT];
 
     VertexBoneData()
     {
@@ -392,11 +392,11 @@ private:
     };
 
 private:
-    float m_elapsedTime = 0.0f;
+    float m_elapsedTime{ 0.0f };
 
     std::map<std::string, unsigned int> m_boneMapping; // maps a bone name to its index
 
-    unsigned int m_numBones = 0;
+    unsigned int m_numBones{ 0 };
 
     std::vector<BoneInfo> m_boneInfos;
 
@@ -404,15 +404,15 @@ private:
 
     std::vector<glm::mat4> m_boneTransforms;
 
-    const aiScene* m_scene;
+    const aiScene* m_scene{ nullptr };
 
     Assimp::Importer m_importer; // TODO get rid of that
 
-    AnimationState m_animationState = AnimationState::RUNNING;
+    AnimationState m_animationState{ AnimationState::RUNNING };
 
-    unsigned int m_animationIndex = 0;
+    unsigned int m_animationIndex{ 0 };
 
-    float m_animationSpeed = 1.0f;
+    float m_animationSpeed{ 1.0f };
 
 public:
     Animation() = default;

@@ -26,10 +26,6 @@ namespace PreVEngine
 		m_extensions.Pick(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 	}
 
-	PhysicalDevice::~PhysicalDevice()
-	{
-	}
-
 	std::string PhysicalDevice::GetVendorName() const
 	{
 		struct

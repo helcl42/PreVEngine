@@ -22,9 +22,9 @@ private:
     };
 
 private:
-    const std::string m_shadersEntryPointName = "main";
+    static inline const std::string DEFAULT_ENTRY_POINT_NAME = "main";
 
-    const std::set<VkShaderStageFlagBits> m_validShaderStages = {
+    static inline const std::set<VkShaderStageFlagBits> VALID_SHADER_STAGES = {
         VK_SHADER_STAGE_VERTEX_BIT,
         VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT,
         VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT,
