@@ -329,20 +329,21 @@ public:
         auto indexBuffer = std::make_unique<IBO>(*allocator);
         indexBuffer->Data(mesh->GerIndices().data(), static_cast<uint32_t>(mesh->GerIndices().size()));
 
-        // TODO - temporary
-        auto material1 = CreateMaterial(*allocator, "vulkan.png", 3.0f, 0.1f);
-        auto material2 = CreateMaterial(*allocator, "texture.jpg", 3.0f, 0.4f);
-        auto material3 = CreateMaterial(*allocator, "vulkan.png", 3.0f, 0.1f);
-        auto material4 = CreateMaterial(*allocator, "texture.jpg", 3.0f, 0.4f);
+        const std::string materialPaths[] = {
+            "fungus.png",
+            "sand_grass.png",
+            "rock.png",
+            "sand.png"
+        };
 
         auto result = std::make_unique<TerrainComponent>(position, size);
         result->m_model = std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
         result->m_heightsInfo = CreateHeightMap(heightGenerator);
         result->m_vertexData = GenerateVertexData(heightGenerator, size);
-        result->m_materials.push_back(std::move(material1));
-        result->m_materials.push_back(std::move(material2));
-        result->m_materials.push_back(std::move(material3));
-        result->m_materials.push_back(std::move(material4));
+        for (const auto& path : materialPaths) {
+            auto material = CreateMaterial(*allocator, path, 3.0f, 0.4f);
+            result->m_materials.emplace_back(std::move(material));
+        }
         return result;
     }
 
@@ -353,7 +354,7 @@ private:
         auto image = imageFactory.CreateImage(textureFilename);
 
         auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
-        imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_FORMAT_R8G8B8A8_UNORM, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, image->GetBuffer() });
+        imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_FORMAT_R8G8B8A8_UNORM, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, image->GetBuffer().get() });
 
         return std::make_unique<Material>(std::move(image), std::move(imageBuffer), shineDamper, reflectivity);
     }
