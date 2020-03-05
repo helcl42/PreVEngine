@@ -400,7 +400,7 @@ private:
 
     std::vector<BoneInfo> m_boneInfos;
 
-    glm::mat4 m_globalInverseTransform;
+    glm::mat4 m_globalInverseTransform{ glm::mat4(1.0f) };
 
     std::vector<glm::mat4> m_boneTransforms;
 

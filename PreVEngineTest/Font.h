@@ -147,6 +147,37 @@ public:
 
     ~MetaDataFile() = default;
 
+public:
+    void MoveToNextLine()
+    {
+        m_currentLine = m_allLinesKeyValues.at(m_lineNumber++);
+    }
+
+    bool ValuesContains(const std::string& variable) const
+    {
+        return m_currentLine.find(variable) != m_currentLine.cend();
+    }
+
+    std::string GetValueAsString(const std::string& variable) const
+    {
+        return m_currentLine.at(variable);
+    }
+
+    int GetValueAsInt(const std::string& variable) const
+    {
+        return std::stoi(m_currentLine.at(variable));
+    }
+
+    std::vector<int> GetValueAsInts(const std::string& variable) const
+    {
+        std::vector<int> actualValues;
+        auto numberStrings = StringUtils::Split(m_currentLine.at(variable), ',');
+        for (size_t i = 0; i < numberStrings.size(); i++) {
+            actualValues.push_back(std::stoi(numberStrings[i]));
+        }
+        return actualValues;
+    }
+
 private:
     bool ProcessNextLine(std::ifstream& inOutFileStream, std::map<std::string, std::string>& outTokens) const
     {
@@ -179,37 +210,6 @@ private:
         }
 
         return result;
-    }
-
-public:
-    void MoveToNextLine()
-    {
-        m_currentLine = m_allLinesKeyValues.at(m_lineNumber++);
-    }
-
-    bool ValuesContains(const std::string& variable) const
-    {
-        return m_currentLine.find(variable) != m_currentLine.cend();
-    }
-
-    std::string GetValueAsString(const std::string& variable) const
-    {
-        return m_currentLine.at(variable);
-    }
-
-    int GetValueAsInt(const std::string& variable) const
-    {
-        return std::stoi(m_currentLine.at(variable));
-    }
-
-    std::vector<int> GetValueAsInts(const std::string& variable) const
-    {
-        std::vector<int> actualValues;
-        auto numberStrings = StringUtils::Split(m_currentLine.at(variable), ',');
-        for (size_t i = 0; i < numberStrings.size(); i++) {
-            actualValues.push_back(std::stoi(numberStrings[i]));
-        }
-        return actualValues;
     }
 
 private:
@@ -279,7 +279,7 @@ private:
         ImageFactory imageFactory;
         image = imageFactory.CreateImage(imagePath);
         imageBuffer = std::make_unique<ImageBuffer>(*AllocatorProvider::GetInstance().GetAllocator());
-        imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_FORMAT_R8G8B8A8_UNORM, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, image->GetBuffer() });
+        imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_FORMAT_R8G8B8A8_UNORM, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, image->GetBuffer().get() });
     }
 
     void ExtractCharactersData(MetaDataFile& metaDataFile, FontMetaDataState& state, std::map<int, Character>& characters) const
