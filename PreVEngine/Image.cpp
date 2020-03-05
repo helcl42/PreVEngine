@@ -15,7 +15,7 @@ RGBA::RGBA()
 {
 }
 
-RGBA::RGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+RGBA::RGBA(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a)
     : R(r)
     , G(g)
     , B(b)
@@ -23,7 +23,7 @@ RGBA::RGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
 }
 
-void RGBA::Set(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+void RGBA::Set(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a)
 {
     R = r;
     G = g;
@@ -33,10 +33,13 @@ void RGBA::Set(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 
 RGBA RGBA::Lerp(const RGBA& c, const float f)
 {
-    return RGBA(uint8_t(f * (c.R - R) + R), uint8_t(f * (c.G - G) + G), uint8_t(f * (c.B - B) + B), uint8_t(f * (c.A - A) + A));
+    return RGBA(static_cast<uint8_t>(f * (c.R - R) + R), static_cast<uint8_t>(f * (c.G - G) + G), static_cast<uint8_t>(f * (c.B - B) + B), static_cast<uint8_t>(f * (c.A - A) + A));
 }
 
 Image::Image()
+    : m_width(0)
+    , m_height(0)
+    , m_buffer(nullptr)
 {
 }
 
@@ -49,14 +52,14 @@ Image::Image(const int width, const int height, const uint8_t* bytes)
 {
     SetSize(width, height);
 
-    std::memcpy(m_buffer, bytes, size_t(width * height * sizeof(RGBA)));
+    std::memcpy(m_buffer.get(), bytes, size_t(width * height * sizeof(RGBA)));
 }
 
 Image::Image(const int width, const int height, const RGBA* pixels)
 {
     SetSize(width, height);
 
-    std::memcpy(m_buffer, pixels, size_t(width * height * sizeof(RGBA)));
+    std::memcpy(m_buffer.get(), pixels, size_t(width * height * sizeof(RGBA)));
 }
 
 Image::~Image()
@@ -66,9 +69,9 @@ Image::~Image()
 
 Image::Image(const Image& other)
 {
-    size_t size{ other.m_width * other.m_height * sizeof(RGBA) };
-    m_buffer = new RGBA[size];
-    std::memcpy(m_buffer, other.m_buffer, size);
+    const size_t size{ other.m_width * other.m_height };
+    m_buffer = std::shared_ptr<RGBA[]>(new RGBA[size]);
+    std::memcpy(m_buffer.get(), other.m_buffer.get(), size * sizeof(RGBA));
 
     m_width = other.m_width;
     m_height = other.m_height;
@@ -79,9 +82,9 @@ Image& Image::operator=(const Image& other)
     if (this != &other) {
         CleanUp();
 
-        size_t size{ other.m_width * other.m_height * sizeof(RGBA) };
-        m_buffer = new RGBA[size];
-        std::memcpy(m_buffer, other.m_buffer, size);
+        const size_t size{ other.m_width * other.m_height };
+        m_buffer = std::shared_ptr<RGBA[]>(new RGBA[size]);
+        std::memcpy(m_buffer.get(), other.m_buffer.get(), size * sizeof(RGBA));
 
         m_width = other.m_width;
         m_height = other.m_height;
@@ -116,10 +119,7 @@ Image& Image::operator=(Image&& other)
 
 void Image::CleanUp()
 {
-    if (m_buffer) {
-        delete[] m_buffer;
-        m_buffer = nullptr;
-    }
+    m_buffer = nullptr;
 }
 
 void Image::SetSize(const int w, const int h)
@@ -128,10 +128,10 @@ void Image::SetSize(const int w, const int h)
 
     m_width = w;
     m_height = h;
-    m_buffer = new RGBA[w * h * sizeof(RGBA)];
+    m_buffer = std::shared_ptr<RGBA[]>(new RGBA[w * h]);
 }
 
-RGBA* Image::GetBuffer() const
+std::shared_ptr<RGBA[]> Image::GetBuffer() const
 {
     return m_buffer;
 }
@@ -148,7 +148,8 @@ uint32_t Image::GetHeight() const
 
 void Image::Clear()
 {
-    std::memset(m_buffer, 0, size_t(m_width * m_height * sizeof(RGBA)));
+    const size_t size(m_width * m_height);
+    std::memset(m_buffer.get(), 0, size * sizeof(RGBA));
 }
 
 void Image::Clear(const RGBA& color)
@@ -160,8 +161,11 @@ void Image::Clear(const RGBA& color)
 
 bool ImageFactory::FileExists(const std::string& fileName)
 {
-#ifdef ANDROID
-    return true;
+#if defined(__ANDROID__)
+    AAsset* asset = android_open_asset(modelPath.c_str(), AASSET_MODE_STREAMING);
+    bool result = !!asset;
+    AAsset_close(asset);
+    return result;
 #else
     std::ifstream infile(fileName);
     return infile.good();
@@ -200,16 +204,16 @@ std::unique_ptr<Image> ImageFactory::CreateImageWithPattern(const uint32_t width
         return image;
     }
 
-    RGBA* buffer = image->GetBuffer();
+    auto buffer = image->GetBuffer();
 
     for (uint32_t y = 0; y < image->GetHeight(); ++y) {
         for (uint32_t x = 0; x < image->GetWidth(); ++x) {
-            RGBA* pix = &buffer[x + y * width];
+            auto pix = &buffer[y * width + x];
 
             *pix = { 0, 0, 0, 255 };
 
             if (gradient) {
-                *pix = { uint8_t(x), uint8_t(y), 0, 255 };
+                *pix = { static_cast<uint8_t>(x), static_cast<uint8_t>(y), 0, 255 };
             }
 
             if (checkers) {

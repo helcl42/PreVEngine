@@ -24,11 +24,11 @@ struct RGBA {
 
 class Image {
 private:
-    uint32_t m_width{ 0 };
+    uint32_t m_width;
 
-    uint32_t m_height{ 0 };
+    uint32_t m_height;
 
-    RGBA* m_buffer{ nullptr };
+    std::shared_ptr<RGBA[]> m_buffer;
 
 public:
     Image();
@@ -60,7 +60,7 @@ public:
 
     uint32_t GetHeight() const;
 
-    RGBA* GetBuffer() const;
+    std::shared_ptr<RGBA[]> GetBuffer() const;
 
     void Clear();
 
