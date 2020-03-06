@@ -22,6 +22,9 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 	uint castedByShadows;
     float minHeight;
     float maxHeight;
+
+	vec4 heightSteps[MATERIAL_COUNT];
+	float heightTtransitionRange;
 } uboFS;
 
 layout(binding = 2) uniform sampler2D textureSampler[MATERIAL_COUNT];
@@ -39,55 +42,36 @@ layout(location = 0) out vec4 outColor;
 
 void main() 
 {
-
-    const vec4 colors[] = {
-      vec4(1.0, 1.0, 1.0, 1.0),
-      vec4(1.0, 0.0, 0.0, 1.0),
-      vec4(0.0, 1.0, 0.0, 1.0),
-      vec4(0.0, 0.0, 1.0, 1.0)
-    };
-
-    const float steps[] = {
-        0.2, 
-        0.4,
-        0.6,
-        0.8
-    };
-
-    const float transitionWidth = 0.1;
-
     const float heightRange = abs(uboFS.maxHeight) + abs(uboFS.minHeight);
-    float normalizedHeight = (inWorldPosition.y + abs(uboFS.minHeight)) / heightRange;
+    const float normalizedHeight = (inWorldPosition.y + abs(uboFS.minHeight)) / heightRange;
 
     vec4 textureColor = vec4(1.0, 1.0, 0.0, 1.0);
     for(uint i = 0; i < MATERIAL_COUNT; i++) 
     {
         if(i < MATERIAL_COUNT - 1)
         {
-            if(normalizedHeight > steps[i] - transitionWidth && normalizedHeight < steps[i] + transitionWidth)
+            if(normalizedHeight > uboFS.heightSteps[i].x - uboFS.heightTtransitionRange && normalizedHeight < uboFS.heightSteps[i].x + uboFS.heightTtransitionRange)
             {
-                float ratio = (normalizedHeight - steps[i] + transitionWidth) / (2 * transitionWidth);
-                //vec4 color1 = texture(textureSampler[i - 1], inTextureCoord);
-                //vec4 color2 = texture(textureSampler[i], inTextureCoord);
-                vec4 color1 = colors[i];
-                vec4 color2 = colors[i + 1];
+                float ratio = (normalizedHeight - uboFS.heightSteps[i].x + uboFS.heightTtransitionRange) / (2 * uboFS.heightTtransitionRange);
+                vec4 color1 = texture(textureSampler[i], inTextureCoord);
+                vec4 color2 = texture(textureSampler[i + 1], inTextureCoord);
                 textureColor = mix(color1, color2, ratio);
                 break;
             }
-            else if(normalizedHeight > steps[i] + transitionWidth && normalizedHeight < steps[i + 1] - transitionWidth)
+            else if(normalizedHeight > uboFS.heightSteps[i].x + uboFS.heightTtransitionRange && normalizedHeight < uboFS.heightSteps[i + 1].x - uboFS.heightTtransitionRange)
             {
-                textureColor = colors[i];
+				textureColor = texture(textureSampler[i], inTextureCoord);
                 break;
             }
-			else if(normalizedHeight < steps[i] - transitionWidth)
+			else if(normalizedHeight < uboFS.heightSteps[i].x - uboFS.heightTtransitionRange)
 			{
-				textureColor = colors[i];
+				textureColor = texture(textureSampler[i], inTextureCoord);
 				break;
 			}
         }
         else
         {
-            textureColor = colors[i];
+			textureColor = texture(textureSampler[i], inTextureCoord);
             break;
         }
     }

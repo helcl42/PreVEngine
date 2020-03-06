@@ -2743,6 +2743,9 @@ private:
         uint32_t castedByShadows;
         float minHeight;
         float maxHeight;
+
+        alignas(16) glm::vec4 heightSteps[4];
+        alignas(16) float heightTtransitionRange;
     };
 
 private:
@@ -2844,15 +2847,21 @@ public:
 
             // material
             uniformsFS.material.shineDamper = terrainComponent->GetMaterials().at(0)->GetShineDamper();
-            uniformsFS.material.reflectivity = terrainComponent->GetMaterials().at(0)->GetReflectivity(); 
-            
+            uniformsFS.material.reflectivity = terrainComponent->GetMaterials().at(0)->GetReflectivity();
+
             // common
+            const glm::vec4 heightSteps[] = { glm::vec4(0.2f), glm::vec4(0.4f), glm::vec4(0.6f), glm::vec4(0.8f) };
+
             uniformsFS.fogColor = FOG_COLOR;
             uniformsFS.selectedColor = SELECTED_COLOR;
             uniformsFS.selected = false;
             uniformsFS.castedByShadows = true;
             uniformsFS.minHeight = terrainComponent->GetHeightMapInfo()->GetMinHeight();
             uniformsFS.maxHeight = terrainComponent->GetHeightMapInfo()->GetMaxHeight();
+            for (uint32_t i = 0; i < 4; i++) {
+                uniformsFS.heightSteps[i] = heightSteps[i];
+            }
+            uniformsFS.heightTtransitionRange = 0.1f;
 
             uboFS->Update(&uniformsFS);
 
