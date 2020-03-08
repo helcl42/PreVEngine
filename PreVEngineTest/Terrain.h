@@ -5,6 +5,8 @@
 
 #include <vector>
 
+static const float TERRAIN_SIZE{ 240.0f };
+
 class PerlinNoiseGenerator {
 public:
     explicit PerlinNoiseGenerator(const float roughness, const float amplitude, const float octave)
@@ -95,19 +97,23 @@ public:
     inline static const float ROUGHNESS = 0.3f;
 
 public:
-    const glm::vec3 m_offset;
+    int m_xOffset = 0;
+
+    int m_zOffset = 0;
 
     const std::shared_ptr<PerlinNoiseGenerator> m_noiseGenerator;
 
 public:
     explicit HeightGenerator()
-        : m_offset(glm::vec3(0.0f, 0.0f, 0.0f))
+        : m_xOffset(0)
+        , m_zOffset(0)
         , m_noiseGenerator(std::make_shared<PerlinNoiseGenerator>(HeightGenerator::ROUGHNESS, HeightGenerator::AMPLITUDE, HeightGenerator::OCTAVES))
     {
     }
 
-    explicit HeightGenerator(const glm::vec3& position, const int size, const unsigned int seed)
-        : m_offset(position.x * (size - 1), position.y, position.z * (size - 1))
+    explicit HeightGenerator(const int x, const int z, const int size, const unsigned int seed)
+        : m_xOffset(x * (size - 1))
+        , m_zOffset(z * (size - 1))
         , m_noiseGenerator(std::make_shared<PerlinNoiseGenerator>(seed, HeightGenerator::ROUGHNESS, HeightGenerator::AMPLITUDE, HeightGenerator::OCTAVES))
     {
     }
@@ -119,11 +125,11 @@ public:
     {
         const float d = static_cast<float>(powf(2.0f, static_cast<float>(HeightGenerator::OCTAVES - 1)));
 
-        float total = m_offset.y;
+        float total = 0.0f;
         for (int i = 0; i < HeightGenerator::OCTAVES; i++) {
             float freq = static_cast<float>(powf(2, static_cast<float>(i)) / d);
             float amp = static_cast<float>(powf(HeightGenerator::ROUGHNESS, static_cast<float>(i))) * static_cast<float>(HeightGenerator::AMPLITUDE);
-            total += m_noiseGenerator->GetInterpolatedNoise((x + m_offset.x) * freq, (z + m_offset.z) * freq) * amp;
+            total += m_noiseGenerator->GetInterpolatedNoise((x + m_xOffset) * freq, (z + m_zOffset) * freq) * amp;
         }
         return total;
     }
@@ -171,13 +177,11 @@ class ITerrainComponenet : public IBasicRenderComponent {
 public:
     virtual std::vector<std::shared_ptr<IMaterial> > GetMaterials() const = 0; // TODO make pack of materials controlled by height
 
-    virtual float GetHeightAt(const float worldX, const float worldZ) const = 0;
+    virtual float GetHeightAt(const glm::vec3& position) const = 0;
 
     virtual std::shared_ptr<VertexData> GetVertexData() const = 0;
 
     virtual std::shared_ptr<HeightMapInfo> GetHeightMapInfo() const = 0;
-
-    virtual float GetSize() const = 0;
 
     virtual const glm::vec3& GetPosition() const = 0;
 
@@ -189,9 +193,8 @@ class TerrainComponentFactory;
 
 class TerrainComponent : public ITerrainComponenet {
 public:
-    TerrainComponent(const glm::vec3& position, const float size)
-        : m_position(position)
-        , m_size(size)
+    TerrainComponent(const int gridX, const int gridZ)
+        : m_position(glm::vec3(gridX * TERRAIN_SIZE, 0.0f, gridZ * TERRAIN_SIZE))
     {
     }
 
@@ -208,11 +211,11 @@ public:
         return m_materials;
     }
 
-    float GetHeightAt(const float worldX, const float worldZ) const override
+    float GetHeightAt(const glm::vec3& position) const override
     {
-        const float terrainX = worldX - m_position.x;
-        const float terrainZ = worldZ - m_position.z;
-        const float gridSquareSize = m_size / ((float)m_heightsInfo->GetSize() - 1.0f);
+        const float terrainX = position.x - m_position.x;
+        const float terrainZ = position.z - m_position.z;
+        const float gridSquareSize = TERRAIN_SIZE / (static_cast<float>(m_heightsInfo->GetSize()) - 1.0f);
         const int gridX = static_cast<int>(floorf(terrainX / gridSquareSize));
         const int gridZ = static_cast<int>(floorf(terrainZ / gridSquareSize));
 
@@ -237,11 +240,6 @@ public:
         return m_vertexData;
     }
 
-    float GetSize() const override
-    {
-        return m_size;
-    }
-
     const glm::vec3& GetPosition() const override
     {
         return m_position;
@@ -257,8 +255,6 @@ private:
 
 private:
     const glm::vec3 m_position;
-
-    const float m_size;
 
     std::shared_ptr<HeightMapInfo> m_heightsInfo;
 
@@ -317,11 +313,11 @@ public:
     {
     }
 
-    std::unique_ptr<ITerrainComponenet> CreateRandomTerrain(const glm::vec3& position, const float size) const
+    std::unique_ptr<ITerrainComponenet> CreateRandomTerrain(const int x, const int z, const float size) const
     {
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
-        const auto heightGenerator = std::make_shared<HeightGenerator>(position, m_vertexCount, m_seed);
+        const auto heightGenerator = std::make_shared<HeightGenerator>(x, z, m_vertexCount, m_seed);
 
         auto mesh = GenerateMesh(heightGenerator, size);
         auto vertexBuffer = std::make_unique<VBO>(*allocator);
@@ -336,7 +332,7 @@ public:
             "sand.png"
         };
 
-        auto result = std::make_unique<TerrainComponent>(position, size);
+        auto result = std::make_unique<TerrainComponent>(x, z);
         result->m_model = std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
         result->m_heightsInfo = CreateHeightMap(heightGenerator);
         result->m_vertexData = GenerateVertexData(heightGenerator, size);
@@ -418,17 +414,17 @@ private:
     glm::vec3 CalculatePosition(const std::shared_ptr<HeightGenerator>& generator, const int x, const int z, const float size) const
     {
         glm::vec3 result{};
-        result.x = (float(x) / (float(m_vertexCount) - 1.0f)) * size;
+        result.x = (static_cast<float>(x) / (static_cast<float>(m_vertexCount) - 1.0f)) * size;
         result.y = generator->GenerateHeight(x, z);
-        result.z = (float(z) / (float(m_vertexCount) - 1.0f)) * size;
+        result.z = (static_cast<float>(z) / (static_cast<float>(m_vertexCount) - 1.0f)) * size;
         return result;
     }
 
     glm::vec2 CalculateTextureCoordinates(const int x, const int z) const
     {
         glm::vec2 result{};
-        result.x = float(x) / (float(m_vertexCount) - 1.0f);
-        result.y = float(z) / (float(m_vertexCount) - 1.0f);
+        result.x = static_cast<float>(x) / (static_cast<float>(m_vertexCount) - 1.0f);
+        result.y = static_cast<float>(z) / (static_cast<float>(m_vertexCount) - 1.0f);
         return result;
     }
 
@@ -470,6 +466,108 @@ private:
     const unsigned int m_seed;
 
     const unsigned int m_vertexCount;
+};
+
+struct TerrainKey {
+    const int xIndex;
+
+    const int zIndex;
+
+    explicit TerrainKey(const int x, const int z)
+        : xIndex(x)
+        , zIndex(z)
+    {
+    }
+
+    explicit TerrainKey(const glm::vec3& position)
+        : xIndex(static_cast<int>(position.x / TERRAIN_SIZE))
+        , zIndex(static_cast<int>(position.z / TERRAIN_SIZE))
+    {
+    }
+
+    ~TerrainKey() = default;
+
+    friend bool operator<(const TerrainKey& a, const TerrainKey& b)
+    {
+        if (a.xIndex < b.xIndex) {
+            return true;
+        }
+        if (a.xIndex > b.xIndex) {
+            return false;
+        }
+
+        if (a.zIndex < b.zIndex) {
+            return true;
+        }
+        if (a.zIndex > b.zIndex) {
+            return false;
+        }
+
+        return false;
+    }
+};
+
+class ITerrainManagerComponent {
+public:
+    virtual void AddTerrainComponent(const std::shared_ptr<ITerrainComponenet>& terrain) = 0;
+
+    virtual void RemoveTerraion(const std::shared_ptr<ITerrainComponenet>& terraain) = 0;
+
+    virtual const std::map<TerrainKey, std::shared_ptr<ITerrainComponenet> >& GetAllTerrains() const = 0;
+
+    virtual std::shared_ptr<ITerrainComponenet> GetTerrainAt(const glm::vec3& position) const = 0;
+
+    virtual float GetHeightAt(const glm::vec3& position) const = 0;
+
+public:
+    virtual ~ITerrainManagerComponent() = default;
+};
+
+class TerrainManagerComponent : public ITerrainManagerComponent {
+public:
+    void AddTerrainComponent(const std::shared_ptr<ITerrainComponenet>& terrain) override
+    {
+        m_terrains.insert({ TerrainKey{ terrain->GetPosition() }, terrain });
+    }
+
+    void RemoveTerraion(const std::shared_ptr<ITerrainComponenet>& terraain) override
+    {
+        m_terrains.erase(TerrainKey{ terraain->GetPosition() });
+    }
+
+    const std::map<TerrainKey, std::shared_ptr<ITerrainComponenet> >& GetAllTerrains() const override
+    {
+        return m_terrains;
+    }
+
+    std::shared_ptr<ITerrainComponenet> GetTerrainAt(const glm::vec3& position) const override
+    {
+        const TerrainKey key{ position };
+        if (m_terrains.find(key) != m_terrains.cend()) {
+            return m_terrains.at(key);
+        }
+        return nullptr;
+    }
+
+    float GetHeightAt(const glm::vec3& position) const override
+    {
+        const auto terrain = GetTerrainAt(position);
+        if (terrain) {
+            return terrain->GetHeightAt(position);
+        }
+        return 0.0f;
+    }
+
+private:
+    std::map<TerrainKey, std::shared_ptr<ITerrainComponenet> > m_terrains;
+};
+
+class TerrainManagerComponentFactory {
+public:
+    std::unique_ptr<ITerrainManagerComponent> Create() const
+    {
+        return std::make_unique<TerrainManagerComponent>();
+    }
 };
 
 #endif // !__TERRAIN_H__

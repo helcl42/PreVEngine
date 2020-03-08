@@ -1117,25 +1117,20 @@ public:
     }
 };
 
-class Terrain : public AbstractSceneNode<SceneNodeFlags> {
+class TerrainManager : public AbstractSceneNode<SceneNodeFlags> {
 public:
-    Terrain(const glm::vec3& position)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT }, position, glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1.0f))
+    TerrainManager()
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT }, glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1.0f))
     {
     }
 
-    virtual ~Terrain() = default;
+    virtual ~TerrainManager() = default;
 
 public:
     void Init() override
     {
-        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
-
-        const auto position = GetPosition();
-        TerrainComponentFactory terrainComponentFactory{};
-        auto terrainComponent = terrainComponentFactory.CreateRandomTerrain(glm::vec3(0.0f, 0.0f, 0.0f), 240.0f);
-
-        ComponentRepository<ITerrainComponenet>::GetInstance().Add(m_id, std::move(terrainComponent));
+        auto terrainManager = TerrainManagerComponentFactory{}.Create();
+        ComponentRepository<ITerrainManagerComponent>::GetInstance().Add(m_id, std::move(terrainManager));
 
         AbstractSceneNode::Init();
     }
@@ -1147,6 +1142,60 @@ public:
 
     void ShutDown() override
     {
+        AbstractSceneNode::ShutDown();
+
+        ComponentRepository<ITerrainManagerComponent>::GetInstance().Remove(m_id);
+    }
+};
+
+class Terrain : public AbstractSceneNode<SceneNodeFlags> {
+private:
+    const int m_xIndex;
+
+    const int m_zIndex;
+
+    std::shared_ptr<ITerrainComponenet> m_terrainComponent;
+
+    std::weak_ptr<ITerrainManagerComponent> m_terrainManagerComponent;
+
+public:
+    Terrain(const int x, const int z)
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT }, glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1.0f))
+        , m_xIndex(x)
+        , m_zIndex(z)
+    {
+    }
+
+    virtual ~Terrain() = default;
+
+public:
+    void Init() override
+    {
+        TerrainComponentFactory terrainComponentFactory{};
+        m_terrainComponent = std::move(terrainComponentFactory.CreateRandomTerrain(m_xIndex, m_zIndex, TERRAIN_SIZE));
+        SetPosition(m_terrainComponent->GetPosition());
+
+        ComponentRepository<ITerrainComponenet>::GetInstance().Add(m_id, m_terrainComponent);
+
+        m_terrainManagerComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT });
+        if (auto manager = m_terrainManagerComponent.lock()) {
+            manager->AddTerrainComponent(m_terrainComponent);
+        }
+
+        AbstractSceneNode::Init();
+    }
+
+    void Update(float deltaTime) override
+    {
+        AbstractSceneNode::Update(deltaTime);
+    }
+
+    void ShutDown() override
+    {
+        if (auto manager = m_terrainManagerComponent.lock()) {
+            manager->RemoveTerraion(m_terrainComponent);
+        }
+
         AbstractSceneNode::ShutDown();
 
         ComponentRepository<ITerrainComponenet>::GetInstance().Remove(m_id);
@@ -1235,7 +1284,7 @@ public:
 
     void Update(float deltaTime) override
     {
-        const auto terrain = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ITerrainComponenet>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT });
+        const auto terrain = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT });
 
         if ((m_shouldGoForward || m_shouldGoBackward) && !m_isInTheAir) {
             m_animatonRenderComponent->GetAnimation()->SetState(AnimationState::RUNNING);
@@ -1257,7 +1306,7 @@ public:
         }
 
         auto currentPosition = GetPosition();
-        const float height = terrain->GetHeightAt(currentPosition.x, currentPosition.z);
+        const float height = terrain->GetHeightAt(currentPosition);
         const auto currentY = height + MIN_Y_POS;
 
         if (m_isInTheAir) {
@@ -1940,11 +1989,10 @@ public:
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT })) {
-            auto renderComponent = ComponentRepository<ITerrainComponenet>::GetInstance().Get(node->GetId());
             const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+            const auto cascade = shadows->GetCascade(shadowsRenderContext.cascadeIndex);
 
-            const auto& cascade = shadows->GetCascade(shadowsRenderContext.cascadeIndex);
-
+            const auto terrainComponent = ComponentRepository<ITerrainComponenet>::GetInstance().Get(node->GetId());
             auto ubo = m_uniformsPool->GetNext();
 
             Uniforms uniforms{};
@@ -1956,14 +2004,14 @@ public:
             m_shader->Bind("ubo", *ubo);
 
             VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-            VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
+            VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };
             VkDeviceSize offsets[] = { 0 };
 
             vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, terrainComponent->GetModel()->GetIndexBuffer()->GetIndexType());
             vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-            vkCmdDrawIndexed(renderContext.defaultCommandBuffer, renderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+            vkCmdDrawIndexed(renderContext.defaultCommandBuffer, terrainComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
         }
 
         for (auto child : node->GetChildren()) {
@@ -2811,7 +2859,7 @@ public:
             const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
             const auto terrainComponent = ComponentRepository<ITerrainComponenet>::GetInstance().Get(node->GetId());
-
+            
             auto uboVS = m_uniformsPoolVS->GetNext();
 
             UniformsVS uniformsVS{};
@@ -3125,7 +3173,10 @@ public:
         auto text = std::make_shared<Text>();
         AddChild(text);
 
-        auto terrain = std::make_shared<Terrain>(glm::vec3(0.0f, 0.0f, 0.0f));
+        auto terrainManager = std::make_shared<TerrainManager>();
+        AddChild(terrainManager);
+
+        auto terrain = std::make_shared<Terrain>(0, 0);
         AddChild(terrain);
 
         for (auto child : m_children) {
