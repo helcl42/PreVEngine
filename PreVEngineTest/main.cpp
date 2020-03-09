@@ -1306,7 +1306,7 @@ public:
 
         if ((m_shouldGoForward || m_shouldGoBackward || m_shouldGoLeft || m_shouldGoRight) && !m_isInTheAir) {
             m_animatonRenderComponent->GetAnimation()->SetState(AnimationState::RUNNING);
-            m_animatonRenderComponent->GetAnimation()->Update(deltaTime);
+            m_animatonRenderComponent->GetAnimation()->Update(m_shouldGoBackward ? -deltaTime : deltaTime);
 
             glm::vec3 positionOffset{ 0.0f };
             if (m_shouldGoForward) {

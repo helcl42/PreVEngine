@@ -560,20 +560,24 @@ private:
 public:
     void Update(const float deltaTime) override
     {
-        const float scaledDeltaTime = deltaTime * m_animationSpeed;
-
         m_animationIndex %= m_scene->mNumAnimations;
+
+        const float scaledDeltaTime = deltaTime * m_animationSpeed;
+        const auto currentAnimation = m_scene->mAnimations[m_animationIndex];
+        const float animationDuration = static_cast<float>(currentAnimation->mDuration);
 
         if (m_animationState == AnimationState::RUNNING) {
             m_elapsedTime += scaledDeltaTime;
+            if (m_elapsedTime < 0.0f) {
+                m_elapsedTime += animationDuration;
+            }
         } else if (m_animationState == AnimationState::STOPPED) {
             m_elapsedTime = 0.0f;
         }
 
-        const auto currentAnimation = m_scene->mAnimations[m_animationIndex];
         const auto ticksPerSecond = static_cast<float>(currentAnimation->mTicksPerSecond != 0 ? currentAnimation->mTicksPerSecond : 25.0f);
         const auto timeInTicks = m_elapsedTime * ticksPerSecond;
-        const auto animationTime = fmod(timeInTicks, static_cast<float>(currentAnimation->mDuration));
+        const auto animationTime = fmod(timeInTicks, animationDuration);
 
         UpdateNodeHeirarchy(animationTime, m_scene->mRootNode, glm::mat4(1.0f));
 
@@ -631,21 +635,22 @@ public:
 
 class AssimpSceneLoader {
 public:
-    bool LoadScene(const std::string& modelPath, Assimp::Importer* importer, const aiScene** scene) {
+    bool LoadScene(const std::string& modelPath, Assimp::Importer* importer, const aiScene** scene)
+    {
 #if defined(__ANDROID__)
-		AAsset* asset = android_open_asset(modelPath.c_str(), AASSET_MODE_STREAMING);
-		assert(asset);
-		size_t size = AAsset_getLength(asset);
+        AAsset* asset = android_open_asset(modelPath.c_str(), AASSET_MODE_STREAMING);
+        assert(asset);
+        size_t size = AAsset_getLength(asset);
 
-		assert(size > 0);
+        assert(size > 0);
 
-		void *meshData = malloc(size);
-		AAsset_read(asset, meshData, size);
-		AAsset_close(asset);
+        void* meshData = malloc(size);
+        AAsset_read(asset, meshData, size);
+        AAsset_close(asset);
 
-		*scene = importer->ReadFileFromMemory(meshData, size, 0);
+        *scene = importer->ReadFileFromMemory(meshData, size, 0);
 
-		free(meshData);
+        free(meshData);
 #else
         *scene = importer->ReadFile(modelPath, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType | aiProcess_GenSmoothNormals | aiProcess_FixInfacingNormals | aiProcess_FindInvalidData);
 #endif
@@ -664,13 +669,13 @@ public:
         std::unique_ptr<Animation> animation = std::make_unique<Animation>();
 
         AssimpSceneLoader assimpSceneLoader{};
-        if(!assimpSceneLoader.LoadScene(modelPath, &animation->m_importer, &animation->m_scene)) {
+        if (!assimpSceneLoader.LoadScene(modelPath, &animation->m_importer, &animation->m_scene)) {
             throw std::runtime_error("Could not load model: " + modelPath);
         }
 
         animation->m_globalInverseTransform = glm::inverse(AssimpGlmConvertor::ToGlmMat4(animation->m_scene->mRootNode->mTransformation));
-        
-         for (unsigned int meshIndex = 0; meshIndex < animation->m_scene->mNumMeshes; meshIndex++) {
+
+        for (unsigned int meshIndex = 0; meshIndex < animation->m_scene->mNumMeshes; meshIndex++) {
             const auto& mesh = *animation->m_scene->mMeshes[meshIndex];
             for (unsigned int i = 0; i < mesh.mNumBones; i++) {
                 const std::string boneName{ mesh.mBones[i]->mName.data };
@@ -707,7 +712,7 @@ public:
         const aiScene* scene;
 
         AssimpSceneLoader assimpSceneLoader{};
-        if(!assimpSceneLoader.LoadScene(modelPath, &importer, &scene)) {
+        if (!assimpSceneLoader.LoadScene(modelPath, &importer, &scene)) {
             throw std::runtime_error("Could not load model: " + modelPath);
         }
 
