@@ -1235,6 +1235,10 @@ private:
 
     bool m_shouldGoBackward{ false };
 
+    bool m_shouldGoLeft{ false };
+
+    bool m_shouldGoRight{ false };
+
     bool m_shouldRotate{ false };
 
     float m_upwardSpeed{ 0.0f };
@@ -1300,20 +1304,24 @@ public:
     {
         const auto terrain = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT });
 
-        if ((m_shouldGoForward || m_shouldGoBackward) && !m_isInTheAir) {
+        if ((m_shouldGoForward || m_shouldGoBackward || m_shouldGoLeft || m_shouldGoRight) && !m_isInTheAir) {
             m_animatonRenderComponent->GetAnimation()->SetState(AnimationState::RUNNING);
             m_animatonRenderComponent->GetAnimation()->Update(deltaTime);
 
-            if (m_shouldGoForward || m_shouldGoBackward) {
-                glm::vec3 forwardDirection = MathUtil::GetUpVector(GetOrientation());
-                glm::vec3 positionOffset{ 0.0f };
-                if (m_shouldGoForward) {
-                    positionOffset -= deltaTime * forwardDirection * RUN_SPEED;
-                } else if (m_shouldGoBackward) {
-                    positionOffset += deltaTime * forwardDirection * RUN_SPEED;
-                }
-                Translate(positionOffset);
+            glm::vec3 positionOffset{ 0.0f };
+            if (m_shouldGoForward) {
+                positionOffset -= deltaTime * MathUtil::GetUpVector(GetOrientation()) * RUN_SPEED;
             }
+            if (m_shouldGoBackward) {
+                positionOffset += deltaTime * MathUtil::GetUpVector(GetOrientation()) * RUN_SPEED;
+            }
+            if (m_shouldGoLeft) {
+                positionOffset += deltaTime * MathUtil::GetRightVector(GetOrientation()) * RUN_SPEED;
+            }
+            if (m_shouldGoRight) {
+                positionOffset -= deltaTime * MathUtil::GetRightVector(GetOrientation()) * RUN_SPEED;
+            }
+            Translate(positionOffset);
         } else {
             m_animatonRenderComponent->GetAnimation()->SetState(AnimationState::PAUSED);
             m_animatonRenderComponent->GetAnimation()->Update(deltaTime);
@@ -1370,7 +1378,14 @@ public:
             }
             if (keyEvent.keyCode == KeyCode::KEY_S) {
                 m_shouldGoBackward = true;
-            } else if (keyEvent.keyCode == KeyCode::KEY_Space) {
+            } 
+            if (keyEvent.keyCode == KeyCode::KEY_A) {
+                m_shouldGoLeft = true;
+            }
+            if (keyEvent.keyCode == KeyCode::KEY_D) {
+                m_shouldGoRight = true;
+            }
+            if (keyEvent.keyCode == KeyCode::KEY_Space) {
                 if (!m_isInTheAir) {
                     m_upwardSpeed = JUMP_POWER;
                     m_isInTheAir = true;
@@ -1382,6 +1397,12 @@ public:
             }
             if (keyEvent.keyCode == KeyCode::KEY_S) {
                 m_shouldGoBackward = false;
+            }
+            if (keyEvent.keyCode == KeyCode::KEY_A) {
+                m_shouldGoLeft = false;
+            }
+            if (keyEvent.keyCode == KeyCode::KEY_D) {
+                m_shouldGoRight = false;
             }
         }
     }
@@ -3187,7 +3208,7 @@ public:
         auto text = std::make_shared<Text>();
         AddChild(text);
 
-        auto terrainManager = std::make_shared<TerrainManager>(1, 2);
+        auto terrainManager = std::make_shared<TerrainManager>(1, 1);
         AddChild(terrainManager);
 
         for (auto child : m_children) {
