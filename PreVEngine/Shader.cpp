@@ -13,6 +13,7 @@ Shader::Shader(const VkDevice device)
     , m_descriptorPool(VK_NULL_HANDLE)
     , m_descriptorSetLayout(VK_NULL_HANDLE)
     , m_poolCapacity(0)
+    , m_currentDescriptorSetIndex(0)
 {
 }
 
