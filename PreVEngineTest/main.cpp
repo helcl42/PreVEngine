@@ -1117,37 +1117,6 @@ public:
     }
 };
 
-class TerrainManager : public AbstractSceneNode<SceneNodeFlags> {
-public:
-    TerrainManager()
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT }, glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1.0f))
-    {
-    }
-
-    virtual ~TerrainManager() = default;
-
-public:
-    void Init() override
-    {
-        auto terrainManager = TerrainManagerComponentFactory{}.Create();
-        ComponentRepository<ITerrainManagerComponent>::GetInstance().Add(m_id, std::move(terrainManager));
-
-        AbstractSceneNode::Init();
-    }
-
-    void Update(float deltaTime) override
-    {
-        AbstractSceneNode::Update(deltaTime);
-    }
-
-    void ShutDown() override
-    {
-        AbstractSceneNode::ShutDown();
-
-        ComponentRepository<ITerrainManagerComponent>::GetInstance().Remove(m_id);
-    }
-};
-
 class Terrain : public AbstractSceneNode<SceneNodeFlags> {
 private:
     const int m_xIndex;
@@ -1192,13 +1161,58 @@ public:
 
     void ShutDown() override
     {
+        AbstractSceneNode::ShutDown();
+
         if (auto manager = m_terrainManagerComponent.lock()) {
             manager->RemoveTerraion(m_terrainComponent);
         }
 
+        ComponentRepository<ITerrainComponenet>::GetInstance().Remove(m_id);
+    }
+};
+
+class TerrainManager : public AbstractSceneNode<SceneNodeFlags> {
+private:
+    const int m_gridMaxX;
+
+    const int m_gridMaxZ;
+
+public:
+    TerrainManager(const int maxX, const int maxZ)
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT }, glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1.0f))
+        , m_gridMaxX(maxX)
+        , m_gridMaxZ(maxZ)
+    {
+    }
+
+    virtual ~TerrainManager() = default;
+
+public:
+    void Init() override
+    {
+        auto terrainManager = TerrainManagerComponentFactory{}.Create();
+        ComponentRepository<ITerrainManagerComponent>::GetInstance().Add(m_id, std::move(terrainManager));
+        
+        for (int x = 0; x < m_gridMaxX; x++) {
+            for (int z = 0; z < m_gridMaxZ; z++) {
+                auto terrain = std::make_shared<Terrain>(x, z);
+                AddChild(terrain);
+            }
+        }
+
+        AbstractSceneNode::Init();
+    }
+
+    void Update(float deltaTime) override
+    {
+        AbstractSceneNode::Update(deltaTime);
+    }
+
+    void ShutDown() override
+    {
         AbstractSceneNode::ShutDown();
 
-        ComponentRepository<ITerrainComponenet>::GetInstance().Remove(m_id);
+        ComponentRepository<ITerrainManagerComponent>::GetInstance().Remove(m_id);
     }
 };
 
@@ -3173,11 +3187,8 @@ public:
         auto text = std::make_shared<Text>();
         AddChild(text);
 
-        auto terrainManager = std::make_shared<TerrainManager>();
+        auto terrainManager = std::make_shared<TerrainManager>(1, 2);
         AddChild(terrainManager);
-
-        auto terrain = std::make_shared<Terrain>(0, 0);
-        AddChild(terrain);
 
         for (auto child : m_children) {
             child->Init();
