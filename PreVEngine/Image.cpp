@@ -50,6 +50,7 @@ Image::Image(const uint32_t width, const uint32_t height)
 }
 
 Image::Image(const uint32_t width, const uint32_t height, const uint8_t* bytes)
+    : m_buffer(nullptr)
 {
     SetSize(width, height);
 
@@ -57,6 +58,7 @@ Image::Image(const uint32_t width, const uint32_t height, const uint8_t* bytes)
 }
 
 Image::Image(const uint32_t width, const uint32_t height, const RGBA* pixels)
+    : m_buffer(nullptr)
 {
     SetSize(width, height);
 
@@ -116,7 +118,7 @@ Image& Image::operator=(Image&& other)
 
 void Image::CleanUp()
 {
-    if(m_buffer != nullptr) {
+    if (m_buffer != nullptr) {
         delete[] m_buffer;
         m_buffer = nullptr;
     }
