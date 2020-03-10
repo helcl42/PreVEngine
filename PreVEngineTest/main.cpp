@@ -1823,8 +1823,14 @@ public:
     {
         auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>(TagSet{ TAG_MAIN_CAMERA });
 
+        const float ROTATION_ANGLE = ROTATION_SPEED_DEGS_PER_SEC * deltaTime;
+
+        glm::mat4 transform(1.0f);
+        transform = glm::rotate(transform, glm::radians(ROTATION_ANGLE), glm::vec3(0.0f, 1.0f, 0.0f));
+
+        Rotate(glm::quat_cast(transform));
         SetPosition(cameraComponent->GetPosition());
-        SetScale(glm::vec3(900.0f));
+        SetScale(glm::vec3(750.0f));
 
         AbstractSceneNode::Update(deltaTime);
     }
@@ -1838,6 +1844,8 @@ public:
 
 private:
     std::shared_ptr<ISkyBoxComponent> m_skyBoxComponent;
+
+    static const inline float ROTATION_SPEED_DEGS_PER_SEC = 1.0f;
 };
 
 class Shadows : public AbstractSceneNode<SceneNodeFlags> {
