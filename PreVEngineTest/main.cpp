@@ -1845,7 +1845,7 @@ public:
 private:
     std::shared_ptr<ISkyBoxComponent> m_skyBoxComponent;
 
-    static const inline float ROTATION_SPEED_DEGS_PER_SEC = 1.0f;
+    static const inline float ROTATION_SPEED_DEGS_PER_SEC = 0.5f;
 };
 
 class Shadows : public AbstractSceneNode<SceneNodeFlags> {
