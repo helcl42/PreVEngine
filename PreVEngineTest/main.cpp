@@ -1839,7 +1839,7 @@ public:
     {
         AbstractSceneNode::ShutDown();
 
-        ComponentRepository<ILightComponent>::GetInstance().Remove(m_id);
+        ComponentRepository<ISkyBoxComponent>::GetInstance().Remove(m_id);
     }
 
 private:
