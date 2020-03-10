@@ -314,7 +314,7 @@ public:
 
 class TerrainComponentFactory {
 public:
-    TerrainComponentFactory(const unsigned int seed = 21236728, const unsigned int vertexCount = 16)
+    TerrainComponentFactory(const unsigned int seed = 21236728, const unsigned int vertexCount = 128)
         : m_seed(seed)
         , m_vertexCount(vertexCount)
     {
