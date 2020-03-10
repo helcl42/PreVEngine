@@ -9,19 +9,13 @@ static const float TERRAIN_SIZE{ 240.0f };
 
 class PerlinNoiseGenerator {
 public:
-    explicit PerlinNoiseGenerator(const float roughness, const float amplitude, const float octave)
-        : m_roughness(roughness)
-        , m_amplitude(amplitude)
-        , m_octaves(octave)
-        , m_seed(GenerateSeed())
+    explicit PerlinNoiseGenerator()
+        : m_seed(GenerateSeed())
     {
     }
 
-    explicit PerlinNoiseGenerator(const float roughness, const float amplitude, const float octave, const unsigned int seed)
-        : m_roughness(roughness)
-        , m_amplitude(amplitude)
-        , m_octaves(octave)
-        , m_seed(seed)
+    explicit PerlinNoiseGenerator(const unsigned int seed)
+        : m_seed(seed)
     {
     }
 
@@ -61,7 +55,6 @@ private:
         return a * (1.0f - factor) + b * factor;
     }
 
-private:
     float GetNoise(const int x, const int z) const
     {
         const unsigned int seed = x * 49632 + z * 325176 + m_seed;
@@ -79,12 +72,6 @@ private:
     }
 
 private:
-    const float m_roughness;
-
-    const float m_amplitude;
-
-    const float m_octaves;
-
     const unsigned int m_seed;
 };
 
@@ -100,14 +87,14 @@ public:
     explicit HeightGenerator()
         : m_xOffset(0)
         , m_zOffset(0)
-        , m_noiseGenerator(std::make_shared<PerlinNoiseGenerator>(HeightGenerator::ROUGHNESS, HeightGenerator::AMPLITUDE, HeightGenerator::OCTAVES))
+        , m_noiseGenerator(std::make_shared<PerlinNoiseGenerator>())
     {
     }
 
     explicit HeightGenerator(const int x, const int z, const int size, const unsigned int seed)
         : m_xOffset(x * (size - 1))
         , m_zOffset(z * (size - 1))
-        , m_noiseGenerator(std::make_shared<PerlinNoiseGenerator>(seed, HeightGenerator::ROUGHNESS, HeightGenerator::AMPLITUDE, HeightGenerator::OCTAVES))
+        , m_noiseGenerator(std::make_shared<PerlinNoiseGenerator>(seed))
     {
     }
 
@@ -120,17 +107,17 @@ public:
 
         float total{ 0.0f };
         for (int i = 0; i < HeightGenerator::OCTAVES; i++) {
-            float freq = static_cast<float>(powf(2, static_cast<float>(i)) / d);
-            float amp = static_cast<float>(powf(HeightGenerator::ROUGHNESS, static_cast<float>(i))) * static_cast<float>(HeightGenerator::AMPLITUDE);
+            const float freq = static_cast<float>(powf(2, static_cast<float>(i)) / d);
+            const float amp = static_cast<float>(powf(HeightGenerator::ROUGHNESS, static_cast<float>(i))) * static_cast<float>(HeightGenerator::AMPLITUDE);
             total += m_noiseGenerator->GetInterpolatedNoise((x + m_xOffset) * freq, (z + m_zOffset) * freq) * amp;
         }
         return total;
     }
 
 private:
-    int m_xOffset;
+    const int m_xOffset;
 
-    int m_zOffset;
+    const int m_zOffset;
 
     const std::shared_ptr<PerlinNoiseGenerator> m_noiseGenerator;
 };
@@ -327,7 +314,7 @@ public:
 
 class TerrainComponentFactory {
 public:
-    TerrainComponentFactory(const unsigned int seed = 21236728, const unsigned int vertexCount = 128)
+    TerrainComponentFactory(const unsigned int seed = 21236728, const unsigned int vertexCount = 16)
         : m_seed(seed)
         , m_vertexCount(vertexCount)
     {
@@ -370,7 +357,7 @@ private:
         auto image = imageFactory.CreateImage(textureFilename);
 
         auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
-        imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_FORMAT_R8G8B8A8_UNORM, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, image->GetBuffer().get() });
+        imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer().get() });
 
         return std::make_unique<Material>(std::move(image), std::move(imageBuffer), shineDamper, reflectivity);
     }

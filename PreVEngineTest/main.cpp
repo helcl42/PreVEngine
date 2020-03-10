@@ -16,6 +16,7 @@
 #include "General.h"
 #include "Mesh.h"
 #include "Pipeline.h"
+#include "SkyBox.h"
 #include "Terrain.h"
 
 class DefaultRenderComponent : public IRenderComponent {
@@ -136,7 +137,7 @@ private:
         const VkExtent2D imageExtent = { image->GetWidth(), image->GetHeight() };
 
         auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
-        imageBuffer->Create(ImageBufferCreateInfo{ imageExtent, VK_FORMAT_R8G8B8A8_UNORM, true, VK_IMAGE_VIEW_TYPE_2D, 1, repeatAddressMode ? VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT : VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, image->GetBuffer().get() });
+        imageBuffer->Create(ImageBufferCreateInfo{ imageExtent, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, repeatAddressMode ? VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT : VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer().get() });
 
         return imageBuffer;
     }
@@ -176,7 +177,7 @@ public:
     {
         auto material = CreateMaterial(allocator, textureFilename, true, 2.0f, 0.3f);
 
-        auto mesh = std::make_shared<PlaneMesh>(40.0f, 40.0f, 1, 1, 10, 10);
+        auto mesh = std::make_shared<PlaneMesh>(40.0f, 40.0f, 1, 1, 10.0f, 10.0f);
         auto model = CreateModel(allocator, std::move(mesh));
 
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -725,7 +726,7 @@ private:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         m_depthBuffer = std::make_shared<DepthImageBuffer>(*allocator);
-        m_depthBuffer->Create(ImageBufferCreateInfo{ GetExtent(), DEPTH_FORMAT, false, VK_IMAGE_VIEW_TYPE_2D_ARRAY, CASCADES_COUNT });
+        m_depthBuffer->Create(ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, DEPTH_FORMAT, 0, false, VK_IMAGE_VIEW_TYPE_2D_ARRAY, CASCADES_COUNT });
         m_depthBuffer->CreateSampler();
 
         m_cascades.resize(CASCADES_COUNT);
@@ -1192,7 +1193,7 @@ public:
     {
         auto terrainManager = TerrainManagerComponentFactory{}.Create();
         ComponentRepository<ITerrainManagerComponent>::GetInstance().Add(m_id, std::move(terrainManager));
-        
+
         for (int x = 0; x < m_gridMaxX; x++) {
             for (int z = 0; z < m_gridMaxZ; z++) {
                 auto terrain = std::make_shared<Terrain>(x, z);
@@ -1378,7 +1379,7 @@ public:
             }
             if (keyEvent.keyCode == KeyCode::KEY_S) {
                 m_shouldGoBackward = true;
-            } 
+            }
             if (keyEvent.keyCode == KeyCode::KEY_A) {
                 m_shouldGoLeft = true;
             }
@@ -1798,6 +1799,47 @@ public:
     }
 };
 
+class SkyBox : public AbstractSceneNode<SceneNodeFlags> {    
+public:
+    SkyBox()
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SKYBOX_RENDER_COMPONENT }) 
+    {
+    }
+
+    ~SkyBox() = default;
+
+public:
+    void Init() override
+    {
+        SkyBoxComponentFactory factory{};
+        m_skyBoxComponent = factory.Create();
+
+        ComponentRepository<ISkyBoxComponent>::GetInstance().Add(m_id, m_skyBoxComponent);
+
+        AbstractSceneNode::Init();
+    }
+
+    void Update(float deltaTime) override
+    {
+        auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>(TagSet{ TAG_MAIN_CAMERA });
+
+        SetPosition(cameraComponent->GetPosition());
+        SetScale(glm::vec3(900.0f));
+
+        AbstractSceneNode::Update(deltaTime);
+    }
+
+    void ShutDown() override 
+    {
+        AbstractSceneNode::ShutDown();
+
+        ComponentRepository<ILightComponent>::GetInstance().Remove(m_id);
+    }
+
+private:
+    std::shared_ptr<ISkyBoxComponent> m_skyBoxComponent;
+};
+
 class Shadows : public AbstractSceneNode<SceneNodeFlags> {
 private:
     std::shared_ptr<IShadowsComponent> m_shadowsCompoent;
@@ -1884,7 +1926,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<DefaultShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "shaders/default_shadows_vert.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<DefaultShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/default_shadows_vert.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(300);
 
         printf("Shadows Shader created\n");
@@ -1993,7 +2035,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<TerrainShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "shaders/terrain_shadows_vert.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<TerrainShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/terrain_shadows_vert.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(300);
 
         printf("Terrain Shadows Shader created\n");
@@ -2100,7 +2142,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<AnimatedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "shaders/animation_shadows_vert.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<AnimatedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/animation_shadows_vert.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Shadows Shader created\n");
@@ -2219,7 +2261,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<QuadShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "shaders/quad_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/quad_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<QuadShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/quad_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "Shaders/quad_frag.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Default Shader created\n");
@@ -2417,7 +2459,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<DefaultShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "shaders/default_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/default_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<DefaultShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/default_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "Shaders/default_frag.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Default Shader created\n");
@@ -2636,7 +2678,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<AnimationShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "shaders/animation_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/animation_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<AnimationShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/animation_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "Shaders/animation_frag.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Animaition Shader created\n");
@@ -2858,7 +2900,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<TerrainShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "shaders/terrain_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/terrain_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<TerrainShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/terrain_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "Shaders/terrain_frag.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Terrain Shader created\n");
@@ -2894,7 +2936,7 @@ public:
             const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
             const auto terrainComponent = ComponentRepository<ITerrainComponenet>::GetInstance().Get(node->GetId());
-            
+
             auto uboVS = m_uniformsPoolVS->GetNext();
 
             UniformsVS uniformsVS{};
@@ -3036,7 +3078,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<FonttShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "shaders/font_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "shaders/font_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<FonttShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/font_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "Shaders/font_frag.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Fonts Shader created\n");
@@ -3118,6 +3160,135 @@ public:
     }
 };
 
+class SkyBoxRenderer : public IRenderer<DefaultRenderContextUserData> {
+private:
+    struct alignas(16) UniformsVS
+    {
+        alignas(16) glm::mat4 modelMatrix;
+
+        alignas(16) glm::mat4 viewMatrix;
+
+        alignas(16) glm::mat4 projectionMatrix;
+    };
+
+    struct alignas(16) UniformsFS
+    {
+        alignas(16) glm::vec4 fogColor;
+
+        alignas(16) float lowerLimit;
+
+        alignas(16) float upperLimit;
+    };
+
+private:
+    std::shared_ptr<RenderPass> m_renderPass;
+
+private:
+    std::shared_ptr<Shader> m_shader;
+
+    std::shared_ptr<IGraphicsPipeline> m_pipeline;
+
+    std::shared_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+
+    std::shared_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+
+public:
+    SkyBoxRenderer(const std::shared_ptr<RenderPass>& renderPass)
+        : m_renderPass(renderPass)
+    {
+    }
+
+    virtual ~SkyBoxRenderer() = default;
+
+public:
+    void Init() override
+    {
+        auto device = DeviceProvider::GetInstance().GetDevice();
+        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+
+        ShaderFactory shaderFactory;
+        m_shader = shaderFactory.CreateShaderFromFiles<SkyBoxShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/skybox_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "Shaders/skybox_frag.spv" } });
+        m_shader->AdjustDescriptorPoolCapacity(100);
+
+        printf("Skybox Shader created\n");
+
+        m_pipeline = std::make_shared<SkyBoxPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline->Init();
+
+        printf("Skybox Pipeline created\n");
+
+        m_uniformsPoolVS = std::make_shared<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS->AdjustCapactity(100);
+
+        m_uniformsPoolFS = std::make_shared<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS->AdjustCapactity(100);
+    }
+
+    void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
+
+        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+    }
+
+    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SKYBOX_RENDER_COMPONENT })) {
+            const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });            
+            const auto skyBoxComponent = ComponentRepository<ISkyBoxComponent>::GetInstance().Get(node->GetId());
+
+            auto uboVS = m_uniformsPoolVS->GetNext();
+
+            UniformsVS uniformsVS{};
+            uniformsVS.projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
+            uniformsVS.viewMatrix = cameraComponent->LookAt();
+            uniformsVS.modelMatrix = node->GetWorldTransformScaled();
+
+            uboVS->Update(&uniformsVS);
+
+            auto uboFS = m_uniformsPoolFS->GetNext();
+
+            UniformsFS uniformsFS{};
+            uniformsFS.fogColor = FOG_COLOR;
+            uniformsFS.lowerLimit = 0.0f;
+            uniformsFS.upperLimit = 30.0f;
+            uboFS->Update(&uniformsFS);
+
+            m_shader->Bind("cubeMap1", *skyBoxComponent->GetMaterial()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            m_shader->Bind("uboVS", *uboVS);
+            m_shader->Bind("uboFS", *uboFS);
+
+            VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+            VkBuffer vertexBuffers[] = { *skyBoxComponent->GetModel()->GetVertexBuffer() };
+            VkDeviceSize offsets[] = { 0 };
+
+            vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *skyBoxComponent->GetModel()->GetIndexBuffer(), 0, skyBoxComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+            vkCmdDrawIndexed(renderContext.defaultCommandBuffer, skyBoxComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+        }
+
+        for (auto child : node->GetChildren()) {
+            Render(renderContext, child, renderContextUserData);
+        }
+    }
+
+    void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void ShutDown() override
+    {
+        m_shader->ShutDown();
+
+        m_pipeline->ShutDown();
+    }
+};
+
 class RootSceneNode : public AbstractSceneNode<SceneNodeFlags> {
 private:
     EventHandler<RootSceneNode, KeyEvent> m_keyEventHnadler{ *this };
@@ -3128,21 +3299,23 @@ private:
     std::shared_ptr<RenderPass> m_defaultRenderPass;
 
 private:
-    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_defaultShadowsRenderer;
+    std::unique_ptr<IRenderer<ShadowsRenderContextUserData> > m_defaultShadowsRenderer;
 
-    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_terrainShadowsRenderer;
+    std::unique_ptr<IRenderer<ShadowsRenderContextUserData> > m_terrainShadowsRenderer;
 
-    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_animationShadowsRenderer;
+    std::unique_ptr<IRenderer<ShadowsRenderContextUserData> > m_animationShadowsRenderer;
 
-    std::shared_ptr<IRenderer<DefaultRenderContextUserData> > m_defaultRenderer;
+    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_defaultRenderer;
 
-    std::shared_ptr<IRenderer<DefaultRenderContextUserData> > m_terrainRenderer;
+    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_terrainRenderer;
 
-    std::shared_ptr<IRenderer<DefaultRenderContextUserData> > m_animationRenderer;
+    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_animationRenderer;
 
-    std::shared_ptr<IRenderer<DefaultRenderContextUserData> > m_quadRenderer;
+    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_quadRenderer;
 
-    std::shared_ptr<IRenderer<DefaultRenderContextUserData> > m_fontRenderer;
+    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_fontRenderer;
+
+    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_skyboxRenderer;
 
 public:
     RootSceneNode(const std::shared_ptr<RenderPass>& renderPass)
@@ -3151,14 +3324,15 @@ public:
     {
     }
 
-    virtual ~RootSceneNode()
-    {
-    }
+    virtual ~RootSceneNode() = default;
 
 public:
     void Init() override
     {
         // Init scene nodes
+        auto skyBox = std::make_shared<SkyBox>();
+        AddChild(skyBox);
+
         auto sunLight = std::make_shared<MainLight>(glm::vec3(150.0f, 150.0f, 150.0f));
         sunLight->SetTags({ TAG_MAIN_LIGHT, TAG_LIGHT });
         AddChild(sunLight);
@@ -3217,29 +3391,32 @@ public:
 
         // Init renderera
         auto shadowsComponent = ComponentRepository<IShadowsComponent>::GetInstance().Get(shadows->GetId());
-        m_defaultShadowsRenderer = std::make_shared<DefaultShadowsRenderer>(shadowsComponent->GetRenderPass());
+        m_defaultShadowsRenderer = std::make_unique<DefaultShadowsRenderer>(shadowsComponent->GetRenderPass());
         m_defaultShadowsRenderer->Init();
 
-        m_terrainShadowsRenderer = std::make_shared<TerrainShadowsRenderer>(shadowsComponent->GetRenderPass());
+        m_terrainShadowsRenderer = std::make_unique<TerrainShadowsRenderer>(shadowsComponent->GetRenderPass());
         m_terrainShadowsRenderer->Init();
 
-        m_animationShadowsRenderer = std::make_shared<AnimationShadowsRenderer>(shadowsComponent->GetRenderPass());
+        m_animationShadowsRenderer = std::make_unique<AnimationShadowsRenderer>(shadowsComponent->GetRenderPass());
         m_animationShadowsRenderer->Init();
 
-        m_defaultRenderer = std::make_shared<DefaultRenderer>(m_defaultRenderPass);
+        m_defaultRenderer = std::make_unique<DefaultRenderer>(m_defaultRenderPass);
         m_defaultRenderer->Init();
 
-        m_terrainRenderer = std::make_shared<TerrainRenderer>(m_defaultRenderPass);
+        m_terrainRenderer = std::make_unique<TerrainRenderer>(m_defaultRenderPass);
         m_terrainRenderer->Init();
 
-        m_animationRenderer = std::make_shared<AnimationSceneRenderer>(m_defaultRenderPass);
+        m_animationRenderer = std::make_unique<AnimationSceneRenderer>(m_defaultRenderPass);
         m_animationRenderer->Init();
 
-        m_quadRenderer = std::make_shared<QuadRenderer>(m_defaultRenderPass);
+        m_quadRenderer = std::make_unique<QuadRenderer>(m_defaultRenderPass);
         m_quadRenderer->Init();
 
-        m_fontRenderer = std::make_shared<FontRenderer>(m_defaultRenderPass);
+        m_fontRenderer = std::make_unique<FontRenderer>(m_defaultRenderPass);
         m_fontRenderer->Init();
+
+        m_skyboxRenderer = std::make_unique<SkyBoxRenderer>(m_defaultRenderPass);
+        m_skyboxRenderer->Init();
     }
 
     void Update(float deltaTime) override
@@ -3292,6 +3469,14 @@ public:
 
         // normal render pass
         m_defaultRenderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, renderContext.fullExtent });
+
+        // SkyBox
+        m_skyboxRenderer->PreRender(renderContext);
+
+        for (auto child : m_children) {
+            m_skyboxRenderer->Render(renderContext, child);
+        }
+        m_skyboxRenderer->PostRender(renderContext);
 
         // Default
         m_defaultRenderer->PreRender(renderContext);
@@ -3347,6 +3532,7 @@ public:
             child->ShutDown();
         }
 
+        m_skyboxRenderer->ShutDown();
         m_fontRenderer->ShutDown();
         m_quadRenderer->ShutDown();
         m_animationRenderer->ShutDown();

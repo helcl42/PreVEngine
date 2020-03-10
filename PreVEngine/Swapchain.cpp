@@ -17,7 +17,7 @@ namespace PreVEngine
 
 		m_commandPool = graphicsQueue->CreateCommandPool();
 
-		m_depthBuffer.Create(ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, renderPass.GetDepthFormat() });
+		m_depthBuffer.Create(ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, renderPass.GetDepthFormat() });
 
 		VkSemaphoreCreateInfo semaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 		VKERRCHECK(vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_acquireSemaphore));

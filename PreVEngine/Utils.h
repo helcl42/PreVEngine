@@ -321,10 +321,11 @@ public:
         return 0;
     }
 
-    static void CreateImage(const VkPhysicalDevice gpu, const VkDevice device, const VkExtent2D& extent, const VkFormat format, const uint32_t mipLevels, const uint32_t arrayLayers, const VkImageTiling tiling, const VkImageUsageFlags usage, const VkMemoryPropertyFlags properties, VkImage& outImage, VkDeviceMemory& outImageMemory)
+    static void CreateImage(const VkPhysicalDevice gpu, const VkDevice device, const VkExtent2D& extent, const VkImageType imageType, const VkFormat format, const uint32_t mipLevels, const uint32_t arrayLayers, const VkImageTiling tiling, const VkImageUsageFlags usage, const VkImageCreateFlags flags, const VkMemoryPropertyFlags properties, VkImage& outImage, VkDeviceMemory& outImageMemory)
     {
         VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
-        imageInfo.imageType = VK_IMAGE_TYPE_2D;
+        imageInfo.flags = flags;
+        imageInfo.imageType = imageType;
         imageInfo.format = format;
         imageInfo.extent = { extent.width, extent.height, 1 };
         imageInfo.mipLevels = mipLevels;

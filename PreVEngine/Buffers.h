@@ -33,7 +33,7 @@ public:
     void EndCommandBuffer();
 
 public:
-    void TransitionImageLayout(const VkImage image, const VkImageLayout oldLayout, const VkImageLayout newLayout, const uint32_t mipLevels = 1);
+    void TransitionImageLayout(const VkImage image, const VkImageLayout oldLayout, const VkImageLayout newLayout, const uint32_t mipLevels = 1, const uint32_t layersCount = 1);
 
     void CreateBuffer(const void* data, uint64_t size, VkBufferUsageFlags usage, VmaMemoryUsage memtype, VkBuffer& buffer, VmaAllocation& alloc, void** mapped = 0);
 
@@ -41,17 +41,17 @@ public:
 
     void CopyBuffer(const VkBuffer srcBuffer, const VkDeviceSize size, VkBuffer dstBuffer);
 
-    void CopyBufferToImage(const VkExtent3D& extent, const VkBuffer buffer, VkImage image);
+    void CopyBufferToImage(const VkExtent3D& extent, const VkBuffer buffer, const uint32_t layerIndex, VkImage image);
 
-    void CreateImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const uint32_t layerCount, const VkImageTiling tiling, const VkImageUsageFlags usage, VkImage& outImage, VmaAllocation& outAlloc);
+    void CreateImage(const VkExtent3D& extent, const VkImageType imageType, const VkFormat format, const uint32_t mipLevels, const uint32_t layerCount, const VkImageTiling tiling, const VkImageUsageFlags usage, const VkImageCreateFlags flags, VkImage& outImage, VmaAllocation& outAlloc);
 
-    void CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const void* data, VkImage& image);
+    void CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const uint8_t* data, const uint32_t layerCount, VkImage& image);
 
     void CreateImageView(const VkImage image, const VkFormat format, const VkImageViewType viewType, const uint32_t mipLevels, const uint32_t layerCount, const VkImageAspectFlags aspectFlags, VkImageView& outImagaView);
 
     void DestroyImage(VkImage image, VkImageView view, VmaAllocation alloc);
 
-    void GenerateMipmaps(const VkImage image, const VkFormat imageFormat, const int32_t texWidth, const int32_t texHeight, const uint32_t mipLevels);
+    void GenerateMipmaps(const VkImage image, const VkFormat imageFormat, const int32_t texWidth, const int32_t texHeight, const uint32_t mipLevels, const uint32_t layersCount = 1);
 
 public:
     VkPhysicalDevice GetPhysicalDevice() const;
@@ -135,23 +135,29 @@ public:
 
 //-------------------------------------AbstractImageBuffer-------------------------------------
 struct ImageBufferCreateInfo {
-    VkExtent2D extent;
+    const VkExtent2D extent;
 
-    VkFormat format;
+    const VkImageType imageType;
 
-    bool mipMap;
+    const VkFormat format;
 
-    VkImageViewType viewType;
+    const VkImageCreateFlags flags;
 
-    uint32_t layerCount;
+    const bool mipMap;
 
-    VkSamplerAddressMode addressMode;
+    const VkImageViewType viewType;
 
-    const void* data;
+    const uint32_t layerCount;
 
-    ImageBufferCreateInfo(const VkExtent2D& ext, const VkFormat fmt, const bool mipmap = false, const VkImageViewType vwType = VK_IMAGE_VIEW_TYPE_2D, const uint32_t lrCount = 1, const VkSamplerAddressMode mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, const void* imageData = nullptr)
+    const VkSamplerAddressMode addressMode;
+
+    const uint8_t* data;
+
+    ImageBufferCreateInfo(const VkExtent2D& ext, const VkImageType imgType, const VkFormat fmt, const VkImageCreateFlags flgs = 0, const bool mipmap = false, const VkImageViewType vwType = VK_IMAGE_VIEW_TYPE_2D, const uint32_t lrCount = 1, const VkSamplerAddressMode mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, const uint8_t* imageData = nullptr)
         : extent(ext)
+        , imageType(imgType)
         , format(fmt)
+        , flags(flgs)
         , mipMap(mipmap)
         , viewType(vwType)
         , layerCount(lrCount)
@@ -185,6 +191,10 @@ public:
 
     virtual VkExtent2D GetExtent() const = 0;
 
+    virtual VkImageType GetImageType() const = 0;
+
+    virtual VkImageCreateFlags GetFlags() const = 0;
+
     virtual uint32_t GetMipLevels() const = 0;
 
     virtual uint32_t GetLayerCount() const = 0;
@@ -204,6 +214,10 @@ protected:
     VkImage m_image;
 
     VkExtent2D m_extent;
+
+    VkImageType m_imageType;
+
+    VkImageCreateFlags m_flags;
 
     VkFormat m_format;
 
@@ -239,6 +253,10 @@ public:
     VkFormat GetFormat() const override;
 
     VkExtent2D GetExtent() const override;
+
+    VkImageType GetImageType() const override;
+
+    VkImageCreateFlags GetFlags() const override;
 
     uint32_t GetMipLevels() const override;
 

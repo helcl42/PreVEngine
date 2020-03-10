@@ -279,7 +279,7 @@ private:
         ImageFactory imageFactory;
         image = imageFactory.CreateImage(imagePath);
         imageBuffer = std::make_unique<ImageBuffer>(*AllocatorProvider::GetInstance().GetAllocator());
-        imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_FORMAT_R8G8B8A8_UNORM, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, image->GetBuffer().get() });
+        imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer().get() });
     }
 
     void ExtractCharactersData(MetaDataFile& metaDataFile, FontMetaDataState& state, std::map<int, Character>& characters) const
