@@ -43,23 +43,24 @@ Image::Image()
 {
 }
 
-Image::Image(const int width, const int height)
+Image::Image(const uint32_t width, const uint32_t height)
+    : m_buffer(nullptr)
 {
     SetSize(width, height);
 }
 
-Image::Image(const int width, const int height, const uint8_t* bytes)
+Image::Image(const uint32_t width, const uint32_t height, const uint8_t* bytes)
 {
     SetSize(width, height);
 
-    std::memcpy(m_buffer.get(), bytes, size_t(width * height * sizeof(RGBA)));
+    std::memcpy(m_buffer, bytes, static_cast<size_t>(width * height * sizeof(RGBA)));
 }
 
-Image::Image(const int width, const int height, const RGBA* pixels)
+Image::Image(const uint32_t width, const uint32_t height, const RGBA* pixels)
 {
     SetSize(width, height);
 
-    std::memcpy(m_buffer.get(), pixels, size_t(width * height * sizeof(RGBA)));
+    std::memcpy(m_buffer, pixels, static_cast<size_t>(width * height * sizeof(RGBA)));
 }
 
 Image::~Image()
@@ -69,9 +70,8 @@ Image::~Image()
 
 Image::Image(const Image& other)
 {
-    const size_t size{ other.m_width * other.m_height };
-    m_buffer = std::shared_ptr<RGBA[]>(new RGBA[size]);
-    std::memcpy(m_buffer.get(), other.m_buffer.get(), size * sizeof(RGBA));
+    SetSize(other.m_width, other.m_height);
+    std::memcpy(m_buffer, other.m_buffer, static_cast<size_t>(other.m_width * other.m_height * sizeof(RGBA)));
 
     m_width = other.m_width;
     m_height = other.m_height;
@@ -80,11 +80,8 @@ Image::Image(const Image& other)
 Image& Image::operator=(const Image& other)
 {
     if (this != &other) {
-        CleanUp();
-
-        const size_t size{ other.m_width * other.m_height };
-        m_buffer = std::shared_ptr<RGBA[]>(new RGBA[size]);
-        std::memcpy(m_buffer.get(), other.m_buffer.get(), size * sizeof(RGBA));
+        SetSize(other.m_width, other.m_height);
+        std::memcpy(m_buffer, other.m_buffer, static_cast<size_t>(other.m_width * other.m_height * sizeof(RGBA)));
 
         m_width = other.m_width;
         m_height = other.m_height;
@@ -119,19 +116,22 @@ Image& Image::operator=(Image&& other)
 
 void Image::CleanUp()
 {
-    m_buffer = nullptr;
+    if(m_buffer != nullptr) {
+        delete[] m_buffer;
+        m_buffer = nullptr;
+    }
 }
 
-void Image::SetSize(const int w, const int h)
+void Image::SetSize(const uint32_t w, const uint32_t h)
 {
     CleanUp();
 
     m_width = w;
     m_height = h;
-    m_buffer = std::shared_ptr<RGBA[]>(new RGBA[w * h]);
+    m_buffer = new RGBA[w * h];
 }
 
-std::shared_ptr<RGBA[]> Image::GetBuffer() const
+RGBA* Image::GetBuffer() const
 {
     return m_buffer;
 }
@@ -148,13 +148,14 @@ uint32_t Image::GetHeight() const
 
 void Image::Clear()
 {
-    const size_t size(m_width * m_height);
-    std::memset(m_buffer.get(), 0, size * sizeof(RGBA));
+    const size_t size{ m_width * m_height };
+    std::memset(m_buffer, 0, size * sizeof(RGBA));
 }
 
 void Image::Clear(const RGBA& color)
 {
-    for (uint32_t i = 0; i < m_width * m_height; i++) {
+    const size_t size{ m_width * m_height };
+    for (uint32_t i = 0; i < size; i++) {
         m_buffer[i] = color;
     }
 }
@@ -162,7 +163,7 @@ void Image::Clear(const RGBA& color)
 bool ImageFactory::FileExists(const std::string& fileName)
 {
 #if defined(__ANDROID__)
-    AAsset* asset = android_open_asset(modelPath.c_str(), AASSET_MODE_STREAMING);
+    AAsset* asset = android_open_asset(fileName.c_str(), AASSET_MODE_STREAMING);
     bool result = !!asset;
     AAsset_close(asset);
     return result;
@@ -179,6 +180,8 @@ std::unique_ptr<Image> ImageFactory::CreateImage(const std::string& filename, bo
         return nullptr;
     }
 
+    LOGI("Loading image: %s...\n", filename.c_str());
+
     int w, h, n;
     stbi_set_flip_vertically_on_load(flipVertically);
 
@@ -188,9 +191,9 @@ std::unique_ptr<Image> ImageFactory::CreateImage(const std::string& filename, bo
         return nullptr;
     }
 
-    LOGI("Load image: %s (%dx%d)\n", filename.c_str(), w, h);
-
     auto image = std::make_unique<Image>(w, h, imageBytes);
+
+    LOGI("Loaded image: %s (%dx%d)\n", filename.c_str(), w, h);
 
     stbi_image_free(imageBytes);
 

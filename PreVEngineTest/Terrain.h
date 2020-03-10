@@ -314,23 +314,19 @@ public:
 
 class TerrainComponentFactory {
 public:
-    TerrainComponentFactory(const unsigned int seed = 21236728, const unsigned int vertexCount = 128)
+    TerrainComponentFactory(const unsigned int seed = 21236728, const unsigned int vertexCount = 16)
         : m_seed(seed)
         , m_vertexCount(vertexCount)
     {
     }
 
+    ~TerrainComponentFactory() = default;
+
+public:
     std::unique_ptr<ITerrainComponenet> CreateRandomTerrain(const int x, const int z, const float size) const
     {
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
-
         const auto heightGenerator = std::make_shared<HeightGenerator>(x, z, m_vertexCount, m_seed);
-
-        auto mesh = GenerateMesh(heightGenerator, size);
-        auto vertexBuffer = std::make_unique<VBO>(*allocator);
-        vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertextLayout().GetStride());
-        auto indexBuffer = std::make_unique<IBO>(*allocator);
-        indexBuffer->Data(mesh->GerIndices().data(), static_cast<uint32_t>(mesh->GerIndices().size()));
 
         const std::string materialPaths[] = {
             "fungus.png",
@@ -340,7 +336,7 @@ public:
         };
 
         auto result = std::make_unique<TerrainComponent>(x, z);
-        result->m_model = std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
+        result->m_model = std::move(CreateModel(*allocator, heightGenerator, size));
         result->m_heightsInfo = CreateHeightMap(heightGenerator);
         result->m_vertexData = GenerateVertexData(heightGenerator, size);
         for (const auto& path : materialPaths) {
@@ -351,13 +347,23 @@ public:
     }
 
 private:
+    std::unique_ptr<IModel> CreateModel(Allocator& allocator, const std::shared_ptr<HeightGenerator>& heightGenerator, const float size) const
+    {
+        auto mesh = GenerateMesh(heightGenerator, size);
+        auto vertexBuffer = std::make_unique<VBO>(allocator);
+        vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertextLayout().GetStride());
+        auto indexBuffer = std::make_unique<IBO>(allocator);
+        indexBuffer->Data(mesh->GerIndices().data(), static_cast<uint32_t>(mesh->GerIndices().size()));
+
+        return std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
+    }
+
     std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& textureFilename, const float shineDamper, const float reflectivity) const
     {
         ImageFactory imageFactory;
         auto image = imageFactory.CreateImage(textureFilename);
-
         auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
-        imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer().get() });
+        imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer() });
 
         return std::make_unique<Material>(std::move(image), std::move(imageBuffer), shineDamper, reflectivity);
     }
@@ -518,7 +524,7 @@ class ITerrainManagerComponent {
 public:
     virtual void AddTerrainComponent(const std::shared_ptr<ITerrainComponenet>& terrain) = 0;
 
-    virtual void RemoveTerraion(const std::shared_ptr<ITerrainComponenet>& terraain) = 0;
+    virtual void RemoveTerrain(const std::shared_ptr<ITerrainComponenet>& terrain) = 0;
 
     virtual std::shared_ptr<ITerrainComponenet> GetTerrainAt(const glm::vec3& position) const = 0;
 
@@ -535,9 +541,9 @@ public:
         m_terrains.insert({ TerrainKey{ terrain->GetPosition() }, terrain });
     }
 
-    void RemoveTerraion(const std::shared_ptr<ITerrainComponenet>& terraain) override
+    void RemoveTerrain(const std::shared_ptr<ITerrainComponenet>& terrain) override
     {
-        m_terrains.erase(TerrainKey{ terraain->GetPosition() });
+        m_terrains.erase(TerrainKey{ terrain->GetPosition() });
     }
 
     std::shared_ptr<ITerrainComponenet> GetTerrainAt(const glm::vec3& position) const override

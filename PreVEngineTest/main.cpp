@@ -137,7 +137,7 @@ private:
         const VkExtent2D imageExtent = { image->GetWidth(), image->GetHeight() };
 
         auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
-        imageBuffer->Create(ImageBufferCreateInfo{ imageExtent, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, repeatAddressMode ? VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT : VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer().get() });
+        imageBuffer->Create(ImageBufferCreateInfo{ imageExtent, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, repeatAddressMode ? VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT : VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
 
         return imageBuffer;
     }
@@ -1165,7 +1165,7 @@ public:
         AbstractSceneNode::ShutDown();
 
         if (auto manager = m_terrainManagerComponent.lock()) {
-            manager->RemoveTerraion(m_terrainComponent);
+            manager->RemoveTerrain(m_terrainComponent);
         }
 
         ComponentRepository<ITerrainComponenet>::GetInstance().Remove(m_id);

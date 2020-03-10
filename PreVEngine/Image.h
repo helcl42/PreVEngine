@@ -28,16 +28,16 @@ private:
 
     uint32_t m_height;
 
-    std::shared_ptr<RGBA[]> m_buffer;
+    RGBA* m_buffer;
 
 public:
     Image();
 
-    Image(const int width, const int height);
+    Image(const uint32_t width, const uint32_t height);
 
-    Image(const int width, const int height, const uint8_t* bytes);
+    Image(const uint32_t width, const uint32_t height, const uint8_t* bytes);
 
-    Image(const int width, const int height, const RGBA* pixels);
+    Image(const uint32_t width, const uint32_t height, const RGBA* pixels);
 
     ~Image();
 
@@ -54,13 +54,13 @@ private:
     void CleanUp();
 
 public:
-    void SetSize(const int width, const int height);
+    void SetSize(const uint32_t width, const uint32_t height);
 
     uint32_t GetWidth() const;
 
     uint32_t GetHeight() const;
 
-    std::shared_ptr<RGBA[]> GetBuffer() const;
+    RGBA* GetBuffer() const;
 
     void Clear();
 
