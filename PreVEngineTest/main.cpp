@@ -1799,10 +1799,10 @@ public:
     }
 };
 
-class SkyBox : public AbstractSceneNode<SceneNodeFlags> {    
+class SkyBox : public AbstractSceneNode<SceneNodeFlags> {
 public:
     SkyBox()
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SKYBOX_RENDER_COMPONENT }) 
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SKYBOX_RENDER_COMPONENT })
     {
     }
 
@@ -1835,7 +1835,7 @@ public:
         AbstractSceneNode::Update(deltaTime);
     }
 
-    void ShutDown() override 
+    void ShutDown() override
     {
         AbstractSceneNode::ShutDown();
 
@@ -3245,7 +3245,7 @@ public:
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SKYBOX_RENDER_COMPONENT })) {
-            const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });            
+            const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
             const auto skyBoxComponent = ComponentRepository<ISkyBoxComponent>::GetInstance().Get(node->GetId());
 
             auto uboVS = m_uniformsPoolVS->GetNext();
@@ -3397,8 +3397,172 @@ public:
             child->Init();
         }
 
-        // Init renderera
-        auto shadowsComponent = ComponentRepository<IShadowsComponent>::GetInstance().Get(shadows->GetId());
+        InitRenderers();
+    }
+
+    void Update(float deltaTime) override
+    {
+        for (auto child : m_children) {
+            child->Update(deltaTime);
+        }
+    }
+
+    void Render(RenderContext& renderContext) override
+    {
+        // Shadows render pass
+        RenderShadows(renderContext);
+
+        // Normal render pass
+        m_defaultRenderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, renderContext.fullExtent });
+
+        // SkyBox
+        RenderSkyBox(renderContext);
+
+        // Scene
+        RenderSceneBase(renderContext);
+
+        // fonts
+        RenderFonts(renderContext);
+
+        m_defaultRenderPass->End(renderContext.defaultCommandBuffer);
+
+#ifndef ANDROID
+        // Debug quad with shadowMap
+        m_quadRenderer->PreRender(renderContext);
+
+        m_quadRenderer->Render(renderContext, GetThis());
+
+        m_quadRenderer->PostRender(renderContext);
+#endif
+    }
+
+    void ShutDown() override
+    {
+        ShutDownRenderers();
+
+        for (auto child : m_children) {
+            child->ShutDown();
+        }
+    }
+
+public:
+    void operator()(const KeyEvent& keyEvent)
+    {
+        if (keyEvent.action == KeyActionType::PRESS) {
+            if (keyEvent.keyCode == KeyCode::KEY_J) {
+                RemmoveNode();
+            } else if (keyEvent.keyCode == KeyCode::KEY_K) {
+                AddNode();
+            }
+        }
+    }
+
+    void operator()(const TouchEvent& touchEvent)
+    {
+        if (touchEvent.action == TouchActionType::DOWN) {
+            AddNode();
+        } else if (touchEvent.action == TouchActionType::UP) {
+            //RemmoveNode();
+        }
+    }
+
+private:
+    void RenderShadows(RenderContext& renderContext)
+    {
+        auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+        for (uint32_t cascadeIndex = 0; cascadeIndex < ShadowsComponent::CASCADES_COUNT; cascadeIndex++) {
+
+            auto cascade = shadows->GetCascade(cascadeIndex);
+            shadows->GetRenderPass()->Begin(cascade.frameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, shadows->GetExtent() });
+
+            ShadowsRenderContextUserData userData{ cascadeIndex };
+
+            // Default
+            m_defaultShadowsRenderer->PreRender(renderContext, userData);
+
+            for (auto child : m_children) {
+                m_defaultShadowsRenderer->Render(renderContext, child, userData);
+            }
+
+            m_defaultShadowsRenderer->PostRender(renderContext, userData);
+
+            // Terrain
+            m_terrainShadowsRenderer->PreRender(renderContext, userData);
+
+            for (auto child : m_children) {
+                m_terrainShadowsRenderer->Render(renderContext, child, userData);
+            }
+
+            m_terrainShadowsRenderer->PostRender(renderContext, userData);
+
+            // Animation
+            m_animationShadowsRenderer->PreRender(renderContext, userData);
+
+            for (auto child : m_children) {
+                m_animationShadowsRenderer->Render(renderContext, child, userData);
+            }
+
+            m_animationShadowsRenderer->PostRender(renderContext, userData);
+
+            shadows->GetRenderPass()->End(renderContext.defaultCommandBuffer);
+        }
+    }
+
+    void RenderSkyBox(RenderContext& renderContext)
+    {
+        m_skyboxRenderer->PreRender(renderContext);
+
+        for (auto child : m_children) {
+            m_skyboxRenderer->Render(renderContext, child);
+        }
+
+        m_skyboxRenderer->PostRender(renderContext);
+    }
+
+    void RenderSceneBase(RenderContext& renderContext)
+    { 
+        // Default
+        m_defaultRenderer->PreRender(renderContext);
+
+        for (auto child : m_children) {
+            m_defaultRenderer->Render(renderContext, child);
+        }
+
+        m_defaultRenderer->PostRender(renderContext);
+
+        // Terrain
+        m_terrainRenderer->PreRender(renderContext);
+
+        for (auto child : m_children) {
+            m_terrainRenderer->Render(renderContext, child);
+        }
+
+        m_terrainRenderer->PostRender(renderContext);
+
+        // Animation
+        m_animationRenderer->PreRender(renderContext);
+
+        for (auto child : m_children) {
+            m_animationRenderer->Render(renderContext, child);
+        }
+
+        m_animationRenderer->PostRender(renderContext);
+    }
+
+    void RenderFonts(RenderContext& renderContext)
+    {
+        m_fontRenderer->PreRender(renderContext);
+
+        for (auto child : m_children) {
+            m_fontRenderer->Render(renderContext, child);
+        }
+
+        m_fontRenderer->PostRender(renderContext);
+    }
+
+    void InitRenderers()
+    {
+        auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>(TagSet{ TAG_SHADOW });
         m_defaultShadowsRenderer = std::make_unique<DefaultShadowsRenderer>(shadowsComponent->GetRenderPass());
         m_defaultShadowsRenderer->Init();
 
@@ -3427,119 +3591,8 @@ public:
         m_skyboxRenderer->Init();
     }
 
-    void Update(float deltaTime) override
+    void ShutDownRenderers()
     {
-        for (auto child : m_children) {
-            child->Update(deltaTime);
-        }
-    }
-
-    void Render(RenderContext& renderContext) override
-    {
-        // shadows render pass
-        auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-        for (uint32_t cascadeIndex = 0; cascadeIndex < ShadowsComponent::CASCADES_COUNT; cascadeIndex++) {
-
-            auto cascade = shadows->GetCascade(cascadeIndex);
-            shadows->GetRenderPass()->Begin(cascade.frameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, shadows->GetExtent() });
-
-            ShadowsRenderContextUserData userData{ cascadeIndex };
-
-            // default
-            m_defaultShadowsRenderer->PreRender(renderContext, userData);
-
-            for (auto child : m_children) {
-                m_defaultShadowsRenderer->Render(renderContext, child, userData);
-            }
-
-            m_defaultShadowsRenderer->PostRender(renderContext, userData);
-
-            // terrain
-            m_terrainShadowsRenderer->PreRender(renderContext, userData);
-
-            for (auto child : m_children) {
-                m_terrainShadowsRenderer->Render(renderContext, child, userData);
-            }
-
-            m_terrainShadowsRenderer->PostRender(renderContext, userData);
-
-            // animated
-            m_animationShadowsRenderer->PreRender(renderContext, userData);
-
-            for (auto child : m_children) {
-                m_animationShadowsRenderer->Render(renderContext, child, userData);
-            }
-
-            m_animationShadowsRenderer->PostRender(renderContext, userData);
-
-            shadows->GetRenderPass()->End(renderContext.defaultCommandBuffer);
-        }
-
-        // normal render pass
-        m_defaultRenderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, renderContext.fullExtent });
-
-        // SkyBox
-        m_skyboxRenderer->PreRender(renderContext);
-
-        for (auto child : m_children) {
-            m_skyboxRenderer->Render(renderContext, child);
-        }
-        m_skyboxRenderer->PostRender(renderContext);
-
-        // Default
-        m_defaultRenderer->PreRender(renderContext);
-
-        for (auto child : m_children) {
-            m_defaultRenderer->Render(renderContext, child);
-        }
-
-        m_defaultRenderer->PostRender(renderContext);
-
-        // Terrain
-        m_terrainRenderer->PreRender(renderContext);
-
-        for (auto child : m_children) {
-            m_terrainRenderer->Render(renderContext, child);
-        }
-
-        m_terrainRenderer->PostRender(renderContext);
-
-        // Animation
-        m_animationRenderer->PreRender(renderContext);
-
-        for (auto child : m_children) {
-            m_animationRenderer->Render(renderContext, child);
-        }
-
-        m_animationRenderer->PostRender(renderContext);
-
-        // fonts
-        m_fontRenderer->PreRender(renderContext);
-
-        for (auto child : m_children) {
-            m_fontRenderer->Render(renderContext, child);
-        }
-
-        m_fontRenderer->PostRender(renderContext);
-
-        m_defaultRenderPass->End(renderContext.defaultCommandBuffer);
-
-#ifndef ANDROID
-        // Debug quad with shadowMap
-        m_quadRenderer->PreRender(renderContext);
-
-        m_quadRenderer->Render(renderContext, GetThis());
-
-        m_quadRenderer->PostRender(renderContext);
-#endif
-    }
-
-    void ShutDown() override
-    {
-        for (auto child : m_children) {
-            child->ShutDown();
-        }
-
         m_skyboxRenderer->ShutDown();
         m_fontRenderer->ShutDown();
         m_quadRenderer->ShutDown();
@@ -3549,27 +3602,6 @@ public:
         m_animationShadowsRenderer->ShutDown();
         m_terrainShadowsRenderer->ShutDown();
         m_defaultShadowsRenderer->ShutDown();
-    }
-
-public:
-    void operator()(const KeyEvent& keyEvent)
-    {
-        if (keyEvent.action == KeyActionType::PRESS) {
-            if (keyEvent.keyCode == KeyCode::KEY_J) {
-                RemmoveNode();
-            } else if (keyEvent.keyCode == KeyCode::KEY_K) {
-                AddNode();
-            }
-        }
-    }
-
-    void operator()(const TouchEvent& touchEvent)
-    {
-        if (touchEvent.action == TouchActionType::DOWN) {
-            AddNode();
-        } else if (touchEvent.action == TouchActionType::UP) {
-            //RemmoveNode();
-        }
     }
 
 private:
