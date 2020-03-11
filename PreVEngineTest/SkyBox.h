@@ -152,10 +152,11 @@ private:
 
     std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::vector<std::string>& textureFilenames) const
     {
-        std::vector<std::shared_ptr<Image> > images;
         ImageFactory imageFactory{};
-        for (size_t i = 0; i < textureFilenames.size(); i++) {
-            auto image = imageFactory.CreateImage(textureFilenames[i]);
+
+        std::vector<std::shared_ptr<Image> > images{};
+        for (const auto& faceFilePaht : textureFilenames) {
+            auto image = imageFactory.CreateImage(faceFilePaht);
             images.emplace_back(std::move(image));
         }
 
