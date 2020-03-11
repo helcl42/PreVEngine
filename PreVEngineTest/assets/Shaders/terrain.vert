@@ -10,6 +10,8 @@ layout(std140, binding = 0) uniform UniformBufferObject {
     
 	mat4 normalMatrix;
 
+	vec4 clipPlane;
+
 	vec4 cameraPosition;
 
 	float density;
@@ -31,6 +33,8 @@ void main()
 {
 	vec4 worldPosition = uboVS.modelMatrix * vec4(inPosition, 1.0);
 	outWorldPosition = worldPosition.xyz;
+
+	gl_ClipDistance[0] = dot(worldPosition, uboVS.clipPlane);
 
 	vec4 viewPosition = uboVS.viewMatrix * worldPosition;
 	outViewPosition = viewPosition.xyz;

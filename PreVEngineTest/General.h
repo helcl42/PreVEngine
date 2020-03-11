@@ -17,6 +17,7 @@ static const glm::vec4 FOG_COLOR{ 0.47f, 0.53f, 0.58f, 1.0f };
 static const bool SHADOWS_ENABLED{ true };
 static const glm::vec4 SELECTED_COLOR{ 1.0f, 0.0f, 0.0f, 1.0f };
 static const uint32_t MAX_BONES_COUNT{ 100 };
+static const glm::vec4 DEFAULT_CLIP_PLANE{ 0.0f, -1.0f, 0.0f, 1000.0f };
 
 enum class SceneNodeFlags : uint64_t {
     HAS_RENDER_COMPONENT,
@@ -40,7 +41,7 @@ private:
     float m_farClippingPlane;
 
 public:
-    ViewFrustum(float fov, float nCp, float fCp)
+    ViewFrustum(const float fov, const float nCp, const float fCp)
         : m_fov(fov)
         , m_nearClippingPlane(nCp)
         , m_farClippingPlane(fCp)

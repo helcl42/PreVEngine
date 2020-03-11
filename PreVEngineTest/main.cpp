@@ -2414,6 +2414,8 @@ private:
 
         alignas(16) glm::mat4 normalMatrix;
 
+        alignas(16) glm::vec4 clipPlane;
+
         alignas(16) glm::vec4 cameraPosition;
 
         alignas(16) glm::vec4 textureOffset;
@@ -2517,6 +2519,7 @@ public:
             uniformsVS.useFakeLightning = nodeRenderComponent->GetMaterial()->UsesFakeLightning();
             uniformsVS.density = 0.002f;
             uniformsVS.gradient = 4.4f;
+            uniformsVS.clipPlane = DEFAULT_CLIP_PLANE;
 
             uboVS->Update(&uniformsVS);
 
@@ -2633,6 +2636,8 @@ private:
 
         alignas(16) glm::mat4 normalMatrix;
 
+        alignas(16) glm::vec4 clipPlane;
+
         alignas(16) glm::vec4 cameraPosition;
 
         alignas(16) glm::vec4 textureOffset;
@@ -2740,6 +2745,7 @@ public:
             uniformsVS.useFakeLightning = nodeRenderComponent->GetMaterial()->UsesFakeLightning();
             uniformsVS.density = 0.002f;
             uniformsVS.gradient = 4.4f;
+            uniformsVS.clipPlane = DEFAULT_CLIP_PLANE;
 
             uboVS->Update(&uniformsVS);
 
@@ -2854,6 +2860,8 @@ private:
 
         alignas(16) glm::mat4 normalMatrix;
 
+        alignas(16) glm::vec4 clipPlane;
+
         alignas(16) glm::vec4 cameraPosition;
 
         alignas(16) float density;
@@ -2955,6 +2963,7 @@ public:
             uniformsVS.cameraPosition = glm::vec4(cameraComponent->GetPosition(), 1.0f);
             uniformsVS.density = 0.002f;
             uniformsVS.gradient = 4.4f;
+            uniformsVS.clipPlane = DEFAULT_CLIP_PLANE;
 
             uboVS->Update(&uniformsVS);
 

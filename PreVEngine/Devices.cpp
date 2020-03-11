@@ -18,6 +18,7 @@ PhysicalDevice::PhysicalDevice(VkPhysicalDevice gpu)
     // enable features here ??
     m_enabledFeatures.samplerAnisotropy = VK_TRUE;
     m_enabledFeatures.depthClamp = VK_TRUE;
+    m_enabledFeatures.shaderClipDistance = VK_TRUE;
 
     uint32_t familyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(gpu, &familyCount, nullptr);
