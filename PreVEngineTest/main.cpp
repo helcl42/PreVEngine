@@ -18,6 +18,7 @@
 #include "Pipeline.h"
 #include "SkyBox.h"
 #include "Terrain.h"
+#include "Water.h"
 
 class DefaultRenderComponent : public IRenderComponent {
 private:
@@ -659,15 +660,15 @@ struct AABB {
 
 class ShadowsComponent : public IShadowsComponent {
 public:
-    static const VkFormat DEPTH_FORMAT;
+    static const inline VkFormat DEPTH_FORMAT = VK_FORMAT_D24_UNORM_S8_UINT;
 
-    static const uint32_t SHADOW_MAP_DIMENSIONS;
+    static const inline uint32_t SHADOW_MAP_DIMENSIONS = 2048;
 
-    static const VkFilter SHADOW_MAP_FILTER;
+    static const inline VkFilter SHADOW_MAP_FILTER = VK_FILTER_LINEAR;
 
-    static const uint32_t CASCADES_COUNT;
+    static const inline uint32_t CASCADES_COUNT = 4;
 
-    static const float CASCADES_SPLIT_LAMBDA;
+    static const inline float CASCADES_SPLIT_LAMBDA = 0.86f;
 
 private:
     std::shared_ptr<Allocator> m_allocator;
@@ -691,7 +692,7 @@ private:
     {
         auto device = DeviceProvider::GetInstance().GetDevice();
 
-        std::vector<VkSubpassDependency> dependencies(2);
+        std::vector<VkSubpassDependency> dependencies{ 2 };
         dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
         dependencies[0].dstSubpass = 0;
         dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
@@ -892,16 +893,6 @@ public:
         return m_depthBuffer;
     }
 };
-
-const VkFormat ShadowsComponent::DEPTH_FORMAT = VK_FORMAT_D24_UNORM_S8_UINT;
-
-const uint32_t ShadowsComponent::SHADOW_MAP_DIMENSIONS = 2048;
-
-const VkFilter ShadowsComponent::SHADOW_MAP_FILTER = VK_FILTER_LINEAR;
-
-const uint32_t ShadowsComponent::CASCADES_COUNT = 4;
-
-const float ShadowsComponent::CASCADES_SPLIT_LAMBDA = 0.86f;
 
 class ShadowsComponentFactory {
 public:
@@ -1848,10 +1839,131 @@ private:
     static const inline float ROTATION_SPEED_DEGS_PER_SEC = 0.5f;
 };
 
-class Shadows : public AbstractSceneNode<SceneNodeFlags> {
-private:
-    std::shared_ptr<IShadowsComponent> m_shadowsCompoent;
+class WaterReflection : public AbstractSceneNode<SceneNodeFlags> {
+public:
+    static const inline uint32_t REFLECTION_WIDTH = 320;
 
+    static const inline uint32_t REFLECTION_HEIGHT = 180;
+
+public:
+    WaterReflection()
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_COMPONENT })
+    {
+    }
+
+    ~WaterReflection() = default;
+
+public:
+    void Init() override
+    {
+        WaterOffscreenComponentsFactory offscreenComponentFactory{};
+        m_reflectionComponent = std::move(offscreenComponentFactory.Create(REFLECTION_WIDTH, REFLECTION_HEIGHT));
+
+        ComponentRepository<IWaterOffscreenRenderPassComponent>::GetInstance().Add(m_id, m_reflectionComponent);
+
+        AbstractSceneNode::Init();
+    }
+
+    void Update(float deltaTime) override
+    {
+        AbstractSceneNode::Update(deltaTime);
+    }
+
+    void ShutDown() override
+    {
+        AbstractSceneNode::ShutDown();
+
+        ComponentRepository<IWaterOffscreenRenderPassComponent>::GetInstance().Remove(m_id);
+    }
+
+private:
+    std::shared_ptr<IWaterOffscreenRenderPassComponent> m_reflectionComponent;
+};
+
+class WaterRefraction : public AbstractSceneNode<SceneNodeFlags> {
+public:
+    static const inline uint32_t REFRACTION_WIDTH = 1280;
+
+    static const inline uint32_t REFRACTION_HEIGHT = 720;
+
+public:
+    WaterRefraction()
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_COMPONENT })
+    {
+    }
+
+    ~WaterRefraction() = default;
+
+public:
+    void Init() override
+    {
+        WaterOffscreenComponentsFactory offscreenComponentFactory{};
+        m_refractionComponent = std::move(offscreenComponentFactory.Create(REFRACTION_WIDTH, REFRACTION_HEIGHT));
+
+        ComponentRepository<IWaterOffscreenRenderPassComponent>::GetInstance().Add(m_id, m_refractionComponent);
+
+        AbstractSceneNode::Init();
+    }
+
+    void Update(float deltaTime) override
+    {
+        AbstractSceneNode::Update(deltaTime);
+    }
+
+    void ShutDown() override
+    {
+        AbstractSceneNode::ShutDown();
+
+        ComponentRepository<IWaterOffscreenRenderPassComponent>::GetInstance().Remove(m_id);
+    }
+
+private:
+    std::shared_ptr<IWaterOffscreenRenderPassComponent> m_refractionComponent;
+};
+
+class Water : public AbstractSceneNode<SceneNodeFlags> {
+public:
+    Water()
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_COMPONENT })
+    {
+    }
+
+    ~Water() = default;
+
+public:
+    void Init() override
+    {
+        WaterComponentFactory componentFactory{};
+        m_waterComponent = std::move(componentFactory.Create());
+
+        ComponentRepository<IWaterComponent>::GetInstance().Add(m_id, m_waterComponent);
+
+        auto waterReflection = std::make_shared<WaterReflection>();
+        AddChild(waterReflection);
+
+        auto waterRefraction = std::make_shared<WaterRefraction>();
+        AddChild(waterRefraction);
+
+        AbstractSceneNode::Init();
+    }
+
+    void Update(float deltaTime) override
+    {
+        AbstractSceneNode::Update(deltaTime);
+    }
+
+    void ShutDown() override
+    {
+        AbstractSceneNode::ShutDown();
+
+        ComponentRepository<IWaterComponent>::GetInstance().Remove(m_id);
+    }
+
+private:
+    std::shared_ptr<IWaterComponent> m_waterComponent;
+};
+
+class Shadows : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Shadows()
         : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SHADOWS_COMPONENT })
@@ -1890,6 +2002,9 @@ public:
 
         m_shadowsCompoent->ShutDown();
     }
+
+private:
+    std::shared_ptr<IShadowsComponent> m_shadowsCompoent;
 };
 
 struct ShadowsRenderContextUserData : DefaultRenderContextUserData {
@@ -3533,7 +3648,7 @@ private:
     }
 
     void RenderSceneBase(RenderContext& renderContext)
-    { 
+    {
         // Default
         m_defaultRenderer->PreRender(renderContext);
 
