@@ -45,7 +45,7 @@ public:
 
     void CreateImage(const VkExtent3D& extent, const VkImageType imageType, const VkFormat format, const uint32_t mipLevels, const uint32_t layerCount, const VkImageTiling tiling, const VkImageUsageFlags usage, const VkImageCreateFlags flags, VkImage& outImage, VmaAllocation& outAlloc);
 
-    void CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const uint8_t* data, const uint32_t layerCount, VkImage& image);
+    void CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const std::vector<const uint8_t*> layerData, const uint32_t layerCount, VkImage& image);
 
     void CreateImageView(const VkImage image, const VkFormat format, const VkImageViewType viewType, const uint32_t mipLevels, const uint32_t layerCount, const VkImageAspectFlags aspectFlags, VkImageView& outImagaView);
 
@@ -151,9 +151,14 @@ struct ImageBufferCreateInfo {
 
     const VkSamplerAddressMode addressMode;
 
-    const uint8_t* data;
+    const std::vector<const uint8_t*> layerData;
 
-    ImageBufferCreateInfo(const VkExtent2D& ext, const VkImageType imgType, const VkFormat fmt, const VkImageCreateFlags flgs = 0, const bool mipmap = false, const VkImageViewType vwType = VK_IMAGE_VIEW_TYPE_2D, const uint32_t lrCount = 1, const VkSamplerAddressMode mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, const uint8_t* imageData = nullptr)
+    ImageBufferCreateInfo(const VkExtent2D& ext, const VkImageType imgType, const VkFormat fmt, const VkImageCreateFlags flgs = 0, const bool mipmap = false, const VkImageViewType vwType = VK_IMAGE_VIEW_TYPE_2D, const uint32_t lrCount = 1, const VkSamplerAddressMode mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, const uint8_t* data = nullptr)
+        : ImageBufferCreateInfo(ext, imgType, fmt, flgs, mipmap, vwType, lrCount, mode, std::vector<const uint8_t*>{ data })
+    {
+    }
+
+    ImageBufferCreateInfo(const VkExtent2D& ext, const VkImageType imgType, const VkFormat fmt, const VkImageCreateFlags flgs, const bool mipmap, const VkImageViewType vwType, const uint32_t lrCount, const VkSamplerAddressMode mode, const std::vector<const uint8_t*>& lrImageData)
         : extent(ext)
         , imageType(imgType)
         , format(fmt)
@@ -162,7 +167,7 @@ struct ImageBufferCreateInfo {
         , viewType(vwType)
         , layerCount(lrCount)
         , addressMode(mode)
-        , data(imageData)
+        , layerData(lrImageData)
     {
     }
 

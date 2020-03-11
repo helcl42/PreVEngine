@@ -110,8 +110,8 @@ void Allocator::CreateBuffer(const void* data, uint64_t size, VkBufferUsageFlags
         if (mapped) {
             *mapped = allocInfo.pMappedData;
         }
-    } else // For GPU-only memory, copy via staging buffer.
-    {
+    } else { // For GPU-only memory, copy via staging buffer.
+
         // TODO: Also skip staging buffer on integrated gpus.
 
         VkBufferCreateInfo stagingBufferCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
@@ -134,7 +134,7 @@ void Allocator::CreateBuffer(const void* data, uint64_t size, VkBufferUsageFlags
         VkBufferCreateInfo bufferCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
         bufferCreateInfo.size = size;
         bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage; // | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage;
 
         VmaAllocationCreateInfo allocCreateInfo = {};
         allocCreateInfo.usage = memtype;
@@ -209,7 +209,7 @@ void Allocator::CreateImage(const VkExtent3D& extent, const VkImageType imageTyp
     vmaCreateImage(m_allocator, &imageInfo, &allocGpuOnlyCreateInfo, &outImage, &outAlloc, nullptr);
 }
 
-void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const uint8_t* data, const uint32_t layerCount, VkImage& image)
+void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const std::vector<const uint8_t*> layerData, const uint32_t layerCount, VkImage& image)
 {
     for (uint32_t layerIndex = 0; layerIndex < layerCount; layerIndex++) {
         // Copy image data to staging buffer in CPU memory
@@ -231,7 +231,7 @@ void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format,
         VKERRCHECK(vmaCreateBuffer(m_allocator, &bufferCreateInfo, &allocStagingMemoryCreateInfo, &stageBuffer, &stageBufferAlloc, &allocStagingBufferInfo));
 
         // copy image data to staging memory
-        memcpy(allocStagingBufferInfo.pMappedData, &data[layerIndex * size], size);
+        memcpy(allocStagingBufferInfo.pMappedData, layerData[layerIndex], size);
 
         //  Copy image from staging buffer to image
         TransitionImageLayout(image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels, layerCount);
@@ -383,6 +383,7 @@ void Allocator::TransitionImageLayout(const VkImage image, const VkImageLayout o
 
         vkCmdPipelineBarrier(m_commandBuffer, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
     }
+
     EndCommandBuffer();
 }
 
@@ -645,7 +646,7 @@ void ImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
     VkExtent3D ext3D{ createInfo.extent.width, createInfo.extent.height, 1 };
 
     m_allocator.CreateImage(ext3D, createInfo.imageType, createInfo.format, m_mipLevels, createInfo.layerCount, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, createInfo.flags, m_image, m_allocation);
-    m_allocator.CopyDataToImage(ext3D, createInfo.format, m_mipLevels, createInfo.data, createInfo.layerCount, m_image);
+    m_allocator.CopyDataToImage(ext3D, createInfo.format, m_mipLevels, createInfo.layerData, createInfo.layerCount, m_image);
 
     if (m_mipLevels > 1) {
         m_allocator.GenerateMipmaps(m_image, createInfo.format, createInfo.extent.width, createInfo.extent.height, m_mipLevels, createInfo.layerCount);
