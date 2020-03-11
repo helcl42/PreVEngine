@@ -3,12 +3,12 @@
 
 #include <chrono>
 #include <cmath>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <random>
 #include <sstream>
 #include <vector>
-#include <filesystem>
-#include <fstream>
 
 namespace PreVEngine {
 // Global functions !!!
@@ -489,7 +489,7 @@ public:
         return MathUtil::CreateTransformationMatrix(position, orientation, glm::vec3(1.0f));
     }
 
-	static float BarryCentric(const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, const glm::vec2& pos)
+    static float BarryCentric(const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, const glm::vec2& pos)
     {
         float det = (p2.z - p3.z) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.z - p3.z);
         float l1 = ((p2.z - p3.z) * (pos.x - p3.x) + (p3.x - p2.x) * (pos.y - p3.z)) / det;

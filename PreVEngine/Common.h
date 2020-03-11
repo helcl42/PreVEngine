@@ -11,9 +11,9 @@
 #include <glm/mat4x4.hpp>
 #include <glm/vec4.hpp>
 
+#include <cmath>
 #include <memory>
 #include <stdexcept>
 #include <thread>
-#include <cmath>
 
 #endif

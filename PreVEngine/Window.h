@@ -24,7 +24,7 @@ public:
 
     AbstractWindow(const char* title, const uint32_t width, const uint32_t height);
 
-    virtual ~AbstractWindow() = default; 
+    virtual ~AbstractWindow() = default;
 
 public:
     Surface& GetSurface(VkInstance instance);
