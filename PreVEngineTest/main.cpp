@@ -2008,10 +2008,34 @@ private:
 };
 
 struct ShadowsRenderContextUserData : DefaultRenderContextUserData {
+    const glm::mat4 viewMatrix;
+
+    const glm::mat4 projectionMatrix;
+
     const uint32_t cascadeIndex;
 
-    ShadowsRenderContextUserData(const uint32_t index)
-        : cascadeIndex(index)
+    ShadowsRenderContextUserData(const glm::mat4& vm, const glm::mat4& pm, const uint32_t index)
+        : viewMatrix(vm)
+        , projectionMatrix(pm)
+        , cascadeIndex(index)
+    {
+    }
+};
+
+struct NormalRenderContextUserData : DefaultRenderContextUserData {
+    const glm::mat4 viewMatrix;
+
+    const glm::mat4 projectionMatrix;
+
+    const glm::vec3 cameraPosition;
+
+    const glm::vec4 clipPlane;
+
+    NormalRenderContextUserData(const glm::mat4& vm, const glm::mat4& pm, const glm::vec3& camPos, const glm::vec4 cp)
+        : viewMatrix(vm)
+        , projectionMatrix(pm)
+        , cameraPosition(camPos)
+        , clipPlane(cp)
     {
     }
 };
@@ -2082,15 +2106,11 @@ public:
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT })) {
             auto renderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());
             if (renderComponent->CastsShadows()) {
-                const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-
-                const auto& cascade = shadows->GetCascade(shadowsRenderContext.cascadeIndex);
-
                 auto ubo = m_uniformsPool->GetNext();
 
                 Uniforms uniforms{};
-                uniforms.projectionMatrix = cascade.projectionMatrix;
-                uniforms.viewMatrix = cascade.viewMatrix;
+                uniforms.projectionMatrix = shadowsRenderContext.projectionMatrix;
+                uniforms.viewMatrix = shadowsRenderContext.viewMatrix;
                 uniforms.modelMatrix = node->GetWorldTransformScaled();
                 ubo->Update(&uniforms);
 
@@ -2189,15 +2209,12 @@ public:
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT })) {
-            const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-            const auto cascade = shadows->GetCascade(shadowsRenderContext.cascadeIndex);
-
             const auto terrainComponent = ComponentRepository<ITerrainComponenet>::GetInstance().Get(node->GetId());
             auto ubo = m_uniformsPool->GetNext();
 
             Uniforms uniforms{};
-            uniforms.projectionMatrix = cascade.projectionMatrix;
-            uniforms.viewMatrix = cascade.viewMatrix;
+            uniforms.projectionMatrix = shadowsRenderContext.projectionMatrix;
+            uniforms.viewMatrix = shadowsRenderContext.viewMatrix;
             uniforms.modelMatrix = node->GetWorldTransformScaled();
             ubo->Update(&uniforms);
 
@@ -2298,10 +2315,6 @@ public:
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_RENDER_COMPONENT })) {
             auto renderComponent = ComponentRepository<IAnimationRenderComponent>::GetInstance().Get(node->GetId());
             if (renderComponent->CastsShadows()) {
-                const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-
-                const auto& cascade = shadows->GetCascade(shadowsRenderContext.cascadeIndex);
-
                 auto ubo = m_uniformsPool->GetNext();
 
                 Uniforms uniforms{};
@@ -2309,8 +2322,8 @@ public:
                 for (size_t i = 0; i < bones.size(); i++) {
                     uniforms.bones[i] = bones[i];
                 }
-                uniforms.projectionMatrix = cascade.projectionMatrix;
-                uniforms.viewMatrix = cascade.viewMatrix;
+                uniforms.projectionMatrix = shadowsRenderContext.projectionMatrix;
+                uniforms.viewMatrix = shadowsRenderContext.viewMatrix;
                 uniforms.modelMatrix = node->GetWorldTransformScaled();
                 ubo->Update(&uniforms);
 
@@ -2483,7 +2496,7 @@ public:
     }
 };
 
-class DefaultRenderer : public IRenderer<DefaultRenderContextUserData> {
+class DefaultRenderer : public IRenderer<NormalRenderContextUserData> {
 private:
     struct ShadowwsCascadeUniform {
         glm::mat4 viewProjectionMatrix;
@@ -2601,7 +2614,7 @@ public:
         m_uniformsPoolFS->AdjustCapactity(100);
     }
 
-    void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
@@ -2611,12 +2624,11 @@ public:
         vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
+    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT })) {
             const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
             const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-            const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
             const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
             const auto nodeRenderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());
@@ -2624,17 +2636,17 @@ public:
             auto uboVS = m_uniformsPoolVS->GetNext();
 
             UniformsVS uniformsVS{};
-            uniformsVS.projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
-            uniformsVS.viewMatrix = cameraComponent->LookAt();
+            uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
+            uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
             uniformsVS.modelMatrix = node->GetWorldTransformScaled();
             uniformsVS.normalMatrix = glm::inverse(node->GetWorldTransformScaled());
             uniformsVS.textureNumberOfRows = nodeRenderComponent->GetMaterial()->GetAtlasNumberOfRows();
             uniformsVS.textureOffset = glm::vec4(nodeRenderComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
-            uniformsVS.cameraPosition = glm::vec4(cameraComponent->GetPosition(), 1.0f);
+            uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
             uniformsVS.useFakeLightning = nodeRenderComponent->GetMaterial()->UsesFakeLightning();
             uniformsVS.density = 0.002f;
             uniformsVS.gradient = 4.4f;
-            uniformsVS.clipPlane = DEFAULT_CLIP_PLANE;
+            uniformsVS.clipPlane = renderContextUserData.clipPlane;
 
             uboVS->Update(&uniformsVS);
 
@@ -2691,7 +2703,7 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PostRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -2703,7 +2715,7 @@ public:
     }
 };
 
-class AnimationSceneRenderer : public IRenderer<DefaultRenderContextUserData> {
+class AnimationSceneRenderer : public IRenderer<NormalRenderContextUserData> {
 private:
     struct ShadowwsCascadeUniform {
         glm::mat4 viewProjectionMatrix;
@@ -2823,7 +2835,7 @@ public:
         m_uniformsPoolFS->AdjustCapactity(100);
     }
 
-    void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
@@ -2833,12 +2845,11 @@ public:
         vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
+    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_RENDER_COMPONENT })) {
             const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
             const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-            const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
             const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
             const auto nodeRenderComponent = ComponentRepository<IAnimationRenderComponent>::GetInstance().Get(node->GetId());
@@ -2850,17 +2861,17 @@ public:
             for (size_t i = 0; i < bones.size(); i++) {
                 uniformsVS.bones[i] = bones[i];
             }
-            uniformsVS.projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
-            uniformsVS.viewMatrix = cameraComponent->LookAt();
+            uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
+            uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
             uniformsVS.modelMatrix = node->GetWorldTransformScaled();
             uniformsVS.normalMatrix = glm::inverse(node->GetWorldTransformScaled());
             uniformsVS.textureNumberOfRows = nodeRenderComponent->GetMaterial()->GetAtlasNumberOfRows();
             uniformsVS.textureOffset = glm::vec4(nodeRenderComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
-            uniformsVS.cameraPosition = glm::vec4(cameraComponent->GetPosition(), 1.0f);
+            uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
             uniformsVS.useFakeLightning = nodeRenderComponent->GetMaterial()->UsesFakeLightning();
             uniformsVS.density = 0.002f;
             uniformsVS.gradient = 4.4f;
-            uniformsVS.clipPlane = DEFAULT_CLIP_PLANE;
+            uniformsVS.clipPlane = renderContextUserData.clipPlane;
 
             uboVS->Update(&uniformsVS);
 
@@ -2917,7 +2928,7 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PostRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -2929,7 +2940,7 @@ public:
     }
 };
 
-class TerrainRenderer : public IRenderer<DefaultRenderContextUserData> {
+class TerrainRenderer : public IRenderer<NormalRenderContextUserData> {
 private:
     struct ShadowwsCascadeUniform {
         glm::mat4 viewProjectionMatrix;
@@ -3048,7 +3059,7 @@ public:
         m_uniformsPoolFS->AdjustCapactity(100);
     }
 
-    void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
@@ -3058,12 +3069,11 @@ public:
         vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
+    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT })) {
             const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
             const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-            const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
             const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
             const auto terrainComponent = ComponentRepository<ITerrainComponenet>::GetInstance().Get(node->GetId());
@@ -3071,14 +3081,14 @@ public:
             auto uboVS = m_uniformsPoolVS->GetNext();
 
             UniformsVS uniformsVS{};
-            uniformsVS.projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
-            uniformsVS.viewMatrix = cameraComponent->LookAt();
+            uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
+            uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
             uniformsVS.modelMatrix = node->GetWorldTransformScaled();
             uniformsVS.normalMatrix = glm::inverse(node->GetWorldTransformScaled());
-            uniformsVS.cameraPosition = glm::vec4(cameraComponent->GetPosition(), 1.0f);
+            uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
             uniformsVS.density = 0.002f;
             uniformsVS.gradient = 4.4f;
-            uniformsVS.clipPlane = DEFAULT_CLIP_PLANE;
+            uniformsVS.clipPlane = renderContextUserData.clipPlane;
 
             uboVS->Update(&uniformsVS);
 
@@ -3145,7 +3155,7 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PostRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -3437,11 +3447,11 @@ private:
 
     std::unique_ptr<IRenderer<ShadowsRenderContextUserData> > m_animationShadowsRenderer;
 
-    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_defaultRenderer;
+    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_defaultRenderer;
 
-    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_terrainRenderer;
+    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_terrainRenderer;
 
-    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_animationRenderer;
+    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_animationRenderer;
 
     std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_quadRenderer;
 
@@ -3603,7 +3613,11 @@ private:
             auto cascade = shadows->GetCascade(cascadeIndex);
             shadows->GetRenderPass()->Begin(cascade.frameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, shadows->GetExtent() });
 
-            ShadowsRenderContextUserData userData{ cascadeIndex };
+            ShadowsRenderContextUserData userData{
+                cascade.viewMatrix,
+                cascade.projectionMatrix,
+                cascadeIndex,
+            };
 
             // Default
             m_defaultShadowsRenderer->PreRender(renderContext, userData);
@@ -3649,32 +3663,41 @@ private:
 
     void RenderSceneBase(RenderContext& renderContext)
     {
+        const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+
+        NormalRenderContextUserData userData{
+            cameraComponent->LookAt(),
+            cameraComponent->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height),
+            cameraComponent->GetPosition(),
+            DEFAULT_CLIP_PLANE
+        };
+
         // Default
-        m_defaultRenderer->PreRender(renderContext);
+        m_defaultRenderer->PreRender(renderContext, userData);
 
         for (auto child : m_children) {
-            m_defaultRenderer->Render(renderContext, child);
+            m_defaultRenderer->Render(renderContext, child, userData);
         }
 
-        m_defaultRenderer->PostRender(renderContext);
+        m_defaultRenderer->PostRender(renderContext, userData);
 
         // Terrain
-        m_terrainRenderer->PreRender(renderContext);
+        m_terrainRenderer->PreRender(renderContext, userData);
 
         for (auto child : m_children) {
-            m_terrainRenderer->Render(renderContext, child);
+            m_terrainRenderer->Render(renderContext, child, userData);
         }
 
-        m_terrainRenderer->PostRender(renderContext);
+        m_terrainRenderer->PostRender(renderContext, userData);
 
         // Animation
-        m_animationRenderer->PreRender(renderContext);
+        m_animationRenderer->PreRender(renderContext, userData);
 
         for (auto child : m_children) {
-            m_animationRenderer->Render(renderContext, child);
+            m_animationRenderer->Render(renderContext, child, userData);
         }
 
-        m_animationRenderer->PostRender(renderContext);
+        m_animationRenderer->PostRender(renderContext, userData);
     }
 
     void RenderFonts(RenderContext& renderContext)
