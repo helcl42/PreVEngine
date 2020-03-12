@@ -3302,7 +3302,7 @@ public:
     }
 };
 
-class SkyBoxRenderer : public IRenderer<DefaultRenderContextUserData> {
+class SkyBoxRenderer : public IRenderer<NormalRenderContextUserData> {
 private:
     struct alignas(16) UniformsVS
     {
@@ -3366,7 +3366,7 @@ public:
         m_uniformsPoolFS->AdjustCapactity(100);
     }
 
-    void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
@@ -3376,18 +3376,19 @@ public:
         vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
+    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SKYBOX_RENDER_COMPONENT })) {
-            const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
             const auto skyBoxComponent = ComponentRepository<ISkyBoxComponent>::GetInstance().Get(node->GetId());
 
             auto uboVS = m_uniformsPoolVS->GetNext();
 
             UniformsVS uniformsVS{};
-            uniformsVS.projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
-            uniformsVS.viewMatrix = cameraComponent->LookAt();
+            uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;            
+            uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
             uniformsVS.modelMatrix = node->GetWorldTransformScaled();
+
+            // TODO should we use CLIP_PLANE here?
 
             uboVS->Update(&uniformsVS);
 
@@ -3419,7 +3420,7 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PostRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -3447,6 +3448,8 @@ private:
 
     std::unique_ptr<IRenderer<ShadowsRenderContextUserData> > m_animationShadowsRenderer;
 
+    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_skyboxRenderer;
+
     std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_defaultRenderer;
 
     std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_terrainRenderer;
@@ -3456,8 +3459,6 @@ private:
     std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_quadRenderer;
 
     std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_fontRenderer;
-
-    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_skyboxRenderer;
 
 public:
     RootSceneNode(const std::shared_ptr<RenderPass>& renderPass)
@@ -3549,15 +3550,14 @@ public:
         // Normal render pass
         m_defaultRenderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, renderContext.fullExtent });
 
-        // SkyBox
-        RenderSkyBox(renderContext);
-
         // Reflection
+        RenderSceneReflection(renderContext);
 
         // Refraction
+        RenderSceneRefraction(renderContext);
 
         // Scene
-        RenderSceneBase(renderContext);
+        RenderScene(renderContext);
 
         // fonts
         RenderFonts(renderContext);
@@ -3650,18 +3650,17 @@ private:
         }
     }
 
-    void RenderSkyBox(RenderContext& renderContext)
+    void RenderSceneReflection(RenderContext& renderContext)
     {
-        m_skyboxRenderer->PreRender(renderContext);
-
-        for (auto child : m_children) {
-            m_skyboxRenderer->Render(renderContext, child);
-        }
-
-        m_skyboxRenderer->PostRender(renderContext);
+        // TODO
+    }
+    
+    void RenderSceneRefraction(RenderContext& renderContext)
+    {
+        // TODO
     }
 
-    void RenderSceneBase(RenderContext& renderContext)
+    void RenderScene(RenderContext& renderContext)
     {
         const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
@@ -3671,6 +3670,17 @@ private:
             cameraComponent->GetPosition(),
             DEFAULT_CLIP_PLANE
         };
+
+        // TODO render water quad
+
+        // SkyBox
+        m_skyboxRenderer->PreRender(renderContext, userData);
+
+        for (auto child : m_children) {
+            m_skyboxRenderer->Render(renderContext, child, userData);
+        }
+
+        m_skyboxRenderer->PostRender(renderContext, userData);
 
         // Default
         m_defaultRenderer->PreRender(renderContext, userData);
@@ -3723,6 +3733,9 @@ private:
         m_animationShadowsRenderer = std::make_unique<AnimationShadowsRenderer>(shadowsComponent->GetRenderPass());
         m_animationShadowsRenderer->Init();
 
+        m_skyboxRenderer = std::make_unique<SkyBoxRenderer>(m_defaultRenderPass);
+        m_skyboxRenderer->Init();
+
         m_defaultRenderer = std::make_unique<DefaultRenderer>(m_defaultRenderPass);
         m_defaultRenderer->Init();
 
@@ -3737,19 +3750,16 @@ private:
 
         m_fontRenderer = std::make_unique<FontRenderer>(m_defaultRenderPass);
         m_fontRenderer->Init();
-
-        m_skyboxRenderer = std::make_unique<SkyBoxRenderer>(m_defaultRenderPass);
-        m_skyboxRenderer->Init();
     }
 
     void ShutDownRenderers()
     {
-        m_skyboxRenderer->ShutDown();
         m_fontRenderer->ShutDown();
         m_quadRenderer->ShutDown();
         m_animationRenderer->ShutDown();
-        m_defaultRenderer->ShutDown();
         m_terrainRenderer->ShutDown();
+        m_defaultRenderer->ShutDown();
+        m_skyboxRenderer->ShutDown();
         m_animationShadowsRenderer->ShutDown();
         m_terrainShadowsRenderer->ShutDown();
         m_defaultShadowsRenderer->ShutDown();
