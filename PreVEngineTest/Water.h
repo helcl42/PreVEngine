@@ -53,6 +53,49 @@ public:
     }
 };
 
+class WaterTileMesh : public IMesh {
+public:
+    const VertexLayout& GetVertextLayout() const override
+    {
+        return vertexLayout;
+    }
+
+    const void* GetVertices() const override
+    {
+        return (const void*)vertices.data();
+    }
+
+    uint32_t GerVerticesCount() const override
+    {
+        return static_cast<uint32_t>(vertices.size());
+    }
+
+    const std::vector<uint32_t>& GerIndices() const override
+    {
+        return indices;
+    }
+
+    bool HasIndices() const override
+    {
+        return indices.size() > 0;
+    }
+
+private:
+    static const inline VertexLayout vertexLayout{ { VertexLayoutComponent::VEC3 } };
+
+    static const inline std::vector<glm::vec3> vertices = {
+        { 1.0f, 0.0f, 1.0f },
+        { -1.0f, 0.0f, 1.0f },
+        { -1.0f, 0.0f, -1.0f },
+        { 1.0f, 0.0f, -1.0f }
+    };
+
+    static const inline std::vector<uint32_t> indices = {
+        0, 1, 2, 2, 3, 0
+    };
+};
+
+
 class IWaterOffscreenRenderPassComponent {
 public:
     virtual void Init() = 0;
@@ -71,14 +114,14 @@ public:
     virtual ~IWaterOffscreenRenderPassComponent() = default;
 };
 
-class WaterOffscreenRenderPassComponent : public IWaterOffscreenRenderPassComponent {
+class WaterOffScreenRenderPassComponent : public IWaterOffscreenRenderPassComponent {
 public:
     static const inline VkFormat COLOR_FORMAT = VK_FORMAT_B8G8R8A8_UNORM;
 
     static const inline VkFormat DEPTH_FORMAT = VK_FORMAT_D32_SFLOAT;
 
 public:
-    WaterOffscreenRenderPassComponent(const uint32_t w, const uint32_t h)
+    WaterOffScreenRenderPassComponent(const uint32_t w, const uint32_t h)
         : m_width(w)
         , m_height(h)
         , m_renderPass(nullptr)
@@ -87,7 +130,7 @@ public:
     {
     }
 
-    ~WaterOffscreenRenderPassComponent() = default;
+    ~WaterOffScreenRenderPassComponent() = default;
 
 public:
     void Init() override
@@ -192,49 +235,26 @@ private:
     VkFramebuffer m_frameBuffer;
 };
 
-class IWaterComponent {
+class IWaterComponent : public IBasicRenderComponent {
 public:
-    virtual std::shared_ptr<Image> GetDudvMapImage() const = 0;
-
-    virtual std::shared_ptr<ImageBuffer> GetDudvMapImageBuffer() const = 0;
-
-    virtual std::shared_ptr<Image> GetDudvMapNormalImage() const = 0;
-
-    virtual std::shared_ptr<ImageBuffer> GetDudvMapNormalImageBuffer() const = 0;
-
-    virtual std::shared_ptr<IModel> GetModel() const = 0;
+    virtual std::shared_ptr<IMaterial> GetMaterial() const = 0;
 
 public:
     virtual ~IWaterComponent() = default;
 };
 
+class WaterComponentFactory;
+
 class WaterComponent : public IWaterComponent {
 public:
-    WaterComponent()
-    {
-    }
+    WaterComponent() = default;
 
     ~WaterComponent() = default;
 
 public:
-    std::shared_ptr<Image> GetDudvMapImage() const override
+    std::shared_ptr<IMaterial> GetMaterial() const override
     {
-        return m_dudvMapImage;
-    }
-
-    std::shared_ptr<ImageBuffer> GetDudvMapImageBuffer() const override
-    {
-        return m_dudvMapImageBuffer;
-    }
-
-    std::shared_ptr<Image> GetDudvMapNormalImage() const override
-    {
-        return m_dudvMapNormalImage;
-    }
-
-    std::shared_ptr<ImageBuffer> GetDudvMapNormalImageBuffer() const override
-    {
-        return m_dudvMapNormalImageBuffer;
+        return m_material;
     }
 
     std::shared_ptr<IModel> GetModel() const override
@@ -243,32 +263,58 @@ public:
     }
 
 private:
-    std::shared_ptr<Image> m_dudvMapImage;
+    friend class WaterComponentFactory;
 
-    std::shared_ptr<ImageBuffer> m_dudvMapImageBuffer;
-
-    std::shared_ptr<Image> m_dudvMapNormalImage;
-
-    std::shared_ptr<ImageBuffer> m_dudvMapNormalImageBuffer;
+private:
+    std::shared_ptr<IMaterial> m_material;
 
     std::shared_ptr<IModel> m_model;
-};
-
-class WaterOffscreenComponentsFactory {
-public:
-    std::unique_ptr<IWaterOffscreenRenderPassComponent> Create(const uint32_t w, const uint32_t h) const
-    {
-        return std::make_unique<WaterOffscreenRenderPassComponent>(w, h);
-    }
 };
 
 class WaterComponentFactory {
 public:
     std::unique_ptr<IWaterComponent> Create() const
     {
+        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+
+        const std::string dudvMapPath{ "waterDUDV.png" };
+        const std::string normalMapPath{ "matchingNormalMap.png" };
+
         auto waterComponent = std::make_unique<WaterComponent>();
-        // TODO
+        waterComponent->m_material = CreateMaterial(*allocator, dudvMapPath, normalMapPath, 1.0f, 0.4f);
+        waterComponent->m_model = CreateModel(*allocator);
         return waterComponent;
+    }
+
+    std::unique_ptr<IWaterOffscreenRenderPassComponent> CreateOffScreenComponent(const uint32_t w, const uint32_t h) const
+    {
+        return std::make_unique<WaterOffScreenRenderPassComponent>(w, h);
+    }
+
+private:
+    std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& textureFilename, const std::string& normalTextureFilename, const float shineDamper, const float reflectivity) const
+    {
+        ImageFactory imageFactory;
+        auto image = imageFactory.CreateImage(textureFilename);
+        auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
+        imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer() });
+
+        auto normalImage = imageFactory.CreateImage(textureFilename);
+        auto normalImageBuffer = std::make_unique<ImageBuffer>(allocator);
+        normalImageBuffer->Create(ImageBufferCreateInfo{ { normalImage->GetWidth(), normalImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)normalImage->GetBuffer() });
+
+        return std::make_unique<Material>(std::move(image), std::move(imageBuffer), std::move(normalImage), std::move(normalImageBuffer), shineDamper, reflectivity);
+    }
+
+    std::unique_ptr<IModel> CreateModel(Allocator& allocator) const
+    {
+        auto mesh = std::make_unique<WaterTileMesh>();
+        auto vertexBuffer = std::make_unique<VBO>(allocator);
+        vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertextLayout().GetStride());
+        auto indexBuffer = std::make_unique<IBO>(allocator);
+        indexBuffer->Data(mesh->GerIndices().data(), static_cast<uint32_t>(mesh->GerIndices().size()));
+
+        return std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
 };
 

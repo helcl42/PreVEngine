@@ -1847,7 +1847,7 @@ public:
 
 public:
     WaterReflection()
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT })
     {
     }
 
@@ -1856,10 +1856,9 @@ public:
 public:
     void Init() override
     {
-        WaterOffscreenComponentsFactory offscreenComponentFactory{};
-        m_reflectionComponent = std::move(offscreenComponentFactory.Create(REFLECTION_WIDTH, REFLECTION_HEIGHT));
-
-        ComponentRepository<IWaterOffscreenRenderPassComponent>::GetInstance().Add(m_id, m_reflectionComponent);
+        WaterComponentFactory componentFactory{};
+        
+        ComponentRepository<IWaterOffscreenRenderPassComponent>::GetInstance().Add(m_id, std::move(componentFactory.CreateOffScreenComponent(REFLECTION_WIDTH, REFLECTION_HEIGHT)));
 
         AbstractSceneNode::Init();
     }
@@ -1875,9 +1874,6 @@ public:
 
         ComponentRepository<IWaterOffscreenRenderPassComponent>::GetInstance().Remove(m_id);
     }
-
-private:
-    std::shared_ptr<IWaterOffscreenRenderPassComponent> m_reflectionComponent;
 };
 
 class WaterRefraction : public AbstractSceneNode<SceneNodeFlags> {
@@ -1888,7 +1884,7 @@ public:
 
 public:
     WaterRefraction()
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT })
     {
     }
 
@@ -1897,10 +1893,9 @@ public:
 public:
     void Init() override
     {
-        WaterOffscreenComponentsFactory offscreenComponentFactory{};
-        m_refractionComponent = std::move(offscreenComponentFactory.Create(REFRACTION_WIDTH, REFRACTION_HEIGHT));
-
-        ComponentRepository<IWaterOffscreenRenderPassComponent>::GetInstance().Add(m_id, m_refractionComponent);
+        WaterComponentFactory componentFactory{};
+        
+        ComponentRepository<IWaterOffscreenRenderPassComponent>::GetInstance().Add(m_id, std::move(componentFactory.CreateOffScreenComponent(REFRACTION_WIDTH, REFRACTION_HEIGHT)));
 
         AbstractSceneNode::Init();
     }
@@ -1916,15 +1911,12 @@ public:
 
         ComponentRepository<IWaterOffscreenRenderPassComponent>::GetInstance().Remove(m_id);
     }
-
-private:
-    std::shared_ptr<IWaterOffscreenRenderPassComponent> m_refractionComponent;
 };
 
 class Water : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Water()
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_RENDER_COMPONENT })
     {
     }
 
@@ -1949,6 +1941,9 @@ public:
 
     void Update(float deltaTime) override
     {
+        SetPosition(glm::vec3(WATER_TILE_SIZE, 0.0f, WATER_TILE_SIZE));
+        SetScale(glm::vec3(WATER_TILE_SIZE));
+
         AbstractSceneNode::Update(deltaTime);
     }
 
@@ -3432,6 +3427,127 @@ public:
     }
 };
 
+class WaterRenderer : public IRenderer<NormalRenderContextUserData> {
+private:
+    struct alignas(16) UniformsVS
+    {
+        alignas(16) glm::mat4 modelMatrix;
+
+        alignas(16) glm::mat4 viewMatrix;
+
+        alignas(16) glm::mat4 projectionMatrix;
+    };
+
+    struct alignas(16) UniformsFS
+    {
+        alignas(16) glm::vec4 fogColor;
+    };
+
+private:
+    std::shared_ptr<RenderPass> m_renderPass;
+
+private:
+    std::shared_ptr<Shader> m_shader;
+
+    std::shared_ptr<IGraphicsPipeline> m_pipeline;
+
+    std::shared_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+
+    std::shared_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+
+public:
+    WaterRenderer(const std::shared_ptr<RenderPass>& renderPass)
+        : m_renderPass(renderPass)
+    {
+    }
+
+    virtual ~WaterRenderer() = default;
+
+public:
+    void Init() override
+    {
+        auto device = DeviceProvider::GetInstance().GetDevice();
+        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+
+        ShaderFactory shaderFactory;
+        m_shader = shaderFactory.CreateShaderFromFiles<WaterShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/water_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "Shaders/water_frag.spv" } });
+        m_shader->AdjustDescriptorPoolCapacity(100);
+
+        printf("Water Shader created\n");
+
+        m_pipeline = std::make_shared<WaterPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline->Init();
+
+        printf("Water Pipeline created\n");
+
+        m_uniformsPoolVS = std::make_shared<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS->AdjustCapactity(100);
+
+        m_uniformsPoolFS = std::make_shared<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS->AdjustCapactity(100);
+    }
+
+    void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
+
+        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+    }
+
+    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_RENDER_COMPONENT })) {
+            const auto waterComponent = ComponentRepository<IWaterComponent>::GetInstance().Get(node->GetId());
+
+            auto uboVS = m_uniformsPoolVS->GetNext();
+
+            UniformsVS uniformsVS{};
+            uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
+            uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
+            uniformsVS.modelMatrix = node->GetWorldTransformScaled();
+
+            uboVS->Update(&uniformsVS);
+
+            auto uboFS = m_uniformsPoolFS->GetNext();
+
+            UniformsFS uniformsFS{};
+            uniformsFS.fogColor = FOG_COLOR;
+            uboFS->Update(&uniformsFS);
+
+            m_shader->Bind("uboVS", *uboVS);
+            m_shader->Bind("uboFS", *uboFS);
+
+            VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+            VkBuffer vertexBuffers[] = { *waterComponent->GetModel()->GetVertexBuffer() };
+            VkDeviceSize offsets[] = { 0 };
+
+            vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *waterComponent->GetModel()->GetIndexBuffer(), 0, waterComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+            vkCmdDrawIndexed(renderContext.defaultCommandBuffer, waterComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+        }
+
+        for (auto child : node->GetChildren()) {
+            Render(renderContext, child, renderContextUserData);
+        }
+    }
+
+    void PostRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void ShutDown() override
+    {
+        m_shader->ShutDown();
+
+        m_pipeline->ShutDown();
+    }
+};
+
 class RootSceneNode : public AbstractSceneNode<SceneNodeFlags> {
 private:
     EventHandler<RootSceneNode, KeyEvent> m_keyEventHnadler{ *this };
@@ -3455,6 +3571,8 @@ private:
     std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_terrainRenderer;
 
     std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_animationRenderer;
+
+    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_waterRenderer;
 
     std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_quadRenderer;
 
@@ -3527,6 +3645,9 @@ public:
 
         auto terrainManager = std::make_shared<TerrainManager>(1, 1);
         AddChild(terrainManager);
+
+        auto water = std::make_shared<Water>();
+        AddChild(water);
 
         for (auto child : m_children) {
             child->Init();
@@ -3629,13 +3750,13 @@ private:
             m_defaultShadowsRenderer->PostRender(renderContext, userData);
 
             // Terrain
-            m_terrainShadowsRenderer->PreRender(renderContext, userData);
+            //m_terrainShadowsRenderer->PreRender(renderContext, userData);
 
-            for (auto child : m_children) {
-                m_terrainShadowsRenderer->Render(renderContext, child, userData);
-            }
+            //for (auto child : m_children) {
+            //    m_terrainShadowsRenderer->Render(renderContext, child, userData);
+            //}
 
-            m_terrainShadowsRenderer->PostRender(renderContext, userData);
+            //m_terrainShadowsRenderer->PostRender(renderContext, userData);
 
             // Animation
             m_animationShadowsRenderer->PreRender(renderContext, userData);
@@ -3670,8 +3791,6 @@ private:
             cameraComponent->GetPosition(),
             DEFAULT_CLIP_PLANE
         };
-
-        // TODO render water quad
 
         // SkyBox
         m_skyboxRenderer->PreRender(renderContext, userData);
@@ -3708,6 +3827,15 @@ private:
         }
 
         m_animationRenderer->PostRender(renderContext, userData);
+
+        // Water
+        m_waterRenderer->PreRender(renderContext, userData);
+
+        for (auto child : m_children) {
+            m_waterRenderer->Render(renderContext, child, userData);
+        }
+
+        m_waterRenderer->PostRender(renderContext, userData);
     }
 
     void RenderFonts(RenderContext& renderContext)
@@ -3745,6 +3873,9 @@ private:
         m_animationRenderer = std::make_unique<AnimationSceneRenderer>(m_defaultRenderPass);
         m_animationRenderer->Init();
 
+        m_waterRenderer = std::make_unique<WaterRenderer>(m_defaultRenderPass);
+        m_waterRenderer->Init();
+
         m_quadRenderer = std::make_unique<QuadRenderer>(m_defaultRenderPass);
         m_quadRenderer->Init();
 
@@ -3756,6 +3887,7 @@ private:
     {
         m_fontRenderer->ShutDown();
         m_quadRenderer->ShutDown();
+        m_waterRenderer->ShutDown();
         m_animationRenderer->ShutDown();
         m_terrainRenderer->ShutDown();
         m_defaultRenderer->ShutDown();

@@ -18,9 +18,9 @@ private:
     };
 
 private:
-    const VertexLayout m_vertexLayout{ { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
+    static const inline VertexLayout vertexLayout{ { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
 
-    const std::vector<Vertex> m_vertices = {
+    static const inline std::vector<Vertex> vertices = {
         // FROMT
         { { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } },
         { { 0.5f, -0.5f, 0.5f }, { 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } },
@@ -58,7 +58,7 @@ private:
         { { 0.5f, -0.5f, -0.5f }, { 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f } }
     };
 
-    const std::vector<uint32_t> m_indices = {
+    static const inline std::vector<uint32_t> indices = {
         0, 1, 2, 2, 3, 0,
         4, 5, 6, 6, 7, 4,
         8, 9, 10, 10, 11, 8,
@@ -70,27 +70,27 @@ private:
 public:
     const VertexLayout& GetVertextLayout() const override
     {
-        return m_vertexLayout;
+        return vertexLayout;
     }
 
     const void* GetVertices() const override
     {
-        return (const void*)m_vertices.data();
+        return (const void*)vertices.data();
     }
 
     uint32_t GerVerticesCount() const override
     {
-        return static_cast<uint32_t>(m_vertices.size());
+        return static_cast<uint32_t>(vertices.size());
     }
 
     const std::vector<uint32_t>& GerIndices() const override
     {
-        return m_indices;
+        return indices;
     }
 
     bool HasIndices() const override
     {
-        return m_indices.size() > 0;
+        return indices.size() > 0;
     }
 };
 
@@ -103,43 +103,43 @@ private:
     };
 
 private:
-    const VertexLayout m_vertexLayout{ { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
+    static const inline VertexLayout vertexLayout{ { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
 
-    const std::vector<Vertex> m_vertices = {
+    static const inline std::vector<Vertex> vertices = {
         { { 1.0f, 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
         { { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
         { { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } },
         { { 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
     };
 
-    const std::vector<uint32_t> m_indices = {
+    static const inline std::vector<uint32_t> indices = {
         0, 1, 2, 2, 3, 0
     };
 
 public:
     const VertexLayout& GetVertextLayout() const override
     {
-        return m_vertexLayout;
+        return vertexLayout;
     }
 
     const void* GetVertices() const override
     {
-        return (const void*)m_vertices.data();
+        return (const void*)vertices.data();
     }
 
     uint32_t GerVerticesCount() const override
     {
-        return static_cast<uint32_t>(m_vertices.size());
+        return static_cast<uint32_t>(vertices.size());
     }
 
     const std::vector<uint32_t>& GerIndices() const override
     {
-        return m_indices;
+        return indices;
     }
 
     bool HasIndices() const override
     {
-        return m_indices.size() > 0;
+        return indices.size() > 0;
     }
 };
 
@@ -201,9 +201,7 @@ public:
         }
     }
 
-    virtual ~PlaneMesh()
-    {
-    }
+    virtual ~PlaneMesh() = default;
 
 public:
     const VertexLayout& GetVertextLayout() const override
