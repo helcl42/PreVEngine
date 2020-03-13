@@ -1,8 +1,6 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-const uint MATERIAL_COUNT = 4;
-
 layout(std140, binding = 1) uniform UniformBufferObject {
 	vec4 fogColor;
     float lowerLimit;

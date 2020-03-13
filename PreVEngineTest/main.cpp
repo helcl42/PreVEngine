@@ -1984,8 +1984,8 @@ public:
 public:
     void Init() override
     {
-        ShadowsComponentFactory shadowsFacory{};
-        m_shadowsCompoent = shadowsFacory.Create();
+        ShadowsComponentFactory shadowsFactory{};
+        m_shadowsCompoent = shadowsFactory.Create();
         m_shadowsCompoent->Init();
 
         ComponentRepository<IShadowsComponent>::GetInstance().Add(m_id, m_shadowsCompoent);
@@ -2406,7 +2406,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<QuadShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/quad_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "Shaders/quad_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<QuadShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/shadow_map_debug_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "Shaders/shadow_map_debug_frag.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Default Shader created\n");
