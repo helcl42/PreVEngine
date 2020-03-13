@@ -1903,7 +1903,7 @@ public:
         WaterComponentFactory componentFactory{};
         m_refractionComponent = std::move(componentFactory.CreateOffScreenComponent(REFRACTION_WIDTH, REFRACTION_HEIGHT));
         m_refractionComponent->Init();
-        
+
         ComponentRepository<IWaterOffscreenRenderPassComponent>::GetInstance().Add(m_id, m_refractionComponent);
 
         AbstractSceneNode::Init();
@@ -2382,12 +2382,12 @@ private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
-    std::shared_ptr<Shader> m_shader;
+    std::unique_ptr<Shader> m_shader;
 
-    std::shared_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IGraphicsPipeline> m_pipeline;
 
 private:
-    std::shared_ptr<IModel> m_quadModel;
+    std::unique_ptr<IModel> m_quadModel;
 
     int32_t m_cascadeIndex = 0;
 
@@ -2409,10 +2409,12 @@ public:
         m_shader = shaderFactory.CreateShaderFromFiles<ShadowMapDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/shadow_map_debug_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "Shaders/shadow_map_debug_frag.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
-        printf("Default Shader created\n");
+        printf("ShadowMapDebug Shader created\n");
 
-        m_pipeline = std::make_shared<ShadowMapDebugPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline = std::make_unique<ShadowMapDebugPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
+
+        printf("ShadowMapDebug Pipeline created\n");
 
         // create quad model
         auto quadMesh = std::make_shared<QuadMesh>();
@@ -2423,7 +2425,7 @@ public:
         auto indexBuffer = std::make_shared<IBO>(*allocator);
         indexBuffer->Data(quadMesh->GerIndices().data(), (uint32_t)quadMesh->GerIndices().size());
 
-        m_quadModel = std::make_shared<Model>(quadMesh, vertexBuffer, indexBuffer);
+        m_quadModel = std::make_unique<Model>(quadMesh, vertexBuffer, indexBuffer);
     }
 
     void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
@@ -2505,6 +2507,116 @@ public:
     }
 };
 
+class TextureDebugRenderer : public IRenderer<DefaultRenderContextUserData> {
+private:
+    std::shared_ptr<RenderPass> m_renderPass;
+
+private:
+    std::unique_ptr<Shader> m_shader;
+
+    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+
+private:
+    std::unique_ptr<IModel> m_quadModel;
+
+public:
+    TextureDebugRenderer(const std::shared_ptr<RenderPass>& renderPass)
+        : m_renderPass(renderPass)
+    {
+    }
+
+    virtual ~TextureDebugRenderer() = default;
+
+public:
+    void Init() override
+    {
+        auto device = DeviceProvider::GetInstance().GetDevice();
+        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+
+        ShaderFactory shaderFactory;
+        m_shader = shaderFactory.CreateShaderFromFiles<TextureDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/texture_debug_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "Shaders/texture_debug_frag.spv" } });
+        m_shader->AdjustDescriptorPoolCapacity(100);
+
+        printf("Texture Debug Shader created\n");
+
+        m_pipeline = std::make_unique<TextureDebugPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline->Init();
+
+        printf("Texture Debug Pipeline created\n");
+
+        // create quad model
+        auto quadMesh = std::make_shared<QuadMesh>();
+
+        auto vertexBuffer = std::make_shared<VBO>(*allocator);
+        vertexBuffer->Data(quadMesh->GetVertices(), quadMesh->GerVerticesCount(), quadMesh->GetVertextLayout().GetStride());
+
+        auto indexBuffer = std::make_shared<IBO>(*allocator);
+        indexBuffer->Data(quadMesh->GerIndices().data(), (uint32_t)quadMesh->GerIndices().size());
+
+        m_quadModel = std::make_unique<Model>(quadMesh, vertexBuffer, indexBuffer);
+    }
+
+    void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+        VkRect2D renderRect{};
+        renderRect.extent.width = renderContext.fullExtent.width / 2;
+        renderRect.extent.height = renderContext.fullExtent.height / 2;
+        renderRect.offset.x = 0;
+        renderRect.offset.y = 0;
+
+        m_renderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, renderRect);
+
+        VkRect2D scissor{};
+        scissor.extent.width = renderContext.fullExtent.width;
+        scissor.extent.height = renderContext.fullExtent.height;
+        scissor.offset.x = 0;
+        scissor.offset.y = 0;
+
+        VkViewport viewport{};
+        viewport.width = static_cast<float>(renderContext.fullExtent.width);
+        viewport.height = static_cast<float>(renderContext.fullExtent.height);
+        viewport.x = -static_cast<float>(renderContext.fullExtent.width / 2.0f);
+        viewport.y = -static_cast<float>(renderContext.fullExtent.height / 2.0f);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+
+        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+    }
+
+    // make a node with quad model & shadowMap texture ???
+    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+        const auto component = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
+
+        m_shader->Bind("imageSampler", component->GetImageBuffer()->GetImageView(), component->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+        VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+
+        VkBuffer vertexBuffers[] = { *m_quadModel->GetVertexBuffer() };
+        VkDeviceSize offsets[] = { 0 };
+
+        vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
+        vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *m_quadModel->GetIndexBuffer(), 0, m_quadModel->GetIndexBuffer()->GetIndexType());
+        vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+        vkCmdDrawIndexed(renderContext.defaultCommandBuffer, m_quadModel->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+    }
+
+    void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+        m_renderPass->End(renderContext.defaultCommandBuffer);
+    }
+
+    void ShutDown() override
+    {
+        m_shader->ShutDown();
+
+        m_pipeline->ShutDown();
+    }
+};
+
 class DefaultRenderer : public IRenderer<NormalRenderContextUserData> {
 private:
     struct ShadowwsCascadeUniform {
@@ -2583,13 +2695,13 @@ private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
-    std::shared_ptr<Shader> m_shader;
+    std::unique_ptr<Shader> m_shader;
 
-    std::shared_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IGraphicsPipeline> m_pipeline;
 
-    std::shared_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::shared_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     DefaultRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -2611,15 +2723,15 @@ public:
 
         printf("Default Shader created\n");
 
-        m_pipeline = std::make_shared<DefaultPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline = std::make_unique<DefaultPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
         printf("Default Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_shared<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(100);
 
-        m_uniformsPoolFS = std::make_shared<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(100);
     }
 
@@ -2804,13 +2916,13 @@ private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
-    std::shared_ptr<Shader> m_shader;
+    std::unique_ptr<Shader> m_shader;
 
-    std::shared_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IGraphicsPipeline> m_pipeline;
 
-    std::shared_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::shared_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     AnimationRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -2832,15 +2944,15 @@ public:
 
         printf("Animaition Shader created\n");
 
-        m_pipeline = std::make_shared<AnimationPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline = std::make_unique<AnimationPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
         printf("Animaition Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_shared<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(100);
 
-        m_uniformsPoolFS = std::make_shared<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(100);
     }
 
@@ -3028,13 +3140,13 @@ private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
-    std::shared_ptr<Shader> m_shader;
+    std::unique_ptr<Shader> m_shader;
 
-    std::shared_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IGraphicsPipeline> m_pipeline;
 
-    std::shared_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::shared_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     TerrainRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -3056,15 +3168,15 @@ public:
 
         printf("Terrain Shader created\n");
 
-        m_pipeline = std::make_shared<TerrainPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline = std::make_unique<TerrainPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
         printf("Terrain Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_shared<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(100);
 
-        m_uniformsPoolFS = std::make_shared<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(100);
     }
 
@@ -3206,13 +3318,13 @@ private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
-    std::shared_ptr<Shader> m_shader;
+    std::unique_ptr<Shader> m_shader;
 
-    std::shared_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IGraphicsPipeline> m_pipeline;
 
-    std::shared_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::shared_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     FontRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -3234,15 +3346,15 @@ public:
 
         printf("Fonts Shader created\n");
 
-        m_pipeline = std::make_shared<FontPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline = std::make_unique<FontPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
         printf("Fonts Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_shared<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(100);
 
-        m_uniformsPoolFS = std::make_shared<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(100);
     }
 
@@ -3335,13 +3447,13 @@ private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
-    std::shared_ptr<Shader> m_shader;
+    std::unique_ptr<Shader> m_shader;
 
-    std::shared_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IGraphicsPipeline> m_pipeline;
 
-    std::shared_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::shared_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     SkyBoxRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -3363,15 +3475,15 @@ public:
 
         printf("Skybox Shader created\n");
 
-        m_pipeline = std::make_shared<SkyBoxPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline = std::make_unique<SkyBoxPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
         printf("Skybox Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_shared<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(100);
 
-        m_uniformsPoolFS = std::make_shared<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(100);
     }
 
@@ -3461,13 +3573,13 @@ private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
-    std::shared_ptr<Shader> m_shader;
+    std::unique_ptr<Shader> m_shader;
 
-    std::shared_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IGraphicsPipeline> m_pipeline;
 
-    std::shared_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::shared_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     WaterRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -3489,15 +3601,15 @@ public:
 
         printf("Water Shader created\n");
 
-        m_pipeline = std::make_shared<WaterPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline = std::make_unique<WaterPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
         printf("Water Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_shared<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(100);
 
-        m_uniformsPoolFS = std::make_shared<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(100);
     }
 
@@ -3611,6 +3723,8 @@ private:
     // Debug
     std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_shadowMapDebugRenderer;
 
+    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_textureDebugRenderer;
+
     // Fonts
     std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_fontRenderer;
 
@@ -3715,11 +3829,17 @@ public:
 
 #ifndef ANDROID
         // Debug quad with shadowMap
-        m_shadowMapDebugRenderer->PreRender(renderContext);
+        //m_shadowMapDebugRenderer->PreRender(renderContext);
 
-        m_shadowMapDebugRenderer->Render(renderContext, GetThis());
+        //m_shadowMapDebugRenderer->Render(renderContext, GetThis());
 
-        m_shadowMapDebugRenderer->PostRender(renderContext);
+        //m_shadowMapDebugRenderer->PostRender(renderContext);
+
+        m_textureDebugRenderer->PreRender(renderContext);
+
+        m_textureDebugRenderer->Render(renderContext, GetThis());
+
+        m_textureDebugRenderer->PostRender(renderContext);
 #endif
     }
 
@@ -3954,11 +4074,14 @@ private:
         m_waterRenderer = std::make_unique<WaterRenderer>(m_defaultRenderPass);
         m_waterRenderer->Init();
 
+        m_fontRenderer = std::make_unique<FontRenderer>(m_defaultRenderPass);
+        m_fontRenderer->Init();
+
         m_shadowMapDebugRenderer = std::make_unique<ShadowMapDebugRenderer>(m_defaultRenderPass);
         m_shadowMapDebugRenderer->Init();
 
-        m_fontRenderer = std::make_unique<FontRenderer>(m_defaultRenderPass);
-        m_fontRenderer->Init();
+        m_textureDebugRenderer = std::make_unique<TextureDebugRenderer>(m_defaultRenderPass);
+        m_textureDebugRenderer->Init();
 
         auto reflectionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
         m_reflectionSkyBoxRenderer = std::make_unique<SkyBoxRenderer>(reflectionComponent->GetRenderPass());
@@ -3999,8 +4122,9 @@ private:
         m_reflectionDefaultRenderer->ShutDown();
         m_reflectionSkyBoxRenderer->ShutDown();
 
-        m_fontRenderer->ShutDown();
+        m_textureDebugRenderer->ShutDown();
         m_shadowMapDebugRenderer->ShutDown();
+        m_fontRenderer->ShutDown();
         m_waterRenderer->ShutDown();
         m_animationRenderer->ShutDown();
         m_terrainRenderer->ShutDown();

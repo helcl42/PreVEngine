@@ -218,7 +218,7 @@ private:
         dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
         m_renderPass = std::make_shared<RenderPass>(*device);
-        m_renderPass->AddColorAttachment(COLOR_FORMAT, { 0.5f, 0.5f, 0.5f, 1.0f });
+        m_renderPass->AddColorAttachment(COLOR_FORMAT, { 0.5f, 0.5f, 0.5f, 1.0f }, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         m_renderPass->AddDepthAttachment(DEPTH_FORMAT);
         m_renderPass->AddSubpass({ 0, 1 });
         m_renderPass->AddSubpassDependency(dependencies);

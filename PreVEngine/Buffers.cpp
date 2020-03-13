@@ -720,7 +720,7 @@ void ColorImageBuffer::Resize(const VkExtent2D& extent)
 
     VkExtent3D ext3D{ extent.width, extent.height, 1 };
 
-    m_allocator.CreateImage(ext3D, m_imageType, m_format, m_mipLevels, m_layerCount, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, m_flags, m_image, m_allocation);
+    m_allocator.CreateImage(ext3D, m_imageType, m_format, m_mipLevels, m_layerCount, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_flags, m_image, m_allocation);
     m_allocator.CreateImageView(m_image, m_format, m_imageViewType, m_mipLevels, m_layerCount, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
 
     m_extent = extent;
