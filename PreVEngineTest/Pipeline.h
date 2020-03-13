@@ -837,15 +837,15 @@ private:
     }
 };
 
-class QuadPipeline final : public AbstractGraphicsPipeline {
+class ShadowMapDebugPipeline final : public AbstractGraphicsPipeline {
 
 public:
-    QuadPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    ShadowMapDebugPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
 
-    ~QuadPipeline() = default;
+    ~ShadowMapDebugPipeline() = default;
 
 public:
     VkPipeline Init() override

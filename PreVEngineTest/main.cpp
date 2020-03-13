@@ -2367,7 +2367,7 @@ public:
     }
 };
 
-class QuadRenderer : public IRenderer<DefaultRenderContextUserData> {
+class ShadowMapDebugRenderer : public IRenderer<DefaultRenderContextUserData> {
 private:
     struct PushConstantBlock {
         uint32_t imageIndex;
@@ -2376,7 +2376,7 @@ private:
     };
 
 private:
-    EventHandler<QuadRenderer, KeyEvent> m_keyEvent{ *this };
+    EventHandler<ShadowMapDebugRenderer, KeyEvent> m_keyEvent{ *this };
 
 private:
     std::shared_ptr<RenderPass> m_renderPass;
@@ -2392,12 +2392,12 @@ private:
     int32_t m_cascadeIndex = 0;
 
 public:
-    QuadRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    ShadowMapDebugRenderer(const std::shared_ptr<RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
 
-    virtual ~QuadRenderer() = default;
+    virtual ~ShadowMapDebugRenderer() = default;
 
 public:
     void Init() override
@@ -2411,7 +2411,7 @@ public:
 
         printf("Default Shader created\n");
 
-        m_pipeline = std::make_shared<QuadPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline = std::make_shared<ShadowMapDebugPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
         // create quad model
@@ -3609,7 +3609,7 @@ private:
     std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_refractionAnimationRenderer;
 
     // Debug
-    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_quadRenderer;
+    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_shadowMapDebugRenderer;
 
     // Fonts
     std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_fontRenderer;
@@ -3715,11 +3715,11 @@ public:
 
 #ifndef ANDROID
         // Debug quad with shadowMap
-        m_quadRenderer->PreRender(renderContext);
+        m_shadowMapDebugRenderer->PreRender(renderContext);
 
-        m_quadRenderer->Render(renderContext, GetThis());
+        m_shadowMapDebugRenderer->Render(renderContext, GetThis());
 
-        m_quadRenderer->PostRender(renderContext);
+        m_shadowMapDebugRenderer->PostRender(renderContext);
 #endif
     }
 
@@ -3954,8 +3954,8 @@ private:
         m_waterRenderer = std::make_unique<WaterRenderer>(m_defaultRenderPass);
         m_waterRenderer->Init();
 
-        m_quadRenderer = std::make_unique<QuadRenderer>(m_defaultRenderPass);
-        m_quadRenderer->Init();
+        m_shadowMapDebugRenderer = std::make_unique<ShadowMapDebugRenderer>(m_defaultRenderPass);
+        m_shadowMapDebugRenderer->Init();
 
         m_fontRenderer = std::make_unique<FontRenderer>(m_defaultRenderPass);
         m_fontRenderer->Init();
@@ -4000,7 +4000,7 @@ private:
         m_reflectionSkyBoxRenderer->ShutDown();
 
         m_fontRenderer->ShutDown();
-        m_quadRenderer->ShutDown();
+        m_shadowMapDebugRenderer->ShutDown();
         m_waterRenderer->ShutDown();
         m_animationRenderer->ShutDown();
         m_terrainRenderer->ShutDown();
