@@ -2040,11 +2040,14 @@ struct NormalRenderContextUserData : DefaultRenderContextUserData {
 
     const glm::vec4 clipPlane;
 
-    NormalRenderContextUserData(const glm::mat4& vm, const glm::mat4& pm, const glm::vec3& camPos, const glm::vec4 cp)
+    const VkExtent2D extent;
+
+    NormalRenderContextUserData(const glm::mat4& vm, const glm::mat4& pm, const glm::vec3& camPos, const glm::vec4 cp, const VkExtent2D ext)
         : viewMatrix(vm)
         , projectionMatrix(pm)
         , cameraPosition(camPos)
         , clipPlane(cp)
+        , extent(ext)
     {
     }
 };
@@ -2588,7 +2591,7 @@ public:
     // make a node with quad model & shadowMap texture ???
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
     {
-        const auto component = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
+        const auto component = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
 
         m_shader->Bind("imageSampler", component->GetImageBuffer()->GetImageView(), component->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
@@ -2738,7 +2741,7 @@ public:
     void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
+        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
@@ -2959,7 +2962,7 @@ public:
     void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
+        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
@@ -3183,7 +3186,7 @@ public:
     void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
+        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
@@ -3490,7 +3493,7 @@ public:
     void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
+        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
@@ -3616,7 +3619,7 @@ public:
     void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
+        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
@@ -3921,7 +3924,56 @@ private:
 
     void RenderSceneReflection(RenderContext& renderContext)
     {
-        // TODO
+        auto reflectionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
+        reflectionComponent->GetRenderPass()->Begin(reflectionComponent->GetFrameBuffer(), renderContext.defaultCommandBuffer, { { 0, 0 }, { WaterReflection::REFLECTION_WIDTH, WaterReflection::REFLECTION_HEIGHT } });
+
+        const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+
+        NormalRenderContextUserData userData{
+            cameraComponent->LookAt(),
+            cameraComponent->GetViewFrustum().CreateProjectionMatrix(WaterReflection::REFLECTION_WIDTH, WaterReflection::REFLECTION_HEIGHT),
+            cameraComponent->GetPosition(),
+            glm::vec4(0.0f, 1.0f, 0.0f, WATER_LEVEL + WATER_CLIP_PLANE_OFFSET),
+            { WaterReflection::REFLECTION_WIDTH, WaterReflection::REFLECTION_HEIGHT }
+        };
+
+        // SkyBox
+        m_reflectionSkyBoxRenderer->PreRender(renderContext, userData);
+
+        for (auto child : m_children) {
+            m_reflectionSkyBoxRenderer->Render(renderContext, child, userData);
+        }
+
+        m_reflectionSkyBoxRenderer->PostRender(renderContext, userData);
+
+        // Default
+        m_reflectionDefaultRenderer->PreRender(renderContext, userData);
+
+        for (auto child : m_children) {
+            m_reflectionDefaultRenderer->Render(renderContext, child, userData);
+        }
+
+        m_reflectionDefaultRenderer->PostRender(renderContext, userData);
+
+        // Terrain
+        m_reflectionTerrainRenderer->PreRender(renderContext, userData);
+
+        for (auto child : m_children) {
+            m_reflectionTerrainRenderer->Render(renderContext, child, userData);
+        }
+
+        m_reflectionTerrainRenderer->PostRender(renderContext, userData);
+
+        // Animation
+        m_reflectionAnimationRenderer->PreRender(renderContext, userData);
+
+        for (auto child : m_children) {
+            m_reflectionAnimationRenderer->Render(renderContext, child, userData);
+        }
+
+        m_reflectionAnimationRenderer->PostRender(renderContext, userData);
+
+        reflectionComponent->GetRenderPass()->End(renderContext.defaultCommandBuffer);
     }
 
     void RenderSceneRefraction(RenderContext& renderContext)
@@ -3935,7 +3987,8 @@ private:
             cameraComponent->LookAt(),
             cameraComponent->GetViewFrustum().CreateProjectionMatrix(WaterRefraction::REFRACTION_WIDTH, WaterRefraction::REFRACTION_HEIGHT),
             cameraComponent->GetPosition(),
-            glm::vec4(DEFAULT_CLIP_PLANE.x, DEFAULT_CLIP_PLANE.y, DEFAULT_CLIP_PLANE.z, WATER_LEVEL + WATER_CLIP_PLANE_OFFSET)
+            glm::vec4(0.0f, -1.0f, 0.0f, WATER_LEVEL + WATER_CLIP_PLANE_OFFSET),
+            { WaterRefraction::REFRACTION_WIDTH, WaterRefraction::REFRACTION_HEIGHT }
         };
 
         // SkyBox
@@ -3987,7 +4040,8 @@ private:
             cameraComponent->LookAt(),
             cameraComponent->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height),
             cameraComponent->GetPosition(),
-            DEFAULT_CLIP_PLANE
+            DEFAULT_CLIP_PLANE,
+            renderContext.fullExtent
         };
 
         // SkyBox
