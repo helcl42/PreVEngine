@@ -134,7 +134,7 @@ private:
         VkFormat depthFormat = m_device->GetGPU().FindDepthFormat();
 
         m_renderPass = std::make_shared<RenderPass>(*m_device);
-        m_renderPass->AddColorAttachment(colorFormat, { 0.5f, 0.5f, 0.5f, 1.0f }); // color buffer, clear to blue
+        m_renderPass->AddColorAttachment(colorFormat, { 0.5f, 0.5f, 0.5f, 1.0f });
         m_renderPass->AddDepthAttachment(depthFormat);
         m_renderPass->AddSubpass({ 0, 1 });
     }

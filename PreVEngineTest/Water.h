@@ -4,6 +4,8 @@
 #include "General.h"
 
 static const float WATER_TILE_SIZE = 60.0f;
+static const float WATER_LEVEL = 0.0f; // -2.6f
+static const float WATER_CLIP_PLANE_OFFSET = 0.05f;
 
 class WaterTile {
 private:
@@ -95,7 +97,6 @@ private:
     };
 };
 
-
 class IWaterOffscreenRenderPassComponent {
 public:
     virtual void Init() = 0;
@@ -126,12 +127,13 @@ public:
         , m_height(h)
         , m_renderPass(nullptr)
         , m_imageBuffer(nullptr)
+        , m_depthBuffer(nullptr)
         , m_frameBuffer(nullptr)
     {
     }
 
     ~WaterOffScreenRenderPassComponent() = default;
-
+    
 public:
     void Init() override
     {
@@ -175,7 +177,11 @@ private:
         m_imageBuffer->Create(ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, COLOR_FORMAT, 0, false, VK_IMAGE_VIEW_TYPE_2D });
         m_imageBuffer->CreateSampler();
 
-        m_frameBuffer = VkUtils::CreateFrameBuffer(*device, *m_renderPass, { m_imageBuffer->GetImageView() }, GetExtent());
+        m_depthBuffer = std::make_shared<DepthImageBuffer>(*allocator);
+        m_depthBuffer->Create(ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, DEPTH_FORMAT, 0, false, VK_IMAGE_VIEW_TYPE_2D });
+        m_depthBuffer->CreateSampler();
+
+        m_frameBuffer = VkUtils::CreateFrameBuffer(*device, *m_renderPass, { m_imageBuffer->GetImageView(), m_depthBuffer->GetImageView() }, GetExtent());
     }
 
     void ShutDownBuffers()
@@ -186,6 +192,7 @@ private:
 
         vkDestroyFramebuffer(*device, m_frameBuffer, nullptr);
 
+        m_depthBuffer->Destroy();
         m_imageBuffer->Destroy();
     }
 
@@ -197,7 +204,7 @@ private:
         dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
         dependencies[0].dstSubpass = 0;
         dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         dependencies[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
         dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
         dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
@@ -231,6 +238,8 @@ private:
     std::shared_ptr<RenderPass> m_renderPass;
 
     std::shared_ptr<ColorImageBuffer> m_imageBuffer;
+
+    std::shared_ptr<DepthImageBuffer> m_depthBuffer;
 
     VkFramebuffer m_frameBuffer;
 };

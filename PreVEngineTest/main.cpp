@@ -1857,8 +1857,10 @@ public:
     void Init() override
     {
         WaterComponentFactory componentFactory{};
-        
-        ComponentRepository<IWaterOffscreenRenderPassComponent>::GetInstance().Add(m_id, std::move(componentFactory.CreateOffScreenComponent(REFLECTION_WIDTH, REFLECTION_HEIGHT)));
+        m_reflectionComponent = std::move(componentFactory.CreateOffScreenComponent(REFLECTION_WIDTH, REFLECTION_HEIGHT));
+        m_reflectionComponent->Init();
+
+        ComponentRepository<IWaterOffscreenRenderPassComponent>::GetInstance().Add(m_id, m_reflectionComponent);
 
         AbstractSceneNode::Init();
     }
@@ -1873,7 +1875,12 @@ public:
         AbstractSceneNode::ShutDown();
 
         ComponentRepository<IWaterOffscreenRenderPassComponent>::GetInstance().Remove(m_id);
+
+        m_reflectionComponent->ShutDown();
     }
+
+private:
+    std::shared_ptr<IWaterOffscreenRenderPassComponent> m_reflectionComponent;
 };
 
 class WaterRefraction : public AbstractSceneNode<SceneNodeFlags> {
@@ -1894,8 +1901,10 @@ public:
     void Init() override
     {
         WaterComponentFactory componentFactory{};
+        m_refractionComponent = std::move(componentFactory.CreateOffScreenComponent(REFRACTION_WIDTH, REFRACTION_HEIGHT));
+        m_refractionComponent->Init();
         
-        ComponentRepository<IWaterOffscreenRenderPassComponent>::GetInstance().Add(m_id, std::move(componentFactory.CreateOffScreenComponent(REFRACTION_WIDTH, REFRACTION_HEIGHT)));
+        ComponentRepository<IWaterOffscreenRenderPassComponent>::GetInstance().Add(m_id, m_refractionComponent);
 
         AbstractSceneNode::Init();
     }
@@ -1910,7 +1919,12 @@ public:
         AbstractSceneNode::ShutDown();
 
         ComponentRepository<IWaterOffscreenRenderPassComponent>::GetInstance().Remove(m_id);
+
+        m_refractionComponent->ShutDown();
     }
+
+private:
+    std::shared_ptr<IWaterOffscreenRenderPassComponent> m_refractionComponent;
 };
 
 class Water : public AbstractSceneNode<SceneNodeFlags> {
@@ -2710,7 +2724,7 @@ public:
     }
 };
 
-class AnimationSceneRenderer : public IRenderer<NormalRenderContextUserData> {
+class AnimationRenderer : public IRenderer<NormalRenderContextUserData> {
 private:
     struct ShadowwsCascadeUniform {
         glm::mat4 viewProjectionMatrix;
@@ -2799,12 +2813,12 @@ private:
     std::shared_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
-    AnimationSceneRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    AnimationRenderer(const std::shared_ptr<RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
 
-    virtual ~AnimationSceneRenderer() = default;
+    virtual ~AnimationRenderer() = default;
 
 public:
     void Init() override
@@ -3379,7 +3393,7 @@ public:
             auto uboVS = m_uniformsPoolVS->GetNext();
 
             UniformsVS uniformsVS{};
-            uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;            
+            uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
             uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
             uniformsVS.modelMatrix = node->GetWorldTransformScaled();
 
@@ -3558,12 +3572,14 @@ private:
     std::shared_ptr<RenderPass> m_defaultRenderPass;
 
 private:
+    // Shadows
     std::unique_ptr<IRenderer<ShadowsRenderContextUserData> > m_defaultShadowsRenderer;
 
     std::unique_ptr<IRenderer<ShadowsRenderContextUserData> > m_terrainShadowsRenderer;
 
     std::unique_ptr<IRenderer<ShadowsRenderContextUserData> > m_animationShadowsRenderer;
 
+    // Main Render
     std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_skyboxRenderer;
 
     std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_defaultRenderer;
@@ -3574,8 +3590,28 @@ private:
 
     std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_waterRenderer;
 
+    // Reflection
+    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionSkyBoxRenderer;
+
+    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionDefaultRenderer;
+
+    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionTerrainRenderer;
+
+    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionAnimationRenderer;
+
+    // Refraction
+    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_refractionSkyBoxRenderer;
+
+    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_refractionDefaultRenderer;
+
+    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_refractionTerrainRenderer;
+
+    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_refractionAnimationRenderer;
+
+    // Debug
     std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_quadRenderer;
 
+    // Fonts
     std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_fontRenderer;
 
 public:
@@ -3668,22 +3704,14 @@ public:
         // Shadows render pass
         RenderShadows(renderContext);
 
-        // Normal render pass
-        m_defaultRenderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, renderContext.fullExtent });
-
         // Reflection
         RenderSceneReflection(renderContext);
 
         // Refraction
         RenderSceneRefraction(renderContext);
 
-        // Scene
+        // Default Scene Render
         RenderScene(renderContext);
-
-        // fonts
-        RenderFonts(renderContext);
-
-        m_defaultRenderPass->End(renderContext.defaultCommandBuffer);
 
 #ifndef ANDROID
         // Debug quad with shadowMap
@@ -3775,14 +3803,64 @@ private:
     {
         // TODO
     }
-    
+
     void RenderSceneRefraction(RenderContext& renderContext)
     {
-        // TODO
+        auto refractionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
+        refractionComponent->GetRenderPass()->Begin(refractionComponent->GetFrameBuffer(), renderContext.defaultCommandBuffer, { { 0, 0 }, { WaterRefraction::REFRACTION_WIDTH, WaterRefraction::REFRACTION_HEIGHT } });
+
+        const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+
+        NormalRenderContextUserData userData{
+            cameraComponent->LookAt(),
+            cameraComponent->GetViewFrustum().CreateProjectionMatrix(WaterRefraction::REFRACTION_WIDTH, WaterRefraction::REFRACTION_HEIGHT),
+            cameraComponent->GetPosition(),
+            glm::vec4(DEFAULT_CLIP_PLANE.x, DEFAULT_CLIP_PLANE.y, DEFAULT_CLIP_PLANE.z, WATER_LEVEL + WATER_CLIP_PLANE_OFFSET)
+        };
+
+        // SkyBox
+        m_refractionSkyBoxRenderer->PreRender(renderContext, userData);
+
+        for (auto child : m_children) {
+            m_refractionSkyBoxRenderer->Render(renderContext, child, userData);
+        }
+
+        m_refractionSkyBoxRenderer->PostRender(renderContext, userData);
+
+        // Default
+        m_refractionDefaultRenderer->PreRender(renderContext, userData);
+
+        for (auto child : m_children) {
+            m_refractionDefaultRenderer->Render(renderContext, child, userData);
+        }
+
+        m_refractionDefaultRenderer->PostRender(renderContext, userData);
+
+        // Terrain
+        m_refractionTerrainRenderer->PreRender(renderContext, userData);
+
+        for (auto child : m_children) {
+            m_refractionTerrainRenderer->Render(renderContext, child, userData);
+        }
+
+        m_refractionTerrainRenderer->PostRender(renderContext, userData);
+
+        // Animation
+        m_refractionAnimationRenderer->PreRender(renderContext, userData);
+
+        for (auto child : m_children) {
+            m_refractionAnimationRenderer->Render(renderContext, child, userData);
+        }
+
+        m_refractionAnimationRenderer->PostRender(renderContext, userData);
+
+        refractionComponent->GetRenderPass()->End(renderContext.defaultCommandBuffer);
     }
 
     void RenderScene(RenderContext& renderContext)
     {
+        m_defaultRenderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, renderContext.fullExtent });
+
         const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
         NormalRenderContextUserData userData{
@@ -3836,10 +3914,8 @@ private:
         }
 
         m_waterRenderer->PostRender(renderContext, userData);
-    }
 
-    void RenderFonts(RenderContext& renderContext)
-    {
+        // Fonts
         m_fontRenderer->PreRender(renderContext);
 
         for (auto child : m_children) {
@@ -3847,6 +3923,8 @@ private:
         }
 
         m_fontRenderer->PostRender(renderContext);
+
+        m_defaultRenderPass->End(renderContext.defaultCommandBuffer);
     }
 
     void InitRenderers()
@@ -3870,7 +3948,7 @@ private:
         m_terrainRenderer = std::make_unique<TerrainRenderer>(m_defaultRenderPass);
         m_terrainRenderer->Init();
 
-        m_animationRenderer = std::make_unique<AnimationSceneRenderer>(m_defaultRenderPass);
+        m_animationRenderer = std::make_unique<AnimationRenderer>(m_defaultRenderPass);
         m_animationRenderer->Init();
 
         m_waterRenderer = std::make_unique<WaterRenderer>(m_defaultRenderPass);
@@ -3881,10 +3959,46 @@ private:
 
         m_fontRenderer = std::make_unique<FontRenderer>(m_defaultRenderPass);
         m_fontRenderer->Init();
+
+        auto reflectionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
+        m_reflectionSkyBoxRenderer = std::make_unique<SkyBoxRenderer>(reflectionComponent->GetRenderPass());
+        m_reflectionSkyBoxRenderer->Init();
+
+        m_reflectionDefaultRenderer = std::make_unique<DefaultRenderer>(reflectionComponent->GetRenderPass());
+        m_reflectionDefaultRenderer->Init();
+
+        m_reflectionTerrainRenderer = std::make_unique<TerrainRenderer>(reflectionComponent->GetRenderPass());
+        m_reflectionTerrainRenderer->Init();
+
+        m_reflectionAnimationRenderer = std::make_unique<AnimationRenderer>(reflectionComponent->GetRenderPass());
+        m_reflectionAnimationRenderer->Init();
+
+        auto refractionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
+        m_refractionSkyBoxRenderer = std::make_unique<SkyBoxRenderer>(refractionComponent->GetRenderPass());
+        m_refractionSkyBoxRenderer->Init();
+
+        m_refractionDefaultRenderer = std::make_unique<DefaultRenderer>(refractionComponent->GetRenderPass());
+        m_refractionDefaultRenderer->Init();
+
+        m_refractionTerrainRenderer = std::make_unique<TerrainRenderer>(refractionComponent->GetRenderPass());
+        m_refractionTerrainRenderer->Init();
+
+        m_refractionAnimationRenderer = std::make_unique<AnimationRenderer>(refractionComponent->GetRenderPass());
+        m_refractionAnimationRenderer->Init();
     }
 
     void ShutDownRenderers()
     {
+        m_refractionAnimationRenderer->ShutDown();
+        m_refractionTerrainRenderer->ShutDown();
+        m_refractionDefaultRenderer->ShutDown();
+        m_reflectionSkyBoxRenderer->ShutDown();
+
+        m_reflectionAnimationRenderer->ShutDown();
+        m_reflectionTerrainRenderer->ShutDown();
+        m_reflectionDefaultRenderer->ShutDown();
+        m_reflectionSkyBoxRenderer->ShutDown();
+
         m_fontRenderer->ShutDown();
         m_quadRenderer->ShutDown();
         m_waterRenderer->ShutDown();
@@ -3892,6 +4006,7 @@ private:
         m_terrainRenderer->ShutDown();
         m_defaultRenderer->ShutDown();
         m_skyboxRenderer->ShutDown();
+
         m_animationShadowsRenderer->ShutDown();
         m_terrainShadowsRenderer->ShutDown();
         m_defaultShadowsRenderer->ShutDown();
@@ -3924,16 +4039,14 @@ private:
 };
 
 template <typename NodeFlagsType>
-class TestApp : public App<NodeFlagsType> {
+class TestApp final : public App<NodeFlagsType> {
 public:
     TestApp(const std::shared_ptr<EngineConfig>& config)
         : App<NodeFlagsType>(config)
     {
     }
 
-    virtual ~TestApp()
-    {
-    }
+    ~TestApp() = default;
 
 protected:
     void OnEngineInit() override
