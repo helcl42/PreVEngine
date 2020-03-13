@@ -804,15 +804,15 @@ public:
     }
 };
 
-class QuadShader final : public Shader {
+class ShadowMapDebugShader final : public Shader {
 private:
 public:
-    QuadShader(const VkDevice device)
+    ShadowMapDebugShader(const VkDevice device)
         : Shader(device)
     {
     }
 
-    ~QuadShader() = default;
+    ~ShadowMapDebugShader() = default;
 
 private:
     void InitVertexInputs() override

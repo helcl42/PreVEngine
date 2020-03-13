@@ -2406,7 +2406,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<QuadShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/shadow_map_debug_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "Shaders/shadow_map_debug_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<ShadowMapDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/shadow_map_debug_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "Shaders/shadow_map_debug_frag.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Default Shader created\n");
