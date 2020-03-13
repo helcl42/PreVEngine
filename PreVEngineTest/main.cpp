@@ -3930,13 +3930,13 @@ private:
         const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
         const auto cameraPosition{ cameraComponent->GetPosition() };
-        const auto cameraViewDirection{ cameraComponent->GetForwardDirection() };
+        const auto cameraViewPosition{ cameraComponent->GetPosition() + cameraComponent->GetForwardDirection() };
         const float cameraPositionOffset{ 2.0f * (cameraPosition.y - WATER_LEVEL) };
-        const float cameraViewOffset {2.0f * (WATER_LEVEL - cameraViewDirection.y) };
+        const float cameraViewOffset {2.0f * (WATER_LEVEL - cameraViewPosition.y) };
 
         const glm::vec3 newCameraPosition{ cameraPosition.x, cameraPosition.y - cameraPositionOffset, cameraPosition.z };
-        const glm::vec3 newCameraViewDirection{ cameraViewDirection.x, cameraViewDirection.y + cameraViewOffset, cameraViewDirection.z };
-        const glm::mat4 viewMatrix = glm::lookAt(newCameraPosition, newCameraViewDirection, cameraComponent->GetUpDirection());
+        const glm::vec3 newCameraViewPosition{ cameraViewPosition.x, cameraViewPosition.y + cameraViewOffset, cameraViewPosition.z };
+        const glm::mat4 viewMatrix = glm::lookAt(newCameraPosition, newCameraViewPosition, cameraComponent->GetUpDirection());
 
         NormalRenderContextUserData userData{
             viewMatrix,
