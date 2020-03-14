@@ -3674,7 +3674,7 @@ public:
 
             const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
             const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-            
+
             auto uboVS = m_uniformsPoolVS->GetNext();
 
             UniformsVS uniformsVS{};
@@ -4008,7 +4008,7 @@ private:
             viewMatrix,
             cameraComponent->GetViewFrustum().CreateProjectionMatrix(WaterReflection::REFLECTION_WIDTH, WaterReflection::REFLECTION_HEIGHT),
             newCameraPosition,
-            glm::vec4(0.0f, 1.0f, 0.0f, WATER_LEVEL + WATER_CLIP_PLANE_OFFSET),
+            glm::vec4(0.0f, 1.0f, 0.0f, -WATER_LEVEL + WATER_CLIP_PLANE_OFFSET),
             { WaterReflection::REFLECTION_WIDTH, WaterReflection::REFLECTION_HEIGHT },
             glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane())
         };

@@ -34,7 +34,7 @@ layout(binding = 7) uniform sampler2D depthMapTexture;
 const float waveStrength = 0.1;
 const float shineDamper = 20.0;
 const float reflectivity = 0.5;
-const float waterReflectivness = 0.7;
+const float waterReflectivness = 0.75;
 
 layout(location = 0) out vec4 outColor;
 
@@ -81,8 +81,7 @@ void main()
 	vec2 totalDistortion = (texture(dudvMapTexture, distortedTexCoords).rg * 2.0 - 1.0) * waveStrength * clamp(waterDepth / 5.0, 0.0, 1.0);
 
 	reflectTexCoord += totalDistortion;
-	reflectTexCoord.x = clamp(reflectTexCoord.x, 0.001, 0.999);
-	reflectTexCoord.y = clamp(reflectTexCoord.y, 0.001, 0.999);
+	reflectTexCoord = clamp(reflectTexCoord, 0.001, 0.999);
 
 	refractTexCoord += totalDistortion;
 	refractTexCoord = clamp(refractTexCoord, 0.001, 0.999);
