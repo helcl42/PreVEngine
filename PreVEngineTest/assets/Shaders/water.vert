@@ -14,13 +14,16 @@ layout(std140, binding = 0) uniform UniformBufferObject {
 	float gradient;
 } uboVS;
 
+const float textureTilingFactor = 6.0;
+
 layout(location = 0) in vec3 inPosition;
 
 layout(location = 0) out vec4 outClipSpaceCoord;
-layout(location = 1) out vec3 outWorldPosition;
-layout(location = 2) out vec3 outViewPosition;
-layout(location = 3) out vec3 outToCameraVector;
-layout(location = 4) out float outVisibility;
+layout(location = 1) out vec2 outTextureCoord;
+layout(location = 2) out vec3 outWorldPosition;
+layout(location = 3) out vec3 outViewPosition;
+layout(location = 4) out vec3 outToCameraVector;
+layout(location = 5) out float outVisibility;
 
 void main()
 {
@@ -34,6 +37,8 @@ void main()
 
     outClipSpaceCoord = uboVS.projectionMatrix * viewPosition;
 	gl_Position = outClipSpaceCoord;
+    
+	outTextureCoord = vec2(inPosition.x / 2.0 + 0.5, inPosition.z / 2.0 + 0.5) * textureTilingFactor;
 
 	//vec3 cameraPosition = (inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz; // OPT - passed in UBO
 	outToCameraVector = uboVS.cameraPosition.xyz - worldPosition.xyz;

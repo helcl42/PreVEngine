@@ -3,8 +3,8 @@
 
 #include "General.h"
 
-static const float WATER_TILE_SIZE = 60.0f;
-static const float WATER_LEVEL = 0.0f; // -2.6f
+static const float WATER_TILE_SIZE = 120.0f;
+static const float WATER_LEVEL = -5.0f;
 static const float WATER_CLIP_PLANE_OFFSET = 0.05f;
 static const float WATER_WAVE_SPEED = 0.03f;
 
@@ -108,7 +108,9 @@ public:
 
     virtual VkExtent2D GetExtent() const = 0;
 
-    virtual std::shared_ptr<IImageBuffer> GetImageBuffer() const = 0;
+    virtual std::shared_ptr<IImageBuffer> GetColorImageBuffer() const = 0;
+
+    virtual std::shared_ptr<IImageBuffer> GetDepthImageBuffer() const = 0;
 
     virtual VkFramebuffer GetFrameBuffer() const = 0;
 
@@ -158,9 +160,14 @@ public:
         return VkExtent2D{ m_width, m_height };
     }
 
-    std::shared_ptr<IImageBuffer> GetImageBuffer() const override
+    std::shared_ptr<IImageBuffer> GetColorImageBuffer() const override
     {
         return m_imageBuffer;
+    }
+
+    std::shared_ptr<IImageBuffer> GetDepthImageBuffer() const override
+    {
+        return m_depthBuffer;
     }
 
     VkFramebuffer GetFrameBuffer() const override

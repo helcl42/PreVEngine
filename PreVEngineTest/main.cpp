@@ -1957,7 +1957,7 @@ public:
     {
         m_waterComponent->Update(deltaTime);
 
-        SetPosition(glm::vec3(WATER_TILE_SIZE, 0.0f, WATER_TILE_SIZE));
+        SetPosition(glm::vec3(WATER_TILE_SIZE, WATER_LEVEL, WATER_TILE_SIZE));
         SetScale(glm::vec3(WATER_TILE_SIZE));
 
         AbstractSceneNode::Update(deltaTime);
@@ -2598,7 +2598,7 @@ public:
     {
         const auto component = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
 
-        m_shader->Bind("imageSampler", component->GetImageBuffer()->GetImageView(), component->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_shader->Bind("imageSampler", component->GetColorImageBuffer()->GetImageView(), component->GetColorImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
         VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
 
@@ -3606,7 +3606,7 @@ private:
 
         alignas(16) LightUniform light;
 
-        alignas(16) glm::vec2 nearFarClippingPlane;
+        alignas(16) glm::vec4 nearFarClippingPlane;
 
         alignas(16) float moveFactor;
     };
@@ -3669,9 +3669,12 @@ public:
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_RENDER_COMPONENT })) {
             const auto waterComponent = ComponentRepository<IWaterComponent>::GetInstance().Get(node->GetId());
+            const auto waterReflectionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
+            const auto waterRefractionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
+
             const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
             const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-
+            
             auto uboVS = m_uniformsPoolVS->GetNext();
 
             UniformsVS uniformsVS{};
@@ -3691,7 +3694,7 @@ public:
             uniformsFS.waterColor = glm::vec4(waterComponent->GetMaterial()->GetColor(), 1.0f);
             uniformsFS.light.color = glm::vec4(mainLightComponent->GetColor(), 1.0f);
             uniformsFS.light.position = glm::vec4(mainLightComponent->GetPosition(), 1.0f);
-            uniformsFS.nearFarClippingPlane = renderContextUserData.nearFarClippingPlane;
+            uniformsFS.nearFarClippingPlane = glm::vec4(renderContextUserData.nearFarClippingPlane, 0.0f, 0.0f);
             uniformsFS.moveFactor = waterComponent->GetMoveFactor();
             // shadows
             for (uint32_t i = 0; i < ShadowsComponent::CASCADES_COUNT; i++) {
@@ -3706,6 +3709,11 @@ public:
             m_shader->Bind("uboVS", *uboVS);
             m_shader->Bind("uboFS", *uboFS);
             m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), shadowsComponent->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+            m_shader->Bind("reflectionTexture", waterReflectionComponent->GetColorImageBuffer()->GetImageView(), waterReflectionComponent->GetColorImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            m_shader->Bind("refractionTexture", waterRefractionComponent->GetColorImageBuffer()->GetImageView(), waterRefractionComponent->GetColorImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            m_shader->Bind("dudvMapTexture", waterComponent->GetMaterial()->GetImageBuffer()->GetImageView(), waterComponent->GetMaterial()->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            m_shader->Bind("normalMapTexture", waterComponent->GetMaterial()->GetNormalmageBuffer()->GetImageView(), waterComponent->GetMaterial()->GetNormalmageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            m_shader->Bind("depthMapTexture", waterRefractionComponent->GetDepthImageBuffer()->GetImageView(), waterRefractionComponent->GetDepthImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 
             VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
             VkBuffer vertexBuffers[] = { *waterComponent->GetModel()->GetVertexBuffer() };

@@ -365,7 +365,7 @@ public:
 
     virtual std::shared_ptr<Image> GetNormalImage() const = 0;
 
-    virtual std::shared_ptr<ImageBuffer> GetINormalmageBuffer() const = 0;
+    virtual std::shared_ptr<ImageBuffer> GetNormalmageBuffer() const = 0;
 
     virtual bool HasNormalImage() const = 0;
 
@@ -600,7 +600,7 @@ public:
         return m_normalImage;
     }
 
-    std::shared_ptr<ImageBuffer> GetINormalmageBuffer() const override
+    std::shared_ptr<ImageBuffer> GetNormalmageBuffer() const override
     {
         return m_normalImageBuffer;
     }
