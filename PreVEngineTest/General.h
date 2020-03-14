@@ -517,6 +517,15 @@ public:
     {
     }
 
+    Material(const glm::vec4 color, const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const float shineDamper, const float reflectivity)
+        : m_color(color)
+        , m_image(image)
+        , m_imageBuffer(imageBuffer)
+        , m_shineDamper(shineDamper)
+        , m_reflectivity(reflectivity)
+    {
+    }
+
     Material(const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<ImageBuffer>& normalImageBuffer, const float shineDamper, const float reflectivity)
         : m_image(image)
         , m_imageBuffer(imageBuffer)
@@ -527,8 +536,32 @@ public:
     {
     }
 
+    Material(const glm::vec4 color, const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<ImageBuffer>& normalImageBuffer, const float shineDamper, const float reflectivity)
+        : m_color(color)
+        , m_image(image)
+        , m_imageBuffer(imageBuffer)
+        , m_normalImage(normalImage)
+        , m_normalImageBuffer(normalImageBuffer)
+        , m_shineDamper(shineDamper)
+        , m_reflectivity(reflectivity)
+    {
+    }
+
     Material(const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<ImageBuffer>& normalImageBuffer, const std::shared_ptr<Image>& extraImage, const std::shared_ptr<ImageBuffer>& extraImageBuffer, const float shineDamper, const float reflectivity)
         : m_image(image)
+        , m_imageBuffer(imageBuffer)
+        , m_normalImage(normalImage)
+        , m_normalImageBuffer(normalImageBuffer)
+        , m_extraImage(extraImage)
+        , m_extraImageBuffer(extraImageBuffer)
+        , m_shineDamper(shineDamper)
+        , m_reflectivity(reflectivity)
+    {
+    }
+
+    Material(const glm::vec4 color, const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<ImageBuffer>& normalImageBuffer, const std::shared_ptr<Image>& extraImage, const std::shared_ptr<ImageBuffer>& extraImageBuffer, const float shineDamper, const float reflectivity)
+        : m_color(color)
+        , m_image(image)
         , m_imageBuffer(imageBuffer)
         , m_normalImage(normalImage)
         , m_normalImageBuffer(normalImageBuffer)

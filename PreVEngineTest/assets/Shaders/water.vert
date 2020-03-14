@@ -7,11 +7,37 @@ layout(std140, binding = 0) uniform UniformBufferObject {
     mat4 viewMatrix;
     
 	mat4 projectionMatrix;    
+    
+	vec4 cameraPosition;
+
+	float density;
+	float gradient;
 } uboVS;
 
 layout(location = 0) in vec3 inPosition;
 
+layout(location = 0) out vec4 outClipSpaceCoord;
+layout(location = 1) out vec3 outWorldPosition;
+layout(location = 2) out vec3 outViewPosition;
+layout(location = 3) out vec3 outToCameraVector;
+layout(location = 4) out float outVisibility;
+
 void main()
 {
 	gl_Position = uboVS.projectionMatrix * uboVS.viewMatrix * uboVS.modelMatrix * vec4(inPosition, 1.0);
+
+    vec4 worldPosition = uboVS.modelMatrix * vec4(inPosition, 1.0);
+	outWorldPosition = worldPosition.xyz;
+
+	vec4 viewPosition = uboVS.viewMatrix * worldPosition;
+	outViewPosition = viewPosition.xyz;
+
+    outClipSpaceCoord = uboVS.projectionMatrix * viewPosition;
+	gl_Position = outClipSpaceCoord;
+
+	//vec3 cameraPosition = (inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz; // OPT - passed in UBO
+	outToCameraVector = uboVS.cameraPosition.xyz - worldPosition.xyz;
+
+	float vertexToCameraDistance = length(viewPosition.xyz);
+	outVisibility = clamp(exp(-pow(vertexToCameraDistance * uboVS.density, uboVS.gradient)), 0.0, 1.0);
 }

@@ -1955,6 +1955,8 @@ public:
 
     void Update(float deltaTime) override
     {
+        m_waterComponent->Update(deltaTime);
+
         SetPosition(glm::vec3(WATER_TILE_SIZE, 0.0f, WATER_TILE_SIZE));
         SetScale(glm::vec3(WATER_TILE_SIZE));
 
@@ -2042,12 +2044,15 @@ struct NormalRenderContextUserData : DefaultRenderContextUserData {
 
     const VkExtent2D extent;
 
-    NormalRenderContextUserData(const glm::mat4& vm, const glm::mat4& pm, const glm::vec3& camPos, const glm::vec4 cp, const VkExtent2D ext)
+    const glm::vec2 nearFarClippingPlane;
+
+    NormalRenderContextUserData(const glm::mat4& vm, const glm::mat4& pm, const glm::vec3& camPos, const glm::vec4 cp, const VkExtent2D ext, const glm::vec2& nearFar)
         : viewMatrix(vm)
         , projectionMatrix(pm)
         , cameraPosition(camPos)
         , clipPlane(cp)
         , extent(ext)
+        , nearFarClippingPlane(nearFar)
     {
     }
 };
@@ -3558,6 +3563,24 @@ public:
 
 class WaterRenderer : public IRenderer<NormalRenderContextUserData> {
 private:
+    struct ShadowwsCascadeUniform {
+        glm::mat4 viewProjectionMatrix;
+
+        glm::vec4 split;
+    };
+
+    struct ShadowsUniform {
+        ShadowwsCascadeUniform cascades[ShadowsComponent::CASCADES_COUNT];
+
+        uint32_t enabled;
+    };
+
+    struct LightUniform {
+        glm::vec4 position;
+
+        glm::vec4 color;
+    };
+
     struct alignas(16) UniformsVS
     {
         alignas(16) glm::mat4 modelMatrix;
@@ -3565,11 +3588,27 @@ private:
         alignas(16) glm::mat4 viewMatrix;
 
         alignas(16) glm::mat4 projectionMatrix;
+
+        alignas(16) glm::vec4 cameraPosition;
+
+        alignas(16) float density;
+
+        alignas(16) float gradient;
     };
 
     struct alignas(16) UniformsFS
     {
+        alignas(16) ShadowsUniform shadows;
+
         alignas(16) glm::vec4 fogColor;
+
+        alignas(16) glm::vec4 waterColor;
+
+        alignas(16) LightUniform light;
+
+        alignas(16) glm::vec2 nearFarClippingPlane;
+
+        alignas(16) float moveFactor;
     };
 
 private:
@@ -3630,6 +3669,8 @@ public:
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_RENDER_COMPONENT })) {
             const auto waterComponent = ComponentRepository<IWaterComponent>::GetInstance().Get(node->GetId());
+            const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+            const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
             auto uboVS = m_uniformsPoolVS->GetNext();
 
@@ -3637,6 +3678,9 @@ public:
             uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
             uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
             uniformsVS.modelMatrix = node->GetWorldTransformScaled();
+            uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
+            uniformsVS.density = 0.002f;
+            uniformsVS.gradient = 4.4f;
 
             uboVS->Update(&uniformsVS);
 
@@ -3644,10 +3688,24 @@ public:
 
             UniformsFS uniformsFS{};
             uniformsFS.fogColor = FOG_COLOR;
+            uniformsFS.waterColor = glm::vec4(waterComponent->GetMaterial()->GetColor(), 1.0f);
+            uniformsFS.light.color = glm::vec4(mainLightComponent->GetColor(), 1.0f);
+            uniformsFS.light.position = glm::vec4(mainLightComponent->GetPosition(), 1.0f);
+            uniformsFS.nearFarClippingPlane = renderContextUserData.nearFarClippingPlane;
+            uniformsFS.moveFactor = waterComponent->GetMoveFactor();
+            // shadows
+            for (uint32_t i = 0; i < ShadowsComponent::CASCADES_COUNT; i++) {
+                const auto& cascade = shadowsComponent->GetCascade(i);
+                uniformsFS.shadows.cascades[i].split = glm::vec4(cascade.endSplitDepth);
+                uniformsFS.shadows.cascades[i].viewProjectionMatrix = cascade.GetBiasedViewProjectionMatrix();
+            }
+            uniformsFS.shadows.enabled = SHADOWS_ENABLED;
+
             uboFS->Update(&uniformsFS);
 
             m_shader->Bind("uboVS", *uboVS);
             m_shader->Bind("uboFS", *uboFS);
+            m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), shadowsComponent->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 
             VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
             VkBuffer vertexBuffers[] = { *waterComponent->GetModel()->GetVertexBuffer() };
@@ -3932,7 +3990,7 @@ private:
         const auto cameraPosition{ cameraComponent->GetPosition() };
         const auto cameraViewPosition{ cameraComponent->GetPosition() + cameraComponent->GetForwardDirection() };
         const float cameraPositionOffset{ 2.0f * (cameraPosition.y - WATER_LEVEL) };
-        const float cameraViewOffset {2.0f * (WATER_LEVEL - cameraViewPosition.y) };
+        const float cameraViewOffset{ 2.0f * (WATER_LEVEL - cameraViewPosition.y) };
 
         const glm::vec3 newCameraPosition{ cameraPosition.x, cameraPosition.y - cameraPositionOffset, cameraPosition.z };
         const glm::vec3 newCameraViewPosition{ cameraViewPosition.x, cameraViewPosition.y + cameraViewOffset, cameraViewPosition.z };
@@ -3943,7 +4001,8 @@ private:
             cameraComponent->GetViewFrustum().CreateProjectionMatrix(WaterReflection::REFLECTION_WIDTH, WaterReflection::REFLECTION_HEIGHT),
             newCameraPosition,
             glm::vec4(0.0f, 1.0f, 0.0f, WATER_LEVEL + WATER_CLIP_PLANE_OFFSET),
-            { WaterReflection::REFLECTION_WIDTH, WaterReflection::REFLECTION_HEIGHT }
+            { WaterReflection::REFLECTION_WIDTH, WaterReflection::REFLECTION_HEIGHT },
+            glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane())
         };
 
         // SkyBox
@@ -3997,7 +4056,8 @@ private:
             cameraComponent->GetViewFrustum().CreateProjectionMatrix(WaterRefraction::REFRACTION_WIDTH, WaterRefraction::REFRACTION_HEIGHT),
             cameraComponent->GetPosition(),
             glm::vec4(0.0f, -1.0f, 0.0f, WATER_LEVEL + WATER_CLIP_PLANE_OFFSET),
-            { WaterRefraction::REFRACTION_WIDTH, WaterRefraction::REFRACTION_HEIGHT }
+            { WaterRefraction::REFRACTION_WIDTH, WaterRefraction::REFRACTION_HEIGHT },
+            glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane())
         };
 
         // SkyBox
@@ -4050,7 +4110,8 @@ private:
             cameraComponent->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height),
             cameraComponent->GetPosition(),
             DEFAULT_CLIP_PLANE,
-            renderContext.fullExtent
+            renderContext.fullExtent,
+            glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane())
         };
 
         // SkyBox

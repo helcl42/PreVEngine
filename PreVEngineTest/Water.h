@@ -6,6 +6,7 @@
 static const float WATER_TILE_SIZE = 60.0f;
 static const float WATER_LEVEL = 0.0f; // -2.6f
 static const float WATER_CLIP_PLANE_OFFSET = 0.05f;
+static const float WATER_WAVE_SPEED = 0.03f;
 
 class WaterTile {
 private:
@@ -133,7 +134,7 @@ public:
     }
 
     ~WaterOffScreenRenderPassComponent() = default;
-    
+
 public:
     void Init() override
     {
@@ -248,6 +249,10 @@ class IWaterComponent : public IBasicRenderComponent {
 public:
     virtual std::shared_ptr<IMaterial> GetMaterial() const = 0;
 
+    virtual void Update(float deltaTime) = 0;
+
+    virtual float GetMoveFactor() const = 0;
+
 public:
     virtual ~IWaterComponent() = default;
 };
@@ -271,6 +276,17 @@ public:
         return m_model;
     }
 
+    void Update(float deltaTime) override
+    {
+        m_moveFactor += WATER_WAVE_SPEED * deltaTime;
+        m_moveFactor = std::fmodf(m_moveFactor, 1.0f);
+    }
+
+    virtual float GetMoveFactor() const override
+    {
+        return m_moveFactor;
+    }
+
 private:
     friend class WaterComponentFactory;
 
@@ -278,6 +294,8 @@ private:
     std::shared_ptr<IMaterial> m_material;
 
     std::shared_ptr<IModel> m_model;
+
+    float m_moveFactor{ 0.0f };
 };
 
 class WaterComponentFactory {
@@ -286,11 +304,12 @@ public:
     {
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
+        const glm::vec4 waterColor{ 0.0f, 0.3f, 0.5f, 1.0f };
         const std::string dudvMapPath{ "waterDUDV.png" };
         const std::string normalMapPath{ "matchingNormalMap.png" };
 
         auto waterComponent = std::make_unique<WaterComponent>();
-        waterComponent->m_material = CreateMaterial(*allocator, dudvMapPath, normalMapPath, 1.0f, 0.4f);
+        waterComponent->m_material = CreateMaterial(*allocator, waterColor, dudvMapPath, normalMapPath, 1.0f, 0.4f);
         waterComponent->m_model = CreateModel(*allocator);
         return waterComponent;
     }
@@ -301,7 +320,7 @@ public:
     }
 
 private:
-    std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& textureFilename, const std::string& normalTextureFilename, const float shineDamper, const float reflectivity) const
+    std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const glm::vec4& color, const std::string& textureFilename, const std::string& normalTextureFilename, const float shineDamper, const float reflectivity) const
     {
         ImageFactory imageFactory;
         auto image = imageFactory.CreateImage(textureFilename);
@@ -312,7 +331,7 @@ private:
         auto normalImageBuffer = std::make_unique<ImageBuffer>(allocator);
         normalImageBuffer->Create(ImageBufferCreateInfo{ { normalImage->GetWidth(), normalImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)normalImage->GetBuffer() });
 
-        return std::make_unique<Material>(std::move(image), std::move(imageBuffer), std::move(normalImage), std::move(normalImageBuffer), shineDamper, reflectivity);
+        return std::make_unique<Material>(color, std::move(image), std::move(imageBuffer), std::move(normalImage), std::move(normalImageBuffer), shineDamper, reflectivity);
     }
 
     std::unique_ptr<IModel> CreateModel(Allocator& allocator) const
