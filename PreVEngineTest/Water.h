@@ -250,7 +250,7 @@ public:
     void Update(float deltaTime) override
     {
         m_moveFactor += WATER_WAVE_SPEED * deltaTime;
-        m_moveFactor = std::fmodf(m_moveFactor, 1.0f);
+        m_moveFactor = fmodf(m_moveFactor, 1.0f);
     }
 
     float GetMoveFactor() const override
