@@ -1885,9 +1885,9 @@ private:
 
 class WaterRefraction : public AbstractSceneNode<SceneNodeFlags> {
 public:
-    static const inline uint32_t REFRACTION_WIDTH = 1280;
+    static const inline uint32_t REFRACTION_WIDTH = 640;
 
-    static const inline uint32_t REFRACTION_HEIGHT = 720;
+    static const inline uint32_t REFRACTION_HEIGHT = 360;
 
 public:
     WaterRefraction()
