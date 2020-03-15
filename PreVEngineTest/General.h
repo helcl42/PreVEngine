@@ -13,7 +13,11 @@ static const std::string TAG_MAIN_CAMERA = "MainCamera";
 
 static const uint32_t MAX_LIGHT_COUNT{ 4 };
 static const float AMBIENT_LIGHT_INTENSITY{ 0.2f };
+
 static const glm::vec4 FOG_COLOR{ 0.47f, 0.53f, 0.58f, 1.0f };
+static const float FOG_DENSITY = 0.004f;
+static const float FOG_GRADIENT = 12.0f;
+
 static const bool SHADOWS_ENABLED{ true };
 static const glm::vec4 SELECTED_COLOR{ 1.0f, 0.0f, 0.0f, 1.0f };
 static const uint32_t MAX_BONES_COUNT{ 100 };

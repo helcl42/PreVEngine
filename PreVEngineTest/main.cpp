@@ -2819,8 +2819,8 @@ public:
             uniformsVS.textureOffset = glm::vec4(nodeRenderComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
             uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
             uniformsVS.useFakeLightning = nodeRenderComponent->GetMaterial()->UsesFakeLightning();
-            uniformsVS.density = 0.002f;
-            uniformsVS.gradient = 4.4f;
+            uniformsVS.density = FOG_DENSITY;
+            uniformsVS.gradient = FOG_GRADIENT;
             uniformsVS.clipPlane = renderContextUserData.clipPlane;
 
             uboVS->Update(&uniformsVS);
@@ -3044,8 +3044,8 @@ public:
             uniformsVS.textureOffset = glm::vec4(nodeRenderComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
             uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
             uniformsVS.useFakeLightning = nodeRenderComponent->GetMaterial()->UsesFakeLightning();
-            uniformsVS.density = 0.002f;
-            uniformsVS.gradient = 4.4f;
+            uniformsVS.density = FOG_DENSITY;
+            uniformsVS.gradient = FOG_GRADIENT;
             uniformsVS.clipPlane = renderContextUserData.clipPlane;
 
             uboVS->Update(&uniformsVS);
@@ -3261,8 +3261,8 @@ public:
             uniformsVS.modelMatrix = node->GetWorldTransformScaled();
             uniformsVS.normalMatrix = glm::inverse(node->GetWorldTransformScaled());
             uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
-            uniformsVS.density = 0.002f;
-            uniformsVS.gradient = 4.4f;
+            uniformsVS.density = FOG_DENSITY;
+            uniformsVS.gradient = FOG_GRADIENT;
             uniformsVS.clipPlane = renderContextUserData.clipPlane;
 
             uboVS->Update(&uniformsVS);
@@ -3728,8 +3728,8 @@ public:
             uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
             uniformsVS.modelMatrix = node->GetWorldTransformScaled();
             uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
-            uniformsVS.density = 0.002f;
-            uniformsVS.gradient = 4.4f;
+            uniformsVS.density = FOG_DENSITY;
+            uniformsVS.gradient = FOG_GRADIENT;
 
             uboVS->Update(&uniformsVS);
 
