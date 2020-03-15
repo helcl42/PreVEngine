@@ -161,7 +161,7 @@ public:
         InitAllocator();
         InitSwapchain();
 
-        AllocatorProvider::GetInstance().SetAllocator(m_allocator);
+        AllocatorProvider::Instance().SetAllocator(m_allocator);
     }
 
     void InitSceneGraph() override
@@ -192,12 +192,12 @@ public:
     {
         m_rootNode->ShutDown();
 
-        GraphTraversal<NodeFlagsType>::GetInstance().SetRootNode(nullptr);
+        GraphTraversal<NodeFlagsType>::Instance().SetRootNode(nullptr);
     }
 
     void ShutDown() override
     {
-        AllocatorProvider::GetInstance().SetAllocator(nullptr);
+        AllocatorProvider::Instance().SetAllocator(nullptr);
     }
 
 public:
@@ -228,7 +228,7 @@ public:
 
     void SetSceneRoot(const std::shared_ptr<ISceneNode<NodeFlagsType> >& root) override
     {
-        GraphTraversal<NodeFlagsType>::GetInstance().SetRootNode(root);
+        GraphTraversal<NodeFlagsType>::Instance().SetRootNode(root);
 
         m_rootNode = root;
     }

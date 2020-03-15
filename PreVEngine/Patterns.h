@@ -31,7 +31,7 @@ public:
     virtual ~Singleton() = default;
 
 public:
-    static ChildType& GetInstance()
+    static ChildType& Instance()
     {
         return s_instance;
     }

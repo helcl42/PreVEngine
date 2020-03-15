@@ -130,8 +130,8 @@ public:
 private:
     void InitBuffers()
     {
-        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
-        auto device = DeviceProvider::GetInstance().GetDevice();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
+        auto device = DeviceProvider::Instance().GetDevice();
 
         m_imageBuffer = std::make_shared<ColorImageBuffer>(*allocator);
         m_imageBuffer->Create(ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, COLOR_FORMAT, 0, false, VK_IMAGE_VIEW_TYPE_2D });
@@ -146,7 +146,7 @@ private:
 
     void ShutDownBuffers()
     {
-        auto device = DeviceProvider::GetInstance().GetDevice();
+        auto device = DeviceProvider::Instance().GetDevice();
 
         vkDeviceWaitIdle(*device);
 
@@ -158,7 +158,7 @@ private:
 
     void InitRenderPass()
     {
-        auto device = DeviceProvider::GetInstance().GetDevice();
+        auto device = DeviceProvider::Instance().GetDevice();
 
         std::vector<VkSubpassDependency> dependencies{ 2 };
         dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -291,11 +291,11 @@ class WaterComponentFactory {
 public:
     std::unique_ptr<IWaterComponent> Create(const int x, const int z) const
     {
-        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         const glm::vec4 waterColor{ 0.0f, 0.3f, 0.5f, 1.0f };
-        const std::string dudvMapPath{ "./Assets/Textures/waterDUDV.png" };
-        const std::string normalMapPath{ "./Assets/Textures/matchingNormalMap.png" };
+        const std::string dudvMapPath{ AssetManager::Instance().GetAssetPath("Textures/waterDUDV.png") };
+        const std::string normalMapPath{ AssetManager::Instance().GetAssetPath("Textures/matchingNormalMap.png") };
 
         auto material = CreateMaterial(*allocator, waterColor, dudvMapPath, normalMapPath, 1.0f, 0.4f);
         auto model = CreateModel(*allocator);

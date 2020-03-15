@@ -109,7 +109,7 @@ protected:
 
 public:
     AbstractSceneNode()
-        : m_id(IDGenerator::GetInstance().GenrateNewId())
+        : m_id(IDGenerator::Instance().GenrateNewId())
         , m_worldTransform(1.0f)
         , m_position(glm::vec3(0.0f))
         , m_orientation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f))
@@ -118,7 +118,7 @@ public:
     }
 
     AbstractSceneNode(const FlagSet<NodeFlagsType>& flags)
-        : m_id(IDGenerator::GetInstance().GenrateNewId())
+        : m_id(IDGenerator::Instance().GenrateNewId())
         , m_worldTransform(1.0f)
         , m_flags(flags)
         , m_position(glm::vec3(0.0f))
@@ -128,7 +128,7 @@ public:
     }
 
     AbstractSceneNode(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
-        : m_id(IDGenerator::GetInstance().GenrateNewId())
+        : m_id(IDGenerator::Instance().GenrateNewId())
         , m_worldTransform(1.0f)
         , m_position(position)
         , m_orientation(orientation)
@@ -137,7 +137,7 @@ public:
     }
 
     AbstractSceneNode(const FlagSet<NodeFlagsType>& flags, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
-        : m_id(IDGenerator::GetInstance().GenrateNewId())
+        : m_id(IDGenerator::Instance().GenrateNewId())
         , m_worldTransform(1.0f)
         , m_flags(flags)
         , m_position(position)

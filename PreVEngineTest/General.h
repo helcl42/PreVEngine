@@ -55,9 +55,7 @@ public:
     {
     }
 
-    ~ViewFrustum()
-    {
-    }
+    ~ViewFrustum() = default;
 
 public:
     glm::mat4 CreateProjectionMatrix(const uint32_t w, const uint32_t h) const
@@ -104,6 +102,27 @@ public:
     {
         m_farClippingPlane = farCP;
     }
+};
+
+class AssetManager : public Singleton<AssetManager>
+{
+public:
+    ~AssetManager() = default;
+
+public:
+    std::string GetAssetPath(const std::string& path) {
+#if defined(__ANDROID__)
+        return path;
+#else
+        return "./assets/" + path;
+#endif
+    }
+
+private:
+    friend class Singleton<AssetManager>;
+
+private:
+    AssetManager() = default;
 };
 
 enum class VertexLayoutComponent {
@@ -280,31 +299,31 @@ public:
     template <typename NodeFlagsType, typename ComponentType>
     static std::shared_ptr<ComponentType> GetNodeComponent(const TagSet& tagSet, const LogicOperation operation = LogicOperation::OR)
     {
-        const auto node = GraphTraversal<NodeFlagsType>::GetInstance().FindOneWithTags(tagSet, operation);
+        const auto node = GraphTraversal<NodeFlagsType>::Instance().FindOneWithTags(tagSet, operation);
         if (node == nullptr) {
             throw std::runtime_error("There is no such node..");
         }
-        return ComponentRepository<ComponentType>::GetInstance().Get(node->GetId());
+        return ComponentRepository<ComponentType>::Instance().Get(node->GetId());
     }
 
     template <typename NodeFlagsType, typename ComponentType>
     static std::shared_ptr<ComponentType> GetNodeComponent(const FlagSet<NodeFlagsType>& flagSet, const LogicOperation operation = LogicOperation::OR)
     {
-        const auto node = GraphTraversal<NodeFlagsType>::GetInstance().FindOneWithFlags(flagSet, operation);
+        const auto node = GraphTraversal<NodeFlagsType>::Instance().FindOneWithFlags(flagSet, operation);
         if (node == nullptr) {
             throw std::runtime_error("There is no such node..");
         }
-        return ComponentRepository<ComponentType>::GetInstance().Get(node->GetId());
+        return ComponentRepository<ComponentType>::Instance().Get(node->GetId());
     }
 
     template <typename NodeFlagsType, typename ComponentType>
     static std::vector<std::shared_ptr<ComponentType> > GetNodeComponents(const TagSet& tagSet, const LogicOperation operation = LogicOperation::OR)
     {
-        const auto nodes = GraphTraversal<NodeFlagsType>::GetInstance().FindAllWthTags(tagSet, operation);
+        const auto nodes = GraphTraversal<NodeFlagsType>::Instance().FindAllWthTags(tagSet, operation);
 
         std::vector<std::shared_ptr<ComponentType> > resultComponents(nodes.size());
         for (size_t i = 0; i < nodes.size(); i++) {
-            resultComponents[i] = ComponentRepository<ComponentType>::GetInstance().Get(nodes[i]->GetId());
+            resultComponents[i] = ComponentRepository<ComponentType>::Instance().Get(nodes[i]->GetId());
         }
         return resultComponents;
     }
@@ -316,7 +335,7 @@ public:
 
         std::vector<std::shared_ptr<ComponentType> > resultComponents(nodes.size());
         for (size_t i = 0; i < nodes.size(); i++) {
-            resultComponents[i] = ComponentRepository<ComponentType>::GetInstance().Get(nodes[i]->GetId());
+            resultComponents[i] = ComponentRepository<ComponentType>::Instance().Get(nodes[i]->GetId());
         }
         return resultComponents;
     }

@@ -132,7 +132,7 @@ public:
         InitSurface();
         InitDevice();
 
-        DeviceProvider::GetInstance().SetDevice(m_device);
+        DeviceProvider::Instance().SetDevice(m_device);
     }
 
     void InitScene()
@@ -171,7 +171,7 @@ public:
         m_scene->ShutDownSceneGraph();
         m_scene->ShutDown();
 
-        DeviceProvider::GetInstance().SetDevice(nullptr);
+        DeviceProvider::Instance().SetDevice(nullptr);
     }
 
 public:

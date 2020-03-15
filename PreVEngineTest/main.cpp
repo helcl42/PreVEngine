@@ -690,7 +690,7 @@ public:
 private:
     void InitRenderPass()
     {
-        auto device = DeviceProvider::GetInstance().GetDevice();
+        auto device = DeviceProvider::Instance().GetDevice();
 
         std::vector<VkSubpassDependency> dependencies{ 2 };
         dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -723,8 +723,8 @@ private:
 
     void InitCascades()
     {
-        auto device = DeviceProvider::GetInstance().GetDevice();
-        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+        auto device = DeviceProvider::Instance().GetDevice();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         m_depthBuffer = std::make_shared<DepthImageBuffer>(*allocator);
         m_depthBuffer->Create(ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, DEPTH_FORMAT, 0, false, VK_IMAGE_VIEW_TYPE_2D_ARRAY, CASCADES_COUNT });
@@ -741,7 +741,7 @@ private:
 
     void ShutDownCascades()
     {
-        auto device = DeviceProvider::GetInstance().GetDevice();
+        auto device = DeviceProvider::Instance().GetDevice();
 
         vkDeviceWaitIdle(*device);
 
@@ -921,12 +921,12 @@ public:
 public:
     void Init() override
     {
-        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         RenderComponentFactory renderComponentFactory{};
         auto cubeComponent = renderComponentFactory.CreateCubeRenderComponent(*allocator, m_texturePath, true, true);
 
-        ComponentRepository<IRenderComponent>::GetInstance().Add(m_id, std::move(cubeComponent));
+        ComponentRepository<IRenderComponent>::Instance().Add(m_id, std::move(cubeComponent));
 
         AbstractSceneNode::Init();
     }
@@ -940,7 +940,7 @@ public:
     {
         AbstractSceneNode::ShutDown();
 
-        ComponentRepository<IRenderComponent>::GetInstance().Remove(m_id);
+        ComponentRepository<IRenderComponent>::Instance().Remove(m_id);
     }
 };
 
@@ -991,13 +991,13 @@ public:
 public:
     void Init() override
     {
-        m_body = std::make_shared<CubeRobotPart>(glm::vec3(0, 35, 0), glm::quat(1, 0, 0, 0), glm::vec3(10, 15, 5), "./Assets/Textures/vulkan.png");
+        m_body = std::make_shared<CubeRobotPart>(glm::vec3(0, 35, 0), glm::quat(1, 0, 0, 0), glm::vec3(10, 15, 5), AssetManager::Instance().GetAssetPath("Textures/vulkan.png"));
 
-        m_head = std::make_shared<CubeRobotPart>(glm::vec3(0, 10, 0), glm::quat(1, 0, 0, 0), glm::vec3(5, 5, 5), "./Assets/Textures/texture.jpg");
-        m_leftArm = std::make_shared<CubeRobotPart>(glm::vec3(-8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), "./Assets/Textures/texture.jpg");
-        m_rightArm = std::make_shared<CubeRobotPart>(glm::vec3(8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), "./Assets/Textures/texture.jpg");
-        m_leftLeg = std::make_shared<CubeRobotPart>(glm::vec3(-4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.5, 17.5f, 4.7f), "./Assets/Textures/texture.jpg");
-        m_rightLeg = std::make_shared<CubeRobotPart>(glm::vec3(4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.5, 17.5f, 4.7f), "./Assets/Textures/texture.jpg");
+        m_head = std::make_shared<CubeRobotPart>(glm::vec3(0, 10, 0), glm::quat(1, 0, 0, 0), glm::vec3(5, 5, 5), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+        m_leftArm = std::make_shared<CubeRobotPart>(glm::vec3(-8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+        m_rightArm = std::make_shared<CubeRobotPart>(glm::vec3(8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+        m_leftLeg = std::make_shared<CubeRobotPart>(glm::vec3(-4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.5, 17.5f, 4.7f), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+        m_rightLeg = std::make_shared<CubeRobotPart>(glm::vec3(4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.5, 17.5f, 4.7f), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
 
         m_body->AddChild(m_head);
         m_body->AddChild(m_leftArm);
@@ -1086,12 +1086,12 @@ public:
 public:
     void Init() override
     {
-        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         RenderComponentFactory renderComponentFactory{};
         auto renderComponent = renderComponentFactory.CreatePlaneRenderComponent(*allocator, m_texturePath, false, true);
 
-        ComponentRepository<IRenderComponent>::GetInstance().Add(m_id, std::move(renderComponent));
+        ComponentRepository<IRenderComponent>::Instance().Add(m_id, std::move(renderComponent));
 
         AbstractSceneNode::Init();
     }
@@ -1105,7 +1105,7 @@ public:
     {
         AbstractSceneNode::ShutDown();
 
-        ComponentRepository<IRenderComponent>::GetInstance().Remove(m_id);
+        ComponentRepository<IRenderComponent>::Instance().Remove(m_id);
     }
 };
 
@@ -1136,7 +1136,7 @@ public:
         m_terrainComponent = std::move(terrainComponentFactory.CreateRandomTerrain(m_xIndex, m_zIndex, TERRAIN_SIZE));
         SetPosition(m_terrainComponent->GetPosition());
 
-        ComponentRepository<ITerrainComponenet>::GetInstance().Add(m_id, m_terrainComponent);
+        ComponentRepository<ITerrainComponenet>::Instance().Add(m_id, m_terrainComponent);
 
         m_terrainManagerComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT });
         if (auto manager = m_terrainManagerComponent.lock()) {
@@ -1159,7 +1159,7 @@ public:
             manager->RemoveTerrain(m_terrainComponent);
         }
 
-        ComponentRepository<ITerrainComponenet>::GetInstance().Remove(m_id);
+        ComponentRepository<ITerrainComponenet>::Instance().Remove(m_id);
     }
 };
 
@@ -1183,7 +1183,7 @@ public:
     void Init() override
     {
         auto terrainManager = TerrainManagerComponentFactory{}.Create();
-        ComponentRepository<ITerrainManagerComponent>::GetInstance().Add(m_id, std::move(terrainManager));
+        ComponentRepository<ITerrainManagerComponent>::Instance().Add(m_id, std::move(terrainManager));
 
         for (int x = 0; x < m_gridMaxX; x++) {
             for (int z = 0; z < m_gridMaxZ; z++) {
@@ -1204,7 +1204,7 @@ public:
     {
         AbstractSceneNode::ShutDown();
 
-        ComponentRepository<ITerrainManagerComponent>::GetInstance().Remove(m_id);
+        ComponentRepository<ITerrainManagerComponent>::Instance().Remove(m_id);
     }
 };
 
@@ -1272,15 +1272,15 @@ public:
 public:
     void Init() override
     {
-        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         RenderComponentFactory renderComponentFactory{};
-        m_animatonRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(*allocator, "./Assets/Models/Goblin/goblin.dae", "./Assets/Models/Goblin/goblin_texture.png", true, true);
-        ComponentRepository<IAnimationRenderComponent>::GetInstance().Add(m_id, m_animatonRenderComponent);
+        m_animatonRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(*allocator, AssetManager::Instance().GetAssetPath("Models/Goblin/goblin.dae"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_texture.png"), true, true);
+        ComponentRepository<IAnimationRenderComponent>::Instance().Add(m_id, m_animatonRenderComponent);
 
         CameraComponentFactory cameraFactory{};
         m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 60.0f, 180.0f));
-        ComponentRepository<ICameraComponent>::GetInstance().Add(m_id, m_cameraComponent);
+        ComponentRepository<ICameraComponent>::Instance().Add(m_id, m_cameraComponent);
 
         m_animatonRenderComponent->GetAnimation()->SetIndex(0);
         m_animatonRenderComponent->GetAnimation()->SetState(AnimationState::RUNNING);
@@ -1358,7 +1358,7 @@ public:
     {
         AbstractSceneNode::ShutDown();
 
-        ComponentRepository<IAnimationRenderComponent>::GetInstance().Remove(m_id);
+        ComponentRepository<IAnimationRenderComponent>::Instance().Remove(m_id);
     }
 
 public:
@@ -1523,7 +1523,7 @@ public:
         CameraComponentFactory cameraFactory{};
         m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 60.0f, 180.0f));
 
-        ComponentRepository<ICameraComponent>::GetInstance().Add(m_id, m_cameraComponent);
+        ComponentRepository<ICameraComponent>::Instance().Add(m_id, m_cameraComponent);
 
         AbstractSceneNode::Init();
 
@@ -1577,7 +1577,7 @@ public:
     {
         AbstractSceneNode::ShutDown();
 
-        ComponentRepository<ICameraComponent>::GetInstance().Remove(m_id);
+        ComponentRepository<ICameraComponent>::Instance().Remove(m_id);
     }
 
 public:
@@ -1659,9 +1659,9 @@ public:
     void Init() override
     {
         FontRenderComponentsFactory factory{};
-        m_fontComponent = factory.Create("./Assets/Fonts/verdana.fnt", "./Assets/Fonts/verdana.png");
+        m_fontComponent = factory.Create(AssetManager::Instance().GetAssetPath("Fonts/verdana.fnt"), AssetManager::Instance().GetAssetPath("Fonts/verdana.png"));
 
-        ComponentRepository<IFontRenderComponent>::GetInstance().Add(m_id, m_fontComponent);
+        ComponentRepository<IFontRenderComponent>::Instance().Add(m_id, m_fontComponent);
 
         AbstractSceneNode::Init();
     }
@@ -1685,7 +1685,7 @@ public:
     {
         AbstractSceneNode::ShutDown();
 
-        ComponentRepository<IFontRenderComponent>::GetInstance().Remove(m_id);
+        ComponentRepository<IFontRenderComponent>::Instance().Remove(m_id);
     }
 };
 
@@ -1710,7 +1710,7 @@ public:
         LightComponentFactory lightFactory{};
         m_lightComponent = lightFactory.CreateLightCompoennt(m_initialPosition);
 
-        ComponentRepository<ILightComponent>::GetInstance().Add(m_id, m_lightComponent);
+        ComponentRepository<ILightComponent>::Instance().Add(m_id, m_lightComponent);
 
         AbstractSceneNode::Init();
     }
@@ -1742,7 +1742,7 @@ public:
     {
         AbstractSceneNode::ShutDown();
 
-        ComponentRepository<ILightComponent>::GetInstance().Remove(m_id);
+        ComponentRepository<ILightComponent>::Instance().Remove(m_id);
     }
 };
 
@@ -1770,7 +1770,7 @@ public:
         LightComponentFactory lightFactory{};
         m_lightComponent = lightFactory.CreateLightCompoennt(m_initialPosition, m_color, glm::vec3(0.1f, 0.005f, 0.001f));
 
-        ComponentRepository<ILightComponent>::GetInstance().Add(m_id, m_lightComponent);
+        ComponentRepository<ILightComponent>::Instance().Add(m_id, m_lightComponent);
 
         AbstractSceneNode::Init();
     }
@@ -1786,7 +1786,7 @@ public:
     {
         AbstractSceneNode::ShutDown();
 
-        ComponentRepository<ILightComponent>::GetInstance().Remove(m_id);
+        ComponentRepository<ILightComponent>::Instance().Remove(m_id);
     }
 };
 
@@ -1805,7 +1805,7 @@ public:
         SkyBoxComponentFactory factory{};
         m_skyBoxComponent = factory.Create();
 
-        ComponentRepository<ISkyBoxComponent>::GetInstance().Add(m_id, m_skyBoxComponent);
+        ComponentRepository<ISkyBoxComponent>::Instance().Add(m_id, m_skyBoxComponent);
 
         AbstractSceneNode::Init();
     }
@@ -1830,7 +1830,7 @@ public:
     {
         AbstractSceneNode::ShutDown();
 
-        ComponentRepository<ISkyBoxComponent>::GetInstance().Remove(m_id);
+        ComponentRepository<ISkyBoxComponent>::Instance().Remove(m_id);
     }
 
 private:
@@ -1860,7 +1860,7 @@ public:
         m_reflectionComponent = std::move(componentFactory.CreateOffScreenComponent(REFLECTION_WIDTH, REFLECTION_HEIGHT));
         m_reflectionComponent->Init();
 
-        ComponentRepository<IWaterOffscreenRenderPassComponent>::GetInstance().Add(m_id, m_reflectionComponent);
+        ComponentRepository<IWaterOffscreenRenderPassComponent>::Instance().Add(m_id, m_reflectionComponent);
 
         AbstractSceneNode::Init();
     }
@@ -1874,7 +1874,7 @@ public:
     {
         AbstractSceneNode::ShutDown();
 
-        ComponentRepository<IWaterOffscreenRenderPassComponent>::GetInstance().Remove(m_id);
+        ComponentRepository<IWaterOffscreenRenderPassComponent>::Instance().Remove(m_id);
 
         m_reflectionComponent->ShutDown();
     }
@@ -1904,7 +1904,7 @@ public:
         m_refractionComponent = std::move(componentFactory.CreateOffScreenComponent(REFRACTION_WIDTH, REFRACTION_HEIGHT));
         m_refractionComponent->Init();
 
-        ComponentRepository<IWaterOffscreenRenderPassComponent>::GetInstance().Add(m_id, m_refractionComponent);
+        ComponentRepository<IWaterOffscreenRenderPassComponent>::Instance().Add(m_id, m_refractionComponent);
 
         AbstractSceneNode::Init();
     }
@@ -1918,7 +1918,7 @@ public:
     {
         AbstractSceneNode::ShutDown();
 
-        ComponentRepository<IWaterOffscreenRenderPassComponent>::GetInstance().Remove(m_id);
+        ComponentRepository<IWaterOffscreenRenderPassComponent>::Instance().Remove(m_id);
 
         m_refractionComponent->ShutDown();
     }
@@ -1944,7 +1944,7 @@ public:
         WaterComponentFactory componentFactory{};
         m_waterComponent = std::move(componentFactory.Create(m_x, m_z));
 
-        ComponentRepository<IWaterComponent>::GetInstance().Add(m_id, m_waterComponent);
+        ComponentRepository<IWaterComponent>::Instance().Add(m_id, m_waterComponent);
 
         AbstractSceneNode::Init();
     }
@@ -1963,7 +1963,7 @@ public:
     {
         AbstractSceneNode::ShutDown();
 
-        ComponentRepository<IWaterComponent>::GetInstance().Remove(m_id);
+        ComponentRepository<IWaterComponent>::Instance().Remove(m_id);
     }
 
 private:
@@ -2036,7 +2036,7 @@ public:
         m_shadowsCompoent = shadowsFactory.Create();
         m_shadowsCompoent->Init();
 
-        ComponentRepository<IShadowsComponent>::GetInstance().Add(m_id, m_shadowsCompoent);
+        ComponentRepository<IShadowsComponent>::Instance().Add(m_id, m_shadowsCompoent);
 
         AbstractSceneNode::Init();
     }
@@ -2055,7 +2055,7 @@ public:
     {
         AbstractSceneNode::ShutDown();
 
-        ComponentRepository<IShadowsComponent>::GetInstance().Remove(m_id);
+        ComponentRepository<IShadowsComponent>::Instance().Remove(m_id);
 
         m_shadowsCompoent->ShutDown();
     }
@@ -2132,11 +2132,13 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::GetInstance().GetDevice();
-        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+        auto device = DeviceProvider::Instance().GetDevice();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<DefaultShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "./Assets/Shaders/default_shadows_vert.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<DefaultShadowsShader>(*device, {
+            { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/default_shadows_vert.spv") }
+        });
         m_shader->AdjustDescriptorPoolCapacity(300);
 
         printf("Shadows Shader created\n");
@@ -2167,7 +2169,7 @@ public:
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT })) {
-            auto renderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());
+            auto renderComponent = ComponentRepository<IRenderComponent>::Instance().Get(node->GetId());
             if (renderComponent->CastsShadows()) {
                 auto ubo = m_uniformsPool->GetNext();
 
@@ -2237,11 +2239,13 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::GetInstance().GetDevice();
-        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+        auto device = DeviceProvider::Instance().GetDevice();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<TerrainShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "./Assets/Shaders/terrain_shadows_vert.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<TerrainShadowsShader>(*device, {
+            { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_shadows_vert.spv") }
+        });
         m_shader->AdjustDescriptorPoolCapacity(300);
 
         printf("Terrain Shadows Shader created\n");
@@ -2272,7 +2276,7 @@ public:
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT })) {
-            const auto terrainComponent = ComponentRepository<ITerrainComponenet>::GetInstance().Get(node->GetId());
+            const auto terrainComponent = ComponentRepository<ITerrainComponenet>::Instance().Get(node->GetId());
             auto ubo = m_uniformsPool->GetNext();
 
             Uniforms uniforms{};
@@ -2341,11 +2345,13 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::GetInstance().GetDevice();
-        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+        auto device = DeviceProvider::Instance().GetDevice();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<AnimatedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "./Assets/Shaders/animation_shadows_vert.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<AnimatedShadowsShader>(*device, {
+            { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_shadows_vert.spv") }
+        });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Shadows Shader created\n");
@@ -2376,7 +2382,7 @@ public:
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_RENDER_COMPONENT })) {
-            auto renderComponent = ComponentRepository<IAnimationRenderComponent>::GetInstance().Get(node->GetId());
+            auto renderComponent = ComponentRepository<IAnimationRenderComponent>::Instance().Get(node->GetId());
             if (renderComponent->CastsShadows()) {
                 auto ubo = m_uniformsPool->GetNext();
 
@@ -2456,11 +2462,14 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::GetInstance().GetDevice();
-        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+        auto device = DeviceProvider::Instance().GetDevice();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<ShadowMapDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "./Assets/Shaders/shadow_map_debug_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "./Assets/Shaders/shadow_map_debug_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<ShadowMapDebugShader>(*device, {
+            { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/shadow_map_debug_vert.spv") },
+            { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/shadow_map_debug_frag.spv") }
+        });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("ShadowMapDebug Shader created\n");
@@ -2584,11 +2593,14 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::GetInstance().GetDevice();
-        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+        auto device = DeviceProvider::Instance().GetDevice();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<TextureDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "./Assets/Shaders/texture_debug_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "./Assets/Shaders/texture_debug_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<TextureDebugShader>(*device, {
+            { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/texture_debug_vert.spv") },
+            { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/texture_debug_frag.spv") }
+        });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Texture Debug Shader created\n");
@@ -2768,11 +2780,14 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::GetInstance().GetDevice();
-        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+        auto device = DeviceProvider::Instance().GetDevice();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<DefaultShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "./Assets/Shaders/default_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "./Assets/Shaders/default_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<DefaultShader>(*device, {
+            { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/default_vert.spv") },
+            { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/default_frag.spv") }
+        });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Default Shader created\n");
@@ -2806,7 +2821,7 @@ public:
             const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
             const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
-            const auto nodeRenderComponent = ComponentRepository<IRenderComponent>::GetInstance().Get(node->GetId());
+            const auto nodeRenderComponent = ComponentRepository<IRenderComponent>::Instance().Get(node->GetId());
 
             auto uboVS = m_uniformsPoolVS->GetNext();
 
@@ -2989,11 +3004,13 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::GetInstance().GetDevice();
-        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+        auto device = DeviceProvider::Instance().GetDevice();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<AnimationShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "./Assets/Shaders/animation_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "./Assets/Shaders/animation_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<AnimationShader>(*device, {
+            { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_vert.spv") },
+            { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Animaition Shader created\n");
@@ -3027,7 +3044,7 @@ public:
             const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
             const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
-            const auto nodeRenderComponent = ComponentRepository<IAnimationRenderComponent>::GetInstance().Get(node->GetId());
+            const auto nodeRenderComponent = ComponentRepository<IAnimationRenderComponent>::Instance().Get(node->GetId());
 
             auto uboVS = m_uniformsPoolVS->GetNext();
 
@@ -3213,11 +3230,14 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::GetInstance().GetDevice();
-        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+        auto device = DeviceProvider::Instance().GetDevice();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<TerrainShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "./Assets/Shaders/terrain_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "./Assets/Shaders/terrain_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<TerrainShader>(*device, {
+            { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_vert.spv") },
+            { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_frag.spv") }
+        });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Terrain Shader created\n");
@@ -3251,7 +3271,7 @@ public:
             const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
             const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
-            const auto terrainComponent = ComponentRepository<ITerrainComponenet>::GetInstance().Get(node->GetId());
+            const auto terrainComponent = ComponentRepository<ITerrainComponenet>::Instance().Get(node->GetId());
 
             auto uboVS = m_uniformsPoolVS->GetNext();
 
@@ -3389,11 +3409,14 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::GetInstance().GetDevice();
-        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+        auto device = DeviceProvider::Instance().GetDevice();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<FonttShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "./Assets/Shaders/font_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "./Assets/Shaders/font_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<FonttShader>(*device, {
+            { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/font_vert.spv") },
+            { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/font_frag.spv") }
+        });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Fonts Shader created\n");
@@ -3423,7 +3446,7 @@ public:
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_FONT_RENDER_COMPONENT })) {
-            const auto nodeFontRenderComponent = ComponentRepository<IFontRenderComponent>::GetInstance().Get(node->GetId());
+            const auto nodeFontRenderComponent = ComponentRepository<IFontRenderComponent>::Instance().Get(node->GetId());
             for (const auto& renderableText : nodeFontRenderComponent->GetRenderableTexts()) {
                 auto uboVS = m_uniformsPoolVS->GetNext();
                 UniformsVS uniformsVS{};
@@ -3518,11 +3541,14 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::GetInstance().GetDevice();
-        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+        auto device = DeviceProvider::Instance().GetDevice();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<SkyBoxShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "./Assets/Shaders/skybox_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "./Assets/Shaders/skybox_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<SkyBoxShader>(*device, {
+            { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/skybox_vert.spv") },
+            { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/skybox_frag.spv") }
+        });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Skybox Shader created\n");
@@ -3552,7 +3578,7 @@ public:
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SKYBOX_RENDER_COMPONENT })) {
-            const auto skyBoxComponent = ComponentRepository<ISkyBoxComponent>::GetInstance().Get(node->GetId());
+            const auto skyBoxComponent = ComponentRepository<ISkyBoxComponent>::Instance().Get(node->GetId());
 
             auto uboVS = m_uniformsPoolVS->GetNext();
 
@@ -3678,11 +3704,14 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::GetInstance().GetDevice();
-        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+        auto device = DeviceProvider::Instance().GetDevice();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<WaterShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "./Assets/Shaders/water_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "./Assets/Shaders/water_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<WaterShader>(*device, {
+            { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/water_vert.spv") },
+            { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/water_frag.spv") }
+        });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Water Shader created\n");
@@ -3712,7 +3741,7 @@ public:
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_RENDER_COMPONENT })) {
-            const auto waterComponent = ComponentRepository<IWaterComponent>::GetInstance().Get(node->GetId());
+            const auto waterComponent = ComponentRepository<IWaterComponent>::Instance().Get(node->GetId());
             const auto waterReflectionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
             const auto waterRefractionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
 
@@ -3881,7 +3910,7 @@ public:
         //freeCamera->SetTags({ TAG_MAIN_CAMERA });
         AddChild(freeCamera);
 
-        auto camRobot = std::make_shared<CubeRobot>(glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), "./Assets/Textures/texture.jpg");
+        auto camRobot = std::make_shared<CubeRobot>(glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
         freeCamera->AddChild(camRobot);
 
         const int32_t MAX_GENERATED_HEIGHT = 1;
@@ -3890,7 +3919,7 @@ public:
         for (int32_t i = 0; i <= MAX_GENERATED_HEIGHT; i++) {
             for (int32_t j = 0; j <= MAX_GENERATED_HEIGHT; j++) {
                 for (int32_t k = 0; k <= MAX_GENERATED_HEIGHT; k++) {
-                    auto robot = std::make_shared<CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), "./Assets/Textures/texture.jpg");
+                    auto robot = std::make_shared<CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
                     AddChild(robot);
                 }
             }
@@ -4320,7 +4349,7 @@ private:
         const auto j = dis(gen);
         const auto k = dis(gen);
 
-        auto robot = std::make_shared<CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), "./Assets/Textures/texture.jpg");
+        auto robot = std::make_shared<CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
         robot->Init();
         AddChild(robot);
     }

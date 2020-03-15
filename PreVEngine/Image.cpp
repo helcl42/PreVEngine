@@ -166,9 +166,11 @@ bool ImageFactory::FileExists(const std::string& fileName)
 {
 #if defined(__ANDROID__)
     AAsset* asset = android_open_asset(fileName.c_str(), AASSET_MODE_STREAMING);
-    bool result = !!asset;
-    AAsset_close(asset);
-    return result;
+    if(asset != nullptr) {
+        AAsset_close(asset);
+        return true;
+    }
+    return false;
 #else
     std::ifstream infile(fileName);
     return infile.good();

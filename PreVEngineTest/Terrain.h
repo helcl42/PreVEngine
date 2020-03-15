@@ -343,14 +343,14 @@ public:
 public:
     std::unique_ptr<ITerrainComponenet> CreateRandomTerrain(const int x, const int z, const float size) const
     {
-        auto allocator = AllocatorProvider::GetInstance().GetAllocator();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
         const auto heightGenerator = std::make_shared<HeightGenerator>(x, z, m_vertexCount, m_seed);
 
         const std::string materialPaths[] = {
-            "./Assets/Textures/fungus.png",
-            "./Assets/Textures/sand_grass.png",
-            "./Assets/Textures/rock.png",
-            "./Assets/Textures/sand.png"
+                AssetManager::Instance().GetAssetPath("Textures/fungus.png"),
+                AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"),
+                AssetManager::Instance().GetAssetPath("Textures/rock.png"),
+                AssetManager::Instance().GetAssetPath("Textures/sand.png")
         };
 
         auto result = std::make_unique<TerrainComponent>(x, z);
