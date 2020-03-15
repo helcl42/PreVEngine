@@ -176,6 +176,10 @@ public:
 
     virtual int GetGridZ() const = 0;
 
+    virtual std::vector<float> GetHeightSteps() const = 0;
+
+    virtual float GetTransitionRange() const = 0;
+
 public:
     virtual ~ITerrainComponenet() = default;
 };
@@ -253,6 +257,16 @@ public:
         return m_gridZ;
     }
 
+    std::vector<float> GetHeightSteps() const override
+    {
+        return m_heightSteps;
+    }
+
+    float GetTransitionRange() const override
+    {
+        return m_transitionRange;
+    }
+
 private:
     friend class TerrainComponentFactory;
 
@@ -270,6 +284,10 @@ private:
     std::shared_ptr<IModel> m_model;
 
     std::vector<std::shared_ptr<IMaterial> > m_materials;
+
+    std::vector<float> m_heightSteps;
+
+    float m_transitionRange;
 };
 
 class TerrainMesh : public IMesh {
@@ -343,6 +361,8 @@ public:
             auto material = CreateMaterial(*allocator, path, 3.0f, 0.4f);
             result->m_materials.emplace_back(std::move(material));
         }
+        result->m_heightSteps = { 0.2f, 0.4f, 0.6f, 0.8f };
+        result->m_transitionRange = 0.1f;
         return result;
     }
 

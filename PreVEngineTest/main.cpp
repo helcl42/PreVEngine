@@ -3292,18 +3292,16 @@ public:
             uniformsFS.material.reflectivity = terrainComponent->GetMaterials().at(0)->GetReflectivity();
 
             // common
-            const glm::vec4 heightSteps[] = { glm::vec4(0.2f), glm::vec4(0.4f), glm::vec4(0.6f), glm::vec4(0.8f) };
-
             uniformsFS.fogColor = FOG_COLOR;
             uniformsFS.selectedColor = SELECTED_COLOR;
             uniformsFS.selected = false;
             uniformsFS.castedByShadows = true;
             uniformsFS.minHeight = terrainComponent->GetHeightMapInfo()->GetMinHeight();
             uniformsFS.maxHeight = terrainComponent->GetHeightMapInfo()->GetMaxHeight();
-            for (uint32_t i = 0; i < 4; i++) {
-                uniformsFS.heightSteps[i] = heightSteps[i];
+            for (uint32_t i = 0; i < terrainComponent->GetHeightSteps().size(); i++) {
+                uniformsFS.heightSteps[i] = glm::vec4(terrainComponent->GetHeightSteps().at(i));
             }
-            uniformsFS.heightTtransitionRange = 0.1f;
+            uniformsFS.heightTtransitionRange = terrainComponent->GetTransitionRange();
 
             uboFS->Update(&uniformsFS);
 
