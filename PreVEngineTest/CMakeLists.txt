@@ -20,6 +20,7 @@ endif()
 target_link_libraries(${PROJECT_NAME} PreVEngine)
 
 if(WIN32)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
     include_directories("../Libs/assimp/include")
     target_link_libraries(${PROJECT_NAME} "../../Libs/assimp/lib/Release/assimp-vc142-mt")
 endif()
