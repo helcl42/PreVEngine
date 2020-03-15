@@ -3,10 +3,13 @@
 
 #include "General.h"
 
-static const float WATER_TILE_SIZE = 120.0f;
-static const float WATER_LEVEL = -5.0f;
-static const float WATER_CLIP_PLANE_OFFSET = 0.05f;
-static const float WATER_WAVE_SPEED = 0.03f;
+static const float WATER_TILE_SIZE{ 120.0f };
+static const float WATER_LEVEL{ -5.0f };
+static const float WATER_CLIP_PLANE_OFFSET{ 0.05f };
+static const float WATER_WAVE_SPEED{ 0.03f };
+static const glm::uvec2 REFRACTION_MEASURES{ 640, 360 };
+static const glm::uvec2 REFLECTION_MEASURES{ 320, 180 };
+
 
 class WaterTileMesh : public IMesh {
 public:

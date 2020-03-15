@@ -104,13 +104,13 @@ public:
     }
 };
 
-class AssetManager : public Singleton<AssetManager>
-{
+class AssetManager : public Singleton<AssetManager> {
 public:
     ~AssetManager() = default;
 
 public:
-    std::string GetAssetPath(const std::string& path) {
+    std::string GetAssetPath(const std::string& path)
+    {
 #if defined(__ANDROID__)
         return path;
 #else
@@ -358,7 +358,7 @@ public:
 
     virtual void ShutDown() = 0;
 
-public:
+public: 
     virtual ~IRenderer() = default;
 };
 
@@ -477,7 +477,7 @@ public:
 };
 
 class IRenderComponent : public IBasicRenderComponent {
-public:        
+public:
     virtual std::shared_ptr<IMaterial> GetMaterial() const = 0;
 
     virtual bool CastsShadows() const = 0;

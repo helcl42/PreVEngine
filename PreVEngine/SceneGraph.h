@@ -160,11 +160,9 @@ public:
 
     virtual void Update(float deltaTime) override
     {
-        if (auto parent = m_parent.lock()) //This node has a parent...
-        {
+        if (auto parent = m_parent.lock()) { //This node has a parent...
             m_worldTransform = parent->GetWorldTransform() * GetTransform();
-        } else //Root node, world transform is local transform!
-        {
+        } else { //Root node, world transform is local transform!
             m_worldTransform = GetTransform();
         }
 

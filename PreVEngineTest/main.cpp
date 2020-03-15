@@ -1155,11 +1155,6 @@ private:
 
 class WaterReflection : public AbstractSceneNode<SceneNodeFlags> {
 public:
-    static const inline uint32_t REFLECTION_WIDTH = 320;
-
-    static const inline uint32_t REFLECTION_HEIGHT = 180;
-
-public:
     WaterReflection()
         : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT })
     {
@@ -1171,7 +1166,7 @@ public:
     void Init() override
     {
         WaterComponentFactory componentFactory{};
-        m_reflectionComponent = std::move(componentFactory.CreateOffScreenComponent(REFLECTION_WIDTH, REFLECTION_HEIGHT));
+        m_reflectionComponent = std::move(componentFactory.CreateOffScreenComponent(REFLECTION_MEASURES.x, REFLECTION_MEASURES.y));
         m_reflectionComponent->Init();
 
         ComponentRepository<IWaterOffscreenRenderPassComponent>::Instance().Add(m_id, m_reflectionComponent);
@@ -1199,11 +1194,6 @@ private:
 
 class WaterRefraction : public AbstractSceneNode<SceneNodeFlags> {
 public:
-    static const inline uint32_t REFRACTION_WIDTH = 640;
-
-    static const inline uint32_t REFRACTION_HEIGHT = 360;
-
-public:
     WaterRefraction()
         : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT })
     {
@@ -1215,7 +1205,7 @@ public:
     void Init() override
     {
         WaterComponentFactory componentFactory{};
-        m_refractionComponent = std::move(componentFactory.CreateOffScreenComponent(REFRACTION_WIDTH, REFRACTION_HEIGHT));
+        m_refractionComponent = std::move(componentFactory.CreateOffScreenComponent(REFRACTION_MEASURES.x, REFRACTION_MEASURES.y));
         m_refractionComponent->Init();
 
         ComponentRepository<IWaterOffscreenRenderPassComponent>::Instance().Add(m_id, m_refractionComponent);
@@ -1385,57 +1375,12 @@ private:
     EventHandler<RootSceneNode, TouchEvent> m_touchEventHnadler{ *this };
 
 private:
-    std::shared_ptr<RenderPass> m_defaultRenderPass;
-
-private:
-    // Shadows
-    std::unique_ptr<IRenderer<ShadowsRenderContextUserData> > m_defaultShadowsRenderer;
-
-    std::unique_ptr<IRenderer<ShadowsRenderContextUserData> > m_terrainShadowsRenderer;
-
-    std::unique_ptr<IRenderer<ShadowsRenderContextUserData> > m_animationShadowsRenderer;
-
-    // Main Render
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_skyboxRenderer;
-
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_defaultRenderer;
-
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_terrainRenderer;
-
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_animationRenderer;
-
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_waterRenderer;
-
-    // Reflection
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionSkyBoxRenderer;
-
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionDefaultRenderer;
-
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionTerrainRenderer;
-
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionAnimationRenderer;
-
-    // Refraction
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_refractionSkyBoxRenderer;
-
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_refractionDefaultRenderer;
-
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_refractionTerrainRenderer;
-
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_refractionAnimationRenderer;
-
-    // Debug
-    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_shadowMapDebugRenderer;
-
-    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_textureDebugRenderer;
-
-    // Fonts
-    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_fontRenderer;
+    std::unique_ptr<IRenderer<DefaultRenderContextUserData>> m_masterRenderer;
 
 public:
     RootSceneNode(const std::shared_ptr<RenderPass>& renderPass)
         : AbstractSceneNode()
-        , m_defaultRenderPass(renderPass)
+        , m_masterRenderer(std::make_unique<MasterRenderer>(renderPass))
     {
     }
 
@@ -1504,7 +1449,7 @@ public:
             child->Init();
         }
 
-        InitRenderers();
+        m_masterRenderer->Init();
     }
 
     void Update(float deltaTime) override
@@ -1516,37 +1461,12 @@ public:
 
     void Render(RenderContext& renderContext) override
     {
-        // Shadows render pass
-        RenderShadows(renderContext);
-
-        // Reflection
-        RenderSceneReflection(renderContext);
-
-        // Refraction
-        RenderSceneRefraction(renderContext);
-
-        // Default Scene Render
-        RenderScene(renderContext);
-
-#ifndef ANDROID
-        // Debug quad with shadowMap
-        //m_shadowMapDebugRenderer->PreRender(renderContext);
-
-        //m_shadowMapDebugRenderer->Render(renderContext, GetThis());
-
-        //m_shadowMapDebugRenderer->PostRender(renderContext);
-
-        m_textureDebugRenderer->PreRender(renderContext);
-
-        m_textureDebugRenderer->Render(renderContext, GetThis());
-
-        m_textureDebugRenderer->PostRender(renderContext);
-#endif
+        m_masterRenderer->Render(renderContext, GetThis());
     }
 
     void ShutDown() override
     {
-        ShutDownRenderers();
+        m_masterRenderer->ShutDown();
 
         for (auto child : m_children) {
             child->ShutDown();
@@ -1572,332 +1492,6 @@ public:
         } else if (touchEvent.action == TouchActionType::UP) {
             //RemmoveNode();
         }
-    }
-
-private:
-    void RenderShadows(RenderContext& renderContext)
-    {
-        auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-        for (uint32_t cascadeIndex = 0; cascadeIndex < ShadowsComponent::CASCADES_COUNT; cascadeIndex++) {
-
-            auto cascade = shadows->GetCascade(cascadeIndex);
-            shadows->GetRenderPass()->Begin(cascade.frameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, shadows->GetExtent() });
-
-            ShadowsRenderContextUserData userData{
-                cascade.viewMatrix,
-                cascade.projectionMatrix,
-                cascadeIndex,
-            };
-
-            // Default
-            m_defaultShadowsRenderer->PreRender(renderContext, userData);
-
-            for (auto child : m_children) {
-                m_defaultShadowsRenderer->Render(renderContext, child, userData);
-            }
-
-            m_defaultShadowsRenderer->PostRender(renderContext, userData);
-
-            // Terrain
-            //m_terrainShadowsRenderer->PreRender(renderContext, userData);
-
-            //for (auto child : m_children) {
-            //    m_terrainShadowsRenderer->Render(renderContext, child, userData);
-            //}
-
-            //m_terrainShadowsRenderer->PostRender(renderContext, userData);
-
-            // Animation
-            m_animationShadowsRenderer->PreRender(renderContext, userData);
-
-            for (auto child : m_children) {
-                m_animationShadowsRenderer->Render(renderContext, child, userData);
-            }
-
-            m_animationShadowsRenderer->PostRender(renderContext, userData);
-
-            shadows->GetRenderPass()->End(renderContext.defaultCommandBuffer);
-        }
-    }
-
-    void RenderSceneReflection(RenderContext& renderContext)
-    {
-        auto reflectionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
-        reflectionComponent->GetRenderPass()->Begin(reflectionComponent->GetFrameBuffer(), renderContext.defaultCommandBuffer, { { 0, 0 }, { WaterReflection::REFLECTION_WIDTH, WaterReflection::REFLECTION_HEIGHT } });
-
-        const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
-
-        const auto cameraPosition{ cameraComponent->GetPosition() };
-        const auto cameraViewPosition{ cameraComponent->GetPosition() + cameraComponent->GetForwardDirection() };
-        const float cameraPositionOffset{ 2.0f * (cameraPosition.y - WATER_LEVEL) };
-        const float cameraViewOffset{ 2.0f * (WATER_LEVEL - cameraViewPosition.y) };
-
-        const glm::vec3 newCameraPosition{ cameraPosition.x, cameraPosition.y - cameraPositionOffset, cameraPosition.z };
-        const glm::vec3 newCameraViewPosition{ cameraViewPosition.x, cameraViewPosition.y + cameraViewOffset, cameraViewPosition.z };
-        const glm::mat4 viewMatrix = glm::lookAt(newCameraPosition, newCameraViewPosition, cameraComponent->GetUpDirection());
-
-        NormalRenderContextUserData userData{
-            viewMatrix,
-            cameraComponent->GetViewFrustum().CreateProjectionMatrix(WaterReflection::REFLECTION_WIDTH, WaterReflection::REFLECTION_HEIGHT),
-            newCameraPosition,
-            glm::vec4(0.0f, 1.0f, 0.0f, -WATER_LEVEL + WATER_CLIP_PLANE_OFFSET),
-            { WaterReflection::REFLECTION_WIDTH, WaterReflection::REFLECTION_HEIGHT },
-            glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane())
-        };
-
-        // SkyBox
-        m_reflectionSkyBoxRenderer->PreRender(renderContext, userData);
-
-        for (auto child : m_children) {
-            m_reflectionSkyBoxRenderer->Render(renderContext, child, userData);
-        }
-
-        m_reflectionSkyBoxRenderer->PostRender(renderContext, userData);
-
-        // Default
-        m_reflectionDefaultRenderer->PreRender(renderContext, userData);
-
-        for (auto child : m_children) {
-            m_reflectionDefaultRenderer->Render(renderContext, child, userData);
-        }
-
-        m_reflectionDefaultRenderer->PostRender(renderContext, userData);
-
-        // Terrain
-        m_reflectionTerrainRenderer->PreRender(renderContext, userData);
-
-        for (auto child : m_children) {
-            m_reflectionTerrainRenderer->Render(renderContext, child, userData);
-        }
-
-        m_reflectionTerrainRenderer->PostRender(renderContext, userData);
-
-        // Animation
-        m_reflectionAnimationRenderer->PreRender(renderContext, userData);
-
-        for (auto child : m_children) {
-            m_reflectionAnimationRenderer->Render(renderContext, child, userData);
-        }
-
-        m_reflectionAnimationRenderer->PostRender(renderContext, userData);
-
-        reflectionComponent->GetRenderPass()->End(renderContext.defaultCommandBuffer);
-    }
-
-    void RenderSceneRefraction(RenderContext& renderContext)
-    {
-        auto refractionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
-        refractionComponent->GetRenderPass()->Begin(refractionComponent->GetFrameBuffer(), renderContext.defaultCommandBuffer, { { 0, 0 }, { WaterRefraction::REFRACTION_WIDTH, WaterRefraction::REFRACTION_HEIGHT } });
-
-        const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
-
-        NormalRenderContextUserData userData{
-            cameraComponent->LookAt(),
-            cameraComponent->GetViewFrustum().CreateProjectionMatrix(WaterRefraction::REFRACTION_WIDTH, WaterRefraction::REFRACTION_HEIGHT),
-            cameraComponent->GetPosition(),
-            glm::vec4(0.0f, -1.0f, 0.0f, WATER_LEVEL + WATER_CLIP_PLANE_OFFSET),
-            { WaterRefraction::REFRACTION_WIDTH, WaterRefraction::REFRACTION_HEIGHT },
-            glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane())
-        };
-
-        // SkyBox
-        m_refractionSkyBoxRenderer->PreRender(renderContext, userData);
-
-        for (auto child : m_children) {
-            m_refractionSkyBoxRenderer->Render(renderContext, child, userData);
-        }
-
-        m_refractionSkyBoxRenderer->PostRender(renderContext, userData);
-
-        // Default
-        m_refractionDefaultRenderer->PreRender(renderContext, userData);
-
-        for (auto child : m_children) {
-            m_refractionDefaultRenderer->Render(renderContext, child, userData);
-        }
-
-        m_refractionDefaultRenderer->PostRender(renderContext, userData);
-
-        // Terrain
-        m_refractionTerrainRenderer->PreRender(renderContext, userData);
-
-        for (auto child : m_children) {
-            m_refractionTerrainRenderer->Render(renderContext, child, userData);
-        }
-
-        m_refractionTerrainRenderer->PostRender(renderContext, userData);
-
-        // Animation
-        m_refractionAnimationRenderer->PreRender(renderContext, userData);
-
-        for (auto child : m_children) {
-            m_refractionAnimationRenderer->Render(renderContext, child, userData);
-        }
-
-        m_refractionAnimationRenderer->PostRender(renderContext, userData);
-
-        refractionComponent->GetRenderPass()->End(renderContext.defaultCommandBuffer);
-    }
-
-    void RenderScene(RenderContext& renderContext)
-    {
-        m_defaultRenderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, renderContext.fullExtent });
-
-        const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
-
-        NormalRenderContextUserData userData{
-            cameraComponent->LookAt(),
-            cameraComponent->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height),
-            cameraComponent->GetPosition(),
-            DEFAULT_CLIP_PLANE,
-            renderContext.fullExtent,
-            glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane())
-        };
-
-        // SkyBox
-        m_skyboxRenderer->PreRender(renderContext, userData);
-
-        for (auto child : m_children) {
-            m_skyboxRenderer->Render(renderContext, child, userData);
-        }
-
-        m_skyboxRenderer->PostRender(renderContext, userData);
-
-        // Default
-        m_defaultRenderer->PreRender(renderContext, userData);
-
-        for (auto child : m_children) {
-            m_defaultRenderer->Render(renderContext, child, userData);
-        }
-
-        m_defaultRenderer->PostRender(renderContext, userData);
-
-        // Terrain
-        m_terrainRenderer->PreRender(renderContext, userData);
-
-        for (auto child : m_children) {
-            m_terrainRenderer->Render(renderContext, child, userData);
-        }
-
-        m_terrainRenderer->PostRender(renderContext, userData);
-
-        // Animation
-        m_animationRenderer->PreRender(renderContext, userData);
-
-        for (auto child : m_children) {
-            m_animationRenderer->Render(renderContext, child, userData);
-        }
-
-        m_animationRenderer->PostRender(renderContext, userData);
-
-        // Water
-        m_waterRenderer->PreRender(renderContext, userData);
-
-        for (auto child : m_children) {
-            m_waterRenderer->Render(renderContext, child, userData);
-        }
-
-        m_waterRenderer->PostRender(renderContext, userData);
-
-        // Fonts
-        m_fontRenderer->PreRender(renderContext);
-
-        for (auto child : m_children) {
-            m_fontRenderer->Render(renderContext, child);
-        }
-
-        m_fontRenderer->PostRender(renderContext);
-
-        m_defaultRenderPass->End(renderContext.defaultCommandBuffer);
-    }
-
-    void InitRenderers()
-    {
-        auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>(TagSet{ TAG_SHADOW });
-        m_defaultShadowsRenderer = std::make_unique<DefaultShadowsRenderer>(shadowsComponent->GetRenderPass());
-        m_defaultShadowsRenderer->Init();
-
-        m_terrainShadowsRenderer = std::make_unique<TerrainShadowsRenderer>(shadowsComponent->GetRenderPass());
-        m_terrainShadowsRenderer->Init();
-
-        m_animationShadowsRenderer = std::make_unique<AnimationShadowsRenderer>(shadowsComponent->GetRenderPass());
-        m_animationShadowsRenderer->Init();
-
-        m_skyboxRenderer = std::make_unique<SkyBoxRenderer>(m_defaultRenderPass);
-        m_skyboxRenderer->Init();
-
-        m_defaultRenderer = std::make_unique<DefaultRenderer>(m_defaultRenderPass);
-        m_defaultRenderer->Init();
-
-        m_terrainRenderer = std::make_unique<TerrainRenderer>(m_defaultRenderPass);
-        m_terrainRenderer->Init();
-
-        m_animationRenderer = std::make_unique<AnimationRenderer>(m_defaultRenderPass);
-        m_animationRenderer->Init();
-
-        m_waterRenderer = std::make_unique<WaterRenderer>(m_defaultRenderPass);
-        m_waterRenderer->Init();
-
-        m_fontRenderer = std::make_unique<FontRenderer>(m_defaultRenderPass);
-        m_fontRenderer->Init();
-
-        m_shadowMapDebugRenderer = std::make_unique<ShadowMapDebugRenderer>(m_defaultRenderPass);
-        m_shadowMapDebugRenderer->Init();
-
-        m_textureDebugRenderer = std::make_unique<TextureDebugRenderer>(m_defaultRenderPass);
-        m_textureDebugRenderer->Init();
-
-        auto reflectionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
-        m_reflectionSkyBoxRenderer = std::make_unique<SkyBoxRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionSkyBoxRenderer->Init();
-
-        m_reflectionDefaultRenderer = std::make_unique<DefaultRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionDefaultRenderer->Init();
-
-        m_reflectionTerrainRenderer = std::make_unique<TerrainRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionTerrainRenderer->Init();
-
-        m_reflectionAnimationRenderer = std::make_unique<AnimationRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionAnimationRenderer->Init();
-
-        auto refractionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
-        m_refractionSkyBoxRenderer = std::make_unique<SkyBoxRenderer>(refractionComponent->GetRenderPass());
-        m_refractionSkyBoxRenderer->Init();
-
-        m_refractionDefaultRenderer = std::make_unique<DefaultRenderer>(refractionComponent->GetRenderPass());
-        m_refractionDefaultRenderer->Init();
-
-        m_refractionTerrainRenderer = std::make_unique<TerrainRenderer>(refractionComponent->GetRenderPass());
-        m_refractionTerrainRenderer->Init();
-
-        m_refractionAnimationRenderer = std::make_unique<AnimationRenderer>(refractionComponent->GetRenderPass());
-        m_refractionAnimationRenderer->Init();
-    }
-
-    void ShutDownRenderers()
-    {
-        m_refractionAnimationRenderer->ShutDown();
-        m_refractionTerrainRenderer->ShutDown();
-        m_refractionDefaultRenderer->ShutDown();
-        m_reflectionSkyBoxRenderer->ShutDown();
-
-        m_reflectionAnimationRenderer->ShutDown();
-        m_reflectionTerrainRenderer->ShutDown();
-        m_reflectionDefaultRenderer->ShutDown();
-        m_reflectionSkyBoxRenderer->ShutDown();
-
-        m_textureDebugRenderer->ShutDown();
-        m_shadowMapDebugRenderer->ShutDown();
-        m_fontRenderer->ShutDown();
-        m_waterRenderer->ShutDown();
-        m_animationRenderer->ShutDown();
-        m_terrainRenderer->ShutDown();
-        m_defaultRenderer->ShutDown();
-        m_skyboxRenderer->ShutDown();
-
-        m_animationShadowsRenderer->ShutDown();
-        m_terrainShadowsRenderer->ShutDown();
-        m_defaultShadowsRenderer->ShutDown();
     }
 
 private:
