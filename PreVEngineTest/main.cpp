@@ -1929,8 +1929,10 @@ private:
 
 class Water : public AbstractSceneNode<SceneNodeFlags> {
 public:
-    Water()
+    Water(const int x, const int z)
         : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_RENDER_COMPONENT })
+        , m_x(x)
+        , m_z(z)
     {
     }
 
@@ -1940,15 +1942,9 @@ public:
     void Init() override
     {
         WaterComponentFactory componentFactory{};
-        m_waterComponent = std::move(componentFactory.Create());
+        m_waterComponent = std::move(componentFactory.Create(m_x, m_z));
 
         ComponentRepository<IWaterComponent>::GetInstance().Add(m_id, m_waterComponent);
-
-        auto waterReflection = std::make_shared<WaterReflection>();
-        AddChild(waterReflection);
-
-        auto waterRefraction = std::make_shared<WaterRefraction>();
-        AddChild(waterRefraction);
 
         AbstractSceneNode::Init();
     }
@@ -1957,7 +1953,7 @@ public:
     {
         m_waterComponent->Update(deltaTime);
 
-        SetPosition(glm::vec3(WATER_TILE_SIZE, WATER_LEVEL, WATER_TILE_SIZE));
+        SetPosition(m_waterComponent->GetPosition());
         SetScale(glm::vec3(WATER_TILE_SIZE));
 
         AbstractSceneNode::Update(deltaTime);
@@ -1971,7 +1967,57 @@ public:
     }
 
 private:
+    const int m_x;
+
+    const int m_z;
+
     std::shared_ptr<IWaterComponent> m_waterComponent;
+};
+
+class WaterManager : public AbstractSceneNode<SceneNodeFlags> {
+private:
+    const int m_gridMaxX;
+
+    const int m_gridMaxZ;
+
+public:
+    WaterManager(const int maxX, const int maxZ)
+        : AbstractSceneNode(glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1.0f))
+        , m_gridMaxX(maxX)
+        , m_gridMaxZ(maxZ)
+    {
+    }
+
+    virtual ~WaterManager() = default;
+
+public:
+    void Init() override
+    {
+        for (int x = 0; x < m_gridMaxX; x++) {
+            for (int z = 0; z < m_gridMaxZ; z++) {
+                auto terrain = std::make_shared<Water>(x, z);
+                AddChild(terrain);
+            }
+        }
+
+        auto waterReflection = std::make_shared<WaterReflection>();
+        AddChild(waterReflection);
+
+        auto waterRefraction = std::make_shared<WaterRefraction>();
+        AddChild(waterRefraction);
+
+        AbstractSceneNode::Init();
+    }
+
+    void Update(float deltaTime) override
+    {
+        AbstractSceneNode::Update(deltaTime);
+    }
+
+    void ShutDown() override
+    {
+        AbstractSceneNode::ShutDown();
+    }
 };
 
 class Shadows : public AbstractSceneNode<SceneNodeFlags> {
@@ -3852,9 +3898,6 @@ public:
             }
         }
 
-        //auto groundPlane = std::make_shared<Plane>(glm::vec3(0.0f, 0.0f, 0.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(12.0f), "cement.jpg");
-        //AddChild(groundPlane);
-
         auto goblin = std::make_shared<Goblin>(glm::vec3(-25.0f, 9.0f, 0.0f), glm::quat(glm::radians(glm::vec3(-90.0f, 0.0f, 0.0f))), glm::vec3(0.005f));
         goblin->SetTags({ TAG_MAIN_CAMERA });
         AddChild(goblin);
@@ -3865,7 +3908,7 @@ public:
         auto terrainManager = std::make_shared<TerrainManager>(1, 1);
         AddChild(terrainManager);
 
-        auto water = std::make_shared<Water>();
+        auto water = std::make_shared<WaterManager>(1, 1);
         AddChild(water);
 
         for (auto child : m_children) {

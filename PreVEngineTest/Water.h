@@ -8,54 +8,6 @@ static const float WATER_LEVEL = -5.0f;
 static const float WATER_CLIP_PLANE_OFFSET = 0.05f;
 static const float WATER_WAVE_SPEED = 0.03f;
 
-class WaterTile {
-private:
-    float m_height;
-
-    float m_x, m_z;
-
-public:
-    explicit WaterTile(const float centerX, const float centerZ, const float height)
-        : m_x(centerX)
-        , m_z(centerZ)
-        , m_height(height)
-    {
-    }
-
-    virtual ~WaterTile() = default;
-
-public:
-    float GetHeight() const
-    {
-        return m_height;
-    }
-
-    void SetHeight(const float height)
-    {
-        m_height = height;
-    }
-
-    float GetX() const
-    {
-        return m_x;
-    }
-
-    void SetX(const float x)
-    {
-        m_x = x;
-    }
-
-    float GetZ() const
-    {
-        return m_z;
-    }
-
-    float SetZ(const float z)
-    {
-        m_z = z;
-    }
-};
-
 class WaterTileMesh : public IMesh {
 public:
     const VertexLayout& GetVertextLayout() const override
@@ -260,15 +212,27 @@ public:
 
     virtual float GetMoveFactor() const = 0;
 
+    virtual const glm::vec3& GetPosition() const = 0;
+
+    virtual int GetGridX() const = 0;
+
+    virtual int GetGridZ() const = 0;
+
 public:
     virtual ~IWaterComponent() = default;
 };
 
-class WaterComponentFactory;
-
 class WaterComponent : public IWaterComponent {
 public:
-    WaterComponent() = default;
+    WaterComponent(const int gridX, const int gridZ, const std::shared_ptr<IMaterial>& material, const std::shared_ptr<IModel>& model)
+        : m_gridX(gridX)
+        , m_gridZ(gridZ)
+        , m_position(glm::vec3(gridX * 2 * WATER_TILE_SIZE + WATER_TILE_SIZE, WATER_LEVEL, gridZ * 2 * WATER_TILE_SIZE + WATER_TILE_SIZE))
+        , m_material(material)
+        , m_model(model)
+        , m_moveFactor(0.0f)
+    {
+    }
 
     ~WaterComponent() = default;
 
@@ -289,25 +253,43 @@ public:
         m_moveFactor = std::fmodf(m_moveFactor, 1.0f);
     }
 
-    virtual float GetMoveFactor() const override
+    float GetMoveFactor() const override
     {
         return m_moveFactor;
     }
 
-private:
-    friend class WaterComponentFactory;
+    const glm::vec3& GetPosition() const override
+    {
+        return m_position;
+    }
+
+    int GetGridX() const override
+    {
+        return m_gridX;
+    }
+
+    int GetGridZ() const override
+    {
+        return m_gridZ;
+    }
 
 private:
+    const int m_gridX;
+
+    const int m_gridZ;
+
+    const glm::vec3 m_position;
+
     std::shared_ptr<IMaterial> m_material;
 
     std::shared_ptr<IModel> m_model;
 
-    float m_moveFactor{ 0.0f };
+    float m_moveFactor;
 };
 
 class WaterComponentFactory {
 public:
-    std::unique_ptr<IWaterComponent> Create() const
+    std::unique_ptr<IWaterComponent> Create(const int x, const int z) const
     {
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
@@ -315,10 +297,10 @@ public:
         const std::string dudvMapPath{ "waterDUDV.png" };
         const std::string normalMapPath{ "matchingNormalMap.png" };
 
-        auto waterComponent = std::make_unique<WaterComponent>();
-        waterComponent->m_material = CreateMaterial(*allocator, waterColor, dudvMapPath, normalMapPath, 1.0f, 0.4f);
-        waterComponent->m_model = CreateModel(*allocator);
-        return waterComponent;
+        auto material = CreateMaterial(*allocator, waterColor, dudvMapPath, normalMapPath, 1.0f, 0.4f);
+        auto model = CreateModel(*allocator);
+
+        return std::make_unique<WaterComponent>(x, z, std::move(material), std::move(model));
     }
 
     std::unique_ptr<IWaterOffscreenRenderPassComponent> CreateOffScreenComponent(const uint32_t w, const uint32_t h) const
