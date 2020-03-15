@@ -294,8 +294,8 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         const glm::vec4 waterColor{ 0.0f, 0.3f, 0.5f, 1.0f };
-        const std::string dudvMapPath{ "waterDUDV.png" };
-        const std::string normalMapPath{ "matchingNormalMap.png" };
+        const std::string dudvMapPath{ "./Assets/Textures/waterDUDV.png" };
+        const std::string normalMapPath{ "./Assets/Textures/matchingNormalMap.png" };
 
         auto material = CreateMaterial(*allocator, waterColor, dudvMapPath, normalMapPath, 1.0f, 0.4f);
         auto model = CreateModel(*allocator);

@@ -123,12 +123,12 @@ public:
     std::unique_ptr<ISkyBoxComponent> Create() const
     {
         const std::vector<std::string> materialPaths = {
-            "SkyBoxes/Sky/right.png",
-            "SkyBoxes/Sky/left.png",
-            "SkyBoxes/Sky/top.png",
-            "SkyBoxes/Sky/top.png",
-            "SkyBoxes/Sky/back.png",
-            "SkyBoxes/Sky/front.png",
+            "./Assets/SkyBoxes/Sky/right.png",
+            "./Assets/SkyBoxes/Sky/left.png",
+            "./Assets/SkyBoxes/Sky/top.png",
+            "./Assets/SkyBoxes/Sky/top.png",
+            "./Assets/SkyBoxes/Sky/back.png",
+            "./Assets/SkyBoxes/Sky/front.png",
         };
 
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();

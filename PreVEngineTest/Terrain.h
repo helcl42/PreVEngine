@@ -347,10 +347,10 @@ public:
         const auto heightGenerator = std::make_shared<HeightGenerator>(x, z, m_vertexCount, m_seed);
 
         const std::string materialPaths[] = {
-            "fungus.png",
-            "sand_grass.png",
-            "rock.png",
-            "sand.png"
+            "./Assets/Textures/fungus.png",
+            "./Assets/Textures/sand_grass.png",
+            "./Assets/Textures/rock.png",
+            "./Assets/Textures/sand.png"
         };
 
         auto result = std::make_unique<TerrainComponent>(x, z);

@@ -36,4 +36,4 @@ endif()
 #-------------------------------------------
 
 #  Copy all files from ./Assets to the binary directory.
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/Assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/Assets/")

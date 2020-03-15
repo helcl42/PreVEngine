@@ -271,19 +271,17 @@ private:
         state.imageHeight = metaDataFile.GetValueAsInt("scaleH");
     }
 
-    void ExtractImageFIle(MetaDataFile& metaDataFile, const std::string& metadataFilePath, std::shared_ptr<Image>& image, std::shared_ptr<ImageBuffer>& imageBuffer) const
+    void ExtractImageFIle(const std::string& textureFilePath, std::shared_ptr<Image>& image, std::shared_ptr<ImageBuffer>& imageBuffer) const
     {
-        metaDataFile.MoveToNextLine();
-
-        const auto imagePath = StringUtils::Replace(metaDataFile.GetValueAsString("file"), "\"", "");
         ImageFactory imageFactory;
-        image = imageFactory.CreateImage(imagePath);
+        image = imageFactory.CreateImage(textureFilePath);
         imageBuffer = std::make_unique<ImageBuffer>(*AllocatorProvider::GetInstance().GetAllocator());
         imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
     }
 
     void ExtractCharactersData(MetaDataFile& metaDataFile, FontMetaDataState& state, std::map<int, Character>& characters) const
     {
+        metaDataFile.MoveToNextLine();
         metaDataFile.MoveToNextLine();
 
         int charactersCount = metaDataFile.GetValueAsInt("count");
@@ -317,7 +315,7 @@ private:
     }
 
 public:
-    std::unique_ptr<FontMetadata> CreateFontMetadata(const std::string& metadataFilePath, const int desiredPadding = 0, const float aspectRatio = 16.0f / 9.0f) const
+    std::unique_ptr<FontMetadata> CreateFontMetadata(const std::string& metadataFilePath, const std::string& textureFilePath, const int desiredPadding = 0, const float aspectRatio = 16.0f / 9.0f) const
     {
         MetaDataFile metaDataFile{ metadataFilePath };
 
@@ -331,7 +329,7 @@ public:
 
         std::shared_ptr<Image> image;
         std::shared_ptr<ImageBuffer> imagwBuffer;
-        ExtractImageFIle(metaDataFile, metadataFilePath, image, imagwBuffer);
+        ExtractImageFIle(textureFilePath, image, imagwBuffer);
 
         ExtractCharactersData(metaDataFile, state, characterMetaData);
 
@@ -895,10 +893,10 @@ public:
 
 class FontRenderComponentsFactory {
 public:
-    std::unique_ptr<IFontRenderComponent> Create(const std::string& fontPaht) const
+    std::unique_ptr<IFontRenderComponent> Create(const std::string& fontPath, const std::string& fontTexture) const
     {
         FontMetadataFactory fontFactory{};
-        auto fontMetaData = fontFactory.CreateFontMetadata(fontPaht);
+        auto fontMetaData = fontFactory.CreateFontMetadata(fontPath, fontTexture);
 
         return std::make_unique<DefaultFontRenderComponent>(std::move(fontMetaData));
     }

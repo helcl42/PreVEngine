@@ -991,13 +991,13 @@ public:
 public:
     void Init() override
     {
-        m_body = std::make_shared<CubeRobotPart>(glm::vec3(0, 35, 0), glm::quat(1, 0, 0, 0), glm::vec3(10, 15, 5), "vulkan.png");
+        m_body = std::make_shared<CubeRobotPart>(glm::vec3(0, 35, 0), glm::quat(1, 0, 0, 0), glm::vec3(10, 15, 5), "./Assets/Textures/vulkan.png");
 
-        m_head = std::make_shared<CubeRobotPart>(glm::vec3(0, 10, 0), glm::quat(1, 0, 0, 0), glm::vec3(5, 5, 5), "texture.jpg");
-        m_leftArm = std::make_shared<CubeRobotPart>(glm::vec3(-8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), "texture.jpg");
-        m_rightArm = std::make_shared<CubeRobotPart>(glm::vec3(8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), "texture.jpg");
-        m_leftLeg = std::make_shared<CubeRobotPart>(glm::vec3(-4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.5, 17.5f, 4.7f), "texture.jpg");
-        m_rightLeg = std::make_shared<CubeRobotPart>(glm::vec3(4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.5, 17.5f, 4.7f), "texture.jpg");
+        m_head = std::make_shared<CubeRobotPart>(glm::vec3(0, 10, 0), glm::quat(1, 0, 0, 0), glm::vec3(5, 5, 5), "./Assets/Textures/texture.jpg");
+        m_leftArm = std::make_shared<CubeRobotPart>(glm::vec3(-8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), "./Assets/Textures/texture.jpg");
+        m_rightArm = std::make_shared<CubeRobotPart>(glm::vec3(8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), "./Assets/Textures/texture.jpg");
+        m_leftLeg = std::make_shared<CubeRobotPart>(glm::vec3(-4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.5, 17.5f, 4.7f), "./Assets/Textures/texture.jpg");
+        m_rightLeg = std::make_shared<CubeRobotPart>(glm::vec3(4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.5, 17.5f, 4.7f), "./Assets/Textures/texture.jpg");
 
         m_body->AddChild(m_head);
         m_body->AddChild(m_leftArm);
@@ -1275,7 +1275,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         RenderComponentFactory renderComponentFactory{};
-        m_animatonRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(*allocator, "goblin.dae", "goblin_texture.png", true, true);
+        m_animatonRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(*allocator, "./Assets/Models/Goblin/goblin.dae", "./Assets/Models/Goblin/goblin_texture.png", true, true);
         ComponentRepository<IAnimationRenderComponent>::GetInstance().Add(m_id, m_animatonRenderComponent);
 
         CameraComponentFactory cameraFactory{};
@@ -1659,7 +1659,7 @@ public:
     void Init() override
     {
         FontRenderComponentsFactory factory{};
-        m_fontComponent = factory.Create("verdana.fnt");
+        m_fontComponent = factory.Create("./Assets/Fonts/verdana.fnt", "./Assets/Fonts/verdana.png");
 
         ComponentRepository<IFontRenderComponent>::GetInstance().Add(m_id, m_fontComponent);
 
@@ -2136,7 +2136,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<DefaultShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/default_shadows_vert.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<DefaultShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "./Assets/Shaders/default_shadows_vert.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(300);
 
         printf("Shadows Shader created\n");
@@ -2241,7 +2241,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<TerrainShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/terrain_shadows_vert.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<TerrainShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "./Assets/Shaders/terrain_shadows_vert.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(300);
 
         printf("Terrain Shadows Shader created\n");
@@ -2345,7 +2345,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<AnimatedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/animation_shadows_vert.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<AnimatedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "./Assets/Shaders/animation_shadows_vert.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Shadows Shader created\n");
@@ -2460,7 +2460,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<ShadowMapDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/shadow_map_debug_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "Shaders/shadow_map_debug_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<ShadowMapDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "./Assets/Shaders/shadow_map_debug_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "./Assets/Shaders/shadow_map_debug_frag.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("ShadowMapDebug Shader created\n");
@@ -2588,7 +2588,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<TextureDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/texture_debug_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "Shaders/texture_debug_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<TextureDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "./Assets/Shaders/texture_debug_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "./Assets/Shaders/texture_debug_frag.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Texture Debug Shader created\n");
@@ -2772,7 +2772,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<DefaultShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/default_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "Shaders/default_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<DefaultShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "./Assets/Shaders/default_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "./Assets/Shaders/default_frag.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Default Shader created\n");
@@ -2993,7 +2993,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<AnimationShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/animation_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "Shaders/animation_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<AnimationShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "./Assets/Shaders/animation_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "./Assets/Shaders/animation_frag.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Animaition Shader created\n");
@@ -3217,7 +3217,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<TerrainShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/terrain_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "Shaders/terrain_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<TerrainShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "./Assets/Shaders/terrain_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "./Assets/Shaders/terrain_frag.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Terrain Shader created\n");
@@ -3393,7 +3393,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<FonttShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/font_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "Shaders/font_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<FonttShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "./Assets/Shaders/font_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "./Assets/Shaders/font_frag.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Fonts Shader created\n");
@@ -3522,7 +3522,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<SkyBoxShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/skybox_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "Shaders/skybox_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<SkyBoxShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "./Assets/Shaders/skybox_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "./Assets/Shaders/skybox_frag.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Skybox Shader created\n");
@@ -3682,7 +3682,7 @@ public:
         auto allocator = AllocatorProvider::GetInstance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<WaterShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "Shaders/water_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "Shaders/water_frag.spv" } });
+        m_shader = shaderFactory.CreateShaderFromFiles<WaterShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, "./Assets/Shaders/water_vert.spv" }, { VK_SHADER_STAGE_FRAGMENT_BIT, "./Assets/Shaders/water_frag.spv" } });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
         printf("Water Shader created\n");
@@ -3881,7 +3881,7 @@ public:
         //freeCamera->SetTags({ TAG_MAIN_CAMERA });
         AddChild(freeCamera);
 
-        auto camRobot = std::make_shared<CubeRobot>(glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), "texture.jpg");
+        auto camRobot = std::make_shared<CubeRobot>(glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), "./Assets/Textures/texture.jpg");
         freeCamera->AddChild(camRobot);
 
         const int32_t MAX_GENERATED_HEIGHT = 1;
@@ -3890,7 +3890,7 @@ public:
         for (int32_t i = 0; i <= MAX_GENERATED_HEIGHT; i++) {
             for (int32_t j = 0; j <= MAX_GENERATED_HEIGHT; j++) {
                 for (int32_t k = 0; k <= MAX_GENERATED_HEIGHT; k++) {
-                    auto robot = std::make_shared<CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), "texture.jpg");
+                    auto robot = std::make_shared<CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), "./Assets/Textures/texture.jpg");
                     AddChild(robot);
                 }
             }
@@ -4320,7 +4320,7 @@ private:
         const auto j = dis(gen);
         const auto k = dis(gen);
 
-        auto robot = std::make_shared<CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), "texture.jpg");
+        auto robot = std::make_shared<CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), "./Assets/Textures/texture.jpg");
         robot->Init();
         AddChild(robot);
     }
