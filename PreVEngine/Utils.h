@@ -194,11 +194,11 @@ public:
 
     static std::vector<std::string> Split(const std::string& s, const std::string& t)
     {
-        std::string copy = s;
+        std::string copy{ s };
         std::vector<std::string> res;
         while (true) {
             size_t pos = copy.find(t);
-            if (pos == -1) {
+            if (pos == std::string::npos) {
                 res.push_back(copy);
                 break;
             }
@@ -210,11 +210,11 @@ public:
 
     static std::vector<std::wstring> Split(const std::wstring& s, const std::wstring& t)
     {
-        std::wstring copy = s;
+        std::wstring copy{ s };
         std::vector<std::wstring> res;
         while (true) {
             size_t pos = copy.find(t);
-            if (pos == -1) {
+            if (pos == std::string::npos) {
                 res.push_back(copy);
                 break;
             }
@@ -226,24 +226,24 @@ public:
 
     static std::string Replace(const std::string& subject, const std::string& search, const std::string& replace)
     {
-        std::string copy = subject;
+        std::string copy{ subject };
         size_t pos = 0;
         while ((pos = copy.find(search, pos)) != std::string::npos) {
             copy.replace(pos, search.length(), replace);
             pos += replace.length();
         }
-        return std::string(copy);
+        return copy;
     }
 
     static std::wstring Replace(const std::wstring& subject, const std::wstring& search, const std::wstring& replace)
     {
-        std::wstring copy = subject;
+        std::wstring copy{ subject };
         size_t pos = 0;
         while ((pos = copy.find(search, pos)) != std::wstring::npos) {
             copy.replace(pos, search.length(), replace);
             pos += replace.length();
         }
-        return std::wstring(copy);
+        return copy;
     }
 };
 
