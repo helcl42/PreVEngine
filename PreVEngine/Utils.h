@@ -227,7 +227,7 @@ public:
     static std::string Replace(const std::string& subject, const std::string& search, const std::string& replace)
     {
         std::string copy{ subject };
-        size_t pos = 0;
+        size_t pos{ 0 };
         while ((pos = copy.find(search, pos)) != std::string::npos) {
             copy.replace(pos, search.length(), replace);
             pos += replace.length();
@@ -238,7 +238,7 @@ public:
     static std::wstring Replace(const std::wstring& subject, const std::wstring& search, const std::wstring& replace)
     {
         std::wstring copy{ subject };
-        size_t pos = 0;
+        size_t pos{ 0 };
         while ((pos = copy.find(search, pos)) != std::wstring::npos) {
             copy.replace(pos, search.length(), replace);
             pos += replace.length();
