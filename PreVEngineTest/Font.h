@@ -36,7 +36,7 @@ private:
 public:
     explicit Character() = default;
 
-    explicit Character(int id, const glm::vec2& textureCoord, const glm::vec2& texSize, const glm::vec2& offset, const glm::vec2& size, float xAdvance)
+    explicit Character(const int id, const glm::vec2& textureCoord, const glm::vec2& texSize, const glm::vec2& offset, const glm::vec2& size, const float xAdvance)
         : m_id(id)
         , m_textureCoords(textureCoord)
         , m_maxTextureCoords(texSize + textureCoord)
@@ -54,22 +54,22 @@ public:
         return m_id;
     }
 
-    glm::vec2 GetTextureCoords() const
+    const glm::vec2& GetTextureCoords() const
     {
         return m_textureCoords;
     }
 
-    glm::vec2 GetMaxTextureCoords() const
+    const glm::vec2& GetMaxTextureCoords() const
     {
         return m_maxTextureCoords;
     }
 
-    glm::vec2 GetOffset() const
+    const glm::vec2& GetOffset() const
     {
         return m_offset;
     }
 
-    glm::vec2 GetSize() const
+    const glm::vec2& GetSize() const
     {
         return m_size;
     }
@@ -108,6 +108,11 @@ public:
     float GetSpaceWidth() const
     {
         return m_spaceWidth;
+    }
+
+    float GetFontSizeScaledSpaceWidth(const float fontSize)
+    {
+        return m_spaceWidth * fontSize;
     }
 
     std::shared_ptr<Image> GetImage() const
@@ -271,7 +276,7 @@ private:
         state.imageHeight = metaDataFile.GetValueAsInt("scaleH");
     }
 
-    void ExtractImageFIle(const std::string& textureFilePath, std::shared_ptr<Image>& image, std::shared_ptr<ImageBuffer>& imageBuffer) const
+    void CreateImage(const std::string& textureFilePath, std::shared_ptr<Image>& image, std::shared_ptr<ImageBuffer>& imageBuffer) const
     {
         ImageFactory imageFactory;
         image = imageFactory.CreateImage(textureFilePath);
@@ -300,17 +305,17 @@ private:
 
     Character CreateSingleCharacter(MetaDataFile& metaDataFile, const FontMetaDataState& state, const int charCode) const
     {
-        float xTex = ((float)metaDataFile.GetValueAsInt("x") + (state.padding[PADDING_LEFT_INDEX] - state.desiredPadding)) / state.imageWidth;
-        float yTex = ((float)metaDataFile.GetValueAsInt("y") + (state.padding[PADDING_TOP_INDEX] - state.desiredPadding)) / state.imageWidth;
-        int width = metaDataFile.GetValueAsInt("width") - (state.paddingWidth - (2 * state.desiredPadding));
-        int height = metaDataFile.GetValueAsInt("height") - ((state.paddingHeight) - (2 * state.desiredPadding));
-        float quadWidth = width * state.horizontalPerPixelSize;
-        float quadHeight = height * state.verticalPerPixelSize;
-        float xTexSize = (float)width / state.imageWidth;
-        float yTexSize = (float)height / state.imageWidth;
-        float xOff = (metaDataFile.GetValueAsInt("xoffset") + state.padding[PADDING_LEFT_INDEX] - state.desiredPadding) * state.horizontalPerPixelSize;
-        float yOff = (metaDataFile.GetValueAsInt("yoffset") + (state.padding[PADDING_TOP_INDEX] - state.desiredPadding)) * state.verticalPerPixelSize;
-        float xAdvance = (metaDataFile.GetValueAsInt("xadvance") - state.paddingWidth) * state.horizontalPerPixelSize;
+        const float xTex = (static_cast<float>(metaDataFile.GetValueAsInt("x")) + (state.padding[PADDING_LEFT_INDEX] - state.desiredPadding)) / state.imageWidth;
+        const float yTex = (static_cast<float>(metaDataFile.GetValueAsInt("y")) + (state.padding[PADDING_TOP_INDEX] - state.desiredPadding)) / state.imageWidth;
+        const int width = metaDataFile.GetValueAsInt("width") - (state.paddingWidth - (2 * state.desiredPadding));
+        const int height = metaDataFile.GetValueAsInt("height") - ((state.paddingHeight) - (2 * state.desiredPadding));
+        const float quadWidth = width * state.horizontalPerPixelSize;
+        const float quadHeight = height * state.verticalPerPixelSize;
+        const float xTexSize = static_cast<float>(width) / state.imageWidth;
+        const float yTexSize = static_cast<float>(height) / state.imageWidth;
+        const float xOff = (metaDataFile.GetValueAsInt("xoffset") + state.padding[PADDING_LEFT_INDEX] - state.desiredPadding) * state.horizontalPerPixelSize;
+        const float yOff = (metaDataFile.GetValueAsInt("yoffset") + (state.padding[PADDING_TOP_INDEX] - state.desiredPadding)) * state.verticalPerPixelSize;
+        const float xAdvance = (metaDataFile.GetValueAsInt("xadvance") - state.paddingWidth) * state.horizontalPerPixelSize;
         return Character(charCode, glm::vec2(xTex, yTex), glm::vec2(xTexSize, yTexSize), glm::vec2(xOff, yOff), glm::vec2(quadWidth, quadHeight), xAdvance);
     }
 
@@ -318,8 +323,6 @@ public:
     std::unique_ptr<FontMetadata> CreateFontMetadata(const std::string& metadataFilePath, const std::string& textureFilePath, const int desiredPadding = 0, const float aspectRatio = 16.0f / 9.0f) const
     {
         MetaDataFile metaDataFile{ metadataFilePath };
-
-        std::map<int, Character> characterMetaData{};
 
         FontMetaDataState state{};
         state.desiredPadding = desiredPadding;
@@ -329,8 +332,9 @@ public:
 
         std::shared_ptr<Image> image;
         std::shared_ptr<ImageBuffer> imagwBuffer;
-        ExtractImageFIle(textureFilePath, image, imagwBuffer);
+        CreateImage(textureFilePath, image, imagwBuffer);
 
+        std::map<int, Character> characterMetaData{};
         ExtractCharactersData(metaDataFile, state, characterMetaData);
 
         std::unique_ptr<FontMetadata> metaData = std::make_unique<FontMetadata>();
@@ -347,19 +351,18 @@ class Word {
 private:
     std::vector<Character> m_characters;
 
-    float m_width = 0;
-
     float m_fontSize;
+
+    float m_width;
 
 public:
     explicit Word(const float fontSize)
         : m_fontSize(fontSize)
+        , m_width(0)
     {
     }
 
-    virtual ~Word()
-    {
-    }
+    virtual ~Word() = default;
 
 public:
     void AddCharacter(const Character& character)
@@ -388,16 +391,17 @@ class TextLine {
 private:
     float m_maxLength;
 
-    float m_spaceSize;
+    float m_spaceWidth;
+
+    float m_currentLength;
 
     std::vector<Word> m_words;
 
-    float m_currentLength = 0;
-
 public:
-    explicit TextLine(float spaceWidth, float fontSize, float maxLength)
+    explicit TextLine(const float maxLength, const float spaceWidth)
         : m_maxLength(maxLength)
-        , m_spaceSize(spaceWidth * fontSize)
+        , m_spaceWidth(spaceWidth)
+        , m_currentLength(0)
     {
     }
 
@@ -406,8 +410,7 @@ public:
 public:
     bool AttemptToAddWord(const Word& word)
     {
-        float additionalLength = word.GetWordWidth();
-        additionalLength += !m_words.empty() ? m_spaceSize : 0;
+        const float additionalLength = word.GetWordWidth() + (m_words.empty() ? 0 : m_spaceWidth);
         if (m_currentLength + additionalLength <= m_maxLength) {
             m_words.push_back(word);
             m_currentLength += additionalLength;
@@ -462,8 +465,7 @@ protected:
 
 public:
     explicit BaseFancyText(const std::wstring& text, float fontSize, const glm::vec4& color, float maxLineLength, bool centered, float width, float edge)
-        :
-        m_textString(text)
+        : m_textString(text)
         , m_fontSize(fontSize)
         , m_color(color)
         , m_lineMaxSize(maxLineLength)
@@ -712,23 +714,23 @@ public:
 private:
     void CreateStructure(const std::shared_ptr<BaseFancyText>& text, const std::shared_ptr<FontMetadata> fontMetaData, std::vector<TextLine>& lines) const
     {
-        TextLine currentLine{ fontMetaData->GetSpaceWidth(), text->GetFontSize(), text->GetMaxLineSize() };
+        TextLine currentLine{ text->GetMaxLineSize(), fontMetaData->GetFontSizeScaledSpaceWidth(text->GetFontSize()) };
         Word currentWord{ text->GetFontSize() };
         for (auto c : text->GetTextString()) {
-            int charCode = (int)c;
+            const int charCode = static_cast<int>(c);
             if (charCode == FontMetadata::SPACE_CODE) {
-                bool added = currentLine.AttemptToAddWord(currentWord);
+                const bool added = currentLine.AttemptToAddWord(currentWord);
                 if (!added) {
                     lines.push_back(currentLine);
-                    currentLine = TextLine{ fontMetaData->GetSpaceWidth(), text->GetFontSize(), text->GetMaxLineSize() };
+                    currentLine = TextLine{ text->GetMaxLineSize(), fontMetaData->GetFontSizeScaledSpaceWidth(text->GetFontSize()) };
                     currentLine.AttemptToAddWord(currentWord);
                 }
                 currentWord = Word{ text->GetFontSize() };
                 continue;
             } else if (charCode == FontMetadata::NEW_LINE_CODE) {
-                bool added = currentLine.AttemptToAddWord(currentWord);
+                const bool added = currentLine.AttemptToAddWord(currentWord);
                 lines.push_back(currentLine);
-                currentLine = TextLine{ fontMetaData->GetSpaceWidth(), text->GetFontSize(), text->GetMaxLineSize() };
+                currentLine = TextLine{ text->GetMaxLineSize(), fontMetaData->GetFontSizeScaledSpaceWidth(text->GetFontSize()) };
                 if (!added) {
                     currentLine.AttemptToAddWord(currentWord);
                 }
@@ -747,10 +749,10 @@ private:
 
     void CompleteStructure(const std::shared_ptr<BaseFancyText>& text, const std::shared_ptr<FontMetadata> fontMetaData, std::vector<TextLine>& lines, TextLine& currentLine, Word& currentWord) const
     {
-        bool added = currentLine.AttemptToAddWord(currentWord);
+        const bool added = currentLine.AttemptToAddWord(currentWord);
         if (!added) {
             lines.push_back(currentLine);
-            currentLine = TextLine{ fontMetaData->GetSpaceWidth(), text->GetFontSize(), text->GetMaxLineSize() };
+            currentLine = TextLine{ text->GetMaxLineSize(), fontMetaData->GetFontSizeScaledSpaceWidth(text->GetFontSize()) };
             currentLine.AttemptToAddWord(currentWord);
         }
         lines.push_back(currentLine);
@@ -802,10 +804,10 @@ private:
     void AddQuadData(const float x, const float y, const float maxX, const float maxY, std::vector<glm::vec2>& vertices) const
     {
         const glm::vec2 planeVertices[] = {
-            glm::vec2{ x, y },
-            glm::vec2{ maxX, y },
-            glm::vec2{ maxX, maxY },
-            glm::vec2{ x, maxY }
+            { x, y },
+            { maxX, y },
+            { maxX, maxY },
+            { x, maxY }
         };
 
         for (uint32_t i = 0; i < 4; i++) {
