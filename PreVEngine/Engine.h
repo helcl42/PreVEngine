@@ -5,19 +5,17 @@
 
 namespace PreVEngine {
 struct EngineConfig {
-    // general
-    bool validation = true;
+    bool validation{ true };
 
-    // window
-    std::string appName = "PreVEngine - Demo";
+    std::string appName{ "PreVEngine - Demo" };
 
-    bool fullScreen = false;
+    bool fullScreen{ false };
 
-    Size windowSize = { 1920, 1080 };
+    Size windowSize{ 1920, 1080 };
 
-    Position windowPosition = { 40, 40 };
+    Position windowPosition{ 40, 40 };
 
-    std::shared_ptr<SceneConfig> sceneCongig = std::make_shared<SceneConfig>();
+    std::shared_ptr<SceneConfig> sceneCongig{ std::make_shared<SceneConfig>() };
 };
 
 template <typename NodeFlagsType>

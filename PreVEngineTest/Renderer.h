@@ -413,7 +413,7 @@ public:
         auto quadMesh = std::make_shared<QuadMesh>();
 
         auto vertexBuffer = std::make_shared<VBO>(*allocator);
-        vertexBuffer->Data(quadMesh->GetVertices(), quadMesh->GerVerticesCount(), quadMesh->GetVertextLayout().GetStride());
+        vertexBuffer->Data(quadMesh->GetVertices(), quadMesh->GerVerticesCount(), quadMesh->GetVertexLayout().GetStride());
 
         auto indexBuffer = std::make_shared<IBO>(*allocator);
         indexBuffer->Data(quadMesh->GerIndices().data(), (uint32_t)quadMesh->GerIndices().size());
@@ -541,7 +541,7 @@ public:
         auto quadMesh = std::make_shared<QuadMesh>();
 
         auto vertexBuffer = std::make_shared<VBO>(*allocator);
-        vertexBuffer->Data(quadMesh->GetVertices(), quadMesh->GerVerticesCount(), quadMesh->GetVertextLayout().GetStride());
+        vertexBuffer->Data(quadMesh->GetVertices(), quadMesh->GerVerticesCount(), quadMesh->GetVertexLayout().GetStride());
 
         auto indexBuffer = std::make_shared<IBO>(*allocator);
         indexBuffer->Data(quadMesh->GerIndices().data(), (uint32_t)quadMesh->GerIndices().size());

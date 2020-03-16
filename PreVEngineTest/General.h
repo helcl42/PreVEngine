@@ -364,7 +364,7 @@ public:
 
 class IMesh {
 public:
-    virtual const VertexLayout& GetVertextLayout() const = 0;
+    virtual const VertexLayout& GetVertexLayout() const = 0;
 
     virtual const void* GetVertices() const = 0;
 

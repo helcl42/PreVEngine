@@ -6,7 +6,7 @@
 
 class CubeMeshVerticesOnly : public IMesh {
 public:
-    const VertexLayout& GetVertextLayout() const override
+    const VertexLayout& GetVertexLayout() const override
     {
         return m_vertexLayout;
     }
@@ -144,7 +144,7 @@ private:
     {
         auto mesh = std::make_unique<CubeMeshVerticesOnly>();
         auto vertexBuffer = std::make_unique<VBO>(allocator);
-        vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertextLayout().GetStride());
+        vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
         auto indexBuffer = std::make_unique<IBO>(allocator);
         indexBuffer->Data(mesh->GerIndices().data(), static_cast<uint32_t>(mesh->GerIndices().size()));
         return std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
@@ -155,8 +155,8 @@ private:
         ImageFactory imageFactory{};
 
         std::vector<std::shared_ptr<Image> > images{};
-        for (const auto& faceFilePaht : textureFilenames) {
-            auto image = imageFactory.CreateImage(faceFilePaht);
+        for (const auto& faceFilePath : textureFilenames) {
+            auto image = imageFactory.CreateImage(faceFilePath);
             images.emplace_back(std::move(image));
         }
 

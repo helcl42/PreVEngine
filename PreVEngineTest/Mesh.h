@@ -68,7 +68,7 @@ private:
     };
 
 public:
-    const VertexLayout& GetVertextLayout() const override
+    const VertexLayout& GetVertexLayout() const override
     {
         return vertexLayout;
     }
@@ -117,7 +117,7 @@ private:
     };
 
 public:
-    const VertexLayout& GetVertextLayout() const override
+    const VertexLayout& GetVertexLayout() const override
     {
         return vertexLayout;
     }
@@ -204,7 +204,7 @@ public:
     virtual ~PlaneMesh() = default;
 
 public:
-    const VertexLayout& GetVertextLayout() const override
+    const VertexLayout& GetVertexLayout() const override
     {
         return m_vertexLayout;
     }
@@ -303,7 +303,7 @@ private:
     std::vector<uint32_t> m_indices;
 
 public:
-    const VertexLayout& GetVertextLayout() const override
+    const VertexLayout& GetVertexLayout() const override
     {
         return m_vertexLayout;
     }
