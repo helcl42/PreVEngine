@@ -47,7 +47,7 @@ layout(location = 5) in float inVisibility;
 
 void main()
 {
-	float shadow = 1.0;		
+	float shadow = 1.0;
     uint cascadeIndex = 0;
     for(uint i = 0; i < SHADOW_MAP_CASCADE_COUNT - 1; i++) 
     {
@@ -60,6 +60,9 @@ void main()
     vec4 shadowCoord = uboFS.shadows.cascades[cascadeIndex].viewProjectionMatrix * vec4(inWorldPosition, 1.0);
     vec4 normalizedShadowCoord = shadowCoord / shadowCoord.w;
     shadow = GetShadowInternal(depthSampler, normalizedShadowCoord, cascadeIndex, 0.02);
+	if(shadow < 0.999) {
+		shadow /= 12.0;
+	}
 
 	vec2 normalizedDeviceSapceCoord = (inClipSpaceCoord.xy / inClipSpaceCoord.w) / 2.0 + 0.5;
 
