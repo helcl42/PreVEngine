@@ -13,7 +13,7 @@ struct EngineConfig {
 
     bool fullScreen = false;
 
-    Size windowSize = { 1280, 720 };
+    Size windowSize = { 1920, 1080 };
 
     Position windowPosition = { 40, 40 };
 
