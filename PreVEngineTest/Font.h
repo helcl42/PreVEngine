@@ -676,7 +676,7 @@ public:
     ~TextMesh() = default;
 
 public:
-    const VertexLayout& GetVertextLayout() const override
+    const VertexLayout& GetVertexLayout() const override
     {
         return m_vertexLayout;
     }
@@ -877,7 +877,7 @@ public:
 
         auto allocator = AllocatorProvider::Instance().GetAllocator();
         auto vertexBuffer = std::make_shared<VBO>(*allocator);
-        vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertextLayout().GetStride());
+        vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
 
         auto indexBuffer = std::make_shared<IBO>(*allocator);
         indexBuffer->Data(mesh->GerIndices().data(), (uint32_t)mesh->GerIndices().size());

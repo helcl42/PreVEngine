@@ -304,7 +304,7 @@ private:
     std::vector<uint32_t> m_indices;
 
 public:
-    const VertexLayout& GetVertextLayout() const override
+    const VertexLayout& GetVertexLayout() const override
     {
         return m_vertexLayout;
     }
@@ -371,7 +371,7 @@ private:
     {
         auto mesh = GenerateMesh(heightGenerator, size);
         auto vertexBuffer = std::make_unique<VBO>(allocator);
-        vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertextLayout().GetStride());
+        vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
         auto indexBuffer = std::make_unique<IBO>(allocator);
         indexBuffer->Data(mesh->GerIndices().data(), static_cast<uint32_t>(mesh->GerIndices().size()));
 
