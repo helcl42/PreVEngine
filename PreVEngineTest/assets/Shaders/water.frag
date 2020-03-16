@@ -98,6 +98,7 @@ void main()
 	vec3 viewVector = normalize(inToCameraVector);
 	float refractiveFactor = dot(viewVector, normal);
 	refractiveFactor = pow(refractiveFactor, waterReflectivness);
+	refractiveFactor = clamp(refractiveFactor, 0.001, 0.999);
 
     vec3 toLightVector = uboFS.light.position.xyz - inWorldPosition.xyz;
 	vec3 reflectedLight = reflect(normalize(toLightVector), normal);
