@@ -78,7 +78,7 @@ void SetConsoleTextColor(const ConsoleColor color);
     }
 #define _LOGV(...)                            \
     {                                         \
-        print(ConsoleColor::CYAN, "PERF : "); \
+        print(ConsoleColor::CYAN, "PERF: "); \
         printf(__VA_ARGS__);                  \
     }
 #define _LOGD(...)                            \
@@ -88,7 +88,7 @@ void SetConsoleTextColor(const ConsoleColor color);
     }
 #define _LOGI(...)                             \
     {                                          \
-        print(ConsoleColor::GREEN, "INFO : "); \
+        print(ConsoleColor::GREEN, "INFO: "); \
         printf(__VA_ARGS__);                   \
     }
 #define _LOGW(...)                                \

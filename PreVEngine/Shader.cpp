@@ -316,7 +316,7 @@ const std::vector<VkPipelineShaderStageCreateInfo>& Shader::GetShaderStages() co
 
 std::vector<char> ShaderFactory::LoadByteCodeFromFile(const std::string& filename) const
 {
-    printf("Load Shader: %s... ", filename.c_str());
+    LOGI("Load Shader: %s\n", filename.c_str());
 
     std::ifstream fileStream(filename, std::ios_base::binary);
 

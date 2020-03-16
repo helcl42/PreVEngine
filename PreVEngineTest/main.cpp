@@ -959,7 +959,7 @@ class Text : public AbstractSceneNode<SceneNodeFlags> {
 private:
     std::shared_ptr<IFontRenderComponent> m_fontComponent;
 
-    FPSService m_fpsService{ 0.1f, false };
+    FPSService m_fpsService{ 1.0f, false };
 
 public:
     Text()
@@ -982,15 +982,16 @@ public:
 
     void Update(float deltaTime) override
     {
-        m_fontComponent->Reset();
+        if (m_fpsService.Update(deltaTime)) {
+            m_fontComponent->Reset();
 
-        m_fpsService.Update(deltaTime);
+            std::stringstream fpsString;
+            fpsString << std::setprecision(1) << std::fixed;
+            fpsString << m_fpsService.GetAverageFPS() << " FPS";
 
-        std::stringstream fpsString;
-        fpsString << m_fpsService.GetAverageFPS() << " FPS";
-
-        auto fancyText = std::make_shared<FancyText>(fpsString.str(), 1.5f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0), glm::vec2(0.4f, -0.4f), 1.0f, true, 0.5f, 0.004f);
-        m_fontComponent->AddText(fancyText);
+            auto fancyText = std::make_shared<FancyText>(fpsString.str(), 1.6f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0), glm::vec2(0.4f, -0.4f), 1.0f, true, 0.5f, 0.005f);
+            m_fontComponent->AddText(fancyText);
+        }
 
         AbstractSceneNode::Update(deltaTime);
     }

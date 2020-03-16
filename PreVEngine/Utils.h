@@ -47,7 +47,7 @@ public:
     virtual ~FPSService() = default;
 
 public:
-    void Update(float deltaTime)
+    bool Update(float deltaTime)
     {
         std::lock_guard<std::mutex> lock(m_lock);
 
@@ -68,7 +68,9 @@ public:
             if (m_printInfo) {
                 LOGI("FPS %f\n", (1.0f / m_averageDeltaTime));
             }
+            return true;
         }
+        return false;
     }
 
     float GetAverageDeltaTime() const
@@ -115,7 +117,7 @@ public:
     virtual ~FPSCounter() = default;
 
 public:
-    void Tick()
+    bool Tick()
     {
         std::lock_guard<std::mutex> lock(m_lock);
 
@@ -127,6 +129,8 @@ public:
         float elapsedInS = std::chrono::duration<float>(NOW - m_lastTickTimestamp).count();
         m_deltaTimeSnapshots.push_back(elapsedInS);
         m_elpasedTimeInS += elapsedInS;
+
+        m_lastTickTimestamp = NOW;
 
         if (m_elpasedTimeInS > m_refreshTimeoutInS) {
             float deltasSum = 0.0f;
@@ -141,9 +145,9 @@ public:
 
             m_elpasedTimeInS = 0.0f;
             m_deltaTimeSnapshots.clear();
+            return true;
         }
-
-        m_lastTickTimestamp = NOW;
+        return false;
     }
 
     float GetAverageDeltaTime() const
