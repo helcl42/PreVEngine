@@ -31,7 +31,7 @@ struct NormalRenderContextUserData : DefaultRenderContextUserData {
 
     const glm::vec2 nearFarClippingPlane;
 
-    NormalRenderContextUserData(const glm::mat4& vm, const glm::mat4& pm, const glm::vec3& camPos, const glm::vec4 cp, const VkExtent2D ext, const glm::vec2& nearFar)
+    NormalRenderContextUserData(const glm::mat4& vm, const glm::mat4& pm, const glm::vec3& camPos, const glm::vec4& cp, const VkExtent2D& ext, const glm::vec2& nearFar)
         : viewMatrix(vm)
         , projectionMatrix(pm)
         , cameraPosition(camPos)
