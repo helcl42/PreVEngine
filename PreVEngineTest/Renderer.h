@@ -76,17 +76,17 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<DefaultShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/default_shadows_vert.spv") } });
-        m_shader->AdjustDescriptorPoolCapacity(300);
+        m_shader->AdjustDescriptorPoolCapacity(1000);
 
-        printf("Shadows Shader created\n");
+        LOGI("Shadows Shader created\n");
 
         m_pipeline = std::make_shared<DefaultShadowsPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
-        printf("Shadows Pipeline created\n");
+        LOGI("Shadows Pipeline created\n");
 
         m_uniformsPool = std::make_shared<UBOPool<Uniforms> >(*allocator);
-        m_uniformsPool->AdjustCapactity(300);
+        m_uniformsPool->AdjustCapactity(1000);
     }
 
     void PreRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
@@ -181,17 +181,17 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<TerrainShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_shadows_vert.spv") } });
-        m_shader->AdjustDescriptorPoolCapacity(300);
+        m_shader->AdjustDescriptorPoolCapacity(1000);
 
-        printf("Terrain Shadows Shader created\n");
+        LOGI("Terrain Shadows Shader created\n");
 
         m_pipeline = std::make_shared<TerrainShadowsPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
-        printf("Terrain Shadows Pipeline created\n");
+        LOGI("Terrain Shadows Pipeline created\n");
 
         m_uniformsPool = std::make_shared<UBOPool<Uniforms> >(*allocator);
-        m_uniformsPool->AdjustCapactity(300);
+        m_uniformsPool->AdjustCapactity(1000);
     }
 
     void PreRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
@@ -287,12 +287,12 @@ public:
         m_shader = shaderFactory.CreateShaderFromFiles<AnimatedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_shadows_vert.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
-        printf("Shadows Shader created\n");
+        LOGI("Shadows Shader created\n");
 
         m_pipeline = std::make_shared<AnimatedShadowsPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
-        printf("Shadows Pipeline created\n");
+        LOGI("Shadows Pipeline created\n");
 
         m_uniformsPool = std::make_shared<UBOPool<Uniforms> >(*allocator);
         m_uniformsPool->AdjustCapactity(100);
@@ -402,12 +402,12 @@ public:
         m_shader = shaderFactory.CreateShaderFromFiles<ShadowMapDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/shadow_map_debug_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/shadow_map_debug_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
-        printf("ShadowMapDebug Shader created\n");
+        LOGI("ShadowMapDebug Shader created\n");
 
         m_pipeline = std::make_unique<ShadowMapDebugPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
-        printf("ShadowMapDebug Pipeline created\n");
+        LOGI("ShadowMapDebug Pipeline created\n");
 
         // create quad model
         auto quadMesh = std::make_shared<QuadMesh>();
@@ -530,12 +530,12 @@ public:
         m_shader = shaderFactory.CreateShaderFromFiles<TextureDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/texture_debug_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/texture_debug_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(100);
 
-        printf("Texture Debug Shader created\n");
+        LOGI("Texture Debug Shader created\n");
 
         m_pipeline = std::make_unique<TextureDebugPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
-        printf("Texture Debug Pipeline created\n");
+        LOGI("Texture Debug Pipeline created\n");
 
         // create quad model
         auto quadMesh = std::make_shared<QuadMesh>();
@@ -712,20 +712,20 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<DefaultShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/default_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/default_frag.spv") } });
-        m_shader->AdjustDescriptorPoolCapacity(100);
+        m_shader->AdjustDescriptorPoolCapacity(1000);
 
-        printf("Default Shader created\n");
+        LOGI("Default Shader created\n");
 
         m_pipeline = std::make_unique<DefaultPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
-        printf("Default Pipeline created\n");
+        LOGI("Default Pipeline created\n");
 
         m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
-        m_uniformsPoolVS->AdjustCapactity(100);
+        m_uniformsPoolVS->AdjustCapactity(1000);
 
         m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
-        m_uniformsPoolFS->AdjustCapactity(100);
+        m_uniformsPoolFS->AdjustCapactity(1000);
     }
 
     void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
@@ -933,20 +933,20 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<AnimationShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_frag.spv") } });
-        m_shader->AdjustDescriptorPoolCapacity(100);
+        m_shader->AdjustDescriptorPoolCapacity(1000);
 
-        printf("Animaition Shader created\n");
+        LOGI("Animaition Shader created\n");
 
         m_pipeline = std::make_unique<AnimationPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
-        printf("Animaition Pipeline created\n");
+        LOGI("Animaition Pipeline created\n");
 
         m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
-        m_uniformsPoolVS->AdjustCapactity(100);
+        m_uniformsPoolVS->AdjustCapactity(1000);
 
         m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
-        m_uniformsPoolFS->AdjustCapactity(100);
+        m_uniformsPoolFS->AdjustCapactity(1000);
     }
 
     void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
@@ -1157,20 +1157,20 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<TerrainShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_frag.spv") } });
-        m_shader->AdjustDescriptorPoolCapacity(100);
+        m_shader->AdjustDescriptorPoolCapacity(1000);
 
-        printf("Terrain Shader created\n");
+        LOGI("Terrain Shader created\n");
 
         m_pipeline = std::make_unique<TerrainPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
-        printf("Terrain Pipeline created\n");
+        LOGI("Terrain Pipeline created\n");
 
         m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
-        m_uniformsPoolVS->AdjustCapactity(100);
+        m_uniformsPoolVS->AdjustCapactity(1000);
 
         m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
-        m_uniformsPoolFS->AdjustCapactity(100);
+        m_uniformsPoolFS->AdjustCapactity(1000);
     }
 
     void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
@@ -1333,20 +1333,20 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<FonttShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/font_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/font_frag.spv") } });
-        m_shader->AdjustDescriptorPoolCapacity(100);
+        m_shader->AdjustDescriptorPoolCapacity(1000);
 
-        printf("Fonts Shader created\n");
+        LOGI("Fonts Shader created\n");
 
         m_pipeline = std::make_unique<FontPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
-        printf("Fonts Pipeline created\n");
+        LOGI("Fonts Pipeline created\n");
 
         m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
-        m_uniformsPoolVS->AdjustCapactity(100);
+        m_uniformsPoolVS->AdjustCapactity(1000);
 
         m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
-        m_uniformsPoolFS->AdjustCapactity(100);
+        m_uniformsPoolFS->AdjustCapactity(1000);
     }
 
     void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
@@ -1462,20 +1462,20 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<SkyBoxShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/skybox_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/skybox_frag.spv") } });
-        m_shader->AdjustDescriptorPoolCapacity(100);
+        m_shader->AdjustDescriptorPoolCapacity(1000);
 
-        printf("Skybox Shader created\n");
+        LOGI("Skybox Shader created\n");
 
         m_pipeline = std::make_unique<SkyBoxPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
-        printf("Skybox Pipeline created\n");
+        LOGI("Skybox Pipeline created\n");
 
         m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
-        m_uniformsPoolVS->AdjustCapactity(100);
+        m_uniformsPoolVS->AdjustCapactity(1000);
 
         m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
-        m_uniformsPoolFS->AdjustCapactity(100);
+        m_uniformsPoolFS->AdjustCapactity(1000);
     }
 
     void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
@@ -1622,20 +1622,20 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<WaterShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/water_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/water_frag.spv") } });
-        m_shader->AdjustDescriptorPoolCapacity(100);
+        m_shader->AdjustDescriptorPoolCapacity(1000);
 
-        printf("Water Shader created\n");
+        LOGI("Water Shader created\n");
 
         m_pipeline = std::make_unique<WaterPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
-        printf("Water Pipeline created\n");
+        LOGI("Water Pipeline created\n");
 
         m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
-        m_uniformsPoolVS->AdjustCapactity(100);
+        m_uniformsPoolVS->AdjustCapactity(1000);
 
         m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
-        m_uniformsPoolFS->AdjustCapactity(100);
+        m_uniformsPoolFS->AdjustCapactity(1000);
     }
 
     void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
