@@ -107,7 +107,7 @@ void main()
 
 	vec4 baseResultColor = mix(reflectColor, refractColor, refractiveFactor);
 	baseResultColor = clamp(mix(baseResultColor, finalWaterColor, 0.2) + vec4(specularHighlights, 1.0), 0.0, 1.0);
-	//outputColor = mix(vec4(skyColor, 1.0), baseResultColor, visibility);
+	//outColor = mix(vec4(uboFS.fogColor.xyz, 1.0), baseResultColor, inVisibility);
 	outColor = baseResultColor;
 	outColor.a = clamp(waterDepth / 2.0, 0.0, 1.0);
 }
