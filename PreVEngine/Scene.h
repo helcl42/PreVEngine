@@ -148,7 +148,11 @@ private:
     void InitSwapchain()
     {
         m_swapchain = std::make_shared<Swapchain>(*m_allocator, *m_renderPass, m_graphicsQueue, m_graphicsQueue);
+#if defined(__ANDROID__)
+        m_swapchain->SetPresentMode(m_config->VSync ? VK_PRESENT_MODE_MAILBOX_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
+#else
         m_swapchain->SetPresentMode(m_config->VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
+#endif
         m_swapchain->SetImageCount(m_config->framesInFlight);
         m_swapchain->Print();
     }
