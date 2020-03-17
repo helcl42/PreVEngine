@@ -485,23 +485,9 @@ VkIndexType IBO::GetIndexType() const
 {
     return m_indexType;
 }
-
-void UBO::Allocate(const uint32_t size)
-{
-    Buffer::Data(nullptr, 1, size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &m_mapped);
-}
-
-void UBO::Update(const void* data)
-{
-    memcpy(m_mapped, data, m_stride);
-}
-
-uint32_t UBO::GetSize() const
-{
-    return m_stride;
-}
-
 //--------------------------------------------------------------------------------
+
+//--------------------------Image Buffers-----------------------
 AbstractImageBuffer::AbstractImageBuffer(Allocator& allocator)
     : m_allocator(allocator)
     , m_allocation()
@@ -640,7 +626,7 @@ void ImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
 
     m_mipLevels = 1;
     if (createInfo.mipMap) {
-        m_mipLevels = Log2(std::max(createInfo.extent.width, createInfo.extent.height)) + 1;
+        m_mipLevels = MathUtil::Log2(std::max(createInfo.extent.width, createInfo.extent.height)) + 1;
     }
 
     VkExtent3D ext3D{ createInfo.extent.width, createInfo.extent.height, 1 };

@@ -252,8 +252,8 @@ void Shader::Bind(const std::string& name, const UBO& ubo)
     auto& item = m_descriptorSetInfos[name];
 
     item.bufferInfo.buffer = ubo;
-    item.bufferInfo.offset = 0;
-    item.bufferInfo.range = VK_WHOLE_SIZE;
+    item.bufferInfo.offset = ubo.GetOffset();
+    item.bufferInfo.range = ubo.GetRange();
 
     //LOGI("Bind UBO   to shader-in: \"%s\"\n", name.c_str());
 }

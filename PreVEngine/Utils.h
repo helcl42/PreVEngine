@@ -18,11 +18,6 @@ ptrdiff_t ArraySize(Type (&)[n])
     return n;
 }
 
-static uint32_t Log2(const uint32_t x)
-{
-    return (uint32_t)(log(x) / log(2));
-}
-
 class FPSService {
 private:
     float m_refreshTimeout = 1.0f;
@@ -530,6 +525,21 @@ public:
     {
         return glm::quat_cast(transform);
     }
+
+    static uint32_t Log2(const uint32_t x)
+    {
+        return (uint32_t)(log(x) / log(2));
+    }
+
+    static uint32_t RoundUp(const uint32_t val, const uint32_t toDivBy)
+    {
+        return val + (toDivBy - (val % toDivBy));
+    }
+
+    static uint32_t RoundDown(const uint32_t val, const uint32_t toDivBy)
+    {
+        return val - (val % toDivBy);
+    }
 };
 
 class IDGenerator final : public Singleton<IDGenerator> {
@@ -603,42 +613,6 @@ public:
     }
 };
 
-template <typename ItemType>
-class UBOPool {
-private:
-    Allocator& m_allocator;
-
-    std::vector<std::shared_ptr<UBO> > m_uniformBuffers;
-
-    uint32_t m_index = 0;
-
-public:
-    UBOPool(Allocator& allocator)
-        : m_allocator(allocator)
-    {
-    }
-
-    virtual ~UBOPool() = default;
-
-public:
-    void AdjustCapactity(uint32_t capacity)
-    {
-        m_index = 0;
-        m_uniformBuffers.clear();
-
-        for (uint32_t i = 0; i < capacity; i++) {
-            auto ubo = std::make_shared<UBO>(m_allocator);
-            ubo->Allocate(sizeof(ItemType));
-            m_uniformBuffers.emplace_back(ubo);
-        }
-    }
-
-    std::shared_ptr<UBO> GetNext()
-    {
-        m_index = (m_index + 1) % m_uniformBuffers.size();
-        return m_uniformBuffers.at(m_index);
-    }
-};
 } // namespace PreVEngine
 
 #endif

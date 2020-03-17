@@ -64,7 +64,7 @@ public:
 
 //-------------------------------------Buffers------------------------------------
 class Buffer {
-private:
+protected:
     Allocator& m_allocator;
 
     VmaAllocation m_allocation;
@@ -73,7 +73,6 @@ private:
 
     uint32_t m_count;
 
-protected:
     uint32_t m_stride;
 
 public:
@@ -116,21 +115,98 @@ public:
     VkIndexType GetIndexType() const;
 };
 
-class UBO : public Buffer {
+class UBO {
 private:
-    void* m_mapped = nullptr;
+    VkBuffer m_buffer;
+
+    void* m_mapped;
+
+    uint32_t m_offset;
+
+    uint32_t m_range;
 
 public:
-    using Buffer::Buffer;
+    UBO(VkBuffer buffer, void* data, const uint32_t offset, const uint32_t range)
+        : m_buffer(buffer)
+        , m_mapped(data)
+        , m_offset(offset)
+        , m_range(range)
+    {
+    }
+
+    ~UBO() = default;
 
 public:
-    void Allocate(const uint32_t size);
+    void Update(const void* data)
+    {
+        memcpy(static_cast<uint8_t*>(m_mapped) + m_offset, data, m_range);
+    }
 
-    void Update(const void* data);
+    uint32_t GetOffset() const
+    {
+        return m_offset;
+    }
 
-public:
-    uint32_t GetSize() const;
+    uint32_t GetRange() const
+    {
+        return m_range;
+    }
+
+    operator VkBuffer() const
+    {
+        return m_buffer;
+    }
 };
+
+template <typename ItemType>
+class UBOPool : public Buffer {
+private:    
+    std::vector<std::shared_ptr<UBO>> m_poolItems;
+
+    uint32_t m_capacity;
+
+    uint32_t m_index;
+
+    void* m_mapped;
+
+public:
+    UBOPool(Allocator& allocator)
+        : Buffer(allocator)
+        , m_index(0)
+        , m_capacity(0)
+        , m_mapped(m_mapped)
+    {
+    }
+
+    virtual ~UBOPool() = default;
+
+public:
+    void AdjustCapactity(const uint32_t capacity)
+    {
+        Clear();
+
+        m_poolItems.clear();
+
+        m_capacity = capacity;
+        m_index = 0;
+        
+        const uint32_t itemSize = MathUtil::RoundUp(static_cast<uint32_t>(sizeof(ItemType)), 32);
+
+        Buffer::Data(nullptr, capacity, itemSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &m_mapped);
+        
+        for (uint32_t i = 0; i < capacity; i++) {
+            auto ubo = std::make_shared<UBO>(m_buffer, m_mapped, i * itemSize, itemSize);
+            m_poolItems.emplace_back(ubo);
+        }
+    }
+
+    std::shared_ptr<UBO> GetNext()
+    {
+        m_index = (m_index + 1) % m_poolItems.size();
+        return m_poolItems.at(m_index);
+    }
+};
+
 //--------------------------------------------------------------------------------
 
 //-------------------------------------AbstractImageBuffer-------------------------------------
