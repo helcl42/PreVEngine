@@ -280,9 +280,7 @@ public:
     {
     }
 
-    virtual ~Clock()
-    {
-    }
+    virtual ~Clock() = default;
 
 public:
     void Reset()

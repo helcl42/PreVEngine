@@ -433,7 +433,7 @@ void Buffer::Clear()
         m_allocator.DestroyBuffer(m_buffer, m_allocation);
     }
 
-    m_buffer = 0;
+    m_buffer = VK_NULL_HANDLE;
     m_count = 0;
     m_stride = 0;
 }
@@ -471,13 +471,13 @@ void VBO::Data(const void* data, const uint32_t count, const uint32_t stride)
 //--------------------------IBO-----------------------
 void IBO::Data(const uint16_t* data, const uint32_t count)
 {
-    Buffer::Data(data, count, 2, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
+    Buffer::Data(data, count, sizeof(uint16_t), VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
     m_indexType = VK_INDEX_TYPE_UINT16;
 }
 
 void IBO::Data(const uint32_t* data, const uint32_t count)
 {
-    Buffer::Data(data, count, 4, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
+    Buffer::Data(data, count, sizeof(uint32_t), VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
     m_indexType = VK_INDEX_TYPE_UINT32;
 }
 
@@ -488,7 +488,7 @@ VkIndexType IBO::GetIndexType() const
 
 void UBO::Allocate(const uint32_t size)
 {
-    Buffer::Data(0, 1, size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &m_mapped);
+    Buffer::Data(nullptr, 1, size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &m_mapped);
 }
 
 void UBO::Update(const void* data)
