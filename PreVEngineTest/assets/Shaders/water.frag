@@ -2,6 +2,7 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive : enable
 
+#include "utils.glsl"
 #include "shadows_use.glsl"
 
 struct Light {
@@ -31,10 +32,10 @@ layout(binding = 5) uniform sampler2D dudvMapTexture;
 layout(binding = 6) uniform sampler2D normalMapTexture;
 layout(binding = 7) uniform sampler2D depthMapTexture;
 
-const float waveStrength = 0.1;
+const float waveStrength = 0.05;
 const float shineDamper = 20.0;
-const float reflectivity = 0.5;
-const float waterReflectivness = 0.75;
+const float reflectivity = 0.45;
+const float waterReflectivness = 0.7;
 
 layout(location = 0) out vec4 outColor;
 
@@ -45,9 +46,18 @@ layout(location = 3) in vec3 inViewPosition;
 layout(location = 4) in vec3 inToCameraVector;
 layout(location = 5) in float inVisibility;
 
+float CalculateWaterDepth(in vec2 texCoords)
+{
+	float depth = texture(depthMapTexture, texCoords).r;
+	float floorDistance = LinearizeDepth(depth, uboFS.nearFarClippinPlane.x, uboFS.nearFarClippinPlane.y);
+	depth = gl_FragCoord.z;
+	float waterDistance = LinearizeDepth(depth, uboFS.nearFarClippinPlane.x, uboFS.nearFarClippinPlane.y);
+	return floorDistance - waterDistance;
+}
+
 void main()
 {
-	float shadow = 1.0;
+	float shadow = 1.0;		
     uint cascadeIndex = 0;
     for(uint i = 0; i < SHADOW_MAP_CASCADE_COUNT - 1; i++) 
     {
@@ -70,13 +80,7 @@ void main()
 	vec2 refractTexCoord = vec2(normalizedDeviceSapceCoord.x, normalizedDeviceSapceCoord.y);
 
     // calculate water depth
-	float depth = texture(depthMapTexture, refractTexCoord).r;
-	float floorDistance = 2.0 * uboFS.nearFarClippinPlane.x * uboFS.nearFarClippinPlane.y / (uboFS.nearFarClippinPlane.y + uboFS.nearFarClippinPlane.x - (2.0 * depth - 1.0) * (uboFS.nearFarClippinPlane.y - uboFS.nearFarClippinPlane.x));
-
-	depth = gl_FragCoord.z;
-	float waterDistance = 2.0 * uboFS.nearFarClippinPlane.x * uboFS.nearFarClippinPlane.y / (uboFS.nearFarClippinPlane.y + uboFS.nearFarClippinPlane.x - (2.0 * depth - 1.0) * (uboFS.nearFarClippinPlane.y - uboFS.nearFarClippinPlane.x));
-
-	float waterDepth = floorDistance - waterDistance;
+	float waterDepth = CalculateWaterDepth(refractTexCoord);
 
     // distortion
 	vec2 distortedTexCoords = texture(dudvMapTexture, vec2(inTextureCoord.x + uboFS.moveFactor, inTextureCoord.y)).rg * 0.1;
