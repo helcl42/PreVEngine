@@ -51,6 +51,9 @@ private:
     };
 
 private:
+    const uint32_t m_descriptorCount{ 1000 };
+
+private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
@@ -76,7 +79,7 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<DefaultShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/default_shadows_vert.spv") } });
-        m_shader->AdjustDescriptorPoolCapacity(1000);
+        m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
         LOGI("Shadows Shader created\n");
 
@@ -86,7 +89,7 @@ public:
         LOGI("Shadows Pipeline created\n");
 
         m_uniformsPool = std::make_shared<UBOPool<Uniforms> >(*allocator);
-        m_uniformsPool->AdjustCapactity(1000);
+        m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
     void PreRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
@@ -156,6 +159,9 @@ private:
     };
 
 private:
+    const uint32_t m_descriptorCount{ 1000 };
+
+private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
@@ -181,7 +187,7 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<TerrainShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_shadows_vert.spv") } });
-        m_shader->AdjustDescriptorPoolCapacity(1000);
+        m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
         LOGI("Terrain Shadows Shader created\n");
 
@@ -191,7 +197,7 @@ public:
         LOGI("Terrain Shadows Pipeline created\n");
 
         m_uniformsPool = std::make_shared<UBOPool<Uniforms> >(*allocator);
-        m_uniformsPool->AdjustCapactity(1000);
+        m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
     void PreRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
@@ -260,6 +266,9 @@ private:
     };
 
 private:
+    const uint32_t m_descriptorCount{ 1000 };
+
+private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
@@ -285,7 +294,7 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<AnimatedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_shadows_vert.spv") } });
-        m_shader->AdjustDescriptorPoolCapacity(100);
+        m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
         LOGI("Shadows Shader created\n");
 
@@ -295,7 +304,7 @@ public:
         LOGI("Shadows Pipeline created\n");
 
         m_uniformsPool = std::make_shared<UBOPool<Uniforms> >(*allocator);
-        m_uniformsPool->AdjustCapactity(100);
+        m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
     void PreRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
@@ -369,6 +378,9 @@ private:
     };
 
 private:
+    const uint32_t m_descriptorCount{ 1000 };
+
+private:
     EventHandler<ShadowMapDebugRenderer, KeyEvent> m_keyEvent{ *this };
 
 private:
@@ -400,7 +412,7 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<ShadowMapDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/shadow_map_debug_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/shadow_map_debug_frag.spv") } });
-        m_shader->AdjustDescriptorPoolCapacity(100);
+        m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
         LOGI("ShadowMapDebug Shader created\n");
 
@@ -502,6 +514,9 @@ public:
 
 class TextureDebugRenderer : public IRenderer<DefaultRenderContextUserData> {
 private:
+    const uint32_t m_descriptorCount{ 1000 };
+
+private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
@@ -528,7 +543,7 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<TextureDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/texture_debug_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/texture_debug_frag.spv") } });
-        m_shader->AdjustDescriptorPoolCapacity(100);
+        m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
         LOGI("Texture Debug Shader created\n");
 
@@ -685,6 +700,9 @@ private:
     };
 
 private:
+    const uint32_t m_descriptorCount{ 1000 };
+
+private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
@@ -712,7 +730,7 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<DefaultShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/default_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/default_frag.spv") } });
-        m_shader->AdjustDescriptorPoolCapacity(1000);
+        m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
         LOGI("Default Shader created\n");
 
@@ -722,10 +740,10 @@ public:
         LOGI("Default Pipeline created\n");
 
         m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
-        m_uniformsPoolVS->AdjustCapactity(1000);
+        m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
         m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
-        m_uniformsPoolFS->AdjustCapactity(1000);
+        m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
     void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
@@ -906,6 +924,9 @@ private:
     };
 
 private:
+    const uint32_t m_descriptorCount{ 1000 };
+
+private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
@@ -933,7 +954,7 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<AnimationShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_frag.spv") } });
-        m_shader->AdjustDescriptorPoolCapacity(1000);
+        m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
         LOGI("Animaition Shader created\n");
 
@@ -943,10 +964,10 @@ public:
         LOGI("Animaition Pipeline created\n");
 
         m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
-        m_uniformsPoolVS->AdjustCapactity(1000);
+        m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
         m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
-        m_uniformsPoolFS->AdjustCapactity(1000);
+        m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
     void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
@@ -1130,6 +1151,9 @@ private:
     };
 
 private:
+    const uint32_t m_descriptorCount{ 1000 };
+
+private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
@@ -1157,7 +1181,7 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<TerrainShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_frag.spv") } });
-        m_shader->AdjustDescriptorPoolCapacity(1000);
+        m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
         LOGI("Terrain Shader created\n");
 
@@ -1167,10 +1191,10 @@ public:
         LOGI("Terrain Pipeline created\n");
 
         m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
-        m_uniformsPoolVS->AdjustCapactity(1000);
+        m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
         m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
-        m_uniformsPoolFS->AdjustCapactity(1000);
+        m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
     void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
@@ -1306,6 +1330,9 @@ private:
     };
 
 private:
+    const uint32_t m_descriptorCount{ 1000 };
+
+private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
@@ -1333,7 +1360,7 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<FonttShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/font_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/font_frag.spv") } });
-        m_shader->AdjustDescriptorPoolCapacity(1000);
+        m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
         LOGI("Fonts Shader created\n");
 
@@ -1343,10 +1370,10 @@ public:
         LOGI("Fonts Pipeline created\n");
 
         m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
-        m_uniformsPoolVS->AdjustCapactity(1000);
+        m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
         m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
-        m_uniformsPoolFS->AdjustCapactity(1000);
+        m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
     void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
@@ -1435,6 +1462,9 @@ private:
     };
 
 private:
+    const uint32_t m_descriptorCount{ 1000 };
+
+private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
@@ -1462,7 +1492,7 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<SkyBoxShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/skybox_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/skybox_frag.spv") } });
-        m_shader->AdjustDescriptorPoolCapacity(1000);
+        m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
         LOGI("Skybox Shader created\n");
 
@@ -1472,10 +1502,10 @@ public:
         LOGI("Skybox Pipeline created\n");
 
         m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
-        m_uniformsPoolVS->AdjustCapactity(1000);
+        m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
         m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
-        m_uniformsPoolFS->AdjustCapactity(1000);
+        m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
     void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
@@ -1595,6 +1625,9 @@ private:
     };
 
 private:
+    const uint32_t m_descriptorCount{ 1000 };
+
+private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
@@ -1622,7 +1655,7 @@ public:
 
         ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<WaterShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/water_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/water_frag.spv") } });
-        m_shader->AdjustDescriptorPoolCapacity(1000);
+        m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
         LOGI("Water Shader created\n");
 
@@ -1632,10 +1665,10 @@ public:
         LOGI("Water Pipeline created\n");
 
         m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
-        m_uniformsPoolVS->AdjustCapactity(1000);
+        m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
         m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
-        m_uniformsPoolFS->AdjustCapactity(1000);
+        m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
     void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override

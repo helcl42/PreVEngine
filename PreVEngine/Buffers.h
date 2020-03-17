@@ -181,7 +181,7 @@ public:
     virtual ~UBOPool() = default;
 
 public:
-    void AdjustCapactity(const uint32_t capacity)
+    void AdjustCapactity(const uint32_t capacity, const uint32_t alignment = 32)
     {
         Clear();
 
@@ -190,7 +190,7 @@ public:
         m_capacity = capacity;
         m_index = 0;
         
-        const uint32_t itemSize = MathUtil::RoundUp(static_cast<uint32_t>(sizeof(ItemType)), 32);
+        const uint32_t itemSize = MathUtil::RoundUp(static_cast<uint32_t>(sizeof(ItemType)), alignment);
 
         Buffer::Data(nullptr, capacity, itemSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &m_mapped);
         
