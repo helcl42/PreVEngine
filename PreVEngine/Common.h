@@ -15,5 +15,6 @@
 #include <memory>
 #include <stdexcept>
 #include <thread>
+#include <mutex>
 
 #endif

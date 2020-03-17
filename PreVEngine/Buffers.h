@@ -1,8 +1,10 @@
 #ifndef __BUFFERS_H__
 #define __BUFFERS_H__
 
+#include "Common.h"
+#include "Patterns.h"
 #include "Devices.h"
-#include "Window.h"
+#include "Utils.h"
 
 #include "External/vk_mem_alloc.h"
 
@@ -174,7 +176,7 @@ public:
         : Buffer(allocator)
         , m_index(0)
         , m_capacity(0)
-        , m_mapped(m_mapped)
+        , m_mapped(nullptr)
     {
     }
 
