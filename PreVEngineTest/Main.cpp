@@ -23,6 +23,7 @@
 #include "Light.h"
 #include "Camera.h"
 #include "Renderer.h"
+#include "LensFlare.h"
 
 class DefaultRenderComponent : public IRenderComponent {
 private:
