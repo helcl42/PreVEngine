@@ -413,10 +413,10 @@ VkQueue Allocator::GetQueue() const
 
 Buffer::Buffer(Allocator& allocator)
     : m_allocator(allocator)
-    , m_allocation()
-    , m_buffer()
-    , m_count()
-    , m_stride()
+    , m_allocation(nullptr)
+    , m_buffer(VK_NULL_HANDLE)
+    , m_count(0)
+    , m_stride(0)
 {
 }
 

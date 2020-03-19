@@ -194,7 +194,7 @@ public:
         
         const uint32_t itemSize = MathUtil::RoundUp(static_cast<uint32_t>(sizeof(ItemType)), alignment);
 
-        Buffer::Data(nullptr, capacity, itemSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &m_mapped);
+        Data(nullptr, capacity, itemSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &m_mapped);
         
         for (uint32_t i = 0; i < capacity; i++) {
             auto ubo = std::make_shared<UBO>(m_buffer, m_mapped, i * itemSize, itemSize);
