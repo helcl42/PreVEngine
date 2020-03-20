@@ -1843,7 +1843,7 @@ public:
 
                 auto uboFS = m_uniformsPoolFS->GetNext();
                 UniformsFS uniformsFS{};
-                uniformsFS.brightness = glm::vec4(LENS_FLARE_BRIGHTNESS);
+                uniformsFS.brightness = glm::vec4(lensFlareComponent->GetBrightness());
                 uboFS->Update(&uniformsFS);
 
                 m_shader->Bind("textureSampler", *lensFlare->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);

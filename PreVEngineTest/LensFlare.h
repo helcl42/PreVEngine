@@ -3,8 +3,6 @@
 
 #include "General.h"
 
-static const float LENS_FLARE_BRIGHTNESS{ 0.25f };
-
 class LensFlareItem {
 public:
     LensFlareItem(const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const float scale)
@@ -103,6 +101,8 @@ public:
 
     virtual std::shared_ptr<IModel> GetModel() = 0;
 
+    virtual float GetBrightness() const = 0;
+
 public:
     virtual ~ILensFlareComponent() = default;
 };
@@ -113,6 +113,7 @@ public:
         : m_flares(flares)
         , m_spacing(spacing)
         , m_model(model)
+        , m_brightness(0.0f)
     {
     }
 
@@ -125,10 +126,13 @@ public:
         if (ConvertWorldSpaceToScreenSpaceCoord(eyePosition + sunPosition, projectionMatrix, viewMatrix, sunPositionInScreenSpace)) {
             const glm::vec2 SCREEN_CENTER{ 0.0f, 0.0f };
             glm::vec2 sunToCenter{ SCREEN_CENTER - sunPositionInScreenSpace };
-            const float brightness = 1.0f - (glm::length(sunToCenter) / 1.4f);
-            if (brightness) {
+            m_brightness = 1.0f - (glm::length(sunToCenter) / 1.4f);
+
+            if (m_brightness > 0) {
                 UpdateFlareTexrures(sunToCenter, sunPositionInScreenSpace);
             }
+
+            m_brightness = glm::clamp(m_brightness, 0.0f, 0.5f);
         }
     }
 
@@ -140,6 +144,11 @@ public:
     std::shared_ptr<IModel> GetModel() override
     {
         return m_model;
+    }
+
+    float GetBrightness() const override
+    {
+        return m_brightness;
     }
 
 private:
@@ -170,6 +179,8 @@ private:
     float m_spacing;
 
     std::shared_ptr<IModel> m_model;
+
+    float m_brightness;
 };
 
 class LensFlareComponentFactory {
