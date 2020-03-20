@@ -1759,6 +1759,126 @@ public:
     }
 };
 
+class LensFlareRenderer : public IRenderer<DefaultRenderContextUserData> {
+private:
+    struct alignas(16) UniformsVS
+    {
+        alignas(16) glm::vec4 translation;
+
+        alignas(16) glm::vec4 scale;
+    };
+
+    struct alignas(16) UniformsFS
+    {
+        alignas(16) glm::vec4 brightness;
+    };
+
+private:
+    const uint32_t m_descriptorCount{ 50 };
+
+private:
+    std::shared_ptr<RenderPass> m_renderPass;
+
+private:
+    std::unique_ptr<Shader> m_shader;
+
+    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+
+    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+
+    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+
+public:
+    LensFlareRenderer(const std::shared_ptr<RenderPass>& renderPass)
+        : m_renderPass(renderPass)
+    {
+    }
+
+    virtual ~LensFlareRenderer() = default;
+
+public:
+    void Init() override
+    {
+        auto device = DeviceProvider::Instance().GetDevice();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
+
+        ShaderFactory shaderFactory;
+        m_shader = shaderFactory.CreateShaderFromFiles<LensFlareShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/lens_flare_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/lens_flare_frag.spv") } });
+        m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
+
+        LOGI("LensFlare Shader created\n");
+
+        m_pipeline = std::make_unique<LensFlarePipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline->Init();
+
+        LOGI("LensFlare Pipeline created\n");
+
+        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+
+        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    }
+
+    void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
+
+        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+    }
+
+    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_LENS_FLARE_RENDER_COMPONENT })) {
+            const auto lensFlareComponent = ComponentRepository<ILensFlareComponent>::Instance().Get(node->GetId());
+            for (const auto& lensFlare : lensFlareComponent->GetFlares()) {
+                auto uboVS = m_uniformsPoolVS->GetNext();
+                UniformsVS uniformsVS{};
+                uniformsVS.translation = glm::vec4(lensFlare->GetScreenSpacePosition(), 0.0f, 1.0f);
+                uniformsVS.scale = glm::vec4(lensFlare->GetScale(), lensFlare->GetScale(), 0.0f, 0.0f);
+                uboVS->Update(&uniformsVS);
+
+                auto uboFS = m_uniformsPoolFS->GetNext();
+                UniformsFS uniformsFS{};
+                uniformsFS.brightness = glm::vec4(LENS_FLARE_BRIGHTNESS);
+                uboFS->Update(&uniformsFS);
+
+                m_shader->Bind("textureSampler", *lensFlare->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                m_shader->Bind("uboVS", *uboVS);
+                m_shader->Bind("uboFS", *uboFS);
+
+                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                VkBuffer vertexBuffers[] = { *lensFlareComponent->GetModel()->GetVertexBuffer() };
+                VkDeviceSize offsets[] = { 0 };
+
+                vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
+                vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *lensFlareComponent->GetModel()->GetIndexBuffer(), 0, lensFlareComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+                vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+                vkCmdDrawIndexed(renderContext.defaultCommandBuffer, lensFlareComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+            }
+        }
+
+        for (auto child : node->GetChildren()) {
+            Render(renderContext, child, renderContextUserData);
+        }
+    }
+
+    void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void ShutDown() override
+    {
+        m_shader->ShutDown();
+
+        m_pipeline->ShutDown();
+    }
+};
+
 class MasterRenderer : public IRenderer<DefaultRenderContextUserData> {
 public:
     MasterRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -1803,11 +1923,11 @@ public:
 
         //m_shadowMapDebugRenderer->PostRender(renderContext);
 
-        m_textureDebugRenderer->PreRender(renderContext);
+        //m_textureDebugRenderer->PreRender(renderContext);
 
-        m_textureDebugRenderer->Render(renderContext, node);
+        //m_textureDebugRenderer->Render(renderContext, node);
 
-        m_textureDebugRenderer->PostRender(renderContext);
+        //m_textureDebugRenderer->PostRender(renderContext);
 #endif
     }
 
@@ -1843,6 +1963,9 @@ private:
 
         m_fontRenderer = std::make_unique<FontRenderer>(m_defaultRenderPass);
         m_fontRenderer->Init();
+
+        m_lensFlareRenderer = std::make_unique<LensFlareRenderer>(m_defaultRenderPass);
+        m_lensFlareRenderer->Init();
 
         m_shadowMapDebugRenderer = std::make_unique<ShadowMapDebugRenderer>(m_defaultRenderPass);
         m_shadowMapDebugRenderer->Init();
@@ -1923,6 +2046,7 @@ private:
     {
         m_textureDebugRenderer->ShutDown();
         m_shadowMapDebugRenderer->ShutDown();
+        m_lensFlareRenderer->ShutDown();
         m_fontRenderer->ShutDown();
         m_waterRenderer->ShutDown();
         m_animationRenderer->ShutDown();
@@ -2155,6 +2279,15 @@ private:
 
         m_waterRenderer->PostRender(renderContext, userData);
 
+        // Water
+        m_lensFlareRenderer->PreRender(renderContext);
+
+        for (auto child : root->GetChildren()) {
+            m_lensFlareRenderer->Render(renderContext, child);
+        }
+
+        m_lensFlareRenderer->PostRender(renderContext);
+        
         // Fonts
         m_fontRenderer->PreRender(renderContext);
 
@@ -2183,6 +2316,8 @@ private:
     std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_waterRenderer;
 
     std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_fontRenderer;
+
+    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_lensFlareRenderer;
     // Debug
     std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_shadowMapDebugRenderer;
 

@@ -22,8 +22,9 @@
 #include "Shadows.h"
 #include "Light.h"
 #include "Camera.h"
-#include "Renderer.h"
 #include "LensFlare.h"
+
+#include "Renderer.h"
 
 class DefaultRenderComponent : public IRenderComponent {
 private:
@@ -1326,6 +1327,48 @@ public:
     }
 };
 
+class LensFlare : public AbstractSceneNode<SceneNodeFlags> {
+public:
+    LensFlare()
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_LENS_FLARE_RENDER_COMPONENT })
+    {
+    }
+
+    ~LensFlare() = default;
+
+public:
+    void Init() override
+    {
+        LensFlareComponentFactory componentFactory{};
+        m_lensFlareComponent = std::move(componentFactory.Create());
+
+        ComponentRepository<ILensFlareComponent>::Instance().Add(m_id, m_lensFlareComponent);
+
+        AbstractSceneNode::Init();
+    }
+
+    void Update(float deltaTime) override
+    {
+        const auto lightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+        const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+
+        // TODO fix aspect ratio -> is should not be hardcoded
+        m_lensFlareComponent->Update(cameraComponent->GetViewFrustum().CreateProjectionMatrix(1920.0f / 1080.0f), cameraComponent->LookAt(), cameraComponent->GetPosition(), lightComponent->GetPosition());
+
+        AbstractSceneNode::Update(deltaTime);
+    }
+
+    void ShutDown() override
+    {
+        AbstractSceneNode::ShutDown();
+
+        ComponentRepository<ILensFlareComponent>::Instance().Remove(m_id);
+    }
+
+private:
+    std::shared_ptr<ILensFlareComponent> m_lensFlareComponent;
+};
+
 class Shadows : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Shadows()
@@ -1395,7 +1438,7 @@ public:
         auto skyBox = std::make_shared<SkyBox>();
         AddChild(skyBox);
 
-        auto sunLight = std::make_shared<MainLight>(glm::vec3(150.0f, 150.0f, 150.0f));
+        auto sunLight = std::make_shared<MainLight>(glm::vec3(150.0f, 50.0f, 150.0f));
         sunLight->SetTags({ TAG_MAIN_LIGHT, TAG_LIGHT });
         AddChild(sunLight);
 
@@ -1446,6 +1489,9 @@ public:
 
         auto water = std::make_shared<WaterManager>(1, 1);
         AddChild(water);
+
+        auto lensFlare = std::make_shared<LensFlare>();
+        AddChild(lensFlare);
 
         for (auto child : m_children) {
             child->Init();
