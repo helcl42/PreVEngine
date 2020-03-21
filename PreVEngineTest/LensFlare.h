@@ -124,8 +124,8 @@ public:
     {
         glm::vec2 sunPositionInScreenSpace;
         if (ConvertWorldSpaceToScreenSpaceCoord(eyePosition + sunPosition, projectionMatrix, viewMatrix, sunPositionInScreenSpace)) {
-            const glm::vec2 SCREEN_CENTER{ 0.0f, 0.0f };
-            glm::vec2 sunToCenter{ SCREEN_CENTER - sunPositionInScreenSpace };
+            const glm::vec2 screenCenter{ 0.0f, 0.0f };
+            glm::vec2 sunToCenter{ screenCenter - sunPositionInScreenSpace };
             m_brightness = 1.0f - (glm::length(sunToCenter) / 1.4f);
 
             if (m_brightness > 0) {

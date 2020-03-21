@@ -11,11 +11,11 @@
 namespace PreVEngine {
 class PickList {
 protected:
-    std::vector<uint32_t> pick_list_indices;
+    std::vector<uint32_t> m_pickListIndices;
 
-    std::vector<std::string> pick_list_names;
+    std::vector<std::string> m_pickListNames;
 
-    std::vector<const char*> pick_list_names_ptrs;
+    std::vector<const char*> m_pickListNamesPtrs;
 
 public:
     PickList() = default;
@@ -60,7 +60,7 @@ public:
 //----------------------------Layers-----------------------------
 class Layers : public PickList {
 private:
-    std::vector<VkLayerProperties> item_list;
+    std::vector<VkLayerProperties> m_itemList;
 
 public:
     Layers();
@@ -77,7 +77,7 @@ public:
 //--------------------------Extensions---------------------------
 class Extensions : public PickList {
 private:
-    std::vector<VkExtensionProperties> item_list;
+    std::vector<VkExtensionProperties> m_itemList;
 
 public:
     Extensions(const char* layerName = nullptr);
@@ -94,7 +94,7 @@ public:
 //----------------------Device Extensions-------------------------
 class DeviceExtensions : public PickList {
 private:
-    std::vector<VkExtensionProperties> item_list;
+    std::vector<VkExtensionProperties> m_itemList;
 
 public:
     DeviceExtensions();

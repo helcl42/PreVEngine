@@ -3,7 +3,7 @@
 namespace PreVEngine {
 bool PickList::IsPicked(const char* name) const
 {
-    for (auto index : pick_list_indices) {
+    for (auto index : m_pickListIndices) {
         if (strcmp(name, Name(index)) == 0) {
             return true;
         }
@@ -46,13 +46,13 @@ bool PickList::Pick(const uint32_t inx)
         return false; // Return false if index is out of range.
     }
 
-    for (const auto pickItem : pick_list_indices) {
+    for (const auto pickItem : m_pickListIndices) {
         if (pickItem == inx) {
             return true; // Check if item was already picked
         }
     }
 
-    pick_list_indices.push_back(inx); // if not, add item to pick-list
+    m_pickListIndices.push_back(inx); // if not, add item to pick-list
 
     RefreshPickList();
 
@@ -62,8 +62,8 @@ bool PickList::Pick(const uint32_t inx)
 void PickList::UnPick(const char* name)
 {
     for (uint32_t i = 0; i < PickCount(); i++) {
-        if (strcmp(name, Name(pick_list_indices[i])) == 0) {
-            pick_list_indices.erase(pick_list_indices.begin() + i);
+        if (strcmp(name, Name(m_pickListIndices[i])) == 0) {
+            m_pickListIndices.erase(m_pickListIndices.begin() + i);
         }
     }
 
@@ -72,13 +72,13 @@ void PickList::UnPick(const char* name)
 
 void PickList::RefreshPickList()
 {
-    pick_list_names.resize(pick_list_indices.size());
-    pick_list_names_ptrs.resize(pick_list_indices.size());
+    m_pickListNames.resize(m_pickListIndices.size());
+    m_pickListNamesPtrs.resize(m_pickListIndices.size());
 
-    for (size_t i = 0; i < pick_list_indices.size(); i++) {
-        const char* name = Name(pick_list_indices.at(i));
-        pick_list_names[i] = std::string(name);
-        pick_list_names_ptrs[i] = pick_list_names.at(i).c_str();
+    for (size_t i = 0; i < m_pickListIndices.size(); i++) {
+        const char* name = Name(m_pickListIndices.at(i));
+        m_pickListNames[i] = std::string(name);
+        m_pickListNamesPtrs[i] = m_pickListNames.at(i).c_str();
     }
 }
 
@@ -91,19 +91,19 @@ void PickList::PickAll()
 
 void PickList::Clear()
 {
-    pick_list_indices.clear();
-    pick_list_indices.clear();
-    pick_list_names_ptrs.clear();
+    m_pickListIndices.clear();
+    m_pickListNames.clear();
+    m_pickListNamesPtrs.clear();
 }
 
 const char* const* PickList::GetPickList() const
 {
-    return static_cast<const char* const*>(pick_list_names_ptrs.data());
+    return static_cast<const char* const*>(m_pickListNamesPtrs.data());
 }
 
 uint32_t PickList::PickCount() const
 {
-    return static_cast<uint32_t>(pick_list_indices.size());
+    return static_cast<uint32_t>(m_pickListIndices.size());
 }
 
 void PickList::Print() const
@@ -112,7 +112,7 @@ void PickList::Print() const
     for (uint32_t i = 0; i < Count(); i++) {
         bool picked = false;
         const char* name = Name(i);
-        for (const auto pickIndex : pick_list_indices) {
+        for (const auto pickIndex : m_pickListIndices) {
             picked |= (strcmp(Name(pickIndex), name) == 0);
         }
 
@@ -129,18 +129,18 @@ Layers::Layers()
     uint32_t count = 0;
     VKERRCHECK(vkEnumerateInstanceLayerProperties(&count, nullptr));
 
-    item_list.resize(count);
-    VKERRCHECK(vkEnumerateInstanceLayerProperties(&count, item_list.data()));
+    m_itemList.resize(count);
+    VKERRCHECK(vkEnumerateInstanceLayerProperties(&count, m_itemList.data()));
 }
 
 const char* Layers::Name(uint32_t inx) const
 {
-    return static_cast<const char*>(item_list.at(inx).layerName);
+    return static_cast<const char*>(m_itemList.at(inx).layerName);
 }
 
 uint32_t Layers::Count() const
 {
-    return (uint32_t)item_list.size();
+    return static_cast<uint32_t>(m_itemList.size());
 }
 
 std::string Layers::PickListName() const
@@ -153,18 +153,18 @@ Extensions::Extensions(const char* layer_name)
     uint32_t count = 0;
     VKERRCHECK(vkEnumerateInstanceExtensionProperties(layer_name, &count, nullptr)); // Get list size
 
-    item_list.resize(count); // Resize buffer
-    VKERRCHECK(vkEnumerateInstanceExtensionProperties(layer_name, &count, item_list.data())); // Fetch list
+    m_itemList.resize(count); // Resize buffer
+    VKERRCHECK(vkEnumerateInstanceExtensionProperties(layer_name, &count, m_itemList.data())); // Fetch list
 }
 
 const char* Extensions::Name(uint32_t inx) const
 {
-    return static_cast<const char*>(item_list.at(inx).extensionName);
+    return static_cast<const char*>(m_itemList.at(inx).extensionName);
 }
 
 uint32_t Extensions::Count() const
 {
-    return (uint32_t)item_list.size();
+    return static_cast<uint32_t>(m_itemList.size());
 }
 
 std::string Extensions::PickListName() const
@@ -179,8 +179,8 @@ DeviceExtensions::DeviceExtensions()
 DeviceExtensions& DeviceExtensions::operator=(const DeviceExtensions& other)
 {
     if (this != &other) {
-        this->item_list = other.item_list;
-        this->pick_list_indices = other.pick_list_indices;
+        this->m_itemList = other.m_itemList;
+        this->m_pickListIndices = other.m_pickListIndices;
         RefreshPickList();
     }
     return *this;
@@ -188,8 +188,8 @@ DeviceExtensions& DeviceExtensions::operator=(const DeviceExtensions& other)
 
 DeviceExtensions::DeviceExtensions(const DeviceExtensions& other)
 {
-    this->item_list = other.item_list;
-    this->pick_list_indices = other.pick_list_indices;
+    this->m_itemList = other.m_itemList;
+    this->m_pickListIndices = other.m_pickListIndices;
     RefreshPickList();
 }
 
@@ -198,18 +198,18 @@ void DeviceExtensions::Init(VkPhysicalDevice phy, const char* layerName)
     uint32_t count = 0;
     VKERRCHECK(vkEnumerateDeviceExtensionProperties(phy, layerName, &count, nullptr));
 
-    item_list.resize(count); // Resize buffer
-    VKERRCHECK(vkEnumerateDeviceExtensionProperties(phy, layerName, &count, item_list.data())); // Fetch list
+    m_itemList.resize(count); // Resize buffer
+    VKERRCHECK(vkEnumerateDeviceExtensionProperties(phy, layerName, &count, m_itemList.data())); // Fetch list
 }
 
 const char* DeviceExtensions::Name(uint32_t inx) const
 {
-    return static_cast<const char*>(item_list.at(inx).extensionName);
+    return static_cast<const char*>(m_itemList.at(inx).extensionName);
 }
 
 uint32_t DeviceExtensions::Count() const
 {
-    return (uint32_t)item_list.size();
+    return static_cast<uint32_t>(m_itemList.size());
 }
 
 std::string DeviceExtensions::PickListName() const
