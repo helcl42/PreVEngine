@@ -99,7 +99,7 @@ public:
 
     virtual const std::vector<std::shared_ptr<Flare> >& GetFlares() const = 0;
 
-    virtual std::shared_ptr<IModel> GetModel() = 0;
+    virtual std::shared_ptr<IModel> GetModel() const = 0;
 
 public:
     virtual ~ILensFlareComponent() = default;
@@ -137,7 +137,7 @@ public:
         return m_flares;
     }
 
-    std::shared_ptr<IModel> GetModel() override
+    std::shared_ptr<IModel> GetModel() const override
     {
         return m_model;
     }
@@ -232,7 +232,7 @@ public:
 
     virtual std::shared_ptr<Flare> GetFlare() const = 0;
 
-    virtual std::shared_ptr<IModel> GetModel() = 0;
+    virtual std::shared_ptr<IModel> GetModel() const = 0;
 
 public:
     virtual ~ISunComponent() = default;
@@ -269,7 +269,7 @@ public:
         return m_flare;
     }
 
-    std::shared_ptr<IModel> GetModel() override
+    std::shared_ptr<IModel> GetModel() const override
     {
         return m_model;
     }
