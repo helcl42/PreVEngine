@@ -1996,9 +1996,9 @@ public:
         // Store results a 64 bit values and wait until the results have been finished
         // If you don't want to wait, you can use VK_QUERY_RESULT_WITH_AVAILABILITY_BIT
         // which also returns the state of the result (ready) in the result
-        vkGetQueryPoolResults(*device, m_queryPool, 0, 1, sizeof(m_passedSamples), &m_passedSamples, sizeof(uint64_t), VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT);
+        auto result = vkGetQueryPoolResults(*device, m_queryPool, 0, 1, sizeof(m_passedSamples), &m_passedSamples, sizeof(uint64_t), VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_PARTIAL_BIT);
         const float ratio = glm::clamp((static_cast<float>(m_passedSamples) / static_cast<float>(m_maxNumberOfSamples)), 0.0f, 1.0f) * 0.8f;
-        //std::cout << "Passed samples: " << m_passedSamples << " Max: " << m_maxNumberOfSamples << " Ratio: " << ratio << std::endl;
+        LOGI("Result: %s Passed samples: %lld Max: %lld Ratio: %f\n", VkResultStr(result),  m_passedSamples,  m_maxNumberOfSamples, ratio);
         EventChannel::Broadcast(SunVisibilityEvent{ ratio });
     }
 
