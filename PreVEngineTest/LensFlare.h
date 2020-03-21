@@ -156,8 +156,8 @@ private:
     void UpdateFlareTexrures(const glm::vec2& sunToCenterDirection, const glm::vec2& sunPositionInScreenSpace)
     {
         for (unsigned int i = 0; i < m_flares.size(); i++) {
-            glm::vec2 direction = sunToCenterDirection * (i * m_spacing);
-            glm::vec2 flarePosition = sunPositionInScreenSpace + direction;
+            const auto direction = sunToCenterDirection * ((i + 1) * m_spacing);
+            const auto flarePosition = sunPositionInScreenSpace + direction;
             m_flares[i]->SetScreenSpacePosition(flarePosition);
         }
     }
@@ -176,8 +176,8 @@ public:
     {
         const float spacing{ 0.16f };
         const std::vector<FlareCreateInfo> flareCreateInfos = {
-            { AssetManager::Instance().GetAssetPath("LensFlares/tex2.png"), 0.0f },
-            { AssetManager::Instance().GetAssetPath("LensFlares/tex3.png"), 0.0f },
+            { AssetManager::Instance().GetAssetPath("LensFlares/tex2.png"), 0.2f },
+            { AssetManager::Instance().GetAssetPath("LensFlares/tex3.png"), 0.12f },
             { AssetManager::Instance().GetAssetPath("LensFlares/tex4.png"), 0.46f },
             { AssetManager::Instance().GetAssetPath("LensFlares/tex5.png"), 0.12f },
             { AssetManager::Instance().GetAssetPath("LensFlares/tex6.png"), 1.0f },
