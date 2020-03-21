@@ -106,6 +106,10 @@ public:
         vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
     }
 
+    void BeforeRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    {
+    }
+
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT })) {
@@ -139,6 +143,10 @@ public:
     }
 
     void PostRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    {
+    }
+
+    void AfterRender(RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -200,6 +208,10 @@ public:
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
+    void BeforeRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    {
+    }
+
     void PreRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
@@ -245,6 +257,10 @@ public:
     }
 
     void PostRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    {
+    }
+
+    void AfterRender(RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -307,6 +323,10 @@ public:
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
+    void BeforeRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    {
+    }
+
     void PreRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
@@ -358,6 +378,10 @@ public:
     }
 
     void PostRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    {
+    }
+
+    void AfterRender(RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -433,6 +457,10 @@ public:
         m_quadModel = std::make_unique<Model>(quadMesh, vertexBuffer, indexBuffer);
     }
 
+    void BeforeRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+    }
+
     void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
         VkRect2D renderRect{};
@@ -488,6 +516,10 @@ public:
     void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
         m_renderPass->End(renderContext.defaultCommandBuffer);
+    }
+
+    void AfterRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
     }
 
     void ShutDown() override
@@ -564,6 +596,10 @@ public:
         m_quadModel = std::make_unique<Model>(quadMesh, vertexBuffer, indexBuffer);
     }
 
+    void BeforeRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+    }
+
     void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
         VkRect2D renderRect{};
@@ -615,6 +651,10 @@ public:
     void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
         m_renderPass->End(renderContext.defaultCommandBuffer);
+    }
+
+    void AfterRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
     }
 
     void ShutDown() override
@@ -746,6 +786,10 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
+    void BeforeRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
     void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
@@ -836,6 +880,10 @@ public:
     }
 
     void PostRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void AfterRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -970,6 +1018,10 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
+    void BeforeRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
     void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
@@ -1064,6 +1116,10 @@ public:
     }
 
     void PostRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void AfterRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -1197,6 +1253,10 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
+    void BeforeRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
     void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
@@ -1295,6 +1355,10 @@ public:
     {
     }
 
+    void AfterRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
     void ShutDown() override
     {
         m_shader->ShutDown();
@@ -1376,6 +1440,10 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
+    void BeforeRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+    }
+
     void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
@@ -1430,6 +1498,10 @@ public:
     }
 
     void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void AfterRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -1508,6 +1580,10 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
+    void BeforeRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
     void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
@@ -1563,6 +1639,10 @@ public:
     }
 
     void PostRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void AfterRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -1681,6 +1761,10 @@ public:
         vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
     }
 
+    void BeforeRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_RENDER_COMPONENT })) {
@@ -1751,6 +1835,10 @@ public:
     {
     }
 
+    void AfterRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
     void ShutDown() override
     {
         m_shader->ShutDown();
@@ -1759,7 +1847,178 @@ public:
     }
 };
 
+struct SunVisibilityEvent {
+    float visibilityFactor;
+};
+
+class SunRenderer : public IRenderer<DefaultRenderContextUserData> {
+private:
+    struct alignas(16) UniformsVS
+    {
+        alignas(16) glm::vec4 translation;
+
+        alignas(16) glm::vec4 scale;
+    };
+
+    struct alignas(16) UniformsFS
+    {
+        alignas(16) glm::vec4 brightness;
+    };
+
+private:
+    const uint32_t m_descriptorCount{ 50 };
+
+private:
+    std::shared_ptr<RenderPass> m_renderPass;
+
+private:
+    std::unique_ptr<Shader> m_shader;
+
+    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+
+    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+
+    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+
+private:
+    uint64_t m_passedSamples{ 0 };
+
+    uint64_t m_maxNumberOfSamples{ 0 };
+
+    VkQueryPool m_queryPool{ nullptr };
+
+public:
+    SunRenderer(const std::shared_ptr<RenderPass>& renderPass)
+        : m_renderPass(renderPass)
+    {
+    }
+
+    virtual ~SunRenderer() = default;
+
+public:
+    void Init() override
+    {
+        auto device = DeviceProvider::Instance().GetDevice();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
+
+        ShaderFactory shaderFactory;
+        m_shader = shaderFactory.CreateShaderFromFiles<FlareShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/sun_occlusion_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/sun_occlusion_frag.spv") } });
+        m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
+
+        LOGI("Sun Shader created\n");
+
+        m_pipeline = std::make_unique<FlarePipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline->Init();
+
+        LOGI("Sun Pipeline created\n");
+
+        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+
+        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+
+        VkQueryPoolCreateInfo queryPoolInfo = { VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO };
+        queryPoolInfo.queryType = VK_QUERY_TYPE_OCCLUSION;
+        queryPoolInfo.queryCount = 1;
+        VKERRCHECK(vkCreateQueryPool(*device, &queryPoolInfo, nullptr, &m_queryPool));
+    }
+
+    void BeforeRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+        m_passedSamples = 0;
+        vkCmdResetQueryPool(renderContext.defaultCommandBuffer, m_queryPool, 0, 1);
+    }
+
+    void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
+
+        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+    }
+
+    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SUN_RENDER_COMPONENT })) {
+            const auto sunComponent = ComponentRepository<ISunComponent>::Instance().Get(node->GetId());
+
+            const float xScale = sunComponent->GetFlare()->GetScale();
+            const float yScale = xScale * renderContext.fullExtent.width / renderContext.fullExtent.height;
+
+            m_maxNumberOfSamples = static_cast<uint64_t>(powf(sunComponent->GetFlare()->GetScale() * renderContext.fullExtent.width, 2.0f));
+
+            vkCmdBeginQuery(renderContext.defaultCommandBuffer, m_queryPool, 0, 0);
+
+            auto uboVS = m_uniformsPoolVS->GetNext();
+            UniformsVS uniformsVS{};
+            uniformsVS.translation = glm::vec4(sunComponent->GetFlare()->GetScreenSpacePosition(), 0.0f, 1.0f);
+            uniformsVS.scale = glm::vec4(xScale, yScale, 0.0f, 0.0f);
+            uboVS->Update(&uniformsVS);
+
+            auto uboFS = m_uniformsPoolFS->GetNext();
+            UniformsFS uniformsFS{};
+            uniformsFS.brightness = glm::vec4(1.0f);
+            uboFS->Update(&uniformsFS);
+
+            m_shader->Bind("textureSampler", *sunComponent->GetFlare()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            m_shader->Bind("uboVS", *uboVS);
+            m_shader->Bind("uboFS", *uboFS);
+
+            VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+            VkBuffer vertexBuffers[] = { *sunComponent->GetModel()->GetVertexBuffer() };
+            VkDeviceSize offsets[] = { 0 };
+
+            vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *sunComponent->GetModel()->GetIndexBuffer(), 0, sunComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+            vkCmdDrawIndexed(renderContext.defaultCommandBuffer, sunComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+
+            vkCmdEndQuery(renderContext.defaultCommandBuffer, m_queryPool, 0);
+        }
+
+        for (auto child : node->GetChildren()) {
+            Render(renderContext, child, renderContextUserData);
+        }
+    }
+
+    void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void AfterRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+        auto device = DeviceProvider::Instance().GetDevice();
+
+        // Store results a 64 bit values and wait until the results have been finished
+        // If you don't want to wait, you can use VK_QUERY_RESULT_WITH_AVAILABILITY_BIT
+        // which also returns the state of the result (ready) in the result
+        vkGetQueryPoolResults(*device, m_queryPool, 0, 1, sizeof(m_passedSamples), &m_passedSamples, sizeof(uint64_t), VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT);
+        const float ratio = glm::clamp((static_cast<float>(m_passedSamples) / static_cast<float>(m_maxNumberOfSamples)), 0.0f, 1.0f);
+        //std::cout << "Passed samples: " << m_passedSamples << " Max: " << m_maxNumberOfSamples << " Ratio: " << ratio << std::endl;
+        EventChannel::Broadcast(SunVisibilityEvent{ ratio });
+    }
+
+    void ShutDown() override
+    {
+        auto device = DeviceProvider::Instance().GetDevice();
+        vkDestroyQueryPool(*device, m_queryPool, nullptr);
+
+        m_shader->ShutDown();
+
+        m_pipeline->ShutDown();
+    }
+};
+
 class LensFlareRenderer : public IRenderer<DefaultRenderContextUserData> {
+private:
+    EventHandler<LensFlareRenderer, SunVisibilityEvent> m_sunVisibilityEventHandler{ *this };
+
+    float m_sunVisibilityFactor{ 0.0f };
+
 private:
     struct alignas(16) UniformsVS
     {
@@ -1803,12 +2062,12 @@ public:
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<LensFlareShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/lens_flare_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/lens_flare_frag.spv") } });
+        m_shader = shaderFactory.CreateShaderFromFiles<FlareShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/lens_flare_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/lens_flare_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
         LOGI("LensFlare Shader created\n");
 
-        m_pipeline = std::make_unique<LensFlarePipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline = std::make_unique<FlarePipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
         LOGI("LensFlare Pipeline created\n");
@@ -1820,11 +2079,15 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
+    void BeforeRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+    }
+
     void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
-
+        
         vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
         vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
@@ -1834,16 +2097,20 @@ public:
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_LENS_FLARE_RENDER_COMPONENT })) {
             const auto lensFlareComponent = ComponentRepository<ILensFlareComponent>::Instance().Get(node->GetId());
+
             for (const auto& lensFlare : lensFlareComponent->GetFlares()) {
+                const float xScale = lensFlare->GetScale();
+                const float yScale = xScale * renderContext.fullExtent.width / renderContext.fullExtent.height;
+
                 auto uboVS = m_uniformsPoolVS->GetNext();
                 UniformsVS uniformsVS{};
                 uniformsVS.translation = glm::vec4(lensFlare->GetScreenSpacePosition(), 0.0f, 1.0f);
-                uniformsVS.scale = glm::vec4(lensFlare->GetScale(), lensFlare->GetScale(), 0.0f, 0.0f);
+                uniformsVS.scale = glm::vec4(xScale, yScale, 0.0f, 0.0f);
                 uboVS->Update(&uniformsVS);
 
                 auto uboFS = m_uniformsPoolFS->GetNext();
                 UniformsFS uniformsFS{};
-                uniformsFS.brightness = glm::vec4(lensFlareComponent->GetBrightness());
+                uniformsFS.brightness = glm::vec4(m_sunVisibilityFactor);
                 uboFS->Update(&uniformsFS);
 
                 m_shader->Bind("textureSampler", *lensFlare->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -1871,11 +2138,20 @@ public:
     {
     }
 
+    void AfterRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+    }
+
     void ShutDown() override
     {
         m_shader->ShutDown();
 
         m_pipeline->ShutDown();
+    }
+
+    void operator()(const SunVisibilityEvent& evt)
+    {
+        m_sunVisibilityFactor = evt.visibilityFactor;
     }
 };
 
@@ -1895,6 +2171,10 @@ public:
         InitShadows();
         InitReflection();
         InitRefraction();
+    }
+
+    void BeforeRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
     }
 
     void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
@@ -1935,6 +2215,10 @@ public:
     {
     }
 
+    void AfterRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+    }
+
     void ShutDown() override
     {
         ShutDownRefraction();
@@ -1963,6 +2247,9 @@ private:
 
         m_fontRenderer = std::make_unique<FontRenderer>(m_defaultRenderPass);
         m_fontRenderer->Init();
+
+        m_sunRenderer = std::make_unique<SunRenderer>(m_defaultRenderPass);
+        m_sunRenderer->Init();
 
         m_lensFlareRenderer = std::make_unique<LensFlareRenderer>(m_defaultRenderPass);
         m_lensFlareRenderer->Init();
@@ -2047,6 +2334,7 @@ private:
         m_textureDebugRenderer->ShutDown();
         m_shadowMapDebugRenderer->ShutDown();
         m_lensFlareRenderer->ShutDown();
+        m_sunRenderer->ShutDown();
         m_fontRenderer->ShutDown();
         m_waterRenderer->ShutDown();
         m_animationRenderer->ShutDown();
@@ -2221,6 +2509,8 @@ private:
 
     void RenderScene(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
     {
+        m_sunRenderer->BeforeRender(renderContext);
+
         m_defaultRenderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, renderContext.fullExtent });
 
         const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
@@ -2279,15 +2569,26 @@ private:
 
         m_waterRenderer->PostRender(renderContext, userData);
 
-        // Water
+        // Sun
+        m_sunRenderer->PreRender(renderContext);
+
+        for (auto child : root->GetChildren()) {
+            m_sunRenderer->Render(renderContext, child);
+        }
+
+        m_sunRenderer->PostRender(renderContext);   
+        
+        m_sunRenderer->AfterRender(renderContext);
+
+        // LensFlare
         m_lensFlareRenderer->PreRender(renderContext);
 
         for (auto child : root->GetChildren()) {
             m_lensFlareRenderer->Render(renderContext, child);
         }
 
-        m_lensFlareRenderer->PostRender(renderContext);
-        
+        m_lensFlareRenderer->PostRender(renderContext);       
+
         // Fonts
         m_fontRenderer->PreRender(renderContext);
 
@@ -2316,6 +2617,8 @@ private:
     std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_waterRenderer;
 
     std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_fontRenderer;
+
+    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_sunRenderer;
 
     std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_lensFlareRenderer;
     // Debug

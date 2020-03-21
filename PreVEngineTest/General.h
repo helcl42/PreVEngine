@@ -37,6 +37,7 @@ enum class SceneNodeFlags : uint64_t {
     HAS_WATER_REFRACTION_RENDER_COMPONENT,
     HAS_WATER_RENDER_COMPONENT,
     HAS_LENS_FLARE_RENDER_COMPONENT,
+    HAS_SUN_RENDER_COMPONENT,
     _
 };
 
@@ -351,11 +352,15 @@ class IRenderer {
 public:
     virtual void Init() = 0;
 
+    virtual void BeforeRender(RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
+
     virtual void PreRender(RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
     virtual void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
     virtual void PostRender(RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
+
+    virtual void AfterRender(RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
     virtual void ShutDown() = 0;
 

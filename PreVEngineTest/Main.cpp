@@ -559,7 +559,7 @@ private:
 
     float m_cameraPitch{ -20.0f };
 
-    float m_distanceFromPerson{ 45.0f };
+    float m_distanceFromPerson{ 50.0f };
 
     glm::vec2 m_prevTouchPosition{ 0.0f, 0.0f };
 
@@ -664,7 +664,7 @@ public:
             m_pitchDiff = 0.0f;
         }
 
-        const glm::vec3 cameraPosition = GetPosition() + (-m_cameraComponent->GetForwardDirection() * m_distanceFromPerson) + glm::vec3(0.0f, 5.0f, 0.0f);
+        const glm::vec3 cameraPosition = GetPosition() + (-m_cameraComponent->GetForwardDirection() * m_distanceFromPerson) + glm::vec3(0.0f, 8.0f, 0.0f);
         m_cameraComponent->SetPosition(cameraPosition);
 
         AbstractSceneNode::Update(deltaTime);
@@ -1034,7 +1034,7 @@ public:
 
     void Update(float deltaTime) override
     {
-        const float ROTATION_SPEED_DEG_PER_SEC = 7.5f;
+        const float ROTATION_SPEED_DEG_PER_SEC = 5.0f;
         const float ROTATION_ANGLE = ROTATION_SPEED_DEG_PER_SEC * deltaTime;
 
         glm::mat4 transform(1.0f);
@@ -1369,6 +1369,48 @@ private:
     std::shared_ptr<ILensFlareComponent> m_lensFlareComponent;
 };
 
+class Sun : public AbstractSceneNode<SceneNodeFlags> {
+public:
+    Sun()
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SUN_RENDER_COMPONENT })
+    {
+    }
+
+    ~Sun() = default;
+
+public:
+    void Init() override
+    {
+        SunComponentFactory componentFactory{};
+        m_sunComponent = std::move(componentFactory.Create());
+
+        ComponentRepository<ISunComponent>::Instance().Add(m_id, m_sunComponent);
+
+        AbstractSceneNode::Init();
+    }
+
+    void Update(float deltaTime) override
+    {
+        const auto lightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+        const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+
+        // TODO fix aspect ratio -> is should not be hardcoded
+        m_sunComponent->Update(cameraComponent->GetViewFrustum().CreateProjectionMatrix(1920.0f / 1080.0f), cameraComponent->LookAt(), cameraComponent->GetPosition(), lightComponent->GetPosition());
+
+        AbstractSceneNode::Update(deltaTime);
+    }
+
+    void ShutDown() override
+    {
+        AbstractSceneNode::ShutDown();
+
+        ComponentRepository<ISunComponent>::Instance().Remove(m_id);
+    }
+
+private:
+    std::shared_ptr<ISunComponent> m_sunComponent;
+};
+
 class Shadows : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Shadows()
@@ -1490,6 +1532,9 @@ public:
         auto water = std::make_shared<WaterManager>(1, 1);
         AddChild(water);
 
+        auto sun = std::make_shared<Sun>();
+        AddChild(sun);
+
         auto lensFlare = std::make_shared<LensFlare>();
         AddChild(lensFlare);
 
@@ -1509,7 +1554,15 @@ public:
 
     void Render(RenderContext& renderContext) override
     {
+        m_masterRenderer->BeforeRender(renderContext);
+
+        m_masterRenderer->PreRender(renderContext);
+
         m_masterRenderer->Render(renderContext, GetThis());
+
+        m_masterRenderer->PostRender(renderContext);
+
+        m_masterRenderer->AfterRender(renderContext);
     }
 
     void ShutDown() override

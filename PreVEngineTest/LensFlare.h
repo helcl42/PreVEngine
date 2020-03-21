@@ -3,9 +3,9 @@
 
 #include "General.h"
 
-class LensFlareItem {
+class Flare {
 public:
-    LensFlareItem(const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const float scale)
+    Flare(const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const float scale)
         : m_image(image)
         , m_imageBuffer(imageBuffer)
         , m_scale(scale)
@@ -13,7 +13,7 @@ public:
     {
     }
 
-    ~LensFlareItem() = default;
+    ~Flare() = default;
 
 public:
     std::shared_ptr<Image> GetImage() const
@@ -51,7 +51,7 @@ private:
     glm::vec2 m_screenSpacePosition;
 };
 
-class LensFlareMesh : public IMesh {
+class QuadMesh2D : public IMesh {
 public:
     const VertexLayout& GetVertexLayout() const override
     {
@@ -97,11 +97,9 @@ class ILensFlareComponent {
 public:
     virtual void Update(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, const glm::vec3& eyePosition, const glm::vec3& sunPosition) = 0;
 
-    virtual const std::vector<std::shared_ptr<LensFlareItem> >& GetFlares() const = 0;
+    virtual const std::vector<std::shared_ptr<Flare> >& GetFlares() const = 0;
 
     virtual std::shared_ptr<IModel> GetModel() = 0;
-
-    virtual float GetBrightness() const = 0;
 
 public:
     virtual ~ILensFlareComponent() = default;
@@ -109,11 +107,10 @@ public:
 
 class LensFlareComponent : public ILensFlareComponent {
 public:
-    explicit LensFlareComponent(const std::vector<std::shared_ptr<LensFlareItem> >& flares, float spacing, const std::shared_ptr<IModel>& model)
+    explicit LensFlareComponent(const std::vector<std::shared_ptr<Flare> >& flares, float spacing, const std::shared_ptr<IModel>& model)
         : m_flares(flares)
         , m_spacing(spacing)
         , m_model(model)
-        , m_brightness(0.0f)
     {
     }
 
@@ -126,17 +123,16 @@ public:
         if (ConvertWorldSpaceToScreenSpaceCoord(eyePosition + sunPosition, projectionMatrix, viewMatrix, sunPositionInScreenSpace)) {
             const glm::vec2 screenCenter{ 0.0f, 0.0f };
             glm::vec2 sunToCenter{ screenCenter - sunPositionInScreenSpace };
-            m_brightness = 1.0f - (glm::length(sunToCenter) / 1.4f);
-
-            if (m_brightness > 0) {
+            const float brightness = 1.0f - (glm::length(sunToCenter) / 1.4f);
+            if (brightness > 0) {
                 UpdateFlareTexrures(sunToCenter, sunPositionInScreenSpace);
+            } else {
+                UpdateFlareTexrures(glm::vec2(-100.0f), glm::vec2(-100.0f));
             }
-
-            m_brightness = glm::clamp(m_brightness, 0.0f, 0.5f);
         }
     }
 
-    const std::vector<std::shared_ptr<LensFlareItem> >& GetFlares() const override
+    const std::vector<std::shared_ptr<Flare> >& GetFlares() const override
     {
         return m_flares;
     }
@@ -146,17 +142,10 @@ public:
         return m_model;
     }
 
-    float GetBrightness() const override
-    {
-        return m_brightness;
-    }
-
 private:
     bool ConvertWorldSpaceToScreenSpaceCoord(const glm::vec3& worldPosition, const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, glm::vec2& convertedSceenPosition)
     {
-        glm::vec4 coord{ worldPosition, 1.0f };
-        coord = viewMatrix * coord;
-        coord = projectionMatrix * coord;
+        const auto coord = projectionMatrix * viewMatrix * glm::vec4{ worldPosition, 1.0f };
         if (coord.w <= 0.0f) {
             return false;
         }
@@ -174,25 +163,23 @@ private:
     }
 
 private:
-    std::vector<std::shared_ptr<LensFlareItem> > m_flares;
+    std::vector<std::shared_ptr<Flare> > m_flares;
 
     float m_spacing;
 
     std::shared_ptr<IModel> m_model;
-
-    float m_brightness;
 };
 
 class LensFlareComponentFactory {
 public:
     std::unique_ptr<ILensFlareComponent> Create() const
     {
-        const float spacing{ 0.2f };
+        const float spacing{ 0.16f };
         const std::vector<FlareCreateInfo> flareCreateInfos = {
-            { AssetManager::Instance().GetAssetPath("LensFlares/tex2.png"), 0.2f },
-            { AssetManager::Instance().GetAssetPath("LensFlares/tex3.png"), 0.12f },
+            { AssetManager::Instance().GetAssetPath("LensFlares/tex2.png"), 0.0f },
+            { AssetManager::Instance().GetAssetPath("LensFlares/tex3.png"), 0.0f },
             { AssetManager::Instance().GetAssetPath("LensFlares/tex4.png"), 0.46f },
-            { AssetManager::Instance().GetAssetPath("LensFlares/tex5.png"), 0.14f },
+            { AssetManager::Instance().GetAssetPath("LensFlares/tex5.png"), 0.12f },
             { AssetManager::Instance().GetAssetPath("LensFlares/tex6.png"), 1.0f },
             { AssetManager::Instance().GetAssetPath("LensFlares/tex7.png"), 0.1f },
             { AssetManager::Instance().GetAssetPath("LensFlares/tex8.png"), 1.2f },
@@ -201,9 +188,11 @@ public:
 
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        std::vector<std::shared_ptr<LensFlareItem>> flares{};
+        std::vector<std::shared_ptr<Flare> > flares{};
         for (const auto& flareCreateInfo : flareCreateInfos) {
-            flares.emplace_back(CreateFlare(*allocator, flareCreateInfo.path, flareCreateInfo.scale));
+            auto flare = CreateFlare(*allocator, flareCreateInfo.path, flareCreateInfo.scale);
+            flare->SetScreenSpacePosition(glm::vec2(-100.0f, -100.0f));
+            flares.emplace_back(std::move(flare));
         }
 
         auto model = CreateModel(*allocator);
@@ -218,7 +207,7 @@ private:
 
     std::unique_ptr<IModel> CreateModel(Allocator& allocator) const
     {
-        auto mesh = std::make_unique<LensFlareMesh>();
+        auto mesh = std::make_unique<QuadMesh2D>();
         auto vertexBuffer = std::make_unique<VBO>(allocator);
         vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
         auto indexBuffer = std::make_unique<IBO>(allocator);
@@ -227,14 +216,115 @@ private:
         return std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
 
-    std::unique_ptr<LensFlareItem> CreateFlare(Allocator& allocator, const std::string& filePath, const float scale) const
+    std::unique_ptr<Flare> CreateFlare(Allocator& allocator, const std::string& filePath, const float scale) const
     {
         ImageFactory imageFactory{};
         auto image = imageFactory.CreateImage(filePath);
         auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
         imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
-        return std::make_unique<LensFlareItem>(std::move(image), std::move(imageBuffer), scale);
+        return std::make_unique<Flare>(std::move(image), std::move(imageBuffer), scale);
     }
 };
+
+class ISunComponent {
+public:
+    virtual void Update(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, const glm::vec3& eyePosition, const glm::vec3& sunPosition) = 0;
+
+    virtual std::shared_ptr<Flare> GetFlare() const = 0;
+
+    virtual std::shared_ptr<IModel> GetModel() = 0;
+
+public:
+    virtual ~ISunComponent() = default;
+};
+
+class SunComponent : public ISunComponent {
+public:
+    explicit SunComponent(const std::shared_ptr<Flare>& flare, const std::shared_ptr<IModel>& model)
+        : m_flare(flare)
+        , m_model(model)
+    {
+    }
+
+    virtual ~SunComponent() = default;
+
+public:
+    void Update(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, const glm::vec3& eyePosition, const glm::vec3& sunPosition) override
+    {
+        glm::vec2 sunPositionInScreenSpace;
+        if (ConvertWorldSpaceToScreenSpaceCoord(eyePosition + sunPosition, projectionMatrix, viewMatrix, sunPositionInScreenSpace)) {
+            const glm::vec2 screenCenter{ 0.0f, 0.0f };
+            glm::vec2 sunToCenter{ screenCenter - sunPositionInScreenSpace };
+            const float brightness = 1.0f - (glm::length(sunToCenter) / 1.4f);
+            if (brightness > 0) {
+                m_flare->SetScreenSpacePosition(sunPositionInScreenSpace);
+            } else {
+                m_flare->SetScreenSpacePosition(glm::vec2(-100.0f));
+            }
+        }
+    }
+
+    std::shared_ptr<Flare> GetFlare() const override
+    {
+        return m_flare;
+    }
+
+    std::shared_ptr<IModel> GetModel() override
+    {
+        return m_model;
+    }
+
+private:
+    bool ConvertWorldSpaceToScreenSpaceCoord(const glm::vec3& worldPosition, const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, glm::vec2& convertedSceenPosition)
+    {
+        const auto coord = projectionMatrix * viewMatrix * glm::vec4{ worldPosition, 1.0f };
+        if (coord.w <= 0.0f) {
+            return false;
+        }
+        convertedSceenPosition = glm::vec2(coord.x / coord.w, coord.y / coord.w);
+        return true;
+    }
+
+private:
+    std::shared_ptr<Flare> m_flare;
+
+    std::shared_ptr<IModel> m_model;
+};
+
+class SunComponentFactory {
+public:
+    std::unique_ptr<ISunComponent> Create() const
+    {
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
+
+        auto flare = CreateFlare(*allocator, AssetManager::Instance().GetAssetPath("Textures/sun.png"), 0.2f);
+        flare->SetScreenSpacePosition(glm::vec2(-100.0f, -100.0f));
+
+        auto model = CreateModel(*allocator);
+        return std::make_unique<SunComponent>(std::move(flare), std::move(model));
+    }
+
+private:
+    std::unique_ptr<IModel> CreateModel(Allocator& allocator) const
+    {
+        auto mesh = std::make_unique<QuadMesh2D>();
+        auto vertexBuffer = std::make_unique<VBO>(allocator);
+        vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
+        auto indexBuffer = std::make_unique<IBO>(allocator);
+        indexBuffer->Data(mesh->GerIndices().data(), static_cast<uint32_t>(mesh->GerIndices().size()));
+
+        return std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
+    }
+
+    std::unique_ptr<Flare> CreateFlare(Allocator& allocator, const std::string& filePath, const float scale) const
+    {
+        ImageFactory imageFactory{};
+        auto image = imageFactory.CreateImage(filePath);
+        auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
+        imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
+        return std::make_unique<Flare>(std::move(image), std::move(imageBuffer), scale);
+    }
+};
+
 
 #endif

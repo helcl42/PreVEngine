@@ -163,6 +163,7 @@ void SetConsoleTextColor(const ConsoleColor color);
 #endif
 
 void ShowVkResult(VkResult err);
+const char* VkResultStr(const VkResult err);
 
 #ifdef NDEBUG
 #define VKERRCHECK(VKFN) \

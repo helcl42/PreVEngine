@@ -1351,8 +1351,8 @@ public:
         multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
         VkPipelineDepthStencilStateCreateInfo depthStencilState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
-        depthStencilState.depthTestEnable = VK_TRUE;
-        depthStencilState.depthWriteEnable = VK_TRUE;
+        depthStencilState.depthTestEnable = VK_FALSE;
+        depthStencilState.depthWriteEnable = VK_FALSE;
         depthStencilState.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
         depthStencilState.depthBoundsTestEnable = VK_FALSE;
         depthStencilState.stencilTestEnable = VK_FALSE;
@@ -1558,14 +1558,14 @@ public:
     }
 };
 
-class LensFlareShader final : public Shader {
+class FlareShader final : public Shader {
 public:
-    LensFlareShader(const VkDevice device)
+    FlareShader(const VkDevice device)
         : Shader(device)
     {
     }
 
-    ~LensFlareShader() = default;
+    ~FlareShader() = default;
 
 private:
     void InitVertexInputs() override
@@ -1593,14 +1593,14 @@ private:
     }
 };
 
-class LensFlarePipeline final : public AbstractGraphicsPipeline {
+class FlarePipeline final : public AbstractGraphicsPipeline {
 public:
-    LensFlarePipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    FlarePipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
 
-    ~LensFlarePipeline() = default;
+    ~FlarePipeline() = default;
 
 public:
     VkPipeline Init() override
