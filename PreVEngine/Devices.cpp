@@ -15,10 +15,16 @@ PhysicalDevice::PhysicalDevice(VkPhysicalDevice gpu)
     vkGetPhysicalDeviceFeatures(gpu, &m_availableFeatures);
     vkGetPhysicalDeviceProperties(gpu, &m_availableProperties);
 
-    // enable features here ??
-    m_enabledFeatures.samplerAnisotropy = VK_TRUE;
-    m_enabledFeatures.depthClamp = VK_TRUE;
-    m_enabledFeatures.shaderClipDistance = VK_TRUE;
+    // enable features here -> might be overriden by an inherited class ??
+    if (m_availableFeatures.samplerAnisotropy) {
+        m_enabledFeatures.samplerAnisotropy = VK_TRUE;
+    }
+    if (m_availableFeatures.depthClamp) {
+        m_enabledFeatures.depthClamp = VK_TRUE;
+    }
+    if (m_availableFeatures.shaderClipDistance) {
+        m_enabledFeatures.shaderClipDistance = VK_TRUE;
+    }
 
     uint32_t familyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(gpu, &familyCount, nullptr);
