@@ -37,6 +37,7 @@ layout(location = 2) in vec3 inWorldPosition;
 layout(location = 3) in vec3 inViewPosition;
 layout(location = 4) in vec3 inToCameraVector;
 layout(location = 5) in float inVisibility;
+layout(location = 6) in vec3 inToLightVector[MAX_LIGHT_COUNT];
 
 layout(location = 0) out vec4 outColor;
 
@@ -84,7 +85,7 @@ void main()
 	float shadow = 1.0;	
 	if(uboFS.castedByShadows != 0)
 	{
-		// shadow = GetShadow(depthSampler, uboFS.shadows, inViewPosition, inWorldPosition);
+		// shadow = GetShadowFull(depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.02);
 
 		uint cascadeIndex = 0;
 		for(uint i = 0; i < SHADOW_MAP_CASCADE_COUNT - 1; i++) 
@@ -97,17 +98,11 @@ void main()
 
 	    vec4 shadowCoord = uboFS.shadows.cascades[cascadeIndex].viewProjectionMatrix * vec4(inWorldPosition, 1.0);
 		vec4 normalizedShadowCoord = shadowCoord / shadowCoord.w;
-		shadow = GetShadowInternal(depthSampler, normalizedShadowCoord, cascadeIndex, 0.02);
+		shadow = GetShadow(depthSampler, normalizedShadowCoord, cascadeIndex, 0.02);
 	}
 
 	const vec3 unitNormal = normalize(inNormal);
 	const vec3 unitToCameraVector = normalize(inToCameraVector);
-
-	//vec3 totalDiffuse = GetDiffuseColor(uboFS.lightning, shadow, unitNormal, unitToCameraVector, inWorldPosition);
-	//vec3 totalSpecular = GetSpecularColor(uboFS.lightning, uboFS.material, shadow, unitNormal, unitToCameraVector, inWorldPosition);
-
-	// vec3 totalDiffuse, totalSpecular;
-	// GetLightColor(uboFS.lightning, uboFS.material, shadow, unitNormal, unitToCameraVector, inWorldPosition, totalDiffuse, totalSpecular);
 
 	vec3 totalDiffuse = vec3(0.0);
 	vec3 totalSpecular = vec3(0.0);
@@ -115,7 +110,7 @@ void main()
 	{
 		const Light light = uboFS.lightning.lights[i];
 
-		const vec3 toLightVector = light.position.xyz - inWorldPosition.xyz;
+		const vec3 toLightVector = inToLightVector[i];
 		const vec3 unitToLightVector = normalize(toLightVector);
 
 		const float attenuationFactor = GetAttenuationFactor(light.attenuation.xyz, toLightVector);

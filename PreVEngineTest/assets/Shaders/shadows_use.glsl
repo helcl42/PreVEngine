@@ -50,7 +50,7 @@ float GetShadowPCF(in sampler2DArray depthSampler, in vec4 shadowCoord, in uint 
 	return shadowFactor / count;
 }
 
-float GetShadowInternal(in sampler2DArray depthSampler, in vec4 shadowCoord, in uint cascadeIndex, in float depthBias)
+float GetShadow(in sampler2DArray depthSampler, in vec4 shadowCoord, in uint cascadeIndex, in float depthBias)
 {
 	float shadow = 1.0f;
 	if(enablePCF)
@@ -64,7 +64,7 @@ float GetShadowInternal(in sampler2DArray depthSampler, in vec4 shadowCoord, in 
 	return shadow;
 }
 
-float GetShadow(in sampler2DArray depthSampler, in Shadows shadows, in vec3 viewPosition, in vec3 worldPosition, in float depthBias)
+float GetShadowFull(in sampler2DArray depthSampler, in Shadows shadows, in vec3 viewPosition, in vec3 worldPosition, in float depthBias)
 {
 	float shadow = 1.0;	
 	if(shadows.enabled != 0)
@@ -80,7 +80,7 @@ float GetShadow(in sampler2DArray depthSampler, in Shadows shadows, in vec3 view
 
 	    vec4 shadowCoord = shadows.cascades[cascadeIndex].viewProjectionMatrix * vec4(worldPosition, 1.0);
 		vec4 normalizedShadowCoord = shadowCoord / shadowCoord.w;
-		shadow = GetShadowInternal(depthSampler, normalizedShadowCoord, cascadeIndex, depthBias);
+		shadow = GetShadow(depthSampler, normalizedShadowCoord, cascadeIndex, depthBias);
 	}
 	return shadow;
 }

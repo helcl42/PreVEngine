@@ -667,24 +667,41 @@ public:
 
 class DefaultRenderer : public IRenderer<NormalRenderContextUserData> {
 private:
-    struct ShadowwsCascadeUniform {
+    struct ShadowsCascadeUniform {
         glm::mat4 viewProjectionMatrix;
 
         glm::vec4 split;
+
+        ShadowsCascadeUniform() = default;
+
+        ShadowsCascadeUniform(const glm::mat4& vpMat, const glm::vec4& spl)
+            : viewProjectionMatrix(vpMat)
+            , split(spl)
+        {
+        }
     };
 
     struct ShadowsUniform {
-        ShadowwsCascadeUniform cascades[ShadowsComponent::CASCADES_COUNT];
+        ShadowsCascadeUniform cascades[ShadowsComponent::CASCADES_COUNT];
 
         uint32_t enabled;
     };
-
+    
     struct LightUniform {
         glm::vec4 position;
 
         glm::vec4 color;
 
         glm::vec4 attenuation;
+
+        LightUniform() = default;
+
+        LightUniform(const glm::vec4& pos, const glm::vec4& col, const glm::vec4& atten)
+            : position(pos)
+            , color(col)
+            , attenuation(atten)
+        {
+        }
     };
 
     struct LightningUniform {
@@ -699,6 +716,14 @@ private:
         float shineDamper;
 
         float reflectivity;
+
+        MaterialUniform() = default;
+
+        MaterialUniform(const float shineDaperr, const float reflect)
+            : shineDamper(shineDaperr)
+            , reflectivity(reflect)
+        {
+        }
     };
 
     struct alignas(16) UniformsVS
@@ -714,6 +739,8 @@ private:
         alignas(16) glm::vec4 clipPlane;
 
         alignas(16) glm::vec4 cameraPosition;
+
+        alignas(16) LightningUniform lightning;
 
         alignas(16) glm::vec4 textureOffset;
 
@@ -819,6 +846,11 @@ public:
             uniformsVS.textureNumberOfRows = nodeRenderComponent->GetMaterial()->GetAtlasNumberOfRows();
             uniformsVS.textureOffset = glm::vec4(nodeRenderComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
             uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
+            for (size_t i = 0; i < lightComponents.size(); i++) {
+                uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
+            }
+            uniformsVS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
+            uniformsVS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
             uniformsVS.useFakeLightning = nodeRenderComponent->GetMaterial()->UsesFakeLightning();
             uniformsVS.density = FOG_DENSITY;
             uniformsVS.gradient = FOG_GRADIENT;
@@ -832,23 +864,19 @@ public:
             // shadows
             for (uint32_t i = 0; i < ShadowsComponent::CASCADES_COUNT; i++) {
                 auto& cascade = shadowsComponent->GetCascade(i);
-                uniformsFS.shadows.cascades[i].split = glm::vec4(cascade.endSplitDepth);
-                uniformsFS.shadows.cascades[i].viewProjectionMatrix = cascade.GetBiasedViewProjectionMatrix();
+                uniformsFS.shadows.cascades[i] = ShadowsCascadeUniform(cascade.GetBiasedViewProjectionMatrix(), glm::vec4(cascade.endSplitDepth));
             }
             uniformsFS.shadows.enabled = SHADOWS_ENABLED;
 
             // lightning
             for (size_t i = 0; i < lightComponents.size(); i++) {
-                uniformsFS.lightning.lights[i].color = glm::vec4(lightComponents[i]->GetColor(), 1.0f);
-                uniformsFS.lightning.lights[i].attenuation = glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f);
-                uniformsFS.lightning.lights[i].position = glm::vec4(lightComponents[i]->GetPosition(), 1.0f);
+                uniformsFS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
             }
             uniformsFS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
             uniformsFS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
 
             // material
-            uniformsFS.material.shineDamper = nodeRenderComponent->GetMaterial()->GetShineDamper();
-            uniformsFS.material.reflectivity = nodeRenderComponent->GetMaterial()->GetReflectivity();
+            uniformsFS.material = MaterialUniform(nodeRenderComponent->GetMaterial()->GetShineDamper(), nodeRenderComponent->GetMaterial()->GetReflectivity());
 
             // common
             uniformsFS.fogColor = FOG_COLOR;
@@ -897,14 +925,22 @@ public:
 
 class AnimationRenderer : public IRenderer<NormalRenderContextUserData> {
 private:
-    struct ShadowwsCascadeUniform {
+    struct ShadowsCascadeUniform {
         glm::mat4 viewProjectionMatrix;
 
         glm::vec4 split;
+
+        ShadowsCascadeUniform() = default;
+
+        ShadowsCascadeUniform(const glm::mat4& vpMat, const glm::vec4& spl)
+            : viewProjectionMatrix(vpMat)
+            , split(spl)
+        {
+        }
     };
 
     struct ShadowsUniform {
-        ShadowwsCascadeUniform cascades[ShadowsComponent::CASCADES_COUNT];
+        ShadowsCascadeUniform cascades[ShadowsComponent::CASCADES_COUNT];
 
         uint32_t enabled;
     };
@@ -915,6 +951,15 @@ private:
         glm::vec4 color;
 
         glm::vec4 attenuation;
+
+        LightUniform() = default;
+
+        LightUniform(const glm::vec4& pos, const glm::vec4& col, const glm::vec4& atten) 
+            : position(pos)
+            , color(col)
+            , attenuation(atten)
+        {
+        }
     };
 
     struct LightningUniform {
@@ -929,6 +974,14 @@ private:
         float shineDamper;
 
         float reflectivity;
+
+        MaterialUniform() = default;
+
+        MaterialUniform(const float shineDaperr, const float reflect)
+            : shineDamper(shineDaperr)
+            , reflectivity(reflect)
+        {
+        }
     };
 
     struct alignas(16) UniformsVS
@@ -946,6 +999,8 @@ private:
         alignas(16) glm::vec4 clipPlane;
 
         alignas(16) glm::vec4 cameraPosition;
+
+        alignas(16) LightningUniform lightning;
 
         alignas(16) glm::vec4 textureOffset;
 
@@ -1055,6 +1110,11 @@ public:
             uniformsVS.textureNumberOfRows = nodeRenderComponent->GetMaterial()->GetAtlasNumberOfRows();
             uniformsVS.textureOffset = glm::vec4(nodeRenderComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
             uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
+            for (size_t i = 0; i < lightComponents.size(); i++) {
+                uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
+            }
+            uniformsVS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
+            uniformsVS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
             uniformsVS.useFakeLightning = nodeRenderComponent->GetMaterial()->UsesFakeLightning();
             uniformsVS.density = FOG_DENSITY;
             uniformsVS.gradient = FOG_GRADIENT;
@@ -1068,23 +1128,19 @@ public:
             // shadows
             for (uint32_t i = 0; i < ShadowsComponent::CASCADES_COUNT; i++) {
                 auto& cascade = shadowsComponent->GetCascade(i);
-                uniformsFS.shadows.cascades[i].split = glm::vec4(cascade.endSplitDepth);
-                uniformsFS.shadows.cascades[i].viewProjectionMatrix = cascade.GetBiasedViewProjectionMatrix();
+                uniformsFS.shadows.cascades[i] = ShadowsCascadeUniform(cascade.GetBiasedViewProjectionMatrix(), glm::vec4(cascade.endSplitDepth));
             }
             uniformsFS.shadows.enabled = SHADOWS_ENABLED;
 
             // lightning
             for (size_t i = 0; i < lightComponents.size(); i++) {
-                uniformsFS.lightning.lights[i].color = glm::vec4(lightComponents[i]->GetColor(), 1.0f);
-                uniformsFS.lightning.lights[i].attenuation = glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f);
-                uniformsFS.lightning.lights[i].position = glm::vec4(lightComponents[i]->GetPosition(), 1.0f);
+                uniformsFS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
             }
             uniformsFS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
             uniformsFS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
 
             // material
-            uniformsFS.material.shineDamper = nodeRenderComponent->GetMaterial()->GetShineDamper();
-            uniformsFS.material.reflectivity = nodeRenderComponent->GetMaterial()->GetReflectivity();
+            uniformsFS.material = MaterialUniform(nodeRenderComponent->GetMaterial()->GetShineDamper(), nodeRenderComponent->GetMaterial()->GetReflectivity());
 
             // common
             uniformsFS.fogColor = FOG_COLOR;
@@ -1133,14 +1189,22 @@ public:
 
 class TerrainRenderer : public IRenderer<NormalRenderContextUserData> {
 private:
-    struct ShadowwsCascadeUniform {
+    struct ShadowsCascadeUniform {
         glm::mat4 viewProjectionMatrix;
 
         glm::vec4 split;
+
+        ShadowsCascadeUniform() = default;
+
+        ShadowsCascadeUniform(const glm::mat4& vpMat, const glm::vec4& spl)
+            : viewProjectionMatrix(vpMat)
+            , split(spl)
+        {
+        }
     };
 
     struct ShadowsUniform {
-        ShadowwsCascadeUniform cascades[ShadowsComponent::CASCADES_COUNT];
+        ShadowsCascadeUniform cascades[ShadowsComponent::CASCADES_COUNT];
 
         uint32_t enabled;
     };
@@ -1151,6 +1215,15 @@ private:
         glm::vec4 color;
 
         glm::vec4 attenuation;
+
+        LightUniform() = default;
+
+        LightUniform(const glm::vec4& pos, const glm::vec4& col, const glm::vec4& atten)
+            : position(pos)
+            , color(col)
+            , attenuation(atten)
+        {
+        }
     };
 
     struct LightningUniform {
@@ -1160,11 +1233,19 @@ private:
 
         float ambientFactor;
     };
-
+    
     struct MaterialUniform {
         float shineDamper;
 
         float reflectivity;
+
+        MaterialUniform() = default;
+
+        MaterialUniform(const float shineDaperr, const float reflect)
+            : shineDamper(shineDaperr)
+            , reflectivity(reflect)
+        {
+        }
     };
 
     struct alignas(16) UniformsVS
@@ -1180,6 +1261,8 @@ private:
         alignas(16) glm::vec4 clipPlane;
 
         alignas(16) glm::vec4 cameraPosition;
+
+        alignas(16) LightningUniform lightning;
 
         alignas(16) float density;
         float gradient;
@@ -1284,6 +1367,11 @@ public:
             uniformsVS.modelMatrix = node->GetWorldTransformScaled();
             uniformsVS.normalMatrix = glm::inverse(node->GetWorldTransformScaled());
             uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
+            for (size_t i = 0; i < lightComponents.size(); i++) {
+                uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
+            }
+            uniformsVS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
+            uniformsVS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
             uniformsVS.density = FOG_DENSITY;
             uniformsVS.gradient = FOG_GRADIENT;
             uniformsVS.clipPlane = renderContextUserData.clipPlane;
@@ -1296,23 +1384,19 @@ public:
             // shadows
             for (uint32_t i = 0; i < ShadowsComponent::CASCADES_COUNT; i++) {
                 const auto& cascade = shadowsComponent->GetCascade(i);
-                uniformsFS.shadows.cascades[i].split = glm::vec4(cascade.endSplitDepth);
-                uniformsFS.shadows.cascades[i].viewProjectionMatrix = cascade.GetBiasedViewProjectionMatrix();
+                uniformsFS.shadows.cascades[i] = ShadowsCascadeUniform(cascade.GetBiasedViewProjectionMatrix(), glm::vec4(cascade.endSplitDepth));
             }
             uniformsFS.shadows.enabled = SHADOWS_ENABLED;
 
             // lightning
             for (size_t i = 0; i < lightComponents.size(); i++) {
-                uniformsFS.lightning.lights[i].color = glm::vec4(lightComponents[i]->GetColor(), 1.0f);
-                uniformsFS.lightning.lights[i].attenuation = glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f);
-                uniformsFS.lightning.lights[i].position = glm::vec4(lightComponents[i]->GetPosition(), 1.0f);
+                uniformsFS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
             }
             uniformsFS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
             uniformsFS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
 
             // material
-            uniformsFS.material.shineDamper = terrainComponent->GetMaterials().at(0)->GetShineDamper();
-            uniformsFS.material.reflectivity = terrainComponent->GetMaterials().at(0)->GetReflectivity();
+            uniformsFS.material = MaterialUniform(terrainComponent->GetMaterials().at(0)->GetShineDamper(), terrainComponent->GetMaterials().at(0)->GetReflectivity());
 
             // common
             uniformsFS.fogColor = FOG_COLOR;
@@ -1656,14 +1740,14 @@ public:
 
 class WaterRenderer : public IRenderer<NormalRenderContextUserData> {
 private:
-    struct ShadowwsCascadeUniform {
+    struct ShadowsCascadeUniform {
         glm::mat4 viewProjectionMatrix;
 
         glm::vec4 split;
     };
 
     struct ShadowsUniform {
-        ShadowwsCascadeUniform cascades[ShadowsComponent::CASCADES_COUNT];
+        ShadowsCascadeUniform cascades[ShadowsComponent::CASCADES_COUNT];
 
         uint32_t enabled;
     };

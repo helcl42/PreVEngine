@@ -1,5 +1,8 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
+#extension GL_GOOGLE_include_directive : enable
+
+#include "lights.glsl"
 
 layout(std140, binding = 0) uniform UniformBufferObject {
     mat4 modelMatrix;
@@ -13,6 +16,8 @@ layout(std140, binding = 0) uniform UniformBufferObject {
 	vec4 clipPlane;
 
 	vec4 cameraPosition;
+
+	Lightning lightning;	
 
 	float density;
 	float gradient;
@@ -28,6 +33,7 @@ layout(location = 2) out vec3 outWorldPosition;
 layout(location = 3) out vec3 outViewPosition;
 layout(location = 4) out vec3 outToCameraVector;
 layout(location = 5) out float outVisibility;
+layout(location = 6) out vec3 outToLightVector[MAX_LIGHT_COUNT];
 
 void main() 
 {
@@ -44,6 +50,12 @@ void main()
 	outTextureCoord = inTextureCoord;
 
 	outNormal = (uboVS.normalMatrix * vec4(inNormal, 0.0)).xyz;
+
+	for (int i = 0; i < uboVS.lightning.realCountOfLights; i++)
+	{
+		const Light light = uboVS.lightning.lights[i];
+		outToLightVector[i] = light.position.xyz - worldPosition.xyz;
+	}
 
 	//vec3 cameraPosition = (inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz; // OPT - passed in UBO
 	outToCameraVector = uboVS.cameraPosition.xyz - worldPosition.xyz;
