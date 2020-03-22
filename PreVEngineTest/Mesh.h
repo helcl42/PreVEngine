@@ -344,7 +344,7 @@ public:
             throw std::runtime_error("Could not load model: " + modelPath);
         }
 
-        std::unique_ptr<ModelMesh> mesh = std::make_unique<ModelMesh>();
+        auto mesh = std::make_unique<ModelMesh>();
 
         mesh->m_vertexLayout = GetVertexLayout(flags);
         mesh->m_verticesCount = ReadMeshes(*scene, flags, mesh->m_vertexDataBuffer, mesh->m_indices);
