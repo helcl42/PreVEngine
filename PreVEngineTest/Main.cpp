@@ -1545,7 +1545,7 @@ public:
             }
         }
 
-        auto goblin = std::make_shared<Goblin>(glm::vec3(-25.0f, 9.0f, 0.0f), glm::quat(glm::radians(glm::vec3(-90.0f, 0.0f, 0.0f))), glm::vec3(0.005f));
+        auto goblin = std::make_shared<Goblin>(glm::vec3(90.0f, 9.0f, 90.0f), glm::quat(glm::radians(glm::vec3(-90.0f, 0.0f, 0.0f))), glm::vec3(0.005f));
         goblin->SetTags({ TAG_MAIN_CAMERA });
         AddChild(goblin);
 
