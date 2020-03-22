@@ -69,7 +69,7 @@ void main()
 
     vec4 shadowCoord = uboFS.shadows.cascades[cascadeIndex].viewProjectionMatrix * vec4(inWorldPosition, 1.0);
     vec4 normalizedShadowCoord = shadowCoord / shadowCoord.w;
-    shadow = GetShadowInternal(depthSampler, normalizedShadowCoord, cascadeIndex, 0.02);
+    shadow = GetShadow(depthSampler, normalizedShadowCoord, cascadeIndex, 0.02);
 	if(shadow < 0.999) {
 		shadow = 0.0;
 	}

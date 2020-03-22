@@ -16,11 +16,7 @@ layout(location = 2) in vec3 inNormal;
 layout(location = 3) in ivec4 inBoneIds;
 layout(location = 4) in vec4 inWeights;
 
-layout(location = 0) out vec2 outTextureCoord;
-
 void main() {
-	outTextureCoord	= inTextureCoord;
-
 	mat4 boneTransform = ubo.bones[inBoneIds[0]] * inWeights[0];
 	boneTransform += ubo.bones[inBoneIds[1]] * inWeights[1];
 	boneTransform += ubo.bones[inBoneIds[2]] * inWeights[2];

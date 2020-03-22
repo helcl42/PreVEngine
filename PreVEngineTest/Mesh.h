@@ -329,7 +329,7 @@ class MeshFactory {
 public:
     enum class AssimpMeshFactoryCreateFlags {
         ANIMATION,
-        BUMP_MAPPING,
+        TANGENT_BITANGENT,
         _
     };
 
@@ -355,11 +355,11 @@ public:
 private:
     VertexLayout GetVertexLayout(const FlagSet<AssimpMeshFactoryCreateFlags>& flags) const
     {
-        if (flags & AssimpMeshFactoryCreateFlags::ANIMATION && flags & AssimpMeshFactoryCreateFlags::BUMP_MAPPING) {
+        if (flags & AssimpMeshFactoryCreateFlags::ANIMATION && flags & AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT) {
             return { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 } };
         } else if (flags & AssimpMeshFactoryCreateFlags::ANIMATION) {
             return { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC4 } };
-        } else if (flags & AssimpMeshFactoryCreateFlags::BUMP_MAPPING) {
+        } else if (flags & AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT) {
             return { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 } };
         } else {
             return { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
@@ -412,7 +412,7 @@ private:
                 AddAnimationData(vertexBoneData, vertexBaseOffset + vertexIndex, inOutVertexBuffer);
             }
 
-            if (flags & AssimpMeshFactoryCreateFlags::BUMP_MAPPING) {
+            if (flags & AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT) {
                 AddBumpMappingData(mesh, vertexIndex, inOutVertexBuffer);
             }
         }

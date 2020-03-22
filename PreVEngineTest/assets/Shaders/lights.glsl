@@ -47,23 +47,3 @@ vec3 GetSpecularColor(in vec3 normal, in vec3 toLightVector, in vec3 toCameraVec
 	float dampedFactor = pow(specularFactor, shineDamper);
 	return (dampedFactor * reflectivity * lightColor) / attenuationFactor;
 }
-
-vec3 GetDiffuseColor(in Lightning lightning, in float shadowFactor, in vec3 unitNormal, in vec3 unitToCameraVector, in vec3 worldPosition)
-{
-	vec3 totalDiffuse = vec3(0.0);
-	for (uint i = 0; i < lightning.realCountOfLights; i++)
-	{
-		const Light light = lightning.lights[i];
-
-		const vec3 toLightVector = light.position.xyz - worldPosition;
-		const vec3 unitToLightVector = normalize(toLightVector);
-		
-		const float attenuationFactor = GetAttenuationFactor(light.attenuation.xyz, toLightVector);
-		
-		totalDiffuse += GetDiffuseColor(unitNormal, unitToLightVector, light.color.xyz, attenuationFactor);
-	}
-
-	totalDiffuse = max(totalDiffuse * shadowFactor, 0.0) + lightning.ambientFactor;
-
-	return totalDiffuse;
-}

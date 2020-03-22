@@ -25,6 +25,7 @@ static const glm::vec4 DEFAULT_CLIP_PLANE{ 0.0f, -1.0f, 0.0f, 1000.0f };
 
 enum class SceneNodeFlags : uint64_t {
     HAS_RENDER_COMPONENT,
+    HAS_RENDER_NORMAL_MAPPED_COMPONENT,
     HAS_ANIMATION_RENDER_COMPONENT,
     HAS_FONT_RENDER_COMPONENT,
     HAS_TERRAIN_RENDER_COMPONENT,
@@ -518,15 +519,15 @@ private:
 
     std::shared_ptr<ImageBuffer> m_extraImageBuffer{ nullptr };
 
-    float m_shineDamper = 10.0f;
+    float m_shineDamper{ 10.0f };
 
-    float m_reflectivity = 1.0f;
+    float m_reflectivity{ 1.0f };
 
     bool m_hasTransparency{ false };
 
     bool m_usesFakeLightning{ false };
 
-    unsigned int m_atlasNuumberOfRows{ 1 };
+    unsigned int m_atlasNumberOfRows{ 1 };
 
     glm::vec2 m_textureOffset{ 0.0f, 0.0f };
 
@@ -686,12 +687,12 @@ public:
 
     unsigned int GetAtlasNumberOfRows() const override
     {
-        return m_atlasNuumberOfRows;
+        return m_atlasNumberOfRows;
     }
 
     void SetAtlasNumberOfRows(unsigned int rows) override
     {
-        m_atlasNuumberOfRows = rows;
+        m_atlasNumberOfRows = rows;
     }
 
     glm::vec2 GetTextureOffset() const override
