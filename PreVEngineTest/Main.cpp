@@ -1473,7 +1473,7 @@ public:
     void Init() override
     {
         RenderComponentFactory componentFactory{};
-        auto component = componentFactory.CreateModelNormalMappedRenderComponent(AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.obj"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.png"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulderNormal.png"), true, true);
+        auto component = componentFactory.CreateModelNormalMappedRenderComponent(AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.dae"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.png"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulderNormal.png"), true, true);
 
         ComponentRepository<IRenderComponent>::Instance().Add(m_id, std::move(component));
 
