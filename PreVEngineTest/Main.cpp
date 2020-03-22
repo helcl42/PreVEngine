@@ -15,6 +15,7 @@
 #include "Font.h"
 #include "General.h"
 #include "Mesh.h"
+#include "Animation.h"
 #include "Pipeline.h"
 #include "SkyBox.h"
 #include "Terrain.h"
