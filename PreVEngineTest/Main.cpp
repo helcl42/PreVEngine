@@ -524,6 +524,34 @@ public:
     }
 };
 
+class InputsHelper : public AbstractSceneNode<SceneNodeFlags> {
+public:
+    InputsHelper()
+        : AbstractSceneNode()
+    {
+        m_inputFacade.SetMouseLocked(true);
+        m_inputFacade.SetMouseCursorVisible(false);
+    }
+
+    virtual ~InputsHelper() = default;
+
+public:
+    void operator()(const KeyEvent& keyEvent)
+    {
+        if (keyEvent.action == KeyActionType::PRESS) {
+            if (keyEvent.keyCode == KeyCode::KEY_L) {
+                m_inputFacade.SetMouseLocked(!m_inputFacade.IsMouseLocked());
+                m_inputFacade.SetMouseCursorVisible(!m_inputFacade.IsMouseCursorVisible());
+            }
+        }
+    }
+
+private:
+    InputsFacade m_inputFacade;
+
+    EventHandler<InputsHelper, KeyEvent> m_keyboardEventsHandler{ *this };
+};
+
 class Goblin : public AbstractSceneNode<SceneNodeFlags> {
 private:
     const float RUN_SPEED{ 14.0f };
@@ -815,8 +843,6 @@ public:
     Camera()
         : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_CAMERA_COMPONENT })
     {
-        m_inputFacade.SetMouseLocked(true);
-        m_inputFacade.SetMouseCursorVisible(false);
     }
 
     virtual ~Camera() = default;
@@ -949,9 +975,6 @@ public:
         if (keyEvent.action == KeyActionType::PRESS) {
             if (keyEvent.keyCode == KeyCode::KEY_R) {
                 Reset();
-            } else if (keyEvent.keyCode == KeyCode::KEY_L) {
-                m_inputFacade.SetMouseLocked(!m_inputFacade.IsMouseLocked());
-                m_inputFacade.SetMouseCursorVisible(!m_inputFacade.IsMouseCursorVisible());
             }
         }
     }
@@ -1500,12 +1523,15 @@ public:
         shadows->SetTags({ TAG_SHADOW });
         AddChild(shadows);
 
-        auto freeCamera = std::make_shared<Camera>();
-        //freeCamera->SetTags({ TAG_MAIN_CAMERA });
-        AddChild(freeCamera);
+        auto inputsHelper = std::make_shared<InputsHelper>();
+        AddChild(inputsHelper);
 
-        auto camRobot = std::make_shared<CubeRobot>(glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
-        freeCamera->AddChild(camRobot);
+        //auto freeCamera = std::make_shared<Camera>();
+        ////freeCamera->SetTags({ TAG_MAIN_CAMERA });
+        //AddChild(freeCamera);
+
+        //auto camRobot = std::make_shared<CubeRobot>(glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+        //freeCamera->AddChild(camRobot);
 
         const int32_t MAX_GENERATED_HEIGHT = 1;
         const float DISTANCE = 40.0f;
