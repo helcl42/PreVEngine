@@ -68,7 +68,7 @@ private:
 
     glm::vec2 m_prevTouchPosition;
 
-    ViewFrustum m_viewFrustum{ 45.0f, 0.1f, 1000.0f };
+    ViewFrustum m_viewFrustum{ 45.0f, 10.0f, 400.0f };
 
     bool m_orientationChanged{ false };
 

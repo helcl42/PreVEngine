@@ -37,7 +37,7 @@ private:
 
     glm::vec3 m_upDirection{ 0.0f, 1.0f, 0.0f };
 
-    ViewFrustum m_viewFrustum{ 45.0f, 0.1f, 1000.0f };
+    ViewFrustum m_viewFrustum{ 45.0f, 10.0f, 400.0f };
 
     glm::vec3 m_position;
 

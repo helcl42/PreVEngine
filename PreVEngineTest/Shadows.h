@@ -74,7 +74,7 @@ struct AABB {
 
 class ShadowsComponent : public IShadowsComponent {
 public:
-    static const inline VkFormat DEPTH_FORMAT = VK_FORMAT_D24_UNORM_S8_UINT;
+    static const inline VkFormat DEPTH_FORMAT = VK_FORMAT_D32_SFLOAT;
 
     static const inline uint32_t SHADOW_MAP_DIMENSIONS = 2048;
 

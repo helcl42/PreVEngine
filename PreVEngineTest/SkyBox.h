@@ -4,6 +4,8 @@
 #include "Common.h"
 #include "General.h"
 
+static const float SKY_BOX_SIZE = 300.0f;
+
 class CubeMeshVerticesOnly : public IMesh {
 public:
     const VertexLayout& GetVertexLayout() const override
@@ -30,9 +32,6 @@ public:
     {
         return m_indices.size() > 0;
     }
-
-private:
-    static const inline float SIZE = 1000.0f;
 
 private:
     const VertexLayout m_vertexLayout{ { VertexLayoutComponent::VEC3 } };

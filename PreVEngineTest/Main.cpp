@@ -1187,7 +1187,7 @@ public:
 
         Rotate(glm::quat_cast(transform));
         SetPosition(cameraComponent->GetPosition());
-        SetScale(glm::vec3(750.0f));
+        SetScale(glm::vec3(SKY_BOX_SIZE));
 
         AbstractSceneNode::Update(deltaTime);
     }
@@ -1573,17 +1573,17 @@ public:
         sunLight->SetTags({ TAG_MAIN_LIGHT, TAG_LIGHT });
         AddChild(sunLight);
 
-        auto light1 = std::make_shared<Light>(glm::vec3(30.0f, 20.0f, 35.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        light1->SetTags({ TAG_LIGHT });
-        AddChild(light1);
-
-        auto light2 = std::make_shared<Light>(glm::vec3(-30.0f, 20.0f, 35.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        light2->SetTags({ TAG_LIGHT });
-        AddChild(light2);
-
-        auto light3 = std::make_shared<Light>(glm::vec3(0.0f, 10.0f, -10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        light3->SetTags({ TAG_LIGHT });
-        AddChild(light3);
+//        auto light1 = std::make_shared<Light>(glm::vec3(30.0f, 20.0f, 35.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+//        light1->SetTags({ TAG_LIGHT });
+//        AddChild(light1);
+//
+//        auto light2 = std::make_shared<Light>(glm::vec3(-30.0f, 20.0f, 35.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+//        light2->SetTags({ TAG_LIGHT });
+//        AddChild(light2);
+//
+//        auto light3 = std::make_shared<Light>(glm::vec3(0.0f, 10.0f, -10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+//        light3->SetTags({ TAG_LIGHT });
+//        AddChild(light3);
 
         auto shadows = std::make_shared<Shadows>();
         shadows->SetTags({ TAG_SHADOW });
@@ -1632,10 +1632,10 @@ public:
 
         std::random_device r;
         std::default_random_engine positionRandom{ r() };
-        std::uniform_real_distribution<float> positionDistribution(0.0f, TERRAIN_SIZE);
+        std::uniform_real_distribution<float> positionDistribution(10.0f, TERRAIN_SIZE - 10.0f);
 
         std::default_random_engine scaleRandom{ r() };
-        std::uniform_real_distribution<float> scaleDistribution(1.0f, 3.0f);
+        std::uniform_real_distribution<float> scaleDistribution(0.5f, 1.5f);
 
         const uint32_t STONES_COUNT = 5;
         for (uint32_t i = 0; i < STONES_COUNT; i++) {
@@ -1696,7 +1696,7 @@ public:
     void operator()(const TouchEvent& touchEvent)
     {
         if (touchEvent.action == TouchActionType::DOWN) {
-            AddNode();
+            //AddNode();
         } else if (touchEvent.action == TouchActionType::UP) {
             //RemmoveNode();
         }
