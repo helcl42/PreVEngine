@@ -150,17 +150,17 @@ private:
         return imageBuffer;
     }
 
-    std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& textureFilename, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
+    std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& texturePath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
     {
-        auto image = CreateImage(textureFilename);
+        auto image = CreateImage(texturePath);
         auto imageBuffer = CreateImageBuffer(allocator, image, repeatAddressMode);
 
         return std::make_unique<Material>(image, std::move(imageBuffer), shineDamper, reflectivity);
     }
 
-    std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& textureFilename, const std::string& normalMapPath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
+    std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
     {
-        auto image = CreateImage(textureFilename);
+        auto image = CreateImage(texturePath);
         auto imageBuffer = CreateImageBuffer(allocator, image, repeatAddressMode);
 
         auto normalImage = CreateImage(normalMapPath);
@@ -181,11 +181,11 @@ private:
     }
 
 public:
-    std::unique_ptr<IRenderComponent> CreateCubeRenderComponent(const std::string& textureFilename, const bool castsShadows, const bool isCastedByShadows) const
+    std::unique_ptr<IRenderComponent> CreateCubeRenderComponent(const std::string& texturePath, const bool castsShadows, const bool isCastedByShadows) const
     {
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        auto material = CreateMaterial(*allocator, textureFilename, false, 10.0f, 1.0f);
+        auto material = CreateMaterial(*allocator, texturePath, false, 10.0f, 1.0f);
 
         auto mesh = std::make_unique<CubeMesh>();
         auto model = CreateModel(*allocator, std::move(mesh));
@@ -193,11 +193,11 @@ public:
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
     }
 
-    std::unique_ptr<IRenderComponent> CreatePlaneRenderComponent(const std::string& textureFilename, const bool castsShadows, const bool isCastedByShadows) const
+    std::unique_ptr<IRenderComponent> CreatePlaneRenderComponent(const std::string& texturePath, const bool castsShadows, const bool isCastedByShadows) const
     {
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        auto material = CreateMaterial(*allocator, textureFilename, true, 2.0f, 0.3f);
+        auto material = CreateMaterial(*allocator, texturePath, true, 2.0f, 0.3f);
 
         auto mesh = std::make_shared<PlaneMesh>(40.0f, 40.0f, 1, 1, 10.0f, 10.0f);
         auto model = CreateModel(*allocator, std::move(mesh));
@@ -205,11 +205,11 @@ public:
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
     }
 
-    std::unique_ptr<IRenderComponent> CreateModelRenderComponent(const std::string& modelPath, const std::string& textureFilename, const bool castsShadows, const bool isCastedByShadows) const
+    std::unique_ptr<IRenderComponent> CreateModelRenderComponent(const std::string& modelPath, const std::string& texturePath, const bool castsShadows, const bool isCastedByShadows) const
     {
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        auto material = CreateMaterial(*allocator, textureFilename, true, 2.0f, 0.3f);
+        auto material = CreateMaterial(*allocator, texturePath, true, 2.0f, 0.3f);
 
         MeshFactory meshFactory{};
         auto mesh = meshFactory.CreateMesh(modelPath);
@@ -218,11 +218,11 @@ public:
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
     }
 
-    std::unique_ptr<IRenderComponent> CreateModelNormalMappedRenderComponent(const std::string& modelPath, const std::string& textureFilename, const std::string& normalMapPath, const bool castsShadows, const bool isCastedByShadows) const
+    std::unique_ptr<IRenderComponent> CreateModelNormalMappedRenderComponent(const std::string& modelPath, const std::string& texturePath, const std::string& normalMapPath, const bool castsShadows, const bool isCastedByShadows) const
     {
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        auto material = CreateMaterial(*allocator, textureFilename, normalMapPath, true, 10.0f, 0.7f);
+        auto material = CreateMaterial(*allocator, texturePath, normalMapPath, true, 10.0f, 0.7f);
 
         MeshFactory meshFactory{};
         auto mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
@@ -231,14 +231,30 @@ public:
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
     }
 
-    std::unique_ptr<IAnimationRenderComponent> CreateAnimatedModelRenderComponent(const std::string& modelPath, const std::string& textureFilename, const bool castsShadows, const bool isCastedByShadows) const
+    std::unique_ptr<IAnimationRenderComponent> CreateAnimatedModelRenderComponent(const std::string& modelPath, const std::string& texturePath, const bool castsShadows, const bool isCastedByShadows) const
     {
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        auto material = CreateMaterial(*allocator, textureFilename, true, 1.5f, 0.3f);
+        auto material = CreateMaterial(*allocator, texturePath, true, 1.5f, 0.3f);
 
         MeshFactory meshFactory{};
         auto mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION });
+        auto model = CreateModel(*allocator, std::move(mesh));
+
+        AnimationFactory animationFactory{};
+        auto animation = animationFactory.CreateAnimation(modelPath);
+
+        return std::make_unique<DefaultAnimationRenderComponent>(std::move(model), std::move(material), std::move(animation), castsShadows, isCastedByShadows);
+    }
+
+    std::unique_ptr<IAnimationRenderComponent> CreateAnimatedNormalMappedModelRenderComponent(const std::string& modelPath, const std::string& texturePath, const std::string& normalMapPath, const bool castsShadows, const bool isCastedByShadows) const
+    {
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
+
+        auto material = CreateMaterial(*allocator, texturePath, normalMapPath, true, 1.5f, 0.3f);
+
+        MeshFactory meshFactory{};
+        auto mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION | MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
         auto model = CreateModel(*allocator, std::move(mesh));
 
         AnimationFactory animationFactory{};
@@ -635,7 +651,7 @@ private:
 
 public:
     Goblin(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_RENDER_COMPONENT }, position, orientation, scale)
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT }, position, orientation, scale)
     {
     }
 
@@ -645,7 +661,7 @@ public:
     void Init() override
     {
         RenderComponentFactory renderComponentFactory{};
-        m_animatonRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(AssetManager::Instance().GetAssetPath("Models/Goblin/goblin.dae"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_texture.png"), true, true);
+        m_animatonRenderComponent = renderComponentFactory.CreateAnimatedNormalMappedModelRenderComponent(AssetManager::Instance().GetAssetPath("Models/Goblin/goblin.dae"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_texture.png"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_normal_texture.png"), true, true);
         ComponentRepository<IAnimationRenderComponent>::Instance().Add(m_id, m_animatonRenderComponent);
 
         CameraComponentFactory cameraFactory{};

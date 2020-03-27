@@ -16,4 +16,8 @@ glslangValidator -V normal_mapped_shadows.vert
 
 mv vert.spv normal_mapped_shadows_vert.spv
 
+glslangValidator -V animation_normal_mapped_shadows.vert
+
+mv vert.spv animation_normal_mapped_shadows_vert.spv
+
 exit
