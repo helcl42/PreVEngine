@@ -214,7 +214,7 @@ public:
         viewportState.pScissors = &scissor;
 
         VkPipelineRasterizationStateCreateInfo rasterizer = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
-        rasterizer.depthClampEnable = VK_FALSE;
+        rasterizer.depthClampEnable = VK_TRUE;
         rasterizer.rasterizerDiscardEnable = VK_FALSE;
         rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
         rasterizer.lineWidth = 1.0f;
@@ -1047,7 +1047,7 @@ private:
             VkUtils::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 }))
         };
     }
-
+    
     void InitDescriptorSets() override
     {
         // vertex shader
@@ -1188,7 +1188,7 @@ public:
     VkPipeline Init() override
     {
         VkPipelineFactory pipelineFactory{};
-        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, true, m_pipelineLayout, m_graphicsPipeline);
+        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, false, m_pipelineLayout, m_graphicsPipeline);
         return m_graphicsPipeline;
     }
 };
