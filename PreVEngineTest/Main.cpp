@@ -166,7 +166,7 @@ private:
         auto normalImage = CreateImage(normalMapPath);
         auto normalImageBuffer = CreateImageBuffer(allocator, normalImage, repeatAddressMode);
 
-        return std::make_unique<Material>(image, std::move(imageBuffer), std::move(normalImage), std::move(normalImageBuffer), shineDamper, reflectivity);
+        return std::make_unique<Material>(image, std::move(imageBuffer), normalImage, std::move(normalImageBuffer), shineDamper, reflectivity);
     }
 
     std::unique_ptr<IModel> CreateModel(Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const

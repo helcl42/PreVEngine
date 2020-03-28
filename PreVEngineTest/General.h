@@ -32,6 +32,7 @@ enum class SceneNodeFlags : uint64_t {
     HAS_TERRAIN_RENDER_COMPONENT,
     HAS_SKYBOX_RENDER_COMPONENT,
     HAS_TERRAIN_COMPONENT,
+    HAS_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT,
     HAS_CAMERA_COMPONENT,
     HAS_SHADOWS_COMPONENT,
     HAS_LIGHT_COMPONENT,
@@ -749,20 +750,7 @@ struct VertexData {
 
     std::vector<glm::vec3> normals;
 
-    unsigned int size;
-
-    explicit VertexData()
-        : size(0)
-    {
-    }
-
-    explicit VertexData(unsigned int sz)
-        : size(sz)
-    {
-        vertices.reserve(size);
-        textureCoords.reserve(size);
-        normals.reserve(size);
-    }
+    std::vector<uint32_t> indices;
 };
 
 #endif

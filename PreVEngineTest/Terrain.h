@@ -353,10 +353,12 @@ public:
                 AssetManager::Instance().GetAssetPath("Textures/sand.png")
         };
 
+        std::shared_ptr<VertexData> vertexData = GenerateVertexData(heightGenerator, size);
+
         auto result = std::make_unique<TerrainComponent>(x, z);
-        result->m_model = std::move(CreateModel(*allocator, heightGenerator, size));
+        result->m_model = std::move(CreateModel(*allocator, vertexData, false));
         result->m_heightsInfo = CreateHeightMap(heightGenerator);
-        result->m_vertexData = GenerateVertexData(heightGenerator, size);
+        result->m_vertexData = vertexData;
         for (const auto& path : materialPaths) {
             auto material = CreateMaterial(*allocator, path, 3.0f, 0.4f);
             result->m_materials.emplace_back(std::move(material));
@@ -366,10 +368,44 @@ public:
         return result;
     }
 
-private:
-    std::unique_ptr<IModel> CreateModel(Allocator& allocator, const std::shared_ptr<HeightGenerator>& heightGenerator, const float size) const
+    std::unique_ptr<ITerrainComponenet> CreateRandomTerrainNormalMapped(const int x, const int z, const float size) const
     {
-        auto mesh = GenerateMesh(heightGenerator, size);
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
+        const auto heightGenerator = std::make_shared<HeightGenerator>(x, z, m_vertexCount, m_seed);
+
+        const std::string materialPaths[] = {
+            AssetManager::Instance().GetAssetPath("Textures/fungus.png"),
+            AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"),
+            AssetManager::Instance().GetAssetPath("Textures/rock.png"),
+            AssetManager::Instance().GetAssetPath("Textures/sand.png")
+        };
+
+        const std::string materialNormalPaths[] = {
+            AssetManager::Instance().GetAssetPath("Textures/fungus_normal.png"),
+            AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal.png"),
+            AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"),
+            AssetManager::Instance().GetAssetPath("Textures/sand_normal.png")
+        };
+
+        std::shared_ptr<VertexData> vertexData = GenerateVertexData(heightGenerator, size);
+
+        auto result = std::make_unique<TerrainComponent>(x, z);
+        result->m_model = std::move(CreateModel(*allocator, vertexData, true));
+        result->m_heightsInfo = CreateHeightMap(heightGenerator);
+        result->m_vertexData = vertexData;
+        for (uint32_t i = 0; i < ArraySize(materialPaths); i++) {
+            auto material = CreateMaterial(*allocator, materialPaths[i], materialNormalPaths[i], 3.0f, 0.4f);
+            result->m_materials.emplace_back(std::move(material));
+        }
+        result->m_heightSteps = { 0.2f, 0.4f, 0.6f, 0.8f };
+        result->m_transitionRange = 0.1f;
+        return result;
+    }
+
+private:
+    std::unique_ptr<IModel> CreateModel(Allocator& allocator, const std::shared_ptr<VertexData>& vertexData, const bool normalMapped) const
+    {
+        auto mesh = GenerateMesh(vertexData, normalMapped);
         auto vertexBuffer = std::make_unique<VBO>(allocator);
         vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
         auto indexBuffer = std::make_unique<IBO>(allocator);
@@ -378,30 +414,52 @@ private:
         return std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
 
-    std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& textureFilename, const float shineDamper, const float reflectivity) const
+    std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& texturePath, const float shineDamper, const float reflectivity) const
     {
         ImageFactory imageFactory;
-        auto image = imageFactory.CreateImage(textureFilename);
+        auto image = imageFactory.CreateImage(texturePath);
         auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
         imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer() });
 
         return std::make_unique<Material>(std::move(image), std::move(imageBuffer), shineDamper, reflectivity);
     }
 
-    std::unique_ptr<IMesh> GenerateMesh(const std::shared_ptr<HeightGenerator>& generator, const float size) const
+    std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const float shineDamper, const float reflectivity) const
+    {
+        ImageFactory imageFactory;
+        auto image = imageFactory.CreateImage(texturePath);
+        auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
+        imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer() });
+
+        auto normalImage = imageFactory.CreateImage(normalMapPath);
+        auto normalImageBuffer = std::make_unique<ImageBuffer>(allocator);
+        normalImageBuffer->Create(ImageBufferCreateInfo{ { normalImage->GetWidth(), normalImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)normalImage->GetBuffer() });
+
+        return std::make_unique<Material>(std::move(image), std::move(imageBuffer), std::move(normalImage), std::move(normalImageBuffer), shineDamper, reflectivity);
+    }
+
+    std::unique_ptr<IMesh> GenerateMesh(const std::shared_ptr<VertexData>& vertexData, const bool normalMapped) const
     {
         auto mesh = std::make_unique<TerrainMesh>();
-        mesh->m_indices = GenerateIndices();
-        mesh->m_vertexLayout = { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 } };
+        mesh->m_indices = vertexData->indices;
+        mesh->m_verticesCount = static_cast<uint32_t>(vertexData->vertices.size());
+        if (normalMapped) {
+            mesh->m_vertexLayout = { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 } };
+        } else {
+            mesh->m_vertexLayout = { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 } };
+        }
         for (unsigned int z = 0; z < m_vertexCount; z++) {
             for (unsigned int x = 0; x < m_vertexCount; x++) {
-                auto position = CalculatePosition(generator, x, z, size);
-                auto texCoord = CalculateTextureCoordinates(x, z);
-                auto normal = CalculateNormal(generator, x, z);
+                const auto vertexIndex = z * m_vertexCount + x;
+                const auto position = vertexData->vertices[vertexIndex];
+                const auto textureCoord = vertexData->textureCoords[vertexIndex];
+                const auto normal = vertexData->normals[vertexIndex];
                 mesh->m_vertexDataBuffer.Add(&position, sizeof(glm::vec3));
-                mesh->m_vertexDataBuffer.Add(&texCoord, sizeof(glm::vec2));
+                mesh->m_vertexDataBuffer.Add(&textureCoord, sizeof(glm::vec2));
                 mesh->m_vertexDataBuffer.Add(&normal, sizeof(glm::vec3));
-                mesh->m_verticesCount++;
+                if (normalMapped) {
+                    // TODO
+                }
             }
         }
         return mesh;
@@ -409,7 +467,11 @@ private:
 
     std::unique_ptr<VertexData> GenerateVertexData(const std::shared_ptr<HeightGenerator>& generator, const float size) const
     {
-        auto result = std::make_unique<VertexData>(m_vertexCount * m_vertexCount);
+        const auto verticesCount = m_vertexCount * m_vertexCount;
+        auto result = std::make_unique<VertexData>();
+        result->vertices.reserve(verticesCount);
+        result->textureCoords.reserve(verticesCount);
+        result->normals.reserve(verticesCount);
         for (unsigned int z = 0; z < m_vertexCount; z++) {
             for (unsigned int x = 0; x < m_vertexCount; x++) {
                 result->vertices.push_back(CalculatePosition(generator, x, z, size));
@@ -417,15 +479,9 @@ private:
                 result->normals.push_back(CalculateNormal(generator, x, z));
             }
         }
-        return result;
-    }
 
-    std::vector<uint32_t> GenerateIndices() const
-    {
         const auto indicesCount = 6 * (m_vertexCount - 1) * (m_vertexCount - 1);
-
-        std::vector<uint32_t> result{};
-        result.reserve(indicesCount);
+        result->indices.reserve(indicesCount);
         for (unsigned int z = 0; z < m_vertexCount - 1; z++) {
             for (unsigned int x = 0; x < m_vertexCount - 1; x++) {
                 const uint32_t topLeft = (z * m_vertexCount) + x;
@@ -433,14 +489,15 @@ private:
                 const uint32_t bottomLeft = ((z + 1) * m_vertexCount) + x;
                 const uint32_t bottomRight = bottomLeft + 1;
 
-                result.push_back(topLeft);
-                result.push_back(bottomLeft);
-                result.push_back(topRight);
-                result.push_back(topRight);
-                result.push_back(bottomLeft);
-                result.push_back(bottomRight);
+                result->indices.push_back(topLeft);
+                result->indices.push_back(bottomLeft);
+                result->indices.push_back(topRight);
+                result->indices.push_back(topRight);
+                result->indices.push_back(bottomLeft);
+                result->indices.push_back(bottomRight);
             }
         }
+
         return result;
     }
 
