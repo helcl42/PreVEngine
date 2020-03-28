@@ -553,6 +553,25 @@ public:
         }
 
         AbstractSceneNode::Init();
+
+        float minHeight = std::numeric_limits<float>::max();
+        float maxHeight = std::numeric_limits<float>::min();
+        auto terrains = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ITerrainComponenet>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT | SceneNodeFlags::HAS_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT });
+        for (const auto& terrain : terrains) {
+            auto& heightInfo = terrain->GetHeightMapInfo();
+            if (minHeight > heightInfo->minHeight) {
+                minHeight = heightInfo->minHeight;
+            }
+            if (maxHeight < heightInfo->maxHeight) {
+                maxHeight = heightInfo->maxHeight;
+            }
+        }
+
+        for (auto& terrain : terrains) {
+            auto& heightInfo = terrain->GetHeightMapInfo();
+            heightInfo->minHeight = minHeight;
+            heightInfo->maxHeight = maxHeight;
+        }
     }
 
     void Update(float deltaTime) override
