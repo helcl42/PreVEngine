@@ -324,7 +324,7 @@ public:
     template <typename NodeFlagsType, typename ComponentType>
     static std::vector<std::shared_ptr<ComponentType> > GetNodeComponents(const TagSet& tagSet, const LogicOperation operation = LogicOperation::OR)
     {
-        const auto nodes = GraphTraversal<NodeFlagsType>::Instance().FindAllWthTags(tagSet, operation);
+        const auto nodes = GraphTraversal<NodeFlagsType>::Instance().FindAllWithTags(tagSet, operation);
 
         std::vector<std::shared_ptr<ComponentType> > resultComponents(nodes.size());
         for (size_t i = 0; i < nodes.size(); i++) {
@@ -336,7 +336,7 @@ public:
     template <typename NodeFlagsType, typename ComponentType>
     static std::vector<std::shared_ptr<ComponentType> > GetNodeComponents(const FlagSet<NodeFlagsType>& flagSet, const LogicOperation operation = LogicOperation::OR)
     {
-        const auto nodes = GraphTraversal<NodeFlagsType>::GetInstance().FindAllWthFlags(flagSet, operation);
+        const auto nodes = GraphTraversal<NodeFlagsType>::Instance().FindAllWithFlags(flagSet, operation);
 
         std::vector<std::shared_ptr<ComponentType> > resultComponents(nodes.size());
         for (size_t i = 0; i < nodes.size(); i++) {

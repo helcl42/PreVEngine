@@ -494,7 +494,7 @@ public:
         return FindOneWithTagsInternal(m_root, tags, operation);
     }
 
-    std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > > FindAllWthTags(const TagSet& tags, const LogicOperation operation = LogicOperation::OR) const
+    std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > > FindAllWithTags(const TagSet& tags, const LogicOperation operation = LogicOperation::OR) const
     {
         std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > > result;
         FindAllWithTagsInternal(m_root, tags, operation, result);
