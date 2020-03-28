@@ -4,11 +4,7 @@
 
 #include "lights.glsl"
 
-const int MAX_BONES_COUNT = 100;
-
 layout(std140, binding = 0) uniform UniformBufferObject {
-	mat4 bones[MAX_BONES_COUNT];
-
     mat4 modelMatrix;
 
     mat4 viewMatrix;
@@ -16,16 +12,12 @@ layout(std140, binding = 0) uniform UniformBufferObject {
 	mat4 projectionMatrix;
     
 	mat4 normalMatrix;
-	
+
 	vec4 clipPlane;
 
 	vec4 cameraPosition;
 
-	Lightning lightning;
-	
-	vec4 textureOffset;
-
-	uint textureNumberOfRows;
+	Lightning lightning;	
 
 	float density;
 	float gradient;
@@ -34,10 +26,8 @@ layout(std140, binding = 0) uniform UniformBufferObject {
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 inTextureCoord;
 layout(location = 2) in vec3 inNormal;
-layout(location = 3) in ivec4 inBoneIds;
-layout(location = 4) in vec4 inWeights;
-layout(location = 5) in vec3 inTangent;
-layout(location = 6) in vec3 inBiTnagent;
+layout(location = 3) in vec3 inTangent;
+layout(location = 4) in vec3 inBiTnagent;
 
 layout(location = 0) out vec2 outTextureCoord;
 layout(location = 1) out vec3 outNormal;
@@ -49,15 +39,7 @@ layout(location = 6) out vec3 outToLightVector[MAX_LIGHT_COUNT];
 
 void main() 
 {
-	mat4 boneTransform = uboVS.bones[inBoneIds[0]] * inWeights[0];
-	boneTransform += uboVS.bones[inBoneIds[1]] * inWeights[1];
-	boneTransform += uboVS.bones[inBoneIds[2]] * inWeights[2];
-	boneTransform += uboVS.bones[inBoneIds[3]] * inWeights[3];
-
-	vec4 positionL = boneTransform * vec4(inPosition, 1.0);
-	vec4 normalL = boneTransform * vec4(inNormal, 0.0);
-
-	vec4 worldPosition = uboVS.modelMatrix * vec4(positionL.xyz, 1.0);
+	vec4 worldPosition = uboVS.modelMatrix * vec4(inPosition, 1.0);
 	outWorldPosition = worldPosition.xyz;
 
 	gl_ClipDistance[0] = dot(worldPosition, uboVS.clipPlane);
@@ -67,7 +49,7 @@ void main()
 
 	gl_Position = uboVS.projectionMatrix * viewPosition;
 
-	outTextureCoord = (inTextureCoord / uboVS.textureNumberOfRows) + uboVS.textureOffset.xy;
+	outTextureCoord = inTextureCoord;
 
 	outNormal = (uboVS.normalMatrix * vec4(inNormal, 0.0)).xyz;
 
@@ -85,7 +67,7 @@ void main()
 	for (int i = 0; i < uboVS.lightning.realCountOfLights; i++)
 	{
 		const Light light = uboVS.lightning.lights[i];
-		outToLightVector[i] = toTangentSpaceMatrix * (light.position.xyz - worldPosition.xyz);
+		outToLightVector[i] = toTangentSpaceMatrix * light.position.xyz - worldPosition.xyz;
 	}
 
 	//vec3 cameraPosition = (inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz; // OPT - passed in UBO

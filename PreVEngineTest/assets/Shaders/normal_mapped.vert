@@ -55,7 +55,6 @@ void main()
 
 	outTextureCoord = (inTextureCoord / uboVS.textureNumberOfRows) + uboVS.textureOffset.xy;
 
-	vec3 normal = inNormal;
 	outNormal = (uboVS.normalMatrix * vec4(inNormal, 0.0)).xyz;
 
 	mat4 viewSpaceNormalMatrix = uboVS.viewMatrix * uboVS.normalMatrix;
