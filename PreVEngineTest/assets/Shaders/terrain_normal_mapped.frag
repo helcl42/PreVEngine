@@ -80,6 +80,7 @@ void main()
         else
         {
 			textureColor = texture(textureSampler[i], inTextureCoord);
+			normal = normalize(2.0 * texture(normalSampler[i], inTextureCoord).xyz - 1.0);
             break;
         }
     }

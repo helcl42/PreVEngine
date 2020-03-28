@@ -750,6 +750,10 @@ struct VertexData {
 
     std::vector<glm::vec3> normals;
 
+    std::vector<glm::vec3> tangents;
+
+    std::vector<glm::vec3> biTangents;
+
     std::vector<uint32_t> indices;
 };
 

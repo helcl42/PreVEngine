@@ -141,6 +141,14 @@ struct HeightMapInfo {
 
     float GetHeightAt(const uint32_t x, const uint32_t z) const
     {
+        if (x < 0 || z < 0) {
+            return 0.0f;
+        }
+
+        if (x > heights.size() - 1 || z > heights.size() - 1) {
+            return 0.0f;
+        }
+
         return heights[x][z];
     }
 
@@ -353,11 +361,12 @@ public:
                 AssetManager::Instance().GetAssetPath("Textures/sand.png")
         };
 
-        std::shared_ptr<VertexData> vertexData = GenerateVertexData(heightGenerator, size);
+        const std::shared_ptr<HeightMapInfo> heightMap = CreateHeightMap(heightGenerator);
+        const std::shared_ptr<VertexData> vertexData = GenerateVertexData(heightMap, size);
 
         auto result = std::make_unique<TerrainComponent>(x, z);
         result->m_model = std::move(CreateModel(*allocator, vertexData, false));
-        result->m_heightsInfo = CreateHeightMap(heightGenerator);
+        result->m_heightsInfo = heightMap;
         result->m_vertexData = vertexData;
         for (const auto& path : materialPaths) {
             auto material = CreateMaterial(*allocator, path, 3.0f, 0.4f);
@@ -387,7 +396,8 @@ public:
             AssetManager::Instance().GetAssetPath("Textures/sand_normal.png")
         };
 
-        std::shared_ptr<VertexData> vertexData = GenerateVertexData(heightGenerator, size);
+        const std::shared_ptr<HeightMapInfo> heightMap = CreateHeightMap(heightGenerator);
+        const std::shared_ptr<VertexData> vertexData = GenerateVertexData(heightMap, size);
 
         auto result = std::make_unique<TerrainComponent>(x, z);
         result->m_model = std::move(CreateModel(*allocator, vertexData, true));
@@ -448,6 +458,7 @@ private:
         } else {
             mesh->m_vertexLayout = { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 } };
         }
+
         for (unsigned int z = 0; z < m_vertexCount; z++) {
             for (unsigned int x = 0; x < m_vertexCount; x++) {
                 const auto vertexIndex = z * m_vertexCount + x;
@@ -458,14 +469,17 @@ private:
                 mesh->m_vertexDataBuffer.Add(&textureCoord, sizeof(glm::vec2));
                 mesh->m_vertexDataBuffer.Add(&normal, sizeof(glm::vec3));
                 if (normalMapped) {
-                    // TODO
+                    const auto tangent = vertexData->tangents[vertexIndex];
+                    const auto biTangent = vertexData->biTangents[vertexIndex];
+                    mesh->m_vertexDataBuffer.Add(&tangent, sizeof(glm::vec3));
+                    mesh->m_vertexDataBuffer.Add(&biTangent, sizeof(glm::vec3));
                 }
             }
         }
         return mesh;
     }
 
-    std::unique_ptr<VertexData> GenerateVertexData(const std::shared_ptr<HeightGenerator>& generator, const float size) const
+    std::unique_ptr<VertexData> GenerateVertexData(const std::shared_ptr<HeightMapInfo>& heightMap, const float size) const
     {
         const auto verticesCount = m_vertexCount * m_vertexCount;
         auto result = std::make_unique<VertexData>();
@@ -474,9 +488,9 @@ private:
         result->normals.reserve(verticesCount);
         for (unsigned int z = 0; z < m_vertexCount; z++) {
             for (unsigned int x = 0; x < m_vertexCount; x++) {
-                result->vertices.push_back(CalculatePosition(generator, x, z, size));
+                result->vertices.push_back(CalculatePosition(heightMap, x, z, size));
                 result->textureCoords.push_back(CalculateTextureCoordinates(x, z));
-                result->normals.push_back(CalculateNormal(generator, x, z));
+                result->normals.push_back(CalculateNormal(heightMap, x, z));
             }
         }
 
@@ -498,32 +512,67 @@ private:
             }
         }
 
+        result->tangents.resize(verticesCount);
+        result->biTangents.resize(verticesCount);
+        for (unsigned int i = 0; i < indicesCount - 3; i += 3) {
+            const auto indexA = result->indices[i + 0];
+            const auto indexB = result->indices[i + 1];
+            const auto indexC = result->indices[i + 2];
+
+            const auto& v0 = result->vertices[indexA];
+            const auto& v1 = result->vertices[indexB];
+            const auto& v2 = result->vertices[indexC];
+
+            const auto& uv0 = result->textureCoords[indexA];
+            const auto& uv1 = result->textureCoords[indexB];
+            const auto& uv2 = result->textureCoords[indexC];
+
+            // Edges of the triangle : position delta
+            glm::vec3 deltaPos1 = v1 - v0;
+            glm::vec3 deltaPos2 = v2 - v0;
+
+            // UV delta
+            glm::vec2 deltaUV1 = uv1 - uv0;
+            glm::vec2 deltaUV2 = uv2 - uv0;
+
+            float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
+            glm::vec3 tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
+            glm::vec3 bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
+
+            result->tangents[indexA] = tangent;
+            result->biTangents[indexA] = bitangent;
+            result->tangents[indexB] = tangent;
+            result->biTangents[indexB] = bitangent;
+            result->tangents[indexC] = tangent;
+            result->biTangents[indexC] = bitangent;
+        }
+
         return result;
     }
 
-    glm::vec3 CalculatePosition(const std::shared_ptr<HeightGenerator>& generator, const int x, const int z, const float size) const
+    glm::vec3 CalculatePosition(const std::shared_ptr<HeightMapInfo>& heightMap, const int x, const int z, const float size) const
     {
         glm::vec3 result{};
-        result.x = (static_cast<float>(x) / (static_cast<float>(m_vertexCount) - 1.0f)) * size;
-        result.y = generator->GenerateHeight(x, z);
-        result.z = (static_cast<float>(z) / (static_cast<float>(m_vertexCount) - 1.0f)) * size;
+        result.x = (static_cast<float>(x) / static_cast<float>(m_vertexCount - 1.0f)) * size;
+        result.y = heightMap->GetHeightAt(x, z);
+        result.z = (static_cast<float>(z) / static_cast<float>(m_vertexCount - 1.0f)) * size;
         return result;
     }
 
     glm::vec2 CalculateTextureCoordinates(const int x, const int z) const
     {
         glm::vec2 result{};
-        result.x = static_cast<float>(x) / (static_cast<float>(m_vertexCount) - 1.0f);
-        result.y = static_cast<float>(z) / (static_cast<float>(m_vertexCount) - 1.0f);
+        result.x = static_cast<float>(x) / static_cast<float>(m_vertexCount) - 1.0f;
+        result.y = static_cast<float>(z) / static_cast<float>(m_vertexCount) - 1.0f;
         return result;
     }
 
-    glm::vec3 CalculateNormal(const std::shared_ptr<HeightGenerator>& generator, const int x, const int z) const
+    glm::vec3 CalculateNormal(const std::shared_ptr<HeightMapInfo>& heightMap, const int x, const int z) const
     {
-        float heightLeft = generator->GenerateHeight(x - 1, z);
-        float heightRight = generator->GenerateHeight(x + 1, z);
-        float heightBottom = generator->GenerateHeight(x, z - 1);
-        float heightTop = generator->GenerateHeight(x, z + 1);
+        const float heightLeft = heightMap->GetHeightAt(x - 1, z);
+        const float heightRight = heightMap->GetHeightAt(x + 1, z);
+        const float heightBottom = heightMap->GetHeightAt(x, z - 1);
+        const float heightTop = heightMap->GetHeightAt(x, z + 1);
 
         glm::vec3 result(heightLeft - heightRight, 2.0f, heightBottom - heightTop);
         result = glm::normalize(result);

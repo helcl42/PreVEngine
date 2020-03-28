@@ -387,6 +387,7 @@ public:
         m_shader->ShutDown();
     }
 };
+
 class TerrainNormalMappedShadowsRenderer : public IRenderer<ShadowsRenderContextUserData> {
 private:
     struct Uniforms {
@@ -1666,12 +1667,12 @@ public:
         m_shader = shaderFactory.CreateShaderFromFiles<AnimationShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
-        LOGI("Animaition Shader created\n");
+        LOGI("Animation Shader created\n");
 
         m_pipeline = std::make_unique<AnimationPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
-        LOGI("Animaition Pipeline created\n");
+        LOGI("Animation Pipeline created\n");
 
         m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
@@ -1929,12 +1930,12 @@ public:
         m_shader = shaderFactory.CreateShaderFromFiles<AnimationNormalMappedShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_normal_mapped_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_normal_mapped_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
-        LOGI("Animaition Normal Mapped Shader created\n");
+        LOGI("Animation Normal Mapped Shader created\n");
 
         m_pipeline = std::make_unique<AnimationNormalMappedPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
-        LOGI("Animaition Normal Mapped Pipeline created\n");
+        LOGI("Animation Normal Mapped Pipeline created\n");
 
         m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
@@ -2502,7 +2503,7 @@ public:
             uniformsVS.normalMatrix = glm::inverse(node->GetWorldTransformScaled());
             uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
             for (size_t i = 0; i < lightComponents.size(); i++) {
-                uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
+                uniformsVS.lightning.lights[i] = LightUniform(renderContextUserData.viewMatrix * glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
             }
             uniformsVS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
             uniformsVS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
@@ -2524,7 +2525,7 @@ public:
 
             // lightning
             for (size_t i = 0; i < lightComponents.size(); i++) {
-                uniformsFS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
+                uniformsFS.lightning.lights[i] = LightUniform(renderContextUserData.viewMatrix * glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
             }
             uniformsFS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
             uniformsFS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;

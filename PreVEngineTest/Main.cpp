@@ -481,7 +481,7 @@ private:
 
 public:
     Terrain(const int x, const int z)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT }, glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1.0f))
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT }, glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1.0f))
         , m_xIndex(x)
         , m_zIndex(z)
     {
@@ -493,7 +493,7 @@ public:
     void Init() override
     {
         TerrainComponentFactory terrainComponentFactory{};
-        m_terrainComponent = std::move(terrainComponentFactory.CreateRandomTerrain(m_xIndex, m_zIndex, TERRAIN_SIZE));
+        m_terrainComponent = std::move(terrainComponentFactory.CreateRandomTerrainNormalMapped(m_xIndex, m_zIndex, TERRAIN_SIZE));
         SetPosition(m_terrainComponent->GetPosition());
 
         ComponentRepository<ITerrainComponenet>::Instance().Add(m_id, m_terrainComponent);
@@ -1512,7 +1512,7 @@ public:
     {
         AbstractSceneNode::ShutDown();
 
-        ComponentRepository<ISunComponent>::Instance().Remove(m_id);
+        ComponentRepository<IRenderComponent>::Instance().Remove(m_id);
     }
 };
 
