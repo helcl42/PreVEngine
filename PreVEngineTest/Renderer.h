@@ -283,7 +283,7 @@ private:
     };
 
 private:
-    const uint32_t m_descriptorCount{ 1000 };
+    const uint32_t m_descriptorCount{ 3000 };
 
 private:
     std::shared_ptr<RenderPass> m_renderPass;
@@ -397,7 +397,7 @@ private:
     };
 
 private:
-    const uint32_t m_descriptorCount{ 1000 };
+    const uint32_t m_descriptorCount{ 3000 };
 
 private:
     std::shared_ptr<RenderPass> m_renderPass;
@@ -2161,7 +2161,7 @@ private:
     };
 
 private:
-    const uint32_t m_descriptorCount{ 1000 };
+    const uint32_t m_descriptorCount{ 3000 };
 
 private:
     std::shared_ptr<RenderPass> m_renderPass;
@@ -2425,7 +2425,7 @@ private:
     };
 
 private:
-    const uint32_t m_descriptorCount{ 1000 };
+    const uint32_t m_descriptorCount{ 3000 };
 
 private:
     std::shared_ptr<RenderPass> m_renderPass;

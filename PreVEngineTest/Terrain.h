@@ -139,17 +139,12 @@ struct HeightMapInfo {
         }
     }
 
-    float GetHeightAt(const uint32_t x, const uint32_t z) const
+    float GetHeightAt(const int32_t x, const int32_t z) const
     {
-        if (x < 0 || z < 0) {
-            return 0.0f;
-        }
-
-        if (x > heights.size() - 1 || z > heights.size() - 1) {
-            return 0.0f;
-        }
-
-        return heights[x][z];
+        const int32_t coordX = glm::clamp(x, 0, static_cast<int32_t>(heights.size() - 1));
+        const int32_t coordZ = glm::clamp(z, 0, static_cast<int32_t>(heights.size() - 1));
+        
+        return heights[coordX][coordZ];
     }
 
     size_t GetSize() const
