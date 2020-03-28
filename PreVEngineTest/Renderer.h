@@ -2274,7 +2274,7 @@ public:
             uniformsFS.selectedColor = SELECTED_COLOR;
             uniformsFS.selected = false;
             uniformsFS.castedByShadows = true;
-            uniformsFS.minHeight = terrainComponent->GetHeightMapInfo()->GetMinHeight();
+            uniformsFS.minHeight = terrainComponent->GetHeightMapInfo()->GetMinHeight(); // TODO - theere should be global world min/max !!
             uniformsFS.maxHeight = terrainComponent->GetHeightMapInfo()->GetMaxHeight();
             for (uint32_t i = 0; i < terrainComponent->GetHeightSteps().size(); i++) {
                 uniformsFS.heightSteps[i] = glm::vec4(terrainComponent->GetHeightSteps().at(i));

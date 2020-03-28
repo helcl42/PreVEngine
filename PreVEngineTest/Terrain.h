@@ -364,7 +364,7 @@ public:
         result->m_heightsInfo = heightMap;
         result->m_vertexData = vertexData;
         for (const auto& path : materialPaths) {
-            auto material = CreateMaterial(*allocator, path, 3.0f, 0.4f);
+            auto material = CreateMaterial(*allocator, path, 12.0f, 0.2f);
             result->m_materials.emplace_back(std::move(material));
         }
         result->m_heightSteps = { 0.2f, 0.4f, 0.6f, 0.8f };
@@ -399,7 +399,7 @@ public:
         result->m_heightsInfo = CreateHeightMap(heightGenerator);
         result->m_vertexData = vertexData;
         for (uint32_t i = 0; i < ArraySize(materialPaths); i++) {
-            auto material = CreateMaterial(*allocator, materialPaths[i], materialNormalPaths[i], 3.0f, 0.4f);
+            auto material = CreateMaterial(*allocator, materialPaths[i], materialNormalPaths[i], 12.0f, 0.2f);
             result->m_materials.emplace_back(std::move(material));
         }
         result->m_heightSteps = { 0.2f, 0.4f, 0.6f, 0.8f };
