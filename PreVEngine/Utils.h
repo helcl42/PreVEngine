@@ -384,13 +384,13 @@ public:
         return frameBuffer;
     }
 
-    static VkCommandBuffer CreatePrimaryCommandBuffer(const VkDevice device, const VkCommandPool commandPool)
+    static VkCommandBuffer CreateCommandBuffer(const VkDevice device, const VkCommandPool commandPool, const VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY)
     {
         VkCommandBuffer commandBuffer;
 
         VkCommandBufferAllocateInfo commandBufferAllocInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
         commandBufferAllocInfo.commandPool = commandPool;
-        commandBufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        commandBufferAllocInfo.level = level;
         commandBufferAllocInfo.commandBufferCount = 1;
         VKERRCHECK(vkAllocateCommandBuffers(device, &commandBufferAllocInfo, &commandBuffer));
 

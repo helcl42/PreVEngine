@@ -304,7 +304,7 @@ void Swapchain::Apply()
         }
 
         swapchainBuffer.framebuffer = VkUtils::CreateFrameBuffer(m_device, m_renderPass, views, m_swapchainCreateInfo.imageExtent);
-        swapchainBuffer.commandBuffer = VkUtils::CreatePrimaryCommandBuffer(m_device, m_commandPool);
+        swapchainBuffer.commandBuffer = VkUtils::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
         swapchainBuffer.fence = VkUtils::CreateFence(m_device);
         swapchainBuffer.extent = m_swapchainCreateInfo.imageExtent;
     }
