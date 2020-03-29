@@ -4,7 +4,11 @@
 #include "General.h"
 
 static const float WATER_TILE_SIZE{ 20.0f };
+#if defined(__ANDROID__)
+static const float WATER_LEVEL{ -4.0f };
+#else
 static const float WATER_LEVEL{ -12.0f };
+#endif
 static const float WATER_CLIP_PLANE_OFFSET{ 0.08f };
 static const float WATER_WAVE_SPEED{ 0.03f };
 static const glm::uvec2 REFRACTION_MEASURES{ 640, 360 };
