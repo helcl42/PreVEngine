@@ -14,7 +14,7 @@ layout(std140, binding = 0) uniform UniformBufferObject {
 	float gradient;
 } uboVS;
 
-const float textureTilingFactor = 6.0;
+const float textureTilingFactor = 1.0;
 
 layout(location = 0) in vec3 inPosition;
 
