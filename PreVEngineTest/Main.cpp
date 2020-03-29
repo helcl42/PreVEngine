@@ -524,12 +524,12 @@ public:
 
 class TerrainManager : public AbstractSceneNode<SceneNodeFlags> {
 private:
-    const int m_gridMaxX;
+    const uint32_t m_gridMaxX;
 
-    const int m_gridMaxZ;
+    const uint32_t m_gridMaxZ;
 
 public:
-    TerrainManager(const int maxX, const int maxZ)
+    TerrainManager(const uint32_t maxX, const uint32_t maxZ)
         : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT }, glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1.0f))
         , m_gridMaxX(maxX)
         , m_gridMaxZ(maxZ)
@@ -544,9 +544,9 @@ public:
         auto terrainManager = TerrainManagerComponentFactory{}.Create();
         ComponentRepository<ITerrainManagerComponent>::Instance().Add(m_id, std::move(terrainManager));
 
-        for (int x = 0; x < m_gridMaxX; x++) {
-            for (int z = 0; z < m_gridMaxZ; z++) {
-                auto terrain = std::make_shared<Terrain>(x, z);
+        for (uint32_t x = 0; x < m_gridMaxX; x++) {
+            for (uint32_t z = 0; z < m_gridMaxZ; z++) {
+                auto terrain = std::make_shared<Terrain>(static_cast<int>(x), static_cast<int>(z));
                 AddChild(terrain);
             }
         }
@@ -557,7 +557,7 @@ public:
         float maxHeight = std::numeric_limits<float>::min();
         auto terrains = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ITerrainComponenet>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT | SceneNodeFlags::HAS_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT });
         for (const auto& terrain : terrains) {
-            auto& heightInfo = terrain->GetHeightMapInfo();
+            auto heightInfo = terrain->GetHeightMapInfo();
             if (minHeight > heightInfo->minHeight) {
                 minHeight = heightInfo->minHeight;
             }
@@ -567,7 +567,7 @@ public:
         }
 
         for (auto& terrain : terrains) {
-            auto& heightInfo = terrain->GetHeightMapInfo();
+            auto heightInfo = terrain->GetHeightMapInfo();
             heightInfo->minHeight = minHeight;
             heightInfo->maxHeight = maxHeight;
         }
@@ -1652,10 +1652,13 @@ public:
         auto text = std::make_shared<Text>();
         AddChild(text);
 
-        auto terrainManager = std::make_shared<TerrainManager>(6, 6);
+        const uint32_t TERRAIN_GRID_MAX_X = 6;
+        const uint32_t TERRAIN_GRID_MAX_Z = 6;
+
+        auto terrainManager = std::make_shared<TerrainManager>(TERRAIN_GRID_MAX_X, TERRAIN_GRID_MAX_Z);
         AddChild(terrainManager);
 
-        auto water = std::make_shared<WaterManager>(6, 6);
+        auto water = std::make_shared<WaterManager>(TERRAIN_GRID_MAX_X, TERRAIN_GRID_MAX_Z);
         AddChild(water);
 
         auto sun = std::make_shared<Sun>();
@@ -1664,9 +1667,11 @@ public:
         auto lensFlare = std::make_shared<LensFlare>();
         AddChild(lensFlare);
 
+        const float ITEMS_TERRAIN_BORDER_PADDING = 10.0f;
+
         std::random_device r;
         std::default_random_engine positionRandom{ r() };
-        std::uniform_real_distribution<float> positionDistribution(10.0f, TERRAIN_SIZE - 10.0f);
+        std::uniform_real_distribution<float> positionDistribution(ITEMS_TERRAIN_BORDER_PADDING, TERRAIN_SIZE * TERRAIN_GRID_MAX_X - ITEMS_TERRAIN_BORDER_PADDING);
 
         std::default_random_engine scaleRandom{ r() };
         std::uniform_real_distribution<float> scaleDistribution(0.5f, 1.5f);
