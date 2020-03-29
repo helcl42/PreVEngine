@@ -1982,7 +1982,7 @@ public:
             uniformsVS.textureOffset = glm::vec4(nodeRenderComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
             uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
             for (size_t i = 0; i < lightComponents.size(); i++) {
-                uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
+                uniformsVS.lightning.lights[i] = LightUniform(renderContextUserData.viewMatrix * glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
             }
             uniformsVS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
             uniformsVS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
@@ -2004,7 +2004,7 @@ public:
 
             // lightning
             for (size_t i = 0; i < lightComponents.size(); i++) {
-                uniformsFS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
+                uniformsFS.lightning.lights[i] = LightUniform(renderContextUserData.viewMatrix * glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
             }
             uniformsFS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
             uniformsFS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
