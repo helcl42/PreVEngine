@@ -24,7 +24,7 @@ layout(std140, binding = 1) uniform UniformBufferObject {
     float maxHeight;
 
 	vec4 heightSteps[MATERIAL_COUNT];
-	float heightTtransitionRange;
+	float heightTransitionRange;
 } uboFS;
 
 layout(binding = 2) uniform sampler2D textureSampler[MATERIAL_COUNT];
@@ -46,15 +46,15 @@ void main()
     const float heightRange = abs(uboFS.maxHeight) + abs(uboFS.minHeight);
     const float normalizedHeight = (inWorldPosition.y + abs(uboFS.minHeight)) / heightRange;
 
-    vec4 textureColor = vec4(1.0, 1.0, 0.0, 1.0);
+    vec4 textureColor = vec4(1.0, 1.0, 1.0, 1.0);
 	vec3 normal = vec3(0.0, 1.0, 0.0);
     for(uint i = 0; i < MATERIAL_COUNT; i++) 
     {
         if(i < MATERIAL_COUNT - 1)
         {
-            if(normalizedHeight > uboFS.heightSteps[i].x - uboFS.heightTtransitionRange && normalizedHeight < uboFS.heightSteps[i].x + uboFS.heightTtransitionRange)
+            if(normalizedHeight > uboFS.heightSteps[i].x - uboFS.heightTransitionRange && normalizedHeight < uboFS.heightSteps[i].x + uboFS.heightTransitionRange)
             {
-                float ratio = (normalizedHeight - uboFS.heightSteps[i].x + uboFS.heightTtransitionRange) / (2 * uboFS.heightTtransitionRange);
+                float ratio = (normalizedHeight - uboFS.heightSteps[i].x + uboFS.heightTransitionRange) / (2 * uboFS.heightTransitionRange);
                 vec4 color1 = texture(textureSampler[i], inTextureCoord);
                 vec4 color2 = texture(textureSampler[i + 1], inTextureCoord);
                 textureColor = mix(color1, color2, ratio);
@@ -64,24 +64,22 @@ void main()
 				normal = mix(normal1, normal2, ratio);
                 break;
             }
-            else if(normalizedHeight > uboFS.heightSteps[i].x + uboFS.heightTtransitionRange && normalizedHeight < uboFS.heightSteps[i + 1].x - uboFS.heightTtransitionRange)
-            {
-				textureColor = texture(textureSampler[i], inTextureCoord);
-				normal = normalize(2.0 * texture(normalSampler[i], inTextureCoord).xyz - 1.0);
-                break;
-            }
-			else if(normalizedHeight < uboFS.heightSteps[i].x - uboFS.heightTtransitionRange)
+			else if(normalizedHeight < uboFS.heightSteps[i].x - uboFS.heightTransitionRange)
 			{
 				textureColor = texture(textureSampler[i], inTextureCoord);
 				normal = normalize(2.0 * texture(normalSampler[i], inTextureCoord).xyz - 1.0);
 				break;
 			}
+            else if(normalizedHeight > uboFS.heightSteps[i].x + uboFS.heightTransitionRange && normalizedHeight < uboFS.heightSteps[i + 1].x - uboFS.heightTransitionRange)
+            {
+				textureColor = texture(textureSampler[i], inTextureCoord);
+				normal = normalize(2.0 * texture(normalSampler[i], inTextureCoord).xyz - 1.0);
+            }
         }
         else
         {
 			textureColor = texture(textureSampler[i], inTextureCoord);
 			normal = normalize(2.0 * texture(normalSampler[i], inTextureCoord).xyz - 1.0);
-            break;
         }
     }
 

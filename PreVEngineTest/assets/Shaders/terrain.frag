@@ -24,7 +24,7 @@ layout(std140, binding = 1) uniform UniformBufferObject {
     float maxHeight;
 
 	vec4 heightSteps[MATERIAL_COUNT];
-	float heightTtransitionRange;
+	float heightTransitionRange;
 } uboFS;
 
 layout(binding = 2) uniform sampler2D textureSampler[MATERIAL_COUNT];
@@ -51,24 +51,23 @@ void main()
     {
         if(i < MATERIAL_COUNT - 1)
         {
-            if(normalizedHeight > uboFS.heightSteps[i].x - uboFS.heightTtransitionRange && normalizedHeight < uboFS.heightSteps[i].x + uboFS.heightTtransitionRange)
+            if(normalizedHeight > uboFS.heightSteps[i].x - uboFS.heightTransitionRange && normalizedHeight < uboFS.heightSteps[i].x + uboFS.heightTransitionRange)
             {
-                float ratio = (normalizedHeight - uboFS.heightSteps[i].x + uboFS.heightTtransitionRange) / (2 * uboFS.heightTtransitionRange);
+                float ratio = (normalizedHeight - uboFS.heightSteps[i].x + uboFS.heightTransitionRange) / (2 * uboFS.heightTransitionRange);
                 vec4 color1 = texture(textureSampler[i], inTextureCoord);
                 vec4 color2 = texture(textureSampler[i + 1], inTextureCoord);
                 textureColor = mix(color1, color2, ratio);
                 break;
             }
-            else if(normalizedHeight > uboFS.heightSteps[i].x + uboFS.heightTtransitionRange && normalizedHeight < uboFS.heightSteps[i + 1].x - uboFS.heightTtransitionRange)
-            {
-				textureColor = texture(textureSampler[i], inTextureCoord);
-                break;
-            }
-			else if(normalizedHeight < uboFS.heightSteps[i].x - uboFS.heightTtransitionRange)
+			else if(normalizedHeight < uboFS.heightSteps[i].x - uboFS.heightTransitionRange)
 			{
 				textureColor = texture(textureSampler[i], inTextureCoord);
 				break;
 			}
+			else if(normalizedHeight > uboFS.heightSteps[i].x + uboFS.heightTransitionRange && normalizedHeight < uboFS.heightSteps[i + 1].x - uboFS.heightTransitionRange)
+            {
+				textureColor = texture(textureSampler[i], inTextureCoord);
+            }
         }
         else
         {

@@ -367,7 +367,7 @@ public:
             auto material = CreateMaterial(*allocator, path, 10.0f, 0.2f);
             result->m_materials.emplace_back(std::move(material));
         }
-        result->m_heightSteps = { 0.2f, 0.4f, 0.6f, 0.8f };
+        result->m_heightSteps = { 0.2f, 0.42f, 0.62f, 0.9f }; // the last step is a bit useless :)
         result->m_transitionRange = 0.1f;
         return result;
     }
@@ -402,7 +402,7 @@ public:
             auto material = CreateMaterial(*allocator, materialPaths[i], materialNormalPaths[i], 10.0f, 0.2f);
             result->m_materials.emplace_back(std::move(material));
         }
-        result->m_heightSteps = { 0.2f, 0.4f, 0.6f, 0.8f };
+        result->m_heightSteps = { 0.2f, 0.42f, 0.62f, 0.9f }; // the last step is a bit useless :)
         result->m_transitionRange = 0.1f;
         return result;
     }
