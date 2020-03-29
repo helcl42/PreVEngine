@@ -98,8 +98,6 @@ struct Queue {
 public:
     VkCommandPool CreateCommandPool() const;
 
-    VkCommandBuffer CreateCommandBuffer(VkCommandPool commandPool) const;
-
 public:
     operator VkQueue() const;
 };

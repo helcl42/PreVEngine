@@ -349,18 +349,6 @@ VkCommandPool Queue::CreateCommandPool() const
     return commandPool;
 }
 
-VkCommandBuffer Queue::CreateCommandBuffer(VkCommandPool commandPool) const
-{
-    VkCommandBufferAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
-    allocInfo.commandPool = commandPool;
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandBufferCount = 1;
-
-    VkCommandBuffer commandBuffer;
-    VKERRCHECK(vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer));
-    return commandBuffer;
-}
-
 Queue::operator VkQueue() const
 {
     ASSERT(!!handle, "Queue not yet initialized. ");
