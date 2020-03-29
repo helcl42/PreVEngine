@@ -4,18 +4,19 @@
 #include <algorithm>
 
 namespace PreVEngine {
-Swapchain::Swapchain(Allocator& allocator, RenderPass& renderPass, const Queue* presentQueue, const Queue* graphicsQueue)
-    : m_allocator(allocator)
-    , m_renderPass(renderPass)
+Swapchain::Swapchain(const Queue& presentQueue, const Queue& graphicsQueue, RenderPass& renderPass, Allocator& allocator)
+    : m_presentQueue(presentQueue)
+    , m_graphicsQueue(graphicsQueue)
+    , m_renderPass(renderPass) 
+    , m_allocator(allocator)
+    , m_gpu(presentQueue.gpu)
+    , m_device(presentQueue.device)
+    , m_surface(presentQueue.surface)
     , m_depthBuffer(DepthImageBuffer(allocator))
 {
-    if (graphicsQueue == nullptr) {
-        graphicsQueue = presentQueue;
-    }
+    Init();
 
-    Init(presentQueue, graphicsQueue);
-
-    m_commandPool = graphicsQueue->CreateCommandPool();
+    m_commandPool = graphicsQueue.CreateCommandPool();
 
     m_depthBuffer.Create(ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, renderPass.GetDepthFormat() });
 
@@ -55,16 +56,10 @@ Swapchain::~Swapchain()
     }
 }
 
-void Swapchain::Init(const Queue* presentQueue, const Queue* graphicsQueue)
+void Swapchain::Init()
 {
     m_swapchain = VK_NULL_HANDLE;
     m_isAcquired = false;
-
-    m_gpu = presentQueue->gpu;
-    m_device = presentQueue->device;
-    m_surface = presentQueue->surface;
-    m_presentQueue = *presentQueue;
-    m_graphicsQueue = *graphicsQueue;
 
     VkSurfaceCapabilitiesKHR surfaceCapabilities = GetSurfaceCapabilities();
     assert(surfaceCapabilities.supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
@@ -81,8 +76,8 @@ void Swapchain::Init(const Queue* presentQueue, const Queue* graphicsQueue)
     m_swapchainCreateInfo.clipped = VK_TRUE;
     m_swapchainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
 
-    if (presentQueue->family != graphicsQueue->family) {
-        const uint32_t families[] = { presentQueue->family, graphicsQueue->family };
+    if (m_presentQueue.family != m_graphicsQueue.family) {
+        const uint32_t families[] = { m_presentQueue.family, m_graphicsQueue.family };
         m_swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         m_swapchainCreateInfo.queueFamilyIndexCount = 2;
         m_swapchainCreateInfo.pQueueFamilyIndices = families;
@@ -432,4 +427,15 @@ void Swapchain::EndFrame()
 
     m_currentFrameIndex = (m_currentFrameIndex + 1) % m_swapchainImagesCount;
 }
+
+const Queue& Swapchain::GetPresentQueue() const
+{
+    return m_presentQueue;
+}
+
+const Queue& Swapchain::GetGraphicsQueue() const
+{
+    return m_graphicsQueue;
+}
+
 } // namespace PreVEngine

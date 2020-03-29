@@ -147,7 +147,7 @@ private:
 
     void InitSwapchain()
     {
-        m_swapchain = std::make_shared<Swapchain>(*m_allocator, *m_renderPass, m_presentQueue, m_graphicsQueue);
+        m_swapchain = std::make_shared<Swapchain>(*m_presentQueue, *m_graphicsQueue, *m_renderPass, *m_allocator);
 #if defined(__ANDROID__)
         m_swapchain->SetPresentMode(m_config->VSync ? VK_PRESENT_MODE_MAILBOX_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
 #else

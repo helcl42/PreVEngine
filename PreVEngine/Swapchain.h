@@ -29,27 +29,27 @@ struct SwapchainBuffer {
 
 class Swapchain {
 private:
+    const Queue& m_presentQueue;
+    
+    const Queue& m_graphicsQueue;
+
+    RenderPass& m_renderPass;
+
     Allocator& m_allocator;
 
     VkPhysicalDevice m_gpu;
 
     VkDevice m_device;
 
-    VkQueue m_graphicsQueue;
-
-    VkQueue m_presentQueue;
-
     VkSurfaceKHR m_surface;
+
+    DepthImageBuffer m_depthBuffer;
 
     VkSwapchainKHR m_swapchain;
 
     VkSwapchainCreateInfoKHR m_swapchainCreateInfo;
 
     VkCommandPool m_commandPool;
-
-    RenderPass& m_renderPass;
-
-    DepthImageBuffer m_depthBuffer;
 
     std::vector<SwapchainBuffer> m_swapchainBuffers;
 
@@ -66,7 +66,7 @@ private:
     uint32_t m_swapchainImagesCount;
 
 private:
-    void Init(const Queue* presentQueue, const Queue* graphicsQueue = 0);
+    void Init();
 
     void Apply();
 
@@ -81,7 +81,7 @@ private:
     std::vector<VkImage> GetSwapchainImages() const;
 
 public:
-    Swapchain(Allocator& allocator, RenderPass& renderPass, const Queue* presentQueue, const Queue* graphicsQueue);
+    Swapchain(const Queue& presentQueue, const Queue& graphicsQueue, RenderPass& renderPass, Allocator& allocator);
 
     ~Swapchain();
 
@@ -99,6 +99,10 @@ public:
     void EndFrame();
 
     void Print() const;
+
+    const Queue& GetPresentQueue() const;
+
+    const Queue& GetGraphicsQueue() const;
 
 public:
     VkExtent2D GetExtent() const;
