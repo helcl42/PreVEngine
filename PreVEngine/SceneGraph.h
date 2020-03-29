@@ -417,15 +417,12 @@ private:
     void FindAllWithFlagsInternal(const std::shared_ptr<ISceneNode<NodeFlagsType> >& parent, const FlagSet<NodeFlagsType>& flags, const LogicOperation operation, std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > >& result) const
     {
         if (HasFlags(parent, flags, operation)) {
-            result.emplace_back(parent);
+            result.push_back(parent);
         }
 
         auto& children = parent->GetChildren();
         for (auto& child : children) {
-            auto node = FindOneWithFlagsInternal(child, flags, operation);
-            if (node != nullptr) {
-                result.emplace_back(node);
-            }
+            FindAllWithFlagsInternal(child, flags, operation, result);
         }
     }
 
@@ -449,15 +446,12 @@ private:
     void FindAllWithTagsInternal(const std::shared_ptr<ISceneNode<NodeFlagsType> >& parent, const TagSet& tags, const LogicOperation operation, std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > >& result) const
     {
         if (HasTags(parent, tags, operation)) {
-            result.emplace_back(parent);
+            result.push_back(parent);
         }
 
         auto& children = parent->GetChildren();
         for (auto& child : children) {
-            auto node = FindOneWithTagsInternal(child, tags, operation);
-            if (node != nullptr) {
-                result.emplace_back(node);
-            }
+            FindAllWithTagsInternal(child, tags, operation, result);
         }
     }
 
