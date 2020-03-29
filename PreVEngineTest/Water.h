@@ -3,8 +3,8 @@
 
 #include "General.h"
 
-static const float WATER_TILE_SIZE{ 120.0f };
-static const float WATER_LEVEL{ -5.0f };
+static const float WATER_TILE_SIZE{ 20.0f };
+static const float WATER_LEVEL{ -12.0f };
 static const float WATER_CLIP_PLANE_OFFSET{ 0.08f };
 static const float WATER_WAVE_SPEED{ 0.03f };
 static const glm::uvec2 REFRACTION_MEASURES{ 640, 360 };

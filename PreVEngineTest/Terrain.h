@@ -5,7 +5,7 @@
 
 #include <vector>
 
-static const float TERRAIN_SIZE{ 240.0f };
+static const float TERRAIN_SIZE{ 40.0f };
 
 class PerlinNoiseGenerator {
 public:
@@ -79,7 +79,7 @@ class HeightGenerator {
 public:
     inline static const float AMPLITUDE{ 60.0f };
 
-    inline static const int OCTAVES{ 5 };
+    inline static const int OCTAVES{ 4 };
 
     inline static const float ROUGHNESS{ 0.1f };
 
@@ -335,7 +335,7 @@ public:
 
 class TerrainComponentFactory {
 public:
-    TerrainComponentFactory(const unsigned int seed = 21236728, const unsigned int vertexCount = 128)
+    TerrainComponentFactory(const unsigned int seed = 21236728, const unsigned int vertexCount = 14)
         : m_seed(seed)
         , m_vertexCount(vertexCount)
     {
@@ -364,7 +364,7 @@ public:
         result->m_heightsInfo = heightMap;
         result->m_vertexData = vertexData;
         for (const auto& path : materialPaths) {
-            auto material = CreateMaterial(*allocator, path, 12.0f, 0.2f);
+            auto material = CreateMaterial(*allocator, path, 10.0f, 0.2f);
             result->m_materials.emplace_back(std::move(material));
         }
         result->m_heightSteps = { 0.2f, 0.4f, 0.6f, 0.8f };
@@ -399,7 +399,7 @@ public:
         result->m_heightsInfo = CreateHeightMap(heightGenerator);
         result->m_vertexData = vertexData;
         for (uint32_t i = 0; i < ArraySize(materialPaths); i++) {
-            auto material = CreateMaterial(*allocator, materialPaths[i], materialNormalPaths[i], 12.0f, 0.2f);
+            auto material = CreateMaterial(*allocator, materialPaths[i], materialNormalPaths[i], 10.0f, 0.2f);
             result->m_materials.emplace_back(std::move(material));
         }
         result->m_heightSteps = { 0.2f, 0.4f, 0.6f, 0.8f };
@@ -408,6 +408,19 @@ public:
     }
 
 private:
+    std::shared_ptr<Image> CreateImage(const std::string& textureFilename) const
+    {
+        std::shared_ptr<Image> image;
+        if (s_imagesCache.find(textureFilename) != s_imagesCache.cend()) {
+            image = s_imagesCache[textureFilename];
+        } else {
+            ImageFactory imageFactory;
+            image = imageFactory.CreateImage(textureFilename);
+            s_imagesCache[textureFilename] = image;
+        }
+        return image;
+    }
+
     std::unique_ptr<IModel> CreateModel(Allocator& allocator, const std::shared_ptr<VertexData>& vertexData, const bool normalMapped) const
     {
         auto mesh = GenerateMesh(vertexData, normalMapped);
@@ -421,8 +434,7 @@ private:
 
     std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& texturePath, const float shineDamper, const float reflectivity) const
     {
-        ImageFactory imageFactory;
-        auto image = imageFactory.CreateImage(texturePath);
+        auto image = CreateImage(texturePath);
         auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
         imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer() });
 
@@ -431,12 +443,11 @@ private:
 
     std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const float shineDamper, const float reflectivity) const
     {
-        ImageFactory imageFactory;
-        auto image = imageFactory.CreateImage(texturePath);
+        auto image = CreateImage(texturePath);
         auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
         imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer() });
 
-        auto normalImage = imageFactory.CreateImage(normalMapPath);
+        auto normalImage = CreateImage(normalMapPath);
         auto normalImageBuffer = std::make_unique<ImageBuffer>(allocator);
         normalImageBuffer->Create(ImageBufferCreateInfo{ { normalImage->GetWidth(), normalImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)normalImage->GetBuffer() });
 
@@ -600,7 +611,12 @@ private:
     const unsigned int m_seed;
 
     const unsigned int m_vertexCount;
+
+private:
+    static std::map<std::string, std::shared_ptr<Image> > s_imagesCache;
 };
+
+std::map<std::string, std::shared_ptr<Image> > TerrainComponentFactory::s_imagesCache;
 
 struct TerrainKey {
     const int xIndex;

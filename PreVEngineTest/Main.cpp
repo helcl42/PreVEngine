@@ -128,7 +128,6 @@ private:
 private:
     std::shared_ptr<Image> CreateImage(const std::string& textureFilename) const
     {
-        // image
         std::shared_ptr<Image> image;
         if (s_imagesCache.find(textureFilename) != s_imagesCache.cend()) {
             image = s_imagesCache[textureFilename];
@@ -1653,10 +1652,10 @@ public:
         auto text = std::make_shared<Text>();
         AddChild(text);
 
-        auto terrainManager = std::make_shared<TerrainManager>(1, 1);
+        auto terrainManager = std::make_shared<TerrainManager>(6, 6);
         AddChild(terrainManager);
 
-        auto water = std::make_shared<WaterManager>(1, 1);
+        auto water = std::make_shared<WaterManager>(6, 6);
         AddChild(water);
 
         auto sun = std::make_shared<Sun>();
