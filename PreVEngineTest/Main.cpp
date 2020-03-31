@@ -568,8 +568,8 @@ public:
 
         for (auto& terrain : terrains) {
             auto heightInfo = terrain->GetHeightMapInfo();
-            heightInfo->minHeight = minHeight;
-            heightInfo->maxHeight = maxHeight;
+            heightInfo->globalMinHeight = minHeight;
+            heightInfo->globalMaxHeight = maxHeight;
         }
     }
 
@@ -1588,9 +1588,9 @@ private:
     std::unique_ptr<IRenderer<DefaultRenderContextUserData>> m_masterRenderer;
 
 public:
-    RootSceneNode(const std::shared_ptr<RenderPass>& renderPass)
+    RootSceneNode(const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Swapchain>& swapchain)
         : AbstractSceneNode()
-        , m_masterRenderer(std::make_unique<MasterRenderer>(renderPass))
+        , m_masterRenderer(std::make_unique<MasterRenderer>(renderPass, swapchain))
     {
     }
 
@@ -1786,7 +1786,7 @@ protected:
     {
         auto scene = this->m_engine->GetScene();
 
-        auto rootNode = std::make_shared<RootSceneNode>(scene->GetRenderPass());
+        auto rootNode = std::make_shared<RootSceneNode>(scene->GetRenderPass(), scene->GetSwapchain());
 
         scene->SetSceneRoot(rootNode);
     }

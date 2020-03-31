@@ -1,6 +1,8 @@
 #ifndef __RENDERER_H__
 #define __RENDERER_H__
 
+#include <ThreadPool.h>
+
 #include "General.h"
 
 struct ShadowsRenderContextUserData : DefaultRenderContextUserData {
@@ -101,9 +103,9 @@ public:
         VkRect2D scissor = { { 0, 0 }, shadows->GetExtent() };
         VkViewport viewport = { 0, 0, static_cast<float>(shadowsExtent.width), static_cast<float>(shadowsExtent.height), 0, 1 };
 
-        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
     void BeforeRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
@@ -129,11 +131,11 @@ public:
                 VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
                 VkDeviceSize offsets[] = { 0 };
 
-                vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
-                vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-                vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+                vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+                vkCmdBindIndexBuffer(renderContext.commandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+                vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-                vkCmdDrawIndexed(renderContext.defaultCommandBuffer, renderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+                vkCmdDrawIndexed(renderContext.commandBuffer, renderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
             }
         }
 
@@ -217,9 +219,9 @@ public:
         VkRect2D scissor = { { 0, 0 }, shadows->GetExtent() };
         VkViewport viewport = { 0, 0, static_cast<float>(shadowsExtent.width), static_cast<float>(shadowsExtent.height), 0, 1 };
 
-        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
     void BeforeRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
@@ -245,11 +247,11 @@ public:
                 VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
                 VkDeviceSize offsets[] = { 0 };
 
-                vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
-                vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-                vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+                vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+                vkCmdBindIndexBuffer(renderContext.commandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+                vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-                vkCmdDrawIndexed(renderContext.defaultCommandBuffer, renderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+                vkCmdDrawIndexed(renderContext.commandBuffer, renderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
             }
         }
 
@@ -337,9 +339,9 @@ public:
         VkRect2D scissor = { { 0, 0 }, shadows->GetExtent() };
         VkViewport viewport = { 0, 0, static_cast<float>(shadowsExtent.width), static_cast<float>(shadowsExtent.height), 0, 1 };
 
-        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
@@ -360,11 +362,11 @@ public:
             VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };
             VkDeviceSize offsets[] = { 0 };
 
-            vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, terrainComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-            vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+            vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(renderContext.commandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, terrainComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-            vkCmdDrawIndexed(renderContext.defaultCommandBuffer, terrainComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+            vkCmdDrawIndexed(renderContext.commandBuffer, terrainComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
         }
 
         for (auto child : node->GetChildren()) {
@@ -451,9 +453,9 @@ public:
         VkRect2D scissor = { { 0, 0 }, shadows->GetExtent() };
         VkViewport viewport = { 0, 0, static_cast<float>(shadowsExtent.width), static_cast<float>(shadowsExtent.height), 0, 1 };
 
-        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
@@ -474,11 +476,11 @@ public:
             VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };
             VkDeviceSize offsets[] = { 0 };
 
-            vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, terrainComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-            vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+            vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(renderContext.commandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, terrainComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-            vkCmdDrawIndexed(renderContext.defaultCommandBuffer, terrainComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+            vkCmdDrawIndexed(renderContext.commandBuffer, terrainComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
         }
 
         for (auto child : node->GetChildren()) {
@@ -566,9 +568,9 @@ public:
         VkRect2D scissor = { { 0, 0 }, shadows->GetExtent() };
         VkViewport viewport = { 0, 0, static_cast<float>(shadowsExtent.width), static_cast<float>(shadowsExtent.height), 0, 1 };
 
-        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
@@ -594,11 +596,11 @@ public:
                 VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
                 VkDeviceSize offsets[] = { 0 };
 
-                vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
-                vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-                vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+                vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+                vkCmdBindIndexBuffer(renderContext.commandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+                vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-                vkCmdDrawIndexed(renderContext.defaultCommandBuffer, renderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+                vkCmdDrawIndexed(renderContext.commandBuffer, renderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
             }
         }
 
@@ -687,9 +689,9 @@ public:
         VkRect2D scissor = { { 0, 0 }, shadows->GetExtent() };
         VkViewport viewport = { 0, 0, static_cast<float>(shadowsExtent.width), static_cast<float>(shadowsExtent.height), 0, 1 };
 
-        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
@@ -715,11 +717,11 @@ public:
                 VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
                 VkDeviceSize offsets[] = { 0 };
 
-                vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
-                vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-                vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+                vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+                vkCmdBindIndexBuffer(renderContext.commandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+                vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-                vkCmdDrawIndexed(renderContext.defaultCommandBuffer, renderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+                vkCmdDrawIndexed(renderContext.commandBuffer, renderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
             }
         }
 
@@ -820,8 +822,6 @@ public:
         renderRect.offset.x = 0;
         renderRect.offset.y = 0;
 
-        m_renderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, renderRect);
-
         VkRect2D scissor{};
         scissor.extent.width = renderContext.fullExtent.width;
         scissor.extent.height = renderContext.fullExtent.height;
@@ -836,9 +836,9 @@ public:
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
 
-        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
     // make a node with quad model & shadowMap texture ???
@@ -848,7 +848,7 @@ public:
 
         const auto& cascade = shadows->GetCascade(m_cascadeIndex);
         PushConstantBlock pushConstBlock{ static_cast<uint32_t>(m_cascadeIndex), -cascade.startSplitDepth, -cascade.endSplitDepth };
-        vkCmdPushConstants(renderContext.defaultCommandBuffer, m_pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantBlock), &pushConstBlock);
+        vkCmdPushConstants(renderContext.commandBuffer, m_pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantBlock), &pushConstBlock);
 
         m_shader->Bind("depthSampler", shadows->GetImageBuffer()->GetImageView(), shadows->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 
@@ -857,16 +857,15 @@ public:
         VkBuffer vertexBuffers[] = { *m_quadModel->GetVertexBuffer() };
         VkDeviceSize offsets[] = { 0 };
 
-        vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *m_quadModel->GetIndexBuffer(), 0, m_quadModel->GetIndexBuffer()->GetIndexType());
-        vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+        vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+        vkCmdBindIndexBuffer(renderContext.commandBuffer, *m_quadModel->GetIndexBuffer(), 0, m_quadModel->GetIndexBuffer()->GetIndexType());
+        vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-        vkCmdDrawIndexed(renderContext.defaultCommandBuffer, m_quadModel->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+        vkCmdDrawIndexed(renderContext.commandBuffer, m_quadModel->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
     }
 
     void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
-        m_renderPass->End(renderContext.defaultCommandBuffer);
     }
 
     void AfterRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
@@ -959,8 +958,6 @@ public:
         renderRect.offset.x = 0;
         renderRect.offset.y = 0;
 
-        m_renderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, renderRect);
-
         VkRect2D scissor{};
         scissor.extent.width = renderContext.fullExtent.width;
         scissor.extent.height = renderContext.fullExtent.height;
@@ -975,12 +972,11 @@ public:
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
 
-        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    // make a node with quad model & shadowMap texture ???
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
     {
         const auto component = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
@@ -992,16 +988,15 @@ public:
         VkBuffer vertexBuffers[] = { *m_quadModel->GetVertexBuffer() };
         VkDeviceSize offsets[] = { 0 };
 
-        vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *m_quadModel->GetIndexBuffer(), 0, m_quadModel->GetIndexBuffer()->GetIndexType());
-        vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+        vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+        vkCmdBindIndexBuffer(renderContext.commandBuffer, *m_quadModel->GetIndexBuffer(), 0, m_quadModel->GetIndexBuffer()->GetIndexType());
+        vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-        vkCmdDrawIndexed(renderContext.defaultCommandBuffer, m_quadModel->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+        vkCmdDrawIndexed(renderContext.commandBuffer, m_quadModel->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
     }
 
     void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
-        m_renderPass->End(renderContext.defaultCommandBuffer);
     }
 
     void AfterRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
@@ -1173,9 +1168,9 @@ public:
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
-        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
@@ -1246,11 +1241,11 @@ public:
             VkBuffer vertexBuffers[] = { *nodeRenderComponent->GetModel()->GetVertexBuffer() };
             VkDeviceSize offsets[] = { 0 };
 
-            vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *nodeRenderComponent->GetModel()->GetIndexBuffer(), 0, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-            vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+            vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(renderContext.commandBuffer, *nodeRenderComponent->GetModel()->GetIndexBuffer(), 0, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-            vkCmdDrawIndexed(renderContext.defaultCommandBuffer, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+            vkCmdDrawIndexed(renderContext.commandBuffer, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
         }
 
         for (auto child : node->GetChildren()) {
@@ -1430,9 +1425,9 @@ public:
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
-        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
@@ -1503,11 +1498,11 @@ public:
             VkBuffer vertexBuffers[] = { *nodeRenderComponent->GetModel()->GetVertexBuffer() };
             VkDeviceSize offsets[] = { 0 };
 
-            vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *nodeRenderComponent->GetModel()->GetIndexBuffer(), 0, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-            vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+            vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(renderContext.commandBuffer, *nodeRenderComponent->GetModel()->GetIndexBuffer(), 0, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-            vkCmdDrawIndexed(renderContext.defaultCommandBuffer, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+            vkCmdDrawIndexed(renderContext.commandBuffer, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
         }
 
         for (auto child : node->GetChildren()) {
@@ -1690,9 +1685,9 @@ public:
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
-        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
@@ -1767,11 +1762,11 @@ public:
             VkBuffer vertexBuffers[] = { *nodeRenderComponent->GetModel()->GetVertexBuffer() };
             VkDeviceSize offsets[] = { 0 };
 
-            vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *nodeRenderComponent->GetModel()->GetIndexBuffer(), 0, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-            vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+            vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(renderContext.commandBuffer, *nodeRenderComponent->GetModel()->GetIndexBuffer(), 0, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-            vkCmdDrawIndexed(renderContext.defaultCommandBuffer, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+            vkCmdDrawIndexed(renderContext.commandBuffer, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
         }
 
         for (auto child : node->GetChildren()) {
@@ -1953,9 +1948,9 @@ public:
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
-        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
@@ -2030,11 +2025,11 @@ public:
             VkBuffer vertexBuffers[] = { *nodeRenderComponent->GetModel()->GetVertexBuffer() };
             VkDeviceSize offsets[] = { 0 };
 
-            vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *nodeRenderComponent->GetModel()->GetIndexBuffer(), 0, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-            vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+            vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(renderContext.commandBuffer, *nodeRenderComponent->GetModel()->GetIndexBuffer(), 0, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-            vkCmdDrawIndexed(renderContext.defaultCommandBuffer, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+            vkCmdDrawIndexed(renderContext.commandBuffer, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
         }
 
         for (auto child : node->GetChildren()) {
@@ -2216,9 +2211,9 @@ public:
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
-        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
@@ -2274,8 +2269,8 @@ public:
             uniformsFS.selectedColor = SELECTED_COLOR;
             uniformsFS.selected = false;
             uniformsFS.castedByShadows = true;
-            uniformsFS.minHeight = terrainComponent->GetHeightMapInfo()->GetMinHeight();
-            uniformsFS.maxHeight = terrainComponent->GetHeightMapInfo()->GetMaxHeight();
+            uniformsFS.minHeight = terrainComponent->GetHeightMapInfo()->GetGlobalMinHeight();
+            uniformsFS.maxHeight = terrainComponent->GetHeightMapInfo()->GetGlobalMaxHeight();
             for (uint32_t i = 0; i < terrainComponent->GetHeightSteps().size(); i++) {
                 uniformsFS.heightSteps[i] = glm::vec4(terrainComponent->GetHeightSteps().at(i));
             }
@@ -2294,11 +2289,11 @@ public:
             VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };
             VkDeviceSize offsets[] = { 0 };
 
-            vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, terrainComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-            vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+            vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(renderContext.commandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, terrainComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-            vkCmdDrawIndexed(renderContext.defaultCommandBuffer, terrainComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+            vkCmdDrawIndexed(renderContext.commandBuffer, terrainComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
         }
 
         for (auto child : node->GetChildren()) {
@@ -2480,9 +2475,9 @@ public:
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
-        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
@@ -2538,8 +2533,8 @@ public:
             uniformsFS.selectedColor = SELECTED_COLOR;
             uniformsFS.selected = false;
             uniformsFS.castedByShadows = true;
-            uniformsFS.minHeight = terrainComponent->GetHeightMapInfo()->GetMinHeight();
-            uniformsFS.maxHeight = terrainComponent->GetHeightMapInfo()->GetMaxHeight();
+            uniformsFS.minHeight = terrainComponent->GetHeightMapInfo()->GetGlobalMinHeight();
+            uniformsFS.maxHeight = terrainComponent->GetHeightMapInfo()->GetGlobalMaxHeight();
             for (uint32_t i = 0; i < terrainComponent->GetHeightSteps().size(); i++) {
                 uniformsFS.heightSteps[i] = glm::vec4(terrainComponent->GetHeightSteps().at(i));
             }
@@ -2559,11 +2554,11 @@ public:
             VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };
             VkDeviceSize offsets[] = { 0 };
 
-            vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, terrainComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-            vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+            vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(renderContext.commandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, terrainComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-            vkCmdDrawIndexed(renderContext.defaultCommandBuffer, terrainComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+            vkCmdDrawIndexed(renderContext.commandBuffer, terrainComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
         }
 
         for (auto child : node->GetChildren()) {
@@ -2587,7 +2582,7 @@ public:
     }
 };
 
-class FontRenderer : public IRenderer<DefaultRenderContextUserData> {
+class FontRenderer : public IRenderer<NormalRenderContextUserData> {
 private:
     struct alignas(16) UniformsVS
     {
@@ -2660,21 +2655,21 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void BeforeRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
 
-        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
+    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_FONT_RENDER_COMPONENT })) {
             const auto nodeFontRenderComponent = ComponentRepository<IFontRenderComponent>::Instance().Get(node->GetId());
@@ -2704,11 +2699,11 @@ public:
                 VkBuffer vertexBuffers[] = { *renderableText.model->GetVertexBuffer() };
                 VkDeviceSize offsets[] = { 0 };
 
-                vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
-                vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *renderableText.model->GetIndexBuffer(), 0, renderableText.model->GetIndexBuffer()->GetIndexType());
-                vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+                vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+                vkCmdBindIndexBuffer(renderContext.commandBuffer, *renderableText.model->GetIndexBuffer(), 0, renderableText.model->GetIndexBuffer()->GetIndexType());
+                vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-                vkCmdDrawIndexed(renderContext.defaultCommandBuffer, renderableText.model->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+                vkCmdDrawIndexed(renderContext.commandBuffer, renderableText.model->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
             }
         }
 
@@ -2717,11 +2712,11 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PostRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void AfterRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -2809,9 +2804,9 @@ public:
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
-        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
     void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
@@ -2846,11 +2841,11 @@ public:
             VkBuffer vertexBuffers[] = { *skyBoxComponent->GetModel()->GetVertexBuffer() };
             VkDeviceSize offsets[] = { 0 };
 
-            vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *skyBoxComponent->GetModel()->GetIndexBuffer(), 0, skyBoxComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-            vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+            vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(renderContext.commandBuffer, *skyBoxComponent->GetModel()->GetIndexBuffer(), 0, skyBoxComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-            vkCmdDrawIndexed(renderContext.defaultCommandBuffer, skyBoxComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+            vkCmdDrawIndexed(renderContext.commandBuffer, skyBoxComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
         }
 
         for (auto child : node->GetChildren()) {
@@ -2976,9 +2971,9 @@ public:
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
-        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
     void BeforeRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
@@ -3039,11 +3034,11 @@ public:
             VkBuffer vertexBuffers[] = { *waterComponent->GetModel()->GetVertexBuffer() };
             VkDeviceSize offsets[] = { 0 };
 
-            vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *waterComponent->GetModel()->GetIndexBuffer(), 0, waterComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-            vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+            vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(renderContext.commandBuffer, *waterComponent->GetModel()->GetIndexBuffer(), 0, waterComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-            vkCmdDrawIndexed(renderContext.defaultCommandBuffer, waterComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+            vkCmdDrawIndexed(renderContext.commandBuffer, waterComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
         }
 
         for (auto child : node->GetChildren()) {
@@ -3071,7 +3066,7 @@ struct SunVisibilityEvent {
     float visibilityFactor;
 };
 
-class SunRenderer : public IRenderer<DefaultRenderContextUserData> {
+class SunRenderer : public IRenderer<NormalRenderContextUserData> {
 private:
     struct alignas(16) UniformsVS
     {
@@ -3144,23 +3139,23 @@ public:
         VKERRCHECK(vkCreateQueryPool(*device, &queryPoolInfo, nullptr, &m_queryPool));
     }
 
-    void BeforeRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void BeforeRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         m_passedSamples = 0;
-        vkCmdResetQueryPool(renderContext.defaultCommandBuffer, m_queryPool, 0, 1);
+        vkCmdResetQueryPool(renderContext.commandBuffer, m_queryPool, 0, 1);
     }
 
-    void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
 
-        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
+    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SUN_RENDER_COMPONENT })) {
             const auto sunComponent = ComponentRepository<ISunComponent>::Instance().Get(node->GetId());
@@ -3170,7 +3165,7 @@ public:
 
             m_maxNumberOfSamples = static_cast<uint64_t>(powf(sunComponent->GetFlare()->GetScale() * renderContext.fullExtent.width, 2.0f));
 
-            vkCmdBeginQuery(renderContext.defaultCommandBuffer, m_queryPool, 0, 0);
+            vkCmdBeginQuery(renderContext.commandBuffer, m_queryPool, 0, 0);
 
             auto uboVS = m_uniformsPoolVS->GetNext();
             UniformsVS uniformsVS{};
@@ -3191,13 +3186,13 @@ public:
             VkBuffer vertexBuffers[] = { *sunComponent->GetModel()->GetVertexBuffer() };
             VkDeviceSize offsets[] = { 0 };
 
-            vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *sunComponent->GetModel()->GetIndexBuffer(), 0, sunComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-            vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+            vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(renderContext.commandBuffer, *sunComponent->GetModel()->GetIndexBuffer(), 0, sunComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-            vkCmdDrawIndexed(renderContext.defaultCommandBuffer, sunComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+            vkCmdDrawIndexed(renderContext.commandBuffer, sunComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
 
-            vkCmdEndQuery(renderContext.defaultCommandBuffer, m_queryPool, 0);
+            vkCmdEndQuery(renderContext.commandBuffer, m_queryPool, 0);
         }
 
         for (auto child : node->GetChildren()) {
@@ -3205,11 +3200,11 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PostRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void AfterRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         auto device = DeviceProvider::Instance().GetDevice();
 
@@ -3234,7 +3229,7 @@ public:
     }
 };
 
-class LensFlareRenderer : public IRenderer<DefaultRenderContextUserData> {
+class LensFlareRenderer : public IRenderer<NormalRenderContextUserData> {
 private:
     EventHandler<LensFlareRenderer, SunVisibilityEvent> m_sunVisibilityEventHandler{ *this };
 
@@ -3300,21 +3295,21 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void BeforeRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
 
-        vkCmdBindPipeline(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-        vkCmdSetViewport(renderContext.defaultCommandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(renderContext.defaultCommandBuffer, 0, 1, &scissor);
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
+    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_LENS_FLARE_RENDER_COMPONENT })) {
             const auto lensFlareComponent = ComponentRepository<ILensFlareComponent>::Instance().Get(node->GetId());
@@ -3342,11 +3337,11 @@ public:
                 VkBuffer vertexBuffers[] = { *lensFlareComponent->GetModel()->GetVertexBuffer() };
                 VkDeviceSize offsets[] = { 0 };
 
-                vkCmdBindVertexBuffers(renderContext.defaultCommandBuffer, 0, 1, vertexBuffers, offsets);
-                vkCmdBindIndexBuffer(renderContext.defaultCommandBuffer, *lensFlareComponent->GetModel()->GetIndexBuffer(), 0, lensFlareComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-                vkCmdBindDescriptorSets(renderContext.defaultCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+                vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+                vkCmdBindIndexBuffer(renderContext.commandBuffer, *lensFlareComponent->GetModel()->GetIndexBuffer(), 0, lensFlareComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+                vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-                vkCmdDrawIndexed(renderContext.defaultCommandBuffer, lensFlareComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+                vkCmdDrawIndexed(renderContext.commandBuffer, lensFlareComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
             }
         }
 
@@ -3355,11 +3350,11 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PostRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void AfterRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -3376,10 +3371,70 @@ public:
     }
 };
 
+class CommandBuffersGroup {
+public:
+    CommandBuffersGroup(const std::vector<std::vector<VkCommandPool> >& pools, const std::vector<std::vector<VkCommandBuffer> >& commandBuffers)
+        : m_commandPoolGroups(pools)
+        , m_commandBufferGroups(commandBuffers)
+    {
+    }
+
+    ~CommandBuffersGroup() {
+        auto device = DeviceProvider::Instance().GetDevice();       
+       
+        vkDeviceWaitIdle(*device);
+
+        for (auto& poolGroup : m_commandPoolGroups) {
+            for (auto& pool : poolGroup) {
+                vkDestroyCommandPool(*device, pool, nullptr);
+            }
+        }
+    }
+
+public:
+    const std::vector<VkCommandBuffer>& GetBuffersGroup(const uint32_t index) const
+    {
+        return m_commandBufferGroups.at(index);
+    }
+
+private:
+    std::vector<std::vector<VkCommandPool> > m_commandPoolGroups{};
+
+    std::vector<std::vector<VkCommandBuffer> > m_commandBufferGroups{};
+};
+
+class CommandBuffersGroupFactory {
+public:
+    std::unique_ptr<CommandBuffersGroup> CreateGroup(const Queue& queue, const uint32_t dim0Size, const uint32_t groupSize)
+    {
+        auto device = DeviceProvider::Instance().GetDevice();
+
+        std::vector<std::vector<VkCommandPool> > commandPools{};
+        std::vector<std::vector<VkCommandBuffer> > commandBuffers{};
+        commandPools.reserve(dim0Size);
+        commandBuffers.reserve(dim0Size);
+
+        for (uint32_t dim0Index = 0; dim0Index < dim0Size; dim0Index++) {
+            std::vector<VkCommandPool> pools{};
+            std::vector<VkCommandBuffer> buffers{};
+            for (uint32_t shadowRendererIndex = 0; shadowRendererIndex < groupSize; shadowRendererIndex++) {
+                auto pool = queue.CreateCommandPool();
+                pools.push_back(pool);
+                buffers.push_back(VkUtils::CreateCommandBuffer(*device, pool, VK_COMMAND_BUFFER_LEVEL_SECONDARY));
+            }
+            commandPools.push_back(pools);
+            commandBuffers.push_back(buffers);
+        }
+
+        return std::make_unique<CommandBuffersGroup>(commandPools, commandBuffers);
+    }
+};
+
 class MasterRenderer : public IRenderer<DefaultRenderContextUserData> {
 public:
-    MasterRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    MasterRenderer(const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Swapchain>& swapchain)
         : m_defaultRenderPass(renderPass)
+        , m_swapchain(swapchain)
     {
     }
 
@@ -3389,6 +3444,7 @@ public:
     void Init() override
     {
         InitDefault();
+        InitDebug();
         InitShadows();
         InitReflection();
         InitRefraction();
@@ -3418,17 +3474,7 @@ public:
 
 #ifndef ANDROID
         // Debug quad with shadowMap
-        //m_shadowMapDebugRenderer->PreRender(renderContext);
-
-        //m_shadowMapDebugRenderer->Render(renderContext, node);
-
-        //m_shadowMapDebugRenderer->PostRender(renderContext);
-
-        //m_textureDebugRenderer->PreRender(renderContext);
-
-        //m_textureDebugRenderer->Render(renderContext, node);
-
-        //m_textureDebugRenderer->PostRender(renderContext);
+        //RenderDebug(renderContext, node);
 #endif
     }
 
@@ -3445,249 +3491,256 @@ public:
         ShutDownRefraction();
         ShutDownReflection();
         ShutDownShadows();
+        ShutDownDebug();
         ShutDownDefault();
     }
 
 private:
     void InitDefault()
     {
-        m_skyboxRenderer = std::make_unique<SkyBoxRenderer>(m_defaultRenderPass);
-        m_skyboxRenderer->Init();
+        m_skyboxRenderer = std::make_shared<SkyBoxRenderer>(m_defaultRenderPass);
+        m_defaultRenderer = std::make_shared<DefaultRenderer>(m_defaultRenderPass);        
+        m_normalMappedRenderer = std::make_shared<NormalMappedRenderer>(m_defaultRenderPass);
+        m_terrainRenderer = std::make_shared<TerrainRenderer>(m_defaultRenderPass);        
+        m_terrainNormalRendererRenderer = std::make_shared<TerrainNormalMappedRenderer>(m_defaultRenderPass);
+        m_animationRenderer = std::make_shared<AnimationRenderer>(m_defaultRenderPass);
+        m_animationNormalMappedRenderer = std::make_shared<AnimationNormalMappedRenderer>(m_defaultRenderPass);        
+        m_waterRenderer = std::make_shared<WaterRenderer>(m_defaultRenderPass);
+        m_fontRenderer = std::make_shared<FontRenderer>(m_defaultRenderPass);
+        m_sunRenderer = std::make_shared<SunRenderer>(m_defaultRenderPass);
+        m_lensFlareRenderer = std::make_shared<LensFlareRenderer>(m_defaultRenderPass);
 
-        m_defaultRenderer = std::make_unique<DefaultRenderer>(m_defaultRenderPass);
-        m_defaultRenderer->Init();
+        m_defaultRenderers = {
+            m_skyboxRenderer,
+            m_defaultRenderer,
+            m_normalMappedRenderer,
+            m_terrainRenderer,
+            m_terrainNormalRendererRenderer,
+            m_animationRenderer,
+            m_animationNormalMappedRenderer,
+            m_waterRenderer,
+            m_fontRenderer,
+            m_sunRenderer,
+            m_lensFlareRenderer
+        };
 
-        m_normalMappedRenderer = std::make_unique<NormalMappedRenderer>(m_defaultRenderPass);
-        m_normalMappedRenderer->Init();
+        for (auto& renderer : m_defaultRenderers) {
+            renderer->Init();
+        }
 
-        m_terrainRenderer = std::make_unique<TerrainRenderer>(m_defaultRenderPass);
-        m_terrainRenderer->Init();
+        CommandBuffersGroupFactory buffersGroupFactory{};
+        m_defaultCommandBuffersGroup = buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetmageCount(), static_cast<uint32_t>(m_defaultRenderers.size()));
+    }
 
-        m_terrainNormalRendererRenderer = std::make_unique<TerrainNormalMappedRenderer>(m_defaultRenderPass);
-        m_terrainNormalRendererRenderer->Init();
+    void ShutDownDefault()
+    {
+        m_defaultCommandBuffersGroup = nullptr;
 
-        m_animationRenderer = std::make_unique<AnimationRenderer>(m_defaultRenderPass);
-        m_animationRenderer->Init();
+        for (auto it = m_defaultRenderers.rbegin(); it != m_defaultRenderers.rend(); ++it) {
+            (*it)->ShutDown();
+        }
+    }
 
-        m_animationNormalMappedRenderer = std::make_unique<AnimationNormalMappedRenderer>(m_defaultRenderPass);
-        m_animationNormalMappedRenderer->Init();
+    void InitDebug()
+    {
+        m_shadowMapDebugRenderer = std::make_shared<ShadowMapDebugRenderer>(m_defaultRenderPass);        
+        m_textureDebugRenderer = std::make_shared<TextureDebugRenderer>(m_defaultRenderPass);
+       
+        m_debugRenderers = {
+            m_shadowMapDebugRenderer,
+            m_textureDebugRenderer
+        };
 
-        m_waterRenderer = std::make_unique<WaterRenderer>(m_defaultRenderPass);
-        m_waterRenderer->Init();
+        for (auto& renderer : m_debugRenderers) {
+            renderer->Init();
+        }
 
-        m_fontRenderer = std::make_unique<FontRenderer>(m_defaultRenderPass);
-        m_fontRenderer->Init();
+        CommandBuffersGroupFactory buffersGroupFactory{};
+        m_debugCommandBuffersGroup = buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetmageCount(), static_cast<uint32_t>(m_debugRenderers.size()));
+    }
 
-        m_sunRenderer = std::make_unique<SunRenderer>(m_defaultRenderPass);
-        m_sunRenderer->Init();
+    void ShutDownDebug()
+    {
+        m_debugCommandBuffersGroup = nullptr;
 
-        m_lensFlareRenderer = std::make_unique<LensFlareRenderer>(m_defaultRenderPass);
-        m_lensFlareRenderer->Init();
-
-        m_shadowMapDebugRenderer = std::make_unique<ShadowMapDebugRenderer>(m_defaultRenderPass);
-        m_shadowMapDebugRenderer->Init();
-
-        m_textureDebugRenderer = std::make_unique<TextureDebugRenderer>(m_defaultRenderPass);
-        m_textureDebugRenderer->Init();
+        for (auto it = m_debugRenderers.rbegin(); it != m_debugRenderers.rend(); ++it) {
+            (*it)->ShutDown();
+        }
     }
 
     void InitShadows()
     {
-        auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>(TagSet{ TAG_SHADOW });
-        m_defaultShadowsRenderer = std::make_unique<DefaultShadowsRenderer>(shadowsComponent->GetRenderPass());
-        m_defaultShadowsRenderer->Init();
+        const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>(TagSet{ TAG_SHADOW });
+        
+        m_defaultShadowsRenderer = std::make_shared<DefaultShadowsRenderer>(shadowsComponent->GetRenderPass());
+        m_normalMappedShadowsRenderer = std::make_shared<NormalMappedShadowsRenderer>(shadowsComponent->GetRenderPass());
+        m_terrainShadowsRenderer = std::make_shared<TerrainShadowsRenderer>(shadowsComponent->GetRenderPass());
+        m_terrainNormalMappedShadowsRenderer = std::make_shared<TerrainNormalMappedShadowsRenderer>(shadowsComponent->GetRenderPass());
+        m_animationShadowsRenderer = std::make_shared<AnimationShadowsRenderer>(shadowsComponent->GetRenderPass());
+        m_animationNormalMappedShadowsRenderer = std::make_shared<AnimationNormalMappedShadowsRenderer>(shadowsComponent->GetRenderPass());
+        
+        m_shadowRenderers = {
+            m_defaultShadowsRenderer,
+            m_normalMappedShadowsRenderer,
+            m_terrainShadowsRenderer,
+            m_terrainNormalMappedShadowsRenderer,
+            m_animationShadowsRenderer,
+            m_animationNormalMappedShadowsRenderer
+        };
+        
+        for (auto& shadowRenderer : m_shadowRenderers) {
+            shadowRenderer->Init();
+        }
 
-        m_normalMappedShadowsRenderer = std::make_unique<NormalMappedShadowsRenderer>(shadowsComponent->GetRenderPass());
-        m_normalMappedShadowsRenderer->Init();
+        CommandBuffersGroupFactory buffersGroupFactory{};
+        for (uint32_t i = 0; i < ShadowsComponent::CASCADES_COUNT; i++) {
+            m_shadowsComandBufferGroups.emplace_back(buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetmageCount(), static_cast<uint32_t>(m_shadowRenderers.size())));
+        }
+    }
 
-        m_terrainShadowsRenderer = std::make_unique<TerrainShadowsRenderer>(shadowsComponent->GetRenderPass());
-        m_terrainShadowsRenderer->Init();
+    void ShutDownShadows()
+    {
+        m_shadowsComandBufferGroups.clear();
 
-        m_terrainNormalMappedShadowsRenderer = std::make_unique<TerrainNormalMappedShadowsRenderer>(shadowsComponent->GetRenderPass());
-        m_terrainNormalMappedShadowsRenderer->Init();
-
-        m_animationShadowsRenderer = std::make_unique<AnimationShadowsRenderer>(shadowsComponent->GetRenderPass());
-        m_animationShadowsRenderer->Init();
-
-        m_animationNormalMappedShadowsRenderer = std::make_unique<AnimationNormalMappedShadowsRenderer>(shadowsComponent->GetRenderPass());
-        m_animationNormalMappedShadowsRenderer->Init();
+        for (auto it = m_shadowRenderers.rbegin(); it != m_shadowRenderers.rend(); ++it) {
+            (*it)->ShutDown();
+        }
     }
 
     void InitReflection()
     {
         auto reflectionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
-        m_reflectionSkyBoxRenderer = std::make_unique<SkyBoxRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionSkyBoxRenderer->Init();
+        m_reflectionSkyBoxRenderer = std::make_shared<SkyBoxRenderer>(reflectionComponent->GetRenderPass());
+        m_reflectionDefaultRenderer = std::make_shared<DefaultRenderer>(reflectionComponent->GetRenderPass());
+        m_reflectionNormalMappedRenderer = std::make_shared<NormalMappedRenderer>(reflectionComponent->GetRenderPass());
+        m_reflectionTerrainRenderer = std::make_shared<TerrainRenderer>(reflectionComponent->GetRenderPass());
+        m_reflectionTerrainNormalMappedRenderer = std::make_shared<TerrainNormalMappedRenderer>(reflectionComponent->GetRenderPass());
+        m_reflectionAnimationRenderer = std::make_shared<AnimationRenderer>(reflectionComponent->GetRenderPass());
+        m_reflectionAnimationNormalMappedRenderer = std::make_shared<AnimationNormalMappedRenderer>(reflectionComponent->GetRenderPass());
 
-        m_reflectionDefaultRenderer = std::make_unique<DefaultRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionDefaultRenderer->Init();
+        m_reflectionRenderers = {
+            m_reflectionSkyBoxRenderer,
+            m_reflectionDefaultRenderer,
+            m_reflectionNormalMappedRenderer,
+            m_reflectionTerrainRenderer,
+            m_reflectionTerrainNormalMappedRenderer,
+            m_reflectionAnimationRenderer,
+            m_reflectionAnimationNormalMappedRenderer
+        };
 
-        m_reflectionNormalMappedRenderer = std::make_unique<NormalMappedRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionNormalMappedRenderer->Init();
+        for (auto& shadowRenderer : m_reflectionRenderers) {
+            shadowRenderer->Init();
+        }
 
-        m_reflectionTerrainRenderer = std::make_unique<TerrainRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionTerrainRenderer->Init();
+        CommandBuffersGroupFactory buffersGroupFactory{};
+        m_reflectionComandBufferGroups = buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetmageCount(), static_cast<uint32_t>(m_reflectionRenderers.size()));
+    }
 
-        m_reflectionTerrainNormalMappedRenderer = std::make_unique<TerrainNormalMappedRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionTerrainNormalMappedRenderer->Init();
+    void ShutDownReflection()
+    {
+        m_reflectionComandBufferGroups = nullptr;
 
-        m_reflectionAnimationRenderer = std::make_unique<AnimationRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionAnimationRenderer->Init();
-
-        m_reflectionAnimationNormalMappedRenderer = std::make_unique<AnimationNormalMappedRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionAnimationNormalMappedRenderer->Init();
+        for (auto it = m_reflectionRenderers.rbegin(); it != m_reflectionRenderers.rend(); ++it) {
+            (*it)->ShutDown();
+        }
     }
 
     void InitRefraction()
     {
         auto refractionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
-        m_refractionSkyBoxRenderer = std::make_unique<SkyBoxRenderer>(refractionComponent->GetRenderPass());
-        m_refractionSkyBoxRenderer->Init();
+        m_refractionSkyBoxRenderer = std::make_shared<SkyBoxRenderer>(refractionComponent->GetRenderPass());
+        m_refractionDefaultRenderer = std::make_shared<DefaultRenderer>(refractionComponent->GetRenderPass());
+        m_refractionNormalMappedRenderer = std::make_shared<NormalMappedRenderer>(refractionComponent->GetRenderPass());
+        m_refractionTerrainRenderer = std::make_shared<TerrainRenderer>(refractionComponent->GetRenderPass());
+        m_refractionTerrainNormalMappedRenderer = std::make_shared<TerrainNormalMappedRenderer>(refractionComponent->GetRenderPass());
+        m_refractionAnimationRenderer = std::make_shared<AnimationRenderer>(refractionComponent->GetRenderPass());
+        m_refractionAnimationNormalMappedRenderer = std::make_shared<AnimationNormalMappedRenderer>(refractionComponent->GetRenderPass());
 
-        m_refractionDefaultRenderer = std::make_unique<DefaultRenderer>(refractionComponent->GetRenderPass());
-        m_refractionDefaultRenderer->Init();
+        m_refractionRenderers = {
+            m_refractionSkyBoxRenderer,
+            m_refractionDefaultRenderer,
+            m_refractionNormalMappedRenderer,
+            m_refractionTerrainRenderer,
+            m_refractionTerrainNormalMappedRenderer,
+            m_refractionAnimationRenderer,
+            m_refractionAnimationNormalMappedRenderer
+        };
 
-        m_refractionNormalMappedRenderer = std::make_unique<NormalMappedRenderer>(refractionComponent->GetRenderPass());
-        m_refractionNormalMappedRenderer->Init();
+        for (auto& shadowRenderer : m_refractionRenderers) {
+            shadowRenderer->Init();
+        }
 
-        m_refractionTerrainRenderer = std::make_unique<TerrainRenderer>(refractionComponent->GetRenderPass());
-        m_refractionTerrainRenderer->Init();
-
-        m_refractionTerrainNormalMappedRenderer = std::make_unique<TerrainNormalMappedRenderer>(refractionComponent->GetRenderPass());
-        m_refractionTerrainNormalMappedRenderer->Init();
-
-        m_refractionAnimationRenderer = std::make_unique<AnimationRenderer>(refractionComponent->GetRenderPass());
-        m_refractionAnimationRenderer->Init();
-
-        m_refractionAnimationNormalMappedRenderer = std::make_unique<AnimationNormalMappedRenderer>(refractionComponent->GetRenderPass());
-        m_refractionAnimationNormalMappedRenderer->Init();
+        CommandBuffersGroupFactory buffersGroupFactory{};
+        m_refractionComandBufferGroups = buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetmageCount(), static_cast<uint32_t>(m_refractionRenderers.size()));
     }
 
     void ShutDownRefraction()
     {
-        m_refractionAnimationNormalMappedRenderer->ShutDown();
-        m_refractionAnimationRenderer->ShutDown();
-        m_refractionTerrainNormalMappedRenderer->ShutDown();
-        m_refractionTerrainRenderer->ShutDown();
-        m_refractionNormalMappedRenderer->ShutDown();
-        m_refractionDefaultRenderer->ShutDown();
-        m_reflectionSkyBoxRenderer->ShutDown();
-    }
+        m_refractionComandBufferGroups = nullptr;
 
-    void ShutDownReflection()
-    {
-        m_reflectionAnimationNormalMappedRenderer->ShutDown();
-        m_reflectionAnimationRenderer->ShutDown();
-        m_reflectionTerrainNormalMappedRenderer->ShutDown();
-        m_reflectionTerrainRenderer->ShutDown();
-        m_reflectionNormalMappedRenderer->ShutDown();
-        m_reflectionDefaultRenderer->ShutDown();
-        m_reflectionSkyBoxRenderer->ShutDown();
-    }
-
-    void ShutDownShadows()
-    {
-        m_animationNormalMappedShadowsRenderer->ShutDown();
-        m_animationShadowsRenderer->ShutDown();
-        m_terrainNormalMappedShadowsRenderer->ShutDown();
-        m_terrainShadowsRenderer->ShutDown();
-        m_normalMappedShadowsRenderer->ShutDown();
-        m_defaultShadowsRenderer->ShutDown();
-    }
-
-    void ShutDownDefault()
-    {
-        m_textureDebugRenderer->ShutDown();
-        m_shadowMapDebugRenderer->ShutDown();
-        m_lensFlareRenderer->ShutDown();
-        m_sunRenderer->ShutDown();
-        m_fontRenderer->ShutDown();
-        m_waterRenderer->ShutDown();
-        m_animationNormalMappedRenderer->ShutDown();
-        m_animationRenderer->ShutDown();
-        m_terrainNormalRendererRenderer->ShutDown();
-        m_terrainRenderer->ShutDown();
-        m_normalMappedRenderer->ShutDown();
-        m_defaultRenderer->ShutDown();
-        m_skyboxRenderer->ShutDown();
+        for (auto it = m_refractionRenderers.rbegin(); it != m_refractionRenderers.rend(); ++it) {
+            (*it)->ShutDown();
+        }
     }
 
     void RenderShadows(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
     {
-        auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+        const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+
         for (uint32_t cascadeIndex = 0; cascadeIndex < ShadowsComponent::CASCADES_COUNT; cascadeIndex++) {
 
-            auto cascade = shadows->GetCascade(cascadeIndex);
-            shadows->GetRenderPass()->Begin(cascade.frameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, shadows->GetExtent() });
+            const auto cascade = shadows->GetCascade(cascadeIndex);
+            const auto& cascadeCommandBuffers = m_shadowsComandBufferGroups.at(cascadeIndex)->GetBuffersGroup(renderContext.frameInFlightIndex);
 
-            ShadowsRenderContextUserData userData{
-                cascade.viewMatrix,
-                cascade.projectionMatrix,
-                cascadeIndex,
-            };
+            shadows->GetRenderPass()->Begin(cascade.frameBuffer, renderContext.commandBuffer, { { 0, 0 }, shadows->GetExtent() }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS );
 
-            // Default
-            m_defaultShadowsRenderer->PreRender(renderContext, userData);
+            ShadowsRenderContextUserData userData{ cascade.viewMatrix, cascade.projectionMatrix, cascadeIndex };
 
-            for (auto child : root->GetChildren()) {
-                m_defaultShadowsRenderer->Render(renderContext, child, userData);
+            std::vector<std::future<void> > tasks;
+            for (size_t i = 0; i < m_shadowRenderers.size(); i++) {
+
+                auto& renderer = m_shadowRenderers.at(i);
+                auto& commandBuffer = cascadeCommandBuffers.at(i);
+                
+                tasks.emplace_back(m_threadPool.Enqueue([&]() {
+                    VkCommandBufferInheritanceInfo inheritanceInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO };
+                    inheritanceInfo.renderPass = *shadows->GetRenderPass();
+                    inheritanceInfo.framebuffer = cascade.frameBuffer;
+
+                    VkCommandBufferBeginInfo commandBufferBeginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+                    commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT | VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+                    commandBufferBeginInfo.pInheritanceInfo = &inheritanceInfo;
+
+                    VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
+
+                    RenderContext customRenderContext{ cascade.frameBuffer, commandBuffer, renderContext.frameInFlightIndex, shadows->GetExtent() };
+
+                    renderer->PreRender(customRenderContext, userData);
+
+                    for (auto child : root->GetChildren()) {
+                        renderer->Render(customRenderContext, child, userData);
+                    }
+
+                    renderer->PostRender(customRenderContext, userData);
+
+                    VKERRCHECK(vkEndCommandBuffer(commandBuffer));
+                }));
             }
 
-            m_defaultShadowsRenderer->PostRender(renderContext, userData);
-
-            // Normal mapped
-            m_normalMappedShadowsRenderer->PreRender(renderContext, userData);
-
-            for (auto child : root->GetChildren()) {
-                m_normalMappedShadowsRenderer->Render(renderContext, child, userData);
+            for (auto&& task : tasks) {
+                task.get();
             }
 
-            m_normalMappedShadowsRenderer->PostRender(renderContext, userData);
+            vkCmdExecuteCommands(renderContext.commandBuffer, static_cast<uint32_t>(cascadeCommandBuffers.size()), cascadeCommandBuffers.data());
 
-            // Terrain
-            m_terrainShadowsRenderer->PreRender(renderContext, userData);
-
-            for (auto child : root->GetChildren()) {
-                m_terrainShadowsRenderer->Render(renderContext, child, userData);
-            }
-
-            m_terrainShadowsRenderer->PostRender(renderContext, userData);
-            
-            // Terrain Normal Mapped
-            m_terrainNormalMappedShadowsRenderer->PreRender(renderContext, userData);
-
-            for (auto child : root->GetChildren()) {
-                m_terrainNormalMappedShadowsRenderer->Render(renderContext, child, userData);
-            }
-
-            m_terrainNormalMappedShadowsRenderer->PostRender(renderContext, userData);
-
-            // Animation
-            m_animationShadowsRenderer->PreRender(renderContext, userData);
-
-            for (auto child : root->GetChildren()) {
-                m_animationShadowsRenderer->Render(renderContext, child, userData);
-            }
-
-            m_animationShadowsRenderer->PostRender(renderContext, userData);
-
-            // Animation Normal Mapped
-            m_animationNormalMappedShadowsRenderer->PreRender(renderContext, userData);
-
-            for (auto child : root->GetChildren()) {
-                m_animationNormalMappedShadowsRenderer->Render(renderContext, child, userData);
-            }
-
-            m_animationNormalMappedShadowsRenderer->PostRender(renderContext, userData);
-
-            shadows->GetRenderPass()->End(renderContext.defaultCommandBuffer);
+            shadows->GetRenderPass()->End(renderContext.commandBuffer);
         }
     }
 
     void RenderSceneReflection(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
     {
-        auto reflectionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
-        reflectionComponent->GetRenderPass()->Begin(reflectionComponent->GetFrameBuffer(), renderContext.defaultCommandBuffer, { { 0, 0 }, { REFLECTION_MEASURES.x, REFLECTION_MEASURES.y } });
+        const auto reflectionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
+        reflectionComponent->GetRenderPass()->Begin(reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, { { 0, 0 }, { REFLECTION_MEASURES.x, REFLECTION_MEASURES.y } }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
         const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
@@ -3709,76 +3762,52 @@ private:
             glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane())
         };
 
-        // SkyBox
-        m_reflectionSkyBoxRenderer->PreRender(renderContext, userData);
+        const auto& commandBuffers = m_reflectionComandBufferGroups->GetBuffersGroup(renderContext.frameInFlightIndex);
 
-        for (auto child : root->GetChildren()) {
-            m_reflectionSkyBoxRenderer->Render(renderContext, child, userData);
+        std::vector<std::future<void> > tasks;
+        for (size_t i = 0; i < m_reflectionRenderers.size(); i++) {
+
+            auto& renderer = m_reflectionRenderers.at(i);
+            auto& commandBuffer = commandBuffers.at(i);
+
+            tasks.emplace_back(m_threadPool.Enqueue([&]() {
+                VkCommandBufferInheritanceInfo inheritanceInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO };
+                inheritanceInfo.renderPass = *reflectionComponent->GetRenderPass();
+                inheritanceInfo.framebuffer = reflectionComponent->GetFrameBuffer();
+
+                VkCommandBufferBeginInfo commandBufferBeginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+                commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT | VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+                commandBufferBeginInfo.pInheritanceInfo = &inheritanceInfo;
+
+                VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
+
+                RenderContext customRenderContext{ renderContext.frameBuffer, commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
+
+                renderer->PreRender(customRenderContext, userData);
+
+                for (auto child : root->GetChildren()) {
+                    renderer->Render(customRenderContext, child, userData);
+                }
+
+                renderer->PostRender(customRenderContext, userData);
+
+                VKERRCHECK(vkEndCommandBuffer(commandBuffer));
+            }));
         }
 
-        m_reflectionSkyBoxRenderer->PostRender(renderContext, userData);
-
-        // Default
-        m_reflectionDefaultRenderer->PreRender(renderContext, userData);
-
-        for (auto child : root->GetChildren()) {
-            m_reflectionDefaultRenderer->Render(renderContext, child, userData);
+        for (auto&& task : tasks) {
+            task.get();
         }
 
-        m_reflectionDefaultRenderer->PostRender(renderContext, userData);
+        vkCmdExecuteCommands(renderContext.commandBuffer, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
-        // NormalMapped
-        m_reflectionNormalMappedRenderer->PreRender(renderContext, userData);
-
-        for (auto child : root->GetChildren()) {
-            m_reflectionNormalMappedRenderer->Render(renderContext, child, userData);
-        }
-
-        m_reflectionNormalMappedRenderer->PostRender(renderContext, userData);
-
-        // Terrain
-        m_reflectionTerrainRenderer->PreRender(renderContext, userData);
-
-        for (auto child : root->GetChildren()) {
-            m_reflectionTerrainRenderer->Render(renderContext, child, userData);
-        }
-
-        m_reflectionTerrainRenderer->PostRender(renderContext, userData);
-        
-        // Terrain Normal Mapped
-        m_reflectionTerrainNormalMappedRenderer->PreRender(renderContext, userData);
-
-        for (auto child : root->GetChildren()) {
-            m_reflectionTerrainNormalMappedRenderer->Render(renderContext, child, userData);
-        }
-
-        m_reflectionTerrainNormalMappedRenderer->PostRender(renderContext, userData);
-
-        // Animation
-        m_reflectionAnimationRenderer->PreRender(renderContext, userData);
-
-        for (auto child : root->GetChildren()) {
-            m_reflectionAnimationRenderer->Render(renderContext, child, userData);
-        }
-
-        m_reflectionAnimationRenderer->PostRender(renderContext, userData);
-
-        // Animation Normal Mapped
-        m_reflectionAnimationNormalMappedRenderer->PreRender(renderContext, userData);
-
-        for (auto child : root->GetChildren()) {
-            m_reflectionAnimationNormalMappedRenderer->Render(renderContext, child, userData);
-        }
-
-        m_reflectionAnimationNormalMappedRenderer->PostRender(renderContext, userData);
-
-        reflectionComponent->GetRenderPass()->End(renderContext.defaultCommandBuffer);
+        reflectionComponent->GetRenderPass()->End(renderContext.commandBuffer);
     }
 
     void RenderSceneRefraction(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
     {
-        auto refractionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
-        refractionComponent->GetRenderPass()->Begin(refractionComponent->GetFrameBuffer(), renderContext.defaultCommandBuffer, { { 0, 0 }, { REFRACTION_MEASURES.x, REFRACTION_MEASURES.y } });
+        const auto refractionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
+        refractionComponent->GetRenderPass()->Begin(refractionComponent->GetFrameBuffer(), renderContext.commandBuffer, { { 0, 0 }, { REFRACTION_MEASURES.x, REFRACTION_MEASURES.y } }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
         const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
@@ -3791,78 +3820,50 @@ private:
             glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane())
         };
 
-        // SkyBox
-        m_refractionSkyBoxRenderer->PreRender(renderContext, userData);
+        const auto& commandBuffers = m_refractionComandBufferGroups->GetBuffersGroup(renderContext.frameInFlightIndex);
 
-        for (auto child : root->GetChildren()) {
-            m_refractionSkyBoxRenderer->Render(renderContext, child, userData);
+        std::vector<std::future<void> > tasks;
+        for (size_t i = 0; i < m_refractionRenderers.size(); i++) {
+
+            auto& renderer = m_refractionRenderers.at(i);
+            auto& commandBuffer = commandBuffers.at(i);
+
+            tasks.emplace_back(m_threadPool.Enqueue([&]() {
+                VkCommandBufferInheritanceInfo inheritanceInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO };
+                inheritanceInfo.renderPass = *refractionComponent->GetRenderPass();
+                inheritanceInfo.framebuffer = refractionComponent->GetFrameBuffer();
+
+                VkCommandBufferBeginInfo commandBufferBeginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+                commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT | VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+                commandBufferBeginInfo.pInheritanceInfo = &inheritanceInfo;
+
+                VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
+
+                RenderContext customRenderContext{ renderContext.frameBuffer, commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
+
+                renderer->PreRender(customRenderContext, userData);
+
+                for (auto child : root->GetChildren()) {
+                    renderer->Render(customRenderContext, child, userData);
+                }
+
+                renderer->PostRender(customRenderContext, userData);
+
+                VKERRCHECK(vkEndCommandBuffer(commandBuffer));
+            }));
         }
 
-        m_refractionSkyBoxRenderer->PostRender(renderContext, userData);
-
-        // Default
-        m_refractionDefaultRenderer->PreRender(renderContext, userData);
-
-        for (auto child : root->GetChildren()) {
-            m_refractionDefaultRenderer->Render(renderContext, child, userData);
+        for (auto&& task : tasks) {
+            task.get();
         }
 
-        m_refractionDefaultRenderer->PostRender(renderContext, userData);
+        vkCmdExecuteCommands(renderContext.commandBuffer, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
-        // NormalMapped
-        m_refractionNormalMappedRenderer->PreRender(renderContext, userData);
-
-        for (auto child : root->GetChildren()) {
-            m_refractionNormalMappedRenderer->Render(renderContext, child, userData);
-        }
-
-        m_refractionNormalMappedRenderer->PostRender(renderContext, userData);
-
-        // Terrain
-        m_refractionTerrainRenderer->PreRender(renderContext, userData);
-
-        for (auto child : root->GetChildren()) {
-            m_refractionTerrainRenderer->Render(renderContext, child, userData);
-        }
-
-        m_refractionTerrainRenderer->PostRender(renderContext, userData);
-        
-        // Terrain Normal Mapped
-        m_refractionTerrainNormalMappedRenderer->PreRender(renderContext, userData);
-
-        for (auto child : root->GetChildren()) {
-            m_refractionTerrainNormalMappedRenderer->Render(renderContext, child, userData);
-        }
-
-        m_refractionTerrainNormalMappedRenderer->PostRender(renderContext, userData);
-
-        // Animation
-        m_refractionAnimationRenderer->PreRender(renderContext, userData);
-
-        for (auto child : root->GetChildren()) {
-            m_refractionAnimationRenderer->Render(renderContext, child, userData);
-        }
-
-        m_refractionAnimationRenderer->PostRender(renderContext, userData);
-         
-        // Animation Normal Mapped
-        m_refractionAnimationNormalMappedRenderer->PreRender(renderContext, userData);
-
-        for (auto child : root->GetChildren()) {
-            m_refractionAnimationNormalMappedRenderer->Render(renderContext, child, userData);
-        }
-
-        m_refractionAnimationNormalMappedRenderer->PostRender(renderContext, userData);
-
-        refractionComponent->GetRenderPass()->End(renderContext.defaultCommandBuffer);
+        refractionComponent->GetRenderPass()->End(renderContext.commandBuffer);
     }
 
     void RenderScene(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
     {
-        m_sunRenderer->BeforeRender(renderContext);
-
-        m_defaultRenderPass->Begin(renderContext.defaultFrameBuffer, renderContext.defaultCommandBuffer, { { 0, 0 }, renderContext.fullExtent });
-
         const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
         NormalRenderContextUserData userData{
@@ -3874,183 +3875,200 @@ private:
             glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane())
         };
 
-        // SkyBox
-        m_skyboxRenderer->PreRender(renderContext, userData);
+        m_sunRenderer->BeforeRender(renderContext, userData);
 
-        for (auto child : root->GetChildren()) {
-            m_skyboxRenderer->Render(renderContext, child, userData);
+        m_defaultRenderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, { { 0, 0 }, renderContext.fullExtent }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+
+        const auto& commandBuffers = m_defaultCommandBuffersGroup->GetBuffersGroup(renderContext.frameInFlightIndex);
+
+        std::vector<std::future<void> > tasks;
+        for (size_t i = 0; i < m_defaultRenderers.size(); i++) {
+            
+            auto& renderer = m_defaultRenderers.at(i);
+            auto& commandBuffer = commandBuffers.at(i);
+
+            tasks.emplace_back(m_threadPool.Enqueue([&]() {
+                VkCommandBufferInheritanceInfo inheritanceInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO };
+                inheritanceInfo.renderPass = *m_defaultRenderPass;
+                inheritanceInfo.framebuffer = renderContext.frameBuffer;
+
+                VkCommandBufferBeginInfo commandBufferBeginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+                commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT | VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+                commandBufferBeginInfo.pInheritanceInfo = &inheritanceInfo;
+
+                VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
+
+                RenderContext customRenderContext{ renderContext.frameBuffer, commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
+
+                renderer->PreRender(customRenderContext, userData);
+
+                for (auto child : root->GetChildren()) {
+                    renderer->Render(customRenderContext, child, userData);
+                }
+
+                renderer->PostRender(customRenderContext, userData);
+
+                VKERRCHECK(vkEndCommandBuffer(commandBuffer));
+            }));
         }
 
-        m_skyboxRenderer->PostRender(renderContext, userData);
-
-        // Default
-        m_defaultRenderer->PreRender(renderContext, userData);
-
-        for (auto child : root->GetChildren()) {
-            m_defaultRenderer->Render(renderContext, child, userData);
+        for (auto&& task : tasks) {
+            task.get();
         }
 
-        m_defaultRenderer->PostRender(renderContext, userData);
+        vkCmdExecuteCommands(renderContext.commandBuffer, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
-        // NormalMapped
-        m_normalMappedRenderer->PreRender(renderContext, userData);
+        m_defaultRenderPass->End(renderContext.commandBuffer);
 
-        for (auto child : root->GetChildren()) {
-            m_normalMappedRenderer->Render(renderContext, child, userData);
+        m_sunRenderer->AfterRender(renderContext, userData);       
+    }
+
+    void RenderDebug(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
+    { 
+        m_defaultRenderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, { { 0, 0 }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 } }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+
+        const auto& debugCommandBuffers = m_debugCommandBuffersGroup->GetBuffersGroup(renderContext.frameInFlightIndex);
+
+        std::vector<std::future<void> > debugTasks;
+        for (size_t i = 0; i < m_debugRenderers.size(); i++) {
+
+            auto& renderer = m_debugRenderers.at(i);
+            auto& commandBuffer = debugCommandBuffers.at(i);
+
+            debugTasks.emplace_back(m_threadPool.Enqueue([&]() {
+                VkCommandBufferInheritanceInfo inheritanceInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO };
+                inheritanceInfo.renderPass = *m_defaultRenderPass;
+                inheritanceInfo.framebuffer = renderContext.frameBuffer;
+
+                VkCommandBufferBeginInfo commandBufferBeginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+                commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT | VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+                commandBufferBeginInfo.pInheritanceInfo = &inheritanceInfo;
+
+                VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
+
+                RenderContext customRenderContext{ renderContext.frameBuffer, commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
+
+                renderer->PreRender(customRenderContext);
+
+                renderer->Render(customRenderContext, root);
+
+                renderer->PostRender(customRenderContext);
+
+                VKERRCHECK(vkEndCommandBuffer(commandBuffer));
+            }));
         }
 
-        m_normalMappedRenderer->PostRender(renderContext, userData);
-
-        // Terrain
-        m_terrainRenderer->PreRender(renderContext, userData);
-
-        for (auto child : root->GetChildren()) {
-            m_terrainRenderer->Render(renderContext, child, userData);
+        for (auto&& debugTask : debugTasks) {
+            (void)debugTask.get();
         }
 
-        m_terrainRenderer->PostRender(renderContext, userData);
+        vkCmdExecuteCommands(renderContext.commandBuffer, static_cast<uint32_t>(debugCommandBuffers.size()), debugCommandBuffers.data());
 
-        // Terrain Normal Mapped
-        m_terrainNormalRendererRenderer->PreRender(renderContext, userData);
-
-        for (auto child : root->GetChildren()) {
-            m_terrainNormalRendererRenderer->Render(renderContext, child, userData);
-        }
-
-        m_terrainNormalRendererRenderer->PostRender(renderContext, userData);
-
-        // Animation
-        m_animationRenderer->PreRender(renderContext, userData);
-
-        for (auto child : root->GetChildren()) {
-            m_animationRenderer->Render(renderContext, child, userData);
-        }
-
-        m_animationRenderer->PostRender(renderContext, userData);
-
-        // Animation Normal Mapped
-        m_animationNormalMappedRenderer->PreRender(renderContext, userData);
-
-        for (auto child : root->GetChildren()) {
-            m_animationNormalMappedRenderer->Render(renderContext, child, userData);
-        }
-
-        m_animationNormalMappedRenderer->PostRender(renderContext, userData);
-
-        // Water
-        m_waterRenderer->PreRender(renderContext, userData);
-
-        for (auto child : root->GetChildren()) {
-            m_waterRenderer->Render(renderContext, child, userData);
-        }
-
-        m_waterRenderer->PostRender(renderContext, userData);
-
-        // Sun
-        m_sunRenderer->PreRender(renderContext);
-
-        for (auto child : root->GetChildren()) {
-            m_sunRenderer->Render(renderContext, child);
-        }
-
-        m_sunRenderer->PostRender(renderContext);
-
-        m_sunRenderer->AfterRender(renderContext);
-
-        // LensFlare
-        m_lensFlareRenderer->PreRender(renderContext);
-
-        for (auto child : root->GetChildren()) {
-            m_lensFlareRenderer->Render(renderContext, child);
-        }
-
-        m_lensFlareRenderer->PostRender(renderContext);
-
-        // Fonts
-        m_fontRenderer->PreRender(renderContext);
-
-        for (auto child : root->GetChildren()) {
-            m_fontRenderer->Render(renderContext, child);
-        }
-
-        m_fontRenderer->PostRender(renderContext);
-
-        m_defaultRenderPass->End(renderContext.defaultCommandBuffer);
+        m_defaultRenderPass->End(renderContext.commandBuffer);
     }
 
 private:
     std::shared_ptr<RenderPass> m_defaultRenderPass;
 
+    std::shared_ptr<Swapchain> m_swapchain;
+
+    ThreadPool m_threadPool{ 8 };
+
 private:
     // Default Render
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_skyboxRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_skyboxRenderer;
 
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_defaultRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_defaultRenderer;
 
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_normalMappedRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_normalMappedRenderer;
 
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_terrainRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_terrainRenderer;
 
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_terrainNormalRendererRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_terrainNormalRendererRenderer;
 
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_animationRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_animationRenderer;
 
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_animationNormalMappedRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_animationNormalMappedRenderer;
 
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_waterRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_waterRenderer;
 
-    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_fontRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_fontRenderer;
 
-    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_sunRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_sunRenderer;
 
-    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_lensFlareRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_lensFlareRenderer;
+
+    std::vector<std::shared_ptr<IRenderer<NormalRenderContextUserData> > > m_defaultRenderers;
+
+    std::unique_ptr<CommandBuffersGroup> m_defaultCommandBuffersGroup;
+
+
     // Debug
-    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_shadowMapDebugRenderer;
+    std::shared_ptr<IRenderer<DefaultRenderContextUserData> > m_shadowMapDebugRenderer;
 
-    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_textureDebugRenderer;
+    std::shared_ptr<IRenderer<DefaultRenderContextUserData> > m_textureDebugRenderer;
+
+    std::vector<std::shared_ptr<IRenderer<DefaultRenderContextUserData> > > m_debugRenderers;
+
+    std::unique_ptr<CommandBuffersGroup> m_debugCommandBuffersGroup;
+
 
     // Shadows
-    std::unique_ptr<IRenderer<ShadowsRenderContextUserData> > m_defaultShadowsRenderer;
+    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_defaultShadowsRenderer;
 
-    std::unique_ptr<IRenderer<ShadowsRenderContextUserData> > m_normalMappedShadowsRenderer;
+    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_normalMappedShadowsRenderer;
 
-    std::unique_ptr<IRenderer<ShadowsRenderContextUserData> > m_terrainShadowsRenderer;
-    
-    std::unique_ptr<IRenderer<ShadowsRenderContextUserData> > m_terrainNormalMappedShadowsRenderer;
+    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_terrainShadowsRenderer;
 
-    std::unique_ptr<IRenderer<ShadowsRenderContextUserData> > m_animationShadowsRenderer;
+    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_terrainNormalMappedShadowsRenderer;
 
-    std::unique_ptr<IRenderer<ShadowsRenderContextUserData> > m_animationNormalMappedShadowsRenderer;
+    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_animationShadowsRenderer;
+
+    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_animationNormalMappedShadowsRenderer;
+
+    std::vector<std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > > m_shadowRenderers;
+
+    std::vector<std::unique_ptr<CommandBuffersGroup> > m_shadowsComandBufferGroups;
+
 
     // Reflection
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionSkyBoxRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionSkyBoxRenderer;
 
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionDefaultRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionDefaultRenderer;
 
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionNormalMappedRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionNormalMappedRenderer;
 
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionTerrainRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionTerrainRenderer;
 
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionTerrainNormalMappedRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionTerrainNormalMappedRenderer;
 
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionAnimationRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionAnimationRenderer;
 
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionAnimationNormalMappedRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionAnimationNormalMappedRenderer;
+    
+    std::vector<std::shared_ptr<IRenderer<NormalRenderContextUserData> > > m_reflectionRenderers;
+
+    std::unique_ptr<CommandBuffersGroup> m_reflectionComandBufferGroups;
+
 
     // Refraction
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_refractionSkyBoxRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionSkyBoxRenderer;
 
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_refractionDefaultRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionDefaultRenderer;
 
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_refractionNormalMappedRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionNormalMappedRenderer;
 
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_refractionTerrainRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionTerrainRenderer;
 
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_refractionTerrainNormalMappedRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionTerrainNormalMappedRenderer;
 
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_refractionAnimationRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionAnimationRenderer;
 
-    std::unique_ptr<IRenderer<NormalRenderContextUserData> > m_refractionAnimationNormalMappedRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionAnimationNormalMappedRenderer;
+
+    std::vector<std::shared_ptr<IRenderer<NormalRenderContextUserData> > > m_refractionRenderers;
+
+    std::unique_ptr<CommandBuffersGroup> m_refractionComandBufferGroups;
 };
 
 #endif
