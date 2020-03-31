@@ -58,18 +58,18 @@ public:
     }
 
 public:
-    // add new work item to the pool
+#ifdef WIN32
     template <class F, class... Args>
     decltype(auto) Enqueue(F&& f, Args&&... args)
     {
         using return_type = std::invoke_result_t<F,Args...>;
 
         auto task = std::make_shared<std::packaged_task<return_type()> >(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
+
         std::future<return_type> res = task->get_future();
         {
             std::lock_guard<std::mutex> lock(m_queueMutex);
 
-            // don't allow enqueueing after stopping the pool
             if (!m_running) {
                 throw std::runtime_error("Enqueue on not running ThreadPool");
             }
@@ -81,23 +81,37 @@ public:
         m_runningCondition.notify_one();
         return res;
     }
-
-    void Clear()
+#else
+    template <class F, class... Args>
+    decltype(auto) Enqueue(F&& f, Args&&... args)
     {
-        std::lock_guard<std::mutex> lock(m_queueMutex);
+        using return_type = std::invoke_result_t<F,Args...>;
 
-        std::queue<std::function<void()> > empty;
-        std::swap(m_tasks, empty);
+        std::packaged_task<return_type()> task(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
+        std::future<return_type> res = task.get_future();
+        {
+            std::lock_guard<std::mutex> lock(m_queueMutex);
+
+            // don't allow enqueueing after stopping the pool
+            if (!m_running) {
+                throw std::runtime_error("Enqueue on not running ThreadPool");
+            }
+
+            m_tasks.emplace(std::move(task));
+        }
+        m_runningCondition.notify_one();
+        return res;
     }
-
+#endif
 private:
-    // need to keep track of threads so we can join them
     std::vector<std::thread> m_workers;
 
-    // the task queue
+#ifdef WIN32
     std::queue<std::function<void()> > m_tasks;
+#else 
+    std::queue<std::packaged_task<void()>> m_tasks;
+#endif
 
-    // synchronization
     std::mutex m_queueMutex;
 
     std::condition_variable m_runningCondition;
