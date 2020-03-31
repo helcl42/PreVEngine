@@ -129,6 +129,10 @@ struct HeightMapInfo {
 
     float maxHeight{ 0.0f };
 
+    float globalMinHeight{ 0.0f };
+
+    float globalMaxHeight{ 0.0f };
+
     HeightMapInfo() = default;
 
     HeightMapInfo(const size_t size)
@@ -160,6 +164,16 @@ struct HeightMapInfo {
     float GetMaxHeight() const
     {
         return maxHeight;
+    }
+
+    float GetGlobalMinHeight() const
+    {
+        return globalMinHeight;
+    }
+
+    float GetGlobalMaxHeight() const
+    {
+        return globalMaxHeight;
     }
 };
 
@@ -602,8 +616,8 @@ private:
                 }
             }
         }
-        heightMapInfo->minHeight = minHeight;
-        heightMapInfo->maxHeight = maxHeight;
+        heightMapInfo->minHeight = heightMapInfo->globalMinHeight = minHeight;
+        heightMapInfo->maxHeight = heightMapInfo->globalMaxHeight = maxHeight;
         return heightMapInfo;
     }
 
