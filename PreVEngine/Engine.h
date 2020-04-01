@@ -5,7 +5,7 @@
 
 namespace PreVEngine {
 struct EngineConfig {
-    bool validation{ true };
+    bool validation{ false };
 
     std::string appName{ "PreVEngine - Demo" };
 

@@ -344,14 +344,26 @@ public:
     }
 
 private:
+    std::shared_ptr<Image> CreateImage(const std::string& textureFilename) const
+    {
+        std::shared_ptr<Image> image;
+        if (s_imagesCache.find(textureFilename) != s_imagesCache.cend()) {
+            image = s_imagesCache[textureFilename];
+        } else {
+            ImageFactory imageFactory;
+            image = imageFactory.CreateImage(textureFilename);
+            s_imagesCache[textureFilename] = image;
+        }
+        return image;
+    }
+
     std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const glm::vec4& color, const std::string& textureFilename, const std::string& normalTextureFilename, const float shineDamper, const float reflectivity) const
     {
-        ImageFactory imageFactory;
-        auto image = imageFactory.CreateImage(textureFilename);
+        auto image = CreateImage(textureFilename);
         auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
         imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer() });
 
-        auto normalImage = imageFactory.CreateImage(textureFilename);
+        auto normalImage = CreateImage(textureFilename);
         auto normalImageBuffer = std::make_unique<ImageBuffer>(allocator);
         normalImageBuffer->Create(ImageBufferCreateInfo{ { normalImage->GetWidth(), normalImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)normalImage->GetBuffer() });
 
@@ -368,6 +380,11 @@ private:
 
         return std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
+
+private:
+    static std::map<std::string, std::shared_ptr<Image> > s_imagesCache;
 };
+
+std::map<std::string, std::shared_ptr<Image> > WaterComponentFactory::s_imagesCache;
 
 #endif
