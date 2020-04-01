@@ -50,7 +50,9 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     #option(BUILD_PREVENGINE_XLIB_SUPPORT    "Build Xlib PREVENGINE support"    OFF)
     #option(BUILD_PREVENGINE_WAYLAND_SUPPORT "Build Wayland PREVENGINE support" OFF)
     #option(BUILD_PREVENGINE_MIR_SUPPORT     "Build Mir PREVENGINE support"     OFF)
-
+    
+    target_link_libraries(${LIBRARY_NAME} pthread)
+    
     if (BUILD_PREVENGINE_XCB_SUPPORT)
         add_definitions(-DVK_USE_PLATFORM_XCB_KHR)
         #---XCB---  (window)

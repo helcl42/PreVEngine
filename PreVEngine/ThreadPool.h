@@ -58,7 +58,6 @@ public:
     }
 
 public:
-#ifdef WIN32
     template <class F, class... Args>
     decltype(auto) Enqueue(F&& f, Args&&... args)
     {
@@ -81,36 +80,11 @@ public:
         m_runningCondition.notify_one();
         return res;
     }
-#else
-    template <class F, class... Args>
-    decltype(auto) Enqueue(F&& f, Args&&... args)
-    {
-        using return_type = std::invoke_result_t<F,Args...>;
 
-        std::packaged_task<return_type()> task(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
-        std::future<return_type> res = task.get_future();
-        {
-            std::lock_guard<std::mutex> lock(m_queueMutex);
-
-            // don't allow enqueueing after stopping the pool
-            if (!m_running) {
-                throw std::runtime_error("Enqueue on not running ThreadPool");
-            }
-
-            m_tasks.emplace(std::move(task));
-        }
-        m_runningCondition.notify_one();
-        return res;
-    }
-#endif
 private:
     std::vector<std::thread> m_workers;
 
-#ifdef WIN32
     std::queue<std::function<void()> > m_tasks;
-#else 
-    std::queue<std::packaged_task<void()>> m_tasks;
-#endif
 
     std::mutex m_queueMutex;
 
