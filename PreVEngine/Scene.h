@@ -180,11 +180,11 @@ public:
 
     void Render() override
     {
-        VkFramebuffer fraemBuffer;
+        VkFramebuffer frameBuffer;
         VkCommandBuffer commandBuffer;
         uint32_t frameInFlightIndex;
-        if (m_swapchain->BeginFrame(fraemBuffer, commandBuffer, frameInFlightIndex)) {
-            RenderContext renderContext{ fraemBuffer, commandBuffer, frameInFlightIndex, m_swapchain->GetExtent() };
+        if (m_swapchain->BeginFrame(frameBuffer, commandBuffer, frameInFlightIndex)) {
+            RenderContext renderContext{frameBuffer, commandBuffer, frameInFlightIndex, m_swapchain->GetExtent() };
 
             m_rootNode->Render(renderContext);
 

@@ -163,7 +163,7 @@ void RenderPass::Destroy()
     LOGI("Renderpass destroyed\n");
 }
 
-void RenderPass::Begin(const VkFramebuffer frameBuffer, const VkCommandBuffer commadbuffer, const VkRect2D& renderArea, const VkSubpassContents contents)
+void RenderPass::Begin(const VkFramebuffer frameBuffer, const VkCommandBuffer commandBuffer, const VkRect2D& renderArea, const VkSubpassContents contents)
 {
     VkRenderPassBeginInfo renderPassInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
     renderPassInfo.renderPass = m_renderPass;
@@ -172,7 +172,7 @@ void RenderPass::Begin(const VkFramebuffer frameBuffer, const VkCommandBuffer co
     renderPassInfo.clearValueCount = static_cast<uint32_t>(m_clearValues.size());
     renderPassInfo.pClearValues = m_clearValues.data();
 
-    vkCmdBeginRenderPass(commadbuffer, &renderPassInfo, contents);
+    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, contents);
 }
 
 void RenderPass::End(const VkCommandBuffer commandBuffer)

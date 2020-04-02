@@ -73,7 +73,7 @@ public:
 
     void Destroy();
 
-    void Begin(const VkFramebuffer frambuffer, const VkCommandBuffer commadBuffer, const VkRect2D& renderArea, const VkSubpassContents contents = VK_SUBPASS_CONTENTS_INLINE);
+    void Begin(const VkFramebuffer frambuffer, const VkCommandBuffer commandBuffer, const VkRect2D& renderArea, const VkSubpassContents contents = VK_SUBPASS_CONTENTS_INLINE);
 
     void End(VkCommandBuffer commadBuffer);
 

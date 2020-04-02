@@ -5,7 +5,7 @@
 
 namespace PreVEngine {
 struct EngineConfig {
-    bool validation{ false };
+    bool validation{ true };
 
     std::string appName{ "PreVEngine - Demo" };
 
@@ -15,7 +15,7 @@ struct EngineConfig {
 
     Position windowPosition{ 40, 40 };
 
-    std::shared_ptr<SceneConfig> sceneCongig{ std::make_shared<SceneConfig>() };
+    std::shared_ptr<SceneConfig> sceneConfig{std::make_shared<SceneConfig>() };
 };
 
 template <typename NodeFlagsType>
@@ -135,7 +135,7 @@ public:
 
     void InitScene()
     {
-        m_scene = std::make_shared<Scene<NodeFlagsType> >(m_config->sceneCongig, m_device, m_surface);
+        m_scene = std::make_shared<Scene<NodeFlagsType> >(m_config->sceneConfig, m_device, m_surface);
         m_scene->Init();
     }
 
