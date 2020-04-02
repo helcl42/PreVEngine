@@ -59,11 +59,11 @@ private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
-    std::shared_ptr<Shader> m_shader;
+    std::unique_ptr<Shader> m_shader;
 
-    std::shared_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IGraphicsPipeline> m_pipeline;
 
-    std::shared_ptr<UBOPool<Uniforms> > m_uniformsPool;
+    std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
 
 public:
     DefaultShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -85,12 +85,12 @@ public:
 
         LOGI("Default Shadows Shader created\n");
 
-        m_pipeline = std::make_shared<DefaultShadowsPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline = std::make_unique<DefaultShadowsPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
         LOGI("Default Shadows Pipeline created\n");
 
-        m_uniformsPool = std::make_shared<UBOPool<Uniforms> >(*allocator);
+        m_uniformsPool = std::make_unique<UBOPool<Uniforms> >(*allocator);
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -3430,6 +3430,8 @@ public:
     }
 };
 
+#define PARALLEL_RENDERING
+
 class MasterRenderer : public IRenderer<DefaultRenderContextUserData> {
 public:
     MasterRenderer(const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Swapchain>& swapchain)
@@ -3498,7 +3500,7 @@ public:
 private:
     void InitDefault()
     {
-        m_skyboxRenderer = std::make_shared<SkyBoxRenderer>(m_defaultRenderPass);
+        m_skyBoxRenderer = std::make_shared<SkyBoxRenderer>(m_defaultRenderPass);
         m_defaultRenderer = std::make_shared<DefaultRenderer>(m_defaultRenderPass);        
         m_normalMappedRenderer = std::make_shared<NormalMappedRenderer>(m_defaultRenderPass);
         m_terrainRenderer = std::make_shared<TerrainRenderer>(m_defaultRenderPass);        
@@ -3511,30 +3513,34 @@ private:
         m_lensFlareRenderer = std::make_shared<LensFlareRenderer>(m_defaultRenderPass);
 
         m_defaultRenderers = {
-            m_skyboxRenderer,
-            m_defaultRenderer,
-            m_normalMappedRenderer,
-            m_terrainRenderer,
-            m_terrainNormalRendererRenderer,
-            m_animationRenderer,
-            m_animationNormalMappedRenderer,
-            m_waterRenderer,
-            m_fontRenderer,
-            m_sunRenderer,
-            m_lensFlareRenderer
+                m_skyBoxRenderer,
+                m_defaultRenderer,
+                m_normalMappedRenderer,
+                m_terrainRenderer,
+                m_terrainNormalRendererRenderer,
+                m_animationRenderer,
+                m_animationNormalMappedRenderer,
+                m_waterRenderer,
+                m_fontRenderer,
+                m_sunRenderer,
+                m_lensFlareRenderer
         };
 
         for (auto& renderer : m_defaultRenderers) {
             renderer->Init();
         }
 
+#ifdef PARALLEL_RENDERING
         CommandBuffersGroupFactory buffersGroupFactory{};
         m_defaultCommandBuffersGroup = buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetmageCount(), static_cast<uint32_t>(m_defaultRenderers.size()));
+#endif
     }
 
     void ShutDownDefault()
     {
+#ifdef PARALLEL_RENDERING
         m_defaultCommandBuffersGroup = nullptr;
+#endif
 
         for (auto it = m_defaultRenderers.rbegin(); it != m_defaultRenderers.rend(); ++it) {
             (*it)->ShutDown();
@@ -3555,13 +3561,17 @@ private:
             renderer->Init();
         }
 
+#ifdef PARALLEL_RENDERING
         CommandBuffersGroupFactory buffersGroupFactory{};
         m_debugCommandBuffersGroup = buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetmageCount(), static_cast<uint32_t>(m_debugRenderers.size()));
+#endif
     }
 
     void ShutDownDebug()
     {
+#ifdef PARALLEL_RENDERING
         m_debugCommandBuffersGroup = nullptr;
+#endif
 
         for (auto it = m_debugRenderers.rbegin(); it != m_debugRenderers.rend(); ++it) {
             (*it)->ShutDown();
@@ -3592,15 +3602,19 @@ private:
             shadowRenderer->Init();
         }
 
+#ifdef PARALLEL_RENDERING
         CommandBuffersGroupFactory buffersGroupFactory{};
         for (uint32_t i = 0; i < ShadowsComponent::CASCADES_COUNT; i++) {
-            m_shadowsComandBufferGroups.emplace_back(buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetmageCount(), static_cast<uint32_t>(m_shadowRenderers.size())));
+            m_shadowsCommandBufferGroups.emplace_back(buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetmageCount(), static_cast<uint32_t>(m_shadowRenderers.size())));
         }
+#endif
     }
 
     void ShutDownShadows()
     {
-        m_shadowsComandBufferGroups.clear();
+#ifdef PARALLEL_RENDERING
+        m_shadowsCommandBufferGroups.clear();
+#endif
 
         for (auto it = m_shadowRenderers.rbegin(); it != m_shadowRenderers.rend(); ++it) {
             (*it)->ShutDown();
@@ -3632,13 +3646,17 @@ private:
             shadowRenderer->Init();
         }
 
+#ifdef PARALLEL_RENDERING
         CommandBuffersGroupFactory buffersGroupFactory{};
-        m_reflectionComandBufferGroups = buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetmageCount(), static_cast<uint32_t>(m_reflectionRenderers.size()));
+        m_reflectionCommandBufferGroups = buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetmageCount(), static_cast<uint32_t>(m_reflectionRenderers.size()));
+#endif
     }
 
     void ShutDownReflection()
     {
-        m_reflectionComandBufferGroups = nullptr;
+#ifdef PARALLEL_RENDERING
+        m_reflectionCommandBufferGroups = nullptr;
+#endif
 
         for (auto it = m_reflectionRenderers.rbegin(); it != m_reflectionRenderers.rend(); ++it) {
             (*it)->ShutDown();
@@ -3670,13 +3688,17 @@ private:
             shadowRenderer->Init();
         }
 
+#ifdef PARALLEL_RENDERING
         CommandBuffersGroupFactory buffersGroupFactory{};
-        m_refractionComandBufferGroups = buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetmageCount(), static_cast<uint32_t>(m_refractionRenderers.size()));
+        m_refractionCommandBufferGroups = buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetmageCount(), static_cast<uint32_t>(m_refractionRenderers.size()));
+#endif
     }
 
     void ShutDownRefraction()
     {
-        m_refractionComandBufferGroups = nullptr;
+#ifdef PARALLEL_RENDERING
+        m_refractionCommandBufferGroups = nullptr;
+#endif
 
         for (auto it = m_refractionRenderers.rbegin(); it != m_refractionRenderers.rend(); ++it) {
             (*it)->ShutDown();
@@ -3690,11 +3712,13 @@ private:
         for (uint32_t cascadeIndex = 0; cascadeIndex < ShadowsComponent::CASCADES_COUNT; cascadeIndex++) {
 
             const auto cascade = shadows->GetCascade(cascadeIndex);
-            const auto& cascadeCommandBuffers = m_shadowsComandBufferGroups.at(cascadeIndex)->GetBuffersGroup(renderContext.frameInFlightIndex);
 
+            const ShadowsRenderContextUserData userData{ cascade.viewMatrix, cascade.projectionMatrix, cascadeIndex };
+
+#ifdef PARALLEL_RENDERING
             shadows->GetRenderPass()->Begin(cascade.frameBuffer, renderContext.commandBuffer, { { 0, 0 }, shadows->GetExtent() }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS );
 
-            ShadowsRenderContextUserData userData{ cascade.viewMatrix, cascade.projectionMatrix, cascadeIndex };
+            const auto& cascadeCommandBuffers = m_shadowsCommandBufferGroups.at(cascadeIndex)->GetBuffersGroup(renderContext.frameInFlightIndex);
 
             std::vector<std::future<void> > tasks;
             for (size_t i = 0; i < m_shadowRenderers.size(); i++) {
@@ -3734,14 +3758,29 @@ private:
             vkCmdExecuteCommands(renderContext.commandBuffer, static_cast<uint32_t>(cascadeCommandBuffers.size()), cascadeCommandBuffers.data());
 
             shadows->GetRenderPass()->End(renderContext.commandBuffer);
+#else
+            shadows->GetRenderPass()->Begin(cascade.frameBuffer, renderContext.commandBuffer, { { 0, 0 }, shadows->GetExtent() } );
+
+            for (size_t i = 0; i < m_shadowRenderers.size(); i++) {
+                auto& renderer = m_shadowRenderers.at(i);
+
+                renderer->PreRender(renderContext, userData);
+
+                for (auto child : root->GetChildren()) {
+                    renderer->Render(renderContext, child, userData);
+                }
+
+                renderer->PostRender(renderContext, userData);
+            }
+
+            shadows->GetRenderPass()->End(renderContext.commandBuffer);
+#endif
         }
     }
 
     void RenderSceneReflection(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
     {
         const auto reflectionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
-        reflectionComponent->GetRenderPass()->Begin(reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, { { 0, 0 }, { REFLECTION_MEASURES.x, REFLECTION_MEASURES.y } }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
-
         const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
         const auto cameraPosition{ cameraComponent->GetPosition() };
@@ -3762,7 +3801,10 @@ private:
             glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane())
         };
 
-        const auto& commandBuffers = m_reflectionComandBufferGroups->GetBuffersGroup(renderContext.frameInFlightIndex);
+#ifdef PARALLEL_RENDERING
+        reflectionComponent->GetRenderPass()->Begin(reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, { { 0, 0 }, { REFLECTION_MEASURES.x, REFLECTION_MEASURES.y } }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+
+        const auto& commandBuffers = m_reflectionCommandBufferGroups->GetBuffersGroup(renderContext.frameInFlightIndex);
 
         std::vector<std::future<void> > tasks;
         for (size_t i = 0; i < m_reflectionRenderers.size(); i++) {
@@ -3802,13 +3844,28 @@ private:
         vkCmdExecuteCommands(renderContext.commandBuffer, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
         reflectionComponent->GetRenderPass()->End(renderContext.commandBuffer);
+#else
+        reflectionComponent->GetRenderPass()->Begin(reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, { { 0, 0 }, { REFLECTION_MEASURES.x, REFLECTION_MEASURES.y } });
+
+        for (size_t i = 0; i < m_reflectionRenderers.size(); i++) {
+            auto& renderer = m_reflectionRenderers.at(i);
+
+            renderer->PreRender(renderContext, userData);
+
+            for (auto child : root->GetChildren()) {
+                renderer->Render(renderContext, child, userData);
+            }
+
+            renderer->PostRender(renderContext, userData);
+        }
+
+        reflectionComponent->GetRenderPass()->End(renderContext.commandBuffer);
+#endif
     }
 
     void RenderSceneRefraction(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
     {
         const auto refractionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
-        refractionComponent->GetRenderPass()->Begin(refractionComponent->GetFrameBuffer(), renderContext.commandBuffer, { { 0, 0 }, { REFRACTION_MEASURES.x, REFRACTION_MEASURES.y } }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
-
         const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
         NormalRenderContextUserData userData{
@@ -3820,7 +3877,8 @@ private:
             glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane())
         };
 
-        const auto& commandBuffers = m_refractionComandBufferGroups->GetBuffersGroup(renderContext.frameInFlightIndex);
+#ifdef PARALLEL_RENDERING
+        const auto& commandBuffers = m_refractionCommandBufferGroups->GetBuffersGroup(renderContext.frameInFlightIndex);
 
         std::vector<std::future<void> > tasks;
         for (size_t i = 0; i < m_refractionRenderers.size(); i++) {
@@ -3860,6 +3918,23 @@ private:
         vkCmdExecuteCommands(renderContext.commandBuffer, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
         refractionComponent->GetRenderPass()->End(renderContext.commandBuffer);
+#else
+        refractionComponent->GetRenderPass()->Begin(refractionComponent->GetFrameBuffer(), renderContext.commandBuffer, { { 0, 0 }, { REFRACTION_MEASURES.x, REFRACTION_MEASURES.y } });
+
+        for (size_t i = 0; i < m_refractionRenderers.size(); i++) {
+            auto& renderer = m_refractionRenderers.at(i);
+
+            renderer->PreRender(renderContext, userData);
+
+            for (auto child : root->GetChildren()) {
+                renderer->Render(renderContext, child, userData);
+            }
+
+            renderer->PostRender(renderContext, userData);
+        }
+
+        refractionComponent->GetRenderPass()->End(renderContext.commandBuffer);
+#endif
     }
 
     void RenderScene(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
@@ -3877,6 +3952,7 @@ private:
 
         m_sunRenderer->BeforeRender(renderContext, userData);
 
+#ifdef PARALLEL_RENDERING
         m_defaultRenderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, { { 0, 0 }, renderContext.fullExtent }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
         const auto& commandBuffers = m_defaultCommandBuffersGroup->GetBuffersGroup(renderContext.frameInFlightIndex);
@@ -3919,12 +3995,29 @@ private:
         vkCmdExecuteCommands(renderContext.commandBuffer, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
         m_defaultRenderPass->End(renderContext.commandBuffer);
+#else
+        m_defaultRenderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, { { 0, 0 }, renderContext.fullExtent });
 
+        for (size_t i = 0; i < m_defaultRenderers.size(); i++) {
+            auto& renderer = m_defaultRenderers.at(i);
+
+            renderer->PreRender(renderContext, userData);
+
+            for (auto child : root->GetChildren()) {
+                renderer->Render(renderContext, child, userData);
+            }
+
+            renderer->PostRender(renderContext, userData);
+        }
+
+        m_defaultRenderPass->End(renderContext.commandBuffer);
+#endif
         m_sunRenderer->AfterRender(renderContext, userData);       
     }
 
     void RenderDebug(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
-    { 
+    {
+#ifdef PARALLEL_RENDERING
         m_defaultRenderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, { { 0, 0 }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 } }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
         const auto& debugCommandBuffers = m_debugCommandBuffersGroup->GetBuffersGroup(renderContext.frameInFlightIndex);
@@ -3959,12 +4052,27 @@ private:
         }
 
         for (auto&& debugTask : debugTasks) {
-            (void)debugTask.get();
+            debugTask.get();
         }
 
         vkCmdExecuteCommands(renderContext.commandBuffer, static_cast<uint32_t>(debugCommandBuffers.size()), debugCommandBuffers.data());
 
         m_defaultRenderPass->End(renderContext.commandBuffer);
+#else
+        m_defaultRenderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, { { 0, 0 }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 } });
+
+        for (size_t i = 0; i < m_debugRenderers.size(); i++) {
+            auto& renderer = m_debugRenderers.at(i);
+
+            renderer->PreRender(renderContext);
+
+            renderer->Render(renderContext, root);
+
+            renderer->PostRender(renderContext);
+        }
+
+        m_defaultRenderPass->End(renderContext.commandBuffer);
+#endif
     }
 
 private:
@@ -3972,11 +4080,9 @@ private:
 
     std::shared_ptr<Swapchain> m_swapchain;
 
-    ThreadPool m_threadPool{ 8 };
-
 private:
     // Default Render
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_skyboxRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_skyBoxRenderer;
 
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_defaultRenderer;
 
@@ -4000,8 +4106,6 @@ private:
 
     std::vector<std::shared_ptr<IRenderer<NormalRenderContextUserData> > > m_defaultRenderers;
 
-    std::unique_ptr<CommandBuffersGroup> m_defaultCommandBuffersGroup;
-
 
     // Debug
     std::shared_ptr<IRenderer<DefaultRenderContextUserData> > m_shadowMapDebugRenderer;
@@ -4009,8 +4113,6 @@ private:
     std::shared_ptr<IRenderer<DefaultRenderContextUserData> > m_textureDebugRenderer;
 
     std::vector<std::shared_ptr<IRenderer<DefaultRenderContextUserData> > > m_debugRenderers;
-
-    std::unique_ptr<CommandBuffersGroup> m_debugCommandBuffersGroup;
 
 
     // Shadows
@@ -4027,8 +4129,6 @@ private:
     std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_animationNormalMappedShadowsRenderer;
 
     std::vector<std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > > m_shadowRenderers;
-
-    std::vector<std::unique_ptr<CommandBuffersGroup> > m_shadowsComandBufferGroups;
 
 
     // Reflection
@@ -4048,8 +4148,6 @@ private:
     
     std::vector<std::shared_ptr<IRenderer<NormalRenderContextUserData> > > m_reflectionRenderers;
 
-    std::unique_ptr<CommandBuffersGroup> m_reflectionComandBufferGroups;
-
 
     // Refraction
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionSkyBoxRenderer;
@@ -4068,7 +4166,20 @@ private:
 
     std::vector<std::shared_ptr<IRenderer<NormalRenderContextUserData> > > m_refractionRenderers;
 
-    std::unique_ptr<CommandBuffersGroup> m_refractionComandBufferGroups;
+#ifdef PARALLEL_RENDERING
+    // Parallel stuff
+    std::unique_ptr<CommandBuffersGroup> m_defaultCommandBuffersGroup;
+
+    std::unique_ptr<CommandBuffersGroup> m_debugCommandBuffersGroup;
+
+    std::vector<std::unique_ptr<CommandBuffersGroup> > m_shadowsCommandBufferGroups;
+
+    std::unique_ptr<CommandBuffersGroup> m_reflectionCommandBufferGroups;
+
+    std::unique_ptr<CommandBuffersGroup> m_refractionCommandBufferGroups;
+
+    ThreadPool m_threadPool{ 8 };
+#endif
 };
 
 #endif
