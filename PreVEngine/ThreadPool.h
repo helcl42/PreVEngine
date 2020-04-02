@@ -30,7 +30,7 @@ public:
                                 });
 
                             if (!this->m_running && this->m_tasks.empty()) {
-                                return;
+                                break;
                             }
 
                             task = std::move(this->m_tasks.front());
