@@ -94,7 +94,7 @@ public:
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void PreRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
@@ -108,11 +108,11 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void BeforeRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void BeforeRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT })) {
             auto renderComponent = ComponentRepository<IRenderComponent>::Instance().Get(node->GetId());
@@ -144,11 +144,11 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PostRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void AfterRender(RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
+    void AfterRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -175,11 +175,11 @@ private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
-    std::shared_ptr<Shader> m_shader;
+    std::unique_ptr<Shader> m_shader;
 
-    std::shared_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IGraphicsPipeline> m_pipeline;
 
-    std::shared_ptr<UBOPool<Uniforms> > m_uniformsPool;
+    std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
 
 public:
     NormalMappedShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -201,16 +201,16 @@ public:
 
         LOGI("NormalMapped Shadows Shader created\n");
 
-        m_pipeline = std::make_shared<NormalMappedShadowsPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline = std::make_unique<NormalMappedShadowsPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
         LOGI("NormalMapped Shadows Pipeline created\n");
 
-        m_uniformsPool = std::make_shared<UBOPool<Uniforms> >(*allocator);
+        m_uniformsPool = std::make_unique<UBOPool<Uniforms> >(*allocator);
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void PreRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
@@ -224,11 +224,11 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void BeforeRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void BeforeRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_NORMAL_MAPPED_COMPONENT })) {
             auto renderComponent = ComponentRepository<IRenderComponent>::Instance().Get(node->GetId());
@@ -260,11 +260,11 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PostRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void AfterRender(RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
+    void AfterRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -291,11 +291,11 @@ private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
-    std::shared_ptr<Shader> m_shader;
+    std::unique_ptr<Shader> m_shader;
 
-    std::shared_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IGraphicsPipeline> m_pipeline;
 
-    std::shared_ptr<UBOPool<Uniforms> > m_uniformsPool;
+    std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
 
 public:
     TerrainShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -317,20 +317,20 @@ public:
 
         LOGI("Terrain Shadows Shader created\n");
 
-        m_pipeline = std::make_shared<TerrainShadowsPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline = std::make_unique<TerrainShadowsPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
         LOGI("Terrain Shadows Pipeline created\n");
 
-        m_uniformsPool = std::make_shared<UBOPool<Uniforms> >(*allocator);
+        m_uniformsPool = std::make_unique<UBOPool<Uniforms> >(*allocator);
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void BeforeRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void PreRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
@@ -344,7 +344,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT })) {
             const auto terrainComponent = ComponentRepository<ITerrainComponenet>::Instance().Get(node->GetId());
@@ -374,11 +374,11 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PostRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void AfterRender(RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
+    void AfterRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -405,11 +405,11 @@ private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
-    std::shared_ptr<Shader> m_shader;
+    std::unique_ptr<Shader> m_shader;
 
-    std::shared_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IGraphicsPipeline> m_pipeline;
 
-    std::shared_ptr<UBOPool<Uniforms> > m_uniformsPool;
+    std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
 
 public:
     TerrainNormalMappedShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -431,20 +431,20 @@ public:
 
         LOGI("Terrain Normal Mapped Shadows Shader created\n");
 
-        m_pipeline = std::make_shared<TerrainNormalMappedShadowsPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline = std::make_unique<TerrainNormalMappedShadowsPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
         LOGI("Terrain Normal Mapped Shadows Pipeline created\n");
 
-        m_uniformsPool = std::make_shared<UBOPool<Uniforms> >(*allocator);
+        m_uniformsPool = std::make_unique<UBOPool<Uniforms> >(*allocator);
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void BeforeRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void PreRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
@@ -458,7 +458,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT })) {
             const auto terrainComponent = ComponentRepository<ITerrainComponenet>::Instance().Get(node->GetId());
@@ -488,11 +488,11 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PostRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void AfterRender(RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
+    void AfterRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -520,11 +520,11 @@ private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
-    std::shared_ptr<Shader> m_shader;
+    std::unique_ptr<Shader> m_shader;
 
-    std::shared_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IGraphicsPipeline> m_pipeline;
 
-    std::shared_ptr<UBOPool<Uniforms> > m_uniformsPool;
+    std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
 
 public:
     AnimationShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -546,20 +546,20 @@ public:
 
         LOGI("Animation Shadows Shader created\n");
 
-        m_pipeline = std::make_shared<AnimatedShadowsPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline = std::make_unique<AnimatedShadowsPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
         LOGI("Animation Shadows Pipeline created\n");
 
-        m_uniformsPool = std::make_shared<UBOPool<Uniforms> >(*allocator);
+        m_uniformsPool = std::make_unique<UBOPool<Uniforms> >(*allocator);
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void BeforeRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void PreRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
@@ -573,7 +573,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_RENDER_COMPONENT })) {
             auto renderComponent = ComponentRepository<IAnimationRenderComponent>::Instance().Get(node->GetId());
@@ -609,11 +609,11 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PostRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void AfterRender(RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
+    void AfterRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -641,11 +641,11 @@ private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
-    std::shared_ptr<Shader> m_shader;
+    std::unique_ptr<Shader> m_shader;
 
-    std::shared_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IGraphicsPipeline> m_pipeline;
 
-    std::shared_ptr<UBOPool<Uniforms> > m_uniformsPool;
+    std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
 
 public:
     AnimationNormalMappedShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -667,20 +667,20 @@ public:
 
         LOGI("Animation Normal Mapped Shadows Shader created\n");
 
-        m_pipeline = std::make_shared<AnimatedNormalMappedShadowsPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline = std::make_unique<AnimatedNormalMappedShadowsPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
         LOGI("Animation Normal Mapped Shadows Pipeline created\n");
 
-        m_uniformsPool = std::make_shared<UBOPool<Uniforms> >(*allocator);
+        m_uniformsPool = std::make_unique<UBOPool<Uniforms> >(*allocator);
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void BeforeRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void PreRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
@@ -694,7 +694,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT })) {
             auto renderComponent = ComponentRepository<IAnimationRenderComponent>::Instance().Get(node->GetId());
@@ -730,11 +730,11 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PostRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void AfterRender(RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
+    void AfterRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -799,22 +799,22 @@ public:
         LOGI("ShadowMapDebug Pipeline created\n");
 
         // create quad model
-        auto quadMesh = std::make_shared<QuadMesh>();
+        auto quadMesh = std::make_unique<QuadMesh>();
 
-        auto vertexBuffer = std::make_shared<VBO>(*allocator);
+        auto vertexBuffer = std::make_unique<VBO>(*allocator);
         vertexBuffer->Data(quadMesh->GetVertices(), quadMesh->GerVerticesCount(), quadMesh->GetVertexLayout().GetStride());
 
-        auto indexBuffer = std::make_shared<IBO>(*allocator);
+        auto indexBuffer = std::make_unique<IBO>(*allocator);
         indexBuffer->Data(quadMesh->GerIndices().data(), (uint32_t)quadMesh->GerIndices().size());
 
-        m_quadModel = std::make_unique<Model>(quadMesh, vertexBuffer, indexBuffer);
+        m_quadModel = std::make_unique<Model>(std::move(quadMesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
 
-    void BeforeRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PreRender(const RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
         VkRect2D renderRect{};
         renderRect.extent.width = renderContext.fullExtent.width / 2;
@@ -842,11 +842,11 @@ public:
     }
 
     // make a node with quad model & shadowMap texture ???
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
     {
         const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
-        const auto& cascade = shadows->GetCascade(m_cascadeIndex);
+        const auto& cascade = shadows->GetCascade(static_cast<uint32_t>(m_cascadeIndex));
         PushConstantBlock pushConstBlock{ static_cast<uint32_t>(m_cascadeIndex), -cascade.startSplitDepth, -cascade.endSplitDepth };
         vkCmdPushConstants(renderContext.commandBuffer, m_pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantBlock), &pushConstBlock);
 
@@ -864,11 +864,11 @@ public:
         vkCmdDrawIndexed(renderContext.commandBuffer, m_quadModel->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
     }
 
-    void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PostRender(const RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void AfterRender(const RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -935,22 +935,22 @@ public:
         LOGI("Texture Debug Pipeline created\n");
 
         // create quad model
-        auto quadMesh = std::make_shared<QuadMesh>();
+        auto quadMesh = std::make_unique<QuadMesh>();
 
-        auto vertexBuffer = std::make_shared<VBO>(*allocator);
+        auto vertexBuffer = std::make_unique<VBO>(*allocator);
         vertexBuffer->Data(quadMesh->GetVertices(), quadMesh->GerVerticesCount(), quadMesh->GetVertexLayout().GetStride());
 
-        auto indexBuffer = std::make_shared<IBO>(*allocator);
+        auto indexBuffer = std::make_unique<IBO>(*allocator);
         indexBuffer->Data(quadMesh->GerIndices().data(), (uint32_t)quadMesh->GerIndices().size());
 
-        m_quadModel = std::make_unique<Model>(quadMesh, vertexBuffer, indexBuffer);
+        m_quadModel = std::make_unique<Model>(std::move(quadMesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
 
-    void BeforeRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PreRender(const RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
         VkRect2D renderRect{};
         renderRect.extent.width = renderContext.fullExtent.width / 2;
@@ -977,7 +977,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
     {
         const auto component = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
 
@@ -995,11 +995,11 @@ public:
         vkCmdDrawIndexed(renderContext.commandBuffer, m_quadModel->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
     }
 
-    void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PostRender(const RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void AfterRender(const RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -1159,11 +1159,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -1173,7 +1173,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT })) {
             const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
@@ -1253,11 +1253,11 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -1416,11 +1416,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -1430,7 +1430,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_NORMAL_MAPPED_COMPONENT })) {
             const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
@@ -1510,11 +1510,11 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -1676,11 +1676,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -1690,7 +1690,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_RENDER_COMPONENT })) {
             const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
@@ -1774,11 +1774,11 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -1939,11 +1939,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -1953,7 +1953,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT })) {
             const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
@@ -2037,11 +2037,11 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -2202,11 +2202,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -2216,7 +2216,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT })) {
             const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
@@ -2301,11 +2301,11 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -2466,11 +2466,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -2480,7 +2480,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT })) {
             const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
@@ -2566,11 +2566,11 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -2655,11 +2655,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
@@ -2669,7 +2669,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_FONT_RENDER_COMPONENT })) {
             const auto nodeFontRenderComponent = ComponentRepository<IFontRenderComponent>::Instance().Get(node->GetId());
@@ -2712,11 +2712,11 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -2795,11 +2795,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -2809,7 +2809,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SKYBOX_RENDER_COMPONENT })) {
             const auto skyBoxComponent = ComponentRepository<ISkyBoxComponent>::Instance().Get(node->GetId());
@@ -2853,11 +2853,11 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -2966,7 +2966,7 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -2976,11 +2976,11 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void BeforeRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_RENDER_COMPONENT })) {
             const auto waterComponent = ComponentRepository<IWaterComponent>::Instance().Get(node->GetId());
@@ -3046,11 +3046,11 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -3139,13 +3139,13 @@ public:
         VKERRCHECK(vkCreateQueryPool(*device, &queryPoolInfo, nullptr, &m_queryPool));
     }
 
-    void BeforeRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         m_passedSamples = 0;
         vkCmdResetQueryPool(renderContext.commandBuffer, m_queryPool, 0, 1);
     }
 
-    void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
@@ -3155,7 +3155,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SUN_RENDER_COMPONENT })) {
             const auto sunComponent = ComponentRepository<ISunComponent>::Instance().Get(node->GetId());
@@ -3200,11 +3200,11 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         auto device = DeviceProvider::Instance().GetDevice();
 
@@ -3295,11 +3295,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
@@ -3309,7 +3309,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_LENS_FLARE_RENDER_COMPONENT })) {
             const auto lensFlareComponent = ComponentRepository<ILensFlareComponent>::Instance().Get(node->GetId());
@@ -3350,11 +3350,11 @@ public:
         }
     }
 
-    void PostRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -3430,7 +3430,7 @@ public:
     }
 };
 
-#define PARALLEL_RENDERING
+//#define PARALLEL_RENDERING
 
 class MasterRenderer : public IRenderer<DefaultRenderContextUserData> {
 public:
@@ -3452,15 +3452,15 @@ public:
         InitRefraction();
     }
 
-    void BeforeRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PreRender(const RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
     {
         // Shadows render pass
         RenderShadows(renderContext, node);
@@ -3480,11 +3480,11 @@ public:
 #endif
     }
 
-    void PostRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PostRender(const RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void AfterRender(const RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -3705,7 +3705,7 @@ private:
         }
     }
 
-    void RenderShadows(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
+    void RenderShadows(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
     {
         const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
@@ -3778,7 +3778,7 @@ private:
         }
     }
 
-    void RenderSceneReflection(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
+    void RenderSceneReflection(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
     {
         const auto reflectionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
         const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
@@ -3863,7 +3863,7 @@ private:
 #endif
     }
 
-    void RenderSceneRefraction(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
+    void RenderSceneRefraction(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
     {
         const auto refractionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
         const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
@@ -3937,7 +3937,7 @@ private:
 #endif
     }
 
-    void RenderScene(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
+    void RenderScene(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
     {
         const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
@@ -4015,7 +4015,7 @@ private:
         m_sunRenderer->AfterRender(renderContext, userData);       
     }
 
-    void RenderDebug(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
+    void RenderDebug(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
     {
 #ifdef PARALLEL_RENDERING
         m_defaultRenderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, { { 0, 0 }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 } }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);

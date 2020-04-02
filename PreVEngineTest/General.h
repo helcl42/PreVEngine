@@ -355,15 +355,15 @@ class IRenderer {
 public:
     virtual void Init() = 0;
 
-    virtual void BeforeRender(RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
+    virtual void BeforeRender(const RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
-    virtual void PreRender(RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
+    virtual void PreRender(const RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
-    virtual void Render(RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const UserDataType& renderContextUserData = UserDataType{}) = 0;
+    virtual void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
-    virtual void PostRender(RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
+    virtual void PostRender(const RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
-    virtual void AfterRender(RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
+    virtual void AfterRender(const RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
     virtual void ShutDown() = 0;
 
