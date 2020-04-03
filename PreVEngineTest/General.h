@@ -375,7 +375,9 @@ class IMesh {
 public:
     virtual const VertexLayout& GetVertexLayout() const = 0;
 
-    virtual const void* GetVertices() const = 0;
+    virtual const void* GetVertexData() const = 0;
+
+    virtual std::vector<glm::vec3> GetVertices() const = 0;
 
     virtual uint32_t GerVerticesCount() const = 0;
 

@@ -13,30 +13,35 @@ public:
         return m_vertexLayout;
     }
 
-    const void* GetVertices() const override
+    const void* GetVertexData() const override
     {
-        return (const void*)m_vertices.data();
+        return (const void*)vertices.data();
+    }
+
+    std::vector<glm::vec3> GetVertices() const override
+    {
+        return vertices;
     }
 
     uint32_t GerVerticesCount() const override
     {
-        return static_cast<uint32_t>(m_vertices.size());
+        return static_cast<uint32_t>(vertices.size());
     }
 
     const std::vector<uint32_t>& GerIndices() const override
     {
-        return m_indices;
+        return indices;
     }
 
     bool HasIndices() const override
     {
-        return m_indices.size() > 0;
+        return indices.size() > 0;
     }
 
 private:
     const VertexLayout m_vertexLayout{ { VertexLayoutComponent::VEC3 } };
 
-    const std::vector<glm::vec3> m_vertices = {
+    static const inline std::vector<glm::vec3> vertices = {
         // FROMT
         { -0.5f, -0.5f, 0.5f },
         { 0.5f, -0.5f, 0.5f },
@@ -74,7 +79,7 @@ private:
         { 0.5f, -0.5f, -0.5f }
     };
 
-    const std::vector<uint32_t> m_indices = {
+    static const inline std::vector<uint32_t> indices = {
         0, 1, 2, 2, 3, 0,
         4, 5, 6, 6, 7, 4,
         8, 9, 10, 10, 11, 8,
@@ -143,7 +148,7 @@ private:
     {
         auto mesh = std::make_unique<CubeMeshVerticesOnly>();
         auto vertexBuffer = std::make_unique<VBO>(allocator);
-        vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
+        vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
         auto indexBuffer = std::make_unique<IBO>(allocator);
         indexBuffer->Data(mesh->GerIndices().data(), static_cast<uint32_t>(mesh->GerIndices().size()));
         return std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));

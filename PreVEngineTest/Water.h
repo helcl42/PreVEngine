@@ -22,9 +22,14 @@ public:
         return vertexLayout;
     }
 
-    const void* GetVertices() const override
+    const void* GetVertexData() const override
     {
         return (const void*)vertices.data();
+    }
+
+    std::vector<glm::vec3> GetVertices() const override
+    {
+        return vertices;
     }
 
     uint32_t GerVerticesCount() const override
@@ -374,7 +379,7 @@ private:
     {
         auto mesh = std::make_unique<WaterTileMesh>();
         auto vertexBuffer = std::make_unique<VBO>(allocator);
-        vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
+        vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
         auto indexBuffer = std::make_unique<IBO>(allocator);
         indexBuffer->Data(mesh->GerIndices().data(), static_cast<uint32_t>(mesh->GerIndices().size()));
 

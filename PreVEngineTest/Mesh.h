@@ -69,9 +69,18 @@ public:
         return vertexLayout;
     }
 
-    const void* GetVertices() const override
+    const void* GetVertexData() const override
     {
         return (const void*)vertices.data();
+    }
+    
+    std::vector<glm::vec3> GetVertices() const override
+    {
+        std::vector<glm::vec3> verts{ vertices.size() };
+        for (auto i = 0; i < vertices.size(); i++) {
+            verts[i] = vertices[i].pos;
+        }
+        return verts;
     }
 
     uint32_t GerVerticesCount() const override
@@ -118,9 +127,18 @@ public:
         return vertexLayout;
     }
 
-    const void* GetVertices() const override
+    const void* GetVertexData() const override
     {
         return (const void*)vertices.data();
+    }
+
+    std::vector<glm::vec3> GetVertices() const override
+    {
+        std::vector<glm::vec3> verts{ vertices.size() };
+        for (auto i = 0; i < vertices.size(); i++) {
+            verts[i] = vertices[i].pos;
+        }
+        return verts;
     }
 
     uint32_t GerVerticesCount() const override
@@ -144,6 +162,8 @@ private:
     const VertexLayout m_vertexLayout{ { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
 
     VertexDataBuffer m_vertexDataBuffer;
+
+    std::vector<glm::vec3> m_vertices;
 
     uint32_t m_verticesCount = 0;
 
@@ -172,6 +192,9 @@ public:
                 m_vertexDataBuffer.Add(vertex);
                 m_vertexDataBuffer.Add(textureCoord);
                 m_vertexDataBuffer.Add(normal);
+
+                m_vertices.push_back(vertex);
+
                 m_verticesCount++;
             }
         }
@@ -205,9 +228,14 @@ public:
         return m_vertexLayout;
     }
 
-    const void* GetVertices() const override
+    const void* GetVertexData() const override
     {
         return m_vertexDataBuffer.GetData();
+    }
+
+    std::vector<glm::vec3> GetVertices() const override
+    {
+        return m_vertices;
     }
 
     uint32_t GerVerticesCount() const override
@@ -294,6 +322,8 @@ private:
 
     VertexDataBuffer m_vertexDataBuffer;
 
+    std::vector<glm::vec3> m_vertices;
+
     uint32_t m_verticesCount = 0;
 
     std::vector<uint32_t> m_indices;
@@ -304,9 +334,14 @@ public:
         return m_vertexLayout;
     }
 
-    const void* GetVertices() const override
+    const void* GetVertexData() const override
     {
         return m_vertexDataBuffer.GetData();
+    }
+
+    std::vector<glm::vec3> GetVertices() const override
+    {
+        return m_vertices;
     }
 
     uint32_t GerVerticesCount() const override
@@ -347,7 +382,7 @@ public:
         auto mesh = std::make_unique<ModelMesh>();
 
         mesh->m_vertexLayout = GetVertexLayout(flags);
-        mesh->m_verticesCount = ReadMeshes(*scene, flags, mesh->m_vertexDataBuffer, mesh->m_indices);
+        mesh->m_verticesCount = ReadMeshes(*scene, flags, mesh->m_vertexDataBuffer, mesh->m_vertices, mesh->m_indices);
 
         return mesh;
     }
@@ -376,11 +411,13 @@ private:
         }
     }
 
-    void AddDefaultVertexData(const aiMesh& mesh, const unsigned int vertexIndex, VertexDataBuffer& inOutVertexBuffer) const
+    void AddDefaultVertexData(const aiMesh& mesh, const unsigned int vertexIndex, VertexDataBuffer& inOutVertexBuffer, std::vector<glm::vec3>& inOutVertices) const
     {
         glm::vec3 pos = glm::make_vec3(&mesh.mVertices[vertexIndex].x);
         glm::vec2 uv = mesh.mTextureCoords[0] != nullptr ? glm::make_vec3(&mesh.mTextureCoords[0][vertexIndex].x) : glm::vec2(1.0f, 1.0f);
         glm::vec3 normal = mesh.HasNormals() ? glm::make_vec3(&mesh.mNormals[vertexIndex].x) : glm::vec3(0.0f, 1.0f, 0.0f);
+
+        inOutVertices.push_back(pos);
 
         inOutVertexBuffer.Add(&pos, sizeof(glm::vec3));
         inOutVertexBuffer.Add(&uv, sizeof(glm::vec2));
@@ -403,10 +440,10 @@ private:
         inOutVertexBuffer.Add(&biTangent, sizeof(glm::vec3));
     }
 
-    void ReadVertexData(const aiMesh& mesh, const FlagSet<AssimpMeshFactoryCreateFlags>& flags, const std::vector<VertexBoneData>& vertexBoneData, const unsigned int vertexBaseOffset, VertexDataBuffer& inOutVertexBuffer) const
+    void ReadVertexData(const aiMesh& mesh, const FlagSet<AssimpMeshFactoryCreateFlags>& flags, const std::vector<VertexBoneData>& vertexBoneData, const unsigned int vertexBaseOffset, VertexDataBuffer& inOutVertexBuffer, std::vector<glm::vec3>& inOutVertices) const
     {
         for (unsigned int vertexIndex = 0; vertexIndex < mesh.mNumVertices; vertexIndex++) {
-            AddDefaultVertexData(mesh, vertexIndex, inOutVertexBuffer);
+            AddDefaultVertexData(mesh, vertexIndex, inOutVertexBuffer, inOutVertices);
 
             if (flags & AssimpMeshFactoryCreateFlags::ANIMATION) {
                 AddAnimationData(vertexBoneData, vertexBaseOffset + vertexIndex, inOutVertexBuffer);
@@ -452,7 +489,7 @@ private:
         return vertexCount;
     }
 
-    unsigned int ReadMeshes(const aiScene& scene, const FlagSet<AssimpMeshFactoryCreateFlags>& flags, VertexDataBuffer& inOutVertexBuffer, std::vector<uint32_t>& inOutIndices) const
+    unsigned int ReadMeshes(const aiScene& scene, const FlagSet<AssimpMeshFactoryCreateFlags>& flags, VertexDataBuffer& inOutVertexBuffer, std::vector<glm::vec3>& inOutVertices, std::vector<uint32_t>& inOutIndices) const
     {
         unsigned int allVertexCount = GetAllVertexCount(scene);
         std::vector<VertexBoneData> vertexBoneData;
@@ -473,7 +510,7 @@ private:
         unsigned int vertexBaseOffset = 0;
         for (unsigned int meshIndex = 0; meshIndex < scene.mNumMeshes; meshIndex++) {
             const aiMesh& assMesh = *scene.mMeshes[meshIndex];
-            ReadVertexData(assMesh, flags, vertexBoneData, vertexBaseOffset, inOutVertexBuffer);
+            ReadVertexData(assMesh, flags, vertexBoneData, vertexBaseOffset, inOutVertexBuffer, inOutVertices);
             ReadIndices(assMesh, inOutIndices);
             vertexBaseOffset += assMesh.mNumVertices;
         }

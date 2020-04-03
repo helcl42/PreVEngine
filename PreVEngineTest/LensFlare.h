@@ -58,9 +58,18 @@ public:
         return vertexLayout;
     }
 
-    const void* GetVertices() const override
+    const void* GetVertexData() const override
     {
         return (const void*)vertices.data();
+    }
+
+    std::vector<glm::vec3> GetVertices() const override
+    {
+        std::vector<glm::vec3> verts{ vertices.size() };
+        for (auto i = 0; i < vertices.size(); i++) {
+            verts[i] = glm::vec3(vertices[i], 0.0f);
+        }
+        return verts;
     }
 
     uint32_t GerVerticesCount() const override
@@ -209,7 +218,7 @@ private:
     {
         auto mesh = std::make_unique<QuadMesh2D>();
         auto vertexBuffer = std::make_unique<VBO>(allocator);
-        vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
+        vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
         auto indexBuffer = std::make_unique<IBO>(allocator);
         indexBuffer->Data(mesh->GerIndices().data(), static_cast<uint32_t>(mesh->GerIndices().size()));
 
@@ -309,7 +318,7 @@ private:
     {
         auto mesh = std::make_unique<QuadMesh2D>();
         auto vertexBuffer = std::make_unique<VBO>(allocator);
-        vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
+        vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
         auto indexBuffer = std::make_unique<IBO>(allocator);
         indexBuffer->Data(mesh->GerIndices().data(), static_cast<uint32_t>(mesh->GerIndices().size()));
 

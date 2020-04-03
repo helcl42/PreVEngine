@@ -655,6 +655,8 @@ class TextMesh final : public IMesh {
 private:
     VertexLayout m_vertexLayout;
 
+    std::vector<glm::vec3> m_vertices;
+
     uint32_t m_verticesCount;
 
     std::vector<uint32_t> m_indices;
@@ -670,6 +672,7 @@ public:
         for (size_t i = 0; i < vertices.size(); i++) {
             m_vertexDataBuffer.Add(&vertices[i], sizeof(glm::vec2));
             m_vertexDataBuffer.Add(&textureCoords[i], sizeof(glm::vec2));
+            m_vertices.push_back(glm::vec3(vertices[i].x, vertices[i].y, 0.0f));
         }
     }
 
@@ -681,9 +684,14 @@ public:
         return m_vertexLayout;
     }
 
-    const void* GetVertices() const override
+    const void* GetVertexData() const override
     {
         return m_vertexDataBuffer.GetData();
+    }
+
+    std::vector<glm::vec3> GetVertices() const override
+    {
+        return m_vertices;
     }
 
     uint32_t GerVerticesCount() const override
@@ -877,7 +885,7 @@ public:
 
         auto allocator = AllocatorProvider::Instance().GetAllocator();
         auto vertexBuffer = std::make_shared<VBO>(*allocator);
-        vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
+        vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
 
         auto indexBuffer = std::make_shared<IBO>(*allocator);
         indexBuffer->Data(mesh->GerIndices().data(), (uint32_t)mesh->GerIndices().size());

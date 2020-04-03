@@ -316,6 +316,8 @@ private:
 
     VertexDataBuffer m_vertexDataBuffer;
 
+    std::vector<glm::vec3> m_vertices;
+
     uint32_t m_verticesCount{ 0 };
 
     std::vector<uint32_t> m_indices;
@@ -326,9 +328,14 @@ public:
         return m_vertexLayout;
     }
 
-    const void* GetVertices() const override
+    const void* GetVertexData() const override
     {
         return m_vertexDataBuffer.GetData();
+    }
+
+    std::vector<glm::vec3> GetVertices() const override
+    {
+        return m_vertices;
     }
 
     uint32_t GerVerticesCount() const override
@@ -439,7 +446,7 @@ private:
     {
         auto mesh = GenerateMesh(vertexData, normalMapped);
         auto vertexBuffer = std::make_unique<VBO>(allocator);
-        vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
+        vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
         auto indexBuffer = std::make_unique<IBO>(allocator);
         indexBuffer->Data(mesh->GerIndices().data(), static_cast<uint32_t>(mesh->GerIndices().size()));
 
@@ -488,6 +495,7 @@ private:
                 mesh->m_vertexDataBuffer.Add(&position, sizeof(glm::vec3));
                 mesh->m_vertexDataBuffer.Add(&textureCoord, sizeof(glm::vec2));
                 mesh->m_vertexDataBuffer.Add(&normal, sizeof(glm::vec3));
+                mesh->m_vertices.push_back(position);
                 if (normalMapped) {
                     const auto tangent = vertexData->tangents[vertexIndex];
                     const auto biTangent = vertexData->biTangents[vertexIndex];

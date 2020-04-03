@@ -12,8 +12,9 @@
 #include <Shader.h>
 #include <Utils.h>
 
-#include "Font.h"
 #include "General.h"
+#include "Culling.h"
+#include "Font.h"
 #include "Mesh.h"
 #include "Animation.h"
 #include "Pipeline.h"
@@ -171,7 +172,7 @@ private:
     std::unique_ptr<IModel> CreateModel(Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const
     {
         auto vertexBuffer = std::make_unique<VBO>(allocator);
-        vertexBuffer->Data(mesh->GetVertices(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
+        vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
 
         auto indexBuffer = std::make_unique<IBO>(allocator);
         indexBuffer->Data(mesh->GerIndices().data(), (uint32_t)mesh->GerIndices().size());
@@ -431,18 +432,18 @@ public:
     }
 };
 
-class Plane : public AbstractSceneNode<SceneNodeFlags> {
+class PlaneNode : public AbstractSceneNode<SceneNodeFlags> {
 protected:
     const std::string m_texturePath;
 
 public:
-    Plane(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
+    PlaneNode(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
         : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT }, position, orientation, scale)
         , m_texturePath(texturePath)
     {
     }
 
-    virtual ~Plane() = default;
+    virtual ~PlaneNode() = default;
 
 public:
     void Init() override

@@ -54,24 +54,6 @@ public:
     virtual ~IShadowsComponent() = default;
 };
 
-struct AABB {
-    glm::vec3 minExtents;
-
-    glm::vec3 maxExtents;
-
-    AABB(const float radius)
-        : minExtents(glm::vec3(-radius))
-        , maxExtents(glm::vec3(radius))
-    {
-    }
-
-    AABB(const glm::vec3& minExtents, const glm::vec3& maxExtents)
-        : minExtents(minExtents)
-        , maxExtents(maxExtents)
-    {
-    }
-};
-
 class ShadowsComponent : public IShadowsComponent {
 public:
     static const inline VkFormat DEPTH_FORMAT = VK_FORMAT_D32_SFLOAT;
@@ -191,24 +173,9 @@ private:
         return cascadeSplits;
     }
 
-    std::vector<glm::vec3> GenerateFrustumCorners(const glm::mat4& inverseCameraTransform, const float splitDistance, const float lastSplitDistance) const
+    std::vector<glm::vec3> GenerateFrustumCorners(const glm::mat4& inverseWorldToClipSpaceTransform, const float splitDistance, const float lastSplitDistance) const
     {
-        std::vector<glm::vec3> frustumCorners{
-            glm::vec3(-1.0f, 1.0f, -1.0f),
-            glm::vec3(1.0f, 1.0f, -1.0f),
-            glm::vec3(1.0f, -1.0f, -1.0f),
-            glm::vec3(-1.0f, -1.0f, -1.0f),
-            glm::vec3(-1.0f, 1.0f, 1.0f),
-            glm::vec3(1.0f, 1.0f, 1.0f),
-            glm::vec3(1.0f, -1.0f, 1.0f),
-            glm::vec3(-1.0f, -1.0f, 1.0f)
-        };
-
-        // Project frustum corners into world space
-        for (uint32_t i = 0; i < 8; i++) {
-            glm::vec4 invCorner = inverseCameraTransform * glm::vec4(frustumCorners[i], 1.0f);
-            frustumCorners[i] = invCorner / invCorner.w;
-        }
+        auto frustumCorners = MathUtil ::GetFrustumCorners(inverseWorldToClipSpaceTransform);
 
         for (uint32_t i = 0; i < 4; i++) {
             glm::vec3 dist = frustumCorners[i + 4] - frustumCorners[i];
@@ -268,14 +235,14 @@ public:
     void Update(const glm::vec3& lightDirection, const float nearClippingPlane, const float farClippingPlane, const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix) override
     {
         const auto cascadeSplits = GenerateCaascadeSplits(nearClippingPlane, farClippingPlane);
-        const glm::mat4 inverseCameraTransform = glm::inverse(projectionMatrix * viewMatrix);
+        const glm::mat4 inverseWorldToClipSpaceTransform = glm::inverse(projectionMatrix * viewMatrix);
 
         float lastSplitDistance = 0.0;
         for (uint32_t i = 0; i < CASCADES_COUNT; i++) {
             const float splitDistance = cascadeSplits[i];
 
             // Calculate orthographic projection matrix for ith cascade
-            UpdateCascade(lightDirection, inverseCameraTransform, nearClippingPlane, farClippingPlane, splitDistance, lastSplitDistance, m_cascades[i]);
+            UpdateCascade(lightDirection, inverseWorldToClipSpaceTransform, nearClippingPlane, farClippingPlane, splitDistance, lastSplitDistance, m_cascades[i]);
 
             lastSplitDistance = splitDistance;
         }

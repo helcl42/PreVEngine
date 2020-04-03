@@ -12,10 +12,13 @@ struct ShadowsRenderContextUserData : DefaultRenderContextUserData {
 
     const uint32_t cascadeIndex;
 
-    ShadowsRenderContextUserData(const glm::mat4& vm, const glm::mat4& pm, const uint32_t index)
+    const Frustum frustum;
+
+    ShadowsRenderContextUserData(const glm::mat4& vm, const glm::mat4& pm, const uint32_t index, const Frustum& frst)
         : viewMatrix(vm)
         , projectionMatrix(pm)
         , cascadeIndex(index)
+        , frustum(frst)
     {
     }
 };
@@ -33,13 +36,16 @@ struct NormalRenderContextUserData : DefaultRenderContextUserData {
 
     const glm::vec2 nearFarClippingPlane;
 
-    NormalRenderContextUserData(const glm::mat4& vm, const glm::mat4& pm, const glm::vec3& camPos, const glm::vec4& cp, const VkExtent2D& ext, const glm::vec2& nearFar)
+    const Frustum frustum;
+
+    NormalRenderContextUserData(const glm::mat4& vm, const glm::mat4& pm, const glm::vec3& camPos, const glm::vec4& cp, const VkExtent2D& ext, const glm::vec2& nearFar, const Frustum& frst)
         : viewMatrix(vm)
         , projectionMatrix(pm)
         , cameraPosition(camPos)
         , clipPlane(cp)
         , extent(ext)
         , nearFarClippingPlane(nearFar)
+        , frustum(frst)
     {
     }
 };
@@ -802,7 +808,7 @@ public:
         auto quadMesh = std::make_unique<QuadMesh>();
 
         auto vertexBuffer = std::make_unique<VBO>(*allocator);
-        vertexBuffer->Data(quadMesh->GetVertices(), quadMesh->GerVerticesCount(), quadMesh->GetVertexLayout().GetStride());
+        vertexBuffer->Data(quadMesh->GetVertexData(), quadMesh->GerVerticesCount(), quadMesh->GetVertexLayout().GetStride());
 
         auto indexBuffer = std::make_unique<IBO>(*allocator);
         indexBuffer->Data(quadMesh->GerIndices().data(), (uint32_t)quadMesh->GerIndices().size());
@@ -938,7 +944,7 @@ public:
         auto quadMesh = std::make_unique<QuadMesh>();
 
         auto vertexBuffer = std::make_unique<VBO>(*allocator);
-        vertexBuffer->Data(quadMesh->GetVertices(), quadMesh->GerVerticesCount(), quadMesh->GetVertexLayout().GetStride());
+        vertexBuffer->Data(quadMesh->GetVertexData(), quadMesh->GerVerticesCount(), quadMesh->GetVertexLayout().GetStride());
 
         auto indexBuffer = std::make_unique<IBO>(*allocator);
         indexBuffer->Data(quadMesh->GerIndices().data(), (uint32_t)quadMesh->GerIndices().size());
@@ -3713,7 +3719,7 @@ private:
 
             const auto cascade = shadows->GetCascade(cascadeIndex);
 
-            const ShadowsRenderContextUserData userData{ cascade.viewMatrix, cascade.projectionMatrix, cascadeIndex };
+            const ShadowsRenderContextUserData userData{ cascade.viewMatrix, cascade.projectionMatrix, cascadeIndex, Frustum{ cascade.projectionMatrix, cascade.viewMatrix } };
 
 #ifdef PARALLEL_RENDERING
             shadows->GetRenderPass()->Begin(cascade.frameBuffer, renderContext.commandBuffer, { { 0, 0 }, shadows->GetExtent() }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS );
@@ -3791,14 +3797,16 @@ private:
         const glm::vec3 newCameraPosition{ cameraPosition.x, cameraPosition.y - cameraPositionOffset, cameraPosition.z };
         const glm::vec3 newCameraViewPosition{ cameraViewPosition.x, cameraViewPosition.y + cameraViewOffset, cameraViewPosition.z };
         const glm::mat4 viewMatrix = glm::lookAt(newCameraPosition, newCameraViewPosition, cameraComponent->GetUpDirection());
+        const glm::mat4 projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(REFLECTION_MEASURES.x, REFLECTION_MEASURES.y);
 
         NormalRenderContextUserData userData{
             viewMatrix,
-            cameraComponent->GetViewFrustum().CreateProjectionMatrix(REFLECTION_MEASURES.x, REFLECTION_MEASURES.y),
+            projectionMatrix,
             newCameraPosition,
             glm::vec4(0.0f, 1.0f, 0.0f, -WATER_LEVEL + WATER_CLIP_PLANE_OFFSET),
             { REFLECTION_MEASURES.x, REFLECTION_MEASURES.y },
-            glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane())
+            glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane()),
+            Frustum{ projectionMatrix, viewMatrix }
         };
 
 #ifdef PARALLEL_RENDERING
@@ -3868,13 +3876,16 @@ private:
         const auto refractionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
         const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
+        const auto viewMatrix = cameraComponent->LookAt();
+        const auto projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(REFRACTION_MEASURES.x, REFRACTION_MEASURES.y);
         NormalRenderContextUserData userData{
-            cameraComponent->LookAt(),
-            cameraComponent->GetViewFrustum().CreateProjectionMatrix(REFRACTION_MEASURES.x, REFRACTION_MEASURES.y),
+            viewMatrix,
+            projectionMatrix,
             cameraComponent->GetPosition(),
             glm::vec4(0.0f, -1.0f, 0.0f, WATER_LEVEL + WATER_CLIP_PLANE_OFFSET),
             { REFRACTION_MEASURES.x, REFRACTION_MEASURES.y },
-            glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane())
+            glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane()),
+            Frustum{ projectionMatrix, viewMatrix }
         };
 
 #ifdef PARALLEL_RENDERING
@@ -3941,13 +3952,16 @@ private:
     {
         const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
+        const auto viewMatrix = cameraComponent->LookAt();
+        const auto projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
         NormalRenderContextUserData userData{
-            cameraComponent->LookAt(),
-            cameraComponent->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height),
+            viewMatrix,
+            projectionMatrix,
             cameraComponent->GetPosition(),
             DEFAULT_CLIP_PLANE,
             renderContext.fullExtent,
-            glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane())
+            glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane()),
+            Frustum{ projectionMatrix, viewMatrix }
         };
 
         m_sunRenderer->BeforeRender(renderContext, userData);

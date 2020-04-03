@@ -540,6 +540,28 @@ public:
     {
         return val - (val % toDivBy);
     }
+
+    static std::vector<glm::vec3> GetFrustumCorners(const glm::mat4& inverseWorldToClipSpaceTransform)
+    {
+        std::vector<glm::vec3> frustumCorners{
+            { -1.0f, 1.0f, -1.0f },
+            { 1.0f, 1.0f, -1.0f },
+            { 1.0f, -1.0f, -1.0f },
+            { -1.0f, -1.0f, -1.0f },
+            { -1.0f, 1.0f, 1.0f },
+            { 1.0f, 1.0f, 1.0f },
+            { 1.0f, -1.0f, 1.0f },
+            { -1.0f, -1.0f, 1.0f }
+        };
+
+        // Project frustum corners into world space(from clip space)
+        for (uint32_t i = 0; i < 8; i++) {
+            glm::vec4 invCorner = inverseWorldToClipSpaceTransform * glm::vec4(frustumCorners[i], 1.0f);
+            frustumCorners[i] = invCorner / invCorner.w;
+        }
+
+        return frustumCorners;
+    }
 };
 
 class IDGenerator final : public Singleton<IDGenerator> {
