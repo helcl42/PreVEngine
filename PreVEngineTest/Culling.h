@@ -289,7 +289,7 @@ public:
             }
             out = 0;
             for (const auto point : frustum.points) {
-                if (point.position[i] > box.minExtents[i]) {
+                if (point.position[i] < box.minExtents[i]) {
                     out++;
                 }
             }
@@ -372,7 +372,7 @@ public:
         }
         
         m_working = AABB(glm::vec3(translation + minBound), glm::vec3(translation + maxBound));
-        m_model = GenerateModel(m_working);
+        //m_model = GenerateModel(m_working);
     }
 
     BoundingVolumeType GetType() const override
