@@ -616,12 +616,8 @@ private:
             for (unsigned int x = 0; x < m_vertexCount; x++) {
                 float height = generator->GenerateHeight(x, z);
                 heightMapInfo->heights[x][z] = height;
-                if (minHeight > height) {
-                    minHeight = height;
-                }
-                if (maxHeight < height) {
-                    maxHeight = height;
-                }
+                minHeight = std::min(minHeight, height);
+                maxHeight = std::max(maxHeight, height);
             }
         }
         heightMapInfo->minHeight = heightMapInfo->globalMinHeight = minHeight;
