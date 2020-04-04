@@ -4117,6 +4117,8 @@ private:
 #ifdef PARALLEL_RENDERING
         const auto& commandBuffers = m_refractionCommandBufferGroups->GetBuffersGroup(renderContext.frameInFlightIndex);
 
+        refractionComponent->GetRenderPass()->Begin(refractionComponent->GetFrameBuffer(), renderContext.commandBuffer, { { 0, 0 }, { REFRACTION_MEASURES.x, REFRACTION_MEASURES.y } }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+
         std::vector<std::future<void> > tasks;
         for (size_t i = 0; i < m_refractionRenderers.size(); i++) {
 
