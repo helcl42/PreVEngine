@@ -668,9 +668,11 @@ private:
 
     std::shared_ptr<ICameraComponent> m_cameraComponent;
 
+    std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
+
 public:
     Goblin(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT }, position, orientation, scale)
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT }, position, orientation, scale)
     {
     }
 
@@ -686,6 +688,10 @@ public:
         CameraComponentFactory cameraFactory{};
         m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 60.0f, 180.0f));
         ComponentRepository<ICameraComponent>::Instance().Add(m_id, m_cameraComponent);
+
+        BoundingVolumeComponentFactory bondingVolumeFactory{};
+        m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_animatonRenderComponent->GetModel()->GetMesh()->GetVertices());
+        ComponentRepository<IBoundingVolumeComponent>::Instance().Add(m_id, m_boundingVolumeComponent);
 
         m_animatonRenderComponent->GetAnimation()->SetIndex(0);
         m_animatonRenderComponent->GetAnimation()->SetState(AnimationState::RUNNING);
@@ -756,12 +762,18 @@ public:
         const glm::vec3 cameraPosition = GetPosition() + (-m_cameraComponent->GetForwardDirection() * m_distanceFromPerson) + glm::vec3(0.0f, 8.0f, 0.0f);
         m_cameraComponent->SetPosition(cameraPosition);
 
+        m_boundingVolumeComponent->Update(GetOrientation(), GetPosition() + glm::vec3(0.0f, -MIN_Y_POS, 0.0f), GetScale());
+
         AbstractSceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
         AbstractSceneNode::ShutDown();
+
+        ComponentRepository<IBoundingVolumeComponent>::Instance().Remove(m_id);
+
+        ComponentRepository<ICameraComponent>::Instance().Remove(m_id);
 
         ComponentRepository<IAnimationRenderComponent>::Instance().Remove(m_id);
     }

@@ -700,11 +700,18 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT })) {
             auto renderComponent = ComponentRepository<IAnimationRenderComponent>::Instance().Get(node->GetId());
-            if (renderComponent->CastsShadows()) {
+
+            bool visible = true;
+            if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
+                auto volumeComponent = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId());
+                visible = volumeComponent->IsInFrustum(shadowsRenderUserData.frustum);
+            }
+
+            if (renderComponent->CastsShadows() && visible) {
                 auto ubo = m_uniformsPool->GetNext();
 
                 Uniforms uniforms{};
@@ -712,8 +719,8 @@ public:
                 for (size_t i = 0; i < bones.size(); i++) {
                     uniforms.bones[i] = bones[i];
                 }
-                uniforms.projectionMatrix = shadowsRenderContext.projectionMatrix;
-                uniforms.viewMatrix = shadowsRenderContext.viewMatrix;
+                uniforms.projectionMatrix = shadowsRenderUserData.projectionMatrix;
+                uniforms.viewMatrix = shadowsRenderUserData.viewMatrix;
                 uniforms.modelMatrix = node->GetWorldTransformScaled();
                 ubo->Update(&uniforms);
 
@@ -732,7 +739,7 @@ public:
         }
 
         for (auto child : node->GetChildren()) {
-            Render(renderContext, child, shadowsRenderContext);
+            Render(renderContext, child, shadowsRenderUserData);
         }
     }
 
@@ -811,7 +818,7 @@ public:
         vertexBuffer->Data(quadMesh->GetVertexData(), quadMesh->GerVerticesCount(), quadMesh->GetVertexLayout().GetStride());
 
         auto indexBuffer = std::make_unique<IBO>(*allocator);
-        indexBuffer->Data(quadMesh->GerIndices().data(), (uint32_t)quadMesh->GerIndices().size());
+        indexBuffer->Data(quadMesh->GerIndices().data(), static_cast<uint32_t>(quadMesh->GerIndices().size()));
 
         m_quadModel = std::make_unique<Model>(std::move(quadMesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
@@ -947,7 +954,7 @@ public:
         vertexBuffer->Data(quadMesh->GetVertexData(), quadMesh->GerVerticesCount(), quadMesh->GetVertexLayout().GetStride());
 
         auto indexBuffer = std::make_unique<IBO>(*allocator);
-        indexBuffer->Data(quadMesh->GerIndices().data(), (uint32_t)quadMesh->GerIndices().size());
+        indexBuffer->Data(quadMesh->GerIndices().data(), static_cast<uint32_t>(quadMesh->GerIndices().size()));
 
         m_quadModel = std::make_unique<Model>(std::move(quadMesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
@@ -1006,6 +1013,145 @@ public:
     }
 
     void AfterRender(const RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void ShutDown() override
+    {
+        m_shader->ShutDown();
+
+        m_pipeline->ShutDown();
+    }
+};
+
+class BoundingVolumeDebugRenderer : public IRenderer<NormalRenderContextUserData> {
+private:
+    struct alignas(16) UniformsVS
+    {
+        alignas(16) glm::mat4 modelMatrix;
+
+        alignas(16) glm::mat4 viewMatrix;
+
+        alignas(16) glm::mat4 projectionMatrix;
+    };
+
+    struct alignas(16) UniformsFS
+    {
+        alignas(16) glm::vec4 color;
+
+        alignas(16) glm::vec4 selectedColor;
+
+        alignas(16) uint32_t selected;
+    };
+
+private:
+    const uint32_t m_descriptorCount{ 1000 };
+
+private:
+    std::shared_ptr<RenderPass> m_renderPass;
+
+private:
+    std::unique_ptr<Shader> m_shader;
+
+    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+
+    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+
+    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+   
+public:
+    BoundingVolumeDebugRenderer(const std::shared_ptr<RenderPass>& renderPass)
+        : m_renderPass(renderPass)
+    {
+    }
+
+    virtual ~BoundingVolumeDebugRenderer() = default;
+
+public:
+    void Init() override
+    {
+        auto device = DeviceProvider::Instance().GetDevice();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
+
+        ShaderFactory shaderFactory;
+        m_shader = shaderFactory.CreateShaderFromFiles<BoundingVolumeDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/bounding_volume_debug_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/bounding_volume_debug_frag.spv") } });
+        m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
+
+        LOGI("Bounding Volume Debug Shader created\n");
+
+        m_pipeline = std::make_unique<BoundingVolumeDebugPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline->Init();
+
+        LOGI("Bounding Volume Debug Pipeline created\n");
+
+        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+
+        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    }
+
+    void BeforeRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
+    }
+
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })) {
+            const auto boundingVolumeComponent = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId());
+
+            auto uboVS = m_uniformsPoolVS->GetNext();
+
+            UniformsVS uniformsVS{};
+            uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
+            uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
+            uniformsVS.modelMatrix = glm::mat4(1.0f);
+
+            uboVS->Update(&uniformsVS);
+
+            auto uboFS = m_uniformsPoolFS->GetNext();
+
+            UniformsFS uniformsFS{};
+            uniformsFS.color = glm::vec4(1.0f, 1.0f, 1.0f, 0.5f);
+            uniformsFS.selectedColor = SELECTED_COLOR;
+            uniformsFS.selected = false;
+            
+            uboFS->Update(&uniformsFS);
+
+            m_shader->Bind("uboVS", *uboVS);
+            m_shader->Bind("uboFS", *uboFS);
+
+            VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+            VkBuffer vertexBuffers[] = { *boundingVolumeComponent->GetModel()->GetVertexBuffer() };
+            VkDeviceSize offsets[] = { 0 };
+
+            vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(renderContext.commandBuffer, *boundingVolumeComponent->GetModel()->GetIndexBuffer(), 0, boundingVolumeComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+            vkCmdDrawIndexed(renderContext.commandBuffer, boundingVolumeComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+        }
+
+        for (auto child : node->GetChildren()) {
+            Render(renderContext, child, renderContextUserData);
+        }
+    }
+
+    void PostRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void AfterRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -3517,6 +3663,7 @@ private:
         m_fontRenderer = std::make_shared<FontRenderer>(m_defaultRenderPass);
         m_sunRenderer = std::make_shared<SunRenderer>(m_defaultRenderPass);
         m_lensFlareRenderer = std::make_shared<LensFlareRenderer>(m_defaultRenderPass);
+        m_boundingVolumeDebugRenderer = std::make_shared<BoundingVolumeDebugRenderer>(m_defaultRenderPass);
 
         m_defaultRenderers = {
                 m_skyBoxRenderer,
@@ -3529,7 +3676,8 @@ private:
                 m_waterRenderer,
                 m_fontRenderer,
                 m_sunRenderer,
-                m_lensFlareRenderer
+                m_lensFlareRenderer,
+                m_boundingVolumeDebugRenderer
         };
 
         for (auto& renderer : m_defaultRenderers) {
@@ -4117,6 +4265,8 @@ private:
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_sunRenderer;
 
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_lensFlareRenderer;
+
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_boundingVolumeDebugRenderer;
 
     std::vector<std::shared_ptr<IRenderer<NormalRenderContextUserData> > > m_defaultRenderers;
 

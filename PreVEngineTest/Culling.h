@@ -92,6 +92,12 @@ struct AABB {
 
     glm::vec3 maxExtents;
 
+    AABB()
+        : minExtents(glm::vec3(std::numeric_limits<float>::max()))
+        , maxExtents(glm::vec3(std::numeric_limits<float>::min()))
+    {
+    }
+
     AABB(const float radius)
         : minExtents(glm::vec3(-radius))
         , maxExtents(glm::vec3(radius))
@@ -191,7 +197,7 @@ public:
     }
 
     static bool Intersects(const AABB& box, const Point& point) {
-        for (auto i = 0; i < glm::length(point.position); i++) {
+        for (auto i = 0; i < point.position.length(); i++) {
             if (point.position[i] > box.maxExtents[i]) {
                 return false;
             }
@@ -242,7 +248,7 @@ public:
 
     static bool Intersects(const Frustum& frustum, const Sphere& sphere)
     {
-        for (size_t i = 0; i < frustum.planes.size(); i++) {
+        for (auto i = 0; i < frustum.planes.size(); i++) {
             if (!Intersects(sphere, frustum.planes[i])) {
                 return false;
             }
@@ -253,7 +259,7 @@ public:
     static bool Intersects(const Frustum& frustum, const AABB& box)
     { 
         // check box outside/inside of frustum
-        for (uint32_t i = 0; i < frustum.planes.size(); i++) {
+        for (auto i = 0; i < frustum.planes.size(); i++) {
             
             if (!Intersects(box, frustum.planes[i])) {
                 return false;
@@ -261,7 +267,7 @@ public:
         }
 
         // check frustum corners outside/inside box
-        for (uint32_t i = 0; i < frustum.points.size(); i++) {
+        for (auto i = 0; i < frustum.points.size(); i++) {
             if (!Intersects(box, frustum.points[i])) {
                 return false;
             }
@@ -294,29 +300,161 @@ class IBoundingVolumeComponent {
 public:
     virtual bool IsInFrustum(const Frustum& frustum) = 0;
     
-    virtual void Update(const glm::mat4& transform) = 0;
+    virtual void Update(const glm::quat& rotation, const glm::vec3& translation, const glm::vec3& scale) = 0;
+
+    virtual BoundingVolumeType GetType() const = 0;
+
+    virtual std::shared_ptr<IModel> GetModel() const = 0;
     
 public:
     virtual ~IBoundingVolumeComponent() = default;
 };
 
-class BoundingVolumeComponent : public IBoundingVolumeComponent {
+class AABBBoundingVolumeComponent : public IBoundingVolumeComponent {
+public:
+    AABBBoundingVolumeComponent(const AABB& box)
+        : m_original(box)
+        , m_working(box)
+        , m_originalAABBPoints(GetPointsFromAABB(box))
+        , m_vorkingAABBPoints(GetPointsFromAABB(box))
+    {
+    }
+
+    ~AABBBoundingVolumeComponent() = default;
+
 public:
     bool IsInFrustum(const Frustum& frustum) override
     {
+        bool intersecting = Culling::Intersects(frustum, m_working);
+        std::cout << "Intersection: " << (intersecting ? "YES" : "NO") <<  std::endl;
+        return intersecting;
     }
 
-    void Update(const glm::mat4& transform) override
+    void Update(const glm::quat& rotation, const glm::vec3& translation, const glm::vec3& scale) override
     {
+        const auto localModelMatrixRotationScale = MathUtil::CreateTransformationMatrix(glm::vec3(0.0f), rotation, scale);
+        
+        for (auto i = 0; i < m_originalAABBPoints.size(); i++) {
+            m_vorkingAABBPoints[i] = localModelMatrixRotationScale * glm::vec4(m_originalAABBPoints[i], 1.0f);
+        }
+
+        glm::vec3 minBound{ std::numeric_limits<float>::max() };
+        glm::vec3 maxBound{ std::numeric_limits<float>::min() };
+        for (const auto pt : m_vorkingAABBPoints) {
+            for (auto i = 0; i < minBound.length(); i++) {
+                minBound[i] = std::min(minBound[i], pt[i]);
+                maxBound[i] = std::max(maxBound[i], pt[i]);
+            }
+        }
+        
+        m_working = AABB(glm::vec3(translation + minBound), glm::vec3(translation + maxBound));
+        m_model = GenerateModel(m_working);
     }
+
+    BoundingVolumeType GetType() const override
+    {
+        return BoundingVolumeType::AABB;
+    }
+
+    std::shared_ptr<IModel> GetModel() const override
+    {
+        return m_model;
+    }
+
+private:
+    static std::vector<glm::vec3> GetPointsFromAABB(const AABB& aabb)
+    {
+        return {
+            { aabb.minExtents.x, aabb.minExtents.y, aabb.minExtents.z },
+            { aabb.minExtents.x, aabb.maxExtents.y, aabb.minExtents.z },
+            { aabb.minExtents.x, aabb.minExtents.y, aabb.maxExtents.z },
+            { aabb.minExtents.x, aabb.maxExtents.y, aabb.maxExtents.z },
+            { aabb.maxExtents.x, aabb.minExtents.y, aabb.minExtents.z },
+            { aabb.maxExtents.x, aabb.maxExtents.y, aabb.minExtents.z },
+            { aabb.maxExtents.x, aabb.minExtents.y, aabb.maxExtents.z },
+            { aabb.maxExtents.x, aabb.maxExtents.y, aabb.maxExtents.z }
+        };
+    }
+
+    static std::unique_ptr<IModel> GenerateModel(const AABB& aabb)
+    {
+        const auto cubePoints = GetPointsFromAABB(aabb);
+
+        const std::vector<glm::vec3> vertices = {
+            // front
+            cubePoints[2],
+            cubePoints[6],
+            cubePoints[7],
+            cubePoints[3],
+            // back
+            cubePoints[0],
+            cubePoints[4],
+            cubePoints[5],
+            cubePoints[1],
+            // top
+            cubePoints[3],
+            cubePoints[7],
+            cubePoints[5],
+            cubePoints[1],
+            // bottom
+            cubePoints[2],
+            cubePoints[6],
+            cubePoints[4],
+            cubePoints[0],
+            // left
+            cubePoints[2],
+            cubePoints[3],
+            cubePoints[1],
+            cubePoints[0],
+            // rightt
+            cubePoints[1],
+            cubePoints[7],
+            cubePoints[5],
+            cubePoints[4]
+        };
+
+        const std::vector<uint32_t> indices = {
+            0, 1, 2, 2, 3, 0,
+            4, 5, 6, 6, 7, 4,
+            8, 9, 10, 10, 11, 8,
+            12, 13, 14, 14, 15, 12,
+            16, 17, 18, 18, 19, 16,
+            20, 21, 22, 22, 23, 20
+        };
+
+        auto allocator = AllocatorProvider::Instance().GetAllocator();        
+        auto vertexBuffer = std::make_unique<VBO>(*allocator);
+        vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
+        auto indexBuffer = std::make_unique<IBO>(*allocator);
+        indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
+        return std::make_unique<Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
+    }
+
+private:    
+    std::shared_ptr<IModel> m_model;
+
+    AABB m_original;
+
+    std::vector<glm::vec3> m_originalAABBPoints;
+
+    AABB m_working;
+
+    std::vector<glm::vec3> m_vorkingAABBPoints;
 };
 
 class BoundingVolumeComponentFactory {
-    std::unique_ptr<IBoundingVolumeComponent> Create(const BoundingVolumeType type, const std::shared_ptr<IMesh>& mesh)
+public:
+    std::unique_ptr<IBoundingVolumeComponent> CreateAABB(const std::vector<glm::vec3>& vertices) const
     {
-        auto boundingVolumeComponent = std::make_unique<BoundingVolumeComponent>();
+        AABB aabb;
+        for (const auto& v : vertices) {
+            for (auto i = 0; i < aabb.minExtents.length(); i++) {
+                aabb.minExtents[i] = std::min(aabb.minExtents[i], v[i]);
+                aabb.maxExtents[i] = std::max(aabb.maxExtents[i], v[i]);
+            }
+        }
         
-        return boundingVolumeComponent;
+        return std::make_unique<AABBBoundingVolumeComponent>(aabb);        
     }
 };
 
