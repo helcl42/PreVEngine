@@ -3,7 +3,7 @@
 
 #include <Common.h>
 
-#define RENDER_BOUNDING_VOLUMES
+//#define RENDER_BOUNDING_VOLUMES
 
 #define CMP(x, y) \
     (fabsf(x - y) <= FLT_EPSILON * fmaxf(1.0f, fmaxf(fabsf(x), fabsf(y))))

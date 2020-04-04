@@ -2652,8 +2652,6 @@ private:
 
     std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
 
-    uint32_t m_visibleCount{ 0 };
-
 public:
     TerrainNormalMappedRenderer(const std::shared_ptr<RenderPass>& renderPass)
         : m_renderPass(renderPass)
@@ -2692,8 +2690,6 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        m_visibleCount = 0;
-
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
@@ -2711,7 +2707,6 @@ public:
             }
 
             if (visible) {
-                m_visibleCount++;
                 const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
                 const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
                 const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
@@ -2798,7 +2793,6 @@ public:
 
     void PostRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        std::cout << "Visible: " << m_visibleCount << std::endl;
     }
 
     void AfterRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override

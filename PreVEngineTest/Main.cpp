@@ -1679,9 +1679,9 @@ public:
         auto inputsHelper = std::make_shared<InputsHelper>();
         AddChild(inputsHelper);
 
-        auto freeCamera = std::make_shared<Camera>();
-        freeCamera->SetTags({ TAG_MAIN_CAMERA });
-        AddChild(freeCamera);
+        //auto freeCamera = std::make_shared<Camera>();
+        //freeCamera->SetTags({ TAG_MAIN_CAMERA });
+        //AddChild(freeCamera);
 
         //auto camRobot = std::make_shared<CubeRobot>(glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
         //freeCamera->AddChild(camRobot);
@@ -1699,7 +1699,7 @@ public:
         }
 
         auto goblin = std::make_shared<Goblin>(glm::vec3(90.0f, 9.0f, 90.0f), glm::quat(glm::radians(glm::vec3(-90.0f, 0.0f, 0.0f))), glm::vec3(0.005f));
-        //goblin->SetTags({ TAG_MAIN_CAMERA });
+        goblin->SetTags({ TAG_MAIN_CAMERA });
         AddChild(goblin);
 
         auto text = std::make_shared<Text>();
