@@ -120,6 +120,11 @@ struct AABB {
         return maxExtents - minExtents;
     }
 
+    glm::vec3 GetHalfSize() const
+    {
+        return GetSize() * 0.5f;
+    }
+
     std::vector<glm::vec3> GetPoints() const
     {
         return {
@@ -448,6 +453,55 @@ private:
     std::vector<glm::vec3> m_vorkingAABBPoints;
 };
 
+class SphereBoundingVolumeComponent : public IBoundingVolumeComponent {
+public:
+    SphereBoundingVolumeComponent(const Sphere& sphere)
+        : m_original(sphere)
+        , m_working(sphere)
+    {
+    }
+
+    ~SphereBoundingVolumeComponent() = default;
+
+public:
+    bool IsInFrustum(const Frustum& frustum) override
+    {
+        return Culling::Intersects(frustum, m_working);
+    }
+
+    void Update(const glm::quat& rotation, const glm::vec3& translation, const glm::vec3& scale) override
+    {
+        const auto transform = MathUtil::CreateTransformationMatrix(translation, rotation, scale);
+
+        m_working.position = transform * glm::vec4(m_original.position, 1.0f);
+        m_model = GenerateModel(m_working);
+    }
+
+    BoundingVolumeType GetType() const override
+    {
+        return BoundingVolumeType::SPHERE;
+    }
+
+    std::shared_ptr<IModel> GetModel() const override
+    {
+        return m_model;
+    }
+
+private:
+    static std::unique_ptr<IModel> GenerateModel(const Sphere& sphere)
+    {
+        // TODO -> should get rid of in release
+        return nullptr;
+    }
+
+private:
+    std::shared_ptr<IModel> m_model;
+
+    Sphere m_original;
+
+    Sphere m_working;
+};
+
 class BoundingVolumeComponentFactory {
 public:
     std::unique_ptr<IBoundingVolumeComponent> CreateAABB(const std::vector<glm::vec3>& vertices) const
@@ -461,6 +515,26 @@ public:
         }
         
         return std::make_unique<AABBBoundingVolumeComponent>(aabb);        
+    }
+
+    std::unique_ptr<IBoundingVolumeComponent> CreateSphere(const std::vector<glm::vec3>& vertices) const
+    {
+        AABB aabb{};
+        for (const auto& v : vertices) {
+            for (auto i = 0; i < aabb.minExtents.length(); i++) {
+                aabb.minExtents[i] = std::min(aabb.minExtents[i], v[i]);
+                aabb.maxExtents[i] = std::max(aabb.maxExtents[i], v[i]);
+            }
+        }
+
+        float radius = std::numeric_limits<float>::min();
+        const auto boxHalfExtents = aabb.GetHalfSize();
+        for (auto i = 0; i < boxHalfExtents.length(); i++) {
+            radius = std::max(radius, boxHalfExtents[i]);
+        }
+        Sphere sphere{ aabb.GetCenter(), radius };
+
+        return std::make_unique<SphereBoundingVolumeComponent>(sphere);
     }
 };
 
