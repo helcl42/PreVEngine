@@ -481,18 +481,9 @@ public:
 };
 
 class Terrain : public AbstractSceneNode<SceneNodeFlags> {
-private:
-    const int m_xIndex;
-
-    const int m_zIndex;
-
-    std::shared_ptr<ITerrainComponenet> m_terrainComponent;
-
-    std::weak_ptr<ITerrainManagerComponent> m_terrainManagerComponent;
-
 public:
     Terrain(const int x, const int z)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT }, glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1.0f))
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT }, glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1.0f))
         , m_xIndex(x)
         , m_zIndex(z)
     {
@@ -506,8 +497,11 @@ public:
         TerrainComponentFactory terrainComponentFactory{};
         m_terrainComponent = std::move(terrainComponentFactory.CreateRandomTerrainNormalMapped(m_xIndex, m_zIndex, TERRAIN_SIZE));
         SetPosition(m_terrainComponent->GetPosition());
-
         ComponentRepository<ITerrainComponenet>::Instance().Add(m_id, m_terrainComponent);
+
+        BoundingVolumeComponentFactory bondingVolumeFactory{};
+        m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_terrainComponent->GetModel()->GetMesh()->GetVertices());
+        ComponentRepository<IBoundingVolumeComponent>::Instance().Add(m_id, m_boundingVolumeComponent);
 
         m_terrainManagerComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT });
         if (auto manager = m_terrainManagerComponent.lock()) {
@@ -519,6 +513,8 @@ public:
 
     void Update(float deltaTime) override
     {
+        m_boundingVolumeComponent->Update(GetWorldTransform());
+
         AbstractSceneNode::Update(deltaTime);
     }
 
@@ -530,8 +526,21 @@ public:
             manager->RemoveTerrain(m_terrainComponent);
         }
 
+        ComponentRepository<IBoundingVolumeComponent>::Instance().Remove(m_id);
+
         ComponentRepository<ITerrainComponenet>::Instance().Remove(m_id);
     }
+
+private:
+    const int m_xIndex;
+
+    const int m_zIndex;
+
+    std::shared_ptr<ITerrainComponenet> m_terrainComponent;
+
+    std::weak_ptr<ITerrainManagerComponent> m_terrainManagerComponent;
+
+    std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
 
 class TerrainManager : public AbstractSceneNode<SceneNodeFlags> {
@@ -1344,7 +1353,7 @@ private:
 class Water : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Water(const int x, const int z)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_RENDER_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_RENDER_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })
         , m_x(x)
         , m_z(z)
     {
@@ -1357,8 +1366,11 @@ public:
     {
         WaterComponentFactory componentFactory{};
         m_waterComponent = std::move(componentFactory.Create(m_x, m_z));
-
         ComponentRepository<IWaterComponent>::Instance().Add(m_id, m_waterComponent);
+
+        BoundingVolumeComponentFactory bondingVolumeFactory{};
+        m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_waterComponent->GetModel()->GetMesh()->GetVertices());
+        ComponentRepository<IBoundingVolumeComponent>::Instance().Add(m_id, m_boundingVolumeComponent);
 
         AbstractSceneNode::Init();
     }
@@ -1370,12 +1382,16 @@ public:
         SetPosition(m_waterComponent->GetPosition());
         SetScale(glm::vec3(WATER_TILE_SIZE));
 
+        m_boundingVolumeComponent->Update(GetWorldTransformScaled());
+
         AbstractSceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
         AbstractSceneNode::ShutDown();
+
+        ComponentRepository<IBoundingVolumeComponent>::Instance().Remove(m_id);
 
         ComponentRepository<IWaterComponent>::Instance().Remove(m_id);
     }
@@ -1386,6 +1402,8 @@ private:
     const int m_z;
 
     std::shared_ptr<IWaterComponent> m_waterComponent;
+
+    std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
 
 class WaterManager : public AbstractSceneNode<SceneNodeFlags> {
@@ -1521,7 +1539,7 @@ private:
 class Stone : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Stone(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_NORMAL_MAPPED_COMPONENT }, position, orientation, scale)
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_NORMAL_MAPPED_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT }, position, orientation, scale)
     {
     }
 
@@ -1531,9 +1549,13 @@ public:
     void Init() override
     {
         RenderComponentFactory componentFactory{};
-        auto component = componentFactory.CreateModelNormalMappedRenderComponent(AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.dae"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.png"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulderNormal.png"), true, true);
+        std::shared_ptr<IRenderComponent> renderComponent = componentFactory.CreateModelNormalMappedRenderComponent(AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.dae"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.png"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulderNormal.png"), true, true);
 
-        ComponentRepository<IRenderComponent>::Instance().Add(m_id, std::move(component));
+        ComponentRepository<IRenderComponent>::Instance().Add(m_id, renderComponent);
+
+        BoundingVolumeComponentFactory bondingVolumeFactory{};
+        m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(renderComponent->GetModel()->GetMesh()->GetVertices());
+        ComponentRepository<IBoundingVolumeComponent>::Instance().Add(m_id, m_boundingVolumeComponent);
 
         AbstractSceneNode::Init();
     }
@@ -1547,6 +1569,8 @@ public:
 
         SetPosition(glm::vec3(currentPosition.x, height - 2.0f, currentPosition.z));
 
+        m_boundingVolumeComponent->Update(GetWorldTransformScaled());
+
         AbstractSceneNode::Update(deltaTime);
     }
 
@@ -1554,8 +1578,13 @@ public:
     {
         AbstractSceneNode::ShutDown();
 
+        ComponentRepository<IBoundingVolumeComponent>::Instance().Remove(m_id);
+
         ComponentRepository<IRenderComponent>::Instance().Remove(m_id);
     }
+
+private:
+    std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
 
 class Shadows : public AbstractSceneNode<SceneNodeFlags> {

@@ -350,9 +350,7 @@ public:
 public:
     bool IsInFrustum(const Frustum& frustum) override
     {
-        bool intersecting = Culling::Intersects(frustum, m_working);
-        std::cout << "Intersection: " << (intersecting ? "YES" : "NO") <<  std::endl;
-        return intersecting;
+        return Culling::Intersects(frustum, m_working);
     }
 
     void Update(const glm::mat4& worldTransform) override

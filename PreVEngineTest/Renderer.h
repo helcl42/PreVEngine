@@ -1116,7 +1116,7 @@ public:
             auto uboFS = m_uniformsPoolFS->GetNext();
 
             UniformsFS uniformsFS{};
-            uniformsFS.color = glm::vec4(1.0f, 1.0f, 1.0f, 0.5f);
+            uniformsFS.color = glm::vec4(1.0f, 1.0f, 1.0f, 0.3f);
             uniformsFS.selectedColor = SELECTED_COLOR;
             uniformsFS.selected = false;
             
