@@ -146,9 +146,7 @@ public:
     {
     }
 
-    virtual ~AbstractSceneNode()
-    {
-    }
+    virtual ~AbstractSceneNode() = default;
 
 public:
     virtual void Init() override

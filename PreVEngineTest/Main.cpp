@@ -299,7 +299,7 @@ public:
 
     void Update(float deltaTime) override
     {
-        m_boundingVolumeComponent->Update(GetOrientation(), GetPosition(), GetScale());
+        m_boundingVolumeComponent->Update(GetWorldTransformScaled());
 
         AbstractSceneNode::Update(deltaTime);
     }
@@ -773,7 +773,7 @@ public:
         const glm::vec3 cameraPosition = GetPosition() + (-m_cameraComponent->GetForwardDirection() * m_distanceFromPerson) + glm::vec3(0.0f, 8.0f, 0.0f);
         m_cameraComponent->SetPosition(cameraPosition);
 
-        m_boundingVolumeComponent->Update(GetOrientation(), GetPosition() + glm::vec3(0.0f, -MIN_Y_POS, 0.0f), GetScale());
+        m_boundingVolumeComponent->Update(GetWorldTransformScaled());
 
         AbstractSceneNode::Update(deltaTime);
     }

@@ -325,7 +325,7 @@ class IBoundingVolumeComponent {
 public:
     virtual bool IsInFrustum(const Frustum& frustum) = 0;
     
-    virtual void Update(const glm::quat& rotation, const glm::vec3& translation, const glm::vec3& scale) = 0;
+    virtual void Update(const glm::mat4& worldTransform) = 0;
 
     virtual BoundingVolumeType GetType() const = 0;
 
@@ -355,12 +355,10 @@ public:
         return intersecting;
     }
 
-    void Update(const glm::quat& rotation, const glm::vec3& translation, const glm::vec3& scale) override
+    void Update(const glm::mat4& worldTransform) override
     {
-        const auto localModelMatrixRotationScale = MathUtil::CreateTransformationMatrix(glm::vec3(0.0f), rotation, scale);
-        
         for (auto i = 0; i < m_originalAABBPoints.size(); i++) {
-            m_vorkingAABBPoints[i] = localModelMatrixRotationScale * glm::vec4(m_originalAABBPoints[i], 1.0f);
+            m_vorkingAABBPoints[i] = worldTransform * glm::vec4(m_originalAABBPoints[i], 1.0f);
         }
 
         glm::vec3 minBound{ std::numeric_limits<float>::max() };
@@ -372,7 +370,7 @@ public:
             }
         }
         
-        m_working = AABB(glm::vec3(translation + minBound), glm::vec3(translation + maxBound));
+        m_working = AABB(glm::vec3(minBound), glm::vec3(maxBound));
         m_model = GenerateModel(m_working);
     }
 
@@ -469,11 +467,9 @@ public:
         return Culling::Intersects(frustum, m_working);
     }
 
-    void Update(const glm::quat& rotation, const glm::vec3& translation, const glm::vec3& scale) override
+    void Update(const glm::mat4& worldTransform) override
     {
-        const auto transform = MathUtil::CreateTransformationMatrix(translation, rotation, scale);
-
-        m_working.position = transform * glm::vec4(m_original.position, 1.0f);
+        m_working.position = worldTransform * glm::vec4(m_original.position, 1.0f);
         m_model = GenerateModel(m_working);
     }
 
