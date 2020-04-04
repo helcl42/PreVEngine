@@ -355,8 +355,11 @@ public:
 
     void Update(const glm::mat4& worldTransform) override
     {
+        const auto rotationScaleTransform = MathUtil::ExtractRotation(worldTransform);
+        const auto translation = MathUtil::ExtractTranslation(worldTransform);
+
         for (auto i = 0; i < m_originalAABBPoints.size(); i++) {
-            m_vorkingAABBPoints[i] = worldTransform * glm::vec4(m_originalAABBPoints[i], 1.0f);
+            m_vorkingAABBPoints[i] = rotationScaleTransform * glm::vec4(m_originalAABBPoints[i], 1.0f);
         }
 
         glm::vec3 minBound{ std::numeric_limits<float>::max() };
@@ -368,7 +371,7 @@ public:
             }
         }
         
-        m_working = AABB(glm::vec3(minBound), glm::vec3(maxBound));
+        m_working = AABB(glm::vec3(translation + minBound), glm::vec3(translation + maxBound));
         m_model = GenerateModel(m_working);
     }
 

@@ -521,6 +521,11 @@ public:
         return glm::vec3(transform[3][0], transform[3][1], transform[3][2]);
     }
 
+    static glm::mat4 ExtractRotation(const glm::mat4& transform)
+    {
+        return glm::mat4(glm::mat3(transform));
+    }
+
     static glm::quat ExtractOrientation(const glm::mat4& transform)
     {
         return glm::quat_cast(transform);
