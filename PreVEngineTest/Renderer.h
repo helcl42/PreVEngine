@@ -705,13 +705,7 @@ public:
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT })) {
             auto renderComponent = ComponentRepository<IAnimationRenderComponent>::Instance().Get(node->GetId());
 
-            bool visible = true;
-            if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-                auto volumeComponent = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId());
-                visible = volumeComponent->IsInFrustum(shadowsRenderUserData.frustum);
-            }
-
-            if (renderComponent->CastsShadows() && visible) {
+            if (renderComponent->CastsShadows()) {
                 auto ubo = m_uniformsPool->GetNext();
 
                 Uniforms uniforms{};
@@ -2108,6 +2102,13 @@ public:
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT })) {
+            
+            bool visible = true;
+            if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
+                auto volumeComponent = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId());
+                visible = volumeComponent->IsInFrustum(renderContextUserData.frustum);
+            }
+
             const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
             const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
             const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
@@ -3666,18 +3667,18 @@ private:
         m_boundingVolumeDebugRenderer = std::make_shared<BoundingVolumeDebugRenderer>(m_defaultRenderPass);
 
         m_defaultRenderers = {
-                m_skyBoxRenderer,
-                m_defaultRenderer,
-                m_normalMappedRenderer,
-                m_terrainRenderer,
-                m_terrainNormalRendererRenderer,
-                m_animationRenderer,
-                m_animationNormalMappedRenderer,
-                m_waterRenderer,
-                m_fontRenderer,
-                m_sunRenderer,
-                m_lensFlareRenderer,
-                m_boundingVolumeDebugRenderer
+            m_skyBoxRenderer,
+            m_defaultRenderer,
+            m_normalMappedRenderer,
+            m_terrainRenderer,
+            m_terrainNormalRendererRenderer,
+            m_animationRenderer,
+            m_animationNormalMappedRenderer,
+            m_waterRenderer,
+            m_fontRenderer,
+            m_sunRenderer,
+            m_lensFlareRenderer,
+            m_boundingVolumeDebugRenderer
         };
 
         for (auto& renderer : m_defaultRenderers) {

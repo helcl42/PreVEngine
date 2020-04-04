@@ -55,7 +55,7 @@ struct Plane {
 
     Plane(const glm::vec3& n, const float d)
         : normal(glm::normalize(n))
-        , distance(d * glm::length(n))
+        , distance(d / glm::length(n))
     {
     }
 
@@ -119,6 +119,20 @@ struct AABB {
     {
         return maxExtents - minExtents;
     }
+
+    std::vector<glm::vec3> GetPoints() const
+    {
+        return {
+            { minExtents.x, minExtents.y, minExtents.z },
+            { minExtents.x, maxExtents.y, minExtents.z },
+            { minExtents.x, minExtents.y, maxExtents.z },
+            { minExtents.x, maxExtents.y, maxExtents.z },
+            { maxExtents.x, minExtents.y, minExtents.z },
+            { maxExtents.x, maxExtents.y, minExtents.z },
+            { maxExtents.x, minExtents.y, maxExtents.z },
+            { maxExtents.x, maxExtents.y, maxExtents.z }
+        };
+    }
 };
 
 struct Frustum {
@@ -172,23 +186,15 @@ public:
 
     static bool Intersects(const AABB& box, const Plane& plane)
     {
-        const glm::vec3 points[] = {
-            { box.minExtents.x, box.minExtents.y, box.minExtents.z },
-            { box.maxExtents.x, box.minExtents.y, box.minExtents.z },
-            { box.minExtents.x, box.maxExtents.y, box.minExtents.z },
-            { box.maxExtents.x, box.maxExtents.y, box.minExtents.z },
-            { box.minExtents.x, box.minExtents.y, box.maxExtents.z },
-            { box.maxExtents.x, box.minExtents.y, box.maxExtents.z },
-            { box.minExtents.x, box.maxExtents.y, box.maxExtents.z },
-            { box.maxExtents.x, box.maxExtents.y, box.maxExtents.z },
-        };
-       
-        for (const auto point : points) {
-            if (glm::dot(glm::vec4(plane.normal, plane.distance), glm::vec4(point, 1.0f)) > 0.0f) {
-                return false;
+        const auto aabbPoints = box.GetPoints();       
+
+        uint32_t missCount{ 0 };
+        for (const auto aabbPoint : aabbPoints) {
+            if (glm::dot(glm::vec4(plane.normal, plane.distance), glm::vec4(aabbPoint, 1.0f)) < 0.0f) {
+                missCount++;
             }
         }
-        return true;
+        return missCount != aabbPoints.size();
     }
 
     static bool Intersects(const Plane& plane, const Point& point)
@@ -259,16 +265,30 @@ public:
     static bool Intersects(const Frustum& frustum, const AABB& box)
     { 
         // check box outside/inside of frustum
-        for (auto i = 0; i < frustum.planes.size(); i++) {
-            
-            if (!Intersects(box, frustum.planes[i])) {
+        for (const auto plane : frustum.planes) {
+            if (!Intersects(box, plane)) {
                 return false;
-            }
+            }    
         }
 
         // check frustum corners outside/inside box
-        for (auto i = 0; i < frustum.points.size(); i++) {
-            if (!Intersects(box, frustum.points[i])) {
+        for (auto i = 0; i < box.maxExtents.length(); i++) {
+            uint32_t out = 0;
+            for (const auto point : frustum.points) {
+                if (point.position[i] > box.maxExtents[i]) {
+                    out++;
+                }
+            }
+            if (out == frustum.points.size()) {
+                return false;
+            }
+            out = 0;
+            for (const auto point : frustum.points) {
+                if (point.position[i] > box.minExtents[i]) {
+                    out++;
+                }
+            }
+            if (out == frustum.points.size()) {
                 return false;
             }
         }
@@ -315,8 +335,8 @@ public:
     AABBBoundingVolumeComponent(const AABB& box)
         : m_original(box)
         , m_working(box)
-        , m_originalAABBPoints(GetPointsFromAABB(box))
-        , m_vorkingAABBPoints(GetPointsFromAABB(box))
+        , m_originalAABBPoints(box.GetPoints())
+        , m_vorkingAABBPoints(box.GetPoints())
     {
     }
 
@@ -362,55 +382,41 @@ public:
     }
 
 private:
-    static std::vector<glm::vec3> GetPointsFromAABB(const AABB& aabb)
-    {
-        return {
-            { aabb.minExtents.x, aabb.minExtents.y, aabb.minExtents.z },
-            { aabb.minExtents.x, aabb.maxExtents.y, aabb.minExtents.z },
-            { aabb.minExtents.x, aabb.minExtents.y, aabb.maxExtents.z },
-            { aabb.minExtents.x, aabb.maxExtents.y, aabb.maxExtents.z },
-            { aabb.maxExtents.x, aabb.minExtents.y, aabb.minExtents.z },
-            { aabb.maxExtents.x, aabb.maxExtents.y, aabb.minExtents.z },
-            { aabb.maxExtents.x, aabb.minExtents.y, aabb.maxExtents.z },
-            { aabb.maxExtents.x, aabb.maxExtents.y, aabb.maxExtents.z }
-        };
-    }
-
     static std::unique_ptr<IModel> GenerateModel(const AABB& aabb)
     {
-        const auto cubePoints = GetPointsFromAABB(aabb);
+        const auto aabbPoints = aabb.GetPoints();
 
         const std::vector<glm::vec3> vertices = {
             // front
-            cubePoints[2],
-            cubePoints[6],
-            cubePoints[7],
-            cubePoints[3],
+            aabbPoints[2],
+            aabbPoints[6],
+            aabbPoints[7],
+            aabbPoints[3],
             // back
-            cubePoints[0],
-            cubePoints[4],
-            cubePoints[5],
-            cubePoints[1],
+            aabbPoints[0],
+            aabbPoints[4],
+            aabbPoints[5],
+            aabbPoints[1],
             // top
-            cubePoints[3],
-            cubePoints[7],
-            cubePoints[5],
-            cubePoints[1],
+            aabbPoints[3],
+            aabbPoints[7],
+            aabbPoints[5],
+            aabbPoints[1],
             // bottom
-            cubePoints[2],
-            cubePoints[6],
-            cubePoints[4],
-            cubePoints[0],
+            aabbPoints[2],
+            aabbPoints[6],
+            aabbPoints[4],
+            aabbPoints[0],
             // left
-            cubePoints[2],
-            cubePoints[3],
-            cubePoints[1],
-            cubePoints[0],
+            aabbPoints[2],
+            aabbPoints[3],
+            aabbPoints[1],
+            aabbPoints[0],
             // rightt
-            cubePoints[1],
-            cubePoints[7],
-            cubePoints[5],
-            cubePoints[4]
+            aabbPoints[1],
+            aabbPoints[7],
+            aabbPoints[5],
+            aabbPoints[4]
         };
 
         const std::vector<uint32_t> indices = {
