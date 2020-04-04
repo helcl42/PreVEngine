@@ -3,7 +3,7 @@
 
 #include <Common.h>
 
-//#define RENDER_BOUNDING_VOLUMES
+#define RENDER_BOUNDING_VOLUMES
 
 #define CMP(x, y) \
     (fabsf(x - y) <= FLT_EPSILON * fmaxf(1.0f, fmaxf(fabsf(x), fabsf(y))))
@@ -184,7 +184,8 @@ struct Frustum {
 
 class Culling {
 public:
-    static bool Intersects(const Sphere& sphere, const Plane& plane) {
+    static bool Intersects(const Sphere& sphere, const Plane& plane)
+    {
         if ((plane.normal.x * sphere.position.x) + (plane.normal.y * sphere.position.y) + (plane.normal.z * sphere.position.z) + plane.distance <= -sphere.radius) {
             return false;
         }
@@ -193,7 +194,7 @@ public:
 
     static bool Intersects(const AABB& box, const Plane& plane)
     {
-        const auto aabbPoints = box.GetPoints();       
+        const auto aabbPoints = box.GetPoints();
 
         uint32_t missCount{ 0 };
         for (const auto aabbPoint : aabbPoints) {
@@ -209,7 +210,8 @@ public:
         return CMP(glm::dot(point.position, plane.normal) - plane.distance, 0.0f);
     }
 
-    static bool Intersects(const AABB& box, const Point& point) {
+    static bool Intersects(const AABB& box, const Point& point)
+    {
         for (auto i = 0; i < point.position.length(); i++) {
             if (point.position[i] > box.maxExtents[i]) {
                 return false;
@@ -218,7 +220,7 @@ public:
             if (point.position[i] < box.minExtents[i]) {
                 return false;
             }
-        }        
+        }
         return true;
     }
 
@@ -229,8 +231,8 @@ public:
 
     static bool Intersects(const AABB& box1, const AABB& box2)
     {
-        return (box1.minExtents.x <= box2.maxExtents.x && box1.maxExtents.x >= box2.minExtents.x) 
-            && (box1.minExtents.y <= box2.maxExtents.y && box1.maxExtents.y >= box2.minExtents.y) 
+        return (box1.minExtents.x <= box2.maxExtents.x && box1.maxExtents.x >= box2.minExtents.x)
+            && (box1.minExtents.y <= box2.maxExtents.y && box1.maxExtents.y >= box2.minExtents.y)
             && (box1.minExtents.z <= box2.maxExtents.z && box1.maxExtents.z >= box2.minExtents.z);
     }
 
@@ -245,7 +247,7 @@ public:
         const float x = std::max(box.minExtents.x, std::min(sphere.position.x, box.maxExtents.x));
         const float y = std::max(box.minExtents.y, std::min(sphere.position.y, box.maxExtents.y));
         const float z = std::max(box.minExtents.z, std::min(sphere.position.z, box.maxExtents.z));
-        
+
         return Intersects(sphere, Point{ glm::vec3{ x, y, z } });
     }
 
@@ -270,12 +272,12 @@ public:
     }
 
     static bool Intersects(const Frustum& frustum, const AABB& box)
-    { 
+    {
         // check box outside/inside of frustum
         for (const auto plane : frustum.planes) {
             if (!Intersects(box, plane)) {
                 return false;
-            }    
+            }
         }
 
         // check frustum corners outside/inside box
@@ -318,83 +320,9 @@ public:
     }
 };
 
-enum class BoundingVolumeType {
-    SPHERE = 0,
-    AABB
-};
-
-class IBoundingVolumeComponent {
+class BoundingVolumeModelFactory {
 public:
-    virtual bool IsInFrustum(const Frustum& frustum) = 0;
-    
-    virtual void Update(const glm::mat4& worldTransform) = 0;
-
-    virtual BoundingVolumeType GetType() const = 0;
-
-#ifdef RENDER_BOUNDING_VOLUMES
-    virtual std::shared_ptr<IModel> GetModel() const = 0;
-#endif
-    
-public:
-    virtual ~IBoundingVolumeComponent() = default;
-};
-
-class AABBBoundingVolumeComponent : public IBoundingVolumeComponent {
-public:
-    AABBBoundingVolumeComponent(const AABB& box)
-        : m_original(box)
-        , m_working(box)
-        , m_originalAABBPoints(box.GetPoints())
-        , m_vorkingAABBPoints(box.GetPoints())
-    {
-    }
-
-    ~AABBBoundingVolumeComponent() = default;
-
-public:
-    bool IsInFrustum(const Frustum& frustum) override
-    {
-        return Culling::Intersects(frustum, m_working);
-    }
-
-    void Update(const glm::mat4& worldTransform) override
-    {
-        const auto rotationScaleTransform = MathUtil::ExtractRotation(worldTransform);
-        const auto translation = MathUtil::ExtractTranslation(worldTransform);
-
-        for (auto i = 0; i < m_originalAABBPoints.size(); i++) {
-            m_vorkingAABBPoints[i] = rotationScaleTransform * glm::vec4(m_originalAABBPoints[i], 1.0f);
-        }
-
-        glm::vec3 minBound{ std::numeric_limits<float>::max() };
-        glm::vec3 maxBound{ std::numeric_limits<float>::min() };
-        for (const auto pt : m_vorkingAABBPoints) {
-            for (auto i = 0; i < minBound.length(); i++) {
-                minBound[i] = std::min(minBound[i], pt[i]);
-                maxBound[i] = std::max(maxBound[i], pt[i]);
-            }
-        }
-        
-        m_working = AABB(glm::vec3(translation + minBound), glm::vec3(translation + maxBound));
-#ifdef RENDER_BOUNDING_VOLUMES
-        m_model = GenerateModel(m_working);
-#endif
-    }
-
-    BoundingVolumeType GetType() const override
-    {
-        return BoundingVolumeType::AABB;
-    }
-
-#ifdef RENDER_BOUNDING_VOLUMES
-    std::shared_ptr<IModel> GetModel() const override
-    {
-        return m_model;
-    }
-#endif
-private:
-#ifdef RENDER_BOUNDING_VOLUMES
-    static std::unique_ptr<IModel> GenerateModel(const AABB& aabb)
+    std::unique_ptr<IModel> CreateAABBModel(const AABB& aabb) const
     {
         const auto aabbPoints = aabb.GetPoints();
 
@@ -440,12 +368,158 @@ private:
             20, 21, 22, 22, 23, 20
         };
 
-        auto allocator = AllocatorProvider::Instance().GetAllocator();        
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
         auto vertexBuffer = std::make_unique<VBO>(*allocator);
         vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
         auto indexBuffer = std::make_unique<IBO>(*allocator);
         indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
         return std::make_unique<Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
+    }
+
+    std::unique_ptr<IModel> CreateSphereModel(const Sphere& sphere) const
+    {
+        const float degreesHorizontal{ 360.0f };
+        const float degreesVertical{ 180.0f };
+        const int subDivY{ 16 };
+        const int subDivZ{ 16 };
+        const float radius{ sphere.radius };
+        const glm::vec3 positionOffset{ sphere.position };
+
+        std::vector<glm::vec3> vertices;
+        std::vector<uint32_t> indices;
+        uint32_t indexBase{ 0 };
+
+        float addAngleY{ -degreesHorizontal / float(subDivY) };
+        float addAngleZ{ degreesVertical / float(subDivZ) };
+        float curAngleY{ 0.0f };
+        int stepsY{ 1 };
+
+        while (stepsY <= subDivY) {
+            const float sinY = std::sinf(glm::radians(curAngleY));
+            const float cosY = std::cosf(glm::radians(curAngleY));
+            const glm::vec3 directionY(cosY, 0.0f, -sinY);
+
+            const float nextAngleY = curAngleY + addAngleY;
+            const float nextSinY = std::sinf(glm::radians(nextAngleY));
+            const float nextCosY = std::cosf(glm::radians(nextAngleY));
+            const glm::vec3 nextDirectionY(nextCosY, 0.0f, -nextSinY);
+
+            float currentAngleZ = 0.0f;
+            int stepsZ = 1;
+            while (stepsZ <= subDivZ) {
+                const float sinZ = std::sinf(glm::radians(currentAngleZ));
+                const float cosZ = std::cosf(glm::radians(currentAngleZ));
+
+                const float nextAngleZ = currentAngleZ + addAngleZ;
+                const float nextSinZ = std::sinf(glm::radians(nextAngleZ));
+                const float nextCosZ = std::cosf(glm::radians(nextAngleZ));
+
+                const glm::vec3 quadPoints[] = {
+                    { directionY.x * sinZ * radius, cosZ * radius, directionY.z * sinZ * radius },
+                    { directionY.x * nextSinZ * radius, nextCosZ * radius, directionY.z * nextSinZ * radius },
+                    { nextDirectionY.x * nextSinZ * radius, nextCosZ * radius, nextDirectionY.z * nextSinZ * radius },
+                    { nextDirectionY.x * sinZ * radius, cosZ * radius, nextDirectionY.z * sinZ * radius }
+                };
+                
+                for (const auto pt : quadPoints) {
+                    vertices.push_back(positionOffset + pt);
+                }
+
+                const uint32_t quadIndices[] = { 0, 1, 2, 2, 3, 0 };
+                for (const auto idx : quadIndices) {
+                    indices.push_back(indexBase + idx);
+                }
+                indexBase += 6;
+
+                stepsZ++;
+                currentAngleZ += addAngleZ;
+            }
+            stepsY++;
+            curAngleY += addAngleY;
+        }
+
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
+        auto vertexBuffer = std::make_unique<VBO>(*allocator);
+        vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
+        auto indexBuffer = std::make_unique<IBO>(*allocator);
+        indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
+        return std::make_unique<Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
+    }
+};
+
+enum class BoundingVolumeType {
+    SPHERE = 0,
+    AABB
+};
+
+class IBoundingVolumeComponent {
+public:
+    virtual bool IsInFrustum(const Frustum& frustum) = 0;
+
+    virtual void Update(const glm::mat4& worldTransform) = 0;
+
+    virtual BoundingVolumeType GetType() const = 0;
+
+#ifdef RENDER_BOUNDING_VOLUMES
+    virtual std::shared_ptr<IModel> GetModel() const = 0;
+#endif
+
+public:
+    virtual ~IBoundingVolumeComponent() = default;
+};
+
+class AABBBoundingVolumeComponent : public IBoundingVolumeComponent {
+public:
+    AABBBoundingVolumeComponent(const AABB& box)
+        : m_original(box)
+        , m_working(box)
+        , m_originalAABBPoints(box.GetPoints())
+        , m_vorkingAABBPoints(box.GetPoints())
+    {
+    }
+
+    ~AABBBoundingVolumeComponent() = default;
+
+public:
+    bool IsInFrustum(const Frustum& frustum) override
+    {
+        return Culling::Intersects(frustum, m_working);
+    }
+
+    void Update(const glm::mat4& worldTransform) override
+    {
+        const auto rotationScaleTransform = MathUtil::ExtractRotation(worldTransform);
+        const auto translation = MathUtil::ExtractTranslation(worldTransform);
+
+        for (auto i = 0; i < m_originalAABBPoints.size(); i++) {
+            m_vorkingAABBPoints[i] = rotationScaleTransform * glm::vec4(m_originalAABBPoints[i], 1.0f);
+        }
+
+        glm::vec3 minBound{ std::numeric_limits<float>::max() };
+        glm::vec3 maxBound{ std::numeric_limits<float>::min() };
+        for (const auto pt : m_vorkingAABBPoints) {
+            for (auto i = 0; i < minBound.length(); i++) {
+                minBound[i] = std::min(minBound[i], pt[i]);
+                maxBound[i] = std::max(maxBound[i], pt[i]);
+            }
+        }
+
+        m_working = AABB(glm::vec3(translation + minBound), glm::vec3(translation + maxBound));
+#ifdef RENDER_BOUNDING_VOLUMES
+        BoundingVolumeModelFactory modelFactory{};
+        m_model = modelFactory.CreateAABBModel(m_working);
+#endif
+    }
+
+    BoundingVolumeType GetType() const override
+    {
+        return BoundingVolumeType::AABB;
+    }
+
+#ifdef RENDER_BOUNDING_VOLUMES
+    std::shared_ptr<IModel> GetModel() const override
+    {
+        return m_model;
     }
 #endif
 private:
@@ -463,9 +537,10 @@ private:
 
 class SphereBoundingVolumeComponent : public IBoundingVolumeComponent {
 public:
-    SphereBoundingVolumeComponent(const Sphere& sphere)
+    SphereBoundingVolumeComponent(const Sphere& sphere, const float scale)
         : m_original(sphere)
         , m_working(sphere)
+        , m_scale(scale)
     {
     }
 
@@ -480,8 +555,10 @@ public:
     void Update(const glm::mat4& worldTransform) override
     {
         m_working.position = worldTransform * glm::vec4(m_original.position, 1.0f);
+        m_working.radius = m_original.radius * m_scale;
 #ifdef RENDER_BOUNDING_VOLUMES
-        m_model = GenerateModel(m_working);
+        BoundingVolumeModelFactory modelFactory{};
+        m_model = modelFactory.CreateSphereModel(m_working);
 #endif
     }
 
@@ -498,19 +575,13 @@ public:
 #endif
 private:
 #ifdef RENDER_BOUNDING_VOLUMES
-    static std::unique_ptr<IModel> GenerateModel(const Sphere& sphere)
-    {
-        // TODO -> should get rid of in release
-        return nullptr;
-    }
-#endif
-private:
-#ifdef RENDER_BOUNDING_VOLUMES
     std::shared_ptr<IModel> m_model;
 #endif
     Sphere m_original;
 
     Sphere m_working;
+
+    float m_scale;
 };
 
 class BoundingVolumeComponentFactory {
@@ -524,11 +595,12 @@ public:
                 aabb.maxExtents[i] = std::max(aabb.maxExtents[i], v[i]);
             }
         }
-        
-        return std::make_unique<AABBBoundingVolumeComponent>(aabb);        
+
+        return std::make_unique<AABBBoundingVolumeComponent>(aabb);
     }
 
-    std::unique_ptr<IBoundingVolumeComponent> CreateSphere(const std::vector<glm::vec3>& vertices) const
+    // TODO -> scale must not change over time
+    std::unique_ptr<IBoundingVolumeComponent> CreateSphere(const std::vector<glm::vec3>& vertices, const float scale) const
     {
         AABB aabb{};
         for (const auto& v : vertices) {
@@ -545,7 +617,7 @@ public:
         }
         Sphere sphere{ aabb.GetCenter(), radius };
 
-        return std::make_unique<SphereBoundingVolumeComponent>(sphere);
+        return std::make_unique<SphereBoundingVolumeComponent>(sphere, scale);
     }
 };
 
