@@ -420,7 +420,7 @@ public:
                     { nextDirectionY.x * nextSinZ * radius, nextCosZ * radius, nextDirectionY.z * nextSinZ * radius },
                     { nextDirectionY.x * sinZ * radius, cosZ * radius, nextDirectionY.z * sinZ * radius }
                 };
-                
+
                 for (const auto pt : quadPoints) {
                     vertices.push_back(positionOffset + pt);
                 }
@@ -588,19 +588,28 @@ class BoundingVolumeComponentFactory {
 public:
     std::unique_ptr<IBoundingVolumeComponent> CreateAABB(const std::vector<glm::vec3>& vertices) const
     {
-        AABB aabb;
-        for (const auto& v : vertices) {
-            for (auto i = 0; i < aabb.minExtents.length(); i++) {
-                aabb.minExtents[i] = std::min(aabb.minExtents[i], v[i]);
-                aabb.maxExtents[i] = std::max(aabb.maxExtents[i], v[i]);
-            }
-        }
-
+        const auto aabb = CreateABBFromVertices(vertices);
         return std::make_unique<AABBBoundingVolumeComponent>(aabb);
     }
 
     // TODO -> scale must not change over time
     std::unique_ptr<IBoundingVolumeComponent> CreateSphere(const std::vector<glm::vec3>& vertices, const float scale) const
+    {
+        const auto aabb = CreateABBFromVertices(vertices);
+
+        float maxExtent = std::numeric_limits<float>::min();
+        const auto boxHalfExtents = aabb.GetHalfSize();
+        for (auto i = 0; i < boxHalfExtents.length(); i++) {
+            maxExtent = std::max(maxExtent, boxHalfExtents[i]);
+        }
+
+        const Sphere sphere{ aabb.GetCenter(), maxExtent };
+
+        return std::make_unique<SphereBoundingVolumeComponent>(sphere, scale);
+    }
+
+private:
+    AABB CreateABBFromVertices(const std::vector<glm::vec3>& vertices) const
     {
         AABB aabb{};
         for (const auto& v : vertices) {
@@ -609,15 +618,7 @@ public:
                 aabb.maxExtents[i] = std::max(aabb.maxExtents[i], v[i]);
             }
         }
-
-        float radius = std::numeric_limits<float>::min();
-        const auto boxHalfExtents = aabb.GetHalfSize();
-        for (auto i = 0; i < boxHalfExtents.length(); i++) {
-            radius = std::max(radius, boxHalfExtents[i]);
-        }
-        Sphere sphere{ aabb.GetCenter(), radius };
-
-        return std::make_unique<SphereBoundingVolumeComponent>(sphere, scale);
+        return aabb;
     }
 };
 
