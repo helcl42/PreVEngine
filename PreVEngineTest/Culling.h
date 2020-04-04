@@ -3,6 +3,8 @@
 
 #include <Common.h>
 
+//#define RENDER_BOUNDING_VOLUMES
+
 #define CMP(x, y) \
     (fabsf(x - y) <= FLT_EPSILON * fmaxf(1.0f, fmaxf(fabsf(x), fabsf(y))))
 
@@ -329,7 +331,9 @@ public:
 
     virtual BoundingVolumeType GetType() const = 0;
 
+#ifdef RENDER_BOUNDING_VOLUMES
     virtual std::shared_ptr<IModel> GetModel() const = 0;
+#endif
     
 public:
     virtual ~IBoundingVolumeComponent() = default;
@@ -372,7 +376,9 @@ public:
         }
         
         m_working = AABB(glm::vec3(translation + minBound), glm::vec3(translation + maxBound));
-        //m_model = GenerateModel(m_working);
+#ifdef RENDER_BOUNDING_VOLUMES
+        m_model = GenerateModel(m_working);
+#endif
     }
 
     BoundingVolumeType GetType() const override
@@ -380,12 +386,14 @@ public:
         return BoundingVolumeType::AABB;
     }
 
+#ifdef RENDER_BOUNDING_VOLUMES
     std::shared_ptr<IModel> GetModel() const override
     {
         return m_model;
     }
-
+#endif
 private:
+#ifdef RENDER_BOUNDING_VOLUMES
     static std::unique_ptr<IModel> GenerateModel(const AABB& aabb)
     {
         const auto aabbPoints = aabb.GetPoints();
@@ -439,10 +447,11 @@ private:
         indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
         return std::make_unique<Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
     }
-
-private:    
+#endif
+private:
+#ifdef RENDER_BOUNDING_VOLUMES
     std::shared_ptr<IModel> m_model;
-
+#endif
     AABB m_original;
 
     std::vector<glm::vec3> m_originalAABBPoints;
@@ -471,7 +480,9 @@ public:
     void Update(const glm::mat4& worldTransform) override
     {
         m_working.position = worldTransform * glm::vec4(m_original.position, 1.0f);
+#ifdef RENDER_BOUNDING_VOLUMES
         m_model = GenerateModel(m_working);
+#endif
     }
 
     BoundingVolumeType GetType() const override
@@ -479,21 +490,24 @@ public:
         return BoundingVolumeType::SPHERE;
     }
 
+#ifdef RENDER_BOUNDING_VOLUMES
     std::shared_ptr<IModel> GetModel() const override
     {
         return m_model;
     }
-
+#endif
 private:
+#ifdef RENDER_BOUNDING_VOLUMES
     static std::unique_ptr<IModel> GenerateModel(const Sphere& sphere)
     {
         // TODO -> should get rid of in release
         return nullptr;
     }
-
+#endif
 private:
+#ifdef RENDER_BOUNDING_VOLUMES
     std::shared_ptr<IModel> m_model;
-
+#endif
     Sphere m_original;
 
     Sphere m_working;

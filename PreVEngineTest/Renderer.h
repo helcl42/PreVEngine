@@ -1052,6 +1052,7 @@ public:
     }
 };
 
+#ifdef RENDER_BOUNDING_VOLUMES
 class BoundingVolumeDebugRenderer : public IRenderer<NormalRenderContextUserData> {
 private:
     struct alignas(16) UniformsVS
@@ -1190,6 +1191,7 @@ public:
         m_pipeline->ShutDown();
     }
 };
+#endif
 
 class DefaultRenderer : public IRenderer<NormalRenderContextUserData> {
 private:
@@ -2650,6 +2652,8 @@ private:
 
     std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
 
+    uint32_t m_visibleCount{ 0 };
+
 public:
     TerrainNormalMappedRenderer(const std::shared_ptr<RenderPass>& renderPass)
         : m_renderPass(renderPass)
@@ -2688,6 +2692,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
+        m_visibleCount = 0;
+
         VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
         VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
@@ -2705,6 +2711,7 @@ public:
             }
 
             if (visible) {
+                m_visibleCount++;
                 const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
                 const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
                 const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
@@ -2791,6 +2798,7 @@ public:
 
     void PostRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
+        std::cout << "Visible: " << m_visibleCount << std::endl;
     }
 
     void AfterRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
@@ -3741,7 +3749,6 @@ private:
         m_fontRenderer = std::make_shared<FontRenderer>(m_defaultRenderPass);
         m_sunRenderer = std::make_shared<SunRenderer>(m_defaultRenderPass);
         m_lensFlareRenderer = std::make_shared<LensFlareRenderer>(m_defaultRenderPass);
-        m_boundingVolumeDebugRenderer = std::make_shared<BoundingVolumeDebugRenderer>(m_defaultRenderPass);
 
         m_defaultRenderers = {
             m_skyBoxRenderer,
@@ -3754,9 +3761,13 @@ private:
             m_waterRenderer,
             m_fontRenderer,
             m_sunRenderer,
-            m_lensFlareRenderer,
-            //m_boundingVolumeDebugRenderer
+            m_lensFlareRenderer
         };
+
+#ifdef RENDER_BOUNDING_VOLUMES
+        m_boundingVolumeDebugRenderer = std::make_shared<BoundingVolumeDebugRenderer>(m_defaultRenderPass);
+        m_defaultRenderers.push_back(m_boundingVolumeDebugRenderer);
+#endif
 
         for (auto& renderer : m_defaultRenderers) {
             renderer->Init();
@@ -4345,9 +4356,9 @@ private:
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_sunRenderer;
 
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_lensFlareRenderer;
-
+#ifdef RENDER_BOUNDING_VOLUMES
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_boundingVolumeDebugRenderer;
-
+#endif
     std::vector<std::shared_ptr<IRenderer<NormalRenderContextUserData> > > m_defaultRenderers;
 
 

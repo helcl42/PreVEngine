@@ -25,6 +25,9 @@ PhysicalDevice::PhysicalDevice(VkPhysicalDevice gpu)
     if (m_availableFeatures.shaderClipDistance) {
         m_enabledFeatures.shaderClipDistance = VK_TRUE;
     }
+    if (m_availableFeatures.fillModeNonSolid) {
+        m_enabledFeatures.fillModeNonSolid = VK_TRUE;
+    }
 
     uint32_t familyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(gpu, &familyCount, nullptr);
