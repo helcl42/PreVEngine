@@ -275,7 +275,7 @@ protected:
 
 public:
     AbstractCubeRobotSceneNode(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT }, position, orientation, scale)
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT }, position, orientation, scale)
         , m_texturePath(texturePath)
     {
     }
@@ -286,15 +286,21 @@ public:
     void Init() override
     {
         RenderComponentFactory renderComponentFactory{};
-        auto cubeComponent = renderComponentFactory.CreateCubeRenderComponent(m_texturePath, true, true);
+        std::shared_ptr<IRenderComponent> cubeComponent = renderComponentFactory.CreateCubeRenderComponent(m_texturePath, true, true);
 
-        ComponentRepository<IRenderComponent>::Instance().Add(m_id, std::move(cubeComponent));
+        ComponentRepository<IRenderComponent>::Instance().Add(m_id, cubeComponent);
+        
+        BoundingVolumeComponentFactory bondingVolumeFactory{};
+        m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(cubeComponent->GetModel()->GetMesh()->GetVertices());
+        ComponentRepository<IBoundingVolumeComponent>::Instance().Add(m_id, m_boundingVolumeComponent);
 
         AbstractSceneNode::Init();
     }
 
     void Update(float deltaTime) override
     {
+        m_boundingVolumeComponent->Update(GetOrientation(), GetPosition(), GetScale());
+
         AbstractSceneNode::Update(deltaTime);
     }
 
@@ -302,8 +308,13 @@ public:
     {
         AbstractSceneNode::ShutDown();
 
+        ComponentRepository<IBoundingVolumeComponent>::Instance().Remove(m_id);
+
         ComponentRepository<IRenderComponent>::Instance().Remove(m_id);
     }
+
+private:
+    std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
 
 class CubeRobotPart : public AbstractCubeRobotSceneNode {
@@ -1639,9 +1650,9 @@ public:
         auto inputsHelper = std::make_shared<InputsHelper>();
         AddChild(inputsHelper);
 
-        //auto freeCamera = std::make_shared<Camera>();
-        ////freeCamera->SetTags({ TAG_MAIN_CAMERA });
-        //AddChild(freeCamera);
+        auto freeCamera = std::make_shared<Camera>();
+        freeCamera->SetTags({ TAG_MAIN_CAMERA });
+        AddChild(freeCamera);
 
         //auto camRobot = std::make_shared<CubeRobot>(glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
         //freeCamera->AddChild(camRobot);
@@ -1659,7 +1670,7 @@ public:
         }
 
         auto goblin = std::make_shared<Goblin>(glm::vec3(90.0f, 9.0f, 90.0f), glm::quat(glm::radians(glm::vec3(-90.0f, 0.0f, 0.0f))), glm::vec3(0.005f));
-        goblin->SetTags({ TAG_MAIN_CAMERA });
+        //goblin->SetTags({ TAG_MAIN_CAMERA });
         AddChild(goblin);
 
         auto text = std::make_shared<Text>();
