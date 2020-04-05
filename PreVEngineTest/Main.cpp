@@ -1092,7 +1092,7 @@ public:
     void Init() override
     {
         FontRenderComponentsFactory factory{};
-        m_fontComponent = factory.Create(AssetManager::Instance().GetAssetPath("Fonts/verdana.fnt"), AssetManager::Instance().GetAssetPath("Fonts/verdana.png"));
+        m_fontComponent = factory.Create(AssetManager::Instance().GetAssetPath("Fonts/verdana.fnt"), AssetManager::Instance().GetAssetPath("Fonts/verdana.png"), 16.0f / 9.0f);
 
         ComponentRepository<IFontRenderComponent>::Instance().Add(m_id, m_fontComponent);
 
@@ -1305,8 +1305,6 @@ public:
     void ShutDown() override
     {
         AbstractSceneNode::ShutDown();
-
-        ComponentRepository<IWaterOffscreenRenderPassComponent>::Instance().Remove(m_id);
 
         DestroyReflectionComponent();
     }
