@@ -3977,11 +3977,7 @@ private:
                     RenderContext customRenderContext{ cascade.frameBuffer, commandBuffer, renderContext.frameInFlightIndex, shadows->GetExtent() };
 
                     renderer->PreRender(customRenderContext, userData);
-
-                    for (auto child : root->GetChildren()) {
-                        renderer->Render(customRenderContext, child, userData);
-                    }
-
+                    renderer->Render(customRenderContext, root, userData);
                     renderer->PostRender(customRenderContext, userData);
 
                     VKERRCHECK(vkEndCommandBuffer(commandBuffer));
@@ -4002,11 +3998,7 @@ private:
                 auto& renderer = m_shadowRenderers.at(i);
 
                 renderer->PreRender(renderContext, userData);
-
-                for (auto child : root->GetChildren()) {
-                    renderer->Render(renderContext, child, userData);
-                }
-
+                renderer->Render(renderContext, root, userData);
                 renderer->PostRender(renderContext, userData);
             }
 
@@ -4065,11 +4057,7 @@ private:
                 RenderContext customRenderContext{ renderContext.frameBuffer, commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
 
                 renderer->PreRender(customRenderContext, userData);
-
-                for (auto child : root->GetChildren()) {
-                    renderer->Render(customRenderContext, child, userData);
-                }
-
+                renderer->Render(customRenderContext, root, userData);
                 renderer->PostRender(customRenderContext, userData);
 
                 VKERRCHECK(vkEndCommandBuffer(commandBuffer));
@@ -4090,11 +4078,7 @@ private:
             auto& renderer = m_reflectionRenderers.at(i);
 
             renderer->PreRender(renderContext, userData);
-
-            for (auto child : root->GetChildren()) {
-                renderer->Render(renderContext, child, userData);
-            }
-
+            renderer->Render(renderContext, root, userData);
             renderer->PostRender(renderContext, userData);
         }
 
@@ -4144,11 +4128,7 @@ private:
                 RenderContext customRenderContext{ renderContext.frameBuffer, commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
 
                 renderer->PreRender(customRenderContext, userData);
-
-                for (auto child : root->GetChildren()) {
-                    renderer->Render(customRenderContext, child, userData);
-                }
-
+                renderer->Render(customRenderContext, root, userData);                
                 renderer->PostRender(customRenderContext, userData);
 
                 VKERRCHECK(vkEndCommandBuffer(commandBuffer));
@@ -4169,11 +4149,7 @@ private:
             auto& renderer = m_refractionRenderers.at(i);
 
             renderer->PreRender(renderContext, userData);
-
-            for (auto child : root->GetChildren()) {
-                renderer->Render(renderContext, child, userData);
-            }
-
+            renderer->Render(renderContext, root, userData);
             renderer->PostRender(renderContext, userData);
         }
 
@@ -4224,11 +4200,7 @@ private:
                 RenderContext customRenderContext{ renderContext.frameBuffer, commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
 
                 renderer->PreRender(customRenderContext, userData);
-
-                for (auto child : root->GetChildren()) {
-                    renderer->Render(customRenderContext, child, userData);
-                }
-
+                renderer->Render(customRenderContext, root, userData);               
                 renderer->PostRender(customRenderContext, userData);
 
                 VKERRCHECK(vkEndCommandBuffer(commandBuffer));
@@ -4249,11 +4221,7 @@ private:
             auto& renderer = m_defaultRenderers.at(i);
 
             renderer->PreRender(renderContext, userData);
-
-            for (auto child : root->GetChildren()) {
-                renderer->Render(renderContext, child, userData);
-            }
-
+            renderer->Render(renderContext, root, userData);            
             renderer->PostRender(renderContext, userData);
         }
 
@@ -4289,9 +4257,7 @@ private:
                 RenderContext customRenderContext{ renderContext.frameBuffer, commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
 
                 renderer->PreRender(customRenderContext);
-
                 renderer->Render(customRenderContext, root);
-
                 renderer->PostRender(customRenderContext);
 
                 VKERRCHECK(vkEndCommandBuffer(commandBuffer));
@@ -4312,9 +4278,7 @@ private:
             auto& renderer = m_debugRenderers.at(i);
 
             renderer->PreRender(renderContext);
-
             renderer->Render(renderContext, root);
-
             renderer->PostRender(renderContext);
         }
 
