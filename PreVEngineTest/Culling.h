@@ -307,16 +307,19 @@ public:
     static bool Intersects(const Ray& ray, const AABB& box)
     {
         // TODO
+        throw std::runtime_error("Not implemented...");
     }
 
     static bool Intersects(const Ray& ray, const Sphere& sphere)
     {
         // TODO
+        throw std::runtime_error("Not implemented...");
     }
 
     static bool Intersects(const Ray& ray, const Plane& plane)
     {
         // TODO
+        throw std::runtime_error("Not implemented...");
     }
 };
 
@@ -395,24 +398,24 @@ public:
         int stepsY{ 1 };
 
         while (stepsY <= subDivY) {
-            const float sinY = std::sinf(glm::radians(curAngleY));
-            const float cosY = std::cosf(glm::radians(curAngleY));
+            const float sinY = sinf(glm::radians(curAngleY));
+            const float cosY = cosf(glm::radians(curAngleY));
             const glm::vec3 directionY(cosY, 0.0f, -sinY);
 
             const float nextAngleY = curAngleY + addAngleY;
-            const float nextSinY = std::sinf(glm::radians(nextAngleY));
-            const float nextCosY = std::cosf(glm::radians(nextAngleY));
+            const float nextSinY = sinf(glm::radians(nextAngleY));
+            const float nextCosY = cosf(glm::radians(nextAngleY));
             const glm::vec3 nextDirectionY(nextCosY, 0.0f, -nextSinY);
 
             float currentAngleZ = 0.0f;
             int stepsZ = 1;
             while (stepsZ <= subDivZ) {
-                const float sinZ = std::sinf(glm::radians(currentAngleZ));
-                const float cosZ = std::cosf(glm::radians(currentAngleZ));
+                const float sinZ = sinf(glm::radians(currentAngleZ));
+                const float cosZ = cosf(glm::radians(currentAngleZ));
 
                 const float nextAngleZ = currentAngleZ + addAngleZ;
-                const float nextSinZ = std::sinf(glm::radians(nextAngleZ));
-                const float nextCosZ = std::cosf(glm::radians(nextAngleZ));
+                const float nextSinZ = sinf(glm::radians(nextAngleZ));
+                const float nextCosZ = cosf(glm::radians(nextAngleZ));
 
                 const glm::vec3 quadPoints[] = {
                     { directionY.x * sinZ * radius, cosZ * radius, directionY.z * sinZ * radius },
