@@ -1285,17 +1285,20 @@ public:
 public:
     void Init() override
     {
-        WaterComponentFactory componentFactory{};
-        m_reflectionComponent = std::move(componentFactory.CreateOffScreenComponent(REFLECTION_MEASURES.x, REFLECTION_MEASURES.y));
-        m_reflectionComponent->Init();
-
-        ComponentRepository<IWaterOffscreenRenderPassComponent>::Instance().Add(m_id, m_reflectionComponent);
+        m_viewPortSize = m_previousViewPortSize;
+        CreateReflectionComponent();
 
         AbstractSceneNode::Init();
     }
 
     void Update(float deltaTime) override
     {
+        if (m_viewPortSize != m_previousViewPortSize) {
+            DestroyReflectionComponent();
+            CreateReflectionComponent();
+            m_previousViewPortSize = m_viewPortSize;
+        }
+
         AbstractSceneNode::Update(deltaTime);
     }
 
@@ -1305,11 +1308,42 @@ public:
 
         ComponentRepository<IWaterOffscreenRenderPassComponent>::Instance().Remove(m_id);
 
-        m_reflectionComponent->ShutDown();
+        DestroyReflectionComponent();
+    }
+
+public:
+    void operator()(const NewIterationEvent& newIterationEvent)
+    {
+        m_viewPortSize = glm::vec2(newIterationEvent.windowWidth, newIterationEvent.windowHeight);
+    }
+
+private:
+    void CreateReflectionComponent()
+    {
+        WaterComponentFactory componentFactory{};
+        m_reflectionComponent = std::move(componentFactory.CreateOffScreenComponent(m_viewPortSize.x / REFLECTION_EXTENT_DIVIDER, m_viewPortSize.y / REFLECTION_EXTENT_DIVIDER));
+        m_reflectionComponent->Init();
+
+        ComponentRepository<IWaterOffscreenRenderPassComponent>::Instance().Add(m_id, m_reflectionComponent);
+    }
+
+    void DestroyReflectionComponent()
+    {
+        if (m_reflectionComponent) {
+            ComponentRepository<IWaterOffscreenRenderPassComponent>::Instance().Remove(m_id);
+            m_reflectionComponent->ShutDown();
+        }
     }
 
 private:
     std::shared_ptr<IWaterOffscreenRenderPassComponent> m_reflectionComponent;
+
+    glm::uvec2 m_viewPortSize{ 0, 0 };
+
+    glm::uvec2 m_previousViewPortSize{ 1920, 1080 };
+
+private:
+    EventHandler<WaterReflection, NewIterationEvent> m_newIterationHandler{ *this };
 };
 
 class WaterRefraction : public AbstractSceneNode<SceneNodeFlags> {
@@ -1324,17 +1358,20 @@ public:
 public:
     void Init() override
     {
-        WaterComponentFactory componentFactory{};
-        m_refractionComponent = std::move(componentFactory.CreateOffScreenComponent(REFRACTION_MEASURES.x, REFRACTION_MEASURES.y));
-        m_refractionComponent->Init();
-
-        ComponentRepository<IWaterOffscreenRenderPassComponent>::Instance().Add(m_id, m_refractionComponent);
+        m_viewPortSize = m_previousViewPortSize;
+        CreateRefractionComponent();
 
         AbstractSceneNode::Init();
     }
 
     void Update(float deltaTime) override
     {
+        if (m_viewPortSize != m_previousViewPortSize) {
+            DestroyRefractionComponent();
+            CreateRefractionComponent();
+            m_previousViewPortSize = m_viewPortSize;
+        }
+
         AbstractSceneNode::Update(deltaTime);
     }
 
@@ -1342,13 +1379,42 @@ public:
     {
         AbstractSceneNode::ShutDown();
 
-        ComponentRepository<IWaterOffscreenRenderPassComponent>::Instance().Remove(m_id);
+        DestroyRefractionComponent();
+    }
 
-        m_refractionComponent->ShutDown();
+public:
+    void operator()(const NewIterationEvent& newIterationEvent)
+    {
+        m_viewPortSize = glm::vec2(newIterationEvent.windowWidth, newIterationEvent.windowHeight);
+    }
+
+private:
+    void CreateRefractionComponent()
+    {
+        WaterComponentFactory componentFactory{};
+        m_refractionComponent = std::move(componentFactory.CreateOffScreenComponent(m_viewPortSize.x / REFRACTION_EXTENT_DIVIDER, m_viewPortSize.y / REFRACTION_EXTENT_DIVIDER));
+        m_refractionComponent->Init();
+
+        ComponentRepository<IWaterOffscreenRenderPassComponent>::Instance().Add(m_id, m_refractionComponent);
+    }
+
+    void DestroyRefractionComponent()
+    {
+        if (m_refractionComponent) {
+            ComponentRepository<IWaterOffscreenRenderPassComponent>::Instance().Remove(m_id);
+            m_refractionComponent->ShutDown();
+        }
     }
 
 private:
     std::shared_ptr<IWaterOffscreenRenderPassComponent> m_refractionComponent;
+
+    glm::uvec2 m_viewPortSize{ 0, 0 };
+
+    glm::uvec2 m_previousViewPortSize{ 1920, 1080 };
+
+private:
+    EventHandler<WaterRefraction, NewIterationEvent> m_newIterationHandler{ *this };
 };
 
 class Water : public AbstractSceneNode<SceneNodeFlags> {
@@ -1726,8 +1792,8 @@ public:
     void Init() override
     {
         // Init scene nodes
-        auto rayCaster = std::make_shared<RyaCasterNode>();
-        AddChild(rayCaster);
+        //auto rayCaster = std::make_shared<RyaCasterNode>();
+        //AddChild(rayCaster);
 
         auto skyBox = std::make_shared<SkyBox>();
         AddChild(skyBox);

@@ -4028,20 +4028,20 @@ private:
         const glm::vec3 newCameraPosition{ cameraPosition.x, cameraPosition.y - cameraPositionOffset, cameraPosition.z };
         const glm::vec3 newCameraViewPosition{ cameraViewPosition.x, cameraViewPosition.y + cameraViewOffset, cameraViewPosition.z };
         const glm::mat4 viewMatrix = glm::lookAt(newCameraPosition, newCameraViewPosition, cameraComponent->GetUpDirection());
-        const glm::mat4 projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(REFLECTION_MEASURES.x, REFLECTION_MEASURES.y);
+        const glm::mat4 projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(reflectionComponent->GetExtent().width, reflectionComponent->GetExtent().height);
 
         NormalRenderContextUserData userData{
             viewMatrix,
             projectionMatrix,
             newCameraPosition,
             glm::vec4(0.0f, 1.0f, 0.0f, -WATER_LEVEL + WATER_CLIP_PLANE_OFFSET),
-            { REFLECTION_MEASURES.x, REFLECTION_MEASURES.y },
+            reflectionComponent->GetExtent(),
             glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane()),
             Frustum{ projectionMatrix, viewMatrix }
         };
 
 #ifdef PARALLEL_RENDERING
-        reflectionComponent->GetRenderPass()->Begin(reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, { { 0, 0 }, { REFLECTION_MEASURES.x, REFLECTION_MEASURES.y } }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+        reflectionComponent->GetRenderPass()->Begin(reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, { { 0, 0 }, reflectionComponent->GetExtent() }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
         const auto& commandBuffers = m_reflectionCommandBufferGroups->GetBuffersGroup(renderContext.frameInFlightIndex);
 
@@ -4084,7 +4084,7 @@ private:
 
         reflectionComponent->GetRenderPass()->End(renderContext.commandBuffer);
 #else
-        reflectionComponent->GetRenderPass()->Begin(reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, { { 0, 0 }, { REFLECTION_MEASURES.x, REFLECTION_MEASURES.y } });
+        reflectionComponent->GetRenderPass()->Begin(reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, { { 0, 0 }, reflectionComponent->GetExtent() });
 
         for (size_t i = 0; i < m_reflectionRenderers.size(); i++) {
             auto& renderer = m_reflectionRenderers.at(i);
@@ -4108,13 +4108,13 @@ private:
         const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
         const auto viewMatrix = cameraComponent->LookAt();
-        const auto projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(REFRACTION_MEASURES.x, REFRACTION_MEASURES.y);
+        const auto projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(refractionComponent->GetExtent().width, refractionComponent->GetExtent().height);
         NormalRenderContextUserData userData{
             viewMatrix,
             projectionMatrix,
             cameraComponent->GetPosition(),
             glm::vec4(0.0f, -1.0f, 0.0f, WATER_LEVEL + WATER_CLIP_PLANE_OFFSET),
-            { REFRACTION_MEASURES.x, REFRACTION_MEASURES.y },
+            refractionComponent->GetExtent(),
             glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane()),
             Frustum{ projectionMatrix, viewMatrix }
         };
@@ -4122,7 +4122,7 @@ private:
 #ifdef PARALLEL_RENDERING
         const auto& commandBuffers = m_refractionCommandBufferGroups->GetBuffersGroup(renderContext.frameInFlightIndex);
 
-        refractionComponent->GetRenderPass()->Begin(refractionComponent->GetFrameBuffer(), renderContext.commandBuffer, { { 0, 0 }, { REFRACTION_MEASURES.x, REFRACTION_MEASURES.y } }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+        refractionComponent->GetRenderPass()->Begin(refractionComponent->GetFrameBuffer(), renderContext.commandBuffer, { { 0, 0 }, refractionComponent->GetExtent() }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
         std::vector<std::future<void> > tasks;
         for (size_t i = 0; i < m_refractionRenderers.size(); i++) {
@@ -4163,7 +4163,7 @@ private:
 
         refractionComponent->GetRenderPass()->End(renderContext.commandBuffer);
 #else
-        refractionComponent->GetRenderPass()->Begin(refractionComponent->GetFrameBuffer(), renderContext.commandBuffer, { { 0, 0 }, { REFRACTION_MEASURES.x, REFRACTION_MEASURES.y } });
+        refractionComponent->GetRenderPass()->Begin(refractionComponent->GetFrameBuffer(), renderContext.commandBuffer, { { 0, 0 }, refractionComponent->GetExtent() });
 
         for (size_t i = 0; i < m_refractionRenderers.size(); i++) {
             auto& renderer = m_refractionRenderers.at(i);
