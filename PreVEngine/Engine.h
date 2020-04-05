@@ -58,13 +58,13 @@ private:
 private:
     std::shared_ptr<EngineConfig> m_config;
 
-    std::shared_ptr<Clock<float> > m_clock;
+    std::unique_ptr<Clock<float> > m_clock;
 
-    std::shared_ptr<FPSService> m_fpsService;
+    std::unique_ptr<FPSService> m_fpsService;
 
-    std::shared_ptr<Instance> m_instance;
+    std::unique_ptr<Instance> m_instance;
 
-    std::shared_ptr<Window> m_window;
+    std::unique_ptr<Window> m_window;
 
     std::shared_ptr<Device> m_device;
 
@@ -83,21 +83,21 @@ public:
 private:
     void InitTiming()
     {
-        m_clock = std::make_shared<Clock<float> >();
-        m_fpsService = std::make_shared<FPSService>();
+        m_clock = std::make_unique<Clock<float> >();
+        m_fpsService = std::make_unique<FPSService>();
     }
 
     void InitInstance()
     {
-        m_instance = std::make_shared<Instance>(m_config->validation);
+        m_instance = std::make_unique<Instance>(m_config->validation);
     }
 
     void InitWindow()
     {
         if (m_config->fullScreen) {
-            m_window = std::make_shared<Window>(m_config->appName.c_str());
+            m_window = std::make_unique<Window>(m_config->appName.c_str());
         } else {
-            m_window = std::make_shared<Window>(m_config->appName.c_str(), m_config->windowSize.width, m_config->windowSize.height);
+            m_window = std::make_unique<Window>(m_config->appName.c_str(), m_config->windowSize.width, m_config->windowSize.height);
             m_window->SetPosition(m_config->windowPosition);
         }
     }
@@ -152,6 +152,8 @@ public:
 
             m_clock->UpdateClock();
             float deltaTime = m_clock->GetDelta();
+
+            EventChannel::Broadcast(NewIterationEvent{ deltaTime, m_window->GetSize().width, m_window->GetSize().height });
 
             if (m_window->HasFocus()) {
                 m_scene->Update(deltaTime);

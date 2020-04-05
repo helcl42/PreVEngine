@@ -1478,8 +1478,7 @@ public:
         const auto lightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
         const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
-        // TODO fix aspect ratio -> is should not be hardcoded
-        m_lensFlareComponent->Update(cameraComponent->GetViewFrustum().CreateProjectionMatrix(1920.0f / 1080.0f), cameraComponent->LookAt(), cameraComponent->GetPosition(), lightComponent->GetPosition());
+        m_lensFlareComponent->Update(cameraComponent->GetViewFrustum().CreateProjectionMatrix(m_viewPortSize.x / m_viewPortSize.y), cameraComponent->LookAt(), cameraComponent->GetPosition(), lightComponent->GetPosition());
 
         AbstractSceneNode::Update(deltaTime);
     }
@@ -1491,8 +1490,19 @@ public:
         ComponentRepository<ILensFlareComponent>::Instance().Remove(m_id);
     }
 
+public:
+    void operator()(const NewIterationEvent& newIterationEvent)
+    {
+        m_viewPortSize = glm::vec2(newIterationEvent.windowWidth, newIterationEvent.windowHeight);
+    }
+
 private:
     std::shared_ptr<ILensFlareComponent> m_lensFlareComponent;
+
+    glm::vec2 m_viewPortSize;
+
+private:
+    EventHandler<LensFlare, NewIterationEvent> m_newIterationHandler{ *this };
 };
 
 class Sun : public AbstractSceneNode<SceneNodeFlags> {
@@ -1520,8 +1530,7 @@ public:
         const auto lightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
         const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
-        // TODO fix aspect ratio -> is should not be hardcoded
-        m_sunComponent->Update(cameraComponent->GetViewFrustum().CreateProjectionMatrix(1920.0f / 1080.0f), cameraComponent->LookAt(), cameraComponent->GetPosition(), lightComponent->GetPosition());
+        m_sunComponent->Update(cameraComponent->GetViewFrustum().CreateProjectionMatrix(m_viewPortSize.x / m_viewPortSize.y), cameraComponent->LookAt(), cameraComponent->GetPosition(), lightComponent->GetPosition());
 
         AbstractSceneNode::Update(deltaTime);
     }
@@ -1533,8 +1542,19 @@ public:
         ComponentRepository<ISunComponent>::Instance().Remove(m_id);
     }
 
+public:
+    void operator()(const NewIterationEvent& newIterationEvent)
+    {
+        m_viewPortSize = glm::vec2(newIterationEvent.windowWidth, newIterationEvent.windowHeight);
+    }
+
 private:
     std::shared_ptr<ISunComponent> m_sunComponent;
+
+    glm::vec2 m_viewPortSize;
+
+private:
+    EventHandler<Sun, NewIterationEvent> m_newIterationHandler{ *this };
 };
 
 class Stone : public AbstractSceneNode<SceneNodeFlags> {
@@ -1654,13 +1674,9 @@ public:
 
     void Update(float deltaTime) override
     {
-        // TODO !!!
-        const uint32_t viewPortWidth{ 1920 };
-        const uint32_t viewPortHeight{ 1080 };
-
         const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
-        m_rayCasterComponent->SetViewPortDimensions({ viewPortWidth, viewPortHeight });
-        m_rayCasterComponent->SetProjectionMatrix(cameraComponent->GetViewFrustum().CreateProjectionMatrix(static_cast<float>(viewPortWidth) / static_cast<float>(viewPortHeight)));
+        m_rayCasterComponent->SetViewPortDimensions(m_viewPortSize);
+        m_rayCasterComponent->SetProjectionMatrix(cameraComponent->GetViewFrustum().CreateProjectionMatrix(m_viewPortSize.x / m_viewPortSize.y));
         m_rayCasterComponent->SetViewMatrix(cameraComponent->LookAt());
         m_rayCasterComponent->SetRayStartPosition(cameraComponent->GetPosition());
         m_rayCasterComponent->Update(deltaTime);
@@ -1673,8 +1689,19 @@ public:
         ComponentRepository<IRayCasterComponent>::Instance().Remove(m_id);
     }
 
+public:
+    void operator()(const NewIterationEvent& newIterationEvent)
+    {
+        m_viewPortSize = glm::vec2(newIterationEvent.windowWidth, newIterationEvent.windowHeight);
+    }
+
 private:
     std::shared_ptr<IRayCasterComponent> m_rayCasterComponent;
+
+    glm::vec2 m_viewPortSize;
+
+private:
+    EventHandler<RyaCasterNode, NewIterationEvent> m_newIterationHandler{ *this };
 };
 
 class RootSceneNode : public AbstractSceneNode<SceneNodeFlags> {
@@ -1754,8 +1781,8 @@ public:
         auto text = std::make_shared<Text>();
         AddChild(text);
 
-        const uint32_t TERRAIN_GRID_MAX_X = 12;
-        const uint32_t TERRAIN_GRID_MAX_Z = 12;
+        const uint32_t TERRAIN_GRID_MAX_X = 6;
+        const uint32_t TERRAIN_GRID_MAX_Z = 6;
 
         auto terrainManager = std::make_shared<TerrainManager>(TERRAIN_GRID_MAX_X, TERRAIN_GRID_MAX_Z);
         AddChild(terrainManager);
