@@ -14,6 +14,7 @@
 
 #include "General.h"
 #include "Culling.h"
+#include "RayCasting.h"
 #include "Font.h"
 #include "Mesh.h"
 #include "Animation.h"
@@ -289,7 +290,7 @@ public:
         std::shared_ptr<IRenderComponent> cubeComponent = renderComponentFactory.CreateCubeRenderComponent(m_texturePath, true, true);
 
         ComponentRepository<IRenderComponent>::Instance().Add(m_id, cubeComponent);
-        
+
         BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(cubeComponent->GetModel()->GetMesh()->GetVertices());
         ComponentRepository<IBoundingVolumeComponent>::Instance().Add(m_id, m_boundingVolumeComponent);
@@ -1631,6 +1632,51 @@ private:
     std::shared_ptr<IShadowsComponent> m_shadowsCompoent;
 };
 
+class RyaCasterNode : public AbstractSceneNode<SceneNodeFlags> {
+public:
+    RyaCasterNode()
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{})
+    {
+    }
+
+    ~RyaCasterNode() = default;
+
+public:
+    void Init() override
+    {
+        RayCasterComponentFactory raycasterFactory{};
+        m_rayCasterComponent = raycasterFactory.Create();
+
+        ComponentRepository<IRayCasterComponent>::Instance().Add(m_id, m_rayCasterComponent);
+
+        AbstractSceneNode::Init();
+    }
+
+    void Update(float deltaTime) override
+    {
+        // TODO !!!
+        const uint32_t viewPortWidth{ 1920 };
+        const uint32_t viewPortHeight{ 1080 };
+
+        const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+        m_rayCasterComponent->SetViewPortDimensions({ viewPortWidth, viewPortHeight });
+        m_rayCasterComponent->SetProjectionMatrix(cameraComponent->GetViewFrustum().CreateProjectionMatrix(static_cast<float>(viewPortWidth) / static_cast<float>(viewPortHeight)));
+        m_rayCasterComponent->SetViewMatrix(cameraComponent->LookAt());
+        m_rayCasterComponent->SetRayStartPosition(cameraComponent->GetPosition());
+        m_rayCasterComponent->Update(deltaTime);
+    }
+
+    void ShutDown() override
+    {
+        AbstractSceneNode::ShutDown();
+
+        ComponentRepository<IRayCasterComponent>::Instance().Remove(m_id);
+    }
+
+private:
+    std::shared_ptr<IRayCasterComponent> m_rayCasterComponent;
+};
+
 class RootSceneNode : public AbstractSceneNode<SceneNodeFlags> {
 private:
     EventHandler<RootSceneNode, KeyEvent> m_keyEventHnadler{ *this };
@@ -1638,7 +1684,7 @@ private:
     EventHandler<RootSceneNode, TouchEvent> m_touchEventHnadler{ *this };
 
 private:
-    std::unique_ptr<IRenderer<DefaultRenderContextUserData>> m_masterRenderer;
+    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_masterRenderer;
 
 public:
     RootSceneNode(const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Swapchain>& swapchain)
@@ -1653,6 +1699,9 @@ public:
     void Init() override
     {
         // Init scene nodes
+        auto rayCaster = std::make_shared<RyaCasterNode>();
+        AddChild(rayCaster);
+
         auto skyBox = std::make_shared<SkyBox>();
         AddChild(skyBox);
 
@@ -1660,17 +1709,17 @@ public:
         sunLight->SetTags({ TAG_MAIN_LIGHT, TAG_LIGHT });
         AddChild(sunLight);
 
-//        auto light1 = std::make_shared<Light>(glm::vec3(30.0f, 20.0f, 35.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-//        light1->SetTags({ TAG_LIGHT });
-//        AddChild(light1);
-//
-//        auto light2 = std::make_shared<Light>(glm::vec3(-30.0f, 20.0f, 35.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-//        light2->SetTags({ TAG_LIGHT });
-//        AddChild(light2);
-//
-//        auto light3 = std::make_shared<Light>(glm::vec3(0.0f, 10.0f, -10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-//        light3->SetTags({ TAG_LIGHT });
-//        AddChild(light3);
+        //        auto light1 = std::make_shared<Light>(glm::vec3(30.0f, 20.0f, 35.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        //        light1->SetTags({ TAG_LIGHT });
+        //        AddChild(light1);
+        //
+        //        auto light2 = std::make_shared<Light>(glm::vec3(-30.0f, 20.0f, 35.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        //        light2->SetTags({ TAG_LIGHT });
+        //        AddChild(light2);
+        //
+        //        auto light3 = std::make_shared<Light>(glm::vec3(0.0f, 10.0f, -10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        //        light3->SetTags({ TAG_LIGHT });
+        //        AddChild(light3);
 
         auto shadows = std::make_shared<Shadows>();
         shadows->SetTags({ TAG_SHADOW });
@@ -1705,8 +1754,8 @@ public:
         auto text = std::make_shared<Text>();
         AddChild(text);
 
-        const uint32_t TERRAIN_GRID_MAX_X = 6;
-        const uint32_t TERRAIN_GRID_MAX_Z = 6;
+        const uint32_t TERRAIN_GRID_MAX_X = 12;
+        const uint32_t TERRAIN_GRID_MAX_Z = 12;
 
         auto terrainManager = std::make_shared<TerrainManager>(TERRAIN_GRID_MAX_X, TERRAIN_GRID_MAX_Z);
         AddChild(terrainManager);
@@ -1732,11 +1781,11 @@ public:
         const uint32_t STONES_COUNT = 5;
         for (uint32_t i = 0; i < STONES_COUNT; i++) {
             const auto x = positionDistribution(positionRandom);
-            const auto z = positionDistribution(positionRandom);            
+            const auto z = positionDistribution(positionRandom);
             auto stone = std::make_shared<Stone>(glm::vec3(x, 0.0f, z), glm::quat(glm::vec3(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f)))), glm::vec3(scaleDistribution(scaleRandom)));
             AddChild(stone);
         }
-        
+
         for (auto child : m_children) {
             child->Init();
         }

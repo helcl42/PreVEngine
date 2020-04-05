@@ -567,6 +567,32 @@ public:
 
         return frustumCorners;
     }
+
+    static glm::vec2 FromViewPortSpaceToNormalizedDeviceSpace(const glm::vec2& viewPortDimensions, const glm::vec2& viewPortCoords)
+    {
+        const float x = (2.0f * viewPortCoords.x) / viewPortDimensions.x - 1.0f;
+        const float y = (2.0f * viewPortCoords.y) / viewPortDimensions.y - 1.0f;
+        return glm::vec2(x, -y);
+    }
+
+    static glm::vec4 FromNormalizedDeviceSpaceToClipSpace(const glm::vec2& normalizedDeviceSpaceCorrds)
+    {
+        return glm::vec4(normalizedDeviceSpaceCorrds.x, normalizedDeviceSpaceCorrds.y, -1.0f, 1.0f);
+    }
+
+    static glm::vec4 FromClipSpaceToCameraSpace(const glm::mat4& projectionMatrix, const glm::vec4& clipSpaceCoords)
+    {
+        const glm::mat4 invertedProjectionMatrix = glm::inverse(projectionMatrix);
+        const glm::vec4 eyeCoords = invertedProjectionMatrix * clipSpaceCoords;
+        return glm::vec4(eyeCoords.x, eyeCoords.y, -1.0f, 0.0f);
+    }
+
+    static glm::vec3 FromCameraSpaceToWorldSpace(const glm::mat4& viewMatrix, const glm::vec4& cameraSpaceCoords)
+    {
+        const glm::mat4 invertedVieMatrix = glm::inverse(viewMatrix);
+        const glm::vec4 worldCoords = invertedVieMatrix * cameraSpaceCoords;
+        return glm::vec3(worldCoords.x, worldCoords.y, worldCoords.z);
+    }
 };
 
 class IDGenerator final : public Singleton<IDGenerator> {
