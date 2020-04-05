@@ -151,7 +151,7 @@ public:
             EventChannel::DispatchAll();
 
             m_clock->UpdateClock();
-            float deltaTime = m_clock->GetDelta();
+            const auto deltaTime = m_clock->GetDelta();
 
             EventChannel::Broadcast(NewIterationEvent{ deltaTime, m_window->GetSize().width, m_window->GetSize().height });
 
