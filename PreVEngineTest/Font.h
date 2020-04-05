@@ -320,7 +320,7 @@ private:
     }
 
 public:
-    std::unique_ptr<FontMetadata> CreateFontMetadata(const std::string& metadataFilePath, const std::string& textureFilePath, const int desiredPadding = 0, const float aspectRatio = 16.0f / 9.0f) const
+    std::unique_ptr<FontMetadata> CreateFontMetadata(const std::string& metadataFilePath, const std::string& textureFilePath, const float aspectRatio = 16.0f / 9.0f, const int desiredPadding = 0) const
     {
         MetaDataFile metaDataFile{ metadataFilePath };
 
@@ -903,10 +903,10 @@ public:
 
 class FontRenderComponentsFactory {
 public:
-    std::unique_ptr<IFontRenderComponent> Create(const std::string& fontPath, const std::string& fontTexture) const
+    std::unique_ptr<IFontRenderComponent> Create(const std::string& fontPath, const std::string& fontTexture, const float aspectRatio) const
     {
         FontMetadataFactory fontFactory{};
-        auto fontMetaData = fontFactory.CreateFontMetadata(fontPath, fontTexture);
+        auto fontMetaData = fontFactory.CreateFontMetadata(fontPath, fontTexture, aspectRatio);
 
         return std::make_unique<DefaultFontRenderComponent>(std::move(fontMetaData));
     }
