@@ -804,10 +804,10 @@ public:
             m_pitchDiff = 0.0f;
         }
 
+        m_transformComponent->Update(deltaTime);
+
         const glm::vec3 cameraPosition = m_transformComponent->GetPosition() + (-m_cameraComponent->GetForwardDirection() * m_distanceFromPerson) + glm::vec3(0.0f, 8.0f, 0.0f);
         m_cameraComponent->SetPosition(cameraPosition);
-
-        m_transformComponent->Update(deltaTime);
 
         m_boundingVolumeComponent->Update(m_transformComponent->GetWorldTransformScaled());
 
