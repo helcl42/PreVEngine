@@ -120,20 +120,21 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);
             }
 
-            auto renderComponent = ComponentRepository<IRenderComponent>::Instance().Get(node->GetId());
+            const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
+            const auto renderComponent = ComponentRepository<IRenderComponent>::Instance().Get(node->GetId());            
             if (renderComponent->CastsShadows() && visible) {
                 auto ubo = m_uniformsPool->GetNext();
 
                 Uniforms uniforms{};
                 uniforms.projectionMatrix = shadowsRenderContext.projectionMatrix;
                 uniforms.viewMatrix = shadowsRenderContext.viewMatrix;
-                uniforms.modelMatrix = node->GetWorldTransformScaled();
+                uniforms.modelMatrix = transformComponent->GetWorldTransformScaled();
                 ubo->Update(&uniforms);
 
                 m_shader->Bind("ubo", *ubo);
@@ -241,20 +242,21 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_NORMAL_MAPPED_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_NORMAL_MAPPED_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);
             }
 
-            auto renderComponent = ComponentRepository<IRenderComponent>::Instance().Get(node->GetId());
+            const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
+            const auto renderComponent = ComponentRepository<IRenderComponent>::Instance().Get(node->GetId());
             if (renderComponent->CastsShadows() && visible) {
                 auto ubo = m_uniformsPool->GetNext();
 
                 Uniforms uniforms{};
                 uniforms.projectionMatrix = shadowsRenderContext.projectionMatrix;
                 uniforms.viewMatrix = shadowsRenderContext.viewMatrix;
-                uniforms.modelMatrix = node->GetWorldTransformScaled();
+                uniforms.modelMatrix = transformComponent->GetWorldTransformScaled();
                 ubo->Update(&uniforms);
 
                 m_shader->Bind("ubo", *ubo);
@@ -362,20 +364,21 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);
             }
 
             if (visible) {
+                const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
                 const auto terrainComponent = ComponentRepository<ITerrainComponenet>::Instance().Get(node->GetId());
                 auto ubo = m_uniformsPool->GetNext();
 
                 Uniforms uniforms{};
                 uniforms.projectionMatrix = shadowsRenderContext.projectionMatrix;
                 uniforms.viewMatrix = shadowsRenderContext.viewMatrix;
-                uniforms.modelMatrix = node->GetWorldTransformScaled();
+                uniforms.modelMatrix = transformComponent->GetWorldTransformScaled();
                 ubo->Update(&uniforms);
 
                 m_shader->Bind("ubo", *ubo);
@@ -483,20 +486,21 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);
             }
 
             if (visible) {
+                const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
                 const auto terrainComponent = ComponentRepository<ITerrainComponenet>::Instance().Get(node->GetId());
                 auto ubo = m_uniformsPool->GetNext();
 
                 Uniforms uniforms{};
                 uniforms.projectionMatrix = shadowsRenderContext.projectionMatrix;
                 uniforms.viewMatrix = shadowsRenderContext.viewMatrix;
-                uniforms.modelMatrix = node->GetWorldTransformScaled();
+                uniforms.modelMatrix = transformComponent->GetWorldTransformScaled();
                 ubo->Update(&uniforms);
 
                 m_shader->Bind("ubo", *ubo);
@@ -605,13 +609,14 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_RENDER_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);
             }
 
-            auto renderComponent = ComponentRepository<IAnimationRenderComponent>::Instance().Get(node->GetId());
+            const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
+            const auto renderComponent = ComponentRepository<IAnimationRenderComponent>::Instance().Get(node->GetId());
             if (renderComponent->CastsShadows() && visible) {
                 auto ubo = m_uniformsPool->GetNext();
 
@@ -622,7 +627,7 @@ public:
                 }
                 uniforms.projectionMatrix = shadowsRenderContext.projectionMatrix;
                 uniforms.viewMatrix = shadowsRenderContext.viewMatrix;
-                uniforms.modelMatrix = node->GetWorldTransformScaled();
+                uniforms.modelMatrix = transformComponent->GetWorldTransformScaled();
                 ubo->Update(&uniforms);
 
                 m_shader->Bind("ubo", *ubo);
@@ -731,14 +736,14 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderUserData.frustum);
             }
 
-            auto renderComponent = ComponentRepository<IAnimationRenderComponent>::Instance().Get(node->GetId());
-
+            const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
+            const auto renderComponent = ComponentRepository<IAnimationRenderComponent>::Instance().Get(node->GetId());
             if (renderComponent->CastsShadows() && visible) {
                 auto ubo = m_uniformsPool->GetNext();
 
@@ -749,7 +754,7 @@ public:
                 }
                 uniforms.projectionMatrix = shadowsRenderUserData.projectionMatrix;
                 uniforms.viewMatrix = shadowsRenderUserData.viewMatrix;
-                uniforms.modelMatrix = node->GetWorldTransformScaled();
+                uniforms.modelMatrix = transformComponent->GetWorldTransformScaled();
                 ubo->Update(&uniforms);
 
                 m_shader->Bind("ubo", *ubo);
@@ -1357,7 +1362,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
@@ -1368,6 +1373,7 @@ public:
                 const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
                 const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
+                const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
                 const auto nodeRenderComponent = ComponentRepository<IRenderComponent>::Instance().Get(node->GetId());
 
                 auto uboVS = m_uniformsPoolVS->GetNext();
@@ -1375,8 +1381,8 @@ public:
                 UniformsVS uniformsVS{};
                 uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
                 uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
-                uniformsVS.modelMatrix = node->GetWorldTransformScaled();
-                uniformsVS.normalMatrix = glm::inverse(node->GetWorldTransformScaled());
+                uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
+                uniformsVS.normalMatrix = glm::inverse(transformComponent->GetWorldTransformScaled());
                 uniformsVS.textureNumberOfRows = nodeRenderComponent->GetMaterial()->GetAtlasNumberOfRows();
                 uniformsVS.textureOffset = glm::vec4(nodeRenderComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
                 uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
@@ -1621,7 +1627,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_NORMAL_MAPPED_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_NORMAL_MAPPED_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
@@ -1632,6 +1638,7 @@ public:
                 const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
                 const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
+                const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
                 const auto nodeRenderComponent = ComponentRepository<IRenderComponent>::Instance().Get(node->GetId());
 
                 auto uboVS = m_uniformsPoolVS->GetNext();
@@ -1639,8 +1646,8 @@ public:
                 UniformsVS uniformsVS{};
                 uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
                 uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
-                uniformsVS.modelMatrix = node->GetWorldTransformScaled();
-                uniformsVS.normalMatrix = glm::inverse(node->GetWorldTransformScaled());
+                uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
+                uniformsVS.normalMatrix = glm::inverse(transformComponent->GetWorldTransformScaled());
                 uniformsVS.textureNumberOfRows = nodeRenderComponent->GetMaterial()->GetAtlasNumberOfRows();
                 uniformsVS.textureOffset = glm::vec4(nodeRenderComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
                 uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
@@ -1888,7 +1895,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_RENDER_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
@@ -1899,6 +1906,7 @@ public:
                 const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
                 const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
+                const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
                 const auto nodeRenderComponent = ComponentRepository<IAnimationRenderComponent>::Instance().Get(node->GetId());
 
                 auto uboVS = m_uniformsPoolVS->GetNext();
@@ -1910,8 +1918,8 @@ public:
                 }
                 uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
                 uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
-                uniformsVS.modelMatrix = node->GetWorldTransformScaled();
-                uniformsVS.normalMatrix = glm::inverse(node->GetWorldTransformScaled());
+                uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
+                uniformsVS.normalMatrix = glm::inverse(transformComponent->GetWorldTransformScaled());
                 uniformsVS.textureNumberOfRows = nodeRenderComponent->GetMaterial()->GetAtlasNumberOfRows();
                 uniformsVS.textureOffset = glm::vec4(nodeRenderComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
                 uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
@@ -2158,7 +2166,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
             
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
@@ -2170,6 +2178,7 @@ public:
                 const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
                 const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
+                const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
                 const auto nodeRenderComponent = ComponentRepository<IAnimationRenderComponent>::Instance().Get(node->GetId());
 
                 auto uboVS = m_uniformsPoolVS->GetNext();
@@ -2181,8 +2190,8 @@ public:
                 }
                 uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
                 uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
-                uniformsVS.modelMatrix = node->GetWorldTransformScaled();
-                uniformsVS.normalMatrix = glm::inverse(node->GetWorldTransformScaled());
+                uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
+                uniformsVS.normalMatrix = glm::inverse(transformComponent->GetWorldTransformScaled());
                 uniformsVS.textureNumberOfRows = nodeRenderComponent->GetMaterial()->GetAtlasNumberOfRows();
                 uniformsVS.textureOffset = glm::vec4(nodeRenderComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
                 uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
@@ -2429,7 +2438,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags> { SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
@@ -2440,6 +2449,7 @@ public:
                 const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
                 const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
+                const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
                 const auto terrainComponent = ComponentRepository<ITerrainComponenet>::Instance().Get(node->GetId());
 
                 auto uboVS = m_uniformsPoolVS->GetNext();
@@ -2447,8 +2457,8 @@ public:
                 UniformsVS uniformsVS{};
                 uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
                 uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
-                uniformsVS.modelMatrix = node->GetWorldTransformScaled();
-                uniformsVS.normalMatrix = glm::inverse(node->GetWorldTransformScaled());
+                uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
+                uniformsVS.normalMatrix = glm::inverse(transformComponent->GetWorldTransformScaled());
                 uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
                 for (size_t i = 0; i < lightComponents.size(); i++) {
                     uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
@@ -2700,7 +2710,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
@@ -2711,6 +2721,7 @@ public:
                 const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
                 const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
+                const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
                 const auto terrainComponent = ComponentRepository<ITerrainComponenet>::Instance().Get(node->GetId());
 
                 auto uboVS = m_uniformsPoolVS->GetNext();
@@ -2718,8 +2729,8 @@ public:
                 UniformsVS uniformsVS{};
                 uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
                 uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
-                uniformsVS.modelMatrix = node->GetWorldTransformScaled();
-                uniformsVS.normalMatrix = glm::inverse(node->GetWorldTransformScaled());
+                uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
+                uniformsVS.normalMatrix = glm::inverse(transformComponent->GetWorldTransformScaled());
                 uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
                 for (size_t i = 0; i < lightComponents.size(); i++) {
                     uniformsVS.lightning.lights[i] = LightUniform(renderContextUserData.viewMatrix * glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
@@ -3036,7 +3047,8 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SKYBOX_RENDER_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SKYBOX_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
+            const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
             const auto skyBoxComponent = ComponentRepository<ISkyBoxComponent>::Instance().Get(node->GetId());
 
             auto uboVS = m_uniformsPoolVS->GetNext();
@@ -3044,7 +3056,7 @@ public:
             UniformsVS uniformsVS{};
             uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
             uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
-            uniformsVS.modelMatrix = node->GetWorldTransformScaled();
+            uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
 
             // TODO should we use CLIP_PLANE here?
 
@@ -3207,7 +3219,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_RENDER_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
@@ -3217,16 +3229,17 @@ public:
                 const auto waterComponent = ComponentRepository<IWaterComponent>::Instance().Get(node->GetId());
                 const auto waterReflectionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
                 const auto waterRefractionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
-
                 const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
                 const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+
+                const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
 
                 auto uboVS = m_uniformsPoolVS->GetNext();
 
                 UniformsVS uniformsVS{};
                 uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
                 uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
-                uniformsVS.modelMatrix = node->GetWorldTransformScaled();
+                uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
                 uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
                 uniformsVS.density = FOG_DENSITY;
                 uniformsVS.gradient = FOG_GRADIENT;
@@ -3389,7 +3402,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SUN_RENDER_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SUN_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
             const auto sunComponent = ComponentRepository<ISunComponent>::Instance().Get(node->GetId());
 
             const float xScale = sunComponent->GetFlare()->GetScale();

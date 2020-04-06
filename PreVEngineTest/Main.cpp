@@ -271,12 +271,12 @@ std::map<std::string, std::shared_ptr<Image> > RenderComponentFactory::s_imagesC
 // SCENE
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 class AbstractCubeRobotSceneNode : public AbstractSceneNode<SceneNodeFlags> {
-protected:
-    const std::string m_texturePath;
-
 public:
     AbstractCubeRobotSceneNode(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT }, position, orientation, scale)
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })
+        , m_initialPosition(position)
+        , m_initialOrientation(orientation)
+        , m_initialScale(scale)
         , m_texturePath(texturePath)
     {
     }
@@ -295,12 +295,20 @@ public:
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(cubeComponent->GetModel()->GetMesh()->GetVertices());
         ComponentRepository<IBoundingVolumeComponent>::Instance().Add(m_id, m_boundingVolumeComponent);
 
+        TrasnformComponentFactory trasformComponentFactory{};
+        m_transformComponent = trasformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
+        if (ComponentRepository<ITransformComponent>::Instance().Contains(GetParent()->GetId())) {
+            m_transformComponent->SetParent(ComponentRepository<ITransformComponent>::Instance().Get(GetParent()->GetId()));
+        }
+        ComponentRepository<ITransformComponent>::Instance().Add(m_id, m_transformComponent);
+
         AbstractSceneNode::Init();
     }
 
     void Update(float deltaTime) override
     {
-        m_boundingVolumeComponent->Update(GetWorldTransformScaled());
+        m_transformComponent->Update(deltaTime);
+        m_boundingVolumeComponent->Update(m_transformComponent->GetWorldTransformScaled());
 
         AbstractSceneNode::Update(deltaTime);
     }
@@ -309,12 +317,25 @@ public:
     {
         AbstractSceneNode::ShutDown();
 
+        ComponentRepository<ITransformComponent>::Instance().Remove(m_id);
+
         ComponentRepository<IBoundingVolumeComponent>::Instance().Remove(m_id);
 
         ComponentRepository<IRenderComponent>::Instance().Remove(m_id);
     }
 
+protected:
+    const std::string m_texturePath;
+
+    const glm::vec3 m_initialPosition;
+
+    const glm::quat m_initialOrientation;
+
+    const glm::vec3 m_initialScale;
+
 private:
+    std::shared_ptr<ITransformComponent> m_transformComponent;
+
     std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
 
@@ -386,14 +407,17 @@ public:
 
     void Update(float deltaTime) override
     {
-        m_body->Rotate(glm::rotate(glm::mat4(1.0f), glm::radians(m_angularVelocity.x), glm::vec3(1.0f, 0.0f, 0.0f)));
-        m_body->Rotate(glm::rotate(glm::mat4(1.0f), glm::radians(m_angularVelocity.y), glm::vec3(0.0f, 1.0f, 0.0f)));
+        auto bodyTransformComponent = ComponentRepository<ITransformComponent>::Instance().Get(m_body->GetId());
+        bodyTransformComponent->Rotate(glm::rotate(glm::mat4(1.0f), glm::radians(m_angularVelocity.x), glm::vec3(1.0f, 0.0f, 0.0f)));
+        bodyTransformComponent->Rotate(glm::rotate(glm::mat4(1.0f), glm::radians(m_angularVelocity.y), glm::vec3(0.0f, 1.0f, 0.0f)));
 
-        m_head->Rotate(glm::rotate(glm::mat4(1.0f), -glm::radians(25.0f) * deltaTime, glm::vec3(0, 1, 0)));
+        auto headTransformComponent = ComponentRepository<ITransformComponent>::Instance().Get(m_head->GetId());
+        headTransformComponent->Rotate(glm::rotate(glm::mat4(1.0f), -glm::radians(25.0f) * deltaTime, glm::vec3(0, 1, 0)));
 
-        m_leftArm->Translate(glm::vec3(0, -4.5, 0));
-        m_leftArm->Rotate(glm::rotate(glm::mat4(1.0f), glm::radians(20.0f) * deltaTime, glm::vec3(1, 0, 0)));
-        m_leftArm->Translate(glm::vec3(0, 4.5, 0));
+        auto leftArmTransformComponent = ComponentRepository<ITransformComponent>::Instance().Get(m_leftArm->GetId());
+        leftArmTransformComponent->Translate(glm::vec3(0, -4.5, 0));
+        leftArmTransformComponent->Rotate(glm::rotate(glm::mat4(1.0f), glm::radians(20.0f) * deltaTime, glm::vec3(1, 0, 0)));
+        leftArmTransformComponent->Translate(glm::vec3(0, 4.5, 0));
 
         AbstractCubeRobotSceneNode::Update(deltaTime);
     }
@@ -445,12 +469,13 @@ public:
 };
 
 class PlaneNode : public AbstractSceneNode<SceneNodeFlags> {
-protected:
-    const std::string m_texturePath;
 
 public:
     PlaneNode(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT }, position, orientation, scale)
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })
+        , m_initialPosition(position)
+        , m_initialOrientation(orientation)
+        , m_initialScale(scale)
         , m_texturePath(texturePath)
     {
     }
@@ -461,15 +486,29 @@ public:
     void Init() override
     {
         RenderComponentFactory renderComponentFactory{};
-        auto renderComponent = renderComponentFactory.CreatePlaneRenderComponent(m_texturePath, false, true);
+        std::shared_ptr<IRenderComponent> renderComponent = renderComponentFactory.CreatePlaneRenderComponent(m_texturePath, false, true);
 
-        ComponentRepository<IRenderComponent>::Instance().Add(m_id, std::move(renderComponent));
+        ComponentRepository<IRenderComponent>::Instance().Add(m_id, renderComponent);
+
+        BoundingVolumeComponentFactory bondingVolumeFactory{};
+        m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(renderComponent->GetModel()->GetMesh()->GetVertices());
+        ComponentRepository<IBoundingVolumeComponent>::Instance().Add(m_id, m_boundingVolumeComponent);
+
+        TrasnformComponentFactory trasformComponentFactory{};
+        m_transformComponent = trasformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
+        if (ComponentRepository<ITransformComponent>::Instance().Contains(GetParent()->GetId())) {
+            m_transformComponent->SetParent(ComponentRepository<ITransformComponent>::Instance().Get(GetParent()->GetId()));
+        }
+        ComponentRepository<ITransformComponent>::Instance().Add(m_id, m_transformComponent);
 
         AbstractSceneNode::Init();
     }
 
     void Update(float deltaTime) override
     {
+        m_transformComponent->Update(deltaTime);
+        m_boundingVolumeComponent->Update(m_transformComponent->GetWorldTransformScaled());
+
         AbstractSceneNode::Update(deltaTime);
     }
 
@@ -477,14 +516,31 @@ public:
     {
         AbstractSceneNode::ShutDown();
 
+        ComponentRepository<ITransformComponent>::Instance().Remove(m_id);
+
+        ComponentRepository<IBoundingVolumeComponent>::Instance().Remove(m_id);
+
         ComponentRepository<IRenderComponent>::Instance().Remove(m_id);
     }
+
+protected:
+    const std::string m_texturePath;
+
+    const glm::vec3 m_initialPosition;
+
+    const glm::quat m_initialOrientation;
+
+    const glm::vec3 m_initialScale;
+
+    std::shared_ptr<ITransformComponent> m_transformComponent;
+
+    std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
 
 class Terrain : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Terrain(const int x, const int z)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT }, glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1.0f))
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })
         , m_xIndex(x)
         , m_zIndex(z)
     {
@@ -495,9 +551,16 @@ public:
 public:
     void Init() override
     {
+        TrasnformComponentFactory trasformComponentFactory{};
+        m_transformComponent = trasformComponentFactory.Create();
+        if (ComponentRepository<ITransformComponent>::Instance().Contains(GetParent()->GetId())) {
+            m_transformComponent->SetParent(ComponentRepository<ITransformComponent>::Instance().Get(GetParent()->GetId()));
+        }
+        ComponentRepository<ITransformComponent>::Instance().Add(m_id, m_transformComponent);
+
         TerrainComponentFactory terrainComponentFactory{};
         m_terrainComponent = std::move(terrainComponentFactory.CreateRandomTerrainNormalMapped(m_xIndex, m_zIndex, TERRAIN_SIZE));
-        SetPosition(m_terrainComponent->GetPosition());
+        m_transformComponent->SetPosition(m_terrainComponent->GetPosition());
         ComponentRepository<ITerrainComponenet>::Instance().Add(m_id, m_terrainComponent);
 
         BoundingVolumeComponentFactory bondingVolumeFactory{};
@@ -514,7 +577,8 @@ public:
 
     void Update(float deltaTime) override
     {
-        m_boundingVolumeComponent->Update(GetWorldTransform());
+        m_transformComponent->Update(deltaTime);
+        m_boundingVolumeComponent->Update(m_transformComponent->GetWorldTransform());
 
         AbstractSceneNode::Update(deltaTime);
     }
@@ -530,12 +594,16 @@ public:
         ComponentRepository<IBoundingVolumeComponent>::Instance().Remove(m_id);
 
         ComponentRepository<ITerrainComponenet>::Instance().Remove(m_id);
+
+        ComponentRepository<ITransformComponent>::Instance().Remove(m_id);
     }
 
 private:
     const int m_xIndex;
 
     const int m_zIndex;
+    
+    std::shared_ptr<ITransformComponent> m_transformComponent;
 
     std::shared_ptr<ITerrainComponenet> m_terrainComponent;
 
@@ -552,7 +620,7 @@ private:
 
 public:
     TerrainManager(const uint32_t maxX, const uint32_t maxZ)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT }, glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1.0f))
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT })
         , m_gridMaxX(maxX)
         , m_gridMaxZ(maxZ)
     {
@@ -563,8 +631,8 @@ public:
 public:
     void Init() override
     {
-        auto terrainManager = TerrainManagerComponentFactory{}.Create();
-        ComponentRepository<ITerrainManagerComponent>::Instance().Add(m_id, std::move(terrainManager));
+        auto terrainManagerComponent = TerrainManagerComponentFactory{}.Create();
+        ComponentRepository<ITerrainManagerComponent>::Instance().Add(m_id, std::move(terrainManagerComponent));
 
         for (uint32_t x = 0; x < m_gridMaxX; x++) {
             for (uint32_t z = 0; z < m_gridMaxZ; z++) {
@@ -637,63 +705,12 @@ private:
 };
 
 class Goblin : public AbstractSceneNode<SceneNodeFlags> {
-private:
-    const float RUN_SPEED{ 14.0f };
-
-    const float YAW_TURN_SPEED{ 3.0f };
-
-    const float PITCH_TURN_SPEED{ 0.5f };
-
-    const float GRAVITY_Y{ -5.0f };
-
-    const float JUMP_POWER{ 2.5f };
-
-    const float MIN_Y_POS{ 9.0f };
-
-private:
-    bool m_shouldGoForward{ false };
-
-    bool m_shouldGoBackward{ false };
-
-    bool m_shouldGoLeft{ false };
-
-    bool m_shouldGoRight{ false };
-
-    bool m_shouldRotate{ false };
-
-    float m_upwardSpeed{ 0.0f };
-
-    float m_rotationAroundY{ 0.0f };
-
-    float m_pitchDiff{ 0.0f };
-
-    bool m_isInTheAir{ false };
-
-    float m_cameraPitch{ -20.0f };
-
-    float m_distanceFromPerson{ 50.0f };
-
-    glm::vec2 m_prevTouchPosition{ 0.0f, 0.0f };
-
-private:
-    EventHandler<Goblin, KeyEvent> m_keyboardEventsHandler{ *this };
-
-    EventHandler<Goblin, MouseEvent> m_mouseEventsHandler{ *this };
-
-    EventHandler<Goblin, TouchEvent> m_touchEventsHandler{ *this };
-
-    EventHandler<Goblin, MouseScrollEvent> m_mouseScrollsHandler{ *this };
-
-private:
-    std::shared_ptr<IAnimationRenderComponent> m_animatonRenderComponent;
-
-    std::shared_ptr<ICameraComponent> m_cameraComponent;
-
-    std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
-
 public:
     Goblin(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT }, position, orientation, scale)
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })
+        , m_initialPosition(position)
+        , m_initialOrientation(orientation)
+        , m_initialScale(scale)
     {
     }
 
@@ -702,6 +719,13 @@ public:
 public:
     void Init() override
     {
+        TrasnformComponentFactory trasformComponentFactory{};
+        m_transformComponent = trasformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
+        if (ComponentRepository<ITransformComponent>::Instance().Contains(GetParent()->GetId())) {
+            m_transformComponent->SetParent(ComponentRepository<ITransformComponent>::Instance().Get(GetParent()->GetId()));
+        }
+        ComponentRepository<ITransformComponent>::Instance().Add(m_id, m_transformComponent);
+
         RenderComponentFactory renderComponentFactory{};
         m_animatonRenderComponent = renderComponentFactory.CreateAnimatedNormalMappedModelRenderComponent(AssetManager::Instance().GetAssetPath("Models/Goblin/goblin.dae"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_texture.png"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_normal_texture.png"), true, true);
         ComponentRepository<IAnimationRenderComponent>::Instance().Add(m_id, m_animatonRenderComponent);
@@ -734,44 +758,44 @@ public:
 
             glm::vec3 positionOffset{ 0.0f };
             if (m_shouldGoForward) {
-                positionOffset -= deltaTime * MathUtil::GetUpVector(GetOrientation()) * RUN_SPEED;
+                positionOffset -= deltaTime * MathUtil::GetUpVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
             }
             if (m_shouldGoBackward) {
-                positionOffset += deltaTime * MathUtil::GetUpVector(GetOrientation()) * RUN_SPEED;
+                positionOffset += deltaTime * MathUtil::GetUpVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
             }
             if (m_shouldGoLeft) {
-                positionOffset += deltaTime * MathUtil::GetRightVector(GetOrientation()) * RUN_SPEED;
+                positionOffset += deltaTime * MathUtil::GetRightVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
             }
             if (m_shouldGoRight) {
-                positionOffset -= deltaTime * MathUtil::GetRightVector(GetOrientation()) * RUN_SPEED;
+                positionOffset -= deltaTime * MathUtil::GetRightVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
             }
-            Translate(positionOffset);
+            m_transformComponent->Translate(positionOffset);
         } else {
             m_animatonRenderComponent->GetAnimation()->SetState(AnimationState::PAUSED);
             m_animatonRenderComponent->GetAnimation()->Update(deltaTime);
         }
 
-        auto currentPosition = GetPosition();
+        auto currentPosition = m_transformComponent->GetPosition();
         const float height = terrain->GetHeightAt(currentPosition);
         const auto currentY = height + MIN_Y_POS;
 
         if (m_isInTheAir) {
             m_upwardSpeed += GRAVITY_Y * deltaTime;
-            Translate(glm::vec3(0.0f, m_upwardSpeed, 0.0f));
+            m_transformComponent->Translate(glm::vec3(0.0f, m_upwardSpeed, 0.0f));
             if (currentPosition.y < currentY) {
-                SetPosition(glm::vec3(currentPosition.x, currentY, currentPosition.z));
+                m_transformComponent->SetPosition(glm::vec3(currentPosition.x, currentY, currentPosition.z));
                 m_upwardSpeed = 0.0f;
                 m_isInTheAir = false;
             }
         } else {
-            SetPosition(glm::vec3(currentPosition.x, currentY, currentPosition.z));
+            m_transformComponent->SetPosition(glm::vec3(currentPosition.x, currentY, currentPosition.z));
         }
 
         if (m_shouldRotate) {
             const float yawAmount = YAW_TURN_SPEED * m_rotationAroundY * deltaTime;
             const float pitchAmount = PITCH_TURN_SPEED * m_pitchDiff * deltaTime;
 
-            Rotate(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(yawAmount), glm::vec3(0.0f, 0.0f, 1.0f))));
+            m_transformComponent->Rotate(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(yawAmount), glm::vec3(0.0f, 0.0f, 1.0f))));
 
             m_cameraComponent->AddYaw(yawAmount);
             m_cameraComponent->AddPitch(pitchAmount);
@@ -780,10 +804,12 @@ public:
             m_pitchDiff = 0.0f;
         }
 
-        const glm::vec3 cameraPosition = GetPosition() + (-m_cameraComponent->GetForwardDirection() * m_distanceFromPerson) + glm::vec3(0.0f, 8.0f, 0.0f);
+        const glm::vec3 cameraPosition = m_transformComponent->GetPosition() + (-m_cameraComponent->GetForwardDirection() * m_distanceFromPerson) + glm::vec3(0.0f, 8.0f, 0.0f);
         m_cameraComponent->SetPosition(cameraPosition);
 
-        m_boundingVolumeComponent->Update(GetWorldTransformScaled());
+        m_transformComponent->Update(deltaTime);
+
+        m_boundingVolumeComponent->Update(m_transformComponent->GetWorldTransformScaled());
 
         AbstractSceneNode::Update(deltaTime);
     }
@@ -797,6 +823,8 @@ public:
         ComponentRepository<ICameraComponent>::Instance().Remove(m_id);
 
         ComponentRepository<IAnimationRenderComponent>::Instance().Remove(m_id);
+
+        ComponentRepository<ITransformComponent>::Instance().Remove(m_id);
     }
 
 public:
@@ -887,7 +915,7 @@ public:
         if (touchEvent.action == TouchActionType::MOVE) {
             const glm::vec2 angleInDegrees = (touchEvent.position - m_prevTouchPosition) * 0.1f;
 
-            Rotate(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(angleInDegrees.x), glm::vec3(0.0f, 0.0f, 1.0f))));
+            m_transformComponent->Rotate(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(angleInDegrees.x), glm::vec3(0.0f, 0.0f, 1.0f))));
 
             m_cameraComponent->AddYaw(angleInDegrees.x);
             m_cameraComponent->AddPitch(angleInDegrees.y);
@@ -902,40 +930,74 @@ public:
     {
         m_distanceFromPerson += scrollEvent.delta;
     }
-};
-
-class Camera : public AbstractSceneNode<SceneNodeFlags> {
-private:
-    EventHandler<Camera, MouseEvent> m_mouseHandler{ *this };
-
-    EventHandler<Camera, TouchEvent> m_touchHandler{ *this };
-
-    EventHandler<Camera, KeyEvent> m_keyHandler{ *this };
 
 private:
-    const float m_sensitivity = 0.05f;
+    const float RUN_SPEED{ 14.0f };
 
-    const float m_moveSpeed = 25.0f;
+    const float YAW_TURN_SPEED{ 3.0f };
 
-    const float m_absMinMaxPitch{ 89.0f };
+    const float PITCH_TURN_SPEED{ 0.5f };
 
-    float m_pitchAngle = 0.0f;
+    const float GRAVITY_Y{ -5.0f };
+
+    const float JUMP_POWER{ 2.5f };
+
+    const float MIN_Y_POS{ 9.0f };
 
 private:
-    InputsFacade m_inputFacade;
+    const glm::vec3 m_initialPosition;
 
-    std::shared_ptr<ICameraComponent> m_cameraComponent;
+    const glm::quat m_initialOrientation;
+
+    const glm::vec3 m_initialScale;
+
+    bool m_shouldGoForward{ false };
+
+    bool m_shouldGoBackward{ false };
+
+    bool m_shouldGoLeft{ false };
+
+    bool m_shouldGoRight{ false };
+
+    bool m_shouldRotate{ false };
+
+    float m_upwardSpeed{ 0.0f };
+
+    float m_rotationAroundY{ 0.0f };
+
+    float m_pitchDiff{ 0.0f };
+
+    bool m_isInTheAir{ false };
+
+    float m_cameraPitch{ -20.0f };
+
+    float m_distanceFromPerson{ 50.0f };
 
     glm::vec2 m_prevTouchPosition{ 0.0f, 0.0f };
 
-#if defined(__ANDROID__)
-    bool m_autoMoveForward = false;
+private:
+    EventHandler<Goblin, KeyEvent> m_keyboardEventsHandler{ *this };
 
-    bool m_autoMoveBackward = false;
-#endif
+    EventHandler<Goblin, MouseEvent> m_mouseEventsHandler{ *this };
+
+    EventHandler<Goblin, TouchEvent> m_touchEventsHandler{ *this };
+
+    EventHandler<Goblin, MouseScrollEvent> m_mouseScrollsHandler{ *this };
+
+private:
+    std::shared_ptr<ITransformComponent> m_transformComponent;
+
+    std::shared_ptr<IAnimationRenderComponent> m_animatonRenderComponent;
+
+    std::shared_ptr<ICameraComponent> m_cameraComponent;
+
+    std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
+};
+
+class Camera : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Camera()
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_CAMERA_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_CAMERA_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })
     {
     }
 
@@ -956,6 +1018,13 @@ private:
 public:
     void Init() override
     {
+        TrasnformComponentFactory trasformComponentFactory{};
+        m_transformComponent = trasformComponentFactory.Create();
+        if (ComponentRepository<ITransformComponent>::Instance().Contains(GetParent()->GetId())) {
+            m_transformComponent->SetParent(ComponentRepository<ITransformComponent>::Instance().Get(GetParent()->GetId()));
+        }
+        ComponentRepository<ITransformComponent>::Instance().Add(m_id, m_transformComponent);
+
         CameraComponentFactory cameraFactory{};
         m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 60.0f, 180.0f));
 
@@ -1003,8 +1072,10 @@ public:
         glm::mat4 viewMatrix = m_cameraComponent->LookAt();
         glm::mat4 cameraTransformInWorldSpace = glm::inverse(viewMatrix);
 
-        SetPosition(MathUtil::ExtractTranslation(cameraTransformInWorldSpace));
-        SetOrientation(MathUtil::ExtractOrientation(cameraTransformInWorldSpace));
+        m_transformComponent->SetPosition(MathUtil::ExtractTranslation(cameraTransformInWorldSpace));
+        m_transformComponent->SetOrientation(MathUtil::ExtractOrientation(cameraTransformInWorldSpace));
+
+        m_transformComponent->Update(deltaTime);
 
         AbstractSceneNode::Update(deltaTime);
     }
@@ -1014,6 +1085,8 @@ public:
         AbstractSceneNode::ShutDown();
 
         ComponentRepository<ICameraComponent>::Instance().Remove(m_id);
+
+        ComponentRepository<ITransformComponent>::Instance().Remove(m_id);
     }
 
 public:
@@ -1072,6 +1145,37 @@ public:
             }
         }
     }
+
+private:
+    EventHandler<Camera, MouseEvent> m_mouseHandler{ *this };
+
+    EventHandler<Camera, TouchEvent> m_touchHandler{ *this };
+
+    EventHandler<Camera, KeyEvent> m_keyHandler{ *this };
+
+private:
+    const float m_sensitivity{ 0.05f };
+
+    const float m_moveSpeed{ 25.0f };
+
+    const float m_absMinMaxPitch{ 89.0f };
+
+    float m_pitchAngle{ 0.0f };
+
+    glm::vec2 m_prevTouchPosition{ 0.0f, 0.0f };
+
+private:
+    InputsFacade m_inputFacade;
+
+    std::shared_ptr<ITransformComponent> m_transformComponent;
+
+    std::shared_ptr<ICameraComponent> m_cameraComponent;
+
+#if defined(__ANDROID__)
+    bool m_autoMoveForward = false;
+
+    bool m_autoMoveBackward = false;
+#endif
 };
 
 class Text : public AbstractSceneNode<SceneNodeFlags> {
@@ -1124,14 +1228,9 @@ public:
 };
 
 class MainLight : public AbstractSceneNode<SceneNodeFlags> {
-private:
-    std::shared_ptr<ILightComponent> m_lightComponent;
-
-    glm::vec3 m_initialPosition;
-
 public:
     MainLight(const glm::vec3& pos)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_LIGHT_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_LIGHT_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })
         , m_initialPosition(pos)
     {
     }
@@ -1141,6 +1240,13 @@ public:
 public:
     void Init() override
     {
+        TrasnformComponentFactory trasformComponentFactory{};
+        m_transformComponent = trasformComponentFactory.Create();
+        if (ComponentRepository<ITransformComponent>::Instance().Contains(GetParent()->GetId())) {
+            m_transformComponent->SetParent(ComponentRepository<ITransformComponent>::Instance().Get(GetParent()->GetId()));
+        }
+        ComponentRepository<ITransformComponent>::Instance().Add(m_id, m_transformComponent);
+
         LightComponentFactory lightFactory{};
         m_lightComponent = lightFactory.CreateLightCompoennt(m_initialPosition);
 
@@ -1164,10 +1270,10 @@ public:
 
         auto lightTransformInWorldSpace = glm::inverse(m_lightComponent->LookAt());
 
-        SetPosition(MathUtil::ExtractTranslation(lightTransformInWorldSpace));
-        SetOrientation(MathUtil::ExtractOrientation(lightTransformInWorldSpace));
+        m_transformComponent->SetPosition(MathUtil::ExtractTranslation(lightTransformInWorldSpace));
+        m_transformComponent->SetOrientation(MathUtil::ExtractOrientation(lightTransformInWorldSpace));
 
-        SetPosition(position);
+        m_transformComponent->Update(deltaTime);
 
         AbstractSceneNode::Update(deltaTime);
     }
@@ -1177,20 +1283,22 @@ public:
         AbstractSceneNode::ShutDown();
 
         ComponentRepository<ILightComponent>::Instance().Remove(m_id);
-    }
-};
 
-class Light : public AbstractSceneNode<SceneNodeFlags> {
+        ComponentRepository<ITransformComponent>::Instance().Remove(m_id);
+    }
+
 private:
+    std::shared_ptr<ITransformComponent> m_transformComponent;
+
     std::shared_ptr<ILightComponent> m_lightComponent;
 
     glm::vec3 m_initialPosition;
+};
 
-    glm::vec3 m_color;
-
+class Light : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Light(const glm::vec3& position, const glm::vec3& color)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_LIGHT_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_LIGHT_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })
         , m_initialPosition(position)
         , m_color(color)
     {
@@ -1201,6 +1309,13 @@ public:
 public:
     void Init() override
     {
+        TrasnformComponentFactory trasformComponentFactory{};
+        m_transformComponent = trasformComponentFactory.Create();
+        if (ComponentRepository<ITransformComponent>::Instance().Contains(GetParent()->GetId())) {
+            m_transformComponent->SetParent(ComponentRepository<ITransformComponent>::Instance().Get(GetParent()->GetId()));
+        }
+        ComponentRepository<ITransformComponent>::Instance().Add(m_id, m_transformComponent);
+
         LightComponentFactory lightFactory{};
         m_lightComponent = lightFactory.CreateLightCompoennt(m_initialPosition, m_color, glm::vec3(0.1f, 0.005f, 0.001f));
 
@@ -1211,7 +1326,8 @@ public:
 
     void Update(float deltaTime) override
     {
-        SetPosition(m_lightComponent->GetPosition());
+        m_transformComponent->SetPosition(m_lightComponent->GetPosition());
+        m_transformComponent->Update(deltaTime);
 
         AbstractSceneNode::Update(deltaTime);
     }
@@ -1221,13 +1337,24 @@ public:
         AbstractSceneNode::ShutDown();
 
         ComponentRepository<ILightComponent>::Instance().Remove(m_id);
+
+        ComponentRepository<ITransformComponent>::Instance().Remove(m_id);
     }
+
+private:
+    const glm::vec3 m_initialPosition;
+
+    const glm::vec3 m_color;
+
+    std::shared_ptr<ITransformComponent> m_transformComponent;
+
+    std::shared_ptr<ILightComponent> m_lightComponent;
 };
 
 class SkyBox : public AbstractSceneNode<SceneNodeFlags> {
 public:
     SkyBox()
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SKYBOX_RENDER_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SKYBOX_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })
     {
     }
 
@@ -1236,6 +1363,13 @@ public:
 public:
     void Init() override
     {
+        TrasnformComponentFactory trasformComponentFactory{};
+        m_transformComponent = trasformComponentFactory.Create();
+        if (ComponentRepository<ITransformComponent>::Instance().Contains(GetParent()->GetId())) {
+            m_transformComponent->SetParent(ComponentRepository<ITransformComponent>::Instance().Get(GetParent()->GetId()));
+        }
+        ComponentRepository<ITransformComponent>::Instance().Add(m_id, m_transformComponent);
+
         SkyBoxComponentFactory factory{};
         m_skyBoxComponent = factory.Create();
 
@@ -1253,9 +1387,11 @@ public:
         glm::mat4 transform(1.0f);
         transform = glm::rotate(transform, glm::radians(ROTATION_ANGLE), glm::vec3(0.0f, 1.0f, 0.0f));
 
-        Rotate(glm::quat_cast(transform));
-        SetPosition(cameraComponent->GetPosition());
-        SetScale(glm::vec3(SKY_BOX_SIZE));
+        m_transformComponent->Rotate(glm::quat_cast(transform));
+        m_transformComponent->SetPosition(cameraComponent->GetPosition());
+        m_transformComponent->SetScale(glm::vec3(SKY_BOX_SIZE));
+
+        m_transformComponent->Update(deltaTime);
 
         AbstractSceneNode::Update(deltaTime);
     }
@@ -1265,9 +1401,13 @@ public:
         AbstractSceneNode::ShutDown();
 
         ComponentRepository<ISkyBoxComponent>::Instance().Remove(m_id);
+
+        ComponentRepository<ITransformComponent>::Instance().Remove(m_id);
     }
 
 private:
+    std::shared_ptr<ITransformComponent> m_transformComponent;
+
     std::shared_ptr<ISkyBoxComponent> m_skyBoxComponent;
 
     static const inline float ROTATION_SPEED_DEGS_PER_SEC = 0.5f;
@@ -1418,7 +1558,7 @@ private:
 class Water : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Water(const int x, const int z)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_RENDER_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })
         , m_x(x)
         , m_z(z)
     {
@@ -1429,6 +1569,13 @@ public:
 public:
     void Init() override
     {
+        TrasnformComponentFactory trasformComponentFactory{};
+        m_transformComponent = trasformComponentFactory.Create();
+        if (ComponentRepository<ITransformComponent>::Instance().Contains(GetParent()->GetId())) {
+            m_transformComponent->SetParent(ComponentRepository<ITransformComponent>::Instance().Get(GetParent()->GetId()));
+        }
+        ComponentRepository<ITransformComponent>::Instance().Add(m_id, m_transformComponent);
+
         WaterComponentFactory componentFactory{};
         m_waterComponent = std::move(componentFactory.Create(m_x, m_z));
         ComponentRepository<IWaterComponent>::Instance().Add(m_id, m_waterComponent);
@@ -1444,10 +1591,12 @@ public:
     {
         m_waterComponent->Update(deltaTime);
 
-        SetPosition(m_waterComponent->GetPosition());
-        SetScale(glm::vec3(WATER_TILE_SIZE));
+        m_transformComponent->SetPosition(m_waterComponent->GetPosition());
+        m_transformComponent->SetScale(glm::vec3(WATER_TILE_SIZE));
 
-        m_boundingVolumeComponent->Update(GetWorldTransformScaled());
+        m_transformComponent->Update(deltaTime);
+
+        m_boundingVolumeComponent->Update(m_transformComponent->GetWorldTransformScaled());
 
         AbstractSceneNode::Update(deltaTime);
     }
@@ -1459,12 +1608,16 @@ public:
         ComponentRepository<IBoundingVolumeComponent>::Instance().Remove(m_id);
 
         ComponentRepository<IWaterComponent>::Instance().Remove(m_id);
+
+        ComponentRepository<ITransformComponent>::Instance().Remove(m_id);
     }
 
 private:
     const int m_x;
 
     const int m_z;
+
+    std::shared_ptr<ITransformComponent> m_transformComponent;
 
     std::shared_ptr<IWaterComponent> m_waterComponent;
 
@@ -1479,7 +1632,7 @@ private:
 
 public:
     WaterManager(const int maxX, const int maxZ)
-        : AbstractSceneNode(glm::vec3(0.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1.0f))
+        : AbstractSceneNode()
         , m_gridMaxX(maxX)
         , m_gridMaxZ(maxZ)
     {
@@ -1624,7 +1777,10 @@ private:
 class Stone : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Stone(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_NORMAL_MAPPED_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT }, position, orientation, scale)
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_NORMAL_MAPPED_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })
+        , m_initialPosition(position)
+        , m_initialOrientation(orientation)
+        , m_initialScale(scale)
     {
     }
 
@@ -1633,6 +1789,13 @@ public:
 public:
     void Init() override
     {
+        TrasnformComponentFactory trasformComponentFactory{};
+        m_transformComponent = trasformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
+        if (ComponentRepository<ITransformComponent>::Instance().Contains(GetParent()->GetId())) {
+            m_transformComponent->SetParent(ComponentRepository<ITransformComponent>::Instance().Get(GetParent()->GetId()));
+        }
+        ComponentRepository<ITransformComponent>::Instance().Add(m_id, m_transformComponent);
+
         RenderComponentFactory componentFactory{};
         std::shared_ptr<IRenderComponent> renderComponent = componentFactory.CreateModelNormalMappedRenderComponent(AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.dae"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.png"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulderNormal.png"), true, true);
 
@@ -1649,12 +1812,14 @@ public:
     {
         const auto terrain = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT });
 
-        auto currentPosition = GetPosition();
+        auto currentPosition = m_transformComponent->GetPosition();
         const float height = terrain->GetHeightAt(currentPosition);
 
-        SetPosition(glm::vec3(currentPosition.x, height - 2.0f, currentPosition.z));
+        m_transformComponent->SetPosition(glm::vec3(currentPosition.x, height - 2.0f, currentPosition.z));
 
-        m_boundingVolumeComponent->Update(GetWorldTransformScaled());
+        m_transformComponent->Update(deltaTime);
+
+        m_boundingVolumeComponent->Update(m_transformComponent->GetWorldTransformScaled());
 
         AbstractSceneNode::Update(deltaTime);
     }
@@ -1666,9 +1831,19 @@ public:
         ComponentRepository<IBoundingVolumeComponent>::Instance().Remove(m_id);
 
         ComponentRepository<IRenderComponent>::Instance().Remove(m_id);
+
+        ComponentRepository<ITransformComponent>::Instance().Remove(m_id);
     }
 
 private:
+    const glm::vec3 m_initialPosition;
+
+    const glm::quat m_initialOrientation;
+
+    const glm::vec3 m_initialScale;
+
+    std::shared_ptr<ITransformComponent> m_transformComponent;
+
     std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
 
@@ -1877,9 +2052,7 @@ public:
             AddChild(stone);
         }
 
-        for (auto child : m_children) {
-            child->Init();
-        }
+        AbstractSceneNode::Init();
 
         m_masterRenderer->Init();
     }

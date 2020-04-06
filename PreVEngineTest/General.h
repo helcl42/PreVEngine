@@ -24,6 +24,7 @@ static const uint32_t MAX_BONES_COUNT{ 100 };
 static const glm::vec4 DEFAULT_CLIP_PLANE{ 0.0f, -1.0f, 0.0f, 1000.0f };
 
 enum class SceneNodeFlags : uint64_t {
+    HAS_TRANSFORM_COMPONENT,
     HAS_RENDER_COMPONENT,
     HAS_RENDER_NORMAL_MAPPED_COMPONENT,
     HAS_ANIMATION_RENDER_COMPONENT,
@@ -758,6 +759,188 @@ struct VertexData {
     std::vector<glm::vec3> biTangents;
 
     std::vector<uint32_t> indices;
+};
+
+class ITransformComponent {
+public:
+    virtual void Update(float deltaTime) = 0;
+
+    virtual std::shared_ptr<ITransformComponent> GetParent() const = 0;
+
+    virtual void SetParent(const std::shared_ptr<ITransformComponent>& parent) = 0;
+
+    virtual void Rotate(const glm::quat& rotationDiff) = 0;
+
+    virtual void Translate(const glm::vec3& positionDiff) = 0;
+
+    virtual void Scale(const glm::vec3& scaleDiff) = 0;
+
+    virtual glm::quat GetOrientation() const = 0;
+
+    virtual glm::vec3 GetPosition() const = 0;
+
+    virtual glm::vec3 GetScale() const = 0;
+
+    virtual void SetOrientation(const glm::quat& orientation) = 0;
+
+    virtual void SetPosition(const glm::vec3& position) = 0;
+
+    virtual void SetScale(const glm::vec3& scale) = 0;
+
+    virtual glm::mat4 GetTransform() const = 0;
+
+    virtual glm::mat4 GetTransformScaled() const = 0;
+
+    virtual glm::mat4 GetWorldTransform() const = 0;
+
+    virtual glm::mat4 GetWorldTransformScaled() const = 0;
+
+    virtual glm::vec3 GetScaler() const = 0;
+
+    virtual bool IsRoot() const = 0;
+
+public:
+    virtual ~ITransformComponent() = default;
+};
+
+class TransformComponent : public ITransformComponent {
+public:
+    TransformComponent()
+        : m_worldTransform(1.0f)
+        , m_position(glm::vec3(0.0f))
+        , m_orientation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f))
+        , m_scaler(glm::vec3(1.0f))
+    {
+    }
+
+    TransformComponent(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
+        : m_worldTransform(1.0f)
+        , m_position(position)
+        , m_orientation(orientation)
+        , m_scaler(scale)
+    {
+    }
+
+    ~TransformComponent() = default;
+
+public:
+    void Update(float deltaTime) override
+    {
+        if (auto parent = m_parent.lock()) { //This node has a parent...
+            m_worldTransform = parent->GetWorldTransform() * GetTransform();
+        } else { //Root node, world transform is local transform!
+            m_worldTransform = GetTransform();
+        }
+    }
+
+    void SetParent(const std::shared_ptr<ITransformComponent>& parent) override
+    {
+        m_parent = parent;
+    }
+
+    std::shared_ptr<ITransformComponent> GetParent() const override
+    {
+        return m_parent.lock();
+    }
+
+    void Rotate(const glm::quat& rotationDiff) override
+    {
+        m_orientation = glm::normalize(m_orientation * rotationDiff);
+    }
+
+    void Translate(const glm::vec3& positionDiff) override
+    {
+        m_position += positionDiff;
+    }
+
+    void Scale(const glm::vec3& scaleDiff) override
+    {
+        m_scaler += scaleDiff;
+    }
+
+    glm::quat GetOrientation() const override
+    {
+        return m_orientation;
+    }
+
+    glm::vec3 GetPosition() const override
+    {
+        return m_position;
+    }
+
+    glm::vec3 GetScale() const override
+    {
+        return m_scaler;
+    }
+
+    void SetOrientation(const glm::quat& orientation) override
+    {
+        m_orientation = orientation;
+    }
+
+    void SetPosition(const glm::vec3& position) override
+    {
+        m_position = position;
+    }
+
+    void SetScale(const glm::vec3& scale) override
+    {
+        m_scaler = scale;
+    }
+
+    glm::mat4 GetTransform() const override
+    {
+        return MathUtil::CreateTransformationMatrix(m_position, m_orientation, glm::vec3(1.0f));
+    }
+
+    glm::mat4 GetTransformScaled() const override
+    {
+        return MathUtil::CreateTransformationMatrix(m_position, m_orientation, m_scaler);
+    }
+
+    glm::mat4 GetWorldTransform() const override
+    {
+        return m_worldTransform;
+    }
+
+    glm::mat4 GetWorldTransformScaled() const override
+    {
+        return glm::scale(GetWorldTransform(), m_scaler);
+    }
+
+    glm::vec3 GetScaler() const override
+    {
+        return m_scaler;
+    }
+
+    bool IsRoot() const override
+    {
+        return !m_parent.lock();
+    }
+
+private:
+    std::weak_ptr<ITransformComponent> m_parent;
+
+    glm::mat4 m_worldTransform;
+
+    glm::vec3 m_position;
+
+    glm::quat m_orientation;
+
+    glm::vec3 m_scaler;
+};
+
+class TrasnformComponentFactory {
+public:
+    std::unique_ptr<ITransformComponent> Create() const
+    {
+        return std::make_unique<TransformComponent>();
+    }
+
+    std::unique_ptr<ITransformComponent> Create(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale) const
+    {
+        return std::make_unique<TransformComponent>(position, orientation, scale);
+    }
 };
 
 #endif
