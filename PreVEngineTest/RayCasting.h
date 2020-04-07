@@ -3,30 +3,41 @@
 
 #include "General.h"
 
+#define RENDER_RAYCASTS
+
 struct RayEvent {
-    glm::vec3 direction;
-
-    glm::vec3 startPosition;
-
-    float length;
+    Ray ray;
 
     RayEvent() = default;
 
-    RayEvent(const glm::vec3& dir, const glm::vec3& startPos, const float len)
-        : direction(glm::normalize(dir))
-        , startPosition(startPos)
-        , length(len)
+    RayEvent(const Ray& r)
+        : ray(r)
     {
     }
 
     virtual ~RayEvent() = default;
+};
 
-    friend std::ostream& operator<<(std::ostream& out, const RayEvent& rayEvent)
+class RayModelFactory {
+public:
+    std::unique_ptr<IModel> Create(const Ray& ray) const
     {
-        out << "Direction: (" << rayEvent.direction.x << ", " << rayEvent.direction.y << ", " << rayEvent.direction.z << ")" << std::endl;
-        out << "StartPos:  (" << rayEvent.startPosition.x << ", " << rayEvent.startPosition.y << ", " << rayEvent.startPosition.z << ")" << std::endl;
-        out << "Length:     " << rayEvent.length << std::endl;
-        return out;
+        const float DISTANCE_BETWEEN_POINTS = 4.0f;
+        const uint32_t pointsCount = static_cast<uint32_t>(ray.length / DISTANCE_BETWEEN_POINTS);
+
+        std::vector<glm::vec3> vertices;
+        std::vector<uint32_t> indices;
+        for (uint32_t i = 0; i < pointsCount; i++) {
+            vertices.emplace_back(ray.startPosition + ray.direction * (static_cast<float>(i) * DISTANCE_BETWEEN_POINTS));
+            indices.emplace_back(i);
+        }
+
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
+        auto vertexBuffer = std::make_unique<VBO>(*allocator);
+        vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
+        auto indexBuffer = std::make_unique<IBO>(*allocator);
+        indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
+        return std::make_unique<Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
     }
 };
 
@@ -34,95 +45,57 @@ class IRayCasterComponent {
 public:
     virtual void Update(float deltaTime) = 0;
 
-    virtual void SetViewPortDimensions(const glm::vec2& viewPortDimensions) = 0;
-
-    virtual const glm::vec2& GetViewPortDimensions() const = 0;
-
-    virtual const glm::mat4& GetViewMatrix() const = 0;
-
-    virtual void SetViewMatrix(const glm::mat4& viewMatrix) = 0;
-
-    virtual const glm::mat4& GetProjectionMatrix() const = 0;
-
-    virtual void SetProjectionMatrix(const glm::mat4& projectionMatrix) = 0;
-
-    virtual const glm::vec3& GetRayDirection() const = 0;
+    virtual void SetRayDirection(const glm::vec3& rayDirection) = 0;
 
     virtual void SetRayLength(const float len) = 0;
-    
-    virtual float GetRayLength() const = 0;
-
-    virtual const glm::vec3& GetStartPosition() const = 0;
 
     virtual void SetRayStartPosition(const glm::vec3& position) = 0;
 
-    virtual float GetPitchCompensationAngle() const = 0;
-    
-    virtual void SetPitchCompensationAngle(const float angle) = 0;
+    virtual void SetOrientationOffsetAngles(const glm::vec2& angles) = 0;
 
+    virtual Ray GetRay() const = 0;
+
+#ifdef RENDER_RAYCASTS
+    virtual std::shared_ptr<IModel> GetModel() const = 0;
+#endif
 public:
     virtual ~IRayCasterComponent() {}
 };
 
-class MouseRayCasterComponent : public IRayCasterComponent {
+class RayCasterComponent final : public IRayCasterComponent {
 public:
-    MouseRayCasterComponent() = default;
+    RayCasterComponent() = default;
 
-    virtual ~MouseRayCasterComponent() = default;
+    ~RayCasterComponent() = default;
 
 public:
-    virtual void Update(float deltaTime) override
+    void Update(float deltaTime) override
     {
-        const glm::vec2 normalizeDeviceCoords = MathUtil::FromViewPortSpaceToNormalizedDeviceSpace(m_viewPortDimensions, glm::vec2(m_currentMousePosition.x, m_currentMousePosition.y));     
-        const glm::vec4 clipSpaceCoords = MathUtil::FromNormalizedDeviceSpaceToClipSpace(normalizeDeviceCoords);
-        const glm::vec4 eyeSpaceCoords = MathUtil::FromClipSpaceToCameraSpace(m_projectionMatrix, clipSpaceCoords);
-        const glm::vec3 worldCoords = MathUtil::FromCameraSpaceToWorldSpace(m_viewMatrix, eyeSpaceCoords);
-        m_rayDirection = glm::normalize(worldCoords);
+        m_rayDirection = glm::normalize(m_rayDirection);
 
-        if (m_pitchCompensationAngle != 0.0f) {
+        if (m_orientationOffsetAngles.x != 0.0f) {
             const auto rightVec = glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), m_rayDirection);
-            const auto compensationTransform = glm::rotate(glm::mat4(1.0f), glm::radians(m_pitchCompensationAngle), rightVec);
+            const auto compensationTransform = glm::rotate(glm::mat4(1.0f), glm::radians(m_orientationOffsetAngles.x), rightVec);
             m_rayDirection = glm::normalize(compensationTransform * glm::vec4(m_rayDirection, 0.0f));
         }
 
-        RayEvent rayEvent{ m_rayDirection, m_startPosition, m_rayLength };
-        EventChannel::Broadcast(rayEvent);
-        std::cout << rayEvent << std::endl;
+        if (m_orientationOffsetAngles.y != 0.0f) {
+            const auto compensationTransform = glm::rotate(glm::mat4(1.0f), glm::radians(m_orientationOffsetAngles.y), glm::vec3(0, 1, 0));
+            m_rayDirection = glm::normalize(compensationTransform * glm::vec4(m_rayDirection, 0.0f));
+        }
+
+        Ray ray{ m_rayStartPosition, m_rayDirection, m_rayLength };
+        EventChannel::Broadcast(RayEvent{ ray });
+        //std::cout << ray << std::endl;
+#ifdef RENDER_RAYCASTS
+        RayModelFactory modelFactory{};
+        m_model = modelFactory.Create(ray);
+#endif
     }
 
-    void SetViewPortDimensions(const glm::vec2& viewPortDimensions) override
+    void SetRayDirection(const glm::vec3& rayDirection) override
     {
-        m_viewPortDimensions = viewPortDimensions;
-    }
-
-    const glm::vec2& GetViewPortDimensions() const override
-    {
-        return m_viewPortDimensions;
-    }
-
-    const glm::mat4& GetViewMatrix() const override
-    {
-        return m_viewMatrix;
-    }
-
-    void SetViewMatrix(const glm::mat4& viewMatrix) override
-    {
-        m_viewMatrix = viewMatrix;
-    }
-
-    const glm::mat4& GetProjectionMatrix() const override
-    {
-        return m_projectionMatrix;
-    }
-
-    void SetProjectionMatrix(const glm::mat4& projectionMatrix) override
-    {
-        m_projectionMatrix = projectionMatrix;
-    }
-
-    const glm::vec3& GetRayDirection() const override
-    {
-        return m_rayDirection;
+        m_rayDirection = rayDirection;
     }
 
     void SetRayLength(const float len) override
@@ -130,35 +103,137 @@ public:
         m_rayLength = len;
     }
 
-    float GetRayLength() const override
+    void SetRayStartPosition(const glm::vec3& position) override
     {
-        return m_rayLength;
+        m_rayStartPosition = position;
     }
 
-    const glm::vec3& GetStartPosition() const override
+    void SetOrientationOffsetAngles(const glm::vec2& angles) override
     {
-        return m_startPosition;
+        m_orientationOffsetAngles = angles;
+    }
+    
+    Ray GetRay() const override 
+    {
+        return Ray{ m_rayStartPosition, m_rayDirection, m_rayLength };
+    }
+#ifdef RENDER_RAYCASTS
+    std::shared_ptr<IModel> GetModel() const override
+    {
+        return m_model;
+    }
+#endif
+private:
+    glm::vec3 m_rayDirection;
+
+    glm::vec3 m_rayStartPosition;
+
+    float m_rayLength{ 500.0f };
+
+    glm::vec2 m_orientationOffsetAngles{ 0.0f, 0.0f };
+#ifdef RENDER_RAYCASTS
+    std::shared_ptr<IModel> m_model;
+#endif
+};
+
+class IMouseRayCasterComponent : public IRayCasterComponent {
+public:
+    virtual void SetViewPortDimensions(const glm::vec2& viewPortDimensions) = 0;
+
+    virtual void SetViewMatrix(const glm::mat4& viewMatrix) = 0;
+
+    virtual void SetProjectionMatrix(const glm::mat4& projectionMatrix) = 0;
+
+public:
+    virtual ~IMouseRayCasterComponent() = default;
+};
+
+class MouseRayCasterComponent : public IMouseRayCasterComponent {
+public:
+    MouseRayCasterComponent() = default;
+
+    virtual ~MouseRayCasterComponent() = default;
+
+public:    
+    void Update(float deltaTime) override
+    {
+        const glm::vec2 normalizeDeviceCoords = MathUtil::FromViewPortSpaceToNormalizedDeviceSpace(m_viewPortDimensions, glm::vec2(m_currentMousePosition.x, m_currentMousePosition.y));
+        const glm::vec4 clipSpaceCoords = MathUtil::FromNormalizedDeviceSpaceToClipSpace(normalizeDeviceCoords);
+        const glm::vec4 eyeSpaceCoords = MathUtil::FromClipSpaceToCameraSpace(m_projectionMatrix, clipSpaceCoords);
+        const glm::vec3 worldCoords = MathUtil::FromCameraSpaceToWorldSpace(m_viewMatrix, eyeSpaceCoords);
+
+        m_rayDirection = glm::normalize(worldCoords);
+
+        if (m_orientationOffsetAngles.x != 0.0f) {
+            const auto rightVec = glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), m_rayDirection);
+            const auto compensationTransform = glm::rotate(glm::mat4(1.0f), glm::radians(m_orientationOffsetAngles.x), rightVec);
+            m_rayDirection = glm::normalize(compensationTransform * glm::vec4(m_rayDirection, 0.0f));
+        }
+
+        if (m_orientationOffsetAngles.y != 0.0f) {
+            const auto compensationTransform = glm::rotate(glm::mat4(1.0f), glm::radians(m_orientationOffsetAngles.y), glm::vec3(0, 1, 0));
+            m_rayDirection = glm::normalize(compensationTransform * glm::vec4(m_rayDirection, 0.0f));
+        }
+
+        Ray ray{ m_rayStartPosition, m_rayDirection, m_rayLength }; 
+        EventChannel::Broadcast(RayEvent{ ray });
+        //std::cout << ray << std::endl;
+#ifdef RENDER_RAYCASTS
+        RayModelFactory modelFactory{};
+        m_model = modelFactory.Create(ray);
+#endif
+    }
+
+    void SetViewPortDimensions(const glm::vec2& viewPortDimensions) override
+    {
+        m_viewPortDimensions = viewPortDimensions;
+    }
+
+    void SetViewMatrix(const glm::mat4& viewMatrix) override
+    {
+        m_viewMatrix = viewMatrix;
+    }
+
+    void SetProjectionMatrix(const glm::mat4& projectionMatrix) override
+    {
+        m_projectionMatrix = projectionMatrix;
+    }
+
+    void SetRayDirection(const glm::vec3& rayDirection) override
+    {
+        m_rayDirection = rayDirection; // will be overwritten in update!!
+    }
+
+    void SetRayLength(const float len) override
+    {
+        m_rayLength = len;
     }
 
     void SetRayStartPosition(const glm::vec3& position) override
     {
-        m_startPosition = position;
+        m_rayStartPosition = position;
     }
 
-    float GetPitchCompensationAngle() const override
+    void SetOrientationOffsetAngles(const glm::vec2& angles) override
     {
-        return m_pitchCompensationAngle;
+        m_orientationOffsetAngles = angles;
     }
-
-    void SetPitchCompensationAngle(const float angle) override
+    
+    Ray GetRay() const override
     {
-        m_pitchCompensationAngle = angle;
+        return Ray{ m_rayStartPosition, m_rayDirection, m_rayLength };
     }
 
+#ifdef RENDER_RAYCASTS
+    std::shared_ptr<IModel> GetModel() const override
+    {
+        return m_model;
+    }
+#endif
 public:
     void operator()(const MouseEvent& moveEvent)
     {
-        const glm::vec2 position{ moveEvent.position.x, moveEvent.position.y };
+        const glm::vec2 position{ moveEvent.position.x, m_viewPortDimensions.y - moveEvent.position.y };
         m_currentMousePosition = glm::clamp(position, glm::vec2(0.0f, 0.0f), m_viewPortDimensions);
     }
 
@@ -176,14 +251,16 @@ protected:
     
     glm::vec3 m_rayDirection;
 
-    glm::vec3 m_startPosition;
+    glm::vec3 m_rayStartPosition;
 
     float m_rayLength{ 500.0f };
 
-    float m_pitchCompensationAngle{ 0.0f };
+    glm::vec2 m_orientationOffsetAngles{ 0.0f, 0.0f };
 
     glm::vec2 m_viewPortDimensions{ 0.0f, 0.0f };
-
+#ifdef RENDER_RAYCASTS
+    std::shared_ptr<IModel> m_model;
+#endif
 private:
     EventHandler<MouseRayCasterComponent, MouseEvent> m_mouseMoveHandler{ *this };
 
@@ -192,7 +269,12 @@ private:
 
 class RayCasterComponentFactory {
 public:
-    std::unique_ptr<IRayCasterComponent> Create()
+    std::unique_ptr<IRayCasterComponent> CreateRayCaster()
+    {
+        return std::make_unique<RayCasterComponent>();
+    }
+
+    std::unique_ptr<IMouseRayCasterComponent> CreateMouseRayCaster()
     {
         return std::make_unique<MouseRayCasterComponent>();
     }

@@ -1198,6 +1198,159 @@ public:
 };
 #endif
 
+#ifdef RENDER_RAYCASTS
+class RayCastDebugRenderer : public IRenderer<NormalRenderContextUserData> {
+private:
+    struct alignas(16) UniformsVS
+    {
+        alignas(16) glm::vec3 color;
+    };
+
+    struct alignas(16) UniformsGS
+    {
+        alignas(16) glm::mat4 modelMatrix;
+
+        alignas(16) glm::mat4 viewMatrix;
+
+        alignas(16) glm::mat4 projectionMatrix;
+    };
+
+    struct alignas(16) UniformsFS
+    {
+        alignas(16) float alpha;
+    };
+
+private:
+    const uint32_t m_descriptorCount{ 1000 };
+
+private:
+    std::shared_ptr<RenderPass> m_renderPass;
+
+private:
+    std::unique_ptr<Shader> m_shader;
+
+    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+
+    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+
+    std::unique_ptr<UBOPool<UniformsGS> > m_uniformsPoolGS;
+
+    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+
+public:
+    RayCastDebugRenderer(const std::shared_ptr<RenderPass>& renderPass)
+        : m_renderPass(renderPass)
+    {
+    }
+
+    virtual ~RayCastDebugRenderer() = default;
+
+public:
+    void Init() override
+    {
+        auto device = DeviceProvider::Instance().GetDevice();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
+
+        ShaderFactory shaderFactory;
+        m_shader = shaderFactory.CreateShaderFromFiles<RayCastDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/raycast_debug_vert.spv") }, { VK_SHADER_STAGE_GEOMETRY_BIT, AssetManager::Instance().GetAssetPath("Shaders/raycast_debug_geom.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/raycast_debug_frag.spv") } });
+        m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
+
+        LOGI("RayCast Debug Shader created\n");
+
+        m_pipeline = std::make_unique<RayCastDebugPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline->Init();
+
+        LOGI("RayCast Debug Pipeline created\n");
+
+        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+
+        m_uniformsPoolGS = std::make_unique<UBOPool<UniformsGS> >(*allocator);
+        m_uniformsPoolGS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+
+        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    }
+
+    void BeforeRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
+    }
+
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RAYCASTER_COMPONENT })) {
+            const auto rayCastingComponent = ComponentRepository<IRayCasterComponent>::Instance().Get(node->GetId());
+
+            auto uboVS = m_uniformsPoolVS->GetNext();
+
+            UniformsVS uniformsVS{};
+            uniformsVS.color = glm::vec3(1.0, 0.0, 0.0);
+
+            uboVS->Update(&uniformsVS);
+            
+            auto uboGS = m_uniformsPoolGS->GetNext();
+
+            UniformsGS uniformsGS{};
+            uniformsGS.projectionMatrix = renderContextUserData.projectionMatrix;
+            uniformsGS.viewMatrix = renderContextUserData.viewMatrix;
+            uniformsGS.modelMatrix = glm::mat4(1.0f);
+
+            uboGS->Update(&uniformsGS);
+
+            auto uboFS = m_uniformsPoolFS->GetNext();
+
+            UniformsFS uniformsFS{};
+            uniformsFS.alpha = 0.7f;
+            
+            uboFS->Update(&uniformsFS);
+
+            m_shader->Bind("uboVS", *uboVS);
+            m_shader->Bind("uboGS", *uboGS);
+            m_shader->Bind("uboFS", *uboFS);
+
+            VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+            VkBuffer vertexBuffers[] = { *rayCastingComponent->GetModel()->GetVertexBuffer() };
+            VkDeviceSize offsets[] = { 0 };
+
+            vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(renderContext.commandBuffer, *rayCastingComponent->GetModel()->GetIndexBuffer(), 0, rayCastingComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+            vkCmdDrawIndexed(renderContext.commandBuffer, rayCastingComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+        }
+
+        for (auto child : node->GetChildren()) {
+            Render(renderContext, child, renderContextUserData);
+        }
+    }
+
+    void PostRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void AfterRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void ShutDown() override
+    {
+        m_shader->ShutDown();
+
+        m_pipeline->ShutDown();
+    }
+};
+#endif
+
 class DefaultRenderer : public IRenderer<NormalRenderContextUserData> {
 private:
     struct ShadowsCascadeUniform {
@@ -3402,7 +3555,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SUN_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SUN_RENDER_COMPONENT })) {
             const auto sunComponent = ComponentRepository<ISunComponent>::Instance().Get(node->GetId());
 
             const float xScale = sunComponent->GetFlare()->GetScale();
@@ -3766,15 +3919,20 @@ private:
             m_animationRenderer,
             m_animationNormalMappedRenderer,
             m_waterRenderer,
-            m_fontRenderer,
-            m_sunRenderer,
-            m_lensFlareRenderer
+            m_fontRenderer
         };
 
 #ifdef RENDER_BOUNDING_VOLUMES
         m_boundingVolumeDebugRenderer = std::make_shared<BoundingVolumeDebugRenderer>(m_defaultRenderPass);
         m_defaultRenderers.push_back(m_boundingVolumeDebugRenderer);
 #endif
+#ifdef RENDER_RAYCASTS
+        m_rayCastDebugRenderer = std::make_shared<RayCastDebugRenderer>(m_defaultRenderPass);
+        m_defaultRenderers.push_back(m_rayCastDebugRenderer);
+#endif
+        // These renderers has to as last otherwise they collide with any geometry that uses depth
+        m_defaultRenderers.push_back(m_sunRenderer);
+        m_defaultRenderers.push_back(m_lensFlareRenderer);
 
         for (auto& renderer : m_defaultRenderers) {
             renderer->Init();
@@ -4329,6 +4487,9 @@ private:
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_lensFlareRenderer;
 #ifdef RENDER_BOUNDING_VOLUMES
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_boundingVolumeDebugRenderer;
+#endif
+#ifdef RENDER_RAYCASTS
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_rayCastDebugRenderer;
 #endif
     std::vector<std::shared_ptr<IRenderer<NormalRenderContextUserData> > > m_defaultRenderers;
 

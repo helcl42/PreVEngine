@@ -1891,10 +1891,15 @@ private:
     std::shared_ptr<IShadowsComponent> m_shadowsCompoent;
 };
 
+//
+// TODO
+// handle mouse lock event
+// choose classic or mouse raycaster -> the choosen one is based on this event
+//
 class RyaCasterNode : public AbstractSceneNode<SceneNodeFlags> {
 public:
     RyaCasterNode()
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{})
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RAYCASTER_COMPONENT })
     {
     }
 
@@ -1904,8 +1909,11 @@ public:
     void Init() override
     {
         RayCasterComponentFactory raycasterFactory{};
-        m_rayCasterComponent = raycasterFactory.Create();
 
+        //m_mouseRayCasterComponent = raycasterFactory.CreateMouseRayCaster();
+        //ComponentRepository<IRayCasterComponent>::Instance().Add(m_id, m_mouseRayCasterComponent);
+
+        m_rayCasterComponent = raycasterFactory.CreateRayCaster();
         ComponentRepository<IRayCasterComponent>::Instance().Add(m_id, m_rayCasterComponent);
 
         AbstractSceneNode::Init();
@@ -1914,11 +1922,19 @@ public:
     void Update(float deltaTime) override
     {
         const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
-        m_rayCasterComponent->SetViewPortDimensions(m_viewPortSize);
-        m_rayCasterComponent->SetProjectionMatrix(cameraComponent->GetViewFrustum().CreateProjectionMatrix(m_viewPortSize.x / m_viewPortSize.y));
-        m_rayCasterComponent->SetViewMatrix(cameraComponent->LookAt());
-        m_rayCasterComponent->SetRayStartPosition(cameraComponent->GetPosition());
+        const auto playerTransformComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ITransformComponent>({ TAG_PLAYER });
+
+        m_rayCasterComponent->SetRayStartPosition(playerTransformComponent->GetPosition() + glm::vec3(0.0f, 12.0f, 0.0f));
+        m_rayCasterComponent->SetRayDirection(cameraComponent->GetForwardDirection());
+        m_rayCasterComponent->SetOrientationOffsetAngles({ -12.0f, 0.0f });
         m_rayCasterComponent->Update(deltaTime);
+
+        //m_mouseRayCasterComponent->SetViewPortDimensions(m_viewPortSize);
+        //m_mouseRayCasterComponent->SetProjectionMatrix(cameraComponent->GetViewFrustum().CreateProjectionMatrix(m_viewPortSize.x / m_viewPortSize.y));
+        //m_mouseRayCasterComponent->SetViewMatrix(cameraComponent->LookAt());
+        //m_mouseRayCasterComponent->SetRayStartPosition(cameraComponent->GetPosition());
+        //m_mouseRayCasterComponent->Update(deltaTime);
+
     }
 
     void ShutDown() override
@@ -1936,6 +1952,8 @@ public:
 
 private:
     std::shared_ptr<IRayCasterComponent> m_rayCasterComponent;
+
+    std::shared_ptr<IMouseRayCasterComponent> m_mouseRayCasterComponent;
 
     glm::vec2 m_viewPortSize;
 
@@ -1965,8 +1983,8 @@ public:
     void Init() override
     {
         // Init scene nodes
-        //auto rayCaster = std::make_shared<RyaCasterNode>();
-        //AddChild(rayCaster);
+        auto rayCaster = std::make_shared<RyaCasterNode>();
+        AddChild(rayCaster);
 
         auto skyBox = std::make_shared<SkyBox>();
         AddChild(skyBox);
@@ -2014,7 +2032,7 @@ public:
         }
 
         auto goblin = std::make_shared<Goblin>(glm::vec3(90.0f, 9.0f, 90.0f), glm::quat(glm::radians(glm::vec3(-90.0f, 0.0f, 0.0f))), glm::vec3(0.005f));
-        goblin->SetTags({ TAG_MAIN_CAMERA });
+        goblin->SetTags({ TAG_MAIN_CAMERA, TAG_PLAYER });
         AddChild(goblin);
 
         auto text = std::make_shared<Text>();

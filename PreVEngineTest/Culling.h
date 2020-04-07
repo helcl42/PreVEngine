@@ -42,6 +42,14 @@ struct Ray {
         , length(len)
     {
     }
+
+    friend std::ostream& operator<<(std::ostream& out, const Ray& ray)
+    {
+        out << "Direction: (" << ray.direction.x << ", " << ray.direction.y << ", " << ray.direction.z << ")" << std::endl;
+        out << "StartPos:  (" << ray.startPosition.x << ", " << ray.startPosition.y << ", " << ray.startPosition.z << ")" << std::endl;
+        out << "Length:    " << ray.length << std::endl;
+        return out;
+    }
 };
 
 struct Plane {

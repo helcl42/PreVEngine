@@ -172,7 +172,7 @@ public:
         VKERRCHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &outPipeline));
     }
 
-    void CreateDefaultPipeline(const VkDevice& device, const VkRenderPass& renderPass, const Shader& shader, const bool depthTestEnabled, const bool fillMode, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
+    void CreateDefaultPipeline(const VkDevice& device, const VkRenderPass& renderPass, const Shader& shader, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool fillMode, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
     {
         // Pipeline layout
         VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
@@ -184,7 +184,7 @@ public:
 
         // Pipeline
         VkPipelineInputAssemblyStateCreateInfo inputAssembly = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
-        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        inputAssembly.topology = topology;
         inputAssembly.primitiveRestartEnable = VK_FALSE;
 
         VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
@@ -748,7 +748,7 @@ public:
     VkPipeline Init() override
     {
         VkPipelineFactory pipelineFactory{};
-        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, true, true, m_pipelineLayout, m_graphicsPipeline);
+        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, m_pipelineLayout, m_graphicsPipeline);
         return m_graphicsPipeline;
     }
 };
@@ -806,7 +806,7 @@ public:
     VkPipeline Init() override
     {
         VkPipelineFactory pipelineFactory{};
-        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, true, true, m_pipelineLayout, m_graphicsPipeline);
+        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, m_pipelineLayout, m_graphicsPipeline);
         return m_graphicsPipeline;
     }
 };
@@ -866,7 +866,7 @@ public:
     VkPipeline Init() override
     {
         VkPipelineFactory pipelineFactory{};
-        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, true, true, m_pipelineLayout, m_graphicsPipeline);
+        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, m_pipelineLayout, m_graphicsPipeline);
         return m_graphicsPipeline;
     }
 };
@@ -923,7 +923,7 @@ public:
     VkPipeline Init() override
     {
         VkPipelineFactory pipelineFactory{};
-        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, true, true, m_pipelineLayout, m_graphicsPipeline);
+        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, m_pipelineLayout, m_graphicsPipeline);
         return m_graphicsPipeline;
     }
 };
@@ -1026,7 +1026,7 @@ public:
     VkPipeline Init() override
     {
         VkPipelineFactory pipelineFactory{};
-        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, false, true, m_pipelineLayout, m_graphicsPipeline);
+        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, false, true, m_pipelineLayout, m_graphicsPipeline);
         return m_graphicsPipeline;
     }
 };
@@ -1082,7 +1082,7 @@ public:
     VkPipeline Init() override
     {
         VkPipelineFactory pipelineFactory{};
-        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, true, true, m_pipelineLayout, m_graphicsPipeline);
+        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, m_pipelineLayout, m_graphicsPipeline);
         return m_graphicsPipeline;
     }
 };
@@ -1140,7 +1140,7 @@ public:
     VkPipeline Init() override
     {
         VkPipelineFactory pipelineFactory{};
-        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, true, true, m_pipelineLayout, m_graphicsPipeline);
+        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, m_pipelineLayout, m_graphicsPipeline);
         return m_graphicsPipeline;
     }
 };
@@ -1192,7 +1192,7 @@ public:
     VkPipeline Init() override
     {
         VkPipelineFactory pipelineFactory{};
-        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, false, true, m_pipelineLayout, m_graphicsPipeline);
+        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, false, true, m_pipelineLayout, m_graphicsPipeline);
         return m_graphicsPipeline;
     }
 };
@@ -1250,7 +1250,7 @@ public:
     VkPipeline Init() override
     {
         VkPipelineFactory pipelineFactory{};
-        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, true, true, m_pipelineLayout, m_graphicsPipeline);
+        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, m_pipelineLayout, m_graphicsPipeline);
         return m_graphicsPipeline;
     }
 };
@@ -1303,7 +1303,7 @@ public:
     VkPipeline Init() override
     {
         VkPipelineFactory pipelineFactory{};
-        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, true, true, m_pipelineLayout, m_graphicsPipeline);
+        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, m_pipelineLayout, m_graphicsPipeline);
         return m_graphicsPipeline;
     }
 };
@@ -1404,7 +1404,61 @@ public:
     VkPipeline Init() override
     {
         VkPipelineFactory pipelineFactory{};
-        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, true, false, m_pipelineLayout, m_graphicsPipeline);
+        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, false, m_pipelineLayout, m_graphicsPipeline);
+        return m_graphicsPipeline;
+    }
+};
+
+class RayCastDebugShader final : public Shader {
+public:
+    RayCastDebugShader(const VkDevice device)
+        : Shader(device)
+    {
+    }
+
+    ~RayCastDebugShader() = default;
+
+private:
+    void InitVertexInputs() override
+    {
+        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+
+        m_inputAttributeDescriptions = {
+            VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0)
+        };
+    }
+
+    void InitDescriptorSets() override
+    {
+        // vertex shader
+        AddDescriptorSet("uboVS", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT);
+
+        // geometry shader
+        AddDescriptorSet("uboGS", 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_GEOMETRY_BIT);
+
+        // fragment shader
+        AddDescriptorSet("uboFS", 2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
+    }
+
+    void InitPushConstantsBlocks() override
+    {
+    }
+};
+
+class RayCastDebugPipeline final : public AbstractGraphicsPipeline {
+public:
+    RayCastDebugPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+        : AbstractGraphicsPipeline(device, renderpass, shaders)
+    {
+    }
+
+    ~RayCastDebugPipeline() = default;
+
+public:
+    VkPipeline Init() override
+    {
+        VkPipelineFactory pipelineFactory{};
+        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, VK_PRIMITIVE_TOPOLOGY_POINT_LIST, true, true, m_pipelineLayout, m_graphicsPipeline);
         return m_graphicsPipeline;
     }
 };
