@@ -211,17 +211,12 @@ private:
 public:
     VertexDataBuffer() = default;
 
-    VertexDataBuffer(const size_t initialSize)
-    {
-        m_buffer.reserve(initialSize);
-    }
-
     ~VertexDataBuffer() = default;
 
 public:
     void Add(const void* data, const unsigned int size)
     {
-        m_buffer.insert(m_buffer.end(), (const uint8_t*)data, (const uint8_t*)data + size);
+        m_buffer.insert(m_buffer.end(), static_cast<const uint8_t*>(data), static_cast<const uint8_t*>(data) + size);
     }
 
     void Add(float data)

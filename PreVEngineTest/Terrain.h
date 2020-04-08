@@ -492,15 +492,15 @@ private:
                 const auto position = vertexData->vertices[vertexIndex];
                 const auto textureCoord = vertexData->textureCoords[vertexIndex];
                 const auto normal = vertexData->normals[vertexIndex];
-                mesh->m_vertexDataBuffer.Add(&position, sizeof(glm::vec3));
-                mesh->m_vertexDataBuffer.Add(&textureCoord, sizeof(glm::vec2));
-                mesh->m_vertexDataBuffer.Add(&normal, sizeof(glm::vec3));
+                mesh->m_vertexDataBuffer.Add(position);
+                mesh->m_vertexDataBuffer.Add(textureCoord);
+                mesh->m_vertexDataBuffer.Add(normal);
                 mesh->m_vertices.push_back(position);
                 if (normalMapped) {
                     const auto tangent = vertexData->tangents[vertexIndex];
                     const auto biTangent = vertexData->biTangents[vertexIndex];
-                    mesh->m_vertexDataBuffer.Add(&tangent, sizeof(glm::vec3));
-                    mesh->m_vertexDataBuffer.Add(&biTangent, sizeof(glm::vec3));
+                    mesh->m_vertexDataBuffer.Add(tangent);
+                    mesh->m_vertexDataBuffer.Add(biTangent);
                 }
             }
         }

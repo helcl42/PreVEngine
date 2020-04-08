@@ -670,8 +670,8 @@ public:
         , m_indices(indices)
     {
         for (size_t i = 0; i < vertices.size(); i++) {
-            m_vertexDataBuffer.Add(&vertices[i], sizeof(glm::vec2));
-            m_vertexDataBuffer.Add(&textureCoords[i], sizeof(glm::vec2));
+            m_vertexDataBuffer.Add(vertices[i]);
+            m_vertexDataBuffer.Add(textureCoords[i]);
             m_vertices.push_back(glm::vec3(vertices[i].x, vertices[i].y, 0.0f));
         }
     }
