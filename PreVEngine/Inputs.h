@@ -41,9 +41,9 @@ private:
 
     glm::vec2 m_mousePosition{ 0, 0 };
 
-    bool m_locked = false;
+    static inline bool m_locked = false;
 
-    bool m_cursorVisible = true;
+    static inline bool m_cursorVisible = true;
 
 public:
     MouseInputComponent() = default;
