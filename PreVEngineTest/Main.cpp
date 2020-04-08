@@ -1896,25 +1896,23 @@ private:
 // handle mouse lock event
 // choose classic or mouse raycaster -> the choosen one is based on this event
 //
-class RyaCasterNode : public AbstractSceneNode<SceneNodeFlags> {
+class RayCasterNode : public AbstractSceneNode<SceneNodeFlags> {
 public:
-    RyaCasterNode()
+    RayCasterNode()
         : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RAYCASTER_COMPONENT })
     {
     }
 
-    ~RyaCasterNode() = default;
+    ~RayCasterNode() = default;
 
 public:
     void Init() override
     {
         RayCasterComponentFactory raycasterFactory{};
-
-        //m_mouseRayCasterComponent = raycasterFactory.CreateMouseRayCaster();
-        //ComponentRepository<IRayCasterComponent>::Instance().Add(m_id, m_mouseRayCasterComponent);
-
         m_rayCasterComponent = raycasterFactory.CreateRayCaster();
-        ComponentRepository<IRayCasterComponent>::Instance().Add(m_id, m_rayCasterComponent);
+        m_mouseRayCasterComponent = raycasterFactory.CreateMouseRayCaster();
+        
+        RegisterCorrectComponent(m_inputFacade.IsMouseLocked());
 
         AbstractSceneNode::Init();
     }
@@ -1924,16 +1922,18 @@ public:
         const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
         const auto playerTransformComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ITransformComponent>({ TAG_PLAYER });
 
-        m_rayCasterComponent->SetRayStartPosition(playerTransformComponent->GetPosition() + glm::vec3(0.0f, 12.0f, 0.0f));
-        m_rayCasterComponent->SetRayDirection(cameraComponent->GetForwardDirection());
-        m_rayCasterComponent->SetOrientationOffsetAngles({ -12.0f, 0.0f });
-        m_rayCasterComponent->Update(deltaTime);
-
-        //m_mouseRayCasterComponent->SetViewPortDimensions(m_viewPortSize);
-        //m_mouseRayCasterComponent->SetProjectionMatrix(cameraComponent->GetViewFrustum().CreateProjectionMatrix(m_viewPortSize.x / m_viewPortSize.y));
-        //m_mouseRayCasterComponent->SetViewMatrix(cameraComponent->LookAt());
-        //m_mouseRayCasterComponent->SetRayStartPosition(cameraComponent->GetPosition());
-        //m_mouseRayCasterComponent->Update(deltaTime);
+        if (m_inputFacade.IsMouseLocked()) {
+            m_rayCasterComponent->SetRayStartPosition(playerTransformComponent->GetPosition() + glm::vec3(0.0f, 12.0f, 0.0f));
+            m_rayCasterComponent->SetRayDirection(cameraComponent->GetForwardDirection());
+            m_rayCasterComponent->SetOrientationOffsetAngles({ -12.0f, 0.0f });
+            m_rayCasterComponent->Update(deltaTime);
+        } else {
+            m_mouseRayCasterComponent->SetViewPortDimensions(m_viewPortSize);
+            m_mouseRayCasterComponent->SetProjectionMatrix(cameraComponent->GetViewFrustum().CreateProjectionMatrix(m_viewPortSize.x / m_viewPortSize.y));
+            m_mouseRayCasterComponent->SetViewMatrix(cameraComponent->LookAt());
+            m_mouseRayCasterComponent->SetRayStartPosition(cameraComponent->GetPosition());
+            m_mouseRayCasterComponent->Update(deltaTime);
+        }
 
     }
 
@@ -1941,13 +1941,34 @@ public:
     {
         AbstractSceneNode::ShutDown();
 
-        ComponentRepository<IRayCasterComponent>::Instance().Remove(m_id);
+        if (ComponentRepository<IRayCasterComponent>::Instance().Contains(m_id)) {
+            ComponentRepository<IRayCasterComponent>::Instance().Remove(m_id);
+        }        
+    }
+
+private:
+    void RegisterCorrectComponent(const bool mouseLocked)
+    {
+        if (ComponentRepository<IRayCasterComponent>::Instance().Contains(m_id)) {
+            ComponentRepository<IRayCasterComponent>::Instance().Remove(m_id);
+        }
+
+        if (mouseLocked) {
+            ComponentRepository<IRayCasterComponent>::Instance().Add(m_id, m_rayCasterComponent);
+        } else {
+            ComponentRepository<IRayCasterComponent>::Instance().Add(m_id, m_mouseRayCasterComponent);
+        }
     }
 
 public:
     void operator()(const NewIterationEvent& newIterationEvent)
     {
         m_viewPortSize = glm::vec2(newIterationEvent.windowWidth, newIterationEvent.windowHeight);
+    }
+
+    void operator()(const MouseLockRequest& lockRequest)
+    {
+        RegisterCorrectComponent(lockRequest.lock);
     }
 
 private:
@@ -1957,8 +1978,12 @@ private:
 
     glm::vec2 m_viewPortSize;
 
+    InputsFacade m_inputFacade;
+
 private:
-    EventHandler<RyaCasterNode, NewIterationEvent> m_newIterationHandler{ *this };
+    EventHandler<RayCasterNode, NewIterationEvent> m_newIterationHandler{ *this };
+
+    EventHandler<RayCasterNode, MouseLockRequest> m_mouseLockHandler{ *this };
 };
 
 class RootSceneNode : public AbstractSceneNode<SceneNodeFlags> {
@@ -1983,7 +2008,10 @@ public:
     void Init() override
     {
         // Init scene nodes
-        auto rayCaster = std::make_shared<RyaCasterNode>();
+        auto inputsHelper = std::make_shared<InputsHelper>();
+        AddChild(inputsHelper);
+
+        auto rayCaster = std::make_shared<RayCasterNode>();
         AddChild(rayCaster);
 
         auto skyBox = std::make_shared<SkyBox>();
@@ -2008,9 +2036,6 @@ public:
         auto shadows = std::make_shared<Shadows>();
         shadows->SetTags({ TAG_SHADOW });
         AddChild(shadows);
-
-        auto inputsHelper = std::make_shared<InputsHelper>();
-        AddChild(inputsHelper);
 
         //auto freeCamera = std::make_shared<Camera>();
         //freeCamera->SetTags({ TAG_MAIN_CAMERA });
