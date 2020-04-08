@@ -85,11 +85,11 @@ void main()
 	for (int i = 0; i < uboVS.lightning.realCountOfLights; i++)
 	{
 		const Light light = uboVS.lightning.lights[i];
-		outToLightVector[i] = toTangentSpaceMatrix * (light.position.xyz - worldPosition.xyz);
+		outToLightVector[i] = toTangentSpaceMatrix * (light.position.xyz - viewPosition.xyz);
 	}
 
 	//vec3 cameraPosition = (inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz; // OPT - passed in UBO
-	outToCameraVector = toTangentSpaceMatrix * -worldPosition.xyz;
+	outToCameraVector = toTangentSpaceMatrix * -viewPosition.xyz;
 
 	float vertexToCameraDistance = length(viewPosition.xyz);
 	outVisibility = clamp(exp(-pow(vertexToCameraDistance * uboVS.density, uboVS.gradient)), 0.0, 1.0);
