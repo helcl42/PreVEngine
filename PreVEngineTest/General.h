@@ -219,7 +219,7 @@ public:
         m_buffer.insert(m_buffer.end(), static_cast<const uint8_t*>(data), static_cast<const uint8_t*>(data) + size);
     }
 
-    void Add(float data)
+    void Add(const float data)
     {
         Add(&data, sizeof(float));
     }
@@ -937,6 +937,48 @@ public:
     std::unique_ptr<ITransformComponent> Create(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale) const
     {
         return std::make_unique<TransformComponent>(position, orientation, scale);
+    }
+};
+
+class MeshUtil {
+public:
+    static void GenerateTangetsAndBiTangents(const std::vector<glm::vec3>& vertices, const std::vector<glm::vec2>& textureCoords, const std::vector<uint32_t>& indices, std::vector<glm::vec3>& outTangents, std::vector<glm::vec3>& outBiTangents)
+    {
+        outTangents.resize(vertices.size());
+        outBiTangents.resize(vertices.size());
+
+        for (auto i = 0; i < indices.size() - 2; i += 3) {
+            const auto indexA = indices[i + 0];
+            const auto indexB = indices[i + 1];
+            const auto indexC = indices[i + 2];
+
+            const auto& v0 = vertices[indexA];
+            const auto& v1 = vertices[indexB];
+            const auto& v2 = vertices[indexC];
+
+            const auto& uv0 = textureCoords[indexA];
+            const auto& uv1 = textureCoords[indexB];
+            const auto& uv2 = textureCoords[indexC];
+
+            // Edges of the triangle : position delta
+            glm::vec3 deltaPos1 = v1 - v0;
+            glm::vec3 deltaPos2 = v2 - v0;
+
+            // UV delta
+            glm::vec2 deltaUV1 = uv1 - uv0;
+            glm::vec2 deltaUV2 = uv2 - uv0;
+
+            float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
+            glm::vec3 tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
+            glm::vec3 biTangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
+
+            outTangents[indexA] += tangent;
+            outBiTangents[indexA] += biTangent;
+            outTangents[indexB] += tangent;
+            outBiTangents[indexB] += biTangent;
+            outTangents[indexC] += tangent;
+            outBiTangents[indexC] += biTangent;
+        }
     }
 };
 

@@ -489,18 +489,13 @@ private:
         for (unsigned int z = 0; z < m_vertexCount; z++) {
             for (unsigned int x = 0; x < m_vertexCount; x++) {
                 const auto vertexIndex = z * m_vertexCount + x;
-                const auto position = vertexData->vertices[vertexIndex];
-                const auto textureCoord = vertexData->textureCoords[vertexIndex];
-                const auto normal = vertexData->normals[vertexIndex];
-                mesh->m_vertexDataBuffer.Add(position);
-                mesh->m_vertexDataBuffer.Add(textureCoord);
-                mesh->m_vertexDataBuffer.Add(normal);
-                mesh->m_vertices.push_back(position);
+                mesh->m_vertexDataBuffer.Add(vertexData->vertices[vertexIndex]);
+                mesh->m_vertexDataBuffer.Add(vertexData->textureCoords[vertexIndex]);
+                mesh->m_vertexDataBuffer.Add(vertexData->normals[vertexIndex]);
+                mesh->m_vertices.push_back(vertexData->vertices[vertexIndex]);
                 if (normalMapped) {
-                    const auto tangent = vertexData->tangents[vertexIndex];
-                    const auto biTangent = vertexData->biTangents[vertexIndex];
-                    mesh->m_vertexDataBuffer.Add(tangent);
-                    mesh->m_vertexDataBuffer.Add(biTangent);
+                    mesh->m_vertexDataBuffer.Add(vertexData->tangents[vertexIndex]);
+                    mesh->m_vertexDataBuffer.Add(vertexData->biTangents[vertexIndex]);
                 }
             }
         }
@@ -540,40 +535,7 @@ private:
             }
         }
 
-        result->tangents.resize(verticesCount);
-        result->biTangents.resize(verticesCount);
-        for (unsigned int i = 0; i < indicesCount - 3; i += 3) {
-            const auto indexA = result->indices[i + 0];
-            const auto indexB = result->indices[i + 1];
-            const auto indexC = result->indices[i + 2];
-
-            const auto& v0 = result->vertices[indexA];
-            const auto& v1 = result->vertices[indexB];
-            const auto& v2 = result->vertices[indexC];
-
-            const auto& uv0 = result->textureCoords[indexA];
-            const auto& uv1 = result->textureCoords[indexB];
-            const auto& uv2 = result->textureCoords[indexC];
-
-            // Edges of the triangle : position delta
-            glm::vec3 deltaPos1 = v1 - v0;
-            glm::vec3 deltaPos2 = v2 - v0;
-
-            // UV delta
-            glm::vec2 deltaUV1 = uv1 - uv0;
-            glm::vec2 deltaUV2 = uv2 - uv0;
-
-            float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
-            glm::vec3 tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
-            glm::vec3 bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
-
-            result->tangents[indexA] = tangent;
-            result->biTangents[indexA] = bitangent;
-            result->tangents[indexB] = tangent;
-            result->biTangents[indexB] = bitangent;
-            result->tangents[indexC] = tangent;
-            result->biTangents[indexC] = bitangent;
-        }
+        MeshUtil::GenerateTangetsAndBiTangents(result->vertices, result->textureCoords, result->indices, result->tangents, result->biTangents);
 
         return result;
     }

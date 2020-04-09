@@ -159,25 +159,32 @@ public:
 
 class PlaneMesh : public IMesh {
 private:
-    const VertexLayout m_vertexLayout{ { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
+    VertexLayout m_vertexLayout;
 
     VertexDataBuffer m_vertexDataBuffer;
 
     std::vector<glm::vec3> m_vertices;
 
-    uint32_t m_verticesCount = 0;
-
     std::vector<uint32_t> m_indices;
 
 public:
-    PlaneMesh(const float xSize, const float zSize, const uint32_t xDivs, const uint32_t zDivs, const float sMax = 1.0f, const float tMax = 1.0f)
+    PlaneMesh(const float xSize, const float zSize, const uint32_t xDivs, const uint32_t zDivs, const float textureCoordUMax = 1.0f, const float textureCoordVMax = 1.0f, bool generateTangentBiTangent = false)
     {
+        if (generateTangentBiTangent) {
+            m_vertexLayout = { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 } };
+        } else {
+            m_vertexLayout = { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
+        }
+
         const float x2 = xSize / 2.0f;
         const float z2 = zSize / 2.0f;
-        const float iFactor = (float)zSize / zDivs;
-        const float jFactor = (float)xSize / xDivs;
-        const float texi = (float)sMax / zDivs;
-        const float texj = (float)tMax / xDivs;
+        const float iFactor = zSize / static_cast<float>(zDivs);
+        const float jFactor = xSize / static_cast<float>(xDivs);
+        const float texi = textureCoordUMax / static_cast<float>(zDivs);
+        const float texj = textureCoordVMax / static_cast<float>(xDivs);
+
+        std::vector<glm::vec2> textureCoords;
+        std::vector<glm::vec3> normals;
 
         for (uint32_t i = 0; i <= zDivs; i++) {
             float z = iFactor * i - z2;
@@ -189,13 +196,9 @@ public:
                 glm::vec2 textureCoord(j * texi, i * texj);
                 glm::vec3 normal(0.0f, 1.0f, 0.0f);
 
-                m_vertexDataBuffer.Add(vertex);
-                m_vertexDataBuffer.Add(textureCoord);
-                m_vertexDataBuffer.Add(normal);
-
                 m_vertices.push_back(vertex);
-
-                m_verticesCount++;
+                textureCoords.push_back(textureCoord);
+                normals.push_back(normal);
             }
         }
 
@@ -206,16 +209,32 @@ public:
             for (uint32_t j = 0; j < xDivs; j++) {
                 const uint32_t indices[] = {
                     rowStart + j,
+                    nextRowStart + j + 1,
                     nextRowStart + j,
-                    nextRowStart + j + 1,
                     rowStart + j,
-                    nextRowStart + j + 1,
-                    rowStart + j + 1
+                    rowStart + j + 1,
+                    nextRowStart + j + 1
                 };
 
                 for (const auto index : indices) {
                     m_indices.emplace_back(index);
                 }
+            }
+        }
+
+        std::vector<glm::vec3> tangents;
+        std::vector<glm::vec3> biTangents;
+        if (generateTangentBiTangent) {
+            MeshUtil::GenerateTangetsAndBiTangents(m_vertices, textureCoords, m_indices, tangents, biTangents);
+        }
+
+        for (auto vertexIndex = 0; vertexIndex < m_vertices.size(); vertexIndex++) {
+            m_vertexDataBuffer.Add(m_vertices[vertexIndex]);
+            m_vertexDataBuffer.Add(textureCoords[vertexIndex]);
+            m_vertexDataBuffer.Add(normals[vertexIndex]);
+            if (generateTangentBiTangent) {
+                m_vertexDataBuffer.Add(tangents[vertexIndex]);
+                m_vertexDataBuffer.Add(biTangents[vertexIndex]);
             }
         }
     }
@@ -240,7 +259,7 @@ public:
 
     uint32_t GerVerticesCount() const override
     {
-        return m_verticesCount;
+        return static_cast<uint32_t>(m_vertices.size());
     }
 
     const std::vector<uint32_t>& GerIndices() const override
@@ -419,9 +438,9 @@ private:
 
         inOutVertices.push_back(pos);
 
-        inOutVertexBuffer.Add(&pos, sizeof(glm::vec3));
-        inOutVertexBuffer.Add(&uv, sizeof(glm::vec2));
-        inOutVertexBuffer.Add(&normal, sizeof(glm::vec3));
+        inOutVertexBuffer.Add(pos);
+        inOutVertexBuffer.Add(uv);
+        inOutVertexBuffer.Add(normal);
     }
 
     void AddAnimationData(const std::vector<VertexBoneData>& vertexBoneData, const unsigned int vertexIndex, VertexDataBuffer& inOutVertexBuffer) const
@@ -436,8 +455,8 @@ private:
     {
         glm::vec3 tangent = glm::make_vec3(&mesh.mTangents[vertexIndex].x);
         glm::vec3 biTangent = glm::make_vec3(&mesh.mBitangents[vertexIndex].x);
-        inOutVertexBuffer.Add(&tangent, sizeof(glm::vec3));
-        inOutVertexBuffer.Add(&biTangent, sizeof(glm::vec3));
+        inOutVertexBuffer.Add(tangent);
+        inOutVertexBuffer.Add(biTangent);
     }
 
     void ReadVertexData(const aiMesh& mesh, const FlagSet<AssimpMeshFactoryCreateFlags>& flags, const std::vector<VertexBoneData>& vertexBoneData, const unsigned int vertexBaseOffset, VertexDataBuffer& inOutVertexBuffer, std::vector<glm::vec3>& inOutVertices) const
