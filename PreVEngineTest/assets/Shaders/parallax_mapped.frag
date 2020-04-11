@@ -106,16 +106,6 @@ void main()
 			break;
 	}
 
-	if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
-		discard;
-	}
-
-	vec4 textureColor = texture(textureSampler, uv);
-	if (textureColor.a < 0.5) 
-	{
-		discard;
-	}
-
 	float shadow = 1.0;	
 	if(uboFS.castedByShadows != 0)
 	{
@@ -136,6 +126,18 @@ void main()
 	}
 
 	const vec3 normalMapValue = 2.0 * texture(normalSampler, uv).rgb - 1.0;
+	const vec4 textureColor = texture(textureSampler, uv);
+
+	if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) 
+    {
+		discard;
+	}
+
+	if (textureColor.a < 0.5) 
+	{
+		discard;
+	}
+
 	const vec3 unitNormal = normalize(normalMapValue);
 	const vec3 unitToCameraVector = normalize(viewDirectionTangentSpace);
 
@@ -164,7 +166,4 @@ void main()
 	}
 
 	outColor = resultColor;
-
-	// float aaa = texture(normalSampler, inTextureCoord).r;
-	// outColor = vec4(aaa, 0.0, 0.0, 1.0);
 }

@@ -42,12 +42,6 @@ layout(location = 0) out vec4 outColor;
 
 void main() 
 {
-	vec4 textureColor = texture(textureSampler, inTextureCoord);
-	if (textureColor.a < 0.5) 
-	{
-		discard;
-	}
-
 	float shadow = 1.0;	
 	if(uboFS.castedByShadows != 0)
 	{
@@ -67,7 +61,14 @@ void main()
 		shadow = GetShadow(depthSampler, normalizedShadowCoord, cascadeIndex, 0.005);
 	}
 
-	const vec3 normalMapValue = 2.0 * texture(normalSampler, inTextureCoord).rgb - 1.0;
+	const vec3 normalMapValue = 2.0 * texture(normalSampler, inTextureCoord).rgb - 1.0;	
+	const vec4 textureColor = texture(textureSampler, inTextureCoord);	
+
+	if (textureColor.a < 0.5) 
+	{
+		discard;
+	}
+
 	const vec3 unitNormal = normalize(normalMapValue);
 	const vec3 unitToCameraVector = normalize(inToCameraVectorTangentSpace - inWorldPositionTangentSpace);
 

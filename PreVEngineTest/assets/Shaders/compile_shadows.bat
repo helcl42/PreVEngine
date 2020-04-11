@@ -26,4 +26,8 @@ move /y vert.spv terrain_normal_mapped_shadows_vert.spv
 
 move /y vert.spv parallax_mapped_shadows_vert.spv
 
+%VULKAN_SDK%/Bin/glslangValidator.exe -V animation_parallax_mapped_shadows.vert
+
+move /y vert.spv animation_parallax_mapped_shadows_vert.spv
+
 pause
