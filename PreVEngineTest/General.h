@@ -29,6 +29,7 @@ enum class SceneNodeFlags : uint64_t {
     HAS_RAYCASTER_COMPONENT,
     HAS_RENDER_COMPONENT,
     HAS_RENDER_NORMAL_MAPPED_COMPONENT,
+    HAS_RENDER_PARALLAX_MAPPED_COMPONENT,
     HAS_ANIMATION_RENDER_COMPONENT,
     HAS_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT,
     HAS_FONT_RENDER_COMPONENT,
@@ -402,11 +403,11 @@ public:
 
     virtual bool HasNormalImage() const = 0;
 
-    virtual std::shared_ptr<Image> GetExtraInfImage() const = 0;
+    virtual std::shared_ptr<Image> GetHeightImage() const = 0;
 
-    virtual std::shared_ptr<ImageBuffer> GetIExtraInfoImageBuffer() const = 0;
+    virtual std::shared_ptr<ImageBuffer> GetHeighImageBuffer() const = 0;
 
-    virtual bool HasExtraInfoImage() const = 0;
+    virtual bool HasHeightImage() const = 0;
 
     virtual float GetShineDamper() const = 0;
 
@@ -429,6 +430,10 @@ public:
     virtual void SetTextureOffset(const glm::vec2& textureOffset) = 0;
 
     virtual const glm::vec3& GetColor() const = 0;
+
+    virtual float GetHeightScale() const = 0;
+
+    virtual void SetHeightScale(const float scale) = 0;
 
 public:
     virtual ~IMaterial() = default;
@@ -518,9 +523,9 @@ private:
 
     std::shared_ptr<ImageBuffer> m_normalImageBuffer{ nullptr };
 
-    std::shared_ptr<Image> m_extraImage{ nullptr };
+    std::shared_ptr<Image> m_heightmage{ nullptr };
 
-    std::shared_ptr<ImageBuffer> m_extraImageBuffer{ nullptr };
+    std::shared_ptr<ImageBuffer> m_heightImageBuffer{ nullptr };
 
     float m_shineDamper{ 10.0f };
 
@@ -530,9 +535,11 @@ private:
 
     bool m_usesFakeLightning{ false };
 
-    unsigned int m_atlasNumberOfRows{ 1 };
+    uint32_t m_atlasNumberOfRows{ 1 };
 
     glm::vec2 m_textureOffset{ 0.0f, 0.0f };
+
+    float m_heightScale{ 0.1f };
 
 public:
     Material(const glm::vec3& color, const float shineDamper, const float reflectivity)
@@ -580,26 +587,26 @@ public:
     {
     }
 
-    Material(const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<ImageBuffer>& normalImageBuffer, const std::shared_ptr<Image>& extraImage, const std::shared_ptr<ImageBuffer>& extraImageBuffer, const float shineDamper, const float reflectivity)
+    Material(const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<ImageBuffer>& normalImageBuffer, const std::shared_ptr<Image>& heightImage, const std::shared_ptr<ImageBuffer>& heightImageBuffer, const float shineDamper, const float reflectivity)
         : m_image(image)
         , m_imageBuffer(imageBuffer)
         , m_normalImage(normalImage)
         , m_normalImageBuffer(normalImageBuffer)
-        , m_extraImage(extraImage)
-        , m_extraImageBuffer(extraImageBuffer)
+        , m_heightmage(heightImage)
+        , m_heightImageBuffer(heightImageBuffer)
         , m_shineDamper(shineDamper)
         , m_reflectivity(reflectivity)
     {
     }
 
-    Material(const glm::vec4 color, const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<ImageBuffer>& normalImageBuffer, const std::shared_ptr<Image>& extraImage, const std::shared_ptr<ImageBuffer>& extraImageBuffer, const float shineDamper, const float reflectivity)
+    Material(const glm::vec4 color, const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<ImageBuffer>& normalImageBuffer, const std::shared_ptr<Image>& heightImage, const std::shared_ptr<ImageBuffer>& heightImageBuffer, const float shineDamper, const float reflectivity)
         : m_color(color)
         , m_image(image)
         , m_imageBuffer(imageBuffer)
         , m_normalImage(normalImage)
         , m_normalImageBuffer(normalImageBuffer)
-        , m_extraImage(extraImage)
-        , m_extraImageBuffer(extraImageBuffer)
+        , m_heightmage(heightImage)
+        , m_heightImageBuffer(heightImageBuffer)
         , m_shineDamper(shineDamper)
         , m_reflectivity(reflectivity)
     {
@@ -643,19 +650,19 @@ public:
         return m_normalImage != nullptr;
     }
 
-    std::shared_ptr<Image> GetExtraInfImage() const override
+    std::shared_ptr<Image> GetHeightImage() const override
     {
-        return m_extraImage;
+        return m_heightmage;
     }
 
-    std::shared_ptr<ImageBuffer> GetIExtraInfoImageBuffer() const override
+    std::shared_ptr<ImageBuffer> GetHeighImageBuffer() const override
     {
-        return m_extraImageBuffer;
+        return m_heightImageBuffer;
     }
 
-    bool HasExtraInfoImage() const override
+    bool HasHeightImage() const override
     {
-        return m_extraImage != nullptr;
+        return m_heightmage != nullptr;
     }
 
     float GetShineDamper() const override
@@ -673,7 +680,7 @@ public:
         return m_hasTransparency;
     }
 
-    void SetHasTransparency(bool transparency) override
+    void SetHasTransparency(const bool transparency) override
     {
         m_hasTransparency = transparency;
     }
@@ -683,7 +690,7 @@ public:
         return m_usesFakeLightning;
     }
 
-    void SetUsesFakeLightning(bool fake) override
+    void SetUsesFakeLightning(const bool fake) override
     {
         m_usesFakeLightning = fake;
     }
@@ -693,7 +700,7 @@ public:
         return m_atlasNumberOfRows;
     }
 
-    void SetAtlasNumberOfRows(unsigned int rows) override
+    void SetAtlasNumberOfRows(const uint32_t rows) override
     {
         m_atlasNumberOfRows = rows;
     }
@@ -706,6 +713,16 @@ public:
     void SetTextureOffset(const glm::vec2& textureOffset) override
     {
         m_textureOffset = textureOffset;
+    }
+
+    float GetHeightScale() const
+    {
+        return m_heightScale;
+    }
+
+    void SetHeightScale(const float scale)
+    {
+        m_heightScale = scale;
     }
 };
 

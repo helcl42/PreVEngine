@@ -24,4 +24,8 @@ glslangValidator -V terrain_normal_mapped_shadows.vert
 
 move /y vert.spv terrain_normal_mapped_shadows_vert.spv
 
+glslangValidator -V parallax_mapped_shadows.vert
+
+move /y vert.spv parallax_mapped_shadows_vert.spv
+
 exit

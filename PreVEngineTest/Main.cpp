@@ -170,6 +170,20 @@ private:
         return std::make_unique<Material>(image, std::move(imageBuffer), normalImage, std::move(normalImageBuffer), shineDamper, reflectivity);
     }
 
+    std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
+    {
+        auto image = CreateImage(texturePath);
+        auto imageBuffer = CreateImageBuffer(allocator, image, repeatAddressMode);
+
+        auto normalImage = CreateImage(normalMapPath);
+        auto normalImageBuffer = CreateImageBuffer(allocator, normalImage, repeatAddressMode);
+
+        auto heightImage = CreateImage(heightMapPath);
+        auto heightImageBuffer = CreateImageBuffer(allocator, heightImage, repeatAddressMode);
+
+        return std::make_unique<Material>(image, std::move(imageBuffer), normalImage, std::move(normalImageBuffer), heightImage, std::move(heightImageBuffer), shineDamper, reflectivity);
+    }
+
     std::unique_ptr<IModel> CreateModel(Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const
     {
         auto vertexBuffer = std::make_unique<VBO>(allocator);
@@ -200,7 +214,31 @@ public:
 
         auto material = CreateMaterial(*allocator, texturePath, true, 2.0f, 0.3f);
 
-        auto mesh = std::make_shared<PlaneMesh>(40.0f, 40.0f, 1, 1, 10.0f, 10.0f);
+        auto mesh = std::make_shared<PlaneMesh>(40.0f, 40.0f, 1, 1, 10.0f, 10.0f, false);
+        auto model = CreateModel(*allocator, std::move(mesh));
+
+        return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
+    }
+
+    std::unique_ptr<IRenderComponent> CreateNormalMappedPlaneRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const bool castsShadows, const bool isCastedByShadows) const
+    {
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
+
+        auto material = CreateMaterial(*allocator, texturePath, normalMapPath, true, 2.0f, 0.3f);
+
+        auto mesh = std::make_shared<PlaneMesh>(40.0f, 40.0f, 1, 1, 1.0f, 1.0f, true);
+        auto model = CreateModel(*allocator, std::move(mesh));
+
+        return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
+    }
+
+    std::unique_ptr<IRenderComponent> CreateParallaxMappedPlaneRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const std::string& parallaxMapPath, const bool castsShadows, const bool isCastedByShadows) const
+    {
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
+
+        auto material = CreateMaterial(*allocator, texturePath, normalMapPath, parallaxMapPath, true, 2.0f, 0.3f);
+
+        auto mesh = std::make_shared<PlaneMesh>(40.0f, 40.0f, 1, 1, 1.0f, 1.0f, true);
         auto model = CreateModel(*allocator, std::move(mesh));
 
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -224,6 +262,19 @@ public:
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         auto material = CreateMaterial(*allocator, texturePath, normalMapPath, true, 10.0f, 0.7f);
+
+        MeshFactory meshFactory{};
+        auto mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
+        auto model = CreateModel(*allocator, std::move(mesh));
+
+        return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
+    }
+
+    std::unique_ptr<IRenderComponent> CreateModelParallaxMappedRenderComponent(const std::string& modelPath, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const bool castsShadows, const bool isCastedByShadows) const
+    {
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
+
+        auto material = CreateMaterial(*allocator, texturePath, normalMapPath, heightMapPath, true, 3.0f, 0.3f);
 
         MeshFactory meshFactory{};
         auto mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
@@ -469,14 +520,15 @@ public:
 };
 
 class PlaneNode : public AbstractSceneNode<SceneNodeFlags> {
-
 public:
-    PlaneNode(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })
+    PlaneNode(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath)
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_PARALLAX_MAPPED_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })
         , m_initialPosition(position)
         , m_initialOrientation(orientation)
         , m_initialScale(scale)
         , m_texturePath(texturePath)
+        , m_normalMapPath(normalMapPath)
+        , m_heightMapPath(heightMapPath)
     {
     }
 
@@ -486,7 +538,7 @@ public:
     void Init() override
     {
         RenderComponentFactory renderComponentFactory{};
-        std::shared_ptr<IRenderComponent> renderComponent = renderComponentFactory.CreatePlaneRenderComponent(m_texturePath, false, true);
+        std::shared_ptr<IRenderComponent> renderComponent = renderComponentFactory.CreateParallaxMappedPlaneRenderComponent(m_texturePath, m_normalMapPath, m_heightMapPath, false, true);
 
         ComponentRepository<IRenderComponent>::Instance().Add(m_id, renderComponent);
 
@@ -524,13 +576,17 @@ public:
     }
 
 protected:
-    const std::string m_texturePath;
-
     const glm::vec3 m_initialPosition;
 
     const glm::quat m_initialOrientation;
 
     const glm::vec3 m_initialScale;
+    
+    const std::string m_texturePath;
+
+    const std::string m_normalMapPath;
+
+    const std::string m_heightMapPath;
 
     std::shared_ptr<ITransformComponent> m_transformComponent;
 
@@ -1777,7 +1833,7 @@ private:
 class Stone : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Stone(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_NORMAL_MAPPED_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_PARALLAX_MAPPED_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })
         , m_initialPosition(position)
         , m_initialOrientation(orientation)
         , m_initialScale(scale)
@@ -1797,7 +1853,8 @@ public:
         ComponentRepository<ITransformComponent>::Instance().Add(m_id, m_transformComponent);
 
         RenderComponentFactory componentFactory{};
-        std::shared_ptr<IRenderComponent> renderComponent = componentFactory.CreateModelNormalMappedRenderComponent(AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.dae"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.png"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulderNormal.png"), true, true);
+        std::shared_ptr<IRenderComponent> renderComponent = componentFactory.CreateModelParallaxMappedRenderComponent(AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.dae"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.png"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_normal.png"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_height.png"), true, true);
+        renderComponent->GetMaterial()->SetHeightScale(0.01f);
 
         ComponentRepository<IRenderComponent>::Instance().Add(m_id, renderComponent);
 
@@ -1891,11 +1948,6 @@ private:
     std::shared_ptr<IShadowsComponent> m_shadowsCompoent;
 };
 
-//
-// TODO
-// handle mouse lock event
-// choose classic or mouse raycaster -> the choosen one is based on this event
-//
 class RayCasterNode : public AbstractSceneNode<SceneNodeFlags> {
 public:
     RayCasterNode()
@@ -1986,6 +2038,51 @@ private:
     EventHandler<RayCasterNode, MouseLockRequest> m_mouseLockHandler{ *this };
 };
 
+class RayCastObserverNode : public AbstractSceneNode<SceneNodeFlags> {
+public:
+    RayCastObserverNode()
+        : AbstractSceneNode()
+    {
+    }
+
+    ~RayCastObserverNode() = default;
+
+public:
+    void Init() override
+    {
+        AbstractSceneNode::Init();
+    }
+
+    void Update(float deltaTime) override
+    {
+        // m_currentRay....
+
+        std::cout << m_currentRay << std::endl;
+
+        // raycast all entities with selectable component and choose the closest + show the actual point where it intersects
+        // if none of thouse is intersected - raycast terrain + show the actual point where it intersects
+        // ot terrain none of terrains intersects... give it up :)
+
+        AbstractSceneNode::Update(deltaTime);
+    }
+
+    void ShutDown() override
+    {
+        AbstractSceneNode::ShutDown();
+    }
+
+public:
+    void operator()(const RayEvent& rayEvt)
+    {
+        m_currentRay = rayEvt.ray;
+    }
+
+private:
+    Ray m_currentRay; // make it nullable???
+
+    EventHandler<RayCastObserverNode, RayEvent> m_rayHandler{ *this };
+};
+
 class RootSceneNode : public AbstractSceneNode<SceneNodeFlags> {
 private:
     EventHandler<RootSceneNode, KeyEvent> m_keyEventHnadler{ *this };
@@ -2014,6 +2111,9 @@ public:
         auto rayCaster = std::make_shared<RayCasterNode>();
         AddChild(rayCaster);
 
+        auto rayCastObserver = std::make_shared<RayCastObserverNode>();
+        AddChild(rayCastObserver);
+
         auto skyBox = std::make_shared<SkyBox>();
         AddChild(skyBox);
 
@@ -2021,17 +2121,17 @@ public:
         sunLight->SetTags({ TAG_MAIN_LIGHT, TAG_LIGHT });
         AddChild(sunLight);
 
-        //        auto light1 = std::make_shared<Light>(glm::vec3(30.0f, 20.0f, 35.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        //        light1->SetTags({ TAG_LIGHT });
-        //        AddChild(light1);
+        //auto light1 = std::make_shared<Light>(glm::vec3(30.0f, 20.0f, 35.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        //light1->SetTags({ TAG_LIGHT });
+        //AddChild(light1);
         //
-        //        auto light2 = std::make_shared<Light>(glm::vec3(-30.0f, 20.0f, 35.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        //        light2->SetTags({ TAG_LIGHT });
-        //        AddChild(light2);
+        //auto light2 = std::make_shared<Light>(glm::vec3(-30.0f, 20.0f, 35.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        //light2->SetTags({ TAG_LIGHT });
+        //AddChild(light2);
         //
-        //        auto light3 = std::make_shared<Light>(glm::vec3(0.0f, 10.0f, -10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        //        light3->SetTags({ TAG_LIGHT });
-        //        AddChild(light3);
+        //auto light3 = std::make_shared<Light>(glm::vec3(0.0f, 10.0f, -10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        //light3->SetTags({ TAG_LIGHT });
+        //AddChild(light3);
 
         auto shadows = std::make_shared<Shadows>();
         shadows->SetTags({ TAG_SHADOW });
@@ -2056,15 +2156,15 @@ public:
             }
         }
 
-        auto goblin = std::make_shared<Goblin>(glm::vec3(90.0f, 9.0f, 90.0f), glm::quat(glm::radians(glm::vec3(-90.0f, 0.0f, 0.0f))), glm::vec3(0.005f));
+        auto goblin = std::make_shared<Goblin>(glm::vec3(0.0f), glm::quat(glm::radians(glm::vec3(-90.0f, 0.0f, 0.0f))), glm::vec3(0.005f));
         goblin->SetTags({ TAG_MAIN_CAMERA, TAG_PLAYER });
         AddChild(goblin);
 
         auto text = std::make_shared<Text>();
         AddChild(text);
 
-        const uint32_t TERRAIN_GRID_MAX_X = 6;
-        const uint32_t TERRAIN_GRID_MAX_Z = 6;
+        const uint32_t TERRAIN_GRID_MAX_X = 3;
+        const uint32_t TERRAIN_GRID_MAX_Z = 3;
 
         auto terrainManager = std::make_shared<TerrainManager>(TERRAIN_GRID_MAX_X, TERRAIN_GRID_MAX_Z);
         AddChild(terrainManager);
@@ -2087,13 +2187,22 @@ public:
         std::default_random_engine scaleRandom{ r() };
         std::uniform_real_distribution<float> scaleDistribution(0.5f, 1.5f);
 
-        const uint32_t STONES_COUNT = 5;
+        const uint32_t STONES_COUNT = 8;
         for (uint32_t i = 0; i < STONES_COUNT; i++) {
             const auto x = positionDistribution(positionRandom);
             const auto z = positionDistribution(positionRandom);
             auto stone = std::make_shared<Stone>(glm::vec3(x, 0.0f, z), glm::quat(glm::vec3(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f)))), glm::vec3(scaleDistribution(scaleRandom)));
             AddChild(stone);
         }
+
+        auto mainPlane = std::make_shared<PlaneNode>(glm::vec3(-25.0f, 0.0f, -25.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/rock.png"), AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), AssetManager::Instance().GetAssetPath("Textures/rock_height.png"));
+        AddChild(mainPlane);
+
+        auto mainPlane2 = std::make_shared<PlaneNode>(glm::vec3(-60.0f, 0.0f, -60.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.png"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_normal.png"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_height.png"));
+        AddChild(mainPlane2);
+
+        auto stone = std::make_shared<Stone>(glm::vec3(-5.0f, 0.0f, -5.0f), glm::quat(glm::vec3(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f)))), glm::vec3(3.0f));
+        AddChild(stone);
 
         AbstractSceneNode::Init();
 

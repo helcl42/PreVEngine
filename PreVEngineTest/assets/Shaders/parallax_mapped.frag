@@ -27,7 +27,8 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 
 layout(binding = 2) uniform sampler2D textureSampler;
 layout(binding = 3) uniform sampler2D normalSampler;
-layout(binding = 4) uniform sampler2DArray depthSampler;
+layout(binding = 4) uniform sampler2D heightSampler;
+layout(binding = 5) uniform sampler2DArray depthSampler;
 
 layout(location = 0) in vec2 inTextureCoord;
 layout(location = 1) in vec3 inNormal;
@@ -40,9 +41,76 @@ layout(location = 7) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
 
 layout(location = 0) out vec4 outColor;
 
+vec2 ParallaxMapping(in vec2 uv, in vec3 viewDir) 
+{
+	float height = 1.0 - texture(heightSampler, uv).r;
+	vec2 p = viewDir.xy * (height * (uboFS.heightScale * 0.5) + uboFS.parallaxBias) / viewDir.z;
+	return uv - p;  
+}
+
+vec2 SteepParallaxMapping(in vec2 uv, in vec3 viewDir) 
+{
+	float layerDepth = 1.0 / uboFS.numLayers;
+	float currLayerDepth = 0.0;
+	vec2 deltaUV = viewDir.xy * uboFS.heightScale / (viewDir.z * uboFS.numLayers);
+	vec2 currUV = uv;
+	float height = 1.0 - texture(heightSampler, currUV).r;
+	for (int i = 0; i < uboFS.numLayers; i++) {
+		currLayerDepth += layerDepth;
+		currUV -= deltaUV;
+		height = 1.0 - texture(heightSampler, currUV).r;
+		if (height < currLayerDepth) {
+			break;
+		}
+	}
+	return currUV;
+}
+
+vec2 ParallaxOcclusionMapping(in vec2 uv, in vec3 viewDir) 
+{
+	float layerDepth = 1.0 / uboFS.numLayers;
+	float currLayerDepth = 0.0;
+	vec2 deltaUV = viewDir.xy * uboFS.heightScale / (viewDir.z * uboFS.numLayers);
+	vec2 currUV = uv;
+	float height = 1.0 - texture(heightSampler, currUV).r;
+	for (int i = 0; i < uboFS.numLayers; i++) {
+		currLayerDepth += layerDepth;
+		currUV -= deltaUV;
+		height = 1.0 - texture(heightSampler, currUV).r;
+		if (height < currLayerDepth) {
+			break;
+		}
+	}
+	vec2 prevUV = currUV + deltaUV;
+	float nextDepth = height - currLayerDepth;
+	float prevDepth = 1.0 - texture(heightSampler, prevUV).r - currLayerDepth + layerDepth;
+	return mix(currUV, prevUV, nextDepth / (nextDepth - prevDepth));
+}
+
 void main() 
 {
-	vec4 textureColor = texture(textureSampler, inTextureCoord);
+	const vec3 viewDirectionTangentSpace = normalize(inToCameraVectorTangentSpace - inWorldPositionTangentSpace);
+	vec2 uv = vec2(0.0, 0.0);
+	switch(uboFS.mappingMode) {
+		case 1:
+			uv = ParallaxMapping(inTextureCoord, viewDirectionTangentSpace);
+			break;
+		case 2:
+			uv = SteepParallaxMapping(inTextureCoord, viewDirectionTangentSpace);
+			break;
+		case 3:
+			uv = ParallaxOcclusionMapping(inTextureCoord, viewDirectionTangentSpace);
+			break;
+		default:
+			uv = inTextureCoord;
+			break;
+	}
+
+	if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+		discard;
+	}
+
+	vec4 textureColor = texture(textureSampler, uv);
 	if (textureColor.a < 0.5) 
 	{
 		discard;
@@ -67,9 +135,9 @@ void main()
 		shadow = GetShadow(depthSampler, normalizedShadowCoord, cascadeIndex, 0.005);
 	}
 
-	const vec3 normalMapValue = 2.0 * texture(normalSampler, inTextureCoord).rgb - 1.0;
+	const vec3 normalMapValue = 2.0 * texture(normalSampler, uv).rgb - 1.0;
 	const vec3 unitNormal = normalize(normalMapValue);
-	const vec3 unitToCameraVector = normalize(inToCameraVectorTangentSpace - inWorldPositionTangentSpace);
+	const vec3 unitToCameraVector = normalize(viewDirectionTangentSpace);
 
 	vec3 totalDiffuse = vec3(0.0);
 	vec3 totalSpecular = vec3(0.0);
@@ -96,4 +164,7 @@ void main()
 	}
 
 	outColor = resultColor;
+
+	// float aaa = texture(normalSampler, inTextureCoord).r;
+	// outColor = vec4(aaa, 0.0, 0.0, 1.0);
 }

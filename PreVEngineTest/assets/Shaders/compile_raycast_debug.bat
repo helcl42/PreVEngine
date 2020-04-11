@@ -1,6 +1,6 @@
-C:/VulkanSDK/1.2.131.2/Bin/glslangValidator.exe -V raycast_debug.vert
-C:/VulkanSDK/1.2.131.2/Bin/glslangValidator.exe -V raycast_debug.geom
-C:/VulkanSDK/1.2.131.2/Bin/glslangValidator.exe -V raycast_debug.frag
+%VULKAN_SDK%/Bin/glslangValidator.exe -V raycast_debug.vert
+%VULKAN_SDK%/Bin/glslangValidator.exe -V raycast_debug.geom
+%VULKAN_SDK%/Bin/glslangValidator.exe -V raycast_debug.frag
 
 move /y frag.spv raycast_debug_frag.spv
 move /y geom.spv raycast_debug_geom.spv
