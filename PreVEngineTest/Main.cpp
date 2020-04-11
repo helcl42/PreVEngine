@@ -314,6 +314,22 @@ public:
 
         return std::make_unique<DefaultAnimationRenderComponent>(std::move(model), std::move(material), std::move(animation), castsShadows, isCastedByShadows);
     }
+
+    std::unique_ptr<IAnimationRenderComponent> CreateAnimatedParallaxMappedModelRenderComponent(const std::string& modelPath, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const bool castsShadows, const bool isCastedByShadows) const
+    {
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
+
+        auto material = CreateMaterial(*allocator, texturePath, normalMapPath, heightMapPath, true, 1.5f, 0.3f);
+
+        MeshFactory meshFactory{};
+        auto mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION | MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
+        auto model = CreateModel(*allocator, std::move(mesh));
+
+        AnimationFactory animationFactory{};
+        auto animation = animationFactory.CreateAnimation(modelPath);
+
+        return std::make_unique<DefaultAnimationRenderComponent>(std::move(model), std::move(material), std::move(animation), castsShadows, isCastedByShadows);
+    }
 };
 
 std::map<std::string, std::shared_ptr<Image> > RenderComponentFactory::s_imagesCache;
@@ -539,6 +555,7 @@ public:
     {
         RenderComponentFactory renderComponentFactory{};
         std::shared_ptr<IRenderComponent> renderComponent = renderComponentFactory.CreateParallaxMappedPlaneRenderComponent(m_texturePath, m_normalMapPath, m_heightMapPath, false, true);
+        renderComponent->GetMaterial()->SetHeightScale(0.001f);
 
         ComponentRepository<IRenderComponent>::Instance().Add(m_id, renderComponent);
 
@@ -763,7 +780,7 @@ private:
 class Goblin : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Goblin(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })
         , m_initialPosition(position)
         , m_initialOrientation(orientation)
         , m_initialScale(scale)
@@ -783,7 +800,8 @@ public:
         ComponentRepository<ITransformComponent>::Instance().Add(m_id, m_transformComponent);
 
         RenderComponentFactory renderComponentFactory{};
-        m_animatonRenderComponent = renderComponentFactory.CreateAnimatedNormalMappedModelRenderComponent(AssetManager::Instance().GetAssetPath("Models/Goblin/goblin.dae"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_texture.png"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_normal_texture.png"), true, true);
+        m_animatonRenderComponent = renderComponentFactory.CreateAnimatedParallaxMappedModelRenderComponent(AssetManager::Instance().GetAssetPath("Models/Goblin/goblin.dae"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_texture.png"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_normal_texture_2.png"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_height_texture.png"), true, true);
+        m_animatonRenderComponent->GetMaterial()->SetHeightScale(0.005f);
         ComponentRepository<IAnimationRenderComponent>::Instance().Add(m_id, m_animatonRenderComponent);
 
         CameraComponentFactory cameraFactory{};
@@ -2198,7 +2216,7 @@ public:
         auto mainPlane = std::make_shared<PlaneNode>(glm::vec3(-25.0f, 0.0f, -25.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/rock.png"), AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), AssetManager::Instance().GetAssetPath("Textures/rock_height.png"));
         AddChild(mainPlane);
 
-        auto mainPlane2 = std::make_shared<PlaneNode>(glm::vec3(-60.0f, 0.0f, -60.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.png"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_normal.png"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_height.png"));
+        auto mainPlane2 = std::make_shared<PlaneNode>(glm::vec3(-60.0f, 0.0f, -60.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_texture.png"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_normal_texture.png"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_height_texture.png"));
         AddChild(mainPlane2);
 
         auto stone = std::make_shared<Stone>(glm::vec3(-5.0f, 0.0f, -5.0f), glm::quat(glm::vec3(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f)))), glm::vec3(3.0f));
