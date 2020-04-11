@@ -406,7 +406,7 @@ public:
 
     virtual std::shared_ptr<Image> GetHeightImage() const = 0;
 
-    virtual std::shared_ptr<ImageBuffer> GetHeighImageBuffer() const = 0;
+    virtual std::shared_ptr<ImageBuffer> GetHeightImageBuffer() const = 0;
 
     virtual bool HasHeightImage() const = 0;
 
@@ -656,7 +656,7 @@ public:
         return m_heightmage;
     }
 
-    std::shared_ptr<ImageBuffer> GetHeighImageBuffer() const override
+    std::shared_ptr<ImageBuffer> GetHeightImageBuffer() const override
     {
         return m_heightImageBuffer;
     }
