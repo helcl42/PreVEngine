@@ -717,12 +717,12 @@ public:
         m_textureOffset = textureOffset;
     }
 
-    float GetHeightScale() const
+    float GetHeightScale() const override
     {
         return m_heightScale;
     }
 
-    void SetHeightScale(const float scale)
+    void SetHeightScale(const float scale) override
     {
         m_heightScale = scale;
     }
