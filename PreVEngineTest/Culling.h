@@ -23,21 +23,21 @@ struct Point {
 };
 
 struct Ray {
-    glm::vec3 startPosition;
+    glm::vec3 origin;
 
     glm::vec3 direction;
 
     float length;
 
     Ray()
-        : startPosition(glm::vec3(0))
+        : origin(glm::vec3(0))
         , direction(glm::vec3(0))
         , length(0)
     {
     }
 
     Ray(const glm::vec3& pos, const glm::vec3& dir, const float len)
-        : startPosition(pos)
+        : origin(pos)
         , direction(glm::normalize(dir))
         , length(len)
     {
@@ -46,9 +46,35 @@ struct Ray {
     friend std::ostream& operator<<(std::ostream& out, const Ray& ray)
     {
         out << "Direction: (" << ray.direction.x << ", " << ray.direction.y << ", " << ray.direction.z << ")" << std::endl;
-        out << "StartPos:  (" << ray.startPosition.x << ", " << ray.startPosition.y << ", " << ray.startPosition.z << ")" << std::endl;
+        out << "Origin:    (" << ray.origin.x << ", " << ray.origin.y << ", " << ray.origin.z << ")" << std::endl;
         out << "Length:    " << ray.length << std::endl;
         return out;
+    }
+};
+
+struct RayCastResult {
+    glm::vec3 point;
+
+    glm::vec3 normal;
+
+    float t;
+
+    bool hit;
+
+    explicit RayCastResult()
+        : point(glm::vec3(0.0f))
+        , normal(glm::vec3(0, 0, 1))
+        , t(-1)
+        , hit(false)
+    {
+    }
+
+    explicit RayCastResult(const glm::vec3& p, const glm::vec3& n, const float distanceOnRay, const bool wasHit)
+        : point(p)
+        , normal(n)
+        , t(distanceOnRay)
+        , hit(wasHit)
+    {
     }
 };
 
@@ -312,22 +338,107 @@ public:
         return true;
     }
 
-    static bool Intersects(const Ray& ray, const AABB& box)
+    static bool Intersects(const Ray& ray, const AABB& box, RayCastResult& result)
     {
-        // TODO
-        throw std::runtime_error("Not implemented...");
+        const glm::vec3 min = box.minExtents;
+        const glm::vec3 max = box.maxExtents;
+
+        const float SMALL_FLOAT = 0.00001f;
+        float t1 = (min.x - ray.origin.x) / (CMP(ray.direction.x, 0.0f) ? SMALL_FLOAT : ray.direction.x);
+        float t2 = (max.x - ray.origin.x) / (CMP(ray.direction.x, 0.0f) ? SMALL_FLOAT : ray.direction.x);
+        float t3 = (min.y - ray.origin.y) / (CMP(ray.direction.y, 0.0f) ? SMALL_FLOAT : ray.direction.y);
+        float t4 = (max.y - ray.origin.y) / (CMP(ray.direction.y, 0.0f) ? SMALL_FLOAT : ray.direction.y);
+        float t5 = (min.z - ray.origin.z) / (CMP(ray.direction.z, 0.0f) ? SMALL_FLOAT : ray.direction.z);
+        float t6 = (max.z - ray.origin.z) / (CMP(ray.direction.z, 0.0f) ? SMALL_FLOAT : ray.direction.z);
+
+        float tmin = std::fmaxf(std::fmaxf(std::fminf(t1, t2), std::fminf(t3, t4)), std::fminf(t5, t6));
+        float tmax = std::fminf(std::fminf(std::fmaxf(t1, t2), std::fmaxf(t3, t4)), std::fmaxf(t5, t6));
+
+        if (tmax < 0) {
+            return false; // AABB is behind ray's origin
+        }        
+
+        if (tmin > tmax) {
+            return false; // tmin > tmax => ray doesn't intersect AABB
+        }
+
+        float tResult = tmin;
+
+        // if tmin is < 0, tmax is closer
+        if (tmin < 0.0f) {
+            tResult = tmax;
+        }        
+
+        const glm::vec3 normals[] = {
+            { -1, 0, 0 },
+            { 1, 0, 0 },
+            { 0, -1, 0 },
+            { 0, 1, 0 },
+            { 0, 0, -1 },
+            { 0, 0, 1 }
+        };
+
+        glm::vec3 resultNormal;
+        float t[] = { t1, t2, t3, t4, t5, t6 };
+        for (auto i = 0; i < 6; ++i) {
+            if (CMP(tResult, t[i])) {
+                resultNormal = normals[i];
+            }
+        }
+
+        result.t = tResult;
+        result.hit = true;
+        result.point = ray.origin + ray.direction * tResult;
+        result.normal = resultNormal;
+
+        return true;
     }
 
-    static bool Intersects(const Ray& ray, const Sphere& sphere)
+    static bool Intersects(const Ray& ray, const Sphere& sphere, RayCastResult& result)
     {
-        // TODO
-        throw std::runtime_error("Not implemented...");
+        const glm::vec3 e = sphere.position - ray.origin;
+        const float radiusSquared = sphere.radius * sphere.radius;
+
+        float eSq = glm::dot(e, e); // squared distance
+        float a = glm::dot(e, ray.direction);
+        
+        if (radiusSquared - (eSq - a * a) < 0.0f) {
+            return false;
+        }
+
+        float bSq = eSq - (a * a);
+        float f = std::sqrt(fabsf(radiusSquared - bSq));       
+
+        float t;
+        if (eSq < radiusSquared) { // Ray starts inside the sphere
+            t = a + f; // reverse direction
+        } else {
+            t = a - f;
+        }
+
+        result.t = t;
+        result.hit = true;
+        result.point = ray.origin + t * ray.direction;
+        result.normal = glm::normalize(result.point - sphere.position);
+        return true;
     }
 
-    static bool Intersects(const Ray& ray, const Plane& plane)
+    static bool Intersects(const Ray& ray, const Plane& plane, RayCastResult& result)
     {
-        // TODO
-        throw std::runtime_error("Not implemented...");
+        const float EPSILON = 0.0001f;
+        float denom = glm::dot(ray.direction, plane.normal);
+        if (std::fabsf(denom) > EPSILON) {
+            float pn = glm::dot(ray.origin, plane.normal);
+            float t = -(plane.distance + pn) / denom;
+            if (t >= EPSILON) {
+                result.t = t;
+                result.hit = true;
+                result.point = ray.origin + t * ray.direction;
+                result.normal = plane.normal;
+                return true;
+            }
+        }
+        return false;
     }
 };
 
@@ -467,6 +578,8 @@ class IBoundingVolumeComponent {
 public:
     virtual bool IsInFrustum(const Frustum& frustum) = 0;
 
+    virtual bool Intersects(const Ray& ray, RayCastResult& result) = 0;
+
     virtual void Update(const glm::mat4& worldTransform) = 0;
 
     virtual BoundingVolumeType GetType() const = 0;
@@ -495,6 +608,11 @@ public:
     bool IsInFrustum(const Frustum& frustum) override
     {
         return Culling::Intersects(frustum, m_working);
+    }
+
+    bool Intersects(const Ray& ray, RayCastResult& result) override
+    {
+        return Culling::Intersects(ray, m_working, result);
     }
 
     void Update(const glm::mat4& worldTransform) override
@@ -561,6 +679,11 @@ public:
     bool IsInFrustum(const Frustum& frustum) override
     {
         return Culling::Intersects(frustum, m_working);
+    }
+
+    bool Intersects(const Ray& ray, RayCastResult& result) override
+    {
+        return Culling::Intersects(ray, m_working, result);
     }
 
     void Update(const glm::mat4& worldTransform) override

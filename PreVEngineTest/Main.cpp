@@ -1854,7 +1854,7 @@ private:
 class Stone : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Stone(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_PARALLAX_MAPPED_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_PARALLAX_MAPPED_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT | SceneNodeFlags::HAS_SELECTABLE_COMPONENT })
         , m_initialPosition(position)
         , m_initialOrientation(orientation)
         , m_initialScale(scale)
@@ -1883,6 +1883,9 @@ public:
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(renderComponent->GetModel()->GetMesh()->GetVertices());
         ComponentRepository<IBoundingVolumeComponent>::Instance().Add(m_id, m_boundingVolumeComponent);
 
+        const auto selectableComponent = std::make_shared<SelectableComponent>();
+        ComponentRepository<ISelectableComponent>::Instance().Add(m_id, selectableComponent);
+
         AbstractSceneNode::Init();
     }
 
@@ -1905,6 +1908,8 @@ public:
     void ShutDown() override
     {
         AbstractSceneNode::ShutDown();
+
+        ComponentRepository<ISelectableComponent>::Instance().Remove(m_id);
 
         ComponentRepository<IBoundingVolumeComponent>::Instance().Remove(m_id);
 
@@ -2076,13 +2081,35 @@ public:
 
     void Update(float deltaTime) override
     {
-        // m_currentRay....
+        //std::cout << m_currentRay << std::endl;
 
-        std::cout << m_currentRay << std::endl;
+        // reset any selectable nodes here -> eventhough it does not have bounding volume flag
+        auto selectableNodes = GetSelectableNodes();
+        for (auto selectableNode : selectableNodes) {
+            auto selectableComponent = ComponentRepository<ISelectableComponent>::Instance().Get(selectableNode->GetId());
+            selectableComponent->Reset();
+        }
 
-        // raycast all entities with selectable component and choose the closest + show the actual point where it intersects
-        // if none of thouse is intersected - raycast terrain + show the actual point where it intersects
-        // ot terrain none of terrains intersects... give it up :)
+        // try find some intersecting nodes
+        auto intersectingNodes = FindIntersectingNodes();
+        if (intersectingNodes.size() > 0) {
+            for (auto intersectedNode : intersectingNodes) {
+                const auto node = std::get<0>(intersectedNode.second);
+                const auto rayCastResult = std::get<1>(intersectedNode.second);
+                auto selectableComponent = ComponentRepository<ISelectableComponent>::Instance().Get(node->GetId());
+                selectableComponent->SetSelected(true);
+                selectableComponent->SetPosition(rayCastResult.point);
+                break; // comment this to mark the closest one
+            }
+            std::cout << "RaycastHitCount: " << intersectingNodes.size() << std::endl;
+        } else {
+            std::cout << "No raycast HIT !!!" << std::endl;
+        }
+
+
+        // TODO 
+        // check terrain first - then any other objects, otherwise give up
+        // render node collision points -> it is stored in selectableComponent
 
         AbstractSceneNode::Update(deltaTime);
     }
@@ -2090,6 +2117,28 @@ public:
     void ShutDown() override
     {
         AbstractSceneNode::ShutDown();
+    }
+
+private:
+    std::vector<std::shared_ptr<ISceneNode<SceneNodeFlags> > > GetSelectableNodes() const
+    {
+        return GraphTraversal<SceneNodeFlags>::Instance().FindAllWithFlags(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SELECTABLE_COMPONENT });
+    }
+
+    std::map<float, std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags>>, RayCastResult> > FindIntersectingNodes() const
+    {
+        std::map<float, std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags> >, RayCastResult> > intersectingNodes; // sorted by distance
+
+        auto selectableNodes = GraphTraversal<SceneNodeFlags>::Instance().FindAllWithFlags(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SELECTABLE_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT }, LogicOperation::AND);
+        for (auto selectable : selectableNodes) {
+            const auto boundingVolume = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(selectable->GetId());
+
+            RayCastResult rayCastResult{};
+            if (boundingVolume->Intersects(m_currentRay, rayCastResult)) {
+                intersectingNodes.insert({ rayCastResult.t, { selectable, rayCastResult } });
+            }
+        }
+        return intersectingNodes;
     }
 
 public:
@@ -2208,7 +2257,7 @@ public:
         std::default_random_engine scaleRandom{ r() };
         std::uniform_real_distribution<float> scaleDistribution(0.5f, 1.5f);
 
-        const uint32_t STONES_COUNT = 8;
+        const uint32_t STONES_COUNT = 12;
         for (uint32_t i = 0; i < STONES_COUNT; i++) {
             const auto x = positionDistribution(positionRandom);
             const auto z = positionDistribution(positionRandom);

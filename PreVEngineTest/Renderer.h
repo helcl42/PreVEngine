@@ -1942,10 +1942,15 @@ public:
                 // material
                 uniformsFS.material = MaterialUniform(nodeRenderComponent->GetMaterial()->GetShineDamper(), nodeRenderComponent->GetMaterial()->GetReflectivity());
 
+                bool selected = false;
+                if (ComponentRepository<ISelectableComponent>::Instance().Contains(node->GetId())) {
+                    selected = ComponentRepository<ISelectableComponent>::Instance().Get(node->GetId())->IsSelected();
+                }
+
                 // common
                 uniformsFS.fogColor = FOG_COLOR;
                 uniformsFS.selectedColor = SELECTED_COLOR;
-                uniformsFS.selected = false;
+                uniformsFS.selected = selected;
                 uniformsFS.castedByShadows = nodeRenderComponent->IsCastedByShadows();
 
                 uboFS->Update(&uniformsFS);
@@ -2206,10 +2211,15 @@ public:
                 // material
                 uniformsFS.material = MaterialUniform(nodeRenderComponent->GetMaterial()->GetShineDamper(), nodeRenderComponent->GetMaterial()->GetReflectivity());
 
+                bool selected = false;
+                if (ComponentRepository<ISelectableComponent>::Instance().Contains(node->GetId())) {
+                    selected = ComponentRepository<ISelectableComponent>::Instance().Get(node->GetId())->IsSelected();
+                }
+
                 // common
                 uniformsFS.fogColor = FOG_COLOR;
                 uniformsFS.selectedColor = SELECTED_COLOR;
-                uniformsFS.selected = false;
+                uniformsFS.selected = selected;
                 uniformsFS.castedByShadows = nodeRenderComponent->IsCastedByShadows();
 
                 uboFS->Update(&uniformsFS);
@@ -2476,10 +2486,15 @@ public:
                 // material
                 uniformsFS.material = MaterialUniform(nodeRenderComponent->GetMaterial()->GetShineDamper(), nodeRenderComponent->GetMaterial()->GetReflectivity());
 
+                bool selected = false;
+                if (ComponentRepository<ISelectableComponent>::Instance().Contains(node->GetId())) {
+                    selected = ComponentRepository<ISelectableComponent>::Instance().Get(node->GetId())->IsSelected();
+                }
+
                 // common
                 uniformsFS.fogColor = FOG_COLOR;
                 uniformsFS.selectedColor = SELECTED_COLOR;
-                uniformsFS.selected = false;
+                uniformsFS.selected = selected;
                 uniformsFS.castedByShadows = nodeRenderComponent->IsCastedByShadows();
 
                 // scaler for heightMap values

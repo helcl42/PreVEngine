@@ -27,8 +27,8 @@ public:
 
         std::vector<glm::vec3> vertices;
         std::vector<uint32_t> indices;
-        for (uint32_t i = 0; i < pointsCount; i++) {
-            vertices.emplace_back(ray.startPosition + ray.direction * (static_cast<float>(i) * DISTANCE_BETWEEN_POINTS));
+        for (uint32_t i = 1; i < pointsCount; i++) {
+            vertices.emplace_back(ray.origin + ray.direction * (static_cast<float>(i) * DISTANCE_BETWEEN_POINTS));
             indices.emplace_back(i);
         }
 
@@ -86,7 +86,7 @@ public:
 
         Ray ray{ m_rayStartPosition, m_rayDirection, m_rayLength };
         EventChannel::Broadcast(RayEvent{ ray });
-        //std::cout << ray << std::endl;
+
 #ifdef RENDER_RAYCASTS
         RayModelFactory modelFactory{};
         m_model = modelFactory.Create(ray);
@@ -177,7 +177,7 @@ public:
 
         Ray ray{ m_rayStartPosition, m_rayDirection, m_rayLength }; 
         EventChannel::Broadcast(RayEvent{ ray });
-        //std::cout << ray << std::endl;
+
 #ifdef RENDER_RAYCASTS
         RayModelFactory modelFactory{};
         m_model = modelFactory.Create(ray);
@@ -278,6 +278,58 @@ public:
     {
         return std::make_unique<MouseRayCasterComponent>();
     }
+};
+
+class ISelectableComponent {
+public:
+    virtual bool IsSelected() const = 0;
+
+    virtual void SetSelected(const bool selected) = 0;
+
+    virtual const glm::vec3& GetPostiion() const = 0;
+
+    virtual void SetPosition(const glm::vec3& at) = 0;
+
+    virtual void Reset() = 0;
+
+public:
+    virtual ~ISelectableComponent() = default;
+};
+
+
+class SelectableComponent final : public ISelectableComponent {
+public:
+    bool IsSelected() const override
+    {
+        return m_selected;
+    }
+
+    void SetSelected(const bool selected) override
+    {
+        m_selected = selected;
+    }
+
+    
+    const glm::vec3& GetPostiion() const override
+    {
+        return m_position;
+    }
+
+    void SetPosition(const glm::vec3& at) override
+    {
+        m_position = at;
+    }
+
+    void Reset()
+    {
+        m_selected = false;
+        m_position = glm::vec3(std::numeric_limits<float>::min());
+    }
+
+private:
+    bool m_selected{ false };
+
+    glm::vec3 m_position{ std::numeric_limits<float>::min() };
 };
 
 #endif // !__RAY_CASTING_H__
