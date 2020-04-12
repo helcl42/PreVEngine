@@ -537,7 +537,7 @@ public:
 
 class PlaneNode : public AbstractSceneNode<SceneNodeFlags> {
 public:
-    PlaneNode(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath)
+    PlaneNode(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const float heightScale)
         : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_PARALLAX_MAPPED_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })
         , m_initialPosition(position)
         , m_initialOrientation(orientation)
@@ -545,6 +545,7 @@ public:
         , m_texturePath(texturePath)
         , m_normalMapPath(normalMapPath)
         , m_heightMapPath(heightMapPath)
+        , m_heightScale(heightScale)
     {
     }
 
@@ -555,7 +556,7 @@ public:
     {
         RenderComponentFactory renderComponentFactory{};
         std::shared_ptr<IRenderComponent> renderComponent = renderComponentFactory.CreateParallaxMappedPlaneRenderComponent(m_texturePath, m_normalMapPath, m_heightMapPath, false, true);
-        renderComponent->GetMaterial()->SetHeightScale(0.001f);
+        renderComponent->GetMaterial()->SetHeightScale(m_heightScale);
 
         ComponentRepository<IRenderComponent>::Instance().Add(m_id, renderComponent);
 
@@ -604,6 +605,8 @@ protected:
     const std::string m_normalMapPath;
 
     const std::string m_heightMapPath;
+    
+    const float m_heightScale;
 
     std::shared_ptr<ITransformComponent> m_transformComponent;
 
@@ -613,7 +616,7 @@ protected:
 class Terrain : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Terrain(const int x, const int z)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })
         , m_xIndex(x)
         , m_zIndex(z)
     {
@@ -632,7 +635,7 @@ public:
         ComponentRepository<ITransformComponent>::Instance().Add(m_id, m_transformComponent);
 
         TerrainComponentFactory terrainComponentFactory{};
-        m_terrainComponent = std::move(terrainComponentFactory.CreateRandomTerrainNormalMapped(m_xIndex, m_zIndex, TERRAIN_SIZE));
+        m_terrainComponent = std::move(terrainComponentFactory.CreateRandomTerrainParallaxMapped(m_xIndex, m_zIndex, TERRAIN_SIZE));
         m_transformComponent->SetPosition(m_terrainComponent->GetPosition());
         ComponentRepository<ITerrainComponenet>::Instance().Add(m_id, m_terrainComponent);
 
@@ -718,7 +721,7 @@ public:
 
         float minHeight = std::numeric_limits<float>::max();
         float maxHeight = std::numeric_limits<float>::min();
-        auto terrains = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ITerrainComponenet>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT | SceneNodeFlags::HAS_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT });
+        auto terrains = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ITerrainComponenet>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT | SceneNodeFlags::HAS_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT });
         for (const auto& terrain : terrains) {
             auto heightInfo = terrain->GetHeightMapInfo();
             if (minHeight > heightInfo->minHeight) {
@@ -2213,14 +2216,17 @@ public:
             AddChild(stone);
         }
 
-        auto mainPlane = std::make_shared<PlaneNode>(glm::vec3(-25.0f, 0.0f, -25.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/rock.png"), AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), AssetManager::Instance().GetAssetPath("Textures/rock_height.png"));
-        AddChild(mainPlane);
+        //auto mainPlane = std::make_shared<PlaneNode>(glm::vec3(-25.0f, 0.0f, -25.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/rock.png"), AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), AssetManager::Instance().GetAssetPath("Textures/rock_height.png"), 0.03f);
+        //AddChild(mainPlane);
 
-        auto mainPlane2 = std::make_shared<PlaneNode>(glm::vec3(-60.0f, 0.0f, -60.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_texture.png"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_normal_texture.png"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_height_texture.png"));
-        AddChild(mainPlane2);
+        //auto mainPlane2 = std::make_shared<PlaneNode>(glm::vec3(-60.0f, 0.0f, -60.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/fungus.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_height.png"), 0.000005f);
+        //AddChild(mainPlane2);
+        //
+        //auto mainPlane3 = std::make_shared<PlaneNode>(glm::vec3(-100.0f, 0.0f, -60.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_height.png"), 0.005f);
+        //AddChild(mainPlane3);
 
-        auto stone = std::make_shared<Stone>(glm::vec3(-5.0f, 0.0f, -5.0f), glm::quat(glm::vec3(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f)))), glm::vec3(3.0f));
-        AddChild(stone);
+        //auto mainPlane4 = std::make_shared<PlaneNode>(glm::vec3(-30.0f, 0.0f, -80.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/sand.png"), AssetManager::Instance().GetAssetPath("Textures/sand_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_height.png"), 0.005f);
+        //AddChild(mainPlane4);
 
         AbstractSceneNode::Init();
 
