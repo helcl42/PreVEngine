@@ -644,6 +644,58 @@ public:
     }
 };
 
+class TerrainParallaxMappedShadowsShader final : public Shader {
+public:
+    TerrainParallaxMappedShadowsShader(const VkDevice device)
+        : Shader(device)
+    {
+    }
+
+    ~TerrainParallaxMappedShadowsShader() = default;
+
+private:
+    void InitVertexInputs() override
+    {
+        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+
+        m_inputAttributeDescriptions = {
+            VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
+            VkUtils::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
+            VkUtils::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })),
+            VkUtils::CreateVertexInputAttributeDescription(0, 3, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 })),
+            VkUtils::CreateVertexInputAttributeDescription(0, 4, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 })),
+        };
+    }
+
+    void InitDescriptorSets() override
+    {
+        // vertex shader
+        AddDescriptorSet("ubo", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT);
+    }
+
+    void InitPushConstantsBlocks() override
+    {
+    }
+};
+
+class TerrainParallaxMappedShadowsPipeline final : public AbstractGraphicsPipeline {
+public:
+    TerrainParallaxMappedShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+        : AbstractGraphicsPipeline(device, renderpass, shaders)
+    {
+    }
+
+    ~TerrainParallaxMappedShadowsPipeline() = default;
+
+public:
+    VkPipeline Init() override
+    {
+        VkPipelineFactory pipelineFactory{};
+        pipelineFactory.CreateShadowsPipeline(m_device, m_renderPass, m_shaders, m_pipelineLayout, m_graphicsPipeline);
+        return m_graphicsPipeline;
+    }
+};
+
 class AnimatedShadowsShader final : public Shader {
 public:
     AnimatedShadowsShader(const VkDevice device)
@@ -1361,6 +1413,65 @@ public:
     }
 
     ~TerrainNormalMappedPipeline() = default;
+
+public:
+    VkPipeline Init() override
+    {
+        VkPipelineFactory pipelineFactory{};
+        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, m_pipelineLayout, m_graphicsPipeline);
+        return m_graphicsPipeline;
+    }
+};
+
+class TerrainParallaxMappedShader final : public Shader {
+public:
+    TerrainParallaxMappedShader(const VkDevice device)
+        : Shader(device)
+    {
+    }
+
+    ~TerrainParallaxMappedShader() = default;
+
+private:
+    void InitVertexInputs() override
+    {
+        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+
+        m_inputAttributeDescriptions = {
+            VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
+            VkUtils::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
+            VkUtils::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })),
+            VkUtils::CreateVertexInputAttributeDescription(0, 3, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 })),
+            VkUtils::CreateVertexInputAttributeDescription(0, 4, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 })),
+        };
+    }
+
+    void InitDescriptorSets() override
+    {
+        // vertex shader
+        AddDescriptorSet("uboVS", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT);
+
+        // fragment shader
+        AddDescriptorSet("uboFS", 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
+        AddDescriptorSet("textureSampler", 2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4, VK_SHADER_STAGE_FRAGMENT_BIT);
+        AddDescriptorSet("normalSampler", 3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4, VK_SHADER_STAGE_FRAGMENT_BIT);
+        AddDescriptorSet("heightSampler", 4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4, VK_SHADER_STAGE_FRAGMENT_BIT);
+        AddDescriptorSet("depthSampler", 5, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
+    }
+
+    void InitPushConstantsBlocks() override
+    {
+    }
+};
+
+class TerrainParallaxMappedPipeline final : public AbstractGraphicsPipeline {
+public:
+    TerrainParallaxMappedPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+        : AbstractGraphicsPipeline(device, renderpass, shaders)
+    {
+    }
+
+    ~TerrainParallaxMappedPipeline() = default;
 
 public:
     VkPipeline Init() override

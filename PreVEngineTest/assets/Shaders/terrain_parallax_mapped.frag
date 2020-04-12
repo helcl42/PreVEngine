@@ -25,12 +25,18 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 
 	vec4 heightSteps[MATERIAL_COUNT];
 
-	float heightTransitionRange;
+	vec4 heightScale[MATERIAL_COUNT];
+
+	float heightTransitionRange;	
+	float parallaxBias;
+	float numLayers;
+	uint mappingMode;
 } uboFS;
 
 layout(binding = 2) uniform sampler2D textureSampler[MATERIAL_COUNT];
 layout(binding = 3) uniform sampler2D normalSampler[MATERIAL_COUNT];
-layout(binding = 4) uniform sampler2DArray depthSampler;
+layout(binding = 4) uniform sampler2D heightSampler[MATERIAL_COUNT];
+layout(binding = 5) uniform sampler2DArray depthSampler;
 
 layout(location = 0) in vec2 inTextureCoord;
 layout(location = 1) in vec3 inNormal;
@@ -43,6 +49,77 @@ layout(location = 7) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
 
 layout(location = 0) out vec4 outColor;
 
+vec2 ParallaxMapping(in uint index, in vec2 uv, in vec3 viewDir) 
+{
+	float height = 1.0 - texture(heightSampler[index], uv).r;
+	vec2 p = viewDir.xy * (height * (uboFS.heightScale[index].x * 0.5) + uboFS.parallaxBias) / viewDir.z;
+	return uv - p;  
+}
+
+vec2 SteepParallaxMapping(in uint index, in vec2 uv, in vec3 viewDir) 
+{
+	float layerDepth = 1.0 / uboFS.numLayers;
+	float currLayerDepth = 0.0;
+	vec2 deltaUV = viewDir.xy * uboFS.heightScale[index].x / (viewDir.z * uboFS.numLayers);
+	vec2 currUV = uv;
+	float height = 1.0 - texture(heightSampler[index], currUV).r;
+	for (int i = 0; i < uboFS.numLayers; i++) 
+	{
+		currLayerDepth += layerDepth;
+		currUV -= deltaUV;
+		height = 1.0 - texture(heightSampler[index], currUV).r;
+		if (height < currLayerDepth) 
+		{
+			break;
+		}
+	}
+	return currUV;
+}
+
+vec2 ParallaxOcclusionMapping(in uint index, in vec2 uv, in vec3 viewDir) 
+{
+	float layerDepth = 1.0 / uboFS.numLayers;
+	float currLayerDepth = 0.0;
+	vec2 deltaUV = viewDir.xy * uboFS.heightScale[index].x / (viewDir.z * uboFS.numLayers);
+	vec2 currUV = uv;
+	float height = 1.0 - texture(heightSampler[index], currUV).r;
+	for (int i = 0; i < uboFS.numLayers; i++) 
+	{
+		currLayerDepth += layerDepth;
+		currUV -= deltaUV;
+		height = 1.0 - texture(heightSampler[index], currUV).r;
+		if (height < currLayerDepth) 
+		{
+			break;
+		}
+	}
+	vec2 prevUV = currUV + deltaUV;
+	float nextDepth = height - currLayerDepth;
+	float prevDepth = 1.0 - texture(heightSampler[index], prevUV).r - currLayerDepth + layerDepth;
+	return mix(currUV, prevUV, nextDepth / (nextDepth - prevDepth));
+}
+
+vec2 GetParallaxTextureCoordOffset(in uint index, in vec2 textureCoord, in vec3 viewDir)
+{
+	vec2 uv = vec2(0.0, 0.0);
+	switch(uboFS.mappingMode) 
+	{
+		case 1:
+			uv = ParallaxMapping(index, textureCoord, viewDir);
+			break;
+		case 2:
+			uv = SteepParallaxMapping(index, textureCoord, viewDir);
+			break;
+		case 3:
+			uv = ParallaxOcclusionMapping(index, textureCoord, viewDir);
+			break;
+		default:
+			uv = textureCoord;
+			break;
+	}
+	return uv;
+}
+
 void main() 
 {
 	const vec3 viewDirectionTangentSpace = normalize(inToCameraVectorTangentSpace - inWorldPositionTangentSpace);
@@ -52,6 +129,7 @@ void main()
 
     vec4 textureColor = vec4(1.0, 1.0, 1.0, 1.0);
 	vec3 normal = vec3(0.0, 1.0, 0.0);
+	vec2 uv = vec2(0.0, 0.0);
 	float shineDamper = 1.0f;
 	float reflectivity = 1.0f;
     for(uint i = 0; i < MATERIAL_COUNT; i++) 
@@ -62,12 +140,16 @@ void main()
             {				
                 float ratio = (normalizedHeight - uboFS.heightSteps[i].x + uboFS.heightTransitionRange) / (2 * uboFS.heightTransitionRange);
 
-                vec4 color1 = texture(textureSampler[i], inTextureCoord);
-                vec4 color2 = texture(textureSampler[i + 1], inTextureCoord);
+				vec2 uv1 = GetParallaxTextureCoordOffset(i, inTextureCoord, viewDirectionTangentSpace);
+				vec2 uv2 = GetParallaxTextureCoordOffset(i + 1, inTextureCoord, viewDirectionTangentSpace);
+				uv = mix(uv1, uv2, ratio);
+
+                vec4 color1 = texture(textureSampler[i], uv);
+                vec4 color2 = texture(textureSampler[i + 1], uv);
                 textureColor = mix(color1, color2, ratio);
 
-				vec3 normal1 = normalize(2.0 * texture(normalSampler[i], inTextureCoord).xyz - 1.0);
-				vec3 normal2 = normalize(2.0 * texture(normalSampler[i + 1], inTextureCoord).xyz - 1.0);
+				vec3 normal1 = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);
+				vec3 normal2 = normalize(2.0 * texture(normalSampler[i + 1], uv).xyz - 1.0);
 				normal = mix(normal1, normal2, ratio);
 
 				float shineDamper1 = uboFS.material[i].shineDamper;
@@ -81,28 +163,36 @@ void main()
             }
 			else if(normalizedHeight < uboFS.heightSteps[i].x - uboFS.heightTransitionRange)
 			{
-				textureColor = texture(textureSampler[i], inTextureCoord);
-				normal = normalize(2.0 * texture(normalSampler[i], inTextureCoord).xyz - 1.0);
+				uv = GetParallaxTextureCoordOffset(i, inTextureCoord, viewDirectionTangentSpace);
+				textureColor = texture(textureSampler[i], uv);
+				normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);
 				shineDamper = uboFS.material[i].shineDamper;
 				reflectivity = uboFS.material[i].reflectivity;
 				break;
 			}
             else if(normalizedHeight > uboFS.heightSteps[i].x + uboFS.heightTransitionRange && normalizedHeight < uboFS.heightSteps[i + 1].x - uboFS.heightTransitionRange)
             {
-				textureColor = texture(textureSampler[i], inTextureCoord);
-				normal = normalize(2.0 * texture(normalSampler[i], inTextureCoord).xyz - 1.0);
+				uv = GetParallaxTextureCoordOffset(i, inTextureCoord, viewDirectionTangentSpace);
+				textureColor = texture(textureSampler[i], uv);
+				normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);
 				shineDamper = uboFS.material[i].shineDamper;
 				reflectivity = uboFS.material[i].reflectivity;
             }
         }
         else
         {
-			textureColor = texture(textureSampler[i], inTextureCoord);
-			normal = normalize(2.0 * texture(normalSampler[i], inTextureCoord).xyz - 1.0);
+			uv = GetParallaxTextureCoordOffset(i, inTextureCoord, viewDirectionTangentSpace);
+			textureColor = texture(textureSampler[i], uv);
+			normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);
 			shineDamper = uboFS.material[i].shineDamper;
 			reflectivity = uboFS.material[i].reflectivity;
         }
     }
+
+	if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) 
+    {
+		discard;
+	}
 
 	if (textureColor.a < 0.5) 
 	{

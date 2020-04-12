@@ -32,4 +32,8 @@ glslangValidator -V animation_parallaax_mapped_shadows.vert
 
 mv vert.spv animation_parallax_mapped_shadows_vert.spv
 
+glslangValidator -V terrain_parallax_mapped_shadows.vert
+
+mv vert.spv terrain_parallax_mapped_shadows_vert.spv
+
 exit

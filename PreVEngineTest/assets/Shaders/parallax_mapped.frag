@@ -55,11 +55,13 @@ vec2 SteepParallaxMapping(in vec2 uv, in vec3 viewDir)
 	vec2 deltaUV = viewDir.xy * uboFS.heightScale / (viewDir.z * uboFS.numLayers);
 	vec2 currUV = uv;
 	float height = 1.0 - texture(heightSampler, currUV).r;
-	for (int i = 0; i < uboFS.numLayers; i++) {
+	for (int i = 0; i < uboFS.numLayers; i++) 
+	{
 		currLayerDepth += layerDepth;
 		currUV -= deltaUV;
 		height = 1.0 - texture(heightSampler, currUV).r;
-		if (height < currLayerDepth) {
+		if (height < currLayerDepth) 
+		{
 			break;
 		}
 	}
@@ -73,11 +75,13 @@ vec2 ParallaxOcclusionMapping(in vec2 uv, in vec3 viewDir)
 	vec2 deltaUV = viewDir.xy * uboFS.heightScale / (viewDir.z * uboFS.numLayers);
 	vec2 currUV = uv;
 	float height = 1.0 - texture(heightSampler, currUV).r;
-	for (int i = 0; i < uboFS.numLayers; i++) {
+	for (int i = 0; i < uboFS.numLayers; i++) 
+	{
 		currLayerDepth += layerDepth;
 		currUV -= deltaUV;
 		height = 1.0 - texture(heightSampler, currUV).r;
-		if (height < currLayerDepth) {
+		if (height < currLayerDepth) 
+		{
 			break;
 		}
 	}
@@ -91,7 +95,8 @@ void main()
 {
 	const vec3 viewDirectionTangentSpace = normalize(inToCameraVectorTangentSpace - inWorldPositionTangentSpace);
 	vec2 uv = vec2(0.0, 0.0);
-	switch(uboFS.mappingMode) {
+	switch(uboFS.mappingMode) 
+	{
 		case 1:
 			uv = ParallaxMapping(inTextureCoord, viewDirectionTangentSpace);
 			break;

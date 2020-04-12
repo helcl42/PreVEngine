@@ -12,7 +12,7 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 
 	Lightning lightning;
 
-	Material material;
+	Material material[MATERIAL_COUNT];
 
 	vec4 fogColor;
 
@@ -47,6 +47,8 @@ void main()
     const float normalizedHeight = (inWorldPosition.y + abs(uboFS.minHeight)) / heightRange;
 
     vec4 textureColor = vec4(1.0, 1.0, 0.0, 1.0);
+	float shineDamper = 1.0f;
+	float reflectivity = 1.0f;
     for(uint i = 0; i < MATERIAL_COUNT; i++) 
     {
         if(i < MATERIAL_COUNT - 1)
@@ -57,21 +59,35 @@ void main()
                 vec4 color1 = texture(textureSampler[i], inTextureCoord);
                 vec4 color2 = texture(textureSampler[i + 1], inTextureCoord);
                 textureColor = mix(color1, color2, ratio);
+				
+				float shineDamper1 = uboFS.material[i].shineDamper;
+				float shineDamper2 = uboFS.material[i + 1].shineDamper;
+				shineDamper = mix(shineDamper1, shineDamper2, ratio);
+
+				float reflectivity1 = uboFS.material[i].reflectivity;
+				float reflectivity2 = uboFS.material[i + 1].reflectivity;
+				reflectivity = mix(reflectivity1, reflectivity2, ratio);
                 break;
             }
 			else if(normalizedHeight < uboFS.heightSteps[i].x - uboFS.heightTransitionRange)
 			{
 				textureColor = texture(textureSampler[i], inTextureCoord);
+				shineDamper = uboFS.material[i].shineDamper;
+				reflectivity = uboFS.material[i].reflectivity;
 				break;
 			}
 			else if(normalizedHeight > uboFS.heightSteps[i].x + uboFS.heightTransitionRange && normalizedHeight < uboFS.heightSteps[i + 1].x - uboFS.heightTransitionRange)
             {
 				textureColor = texture(textureSampler[i], inTextureCoord);
+				shineDamper = uboFS.material[i].shineDamper;
+				reflectivity = uboFS.material[i].reflectivity;
             }
         }
         else
         {
 			textureColor = texture(textureSampler[i], inTextureCoord);
+			shineDamper = uboFS.material[i].shineDamper;
+			reflectivity = uboFS.material[i].reflectivity;
             break;
         }
     }
@@ -114,7 +130,7 @@ void main()
 
 		const float attenuationFactor = GetAttenuationFactor(light.attenuation.xyz, toLightVector);
 		totalDiffuse += GetDiffuseColor(unitNormal, unitToLightVector, light.color.xyz, attenuationFactor);
-		totalSpecular += GetSpecularColor(unitNormal, unitToLightVector, unitToCameraVector, light.color.xyz, attenuationFactor, uboFS.material.shineDamper, uboFS.material.reflectivity);
+		totalSpecular += GetSpecularColor(unitNormal, unitToLightVector, unitToCameraVector, light.color.xyz, attenuationFactor, shineDamper, reflectivity);
 	}
 	totalDiffuse = max(totalDiffuse * shadow, 0.0) + uboFS.lightning.ambientFactor;
 	totalSpecular = totalSpecular * shadow;
