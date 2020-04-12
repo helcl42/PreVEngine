@@ -4160,7 +4160,7 @@ public:
                 
                 // TODO -> add uniform for all terrain materials                
                 uniformsFS.parallaxBias = -0.02f;
-                uniformsFS.numLayers = 48;
+                uniformsFS.numLayers = 64;
                 uniformsFS.mappingMode = 3;
 
                 uboFS->Update(&uniformsFS);
