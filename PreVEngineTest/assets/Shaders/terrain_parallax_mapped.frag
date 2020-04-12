@@ -189,16 +189,6 @@ void main()
         }
     }
 
-	if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) 
-    {
-		discard;
-	}
-
-	if (textureColor.a < 0.5) 
-	{
-		discard;
-	}
-
 	float shadow = 1.0;	
 	if(uboFS.castedByShadows != 0)
 	{

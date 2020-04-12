@@ -92,11 +92,6 @@ void main()
         }
     }
 
-	if (textureColor.a < 0.5) 
-	{
-		discard;
-	}
-
 	float shadow = 1.0;	
 	if(uboFS.castedByShadows != 0)
 	{
