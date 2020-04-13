@@ -1746,6 +1746,59 @@ public:
     }
 };
 
+class SelectionDebugShader final : public Shader {
+public:
+    SelectionDebugShader(const VkDevice device)
+        : Shader(device)
+    {
+    }
+
+    ~SelectionDebugShader() = default;
+
+private:
+    void InitVertexInputs() override
+    {
+        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+
+        m_inputAttributeDescriptions = {
+            VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
+            VkUtils::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
+            VkUtils::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 }))
+        };
+    }
+
+    void InitDescriptorSets() override
+    {
+        // vertex shader
+        AddDescriptorSet("uboVS", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT);
+
+        // fragment shader
+        AddDescriptorSet("uboFS", 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
+    }
+
+    void InitPushConstantsBlocks() override
+    {
+    }
+};
+
+class SelectionDebugPipeline final : public AbstractGraphicsPipeline {
+public:
+    SelectionDebugPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+        : AbstractGraphicsPipeline(device, renderpass, shaders)
+    {
+    }
+
+    ~SelectionDebugPipeline() = default;
+
+public:
+    VkPipeline Init() override
+    {
+        VkPipelineFactory pipelineFactory{};
+        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, false, m_pipelineLayout, m_graphicsPipeline);
+        return m_graphicsPipeline;
+    }
+};
+
 class RayCastDebugShader final : public Shader {
 public:
     RayCastDebugShader(const VkDevice device)

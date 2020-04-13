@@ -1722,6 +1722,158 @@ public:
 };
 #endif
 
+#ifdef RENDER_SELECTION
+class SelectionDebugRenderer final : public IRenderer<NormalRenderContextUserData> {
+private:
+    struct alignas(16) UniformsVS
+    {
+        alignas(16) glm::mat4 modelMatrix;
+
+        alignas(16) glm::mat4 viewMatrix;
+
+        alignas(16) glm::mat4 projectionMatrix;
+    };
+
+    struct alignas(16) UniformsFS
+    {
+        alignas(16) glm::vec4 color;
+    };
+
+private:
+    const uint32_t m_descriptorCount{ 1000 };
+
+private:
+    std::shared_ptr<RenderPass> m_renderPass;
+
+private:
+    std::unique_ptr<Shader> m_shader;
+
+    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+
+    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+
+    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+
+    std::unique_ptr<IModel> m_selectionPointModel;
+
+public:
+    SelectionDebugRenderer(const std::shared_ptr<RenderPass>& renderPass)
+        : m_renderPass(renderPass)
+    {
+    }
+
+    ~SelectionDebugRenderer() = default;
+
+public:
+    void Init() override
+    {
+        auto device = DeviceProvider::Instance().GetDevice();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
+
+        ShaderFactory shaderFactory;
+        m_shader = shaderFactory.CreateShaderFromFiles<SelectionDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/selection_debug_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/selection_debug_frag.spv") } });
+        m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
+
+        LOGI("Selection Debug Shader created\n");
+
+        m_pipeline = std::make_unique<BoundingVolumeDebugPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline->Init();
+
+        LOGI("Selection Debug Pipeline created\n");
+
+        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+        
+        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+
+        m_selectionPointModel = CreateModel(*allocator, std::make_unique<SphereMesh>(1.0f, 32, 32));
+    }
+
+    void BeforeRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
+    }
+
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SELECTABLE_COMPONENT })) {
+            const auto selectableComponent = ComponentRepository<ISelectableComponent>::Instance().Get(node->GetId());
+            if (selectableComponent->IsSelected()) {
+                auto uboVS = m_uniformsPoolVS->GetNext();
+
+                UniformsVS uniformsVS{};
+                uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
+                uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
+                uniformsVS.modelMatrix = MathUtil::CreateTransformationMatrix(selectableComponent->GetPostiion(), glm::quat(), 0.6f);
+
+                uboVS->Update(&uniformsVS);
+
+                auto uboFS = m_uniformsPoolFS->GetNext();
+
+                UniformsFS uniformsFS{};
+                uniformsFS.color = glm::vec4(0.0f, 1.0f, 0.0f, 0.7f);
+
+                uboFS->Update(&uniformsFS);
+
+                m_shader->Bind("uboVS", *uboVS);
+                m_shader->Bind("uboFS", *uboFS);
+
+                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                VkBuffer vertexBuffers[] = { *m_selectionPointModel->GetVertexBuffer() };
+                VkDeviceSize offsets[] = { 0 };
+
+                vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+                vkCmdBindIndexBuffer(renderContext.commandBuffer, *m_selectionPointModel->GetIndexBuffer(), 0, m_selectionPointModel->GetIndexBuffer()->GetIndexType());
+                vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+                vkCmdDrawIndexed(renderContext.commandBuffer, m_selectionPointModel->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+            }
+        }
+
+        for (auto child : node->GetChildren()) {
+            Render(renderContext, child, renderContextUserData);
+        }
+    }
+
+    void PostRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void AfterRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void ShutDown() override
+    {
+        m_shader->ShutDown();
+
+        m_pipeline->ShutDown();
+    }
+
+private:
+    std::unique_ptr<IModel> CreateModel(Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const
+    {
+        auto vertexBuffer = std::make_unique<VBO>(allocator);
+        vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
+
+        auto indexBuffer = std::make_unique<IBO>(allocator);
+        indexBuffer->Data(mesh->GerIndices().data(), (uint32_t)mesh->GerIndices().size());
+
+        return std::make_unique<Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));
+    }
+};
+#endif
+
 class DefaultRenderer final : public IRenderer<NormalRenderContextUserData> {
 private:
     struct ShadowsCascadeUniform {
@@ -5189,6 +5341,10 @@ private:
         m_rayCastDebugRenderer = std::make_shared<RayCastDebugRenderer>(m_defaultRenderPass);
         m_defaultRenderers.push_back(m_rayCastDebugRenderer);
 #endif
+#ifdef RENDER_SELECTION
+        m_selectionDebugRenderer = std::make_shared<SelectionDebugRenderer>(m_defaultRenderPass);
+        m_defaultRenderers.push_back(m_selectionDebugRenderer);
+#endif
         // These renderers has to as last otherwise they collide with any geometry that uses depth
         m_defaultRenderers.push_back(m_sunRenderer);
         m_defaultRenderers.push_back(m_lensFlareRenderer);
@@ -5776,6 +5932,9 @@ private:
 #endif
 #ifdef RENDER_RAYCASTS
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_rayCastDebugRenderer;
+#endif
+#ifdef RENDER_SELECTION
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_selectionDebugRenderer;
 #endif
     std::vector<std::shared_ptr<IRenderer<NormalRenderContextUserData> > > m_defaultRenderers;
 

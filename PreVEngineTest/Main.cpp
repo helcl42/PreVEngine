@@ -244,6 +244,42 @@ public:
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
     }
 
+     std::unique_ptr<IRenderComponent> CreateSphereRenderComponent(const std::string& texturePath, const bool castsShadows, const bool isCastedByShadows) const
+    {
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
+
+        auto material = CreateMaterial(*allocator, texturePath, true, 2.0f, 0.3f);
+
+        auto mesh = std::make_shared<SphereMesh>(1.0f, 64, 64, 360.0f, 180.0f, false);
+        auto model = CreateModel(*allocator, std::move(mesh));
+
+        return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
+    }
+
+    std::unique_ptr<IRenderComponent> CreateNormalMappedSphereRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const bool castsShadows, const bool isCastedByShadows) const
+    {
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
+
+        auto material = CreateMaterial(*allocator, texturePath, normalMapPath, true, 2.0f, 0.3f);
+
+        auto mesh = std::make_shared<SphereMesh>(1.0f, 64, 64, 360.0f, 180.0f, true);
+        auto model = CreateModel(*allocator, std::move(mesh));
+
+        return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
+    }
+
+    std::unique_ptr<IRenderComponent> CreateParallaxMappedSphereRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const std::string& parallaxMapPath, const bool castsShadows, const bool isCastedByShadows) const
+    {
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
+
+        auto material = CreateMaterial(*allocator, texturePath, normalMapPath, parallaxMapPath, true, 2.0f, 0.3f);
+
+        auto mesh = std::make_shared<SphereMesh>(1.0f, 64, 64, 360.0f, 180.0f, true);
+        auto model = CreateModel(*allocator, std::move(mesh));
+
+        return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
+    }
+
     std::unique_ptr<IRenderComponent> CreateModelRenderComponent(const std::string& modelPath, const std::string& texturePath, const bool castsShadows, const bool isCastedByShadows) const
     {
         auto allocator = AllocatorProvider::Instance().GetAllocator();
@@ -2238,17 +2274,17 @@ private:
             return false;
         }
 
-        if (!IsUnderGround(terrainAtStart, startPoint) && IsUnderGround(terrainAtEnd, endPoint)) {
+        if (!IsUnderGround(terrainAtStart, startPoint, false) && IsUnderGround(terrainAtEnd, endPoint, true)) {
             return true;
         }
         return false;
     }
 
-    bool IsUnderGround(const std::shared_ptr<ITerrainComponenet> & terrain, const glm::vec3& testPoint) const
+    bool IsUnderGround(const std::shared_ptr<ITerrainComponenet> & terrain, const glm::vec3& testPoint, bool shouldReturn) const
     {
         float height = 0.0f;
         if (!terrain->GetHeightAt(testPoint, height)) {
-            return false;
+            return !shouldReturn;
         }
         if (testPoint.y < height) {
             return true;

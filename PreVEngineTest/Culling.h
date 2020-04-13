@@ -526,8 +526,8 @@ public:
         std::vector<uint32_t> indices;
         uint32_t indexBase{ 0 };
 
-        float addAngleY{ -degreesHorizontal / float(subDivY) };
-        float addAngleZ{ degreesVertical / float(subDivZ) };
+        float addAngleY{ -degreesHorizontal / static_cast<float>(subDivY) };
+        float addAngleZ{ degreesVertical / static_cast<float>(subDivZ) };
         float curAngleY{ 0.0f };
         int stepsY{ 1 };
 
