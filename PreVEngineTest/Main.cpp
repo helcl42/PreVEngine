@@ -746,6 +746,9 @@ public:
         auto terrainManagerComponent = TerrainManagerComponentFactory{}.Create();
         ComponentRepository<ITerrainManagerComponent>::Instance().Add(m_id, std::move(terrainManagerComponent));
 
+        auto selectableComponent = std::make_shared<SelectableComponent>();
+        ComponentRepository<ISelectableComponent>::Instance().Add(m_id, std::move(selectableComponent));
+
         for (uint32_t x = 0; x < m_gridMaxX; x++) {
             for (uint32_t z = 0; z < m_gridMaxZ; z++) {
                 auto terrain = std::make_shared<Terrain>(static_cast<int>(x), static_cast<int>(z));
@@ -773,9 +776,6 @@ public:
             heightInfo->globalMinHeight = minHeight;
             heightInfo->globalMaxHeight = maxHeight;
         }
-
-        const auto selectableComponent = std::make_shared<SelectableComponent>();
-        ComponentRepository<ISelectableComponent>::Instance().Add(m_id, selectableComponent);
     }
 
     void Update(float deltaTime) override
