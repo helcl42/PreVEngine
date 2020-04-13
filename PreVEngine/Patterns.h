@@ -82,6 +82,44 @@ public:
     }
 };
 ////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////
+// Nullable
+////////////////////////////////////////////////////////////
+template <typename ObjectType>
+class Nullable {
+private:
+    bool m_null;
+
+    ObjectType m_value;
+
+public:
+    Nullable()
+        : m_null(true)
+    {
+    }
+
+    Nullable(const ObjectType& value)
+        : m_null(false)
+        , m_value(value)
+    {
+    }
+
+    virtual ~Nullable() = default;
+
+public:
+    bool IsNull() const
+    {
+        return m_null;
+    }
+
+    const ObjectType& GetValue() const
+    {
+        return m_value;
+    }
+};
+////////////////////////////////////////////////////////////
+
 } // namespace PreVEngine
 
 #endif

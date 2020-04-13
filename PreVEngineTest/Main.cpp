@@ -853,7 +853,8 @@ public:
         }
 
         auto currentPosition = m_transformComponent->GetPosition();
-        const float height = terrain->GetHeightAt(currentPosition);
+        float height = 0.0f;
+        terrain->GetHeightAt(currentPosition, height);
         const auto currentY = height + MIN_Y_POS;
 
         if (m_isInTheAir) {
@@ -1894,7 +1895,9 @@ public:
         const auto terrain = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT });
 
         auto currentPosition = m_transformComponent->GetPosition();
-        const float height = terrain->GetHeightAt(currentPosition);
+
+        float height = 0.0f;
+        terrain->GetHeightAt(currentPosition, height);
 
         m_transformComponent->SetPosition(glm::vec3(currentPosition.x, height - 2.0f, currentPosition.z));
 
@@ -2001,11 +2004,13 @@ public:
         const auto playerTransformComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ITransformComponent>({ TAG_PLAYER });
 
         if (m_inputFacade.IsMouseLocked()) {
+            m_rayCasterComponent->SetRayLength(RAY_LENGTH);
             m_rayCasterComponent->SetRayStartPosition(playerTransformComponent->GetPosition() + glm::vec3(0.0f, 12.0f, 0.0f));
             m_rayCasterComponent->SetRayDirection(cameraComponent->GetForwardDirection());
             m_rayCasterComponent->SetOrientationOffsetAngles({ -12.0f, 0.0f });
             m_rayCasterComponent->Update(deltaTime);
         } else {
+            m_mouseRayCasterComponent->SetRayLength(RAY_LENGTH);
             m_mouseRayCasterComponent->SetViewPortDimensions(m_viewPortSize);
             m_mouseRayCasterComponent->SetProjectionMatrix(cameraComponent->GetViewFrustum().CreateProjectionMatrix(m_viewPortSize.x / m_viewPortSize.y));
             m_mouseRayCasterComponent->SetViewMatrix(cameraComponent->LookAt());
@@ -2050,6 +2055,8 @@ public:
     }
 
 private:
+    const float RAY_LENGTH = 200.0f;
+
     std::shared_ptr<IRayCasterComponent> m_rayCasterComponent;
 
     std::shared_ptr<IMouseRayCasterComponent> m_mouseRayCasterComponent;
@@ -2065,6 +2072,13 @@ private:
 };
 
 class RayCastObserverNode : public AbstractSceneNode<SceneNodeFlags> {
+private:
+    enum class IntersectionType {
+        NONE,
+        TERRAIN,
+        OBJECT
+    };
+
 public:
     RayCastObserverNode()
         : AbstractSceneNode()
@@ -2081,35 +2095,49 @@ public:
 
     void Update(float deltaTime) override
     {
-        //std::cout << m_currentRay << std::endl;
+        if (!m_currentRay.IsNull()) {
 
-        // reset any selectable nodes here -> eventhough it does not have bounding volume flag
-        auto selectableNodes = GetSelectableNodes();
-        for (auto selectableNode : selectableNodes) {
-            auto selectableComponent = ComponentRepository<ISelectableComponent>::Instance().Get(selectableNode->GetId());
-            selectableComponent->Reset();
-        }
+            // reset any selectable nodes here -> eventhough it does not have bounding volume flag
+            auto selectableNodes = GetSelectableNodes();
+            for (auto selectableNode : selectableNodes) {
+                auto selectableComponent = ComponentRepository<ISelectableComponent>::Instance().Get(selectableNode->GetId());
+                selectableComponent->Reset();
+            }
 
-        // try find some intersecting nodes
-        auto intersectingNodes = FindIntersectingNodes();
-        if (intersectingNodes.size() > 0) {
-            for (auto intersectedNode : intersectingNodes) {
-                const auto node = std::get<0>(intersectedNode.second);
-                const auto rayCastResult = std::get<1>(intersectedNode.second);
+            IntersectionType intersectionType = IntersectionType::NONE;
+
+            const auto currentRayValue = m_currentRay.GetValue();
+            const auto currentTerrainIntersectionPoint = FindTheClosestTerrainIntersection(currentRayValue);
+            const auto closestIntersectingObject = FindTheClosestIntersectingNode(currentRayValue);
+            if (!currentTerrainIntersectionPoint.IsNull() && !closestIntersectingObject.IsNull()) {
+                const float terrainRayLength = glm::distance(currentTerrainIntersectionPoint.GetValue(), currentRayValue.origin);
+                const float objectRayLength = std::get<1>(closestIntersectingObject.GetValue()).t;
+                if (terrainRayLength < objectRayLength) {
+                    intersectionType = IntersectionType::TERRAIN;
+                } else {
+                    intersectionType = IntersectionType::OBJECT;
+                }
+            } else {
+                if (!currentTerrainIntersectionPoint.IsNull()) {
+                    intersectionType = IntersectionType::TERRAIN;
+                } else if (!closestIntersectingObject.IsNull()) {
+                    intersectionType = IntersectionType::OBJECT;
+                }
+            }
+
+            if (intersectionType == IntersectionType::TERRAIN) {
+                std::cout << "Terrain Intersection At: " << currentTerrainIntersectionPoint.GetValue().x << ", " << currentTerrainIntersectionPoint.GetValue().y << ", " << currentTerrainIntersectionPoint.GetValue().z << std::endl;
+            } else if (intersectionType == IntersectionType::OBJECT) {
+                const auto node = std::get<0>(closestIntersectingObject.GetValue());
+                const auto rayCastResult = std::get<1>(closestIntersectingObject.GetValue());
                 auto selectableComponent = ComponentRepository<ISelectableComponent>::Instance().Get(node->GetId());
                 selectableComponent->SetSelected(true);
                 selectableComponent->SetPosition(rayCastResult.point);
-                break; // comment this to mark the closest one
             }
-            std::cout << "RaycastHitCount: " << intersectingNodes.size() << std::endl;
-        } else {
-            std::cout << "No raycast HIT !!!" << std::endl;
+
+            // TODO
+            // render node collision points -> it is stored in selectableComponent
         }
-
-
-        // TODO 
-        // check terrain first - then any other objects, otherwise give up
-        // render node collision points -> it is stored in selectableComponent
 
         AbstractSceneNode::Update(deltaTime);
     }
@@ -2120,35 +2148,147 @@ public:
     }
 
 private:
+    // Terrain
+    Nullable<glm::vec3> FindTheClosestTerrainIntersection(const Ray& ray) const
+    {
+        Nullable<glm::vec3> currentTerrainIntersectionPoint{};
+        if (IntersectsInRange(0.0f, ray.length, ray)) {
+            currentTerrainIntersectionPoint = BinarySearch(0, 0, ray.length, ray);
+        } else {
+            currentTerrainIntersectionPoint = GetFirstPositionUnderAlongRay(ray);
+        }
+        return currentTerrainIntersectionPoint;
+    }
+
+    Nullable<glm::vec3> GetFirstPositionUnderAlongRay(const Ray& ray) const
+    {
+        const auto segmentPositions = GenerateSegmentPositions(ray);
+        for (const auto& segmentPosition : segmentPositions) {
+            const auto terrain = GetTerrain(segmentPosition);
+            if (terrain != nullptr) {
+                float currentTerrainHeight = 0.0f;
+                if (!terrain->GetHeightAt(segmentPosition, currentTerrainHeight)) {
+                    continue;
+                }
+                if (segmentPosition.y < currentTerrainHeight) {
+                    return Nullable<glm::vec3>({ segmentPosition.x, currentTerrainHeight, segmentPosition.z });
+                }
+            }
+        }
+        return Nullable<glm::vec3>();
+    }
+
+    std::vector<glm::vec3> GenerateSegmentPositions(const Ray& ray) const
+    {
+        const float distanceBetweenNodes = ray.length / RECURSION_COUNT;
+        const glm::vec3 start = ray.GetStartPoint();
+        const glm::vec3 end = ray.GetEndPoint();
+
+        std::vector<glm::vec3> result;
+        float currentDistance = 0.0f;
+        while (currentDistance < ray.length) {
+            glm::vec3 newNodePoint = ray.GetPointAtDistances(currentDistance);
+            result.push_back(newNodePoint);
+            currentDistance += distanceBetweenNodes;
+        }
+        return result;
+    }
+
+    Nullable<glm::vec3> BinarySearch(const uint32_t count, const float start, const float finish, const Ray& ray) const
+    {
+        const float half = start + ((finish - start) / 2.0f);
+        if (count >= RECURSION_COUNT) {
+            const glm::vec3 endPoint = ray.GetPointAtDistances(half);
+            const auto terrain = GetTerrain(endPoint);
+            if (terrain != nullptr) {
+                return Nullable<glm::vec3>(endPoint);
+            } else {
+                return Nullable<glm::vec3>();
+            }
+        }
+
+        if (IntersectsInRange(start, half, ray)) {
+            return BinarySearch(count + 1, start, half, ray);
+        } else {
+            return BinarySearch(count + 1, half, finish, ray);
+        }
+    }
+
+    bool IntersectsInRange(const float start, const float finish, const Ray& ray) const
+    {
+        const glm::vec3 startPoint = ray.GetPointAtDistances(start);
+        const glm::vec3 endPoint = ray.GetPointAtDistances(finish);
+
+        const auto terrainAtStart = GetTerrain(startPoint);
+        if (!terrainAtStart) {
+            return false;
+        }
+
+        const auto terrainAtEnd = GetTerrain(endPoint);
+        if (!terrainAtEnd) {
+            return false;
+        }
+
+        if (!IsUnderGround(terrainAtStart, startPoint) && IsUnderGround(terrainAtEnd, endPoint)) {
+            return true;
+        }
+        return false;
+    }
+
+    bool IsUnderGround(const std::shared_ptr<ITerrainComponenet> & terrain, const glm::vec3& testPoint) const
+    {
+        float height = 0.0f;
+        if (!terrain->GetHeightAt(testPoint, height)) {
+            return false;
+        }
+        if (testPoint.y < height) {
+            return true;
+        }
+        return false;
+    }
+
+    std::shared_ptr<ITerrainComponenet> GetTerrain(const glm::vec3& position) const
+    {
+        const auto terrain = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT });
+        return terrain->GetTerrainAt(position);
+    }
+
+    // Objects
     std::vector<std::shared_ptr<ISceneNode<SceneNodeFlags> > > GetSelectableNodes() const
     {
         return GraphTraversal<SceneNodeFlags>::Instance().FindAllWithFlags(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SELECTABLE_COMPONENT });
     }
 
-    std::map<float, std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags>>, RayCastResult> > FindIntersectingNodes() const
+    Nullable<std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags>>, RayCastResult>> FindTheClosestIntersectingNode(const Ray& ray) const
     {
-        std::map<float, std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags> >, RayCastResult> > intersectingNodes; // sorted by distance
+        Nullable<std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags> >, RayCastResult> > theClosestNode;
+        float minDistance = std::numeric_limits<float>::max();
 
         auto selectableNodes = GraphTraversal<SceneNodeFlags>::Instance().FindAllWithFlags(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SELECTABLE_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT }, LogicOperation::AND);
         for (auto selectable : selectableNodes) {
             const auto boundingVolume = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(selectable->GetId());
 
             RayCastResult rayCastResult{};
-            if (boundingVolume->Intersects(m_currentRay, rayCastResult)) {
-                intersectingNodes.insert({ rayCastResult.t, { selectable, rayCastResult } });
+            if (boundingVolume->Intersects(ray, rayCastResult)) {
+                if (rayCastResult.t < minDistance) {
+                    theClosestNode = Nullable<std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags> >, RayCastResult> >({ selectable, rayCastResult });
+                    minDistance = rayCastResult.t;
+                }
             }
         }
-        return intersectingNodes;
+        return theClosestNode;
     }
 
 public:
     void operator()(const RayEvent& rayEvt)
     {
-        m_currentRay = rayEvt.ray;
+        m_currentRay = Nullable<Ray>{ rayEvt.ray };
     }
 
 private:
-    Ray m_currentRay; // make it nullable???
+    const uint32_t RECURSION_COUNT = 200;
+
+    Nullable<Ray> m_currentRay; // make it nullable???
 
     EventHandler<RayCastObserverNode, RayEvent> m_rayHandler{ *this };
 };

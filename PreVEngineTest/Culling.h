@@ -43,6 +43,21 @@ struct Ray {
     {
     }
 
+    glm::vec3 GetStartPoint() const
+    {
+        return origin;
+    }
+
+    glm::vec3 GetEndPoint() const
+    {
+        return GetPointAtDistances(length);
+    }
+
+    glm::vec3 GetPointAtDistances(const float distance) const
+    {
+        return origin + direction * distance;
+    }
+
     friend std::ostream& operator<<(std::ostream& out, const Ray& ray)
     {
         out << "Direction: (" << ray.direction.x << ", " << ray.direction.y << ", " << ray.direction.z << ")" << std::endl;
