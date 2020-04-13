@@ -145,6 +145,8 @@ void WindowWin32::Init(const char* title, uint32_t width, uint32_t height, bool 
         dwStyle = WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
     }
 
+    m_shape.x = 0;
+    m_shape.y = 0;
     m_shape.width = uint16_t(fullScreen ? screenWidth : width);
     m_shape.height = uint16_t(fullScreen ? screenHeight : height);
     m_shape.fullscreen = fullScreen;
@@ -164,7 +166,7 @@ void WindowWin32::Init(const char* title, uint32_t width, uint32_t height, bool 
     SetForegroundWindow(m_hWnd);
     SetFocus(m_hWnd);
 
-    m_eventQueue.Push(OnResizeEvent(width, height));
+    m_eventQueue.Push(OnResizeEvent(m_shape.width, m_shape.height));
 
     m_eventQueue.Push(OnInitEvent());
 }
