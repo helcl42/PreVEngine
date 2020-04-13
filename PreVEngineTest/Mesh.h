@@ -329,7 +329,7 @@ public:
                     { nextDirectionY.x * sinZ * radius, cosZ * radius, nextDirectionY.z * sinZ * radius }
                 };
 
-                glm::vec3 ns[] = {
+                const glm::vec3 ns[] = {
                     glm::normalize(quadPoints[0]),
                     glm::normalize(quadPoints[1]),
                     glm::normalize(quadPoints[2]),
