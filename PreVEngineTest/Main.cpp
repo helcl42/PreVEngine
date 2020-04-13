@@ -696,7 +696,7 @@ private:
 
 public:
     TerrainManager(const uint32_t maxX, const uint32_t maxZ)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT | SceneNodeFlags::HAS_SELECTABLE_COMPONENT })
         , m_gridMaxX(maxX)
         , m_gridMaxZ(maxZ)
     {
@@ -737,6 +737,9 @@ public:
             heightInfo->globalMinHeight = minHeight;
             heightInfo->globalMaxHeight = maxHeight;
         }
+
+        const auto selectableComponent = std::make_shared<SelectableComponent>();
+        ComponentRepository<ISelectableComponent>::Instance().Add(m_id, selectableComponent);
     }
 
     void Update(float deltaTime) override
@@ -747,6 +750,8 @@ public:
     void ShutDown() override
     {
         AbstractSceneNode::ShutDown();
+
+        ComponentRepository<ISelectableComponent>::Instance().Remove(m_id);
 
         ComponentRepository<ITerrainManagerComponent>::Instance().Remove(m_id);
     }
@@ -2126,7 +2131,11 @@ public:
             }
 
             if (intersectionType == IntersectionType::TERRAIN) {
-                std::cout << "Terrain Intersection At: " << currentTerrainIntersectionPoint.GetValue().x << ", " << currentTerrainIntersectionPoint.GetValue().y << ", " << currentTerrainIntersectionPoint.GetValue().z << std::endl;
+                auto terrainManagerNode = GraphTraversal<SceneNodeFlags>::Instance().FindOneWithFlags(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT | SceneNodeFlags::HAS_SELECTABLE_COMPONENT }, LogicOperation::AND);
+                auto selectableComponent = ComponentRepository<ISelectableComponent>::Instance().Get(terrainManagerNode->GetId());
+                selectableComponent->SetSelected(true);
+                selectableComponent->SetPosition(currentTerrainIntersectionPoint.GetValue());
+                //std::cout << "Terrain Intersection At: " << currentTerrainIntersectionPoint.GetValue().x << ", " << currentTerrainIntersectionPoint.GetValue().y << ", " << currentTerrainIntersectionPoint.GetValue().z << std::endl;
             } else if (intersectionType == IntersectionType::OBJECT) {
                 const auto node = std::get<0>(closestIntersectingObject.GetValue());
                 const auto rayCastResult = std::get<1>(closestIntersectingObject.GetValue());
