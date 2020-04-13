@@ -181,7 +181,7 @@ class ITerrainComponenet : public IBasicRenderComponent {
 public:
     virtual std::vector<std::shared_ptr<IMaterial> > GetMaterials() const = 0; // TODO make pack of materials controlled by height
 
-    virtual float GetHeightAt(const glm::vec3& position) const = 0;
+    virtual bool GetHeightAt(const glm::vec3& position, float& outHeight) const = 0;
 
     virtual std::shared_ptr<VertexData> GetVertexData() const = 0;
 
@@ -225,7 +225,7 @@ public:
         return m_materials;
     }
 
-    float GetHeightAt(const glm::vec3& position) const override
+    bool GetHeightAt(const glm::vec3& position, float& outHeight) const override
     {
         const float terrainX = position.x - m_position.x;
         const float terrainZ = position.z - m_position.z;
@@ -234,19 +234,18 @@ public:
         const int gridZ = static_cast<int>(floorf(terrainZ / gridSquareSize));
 
         if (gridX >= static_cast<int>(m_heightsInfo->GetSize()) - 1 || gridX < 0 || gridZ >= static_cast<int>(m_heightsInfo->GetSize()) - 1 || gridZ < 0) {
-            return 0.0f;
+            return false;
         }
 
         const float xCoord = fmodf(terrainX, gridSquareSize) / gridSquareSize;
         const float zCoord = fmodf(terrainZ, gridSquareSize) / gridSquareSize;
 
-        float answer;
         if (xCoord <= (1 - zCoord)) {
-            answer = MathUtil::BarryCentric(glm::vec3(0, m_heightsInfo->GetHeightAt(gridX, gridZ), 0), glm::vec3(1, m_heightsInfo->GetHeightAt(gridX + 1, gridZ), 0), glm::vec3(0, m_heightsInfo->GetHeightAt(gridX, gridZ + 1), 1), glm::vec2(xCoord, zCoord));
+            outHeight = MathUtil::BarryCentric(glm::vec3(0, m_heightsInfo->GetHeightAt(gridX, gridZ), 0), glm::vec3(1, m_heightsInfo->GetHeightAt(gridX + 1, gridZ), 0), glm::vec3(0, m_heightsInfo->GetHeightAt(gridX, gridZ + 1), 1), glm::vec2(xCoord, zCoord));
         } else {
-            answer = MathUtil::BarryCentric(glm::vec3(1, m_heightsInfo->GetHeightAt(gridX + 1, gridZ), 0), glm::vec3(1, m_heightsInfo->GetHeightAt(gridX + 1, gridZ + 1), 1), glm::vec3(0, m_heightsInfo->GetHeightAt(gridX, gridZ + 1), 1), glm::vec2(xCoord, zCoord));
+            outHeight = MathUtil::BarryCentric(glm::vec3(1, m_heightsInfo->GetHeightAt(gridX + 1, gridZ), 0), glm::vec3(1, m_heightsInfo->GetHeightAt(gridX + 1, gridZ + 1), 1), glm::vec3(0, m_heightsInfo->GetHeightAt(gridX, gridZ + 1), 1), glm::vec2(xCoord, zCoord));
         }
-        return answer;
+        return true;
     }
 
     std::shared_ptr<VertexData> GetVertexData() const override
@@ -725,7 +724,7 @@ public:
 
     virtual std::shared_ptr<ITerrainComponenet> GetTerrainAt(const glm::vec3& position) const = 0;
 
-    virtual float GetHeightAt(const glm::vec3& position) const = 0;
+    virtual bool GetHeightAt(const glm::vec3& position, float& outHeight) const = 0;
 
 public:
     virtual ~ITerrainManagerComponent() = default;
@@ -752,13 +751,13 @@ public:
         return nullptr;
     }
 
-    float GetHeightAt(const glm::vec3& position) const override
+    bool GetHeightAt(const glm::vec3& position, float& outHeight) const override
     {
         const auto terrain = GetTerrainAt(position);
         if (terrain) {
-            return terrain->GetHeightAt(position);
+            return terrain->GetHeightAt(position, outHeight);
         }
-        return 0.0f;
+        return false;
     }
 
 private:
