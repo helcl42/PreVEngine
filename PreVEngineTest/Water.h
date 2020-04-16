@@ -243,8 +243,10 @@ private:
     VkFramebuffer m_frameBuffer;
 };
 
-class IWaterComponent : public IBasicRenderComponent {
+class IWaterComponent {
 public:
+    virtual std::shared_ptr<IModel> GetModel() const = 0;
+
     virtual std::shared_ptr<IMaterial> GetMaterial() const = 0;
 
     virtual void Update(float deltaTime) = 0;

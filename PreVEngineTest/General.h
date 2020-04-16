@@ -486,34 +486,6 @@ public:
     virtual float GetTime() const = 0;
 };
 
-class IBasicRenderComponent {
-public:
-    virtual std::shared_ptr<IModel> GetModel() const = 0;
-
-public:
-    virtual ~IBasicRenderComponent() = default;
-};
-
-class IRenderComponent : public IBasicRenderComponent {
-public:
-    virtual std::shared_ptr<IMaterial> GetMaterial() const = 0;
-
-    virtual bool CastsShadows() const = 0;
-
-    virtual bool IsCastedByShadows() const = 0;
-
-public:
-    virtual ~IRenderComponent() = default;
-};
-
-class IAnimationRenderComponent : public IRenderComponent {
-public:
-    virtual std::shared_ptr<IAnimation> GetAnimation() const = 0;
-
-public:
-    virtual ~IAnimationRenderComponent() = default;
-};
-
 class Material : public IMaterial {
 private:
     glm::vec3 m_color{ 1.0f, 1.0f, 1.0f };
@@ -764,20 +736,6 @@ public:
     }
 };
 
-struct VertexData {
-    std::vector<glm::vec3> vertices;
-
-    std::vector<glm::vec2> textureCoords;
-
-    std::vector<glm::vec3> normals;
-
-    std::vector<glm::vec3> tangents;
-
-    std::vector<glm::vec3> biTangents;
-
-    std::vector<uint32_t> indices;
-};
-
 class ITransformComponent {
 public:
     virtual void Update(float deltaTime) = 0;
@@ -959,6 +917,29 @@ public:
         return std::make_unique<TransformComponent>(position, orientation, scale);
     }
 };
+
+class IRenderComponent {
+public:
+    virtual std::shared_ptr<IModel> GetModel() const = 0;
+
+    virtual std::shared_ptr<IMaterial> GetMaterial() const = 0;
+
+    virtual bool CastsShadows() const = 0;
+
+    virtual bool IsCastedByShadows() const = 0;
+
+public:
+    virtual ~IRenderComponent() = default;
+};
+
+class IAnimationRenderComponent : public IRenderComponent {
+public:
+    virtual std::shared_ptr<IAnimation> GetAnimation() const = 0;
+
+public:
+    virtual ~IAnimationRenderComponent() = default;
+};
+
 
 class MeshUtil {
 public:

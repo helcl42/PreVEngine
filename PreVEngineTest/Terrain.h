@@ -177,8 +177,24 @@ struct HeightMapInfo {
     }
 };
 
-class ITerrainComponenet : public IBasicRenderComponent {
+struct VertexData {
+    std::vector<glm::vec3> vertices;
+
+    std::vector<glm::vec2> textureCoords;
+
+    std::vector<glm::vec3> normals;
+
+    std::vector<glm::vec3> tangents;
+
+    std::vector<glm::vec3> biTangents;
+
+    std::vector<uint32_t> indices;
+};
+
+class ITerrainComponenet {
 public:
+    virtual std::shared_ptr<IModel> GetModel() const = 0;
+
     virtual std::vector<std::shared_ptr<IMaterial> > GetMaterials() const = 0; // TODO make pack of materials controlled by height
 
     virtual bool GetHeightAt(const glm::vec3& position, float& outHeight) const = 0;
