@@ -302,10 +302,10 @@ public:
     }
 };
 
-class GraphTraversalHelper {
+class NodeComponentHelper {
 public:
     template <typename NodeFlagsType, typename ComponentType>
-    static std::shared_ptr<ComponentType> GetNodeComponent(const TagSet& tagSet, const LogicOperation operation = LogicOperation::OR)
+    static std::shared_ptr<ComponentType> FindOne(const TagSet& tagSet, const LogicOperation operation = LogicOperation::OR)
     {
         const auto node = GraphTraversal<NodeFlagsType>::Instance().FindOneWithTags(tagSet, operation);
         if (node == nullptr) {
@@ -315,7 +315,7 @@ public:
     }
 
     template <typename NodeFlagsType, typename ComponentType>
-    static std::shared_ptr<ComponentType> GetNodeComponent(const FlagSet<NodeFlagsType>& flagSet, const LogicOperation operation = LogicOperation::OR)
+    static std::shared_ptr<ComponentType> FindOne(const FlagSet<NodeFlagsType>& flagSet, const LogicOperation operation = LogicOperation::OR)
     {
         const auto node = GraphTraversal<NodeFlagsType>::Instance().FindOneWithFlags(flagSet, operation);
         if (node == nullptr) {
@@ -325,7 +325,7 @@ public:
     }
 
     template <typename NodeFlagsType, typename ComponentType>
-    static std::vector<std::shared_ptr<ComponentType> > GetNodeComponents(const TagSet& tagSet, const LogicOperation operation = LogicOperation::OR)
+    static std::vector<std::shared_ptr<ComponentType> > FindAll(const TagSet& tagSet, const LogicOperation operation = LogicOperation::OR)
     {
         const auto nodes = GraphTraversal<NodeFlagsType>::Instance().FindAllWithTags(tagSet, operation);
 
@@ -337,7 +337,7 @@ public:
     }
 
     template <typename NodeFlagsType, typename ComponentType>
-    static std::vector<std::shared_ptr<ComponentType> > GetNodeComponents(const FlagSet<NodeFlagsType>& flagSet, const LogicOperation operation = LogicOperation::OR)
+    static std::vector<std::shared_ptr<ComponentType> > FindAll(const FlagSet<NodeFlagsType>& flagSet, const LogicOperation operation = LogicOperation::OR)
     {
         const auto nodes = GraphTraversal<NodeFlagsType>::Instance().FindAllWithFlags(flagSet, operation);
 

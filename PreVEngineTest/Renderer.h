@@ -102,7 +102,7 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+        const auto shadows = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
         const auto shadowsExtent = shadows->GetExtent();
 
@@ -224,7 +224,7 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+        const auto shadows = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
         const auto shadowsExtent = shadows->GetExtent();
 
@@ -346,7 +346,7 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+        const auto shadows = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
         const auto shadowsExtent = shadows->GetExtent();
 
@@ -472,7 +472,7 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+        const auto shadows = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
         const auto shadowsExtent = shadows->GetExtent();
 
@@ -594,7 +594,7 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+        const auto shadows = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
         const auto shadowsExtent = shadows->GetExtent();
 
@@ -716,7 +716,7 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+        const auto shadows = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
         const auto shadowsExtent = shadows->GetExtent();
 
@@ -839,7 +839,7 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+        const auto shadows = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
         const auto shadowsExtent = shadows->GetExtent();
 
@@ -966,7 +966,7 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+        const auto shadows = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
         const auto shadowsExtent = shadows->GetExtent();
 
@@ -1093,7 +1093,7 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+        const auto shadows = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
         const auto shadowsExtent = shadows->GetExtent();
 
@@ -1261,7 +1261,7 @@ public:
     // make a node with quad model & shadowMap texture ???
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
     {
-        const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+        const auto shadows = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
         const auto& cascade = shadows->GetCascade(static_cast<uint32_t>(m_cascadeIndex));
         PushConstantBlock pushConstBlock{ static_cast<uint32_t>(m_cascadeIndex), -cascade.startSplitDepth, -cascade.endSplitDepth };
@@ -1396,7 +1396,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
     {
-        const auto component = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
+        const auto component = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
 
         m_shader->Bind("imageSampler", component->GetColorImageBuffer()->GetImageView(), component->GetColorImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
@@ -2045,9 +2045,9 @@ public:
             }
 
             if (visible) {
-                const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
-                const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-                const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
+                const auto mainLightComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+                const auto shadowsComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+                const auto lightComponents = NodeComponentHelper::FindAll<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
                 const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
                 const auto nodeRenderComponent = ComponentRepository<IRenderComponent>::Instance().Get(node->GetId());
@@ -2315,9 +2315,9 @@ public:
             }
 
             if (visible) {
-                const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
-                const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-                const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
+                const auto mainLightComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+                const auto shadowsComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+                const auto lightComponents = NodeComponentHelper::FindAll<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
                 const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
                 const auto nodeRenderComponent = ComponentRepository<IRenderComponent>::Instance().Get(node->GetId());
@@ -2590,9 +2590,9 @@ public:
             }
 
             if (visible) {
-                const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
-                const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-                const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
+                const auto mainLightComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+                const auto shadowsComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+                const auto lightComponents = NodeComponentHelper::FindAll<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
                 const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
                 const auto nodeRenderComponent = ComponentRepository<IRenderComponent>::Instance().Get(node->GetId());
@@ -2873,9 +2873,9 @@ public:
             }
 
             if (visible) {
-                const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
-                const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-                const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
+                const auto mainLightComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+                const auto shadowsComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+                const auto lightComponents = NodeComponentHelper::FindAll<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
                 const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
                 const auto nodeRenderComponent = ComponentRepository<IAnimationRenderComponent>::Instance().Get(node->GetId());
@@ -3145,9 +3145,9 @@ public:
             }
 
             if (visible) {
-                const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
-                const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-                const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
+                const auto mainLightComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+                const auto shadowsComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+                const auto lightComponents = NodeComponentHelper::FindAll<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
                 const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
                 const auto nodeRenderComponent = ComponentRepository<IAnimationRenderComponent>::Instance().Get(node->GetId());
@@ -3422,9 +3422,9 @@ public:
             }
 
             if (visible) {
-                const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
-                const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-                const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
+                const auto mainLightComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+                const auto shadowsComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+                const auto lightComponents = NodeComponentHelper::FindAll<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
                 const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
                 const auto nodeRenderComponent = ComponentRepository<IAnimationRenderComponent>::Instance().Get(node->GetId());
@@ -3708,9 +3708,9 @@ public:
             }
 
             if (visible) {
-                const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
-                const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-                const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
+                const auto mainLightComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+                const auto shadowsComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+                const auto lightComponents = NodeComponentHelper::FindAll<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
                 const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
                 const auto terrainComponent = ComponentRepository<ITerrainComponenet>::Instance().Get(node->GetId());
@@ -3985,9 +3985,9 @@ public:
             }
 
             if (visible) {
-                const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
-                const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-                const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
+                const auto mainLightComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+                const auto shadowsComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+                const auto lightComponents = NodeComponentHelper::FindAll<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
                 const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
                 const auto terrainComponent = ComponentRepository<ITerrainComponenet>::Instance().Get(node->GetId());
@@ -4267,9 +4267,9 @@ public:
             }
 
             if (visible) {
-                const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
-                const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-                const auto lightComponents = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
+                const auto mainLightComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+                const auto shadowsComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+                const auto lightComponents = NodeComponentHelper::FindAll<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
                 const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
                 const auto terrainComponent = ComponentRepository<ITerrainComponenet>::Instance().Get(node->GetId());
@@ -4784,10 +4784,10 @@ public:
 
             if (visible) {
                 const auto waterComponent = ComponentRepository<IWaterComponent>::Instance().Get(node->GetId());
-                const auto waterReflectionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
-                const auto waterRefractionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
-                const auto mainLightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
-                const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+                const auto waterReflectionComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
+                const auto waterRefractionComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
+                const auto mainLightComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+                const auto shadowsComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
                 const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
 
@@ -5403,7 +5403,7 @@ private:
 
     void InitShadows()
     {
-        const auto shadowsComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>(TagSet{ TAG_SHADOW });
+        const auto shadowsComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>(TagSet{ TAG_SHADOW });
 
         m_defaultShadowsRenderer = std::make_shared<DefaultShadowsRenderer>(shadowsComponent->GetRenderPass());
         m_normalMappedShadowsRenderer = std::make_shared<NormalMappedShadowsRenderer>(shadowsComponent->GetRenderPass());
@@ -5452,7 +5452,7 @@ private:
 
     void InitReflection()
     {
-        const auto reflectionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
+        const auto reflectionComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
 
         m_reflectionSkyBoxRenderer = std::make_shared<SkyBoxRenderer>(reflectionComponent->GetRenderPass());
         m_reflectionDefaultRenderer = std::make_shared<DefaultRenderer>(reflectionComponent->GetRenderPass());
@@ -5501,7 +5501,7 @@ private:
 
     void InitRefraction()
     {
-        const auto refractionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
+        const auto refractionComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
 
         m_refractionSkyBoxRenderer = std::make_shared<SkyBoxRenderer>(refractionComponent->GetRenderPass());
         m_refractionDefaultRenderer = std::make_shared<DefaultRenderer>(refractionComponent->GetRenderPass());
@@ -5549,7 +5549,7 @@ private:
 
     void RenderShadows(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
     {
-        const auto shadows = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+        const auto shadows = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
         for (uint32_t cascadeIndex = 0; cascadeIndex < ShadowsComponent::CASCADES_COUNT; cascadeIndex++) {
 
@@ -5614,8 +5614,8 @@ private:
 
     void RenderSceneReflection(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
     {
-        const auto reflectionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
-        const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+        const auto reflectionComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
+        const auto cameraComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
         const auto cameraPosition{ cameraComponent->GetPosition() };
         const auto cameraViewPosition{ cameraComponent->GetPosition() + cameraComponent->GetForwardDirection() };
@@ -5693,8 +5693,8 @@ private:
 
     void RenderSceneRefraction(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
     {
-        const auto refractionComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
-        const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+        const auto refractionComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
+        const auto cameraComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
         const auto viewMatrix = cameraComponent->LookAt();
         const auto projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(refractionComponent->GetExtent().width, refractionComponent->GetExtent().height);
@@ -5764,7 +5764,7 @@ private:
 
     void RenderScene(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
     {
-        const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+        const auto cameraComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
         const auto viewMatrix = cameraComponent->LookAt();
         const auto projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);

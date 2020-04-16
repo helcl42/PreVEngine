@@ -679,7 +679,7 @@ public:
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_terrainComponent->GetModel()->GetMesh()->GetVertices());
         ComponentRepository<IBoundingVolumeComponent>::Instance().Add(m_id, m_boundingVolumeComponent);
 
-        m_terrainManagerComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT });
+        m_terrainManagerComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT });
         if (auto manager = m_terrainManagerComponent.lock()) {
             manager->AddTerrainComponent(m_terrainComponent);
         }
@@ -760,7 +760,7 @@ public:
 
         float minHeight = std::numeric_limits<float>::max();
         float maxHeight = std::numeric_limits<float>::min();
-        auto terrains = GraphTraversalHelper::GetNodeComponents<SceneNodeFlags, ITerrainComponenet>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT | SceneNodeFlags::HAS_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT });
+        auto terrains = NodeComponentHelper::FindAll<SceneNodeFlags, ITerrainComponenet>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT | SceneNodeFlags::HAS_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT });
         for (const auto& terrain : terrains) {
             auto heightInfo = terrain->GetHeightMapInfo();
             if (minHeight > heightInfo->minHeight) {
@@ -868,7 +868,7 @@ public:
 
     void Update(float deltaTime) override
     {
-        const auto terrain = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT });
+        const auto terrain = NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT });
 
         if ((m_shouldGoForward || m_shouldGoBackward || m_shouldGoLeft || m_shouldGoRight) && !m_isInTheAir) {
             m_animatonRenderComponent->GetAnimation()->SetState(AnimationState::RUNNING);
@@ -1499,7 +1499,7 @@ public:
 
     void Update(float deltaTime) override
     {
-        auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>(TagSet{ TAG_MAIN_CAMERA });
+        auto cameraComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>(TagSet{ TAG_MAIN_CAMERA });
 
         const float ROTATION_ANGLE = ROTATION_SPEED_DEGS_PER_SEC * deltaTime;
 
@@ -1811,8 +1811,8 @@ public:
 
     void Update(float deltaTime) override
     {
-        const auto lightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
-        const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+        const auto lightComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+        const auto cameraComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
         m_lensFlareComponent->Update(cameraComponent->GetViewFrustum().CreateProjectionMatrix(m_viewPortSize.x / m_viewPortSize.y), cameraComponent->LookAt(), cameraComponent->GetPosition(), lightComponent->GetPosition());
 
@@ -1863,8 +1863,8 @@ public:
 
     void Update(float deltaTime) override
     {
-        const auto lightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
-        const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+        const auto lightComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+        const auto cameraComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
         m_sunComponent->Update(cameraComponent->GetViewFrustum().CreateProjectionMatrix(m_viewPortSize.x / m_viewPortSize.y), cameraComponent->LookAt(), cameraComponent->GetPosition(), lightComponent->GetPosition());
 
@@ -1933,7 +1933,7 @@ public:
 
     void Update(float deltaTime) override
     {
-        const auto terrain = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT });
+        const auto terrain = NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT });
 
         auto currentPosition = m_transformComponent->GetPosition();
 
@@ -1997,8 +1997,8 @@ public:
 
     void Update(float deltaTime) override
     {
-        const auto lightComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
-        const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+        const auto lightComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+        const auto cameraComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
         m_shadowsCompoent->Update(lightComponent->GetDirection(), lightComponent->GetViewFrustum().GetNearClippingPlane(), lightComponent->GetViewFrustum().GetFarClippingPlane(), lightComponent->GetViewFrustum().CreateProjectionMatrix(1.0f), cameraComponent->LookAt());
 
@@ -2041,8 +2041,8 @@ public:
 
     void Update(float deltaTime) override
     {
-        const auto cameraComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
-        const auto playerTransformComponent = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ITransformComponent>({ TAG_PLAYER });
+        const auto cameraComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+        const auto playerTransformComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ITransformComponent>({ TAG_PLAYER });
 
         if (m_inputFacade.IsMouseLocked()) {
             m_rayCasterComponent->SetRayLength(RAY_LENGTH);
@@ -2294,7 +2294,7 @@ private:
 
     std::shared_ptr<ITerrainComponenet> GetTerrain(const glm::vec3& position) const
     {
-        const auto terrain = GraphTraversalHelper::GetNodeComponent<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT });
+        const auto terrain = NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT });
         return terrain->GetTerrainAt(position);
     }
 
