@@ -35,7 +35,7 @@ enum class SceneNodeFlags {
     ANIMATION_PARALLAX_MAPPED_RENDER_COMPONENT,
     FONT_RENDER_COMPONENT,
     SKYBOX_RENDER_COMPONENT,
-    TERRAIN_COMPONENT,
+    TERRAIN_MANAGER_COMPONENT,
     TERRAIN_RENDER_COMPONENT,
     TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT,
     TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT,
@@ -350,6 +350,43 @@ public:
             resultComponents[i] = ComponentRepository<ComponentType>::Instance().Get(nodes[i]->GetId());
         }
         return resultComponents;
+    }
+
+    template <typename FlagType, typename ComponentType>
+    static void AddComponent(const std::shared_ptr<ISceneNode<FlagType> >& node, const std::shared_ptr<ComponentType>& component, const FlagType flag)
+    {
+        ComponentRepository<ComponentType>::Instance().Add(node->GetId(), std::move(component));
+
+        auto flags = node->GetFlags();
+        flags.Set(flag, true);
+        node->SetFlags(flags);
+    }
+
+    template <typename FlagType, typename ComponentType>
+    static void RemoveComponent(const std::shared_ptr<ISceneNode<FlagType> >& node, const FlagType flag)
+    {
+        const auto component = ComponentRepository<ComponentType>::Instance().Get(node->GetId());
+
+        ComponentRepository<ComponentType>::Instance().Remove(node->GetId());
+
+        auto flags = node->GetFlags();
+        flags.Set(flag, false);
+        node->SetFlags(flags);
+    }
+
+    template <typename FlagType, typename ComponentType>
+    static std::shared_ptr<ComponentType> GetComponent(const std::shared_ptr<ISceneNode<FlagType> >& node)
+    {
+        return ComponentRepository<ComponentType>::Instance().Get(node->GetId());
+    }
+
+    template <typename FlagType, typename ComponentType>
+    static bool HasComponent(const std::shared_ptr<ISceneNode<FlagType> >& node)
+    {
+        if (node) {
+            return ComponentRepository<ComponentType>::Instance().Contains(node->GetId());
+        }
+        return false;
     }
 };
 
