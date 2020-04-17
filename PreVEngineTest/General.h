@@ -147,6 +147,8 @@ enum class VertexLayoutComponent {
     IVEC2 = 0x5,
     IVEC3 = 0x6,
     IVEC4 = 0x7,
+    MAT3 = 0x8,
+    MAT4 = 0x9
 };
 
 struct VertexLayout {
@@ -154,9 +156,7 @@ private:
     std::vector<VertexLayoutComponent> m_components;
 
 public:
-    VertexLayout()
-    {
-    }
+    VertexLayout() = default;
 
     VertexLayout(const std::vector<VertexLayoutComponent>& components)
         : m_components(components)
@@ -188,6 +188,10 @@ public:
             return 3 * sizeof(int32_t);
         case VertexLayoutComponent::IVEC4:
             return 4 * sizeof(int32_t);
+        case VertexLayoutComponent::MAT3:
+            return 3 * 3 * sizeof(float);
+        case VertexLayoutComponent::MAT4:
+            return 4 * 4 * sizeof(float);
         default:
             throw std::runtime_error("Invalid vertex layout component type.");
         }
