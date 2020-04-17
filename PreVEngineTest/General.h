@@ -24,7 +24,7 @@ static const glm::vec4 SELECTED_COLOR{ 1.0f, 0.0f, 0.0f, 1.0f };
 static const uint32_t MAX_BONES_COUNT{ 100 };
 static const glm::vec4 DEFAULT_CLIP_PLANE{ 0.0f, -1.0f, 0.0f, 1000.0f };
 
-enum class SceneNodeFlags : uint64_t {
+enum class SceneNodeFlags {
     TRANSFORM_COMPONENT,
     RAYCASTER_COMPONENT,
     RENDER_COMPONENT,
