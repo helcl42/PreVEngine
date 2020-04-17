@@ -120,7 +120,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);
@@ -242,7 +242,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_NORMAL_MAPPED_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::RENDER_NORMAL_MAPPED_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);
@@ -364,7 +364,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_PARALLAX_MAPPED_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::RENDER_PARALLAX_MAPPED_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);
@@ -486,7 +486,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);
@@ -608,7 +608,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);
@@ -730,7 +730,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);
@@ -853,7 +853,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::ANIMATION_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);
@@ -980,7 +980,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderUserData.frustum);
@@ -1107,7 +1107,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::ANIMATION_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderUserData.frustum);
@@ -1396,7 +1396,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
     {
-        const auto component = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
+        const auto component = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT });
 
         m_shader->Bind("imageSampler", component->GetColorImageBuffer()->GetImageView(), component->GetColorImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
@@ -1512,7 +1512,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::BOUNDING_VOLUME_COMPONENT })) {
             const auto boundingVolumeComponent = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId());
 
             auto uboVS = m_uniformsPoolVS->GetNext();
@@ -1659,7 +1659,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RAYCASTER_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::RAYCASTER_COMPONENT })) {
             const auto rayCastingComponent = ComponentRepository<IRayCasterComponent>::Instance().Get(node->GetId());
 
             auto uboVS = m_uniformsPoolVS->GetNext();
@@ -1806,7 +1806,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SELECTABLE_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::SELECTABLE_COMPONENT })) {
             const auto selectableComponent = ComponentRepository<ISelectableComponent>::Instance().Get(node->GetId());
             if (selectableComponent->IsSelected()) {
                 auto uboVS = m_uniformsPoolVS->GetNext();
@@ -2038,7 +2038,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
@@ -2308,7 +2308,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_NORMAL_MAPPED_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::RENDER_NORMAL_MAPPED_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
@@ -2583,7 +2583,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_PARALLAX_MAPPED_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::RENDER_PARALLAX_MAPPED_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
@@ -2866,7 +2866,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::ANIMATION_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
@@ -3137,7 +3137,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
 
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
@@ -3414,7 +3414,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::ANIMATION_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
 
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
@@ -3701,7 +3701,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
@@ -3978,7 +3978,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
@@ -4260,7 +4260,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
@@ -4464,7 +4464,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_FONT_RENDER_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::FONT_RENDER_COMPONENT })) {
             const auto nodeFontRenderComponent = ComponentRepository<IFontRenderComponent>::Instance().Get(node->GetId());
             for (const auto& renderableText : nodeFontRenderComponent->GetRenderableTexts()) {
                 auto uboVS = m_uniformsPoolVS->GetNext();
@@ -4604,7 +4604,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SKYBOX_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::SKYBOX_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
             const auto skyBoxComponent = ComponentRepository<ISkyBoxComponent>::Instance().Get(node->GetId());
 
@@ -4776,7 +4776,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
@@ -4784,8 +4784,8 @@ public:
 
             if (visible) {
                 const auto waterComponent = ComponentRepository<IWaterComponent>::Instance().Get(node->GetId());
-                const auto waterReflectionComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
-                const auto waterRefractionComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
+                const auto waterReflectionComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT });
+                const auto waterRefractionComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT });
                 const auto mainLightComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
                 const auto shadowsComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
@@ -4959,7 +4959,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SUN_RENDER_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::SUN_RENDER_COMPONENT })) {
             const auto sunComponent = ComponentRepository<ISunComponent>::Instance().Get(node->GetId());
 
             const float xScale = sunComponent->GetFlare()->GetScale();
@@ -5113,7 +5113,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_LENS_FLARE_RENDER_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::LENS_FLARE_RENDER_COMPONENT })) {
             const auto lensFlareComponent = ComponentRepository<ILensFlareComponent>::Instance().Get(node->GetId());
 
             for (const auto& lensFlare : lensFlareComponent->GetFlares()) {
@@ -5452,7 +5452,7 @@ private:
 
     void InitReflection()
     {
-        const auto reflectionComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
+        const auto reflectionComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT });
 
         m_reflectionSkyBoxRenderer = std::make_shared<SkyBoxRenderer>(reflectionComponent->GetRenderPass());
         m_reflectionDefaultRenderer = std::make_shared<DefaultRenderer>(reflectionComponent->GetRenderPass());
@@ -5501,7 +5501,7 @@ private:
 
     void InitRefraction()
     {
-        const auto refractionComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
+        const auto refractionComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT });
 
         m_refractionSkyBoxRenderer = std::make_shared<SkyBoxRenderer>(refractionComponent->GetRenderPass());
         m_refractionDefaultRenderer = std::make_shared<DefaultRenderer>(refractionComponent->GetRenderPass());
@@ -5614,7 +5614,7 @@ private:
 
     void RenderSceneReflection(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
     {
-        const auto reflectionComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT });
+        const auto reflectionComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT });
         const auto cameraComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
         const auto cameraPosition{ cameraComponent->GetPosition() };
@@ -5693,7 +5693,7 @@ private:
 
     void RenderSceneRefraction(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
     {
-        const auto refractionComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT });
+        const auto refractionComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT });
         const auto cameraComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
         const auto viewMatrix = cameraComponent->LookAt();

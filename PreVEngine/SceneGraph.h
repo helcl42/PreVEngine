@@ -28,19 +28,19 @@ public:
 
     virtual void Render(RenderContext& renderContext) = 0;
 
-    virtual const std::vector<std::shared_ptr<ISceneNode> >& GetChildren() const = 0;
+    virtual const std::vector<std::shared_ptr<ISceneNode<NodeFlagsType>> >& GetChildren() const = 0;
 
-    virtual void AddChild(const std::shared_ptr<ISceneNode>& child) = 0;
+    virtual void AddChild(const std::shared_ptr<ISceneNode<NodeFlagsType>>& child) = 0;
 
-    virtual void RemoveChild(const std::shared_ptr<ISceneNode>& child) = 0;
+    virtual void RemoveChild(const std::shared_ptr<ISceneNode<NodeFlagsType>>& child) = 0;
 
-    virtual void SetParent(const std::shared_ptr<ISceneNode>& parent) = 0;
+    virtual void SetParent(const std::shared_ptr<ISceneNode<NodeFlagsType>>& parent) = 0;
 
-    virtual std::shared_ptr<ISceneNode> GetParent() const = 0;
+    virtual std::shared_ptr<ISceneNode<NodeFlagsType>> GetParent() const = 0;
 
-    virtual std::shared_ptr<ISceneNode> GetThis() = 0;
+    virtual std::shared_ptr<ISceneNode<NodeFlagsType>> GetThis() = 0;
 
-    virtual std::shared_ptr<ISceneNode> GetRoot() = 0;
+    virtual std::shared_ptr<ISceneNode<NodeFlagsType>> GetRoot() = 0;
 
     virtual bool IsRoot() const = 0;
 

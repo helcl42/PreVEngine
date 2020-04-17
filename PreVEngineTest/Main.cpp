@@ -376,7 +376,7 @@ std::map<std::string, std::shared_ptr<Image> > RenderComponentFactory::s_imagesC
 class AbstractCubeRobotSceneNode : public AbstractSceneNode<SceneNodeFlags> {
 public:
     AbstractCubeRobotSceneNode(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT | SceneNodeFlags::BOUNDING_VOLUME_COMPONENT })
         , m_initialPosition(position)
         , m_initialOrientation(orientation)
         , m_initialScale(scale)
@@ -574,7 +574,7 @@ public:
 class PlaneNode : public AbstractSceneNode<SceneNodeFlags> {
 public:
     PlaneNode(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const float heightScale)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_PARALLAX_MAPPED_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::RENDER_PARALLAX_MAPPED_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT | SceneNodeFlags::BOUNDING_VOLUME_COMPONENT })
         , m_initialPosition(position)
         , m_initialOrientation(orientation)
         , m_initialScale(scale)
@@ -652,7 +652,7 @@ protected:
 class Terrain : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Terrain(const int x, const int z)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT | SceneNodeFlags::BOUNDING_VOLUME_COMPONENT })
         , m_xIndex(x)
         , m_zIndex(z)
     {
@@ -679,7 +679,7 @@ public:
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_terrainComponent->GetModel()->GetMesh()->GetVertices());
         ComponentRepository<IBoundingVolumeComponent>::Instance().Add(m_id, m_boundingVolumeComponent);
 
-        m_terrainManagerComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT });
+        m_terrainManagerComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_COMPONENT });
         if (auto manager = m_terrainManagerComponent.lock()) {
             manager->AddTerrainComponent(m_terrainComponent);
         }
@@ -732,7 +732,7 @@ private:
 
 public:
     TerrainManager(const uint32_t maxX, const uint32_t maxZ)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT | SceneNodeFlags::HAS_SELECTABLE_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_COMPONENT | SceneNodeFlags::SELECTABLE_COMPONENT })
         , m_gridMaxX(maxX)
         , m_gridMaxZ(maxZ)
     {
@@ -760,7 +760,7 @@ public:
 
         float minHeight = std::numeric_limits<float>::max();
         float maxHeight = std::numeric_limits<float>::min();
-        auto terrains = NodeComponentHelper::FindAll<SceneNodeFlags, ITerrainComponenet>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_RENDER_COMPONENT | SceneNodeFlags::HAS_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT });
+        auto terrains = NodeComponentHelper::FindAll<SceneNodeFlags, ITerrainComponenet>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT });
         for (const auto& terrain : terrains) {
             auto heightInfo = terrain->GetHeightMapInfo();
             if (minHeight > heightInfo->minHeight) {
@@ -824,7 +824,7 @@ private:
 class Goblin : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Goblin(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_ANIMATION_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::ANIMATION_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT | SceneNodeFlags::BOUNDING_VOLUME_COMPONENT })
         , m_initialPosition(position)
         , m_initialOrientation(orientation)
         , m_initialScale(scale)
@@ -868,7 +868,7 @@ public:
 
     void Update(float deltaTime) override
     {
-        const auto terrain = NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT });
+        const auto terrain = NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_COMPONENT });
 
         if ((m_shouldGoForward || m_shouldGoBackward || m_shouldGoLeft || m_shouldGoRight) && !m_isInTheAir) {
             m_animatonRenderComponent->GetAnimation()->SetState(AnimationState::RUNNING);
@@ -1116,7 +1116,7 @@ private:
 class Camera : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Camera()
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_CAMERA_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::CAMERA_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })
     {
     }
 
@@ -1305,7 +1305,7 @@ private:
 
 public:
     Text()
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_FONT_RENDER_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::FONT_RENDER_COMPONENT })
     {
     }
 
@@ -1349,7 +1349,7 @@ public:
 class MainLight : public AbstractSceneNode<SceneNodeFlags> {
 public:
     MainLight(const glm::vec3& pos)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_LIGHT_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::LIGHT_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })
         , m_initialPosition(pos)
     {
     }
@@ -1417,7 +1417,7 @@ private:
 class Light : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Light(const glm::vec3& position, const glm::vec3& color)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_LIGHT_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::LIGHT_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })
         , m_initialPosition(position)
         , m_color(color)
     {
@@ -1473,7 +1473,7 @@ private:
 class SkyBox : public AbstractSceneNode<SceneNodeFlags> {
 public:
     SkyBox()
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SKYBOX_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::SKYBOX_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })
     {
     }
 
@@ -1535,7 +1535,7 @@ private:
 class WaterReflection : public AbstractSceneNode<SceneNodeFlags> {
 public:
     WaterReflection()
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFLECTION_RENDER_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT })
     {
     }
 
@@ -1606,7 +1606,7 @@ private:
 class WaterRefraction : public AbstractSceneNode<SceneNodeFlags> {
 public:
     WaterRefraction()
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_REFRACTION_RENDER_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT })
     {
     }
 
@@ -1677,7 +1677,7 @@ private:
 class Water : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Water(const int x, const int z)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_WATER_RENDER_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT | SceneNodeFlags::BOUNDING_VOLUME_COMPONENT })
         , m_x(x)
         , m_z(z)
     {
@@ -1792,7 +1792,7 @@ public:
 class LensFlare : public AbstractSceneNode<SceneNodeFlags> {
 public:
     LensFlare()
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_LENS_FLARE_RENDER_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::LENS_FLARE_RENDER_COMPONENT })
     {
     }
 
@@ -1844,7 +1844,7 @@ private:
 class Sun : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Sun()
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SUN_RENDER_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::SUN_RENDER_COMPONENT })
     {
     }
 
@@ -1896,7 +1896,7 @@ private:
 class Stone : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Stone(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RENDER_PARALLAX_MAPPED_COMPONENT | SceneNodeFlags::HAS_TRANSFORM_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT | SceneNodeFlags::HAS_SELECTABLE_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::RENDER_PARALLAX_MAPPED_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT | SceneNodeFlags::BOUNDING_VOLUME_COMPONENT | SceneNodeFlags::SELECTABLE_COMPONENT })
         , m_initialPosition(position)
         , m_initialOrientation(orientation)
         , m_initialScale(scale)
@@ -1933,7 +1933,7 @@ public:
 
     void Update(float deltaTime) override
     {
-        const auto terrain = NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT });
+        const auto terrain = NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_COMPONENT });
 
         auto currentPosition = m_transformComponent->GetPosition();
 
@@ -1977,7 +1977,7 @@ private:
 class Shadows : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Shadows()
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SHADOWS_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::SHADOWS_COMPONENT })
     {
     }
 
@@ -2021,7 +2021,7 @@ private:
 class RayCasterNode : public AbstractSceneNode<SceneNodeFlags> {
 public:
     RayCasterNode()
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_RAYCASTER_COMPONENT })
+        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::RAYCASTER_COMPONENT })
     {
     }
 
@@ -2167,7 +2167,7 @@ public:
             }
 
             if (intersectionType == IntersectionType::TERRAIN) {
-                auto terrainManagerNode = GraphTraversal<SceneNodeFlags>::Instance().FindOneWithFlags(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT | SceneNodeFlags::HAS_SELECTABLE_COMPONENT }, LogicOperation::AND);
+                auto terrainManagerNode = GraphTraversal<SceneNodeFlags>::Instance().FindOneWithFlags(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_COMPONENT | SceneNodeFlags::SELECTABLE_COMPONENT }, LogicOperation::AND);
                 auto selectableComponent = ComponentRepository<ISelectableComponent>::Instance().Get(terrainManagerNode->GetId());
                 selectableComponent->SetSelected(true);
                 selectableComponent->SetPosition(currentTerrainIntersectionPoint.GetValue());
@@ -2294,14 +2294,14 @@ private:
 
     std::shared_ptr<ITerrainComponenet> GetTerrain(const glm::vec3& position) const
     {
-        const auto terrain = NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_TERRAIN_COMPONENT });
+        const auto terrain = NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_COMPONENT });
         return terrain->GetTerrainAt(position);
     }
 
     // Objects
     std::vector<std::shared_ptr<ISceneNode<SceneNodeFlags> > > GetSelectableNodes() const
     {
-        return GraphTraversal<SceneNodeFlags>::Instance().FindAllWithFlags(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SELECTABLE_COMPONENT });
+        return GraphTraversal<SceneNodeFlags>::Instance().FindAllWithFlags(FlagSet<SceneNodeFlags>{ SceneNodeFlags::SELECTABLE_COMPONENT });
     }
 
     Nullable<std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags>>, RayCastResult>> FindTheClosestIntersectingNode(const Ray& ray) const
@@ -2309,7 +2309,7 @@ private:
         Nullable<std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags> >, RayCastResult> > theClosestNode;
         float minDistance = std::numeric_limits<float>::max();
 
-        auto selectableNodes = GraphTraversal<SceneNodeFlags>::Instance().FindAllWithFlags(FlagSet<SceneNodeFlags>{ SceneNodeFlags::HAS_SELECTABLE_COMPONENT | SceneNodeFlags::HAS_BOUNDING_VOLUME_COMPONENT }, LogicOperation::AND);
+        auto selectableNodes = GraphTraversal<SceneNodeFlags>::Instance().FindAllWithFlags(FlagSet<SceneNodeFlags>{ SceneNodeFlags::SELECTABLE_COMPONENT | SceneNodeFlags::BOUNDING_VOLUME_COMPONENT }, LogicOperation::AND);
         for (auto selectable : selectableNodes) {
             const auto boundingVolume = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(selectable->GetId());
 
