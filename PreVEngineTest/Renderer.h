@@ -4328,7 +4328,7 @@ public:
                 uniformsFS.heightTtransitionRange = terrainComponent->GetTransitionRange();
                 
                 // TODO -> add uniform for all terrain materials                
-                uniformsFS.parallaxBias = -0.02f;
+                uniformsFS.parallaxBias = 0.0f;
                 uniformsFS.numLayers = 8;
                 uniformsFS.mappingMode = 3;
                 uniformsFS.maxAngleToFallback = glm::radians(28.0f);
