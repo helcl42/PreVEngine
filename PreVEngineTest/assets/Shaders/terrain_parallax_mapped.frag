@@ -31,6 +31,8 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 	float parallaxBias;
 	float numLayers;
 	uint mappingMode;
+
+	float maxAngleToFallback;
 } uboFS;
 
 layout(binding = 2) uniform sampler2D textureSampler[MATERIAL_COUNT];
@@ -120,7 +122,7 @@ vec2 GetParallaxTextureCoordOffset(in uint index, in vec2 textureCoord, in vec3 
 	return uv;
 }
 
-void main() 
+void main()
 {
 	const vec3 viewDirectionTangentSpace = normalize(inToCameraVectorTangentSpace - inWorldPositionTangentSpace);
 
@@ -129,7 +131,6 @@ void main()
 
     vec4 textureColor = vec4(1.0, 1.0, 1.0, 1.0);
 	vec3 normal = vec3(0.0, 1.0, 0.0);
-	vec2 uv = vec2(0.0, 0.0);
 	float shineDamper = 1.0f;
 	float reflectivity = 1.0f;
     for(uint i = 0; i < MATERIAL_COUNT; i++) 
@@ -142,15 +143,33 @@ void main()
 
 				vec2 uv1 = GetParallaxTextureCoordOffset(i, inTextureCoord, viewDirectionTangentSpace);
 				vec2 uv2 = GetParallaxTextureCoordOffset(i + 1, inTextureCoord, viewDirectionTangentSpace);
-				uv = mix(uv1, uv2, ratio);
 
-                vec4 color1 = texture(textureSampler[i], uv);
-                vec4 color2 = texture(textureSampler[i + 1], uv);
+				vec3 normal1 = normalize(2.0 * texture(normalSampler[i], uv1).xyz - 1.0);
+				// if(abs(dot(normal1, viewDirectionTangentSpace)) < uboFS.maxAngleToFallback) {
+				// 	uv1 = inTextureCoord;
+				// 	normal1 = normalize(2.0 * texture(normalSampler[i], uv1).xyz - 1.0);
+				// }
+
+				vec3 normal2 = normalize(2.0 * texture(normalSampler[i + 1], uv2).xyz - 1.0);
+				// if(abs(dot(normal2, viewDirectionTangentSpace)) < uboFS.maxAngleToFallback) {
+				// 	uv2 = inTextureCoord;
+				// 	normal2 = normalize(2.0 * texture(normalSampler[i + 1], uv1).xyz - 1.0);
+				// }
+
+				normal = normalize(mix(normal1, normal2, ratio));
+
+				float NdotV = abs(dot(normal, viewDirectionTangentSpace));
+				if(NdotV < uboFS.maxAngleToFallback) {
+					uv1 = inTextureCoord;
+					uv2 = inTextureCoord;
+					vec3 normal1 = normalize(2.0 * texture(normalSampler[i], uv1).xyz - 1.0);
+					vec3 normal2 = normalize(2.0 * texture(normalSampler[i + 1], uv2).xyz - 1.0);
+					normal = mix(normal1, normal2, ratio);
+				}
+
+                vec4 color1 = texture(textureSampler[i], uv1);
+                vec4 color2 = texture(textureSampler[i + 1], uv2);
                 textureColor = mix(color1, color2, ratio);
-
-				vec3 normal1 = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);
-				vec3 normal2 = normalize(2.0 * texture(normalSampler[i + 1], uv).xyz - 1.0);
-				normal = mix(normal1, normal2, ratio);
 
 				float shineDamper1 = uboFS.material[i].shineDamper;
 				float shineDamper2 = uboFS.material[i + 1].shineDamper;
@@ -163,27 +182,42 @@ void main()
             }
 			else if(normalizedHeight < uboFS.heightSteps[i].x - uboFS.heightTransitionRange)
 			{
-				uv = GetParallaxTextureCoordOffset(i, inTextureCoord, viewDirectionTangentSpace);
-				textureColor = texture(textureSampler[i], uv);
+				vec2 uv = GetParallaxTextureCoordOffset(i, inTextureCoord, viewDirectionTangentSpace);
 				normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);
+				float NdotV = abs(dot(normal, viewDirectionTangentSpace));
+				if(NdotV < uboFS.maxAngleToFallback) {
+					uv = inTextureCoord;
+					normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);
+				}
+				textureColor = texture(textureSampler[i], uv);
 				shineDamper = uboFS.material[i].shineDamper;
 				reflectivity = uboFS.material[i].reflectivity;
 				break;
 			}
             else if(normalizedHeight > uboFS.heightSteps[i].x + uboFS.heightTransitionRange && normalizedHeight < uboFS.heightSteps[i + 1].x - uboFS.heightTransitionRange)
             {
-				uv = GetParallaxTextureCoordOffset(i, inTextureCoord, viewDirectionTangentSpace);
-				textureColor = texture(textureSampler[i], uv);
+				vec2 uv = GetParallaxTextureCoordOffset(i, inTextureCoord, viewDirectionTangentSpace);
 				normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);
+				float NdotV = abs(dot(normal, viewDirectionTangentSpace));
+				if(NdotV < uboFS.maxAngleToFallback) {
+					uv = inTextureCoord;
+					normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);
+				}
+				textureColor = texture(textureSampler[i], uv);
 				shineDamper = uboFS.material[i].shineDamper;
 				reflectivity = uboFS.material[i].reflectivity;
             }
         }
         else
         {
-			uv = GetParallaxTextureCoordOffset(i, inTextureCoord, viewDirectionTangentSpace);
-			textureColor = texture(textureSampler[i], uv);
+			vec2 uv = GetParallaxTextureCoordOffset(i, inTextureCoord, viewDirectionTangentSpace);
 			normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);
+			float NdotV = abs(dot(normal, viewDirectionTangentSpace));
+			if(NdotV < uboFS.maxAngleToFallback) {
+				uv = inTextureCoord;
+				normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);
+			}
+			textureColor = texture(textureSampler[i], uv);
 			shineDamper = uboFS.material[i].shineDamper;
 			reflectivity = uboFS.material[i].reflectivity;
         }

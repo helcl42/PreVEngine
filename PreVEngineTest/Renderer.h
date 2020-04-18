@@ -2654,7 +2654,7 @@ public:
                 // Basic parallax mapping needs a bias to look any good (and is hard to tweak)
                 uniformsFS.parallaxBias = -0.02f;
                 // Number of layers for steep parallax and parallax occlusion (more layer = better result for less performance)
-                uniformsFS.numLayers = 48;
+                uniformsFS.numLayers = 16;
                 // (Parallax) mapping mode to use 1, 2, 3 otherwise it behaves like normal mapping only(no uv offset is computed)
                 uniformsFS.mappingMode = 3;
 
@@ -3485,7 +3485,7 @@ public:
                 // Basic parallax mapping needs a bias to look any good (and is hard to tweak)
                 uniformsFS.parallaxBias = -0.02f;
                 // Number of layers for steep parallax and parallax occlusion (more layer = better result for less performance)
-                uniformsFS.numLayers = 48;
+                uniformsFS.numLayers = 12;
                 // (Parallax) mapping mode to use 1, 2, 3 otherwise it behaves like normal mapping only(no uv offset is computed)
                 uniformsFS.mappingMode = 3;
 
@@ -4195,6 +4195,8 @@ private:
         float parallaxBias;
         float numLayers;
         uint32_t mappingMode;
+
+        alignas(16) float maxAngleToFallback;
     };
 
 private:
@@ -4327,8 +4329,9 @@ public:
                 
                 // TODO -> add uniform for all terrain materials                
                 uniformsFS.parallaxBias = -0.02f;
-                uniformsFS.numLayers = 64;
+                uniformsFS.numLayers = 8;
                 uniformsFS.mappingMode = 3;
+                uniformsFS.maxAngleToFallback = glm::radians(28.0f);
 
                 uboFS->Update(&uniformsFS);
 
