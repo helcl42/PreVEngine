@@ -411,7 +411,7 @@ public:
 
     virtual void ShutDown() = 0;
 
-public: 
+public:
     virtual ~IRenderer() = default;
 };
 
@@ -980,7 +980,6 @@ public:
 public:
     virtual ~IAnimationRenderComponent() = default;
 };
-
 
 class MeshUtil {
 public:

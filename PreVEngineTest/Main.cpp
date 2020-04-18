@@ -12,20 +12,20 @@
 #include <Shader.h>
 #include <Utils.h>
 
-#include "General.h"
-#include "Culling.h"
-#include "RayCasting.h"
-#include "Font.h"
-#include "Mesh.h"
 #include "Animation.h"
+#include "Camera.h"
+#include "Culling.h"
+#include "Font.h"
+#include "General.h"
+#include "LensFlare.h"
+#include "Light.h"
+#include "Mesh.h"
 #include "Pipeline.h"
+#include "RayCasting.h"
+#include "Shadows.h"
 #include "SkyBox.h"
 #include "Terrain.h"
 #include "Water.h"
-#include "Shadows.h"
-#include "Light.h"
-#include "Camera.h"
-#include "LensFlare.h"
 
 #include "Renderer.h"
 
@@ -244,7 +244,7 @@ public:
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
     }
 
-     std::unique_ptr<IRenderComponent> CreateSphereRenderComponent(const std::string& texturePath, const bool castsShadows, const bool isCastedByShadows) const
+    std::unique_ptr<IRenderComponent> CreateSphereRenderComponent(const std::string& texturePath, const bool castsShadows, const bool isCastedByShadows) const
     {
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
@@ -403,7 +403,7 @@ public:
             m_transformComponent->SetParent(NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
         }
         NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
-        
+
         const auto selectableComponent = std::make_shared<SelectableComponent>();
         NodeComponentHelper::AddComponent<SceneNodeFlags, ISelectableComponent>(GetThis(), selectableComponent, SceneNodeFlags::SELECTABLE_COMPONENT);
 
@@ -423,7 +423,7 @@ public:
         AbstractSceneNode::ShutDown();
 
         NodeComponentHelper::RemoveComponent<SceneNodeFlags, ISelectableComponent>(GetThis(), SceneNodeFlags::SELECTABLE_COMPONENT);
-		NodeComponentHelper::RemoveComponent<SceneNodeFlags, ITransformComponent>(GetThis(), SceneNodeFlags::TRANSFORM_COMPONENT);
+        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ITransformComponent>(GetThis(), SceneNodeFlags::TRANSFORM_COMPONENT);
         NodeComponentHelper::RemoveComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
         NodeComponentHelper::RemoveComponent<SceneNodeFlags, IRenderComponent>(GetThis(), SceneNodeFlags::RENDER_COMPONENT);
     }
@@ -633,13 +633,13 @@ protected:
     const glm::quat m_initialOrientation;
 
     const glm::vec3 m_initialScale;
-    
+
     const std::string m_texturePath;
 
     const std::string m_normalMapPath;
 
     const std::string m_heightMapPath;
-    
+
     const float m_heightScale;
 
     std::shared_ptr<ITransformComponent> m_transformComponent;
@@ -671,7 +671,7 @@ public:
         TerrainComponentFactory terrainComponentFactory{};
         m_terrainComponent = terrainComponentFactory.CreateRandomTerrainParallaxMapped(m_xIndex, m_zIndex, TERRAIN_SIZE);
         NodeComponentHelper::AddComponent<SceneNodeFlags, ITerrainComponenet>(GetThis(), m_terrainComponent, SceneNodeFlags::TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT);
-        
+
         BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_terrainComponent->GetModel()->GetMesh()->GetVertices());
         NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
@@ -711,7 +711,7 @@ private:
     const int m_xIndex;
 
     const int m_zIndex;
-    
+
     std::shared_ptr<ITransformComponent> m_transformComponent;
 
     std::shared_ptr<ITerrainComponenet> m_terrainComponent;
@@ -2006,7 +2006,7 @@ public:
         RayCasterComponentFactory raycasterFactory{};
         m_rayCasterComponent = raycasterFactory.CreateRayCaster();
         m_mouseRayCasterComponent = raycasterFactory.CreateMouseRayCaster();
-        
+
         AddRayCastComponent(m_inputFacade.IsMouseLocked());
 
         AbstractSceneNode::Init();
@@ -2031,7 +2031,6 @@ public:
             m_mouseRayCasterComponent->SetRayStartPosition(cameraComponent->GetPosition());
             m_mouseRayCasterComponent->Update(deltaTime);
         }
-
     }
 
     void ShutDown() override
@@ -2255,7 +2254,7 @@ private:
         return false;
     }
 
-    bool IsUnderGround(const std::shared_ptr<ITerrainComponenet> & terrain, const glm::vec3& testPoint, bool shouldReturn) const
+    bool IsUnderGround(const std::shared_ptr<ITerrainComponenet>& terrain, const glm::vec3& testPoint, bool shouldReturn) const
     {
         float height = 0.0f;
         if (!terrain->GetHeightAt(testPoint, height)) {
@@ -2279,7 +2278,7 @@ private:
         return GraphTraversal<SceneNodeFlags>::Instance().FindAllWithFlags(FlagSet<SceneNodeFlags>{ SceneNodeFlags::SELECTABLE_COMPONENT });
     }
 
-    Nullable<std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags>>, RayCastResult>> FindTheClosestIntersectingNode(const Ray& ray) const
+    Nullable<std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags> >, RayCastResult> > FindTheClosestIntersectingNode(const Ray& ray) const
     {
         Nullable<std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags> >, RayCastResult> > theClosestNode;
         float minDistance = std::numeric_limits<float>::max();
