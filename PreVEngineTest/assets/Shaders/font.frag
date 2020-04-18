@@ -3,11 +3,11 @@
 
 layout(std140, binding = 1) uniform UniformBufferObject {
     vec4 color;
-    float width;
-    float edge;
-    float borderWidth;
-    float borderEdge;
+    vec4 width;
+    vec4 edge;
     uint hasEffect;
+    vec4 borderWidth;
+    vec4 borderEdge;
     vec4 outlineColor;
     vec4 outlineOffset;
 } uboFS;
@@ -21,12 +21,12 @@ layout(location = 0) out vec4 outColor;
 void main()
 {
 	float distance = 1.0 - texture(textureSampler, vec2(inTextureCoord.x, inTextureCoord.y)).a;
-	float alpha = 1.0 - smoothstep(uboFS.width, uboFS.width + uboFS.edge, distance);
+	float alpha = 1.0 - smoothstep(uboFS.width.x, uboFS.width.x + uboFS.edge.x, distance);
 
 	if (uboFS.hasEffect != 0)
 	{
 		float distance2 = 1.0 - texture(textureSampler, vec2(inTextureCoord.x, inTextureCoord.y) + uboFS.outlineOffset.xy).a;
-		float outlineAlpha = 1.0 - smoothstep(uboFS.borderWidth, uboFS.borderWidth + uboFS.borderEdge, distance2);
+		float outlineAlpha = 1.0 - smoothstep(uboFS.borderWidth.x, uboFS.borderWidth.x + uboFS.borderEdge.x, distance2);
 
 		float overallAlpha = alpha + (1.0 - alpha) * outlineAlpha;
 		vec3 overallColor = mix(uboFS.outlineColor.xyz, uboFS.color.rgb, alpha / overallAlpha);

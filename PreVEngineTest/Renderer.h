@@ -4386,15 +4386,15 @@ private:
     {
         alignas(16) glm::vec4 color;
 
-        alignas(16) float width;
+        alignas(16) glm::vec4 width;
 
-        alignas(16) float edge;
-
-        alignas(16) float borderWidth;
-
-        alignas(16) float borderEdge;
+        alignas(16) glm::vec4 edge;
 
         alignas(16) uint32_t hasEffect;
+
+        alignas(16) glm::vec4 borderWidth;
+
+        alignas(16) glm::vec4 borderEdge;
 
         alignas(16) glm::vec4 outlineColor;
 
@@ -4475,11 +4475,11 @@ public:
                 auto uboFS = m_uniformsPoolFS->GetNext();
                 UniformsFS uniformsFS{};
                 uniformsFS.color = renderableText.text->GetColor();
-                uniformsFS.width = renderableText.text->GetWidth();
-                uniformsFS.edge = renderableText.text->GetEdge();
-                uniformsFS.borderWidth = renderableText.text->GetBorderWidth();
-                uniformsFS.borderEdge = renderableText.text->GetBorderEdge();
-                uniformsFS.hasEffect = renderableText.text->HasEffect();
+                uniformsFS.width = glm::vec4(renderableText.text->GetWidth());
+                uniformsFS.edge = glm::vec4(renderableText.text->GetEdge());
+                uniformsFS.borderWidth = glm::vec4(renderableText.text->GetBorderWidth());
+                uniformsFS.borderEdge = glm::vec4(renderableText.text->GetBorderEdge());
+                uniformsFS.hasEffect = renderableText.text->HasEffect() ? 1 : 0;
                 uniformsFS.outlineColor = glm::vec4(renderableText.text->GetOutlineColor(), 1.0f);
                 uniformsFS.outlineOffset = glm::vec4(renderableText.text->GetOutlineOffset(), 0.0f, 1.0f);
                 uboFS->Update(&uniformsFS);

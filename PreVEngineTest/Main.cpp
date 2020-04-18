@@ -1321,7 +1321,7 @@ public:
             fpsString << std::setprecision(1) << std::fixed;
             fpsString << m_fpsService.GetAverageFPS() << " FPS";
 
-            auto fancyText = std::make_shared<FancyText>(fpsString.str(), 1.6f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0), glm::vec2(0.4f, -0.4f), 1.0f, true, 0.5f, 0.1f);
+            auto fancyText = std::make_shared<FancyText>(fpsString.str(), 1.6f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0), glm::vec2(0.4f, -0.4f), 1.0f, true, 0.5f, 0.05f);
             m_fontComponent->AddText(fancyText);
         }
 
