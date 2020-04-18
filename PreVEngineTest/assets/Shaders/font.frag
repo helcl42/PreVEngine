@@ -5,6 +5,7 @@ layout(std140, binding = 1) uniform UniformBufferObject {
     vec4 color;
     vec4 width;
     vec4 edge;
+	vec4 bias;
     uint hasEffect;
     vec4 borderWidth;
     vec4 borderEdge;
@@ -20,7 +21,7 @@ layout(location = 0) out vec4 outColor;
 
 void main()
 {
-	float distance = 1.0 - texture(textureSampler, vec2(inTextureCoord.x, inTextureCoord.y)).a;
+	float distance = 1.0 - texture(textureSampler, vec2(inTextureCoord.x + uboFS.bias.x, inTextureCoord.y + uboFS.bias.y)).a;
 	float alpha = 1.0 - smoothstep(uboFS.width.x, uboFS.width.x + uboFS.edge.x, distance);
 
 	if (uboFS.hasEffect != 0)

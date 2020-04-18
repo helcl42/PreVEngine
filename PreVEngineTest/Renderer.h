@@ -4387,8 +4387,10 @@ private:
         alignas(16) glm::vec4 color;
 
         alignas(16) glm::vec4 width;
-
+        
         alignas(16) glm::vec4 edge;
+
+        alignas(16) glm::vec4 bias;
 
         alignas(16) uint32_t hasEffect;
 
@@ -4477,6 +4479,7 @@ public:
                 uniformsFS.color = renderableText.text->GetColor();
                 uniformsFS.width = glm::vec4(renderableText.text->GetWidth());
                 uniformsFS.edge = glm::vec4(renderableText.text->GetEdge());
+                uniformsFS.bias = glm::vec4(0.0f, 0.0005, 0.0f, 0.0f);
                 uniformsFS.borderWidth = glm::vec4(renderableText.text->GetBorderWidth());
                 uniformsFS.borderEdge = glm::vec4(renderableText.text->GetBorderEdge());
                 uniformsFS.hasEffect = renderableText.text->HasEffect() ? 1 : 0;
