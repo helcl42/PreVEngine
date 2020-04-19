@@ -344,6 +344,8 @@ public:
 
     virtual std::shared_ptr<IParticleFactory> GetParticleFactory() const = 0;
 
+    virtual std::shared_ptr<IModel> GetModel() const = 0;
+
     virtual std::shared_ptr<IMaterial> GetMaterial() const = 0;
 
     virtual std::vector<std::shared_ptr<Particle> > GetParticles() const = 0;
@@ -354,8 +356,9 @@ public:
 
 class ParticleSystemComponent : public IParticlaSystemComponent {
 public:
-    ParticleSystemComponent(const std::shared_ptr<IMaterial>& material, const std::shared_ptr<IParticleFactory>& particleFactory, const float particlesPerSecond)
-        : m_material(material)
+    ParticleSystemComponent(const std::shared_ptr<IModel>& model, const std::shared_ptr<IMaterial>& material, const std::shared_ptr<IParticleFactory>& particleFactory, const float particlesPerSecond)
+        : m_model(model)
+        , m_material(material)
         , m_particleFactory(particleFactory)
         , m_particlesPerSecond(particlesPerSecond)
     {
@@ -387,6 +390,11 @@ public:
     std::shared_ptr<IParticleFactory> GetParticleFactory() const override
     {
         return m_particleFactory;
+    }
+
+    std::shared_ptr<IModel> GetModel() const
+    {
+        return m_model;
     }
 
     std::shared_ptr<IMaterial> GetMaterial() const override
@@ -448,6 +456,8 @@ private:
     }
 
 private:
+    const std::shared_ptr<IModel> m_model;
+
     const std::shared_ptr<IMaterial> m_material;
 
     const std::shared_ptr<IParticleFactory> m_particleFactory;
@@ -462,31 +472,35 @@ public:
     std::unique_ptr<IParticlaSystemComponent> CreateRandom() const
     {
         auto allocator = AllocatorProvider::Instance().GetAllocator();
-
+        
+        auto model = CreateModel(*allocator);
         auto material = CreateMaterial(*allocator, AssetManager::Instance().GetAssetPath("Textures/fire.png"));
 
         auto particleFactory = std::make_shared<RandomInConeParticleFactory>(material, 20.0f, 0.1f, 5.0f, 6.0f, 1.6f);    
         particleFactory->SetConeDirection(glm ::vec3(0.0f, 1.0f, 0.0f));
         particleFactory->SetConeDirectionDeviation(5.0f);
+        particleFactory->SetRandomRotationEnabled(true);
         particleFactory->SetLifeLengthError(0.1f);
         particleFactory->SetSpeedError(0.25f);
         particleFactory->SetScaleError(0.1f);
 
-        return std::make_unique<ParticleSystemComponent>(material, particleFactory, 10.0f);
+        return std::make_unique<ParticleSystemComponent>(model, material, particleFactory, 10.0f);
     }
 
     std::unique_ptr<IParticlaSystemComponent> CreateRandomInCone(const glm::vec3& coneDirection, const float angle) const
     {
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
+        auto model = CreateModel(*allocator);
         auto material = CreateMaterial(*allocator, AssetManager::Instance().GetAssetPath("Textures/fire.png"));
 
         auto particleFactory = std::make_shared<RandomDirectionParticleFactory>(material, 20.0f, 0.1f, 5.0f, 6.0f, 1.6f);
+        particleFactory->SetRandomRotationEnabled(true);
         particleFactory->SetLifeLengthError(0.1f);
         particleFactory->SetSpeedError(0.25f);
         particleFactory->SetScaleError(0.1f);
 
-        return std::make_unique<ParticleSystemComponent>(material, particleFactory, 10.0f);
+        return std::make_unique<ParticleSystemComponent>(model, material, particleFactory, 10.0f);
     }
 
 private:
@@ -504,6 +518,16 @@ private:
         imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer() });
 
         return std::make_shared<Material>(std::move(image), std::move(imageBuffer), 0.0f, 0.0f);
+    }
+
+    std::shared_ptr<IModel> CreateModel(Allocator& allocator) const
+    {
+        auto mesh = std::make_unique<QuadMesh>();
+        auto vertexBuffer = std::make_unique<VBO>(allocator);
+        vertexBuffer->Data(mesh->GetVertexData(), static_cast<uint32_t>(mesh->GetVertices().size()), mesh->GetVertexLayout().GetStride());
+        auto indexBuffer = std::make_unique<IBO>(allocator);
+        indexBuffer->Data(mesh->GerIndices().data(), static_cast<uint32_t>(mesh->GerIndices().size()));
+        return std::make_shared<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
 };
 

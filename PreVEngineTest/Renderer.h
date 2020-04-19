@@ -5179,6 +5179,154 @@ public:
     }
 };
 
+class ParticlesRenderer final : public IRenderer<NormalRenderContextUserData> {
+private:
+    struct alignas(16) UniformsVS
+    {
+        alignas(16) glm::mat4 modelMatrix;
+
+        alignas(16) glm::mat4 viewMatrix;
+
+        alignas(16) glm::mat4 projectionMatrix;
+    };
+
+    struct alignas(16) UniformsFS
+    {
+        alignas(16) glm::vec4 color;
+    };
+
+private:
+    const uint32_t m_descriptorCount{ 1000 };
+
+private:
+    std::shared_ptr<RenderPass> m_renderPass;
+
+private:
+    std::unique_ptr<Shader> m_shader;
+
+    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+
+    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+
+    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+
+public:
+    ParticlesRenderer(const std::shared_ptr<RenderPass>& renderPass)
+        : m_renderPass(renderPass)
+    {
+    }
+
+    ~ParticlesRenderer() = default;
+
+public:
+    void Init() override
+    {
+        auto device = DeviceProvider::Instance().GetDevice();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
+
+        ShaderFactory shaderFactory;
+        m_shader = shaderFactory.CreateShaderFromFiles<ParticlesShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/particles_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/particles_frag.spv") } });
+        m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
+
+        LOGI("Particles Shader created\n");
+
+        m_pipeline = std::make_unique<ParticlesPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline->Init();
+
+        LOGI("Particles Pipeline created\n");
+
+        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+
+        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    }
+
+    void BeforeRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
+    }
+
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::PARTICLE_SYSTEM_COMPONENT })) {
+            const auto cameraComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+            const auto particlesComponent = ComponentRepository<IParticlaSystemComponent>::Instance().Get(node->GetId());            
+            for (const auto& particle : particlesComponent->GetParticles()) {
+                auto uboVS = m_uniformsPoolVS->GetNext();
+
+                UniformsVS uniformsVS{};
+                uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
+                uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
+                uniformsVS.modelMatrix = MathUtil::CreateTransformationMatrix(particle->GetPosition(), glm::inverse(cameraComponent->GetOrientation()) * glm::quat(glm::vec3(0.0f, 0.0f, particle->GetRotation())), particle->GetScale());
+
+                uboVS->Update(&uniformsVS);
+
+                auto uboFS = m_uniformsPoolFS->GetNext();
+
+                UniformsFS uniformsFS{};
+                uniformsFS.color = glm::vec4(0.0f, 1.0f, 0.0f, 0.7f);
+
+                uboFS->Update(&uniformsFS);
+
+                m_shader->Bind("uboVS", *uboVS);
+                m_shader->Bind("uboFS", *uboFS);
+                m_shader->Bind("textureSampler", *particlesComponent->GetMaterial()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                VkBuffer vertexBuffers[] = { *particlesComponent->GetModel()->GetVertexBuffer() };
+                VkDeviceSize offsets[] = { 0 };
+
+                vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+                vkCmdBindIndexBuffer(renderContext.commandBuffer, *particlesComponent->GetModel()->GetIndexBuffer(), 0, particlesComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+                vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+                vkCmdDrawIndexed(renderContext.commandBuffer, particlesComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+            }
+        }
+
+        for (auto child : node->GetChildren()) {
+            Render(renderContext, child, renderContextUserData);
+        }
+    }
+
+    void PostRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void AfterRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void ShutDown() override
+    {
+        m_shader->ShutDown();
+
+        m_pipeline->ShutDown();
+    }
+
+private:
+    std::unique_ptr<IModel> CreateModel(Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const
+    {
+        auto vertexBuffer = std::make_unique<VBO>(allocator);
+        vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
+
+        auto indexBuffer = std::make_unique<IBO>(allocator);
+        indexBuffer->Data(mesh->GerIndices().data(), (uint32_t)mesh->GerIndices().size());
+
+        return std::make_unique<Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));
+    }
+};
+
 class CommandBuffersGroup {
 public:
     CommandBuffersGroup(const std::vector<std::vector<VkCommandPool> >& pools, const std::vector<std::vector<VkCommandBuffer> >& commandBuffers)
@@ -5321,6 +5469,7 @@ private:
         m_animationParallaxMappedRenderer = std::make_shared<AnimationParallaxMappedRenderer>(m_defaultRenderPass);
         m_waterRenderer = std::make_shared<WaterRenderer>(m_defaultRenderPass);
         m_fontRenderer = std::make_shared<FontRenderer>(m_defaultRenderPass);
+        m_particlesRenderer = std::make_shared<ParticlesRenderer>(m_defaultRenderPass);
         m_sunRenderer = std::make_shared<SunRenderer>(m_defaultRenderPass);
         m_lensFlareRenderer = std::make_shared<LensFlareRenderer>(m_defaultRenderPass);
 
@@ -5336,7 +5485,8 @@ private:
             m_animationNormalMappedRenderer,
             m_animationParallaxMappedRenderer,
             m_waterRenderer,
-            m_fontRenderer
+            m_fontRenderer,
+            m_particlesRenderer
         };
 
 #ifdef RENDER_BOUNDING_VOLUMES
@@ -5470,6 +5620,7 @@ private:
         m_reflectionAnimationRenderer = std::make_shared<AnimationRenderer>(reflectionComponent->GetRenderPass());
         m_reflectionAnimationNormalMappedRenderer = std::make_shared<AnimationNormalMappedRenderer>(reflectionComponent->GetRenderPass());
         m_reflectionAnimationParallaxMappedRenderer = std::make_shared<AnimationParallaxMappedRenderer>(reflectionComponent->GetRenderPass());
+        m_reflectionParticlesRenderer = std::make_shared<ParticlesRenderer>(reflectionComponent->GetRenderPass());
 
         m_reflectionRenderers = {
             m_reflectionSkyBoxRenderer,
@@ -5481,7 +5632,8 @@ private:
             m_reflectionTerrainParallaxMappedRenderer,
             m_reflectionAnimationRenderer,
             m_reflectionAnimationNormalMappedRenderer,
-            m_reflectionAnimationParallaxMappedRenderer
+            m_reflectionAnimationParallaxMappedRenderer,
+            m_reflectionParticlesRenderer
         };
 
         for (auto& shadowRenderer : m_reflectionRenderers) {
@@ -5519,6 +5671,7 @@ private:
         m_refractionAnimationRenderer = std::make_shared<AnimationRenderer>(refractionComponent->GetRenderPass());
         m_refractionAnimationNormalMappedRenderer = std::make_shared<AnimationNormalMappedRenderer>(refractionComponent->GetRenderPass());
         m_refractionAnimationParallaxMappedRenderer = std::make_shared<AnimationParallaxMappedRenderer>(refractionComponent->GetRenderPass());
+        m_refractionParticlesRenderer = std::make_shared<ParticlesRenderer>(refractionComponent->GetRenderPass());
 
         m_refractionRenderers = {
             m_refractionSkyBoxRenderer,
@@ -5529,7 +5682,8 @@ private:
             m_refractionTerrainParallaxMappedRenderer,
             m_refractionAnimationRenderer,
             m_refractionAnimationNormalMappedRenderer,
-            m_refractionAnimationParallaxMappedRenderer
+            m_refractionAnimationParallaxMappedRenderer,
+            m_refractionParticlesRenderer
         };
 
         for (auto& shadowRenderer : m_refractionRenderers) {
@@ -5933,6 +6087,8 @@ private:
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_sunRenderer;
 
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_lensFlareRenderer;
+
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_particlesRenderer;
 #ifdef RENDER_BOUNDING_VOLUMES
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_boundingVolumeDebugRenderer;
 #endif
@@ -5993,6 +6149,8 @@ private:
 
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionAnimationParallaxMappedRenderer;
 
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionParticlesRenderer;
+
     std::vector<std::shared_ptr<IRenderer<NormalRenderContextUserData> > > m_reflectionRenderers;
 
     // Refraction
@@ -6015,6 +6173,8 @@ private:
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionAnimationNormalMappedRenderer;
 
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionAnimationParallaxMappedRenderer;
+
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionParticlesRenderer;
 
     std::vector<std::shared_ptr<IRenderer<NormalRenderContextUserData> > > m_refractionRenderers;
 
