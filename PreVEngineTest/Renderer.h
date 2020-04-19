@@ -5188,11 +5188,19 @@ private:
         alignas(16) glm::mat4 viewMatrix;
 
         alignas(16) glm::mat4 projectionMatrix;
+
+        alignas(16) uint32_t textureNumberOfRows;
     };
 
     struct alignas(16) UniformsFS
     {
         alignas(16) glm::vec4 color;
+
+        alignas(16) glm::vec4 textureOffsetStage1;
+
+        alignas(16) glm::vec4 textureOffsetStage2;
+
+        alignas(16) float stagesBlendFactor;
     };
 
 private:
@@ -5267,7 +5275,8 @@ public:
                 UniformsVS uniformsVS{};
                 uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
                 uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
-                uniformsVS.modelMatrix = MathUtil::CreateTransformationMatrix(particle->GetPosition(), glm::inverse(cameraComponent->GetOrientation()) * glm::quat(glm::vec3(0.0f, 0.0f, particle->GetRotation())), particle->GetScale());
+                uniformsVS.modelMatrix = MathUtil::CreateTransformationMatrix(particle->GetPosition(), glm::inverse(cameraComponent->GetOrientation()) * glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, particle->GetRotation()))), particle->GetScale());
+                uniformsVS.textureNumberOfRows = particlesComponent->GetMaterial()->GetAtlasNumberOfRows();
 
                 uboVS->Update(&uniformsVS);
 
@@ -5275,6 +5284,9 @@ public:
 
                 UniformsFS uniformsFS{};
                 uniformsFS.color = glm::vec4(0.0f, 1.0f, 0.0f, 0.7f);
+                uniformsFS.textureOffsetStage1 = glm::vec4(particle->GetCurrentStageTextureOffset(), 0.0f, 0.0f);
+                uniformsFS.textureOffsetStage2 = glm::vec4(particle->GetNextStageTextureOffset(), 0.0f, 0.0f);
+                uniformsFS.stagesBlendFactor = particle->GetStagesBlendFactor();
 
                 uboFS->Update(&uniformsFS);
 

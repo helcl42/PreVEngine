@@ -2313,9 +2313,9 @@ private:
     EventHandler<RayCastObserverNode, RayEvent> m_rayHandler{ *this };
 };
 
-class Fire final : public AbstractSceneNode<SceneNodeFlags>{
+class ParticlesNode final : public AbstractSceneNode<SceneNodeFlags>{
 public:
-    Fire(const glm::vec3& initPosition)
+    ParticlesNode(const glm::vec3& initPosition)
         : m_initialPosition(initPosition)
     {
     }
@@ -2456,8 +2456,8 @@ public:
             AddChild(stone);
         }
 
-        auto fire = std::make_shared<Fire>(glm::vec3(0.0f));
-        AddChild(fire);
+        auto particlesNode = std::make_shared<ParticlesNode>(glm::vec3(0.0f));
+        AddChild(particlesNode);
 
         //auto mainPlane = std::make_shared<PlaneNode>(glm::vec3(-25.0f, 0.0f, -25.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/rock.png"), AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), AssetManager::Instance().GetAssetPath("Textures/rock_height.png"), 0.03f);
         //AddChild(mainPlane);

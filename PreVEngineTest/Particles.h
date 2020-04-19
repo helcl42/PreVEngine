@@ -372,9 +372,9 @@ public:
         AddNewParticles(deltaTime, centerPosition);        
         UpdateParticles(deltaTime, cameraPosition);
 
-        ReverseSortParticlesByCameraDistance();
+        //ReverseSortParticlesByCameraDistance();
 
-        std::cout << "Particles Count: " << m_particles.size() << std::endl;
+        //std::cout << "Particles Count: " << m_particles.size() << std::endl;
     }
 
     void SetParticlesPerSecond(const float pps) override
@@ -475,16 +475,15 @@ public:
         
         auto model = CreateModel(*allocator);
         auto material = CreateMaterial(*allocator, AssetManager::Instance().GetAssetPath("Textures/fire.png"));
+        material->SetAtlasNumberOfRows(8);
 
-        auto particleFactory = std::make_shared<RandomInConeParticleFactory>(material, 20.0f, 0.1f, 5.0f, 6.0f, 1.6f);    
-        particleFactory->SetConeDirection(glm ::vec3(0.0f, 1.0f, 0.0f));
-        particleFactory->SetConeDirectionDeviation(5.0f);
+        auto particleFactory = std::make_shared<RandomDirectionParticleFactory>(material, 20.0f, 0.1f, 5.0f, 6.0f, 10.0f);    
         particleFactory->SetRandomRotationEnabled(true);
         particleFactory->SetLifeLengthError(0.1f);
         particleFactory->SetSpeedError(0.25f);
         particleFactory->SetScaleError(0.1f);
 
-        return std::make_unique<ParticleSystemComponent>(model, material, particleFactory, 10.0f);
+        return std::make_unique<ParticleSystemComponent>(model, material, particleFactory, 100.0f);
     }
 
     std::unique_ptr<IParticlaSystemComponent> CreateRandomInCone(const glm::vec3& coneDirection, const float angle) const
@@ -493,14 +492,17 @@ public:
 
         auto model = CreateModel(*allocator);
         auto material = CreateMaterial(*allocator, AssetManager::Instance().GetAssetPath("Textures/fire.png"));
+        material->SetAtlasNumberOfRows(8);
 
-        auto particleFactory = std::make_shared<RandomDirectionParticleFactory>(material, 20.0f, 0.1f, 5.0f, 6.0f, 1.6f);
+        auto particleFactory = std::make_shared<RandomInConeParticleFactory>(material, 20.0f, 0.1f, 5.0f, 6.0f, 6.0f);
+        particleFactory->SetConeDirection(glm ::vec3(0.0f, 1.0f, 0.0f));
+        particleFactory->SetConeDirectionDeviation(5.0f);
         particleFactory->SetRandomRotationEnabled(true);
         particleFactory->SetLifeLengthError(0.1f);
         particleFactory->SetSpeedError(0.25f);
         particleFactory->SetScaleError(0.1f);
 
-        return std::make_unique<ParticleSystemComponent>(model, material, particleFactory, 10.0f);
+        return std::make_unique<ParticleSystemComponent>(model, material, particleFactory, 100.0f);
     }
 
 private:
