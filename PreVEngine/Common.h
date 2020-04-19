@@ -18,4 +18,6 @@
 #include <mutex>
 #include <array>
 
+#include <Patterns.h>
+
 #endif

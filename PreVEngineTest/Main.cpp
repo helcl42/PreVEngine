@@ -21,6 +21,7 @@
 #include "Light.h"
 #include "Mesh.h"
 #include "Pipeline.h"
+#include "Particles.h"
 #include "RayCasting.h"
 #include "Shadows.h"
 #include "SkyBox.h"
@@ -2312,15 +2313,46 @@ private:
     EventHandler<RayCastObserverNode, RayEvent> m_rayHandler{ *this };
 };
 
+class Fire final : public AbstractSceneNode<SceneNodeFlags>{
+public:
+    Fire(const glm::vec3& initPosition)
+        : m_initialPosition(initPosition)
+    {
+    }
+
+public:
+    void Init() override
+    {
+        ParticleSystemComponentFactory particleSystemComponentFactory{};
+        m_particleSystemComponent = particleSystemComponentFactory.CreateRandomInCone(glm::vec3(0.0f, 1.0f, 0.0f), 15.0f);
+        NodeComponentHelper::AddComponent<SceneNodeFlags, IParticlaSystemComponent>(GetThis(), m_particleSystemComponent, SceneNodeFlags::PARTICLE_SYSTEM_COMPONENT);
+
+        AbstractSceneNode::Init();
+    }
+
+    void Update(float deltaTime) override
+    {
+        const auto cameraComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+
+        m_particleSystemComponent->Update(deltaTime, glm::vec3(0.0f), cameraComponent->GetPosition());
+
+        AbstractSceneNode::Update(deltaTime);
+    }
+
+    void ShutDown() override
+    {
+        AbstractSceneNode::ShutDown();
+
+        NodeComponentHelper::RemoveComponent<SceneNodeFlags, IParticlaSystemComponent>(GetThis(), SceneNodeFlags::PARTICLE_SYSTEM_COMPONENT);
+    }
+
+private:
+    const glm::vec3& m_initialPosition;
+
+    std::shared_ptr<IParticlaSystemComponent> m_particleSystemComponent;
+};
+
 class RootSceneNode : public AbstractSceneNode<SceneNodeFlags> {
-private:
-    EventHandler<RootSceneNode, KeyEvent> m_keyEventHnadler{ *this };
-
-    EventHandler<RootSceneNode, TouchEvent> m_touchEventHnadler{ *this };
-
-private:
-    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_masterRenderer;
-
 public:
     RootSceneNode(const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Swapchain>& swapchain)
         : AbstractSceneNode()
@@ -2424,6 +2456,9 @@ public:
             AddChild(stone);
         }
 
+        auto fire = std::make_shared<Fire>(glm::vec3(0.0f));
+        AddChild(fire);
+
         //auto mainPlane = std::make_shared<PlaneNode>(glm::vec3(-25.0f, 0.0f, -25.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/rock.png"), AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), AssetManager::Instance().GetAssetPath("Textures/rock_height.png"), 0.03f);
         //AddChild(mainPlane);
 
@@ -2515,6 +2550,14 @@ private:
             RemoveChild(child);
         }
     }
+
+private:
+    EventHandler<RootSceneNode, KeyEvent> m_keyEventHnadler{ *this };
+
+    EventHandler<RootSceneNode, TouchEvent> m_touchEventHnadler{ *this };
+
+private:
+    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_masterRenderer;
 };
 
 template <typename NodeFlagsType>
