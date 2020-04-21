@@ -21,5 +21,5 @@ void main()
 {
     vec4 stage1Color = texture(textureSampler, inTextureCoord + uboFS.textureOffsetStage1.xy);
     vec4 stage2Color = texture(textureSampler, inTextureCoord + uboFS.textureOffsetStage2.xy);
-    outColor = mix(stage1Color, stage2Color, uboFS.stagesBlendFactor);
+    outColor = uboFS.color * mix(stage1Color, stage2Color, uboFS.stagesBlendFactor);
 }

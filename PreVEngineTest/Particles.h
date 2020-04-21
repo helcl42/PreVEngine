@@ -5,7 +5,7 @@
 
 #include <random>
 
-static const float PARTICLES_GRAVITY_Y{ -50.0f };
+static const float PARTICLES_GRAVITY_Y{ -9.81f };
 
 class Particle {
 public:
@@ -23,12 +23,11 @@ public:
     virtual ~Particle() = default;
 
 public:
-    void Update(const float deltaTime, const glm::vec3& cameraPosition)
+    void Update(const float deltaTime)
     {
         m_velocity.y += PARTICLES_GRAVITY_Y * m_gravityEffect * deltaTime;
         glm::vec3 positionChange = m_velocity * deltaTime;
         m_position += positionChange;
-        m_distanceFromCamera = glm::length(cameraPosition - m_position);
         UpdateStageInfo(deltaTime);
         m_elapsedTime += deltaTime; // TODO -> order ???
     }
@@ -72,11 +71,6 @@ public:
     bool IsAlive() const
     {
         return m_elapsedTime < m_lifeLength;
-    }
-
-    float GetDistanceFromCamera() const
-    {
-        return m_distanceFromCamera;
     }
 
 private:
@@ -124,8 +118,6 @@ private:
     glm::vec2 m_nextStageTextureOffset{ 0.0f };
 
     float m_stagesBlendFactor{ 0.0f };
-
-    float m_distanceFromCamera{ 0.0f };
 };
 
 class IParticleFactory {
@@ -138,9 +130,8 @@ public:
 
 class AbstractParticleFactory : public IParticleFactory {
 public:
-    AbstractParticleFactory(const std::shared_ptr<IMaterial>& mt, const float pps, const float gravityComp, const float avgSpeed, const float avgLifeLength, const float avgScale)
+    AbstractParticleFactory(const std::shared_ptr<IMaterial>& mt, const float gravityComp, const float avgSpeed, const float avgLifeLength, const float avgScale)
         : m_material(mt)
-        , m_particlesPerSecond(pps)
         , m_gravityCompliment(gravityComp)
         , m_averageSpeed(avgSpeed)
         , m_averageLifeLength(avgLifeLength)
@@ -153,6 +144,8 @@ public:
 protected:
     virtual glm::vec3 GenerateVelocty() const = 0;
 
+    virtual glm::vec3 GenerateRadiusOffset() const = 0;
+
 public:
     std::unique_ptr<Particle> EmitParticle(const glm::vec3& centerPosition) const override
     {
@@ -162,10 +155,11 @@ public:
         float lifeLength = GenerateValue(m_averageLifeLength, m_lifeLengthError);
         float rotation = m_randomRotation ? GenerateRotation() : 0.0f;
         float scale = GenerateValue(m_averageScale, m_scaleError);
-        return std::make_unique<Particle>(m_material, centerPosition, velocity, m_gravityCompliment, lifeLength, rotation, scale);
+        glm::vec3 radiusOffset = GenerateRadiusOffset();        
+        return std::make_unique<Particle>(m_material, centerPosition + radiusOffset, velocity, m_gravityCompliment, lifeLength, rotation, scale);
     }
 
-private:
+protected:
     static float GenerateRotation()
     {
         std::random_device rd;
@@ -224,10 +218,18 @@ public:
         return m_randomRotation;
     }
 
-private:
-    const std::shared_ptr<IMaterial> m_material;
+    void SetRadius(const float radius)
+    {
+        m_radius = radius;
+    }
 
-    const float m_particlesPerSecond;
+    float GetRadius() const
+    {
+        return m_radius;
+    }
+
+protected:
+    const std::shared_ptr<IMaterial> m_material;
 
     const float m_gravityCompliment;
 
@@ -243,13 +245,15 @@ private:
 
     float m_scaleError{ 0.0f };
 
+    float m_radius{ 0.0f };
+
     bool m_randomRotation{ false };
 };
 
 class RandomDirectionParticleFactory final : public AbstractParticleFactory {
 public:
-    RandomDirectionParticleFactory(const std::shared_ptr<IMaterial>& mt, const float pps, const float gravityComp, const float avgSpeed, const float avgLifeLength, const float avgScale)
-        : AbstractParticleFactory(mt, pps, gravityComp, avgSpeed, avgLifeLength, avgScale)
+    RandomDirectionParticleFactory(const std::shared_ptr<IMaterial>& mt, const float gravityComp, const float avgSpeed, const float avgLifeLength, const float avgScale)
+        : AbstractParticleFactory(mt, gravityComp, avgSpeed, avgLifeLength, avgScale)
     {
     }
 
@@ -269,12 +273,17 @@ protected:
         float y = rootOneMinusZSquared * sinf(theta);
         return glm::vec3(x, y, z);
     }
+
+    glm::vec3 GenerateRadiusOffset() const override 
+    {
+        return glm::vec3{ GenerateValue(m_radius, 1.0f), GenerateValue(m_radius, 1.0f), GenerateValue(m_radius, 1.0f) };
+    }
 };
 
 class RandomInConeParticleFactory final : public AbstractParticleFactory {
 public:
-    RandomInConeParticleFactory(const std::shared_ptr<IMaterial>& mt, const float pps, const float gravityComp, const float avgSpeed, const float avgLifeLength, const float avgScale)
-        : AbstractParticleFactory(mt, pps, gravityComp, avgSpeed, avgLifeLength, avgScale)
+    RandomInConeParticleFactory(const std::shared_ptr<IMaterial>& mt, const float gravityComp, const float avgSpeed, const float avgLifeLength, const float avgScale)
+        : AbstractParticleFactory(mt, gravityComp, avgSpeed, avgLifeLength, avgScale)
     {
     }
 
@@ -328,6 +337,24 @@ protected:
         return glm::vec3(direction);
     }
 
+    glm::vec3 GenerateRadiusOffset() const override
+    {
+        glm::vec3 normalToCone;
+        if (m_coneDirection.z != 1.0f && m_coneDirection.z != -1.0f) {
+            normalToCone = glm::normalize(glm::cross(m_coneDirection, glm::vec3(0.0f, 0.0f, 1.0f)));
+        } else {
+            normalToCone = glm::normalize(glm::cross(m_coneDirection, glm::vec3(1.0f, 0.0f, 0.0f)));
+        }
+
+        std::random_device rd;
+        std::mt19937 mt(rd());
+        std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+        const float theta = dist(mt) * glm::pi<float>();
+        glm::mat4 rotationMat = glm::rotate(glm::mat4(1.0), theta, m_coneDirection);
+        glm::vec3 offset = glm::normalize(rotationMat * glm::vec4(normalToCone, 1.0f)) * dist(mt) * m_radius;
+        return offset;
+    }
+
 private:
     glm::vec3 m_coneDirection{ 0.0f, 1.0f, 0.0f };
 
@@ -336,7 +363,7 @@ private:
 
 class IParticlaSystemComponent {
 public:
-    virtual void Update(const float deltaTim, const glm::vec3& centerPosition, const glm::vec3& cameraPosition) = 0;
+    virtual void Update(const float deltaTim, const glm::vec3& centerPosition) = 0;
 
     virtual void SetParticlesPerSecond(const float pps) = 0;
 
@@ -367,12 +394,10 @@ public:
     virtual ~ParticleSystemComponent() = default;
 
 public:
-    void Update(const float deltaTime, const glm::vec3& centerPosition, const glm::vec3& cameraPosition) override
+    void Update(const float deltaTime, const glm::vec3& centerPosition) override
     {
         AddNewParticles(deltaTime, centerPosition);        
-        UpdateParticles(deltaTime, cameraPosition);
-
-        //ReverseSortParticlesByCameraDistance();
+        UpdateParticles(deltaTime);
 
         //std::cout << "Particles Count: " << m_particles.size() << std::endl;
     }
@@ -428,29 +453,15 @@ private:
         }
     }
 
-    void UpdateParticles(const float deltaTime, const glm::vec3& cameraPosition)
+    void UpdateParticles(const float deltaTime)
     {
         for (auto pi = m_particles.begin(); pi != m_particles.end();) {
             auto& particle = (*pi);
-            particle->Update(deltaTime, cameraPosition);
+            particle->Update(deltaTime);
             if (!particle->IsAlive()) {
                 pi = m_particles.erase(pi);
             } else {
                 pi++;
-            }
-        }
-    }
-
-    void ReverseSortParticlesByCameraDistance()
-    {
-        std::shared_ptr<Particle> temp;
-        for (int i = 0; i < m_particles.size(); i++) {
-            int j = i;
-            while (j > 0 && m_particles[j]->GetDistanceFromCamera() > m_particles[j - 1]->GetDistanceFromCamera()) {
-                temp = m_particles[j];
-                m_particles[j] = m_particles[j - 1];
-                m_particles[j - 1] = temp;
-                j--;
             }
         }
     }
@@ -474,16 +485,16 @@ public:
         auto allocator = AllocatorProvider::Instance().GetAllocator();
         
         auto model = CreateModel(*allocator);
-        auto material = CreateMaterial(*allocator, AssetManager::Instance().GetAssetPath("Textures/fire.png"));
+        auto material = CreateMaterial(*allocator, AssetManager::Instance().GetAssetPath("Textures/fire-ember-particles-png-4-transparent.png"));
         material->SetAtlasNumberOfRows(8);
 
-        auto particleFactory = std::make_shared<RandomDirectionParticleFactory>(material, 20.0f, 0.1f, 5.0f, 6.0f, 10.0f);    
+        auto particleFactory = std::make_shared<RandomDirectionParticleFactory>(material, 0.1f, 5.0f, 4.0f, 10.0f);    
         particleFactory->SetRandomRotationEnabled(true);
         particleFactory->SetLifeLengthError(0.1f);
         particleFactory->SetSpeedError(0.25f);
         particleFactory->SetScaleError(0.1f);
 
-        return std::make_unique<ParticleSystemComponent>(model, material, particleFactory, 100.0f);
+        return std::make_unique<ParticleSystemComponent>(model, material, particleFactory, 10.0f);
     }
 
     std::unique_ptr<IParticlaSystemComponent> CreateRandomInCone(const glm::vec3& coneDirection, const float angle) const
@@ -491,20 +502,21 @@ public:
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         auto model = CreateModel(*allocator);
-        auto material = CreateMaterial(*allocator, AssetManager::Instance().GetAssetPath("Textures/fire.png"));
-        material->SetAtlasNumberOfRows(8);
+        auto material = CreateMaterial(*allocator, AssetManager::Instance().GetAssetPath("Textures/fire-texture-atlas.png"));
+        material->SetAtlasNumberOfRows(4);
 
-        auto particleFactory = std::make_shared<RandomInConeParticleFactory>(material, 20.0f, 0.1f, 5.0f, 6.0f, 6.0f);
-        particleFactory->SetConeDirection(glm ::vec3(0.0f, 1.0f, 0.0f));
-        particleFactory->SetConeDirectionDeviation(5.0f);
-        particleFactory->SetRandomRotationEnabled(true);
-        particleFactory->SetLifeLengthError(0.1f);
-        particleFactory->SetSpeedError(0.25f);
-        particleFactory->SetScaleError(0.1f);
+        auto particleFactory = std::make_shared<RandomInConeParticleFactory>(material, -0.1f, 4.0f, 4.0f, 6.0f);
+        particleFactory->SetConeDirection(glm::vec3(0.0f, 1.0f, 0.0f));
+        particleFactory->SetConeDirectionDeviation(1.0f);
+        //particleFactory->SetRandomRotationEnabled(true);
+        particleFactory->SetLifeLengthError(0.3f);
+        particleFactory->SetSpeedError(1.0f);
+        particleFactory->SetScaleError(3.0f); 
+        particleFactory->SetRadius(8.0f);
 
         return std::make_unique<ParticleSystemComponent>(model, material, particleFactory, 100.0f);
     }
-
+     
 private:
     std::unique_ptr<Image> CreateImage(const std::string& textureFilename) const
     {
@@ -517,7 +529,7 @@ private:
     {
         auto image = CreateImage(texturePath);
         auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
-        imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer() });
+        imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER, (uint8_t*)image->GetBuffer() });
 
         return std::make_shared<Material>(std::move(image), std::move(imageBuffer), 0.0f, 0.0f);
     }

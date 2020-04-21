@@ -5268,14 +5268,16 @@ public:
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::PARTICLE_SYSTEM_COMPONENT })) {
             const auto cameraComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
-            const auto particlesComponent = ComponentRepository<IParticlaSystemComponent>::Instance().Get(node->GetId());            
-            for (const auto& particle : particlesComponent->GetParticles()) {
-                auto uboVS = m_uniformsPoolVS->GetNext();
+            const auto particlesComponent = ComponentRepository<IParticlaSystemComponent>::Instance().Get(node->GetId());     
+            const auto& particles = particlesComponent->GetParticles();
+            for(const auto& particle : particles) {
+                 auto uboVS = m_uniformsPoolVS->GetNext();
 
                 UniformsVS uniformsVS{};
                 uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
                 uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
                 uniformsVS.modelMatrix = MathUtil::CreateTransformationMatrix(particle->GetPosition(), glm::inverse(cameraComponent->GetOrientation()) * glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, particle->GetRotation()))), particle->GetScale());
+
                 uniformsVS.textureNumberOfRows = particlesComponent->GetMaterial()->GetAtlasNumberOfRows();
 
                 uboVS->Update(&uniformsVS);
@@ -5283,7 +5285,7 @@ public:
                 auto uboFS = m_uniformsPoolFS->GetNext();
 
                 UniformsFS uniformsFS{};
-                uniformsFS.color = glm::vec4(0.0f, 1.0f, 0.0f, 0.7f);
+                uniformsFS.color = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
                 uniformsFS.textureOffsetStage1 = glm::vec4(particle->GetCurrentStageTextureOffset(), 0.0f, 0.0f);
                 uniformsFS.textureOffsetStage2 = glm::vec4(particle->GetNextStageTextureOffset(), 0.0f, 0.0f);
                 uniformsFS.stagesBlendFactor = particle->GetStagesBlendFactor();

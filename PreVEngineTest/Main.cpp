@@ -2334,7 +2334,7 @@ public:
     {
         const auto cameraComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
-        m_particleSystemComponent->Update(deltaTime, glm::vec3(0.0f), cameraComponent->GetPosition());
+        m_particleSystemComponent->Update(deltaTime, glm::vec3(-10.0f, 0.0f, -10.0f));
 
         AbstractSceneNode::Update(deltaTime);
     }
