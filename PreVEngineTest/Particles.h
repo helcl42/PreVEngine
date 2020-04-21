@@ -349,7 +349,7 @@ protected:
         std::random_device rd;
         std::mt19937 mt(rd());
         std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-        const float theta = dist(mt) * glm::pi<float>();
+        const float theta = dist(mt) * 2.0f * glm::pi<float>();
         glm::mat4 rotationMat = glm::rotate(glm::mat4(1.0), theta, m_coneDirection);
         glm::vec3 offset = glm::normalize(rotationMat * glm::vec4(normalToCone, 1.0f)) * dist(mt) * m_radius;
         return offset;
@@ -505,16 +505,16 @@ public:
         auto material = CreateMaterial(*allocator, AssetManager::Instance().GetAssetPath("Textures/fire-texture-atlas.png"));
         material->SetAtlasNumberOfRows(4);
 
-        auto particleFactory = std::make_shared<RandomInConeParticleFactory>(material, -0.1f, 4.0f, 4.0f, 6.0f);
+        auto particleFactory = std::make_shared<RandomInConeParticleFactory>(material, -0.1f, 4.0f, 4.0f, 7.0f);
         particleFactory->SetConeDirection(glm::vec3(0.0f, 1.0f, 0.0f));
         particleFactory->SetConeDirectionDeviation(1.0f);
         //particleFactory->SetRandomRotationEnabled(true);
-        particleFactory->SetLifeLengthError(0.3f);
+        particleFactory->SetLifeLengthError(0.5f);
         particleFactory->SetSpeedError(1.0f);
-        particleFactory->SetScaleError(3.0f); 
-        particleFactory->SetRadius(8.0f);
+        particleFactory->SetScaleError(2.0f); 
+        particleFactory->SetRadius(10.0f);
 
-        return std::make_unique<ParticleSystemComponent>(model, material, particleFactory, 100.0f);
+        return std::make_unique<ParticleSystemComponent>(model, material, particleFactory, 120.0f);
     }
      
 private:

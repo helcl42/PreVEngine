@@ -2313,9 +2313,9 @@ private:
     EventHandler<RayCastObserverNode, RayEvent> m_rayHandler{ *this };
 };
 
-class ParticlesNode final : public AbstractSceneNode<SceneNodeFlags>{
+class Fire final : public AbstractSceneNode<SceneNodeFlags>{
 public:
-    ParticlesNode(const glm::vec3& initPosition)
+    Fire(const glm::vec3& initPosition)
         : m_initialPosition(initPosition)
     {
     }
@@ -2333,8 +2333,12 @@ public:
     void Update(float deltaTime) override
     {
         const auto cameraComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+        const auto terrain = NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
 
-        m_particleSystemComponent->Update(deltaTime, glm::vec3(-10.0f, 0.0f, -10.0f));
+        float height = 0.0f;
+        terrain->GetHeightAt(m_initialPosition, height);
+
+        m_particleSystemComponent->Update(deltaTime, glm::vec3(m_initialPosition.x, height - 4.0f, m_initialPosition.z));
 
         AbstractSceneNode::Update(deltaTime);
     }
@@ -2347,7 +2351,7 @@ public:
     }
 
 private:
-    const glm::vec3& m_initialPosition;
+    const glm::vec3 m_initialPosition;
 
     std::shared_ptr<IParticlaSystemComponent> m_particleSystemComponent;
 };
@@ -2456,8 +2460,8 @@ public:
             AddChild(stone);
         }
 
-        auto particlesNode = std::make_shared<ParticlesNode>(glm::vec3(0.0f));
-        AddChild(particlesNode);
+        auto fire = std::make_shared<Fire>(glm::vec3(30.0f, 0.0f, 100.0f));
+        AddChild(fire);
 
         //auto mainPlane = std::make_shared<PlaneNode>(glm::vec3(-25.0f, 0.0f, -25.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/rock.png"), AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), AssetManager::Instance().GetAssetPath("Textures/rock_height.png"), 0.03f);
         //AddChild(mainPlane);
