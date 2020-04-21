@@ -375,7 +375,7 @@ public:
 
     virtual std::shared_ptr<IMaterial> GetMaterial() const = 0;
 
-    virtual std::vector<std::shared_ptr<Particle> > GetParticles() const = 0;
+    virtual std::list<std::shared_ptr<Particle> > GetParticles() const = 0;
 
 public:
     virtual ~IParticlaSystemComponent() = default;
@@ -427,7 +427,7 @@ public:
         return m_material;
     }
 
-    std::vector<std::shared_ptr<Particle> > GetParticles() const override
+    std::list<std::shared_ptr<Particle> > GetParticles() const override
     {
         return m_particles;
     }
@@ -473,7 +473,7 @@ private:
 
     const std::shared_ptr<IParticleFactory> m_particleFactory;
     
-    std::vector<std::shared_ptr<Particle> > m_particles;
+    std::list<std::shared_ptr<Particle> > m_particles;
 
     float m_particlesPerSecond;
 };
