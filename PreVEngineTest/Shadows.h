@@ -175,7 +175,7 @@ private:
 
     std::vector<glm::vec3> GenerateFrustumCorners(const glm::mat4& inverseWorldToClipSpaceTransform, const float splitDistance, const float lastSplitDistance) const
     {
-        auto frustumCorners = MathUtil ::GetFrustumCorners(inverseWorldToClipSpaceTransform);
+        auto frustumCorners = MathUtil::GetFrustumCorners(inverseWorldToClipSpaceTransform);
 
         for (uint32_t i = 0; i < 4; i++) {
             glm::vec3 dist = frustumCorners[i + 4] - frustumCorners[i];
