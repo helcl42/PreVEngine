@@ -5204,7 +5204,7 @@ private:
     };
 
 private:
-    const uint32_t m_descriptorCount{ 1000 };
+    const uint32_t m_descriptorCount{ 2000 };
 
 private:
     std::shared_ptr<RenderPass> m_renderPass;
