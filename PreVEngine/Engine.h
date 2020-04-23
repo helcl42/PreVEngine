@@ -146,6 +146,8 @@ public:
 
     void MainLoop()
     {
+        m_clock->Reset();
+
         while (m_window->ProcessEvents()) // Main event loop, runs until window is closed.
         {
             EventChannel::DispatchAll();

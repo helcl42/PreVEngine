@@ -273,6 +273,7 @@ public:
     Clock()
         : m_frameInterval(0.0f)
     {
+        Reset();
     }
 
     virtual ~Clock() = default;
