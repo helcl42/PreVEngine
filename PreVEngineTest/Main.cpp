@@ -398,8 +398,8 @@ public:
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(renderComponent->GetModel()->GetMesh()->GetVertices());
         NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
 
-        TrasnformComponentFactory trasformComponentFactory{};
-        m_transformComponent = trasformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
+        TrasnformComponentFactory transformComponentFactory{};
+        m_transformComponent = transformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
         if (NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
             m_transformComponent->SetParent(NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
         }
@@ -601,8 +601,8 @@ public:
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(renderComponent->GetModel()->GetMesh()->GetVertices());
         NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
 
-        TrasnformComponentFactory trasformComponentFactory{};
-        m_transformComponent = trasformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
+        TrasnformComponentFactory transformComponentFactory{};
+        m_transformComponent = transformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
         if (NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
             m_transformComponent->SetParent(NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
         }
@@ -662,8 +662,8 @@ public:
 public:
     void Init() override
     {
-        TrasnformComponentFactory trasformComponentFactory{};
-        m_transformComponent = trasformComponentFactory.Create();
+        TrasnformComponentFactory transformComponentFactory{};
+        m_transformComponent = transformComponentFactory.Create();
         if (NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
             m_transformComponent->SetParent(NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
         }
@@ -833,8 +833,8 @@ public:
 public:
     void Init() override
     {
-        TrasnformComponentFactory trasformComponentFactory{};
-        m_transformComponent = trasformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
+        TrasnformComponentFactory transformComponentFactory{};
+        m_transformComponent = transformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
         if (NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
             m_transformComponent->SetParent(NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
         }
@@ -1131,8 +1131,8 @@ private:
 public:
     void Init() override
     {
-        TrasnformComponentFactory trasformComponentFactory{};
-        m_transformComponent = trasformComponentFactory.Create();
+        TrasnformComponentFactory transformComponentFactory{};
+        m_transformComponent = transformComponentFactory.Create();
         if (NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
             m_transformComponent->SetParent(NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
         }
@@ -1350,8 +1350,8 @@ public:
 public:
     void Init() override
     {
-        TrasnformComponentFactory trasformComponentFactory{};
-        m_transformComponent = trasformComponentFactory.Create();
+        TrasnformComponentFactory transformComponentFactory{};
+        m_transformComponent = transformComponentFactory.Create();
         if (NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
             m_transformComponent->SetParent(NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
         }
@@ -1417,8 +1417,8 @@ public:
 public:
     void Init() override
     {
-        TrasnformComponentFactory trasformComponentFactory{};
-        m_transformComponent = trasformComponentFactory.Create();
+        TrasnformComponentFactory transformComponentFactory{};
+        m_transformComponent = transformComponentFactory.Create();
         if (NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
             m_transformComponent->SetParent(NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
         }
@@ -1469,8 +1469,8 @@ public:
 public:
     void Init() override
     {
-        TrasnformComponentFactory trasformComponentFactory{};
-        m_transformComponent = trasformComponentFactory.Create();
+        TrasnformComponentFactory transformComponentFactory{};
+        m_transformComponent = transformComponentFactory.Create();
         if (NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
             m_transformComponent->SetParent(NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
         }
@@ -1671,8 +1671,8 @@ public:
 public:
     void Init() override
     {
-        TrasnformComponentFactory trasformComponentFactory{};
-        m_transformComponent = trasformComponentFactory.Create();
+        TrasnformComponentFactory transformComponentFactory{};
+        m_transformComponent = transformComponentFactory.Create();
         if (NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
             m_transformComponent->SetParent(NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
         }
@@ -1887,8 +1887,8 @@ public:
 public:
     void Init() override
     {
-        TrasnformComponentFactory trasformComponentFactory{};
-        m_transformComponent = trasformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
+        TrasnformComponentFactory transformComponentFactory{};
+        m_transformComponent = transformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
         if (NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
             m_transformComponent->SetParent(NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
         }
@@ -2325,7 +2325,7 @@ public:
     {
         ParticleSystemComponentFactory particleSystemComponentFactory{};
         m_particleSystemComponent = particleSystemComponentFactory.CreateRandomInCone(glm::vec3(0.0f, 1.0f, 0.0f), 15.0f);
-        NodeComponentHelper::AddComponent<SceneNodeFlags, IParticlaSystemComponent>(GetThis(), m_particleSystemComponent, SceneNodeFlags::PARTICLE_SYSTEM_COMPONENT);
+        NodeComponentHelper::AddComponent<SceneNodeFlags, IParticleSystemComponent>(GetThis(), m_particleSystemComponent, SceneNodeFlags::PARTICLE_SYSTEM_COMPONENT);
 
         AbstractSceneNode::Init();
     }
@@ -2347,13 +2347,13 @@ public:
     {
         AbstractSceneNode::ShutDown();
 
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, IParticlaSystemComponent>(GetThis(), SceneNodeFlags::PARTICLE_SYSTEM_COMPONENT);
+        NodeComponentHelper::RemoveComponent<SceneNodeFlags, IParticleSystemComponent>(GetThis(), SceneNodeFlags::PARTICLE_SYSTEM_COMPONENT);
     }
 
 private:
     const glm::vec3 m_initialPosition;
 
-    std::shared_ptr<IParticlaSystemComponent> m_particleSystemComponent;
+    std::shared_ptr<IParticleSystemComponent> m_particleSystemComponent;
 };
 
 class RootSceneNode : public AbstractSceneNode<SceneNodeFlags> {
@@ -2514,7 +2514,7 @@ public:
     {
         if (keyEvent.action == KeyActionType::PRESS) {
             if (keyEvent.keyCode == KeyCode::KEY_J) {
-                RemmoveNode();
+                RemoveNode();
             } else if (keyEvent.keyCode == KeyCode::KEY_K) {
                 AddNode();
             }
@@ -2526,7 +2526,7 @@ public:
         if (touchEvent.action == TouchActionType::DOWN) {
             //AddNode();
         } else if (touchEvent.action == TouchActionType::UP) {
-            //RemmoveNode();
+            //RemoveNode();
         }
     }
 
@@ -2546,7 +2546,7 @@ private:
         AddChild(robot);
     }
 
-    void RemmoveNode()
+    void RemoveNode()
     {
         if (m_children.size() > 0) {
             auto& child = m_children.back();

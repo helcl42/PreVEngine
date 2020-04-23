@@ -3,7 +3,7 @@
 
 #include "General.h"
 
-#define RENDER_RAYCASTS
+//#define RENDER_RAYCASTS
 #define RENDER_SELECTION
 
 struct RayEvent {

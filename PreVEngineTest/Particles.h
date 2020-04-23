@@ -362,7 +362,7 @@ private:
     float m_directionDeviationInDegs{ 20.0f };
 };
 
-class IParticlaSystemComponent {
+class IParticleSystemComponent {
 public:
     virtual void Update(const float deltaTim, const glm::vec3& centerPosition) = 0;
 
@@ -379,10 +379,10 @@ public:
     virtual std::list<std::shared_ptr<Particle> > GetParticles() const = 0;
 
 public:
-    virtual ~IParticlaSystemComponent() = default;
+    virtual ~IParticleSystemComponent() = default;
 };
 
-class ParticleSystemComponent : public IParticlaSystemComponent {
+class ParticleSystemComponent : public IParticleSystemComponent {
 public:
     ParticleSystemComponent(const std::shared_ptr<IModel>& model, const std::shared_ptr<IMaterial>& material, const std::shared_ptr<IParticleFactory>& particleFactory, const float particlesPerSecond)
         : m_model(model)
@@ -481,7 +481,7 @@ private:
 
 class ParticleSystemComponentFactory {
 public:
-    std::unique_ptr<IParticlaSystemComponent> CreateRandom() const
+    std::unique_ptr<IParticleSystemComponent> CreateRandom() const
     {
         auto allocator = AllocatorProvider::Instance().GetAllocator();
         
@@ -498,7 +498,7 @@ public:
         return std::make_unique<ParticleSystemComponent>(model, material, particleFactory, 10.0f);
     }
 
-    std::unique_ptr<IParticlaSystemComponent> CreateRandomInCone(const glm::vec3& coneDirection, const float angle) const
+    std::unique_ptr<IParticleSystemComponent> CreateRandomInCone(const glm::vec3& coneDirection, const float angle) const
     {
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 

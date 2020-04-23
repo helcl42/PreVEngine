@@ -5268,7 +5268,7 @@ public:
     {
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::PARTICLE_SYSTEM_COMPONENT })) {
             const auto cameraComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
-            const auto particlesComponent = ComponentRepository<IParticlaSystemComponent>::Instance().Get(node->GetId());     
+            const auto particlesComponent = ComponentRepository<IParticleSystemComponent>::Instance().Get(node->GetId());
             const auto& particles = particlesComponent->GetParticles();
             for(const auto& particle : particles) {
                  auto uboVS = m_uniformsPoolVS->GetNext();
