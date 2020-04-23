@@ -4,6 +4,7 @@
 #include "General.h"
 
 #include <random>
+#include <list>
 
 static const float PARTICLES_GRAVITY_Y{ -9.81f };
 
@@ -88,10 +89,10 @@ private:
         float lifeFactor = m_elapsedTime / m_lifeLength;
         int stageCount = m_material->GetAtlasNumberOfRows() * m_material->GetAtlasNumberOfRows();
         float atlasProgression = lifeFactor * stageCount;
-        int stage1Index = static_cast<int>(std::floorf(atlasProgression));
+        int stage1Index = static_cast<int>(floorf(atlasProgression));
         int stage2Index = stage1Index < stageCount - 1 ? stage1Index + 1 : stage1Index;
 
-        m_stagesBlendFactor = std::fmodf(atlasProgression, 1.0f);
+        m_stagesBlendFactor = fmodf(atlasProgression, 1.0f);
         m_currentStageTextureOffset = GetTextureOffset(stage1Index);
         m_nextStageTextureOffset = GetTextureOffset(stage2Index);
     }
@@ -417,7 +418,7 @@ public:
         return m_particleFactory;
     }
 
-    std::shared_ptr<IModel> GetModel() const
+    std::shared_ptr<IModel> GetModel() const override
     {
         return m_model;
     }
@@ -436,7 +437,7 @@ private:
     void AddNewParticles(const float deltaTime, const glm::vec3& centerPosition)
     {
         const float particlesToCreate = m_particlesPerSecond * deltaTime;
-        const auto particlesToCreateCount = static_cast<int>(std::floorf(particlesToCreate));
+        const auto particlesToCreateCount = static_cast<int>(floorf(particlesToCreate));
         for (auto i = 0; i < particlesToCreateCount; i++) {
             std::shared_ptr<Particle> newParticle = m_particleFactory->EmitParticle(centerPosition);
             m_particles.emplace_back(newParticle);
@@ -446,7 +447,7 @@ private:
         std::mt19937 mt(rd());
         std::uniform_real_distribution<float> dist(0.0, 1.0);
 
-        float partialCount = std::fmodf(particlesToCreate, 1.0f);
+        float partialCount = fmodf(particlesToCreate, 1.0f);
         if (dist(mt) < partialCount) {
             std::shared_ptr<Particle> newParticle = m_particleFactory->EmitParticle(centerPosition);
             m_particles.emplace_back(newParticle);

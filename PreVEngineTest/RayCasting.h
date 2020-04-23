@@ -321,7 +321,7 @@ public:
         m_position = at;
     }
 
-    void Reset()
+    void Reset() override
     {
         m_selected = false;
         m_position = glm::vec3(std::numeric_limits<float>::min());

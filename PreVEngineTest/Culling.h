@@ -422,7 +422,7 @@ public:
         }
 
         float bSq = eSq - (a * a);
-        float f = std::sqrt(fabsf(radiusSquared - bSq));       
+        float f = sqrt(fabsf(radiusSquared - bSq));       
 
         float t;
         if (eSq < radiusSquared) { // Ray starts inside the sphere
@@ -442,7 +442,7 @@ public:
     {
         const float EPSILON = 0.0001f;
         float denom = glm::dot(ray.direction, plane.normal);
-        if (std::fabsf(denom) > EPSILON) {
+        if (fabsf(denom) > EPSILON) {
             float pn = glm::dot(ray.origin, plane.normal);
             float t = -(plane.distance + pn) / denom;
             if (t >= EPSILON) {
