@@ -164,7 +164,7 @@ private:
         // Calculate split depths based on view camera furstum
         for (uint32_t i = 0; i < CASCADES_COUNT; i++) {
             float p = (i + 1) / static_cast<float>(CASCADES_COUNT);
-            float log = minZ * std::pow(ratio, p);
+            float log = minZ * powf(ratio, p);
             float uniform = minZ + range * p;
             float d = CASCADES_SPLIT_LAMBDA * (log - uniform) + uniform;
             cascadeSplits[i] = (d - nearClippingPlane) / clipRange;
