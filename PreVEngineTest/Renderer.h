@@ -14,11 +14,14 @@ struct ShadowsRenderContextUserData : DefaultRenderContextUserData {
 
     const Frustum frustum;
 
-    ShadowsRenderContextUserData(const glm::mat4& vm, const glm::mat4& pm, const uint32_t index, const Frustum& frst)
+    const VkExtent2D extent;
+
+    ShadowsRenderContextUserData(const glm::mat4& vm, const glm::mat4& pm, const uint32_t index, const Frustum& frst, const VkExtent2D& ext)
         : viewMatrix(vm)
         , projectionMatrix(pm)
         , cascadeIndex(index)
         , frustum(frst)
+        , extent(ext)
     {
     }
 };
@@ -102,12 +105,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const auto shadows = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-
-        const auto shadowsExtent = shadows->GetExtent();
-
-        VkRect2D scissor = { { 0, 0 }, shadows->GetExtent() };
-        VkViewport viewport = { 0, 0, static_cast<float>(shadowsExtent.width), static_cast<float>(shadowsExtent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, shadowsRenderContext.extent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -139,9 +138,9 @@ public:
 
                 m_shader->Bind("ubo", *ubo);
 
-                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
 
                 vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
                 vkCmdBindIndexBuffer(renderContext.commandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -224,12 +223,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const auto shadows = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-
-        const auto shadowsExtent = shadows->GetExtent();
-
-        VkRect2D scissor = { { 0, 0 }, shadows->GetExtent() };
-        VkViewport viewport = { 0, 0, static_cast<float>(shadowsExtent.width), static_cast<float>(shadowsExtent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, shadowsRenderContext.extent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -261,9 +256,9 @@ public:
 
                 m_shader->Bind("ubo", *ubo);
 
-                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
 
                 vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
                 vkCmdBindIndexBuffer(renderContext.commandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -346,12 +341,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const auto shadows = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-
-        const auto shadowsExtent = shadows->GetExtent();
-
-        VkRect2D scissor = { { 0, 0 }, shadows->GetExtent() };
-        VkViewport viewport = { 0, 0, static_cast<float>(shadowsExtent.width), static_cast<float>(shadowsExtent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, shadowsRenderContext.extent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -383,9 +374,9 @@ public:
 
                 m_shader->Bind("ubo", *ubo);
 
-                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
 
                 vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
                 vkCmdBindIndexBuffer(renderContext.commandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -472,12 +463,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const auto shadows = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-
-        const auto shadowsExtent = shadows->GetExtent();
-
-        VkRect2D scissor = { { 0, 0 }, shadows->GetExtent() };
-        VkViewport viewport = { 0, 0, static_cast<float>(shadowsExtent.width), static_cast<float>(shadowsExtent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, shadowsRenderContext.extent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -505,9 +492,9 @@ public:
 
                 m_shader->Bind("ubo", *ubo);
 
-                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
 
                 vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
                 vkCmdBindIndexBuffer(renderContext.commandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, terrainComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -594,12 +581,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const auto shadows = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-
-        const auto shadowsExtent = shadows->GetExtent();
-
-        VkRect2D scissor = { { 0, 0 }, shadows->GetExtent() };
-        VkViewport viewport = { 0, 0, static_cast<float>(shadowsExtent.width), static_cast<float>(shadowsExtent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, shadowsRenderContext.extent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -627,9 +610,9 @@ public:
 
                 m_shader->Bind("ubo", *ubo);
 
-                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
 
                 vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
                 vkCmdBindIndexBuffer(renderContext.commandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, terrainComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -716,12 +699,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const auto shadows = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-
-        const auto shadowsExtent = shadows->GetExtent();
-
-        VkRect2D scissor = { { 0, 0 }, shadows->GetExtent() };
-        VkViewport viewport = { 0, 0, static_cast<float>(shadowsExtent.width), static_cast<float>(shadowsExtent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, shadowsRenderContext.extent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -749,9 +728,9 @@ public:
 
                 m_shader->Bind("ubo", *ubo);
 
-                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
 
                 vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
                 vkCmdBindIndexBuffer(renderContext.commandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, terrainComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -839,12 +818,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const auto shadows = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-
-        const auto shadowsExtent = shadows->GetExtent();
-
-        VkRect2D scissor = { { 0, 0 }, shadows->GetExtent() };
-        VkViewport viewport = { 0, 0, static_cast<float>(shadowsExtent.width), static_cast<float>(shadowsExtent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, shadowsRenderContext.extent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -876,9 +851,9 @@ public:
 
                 m_shader->Bind("ubo", *ubo);
 
-                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
 
                 vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
                 vkCmdBindIndexBuffer(renderContext.commandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -966,12 +941,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const auto shadows = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-
-        const auto shadowsExtent = shadows->GetExtent();
-
-        VkRect2D scissor = { { 0, 0 }, shadows->GetExtent() };
-        VkViewport viewport = { 0, 0, static_cast<float>(shadowsExtent.width), static_cast<float>(shadowsExtent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, shadowsRenderContext.extent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -1003,9 +974,9 @@ public:
 
                 m_shader->Bind("ubo", *ubo);
 
-                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
 
                 vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
                 vkCmdBindIndexBuffer(renderContext.commandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -1093,12 +1064,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const auto shadows = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-
-        const auto shadowsExtent = shadows->GetExtent();
-
-        VkRect2D scissor = { { 0, 0 }, shadows->GetExtent() };
-        VkViewport viewport = { 0, 0, static_cast<float>(shadowsExtent.width), static_cast<float>(shadowsExtent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, shadowsRenderContext.extent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -1130,9 +1097,9 @@ public:
 
                 m_shader->Bind("ubo", *ubo);
 
-                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
 
                 vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
                 vkCmdBindIndexBuffer(renderContext.commandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -1269,10 +1236,9 @@ public:
 
         m_shader->Bind("depthSampler", shadows->GetImageBuffer()->GetImageView(), shadows->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 
-        VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-
-        VkBuffer vertexBuffers[] = { *m_quadModel->GetVertexBuffer() };
-        VkDeviceSize offsets[] = { 0 };
+        const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+        const VkBuffer vertexBuffers[] = { *m_quadModel->GetVertexBuffer() };
+        const VkDeviceSize offsets[] = { 0 };
 
         vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
         vkCmdBindIndexBuffer(renderContext.commandBuffer, *m_quadModel->GetIndexBuffer(), 0, m_quadModel->GetIndexBuffer()->GetIndexType());
@@ -1400,10 +1366,9 @@ public:
 
         m_shader->Bind("imageSampler", component->GetColorImageBuffer()->GetImageView(), component->GetColorImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-        VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-
-        VkBuffer vertexBuffers[] = { *m_quadModel->GetVertexBuffer() };
-        VkDeviceSize offsets[] = { 0 };
+        const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+        const VkBuffer vertexBuffers[] = { *m_quadModel->GetVertexBuffer() };
+        const VkDeviceSize offsets[] = { 0 };
 
         vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
         vkCmdBindIndexBuffer(renderContext.commandBuffer, *m_quadModel->GetIndexBuffer(), 0, m_quadModel->GetIndexBuffer()->GetIndexType());
@@ -1502,8 +1467,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -1536,9 +1501,9 @@ public:
             m_shader->Bind("uboVS", *uboVS);
             m_shader->Bind("uboFS", *uboFS);
 
-            VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-            VkBuffer vertexBuffers[] = { *boundingVolumeComponent->GetModel()->GetVertexBuffer() };
-            VkDeviceSize offsets[] = { 0 };
+            const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+            const VkBuffer vertexBuffers[] = { *boundingVolumeComponent->GetModel()->GetVertexBuffer() };
+            const VkDeviceSize offsets[] = { 0 };
 
             vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
             vkCmdBindIndexBuffer(renderContext.commandBuffer, *boundingVolumeComponent->GetModel()->GetIndexBuffer(), 0, boundingVolumeComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -1649,8 +1614,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -1689,9 +1654,9 @@ public:
             m_shader->Bind("uboGS", *uboGS);
             m_shader->Bind("uboFS", *uboFS);
 
-            VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-            VkBuffer vertexBuffers[] = { *rayCastingComponent->GetModel()->GetVertexBuffer() };
-            VkDeviceSize offsets[] = { 0 };
+            const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+            const VkBuffer vertexBuffers[] = { *rayCastingComponent->GetModel()->GetVertexBuffer() };
+            const VkDeviceSize offsets[] = { 0 };
 
             vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
             vkCmdBindIndexBuffer(renderContext.commandBuffer, *rayCastingComponent->GetModel()->GetIndexBuffer(), 0, rayCastingComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -1796,8 +1761,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -1828,9 +1793,9 @@ public:
                 m_shader->Bind("uboVS", *uboVS);
                 m_shader->Bind("uboFS", *uboFS);
 
-                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                VkBuffer vertexBuffers[] = { *m_selectionPointModel->GetVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *m_selectionPointModel->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
 
                 vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
                 vkCmdBindIndexBuffer(renderContext.commandBuffer, *m_selectionPointModel->GetIndexBuffer(), 0, m_selectionPointModel->GetIndexBuffer()->GetIndexType());
@@ -2028,8 +1993,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -2112,9 +2077,9 @@ public:
                 m_shader->Bind("uboVS", *uboVS);
                 m_shader->Bind("uboFS", *uboFS);
 
-                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                VkBuffer vertexBuffers[] = { *nodeRenderComponent->GetModel()->GetVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *nodeRenderComponent->GetModel()->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
 
                 vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
                 vkCmdBindIndexBuffer(renderContext.commandBuffer, *nodeRenderComponent->GetModel()->GetIndexBuffer(), 0, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -2298,8 +2263,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -2382,9 +2347,9 @@ public:
                 m_shader->Bind("uboVS", *uboVS);
                 m_shader->Bind("uboFS", *uboFS);
 
-                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                VkBuffer vertexBuffers[] = { *nodeRenderComponent->GetModel()->GetVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *nodeRenderComponent->GetModel()->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
 
                 vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
                 vkCmdBindIndexBuffer(renderContext.commandBuffer, *nodeRenderComponent->GetModel()->GetIndexBuffer(), 0, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -2573,8 +2538,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -2667,9 +2632,9 @@ public:
                 m_shader->Bind("uboVS", *uboVS);
                 m_shader->Bind("uboFS", *uboFS);
 
-                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                VkBuffer vertexBuffers[] = { *nodeRenderComponent->GetModel()->GetVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *nodeRenderComponent->GetModel()->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
 
                 vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
                 vkCmdBindIndexBuffer(renderContext.commandBuffer, *nodeRenderComponent->GetModel()->GetIndexBuffer(), 0, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -2856,8 +2821,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -2939,9 +2904,9 @@ public:
                 m_shader->Bind("uboVS", *uboVS);
                 m_shader->Bind("uboFS", *uboFS);
 
-                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                VkBuffer vertexBuffers[] = { *nodeRenderComponent->GetModel()->GetVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *nodeRenderComponent->GetModel()->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
 
                 vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
                 vkCmdBindIndexBuffer(renderContext.commandBuffer, *nodeRenderComponent->GetModel()->GetIndexBuffer(), 0, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -3127,8 +3092,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -3211,9 +3176,9 @@ public:
                 m_shader->Bind("uboVS", *uboVS);
                 m_shader->Bind("uboFS", *uboFS);
 
-                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                VkBuffer vertexBuffers[] = { *nodeRenderComponent->GetModel()->GetVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *nodeRenderComponent->GetModel()->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
 
                 vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
                 vkCmdBindIndexBuffer(renderContext.commandBuffer, *nodeRenderComponent->GetModel()->GetIndexBuffer(), 0, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -3404,8 +3369,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -3498,9 +3463,9 @@ public:
                 m_shader->Bind("uboVS", *uboVS);
                 m_shader->Bind("uboFS", *uboFS);
 
-                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                VkBuffer vertexBuffers[] = { *nodeRenderComponent->GetModel()->GetVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *nodeRenderComponent->GetModel()->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
 
                 vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
                 vkCmdBindIndexBuffer(renderContext.commandBuffer, *nodeRenderComponent->GetModel()->GetIndexBuffer(), 0, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -3691,8 +3656,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -3775,9 +3740,9 @@ public:
                 m_shader->Bind("uboVS", *uboVS);
                 m_shader->Bind("uboFS", *uboFS);
 
-                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
 
                 vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
                 vkCmdBindIndexBuffer(renderContext.commandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, terrainComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -3968,8 +3933,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -4053,9 +4018,9 @@ public:
                 m_shader->Bind("uboVS", *uboVS);
                 m_shader->Bind("uboFS", *uboFS);
 
-                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
 
                 vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
                 vkCmdBindIndexBuffer(renderContext.commandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, terrainComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -4252,8 +4217,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -4345,9 +4310,9 @@ public:
                 m_shader->Bind("uboVS", *uboVS);
                 m_shader->Bind("uboFS", *uboFS);
 
-                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
 
                 vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
                 vkCmdBindIndexBuffer(renderContext.commandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, terrainComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -4459,8 +4424,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -4494,9 +4459,9 @@ public:
                 m_shader->Bind("uboVS", *uboVS);
                 m_shader->Bind("uboFS", *uboFS);
 
-                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                VkBuffer vertexBuffers[] = { *renderableText.model->GetVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *renderableText.model->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
 
                 vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
                 vkCmdBindIndexBuffer(renderContext.commandBuffer, *renderableText.model->GetIndexBuffer(), 0, renderableText.model->GetIndexBuffer()->GetIndexType());
@@ -4600,8 +4565,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -4637,9 +4602,9 @@ public:
             m_shader->Bind("uboVS", *uboVS);
             m_shader->Bind("uboFS", *uboFS);
 
-            VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-            VkBuffer vertexBuffers[] = { *skyBoxComponent->GetModel()->GetVertexBuffer() };
-            VkDeviceSize offsets[] = { 0 };
+            const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+            const VkBuffer vertexBuffers[] = { *skyBoxComponent->GetModel()->GetVertexBuffer() };
+            const VkDeviceSize offsets[] = { 0 };
 
             vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
             vkCmdBindIndexBuffer(renderContext.commandBuffer, *skyBoxComponent->GetModel()->GetIndexBuffer(), 0, skyBoxComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -4768,8 +4733,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -4837,9 +4802,9 @@ public:
                 m_shader->Bind("normalMapTexture", waterComponent->GetMaterial()->GetNormalmageBuffer()->GetImageView(), waterComponent->GetMaterial()->GetNormalmageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
                 m_shader->Bind("depthMapTexture", waterRefractionComponent->GetDepthImageBuffer()->GetImageView(), waterRefractionComponent->GetDepthImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 
-                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                VkBuffer vertexBuffers[] = { *waterComponent->GetModel()->GetVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *waterComponent->GetModel()->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
 
                 vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
                 vkCmdBindIndexBuffer(renderContext.commandBuffer, *waterComponent->GetModel()->GetIndexBuffer(), 0, waterComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -4955,8 +4920,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -4990,9 +4955,9 @@ public:
             m_shader->Bind("uboVS", *uboVS);
             m_shader->Bind("uboFS", *uboFS);
 
-            VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-            VkBuffer vertexBuffers[] = { *sunComponent->GetModel()->GetVertexBuffer() };
-            VkDeviceSize offsets[] = { 0 };
+            const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+            const VkBuffer vertexBuffers[] = { *sunComponent->GetModel()->GetVertexBuffer() };
+            const VkDeviceSize offsets[] = { 0 };
 
             vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
             vkCmdBindIndexBuffer(renderContext.commandBuffer, *sunComponent->GetModel()->GetIndexBuffer(), 0, sunComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -5109,8 +5074,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -5141,9 +5106,9 @@ public:
                 m_shader->Bind("uboVS", *uboVS);
                 m_shader->Bind("uboFS", *uboFS);
 
-                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                VkBuffer vertexBuffers[] = { *lensFlareComponent->GetModel()->GetVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *lensFlareComponent->GetModel()->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
 
                 vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
                 vkCmdBindIndexBuffer(renderContext.commandBuffer, *lensFlareComponent->GetModel()->GetIndexBuffer(), 0, lensFlareComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -5256,8 +5221,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -5296,9 +5261,9 @@ public:
                 m_shader->Bind("uboFS", *uboFS);
                 m_shader->Bind("textureSampler", *particlesComponent->GetMaterial()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-                VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                VkBuffer vertexBuffers[] = { *particlesComponent->GetModel()->GetVertexBuffer() };
-                VkDeviceSize offsets[] = { 0 };
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *particlesComponent->GetModel()->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
 
                 vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
                 vkCmdBindIndexBuffer(renderContext.commandBuffer, *particlesComponent->GetModel()->GetIndexBuffer(), 0, particlesComponent->GetModel()->GetIndexBuffer()->GetIndexType());
@@ -5729,7 +5694,7 @@ private:
 
             const auto cascade = shadows->GetCascade(cascadeIndex);
 
-            const ShadowsRenderContextUserData userData{ cascade.viewMatrix, cascade.projectionMatrix, cascadeIndex, Frustum{ cascade.projectionMatrix, cascade.viewMatrix } };
+            const ShadowsRenderContextUserData userData{ cascade.viewMatrix, cascade.projectionMatrix, cascadeIndex, Frustum{ cascade.projectionMatrix, cascade.viewMatrix }, shadows->GetExtent() };
 
 #ifdef PARALLEL_RENDERING
             shadows->GetRenderPass()->Begin(cascade.frameBuffer, renderContext.commandBuffer, { { 0, 0 }, shadows->GetExtent() }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
