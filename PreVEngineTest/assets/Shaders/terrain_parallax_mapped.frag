@@ -162,8 +162,8 @@ void main()
 				if(NdotV < uboFS.maxAngleToFallback) {
 					uv1 = inTextureCoord;
 					uv2 = inTextureCoord;
-					vec3 normal1 = normalize(2.0 * texture(normalSampler[i], uv1).xyz - 1.0);
-					vec3 normal2 = normalize(2.0 * texture(normalSampler[i + 1], uv2).xyz - 1.0);
+					normal1 = normalize(2.0 * texture(normalSampler[i], uv1).xyz - 1.0);
+					normal2 = normalize(2.0 * texture(normalSampler[i + 1], uv2).xyz - 1.0);
 					normal = normalize(mix(normal1, normal2, ratio));
 				}
 
