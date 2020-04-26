@@ -3600,7 +3600,7 @@ private:
         float maxHeight;
 
         alignas(16) glm::vec4 heightSteps[4];
-        alignas(16) float heightTtransitionRange;
+        alignas(16) float heightTransitionRange;
     };
 
 private:
@@ -3728,7 +3728,7 @@ public:
                     uniformsFS.heightSteps[i] = glm::vec4(terrainComponent->GetHeightSteps().at(i));
                     uniformsFS.material[i] = MaterialUniform(material->GetShineDamper(), material->GetReflectivity());
                 }
-                uniformsFS.heightTtransitionRange = terrainComponent->GetTransitionRange();
+                uniformsFS.heightTransitionRange = terrainComponent->GetTransitionRange();
 
                 uboFS->Update(&uniformsFS);
 
@@ -3877,7 +3877,7 @@ private:
         float maxHeight;
 
         alignas(16) glm::vec4 heightSteps[4];
-        alignas(16) float heightTtransitionRange;
+        alignas(16) float heightTransitionRange;
     };
 
 private:
@@ -4005,7 +4005,7 @@ public:
                     uniformsFS.heightSteps[i] = glm::vec4(terrainComponent->GetHeightSteps().at(i));
                     uniformsFS.material[i] = MaterialUniform(material->GetShineDamper(), material->GetReflectivity());
                 }
-                uniformsFS.heightTtransitionRange = terrainComponent->GetTransitionRange();
+                uniformsFS.heightTransitionRange = terrainComponent->GetTransitionRange();
 
                 uboFS->Update(&uniformsFS);
 
@@ -4156,7 +4156,7 @@ private:
         alignas(16) glm::vec4 heightSteps[4];
         alignas(16) glm::vec4 heightScale[4];
 
-        alignas(16) float heightTtransitionRange;
+        alignas(16) float heightTransitionRange;
         float parallaxBias;
         float numLayers;
         uint32_t mappingMode;
@@ -4290,7 +4290,7 @@ public:
                     uniformsFS.heightScale[i] = glm::vec4(material->GetHeightScale());
                     uniformsFS.heightSteps[i] = glm::vec4(terrainComponent->GetHeightSteps().at(i));
                 }
-                uniformsFS.heightTtransitionRange = terrainComponent->GetTransitionRange();
+                uniformsFS.heightTransitionRange = terrainComponent->GetTransitionRange();
                 
                 // TODO -> add uniform for all terrain materials                
                 uniformsFS.parallaxBias = 0.0f;
