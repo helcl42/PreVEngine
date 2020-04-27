@@ -142,12 +142,12 @@ private:
         return image;
     }
 
-    std::unique_ptr<ImageBuffer> CreateImageBuffer(Allocator& allocator, const std::shared_ptr<Image>& image, const bool repeatAddressMode) const
+    std::unique_ptr<ImageBuffer> CreateImageBuffer(Allocator& allocator, const std::shared_ptr<Image>& image, const bool filtering, const bool repeatAddressMode) const
     {
         const VkExtent2D imageExtent = { image->GetWidth(), image->GetHeight() };
 
         auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
-        imageBuffer->Create(ImageBufferCreateInfo{ imageExtent, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, repeatAddressMode ? VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT : VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
+        imageBuffer->Create(ImageBufferCreateInfo{ imageExtent, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, filtering, VK_IMAGE_VIEW_TYPE_2D, 1, repeatAddressMode ? VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT : VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
 
         return imageBuffer;
     }
@@ -155,7 +155,7 @@ private:
     std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& texturePath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
     {
         auto image = CreateImage(texturePath);
-        auto imageBuffer = CreateImageBuffer(allocator, image, repeatAddressMode);
+        auto imageBuffer = CreateImageBuffer(allocator, image, true, repeatAddressMode);
 
         return std::make_unique<Material>(image, std::move(imageBuffer), shineDamper, reflectivity);
     }
@@ -163,10 +163,10 @@ private:
     std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
     {
         auto image = CreateImage(texturePath);
-        auto imageBuffer = CreateImageBuffer(allocator, image, repeatAddressMode);
+        auto imageBuffer = CreateImageBuffer(allocator, image, true, repeatAddressMode);
 
         auto normalImage = CreateImage(normalMapPath);
-        auto normalImageBuffer = CreateImageBuffer(allocator, normalImage, repeatAddressMode);
+        auto normalImageBuffer = CreateImageBuffer(allocator, normalImage, false, repeatAddressMode);
 
         return std::make_unique<Material>(image, std::move(imageBuffer), normalImage, std::move(normalImageBuffer), shineDamper, reflectivity);
     }
@@ -174,13 +174,13 @@ private:
     std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
     {
         auto image = CreateImage(texturePath);
-        auto imageBuffer = CreateImageBuffer(allocator, image, repeatAddressMode);
+        auto imageBuffer = CreateImageBuffer(allocator, image, true, repeatAddressMode);
 
         auto normalImage = CreateImage(normalMapPath);
-        auto normalImageBuffer = CreateImageBuffer(allocator, normalImage, repeatAddressMode);
+        auto normalImageBuffer = CreateImageBuffer(allocator, normalImage, false, repeatAddressMode);
 
         auto heightImage = CreateImage(heightMapPath);
-        auto heightImageBuffer = CreateImageBuffer(allocator, heightImage, repeatAddressMode);
+        auto heightImageBuffer = CreateImageBuffer(allocator, heightImage, false, repeatAddressMode);
 
         return std::make_unique<Material>(image, std::move(imageBuffer), normalImage, std::move(normalImageBuffer), heightImage, std::move(heightImageBuffer), shineDamper, reflectivity);
     }

@@ -490,12 +490,18 @@ VkIndexType IBO::GetIndexType() const
 //--------------------------Image Buffers-----------------------
 AbstractImageBuffer::AbstractImageBuffer(Allocator& allocator)
     : m_allocator(allocator)
-    , m_allocation()
-    , m_image()
-    , m_imageView()
-    , m_sampler()
-    , m_extent()
-    , m_format()
+    , m_allocation(nullptr)
+    , m_image(nullptr)
+    , m_extent({ 0, 0 })
+    , m_imageType(VkImageType::VK_IMAGE_TYPE_2D)
+    , m_flags()
+    , m_format(VkFormat::VK_FORMAT_UNDEFINED)
+    , m_imageView(nullptr)
+    , m_sampler(nullptr)
+    , m_mipLevels(0)
+    , m_layerCount(0)
+    , m_imageViewType()
+    , m_filteringEnabled(false)
 {
 }
 
@@ -504,25 +510,32 @@ AbstractImageBuffer::~AbstractImageBuffer()
     Destroy();
 }
 
-void AbstractImageBuffer::CreateSampler(const float maxLod, const VkSamplerAddressMode addressMode)
+void AbstractImageBuffer::CreateSampler(const float maxLod, const VkSamplerAddressMode addressMode, const bool enableFiltering)
 {
     if (m_sampler) {
         vkDestroySampler(m_allocator.GetDevice(), m_sampler, nullptr);
     }
 
     VkSamplerCreateInfo samplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
-    samplerInfo.magFilter = VK_FILTER_LINEAR;
-    samplerInfo.minFilter = VK_FILTER_LINEAR;
-    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    if (enableFiltering) {
+        samplerInfo.magFilter = VK_FILTER_LINEAR;
+        samplerInfo.minFilter = VK_FILTER_LINEAR;
+        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+
+        samplerInfo.anisotropyEnable = VK_TRUE;
+        samplerInfo.maxAnisotropy = 16;
+    } else {
+        samplerInfo.magFilter = VK_FILTER_NEAREST;
+        samplerInfo.minFilter = VK_FILTER_NEAREST;
+        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+
+        samplerInfo.anisotropyEnable = VK_FALSE;
+        samplerInfo.maxAnisotropy = 1;
+    }
     samplerInfo.addressModeU = addressMode;
     samplerInfo.addressModeV = addressMode;
     samplerInfo.addressModeW = addressMode;
     samplerInfo.mipLodBias = 0;
-
-    samplerInfo.anisotropyEnable = VK_TRUE;
-    samplerInfo.maxAnisotropy = 16;
-    //samplerInfo.anisotropyEnable = VK_FALSE;
-    //samplerInfo.maxAnisotropy = 1;
 
     samplerInfo.compareEnable = VK_FALSE;
     samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
@@ -609,6 +622,11 @@ VkImageViewType AbstractImageBuffer::GetViewType() const
     return m_imageViewType;
 }
 
+bool AbstractImageBuffer::IsFilteringEnabled() const
+{
+    return m_filteringEnabled;
+}
+
 //--------------------------------------------------------------------------------
 ImageBuffer::ImageBuffer(Allocator& allocator)
     : AbstractImageBuffer(allocator)
@@ -623,6 +641,7 @@ void ImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
     m_imageType = createInfo.imageType;
     m_flags = createInfo.flags;
     m_extent = VkExtent2D{ createInfo.extent.width, createInfo.extent.height };
+    m_filteringEnabled = createInfo.filteringEnabled;
 
     m_mipLevels = 1;
     if (createInfo.mipMap) {
@@ -642,7 +661,7 @@ void ImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
 
     m_allocator.CreateImageView(m_image, createInfo.format, createInfo.viewType, m_mipLevels, createInfo.layerCount, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
 
-    CreateSampler((float)m_mipLevels, createInfo.addressMode);
+    CreateSampler((float)m_mipLevels, createInfo.addressMode, createInfo.filteringEnabled);
 }
 
 void ImageBuffer::Resize(const VkExtent2D& extent)

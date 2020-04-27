@@ -123,7 +123,7 @@ private:
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         m_depthBuffer = std::make_shared<DepthImageBuffer>(*allocator);
-        m_depthBuffer->Create(ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, DEPTH_FORMAT, 0, false, VK_IMAGE_VIEW_TYPE_2D_ARRAY, CASCADES_COUNT });
+        m_depthBuffer->Create(ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, DEPTH_FORMAT, 0, false, true, VK_IMAGE_VIEW_TYPE_2D_ARRAY, CASCADES_COUNT });
         m_depthBuffer->CreateSampler();
 
         m_cascades.resize(CASCADES_COUNT);

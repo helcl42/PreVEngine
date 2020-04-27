@@ -231,17 +231,20 @@ struct ImageBufferCreateInfo {
 
     const std::vector<const uint8_t*> layerData;
 
-    ImageBufferCreateInfo(const VkExtent2D& ext, const VkImageType imgType, const VkFormat fmt, const VkImageCreateFlags flgs = 0, const bool mipmap = false, const VkImageViewType vwType = VK_IMAGE_VIEW_TYPE_2D, const uint32_t lrCount = 1, const VkSamplerAddressMode mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, const uint8_t* data = nullptr)
-        : ImageBufferCreateInfo(ext, imgType, fmt, flgs, mipmap, vwType, lrCount, mode, std::vector<const uint8_t*>{ data })
+    const bool filteringEnabled;
+
+    ImageBufferCreateInfo(const VkExtent2D& ext, const VkImageType imgType, const VkFormat fmt, const VkImageCreateFlags flgs = 0, const bool mipmap = false, const bool filtering = true, const VkImageViewType vwType = VK_IMAGE_VIEW_TYPE_2D, const uint32_t lrCount = 1, const VkSamplerAddressMode mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, const uint8_t* data = nullptr)
+        : ImageBufferCreateInfo(ext, imgType, fmt, flgs, mipmap, filtering, vwType, lrCount, mode, std::vector<const uint8_t*>{ data })
     {
     }
 
-    ImageBufferCreateInfo(const VkExtent2D& ext, const VkImageType imgType, const VkFormat fmt, const VkImageCreateFlags flgs, const bool mipmap, const VkImageViewType vwType, const uint32_t lrCount, const VkSamplerAddressMode mode, const std::vector<const uint8_t*>& lrImageData)
+    ImageBufferCreateInfo(const VkExtent2D& ext, const VkImageType imgType, const VkFormat fmt, const VkImageCreateFlags flgs, const bool mipmap, const bool filtering, const VkImageViewType vwType, const uint32_t lrCount, const VkSamplerAddressMode mode, const std::vector<const uint8_t*>& lrImageData)
         : extent(ext)
         , imageType(imgType)
         , format(fmt)
         , flags(flgs)
         , mipMap(mipmap)
+        , filteringEnabled(filtering)
         , viewType(vwType)
         , layerCount(lrCount)
         , addressMode(mode)
@@ -260,7 +263,7 @@ public:
 
     virtual void Destroy() = 0;
 
-    virtual void CreateSampler(const float maxLod = 1.0f, const VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE) = 0;
+    virtual void CreateSampler(const float maxLod = 1.0f, const VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, const bool enableFiltering = true) = 0;
 
     virtual void UpdateSampler(const VkSamplerCreateInfo& samplerInfo) = 0;
 
@@ -283,6 +286,8 @@ public:
     virtual uint32_t GetLayerCount() const = 0;
 
     virtual VkImageViewType GetViewType() const = 0;
+
+    virtual bool IsFilteringEnabled() const = 0;
 
 public:
     virtual ~IImageBuffer() = default;
@@ -314,6 +319,8 @@ protected:
 
     VkImageViewType m_imageViewType;
 
+    bool m_filteringEnabled;
+
 public:
     AbstractImageBuffer(Allocator& allocator);
 
@@ -324,7 +331,7 @@ public:
 
     void Destroy() override;
 
-    void CreateSampler(const float maxLod = 1.0f, const VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE) override;
+    void CreateSampler(const float maxLod = 1.0f, const VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, const bool enableFiltering = true) override;
 
 public:
     VkImage GetImage() const override;
@@ -346,6 +353,8 @@ public:
     uint32_t GetLayerCount() const override;
 
     VkImageViewType GetViewType() const override;
+
+    bool IsFilteringEnabled() const override;
 };
 
 //----------------------------------Image Buffer----------------------------------
