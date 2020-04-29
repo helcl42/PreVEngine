@@ -501,7 +501,6 @@ AbstractImageBuffer::AbstractImageBuffer(Allocator& allocator)
     , m_mipLevels(0)
     , m_layerCount(0)
     , m_imageViewType()
-    , m_filteringEnabled(false)
 {
 }
 
@@ -516,34 +515,34 @@ void AbstractImageBuffer::CreateSampler(const float maxLod, const VkSamplerAddre
         vkDestroySampler(m_allocator.GetDevice(), m_sampler, nullptr);
     }
 
-    VkSamplerCreateInfo samplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
+    VkSamplerCreateInfo samplerCreateInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
     if (enableFiltering) {
-        samplerInfo.magFilter = VK_FILTER_LINEAR;
-        samplerInfo.minFilter = VK_FILTER_LINEAR;
-        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        samplerCreateInfo.magFilter = VK_FILTER_LINEAR;
+        samplerCreateInfo.minFilter = VK_FILTER_LINEAR;
+        samplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
-        samplerInfo.anisotropyEnable = VK_TRUE;
-        samplerInfo.maxAnisotropy = 16;
+        samplerCreateInfo.anisotropyEnable = VK_TRUE;
+        samplerCreateInfo.maxAnisotropy = 16;
     } else {
-        samplerInfo.magFilter = VK_FILTER_NEAREST;
-        samplerInfo.minFilter = VK_FILTER_NEAREST;
-        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+        samplerCreateInfo.magFilter = VK_FILTER_NEAREST;
+        samplerCreateInfo.minFilter = VK_FILTER_NEAREST;
+        samplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
 
-        samplerInfo.anisotropyEnable = VK_FALSE;
-        samplerInfo.maxAnisotropy = 1;
+        samplerCreateInfo.anisotropyEnable = VK_FALSE;
+        samplerCreateInfo.maxAnisotropy = 1;
     }
-    samplerInfo.addressModeU = addressMode;
-    samplerInfo.addressModeV = addressMode;
-    samplerInfo.addressModeW = addressMode;
-    samplerInfo.mipLodBias = 0;
+    samplerCreateInfo.addressModeU = addressMode;
+    samplerCreateInfo.addressModeV = addressMode;
+    samplerCreateInfo.addressModeW = addressMode;
+    samplerCreateInfo.mipLodBias = 0;
 
-    samplerInfo.compareEnable = VK_FALSE;
-    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-    samplerInfo.minLod = 0;
-    samplerInfo.maxLod = maxLod;
-    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-    samplerInfo.unnormalizedCoordinates = VK_FALSE;
-    VKERRCHECK(vkCreateSampler(m_allocator.GetDevice(), &samplerInfo, nullptr, &m_sampler));
+    samplerCreateInfo.compareEnable = VK_FALSE;
+    samplerCreateInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+    samplerCreateInfo.minLod = 0;
+    samplerCreateInfo.maxLod = maxLod;
+    samplerCreateInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    samplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
+    VKERRCHECK(vkCreateSampler(m_allocator.GetDevice(), &samplerCreateInfo, nullptr, &m_sampler));
 }
 
 void AbstractImageBuffer::UpdateSampler(const VkSamplerCreateInfo& samplerInfo)
@@ -622,11 +621,6 @@ VkImageViewType AbstractImageBuffer::GetViewType() const
     return m_imageViewType;
 }
 
-bool AbstractImageBuffer::IsFilteringEnabled() const
-{
-    return m_filteringEnabled;
-}
-
 //--------------------------------------------------------------------------------
 ImageBuffer::ImageBuffer(Allocator& allocator)
     : AbstractImageBuffer(allocator)
@@ -641,8 +635,7 @@ void ImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
     m_imageType = createInfo.imageType;
     m_flags = createInfo.flags;
     m_extent = VkExtent2D{ createInfo.extent.width, createInfo.extent.height };
-    m_filteringEnabled = createInfo.filteringEnabled;
-
+    
     m_mipLevels = 1;
     if (createInfo.mipMap) {
         m_mipLevels = MathUtil::Log2(std::max(createInfo.extent.width, createInfo.extent.height)) + 1;

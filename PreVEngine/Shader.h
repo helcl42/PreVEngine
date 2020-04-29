@@ -24,15 +24,6 @@ private:
 private:
     static inline const std::string DEFAULT_ENTRY_POINT_NAME = "main";
 
-    static inline const std::set<VkShaderStageFlagBits> VALID_SHADER_STAGES = {
-        VK_SHADER_STAGE_VERTEX_BIT,
-        VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT,
-        VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT,
-        VK_SHADER_STAGE_GEOMETRY_BIT,
-        VK_SHADER_STAGE_FRAGMENT_BIT,
-        VK_SHADER_STAGE_COMPUTE_BIT // TODO: should be really here??
-    };
-
 protected:
     VkDevice m_device;
 

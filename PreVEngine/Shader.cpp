@@ -149,8 +149,6 @@ void Shader::AddPushConstantBlock(const VkShaderStageFlags stageFlags, const uin
 
 bool Shader::AddShaderModule(const VkShaderStageFlagBits stage, const std::vector<char>& spirv)
 {
-    assert(!(VALID_SHADER_STAGES.find(stage) == VALID_SHADER_STAGES.cend()) && "Invalid shader stage provided.");
-
     assert(!m_shaderModules[stage] && "Shader stage already loaded.");
 
     m_shaderModules[stage] = CreateShaderModule(spirv);

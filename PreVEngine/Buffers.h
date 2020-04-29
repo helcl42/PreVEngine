@@ -223,6 +223,8 @@ struct ImageBufferCreateInfo {
 
     const bool mipMap;
 
+    const bool filteringEnabled;
+
     const VkImageViewType viewType;
 
     const uint32_t layerCount;
@@ -230,8 +232,6 @@ struct ImageBufferCreateInfo {
     const VkSamplerAddressMode addressMode;
 
     const std::vector<const uint8_t*> layerData;
-
-    const bool filteringEnabled;
 
     ImageBufferCreateInfo(const VkExtent2D& ext, const VkImageType imgType, const VkFormat fmt, const VkImageCreateFlags flgs = 0, const bool mipmap = false, const bool filtering = true, const VkImageViewType vwType = VK_IMAGE_VIEW_TYPE_2D, const uint32_t lrCount = 1, const VkSamplerAddressMode mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, const uint8_t* data = nullptr)
         : ImageBufferCreateInfo(ext, imgType, fmt, flgs, mipmap, filtering, vwType, lrCount, mode, std::vector<const uint8_t*>{ data })
@@ -287,8 +287,6 @@ public:
 
     virtual VkImageViewType GetViewType() const = 0;
 
-    virtual bool IsFilteringEnabled() const = 0;
-
 public:
     virtual ~IImageBuffer() = default;
 };
@@ -318,8 +316,6 @@ protected:
     uint32_t m_layerCount;
 
     VkImageViewType m_imageViewType;
-
-    bool m_filteringEnabled;
 
 public:
     AbstractImageBuffer(Allocator& allocator);
@@ -353,8 +349,6 @@ public:
     uint32_t GetLayerCount() const override;
 
     VkImageViewType GetViewType() const override;
-
-    bool IsFilteringEnabled() const override;
 };
 
 //----------------------------------Image Buffer----------------------------------
