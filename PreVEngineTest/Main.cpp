@@ -166,7 +166,7 @@ private:
         auto imageBuffer = CreateImageBuffer(allocator, image, true, repeatAddressMode);
 
         auto normalImage = CreateImage(normalMapPath);
-        auto normalImageBuffer = CreateImageBuffer(allocator, normalImage, false, repeatAddressMode);
+        auto normalImageBuffer = CreateImageBuffer(allocator, normalImage, true, repeatAddressMode);
 
         return std::make_unique<Material>(image, std::move(imageBuffer), normalImage, std::move(normalImageBuffer), shineDamper, reflectivity);
     }
@@ -177,7 +177,7 @@ private:
         auto imageBuffer = CreateImageBuffer(allocator, image, true, repeatAddressMode);
 
         auto normalImage = CreateImage(normalMapPath);
-        auto normalImageBuffer = CreateImageBuffer(allocator, normalImage, false, repeatAddressMode);
+        auto normalImageBuffer = CreateImageBuffer(allocator, normalImage, true, repeatAddressMode);
 
         auto heightImage = CreateImage(heightMapPath);
         auto heightImageBuffer = CreateImageBuffer(allocator, heightImage, false, repeatAddressMode);
@@ -191,7 +191,7 @@ private:
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
 
         auto indexBuffer = std::make_unique<IBO>(allocator);
-        indexBuffer->Data(mesh->GerIndices().data(), (uint32_t)mesh->GerIndices().size());
+        indexBuffer->Data(mesh->GerIndices().data(), static_cast<uint32_t>(mesh->GerIndices().size()));
 
         return std::make_unique<Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));
     }
@@ -221,7 +221,7 @@ public:
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
     }
 
-    std::unique_ptr<IRenderComponent> CreateNormalMappedPlaneRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const bool castsShadows, const bool isCastedByShadows) const
+    std::unique_ptr<IRenderComponent> CreatePlaneRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const bool castsShadows, const bool isCastedByShadows) const
     {
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
@@ -233,7 +233,7 @@ public:
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
     }
 
-    std::unique_ptr<IRenderComponent> CreateParallaxMappedPlaneRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const std::string& parallaxMapPath, const bool castsShadows, const bool isCastedByShadows) const
+    std::unique_ptr<IRenderComponent> CreatePlaneRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const std::string& parallaxMapPath, const bool castsShadows, const bool isCastedByShadows) const
     {
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
@@ -257,7 +257,7 @@ public:
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
     }
 
-    std::unique_ptr<IRenderComponent> CreateNormalMappedSphereRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const bool castsShadows, const bool isCastedByShadows) const
+    std::unique_ptr<IRenderComponent> CreateSphereRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const bool castsShadows, const bool isCastedByShadows) const
     {
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
@@ -269,7 +269,7 @@ public:
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
     }
 
-    std::unique_ptr<IRenderComponent> CreateParallaxMappedSphereRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const std::string& parallaxMapPath, const bool castsShadows, const bool isCastedByShadows) const
+    std::unique_ptr<IRenderComponent> CreateSphereRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const std::string& parallaxMapPath, const bool castsShadows, const bool isCastedByShadows) const
     {
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
@@ -294,7 +294,7 @@ public:
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
     }
 
-    std::unique_ptr<IRenderComponent> CreateModelNormalMappedRenderComponent(const std::string& modelPath, const std::string& texturePath, const std::string& normalMapPath, const bool castsShadows, const bool isCastedByShadows) const
+    std::unique_ptr<IRenderComponent> CreateModelRenderComponent(const std::string& modelPath, const std::string& texturePath, const std::string& normalMapPath, const bool castsShadows, const bool isCastedByShadows) const
     {
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
@@ -307,7 +307,7 @@ public:
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
     }
 
-    std::unique_ptr<IRenderComponent> CreateModelParallaxMappedRenderComponent(const std::string& modelPath, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const bool castsShadows, const bool isCastedByShadows) const
+    std::unique_ptr<IRenderComponent> CreateModelRenderComponent(const std::string& modelPath, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const bool castsShadows, const bool isCastedByShadows) const
     {
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
@@ -336,7 +336,7 @@ public:
         return std::make_unique<DefaultAnimationRenderComponent>(std::move(model), std::move(material), std::move(animation), castsShadows, isCastedByShadows);
     }
 
-    std::unique_ptr<IAnimationRenderComponent> CreateAnimatedNormalMappedModelRenderComponent(const std::string& modelPath, const std::string& texturePath, const std::string& normalMapPath, const bool castsShadows, const bool isCastedByShadows) const
+    std::unique_ptr<IAnimationRenderComponent> CreateAnimatedModelRenderComponent(const std::string& modelPath, const std::string& texturePath, const std::string& normalMapPath, const bool castsShadows, const bool isCastedByShadows) const
     {
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
@@ -352,7 +352,7 @@ public:
         return std::make_unique<DefaultAnimationRenderComponent>(std::move(model), std::move(material), std::move(animation), castsShadows, isCastedByShadows);
     }
 
-    std::unique_ptr<IAnimationRenderComponent> CreateAnimatedParallaxMappedModelRenderComponent(const std::string& modelPath, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const bool castsShadows, const bool isCastedByShadows) const
+    std::unique_ptr<IAnimationRenderComponent> CreateAnimatedModelRenderComponent(const std::string& modelPath, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const bool castsShadows, const bool isCastedByShadows) const
     {
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
@@ -593,9 +593,9 @@ public:
     void Init() override
     {
         RenderComponentFactory renderComponentFactory{};
-        std::shared_ptr<IRenderComponent> renderComponent = renderComponentFactory.CreateParallaxMappedPlaneRenderComponent(m_texturePath, m_normalMapPath, m_heightMapPath, false, true);
+        std::shared_ptr<IRenderComponent> renderComponent = renderComponentFactory.CreatePlaneRenderComponent(m_texturePath, m_normalMapPath, m_heightMapPath, false, true);
         renderComponent->GetMaterial()->SetHeightScale(m_heightScale);
-        NodeComponentHelper::AddComponent<SceneNodeFlags, IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_PARALLAX_MAPPED_COMPONENT);
+        NodeComponentHelper::AddComponent<SceneNodeFlags, IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_CONE_STEP_MAPPED_COMPONENT);
 
         BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(renderComponent->GetModel()->GetMesh()->GetVertices());
@@ -613,6 +613,10 @@ public:
 
     void Update(float deltaTime) override
     {
+        const float DEGS_PER_SEC = 5.0;
+        m_transformComponent->Rotate(glm::quat(glm::radians(glm::vec3(DEGS_PER_SEC * deltaTime, 0.0f, 0.0f))));
+        m_transformComponent->Rotate(glm::quat(glm::radians(glm::vec3(0.0f, DEGS_PER_SEC * deltaTime, 0.0f))));
+
         m_transformComponent->Update(deltaTime);
         m_boundingVolumeComponent->Update(m_transformComponent->GetWorldTransformScaled());
 
@@ -625,7 +629,7 @@ public:
 
         NodeComponentHelper::RemoveComponent<SceneNodeFlags, ITransformComponent>(GetThis(), SceneNodeFlags::TRANSFORM_COMPONENT);
         NodeComponentHelper::RemoveComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, IRenderComponent>(GetThis(), SceneNodeFlags::RENDER_PARALLAX_MAPPED_COMPONENT);
+        NodeComponentHelper::RemoveComponent<SceneNodeFlags, IRenderComponent>(GetThis(), SceneNodeFlags::RENDER_CONE_STEP_MAPPED_COMPONENT);
     }
 
 protected:
@@ -841,7 +845,7 @@ public:
         NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         RenderComponentFactory renderComponentFactory{};
-        m_animatonRenderComponent = renderComponentFactory.CreateAnimatedParallaxMappedModelRenderComponent(AssetManager::Instance().GetAssetPath("Models/Goblin/goblin.dae"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_texture.png"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_normal_texture_2.png"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_height_texture.png"), true, true);
+        m_animatonRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(AssetManager::Instance().GetAssetPath("Models/Goblin/goblin.dae"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_texture.png"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_normal_texture_2.png"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_height_texture.png"), true, true);
         m_animatonRenderComponent->GetMaterial()->SetHeightScale(0.005f);
         NodeComponentHelper::AddComponent<SceneNodeFlags, IAnimationRenderComponent>(GetThis(), m_animatonRenderComponent, SceneNodeFlags::ANIMATION_PARALLAX_MAPPED_RENDER_COMPONENT);
 
@@ -1895,7 +1899,7 @@ public:
         NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         RenderComponentFactory componentFactory{};
-        std::shared_ptr<IRenderComponent> renderComponent = componentFactory.CreateModelParallaxMappedRenderComponent(AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.dae"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.png"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_normal.png"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_height.png"), true, true);
+        std::shared_ptr<IRenderComponent> renderComponent = componentFactory.CreateModelRenderComponent(AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.dae"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.png"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_normal.png"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_height.png"), true, true);
         renderComponent->GetMaterial()->SetHeightScale(0.01f);
         NodeComponentHelper::AddComponent<SceneNodeFlags, IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_PARALLAX_MAPPED_COMPONENT);
 
@@ -2463,17 +2467,20 @@ public:
         auto fire = std::make_shared<Fire>(glm::vec3(30.0f, 0.0f, 100.0f));
         AddChild(fire);
 
-        //auto mainPlane = std::make_shared<PlaneNode>(glm::vec3(-25.0f, 0.0f, -25.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/rock.png"), AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), AssetManager::Instance().GetAssetPath("Textures/rock_height.png"), 0.03f);
-        //AddChild(mainPlane);
+        auto plane = std::make_shared<PlaneNode>(glm::vec3(-25.0f, 0.0f, -25.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/example_1_texture.png"), AssetManager::Instance().GetAssetPath("Textures/example_1_normal.png"), AssetManager::Instance().GetAssetPath("Textures/ouput_cv.png"), 0.1f);
+        AddChild(plane);
 
-        //auto mainPlane2 = std::make_shared<PlaneNode>(glm::vec3(-60.0f, 0.0f, -60.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/fungus.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_height.png"), 0.000005f);
-        //AddChild(mainPlane2);
-        //
-        //auto mainPlane3 = std::make_shared<PlaneNode>(glm::vec3(-100.0f, 0.0f, -60.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_height.png"), 0.005f);
-        //AddChild(mainPlane3);
+        auto mainPlane = std::make_shared<PlaneNode>(glm::vec3(-65.0f, 0.0f, -65.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 90.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/rock.png"), AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), AssetManager::Instance().GetAssetPath("Textures/rock_cone.png"), 0.1f);
+        AddChild(mainPlane);
 
-        //auto mainPlane4 = std::make_shared<PlaneNode>(glm::vec3(-30.0f, 0.0f, -80.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/sand.png"), AssetManager::Instance().GetAssetPath("Textures/sand_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_height.png"), 0.005f);
-        //AddChild(mainPlane4);
+        auto mainPlane2 = std::make_shared<PlaneNode>(glm::vec3(110.0f, 0.0f, -110.0f), glm::quat(glm::radians(glm::vec3(90.0f, 90.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/fungus.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_cone.png"), 0.05f);
+        AddChild(mainPlane2);
+
+        auto mainPlane3 = std::make_shared<PlaneNode>(glm::vec3(-120.0f, 0.0f, -50.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_cone.png"), 0.05f);
+        AddChild(mainPlane3);
+
+        auto mainPlane4 = std::make_shared<PlaneNode>(glm::vec3(-90.0f, 0.0f, -90.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/sand.png"), AssetManager::Instance().GetAssetPath("Textures/sand_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_cone.png"), 0.1f);
+        AddChild(mainPlane4);
 
         AbstractSceneNode::Init();
 
