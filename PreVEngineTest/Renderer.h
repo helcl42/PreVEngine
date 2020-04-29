@@ -171,7 +171,7 @@ public:
     }
 };
 
-class NormalMappedShadowsRenderer final : public IRenderer<ShadowsRenderContextUserData> {
+class BumpMappedShadowsRenderer final : public IRenderer<ShadowsRenderContextUserData> {
 private:
     struct Uniforms {
         alignas(16) glm::mat4 modelMatrix;
@@ -193,12 +193,12 @@ private:
     std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
 
 public:
-    NormalMappedShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    BumpMappedShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
 
-    ~NormalMappedShadowsRenderer() = default;
+    ~BumpMappedShadowsRenderer() = default;
 
 public:
     void Init() override
@@ -207,15 +207,15 @@ public:
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<NormalMappedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/normal_mapped_shadows_vert.spv") } });
+        m_shader = shaderFactory.CreateShaderFromFiles<BumpMappedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/normal_mapped_shadows_vert.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
-        LOGI("Normal Mapped Shadows Shader created\n");
+        LOGI("Normal Bump Shadows Shader created\n");
 
-        m_pipeline = std::make_unique<NormalMappedShadowsPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline = std::make_unique<BumpMappedShadowsPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
-        LOGI("Normal Mapped Shadows Pipeline created\n");
+        LOGI("Normal Bump Shadows Pipeline created\n");
 
         m_uniformsPool = std::make_unique<UBOPool<Uniforms> >(*allocator);
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
@@ -237,125 +237,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::RENDER_NORMAL_MAPPED_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
-            bool visible = true;
-            if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-                visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);
-            }
-
-            const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
-            const auto renderComponent = ComponentRepository<IRenderComponent>::Instance().Get(node->GetId());
-            if (renderComponent->CastsShadows() && visible) {
-                auto ubo = m_uniformsPool->GetNext();
-
-                Uniforms uniforms{};
-                uniforms.projectionMatrix = shadowsRenderContext.projectionMatrix;
-                uniforms.viewMatrix = shadowsRenderContext.viewMatrix;
-                uniforms.modelMatrix = transformComponent->GetWorldTransformScaled();
-                ubo->Update(&uniforms);
-
-                m_shader->Bind("ubo", *ubo);
-
-                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                const VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
-                const VkDeviceSize offsets[] = { 0 };
-
-                vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-                vkCmdBindIndexBuffer(renderContext.commandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-                vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-
-                vkCmdDrawIndexed(renderContext.commandBuffer, renderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
-            }
-        }
-
-        for (auto child : node->GetChildren()) {
-            Render(renderContext, child, shadowsRenderContext);
-        }
-    }
-
-    void PostRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
-    {
-    }
-
-    void AfterRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
-    {
-    }
-
-    void ShutDown() override
-    {
-        m_pipeline->ShutDown();
-
-        m_shader->ShutDown();
-    }
-};
-
-class ParallaxMappedShadowsRenderer final : public IRenderer<ShadowsRenderContextUserData> {
-private:
-    struct Uniforms {
-        alignas(16) glm::mat4 modelMatrix;
-        alignas(16) glm::mat4 viewMatrix;
-        alignas(16) glm::mat4 projectionMatrix;
-    };
-
-private:
-    const uint32_t m_descriptorCount{ 1000 };
-
-private:
-    std::shared_ptr<RenderPass> m_renderPass;
-
-private:
-    std::unique_ptr<Shader> m_shader;
-
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
-
-    std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
-
-public:
-    ParallaxMappedShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
-        : m_renderPass(renderPass)
-    {
-    }
-
-    ~ParallaxMappedShadowsRenderer() = default;
-
-public:
-    void Init() override
-    {
-        auto device = DeviceProvider::Instance().GetDevice();
-        auto allocator = AllocatorProvider::Instance().GetAllocator();
-
-        ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<ParallaxMappedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/parallax_mapped_shadows_vert.spv") } });
-        m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
-
-        LOGI("Parallax Mapped Shadows Shader created\n");
-
-        m_pipeline = std::make_unique<ParallaxMappedShadowsPipeline>(*device, *m_renderPass, *m_shader);
-        m_pipeline->Init();
-
-        LOGI("Parallax Mapped Shadows Pipeline created\n");
-
-        m_uniformsPool = std::make_unique<UBOPool<Uniforms> >(*allocator);
-        m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
-    }
-
-    void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
-    {
-        const VkRect2D scissor = { { 0, 0 }, shadowsRenderContext.extent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
-
-        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
-    }
-
-    void BeforeRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
-    {
-    }
-
-    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
-    {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::RENDER_PARALLAX_MAPPED_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TRANSFORM_COMPONENT }) && node->GetFlags().HasAny(FlagSet<SceneNodeFlags>{ SceneNodeFlags::RENDER_NORMAL_MAPPED_COMPONENT | SceneNodeFlags::RENDER_PARALLAX_MAPPED_COMPONENT | SceneNodeFlags::RENDER_CONE_STEP_MAPPED_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);
@@ -525,7 +407,7 @@ public:
     }
 };
 
-class TerrainNormalMappedShadowsRenderer final : public IRenderer<ShadowsRenderContextUserData> {
+class TerrainBumplMappedShadowsRenderer final : public IRenderer<ShadowsRenderContextUserData> {
 private:
     struct Uniforms {
         alignas(16) glm::mat4 modelMatrix;
@@ -547,12 +429,12 @@ private:
     std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
 
 public:
-    TerrainNormalMappedShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    TerrainBumplMappedShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
 
-    ~TerrainNormalMappedShadowsRenderer() = default;
+    ~TerrainBumplMappedShadowsRenderer() = default;
 
 public:
     void Init() override
@@ -561,15 +443,15 @@ public:
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<TerrainNormalMappedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_normal_mapped_shadows_vert.spv") } });
+        m_shader = shaderFactory.CreateShaderFromFiles<TerrainBumpMappedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_normal_mapped_shadows_vert.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
-        LOGI("Terrain Normal Mapped Shadows Shader created\n");
+        LOGI("Terrain Bump Mapped Shadows Shader created\n");
 
-        m_pipeline = std::make_unique<TerrainNormalMappedShadowsPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline = std::make_unique<TerrainBumpMappedShadowsPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
-        LOGI("Terrain Normal Mapped Shadows Pipeline created\n");
+        LOGI("Terrain Bump Mapped Shadows Pipeline created\n");
 
         m_uniformsPool = std::make_unique<UBOPool<Uniforms> >(*allocator);
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
@@ -591,125 +473,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
-            bool visible = true;
-            if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-                visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);
-            }
-
-            if (visible) {
-                const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
-                const auto terrainComponent = ComponentRepository<ITerrainComponenet>::Instance().Get(node->GetId());
-                auto ubo = m_uniformsPool->GetNext();
-
-                Uniforms uniforms{};
-                uniforms.projectionMatrix = shadowsRenderContext.projectionMatrix;
-                uniforms.viewMatrix = shadowsRenderContext.viewMatrix;
-                uniforms.modelMatrix = transformComponent->GetWorldTransformScaled();
-                ubo->Update(&uniforms);
-
-                m_shader->Bind("ubo", *ubo);
-
-                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                const VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };
-                const VkDeviceSize offsets[] = { 0 };
-
-                vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-                vkCmdBindIndexBuffer(renderContext.commandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, terrainComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-                vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-
-                vkCmdDrawIndexed(renderContext.commandBuffer, terrainComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
-            }
-        }
-
-        for (auto child : node->GetChildren()) {
-            Render(renderContext, child, shadowsRenderContext);
-        }
-    }
-
-    void PostRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
-    {
-    }
-
-    void AfterRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
-    {
-    }
-
-    void ShutDown() override
-    {
-        m_pipeline->ShutDown();
-
-        m_shader->ShutDown();
-    }
-};
-
-class TerrainParallaxMappedShadowsRenderer final : public IRenderer<ShadowsRenderContextUserData> {
-private:
-    struct Uniforms {
-        alignas(16) glm::mat4 modelMatrix;
-        alignas(16) glm::mat4 viewMatrix;
-        alignas(16) glm::mat4 projectionMatrix;
-    };
-
-private:
-    const uint32_t m_descriptorCount{ 3000 };
-
-private:
-    std::shared_ptr<RenderPass> m_renderPass;
-
-private:
-    std::unique_ptr<Shader> m_shader;
-
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
-
-    std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
-
-public:
-    TerrainParallaxMappedShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
-        : m_renderPass(renderPass)
-    {
-    }
-
-    ~TerrainParallaxMappedShadowsRenderer() = default;
-
-public:
-    void Init() override
-    {
-        auto device = DeviceProvider::Instance().GetDevice();
-        auto allocator = AllocatorProvider::Instance().GetAllocator();
-
-        ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<TerrainParallaxMappedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_parallax_mapped_shadows_vert.spv") } });
-        m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
-
-        LOGI("Terrain Parallax Mapped Shadows Shader created\n");
-
-        m_pipeline = std::make_unique<TerrainParallaxMappedShadowsPipeline>(*device, *m_renderPass, *m_shader);
-        m_pipeline->Init();
-
-        LOGI("Terrain Parallax Mapped Shadows Pipeline created\n");
-
-        m_uniformsPool = std::make_unique<UBOPool<Uniforms> >(*allocator);
-        m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
-    }
-
-    void BeforeRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
-    {
-    }
-
-    void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
-    {
-        const VkRect2D scissor = { { 0, 0 }, shadowsRenderContext.extent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
-
-        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
-    }
-
-    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
-    {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TRANSFORM_COMPONENT }) && node->GetFlags().HasAny(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);
@@ -884,7 +648,7 @@ public:
     }
 };
 
-class AnimationNormalMappedShadowsRenderer final : public IRenderer<ShadowsRenderContextUserData> {
+class AnimationBumpMappedShadowsRenderer final : public IRenderer<ShadowsRenderContextUserData> {
 private:
     struct Uniforms {
         alignas(16) glm::mat4 modelMatrix;
@@ -907,12 +671,12 @@ private:
     std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
 
 public:
-    AnimationNormalMappedShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    AnimationBumpMappedShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
 
-    ~AnimationNormalMappedShadowsRenderer() = default;
+    ~AnimationBumpMappedShadowsRenderer() = default;
 
 public:
     void Init() override
@@ -921,15 +685,15 @@ public:
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<AnimatedNormalMappedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_normal_mapped_shadows_vert.spv") } });
+        m_shader = shaderFactory.CreateShaderFromFiles<AnimatedBumplMappedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_normal_mapped_shadows_vert.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
-        LOGI("Animation Normal Mapped Shadows Shader created\n");
+        LOGI("Animation Bump Mapped Shadows Shader created\n");
 
-        m_pipeline = std::make_unique<AnimatedNormalMappedShadowsPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline = std::make_unique<AnimatedBumpMappedShadowsPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
-        LOGI("Animation Normal Mapped Shadows Pipeline created\n");
+        LOGI("Animation Bump Mapped Shadows Pipeline created\n");
 
         m_uniformsPool = std::make_unique<UBOPool<Uniforms> >(*allocator);
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
@@ -951,130 +715,7 @@ public:
 
     void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderUserData) override
     {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
-            bool visible = true;
-            if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-                visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderUserData.frustum);
-            }
-
-            const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
-            const auto renderComponent = ComponentRepository<IAnimationRenderComponent>::Instance().Get(node->GetId());
-            if (renderComponent->CastsShadows() && visible) {
-                auto ubo = m_uniformsPool->GetNext();
-
-                Uniforms uniforms{};
-                const auto& bones = renderComponent->GetAnimation()->GetBoneTransforms();
-                for (size_t i = 0; i < bones.size(); i++) {
-                    uniforms.bones[i] = bones[i];
-                }
-                uniforms.projectionMatrix = shadowsRenderUserData.projectionMatrix;
-                uniforms.viewMatrix = shadowsRenderUserData.viewMatrix;
-                uniforms.modelMatrix = transformComponent->GetWorldTransformScaled();
-                ubo->Update(&uniforms);
-
-                m_shader->Bind("ubo", *ubo);
-
-                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                const VkBuffer vertexBuffers[] = { *renderComponent->GetModel()->GetVertexBuffer() };
-                const VkDeviceSize offsets[] = { 0 };
-
-                vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-                vkCmdBindIndexBuffer(renderContext.commandBuffer, *renderComponent->GetModel()->GetIndexBuffer(), 0, renderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-                vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-
-                vkCmdDrawIndexed(renderContext.commandBuffer, renderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
-            }
-        }
-
-        for (auto child : node->GetChildren()) {
-            Render(renderContext, child, shadowsRenderUserData);
-        }
-    }
-
-    void PostRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
-    {
-    }
-
-    void AfterRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
-    {
-    }
-
-    void ShutDown() override
-    {
-        m_pipeline->ShutDown();
-
-        m_shader->ShutDown();
-    }
-};
-
-class AnimationParallaxMappedShadowsRenderer final : public IRenderer<ShadowsRenderContextUserData> {
-private:
-    struct Uniforms {
-        alignas(16) glm::mat4 modelMatrix;
-        alignas(16) glm::mat4 viewMatrix;
-        alignas(16) glm::mat4 projectionMatrix;
-        alignas(16) glm::mat4 bones[MAX_BONES_COUNT];
-    };
-
-private:
-    const uint32_t m_descriptorCount{ 1000 };
-
-private:
-    std::shared_ptr<RenderPass> m_renderPass;
-
-private:
-    std::unique_ptr<Shader> m_shader;
-
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
-
-    std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
-
-public:
-    AnimationParallaxMappedShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
-        : m_renderPass(renderPass)
-    {
-    }
-
-    ~AnimationParallaxMappedShadowsRenderer() = default;
-
-public:
-    void Init() override
-    {
-        auto device = DeviceProvider::Instance().GetDevice();
-        auto allocator = AllocatorProvider::Instance().GetAllocator();
-
-        ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<AnimatedNormalMappedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_parallax_mapped_shadows_vert.spv") } });
-        m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
-
-        LOGI("Animation Parallax Mapped Shadows Shader created\n");
-
-        m_pipeline = std::make_unique<AnimatedNormalMappedShadowsPipeline>(*device, *m_renderPass, *m_shader);
-        m_pipeline->Init();
-
-        LOGI("Animation Parallax Mapped Shadows Pipeline created\n");
-
-        m_uniformsPool = std::make_unique<UBOPool<Uniforms> >(*allocator);
-        m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
-    }
-
-    void BeforeRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
-    {
-    }
-
-    void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
-    {
-        const VkRect2D scissor = { { 0, 0 }, shadowsRenderContext.extent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
-
-        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
-    }
-
-    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderUserData) override
-    {
-        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::ANIMATION_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TRANSFORM_COMPONENT }) && node->GetFlags().HasAny(FlagSet<SceneNodeFlags>{ SceneNodeFlags::ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::ANIMATION_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::ANIMATION_CONE_STEP_MAPPED_RENDER_COMPONENT })) {
             bool visible = true;
             if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
                 visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderUserData.frustum);
@@ -6078,25 +5719,19 @@ private:
         const auto shadowsComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>(TagSet{ TAG_SHADOW });
 
         m_defaultShadowsRenderer = std::make_shared<DefaultShadowsRenderer>(shadowsComponent->GetRenderPass());
-        m_normalMappedShadowsRenderer = std::make_shared<NormalMappedShadowsRenderer>(shadowsComponent->GetRenderPass());
-        m_parallaxMappedShadowsRenderer = std::make_shared<ParallaxMappedShadowsRenderer>(shadowsComponent->GetRenderPass());
+        m_bumpMappedShadowsRenderer = std::make_shared<BumpMappedShadowsRenderer>(shadowsComponent->GetRenderPass());
         m_terrainShadowsRenderer = std::make_shared<TerrainShadowsRenderer>(shadowsComponent->GetRenderPass());
-        m_terrainNormalMappedShadowsRenderer = std::make_shared<TerrainNormalMappedShadowsRenderer>(shadowsComponent->GetRenderPass());
-        m_terrainParallaxMappedShadowsRenderer = std::make_shared<TerrainParallaxMappedShadowsRenderer>(shadowsComponent->GetRenderPass());
+        m_terrainBumpMappedShadowsRenderer = std::make_shared<TerrainBumplMappedShadowsRenderer>(shadowsComponent->GetRenderPass());
         m_animationShadowsRenderer = std::make_shared<AnimationShadowsRenderer>(shadowsComponent->GetRenderPass());
-        m_animationNormalMappedShadowsRenderer = std::make_shared<AnimationNormalMappedShadowsRenderer>(shadowsComponent->GetRenderPass());
-        m_animationParallaxMappedShadowsRenderer = std::make_shared<AnimationParallaxMappedShadowsRenderer>(shadowsComponent->GetRenderPass());
+        m_animationBumpMappedShadowsRenderer = std::make_shared<AnimationBumpMappedShadowsRenderer>(shadowsComponent->GetRenderPass());
 
         m_shadowRenderers = {
             m_defaultShadowsRenderer,
-            m_normalMappedShadowsRenderer,
-            m_parallaxMappedShadowsRenderer,
+            m_bumpMappedShadowsRenderer,
             m_terrainShadowsRenderer,
-            m_terrainNormalMappedShadowsRenderer,
-            m_terrainParallaxMappedShadowsRenderer,
+            m_terrainBumpMappedShadowsRenderer,
             m_animationShadowsRenderer,
-            m_animationNormalMappedShadowsRenderer,
-            m_animationParallaxMappedShadowsRenderer
+            m_animationBumpMappedShadowsRenderer
         };
 
         for (auto& shadowRenderer : m_shadowRenderers) {
@@ -6639,21 +6274,15 @@ private:
     // Shadows
     std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_defaultShadowsRenderer;
 
-    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_normalMappedShadowsRenderer;
-
-    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_parallaxMappedShadowsRenderer;
+    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_bumpMappedShadowsRenderer;
 
     std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_terrainShadowsRenderer;
 
-    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_terrainNormalMappedShadowsRenderer;
-
-    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_terrainParallaxMappedShadowsRenderer;
+    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_terrainBumpMappedShadowsRenderer;
 
     std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_animationShadowsRenderer;
 
-    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_animationNormalMappedShadowsRenderer;
-
-    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_animationParallaxMappedShadowsRenderer;
+    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_animationBumpMappedShadowsRenderer;
 
     std::vector<std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > > m_shadowRenderers;
 

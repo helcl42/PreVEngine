@@ -542,14 +542,14 @@ public:
     }
 };
 
-class NormalMappedShadowsShader final : public Shader {
+class BumpMappedShadowsShader final : public Shader {
 public:
-    NormalMappedShadowsShader(const VkDevice device)
+    BumpMappedShadowsShader(const VkDevice device)
         : Shader(device)
     {
     }
 
-    ~NormalMappedShadowsShader() = default;
+    ~BumpMappedShadowsShader() = default;
 
 private:
     void InitVertexInputs() override
@@ -576,118 +576,14 @@ private:
     }
 };
 
-class NormalMappedShadowsPipeline final : public AbstractGraphicsPipeline {
+class BumpMappedShadowsPipeline final : public AbstractGraphicsPipeline {
 public:
-    NormalMappedShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    BumpMappedShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
 
-    ~NormalMappedShadowsPipeline() = default;
-
-public:
-    VkPipeline Init() override
-    {
-        VkPipelineFactory pipelineFactory{};
-        pipelineFactory.CreateShadowsPipeline(m_device, m_renderPass, m_shaders, m_pipelineLayout, m_graphicsPipeline);
-        return m_graphicsPipeline;
-    }
-};
-
-class ParallaxMappedShadowsShader final : public Shader {
-public:
-    ParallaxMappedShadowsShader(const VkDevice device)
-        : Shader(device)
-    {
-    }
-
-    ~ParallaxMappedShadowsShader() = default;
-
-private:
-    void InitVertexInputs() override
-    {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
-
-        m_inputAttributeDescriptions = {
-            VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
-            VkUtils::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
-            VkUtils::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })),
-            VkUtils::CreateVertexInputAttributeDescription(0, 3, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 })),
-            VkUtils::CreateVertexInputAttributeDescription(0, 4, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 })),
-        };
-    }
-
-    void InitDescriptorSets() override
-    {
-        // vertex shader
-        AddDescriptorSet("ubo", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT);
-    }
-
-    void InitPushConstantsBlocks() override
-    {
-    }
-};
-
-class ParallaxMappedShadowsPipeline final : public AbstractGraphicsPipeline {
-public:
-    ParallaxMappedShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
-        : AbstractGraphicsPipeline(device, renderpass, shaders)
-    {
-    }
-
-    ~ParallaxMappedShadowsPipeline() = default;
-
-public:
-    VkPipeline Init() override
-    {
-        VkPipelineFactory pipelineFactory{};
-        pipelineFactory.CreateShadowsPipeline(m_device, m_renderPass, m_shaders, m_pipelineLayout, m_graphicsPipeline);
-        return m_graphicsPipeline;
-    }
-};
-
-class ConeStepMappedShadowsShader final : public Shader {
-public:
-    ConeStepMappedShadowsShader(const VkDevice device)
-        : Shader(device)
-    {
-    }
-
-    ~ConeStepMappedShadowsShader() = default;
-
-private:
-    void InitVertexInputs() override
-    {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
-
-        m_inputAttributeDescriptions = {
-            VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
-            VkUtils::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
-            VkUtils::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })),
-            VkUtils::CreateVertexInputAttributeDescription(0, 3, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 })),
-            VkUtils::CreateVertexInputAttributeDescription(0, 4, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 })),
-        };
-    }
-
-    void InitDescriptorSets() override
-    {
-        // vertex shader
-        AddDescriptorSet("ubo", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT);
-    }
-
-    void InitPushConstantsBlocks() override
-    {
-    }
-};
-
-class ConeStepShadowsPipeline final : public AbstractGraphicsPipeline {
-public:
-    ConeStepShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
-        : AbstractGraphicsPipeline(device, renderpass, shaders)
-    {
-    }
-
-    ~ConeStepShadowsPipeline() = default;
+    ~BumpMappedShadowsPipeline() = default;
 
 public:
     VkPipeline Init() override
@@ -748,14 +644,14 @@ public:
     }
 };
 
-class TerrainNormalMappedShadowsShader final : public Shader {
+class TerrainBumpMappedShadowsShader final : public Shader {
 public:
-    TerrainNormalMappedShadowsShader(const VkDevice device)
+    TerrainBumpMappedShadowsShader(const VkDevice device)
         : Shader(device)
     {
     }
 
-    ~TerrainNormalMappedShadowsShader() = default;
+    ~TerrainBumpMappedShadowsShader() = default;
 
 private:
     void InitVertexInputs() override
@@ -782,118 +678,14 @@ private:
     }
 };
 
-class TerrainNormalMappedShadowsPipeline final : public AbstractGraphicsPipeline {
+class TerrainBumpMappedShadowsPipeline final : public AbstractGraphicsPipeline {
 public:
-    TerrainNormalMappedShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    TerrainBumpMappedShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
 
-    ~TerrainNormalMappedShadowsPipeline() = default;
-
-public:
-    VkPipeline Init() override
-    {
-        VkPipelineFactory pipelineFactory{};
-        pipelineFactory.CreateShadowsPipeline(m_device, m_renderPass, m_shaders, m_pipelineLayout, m_graphicsPipeline);
-        return m_graphicsPipeline;
-    }
-};
-
-class TerrainParallaxMappedShadowsShader final : public Shader {
-public:
-    TerrainParallaxMappedShadowsShader(const VkDevice device)
-        : Shader(device)
-    {
-    }
-
-    ~TerrainParallaxMappedShadowsShader() = default;
-
-private:
-    void InitVertexInputs() override
-    {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
-
-        m_inputAttributeDescriptions = {
-            VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
-            VkUtils::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
-            VkUtils::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })),
-            VkUtils::CreateVertexInputAttributeDescription(0, 3, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 })),
-            VkUtils::CreateVertexInputAttributeDescription(0, 4, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 })),
-        };
-    }
-
-    void InitDescriptorSets() override
-    {
-        // vertex shader
-        AddDescriptorSet("ubo", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT);
-    }
-
-    void InitPushConstantsBlocks() override
-    {
-    }
-};
-
-class TerrainParallaxMappedShadowsPipeline final : public AbstractGraphicsPipeline {
-public:
-    TerrainParallaxMappedShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
-        : AbstractGraphicsPipeline(device, renderpass, shaders)
-    {
-    }
-
-    ~TerrainParallaxMappedShadowsPipeline() = default;
-
-public:
-    VkPipeline Init() override
-    {
-        VkPipelineFactory pipelineFactory{};
-        pipelineFactory.CreateShadowsPipeline(m_device, m_renderPass, m_shaders, m_pipelineLayout, m_graphicsPipeline);
-        return m_graphicsPipeline;
-    }
-};
-
-class TerrainConeStepMappedShadowsShader final : public Shader {
-public:
-    TerrainConeStepMappedShadowsShader(const VkDevice device)
-        : Shader(device)
-    {
-    }
-
-    ~TerrainConeStepMappedShadowsShader() = default;
-
-private:
-    void InitVertexInputs() override
-    {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
-
-        m_inputAttributeDescriptions = {
-            VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
-            VkUtils::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
-            VkUtils::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })),
-            VkUtils::CreateVertexInputAttributeDescription(0, 3, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 })),
-            VkUtils::CreateVertexInputAttributeDescription(0, 4, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 })),
-        };
-    }
-
-    void InitDescriptorSets() override
-    {
-        // vertex shader
-        AddDescriptorSet("ubo", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT);
-    }
-
-    void InitPushConstantsBlocks() override
-    {
-    }
-};
-
-class TerrainConeStepMappedShadowsPipeline final : public AbstractGraphicsPipeline {
-public:
-    TerrainConeStepMappedShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
-        : AbstractGraphicsPipeline(device, renderpass, shaders)
-    {
-    }
-
-    ~TerrainConeStepMappedShadowsPipeline() = default;
+    ~TerrainBumpMappedShadowsPipeline() = default;
 
 public:
     VkPipeline Init() override
@@ -956,14 +748,14 @@ public:
     }
 };
 
-class AnimatedNormalMappedShadowsShader final : public Shader {
+class AnimatedBumplMappedShadowsShader final : public Shader {
 public:
-    AnimatedNormalMappedShadowsShader(const VkDevice device)
+    AnimatedBumplMappedShadowsShader(const VkDevice device)
         : Shader(device)
     {
     }
 
-    ~AnimatedNormalMappedShadowsShader() = default;
+    ~AnimatedBumplMappedShadowsShader() = default;
 
 private:
     void InitVertexInputs() override
@@ -992,122 +784,14 @@ private:
     }
 };
 
-class AnimatedNormalMappedShadowsPipeline final : public AbstractGraphicsPipeline {
+class AnimatedBumpMappedShadowsPipeline final : public AbstractGraphicsPipeline {
 public:
-    AnimatedNormalMappedShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    AnimatedBumpMappedShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
 
-    ~AnimatedNormalMappedShadowsPipeline() = default;
-
-public:
-    VkPipeline Init() override
-    {
-        VkPipelineFactory pipelineFactory{};
-        pipelineFactory.CreateShadowsPipeline(m_device, m_renderPass, m_shaders, m_pipelineLayout, m_graphicsPipeline);
-        return m_graphicsPipeline;
-    }
-};
-
-class AnimatedParallaxMappedShadowsShader final : public Shader {
-public:
-    AnimatedParallaxMappedShadowsShader(const VkDevice device)
-        : Shader(device)
-    {
-    }
-
-    ~AnimatedParallaxMappedShadowsShader() = default;
-
-private:
-    void InitVertexInputs() override
-    {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
-
-        m_inputAttributeDescriptions = {
-            VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
-            VkUtils::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
-            VkUtils::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })),
-            VkUtils::CreateVertexInputAttributeDescription(0, 3, VK_FORMAT_R32G32B32A32_SINT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 })),
-            VkUtils::CreateVertexInputAttributeDescription(0, 4, VK_FORMAT_R32G32B32A32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4 })),
-            VkUtils::CreateVertexInputAttributeDescription(0, 5, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4, VertexLayoutComponent::VEC4 })),
-            VkUtils::CreateVertexInputAttributeDescription(0, 6, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC3 }))
-        };
-    }
-
-    void InitDescriptorSets() override
-    {
-        // vertex shader
-        AddDescriptorSet("ubo", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT);
-    }
-
-    void InitPushConstantsBlocks() override
-    {
-    }
-};
-
-class AnimatedParallaxMappedShadowsPipeline final : public AbstractGraphicsPipeline {
-public:
-    AnimatedParallaxMappedShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
-        : AbstractGraphicsPipeline(device, renderpass, shaders)
-    {
-    }
-
-    ~AnimatedParallaxMappedShadowsPipeline() = default;
-
-public:
-    VkPipeline Init() override
-    {
-        VkPipelineFactory pipelineFactory{};
-        pipelineFactory.CreateShadowsPipeline(m_device, m_renderPass, m_shaders, m_pipelineLayout, m_graphicsPipeline);
-        return m_graphicsPipeline;
-    }
-};
-
-class AnimatedConeStepMappedShadowsShader final : public Shader {
-public:
-    AnimatedConeStepMappedShadowsShader(const VkDevice device)
-        : Shader(device)
-    {
-    }
-
-    ~AnimatedConeStepMappedShadowsShader() = default;
-
-private:
-    void InitVertexInputs() override
-    {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
-
-        m_inputAttributeDescriptions = {
-            VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
-            VkUtils::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
-            VkUtils::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })),
-            VkUtils::CreateVertexInputAttributeDescription(0, 3, VK_FORMAT_R32G32B32A32_SINT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 })),
-            VkUtils::CreateVertexInputAttributeDescription(0, 4, VK_FORMAT_R32G32B32A32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4 })),
-            VkUtils::CreateVertexInputAttributeDescription(0, 5, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4, VertexLayoutComponent::VEC4 })),
-            VkUtils::CreateVertexInputAttributeDescription(0, 6, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC3 }))
-        };
-    }
-
-    void InitDescriptorSets() override
-    {
-        // vertex shader
-        AddDescriptorSet("ubo", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT);
-    }
-
-    void InitPushConstantsBlocks() override
-    {
-    }
-};
-
-class AnimatedConeStepMappedShadowsPipeline final : public AbstractGraphicsPipeline {
-public:
-    AnimatedConeStepMappedShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
-        : AbstractGraphicsPipeline(device, renderpass, shaders)
-    {
-    }
-
-    ~AnimatedConeStepMappedShadowsPipeline() = default;
+    ~AnimatedBumpMappedShadowsPipeline() = default;
 
 public:
     VkPipeline Init() override
