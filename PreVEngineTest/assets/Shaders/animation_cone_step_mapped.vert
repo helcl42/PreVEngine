@@ -4,7 +4,11 @@
 
 #include "lights.glsl"
 
+const int MAX_BONES_COUNT = 100;
+
 layout(std140, binding = 0) uniform UniformBufferObject {
+	mat4 bones[MAX_BONES_COUNT];
+
     mat4 modelMatrix;
 
     mat4 viewMatrix;
@@ -26,8 +30,10 @@ layout(std140, binding = 0) uniform UniformBufferObject {
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 inTextureCoord;
 layout(location = 2) in vec3 inNormal;
-layout(location = 3) in vec3 inTangent;
-layout(location = 4) in vec3 inBiTangent;
+layout(location = 3) in ivec4 inBoneIds;
+layout(location = 4) in vec4 inWeights;
+layout(location = 5) in vec3 inTangent;
+layout(location = 6) in vec3 inBiTangent;
 
 layout(location = 0) out vec2 outTextureCoord;
 layout(location = 1) out vec3 outWorldPosition;
@@ -37,9 +43,17 @@ layout(location = 4) out vec3 outTangent;
 layout(location = 5) out vec3 outBiTangent;
 layout(location = 6) out vec3 outNornal;
 
-void main() 
+void main()
 {
-	vec4 worldPosition = uboVS.modelMatrix * vec4(inPosition, 1.0);
+	mat4 boneTransform = uboVS.bones[inBoneIds[0]] * inWeights[0];
+	boneTransform += uboVS.bones[inBoneIds[1]] * inWeights[1];
+	boneTransform += uboVS.bones[inBoneIds[2]] * inWeights[2];
+	boneTransform += uboVS.bones[inBoneIds[3]] * inWeights[3];
+
+	vec4 positionL = boneTransform * vec4(inPosition, 1.0);
+	vec4 normalL = boneTransform * vec4(inNormal, 0.0);
+
+	vec4 worldPosition = uboVS.modelMatrix * vec4(positionL.xyz, 1.0);
 	outWorldPosition = worldPosition.xyz;
 
 	gl_ClipDistance[0] = dot(worldPosition, uboVS.clipPlane);

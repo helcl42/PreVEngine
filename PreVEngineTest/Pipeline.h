@@ -1531,14 +1531,14 @@ public:
     }
 };
 
-class AnimationConeStepMappedMappedShader final : public Shader {
+class AnimationConeStepMappedShader final : public Shader {
 public:
-    AnimationConeStepMappedMappedShader(const VkDevice device)
+    AnimationConeStepMappedShader(const VkDevice device)
         : Shader(device)
     {
     }
 
-    ~AnimationConeStepMappedMappedShader() = default;
+    ~AnimationConeStepMappedShader() = default;
 
 private:
     void InitVertexInputs() override

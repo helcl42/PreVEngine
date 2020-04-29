@@ -3398,7 +3398,7 @@ public:
                 uniformsVS.textureOffset = glm::vec4(nodeRenderComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
                 uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
                 for (size_t i = 0; i < lightComponents.size(); i++) {
-                    uniformsVS.lightning.lights[i] = LightUniform(renderContextUserData.viewMatrix * glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
+                    uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
                 }
                 uniformsVS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
                 uniformsVS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
@@ -3420,7 +3420,7 @@ public:
 
                 // lightning
                 for (size_t i = 0; i < lightComponents.size(); i++) {
-                    uniformsFS.lightning.lights[i] = LightUniform(renderContextUserData.viewMatrix * glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
+                    uniformsFS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
                 }
                 uniformsFS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
                 uniformsFS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
@@ -3675,10 +3675,284 @@ public:
                 uniformsVS.textureOffset = glm::vec4(nodeRenderComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
                 uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
                 for (size_t i = 0; i < lightComponents.size(); i++) {
-                    uniformsVS.lightning.lights[i] = LightUniform(renderContextUserData.viewMatrix * glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
+                    uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
                 }
                 uniformsVS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
                 uniformsVS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
+                uniformsVS.density = FOG_DENSITY;
+                uniformsVS.gradient = FOG_GRADIENT;
+                uniformsVS.clipPlane = renderContextUserData.clipPlane;
+
+                uboVS->Update(&uniformsVS);
+
+                auto uboFS = m_uniformsPoolFS->GetNext();
+
+                UniformsFS uniformsFS{};
+                // shadows
+                for (uint32_t i = 0; i < ShadowsComponent::CASCADES_COUNT; i++) {
+                    auto& cascade = shadowsComponent->GetCascade(i);
+                    uniformsFS.shadows.cascades[i] = ShadowsCascadeUniform(cascade.GetBiasedViewProjectionMatrix(), glm::vec4(cascade.endSplitDepth));
+                }
+                uniformsFS.shadows.enabled = SHADOWS_ENABLED;
+
+                // lightning
+                for (size_t i = 0; i < lightComponents.size(); i++) {
+                    uniformsFS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
+                }
+                uniformsFS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
+                uniformsFS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
+
+                // material
+                uniformsFS.material = MaterialUniform(nodeRenderComponent->GetMaterial()->GetShineDamper(), nodeRenderComponent->GetMaterial()->GetReflectivity());
+
+                // common
+                uniformsFS.fogColor = FOG_COLOR;
+                uniformsFS.selectedColor = SELECTED_COLOR;
+                uniformsFS.selected = false;
+                uniformsFS.castedByShadows = nodeRenderComponent->IsCastedByShadows();
+
+                // scaler for heightMap values
+                uniformsFS.heightScale = nodeRenderComponent->GetMaterial()->GetHeightScale();
+                // Basic parallax mapping needs a bias to look any good (and is hard to tweak)
+                uniformsFS.parallaxBias = -0.02f;
+                // Number of layers for steep parallax and parallax occlusion (more layer = better result for less performance)
+                uniformsFS.numLayers = 12;
+                // (Parallax) mapping mode to use 1, 2, 3 otherwise it behaves like normal mapping only(no uv offset is computed)
+                uniformsFS.mappingMode = 3;
+
+                uboFS->Update(&uniformsFS);
+
+                m_shader->Bind("textureSampler", *nodeRenderComponent->GetMaterial()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                m_shader->Bind("normalSampler", *nodeRenderComponent->GetMaterial()->GetNormalmageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                m_shader->Bind("heightSampler", *nodeRenderComponent->GetMaterial()->GetHeightImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), shadowsComponent->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+                m_shader->Bind("uboVS", *uboVS);
+                m_shader->Bind("uboFS", *uboFS);
+
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *nodeRenderComponent->GetModel()->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
+
+                vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+                vkCmdBindIndexBuffer(renderContext.commandBuffer, *nodeRenderComponent->GetModel()->GetIndexBuffer(), 0, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+                vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+                vkCmdDrawIndexed(renderContext.commandBuffer, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+            }
+        }
+
+        for (auto child : node->GetChildren()) {
+            Render(renderContext, child, renderContextUserData);
+        }
+    }
+
+    void PostRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void AfterRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void ShutDown() override
+    {
+        m_shader->ShutDown();
+
+        m_pipeline->ShutDown();
+    }
+};
+
+class AnimationConeStepMappedRenderer final : public IRenderer<NormalRenderContextUserData> {
+private:
+    struct ShadowsCascadeUniform {
+        glm::mat4 viewProjectionMatrix;
+
+        glm::vec4 split;
+
+        ShadowsCascadeUniform() = default;
+
+        ShadowsCascadeUniform(const glm::mat4& vpMat, const glm::vec4& spl)
+            : viewProjectionMatrix(vpMat)
+            , split(spl)
+        {
+        }
+    };
+
+    struct ShadowsUniform {
+        ShadowsCascadeUniform cascades[ShadowsComponent::CASCADES_COUNT];
+
+        uint32_t enabled;
+    };
+
+    struct LightUniform {
+        glm::vec4 position;
+
+        glm::vec4 color;
+
+        glm::vec4 attenuation;
+
+        LightUniform() = default;
+
+        LightUniform(const glm::vec4& pos, const glm::vec4& col, const glm::vec4& atten)
+            : position(pos)
+            , color(col)
+            , attenuation(atten)
+        {
+        }
+    };
+
+    struct LightningUniform {
+        LightUniform lights[MAX_LIGHT_COUNT];
+
+        uint32_t realCountOfLights;
+
+        float ambientFactor;
+    };
+
+    struct MaterialUniform {
+        float shineDamper;
+
+        float reflectivity;
+
+        MaterialUniform() = default;
+
+        MaterialUniform(const float shineDaperr, const float reflect)
+            : shineDamper(shineDaperr)
+            , reflectivity(reflect)
+        {
+        }
+    };
+
+    struct alignas(16) UniformsVS
+    {
+        alignas(16) glm::mat4 bones[MAX_BONES_COUNT];
+
+        alignas(16) glm::mat4 modelMatrix;
+
+        alignas(16) glm::mat4 viewMatrix;
+
+        alignas(16) glm::mat4 projectionMatrix;
+
+        alignas(16) glm::mat4 normalMatrix;
+
+        alignas(16) glm::vec4 clipPlane;
+
+        alignas(16) glm::vec4 textureOffset;
+
+        alignas(16) uint32_t textureNumberOfRows;
+        float density;
+        float gradient;
+    };
+
+    struct alignas(16) UniformsFS
+    {
+        alignas(16) ShadowsUniform shadows;
+
+        alignas(16) LightningUniform lightning;
+
+        alignas(16) MaterialUniform material;
+
+        alignas(16) glm::vec4 fogColor;
+
+        alignas(16) glm::vec4 selectedColor;
+
+        alignas(16) uint32_t selected;
+        uint32_t castedByShadows;
+        float heightScale;
+        float numLayers;
+    };
+
+private:
+    const uint32_t m_descriptorCount{ 1000 };
+
+private:
+    std::shared_ptr<RenderPass> m_renderPass;
+
+private:
+    std::unique_ptr<Shader> m_shader;
+
+    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+
+    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+
+    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+
+public:
+    AnimationConeStepMappedRenderer(const std::shared_ptr<RenderPass>& renderPass)
+        : m_renderPass(renderPass)
+    {
+    }
+
+    ~AnimationConeStepMappedRenderer() = default;
+
+public:
+    void Init() override
+    {
+        auto device = DeviceProvider::Instance().GetDevice();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
+
+        ShaderFactory shaderFactory;
+        m_shader = shaderFactory.CreateShaderFromFiles<AnimationConeStepMappedShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_cone_step_mapped_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_cone_step_mapped_frag.spv") } });
+        m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
+
+        LOGI("Animation Cone Step Mapped Shader created\n");
+
+        m_pipeline = std::make_unique<AnimationConeStepMappedPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline->Init();
+
+        LOGI("Animation Cone Step Mapped Pipeline created\n");
+
+        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+
+        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    }
+
+    void BeforeRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
+    }
+
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::ANIMATION_CONE_STEP_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
+
+            bool visible = true;
+            if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
+                visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
+            }
+
+            if (visible) {
+                const auto mainLightComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+                const auto shadowsComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+                const auto lightComponents = NodeComponentHelper::FindAll<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
+
+                const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
+                const auto nodeRenderComponent = ComponentRepository<IAnimationRenderComponent>::Instance().Get(node->GetId());
+
+                auto uboVS = m_uniformsPoolVS->GetNext();
+
+                UniformsVS uniformsVS{};
+                const auto& bones = nodeRenderComponent->GetAnimation()->GetBoneTransforms();
+                for (size_t i = 0; i < bones.size(); i++) {
+                    uniformsVS.bones[i] = bones[i];
+                }
+                uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
+                uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
+                uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
+                uniformsVS.normalMatrix = glm::inverse(transformComponent->GetWorldTransformScaled());
+                uniformsVS.textureNumberOfRows = nodeRenderComponent->GetMaterial()->GetAtlasNumberOfRows();
+                uniformsVS.textureOffset = glm::vec4(nodeRenderComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
                 uniformsVS.density = FOG_DENSITY;
                 uniformsVS.gradient = FOG_GRADIENT;
                 uniformsVS.clipPlane = renderContextUserData.clipPlane;
@@ -3710,15 +3984,8 @@ public:
                 uniformsFS.selectedColor = SELECTED_COLOR;
                 uniformsFS.selected = false;
                 uniformsFS.castedByShadows = nodeRenderComponent->IsCastedByShadows();
-
-                // scaler for heightMap values
                 uniformsFS.heightScale = nodeRenderComponent->GetMaterial()->GetHeightScale();
-                // Basic parallax mapping needs a bias to look any good (and is hard to tweak)
-                uniformsFS.parallaxBias = -0.02f;
-                // Number of layers for steep parallax and parallax occlusion (more layer = better result for less performance)
                 uniformsFS.numLayers = 12;
-                // (Parallax) mapping mode to use 1, 2, 3 otherwise it behaves like normal mapping only(no uv offset is computed)
-                uniformsFS.mappingMode = 3;
 
                 uboFS->Update(&uniformsFS);
 
@@ -5713,6 +5980,7 @@ private:
         m_animationRenderer = std::make_shared<AnimationRenderer>(m_defaultRenderPass);
         m_animationNormalMappedRenderer = std::make_shared<AnimationNormalMappedRenderer>(m_defaultRenderPass);
         m_animationParallaxMappedRenderer = std::make_shared<AnimationParallaxMappedRenderer>(m_defaultRenderPass);
+        m_animationConeStepMappedRenderer = std::make_shared<AnimationConeStepMappedRenderer>(m_defaultRenderPass);
         m_waterRenderer = std::make_shared<WaterRenderer>(m_defaultRenderPass);
         m_fontRenderer = std::make_shared<FontRenderer>(m_defaultRenderPass);
         m_particlesRenderer = std::make_shared<ParticlesRenderer>(m_defaultRenderPass);
@@ -5731,6 +5999,7 @@ private:
             m_animationRenderer,
             m_animationNormalMappedRenderer,
             m_animationParallaxMappedRenderer,
+            m_animationConeStepMappedRenderer,
             m_waterRenderer,
             m_fontRenderer,
             m_particlesRenderer
@@ -5868,6 +6137,7 @@ private:
         m_reflectionAnimationRenderer = std::make_shared<AnimationRenderer>(reflectionComponent->GetRenderPass());
         m_reflectionAnimationNormalMappedRenderer = std::make_shared<AnimationNormalMappedRenderer>(reflectionComponent->GetRenderPass());
         m_reflectionAnimationParallaxMappedRenderer = std::make_shared<AnimationParallaxMappedRenderer>(reflectionComponent->GetRenderPass());
+        m_reflectionAnimationConeStepMappedRenderer = std::make_shared<AnimationConeStepMappedRenderer>(reflectionComponent->GetRenderPass());
         m_reflectionParticlesRenderer = std::make_shared<ParticlesRenderer>(reflectionComponent->GetRenderPass());
 
         m_reflectionRenderers = {
@@ -5882,6 +6152,7 @@ private:
             m_reflectionAnimationRenderer,
             m_reflectionAnimationNormalMappedRenderer,
             m_reflectionAnimationParallaxMappedRenderer,
+            m_reflectionAnimationConeStepMappedRenderer,
             m_reflectionParticlesRenderer
         };
 
@@ -5921,6 +6192,7 @@ private:
         m_refractionAnimationRenderer = std::make_shared<AnimationRenderer>(refractionComponent->GetRenderPass());
         m_refractionAnimationNormalMappedRenderer = std::make_shared<AnimationNormalMappedRenderer>(refractionComponent->GetRenderPass());
         m_refractionAnimationParallaxMappedRenderer = std::make_shared<AnimationParallaxMappedRenderer>(refractionComponent->GetRenderPass());
+        m_refractionAnimationConeStepMappedRenderer = std::make_shared<AnimationConeStepMappedRenderer>(refractionComponent->GetRenderPass());
         m_refractionParticlesRenderer = std::make_shared<ParticlesRenderer>(refractionComponent->GetRenderPass());
 
         m_refractionRenderers = {
@@ -5935,6 +6207,7 @@ private:
             m_refractionAnimationRenderer,
             m_refractionAnimationNormalMappedRenderer,
             m_refractionAnimationParallaxMappedRenderer,
+            m_refractionAnimationConeStepMappedRenderer,
             m_refractionParticlesRenderer
         };
 
@@ -6334,6 +6607,8 @@ private:
 
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_animationParallaxMappedRenderer;
 
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_animationConeStepMappedRenderer;
+
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_waterRenderer;
 
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_fontRenderer;
@@ -6405,6 +6680,8 @@ private:
 
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionAnimationParallaxMappedRenderer;
 
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionAnimationConeStepMappedRenderer;
+
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionParticlesRenderer;
 
     std::vector<std::shared_ptr<IRenderer<NormalRenderContextUserData> > > m_reflectionRenderers;
@@ -6431,6 +6708,8 @@ private:
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionAnimationNormalMappedRenderer;
 
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionAnimationParallaxMappedRenderer;
+
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionAnimationConeStepMappedRenderer;
 
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionParticlesRenderer;
 
