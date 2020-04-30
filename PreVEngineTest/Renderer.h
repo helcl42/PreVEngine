@@ -207,15 +207,15 @@ public:
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<BumpMappedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/normal_mapped_shadows_vert.spv") } });
+        m_shader = shaderFactory.CreateShaderFromFiles<BumpMappedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/bump_mapped_shadows_vert.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
-        LOGI("Normal Bump Shadows Shader created\n");
+        LOGI("Bump Mapped Shadows Shader created\n");
 
         m_pipeline = std::make_unique<BumpMappedShadowsPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
-        LOGI("Normal Bump Shadows Pipeline created\n");
+        LOGI("Bump Mapped Shadows Pipeline created\n");
 
         m_uniformsPool = std::make_unique<UBOPool<Uniforms> >(*allocator);
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
@@ -443,7 +443,7 @@ public:
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<TerrainBumpMappedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_normal_mapped_shadows_vert.spv") } });
+        m_shader = shaderFactory.CreateShaderFromFiles<TerrainBumpMappedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_bump_mapped_shadows_vert.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
         LOGI("Terrain Bump Mapped Shadows Shader created\n");
@@ -685,7 +685,7 @@ public:
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<AnimatedBumplMappedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_normal_mapped_shadows_vert.spv") } });
+        m_shader = shaderFactory.CreateShaderFromFiles<AnimatedBumplMappedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_bump_mapped_shadows_vert.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
         LOGI("Animation Bump Mapped Shadows Shader created\n");
@@ -5586,7 +5586,7 @@ public:
 
 #ifndef ANDROID
         // Debug quad with shadowMap
-        //RenderDebug(renderContext, node);
+        RenderDebug(renderContext, node);
 #endif
     }
 
@@ -5690,7 +5690,7 @@ private:
 
         m_debugRenderers = {
             m_shadowMapDebugRenderer,
-            m_textureDebugRenderer
+            //m_textureDebugRenderer
         };
 
         for (auto& renderer : m_debugRenderers) {

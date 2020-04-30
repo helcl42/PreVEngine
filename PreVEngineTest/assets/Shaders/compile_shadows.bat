@@ -10,28 +10,16 @@ move /y vert.spv animation_shadows_vert.spv
 
 move /y vert.spv terrain_shadows_vert.spv
 
-%VULKAN_SDK%/Bin/glslangValidator.exe -V normal_mapped_shadows.vert
+%VULKAN_SDK%/Bin/glslangValidator.exe -V bump_mapped_shadows.vert
 
-move /y vert.spv normal_mapped_shadows_vert.spv
+move /y vert.spv bump_mapped_shadows_vert.spv
 
-%VULKAN_SDK%/Bin/glslangValidator.exe -V animation_normal_mapped_shadows.vert
+%VULKAN_SDK%/Bin/glslangValidator.exe -V animation_bump_mapped_shadows.vert
 
-move /y vert.spv animation_normal_mapped_shadows_vert.spv
+move /y vert.spv animation_bump_mapped_shadows_vert.spv
 
-%VULKAN_SDK%/Bin/glslangValidator.exe -V terrain_normal_mapped_shadows.vert
+%VULKAN_SDK%/Bin/glslangValidator.exe -V terrain_bump_mapped_shadows.vert
 
-move /y vert.spv terrain_normal_mapped_shadows_vert.spv
-
-%VULKAN_SDK%/Bin/glslangValidator.exe -V parallax_mapped_shadows.vert
-
-move /y vert.spv parallax_mapped_shadows_vert.spv
-
-%VULKAN_SDK%/Bin/glslangValidator.exe -V animation_parallax_mapped_shadows.vert
-
-move /y vert.spv animation_parallax_mapped_shadows_vert.spv
-
-%VULKAN_SDK%/Bin/glslangValidator.exe -V terrain_parallax_mapped_shadows.vert
-
-move /y vert.spv terrain_parallax_mapped_shadows_vert.spv
+move /y vert.spv terrain_bump_mapped_shadows_vert.spv
 
 pause
