@@ -674,8 +674,8 @@ public:
         NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         TerrainComponentFactory terrainComponentFactory{};
-        m_terrainComponent = terrainComponentFactory.CreateRandomTerrainParallaxMapped(m_xIndex, m_zIndex, TERRAIN_SIZE);
-        NodeComponentHelper::AddComponent<SceneNodeFlags, ITerrainComponenet>(GetThis(), m_terrainComponent, SceneNodeFlags::TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT);
+        m_terrainComponent = terrainComponentFactory.CreateRandomTerrainConeStepMapped(m_xIndex, m_zIndex, TERRAIN_SIZE);
+        NodeComponentHelper::AddComponent<SceneNodeFlags, ITerrainComponenet>(GetThis(), m_terrainComponent, SceneNodeFlags::TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT);
 
         BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_terrainComponent->GetModel()->GetMesh()->GetVertices());
@@ -708,7 +708,7 @@ public:
         }
 
         NodeComponentHelper::RemoveComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ITerrainComponenet>(GetThis(), SceneNodeFlags::TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT);
+        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ITerrainComponenet>(GetThis(), SceneNodeFlags::TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT);
         NodeComponentHelper::RemoveComponent<SceneNodeFlags, ITransformComponent>(GetThis(), SceneNodeFlags::TRANSFORM_COMPONENT);
     }
 
@@ -762,7 +762,7 @@ public:
 
         float minHeight = std::numeric_limits<float>::max();
         float maxHeight = std::numeric_limits<float>::min();
-        auto terrains = NodeComponentHelper::FindAll<SceneNodeFlags, ITerrainComponenet>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT });
+        auto terrains = NodeComponentHelper::FindAll<SceneNodeFlags, ITerrainComponenet>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT });
         for (const auto& terrain : terrains) {
             auto heightInfo = terrain->GetHeightMapInfo();
             if (minHeight > heightInfo->minHeight) {
@@ -2413,17 +2413,17 @@ public:
         //auto camRobot = std::make_shared<CubeRobot>(glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
         //freeCamera->AddChild(camRobot);
 
-        //const int32_t MAX_GENERATED_HEIGHT = 1;
-        //const float DISTANCE = 40.0f;
+        const int32_t MAX_GENERATED_HEIGHT = 1;
+        const float DISTANCE = 40.0f;
 
-        //for (int32_t i = 0; i <= MAX_GENERATED_HEIGHT; i++) {
-        //    for (int32_t j = 0; j <= MAX_GENERATED_HEIGHT; j++) {
-        //        for (int32_t k = 0; k <= MAX_GENERATED_HEIGHT; k++) {
-        //            auto robot = std::make_shared<CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
-        //            AddChild(robot);
-        //        }
-        //    }
-        //}
+        for (int32_t i = 0; i <= MAX_GENERATED_HEIGHT; i++) {
+            for (int32_t j = 0; j <= MAX_GENERATED_HEIGHT; j++) {
+                for (int32_t k = 0; k <= MAX_GENERATED_HEIGHT; k++) {
+                    auto robot = std::make_shared<CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+                    AddChild(robot);
+                }
+            }
+        }
 
         auto goblin = std::make_shared<Goblin>(glm::vec3(0.0f), glm::quat(glm::radians(glm::vec3(-90.0f, 0.0f, 0.0f))), glm::vec3(0.005f));
         goblin->SetTags({ TAG_MAIN_CAMERA, TAG_PLAYER });
@@ -2467,20 +2467,20 @@ public:
         auto fire = std::make_shared<Fire>(glm::vec3(30.0f, 0.0f, 100.0f));
         AddChild(fire);
 
-        auto plane = std::make_shared<PlaneNode>(glm::vec3(-35.0f, 0.0f, -35.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/example_1_texture.png"), AssetManager::Instance().GetAssetPath("Textures/example_1_normal.png"), AssetManager::Instance().GetAssetPath("Textures/ouput_cv.png"), 0.1f);
-        AddChild(plane);
+        //auto plane = std::make_shared<PlaneNode>(glm::vec3(-35.0f, 0.0f, -35.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/example_1_texture.png"), AssetManager::Instance().GetAssetPath("Textures/example_1_normal.png"), AssetManager::Instance().GetAssetPath("Textures/ouput_cv.png"), 0.1f);
+        //AddChild(plane);
 
-        auto mainPlane = std::make_shared<PlaneNode>(glm::vec3(-65.0f, 0.0f, -65.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 90.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/rock.png"), AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), AssetManager::Instance().GetAssetPath("Textures/rock_cone.png"), 0.1f);
-        AddChild(mainPlane);
+        //auto mainPlane = std::make_shared<PlaneNode>(glm::vec3(-65.0f, 0.0f, -65.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 90.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/rock.png"), AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), AssetManager::Instance().GetAssetPath("Textures/rock_cone.png"), 0.1f);
+        //AddChild(mainPlane);
 
-        auto mainPlane2 = std::make_shared<PlaneNode>(glm::vec3(110.0f, 0.0f, -110.0f), glm::quat(glm::radians(glm::vec3(90.0f, 90.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/fungus.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_cone.png"), 0.05f);
-        AddChild(mainPlane2);
+        //auto mainPlane2 = std::make_shared<PlaneNode>(glm::vec3(110.0f, 0.0f, -110.0f), glm::quat(glm::radians(glm::vec3(90.0f, 90.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/fungus.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_cone.png"), 0.05f);
+        //AddChild(mainPlane2);
 
-        auto mainPlane3 = std::make_shared<PlaneNode>(glm::vec3(-120.0f, 0.0f, -50.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_cone.png"), 0.05f);
-        AddChild(mainPlane3);
+        //auto mainPlane3 = std::make_shared<PlaneNode>(glm::vec3(-120.0f, 0.0f, -50.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_cone.png"), 0.05f);
+        //AddChild(mainPlane3);
 
-        auto mainPlane4 = std::make_shared<PlaneNode>(glm::vec3(-90.0f, 0.0f, -90.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/sand.png"), AssetManager::Instance().GetAssetPath("Textures/sand_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_cone.png"), 0.1f);
-        AddChild(mainPlane4);
+        //auto mainPlane4 = std::make_shared<PlaneNode>(glm::vec3(-90.0f, 0.0f, -90.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/sand.png"), AssetManager::Instance().GetAssetPath("Textures/sand_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_cone.png"), 0.1f);
+        //AddChild(mainPlane4);
 
         AbstractSceneNode::Init();
 

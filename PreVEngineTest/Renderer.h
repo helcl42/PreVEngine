@@ -4537,6 +4537,290 @@ public:
     }
 };
 
+class TerrainConeStepMappedRenderer final : public IRenderer<NormalRenderContextUserData> {
+private:
+    struct alignas(16) ShadowsCascadeUniform
+    {
+        glm::mat4 viewProjectionMatrix;
+
+        glm::vec4 split;
+
+        ShadowsCascadeUniform() = default;
+
+        ShadowsCascadeUniform(const glm::mat4& vpMat, const glm::vec4& spl)
+            : viewProjectionMatrix(vpMat)
+            , split(spl)
+        {
+        }
+    };
+
+    struct alignas(16) ShadowsUniform
+    {
+        ShadowsCascadeUniform cascades[ShadowsComponent::CASCADES_COUNT];
+
+        uint32_t enabled;
+    };
+
+    struct alignas(16) LightUniform
+    {
+        glm::vec4 position;
+
+        glm::vec4 color;
+
+        glm::vec4 attenuation;
+
+        LightUniform() = default;
+
+        LightUniform(const glm::vec4& pos, const glm::vec4& col, const glm::vec4& atten)
+            : position(pos)
+            , color(col)
+            , attenuation(atten)
+        {
+        }
+    };
+
+    struct alignas(16) LightningUniform
+    {
+        LightUniform lights[MAX_LIGHT_COUNT];
+
+        uint32_t realCountOfLights;
+
+        float ambientFactor;
+    };
+
+    struct alignas(16) MaterialUniform
+    {
+        float shineDamper;
+
+        float reflectivity;
+
+        MaterialUniform() = default;
+
+        MaterialUniform(const float shineDaperr, const float reflect)
+            : shineDamper(shineDaperr)
+            , reflectivity(reflect)
+        {
+        }
+    };
+
+    struct alignas(16) UniformsVS
+    {
+        alignas(16) glm::mat4 modelMatrix;
+
+        alignas(16) glm::mat4 viewMatrix;
+
+        alignas(16) glm::mat4 projectionMatrix;
+
+        alignas(16) glm::mat4 normalMatrix;
+
+        alignas(16) glm::vec4 clipPlane;
+
+        alignas(16) glm::vec4 cameraPosition;
+
+        alignas(16) LightningUniform lightning;
+
+        alignas(16) float density;
+        float gradient;
+    };
+
+    struct alignas(16) UniformsFS
+    {
+        alignas(16) ShadowsUniform shadows;
+
+        alignas(16) LightningUniform lightning;
+
+        alignas(16) MaterialUniform material[4];
+
+        alignas(16) glm::vec4 fogColor;
+
+        alignas(16) glm::vec4 selectedColor;
+
+        alignas(16) uint32_t selected;
+        uint32_t castedByShadows;
+        float minHeight;
+        float maxHeight;
+
+        alignas(16) glm::vec4 heightSteps[4];
+        alignas(16) glm::vec4 heightScale[4];
+
+        alignas(16) float heightTransitionRange;
+        float numLayers;
+    };
+
+private:
+    const uint32_t m_descriptorCount{ 3000 };
+
+private:
+    std::shared_ptr<RenderPass> m_renderPass;
+
+private:
+    std::unique_ptr<Shader> m_shader;
+
+    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+
+    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+
+    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+
+public:
+    TerrainConeStepMappedRenderer(const std::shared_ptr<RenderPass>& renderPass)
+        : m_renderPass(renderPass)
+    {
+    }
+
+    ~TerrainConeStepMappedRenderer() = default;
+
+public:
+    void Init() override
+    {
+        auto device = DeviceProvider::Instance().GetDevice();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
+
+        ShaderFactory shaderFactory;
+        m_shader = shaderFactory.CreateShaderFromFiles<TerrainParallaxMappedShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_cone_step_mapped_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_cone_step_mapped_frag.spv") } });
+        m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
+
+        LOGI("Terrain Cone Step Mapped Shader created\n");
+
+        m_pipeline = std::make_unique<TerrainNormalMappedPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline->Init();
+
+        LOGI("Terrain Cone Step Mapped Pipeline created\n");
+
+        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+
+        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    }
+
+    void BeforeRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
+    }
+
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
+            bool visible = true;
+            if (ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
+                visible = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
+            }
+
+            if (visible) {
+                const auto mainLightComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+                const auto shadowsComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+                const auto lightComponents = NodeComponentHelper::FindAll<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
+
+                const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
+                const auto terrainComponent = ComponentRepository<ITerrainComponenet>::Instance().Get(node->GetId());
+
+                auto uboVS = m_uniformsPoolVS->GetNext();
+
+                UniformsVS uniformsVS{};
+                uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
+                uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
+                uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
+                uniformsVS.normalMatrix = glm::inverse(transformComponent->GetWorldTransformScaled());
+                uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
+                for (auto i = 0; i < lightComponents.size(); i++) {
+                    uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
+                }
+                uniformsVS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
+                uniformsVS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
+                uniformsVS.density = FOG_DENSITY;
+                uniformsVS.gradient = FOG_GRADIENT;
+                uniformsVS.clipPlane = renderContextUserData.clipPlane;
+
+                uboVS->Update(&uniformsVS);
+
+                auto uboFS = m_uniformsPoolFS->GetNext();
+
+                UniformsFS uniformsFS{};
+                // shadows
+                for (auto i = 0; i < ShadowsComponent::CASCADES_COUNT; i++) {
+                    const auto& cascade = shadowsComponent->GetCascade(i);
+                    uniformsFS.shadows.cascades[i] = ShadowsCascadeUniform(cascade.GetBiasedViewProjectionMatrix(), glm::vec4(cascade.endSplitDepth));
+                }
+                uniformsFS.shadows.enabled = SHADOWS_ENABLED;
+
+                // lightning
+                for (auto i = 0; i < lightComponents.size(); i++) {
+                    uniformsFS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
+                }
+                uniformsFS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
+                uniformsFS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
+
+                // common
+                uniformsFS.fogColor = FOG_COLOR;
+                uniformsFS.selectedColor = SELECTED_COLOR;
+                uniformsFS.selected = false;
+                uniformsFS.castedByShadows = true;
+                uniformsFS.minHeight = terrainComponent->GetHeightMapInfo()->GetGlobalMinHeight();
+                uniformsFS.maxHeight = terrainComponent->GetHeightMapInfo()->GetGlobalMaxHeight();
+                for (auto i = 0; i < terrainComponent->GetMaterials().size(); i++) {
+                    const auto material = terrainComponent->GetMaterials().at(i);
+                    uniformsFS.material[i] = MaterialUniform(material->GetShineDamper(), material->GetReflectivity());
+                    uniformsFS.heightScale[i] = glm::vec4(material->GetHeightScale());
+                    uniformsFS.heightSteps[i] = glm::vec4(terrainComponent->GetHeightSteps().at(i));
+                }
+                uniformsFS.heightTransitionRange = terrainComponent->GetTransitionRange();
+                uniformsFS.numLayers = 8;
+
+                uboFS->Update(&uniformsFS);
+
+                for (auto i = 0; i < terrainComponent->GetMaterials().size(); i++) {
+                    const auto meterial = terrainComponent->GetMaterials().at(i);
+                    m_shader->Bind("textureSampler[" + std::to_string(i) + "]", *meterial->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                    m_shader->Bind("normalSampler[" + std::to_string(i) + "]", *meterial->GetNormalmageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                    m_shader->Bind("heightSampler[" + std::to_string(i) + "]", *meterial->GetHeightImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                }
+                m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), shadowsComponent->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+                m_shader->Bind("uboVS", *uboVS);
+                m_shader->Bind("uboFS", *uboFS);
+
+                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                const VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };
+                const VkDeviceSize offsets[] = { 0 };
+
+                vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+                vkCmdBindIndexBuffer(renderContext.commandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, terrainComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+                vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+                vkCmdDrawIndexed(renderContext.commandBuffer, terrainComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+            }
+        }
+
+        for (auto child : node->GetChildren()) {
+            Render(renderContext, child, renderContextUserData);
+        }
+    }
+
+    void PostRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void AfterRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void ShutDown() override
+    {
+        m_shader->ShutDown();
+
+        m_pipeline->ShutDown();
+    }
+};
+
 class FontRenderer final : public IRenderer<NormalRenderContextUserData> {
 private:
     struct alignas(16) UniformsVS
@@ -5636,8 +5920,9 @@ private:
         m_parallaxMappedRenderer = std::make_shared<ParallaxMappedRenderer>(m_defaultRenderPass);
         m_coneStepMappedRenderer = std::make_shared<ConeStepMappedRenderer>(m_defaultRenderPass);
         m_terrainRenderer = std::make_shared<TerrainRenderer>(m_defaultRenderPass);
-        m_terrainNormalRendererRenderer = std::make_shared<TerrainNormalMappedRenderer>(m_defaultRenderPass);
-        m_terrainParallaxRendererRenderer = std::make_shared<TerrainParallaxMappedRenderer>(m_defaultRenderPass);
+        m_terrainNormalMappedRenderer = std::make_shared<TerrainNormalMappedRenderer>(m_defaultRenderPass);
+        m_terrainParallaxMappedRenderer = std::make_shared<TerrainParallaxMappedRenderer>(m_defaultRenderPass);
+        m_terrainConeStepMappedRenderer = std::make_shared<TerrainConeStepMappedRenderer>(m_defaultRenderPass);
         m_animationRenderer = std::make_shared<AnimationRenderer>(m_defaultRenderPass);
         m_animationNormalMappedRenderer = std::make_shared<AnimationNormalMappedRenderer>(m_defaultRenderPass);
         m_animationParallaxMappedRenderer = std::make_shared<AnimationParallaxMappedRenderer>(m_defaultRenderPass);
@@ -5655,8 +5940,9 @@ private:
             m_parallaxMappedRenderer,
             m_coneStepMappedRenderer,
             m_terrainRenderer,
-            m_terrainNormalRendererRenderer,
-            m_terrainParallaxRendererRenderer,
+            m_terrainNormalMappedRenderer,
+            m_terrainParallaxMappedRenderer,
+            m_terrainConeStepMappedRenderer,
             m_animationRenderer,
             m_animationNormalMappedRenderer,
             m_animationParallaxMappedRenderer,
@@ -5789,6 +6075,7 @@ private:
         m_reflectionTerrainRenderer = std::make_shared<TerrainRenderer>(reflectionComponent->GetRenderPass());
         m_reflectionTerrainNormalMappedRenderer = std::make_shared<TerrainNormalMappedRenderer>(reflectionComponent->GetRenderPass());
         m_reflectionTerrainParallaxMappedRenderer = std::make_shared<TerrainParallaxMappedRenderer>(reflectionComponent->GetRenderPass());
+        m_reflectionTerrainConeStepMappedRenderer = std::make_shared<TerrainConeStepMappedRenderer>(reflectionComponent->GetRenderPass());
         m_reflectionAnimationRenderer = std::make_shared<AnimationRenderer>(reflectionComponent->GetRenderPass());
         m_reflectionAnimationNormalMappedRenderer = std::make_shared<AnimationNormalMappedRenderer>(reflectionComponent->GetRenderPass());
         m_reflectionAnimationParallaxMappedRenderer = std::make_shared<AnimationParallaxMappedRenderer>(reflectionComponent->GetRenderPass());
@@ -5804,6 +6091,7 @@ private:
             m_reflectionTerrainRenderer,
             m_reflectionTerrainNormalMappedRenderer,
             m_reflectionTerrainParallaxMappedRenderer,
+            m_reflectionTerrainConeStepMappedRenderer,
             m_reflectionAnimationRenderer,
             m_reflectionAnimationNormalMappedRenderer,
             m_reflectionAnimationParallaxMappedRenderer,
@@ -5844,6 +6132,7 @@ private:
         m_refractionTerrainRenderer = std::make_shared<TerrainRenderer>(refractionComponent->GetRenderPass());
         m_refractionTerrainNormalMappedRenderer = std::make_shared<TerrainNormalMappedRenderer>(refractionComponent->GetRenderPass());
         m_refractionTerrainParallaxMappedRenderer = std::make_shared<TerrainParallaxMappedRenderer>(refractionComponent->GetRenderPass());
+        m_refractionTerrainConeStepMappedRenderer = std::make_shared<TerrainConeStepMappedRenderer>(refractionComponent->GetRenderPass());
         m_refractionAnimationRenderer = std::make_shared<AnimationRenderer>(refractionComponent->GetRenderPass());
         m_refractionAnimationNormalMappedRenderer = std::make_shared<AnimationNormalMappedRenderer>(refractionComponent->GetRenderPass());
         m_refractionAnimationParallaxMappedRenderer = std::make_shared<AnimationParallaxMappedRenderer>(refractionComponent->GetRenderPass());
@@ -5859,6 +6148,7 @@ private:
             m_refractionTerrainRenderer,
             m_refractionTerrainNormalMappedRenderer,
             m_refractionTerrainParallaxMappedRenderer,
+            m_refractionTerrainConeStepMappedRenderer,
             m_refractionAnimationRenderer,
             m_refractionAnimationNormalMappedRenderer,
             m_refractionAnimationParallaxMappedRenderer,
@@ -6252,9 +6542,11 @@ private:
 
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_terrainRenderer;
 
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_terrainNormalRendererRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_terrainNormalMappedRenderer;
 
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_terrainParallaxRendererRenderer;
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_terrainParallaxMappedRenderer;
+
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_terrainConeStepMappedRenderer;
 
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_animationRenderer;
 
@@ -6323,6 +6615,8 @@ private:
 
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionTerrainParallaxMappedRenderer;
 
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionTerrainConeStepMappedRenderer;
+
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionAnimationRenderer;
 
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionAnimationNormalMappedRenderer;
@@ -6351,6 +6645,8 @@ private:
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionTerrainNormalMappedRenderer;
 
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionTerrainParallaxMappedRenderer;
+
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionTerrainConeStepMappedRenderer;
 
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionAnimationRenderer;
 
