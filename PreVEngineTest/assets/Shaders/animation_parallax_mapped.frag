@@ -93,18 +93,18 @@ vec2 ParallaxOcclusionMapping(in vec2 uv, in vec3 viewDir)
 
 void main() 
 {
-	const vec3 viewDirectionTangentSpace = normalize(inToCameraVectorTangentSpace - inWorldPositionTangentSpace);
+	const vec3 unitToCameraVector = normalize(inToCameraVectorTangentSpace - inWorldPositionTangentSpace);
 	vec2 uv = vec2(0.0, 0.0);
 	switch(uboFS.mappingMode) 
 	{
 		case 1:
-			uv = ParallaxMapping(inTextureCoord, viewDirectionTangentSpace);
+			uv = ParallaxMapping(inTextureCoord, unitToCameraVector);
 			break;
 		case 2:
-			uv = SteepParallaxMapping(inTextureCoord, viewDirectionTangentSpace);
+			uv = SteepParallaxMapping(inTextureCoord, unitToCameraVector);
 			break;
 		case 3:
-			uv = ParallaxOcclusionMapping(inTextureCoord, viewDirectionTangentSpace);
+			uv = ParallaxOcclusionMapping(inTextureCoord, unitToCameraVector);
 			break;
 		default:
 			uv = inTextureCoord;
@@ -144,7 +144,6 @@ void main()
 	}
 
 	const vec3 unitNormal = normalize(normalMapValue);
-	const vec3 unitToCameraVector = normalize(viewDirectionTangentSpace);
 
 	vec3 totalDiffuse = vec3(0.0);
 	vec3 totalSpecular = vec3(0.0);

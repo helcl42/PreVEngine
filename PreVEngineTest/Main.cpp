@@ -845,9 +845,9 @@ public:
         NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         RenderComponentFactory renderComponentFactory{};
-        m_animatonRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(AssetManager::Instance().GetAssetPath("Models/Goblin/goblin.dae"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_texture.png"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_normal_texture_2.png"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_height_texture.png"), true, true);
-        m_animatonRenderComponent->GetMaterial()->SetHeightScale(0.005f);
-        NodeComponentHelper::AddComponent<SceneNodeFlags, IAnimationRenderComponent>(GetThis(), m_animatonRenderComponent, SceneNodeFlags::ANIMATION_PARALLAX_MAPPED_RENDER_COMPONENT);
+        m_animatonRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(AssetManager::Instance().GetAssetPath("Models/Goblin/goblin.dae"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_texture.png"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_normal_texture_2.png"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_cone_texture.png"), true, true);
+        m_animatonRenderComponent->GetMaterial()->SetHeightScale(0.004f);
+        NodeComponentHelper::AddComponent<SceneNodeFlags, IAnimationRenderComponent>(GetThis(), m_animatonRenderComponent, SceneNodeFlags::ANIMATION_CONE_STEP_MAPPED_RENDER_COMPONENT);
 
         CameraComponentFactory cameraFactory{};
         m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 60.0f, 180.0f));
@@ -940,7 +940,7 @@ public:
 
         NodeComponentHelper::RemoveComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
         NodeComponentHelper::RemoveComponent<SceneNodeFlags, ICameraComponent>(GetThis(), SceneNodeFlags::CAMERA_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, IAnimationRenderComponent>(GetThis(), SceneNodeFlags::ANIMATION_PARALLAX_MAPPED_RENDER_COMPONENT);
+        NodeComponentHelper::RemoveComponent<SceneNodeFlags, IAnimationRenderComponent>(GetThis(), SceneNodeFlags::ANIMATION_CONE_STEP_MAPPED_RENDER_COMPONENT);
         NodeComponentHelper::RemoveComponent<SceneNodeFlags, ITransformComponent>(GetThis(), SceneNodeFlags::TRANSFORM_COMPONENT);
     }
 
@@ -1876,7 +1876,7 @@ private:
     EventHandler<Sun, NewIterationEvent> m_newIterationHandler{ *this };
 };
 
-class Stone : public AbstractSceneNode<SceneNodeFlags> {
+class Stone final : public AbstractSceneNode<SceneNodeFlags> {
 public:
     Stone(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
         : AbstractSceneNode()
@@ -2413,17 +2413,17 @@ public:
         //auto camRobot = std::make_shared<CubeRobot>(glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
         //freeCamera->AddChild(camRobot);
 
-        const int32_t MAX_GENERATED_HEIGHT = 1;
-        const float DISTANCE = 40.0f;
+        //const int32_t MAX_GENERATED_HEIGHT = 1;
+        //const float DISTANCE = 40.0f;
 
-        for (int32_t i = 0; i <= MAX_GENERATED_HEIGHT; i++) {
-            for (int32_t j = 0; j <= MAX_GENERATED_HEIGHT; j++) {
-                for (int32_t k = 0; k <= MAX_GENERATED_HEIGHT; k++) {
-                    auto robot = std::make_shared<CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
-                    AddChild(robot);
-                }
-            }
-        }
+        //for (int32_t i = 0; i <= MAX_GENERATED_HEIGHT; i++) {
+        //    for (int32_t j = 0; j <= MAX_GENERATED_HEIGHT; j++) {
+        //        for (int32_t k = 0; k <= MAX_GENERATED_HEIGHT; k++) {
+        //            auto robot = std::make_shared<CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+        //            AddChild(robot);
+        //        }
+        //    }
+        //}
 
         auto goblin = std::make_shared<Goblin>(glm::vec3(0.0f), glm::quat(glm::radians(glm::vec3(-90.0f, 0.0f, 0.0f))), glm::vec3(0.005f));
         goblin->SetTags({ TAG_MAIN_CAMERA, TAG_PLAYER });
@@ -2467,7 +2467,7 @@ public:
         auto fire = std::make_shared<Fire>(glm::vec3(30.0f, 0.0f, 100.0f));
         AddChild(fire);
 
-        auto plane = std::make_shared<PlaneNode>(glm::vec3(-25.0f, 0.0f, -25.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/example_1_texture.png"), AssetManager::Instance().GetAssetPath("Textures/example_1_normal.png"), AssetManager::Instance().GetAssetPath("Textures/ouput_cv.png"), 0.1f);
+        auto plane = std::make_shared<PlaneNode>(glm::vec3(-35.0f, 0.0f, -35.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/example_1_texture.png"), AssetManager::Instance().GetAssetPath("Textures/example_1_normal.png"), AssetManager::Instance().GetAssetPath("Textures/ouput_cv.png"), 0.1f);
         AddChild(plane);
 
         auto mainPlane = std::make_shared<PlaneNode>(glm::vec3(-65.0f, 0.0f, -65.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 90.0f))), glm::vec3(1.0f), AssetManager::Instance().GetAssetPath("Textures/rock.png"), AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), AssetManager::Instance().GetAssetPath("Textures/rock_cone.png"), 0.1f);

@@ -34,6 +34,9 @@ layout(location = 3) in float inVisibility;
 layout(location = 4) in vec3 inTangent;
 layout(location = 5) in vec3 inBiTangent;
 layout(location = 6) in vec3 inNornal;
+layout(location = 7) in vec3 inToCameraVectorTangentSpace;
+layout(location = 8) in vec3 inWorldPositionTangentSpace;
+layout(location = 9) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
 
 layout(location = 0) out vec4 outColor;
 
@@ -75,9 +78,8 @@ void main()
 {
 	const float faceSign = sign(dot(inNornal, -inViewPosition));
 	mat3 tbnMat = mat3(inTangent, inBiTangent, inNornal * faceSign);
-    vec3 unitToCameraVectorTangentSpace = normalize(inverse(tbnMat) * inViewPosition);
-	vec3 viewPositionTangentSpace = tbnMat * inViewPosition;
-	vec2 uv = ConeStepMapping(inTextureCoord, unitToCameraVectorTangentSpace);
+    vec3 rayDirection = normalize(inverse(tbnMat) * inViewPosition);
+	vec2 uv = ConeStepMapping(inTextureCoord, rayDirection);
 
 	float shadow = 1.0;	
 	if(uboFS.castedByShadows != 0)
@@ -112,6 +114,7 @@ void main()
 	}
 
 	const vec3 unitNormal = normalize(normalMapValue);
+	const vec3 unitToCameraVector = normalize(inToCameraVectorTangentSpace - inWorldPositionTangentSpace);
 
 	vec3 totalDiffuse = vec3(0.0);
 	vec3 totalSpecular = vec3(0.0);
@@ -119,14 +122,12 @@ void main()
 	{
 		const Light light = uboFS.lightning.lights[i];
 
-		// light position needs to be in viewSpace
-		const vec3 lightPositionInTangentSpace = tbnMat * light.position.xyz;
-		const vec3 toLightVector = lightPositionInTangentSpace - viewPositionTangentSpace;
+		const vec3 toLightVector = inToLightVectorTangentSpace[i] - inWorldPositionTangentSpace;
 		const vec3 unitToLightVector = normalize(toLightVector);
 
 		const float attenuationFactor = GetAttenuationFactor(light.attenuation.xyz, toLightVector);
 		totalDiffuse += GetDiffuseColor(unitNormal, unitToLightVector, light.color.xyz, attenuationFactor);
-		totalSpecular += GetSpecularColor(unitNormal, unitToLightVector, unitToCameraVectorTangentSpace, light.color.xyz, attenuationFactor, uboFS.material.shineDamper, uboFS.material.reflectivity);
+		totalSpecular += GetSpecularColor(unitNormal, unitToLightVector, unitToCameraVector, light.color.xyz, attenuationFactor, uboFS.material.shineDamper, uboFS.material.reflectivity);
 	}
 	totalDiffuse = max(totalDiffuse * shadow, 0.0) + uboFS.lightning.ambientFactor;
 	totalSpecular = totalSpecular * shadow;

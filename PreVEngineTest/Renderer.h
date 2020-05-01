@@ -2379,6 +2379,10 @@ private:
 
         alignas(16) glm::vec4 clipPlane;
 
+        alignas(16) glm::vec4 cameraPosition;
+
+        alignas(16) LightningUniform lightning;
+
         alignas(16) glm::vec4 textureOffset;
 
         alignas(16) uint32_t textureNumberOfRows;
@@ -2489,6 +2493,12 @@ public:
                 uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
                 uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
                 uniformsVS.normalMatrix = glm::inverse(transformComponent->GetWorldTransformScaled());
+                uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
+                for (size_t i = 0; i < lightComponents.size(); i++) {
+                    uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
+                }
+                uniformsVS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
+                uniformsVS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
                 uniformsVS.textureNumberOfRows = nodeRenderComponent->GetMaterial()->GetAtlasNumberOfRows();
                 uniformsVS.textureOffset = glm::vec4(nodeRenderComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
                 uniformsVS.density = FOG_DENSITY;
@@ -2509,7 +2519,7 @@ public:
 
                 // lightning
                 for (size_t i = 0; i < lightComponents.size(); i++) {
-                    uniformsFS.lightning.lights[i] = LightUniform(renderContextUserData.viewMatrix * glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
+                    uniformsFS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
                 }
                 uniformsFS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
                 uniformsFS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
@@ -3478,6 +3488,10 @@ private:
 
         alignas(16) glm::vec4 clipPlane;
 
+        alignas(16) glm::vec4 cameraPosition;
+
+        alignas(16) LightningUniform lightning;
+
         alignas(16) glm::vec4 textureOffset;
 
         alignas(16) uint32_t textureNumberOfRows;
@@ -3592,6 +3606,12 @@ public:
                 uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
                 uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
                 uniformsVS.normalMatrix = glm::inverse(transformComponent->GetWorldTransformScaled());
+                uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
+                for (size_t i = 0; i < lightComponents.size(); i++) {
+                    uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
+                }
+                uniformsVS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
+                uniformsVS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
                 uniformsVS.textureNumberOfRows = nodeRenderComponent->GetMaterial()->GetAtlasNumberOfRows();
                 uniformsVS.textureOffset = glm::vec4(nodeRenderComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
                 uniformsVS.density = FOG_DENSITY;
@@ -5586,7 +5606,7 @@ public:
 
 #ifndef ANDROID
         // Debug quad with shadowMap
-        RenderDebug(renderContext, node);
+        //RenderDebug(renderContext, node);
 #endif
     }
 
@@ -5690,7 +5710,7 @@ private:
 
         m_debugRenderers = {
             m_shadowMapDebugRenderer,
-            //m_textureDebugRenderer
+            m_textureDebugRenderer
         };
 
         for (auto& renderer : m_debugRenderers) {

@@ -15,6 +15,10 @@ layout(std140, binding = 0) uniform UniformBufferObject {
 	
 	vec4 clipPlane;
 
+	vec4 cameraPosition;
+
+	Lightning lightning;	
+	
 	vec4 textureOffset;
 
 	uint textureNumberOfRows;
@@ -36,6 +40,9 @@ layout(location = 3) out float outVisibility;
 layout(location = 4) out vec3 outTangent;
 layout(location = 5) out vec3 outBiTangent;
 layout(location = 6) out vec3 outNornal;
+layout(location = 7) out vec3 outToCameraVectorTangentSpace;
+layout(location = 8) out vec3 outWorldPositionTangentSpace;
+layout(location = 9) out vec3 outToLightVectorTangentSpace[MAX_LIGHT_COUNT];
 
 void main() 
 {
@@ -58,4 +65,18 @@ void main()
 	outTangent = normalize(mv3 * inTangent);
 	outBiTangent = normalize(mv3 * inBiTangent);
 	outNornal = normalize(mv3 * inNormal);
+
+	vec3 T = normalize(mat3(uboVS.modelMatrix) * inTangent);
+	vec3 B = normalize(mat3(uboVS.modelMatrix) * inBiTangent);
+	vec3 N = normalize(mat3(uboVS.modelMatrix) * inNormal);
+	mat3 toTangentSpaceMatrix = transpose(mat3(T, B, N));
+
+	outToCameraVectorTangentSpace = toTangentSpaceMatrix * uboVS.cameraPosition.xyz;
+	outWorldPositionTangentSpace = toTangentSpaceMatrix * worldPosition.xyz;
+
+	for (int i = 0; i < uboVS.lightning.realCountOfLights; i++)
+	{
+		const Light light = uboVS.lightning.lights[i];
+		outToLightVectorTangentSpace[i] = toTangentSpaceMatrix * light.position.xyz;
+	}
 }
