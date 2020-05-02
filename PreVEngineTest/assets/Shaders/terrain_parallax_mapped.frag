@@ -4,6 +4,7 @@
 
 #include "shadows_use.glsl"
 #include "lights.glsl"
+#include "parallax_mapping_use.glsl"
 
 const uint MATERIAL_COUNT = 4;
 
@@ -28,10 +29,8 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 	vec4 heightScale[MATERIAL_COUNT];
 
 	float heightTransitionRange;	
-	float parallaxBias;
-	float numLayers;
+	uint numLayers;
 	uint mappingMode;
-
 	float maxAngleToFallback;
 } uboFS;
 
@@ -51,77 +50,6 @@ layout(location = 7) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
 
 layout(location = 0) out vec4 outColor;
 
-vec2 ParallaxMapping(in uint index, in vec2 uv, in vec3 viewDir) 
-{
-	float height = 1.0 - texture(heightSampler[index], uv).r;
-	vec2 p = viewDir.xy * (height * (uboFS.heightScale[index].x * 0.5) + uboFS.parallaxBias) / viewDir.z;
-	return uv - p;  
-}
-
-vec2 SteepParallaxMapping(in uint index, in vec2 uv, in vec3 viewDir) 
-{
-	float layerDepth = 1.0 / uboFS.numLayers;
-	float currLayerDepth = 0.0;
-	vec2 deltaUV = viewDir.xy * uboFS.heightScale[index].x / (viewDir.z * uboFS.numLayers);
-	vec2 currUV = uv;
-	float height = 1.0 - texture(heightSampler[index], currUV).r;
-	for (int i = 0; i < uboFS.numLayers; i++) 
-	{
-		currLayerDepth += layerDepth;
-		currUV -= deltaUV;
-		height = 1.0 - texture(heightSampler[index], currUV).r;
-		if (height < currLayerDepth) 
-		{
-			break;
-		}
-	}
-	return currUV;
-}
-
-vec2 ParallaxOcclusionMapping(in uint index, in vec2 uv, in vec3 viewDir) 
-{
-	float layerDepth = 1.0 / uboFS.numLayers;
-	float currLayerDepth = 0.0;
-	vec2 deltaUV = viewDir.xy * uboFS.heightScale[index].x / (viewDir.z * uboFS.numLayers);
-	vec2 currUV = uv;
-	float height = 1.0 - texture(heightSampler[index], currUV).r;
-	for (int i = 0; i < uboFS.numLayers; i++) 
-	{
-		currLayerDepth += layerDepth;
-		currUV -= deltaUV;
-		height = 1.0 - texture(heightSampler[index], currUV).r;
-		if (height < currLayerDepth) 
-		{
-			break;
-		}
-	}
-	vec2 prevUV = currUV + deltaUV;
-	float nextDepth = height - currLayerDepth;
-	float prevDepth = 1.0 - texture(heightSampler[index], prevUV).r - currLayerDepth + layerDepth;
-	return mix(currUV, prevUV, nextDepth / (nextDepth - prevDepth));
-}
-
-vec2 GetParallaxTextureCoordOffset(in uint index, in vec2 textureCoord, in vec3 viewDir)
-{
-	vec2 uv = vec2(0.0, 0.0);
-	switch(uboFS.mappingMode) 
-	{
-		case 1:
-			uv = ParallaxMapping(index, textureCoord, viewDir);
-			break;
-		case 2:
-			uv = SteepParallaxMapping(index, textureCoord, viewDir);
-			break;
-		case 3:
-			uv = ParallaxOcclusionMapping(index, textureCoord, viewDir);
-			break;
-		default:
-			uv = textureCoord;
-			break;
-	}
-	return uv;
-}
-
 void main()
 {
 	const vec3 unitToCameraVector = normalize(inToCameraVectorTangentSpace - inWorldPositionTangentSpace);
@@ -140,8 +68,8 @@ void main()
             {				
                 float ratio = (normalizedHeight - uboFS.heightSteps[i].x + uboFS.heightTransitionRange) / (2 * uboFS.heightTransitionRange);
 
-				vec2 uv1 = GetParallaxTextureCoordOffset(i, inTextureCoord, unitToCameraVector);
-				vec2 uv2 = GetParallaxTextureCoordOffset(i + 1, inTextureCoord, unitToCameraVector);
+				vec2 uv1 = ParallaxMapping(uboFS.mappingMode, heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, unitToCameraVector);
+				vec2 uv2 = ParallaxMapping(uboFS.mappingMode, heightSampler[i + 1], uboFS.heightScale[i + 1].x, uboFS.numLayers, inTextureCoord, unitToCameraVector);
 
 				vec3 normal1 = normalize(2.0 * texture(normalSampler[i], uv1).xyz - 1.0);
 				// if(abs(dot(normal1, unitToCameraVector)) < uboFS.maxAngleToFallback) {
@@ -181,7 +109,7 @@ void main()
             }
 			else if(normalizedHeight < uboFS.heightSteps[i].x - uboFS.heightTransitionRange)
 			{
-				vec2 uv = GetParallaxTextureCoordOffset(i, inTextureCoord, unitToCameraVector);
+				vec2 uv = ParallaxMapping(uboFS.mappingMode, heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, unitToCameraVector);
 				normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);
 				float NdotV = abs(dot(normal, unitToCameraVector));
 				if(NdotV < uboFS.maxAngleToFallback) {
@@ -195,7 +123,7 @@ void main()
 			}
             else if(normalizedHeight > uboFS.heightSteps[i].x + uboFS.heightTransitionRange && normalizedHeight < uboFS.heightSteps[i + 1].x - uboFS.heightTransitionRange)
             {
-				vec2 uv = GetParallaxTextureCoordOffset(i, inTextureCoord, unitToCameraVector);
+				vec2 uv = ParallaxMapping(uboFS.mappingMode, heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, unitToCameraVector);
 				normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);
 				float NdotV = abs(dot(normal, unitToCameraVector));
 				if(NdotV < uboFS.maxAngleToFallback) {
@@ -209,7 +137,7 @@ void main()
         }
         else
         {
-			vec2 uv = GetParallaxTextureCoordOffset(i, inTextureCoord, unitToCameraVector);
+			vec2 uv = ParallaxMapping(uboFS.mappingMode, heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, unitToCameraVector);
 			normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);
 			float NdotV = abs(dot(normal, unitToCameraVector));
 			if(NdotV < uboFS.maxAngleToFallback) {

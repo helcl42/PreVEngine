@@ -2120,9 +2120,8 @@ private:
         alignas(16) uint32_t selected;
         uint32_t castedByShadows;
         float heightScale;
-        float parallaxBias;
+        uint32_t numLayers;
 
-        float numLayers;
         uint32_t mappingMode;
     };
 
@@ -2257,8 +2256,6 @@ public:
 
                 // scaler for heightMap values
                 uniformsFS.heightScale = nodeRenderComponent->GetMaterial()->GetHeightScale();
-                // Basic parallax mapping needs a bias to look any good (and is hard to tweak)
-                uniformsFS.parallaxBias = -0.02f;
                 // Number of layers for steep parallax and parallax occlusion (more layer = better result for less performance)
                 uniformsFS.numLayers = 16;
                 // (Parallax) mapping mode to use 1, 2, 3 otherwise it behaves like normal mapping only(no uv offset is computed)
@@ -3227,9 +3224,8 @@ private:
         alignas(16) uint32_t selected;
         uint32_t castedByShadows;
         float heightScale;
-        float parallaxBias;
+        uint32_t numLayers;
 
-        float numLayers;
         uint32_t mappingMode;
     };
 
@@ -3364,8 +3360,6 @@ public:
 
                 // scaler for heightMap values
                 uniformsFS.heightScale = nodeRenderComponent->GetMaterial()->GetHeightScale();
-                // Basic parallax mapping needs a bias to look any good (and is hard to tweak)
-                uniformsFS.parallaxBias = -0.02f;
                 // Number of layers for steep parallax and parallax occlusion (more layer = better result for less performance)
                 uniformsFS.numLayers = 12;
                 // (Parallax) mapping mode to use 1, 2, 3 otherwise it behaves like normal mapping only(no uv offset is computed)
@@ -4351,8 +4345,7 @@ private:
         alignas(16) glm::vec4 heightScale[4];
 
         alignas(16) float heightTransitionRange;
-        float parallaxBias;
-        float numLayers;
+        uint32_t numLayers;
         uint32_t mappingMode;
 
         alignas(16) float maxAngleToFallback;
@@ -4486,8 +4479,6 @@ public:
                 }
                 uniformsFS.heightTransitionRange = terrainComponent->GetTransitionRange();
                 
-                // TODO -> add uniform for all terrain materials                
-                uniformsFS.parallaxBias = 0.0f;
                 uniformsFS.numLayers = 8;
                 uniformsFS.mappingMode = 3;
                 uniformsFS.maxAngleToFallback = glm::radians(28.0f);

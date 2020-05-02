@@ -4,6 +4,7 @@
 
 #include "shadows_use.glsl"
 #include "lights.glsl"
+#include "parallax_mapping_use.glsl"
 
 layout(std140, binding = 1) uniform UniformBufferObject {
 	Shadows shadows;
@@ -19,9 +20,8 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 	uint selected;
 	uint castedByShadows;
 	float heightScale;
-	float parallaxBias;
-
-	float numLayers;
+	uint numLayers;
+	
 	uint mappingMode;
 } uboFS;
 
@@ -41,75 +41,10 @@ layout(location = 7) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
 
 layout(location = 0) out vec4 outColor;
 
-vec2 ParallaxMapping(in vec2 uv, in vec3 viewDir) 
-{
-	float height = 1.0 - texture(heightSampler, uv).r;
-	vec2 p = viewDir.xy * (height * (uboFS.heightScale * 0.5) + uboFS.parallaxBias) / viewDir.z;
-	return uv - p;  
-}
-
-vec2 SteepParallaxMapping(in vec2 uv, in vec3 viewDir) 
-{
-	float layerDepth = 1.0 / uboFS.numLayers;
-	float currLayerDepth = 0.0;
-	vec2 deltaUV = viewDir.xy * uboFS.heightScale / (viewDir.z * uboFS.numLayers);
-	vec2 currUV = uv;
-	float height = 1.0 - texture(heightSampler, currUV).r;
-	for (int i = 0; i < uboFS.numLayers; i++) 
-	{
-		currLayerDepth += layerDepth;
-		currUV -= deltaUV;
-		height = 1.0 - texture(heightSampler, currUV).r;
-		if (height < currLayerDepth) 
-		{
-			break;
-		}
-	}
-	return currUV;
-}
-
-vec2 ParallaxOcclusionMapping(in vec2 uv, in vec3 viewDir) 
-{
-	float layerDepth = 1.0 / uboFS.numLayers;
-	float currLayerDepth = 0.0;
-	vec2 deltaUV = viewDir.xy * uboFS.heightScale / (viewDir.z * uboFS.numLayers);
-	vec2 currUV = uv;
-	float height = 1.0 - texture(heightSampler, currUV).r;
-	for (int i = 0; i < uboFS.numLayers; i++) 
-	{
-		currLayerDepth += layerDepth;
-		currUV -= deltaUV;
-		height = 1.0 - texture(heightSampler, currUV).r;
-		if (height < currLayerDepth) 
-		{
-			break;
-		}
-	}
-	vec2 prevUV = currUV + deltaUV;
-	float nextDepth = height - currLayerDepth;
-	float prevDepth = 1.0 - texture(heightSampler, prevUV).r - currLayerDepth + layerDepth;
-	return mix(currUV, prevUV, nextDepth / (nextDepth - prevDepth));
-}
-
 void main() 
 {
 	const vec3 unitToCameraVector = normalize(inToCameraVectorTangentSpace - inWorldPositionTangentSpace);
-	vec2 uv = vec2(0.0, 0.0);
-	switch(uboFS.mappingMode) 
-	{
-		case 1:
-			uv = ParallaxMapping(inTextureCoord, unitToCameraVector);
-			break;
-		case 2:
-			uv = SteepParallaxMapping(inTextureCoord, unitToCameraVector);
-			break;
-		case 3:
-			uv = ParallaxOcclusionMapping(inTextureCoord, unitToCameraVector);
-			break;
-		default:
-			uv = inTextureCoord;
-			break;
-	}
+	const vec2 uv = ParallaxMapping(uboFS.mappingMode, heightSampler, uboFS.heightScale.x, uboFS.numLayers, inTextureCoord, unitToCameraVector);
 
 	float shadow = 1.0;	
 	if(uboFS.castedByShadows != 0)

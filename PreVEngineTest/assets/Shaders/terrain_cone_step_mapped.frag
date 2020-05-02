@@ -76,7 +76,7 @@ void main()
 				vec2 uv1, uv2;
 				if(minDotToApplyConeMapping > abs(nDotV)) {
 					uv1 = ConeStepMapping(heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, rayDirection);
-					uv2 = ConeStepMapping(heightSampler[i + 1], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, rayDirection);
+					uv2 = ConeStepMapping(heightSampler[i + 1], uboFS.heightScale[i + 1].x, uboFS.numLayers, inTextureCoord, rayDirection);
 				} else {
 					uv1 = inTextureCoord;
 					uv2 = inTextureCoord;
