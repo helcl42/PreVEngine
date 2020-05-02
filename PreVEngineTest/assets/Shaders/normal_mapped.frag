@@ -4,6 +4,7 @@
 
 #include "shadows_use.glsl"
 #include "lights.glsl"
+#include "normal_mapping_use.glsl"
 
 layout(std140, binding = 1) uniform UniformBufferObject {
 	Shadows shadows;
@@ -61,7 +62,7 @@ void main()
 		shadow = GetShadow(depthSampler, normalizedShadowCoord, cascadeIndex, 0.005);
 	}
 
-	const vec3 normalMapValue = 2.0 * texture(normalSampler, inTextureCoord).rgb - 1.0;	
+	const vec3 normal = NormalMapping(normalSampler, inTextureCoord);	
 	const vec4 textureColor = texture(textureSampler, inTextureCoord);	
 
 	if (textureColor.a < 0.5) 
@@ -69,7 +70,6 @@ void main()
 		discard;
 	}
 
-	const vec3 unitNormal = normalize(normalMapValue);
 	const vec3 unitToCameraVector = normalize(inToCameraVectorTangentSpace - inWorldPositionTangentSpace);
 
 	vec3 totalDiffuse = vec3(0.0);
@@ -82,8 +82,8 @@ void main()
 		const vec3 unitToLightVector = normalize(toLightVector);
 
 		const float attenuationFactor = GetAttenuationFactor(light.attenuation.xyz, toLightVector);
-		totalDiffuse += GetDiffuseColor(unitNormal, unitToLightVector, light.color.xyz, attenuationFactor);
-		totalSpecular += GetSpecularColor(unitNormal, unitToLightVector, unitToCameraVector, light.color.xyz, attenuationFactor, uboFS.material.shineDamper, uboFS.material.reflectivity);
+		totalDiffuse += GetDiffuseColor(normal, unitToLightVector, light.color.xyz, attenuationFactor);
+		totalSpecular += GetSpecularColor(normal, unitToLightVector, unitToCameraVector, light.color.xyz, attenuationFactor, uboFS.material.shineDamper, uboFS.material.reflectivity);
 	}
 	totalDiffuse = max(totalDiffuse * shadow, 0.0) + uboFS.lightning.ambientFactor;
 	totalSpecular = totalSpecular * shadow;

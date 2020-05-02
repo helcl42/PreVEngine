@@ -5,6 +5,7 @@
 #include "shadows_use.glsl"
 #include "lights.glsl"
 #include "cone_step_mapping_use.glsl"
+#include "normal_mapping_use.glsl"
 
 const uint MATERIAL_COUNT = 4;
 
@@ -82,8 +83,8 @@ void main()
 					uv2 = inTextureCoord;
 				}
 
-				vec3 normal1 = normalize(2.0 * texture(normalSampler[i], uv1).xyz - 1.0);
-				vec3 normal2 = normalize(2.0 * texture(normalSampler[i + 1], uv2).xyz - 1.0);
+				vec3 normal1 = NormalMapping(normalSampler[i], uv1);
+				vec3 normal2 = NormalMapping(normalSampler[i + 1], uv2);
 				normal = normalize(mix(normal1, normal2, ratio));
 
                 vec4 color1 = texture(textureSampler[i], uv1);
@@ -107,7 +108,7 @@ void main()
 				} else {
 					uv = inTextureCoord;
 				}
-				normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);				
+				normal = NormalMapping(normalSampler[i], uv);				
 				textureColor = texture(textureSampler[i], uv);
 				shineDamper = uboFS.material[i].shineDamper;
 				reflectivity = uboFS.material[i].reflectivity;
@@ -121,7 +122,7 @@ void main()
 				} else {
 					uv = inTextureCoord;
 				}
-				normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);				
+				normal = NormalMapping(normalSampler[i], uv);				
 				textureColor = texture(textureSampler[i], uv);
 				shineDamper = uboFS.material[i].shineDamper;
 				reflectivity = uboFS.material[i].reflectivity;
@@ -135,7 +136,7 @@ void main()
 			} else {
 				uv = inTextureCoord;
 			}
-			normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);			
+			normal = NormalMapping(normalSampler[i], uv);			
 			textureColor = texture(textureSampler[i], uv);
 			shineDamper = uboFS.material[i].shineDamper;
 			reflectivity = uboFS.material[i].reflectivity;
@@ -161,7 +162,6 @@ void main()
 		shadow = GetShadow(depthSampler, normalizedShadowCoord, cascadeIndex, 0.02);
 	}
 
-	const vec3 unitNormal = normalize(normal);
 	const vec3 unitToCameraVector = normalize(inToCameraVectorTangentSpace - inWorldPositionTangentSpace);
 
 	vec3 totalDiffuse = vec3(0.0);
@@ -174,8 +174,8 @@ void main()
 		const vec3 unitToLightVector = normalize(toLightVector);
 
 		const float attenuationFactor = GetAttenuationFactor(light.attenuation.xyz, toLightVector);
-		totalDiffuse += GetDiffuseColor(unitNormal, unitToLightVector, light.color.xyz, attenuationFactor);
-		totalSpecular += GetSpecularColor(unitNormal, unitToLightVector, unitToCameraVector, light.color.xyz, attenuationFactor, shineDamper, reflectivity);
+		totalDiffuse += GetDiffuseColor(normal, unitToLightVector, light.color.xyz, attenuationFactor);
+		totalSpecular += GetSpecularColor(normal, unitToLightVector, unitToCameraVector, light.color.xyz, attenuationFactor, shineDamper, reflectivity);
 	}
 	totalDiffuse = max(totalDiffuse * shadow, 0.0) + uboFS.lightning.ambientFactor;
 	totalSpecular = totalSpecular * shadow;

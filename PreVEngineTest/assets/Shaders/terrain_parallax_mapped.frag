@@ -5,6 +5,7 @@
 #include "shadows_use.glsl"
 #include "lights.glsl"
 #include "parallax_mapping_use.glsl"
+#include "normal_mapping_use.glsl"
 
 const uint MATERIAL_COUNT = 4;
 
@@ -71,16 +72,16 @@ void main()
 				vec2 uv1 = ParallaxMapping(uboFS.mappingMode, heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, unitToCameraVector);
 				vec2 uv2 = ParallaxMapping(uboFS.mappingMode, heightSampler[i + 1], uboFS.heightScale[i + 1].x, uboFS.numLayers, inTextureCoord, unitToCameraVector);
 
-				vec3 normal1 = normalize(2.0 * texture(normalSampler[i], uv1).xyz - 1.0);
+				vec3 normal1 = NormalMapping(normalSampler[i], uv1);
 				// if(abs(dot(normal1, unitToCameraVector)) < uboFS.maxAngleToFallback) {
 				// 	uv1 = inTextureCoord;
-				// 	normal1 = normalize(2.0 * texture(normalSampler[i], uv1).xyz - 1.0);
+				// 	normal1 = NormalMapping(normalSampler[i], uv1);
 				// }
 
-				vec3 normal2 = normalize(2.0 * texture(normalSampler[i + 1], uv2).xyz - 1.0);
+				vec3 normal2 = NormalMapping(normalSampler[i + 1], uv2);
 				// if(abs(dot(normal2, unitToCameraVector)) < uboFS.maxAngleToFallback) {
 				// 	uv2 = inTextureCoord;
-				// 	normal2 = normalize(2.0 * texture(normalSampler[i + 1], uv1).xyz - 1.0);
+				// 	normal2 = NormalMapping(normalSampler[i + 1], uv1);
 				// }
 
 				normal = normalize(mix(normal1, normal2, ratio));
@@ -89,8 +90,8 @@ void main()
 				if(NdotV < uboFS.maxAngleToFallback) {
 					uv1 = inTextureCoord;
 					uv2 = inTextureCoord;
-					normal1 = normalize(2.0 * texture(normalSampler[i], uv1).xyz - 1.0);
-					normal2 = normalize(2.0 * texture(normalSampler[i + 1], uv2).xyz - 1.0);
+					normal1 = NormalMapping(normalSampler[i], uv1);
+					normal2 = NormalMapping(normalSampler[i + 1], uv2);
 					normal = normalize(mix(normal1, normal2, ratio));
 				}
 
@@ -110,11 +111,11 @@ void main()
 			else if(normalizedHeight < uboFS.heightSteps[i].x - uboFS.heightTransitionRange)
 			{
 				vec2 uv = ParallaxMapping(uboFS.mappingMode, heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, unitToCameraVector);
-				normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);
+				normal = NormalMapping(normalSampler[i], uv);
 				float NdotV = abs(dot(normal, unitToCameraVector));
 				if(NdotV < uboFS.maxAngleToFallback) {
 					uv = inTextureCoord;
-					normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);
+					normal = NormalMapping(normalSampler[i], uv);
 				}
 				textureColor = texture(textureSampler[i], uv);
 				shineDamper = uboFS.material[i].shineDamper;
@@ -124,11 +125,11 @@ void main()
             else if(normalizedHeight > uboFS.heightSteps[i].x + uboFS.heightTransitionRange && normalizedHeight < uboFS.heightSteps[i + 1].x - uboFS.heightTransitionRange)
             {
 				vec2 uv = ParallaxMapping(uboFS.mappingMode, heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, unitToCameraVector);
-				normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);
+				normal = NormalMapping(normalSampler[i], uv);
 				float NdotV = abs(dot(normal, unitToCameraVector));
 				if(NdotV < uboFS.maxAngleToFallback) {
 					uv = inTextureCoord;
-					normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);
+					normal = NormalMapping(normalSampler[i], uv);
 				}
 				textureColor = texture(textureSampler[i], uv);
 				shineDamper = uboFS.material[i].shineDamper;
@@ -138,11 +139,11 @@ void main()
         else
         {
 			vec2 uv = ParallaxMapping(uboFS.mappingMode, heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, unitToCameraVector);
-			normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);
+			normal = NormalMapping(normalSampler[i], uv);
 			float NdotV = abs(dot(normal, unitToCameraVector));
 			if(NdotV < uboFS.maxAngleToFallback) {
 				uv = inTextureCoord;
-				normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);
+				normal = NormalMapping(normalSampler[i], uv);
 			}
 			textureColor = texture(textureSampler[i], uv);
 			shineDamper = uboFS.material[i].shineDamper;
@@ -169,8 +170,6 @@ void main()
 		shadow = GetShadow(depthSampler, normalizedShadowCoord, cascadeIndex, 0.02);
 	}
 
-	const vec3 unitNormal = normalize(normal);
-
 	vec3 totalDiffuse = vec3(0.0);
 	vec3 totalSpecular = vec3(0.0);
 	for (uint i = 0; i < uboFS.lightning.realCountOfLights; i++)
@@ -181,8 +180,8 @@ void main()
 		const vec3 unitToLightVector = normalize(toLightVector);
 
 		const float attenuationFactor = GetAttenuationFactor(light.attenuation.xyz, toLightVector);
-		totalDiffuse += GetDiffuseColor(unitNormal, unitToLightVector, light.color.xyz, attenuationFactor);
-		totalSpecular += GetSpecularColor(unitNormal, unitToLightVector, unitToCameraVector, light.color.xyz, attenuationFactor, shineDamper, reflectivity);
+		totalDiffuse += GetDiffuseColor(normal, unitToLightVector, light.color.xyz, attenuationFactor);
+		totalSpecular += GetSpecularColor(normal, unitToLightVector, unitToCameraVector, light.color.xyz, attenuationFactor, shineDamper, reflectivity);
 	}
 	totalDiffuse = max(totalDiffuse * shadow, 0.0) + uboFS.lightning.ambientFactor;
 	totalSpecular = totalSpecular * shadow;

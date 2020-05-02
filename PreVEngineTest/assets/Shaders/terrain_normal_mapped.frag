@@ -4,6 +4,7 @@
 
 #include "shadows_use.glsl"
 #include "lights.glsl"
+#include "normal_mapping_use.glsl"
 
 const uint MATERIAL_COUNT = 4;
 
@@ -45,7 +46,7 @@ layout(location = 0) out vec4 outColor;
 
 void main() 
 {
-	const vec3 viewDirectionTangentSpace = normalize(inToCameraVectorTangentSpace - inWorldPositionTangentSpace);
+	const vec3 unitToCameraVector = normalize(inToCameraVectorTangentSpace - inWorldPositionTangentSpace);
 
     const float heightRange = abs(uboFS.maxHeight) + abs(uboFS.minHeight);
     const float normalizedHeight = (inWorldPosition.y + abs(uboFS.minHeight)) / heightRange;
@@ -66,8 +67,8 @@ void main()
                 vec4 color2 = texture(textureSampler[i + 1], inTextureCoord);
                 textureColor = mix(color1, color2, ratio);
 
-				vec3 normal1 = normalize(2.0 * texture(normalSampler[i], inTextureCoord).xyz - 1.0);
-				vec3 normal2 = normalize(2.0 * texture(normalSampler[i + 1], inTextureCoord).xyz - 1.0);
+				vec3 normal1 = NormalMapping(normalSampler[i], inTextureCoord);
+				vec3 normal2 = NormalMapping(normalSampler[i + 1], inTextureCoord);
 				normal = mix(normal1, normal2, ratio);
 
 				float shineDamper1 = uboFS.material[i].shineDamper;
@@ -82,7 +83,7 @@ void main()
 			else if(normalizedHeight < uboFS.heightSteps[i].x - uboFS.heightTransitionRange)
 			{
 				textureColor = texture(textureSampler[i], inTextureCoord);
-				normal = normalize(2.0 * texture(normalSampler[i], inTextureCoord).xyz - 1.0);
+				normal = NormalMapping(normalSampler[i], inTextureCoord);
 				shineDamper = uboFS.material[i].shineDamper;
 				reflectivity = uboFS.material[i].reflectivity;
 				break;
@@ -90,7 +91,7 @@ void main()
             else if(normalizedHeight > uboFS.heightSteps[i].x + uboFS.heightTransitionRange && normalizedHeight < uboFS.heightSteps[i + 1].x - uboFS.heightTransitionRange)
             {
 				textureColor = texture(textureSampler[i], inTextureCoord);
-				normal = normalize(2.0 * texture(normalSampler[i], inTextureCoord).xyz - 1.0);
+				normal = NormalMapping(normalSampler[i], inTextureCoord);
 				shineDamper = uboFS.material[i].shineDamper;
 				reflectivity = uboFS.material[i].reflectivity;
             }
@@ -98,7 +99,7 @@ void main()
         else
         {
 			textureColor = texture(textureSampler[i], inTextureCoord);
-			normal = normalize(2.0 * texture(normalSampler[i], inTextureCoord).xyz - 1.0);
+			normal = NormalMapping(normalSampler[i], inTextureCoord);
 			shineDamper = uboFS.material[i].shineDamper;
 			reflectivity = uboFS.material[i].reflectivity;
         }
@@ -123,9 +124,6 @@ void main()
 		shadow = GetShadow(depthSampler, normalizedShadowCoord, cascadeIndex, 0.02);
 	}
 
-	const vec3 unitNormal = normalize(normal);
-	const vec3 unitToCameraVector = normalize(viewDirectionTangentSpace);
-
 	vec3 totalDiffuse = vec3(0.0);
 	vec3 totalSpecular = vec3(0.0);
 	for (uint i = 0; i < uboFS.lightning.realCountOfLights; i++)
@@ -136,8 +134,8 @@ void main()
 		const vec3 unitToLightVector = normalize(toLightVector);
 
 		const float attenuationFactor = GetAttenuationFactor(light.attenuation.xyz, toLightVector);
-		totalDiffuse += GetDiffuseColor(unitNormal, unitToLightVector, light.color.xyz, attenuationFactor);
-		totalSpecular += GetSpecularColor(unitNormal, unitToLightVector, unitToCameraVector, light.color.xyz, attenuationFactor, shineDamper, reflectivity);
+		totalDiffuse += GetDiffuseColor(normal, unitToLightVector, light.color.xyz, attenuationFactor);
+		totalSpecular += GetSpecularColor(normal, unitToLightVector, unitToCameraVector, light.color.xyz, attenuationFactor, shineDamper, reflectivity);
 	}
 	totalDiffuse = max(totalDiffuse * shadow, 0.0) + uboFS.lightning.ambientFactor;
 	totalSpecular = totalSpecular * shadow;
