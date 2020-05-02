@@ -2406,7 +2406,7 @@ private:
         uint32_t castedByShadows;
         float heightScale;
 
-        float numLayers;
+        uint32_t numLayers;
     };
 
 private:
@@ -3514,7 +3514,7 @@ private:
         alignas(16) uint32_t selected;
         uint32_t castedByShadows;
         float heightScale;
-        float numLayers;
+        uint32_t numLayers;
     };
 
 private:
@@ -4644,7 +4644,7 @@ private:
         alignas(16) glm::vec4 heightScale[4];
 
         alignas(16) float heightTransitionRange;
-        float numLayers;
+        uint32_t numLayers;
     };
 
 private:

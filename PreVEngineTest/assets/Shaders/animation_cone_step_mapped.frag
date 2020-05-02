@@ -4,6 +4,7 @@
 
 #include "shadows_use.glsl"
 #include "lights.glsl"
+#include "cone_step_mapping_use.glsl"
 
 layout(std140, binding = 1) uniform UniformBufferObject {
 	Shadows shadows;
@@ -19,7 +20,7 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 	uint selected;
 	uint castedByShadows;
 	float heightScale;
-	float numLayers;
+	uint numLayers;
 } uboFS;
 
 layout(binding = 2) uniform sampler2D textureSampler;
@@ -40,46 +41,18 @@ layout(location = 9) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
 
 layout(location = 0) out vec4 outColor;
 
-vec2 ConeStepMapping(in vec2 uv, in vec3 texDir3D)
-{
-    vec2 R = normalize(vec2(length(texDir3D.xy), texDir3D.z)); 
-    vec2 P = R * uboFS.heightScale / texDir3D.z; 
-
-    vec2 textureSize = textureSize(heightSampler, 0);
-    vec2 minTextureStep = normalize(texDir3D.xy) / textureSize;
-    float minStep = length(minTextureStep) * 1.0 / R.x;
-
-    float t = 0.0;
-    for (int i = 0; i < uboFS.numLayers; ++i)
-    {
-        vec3 sample_pt = vec3(uv.xy, uboFS.heightScale) + texDir3D * t;
-
-        vec2 h_and_c = clamp(texture(heightSampler, sample_pt.xy).rg, 0.0, 1.0);
-        float h = h_and_c.x * uboFS.heightScale;
-        float c = h_and_c.y * h_and_c.y / uboFS.heightScale;
-
-        vec2 C = P + R * t;
-        if (C.y <= h)
-		{
-        	break;
-		}
-
-        vec2 Q = vec2(C.x, h);
-        vec2 S = normalize(vec2(c, 1.0));
-        float new_t = dot(Q - P, vec2(S.y, -S.x)) / dot(R, vec2(S.y, -S.x));
-        t = max(t + minStep, new_t);
-    }
-    
-    vec2  texC = uv.xy + texDir3D.xy * t;
-    return texC.xy;
-}
-
 void main() 
 {
-	const float faceSign = sign(dot(inNornal, -inViewPosition));
+	const float nDotV = dot(inNornal, -inViewPosition);
+	const float faceSign = sign(nDotV);
 	mat3 tbnMat = mat3(inTangent, inBiTangent, inNornal * faceSign);
     vec3 rayDirection = normalize(inverse(tbnMat) * inViewPosition);
-	vec2 uv = ConeStepMapping(inTextureCoord, rayDirection);
+	vec2 uv;
+	if(minDotToApplyConeMapping > abs(nDotV)) {
+		uv = ConeStepMapping(heightSampler, uboFS.heightScale.x, uboFS.numLayers, inTextureCoord, rayDirection);
+	} else {
+		uv = inTextureCoord;
+	}
 
 	float shadow = 1.0;	
 	if(uboFS.castedByShadows != 0)

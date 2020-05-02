@@ -4,6 +4,7 @@
 
 #include "shadows_use.glsl"
 #include "lights.glsl"
+#include "cone_step_mapping_use.glsl"
 
 const uint MATERIAL_COUNT = 4;
 
@@ -28,9 +29,7 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 	vec4 heightScale[MATERIAL_COUNT];
 
 	float heightTransitionRange;	
-	float numLayers;
-
-	float maxAngleToFallback;
+	uint numLayers;
 } uboFS;
 
 layout(binding = 2) uniform sampler2D textureSampler[MATERIAL_COUNT];
@@ -51,43 +50,6 @@ layout(location = 9) in vec3 inWorldPositionTangentSpace;
 layout(location = 10) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
 
 layout(location = 0) out vec4 outColor;
-
-vec2 ConeStepMapping(in uint index, in vec2 uv, in vec3 texDir3D)
-{
-	const float heightScale = uboFS.heightScale[index].x;
-    vec2 R = normalize(vec2(length(texDir3D.xy), texDir3D.z)); 
-    vec2 P = R * heightScale / texDir3D.z; 
-
-    vec2 textureSize = textureSize(heightSampler[index], 0);
-    vec2 minTextureStep = normalize(texDir3D.xy) / textureSize;
-    float minStep = length(minTextureStep) * 1.0 / R.x;
-
-    float t = 0.0;
-    for (uint i = 0; i < uboFS.numLayers; ++i)
-    {
-        vec3 sample_pt = vec3(uv.xy, heightScale) + texDir3D * t;
-
-        vec2 h_and_c = clamp(texture(heightSampler[index], sample_pt.xy).rg, 0.0, 1.0);
-        float h = h_and_c.x * heightScale;
-        float c = h_and_c.y * h_and_c.y / heightScale;
-
-        vec2 C = P + R * t;
-        if (C.y <= h)
-		{
-        	break;
-		}
-
-        vec2 Q = vec2(C.x, h);
-        vec2 S = normalize(vec2(c, 1.0));
-        float new_t = dot(Q - P, vec2(S.y, -S.x)) / dot(R, vec2(S.y, -S.x));
-        t = max(t + minStep, new_t);
-    }
-    
-    vec2  texC = uv.xy + texDir3D.xy * t;
-    return texC.xy;
-}
-
-const float minDotToApplyConeMapping = 0.001;
 
 void main()
 {
@@ -113,8 +75,8 @@ void main()
 
 				vec2 uv1, uv2;
 				if(minDotToApplyConeMapping > abs(nDotV)) {
-					uv1 = ConeStepMapping(i, inTextureCoord, rayDirection);
-					uv2 = ConeStepMapping(i + 1, inTextureCoord, rayDirection);
+					uv1 = ConeStepMapping(heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, rayDirection);
+					uv2 = ConeStepMapping(heightSampler[i + 1], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, rayDirection);
 				} else {
 					uv1 = inTextureCoord;
 					uv2 = inTextureCoord;
@@ -141,7 +103,7 @@ void main()
 			{
 				vec2 uv;
 				if(minDotToApplyConeMapping > abs(nDotV)) {
-				 	uv = ConeStepMapping(i, inTextureCoord, rayDirection);
+					uv = ConeStepMapping(heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, rayDirection);
 				} else {
 					uv = inTextureCoord;
 				}
@@ -155,7 +117,7 @@ void main()
             {
 				vec2 uv;
 				if(minDotToApplyConeMapping > abs(nDotV)) {
-					uv = ConeStepMapping(i, inTextureCoord, rayDirection);
+					uv = ConeStepMapping(heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, rayDirection);
 				} else {
 					uv = inTextureCoord;
 				}
@@ -169,7 +131,7 @@ void main()
         {
 			vec2 uv;
 			if(minDotToApplyConeMapping > abs(nDotV)) {
-				uv = ConeStepMapping(i, inTextureCoord, rayDirection);
+				uv = ConeStepMapping(heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, rayDirection);
 			} else {
 				uv = inTextureCoord;
 			}
