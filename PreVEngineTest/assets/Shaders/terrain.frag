@@ -95,20 +95,7 @@ void main()
 	float shadow = 1.0;	
 	if(uboFS.castedByShadows != 0)
 	{
-		// shadow = GetShadowFull(depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.02);
-
-		uint cascadeIndex = 0;
-		for(uint i = 0; i < SHADOW_MAP_CASCADE_COUNT - 1; i++) 
-		{
-			if(inViewPosition.z < uboFS.shadows.cascades[i].split.x)
-			{
-				cascadeIndex = i + 1;
-			}
-		}
-
-	    vec4 shadowCoord = uboFS.shadows.cascades[cascadeIndex].viewProjectionMatrix * vec4(inWorldPosition, 1.0);
-		vec4 normalizedShadowCoord = shadowCoord / shadowCoord.w;
-		shadow = GetShadow(depthSampler, normalizedShadowCoord, cascadeIndex, 0.02);
+		shadow = GetShadow(depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.02);
 	}
 
 	const vec3 unitNormal = normalize(inNormal);

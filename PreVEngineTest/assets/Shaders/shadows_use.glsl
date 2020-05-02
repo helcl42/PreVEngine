@@ -14,7 +14,7 @@ struct Shadows {
 	uint enabled;
 };
 
-float GetShadowRaw(in sampler2DArray depthSampler, in vec4 shadowCoord, in vec2 shadowCoordOffset, in uint cascadeIndex, in float depthBias)
+float GetShadowRawInternal(in sampler2DArray depthSampler, in vec4 shadowCoord, in vec2 shadowCoordOffset, in uint cascadeIndex, in float depthBias)
 {
 	float shadow = 1.0;
 	if (shadowCoord.z > -1.0 && shadowCoord.z < 1.0)
@@ -28,7 +28,7 @@ float GetShadowRaw(in sampler2DArray depthSampler, in vec4 shadowCoord, in vec2 
 	return shadow;
 }
 
-float GetShadowPCF(in sampler2DArray depthSampler, in vec4 shadowCoord, in uint cascadeIndex, in float depthBias)
+float GetShadowPCFInternal(in sampler2DArray depthSampler, in vec4 shadowCoord, in uint cascadeIndex, in float depthBias)
 {
 	const ivec2 texDim = textureSize(depthSampler, 0).xy;
 	const float scale = 0.75;
@@ -42,7 +42,7 @@ float GetShadowPCF(in sampler2DArray depthSampler, in vec4 shadowCoord, in uint 
 	{
 		for (int y = -range; y <= range; y++)
 		{
-			shadowFactor += GetShadowRaw(depthSampler, shadowCoord, vec2(dx * x, dy * y), cascadeIndex, depthBias);
+			shadowFactor += GetShadowRawInternal(depthSampler, shadowCoord, vec2(dx * x, dy * y), cascadeIndex, depthBias);
 			count++;
 		}
 	
@@ -55,16 +55,16 @@ float GetShadow(in sampler2DArray depthSampler, in vec4 shadowCoord, in uint cas
 	float shadow = 1.0f;
 	if(enablePCF)
 	{
-		shadow = GetShadowPCF(depthSampler, shadowCoord, cascadeIndex, depthBias);
+		shadow = GetShadowPCFInternal(depthSampler, shadowCoord, cascadeIndex, depthBias);
 	}
 	else
 	{
-		shadow = GetShadowRaw(depthSampler, shadowCoord, vec2(0.0), cascadeIndex, depthBias);
+		shadow = GetShadowRawInternal(depthSampler, shadowCoord, vec2(0.0), cascadeIndex, depthBias);
 	}
 	return shadow;
 }
 
-float GetShadowFull(in sampler2DArray depthSampler, in Shadows shadows, in vec3 viewPosition, in vec3 worldPosition, in float depthBias)
+float GetShadow(in sampler2DArray depthSampler, in Shadows shadows, in vec3 viewPosition, in vec3 worldPosition, in float depthBias)
 {
 	float shadow = 1.0;	
 	if(shadows.enabled != 0)

@@ -2402,7 +2402,6 @@ private:
         alignas(16) uint32_t selected;
         uint32_t castedByShadows;
         float heightScale;
-
         uint32_t numLayers;
     };
 
