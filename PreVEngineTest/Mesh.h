@@ -5,53 +5,166 @@
 
 #include "AssimpCommon.h"
 
-class CubeMesh : public IMesh {
+class CubeMesh final : public IMesh {
+public:
+    CubeMesh(const bool includeTangentBiTangent = false)
+    {
+        std::vector<glm::vec3> tangents;
+        std::vector<glm::vec3> biTangents;
+        if (includeTangentBiTangent) {
+            MeshUtil::GenerateTangetsAndBiTangents(vertices, textureCoords, indices, tangents, biTangents);
+            m_vertexLayout = { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 } };
+        } else {
+            m_vertexLayout = { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
+        }
+
+        for (auto i = 0; i < vertices.size(); i++) {
+            m_vertexDataBuffer.Add(vertices[i]);
+            m_vertexDataBuffer.Add(textureCoords[i]);
+            m_vertexDataBuffer.Add(normals[i]);
+            if (includeTangentBiTangent) {
+                m_vertexDataBuffer.Add(tangents[i]);
+                m_vertexDataBuffer.Add(biTangents[i]);
+            }
+        }
+    }
+
+    ~CubeMesh() = default;
+    
+public:
+    const VertexLayout& GetVertexLayout() const override
+    {
+        return m_vertexLayout;
+    }
+
+    const void* GetVertexData() const override
+    {
+        return m_vertexDataBuffer.GetData();
+    }
+
+    std::vector<glm::vec3> GetVertices() const override
+    {
+        return vertices;
+    }
+
+    uint32_t GerVerticesCount() const override
+    {
+        return static_cast<uint32_t>(vertices.size());
+    }
+
+    const std::vector<uint32_t>& GerIndices() const override
+    {
+        return indices;
+    }
+
+    bool HasIndices() const override
+    {
+        return indices.size() > 0;
+    }
+
 private:
-    struct Vertex {
-        glm::vec3 pos;
-        glm::vec2 tc;
-        glm::vec3 normal;
+    VertexLayout m_vertexLayout;
+   
+    VertexDataBuffer m_vertexDataBuffer;
+
+private:
+    static const inline std::vector<glm::vec3> vertices = {
+        // FROMT
+        { -0.5f, -0.5f, 0.5f },
+        { 0.5f, -0.5f, 0.5f },
+        { 0.5f, 0.5f, 0.5f },
+        { -0.5f, 0.5f, 0.5f },
+        // BACK
+        { -0.5f, -0.5f, -0.5f },
+        { 0.5f, -0.5f, -0.5f },
+        { 0.5f, 0.5f, -0.5f },
+        { -0.5f, 0.5f, -0.5f },
+        // TOP
+        { -0.5f, 0.5f, 0.5f },
+        { 0.5f, 0.5f, 0.5f },
+        { 0.5f, 0.5f, -0.5f },
+        { -0.5f, 0.5f, -0.5f },
+        // BOTTOM
+        { -0.5f, -0.5f, 0.5f },
+        { 0.5f, -0.5f, 0.5f },
+        { 0.5f, -0.5f, -0.5f },
+        { -0.5f, -0.5f, -0.5f },
+        // LEFT
+        { -0.5f, -0.5f, 0.5f },
+        { -0.5f, 0.5f, 0.5f },
+        { -0.5f, 0.5f, -0.5f },
+        { -0.5f, -0.5f, -0.5f },
+        // RIGHT
+        { 0.5f, -0.5f, 0.5f },
+        { 0.5f, 0.5f, 0.5f },
+        { 0.5f, 0.5f, -0.5f },
+        { 0.5f, -0.5f, -0.5f }
     };
 
-private:
-    static const inline VertexLayout vertexLayout{ { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
-
-    static const inline std::vector<Vertex> vertices = {
+    static const inline std::vector<glm::vec2> textureCoords = {
         // FROMT
-        { { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } },
-        { { 0.5f, -0.5f, 0.5f }, { 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } },
-        { { 0.5f, 0.5f, 0.5f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-        { { -0.5f, 0.5f, 0.5f }, { 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-
+        { 1.0f, 0.0f },
+        { 0.0f, 0.0f },
+        { 0.0f, 1.0f },
+        { 1.0f, 1.0f },
         // BACK
-        { { -0.5f, -0.5f, -0.5f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f } },
-        { { 0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f }, { 0.0f, 0.0f, -1.0f } },
-        { { 0.5f, 0.5f, -0.5f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, -1.0f } },
-        { { -0.5f, 0.5f, -0.5f }, { 1.0f, 1.0f }, { 0.0f, 0.0f, -1.0f } },
-
+        { 1.0f, 0.0f },
+        { 0.0f, 0.0f },
+        { 0.0f, 1.0f },
+        { 1.0f, 1.0f },
         // TOP
-        { { -0.5f, 0.5f, 0.5f }, { 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
-        { { 0.5f, 0.5f, 0.5f }, { 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
-        { { 0.5f, 0.5f, -0.5f }, { 0.0f, 1.0f }, { 0.0f, 1.0f, 0.0f } },
-        { { -0.5f, 0.5f, -0.5f }, { 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f } },
-
+        { 1.0f, 0.0f },
+        { 0.0f, 0.0f },
+        { 0.0f, 1.0f },
+        { 1.0f, 1.0f },
         // BOTTOM
-        { { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f }, { 0.0f, -1.0f, 0.0f } },
-        { { 0.5f, -0.5f, 0.5f }, { 0.0f, 0.0f }, { 0.0f, -1.0f, 0.0f } },
-        { { 0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f }, { 0.0f, -1.0f, 0.0f } },
-        { { -0.5f, -0.5f, -0.5f }, { 1.0f, 1.0f }, { 0.0f, -1.0f, 0.0f } },
-
+        { 1.0f, 0.0f },
+        { 0.0f, 0.0f },
+        { 0.0f, 1.0f },
+        { 1.0f, 1.0f },
         // LEFT
-        { { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f }, { -1.0f, 0.0f, 0.0f } },
-        { { -0.5f, 0.5f, 0.5f }, { 0.0f, 0.0f }, { -1.0f, 0.0f, 0.0f } },
-        { { -0.5f, 0.5f, -0.5f }, { 0.0f, 1.0f }, { -1.0f, 0.0f, 0.0f } },
-        { { -0.5f, -0.5f, -0.5f }, { 1.0f, 1.0f }, { -1.0f, 0.0f, 0.0f } },
-
+        { 1.0f, 0.0f },
+        { 0.0f, 0.0f },
+        { 0.0f, 1.0f },
+        { 1.0f, 1.0f },
         // RIGHT
-        { { 0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
-        { { 0.5f, 0.5f, 0.5f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
-        { { 0.5f, 0.5f, -0.5f }, { 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f } },
-        { { 0.5f, -0.5f, -0.5f }, { 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f } }
+        { 1.0f, 0.0f },
+        { 0.0f, 0.0f },
+        { 0.0f, 1.0f },
+        { 1.0f, 1.0f }
+    };
+
+    static const inline std::vector<glm::vec3> normals = {
+        // FROMT
+        { 0.0f, 0.0f, 1.0f },
+        { 0.0f, 0.0f, 1.0f },
+        { 0.0f, 0.0f, 1.0f },
+        { 0.0f, 0.0f, 1.0f },
+        // BACK
+        { 0.0f, 0.0f, -1.0f },
+        { 0.0f, 0.0f, -1.0f },
+        { 0.0f, 0.0f, -1.0f },
+        { 0.0f, 0.0f, -1.0f },
+        // TOP
+        { 0.0f, 1.0f, 0.0f },
+        { 0.0f, 1.0f, 0.0f },
+        { 0.0f, 1.0f, 0.0f },
+        { 0.0f, 1.0f, 0.0f },
+        // BOTTOM
+        { 0.0f, -1.0f, 0.0f },
+        { 0.0f, -1.0f, 0.0f },
+        { 0.0f, -1.0f, 0.0f },
+        { 0.0f, -1.0f, 0.0f },
+        // LEFT
+        { -1.0f, 0.0f, 0.0f },
+        { -1.0f, 0.0f, 0.0f },
+        { -1.0f, 0.0f, 0.0f },
+        { -1.0f, 0.0f, 0.0f },
+        // RIGHT
+        { 1.0f, 0.0f, 0.0f },
+        { 1.0f, 0.0f, 0.0f },
+        { 1.0f, 0.0f, 0.0f },
+        { 1.0f, 0.0f, 0.0f },
     };
 
     static const inline std::vector<uint32_t> indices = {
@@ -62,25 +175,47 @@ private:
         16, 17, 18, 18, 19, 16,
         20, 21, 22, 22, 23, 20
     };
+};
+
+class QuadMesh final : public IMesh {
+public:
+    QuadMesh(const bool includeTangentBiTangent = false) {
+        std::vector<glm::vec3> tangents;
+        std::vector<glm::vec3> biTangents;
+        if (includeTangentBiTangent) {
+            MeshUtil::GenerateTangetsAndBiTangents(vertices, textureCoords, indices, tangents, biTangents);
+            m_vertexLayout = { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 } };
+        } else {
+            m_vertexLayout = { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
+        }
+
+        for (auto i = 0; i < vertices.size(); i++) {
+            m_vertexDataBuffer.Add(vertices[i]);
+            m_vertexDataBuffer.Add(textureCoords[i]);
+            m_vertexDataBuffer.Add(normals[i]);
+            if (includeTangentBiTangent) {
+                m_vertexDataBuffer.Add(tangents[i]);
+                m_vertexDataBuffer.Add(biTangents[i]);
+            }
+        }
+    }
+
+    ~QuadMesh() = default;
 
 public:
     const VertexLayout& GetVertexLayout() const override
     {
-        return vertexLayout;
+        return m_vertexLayout;
     }
 
     const void* GetVertexData() const override
     {
-        return (const void*)vertices.data();
+        return m_vertexDataBuffer.GetData();
     }
-    
+
     std::vector<glm::vec3> GetVertices() const override
     {
-        std::vector<glm::vec3> verts{ vertices.size() };
-        for (auto i = 0; i < vertices.size(); i++) {
-            verts[i] = vertices[i].pos;
-        }
-        return verts;
+        return vertices;
     }
 
     uint32_t GerVerticesCount() const override
@@ -97,76 +232,40 @@ public:
     {
         return indices.size() > 0;
     }
-};
 
-class QuadMesh : public IMesh {
-private:
-    struct Vertex {
-        glm::vec3 pos;
-        glm::vec2 tc;
-        glm::vec3 normal;
-    };
-
-private:
-    static const inline VertexLayout vertexLayout{ { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
-
-    static const inline std::vector<Vertex> vertices = {
-        { { 1.0f, 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-        { { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-        { { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } },
-        { { 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
-    };
-
-    static const inline std::vector<uint32_t> indices = {
-        0, 1, 2, 2, 3, 0
-    };
-
-public:
-    const VertexLayout& GetVertexLayout() const override
-    {
-        return vertexLayout;
-    }
-
-    const void* GetVertexData() const override
-    {
-        return (const void*)vertices.data();
-    }
-
-    std::vector<glm::vec3> GetVertices() const override
-    {
-        std::vector<glm::vec3> verts{ vertices.size() };
-        for (auto i = 0; i < vertices.size(); i++) {
-            verts[i] = vertices[i].pos;
-        }
-        return verts;
-    }
-
-    uint32_t GerVerticesCount() const override
-    {
-        return static_cast<uint32_t>(vertices.size());
-    }
-
-    const std::vector<uint32_t>& GerIndices() const override
-    {
-        return indices;
-    }
-
-    bool HasIndices() const override
-    {
-        return indices.size() > 0;
-    }
-};
-
-class PlaneMesh : public IMesh {
 private:
     VertexLayout m_vertexLayout;
 
     VertexDataBuffer m_vertexDataBuffer;
 
-    std::vector<glm::vec3> m_vertices;
+private:
+    static const inline std::vector<glm::vec3> vertices = {
+        { 1.0f, 1.0f, 0.0f },
+        { 0.0f, 1.0f, 0.0f },
+        { 0.0f, 0.0f, 0.0f },
+        { 1.0f, 0.0f, 0.0f }
+    };
 
-    std::vector<uint32_t> m_indices;
+    static const inline std::vector<glm::vec2> textureCoords = {
+        { 1.0f, 1.0f },
+        { 0.0f, 1.0f },
+        { 0.0f, 0.0f },
+        { 1.0f, 0.0f }
+    };
 
+    static const inline std::vector<glm::vec3> normals = {
+        { 0.0f, 0.0f, 1.0f },
+        { 0.0f, 0.0f, 1.0f },
+        { 0.0f, 0.0f, 1.0f },
+        { 0.0f, 0.0f, 1.0f }
+    };
+
+    static const inline std::vector<uint32_t> indices = {
+        0, 1, 2, 2, 3, 0
+    };
+};
+
+class PlaneMesh final : public IMesh {
 public:
     PlaneMesh(const float xSize, const float zSize, const uint32_t xDivs, const uint32_t zDivs, const float textureCoordUMax = 1.0f, const float textureCoordVMax = 1.0f, bool generateTangentBiTangent = false)
     {
@@ -239,7 +338,7 @@ public:
         }
     }
 
-    virtual ~PlaneMesh() = default;
+    ~PlaneMesh() = default;
 
 public:
     const VertexLayout& GetVertexLayout() const override
@@ -271,9 +370,7 @@ public:
     {
         return m_indices.size() > 0;
     }
-};
 
-class SphereMesh : public IMesh {
 private:
     VertexLayout m_vertexLayout;
 
@@ -282,7 +379,9 @@ private:
     std::vector<glm::vec3> m_vertices;
 
     std::vector<uint32_t> m_indices;
+};
 
+class SphereMesh final : public IMesh {
 public:
     SphereMesh(const float radius, const int subDivY, const int subDivZ, const float degreesHorizontal = 360.0f, const float degreesVertical = 180.0f, bool generateTangentBiTangent = false)
     {
@@ -392,7 +491,7 @@ public:
         }
     }
 
-    virtual ~SphereMesh() = default;
+    ~SphereMesh() = default;
 
 public:
     const VertexLayout& GetVertexLayout() const override
@@ -424,13 +523,6 @@ public:
     {
         return m_indices.size() > 0;
     }
-};
-
-class MeshFactory;
-
-class ModelMesh : public IMesh {
-private:
-    friend MeshFactory;
 
 private:
     VertexLayout m_vertexLayout;
@@ -439,10 +531,12 @@ private:
 
     std::vector<glm::vec3> m_vertices;
 
-    uint32_t m_verticesCount = 0;
-
     std::vector<uint32_t> m_indices;
+};
 
+class MeshFactory;
+
+class ModelMesh final : public IMesh {
 public:
     const VertexLayout& GetVertexLayout() const override
     {
@@ -473,9 +567,23 @@ public:
     {
         return m_indices.size() > 0;
     }
+
+private:
+    friend MeshFactory;
+
+private:
+    VertexLayout m_vertexLayout;
+
+    VertexDataBuffer m_vertexDataBuffer;
+
+    std::vector<glm::vec3> m_vertices;
+
+    uint32_t m_verticesCount = 0;
+
+    std::vector<uint32_t> m_indices;
 };
 
-class MeshFactory {
+class MeshFactory final {
 public:
     enum class AssimpMeshFactoryCreateFlags {
         ANIMATION,
