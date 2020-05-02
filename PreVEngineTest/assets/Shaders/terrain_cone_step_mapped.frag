@@ -87,12 +87,15 @@ vec2 ConeStepMapping(in uint index, in vec2 uv, in vec3 texDir3D)
     return texC.xy;
 }
 
+const float minDotToApplyConeMapping = 0.001;
+
 void main()
 {
     const float heightRange = abs(uboFS.maxHeight) + abs(uboFS.minHeight);
     const float normalizedHeight = (inWorldPosition.y + abs(uboFS.minHeight)) / heightRange;
 
-	const float faceSign = sign(dot(inNornal, -inViewPosition));
+	const float nDotV = dot(inNornal, -inViewPosition);
+	const float faceSign = sign(nDotV);
 	mat3 tbnMat = mat3(inTangent, inBiTangent, inNornal * faceSign);
     vec3 rayDirection = normalize(inverse(tbnMat) * inViewPosition);
 
@@ -108,8 +111,14 @@ void main()
             {				
                 float ratio = (normalizedHeight - uboFS.heightSteps[i].x + uboFS.heightTransitionRange) / (2 * uboFS.heightTransitionRange);
 
-				vec2 uv1 = ConeStepMapping(i, inTextureCoord, rayDirection);
-				vec2 uv2 = ConeStepMapping(i + 1, inTextureCoord, rayDirection);
+				vec2 uv1, uv2;
+				if(minDotToApplyConeMapping > abs(nDotV)) {
+					uv1 = ConeStepMapping(i, inTextureCoord, rayDirection);
+					uv2 = ConeStepMapping(i + 1, inTextureCoord, rayDirection);
+				} else {
+					uv1 = inTextureCoord;
+					uv2 = inTextureCoord;
+				}
 
 				vec3 normal1 = normalize(2.0 * texture(normalSampler[i], uv1).xyz - 1.0);
 				vec3 normal2 = normalize(2.0 * texture(normalSampler[i + 1], uv2).xyz - 1.0);
@@ -130,7 +139,12 @@ void main()
             }
 			else if(normalizedHeight < uboFS.heightSteps[i].x - uboFS.heightTransitionRange)
 			{
-				vec2 uv = ConeStepMapping(i, inTextureCoord, rayDirection);
+				vec2 uv;
+				if(minDotToApplyConeMapping > abs(nDotV)) {
+				 	uv = ConeStepMapping(i, inTextureCoord, rayDirection);
+				} else {
+					uv = inTextureCoord;
+				}
 				normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);				
 				textureColor = texture(textureSampler[i], uv);
 				shineDamper = uboFS.material[i].shineDamper;
@@ -139,7 +153,12 @@ void main()
 			}
             else if(normalizedHeight > uboFS.heightSteps[i].x + uboFS.heightTransitionRange && normalizedHeight < uboFS.heightSteps[i + 1].x - uboFS.heightTransitionRange)
             {
-				vec2 uv = ConeStepMapping(i, inTextureCoord, rayDirection);
+				vec2 uv;
+				if(minDotToApplyConeMapping > abs(nDotV)) {
+					uv = ConeStepMapping(i, inTextureCoord, rayDirection);
+				} else {
+					uv = inTextureCoord;
+				}
 				normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);				
 				textureColor = texture(textureSampler[i], uv);
 				shineDamper = uboFS.material[i].shineDamper;
@@ -148,7 +167,12 @@ void main()
         }
         else
         {
-			vec2 uv = ConeStepMapping(i, inTextureCoord, rayDirection);
+			vec2 uv;
+			if(minDotToApplyConeMapping > abs(nDotV)) {
+				uv = ConeStepMapping(i, inTextureCoord, rayDirection);
+			} else {
+				uv = inTextureCoord;
+			}
 			normal = normalize(2.0 * texture(normalSampler[i], uv).xyz - 1.0);			
 			textureColor = texture(textureSampler[i], uv);
 			shineDamper = uboFS.material[i].shineDamper;
