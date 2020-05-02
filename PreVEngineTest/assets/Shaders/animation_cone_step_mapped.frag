@@ -46,14 +46,9 @@ void main()
 {
 	const float nDotV = dot(inNornal, -inViewPosition);
 	const float faceSign = sign(nDotV);
-	mat3 tbnMat = mat3(inTangent, inBiTangent, inNornal * faceSign);
-    vec3 rayDirection = normalize(inverse(tbnMat) * inViewPosition);
-	vec2 uv;
-	if(minDotToApplyConeMapping > abs(nDotV)) {
-		uv = ConeStepMapping(heightSampler, uboFS.heightScale.x, uboFS.numLayers, inTextureCoord, rayDirection);
-	} else {
-		uv = inTextureCoord;
-	}
+	const mat3 tbnMat = mat3(inTangent, inBiTangent, inNornal * faceSign);
+    const vec3 rayDirection = normalize(inverse(tbnMat) * inViewPosition);
+	const vec2 uv = ConeStepMapping(heightSampler, uboFS.heightScale.x, uboFS.numLayers, inTextureCoord, rayDirection);
 
 	float shadow = 1.0;	
 	if(uboFS.castedByShadows != 0)

@@ -1,7 +1,5 @@
 // cone step mapping client code
 
-const float minDotToApplyConeMapping = 0.001;
-
 vec2 ConeStepMapping(in sampler2D coneMapSampler, in float heightScale, in uint numLayers, in vec2 uv, in vec3 texDir3D)
 {
     vec2 R = normalize(vec2(length(texDir3D.xy), texDir3D.z)); 
