@@ -595,7 +595,7 @@ private:
         
         auto heightImage = CreateImage(heightPath);
         auto heightImageBuffer = std::make_unique<ImageBuffer>(allocator);
-        heightImageBuffer->Create(ImageBufferCreateInfo{ { heightImage->GetWidth(), heightImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, false, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)heightImage->GetBuffer() });
+        heightImageBuffer->Create(ImageBufferCreateInfo{ { heightImage->GetWidth(), heightImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)heightImage->GetBuffer() });
 
         return std::make_unique<Material>(std::move(image), std::move(imageBuffer), std::move(normalImage), std::move(normalImageBuffer), std::move(heightImage), std::move(heightImageBuffer), shineDamper, reflectivity);
     }
