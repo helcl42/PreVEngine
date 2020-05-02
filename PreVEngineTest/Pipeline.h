@@ -96,10 +96,10 @@ public:
         inputAssembly.primitiveRestartEnable = VK_FALSE;
 
         VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
-        vertexInputState.vertexBindingDescriptionCount = 1;
-        vertexInputState.pVertexBindingDescriptions = shader.GetVertexInputBindingDescription();
-        vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(shader.GetVertexInputAttributeDewcriptions().size());
-        vertexInputState.pVertexAttributeDescriptions = shader.GetVertexInputAttributeDewcriptions().data();
+        vertexInputState.vertexBindingDescriptionCount = static_cast<uint32_t>(shader.GetVertexInputBindingDescriptions().size());
+        vertexInputState.pVertexBindingDescriptions = shader.GetVertexInputBindingDescriptions().data();
+        vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(shader.GetVertexInputAttributeDescriptions().size());
+        vertexInputState.pVertexAttributeDescriptions = shader.GetVertexInputAttributeDescriptions().data();
 
         const VkExtent2D initialExtent{ 640, 480 };
 
@@ -188,10 +188,10 @@ public:
         inputAssembly.primitiveRestartEnable = VK_FALSE;
 
         VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
-        vertexInputState.vertexBindingDescriptionCount = 1;
-        vertexInputState.pVertexBindingDescriptions = shader.GetVertexInputBindingDescription();
-        vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(shader.GetVertexInputAttributeDewcriptions().size());
-        vertexInputState.pVertexAttributeDescriptions = shader.GetVertexInputAttributeDewcriptions().data();
+        vertexInputState.vertexBindingDescriptionCount = static_cast<uint32_t>(shader.GetVertexInputBindingDescriptions().size());
+        vertexInputState.pVertexBindingDescriptions = shader.GetVertexInputBindingDescriptions().data();
+        vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(shader.GetVertexInputAttributeDescriptions().size());
+        vertexInputState.pVertexAttributeDescriptions = shader.GetVertexInputAttributeDescriptions().data();
 
         const VkExtent2D initialExtent{ 640, 480 };
 
@@ -295,10 +295,10 @@ public:
         inputAssembly.primitiveRestartEnable = VK_FALSE;
 
         VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
-        vertexInputState.vertexBindingDescriptionCount = 1;
-        vertexInputState.pVertexBindingDescriptions = shader.GetVertexInputBindingDescription();
-        vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(shader.GetVertexInputAttributeDewcriptions().size());
-        vertexInputState.pVertexAttributeDescriptions = shader.GetVertexInputAttributeDewcriptions().data();
+        vertexInputState.vertexBindingDescriptionCount = static_cast<uint32_t>(shader.GetVertexInputBindingDescriptions().size());
+        vertexInputState.pVertexBindingDescriptions = shader.GetVertexInputBindingDescriptions().data();
+        vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(shader.GetVertexInputAttributeDescriptions().size());
+        vertexInputState.pVertexAttributeDescriptions = shader.GetVertexInputAttributeDescriptions().data();
 
         const VkExtent2D initialExtent{ 640, 480 };
 
@@ -402,10 +402,10 @@ public:
         inputAssembly.primitiveRestartEnable = VK_FALSE;
 
         VkPipelineVertexInputStateCreateInfo vertexInputState = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
-        vertexInputState.vertexBindingDescriptionCount = 1;
-        vertexInputState.pVertexBindingDescriptions = shader.GetVertexInputBindingDescription();
-        vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(shader.GetVertexInputAttributeDewcriptions().size());
-        vertexInputState.pVertexAttributeDescriptions = shader.GetVertexInputAttributeDewcriptions().data();
+        vertexInputState.vertexBindingDescriptionCount = static_cast<uint32_t>(shader.GetVertexInputBindingDescriptions().size());
+        vertexInputState.pVertexBindingDescriptions = shader.GetVertexInputBindingDescriptions().data();
+        vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(shader.GetVertexInputAttributeDescriptions().size());
+        vertexInputState.pVertexAttributeDescriptions = shader.GetVertexInputAttributeDescriptions().data();
 
         const VkExtent2D initialExtent{ 640, 480 };
 
@@ -504,7 +504,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = { 
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
@@ -554,7 +556,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = {
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
@@ -606,7 +610,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = {
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
@@ -656,7 +662,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = { 
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
@@ -708,7 +716,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4, VertexLayoutComponent::VEC4 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = {
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4, VertexLayoutComponent::VEC4 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
@@ -760,7 +770,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = {
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
@@ -816,7 +828,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = {
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX) 
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
@@ -871,7 +885,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = { 
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
@@ -929,7 +945,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = { 
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX) 
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
@@ -988,7 +1006,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = { 
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX) 
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
@@ -1049,7 +1069,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4, VertexLayoutComponent::VEC4 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = {
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4, VertexLayoutComponent::VEC4 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
@@ -1106,7 +1128,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = {
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
@@ -1166,7 +1190,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = {
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
@@ -1227,7 +1253,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = { 
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX) 
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
@@ -1290,7 +1318,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC2 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = { 
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC2 }), VK_VERTEX_INPUT_RATE_VERTEX) 
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32_SFLOAT, 0),
@@ -1345,7 +1375,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = { 
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX) 
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
@@ -1401,7 +1433,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = { 
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
@@ -1459,7 +1493,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = { 
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX) 
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
@@ -1518,7 +1554,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = { 
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
@@ -1579,7 +1617,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = {
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX) 
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0)
@@ -1633,7 +1673,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = { 
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX) 
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0)
@@ -1693,7 +1735,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC2 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = { 
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC2 }), VK_VERTEX_INPUT_RATE_VERTEX) 
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32_SFLOAT, 0)
@@ -1748,7 +1792,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = {
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX) 
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
@@ -1805,7 +1851,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = { 
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
@@ -1855,7 +1903,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = { 
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX) 
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
@@ -1905,7 +1955,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = { 
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX) 
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0)
@@ -1956,7 +2008,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = {
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX) 
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
@@ -2009,7 +2063,9 @@ public:
 private:
     void InitVertexInputs() override
     {
-        m_inputBindingDescription = VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX);
+        m_inputBindingDescriptions = { 
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX) 
+        };
 
         m_inputAttributeDescriptions = {
             VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0)

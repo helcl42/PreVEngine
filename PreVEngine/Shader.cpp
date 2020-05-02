@@ -297,12 +297,12 @@ const std::vector<VkPushConstantRange>& Shader::GetPushConstantsRanges() const
     return m_pushConstantRanges;
 }
 
-const VkVertexInputBindingDescription* Shader::GetVertexInputBindingDescription() const
+const std::vector<VkVertexInputBindingDescription>& Shader::GetVertexInputBindingDescriptions() const
 {
-    return &m_inputBindingDescription;
+    return m_inputBindingDescriptions;
 }
 
-const std::vector<VkVertexInputAttributeDescription>& Shader::GetVertexInputAttributeDewcriptions() const
+const std::vector<VkVertexInputAttributeDescription>& Shader::GetVertexInputAttributeDescriptions() const
 {
     return m_inputAttributeDescriptions;
 }

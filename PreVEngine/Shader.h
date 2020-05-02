@@ -52,7 +52,7 @@ protected:
     std::vector<VkPushConstantRange> m_pushConstantRanges;
 
     //Vertex Inputs
-    VkVertexInputBindingDescription m_inputBindingDescription;
+    std::vector<VkVertexInputBindingDescription> m_inputBindingDescriptions;
 
     std::vector<VkVertexInputAttributeDescription> m_inputAttributeDescriptions;
 
@@ -112,9 +112,9 @@ public:
 
     const std::vector<VkPipelineShaderStageCreateInfo>& GetShaderStages() const;
 
-    const VkVertexInputBindingDescription* GetVertexInputBindingDescription() const;
+    const std::vector<VkVertexInputBindingDescription>& GetVertexInputBindingDescriptions() const;
 
-    const std::vector<VkVertexInputAttributeDescription>& GetVertexInputAttributeDewcriptions() const;
+    const std::vector<VkVertexInputAttributeDescription>& GetVertexInputAttributeDescriptions() const;
 };
 
 class ShaderFactory {
