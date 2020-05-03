@@ -2,6 +2,7 @@
 #define __RENDERER_H__
 
 #include <ThreadPool.h>
+#include <Buffers.h>
 
 #include "General.h"
 
@@ -5616,8 +5617,6 @@ class ParticlesRenderer final : public IRenderer<NormalRenderContextUserData> {
 private:
     struct alignas(16) UniformsVS
     {
-        alignas(16) glm::mat4 modelMatrix;
-
         alignas(16) glm::mat4 viewMatrix;
 
         alignas(16) glm::mat4 projectionMatrix;
@@ -5628,12 +5627,6 @@ private:
     struct alignas(16) UniformsFS
     {
         alignas(16) glm::vec4 color;
-
-        alignas(16) glm::vec4 textureOffsetStage1;
-
-        alignas(16) glm::vec4 textureOffsetStage2;
-
-        alignas(16) float stagesBlendFactor;
     };
 
 private:
@@ -5650,6 +5643,8 @@ private:
     std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
     std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+
+    std::unique_ptr<VBO> m_instanceDataBuffer;
 
 public:
     ParticlesRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -5681,6 +5676,8 @@ public:
 
         m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+
+        m_instanceDataBuffer = std::make_unique<VBO>(*allocator);
     }
 
     void BeforeRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
@@ -5703,42 +5700,45 @@ public:
             const auto cameraComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
             const auto particlesComponent = ComponentRepository<IParticleSystemComponent>::Instance().Get(node->GetId());
             const auto& particles = particlesComponent->GetParticles();
-            for(const auto& particle : particles) {
-                 auto uboVS = m_uniformsPoolVS->GetNext();
 
-                UniformsVS uniformsVS{};
-                uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
-                uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
-                uniformsVS.modelMatrix = MathUtil::CreateTransformationMatrix(particle->GetPosition(), glm::inverse(cameraComponent->GetOrientation()) * glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, particle->GetRotation()))), particle->GetScale());
-
-                uniformsVS.textureNumberOfRows = particlesComponent->GetMaterial()->GetAtlasNumberOfRows();
-
-                uboVS->Update(&uniformsVS);
-
-                auto uboFS = m_uniformsPoolFS->GetNext();
-
-                UniformsFS uniformsFS{};
-                uniformsFS.color = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
-                uniformsFS.textureOffsetStage1 = glm::vec4(particle->GetCurrentStageTextureOffset(), 0.0f, 0.0f);
-                uniformsFS.textureOffsetStage2 = glm::vec4(particle->GetNextStageTextureOffset(), 0.0f, 0.0f);
-                uniformsFS.stagesBlendFactor = particle->GetStagesBlendFactor();
-
-                uboFS->Update(&uniformsFS);
-
-                m_shader->Bind("uboVS", *uboVS);
-                m_shader->Bind("uboFS", *uboFS);
-                m_shader->Bind("textureSampler", *particlesComponent->GetMaterial()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                const VkBuffer vertexBuffers[] = { *particlesComponent->GetModel()->GetVertexBuffer() };
-                const VkDeviceSize offsets[] = { 0 };
-
-                vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-                vkCmdBindIndexBuffer(renderContext.commandBuffer, *particlesComponent->GetModel()->GetIndexBuffer(), 0, particlesComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-                vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-
-                vkCmdDrawIndexed(renderContext.commandBuffer, particlesComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+            const size_t singleInstanceSizeInBytes = sizeof(glm::mat4) + sizeof(glm::vec2) + sizeof(glm::vec2) + sizeof(float);
+            VertexDataBuffer instanceDataBuffer(singleInstanceSizeInBytes * particles.size());
+            for (const auto& particle : particles) {
+                instanceDataBuffer.Add(MathUtil::CreateTransformationMatrix(particle->GetPosition(), glm::inverse(cameraComponent->GetOrientation()) * glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, particle->GetRotation()))), particle->GetScale()));
+                instanceDataBuffer.Add(particle->GetCurrentStageTextureOffset());
+                instanceDataBuffer.Add(particle->GetNextStageTextureOffset());
+                instanceDataBuffer.Add(particle->GetStagesBlendFactor());
             }
+            m_instanceDataBuffer->Data(instanceDataBuffer.GetData(), static_cast<uint32_t>(particles.size()), singleInstanceSizeInBytes);
+
+            auto uboVS = m_uniformsPoolVS->GetNext();
+            UniformsVS uniformsVS{};
+            uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
+            uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
+            uniformsVS.textureNumberOfRows = particlesComponent->GetMaterial()->GetAtlasNumberOfRows();
+            uboVS->Update(&uniformsVS);
+
+            auto uboFS = m_uniformsPoolFS->GetNext();
+            UniformsFS uniformsFS{};
+            uniformsFS.color = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);            
+            uboFS->Update(&uniformsFS);
+
+            m_shader->Bind("uboVS", *uboVS);
+            m_shader->Bind("uboFS", *uboFS);
+            m_shader->Bind("textureSampler", *particlesComponent->GetMaterial()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+            const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+            const VkBuffer vertexBuffers[] = { *particlesComponent->GetModel()->GetVertexBuffer() };
+            const VkBuffer instanceBuffers[] = { *m_instanceDataBuffer };
+            const VkDeviceSize offsets[] = { 0 };
+
+            vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+            vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindVertexBuffers(renderContext.commandBuffer, 1, 1, instanceBuffers, offsets);
+            vkCmdBindIndexBuffer(renderContext.commandBuffer, *particlesComponent->GetModel()->GetIndexBuffer(), 0, particlesComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            //vkCmdDrawIndexed(renderContext.commandBuffer, particlesComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+            vkCmdDrawIndexed(renderContext.commandBuffer, particlesComponent->GetModel()->GetIndexBuffer()->GetCount(), static_cast<uint32_t>(particles.size()), 0, 0, 0);
         }
 
         for (auto child : node->GetChildren()) {

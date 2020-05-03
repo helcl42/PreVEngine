@@ -223,6 +223,10 @@ private:
 public:
     VertexDataBuffer() = default;
 
+    VertexDataBuffer(const size_t desiredSizeInBytes) {
+        m_buffer.reserve(desiredSizeInBytes);
+    }
+
     ~VertexDataBuffer() = default;
 
 public:
@@ -249,6 +253,16 @@ public:
     void Add(const glm::vec4& data)
     {
         Add(&data, sizeof(glm::vec4));
+    }
+
+    void Add(const glm::mat3& data)
+    {
+        Add(&data, sizeof(glm::mat3));
+    }
+
+    void Add(const glm::mat4& data)
+    {
+        Add(&data, sizeof(glm::mat4));
     }
 
     void Reset()
