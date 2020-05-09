@@ -76,9 +76,9 @@ private:
 
     void Present();
 
-    VkSurfaceCapabilitiesKHR GetSurfaceCapabilities() const;
+    virtual VkSurfaceCapabilitiesKHR GetSurfaceCapabilities() const;
 
-    std::vector<VkImage> GetSwapchainImages() const;
+    virtual std::vector<VkImage> GetSwapchainImages() const;
 
 public:
     Swapchain(const Queue& presentQueue, const Queue& graphicsQueue, RenderPass& renderPass, Allocator& allocator);
