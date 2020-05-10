@@ -13,9 +13,6 @@ private:
     friend ChildType;
 
 private:
-    static ChildType s_instance;
-
-private:
     Singleton(const Singleton& other) = delete;
 
     Singleton(Singleton&& other) = delete;
@@ -33,12 +30,10 @@ public:
 public:
     static ChildType& Instance()
     {
-        return s_instance;
+        static ChildType instance;
+        return instance;
     }
 };
-
-template <typename ChildType>
-ChildType Singleton<ChildType>::s_instance;
 ////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////

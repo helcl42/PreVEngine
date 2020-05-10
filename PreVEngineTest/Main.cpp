@@ -6,6 +6,7 @@
 
 #include <App.h>
 #include <Common.h>
+#include <Component.h>
 #include <Image.h>
 #include <Inputs.h>
 #include <SceneGraph.h>
@@ -20,8 +21,8 @@
 #include "LensFlare.h"
 #include "Light.h"
 #include "Mesh.h"
-#include "Pipeline.h"
 #include "Particles.h"
+#include "Pipeline.h"
 #include "RayCasting.h"
 #include "Shadows.h"
 #include "SkyBox.h"
@@ -398,10 +399,10 @@ std::map<std::string, std::shared_ptr<Image> > RenderComponentFactory::s_imagesC
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SCENE
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-class AbstractCubeRobotSceneNode : public AbstractSceneNode<SceneNodeFlags> {
+class BaseCubeRobotSceneNode : public SceneNode<SceneNodeFlags> {
 public:
-    AbstractCubeRobotSceneNode(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
-        : AbstractSceneNode()
+    BaseCubeRobotSceneNode(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
+        : SceneNode()
         , m_initialPosition(position)
         , m_initialOrientation(orientation)
         , m_initialScale(scale)
@@ -409,7 +410,7 @@ public:
     {
     }
 
-    virtual ~AbstractCubeRobotSceneNode() = default;
+    virtual ~BaseCubeRobotSceneNode() = default;
 
 public:
     void Init() override
@@ -432,7 +433,7 @@ public:
         const auto selectableComponent = std::make_shared<SelectableComponent>();
         NodeComponentHelper::AddComponent<SceneNodeFlags, ISelectableComponent>(GetThis(), selectableComponent, SceneNodeFlags::SELECTABLE_COMPONENT);
 
-        AbstractSceneNode::Init();
+        SceneNode::Init();
     }
 
     void Update(float deltaTime) override
@@ -440,17 +441,12 @@ public:
         m_transformComponent->Update(deltaTime);
         m_boundingVolumeComponent->Update(m_transformComponent->GetWorldTransformScaled());
 
-        AbstractSceneNode::Update(deltaTime);
+        SceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
-        AbstractSceneNode::ShutDown();
-
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ISelectableComponent>(GetThis(), SceneNodeFlags::SELECTABLE_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ITransformComponent>(GetThis(), SceneNodeFlags::TRANSFORM_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, IRenderComponent>(GetThis(), SceneNodeFlags::RENDER_COMPONENT);
+        SceneNode::ShutDown();
     }
 
 protected:
@@ -468,17 +464,17 @@ private:
     std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
 
-class CubeRobotPart : public AbstractCubeRobotSceneNode {
+class CubeRobotPart : public BaseCubeRobotSceneNode {
 public:
     CubeRobotPart(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
-        : AbstractCubeRobotSceneNode(position, orientation, scale, texturePath)
+        : BaseCubeRobotSceneNode(position, orientation, scale, texturePath)
     {
     }
 
     virtual ~CubeRobotPart() = default;
 };
 
-class CubeRobot : public AbstractCubeRobotSceneNode {
+class CubeRobot : public BaseCubeRobotSceneNode {
 private:
     EventHandler<CubeRobot, KeyEvent> m_keyEvent{ *this };
 
@@ -506,7 +502,7 @@ private:
 
 public:
     CubeRobot(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
-        : AbstractCubeRobotSceneNode(position, orientation, scale, texturePath)
+        : BaseCubeRobotSceneNode(position, orientation, scale, texturePath)
     {
     }
 
@@ -531,7 +527,7 @@ public:
 
         AddChild(m_body);
 
-        AbstractCubeRobotSceneNode::Init();
+        BaseCubeRobotSceneNode::Init();
     }
 
     void Update(float deltaTime) override
@@ -548,12 +544,12 @@ public:
         leftArmTransformComponent->Rotate(glm::rotate(glm::mat4(1.0f), glm::radians(20.0f) * deltaTime, glm::vec3(1, 0, 0)));
         leftArmTransformComponent->Translate(glm::vec3(0, 4.5, 0));
 
-        AbstractCubeRobotSceneNode::Update(deltaTime);
+        BaseCubeRobotSceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
-        AbstractCubeRobotSceneNode::ShutDown();
+        BaseCubeRobotSceneNode::ShutDown();
     }
 
 public:
@@ -597,10 +593,10 @@ public:
     }
 };
 
-class PlaneNode : public AbstractSceneNode<SceneNodeFlags> {
+class PlaneNode : public SceneNode<SceneNodeFlags> {
 public:
     PlaneNode(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const float heightScale)
-        : AbstractSceneNode()
+        : SceneNode()
         , m_initialPosition(position)
         , m_initialOrientation(orientation)
         , m_initialScale(scale)
@@ -632,7 +628,7 @@ public:
         }
         NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
-        AbstractSceneNode::Init();
+        SceneNode::Init();
     }
 
     void Update(float deltaTime) override
@@ -644,16 +640,12 @@ public:
         m_transformComponent->Update(deltaTime);
         m_boundingVolumeComponent->Update(m_transformComponent->GetWorldTransformScaled());
 
-        AbstractSceneNode::Update(deltaTime);
+        SceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
-        AbstractSceneNode::ShutDown();
-
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ITransformComponent>(GetThis(), SceneNodeFlags::TRANSFORM_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, IRenderComponent>(GetThis(), SceneNodeFlags::RENDER_CONE_STEP_MAPPED_COMPONENT);
+        SceneNode::ShutDown();
     }
 
 protected:
@@ -676,10 +668,10 @@ protected:
     std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
 
-class CubNode : public AbstractSceneNode<SceneNodeFlags> {
+class CubNode : public SceneNode<SceneNodeFlags> {
 public:
     CubNode(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const float heightScale)
-        : AbstractSceneNode()
+        : SceneNode()
         , m_initialPosition(position)
         , m_initialOrientation(orientation)
         , m_initialScale(scale)
@@ -711,7 +703,7 @@ public:
         }
         NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
-        AbstractSceneNode::Init();
+        SceneNode::Init();
     }
 
     void Update(float deltaTime) override
@@ -723,16 +715,12 @@ public:
         m_transformComponent->Update(deltaTime);
         m_boundingVolumeComponent->Update(m_transformComponent->GetWorldTransformScaled());
 
-        AbstractSceneNode::Update(deltaTime);
+        SceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
-        AbstractSceneNode::ShutDown();
-
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ITransformComponent>(GetThis(), SceneNodeFlags::TRANSFORM_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, IRenderComponent>(GetThis(), SceneNodeFlags::RENDER_CONE_STEP_MAPPED_COMPONENT);
+        SceneNode::ShutDown();
     }
 
 protected:
@@ -755,10 +743,10 @@ protected:
     std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
 
-class Terrain : public AbstractSceneNode<SceneNodeFlags> {
+class Terrain : public SceneNode<SceneNodeFlags> {
 public:
     Terrain(const int x, const int z)
-        : AbstractSceneNode()
+        : SceneNode()
         , m_xIndex(x)
         , m_zIndex(z)
     {
@@ -791,7 +779,7 @@ public:
             manager->AddTerrainComponent(m_terrainComponent);
         }
 
-        AbstractSceneNode::Init();
+        SceneNode::Init();
     }
 
     void Update(float deltaTime) override
@@ -799,20 +787,16 @@ public:
         m_transformComponent->Update(deltaTime);
         m_boundingVolumeComponent->Update(m_transformComponent->GetWorldTransform());
 
-        AbstractSceneNode::Update(deltaTime);
+        SceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
-        AbstractSceneNode::ShutDown();
+        SceneNode::ShutDown();
 
         if (auto manager = m_terrainManagerComponent.lock()) {
             manager->RemoveTerrain(m_terrainComponent);
         }
-
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ITerrainComponenet>(GetThis(), SceneNodeFlags::TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ITransformComponent>(GetThis(), SceneNodeFlags::TRANSFORM_COMPONENT);
     }
 
 private:
@@ -829,7 +813,7 @@ private:
     std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
 
-class TerrainManager : public AbstractSceneNode<SceneNodeFlags> {
+class TerrainManager : public SceneNode<SceneNodeFlags> {
 private:
     const uint32_t m_gridMaxX;
 
@@ -837,7 +821,7 @@ private:
 
 public:
     TerrainManager(const uint32_t maxX, const uint32_t maxZ)
-        : AbstractSceneNode()
+        : SceneNode()
         , m_gridMaxX(maxX)
         , m_gridMaxZ(maxZ)
     {
@@ -861,7 +845,7 @@ public:
             }
         }
 
-        AbstractSceneNode::Init();
+        SceneNode::Init();
 
         float minHeight = std::numeric_limits<float>::max();
         float maxHeight = std::numeric_limits<float>::min();
@@ -885,22 +869,19 @@ public:
 
     void Update(float deltaTime) override
     {
-        AbstractSceneNode::Update(deltaTime);
+        SceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
-        AbstractSceneNode::ShutDown();
-
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ISelectableComponent>(GetThis(), SceneNodeFlags::SELECTABLE_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ITerrainManagerComponent>(GetThis(), SceneNodeFlags::TERRAIN_MANAGER_COMPONENT);
+        SceneNode::ShutDown();
     }
 };
 
-class InputsHelper : public AbstractSceneNode<SceneNodeFlags> {
+class InputsHelper : public SceneNode<SceneNodeFlags> {
 public:
     InputsHelper()
-        : AbstractSceneNode()
+        : SceneNode()
     {
         m_inputFacade.SetMouseLocked(true);
         m_inputFacade.SetMouseCursorVisible(false);
@@ -925,10 +906,10 @@ private:
     EventHandler<InputsHelper, KeyEvent> m_keyboardEventsHandler{ *this };
 };
 
-class Goblin : public AbstractSceneNode<SceneNodeFlags> {
+class Goblin : public SceneNode<SceneNodeFlags> {
 public:
     Goblin(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
-        : AbstractSceneNode()
+        : SceneNode()
         , m_initialPosition(position)
         , m_initialOrientation(orientation)
         , m_initialScale(scale)
@@ -967,7 +948,7 @@ public:
         m_cameraComponent->AddOrientation(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), m_cameraComponent->GetUpDirection())));
         m_cameraComponent->AddOrientation(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(m_cameraPitch), m_cameraComponent->GetRightDirection())));
 
-        AbstractSceneNode::Init();
+        SceneNode::Init();
     }
 
     void Update(float deltaTime) override
@@ -1034,17 +1015,12 @@ public:
 
         m_boundingVolumeComponent->Update(m_transformComponent->GetWorldTransformScaled());
 
-        AbstractSceneNode::Update(deltaTime);
+        SceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
-        AbstractSceneNode::ShutDown();
-
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ICameraComponent>(GetThis(), SceneNodeFlags::CAMERA_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, IAnimationRenderComponent>(GetThis(), SceneNodeFlags::ANIMATION_CONE_STEP_MAPPED_RENDER_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ITransformComponent>(GetThis(), SceneNodeFlags::TRANSFORM_COMPONENT);
+        SceneNode::ShutDown();
     }
 
 public:
@@ -1214,10 +1190,10 @@ private:
     std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
 
-class Camera : public AbstractSceneNode<SceneNodeFlags> {
+class Camera : public SceneNode<SceneNodeFlags> {
 public:
     Camera()
-        : AbstractSceneNode()
+        : SceneNode()
     {
     }
 
@@ -1249,7 +1225,7 @@ public:
         m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 60.0f, 180.0f));
         NodeComponentHelper::AddComponent<SceneNodeFlags, ICameraComponent>(GetThis(), m_cameraComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
-        AbstractSceneNode::Init();
+        SceneNode::Init();
 
         Reset();
     }
@@ -1296,15 +1272,12 @@ public:
 
         m_transformComponent->Update(deltaTime);
 
-        AbstractSceneNode::Update(deltaTime);
+        SceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
-        AbstractSceneNode::ShutDown();
-
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ICameraComponent>(GetThis(), SceneNodeFlags::CAMERA_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ITransformComponent>(GetThis(), SceneNodeFlags::TRANSFORM_COMPONENT);
+        SceneNode::ShutDown();
     }
 
 public:
@@ -1396,7 +1369,7 @@ private:
 #endif
 };
 
-class Text : public AbstractSceneNode<SceneNodeFlags> {
+class Text : public SceneNode<SceneNodeFlags> {
 private:
     std::shared_ptr<IFontRenderComponent> m_fontComponent;
 
@@ -1404,7 +1377,7 @@ private:
 
 public:
     Text()
-        : AbstractSceneNode()
+        : SceneNode()
     {
     }
 
@@ -1417,7 +1390,7 @@ public:
         m_fontComponent = factory.Create(AssetManager::Instance().GetAssetPath("Fonts/verdana.fnt"), AssetManager::Instance().GetAssetPath("Fonts/verdana.png"), 16.0f / 9.0f);
         NodeComponentHelper::AddComponent<SceneNodeFlags, IFontRenderComponent>(GetThis(), m_fontComponent, SceneNodeFlags::FONT_RENDER_COMPONENT);
 
-        AbstractSceneNode::Init();
+        SceneNode::Init();
     }
 
     void Update(float deltaTime) override
@@ -1433,21 +1406,19 @@ public:
             m_fontComponent->AddText(fancyText);
         }
 
-        AbstractSceneNode::Update(deltaTime);
+        SceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
-        AbstractSceneNode::ShutDown();
-
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, IFontRenderComponent>(GetThis(), SceneNodeFlags::FONT_RENDER_COMPONENT);
+        SceneNode::ShutDown();
     }
 };
 
-class MainLight : public AbstractSceneNode<SceneNodeFlags> {
+class MainLight : public SceneNode<SceneNodeFlags> {
 public:
     MainLight(const glm::vec3& pos)
-        : AbstractSceneNode()
+        : SceneNode()
         , m_initialPosition(pos)
     {
     }
@@ -1468,7 +1439,7 @@ public:
         m_lightComponent = lightFactory.CreateLightCompoennt(m_initialPosition);
         NodeComponentHelper::AddComponent<SceneNodeFlags, ILightComponent>(GetThis(), m_lightComponent, SceneNodeFlags::LIGHT_COMPONENT);
 
-        AbstractSceneNode::Init();
+        SceneNode::Init();
     }
 
     void Update(float deltaTime) override
@@ -1491,15 +1462,12 @@ public:
 
         m_transformComponent->Update(deltaTime);
 
-        AbstractSceneNode::Update(deltaTime);
+        SceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
-        AbstractSceneNode::ShutDown();
-
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ILightComponent>(GetThis(), SceneNodeFlags::LIGHT_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ITransformComponent>(GetThis(), SceneNodeFlags::TRANSFORM_COMPONENT);
+        SceneNode::ShutDown();
     }
 
 private:
@@ -1510,10 +1478,10 @@ private:
     glm::vec3 m_initialPosition;
 };
 
-class Light : public AbstractSceneNode<SceneNodeFlags> {
+class Light : public SceneNode<SceneNodeFlags> {
 public:
     Light(const glm::vec3& position, const glm::vec3& color)
-        : AbstractSceneNode()
+        : SceneNode()
         , m_initialPosition(position)
         , m_color(color)
     {
@@ -1535,7 +1503,7 @@ public:
         m_lightComponent = lightFactory.CreateLightCompoennt(m_initialPosition, m_color, glm::vec3(0.1f, 0.005f, 0.001f));
         NodeComponentHelper::AddComponent<SceneNodeFlags, ILightComponent>(GetThis(), m_lightComponent, SceneNodeFlags::LIGHT_COMPONENT);
 
-        AbstractSceneNode::Init();
+        SceneNode::Init();
     }
 
     void Update(float deltaTime) override
@@ -1543,15 +1511,12 @@ public:
         m_transformComponent->SetPosition(m_lightComponent->GetPosition());
         m_transformComponent->Update(deltaTime);
 
-        AbstractSceneNode::Update(deltaTime);
+        SceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
-        AbstractSceneNode::ShutDown();
-
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ILightComponent>(GetThis(), SceneNodeFlags::LIGHT_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ITransformComponent>(GetThis(), SceneNodeFlags::TRANSFORM_COMPONENT);
+        SceneNode::ShutDown();
     }
 
 private:
@@ -1564,10 +1529,10 @@ private:
     std::shared_ptr<ILightComponent> m_lightComponent;
 };
 
-class SkyBox : public AbstractSceneNode<SceneNodeFlags> {
+class SkyBox : public SceneNode<SceneNodeFlags> {
 public:
     SkyBox()
-        : AbstractSceneNode()
+        : SceneNode()
     {
     }
 
@@ -1587,7 +1552,7 @@ public:
         m_skyBoxComponent = factory.Create();
         NodeComponentHelper::AddComponent<SceneNodeFlags, ISkyBoxComponent>(GetThis(), m_skyBoxComponent, SceneNodeFlags::SKYBOX_RENDER_COMPONENT);
 
-        AbstractSceneNode::Init();
+        SceneNode::Init();
     }
 
     void Update(float deltaTime) override
@@ -1605,15 +1570,12 @@ public:
 
         m_transformComponent->Update(deltaTime);
 
-        AbstractSceneNode::Update(deltaTime);
+        SceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
-        AbstractSceneNode::ShutDown();
-
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ISkyBoxComponent>(GetThis(), SceneNodeFlags::SKYBOX_RENDER_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ITransformComponent>(GetThis(), SceneNodeFlags::TRANSFORM_COMPONENT);
+        SceneNode::ShutDown();
     }
 
 private:
@@ -1624,10 +1586,10 @@ private:
     static const inline float ROTATION_SPEED_DEGS_PER_SEC = 0.5f;
 };
 
-class WaterReflection : public AbstractSceneNode<SceneNodeFlags> {
+class WaterReflection : public SceneNode<SceneNodeFlags> {
 public:
     WaterReflection()
-        : AbstractSceneNode()
+        : SceneNode()
     {
     }
 
@@ -1639,7 +1601,7 @@ public:
         m_viewPortSize = m_previousViewPortSize;
         CreateReflectionComponent();
 
-        AbstractSceneNode::Init();
+        SceneNode::Init();
     }
 
     void Update(float deltaTime) override
@@ -1650,14 +1612,14 @@ public:
             m_previousViewPortSize = m_viewPortSize;
         }
 
-        AbstractSceneNode::Update(deltaTime);
+        SceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
-        AbstractSceneNode::ShutDown();
+        SceneNode::ShutDown();
 
-        DestroyReflectionComponent();
+        m_reflectionComponent->ShutDown();
     }
 
 public:
@@ -1694,10 +1656,10 @@ private:
     EventHandler<WaterReflection, NewIterationEvent> m_newIterationHandler{ *this };
 };
 
-class WaterRefraction : public AbstractSceneNode<SceneNodeFlags> {
+class WaterRefraction : public SceneNode<SceneNodeFlags> {
 public:
     WaterRefraction()
-        : AbstractSceneNode()
+        : SceneNode()
     {
     }
 
@@ -1709,7 +1671,7 @@ public:
         m_viewPortSize = m_previousViewPortSize;
         CreateRefractionComponent();
 
-        AbstractSceneNode::Init();
+        SceneNode::Init();
     }
 
     void Update(float deltaTime) override
@@ -1720,14 +1682,14 @@ public:
             m_previousViewPortSize = m_viewPortSize;
         }
 
-        AbstractSceneNode::Update(deltaTime);
+        SceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
-        AbstractSceneNode::ShutDown();
+        SceneNode::ShutDown();
 
-        DestroyRefractionComponent();
+        m_refractionComponent->ShutDown();
     }
 
 public:
@@ -1764,10 +1726,10 @@ private:
     EventHandler<WaterRefraction, NewIterationEvent> m_newIterationHandler{ *this };
 };
 
-class Water : public AbstractSceneNode<SceneNodeFlags> {
+class Water : public SceneNode<SceneNodeFlags> {
 public:
     Water(const int x, const int z)
-        : AbstractSceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT | SceneNodeFlags::BOUNDING_VOLUME_COMPONENT })
+        : SceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT | SceneNodeFlags::BOUNDING_VOLUME_COMPONENT })
         , m_x(x)
         , m_z(z)
     {
@@ -1793,7 +1755,7 @@ public:
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_waterComponent->GetModel()->GetMesh()->GetVertices());
         NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
 
-        AbstractSceneNode::Init();
+        SceneNode::Init();
     }
 
     void Update(float deltaTime) override
@@ -1807,16 +1769,12 @@ public:
 
         m_boundingVolumeComponent->Update(m_transformComponent->GetWorldTransformScaled());
 
-        AbstractSceneNode::Update(deltaTime);
+        SceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
-        AbstractSceneNode::ShutDown();
-
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, IWaterComponent>(GetThis(), SceneNodeFlags::WATER_RENDER_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ITransformComponent>(GetThis(), SceneNodeFlags::TRANSFORM_COMPONENT);
+        SceneNode::ShutDown();
     }
 
 private:
@@ -1831,7 +1789,7 @@ private:
     std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
 
-class WaterManager : public AbstractSceneNode<SceneNodeFlags> {
+class WaterManager : public SceneNode<SceneNodeFlags> {
 private:
     const int m_gridMaxX;
 
@@ -1839,7 +1797,7 @@ private:
 
 public:
     WaterManager(const int maxX, const int maxZ)
-        : AbstractSceneNode()
+        : SceneNode()
         , m_gridMaxX(maxX)
         , m_gridMaxZ(maxZ)
     {
@@ -1863,24 +1821,24 @@ public:
         auto waterRefraction = std::make_shared<WaterRefraction>();
         AddChild(waterRefraction);
 
-        AbstractSceneNode::Init();
+        SceneNode::Init();
     }
 
     void Update(float deltaTime) override
     {
-        AbstractSceneNode::Update(deltaTime);
+        SceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
-        AbstractSceneNode::ShutDown();
+        SceneNode::ShutDown();
     }
 };
 
-class LensFlare : public AbstractSceneNode<SceneNodeFlags> {
+class LensFlare : public SceneNode<SceneNodeFlags> {
 public:
     LensFlare()
-        : AbstractSceneNode()
+        : SceneNode()
     {
     }
 
@@ -1893,7 +1851,7 @@ public:
         m_lensFlareComponent = std::move(componentFactory.Create());
         NodeComponentHelper::AddComponent<SceneNodeFlags, ILensFlareComponent>(GetThis(), m_lensFlareComponent, SceneNodeFlags::LENS_FLARE_RENDER_COMPONENT);
 
-        AbstractSceneNode::Init();
+        SceneNode::Init();
     }
 
     void Update(float deltaTime) override
@@ -1903,14 +1861,12 @@ public:
 
         m_lensFlareComponent->Update(cameraComponent->GetViewFrustum().CreateProjectionMatrix(m_viewPortSize.x / m_viewPortSize.y), cameraComponent->LookAt(), cameraComponent->GetPosition(), lightComponent->GetPosition());
 
-        AbstractSceneNode::Update(deltaTime);
+        SceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
-        AbstractSceneNode::ShutDown();
-
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ILensFlareComponent>(GetThis(), SceneNodeFlags::LENS_FLARE_RENDER_COMPONENT);
+        SceneNode::ShutDown();
     }
 
 public:
@@ -1928,10 +1884,10 @@ private:
     EventHandler<LensFlare, NewIterationEvent> m_newIterationHandler{ *this };
 };
 
-class Sun : public AbstractSceneNode<SceneNodeFlags> {
+class Sun : public SceneNode<SceneNodeFlags> {
 public:
     Sun()
-        : AbstractSceneNode()
+        : SceneNode()
     {
     }
 
@@ -1944,7 +1900,7 @@ public:
         m_sunComponent = std::move(componentFactory.Create());
         NodeComponentHelper::AddComponent<SceneNodeFlags, ISunComponent>(GetThis(), m_sunComponent, SceneNodeFlags::SUN_RENDER_COMPONENT);
 
-        AbstractSceneNode::Init();
+        SceneNode::Init();
     }
 
     void Update(float deltaTime) override
@@ -1954,14 +1910,12 @@ public:
 
         m_sunComponent->Update(cameraComponent->GetViewFrustum().CreateProjectionMatrix(m_viewPortSize.x / m_viewPortSize.y), cameraComponent->LookAt(), cameraComponent->GetPosition(), lightComponent->GetPosition());
 
-        AbstractSceneNode::Update(deltaTime);
+        SceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
-        AbstractSceneNode::ShutDown();
-
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ISunComponent>(GetThis(), SceneNodeFlags::SUN_RENDER_COMPONENT);
+        SceneNode::ShutDown();
     }
 
 public:
@@ -1979,10 +1933,10 @@ private:
     EventHandler<Sun, NewIterationEvent> m_newIterationHandler{ *this };
 };
 
-class Stone final : public AbstractSceneNode<SceneNodeFlags> {
+class Stone final : public SceneNode<SceneNodeFlags> {
 public:
     Stone(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
-        : AbstractSceneNode()
+        : SceneNode()
         , m_initialPosition(position)
         , m_initialOrientation(orientation)
         , m_initialScale(scale)
@@ -2013,7 +1967,7 @@ public:
         const auto selectableComponent = std::make_shared<SelectableComponent>();
         NodeComponentHelper::AddComponent<SceneNodeFlags, ISelectableComponent>(GetThis(), selectableComponent, SceneNodeFlags::SELECTABLE_COMPONENT);
 
-        AbstractSceneNode::Init();
+        SceneNode::Init();
     }
 
     void Update(float deltaTime) override
@@ -2031,17 +1985,12 @@ public:
 
         m_boundingVolumeComponent->Update(m_transformComponent->GetWorldTransformScaled());
 
-        AbstractSceneNode::Update(deltaTime);
+        SceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
-        AbstractSceneNode::ShutDown();
-
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ISelectableComponent>(GetThis(), SceneNodeFlags::SELECTABLE_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, IRenderComponent>(GetThis(), SceneNodeFlags::RENDER_PARALLAX_MAPPED_COMPONENT);
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, ITransformComponent>(GetThis(), SceneNodeFlags::TRANSFORM_COMPONENT);
+        SceneNode::ShutDown();
     }
 
 private:
@@ -2056,10 +2005,10 @@ private:
     std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
 
-class Shadows : public AbstractSceneNode<SceneNodeFlags> {
+class Shadows : public SceneNode<SceneNodeFlags> {
 public:
     Shadows()
-        : AbstractSceneNode()
+        : SceneNode()
     {
     }
 
@@ -2073,7 +2022,7 @@ public:
         m_shadowsCompoent->Init();
         NodeComponentHelper::AddComponent<SceneNodeFlags, IShadowsComponent>(GetThis(), m_shadowsCompoent, SceneNodeFlags::SHADOWS_COMPONENT);
 
-        AbstractSceneNode::Init();
+        SceneNode::Init();
     }
 
     void Update(float deltaTime) override
@@ -2083,14 +2032,12 @@ public:
 
         m_shadowsCompoent->Update(lightComponent->GetDirection(), lightComponent->GetViewFrustum().GetNearClippingPlane(), lightComponent->GetViewFrustum().GetFarClippingPlane(), lightComponent->GetViewFrustum().CreateProjectionMatrix(1.0f), cameraComponent->LookAt());
 
-        AbstractSceneNode::Update(deltaTime);
+        SceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
-        AbstractSceneNode::ShutDown();
-
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, IShadowsComponent>(GetThis(), SceneNodeFlags::SHADOWS_COMPONENT);
+        SceneNode::ShutDown();
 
         m_shadowsCompoent->ShutDown();
     }
@@ -2099,10 +2046,10 @@ private:
     std::shared_ptr<IShadowsComponent> m_shadowsCompoent;
 };
 
-class RayCasterNode : public AbstractSceneNode<SceneNodeFlags> {
+class RayCasterNode : public SceneNode<SceneNodeFlags> {
 public:
     RayCasterNode()
-        : AbstractSceneNode()
+        : SceneNode()
     {
     }
 
@@ -2117,7 +2064,7 @@ public:
 
         AddRayCastComponent(m_inputFacade.IsMouseLocked());
 
-        AbstractSceneNode::Init();
+        SceneNode::Init();
     }
 
     void Update(float deltaTime) override
@@ -2143,9 +2090,7 @@ public:
 
     void ShutDown() override
     {
-        AbstractSceneNode::ShutDown();
-
-        RemoveRayCastComponnet();
+        SceneNode::ShutDown();
     }
 
 private:
@@ -2194,7 +2139,7 @@ private:
     EventHandler<RayCasterNode, MouseLockRequest> m_mouseLockHandler{ *this };
 };
 
-class RayCastObserverNode : public AbstractSceneNode<SceneNodeFlags> {
+class RayCastObserverNode : public SceneNode<SceneNodeFlags> {
 private:
     enum class IntersectionType {
         NONE,
@@ -2204,7 +2149,7 @@ private:
 
 public:
     RayCastObserverNode()
-        : AbstractSceneNode()
+        : SceneNode()
     {
     }
 
@@ -2213,7 +2158,7 @@ public:
 public:
     void Init() override
     {
-        AbstractSceneNode::Init();
+        SceneNode::Init();
     }
 
     void Update(float deltaTime) override
@@ -2266,12 +2211,12 @@ public:
             // render node collision points -> it is stored in selectableComponent
         }
 
-        AbstractSceneNode::Update(deltaTime);
+        SceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
-        AbstractSceneNode::ShutDown();
+        SceneNode::ShutDown();
     }
 
 private:
@@ -2420,7 +2365,7 @@ private:
     EventHandler<RayCastObserverNode, RayEvent> m_rayHandler{ *this };
 };
 
-class Fire final : public AbstractSceneNode<SceneNodeFlags>{
+class Fire final : public SceneNode<SceneNodeFlags> {
 public:
     Fire(const glm::vec3& initPosition)
         : m_initialPosition(initPosition)
@@ -2434,7 +2379,7 @@ public:
         m_particleSystemComponent = particleSystemComponentFactory.CreateRandomInCone(glm::vec3(0.0f, 1.0f, 0.0f), 15.0f);
         NodeComponentHelper::AddComponent<SceneNodeFlags, IParticleSystemComponent>(GetThis(), m_particleSystemComponent, SceneNodeFlags::PARTICLE_SYSTEM_COMPONENT);
 
-        AbstractSceneNode::Init();
+        SceneNode::Init();
     }
 
     void Update(float deltaTime) override
@@ -2447,14 +2392,12 @@ public:
 
         m_particleSystemComponent->Update(deltaTime, glm::vec3(m_initialPosition.x, height - 4.0f, m_initialPosition.z));
 
-        AbstractSceneNode::Update(deltaTime);
+        SceneNode::Update(deltaTime);
     }
 
     void ShutDown() override
     {
-        AbstractSceneNode::ShutDown();
-
-        NodeComponentHelper::RemoveComponent<SceneNodeFlags, IParticleSystemComponent>(GetThis(), SceneNodeFlags::PARTICLE_SYSTEM_COMPONENT);
+        SceneNode::ShutDown();
     }
 
 private:
@@ -2463,10 +2406,10 @@ private:
     std::shared_ptr<IParticleSystemComponent> m_particleSystemComponent;
 };
 
-class RootSceneNode : public AbstractSceneNode<SceneNodeFlags> {
+class RootSceneNode : public SceneNode<SceneNodeFlags> {
 public:
     RootSceneNode(const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Swapchain>& swapchain)
-        : AbstractSceneNode()
+        : SceneNode()
         , m_masterRenderer(std::make_unique<MasterRenderer>(renderPass, swapchain))
     {
     }
@@ -2585,7 +2528,7 @@ public:
         auto cube5 = std::make_shared<CubNode>(glm::vec3(-90.0f, 0.0f, -90.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/sand.png"), AssetManager::Instance().GetAssetPath("Textures/sand_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_cone.png"), 0.1f);
         AddChild(cube5);
 
-        AbstractSceneNode::Init();
+        SceneNode::Init();
 
         m_masterRenderer->Init();
     }

@@ -5,6 +5,7 @@
 #include "FlagSet.h"
 #include "Utils.h"
 #include "Window.h"
+#include "Events.h"
 
 namespace PreVEngine {
 struct RenderContext {
@@ -59,7 +60,7 @@ public:
 };
 
 template <typename NodeFlagsType>
-class AbstractSceneNode : public std::enable_shared_from_this<ISceneNode<NodeFlagsType> >, public ISceneNode<NodeFlagsType> {
+class SceneNode : public std::enable_shared_from_this<ISceneNode<NodeFlagsType> >, public ISceneNode<NodeFlagsType> {
 protected:
     uint64_t m_id;
 
@@ -72,24 +73,24 @@ protected:
     std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > > m_children;
 
 public:
-    AbstractSceneNode()
+    SceneNode()
         : m_id(IDGenerator::Instance().GenrateNewId())
     {
     }
 
-    AbstractSceneNode(const FlagSet<NodeFlagsType>& flags)
+    SceneNode(const FlagSet<NodeFlagsType>& flags)
         : m_id(IDGenerator::Instance().GenrateNewId())
         , m_flags(flags)
     {
     }
 
-    AbstractSceneNode(const TagSet& tags)
+    SceneNode(const TagSet& tags)
         : m_id(IDGenerator::Instance().GenrateNewId())
         , m_tags(tags)
     {
     }
 
-    virtual ~AbstractSceneNode() = default;
+    virtual ~SceneNode() = default;
 
 public:
     virtual void Init() override
@@ -115,6 +116,9 @@ public:
         for (auto& child : m_children) {
             child->ShutDown();
         }
+
+        EventChannel::Broadcast(SceneNodeShutDownEvent{ GetId() });
+        m_flags = FlagSet<NodeFlagsType>();
     }
 
 public:
