@@ -59,10 +59,10 @@ void main()
 	const vec3 normal = NormalMapping(normalSampler, uv);
 	const vec4 textureColor = texture(textureSampler, uv);
 
-	if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) 
-    {
-		discard;
-	}
+	// if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) 
+    // {
+	// 	discard;
+	// }
 
 	if (textureColor.a < 0.5) 
 	{
