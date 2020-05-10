@@ -61,17 +61,6 @@ public:
 
 template <typename NodeFlagsType>
 class SceneNode : public std::enable_shared_from_this<ISceneNode<NodeFlagsType> >, public ISceneNode<NodeFlagsType> {
-protected:
-    uint64_t m_id;
-
-    FlagSet<NodeFlagsType> m_flags;
-
-    TagSet m_tags;
-
-    std::weak_ptr<ISceneNode<NodeFlagsType> > m_parent;
-
-    std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > > m_children;
-
 public:
     SceneNode()
         : m_id(IDGenerator::Instance().GenrateNewId())
@@ -208,6 +197,17 @@ public:
     {
         return m_tags;
     }
+
+protected:
+    uint64_t m_id;
+
+    FlagSet<NodeFlagsType> m_flags;
+
+    TagSet m_tags;
+
+    std::weak_ptr<ISceneNode<NodeFlagsType> > m_parent;
+
+    std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > > m_children;
 };
 
 enum class LogicOperation {
@@ -217,15 +217,6 @@ enum class LogicOperation {
 
 template <typename NodeFlagsType>
 class GraphTraversal final : public Singleton<GraphTraversal<NodeFlagsType> > {
-private:
-    friend class Singleton<GraphTraversal<NodeFlagsType> >;
-
-private:
-    std::shared_ptr<ISceneNode<NodeFlagsType> > m_root;
-
-private:
-    GraphTraversal() = default;
-
 public:
     ~GraphTraversal() = default;
 
@@ -325,7 +316,7 @@ private:
     }
 
 public:
-    void SetRootNode(std::shared_ptr<ISceneNode<NodeFlagsType> > root)
+    void SetRootNode(const std::shared_ptr<ISceneNode<NodeFlagsType> >& root)
     {
         m_root = root;
     }
@@ -363,6 +354,15 @@ public:
         FindAllWithTagsInternal(m_root, tags, operation, result);
         return result;
     }
+
+private:
+    GraphTraversal() = default;
+
+private:
+    friend class Singleton<GraphTraversal<NodeFlagsType> >;
+
+private:
+    std::shared_ptr<ISceneNode<NodeFlagsType> > m_root;
 };
 } // namespace PreVEngine
 

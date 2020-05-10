@@ -10,9 +10,6 @@
 namespace PreVEngine {
 template <typename ItemType>
 class ComponentRepository final : public Singleton<ComponentRepository<ItemType> > {
-private:
-    ComponentRepository() = default;
-
 public:
     ~ComponentRepository() = default;
 
@@ -55,6 +52,9 @@ public:
             Remove(evt.id);
         }
     }
+
+private:
+    ComponentRepository() = default;
 
 private:
     friend class Singleton<ComponentRepository<ItemType> >;
