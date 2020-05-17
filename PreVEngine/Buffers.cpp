@@ -13,7 +13,6 @@
 
 namespace PreVEngine {
 Allocator::Allocator(const Queue& q, const VkDeviceSize blockSize)
-    : m_allocator(VK_NULL_HANDLE)
 {
     m_gpu = q.gpu;
     m_device = q.device;

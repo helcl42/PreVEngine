@@ -30,6 +30,8 @@ private:
 private:
     std::shared_ptr<Allocator> m_allocator;
 
+    std::shared_ptr<Allocator> m_computeAllocator;
+
 private:
     AllocatorProvider() = default;
 
@@ -37,15 +39,25 @@ public:
     ~AllocatorProvider() = default;
 
 private:
-    void SetAllocator(const std::shared_ptr<Allocator>& device)
+    void SetAllocator(const std::shared_ptr<Allocator>& alloc)
     {
-        m_allocator = device;
+        m_allocator = alloc;
+    }
+
+    void SetComputeAllocator(const std::shared_ptr<Allocator>& alloc)
+    {
+        m_computeAllocator = alloc;
     }
 
 public:
     std::shared_ptr<Allocator> GetAllocator() const
     {
         return m_allocator;
+    }
+
+    std::shared_ptr<Allocator> GetComputeAllocator() const
+    {
+        return m_computeAllocator;
     }
 };
 
@@ -64,17 +76,21 @@ public:
 
     virtual void ShutDown() = 0;
 
-    virtual std::shared_ptr<ISceneNode<NodeFlagsType> > GetRootNode() = 0;
+    virtual std::shared_ptr<ISceneNode<NodeFlagsType> > GetRootNode() const = 0;
 
     virtual void SetSceneRoot(const std::shared_ptr<ISceneNode<NodeFlagsType> >& root) = 0;
 
-    virtual std::shared_ptr<Device> GetDevice() = 0;
+    virtual std::shared_ptr<Device> GetDevice() const = 0;
 
-    virtual std::shared_ptr<Swapchain> GetSwapchain() = 0;
+    virtual std::shared_ptr<Swapchain> GetSwapchain() const = 0;
 
-    virtual std::shared_ptr<RenderPass> GetRenderPass() = 0;
+    virtual std::shared_ptr<RenderPass> GetRenderPass() const = 0;
 
-    virtual std::shared_ptr<Allocator> GetAllocator() = 0;
+    virtual std::shared_ptr<Allocator> GetAllocator() const = 0;
+
+    virtual Queue* GetComputeQueue() const = 0;
+    
+    virtual std::shared_ptr<Allocator> GetComputeAllocator() const = 0;
 
 public:
     virtual ~IScene() = default;
@@ -96,10 +112,14 @@ protected:
 
     Queue* m_graphicsQueue;
 
+    Queue* m_computeQueue;
+
     VkSurfaceKHR m_surface;
 
 protected:
     std::shared_ptr<Allocator> m_allocator;
+
+    std::shared_ptr<Allocator> m_computeAllocator;
 
     std::shared_ptr<RenderPass> m_renderPass;
 
@@ -120,18 +140,24 @@ public:
 private:
     void InitQueues()
     {
-        m_presentQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT, m_surface); // graphics + present-queue
+        m_presentQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, m_surface); // compute + graphics + present queue
         m_graphicsQueue = m_presentQueue; // they might be the same or not
+        m_computeQueue = m_presentQueue;
         if (!m_presentQueue) {
-            m_presentQueue = m_device->AddQueue(0, m_surface); // create present-queue
-            m_graphicsQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT); // create graphics queue
+            m_presentQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT, m_surface); // graphics + present-queue
+            m_graphicsQueue = m_presentQueue;
+            if (!m_presentQueue) {
+                m_presentQueue = m_device->AddQueue(0, m_surface); // create present-queue
+                m_graphicsQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT); // create graphics queue
+            }
+            m_computeQueue = m_device->AddQueue(VK_QUEUE_COMPUTE_BIT);
         }
     }
 
     void InitRenderPass()
     {
-        VkFormat colorFormat = m_device->GetGPU().FindSurfaceFormat(m_surface);
-        VkFormat depthFormat = m_device->GetGPU().FindDepthFormat();
+        const auto colorFormat = m_device->GetGPU().FindSurfaceFormat(m_surface);
+        const auto depthFormat = m_device->GetGPU().FindDepthFormat();
 
         m_renderPass = std::make_shared<RenderPass>(*m_device);
         m_renderPass->AddColorAttachment(colorFormat, { 0.5f, 0.5f, 0.5f, 1.0f });
@@ -143,6 +169,13 @@ private:
     {
         m_allocator = std::make_shared<Allocator>(*m_graphicsQueue); // Create "Vulkan Memory Aloocator"
         printf("Allocator created\n");
+
+        if (m_computeQueue != nullptr && m_graphicsQueue != m_computeQueue) {
+            m_computeAllocator = std::make_shared<Allocator>(*m_computeQueue);
+            printf("Allocator Compute created\n");
+        } else {
+            m_computeAllocator = m_allocator;
+        }
     }
 
     void InitSwapchain()
@@ -166,6 +199,7 @@ public:
         InitSwapchain();
 
         AllocatorProvider::Instance().SetAllocator(m_allocator);
+        AllocatorProvider::Instance().SetComputeAllocator(m_computeAllocator);
     }
 
     void InitSceneGraph() override
@@ -184,7 +218,7 @@ public:
         VkCommandBuffer commandBuffer;
         uint32_t frameInFlightIndex;
         if (m_swapchain->BeginFrame(frameBuffer, commandBuffer, frameInFlightIndex)) {
-            RenderContext renderContext{frameBuffer, commandBuffer, frameInFlightIndex, m_swapchain->GetExtent() };
+            RenderContext renderContext{ frameBuffer, commandBuffer, frameInFlightIndex, m_swapchain->GetExtent() };
 
             m_rootNode->Render(renderContext);
 
@@ -201,31 +235,42 @@ public:
 
     void ShutDown() override
     {
+        AllocatorProvider::Instance().SetComputeAllocator(nullptr);
         AllocatorProvider::Instance().SetAllocator(nullptr);
     }
 
 public:
-    std::shared_ptr<Device> GetDevice() override
+    std::shared_ptr<Device> GetDevice() const override
     {
         return m_device;
     }
 
-    std::shared_ptr<Swapchain> GetSwapchain() override
+    std::shared_ptr<Swapchain> GetSwapchain() const override
     {
         return m_swapchain;
     }
 
-    std::shared_ptr<RenderPass> GetRenderPass() override
+    std::shared_ptr<RenderPass> GetRenderPass() const override
     {
         return m_renderPass;
     }
 
-    std::shared_ptr<Allocator> GetAllocator() override
+    std::shared_ptr<Allocator> GetAllocator() const override
     {
         return m_allocator;
     }
 
-    std::shared_ptr<ISceneNode<NodeFlagsType> > GetRootNode() override
+    Queue* GetComputeQueue() const override
+    {
+        return m_computeQueue;
+    }
+
+    std::shared_ptr<Allocator> GetComputeAllocator() const override
+    {
+        return m_computeAllocator;
+    }
+
+    std::shared_ptr<ISceneNode<NodeFlagsType> > GetRootNode() const override
     {
         return m_rootNode;
     }
