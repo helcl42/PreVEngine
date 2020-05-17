@@ -223,7 +223,7 @@ const PhysicalDevice& PhysicalDevices::operator[](const size_t i) const
     return m_gpuList.at(i);
 }
 
-Queue* Device::AddQueue(VkQueueFlags flags, VkSurfaceKHR surface)
+std::shared_ptr<Queue> Device::AddQueue(VkQueueFlags flags, VkSurfaceKHR surface)
 {
     ASSERT(!m_handle, "Can't add queues after device is already in use. ");
 
@@ -240,12 +240,12 @@ Queue* Device::AddQueue(VkQueueFlags flags, VkSurfaceKHR surface)
         return nullptr;
     }
 
-    Queue queue{ VK_NULL_HANDLE, familyIndex, queueIndex, flags, surface, m_handle, m_gpu };
+    auto queue = std::make_shared<Queue>(nullptr, familyIndex, queueIndex, flags, surface, m_handle, m_gpu);
     m_queues.push_back(queue);
 
     LOGI("Queue: %d  flags: [ %s%s%s%s]%s\n", queueIndex, (flags & 1) ? "GRAPHICS " : "", (flags & 2) ? "COMPUTE " : "", (flags & 4) ? "TRANSFER " : "", (flags & 8) ? "SPARSE " : "", surface ? " (can present)" : "");
 
-    return &m_queues.back();
+    return queue;
 }
 
 PhysicalDevice& Device::GetGPU()
@@ -255,7 +255,7 @@ PhysicalDevice& Device::GetGPU()
 
 Device::operator VkDevice()
 {
-    if (m_handle == VK_NULL_HANDLE) // make it lazy or const ??!
+    if (m_handle == nullptr) // make it lazy or const ??!
     {
         Create();
     }
@@ -266,7 +266,7 @@ uint32_t Device::FamilyQueueCount(uint32_t family) const
 {
     uint32_t count = 0;
     for (auto& q : m_queues) {
-        if (q.family == family) {
+        if (q->family == family) {
             count++;
         }
     }
@@ -275,7 +275,7 @@ uint32_t Device::FamilyQueueCount(uint32_t family) const
 
 void Device::Create()
 {
-    if (m_handle != VK_NULL_HANDLE) {
+    if (m_handle != nullptr) {
         Destroy();
     }
 
@@ -294,39 +294,38 @@ void Device::Create()
             info.queueCount = queueCount;
             info.pQueuePriorities = priorities.data();
             infoList.push_back(info);
-            // LOGI("\t%d x queueFamily_%d\n", queueCount, i);
         }
     }
 
     DeviceExtensions& extensions = m_gpu.GetExtensions();
-    VkDeviceCreateInfo device_create_info = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
-    device_create_info.queueCreateInfoCount = (uint32_t)infoList.size();
-    device_create_info.pQueueCreateInfos = infoList.data();
-    device_create_info.enabledExtensionCount = extensions.PickCount();
-    device_create_info.ppEnabledExtensionNames = extensions.GetPickList();
-    device_create_info.pEnabledFeatures = &m_gpu.GetEnabledFeatures();
-    VKERRCHECK(vkCreateDevice(m_gpu, &device_create_info, nullptr, &m_handle)); // create device
+    VkDeviceCreateInfo deviceCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+    deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(infoList.size());
+    deviceCreateInfo.pQueueCreateInfos = infoList.data();
+    deviceCreateInfo.enabledExtensionCount = extensions.PickCount();
+    deviceCreateInfo.ppEnabledExtensionNames = extensions.GetPickList();
+    deviceCreateInfo.pEnabledFeatures = &m_gpu.GetEnabledFeatures();
+    VKERRCHECK(vkCreateDevice(m_gpu, &deviceCreateInfo, nullptr, &m_handle)); // create device
 
     for (auto& q : m_queues) {
-        q.device = m_handle;
-        vkGetDeviceQueue(m_handle, q.family, q.index, &q.handle); // get queue handles
+        q->device = m_handle;
+        vkGetDeviceQueue(m_handle, q->family, q->index, &q->handle); // get queue handles
     }
 }
 
 void Device::Destroy()
 {
-    if (m_handle == VK_NULL_HANDLE) {
+    if (m_handle == nullptr) {
         return;
     }
 
     vkDeviceWaitIdle(m_handle);
     vkDestroyDevice(m_handle, nullptr);
 
-    m_handle = VK_NULL_HANDLE;
+    m_handle = nullptr;
 }
 
 Device::Device(PhysicalDevice& inGpu)
-    : m_handle(VK_NULL_HANDLE)
+    : m_handle(nullptr)
     , m_gpu(inGpu)
 {
     m_queues.reserve(16);
@@ -367,11 +366,11 @@ void Device::Print() const
     printf("Logical Device used queues:\n");
     for (size_t i = 0; i < m_queues.size(); i++) {
         const auto& q = m_queues.at(i);
-        printf("\t%zd: family=%d index=%d presentable=%s flags=", i, q.family, q.index, (q.surface == VK_NULL_HANDLE ? "False" : "True"));
+        printf("\t%zd: family=%d index=%d presentable=%s flags=", i, q->family, q->index, (q->surface == VK_NULL_HANDLE ? "False" : "True"));
 
         const char* famillyNames[] = { "GRAPHICS", "COMPUTE", "TRANSFER", "SPARSE", "PROTECTED" };
         for (int j = 0; j < 5; j++) {
-            if (q.flags & 1 << j) {
+            if (q->flags & 1 << j) {
                 printf("%s ", famillyNames[j]);
             }
         }

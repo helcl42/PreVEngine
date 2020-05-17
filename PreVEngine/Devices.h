@@ -1,6 +1,8 @@
 #ifndef __DEVICES_H__
 #define __DEVICES_H__
 
+#include <memory>
+
 #include "Instance.h"
 #include "WindowImpl.h"
 
@@ -70,7 +72,7 @@ public:
 
     PhysicalDevice* FindPresentable(VkSurfaceKHR surface); // Returns first device able to present to surface, or null if none.
 
-    void Print(bool show_queues = false);
+    void Print(bool showQueues = false);
 
 public:
     size_t GetCount() const;
@@ -95,10 +97,19 @@ struct Queue {
 
     PhysicalDevice gpu; // (used by Swapchain)
 
-public:
+    Queue(VkQueue h, uint32_t f, uint32_t idx, VkQueueFlags flgs, VkSurfaceKHR surf, VkDevice dvc, PhysicalDevice& physDevice)
+        : handle(h)
+        , family(f)
+        , index(idx)
+        , flags(flgs)
+        , surface(surf)
+        , device(dvc)
+        , gpu(physDevice)
+    {
+    }
+
     VkCommandPool CreateCommandPool() const;
 
-public:
     operator VkQueue() const;
 };
 //----------------------------------------------------------------
@@ -110,7 +121,7 @@ private:
 
     PhysicalDevice m_gpu;
 
-    std::vector<Queue> m_queues;
+    std::vector<std::shared_ptr<Queue>> m_queues;
 
 private:
     uint32_t FamilyQueueCount(uint32_t family) const;
@@ -125,7 +136,7 @@ public:
     ~Device();
 
 public:
-    Queue* AddQueue(VkQueueFlags flags, VkSurfaceKHR surface = 0);
+    std::shared_ptr<Queue> AddQueue(VkQueueFlags flags, VkSurfaceKHR surface = 0);
 
     PhysicalDevice& GetGPU();
 

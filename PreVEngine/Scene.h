@@ -61,6 +61,54 @@ public:
     }
 };
 
+class ComputeProvider final : public Singleton<ComputeProvider> {
+private:
+    friend class Singleton<ComputeProvider>;
+
+    template <typename NodeFlagsType>
+    friend class Scene;
+
+private:
+    std::shared_ptr<Queue> m_computeQueue;
+
+    std::shared_ptr<Allocator> m_computeAllocator;
+
+private:
+    ComputeProvider() = default;
+
+public:
+    ~ComputeProvider() = default;
+
+private:
+    void Set(const std::shared_ptr<Queue>& queue, const std::shared_ptr<Allocator>& alloc)
+    {
+        m_computeQueue = queue;
+        m_computeAllocator = alloc;
+    }
+
+    void Reset()
+    {
+        m_computeQueue = nullptr;
+        m_computeAllocator = nullptr;
+    }
+
+public:
+    bool IsAvailable() const
+    {
+        return m_computeQueue != nullptr;
+    }
+
+    std::shared_ptr<Queue> GetQueue() const
+    {
+        return m_computeQueue;
+    }
+
+    std::shared_ptr<Allocator> GetComputeAllocator() const
+    {
+        return m_computeAllocator;
+    }
+};
+
 template <typename NodeFlagsType>
 class IScene {
 public:
@@ -88,10 +136,6 @@ public:
 
     virtual std::shared_ptr<Allocator> GetAllocator() const = 0;
 
-    virtual Queue* GetComputeQueue() const = 0;
-    
-    virtual std::shared_ptr<Allocator> GetComputeAllocator() const = 0;
-
 public:
     virtual ~IScene() = default;
 };
@@ -108,11 +152,11 @@ protected:
 
     std::shared_ptr<Device> m_device;
 
-    Queue* m_presentQueue;
+    std::shared_ptr<Queue> m_presentQueue;
 
-    Queue* m_graphicsQueue;
+    std::shared_ptr<Queue> m_graphicsQueue;
 
-    Queue* m_computeQueue;
+    std::shared_ptr<Queue> m_computeQueue;
 
     VkSurfaceKHR m_surface;
 
@@ -199,7 +243,7 @@ public:
         InitSwapchain();
 
         AllocatorProvider::Instance().SetAllocator(m_allocator);
-        AllocatorProvider::Instance().SetComputeAllocator(m_computeAllocator);
+        ComputeProvider::Instance().Set(m_computeQueue, m_computeAllocator);
     }
 
     void InitSceneGraph() override
@@ -235,7 +279,7 @@ public:
 
     void ShutDown() override
     {
-        AllocatorProvider::Instance().SetComputeAllocator(nullptr);
+        ComputeProvider::Instance().Reset();
         AllocatorProvider::Instance().SetAllocator(nullptr);
     }
 
@@ -258,16 +302,6 @@ public:
     std::shared_ptr<Allocator> GetAllocator() const override
     {
         return m_allocator;
-    }
-
-    Queue* GetComputeQueue() const override
-    {
-        return m_computeQueue;
-    }
-
-    std::shared_ptr<Allocator> GetComputeAllocator() const override
-    {
-        return m_computeAllocator;
     }
 
     std::shared_ptr<ISceneNode<NodeFlagsType> > GetRootNode() const override
