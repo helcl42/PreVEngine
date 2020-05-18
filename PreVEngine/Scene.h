@@ -30,8 +30,6 @@ private:
 private:
     std::shared_ptr<Allocator> m_allocator;
 
-    std::shared_ptr<Allocator> m_computeAllocator;
-
 private:
     AllocatorProvider() = default;
 
@@ -44,20 +42,10 @@ private:
         m_allocator = alloc;
     }
 
-    void SetComputeAllocator(const std::shared_ptr<Allocator>& alloc)
-    {
-        m_computeAllocator = alloc;
-    }
-
 public:
     std::shared_ptr<Allocator> GetAllocator() const
     {
         return m_allocator;
-    }
-
-    std::shared_ptr<Allocator> GetComputeAllocator() const
-    {
-        return m_computeAllocator;
     }
 };
 
@@ -103,7 +91,7 @@ public:
         return m_computeQueue;
     }
 
-    std::shared_ptr<Allocator> GetComputeAllocator() const
+    std::shared_ptr<Allocator> GetAllocator() const
     {
         return m_computeAllocator;
     }
