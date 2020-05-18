@@ -2691,8 +2691,8 @@ public:
         auto cube5 = std::make_shared<CubNode>(glm::vec3(-90.0f, 0.0f, -90.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/sand.png"), AssetManager::Instance().GetAssetPath("Textures/sand_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_cone.png"), 0.1f);
         AddChild(cube5);
 
-        auto compute = std::make_shared<ComputeNode>();
-        AddChild(compute);
+        //auto compute = std::make_shared<ComputeNode>();
+        //AddChild(compute);
 
         SceneNode::Init();
 
