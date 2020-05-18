@@ -437,7 +437,7 @@ void Buffer::Clear()
     m_stride = 0;
 }
 
-void Buffer::Data(const void* data, const uint32_t count, const uint32_t stride, const VkBufferUsageFlagBits usage, const VmaMemoryUsage memtype, void** mapped)
+void Buffer::Data(const void* data, const uint32_t count, const uint32_t stride, const VkBufferUsageFlags usage, const VmaMemoryUsage memtype, void** mapped)
 {
     Clear();
 
@@ -454,6 +454,11 @@ void Buffer::Data(const void* data, const uint32_t count, const uint32_t stride,
 uint32_t Buffer::GetCount() const
 {
     return m_count;
+}
+
+uint32_t Buffer::GetSize() const
+{
+    return m_count * m_stride;
 }
 
 Buffer::operator VkBuffer() const
