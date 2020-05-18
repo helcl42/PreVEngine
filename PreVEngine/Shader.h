@@ -99,6 +99,8 @@ public:
 
     void Bind(const std::string& name, const UBO& ubo);
 
+    void Bind(const std::string& name, const Buffer& buffer);
+
     void Bind(const std::string& name, const VkImageView imageView, const VkSampler sampler, const VkImageLayout imageLayout);
 
     void Bind(const std::string& name, const IImageBuffer& image, const VkImageLayout imageLayout);

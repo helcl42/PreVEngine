@@ -256,6 +256,21 @@ void Shader::Bind(const std::string& name, const UBO& ubo)
     //LOGI("Bind UBO   to shader-in: \"%s\"\n", name.c_str());
 }
 
+void Shader::Bind(const std::string& name, const Buffer& buffer)
+{
+    if (m_descriptorSetInfos.find(name) == m_descriptorSetInfos.cend()) {
+        LOGE("Could not find uniform with name: %s", name.c_str());
+    }
+
+    auto& item = m_descriptorSetInfos[name];
+
+    item.bufferInfo.buffer = buffer;
+    item.bufferInfo.offset = 0;
+    item.bufferInfo.range = buffer.GetSize();
+
+    //LOGI("Bind UBO   to shader-in: \"%s\"\n", name.c_str());
+}
+
 void Shader::Bind(const std::string& name, const VkImageView imageView, const VkSampler sampler, const VkImageLayout imageLayout)
 {
     if (m_descriptorSetInfos.find(name) == m_descriptorSetInfos.cend()) {
@@ -318,7 +333,9 @@ std::vector<char> ShaderFactory::LoadByteCodeFromFile(const std::string& filenam
 
     std::ifstream fileStream(filename, std::ios_base::binary);
 
-    assert(fileStream.good() && "Could not open shader file.");
+    if (!fileStream.good()) {
+        throw std::runtime_error("Could not open shader file: " + filename);
+    }
 
     fileStream.seekg(0, fileStream.end);
     size_t length = fileStream.tellg();
