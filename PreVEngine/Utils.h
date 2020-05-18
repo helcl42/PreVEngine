@@ -398,12 +398,12 @@ public:
         return commandBuffer;
     }
 
-    static VkFence CreateFence(const VkDevice device)
+    static VkFence CreateFence(const VkDevice device, const VkFenceCreateFlags createFlags = VK_FENCE_CREATE_SIGNALED_BIT)
     {
         VkFence fence;
 
         VkFenceCreateInfo createInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
-        createInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+        createInfo.flags = createFlags;
         VKERRCHECK(vkCreateFence(device, &createInfo, nullptr, &fence));
 
         return fence;
