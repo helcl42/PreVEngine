@@ -2139,6 +2139,169 @@ private:
     EventHandler<RayCasterNode, MouseLockRequest> m_mouseLockHandler{ *this };
 };
 
+class ComputeNode final : public SceneNode<SceneNodeFlags> {
+public:
+    ComputeNode()
+        : SceneNode()
+    {
+    }
+
+    ~ComputeNode() = default;
+
+public:
+    void Init() override
+    {
+        SceneNode::Init();
+
+        auto device = DeviceProvider::Instance().GetDevice();
+        auto computeQueue = ComputeProvider::Instance().GetQueue();
+        auto computeAllocator = ComputeProvider::Instance().GetAllocator();
+
+        ShaderFactory shaderFactory{};
+        m_shader = shaderFactory.CreateShaderFromFiles<DummyComputeShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/fibonacci_comp.spv") } });
+
+        m_pipeline = std::make_unique<DummyComputePipeline>(*device, *m_shader);
+        m_pipeline->Init();
+
+        m_commandPool = computeQueue->CreateCommandPool();
+        m_commandBuffer = VkUtils::CreateCommandBuffer(*device, m_commandPool);
+
+        m_fence = VkUtils::CreateFence(*device);        
+
+        m_inputBuffer = std::make_unique<Buffer>(*computeAllocator);
+        m_outputBuffer = std::make_unique<Buffer>(*computeAllocator);
+    }
+
+    void Update(float deltaTime) override
+    {
+        if(ComputeProvider::Instance().IsAvailable()) {
+            auto device = DeviceProvider::Instance().GetDevice();
+            auto computeQueue = ComputeProvider::Instance().GetQueue();
+            auto computeAllocator = ComputeProvider::Instance().GetAllocator();
+
+            const uint32_t NUMBER_OF_ELEMENTS = 32;
+
+            std::vector<uint32_t> computeInput(NUMBER_OF_ELEMENTS);
+            std::vector<uint32_t> computeOutput(NUMBER_OF_ELEMENTS);
+
+            const VkDeviceSize bufferSize = NUMBER_OF_ELEMENTS * sizeof(uint32_t);
+
+            uint32_t n = 0;
+            std::generate(computeInput.begin(), computeInput.end(), [&n] { return n++; });
+
+            m_inputBuffer->Data(computeInput.data(), static_cast<uint32_t>(computeInput.size()), sizeof(uint32_t), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
+            m_outputBuffer->Data(computeOutput.data(), static_cast<uint32_t>(computeOutput.size()), sizeof(uint32_t), VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &m_outputBufferMappedMemory);
+
+            VkCommandBufferBeginInfo cmdBufBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+            cmdBufBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+            VKERRCHECK(vkBeginCommandBuffer(m_commandBuffer, &cmdBufBeginInfo));
+
+            // Barrier to ensure that input buffer transfer is finished before compute shader reads from it
+            VkBufferMemoryBarrier beforeComputeShaderReadBufferBarrier{ VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER };
+            beforeComputeShaderReadBufferBarrier.buffer = *m_inputBuffer;
+            beforeComputeShaderReadBufferBarrier.size = VK_WHOLE_SIZE;
+            beforeComputeShaderReadBufferBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+            beforeComputeShaderReadBufferBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            beforeComputeShaderReadBufferBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            beforeComputeShaderReadBufferBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+            vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0, 0, nullptr, 1, &beforeComputeShaderReadBufferBarrier, 0, nullptr);
+
+            m_shader->Bind("dataBuffer", *m_inputBuffer);
+            const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+
+            vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *m_pipeline);
+            vkCmdBindDescriptorSets(m_commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, 0);
+
+            vkCmdDispatch(m_commandBuffer, NUMBER_OF_ELEMENTS, 1, 1);
+
+            // Barrier to ensure that shader writes are finished before buffer is read back from GPU
+            VkBufferMemoryBarrier beforeComputeShaderWriteResultBufferBarrier{ VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER };
+            beforeComputeShaderWriteResultBufferBarrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+            beforeComputeShaderWriteResultBufferBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            beforeComputeShaderWriteResultBufferBarrier.buffer = *m_inputBuffer;
+            beforeComputeShaderWriteResultBufferBarrier.size = VK_WHOLE_SIZE;
+            beforeComputeShaderWriteResultBufferBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            beforeComputeShaderWriteResultBufferBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+            vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 1, &beforeComputeShaderWriteResultBufferBarrier, 0, nullptr);
+
+            // Read back to host visible buffer
+            VkBufferCopy copyRegion = {};
+            copyRegion.size = bufferSize;
+            vkCmdCopyBuffer(m_commandBuffer, *m_inputBuffer, *m_outputBuffer, 1, &copyRegion);
+
+            // Barrier to ensure that buffer copy is finished before host reading from it
+            VkBufferMemoryBarrier beforeHostReadBufferBarrier{ VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER };
+            beforeHostReadBufferBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            beforeHostReadBufferBarrier.dstAccessMask = VK_ACCESS_HOST_READ_BIT;
+            beforeHostReadBufferBarrier.buffer = *m_outputBuffer;
+            beforeHostReadBufferBarrier.size = VK_WHOLE_SIZE;
+            beforeHostReadBufferBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            beforeHostReadBufferBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+            vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_HOST_BIT, 0, 0, nullptr, 1, &beforeHostReadBufferBarrier, 0, nullptr);
+
+            VKERRCHECK(vkEndCommandBuffer(m_commandBuffer));
+
+            // Submit compute work
+            vkResetFences(*device, 1, &m_fence);
+
+            const VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            VkSubmitInfo computeSubmitInfo{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
+            computeSubmitInfo.pWaitDstStageMask = &waitStageMask;
+            computeSubmitInfo.commandBufferCount = 1;
+            computeSubmitInfo.pCommandBuffers = &m_commandBuffer;
+            VKERRCHECK(vkQueueSubmit(*computeQueue, 1, &computeSubmitInfo, m_fence));
+            VKERRCHECK(vkWaitForFences(*device, 1, &m_fence, VK_TRUE, UINT64_MAX));
+
+            // Copy to output
+            memcpy(computeOutput.data(), m_outputBufferMappedMemory, bufferSize);
+
+            std::cout << "---------------------------- FIBONACCI ---------------------------------------" << std::endl;
+            for (auto i = 0; i < computeInput.size(); i++) {
+                std::cout << "Input: " << computeInput.at(i) << " Output: " << computeOutput.at(i) << std::endl;
+            }
+            std::cout << "------------------------------------------------------------------------------" << std::endl;
+
+            VKERRCHECK(vkQueueWaitIdle(*computeQueue));
+        }
+
+        SceneNode::Update(deltaTime);
+    }
+
+    void ShutDown() override
+    {
+        SceneNode::ShutDown();
+
+        auto device = DeviceProvider::Instance().GetDevice();
+
+        vkDestroyFence(*device, m_fence, nullptr);
+        vkDestroyCommandPool(*device, m_commandPool, nullptr);
+
+        m_pipeline->ShutDown();
+
+        m_shader->ShutDown();
+    }
+
+private:    
+    std::unique_ptr<DummyComputePipeline> m_pipeline;
+
+    std::unique_ptr<Shader> m_shader;
+
+    VkCommandPool m_commandPool;
+
+    VkCommandBuffer m_commandBuffer;
+
+    VkFence m_fence;
+
+    std::unique_ptr<Buffer> m_inputBuffer;
+
+    std::unique_ptr<Buffer> m_outputBuffer;
+
+    void* m_outputBufferMappedMemory;
+};
+
 class RayCastObserverNode : public SceneNode<SceneNodeFlags> {
 private:
     enum class IntersectionType {
@@ -2527,6 +2690,9 @@ public:
 
         auto cube5 = std::make_shared<CubNode>(glm::vec3(-90.0f, 0.0f, -90.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/sand.png"), AssetManager::Instance().GetAssetPath("Textures/sand_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_cone.png"), 0.1f);
         AddChild(cube5);
+
+        auto compute = std::make_shared<ComputeNode>();
+        AddChild(compute);
 
         SceneNode::Init();
 

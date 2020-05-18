@@ -1851,6 +1851,101 @@ public:
     }
 };
 
+//////////////////////////////////////////// COMPUTE ////////////////////////////////////////////
+
+class DummyComputeShader final : public Shader {
+public:
+    DummyComputeShader(const VkDevice device)
+        : Shader(device)
+    {
+    }
+
+    ~DummyComputeShader() = default;
+
+private:
+    void InitVertexInputs() override
+    {
+    }
+
+    void InitDescriptorSets() override
+    {
+        AddDescriptorSet("dataBuffer", 0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT);
+    }
+
+    void InitPushConstantsBlocks() override
+    {
+    }
+};
+
+class DummyComputePipeline final {    
+public:
+    DummyComputePipeline(const VkDevice device, const Shader& shaders)
+        : m_device(device)
+        , m_shaders(shaders)
+        , m_pipeline(VK_NULL_HANDLE)
+        , m_pipelineLayout(VK_NULL_HANDLE)
+    {
+    }
+
+    ~DummyComputePipeline() = default;
+
+public:
+    VkPipeline Init()
+    {
+        VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+        pipelineLayoutInfo.setLayoutCount = 1;
+        pipelineLayoutInfo.pSetLayouts = m_shaders.GetDescriptorSetLayout();
+        pipelineLayoutInfo.pPushConstantRanges = m_shaders.GetPushConstantsRanges().data();
+        pipelineLayoutInfo.pushConstantRangeCount = static_cast<uint32_t>(m_shaders.GetPushConstantsRanges().size());
+        VKERRCHECK(vkCreatePipelineLayout(m_device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout));
+
+        VkComputePipelineCreateInfo computePipelineCreateInfo{ VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO };
+        computePipelineCreateInfo.layout = m_pipelineLayout;
+        computePipelineCreateInfo.flags = 0;
+        computePipelineCreateInfo.stage = m_shaders.GetShaderStages().at(0);
+
+        VKERRCHECK(vkCreateComputePipelines(m_device, nullptr, 1, &computePipelineCreateInfo, nullptr, &m_pipeline));
+
+        return m_pipeline;
+    }
+
+    void ShutDown()
+    {
+        if (m_device) {
+            vkDeviceWaitIdle(m_device);
+        }
+
+        if (m_pipelineLayout) {
+            vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
+            m_pipelineLayout = VK_NULL_HANDLE;
+        }
+
+        if (m_pipeline) {
+            vkDestroyPipeline(m_device, m_pipeline, nullptr);
+            m_pipeline = VK_NULL_HANDLE;
+        }
+    }
+
+    VkPipelineLayout GetLayout() const
+    {
+        return m_pipelineLayout;
+    }
+
+    operator VkPipeline() const
+    {
+        return m_pipeline;
+    }
+
+private:
+    const VkDevice m_device;
+
+    const Shader& m_shaders;
+
+    VkPipeline m_pipeline;
+
+    VkPipelineLayout m_pipelineLayout;
+};
+
 //////////////////////////////////////////// DEBUG ////////////////////////////////////////////
 
 class ShadowMapDebugShader final : public Shader {
