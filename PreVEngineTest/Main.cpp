@@ -2285,7 +2285,7 @@ public:
     }
 
 private:    
-    std::unique_ptr<DummyComputePipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<Shader> m_shader;
 
@@ -2300,6 +2300,149 @@ private:
     std::unique_ptr<Buffer> m_outputBuffer;
 
     void* m_outputBufferMappedMemory;
+};
+
+class CloudsNode final : public SceneNode<SceneNodeFlags> {
+private:
+    struct Uniforms {
+        alignas(16) glm::vec4 textureSize;
+        alignas(16) glm::vec4 seed;
+        alignas(16) float perlinAmplitude;
+                    float perlinFrequency;
+                    float perlinScale;
+                    int perlinOctaves;
+    };
+
+public:
+    CloudsNode()
+        : SceneNode()
+    {
+    }
+
+    ~CloudsNode() = default;
+
+public:
+    void Init() override
+    {
+        SceneNode::Init();
+
+        auto device = DeviceProvider::Instance().GetDevice();
+        auto computeQueue = ComputeProvider::Instance().GetQueue();
+        auto computeAllocator = ComputeProvider::Instance().GetAllocator();
+
+        ShaderFactory shaderFactory{};
+        m_shader = shaderFactory.CreateShaderFromFiles<WeatherComputeShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/weather_comp.spv") } });
+
+        m_pipeline = std::make_unique<WeatherComputePipeline>(*device, *m_shader);
+        m_pipeline->Init();
+
+        m_uniformsPool = std::make_unique<UBOPool<Uniforms> >(*computeAllocator);
+        m_uniformsPool->AdjustCapactity(3, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+
+        m_commandPool = computeQueue->CreateCommandPool();
+        m_commandBuffer = VkUtils::CreateCommandBuffer(*device, m_commandPool);
+
+        m_fence = VkUtils::CreateFence(*device);
+
+        m_weatherImageBuffer = std::make_unique<ImageStorageBuffer>(*computeAllocator);
+        m_weatherImageBuffer->Create(ImageBufferCreateInfo{ { IMAGE_WIDTH, IMAGE_HEIGHT }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE });
+    }
+
+    void Update(float deltaTime) override
+    {
+        if (ComputeProvider::Instance().IsAvailable()) {
+            auto device = DeviceProvider::Instance().GetDevice();
+            auto computeQueue = ComputeProvider::Instance().GetQueue();
+            auto computeAllocator = ComputeProvider::Instance().GetAllocator();
+
+            VKERRCHECK(vkQueueWaitIdle(*computeQueue));
+        
+            VkCommandBufferBeginInfo cmdBufBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+            cmdBufBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+            VKERRCHECK(vkBeginCommandBuffer(m_commandBuffer, &cmdBufBeginInfo));
+
+            //// Barrier to ensure that texture is completely written and can be sampled in fragment shader
+            //VkImageMemoryBarrier beforeComputeShaderReadBufferBarrier{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+            //beforeComputeShaderReadBufferBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+            //beforeComputeShaderReadBufferBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            //beforeComputeShaderReadBufferBarrier.image = m_weatherImageBuffer->GetImage();
+            //beforeComputeShaderReadBufferBarrier.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+            //beforeComputeShaderReadBufferBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            //beforeComputeShaderReadBufferBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+            //vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &beforeComputeShaderReadBufferBarrier);
+
+            auto ubo = m_uniformsPool->GetNext();
+
+            Uniforms uniforms{};
+            uniforms.textureSize = glm::vec4(IMAGE_WIDTH, IMAGE_HEIGHT, 0, 0);
+            uniforms.seed = glm::vec4(10, 20, 0, 0);
+            uniforms.perlinAmplitude = 0.5f;
+            uniforms.perlinFrequency = 0.8f;
+            uniforms.perlinScale = 100.0f;
+            uniforms.perlinOctaves = 4;
+            ubo->Update(&uniforms);
+
+            m_shader->Bind("uboCS", *ubo);
+            m_shader->Bind("outWeatherTexture", *m_weatherImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
+            const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+
+            vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *m_pipeline);
+            vkCmdBindDescriptorSets(m_commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, 0);
+
+            vkCmdDispatch(m_commandBuffer, IMAGE_WIDTH, IMAGE_HEIGHT, 1);
+
+            VKERRCHECK(vkEndCommandBuffer(m_commandBuffer));
+
+            // Submit compute work
+            vkResetFences(*device, 1, &m_fence);
+
+            const VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            VkSubmitInfo computeSubmitInfo{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
+            computeSubmitInfo.pWaitDstStageMask = &waitStageMask;
+            computeSubmitInfo.commandBufferCount = 1;
+            computeSubmitInfo.pCommandBuffers = &m_commandBuffer;
+            VKERRCHECK(vkQueueSubmit(*computeQueue, 1, &computeSubmitInfo, m_fence));
+            VKERRCHECK(vkWaitForFences(*device, 1, &m_fence, VK_TRUE, UINT64_MAX));
+        }
+
+        SceneNode::Update(deltaTime);
+    }
+
+    void ShutDown() override
+    {
+        SceneNode::ShutDown();
+
+        auto device = DeviceProvider::Instance().GetDevice();
+
+        vkDestroyFence(*device, m_fence, nullptr);
+        vkDestroyCommandPool(*device, m_commandPool, nullptr);
+
+        m_weatherImageBuffer->Destroy();
+
+        m_pipeline->ShutDown();
+
+        m_shader->ShutDown();
+    }
+
+private:
+    static const inline uint32_t IMAGE_WIDTH = 1024;
+
+    static const inline uint32_t IMAGE_HEIGHT = 1024;
+
+    std::unique_ptr<IPipeline> m_pipeline;
+
+    std::unique_ptr<Shader> m_shader;
+
+    std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
+
+    VkCommandPool m_commandPool;
+
+    VkCommandBuffer m_commandBuffer;
+
+    VkFence m_fence;
+
+    std::unique_ptr<IImageBuffer> m_weatherImageBuffer;
 };
 
 class RayCastObserverNode : public SceneNode<SceneNodeFlags> {
@@ -2691,8 +2834,11 @@ public:
         auto cube5 = std::make_shared<CubNode>(glm::vec3(-90.0f, 0.0f, -90.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/sand.png"), AssetManager::Instance().GetAssetPath("Textures/sand_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_cone.png"), 0.1f);
         AddChild(cube5);
 
-        auto compute = std::make_shared<ComputeNode>();
-        AddChild(compute);
+        //auto compute = std::make_shared<ComputeNode>();
+        //AddChild(compute);
+
+        auto clouds = std::make_shared<CloudsNode>();
+        AddChild(clouds);
 
         SceneNode::Init();
 
