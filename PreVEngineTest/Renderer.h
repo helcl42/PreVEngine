@@ -71,7 +71,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
 
@@ -189,7 +189,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
 
@@ -307,7 +307,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
 
@@ -425,7 +425,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
 
@@ -544,7 +544,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
 
@@ -667,7 +667,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
 
@@ -792,7 +792,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
 private:
     std::unique_ptr<IModel> m_quadModel;
@@ -929,7 +929,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
 private:
     std::unique_ptr<IModel> m_quadModel;
@@ -1065,7 +1065,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
@@ -1207,7 +1207,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
@@ -1355,7 +1355,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
@@ -1591,7 +1591,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
@@ -1861,7 +1861,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
@@ -2135,7 +2135,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
@@ -2415,7 +2415,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
@@ -2691,7 +2691,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
@@ -2962,7 +2962,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
@@ -3238,7 +3238,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
@@ -3520,7 +3520,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
@@ -3800,7 +3800,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
@@ -4077,7 +4077,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
@@ -4360,7 +4360,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
@@ -4647,7 +4647,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
@@ -4849,7 +4849,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
@@ -4990,7 +4990,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
@@ -5162,7 +5162,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
@@ -5331,7 +5331,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
@@ -5499,7 +5499,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
@@ -5638,7 +5638,7 @@ private:
 private:
     std::unique_ptr<Shader> m_shader;
 
-    std::unique_ptr<IGraphicsPipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
 
