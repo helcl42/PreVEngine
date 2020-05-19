@@ -367,6 +367,20 @@ public:
 };
 //--------------------------------------------------------------------------------
 
+//----------------------------------Image Buffer----------------------------------
+class ImageStorageBuffer : public AbstractImageBuffer {
+public:
+    ImageStorageBuffer(Allocator& allocator);
+
+    ~ImageStorageBuffer() = default;
+
+public:
+    void Create(const ImageBufferCreateInfo& createInfo) override;
+
+    void Resize(const VkExtent2D& extent) override;
+};
+//--------------------------------------------------------------------------------
+
 //----------------------------------Depth Buffer----------------------------------
 class DepthImageBuffer : public AbstractImageBuffer {
 public:

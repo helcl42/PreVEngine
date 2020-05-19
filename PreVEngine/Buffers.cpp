@@ -210,7 +210,7 @@ void Allocator::CreateImage(const VkExtent3D& extent, const VkImageType imageTyp
 
 void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const std::vector<const uint8_t*> layerData, const uint32_t layerCount, VkImage& image)
 {
-    for (uint32_t layerIndex = 0; layerIndex < layerCount; layerIndex++) {
+    for (uint32_t layerIndex = 0; layerIndex < layerCount; layerIndex++) {        
         // Copy image data to staging buffer in CPU memory
         uint32_t formatSize = FormatSize(format);
         uint64_t size = extent.width * extent.height * extent.depth * formatSize;
@@ -376,6 +376,9 @@ void Allocator::TransitionImageLayout(const VkImage image, const VkImageLayout o
 
             srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
             dstStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        } else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_GENERAL) {
+            srcStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+            dstStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
         } else {
             LOGE("Unsupported layout transition\n");
         }
@@ -663,7 +666,41 @@ void ImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
 
 void ImageBuffer::Resize(const VkExtent2D& extent)
 {
-    LOGW("Texture can not be resized - it has fixed size");
+    LOGW("ImageBuffer can not be resized - it has fixed size");
+}
+
+//--------------------------------------------------------------------------------
+ImageStorageBuffer::ImageStorageBuffer(Allocator& allocator)
+    : AbstractImageBuffer(allocator)
+{
+}
+
+void ImageStorageBuffer::Create(const ImageBufferCreateInfo& createInfo)
+{
+    m_format = createInfo.format;
+    m_layerCount = createInfo.layerCount;
+    m_imageViewType = createInfo.viewType;
+    m_imageType = createInfo.imageType;
+    m_flags = createInfo.flags;
+    m_extent = VkExtent2D{ createInfo.extent.width, createInfo.extent.height };
+
+    m_mipLevels = 1;
+    if (createInfo.mipMap) {
+        m_mipLevels = MathUtil::Log2(std::max(createInfo.extent.width, createInfo.extent.height)) + 1;
+    }
+
+    VkExtent3D ext3D{ createInfo.extent.width, createInfo.extent.height, 1 };
+
+    m_allocator.CreateImage(ext3D, m_imageType, m_format, m_mipLevels, m_layerCount, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT, m_flags, m_image, m_allocation);
+    m_allocator.TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, m_mipLevels, m_layerCount);
+    m_allocator.CreateImageView(m_image, m_format, m_imageViewType, m_mipLevels, m_layerCount, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
+
+    CreateSampler((float)m_mipLevels, createInfo.addressMode, createInfo.filteringEnabled);
+}
+
+void ImageStorageBuffer::Resize(const VkExtent2D& extent)
+{
+    LOGW("ImageStorageBuffer can not be resized - it has fixed size");
 }
 
 //--------------------------------------------------------------------------------
