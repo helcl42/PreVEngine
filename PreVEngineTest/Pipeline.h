@@ -1973,6 +1973,90 @@ public:
     }
 };
 
+class PerlinWorleyComputeShader final : public Shader {
+public:
+    PerlinWorleyComputeShader(const VkDevice device)
+        : Shader(device)
+    {
+    }
+
+    ~PerlinWorleyComputeShader() = default;
+
+private:
+    void InitVertexInputs() override
+    {
+    }
+
+    void InitDescriptorSets() override
+    {
+        AddDescriptorSet("outVolumeTexture", 0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT);
+    }
+
+    void InitPushConstantsBlocks() override
+    {
+    }
+};
+
+class PerlinWorleyComputePipeline final : public AbstractComputePipeline {
+public:
+    PerlinWorleyComputePipeline(const VkDevice device, const Shader& shaders)
+        : AbstractComputePipeline(device, shaders)
+    {
+    }
+
+    ~PerlinWorleyComputePipeline() = default;
+
+public:
+    VkPipeline Init() override
+    {
+        PipelineFactory pipelineFactory{};
+        pipelineFactory.CreateDefaultComputePipeline(m_device, m_shaders, m_pipelineLayout, m_pipeline);
+        return m_pipeline;
+    }
+};
+
+class WorleyComputeShader final : public Shader {
+public:
+    WorleyComputeShader(const VkDevice device)
+        : Shader(device)
+    {
+    }
+
+    ~WorleyComputeShader() = default;
+
+private:
+    void InitVertexInputs() override
+    {
+    }
+
+    void InitDescriptorSets() override
+    {
+        AddDescriptorSet("outVolumeTexture", 0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT);
+    }
+
+    void InitPushConstantsBlocks() override
+    {
+    }
+};
+
+class WorleyComputePipeline final : public AbstractComputePipeline {
+public:
+    WorleyComputePipeline(const VkDevice device, const Shader& shaders)
+        : AbstractComputePipeline(device, shaders)
+    {
+    }
+
+    ~WorleyComputePipeline() = default;
+
+public:
+    VkPipeline Init() override
+    {
+        PipelineFactory pipelineFactory{};
+        pipelineFactory.CreateDefaultComputePipeline(m_device, m_shaders, m_pipelineLayout, m_pipeline);
+        return m_pipeline;
+    }
+};
+
 //////////////////////////////////////////// DEBUG ////////////////////////////////////////////
 
 class ShadowMapDebugShader final : public Shader {

@@ -215,7 +215,7 @@ public:
 
 //-------------------------------------AbstractImageBuffer-------------------------------------
 struct ImageBufferCreateInfo {
-    const VkExtent2D extent;
+    const VkExtent3D extent;
 
     const VkImageType imageType;
 
@@ -236,11 +236,21 @@ struct ImageBufferCreateInfo {
     const std::vector<const uint8_t*> layerData;
 
     ImageBufferCreateInfo(const VkExtent2D& ext, const VkImageType imgType, const VkFormat fmt, const VkImageCreateFlags flgs = 0, const bool mipmap = false, const bool filtering = true, const VkImageViewType vwType = VK_IMAGE_VIEW_TYPE_2D, const uint32_t lrCount = 1, const VkSamplerAddressMode mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, const uint8_t* data = nullptr)
-        : ImageBufferCreateInfo(ext, imgType, fmt, flgs, mipmap, filtering, vwType, lrCount, mode, std::vector<const uint8_t*>{ data })
+        : ImageBufferCreateInfo(VkExtent3D{ ext.width, ext.height, 1 }, imgType, fmt, flgs, mipmap, filtering, vwType, lrCount, mode, std::vector<const uint8_t*>{ data })
     {
     }
 
     ImageBufferCreateInfo(const VkExtent2D& ext, const VkImageType imgType, const VkFormat fmt, const VkImageCreateFlags flgs, const bool mipmap, const bool filtering, const VkImageViewType vwType, const uint32_t lrCount, const VkSamplerAddressMode mode, const std::vector<const uint8_t*>& lrImageData)
+        : ImageBufferCreateInfo(VkExtent3D{ ext.width, ext.height, 1 }, imgType, fmt, flgs, mipmap, filtering, vwType, lrCount, mode, lrImageData)
+    {
+    }
+
+    ImageBufferCreateInfo(const VkExtent3D& ext, const VkImageType imgType, const VkFormat fmt, const VkImageCreateFlags flgs = 0, const bool mipmap = false, const bool filtering = true, const VkImageViewType vwType = VK_IMAGE_VIEW_TYPE_3D, const uint32_t lrCount = 1, const VkSamplerAddressMode mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, const uint8_t* data = nullptr)
+        : ImageBufferCreateInfo(ext, imgType, fmt, flgs, mipmap, filtering, vwType, lrCount, mode, std::vector<const uint8_t*>{ data })
+    {
+    }
+
+    ImageBufferCreateInfo(const VkExtent3D& ext, const VkImageType imgType, const VkFormat fmt, const VkImageCreateFlags flgs, const bool mipmap, const bool filtering, const VkImageViewType vwType, const uint32_t lrCount, const VkSamplerAddressMode mode, const std::vector<const uint8_t*>& lrImageData)
         : extent(ext)
         , imageType(imgType)
         , format(fmt)
@@ -261,7 +271,7 @@ class IImageBuffer {
 public:
     virtual void Create(const ImageBufferCreateInfo& createInfo) = 0;
 
-    virtual void Resize(const VkExtent2D& extent) = 0;
+    virtual void Resize(const VkExtent3D& extent) = 0;
 
     virtual void Destroy() = 0;
 
@@ -277,7 +287,7 @@ public:
 
     virtual VkFormat GetFormat() const = 0;
 
-    virtual VkExtent2D GetExtent() const = 0;
+    virtual VkExtent3D GetExtent() const = 0;
 
     virtual VkImageType GetImageType() const = 0;
 
@@ -301,7 +311,7 @@ protected:
 
     VkImage m_image;
 
-    VkExtent2D m_extent;
+    VkExtent3D m_extent;
 
     VkImageType m_imageType;
 
@@ -340,7 +350,7 @@ public:
 
     VkFormat GetFormat() const override;
 
-    VkExtent2D GetExtent() const override;
+    VkExtent3D GetExtent() const override;
 
     VkImageType GetImageType() const override;
 
@@ -363,7 +373,7 @@ public:
 public:
     void Create(const ImageBufferCreateInfo& createInfo) override;
 
-    void Resize(const VkExtent2D& extent) override;
+    void Resize(const VkExtent3D& extent) override;
 };
 //--------------------------------------------------------------------------------
 
@@ -377,7 +387,7 @@ public:
 public:
     void Create(const ImageBufferCreateInfo& createInfo) override;
 
-    void Resize(const VkExtent2D& extent) override;
+    void Resize(const VkExtent3D& extent) override;
 };
 //--------------------------------------------------------------------------------
 
@@ -391,7 +401,7 @@ public:
 public:
     void Create(const ImageBufferCreateInfo& createInfo) override;
 
-    void Resize(const VkExtent2D& extent) override;
+    void Resize(const VkExtent3D& extent) override;
 };
 //--------------------------------------------------------------------------------
 
@@ -405,7 +415,7 @@ public:
 public:
     void Create(const ImageBufferCreateInfo& createInfo) override;
 
-    void Resize(const VkExtent2D& extent) override;
+    void Resize(const VkExtent3D& extent) override;
 };
 //--------------------------------------------------------------------------------
 } // namespace PreVEngine
