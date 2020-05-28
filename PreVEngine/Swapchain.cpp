@@ -279,7 +279,7 @@ void Swapchain::Apply()
     m_currentFrameIndex = 0;
 
     const VkExtent3D extent3D{ m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height, 1 };
-    m_depthBuffer.Resize(extent3D); //resize depth buffer
+    m_depthBuffer.Resize(extent3D); // resize depth buffer
 
     std::vector<VkImage> swapchainImages = GetSwapchainImages();
     m_swapchainImagesCount = static_cast<uint32_t>(swapchainImages.size());

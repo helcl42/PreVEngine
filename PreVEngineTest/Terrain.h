@@ -543,7 +543,7 @@ private:
         if (s_imagesCache.find(textureFilename) != s_imagesCache.cend()) {
             image = s_imagesCache[textureFilename];
         } else {
-            ImageFactory imageFactory;
+            ImageFactory imageFactory{};
             image = imageFactory.CreateImage(textureFilename);
             s_imagesCache[textureFilename] = image;
         }
