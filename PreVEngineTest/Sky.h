@@ -1,5 +1,5 @@
-#ifndef __SKYBOX_H__
-#define __SKYBOX_H__
+#ifndef __SKY_H__
+#define __SKY_H__
 
 #include "Common.h"
 #include "General.h"

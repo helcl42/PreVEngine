@@ -26,7 +26,7 @@
 #include "Pipeline.h"
 #include "RayCasting.h"
 #include "Shadows.h"
-#include "SkyBox.h"
+#include "Sky.h"
 #include "Terrain.h"
 #include "Water.h"
 
@@ -2330,7 +2330,6 @@ public:
     void ShutDown() override
     {
         SceneNode::ShutDown();
-
     }
 };
 
