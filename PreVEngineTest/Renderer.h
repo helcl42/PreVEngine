@@ -4976,9 +4976,9 @@ private:
     {
         alignas(16) glm::vec4 fogColor;
 
-        alignas(16) float lowerLimit;
+        alignas(16) glm::vec4 lowerLimit;
 
-        alignas(16) float upperLimit;
+        alignas(16) glm::vec4 upperLimit;
     };
 
 private:
@@ -5063,8 +5063,8 @@ public:
 
             UniformsFS uniformsFS{};
             uniformsFS.fogColor = FOG_COLOR;
-            uniformsFS.lowerLimit = 0.0f;
-            uniformsFS.upperLimit = 30.0f;
+            uniformsFS.lowerLimit = glm::vec4(0.0f);
+            uniformsFS.upperLimit = glm::vec4(0.03f);
             uboFS->Update(&uniformsFS);
 
             m_shader->Bind("cubeMap1", *skyBoxComponent->GetMaterial()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
