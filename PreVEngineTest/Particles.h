@@ -541,7 +541,7 @@ private:
         auto vertexBuffer = std::make_unique<VBO>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), static_cast<uint32_t>(mesh->GetVertices().size()), mesh->GetVertexLayout().GetStride());
         auto indexBuffer = std::make_unique<IBO>(allocator);
-        indexBuffer->Data(mesh->GerIndices().data(), static_cast<uint32_t>(mesh->GerIndices().size()));
+        indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
         return std::make_shared<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
 };

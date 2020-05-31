@@ -54,6 +54,7 @@ enum class SceneNodeFlags {
     SELECTABLE_COMPONENT,
     PARTICLE_SYSTEM_COMPONENT,
     CLOUDS_COMPONENT,
+    SKY_RENDER_COMPONENT,
     _
 };
 
@@ -312,7 +313,7 @@ public:
 
     virtual uint32_t GerVerticesCount() const = 0;
 
-    virtual const std::vector<uint32_t>& GerIndices() const = 0;
+    virtual const std::vector<uint32_t>& GetIndices() const = 0;
 
     virtual bool HasIndices() const = 0;
 

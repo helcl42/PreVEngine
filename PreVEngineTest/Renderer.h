@@ -831,7 +831,7 @@ public:
         vertexBuffer->Data(quadMesh->GetVertexData(), quadMesh->GerVerticesCount(), quadMesh->GetVertexLayout().GetStride());
 
         auto indexBuffer = std::make_unique<IBO>(*allocator);
-        indexBuffer->Data(quadMesh->GerIndices().data(), static_cast<uint32_t>(quadMesh->GerIndices().size()));
+        indexBuffer->Data(quadMesh->GetIndices().data(), static_cast<uint32_t>(quadMesh->GetIndices().size()));
 
         m_quadModel = std::make_unique<Model>(std::move(quadMesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
@@ -966,7 +966,7 @@ public:
         vertexBuffer->Data(quadMesh->GetVertexData(), quadMesh->GerVerticesCount(), quadMesh->GetVertexLayout().GetStride());
 
         auto indexBuffer = std::make_unique<IBO>(*allocator);
-        indexBuffer->Data(quadMesh->GerIndices().data(), static_cast<uint32_t>(quadMesh->GerIndices().size()));
+        indexBuffer->Data(quadMesh->GetIndices().data(), static_cast<uint32_t>(quadMesh->GetIndices().size()));
 
         m_quadModel = std::make_unique<Model>(std::move(quadMesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
@@ -1474,7 +1474,7 @@ private:
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
 
         auto indexBuffer = std::make_unique<IBO>(allocator);
-        indexBuffer->Data(mesh->GerIndices().data(), (uint32_t)mesh->GerIndices().size());
+        indexBuffer->Data(mesh->GetIndices().data(), (uint32_t)mesh->GetIndices().size());
 
         return std::make_unique<Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));
     }
@@ -4982,7 +4982,7 @@ private:
     };
 
 private:
-    const uint32_t m_descriptorCount{ 1000 };
+    const uint32_t m_descriptorCount{ 10 };
 
 private:
     std::shared_ptr<RenderPass> m_renderPass;
@@ -5080,6 +5080,130 @@ public:
             vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
             vkCmdDrawIndexed(renderContext.commandBuffer, skyBoxComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+        }
+
+        for (auto child : node->GetChildren()) {
+            Render(renderContext, child, renderContextUserData);
+        }
+    }
+
+    void PostRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void AfterRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void ShutDown() override
+    {
+        m_shader->ShutDown();
+
+        m_pipeline->ShutDown();
+    }
+};
+
+class SkyRenderer final : public IRenderer<NormalRenderContextUserData> {
+private:    
+    struct alignas(16) UniformsFS
+    {
+        alignas(16) glm::vec4 skyColorBottom;
+
+        alignas(16) glm::vec4 skyColorTop;
+
+        alignas(16) glm::vec4 lightDirection;
+
+        alignas(16) glm::vec4 resolution;
+
+        alignas(16) glm::mat4 inverseProjectionMatrix;
+
+        alignas(16) glm::mat4 inverseViewMatrix;
+    };
+
+private:
+    const uint32_t m_descriptorCount{ 10 };
+
+private:
+    std::shared_ptr<RenderPass> m_renderPass;
+
+private:
+    std::unique_ptr<Shader> m_shader;
+
+    std::unique_ptr<IPipeline> m_pipeline;
+
+    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+
+public:
+    SkyRenderer(const std::shared_ptr<RenderPass>& renderPass)
+        : m_renderPass(renderPass)
+    {
+    }
+
+    ~SkyRenderer() = default;
+
+public:
+    void Init() override
+    {
+        auto device = DeviceProvider::Instance().GetDevice();
+        auto allocator = AllocatorProvider::Instance().GetAllocator();
+
+        ShaderFactory shaderFactory;
+        m_shader = shaderFactory.CreateShaderFromFiles<SkyShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/sky_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/sky_frag.spv") } });
+        m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
+
+        LOGI("Sky Shader created\n");
+
+        m_pipeline = std::make_unique<SkyPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline->Init();
+
+        LOGI("Sky Pipeline created\n");
+
+        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    }
+
+    void BeforeRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+    }
+
+    void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    {
+        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+
+        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+        vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
+    }
+
+    void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    {
+        if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::SKY_RENDER_COMPONENT })) {
+            const auto skyComponent = ComponentRepository<ISkyComponent>::Instance().Get(node->GetId());
+            const auto mainLightComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+
+            auto uboFS = m_uniformsPoolFS->GetNext();
+
+            UniformsFS uniformsFS{};
+            uniformsFS.skyColorBottom = glm::vec4(skyComponent->GetBottomColor(), 1.0f);
+            uniformsFS.skyColorTop = glm::vec4(skyComponent->GetTopColor(), 1.0f);
+            uniformsFS.resolution = glm::vec4(renderContextUserData.extent.width, renderContextUserData.extent.height, 0.0f, 0.0f);
+            uniformsFS.lightDirection = glm::vec4(mainLightComponent->GetDirection(), 0.0f);
+            uniformsFS.inverseProjectionMatrix = glm::inverse(renderContextUserData.projectionMatrix);
+            uniformsFS.inverseViewMatrix = glm::inverse(renderContextUserData.viewMatrix);
+            uboFS->Update(&uniformsFS);
+
+            m_shader->Bind("uboFS", *uboFS);
+
+            const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+            const VkBuffer vertexBuffers[] = { *skyComponent->GetModel()->GetVertexBuffer() };
+            const VkDeviceSize offsets[] = { 0 };
+
+            vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(renderContext.commandBuffer, *skyComponent->GetModel()->GetIndexBuffer(), 0, skyComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+            vkCmdDrawIndexed(renderContext.commandBuffer, skyComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
         }
 
         for (auto child : node->GetChildren()) {
@@ -5768,7 +5892,7 @@ private:
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
 
         auto indexBuffer = std::make_unique<IBO>(allocator);
-        indexBuffer->Data(mesh->GerIndices().data(), (uint32_t)mesh->GerIndices().size());
+        indexBuffer->Data(mesh->GetIndices().data(), (uint32_t)mesh->GetIndices().size());
 
         return std::make_unique<Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));
     }
@@ -5905,6 +6029,7 @@ private:
     void InitDefault()
     {
         m_skyBoxRenderer = std::make_shared<SkyBoxRenderer>(m_defaultRenderPass);
+        m_skyRenderer = std::make_shared<SkyRenderer>(m_defaultRenderPass);
         m_defaultRenderer = std::make_shared<DefaultRenderer>(m_defaultRenderPass);
         m_normalMappedRenderer = std::make_shared<NormalMappedRenderer>(m_defaultRenderPass);
         m_parallaxMappedRenderer = std::make_shared<ParallaxMappedRenderer>(m_defaultRenderPass);
@@ -5925,6 +6050,7 @@ private:
 
         m_defaultRenderers = {
             m_skyBoxRenderer,
+            m_skyRenderer,
             m_defaultRenderer,
             m_normalMappedRenderer,
             m_parallaxMappedRenderer,
@@ -6058,6 +6184,7 @@ private:
         const auto reflectionComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT });
 
         m_reflectionSkyBoxRenderer = std::make_shared<SkyBoxRenderer>(reflectionComponent->GetRenderPass());
+        m_reflectionSkyRenderer = std::make_shared<SkyRenderer>(reflectionComponent->GetRenderPass());
         m_reflectionDefaultRenderer = std::make_shared<DefaultRenderer>(reflectionComponent->GetRenderPass());
         m_reflectionNormalMappedRenderer = std::make_shared<NormalMappedRenderer>(reflectionComponent->GetRenderPass());
         m_reflectionParallaxMappedRenderer = std::make_shared<ParallaxMappedRenderer>(reflectionComponent->GetRenderPass());
@@ -6074,6 +6201,7 @@ private:
 
         m_reflectionRenderers = {
             m_reflectionSkyBoxRenderer,
+            m_reflectionSkyRenderer,
             m_reflectionDefaultRenderer,
             m_reflectionNormalMappedRenderer,
             m_reflectionParallaxMappedRenderer,
@@ -6115,6 +6243,7 @@ private:
         const auto refractionComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT });
 
         m_refractionSkyBoxRenderer = std::make_shared<SkyBoxRenderer>(refractionComponent->GetRenderPass());
+        m_refractionSkyRenderer = std::make_shared<SkyRenderer>(refractionComponent->GetRenderPass());
         m_refractionDefaultRenderer = std::make_shared<DefaultRenderer>(refractionComponent->GetRenderPass());
         m_refractionNormalMappedRenderer = std::make_shared<NormalMappedRenderer>(refractionComponent->GetRenderPass());
         m_refractionParallaxMappedRenderer = std::make_shared<ParallaxMappedRenderer>(refractionComponent->GetRenderPass());
@@ -6131,6 +6260,7 @@ private:
 
         m_refractionRenderers = {
             m_refractionSkyBoxRenderer,
+            m_refractionSkyRenderer,
             m_refractionDefaultRenderer,
             m_refractionNormalMappedRenderer,
             m_refractionParallaxMappedRenderer,
@@ -6522,6 +6652,8 @@ private:
     // Default Render
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_skyBoxRenderer;
 
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_skyRenderer;
+
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_defaultRenderer;
 
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_normalMappedRenderer;
@@ -6591,6 +6723,8 @@ private:
     // Reflection
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionSkyBoxRenderer;
 
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionSkyRenderer;
+
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionDefaultRenderer;
 
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionNormalMappedRenderer;
@@ -6621,6 +6755,8 @@ private:
 
     // Refraction
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionSkyBoxRenderer;
+
+    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionSkyRenderer;
 
     std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionDefaultRenderer;
 

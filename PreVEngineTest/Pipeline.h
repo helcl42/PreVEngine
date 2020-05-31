@@ -1694,6 +1694,61 @@ public:
     }
 };
 
+//////////////////////////////////////////// SKY ////////////////////////////////////////////
+
+class SkyShader final : public Shader {
+public:
+    SkyShader(const VkDevice device)
+        : Shader(device)
+    {
+    }
+
+    ~SkyShader() = default;
+
+private:
+    void InitVertexInputs() override
+    {
+        m_inputBindingDescriptions = {
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX),
+
+        };
+
+        m_inputAttributeDescriptions = {
+            VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
+            VkUtils::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
+            VkUtils::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })),
+        };
+    }
+
+    void InitDescriptorSets() override
+    {
+        // fragment shader
+        AddDescriptorSet("uboFS", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
+    }
+
+    void InitPushConstantsBlocks() override
+    {
+    }
+};
+
+class SkyPipeline final : public AbstractGraphicsPipeline {
+public:
+    SkyPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+        : AbstractGraphicsPipeline(device, renderpass, shaders)
+    {
+    }
+
+    ~SkyPipeline() = default;
+
+public:
+    VkPipeline Init() override
+    {
+        PipelineFactory pipelineFactory{};
+        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, false, false, true, m_pipelineLayout, m_pipeline);
+        return m_pipeline;
+    }
+};
+
 //////////////////////////////////////////// WATER ////////////////////////////////////////////
 
 class WaterShader final : public Shader {

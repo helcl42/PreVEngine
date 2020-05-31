@@ -193,7 +193,7 @@ private:
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
 
         auto indexBuffer = std::make_unique<IBO>(allocator);
-        indexBuffer->Data(mesh->GerIndices().data(), static_cast<uint32_t>(mesh->GerIndices().size()));
+        indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
 
         return std::make_unique<Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));
     }
@@ -2316,7 +2316,7 @@ public:
     void Init() override
     {
         SceneNode::Init();
-
+        
         CloudsComponentFactory cloudsComponentFactory{};
         std::shared_ptr<ICloudsComponent> cloudsComponent = cloudsComponentFactory.Create();
         NodeComponentHelper::AddComponent<SceneNodeFlags, ICloudsComponent>(GetThis(), cloudsComponent, SceneNodeFlags::CLOUDS_COMPONENT);
@@ -2324,6 +2324,36 @@ public:
 
     void Update(float deltaTime) override
     {    
+        SceneNode::Update(deltaTime);
+    }
+
+    void ShutDown() override
+    {
+        SceneNode::ShutDown();
+    }
+};
+
+class SkyNode final : public SceneNode<SceneNodeFlags> {
+public:
+    SkyNode()
+        : SceneNode()
+    {
+    }
+
+    ~SkyNode() = default;
+
+public:
+    void Init() override 
+    {
+        SceneNode::Init();
+
+        SkyComponentFactory skyComponentFactory{};
+        std::shared_ptr<ISkyComponent> skyComponent = skyComponentFactory.Create();
+        NodeComponentHelper::AddComponent<SceneNodeFlags, ISkyComponent>(GetThis(), skyComponent, SceneNodeFlags::SKY_RENDER_COMPONENT);
+    }
+
+    void Update(float deltaTime) override
+    {
         SceneNode::Update(deltaTime);
     }
 
@@ -2623,8 +2653,11 @@ public:
         auto rayCastObserver = std::make_shared<RayCastObserverNode>();
         AddChild(rayCastObserver);
 
-        auto skyBox = std::make_shared<SkyBox>();
-        AddChild(skyBox);
+        //auto skyBox = std::make_shared<SkyBox>();
+        //AddChild(skyBox);
+
+        auto sky = std::make_shared<SkyNode>();
+        AddChild(sky);
 
         auto sunLight = std::make_shared<MainLight>(glm::vec3(150.0f, 50.0f, 150.0f));
         sunLight->SetTags({ TAG_MAIN_LIGHT, TAG_LIGHT });

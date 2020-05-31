@@ -699,7 +699,7 @@ public:
         return m_verticesCount;
     }
 
-    const std::vector<uint32_t>& GerIndices() const override
+    const std::vector<uint32_t>& GetIndices() const override
     {
         return m_indices;
     }
@@ -888,7 +888,7 @@ public:
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
 
         auto indexBuffer = std::make_shared<IBO>(*allocator);
-        indexBuffer->Data(mesh->GerIndices().data(), (uint32_t)mesh->GerIndices().size());
+        indexBuffer->Data(mesh->GetIndices().data(), (uint32_t)mesh->GetIndices().size());
 
         auto model = std::make_shared<Model>(std::move(mesh), vertexBuffer, indexBuffer);
 
