@@ -1,7 +1,5 @@
-%VULKAN_SDK%/Bin/glslangValidator.exe -V sky.vert
-%VULKAN_SDK%/Bin/glslangValidator.exe -V sky.frag
+%VULKAN_SDK%/Bin/glslangValidator.exe -V sky.comp
 
-move /y frag.spv sky_frag.spv
-move /y vert.spv sky_vert.spv
+move /y comp.spv sky_comp.spv
 
 pause

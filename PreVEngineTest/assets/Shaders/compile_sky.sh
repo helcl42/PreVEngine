@@ -1,9 +1,7 @@
 #!/bin/bash
 
-glslangValidator -V sky.vert
-glslangValidator -V sky.frag
+glslangValidator -V sky.comp
 
-mv frag.spv sky_frag.spv
-mv vert.spv sky_vert.spv
+mv comp.spv sky_comp.spv
 
 exit
