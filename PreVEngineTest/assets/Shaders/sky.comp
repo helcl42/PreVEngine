@@ -16,9 +16,8 @@ layout(std140, binding = 0) uniform UniformBufferObject {
 
 layout(rgba32f, binding = 1) uniform image2D outTexture;
 
-vec3 RaySphereIntersectionSkyMap(in vec3 rayDirection, in float radius)
-{	
-	const vec3 sphereCenter = vec3(0.0);
+bool RaySphereIntersection(in vec3 sphereCenter, in float radius, in vec3 rayDirection, out vec3 intersectionPoint)
+{
 	const float radius2 = radius * radius;
 
 	vec3 L = -sphereCenter;
@@ -26,10 +25,18 @@ vec3 RaySphereIntersectionSkyMap(in vec3 rayDirection, in float radius)
 	float b = 2.0 * dot(rayDirection, L);
 	float c = dot(L, L) - radius2;
 
-	float discr = b * b - 4.0 * a * c;
-	float t = max(0.0, (-b + sqrt(discr)) / 2.0);
+	float discriminant = b * b - 4.0 * a * c;
+    if(discriminant == 0) {
+        return false;
+    }
 
-	return rayDirection * t;
+	float t = max(0.0, (-b + sqrt(discriminant)) / 2.0);
+    if(t == 0) {
+        return false;
+    }
+
+	intersectionPoint = rayDirection * t;
+    return true;
 }
 
 vec3 ComputeClipSpaceCoord(in ivec2 fragCoord)
@@ -63,8 +70,10 @@ void main()
 	vec3 worldDir = (uboCS.inverseViewMatrix * rayView).xyz;
 	worldDir = normalize(worldDir);
 
-	vec3 cubeMapEndPos = RaySphereIntersectionSkyMap(worldDir, 0.5);
-	vec4 background = GetCubeMapColor(worldDir, cubeMapEndPos);
+    vec3 intersectionPoint;
+	RaySphereIntersection(vec3(0.0), 0.5, worldDir, intersectionPoint);
+
+	vec4 background = GetCubeMapColor(worldDir, intersectionPoint);
 	
     imageStore(outTexture, fragCoord, vec4(background.xyz, 1.0));
 }
