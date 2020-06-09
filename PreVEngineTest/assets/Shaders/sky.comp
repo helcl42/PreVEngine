@@ -26,12 +26,14 @@ bool RaySphereIntersection(in vec3 sphereCenter, in float radius, in vec3 rayDir
 	float c = dot(L, L) - radius2;
 
 	float discriminant = b * b - 4.0 * a * c;
-    if(discriminant == 0) {
+    if(discriminant == 0) 
+    {
         return false;
     }
 
 	float t = max(0.0, (-b + sqrt(discriminant)) / 2.0);
-    if(t == 0) {
+    if(t == 0) 
+    {
         return false;
     }
 
