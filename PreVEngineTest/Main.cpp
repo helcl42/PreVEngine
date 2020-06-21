@@ -2592,7 +2592,8 @@ private:
 class Fire final : public SceneNode<SceneNodeFlags> {
 public:
     Fire(const glm::vec3& initPosition)
-        : m_initialPosition(initPosition)
+        : SceneNode()
+        , m_initialPosition(initPosition)
     {
     }
 
@@ -2630,6 +2631,37 @@ private:
     std::shared_ptr<IParticleSystemComponent> m_particleSystemComponent;
 };
 
+class TimeNode final : public SceneNode<SceneNodeFlags> {
+public:
+    TimeNode()
+        : SceneNode()
+    {
+    }
+
+    void Init() override
+    {
+        m_timeComponent = std::make_shared<TimeComponent>();
+        NodeComponentHelper::AddComponent<SceneNodeFlags, ITimeComponent>(GetThis(), m_timeComponent, SceneNodeFlags::TIME_COMPONENT);
+
+        SceneNode::Init();
+    }
+
+    void Update(float deltaTime) override
+    {
+        m_timeComponent->Update(deltaTime);
+
+        SceneNode::Update(deltaTime);
+    }
+
+    void ShutDown() override
+    {
+        SceneNode::ShutDown();
+    }
+
+private:
+    std::shared_ptr<ITimeComponent> m_timeComponent;
+};
+
 class RootSceneNode : public SceneNode<SceneNodeFlags> {
 public:
     RootSceneNode(const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Swapchain>& swapchain)
@@ -2646,6 +2678,9 @@ public:
         // Init scene nodes
         auto inputsHelper = std::make_shared<InputsHelper>();
         AddChild(inputsHelper);
+
+        auto timeNode = std::make_shared<TimeNode>();
+        AddChild(timeNode);
 
         auto rayCaster = std::make_shared<RayCasterNode>();
         AddChild(rayCaster);

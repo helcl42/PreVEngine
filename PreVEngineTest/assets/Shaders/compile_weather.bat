@@ -6,8 +6,4 @@ move /y comp.spv weather_comp.spv
 
 move /y comp.spv perlin_worley_noise_3d_comp.spv
 
-%VULKAN_SDK%/Bin/glslangValidator.exe -V worley_noise_3d.comp
-
-move /y comp.spv worley_noise_3d_comp.spv
-
 pause

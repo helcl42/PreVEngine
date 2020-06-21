@@ -55,6 +55,7 @@ enum class SceneNodeFlags {
     PARTICLE_SYSTEM_COMPONENT,
     CLOUDS_COMPONENT,
     SKY_RENDER_COMPONENT,
+    TIME_COMPONENT,
     _
 };
 
@@ -867,6 +868,47 @@ public:
 
 public:
     virtual ~IAnimationRenderComponent() = default;
+};
+
+class ITimeComponent {
+public:
+    virtual void Update(float deltaTime) = 0;
+
+    virtual float GetCurrentDeltaTime() const = 0;
+
+    virtual float GetElapsedTime() const = 0;
+
+public:
+    virtual ~ITimeComponent() = default;
+};
+
+class TimeComponent final : public ITimeComponent {
+public:
+    TimeComponent() = default;
+    
+    ~TimeComponent() = default;
+
+public:
+    void Update(float deltaTime) override
+    {
+        m_currentDelta = deltaTime;
+        m_elapsedTime += deltaTime;
+    }
+
+    float GetCurrentDeltaTime() const override
+    {
+        return m_currentDelta;
+    }
+
+    float GetElapsedTime() const override
+    {
+        return m_elapsedTime;
+    }
+
+private:
+    float m_currentDelta{ 0.0f };
+
+    float m_elapsedTime{ 0.0f };
 };
 
 class MeshUtil {
