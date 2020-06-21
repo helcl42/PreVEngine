@@ -53,7 +53,7 @@ public:
 
     void DestroyImage(VkImage image, VkImageView view, VmaAllocation alloc);
 
-    void GenerateMipmaps(const VkImage image, const VkFormat imageFormat, const int32_t texWidth, const int32_t texHeight, const uint32_t mipLevels, const uint32_t layersCount = 1);
+    void GenerateMipmaps(const VkImage image, const VkFormat imageFormat, const VkExtent3D& extent, const uint32_t mipLevels, const uint32_t layersCount = 1);
 
 public:
     VkPhysicalDevice GetPhysicalDevice() const;

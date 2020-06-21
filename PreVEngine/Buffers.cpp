@@ -260,7 +260,7 @@ void Allocator::CreateImageView(const VkImage image, const VkFormat format, cons
     VKERRCHECK(vkCreateImageView(m_device, &imageViewCreateInfo, nullptr, &outImagaView));
 }
 
-void Allocator::GenerateMipmaps(const VkImage image, const VkFormat imageFormat, const int32_t texWidth, const int32_t texHeight, const uint32_t mipLevels, const uint32_t layersCount)
+void Allocator::GenerateMipmaps(const VkImage image, VkFormat imageFormat, const VkExtent3D& extent, const uint32_t mipLevels, const uint32_t layersCount)
 {
     // Check if image format supports linear blitting
     VkFormatProperties formatProperties;
@@ -274,8 +274,7 @@ void Allocator::GenerateMipmaps(const VkImage image, const VkFormat imageFormat,
     BeginCommandBuffer();
 
     for (uint32_t layerIndex = 0; layerIndex < layersCount; layerIndex++) {
-        VkImageMemoryBarrier barrier = {};
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
         barrier.image = image;
         barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -284,8 +283,9 @@ void Allocator::GenerateMipmaps(const VkImage image, const VkFormat imageFormat,
         barrier.subresourceRange.layerCount = 1;
         barrier.subresourceRange.levelCount = 1;
 
-        int32_t mipWidth = texWidth;
-        int32_t mipHeight = texHeight;
+        int32_t mipWidth = extent.width;
+        int32_t mipHeight = extent.height;
+        int32_t mipDepth = extent.depth;
 
         for (uint32_t i = 1; i < mipLevels; i++) {
             barrier.subresourceRange.baseMipLevel = i - 1;
@@ -296,21 +296,41 @@ void Allocator::GenerateMipmaps(const VkImage image, const VkFormat imageFormat,
 
             vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
-            VkImageBlit blit = {};
-            blit.srcOffsets[0] = { 0, 0, 0 };
-            blit.srcOffsets[1] = { mipWidth, mipHeight, 1 };
-            blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            blit.srcSubresource.mipLevel = i - 1;
-            blit.srcSubresource.baseArrayLayer = layerIndex;
-            blit.srcSubresource.layerCount = 1;
-            blit.dstOffsets[0] = { 0, 0, 0 };
-            blit.dstOffsets[1] = { mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
-            blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            blit.dstSubresource.mipLevel = i;
-            blit.dstSubresource.baseArrayLayer = layerIndex;
-            blit.dstSubresource.layerCount = 1;
+            if (mipDepth > 1) {
+                for (int32_t d = 0; d < mipDepth; d += 2) {
+                    VkImageBlit blit = {};
+                    blit.srcOffsets[0] = { 0, 0, d };
+                    blit.srcOffsets[1] = { mipWidth, mipHeight, d + 2 };
+                    blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                    blit.srcSubresource.mipLevel = i - 1;
+                    blit.srcSubresource.baseArrayLayer = layerIndex;
+                    blit.srcSubresource.layerCount = 1;
+                    blit.dstOffsets[0] = { 0, 0, d / 2 };
+                    blit.dstOffsets[1] = { std::max(1, mipWidth / 2), std::max(1, mipHeight / 2), d / 2 + 1 };
+                    blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                    blit.dstSubresource.mipLevel = i;
+                    blit.dstSubresource.baseArrayLayer = layerIndex;
+                    blit.dstSubresource.layerCount = 1;
 
-            vkCmdBlitImage(m_commandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR);
+                    vkCmdBlitImage(m_commandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR);
+                }
+            } else {
+                VkImageBlit blit = {};
+                blit.srcOffsets[0] = { 0, 0, 0 };
+                blit.srcOffsets[1] = { mipWidth, mipHeight, 1 };
+                blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                blit.srcSubresource.mipLevel = i - 1;
+                blit.srcSubresource.baseArrayLayer = layerIndex;
+                blit.srcSubresource.layerCount = 1;
+                blit.dstOffsets[0] = { 0, 0, 0 };
+                blit.dstOffsets[1] = { std::max(1, mipWidth / 2), std::max(1, mipHeight / 2), 1 };
+                blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                blit.dstSubresource.mipLevel = i;
+                blit.dstSubresource.baseArrayLayer = layerIndex;
+                blit.dstSubresource.layerCount = 1;
+
+                vkCmdBlitImage(m_commandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR);
+            }
 
             barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
             barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -318,13 +338,10 @@ void Allocator::GenerateMipmaps(const VkImage image, const VkFormat imageFormat,
             barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
             vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
-
-            if (mipWidth > 1) {
-                mipWidth /= 2;
-            }
-            if (mipHeight > 1) {
-                mipHeight /= 2;
-            }
+            
+            mipWidth = std::max(1, mipWidth / 2);
+            mipHeight = std::max(1, mipHeight / 2);
+            mipDepth = std::max(1, mipDepth / 2);
         }
 
         barrier.subresourceRange.baseMipLevel = mipLevels - 1;
@@ -335,6 +352,7 @@ void Allocator::GenerateMipmaps(const VkImage image, const VkFormat imageFormat,
 
         vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
     }
+
     EndCommandBuffer();
 }
 
@@ -383,6 +401,12 @@ void Allocator::TransitionImageLayout(const VkImage image, const VkImageLayout o
             srcStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
             dstStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
         } else if (oldLayout == VK_IMAGE_LAYOUT_GENERAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+            barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+            srcStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+            dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        } else if (oldLayout == VK_IMAGE_LAYOUT_GENERAL && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
             barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
             barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
@@ -661,14 +685,14 @@ void ImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
     m_allocator.CopyDataToImage(createInfo.extent, createInfo.format, m_mipLevels, createInfo.layerData, createInfo.layerCount, m_image);
 
     if (m_mipLevels > 1) {
-        m_allocator.GenerateMipmaps(m_image, createInfo.format, createInfo.extent.width, createInfo.extent.height, m_mipLevels, createInfo.layerCount);
+        m_allocator.GenerateMipmaps(m_image, createInfo.format, m_extent, m_mipLevels, createInfo.layerCount);
     } else {
         m_allocator.TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, m_mipLevels, createInfo.layerCount);
     }
 
     m_allocator.CreateImageView(m_image, createInfo.format, createInfo.viewType, m_mipLevels, createInfo.layerCount, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
 
-    CreateSampler((float)m_mipLevels, createInfo.addressMode, createInfo.filteringEnabled);
+    CreateSampler(static_cast<float>(m_mipLevels), createInfo.addressMode, createInfo.filteringEnabled);
 }
 
 void ImageBuffer::Resize(const VkExtent3D& extent)
@@ -696,11 +720,11 @@ void ImageStorageBuffer::Create(const ImageBufferCreateInfo& createInfo)
         m_mipLevels = MathUtil::Log2(std::max(createInfo.extent.width, createInfo.extent.height)) + 1;
     }
 
-    m_allocator.CreateImage(createInfo.extent, m_imageType, m_format, m_mipLevels, m_layerCount, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT, m_flags, m_image, m_allocation);
+    m_allocator.CreateImage(createInfo.extent, m_imageType, m_format, m_mipLevels, m_layerCount, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT, m_flags, m_image, m_allocation);
     m_allocator.TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, m_mipLevels, m_layerCount);
     m_allocator.CreateImageView(m_image, m_format, m_imageViewType, m_mipLevels, m_layerCount, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
 
-    CreateSampler((float)m_mipLevels, createInfo.addressMode, createInfo.filteringEnabled);
+    CreateSampler(static_cast<float>(m_mipLevels), createInfo.addressMode, createInfo.filteringEnabled);
 }
 
 void ImageStorageBuffer::Resize(const VkExtent3D& extent)
