@@ -383,7 +383,7 @@ void main()
 		vec3 cloud = mix(vec3(0.0), bloomColor.rgb, clamp(fogAmount, 0.0, 1.0));
 		bloomColor.rgb = bloomColor.rgb * (1.0 - cloudAlphaness) + cloud.rgb;
 	}
-	vec4 fragColor = vec4(backgroundColor.rgb, alphaness.r);
+	vec4 fragColor = vec4(backgroundColor.rgb, 1.0);
 
 	imageStore(outFragColor, fragCoord, fragColor);
 	imageStore(outBloom, fragCoord, bloomColor);

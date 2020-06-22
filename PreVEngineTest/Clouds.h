@@ -35,7 +35,7 @@ public:
 
         auto fence = VkUtils::CreateFence(*device);
 
-        ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ width, height }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, false, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE };
+        ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ width, height }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, false, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT };
         auto weatherImageBuffer = std::make_unique<ImageStorageBuffer>(*computeAllocator);
         weatherImageBuffer->Create(bufferCreateInfo);
 
@@ -112,10 +112,10 @@ public:
 
         auto fence = VkUtils::CreateFence(*device);
 
-        ImageBufferCreateInfo imageBufferCreateInfo{ VkExtent3D{ width, height, depth }, VK_IMAGE_TYPE_3D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_3D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE };
+        ImageBufferCreateInfo imageBufferCreateInfo{ VkExtent3D{ width, height, depth }, VK_IMAGE_TYPE_3D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_3D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT };
 
-        auto perlinNoise3DImageBuffer = std::make_unique<ImageStorageBuffer>(*computeAllocator);
-        perlinNoise3DImageBuffer->Create(imageBufferCreateInfo);
+        auto noiseImageBuffer = std::make_unique<ImageStorageBuffer>(*computeAllocator);
+        noiseImageBuffer->Create(imageBufferCreateInfo);
 
         VKERRCHECK(vkQueueWaitIdle(*computeQueue));
 
@@ -123,7 +123,7 @@ public:
         cmdBufBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
         VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &cmdBufBeginInfo));
 
-        shader->Bind("outVolumeTexture", *perlinNoise3DImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
+        shader->Bind("outVolumeTexture", *noiseImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
         const VkDescriptorSet descriptorSet = shader->UpdateNextDescriptorSet();
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *pipeline);
@@ -149,15 +149,15 @@ public:
         vkDestroyFence(*device, fence, nullptr);
         vkDestroyCommandPool(*device, commandPool, nullptr);
 
-        computeAllocator->TransitionImageLayout(perlinNoise3DImageBuffer->GetImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, perlinNoise3DImageBuffer->GetMipLevels());
+        computeAllocator->TransitionImageLayout(noiseImageBuffer->GetImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, noiseImageBuffer->GetMipLevels());
 
-        computeAllocator->GenerateMipmaps(perlinNoise3DImageBuffer->GetImage(), perlinNoise3DImageBuffer->GetFormat(), perlinNoise3DImageBuffer->GetExtent(), perlinNoise3DImageBuffer->GetMipLevels(), perlinNoise3DImageBuffer->GetLayerCount());
+        computeAllocator->GenerateMipmaps(noiseImageBuffer->GetImage(), noiseImageBuffer->GetFormat(), noiseImageBuffer->GetExtent(), noiseImageBuffer->GetMipLevels(), noiseImageBuffer->GetLayerCount());
 
         pipeline->ShutDown();
 
         shader->ShutDown();
 
-        return perlinNoise3DImageBuffer;
+        return noiseImageBuffer;
     }
 };
 

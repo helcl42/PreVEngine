@@ -8,7 +8,6 @@ layout(rgba32f, binding = 2) uniform image2D outAlphaness;
 layout(rgba32f, binding = 3) uniform image2D outCloudDistance;
 
 uniform sampler3D perlinNoiseTex;
-uniform sampler3D worlworleyNoiseTexey32;
 uniform sampler2D weatherTex;
 
 uniform vec2 resolution;
