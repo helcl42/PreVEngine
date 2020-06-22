@@ -5613,11 +5613,6 @@ private:
         alignas(16) glm::vec4 scale;
     };
 
-    struct alignas(16) UniformsFS
-    {
-        alignas(16) glm::vec4 brightness;
-    };
-
 private:
     const uint32_t m_descriptorCount{ 50 };
 
@@ -5630,8 +5625,6 @@ private:
     std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
-
-    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 private:
     uint64_t m_passedSamples{ 0 };
@@ -5655,21 +5648,18 @@ public:
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
-        m_shader = shaderFactory.CreateShaderFromFiles<FlareShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/sun_occlusion_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/sun_occlusion_frag.spv") } });
+        m_shader = shaderFactory.CreateShaderFromFiles<SunOcclusionShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/sun_occlusion_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/sun_occlusion_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
         LOGI("Sun Shader created\n");
 
-        m_pipeline = std::make_unique<FlarePipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline = std::make_unique<SunOcclusionPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
         LOGI("Sun Pipeline created\n");
 
         m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
-
-        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
-        m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
         VkQueryPoolCreateInfo queryPoolInfo = { VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO };
         queryPoolInfo.queryType = VK_QUERY_TYPE_OCCLUSION;
@@ -5711,14 +5701,7 @@ public:
             uniformsVS.scale = glm::vec4(xScale, yScale, 0.0f, 0.0f);
             uboVS->Update(&uniformsVS);
 
-            auto uboFS = m_uniformsPoolFS->GetNext();
-            UniformsFS uniformsFS{};
-            uniformsFS.brightness = glm::vec4(1.0f);
-            uboFS->Update(&uniformsFS);
-
-            m_shader->Bind("textureSampler", *sunComponent->GetFlare()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             m_shader->Bind("uboVS", *uboVS);
-            m_shader->Bind("uboFS", *uboFS);
 
             const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
             const VkBuffer vertexBuffers[] = { *sunComponent->GetModel()->GetVertexBuffer() };

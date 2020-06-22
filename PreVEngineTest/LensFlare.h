@@ -185,11 +185,11 @@ public:
     {
         const float spacing{ 0.16f };
         const std::vector<FlareCreateInfo> flareCreateInfos = {
-            { AssetManager::Instance().GetAssetPath("LensFlares/tex2.png"), 0.15f },
+            { AssetManager::Instance().GetAssetPath("LensFlares/tex2.png"), 0.0f },
             { AssetManager::Instance().GetAssetPath("LensFlares/tex3.png"), 0.12f },
             { AssetManager::Instance().GetAssetPath("LensFlares/tex4.png"), 0.46f },
             { AssetManager::Instance().GetAssetPath("LensFlares/tex5.png"), 0.12f },
-            { AssetManager::Instance().GetAssetPath("LensFlares/tex6.png"), 1.0f },
+            { AssetManager::Instance().GetAssetPath("LensFlares/tex6.png"), 0.0f },
             { AssetManager::Instance().GetAssetPath("LensFlares/tex7.png"), 0.1f },
             { AssetManager::Instance().GetAssetPath("LensFlares/tex8.png"), 1.2f },
             { AssetManager::Instance().GetAssetPath("LensFlares/tex9.png"), 0.24f },

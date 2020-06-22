@@ -1756,7 +1756,57 @@ public:
     }
 };
 
-//////////////////////////////////////////// FLARES ////////////////////////////////////////////
+//////////////////////////////////////////// SUN & FLARES ////////////////////////////////////////////
+
+class SunOcclusionShader final : public Shader {
+public:
+    SunOcclusionShader(const VkDevice device)
+        : Shader(device)
+    {
+    }
+
+    ~SunOcclusionShader() = default;
+
+private:
+    void InitVertexInputs() override
+    {
+        m_inputBindingDescriptions = {
+            VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC2 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        };
+
+        m_inputAttributeDescriptions = {
+            VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32_SFLOAT, 0)
+        };
+    }
+
+    void InitDescriptorSets() override
+    {
+        // vertex shader
+        AddDescriptorSet("uboVS", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT);
+    }
+
+    void InitPushConstantsBlocks() override
+    {
+    }
+};
+
+class SunOcclusionPipeline final : public AbstractGraphicsPipeline {
+public:
+    SunOcclusionPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+        : AbstractGraphicsPipeline(device, renderpass, shaders)
+    {
+    }
+
+    ~SunOcclusionPipeline() = default;
+
+public:
+    VkPipeline Init() override
+    {
+        PipelineFactory pipelineFactory{};
+        pipelineFactory.CreateDefaultPipeline(m_device, m_renderPass, m_shaders, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, true, m_pipelineLayout, m_pipeline);
+        return m_pipeline;
+    }
+};
 
 class FlareShader final : public Shader {
 public:
