@@ -439,8 +439,7 @@ private:
         const float particlesToCreate = m_particlesPerSecond * deltaTime;
         const auto particlesToCreateCount = static_cast<int>(floorf(particlesToCreate));
         for (auto i = 0; i < particlesToCreateCount; i++) {
-            std::shared_ptr<Particle> newParticle = m_particleFactory->EmitParticle(centerPosition);
-            m_particles.emplace_back(newParticle);
+            m_particles.emplace_back(m_particleFactory->EmitParticle(centerPosition));
         }
 
         std::random_device rd;
@@ -449,8 +448,7 @@ private:
 
         float partialCount = fmodf(particlesToCreate, 1.0f);
         if (dist(mt) < partialCount) {
-            std::shared_ptr<Particle> newParticle = m_particleFactory->EmitParticle(centerPosition);
-            m_particles.emplace_back(newParticle);
+            m_particles.emplace_back(m_particleFactory->EmitParticle(centerPosition));
         }
     }
 
