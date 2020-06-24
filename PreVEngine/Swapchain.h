@@ -83,7 +83,7 @@ private:
 public:
     Swapchain(const Queue& presentQueue, const Queue& graphicsQueue, RenderPass& renderPass, Allocator& allocator);
 
-    ~Swapchain();
+    virtual ~Swapchain();
 
 public:
     bool SetPresentMode(bool noTearing, bool poweSave = IS_ANDROID); // ANDROID: default to power-save mode (limit to 60fps)
