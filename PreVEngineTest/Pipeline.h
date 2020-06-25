@@ -2159,6 +2159,53 @@ public:
     }
 };
 
+class SkyPostProcessShader final : public Shader {
+public:
+    SkyPostProcessShader(const VkDevice device)
+        : Shader(device)
+    {
+    }
+
+    ~SkyPostProcessShader() = default;
+
+private:
+    void InitVertexInputs() override
+    {
+    }
+
+    void InitDescriptorSets() override
+    {
+        AddDescriptorSet("outFragColor", 0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT);        
+
+        AddDescriptorSet("skyTex", 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_COMPUTE_BIT);
+        AddDescriptorSet("bloomTex", 2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_COMPUTE_BIT);
+
+        AddDescriptorSet("uboCS", 3, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT);
+    }
+
+    void InitPushConstantsBlocks() override
+    {
+    }
+};
+
+class SkyPostProcessPipeline final : public AbstractComputePipeline {
+public:
+    SkyPostProcessPipeline(const VkDevice device, const Shader& shaders)
+        : AbstractComputePipeline(device, shaders)
+    {
+    }
+
+    ~SkyPostProcessPipeline() = default;
+
+public:
+    VkPipeline Init() override
+    {
+        PipelineFactory pipelineFactory{};
+        pipelineFactory.CreateDefaultComputePipeline(m_device, m_shaders, m_pipelineLayout, m_pipeline);
+        return m_pipeline;
+    }
+};
+
 //////////////////////////////////////////// Screen Space ////////////////////////////////////////////
 
 class ScreenSpaceShader final : public Shader {

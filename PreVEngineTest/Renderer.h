@@ -5105,7 +5105,7 @@ public:
 
 class SkyRenderer final : public IRenderer<NormalRenderContextUserData> {
 private:
-    struct alignas(16) UniformsCS
+    struct alignas(16) UniformsSkyCS
     {
         alignas(16) glm::vec4 resolution;
 
@@ -5137,6 +5137,14 @@ private:
         float cloudTopOffset;
     };
 
+    struct alignas(16) UniformsSkyPostProcessCS
+    {
+        alignas(16) glm::vec4 resolution;
+        alignas(16) glm::vec4 lisghtPosition;
+        alignas(16) uint32_t enableGodRays;
+        float lightDotCameraFront;
+    };
+
 private:
     const uint32_t m_descriptorCount{ 10 };
 
@@ -5144,23 +5152,31 @@ private:
     std::shared_ptr<RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_conmputeShader;
+    std::unique_ptr<Shader> m_conmputeSkyShader;
 
-    std::unique_ptr<IPipeline> m_computePipeline;
+    std::unique_ptr<IPipeline> m_computeSkyPipeline;
 
-    std::unique_ptr<UBOPool<UniformsCS> > m_uniformsPoolCS;
+    std::unique_ptr<UBOPool<UniformsSkyCS> > m_uniformsPoolSkyCS;
+
+    std::unique_ptr<Shader> m_conmputeSkyPostProcessShader;
+
+    std::unique_ptr<IPipeline> m_computeSkyPostProcessPipeline;
+
+    std::unique_ptr<UBOPool<UniformsSkyPostProcessCS> > m_uniformsPoolSkyPorstProcessCS;
 
     std::unique_ptr<Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::shared_ptr<IImageBuffer> m_fragColorImageBuffer;
+    std::shared_ptr<IImageBuffer> m_skyColorImageBuffer;
 
-    std::shared_ptr<IImageBuffer> m_bloomImageBuffer;
+    std::shared_ptr<IImageBuffer> m_skyBloomImageBuffer;
 
-    std::shared_ptr<IImageBuffer> m_alphanessImageBuffer;
+    std::shared_ptr<IImageBuffer> m_skyAlphanessImageBuffer;
 
-    std::shared_ptr<IImageBuffer> m_cloudDistanceImageBuffer;
+    std::shared_ptr<IImageBuffer> m_skyCloudDistanceImageBuffer;
+
+    std::shared_ptr<IImageBuffer> m_skyPostProcessColorImageBuffer;
 
 public:
     SkyRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -5178,19 +5194,33 @@ public:
 
         ShaderFactory shaderFactory;
 
-        // compute
-        m_conmputeShader = shaderFactory.CreateShaderFromFiles<SkyShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/sky_comp.spv") } });
-        m_conmputeShader->AdjustDescriptorPoolCapacity(m_descriptorCount);
+        // compute sky
+        m_conmputeSkyShader = shaderFactory.CreateShaderFromFiles<SkyShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/sky_comp.spv") } });
+        m_conmputeSkyShader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
         LOGI("Sky Compute Shader created\n");
 
-        m_computePipeline = std::make_unique<SkyPipeline>(*device, *m_conmputeShader);
-        m_computePipeline->Init();
+        m_computeSkyPipeline = std::make_unique<SkyPipeline>(*device, *m_conmputeSkyShader);
+        m_computeSkyPipeline->Init();
 
         LOGI("Sky Compute Pipeline created\n");
 
-        m_uniformsPoolCS = std::make_unique<UBOPool<UniformsCS> >(*allocator);
-        m_uniformsPoolCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+        m_uniformsPoolSkyCS = std::make_unique<UBOPool<UniformsSkyCS> >(*allocator);
+        m_uniformsPoolSkyCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+
+        // compute sky post process
+        m_conmputeSkyPostProcessShader = shaderFactory.CreateShaderFromFiles<SkyPostProcessShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/sky_post_process_comp.spv") } });
+        m_conmputeSkyPostProcessShader->AdjustDescriptorPoolCapacity(m_descriptorCount);
+
+        LOGI("Sky PostProcess Compute Shader created\n");
+
+        m_computeSkyPostProcessPipeline = std::make_unique<SkyPostProcessPipeline>(*device, *m_conmputeSkyPostProcessShader);
+        m_computeSkyPostProcessPipeline->Init();
+
+        LOGI("Sky PostProcess Compute Pipeline created\n");
+
+        m_uniformsPoolSkyPorstProcessCS = std::make_unique<UBOPool<UniformsSkyPostProcessCS> >(*allocator);
+        m_uniformsPoolSkyPorstProcessCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
         // compositor
         m_shader = shaderFactory.CreateShaderFromFiles<ScreenSpaceShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/screen_space_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/screen_space_frag.spv") } });
@@ -5217,23 +5247,25 @@ public:
         auto computeQueue = ComputeProvider::Instance().GetQueue();
         auto computeAllocator = ComputeProvider::Instance().GetAllocator();
 
-        UpdateImageBufferExtents(VkExtent2D{ renderContextUserData.extent.width, renderContextUserData.extent.height }, m_fragColorImageBuffer);
-        UpdateImageBufferExtents(VkExtent2D{ renderContextUserData.extent.width, renderContextUserData.extent.height }, m_bloomImageBuffer);
-        UpdateImageBufferExtents(VkExtent2D{ renderContextUserData.extent.width, renderContextUserData.extent.height }, m_alphanessImageBuffer);
-        UpdateImageBufferExtents(VkExtent2D{ renderContextUserData.extent.width, renderContextUserData.extent.height }, m_cloudDistanceImageBuffer);
+        UpdateImageBufferExtents(VkExtent2D{ renderContextUserData.extent.width, renderContextUserData.extent.height }, m_skyColorImageBuffer);
+        UpdateImageBufferExtents(VkExtent2D{ renderContextUserData.extent.width, renderContextUserData.extent.height }, m_skyBloomImageBuffer);
+        UpdateImageBufferExtents(VkExtent2D{ renderContextUserData.extent.width, renderContextUserData.extent.height }, m_skyAlphanessImageBuffer);
+        UpdateImageBufferExtents(VkExtent2D{ renderContextUserData.extent.width, renderContextUserData.extent.height }, m_skyCloudDistanceImageBuffer);
+        UpdateImageBufferExtents(VkExtent2D{ renderContextUserData.extent.width, renderContextUserData.extent.height }, m_skyPostProcessColorImageBuffer);
 
         auto commandPool = computeQueue->CreateCommandPool();
         auto commandBuffer = VkUtils::CreateCommandBuffer(*device, commandPool);
 
         auto fence = VkUtils::CreateFence(*device);
 
-        VkCommandBufferBeginInfo cmdBufBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-        cmdBufBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &cmdBufBeginInfo));
+        VkCommandBufferBeginInfo commandBufferBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+        commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 
-        auto uboCS = m_uniformsPoolCS->GetNext();
+        // regular sky render
+        auto uboCS = m_uniformsPoolSkyCS->GetNext();
 
-        UniformsCS uniformsCS{};
+        UniformsSkyCS uniformsCS{};
         uniformsCS.resolution = glm::vec4(renderContextUserData.extent.width, renderContextUserData.extent.height, 0.0f, 0.0f);
         uniformsCS.inverseProjectionMatrix = glm::inverse(renderContextUserData.projectionMatrix);
         uniformsCS.inverseViewMatrix = glm::inverse(renderContextUserData.viewMatrix);
@@ -5259,20 +5291,55 @@ public:
 
         uboCS->Update(&uniformsCS);
 
-        m_conmputeShader->Bind("uboCS", *uboCS);
+        m_conmputeSkyShader->Bind("uboCS", *uboCS);
 
-        m_conmputeShader->Bind("perlinNoiseTex", *cloudsComponent->GetPerlineNoise(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-        m_conmputeShader->Bind("weatherTex", *cloudsComponent->GetWeather(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_conmputeSkyShader->Bind("perlinNoiseTex", *cloudsComponent->GetPerlineNoise(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_conmputeSkyShader->Bind("weatherTex", *cloudsComponent->GetWeather(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-        m_conmputeShader->Bind("outFragColor", *m_fragColorImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
-        m_conmputeShader->Bind("outBloom", *m_bloomImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
-        m_conmputeShader->Bind("outAlphaness", *m_alphanessImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
-        m_conmputeShader->Bind("outCloudDistance", *m_cloudDistanceImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
+        m_conmputeSkyShader->Bind("outFragColor", *m_skyColorImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
+        m_conmputeSkyShader->Bind("outBloom", *m_skyBloomImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
+        m_conmputeSkyShader->Bind("outAlphaness", *m_skyAlphanessImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
+        m_conmputeSkyShader->Bind("outCloudDistance", *m_skyCloudDistanceImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
 
-        const VkDescriptorSet descriptorSetCompute = m_conmputeShader->UpdateNextDescriptorSet();
+        const VkDescriptorSet descriptorSetCompute = m_conmputeSkyShader->UpdateNextDescriptorSet();
 
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *m_computePipeline);
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_computePipeline->GetLayout(), 0, 1, &descriptorSetCompute, 0, 0);
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *m_computeSkyPipeline);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_computeSkyPipeline->GetLayout(), 0, 1, &descriptorSetCompute, 0, 0);
+
+        vkCmdDispatch(commandBuffer, 128, 128, 1);
+
+        // barrier input - output image
+        AddInterComputeImageBufferBarrier(m_skyColorImageBuffer->GetImage(), commandBuffer);
+        AddInterComputeImageBufferBarrier(m_skyBloomImageBuffer->GetImage(), commandBuffer);
+        AddInterComputeImageBufferBarrier(m_skyAlphanessImageBuffer->GetImage(), commandBuffer);
+        AddInterComputeImageBufferBarrier(m_skyCloudDistanceImageBuffer->GetImage(), commandBuffer);
+
+        // sky post process render
+        auto uboPostCS = m_uniformsPoolSkyPorstProcessCS->GetNext();
+
+        glm::vec4 lightPositionNdc = renderContextUserData.projectionMatrix * renderContextUserData.viewMatrix * glm::vec4(mainLightComponent->GetPosition(), 1.0f);
+        lightPositionNdc = lightPositionNdc / lightPositionNdc.w;
+        lightPositionNdc = lightPositionNdc * 0.5f + 0.5f;
+
+        UniformsSkyPostProcessCS uniformsPostCS{};
+        uniformsPostCS.resolution = glm::vec4(renderContextUserData.extent.width, renderContextUserData.extent.height, 0.0f, 0.0f);
+        uniformsPostCS.lisghtPosition = lightPositionNdc;
+        uniformsPostCS.enableGodRays = 1;
+        uniformsPostCS.lightDotCameraFront = glm::dot(glm::normalize(mainLightComponent->GetPosition() - renderContextUserData.cameraPosition), glm::normalize(MathUtil::GetForwardVector(renderContextUserData.viewMatrix)));
+
+        uboPostCS->Update(&uniformsPostCS);
+
+        m_conmputeSkyPostProcessShader->Bind("uboCS", *uboPostCS);
+
+        m_conmputeSkyPostProcessShader->Bind("skyTex", *m_skyColorImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
+        m_conmputeSkyPostProcessShader->Bind("bloomTex", *m_skyBloomImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
+
+        m_conmputeSkyPostProcessShader->Bind("outFragColor", *m_skyPostProcessColorImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
+
+        const VkDescriptorSet descriptorSetComputePost = m_conmputeSkyPostProcessShader->UpdateNextDescriptorSet();
+
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *m_computeSkyPostProcessPipeline);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_computeSkyPostProcessPipeline->GetLayout(), 0, 1, &descriptorSetComputePost, 0, 0);
 
         vkCmdDispatch(commandBuffer, 128, 128, 1);
 
@@ -5292,10 +5359,7 @@ public:
         vkDestroyFence(*device, fence, nullptr);
         vkDestroyCommandPool(*device, commandPool, nullptr);
 
-        AddImageBufferBarrier(m_fragColorImageBuffer->GetImage(), renderContext.commandBuffer);
-        AddImageBufferBarrier(m_bloomImageBuffer->GetImage(), renderContext.commandBuffer);
-        AddImageBufferBarrier(m_alphanessImageBuffer->GetImage(), renderContext.commandBuffer);
-        AddImageBufferBarrier(m_cloudDistanceImageBuffer->GetImage(), renderContext.commandBuffer);
+        AddImageBufferBarrier(m_skyPostProcessColorImageBuffer->GetImage(), renderContext.commandBuffer);
     }
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
@@ -5313,7 +5377,7 @@ public:
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::SKY_RENDER_COMPONENT })) {
             const auto skyComponent = ComponentRepository<ISkyComponent>::Instance().Get(node->GetId());
 
-            m_shader->Bind("image", *m_fragColorImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
+            m_shader->Bind("image", *m_skyColorImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
 
             const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
             const VkBuffer vertexBuffers[] = { *skyComponent->GetModel()->GetVertexBuffer() };
@@ -5341,33 +5405,39 @@ public:
 
     void ShutDown() override
     {
-        if (m_cloudDistanceImageBuffer == nullptr) {
-            m_cloudDistanceImageBuffer->Destroy();
-            m_cloudDistanceImageBuffer = nullptr;
+        if (m_skyPostProcessColorImageBuffer) {
+            m_skyPostProcessColorImageBuffer->Destroy();
+            m_skyPostProcessColorImageBuffer = nullptr;
         }
 
-        if (m_alphanessImageBuffer == nullptr) {
-            m_alphanessImageBuffer->Destroy();
-            m_alphanessImageBuffer = nullptr;
+        if (m_skyCloudDistanceImageBuffer) {
+            m_skyCloudDistanceImageBuffer->Destroy();
+            m_skyCloudDistanceImageBuffer = nullptr;
         }
 
-        if (m_bloomImageBuffer == nullptr) {
-            m_bloomImageBuffer->Destroy();
-            m_bloomImageBuffer = nullptr;
+        if (m_skyAlphanessImageBuffer) {
+            m_skyAlphanessImageBuffer->Destroy();
+            m_skyAlphanessImageBuffer = nullptr;
         }
 
-        if (m_fragColorImageBuffer == nullptr) {
-            m_fragColorImageBuffer->Destroy();
-            m_fragColorImageBuffer = nullptr;
+        if (m_skyBloomImageBuffer) {
+            m_skyBloomImageBuffer->Destroy();
+            m_skyBloomImageBuffer = nullptr;
+        }
+
+        if (m_skyColorImageBuffer) {
+            m_skyColorImageBuffer->Destroy();
+            m_skyColorImageBuffer = nullptr;
         }
 
         m_shader->ShutDown();
-
         m_pipeline->ShutDown();
+        
+        m_conmputeSkyPostProcessShader->ShutDown();
+        m_computeSkyPostProcessPipeline->ShutDown();
 
-        m_conmputeShader->ShutDown();
-
-        m_computePipeline->ShutDown();
+        m_conmputeSkyShader->ShutDown();
+        m_computeSkyPipeline->ShutDown();
     }
 
 private:
@@ -5380,6 +5450,22 @@ private:
             imageBuffer = std::make_unique<ImageStorageBuffer>(*computeAllocator);
             imageBuffer->Create(bufferCreateInfo);
         }
+    }
+
+    void AddInterComputeImageBufferBarrier(const VkImage image, VkCommandBuffer commandBuffer)
+    {
+        // Barrier to ensure that texture is completely written and can be sampled in fragment shader
+        VkImageMemoryBarrier fragColorBeforeShaderReadBufferBarrier{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+        fragColorBeforeShaderReadBufferBarrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+        fragColorBeforeShaderReadBufferBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        fragColorBeforeShaderReadBufferBarrier.image = image;
+        fragColorBeforeShaderReadBufferBarrier.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+        fragColorBeforeShaderReadBufferBarrier.oldLayout = VK_IMAGE_LAYOUT_GENERAL;
+        fragColorBeforeShaderReadBufferBarrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
+        fragColorBeforeShaderReadBufferBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        fragColorBeforeShaderReadBufferBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+        vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &fragColorBeforeShaderReadBufferBarrier);
     }
 
     void AddImageBufferBarrier(const VkImage image, VkCommandBuffer commandBuffer)
