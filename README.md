@@ -2,10 +2,14 @@
 
 A multiplatform Vulkan based rendering engine. This repository is under active development.
 
-Todo: add a video here of demo scene
+Here is a video:
+
+[![PreVEngine In Action](http://img.youtube.com/vi/S9Hq21d241k/0.jpg)](http://www.youtube.com/watch?v=S9Hq21d241k "PreVEngine In Action")
 
 Todo: 
 - Refactor, Refactor, ...
+- Integrate PreVEnginePhysycs
+- Integrate PreVEngineNetwork
 - Featurelist is in Trello
 
 ## Build Linux
