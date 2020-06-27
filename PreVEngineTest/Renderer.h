@@ -5377,7 +5377,7 @@ public:
         if (node->GetFlags().HasAll(FlagSet<SceneNodeFlags>{ SceneNodeFlags::SKY_RENDER_COMPONENT })) {
             const auto skyComponent = ComponentRepository<ISkyComponent>::Instance().Get(node->GetId());
 
-            m_shader->Bind("image", *m_skyColorImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
+            m_shader->Bind("image", *m_skyPostProcessColorImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
 
             const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
             const VkBuffer vertexBuffers[] = { *skyComponent->GetModel()->GetVertexBuffer() };
