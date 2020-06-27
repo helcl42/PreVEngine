@@ -281,7 +281,7 @@ private:
         ImageFactory imageFactory;
         image = imageFactory.CreateImage(textureFilePath);
         imageBuffer = std::make_unique<ImageBuffer>(*AllocatorProvider::Instance().GetAllocator());
-        imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
+        imageBuffer->Create(ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
     }
 
     void ExtractCharactersData(MetaDataFile& metaDataFile, FontMetaDataState& state, std::map<int, Character>& characters) const
@@ -699,7 +699,7 @@ public:
         return m_verticesCount;
     }
 
-    const std::vector<uint32_t>& GerIndices() const override
+    const std::vector<uint32_t>& GetIndices() const override
     {
         return m_indices;
     }
@@ -888,7 +888,7 @@ public:
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
 
         auto indexBuffer = std::make_shared<IBO>(*allocator);
-        indexBuffer->Data(mesh->GerIndices().data(), (uint32_t)mesh->GerIndices().size());
+        indexBuffer->Data(mesh->GetIndices().data(), (uint32_t)mesh->GetIndices().size());
 
         auto model = std::make_shared<Model>(std::move(mesh), vertexBuffer, indexBuffer);
 

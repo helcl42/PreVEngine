@@ -53,6 +53,9 @@ enum class SceneNodeFlags {
     BOUNDING_VOLUME_COMPONENT,
     SELECTABLE_COMPONENT,
     PARTICLE_SYSTEM_COMPONENT,
+    CLOUDS_COMPONENT,
+    SKY_RENDER_COMPONENT,
+    TIME_COMPONENT,
     _
 };
 
@@ -311,7 +314,7 @@ public:
 
     virtual uint32_t GerVerticesCount() const = 0;
 
-    virtual const std::vector<uint32_t>& GerIndices() const = 0;
+    virtual const std::vector<uint32_t>& GetIndices() const = 0;
 
     virtual bool HasIndices() const = 0;
 
@@ -865,6 +868,47 @@ public:
 
 public:
     virtual ~IAnimationRenderComponent() = default;
+};
+
+class ITimeComponent {
+public:
+    virtual void Update(float deltaTime) = 0;
+
+    virtual float GetCurrentDeltaTime() const = 0;
+
+    virtual float GetElapsedTime() const = 0;
+
+public:
+    virtual ~ITimeComponent() = default;
+};
+
+class TimeComponent final : public ITimeComponent {
+public:
+    TimeComponent() = default;
+    
+    ~TimeComponent() = default;
+
+public:
+    void Update(float deltaTime) override
+    {
+        m_currentDelta = deltaTime;
+        m_elapsedTime += deltaTime;
+    }
+
+    float GetCurrentDeltaTime() const override
+    {
+        return m_currentDelta;
+    }
+
+    float GetElapsedTime() const override
+    {
+        return m_elapsedTime;
+    }
+
+private:
+    float m_currentDelta{ 0.0f };
+
+    float m_elapsedTime{ 0.0f };
 };
 
 class MeshUtil {

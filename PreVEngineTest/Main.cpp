@@ -15,6 +15,7 @@
 
 #include "Animation.h"
 #include "Camera.h"
+#include "Clouds.h"
 #include "Culling.h"
 #include "Font.h"
 #include "General.h"
@@ -25,7 +26,7 @@
 #include "Pipeline.h"
 #include "RayCasting.h"
 #include "Shadows.h"
-#include "SkyBox.h"
+#include "Sky.h"
 #include "Terrain.h"
 #include "Water.h"
 
@@ -192,7 +193,7 @@ private:
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
 
         auto indexBuffer = std::make_unique<IBO>(allocator);
-        indexBuffer->Data(mesh->GerIndices().data(), static_cast<uint32_t>(mesh->GerIndices().size()));
+        indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
 
         return std::make_unique<Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));
     }
@@ -2285,7 +2286,7 @@ public:
     }
 
 private:    
-    std::unique_ptr<DummyComputePipeline> m_pipeline;
+    std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<Shader> m_shader;
 
@@ -2300,6 +2301,66 @@ private:
     std::unique_ptr<Buffer> m_outputBuffer;
 
     void* m_outputBufferMappedMemory;
+};
+
+class CloudsNode final : public SceneNode<SceneNodeFlags> {
+public:
+    CloudsNode()
+        : SceneNode()
+    {
+    }
+
+    ~CloudsNode() = default;
+
+public:
+    void Init() override
+    {
+        SceneNode::Init();
+        
+        CloudsComponentFactory cloudsComponentFactory{};
+        std::shared_ptr<ICloudsComponent> cloudsComponent = cloudsComponentFactory.Create();
+        NodeComponentHelper::AddComponent<SceneNodeFlags, ICloudsComponent>(GetThis(), cloudsComponent, SceneNodeFlags::CLOUDS_COMPONENT);
+    }
+
+    void Update(float deltaTime) override
+    {    
+        SceneNode::Update(deltaTime);
+    }
+
+    void ShutDown() override
+    {
+        SceneNode::ShutDown();
+    }
+};
+
+class SkyNode final : public SceneNode<SceneNodeFlags> {
+public:
+    SkyNode()
+        : SceneNode()
+    {
+    }
+
+    ~SkyNode() = default;
+
+public:
+    void Init() override 
+    {
+        SceneNode::Init();
+
+        SkyComponentFactory skyComponentFactory{};
+        std::shared_ptr<ISkyComponent> skyComponent = skyComponentFactory.Create();
+        NodeComponentHelper::AddComponent<SceneNodeFlags, ISkyComponent>(GetThis(), skyComponent, SceneNodeFlags::SKY_RENDER_COMPONENT);
+    }
+
+    void Update(float deltaTime) override
+    {
+        SceneNode::Update(deltaTime);
+    }
+
+    void ShutDown() override
+    {
+        SceneNode::ShutDown();
+    }
 };
 
 class RayCastObserverNode : public SceneNode<SceneNodeFlags> {
@@ -2531,7 +2592,8 @@ private:
 class Fire final : public SceneNode<SceneNodeFlags> {
 public:
     Fire(const glm::vec3& initPosition)
-        : m_initialPosition(initPosition)
+        : SceneNode()
+        , m_initialPosition(initPosition)
     {
     }
 
@@ -2569,6 +2631,37 @@ private:
     std::shared_ptr<IParticleSystemComponent> m_particleSystemComponent;
 };
 
+class TimeNode final : public SceneNode<SceneNodeFlags> {
+public:
+    TimeNode()
+        : SceneNode()
+    {
+    }
+
+    void Init() override
+    {
+        m_timeComponent = std::make_shared<TimeComponent>();
+        NodeComponentHelper::AddComponent<SceneNodeFlags, ITimeComponent>(GetThis(), m_timeComponent, SceneNodeFlags::TIME_COMPONENT);
+
+        SceneNode::Init();
+    }
+
+    void Update(float deltaTime) override
+    {
+        m_timeComponent->Update(deltaTime);
+
+        SceneNode::Update(deltaTime);
+    }
+
+    void ShutDown() override
+    {
+        SceneNode::ShutDown();
+    }
+
+private:
+    std::shared_ptr<ITimeComponent> m_timeComponent;
+};
+
 class RootSceneNode : public SceneNode<SceneNodeFlags> {
 public:
     RootSceneNode(const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Swapchain>& swapchain)
@@ -2586,14 +2679,20 @@ public:
         auto inputsHelper = std::make_shared<InputsHelper>();
         AddChild(inputsHelper);
 
+        auto timeNode = std::make_shared<TimeNode>();
+        AddChild(timeNode);
+
         auto rayCaster = std::make_shared<RayCasterNode>();
         AddChild(rayCaster);
 
         auto rayCastObserver = std::make_shared<RayCastObserverNode>();
         AddChild(rayCastObserver);
 
-        auto skyBox = std::make_shared<SkyBox>();
-        AddChild(skyBox);
+        //auto skyBox = std::make_shared<SkyBox>();
+        //AddChild(skyBox);
+
+        auto sky = std::make_shared<SkyNode>();
+        AddChild(sky);
 
         auto sunLight = std::make_shared<MainLight>(glm::vec3(150.0f, 50.0f, 150.0f));
         sunLight->SetTags({ TAG_MAIN_LIGHT, TAG_LIGHT });
@@ -2693,6 +2792,9 @@ public:
 
         //auto compute = std::make_shared<ComputeNode>();
         //AddChild(compute);
+
+        auto clouds = std::make_shared<CloudsNode>();
+        AddChild(clouds);
 
         SceneNode::Init();
 

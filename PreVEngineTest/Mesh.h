@@ -52,7 +52,7 @@ public:
         return static_cast<uint32_t>(vertices.size());
     }
 
-    const std::vector<uint32_t>& GerIndices() const override
+    const std::vector<uint32_t>& GetIndices() const override
     {
         return indices;
     }
@@ -68,7 +68,7 @@ private:
     VertexDataBuffer m_vertexDataBuffer;
 
 private:
-    static const inline std::vector<glm::vec3> vertices = {
+    static const inline std::vector<glm::vec3> vertices{
         // FROMT
         { -0.5f, -0.5f, 0.5f },
         { 0.5f, -0.5f, 0.5f },
@@ -101,7 +101,7 @@ private:
         { 0.5f, -0.5f, -0.5f }
     };
 
-    static const inline std::vector<glm::vec2> textureCoords = {
+    static const inline std::vector<glm::vec2> textureCoords{
         // FROMT
         { 1.0f, 0.0f },
         { 0.0f, 0.0f },
@@ -134,7 +134,7 @@ private:
         { 1.0f, 1.0f }
     };
 
-    static const inline std::vector<glm::vec3> normals = {
+    static const inline std::vector<glm::vec3> normals{
         // FROMT
         { 0.0f, 0.0f, 1.0f },
         { 0.0f, 0.0f, 1.0f },
@@ -167,7 +167,7 @@ private:
         { 1.0f, 0.0f, 0.0f },
     };
 
-    static const inline std::vector<uint32_t> indices = {
+    static const inline std::vector<uint32_t> indices{
         0, 1, 2, 2, 3, 0,
         4, 5, 6, 6, 7, 4,
         8, 9, 10, 10, 11, 8,
@@ -223,7 +223,7 @@ public:
         return static_cast<uint32_t>(vertices.size());
     }
 
-    const std::vector<uint32_t>& GerIndices() const override
+    const std::vector<uint32_t>& GetIndices() const override
     {
         return indices;
     }
@@ -239,28 +239,104 @@ private:
     VertexDataBuffer m_vertexDataBuffer;
 
 private:
-    static const inline std::vector<glm::vec3> vertices = {
+    static const inline std::vector<glm::vec3> vertices{
         { 1.0f, 1.0f, 0.0f },
         { 0.0f, 1.0f, 0.0f },
         { 0.0f, 0.0f, 0.0f },
         { 1.0f, 0.0f, 0.0f }
     };
 
-    static const inline std::vector<glm::vec2> textureCoords = {
+    static const inline std::vector<glm::vec2> textureCoords{
         { 1.0f, 1.0f },
         { 0.0f, 1.0f },
         { 0.0f, 0.0f },
         { 1.0f, 0.0f }
     };
 
-    static const inline std::vector<glm::vec3> normals = {
+    static const inline std::vector<glm::vec3> normals{
         { 0.0f, 0.0f, 1.0f },
         { 0.0f, 0.0f, 1.0f },
         { 0.0f, 0.0f, 1.0f },
         { 0.0f, 0.0f, 1.0f }
     };
 
-    static const inline std::vector<uint32_t> indices = {
+    static const inline std::vector<uint32_t> indices{
+        0, 1, 2, 2, 3, 0
+    };
+};
+
+class FullScreenQuadMesh final : public IMesh {
+public:
+    FullScreenQuadMesh()
+    {
+        for (auto i = 0; i < vertices.size(); i++) {
+            m_vertexDataBuffer.Add(vertices[i]);
+            m_vertexDataBuffer.Add(textureCoords[i]);
+            m_vertexDataBuffer.Add(normals[i]);
+        }
+    }
+
+    ~FullScreenQuadMesh() = default;
+
+public:
+    const VertexLayout& GetVertexLayout() const override
+    {
+        return m_vertexLayout;
+    }
+
+    const void* GetVertexData() const override
+    {
+        return m_vertexDataBuffer.GetData();
+    }
+
+    std::vector<glm::vec3> GetVertices() const override
+    {
+        return vertices;
+    }
+
+    uint32_t GerVerticesCount() const override
+    {
+        return static_cast<uint32_t>(vertices.size());
+    }
+
+    const std::vector<uint32_t>& GetIndices() const override
+    {
+        return indices;
+    }
+
+    bool HasIndices() const override
+    {
+        return indices.size() > 0;
+    }
+
+private:
+    VertexDataBuffer m_vertexDataBuffer;
+
+private:
+    static const inline VertexLayout m_vertexLayout{ { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
+
+    static const inline std::vector<glm::vec3> vertices{
+        { 1.0f, 1.0f, 0.0f },
+        { -1.0f, 1.0f, 0.0f },
+        { -1.0f, -1.0f, 0.0f },
+        { 1.0f, -1.0f, 0.0f }
+    };
+
+    static const inline std::vector<glm::vec2> textureCoords{
+        { 1.0f, 1.0f },
+        { 0.0f, 1.0f },
+        { 0.0f, 0.0f },
+        { 1.0f, 0.0f }
+    };
+
+    static const inline std::vector<glm::vec3> normals{
+        { 0.0f, 0.0f, 1.0f },
+        { 0.0f, 0.0f, 1.0f },
+        { 0.0f, 0.0f, 1.0f },
+        { 0.0f, 0.0f, 1.0f }
+    };
+
+    static const inline std::vector<uint32_t> indices{
         0, 1, 2, 2, 3, 0
     };
 };
@@ -361,7 +437,7 @@ public:
         return static_cast<uint32_t>(m_vertices.size());
     }
 
-    const std::vector<uint32_t>& GerIndices() const override
+    const std::vector<uint32_t>& GetIndices() const override
     {
         return m_indices;
     }
@@ -514,7 +590,7 @@ public:
         return static_cast<uint32_t>(m_vertices.size());
     }
 
-    const std::vector<uint32_t>& GerIndices() const override
+    const std::vector<uint32_t>& GetIndices() const override
     {
         return m_indices;
     }
@@ -558,7 +634,7 @@ public:
         return m_verticesCount;
     }
 
-    const std::vector<uint32_t>& GerIndices() const override
+    const std::vector<uint32_t>& GetIndices() const override
     {
         return m_indices;
     }

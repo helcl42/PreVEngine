@@ -77,7 +77,7 @@ public:
         return static_cast<uint32_t>(vertices.size());
     }
 
-    const std::vector<uint32_t>& GerIndices() const override
+    const std::vector<uint32_t>& GetIndices() const override
     {
         return indices;
     }
@@ -185,11 +185,11 @@ public:
     {
         const float spacing{ 0.16f };
         const std::vector<FlareCreateInfo> flareCreateInfos = {
-            { AssetManager::Instance().GetAssetPath("LensFlares/tex2.png"), 0.15f },
+            { AssetManager::Instance().GetAssetPath("LensFlares/tex2.png"), 0.0f },
             { AssetManager::Instance().GetAssetPath("LensFlares/tex3.png"), 0.12f },
             { AssetManager::Instance().GetAssetPath("LensFlares/tex4.png"), 0.46f },
             { AssetManager::Instance().GetAssetPath("LensFlares/tex5.png"), 0.12f },
-            { AssetManager::Instance().GetAssetPath("LensFlares/tex6.png"), 1.0f },
+            { AssetManager::Instance().GetAssetPath("LensFlares/tex6.png"), 0.0f },
             { AssetManager::Instance().GetAssetPath("LensFlares/tex7.png"), 0.1f },
             { AssetManager::Instance().GetAssetPath("LensFlares/tex8.png"), 1.2f },
             { AssetManager::Instance().GetAssetPath("LensFlares/tex9.png"), 0.24f },
@@ -220,7 +220,7 @@ private:
         auto vertexBuffer = std::make_unique<VBO>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
         auto indexBuffer = std::make_unique<IBO>(allocator);
-        indexBuffer->Data(mesh->GerIndices().data(), static_cast<uint32_t>(mesh->GerIndices().size()));
+        indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
 
         return std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
@@ -230,7 +230,7 @@ private:
         ImageFactory imageFactory{};
         auto image = imageFactory.CreateImage(filePath);
         auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
-        imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
+        imageBuffer->Create(ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
         return std::make_unique<Flare>(std::move(image), std::move(imageBuffer), scale);
     }
 };
@@ -320,7 +320,7 @@ private:
         auto vertexBuffer = std::make_unique<VBO>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
         auto indexBuffer = std::make_unique<IBO>(allocator);
-        indexBuffer->Data(mesh->GerIndices().data(), static_cast<uint32_t>(mesh->GerIndices().size()));
+        indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
 
         return std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
@@ -330,7 +330,7 @@ private:
         ImageFactory imageFactory{};
         auto image = imageFactory.CreateImage(filePath);
         auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
-        imageBuffer->Create(ImageBufferCreateInfo{ { image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
+        imageBuffer->Create(ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
         return std::make_unique<Flare>(std::move(image), std::move(imageBuffer), scale);
     }
 };

@@ -237,13 +237,13 @@ void Swapchain::Print() const
     printf("\tFormat  = %3d : %s\n", m_swapchainCreateInfo.imageFormat, FormatStr(m_swapchainCreateInfo.imageFormat));
     printf("\tDepth   = %3d : %s\n", m_depthBuffer.GetFormat(), FormatStr(m_depthBuffer.GetFormat()));
 
-    const VkExtent2D& extent = m_swapchainCreateInfo.imageExtent;
+    const auto& extent = m_swapchainCreateInfo.imageExtent;
     printf("\tExtent  = %d x %d\n", extent.width, extent.height);
     printf("\tBuffers = %d\n", (int)m_swapchainBuffers.size());
 
     auto modes = GetPresentModes(m_gpu, m_surface);
     printf("\tPresentMode:\n");
-    const VkPresentModeKHR& mode = m_swapchainCreateInfo.presentMode;
+    const auto& mode = m_swapchainCreateInfo.presentMode;
     for (auto m : modes) {
         print((m == mode) ? ConsoleColor::RESET : ConsoleColor::FAINT, "\t\t%s %s\n", (m == mode) ? cTICK : " ", PresentModeName(m));
     }
@@ -278,7 +278,8 @@ void Swapchain::Apply()
 
     m_currentFrameIndex = 0;
 
-    m_depthBuffer.Resize(m_swapchainCreateInfo.imageExtent); //resize depth buffer
+    const VkExtent3D extent3D{ m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height, 1 };
+    m_depthBuffer.Resize(extent3D); // resize depth buffer
 
     std::vector<VkImage> swapchainImages = GetSwapchainImages();
     m_swapchainImagesCount = static_cast<uint32_t>(swapchainImages.size());
