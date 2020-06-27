@@ -472,11 +472,11 @@ public:
 
         uint32_t indexBase{ 0 };
 
-        float addAngleY{ -degreesHorizontal / static_cast<float>(subDivY) };
-        float addAngleZ{ degreesVertical / static_cast<float>(subDivZ) };
-        float curAngleY{ 0.0f };
-        int stepsY{ 1 };
+        const float addAngleY{ -degreesHorizontal / static_cast<float>(subDivY) };
+        const float addAngleZ{ degreesVertical / static_cast<float>(subDivZ) };
 
+        float curAngleY = 0.0f;
+        int stepsY = 1;
         while (stepsY <= subDivY) {
             const float sinY = sinf(glm::radians(curAngleY));
             const float cosY = cosf(glm::radians(curAngleY));
@@ -541,7 +541,7 @@ public:
                 for (const auto idx : quadIndices) {
                     m_indices.push_back(indexBase + idx);
                 }
-                indexBase += 6;
+                indexBase += 4;
 
                 stepsZ++;
                 currentAngleZ += addAngleZ;
