@@ -1383,7 +1383,7 @@ public:
 
         LOGI("Selection Debug Shader created\n");
 
-        m_pipeline = std::make_unique<BoundingVolumeDebugPipeline>(*device, *m_renderPass, *m_shader);
+        m_pipeline = std::make_unique<SelectionDebugPipeline>(*device, *m_renderPass, *m_shader);
         m_pipeline->Init();
 
         LOGI("Selection Debug Pipeline created\n");
@@ -5325,7 +5325,7 @@ public:
         uniformsPostCS.resolution = glm::vec4(renderContextUserData.extent.width, renderContextUserData.extent.height, 0.0f, 0.0f);
         uniformsPostCS.lisghtPosition = lightPositionNdc;
         uniformsPostCS.enableGodRays = 1;
-        uniformsPostCS.lightDotCameraFront = glm::dot(glm::normalize(mainLightComponent->GetPosition() - renderContextUserData.cameraPosition), glm::normalize(MathUtil::GetForwardVector(renderContextUserData.viewMatrix)));
+        uniformsPostCS.lightDotCameraFront = -glm::dot(glm::normalize(mainLightComponent->GetPosition() - renderContextUserData.cameraPosition), glm::normalize(MathUtil::GetForwardVector(renderContextUserData.viewMatrix)));
 
         uboPostCS->Update(&uniformsPostCS);
 
