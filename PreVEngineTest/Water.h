@@ -26,7 +26,7 @@ public:
         return (const void*)vertices.data();
     }
 
-    std::vector<glm::vec3> GetVertices() const override
+    const std::vector<glm::vec3>& GetVertices() const override
     {
         return vertices;
     }
@@ -41,9 +41,9 @@ public:
         return indices;
     }
 
-    bool HasIndices() const override
+    const std::vector<MeshPart>& GetMeshParts() const override
     {
-        return indices.size() > 0;
+        return meshParts;
     }
 
 private:
@@ -58,6 +58,10 @@ private:
 
     static const inline std::vector<uint32_t> indices = {
         0, 1, 2, 2, 3, 0
+    };
+
+    static const inline std::vector<MeshPart> meshParts = {
+        MeshPart{ 0, static_cast<uint32_t>(indices.size()), glm::mat4(1.0f), 0 }
     };
 };
 

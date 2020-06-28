@@ -42,7 +42,7 @@ public:
         return m_vertexDataBuffer.GetData();
     }
 
-    std::vector<glm::vec3> GetVertices() const override
+    const std::vector<glm::vec3>& GetVertices() const override
     {
         return vertices;
     }
@@ -57,9 +57,9 @@ public:
         return indices;
     }
 
-    bool HasIndices() const override
+    const std::vector<MeshPart>& GetMeshParts() const override
     {
-        return indices.size() > 0;
+        return meshParts;
     }
 
 private:
@@ -175,6 +175,10 @@ private:
         16, 17, 18, 18, 19, 16,
         20, 21, 22, 22, 23, 20
     };
+
+    static const inline std::vector<MeshPart> meshParts = {
+        MeshPart{ 0, static_cast<uint32_t>(indices.size()), glm::mat4(1.0f), 0 }
+    };
 };
 
 class QuadMesh final : public IMesh {
@@ -213,7 +217,7 @@ public:
         return m_vertexDataBuffer.GetData();
     }
 
-    std::vector<glm::vec3> GetVertices() const override
+    const std::vector<glm::vec3>& GetVertices() const override
     {
         return vertices;
     }
@@ -228,9 +232,9 @@ public:
         return indices;
     }
 
-    bool HasIndices() const override
+    const std::vector<MeshPart>& GetMeshParts() const override
     {
-        return indices.size() > 0;
+        return meshParts;
     }
 
 private:
@@ -263,6 +267,10 @@ private:
     static const inline std::vector<uint32_t> indices{
         0, 1, 2, 2, 3, 0
     };
+
+    static const inline std::vector<MeshPart> meshParts = {
+        MeshPart{ 0, static_cast<uint32_t>(indices.size()), glm::mat4(1.0f), 0 }
+    };
 };
 
 class FullScreenQuadMesh final : public IMesh {
@@ -289,7 +297,7 @@ public:
         return m_vertexDataBuffer.GetData();
     }
 
-    std::vector<glm::vec3> GetVertices() const override
+    const std::vector<glm::vec3>& GetVertices() const override
     {
         return vertices;
     }
@@ -304,9 +312,9 @@ public:
         return indices;
     }
 
-    bool HasIndices() const override
+    const std::vector<MeshPart>& GetMeshParts() const override
     {
-        return indices.size() > 0;
+        return meshParts;
     }
 
 private:
@@ -338,6 +346,10 @@ private:
 
     static const inline std::vector<uint32_t> indices{
         0, 1, 2, 2, 3, 0
+    };
+
+    static const inline std::vector<MeshPart> meshParts = {
+        MeshPart{ 0, static_cast<uint32_t>(indices.size()), glm::mat4(1.0f), 0 }
     };
 };
 
@@ -412,6 +424,8 @@ public:
                 m_vertexDataBuffer.Add(biTangents[vertexIndex]);
             }
         }
+
+        m_meshParts.push_back(MeshPart{ 0, static_cast<uint32_t>(m_indices.size()), glm::mat4(1.0f), 0 });
     }
 
     ~PlaneMesh() = default;
@@ -427,7 +441,7 @@ public:
         return m_vertexDataBuffer.GetData();
     }
 
-    std::vector<glm::vec3> GetVertices() const override
+    const std::vector<glm::vec3>& GetVertices() const override
     {
         return m_vertices;
     }
@@ -442,9 +456,9 @@ public:
         return m_indices;
     }
 
-    bool HasIndices() const override
+    const std::vector<MeshPart>& GetMeshParts() const override
     {
-        return m_indices.size() > 0;
+        return m_meshParts;
     }
 
 private:
@@ -455,6 +469,8 @@ private:
     std::vector<glm::vec3> m_vertices;
 
     std::vector<uint32_t> m_indices;
+
+    std::vector<MeshPart> m_meshParts;
 };
 
 class SphereMesh final : public IMesh {
@@ -565,6 +581,8 @@ public:
                 m_vertexDataBuffer.Add(biTangents[vertexIndex]);
             }
         }
+
+        m_meshParts.push_back(MeshPart{ 0, static_cast<uint32_t>(m_indices.size()), glm::mat4(1.0f), 0 });
     }
 
     ~SphereMesh() = default;
@@ -580,7 +598,7 @@ public:
         return m_vertexDataBuffer.GetData();
     }
 
-    std::vector<glm::vec3> GetVertices() const override
+    const std::vector<glm::vec3>& GetVertices() const override
     {
         return m_vertices;
     }
@@ -595,9 +613,9 @@ public:
         return m_indices;
     }
 
-    bool HasIndices() const override
+    const std::vector<MeshPart>& GetMeshParts() const override
     {
-        return m_indices.size() > 0;
+        return m_meshParts;
     }
 
 private:
@@ -608,6 +626,8 @@ private:
     std::vector<glm::vec3> m_vertices;
 
     std::vector<uint32_t> m_indices;
+
+    std::vector<MeshPart> m_meshParts;
 };
 
 class MeshFactory;
@@ -624,7 +644,7 @@ public:
         return m_vertexDataBuffer.GetData();
     }
 
-    std::vector<glm::vec3> GetVertices() const override
+    const std::vector<glm::vec3>& GetVertices() const override
     {
         return m_vertices;
     }
@@ -639,9 +659,9 @@ public:
         return m_indices;
     }
 
-    bool HasIndices() const override
+    const std::vector<MeshPart>& GetMeshParts() const override
     {
-        return m_indices.size() > 0;
+        return m_meshParts;
     }
 
 private:
@@ -657,6 +677,8 @@ private:
     uint32_t m_verticesCount = 0;
 
     std::vector<uint32_t> m_indices;
+
+    std::vector<MeshPart> m_meshParts;
 };
 
 class MeshFactory final {
@@ -681,12 +703,24 @@ public:
         auto mesh = std::make_unique<ModelMesh>();
 
         mesh->m_vertexLayout = GetVertexLayout(flags);
-        mesh->m_verticesCount = ReadMeshes(*scene, flags, mesh->m_vertexDataBuffer, mesh->m_vertices, mesh->m_indices);
+        mesh->m_verticesCount = ReadMeshes(*scene, flags, mesh->m_vertexDataBuffer, mesh->m_vertices, mesh->m_indices, mesh->m_meshParts);
 
         return mesh;
     }
 
 private:
+    void ReadNodeHierarchy(const aiNode* node, const glm::mat4& parentTransform, std::vector<glm::mat4>& transforms) const
+    {
+        const auto currentTransform = parentTransform * AssimpGlmConvertor::ToGlmMat4(node->mTransformation);
+        if (node->mNumMeshes > 0) {
+            transforms.push_back(currentTransform);
+        }
+
+        for (unsigned int i = 0; i < node->mNumChildren; i++) {
+            ReadNodeHierarchy(node->mChildren[i], currentTransform, transforms);
+        }
+    }
+
     VertexLayout GetVertexLayout(const FlagSet<AssimpMeshFactoryCreateFlags>& flags) const
     {
         if (flags & AssimpMeshFactoryCreateFlags::ANIMATION && flags & AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT) {
@@ -788,15 +822,15 @@ private:
         return vertexCount;
     }
 
-    unsigned int ReadMeshes(const aiScene& scene, const FlagSet<AssimpMeshFactoryCreateFlags>& flags, VertexDataBuffer& inOutVertexBuffer, std::vector<glm::vec3>& inOutVertices, std::vector<uint32_t>& inOutIndices) const
+    unsigned int ReadMeshes(const aiScene& scene, const FlagSet<AssimpMeshFactoryCreateFlags>& flags, VertexDataBuffer& inOutVertexBuffer, std::vector<glm::vec3>& inOutVertices, std::vector<uint32_t>& inOutIndices, std::vector<MeshPart>& inOutMeshParts) const
     {
-        unsigned int allVertexCount = GetAllVertexCount(scene);
+        uint32_t allVertexCount = GetAllVertexCount(scene);
         std::vector<VertexBoneData> vertexBoneData;
         if (flags & AssimpMeshFactoryCreateFlags::ANIMATION) {
             vertexBoneData.resize(allVertexCount);
 
-            unsigned int vertexBaseOffset = 0;
-            for (unsigned int meshIndex = 0; meshIndex < scene.mNumMeshes; meshIndex++) {
+            uint32_t vertexBaseOffset = 0;
+            for (uint32_t meshIndex = 0; meshIndex < scene.mNumMeshes; meshIndex++) {
                 const aiMesh& assMesh = *scene.mMeshes[meshIndex];
                 const auto vertexBonePart = LoadAnimationBones(assMesh, vertexBaseOffset);
                 for (size_t j = 0; j < vertexBonePart.size(); j++) {
@@ -806,12 +840,23 @@ private:
             }
         }
 
-        unsigned int vertexBaseOffset = 0;
-        for (unsigned int meshIndex = 0; meshIndex < scene.mNumMeshes; meshIndex++) {
+        std::vector<glm::mat4> transforms;
+        ReadNodeHierarchy(scene.mRootNode, AssimpGlmConvertor::ToGlmMat4(scene.mRootNode->mTransformation), transforms);
+
+        uint32_t vertexBaseOffset = 0;
+        uint32_t indexBaseOffset = 0;
+        for (uint32_t meshIndex = 0; meshIndex < scene.mNumMeshes; meshIndex++) {
             const aiMesh& assMesh = *scene.mMeshes[meshIndex];
             ReadVertexData(assMesh, flags, vertexBoneData, vertexBaseOffset, inOutVertexBuffer, inOutVertices);
-            ReadIndices(assMesh, inOutIndices);
+
+            std::vector<uint32_t> meshIndices;
+            ReadIndices(assMesh, meshIndices);
+
+            inOutIndices.insert(inOutIndices.end(), meshIndices.begin(), meshIndices.end());
+            inOutMeshParts.push_back(MeshPart{ indexBaseOffset, static_cast<uint32_t>(meshIndices.size()), transforms.at(meshIndex), assMesh.mMaterialIndex });
+
             vertexBaseOffset += assMesh.mNumVertices;
+            indexBaseOffset += static_cast<uint32_t>(meshIndices.size());
         }
 
         return allVertexCount;

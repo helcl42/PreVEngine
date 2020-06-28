@@ -652,17 +652,6 @@ public:
 };
 
 class TextMesh final : public IMesh {
-private:
-    VertexLayout m_vertexLayout;
-
-    std::vector<glm::vec3> m_vertices;
-
-    uint32_t m_verticesCount;
-
-    std::vector<uint32_t> m_indices;
-
-    VertexDataBuffer m_vertexDataBuffer;
-
 public:
     TextMesh(const std::vector<glm::vec2>& vertices, const std::vector<glm::vec2>& textureCoords, const std::vector<uint32_t>& indices)
         : m_vertexLayout({ VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC2 })
@@ -674,6 +663,8 @@ public:
             m_vertexDataBuffer.Add(textureCoords[i]);
             m_vertices.push_back(glm::vec3(vertices[i].x, vertices[i].y, 0.0f));
         }
+
+        m_meshParts.push_back(MeshPart{ 0, static_cast<uint32_t>(m_indices.size()), glm::mat4(1.0f), 0 });
     }
 
     ~TextMesh() = default;
@@ -689,7 +680,7 @@ public:
         return m_vertexDataBuffer.GetData();
     }
 
-    std::vector<glm::vec3> GetVertices() const override
+    const std::vector<glm::vec3>& GetVertices() const override
     {
         return m_vertices;
     }
@@ -703,11 +694,24 @@ public:
     {
         return m_indices;
     }
-
-    bool HasIndices() const override
+    
+    const std::vector<MeshPart>& GetMeshParts() const override
     {
-        return m_indices.size() > 0;
+        return m_meshParts;
     }
+
+private:
+    VertexLayout m_vertexLayout;
+
+    std::vector<glm::vec3> m_vertices;
+
+    uint32_t m_verticesCount;
+
+    std::vector<uint32_t> m_indices;
+
+    VertexDataBuffer m_vertexDataBuffer;
+
+    std::vector<MeshPart> m_meshParts;
 };
 
 class TextMeshFactory {
