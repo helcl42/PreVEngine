@@ -2806,8 +2806,19 @@ public:
         }
         NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
+        const std::vector<std::string> texturePaths = {
+            AssetManager::Instance().GetAssetPath("Models/Warehouse/scene_full.fbm/asphalt_2.png"),
+            AssetManager::Instance().GetAssetPath("Models/Warehouse/scene_full.fbm/asphalt_2.png"),
+            AssetManager::Instance().GetAssetPath("Models/Warehouse/scene_full.fbm/asphalt_2.png"),
+            AssetManager::Instance().GetAssetPath("Models/Warehouse/scene_full.fbm/box_3.png"),
+            AssetManager::Instance().GetAssetPath("Models/Warehouse/scene_full.fbm/Box_1_2.png"),
+            AssetManager::Instance().GetAssetPath("Models/Warehouse/scene_full.fbm/box_3.png"),
+            AssetManager::Instance().GetAssetPath("Models/Warehouse/scene_full.fbm/Box_1_2.png"),
+            AssetManager::Instance().GetAssetPath("Models/Warehouse/scene_full.fbm/asphalt_2.png")
+        };
+
         RenderComponentFactory componentFactory{};
-        std::shared_ptr<IRenderComponent> renderComponent = componentFactory.CreateModelRenderComponent(AssetManager::Instance().GetAssetPath("Models/Warehouse/scene_full.fbx"), AssetManager::Instance().GetAssetPath("Models/Warehouse/scene_full.fbm/box_3.png"), true, true);
+        std::shared_ptr<IRenderComponent> renderComponent = componentFactory.CreateModelRenderComponent(AssetManager::Instance().GetAssetPath("Models/Warehouse/scene_full.fbx"), texturePaths, true, true);
         NodeComponentHelper::AddComponent<SceneNodeFlags, IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_COMPONENT);
 
         SceneNode::Init();
