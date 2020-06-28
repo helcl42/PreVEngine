@@ -878,7 +878,9 @@ class IRenderComponent {
 public:
     virtual std::shared_ptr<IModel> GetModel() const = 0;
 
-    virtual std::shared_ptr<IMaterial> GetMaterial() const = 0;
+    virtual std::shared_ptr<IMaterial> GetMaterial(const uint32_t = 0) const = 0;
+
+    virtual const std::vector<std::shared_ptr<IMaterial>>& GetMaterials() const = 0;
 
     virtual bool CastsShadows() const = 0;
 
