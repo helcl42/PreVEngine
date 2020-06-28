@@ -1264,7 +1264,7 @@ private:
 
     const float JUMP_POWER{ 2.5f };
 
-    const float MIN_Y_POS{ 9.0f };
+    const float MIN_Y_POS{ 5.5f };
 
 private:
     const glm::vec3 m_initialPosition;
@@ -2787,59 +2787,6 @@ private:
     std::shared_ptr<ITimeComponent> m_timeComponent;
 };
 
-class WarehouseNode final : public SceneNode<SceneNodeFlags> {
-public:
-    WarehouseNode()
-        : SceneNode()
-    {
-    }
-
-    ~WarehouseNode() = default;
-
-public:
-    void Init() override
-    {
-        TrasnformComponentFactory transformComponentFactory{};
-        m_transformComponent = transformComponentFactory.Create(glm::vec3(-100.0f, 0.0f, -100.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(0.05f));
-        if (NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
-            m_transformComponent->SetParent(NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
-        }
-        NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
-
-        const std::vector<std::string> texturePaths = {
-            AssetManager::Instance().GetAssetPath("Models/Warehouse/scene_full.fbm/asphalt_2.png"),
-            AssetManager::Instance().GetAssetPath("Models/Warehouse/scene_full.fbm/asphalt_2.png"),
-            AssetManager::Instance().GetAssetPath("Models/Warehouse/scene_full.fbm/asphalt_2.png"),
-            AssetManager::Instance().GetAssetPath("Models/Warehouse/scene_full.fbm/box_3.png"),
-            AssetManager::Instance().GetAssetPath("Models/Warehouse/scene_full.fbm/Box_1_2.png"),
-            AssetManager::Instance().GetAssetPath("Models/Warehouse/scene_full.fbm/box_3.png"),
-            AssetManager::Instance().GetAssetPath("Models/Warehouse/scene_full.fbm/Box_1_2.png"),
-            AssetManager::Instance().GetAssetPath("Models/Warehouse/scene_full.fbm/asphalt_2.png")
-        };
-
-        RenderComponentFactory componentFactory{};
-        std::shared_ptr<IRenderComponent> renderComponent = componentFactory.CreateModelRenderComponent(AssetManager::Instance().GetAssetPath("Models/Warehouse/scene_full.fbx"), texturePaths, true, true);
-        NodeComponentHelper::AddComponent<SceneNodeFlags, IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_COMPONENT);
-
-        SceneNode::Init();
-    }
-
-    void Update(float deltaTime) override
-    {
-        m_transformComponent->Update(deltaTime);
-
-        SceneNode::Update(deltaTime);
-    }
-
-    void ShutDown() override
-    {
-        SceneNode::ShutDown();
-    }
-
-private:
-    std::shared_ptr<ITransformComponent> m_transformComponent;
-};
-
 class RootSceneNode final : public SceneNode<SceneNodeFlags> {
 public:
     RootSceneNode(const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Swapchain>& swapchain)
@@ -2865,9 +2812,6 @@ public:
 
         auto rayCastObserver = std::make_shared<RayCastObserverNode>();
         AddChild(rayCastObserver);
-
-        auto warehouse = std::make_shared<WarehouseNode>();
-        AddChild(warehouse);
 
         //auto skyBox = std::make_shared<SkyBox>();
         //AddChild(skyBox);
@@ -2914,7 +2858,7 @@ public:
         //    }
         //}
 
-        auto goblin = std::make_shared<Goblin>(glm::vec3(0.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(4.0f));
+        auto goblin = std::make_shared<Goblin>(glm::vec3(0.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(5.0f));
         goblin->SetTags({ TAG_MAIN_CAMERA, TAG_PLAYER });
         AddChild(goblin);
 
