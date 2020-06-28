@@ -177,7 +177,7 @@ private:
     };
 
     static const inline std::vector<MeshPart> meshParts = {
-        MeshPart{ 0, static_cast<uint32_t>(indices.size()), glm::mat4(1.0f), 0 }
+        MeshPart(static_cast<uint32_t>(indices.size()))
     };
 };
 
@@ -269,7 +269,7 @@ private:
     };
 
     static const inline std::vector<MeshPart> meshParts = {
-        MeshPart{ 0, static_cast<uint32_t>(indices.size()), glm::mat4(1.0f), 0 }
+        MeshPart(static_cast<uint32_t>(indices.size()))
     };
 };
 
@@ -349,7 +349,7 @@ private:
     };
 
     static const inline std::vector<MeshPart> meshParts = {
-        MeshPart{ 0, static_cast<uint32_t>(indices.size()), glm::mat4(1.0f), 0 }
+        MeshPart(static_cast<uint32_t>(indices.size()))
     };
 };
 
@@ -425,7 +425,7 @@ public:
             }
         }
 
-        m_meshParts.push_back(MeshPart{ 0, static_cast<uint32_t>(m_indices.size()), glm::mat4(1.0f), 0 });
+        m_meshParts.push_back(MeshPart(static_cast<uint32_t>(m_indices.size())));
     }
 
     ~PlaneMesh() = default;
@@ -582,7 +582,7 @@ public:
             }
         }
 
-        m_meshParts.push_back(MeshPart{ 0, static_cast<uint32_t>(m_indices.size()), glm::mat4(1.0f), 0 });
+        m_meshParts.push_back(MeshPart(static_cast<uint32_t>(m_indices.size())));
     }
 
     ~SphereMesh() = default;
@@ -716,7 +716,7 @@ private:
             transforms.push_back(currentTransform);
         }
 
-        for (unsigned int i = 0; i < node->mNumChildren; i++) {
+        for (uint32_t i = 0; i < node->mNumChildren; i++) {
             ReadNodeHierarchy(node->mChildren[i], currentTransform, transforms);
         }
     }
@@ -744,7 +744,7 @@ private:
         }
     }
 
-    void AddDefaultVertexData(const aiMesh& mesh, const unsigned int vertexIndex, VertexDataBuffer& inOutVertexBuffer, std::vector<glm::vec3>& inOutVertices) const
+    void AddDefaultVertexData(const aiMesh& mesh, const uint32_t vertexIndex, VertexDataBuffer& inOutVertexBuffer, std::vector<glm::vec3>& inOutVertices) const
     {
         glm::vec3 pos = glm::make_vec3(&mesh.mVertices[vertexIndex].x);
         glm::vec2 uv = mesh.mTextureCoords[0] != nullptr ? glm::make_vec3(&mesh.mTextureCoords[0][vertexIndex].x) : glm::vec2(1.0f, 1.0f);
@@ -757,12 +757,12 @@ private:
         inOutVertexBuffer.Add(normal);
     }
 
-    void AddAnimationData(const std::vector<VertexBoneData>& vertexBoneData, const unsigned int vertexIndex, VertexDataBuffer& inOutVertexBuffer) const
+    void AddAnimationData(const std::vector<VertexBoneData>& vertexBoneData, const uint32_t vertexIndex, VertexDataBuffer& inOutVertexBuffer) const
     {
         const auto& singleVertexBoneData = vertexBoneData[vertexIndex];
 
-        inOutVertexBuffer.Add(&singleVertexBoneData.ids, static_cast<unsigned int>(ArraySize(singleVertexBoneData.ids) * sizeof(unsigned int)));
-        inOutVertexBuffer.Add(&singleVertexBoneData.weights, static_cast<unsigned int>(ArraySize(singleVertexBoneData.weights) * sizeof(float)));
+        inOutVertexBuffer.Add(&singleVertexBoneData.ids, static_cast<uint32_t>(ArraySize(singleVertexBoneData.ids) * sizeof(unsigned int)));
+        inOutVertexBuffer.Add(&singleVertexBoneData.weights, static_cast<uint32_t>(ArraySize(singleVertexBoneData.weights) * sizeof(float)));
     }
 
     void AddBumpMappingData(const aiMesh& mesh, const unsigned int vertexIndex, VertexDataBuffer& inOutVertexBuffer) const
@@ -773,7 +773,7 @@ private:
         inOutVertexBuffer.Add(biTangent);
     }
 
-    void ReadVertexData(const aiMesh& mesh, const FlagSet<AssimpMeshFactoryCreateFlags>& flags, const std::vector<VertexBoneData>& vertexBoneData, const unsigned int vertexBaseOffset, VertexDataBuffer& inOutVertexBuffer, std::vector<glm::vec3>& inOutVertices) const
+    void ReadVertexData(const aiMesh& mesh, const FlagSet<AssimpMeshFactoryCreateFlags>& flags, const std::vector<VertexBoneData>& vertexBoneData, const uint32_t vertexBaseOffset, VertexDataBuffer& inOutVertexBuffer, std::vector<glm::vec3>& inOutVertices) const
     {
         for (unsigned int vertexIndex = 0; vertexIndex < mesh.mNumVertices; vertexIndex++) {
             AddDefaultVertexData(mesh, vertexIndex, inOutVertexBuffer, inOutVertices);
@@ -788,24 +788,24 @@ private:
         }
     }
 
-    std::vector<VertexBoneData> LoadAnimationBones(const aiMesh& mesh, const unsigned int vertexBaseOffset) const
+    std::vector<VertexBoneData> LoadAnimationBones(const aiMesh& mesh, const uint32_t vertexBaseOffset) const
     {
         std::vector<VertexBoneData> bones(mesh.mNumVertices);
-        std::map<std::string, unsigned int> boneMapping;
+        std::map<std::string, uint32_t> boneMapping;
 
-        for (unsigned int boneIndex = 0; boneIndex < mesh.mNumBones; boneIndex++) {
+        for (uint32_t boneIndex = 0; boneIndex < mesh.mNumBones; boneIndex++) {
             const std::string currentBoneName{ mesh.mBones[boneIndex]->mName.data };
 
-            unsigned int currentBoneIndex = 0;
+            uint32_t currentBoneIndex{ 0 };
             if (boneMapping.find(currentBoneName) == boneMapping.end()) {
-                currentBoneIndex = static_cast<unsigned int>(boneMapping.size());
+                currentBoneIndex = static_cast<uint32_t>(boneMapping.size());
                 boneMapping[currentBoneName] = currentBoneIndex;
             } else {
                 currentBoneIndex = boneMapping[currentBoneName];
             }
 
-            for (unsigned int j = 0; j < mesh.mBones[boneIndex]->mNumWeights; j++) {
-                const unsigned int vertexId = vertexBaseOffset + mesh.mBones[boneIndex]->mWeights[j].mVertexId;
+            for (uint32_t j = 0; j < mesh.mBones[boneIndex]->mNumWeights; j++) {
+                const uint32_t vertexId = vertexBaseOffset + mesh.mBones[boneIndex]->mWeights[j].mVertexId;
                 const float weight = mesh.mBones[boneIndex]->mWeights[j].mWeight;
                 bones[vertexId].AddBoneData(currentBoneIndex, weight);
             }
@@ -815,8 +815,8 @@ private:
 
     unsigned int GetAllVertexCount(const aiScene& scene) const
     {
-        unsigned int vertexCount{ 0 };
-        for (unsigned int meshIndex = 0; meshIndex < scene.mNumMeshes; meshIndex++) {
+        uint32_t vertexCount{ 0 };
+        for (uint32_t meshIndex = 0; meshIndex < scene.mNumMeshes; meshIndex++) {
             vertexCount += scene.mMeshes[meshIndex]->mNumVertices;
         };
         return vertexCount;
@@ -853,7 +853,7 @@ private:
             ReadIndices(assMesh, meshIndices);
 
             inOutIndices.insert(inOutIndices.end(), meshIndices.begin(), meshIndices.end());
-            inOutMeshParts.push_back(MeshPart{ indexBaseOffset, static_cast<uint32_t>(meshIndices.size()), transforms.at(meshIndex), assMesh.mMaterialIndex });
+            inOutMeshParts.push_back(MeshPart{ vertexBaseOffset, indexBaseOffset, static_cast<uint32_t>(meshIndices.size()), transforms.at(meshIndex), assMesh.mMaterialIndex });
 
             vertexBaseOffset += assMesh.mNumVertices;
             indexBaseOffset += static_cast<uint32_t>(meshIndices.size());

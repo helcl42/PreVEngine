@@ -664,7 +664,7 @@ public:
             m_vertices.push_back(glm::vec3(vertices[i].x, vertices[i].y, 0.0f));
         }
 
-        m_meshParts.push_back(MeshPart{ 0, static_cast<uint32_t>(m_indices.size()), glm::mat4(1.0f), 0 });
+        m_meshParts.push_back(MeshPart(static_cast<uint32_t>(m_indices.size())));
     }
 
     ~TextMesh() = default;

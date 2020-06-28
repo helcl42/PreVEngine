@@ -305,13 +305,29 @@ public:
 };
 
 struct MeshPart {
-    uint32_t startIndex;
+    uint32_t firstVertexIndex;
+
+    uint32_t firstIndicesIndex;
 
     uint32_t indicesCount;
 
     glm::mat4 transform;
 
     uint32_t materialIndex;
+
+    MeshPart(const uint32_t indicesCnt)
+        : MeshPart(0, 0, indicesCnt, glm::mat4(1.0f), 0)
+    {
+    }
+
+    MeshPart(const uint32_t firstVertex, const uint32_t firstIndex, const uint32_t indicesCnt, const glm::mat4& trans, const uint32_t materialIdx)
+        : firstVertexIndex(firstVertex)
+        , firstIndicesIndex(firstIndex)
+        , indicesCount(indicesCnt)
+        , transform(trans)
+        , materialIndex(materialIdx)
+    {
+    }
 };
 
 class IMesh {
