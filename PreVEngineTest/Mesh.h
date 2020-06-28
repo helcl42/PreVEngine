@@ -744,13 +744,11 @@ private:
         }
     }
 
-    void AddDefaultVertexData(const aiMesh& mesh, const uint32_t vertexIndex, VertexDataBuffer& inOutVertexBuffer, std::vector<glm::vec3>& inOutVertices) const
+    void AddDefaultVertexData(const aiMesh& mesh, const uint32_t vertexIndex, VertexDataBuffer& inOutVertexBuffer) const
     {
         glm::vec3 pos = glm::make_vec3(&mesh.mVertices[vertexIndex].x);
         glm::vec2 uv = mesh.mTextureCoords[0] != nullptr ? glm::make_vec3(&mesh.mTextureCoords[0][vertexIndex].x) : glm::vec2(1.0f, 1.0f);
         glm::vec3 normal = mesh.HasNormals() ? glm::make_vec3(&mesh.mNormals[vertexIndex].x) : glm::vec3(0.0f, 1.0f, 0.0f);
-
-        inOutVertices.push_back(pos);
 
         inOutVertexBuffer.Add(pos);
         inOutVertexBuffer.Add(uv);
@@ -773,10 +771,10 @@ private:
         inOutVertexBuffer.Add(biTangent);
     }
 
-    void ReadVertexData(const aiMesh& mesh, const FlagSet<AssimpMeshFactoryCreateFlags>& flags, const std::vector<VertexBoneData>& vertexBoneData, const uint32_t vertexBaseOffset, VertexDataBuffer& inOutVertexBuffer, std::vector<glm::vec3>& inOutVertices) const
+    void ReadVertexData(const aiMesh& mesh, const FlagSet<AssimpMeshFactoryCreateFlags>& flags, const std::vector<VertexBoneData>& vertexBoneData, const uint32_t vertexBaseOffset, VertexDataBuffer& inOutVertexBuffer) const
     {
         for (unsigned int vertexIndex = 0; vertexIndex < mesh.mNumVertices; vertexIndex++) {
-            AddDefaultVertexData(mesh, vertexIndex, inOutVertexBuffer, inOutVertices);
+            AddDefaultVertexData(mesh, vertexIndex, inOutVertexBuffer);
 
             if (flags & AssimpMeshFactoryCreateFlags::ANIMATION) {
                 AddAnimationData(vertexBoneData, vertexBaseOffset + vertexIndex, inOutVertexBuffer);
@@ -847,7 +845,13 @@ private:
         uint32_t indexBaseOffset = 0;
         for (uint32_t meshIndex = 0; meshIndex < scene.mNumMeshes; meshIndex++) {
             const aiMesh& assMesh = *scene.mMeshes[meshIndex];
-            ReadVertexData(assMesh, flags, vertexBoneData, vertexBaseOffset, inOutVertexBuffer, inOutVertices);
+
+            const auto currentTransform = transforms.at(meshIndex);
+            for (uint32_t vi = 0; vi < assMesh.mNumVertices; vi++) {
+                inOutVertices.push_back(currentTransform * glm::vec4(AssimpGlmConvertor::ToGlmVec3(assMesh.mVertices[vi]), 1.0f));
+            }
+
+            ReadVertexData(assMesh, flags, vertexBoneData, vertexBaseOffset, inOutVertexBuffer);
 
             std::vector<uint32_t> meshIndices;
             ReadIndices(assMesh, meshIndices);
