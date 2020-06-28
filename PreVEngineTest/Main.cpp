@@ -1087,10 +1087,10 @@ public:
 
             glm::vec3 positionOffset{ 0.0f };
             if (m_shouldGoForward) {
-                positionOffset -= deltaTime * MathUtil::GetUpVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
+                positionOffset += deltaTime * MathUtil::GetUpVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
             }
             if (m_shouldGoBackward) {
-                positionOffset += deltaTime * MathUtil::GetUpVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
+                positionOffset -= deltaTime * MathUtil::GetUpVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
             }
             if (m_shouldGoLeft) {
                 positionOffset += deltaTime * MathUtil::GetRightVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
@@ -1125,7 +1125,7 @@ public:
             const float yawAmount = YAW_TURN_SPEED * m_rotationAroundY * deltaTime;
             const float pitchAmount = PITCH_TURN_SPEED * m_pitchDiff * deltaTime;
 
-            m_transformComponent->Rotate(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(yawAmount), glm::vec3(0.0f, 0.0f, 1.0f))));
+            m_transformComponent->Rotate(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(-yawAmount), glm::vec3(0.0f, 0.0f, 1.0f))));
 
             m_cameraComponent->AddYaw(yawAmount);
             m_cameraComponent->AddPitch(pitchAmount);
@@ -2914,7 +2914,7 @@ public:
         //    }
         //}
 
-        auto goblin = std::make_shared<Goblin>(glm::vec3(0.0f), glm::quat(glm::radians(glm::vec3(-90.0f, 0.0f, 0.0f))), glm::vec3(0.005f));
+        auto goblin = std::make_shared<Goblin>(glm::vec3(0.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(4.0f));
         goblin->SetTags({ TAG_MAIN_CAMERA, TAG_PLAYER });
         AddChild(goblin);
 
