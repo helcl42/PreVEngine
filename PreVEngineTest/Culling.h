@@ -609,12 +609,17 @@ public:
 
 class AABBBoundingVolumeComponent : public IBoundingVolumeComponent {
 public:
-    AABBBoundingVolumeComponent(const AABB& box)
-        : m_original(box)
-        , m_working(box)
-        , m_originalAABBPoints(box.GetPoints())
-        , m_vorkingAABBPoints(box.GetPoints())
+    AABBBoundingVolumeComponent(const AABB& box, const float scale, const glm::vec3& offset)
+        : m_scale(scale)
+        , m_offset(offset)
     {
+        AABB newBox = OffsetBox(box, offset);
+        newBox = ScaleBox(newBox, scale);
+
+        m_original = newBox;
+        m_working = newBox;
+        m_originalAABBPoints = newBox.GetPoints();
+        m_vorkingAABBPoints = newBox.GetPoints();
     }
 
     ~AABBBoundingVolumeComponent() = default;
@@ -667,6 +672,27 @@ public:
     }
 #endif
 private:
+    static AABB ScaleBox(const AABB& box, const float scale)
+    {
+        AABB result{};
+        result.minExtents = box.minExtents * scale;
+        result.maxExtents = box.maxExtents * scale;
+        return result;
+    }
+
+    static AABB OffsetBox(const AABB& box, const glm::vec3& offset)
+    {
+        AABB result{};
+        result.minExtents = box.minExtents + offset;
+        result.maxExtents = box.maxExtents + offset;
+        return result;
+    }
+
+private:
+    const float m_scale;
+
+    const glm::vec3 m_offset;
+
 #ifdef RENDER_BOUNDING_VOLUMES
     std::shared_ptr<IModel> m_model;
 #endif
@@ -681,11 +707,13 @@ private:
 
 class SphereBoundingVolumeComponent : public IBoundingVolumeComponent {
 public:
-    SphereBoundingVolumeComponent(const Sphere& sphere, const float scale)
-        : m_original(sphere)
-        , m_working(sphere)
-        , m_scale(scale)
+    SphereBoundingVolumeComponent(const Sphere& sphere, const float scale, const glm::vec3& offset)
+        : m_scale(scale)
+        , m_offset(offset)
     {
+        Sphere newSphere = OffsetSphere(sphere, offset);
+        m_original = newSphere;
+        m_working = newSphere;
     }
 
     ~SphereBoundingVolumeComponent() = default;
@@ -723,26 +751,45 @@ public:
     }
 #endif
 private:
+    static Sphere ScaleSphere(const Sphere& sphere, const float scale)
+    {
+        Sphere result{};
+        result.radius = sphere.radius * scale;
+        result.position = sphere.position;
+        return result;
+    }
+
+    static Sphere OffsetSphere(const Sphere& sphere, const glm::vec3& offset)
+    {
+        Sphere result{};
+        result.radius = sphere.radius;
+        result.position = sphere.position + offset;
+        return result;
+    }
+
+private:
+    const float m_scale;
+
+    const glm::vec3 m_offset;
+
 #ifdef RENDER_BOUNDING_VOLUMES
     std::shared_ptr<IModel> m_model;
 #endif
     Sphere m_original;
 
     Sphere m_working;
-
-    float m_scale;
 };
 
 class BoundingVolumeComponentFactory {
 public:
-    std::unique_ptr<IBoundingVolumeComponent> CreateAABB(const std::vector<glm::vec3>& vertices) const
+    std::unique_ptr<IBoundingVolumeComponent> CreateAABB(const std::vector<glm::vec3>& vertices, const float scale = 1.0f, const glm::vec3& offset = glm::vec3(0.0f)) const
     {
         const auto aabb = CreateABBFromVertices(vertices);
-        return std::make_unique<AABBBoundingVolumeComponent>(aabb);
+        return std::make_unique<AABBBoundingVolumeComponent>(aabb, scale, offset);
     }
 
     // TODO -> scale must not change over time
-    std::unique_ptr<IBoundingVolumeComponent> CreateSphere(const std::vector<glm::vec3>& vertices, const float scale) const
+    std::unique_ptr<IBoundingVolumeComponent> CreateSphere(const std::vector<glm::vec3>& vertices, const float scale = 1.0f, const glm::vec3& offset = glm::vec3(0.0f)) const
     {
         const auto aabb = CreateABBFromVertices(vertices);
 
@@ -754,7 +801,7 @@ public:
 
         const Sphere sphere{ aabb.GetCenter(), maxExtent };
 
-        return std::make_unique<SphereBoundingVolumeComponent>(sphere, scale);
+        return std::make_unique<SphereBoundingVolumeComponent>(sphere, scale, offset);
     }
 
 private:
