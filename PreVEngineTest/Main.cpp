@@ -1064,7 +1064,7 @@ public:
         NodeComponentHelper::AddComponent<SceneNodeFlags, ICameraComponent>(GetThis(), m_cameraComponent, SceneNodeFlags::CAMERA_COMPONENT);
 
         BoundingVolumeComponentFactory bondingVolumeFactory{};
-        m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_animatonRenderComponent->GetModel()->GetMesh()->GetVertices());
+        m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_animatonRenderComponent->GetModel()->GetMesh()->GetVertices(), 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
         NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
 
         m_animatonRenderComponent->GetAnimation()->SetIndex(0);
@@ -2105,7 +2105,7 @@ public:
         float height = 0.0f;
         terrain->GetHeightAt(currentPosition, height);
 
-        m_transformComponent->SetPosition(glm::vec3(currentPosition.x, height - 2.0f, currentPosition.z));
+        m_transformComponent->SetPosition(glm::vec3(currentPosition.x, height, currentPosition.z));
 
         m_transformComponent->Update(deltaTime);
 
@@ -2200,7 +2200,7 @@ public:
 
         if (m_inputFacade.IsMouseLocked()) {
             m_rayCasterComponent->SetRayLength(RAY_LENGTH);
-            m_rayCasterComponent->SetRayStartPosition(playerTransformComponent->GetPosition() + glm::vec3(0.0f, 12.0f, 0.0f));
+            m_rayCasterComponent->SetRayStartPosition(playerTransformComponent->GetPosition() + glm::vec3(0.0f, 8.0f, 0.0f));
             m_rayCasterComponent->SetRayDirection(cameraComponent->GetForwardDirection());
             m_rayCasterComponent->SetOrientationOffsetAngles({ -12.0f, 0.0f });
             m_rayCasterComponent->Update(deltaTime);
@@ -2846,17 +2846,17 @@ public:
         //auto camRobot = std::make_shared<CubeRobot>(glm::vec3(1.0f, -0.4f, -1.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1, 1, 1), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
         //freeCamera->AddChild(camRobot);
 
-        //const int32_t MAX_GENERATED_HEIGHT = 1;
-        //const float DISTANCE = 40.0f;
+        const int32_t MAX_GENERATED_HEIGHT = 1;
+        const float DISTANCE = 40.0f;
 
-        //for (int32_t i = 0; i <= MAX_GENERATED_HEIGHT; i++) {
-        //    for (int32_t j = 0; j <= MAX_GENERATED_HEIGHT; j++) {
-        //        for (int32_t k = 0; k <= MAX_GENERATED_HEIGHT; k++) {
-        //            auto robot = std::make_shared<CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
-        //            AddChild(robot);
-        //        }
-        //    }
-        //}
+        for (int32_t i = 0; i <= MAX_GENERATED_HEIGHT; i++) {
+            for (int32_t j = 0; j <= MAX_GENERATED_HEIGHT; j++) {
+                for (int32_t k = 0; k <= MAX_GENERATED_HEIGHT; k++) {
+                    auto robot = std::make_shared<CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+                    AddChild(robot);
+                }
+            }
+        }
 
         auto goblin = std::make_shared<Goblin>(glm::vec3(0.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(5.0f));
         goblin->SetTags({ TAG_MAIN_CAMERA, TAG_PLAYER });
@@ -2887,7 +2887,7 @@ public:
         std::uniform_real_distribution<float> positionDistribution(ITEMS_TERRAIN_BORDER_PADDING, TERRAIN_SIZE * TERRAIN_GRID_MAX_X - ITEMS_TERRAIN_BORDER_PADDING);
 
         std::default_random_engine scaleRandom{ r() };
-        std::uniform_real_distribution<float> scaleDistribution(0.5f, 1.5f);
+        std::uniform_real_distribution<float> scaleDistribution(6000.0f, 9000.0f);
 
         const uint32_t STONES_COUNT = 12;
         for (uint32_t i = 0; i < STONES_COUNT; i++) {
