@@ -1723,7 +1723,7 @@ public:
                     uboFS->Update(&uniformsFS);
 
                     m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), shadowsComponent->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-                    m_shader->Bind("textureSampler", *nodeRenderComponent->GetMaterial()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                    m_shader->Bind("textureSampler", *nodeRenderComponent->GetMaterial(meshPart.materialIndex)->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
                     m_shader->Bind("uboVS", *uboVS);
                     m_shader->Bind("uboFS", *uboFS);
 
