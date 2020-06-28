@@ -1652,6 +1652,8 @@ public:
             }
 
             if (visible) {
+                auto device = DeviceProvider::Instance().GetDevice();
+
                 const auto mainLightComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
                 const auto shadowsComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
                 const auto lightComponents = NodeComponentHelper::FindAll<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
@@ -1659,75 +1661,82 @@ public:
                 const auto transformComponent = ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
                 const auto nodeRenderComponent = ComponentRepository<IRenderComponent>::Instance().Get(node->GetId());
 
-                auto uboVS = m_uniformsPoolVS->GetNext();
+                const auto vertexStride = nodeRenderComponent->GetModel()->GetMesh()->GetVertexLayout().GetStride();
 
-                UniformsVS uniformsVS{};
-                uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
-                uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
-                uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
-                uniformsVS.normalMatrix = glm::inverse(transformComponent->GetWorldTransformScaled());
-                uniformsVS.textureNumberOfRows = nodeRenderComponent->GetMaterial()->GetAtlasNumberOfRows();
-                uniformsVS.textureOffset = glm::vec4(nodeRenderComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
-                uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
-                for (size_t i = 0; i < lightComponents.size(); i++) {
-                    uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
+                const auto meshParts = nodeRenderComponent->GetModel()->GetMesh()->GetMeshParts();
+                for (const auto& meshPart : meshParts) {
+                    const auto modelMatrix = transformComponent->GetWorldTransformScaled() * meshPart.transform;
+
+                    auto uboVS = m_uniformsPoolVS->GetNext();
+
+                    UniformsVS uniformsVS{};
+                    uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
+                    uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
+                    uniformsVS.modelMatrix = modelMatrix;
+                    uniformsVS.normalMatrix = glm::inverse(modelMatrix);
+                    uniformsVS.textureNumberOfRows = nodeRenderComponent->GetMaterial()->GetAtlasNumberOfRows();
+                    uniformsVS.textureOffset = glm::vec4(nodeRenderComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
+                    uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
+                    for (size_t i = 0; i < lightComponents.size(); i++) {
+                        uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
+                    }
+                    uniformsVS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
+                    uniformsVS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
+                    uniformsVS.useFakeLightning = nodeRenderComponent->GetMaterial()->UsesFakeLightning();
+                    uniformsVS.density = FOG_DENSITY;
+                    uniformsVS.gradient = FOG_GRADIENT;
+                    uniformsVS.clipPlane = renderContextUserData.clipPlane;
+
+                    uboVS->Update(&uniformsVS);
+
+                    auto uboFS = m_uniformsPoolFS->GetNext();
+
+                    UniformsFS uniformsFS{};
+                    // shadows
+                    for (uint32_t i = 0; i < ShadowsComponent::CASCADES_COUNT; i++) {
+                        auto& cascade = shadowsComponent->GetCascade(i);
+                        uniformsFS.shadows.cascades[i] = ShadowsCascadeUniform(cascade.GetBiasedViewProjectionMatrix(), glm::vec4(cascade.endSplitDepth));
+                    }
+                    uniformsFS.shadows.enabled = SHADOWS_ENABLED;
+
+                    // lightning
+                    for (size_t i = 0; i < lightComponents.size(); i++) {
+                        uniformsFS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
+                    }
+                    uniformsFS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
+                    uniformsFS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
+
+                    // material
+                    uniformsFS.material = MaterialUniform(nodeRenderComponent->GetMaterial()->GetShineDamper(), nodeRenderComponent->GetMaterial()->GetReflectivity());
+
+                    bool selected = false;
+                    if (ComponentRepository<ISelectableComponent>::Instance().Contains(node->GetId())) {
+                        selected = ComponentRepository<ISelectableComponent>::Instance().Get(node->GetId())->IsSelected();
+                    }
+
+                    // common
+                    uniformsFS.fogColor = FOG_COLOR;
+                    uniformsFS.selectedColor = SELECTED_COLOR;
+                    uniformsFS.selected = selected;
+                    uniformsFS.castedByShadows = nodeRenderComponent->IsCastedByShadows();
+
+                    uboFS->Update(&uniformsFS);
+
+                    m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), shadowsComponent->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+                    m_shader->Bind("textureSampler", *nodeRenderComponent->GetMaterial()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                    m_shader->Bind("uboVS", *uboVS);
+                    m_shader->Bind("uboFS", *uboFS);
+
+                    const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+                    const VkBuffer vertexBuffers[] = { *nodeRenderComponent->GetModel()->GetVertexBuffer() };
+                    const VkDeviceSize offsets[] = { meshPart.firstVertexIndex * vertexStride };
+
+                    vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+                    vkCmdBindIndexBuffer(renderContext.commandBuffer, *nodeRenderComponent->GetModel()->GetIndexBuffer(), 0, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+                    vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+                    vkCmdDrawIndexed(renderContext.commandBuffer, meshPart.indicesCount, 1, meshPart.firstIndicesIndex, 0, 0);
                 }
-                uniformsVS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
-                uniformsVS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
-                uniformsVS.useFakeLightning = nodeRenderComponent->GetMaterial()->UsesFakeLightning();
-                uniformsVS.density = FOG_DENSITY;
-                uniformsVS.gradient = FOG_GRADIENT;
-                uniformsVS.clipPlane = renderContextUserData.clipPlane;
-
-                uboVS->Update(&uniformsVS);
-
-                auto uboFS = m_uniformsPoolFS->GetNext();
-
-                UniformsFS uniformsFS{};
-                // shadows
-                for (uint32_t i = 0; i < ShadowsComponent::CASCADES_COUNT; i++) {
-                    auto& cascade = shadowsComponent->GetCascade(i);
-                    uniformsFS.shadows.cascades[i] = ShadowsCascadeUniform(cascade.GetBiasedViewProjectionMatrix(), glm::vec4(cascade.endSplitDepth));
-                }
-                uniformsFS.shadows.enabled = SHADOWS_ENABLED;
-
-                // lightning
-                for (size_t i = 0; i < lightComponents.size(); i++) {
-                    uniformsFS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
-                }
-                uniformsFS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
-                uniformsFS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
-
-                // material
-                uniformsFS.material = MaterialUniform(nodeRenderComponent->GetMaterial()->GetShineDamper(), nodeRenderComponent->GetMaterial()->GetReflectivity());
-
-                bool selected = false;
-                if (ComponentRepository<ISelectableComponent>::Instance().Contains(node->GetId())) {
-                    selected = ComponentRepository<ISelectableComponent>::Instance().Get(node->GetId())->IsSelected();
-                }
-
-                // common
-                uniformsFS.fogColor = FOG_COLOR;
-                uniformsFS.selectedColor = SELECTED_COLOR;
-                uniformsFS.selected = selected;
-                uniformsFS.castedByShadows = nodeRenderComponent->IsCastedByShadows();
-
-                uboFS->Update(&uniformsFS);
-
-                m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), shadowsComponent->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-                m_shader->Bind("textureSampler", *nodeRenderComponent->GetMaterial()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-                m_shader->Bind("uboVS", *uboVS);
-                m_shader->Bind("uboFS", *uboFS);
-
-                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                const VkBuffer vertexBuffers[] = { *nodeRenderComponent->GetModel()->GetVertexBuffer() };
-                const VkDeviceSize offsets[] = { 0 };
-
-                vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-                vkCmdBindIndexBuffer(renderContext.commandBuffer, *nodeRenderComponent->GetModel()->GetIndexBuffer(), 0, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-                vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-
-                vkCmdDrawIndexed(renderContext.commandBuffer, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
             }
         }
 

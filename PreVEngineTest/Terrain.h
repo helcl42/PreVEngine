@@ -627,7 +627,7 @@ private:
             }
         }
 
-        mesh->m_meshParts.push_back(MeshPart{ 0, static_cast<uint32_t>(vertexData->indices.size()), glm::mat4(1.0f), 0 });
+        mesh->m_meshParts.push_back(MeshPart(static_cast<uint32_t>(vertexData->indices.size())));
 
         return mesh;
     }

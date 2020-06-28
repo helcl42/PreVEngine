@@ -61,7 +61,7 @@ private:
     };
 
     static const inline std::vector<MeshPart> meshParts = {
-        MeshPart{ 0, static_cast<uint32_t>(indices.size()), glm::mat4(1.0f), 0 }
+        MeshPart(static_cast<uint32_t>(indices.size()))
     };
 };
 
