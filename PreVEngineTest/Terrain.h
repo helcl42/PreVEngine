@@ -337,6 +337,8 @@ private:
 
     std::vector<uint32_t> m_indices;
 
+    std::vector<MeshPart> m_meshParts;
+
 public:
     const VertexLayout& GetVertexLayout() const override
     {
@@ -348,7 +350,7 @@ public:
         return m_vertexDataBuffer.GetData();
     }
 
-    std::vector<glm::vec3> GetVertices() const override
+    const std::vector<glm::vec3>& GetVertices() const override
     {
         return m_vertices;
     }
@@ -363,9 +365,9 @@ public:
         return m_indices;
     }
 
-    bool HasIndices() const override
+    const std::vector<MeshPart>& GetMeshParts() const override
     {
-        return m_indices.size() > 0;
+        return m_meshParts;
     }
 };
 
@@ -624,6 +626,9 @@ private:
                 }
             }
         }
+
+        mesh->m_meshParts.push_back(MeshPart{ 0, static_cast<uint32_t>(vertexData->indices.size()), glm::mat4(1.0f), 0 });
+
         return mesh;
     }
 

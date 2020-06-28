@@ -2662,7 +2662,49 @@ private:
     std::shared_ptr<ITimeComponent> m_timeComponent;
 };
 
-class RootSceneNode : public SceneNode<SceneNodeFlags> {
+class WarehouseNode final : public SceneNode<SceneNodeFlags> {
+public:
+    WarehouseNode()
+        : SceneNode()
+    {
+    }
+
+    ~WarehouseNode() = default;
+
+public:
+    void Init() override
+    {
+        TrasnformComponentFactory transformComponentFactory{};
+        m_transformComponent = transformComponentFactory.Create(glm::vec3(-100.0f, 0.0f, -100.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(1.0f, 1.0f, 1.0f));
+        if (NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
+            m_transformComponent->SetParent(NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
+        }
+        NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+
+        RenderComponentFactory componentFactory{};
+        std::shared_ptr<IRenderComponent> renderComponent = componentFactory.CreateModelRenderComponent(AssetManager::Instance().GetAssetPath("Models/Warehouse/scene_full.fbx"), AssetManager::Instance().GetAssetPath("Models/Warehouse/scene_full.fbm/box_3.png"), true, true);
+        NodeComponentHelper::AddComponent<SceneNodeFlags, IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_COMPONENT);
+
+        SceneNode::Init();
+    }
+
+    void Update(float deltaTime) override
+    {
+        m_transformComponent->Update(deltaTime);
+
+        SceneNode::Update(deltaTime);
+    }
+
+    void ShutDown() override
+    {
+        SceneNode::ShutDown();
+    }
+
+private:
+    std::shared_ptr<ITransformComponent> m_transformComponent;
+};
+
+class RootSceneNode final : public SceneNode<SceneNodeFlags> {
 public:
     RootSceneNode(const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Swapchain>& swapchain)
         : SceneNode()
@@ -2670,7 +2712,7 @@ public:
     {
     }
 
-    virtual ~RootSceneNode() = default;
+    ~RootSceneNode() = default;
 
 public:
     void Init() override
@@ -2687,6 +2729,9 @@ public:
 
         auto rayCastObserver = std::make_shared<RayCastObserverNode>();
         AddChild(rayCastObserver);
+
+        auto warehouse = std::make_shared<WarehouseNode>();
+        AddChild(warehouse);
 
         //auto skyBox = std::make_shared<SkyBox>();
         //AddChild(skyBox);
@@ -2775,20 +2820,20 @@ public:
         auto fire = std::make_shared<Fire>(glm::vec3(30.0f, 0.0f, 100.0f));
         AddChild(fire);
 
-        auto cube1 = std::make_shared<CubNode>(glm::vec3(-35.0f, 0.0f, -35.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/example_1_texture.png"), AssetManager::Instance().GetAssetPath("Textures/example_1_normal.png"), AssetManager::Instance().GetAssetPath("Textures/ouput_cv.png"), 0.1f);
-        AddChild(cube1);
+        //auto cube1 = std::make_shared<CubNode>(glm::vec3(-35.0f, 0.0f, -35.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/example_1_texture.png"), AssetManager::Instance().GetAssetPath("Textures/example_1_normal.png"), AssetManager::Instance().GetAssetPath("Textures/ouput_cv.png"), 0.1f);
+        //AddChild(cube1);
 
-        auto cube2 = std::make_shared<CubNode>(glm::vec3(-65.0f, 0.0f, -65.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 90.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/rock.png"), AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), AssetManager::Instance().GetAssetPath("Textures/rock_cone.png"), 0.1f);
-        AddChild(cube2);
+        //auto cube2 = std::make_shared<CubNode>(glm::vec3(-65.0f, 0.0f, -65.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 90.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/rock.png"), AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), AssetManager::Instance().GetAssetPath("Textures/rock_cone.png"), 0.1f);
+        //AddChild(cube2);
 
-        auto cube3 = std::make_shared<CubNode>(glm::vec3(-10.0f, 0.0f, -110.0f), glm::quat(glm::radians(glm::vec3(90.0f, 90.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/fungus.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_cone.png"), 0.05f);
-        AddChild(cube3);
+        //auto cube3 = std::make_shared<CubNode>(glm::vec3(-10.0f, 0.0f, -110.0f), glm::quat(glm::radians(glm::vec3(90.0f, 90.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/fungus.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_cone.png"), 0.05f);
+        //AddChild(cube3);
 
-        auto cube4 = std::make_shared<CubNode>(glm::vec3(-120.0f, 0.0f, -50.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_cone.png"), 0.05f);
-        AddChild(cube4);
+        //auto cube4 = std::make_shared<CubNode>(glm::vec3(-120.0f, 0.0f, -50.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_cone.png"), 0.05f);
+        //AddChild(cube4);
 
-        auto cube5 = std::make_shared<CubNode>(glm::vec3(-90.0f, 0.0f, -90.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/sand.png"), AssetManager::Instance().GetAssetPath("Textures/sand_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_cone.png"), 0.1f);
-        AddChild(cube5);
+        //auto cube5 = std::make_shared<CubNode>(glm::vec3(-90.0f, 0.0f, -90.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/sand.png"), AssetManager::Instance().GetAssetPath("Textures/sand_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_cone.png"), 0.1f);
+        //AddChild(cube5);
 
         //auto compute = std::make_shared<ComputeNode>();
         //AddChild(compute);
@@ -2803,9 +2848,7 @@ public:
 
     void Update(float deltaTime) override
     {
-        for (auto child : m_children) {
-            child->Update(deltaTime);
-        }
+        SceneNode::Update(deltaTime);
     }
 
     void Render(RenderContext& renderContext) override
@@ -2825,9 +2868,7 @@ public:
     {
         m_masterRenderer->ShutDown();
 
-        for (auto child : m_children) {
-            child->ShutDown();
-        }
+        SceneNode::ShutDown();
     }
 
 public:

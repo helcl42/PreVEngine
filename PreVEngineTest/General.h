@@ -304,19 +304,29 @@ public:
     virtual ~IRenderer() = default;
 };
 
+struct MeshPart {
+    uint32_t startIndex;
+
+    uint32_t indicesCount;
+
+    glm::mat4 transform;
+
+    uint32_t materialIndex;
+};
+
 class IMesh {
 public:
     virtual const VertexLayout& GetVertexLayout() const = 0;
 
     virtual const void* GetVertexData() const = 0;
 
-    virtual std::vector<glm::vec3> GetVertices() const = 0;
+    virtual const std::vector<glm::vec3>& GetVertices() const = 0;
 
     virtual uint32_t GerVerticesCount() const = 0;
 
     virtual const std::vector<uint32_t>& GetIndices() const = 0;
 
-    virtual bool HasIndices() const = 0;
+    virtual const std::vector<MeshPart>& GetMeshParts() const = 0;
 
 public:
     virtual ~IMesh() = default;
