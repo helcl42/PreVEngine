@@ -26,11 +26,12 @@ if(WIN32)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    target_link_libraries(${PROJECT_NAME} "/home/lubos/Documents/Vulkan/assimp/assimp/build/code/libassimp.so")
+    target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Linux/libassimp.so")
 endif()
 
 if(ANDROID)
-    target_link_libraries(${PROJECT_NAME} "/home/lubos/Documents/Vulkan/assimp_android/assimp/contrib/android-cmake/code/libassimp.so")
+    target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Android/libassimp.so")
+    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Android/libassimp.so" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/android/app/src/main/libs/arm64-v8a/")
 endif()
 #-------------------------------------------
 
