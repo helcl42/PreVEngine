@@ -12,6 +12,10 @@ Todo:
 - Integrate PreVEngineNetwork
 - Featurelist is in Trello
 
+## Download Dependencies (glm, assimp with platform builds ~100MB)
+ - Run `python download_dependencies.py`
+
+
 ## Build Linux
 
  - Use `clang`
