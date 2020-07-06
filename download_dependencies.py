@@ -1,6 +1,7 @@
-import requests, zipfile, io
+import requests, zipfile, io, sys
 
 def download_file_from_google_drive(id):
+    print("Downloading dependencies, plaese wait...", end='\n', file=sys.stdout, flush=True)
     URL = "https://docs.google.com/uc?export=download"
 
     session = requests.Session()
@@ -31,5 +32,5 @@ def save_and_extract_response_content(response):
     z = zipfile.ZipFile(buffer)
     z.extractall()
 
-file_id = '1NEJV7zXosO0kjoxfjPzQZWPYxL2HTh-M'
+file_id = '1_9gK0mHCFIuXkZlF7yv9HmXcr4KabK0c'
 download_file_from_google_drive(file_id)
