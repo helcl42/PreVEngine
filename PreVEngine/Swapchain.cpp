@@ -249,7 +249,7 @@ void Swapchain::Print() const
     }
 }
 
-VkExtent2D Swapchain::GetExtent() const
+const VkExtent2D& Swapchain::GetExtent() const
 {
     return m_swapchainCreateInfo.imageExtent;
 }

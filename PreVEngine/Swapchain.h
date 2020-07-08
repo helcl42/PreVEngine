@@ -105,7 +105,7 @@ public:
     const Queue& GetGraphicsQueue() const;
 
 public:
-    VkExtent2D GetExtent() const;
+    const VkExtent2D& GetExtent() const;
 
     uint32_t GetmageCount() const;
 };
