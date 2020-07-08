@@ -6670,17 +6670,8 @@ private:
 
             shadows->GetRenderPass()->End(renderContext.commandBuffer);
 #else
-            shadows->GetRenderPass()->Begin(cascade.frameBuffer, renderContext.commandBuffer, { { 0, 0 }, shadows->GetExtent() });
-
-            for (size_t i = 0; i < m_shadowRenderers.size(); i++) {
-                auto& renderer = m_shadowRenderers.at(i);
-
-                renderer->PreRender(renderContext, userData);
-                renderer->Render(renderContext, root, userData);
-                renderer->PostRender(renderContext, userData);
-            }
-
-            shadows->GetRenderPass()->End(renderContext.commandBuffer);
+            RenderContext customRenderContext{ cascade.frameBuffer, renderContext.commandBuffer, renderContext.frameInFlightIndex, shadows->GetExtent() };
+            RenderSerial(shadows->GetRenderPass(), customRenderContext, root, m_shadowRenderers, userData, { { 0, 0 }, shadows->GetExtent() });
 #endif
         }
     }
@@ -6708,9 +6699,10 @@ private:
             reflectionComponent->GetExtent(),
             glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane()),
             Frustum{ projectionMatrix, viewMatrix }
-        };
+        };        
 
-        m_reflectionSkyRenderer->BeforeRender(renderContext, userData);
+        RenderContext customRenderContext{ reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
+        m_reflectionSkyRenderer->BeforeRender(customRenderContext, userData);
 
 #ifdef PARALLEL_RENDERING
         reflectionComponent->GetRenderPass()->Begin(reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, { { 0, 0 }, reflectionComponent->GetExtent() }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
@@ -6734,11 +6726,10 @@ private:
 
                 VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 
-                RenderContext customRenderContext{ renderContext.frameBuffer, commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
-
-                renderer->PreRender(customRenderContext, userData);
-                renderer->Render(customRenderContext, root, userData);
-                renderer->PostRender(customRenderContext, userData);
+                RenderContext parallelRenderContext{ reflectionComponent->GetFrameBuffer(), commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
+                renderer->PreRender(parallelRenderContext, userData);
+                renderer->Render(parallelRenderContext, root, userData);
+                renderer->PostRender(parallelRenderContext, userData);
 
                 VKERRCHECK(vkEndCommandBuffer(commandBuffer));
             }));
@@ -6752,20 +6743,10 @@ private:
 
         reflectionComponent->GetRenderPass()->End(renderContext.commandBuffer);
 #else
-        reflectionComponent->GetRenderPass()->Begin(reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, { { 0, 0 }, reflectionComponent->GetExtent() });
-
-        for (size_t i = 0; i < m_reflectionRenderers.size(); i++) {
-            auto& renderer = m_reflectionRenderers.at(i);
-
-            renderer->PreRender(renderContext, userData);
-            renderer->Render(renderContext, root, userData);
-            renderer->PostRender(renderContext, userData);
-        }
-
-        reflectionComponent->GetRenderPass()->End(renderContext.commandBuffer);
+        RenderSerial(reflectionComponent->GetRenderPass(), customRenderContext, root, m_reflectionRenderers, userData, { { 0, 0 }, reflectionComponent->GetExtent() });
 #endif
 
-        m_reflectionSkyRenderer->AfterRender(renderContext, userData);
+        m_reflectionSkyRenderer->AfterRender(customRenderContext, userData);
     }
 
     void RenderSceneRefraction(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
@@ -6785,7 +6766,8 @@ private:
             Frustum{ projectionMatrix, viewMatrix }
         };
 
-        m_refractionSkyRenderer->BeforeRender(renderContext, userData);
+        RenderContext customRenderContext{ refractionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
+        m_refractionSkyRenderer->BeforeRender(customRenderContext, userData);
 
 #ifdef PARALLEL_RENDERING
         const auto& commandBuffers = m_refractionCommandBufferGroups->GetBuffersGroup(renderContext.frameInFlightIndex);
@@ -6809,11 +6791,11 @@ private:
 
                 VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 
-                RenderContext customRenderContext{ renderContext.frameBuffer, commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
+                RenderContext parallelRenderContext{ refractionComponent->GetFrameBuffer(), commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
 
-                renderer->PreRender(customRenderContext, userData);
-                renderer->Render(customRenderContext, root, userData);
-                renderer->PostRender(customRenderContext, userData);
+                renderer->PreRender(parallelRenderContext, userData);
+                renderer->Render(parallelRenderContext, root, userData);
+                renderer->PostRender(parallelRenderContext, userData);
 
                 VKERRCHECK(vkEndCommandBuffer(commandBuffer));
             }));
@@ -6827,20 +6809,10 @@ private:
 
         refractionComponent->GetRenderPass()->End(renderContext.commandBuffer);
 #else
-        refractionComponent->GetRenderPass()->Begin(refractionComponent->GetFrameBuffer(), renderContext.commandBuffer, { { 0, 0 }, refractionComponent->GetExtent() });
-
-        for (size_t i = 0; i < m_refractionRenderers.size(); i++) {
-            auto& renderer = m_refractionRenderers.at(i);
-
-            renderer->PreRender(renderContext, userData);
-            renderer->Render(renderContext, root, userData);
-            renderer->PostRender(renderContext, userData);
-        }
-
-        refractionComponent->GetRenderPass()->End(renderContext.commandBuffer);
+        RenderSerial(refractionComponent->GetRenderPass(), customRenderContext, root, m_refractionRenderers, userData, { { 0, 0 }, refractionComponent->GetExtent() });
 #endif
 
-        m_refractionSkyRenderer->AfterRender(renderContext, userData);
+        m_refractionSkyRenderer->AfterRender(customRenderContext, userData);
     }
 
     void RenderScene(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
@@ -6902,17 +6874,7 @@ private:
 
         m_defaultRenderPass->End(renderContext.commandBuffer);
 #else
-        m_defaultRenderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, { { 0, 0 }, renderContext.fullExtent });
-
-        for (size_t i = 0; i < m_defaultRenderers.size(); i++) {
-            auto& renderer = m_defaultRenderers.at(i);
-
-            renderer->PreRender(renderContext, userData);
-            renderer->Render(renderContext, root, userData);
-            renderer->PostRender(renderContext, userData);
-        }
-
-        m_defaultRenderPass->End(renderContext.commandBuffer);
+        RenderSerial(m_defaultRenderPass, renderContext, root, m_defaultRenderers, userData, { { 0, 0 }, renderContext.fullExtent });
 #endif
         m_skyRenderer->AfterRender(renderContext, userData);
         m_sunRenderer->AfterRender(renderContext, userData);
@@ -6962,18 +6924,22 @@ private:
 
         m_defaultRenderPass->End(renderContext.commandBuffer);
 #else
-        m_defaultRenderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, { { 0, 0 }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 } });
+        RenderSerial(m_defaultRenderPass, renderContext, root, m_debugRenderers, {}, { { 0, 0 }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 } });
+#endif
+    }
 
-        for (size_t i = 0; i < m_debugRenderers.size(); i++) {
-            auto& renderer = m_debugRenderers.at(i);
+    template <typename ContextUserDataType>
+    void RenderSerial(const std::shared_ptr<RenderPass>& renderPass, const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root, const std::vector<std::shared_ptr<IRenderer<ContextUserDataType> > >& renderers, const ContextUserDataType& userData, const VkRect2D& area)
+    {
+        renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, area);
 
-            renderer->PreRender(renderContext);
-            renderer->Render(renderContext, root);
-            renderer->PostRender(renderContext);
+        for (auto& renderer : renderers) {
+            renderer->PreRender(renderContext, userData);
+            renderer->Render(renderContext, root, userData);
+            renderer->PostRender(renderContext, userData);
         }
 
-        m_defaultRenderPass->End(renderContext.commandBuffer);
-#endif
+        renderPass->End(renderContext.commandBuffer);
     }
 
 private:
