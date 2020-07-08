@@ -6281,7 +6281,7 @@ public:
     }
 };
 
-//#define PARALLEL_RENDERING
+#define PARALLEL_RENDERING
 
 class MasterRenderer final : public IRenderer<DefaultRenderContextUserData> {
 public:
@@ -6629,48 +6629,12 @@ private:
             const auto cascade = shadows->GetCascade(cascadeIndex);
 
             const ShadowsRenderContextUserData userData{ cascade.viewMatrix, cascade.projectionMatrix, cascadeIndex, Frustum{ cascade.projectionMatrix, cascade.viewMatrix }, shadows->GetExtent() };
+            const RenderContext customRenderContext{ cascade.frameBuffer, renderContext.commandBuffer, renderContext.frameInFlightIndex, shadows->GetExtent() };
 
 #ifdef PARALLEL_RENDERING
-            shadows->GetRenderPass()->Begin(cascade.frameBuffer, renderContext.commandBuffer, { { 0, 0 }, shadows->GetExtent() }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
-
             const auto& cascadeCommandBuffers = m_shadowsCommandBufferGroups.at(cascadeIndex)->GetBuffersGroup(renderContext.frameInFlightIndex);
-
-            std::vector<std::future<void> > tasks;
-            for (size_t i = 0; i < m_shadowRenderers.size(); i++) {
-
-                auto& renderer = m_shadowRenderers.at(i);
-                auto& commandBuffer = cascadeCommandBuffers.at(i);
-
-                tasks.emplace_back(m_threadPool.Enqueue([&]() {
-                    VkCommandBufferInheritanceInfo inheritanceInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO };
-                    inheritanceInfo.renderPass = *shadows->GetRenderPass();
-                    inheritanceInfo.framebuffer = cascade.frameBuffer;
-
-                    VkCommandBufferBeginInfo commandBufferBeginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-                    commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT | VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-                    commandBufferBeginInfo.pInheritanceInfo = &inheritanceInfo;
-
-                    VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
-
-                    RenderContext customRenderContext{ cascade.frameBuffer, commandBuffer, renderContext.frameInFlightIndex, shadows->GetExtent() };
-
-                    renderer->PreRender(customRenderContext, userData);
-                    renderer->Render(customRenderContext, root, userData);
-                    renderer->PostRender(customRenderContext, userData);
-
-                    VKERRCHECK(vkEndCommandBuffer(commandBuffer));
-                }));
-            }
-
-            for (auto&& task : tasks) {
-                task.get();
-            }
-
-            vkCmdExecuteCommands(renderContext.commandBuffer, static_cast<uint32_t>(cascadeCommandBuffers.size()), cascadeCommandBuffers.data());
-
-            shadows->GetRenderPass()->End(renderContext.commandBuffer);
+            RenderParallel(shadows->GetRenderPass(), customRenderContext, root, m_shadowRenderers, cascadeCommandBuffers, userData, { { 0, 0 }, shadows->GetExtent() });
 #else
-            RenderContext customRenderContext{ cascade.frameBuffer, renderContext.commandBuffer, renderContext.frameInFlightIndex, shadows->GetExtent() };
             RenderSerial(shadows->GetRenderPass(), customRenderContext, root, m_shadowRenderers, userData, { { 0, 0 }, shadows->GetExtent() });
 #endif
         }
@@ -6691,7 +6655,7 @@ private:
         const glm::mat4 viewMatrix = glm::lookAt(newCameraPosition, newCameraViewPosition, cameraComponent->GetUpDirection());
         const glm::mat4 projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(reflectionComponent->GetExtent().width, reflectionComponent->GetExtent().height);
 
-        NormalRenderContextUserData userData{
+        const NormalRenderContextUserData userData{
             viewMatrix,
             projectionMatrix,
             newCameraPosition,
@@ -6701,47 +6665,13 @@ private:
             Frustum{ projectionMatrix, viewMatrix }
         };        
 
-        RenderContext customRenderContext{ reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
+        const RenderContext customRenderContext{ reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
+
         m_reflectionSkyRenderer->BeforeRender(customRenderContext, userData);
 
 #ifdef PARALLEL_RENDERING
-        reflectionComponent->GetRenderPass()->Begin(reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, { { 0, 0 }, reflectionComponent->GetExtent() }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
-
         const auto& commandBuffers = m_reflectionCommandBufferGroups->GetBuffersGroup(renderContext.frameInFlightIndex);
-
-        std::vector<std::future<void> > tasks;
-        for (size_t i = 0; i < m_reflectionRenderers.size(); i++) {
-
-            auto& renderer = m_reflectionRenderers.at(i);
-            auto& commandBuffer = commandBuffers.at(i);
-
-            tasks.emplace_back(m_threadPool.Enqueue([&]() {
-                VkCommandBufferInheritanceInfo inheritanceInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO };
-                inheritanceInfo.renderPass = *reflectionComponent->GetRenderPass();
-                inheritanceInfo.framebuffer = reflectionComponent->GetFrameBuffer();
-
-                VkCommandBufferBeginInfo commandBufferBeginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-                commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT | VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-                commandBufferBeginInfo.pInheritanceInfo = &inheritanceInfo;
-
-                VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
-
-                RenderContext parallelRenderContext{ reflectionComponent->GetFrameBuffer(), commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
-                renderer->PreRender(parallelRenderContext, userData);
-                renderer->Render(parallelRenderContext, root, userData);
-                renderer->PostRender(parallelRenderContext, userData);
-
-                VKERRCHECK(vkEndCommandBuffer(commandBuffer));
-            }));
-        }
-
-        for (auto&& task : tasks) {
-            task.get();
-        }
-
-        vkCmdExecuteCommands(renderContext.commandBuffer, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
-
-        reflectionComponent->GetRenderPass()->End(renderContext.commandBuffer);
+        RenderParallel(reflectionComponent->GetRenderPass(), customRenderContext, root, m_reflectionRenderers, commandBuffers, userData, { { 0, 0 }, reflectionComponent->GetExtent() });
 #else
         RenderSerial(reflectionComponent->GetRenderPass(), customRenderContext, root, m_reflectionRenderers, userData, { { 0, 0 }, reflectionComponent->GetExtent() });
 #endif
@@ -6756,7 +6686,7 @@ private:
 
         const auto viewMatrix = cameraComponent->LookAt();
         const auto projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(refractionComponent->GetExtent().width, refractionComponent->GetExtent().height);
-        NormalRenderContextUserData userData{
+        const NormalRenderContextUserData userData{
             viewMatrix,
             projectionMatrix,
             cameraComponent->GetPosition(),
@@ -6766,48 +6696,13 @@ private:
             Frustum{ projectionMatrix, viewMatrix }
         };
 
-        RenderContext customRenderContext{ refractionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
+        const RenderContext customRenderContext{ refractionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
+
         m_refractionSkyRenderer->BeforeRender(customRenderContext, userData);
 
 #ifdef PARALLEL_RENDERING
         const auto& commandBuffers = m_refractionCommandBufferGroups->GetBuffersGroup(renderContext.frameInFlightIndex);
-
-        refractionComponent->GetRenderPass()->Begin(refractionComponent->GetFrameBuffer(), renderContext.commandBuffer, { { 0, 0 }, refractionComponent->GetExtent() }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
-
-        std::vector<std::future<void> > tasks;
-        for (size_t i = 0; i < m_refractionRenderers.size(); i++) {
-
-            auto& renderer = m_refractionRenderers.at(i);
-            auto& commandBuffer = commandBuffers.at(i);
-
-            tasks.emplace_back(m_threadPool.Enqueue([&]() {
-                VkCommandBufferInheritanceInfo inheritanceInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO };
-                inheritanceInfo.renderPass = *refractionComponent->GetRenderPass();
-                inheritanceInfo.framebuffer = refractionComponent->GetFrameBuffer();
-
-                VkCommandBufferBeginInfo commandBufferBeginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-                commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT | VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-                commandBufferBeginInfo.pInheritanceInfo = &inheritanceInfo;
-
-                VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
-
-                RenderContext parallelRenderContext{ refractionComponent->GetFrameBuffer(), commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
-
-                renderer->PreRender(parallelRenderContext, userData);
-                renderer->Render(parallelRenderContext, root, userData);
-                renderer->PostRender(parallelRenderContext, userData);
-
-                VKERRCHECK(vkEndCommandBuffer(commandBuffer));
-            }));
-        }
-
-        for (auto&& task : tasks) {
-            task.get();
-        }
-
-        vkCmdExecuteCommands(renderContext.commandBuffer, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
-
-        refractionComponent->GetRenderPass()->End(renderContext.commandBuffer);
+        RenderParallel(refractionComponent->GetRenderPass(), customRenderContext, root, m_refractionRenderers, commandBuffers, userData, { { 0, 0 }, refractionComponent->GetExtent() });
 #else
         RenderSerial(refractionComponent->GetRenderPass(), customRenderContext, root, m_refractionRenderers, userData, { { 0, 0 }, refractionComponent->GetExtent() });
 #endif
@@ -6821,7 +6716,7 @@ private:
 
         const auto viewMatrix = cameraComponent->LookAt();
         const auto projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
-        NormalRenderContextUserData userData{
+        const NormalRenderContextUserData userData{
             viewMatrix,
             projectionMatrix,
             cameraComponent->GetPosition(),
@@ -6835,44 +6730,8 @@ private:
         m_skyRenderer->BeforeRender(renderContext, userData);
 
 #ifdef PARALLEL_RENDERING
-        m_defaultRenderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, { { 0, 0 }, renderContext.fullExtent }, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
-
         const auto& commandBuffers = m_defaultCommandBuffersGroup->GetBuffersGroup(renderContext.frameInFlightIndex);
-
-        std::vector<std::future<void> > tasks;
-        for (size_t i = 0; i < m_defaultRenderers.size(); i++) {
-
-            auto& renderer = m_defaultRenderers.at(i);
-            auto& commandBuffer = commandBuffers.at(i);
-
-            tasks.emplace_back(m_threadPool.Enqueue([&]() {
-                VkCommandBufferInheritanceInfo inheritanceInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO };
-                inheritanceInfo.renderPass = *m_defaultRenderPass;
-                inheritanceInfo.framebuffer = renderContext.frameBuffer;
-
-                VkCommandBufferBeginInfo commandBufferBeginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-                commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT | VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-                commandBufferBeginInfo.pInheritanceInfo = &inheritanceInfo;
-
-                VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
-
-                RenderContext customRenderContext{ renderContext.frameBuffer, commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
-
-                renderer->PreRender(customRenderContext, userData);
-                renderer->Render(customRenderContext, root, userData);
-                renderer->PostRender(customRenderContext, userData);
-
-                VKERRCHECK(vkEndCommandBuffer(commandBuffer));
-            }));
-        }
-
-        for (auto&& task : tasks) {
-            task.get();
-        }
-
-        vkCmdExecuteCommands(renderContext.commandBuffer, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
-
-        m_defaultRenderPass->End(renderContext.commandBuffer);
+        RenderParallel(m_defaultRenderPass, renderContext, root, m_defaultRenderers, commandBuffers, userData, { { 0, 0 }, renderContext.fullExtent });
 #else
         RenderSerial(m_defaultRenderPass, renderContext, root, m_defaultRenderers, userData, { { 0, 0 }, renderContext.fullExtent });
 #endif
@@ -6883,46 +6742,8 @@ private:
     void RenderDebug(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
     {
 #ifdef PARALLEL_RENDERING
-        m_defaultRenderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, { { 0, 0 }, { renderContext.fullExtent.width / 2,
-                                                                                                renderContext.fullExtent.height / 2 } },
-            VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
-
         const auto& debugCommandBuffers = m_debugCommandBuffersGroup->GetBuffersGroup(renderContext.frameInFlightIndex);
-
-        std::vector<std::future<void> > debugTasks;
-        for (size_t i = 0; i < m_debugRenderers.size(); i++) {
-
-            auto& renderer = m_debugRenderers.at(i);
-            auto& commandBuffer = debugCommandBuffers.at(i);
-
-            debugTasks.emplace_back(m_threadPool.Enqueue([&]() {
-                VkCommandBufferInheritanceInfo inheritanceInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO };
-                inheritanceInfo.renderPass = *m_defaultRenderPass;
-                inheritanceInfo.framebuffer = renderContext.frameBuffer;
-
-                VkCommandBufferBeginInfo commandBufferBeginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-                commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT | VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-                commandBufferBeginInfo.pInheritanceInfo = &inheritanceInfo;
-
-                VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
-
-                RenderContext customRenderContext{ renderContext.frameBuffer, commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
-
-                renderer->PreRender(customRenderContext);
-                renderer->Render(customRenderContext, root);
-                renderer->PostRender(customRenderContext);
-
-                VKERRCHECK(vkEndCommandBuffer(commandBuffer));
-            }));
-        }
-
-        for (auto&& debugTask : debugTasks) {
-            debugTask.get();
-        }
-
-        vkCmdExecuteCommands(renderContext.commandBuffer, static_cast<uint32_t>(debugCommandBuffers.size()), debugCommandBuffers.data());
-
-        m_defaultRenderPass->End(renderContext.commandBuffer);
+        RenderParallel(m_defaultRenderPass, renderContext, root, m_debugRenderers, debugCommandBuffers, {}, { { 0, 0 }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 } });
 #else
         RenderSerial(m_defaultRenderPass, renderContext, root, m_debugRenderers, {}, { { 0, 0 }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 } });
 #endif
@@ -6938,6 +6759,47 @@ private:
             renderer->Render(renderContext, root, userData);
             renderer->PostRender(renderContext, userData);
         }
+
+        renderPass->End(renderContext.commandBuffer);
+    }
+
+    template <typename ContextUserDataType>
+    void RenderParallel(const std::shared_ptr<RenderPass>& renderPass, const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root, const std::vector<std::shared_ptr<IRenderer<ContextUserDataType> > >& renderers, const std::vector <VkCommandBuffer>& commandBuffers, const ContextUserDataType& userData, const VkRect2D& area)
+    {
+        renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, area, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+
+        std::vector<std::future<void> > tasks;
+        for (size_t i = 0; i < renderers.size(); i++) {
+
+            auto& renderer = renderers.at(i);
+            auto& commandBuffer = commandBuffers.at(i);
+
+            tasks.emplace_back(m_threadPool.Enqueue([&]() {
+                VkCommandBufferInheritanceInfo inheritanceInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO };
+                inheritanceInfo.renderPass = *renderPass;
+                inheritanceInfo.framebuffer = renderContext.frameBuffer;
+
+                VkCommandBufferBeginInfo commandBufferBeginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+                commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT | VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+                commandBufferBeginInfo.pInheritanceInfo = &inheritanceInfo;
+
+                VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
+
+                RenderContext parallelRenderContext{ renderContext.frameBuffer, commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
+
+                renderer->PreRender(parallelRenderContext, userData);
+                renderer->Render(parallelRenderContext, root, userData);
+                renderer->PostRender(parallelRenderContext, userData);
+
+                VKERRCHECK(vkEndCommandBuffer(commandBuffer));
+            }));
+        }
+
+        for (auto&& task : tasks) {
+            task.get();
+        }
+
+        vkCmdExecuteCommands(renderContext.commandBuffer, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
         renderPass->End(renderContext.commandBuffer);
     }
