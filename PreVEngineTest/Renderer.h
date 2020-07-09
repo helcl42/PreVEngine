@@ -6281,7 +6281,7 @@ public:
     }
 };
 
-#define PARALLEL_RENDERING
+//#define PARALLEL_RENDERING
 
 class MasterRenderer final : public IRenderer<DefaultRenderContextUserData> {
 public:
@@ -6762,7 +6762,7 @@ private:
 
         renderPass->End(renderContext.commandBuffer);
     }
-
+#ifdef PARALLEL_RENDERING
     template <typename ContextUserDataType>
     void RenderParallel(const std::shared_ptr<RenderPass>& renderPass, const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root, const std::vector<std::shared_ptr<IRenderer<ContextUserDataType> > >& renderers, const std::vector <VkCommandBuffer>& commandBuffers, const ContextUserDataType& userData, const VkRect2D& area)
     {
@@ -6803,7 +6803,7 @@ private:
 
         renderPass->End(renderContext.commandBuffer);
     }
-
+#endif
 private:
     std::shared_ptr<RenderPass> m_defaultRenderPass;
 
