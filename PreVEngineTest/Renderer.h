@@ -6351,62 +6351,35 @@ public:
 private:
     void InitDefault()
     {
-        m_skyBoxRenderer = std::make_shared<SkyBoxRenderer>(m_defaultRenderPass);
-        m_skyRenderer = std::make_shared<SkyRenderer>(m_defaultRenderPass);
-        m_defaultRenderer = std::make_shared<DefaultRenderer>(m_defaultRenderPass);
-        m_normalMappedRenderer = std::make_shared<NormalMappedRenderer>(m_defaultRenderPass);
-        m_parallaxMappedRenderer = std::make_shared<ParallaxMappedRenderer>(m_defaultRenderPass);
-        m_coneStepMappedRenderer = std::make_shared<ConeStepMappedRenderer>(m_defaultRenderPass);
-        m_terrainRenderer = std::make_shared<TerrainRenderer>(m_defaultRenderPass);
-        m_terrainNormalMappedRenderer = std::make_shared<TerrainNormalMappedRenderer>(m_defaultRenderPass);
-        m_terrainParallaxMappedRenderer = std::make_shared<TerrainParallaxMappedRenderer>(m_defaultRenderPass);
-        m_terrainConeStepMappedRenderer = std::make_shared<TerrainConeStepMappedRenderer>(m_defaultRenderPass);
-        m_animationRenderer = std::make_shared<AnimationRenderer>(m_defaultRenderPass);
-        m_animationNormalMappedRenderer = std::make_shared<AnimationNormalMappedRenderer>(m_defaultRenderPass);
-        m_animationParallaxMappedRenderer = std::make_shared<AnimationParallaxMappedRenderer>(m_defaultRenderPass);
-        m_animationConeStepMappedRenderer = std::make_shared<AnimationConeStepMappedRenderer>(m_defaultRenderPass);
-        m_waterRenderer = std::make_shared<WaterRenderer>(m_defaultRenderPass);
-        m_fontRenderer = std::make_shared<FontRenderer>(m_defaultRenderPass);
-        m_particlesRenderer = std::make_shared<ParticlesRenderer>(m_defaultRenderPass);
-        m_sunRenderer = std::make_shared<SunRenderer>(m_defaultRenderPass);
-        m_lensFlareRenderer = std::make_shared<LensFlareRenderer>(m_defaultRenderPass);
-
-        m_defaultRenderers = {
-            m_skyBoxRenderer,
-            m_skyRenderer,
-            m_defaultRenderer,
-            m_normalMappedRenderer,
-            m_parallaxMappedRenderer,
-            m_coneStepMappedRenderer,
-            m_terrainRenderer,
-            m_terrainNormalMappedRenderer,
-            m_terrainParallaxMappedRenderer,
-            m_terrainConeStepMappedRenderer,
-            m_animationRenderer,
-            m_animationNormalMappedRenderer,
-            m_animationParallaxMappedRenderer,
-            m_animationConeStepMappedRenderer,
-            m_waterRenderer,
-            m_fontRenderer,
-            m_particlesRenderer
-        };
-
+        m_defaultRenderers.push_back(std::make_unique<SkyBoxRenderer>(m_defaultRenderPass));
+        m_defaultRenderers.push_back(std::make_unique<SkyRenderer>(m_defaultRenderPass));
+        m_defaultRenderers.push_back(std::make_unique<DefaultRenderer>(m_defaultRenderPass));
+        m_defaultRenderers.push_back(std::make_unique<NormalMappedRenderer>(m_defaultRenderPass));
+        m_defaultRenderers.push_back(std::make_unique<ParallaxMappedRenderer>(m_defaultRenderPass));
+        m_defaultRenderers.push_back(std::make_unique<ConeStepMappedRenderer>(m_defaultRenderPass));
+        m_defaultRenderers.push_back(std::make_unique<TerrainRenderer>(m_defaultRenderPass));
+        m_defaultRenderers.push_back(std::make_unique<TerrainNormalMappedRenderer>(m_defaultRenderPass));
+        m_defaultRenderers.push_back(std::make_unique<TerrainParallaxMappedRenderer>(m_defaultRenderPass));
+        m_defaultRenderers.push_back(std::make_unique<TerrainConeStepMappedRenderer>(m_defaultRenderPass));
+        m_defaultRenderers.push_back(std::make_unique<AnimationRenderer>(m_defaultRenderPass));
+        m_defaultRenderers.push_back(std::make_unique<AnimationNormalMappedRenderer>(m_defaultRenderPass));
+        m_defaultRenderers.push_back(std::make_unique<AnimationParallaxMappedRenderer>(m_defaultRenderPass));
+        m_defaultRenderers.push_back(std::make_unique<AnimationConeStepMappedRenderer>(m_defaultRenderPass));
+        m_defaultRenderers.push_back(std::make_unique<WaterRenderer>(m_defaultRenderPass));
+        m_defaultRenderers.push_back(std::make_unique<FontRenderer>(m_defaultRenderPass));
+        m_defaultRenderers.push_back(std::make_unique<ParticlesRenderer>(m_defaultRenderPass));
 #ifdef RENDER_BOUNDING_VOLUMES
-        m_boundingVolumeDebugRenderer = std::make_shared<BoundingVolumeDebugRenderer>(m_defaultRenderPass);
-        m_defaultRenderers.push_back(m_boundingVolumeDebugRenderer);
+        m_defaultRenderers.push_back(std::make_unique<BoundingVolumeDebugRenderer>(m_defaultRenderPass));
 #endif
 #ifdef RENDER_RAYCASTS
-        m_rayCastDebugRenderer = std::make_shared<RayCastDebugRenderer>(m_defaultRenderPass);
-        m_defaultRenderers.push_back(m_rayCastDebugRenderer);
+        m_defaultRenderers.push_back(std::make_unique<RayCastDebugRenderer>(m_defaultRenderPass));
 #endif
 #ifdef RENDER_SELECTION
-        m_selectionDebugRenderer = std::make_shared<SelectionDebugRenderer>(m_defaultRenderPass);
-        m_defaultRenderers.push_back(m_selectionDebugRenderer);
+        m_defaultRenderers.push_back(std::make_unique<SelectionDebugRenderer>(m_defaultRenderPass));
 #endif
-        // These renderers has to as last otherwise they collide with any geometry that uses depth
-        m_defaultRenderers.push_back(m_sunRenderer);
-        m_defaultRenderers.push_back(m_lensFlareRenderer);
-
+        m_defaultRenderers.push_back(std::make_unique<SunRenderer>(m_defaultRenderPass));
+        m_defaultRenderers.push_back(std::make_unique<LensFlareRenderer>(m_defaultRenderPass));
+    
         for (auto& renderer : m_defaultRenderers) {
             renderer->Init();
         }
@@ -6430,13 +6403,8 @@ private:
 
     void InitDebug()
     {
-        m_shadowMapDebugRenderer = std::make_shared<ShadowMapDebugRenderer>(m_defaultRenderPass);
-        m_textureDebugRenderer = std::make_shared<TextureDebugRenderer>(m_defaultRenderPass);
-
-        m_debugRenderers = {
-            m_shadowMapDebugRenderer,
-            m_textureDebugRenderer
-        };
+        m_debugRenderers.push_back(std::make_unique<ShadowMapDebugRenderer>(m_defaultRenderPass));
+        m_debugRenderers.push_back(std::make_unique<TextureDebugRenderer>(m_defaultRenderPass));
 
         for (auto& renderer : m_debugRenderers) {
             renderer->Init();
@@ -6463,21 +6431,12 @@ private:
     {
         const auto shadowsComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>(TagSet{ TAG_SHADOW });
 
-        m_defaultShadowsRenderer = std::make_shared<DefaultShadowsRenderer>(shadowsComponent->GetRenderPass());
-        m_bumpMappedShadowsRenderer = std::make_shared<BumpMappedShadowsRenderer>(shadowsComponent->GetRenderPass());
-        m_terrainShadowsRenderer = std::make_shared<TerrainShadowsRenderer>(shadowsComponent->GetRenderPass());
-        m_terrainBumpMappedShadowsRenderer = std::make_shared<TerrainBumplMappedShadowsRenderer>(shadowsComponent->GetRenderPass());
-        m_animationShadowsRenderer = std::make_shared<AnimationShadowsRenderer>(shadowsComponent->GetRenderPass());
-        m_animationBumpMappedShadowsRenderer = std::make_shared<AnimationBumpMappedShadowsRenderer>(shadowsComponent->GetRenderPass());
-
-        m_shadowRenderers = {
-            m_defaultShadowsRenderer,
-            m_bumpMappedShadowsRenderer,
-            m_terrainShadowsRenderer,
-            m_terrainBumpMappedShadowsRenderer,
-            m_animationShadowsRenderer,
-            m_animationBumpMappedShadowsRenderer
-        };
+        m_shadowRenderers.push_back(std::make_unique<DefaultShadowsRenderer>(shadowsComponent->GetRenderPass()));
+        m_shadowRenderers.push_back(std::make_unique<BumpMappedShadowsRenderer>(shadowsComponent->GetRenderPass()));
+        m_shadowRenderers.push_back(std::make_unique<TerrainShadowsRenderer>(shadowsComponent->GetRenderPass()));
+        m_shadowRenderers.push_back(std::make_unique<TerrainBumplMappedShadowsRenderer>(shadowsComponent->GetRenderPass()));
+        m_shadowRenderers.push_back(std::make_unique<AnimationShadowsRenderer>(shadowsComponent->GetRenderPass()));
+        m_shadowRenderers.push_back(std::make_unique<AnimationBumpMappedShadowsRenderer>(shadowsComponent->GetRenderPass()));
 
         for (auto& shadowRenderer : m_shadowRenderers) {
             shadowRenderer->Init();
@@ -6506,39 +6465,21 @@ private:
     {
         const auto reflectionComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT });
 
-        m_reflectionSkyBoxRenderer = std::make_shared<SkyBoxRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionSkyRenderer = std::make_shared<SkyRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionDefaultRenderer = std::make_shared<DefaultRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionNormalMappedRenderer = std::make_shared<NormalMappedRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionParallaxMappedRenderer = std::make_shared<ParallaxMappedRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionConeStepMappedRenderer = std::make_shared<ConeStepMappedRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionTerrainRenderer = std::make_shared<TerrainRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionTerrainNormalMappedRenderer = std::make_shared<TerrainNormalMappedRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionTerrainParallaxMappedRenderer = std::make_shared<TerrainParallaxMappedRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionTerrainConeStepMappedRenderer = std::make_shared<TerrainConeStepMappedRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionAnimationRenderer = std::make_shared<AnimationRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionAnimationNormalMappedRenderer = std::make_shared<AnimationNormalMappedRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionAnimationParallaxMappedRenderer = std::make_shared<AnimationParallaxMappedRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionAnimationConeStepMappedRenderer = std::make_shared<AnimationConeStepMappedRenderer>(reflectionComponent->GetRenderPass());
-        m_reflectionParticlesRenderer = std::make_shared<ParticlesRenderer>(reflectionComponent->GetRenderPass());
-
-        m_reflectionRenderers = {
-            m_reflectionSkyBoxRenderer,
-            m_reflectionSkyRenderer,
-            m_reflectionDefaultRenderer,
-            m_reflectionNormalMappedRenderer,
-            m_reflectionParallaxMappedRenderer,
-            m_reflectionConeStepMappedRenderer,
-            m_reflectionTerrainRenderer,
-            m_reflectionTerrainNormalMappedRenderer,
-            m_reflectionTerrainParallaxMappedRenderer,
-            m_reflectionTerrainConeStepMappedRenderer,
-            m_reflectionAnimationRenderer,
-            m_reflectionAnimationNormalMappedRenderer,
-            m_reflectionAnimationParallaxMappedRenderer,
-            m_reflectionAnimationConeStepMappedRenderer,
-            m_reflectionParticlesRenderer
-        };
+        m_reflectionRenderers.push_back(std::make_unique<SkyBoxRenderer>(reflectionComponent->GetRenderPass()));
+        m_reflectionRenderers.push_back(std::make_unique<SkyRenderer>(reflectionComponent->GetRenderPass()));
+        m_reflectionRenderers.push_back(std::make_unique<DefaultRenderer>(reflectionComponent->GetRenderPass()));
+        m_reflectionRenderers.push_back(std::make_unique<NormalMappedRenderer>(reflectionComponent->GetRenderPass()));
+        m_reflectionRenderers.push_back(std::make_unique<ParallaxMappedRenderer>(reflectionComponent->GetRenderPass()));
+        m_reflectionRenderers.push_back(std::make_unique<ConeStepMappedRenderer>(reflectionComponent->GetRenderPass()));
+        m_reflectionRenderers.push_back(std::make_unique<TerrainRenderer>(reflectionComponent->GetRenderPass()));
+        m_reflectionRenderers.push_back(std::make_unique<TerrainNormalMappedRenderer>(reflectionComponent->GetRenderPass()));
+        m_reflectionRenderers.push_back(std::make_unique<TerrainParallaxMappedRenderer>(reflectionComponent->GetRenderPass()));
+        m_reflectionRenderers.push_back(std::make_unique<TerrainConeStepMappedRenderer>(reflectionComponent->GetRenderPass()));
+        m_reflectionRenderers.push_back(std::make_unique<AnimationRenderer>(reflectionComponent->GetRenderPass()));
+        m_reflectionRenderers.push_back(std::make_unique<AnimationNormalMappedRenderer>(reflectionComponent->GetRenderPass()));
+        m_reflectionRenderers.push_back(std::make_unique<AnimationParallaxMappedRenderer>(reflectionComponent->GetRenderPass()));
+        m_reflectionRenderers.push_back(std::make_unique<AnimationConeStepMappedRenderer>(reflectionComponent->GetRenderPass()));
+        m_reflectionRenderers.push_back(std::make_unique<ParticlesRenderer>(reflectionComponent->GetRenderPass()));
 
         for (auto& shadowRenderer : m_reflectionRenderers) {
             shadowRenderer->Init();
@@ -6565,39 +6506,21 @@ private:
     {
         const auto refractionComponent = NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT });
 
-        m_refractionSkyBoxRenderer = std::make_shared<SkyBoxRenderer>(refractionComponent->GetRenderPass());
-        m_refractionSkyRenderer = std::make_shared<SkyRenderer>(refractionComponent->GetRenderPass());
-        m_refractionDefaultRenderer = std::make_shared<DefaultRenderer>(refractionComponent->GetRenderPass());
-        m_refractionNormalMappedRenderer = std::make_shared<NormalMappedRenderer>(refractionComponent->GetRenderPass());
-        m_refractionParallaxMappedRenderer = std::make_shared<ParallaxMappedRenderer>(refractionComponent->GetRenderPass());
-        m_refractionConeStepMappedRenderer = std::make_shared<ConeStepMappedRenderer>(refractionComponent->GetRenderPass());
-        m_refractionTerrainRenderer = std::make_shared<TerrainRenderer>(refractionComponent->GetRenderPass());
-        m_refractionTerrainNormalMappedRenderer = std::make_shared<TerrainNormalMappedRenderer>(refractionComponent->GetRenderPass());
-        m_refractionTerrainParallaxMappedRenderer = std::make_shared<TerrainParallaxMappedRenderer>(refractionComponent->GetRenderPass());
-        m_refractionTerrainConeStepMappedRenderer = std::make_shared<TerrainConeStepMappedRenderer>(refractionComponent->GetRenderPass());
-        m_refractionAnimationRenderer = std::make_shared<AnimationRenderer>(refractionComponent->GetRenderPass());
-        m_refractionAnimationNormalMappedRenderer = std::make_shared<AnimationNormalMappedRenderer>(refractionComponent->GetRenderPass());
-        m_refractionAnimationParallaxMappedRenderer = std::make_shared<AnimationParallaxMappedRenderer>(refractionComponent->GetRenderPass());
-        m_refractionAnimationConeStepMappedRenderer = std::make_shared<AnimationConeStepMappedRenderer>(refractionComponent->GetRenderPass());
-        m_refractionParticlesRenderer = std::make_shared<ParticlesRenderer>(refractionComponent->GetRenderPass());
-
-        m_refractionRenderers = {
-            m_refractionSkyBoxRenderer,
-            m_refractionSkyRenderer,
-            m_refractionDefaultRenderer,
-            m_refractionNormalMappedRenderer,
-            m_refractionParallaxMappedRenderer,
-            m_refractionConeStepMappedRenderer,
-            m_refractionTerrainRenderer,
-            m_refractionTerrainNormalMappedRenderer,
-            m_refractionTerrainParallaxMappedRenderer,
-            m_refractionTerrainConeStepMappedRenderer,
-            m_refractionAnimationRenderer,
-            m_refractionAnimationNormalMappedRenderer,
-            m_refractionAnimationParallaxMappedRenderer,
-            m_refractionAnimationConeStepMappedRenderer,
-            m_refractionParticlesRenderer
-        };
+        m_refractionRenderers.push_back(std::make_unique<SkyBoxRenderer>(refractionComponent->GetRenderPass()));
+        m_refractionRenderers.push_back(std::make_unique<SkyRenderer>(refractionComponent->GetRenderPass()));
+        m_refractionRenderers.push_back(std::make_unique<DefaultRenderer>(refractionComponent->GetRenderPass()));
+        m_refractionRenderers.push_back(std::make_unique<NormalMappedRenderer>(refractionComponent->GetRenderPass()));
+        m_refractionRenderers.push_back(std::make_unique<ParallaxMappedRenderer>(refractionComponent->GetRenderPass()));
+        m_refractionRenderers.push_back(std::make_unique<ConeStepMappedRenderer>(refractionComponent->GetRenderPass()));
+        m_refractionRenderers.push_back(std::make_unique<TerrainRenderer>(refractionComponent->GetRenderPass()));
+        m_refractionRenderers.push_back(std::make_unique<TerrainNormalMappedRenderer>(refractionComponent->GetRenderPass()));
+        m_refractionRenderers.push_back(std::make_unique<TerrainParallaxMappedRenderer>(refractionComponent->GetRenderPass()));
+        m_refractionRenderers.push_back(std::make_unique<TerrainConeStepMappedRenderer>(refractionComponent->GetRenderPass()));
+        m_refractionRenderers.push_back(std::make_unique<AnimationRenderer>(refractionComponent->GetRenderPass()));
+        m_refractionRenderers.push_back(std::make_unique<AnimationNormalMappedRenderer>(refractionComponent->GetRenderPass()));
+        m_refractionRenderers.push_back(std::make_unique<AnimationParallaxMappedRenderer>(refractionComponent->GetRenderPass()));
+        m_refractionRenderers.push_back(std::make_unique<AnimationConeStepMappedRenderer>(refractionComponent->GetRenderPass()));
+        m_refractionRenderers.push_back(std::make_unique<ParticlesRenderer>(refractionComponent->GetRenderPass()));
 
         for (auto& shadowRenderer : m_refractionRenderers) {
             shadowRenderer->Init();
@@ -6631,12 +6554,19 @@ private:
             const ShadowsRenderContextUserData userData{ cascade.viewMatrix, cascade.projectionMatrix, cascadeIndex, Frustum{ cascade.projectionMatrix, cascade.viewMatrix }, shadows->GetExtent() };
             const RenderContext customRenderContext{ cascade.frameBuffer, renderContext.commandBuffer, renderContext.frameInFlightIndex, shadows->GetExtent() };
 
+            for (auto& renderer : m_shadowRenderers) {
+                renderer->BeforeRender(customRenderContext, userData);
+            }
+
 #ifdef PARALLEL_RENDERING
             const auto& cascadeCommandBuffers = m_shadowsCommandBufferGroups.at(cascadeIndex)->GetBuffersGroup(renderContext.frameInFlightIndex);
             RenderParallel(shadows->GetRenderPass(), customRenderContext, root, m_shadowRenderers, cascadeCommandBuffers, userData, { { 0, 0 }, shadows->GetExtent() });
 #else
             RenderSerial(shadows->GetRenderPass(), customRenderContext, root, m_shadowRenderers, userData, { { 0, 0 }, shadows->GetExtent() });
 #endif
+            for (auto& renderer : m_shadowRenderers) {
+                renderer->AfterRender(customRenderContext, userData);
+            }
         }
     }
 
@@ -6667,7 +6597,9 @@ private:
 
         const RenderContext customRenderContext{ reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
 
-        m_reflectionSkyRenderer->BeforeRender(customRenderContext, userData);
+        for (auto& renderer : m_reflectionRenderers) {
+            renderer->BeforeRender(customRenderContext, userData);
+        }
 
 #ifdef PARALLEL_RENDERING
         const auto& commandBuffers = m_reflectionCommandBufferGroups->GetBuffersGroup(renderContext.frameInFlightIndex);
@@ -6676,7 +6608,9 @@ private:
         RenderSerial(reflectionComponent->GetRenderPass(), customRenderContext, root, m_reflectionRenderers, userData, { { 0, 0 }, reflectionComponent->GetExtent() });
 #endif
 
-        m_reflectionSkyRenderer->AfterRender(customRenderContext, userData);
+        for (auto& renderer : m_reflectionRenderers) {
+            renderer->AfterRender(customRenderContext, userData);
+        }
     }
 
     void RenderSceneRefraction(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
@@ -6697,8 +6631,10 @@ private:
         };
 
         const RenderContext customRenderContext{ refractionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
-
-        m_refractionSkyRenderer->BeforeRender(customRenderContext, userData);
+        
+        for (auto& renderer : m_refractionRenderers) {
+            renderer->BeforeRender(customRenderContext, userData);
+        }
 
 #ifdef PARALLEL_RENDERING
         const auto& commandBuffers = m_refractionCommandBufferGroups->GetBuffersGroup(renderContext.frameInFlightIndex);
@@ -6707,7 +6643,9 @@ private:
         RenderSerial(refractionComponent->GetRenderPass(), customRenderContext, root, m_refractionRenderers, userData, { { 0, 0 }, refractionComponent->GetExtent() });
 #endif
 
-        m_refractionSkyRenderer->AfterRender(customRenderContext, userData);
+        for (auto& renderer : m_refractionRenderers) {
+            renderer->AfterRender(customRenderContext, userData);
+        }
     }
 
     void RenderScene(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
@@ -6726,8 +6664,9 @@ private:
             Frustum{ projectionMatrix, viewMatrix }
         };
 
-        m_sunRenderer->BeforeRender(renderContext, userData);
-        m_skyRenderer->BeforeRender(renderContext, userData);
+        for (auto& renderer : m_defaultRenderers) {
+            renderer->BeforeRender(renderContext, userData);
+        }
 
 #ifdef PARALLEL_RENDERING
         const auto& commandBuffers = m_defaultCommandBuffersGroup->GetBuffersGroup(renderContext.frameInFlightIndex);
@@ -6735,36 +6674,33 @@ private:
 #else
         RenderSerial(m_defaultRenderPass, renderContext, root, m_defaultRenderers, userData, { { 0, 0 }, renderContext.fullExtent });
 #endif
-        m_skyRenderer->AfterRender(renderContext, userData);
-        m_sunRenderer->AfterRender(renderContext, userData);
+        
+        for (auto& renderer : m_defaultRenderers) {
+            renderer->AfterRender(renderContext, userData);
+        }
     }
 
     void RenderDebug(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root)
     {
+        for (auto& renderer : m_debugRenderers) {
+            renderer->BeforeRender(renderContext);
+        }
+
 #ifdef PARALLEL_RENDERING
         const auto& debugCommandBuffers = m_debugCommandBuffersGroup->GetBuffersGroup(renderContext.frameInFlightIndex);
         RenderParallel(m_defaultRenderPass, renderContext, root, m_debugRenderers, debugCommandBuffers, {}, { { 0, 0 }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 } });
 #else
         RenderSerial(m_defaultRenderPass, renderContext, root, m_debugRenderers, {}, { { 0, 0 }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 } });
 #endif
-    }
 
-    template <typename ContextUserDataType>
-    void RenderSerial(const std::shared_ptr<RenderPass>& renderPass, const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root, const std::vector<std::shared_ptr<IRenderer<ContextUserDataType> > >& renderers, const ContextUserDataType& userData, const VkRect2D& area)
-    {
-        renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, area);
-
-        for (auto& renderer : renderers) {
-            renderer->PreRender(renderContext, userData);
-            renderer->Render(renderContext, root, userData);
-            renderer->PostRender(renderContext, userData);
+        for (auto& renderer : m_debugRenderers) {
+            renderer->AfterRender(renderContext);
         }
-
-        renderPass->End(renderContext.commandBuffer);
     }
+
 #ifdef PARALLEL_RENDERING
     template <typename ContextUserDataType>
-    void RenderParallel(const std::shared_ptr<RenderPass>& renderPass, const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root, const std::vector<std::shared_ptr<IRenderer<ContextUserDataType> > >& renderers, const std::vector <VkCommandBuffer>& commandBuffers, const ContextUserDataType& userData, const VkRect2D& area)
+    void RenderParallel(const std::shared_ptr<RenderPass>& renderPass, const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const std::vector<VkCommandBuffer>& commandBuffers, const ContextUserDataType& userData, const VkRect2D& area)
     {
         renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, area, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
@@ -6803,6 +6739,20 @@ private:
 
         renderPass->End(renderContext.commandBuffer);
     }
+#else     
+    template <typename ContextUserDataType>
+    void RenderSerial(const std::shared_ptr<RenderPass>& renderPass, const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const ContextUserDataType& userData, const VkRect2D& area)
+    {
+        renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, area);
+
+        for (auto& renderer : renderers) {
+            renderer->PreRender(renderContext, userData);
+            renderer->Render(renderContext, root, userData);
+            renderer->PostRender(renderContext, userData);
+        }
+
+        renderPass->End(renderContext.commandBuffer);
+    }
 #endif
 private:
     std::shared_ptr<RenderPass> m_defaultRenderPass;
@@ -6810,142 +6760,20 @@ private:
     std::shared_ptr<Swapchain> m_swapchain;
 
 private:
-    // Default Render
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_skyBoxRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_skyRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_defaultRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_normalMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_parallaxMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_coneStepMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_terrainRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_terrainNormalMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_terrainParallaxMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_terrainConeStepMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_animationRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_animationNormalMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_animationParallaxMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_animationConeStepMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_waterRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_fontRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_sunRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_lensFlareRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_particlesRenderer;
-#ifdef RENDER_BOUNDING_VOLUMES
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_boundingVolumeDebugRenderer;
-#endif
-#ifdef RENDER_RAYCASTS
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_rayCastDebugRenderer;
-#endif
-#ifdef RENDER_SELECTION
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_selectionDebugRenderer;
-#endif
-    std::vector<std::shared_ptr<IRenderer<NormalRenderContextUserData> > > m_defaultRenderers;
+    // Default
+    std::vector<std::unique_ptr<IRenderer<NormalRenderContextUserData> > > m_defaultRenderers;
 
     // Debug
-    std::shared_ptr<IRenderer<DefaultRenderContextUserData> > m_shadowMapDebugRenderer;
+    std::vector<std::unique_ptr<IRenderer<DefaultRenderContextUserData> > > m_debugRenderers;
 
-    std::shared_ptr<IRenderer<DefaultRenderContextUserData> > m_textureDebugRenderer;
+    // Shadows    
+    std::vector<std::unique_ptr<IRenderer<ShadowsRenderContextUserData> > > m_shadowRenderers;
 
-    std::vector<std::shared_ptr<IRenderer<DefaultRenderContextUserData> > > m_debugRenderers;
+    // Reflection   
+    std::vector<std::unique_ptr<IRenderer<NormalRenderContextUserData> > > m_reflectionRenderers;
 
-    // Shadows
-    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_defaultShadowsRenderer;
-
-    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_bumpMappedShadowsRenderer;
-
-    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_terrainShadowsRenderer;
-
-    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_terrainBumpMappedShadowsRenderer;
-
-    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_animationShadowsRenderer;
-
-    std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > m_animationBumpMappedShadowsRenderer;
-
-    std::vector<std::shared_ptr<IRenderer<ShadowsRenderContextUserData> > > m_shadowRenderers;
-
-    // Reflection
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionSkyBoxRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionSkyRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionDefaultRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionNormalMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionParallaxMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionConeStepMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionTerrainRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionTerrainNormalMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionTerrainParallaxMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionTerrainConeStepMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionAnimationRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionAnimationNormalMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionAnimationParallaxMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionAnimationConeStepMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_reflectionParticlesRenderer;
-
-    std::vector<std::shared_ptr<IRenderer<NormalRenderContextUserData> > > m_reflectionRenderers;
-
-    // Refraction
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionSkyBoxRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionSkyRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionDefaultRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionNormalMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionParallaxMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionConeStepMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionTerrainRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionTerrainNormalMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionTerrainParallaxMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionTerrainConeStepMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionAnimationRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionAnimationNormalMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionAnimationParallaxMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionAnimationConeStepMappedRenderer;
-
-    std::shared_ptr<IRenderer<NormalRenderContextUserData> > m_refractionParticlesRenderer;
-
-    std::vector<std::shared_ptr<IRenderer<NormalRenderContextUserData> > > m_refractionRenderers;
+    // Refraction    
+    std::vector<std::unique_ptr<IRenderer<NormalRenderContextUserData> > > m_refractionRenderers;
 
 #ifdef PARALLEL_RENDERING
     // Parallel stuff
