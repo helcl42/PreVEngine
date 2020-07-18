@@ -4,7 +4,7 @@ namespace PreVEngine {
 bool PickList::IsPicked(const char* name) const
 {
     for (auto index : m_pickListIndices) {
-        if (strcmp(name, Name(index)) == 0) {
+        if (strcmp(name, GetNameByIndex(index)) == 0) {
             return true;
         }
     }
@@ -13,15 +13,15 @@ bool PickList::IsPicked(const char* name) const
 
 int PickList::IndexOf(const char* name) const
 {
-    for (unsigned int i = 0; i < Count(); i++) {
-        if (strcmp(name, Name(i)) == 0) {
+    for (unsigned int i = 0; i < GetPickedCount(); i++) {
+        if (strcmp(name, GetNameByIndex(i)) == 0) {
             return i;
         }
     }
     return -1;
 }
 
-bool PickList::Pick(std::initializer_list<const char*> list)
+bool PickList::Pick(const std::vector<const char*>& list)
 {
     bool found = true;
     for (auto item : list) {
@@ -42,7 +42,7 @@ bool PickList::Pick(const char* name)
 
 bool PickList::Pick(const uint32_t inx)
 {
-    if (inx >= Count()) {
+    if (inx >= GetPickedCount()) {
         return false; // Return false if index is out of range.
     }
 
@@ -54,7 +54,7 @@ bool PickList::Pick(const uint32_t inx)
 
     m_pickListIndices.push_back(inx); // if not, add item to pick-list
 
-    RefreshPickList();
+    Refresh();
 
     return true;
 }
@@ -62,21 +62,21 @@ bool PickList::Pick(const uint32_t inx)
 void PickList::UnPick(const char* name)
 {
     for (uint32_t i = 0; i < PickCount(); i++) {
-        if (strcmp(name, Name(m_pickListIndices[i])) == 0) {
+        if (strcmp(name, GetNameByIndex(m_pickListIndices[i])) == 0) {
             m_pickListIndices.erase(m_pickListIndices.begin() + i);
         }
     }
 
-    RefreshPickList();
+    Refresh();
 }
 
-void PickList::RefreshPickList()
+void PickList::Refresh()
 {
     m_pickListNames.resize(m_pickListIndices.size());
     m_pickListNamesPtrs.resize(m_pickListIndices.size());
 
     for (size_t i = 0; i < m_pickListIndices.size(); i++) {
-        const char* name = Name(m_pickListIndices.at(i));
+        const char* name = GetNameByIndex(m_pickListIndices.at(i));
         m_pickListNames[i] = std::string(name);
         m_pickListNamesPtrs[i] = m_pickListNames.at(i).c_str();
     }
@@ -84,7 +84,7 @@ void PickList::RefreshPickList()
 
 void PickList::PickAll()
 {
-    for (uint32_t i = 0; i < Count(); i++) {
+    for (uint32_t i = 0; i < GetPickedCount(); i++) {
         Pick(i);
     }
 }
@@ -108,12 +108,12 @@ uint32_t PickList::PickCount() const
 
 void PickList::Print() const
 {
-    printf("%s picked: %d of %d\n", PickListName().c_str(), PickCount(), Count());
-    for (uint32_t i = 0; i < Count(); i++) {
+    printf("%s picked: %d of %d\n", GetName().c_str(), PickCount(), GetPickedCount());
+    for (uint32_t i = 0; i < GetPickedCount(); i++) {
         bool picked = false;
-        const char* name = Name(i);
+        const char* name = GetNameByIndex(i);
         for (const auto pickIndex : m_pickListIndices) {
-            picked |= (strcmp(Name(pickIndex), name) == 0);
+            picked |= (strcmp(GetNameByIndex(pickIndex), name) == 0);
         }
 
         if (picked) {
@@ -133,17 +133,17 @@ Layers::Layers()
     VKERRCHECK(vkEnumerateInstanceLayerProperties(&count, m_itemList.data()));
 }
 
-const char* Layers::Name(uint32_t inx) const
+const char* Layers::GetNameByIndex(uint32_t inx) const
 {
     return static_cast<const char*>(m_itemList.at(inx).layerName);
 }
 
-uint32_t Layers::Count() const
+uint32_t Layers::GetPickedCount() const
 {
     return static_cast<uint32_t>(m_itemList.size());
 }
 
-std::string Layers::PickListName() const
+std::string Layers::GetName() const
 {
     return "Layers";
 }
@@ -157,17 +157,17 @@ Extensions::Extensions(const char* layer_name)
     VKERRCHECK(vkEnumerateInstanceExtensionProperties(layer_name, &count, m_itemList.data())); // Fetch list
 }
 
-const char* Extensions::Name(uint32_t inx) const
+const char* Extensions::GetNameByIndex(uint32_t inx) const
 {
     return static_cast<const char*>(m_itemList.at(inx).extensionName);
 }
 
-uint32_t Extensions::Count() const
+uint32_t Extensions::GetPickedCount() const
 {
     return static_cast<uint32_t>(m_itemList.size());
 }
 
-std::string Extensions::PickListName() const
+std::string Extensions::GetName() const
 {
     return "Extensions";
 }
@@ -181,7 +181,7 @@ DeviceExtensions& DeviceExtensions::operator=(const DeviceExtensions& other)
     if (this != &other) {
         this->m_itemList = other.m_itemList;
         this->m_pickListIndices = other.m_pickListIndices;
-        RefreshPickList();
+        Refresh();
     }
     return *this;
 }
@@ -190,7 +190,7 @@ DeviceExtensions::DeviceExtensions(const DeviceExtensions& other)
 {
     this->m_itemList = other.m_itemList;
     this->m_pickListIndices = other.m_pickListIndices;
-    RefreshPickList();
+    Refresh();
 }
 
 void DeviceExtensions::Init(VkPhysicalDevice phy, const char* layerName)
@@ -202,17 +202,17 @@ void DeviceExtensions::Init(VkPhysicalDevice phy, const char* layerName)
     VKERRCHECK(vkEnumerateDeviceExtensionProperties(phy, layerName, &count, m_itemList.data())); // Fetch list
 }
 
-const char* DeviceExtensions::Name(uint32_t inx) const
+const char* DeviceExtensions::GetNameByIndex(uint32_t inx) const
 {
     return static_cast<const char*>(m_itemList.at(inx).extensionName);
 }
 
-uint32_t DeviceExtensions::Count() const
+uint32_t DeviceExtensions::GetPickedCount() const
 {
     return static_cast<uint32_t>(m_itemList.size());
 }
 
-std::string DeviceExtensions::PickListName() const
+std::string DeviceExtensions::GetName() const
 {
     return "Device-Extensions";
 }
@@ -241,8 +241,9 @@ Instance::Instance(const bool enableValidation, const char* appName, const char*
 #elif VK_USE_PLATFORM_MIR_KHR
         extensions.Pick(VK_KHR_MIR_SURFACE_EXTENSION_NAME);
 #endif
-    } else
+    } else {
         LOGE("Failed to load VK_KHR_Surface");
+    }
 
 #ifdef ENABLE_VALIDATION
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
