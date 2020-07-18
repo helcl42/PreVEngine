@@ -23,17 +23,17 @@ public:
     virtual ~PickList() = default;
 
 protected:
-    void RefreshPickList();
+    void Refresh();
 
 public:
-    virtual const char* Name(uint32_t inx) const = 0;
+    virtual const char* GetNameByIndex(uint32_t inx) const = 0;
 
-    virtual uint32_t Count() const = 0;
+    virtual uint32_t GetPickedCount() const = 0;
 
-    virtual std::string PickListName() const = 0;
+    virtual std::string GetName() const = 0;
 
 public:
-    bool Pick(std::initializer_list<const char*> list);
+    bool Pick(const std::vector<const char*>& list);
 
     bool Pick(const char* name);
 
@@ -66,11 +66,11 @@ public:
     Layers();
 
 public:
-    const char* Name(uint32_t inx) const override;
+    const char* GetNameByIndex(uint32_t inx) const override;
 
-    uint32_t Count() const override;
+    uint32_t GetPickedCount() const override;
 
-    std::string PickListName() const override;
+    std::string GetName() const override;
 };
 //----------------------------------------------------------------
 
@@ -83,11 +83,11 @@ public:
     Extensions(const char* layerName = nullptr);
 
 public:
-    const char* Name(uint32_t inx) const override;
+    const char* GetNameByIndex(uint32_t inx) const override;
 
-    uint32_t Count() const override;
+    uint32_t GetPickedCount() const override;
 
-    std::string PickListName() const override;
+    std::string GetName() const override;
 };
 //----------------------------------------------------------------
 
@@ -107,11 +107,11 @@ public:
     void Init(VkPhysicalDevice phy, const char* layerName = nullptr);
 
 public:
-    const char* Name(uint32_t inx) const override;
+    const char* GetNameByIndex(uint32_t inx) const override;
 
-    uint32_t Count() const override;
+    uint32_t GetPickedCount() const override;
 
-    std::string PickListName() const override;
+    std::string GetName() const override;
 };
 //----------------------------------------------------------------
 
