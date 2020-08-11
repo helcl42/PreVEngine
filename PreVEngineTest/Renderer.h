@@ -1,8 +1,7 @@
 #ifndef __RENDERER_H__
 #define __RENDERER_H__
 
-#include <ThreadPool.h>
-#include <Buffers.h>
+#include <common/ThreadPool.h>
 
 #include "General.h"
 

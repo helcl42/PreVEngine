@@ -1,0 +1,35 @@
+#ifndef __EVENT_HANDLER_H__
+#define __EVENT_HANDLER_H__
+
+#include "EventsChannel.h"
+
+namespace PreVEngine {
+template <typename EventHandlerType, typename EventType>
+class EventHandler final {
+private:
+    EventHandlerType& m_handlerInstance;
+
+public:
+    EventHandler(EventHandlerType& instance)
+        : m_handlerInstance(instance)
+    {
+        EventChannel::Add<EventType>(m_handlerInstance);
+    }
+
+    virtual ~EventHandler()
+    {
+        EventChannel::Remove<EventType>(m_handlerInstance);
+    }
+
+public:
+    EventHandler(const EventHandler& other) = default;
+
+    EventHandler& operator=(const EventHandler& other) = default;
+
+    EventHandler(EventHandler&& other) = default;
+
+    EventHandler& operator=(EventHandler&& other) = default;
+};
+} // namespace PreVEngine
+
+#endif

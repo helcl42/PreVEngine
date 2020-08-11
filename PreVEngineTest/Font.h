@@ -1,9 +1,9 @@
 #ifndef __FONT_H__
 #define __FONT_H__
 
-#include <Buffers.h>
-#include <Common.h>
-#include <Image.h>
+#include <common/Common.h>
+#include <render/image/ImageFactory.h>
+#include <core/memory/image/ImageBuffer.h>
 
 #include "General.h"
 

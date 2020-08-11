@@ -1,0 +1,45 @@
+#ifndef __EVENT_CHANNEL_QUEUE_MANAGER_H__
+#define __EVENT_CHANNEL_QUEUE_MANAGER_H__
+
+#include "../../common/pattern/Singleton.h"
+#include "IEventChannelQueue.h"
+
+#include <mutex>
+#include <vector>
+
+namespace PreVEngine {
+namespace Internal {
+    class EventChannelQueueManager final : public Singleton<EventChannelQueueManager> {
+    private:
+        friend class Singleton<EventChannelQueueManager>;
+
+    private:
+        std::mutex m_mutex;
+
+        std::vector<IEventChannelQueue*> m_eventChannelQueues;
+
+    private:
+        EventChannelQueueManager(EventChannelQueueManager&& other) = delete;
+
+        EventChannelQueueManager& operator=(EventChannelQueueManager&& other) = delete;
+
+        EventChannelQueueManager(const EventChannelQueueManager& other) = delete;
+
+        EventChannelQueueManager& operator=(const EventChannelQueueManager& other) = delete;
+
+    private:
+        EventChannelQueueManager() = default;
+
+        ~EventChannelQueueManager() = default;
+
+    public:
+        void Add(IEventChannelQueue& queue);
+
+        void Remove(IEventChannelQueue& queue);
+
+        void BroadcastAll();
+    };
+} // namespace Internal
+} // namespace PreVEngine
+
+#endif

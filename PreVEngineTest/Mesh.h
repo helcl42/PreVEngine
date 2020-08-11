@@ -1,7 +1,7 @@
 #ifndef __MESH_H__
 #define __MESH_H__
 
-#include <Utils.h>
+#include <util/Utils.h>
 
 #include "AssimpCommon.h"
 
