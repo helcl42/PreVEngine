@@ -1,6 +1,6 @@
 #include "ImageBuffer.h"
 
-#include "../../../util/Utils.h"
+#include "../../../util/MathUtils.h"
 #include "../../instance/Validation.h"
 
 namespace PreVEngine {

@@ -13,6 +13,8 @@
 #include <scene/component/NodeComponentHelper.h>
 #include <scene/graph/GraphTraversal.h>
 #include <scene/graph/SceneNode.h>
+#include <util/MathUtils.h>
+#include <util/VkUtils.h>
 
 using namespace PreVEngine;
 
