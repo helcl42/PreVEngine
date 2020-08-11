@@ -1,7 +1,8 @@
 #include "Shader.h"
 
 #include "../../core/Formats.h"
-#include "../../util/Utils.h"
+#include "../../util/MathUtils.h"
+#include "../../util/VkUtils.h"
 
 #include <algorithm>
 #include <iostream>

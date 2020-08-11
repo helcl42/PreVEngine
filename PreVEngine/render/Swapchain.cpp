@@ -1,5 +1,6 @@
 #include "Swapchain.h"
-#include "../util/Utils.h"
+#include "../util/MathUtils.h"
+#include "../util/VkUtils.h"
 
 #include <algorithm>
 
