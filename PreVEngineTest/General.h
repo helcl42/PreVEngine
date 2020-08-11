@@ -9,6 +9,7 @@
 #include <core/memory/buffer/IndexBuffer.h>
 #include <core/memory/buffer/UniformBuffer.h>
 #include <core/memory/buffer/VertexBuffer.h>
+#include <render/image/Image.h>
 #include <scene/component/ComponentRepository.h>
 #include <scene/component/NodeComponentHelper.h>
 #include <scene/graph/GraphTraversal.h>
