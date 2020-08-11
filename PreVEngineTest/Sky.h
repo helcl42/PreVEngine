@@ -1,7 +1,6 @@
 #ifndef __SKY_H__
 #define __SKY_H__
 
-#include "Common.h"
 #include "General.h"
 
 static const float SKY_BOX_SIZE = 300.0f;

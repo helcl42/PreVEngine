@@ -1,7 +1,18 @@
 #ifndef __GENERAL_H__
 #define __GENERAL_H__
 
-#include <Common.h>
+#include <common/Common.h>
+#include <core/memory/image/ImageBuffer.h>
+#include <core/memory/image/ColorImageBuffer.h>
+#include <core/memory/image/DepthImageBuffer.h>
+#include <core/memory/image/ImageStorageBuffer.h>
+#include <core/memory/buffer/IndexBuffer.h>
+#include <core/memory/buffer/UniformBuffer.h>
+#include <core/memory/buffer/VertexBuffer.h>
+#include <scene/component/ComponentRepository.h>
+#include <scene/component/NodeComponentHelper.h>
+#include <scene/graph/GraphTraversal.h>
+#include <scene/graph/SceneNode.h>
 
 using namespace PreVEngine;
 

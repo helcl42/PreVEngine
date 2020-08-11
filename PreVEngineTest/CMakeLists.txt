@@ -1,17 +1,23 @@
 project(PreVEngineTest)
 cmake_minimum_required(VERSION 2.8)
 
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+SET(SOURCE_GROUP_DELIMITER "/")
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     add_definitions(-std=c++17)
 endif()
 
-include_directories("${PROJECT_SOURCE_DIR}")
+# include_directories("${PROJECT_SOURCE_DIR}")
 include_directories("../PreVEngine/External")
 include_directories("../Dependencies/glm")
 include_directories("../Dependencies/assimp/include")
 
-file(GLOB SRC_LIST "*.h" "*.cpp")  
-add_executable(${PROJECT_NAME} ${SRC_LIST})
+FILE(GLOB ROOT_SRC_LIST "*.h" "*.cpp")
+
+SOURCE_GROUP("" FILES ${ROOT_SRC_LIST})
+
+add_executable(${PROJECT_NAME} ${ROOT_SRC_LIST})
 
 #---------------Find PreVEngine---------------
 if(NOT TARGET PreVEngine)

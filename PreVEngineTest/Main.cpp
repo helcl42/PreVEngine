@@ -5,13 +5,10 @@
 #include <random>
 
 #include <App.h>
-#include <Common.h>
-#include <Component.h>
-#include <Image.h>
-#include <Inputs.h>
-#include <SceneGraph.h>
-#include <Shader.h>
-#include <Utils.h>
+#include <render/image/Image.h>
+#include <render/shader/ShaderFactory.h>
+#include <input/InputFacade.h>
+#include <common/pattern/Nullable.h>
 
 #include "Animation.h"
 #include "Camera.h"

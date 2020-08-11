@@ -1,9 +1,9 @@
 #ifndef __PIPELINE_H__
 #define __PIPELINE_H__
 
-#include <RenderPass.h>
-#include <Shader.h>
-#include <Utils.h>
+#include <render/pass/RenderPass.h>
+#include <render/shader/Shader.h>
+#include <util/Utils.h>
 
 using namespace PreVEngine;
 
