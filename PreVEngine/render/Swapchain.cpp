@@ -19,7 +19,7 @@ Swapchain::Swapchain(const Queue& presentQueue, const Queue& graphicsQueue, Rend
 
     m_commandPool = graphicsQueue.CreateCommandPool();
 
-    m_depthBuffer.Create(ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, renderPass.GetDepthFormat() });
+    m_depthBuffer.Create(ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, renderPass.GetDepthFormat(), 0, false, false, VK_IMAGE_VIEW_TYPE_2D });
 
     VkSemaphoreCreateInfo semaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
     VKERRCHECK(vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_acquireSemaphore));
