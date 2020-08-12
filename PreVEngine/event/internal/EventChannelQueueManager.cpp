@@ -1,5 +1,7 @@
 #include "EventChannelQueueManager.h"
 
+#include <algorithm>
+
 namespace PreVEngine {
 namespace Internal {
     void EventChannelQueueManager::Add(IEventChannelQueue& queue)

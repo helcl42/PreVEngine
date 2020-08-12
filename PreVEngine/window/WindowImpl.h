@@ -5,6 +5,8 @@
 #include "Surface.h"
 #include "WindowCommon.h"
 
+#include <string.h>
+
 namespace PreVEngine {
 class EventFIFO {
 public:

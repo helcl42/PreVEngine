@@ -2,6 +2,8 @@
 
 #include "../core/instance/Validation.h"
 
+#include <cstring>
+
 namespace PreVEngine {
 bool PickList::IsPicked(const char* name) const
 {

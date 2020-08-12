@@ -27,6 +27,7 @@
 #define cTICK "\u2713"
 #define PAUSE
 #elif __LINUX__
+#include <stdlib.h>
 #include <xkbcommon/xkbcommon.h>
 #define cTICK "\u2713"
 #define PAUSE

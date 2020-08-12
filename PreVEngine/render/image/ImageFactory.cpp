@@ -2,7 +2,7 @@
 #include "../../core/instance/Validation.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "External/stb_image.h"
+#include "external/stb_image.h"
 
 #include <filesystem>
 
