@@ -60,7 +60,7 @@ public:
 
     static const inline uint32_t SHADOW_MAP_DIMENSIONS = 2048;
 
-    static const inline VkFilter SHADOW_MAP_FILTER = VK_FILTER_LINEAR;
+    static const inline VkFilter SHADOW_MAP_FILTER = VK_FILTER_NEAREST;
 
     static const inline uint32_t CASCADES_COUNT = 4;
 
@@ -123,8 +123,8 @@ private:
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         m_depthBuffer = std::make_shared<DepthImageBuffer>(*allocator);
-        m_depthBuffer->Create(ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, DEPTH_FORMAT, 0, false, true, VK_IMAGE_VIEW_TYPE_2D_ARRAY, CASCADES_COUNT });
-        m_depthBuffer->CreateSampler();
+        m_depthBuffer->Create(ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, DEPTH_FORMAT, 0, false, false, VK_IMAGE_VIEW_TYPE_2D_ARRAY, CASCADES_COUNT });
+        m_depthBuffer->CreateSampler(1.0f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, false);
 
         m_cascades.resize(CASCADES_COUNT);
         for (uint32_t i = 0; i < CASCADES_COUNT; i++) {

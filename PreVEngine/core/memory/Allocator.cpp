@@ -271,7 +271,7 @@ void Allocator::GenerateMipmaps(const VkImage image, VkFormat imageFormat, const
         LOGE("Texture image format does not support linear blitting!");
         exit(0);
     }
-
+    
     BeginCommandBuffer();
 
     for (uint32_t layerIndex = 0; layerIndex < layersCount; layerIndex++) {
