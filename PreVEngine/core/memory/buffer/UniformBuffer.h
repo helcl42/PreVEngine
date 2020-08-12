@@ -2,6 +2,7 @@
 #define __UNIFORM_BUFFER_H__
 
 #include "Buffer.h"
+#include "../../../util/MathUtils.h"
 
 namespace PreVEngine {
 class UBO {

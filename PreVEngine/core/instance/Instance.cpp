@@ -6,7 +6,7 @@ Instance::Instance(const bool enableValidation, const char* appName, const char*
     Layers layers;
 #ifdef ENABLE_VALIDATION
     if (enableValidation) {
-        layers.Pick({ "VK_LAYER_KHRONOS_validation" });
+        layers.Pick("VK_LAYER_KHRONOS_validation");
     }
     layers.Print();
 #endif

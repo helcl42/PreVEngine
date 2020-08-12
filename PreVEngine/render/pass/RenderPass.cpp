@@ -73,8 +73,9 @@ void RenderPass::Create()
 {
     ASSERT(!m_renderPass, "Renderpass cannot be modified after its been linked to swapchain or pipeline.\n");
 
-    if (m_renderPass != VK_NULL_HANDLE)
+    if (m_renderPass != VK_NULL_HANDLE) {
         return;
+    }
 
     std::vector<VkSubpassDescription> vkSubs;
     vkSubs.insert(vkSubs.end(), m_subpasses.begin(), m_subpasses.end());

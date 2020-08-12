@@ -3,6 +3,7 @@
 
 #include "../../common/pattern/Singleton.h"
 #include "IEventChannelQueue.h"
+#include "EventChannelQueueManager.h"
 
 #include <mutex>
 #include <vector>
