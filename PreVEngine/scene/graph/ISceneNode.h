@@ -8,7 +8,7 @@
 #include <memory>
 #include <vector>
 
-namespace PreVEngine {
+namespace prev {
 template <typename NodeFlagsType>
 class ISceneNode {
 public:
@@ -49,6 +49,6 @@ public:
 public:
     virtual ~ISceneNode() = default;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif // !__ISCENE_NODE_H__

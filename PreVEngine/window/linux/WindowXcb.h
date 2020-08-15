@@ -12,7 +12,7 @@
 #include <xkbcommon/xkbcommon.h> // Keyboard
 //-------------------------------------------------
 
-namespace PreVEngine {
+namespace prev {
 class WindowXcb final : public WindowImpl {
 public:
     WindowXcb(const char* title);

@@ -4,7 +4,7 @@
 
 #include <algorithm>
 
-namespace PreVEngine {
+namespace prev {
 Swapchain::Swapchain(const Queue& presentQueue, const Queue& graphicsQueue, RenderPass& renderPass, Allocator& allocator)
     : m_presentQueue(presentQueue)
     , m_graphicsQueue(graphicsQueue)
@@ -437,4 +437,4 @@ const Queue& Swapchain::GetGraphicsQueue() const
     return m_graphicsQueue;
 }
 
-} // namespace PreVEngine
+} // namespace prev

@@ -19,7 +19,7 @@
 #include "IWindow.h"
 #include "WindowImpl.h"
 
-namespace PreVEngine {
+namespace prev {
 class AbstractWindow : public IWindow {
 private:
     std::shared_ptr<WindowImpl> m_windowImpl;
@@ -183,6 +183,6 @@ public:
     }
 };
 
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

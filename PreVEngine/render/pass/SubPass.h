@@ -5,7 +5,7 @@
 
 #include <vector>
 
-namespace PreVEngine {
+namespace prev {
 class RenderPass;
 
 class SubPass final {
@@ -35,6 +35,6 @@ private:
 
     VkAttachmentReference m_depthReference = { UINT32_MAX, VK_IMAGE_LAYOUT_UNDEFINED };
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

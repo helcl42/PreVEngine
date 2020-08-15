@@ -1,7 +1,7 @@
 #include "WindowImpl.h"
 #include "../core/instance/Validation.h"
 
-namespace PreVEngine {
+namespace prev {
 WindowImpl::WindowImpl()
     : m_isRunning(false)
     , m_hasTextInput(false)
@@ -172,4 +172,4 @@ bool WindowImpl::IsMouseCursorVisible() const
 {
     return m_mouseCursorVisible;
 }
-} // namespace PreVEngine
+} // namespace prev

@@ -4,7 +4,7 @@
 #include "../../common/PickList.h"
 #include "Validation.h"
 
-namespace PreVEngine {
+namespace prev {
 class Layers final : public PickList {
 public:
     Layers();
@@ -19,6 +19,6 @@ public:
 private:
     std::vector<VkLayerProperties> m_itemList;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

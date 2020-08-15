@@ -6,7 +6,7 @@
 
 #include <vector>
 
-namespace PreVEngine {
+namespace prev {
 class Allocator final {
 public:
     Allocator(const Queue& queue, const VkDeviceSize blockSize = 256);
@@ -59,6 +59,6 @@ private:
 
     VkCommandBuffer m_commandBuffer;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

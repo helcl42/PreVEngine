@@ -6,7 +6,7 @@
 
 #include <filesystem>
 
-namespace PreVEngine {
+namespace prev {
 bool ImageFactory::FileExists(const std::string& fileName)
 {
 #if defined(__ANDROID__)
@@ -89,4 +89,4 @@ std::unique_ptr<Image> ImageFactory::CreateImageWithColor(const uint32_t width, 
 
     return image;
 }
-} // namespace PreVEngine
+} // namespace prev

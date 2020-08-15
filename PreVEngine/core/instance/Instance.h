@@ -5,7 +5,7 @@
 #include "Layers.h"
 #include "Validation.h"
 
-namespace PreVEngine {
+namespace prev {
 class Instance {
 public:
     Instance(const Layers& layers, const Extensions& extensions, const char* appName = "PreVEngineApp", const char* engineName = "PreVEngine");
@@ -29,6 +29,6 @@ private:
 
     DebugReport m_debugReport; // Configure debug report flags here.
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

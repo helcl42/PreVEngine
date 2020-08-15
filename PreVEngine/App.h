@@ -3,7 +3,7 @@
 
 #include "core/Engine.h"
 
-namespace PreVEngine {
+namespace prev {
 template <typename NodeFlagsType>
 class App {
 protected:
@@ -50,6 +50,6 @@ public:
         m_engine->ShutDown();
     }
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

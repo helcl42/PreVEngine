@@ -182,7 +182,7 @@ const char* VkResultStr(const VkResult err);
     }
 #endif
 
-namespace PreVEngine {
+namespace prev {
 class DebugReport {
 private:
     VkInstance m_instance;
@@ -213,6 +213,6 @@ public:
 
     void Destroy();
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

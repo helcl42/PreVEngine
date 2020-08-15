@@ -3,7 +3,7 @@
 
 #include "../Allocator.h"
 
-namespace PreVEngine {
+namespace prev {
 struct ImageBufferCreateInfo {
     ImageBufferCreateInfo(const VkExtent2D& ext, const VkImageType imgType, const VkFormat fmt, const VkImageCreateFlags flgs = 0, const bool mipmap = false, const bool filtering = true, const VkImageViewType vwType = VK_IMAGE_VIEW_TYPE_2D, const uint32_t lrCount = 1, const VkSamplerAddressMode mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, const uint8_t* data = nullptr);
 
@@ -36,6 +36,6 @@ struct ImageBufferCreateInfo {
     const std::vector<const uint8_t*> layerData;
 };
 
-} // namespace PreVEngine
+} // namespace prev
 
 #endif // !__IIMAGE_BUFFER_H__

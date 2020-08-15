@@ -3,7 +3,7 @@
 #include "../../../util/MathUtils.h"
 #include "../../instance/Validation.h"
 
-namespace PreVEngine {
+namespace prev {
 ImageBuffer::ImageBuffer(Allocator& allocator)
     : AbstractImageBuffer(allocator)
 {
@@ -42,4 +42,4 @@ void ImageBuffer::Resize(const VkExtent3D& extent)
     LOGW("ImageBuffer can not be resized - it has fixed size");
 }
 
-} // namespace PreVEngine
+} // namespace prev

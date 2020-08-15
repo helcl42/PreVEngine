@@ -13,7 +13,7 @@
 #include <sstream>
 #include <vector>
 
-namespace PreVEngine {
+namespace prev {
 // Global functions !!!
 template <typename Type, ptrdiff_t n>
 ptrdiff_t ArraySize(Type (&)[n])
@@ -375,6 +375,6 @@ public:
     }
 };
 
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

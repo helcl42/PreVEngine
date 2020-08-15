@@ -8,7 +8,7 @@
 #include "WindowCommon.h"
 #include "Surface.h"
 
-namespace PreVEngine {
+namespace prev {
 class IWindow {
 public:
     virtual Surface& GetSurface(VkInstance instance) = 0;
@@ -52,6 +52,6 @@ public:
 public:
     virtual ~IWindow() = default;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

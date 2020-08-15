@@ -1,6 +1,6 @@
 #include "Layers.h"
 
-namespace PreVEngine {
+namespace prev {
 Layers::Layers()
 {
     uint32_t count = 0;
@@ -24,4 +24,4 @@ std::string Layers::GetName() const
 {
     return "Layers";
 }
-} // namespace PreVEngine
+} // namespace prev

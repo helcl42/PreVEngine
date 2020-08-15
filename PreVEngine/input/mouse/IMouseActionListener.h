@@ -3,7 +3,7 @@
 
 #include "MouseEvents.h"
 
-namespace PreVEngine {
+namespace prev {
 class IMouseActionListener {
 public:
     virtual void OnMouseAction(const MouseEvent& mouseAction) = 0;
@@ -11,6 +11,6 @@ public:
 public:
     virtual ~IMouseActionListener() = default;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

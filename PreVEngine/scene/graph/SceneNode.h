@@ -3,7 +3,7 @@
 
 #include "ISceneNode.h"
 
-namespace PreVEngine {
+namespace prev {
 template <typename NodeFlagsType>
 class SceneNode : public std::enable_shared_from_this<ISceneNode<NodeFlagsType> >, public ISceneNode<NodeFlagsType> {
 public:
@@ -155,6 +155,6 @@ protected:
 
     std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > > m_children;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

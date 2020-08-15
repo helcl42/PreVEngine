@@ -3,10 +3,10 @@
 
 #include <inttypes.h>
 
-namespace PreVEngine {
+namespace prev {
 struct SceneNodeShutDownEvent {
     uint64_t id;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

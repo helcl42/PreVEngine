@@ -6,7 +6,7 @@
 #include <iostream>
 #include <string>
 
-namespace PreVEngine {
+namespace prev {
 template <typename T>
 class FlagSet {
 public:
@@ -200,6 +200,6 @@ std::enable_if_t<is_enum_that_contains_sentinel<T>::value, FlagSet<T> > operator
     fs |= rhs;
     return fs;
 }
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

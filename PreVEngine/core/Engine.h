@@ -14,7 +14,7 @@
 #include <memory>
 #include <string>
 
-namespace PreVEngine {
+namespace prev {
 struct EngineConfig {
     bool validation{ true };
 
@@ -203,6 +203,6 @@ public:
         EventChannel::Broadcast(SurfaceChanged{ m_surface });
     }
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif // !__ENGINE_H__

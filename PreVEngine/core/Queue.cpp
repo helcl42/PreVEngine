@@ -1,6 +1,6 @@
 #include "Queue.h"
 
-namespace PreVEngine {
+namespace prev {
 Queue::Queue(VkQueue h, uint32_t f, uint32_t idx, VkQueueFlags flgs, VkSurfaceKHR surf, VkDevice dvc, PhysicalDevice& physDevice)
     : handle(h)
     , family(f)

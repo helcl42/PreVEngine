@@ -3,7 +3,7 @@
 
 #include "../Allocator.h"
 
-namespace PreVEngine {
+namespace prev {
 class Buffer {
 public:
     Buffer(Allocator& allocator);
@@ -34,5 +34,5 @@ protected:
 
     uint32_t m_stride;
 };
-} // namespace PreVEngine
+} // namespace prev
 #endif // !__BUFFER_H__

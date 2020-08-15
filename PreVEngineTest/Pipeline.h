@@ -5,7 +5,7 @@
 #include <render/shader/Shader.h>
 #include <util/Utils.h>
 
-using namespace PreVEngine;
+using namespace prev;
 
 class IPipeline {
 public:
@@ -74,7 +74,7 @@ protected:
 
 class AbstractGraphicsPipeline : public AbstractPipeline {
 protected:
-    AbstractGraphicsPipeline(const VkDevice device, const VkRenderPass renderpass, const PreVEngine::Shader& shaders)
+    AbstractGraphicsPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::Shader& shaders)
         : AbstractPipeline(device, shaders)
         , m_renderPass(renderpass)
     {

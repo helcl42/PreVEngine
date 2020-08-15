@@ -4,7 +4,7 @@
 #include "Buffer.h"
 #include "../../../util/MathUtils.h"
 
-namespace PreVEngine {
+namespace prev {
 class UBO {
 public:
     UBO(VkBuffer buffer, void* data, const uint32_t offset, const uint32_t range);
@@ -78,6 +78,6 @@ private:
 
     void* m_mapped;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

@@ -1,6 +1,6 @@
 #include "InputFacade.h"
 
-namespace PreVEngine {
+namespace prev {
 bool InputsFacade::RegisterKeyboardActionListener(IKeyboardActionListener& listener)
 {
     return m_keyboardInputComponent.RegisterKeyboardActionListener(listener);
@@ -130,4 +130,4 @@ void InputsFacade::SetMouseCursorVisible(bool visible)
 {
     m_mouseInputComponent.SetCursorVisible(visible);
 }
-} // namespace PreVEngine
+} // namespace prev

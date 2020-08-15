@@ -3,7 +3,7 @@
 
 #include "../../common/Common.h"
 
-namespace PreVEngine {
+namespace prev {
 enum class TouchActionType {
     DOWN,
     UP,
@@ -19,6 +19,6 @@ struct TouchEvent {
 
     glm::vec2 extent;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

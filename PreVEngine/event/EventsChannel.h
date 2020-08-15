@@ -4,7 +4,7 @@
 #include "internal/EventChannelQueue.h"
 #include "internal/EventChannelQueueManager.h"
 
-namespace PreVEngine {
+namespace prev {
 class EventChannel final {
 private:
     EventChannel() = default;
@@ -52,6 +52,6 @@ public:
         Internal::EventChannelQueueManager::Instance().BroadcastAll();
     }
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

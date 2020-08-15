@@ -1,6 +1,6 @@
 #include "DepthImageBuffer.h"
 
-namespace PreVEngine {
+namespace prev {
 DepthImageBuffer::DepthImageBuffer(Allocator& allocator)
     : AbstractImageBuffer(allocator)
 {
@@ -28,4 +28,4 @@ void DepthImageBuffer::Resize(const VkExtent3D& extent)
 
     m_extent = extent;
 }
-} // namespace PreVEngine
+} // namespace prev

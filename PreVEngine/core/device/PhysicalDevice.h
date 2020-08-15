@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace PreVEngine {
+namespace prev {
 class PhysicalDevice {
 public:
     PhysicalDevice();
@@ -61,6 +61,6 @@ private:
 
     VkPhysicalDeviceFeatures m_enabledFeatures = {}; // Set required features.   TODO: finish this.
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

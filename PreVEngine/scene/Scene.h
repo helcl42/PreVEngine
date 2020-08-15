@@ -13,7 +13,7 @@
 #include <inttypes.h>
 #include <memory>
 
-namespace PreVEngine {
+namespace prev {
 struct SceneConfig {
     // swapchain
     bool VSync = true;
@@ -321,6 +321,6 @@ public:
         m_swapchain->UpdateExtent();
     }
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif // !__SCENE_H__

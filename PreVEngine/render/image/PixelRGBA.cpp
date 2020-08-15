@@ -1,6 +1,6 @@
 #include "PixelRGBA.h"
 
-namespace PreVEngine {
+namespace prev {
 PixelRGBA::PixelRGBA()
     : R(0)
     , G(0)
@@ -30,4 +30,4 @@ PixelRGBA PixelRGBA::Lerp(const PixelRGBA& c, const float f)
     return PixelRGBA(static_cast<uint8_t>(f * (c.R - R) + R), static_cast<uint8_t>(f * (c.G - G) + G), static_cast<uint8_t>(f * (c.B - B) + B), static_cast<uint8_t>(f * (c.A - A) + A));
 }
 
-} // namespace PreVEngine
+} // namespace prev

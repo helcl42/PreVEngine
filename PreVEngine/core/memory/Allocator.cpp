@@ -12,7 +12,7 @@
 #define VMA_IMPLEMENTATION
 #include "../../external/vk_mem_alloc.h"
 
-namespace PreVEngine {
+namespace prev {
 Allocator::Allocator(const Queue& q, const VkDeviceSize blockSize)
 {
     m_gpu = q.gpu;
@@ -446,4 +446,4 @@ VkQueue Allocator::GetQueue() const
 {
     return m_queue;
 }
-} // namespace PreVEngine
+} // namespace prev

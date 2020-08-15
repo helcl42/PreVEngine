@@ -4,7 +4,7 @@
 #include "linux/WindowXcb.h"
 #include "windows/WindowWin32.h"
 
-namespace PreVEngine {
+namespace prev {
 AbstractWindow::AbstractWindow(const char* title)
 {
     InitWindow(title, 640, 480, true);
@@ -187,4 +187,4 @@ bool AbstractWindow::ProcessEvents(bool waitForEvent)
 
     return m_windowImpl->IsRunning();
 }
-} // namespace PreVEngine
+} // namespace prev

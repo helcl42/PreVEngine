@@ -3,7 +3,7 @@
 
 #include "KeyboardEvents.h"
 
-namespace PreVEngine {
+namespace prev {
 class IKeyboardActionListener {
 public:
     virtual void OnKeyAction(const KeyEvent& keyEvent) = 0;
@@ -11,6 +11,6 @@ public:
 public:
     virtual ~IKeyboardActionListener() = default;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

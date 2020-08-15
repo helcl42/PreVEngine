@@ -7,7 +7,7 @@
 
 #include <string.h>
 
-namespace PreVEngine {
+namespace prev {
 class EventFIFO {
 public:
     EventFIFO()
@@ -222,6 +222,6 @@ private:
 
     bool m_keyboardKeysState[256] = {};
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

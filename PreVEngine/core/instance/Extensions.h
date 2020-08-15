@@ -4,7 +4,7 @@
 #include "../../common/PickList.h"
 #include "Validation.h"
 
-namespace PreVEngine {
+namespace prev {
 class Extensions final : public PickList {
 public:
     Extensions(const char* layerName = nullptr);
@@ -19,6 +19,6 @@ public:
 private:
     std::vector<VkExtensionProperties> m_itemList;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

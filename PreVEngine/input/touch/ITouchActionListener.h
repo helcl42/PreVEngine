@@ -3,7 +3,7 @@
 
 #include "TouchEvents.h"
 
-namespace PreVEngine {
+namespace prev {
 class ITouchActionListener {
 public:
     virtual void OnTouchAction(const TouchEvent& textEvent) = 0;
@@ -12,6 +12,6 @@ public:
     virtual ~ITouchActionListener() = default;
 };
 
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

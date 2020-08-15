@@ -8,7 +8,7 @@
 #include <iostream>
 #include <sstream>
 
-namespace PreVEngine {
+namespace prev {
 Shader::Shader(const VkDevice device)
     : m_device(device)
     , m_descriptorPool(VK_NULL_HANDLE)
@@ -327,4 +327,4 @@ const std::vector<VkPipelineShaderStageCreateInfo>& Shader::GetShaderStages() co
 {
     return m_shaderStages;
 }
-} // namespace PreVEngine
+} // namespace prev

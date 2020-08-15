@@ -3,7 +3,7 @@
 
 #include <set>
 
-namespace PreVEngine {
+namespace prev {
 template <typename ObserverType>
 class Observer {
 public:
@@ -41,6 +41,6 @@ public:
 protected:
     std::set<ObserverType*> m_observers;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif
