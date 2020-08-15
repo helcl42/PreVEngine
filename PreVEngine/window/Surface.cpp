@@ -1,7 +1,7 @@
 #include "Surface.h"
 #include "../core/instance/Validation.h"
 
-namespace PreVEngine {
+namespace prev {
 Surface::Surface()
 {
 }
@@ -21,4 +21,4 @@ bool Surface::CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const
     VKERRCHECK(vkGetPhysicalDeviceSurfaceSupportKHR(gpu, queueFamily, m_vkSurface, &canPresent));
     return !!canPresent;
 }
-} // namespace PreVEngine
+} // namespace prev

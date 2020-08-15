@@ -11,7 +11,7 @@
 #define IS_ANDROID false // PC: default to low-latency (no fps limit)
 #endif
 
-namespace PreVEngine {
+namespace prev {
 struct SwapchainBuffer {
     VkImage image;
 
@@ -108,6 +108,6 @@ private:
 
     uint32_t m_swapchainImagesCount;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

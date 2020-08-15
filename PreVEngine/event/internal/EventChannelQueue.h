@@ -9,7 +9,7 @@
 #include <vector>
 #include <functional>
 
-namespace PreVEngine {
+namespace prev {
 namespace Internal {
     template <typename EventType>
     class EventChannelQueue final : public Singleton<EventChannelQueue<EventType> >, public IEventChannelQueue {
@@ -121,6 +121,6 @@ namespace Internal {
         }
     };
 } // namespace Internal
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

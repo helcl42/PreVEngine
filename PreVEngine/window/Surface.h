@@ -3,7 +3,7 @@
 
 #include "../core/instance/Validation.h"
 
-namespace PreVEngine {
+namespace prev {
 
 class Surface { // Vulkan Surface
 public:
@@ -21,6 +21,6 @@ protected:
 
     VkSurfaceKHR m_vkSurface = VK_NULL_HANDLE;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

@@ -3,7 +3,7 @@
 #include <string>
 #include <stdexcept>
 
-namespace PreVEngine {
+namespace prev {
 Buffer::Buffer(Allocator& allocator)
     : m_allocator(allocator)
     , m_allocation(nullptr)
@@ -59,4 +59,4 @@ Buffer::operator VkBuffer() const
 {
     return m_buffer;
 }
-} // namespace PreVEngine
+} // namespace prev

@@ -5,7 +5,7 @@
 
 #include <vector>
 
-namespace PreVEngine {
+namespace prev {
 class PhysicalDevices {
 public:
     PhysicalDevices(const VkInstance instance);
@@ -22,6 +22,6 @@ public:
 private:
     std::vector<PhysicalDevice> m_gpuList;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

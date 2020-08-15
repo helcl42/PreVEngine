@@ -7,7 +7,7 @@
 
 #include "WindowImpl.h"
 
-namespace PreVEngine {
+namespace prev {
 class InputConvertor {
 public:
     static KeyActionType GetKeyActionType(const ActionType action);
@@ -18,6 +18,6 @@ public:
 
     static TouchActionType GetTouchActionType(const ActionType action);
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

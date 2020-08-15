@@ -5,7 +5,7 @@
 
 #include <vector>
 
-namespace PreVEngine {
+namespace prev {
 class ShaderFactory {
 public:
     template <typename ShaderType>
@@ -37,6 +37,6 @@ public:
 private:
     std::vector<char> LoadByteCodeFromFile(const std::string& filename) const;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

@@ -3,7 +3,7 @@
 
 #include "Buffer.h"
 
-namespace PreVEngine {
+namespace prev {
 class IBO : public Buffer {
 public:
     using Buffer::Buffer;
@@ -18,6 +18,6 @@ public:
 private:
     VkIndexType m_indexType = VK_INDEX_TYPE_MAX_ENUM;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

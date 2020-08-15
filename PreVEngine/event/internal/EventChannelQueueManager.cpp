@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-namespace PreVEngine {
+namespace prev {
 namespace Internal {
     void EventChannelQueueManager::Add(IEventChannelQueue& queue)
     {
@@ -33,4 +33,4 @@ namespace Internal {
         }
     }
 } // namespace Internal
-} // namespace PreVEngine
+} // namespace prev

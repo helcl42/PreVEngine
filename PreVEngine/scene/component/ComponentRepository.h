@@ -7,7 +7,7 @@
 #include <map>
 #include <memory>
 
-namespace PreVEngine {
+namespace prev {
 template <typename ItemType>
 class ComponentRepository final : public Singleton<ComponentRepository<ItemType> > {
 public:
@@ -64,6 +64,6 @@ private:
 
     EventHandler<ComponentRepository<ItemType>, SceneNodeShutDownEvent> m_shutDownHandler{ *this };
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

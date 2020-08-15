@@ -3,7 +3,7 @@
 
 #include "EventsChannel.h"
 
-namespace PreVEngine {
+namespace prev {
 template <typename EventHandlerType, typename EventType>
 class EventHandler final {
 private:
@@ -30,6 +30,6 @@ public:
 
     EventHandler& operator=(EventHandler&& other) = default;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

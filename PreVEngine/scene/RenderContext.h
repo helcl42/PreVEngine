@@ -3,7 +3,7 @@
 
 #include "../core/instance/Validation.h"
 
-namespace PreVEngine {
+namespace prev {
 struct RenderContext {
     VkFramebuffer frameBuffer;
 
@@ -13,6 +13,6 @@ struct RenderContext {
 
     VkExtent2D fullExtent;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

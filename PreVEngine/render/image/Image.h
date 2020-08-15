@@ -3,7 +3,7 @@
 
 #include "PixelRGBA.h"
 
-namespace PreVEngine {
+namespace prev {
 
 class Image {
 public:
@@ -49,6 +49,6 @@ private:
 
     PixelRGBA* m_buffer;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

@@ -5,7 +5,7 @@
 #include "mouse/MouseInputComponent.h"
 #include "touch/TouchInputComponent.h"
 
-namespace PreVEngine {
+namespace prev {
 class InputsFacade {
 public:
     InputsFacade() = default;
@@ -82,6 +82,6 @@ private:
     TouchInputComponent m_touchInuptComponent;
 };
 
-} // namespace PreVEngine
+} // namespace prev
 
 #endif // !__INPUTS_H__

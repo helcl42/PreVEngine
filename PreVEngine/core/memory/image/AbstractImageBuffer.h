@@ -3,7 +3,7 @@
 
 #include "IImageBuffer.h"
 
-namespace PreVEngine {
+namespace prev {
 class AbstractImageBuffer : public IImageBuffer {
 public:
     AbstractImageBuffer(Allocator& allocator);
@@ -63,6 +63,6 @@ protected:
 
     VkImageViewType m_imageViewType;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

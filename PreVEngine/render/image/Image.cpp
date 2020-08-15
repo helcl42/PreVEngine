@@ -2,7 +2,7 @@
 
 #include <cstring>
 
-namespace PreVEngine {
+namespace prev {
 Image::Image()
     : m_width(0)
     , m_height(0)
@@ -128,4 +128,4 @@ void Image::Clear(const PixelRGBA& color)
         m_buffer[i] = color;
     }
 }
-} // namespace PreVEngine
+} // namespace prev

@@ -8,7 +8,7 @@
 #include <memory>
 #include <vector>
 
-namespace PreVEngine {
+namespace prev {
 class NodeComponentHelper {
 public:
     template <typename NodeFlagsType, typename ComponentType>
@@ -92,6 +92,6 @@ public:
         return false;
     }
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

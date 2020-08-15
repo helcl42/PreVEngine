@@ -1,6 +1,6 @@
 #include "Extensions.h"
 
-namespace PreVEngine {
+namespace prev {
 Extensions::Extensions(const char* layerName)
 {
     uint32_t count = 0;
@@ -24,4 +24,4 @@ std::string Extensions::GetName() const
 {
     return "Extensions";
 }
-} // namespace PreVEngine
+} // namespace prev

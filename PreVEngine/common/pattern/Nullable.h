@@ -1,7 +1,7 @@
 #ifndef __NULLABLE_H__
 #define __NULLABLE_H__
 
-namespace PreVEngine {
+namespace prev {
 template <typename ObjectType>
 class Nullable {
 public:
@@ -34,5 +34,5 @@ private:
 
     ObjectType m_value;
 };
-} // namespace PreVEngine
+} // namespace prev
 #endif

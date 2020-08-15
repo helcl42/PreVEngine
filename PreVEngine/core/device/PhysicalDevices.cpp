@@ -1,6 +1,6 @@
 #include "PhysicalDevices.h"
 
-namespace PreVEngine {
+namespace prev {
 PhysicalDevices::PhysicalDevices(const VkInstance instance)
 {
     uint32_t gpuCount = 0;
@@ -63,4 +63,4 @@ const PhysicalDevice& PhysicalDevices::operator[](const size_t i) const
 {
     return m_gpuList.at(i);
 }
-} // namespace PreVEngine
+} // namespace prev

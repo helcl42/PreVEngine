@@ -3,7 +3,7 @@
 
 #include <inttypes.h>
 
-namespace PreVEngine {
+namespace prev {
 struct Position {
     int16_t x;
 
@@ -125,6 +125,6 @@ struct Event {
         tag = EventType::NONE;
     }
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

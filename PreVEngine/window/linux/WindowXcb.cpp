@@ -5,7 +5,7 @@
 #ifdef ENABLE_MULTITOUCH
 #include <X11/extensions/XInput2.h> // MultiTouch
 
-namespace PreVEngine {
+namespace prev {
 typedef uint16_t xcb_input_device_id_t;
 typedef uint32_t xcb_input_fp1616_t;
 
@@ -34,11 +34,11 @@ typedef struct xcb_input_touch_begin_event_t { // from xinput.h in XCB 1.12 (cur
     // xcb_input_modifier_info_t mods;
     // xcb_input_group_info_t    group;
 } xcb_input_touch_begin_event_t;
-} // namespace PreVEngine
+} // namespace prev
 
 #endif
 
-namespace PreVEngine {
+namespace prev {
 
 // Convert native EVDEV key-code to cross-platform USB HID code.
 const unsigned char EVDEV_TO_HID[256] = {
@@ -418,6 +418,6 @@ bool WindowXcb::CanPresent(VkPhysicalDevice gpu, uint32_t queue_family) const
 {
     return vkGetPhysicalDeviceXcbPresentationSupportKHR(gpu, queue_family, m_xcbConnection, m_xcbScreen->root_visual) == VK_TRUE;
 }
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

@@ -7,7 +7,7 @@
 #include <mutex>
 #include <vector>
 
-namespace PreVEngine {
+namespace prev {
 namespace Internal {
     class EventChannelQueueManager final : public Singleton<EventChannelQueueManager> {
     private:
@@ -40,6 +40,6 @@ namespace Internal {
         void BroadcastAll();
     };
 } // namespace Internal
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

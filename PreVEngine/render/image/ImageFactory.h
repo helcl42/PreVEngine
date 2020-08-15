@@ -7,7 +7,7 @@
 #include <memory>
 #include <string>
 
-namespace PreVEngine {
+namespace prev {
 class ImageFactory {
 private:
     static bool FileExists(const std::string& fileName);
@@ -19,6 +19,6 @@ public:
 
     std::unique_ptr<Image> CreateImageWithColor(const uint32_t width, const uint32_t height, const PixelRGBA& color) const;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif // !__IMAGE_FACTORY_H__

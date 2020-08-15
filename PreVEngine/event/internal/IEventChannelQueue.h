@@ -1,7 +1,7 @@
 #ifndef __IEVENT_CHANNEL_QUEUE_H__
 #define __IEVENT_CHANNEL_QUEUE_H__
 
-namespace PreVEngine {
+namespace prev {
 namespace Internal {
     class IEventChannelQueue {
     public:
@@ -11,6 +11,6 @@ namespace Internal {
         virtual ~IEventChannelQueue() = default;
     };
 } // namespace Internal
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

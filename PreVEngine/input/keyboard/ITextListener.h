@@ -3,7 +3,7 @@
 
 #include "KeyboardEvents.h"
 
-namespace PreVEngine {
+namespace prev {
 class ITextListener {
 public:
     virtual void OnText(const TextEvent& textEvent) = 0;
@@ -11,6 +11,6 @@ public:
 public:
     virtual ~ITextListener() = default;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

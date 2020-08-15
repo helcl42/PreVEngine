@@ -6,7 +6,7 @@
 
 #include <memory>
 
-namespace PreVEngine {
+namespace prev {
 struct Queue {
     VkQueue handle;
 
@@ -28,6 +28,6 @@ struct Queue {
 
     operator VkQueue() const;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

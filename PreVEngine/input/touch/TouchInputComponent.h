@@ -10,7 +10,7 @@
 #include <map>
 #include <mutex>
 
-namespace PreVEngine {
+namespace prev {
 struct Touch {
     uint8_t pointerId;
 
@@ -57,6 +57,6 @@ private:
 
     std::map<uint8_t, Touch> m_touchedDownPointers;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif // !__TOUCH_INPUT_COMPONENT_H__

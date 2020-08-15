@@ -11,7 +11,7 @@
 #include <mutex>
 #include <set>
 
-namespace PreVEngine {
+namespace prev {
 class MouseInputComponent final {
 public:
     MouseInputComponent() = default;
@@ -80,6 +80,6 @@ private:
 
     static inline bool m_cursorVisible{ true };
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

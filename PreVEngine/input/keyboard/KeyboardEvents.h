@@ -4,7 +4,7 @@
 #include "../../common/Common.h"
 #include "KeyCodes.h"
 
-namespace PreVEngine {
+namespace prev {
 enum class KeyActionType : uint32_t {
     PRESS,
     RELEASE
@@ -19,6 +19,6 @@ struct KeyEvent {
 struct TextEvent {
     std::string text;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif

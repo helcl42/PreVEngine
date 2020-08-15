@@ -17,7 +17,7 @@
 #include <util/MathUtils.h>
 #include <util/VkUtils.h>
 
-using namespace PreVEngine;
+using namespace prev;
 
 static const std::string TAG_LIGHT = "Light";
 static const std::string TAG_MAIN_LIGHT = "MainLight";

@@ -1,6 +1,6 @@
 ﻿#include "Instance.h"
 
-namespace PreVEngine {
+namespace prev {
 Instance::Instance(const bool enableValidation, const char* appName, const char* engineName)
 {
     Layers layers;
@@ -110,4 +110,4 @@ Instance::operator VkInstance() const
 {
     return m_instance;
 }
-} // namespace PreVEngine
+} // namespace prev

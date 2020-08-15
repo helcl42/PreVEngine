@@ -3,7 +3,7 @@
 
 #include <inttypes.h>
 
-namespace PreVEngine {
+namespace prev {
 struct PixelRGBA {
     PixelRGBA();
 
@@ -18,6 +18,6 @@ struct PixelRGBA {
     uint8_t B;
     uint8_t A;
 };
-} // namespace PreVEngine
+} // namespace prev
 
 #endif
