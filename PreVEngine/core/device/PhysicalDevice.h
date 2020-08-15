@@ -1,7 +1,7 @@
 #ifndef __PHYSICAL_DEVICE_H__
 #define __PHYSICAL_DEVICE_H__
 
-#include "../instance/Instance.h"
+#include "../instance/Validation.h"
 
 #include "DeviceExtensions.h"
 

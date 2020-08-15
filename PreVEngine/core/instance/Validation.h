@@ -158,9 +158,9 @@ void SetConsoleTextColor(const ConsoleColor color);
 //#define USE_VULKAN_WRAPPER
 
 #ifdef USE_VULKAN_WRAPPER
-#include <vulkan_wrapper.h> // PC: Build dispatch table, so we can skip loader trampoline-code
+#include <vulkan_wrapper.h> // Android: This must be included AFTER native.h
 #else
-#include <vulkan/vulkan.h> // Android: This must be included AFTER native.h
+#include <vulkan/vulkan.h> // PC: Build dispatch table, so we can skip loader trampoline-code
 #endif
 
 void ShowVkResult(VkResult err);

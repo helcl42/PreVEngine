@@ -1,7 +1,7 @@
 #ifndef __ALLOCATOR_H__
 #define __ALLOCATOR_H__
 
-#include "../../external/vk_mem_alloc.h"
+#include <external/vk_mem_alloc.h>
 #include "../Queue.h"
 
 #include <vector>
