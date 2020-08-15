@@ -9,7 +9,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 
 # include_directories("${PROJECT_SOURCE_DIR}")
-include_directories("../PreVEngine/External")
+include_directories("../PreVEngine/external")
 include_directories("../Dependencies/glm")
 include_directories("../Dependencies/assimp/include")
 

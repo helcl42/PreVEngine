@@ -6,6 +6,7 @@
 #include "../window/Window.h"
 #include "../util/Utils.h"
 #include "../core/device/PhysicalDevices.h"
+#include "../core/instance/Instance.h"
 
 #include "CoreEvents.h"
 #include "device/Device.h"
