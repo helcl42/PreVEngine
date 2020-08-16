@@ -5,8 +5,6 @@
 #include <render/shader/Shader.h>
 #include <util/Utils.h>
 
-using namespace prev;
-
 class IPipeline {
 public:
     virtual VkPipeline Init() = 0;
