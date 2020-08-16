@@ -9,7 +9,7 @@
 #include "../../core/memory/buffer/UniformBuffer.h"
 #include "../../core/memory/image/IImageBuffer.h"
 
-namespace prev {
+namespace prev::render::shader {
 class Shader {
 private:
     struct DescriptorSetInfo {
@@ -120,6 +120,6 @@ public:
     const std::vector<VkVertexInputAttributeDescription>& GetVertexInputAttributeDescriptions() const;
 };
 
-} // namespace prev
+} // namespace prev::render::shader
 
 #endif

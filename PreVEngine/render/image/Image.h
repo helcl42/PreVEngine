@@ -3,8 +3,7 @@
 
 #include "PixelRGBA.h"
 
-namespace prev {
-
+namespace prev::render::image {
 class Image {
 public:
     Image();
@@ -49,6 +48,6 @@ private:
 
     PixelRGBA* m_buffer;
 };
-} // namespace prev
+} // namespace prev::render::image
 
 #endif

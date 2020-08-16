@@ -11,7 +11,7 @@
 #define IS_ANDROID false // PC: default to low-latency (no fps limit)
 #endif
 
-namespace prev {
+namespace prev::render {
 struct SwapchainBuffer {
     VkImage image;
 
@@ -28,7 +28,7 @@ struct SwapchainBuffer {
 
 class Swapchain {
 public:
-    Swapchain(const prev::core::Queue& presentQueue, const prev::core::Queue& graphicsQueue, RenderPass& renderPass, prev::core::memory::Allocator& allocator);
+    Swapchain(const prev::core::Queue& presentQueue, const prev::core::Queue& graphicsQueue, pass::RenderPass& renderPass, prev::core::memory::Allocator& allocator);
 
     virtual ~Swapchain();
 
@@ -76,7 +76,7 @@ private:
 
     const prev::core::Queue& m_graphicsQueue;
 
-    RenderPass& m_renderPass;
+    pass::RenderPass& m_renderPass;
 
     prev::core::memory::Allocator& m_allocator;
 

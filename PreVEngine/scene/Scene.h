@@ -122,9 +122,9 @@ public:
 
     virtual std::shared_ptr<prev::core::device::Device> GetDevice() const = 0;
 
-    virtual std::shared_ptr<Swapchain> GetSwapchain() const = 0;
+    virtual std::shared_ptr<prev::render::Swapchain> GetSwapchain() const = 0;
 
-    virtual std::shared_ptr<RenderPass> GetRenderPass() const = 0;
+    virtual std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const = 0;
 
     virtual std::shared_ptr<prev::core::memory::Allocator> GetAllocator() const = 0;
 
@@ -157,9 +157,9 @@ protected:
 
     std::shared_ptr<prev::core::memory::Allocator> m_computeAllocator;
 
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
-    std::shared_ptr<Swapchain> m_swapchain;
+    std::shared_ptr<prev::render::Swapchain> m_swapchain;
 
     std::shared_ptr<ISceneNode<NodeFlagsType> > m_rootNode;
 
@@ -195,7 +195,7 @@ private:
         const auto colorFormat = m_device->GetGPU().FindSurfaceFormat(m_surface);
         const auto depthFormat = m_device->GetGPU().FindDepthFormat();
 
-        m_renderPass = std::make_shared<RenderPass>(*m_device);
+        m_renderPass = std::make_shared<prev::render::pass::RenderPass>(*m_device);
         m_renderPass->AddColorAttachment(colorFormat, { 0.5f, 0.5f, 0.5f, 1.0f });
         m_renderPass->AddDepthAttachment(depthFormat);
         m_renderPass->AddSubpass({ 0, 1 });
@@ -216,7 +216,7 @@ private:
 
     void InitSwapchain()
     {
-        m_swapchain = std::make_shared<Swapchain>(*m_presentQueue, *m_graphicsQueue, *m_renderPass, *m_allocator);
+        m_swapchain = std::make_shared<prev::render::Swapchain>(*m_presentQueue, *m_graphicsQueue, *m_renderPass, *m_allocator);
 #if defined(__ANDROID__)
         m_swapchain->SetPresentMode(m_config->VSync ? VK_PRESENT_MODE_MAILBOX_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
 #else
@@ -281,12 +281,12 @@ public:
         return m_device;
     }
 
-    std::shared_ptr<Swapchain> GetSwapchain() const override
+    std::shared_ptr<prev::render::Swapchain> GetSwapchain() const override
     {
         return m_swapchain;
     }
 
-    std::shared_ptr<RenderPass> GetRenderPass() const override
+    std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const override
     {
         return m_renderPass;
     }

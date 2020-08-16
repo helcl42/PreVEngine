@@ -51,7 +51,7 @@ public:
     }
 
 protected:
-    AbstractPipeline(const VkDevice device, const Shader& shaders)
+    AbstractPipeline(const VkDevice device, const prev::render::shader::Shader& shaders)
         : m_device(device)
         , m_shaders(shaders)
         , m_pipeline(VK_NULL_HANDLE)
@@ -64,7 +64,7 @@ protected:
 protected:
     const VkDevice m_device;
 
-    const Shader& m_shaders;
+    const prev::render::shader::Shader& m_shaders;
 
     VkPipeline m_pipeline;
 
@@ -74,7 +74,7 @@ protected:
 
 class AbstractGraphicsPipeline : public AbstractPipeline {
 protected:
-    AbstractGraphicsPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::Shader& shaders)
+    AbstractGraphicsPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractPipeline(device, shaders)
         , m_renderPass(renderpass)
     {
@@ -88,7 +88,7 @@ protected:
 
 class AbstractComputePipeline : public AbstractPipeline {
 protected:
-    AbstractComputePipeline(const VkDevice device, const Shader& shaders)
+    AbstractComputePipeline(const VkDevice device, const prev::render::shader::Shader& shaders)
         : AbstractPipeline(device, shaders)
     {
     }
@@ -98,7 +98,7 @@ protected:
 
 class PipelineFactory {
 public:
-    void CreateShadowsPipeline(const VkDevice& device, const VkRenderPass& renderPass, const Shader& shader, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
+    void CreateShadowsPipeline(const VkDevice& device, const VkRenderPass& renderPass, const prev::render::shader::Shader& shader, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
     {
         // Pipeline layout
         VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
@@ -190,7 +190,7 @@ public:
         VKERRCHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &outPipeline));
     }
 
-    void CreateDefaultPipeline(const VkDevice& device, const VkRenderPass& renderPass, const Shader& shader, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool fillMode, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
+    void CreateDefaultPipeline(const VkDevice& device, const VkRenderPass& renderPass, const prev::render::shader::Shader& shader, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool fillMode, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
     {
         // Pipeline layout
         VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
@@ -297,7 +297,7 @@ public:
         VKERRCHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &outPipeline));
     }
 
-    void CreateParticlesPipeline(const VkDevice& device, const VkRenderPass& renderPass, const Shader& shader, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool fillMode, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
+    void CreateParticlesPipeline(const VkDevice& device, const VkRenderPass& renderPass, const prev::render::shader::Shader& shader, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool fillMode, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
     {
         // Pipeline layout
         VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
@@ -404,7 +404,7 @@ public:
         VKERRCHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &outPipeline));
     }
 
-    void CreateDebugPipeline(const VkDevice& device, const VkRenderPass& renderPass, const Shader& shader, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
+    void CreateDebugPipeline(const VkDevice& device, const VkRenderPass& renderPass, const prev::render::shader::Shader& shader, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
     {
         // Pipeline layout
         VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
@@ -507,7 +507,7 @@ public:
         VKERRCHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &outPipeline));
     }
 
-    void CreateDefaultComputePipeline(const VkDevice& device, const Shader& shader, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
+    void CreateDefaultComputePipeline(const VkDevice& device, const prev::render::shader::Shader& shader, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
     {
         VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
         pipelineLayoutInfo.setLayoutCount = 1;
@@ -527,7 +527,7 @@ public:
 
 //////////////////////////////////////////// SHADDWS ////////////////////////////////////////////
 
-class DefaultShadowsShader final : public Shader {
+class DefaultShadowsShader final : public prev::render::shader::Shader {
 public:
     DefaultShadowsShader(const VkDevice device)
         : Shader(device)
@@ -563,7 +563,7 @@ private:
 
 class DefaultShadowsPipeline final : public AbstractGraphicsPipeline {
 public:
-    DefaultShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    DefaultShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -579,7 +579,7 @@ public:
     }
 };
 
-class BumpMappedShadowsShader final : public Shader {
+class BumpMappedShadowsShader final : public prev::render::shader::Shader {
 public:
     BumpMappedShadowsShader(const VkDevice device)
         : Shader(device)
@@ -617,7 +617,7 @@ private:
 
 class BumpMappedShadowsPipeline final : public AbstractGraphicsPipeline {
 public:
-    BumpMappedShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    BumpMappedShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -633,7 +633,7 @@ public:
     }
 };
 
-class TerrainShadowsShader final : public Shader {
+class TerrainShadowsShader final : public prev::render::shader::Shader {
 public:
     TerrainShadowsShader(const VkDevice device)
         : Shader(device)
@@ -669,7 +669,7 @@ private:
 
 class TerrainShadowsPipeline final : public AbstractGraphicsPipeline {
 public:
-    TerrainShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    TerrainShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -685,7 +685,7 @@ public:
     }
 };
 
-class TerrainBumpMappedShadowsShader final : public Shader {
+class TerrainBumpMappedShadowsShader final : public prev::render::shader::Shader {
 public:
     TerrainBumpMappedShadowsShader(const VkDevice device)
         : Shader(device)
@@ -723,7 +723,7 @@ private:
 
 class TerrainBumpMappedShadowsPipeline final : public AbstractGraphicsPipeline {
 public:
-    TerrainBumpMappedShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    TerrainBumpMappedShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -739,7 +739,7 @@ public:
     }
 };
 
-class AnimatedShadowsShader final : public Shader {
+class AnimatedShadowsShader final : public prev::render::shader::Shader {
 public:
     AnimatedShadowsShader(const VkDevice device)
         : Shader(device)
@@ -777,7 +777,7 @@ private:
 
 class AnimatedShadowsPipeline final : public AbstractGraphicsPipeline {
 public:
-    AnimatedShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    AnimatedShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -793,7 +793,7 @@ public:
     }
 };
 
-class AnimatedBumplMappedShadowsShader final : public Shader {
+class AnimatedBumplMappedShadowsShader final : public prev::render::shader::Shader {
 public:
     AnimatedBumplMappedShadowsShader(const VkDevice device)
         : Shader(device)
@@ -833,7 +833,7 @@ private:
 
 class AnimatedBumpMappedShadowsPipeline final : public AbstractGraphicsPipeline {
 public:
-    AnimatedBumpMappedShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    AnimatedBumpMappedShadowsPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -851,7 +851,7 @@ public:
 
 //////////////////////////////////////////// DEFAULT ////////////////////////////////////////////
 
-class DefaultShader final : public Shader {
+class DefaultShader final : public prev::render::shader::Shader {
 public:
     DefaultShader(const VkDevice device)
         : Shader(device)
@@ -892,7 +892,7 @@ private:
 
 class DefaultPipeline final : public AbstractGraphicsPipeline {
 public:
-    DefaultPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    DefaultPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -908,7 +908,7 @@ public:
     }
 };
 
-class NormalMappedShader final : public Shader {
+class NormalMappedShader final : public prev::render::shader::Shader {
 public:
     NormalMappedShader(const VkDevice device)
         : Shader(device)
@@ -952,7 +952,7 @@ private:
 
 class NormalMappedPipeline final : public AbstractGraphicsPipeline {
 public:
-    NormalMappedPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    NormalMappedPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -968,7 +968,7 @@ public:
     }
 };
 
-class ParallaxMappedShader final : public Shader {
+class ParallaxMappedShader final : public prev::render::shader::Shader {
 public:
     ParallaxMappedShader(const VkDevice device)
         : Shader(device)
@@ -1013,7 +1013,7 @@ private:
 
 class ParallaxMappedPipeline final : public AbstractGraphicsPipeline {
 public:
-    ParallaxMappedPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    ParallaxMappedPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -1029,7 +1029,7 @@ public:
     }
 };
 
-class ConeStepMappedShader final : public Shader {
+class ConeStepMappedShader final : public prev::render::shader::Shader {
 public:
     ConeStepMappedShader(const VkDevice device)
         : Shader(device)
@@ -1074,7 +1074,7 @@ private:
 
 class ConeStepMappedPipeline final : public AbstractGraphicsPipeline {
 public:
-    ConeStepMappedPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    ConeStepMappedPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -1092,7 +1092,7 @@ public:
 
 //////////////////////////////////////////// ANIMATION ////////////////////////////////////////////
 
-class AnimationShader final : public Shader {
+class AnimationShader final : public prev::render::shader::Shader {
 public:
     AnimationShader(const VkDevice device)
         : Shader(device)
@@ -1135,7 +1135,7 @@ private:
 
 class AnimationPipeline final : public AbstractGraphicsPipeline {
 public:
-    AnimationPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    AnimationPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -1151,7 +1151,7 @@ public:
     }
 };
 
-class AnimationNormalMappedShader final : public Shader {
+class AnimationNormalMappedShader final : public prev::render::shader::Shader {
 public:
     AnimationNormalMappedShader(const VkDevice device)
         : Shader(device)
@@ -1197,7 +1197,7 @@ private:
 
 class AnimationNormalMappedPipeline final : public AbstractGraphicsPipeline {
 public:
-    AnimationNormalMappedPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    AnimationNormalMappedPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -1213,7 +1213,7 @@ public:
     }
 };
 
-class AnimationParallaxMappedShader final : public Shader {
+class AnimationParallaxMappedShader final : public prev::render::shader::Shader {
 public:
     AnimationParallaxMappedShader(const VkDevice device)
         : Shader(device)
@@ -1260,7 +1260,7 @@ private:
 
 class AnimationParallaxMappedPipeline final : public AbstractGraphicsPipeline {
 public:
-    AnimationParallaxMappedPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    AnimationParallaxMappedPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -1276,7 +1276,7 @@ public:
     }
 };
 
-class AnimationConeStepMappedShader final : public Shader {
+class AnimationConeStepMappedShader final : public prev::render::shader::Shader {
 public:
     AnimationConeStepMappedShader(const VkDevice device)
         : Shader(device)
@@ -1323,7 +1323,7 @@ private:
 
 class AnimationConeStepMappedPipeline final : public AbstractGraphicsPipeline {
 public:
-    AnimationConeStepMappedPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    AnimationConeStepMappedPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -1341,7 +1341,7 @@ public:
 
 //////////////////////////////////////////// FONT ////////////////////////////////////////////
 
-class FonttShader final : public Shader {
+class FonttShader final : public prev::render::shader::Shader {
 public:
     FonttShader(const VkDevice device)
         : Shader(device)
@@ -1380,7 +1380,7 @@ private:
 
 class FontPipeline final : public AbstractGraphicsPipeline {
 public:
-    FontPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    FontPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -1398,7 +1398,7 @@ public:
 
 //////////////////////////////////////////// TERRAIN ////////////////////////////////////////////
 
-class TerrainShader final : public Shader {
+class TerrainShader final : public prev::render::shader::Shader {
 public:
     TerrainShader(const VkDevice device)
         : Shader(device)
@@ -1440,7 +1440,7 @@ private:
 
 class TerrainPipeline final : public AbstractGraphicsPipeline {
 public:
-    TerrainPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    TerrainPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -1456,7 +1456,7 @@ public:
     }
 };
 
-class TerrainNormalMappedShader final : public Shader {
+class TerrainNormalMappedShader final : public prev::render::shader::Shader {
 public:
     TerrainNormalMappedShader(const VkDevice device)
         : Shader(device)
@@ -1500,7 +1500,7 @@ private:
 
 class TerrainNormalMappedPipeline final : public AbstractGraphicsPipeline {
 public:
-    TerrainNormalMappedPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    TerrainNormalMappedPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -1516,7 +1516,7 @@ public:
     }
 };
 
-class TerrainParallaxMappedShader final : public Shader {
+class TerrainParallaxMappedShader final : public prev::render::shader::Shader {
 public:
     TerrainParallaxMappedShader(const VkDevice device)
         : Shader(device)
@@ -1561,7 +1561,7 @@ private:
 
 class TerrainParallaxMappedPipeline final : public AbstractGraphicsPipeline {
 public:
-    TerrainParallaxMappedPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    TerrainParallaxMappedPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -1577,7 +1577,7 @@ public:
     }
 };
 
-class TerrainConeStepMappedShader final : public Shader {
+class TerrainConeStepMappedShader final : public prev::render::shader::Shader {
 public:
     TerrainConeStepMappedShader(const VkDevice device)
         : Shader(device)
@@ -1622,7 +1622,7 @@ private:
 
 class TerrainConeStepMappedPipeline final : public AbstractGraphicsPipeline {
 public:
-    TerrainConeStepMappedPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    TerrainConeStepMappedPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -1640,7 +1640,7 @@ public:
 
 //////////////////////////////////////////// SKY BOX ////////////////////////////////////////////
 
-class SkyBoxShader final : public Shader {
+class SkyBoxShader final : public prev::render::shader::Shader {
 public:
     SkyBoxShader(const VkDevice device)
         : Shader(device)
@@ -1678,7 +1678,7 @@ private:
 
 class SkyBoxPipeline final : public AbstractGraphicsPipeline {
 public:
-    SkyBoxPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    SkyBoxPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -1696,7 +1696,7 @@ public:
 
 //////////////////////////////////////////// WATER ////////////////////////////////////////////
 
-class WaterShader final : public Shader {
+class WaterShader final : public prev::render::shader::Shader {
 public:
     WaterShader(const VkDevice device)
         : Shader(device)
@@ -1740,7 +1740,7 @@ private:
 
 class WaterPipeline final : public AbstractGraphicsPipeline {
 public:
-    WaterPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    WaterPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -1758,7 +1758,7 @@ public:
 
 //////////////////////////////////////////// SUN & FLARES ////////////////////////////////////////////
 
-class SunOcclusionShader final : public Shader {
+class SunOcclusionShader final : public prev::render::shader::Shader {
 public:
     SunOcclusionShader(const VkDevice device)
         : Shader(device)
@@ -1792,7 +1792,7 @@ private:
 
 class SunOcclusionPipeline final : public AbstractGraphicsPipeline {
 public:
-    SunOcclusionPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    SunOcclusionPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -1808,7 +1808,7 @@ public:
     }
 };
 
-class FlareShader final : public Shader {
+class FlareShader final : public prev::render::shader::Shader {
 public:
     FlareShader(const VkDevice device)
         : Shader(device)
@@ -1847,7 +1847,7 @@ private:
 
 class FlarePipeline final : public AbstractGraphicsPipeline {
 public:
-    FlarePipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    FlarePipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -1865,7 +1865,7 @@ public:
 
 //////////////////////////////////////////// PARTICLES ////////////////////////////////////////////
 
-class ParticlesShader final : public Shader {
+class ParticlesShader final : public prev::render::shader::Shader {
 public:
     ParticlesShader(const VkDevice device)
         : Shader(device)
@@ -1920,7 +1920,7 @@ private:
 
 class ParticlesPipeline final : public AbstractGraphicsPipeline {
 public:
-    ParticlesPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    ParticlesPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -1938,7 +1938,7 @@ public:
 
 //////////////////////////////////////////// COMPUTE ////////////////////////////////////////////
 
-class DummyComputeShader final : public Shader {
+class DummyComputeShader final : public prev::render::shader::Shader {
 public:
     DummyComputeShader(const VkDevice device)
         : Shader(device)
@@ -1964,7 +1964,7 @@ private:
 
 class DummyComputePipeline final : public AbstractComputePipeline {
 public:
-    DummyComputePipeline(const VkDevice device, const Shader& shaders)
+    DummyComputePipeline(const VkDevice device, const prev::render::shader::Shader& shaders)
         : AbstractComputePipeline(device, shaders)
     {
     }
@@ -1982,7 +1982,7 @@ public:
 
 //////////////////////////////////////////// SKY ////////////////////////////////////////////
 
-class WeatherComputeShader final : public Shader {
+class WeatherComputeShader final : public prev::render::shader::Shader {
 public:
     WeatherComputeShader(const VkDevice device)
         : Shader(device)
@@ -2009,7 +2009,7 @@ private:
 
 class WeatherComputePipeline final : public AbstractComputePipeline {
 public:
-    WeatherComputePipeline(const VkDevice device, const Shader& shaders)
+    WeatherComputePipeline(const VkDevice device, const prev::render::shader::Shader& shaders)
         : AbstractComputePipeline(device, shaders)
     {
     }
@@ -2025,7 +2025,7 @@ public:
     }
 };
 
-class PerlinWorleyComputeShader final : public Shader {
+class PerlinWorleyComputeShader final : public prev::render::shader::Shader {
 public:
     PerlinWorleyComputeShader(const VkDevice device)
         : Shader(device)
@@ -2051,7 +2051,7 @@ private:
 
 class PerlinWorleyComputePipeline final : public AbstractComputePipeline {
 public:
-    PerlinWorleyComputePipeline(const VkDevice device, const Shader& shaders)
+    PerlinWorleyComputePipeline(const VkDevice device, const prev::render::shader::Shader& shaders)
         : AbstractComputePipeline(device, shaders)
     {
     }
@@ -2067,7 +2067,7 @@ public:
     }
 };
 
-class WorleyComputeShader final : public Shader {
+class WorleyComputeShader final : public prev::render::shader::Shader {
 public:
     WorleyComputeShader(const VkDevice device)
         : Shader(device)
@@ -2093,7 +2093,7 @@ private:
 
 class WorleyComputePipeline final : public AbstractComputePipeline {
 public:
-    WorleyComputePipeline(const VkDevice device, const Shader& shaders)
+    WorleyComputePipeline(const VkDevice device, const prev::render::shader::Shader& shaders)
         : AbstractComputePipeline(device, shaders)
     {
     }
@@ -2109,7 +2109,7 @@ public:
     }
 };
 
-class SkyShader final : public Shader {
+class SkyShader final : public prev::render::shader::Shader {
 public:
     SkyShader(const VkDevice device)
         : Shader(device)
@@ -2143,7 +2143,7 @@ private:
 
 class SkyPipeline final : public AbstractComputePipeline {
 public:
-    SkyPipeline(const VkDevice device, const Shader& shaders)
+    SkyPipeline(const VkDevice device, const prev::render::shader::Shader& shaders)
         : AbstractComputePipeline(device, shaders)
     {
     }
@@ -2159,7 +2159,7 @@ public:
     }
 };
 
-class SkyPostProcessShader final : public Shader {
+class SkyPostProcessShader final : public prev::render::shader::Shader {
 public:
     SkyPostProcessShader(const VkDevice device)
         : Shader(device)
@@ -2190,7 +2190,7 @@ private:
 
 class SkyPostProcessPipeline final : public AbstractComputePipeline {
 public:
-    SkyPostProcessPipeline(const VkDevice device, const Shader& shaders)
+    SkyPostProcessPipeline(const VkDevice device, const prev::render::shader::Shader& shaders)
         : AbstractComputePipeline(device, shaders)
     {
     }
@@ -2208,7 +2208,7 @@ public:
 
 //////////////////////////////////////////// Screen Space ////////////////////////////////////////////
 
-class ScreenSpaceShader final : public Shader {
+class ScreenSpaceShader final : public prev::render::shader::Shader {
 public:
     ScreenSpaceShader(const VkDevice device)
         : Shader(device)
@@ -2243,7 +2243,7 @@ private:
 
 class ScreenSpacePipeline final : public AbstractGraphicsPipeline {
 public:
-    ScreenSpacePipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    ScreenSpacePipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -2261,7 +2261,7 @@ public:
 
 //////////////////////////////////////////// DEBUG ////////////////////////////////////////////
 
-class ShadowMapDebugShader final : public Shader {
+class ShadowMapDebugShader final : public prev::render::shader::Shader {
 public:
     ShadowMapDebugShader(const VkDevice device)
         : Shader(device)
@@ -2297,7 +2297,7 @@ private:
 
 class ShadowMapDebugPipeline final : public AbstractGraphicsPipeline {
 public:
-    ShadowMapDebugPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    ShadowMapDebugPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -2313,7 +2313,7 @@ public:
     }
 };
 
-class TextureDebugShader final : public Shader {
+class TextureDebugShader final : public prev::render::shader::Shader {
 public:
     TextureDebugShader(const VkDevice device)
         : Shader(device)
@@ -2349,7 +2349,7 @@ private:
 
 class TextureDebugPipeline final : public AbstractGraphicsPipeline {
 public:
-    TextureDebugPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    TextureDebugPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -2365,7 +2365,7 @@ public:
     }
 };
 
-class BoundingVolumeDebugShader final : public Shader {
+class BoundingVolumeDebugShader final : public prev::render::shader::Shader {
 public:
     BoundingVolumeDebugShader(const VkDevice device)
         : Shader(device)
@@ -2402,7 +2402,7 @@ private:
 
 class BoundingVolumeDebugPipeline final : public AbstractGraphicsPipeline {
 public:
-    BoundingVolumeDebugPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    BoundingVolumeDebugPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -2418,7 +2418,7 @@ public:
     }
 };
 
-class SelectionDebugShader final : public Shader {
+class SelectionDebugShader final : public prev::render::shader::Shader {
 public:
     SelectionDebugShader(const VkDevice device)
         : Shader(device)
@@ -2457,7 +2457,7 @@ private:
 
 class SelectionDebugPipeline final : public AbstractGraphicsPipeline {
 public:
-    SelectionDebugPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    SelectionDebugPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }
@@ -2473,7 +2473,7 @@ public:
     }
 };
 
-class RayCastDebugShader final : public Shader {
+class RayCastDebugShader final : public prev::render::shader::Shader {
 public:
     RayCastDebugShader(const VkDevice device)
         : Shader(device)
@@ -2513,7 +2513,7 @@ private:
 
 class RayCastDebugPipeline final : public AbstractGraphicsPipeline {
 public:
-    RayCastDebugPipeline(const VkDevice device, const VkRenderPass renderpass, const Shader& shaders)
+    RayCastDebugPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders)
         : AbstractGraphicsPipeline(device, renderpass, shaders)
     {
     }

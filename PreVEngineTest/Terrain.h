@@ -539,13 +539,13 @@ public:
     }
 
 private:
-    std::shared_ptr<Image> CreateImage(const std::string& textureFilename) const
+    std::shared_ptr<prev::render::image::Image> CreateImage(const std::string& textureFilename) const
     {
-        std::shared_ptr<Image> image;
+        std::shared_ptr<prev::render::image::Image> image;
         if (s_imagesCache.find(textureFilename) != s_imagesCache.cend()) {
             image = s_imagesCache[textureFilename];
         } else {
-            ImageFactory imageFactory{};
+            prev::render::image::ImageFactory imageFactory{};
             image = imageFactory.CreateImage(textureFilename);
             s_imagesCache[textureFilename] = image;
         }
@@ -723,10 +723,10 @@ private:
     const unsigned int m_vertexCount;
 
 private:
-    static std::map<std::string, std::shared_ptr<Image> > s_imagesCache;
+    static std::map<std::string, std::shared_ptr<prev::render::image::Image> > s_imagesCache;
 };
 
-std::map<std::string, std::shared_ptr<Image> > TerrainComponentFactory::s_imagesCache;
+std::map<std::string, std::shared_ptr<prev::render::image::Image> > TerrainComponentFactory::s_imagesCache;
 
 struct TerrainKey {
     const int xIndex;

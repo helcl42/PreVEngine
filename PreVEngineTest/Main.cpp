@@ -145,23 +145,23 @@ public:
 
 class RenderComponentFactory {
 private:
-    static std::map<std::string, std::shared_ptr<Image> > s_imagesCache;
+    static std::map<std::string, std::shared_ptr<prev::render::image::Image> > s_imagesCache;
 
 private:
-    std::shared_ptr<Image> CreateImage(const std::string& textureFilename) const
+    std::shared_ptr<prev::render::image::Image> CreateImage(const std::string& textureFilename) const
     {
-        std::shared_ptr<Image> image;
+        std::shared_ptr<prev::render::image::Image> image;
         if (s_imagesCache.find(textureFilename) != s_imagesCache.cend()) {
             image = s_imagesCache[textureFilename];
         } else {
-            ImageFactory imageFactory;
+            prev::render::image::ImageFactory imageFactory;
             image = imageFactory.CreateImage(textureFilename);
             s_imagesCache[textureFilename] = image;
         }
         return image;
     }
 
-    std::unique_ptr<prev::core::memory::image::ImageBuffer> CreateImageBuffer(prev::core::memory::Allocator& allocator, const std::shared_ptr<Image>& image, const bool filtering, const bool repeatAddressMode) const
+    std::unique_ptr<prev::core::memory::image::ImageBuffer> CreateImageBuffer(prev::core::memory::Allocator& allocator, const std::shared_ptr<prev::render::image::Image>& image, const bool filtering, const bool repeatAddressMode) const
     {
         const VkExtent2D imageExtent = { image->GetWidth(), image->GetHeight() };
 
@@ -517,7 +517,7 @@ public:
     }
 };
 
-std::map<std::string, std::shared_ptr<Image> > RenderComponentFactory::s_imagesCache;
+std::map<std::string, std::shared_ptr<prev::render::image::Image> > RenderComponentFactory::s_imagesCache;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SCENE
@@ -2280,7 +2280,7 @@ public:
         auto computeQueue = ComputeProvider::Instance().GetQueue();
         auto computeAllocator = ComputeProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory{};
+        prev::render::shader::ShaderFactory shaderFactory{};
         m_shader = shaderFactory.CreateShaderFromFiles<DummyComputeShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/fibonacci_comp.spv") } });
 
         m_pipeline = std::make_unique<DummyComputePipeline>(*device, *m_shader);
@@ -2410,7 +2410,7 @@ public:
 private:    
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     VkCommandPool m_commandPool;
 
@@ -2786,7 +2786,7 @@ private:
 
 class RootSceneNode final : public SceneNode<SceneNodeFlags> {
 public:
-    RootSceneNode(const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Swapchain>& swapchain)
+    RootSceneNode(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::Swapchain>& swapchain)
         : SceneNode()
         , m_masterRenderer(std::make_unique<MasterRenderer>(renderPass, swapchain))
     {

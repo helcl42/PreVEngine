@@ -517,9 +517,9 @@ public:
     }
      
 private:
-    std::unique_ptr<Image> CreateImage(const std::string& textureFilename) const
+    std::unique_ptr<prev::render::image::Image> CreateImage(const std::string& textureFilename) const
     {
-        ImageFactory imageFactory;
+        prev::render::image::ImageFactory imageFactory;
         auto image = imageFactory.CreateImage(textureFilename);     
         return image;
     }

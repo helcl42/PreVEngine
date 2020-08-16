@@ -4,8 +4,8 @@
 
 #include <algorithm>
 
-namespace prev {
-Swapchain::Swapchain(const prev::core::Queue& presentQueue, const prev::core::Queue& graphicsQueue, RenderPass& renderPass, prev::core::memory::Allocator& allocator)
+namespace prev::render {
+Swapchain::Swapchain(const prev::core::Queue& presentQueue, const prev::core::Queue& graphicsQueue, pass::RenderPass& renderPass, prev::core::memory::Allocator& allocator)
     : m_presentQueue(presentQueue)
     , m_graphicsQueue(graphicsQueue)
     , m_renderPass(renderPass)
@@ -437,4 +437,4 @@ const prev::core::Queue& Swapchain::GetGraphicsQueue() const
     return m_graphicsQueue;
 }
 
-} // namespace prev
+} // namespace prev::render

@@ -6,7 +6,7 @@
 
 #include <vector>
 
-namespace prev {
+namespace prev::render::pass {
 class RenderPass final {
 public:
     RenderPass(VkDevice device);
@@ -66,6 +66,6 @@ private:
 
     std::vector<VkSubpassDependency> m_dependencies;
 };
-} // namespace prev
+} // namespace prev::render::pass
 
 #endif

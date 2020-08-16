@@ -2,7 +2,7 @@
 
 #include <fstream>
 
-namespace prev {
+namespace prev::render::shader {
 std::vector<char> ShaderFactory::LoadByteCodeFromFile(const std::string& filename) const
 {
     LOGI("Load Shader: %s\n", filename.c_str());
@@ -28,4 +28,4 @@ std::vector<char> ShaderFactory::LoadByteCodeFromFile(const std::string& filenam
 
     return buffer;
 }
-} // namespace prev
+} // namespace prev::render::shader
