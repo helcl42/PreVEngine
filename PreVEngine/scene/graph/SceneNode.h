@@ -12,13 +12,13 @@ public:
     {
     }
 
-    SceneNode(const FlagSet<NodeFlagsType>& flags)
+    SceneNode(const prev::common::FlagSet<NodeFlagsType>& flags)
         : m_id(IDGenerator::Instance().GenrateNewId())
         , m_flags(flags)
     {
     }
 
-    SceneNode(const TagSet& tags)
+    SceneNode(const prev::common::TagSet& tags)
         : m_id(IDGenerator::Instance().GenrateNewId())
         , m_tags(tags)
     {
@@ -53,7 +53,7 @@ public:
         }
 
         EventChannel::Broadcast(SceneNodeShutDownEvent{ GetId() });
-        m_flags = FlagSet<NodeFlagsType>();
+        m_flags = prev::common::FlagSet<NodeFlagsType>();
     }
 
 public:
@@ -124,22 +124,22 @@ public:
         return m_id;
     }
 
-    void SetFlags(const FlagSet<NodeFlagsType>& flags) override
+    void SetFlags(const prev::common::FlagSet<NodeFlagsType>& flags) override
     {
         m_flags = flags;
     }
 
-    const FlagSet<NodeFlagsType>& GetFlags() const override
+    const prev::common::FlagSet<NodeFlagsType>& GetFlags() const override
     {
         return m_flags;
     }
 
-    void SetTags(const TagSet& tagSet) override
+    void SetTags(const prev::common::TagSet& tagSet) override
     {
         m_tags = tagSet;
     }
 
-    const TagSet& GetTags() const override
+    const prev::common::TagSet& GetTags() const override
     {
         return m_tags;
     }
@@ -147,9 +147,9 @@ public:
 protected:
     uint64_t m_id;
 
-    FlagSet<NodeFlagsType> m_flags;
+    prev::common::FlagSet<NodeFlagsType> m_flags;
 
-    TagSet m_tags;
+    prev::common::TagSet m_tags;
 
     std::weak_ptr<ISceneNode<NodeFlagsType> > m_parent;
 

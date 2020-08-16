@@ -50,7 +50,7 @@ private:
     EventHandler<TouchInputComponent, TouchEvent> m_touchEventsHandler{ *this };
 
 private:
-    Observer<ITouchActionListener> m_touchObservers;
+    prev::common::pattern::Observer<ITouchActionListener> m_touchObservers;
 
 private:
     mutable std::mutex m_mutex;

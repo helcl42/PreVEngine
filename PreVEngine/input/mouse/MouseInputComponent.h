@@ -65,9 +65,9 @@ private:
     EventHandler<MouseInputComponent, MouseScrollEvent> m_mouseScrollsHandler{ *this };
 
 private:
-    Observer<IMouseActionListener> m_mouseActionObservers;
+    prev::common::pattern::Observer<IMouseActionListener> m_mouseActionObservers;
 
-    Observer<IMouseScrollListener> m_mouseScrollObservers;
+    prev::common::pattern::Observer<IMouseScrollListener> m_mouseScrollObservers;
 
 private:
     mutable std::mutex m_mutex;

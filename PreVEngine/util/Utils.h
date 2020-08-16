@@ -304,9 +304,9 @@ public:
     }
 };
 
-class IDGenerator final : public Singleton<IDGenerator> {
+class IDGenerator final : public prev::common::pattern::Singleton<IDGenerator> {
 private:
-    friend class Singleton<IDGenerator>;
+    friend class prev::common::pattern::Singleton<IDGenerator>;
 
 private:
     uint64_t m_id = 0;

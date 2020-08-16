@@ -690,7 +690,7 @@ public:
     };
 
 public:
-    std::unique_ptr<IMesh> CreateMesh(const std::string& modelPath, const FlagSet<AssimpMeshFactoryCreateFlags>& flags = FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{}) const
+    std::unique_ptr<IMesh> CreateMesh(const std::string& modelPath, const prev::common::FlagSet<AssimpMeshFactoryCreateFlags>& flags = prev::common::FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{}) const
     {
         Assimp::Importer importer{};
         const aiScene* scene;
@@ -721,7 +721,7 @@ private:
         }
     }
 
-    VertexLayout GetVertexLayout(const FlagSet<AssimpMeshFactoryCreateFlags>& flags) const
+    VertexLayout GetVertexLayout(const prev::common::FlagSet<AssimpMeshFactoryCreateFlags>& flags) const
     {
         if (flags & AssimpMeshFactoryCreateFlags::ANIMATION && flags & AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT) {
             return { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 } };
@@ -771,7 +771,7 @@ private:
         inOutVertexBuffer.Add(biTangent);
     }
 
-    void ReadVertexData(const aiMesh& mesh, const FlagSet<AssimpMeshFactoryCreateFlags>& flags, const std::vector<VertexBoneData>& vertexBoneData, const uint32_t vertexBaseOffset, VertexDataBuffer& inOutVertexBuffer) const
+    void ReadVertexData(const aiMesh& mesh, const prev::common::FlagSet<AssimpMeshFactoryCreateFlags>& flags, const std::vector<VertexBoneData>& vertexBoneData, const uint32_t vertexBaseOffset, VertexDataBuffer& inOutVertexBuffer) const
     {
         for (unsigned int vertexIndex = 0; vertexIndex < mesh.mNumVertices; vertexIndex++) {
             AddDefaultVertexData(mesh, vertexIndex, inOutVertexBuffer);
@@ -820,7 +820,7 @@ private:
         return vertexCount;
     }
 
-    unsigned int ReadMeshes(const aiScene& scene, const FlagSet<AssimpMeshFactoryCreateFlags>& flags, VertexDataBuffer& inOutVertexBuffer, std::vector<glm::vec3>& inOutVertices, std::vector<uint32_t>& inOutIndices, std::vector<MeshPart>& inOutMeshParts) const
+    unsigned int ReadMeshes(const aiScene& scene, const prev::common::FlagSet<AssimpMeshFactoryCreateFlags>& flags, VertexDataBuffer& inOutVertexBuffer, std::vector<glm::vec3>& inOutVertices, std::vector<uint32_t>& inOutIndices, std::vector<MeshPart>& inOutMeshParts) const
     {
         uint32_t allVertexCount = GetAllVertexCount(scene);
         std::vector<VertexBoneData> vertexBoneData;

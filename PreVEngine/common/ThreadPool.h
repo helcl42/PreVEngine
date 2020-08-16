@@ -9,7 +9,7 @@
 #include <thread>
 #include <vector>
 
-namespace prev {
+namespace prev::common {
 class ThreadPool {
 public:
     inline ThreadPool(const size_t threads)
@@ -93,6 +93,6 @@ private:
     std::atomic<bool> m_running;
 };
 
-} // namespace prev
+} // namespace prev::common
 
 #endif // !__THREAD_POOL_H__

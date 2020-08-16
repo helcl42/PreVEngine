@@ -5,7 +5,7 @@
 #include "Validation.h"
 
 namespace prev {
-class Layers final : public PickList {
+class Layers final : public prev::common::PickList {
 public:
     Layers();
 

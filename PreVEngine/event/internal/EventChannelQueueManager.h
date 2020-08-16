@@ -9,9 +9,9 @@
 
 namespace prev {
 namespace Internal {
-    class EventChannelQueueManager final : public Singleton<EventChannelQueueManager> {
+    class EventChannelQueueManager final : public prev::common::pattern::Singleton<EventChannelQueueManager> {
     private:
-        friend class Singleton<EventChannelQueueManager>;
+        friend class prev::common::pattern::Singleton<EventChannelQueueManager>;
 
     private:
         std::mutex m_mutex;

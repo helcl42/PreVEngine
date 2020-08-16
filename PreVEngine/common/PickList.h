@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace prev {
+namespace prev::common {
 class PickList {
 public:
     PickList() = default;
@@ -52,5 +52,5 @@ protected:
 
     std::vector<const char*> m_pickListNamesPtrs;
 };
-} // namespace prev
+} // namespace prev::common
 #endif

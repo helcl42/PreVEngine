@@ -5,7 +5,7 @@
 #include "Validation.h"
 
 namespace prev {
-class Extensions final : public PickList {
+class Extensions final : public prev::common::PickList {
 public:
     Extensions(const char* layerName = nullptr);
 

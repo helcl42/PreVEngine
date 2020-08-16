@@ -6,7 +6,7 @@
 #include <iostream>
 #include <string>
 
-namespace prev {
+namespace prev::common {
 template <typename T>
 class FlagSet {
 public:
@@ -181,6 +181,8 @@ private:
     // _ is last value sentinel and must be present in enum T.
     std::bitset<static_cast<u_type>(T::_)> m_flags;
 };
+} // namespace prev::common
+
 
 template <typename T, typename = void>
 struct is_enum_that_contains_sentinel : std::false_type {
@@ -193,13 +195,12 @@ struct is_enum_that_contains_sentinel<T, decltype(static_cast<void>(T::_))> : st
 // Operator that combines two enumeration values into a FlagSet only if the
 // enumeration contains the sentinel `_`.
 template <typename T>
-std::enable_if_t<is_enum_that_contains_sentinel<T>::value, FlagSet<T> > operator|(const T& lhs, const T& rhs)
+std::enable_if_t<is_enum_that_contains_sentinel<T>::value, prev::common::FlagSet<T> > operator|(const T& lhs, const T& rhs)
 {
-    FlagSet<T> fs;
+    prev::common::FlagSet<T> fs;
     fs |= lhs;
     fs |= rhs;
     return fs;
 }
-} // namespace prev
 
 #endif

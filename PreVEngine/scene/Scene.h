@@ -24,9 +24,9 @@ struct SceneConfig {
 template <typename NodeFlagsType>
 class Scene;
 
-class AllocatorProvider final : public Singleton<AllocatorProvider> {
+class AllocatorProvider final : public prev::common::pattern::Singleton<AllocatorProvider> {
 private:
-    friend class Singleton<AllocatorProvider>;
+    friend class prev::common::pattern::Singleton<AllocatorProvider>;
 
     template <typename NodeFlagsType>
     friend class Scene;
@@ -53,9 +53,9 @@ public:
     }
 };
 
-class ComputeProvider final : public Singleton<ComputeProvider> {
+class ComputeProvider final : public prev::common::pattern::Singleton<ComputeProvider> {
 private:
-    friend class Singleton<ComputeProvider>;
+    friend class prev::common::pattern::Singleton<ComputeProvider>;
 
     template <typename NodeFlagsType>
     friend class Scene;
