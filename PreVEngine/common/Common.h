@@ -11,11 +11,11 @@
 #include <glm/mat4x4.hpp>
 #include <glm/vec4.hpp>
 
+#include <array>
 #include <cmath>
 #include <memory>
+#include <mutex>
 #include <stdexcept>
 #include <thread>
-#include <mutex>
-#include <array>
 
 #endif

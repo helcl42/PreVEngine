@@ -14,32 +14,32 @@ public:
 
     explicit FlagSet(const T& val)
     {
-        flags.set(static_cast<u_type>(val));
+        m_flags.set(static_cast<u_type>(val));
     }
 
     FlagSet& operator&=(const T& val) noexcept
     {
-        bool tmp = flags.test(static_cast<u_type>(val));
-        flags.reset();
-        flags.set(static_cast<u_type>(val), tmp);
+        bool tmp = m_flags.test(static_cast<u_type>(val));
+        m_flags.reset();
+        m_flags.set(static_cast<u_type>(val), tmp);
         return *this;
     }
 
     FlagSet& operator&=(const FlagSet& o) noexcept
     {
-        flags &= o.flags;
+        m_flags &= o.m_flags;
         return *this;
     }
 
     FlagSet& operator|=(const T& val) noexcept
     {
-        flags.set(static_cast<u_type>(val));
+        m_flags.set(static_cast<u_type>(val));
         return *this;
     }
 
     FlagSet& operator|=(const FlagSet& o) noexcept
     {
-        flags |= o.flags;
+        m_flags |= o.m_flags;
         return *this;
     }
 
@@ -48,14 +48,14 @@ public:
         FlagSet ret(*this);
         ret &= val;
 
-        assert(ret.flags.count() <= 1);
+        assert(ret.m_flags.count() <= 1);
         return ret;
     }
 
     FlagSet operator&(const FlagSet& val) const
     {
         FlagSet ret(*this);
-        ret.flags &= val.flags;
+        ret.m_flags &= val.m_flags;
 
         return ret;
     }
@@ -65,14 +65,14 @@ public:
         FlagSet ret(*this);
         ret |= val;
 
-        assert(ret.flags.count() >= 1);
+        assert(ret.m_flags.count() >= 1);
         return ret;
     }
 
     FlagSet operator|(const FlagSet& val) const
     {
         FlagSet ret(*this);
-        ret.flags |= val.flags;
+        ret.m_flags |= val.m_flags;
 
         return ret;
     }
@@ -80,70 +80,70 @@ public:
     FlagSet operator~() const
     {
         FlagSet cp(*this);
-        cp.flags.flip();
+        cp.m_flags.flip();
 
         return cp;
     }
 
     explicit operator bool() const
     {
-        return flags.any();
+        return m_flags.any();
     }
 
     bool operator==(const FlagSet& o) const
     {
-        return flags == o.flags;
+        return m_flags == o.m_flags;
     }
 
     std::size_t GetSize() const
     {
-        return flags.size();
+        return m_flags.size();
     }
 
     std::size_t GetCount() const
     {
-        return flags.count();
+        return m_flags.count();
     }
 
     FlagSet& Set()
     {
-        flags.set();
+        m_flags.set();
         return *this;
     }
 
     FlagSet& Set(const T& val, bool value = true)
     {
-        flags.set(static_cast<u_type>(val), value);
+        m_flags.set(static_cast<u_type>(val), value);
         return *this;
     }
 
     FlagSet& Reset()
     {
-        flags.reset();
+        m_flags.reset();
         return *this;
     }
 
     FlagSet& Reset(const T& val)
     {
-        flags.reset(static_cast<u_type>(val));
+        m_flags.reset(static_cast<u_type>(val));
         return *this;
     }
 
     FlagSet& Flip()
     {
-        flags.flip();
+        m_flags.flip();
         return *this;
     }
 
     FlagSet& Flip(const T& val)
     {
-        flags.flip(static_cast<u_type>(val));
+        m_flags.flip(static_cast<u_type>(val));
         return *this;
     }
 
     constexpr bool operator[](const T& val) const
     {
-        return flags[static_cast<u_type>(val)];
+        return m_flags[static_cast<u_type>(val)];
     }
 
     bool HasAny(const FlagSet<T>& from) const
@@ -160,26 +160,26 @@ public:
 
     std::string ToString() const
     {
-        return flags.to_string();
+        return m_flags.to_string();
     }
 
     template <typename ReturnType>
-    ReturnType ToIntegerumber() const
+    ReturnType ToIntegerNumber() const
     {
-        return static_cast<ReturnType>(flags.to_ullong());
+        return static_cast<ReturnType>(m_flags.to_ullong());
     }
 
     // Operator for outputting to std::ostream.
     friend std::ostream& operator<<(std::ostream& stream, const FlagSet& self)
     {
-        return stream << self.flags;
+        return stream << self.m_flags;
     }
 
 private:
     using u_type = std::underlying_type_t<T>;
 
     // _ is last value sentinel and must be present in enum T.
-    std::bitset<static_cast<u_type>(T::_)> flags;
+    std::bitset<static_cast<u_type>(T::_)> m_flags;
 };
 
 template <typename T, typename = void>

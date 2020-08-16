@@ -19,12 +19,12 @@
 
 using namespace prev;
 
-static const std::string TAG_LIGHT = "Light";
-static const std::string TAG_MAIN_LIGHT = "MainLight";
-static const std::string TAG_SHADOW = "Shadow";
-static const std::string TAG_CAMERA = "Camera";
-static const std::string TAG_MAIN_CAMERA = "MainCamera";
-static const std::string TAG_PLAYER = "Player";
+static const std::string TAG_LIGHT{ "Light" };
+static const std::string TAG_MAIN_LIGHT{ "MainLight" };
+static const std::string TAG_SHADOW{ "Shadow" };
+static const std::string TAG_CAMERA{ "Camera" };
+static const std::string TAG_MAIN_CAMERA{ "MainCamera" };
+static const std::string TAG_PLAYER{ "Player" };
 
 static const uint32_t MAX_LIGHT_COUNT{ 4 };
 static const float AMBIENT_LIGHT_INTENSITY{ 0.2f };
