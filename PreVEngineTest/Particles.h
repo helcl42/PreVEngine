@@ -481,7 +481,7 @@ class ParticleSystemComponentFactory {
 public:
     std::unique_ptr<IParticleSystemComponent> CreateRandom() const
     {
-        auto allocator = AllocatorProvider::Instance().GetAllocator();
+        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
         
         auto model = CreateModel(*allocator);
         auto material = CreateMaterial(*allocator, AssetManager::Instance().GetAssetPath("Textures/fire-ember-particles-png-4-transparent.png"));
@@ -498,7 +498,7 @@ public:
 
     std::unique_ptr<IParticleSystemComponent> CreateRandomInCone(const glm::vec3& coneDirection, const float angle) const
     {
-        auto allocator = AllocatorProvider::Instance().GetAllocator();
+        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
         auto model = CreateModel(*allocator);
         auto material = CreateMaterial(*allocator, AssetManager::Instance().GetAssetPath("Textures/fire-texture-atlas.png"));

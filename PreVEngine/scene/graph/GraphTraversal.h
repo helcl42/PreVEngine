@@ -4,7 +4,7 @@
 #include "../../common/pattern/Singleton.h"
 #include "ISceneNode.h"
 
-namespace prev {
+namespace prev::scene::graph {
 enum class LogicOperation {
     OR,
     AND
@@ -159,6 +159,6 @@ private:
 private:
     std::shared_ptr<ISceneNode<NodeFlagsType> > m_root;
 };
-} // namespace prev
+} // namespace prev::scene::graph
 
 #endif

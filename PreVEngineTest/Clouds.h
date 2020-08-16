@@ -18,8 +18,8 @@ public:
         };
 
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
-        auto computeQueue = ComputeProvider::Instance().GetQueue();
-        auto computeAllocator = ComputeProvider::Instance().GetAllocator();
+        auto computeQueue = prev::scene::ComputeProvider::Instance().GetQueue();
+        auto computeAllocator = prev::scene::ComputeProvider::Instance().GetAllocator();
 
         prev::render::shader::ShaderFactory shaderFactory{};
         auto shader = shaderFactory.CreateShaderFromFiles<WeatherComputeShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/weather_comp.spv") } });
@@ -98,8 +98,8 @@ public:
     std::unique_ptr<prev::core::memory::image::IImageBuffer> CreatePerlinWorleyNoise(const uint32_t width, const uint32_t height, const uint32_t depth) const
     {
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
-        auto computeQueue = ComputeProvider::Instance().GetQueue();
-        auto computeAllocator = ComputeProvider::Instance().GetAllocator();
+        auto computeQueue = prev::scene::ComputeProvider::Instance().GetQueue();
+        auto computeAllocator = prev::scene::ComputeProvider::Instance().GetAllocator();
 
         prev::render::shader::ShaderFactory shaderFactory{};
         auto shader = shaderFactory.CreateShaderFromFiles<PerlinWorleyComputeShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/perlin_worley_noise_3d_comp.spv") } });

@@ -202,7 +202,7 @@ public:
             { AssetManager::Instance().GetAssetPath("LensFlares/tex9.png"), 0.24f },
         };
 
-        auto allocator = AllocatorProvider::Instance().GetAllocator();
+        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
         std::vector<std::shared_ptr<Flare> > flares{};
         for (const auto& flareCreateInfo : flareCreateInfos) {
@@ -311,7 +311,7 @@ class SunComponentFactory {
 public:
     std::unique_ptr<ISunComponent> Create() const
     {
-        auto allocator = AllocatorProvider::Instance().GetAllocator();
+        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
         auto flare = CreateFlare(*allocator, AssetManager::Instance().GetAssetPath("Textures/sun.png"), 0.2f);
         flare->SetScreenSpacePosition(glm::vec2(-100.0f, -100.0f));

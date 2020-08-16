@@ -422,7 +422,7 @@ public:
 public:
     std::unique_ptr<ITerrainComponenet> CreateRandomTerrain(const int x, const int z, const float size) const
     {
-        auto allocator = AllocatorProvider::Instance().GetAllocator();
+        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
         const auto heightGenerator = std::make_shared<HeightGenerator>(x, z, m_vertexCount, m_seed);
 
         const float layerTransitionWidth = 0.1f;
@@ -451,7 +451,7 @@ public:
 
     std::unique_ptr<ITerrainComponenet> CreateRandomTerrainNormalMapped(const int x, const int z, const float size) const
     {
-        auto allocator = AllocatorProvider::Instance().GetAllocator();
+        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
         const auto heightGenerator = std::make_shared<HeightGenerator>(x, z, m_vertexCount, m_seed);
 
         const float layerTransitionWidth = 0.1f;
@@ -480,7 +480,7 @@ public:
 
     std::unique_ptr<ITerrainComponenet> CreateRandomTerrainParallaxMapped(const int x, const int z, const float size) const
     {
-        auto allocator = AllocatorProvider::Instance().GetAllocator();
+        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
         const auto heightGenerator = std::make_shared<HeightGenerator>(x, z, m_vertexCount, m_seed);
 
         const float layerTransitionWidth = 0.1f;
@@ -510,7 +510,7 @@ public:
 
     std::unique_ptr<ITerrainComponenet> CreateRandomTerrainConeStepMapped(const int x, const int z, const float size) const
     {
-        auto allocator = AllocatorProvider::Instance().GetAllocator();
+        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
         const auto heightGenerator = std::make_shared<HeightGenerator>(x, z, m_vertexCount, m_seed);
 
         const float layerTransitionWidth = 0.1f;

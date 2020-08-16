@@ -7,7 +7,7 @@
 #include <map>
 #include <memory>
 
-namespace prev {
+namespace prev::scene::component {
 template <typename ItemType>
 class ComponentRepository final : public prev::common::pattern::Singleton<ComponentRepository<ItemType> > {
 public:
@@ -46,7 +46,7 @@ public:
         return m_components.find(id) != m_components.cend();
     }
 
-    void operator()(const SceneNodeShutDownEvent& evt)
+    void operator()(const prev::scene::SceneNodeShutDownEvent& evt)
     {
         if (Contains(evt.id)) {
             Remove(evt.id);
@@ -62,8 +62,8 @@ private:
 private:
     std::map<uint64_t, std::shared_ptr<ItemType> > m_components;
 
-    prev::event::EventHandler<ComponentRepository<ItemType>, SceneNodeShutDownEvent> m_shutDownHandler{ *this };
+    prev::event::EventHandler<ComponentRepository<ItemType>, prev::scene::SceneNodeShutDownEvent> m_shutDownHandler{ *this };
 };
-} // namespace prev
+} // namespace prev::scene::component
 
 #endif

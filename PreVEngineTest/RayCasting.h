@@ -33,7 +33,7 @@ public:
             indices.emplace_back(i);
         }
 
-        auto allocator = AllocatorProvider::Instance().GetAllocator();
+        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
         auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator);
         vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
         auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(*allocator);

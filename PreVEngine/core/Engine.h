@@ -26,7 +26,7 @@ struct EngineConfig {
 
     Position windowPosition{ 40, 40 };
 
-    std::shared_ptr<SceneConfig> sceneConfig{ std::make_shared<SceneConfig>() };
+    std::shared_ptr<prev::scene::SceneConfig> sceneConfig{ std::make_shared<prev::scene::SceneConfig>() };
 };
 
 template <typename NodeFlagsType>
@@ -79,7 +79,7 @@ private:
 
     std::shared_ptr<prev::core::device::Device> m_device;
 
-    std::shared_ptr<IScene<NodeFlagsType> > m_scene;
+    std::shared_ptr<prev::scene::IScene<NodeFlagsType> > m_scene;
 
     VkSurfaceKHR m_surface;
 
@@ -146,7 +146,7 @@ public:
 
     void InitScene()
     {
-        m_scene = std::make_shared<Scene<NodeFlagsType> >(m_config->sceneConfig, m_device, m_surface);
+        m_scene = std::make_shared<prev::scene::Scene<NodeFlagsType> >(m_config->sceneConfig, m_device, m_surface);
         m_scene->Init();
     }
 
@@ -188,7 +188,7 @@ public:
     }
 
 public:
-    std::shared_ptr<IScene<NodeFlagsType> > GetScene() const
+    std::shared_ptr<prev::scene::IScene<NodeFlagsType> > GetScene() const
     {
         return m_scene;
     }
