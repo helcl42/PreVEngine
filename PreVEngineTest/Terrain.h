@@ -555,9 +555,9 @@ private:
     std::unique_ptr<IModel> CreateModel(prev::core::memory::Allocator& allocator, const std::shared_ptr<VertexData>& vertexData, const bool normalMapped) const
     {
         auto mesh = GenerateMesh(vertexData, normalMapped);
-        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VBO>(allocator);
+        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
-        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IBO>(allocator);
+        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
         indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
 
         return std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));

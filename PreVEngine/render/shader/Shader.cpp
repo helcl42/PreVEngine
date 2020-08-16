@@ -242,7 +242,7 @@ VkDescriptorSet Shader::UpdateNextDescriptorSet()
     return descriptorSet;
 }
 
-void Shader::Bind(const std::string& name, const prev::core::memory::buffer::UBO& ubo)
+void Shader::Bind(const std::string& name, const prev::core::memory::buffer::UniformBuffer& ubo)
 {
     if (m_descriptorSetInfos.find(name) == m_descriptorSetInfos.cend()) {
         LOGE("Could not find uniform with name: %s", name.c_str());
@@ -254,7 +254,7 @@ void Shader::Bind(const std::string& name, const prev::core::memory::buffer::UBO
     item.bufferInfo.offset = ubo.GetOffset();
     item.bufferInfo.range = ubo.GetRange();
 
-    //LOGI("Bind UBO   to shader-in: \"%s\"\n", name.c_str());
+    //LOGI("Bind UniformBuffer to shader-in: \"%s\"\n", name.c_str());
 }
 
 void Shader::Bind(const std::string& name, const prev::core::memory::buffer::Buffer& buffer)
@@ -269,7 +269,7 @@ void Shader::Bind(const std::string& name, const prev::core::memory::buffer::Buf
     item.bufferInfo.offset = 0;
     item.bufferInfo.range = buffer.GetSize();
 
-    //LOGI("Bind UBO   to shader-in: \"%s\"\n", name.c_str());
+    //LOGI("Bind Buffer to shader-in: \"%s\"\n", name.c_str());
 }
 
 void Shader::Bind(const std::string& name, const VkImageView imageView, const VkSampler sampler, const VkImageLayout imageLayout)
@@ -284,7 +284,7 @@ void Shader::Bind(const std::string& name, const VkImageView imageView, const Vk
     item.imageInfo.sampler = sampler;
     item.imageInfo.imageLayout = imageLayout;
 
-    //LOGI("Bind UBO   to shader-in: \"%s\"\n", name.c_str());
+    //LOGI("Bind Image to shader-in: \"%s\"\n", name.c_str());
 }
 
 void Shader::Bind(const std::string& name, const prev::core::memory::image::IImageBuffer& image, const VkImageLayout imageLayout)

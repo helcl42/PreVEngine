@@ -150,9 +150,9 @@ private:
     std::unique_ptr<IModel> CreateModel(prev::core::memory::Allocator& allocator) const
     {
         auto mesh = std::make_unique<CubeMeshVerticesOnly>();
-        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VBO>(allocator);
+        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
-        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IBO>(allocator);
+        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
         indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
         return std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
@@ -238,9 +238,9 @@ private:
     std::unique_ptr<IModel> CreateModel(prev::core::memory::Allocator& allocator) const
     {
         auto mesh = std::make_unique<FullScreenQuadMesh>();
-        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VBO>(allocator);
+        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
-        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IBO>(allocator);
+        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
         indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
         return std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
     }

@@ -5,11 +5,11 @@
 #include "Buffer.h"
 
 namespace prev::core::memory::buffer {
-class UBO final {
+class UniformBuffer final {
 public:
-    UBO(VkBuffer buffer, void* data, const uint32_t offset, const uint32_t range);
+    UniformBuffer(VkBuffer buffer, void* data, const uint32_t offset, const uint32_t range);
 
-    ~UBO() = default;
+    ~UniformBuffer() = default;
 
 public:
     void Update(const void* data);
@@ -58,19 +58,19 @@ public:
         Data(nullptr, capacity, itemSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &m_mapped);
 
         for (uint32_t i = 0; i < capacity; i++) {
-            auto ubo = std::make_shared<UBO>(m_buffer, m_mapped, i * itemSize, itemSize);
+            auto ubo = std::make_shared<UniformBuffer>(m_buffer, m_mapped, i * itemSize, itemSize);
             m_poolItems.emplace_back(ubo);
         }
     }
 
-    std::shared_ptr<UBO> GetNext()
+    std::shared_ptr<UniformBuffer> GetNext()
     {
         m_index = (m_index + 1) % m_poolItems.size();
         return m_poolItems.at(m_index);
     }
 
 private:
-    std::vector<std::shared_ptr<UBO> > m_poolItems;
+    std::vector<std::shared_ptr<UniformBuffer> > m_poolItems;
 
     uint32_t m_capacity;
 

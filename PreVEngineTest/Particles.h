@@ -536,9 +536,9 @@ private:
     std::shared_ptr<IModel> CreateModel(prev::core::memory::Allocator& allocator) const
     {
         auto mesh = std::make_unique<QuadMesh>();
-        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VBO>(allocator);
+        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), static_cast<uint32_t>(mesh->GetVertices().size()), mesh->GetVertexLayout().GetStride());
-        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IBO>(allocator);
+        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
         indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
         return std::make_shared<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
     }

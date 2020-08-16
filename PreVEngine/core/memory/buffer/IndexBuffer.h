@@ -4,7 +4,7 @@
 #include "Buffer.h"
 
 namespace prev::core::memory::buffer {
-class IBO final : public Buffer {
+class IndexBuffer final : public Buffer {
 public:
     using Buffer::Buffer;
 

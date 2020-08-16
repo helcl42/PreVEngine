@@ -98,7 +98,7 @@ public:
 
     bool AddShaderModule(const VkShaderStageFlagBits stage, const std::vector<char>& spirv);
 
-    void Bind(const std::string& name, const prev::core::memory::buffer::UBO& ubo);
+    void Bind(const std::string& name, const prev::core::memory::buffer::UniformBuffer& ubo);
 
     void Bind(const std::string& name, const prev::core::memory::buffer::Buffer& buffer);
 
