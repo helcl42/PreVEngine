@@ -20,7 +20,7 @@ void ImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
 
     m_mipLevels = 1;
     if (createInfo.mipMap) {
-        m_mipLevels = MathUtil::Log2(std::max(createInfo.extent.width, createInfo.extent.height)) + 1;
+        m_mipLevels = prev::util::MathUtil::Log2(std::max(createInfo.extent.width, createInfo.extent.height)) + 1;
     }
 
     m_allocator.CreateImage(createInfo.extent, createInfo.imageType, createInfo.format, m_mipLevels, createInfo.layerCount, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, createInfo.flags, m_image, m_allocation);

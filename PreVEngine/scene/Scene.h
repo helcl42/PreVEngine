@@ -135,9 +135,9 @@ public:
 template <typename NodeFlagsType>
 class Scene : public IScene<NodeFlagsType> {
 private:
-    prev::event::EventHandler<Scene, WindowResizeEvent> m_windowResizeEvent{ *this };
+    prev::event::EventHandler<Scene, prev::window::WindowResizeEvent> m_windowResizeEvent{ *this };
 
-    prev::event::EventHandler<Scene, SurfaceChanged> m_surfaceChangedEvent{ *this };
+    prev::event::EventHandler<Scene, prev::window::SurfaceChanged> m_surfaceChangedEvent{ *this };
 
 protected:
     std::shared_ptr<SceneConfig> m_config;
@@ -309,12 +309,12 @@ public:
     }
 
 public:
-    void operator()(const WindowResizeEvent& resizeEvent)
+    void operator()(const prev::window::WindowResizeEvent& resizeEvent)
     {
         m_swapchain->UpdateExtent();
     }
 
-    void operator()(const SurfaceChanged& surfaceChangedEvent)
+    void operator()(const prev::window::SurfaceChanged& surfaceChangedEvent)
     {
         m_surface = surfaceChangedEvent.surface;
         InitSwapchain();

@@ -759,8 +759,8 @@ private:
     {
         const auto& singleVertexBoneData = vertexBoneData[vertexIndex];
 
-        inOutVertexBuffer.Add(&singleVertexBoneData.ids, static_cast<uint32_t>(ArraySize(singleVertexBoneData.ids) * sizeof(unsigned int)));
-        inOutVertexBuffer.Add(&singleVertexBoneData.weights, static_cast<uint32_t>(ArraySize(singleVertexBoneData.weights) * sizeof(float)));
+        inOutVertexBuffer.Add(&singleVertexBoneData.ids, static_cast<uint32_t>(prev::util::ArraySize(singleVertexBoneData.ids) * sizeof(unsigned int)));
+        inOutVertexBuffer.Add(&singleVertexBoneData.weights, static_cast<uint32_t>(prev::util::ArraySize(singleVertexBoneData.weights) * sizeof(float)));
     }
 
     void AddBumpMappingData(const aiMesh& mesh, const unsigned int vertexIndex, VertexDataBuffer& inOutVertexBuffer) const

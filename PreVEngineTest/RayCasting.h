@@ -158,10 +158,10 @@ public:
 public:    
     void Update(float deltaTime) override
     {
-        const glm::vec2 normalizeDeviceCoords = MathUtil::FromViewPortSpaceToNormalizedDeviceSpace(m_viewPortDimensions, glm::vec2(m_currentMousePosition.x, m_currentMousePosition.y));
-        const glm::vec4 clipSpaceCoords = MathUtil::FromNormalizedDeviceSpaceToClipSpace(normalizeDeviceCoords);
-        const glm::vec4 eyeSpaceCoords = MathUtil::FromClipSpaceToCameraSpace(m_projectionMatrix, clipSpaceCoords);
-        const glm::vec3 worldCoords = MathUtil::FromCameraSpaceToWorldSpace(m_viewMatrix, eyeSpaceCoords);
+        const glm::vec2 normalizeDeviceCoords = prev::util::MathUtil::FromViewPortSpaceToNormalizedDeviceSpace(m_viewPortDimensions, glm::vec2(m_currentMousePosition.x, m_currentMousePosition.y));
+        const glm::vec4 clipSpaceCoords = prev::util::MathUtil::FromNormalizedDeviceSpaceToClipSpace(normalizeDeviceCoords);
+        const glm::vec4 eyeSpaceCoords = prev::util::MathUtil::FromClipSpaceToCameraSpace(m_projectionMatrix, clipSpaceCoords);
+        const glm::vec3 worldCoords = prev::util::MathUtil::FromCameraSpaceToWorldSpace(m_viewMatrix, eyeSpaceCoords);
 
         m_rayDirection = glm::normalize(worldCoords);
 
@@ -238,7 +238,7 @@ public:
         m_currentMousePosition = glm::clamp(position, glm::vec2(0.0f, 0.0f), m_viewPortDimensions);
     }
 
-    void operator()(const WindowResizeEvent& vwindowResizeEvent)
+    void operator()(const prev::window::WindowResizeEvent& vwindowResizeEvent)
     {
         m_viewPortDimensions = glm::vec2(vwindowResizeEvent.width, vwindowResizeEvent.height);
     }
@@ -265,7 +265,7 @@ protected:
 private:
     prev::event::EventHandler<MouseRayCasterComponent, prev::input::mouse::MouseEvent> m_mouseMoveHandler{ *this };
 
-    prev::event::EventHandler<MouseRayCasterComponent, WindowResizeEvent> m_viewFrustumChangeHandler{ *this };
+    prev::event::EventHandler<MouseRayCasterComponent, prev::window::WindowResizeEvent> m_viewFrustumChangeHandler{ *this };
 };
 
 class RayCasterComponentFactory {

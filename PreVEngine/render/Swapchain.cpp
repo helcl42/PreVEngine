@@ -106,8 +106,8 @@ void Swapchain::UpdateExtent()
 
         LOGW("Can't determine current window surface extent from surface caps. Using defaults instead. (%d x %d)\n", defaultWidth, defaultHeight);
 
-        m_swapchainCreateInfo.imageExtent.width = MathUtil::Clamp(defaultWidth, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width);
-        m_swapchainCreateInfo.imageExtent.height = MathUtil::Clamp(defaultHeight, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
+        m_swapchainCreateInfo.imageExtent.width = prev::util::MathUtil::Clamp(defaultWidth, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width);
+        m_swapchainCreateInfo.imageExtent.height = prev::util::MathUtil::Clamp(defaultHeight, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
     } else {
         // because of android notifies about SUBOPTIMAL presence -> it internaly transforms image(rotates) because we use preTransform == VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
         if (currentSurfaceExtent.width == m_swapchainCreateInfo.imageExtent.width && currentSurfaceExtent.height == m_swapchainCreateInfo.imageExtent.height) {
@@ -289,7 +289,7 @@ void Swapchain::Apply()
         SwapchainBuffer& swapchainBuffer = m_swapchainBuffers[i];
 
         swapchainBuffer.image = swapchainImages[i];
-        swapchainBuffer.view = VkUtils::CreateImageView(m_device, swapchainImages[i], m_swapchainCreateInfo.imageFormat, VK_IMAGE_VIEW_TYPE_2D, 1, VK_IMAGE_ASPECT_COLOR_BIT);
+        swapchainBuffer.view = prev::util::VkUtils::CreateImageView(m_device, swapchainImages[i], m_swapchainCreateInfo.imageFormat, VK_IMAGE_VIEW_TYPE_2D, 1, VK_IMAGE_ASPECT_COLOR_BIT);
 
         std::vector<VkImageView> views;
         views.push_back(swapchainBuffer.view); // Add color buffer (unique)
@@ -299,9 +299,9 @@ void Swapchain::Apply()
             views.push_back(depthBufferImageView); // Add depth buffer (shared)
         }
 
-        swapchainBuffer.framebuffer = VkUtils::CreateFrameBuffer(m_device, m_renderPass, views, m_swapchainCreateInfo.imageExtent);
-        swapchainBuffer.commandBuffer = VkUtils::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-        swapchainBuffer.fence = VkUtils::CreateFence(m_device);
+        swapchainBuffer.framebuffer = prev::util::VkUtils::CreateFrameBuffer(m_device, m_renderPass, views, m_swapchainCreateInfo.imageExtent);
+        swapchainBuffer.commandBuffer = prev::util::VkUtils::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+        swapchainBuffer.fence = prev::util::VkUtils::CreateFence(m_device);
         swapchainBuffer.extent = m_swapchainCreateInfo.imageExtent;
     }
 

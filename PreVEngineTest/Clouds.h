@@ -31,9 +31,9 @@ public:
         uniformsPool->AdjustCapactity(3, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
         auto commandPool = computeQueue->CreateCommandPool();
-        auto commandBuffer = VkUtils::CreateCommandBuffer(*device, commandPool);
+        auto commandBuffer = prev::util::VkUtils::CreateCommandBuffer(*device, commandPool);
 
-        auto fence = VkUtils::CreateFence(*device);
+        auto fence = prev::util::VkUtils::CreateFence(*device);
 
         prev::core::memory::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ width, height }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, false, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT };
         auto weatherImageBuffer = std::make_unique<prev::core::memory::image::ImageStorageBuffer>(*computeAllocator);
@@ -108,9 +108,9 @@ public:
         pipeline->Init();
 
         auto commandPool = computeQueue->CreateCommandPool();
-        auto commandBuffer = VkUtils::CreateCommandBuffer(*device, commandPool);
+        auto commandBuffer = prev::util::VkUtils::CreateCommandBuffer(*device, commandPool);
 
-        auto fence = VkUtils::CreateFence(*device);
+        auto fence = prev::util::VkUtils::CreateFence(*device);
 
         prev::core::memory::image::ImageBufferCreateInfo imageBufferCreateInfo{ VkExtent3D{ width, height, depth }, VK_IMAGE_TYPE_3D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_3D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT };
 

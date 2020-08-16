@@ -224,7 +224,7 @@ struct Frustum {
         planes[Side::FRONT] = Plane(col4 + col3, viewProjectionMatrix[3].w + viewProjectionMatrix[3].z);
         planes[Side::BACK] = Plane(col4 - col3, viewProjectionMatrix[3].w - viewProjectionMatrix[3].z);
 
-        auto frustumCorners = MathUtil::GetFrustumCorners(inverseViewProjectionMatrix);
+        auto frustumCorners = prev::util::MathUtil::GetFrustumCorners(inverseViewProjectionMatrix);
         for (auto i = 0; i < frustumCorners.size(); i++) {
             points[i] = Point(frustumCorners[i]);
         }
@@ -637,8 +637,8 @@ public:
 
     void Update(const glm::mat4& worldTransform) override
     {
-        const auto rotationScaleTransform = MathUtil::ExtractRotation(worldTransform);
-        const auto translation = MathUtil::ExtractTranslation(worldTransform);
+        const auto rotationScaleTransform = prev::util::MathUtil::ExtractRotation(worldTransform);
+        const auto translation = prev::util::MathUtil::ExtractTranslation(worldTransform);
 
         for (auto i = 0; i < m_originalAABBPoints.size(); i++) {
             m_vorkingAABBPoints[i] = rotationScaleTransform * glm::vec4(m_originalAABBPoints[i], 1.0f);

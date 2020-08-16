@@ -7,7 +7,7 @@
 
 #include "WindowImpl.h"
 
-namespace prev {
+namespace prev::window {
 class InputConvertor {
 public:
     static prev::input::keyboard::KeyActionType GetKeyActionType(const ActionType action);
@@ -18,6 +18,6 @@ public:
 
     static prev::input::touch::TouchActionType GetTouchActionType(const ActionType action);
 };
-} // namespace prev
+} // namespace prev::window
 
 #endif

@@ -1444,7 +1444,7 @@ public:
                 UniformsVS uniformsVS{};
                 uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
                 uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
-                uniformsVS.modelMatrix = MathUtil::CreateTransformationMatrix(selectableComponent->GetPostiion(), glm::quat(), 0.6f);
+                uniformsVS.modelMatrix = prev::util::MathUtil::CreateTransformationMatrix(selectableComponent->GetPostiion(), glm::quat(), 0.6f);
 
                 uboVS->Update(&uniformsVS);
 
@@ -5333,9 +5333,9 @@ public:
         UpdateImageBufferExtents(VkExtent2D{ renderContextUserData.extent.width, renderContextUserData.extent.height }, m_skyPostProcessColorImageBuffer);
 
         auto commandPool = computeQueue->CreateCommandPool();
-        auto commandBuffer = VkUtils::CreateCommandBuffer(*device, commandPool);
+        auto commandBuffer = prev::util::VkUtils::CreateCommandBuffer(*device, commandPool);
 
-        auto fence = VkUtils::CreateFence(*device);
+        auto fence = prev::util::VkUtils::CreateFence(*device);
 
         VkCommandBufferBeginInfo commandBufferBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
         commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -5404,7 +5404,7 @@ public:
         uniformsPostCS.resolution = glm::vec4(renderContextUserData.extent.width, renderContextUserData.extent.height, 0.0f, 0.0f);
         uniformsPostCS.lisghtPosition = lightPositionNdc;
         uniformsPostCS.enableGodRays = 1;
-        uniformsPostCS.lightDotCameraFront = -glm::dot(glm::normalize(mainLightComponent->GetPosition() - renderContextUserData.cameraPosition), glm::normalize(MathUtil::GetForwardVector(renderContextUserData.viewMatrix)));
+        uniformsPostCS.lightDotCameraFront = -glm::dot(glm::normalize(mainLightComponent->GetPosition() - renderContextUserData.cameraPosition), glm::normalize(prev::util::MathUtil::GetForwardVector(renderContextUserData.viewMatrix)));
 
         uboPostCS->Update(&uniformsPostCS);
 
@@ -6149,7 +6149,7 @@ public:
                 const size_t singleInstanceSizeInBytes = sizeof(glm::mat4) + sizeof(glm::vec2) + sizeof(glm::vec2) + sizeof(float);
                 VertexDataBuffer instanceDataBuffer(singleInstanceSizeInBytes * particles.size());
                 for (const auto& particle : particles) {
-                    instanceDataBuffer.Add(MathUtil::CreateTransformationMatrix(particle->GetPosition(), glm::inverse(cameraComponent->GetOrientation()) * glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, particle->GetRotation()))), particle->GetScale()));
+                    instanceDataBuffer.Add(prev::util::MathUtil::CreateTransformationMatrix(particle->GetPosition(), glm::inverse(cameraComponent->GetOrientation()) * glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, particle->GetRotation()))), particle->GetScale()));
                     instanceDataBuffer.Add(particle->GetCurrentStageTextureOffset());
                     instanceDataBuffer.Add(particle->GetNextStageTextureOffset());
                     instanceDataBuffer.Add(particle->GetStagesBlendFactor());
@@ -6270,7 +6270,7 @@ public:
             for (uint32_t shadowRendererIndex = 0; shadowRendererIndex < groupSize; shadowRendererIndex++) {
                 auto pool = queue.CreateCommandPool();
                 pools.push_back(pool);
-                buffers.push_back(VkUtils::CreateCommandBuffer(*device, pool, VK_COMMAND_BUFFER_LEVEL_SECONDARY));
+                buffers.push_back(prev::util::VkUtils::CreateCommandBuffer(*device, pool, VK_COMMAND_BUFFER_LEVEL_SECONDARY));
             }
             commandPools.push_back(pools);
             commandBuffers.push_back(buffers);

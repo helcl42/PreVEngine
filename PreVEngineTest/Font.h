@@ -176,7 +176,7 @@ public:
     std::vector<int> GetValueAsInts(const std::string& variable) const
     {
         std::vector<int> actualValues;
-        auto numberStrings = StringUtils::Split(m_currentLine.at(variable), ',');
+        auto numberStrings = prev::util::StringUtils::Split(m_currentLine.at(variable), ',');
         for (size_t i = 0; i < numberStrings.size(); i++) {
             actualValues.push_back(std::stoi(numberStrings[i]));
         }
@@ -195,9 +195,9 @@ private:
             return false;
         }
 
-        auto items = StringUtils::Split(line, ' ');
+        auto items = prev::util::StringUtils::Split(line, ' ');
         for (auto& part : items) {
-            auto valuePairs = StringUtils::Split(part, '=');
+            auto valuePairs = prev::util::StringUtils::Split(part, '=');
             if (valuePairs.size() == 2) {
                 outTokens.insert({ valuePairs[0], valuePairs[1] });
             }

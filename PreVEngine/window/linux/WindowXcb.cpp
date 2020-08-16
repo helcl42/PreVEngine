@@ -5,7 +5,7 @@
 #ifdef ENABLE_MULTITOUCH
 #include <X11/extensions/XInput2.h> // MultiTouch
 
-namespace prev {
+namespace prev::window::linux {
 typedef uint16_t xcb_input_device_id_t;
 typedef uint32_t xcb_input_fp1616_t;
 
@@ -34,7 +34,7 @@ typedef struct xcb_input_touch_begin_event_t { // from xinput.h in XCB 1.12 (cur
     // xcb_input_modifier_info_t mods;
     // xcb_input_group_info_t    group;
 } xcb_input_touch_begin_event_t;
-} // namespace prev
+} // namespace prev::window::linux
 
 #endif
 

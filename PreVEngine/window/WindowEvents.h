@@ -8,7 +8,7 @@
 
 #include <inttypes.h>
 
-namespace prev {
+namespace prev::window {
 struct WindowCreatedEvent {
     IWindow* window;
 };
@@ -44,6 +44,6 @@ struct WindowFocusChangeEvent {
 struct SurfaceChanged {
     VkSurfaceKHR surface;
 };
-} // namespace prev
+} // namespace prev::window
 
 #endif

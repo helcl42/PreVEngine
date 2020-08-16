@@ -19,7 +19,7 @@ Allocator::Allocator(const Queue& q, const VkDeviceSize blockSize)
     m_device = q.device;
     m_queue = q.handle;
     m_commandPool = q.CreateCommandPool();
-    m_commandBuffer = VkUtils::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+    m_commandBuffer = prev::util::VkUtils::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
     VmaAllocatorCreateInfo allocatorInfo = {};
     allocatorInfo.physicalDevice = m_gpu;

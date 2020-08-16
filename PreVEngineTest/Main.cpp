@@ -1084,16 +1084,16 @@ public:
 
             glm::vec3 positionOffset{ 0.0f };
             if (m_shouldGoForward) {
-                positionOffset += deltaTime * MathUtil::GetUpVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
+                positionOffset += deltaTime * prev::util::MathUtil::GetUpVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
             }
             if (m_shouldGoBackward) {
-                positionOffset -= deltaTime * MathUtil::GetUpVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
+                positionOffset -= deltaTime * prev::util::MathUtil::GetUpVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
             }
             if (m_shouldGoLeft) {
-                positionOffset += deltaTime * MathUtil::GetRightVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
+                positionOffset += deltaTime * prev::util::MathUtil::GetRightVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
             }
             if (m_shouldGoRight) {
-                positionOffset -= deltaTime * MathUtil::GetRightVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
+                positionOffset -= deltaTime * prev::util::MathUtil::GetRightVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
             }
             m_transformComponent->Translate(positionOffset);
         } else {
@@ -1390,8 +1390,8 @@ public:
         glm::mat4 viewMatrix = m_cameraComponent->LookAt();
         glm::mat4 cameraTransformInWorldSpace = glm::inverse(viewMatrix);
 
-        m_transformComponent->SetPosition(MathUtil::ExtractTranslation(cameraTransformInWorldSpace));
-        m_transformComponent->SetOrientation(MathUtil::ExtractOrientation(cameraTransformInWorldSpace));
+        m_transformComponent->SetPosition(prev::util::MathUtil::ExtractTranslation(cameraTransformInWorldSpace));
+        m_transformComponent->SetOrientation(prev::util::MathUtil::ExtractOrientation(cameraTransformInWorldSpace));
 
         m_transformComponent->Update(deltaTime);
 
@@ -1496,7 +1496,7 @@ class Text : public prev::scene::graph::SceneNode<SceneNodeFlags> {
 private:
     std::shared_ptr<IFontRenderComponent> m_fontComponent;
 
-    FPSService m_fpsService{ 1.0f, false };
+    prev::util::FPSService m_fpsService{ 1.0f, false };
 
 public:
     Text()
@@ -1580,8 +1580,8 @@ public:
 
         auto lightTransformInWorldSpace = glm::inverse(m_lightComponent->LookAt());
 
-        m_transformComponent->SetPosition(MathUtil::ExtractTranslation(lightTransformInWorldSpace));
-        m_transformComponent->SetOrientation(MathUtil::ExtractOrientation(lightTransformInWorldSpace));
+        m_transformComponent->SetPosition(prev::util::MathUtil::ExtractTranslation(lightTransformInWorldSpace));
+        m_transformComponent->SetOrientation(prev::util::MathUtil::ExtractOrientation(lightTransformInWorldSpace));
 
         m_transformComponent->Update(deltaTime);
 
@@ -2287,9 +2287,9 @@ public:
         m_pipeline->Init();
 
         m_commandPool = computeQueue->CreateCommandPool();
-        m_commandBuffer = VkUtils::CreateCommandBuffer(*device, m_commandPool);
+        m_commandBuffer = prev::util::VkUtils::CreateCommandBuffer(*device, m_commandPool);
 
-        m_fence = VkUtils::CreateFence(*device);        
+        m_fence = prev::util::VkUtils::CreateFence(*device);        
 
         m_inputBuffer = std::make_unique<prev::core::memory::buffer::Buffer>(*computeAllocator);
         m_outputBuffer = std::make_unique<prev::core::memory::buffer::Buffer>(*computeAllocator);

@@ -5,7 +5,7 @@
 
 #include <vector>
 
-namespace prev {
+namespace prev::util {
 class MathUtil {
 public:
     static glm::mat4 CreateTransformationMatrix(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
@@ -166,6 +166,6 @@ public:
         return glm::vec3(worldCoords.x, worldCoords.y, worldCoords.z);
     }
 };
-} // namespace prev
+} // namespace prev::util
 
 #endif

@@ -6,10 +6,11 @@
 #include "../WindowImpl.h"
 #include "native.h" // for Android_App
 
-namespace prev {
+namespace prev::window::android {
 class WindowAndroid : public WindowImpl {
 public:
-    WindowAndroid(const char* title, uint32_t width, uint32_t height);;
+    WindowAndroid(const char* title, uint32_t width, uint32_t height);
+    ;
 
     ~WindowAndroid();
 
@@ -35,7 +36,7 @@ private:
 
     MultiTouch m_MTouch;
 };
-} // namespace prev
+} // namespace prev::window::android
 
 #endif
 
