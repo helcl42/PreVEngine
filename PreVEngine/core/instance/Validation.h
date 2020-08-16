@@ -77,20 +77,20 @@ void SetConsoleTextColor(const ConsoleColor color);
     {                        \
         printf(__VA_ARGS__); \
     }
-#define _LOGV(...)                           \
-    {                                        \
+#define _LOGV(...)                            \
+    {                                         \
         print(ConsoleColor::CYAN, "PERF: "); \
-        printf(__VA_ARGS__);                 \
+        printf(__VA_ARGS__);                  \
     }
 #define _LOGD(...)                            \
     {                                         \
         print(ConsoleColor::BLUE, "DEBUG: "); \
         printf(__VA_ARGS__);                  \
     }
-#define _LOGI(...)                            \
-    {                                         \
+#define _LOGI(...)                             \
+    {                                          \
         print(ConsoleColor::GREEN, "INFO: "); \
-        printf(__VA_ARGS__);                  \
+        printf(__VA_ARGS__);                   \
     }
 #define _LOGW(...)                                \
     {                                             \
@@ -184,6 +184,14 @@ const char* VkResultStr(const VkResult err);
 
 namespace prev::core::instance {
 class DebugReport {
+public:
+    DebugReport();
+
+public:
+    void Init(VkInstance inst);
+
+    void Destroy();
+
 private:
     VkInstance m_instance;
 
@@ -205,14 +213,7 @@ private:
     VkDebugUtilsMessageSeverityFlagsEXT m_flags;
 
 #endif
-public:
-    DebugReport();
-
-public:
-    void Init(VkInstance inst);
-
-    void Destroy();
 };
-} // namespace prev::core::instance
+} // namespace prev
 
 #endif

@@ -25,6 +25,24 @@ template <typename NodeFlagsType>
 class Scene;
 
 class AllocatorProvider final : public prev::common::pattern::Singleton<AllocatorProvider> {
+public:
+    ~AllocatorProvider() = default;
+
+public:
+    std::shared_ptr<prev::core::memory::Allocator> GetAllocator() const
+    {
+        return m_allocator;
+    }
+
+private:
+    AllocatorProvider() = default;
+
+private:
+    void SetAllocator(const std::shared_ptr<prev::core::memory::Allocator>& alloc)
+    {
+        m_allocator = alloc;
+    }
+
 private:
     friend class prev::common::pattern::Singleton<AllocatorProvider>;
 
@@ -33,56 +51,11 @@ private:
 
 private:
     std::shared_ptr<prev::core::memory::Allocator> m_allocator;
-
-private:
-    AllocatorProvider() = default;
-
-public:
-    ~AllocatorProvider() = default;
-
-private:
-    void SetAllocator(const std::shared_ptr<prev::core::memory::Allocator>& alloc)
-    {
-        m_allocator = alloc;
-    }
-
-public:
-    std::shared_ptr<prev::core::memory::Allocator> GetAllocator() const
-    {
-        return m_allocator;
-    }
 };
 
 class ComputeProvider final : public prev::common::pattern::Singleton<ComputeProvider> {
-private:
-    friend class prev::common::pattern::Singleton<ComputeProvider>;
-
-    template <typename NodeFlagsType>
-    friend class Scene;
-
-private:
-    std::shared_ptr<prev::core::Queue> m_computeQueue;
-
-    std::shared_ptr<prev::core::memory::Allocator> m_computeAllocator;
-
-private:
-    ComputeProvider() = default;
-
 public:
     ~ComputeProvider() = default;
-
-private:
-    void Set(const std::shared_ptr<prev::core::Queue>& queue, const std::shared_ptr<prev::core::memory::Allocator>& alloc)
-    {
-        m_computeQueue = queue;
-        m_computeAllocator = alloc;
-    }
-
-    void Reset()
-    {
-        m_computeQueue = nullptr;
-        m_computeAllocator = nullptr;
-    }
 
 public:
     bool IsAvailable() const
@@ -99,6 +72,33 @@ public:
     {
         return m_computeAllocator;
     }
+
+private:
+    ComputeProvider() = default;
+
+private:
+    void Set(const std::shared_ptr<prev::core::Queue>& queue, const std::shared_ptr<prev::core::memory::Allocator>& alloc)
+    {
+        m_computeQueue = queue;
+        m_computeAllocator = alloc;
+    }
+
+    void Reset()
+    {
+        m_computeQueue = nullptr;
+        m_computeAllocator = nullptr;
+    }
+
+private:
+    friend class prev::common::pattern::Singleton<ComputeProvider>;
+
+    template <typename NodeFlagsType>
+    friend class Scene;
+
+private:
+    std::shared_ptr<prev::core::Queue> m_computeQueue;
+
+    std::shared_ptr<prev::core::memory::Allocator> m_computeAllocator;
 };
 
 template <typename NodeFlagsType>
@@ -134,35 +134,6 @@ public:
 
 template <typename NodeFlagsType>
 class Scene : public IScene<NodeFlagsType> {
-private:
-    prev::event::EventHandler<Scene, prev::window::WindowResizeEvent> m_windowResizeEvent{ *this };
-
-    prev::event::EventHandler<Scene, prev::window::SurfaceChanged> m_surfaceChangedEvent{ *this };
-
-protected:
-    std::shared_ptr<SceneConfig> m_config;
-
-    std::shared_ptr<prev::core::device::Device> m_device;
-
-    std::shared_ptr<prev::core::Queue> m_presentQueue;
-
-    std::shared_ptr<prev::core::Queue> m_graphicsQueue;
-
-    std::shared_ptr<prev::core::Queue> m_computeQueue;
-
-    VkSurfaceKHR m_surface;
-
-protected:
-    std::shared_ptr<prev::core::memory::Allocator> m_allocator;
-
-    std::shared_ptr<prev::core::memory::Allocator> m_computeAllocator;
-
-    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
-
-    std::shared_ptr<prev::render::Swapchain> m_swapchain;
-
-    std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> > m_rootNode;
-
 public:
     Scene(const std::shared_ptr<SceneConfig>& sceneConfig, const std::shared_ptr<prev::core::device::Device>& device, VkSurfaceKHR surface)
         : m_config(sceneConfig)
@@ -172,59 +143,6 @@ public:
     }
 
     virtual ~Scene() = default;
-
-private:
-    void InitQueues()
-    {
-        m_presentQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, m_surface); // compute + graphics + present queue
-        m_graphicsQueue = m_presentQueue; // they might be the same or not
-        m_computeQueue = m_presentQueue;
-        if (!m_presentQueue) {
-            m_presentQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT, m_surface); // graphics + present-queue
-            m_graphicsQueue = m_presentQueue;
-            if (!m_presentQueue) {
-                m_presentQueue = m_device->AddQueue(0, m_surface); // create present-queue
-                m_graphicsQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT); // create graphics queue
-            }
-            m_computeQueue = m_device->AddQueue(VK_QUEUE_COMPUTE_BIT);
-        }
-    }
-
-    void InitRenderPass()
-    {
-        const auto colorFormat = m_device->GetGPU().FindSurfaceFormat(m_surface);
-        const auto depthFormat = m_device->GetGPU().FindDepthFormat();
-
-        m_renderPass = std::make_shared<prev::render::pass::RenderPass>(*m_device);
-        m_renderPass->AddColorAttachment(colorFormat, { 0.5f, 0.5f, 0.5f, 1.0f });
-        m_renderPass->AddDepthAttachment(depthFormat);
-        m_renderPass->AddSubpass({ 0, 1 });
-    }
-
-    void InitAllocator()
-    {
-        m_allocator = std::make_shared<prev::core::memory::Allocator>(*m_graphicsQueue); // Create "Vulkan Memory Aloocator"
-        printf("Allocator created\n");
-
-        if (m_computeQueue != nullptr && m_graphicsQueue != m_computeQueue) {
-            m_computeAllocator = std::make_shared<prev::core::memory::Allocator>(*m_computeQueue);
-            printf("Allocator Compute created\n");
-        } else {
-            m_computeAllocator = m_allocator;
-        }
-    }
-
-    void InitSwapchain()
-    {
-        m_swapchain = std::make_shared<prev::render::Swapchain>(*m_presentQueue, *m_graphicsQueue, *m_renderPass, *m_allocator);
-#if defined(__ANDROID__)
-        m_swapchain->SetPresentMode(m_config->VSync ? VK_PRESENT_MODE_MAILBOX_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
-#else
-        m_swapchain->SetPresentMode(m_config->VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
-#endif
-        m_swapchain->SetImageCount(m_config->framesInFlight);
-        m_swapchain->Print();
-    }
 
 public:
     void Init() override
@@ -320,6 +238,88 @@ public:
         InitSwapchain();
         m_swapchain->UpdateExtent();
     }
+
+private:
+    void InitQueues()
+    {
+        m_presentQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, m_surface); // compute + graphics + present queue
+        m_graphicsQueue = m_presentQueue; // they might be the same or not
+        m_computeQueue = m_presentQueue;
+        if (!m_presentQueue) {
+            m_presentQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT, m_surface); // graphics + present-queue
+            m_graphicsQueue = m_presentQueue;
+            if (!m_presentQueue) {
+                m_presentQueue = m_device->AddQueue(0, m_surface); // create present-queue
+                m_graphicsQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT); // create graphics queue
+            }
+            m_computeQueue = m_device->AddQueue(VK_QUEUE_COMPUTE_BIT);
+        }
+    }
+
+    void InitRenderPass()
+    {
+        const auto colorFormat = m_device->GetGPU().FindSurfaceFormat(m_surface);
+        const auto depthFormat = m_device->GetGPU().FindDepthFormat();
+
+        m_renderPass = std::make_shared<prev::render::pass::RenderPass>(*m_device);
+        m_renderPass->AddColorAttachment(colorFormat, { 0.5f, 0.5f, 0.5f, 1.0f });
+        m_renderPass->AddDepthAttachment(depthFormat);
+        m_renderPass->AddSubpass({ 0, 1 });
+    }
+
+    void InitAllocator()
+    {
+        m_allocator = std::make_shared<prev::core::memory::Allocator>(*m_graphicsQueue); // Create "Vulkan Memory Aloocator"
+        printf("Allocator created\n");
+
+        if (m_computeQueue != nullptr && m_graphicsQueue != m_computeQueue) {
+            m_computeAllocator = std::make_shared<prev::core::memory::Allocator>(*m_computeQueue);
+            printf("Allocator Compute created\n");
+        } else {
+            m_computeAllocator = m_allocator;
+        }
+    }
+
+    void InitSwapchain()
+    {
+        m_swapchain = std::make_shared<prev::render::Swapchain>(*m_presentQueue, *m_graphicsQueue, *m_renderPass, *m_allocator);
+#if defined(__ANDROID__)
+        m_swapchain->SetPresentMode(m_config->VSync ? VK_PRESENT_MODE_MAILBOX_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
+#else
+        m_swapchain->SetPresentMode(m_config->VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
+#endif
+        m_swapchain->SetImageCount(m_config->framesInFlight);
+        m_swapchain->Print();
+    }
+    
+protected:
+    std::shared_ptr<SceneConfig> m_config;
+
+    std::shared_ptr<prev::core::device::Device> m_device;
+
+    std::shared_ptr<prev::core::Queue> m_presentQueue;
+
+    std::shared_ptr<prev::core::Queue> m_graphicsQueue;
+
+    std::shared_ptr<prev::core::Queue> m_computeQueue;
+
+    VkSurfaceKHR m_surface;
+
+protected:
+    std::shared_ptr<prev::core::memory::Allocator> m_allocator;
+
+    std::shared_ptr<prev::core::memory::Allocator> m_computeAllocator;
+
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
+
+    std::shared_ptr<prev::render::Swapchain> m_swapchain;
+
+    std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> > m_rootNode;
+
+private:
+    prev::event::EventHandler<Scene, prev::window::WindowResizeEvent> m_windowResizeEvent{ *this };
+
+    prev::event::EventHandler<Scene, prev::window::SurfaceChanged> m_surfaceChangedEvent{ *this };
 };
 } // namespace prev::scene
 

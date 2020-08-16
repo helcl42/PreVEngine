@@ -11,79 +11,6 @@
 
 namespace prev::render::shader {
 class Shader {
-private:
-    struct DescriptorSetInfo {
-        size_t writeIndex;
-
-        union {
-            VkDescriptorBufferInfo bufferInfo;
-
-            VkDescriptorImageInfo imageInfo;
-        };
-    };
-
-private:
-    static inline const std::string DEFAULT_ENTRY_POINT_NAME{ "main" };
-
-protected:
-    VkDevice m_device;
-
-    // Shader Stages
-    std::map<VkShaderStageFlagBits, VkShaderModule> m_shaderModules;
-
-    std::vector<VkPipelineShaderStageCreateInfo> m_shaderStages;
-
-    // Descriptor Sets
-    uint32_t m_poolCapacity;
-
-    uint32_t m_currentDescriptorSetIndex;
-
-    VkDescriptorPool m_descriptorPool;
-
-    std::vector<VkDescriptorSet> m_descriptorSets;
-
-    std::vector<VkDescriptorSetLayoutBinding> m_layoutBindings;
-
-    std::vector<VkWriteDescriptorSet> m_descriptorWrites;
-
-    VkDescriptorSetLayout m_descriptorSetLayout;
-
-    std::map<std::string, DescriptorSetInfo> m_descriptorSetInfos;
-
-    std::vector<VkPushConstantRange> m_pushConstantRanges;
-
-    //Vertex Inputs
-    std::vector<VkVertexInputBindingDescription> m_inputBindingDescriptions;
-
-    std::vector<VkVertexInputAttributeDescription> m_inputAttributeDescriptions;
-
-private:
-    VkShaderModule CreateShaderModule(const std::vector<char>& spirv) const;
-
-    void CheckBindings() const;
-
-    VkDescriptorSetLayout CreateDescriptorSetLayout() const;
-
-    VkDescriptorPool CreateDescriptorPool(const uint32_t size) const;
-
-    void RecreateDescriptorPool(const uint32_t size);
-
-    void RecreateDescriptorSets(const uint32_t size);
-
-    bool ShouldAdjustCapacity(const uint32_t size);
-
-protected:
-    void AddDescriptorSet(const std::string& name, const uint32_t binding, const VkDescriptorType descType, const uint32_t descCount, const VkShaderStageFlags stageFlags);
-
-    void AddPushConstantBlock(const VkShaderStageFlags stageFlags, const uint32_t offset, const uint32_t size);
-
-protected:
-    virtual void InitVertexInputs() = 0;
-
-    virtual void InitDescriptorSets() = 0;
-
-    virtual void InitPushConstantsBlocks() = 0;
-
 public:
     Shader(const VkDevice device);
 
@@ -118,6 +45,79 @@ public:
     const std::vector<VkVertexInputBindingDescription>& GetVertexInputBindingDescriptions() const;
 
     const std::vector<VkVertexInputAttributeDescription>& GetVertexInputAttributeDescriptions() const;
+
+protected:
+    void AddDescriptorSet(const std::string& name, const uint32_t binding, const VkDescriptorType descType, const uint32_t descCount, const VkShaderStageFlags stageFlags);
+
+    void AddPushConstantBlock(const VkShaderStageFlags stageFlags, const uint32_t offset, const uint32_t size);
+
+protected:
+    virtual void InitVertexInputs() = 0;
+
+    virtual void InitDescriptorSets() = 0;
+
+    virtual void InitPushConstantsBlocks() = 0;
+
+private:
+    struct DescriptorSetInfo {
+        size_t writeIndex;
+
+        union {
+            VkDescriptorBufferInfo bufferInfo;
+
+            VkDescriptorImageInfo imageInfo;
+        };
+    };
+
+private:
+    VkShaderModule CreateShaderModule(const std::vector<char>& spirv) const;
+
+    void CheckBindings() const;
+
+    VkDescriptorSetLayout CreateDescriptorSetLayout() const;
+
+    VkDescriptorPool CreateDescriptorPool(const uint32_t size) const;
+
+    void RecreateDescriptorPool(const uint32_t size);
+
+    void RecreateDescriptorSets(const uint32_t size);
+
+    bool ShouldAdjustCapacity(const uint32_t size);
+
+protected:
+    static inline const std::string DEFAULT_ENTRY_POINT_NAME{ "main" };
+
+protected:
+    VkDevice m_device;
+
+    // Shader Stages
+    std::map<VkShaderStageFlagBits, VkShaderModule> m_shaderModules;
+
+    std::vector<VkPipelineShaderStageCreateInfo> m_shaderStages;
+
+    // Descriptor Sets
+    uint32_t m_poolCapacity;
+
+    uint32_t m_currentDescriptorSetIndex;
+
+    VkDescriptorPool m_descriptorPool;
+
+    std::vector<VkDescriptorSet> m_descriptorSets;
+
+    std::vector<VkDescriptorSetLayoutBinding> m_layoutBindings;
+
+    std::vector<VkWriteDescriptorSet> m_descriptorWrites;
+
+    VkDescriptorSetLayout m_descriptorSetLayout;
+
+    std::map<std::string, DescriptorSetInfo> m_descriptorSetInfos;
+
+    std::vector<VkPushConstantRange> m_pushConstantRanges;
+
+    //Vertex Inputs
+    std::vector<VkVertexInputBindingDescription> m_inputBindingDescriptions;
+
+    std::vector<VkVertexInputAttributeDescription> m_inputAttributeDescriptions;
 };
 
 } // namespace prev::render::shader

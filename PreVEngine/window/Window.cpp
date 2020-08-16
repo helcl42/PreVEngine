@@ -1,190 +1,79 @@
 #include "Window.h"
-#include "WindowImpl.h"
-#include "android//WindowAndroid.h"
-#include "linux/WindowXcb.h"
-#include "windows/WindowWin32.h"
 
 namespace prev::window {
-AbstractWindow::AbstractWindow(const char* title)
+Window::Window(const char* title)
+    : AbstractWindow(title)
 {
-    InitWindow(title, 640, 480, true);
 }
 
-AbstractWindow::AbstractWindow(const char* title, const uint32_t width, const uint32_t height)
+Window::Window(const char* title, const uint32_t width, const uint32_t height)
+    : AbstractWindow(title, width, height)
 {
-    InitWindow(title, width, height, false);
 }
 
-void AbstractWindow::InitWindow(const char* title, const uint32_t width, const uint32_t height, bool tryFullscreen)
+void Window::OnInitEvent()
 {
-#ifdef VK_USE_PLATFORM_XCB_KHR
-    LOGI("PLATFORM: XCB\n");
-    if (tryFullscreen) {
-        m_windowImpl = std::make_shared<prev::window::linux::WindowXcb>(title);
-    } else {
-        m_windowImpl = std::make_shared<prev::window::linux::WindowXcb>(title, width, height);
-    }
-#elif VK_USE_PLATFORM_WIN32_KHR
-    LOGI("PLATFORM: WIN32\n");
-    if (tryFullscreen) {
-        m_windowImpl = std::make_shared<prev::window::windows::WindowWin32>(title);
-    } else {
-        m_windowImpl = std::make_shared<prev::window::windows::WindowWin32>(title, width, height);
-    }
-#elif VK_USE_PLATFORM_ANDROID_KHR
-    LOGI("PLATFORM: ANDROID\n");
-    m_windowImpl = std::make_shared<prev::window::android::WindowAndroid>(title, width, height);
-#else
-#error NOT IMPLEMENTED PLATFORM
-#endif
-    // TODO:
-    //    #ifdef VK_USE_PLATFORM_XLIB_KHR
-    //    #ifdef VK_USE_PLATFORM_MIR_KHR
-    //    #ifdef VK_USE_PLATFORM_WAYLAND_KHR
+    prev::event::EventChannel::Broadcast(WindowCreatedEvent{ this });
 }
 
-Surface& AbstractWindow::GetSurface(VkInstance instance)
+void Window::OnCloseEvent()
 {
-    m_windowImpl->CreateSurface(instance);
-
-    return *m_windowImpl;
+    prev::event::EventChannel::Broadcast(WindowDestroyedEvent{ this });
 }
 
-bool AbstractWindow::CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const
+void Window::OnChangeEvent()
 {
-    return m_windowImpl->CanPresent(gpu, queueFamily);
+    prev::event::EventChannel::Broadcast(WindowChangeEvent{ this });
 }
 
-Position AbstractWindow::GetPosition() const
+void Window::OnResizeEvent(uint16_t width, uint16_t height)
 {
-    const auto& shape = m_windowImpl->GetShape();
-
-    return Position{ shape.x, shape.y };
+    prev::event::EventChannel::Broadcast(WindowResizeEvent{ this, width, height });
 }
 
-Size AbstractWindow::GetSize() const
+void Window::OnMoveEvent(int16_t x, int16_t y)
 {
-    const auto& shape = m_windowImpl->GetShape();
-
-    return Size{ shape.width, shape.height };
+    prev::event::EventChannel::Broadcast(WindowMovedEvent{ this, glm::vec2(x, y) });
 }
 
-bool AbstractWindow::IsKeyPressed(const prev::input::keyboard::KeyCode key) const
+void Window::OnFocusEvent(bool hasFocus)
 {
-    return m_windowImpl->IsKeyPressed(key);
+    prev::event::EventChannel::Broadcast(WindowFocusChangeEvent{ this, hasFocus });
 }
 
-bool AbstractWindow::IsMouseButtonPressed(const ButtonType btn) const
+void Window::OnKeyEvent(ActionType action, prev::input::keyboard::KeyCode keyCode)
 {
-    return m_windowImpl->IsMouseButtonPressed(btn);
+    prev::event::EventChannel::Broadcast(prev::input::keyboard::KeyEvent{ InputConvertor::GetKeyActionType(action), keyCode });
 }
 
-Position AbstractWindow::GetMousePosition() const
+void Window::OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType button, int16_t w, int16_t h)
 {
-    return m_windowImpl->GetMousePosition();
+    prev::event::EventChannel::Broadcast(prev::input::mouse::MouseEvent{ InputConvertor::GetMouseActionType(action), InputConvertor::GetMouseButtonType(button), glm::vec2(x, y), glm::vec2(w, h) });
 }
 
-bool AbstractWindow::HasFocus() const
+void Window::OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y)
 {
-    return m_windowImpl->HasFocus();
+    prev::event::EventChannel::Broadcast(prev::input::mouse::MouseScrollEvent{ delta, glm::vec2(x, y) });
 }
 
-bool AbstractWindow::IsMouseLocked() const
+void Window::OnTouchEvent(ActionType action, float x, float y, uint8_t pointerId, float w, float h)
 {
-    return m_windowImpl->IsMouseLocked();
+    prev::event::EventChannel::Broadcast(prev::input::touch::TouchEvent{ InputConvertor::GetTouchActionType(action), pointerId, glm::vec2(x, y), glm::vec2(w, h) });
 }
 
-bool AbstractWindow::IsMouseCursorVisible() const
+void Window::OnTextEvent(const char* str)
 {
-    return m_windowImpl->IsMouseCursorVisible();
+    prev::event::EventChannel::Broadcast(prev::input::keyboard::TextEvent{ str });
 }
 
-void AbstractWindow::SetTitle(const char* title)
+void Window::operator()(const prev::input::mouse::MouseLockRequest& mouseLock)
 {
-    m_windowImpl->SetTitle(title);
+    SetMouseLocked(mouseLock.lock);
 }
 
-void AbstractWindow::SetPosition(const Position& position)
+void Window::operator()(const prev::input::mouse::MouseCursorVisibilityRequest& cursorVisibility)
 {
-    m_windowImpl->SetPosition(position.x, position.y);
+    SetMouseCursorVisible(cursorVisibility.visible);
 }
 
-void AbstractWindow::SetSize(const Size& size)
-{
-    m_windowImpl->SetSize(size.width, size.height);
-}
-
-void AbstractWindow::ShowKeyboard(bool enabled) // On Android, show the soft-keyboard.
-{
-    m_windowImpl->SetTextInput(enabled);
-}
-
-void AbstractWindow::SetMouseLocked(bool locked)
-{
-    m_windowImpl->SetMouseLocked(locked);
-}
-
-void AbstractWindow::SetMouseCursorVisible(bool visible)
-{
-    m_windowImpl->SetMouseCursorVisible(visible);
-}
-
-void AbstractWindow::Close()
-{
-    m_windowImpl->Close();
-}
-
-Event AbstractWindow::GetEvent(bool waitForEvent)
-{
-    return m_windowImpl->GetEvent(waitForEvent);
-}
-
-bool AbstractWindow::ProcessEvents(bool waitForEvent)
-{
-    Event e = m_windowImpl->GetEvent(waitForEvent);
-    while (e.tag != Event::EventType::NONE) {
-        // Calling the event handlers
-        switch (e.tag) {
-        case Event::EventType::MOUSE:
-            OnMouseEvent(e.mouse.action, e.mouse.x, e.mouse.y, e.mouse.btn, e.mouse.w, e.mouse.h);
-            break;
-        case Event::EventType::MOUSE_SCROLL:
-            OnMouseScrollEvent(e.scroll.delta, e.scroll.x, e.scroll.y);
-            break;
-        case Event::EventType::KEY:
-            OnKeyEvent(e.key.action, e.key.keycode);
-            break;
-        case Event::EventType::TEXT:
-            OnTextEvent(e.text.str);
-            break;
-        case Event::EventType::MOVE:
-            OnMoveEvent(e.move.x, e.move.y);
-            break;
-        case Event::EventType::RESIZE:
-            OnResizeEvent(e.resize.width, e.resize.height);
-            break;
-        case Event::EventType::FOCUS:
-            OnFocusEvent(e.focus.hasFocus);
-            break;
-        case Event::EventType::TOUCH:
-            OnTouchEvent(e.touch.action, e.touch.x, e.touch.y, e.touch.id, e.touch.w, e.touch.h);
-            break;
-        case Event::EventType::INIT:
-            OnInitEvent();
-            break;
-        case Event::EventType::CHANGE:
-            OnChangeEvent();
-            break;
-        case Event::EventType::CLOSE:
-            OnCloseEvent();
-            return false;
-        default:
-            break;
-        }
-
-        e = m_windowImpl->GetEvent();
-    }
-
-    return m_windowImpl->IsRunning();
-}
 } // namespace prev::window

@@ -8,6 +8,12 @@
 
 namespace prev::core {
 struct Queue {
+    Queue(VkQueue h, uint32_t f, uint32_t idx, VkQueueFlags flgs, VkSurfaceKHR surf, VkDevice dvc, prev::core::device::PhysicalDevice& physDevice);
+
+    VkCommandPool CreateCommandPool() const;
+
+    operator VkQueue() const;
+
     VkQueue handle;
 
     uint32_t family; // queue family
@@ -21,12 +27,6 @@ struct Queue {
     VkDevice device; // (used by Swapchain)
 
     prev::core::device::PhysicalDevice gpu; // (used by Swapchain)
-
-    Queue(VkQueue h, uint32_t f, uint32_t idx, VkQueueFlags flgs, VkSurfaceKHR surf, VkDevice dvc, prev::core::device::PhysicalDevice& physDevice);
-
-    VkCommandPool CreateCommandPool() const;
-
-    operator VkQueue() const;
 };
 } // namespace prev::core
 
