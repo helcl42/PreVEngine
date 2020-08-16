@@ -5,7 +5,7 @@
 
 #include <vector>
 
-namespace prev {
+namespace prev::core::device {
 class PhysicalDevices {
 public:
     PhysicalDevices(const VkInstance instance);

@@ -1,6 +1,6 @@
 #include "DeviceExtensions.h"
 
-namespace prev {
+namespace prev::core::device {
 DeviceExtensions& DeviceExtensions::operator=(const DeviceExtensions& other)
 {
     if (this != &other) {
@@ -41,4 +41,4 @@ std::string DeviceExtensions::GetName() const
 {
     return "Device-Extensions";
 }
-} // namespace prev
+} // namespace prev::core::device

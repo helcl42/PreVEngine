@@ -1,11 +1,11 @@
 #ifndef __UNIFORM_BUFFER_H__
 #define __UNIFORM_BUFFER_H__
 
-#include "Buffer.h"
 #include "../../../util/MathUtils.h"
+#include "Buffer.h"
 
-namespace prev {
-class UBO {
+namespace prev::core::memory::buffer {
+class UBO final {
 public:
     UBO(VkBuffer buffer, void* data, const uint32_t offset, const uint32_t range);
 
@@ -31,7 +31,7 @@ private:
 };
 
 template <typename ItemType>
-class UBOPool : public Buffer {
+class UBOPool final : public Buffer {
 public:
     UBOPool(Allocator& allocator)
         : Buffer(allocator)
@@ -41,7 +41,7 @@ public:
     {
     }
 
-    virtual ~UBOPool() = default;
+    ~UBOPool() = default;
 
 public:
     void AdjustCapactity(const uint32_t capacity, const uint32_t alignment = 32)
@@ -78,6 +78,6 @@ private:
 
     void* m_mapped;
 };
-} // namespace prev
+} // namespace prev::core::memory::buffer
 
 #endif

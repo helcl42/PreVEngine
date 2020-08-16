@@ -5,7 +5,7 @@
 
 class Flare {
 public:
-    Flare(const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const float scale)
+    Flare(const std::shared_ptr<Image>& image, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const float scale)
         : m_image(image)
         , m_imageBuffer(imageBuffer)
         , m_scale(scale)
@@ -21,7 +21,7 @@ public:
         return m_image;
     }
 
-    std::shared_ptr<ImageBuffer> GetImageBuffer() const
+    std::shared_ptr<prev::core::memory::image::IImageBuffer> GetImageBuffer() const
     {
         return m_imageBuffer;
     }
@@ -44,7 +44,7 @@ public:
 private:
     std::shared_ptr<Image> m_image;
 
-    std::shared_ptr<ImageBuffer> m_imageBuffer;
+    std::shared_ptr<prev::core::memory::image::ImageBuffer> m_imageBuffer;
 
     float m_scale;
 
@@ -221,23 +221,23 @@ private:
         float scale;
     };
 
-    std::unique_ptr<IModel> CreateModel(Allocator& allocator) const
+    std::unique_ptr<IModel> CreateModel(prev::core::memory::Allocator& allocator) const
     {
         auto mesh = std::make_unique<QuadMesh2D>();
-        auto vertexBuffer = std::make_unique<VBO>(allocator);
+        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VBO>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
-        auto indexBuffer = std::make_unique<IBO>(allocator);
+        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IBO>(allocator);
         indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
 
         return std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
 
-    std::unique_ptr<Flare> CreateFlare(Allocator& allocator, const std::string& filePath, const float scale) const
+    std::unique_ptr<Flare> CreateFlare(prev::core::memory::Allocator& allocator, const std::string& filePath, const float scale) const
     {
         ImageFactory imageFactory{};
         auto image = imageFactory.CreateImage(filePath);
-        auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
-        imageBuffer->Create(ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
+        auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
+        imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
         return std::make_unique<Flare>(std::move(image), std::move(imageBuffer), scale);
     }
 };
@@ -321,23 +321,23 @@ public:
     }
 
 private:
-    std::unique_ptr<IModel> CreateModel(Allocator& allocator) const
+    std::unique_ptr<IModel> CreateModel(prev::core::memory::Allocator& allocator) const
     {
         auto mesh = std::make_unique<QuadMesh2D>();
-        auto vertexBuffer = std::make_unique<VBO>(allocator);
+        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VBO>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
-        auto indexBuffer = std::make_unique<IBO>(allocator);
+        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IBO>(allocator);
         indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
 
         return std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
 
-    std::unique_ptr<Flare> CreateFlare(Allocator& allocator, const std::string& filePath, const float scale) const
+    std::unique_ptr<Flare> CreateFlare(prev::core::memory::Allocator& allocator, const std::string& filePath, const float scale) const
     {
         ImageFactory imageFactory{};
         auto image = imageFactory.CreateImage(filePath);
-        auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
-        imageBuffer->Create(ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
+        auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
+        imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
         return std::make_unique<Flare>(std::move(image), std::move(imageBuffer), scale);
     }
 };

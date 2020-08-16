@@ -552,52 +552,52 @@ private:
         return image;
     }
 
-    std::unique_ptr<IModel> CreateModel(Allocator& allocator, const std::shared_ptr<VertexData>& vertexData, const bool normalMapped) const
+    std::unique_ptr<IModel> CreateModel(prev::core::memory::Allocator& allocator, const std::shared_ptr<VertexData>& vertexData, const bool normalMapped) const
     {
         auto mesh = GenerateMesh(vertexData, normalMapped);
-        auto vertexBuffer = std::make_unique<VBO>(allocator);
+        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VBO>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
-        auto indexBuffer = std::make_unique<IBO>(allocator);
+        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IBO>(allocator);
         indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
 
         return std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
 
-    std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& texturePath, const float shineDamper, const float reflectivity) const
+    std::unique_ptr<IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const float shineDamper, const float reflectivity) const
     {
         auto image = CreateImage(texturePath);
-        auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
-        imageBuffer->Create(ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer() });
+        auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
+        imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer() });
 
         return std::make_unique<Material>(std::move(image), std::move(imageBuffer), shineDamper, reflectivity);
     }
 
-    std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const float shineDamper, const float reflectivity) const
+    std::unique_ptr<IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const float shineDamper, const float reflectivity) const
     {
         auto image = CreateImage(texturePath);
-        auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
-        imageBuffer->Create(ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer() });
+        auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
+        imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer() });
 
         auto normalImage = CreateImage(normalMapPath);
-        auto normalImageBuffer = std::make_unique<ImageBuffer>(allocator);
-        normalImageBuffer->Create(ImageBufferCreateInfo{ VkExtent2D{ normalImage->GetWidth(), normalImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)normalImage->GetBuffer() });
+        auto normalImageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
+        normalImageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ normalImage->GetWidth(), normalImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)normalImage->GetBuffer() });
 
         return std::make_unique<Material>(std::move(image), std::move(imageBuffer), std::move(normalImage), std::move(normalImageBuffer), shineDamper, reflectivity);
     }
     
-    std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightPath, const float shineDamper, const float reflectivity) const
+    std::unique_ptr<IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightPath, const float shineDamper, const float reflectivity) const
     {
         auto image = CreateImage(texturePath);
-        auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
-        imageBuffer->Create(ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer() });
+        auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
+        imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer() });
 
         auto normalImage = CreateImage(normalMapPath);
-        auto normalImageBuffer = std::make_unique<ImageBuffer>(allocator);
-        normalImageBuffer->Create(ImageBufferCreateInfo{ VkExtent2D{ normalImage->GetWidth(), normalImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)normalImage->GetBuffer() });
+        auto normalImageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
+        normalImageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ normalImage->GetWidth(), normalImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)normalImage->GetBuffer() });
         
         auto heightImage = CreateImage(heightPath);
-        auto heightImageBuffer = std::make_unique<ImageBuffer>(allocator);
-        heightImageBuffer->Create(ImageBufferCreateInfo{ VkExtent2D{ heightImage->GetWidth(), heightImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)heightImage->GetBuffer() });
+        auto heightImageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
+        heightImageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ heightImage->GetWidth(), heightImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)heightImage->GetBuffer() });
 
         return std::make_unique<Material>(std::move(image), std::move(imageBuffer), std::move(normalImage), std::move(normalImageBuffer), std::move(heightImage), std::move(heightImageBuffer), shineDamper, reflectivity);
     }

@@ -1,9 +1,9 @@
 #include "Buffer.h"
 
-#include <string>
 #include <stdexcept>
+#include <string>
 
-namespace prev {
+namespace prev::core::memory::buffer {
 Buffer::Buffer(Allocator& allocator)
     : m_allocator(allocator)
     , m_allocation(nullptr)
@@ -59,4 +59,4 @@ Buffer::operator VkBuffer() const
 {
     return m_buffer;
 }
-} // namespace prev
+} // namespace prev::core::memory::buffer

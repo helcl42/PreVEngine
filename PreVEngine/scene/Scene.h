@@ -32,7 +32,7 @@ private:
     friend class Scene;
 
 private:
-    std::shared_ptr<Allocator> m_allocator;
+    std::shared_ptr<prev::core::memory::Allocator> m_allocator;
 
 private:
     AllocatorProvider() = default;
@@ -41,13 +41,13 @@ public:
     ~AllocatorProvider() = default;
 
 private:
-    void SetAllocator(const std::shared_ptr<Allocator>& alloc)
+    void SetAllocator(const std::shared_ptr<prev::core::memory::Allocator>& alloc)
     {
         m_allocator = alloc;
     }
 
 public:
-    std::shared_ptr<Allocator> GetAllocator() const
+    std::shared_ptr<prev::core::memory::Allocator> GetAllocator() const
     {
         return m_allocator;
     }
@@ -61,9 +61,9 @@ private:
     friend class Scene;
 
 private:
-    std::shared_ptr<Queue> m_computeQueue;
+    std::shared_ptr<prev::core::Queue> m_computeQueue;
 
-    std::shared_ptr<Allocator> m_computeAllocator;
+    std::shared_ptr<prev::core::memory::Allocator> m_computeAllocator;
 
 private:
     ComputeProvider() = default;
@@ -72,7 +72,7 @@ public:
     ~ComputeProvider() = default;
 
 private:
-    void Set(const std::shared_ptr<Queue>& queue, const std::shared_ptr<Allocator>& alloc)
+    void Set(const std::shared_ptr<prev::core::Queue>& queue, const std::shared_ptr<prev::core::memory::Allocator>& alloc)
     {
         m_computeQueue = queue;
         m_computeAllocator = alloc;
@@ -90,12 +90,12 @@ public:
         return m_computeQueue != nullptr;
     }
 
-    std::shared_ptr<Queue> GetQueue() const
+    std::shared_ptr<prev::core::Queue> GetQueue() const
     {
         return m_computeQueue;
     }
 
-    std::shared_ptr<Allocator> GetAllocator() const
+    std::shared_ptr<prev::core::memory::Allocator> GetAllocator() const
     {
         return m_computeAllocator;
     }
@@ -120,13 +120,13 @@ public:
 
     virtual void SetSceneRoot(const std::shared_ptr<ISceneNode<NodeFlagsType> >& root) = 0;
 
-    virtual std::shared_ptr<Device> GetDevice() const = 0;
+    virtual std::shared_ptr<prev::core::device::Device> GetDevice() const = 0;
 
     virtual std::shared_ptr<Swapchain> GetSwapchain() const = 0;
 
     virtual std::shared_ptr<RenderPass> GetRenderPass() const = 0;
 
-    virtual std::shared_ptr<Allocator> GetAllocator() const = 0;
+    virtual std::shared_ptr<prev::core::memory::Allocator> GetAllocator() const = 0;
 
 public:
     virtual ~IScene() = default;
@@ -142,20 +142,20 @@ private:
 protected:
     std::shared_ptr<SceneConfig> m_config;
 
-    std::shared_ptr<Device> m_device;
+    std::shared_ptr<prev::core::device::Device> m_device;
 
-    std::shared_ptr<Queue> m_presentQueue;
+    std::shared_ptr<prev::core::Queue> m_presentQueue;
 
-    std::shared_ptr<Queue> m_graphicsQueue;
+    std::shared_ptr<prev::core::Queue> m_graphicsQueue;
 
-    std::shared_ptr<Queue> m_computeQueue;
+    std::shared_ptr<prev::core::Queue> m_computeQueue;
 
     VkSurfaceKHR m_surface;
 
 protected:
-    std::shared_ptr<Allocator> m_allocator;
+    std::shared_ptr<prev::core::memory::Allocator> m_allocator;
 
-    std::shared_ptr<Allocator> m_computeAllocator;
+    std::shared_ptr<prev::core::memory::Allocator> m_computeAllocator;
 
     std::shared_ptr<RenderPass> m_renderPass;
 
@@ -164,7 +164,7 @@ protected:
     std::shared_ptr<ISceneNode<NodeFlagsType> > m_rootNode;
 
 public:
-    Scene(const std::shared_ptr<SceneConfig>& sceneConfig, const std::shared_ptr<Device>& device, VkSurfaceKHR surface)
+    Scene(const std::shared_ptr<SceneConfig>& sceneConfig, const std::shared_ptr<prev::core::device::Device>& device, VkSurfaceKHR surface)
         : m_config(sceneConfig)
         , m_device(device)
         , m_surface(surface)
@@ -203,11 +203,11 @@ private:
 
     void InitAllocator()
     {
-        m_allocator = std::make_shared<Allocator>(*m_graphicsQueue); // Create "Vulkan Memory Aloocator"
+        m_allocator = std::make_shared<prev::core::memory::Allocator>(*m_graphicsQueue); // Create "Vulkan Memory Aloocator"
         printf("Allocator created\n");
 
         if (m_computeQueue != nullptr && m_graphicsQueue != m_computeQueue) {
-            m_computeAllocator = std::make_shared<Allocator>(*m_computeQueue);
+            m_computeAllocator = std::make_shared<prev::core::memory::Allocator>(*m_computeQueue);
             printf("Allocator Compute created\n");
         } else {
             m_computeAllocator = m_allocator;
@@ -276,7 +276,7 @@ public:
     }
 
 public:
-    std::shared_ptr<Device> GetDevice() const override
+    std::shared_ptr<prev::core::device::Device> GetDevice() const override
     {
         return m_device;
     }
@@ -291,7 +291,7 @@ public:
         return m_renderPass;
     }
 
-    std::shared_ptr<Allocator> GetAllocator() const override
+    std::shared_ptr<prev::core::memory::Allocator> GetAllocator() const override
     {
         return m_allocator;
     }

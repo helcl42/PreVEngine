@@ -1,6 +1,6 @@
 #include "PhysicalDevice.h"
 
-namespace prev {
+namespace prev::core::device {
 PhysicalDevice::PhysicalDevice()
     : m_handle(VK_NULL_HANDLE)
     , m_availableProperties()
@@ -159,4 +159,4 @@ PhysicalDevice::operator VkPhysicalDevice() const
 {
     return m_handle;
 }
-} // namespace prev
+} // namespace prev::core::device

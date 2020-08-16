@@ -72,7 +72,7 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<Uniforms> > m_uniformsPool;
 
 public:
     DefaultShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -85,7 +85,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -99,7 +99,7 @@ public:
 
         LOGI("Default Shadows Pipeline created\n");
 
-        m_uniformsPool = std::make_unique<UBOPool<Uniforms> >(*allocator);
+        m_uniformsPool = std::make_unique<prev::core::memory::buffer::UBOPool<Uniforms> >(*allocator);
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -196,7 +196,7 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<Uniforms> > m_uniformsPool;
 
 public:
     BumpMappedShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -209,7 +209,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -223,7 +223,7 @@ public:
 
         LOGI("Bump Mapped Shadows Pipeline created\n");
 
-        m_uniformsPool = std::make_unique<UBOPool<Uniforms> >(*allocator);
+        m_uniformsPool = std::make_unique<prev::core::memory::buffer::UBOPool<Uniforms> >(*allocator);
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -320,7 +320,7 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<Uniforms> > m_uniformsPool;
 
 public:
     TerrainShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -333,7 +333,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -347,7 +347,7 @@ public:
 
         LOGI("Terrain Shadows Pipeline created\n");
 
-        m_uniformsPool = std::make_unique<UBOPool<Uniforms> >(*allocator);
+        m_uniformsPool = std::make_unique<prev::core::memory::buffer::UBOPool<Uniforms> >(*allocator);
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -438,7 +438,7 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<Uniforms> > m_uniformsPool;
 
 public:
     TerrainBumplMappedShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -451,7 +451,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -465,7 +465,7 @@ public:
 
         LOGI("Terrain Bump Mapped Shadows Pipeline created\n");
 
-        m_uniformsPool = std::make_unique<UBOPool<Uniforms> >(*allocator);
+        m_uniformsPool = std::make_unique<prev::core::memory::buffer::UBOPool<Uniforms> >(*allocator);
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -557,7 +557,7 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<Uniforms> > m_uniformsPool;
 
 public:
     AnimationShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -570,7 +570,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -584,7 +584,7 @@ public:
 
         LOGI("Animation Shadows Pipeline created\n");
 
-        m_uniformsPool = std::make_unique<UBOPool<Uniforms> >(*allocator);
+        m_uniformsPool = std::make_unique<prev::core::memory::buffer::UBOPool<Uniforms> >(*allocator);
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -686,7 +686,7 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<Uniforms> > m_uniformsPool;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<Uniforms> > m_uniformsPool;
 
 public:
     AnimationBumpMappedShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -699,7 +699,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -713,7 +713,7 @@ public:
 
         LOGI("Animation Bump Mapped Shadows Pipeline created\n");
 
-        m_uniformsPool = std::make_unique<UBOPool<Uniforms> >(*allocator);
+        m_uniformsPool = std::make_unique<prev::core::memory::buffer::UBOPool<Uniforms> >(*allocator);
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -833,7 +833,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -850,10 +850,10 @@ public:
         // create quad model
         auto quadMesh = std::make_unique<QuadMesh>();
 
-        auto vertexBuffer = std::make_unique<VBO>(*allocator);
+        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VBO>(*allocator);
         vertexBuffer->Data(quadMesh->GetVertexData(), quadMesh->GerVerticesCount(), quadMesh->GetVertexLayout().GetStride());
 
-        auto indexBuffer = std::make_unique<IBO>(*allocator);
+        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IBO>(*allocator);
         indexBuffer->Data(quadMesh->GetIndices().data(), static_cast<uint32_t>(quadMesh->GetIndices().size()));
 
         m_quadModel = std::make_unique<Model>(std::move(quadMesh), std::move(vertexBuffer), std::move(indexBuffer));
@@ -968,7 +968,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -985,10 +985,10 @@ public:
         // create quad model
         auto quadMesh = std::make_unique<QuadMesh>();
 
-        auto vertexBuffer = std::make_unique<VBO>(*allocator);
+        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VBO>(*allocator);
         vertexBuffer->Data(quadMesh->GetVertexData(), quadMesh->GerVerticesCount(), quadMesh->GetVertexLayout().GetStride());
 
-        auto indexBuffer = std::make_unique<IBO>(*allocator);
+        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IBO>(*allocator);
         indexBuffer->Data(quadMesh->GetIndices().data(), static_cast<uint32_t>(quadMesh->GetIndices().size()));
 
         m_quadModel = std::make_unique<Model>(std::move(quadMesh), std::move(vertexBuffer), std::move(indexBuffer));
@@ -1090,9 +1090,9 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     BoundingVolumeDebugRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -1105,7 +1105,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -1119,10 +1119,10 @@ public:
 
         LOGI("Bounding Volume Debug Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -1232,11 +1232,11 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::unique_ptr<UBOPool<UniformsGS> > m_uniformsPoolGS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsGS> > m_uniformsPoolGS;
 
-    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     RayCastDebugRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -1249,7 +1249,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -1263,13 +1263,13 @@ public:
 
         LOGI("RayCast Debug Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-        m_uniformsPoolGS = std::make_unique<UBOPool<UniformsGS> >(*allocator);
+        m_uniformsPoolGS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsGS> >(*allocator);
         m_uniformsPoolGS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -1380,9 +1380,9 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
     std::unique_ptr<IModel> m_selectionPointModel;
 
@@ -1397,7 +1397,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -1411,10 +1411,10 @@ public:
 
         LOGI("Selection Debug Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
         
-        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
         m_selectionPointModel = CreateModel(*allocator, std::make_unique<SphereMesh>(1.0f, 32, 32));
@@ -1491,12 +1491,12 @@ public:
     }
 
 private:
-    std::unique_ptr<IModel> CreateModel(Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const
+    std::unique_ptr<IModel> CreateModel(prev::core::memory::Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const
     {
-        auto vertexBuffer = std::make_unique<VBO>(allocator);
+        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VBO>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
 
-        auto indexBuffer = std::make_unique<IBO>(allocator);
+        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IBO>(allocator);
         indexBuffer->Data(mesh->GetIndices().data(), (uint32_t)mesh->GetIndices().size());
 
         return std::make_unique<Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));
@@ -1616,9 +1616,9 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     DefaultRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -1631,7 +1631,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -1645,10 +1645,10 @@ public:
 
         LOGI("Default Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -1893,9 +1893,9 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     NormalMappedRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -1908,7 +1908,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -1922,10 +1922,10 @@ public:
 
         LOGI("Normal Mapped Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -2174,9 +2174,9 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     ParallaxMappedRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -2189,7 +2189,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -2203,10 +2203,10 @@ public:
 
         LOGI("Prallax Mapped Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -2461,9 +2461,9 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     ConeStepMappedRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -2476,7 +2476,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -2490,10 +2490,10 @@ public:
 
         LOGI("Cone Step Mapped Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -2744,9 +2744,9 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     AnimationRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -2759,7 +2759,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -2773,10 +2773,10 @@ public:
 
         LOGI("Animation Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -3022,9 +3022,9 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     AnimationNormalMappedRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -3037,7 +3037,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -3051,10 +3051,10 @@ public:
 
         LOGI("Animation Normal Mapped Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -3305,9 +3305,9 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     AnimationParallaxMappedRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -3320,7 +3320,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -3334,10 +3334,10 @@ public:
 
         LOGI("Animation Parallax Mapped Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -3594,9 +3594,9 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     AnimationConeStepMappedRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -3609,7 +3609,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -3623,10 +3623,10 @@ public:
 
         LOGI("Animation Cone Step Mapped Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -3881,9 +3881,9 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     TerrainRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -3896,7 +3896,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -3910,10 +3910,10 @@ public:
 
         LOGI("Terrain Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -4158,9 +4158,9 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     TerrainNormalMappedRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -4173,7 +4173,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -4187,10 +4187,10 @@ public:
 
         LOGI("Terrain Normal Mapped Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -4441,9 +4441,9 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     TerrainParallaxMappedRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -4456,7 +4456,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -4470,10 +4470,10 @@ public:
 
         LOGI("Terrain Parallax Mapped Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -4728,9 +4728,9 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     TerrainConeStepMappedRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -4743,7 +4743,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -4757,10 +4757,10 @@ public:
 
         LOGI("Terrain Cone Step Mapped Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -4930,9 +4930,9 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     FontRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -4945,7 +4945,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -4959,10 +4959,10 @@ public:
 
         LOGI("Fonts Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -5071,9 +5071,9 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     SkyBoxRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -5086,7 +5086,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -5100,10 +5100,10 @@ public:
 
         LOGI("Skybox Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -5235,27 +5235,27 @@ private:
 
     std::unique_ptr<IPipeline> m_computeSkyPipeline;
 
-    std::unique_ptr<UBOPool<UniformsSkyCS> > m_uniformsPoolSkyCS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsSkyCS> > m_uniformsPoolSkyCS;
 
     std::unique_ptr<Shader> m_conmputeSkyPostProcessShader;
 
     std::unique_ptr<IPipeline> m_computeSkyPostProcessPipeline;
 
-    std::unique_ptr<UBOPool<UniformsSkyPostProcessCS> > m_uniformsPoolSkyPorstProcessCS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsSkyPostProcessCS> > m_uniformsPoolSkyPorstProcessCS;
 
     std::unique_ptr<Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::shared_ptr<IImageBuffer> m_skyColorImageBuffer;
+    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_skyColorImageBuffer;
 
-    std::shared_ptr<IImageBuffer> m_skyBloomImageBuffer;
+    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_skyBloomImageBuffer;
 
-    std::shared_ptr<IImageBuffer> m_skyAlphanessImageBuffer;
+    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_skyAlphanessImageBuffer;
 
-    std::shared_ptr<IImageBuffer> m_skyCloudDistanceImageBuffer;
+    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_skyCloudDistanceImageBuffer;
 
-    std::shared_ptr<IImageBuffer> m_skyPostProcessColorImageBuffer;
+    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_skyPostProcessColorImageBuffer;
 
 public:
     SkyRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -5268,7 +5268,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -5284,7 +5284,7 @@ public:
 
         LOGI("Sky Compute Pipeline created\n");
 
-        m_uniformsPoolSkyCS = std::make_unique<UBOPool<UniformsSkyCS> >(*allocator);
+        m_uniformsPoolSkyCS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsSkyCS> >(*allocator);
         m_uniformsPoolSkyCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
         // compute sky post process
@@ -5298,7 +5298,7 @@ public:
 
         LOGI("Sky PostProcess Compute Pipeline created\n");
 
-        m_uniformsPoolSkyPorstProcessCS = std::make_unique<UBOPool<UniformsSkyPostProcessCS> >(*allocator);
+        m_uniformsPoolSkyPorstProcessCS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsSkyPostProcessCS> >(*allocator);
         m_uniformsPoolSkyPorstProcessCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
         // compositor
@@ -5320,7 +5320,7 @@ public:
         const auto mainLightComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
         const auto timeComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ITimeComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TIME_COMPONENT });
 
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
 
         // generate clouds usgin compute queue
         auto computeQueue = ComputeProvider::Instance().GetQueue();
@@ -5520,13 +5520,13 @@ public:
     }
 
 private:
-    void UpdateImageBufferExtents(const VkExtent2D& extent, std::shared_ptr<IImageBuffer>& imageBuffer)
+    void UpdateImageBufferExtents(const VkExtent2D& extent, std::shared_ptr<prev::core::memory::image::IImageBuffer>& imageBuffer)
     {
         auto computeAllocator = ComputeProvider::Instance().GetAllocator();
         if (imageBuffer == nullptr || imageBuffer->GetExtent().width != extent.width || imageBuffer->GetExtent().height != extent.height) {
-            const ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ extent.width, extent.height }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE };
+            const prev::core::memory::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ extent.width, extent.height }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE };
 
-            imageBuffer = std::make_unique<ImageStorageBuffer>(*computeAllocator);
+            imageBuffer = std::make_unique<prev::core::memory::image::ImageStorageBuffer>(*computeAllocator);
             imageBuffer->Create(bufferCreateInfo);
         }
     }
@@ -5625,9 +5625,9 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     WaterRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -5640,7 +5640,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -5654,10 +5654,10 @@ public:
 
         LOGI("Water Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -5789,7 +5789,7 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
 
 private:
     uint64_t m_passedSamples{ 0 };
@@ -5809,7 +5809,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -5823,7 +5823,7 @@ public:
 
         LOGI("Sun Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
         VkQueryPoolCreateInfo queryPoolInfo = { VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO };
@@ -5892,7 +5892,7 @@ public:
 
     void AfterRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
 
         //#if defined(__ANDROID__)
         auto result = vkGetQueryPoolResults(*device, m_queryPool, 0, 1, sizeof(m_passedSamples), &m_passedSamples, sizeof(uint64_t), VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_PARTIAL_BIT);
@@ -5906,7 +5906,7 @@ public:
 
     void ShutDown() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         vkDestroyQueryPool(*device, m_queryPool, nullptr);
 
         m_shader->ShutDown();
@@ -5945,9 +5945,9 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
     LensFlareRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -5960,7 +5960,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -5974,10 +5974,10 @@ public:
 
         LOGI("LensFlare Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
@@ -6084,11 +6084,11 @@ private:
 
     std::unique_ptr<IPipeline> m_pipeline;
 
-    std::unique_ptr<UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
 
-    std::unique_ptr<UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
-    std::unique_ptr<VBO> m_instanceDataBuffer;
+    std::unique_ptr<prev::core::memory::buffer::VBO> m_instanceDataBuffer;
 
 public:
     ParticlesRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -6101,7 +6101,7 @@ public:
 public:
     void Init() override
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
         ShaderFactory shaderFactory;
@@ -6115,13 +6115,13 @@ public:
 
         LOGI("Particles Pipeline created\n");
 
-        m_uniformsPoolVS = std::make_unique<UBOPool<UniformsVS> >(*allocator);
+        m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
         m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-        m_uniformsPoolFS = std::make_unique<UBOPool<UniformsFS> >(*allocator);
+        m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-        m_instanceDataBuffer = std::make_unique<VBO>(*allocator);
+        m_instanceDataBuffer = std::make_unique<prev::core::memory::buffer::VBO>(*allocator);
     }
 
     void BeforeRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
@@ -6208,12 +6208,12 @@ public:
     }
 
 private:
-    std::unique_ptr<IModel> CreateModel(Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const
+    std::unique_ptr<IModel> CreateModel(prev::core::memory::Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const
     {
-        auto vertexBuffer = std::make_unique<VBO>(allocator);
+        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VBO>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
 
-        auto indexBuffer = std::make_unique<IBO>(allocator);
+        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IBO>(allocator);
         indexBuffer->Data(mesh->GetIndices().data(), (uint32_t)mesh->GetIndices().size());
 
         return std::make_unique<Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));
@@ -6230,7 +6230,7 @@ public:
 
     ~CommandBuffersGroup()
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
 
         vkDeviceWaitIdle(*device);
 
@@ -6255,9 +6255,9 @@ private:
 
 class CommandBuffersGroupFactory {
 public:
-    std::unique_ptr<CommandBuffersGroup> CreateGroup(const Queue& queue, const uint32_t dim0Size, const uint32_t groupSize) const
+    std::unique_ptr<CommandBuffersGroup> CreateGroup(const prev::core::Queue& queue, const uint32_t dim0Size, const uint32_t groupSize) const
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
 
         std::vector<std::vector<VkCommandPool> > commandPools{};
         std::vector<std::vector<VkCommandBuffer> > commandBuffers{};

@@ -5,7 +5,7 @@
 #include <algorithm>
 
 namespace prev {
-Swapchain::Swapchain(const Queue& presentQueue, const Queue& graphicsQueue, RenderPass& renderPass, Allocator& allocator)
+Swapchain::Swapchain(const prev::core::Queue& presentQueue, const prev::core::Queue& graphicsQueue, RenderPass& renderPass, prev::core::memory::Allocator& allocator)
     : m_presentQueue(presentQueue)
     , m_graphicsQueue(graphicsQueue)
     , m_renderPass(renderPass)
@@ -13,13 +13,13 @@ Swapchain::Swapchain(const Queue& presentQueue, const Queue& graphicsQueue, Rend
     , m_gpu(presentQueue.gpu)
     , m_device(presentQueue.device)
     , m_surface(presentQueue.surface)
-    , m_depthBuffer(DepthImageBuffer(allocator))
+    , m_depthBuffer(prev::core::memory::image::DepthImageBuffer(allocator))
 {
     Init();
 
     m_commandPool = graphicsQueue.CreateCommandPool();
 
-    m_depthBuffer.Create(ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, renderPass.GetDepthFormat(), 0, false, false, VK_IMAGE_VIEW_TYPE_2D });
+    m_depthBuffer.Create(prev::core::memory::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, renderPass.GetDepthFormat(), 0, false, false, VK_IMAGE_VIEW_TYPE_2D });
 
     VkSemaphoreCreateInfo semaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
     VKERRCHECK(vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_acquireSemaphore));
@@ -427,12 +427,12 @@ void Swapchain::EndFrame()
     m_currentFrameIndex = (m_currentFrameIndex + 1) % m_swapchainImagesCount;
 }
 
-const Queue& Swapchain::GetPresentQueue() const
+const prev::core::Queue& Swapchain::GetPresentQueue() const
 {
     return m_presentQueue;
 }
 
-const Queue& Swapchain::GetGraphicsQueue() const
+const prev::core::Queue& Swapchain::GetGraphicsQueue() const
 {
     return m_graphicsQueue;
 }

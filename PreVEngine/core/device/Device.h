@@ -7,7 +7,7 @@
 
 #include <memory>
 
-namespace prev {
+namespace prev::core::device {
 class Device {
 public:
     Device(PhysicalDevice& gpu);
@@ -38,6 +38,6 @@ private:
 
     std::vector<std::shared_ptr<Queue> > m_queues;
 };
-} // namespace prev
+} // namespace prev::core::device
 
 #endif

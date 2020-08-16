@@ -3,7 +3,7 @@
 
 #include "../Allocator.h"
 
-namespace prev {
+namespace prev::core::memory::buffer {
 class Buffer {
 public:
     Buffer(Allocator& allocator);
@@ -34,5 +34,6 @@ protected:
 
     uint32_t m_stride;
 };
-} // namespace prev
+} // namespace prev::core::memory::buffer
+
 #endif // !__BUFFER_H__

@@ -1,6 +1,6 @@
 ﻿#include "Device.h"
 
-namespace prev {
+namespace prev::core::device {
 std::shared_ptr<Queue> Device::AddQueue(VkQueueFlags flags, VkSurfaceKHR surface)
 {
     ASSERT(!m_handle, "Can't add queues after device is already in use. ");
@@ -137,4 +137,4 @@ void Device::Print() const
         printf("\n");
     }
 }
-} // namespace prev
+} // namespace prev::core::device

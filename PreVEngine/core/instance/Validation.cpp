@@ -92,7 +92,7 @@ void ShowVkResult(VkResult err)
 }
 #endif
 
-namespace prev {
+namespace prev::core::instance {
 #ifdef ENABLE_VALIDATION
 
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
@@ -215,4 +215,4 @@ DebugReport::DebugReport()
     , m_flags(0)
 {
 }
-} // namespace prev
+} // namespace prev::core::instance

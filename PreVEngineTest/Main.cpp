@@ -161,17 +161,17 @@ private:
         return image;
     }
 
-    std::unique_ptr<ImageBuffer> CreateImageBuffer(Allocator& allocator, const std::shared_ptr<Image>& image, const bool filtering, const bool repeatAddressMode) const
+    std::unique_ptr<prev::core::memory::image::ImageBuffer> CreateImageBuffer(prev::core::memory::Allocator& allocator, const std::shared_ptr<Image>& image, const bool filtering, const bool repeatAddressMode) const
     {
         const VkExtent2D imageExtent = { image->GetWidth(), image->GetHeight() };
 
-        auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
-        imageBuffer->Create(ImageBufferCreateInfo{ imageExtent, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, filtering, VK_IMAGE_VIEW_TYPE_2D, 1, repeatAddressMode ? VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT : VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
+        auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
+        imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ imageExtent, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, filtering, VK_IMAGE_VIEW_TYPE_2D, 1, repeatAddressMode ? VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT : VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
 
         return imageBuffer;
     }
 
-    std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& texturePath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
+    std::unique_ptr<IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
     {
         auto image = CreateImage(texturePath);
         auto imageBuffer = CreateImageBuffer(allocator, image, true, repeatAddressMode);
@@ -179,7 +179,7 @@ private:
         return std::make_unique<Material>(image, std::move(imageBuffer), shineDamper, reflectivity);
     }
 
-    std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
+    std::unique_ptr<IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
     {
         auto image = CreateImage(texturePath);
         auto imageBuffer = CreateImageBuffer(allocator, image, true, repeatAddressMode);
@@ -190,7 +190,7 @@ private:
         return std::make_unique<Material>(image, std::move(imageBuffer), normalImage, std::move(normalImageBuffer), shineDamper, reflectivity);
     }
 
-    std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
+    std::unique_ptr<IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
     {
         auto image = CreateImage(texturePath);
         auto imageBuffer = CreateImageBuffer(allocator, image, true, repeatAddressMode);
@@ -204,12 +204,12 @@ private:
         return std::make_unique<Material>(image, std::move(imageBuffer), normalImage, std::move(normalImageBuffer), heightImage, std::move(heightImageBuffer), shineDamper, reflectivity);
     }
 
-    std::unique_ptr<IModel> CreateModel(Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const
+    std::unique_ptr<IModel> CreateModel(prev::core::memory::Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const
     {
-        auto vertexBuffer = std::make_unique<VBO>(allocator);
+        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VBO>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
 
-        auto indexBuffer = std::make_unique<IBO>(allocator);
+        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IBO>(allocator);
         indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
 
         return std::make_unique<Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));
@@ -1746,7 +1746,7 @@ public:
     }
 
 public:
-    void operator()(const NewIterationEvent& newIterationEvent)
+    void operator()(const prev::core::NewIterationEvent& newIterationEvent)
     {
         m_viewPortSize = glm::vec2(newIterationEvent.windowWidth, newIterationEvent.windowHeight);
     }
@@ -1776,7 +1776,7 @@ private:
     glm::uvec2 m_previousViewPortSize{ 1920, 1080 };
 
 private:
-    EventHandler<WaterReflection, NewIterationEvent> m_newIterationHandler{ *this };
+    EventHandler<WaterReflection, prev::core::NewIterationEvent> m_newIterationHandler{ *this };
 };
 
 class WaterRefraction : public SceneNode<SceneNodeFlags> {
@@ -1816,7 +1816,7 @@ public:
     }
 
 public:
-    void operator()(const NewIterationEvent& newIterationEvent)
+    void operator()(const prev::core::NewIterationEvent& newIterationEvent)
     {
         m_viewPortSize = glm::vec2(newIterationEvent.windowWidth, newIterationEvent.windowHeight);
     }
@@ -1846,7 +1846,7 @@ private:
     glm::uvec2 m_previousViewPortSize{ 1920, 1080 };
 
 private:
-    EventHandler<WaterRefraction, NewIterationEvent> m_newIterationHandler{ *this };
+    EventHandler<WaterRefraction, prev::core::NewIterationEvent> m_newIterationHandler{ *this };
 };
 
 class Water : public SceneNode<SceneNodeFlags> {
@@ -1993,7 +1993,7 @@ public:
     }
 
 public:
-    void operator()(const NewIterationEvent& newIterationEvent)
+    void operator()(const prev::core::NewIterationEvent& newIterationEvent)
     {
         m_viewPortSize = glm::vec2(newIterationEvent.windowWidth, newIterationEvent.windowHeight);
     }
@@ -2004,7 +2004,7 @@ private:
     glm::vec2 m_viewPortSize;
 
 private:
-    EventHandler<LensFlare, NewIterationEvent> m_newIterationHandler{ *this };
+    EventHandler<LensFlare, prev::core::NewIterationEvent> m_newIterationHandler{ *this };
 };
 
 class Sun : public SceneNode<SceneNodeFlags> {
@@ -2042,7 +2042,7 @@ public:
     }
 
 public:
-    void operator()(const NewIterationEvent& newIterationEvent)
+    void operator()(const prev::core::NewIterationEvent& newIterationEvent)
     {
         m_viewPortSize = glm::vec2(newIterationEvent.windowWidth, newIterationEvent.windowHeight);
     }
@@ -2053,7 +2053,7 @@ private:
     glm::vec2 m_viewPortSize;
 
 private:
-    EventHandler<Sun, NewIterationEvent> m_newIterationHandler{ *this };
+    EventHandler<Sun, prev::core::NewIterationEvent> m_newIterationHandler{ *this };
 };
 
 class Stone final : public SceneNode<SceneNodeFlags> {
@@ -2234,7 +2234,7 @@ private:
     }
 
 public:
-    void operator()(const NewIterationEvent& newIterationEvent)
+    void operator()(const prev::core::NewIterationEvent& newIterationEvent)
     {
         m_viewPortSize = glm::vec2(newIterationEvent.windowWidth, newIterationEvent.windowHeight);
     }
@@ -2257,7 +2257,7 @@ private:
     InputsFacade m_inputFacade;
 
 private:
-    EventHandler<RayCasterNode, NewIterationEvent> m_newIterationHandler{ *this };
+    EventHandler<RayCasterNode, prev::core::NewIterationEvent> m_newIterationHandler{ *this };
 
     EventHandler<RayCasterNode, MouseLockRequest> m_mouseLockHandler{ *this };
 };
@@ -2276,7 +2276,7 @@ public:
     {
         SceneNode::Init();
 
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto computeQueue = ComputeProvider::Instance().GetQueue();
         auto computeAllocator = ComputeProvider::Instance().GetAllocator();
 
@@ -2291,14 +2291,14 @@ public:
 
         m_fence = VkUtils::CreateFence(*device);        
 
-        m_inputBuffer = std::make_unique<Buffer>(*computeAllocator);
-        m_outputBuffer = std::make_unique<Buffer>(*computeAllocator);
+        m_inputBuffer = std::make_unique<prev::core::memory::buffer::Buffer>(*computeAllocator);
+        m_outputBuffer = std::make_unique<prev::core::memory::buffer::Buffer>(*computeAllocator);
     }
 
     void Update(float deltaTime) override
     {
         if(ComputeProvider::Instance().IsAvailable()) {
-            auto device = DeviceProvider::Instance().GetDevice();
+            auto device = prev::core::DeviceProvider::Instance().GetDevice();
             auto computeQueue = ComputeProvider::Instance().GetQueue();
             auto computeAllocator = ComputeProvider::Instance().GetAllocator();
 
@@ -2397,7 +2397,7 @@ public:
     {
         SceneNode::ShutDown();
 
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
 
         vkDestroyFence(*device, m_fence, nullptr);
         vkDestroyCommandPool(*device, m_commandPool, nullptr);
@@ -2418,9 +2418,9 @@ private:
 
     VkFence m_fence;
 
-    std::unique_ptr<Buffer> m_inputBuffer;
+    std::unique_ptr<prev::core::memory::buffer::Buffer> m_inputBuffer;
 
-    std::unique_ptr<Buffer> m_outputBuffer;
+    std::unique_ptr<prev::core::memory::buffer::Buffer> m_outputBuffer;
 
     void* m_outputBufferMappedMemory;
 };
@@ -3006,7 +3006,7 @@ private:
 template <typename NodeFlagsType>
 class TestApp final : public App<NodeFlagsType> {
 public:
-    TestApp(const std::shared_ptr<EngineConfig>& config)
+    TestApp(const std::shared_ptr<prev::core::EngineConfig>& config)
         : App<NodeFlagsType>(config)
     {
     }
@@ -3036,7 +3036,7 @@ int main(int argc, char* argv[])
 {
     setvbuf(stdout, NULL, _IONBF, 0); // avoid buffering
 
-    auto config = std::make_shared<EngineConfig>();
+    auto config = std::make_shared<prev::core::EngineConfig>();
 
     TestApp<SceneNodeFlags> app(config);
     app.Init();

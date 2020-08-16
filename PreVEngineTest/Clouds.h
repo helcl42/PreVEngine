@@ -6,7 +6,7 @@
 
 class WatherFactory {
 public:
-    std::unique_ptr<IImageBuffer> Create(const uint32_t width, const uint32_t height) const
+    std::unique_ptr<prev::core::memory::image::IImageBuffer> Create(const uint32_t width, const uint32_t height) const
     {
         struct Uniforms {
             alignas(16) glm::vec4 textureSize;
@@ -17,7 +17,7 @@ public:
             int perlinOctaves;
         };
 
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto computeQueue = ComputeProvider::Instance().GetQueue();
         auto computeAllocator = ComputeProvider::Instance().GetAllocator();
 
@@ -27,7 +27,7 @@ public:
         auto pipeline = std::make_unique<WeatherComputePipeline>(*device, *shader);
         pipeline->Init();
 
-        auto uniformsPool = std::make_unique<UBOPool<Uniforms> >(*computeAllocator);
+        auto uniformsPool = std::make_unique<prev::core::memory::buffer::UBOPool<Uniforms> >(*computeAllocator);
         uniformsPool->AdjustCapactity(3, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
         auto commandPool = computeQueue->CreateCommandPool();
@@ -35,8 +35,8 @@ public:
 
         auto fence = VkUtils::CreateFence(*device);
 
-        ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ width, height }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, false, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT };
-        auto weatherImageBuffer = std::make_unique<ImageStorageBuffer>(*computeAllocator);
+        prev::core::memory::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ width, height }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, false, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT };
+        auto weatherImageBuffer = std::make_unique<prev::core::memory::image::ImageStorageBuffer>(*computeAllocator);
         weatherImageBuffer->Create(bufferCreateInfo);
 
         VKERRCHECK(vkQueueWaitIdle(*computeQueue));
@@ -95,9 +95,9 @@ public:
 
 class WatherNoiseFactory {
 public:
-    std::unique_ptr<IImageBuffer> CreatePerlinWorleyNoise(const uint32_t width, const uint32_t height, const uint32_t depth) const
+    std::unique_ptr<prev::core::memory::image::IImageBuffer> CreatePerlinWorleyNoise(const uint32_t width, const uint32_t height, const uint32_t depth) const
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto computeQueue = ComputeProvider::Instance().GetQueue();
         auto computeAllocator = ComputeProvider::Instance().GetAllocator();
 
@@ -112,9 +112,9 @@ public:
 
         auto fence = VkUtils::CreateFence(*device);
 
-        ImageBufferCreateInfo imageBufferCreateInfo{ VkExtent3D{ width, height, depth }, VK_IMAGE_TYPE_3D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_3D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT };
+        prev::core::memory::image::ImageBufferCreateInfo imageBufferCreateInfo{ VkExtent3D{ width, height, depth }, VK_IMAGE_TYPE_3D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_3D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT };
 
-        auto noiseImageBuffer = std::make_unique<ImageStorageBuffer>(*computeAllocator);
+        auto noiseImageBuffer = std::make_unique<prev::core::memory::image::ImageStorageBuffer>(*computeAllocator);
         noiseImageBuffer->Create(imageBufferCreateInfo);
 
         VKERRCHECK(vkQueueWaitIdle(*computeQueue));
@@ -163,9 +163,9 @@ public:
 
 class ICloudsComponent {
 public:
-    virtual std::shared_ptr<IImageBuffer> GetPerlineNoise() const = 0;
+    virtual std::shared_ptr<prev::core::memory::image::IImageBuffer> GetPerlineNoise() const = 0;
 
-    virtual std::shared_ptr<IImageBuffer> GetWeather() const = 0;
+    virtual std::shared_ptr<prev::core::memory::image::IImageBuffer> GetWeather() const = 0;
 
     virtual const glm::vec4& GetColor() const = 0;
 
@@ -177,12 +177,12 @@ class CloudsComponentFactory;
 
 class CloudsComponent : public ICloudsComponent {
 public:
-    std::shared_ptr<IImageBuffer> GetPerlineNoise() const override
+    std::shared_ptr<prev::core::memory::image::IImageBuffer> GetPerlineNoise() const override
     {
         return m_perlinWorleyNoiseImageBuffer;
     }
 
-    std::shared_ptr<IImageBuffer> GetWeather() const override
+    std::shared_ptr<prev::core::memory::image::IImageBuffer> GetWeather() const override
     {
         return m_weatherImageBuffer;
     }
@@ -196,9 +196,9 @@ private:
     friend class CloudsComponentFactory;
 
 private:
-    std::shared_ptr<IImageBuffer> m_weatherImageBuffer;
+    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_weatherImageBuffer;
 
-    std::shared_ptr<IImageBuffer> m_perlinWorleyNoiseImageBuffer;
+    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_perlinWorleyNoiseImageBuffer;
 
     glm::vec4 m_color;
 };

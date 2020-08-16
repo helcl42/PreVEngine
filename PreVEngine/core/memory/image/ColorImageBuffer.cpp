@@ -1,6 +1,6 @@
 #include "ColorImageBuffer.h"
 
-namespace prev {
+namespace prev::core::memory::image {
 ColorImageBuffer::ColorImageBuffer(Allocator& allocator)
     : AbstractImageBuffer(allocator)
 {
@@ -28,4 +28,4 @@ void ColorImageBuffer::Resize(const VkExtent3D& extent)
 
     m_extent = extent;
 }
-} // namespace prev
+} // namespace prev::core::memory::image

@@ -75,9 +75,9 @@ public:
 
     virtual VkExtent2D GetExtent() const = 0;
 
-    virtual std::shared_ptr<IImageBuffer> GetColorImageBuffer() const = 0;
+    virtual std::shared_ptr<prev::core::memory::image::IImageBuffer> GetColorImageBuffer() const = 0;
 
-    virtual std::shared_ptr<IImageBuffer> GetDepthImageBuffer() const = 0;
+    virtual std::shared_ptr<prev::core::memory::image::IImageBuffer> GetDepthImageBuffer() const = 0;
 
     virtual VkFramebuffer GetFrameBuffer() const = 0;
 
@@ -127,12 +127,12 @@ public:
         return VkExtent2D{ m_width, m_height };
     }
 
-    std::shared_ptr<IImageBuffer> GetColorImageBuffer() const override
+    std::shared_ptr<prev::core::memory::image::IImageBuffer> GetColorImageBuffer() const override
     {
         return m_imageBuffer;
     }
 
-    std::shared_ptr<IImageBuffer> GetDepthImageBuffer() const override
+    std::shared_ptr<prev::core::memory::image::IImageBuffer> GetDepthImageBuffer() const override
     {
         return m_depthBuffer;
     }
@@ -146,14 +146,14 @@ private:
     void InitBuffers()
     {
         auto allocator = AllocatorProvider::Instance().GetAllocator();
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
 
-        m_imageBuffer = std::make_shared<ColorImageBuffer>(*allocator);
-        m_imageBuffer->Create(ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, COLOR_FORMAT, 0, false, true, VK_IMAGE_VIEW_TYPE_2D });
+        m_imageBuffer = std::make_shared<prev::core::memory::image::ColorImageBuffer>(*allocator);
+        m_imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, COLOR_FORMAT, 0, false, true, VK_IMAGE_VIEW_TYPE_2D });
         m_imageBuffer->CreateSampler();
 
-        m_depthBuffer = std::make_shared<DepthImageBuffer>(*allocator);
-        m_depthBuffer->Create(ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, DEPTH_FORMAT, 0, false, false, VK_IMAGE_VIEW_TYPE_2D });
+        m_depthBuffer = std::make_shared<prev::core::memory::image::DepthImageBuffer>(*allocator);
+        m_depthBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, DEPTH_FORMAT, 0, false, false, VK_IMAGE_VIEW_TYPE_2D });
         m_depthBuffer->CreateSampler(1.0f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, false);
 
         m_frameBuffer = VkUtils::CreateFrameBuffer(*device, *m_renderPass, { m_imageBuffer->GetImageView(), m_depthBuffer->GetImageView() }, GetExtent());
@@ -161,7 +161,7 @@ private:
 
     void ShutDownBuffers()
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
 
         vkDeviceWaitIdle(*device);
 
@@ -173,7 +173,7 @@ private:
 
     void InitRenderPass()
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
 
         std::vector<VkSubpassDependency> dependencies{ 2 };
         dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -240,9 +240,9 @@ private:
 
     std::shared_ptr<RenderPass> m_renderPass;
 
-    std::shared_ptr<ColorImageBuffer> m_imageBuffer;
+    std::shared_ptr<prev::core::memory::image::ColorImageBuffer> m_imageBuffer;
 
-    std::shared_ptr<DepthImageBuffer> m_depthBuffer;
+    std::shared_ptr<prev::core::memory::image::DepthImageBuffer> m_depthBuffer;
 
     VkFramebuffer m_frameBuffer;
 };
@@ -367,25 +367,25 @@ private:
         return image;
     }
 
-    std::unique_ptr<IMaterial> CreateMaterial(Allocator& allocator, const glm::vec4& color, const std::string& textureFilename, const std::string& normalTextureFilename, const float shineDamper, const float reflectivity) const
+    std::unique_ptr<IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const glm::vec4& color, const std::string& textureFilename, const std::string& normalTextureFilename, const float shineDamper, const float reflectivity) const
     {
         auto image = CreateImage(textureFilename);
-        auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
-        imageBuffer->Create(ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer() });
+        auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
+        imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer() });
 
         auto normalImage = CreateImage(textureFilename);
-        auto normalImageBuffer = std::make_unique<ImageBuffer>(allocator);
-        normalImageBuffer->Create(ImageBufferCreateInfo{ VkExtent2D{ normalImage->GetWidth(), normalImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)normalImage->GetBuffer() });
+        auto normalImageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
+        normalImageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ normalImage->GetWidth(), normalImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)normalImage->GetBuffer() });
 
         return std::make_unique<Material>(color, std::move(image), std::move(imageBuffer), std::move(normalImage), std::move(normalImageBuffer), shineDamper, reflectivity);
     }
 
-    std::unique_ptr<IModel> CreateModel(Allocator& allocator) const
+    std::unique_ptr<IModel> CreateModel(prev::core::memory::Allocator& allocator) const
     {
         auto mesh = std::make_unique<WaterTileMesh>();
-        auto vertexBuffer = std::make_unique<VBO>(allocator);
+        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VBO>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
-        auto indexBuffer = std::make_unique<IBO>(allocator);
+        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IBO>(allocator);
         indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
 
         return std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));

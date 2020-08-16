@@ -7,11 +7,11 @@ namespace prev {
 template <typename NodeFlagsType>
 class App {
 protected:
-    std::unique_ptr<Engine<NodeFlagsType> > m_engine;
+    std::unique_ptr<prev::core::Engine<NodeFlagsType> > m_engine;
 
 public:
-    App(const std::shared_ptr<EngineConfig>& config)
-        : m_engine(std::make_unique<Engine<NodeFlagsType> >(config))
+    App(const std::shared_ptr<prev::core::EngineConfig>& config)
+        : m_engine(std::make_unique<prev::core::Engine<NodeFlagsType> >(config))
     {
     }
 

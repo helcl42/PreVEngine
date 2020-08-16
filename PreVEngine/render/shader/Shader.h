@@ -98,13 +98,13 @@ public:
 
     bool AddShaderModule(const VkShaderStageFlagBits stage, const std::vector<char>& spirv);
 
-    void Bind(const std::string& name, const UBO& ubo);
+    void Bind(const std::string& name, const prev::core::memory::buffer::UBO& ubo);
 
-    void Bind(const std::string& name, const Buffer& buffer);
+    void Bind(const std::string& name, const prev::core::memory::buffer::Buffer& buffer);
 
     void Bind(const std::string& name, const VkImageView imageView, const VkSampler sampler, const VkImageLayout imageLayout);
 
-    void Bind(const std::string& name, const IImageBuffer& image, const VkImageLayout imageLayout);
+    void Bind(const std::string& name, const prev::core::memory::image::IImageBuffer& image, const VkImageLayout imageLayout);
 
     VkDescriptorSet UpdateNextDescriptorSet();
 
