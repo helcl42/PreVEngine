@@ -1,6 +1,6 @@
 #include "RenderPass.h"
 
-namespace prev {
+namespace prev::render::pass {
 RenderPass::RenderPass(VkDevice device)
     : m_device(device)
     , m_renderPass(VK_NULL_HANDLE)
@@ -160,4 +160,4 @@ RenderPass::operator VkRenderPass()
     }
     return m_renderPass;
 }
-} // namespace prev
+} // namespace prev::render::pass

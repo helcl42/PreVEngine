@@ -42,7 +42,7 @@ public:
 
     virtual void ShutDown() = 0;
 
-    virtual std::shared_ptr<RenderPass> GetRenderPass() const = 0;
+    virtual std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const = 0;
 
     virtual const ShadowsCascade& GetCascade(const uint32_t cascadeIndex) const = 0;
 
@@ -72,7 +72,7 @@ private:
     std::shared_ptr<prev::core::device::Device> m_device;
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
     std::shared_ptr<prev::core::memory::image::DepthImageBuffer> m_depthBuffer;
 
@@ -105,7 +105,7 @@ private:
         dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
         dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-        m_renderPass = std::make_shared<RenderPass>(*device);
+        m_renderPass = std::make_shared<prev::render::pass::RenderPass>(*device);
         m_renderPass->AddDepthAttachment(DEPTH_FORMAT);
         m_renderPass->AddSubpass({ 0 });
         m_renderPass->AddSubpassDependency(dependencies);
@@ -254,7 +254,7 @@ public:
         ShutDownRenderPass();
     }
 
-    std::shared_ptr<RenderPass> GetRenderPass() const override
+    std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const override
     {
         return m_renderPass;
     }

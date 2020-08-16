@@ -364,19 +364,19 @@ public:
 
 class IMaterial {
 public:
-    virtual std::shared_ptr<Image> GetImage() const = 0;
+    virtual std::shared_ptr<prev::render::image::Image> GetImage() const = 0;
 
     virtual std::shared_ptr<prev::core::memory::image::ImageBuffer> GetImageBuffer() const = 0;
 
     virtual bool HasImage() const = 0;
 
-    virtual std::shared_ptr<Image> GetNormalImage() const = 0;
+    virtual std::shared_ptr<prev::render::image::Image> GetNormalImage() const = 0;
 
     virtual std::shared_ptr<prev::core::memory::image::ImageBuffer> GetNormalmageBuffer() const = 0;
 
     virtual bool HasNormalImage() const = 0;
 
-    virtual std::shared_ptr<Image> GetHeightImage() const = 0;
+    virtual std::shared_ptr<prev::render::image::Image> GetHeightImage() const = 0;
 
     virtual std::shared_ptr<prev::core::memory::image::ImageBuffer> GetHeightImageBuffer() const = 0;
 
@@ -460,15 +460,15 @@ class Material : public IMaterial {
 private:
     glm::vec3 m_color{ 1.0f, 1.0f, 1.0f };
 
-    std::shared_ptr<Image> m_image{ nullptr };
+    std::shared_ptr<prev::render::image::Image> m_image{ nullptr };
 
     std::shared_ptr<prev::core::memory::image::ImageBuffer> m_imageBuffer{ nullptr };
 
-    std::shared_ptr<Image> m_normalImage{ nullptr };
+    std::shared_ptr<prev::render::image::Image> m_normalImage{ nullptr };
 
     std::shared_ptr<prev::core::memory::image::ImageBuffer> m_normalImageBuffer{ nullptr };
 
-    std::shared_ptr<Image> m_heightmage{ nullptr };
+    std::shared_ptr<prev::render::image::Image> m_heightmage{ nullptr };
 
     std::shared_ptr<prev::core::memory::image::ImageBuffer> m_heightImageBuffer{ nullptr };
 
@@ -494,7 +494,7 @@ public:
     {
     }
 
-    Material(const std::shared_ptr<Image>& image, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const float shineDamper, const float reflectivity)
+    Material(const std::shared_ptr<prev::render::image::Image>& image, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const float shineDamper, const float reflectivity)
         : m_image(image)
         , m_imageBuffer(imageBuffer)
         , m_shineDamper(shineDamper)
@@ -502,7 +502,7 @@ public:
     {
     }
 
-    Material(const glm::vec4 color, const std::shared_ptr<Image>& image, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const float shineDamper, const float reflectivity)
+    Material(const glm::vec4 color, const std::shared_ptr<prev::render::image::Image>& image, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const float shineDamper, const float reflectivity)
         : m_color(color)
         , m_image(image)
         , m_imageBuffer(imageBuffer)
@@ -511,7 +511,7 @@ public:
     {
     }
 
-    Material(const std::shared_ptr<Image>& image, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& normalImageBuffer, const float shineDamper, const float reflectivity)
+    Material(const std::shared_ptr<prev::render::image::Image>& image, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const std::shared_ptr<prev::render::image::Image>& normalImage, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& normalImageBuffer, const float shineDamper, const float reflectivity)
         : m_image(image)
         , m_imageBuffer(imageBuffer)
         , m_normalImage(normalImage)
@@ -521,7 +521,7 @@ public:
     {
     }
 
-    Material(const glm::vec4 color, const std::shared_ptr<Image>& image, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& normalImageBuffer, const float shineDamper, const float reflectivity)
+    Material(const glm::vec4 color, const std::shared_ptr<prev::render::image::Image>& image, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const std::shared_ptr<prev::render::image::Image>& normalImage, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& normalImageBuffer, const float shineDamper, const float reflectivity)
         : m_color(color)
         , m_image(image)
         , m_imageBuffer(imageBuffer)
@@ -532,7 +532,7 @@ public:
     {
     }
 
-    Material(const std::shared_ptr<Image>& image, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& normalImageBuffer, const std::shared_ptr<Image>& heightImage, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& heightImageBuffer, const float shineDamper, const float reflectivity)
+    Material(const std::shared_ptr<prev::render::image::Image>& image, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const std::shared_ptr<prev::render::image::Image>& normalImage, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& normalImageBuffer, const std::shared_ptr<prev::render::image::Image>& heightImage, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& heightImageBuffer, const float shineDamper, const float reflectivity)
         : m_image(image)
         , m_imageBuffer(imageBuffer)
         , m_normalImage(normalImage)
@@ -544,7 +544,7 @@ public:
     {
     }
 
-    Material(const glm::vec4 color, const std::shared_ptr<Image>& image, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& normalImageBuffer, const std::shared_ptr<Image>& heightImage, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& heightImageBuffer, const float shineDamper, const float reflectivity)
+    Material(const glm::vec4 color, const std::shared_ptr<prev::render::image::Image>& image, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const std::shared_ptr<prev::render::image::Image>& normalImage, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& normalImageBuffer, const std::shared_ptr<prev::render::image::Image>& heightImage, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& heightImageBuffer, const float shineDamper, const float reflectivity)
         : m_color(color)
         , m_image(image)
         , m_imageBuffer(imageBuffer)
@@ -560,7 +560,7 @@ public:
     virtual ~Material() = default;
 
 public:
-    std::shared_ptr<Image> GetImage() const override
+    std::shared_ptr<prev::render::image::Image> GetImage() const override
     {
         return m_image;
     }
@@ -580,7 +580,7 @@ public:
         return m_color;
     }
 
-    std::shared_ptr<Image> GetNormalImage() const override
+    std::shared_ptr<prev::render::image::Image> GetNormalImage() const override
     {
         return m_normalImage;
     }
@@ -595,7 +595,7 @@ public:
         return m_normalImage != nullptr;
     }
 
-    std::shared_ptr<Image> GetHeightImage() const override
+    std::shared_ptr<prev::render::image::Image> GetHeightImage() const override
     {
         return m_heightmage;
     }

@@ -5,7 +5,7 @@
 
 class Flare {
 public:
-    Flare(const std::shared_ptr<Image>& image, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const float scale)
+    Flare(const std::shared_ptr<prev::render::image::Image>& image, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const float scale)
         : m_image(image)
         , m_imageBuffer(imageBuffer)
         , m_scale(scale)
@@ -16,7 +16,7 @@ public:
     ~Flare() = default;
 
 public:
-    std::shared_ptr<Image> GetImage() const
+    std::shared_ptr<prev::render::image::Image> GetImage() const
     {
         return m_image;
     }
@@ -42,7 +42,7 @@ public:
     }
 
 private:
-    std::shared_ptr<Image> m_image;
+    std::shared_ptr<prev::render::image::Image> m_image;
 
     std::shared_ptr<prev::core::memory::image::ImageBuffer> m_imageBuffer;
 
@@ -234,7 +234,7 @@ private:
 
     std::unique_ptr<Flare> CreateFlare(prev::core::memory::Allocator& allocator, const std::string& filePath, const float scale) const
     {
-        ImageFactory imageFactory{};
+        prev::render::image::ImageFactory imageFactory{};
         auto image = imageFactory.CreateImage(filePath);
         auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
         imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
@@ -334,7 +334,7 @@ private:
 
     std::unique_ptr<Flare> CreateFlare(prev::core::memory::Allocator& allocator, const std::string& filePath, const float scale) const
     {
-        ImageFactory imageFactory{};
+        prev::render::image::ImageFactory imageFactory{};
         auto image = imageFactory.CreateImage(filePath);
         auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
         imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });

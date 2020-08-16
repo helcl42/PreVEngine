@@ -21,7 +21,7 @@ public:
         auto computeQueue = ComputeProvider::Instance().GetQueue();
         auto computeAllocator = ComputeProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory{};
+        prev::render::shader::ShaderFactory shaderFactory{};
         auto shader = shaderFactory.CreateShaderFromFiles<WeatherComputeShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/weather_comp.spv") } });
 
         auto pipeline = std::make_unique<WeatherComputePipeline>(*device, *shader);
@@ -101,7 +101,7 @@ public:
         auto computeQueue = ComputeProvider::Instance().GetQueue();
         auto computeAllocator = ComputeProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory{};
+        prev::render::shader::ShaderFactory shaderFactory{};
         auto shader = shaderFactory.CreateShaderFromFiles<PerlinWorleyComputeShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/perlin_worley_noise_3d_comp.spv") } });
 
         auto pipeline = std::make_unique<WorleyComputePipeline>(*device, *shader);

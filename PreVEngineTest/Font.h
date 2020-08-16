@@ -89,20 +89,20 @@ private:
 
     std::map<int, Character> m_characterMetaData;
 
-    std::shared_ptr<Image> m_image;
+    std::shared_ptr<prev::render::image::Image> m_image;
 
     std::shared_ptr<prev::core::memory::image::ImageBuffer> m_imageBuffer;
 
 public:
-    inline static const float LINE_HEIGHT = 0.03f;
+    inline static const float LINE_HEIGHT{ 0.03f };
 
-    inline static const int NULL_CODE = 0;
+    inline static const int NULL_CODE{ 0 };
 
-    inline static const int SPACE_CODE = ' ';
+    inline static const int SPACE_CODE{ ' ' };
 
-    inline static const int NEW_LINE_CODE = '\n';
+    inline static const int NEW_LINE_CODE{ '\n' };
 
-    inline static const int FALLBACK_CODE = '?';
+    inline static const int FALLBACK_CODE{ '?' };
 
 public:
     float GetSpaceWidth() const
@@ -115,7 +115,7 @@ public:
         return m_spaceWidth * fontSize;
     }
 
-    std::shared_ptr<Image> GetImage() const
+    std::shared_ptr<prev::render::image::Image> GetImage() const
     {
         return m_image;
     }
@@ -227,10 +227,10 @@ private:
 
 class FontMetadataFactory {
 private:
-    inline static const int PADDING_TOP_INDEX = 0;
-    inline static const int PADDING_LEFT_INDEX = 1;
-    inline static const int PADDING_BOTTOM_INDEX = 2;
-    inline static const int PADDING_RIGHT_INDEX = 3;
+    inline static const int PADDING_TOP_INDEX{ 0 };
+    inline static const int PADDING_LEFT_INDEX{ 1 };
+    inline static const int PADDING_BOTTOM_INDEX{ 2 };
+    inline static const int PADDING_RIGHT_INDEX{ 3 };
 
     struct FontMetaDataState {
         float aspectRatio;
@@ -276,9 +276,9 @@ private:
         state.imageHeight = metaDataFile.GetValueAsInt("scaleH");
     }
 
-    void CreateImage(const std::string& textureFilePath, std::shared_ptr<Image>& image, std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer) const
+    void CreateImage(const std::string& textureFilePath, std::shared_ptr<prev::render::image::Image>& image, std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer) const
     {
-        ImageFactory imageFactory;
+        prev::render::image::ImageFactory imageFactory;
         image = imageFactory.CreateImage(textureFilePath);
         imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(*AllocatorProvider::Instance().GetAllocator());
         imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
@@ -330,7 +330,7 @@ public:
         ExtractPaddingData(metaDataFile, state);
         ExtractMeasureInfo(metaDataFile, state);
 
-        std::shared_ptr<Image> image;
+        std::shared_ptr<prev::render::image::Image> image;
         std::shared_ptr<prev::core::memory::image::ImageBuffer> imagwBuffer;
         CreateImage(textureFilePath, image, imagwBuffer);
 

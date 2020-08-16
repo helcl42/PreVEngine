@@ -71,7 +71,7 @@ public:
 
     virtual void ShutDown() = 0;
 
-    virtual std::shared_ptr<RenderPass> GetRenderPass() const = 0;
+    virtual std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const = 0;
 
     virtual VkExtent2D GetExtent() const = 0;
 
@@ -117,7 +117,7 @@ public:
         ShutDownRenderPass();
     }
 
-    std::shared_ptr<RenderPass> GetRenderPass() const override
+    std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const override
     {
         return m_renderPass;
     }
@@ -220,7 +220,7 @@ private:
        // dependencies[1].dstAccessMask = 0;
        // dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-        m_renderPass = std::make_shared<RenderPass>(*device);
+        m_renderPass = std::make_shared<prev::render::pass::RenderPass>(*device);
         m_renderPass->AddColorAttachment(COLOR_FORMAT, { 0.5f, 0.5f, 0.5f, 1.0f }, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         m_renderPass->AddDepthAttachment(DEPTH_FORMAT);
         m_renderPass->AddSubpass({ 0, 1 });
@@ -238,7 +238,7 @@ private:
 
     const uint32_t m_height;
 
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
     std::shared_ptr<prev::core::memory::image::ColorImageBuffer> m_imageBuffer;
 
@@ -354,13 +354,13 @@ public:
     }
 
 private:
-    std::shared_ptr<Image> CreateImage(const std::string& textureFilename) const
+    std::shared_ptr<prev::render::image::Image> CreateImage(const std::string& textureFilename) const
     {
-        std::shared_ptr<Image> image;
+        std::shared_ptr<prev::render::image::Image> image;
         if (s_imagesCache.find(textureFilename) != s_imagesCache.cend()) {
             image = s_imagesCache[textureFilename];
         } else {
-            ImageFactory imageFactory;
+            prev::render::image::ImageFactory imageFactory;
             image = imageFactory.CreateImage(textureFilename);
             s_imagesCache[textureFilename] = image;
         }
@@ -392,9 +392,9 @@ private:
     }
 
 private:
-    static std::map<std::string, std::shared_ptr<Image> > s_imagesCache;
+    static std::map<std::string, std::shared_ptr<prev::render::image::Image> > s_imagesCache;
 };
 
-std::map<std::string, std::shared_ptr<Image> > WaterComponentFactory::s_imagesCache;
+std::map<std::string, std::shared_ptr<prev::render::image::Image> > WaterComponentFactory::s_imagesCache;
 
 #endif

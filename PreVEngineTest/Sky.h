@@ -159,9 +159,9 @@ private:
 
     std::unique_ptr<IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::vector<std::string>& textureFilenames) const
     {
-        ImageFactory imageFactory{};
+        prev::render::image::ImageFactory imageFactory{};
 
-        std::vector<std::shared_ptr<Image> > images{};
+        std::vector<std::shared_ptr<prev::render::image::Image> > images{};
         for (const auto& faceFilePath : textureFilenames) {
             auto image = imageFactory.CreateImage(faceFilePath);
             images.emplace_back(std::move(image));

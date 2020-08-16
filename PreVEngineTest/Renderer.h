@@ -65,17 +65,17 @@ private:
     const uint32_t m_descriptorCount{ 10000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<prev::core::memory::buffer::UBOPool<Uniforms> > m_uniformsPool;
 
 public:
-    DefaultShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    DefaultShadowsRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -88,7 +88,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<DefaultShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/default_shadows_vert.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -189,17 +189,17 @@ private:
     const uint32_t m_descriptorCount{ 1000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<prev::core::memory::buffer::UBOPool<Uniforms> > m_uniformsPool;
 
 public:
-    BumpMappedShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    BumpMappedShadowsRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -212,7 +212,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<BumpMappedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/bump_mapped_shadows_vert.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -313,17 +313,17 @@ private:
     const uint32_t m_descriptorCount{ 3000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<prev::core::memory::buffer::UBOPool<Uniforms> > m_uniformsPool;
 
 public:
-    TerrainShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    TerrainShadowsRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -336,7 +336,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<TerrainShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_shadows_vert.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -431,17 +431,17 @@ private:
     const uint32_t m_descriptorCount{ 3000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<prev::core::memory::buffer::UBOPool<Uniforms> > m_uniformsPool;
 
 public:
-    TerrainBumplMappedShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    TerrainBumplMappedShadowsRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -454,7 +454,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<TerrainBumpMappedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_bump_mapped_shadows_vert.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -550,17 +550,17 @@ private:
     const uint32_t m_descriptorCount{ 1000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<prev::core::memory::buffer::UBOPool<Uniforms> > m_uniformsPool;
 
 public:
-    AnimationShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    AnimationShadowsRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -573,7 +573,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<AnimatedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_shadows_vert.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -679,17 +679,17 @@ private:
     const uint32_t m_descriptorCount{ 1000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
     std::unique_ptr<prev::core::memory::buffer::UBOPool<Uniforms> > m_uniformsPool;
 
 public:
-    AnimationBumpMappedShadowsRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    AnimationBumpMappedShadowsRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -702,7 +702,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<AnimatedBumplMappedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_bump_mapped_shadows_vert.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -810,10 +810,10 @@ private:
     prev::event::EventHandler<ShadowMapDebugRenderer, prev::input::keyboard::KeyEvent> m_keyEvent{ *this };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -823,7 +823,7 @@ private:
     int32_t m_cascadeIndex = 0;
 
 public:
-    ShadowMapDebugRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    ShadowMapDebugRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -836,7 +836,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<ShadowMapDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/shadow_map_debug_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/shadow_map_debug_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -947,10 +947,10 @@ private:
     const uint32_t m_descriptorCount{ 1000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -958,7 +958,7 @@ private:
     std::unique_ptr<IModel> m_quadModel;
 
 public:
-    TextureDebugRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    TextureDebugRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -971,7 +971,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<TextureDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/texture_debug_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/texture_debug_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -1083,10 +1083,10 @@ private:
     const uint32_t m_descriptorCount{ 1000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -1095,7 +1095,7 @@ private:
     std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
-    BoundingVolumeDebugRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    BoundingVolumeDebugRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -1108,7 +1108,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<BoundingVolumeDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/bounding_volume_debug_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/bounding_volume_debug_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -1225,10 +1225,10 @@ private:
     const uint32_t m_descriptorCount{ 1000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -1239,7 +1239,7 @@ private:
     std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
-    RayCastDebugRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    RayCastDebugRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -1373,10 +1373,10 @@ private:
     const uint32_t m_descriptorCount{ 1000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -1387,7 +1387,7 @@ private:
     std::unique_ptr<IModel> m_selectionPointModel;
 
 public:
-    SelectionDebugRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    SelectionDebugRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -1400,7 +1400,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<SelectionDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/selection_debug_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/selection_debug_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -1609,10 +1609,10 @@ private:
     const uint32_t m_descriptorCount{ 1000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -1621,7 +1621,7 @@ private:
     std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
-    DefaultRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    DefaultRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -1634,7 +1634,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<DefaultShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/default_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/default_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -1886,10 +1886,10 @@ private:
     const uint32_t m_descriptorCount{ 1000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -1898,7 +1898,7 @@ private:
     std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
-    NormalMappedRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    NormalMappedRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -1911,7 +1911,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<NormalMappedShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/normal_mapped_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/normal_mapped_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -2167,10 +2167,10 @@ private:
     const uint32_t m_descriptorCount{ 1000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -2179,7 +2179,7 @@ private:
     std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
-    ParallaxMappedRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    ParallaxMappedRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -2192,7 +2192,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<ParallaxMappedShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/parallax_mapped_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/parallax_mapped_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -2454,10 +2454,10 @@ private:
     const uint32_t m_descriptorCount{ 1000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -2466,7 +2466,7 @@ private:
     std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
-    ConeStepMappedRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    ConeStepMappedRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -2479,7 +2479,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<ConeStepMappedShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/cone_step_mapped_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/cone_step_mapped_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -2737,10 +2737,10 @@ private:
     const uint32_t m_descriptorCount{ 1000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -2749,7 +2749,7 @@ private:
     std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
-    AnimationRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    AnimationRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -2762,7 +2762,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<AnimationShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -3015,10 +3015,10 @@ private:
     const uint32_t m_descriptorCount{ 1000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -3027,7 +3027,7 @@ private:
     std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
-    AnimationNormalMappedRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    AnimationNormalMappedRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -3040,7 +3040,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<AnimationNormalMappedShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_normal_mapped_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_normal_mapped_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -3298,10 +3298,10 @@ private:
     const uint32_t m_descriptorCount{ 1000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -3310,7 +3310,7 @@ private:
     std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
-    AnimationParallaxMappedRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    AnimationParallaxMappedRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -3323,7 +3323,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<AnimationParallaxMappedShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_parallax_mapped_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_parallax_mapped_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -3587,10 +3587,10 @@ private:
     const uint32_t m_descriptorCount{ 1000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -3599,7 +3599,7 @@ private:
     std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
-    AnimationConeStepMappedRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    AnimationConeStepMappedRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -3612,7 +3612,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<AnimationConeStepMappedShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_cone_step_mapped_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_cone_step_mapped_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -3874,10 +3874,10 @@ private:
     const uint32_t m_descriptorCount{ 3000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -3886,7 +3886,7 @@ private:
     std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
-    TerrainRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    TerrainRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -3899,7 +3899,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<TerrainShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -4151,10 +4151,10 @@ private:
     const uint32_t m_descriptorCount{ 3000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -4163,7 +4163,7 @@ private:
     std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
-    TerrainNormalMappedRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    TerrainNormalMappedRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -4176,7 +4176,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<TerrainNormalMappedShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_normal_mapped_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_normal_mapped_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -4434,10 +4434,10 @@ private:
     const uint32_t m_descriptorCount{ 3000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -4446,7 +4446,7 @@ private:
     std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
-    TerrainParallaxMappedRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    TerrainParallaxMappedRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -4459,7 +4459,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<TerrainParallaxMappedShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_parallax_mapped_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_parallax_mapped_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -4721,10 +4721,10 @@ private:
     const uint32_t m_descriptorCount{ 3000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -4733,7 +4733,7 @@ private:
     std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
-    TerrainConeStepMappedRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    TerrainConeStepMappedRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -4746,7 +4746,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<TerrainParallaxMappedShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_cone_step_mapped_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_cone_step_mapped_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -4923,10 +4923,10 @@ private:
     const uint32_t m_descriptorCount{ 1000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -4935,7 +4935,7 @@ private:
     std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
-    FontRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    FontRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -4948,7 +4948,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<FonttShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/font_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/font_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -5064,10 +5064,10 @@ private:
     const uint32_t m_descriptorCount{ 10 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -5076,7 +5076,7 @@ private:
     std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
-    SkyBoxRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    SkyBoxRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -5089,7 +5089,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<SkyBoxShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/skybox_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/skybox_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -5228,22 +5228,22 @@ private:
     const uint32_t m_descriptorCount{ 10 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_conmputeSkyShader;
+    std::unique_ptr<prev::render::shader::Shader> m_conmputeSkyShader;
 
     std::unique_ptr<IPipeline> m_computeSkyPipeline;
 
     std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsSkyCS> > m_uniformsPoolSkyCS;
 
-    std::unique_ptr<Shader> m_conmputeSkyPostProcessShader;
+    std::unique_ptr<prev::render::shader::Shader> m_conmputeSkyPostProcessShader;
 
     std::unique_ptr<IPipeline> m_computeSkyPostProcessPipeline;
 
     std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsSkyPostProcessCS> > m_uniformsPoolSkyPorstProcessCS;
 
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -5258,7 +5258,7 @@ private:
     std::shared_ptr<prev::core::memory::image::IImageBuffer> m_skyPostProcessColorImageBuffer;
 
 public:
-    SkyRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    SkyRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -5271,7 +5271,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
 
         // compute sky
         m_conmputeSkyShader = shaderFactory.CreateShaderFromFiles<SkyShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/sky_comp.spv") } });
@@ -5618,10 +5618,10 @@ private:
     const uint32_t m_descriptorCount{ 1000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -5630,7 +5630,7 @@ private:
     std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
-    WaterRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    WaterRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -5643,7 +5643,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<WaterShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/water_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/water_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -5782,10 +5782,10 @@ private:
     const uint32_t m_descriptorCount{ 50 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -5799,7 +5799,7 @@ private:
     VkQueryPool m_queryPool{ nullptr };
 
 public:
-    SunRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    SunRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -5812,7 +5812,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<SunOcclusionShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/sun_occlusion_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/sun_occlusion_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -5938,10 +5938,10 @@ private:
     const uint32_t m_descriptorCount{ 50 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -5950,7 +5950,7 @@ private:
     std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
 public:
-    LensFlareRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    LensFlareRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -5963,7 +5963,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<FlareShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/lens_flare_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/lens_flare_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -6077,10 +6077,10 @@ private:
     const uint32_t m_descriptorCount{ 2000 };
 
 private:
-    std::shared_ptr<RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<IPipeline> m_pipeline;
 
@@ -6091,7 +6091,7 @@ private:
     std::unique_ptr<prev::core::memory::buffer::VertexBuffer> m_instanceDataBuffer;
 
 public:
-    ParticlesRenderer(const std::shared_ptr<RenderPass>& renderPass)
+    ParticlesRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
         : m_renderPass(renderPass)
     {
     }
@@ -6104,7 +6104,7 @@ public:
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        ShaderFactory shaderFactory;
+        prev::render::shader::ShaderFactory shaderFactory;
         m_shader = shaderFactory.CreateShaderFromFiles<ParticlesShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/particles_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/particles_frag.spv") } });
         m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
@@ -6284,7 +6284,7 @@ public:
 
 class MasterRenderer final : public IRenderer<DefaultRenderContextUserData> {
 public:
-    MasterRenderer(const std::shared_ptr<RenderPass>& renderPass, const std::shared_ptr<Swapchain>& swapchain)
+    MasterRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::Swapchain>& swapchain)
         : m_defaultRenderPass(renderPass)
         , m_swapchain(swapchain)
     {
@@ -6699,7 +6699,7 @@ private:
 
 #ifdef PARALLEL_RENDERING
     template <typename ContextUserDataType>
-    void RenderParallel(const std::shared_ptr<RenderPass>& renderPass, const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const std::vector<VkCommandBuffer>& commandBuffers, const ContextUserDataType& userData, const VkRect2D& area)
+    void RenderParallel(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const std::vector<VkCommandBuffer>& commandBuffers, const ContextUserDataType& userData, const VkRect2D& area)
     {
         renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, area, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
@@ -6740,7 +6740,7 @@ private:
     }
 #else     
     template <typename ContextUserDataType>
-    void RenderSerial(const std::shared_ptr<RenderPass>& renderPass, const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const ContextUserDataType& userData, const VkRect2D& area)
+    void RenderSerial(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const ContextUserDataType& userData, const VkRect2D& area)
     {
         renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, area);
 
@@ -6754,9 +6754,9 @@ private:
     }
 #endif
 private:
-    std::shared_ptr<RenderPass> m_defaultRenderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_defaultRenderPass;
 
-    std::shared_ptr<Swapchain> m_swapchain;
+    std::shared_ptr<prev::render::Swapchain> m_swapchain;
 
 private:
     // Default

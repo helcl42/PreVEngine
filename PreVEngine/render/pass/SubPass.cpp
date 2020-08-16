@@ -1,7 +1,7 @@
 #include "SubPass.h"
 #include "RenderPass.h"
 
-namespace prev {
+namespace prev::render::pass {
 SubPass::SubPass(RenderPass& renderpass)
     : m_renderPass(renderpass)
 {
@@ -58,4 +58,4 @@ void SubPass::InputAttachments(const std::vector<uint32_t>& attachmentIndexes)
         InputAttachment(i);
     }
 }
-} // namespace prev
+} // namespace prev::render::pass
