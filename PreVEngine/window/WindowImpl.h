@@ -7,7 +7,7 @@
 
 #include <string.h>
 
-namespace prev {
+namespace prev::window {
 class EventFIFO {
 public:
     EventFIFO()
@@ -41,7 +41,7 @@ public:
     }
 
 private:
-    static const char SIZE = 10; // The queue should never contains more than 2 items.
+    static const inline int SIZE{ 10 }; // The queue should never contains more than 2 items.
 
 private:
     int m_head;
@@ -222,6 +222,6 @@ private:
 
     bool m_keyboardKeysState[256] = {};
 };
-} // namespace prev
+} // namespace prev::window
 
 #endif

@@ -13,7 +13,7 @@
 #include <sstream>
 #include <vector>
 
-namespace prev {
+namespace prev::util {
 // Global functions !!!
 template <typename Type, ptrdiff_t n>
 ptrdiff_t ArraySize(Type (&)[n])
@@ -266,7 +266,7 @@ public:
 };
 
 template <class Type>
-class Clock {
+class Clock final {
 private:
     std::chrono::time_point<std::chrono::steady_clock> m_lastFrameTimestamp;
 
@@ -279,7 +279,7 @@ public:
         Reset();
     }
 
-    virtual ~Clock() = default;
+    ~Clock() = default;
 
 public:
     void Reset()
@@ -375,6 +375,6 @@ public:
     }
 };
 
-} // namespace prev
+} // namespace prev::util
 
 #endif

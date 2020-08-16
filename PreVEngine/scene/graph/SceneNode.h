@@ -8,18 +8,18 @@ template <typename NodeFlagsType>
 class SceneNode : public std::enable_shared_from_this<ISceneNode<NodeFlagsType> >, public ISceneNode<NodeFlagsType> {
 public:
     SceneNode()
-        : m_id(IDGenerator::Instance().GenrateNewId())
+        : m_id(prev::util::IDGenerator::Instance().GenrateNewId())
     {
     }
 
     SceneNode(const prev::common::FlagSet<NodeFlagsType>& flags)
-        : m_id(IDGenerator::Instance().GenrateNewId())
+        : m_id(prev::util::IDGenerator::Instance().GenrateNewId())
         , m_flags(flags)
     {
     }
 
     SceneNode(const prev::common::TagSet& tags)
-        : m_id(IDGenerator::Instance().GenrateNewId())
+        : m_id(prev::util::IDGenerator::Instance().GenrateNewId())
         , m_tags(tags)
     {
     }

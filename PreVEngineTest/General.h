@@ -836,12 +836,12 @@ public:
 
     glm::mat4 GetTransform() const override
     {
-        return MathUtil::CreateTransformationMatrix(m_position, m_orientation, glm::vec3(1.0f));
+        return prev::util::MathUtil::CreateTransformationMatrix(m_position, m_orientation, glm::vec3(1.0f));
     }
 
     glm::mat4 GetTransformScaled() const override
     {
-        return MathUtil::CreateTransformationMatrix(m_position, m_orientation, m_scaler);
+        return prev::util::MathUtil::CreateTransformationMatrix(m_position, m_orientation, m_scaler);
     }
 
     glm::mat4 GetWorldTransform() const override

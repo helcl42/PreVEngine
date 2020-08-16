@@ -22,9 +22,9 @@ struct EngineConfig {
 
     bool fullScreen{ false };
 
-    Size windowSize{ 1920, 1080 };
+    prev::window::Size windowSize{ 1920, 1080 };
 
-    Position windowPosition{ 40, 40 };
+    prev::window::Position windowPosition{ 40, 40 };
 
     std::shared_ptr<prev::scene::SceneConfig> sceneConfig{ std::make_shared<prev::scene::SceneConfig>() };
 };
@@ -64,18 +64,18 @@ public:
 template <typename NodeFlagsType>
 class Engine final {
 private:
-    prev::event::EventHandler<Engine, WindowChangeEvent> m_windowChangedHandler{ *this };
+    prev::event::EventHandler<Engine, prev::window::WindowChangeEvent> m_windowChangedHandler{ *this };
 
 private:
     std::shared_ptr<EngineConfig> m_config;
 
-    std::unique_ptr<Clock<float> > m_clock;
+    std::unique_ptr<prev::util::Clock<float> > m_clock;
 
-    std::unique_ptr<FPSService> m_fpsService;
+    std::unique_ptr<prev::util::FPSService> m_fpsService;
 
     std::unique_ptr<prev::core::instance::Instance> m_instance;
 
-    std::unique_ptr<IWindow> m_window;
+    std::unique_ptr<prev::window::IWindow> m_window;
 
     std::shared_ptr<prev::core::device::Device> m_device;
 
@@ -94,8 +94,8 @@ public:
 private:
     void InitTiming()
     {
-        m_clock = std::make_unique<Clock<float> >();
-        m_fpsService = std::make_unique<FPSService>();
+        m_clock = std::make_unique<prev::util::Clock<float> >();
+        m_fpsService = std::make_unique<prev::util::FPSService>();
     }
 
     void InitInstance()
@@ -106,9 +106,9 @@ private:
     void InitWindow()
     {
         if (m_config->fullScreen) {
-            m_window = std::make_unique<Window>(m_config->appName.c_str());
+            m_window = std::make_unique<prev::window::Window>(m_config->appName.c_str());
         } else {
-            m_window = std::make_unique<Window>(m_config->appName.c_str(), m_config->windowSize.width, m_config->windowSize.height);
+            m_window = std::make_unique<prev::window::Window>(m_config->appName.c_str(), m_config->windowSize.width, m_config->windowSize.height);
             m_window->SetPosition(m_config->windowPosition);
         }
     }
@@ -194,13 +194,13 @@ public:
     }
 
 public:
-    void operator()(const WindowChangeEvent& windowChangeEvent)
+    void operator()(const prev::window::WindowChangeEvent& windowChangeEvent)
     {
         vkDeviceWaitIdle(*m_device);
 
         InitSurface();
 
-        prev::event::EventChannel::Broadcast(SurfaceChanged{ m_surface });
+        prev::event::EventChannel::Broadcast(prev::window::SurfaceChanged{ m_surface });
     }
 };
 } // namespace prev::core

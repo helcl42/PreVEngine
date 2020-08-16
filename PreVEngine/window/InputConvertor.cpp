@@ -1,6 +1,6 @@
 #include "InputConvertor.h"
 
-namespace prev {
+namespace prev::window {
 prev::input::keyboard::KeyActionType InputConvertor::GetKeyActionType(const ActionType action)
 {
     switch (action) {
@@ -56,4 +56,4 @@ prev::input::touch::TouchActionType InputConvertor::GetTouchActionType(const Act
         throw std::runtime_error("Invalid touch action");
     }
 }
-} // namespace prev
+} // namespace prev::window

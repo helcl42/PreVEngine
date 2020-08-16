@@ -130,8 +130,8 @@ private:
         for (uint32_t i = 0; i < CASCADES_COUNT; i++) {
             auto& cascade = m_cascades.at(i);
 
-            cascade.imageView = VkUtils::CreateImageView(*device, m_depthBuffer->GetImage(), m_depthBuffer->GetFormat(), VK_IMAGE_VIEW_TYPE_2D_ARRAY, m_depthBuffer->GetMipLevels(), VK_IMAGE_ASPECT_DEPTH_BIT, 1, i);
-            cascade.frameBuffer = VkUtils::CreateFrameBuffer(*device, *m_renderPass, { cascade.imageView }, GetExtent());
+            cascade.imageView = prev::util::VkUtils::CreateImageView(*device, m_depthBuffer->GetImage(), m_depthBuffer->GetFormat(), VK_IMAGE_VIEW_TYPE_2D_ARRAY, m_depthBuffer->GetMipLevels(), VK_IMAGE_ASPECT_DEPTH_BIT, 1, i);
+            cascade.frameBuffer = prev::util::VkUtils::CreateFrameBuffer(*device, *m_renderPass, { cascade.imageView }, GetExtent());
         }
     }
 
@@ -175,7 +175,7 @@ private:
 
     std::vector<glm::vec3> GenerateFrustumCorners(const glm::mat4& inverseWorldToClipSpaceTransform, const float splitDistance, const float lastSplitDistance) const
     {
-        auto frustumCorners = MathUtil::GetFrustumCorners(inverseWorldToClipSpaceTransform);
+        auto frustumCorners = prev::util::MathUtil::GetFrustumCorners(inverseWorldToClipSpaceTransform);
 
         for (uint32_t i = 0; i < 4; i++) {
             glm::vec3 dist = frustumCorners[i + 4] - frustumCorners[i];

@@ -5,10 +5,10 @@
 #include "../core/instance/Validation.h"
 #include "../input/keyboard/KeyCodes.h"
 
-#include "WindowCommon.h"
 #include "Surface.h"
+#include "WindowCommon.h"
 
-namespace prev {
+namespace prev::window {
 class IWindow {
 public:
     virtual Surface& GetSurface(VkInstance instance) = 0;
@@ -46,12 +46,12 @@ public:
     virtual void Close() = 0;
 
     virtual Event GetEvent(bool waitForEvent = false) = 0;
-     
+
     virtual bool ProcessEvents(bool waitForEvent = false) = 0;
 
 public:
     virtual ~IWindow() = default;
 };
-} // namespace prev
+} // namespace prev::window
 
 #endif
