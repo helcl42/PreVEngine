@@ -246,11 +246,11 @@ Event WindowWin32::GetEvent(bool waitForEvent)
             }
 
             if (msg.wParam == VK_SHIFT) {
-                if (!!(GetKeyState(VK_LSHIFT) & 128) != IsKeyPressed(KeyCode::KEY_LeftShift)) {
+                if (!!(GetKeyState(VK_LSHIFT) & 128) != IsKeyPressed(prev::input::keyboard::KeyCode::KEY_LeftShift)) {
                     PostMessage(m_hWnd, msg.message, VK_LSHIFT, 0);
                 }
 
-                if (!!(GetKeyState(VK_RSHIFT) & 128) != IsKeyPressed(KeyCode::KEY_RightShift)) {
+                if (!!(GetKeyState(VK_RSHIFT) & 128) != IsKeyPressed(prev::input::keyboard::KeyCode::KEY_RightShift)) {
                     PostMessage(m_hWnd, msg.message, VK_RSHIFT, 0);
                 }
 

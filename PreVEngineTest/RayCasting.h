@@ -232,7 +232,7 @@ public:
     }
 #endif
 public:
-    void operator()(const MouseEvent& moveEvent)
+    void operator()(const prev::input::mouse::MouseEvent& moveEvent)
     {
         const glm::vec2 position{ moveEvent.position.x, m_viewPortDimensions.y - moveEvent.position.y };
         m_currentMousePosition = glm::clamp(position, glm::vec2(0.0f, 0.0f), m_viewPortDimensions);
@@ -263,7 +263,7 @@ protected:
     std::shared_ptr<IModel> m_model;
 #endif
 private:
-    prev::event::EventHandler<MouseRayCasterComponent, MouseEvent> m_mouseMoveHandler{ *this };
+    prev::event::EventHandler<MouseRayCasterComponent, prev::input::mouse::MouseEvent> m_mouseMoveHandler{ *this };
 
     prev::event::EventHandler<MouseRayCasterComponent, WindowResizeEvent> m_viewFrustumChangeHandler{ *this };
 };

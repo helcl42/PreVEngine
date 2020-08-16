@@ -1,7 +1,7 @@
 #ifndef __KEY_CODES_H__
 #define __KEY_CODES_H__
 
-namespace prev {
+namespace prev::input::keyboard {
 enum class KeyCode {
     KEY_NONE = 0, // Undefined. (No event)
     KEY_A = 4,

@@ -3,7 +3,7 @@
 
 #include "MouseEvents.h"
 
-namespace prev {
+namespace prev::input::mouse {
 class IMouseScrollListener {
 public:
     virtual void OnMouseScroll(const MouseScrollEvent& scroll) = 0;
@@ -11,6 +11,6 @@ public:
 public:
     virtual ~IMouseScrollListener() = default;
 };
-} // namespace prev
+} // namespace prev::input::mouse
 
 #endif // !__IMOUSE_SCROLL_LISTENER_H__

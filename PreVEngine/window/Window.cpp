@@ -69,7 +69,7 @@ Size AbstractWindow::GetSize() const
     return Size{ shape.width, shape.height };
 }
 
-bool AbstractWindow::IsKeyPressed(const KeyCode key) const
+bool AbstractWindow::IsKeyPressed(const prev::input::keyboard::KeyCode key) const
 {
     return m_windowImpl->IsKeyPressed(key);
 }

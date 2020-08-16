@@ -3,7 +3,7 @@
 
 #include "../../common/Common.h"
 
-namespace prev {
+namespace prev::input::mouse {
 enum class MouseActionType : uint32_t {
     PRESS,
     RELEASE,
@@ -40,6 +40,6 @@ struct MouseLockRequest {
 struct MouseCursorVisibilityRequest {
     bool visible;
 };
-} // namespace prev
+} // namespace prev::input::mouse
 
 #endif // !__MOUSE_EVENTS_H__

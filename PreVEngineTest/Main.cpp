@@ -599,11 +599,11 @@ public:
 
 class CubeRobot : public BaseCubeRobotSceneNode {
 private:
-    prev::event::EventHandler<CubeRobot, KeyEvent> m_keyEvent{ *this };
+    prev::event::EventHandler<CubeRobot, prev::input::keyboard::KeyEvent> m_keyEvent{ *this };
 
-    prev::event::EventHandler<CubeRobot, MouseEvent> m_mouseEvent{ *this };
+    prev::event::EventHandler<CubeRobot, prev::input::mouse::MouseEvent> m_mouseEvent{ *this };
 
-    prev::event::EventHandler<CubeRobot, TouchEvent> m_touchEvent{ *this };
+    prev::event::EventHandler<CubeRobot, prev::input::touch::TouchEvent> m_touchEvent{ *this };
 
 private:
     std::shared_ptr<CubeRobotPart> m_body;
@@ -676,39 +676,39 @@ public:
     }
 
 public:
-    void operator()(const KeyEvent& keyEvent)
+    void operator()(const prev::input::keyboard::KeyEvent& keyEvent)
     {
-        if (keyEvent.action == KeyActionType::PRESS) {
-            if (keyEvent.keyCode == KeyCode::KEY_Left) {
+        if (keyEvent.action == prev::input::keyboard::KeyActionType::PRESS) {
+            if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_Left) {
                 m_angularVelocity.y -= 0.1f;
             }
 
-            if (keyEvent.keyCode == KeyCode::KEY_Right) {
+            if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_Right) {
                 m_angularVelocity.y += 0.1f;
             }
 
-            if (keyEvent.keyCode == KeyCode::KEY_Up) {
+            if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_Up) {
                 m_angularVelocity.x += 0.1f;
             }
 
-            if (keyEvent.keyCode == KeyCode::KEY_Down) {
+            if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_Down) {
                 m_angularVelocity.x -= 0.1f;
             }
         }
     }
 
-    void operator()(const MouseEvent& mouseEvent)
+    void operator()(const prev::input::mouse::MouseEvent& mouseEvent)
     {
-        if (mouseEvent.action == MouseActionType::MOVE && mouseEvent.button == MouseButtonType::RIGHT) {
+        if (mouseEvent.action == prev::input::mouse::MouseActionType::MOVE && mouseEvent.button == prev::input::mouse::MouseButtonType::RIGHT) {
             m_angularVelocity = glm::vec2(mouseEvent.position.x - m_prevMousePosition.x, m_prevMousePosition.y - mouseEvent.position.y);
         }
 
         m_prevMousePosition = mouseEvent.position;
     }
 
-    void operator()(const TouchEvent& touchEvent)
+    void operator()(const prev::input::touch::TouchEvent& touchEvent)
     {
-        if (touchEvent.action == TouchActionType::MOVE) {
+        if (touchEvent.action == prev::input::touch::TouchActionType::MOVE) {
             m_angularVelocity = glm::vec2(touchEvent.position.x - m_prevMousePosition.x, m_prevMousePosition.y - touchEvent.position.y);
         }
 
@@ -1013,10 +1013,10 @@ public:
     virtual ~InputsHelper() = default;
 
 public:
-    void operator()(const KeyEvent& keyEvent)
+    void operator()(const prev::input::keyboard::KeyEvent& keyEvent)
     {
-        if (keyEvent.action == KeyActionType::PRESS) {
-            if (keyEvent.keyCode == KeyCode::KEY_L) {
+        if (keyEvent.action == prev::input::keyboard::KeyActionType::PRESS) {
+            if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_L) {
                 m_inputFacade.SetMouseLocked(!m_inputFacade.IsMouseLocked());
                 m_inputFacade.SetMouseCursorVisible(!m_inputFacade.IsMouseCursorVisible());
             }
@@ -1024,9 +1024,9 @@ public:
     }
 
 private:
-    InputsFacade m_inputFacade;
+    prev::input::InputsFacade m_inputFacade;
 
-    prev::event::EventHandler<InputsHelper, KeyEvent> m_keyboardEventsHandler{ *this };
+    prev::event::EventHandler<InputsHelper, prev::input::keyboard::KeyEvent> m_keyboardEventsHandler{ *this };
 };
 
 class Goblin : public SceneNode<SceneNodeFlags> {
@@ -1147,58 +1147,58 @@ public:
     }
 
 public:
-    void operator()(const KeyEvent& keyEvent)
+    void operator()(const prev::input::keyboard::KeyEvent& keyEvent)
     {
-        if (keyEvent.action == KeyActionType::PRESS) {
-            if (keyEvent.keyCode == KeyCode::KEY_W) {
+        if (keyEvent.action == prev::input::keyboard::KeyActionType::PRESS) {
+            if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_W) {
                 m_shouldGoForward = true;
             }
-            if (keyEvent.keyCode == KeyCode::KEY_S) {
+            if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_S) {
                 m_shouldGoBackward = true;
             }
-            if (keyEvent.keyCode == KeyCode::KEY_A) {
+            if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_A) {
                 m_shouldGoLeft = true;
             }
-            if (keyEvent.keyCode == KeyCode::KEY_D) {
+            if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_D) {
                 m_shouldGoRight = true;
             }
-            if (keyEvent.keyCode == KeyCode::KEY_Space) {
+            if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_Space) {
                 if (!m_isInTheAir) {
                     m_upwardSpeed = JUMP_POWER;
                     m_isInTheAir = true;
                 }
             }
-        } else if (keyEvent.action == KeyActionType::RELEASE) {
-            if (keyEvent.keyCode == KeyCode::KEY_W) {
+        } else if (keyEvent.action == prev::input::keyboard::KeyActionType::RELEASE) {
+            if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_W) {
                 m_shouldGoForward = false;
             }
-            if (keyEvent.keyCode == KeyCode::KEY_S) {
+            if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_S) {
                 m_shouldGoBackward = false;
             }
-            if (keyEvent.keyCode == KeyCode::KEY_A) {
+            if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_A) {
                 m_shouldGoLeft = false;
             }
-            if (keyEvent.keyCode == KeyCode::KEY_D) {
+            if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_D) {
                 m_shouldGoRight = false;
             }
         }
     }
 
-    void operator()(const MouseEvent& mouseEvent)
+    void operator()(const prev::input::mouse::MouseEvent& mouseEvent)
     {
-        if (mouseEvent.button == MouseButtonType::LEFT) {
-            if (mouseEvent.action == MouseActionType::PRESS) {
+        if (mouseEvent.button == prev::input::mouse::MouseButtonType::LEFT) {
+            if (mouseEvent.action == prev::input::mouse::MouseActionType::PRESS) {
                 m_shouldRotate = true;
-            } else if (mouseEvent.action == MouseActionType::RELEASE) {
+            } else if (mouseEvent.action == prev::input::mouse::MouseActionType::RELEASE) {
                 m_shouldRotate = false;
-            } else if (m_shouldRotate && mouseEvent.action == MouseActionType::MOVE) {
+            } else if (m_shouldRotate && mouseEvent.action == prev::input::mouse::MouseActionType::MOVE) {
                 m_rotationAroundY = mouseEvent.position.x;
                 m_pitchDiff = mouseEvent.position.y;
             }
         }
     }
 
-    void operator()(const TouchEvent& touchEvent)
+    void operator()(const prev::input::touch::TouchEvent& touchEvent)
     {
 #if defined(__ANDROID__)
         if (touchEvent.action == TouchActionType::DOWN) {
@@ -1231,7 +1231,7 @@ public:
             return;
         }
 #endif
-        if (touchEvent.action == TouchActionType::MOVE) {
+        if (touchEvent.action == prev::input::touch::TouchActionType::MOVE) {
             const glm::vec2 angleInDegrees = (touchEvent.position - m_prevTouchPosition) * 0.1f;
 
             m_transformComponent->Rotate(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(-angleInDegrees.x), glm::vec3(0.0f, 0.0f, 1.0f))));
@@ -1240,12 +1240,12 @@ public:
             m_cameraComponent->AddPitch(angleInDegrees.y);
         }
 
-        if (touchEvent.action == TouchActionType::MOVE || touchEvent.action == TouchActionType::DOWN) {
+        if (touchEvent.action == prev::input::touch::TouchActionType::MOVE || touchEvent.action == prev::input::touch::TouchActionType::DOWN) {
             m_prevTouchPosition = touchEvent.position;
         }
     }
 
-    void operator()(const MouseScrollEvent& scrollEvent)
+    void operator()(const prev::input::mouse::MouseScrollEvent& scrollEvent)
     {
         m_distanceFromPerson += scrollEvent.delta;
     }
@@ -1295,13 +1295,13 @@ private:
     glm::vec2 m_prevTouchPosition{ 0.0f, 0.0f };
 
 private:
-    prev::event::EventHandler<Goblin, KeyEvent> m_keyboardEventsHandler{ *this };
+    prev::event::EventHandler<Goblin, prev::input::keyboard::KeyEvent> m_keyboardEventsHandler{ *this };
 
-    prev::event::EventHandler<Goblin, MouseEvent> m_mouseEventsHandler{ *this };
+    prev::event::EventHandler<Goblin, prev::input::mouse::MouseEvent> m_mouseEventsHandler{ *this };
 
-    prev::event::EventHandler<Goblin, TouchEvent> m_touchEventsHandler{ *this };
+    prev::event::EventHandler<Goblin, prev::input::touch::TouchEvent> m_touchEventsHandler{ *this };
 
-    prev::event::EventHandler<Goblin, MouseScrollEvent> m_mouseScrollsHandler{ *this };
+    prev::event::EventHandler<Goblin, prev::input::mouse::MouseScrollEvent> m_mouseScrollsHandler{ *this };
 
 private:
     std::shared_ptr<ITransformComponent> m_transformComponent;
@@ -1356,22 +1356,22 @@ public:
     void Update(float deltaTime) override
     {
         glm::vec3 positionDelta{ 0.0f, 0.0f, 0.0f };
-        if (m_inputFacade.IsKeyPressed(KeyCode::KEY_W)) {
+        if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_W)) {
             positionDelta += m_cameraComponent->GetForwardDirection() * deltaTime * m_moveSpeed;
         }
-        if (m_inputFacade.IsKeyPressed(KeyCode::KEY_S)) {
+        if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_S)) {
             positionDelta -= m_cameraComponent->GetForwardDirection() * deltaTime * m_moveSpeed;
         }
-        if (m_inputFacade.IsKeyPressed(KeyCode::KEY_A)) {
+        if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_A)) {
             positionDelta -= m_cameraComponent->GetRightDirection() * deltaTime * m_moveSpeed;
         }
-        if (m_inputFacade.IsKeyPressed(KeyCode::KEY_D)) {
+        if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_D)) {
             positionDelta += m_cameraComponent->GetRightDirection() * deltaTime * m_moveSpeed;
         }
-        if (m_inputFacade.IsKeyPressed(KeyCode::KEY_Q)) {
+        if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_Q)) {
             positionDelta -= m_cameraComponent->GetUpDirection() * deltaTime * m_moveSpeed;
         }
-        if (m_inputFacade.IsKeyPressed(KeyCode::KEY_E)) {
+        if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_E)) {
             positionDelta += m_cameraComponent->GetUpDirection() * deltaTime * m_moveSpeed;
         }
 
@@ -1404,9 +1404,9 @@ public:
     }
 
 public:
-    void operator()(const MouseEvent& mouseEvent)
+    void operator()(const prev::input::mouse::MouseEvent& mouseEvent)
     {
-        if (mouseEvent.action == MouseActionType::MOVE && mouseEvent.button == MouseButtonType::LEFT) {
+        if (mouseEvent.action == prev::input::mouse::MouseActionType::MOVE && mouseEvent.button == prev::input::mouse::MouseButtonType::LEFT) {
             const glm::vec2 angleInDegrees = mouseEvent.position * m_sensitivity;
 
             const float newPitch = m_pitchAngle + angleInDegrees.y;
@@ -1418,7 +1418,7 @@ public:
         }
     }
 
-    void operator()(const TouchEvent& touchEvent)
+    void operator()(const prev::input::touch::TouchEvent& touchEvent)
     {
 #if defined(__ANDROID__)
         const float MAX_RATIO_FOR_MOVE_CONTROL = 0.25; //
@@ -1439,33 +1439,33 @@ public:
             return;
         }
 #endif
-        if (touchEvent.action == TouchActionType::MOVE) {
+        if (touchEvent.action == prev::input::touch::TouchActionType::MOVE) {
             const glm::vec2 angleInDegrees = (touchEvent.position - m_prevTouchPosition) * m_sensitivity;
 
             m_cameraComponent->AddPitch(angleInDegrees.y);
             m_cameraComponent->AddYaw(angleInDegrees.x);
         }
 
-        if (touchEvent.action == TouchActionType::MOVE || touchEvent.action == TouchActionType::DOWN) {
+        if (touchEvent.action == prev::input::touch::TouchActionType::MOVE || touchEvent.action == prev::input::touch::TouchActionType::DOWN) {
             m_prevTouchPosition = touchEvent.position;
         }
     }
 
-    void operator()(const KeyEvent& keyEvent)
+    void operator()(const prev::input::keyboard::KeyEvent& keyEvent)
     {
-        if (keyEvent.action == KeyActionType::PRESS) {
-            if (keyEvent.keyCode == KeyCode::KEY_R) {
+        if (keyEvent.action == prev::input::keyboard::KeyActionType::PRESS) {
+            if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_R) {
                 Reset();
             }
         }
     }
 
 private:
-    prev::event::EventHandler<Camera, MouseEvent> m_mouseHandler{ *this };
+    prev::event::EventHandler<Camera, prev::input::mouse::MouseEvent> m_mouseHandler{ *this };
 
-    prev::event::EventHandler<Camera, TouchEvent> m_touchHandler{ *this };
+    prev::event::EventHandler<Camera, prev::input::touch::TouchEvent> m_touchHandler{ *this };
 
-    prev::event::EventHandler<Camera, KeyEvent> m_keyHandler{ *this };
+    prev::event::EventHandler<Camera, prev::input::keyboard::KeyEvent> m_keyHandler{ *this };
 
 private:
     const float m_sensitivity{ 0.05f };
@@ -1479,7 +1479,7 @@ private:
     glm::vec2 m_prevTouchPosition{ 0.0f, 0.0f };
 
 private:
-    InputsFacade m_inputFacade;
+    prev::input::InputsFacade m_inputFacade;
 
     std::shared_ptr<ITransformComponent> m_transformComponent;
 
@@ -2239,7 +2239,7 @@ public:
         m_viewPortSize = glm::vec2(newIterationEvent.windowWidth, newIterationEvent.windowHeight);
     }
 
-    void operator()(const MouseLockRequest& lockRequest)
+    void operator()(const prev::input::mouse::MouseLockRequest& lockRequest)
     {
         RemoveRayCastComponnet();
         AddRayCastComponent(lockRequest.lock);
@@ -2254,12 +2254,12 @@ private:
 
     glm::vec2 m_viewPortSize;
 
-    InputsFacade m_inputFacade;
+    prev::input::InputsFacade m_inputFacade;
 
 private:
     prev::event::EventHandler<RayCasterNode, prev::core::NewIterationEvent> m_newIterationHandler{ *this };
 
-    prev::event::EventHandler<RayCasterNode, MouseLockRequest> m_mouseLockHandler{ *this };
+    prev::event::EventHandler<RayCasterNode, prev::input::mouse::MouseLockRequest> m_mouseLockHandler{ *this };
 };
 
 class ComputeNode final : public SceneNode<SceneNodeFlags> {
@@ -2949,22 +2949,22 @@ public:
     }
 
 public:
-    void operator()(const KeyEvent& keyEvent)
+    void operator()(const prev::input::keyboard::KeyEvent& keyEvent)
     {
-        if (keyEvent.action == KeyActionType::PRESS) {
-            if (keyEvent.keyCode == KeyCode::KEY_J) {
+        if (keyEvent.action == prev::input::keyboard::KeyActionType::PRESS) {
+            if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_J) {
                 RemoveNode();
-            } else if (keyEvent.keyCode == KeyCode::KEY_K) {
+            } else if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_K) {
                 AddNode();
             }
         }
     }
 
-    void operator()(const TouchEvent& touchEvent)
+    void operator()(const prev::input::touch::TouchEvent& touchEvent)
     {
-        if (touchEvent.action == TouchActionType::DOWN) {
+        if (touchEvent.action == prev::input::touch::TouchActionType::DOWN) {
             //AddNode();
-        } else if (touchEvent.action == TouchActionType::UP) {
+        } else if (touchEvent.action == prev::input::touch::TouchActionType::UP) {
             //RemoveNode();
         }
     }
@@ -2995,9 +2995,9 @@ private:
     }
 
 private:
-    prev::event::EventHandler<RootSceneNode, KeyEvent> m_keyEventHnadler{ *this };
+    prev::event::EventHandler<RootSceneNode, prev::input::keyboard::KeyEvent> m_keyEventHnadler{ *this };
 
-    prev::event::EventHandler<RootSceneNode, TouchEvent> m_touchEventHnadler{ *this };
+    prev::event::EventHandler<RootSceneNode, prev::input::touch::TouchEvent> m_touchEventHnadler{ *this };
 
 private:
     std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_masterRenderer;

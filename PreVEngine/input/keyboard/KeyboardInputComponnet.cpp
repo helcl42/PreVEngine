@@ -1,6 +1,6 @@
 #include "KeyboardInputComponnet.h"
 
-namespace prev {
+namespace prev::input::keyboard {
 bool KeyboardInputComponnet::RegisterKeyboardActionListener(IKeyboardActionListener& listener)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -80,4 +80,4 @@ void KeyboardInputComponnet::operator()(const TextEvent& textEvent)
         listener->OnText(textEvent);
     }
 }
-} // namespace prev
+} // namespace prev::input::keyboard
