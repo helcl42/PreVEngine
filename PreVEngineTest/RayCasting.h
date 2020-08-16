@@ -34,9 +34,9 @@ public:
         }
 
         auto allocator = AllocatorProvider::Instance().GetAllocator();
-        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VBO>(*allocator);
+        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator);
         vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
-        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IBO>(*allocator);
+        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(*allocator);
         indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
         return std::make_unique<Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
     }

@@ -416,9 +416,9 @@ class IModel {
 public:
     virtual std::shared_ptr<IMesh> GetMesh() const = 0;
 
-    virtual std::shared_ptr<prev::core::memory::buffer::VBO> GetVertexBuffer() const = 0;
+    virtual std::shared_ptr<prev::core::memory::buffer::VertexBuffer> GetVertexBuffer() const = 0;
 
-    virtual std::shared_ptr<prev::core::memory::buffer::IBO> GetIndexBuffer() const = 0;
+    virtual std::shared_ptr<prev::core::memory::buffer::IndexBuffer> GetIndexBuffer() const = 0;
 
 public:
     virtual ~IModel() = default;
@@ -675,12 +675,12 @@ class Model : public IModel {
 private:
     std::shared_ptr<IMesh> m_mesh;
 
-    std::shared_ptr<prev::core::memory::buffer::VBO> m_vbo;
+    std::shared_ptr<prev::core::memory::buffer::VertexBuffer> m_vbo;
 
-    std::shared_ptr<prev::core::memory::buffer::IBO> m_ibo;
+    std::shared_ptr<prev::core::memory::buffer::IndexBuffer> m_ibo;
 
 public:
-    Model(const std::shared_ptr<IMesh>& mesh, const std::shared_ptr<prev::core::memory::buffer::VBO>& vbo, const std::shared_ptr<prev::core::memory::buffer::IBO>& ibo)
+    Model(const std::shared_ptr<IMesh>& mesh, const std::shared_ptr<prev::core::memory::buffer::VertexBuffer>& vbo, const std::shared_ptr<prev::core::memory::buffer::IndexBuffer>& ibo)
         : m_mesh(mesh)
         , m_vbo(vbo)
         , m_ibo(ibo)
@@ -695,12 +695,12 @@ public:
         return m_mesh;
     }
 
-    std::shared_ptr<prev::core::memory::buffer::VBO> GetVertexBuffer() const override
+    std::shared_ptr<prev::core::memory::buffer::VertexBuffer> GetVertexBuffer() const override
     {
         return m_vbo;
     }
 
-    std::shared_ptr<prev::core::memory::buffer::IBO> GetIndexBuffer() const override
+    std::shared_ptr<prev::core::memory::buffer::IndexBuffer> GetIndexBuffer() const override
     {
         return m_ibo;
     }

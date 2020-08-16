@@ -888,10 +888,10 @@ public:
         auto mesh = meshFactory.CreateTextMesh(text, m_fontMetaData);
 
         auto allocator = AllocatorProvider::Instance().GetAllocator();
-        auto vertexBuffer = std::make_shared<prev::core::memory::buffer::VBO>(*allocator);
+        auto vertexBuffer = std::make_shared<prev::core::memory::buffer::VertexBuffer>(*allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
 
-        auto indexBuffer = std::make_shared<prev::core::memory::buffer::IBO>(*allocator);
+        auto indexBuffer = std::make_shared<prev::core::memory::buffer::IndexBuffer>(*allocator);
         indexBuffer->Data(mesh->GetIndices().data(), (uint32_t)mesh->GetIndices().size());
 
         auto model = std::make_shared<Model>(std::move(mesh), vertexBuffer, indexBuffer);

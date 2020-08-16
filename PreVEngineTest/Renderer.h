@@ -850,10 +850,10 @@ public:
         // create quad model
         auto quadMesh = std::make_unique<QuadMesh>();
 
-        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VBO>(*allocator);
+        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator);
         vertexBuffer->Data(quadMesh->GetVertexData(), quadMesh->GerVerticesCount(), quadMesh->GetVertexLayout().GetStride());
 
-        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IBO>(*allocator);
+        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(*allocator);
         indexBuffer->Data(quadMesh->GetIndices().data(), static_cast<uint32_t>(quadMesh->GetIndices().size()));
 
         m_quadModel = std::make_unique<Model>(std::move(quadMesh), std::move(vertexBuffer), std::move(indexBuffer));
@@ -985,10 +985,10 @@ public:
         // create quad model
         auto quadMesh = std::make_unique<QuadMesh>();
 
-        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VBO>(*allocator);
+        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator);
         vertexBuffer->Data(quadMesh->GetVertexData(), quadMesh->GerVerticesCount(), quadMesh->GetVertexLayout().GetStride());
 
-        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IBO>(*allocator);
+        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(*allocator);
         indexBuffer->Data(quadMesh->GetIndices().data(), static_cast<uint32_t>(quadMesh->GetIndices().size()));
 
         m_quadModel = std::make_unique<Model>(std::move(quadMesh), std::move(vertexBuffer), std::move(indexBuffer));
@@ -1493,10 +1493,10 @@ public:
 private:
     std::unique_ptr<IModel> CreateModel(prev::core::memory::Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const
     {
-        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VBO>(allocator);
+        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
 
-        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IBO>(allocator);
+        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
         indexBuffer->Data(mesh->GetIndices().data(), (uint32_t)mesh->GetIndices().size());
 
         return std::make_unique<Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));
@@ -6088,7 +6088,7 @@ private:
 
     std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
 
-    std::unique_ptr<prev::core::memory::buffer::VBO> m_instanceDataBuffer;
+    std::unique_ptr<prev::core::memory::buffer::VertexBuffer> m_instanceDataBuffer;
 
 public:
     ParticlesRenderer(const std::shared_ptr<RenderPass>& renderPass)
@@ -6121,7 +6121,7 @@ public:
         m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-        m_instanceDataBuffer = std::make_unique<prev::core::memory::buffer::VBO>(*allocator);
+        m_instanceDataBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator);
     }
 
     void BeforeRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
@@ -6210,10 +6210,10 @@ public:
 private:
     std::unique_ptr<IModel> CreateModel(prev::core::memory::Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const
     {
-        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VBO>(allocator);
+        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
 
-        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IBO>(allocator);
+        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
         indexBuffer->Data(mesh->GetIndices().data(), (uint32_t)mesh->GetIndices().size());
 
         return std::make_unique<Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));

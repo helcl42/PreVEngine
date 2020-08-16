@@ -4,7 +4,7 @@
 #include "Buffer.h"
 
 namespace prev::core::memory::buffer {
-class VBO final : public Buffer {
+class VertexBuffer final : public Buffer {
 public:
     using Buffer::Buffer;
 
