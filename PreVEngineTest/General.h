@@ -295,6 +295,7 @@ private:
 
 struct DefaultRenderContextUserData // inherit this in case you need any special data while rendering scene graph
 {
+    virtual ~DefaultRenderContextUserData() = default;
 };
 
 template <typename UserDataType = DefaultRenderContextUserData>
@@ -302,15 +303,15 @@ class IRenderer {
 public:
     virtual void Init() = 0;
 
-    virtual void BeforeRender(const RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
+    virtual void BeforeRender(const prev::scene::RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
-    virtual void PreRender(const RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
+    virtual void PreRender(const prev::scene::RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
-    virtual void Render(const RenderContext& renderContext, const std::shared_ptr<ISceneNode<SceneNodeFlags> >& node, const UserDataType& renderContextUserData = UserDataType{}) = 0;
+    virtual void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
-    virtual void PostRender(const RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
+    virtual void PostRender(const prev::scene::RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
-    virtual void AfterRender(const RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
+    virtual void AfterRender(const prev::scene::RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
     virtual void ShutDown() = 0;
 

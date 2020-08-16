@@ -145,7 +145,7 @@ public:
 private:
     void InitBuffers()
     {
-        auto allocator = AllocatorProvider::Instance().GetAllocator();
+        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
 
         m_imageBuffer = std::make_shared<prev::core::memory::image::ColorImageBuffer>(*allocator);
@@ -336,7 +336,7 @@ class WaterComponentFactory {
 public:
     std::unique_ptr<IWaterComponent> Create(const int x, const int z) const
     {
-        auto allocator = AllocatorProvider::Instance().GetAllocator();
+        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
         const glm::vec4 waterColor{ 0.0f, 0.3f, 0.5f, 1.0f };
         const std::string dudvMapPath{ AssetManager::Instance().GetAssetPath("Textures/waterDUDV.png") };

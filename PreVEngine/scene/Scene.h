@@ -4,8 +4,8 @@
 #include "../common/pattern/Singleton.h"
 #include "../core/device/Device.h"
 #include "../core/memory/Allocator.h"
-#include "../render/Swapchain.h"
 #include "../event/EventHandler.h"
+#include "../render/Swapchain.h"
 #include "../window/WindowEvents.h"
 
 #include "graph/GraphTraversal.h"
@@ -13,12 +13,12 @@
 #include <inttypes.h>
 #include <memory>
 
-namespace prev {
+namespace prev::scene {
 struct SceneConfig {
     // swapchain
-    bool VSync = true;
+    bool VSync{ true };
 
-    uint32_t framesInFlight = 3;
+    uint32_t framesInFlight{ 3 };
 };
 
 template <typename NodeFlagsType>
@@ -116,9 +116,9 @@ public:
 
     virtual void ShutDown() = 0;
 
-    virtual std::shared_ptr<ISceneNode<NodeFlagsType> > GetRootNode() const = 0;
+    virtual std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> > GetRootNode() const = 0;
 
-    virtual void SetSceneRoot(const std::shared_ptr<ISceneNode<NodeFlagsType> >& root) = 0;
+    virtual void SetRootNode(const std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> >& root) = 0;
 
     virtual std::shared_ptr<prev::core::device::Device> GetDevice() const = 0;
 
@@ -161,7 +161,7 @@ protected:
 
     std::shared_ptr<prev::render::Swapchain> m_swapchain;
 
-    std::shared_ptr<ISceneNode<NodeFlagsType> > m_rootNode;
+    std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> > m_rootNode;
 
 public:
     Scene(const std::shared_ptr<SceneConfig>& sceneConfig, const std::shared_ptr<prev::core::device::Device>& device, VkSurfaceKHR surface)
@@ -266,7 +266,7 @@ public:
     {
         m_rootNode->ShutDown();
 
-        GraphTraversal<NodeFlagsType>::Instance().SetRootNode(nullptr);
+        prev::scene::graph::GraphTraversal<NodeFlagsType>::Instance().SetRootNode(nullptr);
     }
 
     void ShutDown() override
@@ -296,14 +296,14 @@ public:
         return m_allocator;
     }
 
-    std::shared_ptr<ISceneNode<NodeFlagsType> > GetRootNode() const override
+    std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> > GetRootNode() const override
     {
         return m_rootNode;
     }
 
-    void SetSceneRoot(const std::shared_ptr<ISceneNode<NodeFlagsType> >& root) override
+    void SetRootNode(const std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> >& root) override
     {
-        GraphTraversal<NodeFlagsType>::Instance().SetRootNode(root);
+        prev::scene::graph::GraphTraversal<NodeFlagsType>::Instance().SetRootNode(root);
 
         m_rootNode = root;
     }
@@ -321,6 +321,6 @@ public:
         m_swapchain->UpdateExtent();
     }
 };
-} // namespace prev
+} // namespace prev::scene
 
 #endif // !__SCENE_H__

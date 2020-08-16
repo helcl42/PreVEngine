@@ -8,7 +8,7 @@
 #include <memory>
 #include <vector>
 
-namespace prev {
+namespace prev::scene::graph {
 template <typename NodeFlagsType>
 class ISceneNode {
 public:
@@ -49,6 +49,6 @@ public:
 public:
     virtual ~ISceneNode() = default;
 };
-} // namespace prev
+} // namespace prev::scene::graph
 
 #endif // !__ISCENE_NODE_H__

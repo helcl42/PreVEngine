@@ -120,7 +120,7 @@ private:
     void InitCascades()
     {
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
-        auto allocator = AllocatorProvider::Instance().GetAllocator();
+        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
         m_depthBuffer = std::make_shared<prev::core::memory::image::DepthImageBuffer>(*allocator);
         m_depthBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, DEPTH_FORMAT, 0, false, false, VK_IMAGE_VIEW_TYPE_2D_ARRAY, CASCADES_COUNT });

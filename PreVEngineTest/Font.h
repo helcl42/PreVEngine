@@ -280,7 +280,7 @@ private:
     {
         prev::render::image::ImageFactory imageFactory;
         image = imageFactory.CreateImage(textureFilePath);
-        imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(*AllocatorProvider::Instance().GetAllocator());
+        imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(*prev::scene::AllocatorProvider::Instance().GetAllocator());
         imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
     }
 
@@ -887,7 +887,7 @@ public:
         TextMeshFactory meshFactory;
         auto mesh = meshFactory.CreateTextMesh(text, m_fontMetaData);
 
-        auto allocator = AllocatorProvider::Instance().GetAllocator();
+        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
         auto vertexBuffer = std::make_shared<prev::core::memory::buffer::VertexBuffer>(*allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
 

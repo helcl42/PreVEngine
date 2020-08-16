@@ -138,7 +138,7 @@ public:
             AssetManager::Instance().GetAssetPath("SkyBoxes/Sky/front.png"),
         };
 
-        auto allocator = AllocatorProvider::Instance().GetAllocator();
+        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
         auto skyBox = std::make_unique<SkyBoxComponent>();
         skyBox->m_model = CreateModel(*allocator);
@@ -225,7 +225,7 @@ class SkyComponentFactory {
 public:
     std::unique_ptr<ISkyComponent> Create() const
     {
-        auto allocator = AllocatorProvider::Instance().GetAllocator();
+        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
         auto sky = std::make_unique<SkyComponent>();
         sky->m_model = CreateModel(*allocator);
