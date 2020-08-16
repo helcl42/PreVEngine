@@ -52,7 +52,7 @@ public:
             child->ShutDown();
         }
 
-        EventChannel::Broadcast(SceneNodeShutDownEvent{ GetId() });
+        prev::event::EventChannel::Broadcast(SceneNodeShutDownEvent{ GetId() });
         m_flags = prev::common::FlagSet<NodeFlagsType>();
     }
 

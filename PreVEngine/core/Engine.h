@@ -64,7 +64,7 @@ public:
 template <typename NodeFlagsType>
 class Engine final {
 private:
-    EventHandler<Engine, WindowChangeEvent> m_windowChangedHandler{ *this };
+    prev::event::EventHandler<Engine, WindowChangeEvent> m_windowChangedHandler{ *this };
 
 private:
     std::shared_ptr<EngineConfig> m_config;
@@ -161,12 +161,12 @@ public:
 
         while (m_window->ProcessEvents()) // Main event loop, runs until window is closed.
         {
-            EventChannel::DispatchAll();
+            prev::event::EventChannel::DispatchAll();
 
             m_clock->UpdateClock();
             const auto deltaTime = m_clock->GetDelta();
 
-            EventChannel::Broadcast(NewIterationEvent{ deltaTime, m_window->GetSize().width, m_window->GetSize().height });
+            prev::event::EventChannel::Broadcast(NewIterationEvent{ deltaTime, m_window->GetSize().width, m_window->GetSize().height });
 
             if (m_window->HasFocus()) {
                 m_scene->Update(deltaTime);
@@ -200,7 +200,7 @@ public:
 
         InitSurface();
 
-        EventChannel::Broadcast(SurfaceChanged{ m_surface });
+        prev::event::EventChannel::Broadcast(SurfaceChanged{ m_surface });
     }
 };
 } // namespace prev::core

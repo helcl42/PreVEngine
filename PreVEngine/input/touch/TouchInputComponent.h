@@ -47,7 +47,7 @@ public:
     void operator()(const TouchEvent& touchEvent);
 
 private:
-    EventHandler<TouchInputComponent, TouchEvent> m_touchEventsHandler{ *this };
+    prev::event::EventHandler<TouchInputComponent, TouchEvent> m_touchEventsHandler{ *this };
 
 private:
     prev::common::pattern::Observer<ITouchActionListener> m_touchObservers;

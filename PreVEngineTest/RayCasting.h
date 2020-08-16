@@ -86,7 +86,7 @@ public:
         }
 
         Ray ray{ m_rayStartPosition, m_rayDirection, m_rayLength };
-        EventChannel::Broadcast(RayEvent{ ray });
+        prev::event::EventChannel::Broadcast(RayEvent{ ray });
 
 #ifdef RENDER_RAYCASTS
         RayModelFactory modelFactory{};
@@ -177,7 +177,7 @@ public:
         }
 
         Ray ray{ m_rayStartPosition, m_rayDirection, m_rayLength }; 
-        EventChannel::Broadcast(RayEvent{ ray });
+        prev::event::EventChannel::Broadcast(RayEvent{ ray });
 
 #ifdef RENDER_RAYCASTS
         RayModelFactory modelFactory{};
@@ -263,9 +263,9 @@ protected:
     std::shared_ptr<IModel> m_model;
 #endif
 private:
-    EventHandler<MouseRayCasterComponent, MouseEvent> m_mouseMoveHandler{ *this };
+    prev::event::EventHandler<MouseRayCasterComponent, MouseEvent> m_mouseMoveHandler{ *this };
 
-    EventHandler<MouseRayCasterComponent, WindowResizeEvent> m_viewFrustumChangeHandler{ *this };
+    prev::event::EventHandler<MouseRayCasterComponent, WindowResizeEvent> m_viewFrustumChangeHandler{ *this };
 };
 
 class RayCasterComponentFactory {

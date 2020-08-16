@@ -807,7 +807,7 @@ private:
     const uint32_t m_descriptorCount{ 1000 };
 
 private:
-    EventHandler<ShadowMapDebugRenderer, KeyEvent> m_keyEvent{ *this };
+    prev::event::EventHandler<ShadowMapDebugRenderer, KeyEvent> m_keyEvent{ *this };
 
 private:
     std::shared_ptr<RenderPass> m_renderPass;
@@ -5901,7 +5901,7 @@ public:
         //#endif
         const float ratio = glm::clamp((static_cast<float>(m_passedSamples) / static_cast<float>(m_maxNumberOfSamples)), 0.0f, 1.0f) * 0.8f;
         //LOGI("Result: %s Passed samples: %lld Max: %lld Ratio: %f\n", VkResultStr(result),  m_passedSamples,  m_maxNumberOfSamples, ratio);
-        EventChannel::Broadcast(SunVisibilityEvent{ ratio });
+        prev::event::EventChannel::Broadcast(SunVisibilityEvent{ ratio });
     }
 
     void ShutDown() override
@@ -5917,7 +5917,7 @@ public:
 
 class LensFlareRenderer final : public IRenderer<NormalRenderContextUserData> {
 private:
-    EventHandler<LensFlareRenderer, SunVisibilityEvent> m_sunVisibilityEventHandler{ *this };
+    prev::event::EventHandler<LensFlareRenderer, SunVisibilityEvent> m_sunVisibilityEventHandler{ *this };
 
     float m_sunVisibilityFactor{ 0.0f };
 
