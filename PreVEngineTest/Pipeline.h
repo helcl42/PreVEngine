@@ -16,7 +16,7 @@ public:
     virtual operator VkPipeline() const = 0;
 
 public:
-    virtual ~IPipeline() {}
+    virtual ~IPipeline() = default;
 };
 
 class AbstractPipeline : public IPipeline {
