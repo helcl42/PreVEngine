@@ -47,7 +47,7 @@ Event WindowImpl::OnKeyEvent(ActionType action, uint8_t key)
     m_keyboardKeysState[key] = (action == ActionType::DOWN);
 
     Event e{ Event::EventType::KEY };
-    e.key = { action, (KeyCode)key };
+    e.key = { action, (prev::input::keyboard::KeyCode)key };
     return e;
 }
 
@@ -136,7 +136,7 @@ bool WindowImpl::IsRunning() const
     return m_isRunning;
 }
 
-bool WindowImpl::IsKeyPressed(const KeyCode key) const
+bool WindowImpl::IsKeyPressed(const prev::input::keyboard::KeyCode key) const
 {
     uint32_t keyIndex = static_cast<uint32_t>(key);
     return m_keyboardKeysState[keyIndex];

@@ -1,6 +1,6 @@
 #include "MouseInputComponent.h"
 
-namespace prev {
+namespace prev::input::mouse {
 bool MouseInputComponent::RegisterMouseActionListener(IMouseActionListener& listener)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -121,4 +121,4 @@ void MouseInputComponent::operator()(const MouseScrollEvent& scrollAction)
         listener->OnMouseScroll(scrollAction);
     }
 }
-} // namespace prev
+} // namespace prev::input::mouse

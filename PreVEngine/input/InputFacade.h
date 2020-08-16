@@ -5,7 +5,7 @@
 #include "mouse/MouseInputComponent.h"
 #include "touch/TouchInputComponent.h"
 
-namespace prev {
+namespace prev::input {
 class InputsFacade {
 public:
     InputsFacade() = default;
@@ -21,52 +21,52 @@ public:
     InputsFacade& operator=(InputsFacade&& other) = delete;
 
 public:
-    bool RegisterKeyboardActionListener(IKeyboardActionListener& listener);
+    bool RegisterKeyboardActionListener(keyboard::IKeyboardActionListener& listener);
 
-    bool UnregisterKeyboardActionListener(IKeyboardActionListener& listener);
+    bool UnregisterKeyboardActionListener(keyboard::IKeyboardActionListener& listener);
 
-    bool IsKeyboardActionListenerRegistered(IKeyboardActionListener& listener) const;
+    bool IsKeyboardActionListenerRegistered(keyboard::IKeyboardActionListener& listener) const;
 
-    bool RegisterTextListener(ITextListener& listener);
+    bool RegisterTextListener(keyboard::ITextListener& listener);
 
-    bool UnregisterTextListener(ITextListener& listener);
+    bool UnregisterTextListener(keyboard::ITextListener& listener);
 
-    bool IsTextListenerRegistered(ITextListener& listener) const;
+    bool IsTextListenerRegistered(keyboard::ITextListener& listener) const;
 
-    bool RegisterMouseActionListener(IMouseActionListener& listener);
+    bool RegisterMouseActionListener(mouse::IMouseActionListener& listener);
 
-    bool UnregisterMouseActionListener(IMouseActionListener& listener);
+    bool UnregisterMouseActionListener(mouse::IMouseActionListener& listener);
 
-    bool IsMouseActionListenerRegistered(IMouseActionListener& listener) const;
+    bool IsMouseActionListenerRegistered(mouse::IMouseActionListener& listener) const;
 
-    bool RegisterMouseScrollListener(IMouseScrollListener& listener);
+    bool RegisterMouseScrollListener(mouse::IMouseScrollListener& listener);
 
-    bool UnregisterMouseScrollListener(IMouseScrollListener& listener);
+    bool UnregisterMouseScrollListener(mouse::IMouseScrollListener& listener);
 
-    bool IsMouseScrollListenerRegistered(IMouseScrollListener& listener) const;
+    bool IsMouseScrollListenerRegistered(mouse::IMouseScrollListener& listener) const;
 
-    bool RegisterTouchActionListener(ITouchActionListener& listener);
+    bool RegisterTouchActionListener(touch::ITouchActionListener& listener);
 
-    bool UnregisterTouchActionListener(ITouchActionListener& listener);
+    bool UnregisterTouchActionListener(touch::ITouchActionListener& listener);
 
-    bool IsTouchActionListenerRegistered(ITouchActionListener& listener) const;
+    bool IsTouchActionListenerRegistered(touch::ITouchActionListener& listener) const;
 
 public:
-    bool IsKeyPressed(const KeyCode keyCode) const;
+    bool IsKeyPressed(const keyboard::KeyCode keyCode) const;
 
-    std::set<KeyCode> GetPressedKeys() const;
+    std::set<keyboard::KeyCode> GetPressedKeys() const;
 
-    std::set<MouseButtonType> GetPressedButtons() const;
+    std::set<mouse::MouseButtonType> GetPressedButtons() const;
 
     glm::vec2 GetMousePosition() const;
 
-    bool IsButtonPressed(const MouseButtonType button) const;
+    bool IsButtonPressed(const mouse::MouseButtonType button) const;
 
     bool IsMouseLocked() const;
 
     void SetMouseLocked(bool locked);
 
-    std::map<uint8_t, Touch> GetTouches() const;
+    std::map<uint8_t, touch::Touch> GetTouches() const;
 
     bool IsPointerTouched(const uint8_t pointerId) const;
 
@@ -75,13 +75,13 @@ public:
     void SetMouseCursorVisible(bool visible);
 
 private:
-    KeyboardInputComponnet m_keyboardInputComponent;
+    keyboard::KeyboardInputComponnet m_keyboardInputComponent;
 
-    MouseInputComponent m_mouseInputComponent;
+    mouse::MouseInputComponent m_mouseInputComponent;
 
-    TouchInputComponent m_touchInuptComponent;
+    touch::TouchInputComponent m_touchInuptComponent;
 };
 
-} // namespace prev
+} // namespace prev::input
 
 #endif // !__INPUTS_H__

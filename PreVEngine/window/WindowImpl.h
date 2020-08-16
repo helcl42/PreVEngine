@@ -139,7 +139,7 @@ public:
     virtual ~WindowImpl();
 
 public:
-    bool IsKeyPressed(const KeyCode key) const;
+    bool IsKeyPressed(const prev::input::keyboard::KeyCode key) const;
 
     bool IsMouseButtonPressed(const ButtonType btn) const;
 

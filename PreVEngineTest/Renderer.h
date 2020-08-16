@@ -807,7 +807,7 @@ private:
     const uint32_t m_descriptorCount{ 1000 };
 
 private:
-    prev::event::EventHandler<ShadowMapDebugRenderer, KeyEvent> m_keyEvent{ *this };
+    prev::event::EventHandler<ShadowMapDebugRenderer, prev::input::keyboard::KeyEvent> m_keyEvent{ *this };
 
 private:
     std::shared_ptr<RenderPass> m_renderPass;
@@ -928,13 +928,13 @@ public:
     }
 
 public:
-    void operator()(const KeyEvent& keyEvent)
+    void operator()(const prev::input::keyboard::KeyEvent& keyEvent)
     {
-        if (keyEvent.action == KeyActionType::PRESS) {
-            if (keyEvent.keyCode == KeyCode::KEY_O) {
+        if (keyEvent.action == prev::input::keyboard::KeyActionType::PRESS) {
+            if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_O) {
                 m_cascadeIndex = (m_cascadeIndex - 1) < 0 ? ShadowsComponent::CASCADES_COUNT - 1 : m_cascadeIndex - 1;
                 std::cout << "New Cascade Index = " << m_cascadeIndex << std::endl;
-            } else if (keyEvent.keyCode == KeyCode::KEY_P) {
+            } else if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_P) {
                 m_cascadeIndex = (m_cascadeIndex + 1) % ShadowsComponent::CASCADES_COUNT;
                 std::cout << "New Cascade Index = " << m_cascadeIndex << std::endl;
             }

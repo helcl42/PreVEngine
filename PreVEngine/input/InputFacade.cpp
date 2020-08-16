@@ -1,92 +1,92 @@
 #include "InputFacade.h"
 
-namespace prev {
-bool InputsFacade::RegisterKeyboardActionListener(IKeyboardActionListener& listener)
+namespace prev::input {
+bool InputsFacade::RegisterKeyboardActionListener(keyboard::IKeyboardActionListener& listener)
 {
     return m_keyboardInputComponent.RegisterKeyboardActionListener(listener);
 }
 
-bool InputsFacade::UnregisterKeyboardActionListener(IKeyboardActionListener& listener)
+bool InputsFacade::UnregisterKeyboardActionListener(keyboard::IKeyboardActionListener& listener)
 {
     return m_keyboardInputComponent.UnregisterKeyboardActionListener(listener);
 }
 
-bool InputsFacade::IsKeyboardActionListenerRegistered(IKeyboardActionListener& listener) const
+bool InputsFacade::IsKeyboardActionListenerRegistered(keyboard::IKeyboardActionListener& listener) const
 {
     return m_keyboardInputComponent.IsKeyboardActionListenerRegistered(listener);
 }
 
-bool InputsFacade::RegisterTextListener(ITextListener& listener)
+bool InputsFacade::RegisterTextListener(keyboard::ITextListener& listener)
 {
     return m_keyboardInputComponent.RegisterTextListener(listener);
 }
 
-bool InputsFacade::UnregisterTextListener(ITextListener& listener)
+bool InputsFacade::UnregisterTextListener(keyboard::ITextListener& listener)
 {
     return m_keyboardInputComponent.UnregisterTextListener(listener);
 }
 
-bool InputsFacade::IsTextListenerRegistered(ITextListener& listener) const
+bool InputsFacade::IsTextListenerRegistered(keyboard::ITextListener& listener) const
 {
     return m_keyboardInputComponent.IsTextListenerRegistered(listener);
 }
 
-bool InputsFacade::RegisterMouseActionListener(IMouseActionListener& listener)
+bool InputsFacade::RegisterMouseActionListener(mouse::IMouseActionListener& listener)
 {
     return m_mouseInputComponent.RegisterMouseActionListener(listener);
 }
 
-bool InputsFacade::UnregisterMouseActionListener(IMouseActionListener& listener)
+bool InputsFacade::UnregisterMouseActionListener(mouse::IMouseActionListener& listener)
 {
     return m_mouseInputComponent.UnregisterMouseActionListener(listener);
 }
 
-bool InputsFacade::IsMouseActionListenerRegistered(IMouseActionListener& listener) const
+bool InputsFacade::IsMouseActionListenerRegistered(mouse::IMouseActionListener& listener) const
 {
     return m_mouseInputComponent.IsMouseActionListenerRegistered(listener);
 }
 
-bool InputsFacade::RegisterMouseScrollListener(IMouseScrollListener& listener)
+bool InputsFacade::RegisterMouseScrollListener(mouse::IMouseScrollListener& listener)
 {
     return m_mouseInputComponent.RegisterMouseScrollListener(listener);
 }
 
-bool InputsFacade::UnregisterMouseScrollListener(IMouseScrollListener& listener)
+bool InputsFacade::UnregisterMouseScrollListener(mouse::IMouseScrollListener& listener)
 {
     return m_mouseInputComponent.UnregisterMouseScrollListener(listener);
 }
 
-bool InputsFacade::IsMouseScrollListenerRegistered(IMouseScrollListener& listener) const
+bool InputsFacade::IsMouseScrollListenerRegistered(mouse::IMouseScrollListener& listener) const
 {
     return m_mouseInputComponent.IsMouseScrollListenerRegistered(listener);
 }
 
-bool InputsFacade::RegisterTouchActionListener(ITouchActionListener& listener)
+bool InputsFacade::RegisterTouchActionListener(touch::ITouchActionListener& listener)
 {
     return m_touchInuptComponent.RegisterTouchActionListener(listener);
 }
 
-bool InputsFacade::UnregisterTouchActionListener(ITouchActionListener& listener)
+bool InputsFacade::UnregisterTouchActionListener(touch::ITouchActionListener& listener)
 {
     return m_touchInuptComponent.UnregisterTouchActionListener(listener);
 }
 
-bool InputsFacade::IsTouchActionListenerRegistered(ITouchActionListener& listener) const
+bool InputsFacade::IsTouchActionListenerRegistered(touch::ITouchActionListener& listener) const
 {
     return m_touchInuptComponent.IsTouchActionListenerRegistered(listener);
 }
 
-bool InputsFacade::IsKeyPressed(const KeyCode keyCode) const
+bool InputsFacade::IsKeyPressed(const keyboard::KeyCode keyCode) const
 {
     return m_keyboardInputComponent.IsKeyPressed(keyCode);
 }
 
-std::set<KeyCode> InputsFacade::GetPressedKeys() const
+std::set<keyboard::KeyCode> InputsFacade::GetPressedKeys() const
 {
     return m_keyboardInputComponent.GetPressedKeys();
 }
 
-std::set<MouseButtonType> InputsFacade::GetPressedButtons() const
+std::set<mouse::MouseButtonType> InputsFacade::GetPressedButtons() const
 {
     return m_mouseInputComponent.GetPressedButtons();
 }
@@ -96,7 +96,7 @@ glm::vec2 InputsFacade::GetMousePosition() const
     return m_mouseInputComponent.GetMousePosition();
 }
 
-bool InputsFacade::IsButtonPressed(const MouseButtonType button) const
+bool InputsFacade::IsButtonPressed(const mouse::MouseButtonType button) const
 {
     return m_mouseInputComponent.IsButtonPressed(button);
 }
@@ -111,7 +111,7 @@ void InputsFacade::SetMouseLocked(bool locked)
     m_mouseInputComponent.SetLocked(locked);
 }
 
-std::map<uint8_t, Touch> InputsFacade::GetTouches() const
+std::map<uint8_t, touch::Touch> InputsFacade::GetTouches() const
 {
     return m_touchInuptComponent.GetTouches();
 }
@@ -130,4 +130,4 @@ void InputsFacade::SetMouseCursorVisible(bool visible)
 {
     m_mouseInputComponent.SetCursorVisible(visible);
 }
-} // namespace prev
+} // namespace prev::input

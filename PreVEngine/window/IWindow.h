@@ -19,7 +19,7 @@ public:
 
     virtual Size GetSize() const = 0;
 
-    virtual bool IsKeyPressed(const KeyCode key) const = 0;
+    virtual bool IsKeyPressed(const prev::input::keyboard::KeyCode key) const = 0;
 
     virtual bool IsMouseButtonPressed(const ButtonType btn) const = 0;
 

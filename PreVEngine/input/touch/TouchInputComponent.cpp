@@ -1,6 +1,6 @@
 #include "TouchInputComponent.h"
 
-namespace prev {
+namespace prev::input::touch {
 bool TouchInputComponent::RegisterTouchActionListener(ITouchActionListener& listener)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -50,4 +50,4 @@ void TouchInputComponent::operator()(const TouchEvent& touchEvent)
         listener->OnTouchAction(touchEvent);
     }
 }
-} // namespace prev
+} // namespace prev::input::touch

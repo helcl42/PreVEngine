@@ -10,7 +10,7 @@
 
 #include <mutex>
 
-namespace prev {
+namespace prev::input::keyboard {
 class KeyboardInputComponnet final {
 public:
     KeyboardInputComponnet() = default;
@@ -63,6 +63,6 @@ private:
 
     std::set<KeyCode> m_pressedKeys;
 };
-} // namespace prev
+} // namespace prev::input::keyboard
 
 #endif // !__KEYBOARD_INPUT_COMPONENT_H__
