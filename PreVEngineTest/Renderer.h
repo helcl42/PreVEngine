@@ -105,8 +105,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const VkRect2D scissor = { { 0, 0 }, shadowsRenderContext.extent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, shadowsRenderContext.extent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -229,8 +229,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const VkRect2D scissor = { { 0, 0 }, shadowsRenderContext.extent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, shadowsRenderContext.extent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -357,8 +357,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const VkRect2D scissor = { { 0, 0 }, shadowsRenderContext.extent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, shadowsRenderContext.extent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -475,8 +475,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const VkRect2D scissor = { { 0, 0 }, shadowsRenderContext.extent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, shadowsRenderContext.extent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -594,8 +594,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const VkRect2D scissor = { { 0, 0 }, shadowsRenderContext.extent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, shadowsRenderContext.extent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -723,8 +723,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
-        const VkRect2D scissor = { { 0, 0 }, shadowsRenderContext.extent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, shadowsRenderContext.extent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -1132,8 +1132,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -1279,8 +1279,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -1426,8 +1426,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -1658,8 +1658,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -1935,8 +1935,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -2216,8 +2216,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -2503,8 +2503,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -2786,8 +2786,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -3064,8 +3064,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -3347,8 +3347,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -3636,8 +3636,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -3923,8 +3923,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -4200,8 +4200,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -4483,8 +4483,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -4770,8 +4770,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -4972,8 +4972,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -5113,8 +5113,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -5443,8 +5443,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -5663,8 +5663,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -5840,8 +5840,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -5987,8 +5987,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -6130,8 +6130,8 @@ public:
 
     void PreRender(const RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
-        const VkRect2D scissor = { { 0, 0 }, renderContext.fullExtent };
-        const VkViewport viewport = { 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+        const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
+        const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
 
         vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
         vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -6255,7 +6255,7 @@ private:
 
 class CommandBuffersGroupFactory {
 public:
-    std::unique_ptr<CommandBuffersGroup> CreateGroup(const Queue& queue, const uint32_t dim0Size, const uint32_t groupSize)
+    std::unique_ptr<CommandBuffersGroup> CreateGroup(const Queue& queue, const uint32_t dim0Size, const uint32_t groupSize) const
     {
         auto device = DeviceProvider::Instance().GetDevice();
 
