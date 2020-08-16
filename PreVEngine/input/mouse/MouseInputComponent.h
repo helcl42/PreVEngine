@@ -60,9 +60,9 @@ public:
     void operator()(const MouseScrollEvent& scrollAction);
 
 private:
-    EventHandler<MouseInputComponent, MouseEvent> m_mouseActionsHandler{ *this };
+    prev::event::EventHandler<MouseInputComponent, MouseEvent> m_mouseActionsHandler{ *this };
 
-    EventHandler<MouseInputComponent, MouseScrollEvent> m_mouseScrollsHandler{ *this };
+    prev::event::EventHandler<MouseInputComponent, MouseScrollEvent> m_mouseScrollsHandler{ *this };
 
 private:
     prev::common::pattern::Observer<IMouseActionListener> m_mouseActionObservers;

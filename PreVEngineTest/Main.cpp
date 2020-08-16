@@ -599,11 +599,11 @@ public:
 
 class CubeRobot : public BaseCubeRobotSceneNode {
 private:
-    EventHandler<CubeRobot, KeyEvent> m_keyEvent{ *this };
+    prev::event::EventHandler<CubeRobot, KeyEvent> m_keyEvent{ *this };
 
-    EventHandler<CubeRobot, MouseEvent> m_mouseEvent{ *this };
+    prev::event::EventHandler<CubeRobot, MouseEvent> m_mouseEvent{ *this };
 
-    EventHandler<CubeRobot, TouchEvent> m_touchEvent{ *this };
+    prev::event::EventHandler<CubeRobot, TouchEvent> m_touchEvent{ *this };
 
 private:
     std::shared_ptr<CubeRobotPart> m_body;
@@ -1026,7 +1026,7 @@ public:
 private:
     InputsFacade m_inputFacade;
 
-    EventHandler<InputsHelper, KeyEvent> m_keyboardEventsHandler{ *this };
+    prev::event::EventHandler<InputsHelper, KeyEvent> m_keyboardEventsHandler{ *this };
 };
 
 class Goblin : public SceneNode<SceneNodeFlags> {
@@ -1295,13 +1295,13 @@ private:
     glm::vec2 m_prevTouchPosition{ 0.0f, 0.0f };
 
 private:
-    EventHandler<Goblin, KeyEvent> m_keyboardEventsHandler{ *this };
+    prev::event::EventHandler<Goblin, KeyEvent> m_keyboardEventsHandler{ *this };
 
-    EventHandler<Goblin, MouseEvent> m_mouseEventsHandler{ *this };
+    prev::event::EventHandler<Goblin, MouseEvent> m_mouseEventsHandler{ *this };
 
-    EventHandler<Goblin, TouchEvent> m_touchEventsHandler{ *this };
+    prev::event::EventHandler<Goblin, TouchEvent> m_touchEventsHandler{ *this };
 
-    EventHandler<Goblin, MouseScrollEvent> m_mouseScrollsHandler{ *this };
+    prev::event::EventHandler<Goblin, MouseScrollEvent> m_mouseScrollsHandler{ *this };
 
 private:
     std::shared_ptr<ITransformComponent> m_transformComponent;
@@ -1461,11 +1461,11 @@ public:
     }
 
 private:
-    EventHandler<Camera, MouseEvent> m_mouseHandler{ *this };
+    prev::event::EventHandler<Camera, MouseEvent> m_mouseHandler{ *this };
 
-    EventHandler<Camera, TouchEvent> m_touchHandler{ *this };
+    prev::event::EventHandler<Camera, TouchEvent> m_touchHandler{ *this };
 
-    EventHandler<Camera, KeyEvent> m_keyHandler{ *this };
+    prev::event::EventHandler<Camera, KeyEvent> m_keyHandler{ *this };
 
 private:
     const float m_sensitivity{ 0.05f };
@@ -1776,7 +1776,7 @@ private:
     glm::uvec2 m_previousViewPortSize{ 1920, 1080 };
 
 private:
-    EventHandler<WaterReflection, prev::core::NewIterationEvent> m_newIterationHandler{ *this };
+    prev::event::EventHandler<WaterReflection, prev::core::NewIterationEvent> m_newIterationHandler{ *this };
 };
 
 class WaterRefraction : public SceneNode<SceneNodeFlags> {
@@ -1846,7 +1846,7 @@ private:
     glm::uvec2 m_previousViewPortSize{ 1920, 1080 };
 
 private:
-    EventHandler<WaterRefraction, prev::core::NewIterationEvent> m_newIterationHandler{ *this };
+    prev::event::EventHandler<WaterRefraction, prev::core::NewIterationEvent> m_newIterationHandler{ *this };
 };
 
 class Water : public SceneNode<SceneNodeFlags> {
@@ -2004,7 +2004,7 @@ private:
     glm::vec2 m_viewPortSize;
 
 private:
-    EventHandler<LensFlare, prev::core::NewIterationEvent> m_newIterationHandler{ *this };
+    prev::event::EventHandler<LensFlare, prev::core::NewIterationEvent> m_newIterationHandler{ *this };
 };
 
 class Sun : public SceneNode<SceneNodeFlags> {
@@ -2053,7 +2053,7 @@ private:
     glm::vec2 m_viewPortSize;
 
 private:
-    EventHandler<Sun, prev::core::NewIterationEvent> m_newIterationHandler{ *this };
+    prev::event::EventHandler<Sun, prev::core::NewIterationEvent> m_newIterationHandler{ *this };
 };
 
 class Stone final : public SceneNode<SceneNodeFlags> {
@@ -2257,9 +2257,9 @@ private:
     InputsFacade m_inputFacade;
 
 private:
-    EventHandler<RayCasterNode, prev::core::NewIterationEvent> m_newIterationHandler{ *this };
+    prev::event::EventHandler<RayCasterNode, prev::core::NewIterationEvent> m_newIterationHandler{ *this };
 
-    EventHandler<RayCasterNode, MouseLockRequest> m_mouseLockHandler{ *this };
+    prev::event::EventHandler<RayCasterNode, MouseLockRequest> m_mouseLockHandler{ *this };
 };
 
 class ComputeNode final : public SceneNode<SceneNodeFlags> {
@@ -2708,7 +2708,7 @@ private:
 
     prev::common::pattern::Nullable<Ray> m_currentRay; // make it nullable???
 
-    EventHandler<RayCastObserverNode, RayEvent> m_rayHandler{ *this };
+    prev::event::EventHandler<RayCastObserverNode, RayEvent> m_rayHandler{ *this };
 };
 
 class Fire final : public SceneNode<SceneNodeFlags> {
@@ -2995,9 +2995,9 @@ private:
     }
 
 private:
-    EventHandler<RootSceneNode, KeyEvent> m_keyEventHnadler{ *this };
+    prev::event::EventHandler<RootSceneNode, KeyEvent> m_keyEventHnadler{ *this };
 
-    EventHandler<RootSceneNode, TouchEvent> m_touchEventHnadler{ *this };
+    prev::event::EventHandler<RootSceneNode, TouchEvent> m_touchEventHnadler{ *this };
 
 private:
     std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_masterRenderer;

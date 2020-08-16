@@ -135,9 +135,9 @@ public:
 template <typename NodeFlagsType>
 class Scene : public IScene<NodeFlagsType> {
 private:
-    EventHandler<Scene, WindowResizeEvent> m_windowResizeEvent{ *this };
+    prev::event::EventHandler<Scene, WindowResizeEvent> m_windowResizeEvent{ *this };
 
-    EventHandler<Scene, SurfaceChanged> m_surfaceChangedEvent{ *this };
+    prev::event::EventHandler<Scene, SurfaceChanged> m_surfaceChangedEvent{ *this };
 
 protected:
     std::shared_ptr<SceneConfig> m_config;

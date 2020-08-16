@@ -62,7 +62,7 @@ private:
 private:
     std::map<uint64_t, std::shared_ptr<ItemType> > m_components;
 
-    EventHandler<ComponentRepository<ItemType>, SceneNodeShutDownEvent> m_shutDownHandler{ *this };
+    prev::event::EventHandler<ComponentRepository<ItemType>, SceneNodeShutDownEvent> m_shutDownHandler{ *this };
 };
 } // namespace prev
 

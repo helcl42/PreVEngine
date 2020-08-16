@@ -49,9 +49,9 @@ public:
     void operator()(const TextEvent& textEvent);
 
 private:
-    EventHandler<KeyboardInputComponnet, KeyEvent> m_keyEventsHandler{ *this };
+    prev::event::EventHandler<KeyboardInputComponnet, KeyEvent> m_keyEventsHandler{ *this };
 
-    EventHandler<KeyboardInputComponnet, TextEvent> m_textEventHandler{ *this };
+    prev::event::EventHandler<KeyboardInputComponnet, TextEvent> m_textEventHandler{ *this };
 
 private:
     prev::common::pattern::Observer<IKeyboardActionListener> m_keyActionObservers;

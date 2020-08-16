@@ -7,39 +7,37 @@
 #include <mutex>
 #include <vector>
 
-namespace prev {
-namespace Internal {
-    class EventChannelQueueManager final : public prev::common::pattern::Singleton<EventChannelQueueManager> {
-    private:
-        friend class prev::common::pattern::Singleton<EventChannelQueueManager>;
+namespace prev::event::internal {
+class EventChannelQueueManager final : public prev::common::pattern::Singleton<EventChannelQueueManager> {
+private:
+    friend class prev::common::pattern::Singleton<EventChannelQueueManager>;
 
-    private:
-        std::mutex m_mutex;
+private:
+    std::mutex m_mutex;
 
-        std::vector<IEventChannelQueue*> m_eventChannelQueues;
+    std::vector<IEventChannelQueue*> m_eventChannelQueues;
 
-    private:
-        EventChannelQueueManager(EventChannelQueueManager&& other) = delete;
+private:
+    EventChannelQueueManager(EventChannelQueueManager&& other) = delete;
 
-        EventChannelQueueManager& operator=(EventChannelQueueManager&& other) = delete;
+    EventChannelQueueManager& operator=(EventChannelQueueManager&& other) = delete;
 
-        EventChannelQueueManager(const EventChannelQueueManager& other) = delete;
+    EventChannelQueueManager(const EventChannelQueueManager& other) = delete;
 
-        EventChannelQueueManager& operator=(const EventChannelQueueManager& other) = delete;
+    EventChannelQueueManager& operator=(const EventChannelQueueManager& other) = delete;
 
-    private:
-        EventChannelQueueManager() = default;
+private:
+    EventChannelQueueManager() = default;
 
-        ~EventChannelQueueManager() = default;
+    ~EventChannelQueueManager() = default;
 
-    public:
-        void Add(IEventChannelQueue& queue);
+public:
+    void Add(IEventChannelQueue& queue);
 
-        void Remove(IEventChannelQueue& queue);
+    void Remove(IEventChannelQueue& queue);
 
-        void BroadcastAll();
-    };
-} // namespace Internal
-} // namespace prev
+    void BroadcastAll();
+};
+} // namespace prev::event::internal
 
 #endif

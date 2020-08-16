@@ -100,9 +100,9 @@ public:
 
 class Window : public AbstractWindow {
 private:
-    EventHandler<Window, MouseLockRequest> m_mouseLockHandler{ *this };
+    prev::event::EventHandler<Window, MouseLockRequest> m_mouseLockHandler{ *this };
 
-    EventHandler<Window, MouseCursorVisibilityRequest> m_mouseCursorVisibilityHandler{ *this };
+    prev::event::EventHandler<Window, MouseCursorVisibilityRequest> m_mouseCursorVisibilityHandler{ *this };
 
 public:
     Window(const char* title)
@@ -118,57 +118,57 @@ public:
 public:
     virtual void OnInitEvent() override
     {
-        EventChannel::Broadcast(WindowCreatedEvent{ this });
+        prev::event::EventChannel::Broadcast(WindowCreatedEvent{ this });
     }
 
     virtual void OnCloseEvent() override
     {
-        EventChannel::Broadcast(WindowDestroyedEvent{ this });
+        prev::event::EventChannel::Broadcast(WindowDestroyedEvent{ this });
     }
 
     virtual void OnChangeEvent() override
     {
-        EventChannel::Broadcast(WindowChangeEvent{ this });
+        prev::event::EventChannel::Broadcast(WindowChangeEvent{ this });
     }
 
     virtual void OnResizeEvent(uint16_t width, uint16_t height) override
     {
-        EventChannel::Broadcast(WindowResizeEvent{ this, width, height });
+        prev::event::EventChannel::Broadcast(WindowResizeEvent{ this, width, height });
     }
 
     virtual void OnMoveEvent(int16_t x, int16_t y) override
     {
-        EventChannel::Broadcast(WindowMovedEvent{ this, glm::vec2(x, y) });
+        prev::event::EventChannel::Broadcast(WindowMovedEvent{ this, glm::vec2(x, y) });
     }
 
     virtual void OnFocusEvent(bool hasFocus) override
     {
-        EventChannel::Broadcast(WindowFocusChangeEvent{ this, hasFocus });
+        prev::event::EventChannel::Broadcast(WindowFocusChangeEvent{ this, hasFocus });
     }
 
     virtual void OnKeyEvent(ActionType action, KeyCode keyCode) override
     {
-        EventChannel::Broadcast(KeyEvent{ InputConvertor::GetKeyActionType(action), keyCode });
+        prev::event::EventChannel::Broadcast(KeyEvent{ InputConvertor::GetKeyActionType(action), keyCode });
     }
 
     virtual void OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType button, int16_t w, int16_t h) override
     {
-        EventChannel::Broadcast(MouseEvent{ InputConvertor::GetMouseActionType(action), InputConvertor::GetMouseButtonType(button), glm::vec2(x, y), glm::vec2(w, h) });
+        prev::event::EventChannel::Broadcast(MouseEvent{ InputConvertor::GetMouseActionType(action), InputConvertor::GetMouseButtonType(button), glm::vec2(x, y), glm::vec2(w, h) });
     }
 
     virtual void OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y) override
     {
-        EventChannel::Broadcast(MouseScrollEvent{ delta, glm::vec2(x, y) });
+        prev::event::EventChannel::Broadcast(MouseScrollEvent{ delta, glm::vec2(x, y) });
     }
 
     virtual void OnTouchEvent(ActionType action, float x, float y, uint8_t pointerId, float w, float h) override
     {
-        EventChannel::Broadcast(TouchEvent{ InputConvertor::GetTouchActionType(action), pointerId, glm::vec2(x, y), glm::vec2(w, h) });
+        prev::event::EventChannel::Broadcast(TouchEvent{ InputConvertor::GetTouchActionType(action), pointerId, glm::vec2(x, y), glm::vec2(w, h) });
     }
 
     virtual void OnTextEvent(const char* str) override
     {
-        EventChannel::Broadcast(TextEvent{ str });
+        prev::event::EventChannel::Broadcast(TextEvent{ str });
     }
 
 public:
