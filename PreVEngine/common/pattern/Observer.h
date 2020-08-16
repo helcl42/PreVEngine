@@ -3,7 +3,7 @@
 
 #include <set>
 
-namespace prev {
+namespace prev::common::pattern {
 template <typename ObserverType>
 class Observer {
 public:

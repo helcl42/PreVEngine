@@ -1,11 +1,11 @@
 #ifndef __DEVICE_EXTENSIONS_H__
 #define __DEVICE_EXTENSIONS_H__
 
-#include "../instance/Validation.h"
 #include "../../common/PickList.h"
+#include "../instance/Validation.h"
 
 namespace prev {
-class DeviceExtensions final : public PickList {
+class DeviceExtensions final : public prev::common::PickList {
 public:
     DeviceExtensions() = default;
 

@@ -9,7 +9,7 @@
 
 namespace prev {
 template <typename ItemType>
-class ComponentRepository final : public Singleton<ComponentRepository<ItemType> > {
+class ComponentRepository final : public prev::common::pattern::Singleton<ComponentRepository<ItemType> > {
 public:
     ~ComponentRepository() = default;
 
@@ -57,7 +57,7 @@ private:
     ComponentRepository() = default;
 
 private:
-    friend class Singleton<ComponentRepository<ItemType> >;
+    friend class prev::common::pattern::Singleton<ComponentRepository<ItemType> >;
 
 private:
     std::map<uint64_t, std::shared_ptr<ItemType> > m_components;

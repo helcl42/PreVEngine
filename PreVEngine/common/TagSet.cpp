@@ -1,6 +1,6 @@
 #include "TagSet.h"
 
-namespace prev {
+namespace prev::common {
 TagSet::TagSet(const std::set<std::string>& tags)
     : m_tags(tags)
 {
@@ -60,4 +60,4 @@ bool TagSet::operator[](const std::string& val) const
 {
     return m_tags.find(val) != m_tags.cend();
 }
-} // namespace prev
+} // namespace prev::common

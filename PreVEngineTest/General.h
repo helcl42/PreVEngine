@@ -138,7 +138,7 @@ public:
     }
 };
 
-class AssetManager : public Singleton<AssetManager> {
+class AssetManager : public prev::common::pattern::Singleton<AssetManager> {
 public:
     ~AssetManager() = default;
 
@@ -153,7 +153,7 @@ public:
     }
 
 private:
-    friend class Singleton<AssetManager>;
+    friend class prev::common::pattern::Singleton<AssetManager>;
 
 private:
     AssetManager() = default;

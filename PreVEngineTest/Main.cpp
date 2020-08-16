@@ -360,7 +360,7 @@ public:
         auto material = CreateMaterial(*allocator, texturePath, normalMapPath, true, 10.0f, 0.7f);
 
         MeshFactory meshFactory{};
-        auto mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
+        auto mesh = meshFactory.CreateMesh(modelPath, prev::common::FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
         auto model = CreateModel(*allocator, std::move(mesh));
 
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -376,7 +376,7 @@ public:
         }
 
         MeshFactory meshFactory{};
-        auto mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
+        auto mesh = meshFactory.CreateMesh(modelPath, prev::common::FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
         auto model = CreateModel(*allocator, std::move(mesh));
 
         return std::make_unique<DefaultRenderComponent>(std::move(model), materials, castsShadows, isCastedByShadows);
@@ -389,7 +389,7 @@ public:
         auto material = CreateMaterial(*allocator, texturePath, normalMapPath, heightOrConeMapPath, true, 3.0f, 0.3f);
 
         MeshFactory meshFactory{};
-        auto mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
+        auto mesh = meshFactory.CreateMesh(modelPath, prev::common::FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
         auto model = CreateModel(*allocator, std::move(mesh));
 
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -405,7 +405,7 @@ public:
         }
 
         MeshFactory meshFactory{};
-        auto mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
+        auto mesh = meshFactory.CreateMesh(modelPath, prev::common::FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
         auto model = CreateModel(*allocator, std::move(mesh));
 
         return std::make_unique<DefaultRenderComponent>(std::move(model), materials, castsShadows, isCastedByShadows);
@@ -418,7 +418,7 @@ public:
         auto material = CreateMaterial(*allocator, texturePath, true, 1.5f, 0.3f);
 
         MeshFactory meshFactory{};
-        auto mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION });
+        auto mesh = meshFactory.CreateMesh(modelPath, prev::common::FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION });
         auto model = CreateModel(*allocator, std::move(mesh));
 
         AnimationFactory animationFactory{};
@@ -437,7 +437,7 @@ public:
         }
 
         MeshFactory meshFactory{};
-        auto mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION });
+        auto mesh = meshFactory.CreateMesh(modelPath, prev::common::FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION });
         auto model = CreateModel(*allocator, std::move(mesh));
 
         AnimationFactory animationFactory{};
@@ -453,7 +453,7 @@ public:
         auto material = CreateMaterial(*allocator, texturePath, normalMapPath, true, 1.5f, 0.3f);
 
         MeshFactory meshFactory{};
-        auto mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION | MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
+        auto mesh = meshFactory.CreateMesh(modelPath, prev::common::FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION | MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
         auto model = CreateModel(*allocator, std::move(mesh));
 
         AnimationFactory animationFactory{};
@@ -472,7 +472,7 @@ public:
         }
 
         MeshFactory meshFactory{};
-        auto mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION | MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
+        auto mesh = meshFactory.CreateMesh(modelPath, prev::common::FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION | MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
         auto model = CreateModel(*allocator, std::move(mesh));
 
         AnimationFactory animationFactory{};
@@ -488,7 +488,7 @@ public:
         auto material = CreateMaterial(*allocator, texturePath, normalMapPath, heightOrConeMapPath, true, 1.5f, 0.3f);
 
         MeshFactory meshFactory{};
-        auto mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION | MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
+        auto mesh = meshFactory.CreateMesh(modelPath, prev::common::FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION | MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
         auto model = CreateModel(*allocator, std::move(mesh));
 
         AnimationFactory animationFactory{};
@@ -507,7 +507,7 @@ public:
         }
 
         MeshFactory meshFactory{};
-        auto mesh = meshFactory.CreateMesh(modelPath, FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION | MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
+        auto mesh = meshFactory.CreateMesh(modelPath, prev::common::FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION | MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
         auto model = CreateModel(*allocator, std::move(mesh));
 
         AnimationFactory animationFactory{};
@@ -897,7 +897,7 @@ public:
 
         m_transformComponent->SetPosition(m_terrainComponent->GetPosition());
 
-        m_terrainManagerComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
+        m_terrainManagerComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
         if (auto manager = m_terrainManagerComponent.lock()) {
             manager->AddTerrainComponent(m_terrainComponent);
         }
@@ -972,7 +972,7 @@ public:
 
         float minHeight = std::numeric_limits<float>::max();
         float maxHeight = std::numeric_limits<float>::min();
-        auto terrains = NodeComponentHelper::FindAll<SceneNodeFlags, ITerrainComponenet>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT });
+        auto terrains = NodeComponentHelper::FindAll<SceneNodeFlags, ITerrainComponenet>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT });
         for (const auto& terrain : terrains) {
             auto heightInfo = terrain->GetHeightMapInfo();
             if (minHeight > heightInfo->minHeight) {
@@ -1076,7 +1076,7 @@ public:
 
     void Update(float deltaTime) override
     {
-        const auto terrain = NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
+        const auto terrain = NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
 
         if ((m_shouldGoForward || m_shouldGoBackward || m_shouldGoLeft || m_shouldGoRight) && !m_isInTheAir) {
             m_animatonRenderComponent->GetAnimation()->SetState(AnimationState::RUNNING);
@@ -1680,7 +1680,7 @@ public:
 
     void Update(float deltaTime) override
     {
-        auto cameraComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>(TagSet{ TAG_MAIN_CAMERA });
+        auto cameraComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>(prev::common::TagSet{ TAG_MAIN_CAMERA });
 
         const float ROTATION_ANGLE = ROTATION_SPEED_DEGS_PER_SEC * deltaTime;
 
@@ -1852,7 +1852,7 @@ private:
 class Water : public SceneNode<SceneNodeFlags> {
 public:
     Water(const int x, const int z)
-        : SceneNode(FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT | SceneNodeFlags::BOUNDING_VOLUME_COMPONENT })
+        : SceneNode(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT | SceneNodeFlags::BOUNDING_VOLUME_COMPONENT })
         , m_x(x)
         , m_z(z)
     {
@@ -2095,7 +2095,7 @@ public:
 
     void Update(float deltaTime) override
     {
-        const auto terrain = NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
+        const auto terrain = NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
 
         auto currentPosition = m_transformComponent->GetPosition();
 
@@ -2540,7 +2540,7 @@ public:
             }
 
             if (intersectionType == IntersectionType::TERRAIN) {
-                auto terrainManagerNode = GraphTraversal<SceneNodeFlags>::Instance().FindOneWithFlags(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT | SceneNodeFlags::SELECTABLE_COMPONENT }, LogicOperation::AND);
+                auto terrainManagerNode = GraphTraversal<SceneNodeFlags>::Instance().FindOneWithFlags(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT | SceneNodeFlags::SELECTABLE_COMPONENT }, LogicOperation::AND);
                 auto selectableComponent = ComponentRepository<ISelectableComponent>::Instance().Get(terrainManagerNode->GetId());
                 selectableComponent->SetSelected(true);
                 selectableComponent->SetPosition(currentTerrainIntersectionPoint.GetValue());
@@ -2567,9 +2567,9 @@ public:
 
 private:
     // Terrain
-    Nullable<glm::vec3> FindTheClosestTerrainIntersection(const Ray& ray) const
+    prev::common::pattern::Nullable<glm::vec3> FindTheClosestTerrainIntersection(const Ray& ray) const
     {
-        Nullable<glm::vec3> currentTerrainIntersectionPoint{};
+        prev::common::pattern::Nullable<glm::vec3> currentTerrainIntersectionPoint{};
         if (IntersectsInRange(0.0f, ray.length, ray)) {
             currentTerrainIntersectionPoint = BinarySearch(0, 0, ray.length, ray);
         } else {
@@ -2578,7 +2578,7 @@ private:
         return currentTerrainIntersectionPoint;
     }
 
-    Nullable<glm::vec3> GetFirstPositionUnderAlongRay(const Ray& ray) const
+    prev::common::pattern::Nullable<glm::vec3> GetFirstPositionUnderAlongRay(const Ray& ray) const
     {
         const auto segmentPositions = GenerateSegmentPositions(ray);
         for (const auto& segmentPosition : segmentPositions) {
@@ -2589,11 +2589,11 @@ private:
                     continue;
                 }
                 if (segmentPosition.y < currentTerrainHeight) {
-                    return Nullable<glm::vec3>({ segmentPosition.x, currentTerrainHeight, segmentPosition.z });
+                    return prev::common::pattern::Nullable<glm::vec3>({ segmentPosition.x, currentTerrainHeight, segmentPosition.z });
                 }
             }
         }
-        return Nullable<glm::vec3>();
+        return prev::common::pattern::Nullable<glm::vec3>();
     }
 
     std::vector<glm::vec3> GenerateSegmentPositions(const Ray& ray) const
@@ -2612,16 +2612,16 @@ private:
         return result;
     }
 
-    Nullable<glm::vec3> BinarySearch(const uint32_t count, const float start, const float finish, const Ray& ray) const
+    prev::common::pattern::Nullable<glm::vec3> BinarySearch(const uint32_t count, const float start, const float finish, const Ray& ray) const
     {
         const float half = start + ((finish - start) / 2.0f);
         if (count >= RECURSION_COUNT) {
             const glm::vec3 endPoint = ray.GetPointAtDistances(half);
             const auto terrain = GetTerrain(endPoint);
             if (terrain != nullptr) {
-                return Nullable<glm::vec3>(endPoint);
+                return prev::common::pattern::Nullable<glm::vec3>(endPoint);
             } else {
-                return Nullable<glm::vec3>();
+                return prev::common::pattern::Nullable<glm::vec3>();
             }
         }
 
@@ -2667,29 +2667,29 @@ private:
 
     std::shared_ptr<ITerrainComponenet> GetTerrain(const glm::vec3& position) const
     {
-        const auto terrainManager = NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
+        const auto terrainManager = NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
         return terrainManager->GetTerrainAt(position);
     }
 
     // Objects
     std::vector<std::shared_ptr<ISceneNode<SceneNodeFlags> > > GetSelectableNodes() const
     {
-        return GraphTraversal<SceneNodeFlags>::Instance().FindAllWithFlags(FlagSet<SceneNodeFlags>{ SceneNodeFlags::SELECTABLE_COMPONENT });
+        return GraphTraversal<SceneNodeFlags>::Instance().FindAllWithFlags(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SELECTABLE_COMPONENT });
     }
 
-    Nullable<std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags> >, RayCastResult> > FindTheClosestIntersectingNode(const Ray& ray) const
+    prev::common::pattern::Nullable<std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags> >, RayCastResult> > FindTheClosestIntersectingNode(const Ray& ray) const
     {
-        Nullable<std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags> >, RayCastResult> > theClosestNode;
+        prev::common::pattern::Nullable<std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags> >, RayCastResult> > theClosestNode;
         float minDistance = std::numeric_limits<float>::max();
 
-        auto selectableNodes = GraphTraversal<SceneNodeFlags>::Instance().FindAllWithFlags(FlagSet<SceneNodeFlags>{ SceneNodeFlags::SELECTABLE_COMPONENT | SceneNodeFlags::BOUNDING_VOLUME_COMPONENT }, LogicOperation::AND);
+        auto selectableNodes = GraphTraversal<SceneNodeFlags>::Instance().FindAllWithFlags(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SELECTABLE_COMPONENT | SceneNodeFlags::BOUNDING_VOLUME_COMPONENT }, LogicOperation::AND);
         for (auto selectable : selectableNodes) {
             const auto boundingVolume = ComponentRepository<IBoundingVolumeComponent>::Instance().Get(selectable->GetId());
 
             RayCastResult rayCastResult{};
             if (boundingVolume->Intersects(ray, rayCastResult)) {
                 if (rayCastResult.t < minDistance) {
-                    theClosestNode = Nullable<std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags> >, RayCastResult> >({ selectable, rayCastResult });
+                    theClosestNode = prev::common::pattern::Nullable<std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags> >, RayCastResult> >({ selectable, rayCastResult });
                     minDistance = rayCastResult.t;
                 }
             }
@@ -2700,13 +2700,13 @@ private:
 public:
     void operator()(const RayEvent& rayEvt)
     {
-        m_currentRay = Nullable<Ray>{ rayEvt.ray };
+        m_currentRay = prev::common::pattern::Nullable<Ray>{ rayEvt.ray };
     }
 
 private:
     const uint32_t RECURSION_COUNT = 200;
 
-    Nullable<Ray> m_currentRay; // make it nullable???
+    prev::common::pattern::Nullable<Ray> m_currentRay; // make it nullable???
 
     EventHandler<RayCastObserverNode, RayEvent> m_rayHandler{ *this };
 };
@@ -2732,7 +2732,7 @@ public:
     void Update(float deltaTime) override
     {
         const auto cameraComponent = NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
-        const auto terrain = NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
+        const auto terrain = NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
 
         float height = 0.0f;
         terrain->GetHeightAt(m_initialPosition, height);

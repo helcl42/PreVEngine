@@ -4,7 +4,7 @@
 #include <set>
 #include <string>
 
-namespace prev {
+namespace prev::common {
 class TagSet {
 public:
     TagSet() = default;
@@ -33,6 +33,6 @@ private:
     std::set<std::string> m_tags;
 };
 
-} // namespace prev
+} // namespace prev::common
 
 #endif

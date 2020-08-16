@@ -38,13 +38,13 @@ public:
 
     virtual uint64_t GetId() const = 0;
 
-    virtual void SetFlags(const FlagSet<NodeFlagsType>& flags) = 0;
+    virtual void SetFlags(const prev::common::FlagSet<NodeFlagsType>& flags) = 0;
 
-    virtual const FlagSet<NodeFlagsType>& GetFlags() const = 0;
+    virtual const prev::common::FlagSet<NodeFlagsType>& GetFlags() const = 0;
 
-    virtual void SetTags(const TagSet& tags) = 0;
+    virtual void SetTags(const prev::common::TagSet& tags) = 0;
 
-    virtual const TagSet& GetTags() const = 0;
+    virtual const prev::common::TagSet& GetTags() const = 0;
 
 public:
     virtual ~ISceneNode() = default;

@@ -4,7 +4,7 @@
 
 #include <cstring>
 
-namespace prev {
+namespace prev::common {
 bool PickList::IsPicked(const char* name) const
 {
     for (auto index : m_pickListIndices) {
@@ -127,4 +127,4 @@ void PickList::Print() const
         }
     }
 }
-} // namespace prev
+} // namespace prev::common

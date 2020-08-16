@@ -11,12 +11,12 @@ enum class LogicOperation {
 };
 
 template <typename NodeFlagsType>
-class GraphTraversal final : public Singleton<GraphTraversal<NodeFlagsType> > {
+class GraphTraversal final : public prev::common::pattern::Singleton<GraphTraversal<NodeFlagsType> > {
 public:
     ~GraphTraversal() = default;
 
 private:
-    bool HasFlags(const std::shared_ptr<ISceneNode<NodeFlagsType> >& node, const FlagSet<NodeFlagsType>& flagsToCheck, const LogicOperation operation) const
+    bool HasFlags(const std::shared_ptr<ISceneNode<NodeFlagsType> >& node, const prev::common::FlagSet<NodeFlagsType>& flagsToCheck, const LogicOperation operation) const
     {
         if (operation == LogicOperation::AND) {
             return node->GetFlags().HasAll(flagsToCheck);
@@ -26,7 +26,7 @@ private:
         return false;
     }
 
-    bool HasTags(const std::shared_ptr<ISceneNode<NodeFlagsType> >& node, const TagSet& tagsToCheck, const LogicOperation operation) const
+    bool HasTags(const std::shared_ptr<ISceneNode<NodeFlagsType> >& node, const prev::common::TagSet& tagsToCheck, const LogicOperation operation) const
     {
         if (operation == LogicOperation::AND) {
             return node->GetTags().HasAll(tagsToCheck);
@@ -52,7 +52,7 @@ private:
         return nullptr;
     }
 
-    std::shared_ptr<ISceneNode<NodeFlagsType> > FindOneWithFlagsInternal(const std::shared_ptr<ISceneNode<NodeFlagsType> >& parent, const FlagSet<NodeFlagsType>& flags, const LogicOperation operation) const
+    std::shared_ptr<ISceneNode<NodeFlagsType> > FindOneWithFlagsInternal(const std::shared_ptr<ISceneNode<NodeFlagsType> >& parent, const prev::common::FlagSet<NodeFlagsType>& flags, const LogicOperation operation) const
     {
         if (HasFlags(parent, flags, operation)) {
             return parent;
@@ -69,7 +69,7 @@ private:
         return nullptr;
     }
 
-    void FindAllWithFlagsInternal(const std::shared_ptr<ISceneNode<NodeFlagsType> >& parent, const FlagSet<NodeFlagsType>& flags, const LogicOperation operation, std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > >& result) const
+    void FindAllWithFlagsInternal(const std::shared_ptr<ISceneNode<NodeFlagsType> >& parent, const prev::common::FlagSet<NodeFlagsType>& flags, const LogicOperation operation, std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > >& result) const
     {
         if (HasFlags(parent, flags, operation)) {
             result.push_back(parent);
@@ -81,7 +81,7 @@ private:
         }
     }
 
-    std::shared_ptr<ISceneNode<NodeFlagsType> > FindOneWithTagsInternal(const std::shared_ptr<ISceneNode<NodeFlagsType> >& parent, const TagSet& tags, const LogicOperation operation) const
+    std::shared_ptr<ISceneNode<NodeFlagsType> > FindOneWithTagsInternal(const std::shared_ptr<ISceneNode<NodeFlagsType> >& parent, const prev::common::TagSet& tags, const LogicOperation operation) const
     {
         if (HasTags(parent, tags, operation)) {
             return parent;
@@ -98,7 +98,7 @@ private:
         return nullptr;
     }
 
-    void FindAllWithTagsInternal(const std::shared_ptr<ISceneNode<NodeFlagsType> >& parent, const TagSet& tags, const LogicOperation operation, std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > >& result) const
+    void FindAllWithTagsInternal(const std::shared_ptr<ISceneNode<NodeFlagsType> >& parent, const prev::common::TagSet& tags, const LogicOperation operation, std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > >& result) const
     {
         if (HasTags(parent, tags, operation)) {
             result.push_back(parent);
@@ -126,24 +126,24 @@ public:
         return FindByIdInternal(m_root, id);
     }
 
-    std::shared_ptr<ISceneNode<NodeFlagsType> > FindOneWithFlags(const FlagSet<NodeFlagsType>& flags, const LogicOperation operation = LogicOperation::OR) const
+    std::shared_ptr<ISceneNode<NodeFlagsType> > FindOneWithFlags(const prev::common::FlagSet<NodeFlagsType>& flags, const LogicOperation operation = LogicOperation::OR) const
     {
         return FindOneWithFlagsInternal(m_root, flags, operation);
     }
 
-    std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > > FindAllWithFlags(const FlagSet<NodeFlagsType>& flags, const LogicOperation operation = LogicOperation::OR) const
+    std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > > FindAllWithFlags(const prev::common::FlagSet<NodeFlagsType>& flags, const LogicOperation operation = LogicOperation::OR) const
     {
         std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > > result;
         FindAllWithFlagsInternal(m_root, flags, operation, result);
         return result;
     }
 
-    std::shared_ptr<ISceneNode<NodeFlagsType> > FindOneWithTags(const TagSet& tags, const LogicOperation operation = LogicOperation::OR) const
+    std::shared_ptr<ISceneNode<NodeFlagsType> > FindOneWithTags(const prev::common::TagSet& tags, const LogicOperation operation = LogicOperation::OR) const
     {
         return FindOneWithTagsInternal(m_root, tags, operation);
     }
 
-    std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > > FindAllWithTags(const TagSet& tags, const LogicOperation operation = LogicOperation::OR) const
+    std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > > FindAllWithTags(const prev::common::TagSet& tags, const LogicOperation operation = LogicOperation::OR) const
     {
         std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > > result;
         FindAllWithTagsInternal(m_root, tags, operation, result);
@@ -154,7 +154,7 @@ private:
     GraphTraversal() = default;
 
 private:
-    friend class Singleton<GraphTraversal<NodeFlagsType> >;
+    friend class prev::common::pattern::Singleton<GraphTraversal<NodeFlagsType> >;
 
 private:
     std::shared_ptr<ISceneNode<NodeFlagsType> > m_root;

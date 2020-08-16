@@ -54,9 +54,9 @@ private:
     EventHandler<KeyboardInputComponnet, TextEvent> m_textEventHandler{ *this };
 
 private:
-    Observer<IKeyboardActionListener> m_keyActionObservers;
+    prev::common::pattern::Observer<IKeyboardActionListener> m_keyActionObservers;
 
-    Observer<ITextListener> m_textObservers;
+    prev::common::pattern::Observer<ITextListener> m_textObservers;
 
 private:
     mutable std::mutex m_mutex;

@@ -1,7 +1,7 @@
 #ifndef __SINGLETON_H__
 #define __SINGLETON_H__
 
-namespace prev {
+namespace prev::common::pattern {
 template <typename ChildType>
 class Singleton {
 private:
@@ -29,6 +29,6 @@ public:
         return instance;
     }
 };
-} // namespace prev
+} // namespace prev::common::pattern
 
 #endif

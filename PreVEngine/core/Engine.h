@@ -32,9 +32,9 @@ struct EngineConfig {
 template <typename NodeFlagsType>
 class Engine;
 
-class DeviceProvider final : public Singleton<DeviceProvider> {
+class DeviceProvider final : public prev::common::pattern::Singleton<DeviceProvider> {
 private:
-    friend class Singleton<DeviceProvider>;
+    friend class prev::common::pattern::Singleton<DeviceProvider>;
 
     template <typename NodeFlagsType>
     friend class Engine;

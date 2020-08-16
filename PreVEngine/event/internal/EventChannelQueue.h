@@ -12,9 +12,9 @@
 namespace prev {
 namespace Internal {
     template <typename EventType>
-    class EventChannelQueue final : public Singleton<EventChannelQueue<EventType> >, public IEventChannelQueue {
+    class EventChannelQueue final : public prev::common::pattern::Singleton<EventChannelQueue<EventType> >, public IEventChannelQueue {
     private:
-        friend class Singleton<EventChannelQueue<EventType> >;
+        friend class prev::common::pattern::Singleton<EventChannelQueue<EventType> >;
 
     private:
         std::mutex m_mutex;
