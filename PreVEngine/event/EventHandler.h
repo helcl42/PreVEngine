@@ -6,9 +6,6 @@
 namespace prev::event {
 template <typename EventHandlerType, typename EventType>
 class EventHandler final {
-private:
-    EventHandlerType& m_handlerInstance;
-
 public:
     EventHandler(EventHandlerType& instance)
         : m_handlerInstance(instance)
@@ -16,7 +13,7 @@ public:
         EventChannel::Add<EventType>(m_handlerInstance);
     }
 
-    virtual ~EventHandler()
+    ~EventHandler()
     {
         EventChannel::Remove<EventType>(m_handlerInstance);
     }
@@ -29,6 +26,9 @@ public:
     EventHandler(EventHandler&& other) = default;
 
     EventHandler& operator=(EventHandler&& other) = default;
+
+private:
+    EventHandlerType& m_handlerInstance;
 };
 } // namespace prev::event
 

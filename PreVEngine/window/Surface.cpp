@@ -2,14 +2,6 @@
 #include "../core/instance/Validation.h"
 
 namespace prev::window {
-Surface::Surface()
-{
-}
-
-Surface::~Surface()
-{
-}
-
 Surface::operator VkSurfaceKHR() const // Use *this as a VkSurfaceKHR
 {
     return m_vkSurface;

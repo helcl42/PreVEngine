@@ -13,18 +13,6 @@ namespace prev::event::internal {
 template <typename EventType>
 class EventChannelQueue final : public prev::common::pattern::Singleton<EventChannelQueue<EventType> >, public IEventChannelQueue {
 private:
-    friend class prev::common::pattern::Singleton<EventChannelQueue<EventType> >;
-
-private:
-    std::mutex m_mutex;
-
-    std::vector<std::function<void(const EventType&)> > m_handlers;
-
-    std::vector<void*> m_originalPointers;
-
-    std::vector<EventType> m_unsedMessages;
-
-private:
     EventChannelQueue(EventChannelQueue&& other) = delete;
 
     EventChannelQueue& operator=(EventChannelQueue&& other) = delete;
@@ -118,6 +106,18 @@ private:
     {
         return [&handler](const EventType& message) { handler(message); };
     }
+
+private:
+    friend class prev::common::pattern::Singleton<EventChannelQueue<EventType> >;
+
+private:
+    std::mutex m_mutex;
+
+    std::vector<std::function<void(const EventType&)> > m_handlers;
+
+    std::vector<void*> m_originalPointers;
+
+    std::vector<EventType> m_unsedMessages;
 };
 } // namespace prev::event::internal
 

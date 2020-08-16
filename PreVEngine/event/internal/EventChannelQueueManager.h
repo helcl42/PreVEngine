@@ -10,14 +10,6 @@
 namespace prev::event::internal {
 class EventChannelQueueManager final : public prev::common::pattern::Singleton<EventChannelQueueManager> {
 private:
-    friend class prev::common::pattern::Singleton<EventChannelQueueManager>;
-
-private:
-    std::mutex m_mutex;
-
-    std::vector<IEventChannelQueue*> m_eventChannelQueues;
-
-private:
     EventChannelQueueManager(EventChannelQueueManager&& other) = delete;
 
     EventChannelQueueManager& operator=(EventChannelQueueManager&& other) = delete;
@@ -37,6 +29,14 @@ public:
     void Remove(IEventChannelQueue& queue);
 
     void BroadcastAll();
+
+private:
+    friend class prev::common::pattern::Singleton<EventChannelQueueManager>;
+
+private:
+    std::mutex m_mutex;
+
+    std::vector<IEventChannelQueue*> m_eventChannelQueues;
 };
 } // namespace prev::event::internal
 

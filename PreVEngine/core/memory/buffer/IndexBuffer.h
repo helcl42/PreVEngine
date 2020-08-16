@@ -16,7 +16,7 @@ public:
     VkIndexType GetIndexType() const;
 
 private:
-    VkIndexType m_indexType = VK_INDEX_TYPE_MAX_ENUM;
+    VkIndexType m_indexType{ VK_INDEX_TYPE_MAX_ENUM };
 };
 } // namespace prev::core::memory::buffer
 
