@@ -17,8 +17,6 @@
 #include <util/MathUtils.h>
 #include <util/VkUtils.h>
 
-using namespace prev;
-
 static const std::string TAG_LIGHT{ "Light" };
 static const std::string TAG_MAIN_LIGHT{ "MainLight" };
 static const std::string TAG_SHADOW{ "Shadow" };
