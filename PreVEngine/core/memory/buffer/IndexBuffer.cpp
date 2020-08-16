@@ -1,6 +1,6 @@
 #include "IndexBuffer.h"
 
-namespace prev {
+namespace prev::core::memory::buffer {
 void IBO::Data(const uint16_t* data, const uint32_t count)
 {
     Buffer::Data(data, count, sizeof(uint16_t), VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
@@ -17,4 +17,4 @@ VkIndexType IBO::GetIndexType() const
 {
     return m_indexType;
 }
-} // namespace prev
+} // namespace prev::core::memory::buffer

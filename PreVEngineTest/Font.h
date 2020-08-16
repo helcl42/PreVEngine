@@ -91,7 +91,7 @@ private:
 
     std::shared_ptr<Image> m_image;
 
-    std::shared_ptr<ImageBuffer> m_imageBuffer;
+    std::shared_ptr<prev::core::memory::image::ImageBuffer> m_imageBuffer;
 
 public:
     inline static const float LINE_HEIGHT = 0.03f;
@@ -120,7 +120,7 @@ public:
         return m_image;
     }
 
-    std::shared_ptr<ImageBuffer> GetImageBuffer() const
+    std::shared_ptr<prev::core::memory::image::IImageBuffer> GetImageBuffer() const
     {
         return m_imageBuffer;
     }
@@ -276,12 +276,12 @@ private:
         state.imageHeight = metaDataFile.GetValueAsInt("scaleH");
     }
 
-    void CreateImage(const std::string& textureFilePath, std::shared_ptr<Image>& image, std::shared_ptr<ImageBuffer>& imageBuffer) const
+    void CreateImage(const std::string& textureFilePath, std::shared_ptr<Image>& image, std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer) const
     {
         ImageFactory imageFactory;
         image = imageFactory.CreateImage(textureFilePath);
-        imageBuffer = std::make_unique<ImageBuffer>(*AllocatorProvider::Instance().GetAllocator());
-        imageBuffer->Create(ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
+        imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(*AllocatorProvider::Instance().GetAllocator());
+        imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
     }
 
     void ExtractCharactersData(MetaDataFile& metaDataFile, FontMetaDataState& state, std::map<int, Character>& characters) const
@@ -331,7 +331,7 @@ public:
         ExtractMeasureInfo(metaDataFile, state);
 
         std::shared_ptr<Image> image;
-        std::shared_ptr<ImageBuffer> imagwBuffer;
+        std::shared_ptr<prev::core::memory::image::ImageBuffer> imagwBuffer;
         CreateImage(textureFilePath, image, imagwBuffer);
 
         std::map<int, Character> characterMetaData{};
@@ -888,10 +888,10 @@ public:
         auto mesh = meshFactory.CreateTextMesh(text, m_fontMetaData);
 
         auto allocator = AllocatorProvider::Instance().GetAllocator();
-        auto vertexBuffer = std::make_shared<VBO>(*allocator);
+        auto vertexBuffer = std::make_shared<prev::core::memory::buffer::VBO>(*allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
 
-        auto indexBuffer = std::make_shared<IBO>(*allocator);
+        auto indexBuffer = std::make_shared<prev::core::memory::buffer::IBO>(*allocator);
         indexBuffer->Data(mesh->GetIndices().data(), (uint32_t)mesh->GetIndices().size());
 
         auto model = std::make_shared<Model>(std::move(mesh), vertexBuffer, indexBuffer);

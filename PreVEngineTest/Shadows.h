@@ -48,7 +48,7 @@ public:
 
     virtual VkExtent2D GetExtent() const = 0;
 
-    virtual std::shared_ptr<IImageBuffer> GetImageBuffer() const = 0;
+    virtual std::shared_ptr<prev::core::memory::image::IImageBuffer> GetImageBuffer() const = 0;
 
 public:
     virtual ~IShadowsComponent() = default;
@@ -67,14 +67,14 @@ public:
     static const inline float CASCADES_SPLIT_LAMBDA = 0.86f;
 
 private:
-    std::shared_ptr<Allocator> m_allocator;
+    std::shared_ptr<prev::core::memory::Allocator> m_allocator;
 
-    std::shared_ptr<Device> m_device;
+    std::shared_ptr<prev::core::device::Device> m_device;
 
 private:
     std::shared_ptr<RenderPass> m_renderPass;
 
-    std::shared_ptr<DepthImageBuffer> m_depthBuffer;
+    std::shared_ptr<prev::core::memory::image::DepthImageBuffer> m_depthBuffer;
 
     std::vector<ShadowsCascade> m_cascades;
 
@@ -86,7 +86,7 @@ public:
 private:
     void InitRenderPass()
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
 
         std::vector<VkSubpassDependency> dependencies{ 2 };
         dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -119,11 +119,11 @@ private:
 
     void InitCascades()
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
         auto allocator = AllocatorProvider::Instance().GetAllocator();
 
-        m_depthBuffer = std::make_shared<DepthImageBuffer>(*allocator);
-        m_depthBuffer->Create(ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, DEPTH_FORMAT, 0, false, false, VK_IMAGE_VIEW_TYPE_2D_ARRAY, CASCADES_COUNT });
+        m_depthBuffer = std::make_shared<prev::core::memory::image::DepthImageBuffer>(*allocator);
+        m_depthBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, DEPTH_FORMAT, 0, false, false, VK_IMAGE_VIEW_TYPE_2D_ARRAY, CASCADES_COUNT });
         m_depthBuffer->CreateSampler(1.0f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, false);
 
         m_cascades.resize(CASCADES_COUNT);
@@ -137,7 +137,7 @@ private:
 
     void ShutDownCascades()
     {
-        auto device = DeviceProvider::Instance().GetDevice();
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
 
         vkDeviceWaitIdle(*device);
 
@@ -269,7 +269,7 @@ public:
         return { SHADOW_MAP_DIMENSIONS, SHADOW_MAP_DIMENSIONS };
     }
 
-    std::shared_ptr<IImageBuffer> GetImageBuffer() const override
+    std::shared_ptr<prev::core::memory::image::IImageBuffer> GetImageBuffer() const override
     {
         return m_depthBuffer;
     }

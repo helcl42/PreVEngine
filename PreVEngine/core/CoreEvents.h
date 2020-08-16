@@ -3,7 +3,7 @@
 
 #include <inttypes.h>
 
-namespace prev {
+namespace prev::core {
 struct NewIterationEvent {
     float deltaTime;
 
@@ -11,6 +11,6 @@ struct NewIterationEvent {
 
     uint32_t windowHeight;
 };
-} // namespace prev
+} // namespace prev::core
 
 #endif // !__CORE_EVENTS_H__

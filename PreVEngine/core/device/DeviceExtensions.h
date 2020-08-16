@@ -4,7 +4,7 @@
 #include "../../common/PickList.h"
 #include "../instance/Validation.h"
 
-namespace prev {
+namespace prev::core::device {
 class DeviceExtensions final : public prev::common::PickList {
 public:
     DeviceExtensions() = default;
@@ -26,6 +26,6 @@ public:
 private:
     std::vector<VkExtensionProperties> m_itemList;
 };
-} // namespace prev
+} // namespace prev::core::device
 
 #endif

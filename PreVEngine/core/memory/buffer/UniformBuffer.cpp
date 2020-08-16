@@ -1,6 +1,6 @@
 #include "UniformBuffer.h"
 
-namespace prev {
+namespace prev::core::memory::buffer {
 UBO::UBO(VkBuffer buffer, void* data, const uint32_t offset, const uint32_t range)
     : m_buffer(buffer)
     , m_mapped(data)
@@ -28,4 +28,4 @@ UBO::operator VkBuffer() const
 {
     return m_buffer;
 }
-} // namespace prev
+} // namespace prev::core::memory::buffer

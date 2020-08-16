@@ -12,7 +12,7 @@
 #define VMA_IMPLEMENTATION
 #include "../../external/vk_mem_alloc.h"
 
-namespace prev {
+namespace prev::core::memory {
 Allocator::Allocator(const Queue& q, const VkDeviceSize blockSize)
 {
     m_gpu = q.gpu;
@@ -271,7 +271,7 @@ void Allocator::GenerateMipmaps(const VkImage image, VkFormat imageFormat, const
         LOGE("Texture image format does not support linear blitting!");
         exit(0);
     }
-    
+
     BeginCommandBuffer();
 
     for (uint32_t layerIndex = 0; layerIndex < layersCount; layerIndex++) {
@@ -446,4 +446,4 @@ VkQueue Allocator::GetQueue() const
 {
     return m_queue;
 }
-} // namespace prev
+} // namespace prev::core::memory

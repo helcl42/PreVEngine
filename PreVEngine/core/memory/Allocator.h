@@ -1,12 +1,12 @@
 #ifndef __ALLOCATOR_H__
 #define __ALLOCATOR_H__
 
-#include <external/vk_mem_alloc.h>
 #include "../Queue.h"
+#include <external/vk_mem_alloc.h>
 
 #include <vector>
 
-namespace prev {
+namespace prev::core::memory {
 class Allocator final {
 public:
     Allocator(const Queue& queue, const VkDeviceSize blockSize = 256);
@@ -59,6 +59,6 @@ private:
 
     VkCommandBuffer m_commandBuffer;
 };
-} // namespace prev
+} // namespace prev::core::memory
 
 #endif

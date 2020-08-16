@@ -366,19 +366,19 @@ class IMaterial {
 public:
     virtual std::shared_ptr<Image> GetImage() const = 0;
 
-    virtual std::shared_ptr<ImageBuffer> GetImageBuffer() const = 0;
+    virtual std::shared_ptr<prev::core::memory::image::ImageBuffer> GetImageBuffer() const = 0;
 
     virtual bool HasImage() const = 0;
 
     virtual std::shared_ptr<Image> GetNormalImage() const = 0;
 
-    virtual std::shared_ptr<ImageBuffer> GetNormalmageBuffer() const = 0;
+    virtual std::shared_ptr<prev::core::memory::image::ImageBuffer> GetNormalmageBuffer() const = 0;
 
     virtual bool HasNormalImage() const = 0;
 
     virtual std::shared_ptr<Image> GetHeightImage() const = 0;
 
-    virtual std::shared_ptr<ImageBuffer> GetHeightImageBuffer() const = 0;
+    virtual std::shared_ptr<prev::core::memory::image::ImageBuffer> GetHeightImageBuffer() const = 0;
 
     virtual bool HasHeightImage() const = 0;
 
@@ -416,9 +416,9 @@ class IModel {
 public:
     virtual std::shared_ptr<IMesh> GetMesh() const = 0;
 
-    virtual std::shared_ptr<VBO> GetVertexBuffer() const = 0;
+    virtual std::shared_ptr<prev::core::memory::buffer::VBO> GetVertexBuffer() const = 0;
 
-    virtual std::shared_ptr<IBO> GetIndexBuffer() const = 0;
+    virtual std::shared_ptr<prev::core::memory::buffer::IBO> GetIndexBuffer() const = 0;
 
 public:
     virtual ~IModel() = default;
@@ -462,15 +462,15 @@ private:
 
     std::shared_ptr<Image> m_image{ nullptr };
 
-    std::shared_ptr<ImageBuffer> m_imageBuffer{ nullptr };
+    std::shared_ptr<prev::core::memory::image::ImageBuffer> m_imageBuffer{ nullptr };
 
     std::shared_ptr<Image> m_normalImage{ nullptr };
 
-    std::shared_ptr<ImageBuffer> m_normalImageBuffer{ nullptr };
+    std::shared_ptr<prev::core::memory::image::ImageBuffer> m_normalImageBuffer{ nullptr };
 
     std::shared_ptr<Image> m_heightmage{ nullptr };
 
-    std::shared_ptr<ImageBuffer> m_heightImageBuffer{ nullptr };
+    std::shared_ptr<prev::core::memory::image::ImageBuffer> m_heightImageBuffer{ nullptr };
 
     float m_shineDamper{ 10.0f };
 
@@ -494,7 +494,7 @@ public:
     {
     }
 
-    Material(const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const float shineDamper, const float reflectivity)
+    Material(const std::shared_ptr<Image>& image, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const float shineDamper, const float reflectivity)
         : m_image(image)
         , m_imageBuffer(imageBuffer)
         , m_shineDamper(shineDamper)
@@ -502,7 +502,7 @@ public:
     {
     }
 
-    Material(const glm::vec4 color, const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const float shineDamper, const float reflectivity)
+    Material(const glm::vec4 color, const std::shared_ptr<Image>& image, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const float shineDamper, const float reflectivity)
         : m_color(color)
         , m_image(image)
         , m_imageBuffer(imageBuffer)
@@ -511,7 +511,7 @@ public:
     {
     }
 
-    Material(const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<ImageBuffer>& normalImageBuffer, const float shineDamper, const float reflectivity)
+    Material(const std::shared_ptr<Image>& image, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& normalImageBuffer, const float shineDamper, const float reflectivity)
         : m_image(image)
         , m_imageBuffer(imageBuffer)
         , m_normalImage(normalImage)
@@ -521,7 +521,7 @@ public:
     {
     }
 
-    Material(const glm::vec4 color, const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<ImageBuffer>& normalImageBuffer, const float shineDamper, const float reflectivity)
+    Material(const glm::vec4 color, const std::shared_ptr<Image>& image, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& normalImageBuffer, const float shineDamper, const float reflectivity)
         : m_color(color)
         , m_image(image)
         , m_imageBuffer(imageBuffer)
@@ -532,7 +532,7 @@ public:
     {
     }
 
-    Material(const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<ImageBuffer>& normalImageBuffer, const std::shared_ptr<Image>& heightImage, const std::shared_ptr<ImageBuffer>& heightImageBuffer, const float shineDamper, const float reflectivity)
+    Material(const std::shared_ptr<Image>& image, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& normalImageBuffer, const std::shared_ptr<Image>& heightImage, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& heightImageBuffer, const float shineDamper, const float reflectivity)
         : m_image(image)
         , m_imageBuffer(imageBuffer)
         , m_normalImage(normalImage)
@@ -544,7 +544,7 @@ public:
     {
     }
 
-    Material(const glm::vec4 color, const std::shared_ptr<Image>& image, const std::shared_ptr<ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<ImageBuffer>& normalImageBuffer, const std::shared_ptr<Image>& heightImage, const std::shared_ptr<ImageBuffer>& heightImageBuffer, const float shineDamper, const float reflectivity)
+    Material(const glm::vec4 color, const std::shared_ptr<Image>& image, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const std::shared_ptr<Image>& normalImage, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& normalImageBuffer, const std::shared_ptr<Image>& heightImage, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& heightImageBuffer, const float shineDamper, const float reflectivity)
         : m_color(color)
         , m_image(image)
         , m_imageBuffer(imageBuffer)
@@ -565,7 +565,7 @@ public:
         return m_image;
     }
 
-    std::shared_ptr<ImageBuffer> GetImageBuffer() const override
+    std::shared_ptr<prev::core::memory::image::ImageBuffer> GetImageBuffer() const override
     {
         return m_imageBuffer;
     }
@@ -585,7 +585,7 @@ public:
         return m_normalImage;
     }
 
-    std::shared_ptr<ImageBuffer> GetNormalmageBuffer() const override
+    std::shared_ptr<prev::core::memory::image::ImageBuffer> GetNormalmageBuffer() const override
     {
         return m_normalImageBuffer;
     }
@@ -600,7 +600,7 @@ public:
         return m_heightmage;
     }
 
-    std::shared_ptr<ImageBuffer> GetHeightImageBuffer() const override
+    std::shared_ptr<prev::core::memory::image::ImageBuffer> GetHeightImageBuffer() const override
     {
         return m_heightImageBuffer;
     }
@@ -675,12 +675,12 @@ class Model : public IModel {
 private:
     std::shared_ptr<IMesh> m_mesh;
 
-    std::shared_ptr<VBO> m_vbo;
+    std::shared_ptr<prev::core::memory::buffer::VBO> m_vbo;
 
-    std::shared_ptr<IBO> m_ibo;
+    std::shared_ptr<prev::core::memory::buffer::IBO> m_ibo;
 
 public:
-    Model(const std::shared_ptr<IMesh>& mesh, const std::shared_ptr<VBO>& vbo, const std::shared_ptr<IBO>& ibo)
+    Model(const std::shared_ptr<IMesh>& mesh, const std::shared_ptr<prev::core::memory::buffer::VBO>& vbo, const std::shared_ptr<prev::core::memory::buffer::IBO>& ibo)
         : m_mesh(mesh)
         , m_vbo(vbo)
         , m_ibo(ibo)
@@ -695,12 +695,12 @@ public:
         return m_mesh;
     }
 
-    std::shared_ptr<VBO> GetVertexBuffer() const override
+    std::shared_ptr<prev::core::memory::buffer::VBO> GetVertexBuffer() const override
     {
         return m_vbo;
     }
 
-    std::shared_ptr<IBO> GetIndexBuffer() const override
+    std::shared_ptr<prev::core::memory::buffer::IBO> GetIndexBuffer() const override
     {
         return m_ibo;
     }

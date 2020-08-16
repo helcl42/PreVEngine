@@ -28,7 +28,7 @@ struct SwapchainBuffer {
 
 class Swapchain {
 public:
-    Swapchain(const Queue& presentQueue, const Queue& graphicsQueue, RenderPass& renderPass, Allocator& allocator);
+    Swapchain(const prev::core::Queue& presentQueue, const prev::core::Queue& graphicsQueue, RenderPass& renderPass, prev::core::memory::Allocator& allocator);
 
     virtual ~Swapchain();
 
@@ -47,9 +47,9 @@ public:
 
     void Print() const;
 
-    const Queue& GetPresentQueue() const;
+    const prev::core::Queue& GetPresentQueue() const;
 
-    const Queue& GetGraphicsQueue() const;
+    const prev::core::Queue& GetGraphicsQueue() const;
 
 public:
     const VkExtent2D& GetExtent() const;
@@ -72,13 +72,13 @@ private:
     virtual std::vector<VkImage> GetSwapchainImages() const;
 
 private:
-    const Queue& m_presentQueue;
+    const prev::core::Queue& m_presentQueue;
 
-    const Queue& m_graphicsQueue;
+    const prev::core::Queue& m_graphicsQueue;
 
     RenderPass& m_renderPass;
 
-    Allocator& m_allocator;
+    prev::core::memory::Allocator& m_allocator;
 
     VkPhysicalDevice m_gpu;
 
@@ -86,7 +86,7 @@ private:
 
     VkSurfaceKHR m_surface;
 
-    DepthImageBuffer m_depthBuffer;
+    prev::core::memory::image::DepthImageBuffer m_depthBuffer;
 
     VkSwapchainKHR m_swapchain;
 

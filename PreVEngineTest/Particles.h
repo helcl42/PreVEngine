@@ -524,21 +524,21 @@ private:
         return image;
     }
 
-    std::shared_ptr<IMaterial> CreateMaterial(Allocator& allocator, const std::string& texturePath) const
+    std::shared_ptr<IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath) const
     {
         auto image = CreateImage(texturePath);
-        auto imageBuffer = std::make_unique<ImageBuffer>(allocator);
-        imageBuffer->Create(ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER, (uint8_t*)image->GetBuffer() });
+        auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
+        imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER, (uint8_t*)image->GetBuffer() });
 
         return std::make_shared<Material>(std::move(image), std::move(imageBuffer), 0.0f, 0.0f);
     }
 
-    std::shared_ptr<IModel> CreateModel(Allocator& allocator) const
+    std::shared_ptr<IModel> CreateModel(prev::core::memory::Allocator& allocator) const
     {
         auto mesh = std::make_unique<QuadMesh>();
-        auto vertexBuffer = std::make_unique<VBO>(allocator);
+        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VBO>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), static_cast<uint32_t>(mesh->GetVertices().size()), mesh->GetVertexLayout().GetStride());
-        auto indexBuffer = std::make_unique<IBO>(allocator);
+        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IBO>(allocator);
         indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
         return std::make_shared<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
     }

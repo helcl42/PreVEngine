@@ -1,6 +1,6 @@
 #include "Extensions.h"
 
-namespace prev {
+namespace prev::core::instance {
 Extensions::Extensions(const char* layerName)
 {
     uint32_t count = 0;

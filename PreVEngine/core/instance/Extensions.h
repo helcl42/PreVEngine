@@ -4,7 +4,7 @@
 #include "../../common/PickList.h"
 #include "Validation.h"
 
-namespace prev {
+namespace prev::core::instance {
 class Extensions final : public prev::common::PickList {
 public:
     Extensions(const char* layerName = nullptr);
@@ -19,6 +19,6 @@ public:
 private:
     std::vector<VkExtensionProperties> m_itemList;
 };
-} // namespace prev
+} // namespace prev::core::instance
 
 #endif

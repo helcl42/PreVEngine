@@ -1,6 +1,6 @@
 #include "Layers.h"
 
-namespace prev {
+namespace prev::core::instance {
 Layers::Layers()
 {
     uint32_t count = 0;
@@ -24,4 +24,4 @@ std::string Layers::GetName() const
 {
     return "Layers";
 }
-} // namespace prev
+} // namespace prev::core::instance

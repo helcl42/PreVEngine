@@ -2,11 +2,11 @@
 #define __ENGINE_H__
 
 #include "../common/pattern/Singleton.h"
-#include "../scene/Scene.h"
-#include "../window/Window.h"
-#include "../util/Utils.h"
 #include "../core/device/PhysicalDevices.h"
 #include "../core/instance/Instance.h"
+#include "../scene/Scene.h"
+#include "../util/Utils.h"
+#include "../window/Window.h"
 
 #include "CoreEvents.h"
 #include "device/Device.h"
@@ -14,7 +14,7 @@
 #include <memory>
 #include <string>
 
-namespace prev {
+namespace prev::core {
 struct EngineConfig {
     bool validation{ true };
 
@@ -40,7 +40,7 @@ private:
     friend class Engine;
 
 private:
-    std::shared_ptr<Device> m_device;
+    std::shared_ptr<prev::core::device::Device> m_device;
 
 private:
     DeviceProvider() = default;
@@ -49,20 +49,20 @@ public:
     ~DeviceProvider() = default;
 
 private:
-    void SetDevice(const std::shared_ptr<Device>& device)
+    void SetDevice(const std::shared_ptr<prev::core::device::Device>& device)
     {
         m_device = device;
     }
 
 public:
-    std::shared_ptr<Device> GetDevice() const
+    std::shared_ptr<prev::core::device::Device> GetDevice() const
     {
         return m_device;
     }
 };
 
 template <typename NodeFlagsType>
-class Engine {
+class Engine final {
 private:
     EventHandler<Engine, WindowChangeEvent> m_windowChangedHandler{ *this };
 
@@ -73,11 +73,11 @@ private:
 
     std::unique_ptr<FPSService> m_fpsService;
 
-    std::unique_ptr<Instance> m_instance;
+    std::unique_ptr<prev::core::instance::Instance> m_instance;
 
     std::unique_ptr<IWindow> m_window;
 
-    std::shared_ptr<Device> m_device;
+    std::shared_ptr<prev::core::device::Device> m_device;
 
     std::shared_ptr<IScene<NodeFlagsType> > m_scene;
 
@@ -89,7 +89,7 @@ public:
     {
     }
 
-    virtual ~Engine() = default;
+    ~Engine() = default;
 
 private:
     void InitTiming()
@@ -100,7 +100,7 @@ private:
 
     void InitInstance()
     {
-        m_instance = std::make_unique<Instance>(m_config->validation);
+        m_instance = std::make_unique<prev::core::instance::Instance>(m_config->validation);
     }
 
     void InitWindow()
@@ -120,15 +120,15 @@ private:
 
     void InitDevice()
     {
-        auto physicalDevices = std::make_shared<PhysicalDevices>(*m_instance);
+        auto physicalDevices = std::make_shared<prev::core::device::PhysicalDevices>(*m_instance);
         physicalDevices->Print();
 
-        PhysicalDevice* physicalDevice = physicalDevices->FindPresentable(m_surface);
+        auto physicalDevice = physicalDevices->FindPresentable(m_surface);
         if (!physicalDevice) {
             throw std::runtime_error("No suitable GPU found?!");
         }
 
-        m_device = std::make_shared<Device>(*physicalDevice);
+        m_device = std::make_shared<prev::core::device::Device>(*physicalDevice);
         m_device->Print();
     }
 
@@ -203,6 +203,6 @@ public:
         EventChannel::Broadcast(SurfaceChanged{ m_surface });
     }
 };
-} // namespace prev
+} // namespace prev::core
 
 #endif // !__ENGINE_H__

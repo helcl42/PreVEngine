@@ -3,7 +3,7 @@
 
 #include "AbstractImageBuffer.h"
 
-namespace prev {
+namespace prev::core::memory::image {
 class ImageBuffer : public AbstractImageBuffer {
 public:
     ImageBuffer(Allocator& allocator);
@@ -15,6 +15,6 @@ public:
 
     void Resize(const VkExtent3D& extent) override;
 };
-} // namespace prev
+} // namespace prev::core::memory::image
 
 #endif

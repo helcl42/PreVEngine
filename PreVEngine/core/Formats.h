@@ -5,7 +5,7 @@
 
 #include "instance/Validation.h"
 
-namespace prev {
+namespace prev::core {
 struct FormatInfo {
     uint32_t size;
 
@@ -239,6 +239,6 @@ static uint32_t FormatChannels(VkFormat format)
     }
     return 0;
 }
-} // namespace prev
+} // namespace prev::core
 
 #endif

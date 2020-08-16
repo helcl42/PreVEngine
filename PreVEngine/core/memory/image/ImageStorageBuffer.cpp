@@ -2,7 +2,7 @@
 #include "../../../util/MathUtils.h"
 #include "../../instance/Validation.h"
 
-namespace prev {
+namespace prev::core::memory::image {
 ImageStorageBuffer::ImageStorageBuffer(Allocator& allocator)
     : AbstractImageBuffer(allocator)
 {
@@ -33,4 +33,4 @@ void ImageStorageBuffer::Resize(const VkExtent3D& extent)
 {
     LOGW("ImageStorageBuffer can not be resized - it has fixed size");
 }
-} // namespace prev
+} // namespace prev::core::memory::image
