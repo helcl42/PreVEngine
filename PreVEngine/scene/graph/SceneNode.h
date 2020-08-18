@@ -41,7 +41,7 @@ public:
         }
     }
 
-    virtual void Render(RenderContext& renderContext) override
+    virtual void Render(prev::render::RenderContext& renderContext) override
     {
         // TODO remove ???
     }
