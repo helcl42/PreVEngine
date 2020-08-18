@@ -103,7 +103,7 @@ public:
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PreRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         const VkRect2D scissor{ { 0, 0 }, shadowsRenderContext.extent };
         const VkViewport viewport{ 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
@@ -113,11 +113,11 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
@@ -161,11 +161,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PostRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -227,7 +227,7 @@ public:
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PreRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         const VkRect2D scissor{ { 0, 0 }, shadowsRenderContext.extent };
         const VkViewport viewport{ 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
@@ -237,11 +237,11 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TRANSFORM_COMPONENT }) && node->GetFlags().HasAny(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::RENDER_NORMAL_MAPPED_COMPONENT | SceneNodeFlags::RENDER_PARALLAX_MAPPED_COMPONENT | SceneNodeFlags::RENDER_CONE_STEP_MAPPED_COMPONENT })) {
             bool visible = true;
@@ -285,11 +285,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PostRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -351,11 +351,11 @@ public:
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PreRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         const VkRect2D scissor{ { 0, 0 }, shadowsRenderContext.extent };
         const VkViewport viewport{ 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
@@ -365,7 +365,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
@@ -403,11 +403,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PostRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -469,11 +469,11 @@ public:
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PreRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         const VkRect2D scissor{ { 0, 0 }, shadowsRenderContext.extent };
         const VkViewport viewport{ 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
@@ -483,7 +483,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TRANSFORM_COMPONENT }) && node->GetFlags().HasAny(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT })) {
             bool visible = true;
@@ -521,11 +521,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PostRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -588,11 +588,11 @@ public:
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PreRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         const VkRect2D scissor{ { 0, 0 }, shadowsRenderContext.extent };
         const VkViewport viewport{ 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
@@ -602,7 +602,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::ANIMATION_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
@@ -650,11 +650,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PostRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -717,11 +717,11 @@ public:
         m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PreRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
         const VkRect2D scissor{ { 0, 0 }, shadowsRenderContext.extent };
         const VkViewport viewport{ 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
@@ -731,7 +731,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderUserData) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TRANSFORM_COMPONENT }) && node->GetFlags().HasAny(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::ANIMATION_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::ANIMATION_CONE_STEP_MAPPED_RENDER_COMPONENT })) {
             bool visible = true;
@@ -779,11 +779,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
+    void PostRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -859,11 +859,11 @@ public:
         m_quadModel = std::make_unique<Model>(std::move(quadMesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
         VkRect2D renderRect{};
         renderRect.extent.width = renderContext.fullExtent.width / 2;
@@ -891,7 +891,7 @@ public:
     }
 
     // make a node with quad model & shadowMap texture ???
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
     {
         const auto shadows = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
@@ -912,11 +912,11 @@ public:
         vkCmdDrawIndexed(renderContext.commandBuffer, m_quadModel->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -994,11 +994,11 @@ public:
         m_quadModel = std::make_unique<Model>(std::move(quadMesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
         VkRect2D renderRect{};
         renderRect.extent.width = renderContext.fullExtent.width / 2;
@@ -1025,7 +1025,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
     {
         const auto component = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT });
 
@@ -1042,11 +1042,11 @@ public:
         vkCmdDrawIndexed(renderContext.commandBuffer, m_quadModel->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -1126,11 +1126,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
         const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -1140,7 +1140,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::BOUNDING_VOLUME_COMPONENT })) {
             const auto boundingVolumeComponent = prev::scene::component::ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId());
@@ -1182,11 +1182,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -1273,11 +1273,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
         const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -1287,7 +1287,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::RAYCASTER_COMPONENT })) {
             const auto rayCastingComponent = prev::scene::component::ComponentRepository<IRayCasterComponent>::Instance().Get(node->GetId());
@@ -1335,11 +1335,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -1420,11 +1420,11 @@ public:
         m_selectionPointModel = CreateModel(*allocator, std::make_unique<SphereMesh>(1.0f, 32, 32));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
         const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -1434,7 +1434,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SELECTABLE_COMPONENT })) {
             const auto selectableComponent = prev::scene::component::ComponentRepository<ISelectableComponent>::Instance().Get(node->GetId());
@@ -1475,11 +1475,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -1652,11 +1652,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
         const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -1666,7 +1666,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
@@ -1766,11 +1766,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -1929,11 +1929,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
         const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -1943,7 +1943,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::RENDER_NORMAL_MAPPED_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
@@ -2043,11 +2043,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -2210,11 +2210,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
         const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -2224,7 +2224,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::RENDER_PARALLAX_MAPPED_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
@@ -2332,11 +2332,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -2497,11 +2497,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
         const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -2511,7 +2511,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::RENDER_CONE_STEP_MAPPED_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
@@ -2614,11 +2614,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -2780,11 +2780,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
         const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -2794,7 +2794,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::ANIMATION_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
@@ -2893,11 +2893,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -3058,11 +3058,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
         const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -3072,7 +3072,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
 
@@ -3172,11 +3172,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -3341,11 +3341,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
         const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -3355,7 +3355,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::ANIMATION_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
 
@@ -3463,11 +3463,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -3630,11 +3630,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
         const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -3644,7 +3644,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::ANIMATION_CONE_STEP_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
 
@@ -3747,11 +3747,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -3917,11 +3917,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
         const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -3931,7 +3931,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
@@ -4024,11 +4024,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -4194,11 +4194,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
         const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -4208,7 +4208,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
@@ -4302,11 +4302,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -4477,11 +4477,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
         const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -4491,7 +4491,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
@@ -4591,11 +4591,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -4764,11 +4764,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
         const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -4778,7 +4778,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
@@ -4875,11 +4875,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -4966,11 +4966,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
         const VkViewport viewport{ 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
@@ -4980,7 +4980,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::FONT_RENDER_COMPONENT })) {
             const auto nodeFontRenderComponent = prev::scene::component::ComponentRepository<IFontRenderComponent>::Instance().Get(node->GetId());
@@ -5024,11 +5024,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -5107,11 +5107,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
         const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -5121,7 +5121,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SKYBOX_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             const auto transformComponent = prev::scene::component::ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
@@ -5166,11 +5166,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -5313,7 +5313,7 @@ public:
         LOGI("Sky Screen Space Pipeline created\n");
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         const auto skyComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ISkyComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SKY_RENDER_COMPONENT });
         const auto cloudsComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICloudsComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::CLOUDS_COMPONENT });
@@ -5441,7 +5441,7 @@ public:
         AddImageBufferBarrier(m_skyPostProcessColorImageBuffer->GetImage(), renderContext.commandBuffer);
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
         const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -5451,7 +5451,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SKY_RENDER_COMPONENT })) {
             const auto skyComponent = prev::scene::component::ComponentRepository<ISkyComponent>::Instance().Get(node->GetId());
@@ -5474,11 +5474,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -5661,7 +5661,7 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
         const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -5671,11 +5671,11 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
             bool visible = true;
@@ -5749,11 +5749,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -5832,13 +5832,13 @@ public:
         VKERRCHECK(vkCreateQueryPool(*device, &queryPoolInfo, nullptr, &m_queryPool));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         m_passedSamples = 0;
         vkCmdResetQueryPool(renderContext.commandBuffer, m_queryPool, 0, 1);
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
         const VkViewport viewport{ 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
@@ -5848,7 +5848,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SUN_RENDER_COMPONENT })) {
             const auto sunComponent = prev::scene::component::ComponentRepository<ISunComponent>::Instance().Get(node->GetId());
@@ -5886,11 +5886,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
 
@@ -5981,11 +5981,11 @@ public:
         m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
         const VkViewport viewport{ 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
@@ -5995,7 +5995,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::LENS_FLARE_RENDER_COMPONENT })) {
             const auto lensFlareComponent = prev::scene::component::ComponentRepository<ILensFlareComponent>::Instance().Get(node->GetId());
@@ -6036,11 +6036,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -6124,11 +6124,11 @@ public:
         m_instanceDataBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator);
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
         const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
         const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
@@ -6138,7 +6138,7 @@ public:
         vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override
     {
         if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::PARTICLE_SYSTEM_COMPONENT })) {
             const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
@@ -6192,11 +6192,11 @@ public:
         }
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -6302,15 +6302,15 @@ public:
         InitRefraction();
     }
 
-    void BeforeRender(const prev::scene::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void BeforeRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void PreRender(const prev::scene::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PreRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override
     {
         // Shadows render pass
         RenderShadows(renderContext, node);
@@ -6330,11 +6330,11 @@ public:
 #endif
     }
 
-    void PostRender(const prev::scene::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void PostRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
     }
 
-    void AfterRender(const prev::scene::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
+    void AfterRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override
     {
     }
 
@@ -6542,7 +6542,7 @@ private:
         }
     }
 
-    void RenderShadows(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root)
+    void RenderShadows(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root)
     {
         const auto shadows = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
@@ -6551,7 +6551,7 @@ private:
             const auto cascade = shadows->GetCascade(cascadeIndex);
 
             const ShadowsRenderContextUserData userData{ cascade.viewMatrix, cascade.projectionMatrix, cascadeIndex, Frustum{ cascade.projectionMatrix, cascade.viewMatrix }, shadows->GetExtent() };
-            const prev::scene::RenderContext customRenderContext{ cascade.frameBuffer, renderContext.commandBuffer, renderContext.frameInFlightIndex, shadows->GetExtent() };
+            const prev::render::RenderContext customRenderContext{ cascade.frameBuffer, renderContext.commandBuffer, renderContext.frameInFlightIndex, shadows->GetExtent() };
 
             for (auto& renderer : m_shadowRenderers) {
                 renderer->BeforeRender(customRenderContext, userData);
@@ -6569,7 +6569,7 @@ private:
         }
     }
 
-    void RenderSceneReflection(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root)
+    void RenderSceneReflection(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root)
     {
         const auto reflectionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT });
         const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
@@ -6594,7 +6594,7 @@ private:
             Frustum{ projectionMatrix, viewMatrix }
         };        
 
-        const prev::scene::RenderContext customRenderContext{ reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
+        const prev::render::RenderContext customRenderContext{ reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
 
         for (auto& renderer : m_reflectionRenderers) {
             renderer->BeforeRender(customRenderContext, userData);
@@ -6612,7 +6612,7 @@ private:
         }
     }
 
-    void RenderSceneRefraction(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root)
+    void RenderSceneRefraction(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root)
     {
         const auto refractionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT });
         const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
@@ -6629,7 +6629,7 @@ private:
             Frustum{ projectionMatrix, viewMatrix }
         };
 
-        const prev::scene::RenderContext customRenderContext{ refractionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
+        const prev::render::RenderContext customRenderContext{ refractionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
         
         for (auto& renderer : m_refractionRenderers) {
             renderer->BeforeRender(customRenderContext, userData);
@@ -6647,7 +6647,7 @@ private:
         }
     }
 
-    void RenderScene(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root)
+    void RenderScene(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root)
     {
         const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
@@ -6679,7 +6679,7 @@ private:
         }
     }
 
-    void RenderDebug(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root)
+    void RenderDebug(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root)
     {
         for (auto& renderer : m_debugRenderers) {
             renderer->BeforeRender(renderContext);
@@ -6699,7 +6699,7 @@ private:
 
 #ifdef PARALLEL_RENDERING
     template <typename ContextUserDataType>
-    void RenderParallel(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const std::vector<VkCommandBuffer>& commandBuffers, const ContextUserDataType& userData, const VkRect2D& area)
+    void RenderParallel(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const std::vector<VkCommandBuffer>& commandBuffers, const ContextUserDataType& userData, const VkRect2D& area)
     {
         renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, area, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
@@ -6740,7 +6740,7 @@ private:
     }
 #else     
     template <typename ContextUserDataType>
-    void RenderSerial(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const ContextUserDataType& userData, const VkRect2D& area)
+    void RenderSerial(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const ContextUserDataType& userData, const VkRect2D& area)
     {
         renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, area);
 

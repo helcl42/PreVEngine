@@ -301,15 +301,15 @@ class IRenderer {
 public:
     virtual void Init() = 0;
 
-    virtual void BeforeRender(const prev::scene::RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
+    virtual void BeforeRender(const prev::render::RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
-    virtual void PreRender(const prev::scene::RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
+    virtual void PreRender(const prev::render::RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
-    virtual void Render(const prev::scene::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const UserDataType& renderContextUserData = UserDataType{}) = 0;
+    virtual void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
-    virtual void PostRender(const prev::scene::RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
+    virtual void PostRender(const prev::render::RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
-    virtual void AfterRender(const prev::scene::RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
+    virtual void AfterRender(const prev::render::RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
     virtual void ShutDown() = 0;
 

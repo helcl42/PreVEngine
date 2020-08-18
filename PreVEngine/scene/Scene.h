@@ -172,7 +172,7 @@ public:
         VkCommandBuffer commandBuffer;
         uint32_t frameInFlightIndex;
         if (m_swapchain->BeginFrame(frameBuffer, commandBuffer, frameInFlightIndex)) {
-            RenderContext renderContext{ frameBuffer, commandBuffer, frameInFlightIndex, m_swapchain->GetExtent() };
+            prev::render::RenderContext renderContext{ frameBuffer, commandBuffer, frameInFlightIndex, m_swapchain->GetExtent() };
 
             m_rootNode->Render(renderContext);
 

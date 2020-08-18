@@ -3,7 +3,7 @@
 
 #include "../core/instance/Validation.h"
 
-namespace prev::scene {
+namespace prev::render {
 struct RenderContext {
     VkFramebuffer frameBuffer;
 

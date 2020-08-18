@@ -2928,7 +2928,7 @@ public:
         SceneNode::Update(deltaTime);
     }
 
-    void Render(prev::scene::RenderContext& renderContext) override
+    void Render(prev::render::RenderContext& renderContext) override
     {
         m_masterRenderer->BeforeRender(renderContext);
 
