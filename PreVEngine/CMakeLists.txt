@@ -30,9 +30,10 @@ FILE(GLOB SCENE_COMPONENT_SRC_LIST "scene/component/*.h" "scene/component/*.cpp"
 FILE(GLOB SCENE_GRAPH_SRC_LIST "scene/graph/*.h" "scene/graph/*.cpp")
 FILE(GLOB UTIL_SRC_LIST "util/*.h" "util/*.cpp")
 FILE(GLOB WINDOW_SRC_LIST "window/*.h" "window/*.cpp")
-FILE(GLOB WINDOW_WINDOWS_SRC_LIST "window/windows/*.h" "window/windows/*.cpp")
-FILE(GLOB WINDOW_LINUX_SRC_LIST "window/linux/*.h" "window/linux/*.cpp")
-FILE(GLOB WINDOW_ANDROID_SRC_LIST "window/android/*.h" "window/android/*.cpp")
+FILE(GLOB WINDOW_IMPL_SRC_LIST "window/impl/*.h" "window/impl/*.cpp")
+FILE(GLOB WINDOW_IMPL_WINDOWS_SRC_LIST "window/impl/windows/*.h" "window/impl/windows/*.cpp")
+FILE(GLOB WINDOW_IMPL_LINUX_SRC_LIST "window/impl/linux/*.h" "window/impl/linux/*.cpp")
+FILE(GLOB WINDOW_IMPL_ANDROID_SRC_LIST "window/impl/android/*.h" "window/impl/android/*.cpp")
 
 SOURCE_GROUP("" FILES ${ROOT_SRC_LIST})
 SOURCE_GROUP(external FILES ${EXT_SRC_LIST})
@@ -59,9 +60,10 @@ SOURCE_GROUP(scene/component FILES ${SCENE_COMPONENT_SRC_LIST})
 SOURCE_GROUP(scene/graph FILES ${SCENE_GRAPH_SRC_LIST})
 SOURCE_GROUP(util FILES ${UTIL_SRC_LIST})
 SOURCE_GROUP(window FILES ${WINDOW_SRC_LIST})
-SOURCE_GROUP(window/windows FILES ${WINDOW_WINDOWS_SRC_LIST})
-SOURCE_GROUP(window/linux FILES ${WINDOW_LINUX_SRC_LIST})
-SOURCE_GROUP(window/android FILES ${WINDOW_ANDROID_SRC_LIST})
+SOURCE_GROUP(window/impl FILES ${WINDOW_IMPL_SRC_LIST})
+SOURCE_GROUP(window/impl/windows FILES ${WINDOW_IMPL_WINDOWS_SRC_LIST})
+SOURCE_GROUP(window/impl/linux FILES ${WINDOW_IMPL_LINUX_SRC_LIST})
+SOURCE_GROUP(window/impl/android FILES ${WINDOW_IMPL_ANDROID_SRC_LIST})
 
 add_library(${LIBRARY_NAME} STATIC 
     ${ROOT_SRC_LIST}
@@ -89,9 +91,10 @@ add_library(${LIBRARY_NAME} STATIC
     ${SCENE_GRAPH_SRC_LIST}
     ${UTIL_SRC_LIST}
     ${WINDOW_SRC_LIST}
-    ${WINDOW_WINDOWS_SRC_LIST}
-    ${WINDOW_LINUX_SRC_LIST}
-    ${WINDOW_ANDROID_SRC_LIST}
+    ${WINDOW_IMPL_SRC_LIST}
+    ${WINDOW_IMPL_WINDOWS_SRC_LIST}
+    ${WINDOW_IMPL_LINUX_SRC_LIST}
+    ${WINDOW_IMPL_ANDROID_SRC_LIST}
 )
 
 target_include_directories (${LIBRARY_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

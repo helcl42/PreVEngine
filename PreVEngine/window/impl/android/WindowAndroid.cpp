@@ -4,7 +4,7 @@
 
 #include <thread>
 
-namespace prev::window::android {
+namespace prev::window::impl::android {
 
 // Convert native Android key-code to cross-platform USB HID code.
 const unsigned char ANDROID_TO_HID[256] = { ///

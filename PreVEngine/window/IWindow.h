@@ -5,13 +5,13 @@
 #include "../core/instance/Validation.h"
 #include "../input/keyboard/KeyCodes.h"
 
-#include "Surface.h"
+#include "impl/Surface.h"
 #include "WindowCommon.h"
 
 namespace prev::window {
 class IWindow {
 public:
-    virtual Surface& GetSurface(VkInstance instance) = 0;
+    virtual impl::Surface& GetSurface(VkInstance instance) = 0;
 
     virtual bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const = 0;
 

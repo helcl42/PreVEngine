@@ -6,7 +6,7 @@
 #include "../WindowImpl.h"
 #include "native.h" // for Android_App
 
-namespace prev::window::android {
+namespace prev::window::impl::android {
 class WindowAndroid : public WindowImpl {
 public:
     WindowAndroid(const char* title, uint32_t width, uint32_t height);

@@ -1,9 +1,9 @@
 #ifndef __SURFACE_H__
 #define __SURFACE_H__
 
-#include "../core/instance/Validation.h"
+#include "../../core/instance/Validation.h"
 
-namespace prev::window {
+namespace prev::window::impl {
 class Surface { // Vulkan Surface
 public:
     Surface() = default;
@@ -20,6 +20,6 @@ protected:
 
     VkSurfaceKHR m_vkSurface{ VK_NULL_HANDLE };
 };
-} // namespace prev::window
+} // namespace prev::window::impl
 
 #endif

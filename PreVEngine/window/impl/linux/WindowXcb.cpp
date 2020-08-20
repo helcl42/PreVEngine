@@ -4,11 +4,13 @@
 
 #ifdef ENABLE_MULTITOUCH
 #include <X11/extensions/XInput2.h> // MultiTouch
+#endif
 
-namespace prev::window::linux {
+namespace prev::window::impl::linux {
+
+#ifdef ENABLE_MULTITOUCH
 typedef uint16_t xcb_input_device_id_t;
 typedef uint32_t xcb_input_fp1616_t;
-
 typedef struct xcb_input_touch_begin_event_t { // from xinput.h in XCB 1.12 (current version is 1.11)
     uint8_t response_type;
     uint8_t extension;
@@ -34,11 +36,7 @@ typedef struct xcb_input_touch_begin_event_t { // from xinput.h in XCB 1.12 (cur
     // xcb_input_modifier_info_t mods;
     // xcb_input_group_info_t    group;
 } xcb_input_touch_begin_event_t;
-} // namespace prev::window::linux
-
 #endif
-
-namespace prev {
 
 // Convert native EVDEV key-code to cross-platform USB HID code.
 const unsigned char EVDEV_TO_HID[256] = {
@@ -385,7 +383,7 @@ Event WindowXcb::TranslateEvent(xcb_generic_event_t* x_event)
     return { Event::EventType::NONE };
 }
 
-Event WindowXcb::GetEvent(bool wait_for_event)
+Event WindowXcb::GetEvent(bool waitForEvent)
 {
     if (!m_eventQueue.IsEmpty()) {
         return *m_eventQueue.Pop(); // Pop message from message queue buffer
@@ -393,8 +391,8 @@ Event WindowXcb::GetEvent(bool wait_for_event)
 
     xcb_generic_event_t* x_event;
 
-    if (wait_for_event) {
-        x_event = xcb_wait_for_event(m_xcbConnection); // Blocking mode
+    if (waitForEvent) {
+        x_event = waitForEvent(m_xcbConnection); // Blocking mode
     } else {
         x_event = xcb_poll_for_event(m_xcbConnection); // Non-blocking mode
     }
@@ -418,6 +416,6 @@ bool WindowXcb::CanPresent(VkPhysicalDevice gpu, uint32_t queue_family) const
 {
     return vkGetPhysicalDeviceXcbPresentationSupportKHR(gpu, queue_family, m_xcbConnection, m_xcbScreen->root_visual) == VK_TRUE;
 }
-} // namespace prev
+} // namespace prev::window::impl::linux
 
 #endif
