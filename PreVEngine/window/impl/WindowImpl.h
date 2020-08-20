@@ -1,13 +1,13 @@
 #ifndef __WINDOWIMPL_H__
 #define __WINDOWIMPL_H__
 
-#include "../input/keyboard/KeyCodes.h"
+#include "../../input/keyboard/KeyCodes.h"
+#include "../WindowCommon.h"
 #include "Surface.h"
-#include "WindowCommon.h"
 
 #include <string.h>
 
-namespace prev::window {
+namespace prev::window::impl {
 class EventFIFO {
 public:
     EventFIFO()
@@ -222,6 +222,6 @@ private:
 
     bool m_keyboardKeysState[256] = {};
 };
-} // namespace prev::window
+} // namespace prev::window::impl
 
 #endif

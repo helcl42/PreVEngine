@@ -7,7 +7,7 @@
 
 #include <windowsx.h> // Mouse
 
-namespace prev::window::windows {
+namespace prev::window::impl::windows {
 class WindowWin32 final : public WindowImpl {
 public:
     WindowWin32(const char* title); // creates fullScreen window

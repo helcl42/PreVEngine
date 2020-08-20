@@ -7,7 +7,7 @@
 #include "WindowEvents.h"
 
 #include "IWindow.h"
-#include "WindowImpl.h"
+#include "impl/WindowImpl.h"
 
 namespace prev::window {
 class AbstractWindow : public IWindow {
@@ -19,7 +19,7 @@ public:
     virtual ~AbstractWindow() = default;
 
 public:
-    Surface& GetSurface(VkInstance instance) override;
+    impl::Surface& GetSurface(VkInstance instance) override;
 
     bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const override;
 
@@ -85,7 +85,7 @@ private:
     void InitWindow(const char* title, const uint32_t width, const uint32_t height, bool tryFullscreen);
 
 private:
-    std::shared_ptr<WindowImpl> m_windowImpl;
+    std::shared_ptr<impl::WindowImpl> m_windowImpl;
 };
 
 }

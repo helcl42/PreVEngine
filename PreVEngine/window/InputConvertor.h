@@ -5,7 +5,7 @@
 #include "../input/mouse/MouseEvents.h"
 #include "../input/touch/TouchEvents.h"
 
-#include "WindowImpl.h"
+#include "impl/WindowImpl.h"
 
 namespace prev::window {
 class InputConvertor {
