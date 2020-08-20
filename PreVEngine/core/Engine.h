@@ -22,9 +22,9 @@ struct EngineConfig {
 
     bool fullScreen{ false };
 
-    prev::window::Size windowSize{ 1920, 1080 };
+    prev::window::impl::Size windowSize{ 1920, 1080 };
 
-    prev::window::Position windowPosition{ 40, 40 };
+    prev::window::impl::Position windowPosition{ 40, 40 };
 
     std::shared_ptr<prev::scene::SceneConfig> sceneConfig{ std::make_shared<prev::scene::SceneConfig>() };
 };

@@ -2,7 +2,7 @@
 #define __WINDOWIMPL_H__
 
 #include "../../input/keyboard/KeyCodes.h"
-#include "../WindowCommon.h"
+#include "WindowIImplCommon.h"
 #include "Surface.h"
 
 #include <string.h>

@@ -10,13 +10,13 @@
 namespace prev::window {
 class InputConvertor {
 public:
-    static prev::input::keyboard::KeyActionType GetKeyActionType(const ActionType action);
+    static prev::input::keyboard::KeyActionType GetKeyActionType(const impl::ActionType action);
 
-    static prev::input::mouse::MouseActionType GetMouseActionType(const ActionType action);
+    static prev::input::mouse::MouseActionType GetMouseActionType(const impl::ActionType action);
 
-    static prev::input::mouse::MouseButtonType GetMouseButtonType(const ButtonType button);
+    static prev::input::mouse::MouseButtonType GetMouseButtonType(const impl::ButtonType button);
 
-    static prev::input::touch::TouchActionType GetTouchActionType(const ActionType action);
+    static prev::input::touch::TouchActionType GetTouchActionType(const impl::ActionType action);
 };
 } // namespace prev::window
 
