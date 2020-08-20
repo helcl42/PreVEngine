@@ -35,13 +35,13 @@ public:
 
     virtual void OnFocusEvent(bool hasFocus) override;
 
-    virtual void OnKeyEvent(ActionType action, prev::input::keyboard::KeyCode keyCode) override;
+    virtual void OnKeyEvent(impl::ActionType action, prev::input::keyboard::KeyCode keyCode) override;
 
-    virtual void OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType button, int16_t w, int16_t h) override;
+    virtual void OnMouseEvent(impl::ActionType action, int16_t x, int16_t y, impl::ButtonType button, int16_t w, int16_t h) override;
 
     virtual void OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y) override;
 
-    virtual void OnTouchEvent(ActionType action, float x, float y, uint8_t pointerId, float w, float h) override;
+    virtual void OnTouchEvent(impl::ActionType action, float x, float y, uint8_t pointerId, float w, float h) override;
 
     virtual void OnTextEvent(const char* str) override;
 

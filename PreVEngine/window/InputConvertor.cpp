@@ -1,56 +1,56 @@
 #include "InputConvertor.h"
 
 namespace prev::window {
-prev::input::keyboard::KeyActionType InputConvertor::GetKeyActionType(const ActionType action)
+prev::input::keyboard::KeyActionType InputConvertor::GetKeyActionType(const impl::ActionType action)
 {
     switch (action) {
-    case ActionType::DOWN:
+    case impl::ActionType::DOWN:
         return prev::input::keyboard::KeyActionType::PRESS;
-    case ActionType::UP:
+    case impl::ActionType::UP:
         return prev::input::keyboard::KeyActionType::RELEASE;
     default:
         throw std::runtime_error("Invalid key action");
     }
 }
 
-prev::input::mouse::MouseActionType InputConvertor::GetMouseActionType(const ActionType action)
+prev::input::mouse::MouseActionType InputConvertor::GetMouseActionType(const impl::ActionType action)
 {
     switch (action) {
-    case ActionType::DOWN:
+    case impl::ActionType::DOWN:
         return prev::input::mouse::MouseActionType::PRESS;
-    case ActionType::UP:
+    case impl::ActionType::UP:
         return prev::input::mouse::MouseActionType::RELEASE;
-    case ActionType::MOVE:
+    case impl::ActionType::MOVE:
         return prev::input::mouse::MouseActionType::MOVE;
     default:
         throw std::runtime_error("Invalid mouse button action");
     }
 }
 
-prev::input::mouse::MouseButtonType InputConvertor::GetMouseButtonType(const ButtonType button)
+prev::input::mouse::MouseButtonType InputConvertor::GetMouseButtonType(const impl::ButtonType button)
 {
     switch (button) {
-    case ButtonType::NONE:
+    case impl::ButtonType::NONE:
         return prev::input::mouse::MouseButtonType::NONE;
-    case ButtonType::LEFT:
+    case impl::ButtonType::LEFT:
         return prev::input::mouse::MouseButtonType::LEFT;
-    case ButtonType::MIDDLE:
+    case impl::ButtonType::MIDDLE:
         return prev::input::mouse::MouseButtonType::MIDDLE;
-    case ButtonType::RIGHT:
+    case impl::ButtonType::RIGHT:
         return prev::input::mouse::MouseButtonType::RIGHT;
     default:
         throw std::runtime_error("Invalid mouse button type");
     }
 }
 
-prev::input::touch::TouchActionType InputConvertor::GetTouchActionType(const ActionType action)
+prev::input::touch::TouchActionType InputConvertor::GetTouchActionType(const impl::ActionType action)
 {
     switch (action) {
-    case ActionType::DOWN:
+    case impl::ActionType::DOWN:
         return prev::input::touch::TouchActionType::DOWN;
-    case ActionType::UP:
+    case impl::ActionType::UP:
         return prev::input::touch::TouchActionType::UP;
-    case ActionType::MOVE:
+    case impl::ActionType::MOVE:
         return prev::input::touch::TouchActionType::MOVE;
     default:
         throw std::runtime_error("Invalid touch action");

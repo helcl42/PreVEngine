@@ -41,12 +41,12 @@ void Window::OnFocusEvent(bool hasFocus)
     prev::event::EventChannel::Broadcast(WindowFocusChangeEvent{ this, hasFocus });
 }
 
-void Window::OnKeyEvent(ActionType action, prev::input::keyboard::KeyCode keyCode)
+void Window::OnKeyEvent(impl::ActionType action, prev::input::keyboard::KeyCode keyCode)
 {
     prev::event::EventChannel::Broadcast(prev::input::keyboard::KeyEvent{ InputConvertor::GetKeyActionType(action), keyCode });
 }
 
-void Window::OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType button, int16_t w, int16_t h)
+void Window::OnMouseEvent(impl::ActionType action, int16_t x, int16_t y, impl::ButtonType button, int16_t w, int16_t h)
 {
     prev::event::EventChannel::Broadcast(prev::input::mouse::MouseEvent{ InputConvertor::GetMouseActionType(action), InputConvertor::GetMouseButtonType(button), glm::vec2(x, y), glm::vec2(w, h) });
 }
@@ -56,7 +56,7 @@ void Window::OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y)
     prev::event::EventChannel::Broadcast(prev::input::mouse::MouseScrollEvent{ delta, glm::vec2(x, y) });
 }
 
-void Window::OnTouchEvent(ActionType action, float x, float y, uint8_t pointerId, float w, float h)
+void Window::OnTouchEvent(impl::ActionType action, float x, float y, uint8_t pointerId, float w, float h)
 {
     prev::event::EventChannel::Broadcast(prev::input::touch::TouchEvent{ InputConvertor::GetTouchActionType(action), pointerId, glm::vec2(x, y), glm::vec2(w, h) });
 }

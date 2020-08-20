@@ -23,15 +23,15 @@ public:
 
     bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const override;
 
-    Position GetPosition() const override;
+    impl::Position GetPosition() const override;
 
-    Size GetSize() const override;
+    impl::Size GetSize() const override;
 
     bool IsKeyPressed(const prev::input::keyboard::KeyCode key) const override;
 
-    bool IsMouseButtonPressed(const ButtonType btn) const override;
+    bool IsMouseButtonPressed(const impl::ButtonType btn) const override;
 
-    Position GetMousePosition() const override;
+    impl::Position GetMousePosition() const override;
 
     bool HasFocus() const override;
 
@@ -41,9 +41,9 @@ public:
 
     void SetTitle(const char* title) override;
 
-    void SetPosition(const Position& position) override;
+    void SetPosition(const impl::Position& position) override;
 
-    void SetSize(const Size& size) override;
+    void SetSize(const impl::Size& size) override;
 
     void ShowKeyboard(bool enabled) override;
 
@@ -54,7 +54,7 @@ public:
     void Close() override;
 
 public:
-    Event GetEvent(bool waitForEvent = false) override; // Return a single event from the queue (Alternative to using ProcessEvents.)
+    impl::Event GetEvent(bool waitForEvent = false) override; // Return a single event from the queue (Alternative to using ProcessEvents.)
 
     bool ProcessEvents(bool waitForEvent = false) override; // Poll events, and call event handlers. Returns false if window is closing.
 
@@ -71,15 +71,15 @@ public:
 
     virtual void OnFocusEvent(bool hasFocus) = 0;
 
-    virtual void OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType btn, int16_t w, int16_t h) = 0;
+    virtual void OnMouseEvent(impl::ActionType action, int16_t x, int16_t y, impl::ButtonType btn, int16_t w, int16_t h) = 0;
 
     virtual void OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y) = 0;
 
-    virtual void OnKeyEvent(ActionType action, prev::input::keyboard::KeyCode keycode) = 0;
+    virtual void OnKeyEvent(impl::ActionType action, prev::input::keyboard::KeyCode keycode) = 0;
 
     virtual void OnTextEvent(const char* str) = 0;
 
-    virtual void OnTouchEvent(ActionType action, float x, float y, uint8_t id, float w, float h) = 0;
+    virtual void OnTouchEvent(impl::ActionType action, float x, float y, uint8_t id, float w, float h) = 0;
 
 private:
     void InitWindow(const char* title, const uint32_t width, const uint32_t height, bool tryFullscreen);

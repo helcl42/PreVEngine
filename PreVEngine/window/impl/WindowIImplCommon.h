@@ -1,9 +1,9 @@
-#ifndef __WINDOW_COMMON_H__
-#define __WINDOW_COMMON_H__
+#ifndef __WINDOW_IMPL_COMMON_H__
+#define __WINDOW_IMPL_COMMON_H__
 
 #include <inttypes.h>
 
-namespace prev::window {
+namespace prev::window::impl {
 struct Position {
     int16_t x;
 
@@ -125,6 +125,6 @@ struct Event {
         tag = EventType::NONE;
     }
 };
-} // namespace prev::window
+} // namespace prev::window::impl
 
 #endif

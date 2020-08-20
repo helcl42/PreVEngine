@@ -54,18 +54,18 @@ bool AbstractWindow::CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) cons
     return m_windowImpl->CanPresent(gpu, queueFamily);
 }
 
-Position AbstractWindow::GetPosition() const
+impl::Position AbstractWindow::GetPosition() const
 {
     const auto& shape = m_windowImpl->GetShape();
 
-    return Position{ shape.x, shape.y };
+    return impl::Position{ shape.x, shape.y };
 }
 
-Size AbstractWindow::GetSize() const
+impl::Size AbstractWindow::GetSize() const
 {
     const auto& shape = m_windowImpl->GetShape();
 
-    return Size{ shape.width, shape.height };
+    return impl::Size{ shape.width, shape.height };
 }
 
 bool AbstractWindow::IsKeyPressed(const prev::input::keyboard::KeyCode key) const
@@ -73,12 +73,12 @@ bool AbstractWindow::IsKeyPressed(const prev::input::keyboard::KeyCode key) cons
     return m_windowImpl->IsKeyPressed(key);
 }
 
-bool AbstractWindow::IsMouseButtonPressed(const ButtonType btn) const
+bool AbstractWindow::IsMouseButtonPressed(const impl::ButtonType btn) const
 {
     return m_windowImpl->IsMouseButtonPressed(btn);
 }
 
-Position AbstractWindow::GetMousePosition() const
+impl::Position AbstractWindow::GetMousePosition() const
 {
     return m_windowImpl->GetMousePosition();
 }
@@ -103,12 +103,12 @@ void AbstractWindow::SetTitle(const char* title)
     m_windowImpl->SetTitle(title);
 }
 
-void AbstractWindow::SetPosition(const Position& position)
+void AbstractWindow::SetPosition(const impl::Position& position)
 {
     m_windowImpl->SetPosition(position.x, position.y);
 }
 
-void AbstractWindow::SetSize(const Size& size)
+void AbstractWindow::SetSize(const impl::Size& size)
 {
     m_windowImpl->SetSize(size.width, size.height);
 }
@@ -133,48 +133,48 @@ void AbstractWindow::Close()
     m_windowImpl->Close();
 }
 
-Event AbstractWindow::GetEvent(bool waitForEvent)
+impl::Event AbstractWindow::GetEvent(bool waitForEvent)
 {
     return m_windowImpl->GetEvent(waitForEvent);
 }
 
 bool AbstractWindow::ProcessEvents(bool waitForEvent)
 {
-    Event e = m_windowImpl->GetEvent(waitForEvent);
-    while (e.tag != Event::EventType::NONE) {
+    impl::Event e = m_windowImpl->GetEvent(waitForEvent);
+    while (e.tag != impl::Event::EventType::NONE) {
         // Calling the event handlers
         switch (e.tag) {
-        case Event::EventType::MOUSE:
+        case impl::Event::EventType::MOUSE:
             OnMouseEvent(e.mouse.action, e.mouse.x, e.mouse.y, e.mouse.btn, e.mouse.w, e.mouse.h);
             break;
-        case Event::EventType::MOUSE_SCROLL:
+        case impl::Event::EventType::MOUSE_SCROLL:
             OnMouseScrollEvent(e.scroll.delta, e.scroll.x, e.scroll.y);
             break;
-        case Event::EventType::KEY:
+        case impl::Event::EventType::KEY:
             OnKeyEvent(e.key.action, e.key.keycode);
             break;
-        case Event::EventType::TEXT:
+        case impl::Event::EventType::TEXT:
             OnTextEvent(e.text.str);
             break;
-        case Event::EventType::MOVE:
+        case impl::Event::EventType::MOVE:
             OnMoveEvent(e.move.x, e.move.y);
             break;
-        case Event::EventType::RESIZE:
+        case impl::Event::EventType::RESIZE:
             OnResizeEvent(e.resize.width, e.resize.height);
             break;
-        case Event::EventType::FOCUS:
+        case impl::Event::EventType::FOCUS:
             OnFocusEvent(e.focus.hasFocus);
             break;
-        case Event::EventType::TOUCH:
+        case impl::Event::EventType::TOUCH:
             OnTouchEvent(e.touch.action, e.touch.x, e.touch.y, e.touch.id, e.touch.w, e.touch.h);
             break;
-        case Event::EventType::INIT:
+        case impl::Event::EventType::INIT:
             OnInitEvent();
             break;
-        case Event::EventType::CHANGE:
+        case impl::Event::EventType::CHANGE:
             OnChangeEvent();
             break;
-        case Event::EventType::CLOSE:
+        case impl::Event::EventType::CLOSE:
             OnCloseEvent();
             return false;
         default:
