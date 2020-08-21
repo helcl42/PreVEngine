@@ -1,15 +1,15 @@
 #ifndef __ENGINE_H__
 #define __ENGINE_H__
 
-#include "../common/pattern/Singleton.h"
 #include "../core/device/PhysicalDevices.h"
 #include "../core/instance/Instance.h"
 #include "../scene/Scene.h"
 #include "../util/Utils.h"
 #include "../window/Window.h"
 
-#include "CoreEvents.h"
 #include "device/Device.h"
+#include "CoreEvents.h"
+#include "DeviceProvider.h"
 
 #include <memory>
 #include <string>
@@ -27,38 +27,6 @@ struct EngineConfig {
     prev::window::impl::Position windowPosition{ 40, 40 };
 
     std::shared_ptr<prev::scene::SceneConfig> sceneConfig{ std::make_shared<prev::scene::SceneConfig>() };
-};
-
-template <typename NodeFlagsType>
-class Engine;
-
-class DeviceProvider final : public prev::common::pattern::Singleton<DeviceProvider> {
-public:
-    ~DeviceProvider() = default;
-
-public:
-    std::shared_ptr<prev::core::device::Device> GetDevice() const
-    {
-        return m_device;
-    }
-
-private:
-    friend class prev::common::pattern::Singleton<DeviceProvider>;
-
-    template <typename NodeFlagsType>
-    friend class Engine;
-
-private:
-    void SetDevice(const std::shared_ptr<prev::core::device::Device>& device)
-    {
-        m_device = device;
-    }
-
-private:
-    DeviceProvider() = default;
-
-private:
-    std::shared_ptr<prev::core::device::Device> m_device;
 };
 
 template <typename NodeFlagsType>

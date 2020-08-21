@@ -9,6 +9,9 @@
 #include "../window/WindowEvents.h"
 
 #include "graph/GraphTraversal.h"
+#include "IScene.h"
+#include "AllocatorProvider.h"
+#include "ComputeProvider.h"
 
 #include <inttypes.h>
 #include <memory>
@@ -19,117 +22,6 @@ struct SceneConfig {
     bool VSync{ true };
 
     uint32_t framesInFlight{ 3 };
-};
-
-template <typename NodeFlagsType>
-class Scene;
-
-class AllocatorProvider final : public prev::common::pattern::Singleton<AllocatorProvider> {
-public:
-    ~AllocatorProvider() = default;
-
-public:
-    std::shared_ptr<prev::core::memory::Allocator> GetAllocator() const
-    {
-        return m_allocator;
-    }
-
-private:
-    AllocatorProvider() = default;
-
-private:
-    void SetAllocator(const std::shared_ptr<prev::core::memory::Allocator>& alloc)
-    {
-        m_allocator = alloc;
-    }
-
-private:
-    friend class prev::common::pattern::Singleton<AllocatorProvider>;
-
-    template <typename NodeFlagsType>
-    friend class Scene;
-
-private:
-    std::shared_ptr<prev::core::memory::Allocator> m_allocator;
-};
-
-class ComputeProvider final : public prev::common::pattern::Singleton<ComputeProvider> {
-public:
-    ~ComputeProvider() = default;
-
-public:
-    bool IsAvailable() const
-    {
-        return m_computeQueue != nullptr;
-    }
-
-    std::shared_ptr<prev::core::Queue> GetQueue() const
-    {
-        return m_computeQueue;
-    }
-
-    std::shared_ptr<prev::core::memory::Allocator> GetAllocator() const
-    {
-        return m_computeAllocator;
-    }
-
-private:
-    ComputeProvider() = default;
-
-private:
-    void Set(const std::shared_ptr<prev::core::Queue>& queue, const std::shared_ptr<prev::core::memory::Allocator>& alloc)
-    {
-        m_computeQueue = queue;
-        m_computeAllocator = alloc;
-    }
-
-    void Reset()
-    {
-        m_computeQueue = nullptr;
-        m_computeAllocator = nullptr;
-    }
-
-private:
-    friend class prev::common::pattern::Singleton<ComputeProvider>;
-
-    template <typename NodeFlagsType>
-    friend class Scene;
-
-private:
-    std::shared_ptr<prev::core::Queue> m_computeQueue;
-
-    std::shared_ptr<prev::core::memory::Allocator> m_computeAllocator;
-};
-
-template <typename NodeFlagsType>
-class IScene {
-public:
-    virtual void Init() = 0;
-
-    virtual void InitSceneGraph() = 0;
-
-    virtual void Update(float deltaTime) = 0;
-
-    virtual void Render() = 0;
-
-    virtual void ShutDownSceneGraph() = 0;
-
-    virtual void ShutDown() = 0;
-
-    virtual std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> > GetRootNode() const = 0;
-
-    virtual void SetRootNode(const std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> >& root) = 0;
-
-    virtual std::shared_ptr<prev::core::device::Device> GetDevice() const = 0;
-
-    virtual std::shared_ptr<prev::render::Swapchain> GetSwapchain() const = 0;
-
-    virtual std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const = 0;
-
-    virtual std::shared_ptr<prev::core::memory::Allocator> GetAllocator() const = 0;
-
-public:
-    virtual ~IScene() = default;
 };
 
 template <typename NodeFlagsType>
