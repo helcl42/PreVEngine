@@ -9,13 +9,17 @@
 #include <core/memory/buffer/IndexBuffer.h>
 #include <core/memory/buffer/UniformBuffer.h>
 #include <core/memory/buffer/VertexBuffer.h>
+#include <core/DeviceProvider.h>
 #include <render/image/Image.h>
+#include <scene/AllocatorProvider.h>
 #include <scene/component/ComponentRepository.h>
 #include <scene/component/NodeComponentHelper.h>
 #include <scene/graph/GraphTraversal.h>
 #include <scene/graph/SceneNode.h>
 #include <util/MathUtils.h>
 #include <util/VkUtils.h>
+
+#include "render/VertexLayout.h"
 
 static const std::string TAG_LIGHT{ "Light" };
 static const std::string TAG_MAIN_LIGHT{ "MainLight" };
@@ -157,166 +161,6 @@ private:
     AssetManager() = default;
 };
 
-enum class VertexLayoutComponent {
-    FLOAT = 0x0,
-    VEC2 = 0x1,
-    VEC3 = 0x2,
-    VEC4 = 0x3,
-    IVEC = 0x4,
-    IVEC2 = 0x5,
-    IVEC3 = 0x6,
-    IVEC4 = 0x7,
-    MAT3 = 0x8,
-    MAT4 = 0x9
-};
-
-struct VertexLayout {
-private:
-    std::vector<VertexLayoutComponent> m_components;
-
-public:
-    VertexLayout() = default;
-
-    VertexLayout(const std::vector<VertexLayoutComponent>& components)
-        : m_components(components)
-    {
-    }
-
-public:
-    const std::vector<VertexLayoutComponent>& GetComponents() const
-    {
-        return m_components;
-    }
-
-    static uint32_t GetComponentSize(const VertexLayoutComponent component)
-    {
-        switch (component) {
-        case VertexLayoutComponent::FLOAT:
-            return 1 * sizeof(float);
-        case VertexLayoutComponent::VEC2:
-            return 2 * sizeof(float);
-        case VertexLayoutComponent::VEC3:
-            return 3 * sizeof(float);
-        case VertexLayoutComponent::VEC4:
-            return 4 * sizeof(float);
-        case VertexLayoutComponent::IVEC:
-            return 1 * sizeof(int32_t);
-        case VertexLayoutComponent::IVEC2:
-            return 2 * sizeof(int32_t);
-        case VertexLayoutComponent::IVEC3:
-            return 3 * sizeof(int32_t);
-        case VertexLayoutComponent::IVEC4:
-            return 4 * sizeof(int32_t);
-        case VertexLayoutComponent::MAT3:
-            return 3 * 3 * sizeof(float);
-        case VertexLayoutComponent::MAT4:
-            return 4 * 4 * sizeof(float);
-        default:
-            throw std::runtime_error("Invalid vertex layout component type.");
-        }
-    }
-
-    static uint32_t GetComponentsSize(const std::vector<VertexLayoutComponent>& components)
-    {
-        uint32_t singleVertexPackSizeInBytes = 0;
-        for (const auto& component : components) {
-            singleVertexPackSizeInBytes += VertexLayout::GetComponentSize(component);
-        }
-        return singleVertexPackSizeInBytes;
-    }
-
-    uint32_t GetStride() const
-    {
-        return VertexLayout::GetComponentsSize(m_components);
-    }
-};
-
-class VertexDataBuffer {
-public:
-    VertexDataBuffer() = default;
-
-    VertexDataBuffer(const size_t desiredSizeInBytes) {
-        m_buffer.reserve(desiredSizeInBytes);
-    }
-
-    ~VertexDataBuffer() = default;
-
-public:
-    void Add(const void* data, const unsigned int size)
-    {
-        m_buffer.insert(m_buffer.end(), static_cast<const uint8_t*>(data), static_cast<const uint8_t*>(data) + size);
-    }
-
-    void Add(const float data)
-    {
-        Add(&data, sizeof(float));
-    }
-
-    void Add(const glm::vec2& data)
-    {
-        Add(&data, sizeof(glm::vec2));
-    }
-
-    void Add(const glm::vec3& data)
-    {
-        Add(&data, sizeof(glm::vec3));
-    }
-
-    void Add(const glm::vec4& data)
-    {
-        Add(&data, sizeof(glm::vec4));
-    }
-
-    void Add(const glm::mat3& data)
-    {
-        Add(&data, sizeof(glm::mat3));
-    }
-
-    void Add(const glm::mat4& data)
-    {
-        Add(&data, sizeof(glm::mat4));
-    }
-
-    void Reset()
-    {
-        m_buffer.clear();
-    }
-
-    const uint8_t* GetData() const
-    {
-        return m_buffer.data();
-    }
-
-private:
-    std::vector<uint8_t> m_buffer;
-};
-
-struct DefaultRenderContextUserData // inherit this in case you need any special data while rendering scene graph
-{
-    virtual ~DefaultRenderContextUserData() = default;
-};
-
-template <typename UserDataType = DefaultRenderContextUserData>
-class IRenderer {
-public:
-    virtual void Init() = 0;
-
-    virtual void BeforeRender(const prev::render::RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
-
-    virtual void PreRender(const prev::render::RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
-
-    virtual void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const UserDataType& renderContextUserData = UserDataType{}) = 0;
-
-    virtual void PostRender(const prev::render::RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
-
-    virtual void AfterRender(const prev::render::RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
-
-    virtual void ShutDown() = 0;
-
-public:
-    virtual ~IRenderer() = default;
-};
-
 struct MeshPart {
     uint32_t firstVertexIndex;
 
@@ -345,7 +189,7 @@ struct MeshPart {
 
 class IMesh {
 public:
-    virtual const VertexLayout& GetVertexLayout() const = 0;
+    virtual const prev_test::render::VertexLayout& GetVertexLayout() const = 0;
 
     virtual const void* GetVertexData() const = 0;
 

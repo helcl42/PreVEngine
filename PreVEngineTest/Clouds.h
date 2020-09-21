@@ -1,8 +1,15 @@
 #ifndef __CLOUDS_H__
 #define __CLOUDS_H__
 
+#include <render/shader/ShaderFactory.h>
+#include <scene/ComputeProvider.h>
+
 #include "General.h"
-#include "Pipeline.h"
+
+#include "render/sky/shader/CloudsShader.h"
+#include "render/sky/shader/PerlinWorleyNoiseShader.h"
+#include "render/sky/pipeline/CloudsPipeline.h"
+#include "render/sky/pipeline/PerlinWorleyNoisePipeline.h"
 
 class WatherFactory {
 public:
@@ -22,9 +29,9 @@ public:
         auto computeAllocator = prev::scene::ComputeProvider::Instance().GetAllocator();
 
         prev::render::shader::ShaderFactory shaderFactory{};
-        auto shader = shaderFactory.CreateShaderFromFiles<WeatherComputeShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/weather_comp.spv") } });
+        auto shader = shaderFactory.CreateShaderFromFiles<prev_test::render::sky::shader::CloudsShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/weather_comp.spv") } });
 
-        auto pipeline = std::make_unique<WeatherComputePipeline>(*device, *shader);
+        auto pipeline = std::make_unique<prev_test::render::sky::pipeline::CloudsPipeline>(*device, *shader);
         pipeline->Init();
 
         auto uniformsPool = std::make_unique<prev::core::memory::buffer::UBOPool<Uniforms> >(*computeAllocator);
@@ -102,9 +109,9 @@ public:
         auto computeAllocator = prev::scene::ComputeProvider::Instance().GetAllocator();
 
         prev::render::shader::ShaderFactory shaderFactory{};
-        auto shader = shaderFactory.CreateShaderFromFiles<PerlinWorleyComputeShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/perlin_worley_noise_3d_comp.spv") } });
+        auto shader = shaderFactory.CreateShaderFromFiles<prev_test::render::sky::shader::PerlinWorleyNoiseShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/perlin_worley_noise_3d_comp.spv") } });
 
-        auto pipeline = std::make_unique<WorleyComputePipeline>(*device, *shader);
+        auto pipeline = std::make_unique<prev_test::render::sky::pipeline::PerlinWorleyNoisePipeline>(*device, *shader);
         pipeline->Init();
 
         auto commandPool = computeQueue->CreateCommandPool();

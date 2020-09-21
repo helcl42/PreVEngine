@@ -3,6 +3,9 @@
 
 #include "General.h"
 
+#include <input/mouse/MouseEvents.h>
+#include <window/WindowEvents.h>
+
 //#define RENDER_RAYCASTS
 #define RENDER_SELECTION
 

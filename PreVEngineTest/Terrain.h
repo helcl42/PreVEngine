@@ -1,9 +1,13 @@
 #ifndef __TERRAIN_H__
 #define __TERRAIN_H__
 
+#include <render/image/ImageFactory.h>
+
 #include "General.h"
+#include "render/VertexDataBuffer.h"
 
 #include <vector>
+#include <random>
 
 static const float TERRAIN_SIZE{ 40.0f };
 
@@ -327,9 +331,9 @@ private:
     friend TerrainComponentFactory;
 
 private:
-    VertexLayout m_vertexLayout;
+    prev_test::render::VertexLayout m_vertexLayout;
 
-    VertexDataBuffer m_vertexDataBuffer;
+    prev_test::render::VertexDataBuffer m_vertexDataBuffer;
 
     std::vector<glm::vec3> m_vertices;
 
@@ -340,7 +344,7 @@ private:
     std::vector<MeshPart> m_meshParts;
 
 public:
-    const VertexLayout& GetVertexLayout() const override
+    const prev_test::render::VertexLayout& GetVertexLayout() const override
     {
         return m_vertexLayout;
     }
@@ -542,12 +546,12 @@ private:
     std::shared_ptr<prev::render::image::Image> CreateImage(const std::string& textureFilename) const
     {
         std::shared_ptr<prev::render::image::Image> image;
-        if (s_imagesCache.find(textureFilename) != s_imagesCache.cend()) {
-            image = s_imagesCache[textureFilename];
+        if (s_terrainImageCache.find(textureFilename) != s_terrainImageCache.cend()) {
+            image = s_terrainImageCache[textureFilename];
         } else {
             prev::render::image::ImageFactory imageFactory{};
             image = imageFactory.CreateImage(textureFilename);
-            s_imagesCache[textureFilename] = image;
+            s_terrainImageCache[textureFilename] = image;
         }
         return image;
     }
@@ -608,9 +612,9 @@ private:
         mesh->m_indices = vertexData->indices;
         mesh->m_verticesCount = static_cast<uint32_t>(vertexData->vertices.size());
         if (normalMapped) {
-            mesh->m_vertexLayout = { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 } };
+            mesh->m_vertexLayout = { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3 } };
         } else {
-            mesh->m_vertexLayout = { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 } };
+            mesh->m_vertexLayout = { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3 } };
         }
 
         for (unsigned int z = 0; z < m_vertexCount; z++) {
@@ -723,10 +727,8 @@ private:
     const unsigned int m_vertexCount;
 
 private:
-    static std::map<std::string, std::shared_ptr<prev::render::image::Image> > s_imagesCache;
+    static inline std::map<std::string, std::shared_ptr<prev::render::image::Image> > s_terrainImageCache;
 };
-
-std::map<std::string, std::shared_ptr<prev::render::image::Image> > TerrainComponentFactory::s_imagesCache;
 
 struct TerrainKey {
     const int xIndex;

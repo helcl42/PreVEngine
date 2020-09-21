@@ -3,6 +3,9 @@
 
 #include <util/Utils.h>
 
+#include "render/VertexLayout.h"
+#include "render/VertexDataBuffer.h"
+
 #include "AssimpCommon.h"
 
 class CubeMesh final : public IMesh {
@@ -13,9 +16,9 @@ public:
         std::vector<glm::vec3> biTangents;
         if (includeTangentBiTangent) {
             MeshUtil::GenerateTangetsAndBiTangents(vertices, textureCoords, indices, tangents, biTangents);
-            m_vertexLayout = { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 } };
+            m_vertexLayout = { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC2, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3 } };
         } else {
-            m_vertexLayout = { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
+            m_vertexLayout = { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC2, prev_test::render::VertexLayoutComponent::VEC3 } };
         }
 
         for (auto i = 0; i < vertices.size(); i++) {
@@ -32,7 +35,7 @@ public:
     ~CubeMesh() = default;
     
 public:
-    const VertexLayout& GetVertexLayout() const override
+    const prev_test::render::VertexLayout& GetVertexLayout() const override
     {
         return m_vertexLayout;
     }
@@ -63,9 +66,9 @@ public:
     }
 
 private:
-    VertexLayout m_vertexLayout;
+    prev_test::render::VertexLayout m_vertexLayout;
    
-    VertexDataBuffer m_vertexDataBuffer;
+    prev_test::render::VertexDataBuffer m_vertexDataBuffer;
 
 private:
     static const inline std::vector<glm::vec3> vertices{
@@ -188,9 +191,9 @@ public:
         std::vector<glm::vec3> biTangents;
         if (includeTangentBiTangent) {
             MeshUtil::GenerateTangetsAndBiTangents(vertices, textureCoords, indices, tangents, biTangents);
-            m_vertexLayout = { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 } };
+            m_vertexLayout = { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC2, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3 } };
         } else {
-            m_vertexLayout = { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
+            m_vertexLayout = { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC2, prev_test::render::VertexLayoutComponent::VEC3 } };
         }
 
         for (auto i = 0; i < vertices.size(); i++) {
@@ -207,7 +210,7 @@ public:
     ~QuadMesh() = default;
 
 public:
-    const VertexLayout& GetVertexLayout() const override
+    const prev_test::render::VertexLayout& GetVertexLayout() const override
     {
         return m_vertexLayout;
     }
@@ -238,9 +241,9 @@ public:
     }
 
 private:
-    VertexLayout m_vertexLayout;
+    prev_test::render::VertexLayout m_vertexLayout;
 
-    VertexDataBuffer m_vertexDataBuffer;
+    prev_test::render::VertexDataBuffer m_vertexDataBuffer;
 
 private:
     static const inline std::vector<glm::vec3> vertices{
@@ -287,7 +290,7 @@ public:
     ~FullScreenQuadMesh() = default;
 
 public:
-    const VertexLayout& GetVertexLayout() const override
+    const prev_test::render::VertexLayout& GetVertexLayout() const override
     {
         return m_vertexLayout;
     }
@@ -318,10 +321,10 @@ public:
     }
 
 private:
-    VertexDataBuffer m_vertexDataBuffer;
+    prev_test::render::VertexDataBuffer m_vertexDataBuffer;
 
 private:
-    static const inline VertexLayout m_vertexLayout{ { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
+    static const inline prev_test::render::VertexLayout m_vertexLayout{ { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC2, prev_test::render::VertexLayoutComponent::VEC3 } };
 
     static const inline std::vector<glm::vec3> vertices{
         { 1.0f, 1.0f, 0.0f },
@@ -358,9 +361,9 @@ public:
     PlaneMesh(const float xSize, const float zSize, const uint32_t xDivs, const uint32_t zDivs, const float textureCoordUMax = 1.0f, const float textureCoordVMax = 1.0f, bool generateTangentBiTangent = false)
     {
         if (generateTangentBiTangent) {
-            m_vertexLayout = { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 } };
+            m_vertexLayout = { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC2, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3 } };
         } else {
-            m_vertexLayout = { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
+            m_vertexLayout = { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC2, prev_test::render::VertexLayoutComponent::VEC3 } };
         }
 
         const float x2 = xSize / 2.0f;
@@ -431,7 +434,7 @@ public:
     ~PlaneMesh() = default;
 
 public:
-    const VertexLayout& GetVertexLayout() const override
+    const prev_test::render::VertexLayout& GetVertexLayout() const override
     {
         return m_vertexLayout;
     }
@@ -462,9 +465,9 @@ public:
     }
 
 private:
-    VertexLayout m_vertexLayout;
+    prev_test::render::VertexLayout m_vertexLayout;
 
-    VertexDataBuffer m_vertexDataBuffer;
+    prev_test::render::VertexDataBuffer m_vertexDataBuffer;
 
     std::vector<glm::vec3> m_vertices;
 
@@ -478,9 +481,9 @@ public:
     SphereMesh(const float radius, const int subDivY, const int subDivZ, const float degreesHorizontal = 360.0f, const float degreesVertical = 180.0f, bool generateTangentBiTangent = false)
     {
         if (generateTangentBiTangent) {
-            m_vertexLayout = { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 } };
+            m_vertexLayout = { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC2, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3 } };
         } else {
-            m_vertexLayout = { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
+            m_vertexLayout = { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC2, prev_test::render::VertexLayoutComponent::VEC3 } };
         }
 
         std::vector<glm::vec2> textureCoords;
@@ -588,7 +591,7 @@ public:
     ~SphereMesh() = default;
 
 public:
-    const VertexLayout& GetVertexLayout() const override
+    const prev_test::render::VertexLayout& GetVertexLayout() const override
     {
         return m_vertexLayout;
     }
@@ -619,9 +622,9 @@ public:
     }
 
 private:
-    VertexLayout m_vertexLayout;
+    prev_test::render::VertexLayout m_vertexLayout;
 
-    VertexDataBuffer m_vertexDataBuffer;
+    prev_test::render::VertexDataBuffer m_vertexDataBuffer;
 
     std::vector<glm::vec3> m_vertices;
 
@@ -634,7 +637,7 @@ class MeshFactory;
 
 class ModelMesh final : public IMesh {
 public:
-    const VertexLayout& GetVertexLayout() const override
+    const prev_test::render::VertexLayout& GetVertexLayout() const override
     {
         return m_vertexLayout;
     }
@@ -668,9 +671,9 @@ private:
     friend MeshFactory;
 
 private:
-    VertexLayout m_vertexLayout;
+    prev_test::render::VertexLayout m_vertexLayout;
 
-    VertexDataBuffer m_vertexDataBuffer;
+    prev_test::render::VertexDataBuffer m_vertexDataBuffer;
 
     std::vector<glm::vec3> m_vertices;
 
@@ -721,16 +724,16 @@ private:
         }
     }
 
-    VertexLayout GetVertexLayout(const prev::common::FlagSet<AssimpMeshFactoryCreateFlags>& flags) const
+    prev_test::render::VertexLayout GetVertexLayout(const prev::common::FlagSet<AssimpMeshFactoryCreateFlags>& flags) const
     {
         if (flags & AssimpMeshFactoryCreateFlags::ANIMATION && flags & AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT) {
-            return { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 } };
+            return { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC2, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC4, prev_test::render::VertexLayoutComponent::VEC4, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3 } };
         } else if (flags & AssimpMeshFactoryCreateFlags::ANIMATION) {
-            return { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC4 } };
+            return { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC2, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC4, prev_test::render::VertexLayoutComponent::VEC4 } };
         } else if (flags & AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT) {
-            return { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 } };
+            return { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC2, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3 } };
         } else {
-            return { { VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 } };
+            return { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC2, prev_test::render::VertexLayoutComponent::VEC3 } };
         }
     }
 
@@ -744,7 +747,7 @@ private:
         }
     }
 
-    void AddDefaultVertexData(const aiMesh& mesh, const uint32_t vertexIndex, VertexDataBuffer& inOutVertexBuffer) const
+    void AddDefaultVertexData(const aiMesh& mesh, const uint32_t vertexIndex, prev_test::render::VertexDataBuffer& inOutVertexBuffer) const
     {
         glm::vec3 pos = glm::make_vec3(&mesh.mVertices[vertexIndex].x);
         glm::vec2 uv = mesh.mTextureCoords[0] != nullptr ? glm::make_vec3(&mesh.mTextureCoords[0][vertexIndex].x) : glm::vec2(1.0f, 1.0f);
@@ -755,7 +758,7 @@ private:
         inOutVertexBuffer.Add(normal);
     }
 
-    void AddAnimationData(const std::vector<VertexBoneData>& vertexBoneData, const uint32_t vertexIndex, VertexDataBuffer& inOutVertexBuffer) const
+    void AddAnimationData(const std::vector<VertexBoneData>& vertexBoneData, const uint32_t vertexIndex, prev_test::render::VertexDataBuffer& inOutVertexBuffer) const
     {
         const auto& singleVertexBoneData = vertexBoneData[vertexIndex];
 
@@ -763,7 +766,7 @@ private:
         inOutVertexBuffer.Add(&singleVertexBoneData.weights, static_cast<uint32_t>(prev::util::ArraySize(singleVertexBoneData.weights) * sizeof(float)));
     }
 
-    void AddBumpMappingData(const aiMesh& mesh, const unsigned int vertexIndex, VertexDataBuffer& inOutVertexBuffer) const
+    void AddBumpMappingData(const aiMesh& mesh, const unsigned int vertexIndex, prev_test::render::VertexDataBuffer& inOutVertexBuffer) const
     {
         glm::vec3 tangent = glm::make_vec3(&mesh.mTangents[vertexIndex].x);
         glm::vec3 biTangent = glm::make_vec3(&mesh.mBitangents[vertexIndex].x);
@@ -771,7 +774,7 @@ private:
         inOutVertexBuffer.Add(biTangent);
     }
 
-    void ReadVertexData(const aiMesh& mesh, const prev::common::FlagSet<AssimpMeshFactoryCreateFlags>& flags, const std::vector<VertexBoneData>& vertexBoneData, const uint32_t vertexBaseOffset, VertexDataBuffer& inOutVertexBuffer) const
+    void ReadVertexData(const aiMesh& mesh, const prev::common::FlagSet<AssimpMeshFactoryCreateFlags>& flags, const std::vector<VertexBoneData>& vertexBoneData, const uint32_t vertexBaseOffset, prev_test::render::VertexDataBuffer& inOutVertexBuffer) const
     {
         for (unsigned int vertexIndex = 0; vertexIndex < mesh.mNumVertices; vertexIndex++) {
             AddDefaultVertexData(mesh, vertexIndex, inOutVertexBuffer);
@@ -820,7 +823,7 @@ private:
         return vertexCount;
     }
 
-    unsigned int ReadMeshes(const aiScene& scene, const prev::common::FlagSet<AssimpMeshFactoryCreateFlags>& flags, VertexDataBuffer& inOutVertexBuffer, std::vector<glm::vec3>& inOutVertices, std::vector<uint32_t>& inOutIndices, std::vector<MeshPart>& inOutMeshParts) const
+    unsigned int ReadMeshes(const aiScene& scene, const prev::common::FlagSet<AssimpMeshFactoryCreateFlags>& flags, prev_test::render::VertexDataBuffer& inOutVertexBuffer, std::vector<glm::vec3>& inOutVertices, std::vector<uint32_t>& inOutIndices, std::vector<MeshPart>& inOutMeshParts) const
     {
         uint32_t allVertexCount = GetAllVertexCount(scene);
         std::vector<VertexBoneData> vertexBoneData;

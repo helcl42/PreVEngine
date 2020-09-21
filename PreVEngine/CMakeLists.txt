@@ -6,7 +6,7 @@ SET(SOURCE_GROUP_DELIMITER "/")
 set(LIBRARY_NAME PreVEngine)
 
 FILE(GLOB ROOT_SRC_LIST "*.h" "*.cpp")
-FILE(GLOB EXT_SRC_LIST "external/*.h" "external/*.cpp")
+FILE(GLOB EXTERNAL_SRC_LIST "external/*.h" "external/*.cpp")
 FILE(GLOB COMMON_SRC_LIST "common/*.h" "common/*.cpp")
 FILE(GLOB COMMON_PATTERN_SRC_LIST "common/pattern/*.h" "common/pattern/*.cpp")
 FILE(GLOB CORE_SRC_LIST "core/*.h" "core/*.cpp")
@@ -36,7 +36,7 @@ FILE(GLOB WINDOW_IMPL_LINUX_SRC_LIST "window/impl/linux/*.h" "window/impl/linux/
 FILE(GLOB WINDOW_IMPL_ANDROID_SRC_LIST "window/impl/android/*.h" "window/impl/android/*.cpp")
 
 SOURCE_GROUP("" FILES ${ROOT_SRC_LIST})
-SOURCE_GROUP(external FILES ${EXT_SRC_LIST})
+SOURCE_GROUP(external FILES ${EXTERNAL_SRC_LIST})
 SOURCE_GROUP(common FILES ${COMMON_SRC_LIST})
 SOURCE_GROUP(common/pattern FILES ${COMMON_PATTERN_SRC_LIST})
 SOURCE_GROUP(core FILES ${CORE_SRC_LIST})
@@ -67,7 +67,7 @@ SOURCE_GROUP(window/impl/android FILES ${WINDOW_IMPL_ANDROID_SRC_LIST})
 
 add_library(${LIBRARY_NAME} STATIC 
     ${ROOT_SRC_LIST}
-    ${EXT_SRC_LIST}
+    ${EXTERNAL_SRC_LIST}
     ${COMMON_SRC_LIST}
     ${COMMON_PATTERN_SRC_LIST}
     ${CORE_SRC_LIST}

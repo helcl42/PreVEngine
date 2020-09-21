@@ -1,6 +1,8 @@
 #ifndef __WATER_H__
 #define __WATER_H__
 
+#include <render/image/ImageFactory.h>
+
 #include "General.h"
 
 static const float WATER_TILE_SIZE{ 20.0f };
@@ -16,7 +18,7 @@ static const uint32_t REFLECTION_EXTENT_DIVIDER{ 4 };
 
 class WaterTileMesh : public IMesh {
 public:
-    const VertexLayout& GetVertexLayout() const override
+    const prev_test::render::VertexLayout& GetVertexLayout() const override
     {
         return vertexLayout;
     }
@@ -47,7 +49,7 @@ public:
     }
 
 private:
-    static const inline VertexLayout vertexLayout{ { VertexLayoutComponent::VEC3 } };
+    static const inline prev_test::render::VertexLayout vertexLayout{ { prev_test::render::VertexLayoutComponent::VEC3 } };
 
     static const inline std::vector<glm::vec3> vertices = {
         { 1.0f, 0.0f, 1.0f },
@@ -357,12 +359,12 @@ private:
     std::shared_ptr<prev::render::image::Image> CreateImage(const std::string& textureFilename) const
     {
         std::shared_ptr<prev::render::image::Image> image;
-        if (s_imagesCache.find(textureFilename) != s_imagesCache.cend()) {
-            image = s_imagesCache[textureFilename];
+        if (s_waterImageCache.find(textureFilename) != s_waterImageCache.cend()) {
+            image = s_waterImageCache[textureFilename];
         } else {
             prev::render::image::ImageFactory imageFactory;
             image = imageFactory.CreateImage(textureFilename);
-            s_imagesCache[textureFilename] = image;
+            s_waterImageCache[textureFilename] = image;
         }
         return image;
     }
@@ -392,9 +394,7 @@ private:
     }
 
 private:
-    static std::map<std::string, std::shared_ptr<prev::render::image::Image> > s_imagesCache;
+    static inline std::map<std::string, std::shared_ptr<prev::render::image::Image> > s_waterImageCache;
 };
-
-std::map<std::string, std::shared_ptr<prev::render::image::Image> > WaterComponentFactory::s_imagesCache;
 
 #endif

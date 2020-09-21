@@ -191,16 +191,7 @@ struct AABB {
     }
 };
 
-struct Frustum {
-    enum Side {
-        LEFT = 0,
-        RIGHT = 1,
-        TOP = 2,
-        BOTTOM = 3,
-        FRONT = 4, // near
-        BACK = 5 // far
-    };
-
+struct Frustum {    
     std::array<Plane, 6> planes;
 
     std::array<Point, 8> points;
@@ -217,12 +208,12 @@ struct Frustum {
         const glm::vec3 col3(viewProjectionMatrix[0].z, viewProjectionMatrix[1].z, viewProjectionMatrix[2].z);
         const glm::vec3 col4(viewProjectionMatrix[0].w, viewProjectionMatrix[1].w, viewProjectionMatrix[2].w);
 
-        planes[Side::LEFT] = Plane(col4 + col1, viewProjectionMatrix[3].w + viewProjectionMatrix[3].x),
-        planes[Side::RIGHT] = Plane(col4 - col1, viewProjectionMatrix[3].w - viewProjectionMatrix[3].x);
-        planes[Side::BOTTOM] = Plane(col4 + col2, viewProjectionMatrix[3].w + viewProjectionMatrix[3].y);
-        planes[Side::TOP] = Plane(col4 - col2, viewProjectionMatrix[3].w - viewProjectionMatrix[3].y);
-        planes[Side::FRONT] = Plane(col4 + col3, viewProjectionMatrix[3].w + viewProjectionMatrix[3].z);
-        planes[Side::BACK] = Plane(col4 - col3, viewProjectionMatrix[3].w - viewProjectionMatrix[3].z);
+        planes[0] = Plane(col4 + col1, viewProjectionMatrix[3].w + viewProjectionMatrix[3].x); // left
+        planes[1] = Plane(col4 - col1, viewProjectionMatrix[3].w - viewProjectionMatrix[3].x); // right
+        planes[2] = Plane(col4 - col2, viewProjectionMatrix[3].w - viewProjectionMatrix[3].y); // top
+        planes[3] = Plane(col4 + col2, viewProjectionMatrix[3].w + viewProjectionMatrix[3].y); // bottom
+        planes[4] = Plane(col4 + col3, viewProjectionMatrix[3].w + viewProjectionMatrix[3].z); // front - near
+        planes[5] = Plane(col4 - col3, viewProjectionMatrix[3].w - viewProjectionMatrix[3].z); // back - far
 
         auto frustumCorners = prev::util::MathUtil::GetFrustumCorners(inverseViewProjectionMatrix);
         for (auto i = 0; i < frustumCorners.size(); i++) {

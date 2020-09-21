@@ -1,7 +1,10 @@
 #ifndef __SHADOWS_H__
 #define __SHADOWS_H__
 
+#include <render/pass/RenderPass.h>
+
 #include "General.h"
+#include "Culling.h"
 
 struct ShadowsCascade {
     VkFramebuffer frameBuffer;
@@ -56,15 +59,15 @@ public:
 
 class ShadowsComponent : public IShadowsComponent {
 public:
-    static const inline VkFormat DEPTH_FORMAT = VK_FORMAT_D32_SFLOAT;
+    static const inline VkFormat DEPTH_FORMAT{ VK_FORMAT_D32_SFLOAT };
 
-    static const inline uint32_t SHADOW_MAP_DIMENSIONS = 2048;
+    static const inline uint32_t SHADOW_MAP_DIMENSIONS{ 2048 };
 
-    static const inline VkFilter SHADOW_MAP_FILTER = VK_FILTER_NEAREST;
+    static const inline VkFilter SHADOW_MAP_FILTER{ VK_FILTER_NEAREST };
 
-    static const inline uint32_t CASCADES_COUNT = 4;
+    static const inline uint32_t CASCADES_COUNT{ 4 };
 
-    static const inline float CASCADES_SPLIT_LAMBDA = 0.86f;
+    static const inline float CASCADES_SPLIT_LAMBDA{ 0.86f };
 
 private:
     std::shared_ptr<prev::core::memory::Allocator> m_allocator;
