@@ -1,15 +1,18 @@
 #ifndef __SKY_H__
 #define __SKY_H__
 
+#include <render/image/ImageFactory.h>
+
 #include "General.h"
+#include "Mesh.h"
 
 static const float SKY_BOX_SIZE = 300.0f;
 
 class CubeMeshVerticesOnly : public IMesh {
 public:
-    const VertexLayout& GetVertexLayout() const override
+    const prev_test::render::VertexLayout& GetVertexLayout() const override
     {
-        return m_vertexLayout;
+        return vertexLayout;
     }
 
     const void* GetVertexData() const override
@@ -38,7 +41,7 @@ public:
     }
 
 private:
-    static const inline VertexLayout m_vertexLayout{ { VertexLayoutComponent::VEC3 } };
+    static const inline prev_test::render::VertexLayout vertexLayout{ { prev_test::render::VertexLayoutComponent::VEC3 } };
 
     static const inline std::vector<glm::vec3> vertices = {
         // FROMT

@@ -1,7 +1,10 @@
 #ifndef __PARTICLES_H__
 #define __PARTICLES_H__
 
+#include <render/image/ImageFactory.h>
+
 #include "General.h"
+#include "Mesh.h"
 
 #include <random>
 #include <list>

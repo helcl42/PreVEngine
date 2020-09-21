@@ -4,8 +4,12 @@
 #include <common/Common.h>
 #include <render/image/ImageFactory.h>
 #include <core/memory/image/ImageBuffer.h>
+#include <util/Utils.h>
 
 #include "General.h"
+
+#include "render/VertexLayout.h"
+#include "render/VertexDataBuffer.h"
 
 #include <fstream>
 #include <iostream>
@@ -654,7 +658,7 @@ public:
 class TextMesh final : public IMesh {
 public:
     TextMesh(const std::vector<glm::vec2>& vertices, const std::vector<glm::vec2>& textureCoords, const std::vector<uint32_t>& indices)
-        : m_vertexLayout({ VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC2 })
+        : m_vertexLayout({ prev_test::render::VertexLayoutComponent::VEC2, prev_test::render::VertexLayoutComponent::VEC2 })
         , m_verticesCount(static_cast<uint32_t>(vertices.size()))
         , m_indices(indices)
     {
@@ -670,7 +674,7 @@ public:
     ~TextMesh() = default;
 
 public:
-    const VertexLayout& GetVertexLayout() const override
+    const prev_test::render::VertexLayout& GetVertexLayout() const override
     {
         return m_vertexLayout;
     }
@@ -701,7 +705,7 @@ public:
     }
 
 private:
-    VertexLayout m_vertexLayout;
+    prev_test::render::VertexLayout m_vertexLayout;
 
     std::vector<glm::vec3> m_vertices;
 
@@ -709,7 +713,7 @@ private:
 
     std::vector<uint32_t> m_indices;
 
-    VertexDataBuffer m_vertexDataBuffer;
+    prev_test::render::VertexDataBuffer m_vertexDataBuffer;
 
     std::vector<MeshPart> m_meshParts;
 };

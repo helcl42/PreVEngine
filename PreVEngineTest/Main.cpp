@@ -5,10 +5,11 @@
 #include <random>
 
 #include <App.h>
-#include <render/image/Image.h>
-#include <render/shader/ShaderFactory.h>
-#include <input/InputFacade.h>
 #include <common/pattern/Nullable.h>
+#include <input/InputFacade.h>
+#include <render/image/Image.h>
+
+#include "render/MasterRenderer.h"
 
 #include "Animation.h"
 #include "Camera.h"
@@ -20,27 +21,24 @@
 #include "Light.h"
 #include "Mesh.h"
 #include "Particles.h"
-#include "Pipeline.h"
 #include "RayCasting.h"
 #include "Shadows.h"
 #include "Sky.h"
 #include "Terrain.h"
 #include "Water.h"
 
-#include "Renderer.h"
-
 class DefaultRenderComponent : public IRenderComponent {
 private:
     std::shared_ptr<IModel> m_model;
 
-    std::vector<std::shared_ptr<IMaterial>> m_materials;
+    std::vector<std::shared_ptr<IMaterial> > m_materials;
 
     bool m_castsShadows;
 
     bool m_isCastedByShadows;
 
 public:
-    DefaultRenderComponent(const std::shared_ptr<IModel>& model, const std::vector<std::shared_ptr<IMaterial>>& materials, const bool castsShadows, const bool isCastedByShadows)
+    DefaultRenderComponent(const std::shared_ptr<IModel>& model, const std::vector<std::shared_ptr<IMaterial> >& materials, const bool castsShadows, const bool isCastedByShadows)
         : m_model(model)
         , m_materials(materials)
         , m_castsShadows(castsShadows)
@@ -49,7 +47,7 @@ public:
     }
 
     DefaultRenderComponent(const std::shared_ptr<IModel>& model, const std::shared_ptr<IMaterial>& material, const bool castsShadows, const bool isCastedByShadows)
-        : DefaultRenderComponent(model, std::vector<std::shared_ptr<IMaterial>>{ material }, castsShadows, isCastedByShadows)
+        : DefaultRenderComponent(model, std::vector<std::shared_ptr<IMaterial> >{ material }, castsShadows, isCastedByShadows)
     {
     }
 
@@ -66,7 +64,7 @@ public:
         return m_materials.at(index);
     }
 
-    const std::vector<std::shared_ptr<IMaterial>>& GetMaterials() const override 
+    const std::vector<std::shared_ptr<IMaterial> >& GetMaterials() const override
     {
         return m_materials;
     }
@@ -86,7 +84,7 @@ class DefaultAnimationRenderComponent : public IAnimationRenderComponent {
 private:
     std::shared_ptr<IModel> m_model;
 
-    std::vector<std::shared_ptr<IMaterial>> m_materials;
+    std::vector<std::shared_ptr<IMaterial> > m_materials;
 
     std::shared_ptr<IAnimation> m_animation;
 
@@ -95,7 +93,7 @@ private:
     bool m_isCastedByShadows;
 
 public:
-    DefaultAnimationRenderComponent(const std::shared_ptr<IModel>& model, const std::vector<std::shared_ptr<IMaterial>>& materials, const std::shared_ptr<IAnimation>& animation, const bool castsShadows, const bool isCastedByShadows)
+    DefaultAnimationRenderComponent(const std::shared_ptr<IModel>& model, const std::vector<std::shared_ptr<IMaterial> >& materials, const std::shared_ptr<IAnimation>& animation, const bool castsShadows, const bool isCastedByShadows)
         : m_model(model)
         , m_materials(materials)
         , m_animation(animation)
@@ -145,7 +143,7 @@ public:
 
 class RenderComponentFactory {
 private:
-    static std::map<std::string, std::shared_ptr<prev::render::image::Image> > s_imagesCache;
+    static inline std::map<std::string, std::shared_ptr<prev::render::image::Image> > s_imagesCache;
 
 private:
     std::shared_ptr<prev::render::image::Image> CreateImage(const std::string& textureFilename) const
@@ -394,7 +392,7 @@ public:
 
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
     }
-    
+
     std::unique_ptr<IRenderComponent> CreateModelRenderComponent(const std::string& modelPath, const std::vector<std::string>& texturePaths, const std::vector<std::string>& normalMapPaths, const std::vector<std::string>& heightOrConeMapPaths, const bool castsShadows, const bool isCastedByShadows) const
     {
         auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
@@ -426,7 +424,7 @@ public:
 
         return std::make_unique<DefaultAnimationRenderComponent>(std::move(model), std::move(material), std::move(animation), castsShadows, isCastedByShadows);
     }
-    
+
     std::unique_ptr<IAnimationRenderComponent> CreateAnimatedModelRenderComponent(const std::string& modelPath, const std::vector<std::string>& texturePaths, const bool castsShadows, const bool isCastedByShadows) const
     {
         auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
@@ -465,7 +463,7 @@ public:
     std::unique_ptr<IAnimationRenderComponent> CreateAnimatedModelRenderComponent(const std::string& modelPath, const std::vector<std::string>& texturePaths, const std::vector<std::string>& normalMapPaths, const bool castsShadows, const bool isCastedByShadows) const
     {
         auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-        
+
         std::vector<std::shared_ptr<IMaterial> > materials;
         for (size_t i = 0; i < texturePaths.size(); i++) {
             materials.emplace_back(CreateMaterial(*allocator, texturePaths.at(i), normalMapPaths.at(i), true, 1.5f, 0.3f));
@@ -517,8 +515,6 @@ public:
     }
 };
 
-std::map<std::string, std::shared_ptr<prev::render::image::Image> > RenderComponentFactory::s_imagesCache;
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SCENE
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -540,21 +536,21 @@ public:
     {
         RenderComponentFactory renderComponentFactory{};
         std::shared_ptr<IRenderComponent> renderComponent = renderComponentFactory.CreateCubeRenderComponent(m_texturePath, true, true);
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_COMPONENT);
 
         BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(renderComponent->GetModel()->GetMesh()->GetVertices());
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
 
         TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
-        if ( prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
-            m_transformComponent->SetParent( prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
+            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
         }
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         const auto selectableComponent = std::make_shared<SelectableComponent>();
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ISelectableComponent>(GetThis(), selectableComponent, SceneNodeFlags::SELECTABLE_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ISelectableComponent>(GetThis(), selectableComponent, SceneNodeFlags::SELECTABLE_COMPONENT);
 
         SceneNode::Init();
     }
@@ -738,18 +734,18 @@ public:
         RenderComponentFactory renderComponentFactory{};
         std::shared_ptr<IRenderComponent> renderComponent = renderComponentFactory.CreatePlaneRenderComponent(m_texturePath, m_normalMapPath, m_heightMapPath, false, true);
         renderComponent->GetMaterial()->SetHeightScale(m_heightScale);
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_CONE_STEP_MAPPED_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_CONE_STEP_MAPPED_COMPONENT);
 
         BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(renderComponent->GetModel()->GetMesh()->GetVertices());
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
 
         TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
-        if ( prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
-            m_transformComponent->SetParent( prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
+            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
         }
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         SceneNode::Init();
     }
@@ -813,18 +809,18 @@ public:
         RenderComponentFactory renderComponentFactory{};
         std::shared_ptr<IRenderComponent> renderComponent = renderComponentFactory.CreateCubeRenderComponent(m_texturePath, m_normalMapPath, m_heightMapPath, false, true);
         renderComponent->GetMaterial()->SetHeightScale(m_heightScale);
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_CONE_STEP_MAPPED_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_CONE_STEP_MAPPED_COMPONENT);
 
         BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(renderComponent->GetModel()->GetMesh()->GetVertices());
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
 
         TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
-        if ( prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
-            m_transformComponent->SetParent( prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
+            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
         }
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         SceneNode::Init();
     }
@@ -882,22 +878,22 @@ public:
     {
         TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create();
-        if ( prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
-            m_transformComponent->SetParent( prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
+            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
         }
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         TerrainComponentFactory terrainComponentFactory{};
         m_terrainComponent = terrainComponentFactory.CreateRandomTerrainConeStepMapped(m_xIndex, m_zIndex, TERRAIN_SIZE);
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITerrainComponenet>(GetThis(), m_terrainComponent, SceneNodeFlags::TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITerrainComponenet>(GetThis(), m_terrainComponent, SceneNodeFlags::TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT);
 
         BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_terrainComponent->GetModel()->GetMesh()->GetVertices());
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
 
         m_transformComponent->SetPosition(m_terrainComponent->GetPosition());
 
-        m_terrainManagerComponent =  prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
+        m_terrainManagerComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
         if (auto manager = m_terrainManagerComponent.lock()) {
             manager->AddTerrainComponent(m_terrainComponent);
         }
@@ -956,10 +952,10 @@ public:
     void Init() override
     {
         std::shared_ptr<ITerrainManagerComponent> terrainManagerComponent = TerrainManagerComponentFactory{}.Create();
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITerrainManagerComponent>(GetThis(), terrainManagerComponent, SceneNodeFlags::TERRAIN_MANAGER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITerrainManagerComponent>(GetThis(), terrainManagerComponent, SceneNodeFlags::TERRAIN_MANAGER_COMPONENT);
 
         auto selectableComponent = std::make_shared<SelectableComponent>();
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ISelectableComponent>(GetThis(), selectableComponent, SceneNodeFlags::SELECTABLE_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ISelectableComponent>(GetThis(), selectableComponent, SceneNodeFlags::SELECTABLE_COMPONENT);
 
         for (uint32_t x = 0; x < m_gridMaxX; x++) {
             for (uint32_t z = 0; z < m_gridMaxZ; z++) {
@@ -972,7 +968,7 @@ public:
 
         float minHeight = std::numeric_limits<float>::max();
         float maxHeight = std::numeric_limits<float>::min();
-        auto terrains =  prev::scene::component::NodeComponentHelper::FindAll<SceneNodeFlags, ITerrainComponenet>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT });
+        auto terrains = prev::scene::component::NodeComponentHelper::FindAll<SceneNodeFlags, ITerrainComponenet>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT });
         for (const auto& terrain : terrains) {
             auto heightInfo = terrain->GetHeightMapInfo();
             if (minHeight > heightInfo->minHeight) {
@@ -1046,23 +1042,23 @@ public:
     {
         TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
-        if ( prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
-            m_transformComponent->SetParent( prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
+            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
         }
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         RenderComponentFactory renderComponentFactory{};
         m_animatonRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(AssetManager::Instance().GetAssetPath("Models/Goblin/goblin.dae"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_texture.png"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_normal_texture_2.png"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_cone_texture.png"), true, true);
         m_animatonRenderComponent->GetMaterial()->SetHeightScale(0.004f);
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IAnimationRenderComponent>(GetThis(), m_animatonRenderComponent, SceneNodeFlags::ANIMATION_CONE_STEP_MAPPED_RENDER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IAnimationRenderComponent>(GetThis(), m_animatonRenderComponent, SceneNodeFlags::ANIMATION_CONE_STEP_MAPPED_RENDER_COMPONENT);
 
         CameraComponentFactory cameraFactory{};
         m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 60.0f, 180.0f));
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ICameraComponent>(GetThis(), m_cameraComponent, SceneNodeFlags::CAMERA_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ICameraComponent>(GetThis(), m_cameraComponent, SceneNodeFlags::CAMERA_COMPONENT);
 
         BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_animatonRenderComponent->GetModel()->GetMesh()->GetVertices(), 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
 
         m_animatonRenderComponent->GetAnimation()->SetIndex(0);
         m_animatonRenderComponent->GetAnimation()->SetState(AnimationState::RUNNING);
@@ -1076,7 +1072,7 @@ public:
 
     void Update(float deltaTime) override
     {
-        const auto terrain =  prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
+        const auto terrain = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
 
         if ((m_shouldGoForward || m_shouldGoBackward || m_shouldGoLeft || m_shouldGoRight) && !m_isInTheAir) {
             m_animatonRenderComponent->GetAnimation()->SetState(AnimationState::RUNNING);
@@ -1339,14 +1335,14 @@ public:
     {
         TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create();
-        if ( prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
-            m_transformComponent->SetParent( prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
+            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
         }
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         CameraComponentFactory cameraFactory{};
         m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 60.0f, 180.0f));
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ICameraComponent>(GetThis(), m_cameraComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ICameraComponent>(GetThis(), m_cameraComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         SceneNode::Init();
 
@@ -1511,7 +1507,7 @@ public:
     {
         FontRenderComponentsFactory factory{};
         m_fontComponent = factory.Create(AssetManager::Instance().GetAssetPath("Fonts/verdana.fnt"), AssetManager::Instance().GetAssetPath("Fonts/verdana.png"), 16.0f / 9.0f);
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IFontRenderComponent>(GetThis(), m_fontComponent, SceneNodeFlags::FONT_RENDER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IFontRenderComponent>(GetThis(), m_fontComponent, SceneNodeFlags::FONT_RENDER_COMPONENT);
 
         SceneNode::Init();
     }
@@ -1553,14 +1549,14 @@ public:
     {
         TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create();
-        if ( prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
-            m_transformComponent->SetParent( prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
+            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
         }
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         LightComponentFactory lightFactory{};
         m_lightComponent = lightFactory.CreateLightCompoennt(m_initialPosition);
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ILightComponent>(GetThis(), m_lightComponent, SceneNodeFlags::LIGHT_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ILightComponent>(GetThis(), m_lightComponent, SceneNodeFlags::LIGHT_COMPONENT);
 
         SceneNode::Init();
     }
@@ -1617,14 +1613,14 @@ public:
     {
         TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create();
-        if ( prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
-            m_transformComponent->SetParent( prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
+            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
         }
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         LightComponentFactory lightFactory{};
         m_lightComponent = lightFactory.CreateLightCompoennt(m_initialPosition, m_color, glm::vec3(0.1f, 0.005f, 0.001f));
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ILightComponent>(GetThis(), m_lightComponent, SceneNodeFlags::LIGHT_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ILightComponent>(GetThis(), m_lightComponent, SceneNodeFlags::LIGHT_COMPONENT);
 
         SceneNode::Init();
     }
@@ -1666,21 +1662,21 @@ public:
     {
         TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create();
-        if ( prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
-            m_transformComponent->SetParent( prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
+            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
         }
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         SkyBoxComponentFactory factory{};
         m_skyBoxComponent = factory.Create();
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ISkyBoxComponent>(GetThis(), m_skyBoxComponent, SceneNodeFlags::SKYBOX_RENDER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ISkyBoxComponent>(GetThis(), m_skyBoxComponent, SceneNodeFlags::SKYBOX_RENDER_COMPONENT);
 
         SceneNode::Init();
     }
 
     void Update(float deltaTime) override
     {
-        auto cameraComponent =  prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>(prev::common::TagSet{ TAG_MAIN_CAMERA });
+        auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>(prev::common::TagSet{ TAG_MAIN_CAMERA });
 
         const float ROTATION_ANGLE = ROTATION_SPEED_DEGS_PER_SEC * deltaTime;
 
@@ -1757,13 +1753,13 @@ private:
         WaterComponentFactory componentFactory{};
         m_reflectionComponent = std::move(componentFactory.CreateOffScreenComponent(m_viewPortSize.x / REFLECTION_EXTENT_DIVIDER, m_viewPortSize.y / REFLECTION_EXTENT_DIVIDER));
         m_reflectionComponent->Init();
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(GetThis(), m_reflectionComponent, SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(GetThis(), m_reflectionComponent, SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT);
     }
 
     void DestroyReflectionComponent()
     {
         if (m_reflectionComponent) {
-             prev::scene::component::NodeComponentHelper::RemoveComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(GetThis(), SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT);
+            prev::scene::component::NodeComponentHelper::RemoveComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(GetThis(), SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT);
             m_reflectionComponent->ShutDown();
         }
     }
@@ -1827,13 +1823,13 @@ private:
         WaterComponentFactory componentFactory{};
         m_refractionComponent = std::move(componentFactory.CreateOffScreenComponent(m_viewPortSize.x / REFRACTION_EXTENT_DIVIDER, m_viewPortSize.y / REFRACTION_EXTENT_DIVIDER));
         m_refractionComponent->Init();
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(GetThis(), m_refractionComponent, SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(GetThis(), m_refractionComponent, SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT);
     }
 
     void DestroyRefractionComponent()
     {
         if (m_refractionComponent) {
-             prev::scene::component::NodeComponentHelper::RemoveComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(GetThis(), SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT);
+            prev::scene::component::NodeComponentHelper::RemoveComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(GetThis(), SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT);
             m_refractionComponent->ShutDown();
         }
     }
@@ -1865,18 +1861,18 @@ public:
     {
         TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create();
-        if ( prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
-            m_transformComponent->SetParent( prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
+            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
         }
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         WaterComponentFactory componentFactory{};
         m_waterComponent = std::move(componentFactory.Create(m_x, m_z));
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IWaterComponent>(GetThis(), m_waterComponent, SceneNodeFlags::WATER_RENDER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IWaterComponent>(GetThis(), m_waterComponent, SceneNodeFlags::WATER_RENDER_COMPONENT);
 
         BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_waterComponent->GetModel()->GetMesh()->GetVertices());
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
 
         SceneNode::Init();
     }
@@ -1972,15 +1968,15 @@ public:
     {
         LensFlareComponentFactory componentFactory{};
         m_lensFlareComponent = std::move(componentFactory.Create());
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ILensFlareComponent>(GetThis(), m_lensFlareComponent, SceneNodeFlags::LENS_FLARE_RENDER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ILensFlareComponent>(GetThis(), m_lensFlareComponent, SceneNodeFlags::LENS_FLARE_RENDER_COMPONENT);
 
         SceneNode::Init();
     }
 
     void Update(float deltaTime) override
     {
-        const auto lightComponent =  prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
-        const auto cameraComponent =  prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+        const auto lightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+        const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
         m_lensFlareComponent->Update(cameraComponent->GetViewFrustum().CreateProjectionMatrix(m_viewPortSize.x / m_viewPortSize.y), cameraComponent->LookAt(), cameraComponent->GetPosition(), lightComponent->GetPosition());
 
@@ -2021,15 +2017,15 @@ public:
     {
         SunComponentFactory componentFactory{};
         m_sunComponent = std::move(componentFactory.Create());
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ISunComponent>(GetThis(), m_sunComponent, SceneNodeFlags::SUN_RENDER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ISunComponent>(GetThis(), m_sunComponent, SceneNodeFlags::SUN_RENDER_COMPONENT);
 
         SceneNode::Init();
     }
 
     void Update(float deltaTime) override
     {
-        const auto lightComponent =  prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
-        const auto cameraComponent =  prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+        const auto lightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+        const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
         m_sunComponent->Update(cameraComponent->GetViewFrustum().CreateProjectionMatrix(m_viewPortSize.x / m_viewPortSize.y), cameraComponent->LookAt(), cameraComponent->GetPosition(), lightComponent->GetPosition());
 
@@ -2073,29 +2069,29 @@ public:
     {
         TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
-        if ( prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
-            m_transformComponent->SetParent( prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
+            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
         }
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         RenderComponentFactory componentFactory{};
         std::shared_ptr<IRenderComponent> renderComponent = componentFactory.CreateModelRenderComponent(AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.dae"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.png"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_normal.png"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_height.png"), true, true);
         renderComponent->GetMaterial()->SetHeightScale(0.01f);
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_PARALLAX_MAPPED_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_PARALLAX_MAPPED_COMPONENT);
 
         BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(renderComponent->GetModel()->GetMesh()->GetVertices());
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
 
         const auto selectableComponent = std::make_shared<SelectableComponent>();
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ISelectableComponent>(GetThis(), selectableComponent, SceneNodeFlags::SELECTABLE_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ISelectableComponent>(GetThis(), selectableComponent, SceneNodeFlags::SELECTABLE_COMPONENT);
 
         SceneNode::Init();
     }
 
     void Update(float deltaTime) override
     {
-        const auto terrain =  prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
+        const auto terrain = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
 
         auto currentPosition = m_transformComponent->GetPosition();
 
@@ -2143,15 +2139,15 @@ public:
         ShadowsComponentFactory shadowsFactory{};
         m_shadowsCompoent = shadowsFactory.Create();
         m_shadowsCompoent->Init();
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IShadowsComponent>(GetThis(), m_shadowsCompoent, SceneNodeFlags::SHADOWS_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IShadowsComponent>(GetThis(), m_shadowsCompoent, SceneNodeFlags::SHADOWS_COMPONENT);
 
         SceneNode::Init();
     }
 
     void Update(float deltaTime) override
     {
-        const auto lightComponent =  prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
-        const auto cameraComponent =  prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+        const auto lightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+        const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
 
         m_shadowsCompoent->Update(lightComponent->GetDirection(), lightComponent->GetViewFrustum().GetNearClippingPlane(), lightComponent->GetViewFrustum().GetFarClippingPlane(), lightComponent->GetViewFrustum().CreateProjectionMatrix(1.0f), cameraComponent->LookAt());
 
@@ -2192,8 +2188,8 @@ public:
 
     void Update(float deltaTime) override
     {
-        const auto cameraComponent =  prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
-        const auto playerTransformComponent =  prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ITransformComponent>({ TAG_PLAYER });
+        const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+        const auto playerTransformComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ITransformComponent>({ TAG_PLAYER });
 
         if (m_inputFacade.IsMouseLocked()) {
             m_rayCasterComponent->SetRayLength(RAY_LENGTH);
@@ -2219,17 +2215,17 @@ public:
 private:
     void RemoveRayCastComponnet()
     {
-        if ( prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, IRayCasterComponent>(GetThis())) {
-             prev::scene::component::NodeComponentHelper::RemoveComponent<SceneNodeFlags, IRayCasterComponent>(GetThis(), SceneNodeFlags::RAYCASTER_COMPONENT);
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, IRayCasterComponent>(GetThis())) {
+            prev::scene::component::NodeComponentHelper::RemoveComponent<SceneNodeFlags, IRayCasterComponent>(GetThis(), SceneNodeFlags::RAYCASTER_COMPONENT);
         }
     }
 
     void AddRayCastComponent(const bool mouseLocked)
     {
         if (mouseLocked) {
-             prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IRayCasterComponent>(GetThis(), m_rayCasterComponent, SceneNodeFlags::RAYCASTER_COMPONENT);
+            prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IRayCasterComponent>(GetThis(), m_rayCasterComponent, SceneNodeFlags::RAYCASTER_COMPONENT);
         } else {
-             prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IRayCasterComponent>(GetThis(), m_mouseRayCasterComponent, SceneNodeFlags::RAYCASTER_COMPONENT);
+            prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IRayCasterComponent>(GetThis(), m_mouseRayCasterComponent, SceneNodeFlags::RAYCASTER_COMPONENT);
         }
     }
 
@@ -2262,169 +2258,6 @@ private:
     prev::event::EventHandler<RayCasterNode, prev::input::mouse::MouseLockRequest> m_mouseLockHandler{ *this };
 };
 
-class ComputeNode final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
-public:
-    ComputeNode()
-        : SceneNode()
-    {
-    }
-
-    ~ComputeNode() = default;
-
-public:
-    void Init() override
-    {
-        SceneNode::Init();
-
-        auto device = prev::core::DeviceProvider::Instance().GetDevice();
-        auto computeQueue = prev::scene::ComputeProvider::Instance().GetQueue();
-        auto computeAllocator = prev::scene::ComputeProvider::Instance().GetAllocator();
-
-        prev::render::shader::ShaderFactory shaderFactory{};
-        m_shader = shaderFactory.CreateShaderFromFiles<DummyComputeShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/fibonacci_comp.spv") } });
-
-        m_pipeline = std::make_unique<DummyComputePipeline>(*device, *m_shader);
-        m_pipeline->Init();
-
-        m_commandPool = computeQueue->CreateCommandPool();
-        m_commandBuffer = prev::util::VkUtils::CreateCommandBuffer(*device, m_commandPool);
-
-        m_fence = prev::util::VkUtils::CreateFence(*device);        
-
-        m_inputBuffer = std::make_unique<prev::core::memory::buffer::Buffer>(*computeAllocator);
-        m_outputBuffer = std::make_unique<prev::core::memory::buffer::Buffer>(*computeAllocator);
-    }
-
-    void Update(float deltaTime) override
-    {
-        if (prev::scene::ComputeProvider::Instance().IsAvailable()) {
-            auto device = prev::core::DeviceProvider::Instance().GetDevice();
-            auto computeQueue = prev::scene::ComputeProvider::Instance().GetQueue();
-            auto computeAllocator = prev::scene::ComputeProvider::Instance().GetAllocator();
-
-            const uint32_t NUMBER_OF_ELEMENTS = 32;
-
-            std::vector<uint32_t> computeInput(NUMBER_OF_ELEMENTS);
-            std::vector<uint32_t> computeOutput(NUMBER_OF_ELEMENTS);
-
-            const VkDeviceSize bufferSize = NUMBER_OF_ELEMENTS * sizeof(uint32_t);
-
-            uint32_t n = 0;
-            std::generate(computeInput.begin(), computeInput.end(), [&n] { return n++; });
-
-            m_inputBuffer->Data(computeInput.data(), static_cast<uint32_t>(computeInput.size()), sizeof(uint32_t), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
-            m_outputBuffer->Data(computeOutput.data(), static_cast<uint32_t>(computeOutput.size()), sizeof(uint32_t), VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &m_outputBufferMappedMemory);
-
-            VkCommandBufferBeginInfo cmdBufBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-            cmdBufBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-            VKERRCHECK(vkBeginCommandBuffer(m_commandBuffer, &cmdBufBeginInfo));
-
-            // Barrier to ensure that input buffer transfer is finished before compute shader reads from it
-            VkBufferMemoryBarrier beforeComputeShaderReadBufferBarrier{ VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER };
-            beforeComputeShaderReadBufferBarrier.buffer = *m_inputBuffer;
-            beforeComputeShaderReadBufferBarrier.size = VK_WHOLE_SIZE;
-            beforeComputeShaderReadBufferBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
-            beforeComputeShaderReadBufferBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-            beforeComputeShaderReadBufferBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-            beforeComputeShaderReadBufferBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-
-            vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0, 0, nullptr, 1, &beforeComputeShaderReadBufferBarrier, 0, nullptr);
-
-            m_shader->Bind("dataBuffer", *m_inputBuffer);
-            const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-
-            vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *m_pipeline);
-            vkCmdBindDescriptorSets(m_commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, 0);
-
-            vkCmdDispatch(m_commandBuffer, NUMBER_OF_ELEMENTS, 1, 1);
-
-            // Barrier to ensure that shader writes are finished before buffer is read back from GPU
-            VkBufferMemoryBarrier beforeComputeShaderWriteResultBufferBarrier{ VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER };
-            beforeComputeShaderWriteResultBufferBarrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
-            beforeComputeShaderWriteResultBufferBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-            beforeComputeShaderWriteResultBufferBarrier.buffer = *m_inputBuffer;
-            beforeComputeShaderWriteResultBufferBarrier.size = VK_WHOLE_SIZE;
-            beforeComputeShaderWriteResultBufferBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-            beforeComputeShaderWriteResultBufferBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-
-            vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 1, &beforeComputeShaderWriteResultBufferBarrier, 0, nullptr);
-
-            // Read back to host visible buffer
-            VkBufferCopy copyRegion = {};
-            copyRegion.size = bufferSize;
-            vkCmdCopyBuffer(m_commandBuffer, *m_inputBuffer, *m_outputBuffer, 1, &copyRegion);
-
-            // Barrier to ensure that buffer copy is finished before host reading from it
-            VkBufferMemoryBarrier beforeHostReadBufferBarrier{ VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER };
-            beforeHostReadBufferBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-            beforeHostReadBufferBarrier.dstAccessMask = VK_ACCESS_HOST_READ_BIT;
-            beforeHostReadBufferBarrier.buffer = *m_outputBuffer;
-            beforeHostReadBufferBarrier.size = VK_WHOLE_SIZE;
-            beforeHostReadBufferBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-            beforeHostReadBufferBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-
-            vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_HOST_BIT, 0, 0, nullptr, 1, &beforeHostReadBufferBarrier, 0, nullptr);
-
-            VKERRCHECK(vkEndCommandBuffer(m_commandBuffer));
-
-            // Submit compute work
-            vkResetFences(*device, 1, &m_fence);
-
-            const VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
-            VkSubmitInfo computeSubmitInfo{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
-            computeSubmitInfo.pWaitDstStageMask = &waitStageMask;
-            computeSubmitInfo.commandBufferCount = 1;
-            computeSubmitInfo.pCommandBuffers = &m_commandBuffer;
-            VKERRCHECK(vkQueueSubmit(*computeQueue, 1, &computeSubmitInfo, m_fence));
-            VKERRCHECK(vkWaitForFences(*device, 1, &m_fence, VK_TRUE, UINT64_MAX));
-
-            // Copy to output
-            memcpy(computeOutput.data(), m_outputBufferMappedMemory, bufferSize);
-
-            std::cout << "---------------------------- FIBONACCI ---------------------------------------" << std::endl;
-            for (auto i = 0; i < computeInput.size(); i++) {
-                std::cout << "Input: " << computeInput.at(i) << " Output: " << computeOutput.at(i) << std::endl;
-            }
-            std::cout << "------------------------------------------------------------------------------" << std::endl;
-
-            VKERRCHECK(vkQueueWaitIdle(*computeQueue));
-        }
-
-        SceneNode::Update(deltaTime);
-    }
-
-    void ShutDown() override
-    {
-        SceneNode::ShutDown();
-
-        auto device = prev::core::DeviceProvider::Instance().GetDevice();
-
-        vkDestroyFence(*device, m_fence, nullptr);
-        vkDestroyCommandPool(*device, m_commandPool, nullptr);
-
-        m_pipeline->ShutDown();
-
-        m_shader->ShutDown();
-    }
-
-private:    
-    std::unique_ptr<IPipeline> m_pipeline;
-
-    std::unique_ptr<prev::render::shader::Shader> m_shader;
-
-    VkCommandPool m_commandPool;
-
-    VkCommandBuffer m_commandBuffer;
-
-    VkFence m_fence;
-
-    std::unique_ptr<prev::core::memory::buffer::Buffer> m_inputBuffer;
-
-    std::unique_ptr<prev::core::memory::buffer::Buffer> m_outputBuffer;
-
-    void* m_outputBufferMappedMemory;
-};
-
 class CloudsNode final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
 public:
     CloudsNode()
@@ -2438,14 +2271,14 @@ public:
     void Init() override
     {
         SceneNode::Init();
-        
+
         CloudsComponentFactory cloudsComponentFactory{};
         std::shared_ptr<ICloudsComponent> cloudsComponent = cloudsComponentFactory.Create();
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ICloudsComponent>(GetThis(), cloudsComponent, SceneNodeFlags::CLOUDS_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ICloudsComponent>(GetThis(), cloudsComponent, SceneNodeFlags::CLOUDS_COMPONENT);
     }
 
     void Update(float deltaTime) override
-    {    
+    {
         SceneNode::Update(deltaTime);
     }
 
@@ -2465,13 +2298,13 @@ public:
     ~SkyNode() = default;
 
 public:
-    void Init() override 
+    void Init() override
     {
         SceneNode::Init();
 
         SkyComponentFactory skyComponentFactory{};
         std::shared_ptr<ISkyComponent> skyComponent = skyComponentFactory.Create();
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ISkyComponent>(GetThis(), skyComponent, SceneNodeFlags::SKY_RENDER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ISkyComponent>(GetThis(), skyComponent, SceneNodeFlags::SKY_RENDER_COMPONENT);
     }
 
     void Update(float deltaTime) override
@@ -2667,7 +2500,7 @@ private:
 
     std::shared_ptr<ITerrainComponenet> GetTerrain(const glm::vec3& position) const
     {
-        const auto terrainManager =  prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
+        const auto terrainManager = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
         return terrainManager->GetTerrainAt(position);
     }
 
@@ -2724,15 +2557,15 @@ public:
     {
         ParticleSystemComponentFactory particleSystemComponentFactory{};
         m_particleSystemComponent = particleSystemComponentFactory.CreateRandomInCone(glm::vec3(0.0f, 1.0f, 0.0f), 15.0f);
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IParticleSystemComponent>(GetThis(), m_particleSystemComponent, SceneNodeFlags::PARTICLE_SYSTEM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IParticleSystemComponent>(GetThis(), m_particleSystemComponent, SceneNodeFlags::PARTICLE_SYSTEM_COMPONENT);
 
         SceneNode::Init();
     }
 
     void Update(float deltaTime) override
     {
-        const auto cameraComponent =  prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
-        const auto terrain =  prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
+        const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+        const auto terrain = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
 
         float height = 0.0f;
         terrain->GetHeightAt(m_initialPosition, height);
@@ -2763,7 +2596,7 @@ public:
     void Init() override
     {
         m_timeComponent = std::make_shared<TimeComponent>();
-         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITimeComponent>(GetThis(), m_timeComponent, SceneNodeFlags::TIME_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITimeComponent>(GetThis(), m_timeComponent, SceneNodeFlags::TIME_COMPONENT);
 
         SceneNode::Init();
     }
@@ -2788,7 +2621,7 @@ class RootSceneNode final : public prev::scene::graph::SceneNode<SceneNodeFlags>
 public:
     RootSceneNode(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::Swapchain>& swapchain)
         : SceneNode()
-        , m_masterRenderer(std::make_unique<MasterRenderer>(renderPass, swapchain))
+        , m_masterRenderer(std::make_unique<prev_test::render::MasterRenderer>(renderPass, swapchain))
     {
     }
 
@@ -3000,7 +2833,7 @@ private:
     prev::event::EventHandler<RootSceneNode, prev::input::touch::TouchEvent> m_touchEventHnadler{ *this };
 
 private:
-    std::unique_ptr<IRenderer<DefaultRenderContextUserData> > m_masterRenderer;
+    std::unique_ptr<prev_test::render::IRenderer<prev_test::render::DefaultRenderContextUserData> > m_masterRenderer;
 };
 
 template <typename NodeFlagsType>

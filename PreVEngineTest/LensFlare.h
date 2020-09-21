@@ -1,6 +1,8 @@
 #ifndef __LENS_FLARE_H__
 #define __LENS_FLARE_H__
 
+#include <render/image/ImageFactory.h>
+
 #include "General.h"
 
 class Flare {
@@ -53,7 +55,7 @@ private:
 
 class QuadMesh2D : public IMesh {
 public:
-    const VertexLayout& GetVertexLayout() const override
+    const prev_test::render::VertexLayout& GetVertexLayout() const override
     {
         return vertexLayout;
     }
@@ -84,7 +86,7 @@ public:
     }
 
 private:
-    static const inline VertexLayout vertexLayout{ { VertexLayoutComponent::VEC2 } };
+    static const inline prev_test::render::VertexLayout vertexLayout{ { prev_test::render::VertexLayoutComponent::VEC2 } };
 
     static const inline std::vector<glm::vec2> vertices = {
         { 0.5f, 0.5f },
