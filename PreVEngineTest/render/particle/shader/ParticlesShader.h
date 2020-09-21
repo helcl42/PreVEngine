@@ -1,7 +1,7 @@
 #ifndef __PARTICLES_SHADER_H__
 #define __PARTICLES_SHADER_H__
 
-#include <render/shader/Shader.h>
+#include <prev/render/shader/Shader.h>
 
 namespace prev_test::render::particle::shader {
 class ParticlesShader final : public prev::render::shader::Shader {

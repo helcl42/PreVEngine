@@ -12,11 +12,11 @@
 #include "../../Light.h"
 #include "../../Sky.h"
 
-#include <core/DeviceProvider.h>
-#include <core/memory/buffer/UniformBuffer.h>
-#include <render/shader/ShaderFactory.h>
-#include <scene/AllocatorProvider.h>
-#include <scene/ComputeProvider.h>
+#include <prev/core/DeviceProvider.h>
+#include <prev/core/memory/buffer/UniformBuffer.h>
+#include <prev/render/shader/ShaderFactory.h>
+#include <prev/scene/AllocatorProvider.h>
+#include <prev/scene/ComputeProvider.h>
 
 #include <memory>
 

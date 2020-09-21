@@ -1,5 +1,5 @@
-#ifndef NATIVE_H
-#define NATIVE_H
+#ifndef __ANDROID_NATIVE_H__
+#define __ANDROID_NATIVE_H__
 
 #include <jni.h>
 #include <stdlib.h>

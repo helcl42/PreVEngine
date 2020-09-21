@@ -1,7 +1,7 @@
 #ifndef __PARALLAX_MAPPED_SHADER_H__
 #define __PARALLAX_MAPPED_SHADER_H__
 
-#include <render/shader/Shader.h>
+#include <prev/render/shader/Shader.h>
 
 namespace prev_test::render::normal::shader {
 class ParallaxMappedShader final : public prev::render::shader::Shader {

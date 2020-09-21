@@ -3,7 +3,7 @@
 
 #include "IPipeline.h"
 
-#include <render/shader/Shader.h>
+#include <prev/render/shader/Shader.h>
 
 namespace prev_test::render::pipeline {
 class AbstractPipeline : public IPipeline {

@@ -4,14 +4,14 @@
 #include "shader/TextureDebugShader.h"
 
 #include "../../Light.h"
-#include "../../RayCasting.h"
 #include "../../Mesh.h"
+#include "../../RayCasting.h"
 #include "../../Water.h"
 
-#include <core/DeviceProvider.h>
-#include <core/memory/buffer/UniformBuffer.h>
-#include <render/shader/ShaderFactory.h>
-#include <scene/AllocatorProvider.h>
+#include <prev/core/DeviceProvider.h>
+#include <prev/core/memory/buffer/UniformBuffer.h>
+#include <prev/render/shader/ShaderFactory.h>
+#include <prev/scene/AllocatorProvider.h>
 
 #include <memory>
 

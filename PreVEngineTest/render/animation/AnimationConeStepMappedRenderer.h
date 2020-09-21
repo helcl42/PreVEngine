@@ -6,9 +6,9 @@
 #include "../IRenderer.h"
 #include "../pipeline/IPipeline.h"
 
-#include <render/pass/RenderPass.h>
-#include <render/shader/Shader.h>
-#include <scene/graph/ISceneNode.h>
+#include <prev/render/pass/RenderPass.h>
+#include <prev/render/shader/Shader.h>
+#include <prev/scene/graph/ISceneNode.h>
 
 #include <memory>
 

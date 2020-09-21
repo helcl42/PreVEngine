@@ -1,12 +1,12 @@
 #ifndef __MESH_H__
 #define __MESH_H__
 
-#include <util/Utils.h>
+#include "AssimpCommon.h"
 
 #include "render/VertexLayout.h"
 #include "render/VertexDataBuffer.h"
 
-#include "AssimpCommon.h"
+#include <prev/util/Utils.h>
 
 class CubeMesh final : public IMesh {
 public:

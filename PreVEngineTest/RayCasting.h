@@ -3,8 +3,8 @@
 
 #include "General.h"
 
-#include <input/mouse/MouseEvents.h>
-#include <window/WindowEvents.h>
+#include <prev/input/mouse/MouseEvents.h>
+#include <prev/window/WindowEvents.h>
 
 //#define RENDER_RAYCASTS
 #define RENDER_SELECTION
@@ -116,8 +116,8 @@ public:
     {
         m_orientationOffsetAngles = angles;
     }
-    
-    Ray GetRay() const override 
+
+    Ray GetRay() const override
     {
         return Ray{ m_rayStartPosition, m_rayDirection, m_rayLength };
     }
@@ -158,7 +158,7 @@ public:
 
     virtual ~MouseRayCasterComponent() = default;
 
-public:    
+public:
     void Update(float deltaTime) override
     {
         const glm::vec2 normalizeDeviceCoords = prev::util::MathUtil::FromViewPortSpaceToNormalizedDeviceSpace(m_viewPortDimensions, glm::vec2(m_currentMousePosition.x, m_currentMousePosition.y));
@@ -179,7 +179,7 @@ public:
             m_rayDirection = glm::normalize(compensationTransform * glm::vec4(m_rayDirection, 0.0f));
         }
 
-        Ray ray{ m_rayStartPosition, m_rayDirection, m_rayLength }; 
+        Ray ray{ m_rayStartPosition, m_rayDirection, m_rayLength };
         prev::event::EventChannel::Broadcast(RayEvent{ ray });
 
 #ifdef RENDER_RAYCASTS
@@ -222,7 +222,7 @@ public:
     {
         m_orientationOffsetAngles = angles;
     }
-    
+
     Ray GetRay() const override
     {
         return Ray{ m_rayStartPosition, m_rayDirection, m_rayLength };
@@ -246,13 +246,13 @@ public:
         m_viewPortDimensions = glm::vec2(vwindowResizeEvent.width, vwindowResizeEvent.height);
     }
 
-protected:    
+protected:
     glm::mat4 m_viewMatrix;
 
     glm::mat4 m_projectionMatrix;
 
     glm::vec2 m_currentMousePosition;
-    
+
     glm::vec3 m_rayDirection;
 
     glm::vec3 m_rayStartPosition;
@@ -300,7 +300,6 @@ public:
     virtual ~ISelectableComponent() = default;
 };
 
-
 class SelectableComponent final : public ISelectableComponent {
 public:
     bool IsSelected() const override
@@ -313,7 +312,6 @@ public:
         m_selected = selected;
     }
 
-    
     const glm::vec3& GetPostiion() const override
     {
         return m_position;

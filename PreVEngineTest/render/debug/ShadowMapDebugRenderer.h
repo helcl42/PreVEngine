@@ -5,11 +5,11 @@
 #include "../IRenderer.h"
 #include "../pipeline/IPipeline.h"
 
-#include <render/pass/RenderPass.h>
-#include <render/shader/Shader.h>
-#include <scene/graph/ISceneNode.h>
-#include <input/keyboard/KeyboardEvents.h>
-#include <event/EventHandler.h>
+#include <prev/event/EventHandler.h>
+#include <prev/input/keyboard/KeyboardEvents.h>
+#include <prev/render/pass/RenderPass.h>
+#include <prev/render/shader/Shader.h>
+#include <prev/scene/graph/ISceneNode.h>
 
 #include <memory>
 

@@ -1,9 +1,9 @@
 #ifndef __LENS_FLARE_H__
 #define __LENS_FLARE_H__
 
-#include <render/image/ImageFactory.h>
-
 #include "General.h"
+
+#include <prev/render/image/ImageFactory.h>
 
 class Flare {
 public:
@@ -134,7 +134,7 @@ public:
 
     virtual ~LensFlareComponent() = default;
 
-public:    
+public:
     void Update(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, const glm::vec3& eyePosition, const glm::vec3& sunPosition) override
     {
         glm::vec2 sunPositionInScreenSpace;
@@ -343,6 +343,5 @@ private:
         return std::make_unique<Flare>(std::move(image), std::move(imageBuffer), scale);
     }
 };
-
 
 #endif

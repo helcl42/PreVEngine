@@ -10,7 +10,7 @@
 #define VMA_STATIC_VULKAN_FUNCTIONS 0
 
 #define VMA_IMPLEMENTATION
-#include "../../external/vk_mem_alloc.h"
+#include <external/vk_mem_alloc.h>
 
 namespace prev::core::memory {
 Allocator::Allocator(const Queue& q, const VkDeviceSize blockSize)

@@ -1,7 +1,7 @@
 #include "TerrainNormalMappedShader.h"
 #include "../../VertexLayout.h"
 
-#include <util/VkUtils.h>
+#include <prev/util/VkUtils.h>
 
 namespace prev_test::render::terrain::shader {
 TerrainNormalMappedShader::TerrainNormalMappedShader(const VkDevice device)
@@ -39,4 +39,4 @@ void TerrainNormalMappedShader::InitDescriptorSets()
 void TerrainNormalMappedShader::InitPushConstantsBlocks()
 {
 }
-}
+} // namespace prev_test::render::terrain::shader

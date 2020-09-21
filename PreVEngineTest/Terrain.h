@@ -1,13 +1,14 @@
 #ifndef __TERRAIN_H__
 #define __TERRAIN_H__
 
-#include <render/image/ImageFactory.h>
-
 #include "General.h"
+
 #include "render/VertexDataBuffer.h"
 
-#include <vector>
+#include <prev/render/image/ImageFactory.h>
+
 #include <random>
+#include <vector>
 
 static const float TERRAIN_SIZE{ 40.0f };
 
@@ -151,7 +152,7 @@ struct HeightMapInfo {
     {
         const int32_t coordX = glm::clamp(x, 0, static_cast<int32_t>(heights.size() - 1));
         const int32_t coordZ = glm::clamp(z, 0, static_cast<int32_t>(heights.size() - 1));
-        
+
         return heights[coordX][coordZ];
     }
 
@@ -588,7 +589,7 @@ private:
 
         return std::make_unique<Material>(std::move(image), std::move(imageBuffer), std::move(normalImage), std::move(normalImageBuffer), shineDamper, reflectivity);
     }
-    
+
     std::unique_ptr<IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightPath, const float shineDamper, const float reflectivity) const
     {
         auto image = CreateImage(texturePath);
@@ -598,7 +599,7 @@ private:
         auto normalImage = CreateImage(normalMapPath);
         auto normalImageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
         normalImageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ normalImage->GetWidth(), normalImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)normalImage->GetBuffer() });
-        
+
         auto heightImage = CreateImage(heightPath);
         auto heightImageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
         heightImageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ heightImage->GetWidth(), heightImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)heightImage->GetBuffer() });

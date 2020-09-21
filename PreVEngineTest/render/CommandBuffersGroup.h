@@ -1,7 +1,7 @@
 #ifndef __COMMAND_BUFFER_FACTORY_H__
 #define __COMMAND_BUFFER_FACTORY_H__
 
-#include <core/DeviceProvider.h>
+#include <prev/core/DeviceProvider.h>
 
 #include <vector>
 

@@ -1,4 +1,4 @@
-#include "native.h"
+#include "android_native.h"
 
 //----------------------------------------printf for Android----------------------------------------
 // Uses a 256 byte buffer to allow concatenating multiple printf's onto one log line.

@@ -1,7 +1,7 @@
 #include "ShadowMapDebugShader.h"
 #include "../../VertexLayout.h"
 
-#include <util/VkUtils.h>
+#include <prev/util/VkUtils.h>
 
 namespace prev_test::render::debug::shader {
 ShadowMapDebugShader::ShadowMapDebugShader(const VkDevice device)

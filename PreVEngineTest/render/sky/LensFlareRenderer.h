@@ -6,10 +6,10 @@
 #include "../pipeline/IPipeline.h"
 #include "SkyEvents.h"
 
-#include <event/EventHandler.h>
-#include <render/pass/RenderPass.h>
-#include <render/shader/Shader.h>
-#include <scene/graph/ISceneNode.h>
+#include <prev/event/EventHandler.h>
+#include <prev/render/pass/RenderPass.h>
+#include <prev/render/shader/Shader.h>
+#include <prev/scene/graph/ISceneNode.h>
 
 #include <memory>
 

@@ -1,7 +1,7 @@
 #ifndef __ANIMATION_CONE_STEP_MAPPED_SHADER_H__
 #define __ANIMATION_CONE_STEP_MAPPED_SHADER_H__
 
-#include <render/shader/Shader.h>
+#include <prev/render/shader/Shader.h>
 
 namespace prev_test::render::animation::shader {
 class AnimationConeStepMappedShader final : public prev::render::shader::Shader {

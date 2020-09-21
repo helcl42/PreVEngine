@@ -6,11 +6,11 @@
 #include "../../LensFlare.h"
 #include "SkyEvents.h"
 
-#include <core/DeviceProvider.h>
-#include <core/memory/buffer/UniformBuffer.h>
-#include <event/EventsChannel.h>
-#include <render/shader/ShaderFactory.h>
-#include <scene/AllocatorProvider.h>
+#include <prev/core/DeviceProvider.h>
+#include <prev/core/memory/buffer/UniformBuffer.h>
+#include <prev/event/EventsChannel.h>
+#include <prev/render/shader/ShaderFactory.h>
+#include <prev/scene/AllocatorProvider.h>
 
 #include <memory>
 
