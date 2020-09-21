@@ -1,7 +1,7 @@
 #include "AnimatedShadowsShader.h"
 #include "../../VertexLayout.h"
 
-#include <util/VkUtils.h>
+#include <prev/util/VkUtils.h>
 
 namespace prev_test::render::shadow::shader {
 AnimatedShadowsShader::AnimatedShadowsShader(const VkDevice device)

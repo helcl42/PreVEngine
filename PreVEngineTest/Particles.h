@@ -1,13 +1,13 @@
 #ifndef __PARTICLES_H__
 #define __PARTICLES_H__
 
-#include <render/image/ImageFactory.h>
-
 #include "General.h"
 #include "Mesh.h"
 
-#include <random>
+#include <prev/render/image/ImageFactory.h>
+
 #include <list>
+#include <random>
 
 static const float PARTICLES_GRAVITY_Y{ -9.81f };
 
@@ -159,7 +159,7 @@ public:
         float lifeLength = GenerateValue(m_averageLifeLength, m_lifeLengthError);
         float rotation = m_randomRotation ? GenerateRotation() : 0.0f;
         float scale = GenerateValue(m_averageScale, m_scaleError);
-        glm::vec3 radiusOffset = GenerateRadiusOffset();        
+        glm::vec3 radiusOffset = GenerateRadiusOffset();
         return std::make_unique<Particle>(m_material, centerPosition + radiusOffset, velocity, m_gravityCompliment, lifeLength, rotation, scale);
     }
 
@@ -278,7 +278,7 @@ protected:
         return glm::vec3(x, y, z);
     }
 
-    glm::vec3 GenerateRadiusOffset() const override 
+    glm::vec3 GenerateRadiusOffset() const override
     {
         return glm::vec3{ GenerateValue(m_radius, 1.0f), GenerateValue(m_radius, 1.0f), GenerateValue(m_radius, 1.0f) };
     }
@@ -400,7 +400,7 @@ public:
 public:
     void Update(const float deltaTime, const glm::vec3& centerPosition) override
     {
-        AddNewParticles(deltaTime, centerPosition);        
+        AddNewParticles(deltaTime, centerPosition);
         UpdateParticles(deltaTime);
 
         //std::cout << "Particles Count: " << m_particles.size() << std::endl;
@@ -474,7 +474,7 @@ private:
     const std::shared_ptr<IMaterial> m_material;
 
     const std::shared_ptr<IParticleFactory> m_particleFactory;
-    
+
     std::list<std::shared_ptr<Particle> > m_particles;
 
     float m_particlesPerSecond;
@@ -485,12 +485,12 @@ public:
     std::unique_ptr<IParticleSystemComponent> CreateRandom() const
     {
         auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-        
+
         auto model = CreateModel(*allocator);
         auto material = CreateMaterial(*allocator, AssetManager::Instance().GetAssetPath("Textures/fire-ember-particles-png-4-transparent.png"));
         material->SetAtlasNumberOfRows(8);
 
-        auto particleFactory = std::make_shared<RandomDirectionParticleFactory>(material, 0.1f, 5.0f, 4.0f, 10.0f);    
+        auto particleFactory = std::make_shared<RandomDirectionParticleFactory>(material, 0.1f, 5.0f, 4.0f, 10.0f);
         particleFactory->SetRandomRotationEnabled(true);
         particleFactory->SetLifeLengthError(0.1f);
         particleFactory->SetSpeedError(0.25f);
@@ -513,17 +513,17 @@ public:
         //particleFactory->SetRandomRotationEnabled(true);
         particleFactory->SetLifeLengthError(0.5f);
         particleFactory->SetSpeedError(1.0f);
-        particleFactory->SetScaleError(2.0f); 
+        particleFactory->SetScaleError(2.0f);
         particleFactory->SetRadius(10.0f);
 
         return std::make_unique<ParticleSystemComponent>(model, material, particleFactory, 120.0f);
     }
-     
+
 private:
     std::unique_ptr<prev::render::image::Image> CreateImage(const std::string& textureFilename) const
     {
         prev::render::image::ImageFactory imageFactory;
-        auto image = imageFactory.CreateImage(textureFilename);     
+        auto image = imageFactory.CreateImage(textureFilename);
         return image;
     }
 

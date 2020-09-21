@@ -1,7 +1,7 @@
 #ifndef __WATER_SHADER_H__
 #define __WATER_SHADER_H__
 
-#include <render/shader/Shader.h>
+#include <prev/render/shader/Shader.h>
 
 namespace prev_test::render::water::shader {
 class WaterShader final : public prev::render::shader::Shader {

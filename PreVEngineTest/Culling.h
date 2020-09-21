@@ -1,7 +1,7 @@
 #ifndef __CULLING_H__
 #define __CULLING_H__
 
-#include <common/Common.h>
+#include <prev/common/Common.h>
 
 //#define RENDER_BOUNDING_VOLUMES
 
@@ -191,7 +191,7 @@ struct AABB {
     }
 };
 
-struct Frustum {    
+struct Frustum {
     std::array<Plane, 6> planes;
 
     std::array<Point, 8> points;
@@ -362,7 +362,7 @@ public:
 
         if (tmax < 0) {
             return false; // AABB is behind ray's origin
-        }        
+        }
 
         if (tmin > tmax) {
             return false; // tmin > tmax => ray doesn't intersect AABB
@@ -373,7 +373,7 @@ public:
         // if tmin is < 0, tmax is closer
         if (tmin < 0.0f) {
             tResult = tmax;
-        }        
+        }
 
         const glm::vec3 normals[] = {
             { -1, 0, 0 },
@@ -407,13 +407,13 @@ public:
 
         float eSq = glm::dot(e, e); // squared distance
         float a = glm::dot(e, ray.direction);
-        
+
         if (radiusSquared - (eSq - a * a) < 0.0f) {
             return false;
         }
 
         float bSq = eSq - (a * a);
-        float f = sqrt(fabsf(radiusSquared - bSq));       
+        float f = sqrt(fabsf(radiusSquared - bSq));
 
         float t;
         if (eSq < radiusSquared) { // Ray starts inside the sphere

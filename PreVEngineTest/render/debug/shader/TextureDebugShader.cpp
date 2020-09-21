@@ -1,7 +1,7 @@
 #include "TextureDebugShader.h"
 #include "../../VertexLayout.h"
 
-#include <util/VkUtils.h>
+#include <prev/util/VkUtils.h>
 
 namespace prev_test::render::debug::shader {
 TextureDebugShader::TextureDebugShader(const VkDevice device)

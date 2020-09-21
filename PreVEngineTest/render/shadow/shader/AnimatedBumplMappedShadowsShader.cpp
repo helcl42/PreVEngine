@@ -1,7 +1,7 @@
 #include "AnimatedBumplMappedShadowsShader.h"
 #include "../../VertexLayout.h"
 
-#include <util/VkUtils.h>
+#include <prev/util/VkUtils.h>
 
 namespace prev_test::render::shadow::shader {
 AnimatedBumplMappedShadowsShader::AnimatedBumplMappedShadowsShader(const VkDevice device)

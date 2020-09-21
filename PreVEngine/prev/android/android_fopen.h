@@ -1,7 +1,7 @@
 // From http://www.50ply.com/blog/2013/01/19/loading-compressed-android-assets-with-file-pointer/
 
-#ifndef ANDROID_FOPEN_H
-#define ANDROID_FOPEN_H
+#ifndef __ANDROID_FOPEN_H__
+#define __ANDROID_FOPEN_H__
 
 #include <stdio.h>
 #include <android/asset_manager.h>

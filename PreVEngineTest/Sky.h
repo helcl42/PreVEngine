@@ -1,10 +1,10 @@
 #ifndef __SKY_H__
 #define __SKY_H__
 
-#include <render/image/ImageFactory.h>
-
 #include "General.h"
 #include "Mesh.h"
+
+#include <prev/render/image/ImageFactory.h>
 
 static const float SKY_BOX_SIZE = 300.0f;
 
@@ -249,6 +249,4 @@ private:
     }
 };
 
-
 #endif // !__SKY_H__
-

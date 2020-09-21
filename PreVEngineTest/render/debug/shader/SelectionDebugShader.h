@@ -1,7 +1,7 @@
 #ifndef __SELECTION_DEBUG_SHADER_H__
 #define __SELECTION_DEBUG_SHADER_H__
 
-#include <render/shader/Shader.h>
+#include <prev/render/shader/Shader.h>
 
 namespace prev_test::render::debug::shader {
 class SelectionDebugShader final : public prev::render::shader::Shader {

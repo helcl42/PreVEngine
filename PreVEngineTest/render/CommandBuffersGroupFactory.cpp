@@ -1,5 +1,6 @@
 #include "CommandBuffersGroupFactory.h"
-#include <util/VkUtils.h>
+
+#include <prev/util/VkUtils.h>
 
 namespace prev_test::render {
 std::unique_ptr<CommandBuffersGroup> CommandBuffersGroupFactory::CreateGroup(const prev::core::Queue& queue, const uint32_t dim0Size, const uint32_t groupSize) const

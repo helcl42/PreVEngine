@@ -1,7 +1,7 @@
 #ifndef __SCREEN_SPACE_SHADER_H__
 #define __SCREEN_SPACE_SHADER_H__
 
-#include <render/shader/Shader.h>
+#include <prev/render/shader/Shader.h>
 
 namespace prev_test::render::common::shader {
 class ScreenSpaceShader final : public prev::render::shader::Shader {

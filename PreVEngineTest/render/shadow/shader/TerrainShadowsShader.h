@@ -1,7 +1,7 @@
 #ifndef __TERRAIN_SHADOWS_SHADER_H__
 #define __TERRAIN_SHADOWS_SHADER_H__
 
-#include <render/shader/Shader.h>
+#include <prev/render/shader/Shader.h>
 
 namespace prev_test::render::shadow::shader {
 class TerrainShadowsShader final : public prev::render::shader::Shader {

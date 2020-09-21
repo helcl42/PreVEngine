@@ -2,7 +2,7 @@
 
 #include "../../VertexLayout.h"
 
-#include <util/VkUtils.h>
+#include <prev/util/VkUtils.h>
 
 namespace prev_test::render::particle::shader {
 ParticlesShader::ParticlesShader(const VkDevice device)
