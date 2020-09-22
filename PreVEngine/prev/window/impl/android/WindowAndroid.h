@@ -4,7 +4,7 @@
 #define __WINDOW_ANDROID__
 
 #include "../WindowImpl.h"
-#include "native.h" // for Android_App
+#include "../../../android/android_native.h" // for Android_App
 
 namespace prev::window::impl::android {
 class WindowAndroid : public WindowImpl {

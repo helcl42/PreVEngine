@@ -2,7 +2,7 @@
 #define __WINDOW_H__
 
 #ifdef ANDROID
-#include <native.h>
+#include "../android/android_native.h"
 #endif
 
 #include "../common/Common.h"

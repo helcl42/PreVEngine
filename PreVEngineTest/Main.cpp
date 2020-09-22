@@ -1197,7 +1197,7 @@ public:
     void operator()(const prev::input::touch::TouchEvent& touchEvent)
     {
 #if defined(__ANDROID__)
-        if (touchEvent.action == TouchActionType::DOWN) {
+        if (touchEvent.action == prev::input::touch::TouchActionType::DOWN) {
             const float MAX_RATIO_FOR_JUMP_CONTROL = 0.25f;
             const auto MAX_X = touchEvent.extent.x * MAX_RATIO_FOR_JUMP_CONTROL;
             const auto MAX_Y = touchEvent.extent.y * MAX_RATIO_FOR_JUMP_CONTROL;
@@ -1209,7 +1209,7 @@ public:
             }
         }
 
-        if (touchEvent.action == TouchActionType::MOVE || touchEvent.action == TouchActionType::DOWN) {
+        if (touchEvent.action == prev::input::touch::TouchActionType::MOVE || touchEvent.action == prev::input::touch::TouchActionType::DOWN) {
             const float MAX_RATIO_FOR_MOVE_CONTROL = 0.35f;
             const auto MIN_X = touchEvent.extent.x - touchEvent.extent.x * MAX_RATIO_FOR_MOVE_CONTROL;
             const auto MAX_Y = touchEvent.extent.y * MAX_RATIO_FOR_MOVE_CONTROL;
@@ -1418,7 +1418,7 @@ public:
     {
 #if defined(__ANDROID__)
         const float MAX_RATIO_FOR_MOVE_CONTROL = 0.25; //
-        if (touchEvent.action == TouchActionType::MOVE || touchEvent.action == TouchActionType::DOWN) {
+        if (touchEvent.action == prev::input::touch::TouchActionType::MOVE || touchEvent.action == prev::input::touch::TouchActionType::DOWN) {
             const auto MAX_X_COORD_TO_CONTROL = touchEvent.extent.x * MAX_RATIO_FOR_MOVE_CONTROL;
             const auto MAX_Y_COORD_TO_BACKWARD_CONTROL = touchEvent.extent.y * MAX_RATIO_FOR_MOVE_CONTROL;
             const auto MIN_Y_COORD_TO_BACKWARD_CONTROL = touchEvent.extent.y - touchEvent.extent.y * MAX_RATIO_FOR_MOVE_CONTROL;
