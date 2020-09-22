@@ -2840,7 +2840,7 @@ template <typename NodeFlagsType>
 class TestApp final : public prev::App<NodeFlagsType> {
 public:
     TestApp(const std::shared_ptr<prev::core::EngineConfig>& config)
-        : App<NodeFlagsType>(config)
+        : prev::App<NodeFlagsType>(config)
     {
     }
 
