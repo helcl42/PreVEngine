@@ -3,6 +3,8 @@
 
 #include "VertexLayoutComponent.h"
 
+#include <prev/common/Common.h>
+
 #include <vector>
 
 namespace prev_test::render {

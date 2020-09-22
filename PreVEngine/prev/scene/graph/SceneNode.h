@@ -1,6 +1,8 @@
 #ifndef __SCENE_GRAPH_H__
 #define __SCENE_GRAPH_H__
 
+#include "../../util/Utils.h"
+
 #include "ISceneNode.h"
 
 namespace prev::scene::graph {

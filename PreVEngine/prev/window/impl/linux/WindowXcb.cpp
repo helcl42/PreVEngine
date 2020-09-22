@@ -392,7 +392,7 @@ Event WindowXcb::GetEvent(bool waitForEvent)
     xcb_generic_event_t* x_event;
 
     if (waitForEvent) {
-        x_event = waitForEvent(m_xcbConnection); // Blocking mode
+        x_event = xcb_wait_for_event(m_xcbConnection); // Blocking mode
     } else {
         x_event = xcb_poll_for_event(m_xcbConnection); // Non-blocking mode
     }

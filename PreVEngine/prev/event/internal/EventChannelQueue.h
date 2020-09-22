@@ -23,7 +23,7 @@ private:
 
 private:
     EventChannelQueue()
-        : Singleton<EventChannelQueue<EventType> >()
+        : prev::common::pattern::Singleton<EventChannelQueue<EventType> >()
     {
         EventChannelQueueManager::Instance().Add(*this);
     }
