@@ -14,7 +14,7 @@
 #include "Terrain.h"
 #include "Water.h"
 
-#include "render/MasterRenderer.h"
+#include "render/renderer/MasterRenderer.h"
 
 #include <prev/App.h>
 #include <prev/common/pattern/Nullable.h>
@@ -2621,7 +2621,7 @@ class RootSceneNode final : public prev::scene::graph::SceneNode<SceneNodeFlags>
 public:
     RootSceneNode(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::Swapchain>& swapchain)
         : SceneNode()
-        , m_masterRenderer(std::make_unique<prev_test::render::MasterRenderer>(renderPass, swapchain))
+        , m_masterRenderer(std::make_unique<prev_test::render::renderer::MasterRenderer>(renderPass, swapchain))
     {
     }
 
@@ -2833,7 +2833,7 @@ private:
     prev::event::EventHandler<RootSceneNode, prev::input::touch::TouchEvent> m_touchEventHnadler{ *this };
 
 private:
-    std::unique_ptr<prev_test::render::IRenderer<prev_test::render::DefaultRenderContextUserData> > m_masterRenderer;
+    std::unique_ptr<prev_test::render::renderer::IRenderer<prev_test::render::DefaultRenderContextUserData> > m_masterRenderer;
 };
 
 template <typename NodeFlagsType>
