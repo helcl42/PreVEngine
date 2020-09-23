@@ -19,7 +19,7 @@ struct RayEvent {
     {
     }
 
-    virtual ~RayEvent() = default;
+    ~RayEvent() = default;
 };
 
 class RayModelFactory {
@@ -63,7 +63,7 @@ public:
     virtual std::shared_ptr<IModel> GetModel() const = 0;
 #endif
 public:
-    virtual ~IRayCasterComponent() {}
+    virtual ~IRayCasterComponent() = default;
 };
 
 class RayCasterComponent final : public IRayCasterComponent {
@@ -152,11 +152,11 @@ public:
     virtual ~IMouseRayCasterComponent() = default;
 };
 
-class MouseRayCasterComponent : public IMouseRayCasterComponent {
+class MouseRayCasterComponent final : public IMouseRayCasterComponent {
 public:
     MouseRayCasterComponent() = default;
 
-    virtual ~MouseRayCasterComponent() = default;
+    ~MouseRayCasterComponent() = default;
 
 public:
     void Update(float deltaTime) override
