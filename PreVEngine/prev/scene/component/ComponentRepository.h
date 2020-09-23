@@ -19,7 +19,7 @@ public:
     std::shared_ptr<ItemType> Get(const uint64_t id) const
     {
         if (!Contains(id)) {
-            throw std::runtime_error("Entitity sith id = " + std::to_string(id) + " does not exist in this repository.");
+            throw std::runtime_error("Entitity with id = " + std::to_string(id) + " does not exist in this repository.");
         }
 
         return m_components.at(id);
@@ -28,7 +28,7 @@ public:
     void Add(const uint64_t id, const std::shared_ptr<ItemType>& component)
     {
         if (Contains(id)) {
-            throw std::runtime_error("Entitity sith id = " + std::to_string(id) + " already exist in this repository.");
+            throw std::runtime_error("Entitity with id = " + std::to_string(id) + " already exist in this repository.");
         }
 
         m_components[id] = component;
@@ -37,7 +37,7 @@ public:
     void Remove(const uint64_t id)
     {
         if (!Contains(id)) {
-            throw std::runtime_error("Entitity sith id = " + std::to_string(id) + " does not exist in this repository.");
+            throw std::runtime_error("Entitity with id = " + std::to_string(id) + " does not exist in this repository.");
         }
 
         m_components.erase(id);

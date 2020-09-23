@@ -10,7 +10,7 @@
 #include <assimp/scene.h>
 
 struct VertexBoneData {
-    inline static const int BONES_PER_VERTEX_COUNT = 4;
+    inline static const int BONES_PER_VERTEX_COUNT{ 4 };
 
     unsigned int ids[BONES_PER_VERTEX_COUNT];
 
