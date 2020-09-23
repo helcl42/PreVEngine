@@ -3,10 +3,10 @@
 
 #include "General.h"
 
-#include "render/sky/shader/CloudsShader.h"
-#include "render/sky/shader/PerlinWorleyNoiseShader.h"
-#include "render/sky/pipeline/CloudsPipeline.h"
-#include "render/sky/pipeline/PerlinWorleyNoisePipeline.h"
+#include "render/renderer/sky/shader/CloudsShader.h"
+#include "render/renderer/sky/shader/PerlinWorleyNoiseShader.h"
+#include "render/renderer/sky/pipeline/CloudsPipeline.h"
+#include "render/renderer/sky/pipeline/PerlinWorleyNoisePipeline.h"
 
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/ComputeProvider.h>
@@ -29,9 +29,9 @@ public:
         auto computeAllocator = prev::scene::ComputeProvider::Instance().GetAllocator();
 
         prev::render::shader::ShaderFactory shaderFactory{};
-        auto shader = shaderFactory.CreateShaderFromFiles<prev_test::render::sky::shader::CloudsShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/weather_comp.spv") } });
+        auto shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::CloudsShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/weather_comp.spv") } });
 
-        auto pipeline = std::make_unique<prev_test::render::sky::pipeline::CloudsPipeline>(*device, *shader);
+        auto pipeline = std::make_unique<prev_test::render::renderer::sky::pipeline::CloudsPipeline>(*device, *shader);
         pipeline->Init();
 
         auto uniformsPool = std::make_unique<prev::core::memory::buffer::UBOPool<Uniforms> >(*computeAllocator);
@@ -109,9 +109,9 @@ public:
         auto computeAllocator = prev::scene::ComputeProvider::Instance().GetAllocator();
 
         prev::render::shader::ShaderFactory shaderFactory{};
-        auto shader = shaderFactory.CreateShaderFromFiles<prev_test::render::sky::shader::PerlinWorleyNoiseShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/perlin_worley_noise_3d_comp.spv") } });
+        auto shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::PerlinWorleyNoiseShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/perlin_worley_noise_3d_comp.spv") } });
 
-        auto pipeline = std::make_unique<prev_test::render::sky::pipeline::PerlinWorleyNoisePipeline>(*device, *shader);
+        auto pipeline = std::make_unique<prev_test::render::renderer::sky::pipeline::PerlinWorleyNoisePipeline>(*device, *shader);
         pipeline->Init();
 
         auto commandPool = computeQueue->CreateCommandPool();

@@ -13,128 +13,138 @@ include_directories("../Dependencies/assimp/include")
 
 FILE(GLOB ROOT_SRC_LIST "*.h" "*.cpp")
 
+FILE(GLOB COMMON_SRC_LIST "common/*.h" "common/*.cpp")
+
 FILE(GLOB RENDER_SRC_LIST "render/*.h" "render/*.cpp")
 FILE(GLOB RENDER_PIPELINE_SRC_LIST "render/pipeline/*.h" "render/pipeline/*.cpp")
 
-FILE(GLOB RENDER_ANIMATION_SRC_LIST "render/animation/*.h" "render/animation/*.cpp")
-FILE(GLOB RENDER_ANIMATION_PIPELINE_SRC_LIST "render/animation/pipeline/*.h" "render/animation/pipeline/*.cpp")
-FILE(GLOB RENDER_ANIMATION_SHADER_SRC_LIST "render/animation/shader/*.h" "render/animation/shader/*.cpp")
+FILE(GLOB RENDER_RENDERER_SRC_LIST "render/renderer/*.h" "render/renderer/*.cpp")
 
-FILE(GLOB RENDER_DEBUG_SRC_LIST "render/debug/*.h" "render/debug/*.cpp")
-FILE(GLOB RENDER_DEBUG_PIPELINE_SRC_LIST "render/debug/pipeline/*.h" "render/debug/pipeline/*.cpp")
-FILE(GLOB RENDER_DEBUG_SHADER_SRC_LIST "render/debug/shader/*.h" "render/debug/shader/*.cpp")
+FILE(GLOB RENDER_RENDERER_ANIMATION_SRC_LIST "render/renderer/animation/*.h" "render/renderer/animation/*.cpp")
+FILE(GLOB RENDER_RENDERER_ANIMATION_PIPELINE_SRC_LIST "render/renderer/animation/pipeline/*.h" "render/renderer/animation/pipeline/*.cpp")
+FILE(GLOB RENDER_RENDERER_ANIMATION_SHADER_SRC_LIST "render/renderer/animation/shader/*.h" "render/renderer/animation/shader/*.cpp")
 
-FILE(GLOB RENDER_COMMON_SRC_LIST "render/common/*.h" "render/common/*.cpp")
-FILE(GLOB RENDER_COMMON_PIPELINE_SRC_LIST "render/common/pipeline/*.h" "render/common/pipeline/*.cpp")
-FILE(GLOB RENDER_COMMON_SHADER_SRC_LIST "render/common/shader/*.h" "render/common/shader/*.cpp")
+FILE(GLOB RENDER_RENDERER_DEBUG_SRC_LIST "render/renderer/debug/*.h" "render/renderer/debug/*.cpp")
+FILE(GLOB RENDER_RENDERER_DEBUG_PIPELINE_SRC_LIST "render/renderer/debug/pipeline/*.h" "render/renderer/debug/pipeline/*.cpp")
+FILE(GLOB RENDER_RENDERER_DEBUG_SHADER_SRC_LIST "render/renderer/debug/shader/*.h" "render/renderer/debug/shader/*.cpp")
 
-FILE(GLOB RENDER_NORMAL_SRC_LIST "render/normal/*.h" "render/normal/*.cpp")
-FILE(GLOB RENDER_NORMAL_PIPELINE_SRC_LIST "render/normal/pipeline/*.h" "render/normal/pipeline/*.cpp")
-FILE(GLOB RENDER_NORMAL_SHADER_SRC_LIST "render/normal/shader/*.h" "render/normal/shader/*.cpp")
+FILE(GLOB RENDER_RENDERER_COMMON_SRC_LIST "render/renderer/common/*.h" "render/renderer/common/*.cpp")
+FILE(GLOB RENDER_RENDERER_COMMON_PIPELINE_SRC_LIST "render/renderer/common/pipeline/*.h" "render/renderer/common/pipeline/*.cpp")
+FILE(GLOB RENDER_RENDERER_COMMON_SHADER_SRC_LIST "render/renderer/common/shader/*.h" "render/renderer/common/shader/*.cpp")
 
-FILE(GLOB RENDER_FONT_SRC_LIST "render/font/*.h" "render/font/*.cpp")
-FILE(GLOB RENDER_FONT_PIPELINE_SRC_LIST "render/font/pipeline/*.h" "render/font/pipeline/*.cpp")
-FILE(GLOB RENDER_FONT_SHADER_SRC_LIST "render/font/shader/*.h" "render/font/shader/*.cpp")
+FILE(GLOB RENDER_RENDERER_NORMAL_SRC_LIST "render/renderer/normal/*.h" "render/renderer/normal/*.cpp")
+FILE(GLOB RENDER_RENDERER_NORMAL_PIPELINE_SRC_LIST "render/renderer/normal/pipeline/*.h" "render/renderer/normal/pipeline/*.cpp")
+FILE(GLOB RENDER_RENDERER_NORMAL_SHADER_SRC_LIST "render/renderer/normal/shader/*.h" "render/renderer/normal/shader/*.cpp")
 
-FILE(GLOB RENDER_PARTICLE_SRC_LIST "render/particle/*.h" "render/particle/*.cpp")
-FILE(GLOB RENDER_PARTICLE_PIPELINE_SRC_LIST "render/particle/pipeline/*.h" "render/particle/pipeline/*.cpp")
-FILE(GLOB RENDER_PARTICLE_SHADER_SRC_LIST "render/particle/shader/*.h" "render/particle/shader/*.cpp")
+FILE(GLOB RENDER_RENDERER_FONT_SRC_LIST "render/renderer/font/*.h" "render/renderer/font/*.cpp")
+FILE(GLOB RENDER_RENDERER_FONT_PIPELINE_SRC_LIST "render/renderer/font/pipeline/*.h" "render/renderer/font/pipeline/*.cpp")
+FILE(GLOB RENDER_RENDERER_FONT_SHADER_SRC_LIST "render/renderer/font/shader/*.h" "render/renderer/font/shader/*.cpp")
 
-FILE(GLOB RENDER_SHADOW_SRC_LIST "render/shadow/*.h" "render/shadow/*.cpp")
-FILE(GLOB RENDER_SHADOW_PIPELINE_SRC_LIST "render/shadow/pipeline/*.h" "render/shadow/pipeline/*.cpp")
-FILE(GLOB RENDER_SHADOW_SHADER_SRC_LIST "render/shadow/shader/*.h" "render/shadow/shader/*.cpp")
+FILE(GLOB RENDER_RENDERER_PARTICLE_SRC_LIST "render/renderer/particle/*.h" "render/renderer/particle/*.cpp")
+FILE(GLOB RENDER_RENDERER_PARTICLE_PIPELINE_SRC_LIST "render/renderer/particle/pipeline/*.h" "render/renderer/particle/pipeline/*.cpp")
+FILE(GLOB RENDER_RENDERER_PARTICLE_SHADER_SRC_LIST "render/renderer/particle/shader/*.h" "render/renderer/particle/shader/*.cpp")
 
-FILE(GLOB RENDER_SKY_SRC_LIST "render/sky/*.h" "render/sky/*.cpp")
-FILE(GLOB RENDER_SKY_PIPELINE_SRC_LIST "render/sky/pipeline/*.h" "render/sky/pipeline/*.cpp")
-FILE(GLOB RENDER_SKY_SHADER_SRC_LIST "render/sky/shader/*.h" "render/sky/shader/*.cpp")
+FILE(GLOB RENDER_RENDERER_SHADOW_SRC_LIST "render/renderer/shadow/*.h" "render/renderer/shadow/*.cpp")
+FILE(GLOB RENDER_RENDERER_SHADOW_PIPELINE_SRC_LIST "render/renderer/shadow/pipeline/*.h" "render/renderer/shadow/pipeline/*.cpp")
+FILE(GLOB RENDER_RENDERER_SHADOW_SHADER_SRC_LIST "render/renderer/shadow/shader/*.h" "render/renderer/shadow/shader/*.cpp")
 
-FILE(GLOB RENDER_TERRAIN_SRC_LIST "render/terrain/*.h" "render/terrain/*.cpp")
-FILE(GLOB RENDER_TERRAIN_PIPELINE_SRC_LIST "render/terrain/pipeline/*.h" "render/terrain/pipeline/*.cpp")
-FILE(GLOB RENDER_TERRAIN_SHADER_SRC_LIST "render/terrain/shader/*.h" "render/terrain/shader/*.cpp")
+FILE(GLOB RENDER_RENDERER_SKY_SRC_LIST "render/renderer/sky/*.h" "render/renderer/sky/*.cpp")
+FILE(GLOB RENDER_RENDERER_SKY_PIPELINE_SRC_LIST "render/renderer/sky/pipeline/*.h" "render/renderer/sky/pipeline/*.cpp")
+FILE(GLOB RENDER_RENDERER_SKY_SHADER_SRC_LIST "render/renderer/sky/shader/*.h" "render/renderer/sky/shader/*.cpp")
 
-FILE(GLOB RENDER_WATER_SRC_LIST "render/water/*.h" "render/water/*.cpp")
-FILE(GLOB RENDER_WATER_PIPELINE_SRC_LIST "render/water/pipeline/*.h" "render/water/pipeline/*.cpp")
-FILE(GLOB RENDER_WATER_SHADER_SRC_LIST "render/water/shader/*.h" "render/water/shader/*.cpp")
+FILE(GLOB RENDER_RENDERER_TERRAIN_SRC_LIST "render/renderer/terrain/*.h" "render/renderer/terrain/*.cpp")
+FILE(GLOB RENDER_RENDERER_TERRAIN_PIPELINE_SRC_LIST "render/renderer/terrain/pipeline/*.h" "render/renderer/terrain/pipeline/*.cpp")
+FILE(GLOB RENDER_RENDERER_TERRAIN_SHADER_SRC_LIST "render/renderer/terrain/shader/*.h" "render/renderer/terrain/shader/*.cpp")
+
+FILE(GLOB RENDER_RENDERER_WATER_SRC_LIST "render/renderer/water/*.h" "render/renderer/water/*.cpp")
+FILE(GLOB RENDER_RENDERER_WATER_PIPELINE_SRC_LIST "render/renderer/water/pipeline/*.h" "render/renderer/water/pipeline/*.cpp")
+FILE(GLOB RENDER_RENDERER_WATER_SHADER_SRC_LIST "render/renderer/water/shader/*.h" "render/renderer/water/shader/*.cpp")
 
 SOURCE_GROUP("" FILES ${ROOT_SRC_LIST})
+
+SOURCE_GROUP("common" FILES ${COMMON_SRC_LIST})
 
 SOURCE_GROUP("render" FILES ${RENDER_SRC_LIST})
 SOURCE_GROUP("render/pipeline" FILES ${RENDER_PIPELINE_SRC_LIST})
 
-SOURCE_GROUP("render/animation" FILES ${RENDER_ANIMATION_SRC_LIST})
-SOURCE_GROUP("render/animation/pipeline" FILES ${RENDER_ANIMATION_PIPELINE_SRC_LIST})
-SOURCE_GROUP("render/animation/shader" FILES ${RENDER_ANIMATION_SHADER_SRC_LIST})
+SOURCE_GROUP("render/renderer" FILES ${RENDER_RENDERER_SRC_LIST})
 
-SOURCE_GROUP("render/debug" FILES ${RENDER_DEBUG_SRC_LIST})
-SOURCE_GROUP("render/debug/pipeline" FILES ${RENDER_DEBUG_PIPELINE_SRC_LIST})
-SOURCE_GROUP("render/debug/shader" FILES ${RENDER_DEBUG_SHADER_SRC_LIST})
+SOURCE_GROUP("render/renderer/animation" FILES ${RENDER_RENDERER_ANIMATION_SRC_LIST})
+SOURCE_GROUP("render/renderer/animation/pipeline" FILES ${RENDER_RENDERER_ANIMATION_PIPELINE_SRC_LIST})
+SOURCE_GROUP("render/renderer/animation/shader" FILES ${RENDER_RENDERER_ANIMATION_SHADER_SRC_LIST})
 
-SOURCE_GROUP("render/common" FILES ${RENDER_COMMON_SRC_LIST})
-SOURCE_GROUP("render/common/pipeline" FILES ${RENDER_COMMON_PIPELINE_SRC_LIST})
-SOURCE_GROUP("render/common/shader" FILES ${RENDER_COMMON_SHADER_SRC_LIST})
+SOURCE_GROUP("render/renderer/debug" FILES ${RENDER_RENDERER_DEBUG_SRC_LIST})
+SOURCE_GROUP("render/renderer/debug/pipeline" FILES ${RENDER_RENDERER_DEBUG_PIPELINE_SRC_LIST})
+SOURCE_GROUP("render/renderer/debug/shader" FILES ${RENDER_RENDERER_DEBUG_SHADER_SRC_LIST})
 
-SOURCE_GROUP("render/normal" FILES ${RENDER_NORMAL_SRC_LIST})
-SOURCE_GROUP("render/normal/pipeline" FILES ${RENDER_NORMAL_PIPELINE_SRC_LIST})
-SOURCE_GROUP("render/normal/shader" FILES ${RENDER_NORMAL_SHADER_SRC_LIST})
+SOURCE_GROUP("render/renderer/common" FILES ${RENDER_RENDERER_COMMON_SRC_LIST})
+SOURCE_GROUP("render/renderer/common/pipeline" FILES ${RENDER_RENDERER_COMMON_PIPELINE_SRC_LIST})
+SOURCE_GROUP("render/renderer/common/shader" FILES ${RENDER_RENDERER_COMMON_SHADER_SRC_LIST})
 
-SOURCE_GROUP("render/font" FILES ${RENDER_FONT_SRC_LIST})
-SOURCE_GROUP("render/font/pipeline" FILES ${RENDER_FONT_PIPELINE_SRC_LIST})
-SOURCE_GROUP("render/font/shader" FILES ${RENDER_FONT_SHADER_SRC_LIST})
+SOURCE_GROUP("render/renderer/normal" FILES ${RENDER_RENDERER_NORMAL_SRC_LIST})
+SOURCE_GROUP("render/renderer/normal/pipeline" FILES ${RENDER_RENDERER_NORMAL_PIPELINE_SRC_LIST})
+SOURCE_GROUP("render/renderer/normal/shader" FILES ${RENDER_RENDERER_NORMAL_SHADER_SRC_LIST})
 
-SOURCE_GROUP("render/particle" FILES ${RENDER_PARTICLE_SRC_LIST})
-SOURCE_GROUP("render/particle/pipeline" FILES ${RENDER_PARTICLE_PIPELINE_SRC_LIST})
-SOURCE_GROUP("render/particle/shader" FILES ${RENDER_PARTICLE_SHADER_SRC_LIST})
+SOURCE_GROUP("render/renderer/font" FILES ${RENDER_RENDERER_FONT_SRC_LIST})
+SOURCE_GROUP("render/renderer/font/pipeline" FILES ${RENDER_RENDERER_FONT_PIPELINE_SRC_LIST})
+SOURCE_GROUP("render/renderer/font/shader" FILES ${RENDER_RENDERER_FONT_SHADER_SRC_LIST})
 
-SOURCE_GROUP("render/shadow" FILES ${RENDER_SHADOW_SRC_LIST})
-SOURCE_GROUP("render/shadow/pipeline" FILES ${RENDER_SHADOW_PIPELINE_SRC_LIST})
-SOURCE_GROUP("render/shadow/shader" FILES ${RENDER_SHADOW_SHADER_SRC_LIST})
+SOURCE_GROUP("render/renderer/particle" FILES ${RENDER_RENDERER_PARTICLE_SRC_LIST})
+SOURCE_GROUP("render/renderer/particle/pipeline" FILES ${RENDER_RENDERER_PARTICLE_PIPELINE_SRC_LIST})
+SOURCE_GROUP("render/renderer/particle/shader" FILES ${RENDER_RENDERER_PARTICLE_SHADER_SRC_LIST})
 
-SOURCE_GROUP("render/sky" FILES ${RENDER_SKY_SRC_LIST})
-SOURCE_GROUP("render/sky/pipeline" FILES ${RENDER_SKY_PIPELINE_SRC_LIST})
-SOURCE_GROUP("render/sky/shader" FILES ${RENDER_SKY_SHADER_SRC_LIST})
+SOURCE_GROUP("render/renderer/shadow" FILES ${RENDER_RENDERER_SHADOW_SRC_LIST})
+SOURCE_GROUP("render/renderer/shadow/pipeline" FILES ${RENDER_RENDERER_SHADOW_PIPELINE_SRC_LIST})
+SOURCE_GROUP("render/renderer/shadow/shader" FILES ${RENDER_RENDERER_SHADOW_SHADER_SRC_LIST})
 
-SOURCE_GROUP("render/terrain" FILES ${RENDER_TERRAIN_SRC_LIST})
-SOURCE_GROUP("render/terrain/pipeline" FILES ${RENDER_TERRAIN_PIPELINE_SRC_LIST})
-SOURCE_GROUP("render/terrain/shader" FILES ${RENDER_TERRAIN_SHADER_SRC_LIST})
+SOURCE_GROUP("render/renderer/sky" FILES ${RENDER_RENDERER_SKY_SRC_LIST})
+SOURCE_GROUP("render/renderer/sky/pipeline" FILES ${RENDER_RENDERER_SKY_PIPELINE_SRC_LIST})
+SOURCE_GROUP("render/renderer/sky/shader" FILES ${RENDER_RENDERER_SKY_SHADER_SRC_LIST})
 
-SOURCE_GROUP("render/water" FILES ${RENDER_WATER_SRC_LIST})
-SOURCE_GROUP("render/water/pipeline" FILES ${RENDER_WATER_PIPELINE_SRC_LIST})
-SOURCE_GROUP("render/water/shader" FILES ${RENDER_WATER_SHADER_SRC_LIST})
+SOURCE_GROUP("render/renderer/terrain" FILES ${RENDER_RENDERER_TERRAIN_SRC_LIST})
+SOURCE_GROUP("render/renderer/terrain/pipeline" FILES ${RENDER_RENDERER_TERRAIN_PIPELINE_SRC_LIST})
+SOURCE_GROUP("render/renderer/terrain/shader" FILES ${RENDER_RENDERER_TERRAIN_SHADER_SRC_LIST})
+
+SOURCE_GROUP("render/renderer/water" FILES ${RENDER_RENDERER_WATER_SRC_LIST})
+SOURCE_GROUP("render/renderer/water/pipeline" FILES ${RENDER_RENDERER_WATER_PIPELINE_SRC_LIST})
+SOURCE_GROUP("render/renderer/water/shader" FILES ${RENDER_RENDERER_WATER_SHADER_SRC_LIST})
 
 add_executable(${PROJECT_NAME} 
     ${ROOT_SRC_LIST}
+    ${COMMON_SRC_LIST}
     ${RENDER_SRC_LIST}
     ${RENDER_PIPELINE_SRC_LIST}
-    ${RENDER_ANIMATION_SRC_LIST}
-    ${RENDER_ANIMATION_PIPELINE_SRC_LIST}
-    ${RENDER_ANIMATION_SHADER_SRC_LIST}
-    ${RENDER_DEBUG_SRC_LIST}
-    ${RENDER_DEBUG_PIPELINE_SRC_LIST}
-    ${RENDER_DEBUG_SHADER_SRC_LIST}
-    ${RENDER_COMMON_SRC_LIST}
-    ${RENDER_COMMON_PIPELINE_SRC_LIST}
-    ${RENDER_COMMON_SHADER_SRC_LIST}
-    ${RENDER_NORMAL_SRC_LIST}
-    ${RENDER_NORMAL_PIPELINE_SRC_LIST}
-    ${RENDER_NORMAL_SHADER_SRC_LIST}
-    ${RENDER_FONT_SRC_LIST}
-    ${RENDER_FONT_PIPELINE_SRC_LIST}
-    ${RENDER_FONT_SHADER_SRC_LIST}
-    ${RENDER_PARTICLE_SRC_LIST}
-    ${RENDER_PARTICLE_PIPELINE_SRC_LIST}
-    ${RENDER_PARTICLE_SHADER_SRC_LIST}
-    ${RENDER_SHADOW_SRC_LIST}
-    ${RENDER_SHADOW_PIPELINE_SRC_LIST}
-    ${RENDER_SHADOW_SHADER_SRC_LIST}
-    ${RENDER_SKY_SRC_LIST}
-    ${RENDER_SKY_PIPELINE_SRC_LIST}
-    ${RENDER_SKY_SHADER_SRC_LIST}
-    ${RENDER_TERRAIN_SRC_LIST}
-    ${RENDER_TERRAIN_PIPELINE_SRC_LIST}
-    ${RENDER_TERRAIN_SHADER_SRC_LIST}
-    ${RENDER_WATER_SRC_LIST}
-    ${RENDER_WATER_PIPELINE_SRC_LIST}
-    ${RENDER_WATER_SHADER_SRC_LIST}
+    ${RENDER_RENDERER_SRC_LIST}
+    ${RENDER_RENDERER_ANIMATION_SRC_LIST}
+    ${RENDER_RENDERER_ANIMATION_PIPELINE_SRC_LIST}
+    ${RENDER_RENDERER_ANIMATION_SHADER_SRC_LIST}
+    ${RENDER_RENDERER_DEBUG_SRC_LIST}
+    ${RENDER_RENDERER_DEBUG_PIPELINE_SRC_LIST}
+    ${RENDER_RENDERER_DEBUG_SHADER_SRC_LIST}
+    ${RENDER_RENDERER_COMMON_SRC_LIST}
+    ${RENDER_RENDERER_COMMON_PIPELINE_SRC_LIST}
+    ${RENDER_RENDERER_COMMON_SHADER_SRC_LIST}
+    ${RENDER_RENDERER_NORMAL_SRC_LIST}
+    ${RENDER_RENDERER_NORMAL_PIPELINE_SRC_LIST}
+    ${RENDER_RENDERER_NORMAL_SHADER_SRC_LIST}
+    ${RENDER_RENDERER_FONT_SRC_LIST}
+    ${RENDER_RENDERER_FONT_PIPELINE_SRC_LIST}
+    ${RENDER_RENDERER_FONT_SHADER_SRC_LIST}
+    ${RENDER_RENDERER_PARTICLE_SRC_LIST}
+    ${RENDER_RENDERER_PARTICLE_PIPELINE_SRC_LIST}
+    ${RENDER_RENDERER_PARTICLE_SHADER_SRC_LIST}
+    ${RENDER_RENDERER_SHADOW_SRC_LIST}
+    ${RENDER_RENDERER_SHADOW_PIPELINE_SRC_LIST}
+    ${RENDER_RENDERER_SHADOW_SHADER_SRC_LIST}
+    ${RENDER_RENDERER_SKY_SRC_LIST}
+    ${RENDER_RENDERER_SKY_PIPELINE_SRC_LIST}
+    ${RENDER_RENDERER_SKY_SHADER_SRC_LIST}
+    ${RENDER_RENDERER_TERRAIN_SRC_LIST}
+    ${RENDER_RENDERER_TERRAIN_PIPELINE_SRC_LIST}
+    ${RENDER_RENDERER_TERRAIN_SHADER_SRC_LIST}
+    ${RENDER_RENDERER_WATER_SRC_LIST}
+    ${RENDER_RENDERER_WATER_PIPELINE_SRC_LIST}
+    ${RENDER_RENDERER_WATER_SHADER_SRC_LIST}
 )
 
 #---------------Find PreVEngine---------------

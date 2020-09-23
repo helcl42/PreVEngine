@@ -1,0 +1,22 @@
+#ifndef __DEFAULT_SHADER_H__
+#define __DEFAULT_SHADER_H__
+
+#include <prev/render/shader/Shader.h>
+
+namespace prev_test::render::renderer::normal::shader {
+class DefaultShader final : public prev::render::shader::Shader {
+public:
+    DefaultShader(const VkDevice device);
+
+    ~DefaultShader() = default;
+
+private:
+    void InitVertexInputs() override;
+
+    void InitDescriptorSets() override;
+
+    void InitPushConstantsBlocks() override;
+};
+} // namespace prev_test::render::renderer::normal::shader
+
+#endif // !__DEFAULT_SHADER_H__
