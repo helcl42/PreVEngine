@@ -1,4 +1,3 @@
-#include "Animation.h"
 #include "Camera.h"
 #include "Clouds.h"
 #include "Culling.h"
@@ -6,13 +5,22 @@
 #include "General.h"
 #include "LensFlare.h"
 #include "Light.h"
-#include "Mesh.h"
 #include "Particles.h"
 #include "RayCasting.h"
 #include "Shadows.h"
 #include "Sky.h"
 #include "Terrain.h"
 #include "Water.h"
+
+#include "render/mesh/CubeMesh.h"
+#include "render/mesh/MeshFactory.h"
+#include "render/mesh/PlaneMesh.h"
+#include "render/mesh/QuadMesh.h"
+#include "render/mesh/SphereMesh.h"
+#include "render/model/Model.h"
+#include "render/animation/AnimationFactory.h"
+#include "render/material/MaterialFactory.h"
+#include "render/mesh/MeshFactory.h"
 
 #include "render/renderer/MasterRenderer.h"
 
@@ -29,16 +37,16 @@
 
 class DefaultRenderComponent : public IRenderComponent {
 private:
-    std::shared_ptr<IModel> m_model;
+    std::shared_ptr<prev_test::render::IModel> m_model;
 
-    std::vector<std::shared_ptr<IMaterial> > m_materials;
+    std::vector<std::shared_ptr<prev_test::render::IMaterial> > m_materials;
 
     bool m_castsShadows;
 
     bool m_isCastedByShadows;
 
 public:
-    DefaultRenderComponent(const std::shared_ptr<IModel>& model, const std::vector<std::shared_ptr<IMaterial> >& materials, const bool castsShadows, const bool isCastedByShadows)
+    DefaultRenderComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::vector<std::shared_ptr<prev_test::render::IMaterial> >& materials, const bool castsShadows, const bool isCastedByShadows)
         : m_model(model)
         , m_materials(materials)
         , m_castsShadows(castsShadows)
@@ -46,25 +54,25 @@ public:
     {
     }
 
-    DefaultRenderComponent(const std::shared_ptr<IModel>& model, const std::shared_ptr<IMaterial>& material, const bool castsShadows, const bool isCastedByShadows)
-        : DefaultRenderComponent(model, std::vector<std::shared_ptr<IMaterial> >{ material }, castsShadows, isCastedByShadows)
+    DefaultRenderComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::shared_ptr<prev_test::render::IMaterial>& material, const bool castsShadows, const bool isCastedByShadows)
+        : DefaultRenderComponent(model, std::vector<std::shared_ptr<prev_test::render::IMaterial> >{ material }, castsShadows, isCastedByShadows)
     {
     }
 
     virtual ~DefaultRenderComponent() = default;
 
 public:
-    std::shared_ptr<IModel> GetModel() const override
+    std::shared_ptr<prev_test::render::IModel> GetModel() const override
     {
         return m_model;
     }
 
-    std::shared_ptr<IMaterial> GetMaterial(const uint32_t index = 0) const override
+    std::shared_ptr<prev_test::render::IMaterial> GetMaterial(const uint32_t index = 0) const override
     {
         return m_materials.at(index);
     }
 
-    const std::vector<std::shared_ptr<IMaterial> >& GetMaterials() const override
+    const std::vector<std::shared_ptr<prev_test::render::IMaterial> >& GetMaterials() const override
     {
         return m_materials;
     }
@@ -82,18 +90,18 @@ public:
 
 class DefaultAnimationRenderComponent : public IAnimationRenderComponent {
 private:
-    std::shared_ptr<IModel> m_model;
+    std::shared_ptr<prev_test::render::IModel> m_model;
 
-    std::vector<std::shared_ptr<IMaterial> > m_materials;
+    std::vector<std::shared_ptr<prev_test::render::IMaterial> > m_materials;
 
-    std::shared_ptr<IAnimation> m_animation;
+    std::shared_ptr<prev_test::render::IAnimation> m_animation;
 
     bool m_castsShadows;
 
     bool m_isCastedByShadows;
 
 public:
-    DefaultAnimationRenderComponent(const std::shared_ptr<IModel>& model, const std::vector<std::shared_ptr<IMaterial> >& materials, const std::shared_ptr<IAnimation>& animation, const bool castsShadows, const bool isCastedByShadows)
+    DefaultAnimationRenderComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::vector<std::shared_ptr<prev_test::render::IMaterial> >& materials, const std::shared_ptr<prev_test::render::IAnimation>& animation, const bool castsShadows, const bool isCastedByShadows)
         : m_model(model)
         , m_materials(materials)
         , m_animation(animation)
@@ -102,30 +110,30 @@ public:
     {
     }
 
-    DefaultAnimationRenderComponent(const std::shared_ptr<IModel>& model, const std::shared_ptr<IMaterial>& material, const std::shared_ptr<IAnimation>& animation, const bool castsShadows, const bool isCastedByShadows)
-        : DefaultAnimationRenderComponent(model, std::vector<std::shared_ptr<IMaterial> >{ material }, animation, castsShadows, isCastedByShadows)
+    DefaultAnimationRenderComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::shared_ptr<prev_test::render::IMaterial>& material, const std::shared_ptr<prev_test::render::IAnimation>& animation, const bool castsShadows, const bool isCastedByShadows)
+        : DefaultAnimationRenderComponent(model, std::vector<std::shared_ptr<prev_test::render::IMaterial> >{ material }, animation, castsShadows, isCastedByShadows)
     {
     }
 
     virtual ~DefaultAnimationRenderComponent() = default;
 
 public:
-    std::shared_ptr<IModel> GetModel() const override
+    std::shared_ptr<prev_test::render::IModel> GetModel() const override
     {
         return m_model;
     }
 
-    std::shared_ptr<IMaterial> GetMaterial(const uint32_t index = 0) const override
+    std::shared_ptr<prev_test::render::IMaterial> GetMaterial(const uint32_t index = 0) const override
     {
         return m_materials.at(index);
     }
 
-    const std::vector<std::shared_ptr<IMaterial> >& GetMaterials() const override
+    const std::vector<std::shared_ptr<prev_test::render::IMaterial> >& GetMaterials() const override
     {
         return m_materials;
     }
 
-    std::shared_ptr<IAnimation> GetAnimation() const override
+    std::shared_ptr<prev_test::render::IAnimation> GetAnimation() const override
     {
         return m_animation;
     }
@@ -159,7 +167,7 @@ private:
         return image;
     }
 
-    std::unique_ptr<prev::core::memory::image::ImageBuffer> CreateImageBuffer(prev::core::memory::Allocator& allocator, const std::shared_ptr<prev::render::image::Image>& image, const bool filtering, const bool repeatAddressMode) const
+    std::unique_ptr<prev::core::memory::image::IImageBuffer> CreateImageBuffer(prev::core::memory::Allocator& allocator, const std::shared_ptr<prev::render::image::Image>& image, const bool filtering, const bool repeatAddressMode) const
     {
         const VkExtent2D imageExtent = { image->GetWidth(), image->GetHeight() };
 
@@ -169,15 +177,16 @@ private:
         return imageBuffer;
     }
 
-    std::unique_ptr<IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
+    std::unique_ptr<prev_test::render::IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
     {
         auto image = CreateImage(texturePath);
         auto imageBuffer = CreateImageBuffer(allocator, image, true, repeatAddressMode);
 
-        return std::make_unique<Material>(image, std::move(imageBuffer), shineDamper, reflectivity);
+        prev_test::render::material::MaterialFactory materialFactory{};
+        return materialFactory.Create({ glm::vec3{ 1.0f }, shineDamper, reflectivity }, { image, std::move(imageBuffer) });
     }
 
-    std::unique_ptr<IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
+    std::unique_ptr<prev_test::render::IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
     {
         auto image = CreateImage(texturePath);
         auto imageBuffer = CreateImageBuffer(allocator, image, true, repeatAddressMode);
@@ -185,10 +194,11 @@ private:
         auto normalImage = CreateImage(normalMapPath);
         auto normalImageBuffer = CreateImageBuffer(allocator, normalImage, true, repeatAddressMode);
 
-        return std::make_unique<Material>(image, std::move(imageBuffer), normalImage, std::move(normalImageBuffer), shineDamper, reflectivity);
+        prev_test::render::material::MaterialFactory materialFactory{};
+        return materialFactory.Create({ glm::vec3{ 1.0f }, shineDamper, reflectivity }, { image, std::move(imageBuffer) }, { normalImage, std::move(normalImageBuffer) });
     }
 
-    std::unique_ptr<IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
+    std::unique_ptr<prev_test::render::IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
     {
         auto image = CreateImage(texturePath);
         auto imageBuffer = CreateImageBuffer(allocator, image, true, repeatAddressMode);
@@ -199,10 +209,11 @@ private:
         auto heightImage = CreateImage(heightMapPath);
         auto heightImageBuffer = CreateImageBuffer(allocator, heightImage, false, repeatAddressMode);
 
-        return std::make_unique<Material>(image, std::move(imageBuffer), normalImage, std::move(normalImageBuffer), heightImage, std::move(heightImageBuffer), shineDamper, reflectivity);
+        prev_test::render::material::MaterialFactory materialFactory{};
+        return materialFactory.Create({ glm::vec3{ 1.0f }, shineDamper, reflectivity }, { image, std::move(imageBuffer) }, { normalImage, std::move(normalImageBuffer) }, { heightImage, std::move(heightImageBuffer) });
     }
 
-    std::unique_ptr<IModel> CreateModel(prev::core::memory::Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const
+    std::unique_ptr<prev_test::render::IModel> CreateModel(prev::core::memory::Allocator& allocator, const std::shared_ptr<prev_test::render::IMesh>& mesh) const
     {
         auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
@@ -210,7 +221,7 @@ private:
         auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
         indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
 
-        return std::make_unique<Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));
+        return std::make_unique<prev_test::render::model::Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));
     }
 
 public:
@@ -220,7 +231,7 @@ public:
 
         auto material = CreateMaterial(*allocator, texturePath, false, 10.0f, 1.0f);
 
-        auto mesh = std::make_unique<CubeMesh>();
+        auto mesh = std::make_unique<prev_test::render::mesh::CubeMesh>();
         auto model = CreateModel(*allocator, std::move(mesh));
 
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -232,7 +243,7 @@ public:
 
         auto material = CreateMaterial(*allocator, texturePath, normalPath, false, 10.0f, 1.0f);
 
-        auto mesh = std::make_unique<CubeMesh>(true);
+        auto mesh = std::make_unique<prev_test::render::mesh::CubeMesh>(true);
         auto model = CreateModel(*allocator, std::move(mesh));
 
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -244,7 +255,7 @@ public:
 
         auto material = CreateMaterial(*allocator, texturePath, normalPath, heightOrConeMapPath, false, 10.0f, 1.0f);
 
-        auto mesh = std::make_unique<CubeMesh>(true);
+        auto mesh = std::make_unique<prev_test::render::mesh::CubeMesh>(true);
         auto model = CreateModel(*allocator, std::move(mesh));
 
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -256,7 +267,7 @@ public:
 
         auto material = CreateMaterial(*allocator, texturePath, true, 2.0f, 0.3f);
 
-        auto mesh = std::make_shared<PlaneMesh>(40.0f, 40.0f, 1, 1, 10.0f, 10.0f, false);
+        auto mesh = std::make_shared<prev_test::render::mesh::PlaneMesh>(40.0f, 40.0f, 1, 1, 10.0f, 10.0f, false);
         auto model = CreateModel(*allocator, std::move(mesh));
 
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -268,7 +279,7 @@ public:
 
         auto material = CreateMaterial(*allocator, texturePath, normalMapPath, true, 2.0f, 0.3f);
 
-        auto mesh = std::make_shared<PlaneMesh>(40.0f, 40.0f, 1, 1, 1.0f, 1.0f, true);
+        auto mesh = std::make_shared<prev_test::render::mesh::PlaneMesh>(40.0f, 40.0f, 1, 1, 1.0f, 1.0f, true);
         auto model = CreateModel(*allocator, std::move(mesh));
 
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -280,7 +291,7 @@ public:
 
         auto material = CreateMaterial(*allocator, texturePath, normalMapPath, heightOrConeMapPath, true, 2.0f, 0.3f);
 
-        auto mesh = std::make_shared<PlaneMesh>(40.0f, 40.0f, 1, 1, 1.0f, 1.0f, true);
+        auto mesh = std::make_shared<prev_test::render::mesh::PlaneMesh>(40.0f, 40.0f, 1, 1, 1.0f, 1.0f, true);
         auto model = CreateModel(*allocator, std::move(mesh));
 
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -292,7 +303,7 @@ public:
 
         auto material = CreateMaterial(*allocator, texturePath, true, 2.0f, 0.3f);
 
-        auto mesh = std::make_shared<SphereMesh>(1.0f, 64, 64, 360.0f, 180.0f, false);
+        auto mesh = std::make_shared<prev_test::render::mesh::SphereMesh>(1.0f, 64, 64, 360.0f, 180.0f, false);
         auto model = CreateModel(*allocator, std::move(mesh));
 
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -304,7 +315,7 @@ public:
 
         auto material = CreateMaterial(*allocator, texturePath, normalMapPath, true, 2.0f, 0.3f);
 
-        auto mesh = std::make_shared<SphereMesh>(1.0f, 64, 64, 360.0f, 180.0f, true);
+        auto mesh = std::make_shared<prev_test::render::mesh::SphereMesh>(1.0f, 64, 64, 360.0f, 180.0f, true);
         auto model = CreateModel(*allocator, std::move(mesh));
 
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -316,7 +327,7 @@ public:
 
         auto material = CreateMaterial(*allocator, texturePath, normalMapPath, heightOrConeMapPath, true, 2.0f, 0.3f);
 
-        auto mesh = std::make_shared<SphereMesh>(1.0f, 64, 64, 360.0f, 180.0f, true);
+        auto mesh = std::make_shared<prev_test::render::mesh::SphereMesh>(1.0f, 64, 64, 360.0f, 180.0f, true);
         auto model = CreateModel(*allocator, std::move(mesh));
 
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -328,8 +339,8 @@ public:
 
         auto material = CreateMaterial(*allocator, texturePath, true, 2.0f, 0.3f);
 
-        MeshFactory meshFactory{};
-        auto mesh = meshFactory.CreateMesh(modelPath);
+        prev_test::render::mesh::MeshFactory meshFactory{};
+        auto mesh = meshFactory.Create(modelPath);
         auto model = CreateModel(*allocator, std::move(mesh));
 
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -339,13 +350,13 @@ public:
     {
         auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
-        std::vector<std::shared_ptr<IMaterial> > materials;
+        std::vector<std::shared_ptr<prev_test::render::IMaterial> > materials;
         for (const auto texturePath : texturePaths) {
             materials.emplace_back(CreateMaterial(*allocator, texturePath, true, 2.0f, 0.3f));
         }
 
-        MeshFactory meshFactory{};
-        auto mesh = meshFactory.CreateMesh(modelPath);
+        prev_test::render::mesh::MeshFactory meshFactory{};
+        auto mesh = meshFactory.Create(modelPath);
         auto model = CreateModel(*allocator, std::move(mesh));
 
         return std::make_unique<DefaultRenderComponent>(std::move(model), materials, castsShadows, isCastedByShadows);
@@ -357,8 +368,8 @@ public:
 
         auto material = CreateMaterial(*allocator, texturePath, normalMapPath, true, 10.0f, 0.7f);
 
-        MeshFactory meshFactory{};
-        auto mesh = meshFactory.CreateMesh(modelPath, prev::common::FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
+        prev_test::render::mesh::MeshFactory meshFactory{};
+        auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
         auto model = CreateModel(*allocator, std::move(mesh));
 
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -368,13 +379,13 @@ public:
     {
         auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
-        std::vector<std::shared_ptr<IMaterial> > materials;
+        std::vector<std::shared_ptr<prev_test::render::IMaterial> > materials;
         for (size_t i = 0; i < texturePaths.size(); i++) {
             materials.emplace_back(CreateMaterial(*allocator, texturePaths.at(i), normalMapPaths.at(i), true, 10.0f, 0.7f));
         }
 
-        MeshFactory meshFactory{};
-        auto mesh = meshFactory.CreateMesh(modelPath, prev::common::FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
+        prev_test::render::mesh::MeshFactory meshFactory{};
+        auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
         auto model = CreateModel(*allocator, std::move(mesh));
 
         return std::make_unique<DefaultRenderComponent>(std::move(model), materials, castsShadows, isCastedByShadows);
@@ -386,8 +397,8 @@ public:
 
         auto material = CreateMaterial(*allocator, texturePath, normalMapPath, heightOrConeMapPath, true, 3.0f, 0.3f);
 
-        MeshFactory meshFactory{};
-        auto mesh = meshFactory.CreateMesh(modelPath, prev::common::FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
+        prev_test::render::mesh::MeshFactory meshFactory{};
+        auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
         auto model = CreateModel(*allocator, std::move(mesh));
 
         return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -397,13 +408,13 @@ public:
     {
         auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
-        std::vector<std::shared_ptr<IMaterial> > materials;
+        std::vector<std::shared_ptr<prev_test::render::IMaterial> > materials;
         for (size_t i = 0; i < texturePaths.size(); i++) {
             materials.emplace_back(CreateMaterial(*allocator, texturePaths.at(i), normalMapPaths.at(i), heightOrConeMapPaths.at(i), true, 10.0f, 0.7f));
         }
 
-        MeshFactory meshFactory{};
-        auto mesh = meshFactory.CreateMesh(modelPath, prev::common::FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
+        prev_test::render::mesh::MeshFactory meshFactory{};
+        auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
         auto model = CreateModel(*allocator, std::move(mesh));
 
         return std::make_unique<DefaultRenderComponent>(std::move(model), materials, castsShadows, isCastedByShadows);
@@ -415,12 +426,12 @@ public:
 
         auto material = CreateMaterial(*allocator, texturePath, true, 1.5f, 0.3f);
 
-        MeshFactory meshFactory{};
-        auto mesh = meshFactory.CreateMesh(modelPath, prev::common::FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION });
+        prev_test::render::mesh::MeshFactory meshFactory{};
+        auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::ANIMATION });
         auto model = CreateModel(*allocator, std::move(mesh));
 
-        AnimationFactory animationFactory{};
-        auto animation = animationFactory.CreateAnimation(modelPath);
+        prev_test::render::animation::AnimationFactory animationFactory{};
+        auto animation = animationFactory.Create(modelPath);
 
         return std::make_unique<DefaultAnimationRenderComponent>(std::move(model), std::move(material), std::move(animation), castsShadows, isCastedByShadows);
     }
@@ -429,17 +440,17 @@ public:
     {
         auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
-        std::vector<std::shared_ptr<IMaterial> > materials;
+        std::vector<std::shared_ptr<prev_test::render::IMaterial> > materials;
         for (const auto& texturePath : texturePaths) {
             materials.emplace_back(CreateMaterial(*allocator, texturePath, true, 1.5f, 0.3f));
         }
 
-        MeshFactory meshFactory{};
-        auto mesh = meshFactory.CreateMesh(modelPath, prev::common::FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION });
+        prev_test::render::mesh::MeshFactory meshFactory{};
+        auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::ANIMATION });
         auto model = CreateModel(*allocator, std::move(mesh));
 
-        AnimationFactory animationFactory{};
-        auto animation = animationFactory.CreateAnimation(modelPath);
+        prev_test::render::animation::AnimationFactory animationFactory{};
+        auto animation = animationFactory.Create(modelPath);
 
         return std::make_unique<DefaultAnimationRenderComponent>(std::move(model), materials, std::move(animation), castsShadows, isCastedByShadows);
     }
@@ -450,12 +461,12 @@ public:
 
         auto material = CreateMaterial(*allocator, texturePath, normalMapPath, true, 1.5f, 0.3f);
 
-        MeshFactory meshFactory{};
-        auto mesh = meshFactory.CreateMesh(modelPath, prev::common::FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION | MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
+        prev_test::render::mesh::MeshFactory meshFactory{};
+        auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
         auto model = CreateModel(*allocator, std::move(mesh));
 
-        AnimationFactory animationFactory{};
-        auto animation = animationFactory.CreateAnimation(modelPath);
+        prev_test::render::animation::AnimationFactory animationFactory{};
+        auto animation = animationFactory.Create(modelPath);
 
         return std::make_unique<DefaultAnimationRenderComponent>(std::move(model), std::move(material), std::move(animation), castsShadows, isCastedByShadows);
     }
@@ -464,17 +475,17 @@ public:
     {
         auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
-        std::vector<std::shared_ptr<IMaterial> > materials;
+        std::vector<std::shared_ptr<prev_test::render::IMaterial> > materials;
         for (size_t i = 0; i < texturePaths.size(); i++) {
             materials.emplace_back(CreateMaterial(*allocator, texturePaths.at(i), normalMapPaths.at(i), true, 1.5f, 0.3f));
         }
 
-        MeshFactory meshFactory{};
-        auto mesh = meshFactory.CreateMesh(modelPath, prev::common::FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION | MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
+        prev_test::render::mesh::MeshFactory meshFactory{};
+        auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
         auto model = CreateModel(*allocator, std::move(mesh));
 
-        AnimationFactory animationFactory{};
-        auto animation = animationFactory.CreateAnimation(modelPath);
+        prev_test::render::animation::AnimationFactory animationFactory{};
+        auto animation = animationFactory.Create(modelPath);
 
         return std::make_unique<DefaultAnimationRenderComponent>(std::move(model), materials, std::move(animation), castsShadows, isCastedByShadows);
     }
@@ -485,12 +496,12 @@ public:
 
         auto material = CreateMaterial(*allocator, texturePath, normalMapPath, heightOrConeMapPath, true, 1.5f, 0.3f);
 
-        MeshFactory meshFactory{};
-        auto mesh = meshFactory.CreateMesh(modelPath, prev::common::FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION | MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
+        prev_test::render::mesh::MeshFactory meshFactory{};
+        auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
         auto model = CreateModel(*allocator, std::move(mesh));
 
-        AnimationFactory animationFactory{};
-        auto animation = animationFactory.CreateAnimation(modelPath);
+        prev_test::render::animation::AnimationFactory animationFactory{};
+        auto animation = animationFactory.Create(modelPath);
 
         return std::make_unique<DefaultAnimationRenderComponent>(std::move(model), std::move(material), std::move(animation), castsShadows, isCastedByShadows);
     }
@@ -499,17 +510,17 @@ public:
     {
         auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
-        std::vector<std::shared_ptr<IMaterial> > materials;
+        std::vector<std::shared_ptr<prev_test::render::IMaterial> > materials;
         for (size_t i = 0; i < texturePaths.size(); i++) {
             materials.emplace_back(CreateMaterial(*allocator, texturePaths.at(i), normalMapPaths.at(i), heightOrConeMapPaths.at(i), true, 1.5f, 0.3f));
         }
 
-        MeshFactory meshFactory{};
-        auto mesh = meshFactory.CreateMesh(modelPath, prev::common::FlagSet<MeshFactory::AssimpMeshFactoryCreateFlags>{ MeshFactory::AssimpMeshFactoryCreateFlags::ANIMATION | MeshFactory::AssimpMeshFactoryCreateFlags::TANGENT_BITANGENT });
+        prev_test::render::mesh::MeshFactory meshFactory{};
+        auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
         auto model = CreateModel(*allocator, std::move(mesh));
 
-        AnimationFactory animationFactory{};
-        auto animation = animationFactory.CreateAnimation(modelPath);
+        prev_test::render::animation::AnimationFactory animationFactory{};
+        auto animation = animationFactory.Create(modelPath);
 
         return std::make_unique<DefaultAnimationRenderComponent>(std::move(model), materials, std::move(animation), castsShadows, isCastedByShadows);
     }
@@ -1061,7 +1072,7 @@ public:
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
 
         m_animatonRenderComponent->GetAnimation()->SetIndex(0);
-        m_animatonRenderComponent->GetAnimation()->SetState(AnimationState::RUNNING);
+        m_animatonRenderComponent->GetAnimation()->SetState(prev_test::render::AnimationState::RUNNING);
         m_animatonRenderComponent->GetAnimation()->SetSpeed(1.0f);
 
         m_cameraComponent->AddOrientation(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), m_cameraComponent->GetUpDirection())));
@@ -1075,7 +1086,7 @@ public:
         const auto terrain = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
 
         if ((m_shouldGoForward || m_shouldGoBackward || m_shouldGoLeft || m_shouldGoRight) && !m_isInTheAir) {
-            m_animatonRenderComponent->GetAnimation()->SetState(AnimationState::RUNNING);
+            m_animatonRenderComponent->GetAnimation()->SetState(prev_test::render::AnimationState::RUNNING);
             m_animatonRenderComponent->GetAnimation()->Update(m_shouldGoBackward ? -deltaTime : deltaTime);
 
             glm::vec3 positionOffset{ 0.0f };
@@ -1093,7 +1104,7 @@ public:
             }
             m_transformComponent->Translate(positionOffset);
         } else {
-            m_animatonRenderComponent->GetAnimation()->SetState(AnimationState::PAUSED);
+            m_animatonRenderComponent->GetAnimation()->SetState(prev_test::render::AnimationState::PAUSED);
             m_animatonRenderComponent->GetAnimation()->Update(deltaTime);
         }
 

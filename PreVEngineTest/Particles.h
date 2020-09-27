@@ -2,7 +2,11 @@
 #define __PARTICLES_H__
 
 #include "General.h"
-#include "Mesh.h"
+
+#include "render/material/Material.h"
+#include "render/mesh/QuadMesh.h"
+#include "render/model/Model.h"
+#include "render/material/MaterialFactory.h"
 
 #include <prev/render/image/ImageFactory.h>
 
@@ -13,7 +17,7 @@ static const float PARTICLES_GRAVITY_Y{ -9.81f };
 
 class Particle {
 public:
-    explicit Particle(const std::shared_ptr<IMaterial>& material, const glm::vec3& position, const glm::vec3& velocity, const float gravityEffect, const float lifeLength, const float rotation, const float scale)
+    explicit Particle(const std::shared_ptr<prev_test::render::IMaterial>& material, const glm::vec3& position, const glm::vec3& velocity, const float gravityEffect, const float lifeLength, const float rotation, const float scale)
         : m_material(material)
         , m_position(position)
         , m_velocity(velocity)
@@ -52,7 +56,7 @@ public:
         return m_stagesBlendFactor;
     }
 
-    std::shared_ptr<IMaterial> GetMaterial() const
+    std::shared_ptr<prev_test::render::IMaterial> GetMaterial() const
     {
         return m_material;
     }
@@ -101,7 +105,7 @@ private:
     }
 
 private:
-    std::shared_ptr<IMaterial> m_material;
+    std::shared_ptr<prev_test::render::IMaterial> m_material;
 
     glm::vec3 m_position;
 
@@ -134,7 +138,7 @@ public:
 
 class AbstractParticleFactory : public IParticleFactory {
 public:
-    AbstractParticleFactory(const std::shared_ptr<IMaterial>& mt, const float gravityComp, const float avgSpeed, const float avgLifeLength, const float avgScale)
+    AbstractParticleFactory(const std::shared_ptr<prev_test::render::IMaterial>& mt, const float gravityComp, const float avgSpeed, const float avgLifeLength, const float avgScale)
         : m_material(mt)
         , m_gravityCompliment(gravityComp)
         , m_averageSpeed(avgSpeed)
@@ -233,7 +237,7 @@ public:
     }
 
 protected:
-    const std::shared_ptr<IMaterial> m_material;
+    const std::shared_ptr<prev_test::render::IMaterial> m_material;
 
     const float m_gravityCompliment;
 
@@ -256,7 +260,7 @@ protected:
 
 class RandomDirectionParticleFactory final : public AbstractParticleFactory {
 public:
-    RandomDirectionParticleFactory(const std::shared_ptr<IMaterial>& mt, const float gravityComp, const float avgSpeed, const float avgLifeLength, const float avgScale)
+    RandomDirectionParticleFactory(const std::shared_ptr<prev_test::render::IMaterial>& mt, const float gravityComp, const float avgSpeed, const float avgLifeLength, const float avgScale)
         : AbstractParticleFactory(mt, gravityComp, avgSpeed, avgLifeLength, avgScale)
     {
     }
@@ -286,7 +290,7 @@ protected:
 
 class RandomInConeParticleFactory final : public AbstractParticleFactory {
 public:
-    RandomInConeParticleFactory(const std::shared_ptr<IMaterial>& mt, const float gravityComp, const float avgSpeed, const float avgLifeLength, const float avgScale)
+    RandomInConeParticleFactory(const std::shared_ptr<prev_test::render::IMaterial>& mt, const float gravityComp, const float avgSpeed, const float avgLifeLength, const float avgScale)
         : AbstractParticleFactory(mt, gravityComp, avgSpeed, avgLifeLength, avgScale)
     {
     }
@@ -375,9 +379,9 @@ public:
 
     virtual std::shared_ptr<IParticleFactory> GetParticleFactory() const = 0;
 
-    virtual std::shared_ptr<IModel> GetModel() const = 0;
+    virtual std::shared_ptr<prev_test::render::IModel> GetModel() const = 0;
 
-    virtual std::shared_ptr<IMaterial> GetMaterial() const = 0;
+    virtual std::shared_ptr<prev_test::render::IMaterial> GetMaterial() const = 0;
 
     virtual std::list<std::shared_ptr<Particle> > GetParticles() const = 0;
 
@@ -387,7 +391,7 @@ public:
 
 class ParticleSystemComponent : public IParticleSystemComponent {
 public:
-    ParticleSystemComponent(const std::shared_ptr<IModel>& model, const std::shared_ptr<IMaterial>& material, const std::shared_ptr<IParticleFactory>& particleFactory, const float particlesPerSecond)
+    ParticleSystemComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::shared_ptr<prev_test::render::IMaterial>& material, const std::shared_ptr<IParticleFactory>& particleFactory, const float particlesPerSecond)
         : m_model(model)
         , m_material(material)
         , m_particleFactory(particleFactory)
@@ -421,12 +425,12 @@ public:
         return m_particleFactory;
     }
 
-    std::shared_ptr<IModel> GetModel() const override
+    std::shared_ptr<prev_test::render::IModel> GetModel() const override
     {
         return m_model;
     }
 
-    std::shared_ptr<IMaterial> GetMaterial() const override
+    std::shared_ptr<prev_test::render::IMaterial> GetMaterial() const override
     {
         return m_material;
     }
@@ -469,9 +473,9 @@ private:
     }
 
 private:
-    const std::shared_ptr<IModel> m_model;
+    const std::shared_ptr<prev_test::render::IModel> m_model;
 
-    const std::shared_ptr<IMaterial> m_material;
+    const std::shared_ptr<prev_test::render::IMaterial> m_material;
 
     const std::shared_ptr<IParticleFactory> m_particleFactory;
 
@@ -527,23 +531,24 @@ private:
         return image;
     }
 
-    std::shared_ptr<IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath) const
+    std::shared_ptr<prev_test::render::IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath) const
     {
         auto image = CreateImage(texturePath);
         auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
         imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER, (uint8_t*)image->GetBuffer() });
 
-        return std::make_shared<Material>(std::move(image), std::move(imageBuffer), 0.0f, 0.0f);
+        prev_test::render::material::MaterialFactory materialFactory{};
+        return materialFactory.Create({ glm::vec3{ 1.0f }, 0.0f, 0.0f }, { std::move(image), std::move(imageBuffer) });
     }
 
-    std::shared_ptr<IModel> CreateModel(prev::core::memory::Allocator& allocator) const
+    std::shared_ptr<prev_test::render::IModel> CreateModel(prev::core::memory::Allocator& allocator) const
     {
-        auto mesh = std::make_unique<QuadMesh>();
+        auto mesh = std::make_unique<prev_test::render::mesh::QuadMesh>();
         auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), static_cast<uint32_t>(mesh->GetVertices().size()), mesh->GetVertexLayout().GetStride());
         auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
         indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
-        return std::make_shared<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
+        return std::make_shared<prev_test::render::model::Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
 };
 

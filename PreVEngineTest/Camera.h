@@ -3,6 +3,8 @@
 
 #include "General.h"
 
+#include "render/ViewFrustum.h"
+
 class ICameraComponent {
 public:
     virtual const glm::mat4& LookAt() const = 0;
@@ -33,9 +35,9 @@ public:
 
     virtual glm::quat GetOrientation() const = 0;
 
-    virtual const ViewFrustum& GetViewFrustum() const = 0;
+    virtual const prev_test::render::ViewFrustum& GetViewFrustum() const = 0;
 
-    virtual void SetViewFrustum(const ViewFrustum& viewFrustum) = 0;
+    virtual void SetViewFrustum(const prev_test::render::ViewFrustum& viewFrustum) = 0;
 
 public:
     virtual ~ICameraComponent() = default;
@@ -68,7 +70,7 @@ private:
 
     glm::vec2 m_prevTouchPosition;
 
-    ViewFrustum m_viewFrustum{ 45.0f, 10.0f, 300.0f };
+    prev_test::render::ViewFrustum m_viewFrustum{ 45.0f, 10.0f, 300.0f };
 
     bool m_orientationChanged{ false };
 
@@ -225,12 +227,12 @@ public:
         return m_orientation;
     }
 
-    const ViewFrustum& GetViewFrustum() const override
+    const prev_test::render::ViewFrustum& GetViewFrustum() const override
     {
         return m_viewFrustum;
     }
 
-    void SetViewFrustum(const ViewFrustum& viewFrustum) override
+    void SetViewFrustum(const prev_test::render::ViewFrustum& viewFrustum) override
     {
         m_viewFrustum = viewFrustum;
     }

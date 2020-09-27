@@ -3,6 +3,7 @@
 
 #include "../common/Common.h"
 #include "../common/pattern/Singleton.h"
+#include "../core/instance/Validation.h"
 
 #include <chrono>
 #include <cmath>

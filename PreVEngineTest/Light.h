@@ -3,6 +3,8 @@
 
 #include "General.h"
 
+#include "render/ViewFrustum.h"
+
 class ILightComponent {
 public:
     virtual glm::mat4 LookAt() const = 0;
@@ -23,28 +25,15 @@ public:
 
     virtual void SetAttenuation(const glm::vec3& attenuation) = 0;
 
-    virtual const ViewFrustum& GetViewFrustum() const = 0;
+    virtual const prev_test::render::ViewFrustum& GetViewFrustum() const = 0;
 
-    virtual void SetViewFrustum(const ViewFrustum& viewFrustum) = 0;
+    virtual void SetViewFrustum(const prev_test::render::ViewFrustum& viewFrustum) = 0;
 
 public:
     virtual ~ILightComponent() = default;
 };
 
 class LightComponent : public ILightComponent {
-private:
-    glm::vec3 m_lookAtPosition{ 0.0f, 0.0f, 0.0f };
-
-    glm::vec3 m_upDirection{ 0.0f, 1.0f, 0.0f };
-
-    ViewFrustum m_viewFrustum{ 45.0f, 10.0f, 300.0f };
-
-    glm::vec3 m_position;
-
-    glm::vec3 m_color{ 1.0f, 1.0f, 1.0f };
-
-    glm::vec3 m_attenuation{ 1.0f, 0.0f, 0.0f };
-
 public:
     LightComponent(const glm::vec3& pos)
         : m_position(pos)
@@ -106,15 +95,28 @@ public:
         m_attenuation = attenuation;
     }
 
-    const ViewFrustum& GetViewFrustum() const override
+    const prev_test::render::ViewFrustum& GetViewFrustum() const override
     {
         return m_viewFrustum;
     }
 
-    void SetViewFrustum(const ViewFrustum& viewFrustum) override
+    void SetViewFrustum(const prev_test::render::ViewFrustum& viewFrustum) override
     {
         m_viewFrustum = viewFrustum;
     }
+
+private:
+    glm::vec3 m_lookAtPosition{ 0.0f, 0.0f, 0.0f };
+
+    glm::vec3 m_upDirection{ 0.0f, 1.0f, 0.0f };
+
+    prev_test::render::ViewFrustum m_viewFrustum{ 45.0f, 10.0f, 300.0f };
+
+    glm::vec3 m_position;
+
+    glm::vec3 m_color{ 1.0f, 1.0f, 1.0f };
+
+    glm::vec3 m_attenuation{ 1.0f, 0.0f, 0.0f };
 };
 
 class LightComponentFactory {

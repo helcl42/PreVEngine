@@ -3,6 +3,8 @@
 
 #include "General.h"
 
+#include "render/IMesh.h"
+
 #include <prev/render/image/ImageFactory.h>
 
 class Flare {
@@ -53,7 +55,7 @@ private:
     glm::vec2 m_screenSpacePosition;
 };
 
-class QuadMesh2D : public IMesh {
+class QuadMesh2D : public prev_test::render::IMesh {
 public:
     const prev_test::render::VertexLayout& GetVertexLayout() const override
     {
@@ -80,7 +82,7 @@ public:
         return indices;
     }
 
-    const std::vector<MeshPart>& GetMeshParts() const override
+    const std::vector<prev_test::render::MeshPart>& GetMeshParts() const override
     {
         return meshParts;
     }
@@ -106,8 +108,8 @@ private:
         0, 1, 2, 2, 3, 0
     };
 
-    static const inline std::vector<MeshPart> meshParts = {
-        MeshPart(static_cast<uint32_t>(indices.size()))
+    static const inline std::vector<prev_test::render::MeshPart> meshParts = {
+        prev_test::render::MeshPart(static_cast<uint32_t>(indices.size()))
     };
 };
 
@@ -117,7 +119,7 @@ public:
 
     virtual const std::vector<std::shared_ptr<Flare> >& GetFlares() const = 0;
 
-    virtual std::shared_ptr<IModel> GetModel() const = 0;
+    virtual std::shared_ptr<prev_test::render::IModel> GetModel() const = 0;
 
 public:
     virtual ~ILensFlareComponent() = default;
@@ -125,7 +127,7 @@ public:
 
 class LensFlareComponent : public ILensFlareComponent {
 public:
-    explicit LensFlareComponent(const std::vector<std::shared_ptr<Flare> >& flares, float spacing, const std::shared_ptr<IModel>& model)
+    explicit LensFlareComponent(const std::vector<std::shared_ptr<Flare> >& flares, float spacing, const std::shared_ptr<prev_test::render::IModel>& model)
         : m_flares(flares)
         , m_spacing(spacing)
         , m_model(model)
@@ -155,7 +157,7 @@ public:
         return m_flares;
     }
 
-    std::shared_ptr<IModel> GetModel() const override
+    std::shared_ptr<prev_test::render::IModel> GetModel() const override
     {
         return m_model;
     }
@@ -185,7 +187,7 @@ private:
 
     float m_spacing;
 
-    std::shared_ptr<IModel> m_model;
+    std::shared_ptr<prev_test::render::IModel> m_model;
 };
 
 class LensFlareComponentFactory {
@@ -223,15 +225,14 @@ private:
         float scale;
     };
 
-    std::unique_ptr<IModel> CreateModel(prev::core::memory::Allocator& allocator) const
+    std::unique_ptr<prev_test::render::IModel> CreateModel(prev::core::memory::Allocator& allocator) const
     {
         auto mesh = std::make_unique<QuadMesh2D>();
         auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
         auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
         indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
-
-        return std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
+        return std::make_unique<prev_test::render::model::Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
 
     std::unique_ptr<Flare> CreateFlare(prev::core::memory::Allocator& allocator, const std::string& filePath, const float scale) const
@@ -250,7 +251,7 @@ public:
 
     virtual std::shared_ptr<Flare> GetFlare() const = 0;
 
-    virtual std::shared_ptr<IModel> GetModel() const = 0;
+    virtual std::shared_ptr<prev_test::render::IModel> GetModel() const = 0;
 
 public:
     virtual ~ISunComponent() = default;
@@ -258,7 +259,7 @@ public:
 
 class SunComponent : public ISunComponent {
 public:
-    explicit SunComponent(const std::shared_ptr<Flare>& flare, const std::shared_ptr<IModel>& model)
+    explicit SunComponent(const std::shared_ptr<Flare>& flare, const std::shared_ptr<prev_test::render::IModel>& model)
         : m_flare(flare)
         , m_model(model)
     {
@@ -287,7 +288,7 @@ public:
         return m_flare;
     }
 
-    std::shared_ptr<IModel> GetModel() const override
+    std::shared_ptr<prev_test::render::IModel> GetModel() const override
     {
         return m_model;
     }
@@ -306,7 +307,7 @@ private:
 private:
     std::shared_ptr<Flare> m_flare;
 
-    std::shared_ptr<IModel> m_model;
+    std::shared_ptr<prev_test::render::IModel> m_model;
 };
 
 class SunComponentFactory {
@@ -323,7 +324,7 @@ public:
     }
 
 private:
-    std::unique_ptr<IModel> CreateModel(prev::core::memory::Allocator& allocator) const
+    std::unique_ptr<prev_test::render::IModel> CreateModel(prev::core::memory::Allocator& allocator) const
     {
         auto mesh = std::make_unique<QuadMesh2D>();
         auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
@@ -331,7 +332,7 @@ private:
         auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
         indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
 
-        return std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
+        return std::make_unique<prev_test::render::model::Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
 
     std::unique_ptr<Flare> CreateFlare(prev::core::memory::Allocator& allocator, const std::string& filePath, const float scale) const

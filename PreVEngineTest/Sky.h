@@ -2,13 +2,16 @@
 #define __SKY_H__
 
 #include "General.h"
-#include "Mesh.h"
+#include "render/IMesh.h"
+#include "render/material/MaterialFactory.h"
+#include "render/mesh/FullScreenQuadMesh.h"
+#include "render/model/Model.h"
 
 #include <prev/render/image/ImageFactory.h>
 
 static const float SKY_BOX_SIZE = 300.0f;
 
-class CubeMeshVerticesOnly : public IMesh {
+class CubeMeshVerticesOnly : public prev_test::render::IMesh {
 public:
     const prev_test::render::VertexLayout& GetVertexLayout() const override
     {
@@ -35,7 +38,7 @@ public:
         return indices;
     }
 
-    const std::vector<MeshPart>& GetMeshParts() const override
+    const std::vector<prev_test::render::MeshPart>& GetMeshParts() const override
     {
         return meshParts;
     }
@@ -90,16 +93,16 @@ private:
         20, 21, 22, 22, 23, 20
     };
 
-    static const inline std::vector<MeshPart> meshParts = {
-        MeshPart(static_cast<uint32_t>(indices.size()))
+    static const inline std::vector<prev_test::render::MeshPart> meshParts = {
+        prev_test::render::MeshPart(static_cast<uint32_t>(indices.size()))
     };
 };
 
 class ISkyBoxComponent {
 public:
-    virtual std::shared_ptr<IModel> GetModel() const = 0;
+    virtual std::shared_ptr<prev_test::render::IModel> GetModel() const = 0;
 
-    virtual std::shared_ptr<IMaterial> GetMaterial() const = 0;
+    virtual std::shared_ptr<prev_test::render::IMaterial> GetMaterial() const = 0;
 
 public:
     virtual ~ISkyBoxComponent() = default;
@@ -109,12 +112,12 @@ class SkyBoxComponentFactory;
 
 class SkyBoxComponent : public ISkyBoxComponent {
 public:
-    std::shared_ptr<IModel> GetModel() const override
+    std::shared_ptr<prev_test::render::IModel> GetModel() const override
     {
         return m_model;
     }
 
-    std::shared_ptr<IMaterial> GetMaterial() const override
+    std::shared_ptr<prev_test::render::IMaterial> GetMaterial() const override
     {
         return m_material;
     }
@@ -123,9 +126,9 @@ private:
     friend class SkyBoxComponentFactory;
 
 private:
-    std::shared_ptr<IModel> m_model;
+    std::shared_ptr<prev_test::render::IModel> m_model;
 
-    std::shared_ptr<IMaterial> m_material;
+    std::shared_ptr<prev_test::render::IMaterial> m_material;
 };
 
 class SkyBoxComponentFactory {
@@ -150,17 +153,17 @@ public:
     }
 
 private:
-    std::unique_ptr<IModel> CreateModel(prev::core::memory::Allocator& allocator) const
+    std::unique_ptr<prev_test::render::IModel> CreateModel(prev::core::memory::Allocator& allocator) const
     {
         auto mesh = std::make_unique<CubeMeshVerticesOnly>();
         auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
         auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
         indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
-        return std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
+        return std::make_unique<prev_test::render::model::Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
 
-    std::unique_ptr<IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::vector<std::string>& textureFilenames) const
+    std::unique_ptr<prev_test::render::IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::vector<std::string>& textureFilenames) const
     {
         prev::render::image::ImageFactory imageFactory{};
 
@@ -178,13 +181,14 @@ private:
         auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
         imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ images[0]->GetWidth(), images[0]->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT, true, true, VK_IMAGE_VIEW_TYPE_CUBE, static_cast<uint32_t>(images.size()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, layersData });
 
-        return std::make_unique<Material>(std::move(images[0]), std::move(imageBuffer), 1.0f, 0.0f);
+        prev_test::render::material::MaterialFactory materialFactory{};
+        return materialFactory.Create({ glm::vec3{ 1.0f }, 1.0f, 0.0f }, { std::move(images[0]), std::move(imageBuffer) });
     }
 };
 
 class ISkyComponent {
 public:
-    virtual std::shared_ptr<IModel> GetModel() const = 0;
+    virtual std::shared_ptr<prev_test::render::IModel> GetModel() const = 0;
 
     virtual glm::vec3 GetBottomColor() const = 0;
 
@@ -198,7 +202,7 @@ class SkyComponentFactory;
 
 class SkyComponent : public ISkyComponent {
 public:
-    std::shared_ptr<IModel> GetModel() const override
+    std::shared_ptr<prev_test::render::IModel> GetModel() const override
     {
         return m_model;
     }
@@ -217,7 +221,7 @@ private:
     friend class SkyComponentFactory;
 
 private:
-    std::shared_ptr<IModel> m_model;
+    std::shared_ptr<prev_test::render::IModel> m_model;
 
     glm::vec3 m_bottomColor;
 
@@ -238,14 +242,14 @@ public:
     }
 
 private:
-    std::unique_ptr<IModel> CreateModel(prev::core::memory::Allocator& allocator) const
+    std::unique_ptr<prev_test::render::IModel> CreateModel(prev::core::memory::Allocator& allocator) const
     {
-        auto mesh = std::make_unique<FullScreenQuadMesh>();
+        auto mesh = std::make_unique<prev_test::render::mesh::FullScreenQuadMesh>();
         auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
         auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
         indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
-        return std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
+        return std::make_unique<prev_test::render::model::Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
 };
 

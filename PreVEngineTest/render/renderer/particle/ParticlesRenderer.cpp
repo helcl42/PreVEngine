@@ -3,6 +3,8 @@
 #include "pipeline/ParticlesPipeline.h"
 #include "shader/ParticlesShader.h"
 
+#include "../../model/ModelFactory.h"
+
 #include "../../../Camera.h"
 #include "../../../Particles.h"
 #include "../../VertexDataBuffer.h"
@@ -137,6 +139,6 @@ std::unique_ptr<IModel> ParticlesRenderer::CreateModel(prev::core::memory::Alloc
     auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
     indexBuffer->Data(mesh->GetIndices().data(), (uint32_t)mesh->GetIndices().size());
 
-    return std::make_unique<Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));
+    return prev_test::render::model::ModelFactory{}.Create(mesh, std::move(vertexBuffer), std::move(indexBuffer));
 }
 } // namespace prev_test::render::renderer::particle

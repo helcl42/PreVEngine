@@ -3,7 +3,9 @@
 #include "pipeline/ShadowMapDebugPipeline.h"
 #include "shader/ShadowMapDebugShader.h"
 
-#include "../../../Mesh.h"
+#include "../../mesh/QuadMesh.h"
+#include "../../model/ModelFactory.h"
+
 #include "../../../Shadows.h"
 
 #include <prev/core/DeviceProvider.h>
@@ -36,7 +38,7 @@ void ShadowMapDebugRenderer::Init()
     LOGI("ShadowMapDebug Pipeline created\n");
 
     // create quad model
-    auto quadMesh = std::make_unique<QuadMesh>();
+    auto quadMesh = std::make_unique<prev_test::render::mesh::QuadMesh>();
 
     auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator);
     vertexBuffer->Data(quadMesh->GetVertexData(), quadMesh->GerVerticesCount(), quadMesh->GetVertexLayout().GetStride());
@@ -44,7 +46,7 @@ void ShadowMapDebugRenderer::Init()
     auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(*allocator);
     indexBuffer->Data(quadMesh->GetIndices().data(), static_cast<uint32_t>(quadMesh->GetIndices().size()));
 
-    m_quadModel = std::make_unique<Model>(std::move(quadMesh), std::move(vertexBuffer), std::move(indexBuffer));
+    m_quadModel = prev_test::render::model::ModelFactory{}.Create(std::move(quadMesh), std::move(vertexBuffer), std::move(indexBuffer));
 }
 
 void ShadowMapDebugRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData)
