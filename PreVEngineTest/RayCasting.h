@@ -2,6 +2,7 @@
 #define __RAY_CASTING_H__
 
 #include "General.h"
+#include "render/model/Model.h"
 
 #include <prev/input/mouse/MouseEvents.h>
 #include <prev/window/WindowEvents.h>
@@ -24,7 +25,7 @@ struct RayEvent {
 
 class RayModelFactory {
 public:
-    std::unique_ptr<IModel> Create(const Ray& ray) const
+    std::unique_ptr<prev_test::render::IModel> Create(const Ray& ray) const
     {
         const float DISTANCE_BETWEEN_POINTS = 4.0f;
         const uint32_t pointsCount = static_cast<uint32_t>(ray.length / DISTANCE_BETWEEN_POINTS);
@@ -41,7 +42,7 @@ public:
         vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
         auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(*allocator);
         indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
-        return std::make_unique<Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
+        return std::make_unique<prev_test::render::model::Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
     }
 };
 

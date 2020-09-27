@@ -1,9 +1,13 @@
 #ifndef __WATER_H__
 #define __WATER_H__
 
-#include <prev/render/image/ImageFactory.h>
-
 #include "General.h"
+
+#include "render/material/MaterialFactory.h"
+#include "render/model/Model.h"
+#include "render/IMesh.h"
+
+#include <prev/render/image/ImageFactory.h>
 
 static const float WATER_TILE_SIZE{ 20.0f };
 #ifdef WIN32
@@ -16,7 +20,7 @@ static const float WATER_WAVE_SPEED{ 0.03f };
 static const uint32_t REFRACTION_EXTENT_DIVIDER{ 3 };
 static const uint32_t REFLECTION_EXTENT_DIVIDER{ 4 };
 
-class WaterTileMesh : public IMesh {
+class WaterTileMesh : public prev_test::render::IMesh {
 public:
     const prev_test::render::VertexLayout& GetVertexLayout() const override
     {
@@ -43,7 +47,7 @@ public:
         return indices;
     }
 
-    const std::vector<MeshPart>& GetMeshParts() const override
+    const std::vector<prev_test::render::MeshPart>& GetMeshParts() const override
     {
         return meshParts;
     }
@@ -62,8 +66,8 @@ private:
         0, 1, 2, 2, 3, 0
     };
 
-    static const inline std::vector<MeshPart> meshParts = {
-        MeshPart(static_cast<uint32_t>(indices.size()))
+    static const inline std::vector<prev_test::render::MeshPart> meshParts = {
+        prev_test::render::MeshPart(static_cast<uint32_t>(indices.size()))
     };
 };
 
@@ -251,9 +255,9 @@ private:
 
 class IWaterComponent {
 public:
-    virtual std::shared_ptr<IModel> GetModel() const = 0;
+    virtual std::shared_ptr<prev_test::render::IModel> GetModel() const = 0;
 
-    virtual std::shared_ptr<IMaterial> GetMaterial() const = 0;
+    virtual std::shared_ptr<prev_test::render::IMaterial> GetMaterial() const = 0;
 
     virtual void Update(float deltaTime) = 0;
 
@@ -271,7 +275,7 @@ public:
 
 class WaterComponent : public IWaterComponent {
 public:
-    WaterComponent(const int gridX, const int gridZ, const std::shared_ptr<IMaterial>& material, const std::shared_ptr<IModel>& model)
+    WaterComponent(const int gridX, const int gridZ, const std::shared_ptr<prev_test::render::IMaterial>& material, const std::shared_ptr<prev_test::render::IModel>& model)
         : m_gridX(gridX)
         , m_gridZ(gridZ)
         , m_position(glm::vec3(gridX * 2 * WATER_TILE_SIZE + WATER_TILE_SIZE, WATER_LEVEL, gridZ * 2 * WATER_TILE_SIZE + WATER_TILE_SIZE))
@@ -284,12 +288,12 @@ public:
     ~WaterComponent() = default;
 
 public:
-    std::shared_ptr<IMaterial> GetMaterial() const override
+    std::shared_ptr<prev_test::render::IMaterial> GetMaterial() const override
     {
         return m_material;
     }
 
-    std::shared_ptr<IModel> GetModel() const override
+    std::shared_ptr<prev_test::render::IModel> GetModel() const override
     {
         return m_model;
     }
@@ -327,9 +331,9 @@ private:
 
     const glm::vec3 m_position;
 
-    std::shared_ptr<IMaterial> m_material;
+    std::shared_ptr<prev_test::render::IMaterial> m_material;
 
-    std::shared_ptr<IModel> m_model;
+    std::shared_ptr<prev_test::render::IModel> m_model;
 
     float m_moveFactor;
 };
@@ -369,7 +373,7 @@ private:
         return image;
     }
 
-    std::unique_ptr<IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const glm::vec4& color, const std::string& textureFilename, const std::string& normalTextureFilename, const float shineDamper, const float reflectivity) const
+    std::unique_ptr<prev_test::render::IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const glm::vec4& color, const std::string& textureFilename, const std::string& normalTextureFilename, const float shineDamper, const float reflectivity) const
     {
         auto image = CreateImage(textureFilename);
         auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
@@ -379,10 +383,11 @@ private:
         auto normalImageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
         normalImageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ normalImage->GetWidth(), normalImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)normalImage->GetBuffer() });
 
-        return std::make_unique<Material>(color, std::move(image), std::move(imageBuffer), std::move(normalImage), std::move(normalImageBuffer), shineDamper, reflectivity);
+        prev_test::render::material::MaterialFactory materialFactory{};
+        return materialFactory.Create({ glm::vec3{ 1.0f }, 1.0f, 0.0f }, { image, std::move(imageBuffer) }, { normalImage, std::move(normalImageBuffer) });
     }
 
-    std::unique_ptr<IModel> CreateModel(prev::core::memory::Allocator& allocator) const
+    std::unique_ptr<prev_test::render::IModel> CreateModel(prev::core::memory::Allocator& allocator) const
     {
         auto mesh = std::make_unique<WaterTileMesh>();
         auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
@@ -390,7 +395,7 @@ private:
         auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
         indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
 
-        return std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
+        return std::make_unique<prev_test::render::model::Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
 
 private:

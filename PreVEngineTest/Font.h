@@ -5,6 +5,10 @@
 
 #include "render/VertexLayout.h"
 #include "render/VertexDataBuffer.h"
+#include "render/IMesh.h"
+#include "render/IModel.h"
+
+#include "render/model/Model.h"
 
 #include <prev/common/Common.h>
 #include <prev/render/image/ImageFactory.h>
@@ -655,7 +659,7 @@ public:
     }
 };
 
-class TextMesh final : public IMesh {
+class TextMesh final : public prev_test::render::IMesh {
 public:
     TextMesh(const std::vector<glm::vec2>& vertices, const std::vector<glm::vec2>& textureCoords, const std::vector<uint32_t>& indices)
         : m_vertexLayout({ prev_test::render::VertexLayoutComponent::VEC2, prev_test::render::VertexLayoutComponent::VEC2 })
@@ -668,7 +672,7 @@ public:
             m_vertices.push_back(glm::vec3(vertices[i].x, vertices[i].y, 0.0f));
         }
 
-        m_meshParts.push_back(MeshPart(static_cast<uint32_t>(m_indices.size())));
+        m_meshParts.push_back(prev_test::render::MeshPart(static_cast<uint32_t>(m_indices.size())));
     }
 
     ~TextMesh() = default;
@@ -699,7 +703,7 @@ public:
         return m_indices;
     }
     
-    const std::vector<MeshPart>& GetMeshParts() const override
+    const std::vector<prev_test::render::MeshPart>& GetMeshParts() const override
     {
         return m_meshParts;
     }
@@ -715,12 +719,12 @@ private:
 
     prev_test::render::VertexDataBuffer m_vertexDataBuffer;
 
-    std::vector<MeshPart> m_meshParts;
+    std::vector<prev_test::render::MeshPart> m_meshParts;
 };
 
 class TextMeshFactory {
 public:
-    std::unique_ptr<IMesh> CreateTextMesh(const std::shared_ptr<BaseFancyText>& text, const std::shared_ptr<FontMetadata> fontMetaData) const
+    std::unique_ptr<prev_test::render::IMesh> CreateTextMesh(const std::shared_ptr<BaseFancyText>& text, const std::shared_ptr<FontMetadata> fontMetaData) const
     {
         std::vector<TextLine> lines;
         CreateStructure(text, fontMetaData, lines);
@@ -774,7 +778,7 @@ private:
         lines.push_back(currentLine);
     }
 
-    std::unique_ptr<IMesh> CreateQuadVertices(const std::shared_ptr<BaseFancyText>& text, const std::shared_ptr<FontMetadata> fontMetaData, const std::vector<TextLine>& lines) const
+    std::unique_ptr<prev_test::render::IMesh> CreateQuadVertices(const std::shared_ptr<BaseFancyText>& text, const std::shared_ptr<FontMetadata> fontMetaData, const std::vector<TextLine>& lines) const
     {
         text->SetNumberOfLines(static_cast<unsigned int>(lines.size()));
 
@@ -844,7 +848,7 @@ private:
 struct RenderableText {
     std::shared_ptr<FancyText> text;
 
-    std::shared_ptr<IModel> model;
+    std::shared_ptr<prev_test::render::IModel> model;
 };
 
 class IFontRenderComponent {
@@ -898,7 +902,7 @@ public:
         auto indexBuffer = std::make_shared<prev::core::memory::buffer::IndexBuffer>(*allocator);
         indexBuffer->Data(mesh->GetIndices().data(), (uint32_t)mesh->GetIndices().size());
 
-        auto model = std::make_shared<Model>(std::move(mesh), vertexBuffer, indexBuffer);
+        auto model = std::make_shared<prev_test::render::model::Model>(std::move(mesh), vertexBuffer, indexBuffer);
 
         m_renderableTexts.push_back(RenderableText{ text, model });
     }

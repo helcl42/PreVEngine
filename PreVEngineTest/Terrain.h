@@ -3,7 +3,11 @@
 
 #include "General.h"
 
+#include "render/IMesh.h"
 #include "render/VertexDataBuffer.h"
+#include "render/mesh/MeshUtil.h"
+#include "render/material/MaterialFactory.h"
+#include "render/model/ModelFactory.h"
 
 #include <prev/render/image/ImageFactory.h>
 
@@ -198,9 +202,9 @@ struct VertexData {
 
 class ITerrainComponenet {
 public:
-    virtual std::shared_ptr<IModel> GetModel() const = 0;
+    virtual std::shared_ptr<prev_test::render::IModel> GetModel() const = 0;
 
-    virtual std::vector<std::shared_ptr<IMaterial> > GetMaterials() const = 0; // TODO make pack of materials controlled by height
+    virtual std::vector<std::shared_ptr<prev_test::render::IMaterial> > GetMaterials() const = 0; // TODO make pack of materials controlled by height
 
     virtual bool GetHeightAt(const glm::vec3& position, float& outHeight) const = 0;
 
@@ -236,12 +240,12 @@ public:
     ~TerrainComponent() = default;
 
 public:
-    std::shared_ptr<IModel> GetModel() const override
+    std::shared_ptr<prev_test::render::IModel> GetModel() const override
     {
         return m_model;
     }
 
-    std::vector<std::shared_ptr<IMaterial> > GetMaterials() const override
+    std::vector<std::shared_ptr<prev_test::render::IMaterial> > GetMaterials() const override
     {
         return m_materials;
     }
@@ -318,16 +322,16 @@ private:
 
     std::shared_ptr<VertexData> m_vertexData;
 
-    std::shared_ptr<IModel> m_model;
+    std::shared_ptr<prev_test::render::IModel> m_model;
 
-    std::vector<std::shared_ptr<IMaterial> > m_materials;
+    std::vector<std::shared_ptr<prev_test::render::IMaterial> > m_materials;
 
     std::vector<float> m_heightSteps;
 
     float m_transitionRange;
 };
 
-class TerrainMesh : public IMesh {
+class TerrainMesh : public prev_test::render::IMesh {
 private:
     friend TerrainComponentFactory;
 
@@ -342,7 +346,7 @@ private:
 
     std::vector<uint32_t> m_indices;
 
-    std::vector<MeshPart> m_meshParts;
+    std::vector<prev_test::render::MeshPart> m_meshParts;
 
 public:
     const prev_test::render::VertexLayout& GetVertexLayout() const override
@@ -370,7 +374,7 @@ public:
         return m_indices;
     }
 
-    const std::vector<MeshPart>& GetMeshParts() const override
+    const std::vector<prev_test::render::MeshPart>& GetMeshParts() const override
     {
         return m_meshParts;
     }
@@ -557,7 +561,7 @@ private:
         return image;
     }
 
-    std::unique_ptr<IModel> CreateModel(prev::core::memory::Allocator& allocator, const std::shared_ptr<VertexData>& vertexData, const bool normalMapped) const
+    std::unique_ptr<prev_test::render::IModel> CreateModel(prev::core::memory::Allocator& allocator, const std::shared_ptr<VertexData>& vertexData, const bool normalMapped) const
     {
         auto mesh = GenerateMesh(vertexData, normalMapped);
         auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
@@ -565,19 +569,19 @@ private:
         auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
         indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
 
-        return std::make_unique<Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
+        return std::make_unique<prev_test::render::model::Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
 
-    std::unique_ptr<IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const float shineDamper, const float reflectivity) const
+    std::unique_ptr<prev_test::render::IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const float shineDamper, const float reflectivity) const
     {
         auto image = CreateImage(texturePath);
         auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
         imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer() });
 
-        return std::make_unique<Material>(std::move(image), std::move(imageBuffer), shineDamper, reflectivity);
+        return prev_test::render::material::MaterialFactory{}.Create({ glm::vec3{ 1.0f }, shineDamper, reflectivity }, { image, std::move(imageBuffer) });
     }
 
-    std::unique_ptr<IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const float shineDamper, const float reflectivity) const
+    std::unique_ptr<prev_test::render::IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const float shineDamper, const float reflectivity) const
     {
         auto image = CreateImage(texturePath);
         auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
@@ -587,10 +591,10 @@ private:
         auto normalImageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
         normalImageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ normalImage->GetWidth(), normalImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)normalImage->GetBuffer() });
 
-        return std::make_unique<Material>(std::move(image), std::move(imageBuffer), std::move(normalImage), std::move(normalImageBuffer), shineDamper, reflectivity);
+        return prev_test::render::material::MaterialFactory{}.Create({ glm::vec3{ 1.0f }, shineDamper, reflectivity }, { image, std::move(imageBuffer) }, { normalImage, std::move(normalImageBuffer) });
     }
 
-    std::unique_ptr<IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightPath, const float shineDamper, const float reflectivity) const
+    std::unique_ptr<prev_test::render::IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightPath, const float shineDamper, const float reflectivity) const
     {
         auto image = CreateImage(texturePath);
         auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
@@ -604,10 +608,10 @@ private:
         auto heightImageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
         heightImageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ heightImage->GetWidth(), heightImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)heightImage->GetBuffer() });
 
-        return std::make_unique<Material>(std::move(image), std::move(imageBuffer), std::move(normalImage), std::move(normalImageBuffer), std::move(heightImage), std::move(heightImageBuffer), shineDamper, reflectivity);
+        return prev_test::render::material::MaterialFactory{}.Create({ glm::vec3{ 1.0f }, shineDamper, reflectivity }, { image, std::move(imageBuffer) }, { normalImage, std::move(normalImageBuffer) }, { heightImage, std::move(heightImageBuffer) });
     }
 
-    std::unique_ptr<IMesh> GenerateMesh(const std::shared_ptr<VertexData>& vertexData, const bool normalMapped) const
+    std::unique_ptr<prev_test::render::IMesh> GenerateMesh(const std::shared_ptr<VertexData>& vertexData, const bool normalMapped) const
     {
         auto mesh = std::make_unique<TerrainMesh>();
         mesh->m_indices = vertexData->indices;
@@ -632,7 +636,7 @@ private:
             }
         }
 
-        mesh->m_meshParts.push_back(MeshPart(static_cast<uint32_t>(vertexData->indices.size())));
+        mesh->m_meshParts.push_back(prev_test::render::MeshPart(static_cast<uint32_t>(vertexData->indices.size())));
 
         return mesh;
     }
@@ -670,7 +674,7 @@ private:
             }
         }
 
-        MeshUtil::GenerateTangetsAndBiTangents(result->vertices, result->textureCoords, result->indices, result->tangents, result->biTangents);
+        prev_test::render::mesh::MeshUtil::GenerateTangetsAndBiTangents(result->vertices, result->textureCoords, result->indices, result->tangents, result->biTangents);
 
         return result;
     }

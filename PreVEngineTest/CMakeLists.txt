@@ -18,6 +18,14 @@ FILE(GLOB COMMON_SRC_LIST "common/*.h" "common/*.cpp")
 FILE(GLOB RENDER_SRC_LIST "render/*.h" "render/*.cpp")
 FILE(GLOB RENDER_PIPELINE_SRC_LIST "render/pipeline/*.h" "render/pipeline/*.cpp")
 
+FILE(GLOB RENDER_UTIL_SRC_LIST "render/util/*.h" "render/util/*.cpp")
+FILE(GLOB RENDER_UTIL_ASSIMP_SRC_LIST "render/util/assimp/*.h" "render/util/assimp/*.cpp")
+
+FILE(GLOB RENDER_MESH_SRC_LIST "render/mesh/*.h" "render/mesh/*.cpp")
+FILE(GLOB RENDER_MODEL_SRC_LIST "render/model/*.h" "render/model/*.cpp")
+FILE(GLOB RENDER_MATERIAL_SRC_LIST "render/material/*.h" "render/material/*.cpp")
+FILE(GLOB RENDER_ANIMATION_SRC_LIST "render/animation/*.h" "render/animation/*.cpp")
+
 FILE(GLOB RENDER_RENDERER_SRC_LIST "render/renderer/*.h" "render/renderer/*.cpp")
 
 FILE(GLOB RENDER_RENDERER_ANIMATION_SRC_LIST "render/renderer/animation/*.h" "render/renderer/animation/*.cpp")
@@ -67,6 +75,14 @@ SOURCE_GROUP("common" FILES ${COMMON_SRC_LIST})
 SOURCE_GROUP("render" FILES ${RENDER_SRC_LIST})
 SOURCE_GROUP("render/pipeline" FILES ${RENDER_PIPELINE_SRC_LIST})
 
+SOURCE_GROUP("render/util" FILES ${RENDER_UTIL_SRC_LIST})
+SOURCE_GROUP("render/util/assimp" FILES ${RENDER_UTIL_ASSIMP_SRC_LIST})
+
+SOURCE_GROUP("render/mesh" FILES ${RENDER_MESH_SRC_LIST})
+SOURCE_GROUP("render/model" FILES ${RENDER_MODEL_SRC_LIST})
+SOURCE_GROUP("render/material" FILES ${RENDER_MATERIAL_SRC_LIST})
+SOURCE_GROUP("render/animation" FILES ${RENDER_ANIMATION_SRC_LIST})
+
 SOURCE_GROUP("render/renderer" FILES ${RENDER_RENDERER_SRC_LIST})
 
 SOURCE_GROUP("render/renderer/animation" FILES ${RENDER_RENDERER_ANIMATION_SRC_LIST})
@@ -113,6 +129,12 @@ add_executable(${PROJECT_NAME}
     ${ROOT_SRC_LIST}
     ${COMMON_SRC_LIST}
     ${RENDER_SRC_LIST}
+    ${RENDER_UTIL_SRC_LIST}
+    ${RENDER_UTIL_ASSIMP_SRC_LIST}
+    ${RENDER_MESH_SRC_LIST}
+    ${RENDER_MODEL_SRC_LIST}
+    ${RENDER_MATERIAL_SRC_LIST}
+    ${RENDER_ANIMATION_SRC_LIST}
     ${RENDER_PIPELINE_SRC_LIST}
     ${RENDER_RENDERER_SRC_LIST}
     ${RENDER_RENDERER_ANIMATION_SRC_LIST}
