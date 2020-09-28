@@ -8,6 +8,7 @@
 #include "render/mesh/MeshUtil.h"
 #include "render/material/MaterialFactory.h"
 #include "render/model/ModelFactory.h"
+#include "common/AssetManager.h"
 
 #include <prev/render/image/ImageFactory.h>
 
@@ -436,10 +437,10 @@ public:
 
         const float layerTransitionWidth = 0.1f;
         const TerrainLayerCreateInfo terrainLayers[] = {
-            { AssetManager::Instance().GetAssetPath("Textures/fungus.png"), 10.0f, 0.2f, 0.2f },
-            { AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), 10.0f, 0.2f, 0.42f },
-            { AssetManager::Instance().GetAssetPath("Textures/rock.png"), 10.0f, 0.2f, 0.62f },
-            { AssetManager::Instance().GetAssetPath("Textures/sand.png"), 10.0f, 0.2f, 0.9f }
+            { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus.png"), 10.0f, 0.2f, 0.2f },
+            { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), 10.0f, 0.2f, 0.42f },
+            { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock.png"), 10.0f, 0.2f, 0.62f },
+            { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand.png"), 10.0f, 0.2f, 0.9f }
         };
 
         const std::shared_ptr<HeightMapInfo> heightMap = CreateHeightMap(heightGenerator);
@@ -465,10 +466,10 @@ public:
 
         const float layerTransitionWidth = 0.1f;
         const TerrainLayerCreateInfo terrainLayers[] = {
-            { AssetManager::Instance().GetAssetPath("Textures/fungus.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_normal.png"), 10.0f, 0.2f, 0.2f },
-            { AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal.png"), 10.0f, 0.2f, 0.42f },
-            { AssetManager::Instance().GetAssetPath("Textures/rock.png"), AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), 10.0f, 0.2f, 0.62f },
-            { AssetManager::Instance().GetAssetPath("Textures/sand.png"), AssetManager::Instance().GetAssetPath("Textures/sand_normal.png"), 10.0f, 0.2f, 0.9f }
+            { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus_normal.png"), 10.0f, 0.2f, 0.2f },
+            { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal.png"), 10.0f, 0.2f, 0.42f },
+            { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), 10.0f, 0.2f, 0.62f },
+            { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_normal.png"), 10.0f, 0.2f, 0.9f }
         };
 
         const std::shared_ptr<HeightMapInfo> heightMap = CreateHeightMap(heightGenerator);
@@ -494,10 +495,10 @@ public:
 
         const float layerTransitionWidth = 0.1f;
         const TerrainLayerCreateInfo terrainLayers[] = {
-            { AssetManager::Instance().GetAssetPath("Textures/fungus.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_height.png"), 10.0f, 0.2f, 0.000002f, 0.2f },
-            { AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_height.png"), 10.0f, 0.2f, 0.005f, 0.42f },
-            { AssetManager::Instance().GetAssetPath("Textures/rock.png"), AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), AssetManager::Instance().GetAssetPath("Textures/rock_height.png"), 10.0f, 0.2f, 0.02f, 0.62f },
-            { AssetManager::Instance().GetAssetPath("Textures/sand.png"), AssetManager::Instance().GetAssetPath("Textures/sand_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_height.png"), 10.0f, 0.2f, 0.03f, 0.9f }
+            { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus_normal_2.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus_height.png"), 10.0f, 0.2f, 0.000002f, 0.2f },
+            { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal_2.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass_height.png"), 10.0f, 0.2f, 0.005f, 0.42f },
+            { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock_height.png"), 10.0f, 0.2f, 0.02f, 0.62f },
+            { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_normal_2.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_height.png"), 10.0f, 0.2f, 0.03f, 0.9f }
         };
 
         const std::shared_ptr<HeightMapInfo> heightMap = CreateHeightMap(heightGenerator);
@@ -524,10 +525,10 @@ public:
 
         const float layerTransitionWidth = 0.1f;
         const TerrainLayerCreateInfo terrainLayers[] = {
-            { AssetManager::Instance().GetAssetPath("Textures/fungus.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_cone.png"), 10.0f, 0.2f, 0.00002f, 0.2f },
-            { AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_cone.png"), 10.0f, 0.2f, 0.01f, 0.42f },
-            { AssetManager::Instance().GetAssetPath("Textures/rock.png"), AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), AssetManager::Instance().GetAssetPath("Textures/rock_cone.png"), 10.0f, 0.2f, 0.03f, 0.62f },
-            { AssetManager::Instance().GetAssetPath("Textures/sand.png"), AssetManager::Instance().GetAssetPath("Textures/sand_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_cone.png"), 10.0f, 0.2f, 0.05f, 0.9f }
+            { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus_normal_2.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus_cone.png"), 10.0f, 0.2f, 0.00002f, 0.2f },
+            { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal_2.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass_cone.png"), 10.0f, 0.2f, 0.01f, 0.42f },
+            { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock_cone.png"), 10.0f, 0.2f, 0.03f, 0.62f },
+            { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_normal_2.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_cone.png"), 10.0f, 0.2f, 0.05f, 0.9f }
         };
 
         const std::shared_ptr<HeightMapInfo> heightMap = CreateHeightMap(heightGenerator);

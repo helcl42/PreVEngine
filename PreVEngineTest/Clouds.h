@@ -3,10 +3,11 @@
 
 #include "General.h"
 
-#include "render/renderer/sky/shader/CloudsShader.h"
-#include "render/renderer/sky/shader/PerlinWorleyNoiseShader.h"
+#include "common/AssetManager.h"
 #include "render/renderer/sky/pipeline/CloudsPipeline.h"
 #include "render/renderer/sky/pipeline/PerlinWorleyNoisePipeline.h"
+#include "render/renderer/sky/shader/CloudsShader.h"
+#include "render/renderer/sky/shader/PerlinWorleyNoiseShader.h"
 
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/ComputeProvider.h>
@@ -29,7 +30,7 @@ public:
         auto computeAllocator = prev::scene::ComputeProvider::Instance().GetAllocator();
 
         prev::render::shader::ShaderFactory shaderFactory{};
-        auto shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::CloudsShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/weather_comp.spv") } });
+        auto shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::CloudsShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/weather_comp.spv") } });
 
         auto pipeline = std::make_unique<prev_test::render::renderer::sky::pipeline::CloudsPipeline>(*device, *shader);
         pipeline->Init();
@@ -109,7 +110,7 @@ public:
         auto computeAllocator = prev::scene::ComputeProvider::Instance().GetAllocator();
 
         prev::render::shader::ShaderFactory shaderFactory{};
-        auto shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::PerlinWorleyNoiseShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/perlin_worley_noise_3d_comp.spv") } });
+        auto shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::PerlinWorleyNoiseShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/perlin_worley_noise_3d_comp.spv") } });
 
         auto pipeline = std::make_unique<prev_test::render::renderer::sky::pipeline::PerlinWorleyNoisePipeline>(*device, *shader);
         pipeline->Init();
@@ -216,7 +217,7 @@ public:
     {
         WatherFactory weatherFactory{};
         WatherNoiseFactory weatherNoiseFactory{};
-        
+
         auto clouds = std::make_unique<CloudsComponent>();
         clouds->m_weatherImageBuffer = weatherFactory.Create(1024, 1024);
         clouds->m_perlinWorleyNoiseImageBuffer = weatherNoiseFactory.CreatePerlinWorleyNoise(128, 128, 128);

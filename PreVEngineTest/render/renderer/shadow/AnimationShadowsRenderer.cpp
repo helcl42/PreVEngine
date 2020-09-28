@@ -3,6 +3,8 @@
 #include "pipeline/AnimatedShadowsPipeline.h"
 #include "shader/AnimatedShadowsShader.h"
 
+#include "../../../common/AssetManager.h"
+
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
@@ -22,7 +24,7 @@ void AnimationShadowsRenderer::Init()
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::shadow::shader::AnimatedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_shadows_vert.spv") } });
+    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::shadow::shader::AnimatedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/animation_shadows_vert.spv") } });
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Animation Shadows Shader created\n");

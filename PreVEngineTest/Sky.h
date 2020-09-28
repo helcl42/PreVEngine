@@ -6,6 +6,7 @@
 #include "render/material/MaterialFactory.h"
 #include "render/mesh/FullScreenQuadMesh.h"
 #include "render/model/Model.h"
+#include "common/AssetManager.h"
 
 #include <prev/render/image/ImageFactory.h>
 
@@ -136,12 +137,12 @@ public:
     std::unique_ptr<ISkyBoxComponent> Create() const
     {
         const std::vector<std::string> materialPaths = {
-            AssetManager::Instance().GetAssetPath("SkyBoxes/Sky/right.png"),
-            AssetManager::Instance().GetAssetPath("SkyBoxes/Sky/left.png"),
-            AssetManager::Instance().GetAssetPath("SkyBoxes/Sky/top.png"),
-            AssetManager::Instance().GetAssetPath("SkyBoxes/Sky/top.png"),
-            AssetManager::Instance().GetAssetPath("SkyBoxes/Sky/back.png"),
-            AssetManager::Instance().GetAssetPath("SkyBoxes/Sky/front.png"),
+            prev_test::common::AssetManager::Instance().GetAssetPath("SkyBoxes/Sky/right.png"),
+            prev_test::common::AssetManager::Instance().GetAssetPath("SkyBoxes/Sky/left.png"),
+            prev_test::common::AssetManager::Instance().GetAssetPath("SkyBoxes/Sky/top.png"),
+            prev_test::common::AssetManager::Instance().GetAssetPath("SkyBoxes/Sky/top.png"),
+            prev_test::common::AssetManager::Instance().GetAssetPath("SkyBoxes/Sky/back.png"),
+            prev_test::common::AssetManager::Instance().GetAssetPath("SkyBoxes/Sky/front.png"),
         };
 
         auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();

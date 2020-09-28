@@ -3,6 +3,8 @@
 #include "pipeline/AnimationPipeline.h"
 #include "shader/AnimationShader.h"
 
+#include "../../../common/AssetManager.h"
+
 #include "../../../Light.h"
 #include "../../../RayCasting.h"
 
@@ -25,7 +27,7 @@ void AnimationRenderer::Init()
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::animation::shader::AnimationShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/animation_frag.spv") } });
+    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::animation::shader::AnimationShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/animation_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/animation_frag.spv") } });
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Animation Shader created\n");

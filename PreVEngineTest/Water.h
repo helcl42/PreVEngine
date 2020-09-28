@@ -6,6 +6,7 @@
 #include "render/material/MaterialFactory.h"
 #include "render/model/Model.h"
 #include "render/IMesh.h"
+#include "common/AssetManager.h"
 
 #include <prev/render/image/ImageFactory.h>
 
@@ -345,8 +346,8 @@ public:
         auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
         const glm::vec4 waterColor{ 0.0f, 0.3f, 0.5f, 1.0f };
-        const std::string dudvMapPath{ AssetManager::Instance().GetAssetPath("Textures/waterDUDV.png") };
-        const std::string normalMapPath{ AssetManager::Instance().GetAssetPath("Textures/matchingNormalMap.png") };
+        const std::string dudvMapPath{ prev_test::common::AssetManager::Instance().GetAssetPath("Textures/waterDUDV.png") };
+        const std::string normalMapPath{ prev_test::common::AssetManager::Instance().GetAssetPath("Textures/matchingNormalMap.png") };
 
         auto material = CreateMaterial(*allocator, waterColor, dudvMapPath, normalMapPath, 1.0f, 0.4f);
         auto model = CreateModel(*allocator);

@@ -3,6 +3,8 @@
 #include "pipeline/FontPipeline.h"
 #include "shader/FonttShader.h"
 
+#include "../../../common/AssetManager.h"
+
 #include "../../../Font.h"
 
 #include <prev/core/DeviceProvider.h>
@@ -24,7 +26,7 @@ void FontRenderer::Init()
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::font::shader::FonttShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/font_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/font_frag.spv") } });
+    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::font::shader::FonttShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/font_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/font_frag.spv") } });
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Fonts Shader created\n");

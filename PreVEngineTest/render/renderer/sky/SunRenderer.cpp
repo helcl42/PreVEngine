@@ -3,6 +3,8 @@
 #include "pipeline/SunOcclusionPipeline.h"
 #include "shader/SunOcclusionShader.h"
 
+#include "../../../common/AssetManager.h"
+
 #include "../../../LensFlare.h"
 #include "SkyEvents.h"
 
@@ -26,7 +28,7 @@ void SunRenderer::Init()
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::SunOcclusionShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/sun_occlusion_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/sun_occlusion_frag.spv") } });
+    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::SunOcclusionShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sun_occlusion_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sun_occlusion_frag.spv") } });
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Sun Shader created\n");

@@ -5,6 +5,8 @@
 
 #include "../../model/ModelFactory.h"
 
+#include "../../../common//AssetManager.h"
+
 #include "../../../Camera.h"
 #include "../../../Particles.h"
 #include "../../VertexDataBuffer.h"
@@ -29,7 +31,7 @@ void ParticlesRenderer::Init()
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::particle::shader::ParticlesShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/particles_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/particles_frag.spv") } });
+    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::particle::shader::ParticlesShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/particles_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/particles_frag.spv") } });
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Particles Shader created\n");

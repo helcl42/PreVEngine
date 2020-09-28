@@ -6,6 +6,8 @@
 #include "../../mesh/QuadMesh.h"
 #include "../../model/ModelFactory.h"
 
+#include "../../../common/AssetManager.h"
+
 #include "../../../Light.h"
 #include "../../../RayCasting.h"
 #include "../../../Water.h"
@@ -29,7 +31,7 @@ void TextureDebugRenderer::Init()
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::debug::shader::TextureDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/texture_debug_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/texture_debug_frag.spv") } });
+    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::debug::shader::TextureDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/texture_debug_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/texture_debug_frag.spv") } });
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Texture Debug Shader created\n");

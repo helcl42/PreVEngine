@@ -4,6 +4,7 @@
 #include "General.h"
 
 #include "render/IMesh.h"
+#include "common/AssetManager.h"
 
 #include <prev/render/image/ImageFactory.h>
 
@@ -196,14 +197,14 @@ public:
     {
         const float spacing{ 0.16f };
         const std::vector<FlareCreateInfo> flareCreateInfos = {
-            { AssetManager::Instance().GetAssetPath("LensFlares/tex2.png"), 0.0f },
-            { AssetManager::Instance().GetAssetPath("LensFlares/tex3.png"), 0.12f },
-            { AssetManager::Instance().GetAssetPath("LensFlares/tex4.png"), 0.46f },
-            { AssetManager::Instance().GetAssetPath("LensFlares/tex5.png"), 0.12f },
-            { AssetManager::Instance().GetAssetPath("LensFlares/tex6.png"), 0.0f },
-            { AssetManager::Instance().GetAssetPath("LensFlares/tex7.png"), 0.1f },
-            { AssetManager::Instance().GetAssetPath("LensFlares/tex8.png"), 1.2f },
-            { AssetManager::Instance().GetAssetPath("LensFlares/tex9.png"), 0.24f },
+            { prev_test::common::AssetManager::Instance().GetAssetPath("LensFlares/tex2.png"), 0.0f },
+            { prev_test::common::AssetManager::Instance().GetAssetPath("LensFlares/tex3.png"), 0.12f },
+            { prev_test::common::AssetManager::Instance().GetAssetPath("LensFlares/tex4.png"), 0.46f },
+            { prev_test::common::AssetManager::Instance().GetAssetPath("LensFlares/tex5.png"), 0.12f },
+            { prev_test::common::AssetManager::Instance().GetAssetPath("LensFlares/tex6.png"), 0.0f },
+            { prev_test::common::AssetManager::Instance().GetAssetPath("LensFlares/tex7.png"), 0.1f },
+            { prev_test::common::AssetManager::Instance().GetAssetPath("LensFlares/tex8.png"), 1.2f },
+            { prev_test::common::AssetManager::Instance().GetAssetPath("LensFlares/tex9.png"), 0.24f },
         };
 
         auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
@@ -316,7 +317,7 @@ public:
     {
         auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
-        auto flare = CreateFlare(*allocator, AssetManager::Instance().GetAssetPath("Textures/sun.png"), 0.2f);
+        auto flare = CreateFlare(*allocator, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sun.png"), 0.2f);
         flare->SetScreenSpacePosition(glm::vec2(-100.0f, -100.0f));
 
         auto model = CreateModel(*allocator);

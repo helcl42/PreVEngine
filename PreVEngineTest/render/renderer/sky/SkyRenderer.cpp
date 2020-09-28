@@ -8,6 +8,8 @@
 #include "shader/SkyPostProcess.h"
 #include "shader/SkyShader.h"
 
+#include "../../../common/AssetManager.h"
+
 #include "../../../Clouds.h"
 #include "../../../Light.h"
 #include "../../../Sky.h"
@@ -34,7 +36,7 @@ void SkyRenderer::Init()
     prev::render::shader::ShaderFactory shaderFactory;
 
     // compute sky
-    m_conmputeSkyShader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::SkyShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/sky_comp.spv") } });
+    m_conmputeSkyShader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::SkyShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky_comp.spv") } });
     m_conmputeSkyShader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Sky Compute Shader created\n");
@@ -48,7 +50,7 @@ void SkyRenderer::Init()
     m_uniformsPoolSkyCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
     // compute sky post process
-    m_conmputeSkyPostProcessShader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::SkyPostProcessShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, AssetManager::Instance().GetAssetPath("Shaders/sky_post_process_comp.spv") } });
+    m_conmputeSkyPostProcessShader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::SkyPostProcessShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky_post_process_comp.spv") } });
     m_conmputeSkyPostProcessShader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Sky PostProcess Compute Shader created\n");
@@ -62,7 +64,7 @@ void SkyRenderer::Init()
     m_uniformsPoolSkyPorstProcessCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
     // compositor
-    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::common::shader::ScreenSpaceShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/screen_space_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/screen_space_frag.spv") } });
+    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::common::shader::ScreenSpaceShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/screen_space_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/screen_space_frag.spv") } });
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Sky Screen Space Shader created\n");

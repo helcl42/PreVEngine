@@ -3,6 +3,8 @@
 #include "pipeline/TerrainParallaxMappedPipeline.h"
 #include "shader/TerrainParallaxMappedShader.h"
 
+#include "../../../common/AssetManager.h"
+
 #include "../../../Light.h"
 #include "../../../RayCasting.h"
 #include "../../../Terrain.h"
@@ -26,7 +28,7 @@ void TerrainParallaxMappedRenderer::Init()
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::terrain::shader::TerrainParallaxMappedShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_parallax_mapped_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_parallax_mapped_frag.spv") } });
+    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::terrain::shader::TerrainParallaxMappedShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/terrain_parallax_mapped_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/terrain_parallax_mapped_frag.spv") } });
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Terrain Parallax Mapped Shader created\n");

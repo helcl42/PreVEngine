@@ -7,6 +7,7 @@
 #include "render/mesh/QuadMesh.h"
 #include "render/model/Model.h"
 #include "render/material/MaterialFactory.h"
+#include "common/AssetManager.h"
 
 #include <prev/render/image/ImageFactory.h>
 
@@ -491,7 +492,7 @@ public:
         auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
         auto model = CreateModel(*allocator);
-        auto material = CreateMaterial(*allocator, AssetManager::Instance().GetAssetPath("Textures/fire-ember-particles-png-4-transparent.png"));
+        auto material = CreateMaterial(*allocator, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fire-ember-particles-png-4-transparent.png"));
         material->SetAtlasNumberOfRows(8);
 
         auto particleFactory = std::make_shared<RandomDirectionParticleFactory>(material, 0.1f, 5.0f, 4.0f, 10.0f);
@@ -508,7 +509,7 @@ public:
         auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
         auto model = CreateModel(*allocator);
-        auto material = CreateMaterial(*allocator, AssetManager::Instance().GetAssetPath("Textures/fire-texture-atlas.png"));
+        auto material = CreateMaterial(*allocator, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fire-texture-atlas.png"));
         material->SetAtlasNumberOfRows(4);
 
         auto particleFactory = std::make_shared<RandomInConeParticleFactory>(material, -0.1f, 4.0f, 4.0f, 7.0f);

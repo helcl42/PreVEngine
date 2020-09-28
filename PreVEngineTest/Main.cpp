@@ -641,13 +641,13 @@ public:
 public:
     void Init() override
     {
-        m_body = std::make_shared<CubeRobotPart>(glm::vec3(0, 35, 0), glm::quat(1, 0, 0, 0), glm::vec3(10, 15, 5), AssetManager::Instance().GetAssetPath("Textures/vulkan.png"));
+        m_body = std::make_shared<CubeRobotPart>(glm::vec3(0, 35, 0), glm::quat(1, 0, 0, 0), glm::vec3(10, 15, 5), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/vulkan.png"));
 
-        m_head = std::make_shared<CubeRobotPart>(glm::vec3(0, 10, 0), glm::quat(1, 0, 0, 0), glm::vec3(5, 5, 5), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
-        m_leftArm = std::make_shared<CubeRobotPart>(glm::vec3(-8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
-        m_rightArm = std::make_shared<CubeRobotPart>(glm::vec3(8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
-        m_leftLeg = std::make_shared<CubeRobotPart>(glm::vec3(-4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.5, 17.5f, 4.7f), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
-        m_rightLeg = std::make_shared<CubeRobotPart>(glm::vec3(4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.5, 17.5f, 4.7f), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+        m_head = std::make_shared<CubeRobotPart>(glm::vec3(0, 10, 0), glm::quat(1, 0, 0, 0), glm::vec3(5, 5, 5), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+        m_leftArm = std::make_shared<CubeRobotPart>(glm::vec3(-8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+        m_rightArm = std::make_shared<CubeRobotPart>(glm::vec3(8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+        m_leftLeg = std::make_shared<CubeRobotPart>(glm::vec3(-4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.5, 17.5f, 4.7f), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+        m_rightLeg = std::make_shared<CubeRobotPart>(glm::vec3(4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.5, 17.5f, 4.7f), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
 
         m_body->AddChild(m_head);
         m_body->AddChild(m_leftArm);
@@ -1059,7 +1059,7 @@ public:
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         RenderComponentFactory renderComponentFactory{};
-        m_animatonRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(AssetManager::Instance().GetAssetPath("Models/Goblin/goblin.dae"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_texture.png"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_normal_texture_2.png"), AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_cone_texture.png"), true, true);
+        m_animatonRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin.dae"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_texture.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_normal_texture_2.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_cone_texture.png"), true, true);
         m_animatonRenderComponent->GetMaterial()->SetHeightScale(0.004f);
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IAnimationRenderComponent>(GetThis(), m_animatonRenderComponent, SceneNodeFlags::ANIMATION_CONE_STEP_MAPPED_RENDER_COMPONENT);
 
@@ -1517,7 +1517,7 @@ public:
     void Init() override
     {
         FontRenderComponentsFactory factory{};
-        m_fontComponent = factory.Create(AssetManager::Instance().GetAssetPath("Fonts/verdana.fnt"), AssetManager::Instance().GetAssetPath("Fonts/verdana.png"), 16.0f / 9.0f);
+        m_fontComponent = factory.Create(prev_test::common::AssetManager::Instance().GetAssetPath("Fonts/verdana.fnt"), prev_test::common::AssetManager::Instance().GetAssetPath("Fonts/verdana.png"), 16.0f / 9.0f);
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IFontRenderComponent>(GetThis(), m_fontComponent, SceneNodeFlags::FONT_RENDER_COMPONENT);
 
         SceneNode::Init();
@@ -2086,7 +2086,7 @@ public:
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         RenderComponentFactory componentFactory{};
-        std::shared_ptr<IRenderComponent> renderComponent = componentFactory.CreateModelRenderComponent(AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.dae"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.png"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_normal.png"), AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_height.png"), true, true);
+        std::shared_ptr<IRenderComponent> renderComponent = componentFactory.CreateModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.dae"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_normal.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_height.png"), true, true);
         renderComponent->GetMaterial()->SetHeightScale(0.01f);
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_PARALLAX_MAPPED_COMPONENT);
 
@@ -2693,7 +2693,7 @@ public:
         for (int32_t i = 0; i <= MAX_GENERATED_HEIGHT; i++) {
             for (int32_t j = 0; j <= MAX_GENERATED_HEIGHT; j++) {
                 for (int32_t k = 0; k <= MAX_GENERATED_HEIGHT; k++) {
-                    auto robot = std::make_shared<CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+                    auto robot = std::make_shared<CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
                     AddChild(robot);
                 }
             }
@@ -2824,7 +2824,7 @@ private:
         const auto j = dis(gen);
         const auto k = dis(gen);
 
-        auto robot = std::make_shared<CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+        auto robot = std::make_shared<CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
         robot->Init();
         AddChild(robot);
     }

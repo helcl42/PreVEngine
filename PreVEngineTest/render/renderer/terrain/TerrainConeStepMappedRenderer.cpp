@@ -3,6 +3,8 @@
 #include "pipeline/TerrainConeStepMappedPipeline.h"
 #include "shader/TerrainConeStepMappedShader.h"
 
+#include "../../../common/AssetManager.h"
+
 #include "../../../Light.h"
 #include "../../../RayCasting.h"
 #include "../../../Terrain.h"
@@ -26,7 +28,7 @@ void TerrainConeStepMappedRenderer::Init()
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::terrain::shader::TerrainConeStepMappedShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_cone_step_mapped_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_cone_step_mapped_frag.spv") } });
+    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::terrain::shader::TerrainConeStepMappedShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/terrain_cone_step_mapped_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/terrain_cone_step_mapped_frag.spv") } });
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Terrain Cone Step Mapped Shader created\n");
