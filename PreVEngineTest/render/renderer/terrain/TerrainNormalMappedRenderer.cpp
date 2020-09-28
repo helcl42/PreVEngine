@@ -3,6 +3,8 @@
 #include "pipeline/TerrainNormalMappedPipeline.h"
 #include "shader/TerrainNormalMappedShader.h"
 
+#include "../../../common/AssetManager.h"
+
 #include "../../../Light.h"
 #include "../../../RayCasting.h"
 #include "../../../Terrain.h"
@@ -26,7 +28,7 @@ void TerrainNormalMappedRenderer::Init()
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::terrain::shader::TerrainNormalMappedShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_normal_mapped_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_normal_mapped_frag.spv") } });
+    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::terrain::shader::TerrainNormalMappedShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/terrain_normal_mapped_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/terrain_normal_mapped_frag.spv") } });
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Terrain Normal Mapped Shader created\n");

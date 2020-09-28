@@ -78,27 +78,6 @@ enum class SceneNodeFlags {
     _
 };
 
-class AssetManager : public prev::common::pattern::Singleton<AssetManager> {
-public:
-    ~AssetManager() = default;
-
-public:
-    std::string GetAssetPath(const std::string& path)
-    {
-#if defined(__ANDROID__)
-        return path;
-#else
-        return "./assets/" + path;
-#endif
-    }
-
-private:
-    friend class prev::common::pattern::Singleton<AssetManager>;
-
-private:
-    AssetManager() = default;
-};
-
 class ITransformComponent {
 public:
     virtual void Update(float deltaTime) = 0;

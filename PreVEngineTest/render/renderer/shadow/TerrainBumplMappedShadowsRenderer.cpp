@@ -3,6 +3,8 @@
 #include "pipeline/TerrainBumpMappedShadowsPipeline.h"
 #include "shader/TerrainBumpMappedShadowsShader.h"
 
+#include "../../../common/AssetManager.h"
+
 #include "../../../Terrain.h"
 
 #include <prev/core/DeviceProvider.h>
@@ -24,7 +26,7 @@ void TerrainBumplMappedShadowsRenderer::Init()
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::shadow::shader::TerrainBumpMappedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/terrain_bump_mapped_shadows_vert.spv") } });
+    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::shadow::shader::TerrainBumpMappedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/terrain_bump_mapped_shadows_vert.spv") } });
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Terrain Bump Mapped Shadows Shader created\n");
