@@ -1,21 +1,20 @@
 #ifndef __TERRAIN_H__
 #define __TERRAIN_H__
 
-#include "General.h"
-
+#include "common/AssetManager.h"
 #include "render/IMesh.h"
 #include "render/VertexDataBuffer.h"
-#include "render/mesh/MeshUtil.h"
 #include "render/material/MaterialFactory.h"
+#include "render/mesh/MeshUtil.h"
 #include "render/model/ModelFactory.h"
-#include "common/AssetManager.h"
 
 #include <prev/render/image/ImageFactory.h>
+#include <prev/core/memory/image/ImageBuffer.h>
 
 #include <random>
 #include <vector>
 
-static const float TERRAIN_SIZE{ 40.0f };
+constexpr float TERRAIN_SIZE{ 40.0f };
 
 class PerlinNoiseGenerator {
 public:

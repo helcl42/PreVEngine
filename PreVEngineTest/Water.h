@@ -1,25 +1,30 @@
 #ifndef __WATER_H__
 #define __WATER_H__
 
-#include "General.h"
-
+#include "common/AssetManager.h"
+#include "render/IMesh.h"
 #include "render/material/MaterialFactory.h"
 #include "render/model/Model.h"
-#include "render/IMesh.h"
-#include "common/AssetManager.h"
 
+#include <prev/core/DeviceProvider.h>
+#include <prev/core/memory/image/ColorImageBuffer.h>
+#include <prev/core/memory/image/DepthImageBuffer.h>
+#include <prev/core/memory/image/ImageBuffer.h>
 #include <prev/render/image/ImageFactory.h>
+#include <prev/util/VkUtils.h>
 
-static const float WATER_TILE_SIZE{ 20.0f };
+#include <map>
+
+constexpr float WATER_TILE_SIZE{ 20.0f };
 #ifdef WIN32
-static const float WATER_LEVEL{ -12.0f };
+constexpr float WATER_LEVEL{ -12.0f };
 #else
-static const float WATER_LEVEL{ -4.0f };
+constexpr float WATER_LEVEL{ -4.0f };
 #endif // WIN32
-static const float WATER_CLIP_PLANE_OFFSET{ 0.08f };
-static const float WATER_WAVE_SPEED{ 0.03f };
-static const uint32_t REFRACTION_EXTENT_DIVIDER{ 3 };
-static const uint32_t REFLECTION_EXTENT_DIVIDER{ 4 };
+constexpr float WATER_CLIP_PLANE_OFFSET{ 0.08f };
+constexpr float WATER_WAVE_SPEED{ 0.03f };
+constexpr uint32_t REFRACTION_EXTENT_DIVIDER{ 3 };
+constexpr uint32_t REFLECTION_EXTENT_DIVIDER{ 4 };
 
 class WaterTileMesh : public prev_test::render::IMesh {
 public:
@@ -206,26 +211,26 @@ private:
         // srcStageMask, dstStageMask, srcAccessMask, dstAccessMask (and dependencyFlags is set)
         // Note: VK_SUBPASS_EXTERNAL is a special constant that refers to all commands executed outside of the actual renderpass)
 
-  	    //// First dependency at the start of the renderpass
-       // // Does the transition from final to initial layout
-       // dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL; // Producer of the dependency
-       // dependencies[0].dstSubpass = 0; // Consumer is our single subpass that will wait for the execution depdendency
-       // dependencies[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // Match our pWaitDstStageMask when we vkQueueSubmit
-       // dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // is a loadOp stage for color attachments
-       // dependencies[0].srcAccessMask = 0; // semaphore wait already does memory dependency for us
-       // dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; // is a loadOp CLEAR access mask for color attachments
-       // dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+        //// First dependency at the start of the renderpass
+        // // Does the transition from final to initial layout
+        // dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL; // Producer of the dependency
+        // dependencies[0].dstSubpass = 0; // Consumer is our single subpass that will wait for the execution depdendency
+        // dependencies[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // Match our pWaitDstStageMask when we vkQueueSubmit
+        // dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // is a loadOp stage for color attachments
+        // dependencies[0].srcAccessMask = 0; // semaphore wait already does memory dependency for us
+        // dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; // is a loadOp CLEAR access mask for color attachments
+        // dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-       // // Second dependency at the end the renderpass
-       // // Does the transition from the initial to the final layout
-       // // Technically this is the same as the implicit subpass dependency, but we are gonna state it explicitly here
-       // dependencies[1].srcSubpass = 0; // Producer of the dependency is our single subpass
-       // dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL; // Consumer are all commands outside of the renderpass
-       // dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // is a storeOp stage for color attachments
-       // dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT; // Do not block any subsequent work
-       // dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; // is a storeOp `STORE` access mask for color attachments
-       // dependencies[1].dstAccessMask = 0;
-       // dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+        // // Second dependency at the end the renderpass
+        // // Does the transition from the initial to the final layout
+        // // Technically this is the same as the implicit subpass dependency, but we are gonna state it explicitly here
+        // dependencies[1].srcSubpass = 0; // Producer of the dependency is our single subpass
+        // dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL; // Consumer are all commands outside of the renderpass
+        // dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // is a storeOp stage for color attachments
+        // dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT; // Do not block any subsequent work
+        // dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; // is a storeOp `STORE` access mask for color attachments
+        // dependencies[1].dstAccessMask = 0;
+        // dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
         m_renderPass = std::make_shared<prev::render::pass::RenderPass>(*device);
         m_renderPass->AddColorAttachment(COLOR_FORMAT, { 0.5f, 0.5f, 0.5f, 1.0f }, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);

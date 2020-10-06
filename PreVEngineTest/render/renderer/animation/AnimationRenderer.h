@@ -1,10 +1,13 @@
 #ifndef __ANIMATION_RENDERER_H__
 #define __ANIMATION_RENDERER_H__
 
+#include "../../IAnimation.h"
+#include "../../pipeline/IPipeline.h"
+#include "../IRenderer.h"
+
 #include "../../../General.h"
 #include "../../../Shadows.h"
-#include "../IRenderer.h"
-#include "../../pipeline/IPipeline.h"
+#include "../../../Light.h"
 
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
@@ -23,7 +26,7 @@ public:
     void Init() override;
 
     void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override;
-    
+
     void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override;
 
     void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override;

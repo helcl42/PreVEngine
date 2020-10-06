@@ -1,10 +1,13 @@
 #ifndef __ANIMATION_PARALLAX_MAPPED_RENDERER_H__
 #define __ANIMATION_PARALLAX_MAPPED_RENDERER_H__
 
-#include "../../../General.h"
-#include "../../../Shadows.h"
-#include "../IRenderer.h"
 #include "../../pipeline/IPipeline.h"
+#include "../../IAnimation.h"
+#include "../IRenderer.h"
+
+#include "../../../General.h"
+#include "../../../Light.h"
+#include "../../../Shadows.h"
 
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>

@@ -76,6 +76,8 @@ private:
     void RenderSerial(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const ContextUserDataType& userData, const VkRect2D& area);
 #endif
 private:
+    static const inline glm::vec4 DEFAULT_CLIP_PLANE{ 0.0f, -1.0f, 0.0f, 1000.0f };
+
     std::shared_ptr<prev::render::pass::RenderPass> m_defaultRenderPass;
 
     std::shared_ptr<prev::render::Swapchain> m_swapchain;

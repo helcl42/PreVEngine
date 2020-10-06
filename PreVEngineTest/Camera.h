@@ -1,8 +1,6 @@
 #ifndef __CAMERA_H__
 #define __CAMERA_H__
 
-#include "General.h"
-
 #include "render/ViewFrustum.h"
 
 class ICameraComponent {

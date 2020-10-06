@@ -1,9 +1,10 @@
 #ifndef __LIGHT_H__
 #define __LIGHT_H__
 
-#include "General.h"
-
 #include "render/ViewFrustum.h"
+
+constexpr uint32_t MAX_LIGHT_COUNT{ 4 };
+constexpr float AMBIENT_LIGHT_INTENSITY{ 0.2f };
 
 class ILightComponent {
 public:

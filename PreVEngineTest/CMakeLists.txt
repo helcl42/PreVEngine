@@ -4,16 +4,22 @@ cmake_minimum_required(VERSION 2.8)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 SET(SOURCE_GROUP_DELIMITER "/")
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    add_definitions(-std=c++17)
-endif()
-
 include_directories("../Dependencies/glm")
 include_directories("../Dependencies/assimp/include")
 
 FILE(GLOB ROOT_SRC_LIST "*.h" "*.cpp")
 
 FILE(GLOB COMMON_SRC_LIST "common/*.h" "common/*.cpp")
+
+FILE(GLOB COMPONENT_SRC_LIST "component/*.h" "component/*.cpp")
+FILE(GLOB COMPONENT_TRANSFORM_SRC_LIST "component/transform/*.h" "component/transform/*.cpp")
+FILE(GLOB COMPONENT_TIME_SRC_LIST "component/time/*.h" "component/time/*.cpp")
+FILE(GLOB COMPONENT_TERRAIN_SRC_LIST "component/terrain/*.h" "component/terrain/*.cpp")
+FILE(GLOB COMPONENT_SKY_SRC_LIST "component/sky/*.h" "component/sky/*.cpp")
+FILE(GLOB COMPONENT_RENDER_SRC_LIST "component/render/*.h" "component/render/*.cpp")
+FILE(GLOB COMPONENT_LIGHT_SRC_LIST "component/light/*.h" "component/light/*.cpp")
+FILE(GLOB COMPONENT_FONT_SRC_LIST "component/font/*.h" "component/font/*.cpp")
+FILE(GLOB COMPONENT_CAMERA_SRC_LIST "component/camera/*.h" "component/camera/*.cpp")
 
 FILE(GLOB RENDER_SRC_LIST "render/*.h" "render/*.cpp")
 FILE(GLOB RENDER_PIPELINE_SRC_LIST "render/pipeline/*.h" "render/pipeline/*.cpp")
@@ -72,6 +78,16 @@ SOURCE_GROUP("" FILES ${ROOT_SRC_LIST})
 
 SOURCE_GROUP("common" FILES ${COMMON_SRC_LIST})
 
+SOURCE_GROUP("component" FILES ${COMPONENT_SRC_LIST})
+SOURCE_GROUP("component/transform" FILES ${COMPONENT_TRANSFORM_SRC_LIST})
+SOURCE_GROUP("component/time" FILES ${COMPONENT_TIME_SRC_LIST})
+SOURCE_GROUP("component/terrain" FILES ${COMPONENT_TERRAIN_SRC_LIST})
+SOURCE_GROUP("component/sky" FILES ${COMPONENT_SKY_SRC_LIST})
+SOURCE_GROUP("component/render" FILES ${COMPONENT_RENDER_SRC_LIST})
+SOURCE_GROUP("component/light" FILES ${COMPONENT_LIGHT_SRC_LIST})
+SOURCE_GROUP("component/font" FILES ${COMPONENT_FONT_SRC_LIST})
+SOURCE_GROUP("component/camera" FILES ${COMPONENT_CAMERA_SRC_LIST})
+
 SOURCE_GROUP("render" FILES ${RENDER_SRC_LIST})
 SOURCE_GROUP("render/pipeline" FILES ${RENDER_PIPELINE_SRC_LIST})
 
@@ -128,6 +144,15 @@ SOURCE_GROUP("render/renderer/water/shader" FILES ${RENDER_RENDERER_WATER_SHADER
 add_executable(${PROJECT_NAME} 
     ${ROOT_SRC_LIST}
     ${COMMON_SRC_LIST}
+    ${COMPONENT_SRC_LIST}
+    ${COMPONENT_TRANSFORM_SRC_LIST}
+    ${COMPONENT_TIME_SRC_LIST}
+    ${COMPONENT_TERRAIN_SRC_LIST}
+    ${COMPONENT_SKY_SRC_LIST}
+    ${COMPONENT_RENDER_SRC_LIST}
+    ${COMPONENT_LIGHT_SRC_LIST}
+    ${COMPONENT_FONT_SRC_LIST}
+    ${COMPONENT_CAMERA_SRC_LIST}
     ${RENDER_SRC_LIST}
     ${RENDER_UTIL_SRC_LIST}
     ${RENDER_UTIL_ASSIMP_SRC_LIST}
@@ -182,6 +207,7 @@ if(WIN32)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    add_definitions(-std=c++17)
     target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Linux/libassimp.so")
 endif()
 

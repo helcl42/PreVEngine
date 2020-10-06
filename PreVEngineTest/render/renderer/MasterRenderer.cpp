@@ -34,6 +34,8 @@
 #include "../../Camera.h"
 #include "../../Water.h"
 
+#include <prev/scene/component/NodeComponentHelper.h>
+
 namespace prev_test::render::renderer {
 MasterRenderer::MasterRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::Swapchain>& swapchain)
     : m_defaultRenderPass(renderPass)

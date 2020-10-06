@@ -4,6 +4,7 @@
 #include "shader/SkyBoxShader.h"
 
 #include "../../../common/AssetManager.h"
+#include "../../../component/transform/ITransformComponent.h"
 
 #include "../../../Sky.h"
 
@@ -11,6 +12,8 @@
 #include <prev/core/memory/buffer/UniformBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/AllocatorProvider.h>
+#include <prev/scene/component/ComponentRepository.h>
+#include <prev/scene/component/NodeComponentHelper.h>
 
 #include <memory>
 
@@ -60,7 +63,7 @@ void SkyBoxRenderer::PreRender(const prev::render::RenderContext& renderContext,
 void SkyBoxRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData)
 {
     if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SKYBOX_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
-        const auto transformComponent = prev::scene::component::ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
+        const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());
         const auto skyBoxComponent = prev::scene::component::ComponentRepository<ISkyBoxComponent>::Instance().Get(node->GetId());
 
         auto uboVS = m_uniformsPoolVS->GetNext();

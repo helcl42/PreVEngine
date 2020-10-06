@@ -1,11 +1,10 @@
 #ifndef __LENS_FLARE_H__
 #define __LENS_FLARE_H__
 
-#include "General.h"
-
-#include "render/IMesh.h"
 #include "common/AssetManager.h"
+#include "render/IMesh.h"
 
+#include <prev/core/memory/image/ImageBuffer.h>
 #include <prev/render/image/ImageFactory.h>
 
 class Flare {

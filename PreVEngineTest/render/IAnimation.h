@@ -6,6 +6,8 @@
 #include <vector>
 
 namespace prev_test::render {
+constexpr uint32_t MAX_BONES_COUNT{ 100 };
+
 enum class AnimationState {
     RUNNING = 0,
     PAUSED,

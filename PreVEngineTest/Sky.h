@@ -1,16 +1,19 @@
 #ifndef __SKY_H__
 #define __SKY_H__
 
-#include "General.h"
+#include "common/AssetManager.h"
 #include "render/IMesh.h"
 #include "render/material/MaterialFactory.h"
 #include "render/mesh/FullScreenQuadMesh.h"
 #include "render/model/Model.h"
-#include "common/AssetManager.h"
 
+#include <prev/core/memory/image/ImageBuffer.h>
 #include <prev/render/image/ImageFactory.h>
 
-static const float SKY_BOX_SIZE = 300.0f;
+constexpr float SKY_BOX_SIZE = 300.0f;
+constexpr glm::vec4 FOG_COLOR{ 0.47f, 0.53f, 0.58f, 1.0f };
+constexpr float FOG_DENSITY{ 0.004f };
+constexpr float FOG_GRADIENT{ 12.0f };
 
 class CubeMeshVerticesOnly : public prev_test::render::IMesh {
 public:

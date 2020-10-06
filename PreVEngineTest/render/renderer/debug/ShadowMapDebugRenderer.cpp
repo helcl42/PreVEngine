@@ -3,10 +3,9 @@
 #include "pipeline/ShadowMapDebugPipeline.h"
 #include "shader/ShadowMapDebugShader.h"
 
+#include "../../../common/AssetManager.h"
 #include "../../mesh/QuadMesh.h"
 #include "../../model/ModelFactory.h"
-
-#include "../../../common/AssetManager.h"
 
 #include "../../../Shadows.h"
 
@@ -14,6 +13,8 @@
 #include <prev/core/memory/buffer/UniformBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/AllocatorProvider.h>
+#include <prev/scene/component/ComponentRepository.h>
+#include <prev/scene/component/NodeComponentHelper.h>
 
 #include <memory>
 

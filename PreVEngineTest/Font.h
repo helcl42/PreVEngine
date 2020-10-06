@@ -1,8 +1,6 @@
 #ifndef __FONT_H__
 #define __FONT_H__
 
-#include "General.h"
-
 #include "render/VertexLayout.h"
 #include "render/VertexDataBuffer.h"
 #include "render/IMesh.h"

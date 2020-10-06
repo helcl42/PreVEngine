@@ -9,6 +9,7 @@
 #include "shader/SkyShader.h"
 
 #include "../../../common/AssetManager.h"
+#include "../../../component/time/ITimeComponent.h"
 
 #include "../../../Clouds.h"
 #include "../../../Light.h"
@@ -19,6 +20,8 @@
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/AllocatorProvider.h>
 #include <prev/scene/ComputeProvider.h>
+#include <prev/scene/component/ComponentRepository.h>
+#include <prev/scene/component/NodeComponentHelper.h>
 
 #include <memory>
 
@@ -80,7 +83,7 @@ void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext,
     const auto skyComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ISkyComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SKY_RENDER_COMPONENT });
     const auto cloudsComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICloudsComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::CLOUDS_COMPONENT });
     const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
-    const auto timeComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ITimeComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TIME_COMPONENT });
+    const auto timeComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::time::ITimeComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TIME_COMPONENT });
 
     auto device = prev::core::DeviceProvider::Instance().GetDevice();
 
