@@ -16,6 +16,8 @@
 #include <prev/core/memory/buffer/VertexBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/AllocatorProvider.h>
+#include <prev/scene/component/ComponentRepository.h>
+#include <prev/scene/component/NodeComponentHelper.h>
 
 #include <memory>
 

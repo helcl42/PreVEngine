@@ -4,14 +4,18 @@
 #include "shader/WaterShader.h"
 
 #include "../../../common/AssetManager.h"
+#include "../../../component/transform/ITransformComponent.h"
 
 #include "../../../Light.h"
 #include "../../../Water.h"
+#include "../../../Sky.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/AllocatorProvider.h>
+#include <prev/scene/component/ComponentRepository.h>
+#include <prev/scene/component/NodeComponentHelper.h>
 
 #include <memory>
 
@@ -73,7 +77,7 @@ void WaterRenderer::Render(const prev::render::RenderContext& renderContext, con
             const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
             const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
 
-            const auto transformComponent = prev::scene::component::ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
+            const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());
 
             auto uboVS = m_uniformsPoolVS->GetNext();
 

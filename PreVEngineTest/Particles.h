@@ -1,8 +1,6 @@
 #ifndef __PARTICLES_H__
 #define __PARTICLES_H__
 
-#include "General.h"
-
 #include "render/material/Material.h"
 #include "render/mesh/QuadMesh.h"
 #include "render/model/Model.h"
@@ -10,11 +8,12 @@
 #include "common/AssetManager.h"
 
 #include <prev/render/image/ImageFactory.h>
+#include <prev/core/memory/image/ImageBuffer.h>
 
 #include <list>
 #include <random>
 
-static const float PARTICLES_GRAVITY_Y{ -9.81f };
+constexpr float PARTICLES_GRAVITY_Y{ -9.81f };
 
 class Particle {
 public:

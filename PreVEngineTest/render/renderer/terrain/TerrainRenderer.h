@@ -1,10 +1,12 @@
 #ifndef __TERRAIN_RENDERER_H__
 #define __TERRAIN_RENDERER_H__
 
-#include "../../../General.h"
-#include "../../../Shadows.h"
 #include "../../pipeline/IPipeline.h"
 #include "../IRenderer.h"
+
+#include "../../../General.h"
+#include "../../../Light.h"
+#include "../../../Shadows.h"
 
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>

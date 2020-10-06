@@ -12,22 +12,20 @@
 #include "Terrain.h"
 #include "Water.h"
 
-#include "render/mesh/CubeMesh.h"
-#include "render/mesh/MeshFactory.h"
-#include "render/mesh/PlaneMesh.h"
-#include "render/mesh/QuadMesh.h"
-#include "render/mesh/SphereMesh.h"
-#include "render/model/Model.h"
-#include "render/animation/AnimationFactory.h"
-#include "render/material/MaterialFactory.h"
-#include "render/mesh/MeshFactory.h"
-
 #include "render/renderer/MasterRenderer.h"
+
+#include "component/render/RenderComponentFactory.h"
+#include "component/time/TimeComponent.h"
+#include "component/transform/TransformComponentFactory.h"
+#include "component/render/RenderComponentFactory.h"
 
 #include <prev/App.h>
 #include <prev/common/pattern/Nullable.h>
 #include <prev/input/InputFacade.h>
 #include <prev/render/image/Image.h>
+#include <prev/scene/graph/SceneNode.h>
+#include <prev/scene/component/ComponentRepository.h>
+#include <prev/scene/component/NodeComponentHelper.h>
 
 #include <array>
 #include <cstring>
@@ -35,500 +33,10 @@
 #include <memory>
 #include <random>
 
-class DefaultRenderComponent : public IRenderComponent {
-private:
-    std::shared_ptr<prev_test::render::IModel> m_model;
-
-    std::vector<std::shared_ptr<prev_test::render::IMaterial> > m_materials;
-
-    bool m_castsShadows;
-
-    bool m_isCastedByShadows;
-
-public:
-    DefaultRenderComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::vector<std::shared_ptr<prev_test::render::IMaterial> >& materials, const bool castsShadows, const bool isCastedByShadows)
-        : m_model(model)
-        , m_materials(materials)
-        , m_castsShadows(castsShadows)
-        , m_isCastedByShadows(isCastedByShadows)
-    {
-    }
-
-    DefaultRenderComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::shared_ptr<prev_test::render::IMaterial>& material, const bool castsShadows, const bool isCastedByShadows)
-        : DefaultRenderComponent(model, std::vector<std::shared_ptr<prev_test::render::IMaterial> >{ material }, castsShadows, isCastedByShadows)
-    {
-    }
-
-    virtual ~DefaultRenderComponent() = default;
-
-public:
-    std::shared_ptr<prev_test::render::IModel> GetModel() const override
-    {
-        return m_model;
-    }
-
-    std::shared_ptr<prev_test::render::IMaterial> GetMaterial(const uint32_t index = 0) const override
-    {
-        return m_materials.at(index);
-    }
-
-    const std::vector<std::shared_ptr<prev_test::render::IMaterial> >& GetMaterials() const override
-    {
-        return m_materials;
-    }
-
-    bool CastsShadows() const override
-    {
-        return m_castsShadows;
-    }
-
-    bool IsCastedByShadows() const override
-    {
-        return m_isCastedByShadows;
-    }
-};
-
-class DefaultAnimationRenderComponent : public IAnimationRenderComponent {
-private:
-    std::shared_ptr<prev_test::render::IModel> m_model;
-
-    std::vector<std::shared_ptr<prev_test::render::IMaterial> > m_materials;
-
-    std::shared_ptr<prev_test::render::IAnimation> m_animation;
-
-    bool m_castsShadows;
-
-    bool m_isCastedByShadows;
-
-public:
-    DefaultAnimationRenderComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::vector<std::shared_ptr<prev_test::render::IMaterial> >& materials, const std::shared_ptr<prev_test::render::IAnimation>& animation, const bool castsShadows, const bool isCastedByShadows)
-        : m_model(model)
-        , m_materials(materials)
-        , m_animation(animation)
-        , m_castsShadows(castsShadows)
-        , m_isCastedByShadows(isCastedByShadows)
-    {
-    }
-
-    DefaultAnimationRenderComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::shared_ptr<prev_test::render::IMaterial>& material, const std::shared_ptr<prev_test::render::IAnimation>& animation, const bool castsShadows, const bool isCastedByShadows)
-        : DefaultAnimationRenderComponent(model, std::vector<std::shared_ptr<prev_test::render::IMaterial> >{ material }, animation, castsShadows, isCastedByShadows)
-    {
-    }
-
-    virtual ~DefaultAnimationRenderComponent() = default;
-
-public:
-    std::shared_ptr<prev_test::render::IModel> GetModel() const override
-    {
-        return m_model;
-    }
-
-    std::shared_ptr<prev_test::render::IMaterial> GetMaterial(const uint32_t index = 0) const override
-    {
-        return m_materials.at(index);
-    }
-
-    const std::vector<std::shared_ptr<prev_test::render::IMaterial> >& GetMaterials() const override
-    {
-        return m_materials;
-    }
-
-    std::shared_ptr<prev_test::render::IAnimation> GetAnimation() const override
-    {
-        return m_animation;
-    }
-
-    bool CastsShadows() const override
-    {
-        return m_castsShadows;
-    }
-
-    bool IsCastedByShadows() const override
-    {
-        return m_isCastedByShadows;
-    }
-};
-
-class RenderComponentFactory {
-private:
-    static inline std::map<std::string, std::shared_ptr<prev::render::image::Image> > s_imagesCache;
-
-private:
-    std::shared_ptr<prev::render::image::Image> CreateImage(const std::string& textureFilename) const
-    {
-        std::shared_ptr<prev::render::image::Image> image;
-        if (s_imagesCache.find(textureFilename) != s_imagesCache.cend()) {
-            image = s_imagesCache[textureFilename];
-        } else {
-            prev::render::image::ImageFactory imageFactory;
-            image = imageFactory.CreateImage(textureFilename);
-            s_imagesCache[textureFilename] = image;
-        }
-        return image;
-    }
-
-    std::unique_ptr<prev::core::memory::image::IImageBuffer> CreateImageBuffer(prev::core::memory::Allocator& allocator, const std::shared_ptr<prev::render::image::Image>& image, const bool filtering, const bool repeatAddressMode) const
-    {
-        const VkExtent2D imageExtent = { image->GetWidth(), image->GetHeight() };
-
-        auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
-        imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ imageExtent, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, filtering, VK_IMAGE_VIEW_TYPE_2D, 1, repeatAddressMode ? VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT : VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
-
-        return imageBuffer;
-    }
-
-    std::unique_ptr<prev_test::render::IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
-    {
-        auto image = CreateImage(texturePath);
-        auto imageBuffer = CreateImageBuffer(allocator, image, true, repeatAddressMode);
-
-        prev_test::render::material::MaterialFactory materialFactory{};
-        return materialFactory.Create({ glm::vec3{ 1.0f }, shineDamper, reflectivity }, { image, std::move(imageBuffer) });
-    }
-
-    std::unique_ptr<prev_test::render::IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
-    {
-        auto image = CreateImage(texturePath);
-        auto imageBuffer = CreateImageBuffer(allocator, image, true, repeatAddressMode);
-
-        auto normalImage = CreateImage(normalMapPath);
-        auto normalImageBuffer = CreateImageBuffer(allocator, normalImage, true, repeatAddressMode);
-
-        prev_test::render::material::MaterialFactory materialFactory{};
-        return materialFactory.Create({ glm::vec3{ 1.0f }, shineDamper, reflectivity }, { image, std::move(imageBuffer) }, { normalImage, std::move(normalImageBuffer) });
-    }
-
-    std::unique_ptr<prev_test::render::IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const
-    {
-        auto image = CreateImage(texturePath);
-        auto imageBuffer = CreateImageBuffer(allocator, image, true, repeatAddressMode);
-
-        auto normalImage = CreateImage(normalMapPath);
-        auto normalImageBuffer = CreateImageBuffer(allocator, normalImage, true, repeatAddressMode);
-
-        auto heightImage = CreateImage(heightMapPath);
-        auto heightImageBuffer = CreateImageBuffer(allocator, heightImage, false, repeatAddressMode);
-
-        prev_test::render::material::MaterialFactory materialFactory{};
-        return materialFactory.Create({ glm::vec3{ 1.0f }, shineDamper, reflectivity }, { image, std::move(imageBuffer) }, { normalImage, std::move(normalImageBuffer) }, { heightImage, std::move(heightImageBuffer) });
-    }
-
-    std::unique_ptr<prev_test::render::IModel> CreateModel(prev::core::memory::Allocator& allocator, const std::shared_ptr<prev_test::render::IMesh>& mesh) const
-    {
-        auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
-        vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
-
-        auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
-        indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
-
-        return std::make_unique<prev_test::render::model::Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));
-    }
-
-public:
-    std::unique_ptr<IRenderComponent> CreateCubeRenderComponent(const std::string& texturePath, const bool castsShadows, const bool isCastedByShadows) const
-    {
-        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-
-        auto material = CreateMaterial(*allocator, texturePath, false, 10.0f, 1.0f);
-
-        auto mesh = std::make_unique<prev_test::render::mesh::CubeMesh>();
-        auto model = CreateModel(*allocator, std::move(mesh));
-
-        return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
-    }
-
-    std::unique_ptr<IRenderComponent> CreateCubeRenderComponent(const std::string& texturePath, const std::string& normalPath, const bool castsShadows, const bool isCastedByShadows) const
-    {
-        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-
-        auto material = CreateMaterial(*allocator, texturePath, normalPath, false, 10.0f, 1.0f);
-
-        auto mesh = std::make_unique<prev_test::render::mesh::CubeMesh>(true);
-        auto model = CreateModel(*allocator, std::move(mesh));
-
-        return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
-    }
-
-    std::unique_ptr<IRenderComponent> CreateCubeRenderComponent(const std::string& texturePath, const std::string& normalPath, const std::string& heightOrConeMapPath, const bool castsShadows, const bool isCastedByShadows) const
-    {
-        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-
-        auto material = CreateMaterial(*allocator, texturePath, normalPath, heightOrConeMapPath, false, 10.0f, 1.0f);
-
-        auto mesh = std::make_unique<prev_test::render::mesh::CubeMesh>(true);
-        auto model = CreateModel(*allocator, std::move(mesh));
-
-        return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
-    }
-
-    std::unique_ptr<IRenderComponent> CreatePlaneRenderComponent(const std::string& texturePath, const bool castsShadows, const bool isCastedByShadows) const
-    {
-        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-
-        auto material = CreateMaterial(*allocator, texturePath, true, 2.0f, 0.3f);
-
-        auto mesh = std::make_shared<prev_test::render::mesh::PlaneMesh>(40.0f, 40.0f, 1, 1, 10.0f, 10.0f, false);
-        auto model = CreateModel(*allocator, std::move(mesh));
-
-        return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
-    }
-
-    std::unique_ptr<IRenderComponent> CreatePlaneRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const bool castsShadows, const bool isCastedByShadows) const
-    {
-        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-
-        auto material = CreateMaterial(*allocator, texturePath, normalMapPath, true, 2.0f, 0.3f);
-
-        auto mesh = std::make_shared<prev_test::render::mesh::PlaneMesh>(40.0f, 40.0f, 1, 1, 1.0f, 1.0f, true);
-        auto model = CreateModel(*allocator, std::move(mesh));
-
-        return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
-    }
-
-    std::unique_ptr<IRenderComponent> CreatePlaneRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const std::string& heightOrConeMapPath, const bool castsShadows, const bool isCastedByShadows) const
-    {
-        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-
-        auto material = CreateMaterial(*allocator, texturePath, normalMapPath, heightOrConeMapPath, true, 2.0f, 0.3f);
-
-        auto mesh = std::make_shared<prev_test::render::mesh::PlaneMesh>(40.0f, 40.0f, 1, 1, 1.0f, 1.0f, true);
-        auto model = CreateModel(*allocator, std::move(mesh));
-
-        return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
-    }
-
-    std::unique_ptr<IRenderComponent> CreateSphereRenderComponent(const std::string& texturePath, const bool castsShadows, const bool isCastedByShadows) const
-    {
-        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-
-        auto material = CreateMaterial(*allocator, texturePath, true, 2.0f, 0.3f);
-
-        auto mesh = std::make_shared<prev_test::render::mesh::SphereMesh>(1.0f, 64, 64, 360.0f, 180.0f, false);
-        auto model = CreateModel(*allocator, std::move(mesh));
-
-        return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
-    }
-
-    std::unique_ptr<IRenderComponent> CreateSphereRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const bool castsShadows, const bool isCastedByShadows) const
-    {
-        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-
-        auto material = CreateMaterial(*allocator, texturePath, normalMapPath, true, 2.0f, 0.3f);
-
-        auto mesh = std::make_shared<prev_test::render::mesh::SphereMesh>(1.0f, 64, 64, 360.0f, 180.0f, true);
-        auto model = CreateModel(*allocator, std::move(mesh));
-
-        return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
-    }
-
-    std::unique_ptr<IRenderComponent> CreateSphereRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const std::string& heightOrConeMapPath, const bool castsShadows, const bool isCastedByShadows) const
-    {
-        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-
-        auto material = CreateMaterial(*allocator, texturePath, normalMapPath, heightOrConeMapPath, true, 2.0f, 0.3f);
-
-        auto mesh = std::make_shared<prev_test::render::mesh::SphereMesh>(1.0f, 64, 64, 360.0f, 180.0f, true);
-        auto model = CreateModel(*allocator, std::move(mesh));
-
-        return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
-    }
-
-    std::unique_ptr<IRenderComponent> CreateModelRenderComponent(const std::string& modelPath, const std::string& texturePath, const bool castsShadows, const bool isCastedByShadows) const
-    {
-        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-
-        auto material = CreateMaterial(*allocator, texturePath, true, 2.0f, 0.3f);
-
-        prev_test::render::mesh::MeshFactory meshFactory{};
-        auto mesh = meshFactory.Create(modelPath);
-        auto model = CreateModel(*allocator, std::move(mesh));
-
-        return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
-    }
-
-    std::unique_ptr<IRenderComponent> CreateModelRenderComponent(const std::string& modelPath, const std::vector<std::string>& texturePaths, const bool castsShadows, const bool isCastedByShadows) const
-    {
-        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-
-        std::vector<std::shared_ptr<prev_test::render::IMaterial> > materials;
-        for (const auto texturePath : texturePaths) {
-            materials.emplace_back(CreateMaterial(*allocator, texturePath, true, 2.0f, 0.3f));
-        }
-
-        prev_test::render::mesh::MeshFactory meshFactory{};
-        auto mesh = meshFactory.Create(modelPath);
-        auto model = CreateModel(*allocator, std::move(mesh));
-
-        return std::make_unique<DefaultRenderComponent>(std::move(model), materials, castsShadows, isCastedByShadows);
-    }
-
-    std::unique_ptr<IRenderComponent> CreateModelRenderComponent(const std::string& modelPath, const std::string& texturePath, const std::string& normalMapPath, const bool castsShadows, const bool isCastedByShadows) const
-    {
-        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-
-        auto material = CreateMaterial(*allocator, texturePath, normalMapPath, true, 10.0f, 0.7f);
-
-        prev_test::render::mesh::MeshFactory meshFactory{};
-        auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
-        auto model = CreateModel(*allocator, std::move(mesh));
-
-        return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
-    }
-
-    std::unique_ptr<IRenderComponent> CreateModelRenderComponent(const std::string& modelPath, const std::vector<std::string>& texturePaths, const std::vector<std::string>& normalMapPaths, const bool castsShadows, const bool isCastedByShadows) const
-    {
-        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-
-        std::vector<std::shared_ptr<prev_test::render::IMaterial> > materials;
-        for (size_t i = 0; i < texturePaths.size(); i++) {
-            materials.emplace_back(CreateMaterial(*allocator, texturePaths.at(i), normalMapPaths.at(i), true, 10.0f, 0.7f));
-        }
-
-        prev_test::render::mesh::MeshFactory meshFactory{};
-        auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
-        auto model = CreateModel(*allocator, std::move(mesh));
-
-        return std::make_unique<DefaultRenderComponent>(std::move(model), materials, castsShadows, isCastedByShadows);
-    }
-
-    std::unique_ptr<IRenderComponent> CreateModelRenderComponent(const std::string& modelPath, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightOrConeMapPath, const bool castsShadows, const bool isCastedByShadows) const
-    {
-        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-
-        auto material = CreateMaterial(*allocator, texturePath, normalMapPath, heightOrConeMapPath, true, 3.0f, 0.3f);
-
-        prev_test::render::mesh::MeshFactory meshFactory{};
-        auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
-        auto model = CreateModel(*allocator, std::move(mesh));
-
-        return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
-    }
-
-    std::unique_ptr<IRenderComponent> CreateModelRenderComponent(const std::string& modelPath, const std::vector<std::string>& texturePaths, const std::vector<std::string>& normalMapPaths, const std::vector<std::string>& heightOrConeMapPaths, const bool castsShadows, const bool isCastedByShadows) const
-    {
-        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-
-        std::vector<std::shared_ptr<prev_test::render::IMaterial> > materials;
-        for (size_t i = 0; i < texturePaths.size(); i++) {
-            materials.emplace_back(CreateMaterial(*allocator, texturePaths.at(i), normalMapPaths.at(i), heightOrConeMapPaths.at(i), true, 10.0f, 0.7f));
-        }
-
-        prev_test::render::mesh::MeshFactory meshFactory{};
-        auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
-        auto model = CreateModel(*allocator, std::move(mesh));
-
-        return std::make_unique<DefaultRenderComponent>(std::move(model), materials, castsShadows, isCastedByShadows);
-    }
-
-    std::unique_ptr<IAnimationRenderComponent> CreateAnimatedModelRenderComponent(const std::string& modelPath, const std::string& texturePath, const bool castsShadows, const bool isCastedByShadows) const
-    {
-        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-
-        auto material = CreateMaterial(*allocator, texturePath, true, 1.5f, 0.3f);
-
-        prev_test::render::mesh::MeshFactory meshFactory{};
-        auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::ANIMATION });
-        auto model = CreateModel(*allocator, std::move(mesh));
-
-        prev_test::render::animation::AnimationFactory animationFactory{};
-        auto animation = animationFactory.Create(modelPath);
-
-        return std::make_unique<DefaultAnimationRenderComponent>(std::move(model), std::move(material), std::move(animation), castsShadows, isCastedByShadows);
-    }
-
-    std::unique_ptr<IAnimationRenderComponent> CreateAnimatedModelRenderComponent(const std::string& modelPath, const std::vector<std::string>& texturePaths, const bool castsShadows, const bool isCastedByShadows) const
-    {
-        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-
-        std::vector<std::shared_ptr<prev_test::render::IMaterial> > materials;
-        for (const auto& texturePath : texturePaths) {
-            materials.emplace_back(CreateMaterial(*allocator, texturePath, true, 1.5f, 0.3f));
-        }
-
-        prev_test::render::mesh::MeshFactory meshFactory{};
-        auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::ANIMATION });
-        auto model = CreateModel(*allocator, std::move(mesh));
-
-        prev_test::render::animation::AnimationFactory animationFactory{};
-        auto animation = animationFactory.Create(modelPath);
-
-        return std::make_unique<DefaultAnimationRenderComponent>(std::move(model), materials, std::move(animation), castsShadows, isCastedByShadows);
-    }
-
-    std::unique_ptr<IAnimationRenderComponent> CreateAnimatedModelRenderComponent(const std::string& modelPath, const std::string& texturePath, const std::string& normalMapPath, const bool castsShadows, const bool isCastedByShadows) const
-    {
-        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-
-        auto material = CreateMaterial(*allocator, texturePath, normalMapPath, true, 1.5f, 0.3f);
-
-        prev_test::render::mesh::MeshFactory meshFactory{};
-        auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
-        auto model = CreateModel(*allocator, std::move(mesh));
-
-        prev_test::render::animation::AnimationFactory animationFactory{};
-        auto animation = animationFactory.Create(modelPath);
-
-        return std::make_unique<DefaultAnimationRenderComponent>(std::move(model), std::move(material), std::move(animation), castsShadows, isCastedByShadows);
-    }
-
-    std::unique_ptr<IAnimationRenderComponent> CreateAnimatedModelRenderComponent(const std::string& modelPath, const std::vector<std::string>& texturePaths, const std::vector<std::string>& normalMapPaths, const bool castsShadows, const bool isCastedByShadows) const
-    {
-        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-
-        std::vector<std::shared_ptr<prev_test::render::IMaterial> > materials;
-        for (size_t i = 0; i < texturePaths.size(); i++) {
-            materials.emplace_back(CreateMaterial(*allocator, texturePaths.at(i), normalMapPaths.at(i), true, 1.5f, 0.3f));
-        }
-
-        prev_test::render::mesh::MeshFactory meshFactory{};
-        auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
-        auto model = CreateModel(*allocator, std::move(mesh));
-
-        prev_test::render::animation::AnimationFactory animationFactory{};
-        auto animation = animationFactory.Create(modelPath);
-
-        return std::make_unique<DefaultAnimationRenderComponent>(std::move(model), materials, std::move(animation), castsShadows, isCastedByShadows);
-    }
-
-    std::unique_ptr<IAnimationRenderComponent> CreateAnimatedModelRenderComponent(const std::string& modelPath, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightOrConeMapPath, const bool castsShadows, const bool isCastedByShadows) const
-    {
-        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-
-        auto material = CreateMaterial(*allocator, texturePath, normalMapPath, heightOrConeMapPath, true, 1.5f, 0.3f);
-
-        prev_test::render::mesh::MeshFactory meshFactory{};
-        auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
-        auto model = CreateModel(*allocator, std::move(mesh));
-
-        prev_test::render::animation::AnimationFactory animationFactory{};
-        auto animation = animationFactory.Create(modelPath);
-
-        return std::make_unique<DefaultAnimationRenderComponent>(std::move(model), std::move(material), std::move(animation), castsShadows, isCastedByShadows);
-    }
-
-    std::unique_ptr<IAnimationRenderComponent> CreateAnimatedModelRenderComponent(const std::string& modelPath, const std::vector<std::string>& texturePaths, const std::vector<std::string>& normalMapPaths, const std::vector<std::string>& heightOrConeMapPaths, const bool castsShadows, const bool isCastedByShadows) const
-    {
-        auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-
-        std::vector<std::shared_ptr<prev_test::render::IMaterial> > materials;
-        for (size_t i = 0; i < texturePaths.size(); i++) {
-            materials.emplace_back(CreateMaterial(*allocator, texturePaths.at(i), normalMapPaths.at(i), heightOrConeMapPaths.at(i), true, 1.5f, 0.3f));
-        }
-
-        prev_test::render::mesh::MeshFactory meshFactory{};
-        auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
-        auto model = CreateModel(*allocator, std::move(mesh));
-
-        prev_test::render::animation::AnimationFactory animationFactory{};
-        auto animation = animationFactory.Create(modelPath);
-
-        return std::make_unique<DefaultAnimationRenderComponent>(std::move(model), materials, std::move(animation), castsShadows, isCastedByShadows);
-    }
-};
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SCENE
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
+namespace prev_test {
 class BaseCubeRobotSceneNode : public prev::scene::graph::SceneNode<SceneNodeFlags> {
 public:
     BaseCubeRobotSceneNode(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
@@ -545,20 +53,20 @@ public:
 public:
     void Init() override
     {
-        RenderComponentFactory renderComponentFactory{};
-        std::shared_ptr<IRenderComponent> renderComponent = renderComponentFactory.CreateCubeRenderComponent(m_texturePath, true, true);
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_COMPONENT);
+        prev_test::component::render::RenderComponentFactory renderComponentFactory{};
+        std::shared_ptr<prev_test::component::render::IRenderComponent> renderComponent = renderComponentFactory.CreateCubeRenderComponent(m_texturePath, true, true);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::render::IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_COMPONENT);
 
         BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(renderComponent->GetModel()->GetMesh()->GetVertices());
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
 
-        TrasnformComponentFactory transformComponentFactory{};
+        prev_test::component::transform::TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
-        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
-            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent())) {
+            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent()));
         }
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         const auto selectableComponent = std::make_shared<SelectableComponent>();
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ISelectableComponent>(GetThis(), selectableComponent, SceneNodeFlags::SELECTABLE_COMPONENT);
@@ -589,7 +97,7 @@ protected:
     const glm::vec3 m_initialScale;
 
 private:
-    std::shared_ptr<ITransformComponent> m_transformComponent;
+    std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
     std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
@@ -662,14 +170,14 @@ public:
 
     void Update(float deltaTime) override
     {
-        auto bodyTransformComponent = prev::scene::component::ComponentRepository<ITransformComponent>::Instance().Get(m_body->GetId());
+        auto bodyTransformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(m_body->GetId());
         bodyTransformComponent->Rotate(glm::rotate(glm::mat4(1.0f), glm::radians(m_angularVelocity.x), glm::vec3(1.0f, 0.0f, 0.0f)));
         bodyTransformComponent->Rotate(glm::rotate(glm::mat4(1.0f), glm::radians(m_angularVelocity.y), glm::vec3(0.0f, 1.0f, 0.0f)));
 
-        auto headTransformComponent = prev::scene::component::ComponentRepository<ITransformComponent>::Instance().Get(m_head->GetId());
+        auto headTransformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(m_head->GetId());
         headTransformComponent->Rotate(glm::rotate(glm::mat4(1.0f), -glm::radians(25.0f) * deltaTime, glm::vec3(0, 1, 0)));
 
-        auto leftArmTransformComponent = prev::scene::component::ComponentRepository<ITransformComponent>::Instance().Get(m_leftArm->GetId());
+        auto leftArmTransformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(m_leftArm->GetId());
         leftArmTransformComponent->Translate(glm::vec3(0, -4.5, 0));
         leftArmTransformComponent->Rotate(glm::rotate(glm::mat4(1.0f), glm::radians(20.0f) * deltaTime, glm::vec3(1, 0, 0)));
         leftArmTransformComponent->Translate(glm::vec3(0, 4.5, 0));
@@ -742,21 +250,21 @@ public:
 public:
     void Init() override
     {
-        RenderComponentFactory renderComponentFactory{};
-        std::shared_ptr<IRenderComponent> renderComponent = renderComponentFactory.CreatePlaneRenderComponent(m_texturePath, m_normalMapPath, m_heightMapPath, false, true);
+        prev_test::component::render::RenderComponentFactory renderComponentFactory{};
+        std::shared_ptr<prev_test::component::render::IRenderComponent> renderComponent = renderComponentFactory.CreatePlaneRenderComponent(m_texturePath, m_normalMapPath, m_heightMapPath, false, true);
         renderComponent->GetMaterial()->SetHeightScale(m_heightScale);
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_CONE_STEP_MAPPED_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::render::IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_CONE_STEP_MAPPED_COMPONENT);
 
         BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(renderComponent->GetModel()->GetMesh()->GetVertices());
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
 
-        TrasnformComponentFactory transformComponentFactory{};
+        prev_test::component::transform::TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
-        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
-            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent())) {
+            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent()));
         }
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         SceneNode::Init();
     }
@@ -793,7 +301,7 @@ protected:
 
     const float m_heightScale;
 
-    std::shared_ptr<ITransformComponent> m_transformComponent;
+    std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
     std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
@@ -817,21 +325,21 @@ public:
 public:
     void Init() override
     {
-        RenderComponentFactory renderComponentFactory{};
-        std::shared_ptr<IRenderComponent> renderComponent = renderComponentFactory.CreateCubeRenderComponent(m_texturePath, m_normalMapPath, m_heightMapPath, false, true);
+        prev_test::component::render::RenderComponentFactory renderComponentFactory{};
+        std::shared_ptr<prev_test::component::render::IRenderComponent> renderComponent = renderComponentFactory.CreateCubeRenderComponent(m_texturePath, m_normalMapPath, m_heightMapPath, false, true);
         renderComponent->GetMaterial()->SetHeightScale(m_heightScale);
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_CONE_STEP_MAPPED_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::render::IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_CONE_STEP_MAPPED_COMPONENT);
 
         BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(renderComponent->GetModel()->GetMesh()->GetVertices());
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
 
-        TrasnformComponentFactory transformComponentFactory{};
+        prev_test::component::transform::TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
-        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
-            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent())) {
+            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent()));
         }
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         SceneNode::Init();
     }
@@ -868,7 +376,7 @@ protected:
 
     const float m_heightScale;
 
-    std::shared_ptr<ITransformComponent> m_transformComponent;
+    std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
     std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
@@ -887,12 +395,12 @@ public:
 public:
     void Init() override
     {
-        TrasnformComponentFactory transformComponentFactory{};
+        prev_test::component::transform::TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create();
-        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
-            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent())) {
+            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent()));
         }
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         TerrainComponentFactory terrainComponentFactory{};
         m_terrainComponent = terrainComponentFactory.CreateRandomTerrainConeStepMapped(m_xIndex, m_zIndex, TERRAIN_SIZE);
@@ -934,7 +442,7 @@ private:
 
     const int m_zIndex;
 
-    std::shared_ptr<ITransformComponent> m_transformComponent;
+    std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
     std::shared_ptr<ITerrainComponenet> m_terrainComponent;
 
@@ -1051,17 +559,17 @@ public:
 public:
     void Init() override
     {
-        TrasnformComponentFactory transformComponentFactory{};
+        prev_test::component::transform::TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
-        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
-            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent())) {
+            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent()));
         }
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
-        RenderComponentFactory renderComponentFactory{};
+        prev_test::component::render::RenderComponentFactory renderComponentFactory{};
         m_animatonRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin.dae"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_texture.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_normal_texture_2.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_cone_texture.png"), true, true);
         m_animatonRenderComponent->GetMaterial()->SetHeightScale(0.004f);
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IAnimationRenderComponent>(GetThis(), m_animatonRenderComponent, SceneNodeFlags::ANIMATION_CONE_STEP_MAPPED_RENDER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::render::IAnimationRenderComponent>(GetThis(), m_animatonRenderComponent, SceneNodeFlags::ANIMATION_CONE_STEP_MAPPED_RENDER_COMPONENT);
 
         CameraComponentFactory cameraFactory{};
         m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 60.0f, 180.0f));
@@ -1311,9 +819,9 @@ private:
     prev::event::EventHandler<Goblin, prev::input::mouse::MouseScrollEvent> m_mouseScrollsHandler{ *this };
 
 private:
-    std::shared_ptr<ITransformComponent> m_transformComponent;
+    std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
-    std::shared_ptr<IAnimationRenderComponent> m_animatonRenderComponent;
+    std::shared_ptr<prev_test::component::render::IAnimationRenderComponent> m_animatonRenderComponent;
 
     std::shared_ptr<ICameraComponent> m_cameraComponent;
 
@@ -1344,12 +852,12 @@ private:
 public:
     void Init() override
     {
-        TrasnformComponentFactory transformComponentFactory{};
+        prev_test::component::transform::TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create();
-        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
-            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent())) {
+            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent()));
         }
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         CameraComponentFactory cameraFactory{};
         m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 60.0f, 180.0f));
@@ -1488,7 +996,7 @@ private:
 private:
     prev::input::InputsFacade m_inputFacade;
 
-    std::shared_ptr<ITransformComponent> m_transformComponent;
+    std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
     std::shared_ptr<ICameraComponent> m_cameraComponent;
 
@@ -1558,12 +1066,12 @@ public:
 public:
     void Init() override
     {
-        TrasnformComponentFactory transformComponentFactory{};
+        prev_test::component::transform::TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create();
-        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
-            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent())) {
+            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent()));
         }
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         LightComponentFactory lightFactory{};
         m_lightComponent = lightFactory.CreateLightCompoennt(m_initialPosition);
@@ -1601,7 +1109,7 @@ public:
     }
 
 private:
-    std::shared_ptr<ITransformComponent> m_transformComponent;
+    std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
     std::shared_ptr<ILightComponent> m_lightComponent;
 
@@ -1622,12 +1130,12 @@ public:
 public:
     void Init() override
     {
-        TrasnformComponentFactory transformComponentFactory{};
+        prev_test::component::transform::TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create();
-        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
-            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent())) {
+            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent()));
         }
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         LightComponentFactory lightFactory{};
         m_lightComponent = lightFactory.CreateLightCompoennt(m_initialPosition, m_color, glm::vec3(0.1f, 0.005f, 0.001f));
@@ -1654,7 +1162,7 @@ private:
 
     const glm::vec3 m_color;
 
-    std::shared_ptr<ITransformComponent> m_transformComponent;
+    std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
     std::shared_ptr<ILightComponent> m_lightComponent;
 };
@@ -1671,12 +1179,12 @@ public:
 public:
     void Init() override
     {
-        TrasnformComponentFactory transformComponentFactory{};
+        prev_test::component::transform::TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create();
-        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
-            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent())) {
+            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent()));
         }
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         SkyBoxComponentFactory factory{};
         m_skyBoxComponent = factory.Create();
@@ -1709,7 +1217,7 @@ public:
     }
 
 private:
-    std::shared_ptr<ITransformComponent> m_transformComponent;
+    std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
     std::shared_ptr<ISkyBoxComponent> m_skyBoxComponent;
 
@@ -1870,12 +1378,12 @@ public:
 public:
     void Init() override
     {
-        TrasnformComponentFactory transformComponentFactory{};
+        prev_test::component::transform::TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create();
-        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
-            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent())) {
+            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent()));
         }
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         WaterComponentFactory componentFactory{};
         m_waterComponent = std::move(componentFactory.Create(m_x, m_z));
@@ -1912,7 +1420,7 @@ private:
 
     const int m_z;
 
-    std::shared_ptr<ITransformComponent> m_transformComponent;
+    std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
     std::shared_ptr<IWaterComponent> m_waterComponent;
 
@@ -2078,17 +1586,17 @@ public:
 public:
     void Init() override
     {
-        TrasnformComponentFactory transformComponentFactory{};
+        prev_test::component::transform::TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
-        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, ITransformComponent>(GetParent())) {
-            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, ITransformComponent>(GetParent()));
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent())) {
+            m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent()));
         }
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
-        RenderComponentFactory componentFactory{};
-        std::shared_ptr<IRenderComponent> renderComponent = componentFactory.CreateModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.dae"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_normal.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_height.png"), true, true);
+        prev_test::component::render::RenderComponentFactory componentFactory{};
+        std::shared_ptr<prev_test::component::render::IRenderComponent> renderComponent = componentFactory.CreateModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.dae"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_normal.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_height.png"), true, true);
         renderComponent->GetMaterial()->SetHeightScale(0.01f);
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_PARALLAX_MAPPED_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::render::IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_PARALLAX_MAPPED_COMPONENT);
 
         BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(renderComponent->GetModel()->GetMesh()->GetVertices());
@@ -2130,7 +1638,7 @@ private:
 
     const glm::vec3 m_initialScale;
 
-    std::shared_ptr<ITransformComponent> m_transformComponent;
+    std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
     std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
@@ -2200,7 +1708,7 @@ public:
     void Update(float deltaTime) override
     {
         const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
-        const auto playerTransformComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ITransformComponent>({ TAG_PLAYER });
+        const auto playerTransformComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::transform::ITransformComponent>({ TAG_PLAYER });
 
         if (m_inputFacade.IsMouseLocked()) {
             m_rayCasterComponent->SetRayLength(RAY_LENGTH);
@@ -2606,8 +2114,8 @@ public:
 
     void Init() override
     {
-        m_timeComponent = std::make_shared<TimeComponent>();
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITimeComponent>(GetThis(), m_timeComponent, SceneNodeFlags::TIME_COMPONENT);
+        m_timeComponent = std::make_shared<prev_test::component::time::TimeComponent>();
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::time::ITimeComponent>(GetThis(), m_timeComponent, SceneNodeFlags::TIME_COMPONENT);
 
         SceneNode::Init();
     }
@@ -2625,7 +2133,7 @@ public:
     }
 
 private:
-    std::shared_ptr<ITimeComponent> m_timeComponent;
+    std::shared_ptr<prev_test::component::time::ITimeComponent> m_timeComponent;
 };
 
 class RootSceneNode final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
@@ -2875,6 +2383,7 @@ protected:
     {
     }
 };
+} // namespace prev_test
 
 int main(int argc, char* argv[])
 {
@@ -2882,7 +2391,7 @@ int main(int argc, char* argv[])
 
     auto config = std::make_shared<prev::core::EngineConfig>();
 
-    TestApp<SceneNodeFlags> app(config);
+    prev_test::TestApp<prev_test::SceneNodeFlags> app(config);
     app.Init();
     app.Run();
     app.ShutDown();

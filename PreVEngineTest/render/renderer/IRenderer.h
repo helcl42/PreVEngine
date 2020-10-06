@@ -1,9 +1,12 @@
 #ifndef __IRENDERER_H__
 #define __IRENDERER_H__
 
-#include <prev/render/RenderContext.h>
-
 #include "RenderContextUserData.h"
+
+#include "../../General.h"
+
+#include <prev/render/RenderContext.h>
+#include <prev/scene/graph/ISceneNode.h>
 
 namespace prev_test::render::renderer {
 template <typename UserDataType = DefaultRenderContextUserData>

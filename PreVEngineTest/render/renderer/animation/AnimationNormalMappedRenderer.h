@@ -3,8 +3,11 @@
 
 #include "../../../General.h"
 #include "../../../Shadows.h"
+#include "../../IAnimation.h"
 #include "../../pipeline/IPipeline.h"
 #include "../IRenderer.h"
+
+#include "../../../Light.h"
 
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>

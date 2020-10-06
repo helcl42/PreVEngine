@@ -4,6 +4,7 @@
 #include "shader/TerrainShadowsShader.h"
 
 #include "../../../common/AssetManager.h"
+#include "../../../component/transform/ITransformComponent.h"
 
 #include "../../../Terrain.h"
 
@@ -11,6 +12,8 @@
 #include <prev/core/memory/buffer/UniformBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/AllocatorProvider.h>
+#include <prev/scene/component/ComponentRepository.h>
+#include <prev/scene/component/NodeComponentHelper.h>
 
 #include <memory>
 
@@ -63,7 +66,7 @@ void TerrainShadowsRenderer::Render(const prev::render::RenderContext& renderCon
         }
 
         if (visible) {
-            const auto transformComponent = prev::scene::component::ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
+            const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());
             const auto terrainComponent = prev::scene::component::ComponentRepository<ITerrainComponenet>::Instance().Get(node->GetId());
             auto ubo = m_uniformsPool->GetNext();
 

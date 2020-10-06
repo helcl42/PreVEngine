@@ -2,7 +2,10 @@
 #define __ANIMATION_CONE_STEP_MAPPED_RENDERER_H__
 
 #include "../../../General.h"
+#include "../../../Light.h"
 #include "../../../Shadows.h"
+
+#include "../../IAnimation.h"
 #include "../../pipeline/IPipeline.h"
 #include "../IRenderer.h"
 

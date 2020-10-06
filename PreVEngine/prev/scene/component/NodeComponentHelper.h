@@ -4,6 +4,7 @@
 #include "../../common/FlagSet.h"
 #include "../../common/TagSet.h"
 #include "../graph/GraphTraversal.h"
+#include "ComponentRepository.h"
 
 #include <memory>
 #include <vector>

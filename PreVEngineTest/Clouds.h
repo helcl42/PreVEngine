@@ -1,16 +1,17 @@
 #ifndef __CLOUDS_H__
 #define __CLOUDS_H__
 
-#include "General.h"
-
 #include "common/AssetManager.h"
 #include "render/renderer/sky/pipeline/CloudsPipeline.h"
 #include "render/renderer/sky/pipeline/PerlinWorleyNoisePipeline.h"
 #include "render/renderer/sky/shader/CloudsShader.h"
 #include "render/renderer/sky/shader/PerlinWorleyNoiseShader.h"
 
+#include <prev/core/DeviceProvider.h>
+#include <prev/core/memory/image/ImageStorageBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/ComputeProvider.h>
+#include <prev/util/VkUtils.h>
 
 class WatherFactory {
 public:

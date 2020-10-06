@@ -2,6 +2,7 @@
 #define __ANIMATION_SHADOWS_RENDERER_H__
 
 #include "../../../General.h"
+#include "../../IAnimation.h"
 #include "../../pipeline/IPipeline.h"
 #include "../IRenderer.h"
 

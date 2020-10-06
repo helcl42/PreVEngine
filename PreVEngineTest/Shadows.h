@@ -2,9 +2,13 @@
 #define __SHADOWS_H__
 
 #include "Culling.h"
-#include "General.h"
 
+#include <prev/core/DeviceProvider.h>
+#include <prev/core/memory/image/DepthImageBuffer.h>
 #include <prev/render/pass/RenderPass.h>
+#include <prev/util/VkUtils.h>
+
+constexpr bool SHADOWS_ENABLED{ true };
 
 struct ShadowsCascade {
     VkFramebuffer frameBuffer;

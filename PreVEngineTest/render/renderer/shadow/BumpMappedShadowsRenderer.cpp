@@ -4,11 +4,15 @@
 #include "shader/BumpMappedShadowsShader.h"
 
 #include "../../../common/AssetManager.h"
+#include "../../../component/transform/ITransformComponent.h"
+#include "../../../component/render/IRenderComponent.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/AllocatorProvider.h>
+#include <prev/scene/component/ComponentRepository.h>
+#include <prev/scene/component/NodeComponentHelper.h>
 
 #include <memory>
 
@@ -60,8 +64,8 @@ void BumpMappedShadowsRenderer::Render(const prev::render::RenderContext& render
             visible = prev::scene::component::ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);
         }
 
-        const auto transformComponent = prev::scene::component::ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
-        const auto renderComponent = prev::scene::component::ComponentRepository<IRenderComponent>::Instance().Get(node->GetId());
+        const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());
+        const auto renderComponent = prev::scene::component::ComponentRepository<prev_test::component::render::IRenderComponent>::Instance().Get(node->GetId());
         if (renderComponent->CastsShadows() && visible) {
             const auto vertexStride = renderComponent->GetModel()->GetMesh()->GetVertexLayout().GetStride();
             const auto meshParts = renderComponent->GetModel()->GetMesh()->GetMeshParts();

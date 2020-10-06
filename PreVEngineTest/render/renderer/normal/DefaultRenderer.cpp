@@ -4,14 +4,19 @@
 #include "shader/DefaultShader.h"
 
 #include "../../../common/AssetManager.h"
+#include "../../../component/render/IRenderComponent.h"
+#include "../../../component/transform/ITransformComponent.h"
 
 #include "../../../Light.h"
 #include "../../../RayCasting.h"
+#include "../../../Sky.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/AllocatorProvider.h>
+#include <prev/scene/component/ComponentRepository.h>
+#include <prev/scene/component/NodeComponentHelper.h>
 
 #include <memory>
 
@@ -71,8 +76,8 @@ void DefaultRenderer::Render(const prev::render::RenderContext& renderContext, c
             const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
             const auto lightComponents = prev::scene::component::NodeComponentHelper::FindAll<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
 
-            const auto transformComponent = prev::scene::component::ComponentRepository<ITransformComponent>::Instance().Get(node->GetId());
-            const auto nodeRenderComponent = prev::scene::component::ComponentRepository<IRenderComponent>::Instance().Get(node->GetId());
+            const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());
+            const auto nodeRenderComponent = prev::scene::component::ComponentRepository<prev_test::component::render::IRenderComponent>::Instance().Get(node->GetId());
 
             const auto vertexStride = nodeRenderComponent->GetModel()->GetMesh()->GetVertexLayout().GetStride();
 

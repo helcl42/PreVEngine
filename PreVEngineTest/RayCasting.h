@@ -1,14 +1,17 @@
 #ifndef __RAY_CASTING_H__
 #define __RAY_CASTING_H__
 
-#include "General.h"
 #include "render/model/Model.h"
 
 #include <prev/input/mouse/MouseEvents.h>
 #include <prev/window/WindowEvents.h>
+#include <prev/event/EventsChannel.h>
+#include <prev/event/EventHandler.h>
 
 //#define RENDER_RAYCASTS
 #define RENDER_SELECTION
+
+constexpr glm::vec4 SELECTED_COLOR{ 1.0f, 0.0f, 0.0f, 1.0f };
 
 struct RayEvent {
     Ray ray;
