@@ -1,7 +1,6 @@
 #include "Camera.h"
 #include "Clouds.h"
 #include "Culling.h"
-#include "Font.h"
 #include "General.h"
 #include "LensFlare.h"
 #include "Light.h"
@@ -18,6 +17,7 @@
 #include "component/time/TimeComponent.h"
 #include "component/transform/TransformComponentFactory.h"
 #include "component/render/RenderComponentFactory.h"
+#include "component/font/FontRenderComponentsFactory.h"
 
 #include <prev/App.h>
 #include <prev/common/pattern/Nullable.h>
@@ -1009,7 +1009,7 @@ private:
 
 class Text : public prev::scene::graph::SceneNode<SceneNodeFlags> {
 private:
-    std::shared_ptr<IFontRenderComponent> m_fontComponent;
+    std::shared_ptr<prev_test::component::font::IFontRenderComponent> m_fontComponent;
 
     prev::util::FPSService m_fpsService{ 1.0f, false };
 
@@ -1024,9 +1024,9 @@ public:
 public:
     void Init() override
     {
-        FontRenderComponentsFactory factory{};
+        prev_test::component::font::FontRenderComponentsFactory factory{};
         m_fontComponent = factory.Create(prev_test::common::AssetManager::Instance().GetAssetPath("Fonts/verdana.fnt"), prev_test::common::AssetManager::Instance().GetAssetPath("Fonts/verdana.png"), 16.0f / 9.0f);
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IFontRenderComponent>(GetThis(), m_fontComponent, SceneNodeFlags::FONT_RENDER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::font::IFontRenderComponent>(GetThis(), m_fontComponent, SceneNodeFlags::FONT_RENDER_COMPONENT);
 
         SceneNode::Init();
     }
@@ -1040,7 +1040,7 @@ public:
             fpsString << std::setprecision(1) << std::fixed;
             fpsString << m_fpsService.GetAverageFPS() << " FPS";
 
-            auto fancyText = std::make_shared<FancyText>(fpsString.str(), 1.6f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0), glm::vec2(0.4f, -0.4f), 1.0f, true, 0.5f, 0.05f);
+            auto fancyText = std::make_shared<prev_test::render::font::ScreenSpaceText>(fpsString.str(), 1.6f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0), glm::vec2(0.4f, -0.4f), 1.0f, true, 0.5f, 0.05f);
             m_fontComponent->AddText(fancyText);
         }
 
