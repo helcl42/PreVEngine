@@ -5,7 +5,7 @@
 
 #include "../../../common/AssetManager.h"
 
-#include "../../../Font.h"
+#include "../../../component/font/IFontRenderComponent.h"
 
 #include <prev/common/Common.h>
 #include <prev/core/DeviceProvider.h>
@@ -63,7 +63,7 @@ void FontRenderer::PreRender(const prev::render::RenderContext& renderContext, c
 void FontRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData)
 {
     if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::FONT_RENDER_COMPONENT })) {
-        const auto nodeFontRenderComponent = prev::scene::component::ComponentRepository<IFontRenderComponent>::Instance().Get(node->GetId());
+        const auto nodeFontRenderComponent = prev::scene::component::ComponentRepository<prev_test::component::font::IFontRenderComponent>::Instance().Get(node->GetId());
         for (const auto& renderableText : nodeFontRenderComponent->GetRenderableTexts()) {
             auto uboVS = m_uniformsPoolVS->GetNext();
             UniformsVS uniformsVS{};
