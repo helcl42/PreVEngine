@@ -5,7 +5,7 @@
 
 #include "../../../common/AssetManager.h"
 
-#include "../../../LensFlare.h"
+#include "../../../component/sky/ILensFlareComponent.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
@@ -62,7 +62,7 @@ void LensFlareRenderer::PreRender(const prev::render::RenderContext& renderConte
 void LensFlareRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData)
 {
     if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::LENS_FLARE_RENDER_COMPONENT })) {
-        const auto lensFlareComponent = prev::scene::component::ComponentRepository<ILensFlareComponent>::Instance().Get(node->GetId());
+        const auto lensFlareComponent = prev::scene::component::ComponentRepository<prev_test::component::sky::ILensFlareComponent>::Instance().Get(node->GetId());
 
         for (const auto& lensFlare : lensFlareComponent->GetFlares()) {
             const float xScale = lensFlare->GetScale();
