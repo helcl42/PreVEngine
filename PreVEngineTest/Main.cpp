@@ -1,7 +1,6 @@
 #include "Clouds.h"
 #include "Culling.h"
 #include "General.h"
-#include "LensFlare.h"
 #include "Light.h"
 #include "Particles.h"
 #include "RayCasting.h"
@@ -12,20 +11,21 @@
 
 #include "render/renderer/MasterRenderer.h"
 
+#include "component/camera/CameraComponentFactory.h"
+#include "component/font/FontRenderComponentsFactory.h"
 #include "component/render/RenderComponentFactory.h"
+#include "component/sky/LensFlareComponentFactory.h"
+#include "component/sky/SunComponentFactory.h"
 #include "component/time/TimeComponent.h"
 #include "component/transform/TransformComponentFactory.h"
-#include "component/render/RenderComponentFactory.h"
-#include "component/font/FontRenderComponentsFactory.h"
-#include "component/camera/CameraComponentFactory.h"
 
 #include <prev/App.h>
 #include <prev/common/pattern/Nullable.h>
 #include <prev/input/InputFacade.h>
 #include <prev/render/image/Image.h>
-#include <prev/scene/graph/SceneNode.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
+#include <prev/scene/graph/SceneNode.h>
 
 #include <array>
 #include <cstring>
@@ -1485,9 +1485,9 @@ public:
 public:
     void Init() override
     {
-        LensFlareComponentFactory componentFactory{};
+        prev_test::component::sky::LensFlareComponentFactory componentFactory{};
         m_lensFlareComponent = std::move(componentFactory.Create());
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ILensFlareComponent>(GetThis(), m_lensFlareComponent, SceneNodeFlags::LENS_FLARE_RENDER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::sky::ILensFlareComponent>(GetThis(), m_lensFlareComponent, SceneNodeFlags::LENS_FLARE_RENDER_COMPONENT);
 
         SceneNode::Init();
     }
@@ -1514,7 +1514,7 @@ public:
     }
 
 private:
-    std::shared_ptr<ILensFlareComponent> m_lensFlareComponent;
+    std::shared_ptr<prev_test::component::sky::ILensFlareComponent> m_lensFlareComponent;
 
     glm::vec2 m_viewPortSize;
 
@@ -1534,9 +1534,9 @@ public:
 public:
     void Init() override
     {
-        SunComponentFactory componentFactory{};
+        prev_test::component::sky::SunComponentFactory componentFactory{};
         m_sunComponent = std::move(componentFactory.Create());
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ISunComponent>(GetThis(), m_sunComponent, SceneNodeFlags::SUN_RENDER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::sky::ISunComponent>(GetThis(), m_sunComponent, SceneNodeFlags::SUN_RENDER_COMPONENT);
 
         SceneNode::Init();
     }
@@ -1563,7 +1563,7 @@ public:
     }
 
 private:
-    std::shared_ptr<ISunComponent> m_sunComponent;
+    std::shared_ptr<prev_test::component::sky::ISunComponent> m_sunComponent;
 
     glm::vec2 m_viewPortSize;
 
