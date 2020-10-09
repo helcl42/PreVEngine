@@ -1,4 +1,3 @@
-#include "Camera.h"
 #include "Clouds.h"
 #include "Culling.h"
 #include "General.h"
@@ -18,6 +17,7 @@
 #include "component/transform/TransformComponentFactory.h"
 #include "component/render/RenderComponentFactory.h"
 #include "component/font/FontRenderComponentsFactory.h"
+#include "component/camera/CameraComponentFactory.h"
 
 #include <prev/App.h>
 #include <prev/common/pattern/Nullable.h>
@@ -571,9 +571,9 @@ public:
         m_animatonRenderComponent->GetMaterial()->SetHeightScale(0.004f);
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::render::IAnimationRenderComponent>(GetThis(), m_animatonRenderComponent, SceneNodeFlags::ANIMATION_CONE_STEP_MAPPED_RENDER_COMPONENT);
 
-        CameraComponentFactory cameraFactory{};
+        prev_test::component::camera::CameraComponentFactory cameraFactory{};
         m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 60.0f, 180.0f));
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ICameraComponent>(GetThis(), m_cameraComponent, SceneNodeFlags::CAMERA_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::camera::ICameraComponent>(GetThis(), m_cameraComponent, SceneNodeFlags::CAMERA_COMPONENT);
 
         BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_animatonRenderComponent->GetModel()->GetMesh()->GetVertices(), 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
@@ -823,7 +823,7 @@ private:
 
     std::shared_ptr<prev_test::component::render::IAnimationRenderComponent> m_animatonRenderComponent;
 
-    std::shared_ptr<ICameraComponent> m_cameraComponent;
+    std::shared_ptr<prev_test::component::camera::ICameraComponent> m_cameraComponent;
 
     std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
@@ -859,9 +859,9 @@ public:
         }
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
-        CameraComponentFactory cameraFactory{};
+        prev_test::component::camera::CameraComponentFactory cameraFactory{};
         m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 60.0f, 180.0f));
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ICameraComponent>(GetThis(), m_cameraComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::camera::ICameraComponent>(GetThis(), m_cameraComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
         SceneNode::Init();
 
@@ -998,7 +998,7 @@ private:
 
     std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
-    std::shared_ptr<ICameraComponent> m_cameraComponent;
+    std::shared_ptr<prev_test::component::camera::ICameraComponent> m_cameraComponent;
 
 #if defined(__ANDROID__)
     bool m_autoMoveForward = false;
@@ -1195,7 +1195,7 @@ public:
 
     void Update(float deltaTime) override
     {
-        auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>(prev::common::TagSet{ TAG_MAIN_CAMERA });
+        auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::camera::ICameraComponent>(prev::common::TagSet{ TAG_MAIN_CAMERA });
 
         const float ROTATION_ANGLE = ROTATION_SPEED_DEGS_PER_SEC * deltaTime;
 
@@ -1495,7 +1495,7 @@ public:
     void Update(float deltaTime) override
     {
         const auto lightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
-        const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+        const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
 
         m_lensFlareComponent->Update(cameraComponent->GetViewFrustum().CreateProjectionMatrix(m_viewPortSize.x / m_viewPortSize.y), cameraComponent->LookAt(), cameraComponent->GetPosition(), lightComponent->GetPosition());
 
@@ -1544,7 +1544,7 @@ public:
     void Update(float deltaTime) override
     {
         const auto lightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
-        const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+        const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
 
         m_sunComponent->Update(cameraComponent->GetViewFrustum().CreateProjectionMatrix(m_viewPortSize.x / m_viewPortSize.y), cameraComponent->LookAt(), cameraComponent->GetPosition(), lightComponent->GetPosition());
 
@@ -1666,7 +1666,7 @@ public:
     void Update(float deltaTime) override
     {
         const auto lightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
-        const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+        const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
 
         m_shadowsCompoent->Update(lightComponent->GetDirection(), lightComponent->GetViewFrustum().GetNearClippingPlane(), lightComponent->GetViewFrustum().GetFarClippingPlane(), lightComponent->GetViewFrustum().CreateProjectionMatrix(1.0f), cameraComponent->LookAt());
 
@@ -1707,7 +1707,7 @@ public:
 
     void Update(float deltaTime) override
     {
-        const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+        const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
         const auto playerTransformComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::transform::ITransformComponent>({ TAG_PLAYER });
 
         if (m_inputFacade.IsMouseLocked()) {
@@ -2083,7 +2083,7 @@ public:
 
     void Update(float deltaTime) override
     {
-        const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+        const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
         const auto terrain = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
 
         float height = 0.0f;

@@ -31,7 +31,7 @@
 #include "terrain/TerrainRenderer.h"
 #include "water/WaterRenderer.h"
 
-#include "../../Camera.h"
+#include "../../component/camera/ICameraComponent.h"
 #include "../../Water.h"
 
 #include <prev/scene/component/NodeComponentHelper.h>
@@ -321,7 +321,7 @@ void MasterRenderer::RenderShadows(const prev::render::RenderContext& renderCont
 void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root)
 {
     const auto reflectionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT });
-    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
 
     const auto cameraPosition{ cameraComponent->GetPosition() };
     const auto cameraViewPosition{ cameraComponent->GetPosition() + cameraComponent->GetForwardDirection() };
@@ -364,7 +364,7 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
 void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root)
 {
     const auto refractionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT });
-    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
 
     const auto viewMatrix = cameraComponent->LookAt();
     const auto projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(refractionComponent->GetExtent().width, refractionComponent->GetExtent().height);
@@ -398,7 +398,7 @@ void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& re
 
 void MasterRenderer::RenderScene(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root)
 {
-    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
+    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
 
     const auto viewMatrix = cameraComponent->LookAt();
     const auto projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);

@@ -5,11 +5,6 @@
 
 namespace prev_test::component::font {
 class DefaultFontRenderComponent : public IFontRenderComponent {
-private:
-    std::shared_ptr<prev_test::render::font::FontMetadata> m_fontMetaData;
-
-    std::vector<RenderableText> m_renderableTexts;
-
 public:
     DefaultFontRenderComponent(const std::shared_ptr<prev_test::render::font::FontMetadata>& fontMetaData);
 
@@ -23,6 +18,11 @@ public:
     void AddText(const std::shared_ptr<prev_test::render::font::ScreenSpaceText>& text);
 
     void Reset();
+
+private:
+    std::shared_ptr<prev_test::render::font::FontMetadata> m_fontMetaData;
+
+    std::vector<RenderableText> m_renderableTexts;
 };
 } // namespace prev_test::component::font
 

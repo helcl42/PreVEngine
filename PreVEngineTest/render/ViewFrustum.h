@@ -6,60 +6,27 @@
 namespace prev_test::render {
 class ViewFrustum {
 public:
-    ViewFrustum(const float fov, const float nCp, const float fCp)
-        : m_fov(fov)
-        , m_nearClippingPlane(nCp)
-        , m_farClippingPlane(fCp)
-    {
-    }
+    ViewFrustum(const float fov, const float nCp, const float fCp);
 
     ~ViewFrustum() = default;
 
 public:
-    glm::mat4 CreateProjectionMatrix(const uint32_t w, const uint32_t h) const
-    {
-        const float aspectRatio = static_cast<float>(w) / static_cast<float>(h);
-        return CreateProjectionMatrix(aspectRatio);
-    }
+    glm::mat4 CreateProjectionMatrix(const uint32_t w, const uint32_t h) const;
 
-    glm::mat4 CreateProjectionMatrix(const float aspectRatio) const
-    {
-        glm::mat4 projectionMatrix = glm::perspective(glm::radians(m_fov), aspectRatio, m_nearClippingPlane, m_farClippingPlane);
-        projectionMatrix[1][1] *= -1; // invert Y in clip coordinates
-
-        return projectionMatrix;
-    }
+    glm::mat4 CreateProjectionMatrix(const float aspectRatio) const;
 
 public:
-    float GetFov() const // vertical in degs
-    {
-        return m_fov;
-    }
+    float GetFov() const; // vertical in degs
 
-    void SetFov(float fov) // vertical in degs
-    {
-        m_fov = fov;
-    }
+    void SetFov(float fov); // vertical in degs
 
-    float GetNearClippingPlane() const
-    {
-        return m_nearClippingPlane;
-    }
+    float GetNearClippingPlane() const;
 
-    void SetNearClippingPlane(float nearCP)
-    {
-        m_nearClippingPlane = nearCP;
-    }
+    void SetNearClippingPlane(float nearCP);
 
-    float GetFarClippingPlane() const
-    {
-        return m_farClippingPlane;
-    }
+    float GetFarClippingPlane() const;
 
-    void SetFarClippingPlane(float farCP)
-    {
-        m_farClippingPlane = farCP;
-    }
+    void SetFarClippingPlane(float farCP);
 
 private:
     float m_fov;
