@@ -2,7 +2,7 @@
 #define __LENS_FLARE_H__
 
 #include "common/AssetManager.h"
-#include "render/IMesh.h"
+#include "render/mesh/CentricQuadMesh.h"
 
 #include <prev/core/memory/image/ImageBuffer.h>
 #include <prev/render/image/ImageFactory.h>
@@ -53,64 +53,6 @@ private:
     float m_scale;
 
     glm::vec2 m_screenSpacePosition;
-};
-
-class QuadMesh2D : public prev_test::render::IMesh {
-public:
-    const prev_test::render::VertexLayout& GetVertexLayout() const override
-    {
-        return vertexLayout;
-    }
-
-    const void* GetVertexData() const override
-    {
-        return (const void*)vertices.data();
-    }
-
-    const std::vector<glm::vec3>& GetVertices() const override
-    {
-        return vertices3d;
-    }
-
-    uint32_t GerVerticesCount() const override
-    {
-        return static_cast<uint32_t>(vertices.size());
-    }
-
-    const std::vector<uint32_t>& GetIndices() const override
-    {
-        return indices;
-    }
-
-    const std::vector<prev_test::render::MeshPart>& GetMeshParts() const override
-    {
-        return meshParts;
-    }
-
-private:
-    static const inline prev_test::render::VertexLayout vertexLayout{ { prev_test::render::VertexLayoutComponent::VEC2 } };
-
-    static const inline std::vector<glm::vec2> vertices = {
-        { 0.5f, 0.5f },
-        { -0.5f, 0.5f },
-        { -0.5f, -0.5f },
-        { 0.5f, -0.5f }
-    };
-
-    static const inline std::vector<glm::vec3> vertices3d = {
-        { vertices[0], 0.0f },
-        { vertices[1], 0.0f },
-        { vertices[2], 0.0f },
-        { vertices[3], 0.0f }
-    };
-
-    static const inline std::vector<uint32_t> indices = {
-        0, 1, 2, 2, 3, 0
-    };
-
-    static const inline std::vector<prev_test::render::MeshPart> meshParts = {
-        prev_test::render::MeshPart(static_cast<uint32_t>(indices.size()))
-    };
 };
 
 class ILensFlareComponent {
@@ -227,7 +169,7 @@ private:
 
     std::unique_ptr<prev_test::render::IModel> CreateModel(prev::core::memory::Allocator& allocator) const
     {
-        auto mesh = std::make_unique<QuadMesh2D>();
+        auto mesh = std::make_unique<prev_test::render::mesh::CentricQuadMesh>();
         auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
         auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
@@ -326,7 +268,7 @@ public:
 private:
     std::unique_ptr<prev_test::render::IModel> CreateModel(prev::core::memory::Allocator& allocator) const
     {
-        auto mesh = std::make_unique<QuadMesh2D>();
+        auto mesh = std::make_unique<prev_test::render::mesh::CentricQuadMesh>();
         auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
         auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
