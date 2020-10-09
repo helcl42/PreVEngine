@@ -8,7 +8,6 @@
 
 #include "../../../common/AssetManager.h"
 
-#include "../../../Light.h"
 #include "../../../RayCasting.h"
 #include "../../../Water.h"
 

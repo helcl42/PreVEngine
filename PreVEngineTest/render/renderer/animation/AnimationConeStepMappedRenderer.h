@@ -1,9 +1,8 @@
 #ifndef __ANIMATION_CONE_STEP_MAPPED_RENDERER_H__
 #define __ANIMATION_CONE_STEP_MAPPED_RENDERER_H__
 
-#include "../../../General.h"
-#include "../../../Light.h"
 #include "../../../Shadows.h"
+#include "../../../component/light/LightCommon.h"
 
 #include "../../IAnimation.h"
 #include "../../pipeline/IPipeline.h"
@@ -76,7 +75,7 @@ private:
     };
 
     struct LightningUniform {
-        LightUniform lights[MAX_LIGHT_COUNT];
+        LightUniform lights[prev_test::component::light::MAX_LIGHT_COUNT];
 
         uint32_t realCountOfLights;
 

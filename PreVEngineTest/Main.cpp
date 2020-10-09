@@ -1,7 +1,6 @@
 #include "Clouds.h"
 #include "Culling.h"
 #include "General.h"
-#include "Light.h"
 #include "Particles.h"
 #include "RayCasting.h"
 #include "Shadows.h"
@@ -18,6 +17,7 @@
 #include "component/sky/SunComponentFactory.h"
 #include "component/time/TimeComponent.h"
 #include "component/transform/TransformComponentFactory.h"
+#include "component/light/LightComponentFactory.h"
 
 #include <prev/App.h>
 #include <prev/common/pattern/Nullable.h>
@@ -1073,9 +1073,9 @@ public:
         }
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
-        LightComponentFactory lightFactory{};
+        prev_test::component::light::LightComponentFactory lightFactory{};
         m_lightComponent = lightFactory.CreateLightCompoennt(m_initialPosition);
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ILightComponent>(GetThis(), m_lightComponent, SceneNodeFlags::LIGHT_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::light::ILightComponent>(GetThis(), m_lightComponent, SceneNodeFlags::LIGHT_COMPONENT);
 
         SceneNode::Init();
     }
@@ -1111,7 +1111,7 @@ public:
 private:
     std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
-    std::shared_ptr<ILightComponent> m_lightComponent;
+    std::shared_ptr<prev_test::component::light::ILightComponent> m_lightComponent;
 
     glm::vec3 m_initialPosition;
 };
@@ -1137,9 +1137,9 @@ public:
         }
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
-        LightComponentFactory lightFactory{};
+        prev_test::component::light::LightComponentFactory lightFactory{};
         m_lightComponent = lightFactory.CreateLightCompoennt(m_initialPosition, m_color, glm::vec3(0.1f, 0.005f, 0.001f));
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ILightComponent>(GetThis(), m_lightComponent, SceneNodeFlags::LIGHT_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::light::ILightComponent>(GetThis(), m_lightComponent, SceneNodeFlags::LIGHT_COMPONENT);
 
         SceneNode::Init();
     }
@@ -1164,7 +1164,7 @@ private:
 
     std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
-    std::shared_ptr<ILightComponent> m_lightComponent;
+    std::shared_ptr<prev_test::component::light::ILightComponent> m_lightComponent;
 };
 
 class SkyBox : public prev::scene::graph::SceneNode<SceneNodeFlags> {
@@ -1494,7 +1494,7 @@ public:
 
     void Update(float deltaTime) override
     {
-        const auto lightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+        const auto lightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
         const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
 
         m_lensFlareComponent->Update(cameraComponent->GetViewFrustum().CreateProjectionMatrix(m_viewPortSize.x / m_viewPortSize.y), cameraComponent->LookAt(), cameraComponent->GetPosition(), lightComponent->GetPosition());
@@ -1543,7 +1543,7 @@ public:
 
     void Update(float deltaTime) override
     {
-        const auto lightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+        const auto lightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
         const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
 
         m_sunComponent->Update(cameraComponent->GetViewFrustum().CreateProjectionMatrix(m_viewPortSize.x / m_viewPortSize.y), cameraComponent->LookAt(), cameraComponent->GetPosition(), lightComponent->GetPosition());
@@ -1665,7 +1665,7 @@ public:
 
     void Update(float deltaTime) override
     {
-        const auto lightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+        const auto lightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
         const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
 
         m_shadowsCompoent->Update(lightComponent->GetDirection(), lightComponent->GetViewFrustum().GetNearClippingPlane(), lightComponent->GetViewFrustum().GetFarClippingPlane(), lightComponent->GetViewFrustum().CreateProjectionMatrix(1.0f), cameraComponent->LookAt());
