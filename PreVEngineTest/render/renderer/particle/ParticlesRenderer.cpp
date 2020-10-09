@@ -7,7 +7,6 @@
 
 #include "../../../common//AssetManager.h"
 
-#include "../../../Camera.h"
 #include "../../../Particles.h"
 #include "../../VertexDataBuffer.h"
 
@@ -69,7 +68,6 @@ void ParticlesRenderer::PreRender(const prev::render::RenderContext& renderConte
 void ParticlesRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData)
 {
     if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::PARTICLE_SYSTEM_COMPONENT })) {
-        const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICameraComponent>({ TAG_MAIN_CAMERA });
         const auto particlesComponent = prev::scene::component::ComponentRepository<IParticleSystemComponent>::Instance().Get(node->GetId());
         const auto& particles = particlesComponent->GetParticles();
 
@@ -77,7 +75,7 @@ void ParticlesRenderer::Render(const prev::render::RenderContext& renderContext,
             const size_t singleInstanceSizeInBytes = sizeof(glm::mat4) + sizeof(glm::vec2) + sizeof(glm::vec2) + sizeof(float);
             prev_test::render::VertexDataBuffer instanceDataBuffer(singleInstanceSizeInBytes * particles.size());
             for (const auto& particle : particles) {
-                instanceDataBuffer.Add(prev::util::MathUtil::CreateTransformationMatrix(particle->GetPosition(), glm::inverse(cameraComponent->GetOrientation()) * glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, particle->GetRotation()))), particle->GetScale()));
+                instanceDataBuffer.Add(prev::util::MathUtil::CreateTransformationMatrix(particle->GetPosition(), glm::inverse(glm::quat_cast(renderContextUserData.viewMatrix)) * glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, particle->GetRotation()))), particle->GetScale()));
                 instanceDataBuffer.Add(particle->GetCurrentStageTextureOffset());
                 instanceDataBuffer.Add(particle->GetNextStageTextureOffset());
                 instanceDataBuffer.Add(particle->GetStagesBlendFactor());
