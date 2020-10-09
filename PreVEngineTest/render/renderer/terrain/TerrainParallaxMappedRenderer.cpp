@@ -6,10 +6,10 @@
 #include "../../../common/AssetManager.h"
 #include "../../../component/transform/ITransformComponent.h"
 
-#include "../../../Light.h"
 #include "../../../RayCasting.h"
-#include "../../../Terrain.h"
 #include "../../../Sky.h"
+#include "../../../Terrain.h"
+#include "../../../component/light/ILightComponent.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
@@ -72,9 +72,9 @@ void TerrainParallaxMappedRenderer::Render(const prev::render::RenderContext& re
         }
 
         if (visible) {
-            const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ILightComponent>({ TAG_MAIN_LIGHT });
+            const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
             const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
-            const auto lightComponents = prev::scene::component::NodeComponentHelper::FindAll<SceneNodeFlags, ILightComponent>({ TAG_LIGHT });
+            const auto lightComponents = prev::scene::component::NodeComponentHelper::FindAll<SceneNodeFlags, prev_test::component::light::ILightComponent>({ TAG_LIGHT });
 
             const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());
             const auto terrainComponent = prev::scene::component::ComponentRepository<ITerrainComponenet>::Instance().Get(node->GetId());
@@ -91,7 +91,7 @@ void TerrainParallaxMappedRenderer::Render(const prev::render::RenderContext& re
                 uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
             }
             uniformsVS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
-            uniformsVS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
+            uniformsVS.lightning.ambientFactor = prev_test::component::light::AMBIENT_LIGHT_INTENSITY;
             uniformsVS.density = FOG_DENSITY;
             uniformsVS.gradient = FOG_GRADIENT;
             uniformsVS.clipPlane = renderContextUserData.clipPlane;
@@ -113,7 +113,7 @@ void TerrainParallaxMappedRenderer::Render(const prev::render::RenderContext& re
                 uniformsFS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
             }
             uniformsFS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
-            uniformsFS.lightning.ambientFactor = AMBIENT_LIGHT_INTENSITY;
+            uniformsFS.lightning.ambientFactor = prev_test::component::light::AMBIENT_LIGHT_INTENSITY;
 
             // common
             uniformsFS.fogColor = FOG_COLOR;

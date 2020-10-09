@@ -5,9 +5,8 @@
 #include "../../pipeline/IPipeline.h"
 #include "../IRenderer.h"
 
-#include "../../../General.h"
 #include "../../../Shadows.h"
-#include "../../../Light.h"
+#include "../../../component/light/LightCommon.h"
 
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
@@ -76,7 +75,7 @@ private:
     };
 
     struct LightningUniform {
-        LightUniform lights[MAX_LIGHT_COUNT];
+        LightUniform lights[prev_test::component::light::MAX_LIGHT_COUNT];
 
         uint32_t realCountOfLights;
 
