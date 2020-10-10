@@ -1,7 +1,6 @@
 #include "Clouds.h"
 #include "Culling.h"
 #include "General.h"
-#include "Particles.h"
 #include "RayCasting.h"
 #include "Sky.h"
 #include "Terrain.h"
@@ -12,6 +11,7 @@
 #include "component/camera/CameraComponentFactory.h"
 #include "component/font/FontRenderComponentsFactory.h"
 #include "component/light/LightComponentFactory.h"
+#include "component/particle/ParticleSystemComponentFactory.h"
 #include "component/render/RenderComponentFactory.h"
 #include "component/shadow/ShadowsComponentFactory.h"
 #include "component/sky/LensFlareComponentFactory.h"
@@ -2074,9 +2074,9 @@ public:
 public:
     void Init() override
     {
-        ParticleSystemComponentFactory particleSystemComponentFactory{};
+        prev_test::component::particle::ParticleSystemComponentFactory particleSystemComponentFactory{};
         m_particleSystemComponent = particleSystemComponentFactory.CreateRandomInCone(glm::vec3(0.0f, 1.0f, 0.0f), 15.0f);
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IParticleSystemComponent>(GetThis(), m_particleSystemComponent, SceneNodeFlags::PARTICLE_SYSTEM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::particle::IParticleSystemComponent>(GetThis(), m_particleSystemComponent, SceneNodeFlags::PARTICLE_SYSTEM_COMPONENT);
 
         SceneNode::Init();
     }
@@ -2102,7 +2102,7 @@ public:
 private:
     const glm::vec3 m_initialPosition;
 
-    std::shared_ptr<IParticleSystemComponent> m_particleSystemComponent;
+    std::shared_ptr<prev_test::component::particle::IParticleSystemComponent> m_particleSystemComponent;
 };
 
 class TimeNode final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
