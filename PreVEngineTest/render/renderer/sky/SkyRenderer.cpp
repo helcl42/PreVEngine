@@ -9,11 +9,11 @@
 #include "shader/SkyShader.h"
 
 #include "../../../common/AssetManager.h"
+#include "../../../component/light/ILightComponent.h"
+#include "../../../component/sky/ISkyComponent.h"
 #include "../../../component/time/ITimeComponent.h"
 
 #include "../../../Clouds.h"
-#include "../../../Sky.h"
-#include "../../../component/light/ILightComponent.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
@@ -80,7 +80,7 @@ void SkyRenderer::Init()
 
 void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
 {
-    const auto skyComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ISkyComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SKY_RENDER_COMPONENT });
+    const auto skyComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::sky::ISkyComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SKY_RENDER_COMPONENT });
     const auto cloudsComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICloudsComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::CLOUDS_COMPONENT });
     const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
     const auto timeComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::time::ITimeComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TIME_COMPONENT });
@@ -219,7 +219,7 @@ void SkyRenderer::PreRender(const prev::render::RenderContext& renderContext, co
 void SkyRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData)
 {
     if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SKY_RENDER_COMPONENT })) {
-        const auto skyComponent = prev::scene::component::ComponentRepository<ISkyComponent>::Instance().Get(node->GetId());
+        const auto skyComponent = prev::scene::component::ComponentRepository<prev_test::component::sky::ISkyComponent>::Instance().Get(node->GetId());
 
         m_shader->Bind("image", *m_skyPostProcessColorImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
 
@@ -288,8 +288,12 @@ void SkyRenderer::UpdateImageBufferExtents(const VkExtent2D& extent, std::shared
 {
     auto computeAllocator = prev::scene::ComputeProvider::Instance().GetAllocator();
     if (imageBuffer == nullptr || imageBuffer->GetExtent().width != extent.width || imageBuffer->GetExtent().height != extent.height) {
-        const prev::core::memory::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ extent.width, extent.height }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE };
+        if (imageBuffer) {
+            imageBuffer->Destroy();
+            imageBuffer = nullptr;
+        }
 
+        const prev::core::memory::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ extent.width, extent.height }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE };
         imageBuffer = std::make_unique<prev::core::memory::image::ImageStorageBuffer>(*computeAllocator);
         imageBuffer->Create(bufferCreateInfo);
     }
