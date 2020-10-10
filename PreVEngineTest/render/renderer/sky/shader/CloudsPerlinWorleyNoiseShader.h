@@ -1,14 +1,14 @@
-#ifndef __PERLIN_WORLEY_NOISE_SHADER_H__
-#define __PERLIN_WORLEY_NOISE_SHADER_H__
+#ifndef __CLOUDS_PERLIN_WORLEY_NOISE_SHADER_H__
+#define __CLOUDS_PERLIN_WORLEY_NOISE_SHADER_H__
 
 #include <prev/render/shader/Shader.h>
 
 namespace prev_test::render::renderer::sky::shader {
-class PerlinWorleyNoiseShader final : public prev::render::shader::Shader {
+class CloudsPerlinWorleyNoiseShader final : public prev::render::shader::Shader {
 public:
-    PerlinWorleyNoiseShader(const VkDevice device);
+    CloudsPerlinWorleyNoiseShader(const VkDevice device);
 
-    ~PerlinWorleyNoiseShader() = default;
+    ~CloudsPerlinWorleyNoiseShader() = default;
 
 private:
     void InitVertexInputs() override;

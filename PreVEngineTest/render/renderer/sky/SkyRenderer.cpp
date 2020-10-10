@@ -9,19 +9,20 @@
 #include "shader/SkyShader.h"
 
 #include "../../../common/AssetManager.h"
+#include "../../../component/cloud/ICloudsComponent.h"
 #include "../../../component/light/ILightComponent.h"
 #include "../../../component/sky/ISkyComponent.h"
 #include "../../../component/time/ITimeComponent.h"
 
-#include "../../../Clouds.h"
-
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
+#include <prev/core/memory/image/ImageStorageBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/AllocatorProvider.h>
 #include <prev/scene/ComputeProvider.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
+#include <prev/util/VkUtils.h>
 
 #include <memory>
 
@@ -81,7 +82,7 @@ void SkyRenderer::Init()
 void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
 {
     const auto skyComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::sky::ISkyComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SKY_RENDER_COMPONENT });
-    const auto cloudsComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ICloudsComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::CLOUDS_COMPONENT });
+    const auto cloudsComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::cloud::ICloudsComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::CLOUDS_COMPONENT });
     const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
     const auto timeComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::time::ITimeComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TIME_COMPONENT });
 
