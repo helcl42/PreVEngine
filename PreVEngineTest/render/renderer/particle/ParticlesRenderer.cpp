@@ -3,12 +3,10 @@
 #include "pipeline/ParticlesPipeline.h"
 #include "shader/ParticlesShader.h"
 
-#include "../../model/ModelFactory.h"
-
 #include "../../../common//AssetManager.h"
-
-#include "../../../Particles.h"
+#include "../../../component/particle/IParticleSystemComponent.h"
 #include "../../VertexDataBuffer.h"
+#include "../../model/ModelFactory.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
@@ -68,7 +66,7 @@ void ParticlesRenderer::PreRender(const prev::render::RenderContext& renderConte
 void ParticlesRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData)
 {
     if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::PARTICLE_SYSTEM_COMPONENT })) {
-        const auto particlesComponent = prev::scene::component::ComponentRepository<IParticleSystemComponent>::Instance().Get(node->GetId());
+        const auto particlesComponent = prev::scene::component::ComponentRepository<prev_test::component::particle::IParticleSystemComponent>::Instance().Get(node->GetId());
         const auto& particles = particlesComponent->GetParticles();
 
         if (particles.size() > 0) {
