@@ -2,7 +2,6 @@
 #include "Culling.h"
 #include "General.h"
 #include "RayCasting.h"
-#include "Sky.h"
 #include "Water.h"
 
 #include "render/renderer/MasterRenderer.h"
@@ -14,7 +13,10 @@
 #include "component/render/RenderComponentFactory.h"
 #include "component/shadow/ShadowsComponentFactory.h"
 #include "component/sky/LensFlareComponentFactory.h"
+#include "component/sky/SkyBoxComponentFactory.h"
+#include "component/sky/SkyComponentFactory.h"
 #include "component/sky/SunComponentFactory.h"
+#include "component/sky/SkyCommon.h"
 #include "component/terrain/TerrainCommon.h"
 #include "component/terrain/TerrainComponentFactory.h"
 #include "component/terrain/TerrainManagerComponentFactory.h"
@@ -1188,9 +1190,9 @@ public:
         }
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
-        SkyBoxComponentFactory factory{};
+        prev_test::component::sky::SkyBoxComponentFactory factory{};
         m_skyBoxComponent = factory.Create();
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ISkyBoxComponent>(GetThis(), m_skyBoxComponent, SceneNodeFlags::SKYBOX_RENDER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::sky::ISkyBoxComponent>(GetThis(), m_skyBoxComponent, SceneNodeFlags::SKYBOX_RENDER_COMPONENT);
 
         SceneNode::Init();
     }
@@ -1206,7 +1208,7 @@ public:
 
         m_transformComponent->Rotate(glm::quat_cast(transform));
         m_transformComponent->SetPosition(cameraComponent->GetPosition());
-        m_transformComponent->SetScale(glm::vec3(SKY_BOX_SIZE));
+        m_transformComponent->SetScale(glm::vec3(prev_test::component::sky::SKY_BOX_SIZE));
 
         m_transformComponent->Update(deltaTime);
 
@@ -1221,7 +1223,7 @@ public:
 private:
     std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
-    std::shared_ptr<ISkyBoxComponent> m_skyBoxComponent;
+    std::shared_ptr<prev_test::component::sky::ISkyBoxComponent> m_skyBoxComponent;
 
     static const inline float ROTATION_SPEED_DEGS_PER_SEC = 0.5f;
 };
@@ -1823,9 +1825,9 @@ public:
     {
         SceneNode::Init();
 
-        SkyComponentFactory skyComponentFactory{};
-        std::shared_ptr<ISkyComponent> skyComponent = skyComponentFactory.Create();
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ISkyComponent>(GetThis(), skyComponent, SceneNodeFlags::SKY_RENDER_COMPONENT);
+        prev_test::component::sky::SkyComponentFactory skyComponentFactory{};
+        std::shared_ptr<prev_test::component::sky::ISkyComponent> skyComponent = skyComponentFactory.Create();
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::sky::ISkyComponent>(GetThis(), skyComponent, SceneNodeFlags::SKY_RENDER_COMPONENT);
     }
 
     void Update(float deltaTime) override

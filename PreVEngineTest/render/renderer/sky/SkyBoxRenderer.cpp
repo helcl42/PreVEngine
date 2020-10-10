@@ -4,9 +4,9 @@
 #include "shader/SkyBoxShader.h"
 
 #include "../../../common/AssetManager.h"
+#include "../../../component/sky//ISkyBoxComponent.h"
+#include "../../../component/sky/SkyCommon.h"
 #include "../../../component/transform/ITransformComponent.h"
-
-#include "../../../Sky.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
@@ -64,7 +64,7 @@ void SkyBoxRenderer::Render(const prev::render::RenderContext& renderContext, co
 {
     if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SKYBOX_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
         const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());
-        const auto skyBoxComponent = prev::scene::component::ComponentRepository<ISkyBoxComponent>::Instance().Get(node->GetId());
+        const auto skyBoxComponent = prev::scene::component::ComponentRepository<prev_test::component::sky::ISkyBoxComponent>::Instance().Get(node->GetId());
 
         auto uboVS = m_uniformsPoolVS->GetNext();
 
@@ -80,7 +80,7 @@ void SkyBoxRenderer::Render(const prev::render::RenderContext& renderContext, co
         auto uboFS = m_uniformsPoolFS->GetNext();
 
         UniformsFS uniformsFS{};
-        uniformsFS.fogColor = FOG_COLOR;
+        uniformsFS.fogColor = prev_test::component::sky::FOG_COLOR;
         uniformsFS.lowerLimit = glm::vec4(0.0f);
         uniformsFS.upperLimit = glm::vec4(0.03f);
         uboFS->Update(&uniformsFS);

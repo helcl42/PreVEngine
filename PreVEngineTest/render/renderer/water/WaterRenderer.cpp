@@ -6,9 +6,9 @@
 #include "../../../common/AssetManager.h"
 #include "../../../component/light/ILightComponent.h"
 #include "../../../component/shadow/IShadowsComponent.h"
+#include "../../../component/sky/SkyCommon.h"
 #include "../../../component/transform/ITransformComponent.h"
 
-#include "../../../Sky.h"
 #include "../../../Water.h"
 
 #include <prev/core/DeviceProvider.h>
@@ -87,15 +87,15 @@ void WaterRenderer::Render(const prev::render::RenderContext& renderContext, con
             uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
             uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
             uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
-            uniformsVS.density = FOG_DENSITY;
-            uniformsVS.gradient = FOG_GRADIENT;
+            uniformsVS.density = prev_test::component::sky::FOG_DENSITY;
+            uniformsVS.gradient = prev_test::component::sky::FOG_GRADIENT;
 
             uboVS->Update(&uniformsVS);
 
             auto uboFS = m_uniformsPoolFS->GetNext();
 
             UniformsFS uniformsFS{};
-            uniformsFS.fogColor = FOG_COLOR;
+            uniformsFS.fogColor = prev_test::component::sky::FOG_COLOR;
             uniformsFS.waterColor = glm::vec4(waterComponent->GetMaterial()->GetColor(), 1.0f);
             uniformsFS.light.color = glm::vec4(mainLightComponent->GetColor(), 1.0f);
             uniformsFS.light.position = glm::vec4(mainLightComponent->GetPosition(), 1.0f);

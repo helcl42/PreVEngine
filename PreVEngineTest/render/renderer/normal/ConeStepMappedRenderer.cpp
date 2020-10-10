@@ -8,9 +8,9 @@
 #include "../../../component/transform/ITransformComponent.h"
 
 #include "../../../RayCasting.h"
-#include "../../../Sky.h"
 #include "../../../component/light/ILightComponent.h"
 #include "../../../component/shadow/IShadowsComponent.h"
+#include "../../../component/sky/SkyCommon.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
@@ -101,8 +101,8 @@ void ConeStepMappedRenderer::Render(const prev::render::RenderContext& renderCon
                 uniformsVS.lightning.ambientFactor = prev_test::component::light::AMBIENT_LIGHT_INTENSITY;
                 uniformsVS.textureNumberOfRows = nodeRenderComponent->GetMaterial()->GetAtlasNumberOfRows();
                 uniformsVS.textureOffset = glm::vec4(nodeRenderComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
-                uniformsVS.density = FOG_DENSITY;
-                uniformsVS.gradient = FOG_GRADIENT;
+                uniformsVS.density = prev_test::component::sky::FOG_DENSITY;
+                uniformsVS.gradient = prev_test::component::sky::FOG_GRADIENT;
                 uniformsVS.clipPlane = renderContextUserData.clipPlane;
 
                 uboVS->Update(&uniformsVS);
@@ -133,7 +133,7 @@ void ConeStepMappedRenderer::Render(const prev::render::RenderContext& renderCon
                 }
 
                 // common
-                uniformsFS.fogColor = FOG_COLOR;
+                uniformsFS.fogColor = prev_test::component::sky::FOG_COLOR;
                 uniformsFS.selectedColor = SELECTED_COLOR;
                 uniformsFS.selected = selected;
                 uniformsFS.castedByShadows = nodeRenderComponent->IsCastedByShadows();

@@ -88,7 +88,7 @@ void main()
             illuminationDecay *= decay;
         }
         
-        vec3 colorWithRays = fragColor.rgb +  (smoothstep(0.0, 1.0, colRays) * exposure);
+        vec3 colorWithRays = fragColor.rgb + (smoothstep(0.0, 1.0, colRays) * exposure);
         fragColor.rgb = mix(fragColor.rgb, colorWithRays * 0.9, uboCS.lightDotCameraFront * uboCS.lightDotCameraFront);
 	}
 
