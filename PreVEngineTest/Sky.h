@@ -5,6 +5,7 @@
 #include "render/IMesh.h"
 #include "render/material/MaterialFactory.h"
 #include "render/mesh/FullScreenQuadMesh.h"
+#include "render/mesh/CubeMesh.h"
 #include "render/model/Model.h"
 
 #include <prev/core/memory/image/ImageBuffer.h>
@@ -14,93 +15,6 @@ constexpr float SKY_BOX_SIZE = 300.0f;
 constexpr glm::vec4 FOG_COLOR{ 0.47f, 0.53f, 0.58f, 1.0f };
 constexpr float FOG_DENSITY{ 0.004f };
 constexpr float FOG_GRADIENT{ 12.0f };
-
-class CubeMeshVerticesOnly : public prev_test::render::IMesh {
-public:
-    const prev_test::render::VertexLayout& GetVertexLayout() const override
-    {
-        return vertexLayout;
-    }
-
-    const void* GetVertexData() const override
-    {
-        return (const void*)vertices.data();
-    }
-
-    const std::vector<glm::vec3>& GetVertices() const override
-    {
-        return vertices;
-    }
-
-    uint32_t GerVerticesCount() const override
-    {
-        return static_cast<uint32_t>(vertices.size());
-    }
-
-    const std::vector<uint32_t>& GetIndices() const override
-    {
-        return indices;
-    }
-
-    const std::vector<prev_test::render::MeshPart>& GetMeshParts() const override
-    {
-        return meshParts;
-    }
-
-private:
-    static const inline prev_test::render::VertexLayout vertexLayout{ { prev_test::render::VertexLayoutComponent::VEC3 } };
-
-    static const inline std::vector<glm::vec3> vertices = {
-        // FROMT
-        { -0.5f, -0.5f, 0.5f },
-        { 0.5f, -0.5f, 0.5f },
-        { 0.5f, 0.5f, 0.5f },
-        { -0.5f, 0.5f, 0.5f },
-
-        // BACK
-        { -0.5f, -0.5f, -0.5f },
-        { 0.5f, -0.5f, -0.5f },
-        { 0.5f, 0.5f, -0.5f },
-        { -0.5f, 0.5f, -0.5f },
-
-        // TOP
-        { -0.5f, 0.5f, 0.5f },
-        { 0.5f, 0.5f, 0.5f },
-        { 0.5f, 0.5f, -0.5f },
-        { -0.5f, 0.5f, -0.5f },
-
-        // BOTTOM
-        { -0.5f, -0.5f, 0.5f },
-        { 0.5f, -0.5f, 0.5f },
-        { 0.5f, -0.5f, -0.5f },
-        { -0.5f, -0.5f, -0.5f },
-
-        // LEFT
-        { -0.5f, -0.5f, 0.5f },
-        { -0.5f, 0.5f, 0.5f },
-        { -0.5f, 0.5f, -0.5f },
-        { -0.5f, -0.5f, -0.5f },
-
-        // RIGHT
-        { 0.5f, -0.5f, 0.5f },
-        { 0.5f, 0.5f, 0.5f },
-        { 0.5f, 0.5f, -0.5f },
-        { 0.5f, -0.5f, -0.5f }
-    };
-
-    static const inline std::vector<uint32_t> indices = {
-        0, 1, 2, 2, 3, 0,
-        4, 5, 6, 6, 7, 4,
-        8, 9, 10, 10, 11, 8,
-        12, 13, 14, 14, 15, 12,
-        16, 17, 18, 18, 19, 16,
-        20, 21, 22, 22, 23, 20
-    };
-
-    static const inline std::vector<prev_test::render::MeshPart> meshParts = {
-        prev_test::render::MeshPart(static_cast<uint32_t>(indices.size()))
-    };
-};
 
 class ISkyBoxComponent {
 public:
@@ -159,7 +73,7 @@ public:
 private:
     std::unique_ptr<prev_test::render::IModel> CreateModel(prev::core::memory::Allocator& allocator) const
     {
-        auto mesh = std::make_unique<CubeMeshVerticesOnly>();
+        auto mesh = std::make_unique<prev_test::render::mesh::CubeMesh>();
         auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
         vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
         auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
