@@ -2,12 +2,12 @@
 #define __ANIMATION_NORMAL_MAPPED_RENDERER_H__
 
 #include "../../../General.h"
-#include "../../../Shadows.h"
 #include "../../IAnimation.h"
 #include "../../pipeline/IPipeline.h"
 #include "../IRenderer.h"
 
 #include "../../../component/light/LightCommon.h"
+#include "../../../component/shadow/ShadowsCommon.h"
 
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
@@ -53,7 +53,7 @@ private:
     };
 
     struct ShadowsUniform {
-        ShadowsCascadeUniform cascades[ShadowsComponent::CASCADES_COUNT];
+        ShadowsCascadeUniform cascades[prev_test::component::shadow::CASCADES_COUNT];
 
         uint32_t enabled;
     };

@@ -4,8 +4,8 @@
 #include "../../pipeline/IPipeline.h"
 #include "../IRenderer.h"
 
-#include "../../../Shadows.h"
 #include "../../../component/light/LightCommon.h"
+#include "../../../component/shadow//ShadowsCommon.h"
 
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
@@ -51,7 +51,7 @@ private:
     };
 
     struct ShadowsUniform {
-        ShadowsCascadeUniform cascades[ShadowsComponent::CASCADES_COUNT];
+        ShadowsCascadeUniform cascades[prev_test::component::shadow::CASCADES_COUNT];
 
         uint32_t enabled;
     };

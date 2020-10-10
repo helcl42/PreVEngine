@@ -4,10 +4,10 @@
 #include "shader/ShadowMapDebugShader.h"
 
 #include "../../../common/AssetManager.h"
+#include "../../../component/shadow/IShadowsComponent.h"
+#include "../../../component/shadow/ShadowsCommon.h"
 #include "../../mesh/QuadMesh.h"
 #include "../../model/ModelFactory.h"
-
-#include "../../../Shadows.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
@@ -86,7 +86,7 @@ void ShadowMapDebugRenderer::PreRender(const prev::render::RenderContext& render
 // make a node with quad model & shadowMap texture ???
 void ShadowMapDebugRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData)
 {
-    const auto shadows = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+    const auto shadows = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
 
     const auto& cascade = shadows->GetCascade(static_cast<uint32_t>(m_cascadeIndex));
     PushConstantBlock pushConstBlock{ static_cast<uint32_t>(m_cascadeIndex), -cascade.startSplitDepth, -cascade.endSplitDepth };
@@ -124,10 +124,10 @@ void ShadowMapDebugRenderer::operator()(const prev::input::keyboard::KeyEvent& k
 {
     if (keyEvent.action == prev::input::keyboard::KeyActionType::PRESS) {
         if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_O) {
-            m_cascadeIndex = (m_cascadeIndex - 1) < 0 ? ShadowsComponent::CASCADES_COUNT - 1 : m_cascadeIndex - 1;
+            m_cascadeIndex = (m_cascadeIndex - 1) < 0 ? prev_test::component::shadow::CASCADES_COUNT - 1 : m_cascadeIndex - 1;
             std::cout << "New Cascade Index = " << m_cascadeIndex << std::endl;
         } else if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_P) {
-            m_cascadeIndex = (m_cascadeIndex + 1) % ShadowsComponent::CASCADES_COUNT;
+            m_cascadeIndex = (m_cascadeIndex + 1) % prev_test::component::shadow::CASCADES_COUNT;
             std::cout << "New Cascade Index = " << m_cascadeIndex << std::endl;
         }
     }

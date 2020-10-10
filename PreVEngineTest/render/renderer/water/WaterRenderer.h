@@ -2,8 +2,8 @@
 #define __WATER_RENDERER_H__
 
 #include "../../../General.h"
-#include "../../../Shadows.h"
 #include "../../../Water.h"
+#include "../../../component/shadow/ShadowsCommon.h"
 #include "../../pipeline/IPipeline.h"
 #include "../IRenderer.h"
 
@@ -43,7 +43,7 @@ private:
     };
 
     struct ShadowsUniform {
-        ShadowsCascadeUniform cascades[ShadowsComponent::CASCADES_COUNT];
+        ShadowsCascadeUniform cascades[prev_test::component::shadow::CASCADES_COUNT];
 
         uint32_t enabled;
     };

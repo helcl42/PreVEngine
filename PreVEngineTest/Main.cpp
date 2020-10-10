@@ -3,7 +3,6 @@
 #include "General.h"
 #include "Particles.h"
 #include "RayCasting.h"
-#include "Shadows.h"
 #include "Sky.h"
 #include "Terrain.h"
 #include "Water.h"
@@ -12,12 +11,13 @@
 
 #include "component/camera/CameraComponentFactory.h"
 #include "component/font/FontRenderComponentsFactory.h"
+#include "component/light/LightComponentFactory.h"
 #include "component/render/RenderComponentFactory.h"
+#include "component/shadow/ShadowsComponentFactory.h"
 #include "component/sky/LensFlareComponentFactory.h"
 #include "component/sky/SunComponentFactory.h"
 #include "component/time/TimeComponent.h"
 #include "component/transform/TransformComponentFactory.h"
-#include "component/light/LightComponentFactory.h"
 
 #include <prev/App.h>
 #include <prev/common/pattern/Nullable.h>
@@ -1655,10 +1655,10 @@ public:
 public:
     void Init() override
     {
-        ShadowsComponentFactory shadowsFactory{};
+        prev_test::component::shadow::ShadowsComponentFactory shadowsFactory{};
         m_shadowsCompoent = shadowsFactory.Create();
         m_shadowsCompoent->Init();
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IShadowsComponent>(GetThis(), m_shadowsCompoent, SceneNodeFlags::SHADOWS_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::shadow::IShadowsComponent>(GetThis(), m_shadowsCompoent, SceneNodeFlags::SHADOWS_COMPONENT);
 
         SceneNode::Init();
     }
@@ -1681,7 +1681,7 @@ public:
     }
 
 private:
-    std::shared_ptr<IShadowsComponent> m_shadowsCompoent;
+    std::shared_ptr<prev_test::component::shadow::IShadowsComponent> m_shadowsCompoent;
 };
 
 class RayCasterNode : public prev::scene::graph::SceneNode<SceneNodeFlags> {

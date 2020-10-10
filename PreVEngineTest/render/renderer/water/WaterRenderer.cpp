@@ -4,11 +4,12 @@
 #include "shader/WaterShader.h"
 
 #include "../../../common/AssetManager.h"
+#include "../../../component/light/ILightComponent.h"
+#include "../../../component/shadow/IShadowsComponent.h"
 #include "../../../component/transform/ITransformComponent.h"
 
-#include "../../../Water.h"
 #include "../../../Sky.h"
-#include "../../../component/light/ILightComponent.h"
+#include "../../../Water.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
@@ -75,7 +76,7 @@ void WaterRenderer::Render(const prev::render::RenderContext& renderContext, con
             const auto waterReflectionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT });
             const auto waterRefractionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT });
             const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
-            const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+            const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
 
             const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());
 
@@ -101,12 +102,12 @@ void WaterRenderer::Render(const prev::render::RenderContext& renderContext, con
             uniformsFS.nearFarClippingPlane = glm::vec4(renderContextUserData.nearFarClippingPlane, 0.0f, 0.0f);
             uniformsFS.moveFactor = waterComponent->GetMoveFactor();
             // shadows
-            for (uint32_t i = 0; i < ShadowsComponent::CASCADES_COUNT; i++) {
+            for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; i++) {
                 const auto& cascade = shadowsComponent->GetCascade(i);
                 uniformsFS.shadows.cascades[i].split = glm::vec4(cascade.endSplitDepth);
                 uniformsFS.shadows.cascades[i].viewProjectionMatrix = cascade.GetBiasedViewProjectionMatrix();
             }
-            uniformsFS.shadows.enabled = SHADOWS_ENABLED;
+            uniformsFS.shadows.enabled = prev_test::component::shadow::SHADOWS_ENABLED;
 
             uboFS->Update(&uniformsFS);
 

@@ -1,8 +1,8 @@
 #ifndef __ANIMATION_CONE_STEP_MAPPED_RENDERER_H__
 #define __ANIMATION_CONE_STEP_MAPPED_RENDERER_H__
 
-#include "../../../Shadows.h"
 #include "../../../component/light/LightCommon.h"
+#include "../../../component/shadow/ShadowsCommon.h"
 
 #include "../../IAnimation.h"
 #include "../../pipeline/IPipeline.h"
@@ -52,7 +52,7 @@ private:
     };
 
     struct ShadowsUniform {
-        ShadowsCascadeUniform cascades[ShadowsComponent::CASCADES_COUNT];
+        ShadowsCascadeUniform cascades[prev_test::component::shadow::CASCADES_COUNT];
 
         uint32_t enabled;
     };

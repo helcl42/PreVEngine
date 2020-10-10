@@ -11,6 +11,8 @@
 #include <prev/core/memory/image/DepthImageBuffer.h>
 #include <prev/core/memory/image/ImageBuffer.h>
 #include <prev/render/image/ImageFactory.h>
+#include <prev/render/pass/RenderPass.h>
+#include <prev/scene/AllocatorProvider.h>
 #include <prev/util/VkUtils.h>
 
 #include <map>
@@ -99,9 +101,9 @@ public:
 
 class WaterOffScreenRenderPassComponent : public IWaterOffscreenRenderPassComponent {
 public:
-    static const inline VkFormat COLOR_FORMAT = VK_FORMAT_B8G8R8A8_UNORM;
+    static const inline VkFormat COLOR_FORMAT{ VK_FORMAT_B8G8R8A8_UNORM };
 
-    static const inline VkFormat DEPTH_FORMAT = VK_FORMAT_D32_SFLOAT;
+    static const inline VkFormat DEPTH_FORMAT{ VK_FORMAT_D32_SFLOAT };
 
 public:
     WaterOffScreenRenderPassComponent(const uint32_t w, const uint32_t h)

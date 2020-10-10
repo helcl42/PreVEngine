@@ -2,7 +2,6 @@
 #define __PARTICLES_RENDERER_H__
 
 #include "../../../General.h"
-#include "../../../Shadows.h"
 #include "../../pipeline/IPipeline.h"
 #include "../IRenderer.h"
 
