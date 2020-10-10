@@ -16,12 +16,14 @@ FILE(GLOB COMPONENT_TRANSFORM_SRC_LIST "component/transform/*.h" "component/tran
 FILE(GLOB COMPONENT_TIME_SRC_LIST "component/time/*.h" "component/time/*.cpp")
 FILE(GLOB COMPONENT_TERRAIN_SRC_LIST "component/terrain/*.h" "component/terrain/*.cpp")
 FILE(GLOB COMPONENT_SKY_SRC_LIST "component/sky/*.h" "component/sky/*.cpp")
+FILE(GLOB COMPONENT_CLOUD_SRC_LIST "component/cloud/*.h" "component/cloud/*.cpp")
 FILE(GLOB COMPONENT_RENDER_SRC_LIST "component/render/*.h" "component/render/*.cpp")
 FILE(GLOB COMPONENT_LIGHT_SRC_LIST "component/light/*.h" "component/light/*.cpp")
 FILE(GLOB COMPONENT_FONT_SRC_LIST "component/font/*.h" "component/font/*.cpp")
 FILE(GLOB COMPONENT_CAMERA_SRC_LIST "component/camera/*.h" "component/camera/*.cpp")
 FILE(GLOB COMPONENT_SHADOW_SRC_LIST "component/shadow/*.h" "component/shadow/*.cpp")
 FILE(GLOB COMPONENT_PARTICLE_SRC_LIST "component/particle/*.h" "component/particle/*.cpp")
+FILE(GLOB COMPONENT_WATER_SRC_LIST "component/water/*.h" "component/water/*.cpp")
 
 FILE(GLOB RENDER_SRC_LIST "render/*.h" "render/*.cpp")
 FILE(GLOB RENDER_PIPELINE_SRC_LIST "render/pipeline/*.h" "render/pipeline/*.cpp")
@@ -86,12 +88,14 @@ SOURCE_GROUP("component/transform" FILES ${COMPONENT_TRANSFORM_SRC_LIST})
 SOURCE_GROUP("component/time" FILES ${COMPONENT_TIME_SRC_LIST})
 SOURCE_GROUP("component/terrain" FILES ${COMPONENT_TERRAIN_SRC_LIST})
 SOURCE_GROUP("component/sky" FILES ${COMPONENT_SKY_SRC_LIST})
+SOURCE_GROUP("component/cloud" FILES ${COMPONENT_CLOUD_SRC_LIST})
 SOURCE_GROUP("component/render" FILES ${COMPONENT_RENDER_SRC_LIST})
 SOURCE_GROUP("component/light" FILES ${COMPONENT_LIGHT_SRC_LIST})
 SOURCE_GROUP("component/font" FILES ${COMPONENT_FONT_SRC_LIST})
 SOURCE_GROUP("component/camera" FILES ${COMPONENT_CAMERA_SRC_LIST})
 SOURCE_GROUP("component/shadow" FILES ${COMPONENT_SHADOW_SRC_LIST})
 SOURCE_GROUP("component/particle" FILES ${COMPONENT_PARTICLE_SRC_LIST})
+SOURCE_GROUP("component/water" FILES ${COMPONENT_WATER_SRC_LIST})
 
 SOURCE_GROUP("render" FILES ${RENDER_SRC_LIST})
 SOURCE_GROUP("render/pipeline" FILES ${RENDER_PIPELINE_SRC_LIST})
@@ -155,12 +159,14 @@ add_executable(${PROJECT_NAME}
     ${COMPONENT_TIME_SRC_LIST}
     ${COMPONENT_TERRAIN_SRC_LIST}
     ${COMPONENT_SKY_SRC_LIST}
+    ${COMPONENT_CLOUD_SRC_LIST}
     ${COMPONENT_RENDER_SRC_LIST}
     ${COMPONENT_LIGHT_SRC_LIST}
     ${COMPONENT_FONT_SRC_LIST}
     ${COMPONENT_CAMERA_SRC_LIST}
     ${COMPONENT_SHADOW_SRC_LIST}
     ${COMPONENT_PARTICLE_SRC_LIST}
+    ${COMPONENT_WATER_SRC_LIST}
     ${RENDER_SRC_LIST}
     ${RENDER_UTIL_SRC_LIST}
     ${RENDER_UTIL_ASSIMP_SRC_LIST}

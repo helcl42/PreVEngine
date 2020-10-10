@@ -1,25 +1,25 @@
-#include "PerlinWorleyNoiseShader.h"
+#include "CloudsPerlinWorleyNoiseShader.h"
 
 #include "../../../VertexLayout.h"
 
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::sky::shader {
-PerlinWorleyNoiseShader::PerlinWorleyNoiseShader(const VkDevice device)
+CloudsPerlinWorleyNoiseShader::CloudsPerlinWorleyNoiseShader(const VkDevice device)
     : Shader(device)
 {
 }
 
-void PerlinWorleyNoiseShader::InitVertexInputs()
+void CloudsPerlinWorleyNoiseShader::InitVertexInputs()
 {
 }
 
-void PerlinWorleyNoiseShader::InitDescriptorSets()
+void CloudsPerlinWorleyNoiseShader::InitDescriptorSets()
 {
     AddDescriptorSet("outVolumeTexture", 0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT);
 }
 
-void PerlinWorleyNoiseShader::InitPushConstantsBlocks()
+void CloudsPerlinWorleyNoiseShader::InitPushConstantsBlocks()
 {
 }
 } // namespace prev_test::render::renderer::sky::shader

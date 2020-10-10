@@ -1,4 +1,3 @@
-#include "Clouds.h"
 #include "Culling.h"
 #include "General.h"
 #include "RayCasting.h"
@@ -7,6 +6,7 @@
 #include "render/renderer/MasterRenderer.h"
 
 #include "component/camera/CameraComponentFactory.h"
+#include "component/cloud/CloudsComponentFactory.h"
 #include "component/font/FontRenderComponentsFactory.h"
 #include "component/light/LightComponentFactory.h"
 #include "component/particle/ParticleSystemComponentFactory.h"
@@ -14,9 +14,9 @@
 #include "component/shadow/ShadowsComponentFactory.h"
 #include "component/sky/LensFlareComponentFactory.h"
 #include "component/sky/SkyBoxComponentFactory.h"
+#include "component/sky/SkyCommon.h"
 #include "component/sky/SkyComponentFactory.h"
 #include "component/sky/SunComponentFactory.h"
-#include "component/sky/SkyCommon.h"
 #include "component/terrain/TerrainCommon.h"
 #include "component/terrain/TerrainComponentFactory.h"
 #include "component/terrain/TerrainManagerComponentFactory.h"
@@ -1795,9 +1795,9 @@ public:
     {
         SceneNode::Init();
 
-        CloudsComponentFactory cloudsComponentFactory{};
-        std::shared_ptr<ICloudsComponent> cloudsComponent = cloudsComponentFactory.Create();
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ICloudsComponent>(GetThis(), cloudsComponent, SceneNodeFlags::CLOUDS_COMPONENT);
+        prev_test::component::cloud::CloudsComponentFactory cloudsComponentFactory{};
+        std::shared_ptr<prev_test::component::cloud::ICloudsComponent> cloudsComponent = cloudsComponentFactory.Create();
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::cloud::ICloudsComponent>(GetThis(), cloudsComponent, SceneNodeFlags::CLOUDS_COMPONENT);
     }
 
     void Update(float deltaTime) override
