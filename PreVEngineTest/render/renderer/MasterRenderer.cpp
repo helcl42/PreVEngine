@@ -31,8 +31,9 @@
 #include "terrain/TerrainRenderer.h"
 #include "water/WaterRenderer.h"
 
-#include "../../component/camera/ICameraComponent.h"
 #include "../../Water.h"
+#include "../../component/camera/ICameraComponent.h"
+#include "../../component/shadow/IShadowsComponent.h"
 
 #include <prev/scene/component/NodeComponentHelper.h>
 
@@ -177,7 +178,7 @@ void MasterRenderer::ShutDownDebug()
 
 void MasterRenderer::InitShadows()
 {
-    const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+    const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
 
     m_shadowRenderers.push_back(std::make_unique<prev_test::render::renderer::shadow::DefaultShadowsRenderer>(shadowsComponent->GetRenderPass()));
     m_shadowRenderers.push_back(std::make_unique<prev_test::render::renderer::shadow::BumpMappedShadowsRenderer>(shadowsComponent->GetRenderPass()));
@@ -293,9 +294,9 @@ void MasterRenderer::ShutDownRefraction()
 
 void MasterRenderer::RenderShadows(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root)
 {
-    const auto shadows = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+    const auto shadows = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
 
-    for (uint32_t cascadeIndex = 0; cascadeIndex < ShadowsComponent::CASCADES_COUNT; cascadeIndex++) {
+    for (uint32_t cascadeIndex = 0; cascadeIndex < prev_test::component::shadow::CASCADES_COUNT; cascadeIndex++) {
 
         const auto cascade = shadows->GetCascade(cascadeIndex);
 

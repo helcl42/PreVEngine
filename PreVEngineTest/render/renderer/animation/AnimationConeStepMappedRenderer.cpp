@@ -10,6 +10,7 @@
 #include "../../../RayCasting.h"
 #include "../../../Sky.h"
 #include "../../../component/light/ILightComponent.h"
+#include "../../../component/shadow/IShadowsComponent.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
@@ -74,7 +75,7 @@ void AnimationConeStepMappedRenderer::Render(const prev::render::RenderContext& 
 
         if (visible) {
             const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
-            const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IShadowsComponent>({ TAG_SHADOW });
+            const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
             const auto lightComponents = prev::scene::component::NodeComponentHelper::FindAll<SceneNodeFlags, prev_test::component::light::ILightComponent>({ TAG_LIGHT });
 
             const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());
@@ -115,11 +116,11 @@ void AnimationConeStepMappedRenderer::Render(const prev::render::RenderContext& 
 
                 UniformsFS uniformsFS{};
                 // shadows
-                for (uint32_t i = 0; i < ShadowsComponent::CASCADES_COUNT; i++) {
+                for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; i++) {
                     auto& cascade = shadowsComponent->GetCascade(i);
                     uniformsFS.shadows.cascades[i] = ShadowsCascadeUniform(cascade.GetBiasedViewProjectionMatrix(), glm::vec4(cascade.endSplitDepth));
                 }
-                uniformsFS.shadows.enabled = SHADOWS_ENABLED;
+                uniformsFS.shadows.enabled = prev_test::component::shadow::SHADOWS_ENABLED;
 
                 // lightning
                 for (size_t i = 0; i < lightComponents.size(); i++) {
