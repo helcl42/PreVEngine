@@ -3,7 +3,7 @@
 #include "pipeline/ParticlesPipeline.h"
 #include "shader/ParticlesShader.h"
 
-#include "../../../common//AssetManager.h"
+#include "../../../common/AssetManager.h"
 #include "../../../component/particle/IParticleSystemComponent.h"
 #include "../../VertexDataBuffer.h"
 #include "../../model/ModelFactory.h"

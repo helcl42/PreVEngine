@@ -4,9 +4,8 @@
 #include "shader/TerrainBumpMappedShadowsShader.h"
 
 #include "../../../common/AssetManager.h"
+#include "../../../component/terrain/ITerrainComponent.h"
 #include "../../../component/transform/ITransformComponent.h"
-
-#include "../../../Terrain.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
@@ -67,7 +66,7 @@ void TerrainBumplMappedShadowsRenderer::Render(const prev::render::RenderContext
 
         if (visible) {
             const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());
-            const auto terrainComponent = prev::scene::component::ComponentRepository<ITerrainComponenet>::Instance().Get(node->GetId());
+            const auto terrainComponent = prev::scene::component::ComponentRepository<prev_test::component::terrain::ITerrainComponenet>::Instance().Get(node->GetId());
             auto ubo = m_uniformsPool->GetNext();
 
             Uniforms uniforms{};

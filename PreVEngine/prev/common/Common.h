@@ -17,5 +17,6 @@
 #include <mutex>
 #include <stdexcept>
 #include <thread>
+#include <cinttypes>
 
 #endif

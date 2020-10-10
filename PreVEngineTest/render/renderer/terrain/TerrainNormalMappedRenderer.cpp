@@ -6,11 +6,11 @@
 #include "../../../common/AssetManager.h"
 #include "../../../component/light/ILightComponent.h"
 #include "../../../component/shadow/IShadowsComponent.h"
+#include "../../../component/terrain/ITerrainComponent.h"
 #include "../../../component/transform/ITransformComponent.h"
 
 #include "../../../RayCasting.h"
 #include "../../../Sky.h"
-#include "../../../Terrain.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
@@ -78,7 +78,7 @@ void TerrainNormalMappedRenderer::Render(const prev::render::RenderContext& rend
             const auto lightComponents = prev::scene::component::NodeComponentHelper::FindAll<SceneNodeFlags, prev_test::component::light::ILightComponent>({ TAG_LIGHT });
 
             const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());
-            const auto terrainComponent = prev::scene::component::ComponentRepository<ITerrainComponenet>::Instance().Get(node->GetId());
+            const auto terrainComponent = prev::scene::component::ComponentRepository<prev_test::component::terrain::ITerrainComponenet>::Instance().Get(node->GetId());
 
             auto uboVS = m_uniformsPoolVS->GetNext();
 
