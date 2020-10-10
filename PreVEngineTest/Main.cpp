@@ -3,7 +3,6 @@
 #include "General.h"
 #include "RayCasting.h"
 #include "Sky.h"
-#include "Terrain.h"
 #include "Water.h"
 
 #include "render/renderer/MasterRenderer.h"
@@ -16,6 +15,9 @@
 #include "component/shadow/ShadowsComponentFactory.h"
 #include "component/sky/LensFlareComponentFactory.h"
 #include "component/sky/SunComponentFactory.h"
+#include "component/terrain/TerrainCommon.h"
+#include "component/terrain/TerrainComponentFactory.h"
+#include "component/terrain/TerrainManagerComponentFactory.h"
 #include "component/time/TimeComponent.h"
 #include "component/transform/TransformComponentFactory.h"
 
@@ -402,9 +404,9 @@ public:
         }
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
-        TerrainComponentFactory terrainComponentFactory{};
-        m_terrainComponent = terrainComponentFactory.CreateRandomTerrainConeStepMapped(m_xIndex, m_zIndex, TERRAIN_SIZE);
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITerrainComponenet>(GetThis(), m_terrainComponent, SceneNodeFlags::TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT);
+        prev_test::component::terrain::TerrainComponentFactory terrainComponentFactory{};
+        m_terrainComponent = terrainComponentFactory.CreateRandomTerrainConeStepMapped(m_xIndex, m_zIndex, prev_test::component::terrain::TERRAIN_TILE_SIZE);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::terrain::ITerrainComponenet>(GetThis(), m_terrainComponent, SceneNodeFlags::TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT);
 
         BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_terrainComponent->GetModel()->GetMesh()->GetVertices());
@@ -412,7 +414,7 @@ public:
 
         m_transformComponent->SetPosition(m_terrainComponent->GetPosition());
 
-        m_terrainManagerComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
+        m_terrainManagerComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::terrain::ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
         if (auto manager = m_terrainManagerComponent.lock()) {
             manager->AddTerrainComponent(m_terrainComponent);
         }
@@ -444,9 +446,9 @@ private:
 
     std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
-    std::shared_ptr<ITerrainComponenet> m_terrainComponent;
+    std::shared_ptr<prev_test::component::terrain::ITerrainComponenet> m_terrainComponent;
 
-    std::weak_ptr<ITerrainManagerComponent> m_terrainManagerComponent;
+    std::weak_ptr<prev_test::component::terrain::ITerrainManagerComponent> m_terrainManagerComponent;
 
     std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
@@ -470,8 +472,8 @@ public:
 public:
     void Init() override
     {
-        std::shared_ptr<ITerrainManagerComponent> terrainManagerComponent = TerrainManagerComponentFactory{}.Create();
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ITerrainManagerComponent>(GetThis(), terrainManagerComponent, SceneNodeFlags::TERRAIN_MANAGER_COMPONENT);
+        std::shared_ptr<prev_test::component::terrain::ITerrainManagerComponent> terrainManagerComponent = prev_test::component::terrain::TerrainManagerComponentFactory{}.Create();
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::terrain::ITerrainManagerComponent>(GetThis(), terrainManagerComponent, SceneNodeFlags::TERRAIN_MANAGER_COMPONENT);
 
         auto selectableComponent = std::make_shared<SelectableComponent>();
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ISelectableComponent>(GetThis(), selectableComponent, SceneNodeFlags::SELECTABLE_COMPONENT);
@@ -487,7 +489,7 @@ public:
 
         float minHeight = std::numeric_limits<float>::max();
         float maxHeight = std::numeric_limits<float>::min();
-        auto terrains = prev::scene::component::NodeComponentHelper::FindAll<SceneNodeFlags, ITerrainComponenet>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT });
+        auto terrains = prev::scene::component::NodeComponentHelper::FindAll<SceneNodeFlags, prev_test::component::terrain::ITerrainComponenet>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT });
         for (const auto& terrain : terrains) {
             auto heightInfo = terrain->GetHeightMapInfo();
             if (minHeight > heightInfo->minHeight) {
@@ -591,7 +593,7 @@ public:
 
     void Update(float deltaTime) override
     {
-        const auto terrain = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
+        const auto terrain = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::terrain::ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
 
         if ((m_shouldGoForward || m_shouldGoBackward || m_shouldGoLeft || m_shouldGoRight) && !m_isInTheAir) {
             m_animatonRenderComponent->GetAnimation()->SetState(prev_test::render::AnimationState::RUNNING);
@@ -1610,7 +1612,7 @@ public:
 
     void Update(float deltaTime) override
     {
-        const auto terrain = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
+        const auto terrain = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::terrain::ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
 
         auto currentPosition = m_transformComponent->GetPosition();
 
@@ -2005,7 +2007,7 @@ private:
         return false;
     }
 
-    bool IsUnderGround(const std::shared_ptr<ITerrainComponenet>& terrain, const glm::vec3& testPoint, bool shouldReturn) const
+    bool IsUnderGround(const std::shared_ptr<prev_test::component::terrain::ITerrainComponenet>& terrain, const glm::vec3& testPoint, bool shouldReturn) const
     {
         float height = 0.0f;
         if (!terrain->GetHeightAt(testPoint, height)) {
@@ -2017,9 +2019,9 @@ private:
         return false;
     }
 
-    std::shared_ptr<ITerrainComponenet> GetTerrain(const glm::vec3& position) const
+    std::shared_ptr<prev_test::component::terrain::ITerrainComponenet> GetTerrain(const glm::vec3& position) const
     {
-        const auto terrainManager = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
+        const auto terrainManager = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::terrain::ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
         return terrainManager->GetTerrainAt(position);
     }
 
@@ -2084,7 +2086,7 @@ public:
     void Update(float deltaTime) override
     {
         const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
-        const auto terrain = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
+        const auto terrain = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::terrain::ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
 
         float height = 0.0f;
         terrain->GetHeightAt(m_initialPosition, height);
@@ -2233,7 +2235,7 @@ public:
 
         std::random_device r;
         std::default_random_engine positionRandom{ r() };
-        std::uniform_real_distribution<float> positionDistribution(ITEMS_TERRAIN_BORDER_PADDING, TERRAIN_SIZE * TERRAIN_GRID_MAX_X - ITEMS_TERRAIN_BORDER_PADDING);
+        std::uniform_real_distribution<float> positionDistribution(ITEMS_TERRAIN_BORDER_PADDING, prev_test::component::terrain::TERRAIN_TILE_SIZE * TERRAIN_GRID_MAX_X - ITEMS_TERRAIN_BORDER_PADDING);
 
         std::default_random_engine scaleRandom{ r() };
         std::uniform_real_distribution<float> scaleDistribution(6000.0f, 9000.0f);
