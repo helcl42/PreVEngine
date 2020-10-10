@@ -31,9 +31,11 @@
 #include "terrain/TerrainRenderer.h"
 #include "water/WaterRenderer.h"
 
-#include "../../Water.h"
 #include "../../component/camera/ICameraComponent.h"
 #include "../../component/shadow/IShadowsComponent.h"
+#include "../../component/water/IWaterComponent.h"
+#include "../../component/water/IWaterOffscreenRenderPassComponent.h"
+#include "../../component/water/WaterCommon.h"
 
 #include <prev/scene/component/NodeComponentHelper.h>
 
@@ -212,7 +214,7 @@ void MasterRenderer::ShutDownShadows()
 
 void MasterRenderer::InitReflection()
 {
-    const auto reflectionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT });
+    const auto reflectionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::water::IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT });
 
     m_reflectionRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyBoxRenderer>(reflectionComponent->GetRenderPass()));
     m_reflectionRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyRenderer>(reflectionComponent->GetRenderPass()));
@@ -253,7 +255,7 @@ void MasterRenderer::ShutDownReflection()
 
 void MasterRenderer::InitRefraction()
 {
-    const auto refractionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT });
+    const auto refractionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::water::IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT });
 
     m_refractionRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyBoxRenderer>(refractionComponent->GetRenderPass()));
     m_refractionRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyRenderer>(refractionComponent->GetRenderPass()));
@@ -321,13 +323,13 @@ void MasterRenderer::RenderShadows(const prev::render::RenderContext& renderCont
 
 void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root)
 {
-    const auto reflectionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT });
+    const auto reflectionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::water::IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT });
     const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
 
     const auto cameraPosition{ cameraComponent->GetPosition() };
     const auto cameraViewPosition{ cameraComponent->GetPosition() + cameraComponent->GetForwardDirection() };
-    const float cameraPositionOffset{ 2.0f * (cameraPosition.y - WATER_LEVEL) };
-    const float cameraViewOffset{ 2.0f * (WATER_LEVEL - cameraViewPosition.y) };
+    const float cameraPositionOffset{ 2.0f * (cameraPosition.y - prev_test::component::water::WATER_LEVEL) };
+    const float cameraViewOffset{ 2.0f * (prev_test::component::water::WATER_LEVEL - cameraViewPosition.y) };
 
     const glm::vec3 newCameraPosition{ cameraPosition.x, cameraPosition.y - cameraPositionOffset, cameraPosition.z };
     const glm::vec3 newCameraViewPosition{ cameraViewPosition.x, cameraViewPosition.y + cameraViewOffset, cameraViewPosition.z };
@@ -338,7 +340,7 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
         viewMatrix,
         projectionMatrix,
         newCameraPosition,
-        glm::vec4(0.0f, 1.0f, 0.0f, -WATER_LEVEL + WATER_CLIP_PLANE_OFFSET),
+        glm::vec4(0.0f, 1.0f, 0.0f, -prev_test::component::water::WATER_LEVEL + prev_test::component::water::WATER_CLIP_PLANE_OFFSET),
         reflectionComponent->GetExtent(),
         glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane()),
         Frustum{ projectionMatrix, viewMatrix }
@@ -364,7 +366,7 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
 
 void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root)
 {
-    const auto refractionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT });
+    const auto refractionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::water::IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT });
     const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
 
     const auto viewMatrix = cameraComponent->LookAt();
@@ -373,7 +375,7 @@ void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& re
         viewMatrix,
         projectionMatrix,
         cameraComponent->GetPosition(),
-        glm::vec4(0.0f, -1.0f, 0.0f, WATER_LEVEL + WATER_CLIP_PLANE_OFFSET),
+        glm::vec4(0.0f, -1.0f, 0.0f, prev_test::component::water::WATER_LEVEL + prev_test::component::water::WATER_CLIP_PLANE_OFFSET),
         refractionComponent->GetExtent(),
         glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane()),
         Frustum{ projectionMatrix, viewMatrix }
