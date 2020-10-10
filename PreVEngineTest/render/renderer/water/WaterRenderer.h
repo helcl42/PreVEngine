@@ -2,7 +2,6 @@
 #define __WATER_RENDERER_H__
 
 #include "../../../General.h"
-#include "../../../Water.h"
 #include "../../../component/shadow/ShadowsCommon.h"
 #include "../../pipeline/IPipeline.h"
 #include "../IRenderer.h"

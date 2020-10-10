@@ -8,8 +8,8 @@
 #include "../../../component/shadow/IShadowsComponent.h"
 #include "../../../component/sky/SkyCommon.h"
 #include "../../../component/transform/ITransformComponent.h"
-
-#include "../../../Water.h"
+#include "../../../component/water/IWaterComponent.h"
+#include "../../../component/water/IWaterOffscreenRenderPassComponent.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
@@ -72,9 +72,9 @@ void WaterRenderer::Render(const prev::render::RenderContext& renderContext, con
         }
 
         if (visible) {
-            const auto waterComponent = prev::scene::component::ComponentRepository<IWaterComponent>::Instance().Get(node->GetId());
-            const auto waterReflectionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT });
-            const auto waterRefractionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT });
+            const auto waterComponent = prev::scene::component::ComponentRepository<prev_test::component::water::IWaterComponent>::Instance().Get(node->GetId());
+            const auto waterReflectionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::water::IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT });
+            const auto waterRefractionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::water::IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT });
             const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
             const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
 

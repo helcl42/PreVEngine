@@ -6,10 +6,9 @@
 #include "../../mesh/QuadMesh.h"
 #include "../../model/ModelFactory.h"
 
-#include "../../../common/AssetManager.h"
-
 #include "../../../RayCasting.h"
-#include "../../../Water.h"
+#include "../../../common/AssetManager.h"
+#include "../../../component/water/IWaterOffscreenRenderPassComponent.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
@@ -87,7 +86,7 @@ void TextureDebugRenderer::PreRender(const prev::render::RenderContext& renderCo
 
 void TextureDebugRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData)
 {
-    const auto component = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT });
+    const auto component = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::water::IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT });
 
     m_shader->Bind("imageSampler", component->GetColorImageBuffer()->GetImageView(), component->GetColorImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 

@@ -1,9 +1,10 @@
 #include "Culling.h"
 #include "General.h"
 #include "RayCasting.h"
-#include "Water.h"
 
 #include "render/renderer/MasterRenderer.h"
+
+#include "common/AssetManager.h"
 
 #include "component/camera/CameraComponentFactory.h"
 #include "component/cloud/CloudsComponentFactory.h"
@@ -22,6 +23,8 @@
 #include "component/terrain/TerrainManagerComponentFactory.h"
 #include "component/time/TimeComponent.h"
 #include "component/transform/TransformComponentFactory.h"
+#include "component/water/WaterCommon.h"
+#include "component/water/WaterComponentFactory.h"
 
 #include <prev/App.h>
 #include <prev/common/pattern/Nullable.h>
@@ -1273,22 +1276,22 @@ public:
 private:
     void CreateReflectionComponent()
     {
-        WaterComponentFactory componentFactory{};
-        m_reflectionComponent = std::move(componentFactory.CreateOffScreenComponent(m_viewPortSize.x / REFLECTION_EXTENT_DIVIDER, m_viewPortSize.y / REFLECTION_EXTENT_DIVIDER));
+        prev_test::component::water::WaterComponentFactory componentFactory{};
+        m_reflectionComponent = std::move(componentFactory.CreateOffScreenComponent(m_viewPortSize.x / prev_test::component::water::REFLECTION_EXTENT_DIVIDER, m_viewPortSize.y / prev_test::component::water::REFLECTION_EXTENT_DIVIDER));
         m_reflectionComponent->Init();
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(GetThis(), m_reflectionComponent, SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::water::IWaterOffscreenRenderPassComponent>(GetThis(), m_reflectionComponent, SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT);
     }
 
     void DestroyReflectionComponent()
     {
         if (m_reflectionComponent) {
-            prev::scene::component::NodeComponentHelper::RemoveComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(GetThis(), SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT);
+            prev::scene::component::NodeComponentHelper::RemoveComponent<SceneNodeFlags, prev_test::component::water::IWaterOffscreenRenderPassComponent>(GetThis(), SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT);
             m_reflectionComponent->ShutDown();
         }
     }
 
 private:
-    std::shared_ptr<IWaterOffscreenRenderPassComponent> m_reflectionComponent;
+    std::shared_ptr<prev_test::component::water::IWaterOffscreenRenderPassComponent> m_reflectionComponent;
 
     glm::uvec2 m_viewPortSize{ 0, 0 };
 
@@ -1343,22 +1346,22 @@ public:
 private:
     void CreateRefractionComponent()
     {
-        WaterComponentFactory componentFactory{};
-        m_refractionComponent = std::move(componentFactory.CreateOffScreenComponent(m_viewPortSize.x / REFRACTION_EXTENT_DIVIDER, m_viewPortSize.y / REFRACTION_EXTENT_DIVIDER));
+        prev_test::component::water::WaterComponentFactory componentFactory{};
+        m_refractionComponent = std::move(componentFactory.CreateOffScreenComponent(m_viewPortSize.x / prev_test::component::water::REFRACTION_EXTENT_DIVIDER, m_viewPortSize.y / prev_test::component::water::REFRACTION_EXTENT_DIVIDER));
         m_refractionComponent->Init();
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(GetThis(), m_refractionComponent, SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::water::IWaterOffscreenRenderPassComponent>(GetThis(), m_refractionComponent, SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT);
     }
 
     void DestroyRefractionComponent()
     {
         if (m_refractionComponent) {
-            prev::scene::component::NodeComponentHelper::RemoveComponent<SceneNodeFlags, IWaterOffscreenRenderPassComponent>(GetThis(), SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT);
+            prev::scene::component::NodeComponentHelper::RemoveComponent<SceneNodeFlags, prev_test::component::water::IWaterOffscreenRenderPassComponent>(GetThis(), SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT);
             m_refractionComponent->ShutDown();
         }
     }
 
 private:
-    std::shared_ptr<IWaterOffscreenRenderPassComponent> m_refractionComponent;
+    std::shared_ptr<prev_test::component::water::IWaterOffscreenRenderPassComponent> m_refractionComponent;
 
     glm::uvec2 m_viewPortSize{ 0, 0 };
 
@@ -1389,9 +1392,9 @@ public:
         }
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
-        WaterComponentFactory componentFactory{};
+        prev_test::component::water::WaterComponentFactory componentFactory{};
         m_waterComponent = std::move(componentFactory.Create(m_x, m_z));
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IWaterComponent>(GetThis(), m_waterComponent, SceneNodeFlags::WATER_RENDER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::water::IWaterComponent>(GetThis(), m_waterComponent, SceneNodeFlags::WATER_RENDER_COMPONENT);
 
         BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_waterComponent->GetModel()->GetMesh()->GetVertices());
@@ -1405,7 +1408,7 @@ public:
         m_waterComponent->Update(deltaTime);
 
         m_transformComponent->SetPosition(m_waterComponent->GetPosition());
-        m_transformComponent->SetScale(glm::vec3(WATER_TILE_SIZE));
+        m_transformComponent->SetScale(glm::vec3(prev_test::component::water::WATER_TILE_SIZE));
 
         m_transformComponent->Update(deltaTime);
 
@@ -1426,7 +1429,7 @@ private:
 
     std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
-    std::shared_ptr<IWaterComponent> m_waterComponent;
+    std::shared_ptr<prev_test::component::water::IWaterComponent> m_waterComponent;
 
     std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
