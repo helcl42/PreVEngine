@@ -7,8 +7,9 @@
 #include "../../../component/render/IAnimationRenderComponent.h"
 #include "../../../component/transform/ITransformComponent.h"
 
-#include "../../../RayCasting.h"
 #include "../../../component/light/ILightComponent.h"
+#include "../../../component/ray_casting/IBoundingVolumeComponent.h"
+#include "../../../component/ray_casting/RayCastingCommon.h"
 #include "../../../component/shadow/IShadowsComponent.h"
 #include "../../../component/sky/SkyCommon.h"
 
@@ -69,8 +70,8 @@ void AnimationParallaxMappedRenderer::Render(const prev::render::RenderContext& 
     if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::ANIMATION_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
 
         bool visible = true;
-        if (prev::scene::component::ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-            visible = prev::scene::component::ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
+        if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
+            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
         }
 
         if (visible) {
@@ -134,7 +135,7 @@ void AnimationParallaxMappedRenderer::Render(const prev::render::RenderContext& 
 
                 // common
                 uniformsFS.fogColor = prev_test::component::sky::FOG_COLOR;
-                uniformsFS.selectedColor = SELECTED_COLOR;
+                uniformsFS.selectedColor = prev_test::component::ray_casting::SELECTED_COLOR;
                 uniformsFS.selected = false;
                 uniformsFS.castedByShadows = nodeRenderComponent->IsCastedByShadows();
 

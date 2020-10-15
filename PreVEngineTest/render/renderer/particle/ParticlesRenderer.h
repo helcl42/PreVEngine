@@ -2,9 +2,11 @@
 #define __PARTICLES_RENDERER_H__
 
 #include "../../../General.h"
+#include "../../IModel.h"
 #include "../../pipeline/IPipeline.h"
 #include "../IRenderer.h"
 
+#include <prev/core/memory/buffer/VertexBuffer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
@@ -34,7 +36,7 @@ public:
     void ShutDown() override;
 
 private:
-    std::unique_ptr<IModel> CreateModel(prev::core::memory::Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const;
+    std::unique_ptr<prev_test::render::IModel> CreateModel(prev::core::memory::Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const;
 
 private:
     struct alignas(16) UniformsVS

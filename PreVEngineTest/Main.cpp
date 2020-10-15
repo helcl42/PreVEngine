@@ -1,16 +1,14 @@
-#include "Culling.h"
 #include "General.h"
-#include "RayCasting.h"
-
-#include "render/renderer/MasterRenderer.h"
-
 #include "common/AssetManager.h"
-
 #include "component/camera/CameraComponentFactory.h"
 #include "component/cloud/CloudsComponentFactory.h"
 #include "component/font/FontRenderComponentsFactory.h"
 #include "component/light/LightComponentFactory.h"
 #include "component/particle/ParticleSystemComponentFactory.h"
+#include "component/ray_casting/BoundingVolumeComponentFactory.h"
+#include "component/ray_casting/RayCasterComponentFactory.h"
+#include "component/ray_casting/RayCastingEvents.h"
+#include "component/ray_casting/SelectableComponentFactory.h"
 #include "component/render/RenderComponentFactory.h"
 #include "component/shadow/ShadowsComponentFactory.h"
 #include "component/sky/LensFlareComponentFactory.h"
@@ -25,6 +23,7 @@
 #include "component/transform/TransformComponentFactory.h"
 #include "component/water/WaterCommon.h"
 #include "component/water/WaterComponentFactory.h"
+#include "render/renderer/MasterRenderer.h"
 
 #include <prev/App.h>
 #include <prev/common/pattern/Nullable.h>
@@ -64,9 +63,9 @@ public:
         std::shared_ptr<prev_test::component::render::IRenderComponent> renderComponent = renderComponentFactory.CreateCubeRenderComponent(m_texturePath, true, true);
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::render::IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_COMPONENT);
 
-        BoundingVolumeComponentFactory bondingVolumeFactory{};
+        prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(renderComponent->GetModel()->GetMesh()->GetVertices());
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
 
         prev_test::component::transform::TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
@@ -75,8 +74,9 @@ public:
         }
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
 
-        const auto selectableComponent = std::make_shared<SelectableComponent>();
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ISelectableComponent>(GetThis(), selectableComponent, SceneNodeFlags::SELECTABLE_COMPONENT);
+        prev_test::component::ray_casting::SelectableComponentFacrory selectableComponentFactory{};
+        std::shared_ptr<prev_test::component::ray_casting::ISelectableComponent> selectableComponent = selectableComponentFactory.Create();
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::ray_casting::ISelectableComponent>(GetThis(), selectableComponent, SceneNodeFlags::SELECTABLE_COMPONENT);
 
         SceneNode::Init();
     }
@@ -106,7 +106,7 @@ protected:
 private:
     std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
-    std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
+    std::shared_ptr<prev_test::component::ray_casting::IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
 
 class CubeRobotPart : public BaseCubeRobotSceneNode {
@@ -262,9 +262,9 @@ public:
         renderComponent->GetMaterial()->SetHeightScale(m_heightScale);
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::render::IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_CONE_STEP_MAPPED_COMPONENT);
 
-        BoundingVolumeComponentFactory bondingVolumeFactory{};
+        prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(renderComponent->GetModel()->GetMesh()->GetVertices());
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
 
         prev_test::component::transform::TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
@@ -310,7 +310,7 @@ protected:
 
     std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
-    std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
+    std::shared_ptr<prev_test::component::ray_casting::IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
 
 class CubNode : public prev::scene::graph::SceneNode<SceneNodeFlags> {
@@ -337,9 +337,9 @@ public:
         renderComponent->GetMaterial()->SetHeightScale(m_heightScale);
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::render::IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_CONE_STEP_MAPPED_COMPONENT);
 
-        BoundingVolumeComponentFactory bondingVolumeFactory{};
+        prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(renderComponent->GetModel()->GetMesh()->GetVertices());
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
 
         prev_test::component::transform::TrasnformComponentFactory transformComponentFactory{};
         m_transformComponent = transformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
@@ -385,7 +385,7 @@ protected:
 
     std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
-    std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
+    std::shared_ptr<prev_test::component::ray_casting::IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
 
 class Terrain : public prev::scene::graph::SceneNode<SceneNodeFlags> {
@@ -413,9 +413,9 @@ public:
         m_terrainComponent = terrainComponentFactory.CreateRandomTerrainConeStepMapped(m_xIndex, m_zIndex, prev_test::component::terrain::TERRAIN_TILE_SIZE);
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::terrain::ITerrainComponenet>(GetThis(), m_terrainComponent, SceneNodeFlags::TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT);
 
-        BoundingVolumeComponentFactory bondingVolumeFactory{};
+        prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_terrainComponent->GetModel()->GetMesh()->GetVertices());
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
 
         m_transformComponent->SetPosition(m_terrainComponent->GetPosition());
 
@@ -455,7 +455,7 @@ private:
 
     std::weak_ptr<prev_test::component::terrain::ITerrainManagerComponent> m_terrainManagerComponent;
 
-    std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
+    std::shared_ptr<prev_test::component::ray_casting::IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
 
 class TerrainManager : public prev::scene::graph::SceneNode<SceneNodeFlags> {
@@ -480,8 +480,9 @@ public:
         std::shared_ptr<prev_test::component::terrain::ITerrainManagerComponent> terrainManagerComponent = prev_test::component::terrain::TerrainManagerComponentFactory{}.Create();
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::terrain::ITerrainManagerComponent>(GetThis(), terrainManagerComponent, SceneNodeFlags::TERRAIN_MANAGER_COMPONENT);
 
-        auto selectableComponent = std::make_shared<SelectableComponent>();
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ISelectableComponent>(GetThis(), selectableComponent, SceneNodeFlags::SELECTABLE_COMPONENT);
+        prev_test::component::ray_casting::SelectableComponentFacrory selectableComponentFactory{};
+        std::shared_ptr<prev_test::component::ray_casting::ISelectableComponent> selectableComponent = selectableComponentFactory.Create();
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::ray_casting::ISelectableComponent>(GetThis(), selectableComponent, SceneNodeFlags::SELECTABLE_COMPONENT);
 
         for (uint32_t x = 0; x < m_gridMaxX; x++) {
             for (uint32_t z = 0; z < m_gridMaxZ; z++) {
@@ -582,9 +583,9 @@ public:
         m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 60.0f, 180.0f));
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::camera::ICameraComponent>(GetThis(), m_cameraComponent, SceneNodeFlags::CAMERA_COMPONENT);
 
-        BoundingVolumeComponentFactory bondingVolumeFactory{};
+        prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_animatonRenderComponent->GetModel()->GetMesh()->GetVertices(), 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
 
         m_animatonRenderComponent->GetAnimation()->SetIndex(0);
         m_animatonRenderComponent->GetAnimation()->SetState(prev_test::render::AnimationState::RUNNING);
@@ -832,7 +833,7 @@ private:
 
     std::shared_ptr<prev_test::component::camera::ICameraComponent> m_cameraComponent;
 
-    std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
+    std::shared_ptr<prev_test::component::ray_casting::IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
 
 class Camera : public prev::scene::graph::SceneNode<SceneNodeFlags> {
@@ -1396,9 +1397,9 @@ public:
         m_waterComponent = std::move(componentFactory.Create(m_x, m_z));
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::water::IWaterComponent>(GetThis(), m_waterComponent, SceneNodeFlags::WATER_RENDER_COMPONENT);
 
-        BoundingVolumeComponentFactory bondingVolumeFactory{};
+        prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_waterComponent->GetModel()->GetMesh()->GetVertices());
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
 
         SceneNode::Init();
     }
@@ -1431,7 +1432,7 @@ private:
 
     std::shared_ptr<prev_test::component::water::IWaterComponent> m_waterComponent;
 
-    std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
+    std::shared_ptr<prev_test::component::ray_casting::IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
 
 class WaterManager : public prev::scene::graph::SceneNode<SceneNodeFlags> {
@@ -1605,12 +1606,13 @@ public:
         renderComponent->GetMaterial()->SetHeightScale(0.01f);
         prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::render::IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_PARALLAX_MAPPED_COMPONENT);
 
-        BoundingVolumeComponentFactory bondingVolumeFactory{};
+        prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{};
         m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(renderComponent->GetModel()->GetMesh()->GetVertices());
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
 
-        const auto selectableComponent = std::make_shared<SelectableComponent>();
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, ISelectableComponent>(GetThis(), selectableComponent, SceneNodeFlags::SELECTABLE_COMPONENT);
+        prev_test::component::ray_casting::SelectableComponentFacrory selectableComponentFactory{};
+        std::shared_ptr<prev_test::component::ray_casting::ISelectableComponent> selectableComponent = selectableComponentFactory.Create();
+        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::ray_casting::ISelectableComponent>(GetThis(), selectableComponent, SceneNodeFlags::SELECTABLE_COMPONENT);
 
         SceneNode::Init();
     }
@@ -1647,7 +1649,7 @@ private:
 
     std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
-    std::shared_ptr<IBoundingVolumeComponent> m_boundingVolumeComponent;
+    std::shared_ptr<prev_test::component::ray_casting::IBoundingVolumeComponent> m_boundingVolumeComponent;
 };
 
 class Shadows : public prev::scene::graph::SceneNode<SceneNodeFlags> {
@@ -1703,7 +1705,7 @@ public:
 public:
     void Init() override
     {
-        RayCasterComponentFactory raycasterFactory{};
+        prev_test::component::ray_casting::RayCasterComponentFactory raycasterFactory{};
         m_rayCasterComponent = raycasterFactory.CreateRayCaster();
         m_mouseRayCasterComponent = raycasterFactory.CreateMouseRayCaster();
 
@@ -1741,17 +1743,17 @@ public:
 private:
     void RemoveRayCastComponnet()
     {
-        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, IRayCasterComponent>(GetThis())) {
-            prev::scene::component::NodeComponentHelper::RemoveComponent<SceneNodeFlags, IRayCasterComponent>(GetThis(), SceneNodeFlags::RAYCASTER_COMPONENT);
+        if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, prev_test::component::ray_casting::IRayCasterComponent>(GetThis())) {
+            prev::scene::component::NodeComponentHelper::RemoveComponent<SceneNodeFlags, prev_test::component::ray_casting::IRayCasterComponent>(GetThis(), SceneNodeFlags::RAYCASTER_COMPONENT);
         }
     }
 
     void AddRayCastComponent(const bool mouseLocked)
     {
         if (mouseLocked) {
-            prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IRayCasterComponent>(GetThis(), m_rayCasterComponent, SceneNodeFlags::RAYCASTER_COMPONENT);
+            prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::ray_casting::IRayCasterComponent>(GetThis(), m_rayCasterComponent, SceneNodeFlags::RAYCASTER_COMPONENT);
         } else {
-            prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, IRayCasterComponent>(GetThis(), m_mouseRayCasterComponent, SceneNodeFlags::RAYCASTER_COMPONENT);
+            prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::ray_casting::IRayCasterComponent>(GetThis(), m_mouseRayCasterComponent, SceneNodeFlags::RAYCASTER_COMPONENT);
         }
     }
 
@@ -1768,11 +1770,11 @@ public:
     }
 
 private:
-    const float RAY_LENGTH = 200.0f;
+    const float RAY_LENGTH{ 200.0f };
 
-    std::shared_ptr<IRayCasterComponent> m_rayCasterComponent;
+    std::shared_ptr<prev_test::component::ray_casting::IRayCasterComponent> m_rayCasterComponent;
 
-    std::shared_ptr<IMouseRayCasterComponent> m_mouseRayCasterComponent;
+    std::shared_ptr<prev_test::component::ray_casting::IMouseRayCasterComponent> m_mouseRayCasterComponent;
 
     glm::vec2 m_viewPortSize;
 
@@ -1873,7 +1875,7 @@ public:
             // reset any selectable nodes here -> eventhough it does not have bounding volume flag
             auto selectableNodes = GetSelectableNodes();
             for (auto selectableNode : selectableNodes) {
-                auto selectableComponent = prev::scene::component::ComponentRepository<ISelectableComponent>::Instance().Get(selectableNode->GetId());
+                auto selectableComponent = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::ISelectableComponent>::Instance().Get(selectableNode->GetId());
                 selectableComponent->Reset();
             }
 
@@ -1900,14 +1902,14 @@ public:
 
             if (intersectionType == IntersectionType::TERRAIN) {
                 auto terrainManagerNode = prev::scene::graph::GraphTraversal<SceneNodeFlags>::Instance().FindOneWithFlags(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT | SceneNodeFlags::SELECTABLE_COMPONENT }, prev::scene::graph::LogicOperation::AND);
-                auto selectableComponent = prev::scene::component::ComponentRepository<ISelectableComponent>::Instance().Get(terrainManagerNode->GetId());
+                auto selectableComponent = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::ISelectableComponent>::Instance().Get(terrainManagerNode->GetId());
                 selectableComponent->SetSelected(true);
                 selectableComponent->SetPosition(currentTerrainIntersectionPoint.GetValue());
                 //std::cout << "Terrain Intersection At: " << currentTerrainIntersectionPoint.GetValue().x << ", " << currentTerrainIntersectionPoint.GetValue().y << ", " << currentTerrainIntersectionPoint.GetValue().z << std::endl;
             } else if (intersectionType == IntersectionType::OBJECT) {
                 const auto node = std::get<0>(closestIntersectingObject.GetValue());
                 const auto rayCastResult = std::get<1>(closestIntersectingObject.GetValue());
-                auto selectableComponent = prev::scene::component::ComponentRepository<ISelectableComponent>::Instance().Get(node->GetId());
+                auto selectableComponent = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::ISelectableComponent>::Instance().Get(node->GetId());
                 selectableComponent->SetSelected(true);
                 selectableComponent->SetPosition(rayCastResult.point);
             }
@@ -1926,7 +1928,7 @@ public:
 
 private:
     // Terrain
-    prev::common::pattern::Nullable<glm::vec3> FindTheClosestTerrainIntersection(const Ray& ray) const
+    prev::common::pattern::Nullable<glm::vec3> FindTheClosestTerrainIntersection(const prev_test::common::intersection::Ray& ray) const
     {
         prev::common::pattern::Nullable<glm::vec3> currentTerrainIntersectionPoint{};
         if (IntersectsInRange(0.0f, ray.length, ray)) {
@@ -1937,7 +1939,7 @@ private:
         return currentTerrainIntersectionPoint;
     }
 
-    prev::common::pattern::Nullable<glm::vec3> GetFirstPositionUnderAlongRay(const Ray& ray) const
+    prev::common::pattern::Nullable<glm::vec3> GetFirstPositionUnderAlongRay(const prev_test::common::intersection::Ray& ray) const
     {
         const auto segmentPositions = GenerateSegmentPositions(ray);
         for (const auto& segmentPosition : segmentPositions) {
@@ -1955,7 +1957,7 @@ private:
         return prev::common::pattern::Nullable<glm::vec3>();
     }
 
-    std::vector<glm::vec3> GenerateSegmentPositions(const Ray& ray) const
+    std::vector<glm::vec3> GenerateSegmentPositions(const prev_test::common::intersection::Ray& ray) const
     {
         const float distanceBetweenNodes = ray.length / RECURSION_COUNT;
         const glm::vec3 start = ray.GetStartPoint();
@@ -1971,7 +1973,7 @@ private:
         return result;
     }
 
-    prev::common::pattern::Nullable<glm::vec3> BinarySearch(const uint32_t count, const float start, const float finish, const Ray& ray) const
+    prev::common::pattern::Nullable<glm::vec3> BinarySearch(const uint32_t count, const float start, const float finish, const prev_test::common::intersection::Ray& ray) const
     {
         const float half = start + ((finish - start) / 2.0f);
         if (count >= RECURSION_COUNT) {
@@ -1991,7 +1993,7 @@ private:
         }
     }
 
-    bool IntersectsInRange(const float start, const float finish, const Ray& ray) const
+    bool IntersectsInRange(const float start, const float finish, const prev_test::common::intersection::Ray& ray) const
     {
         const glm::vec3 startPoint = ray.GetPointAtDistances(start);
         const glm::vec3 endPoint = ray.GetPointAtDistances(finish);
@@ -2036,19 +2038,19 @@ private:
         return prev::scene::graph::GraphTraversal<SceneNodeFlags>::Instance().FindAllWithFlags(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SELECTABLE_COMPONENT });
     }
 
-    prev::common::pattern::Nullable<std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags> >, RayCastResult> > FindTheClosestIntersectingNode(const Ray& ray) const
+    prev::common::pattern::Nullable<std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags> >, prev_test::common::intersection::RayCastResult> > FindTheClosestIntersectingNode(const prev_test::common::intersection::Ray& ray) const
     {
-        prev::common::pattern::Nullable<std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags> >, RayCastResult> > theClosestNode;
+        prev::common::pattern::Nullable<std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags> >, prev_test::common::intersection::RayCastResult> > theClosestNode;
         float minDistance = std::numeric_limits<float>::max();
 
         auto selectableNodes = prev::scene::graph::GraphTraversal<SceneNodeFlags>::Instance().FindAllWithFlags(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SELECTABLE_COMPONENT | SceneNodeFlags::BOUNDING_VOLUME_COMPONENT }, prev::scene::graph::LogicOperation::AND);
         for (auto selectable : selectableNodes) {
-            const auto boundingVolume = prev::scene::component::ComponentRepository<IBoundingVolumeComponent>::Instance().Get(selectable->GetId());
+            const auto boundingVolume = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(selectable->GetId());
 
-            RayCastResult rayCastResult{};
+            prev_test::common::intersection::RayCastResult rayCastResult{};
             if (boundingVolume->Intersects(ray, rayCastResult)) {
                 if (rayCastResult.t < minDistance) {
-                    theClosestNode = prev::common::pattern::Nullable<std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags> >, RayCastResult> >({ selectable, rayCastResult });
+                    theClosestNode = prev::common::pattern::Nullable<std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags> >, prev_test::common::intersection::RayCastResult> >({ selectable, rayCastResult });
                     minDistance = rayCastResult.t;
                 }
             }
@@ -2057,17 +2059,17 @@ private:
     }
 
 public:
-    void operator()(const RayEvent& rayEvt)
+    void operator()(const prev_test::component::ray_casting::RayEvent& rayEvt)
     {
-        m_currentRay = prev::common::pattern::Nullable<Ray>{ rayEvt.ray };
+        m_currentRay = prev::common::pattern::Nullable<prev_test::common::intersection::Ray>{ rayEvt.ray };
     }
 
 private:
-    const uint32_t RECURSION_COUNT = 200;
+    const uint32_t RECURSION_COUNT{ 200 };
 
-    prev::common::pattern::Nullable<Ray> m_currentRay; // make it nullable???
+    prev::common::pattern::Nullable<prev_test::common::intersection::Ray> m_currentRay; // make it nullable???
 
-    prev::event::EventHandler<RayCastObserverNode, RayEvent> m_rayHandler{ *this };
+    prev::event::EventHandler<RayCastObserverNode, prev_test::component::ray_casting::RayEvent> m_rayHandler{ *this };
 };
 
 class Fire final : public prev::scene::graph::SceneNode<SceneNodeFlags> {

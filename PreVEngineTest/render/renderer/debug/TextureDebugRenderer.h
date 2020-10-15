@@ -2,6 +2,7 @@
 #define __TEXTURE_DEBUG_RENDERER_H__
 
 #include "../../../General.h"
+#include "../../IModel.h"
 #include "../../pipeline/IPipeline.h"
 #include "../IRenderer.h"
 
@@ -45,7 +46,7 @@ private:
     std::unique_ptr<prev_test::render::pipeline::IPipeline> m_pipeline;
 
 private:
-    std::unique_ptr<IModel> m_quadModel;
+    std::unique_ptr<prev_test::render::IModel> m_quadModel;
 };
 } // namespace prev_test::render::renderer::debug
 

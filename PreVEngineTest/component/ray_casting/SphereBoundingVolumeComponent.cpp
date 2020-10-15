@@ -1,0 +1,62 @@
+#include "SphereBoundingVolumeComponent.h"
+#include "../../common/intersection/IntersectionTester.h"
+#include "BoundingVolumeModelFactory.h"
+
+namespace prev_test::component::ray_casting {
+SphereBoundingVolumeComponent::SphereBoundingVolumeComponent(const prev_test::common::intersection::Sphere& sphere, const float scale, const glm::vec3& offset)
+    : m_scale(scale)
+    , m_offset(offset)
+{
+    prev_test::common::intersection::Sphere newSphere = OffsetSphere(sphere, offset);
+    m_original = newSphere;
+    m_working = newSphere;
+}
+
+bool SphereBoundingVolumeComponent::IsInFrustum(const prev_test::common::intersection::Frustum& frustum)
+{
+    return prev_test::common::intersection::IntersectionTester::Intersects(frustum, m_working);
+}
+
+bool SphereBoundingVolumeComponent::Intersects(const prev_test::common::intersection::Ray& ray, prev_test::common::intersection::RayCastResult& result)
+{
+    return prev_test::common::intersection::IntersectionTester::Intersects(ray, m_working, result);
+}
+
+void SphereBoundingVolumeComponent::Update(const glm::mat4& worldTransform)
+{
+    m_working.position = worldTransform * glm::vec4(m_original.position, 1.0f);
+    m_working.radius = m_original.radius * m_scale;
+#ifdef RENDER_BOUNDING_VOLUMES
+    BoundingVolumeModelFactory modelFactory{};
+    m_model = modelFactory.CreateSphereModel(m_working);
+#endif
+}
+
+BoundingVolumeType SphereBoundingVolumeComponent::GetType() const
+{
+    return BoundingVolumeType::SPHERE;
+}
+
+#ifdef RENDER_BOUNDING_VOLUMES
+std::shared_ptr<prev_test::render::IModel> GetModel() const
+{
+    return m_model;
+}
+#endif
+
+prev_test::common::intersection::Sphere SphereBoundingVolumeComponent::ScaleSphere(const prev_test::common::intersection::Sphere& sphere, const float scale)
+{
+    prev_test::common::intersection::Sphere result{};
+    result.radius = sphere.radius * scale;
+    result.position = sphere.position;
+    return result;
+}
+
+prev_test::common::intersection::Sphere SphereBoundingVolumeComponent::OffsetSphere(const prev_test::common::intersection::Sphere& sphere, const glm::vec3& offset)
+{
+    prev_test::common::intersection::Sphere result{};
+    result.radius = sphere.radius;
+    result.position = sphere.position + offset;
+    return result;
+}
+} // namespace prev_test::component::ray_casting

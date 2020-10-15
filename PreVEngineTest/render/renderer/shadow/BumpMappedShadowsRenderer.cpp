@@ -4,8 +4,9 @@
 #include "shader/BumpMappedShadowsShader.h"
 
 #include "../../../common/AssetManager.h"
-#include "../../../component/transform/ITransformComponent.h"
+#include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../../component/render/IRenderComponent.h"
+#include "../../../component/transform/ITransformComponent.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
@@ -60,8 +61,8 @@ void BumpMappedShadowsRenderer::Render(const prev::render::RenderContext& render
 {
     if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TRANSFORM_COMPONENT }) && node->GetFlags().HasAny(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::RENDER_NORMAL_MAPPED_COMPONENT | SceneNodeFlags::RENDER_PARALLAX_MAPPED_COMPONENT | SceneNodeFlags::RENDER_CONE_STEP_MAPPED_COMPONENT })) {
         bool visible = true;
-        if (prev::scene::component::ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-            visible = prev::scene::component::ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);
+        if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
+            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);
         }
 
         const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());

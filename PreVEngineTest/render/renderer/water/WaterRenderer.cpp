@@ -5,6 +5,7 @@
 
 #include "../../../common/AssetManager.h"
 #include "../../../component/light/ILightComponent.h"
+#include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../../component/shadow/IShadowsComponent.h"
 #include "../../../component/sky/SkyCommon.h"
 #include "../../../component/transform/ITransformComponent.h"
@@ -67,8 +68,8 @@ void WaterRenderer::Render(const prev::render::RenderContext& renderContext, con
 {
     if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
         bool visible = true;
-        if (prev::scene::component::ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-            visible = prev::scene::component::ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
+        if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
+            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
         }
 
         if (visible) {

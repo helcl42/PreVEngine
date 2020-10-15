@@ -4,13 +4,14 @@
 #include "shader/DefaultShader.h"
 
 #include "../../../common/AssetManager.h"
-#include "../../../component/render/IRenderComponent.h"
-#include "../../../component/transform/ITransformComponent.h"
-
-#include "../../../RayCasting.h"
 #include "../../../component/light/ILightComponent.h"
+#include "../../../component/ray_casting/IBoundingVolumeComponent.h"
+#include "../../../component/ray_casting/ISelectableComponent.h"
+#include "../../../component/ray_casting/RayCastingCommon.h"
+#include "../../../component/render/IRenderComponent.h"
 #include "../../../component/shadow/IShadowsComponent.h"
 #include "../../../component/sky/SkyCommon.h"
+#include "../../../component/transform/ITransformComponent.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
@@ -68,8 +69,8 @@ void DefaultRenderer::Render(const prev::render::RenderContext& renderContext, c
 {
     if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
         bool visible = true;
-        if (prev::scene::component::ComponentRepository<IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-            visible = prev::scene::component::ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
+        if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
+            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
         }
 
         if (visible) {
@@ -129,13 +130,13 @@ void DefaultRenderer::Render(const prev::render::RenderContext& renderContext, c
                 uniformsFS.material = MaterialUniform(nodeRenderComponent->GetMaterial()->GetShineDamper(), nodeRenderComponent->GetMaterial()->GetReflectivity());
 
                 bool selected = false;
-                if (prev::scene::component::ComponentRepository<ISelectableComponent>::Instance().Contains(node->GetId())) {
-                    selected = prev::scene::component::ComponentRepository<ISelectableComponent>::Instance().Get(node->GetId())->IsSelected();
+                if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::ISelectableComponent>::Instance().Contains(node->GetId())) {
+                    selected = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::ISelectableComponent>::Instance().Get(node->GetId())->IsSelected();
                 }
 
                 // common
                 uniformsFS.fogColor = prev_test::component::sky::FOG_COLOR;
-                uniformsFS.selectedColor = SELECTED_COLOR;
+                uniformsFS.selectedColor = prev_test::component::ray_casting::SELECTED_COLOR;
                 uniformsFS.selected = selected;
                 uniformsFS.castedByShadows = nodeRenderComponent->IsCastedByShadows();
 
