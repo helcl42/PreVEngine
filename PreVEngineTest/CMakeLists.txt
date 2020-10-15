@@ -10,6 +10,7 @@ include_directories("../Dependencies/assimp/include")
 FILE(GLOB ROOT_SRC_LIST "*.h" "*.cpp")
 
 FILE(GLOB COMMON_SRC_LIST "common/*.h" "common/*.cpp")
+FILE(GLOB COMMON_INTERSECTION_SRC_LIST "common/intersection/*.h" "common/intersection/*.cpp")
 
 FILE(GLOB COMPONENT_SRC_LIST "component/*.h" "component/*.cpp")
 FILE(GLOB COMPONENT_TRANSFORM_SRC_LIST "component/transform/*.h" "component/transform/*.cpp")
@@ -24,6 +25,7 @@ FILE(GLOB COMPONENT_CAMERA_SRC_LIST "component/camera/*.h" "component/camera/*.c
 FILE(GLOB COMPONENT_SHADOW_SRC_LIST "component/shadow/*.h" "component/shadow/*.cpp")
 FILE(GLOB COMPONENT_PARTICLE_SRC_LIST "component/particle/*.h" "component/particle/*.cpp")
 FILE(GLOB COMPONENT_WATER_SRC_LIST "component/water/*.h" "component/water/*.cpp")
+FILE(GLOB COMPONENT_RAY_CASTING_SRC_LIST "component/ray_casting/*.h" "component/ray_casting/*.cpp")
 
 FILE(GLOB RENDER_SRC_LIST "render/*.h" "render/*.cpp")
 FILE(GLOB RENDER_PIPELINE_SRC_LIST "render/pipeline/*.h" "render/pipeline/*.cpp")
@@ -82,6 +84,7 @@ FILE(GLOB RENDER_RENDERER_WATER_SHADER_SRC_LIST "render/renderer/water/shader/*.
 SOURCE_GROUP("" FILES ${ROOT_SRC_LIST})
 
 SOURCE_GROUP("common" FILES ${COMMON_SRC_LIST})
+SOURCE_GROUP("common/intersection" FILES ${COMMON_INTERSECTION_SRC_LIST})
 
 SOURCE_GROUP("component" FILES ${COMPONENT_SRC_LIST})
 SOURCE_GROUP("component/transform" FILES ${COMPONENT_TRANSFORM_SRC_LIST})
@@ -96,6 +99,7 @@ SOURCE_GROUP("component/camera" FILES ${COMPONENT_CAMERA_SRC_LIST})
 SOURCE_GROUP("component/shadow" FILES ${COMPONENT_SHADOW_SRC_LIST})
 SOURCE_GROUP("component/particle" FILES ${COMPONENT_PARTICLE_SRC_LIST})
 SOURCE_GROUP("component/water" FILES ${COMPONENT_WATER_SRC_LIST})
+SOURCE_GROUP("component/ray_casting" FILES ${COMPONENT_RAY_CASTING_SRC_LIST})
 
 SOURCE_GROUP("render" FILES ${RENDER_SRC_LIST})
 SOURCE_GROUP("render/pipeline" FILES ${RENDER_PIPELINE_SRC_LIST})
@@ -154,6 +158,7 @@ SOURCE_GROUP("render/renderer/water/shader" FILES ${RENDER_RENDERER_WATER_SHADER
 add_executable(${PROJECT_NAME} 
     ${ROOT_SRC_LIST}
     ${COMMON_SRC_LIST}
+    ${COMMON_INTERSECTION_SRC_LIST}
     ${COMPONENT_SRC_LIST}
     ${COMPONENT_TRANSFORM_SRC_LIST}
     ${COMPONENT_TIME_SRC_LIST}
@@ -167,6 +172,7 @@ add_executable(${PROJECT_NAME}
     ${COMPONENT_SHADOW_SRC_LIST}
     ${COMPONENT_PARTICLE_SRC_LIST}
     ${COMPONENT_WATER_SRC_LIST}
+    ${COMPONENT_RAY_CASTING_SRC_LIST}
     ${RENDER_SRC_LIST}
     ${RENDER_UTIL_SRC_LIST}
     ${RENDER_UTIL_ASSIMP_SRC_LIST}

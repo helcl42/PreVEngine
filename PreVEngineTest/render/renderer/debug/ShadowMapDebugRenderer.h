@@ -2,6 +2,7 @@
 #define __SHADOW_MAP_DEBUG_RENDERER_H__
 
 #include "../../../General.h"
+#include "../../IModel.h"
 #include "../../pipeline/IPipeline.h"
 #include "../IRenderer.h"
 

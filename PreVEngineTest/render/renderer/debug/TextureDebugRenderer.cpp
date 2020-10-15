@@ -6,7 +6,6 @@
 #include "../../mesh/QuadMesh.h"
 #include "../../model/ModelFactory.h"
 
-#include "../../../RayCasting.h"
 #include "../../../common/AssetManager.h"
 #include "../../../component/water/IWaterOffscreenRenderPassComponent.h"
 

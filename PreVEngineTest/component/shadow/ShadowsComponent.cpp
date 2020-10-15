@@ -1,6 +1,6 @@
 #include "ShadowsComponent.h"
 
-#include "../../Culling.h"
+#include "../../common/intersection/AABB.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/image/DepthImageBuffer.h>
@@ -192,7 +192,7 @@ void ShadowsComponent::UpdateCascade(const glm::vec3& lightDirection, const glm:
     const auto frustumCenter = CalculateFrustumCenter(frustumCorners);
     const auto radius = CalculateFrustumRadius(frustumCorners, frustumCenter);
 
-    AABB aabb{ radius };
+    prev_test::common::intersection::AABB aabb{ radius };
 
     const glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDirection * -aabb.minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
     const glm::mat4 lightOrthoProjectionMatrix = glm::ortho(aabb.minExtents.x, aabb.maxExtents.x, aabb.minExtents.y, aabb.maxExtents.y, 0.0f, aabb.maxExtents.z - aabb.minExtents.z);

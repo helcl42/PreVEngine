@@ -1,10 +1,10 @@
 #ifndef __DEFAULT_RENDER_CONTEXT_USER_DATA_H__
 #define __DEFAULT_RENDER_CONTEXT_USER_DATA_H__
 
+#include "../../common/intersection/Frustum.h"
+
 #include <prev/common/Common.h>
 #include <prev/core/instance/Validation.h>
-
-#include "../../Culling.h"
 
 namespace prev_test::render {
 struct DefaultRenderContextUserData // inherit this in case you need any special data while rendering scene graph
@@ -19,11 +19,11 @@ struct ShadowsRenderContextUserData : DefaultRenderContextUserData {
 
     const uint32_t cascadeIndex;
 
-    const Frustum frustum;
+    const prev_test::common::intersection::Frustum frustum;
 
     const VkExtent2D extent;
 
-    ShadowsRenderContextUserData(const glm::mat4& vm, const glm::mat4& pm, const uint32_t index, const Frustum& frst, const VkExtent2D& ext)
+    ShadowsRenderContextUserData(const glm::mat4& vm, const glm::mat4& pm, const uint32_t index, const prev_test::common::intersection::Frustum& frst, const VkExtent2D& ext)
         : viewMatrix(vm)
         , projectionMatrix(pm)
         , cascadeIndex(index)
@@ -46,9 +46,9 @@ struct NormalRenderContextUserData : DefaultRenderContextUserData {
 
     const glm::vec2 nearFarClippingPlane;
 
-    const Frustum frustum;
+    const prev_test::common::intersection::Frustum frustum;
 
-    NormalRenderContextUserData(const glm::mat4& vm, const glm::mat4& pm, const glm::vec3& camPos, const glm::vec4& cp, const VkExtent2D& ext, const glm::vec2& nearFar, const Frustum& frst)
+    NormalRenderContextUserData(const glm::mat4& vm, const glm::mat4& pm, const glm::vec3& camPos, const glm::vec4& cp, const VkExtent2D& ext, const glm::vec2& nearFar, const prev_test::common::intersection::Frustum& frst)
         : viewMatrix(vm)
         , projectionMatrix(pm)
         , cameraPosition(camPos)

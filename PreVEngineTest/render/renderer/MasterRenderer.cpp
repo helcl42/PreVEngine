@@ -1,5 +1,11 @@
 #include "MasterRenderer.h"
 
+#include "../../common/intersection/Frustum.h"
+#include "../../component/camera/ICameraComponent.h"
+#include "../../component/shadow/IShadowsComponent.h"
+#include "../../component/water/IWaterComponent.h"
+#include "../../component/water/IWaterOffscreenRenderPassComponent.h"
+#include "../../component/water/WaterCommon.h"
 #include "animation/AnimationConeStepMappedRenderer.h"
 #include "animation/AnimationNormalMappedRenderer.h"
 #include "animation/AnimationParallaxMappedRenderer.h"
@@ -30,12 +36,6 @@
 #include "terrain/TerrainParallaxMappedRenderer.h"
 #include "terrain/TerrainRenderer.h"
 #include "water/WaterRenderer.h"
-
-#include "../../component/camera/ICameraComponent.h"
-#include "../../component/shadow/IShadowsComponent.h"
-#include "../../component/water/IWaterComponent.h"
-#include "../../component/water/IWaterOffscreenRenderPassComponent.h"
-#include "../../component/water/WaterCommon.h"
 
 #include <prev/scene/component/NodeComponentHelper.h>
 
@@ -302,7 +302,7 @@ void MasterRenderer::RenderShadows(const prev::render::RenderContext& renderCont
 
         const auto cascade = shadows->GetCascade(cascadeIndex);
 
-        const ShadowsRenderContextUserData userData{ cascade.viewMatrix, cascade.projectionMatrix, cascadeIndex, Frustum{ cascade.projectionMatrix, cascade.viewMatrix }, shadows->GetExtent() };
+        const ShadowsRenderContextUserData userData{ cascade.viewMatrix, cascade.projectionMatrix, cascadeIndex, prev_test::common::intersection::Frustum{ cascade.projectionMatrix, cascade.viewMatrix }, shadows->GetExtent() };
         const prev::render::RenderContext customRenderContext{ cascade.frameBuffer, renderContext.commandBuffer, renderContext.frameInFlightIndex, shadows->GetExtent() };
 
         for (auto& renderer : m_shadowRenderers) {
@@ -343,7 +343,7 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
         glm::vec4(0.0f, 1.0f, 0.0f, -prev_test::component::water::WATER_LEVEL + prev_test::component::water::WATER_CLIP_PLANE_OFFSET),
         reflectionComponent->GetExtent(),
         glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane()),
-        Frustum{ projectionMatrix, viewMatrix }
+        prev_test::common::intersection::Frustum{ projectionMatrix, viewMatrix }
     };
 
     const prev::render::RenderContext customRenderContext{ reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
@@ -378,7 +378,7 @@ void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& re
         glm::vec4(0.0f, -1.0f, 0.0f, prev_test::component::water::WATER_LEVEL + prev_test::component::water::WATER_CLIP_PLANE_OFFSET),
         refractionComponent->GetExtent(),
         glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane()),
-        Frustum{ projectionMatrix, viewMatrix }
+        prev_test::common::intersection::Frustum{ projectionMatrix, viewMatrix }
     };
 
     const prev::render::RenderContext customRenderContext{ refractionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
@@ -412,7 +412,7 @@ void MasterRenderer::RenderScene(const prev::render::RenderContext& renderContex
         DEFAULT_CLIP_PLANE,
         renderContext.fullExtent,
         glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane()),
-        Frustum{ projectionMatrix, viewMatrix }
+        prev_test::common::intersection::Frustum{ projectionMatrix, viewMatrix }
     };
 
     for (auto& renderer : m_defaultRenderers) {
