@@ -119,6 +119,34 @@ public:
         }
         return copy;
     }
+
+    static std::string GetAsString(const glm::vec2& v, const uint32_t precission)
+    {
+        std::stringstream ss;
+        ss << std::setprecision(precission) << "(" << v.x << ", " << v.y << ")";
+        return ss.str();
+    }
+
+    static std::string GetAsString(const glm::vec3& v, const uint32_t precission)
+    {
+        std::stringstream ss;
+        ss << std::setprecision(precission) << "(" << v.x << ", " << v.y << ", " << v.z << ")";
+        return ss.str();
+    }
+
+    static std::string GetAsString(const glm::vec4& v, const uint32_t precission)
+    {
+        std::stringstream ss;
+        ss << std::setprecision(precission) << "(" << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ")";
+        return ss.str();
+    }
+
+    static std::string GetAsString(const glm::quat& q, const uint32_t precission)
+    {
+        std::stringstream ss;
+        ss << std::setprecision(precission) << "(" << q.x << ", " << q.y << ", " << q.z << ", " << q.w << ")";
+        return ss.str();
+    }
 };
 
 class FPSService final {
