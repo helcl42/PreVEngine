@@ -5,7 +5,7 @@
 
 //#define RENDER_BOUNDING_VOLUMES
 //#define RENDER_RAYCASTS
-#define RENDER_SELECTION
+//#define RENDER_SELECTION
 
 namespace prev_test::component::ray_casting {
 

@@ -1,15 +1,12 @@
 #ifndef __IRENDERER_H__
 #define __IRENDERER_H__
 
-#include "RenderContextUserData.h"
+#include "../scene/graph/ISceneNode.h"
+#include "DefaultRenderContextUserData.h"
+#include "RenderContext.h"
 
-#include "../../General.h"
-
-#include <prev/render/RenderContext.h>
-#include <prev/scene/graph/ISceneNode.h>
-
-namespace prev_test::render::renderer {
-template <typename UserDataType = DefaultRenderContextUserData>
+namespace prev::render {
+template <typename NodeFlagsType, typename UserDataType = DefaultRenderContextUserData>
 class IRenderer {
 public:
     virtual void Init() = 0;
@@ -18,7 +15,7 @@ public:
 
     virtual void PreRender(const prev::render::RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
-    virtual void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const UserDataType& renderContextUserData = UserDataType{}) = 0;
+    virtual void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> >& node, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
     virtual void PostRender(const prev::render::RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
@@ -29,6 +26,6 @@ public:
 public:
     virtual ~IRenderer() = default;
 };
-} // namespace prev_test::render::renderer
+} // namespace prev::render
 
 #endif // !__IRENDERER_H__

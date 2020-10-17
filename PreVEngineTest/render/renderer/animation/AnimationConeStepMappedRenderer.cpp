@@ -1,5 +1,6 @@
 #include "AnimationConeStepMappedRenderer.h"
 
+#include "../RenderContextUserData.h"
 #include "pipeline/AnimationConeStepMappedPipeline.h"
 #include "shader/AnimationConeStepMappedShader.h"
 
@@ -19,8 +20,6 @@
 #include <prev/scene/AllocatorProvider.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
-
-#include <memory>
 
 namespace prev_test::render::renderer::animation {
 AnimationConeStepMappedRenderer::AnimationConeStepMappedRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)

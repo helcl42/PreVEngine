@@ -5,15 +5,15 @@
 #include "pipeline/RayCastDebugPipeline.h"
 #include "shader/RayCastDebugShader.h"
 
-#include "../../../Mesh.h"
-#include "../../../RayCasting.h"
+#include "../../../common/AssetManager.h"
+#include "../../../component/ray_casting/IRayCasterComponent.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/AllocatorProvider.h>
-
-#include <memory>
+#include <prev/scene/component/ComponentRepository.h>
+#include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::render::renderer::debug {
 RayCastDebugRenderer::RayCastDebugRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
@@ -27,7 +27,7 @@ void RayCastDebugRenderer::Init()
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::debug::shader::RayCastDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/raycast_debug_vert.spv") }, { VK_SHADER_STAGE_GEOMETRY_BIT, AssetManager::Instance().GetAssetPath("Shaders/raycast_debug_geom.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/raycast_debug_frag.spv") } });
+    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::debug::shader::RayCastDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/raycast_debug_vert.spv") }, { VK_SHADER_STAGE_GEOMETRY_BIT, AssetManager::Instance().GetAssetPath("Shaders/raycast_debug_geom.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/raycast_debug_frag.spv") } });
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("RayCast Debug Shader created\n");
@@ -64,7 +64,7 @@ void RayCastDebugRenderer::PreRender(const prev::render::RenderContext& renderCo
 void RayCastDebugRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData)
 {
     if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::RAYCASTER_COMPONENT })) {
-        const auto rayCastingComponent = prev::scene::component::ComponentRepository<IRayCasterComponent>::Instance().Get(node->GetId());
+        const auto rayCastingComponent = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IRayCasterComponent>::Instance().Get(node->GetId());
 
         auto uboVS = m_uniformsPoolVS->GetNext();
 

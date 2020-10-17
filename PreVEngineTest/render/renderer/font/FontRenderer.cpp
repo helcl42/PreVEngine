@@ -4,7 +4,6 @@
 #include "shader/FonttShader.h"
 
 #include "../../../common/AssetManager.h"
-
 #include "../../../component/font/IFontRenderComponent.h"
 
 #include <prev/common/Common.h>
@@ -14,8 +13,6 @@
 #include <prev/scene/AllocatorProvider.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
-
-#include <memory>
 
 namespace prev_test::render::renderer::font {
 FontRenderer::FontRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)

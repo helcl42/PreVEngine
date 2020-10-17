@@ -1,7 +1,7 @@
 #ifndef __TEST_APP_H__
 #define __TEST_APP_H__
 
-#include "General.h"
+#include "render/renderer/MasterRenderer.h"
 #include "scene/Root.h"
 
 #include <prev/App.h>
@@ -20,8 +20,13 @@ public:
 protected:
     std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> > CreateRootNode() const override
     {
+        return std::make_shared<scene::Root>();
+    }
+
+    std::shared_ptr<prev::render::IRenderer<NodeFlagsType, prev::render::DefaultRenderContextUserData> > CreateRootRenderer() const override
+    {
         auto scene = this->m_engine->GetScene();
-        return std::make_shared<scene::Root>(scene->GetRenderPass(), scene->GetSwapchain());
+        return std::make_shared<prev_test::render::renderer::MasterRenderer>(scene->GetRenderPass(), scene->GetSwapchain());
     }
 };
 } // namespace prev_test

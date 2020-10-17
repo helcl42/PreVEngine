@@ -2,18 +2,20 @@
 
 #ifdef RENDER_SELECTION
 
+#include "../../mesh/SphereMesh.h"
+#include "../../model/Model.h"
 #include "pipeline/SelectionDebugPipeline.h"
 #include "shader/SelectionDebugShader.h"
 
-#include "../../../Mesh.h"
-#include "../../../RayCasting.h"
+#include "../../../common/AssetManager.h"
+#include "../../../component/ray_casting/ISelectableComponent.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/AllocatorProvider.h>
-
-#include <memory>
+#include <prev/scene/component/ComponentRepository.h>
+#include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::render::renderer::debug {
 SelectionDebugRenderer::SelectionDebugRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
@@ -27,7 +29,7 @@ void SelectionDebugRenderer::Init()
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::debug::shader::SelectionDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/selection_debug_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/selection_debug_frag.spv") } });
+    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::debug::shader::SelectionDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/selection_debug_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/selection_debug_frag.spv") } });
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Selection Debug Shader created\n");
@@ -43,7 +45,7 @@ void SelectionDebugRenderer::Init()
     m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
     m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-    m_selectionPointModel = CreateModel(*allocator, std::make_unique<SphereMesh>(1.0f, 32, 32));
+    m_selectionPointModel = CreateModel(*allocator, std::make_unique<prev_test::render::mesh::SphereMesh>(1.0f, 32, 32));
 }
 
 void SelectionDebugRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
@@ -63,7 +65,7 @@ void SelectionDebugRenderer::PreRender(const prev::render::RenderContext& render
 void SelectionDebugRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData)
 {
     if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SELECTABLE_COMPONENT })) {
-        const auto selectableComponent = prev::scene::component::ComponentRepository<ISelectableComponent>::Instance().Get(node->GetId());
+        const auto selectableComponent = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::ISelectableComponent>::Instance().Get(node->GetId());
         if (selectableComponent->IsSelected()) {
             auto uboVS = m_uniformsPoolVS->GetNext();
 
@@ -124,7 +126,7 @@ std::unique_ptr<IModel> SelectionDebugRenderer::CreateModel(prev::core::memory::
     auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
     indexBuffer->Data(mesh->GetIndices().data(), (uint32_t)mesh->GetIndices().size());
 
-    return std::make_unique<Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));
+    return std::make_unique<prev_test::render::model::Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));
 }
 } // namespace prev_test::render::renderer::debug
 

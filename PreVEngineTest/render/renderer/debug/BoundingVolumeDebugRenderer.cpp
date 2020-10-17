@@ -5,15 +5,16 @@
 #include "pipeline/BoundingVolumeDebugPipeline.h"
 #include "shader/BoundingVolumeDebugShader.h"
 
-#include "../../../Culling.h"
-#include "../../../Mesh.h"
+#include "../../../common/AssetManager.h"
+#include "../../../component/ray_casting/IBoundingVolumeComponent.h"
+#include "../../../component/ray_casting/RayCastingCommon.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/AllocatorProvider.h>
-
-#include <memory>
+#include <prev/scene/component/ComponentRepository.h>
+#include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::render::renderer::debug {
 BoundingVolumeDebugRenderer::BoundingVolumeDebugRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
@@ -27,7 +28,7 @@ void BoundingVolumeDebugRenderer::Init()
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::debug::shader::BoundingVolumeDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, AssetManager::Instance().GetAssetPath("Shaders/bounding_volume_debug_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, AssetManager::Instance().GetAssetPath("Shaders/bounding_volume_debug_frag.spv") } });
+    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::debug::shader::BoundingVolumeDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/bounding_volume_debug_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/bounding_volume_debug_frag.spv") } });
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Bounding Volume Debug Shader created\n");
@@ -61,7 +62,7 @@ void BoundingVolumeDebugRenderer::PreRender(const prev::render::RenderContext& r
 void BoundingVolumeDebugRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData)
 {
     if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::BOUNDING_VOLUME_COMPONENT })) {
-        const auto boundingVolumeComponent = prev::scene::component::ComponentRepository<IBoundingVolumeComponent>::Instance().Get(node->GetId());
+        const auto boundingVolumeComponent = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId());
 
         auto uboVS = m_uniformsPoolVS->GetNext();
 
@@ -76,7 +77,7 @@ void BoundingVolumeDebugRenderer::Render(const prev::render::RenderContext& rend
 
         UniformsFS uniformsFS{};
         uniformsFS.color = glm::vec4(1.0f, 1.0f, 1.0f, 0.3f);
-        uniformsFS.selectedColor = SELECTED_COLOR;
+        uniformsFS.selectedColor = prev_test::component::ray_casting::SELECTED_COLOR;
         uniformsFS.selected = false;
 
         uboFS->Update(&uniformsFS);

@@ -16,8 +16,6 @@
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 
-#include <memory>
-
 namespace prev_test::render::renderer::debug {
 TextureDebugRenderer::TextureDebugRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
     : m_renderPass(renderPass)
@@ -52,11 +50,11 @@ void TextureDebugRenderer::Init()
     m_quadModel = prev_test::render::model::ModelFactory{}.Create(std::move(quadMesh), std::move(vertexBuffer), std::move(indexBuffer));
 }
 
-void TextureDebugRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData)
+void TextureDebugRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData)
 {
 }
 
-void TextureDebugRenderer::PreRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData)
+void TextureDebugRenderer::PreRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData)
 {
     VkRect2D renderRect{};
     renderRect.extent.width = renderContext.fullExtent.width / 2;
@@ -83,7 +81,7 @@ void TextureDebugRenderer::PreRender(const prev::render::RenderContext& renderCo
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void TextureDebugRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData)
+void TextureDebugRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const prev::render::DefaultRenderContextUserData& renderContextUserData)
 {
     const auto component = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::water::IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT });
 
@@ -100,11 +98,11 @@ void TextureDebugRenderer::Render(const prev::render::RenderContext& renderConte
     vkCmdDrawIndexed(renderContext.commandBuffer, m_quadModel->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
 }
 
-void TextureDebugRenderer::PostRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData)
+void TextureDebugRenderer::PostRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData)
 {
 }
 
-void TextureDebugRenderer::AfterRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData)
+void TextureDebugRenderer::AfterRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData)
 {
 }
 

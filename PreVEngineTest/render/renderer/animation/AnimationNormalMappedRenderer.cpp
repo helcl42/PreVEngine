@@ -1,5 +1,6 @@
 #include "AnimationNormalMappedRenderer.h"
 
+#include "../RenderContextUserData.h"
 #include "pipeline/AnimationNormalMappedPipeline.h"
 #include "shader/AnimationNormalMappedShader.h"
 
@@ -18,8 +19,6 @@
 #include <prev/scene/AllocatorProvider.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
-
-#include <memory>
 
 namespace prev_test::render::renderer::animation {
 AnimationNormalMappedRenderer::AnimationNormalMappedRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)

@@ -4,16 +4,16 @@
 #include "../../../General.h"
 #include "../../IModel.h"
 #include "../../pipeline/IPipeline.h"
-#include "../IRenderer.h"
 
+#include "../../../General.h"
+
+#include <prev/render/IRenderer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
 
-#include <memory>
-
 namespace prev_test::render::renderer::debug {
-class TextureDebugRenderer final : public IRenderer<DefaultRenderContextUserData> {
+class TextureDebugRenderer final : public prev::render::IRenderer<SceneNodeFlags, prev::render::DefaultRenderContextUserData> {
 public:
     TextureDebugRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass);
 
@@ -22,15 +22,15 @@ public:
 public:
     void Init() override;
 
-    void BeforeRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override;
+    void BeforeRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData) override;
 
-    void PreRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override;
+    void PreRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData) override;
 
-    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override;
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const prev::render::DefaultRenderContextUserData& renderContextUserData) override;
 
-    void PostRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override;
+    void PostRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData) override;
 
-    void AfterRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override;
+    void AfterRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData) override;
 
     void ShutDown() override;
 

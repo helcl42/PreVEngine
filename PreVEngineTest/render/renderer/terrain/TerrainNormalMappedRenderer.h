@@ -2,19 +2,19 @@
 #define __TERRAIN_NORMAL_MAPPED_RENDERER_H__
 
 #include "../../pipeline/IPipeline.h"
-#include "../IRenderer.h"
+#include "../RenderContextUserData.h"
 
+#include "../../../General.h"
 #include "../../../component/light/LightCommon.h"
 #include "../../../component/shadow/ShadowsCommon.h"
 
+#include <prev/render/IRenderer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
 
-#include <memory>
-
 namespace prev_test::render::renderer::terrain {
-class TerrainNormalMappedRenderer final : public IRenderer<NormalRenderContextUserData> {
+class TerrainNormalMappedRenderer final : public prev::render::IRenderer<SceneNodeFlags, NormalRenderContextUserData> {
 public:
     TerrainNormalMappedRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass);
 

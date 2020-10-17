@@ -4,7 +4,6 @@
 #include "shader/FlareShader.h"
 
 #include "../../../common/AssetManager.h"
-
 #include "../../../component/sky/ILensFlareComponent.h"
 
 #include <prev/core/DeviceProvider.h>
@@ -13,8 +12,6 @@
 #include <prev/scene/AllocatorProvider.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
-
-#include <memory>
 
 namespace prev_test::render::renderer::sky {
 LensFlareRenderer::LensFlareRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
