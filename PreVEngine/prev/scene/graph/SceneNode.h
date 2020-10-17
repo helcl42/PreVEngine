@@ -2,6 +2,7 @@
 #define __SCENE_GRAPH_H__
 
 #include "../../util/Utils.h"
+#include "../SceneEvents.h"
 
 #include "ISceneNode.h"
 
@@ -54,7 +55,7 @@ public:
             child->ShutDown();
         }
 
-        prev::event::EventChannel::Broadcast(SceneNodeShutDownEvent{ GetId() });
+        prev::event::EventChannel::Broadcast(prev::scene::SceneNodeShutDownEvent{ GetId() });
         m_flags = prev::common::FlagSet<NodeFlagsType>();
     }
 

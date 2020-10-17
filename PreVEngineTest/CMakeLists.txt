@@ -81,6 +81,15 @@ FILE(GLOB RENDER_RENDERER_WATER_SRC_LIST "render/renderer/water/*.h" "render/ren
 FILE(GLOB RENDER_RENDERER_WATER_PIPELINE_SRC_LIST "render/renderer/water/pipeline/*.h" "render/renderer/water/pipeline/*.cpp")
 FILE(GLOB RENDER_RENDERER_WATER_SHADER_SRC_LIST "render/renderer/water/shader/*.h" "render/renderer/water/shader/*.cpp")
 
+FILE(GLOB SCENE_SRC_LIST "scene/*.h" "scene/*.cpp")
+FILE(GLOB SCENE_LIGHT_SRC_LIST "scene/light/*.h" "scene/light/*.cpp")
+FILE(GLOB SCENE_RAY_CASTING_SRC_LIST "scene/ray_casting/*.h" "scene/ray_casting/*.cpp")
+FILE(GLOB SCENE_ROBOT_SRC_LIST "scene/robot/*.h" "scene/robot/*.cpp")
+FILE(GLOB SCENE_SHADOW_SRC_LIST "scene/shadow/*.h" "scene/shadow/*.cpp")
+FILE(GLOB SCENE_SKY_SRC_LIST "scene/sky/*.h" "scene/sky/*.cpp")
+FILE(GLOB SCENE_TERRAIN_SRC_LIST "scene/terrain/*.h" "scene/terrain/*.cpp")
+FILE(GLOB SCENE_WATER_SRC_LIST "scene/water/*.h" "scene/water/*.cpp")
+
 SOURCE_GROUP("" FILES ${ROOT_SRC_LIST})
 
 SOURCE_GROUP("common" FILES ${COMMON_SRC_LIST})
@@ -155,6 +164,15 @@ SOURCE_GROUP("render/renderer/water" FILES ${RENDER_RENDERER_WATER_SRC_LIST})
 SOURCE_GROUP("render/renderer/water/pipeline" FILES ${RENDER_RENDERER_WATER_PIPELINE_SRC_LIST})
 SOURCE_GROUP("render/renderer/water/shader" FILES ${RENDER_RENDERER_WATER_SHADER_SRC_LIST})
 
+SOURCE_GROUP("scene" FILES ${SCENE_SRC_LIST})
+SOURCE_GROUP("scene/light" FILES ${SCENE_LIGHT_SRC_LIST})
+SOURCE_GROUP("scene/ray_casting" FILES ${SCENE_RAY_CASTING_SRC_LIST})
+SOURCE_GROUP("scene/robot" FILES ${SCENE_ROBOT_SRC_LIST})
+SOURCE_GROUP("scene/shadow" FILES ${SCENE_SHADOW_SRC_LIST})
+SOURCE_GROUP("scene/sky" FILES ${SCENE_SKY_SRC_LIST})
+SOURCE_GROUP("scene/terrain" FILES ${SCENE_TERRAIN_SRC_LIST})
+SOURCE_GROUP("scene/water" FILES ${SCENE_WATER_SRC_LIST})
+
 add_executable(${PROJECT_NAME} 
     ${ROOT_SRC_LIST}
     ${COMMON_SRC_LIST}
@@ -213,6 +231,14 @@ add_executable(${PROJECT_NAME}
     ${RENDER_RENDERER_WATER_SRC_LIST}
     ${RENDER_RENDERER_WATER_PIPELINE_SRC_LIST}
     ${RENDER_RENDERER_WATER_SHADER_SRC_LIST}
+    ${SCENE_SRC_LIST}
+    ${SCENE_LIGHT_SRC_LIST}
+    ${SCENE_RAY_CASTING_SRC_LIST}
+    ${SCENE_ROBOT_SRC_LIST}
+    ${SCENE_SHADOW_SRC_LIST}
+    ${SCENE_SKY_SRC_LIST}
+    ${SCENE_TERRAIN_SRC_LIST}
+    ${SCENE_WATER_SRC_LIST}
 )
 
 #---------------Find PreVEngine---------------
