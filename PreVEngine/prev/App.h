@@ -2,6 +2,7 @@
 #define __APP_H__
 
 #include "core/Engine.h"
+#include "scene/graph/ISceneNode.h"
 
 namespace prev {
 template <typename NodeFlagsType>
@@ -18,26 +19,21 @@ public:
     virtual ~App() = default;
 
 protected:
-    virtual void OnEngineInit() = 0;
-
-    virtual void OnSceneInit() = 0;
-
-    virtual void OnSceneGraphInit() = 0;
+    virtual std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> > CreateRootNode() const = 0;
 
 public:
     void Init()
     {
         m_engine->Init();
 
-        OnEngineInit();
-
         m_engine->InitScene();
 
-        OnSceneInit();
+        auto root = CreateRootNode();
+        m_engine->GetScene()->SetRootNode(root);
 
         m_engine->InitSceneGraph();
 
-        OnSceneGraphInit();
+        // TODO create renderer here ??
     }
 
     void Run()

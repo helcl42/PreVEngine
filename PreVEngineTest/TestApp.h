@@ -1,5 +1,5 @@
-#ifndef __PREV_TEST_APP_H__
-#define __PREV_TEST_APP_H__
+#ifndef __TEST_APP_H__
+#define __TEST_APP_H__
 
 #include "General.h"
 #include "scene/Root.h"
@@ -18,21 +18,10 @@ public:
     ~TestApp() = default;
 
 protected:
-    void OnEngineInit() override
-    {
-    }
-
-    void OnSceneInit() override
+    std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> > CreateRootNode() const override
     {
         auto scene = this->m_engine->GetScene();
-
-        auto rootNode = std::make_shared<scene::Root>(scene->GetRenderPass(), scene->GetSwapchain());
-
-        scene->SetRootNode(rootNode);
-    }
-
-    void OnSceneGraphInit() override
-    {
+        return std::make_shared<scene::Root>(scene->GetRenderPass(), scene->GetSwapchain());
     }
 };
 } // namespace prev_test

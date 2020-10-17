@@ -1,4 +1,4 @@
-#include "PrevTestApp.h"
+#include "TestApp.h"
 
 int main(int argc, char* argv[])
 {
