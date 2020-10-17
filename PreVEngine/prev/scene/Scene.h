@@ -5,13 +5,14 @@
 #include "../core/device/Device.h"
 #include "../core/memory/Allocator.h"
 #include "../event/EventHandler.h"
+#include "../render/IRenderer.h"
 #include "../render/Swapchain.h"
 #include "../window/WindowEvents.h"
 
-#include "graph/GraphTraversal.h"
-#include "IScene.h"
 #include "AllocatorProvider.h"
 #include "ComputeProvider.h"
+#include "IScene.h"
+#include "graph/GraphTraversal.h"
 
 #include <inttypes.h>
 #include <memory>
@@ -48,9 +49,15 @@ public:
         ComputeProvider::Instance().Set(m_computeQueue, m_computeAllocator);
     }
 
-    void InitSceneGraph() override
+    void PostInitScene(const std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> >& rootNode, const std::shared_ptr<prev::render::IRenderer<NodeFlagsType, prev::render::DefaultRenderContextUserData> >& rootRenderer) override
     {
+        m_rootNode = rootNode;
+        m_rootRenderer = rootRenderer;
+
+        prev::scene::graph::GraphTraversal<NodeFlagsType>::Instance().SetRootNode(m_rootNode);
+
         m_rootNode->Init();
+        m_rootRenderer->Init();
     }
 
     void Update(float deltaTime) override
@@ -66,21 +73,23 @@ public:
         if (m_swapchain->BeginFrame(frameBuffer, commandBuffer, frameInFlightIndex)) {
             prev::render::RenderContext renderContext{ frameBuffer, commandBuffer, frameInFlightIndex, m_swapchain->GetExtent() };
 
-            m_rootNode->Render(renderContext);
+            m_rootRenderer->BeforeRender(renderContext);
+            m_rootRenderer->PreRender(renderContext);
+            m_rootRenderer->Render(renderContext, m_rootNode);
+            m_rootRenderer->PostRender(renderContext);
+            m_rootRenderer->AfterRender(renderContext);
 
             m_swapchain->EndFrame();
         }
     }
 
-    void ShutDownSceneGraph() override
+    void ShutDown() override
     {
+        m_rootRenderer->ShutDown();
         m_rootNode->ShutDown();
 
         prev::scene::graph::GraphTraversal<NodeFlagsType>::Instance().SetRootNode(nullptr);
-    }
 
-    void ShutDown() override
-    {
         ComputeProvider::Instance().Reset();
         AllocatorProvider::Instance().SetAllocator(nullptr);
     }
@@ -111,11 +120,9 @@ public:
         return m_rootNode;
     }
 
-    void SetRootNode(const std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> >& root) override
+    std::shared_ptr<prev::render::IRenderer<NodeFlagsType, prev::render::DefaultRenderContextUserData> > GetRootRenderer() const override
     {
-        prev::scene::graph::GraphTraversal<NodeFlagsType>::Instance().SetRootNode(root);
-
-        m_rootNode = root;
+        return m_rootRenderer;
     }
 
 public:
@@ -183,7 +190,7 @@ private:
         m_swapchain->SetImageCount(m_config->framesInFlight);
         m_swapchain->Print();
     }
-    
+
 protected:
     std::shared_ptr<SceneConfig> m_config;
 
@@ -207,6 +214,8 @@ protected:
     std::shared_ptr<prev::render::Swapchain> m_swapchain;
 
     std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> > m_rootNode;
+
+    std::shared_ptr<prev::render::IRenderer<NodeFlagsType, prev::render::DefaultRenderContextUserData> > m_rootRenderer;
 
 private:
     prev::event::EventHandler<Scene, prev::window::WindowResizeEvent> m_windowResizeEvent{ *this };

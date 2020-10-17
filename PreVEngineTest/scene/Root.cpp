@@ -1,7 +1,6 @@
 #include "Root.h"
 
 #include "../common/AssetManager.h"
-#include "../render/renderer/MasterRenderer.h"
 #include "Cube.h"
 #include "Fire.h"
 #include "Plane.h"
@@ -25,9 +24,8 @@
 #include "water/WaterManager.h"
 
 namespace prev_test::scene {
-Root::Root(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::Swapchain>& swapchain)
+Root::Root()
     : SceneNode()
-    , m_masterRenderer(std::make_unique<prev_test::render::renderer::MasterRenderer>(renderPass, swapchain))
 {
 }
 
@@ -149,8 +147,6 @@ void Root::Init()
     AddChild(clouds);
 
     SceneNode::Init();
-
-    m_masterRenderer->Init();
 }
 
 void Root::Update(float deltaTime)
@@ -158,23 +154,8 @@ void Root::Update(float deltaTime)
     SceneNode::Update(deltaTime);
 }
 
-void Root::Render(prev::render::RenderContext& renderContext)
-{
-    m_masterRenderer->BeforeRender(renderContext);
-
-    m_masterRenderer->PreRender(renderContext);
-
-    m_masterRenderer->Render(renderContext, GetThis());
-
-    m_masterRenderer->PostRender(renderContext);
-
-    m_masterRenderer->AfterRender(renderContext);
-}
-
 void Root::ShutDown()
 {
-    m_masterRenderer->ShutDown();
-
     SceneNode::ShutDown();
 }
 

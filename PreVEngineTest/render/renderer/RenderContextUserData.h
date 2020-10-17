@@ -1,18 +1,14 @@
-#ifndef __DEFAULT_RENDER_CONTEXT_USER_DATA_H__
-#define __DEFAULT_RENDER_CONTEXT_USER_DATA_H__
+#ifndef __RENDER_CONTEXT_USER_DATA_H__
+#define __RENDER_CONTEXT_USER_DATA_H__
 
 #include "../../common/intersection/Frustum.h"
 
 #include <prev/common/Common.h>
 #include <prev/core/instance/Validation.h>
+#include <prev/render/DefaultRenderContextUserData.h>
 
 namespace prev_test::render {
-struct DefaultRenderContextUserData // inherit this in case you need any special data while rendering scene graph
-{
-    virtual ~DefaultRenderContextUserData() = default;
-};
-
-struct ShadowsRenderContextUserData : DefaultRenderContextUserData {
+struct ShadowsRenderContextUserData : prev::render::DefaultRenderContextUserData {
     const glm::mat4 viewMatrix;
 
     const glm::mat4 projectionMatrix;
@@ -33,7 +29,7 @@ struct ShadowsRenderContextUserData : DefaultRenderContextUserData {
     }
 };
 
-struct NormalRenderContextUserData : DefaultRenderContextUserData {
+struct NormalRenderContextUserData : prev::render::DefaultRenderContextUserData {
     const glm::mat4 viewMatrix;
 
     const glm::mat4 projectionMatrix;

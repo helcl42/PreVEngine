@@ -3,13 +3,14 @@
 
 #include "../core/device/PhysicalDevices.h"
 #include "../core/instance/Instance.h"
+#include "../render/IRenderer.h"
 #include "../scene/Scene.h"
+#include "../scene/graph/ISceneNode.h"
 #include "../util/Utils.h"
 #include "../window/Window.h"
-
-#include "device/Device.h"
 #include "CoreEvents.h"
 #include "DeviceProvider.h"
+#include "device/Device.h"
 
 #include <memory>
 #include <string>
@@ -57,9 +58,9 @@ public:
         m_scene->Init();
     }
 
-    void InitSceneGraph()
+    void PostInitScene(const std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> >& rootNode, const std::shared_ptr<prev::render::IRenderer<NodeFlagsType, prev::render::DefaultRenderContextUserData> >& rootRenderer)
     {
-        m_scene->InitSceneGraph();
+        m_scene->PostInitScene(rootNode, rootRenderer);
     }
 
     void MainLoop()
@@ -88,7 +89,6 @@ public:
 
     void ShutDown()
     {
-        m_scene->ShutDownSceneGraph();
         m_scene->ShutDown();
 
         DeviceProvider::Instance().SetDevice(nullptr);

@@ -44,11 +44,6 @@ public:
         }
     }
 
-    virtual void Render(prev::render::RenderContext& renderContext) override
-    {
-        // TODO remove ???
-    }
-
     virtual void ShutDown() override
     {
         for (auto& child : m_children) {

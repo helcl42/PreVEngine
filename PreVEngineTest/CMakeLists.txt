@@ -241,6 +241,8 @@ add_executable(${PROJECT_NAME}
     ${SCENE_WATER_SRC_LIST}
 )
 
+add_compile_definitions(RENDER_SELECTION)
+
 #---------------Find PreVEngine---------------
 if(NOT TARGET PreVEngine)
     add_subdirectory(../PreVEngine ${CMAKE_BINARY_DIR}/PreVEngine)

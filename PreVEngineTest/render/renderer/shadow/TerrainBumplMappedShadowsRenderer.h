@@ -2,17 +2,18 @@
 #define __TERRAIN_BUMP_MAPPED_SHADOWS_RENDERER_H__
 
 #include "../../../General.h"
-#include "../IRenderer.h"
 #include "../../pipeline/IPipeline.h"
+#include "../RenderContextUserData.h"
 
+#include "../../../General.h"
+
+#include <prev/render/IRenderer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
 
-#include <memory>
-
 namespace prev_test::render::renderer::shadow {
-class TerrainBumplMappedShadowsRenderer final : public IRenderer<ShadowsRenderContextUserData> {
+class TerrainBumplMappedShadowsRenderer final : public prev::render::IRenderer<SceneNodeFlags, ShadowsRenderContextUserData> {
 public:
     TerrainBumplMappedShadowsRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass);
 

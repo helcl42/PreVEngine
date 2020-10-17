@@ -1,21 +1,21 @@
 #ifndef __ANIMATION_CONE_STEP_MAPPED_RENDERER_H__
 #define __ANIMATION_CONE_STEP_MAPPED_RENDERER_H__
 
+#include "../../IAnimation.h"
+#include "../../pipeline/IPipeline.h"
+#include "../RenderContextUserData.h"
+
+#include "../../../General.h"
 #include "../../../component/light/LightCommon.h"
 #include "../../../component/shadow/ShadowsCommon.h"
 
-#include "../../IAnimation.h"
-#include "../../pipeline/IPipeline.h"
-#include "../IRenderer.h"
-
+#include <prev/render/IRenderer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
 
-#include <memory>
-
 namespace prev_test::render::renderer::animation {
-class AnimationConeStepMappedRenderer final : public IRenderer<NormalRenderContextUserData> {
+class AnimationConeStepMappedRenderer final : public prev::render::IRenderer<SceneNodeFlags, NormalRenderContextUserData> {
 public:
     AnimationConeStepMappedRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass);
 

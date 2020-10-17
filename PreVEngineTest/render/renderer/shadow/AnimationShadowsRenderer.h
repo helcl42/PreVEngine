@@ -1,19 +1,19 @@
 #ifndef __ANIMATION_SHADOWS_RENDERER_H__
 #define __ANIMATION_SHADOWS_RENDERER_H__
 
-#include "../../../General.h"
 #include "../../IAnimation.h"
 #include "../../pipeline/IPipeline.h"
-#include "../IRenderer.h"
+#include "../RenderContextUserData.h"
 
+#include "../../../General.h"
+
+#include <prev/render/IRenderer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
 
-#include <memory>
-
 namespace prev_test::render::renderer::shadow {
-class AnimationShadowsRenderer final : public IRenderer<ShadowsRenderContextUserData> {
+class AnimationShadowsRenderer final : public prev::render::IRenderer<SceneNodeFlags, ShadowsRenderContextUserData> {
 public:
     AnimationShadowsRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass);
 

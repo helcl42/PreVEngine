@@ -3,20 +3,21 @@
 
 #include "../../General.h"
 #include "../pipeline/IPipeline.h"
-#include "IRenderer.h"
+#include "RenderContextUserData.h"
+
+#include "../../General.h"
 
 #include <prev/common/ThreadPool.h>
+#include <prev/render/IRenderer.h>
 #include <prev/render/Swapchain.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
 
-#include <memory>
-
 //#define PARALLEL_RENDERING
 
 namespace prev_test::render::renderer {
-class MasterRenderer final : public IRenderer<DefaultRenderContextUserData> {
+class MasterRenderer final : public prev::render::IRenderer<SceneNodeFlags, prev::render::DefaultRenderContextUserData> {
 public:
     MasterRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::Swapchain>& swapchain);
 
@@ -25,15 +26,15 @@ public:
 public:
     void Init() override;
 
-    void BeforeRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override;
+    void BeforeRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData) override;
 
-    void PreRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override;
+    void PreRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData) override;
 
-    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData) override;
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const prev::render::DefaultRenderContextUserData& renderContextUserData) override;
 
-    void PostRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override;
+    void PostRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData) override;
 
-    void AfterRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData) override;
+    void AfterRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData) override;
 
     void ShutDown() override;
 
@@ -70,10 +71,10 @@ private:
 
 #ifdef PARALLEL_RENDERING
     template <typename ContextUserDataType>
-    void RenderParallel(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const std::vector<VkCommandBuffer>& commandBuffers, const ContextUserDataType& userData, const VkRect2D& area);
+    void RenderParallel(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root, const std::vector<std::unique_ptr<IRenderer<SceneNodeFlags, ContextUserDataType> > >& renderers, const std::vector<VkCommandBuffer>& commandBuffers, const ContextUserDataType& userData, const VkRect2D& area);
 #else
     template <typename ContextUserDataType>
-    void RenderSerial(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const ContextUserDataType& userData, const VkRect2D& area);
+    void RenderSerial(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root, const std::vector<std::unique_ptr<IRenderer<SceneNodeFlags, ContextUserDataType> > >& renderers, const ContextUserDataType& userData, const VkRect2D& area);
 #endif
 private:
     static const inline glm::vec4 DEFAULT_CLIP_PLANE{ 0.0f, -1.0f, 0.0f, 1000.0f };
@@ -84,19 +85,19 @@ private:
 
 private:
     // Default
-    std::vector<std::unique_ptr<IRenderer<NormalRenderContextUserData> > > m_defaultRenderers;
+    std::vector<std::unique_ptr<IRenderer<SceneNodeFlags, NormalRenderContextUserData> > > m_defaultRenderers;
 
     // Debug
-    std::vector<std::unique_ptr<IRenderer<DefaultRenderContextUserData> > > m_debugRenderers;
+    std::vector<std::unique_ptr<IRenderer<SceneNodeFlags, prev::render::DefaultRenderContextUserData> > > m_debugRenderers;
 
     // Shadows
-    std::vector<std::unique_ptr<IRenderer<ShadowsRenderContextUserData> > > m_shadowRenderers;
+    std::vector<std::unique_ptr<IRenderer<SceneNodeFlags, ShadowsRenderContextUserData> > > m_shadowRenderers;
 
     // Reflection
-    std::vector<std::unique_ptr<IRenderer<NormalRenderContextUserData> > > m_reflectionRenderers;
+    std::vector<std::unique_ptr<IRenderer<SceneNodeFlags, NormalRenderContextUserData> > > m_reflectionRenderers;
 
     // Refraction
-    std::vector<std::unique_ptr<IRenderer<NormalRenderContextUserData> > > m_refractionRenderers;
+    std::vector<std::unique_ptr<IRenderer<SceneNodeFlags, NormalRenderContextUserData> > > m_refractionRenderers;
 
 #ifdef PARALLEL_RENDERING
     // Parallel stuff
@@ -116,7 +117,7 @@ private:
 
 #ifdef PARALLEL_RENDERING
 template <typename ContextUserDataType>
-void MasterRenderer::RenderParallel(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const std::vector<VkCommandBuffer>& commandBuffers, const ContextUserDataType& userData, const VkRect2D& area)
+void MasterRenderer::RenderParallel(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root, const std::vector<std::unique_ptr<IRenderer<SceneNodeFlags, ContextUserDataType> > >& renderers, const std::vector<VkCommandBuffer>& commandBuffers, const ContextUserDataType& userData, const VkRect2D& area)
 {
     renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, area, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
@@ -157,7 +158,7 @@ void MasterRenderer::RenderParallel(const std::shared_ptr<prev::render::pass::Re
 }
 #else
 template <typename ContextUserDataType>
-void MasterRenderer::RenderSerial(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const ContextUserDataType& userData, const VkRect2D& area)
+void MasterRenderer::RenderSerial(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root, const std::vector<std::unique_ptr<IRenderer<SceneNodeFlags, ContextUserDataType> > >& renderers, const ContextUserDataType& userData, const VkRect2D& area)
 {
     renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, area);
 

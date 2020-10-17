@@ -19,8 +19,6 @@
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 
-#include <memory>
-
 namespace prev_test::render::renderer::terrain {
 TerrainParallaxMappedRenderer::TerrainParallaxMappedRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
     : m_renderPass(renderPass)

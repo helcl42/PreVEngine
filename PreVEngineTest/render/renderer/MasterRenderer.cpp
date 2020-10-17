@@ -55,15 +55,15 @@ void MasterRenderer::Init()
     InitRefraction();
 }
 
-void MasterRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData)
+void MasterRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData)
 {
 }
 
-void MasterRenderer::PreRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData)
+void MasterRenderer::PreRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData)
 {
 }
 
-void MasterRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData)
+void MasterRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const prev::render::DefaultRenderContextUserData& renderContextUserData)
 {
     // Shadows render pass
     RenderShadows(renderContext, node);
@@ -83,11 +83,11 @@ void MasterRenderer::Render(const prev::render::RenderContext& renderContext, co
 #endif
 }
 
-void MasterRenderer::PostRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData)
+void MasterRenderer::PostRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData)
 {
 }
 
-void MasterRenderer::AfterRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData)
+void MasterRenderer::AfterRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData)
 {
 }
 
@@ -120,13 +120,13 @@ void MasterRenderer::InitDefault()
     m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::font::FontRenderer>(m_defaultRenderPass));
     m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::particle::ParticlesRenderer>(m_defaultRenderPass));
 #ifdef RENDER_BOUNDING_VOLUMES
-    m_defaultRenderers.push_back(std::make_unique<BoundingVolumeDebugRenderer>(m_defaultRenderPass));
+    m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::debug::BoundingVolumeDebugRenderer>(m_defaultRenderPass));
 #endif
 #ifdef RENDER_RAYCASTS
-    m_defaultRenderers.push_back(std::make_unique<RayCastDebugRenderer>(m_defaultRenderPass));
+    m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::debug::RayCastDebugRenderer>(m_defaultRenderPass));
 #endif
 #ifdef RENDER_SELECTION
-    m_defaultRenderers.push_back(std::make_unique<SelectionDebugRenderer>(m_defaultRenderPass));
+    m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::debug::SelectionDebugRenderer>(m_defaultRenderPass));
 #endif
     m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SunRenderer>(m_defaultRenderPass));
     m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::LensFlareRenderer>(m_defaultRenderPass));

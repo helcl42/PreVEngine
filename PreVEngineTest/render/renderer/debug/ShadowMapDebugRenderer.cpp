@@ -16,8 +16,6 @@
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 
-#include <memory>
-
 namespace prev_test::render::renderer::debug {
 ShadowMapDebugRenderer::ShadowMapDebugRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
     : m_renderPass(renderPass)
@@ -52,11 +50,11 @@ void ShadowMapDebugRenderer::Init()
     m_quadModel = prev_test::render::model::ModelFactory{}.Create(std::move(quadMesh), std::move(vertexBuffer), std::move(indexBuffer));
 }
 
-void ShadowMapDebugRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData)
+void ShadowMapDebugRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData)
 {
 }
 
-void ShadowMapDebugRenderer::PreRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData)
+void ShadowMapDebugRenderer::PreRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData)
 {
     VkRect2D renderRect{};
     renderRect.extent.width = renderContext.fullExtent.width / 2;
@@ -84,7 +82,7 @@ void ShadowMapDebugRenderer::PreRender(const prev::render::RenderContext& render
 }
 
 // make a node with quad model & shadowMap texture ???
-void ShadowMapDebugRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const DefaultRenderContextUserData& renderContextUserData)
+void ShadowMapDebugRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const prev::render::DefaultRenderContextUserData& renderContextUserData)
 {
     const auto shadows = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
 
@@ -105,11 +103,11 @@ void ShadowMapDebugRenderer::Render(const prev::render::RenderContext& renderCon
     vkCmdDrawIndexed(renderContext.commandBuffer, m_quadModel->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
 }
 
-void ShadowMapDebugRenderer::PostRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData)
+void ShadowMapDebugRenderer::PostRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData)
 {
 }
 
-void ShadowMapDebugRenderer::AfterRender(const prev::render::RenderContext& renderContext, const DefaultRenderContextUserData& renderContextUserData)
+void ShadowMapDebugRenderer::AfterRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData)
 {
 }
 

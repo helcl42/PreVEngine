@@ -3,7 +3,6 @@
 
 #include "../../common/FlagSet.h"
 #include "../../common/TagSet.h"
-#include "../../render/RenderContext.h"
 
 #include <memory>
 #include <vector>
@@ -17,8 +16,6 @@ public:
     virtual void ShutDown() = 0;
 
     virtual void Update(float deltaTime) = 0;
-
-    virtual void Render(prev::render::RenderContext& renderContext) = 0;
 
     virtual const std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > >& GetChildren() const = 0;
 

@@ -3,16 +3,17 @@
 
 #include "../../../General.h"
 #include "../../pipeline/IPipeline.h"
-#include "../IRenderer.h"
+#include "../RenderContextUserData.h"
 
+#include "../../../General.h"
+
+#include <prev/render/IRenderer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
 
-#include <memory>
-
 namespace prev_test::render::renderer::shadow {
-class BumpMappedShadowsRenderer final : public IRenderer<ShadowsRenderContextUserData> {
+class BumpMappedShadowsRenderer final : public prev::render::IRenderer<SceneNodeFlags, ShadowsRenderContextUserData> {
 public:
     BumpMappedShadowsRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass);
 
