@@ -57,8 +57,7 @@ Here is a video:
 
 ## Todo: 
 
-- Refactor, Refactor, ...
-- Fix/Feature list is in Trello
-- Integrate PreVEnginePhysycs
+- Integrate PreVEnginePhysics
 - Integrate PreVEngineNetwork
+- Fix/Feature list is in Trello
 
