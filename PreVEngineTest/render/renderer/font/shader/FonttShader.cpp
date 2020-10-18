@@ -10,29 +10,35 @@ FonttShader::FonttShader(const VkDevice device)
 {
 }
 
-void FonttShader::InitVertexInputs()
+std::vector<VkVertexInputBindingDescription> FonttShader::CreateVertexInputBindingDescriptors() const
 {
-    m_inputBindingDescriptions = {
+    return {
         prev::util::VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC2 }), VK_VERTEX_INPUT_RATE_VERTEX)
     };
+}
 
-    m_inputAttributeDescriptions = {
+std::vector<VkVertexInputAttributeDescription> FonttShader::CreateInputAttributeDescriptors() const
+{
+    return {
         prev::util::VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32_SFLOAT, 0),
         prev::util::VkUtils::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC2 }))
     };
 }
 
-void FonttShader::InitDescriptorSets()
+std::vector<prev::render::shader::Shader::DescriptorSet> FonttShader::CreateDescriptorSets() const
 {
-    // vertex shader
-    AddDescriptorSet("uboVS", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT);
+    return {
+        // vertex shader
+        { "uboVS", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT },
 
-    // fragment shader
-    AddDescriptorSet("uboFS", 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
-    AddDescriptorSet("textureSampler", 2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
+        // fragment shader
+        { "uboFS", 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT },
+        { "textureSampler", 2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }
+    };
 }
 
-void FonttShader::InitPushConstantsBlocks()
+std::vector<prev::render::shader::Shader::PushConstantBlock> FonttShader::CreatePushConstantBlocks() const
 {
+    return {};
 }
 } // namespace prev_test::render::renderer::font::shader

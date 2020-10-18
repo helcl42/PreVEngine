@@ -10,27 +10,33 @@ BoundingVolumeDebugShader::BoundingVolumeDebugShader(const VkDevice device)
 {
 }
 
-void BoundingVolumeDebugShader::InitVertexInputs()
+std::vector<VkVertexInputBindingDescription> BoundingVolumeDebugShader::CreateVertexInputBindingDescriptors() const
 {
-    m_inputBindingDescriptions = {
+    return {
         prev::util::VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
     };
+}
 
-    m_inputAttributeDescriptions = {
+std::vector<VkVertexInputAttributeDescription> BoundingVolumeDebugShader::CreateInputAttributeDescriptors() const
+{
+    return {
         prev::util::VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0)
     };
 }
 
-void BoundingVolumeDebugShader::InitDescriptorSets()
+std::vector<prev::render::shader::Shader::DescriptorSet> BoundingVolumeDebugShader::CreateDescriptorSets() const
 {
-    // vertex shader
-    AddDescriptorSet("uboVS", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT);
+    return {
+        // vertex shader
+        { "uboVS", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT },
 
-    // fragment shader
-    AddDescriptorSet("uboFS", 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
+        // fragment shader
+        { "uboFS", 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }
+    };
 }
 
-void BoundingVolumeDebugShader::InitPushConstantsBlocks()
+std::vector<prev::render::shader::Shader::PushConstantBlock> BoundingVolumeDebugShader::CreatePushConstantBlocks() const
 {
+    return {};
 }
 } // namespace prev_test::render::renderer::debug::shader

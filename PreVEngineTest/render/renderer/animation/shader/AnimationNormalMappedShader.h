@@ -11,12 +11,14 @@ public:
     ~AnimationNormalMappedShader() = default;
 
 private:
-    void InitVertexInputs() override;
+    std::vector<VkVertexInputBindingDescription> CreateVertexInputBindingDescriptors() const override;
 
-    void InitDescriptorSets() override;
+    std::vector<VkVertexInputAttributeDescription> CreateInputAttributeDescriptors() const override;
 
-    void InitPushConstantsBlocks() override;
+    std::vector<DescriptorSet> CreateDescriptorSets() const override;
+
+    std::vector<PushConstantBlock> CreatePushConstantBlocks() const override;
 };
-}
+} // namespace prev_test::render::renderer::animation::shader
 
 #endif

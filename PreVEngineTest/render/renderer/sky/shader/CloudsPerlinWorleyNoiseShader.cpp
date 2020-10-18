@@ -10,16 +10,25 @@ CloudsPerlinWorleyNoiseShader::CloudsPerlinWorleyNoiseShader(const VkDevice devi
 {
 }
 
-void CloudsPerlinWorleyNoiseShader::InitVertexInputs()
+std::vector<VkVertexInputBindingDescription> CloudsPerlinWorleyNoiseShader::CreateVertexInputBindingDescriptors() const
 {
+    return {};
 }
 
-void CloudsPerlinWorleyNoiseShader::InitDescriptorSets()
+std::vector<VkVertexInputAttributeDescription> CloudsPerlinWorleyNoiseShader::CreateInputAttributeDescriptors() const
 {
-    AddDescriptorSet("outVolumeTexture", 0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT);
+    return {};
 }
 
-void CloudsPerlinWorleyNoiseShader::InitPushConstantsBlocks()
+std::vector<prev::render::shader::Shader::DescriptorSet> CloudsPerlinWorleyNoiseShader::CreateDescriptorSets() const
 {
+    return {
+        { "outVolumeTexture", 0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT }
+    };
+}
+
+std::vector<prev::render::shader::Shader::PushConstantBlock> CloudsPerlinWorleyNoiseShader::CreatePushConstantBlocks() const
+{
+    return {};
 }
 } // namespace prev_test::render::renderer::sky::shader

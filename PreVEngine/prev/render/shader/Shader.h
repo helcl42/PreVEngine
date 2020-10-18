@@ -47,29 +47,43 @@ public:
     const std::vector<VkVertexInputAttributeDescription>& GetVertexInputAttributeDescriptions() const;
 
 protected:
-    void AddDescriptorSet(const std::string& name, const uint32_t binding, const VkDescriptorType descType, const uint32_t descCount, const VkShaderStageFlags stageFlags);
+    struct DescriptorSet {
+        std::string name;
+        uint32_t binding;
+        VkDescriptorType descType;
+        uint32_t descCount;
+        VkShaderStageFlags stageFlags;
+    };
 
-    void AddPushConstantBlock(const VkShaderStageFlags stageFlags, const uint32_t offset, const uint32_t size);
+    struct PushConstantBlock {
+        VkShaderStageFlags stageFlags;
+        uint32_t offset;
+        uint32_t size;
+    };
 
 protected:
-    virtual void InitVertexInputs() = 0;
+    virtual std::vector<VkVertexInputBindingDescription> CreateVertexInputBindingDescriptors() const = 0;
 
-    virtual void InitDescriptorSets() = 0;
+    virtual std::vector<VkVertexInputAttributeDescription> CreateInputAttributeDescriptors() const = 0;
 
-    virtual void InitPushConstantsBlocks() = 0;
+    virtual std::vector<DescriptorSet> CreateDescriptorSets() const = 0;
+
+    virtual std::vector<PushConstantBlock> CreatePushConstantBlocks() const = 0;
 
 private:
     struct DescriptorSetInfo {
         size_t writeIndex;
-
         union {
             VkDescriptorBufferInfo bufferInfo;
-
             VkDescriptorImageInfo imageInfo;
         };
     };
 
 private:
+    void AddDescriptorSet(const std::string& name, const uint32_t binding, const VkDescriptorType descType, const uint32_t descCount, const VkShaderStageFlags stageFlags);
+
+    void AddPushConstantBlock(const VkShaderStageFlags stageFlags, const uint32_t offset, const uint32_t size);
+
     VkShaderModule CreateShaderModule(const std::vector<char>& spirv) const;
 
     void CheckBindings() const;

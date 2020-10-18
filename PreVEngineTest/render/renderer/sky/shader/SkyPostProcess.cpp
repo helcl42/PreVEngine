@@ -10,21 +10,30 @@ SkyPostProcessShader::SkyPostProcessShader(const VkDevice device)
 {
 }
 
-void SkyPostProcessShader::InitVertexInputs()
+std::vector<VkVertexInputBindingDescription> SkyPostProcessShader::CreateVertexInputBindingDescriptors() const
 {
+    return {};
 }
 
-void SkyPostProcessShader::InitDescriptorSets()
+std::vector<VkVertexInputAttributeDescription> SkyPostProcessShader::CreateInputAttributeDescriptors() const
 {
-    AddDescriptorSet("outFragColor", 0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT);
-
-    AddDescriptorSet("skyTex", 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_COMPUTE_BIT);
-    AddDescriptorSet("bloomTex", 2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_COMPUTE_BIT);
-
-    AddDescriptorSet("uboCS", 3, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT);
+    return {};
 }
 
-void SkyPostProcessShader::InitPushConstantsBlocks()
+std::vector<prev::render::shader::Shader::DescriptorSet> SkyPostProcessShader::CreateDescriptorSets() const
 {
+    return {
+        { "outFragColor", 0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT },
+
+        { "skyTex", 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_COMPUTE_BIT },
+        { "bloomTex", 2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_COMPUTE_BIT },
+
+        { "uboCS", 3, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT }
+    };
+}
+
+std::vector<prev::render::shader::Shader::PushConstantBlock> SkyPostProcessShader::CreatePushConstantBlocks() const
+{
+    return {};
 }
 } // namespace prev_test::render::renderer::sky::shader

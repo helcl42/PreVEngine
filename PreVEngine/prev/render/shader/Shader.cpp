@@ -34,9 +34,18 @@ bool Shader::Init()
             m_shaderStages.push_back(stageInfo);
         }
 
-        InitVertexInputs();
-        InitDescriptorSets();
-        InitPushConstantsBlocks();
+        m_inputBindingDescriptions = CreateVertexInputBindingDescriptors();
+        m_inputAttributeDescriptions = CreateInputAttributeDescriptors();
+
+        auto descriptorSets = CreateDescriptorSets();
+        for (const auto& ds : descriptorSets) {
+            AddDescriptorSet(ds.name, ds.binding, ds.descType, ds.descCount, ds.stageFlags);
+        }
+
+        auto pushConstantBlocks = CreatePushConstantBlocks();
+        for (const auto& pcb : pushConstantBlocks) {
+            AddPushConstantBlock(pcb.stageFlags, pcb.offset, pcb.size);
+        }
 
         m_currentDescriptorSetIndex = 0;
 

@@ -9,32 +9,37 @@ TerrainShader::TerrainShader(const VkDevice device)
 {
 }
 
-void TerrainShader::InitVertexInputs()
+std::vector<VkVertexInputBindingDescription> TerrainShader::CreateVertexInputBindingDescriptors() const
 {
-    m_inputBindingDescriptions = {
+    return {
         prev::util::VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
     };
+}
 
-    m_inputAttributeDescriptions = {
+std::vector<VkVertexInputAttributeDescription> TerrainShader::CreateInputAttributeDescriptors() const
+{
+    return {
         prev::util::VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
         prev::util::VkUtils::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
         prev::util::VkUtils::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 }))
     };
 }
 
-void TerrainShader::InitDescriptorSets()
+std::vector<prev::render::shader::Shader::DescriptorSet> TerrainShader::CreateDescriptorSets() const
 {
-    // vertex shader
-    AddDescriptorSet("uboVS", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT);
+    return {
+        // vertex shader
+        { "uboVS", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT },
 
-    // fragment shader
-    AddDescriptorSet("uboFS", 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
-    AddDescriptorSet("textureSampler", 2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4, VK_SHADER_STAGE_FRAGMENT_BIT);
-
-    AddDescriptorSet("depthSampler", 3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
+        // fragment shader
+        { "uboFS", 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT },
+        { "textureSampler", 2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4, VK_SHADER_STAGE_FRAGMENT_BIT },
+        { "depthSampler", 3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }
+    };
 }
 
-void TerrainShader::InitPushConstantsBlocks()
+std::vector<prev::render::shader::Shader::PushConstantBlock> TerrainShader::CreatePushConstantBlocks() const
 {
+    return {};
 }
 } // namespace prev_test::render::renderer::terrain::shader
