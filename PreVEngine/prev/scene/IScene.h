@@ -14,11 +14,17 @@ class IScene {
 public:
     virtual void Init() = 0;
 
-    virtual void PostInitScene(const std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> >& rootNode, const std::shared_ptr<prev::render::IRenderer<NodeFlagsType, prev::render::DefaultRenderContextUserData> >& rootRenderer) = 0;
+    virtual void InitSceneGraph(const std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> >& rootNode) = 0;
+
+    virtual void InitRenderer(const std::shared_ptr<prev::render::IRenderer<NodeFlagsType, prev::render::DefaultRenderContextUserData> >& rootRenderer) = 0;
 
     virtual void Update(float deltaTime) = 0;
 
     virtual void Render() = 0;
+
+    virtual void ShutDownRenderer() = 0;
+
+    virtual void ShutDownSceneGraph() = 0;
 
     virtual void ShutDown() = 0;
 
