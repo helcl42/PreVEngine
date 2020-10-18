@@ -3,7 +3,7 @@
 #ifdef RENDER_SELECTION
 
 #include "../../mesh/SphereMesh.h"
-#include "../../model/Model.h"
+#include "../../model/ModelFactory.h"
 #include "pipeline/SelectionDebugPipeline.h"
 #include "shader/SelectionDebugShader.h"
 
@@ -125,7 +125,8 @@ std::unique_ptr<IModel> SelectionDebugRenderer::CreateModel(prev::core::memory::
     auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
     indexBuffer->Data(mesh->GetIndices().data(), (uint32_t)mesh->GetIndices().size());
 
-    return std::make_unique<prev_test::render::model::Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));
+    prev_test::render::model::ModelFactory modelFactory{};
+    return modelFactory.Create(mesh, std::move(vertexBuffer), std::move(indexBuffer));
 }
 } // namespace prev_test::render::renderer::debug
 

@@ -1,5 +1,5 @@
 #include "BoundingVolumeModelFactory.h"
-#include "../../render/model/Model.h"
+#include "../../render/model/ModelFactory.h"
 
 #include <prev/scene/AllocatorProvider.h>
 
@@ -55,7 +55,9 @@ std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateAAB
     vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
     auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(*allocator);
     indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
-    return std::make_unique<prev_test::render::model::Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
+
+    prev_test::render::model::ModelFactory modelFactory{};
+    return modelFactory.Create(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
 }
 
 std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateSphereModel(const prev_test::common::intersection::Sphere& sphere) const
@@ -125,6 +127,8 @@ std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateSph
     vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
     auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(*allocator);
     indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
-    return std::make_unique<prev_test::render::model::Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
+
+    prev_test::render::model::ModelFactory modelFactory{};
+    return modelFactory.Create(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
 }
 } // namespace prev_test::component::ray_casting

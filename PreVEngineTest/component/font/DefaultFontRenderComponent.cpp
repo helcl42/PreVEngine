@@ -1,7 +1,7 @@
 #include "DefaultFontRenderComponent.h"
 
 #include "../../render/font/TextMeshFactory.h"
-#include "../../render/model/Model.h"
+#include "../../render/model/ModelFactory.h"
 
 #include <prev/scene/AllocatorProvider.h>
 
@@ -27,13 +27,14 @@ void DefaultFontRenderComponent::AddText(const std::shared_ptr<prev_test::render
     auto mesh = meshFactory.CreateTextMesh(text, m_fontMetaData);
 
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-    auto vertexBuffer = std::make_shared<prev::core::memory::buffer::VertexBuffer>(*allocator);
+    auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator);
     vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
 
-    auto indexBuffer = std::make_shared<prev::core::memory::buffer::IndexBuffer>(*allocator);
+    auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(*allocator);
     indexBuffer->Data(mesh->GetIndices().data(), (uint32_t)mesh->GetIndices().size());
 
-    auto model = std::make_shared<prev_test::render::model::Model>(std::move(mesh), vertexBuffer, indexBuffer);
+    prev_test::render::model::ModelFactory modelFactory{};
+    std::shared_ptr<prev_test::render::IModel> model = modelFactory.Create(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
 
     m_renderableTexts.push_back(RenderableText{ text, model });
 }

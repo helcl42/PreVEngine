@@ -2,7 +2,7 @@
 #include "../../common/AssetManager.h"
 #include "../../render/material/MaterialFactory.h"
 #include "../../render/mesh/CubeMesh.h"
-#include "../../render/model/Model.h"
+#include "../../render/model/ModelFactory.h"
 #include "SkyBoxComponent.h"
 
 #include <prev/core/memory/image/ImageBuffer.h>
@@ -36,7 +36,9 @@ std::unique_ptr<prev_test::render::IModel> SkyBoxComponentFactory::CreateModel(p
     vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
     auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
     indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
-    return std::make_unique<prev_test::render::model::Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
+
+    prev_test::render::model::ModelFactory modelFactory{};
+    return modelFactory.Create(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
 }
 
 std::unique_ptr<prev_test::render::IMaterial> SkyBoxComponentFactory::CreateMaterial(prev::core::memory::Allocator& allocator, const std::vector<std::string>& textureFilenames) const

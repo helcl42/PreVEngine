@@ -1,9 +1,8 @@
 #include "ParticleSystemComponentFactory.h"
 #include "../../common/AssetManager.h"
-#include "../../render/material/Material.h"
 #include "../../render/material/MaterialFactory.h"
 #include "../../render/mesh/QuadMesh.h"
-#include "../../render/model/Model.h"
+#include "../../render/model/ModelFactory.h"
 #include "ParticleSystemComponent.h"
 #include "RandomDirectionParticleFactory.h"
 #include "RandomInConeParticleFactory.h"
@@ -74,6 +73,8 @@ std::shared_ptr<prev_test::render::IModel> ParticleSystemComponentFactory::Creat
     vertexBuffer->Data(mesh->GetVertexData(), static_cast<uint32_t>(mesh->GetVertices().size()), mesh->GetVertexLayout().GetStride());
     auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
     indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
-    return std::make_shared<prev_test::render::model::Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
+
+    prev_test::render::model::ModelFactory modelFactory{};
+    return modelFactory.Create(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
 }
 } // namespace prev_test::component::particle
