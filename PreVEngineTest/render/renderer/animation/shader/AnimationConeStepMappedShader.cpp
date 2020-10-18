@@ -1,4 +1,5 @@
 #include "AnimationConeStepMappedShader.h"
+#include "../../../../common/AssetManager.h"
 #include "../../../VertexLayout.h"
 
 #include <prev/util/VkUtils.h>
@@ -7,6 +8,14 @@ namespace prev_test::render::renderer::animation::shader {
 AnimationConeStepMappedShader::AnimationConeStepMappedShader(const VkDevice device)
     : Shader(device)
 {
+}
+
+std::map<VkShaderStageFlagBits, std::string> AnimationConeStepMappedShader::GetPaths()
+{
+    return {
+        { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/animation/animation_cone_step_mapped_vert.spv") },
+        { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/animation/animation_cone_step_mapped_frag.spv") }
+    };
 }
 
 std::vector<VkVertexInputBindingDescription> AnimationConeStepMappedShader::CreateVertexInputBindingDescriptors() const

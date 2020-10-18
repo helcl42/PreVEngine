@@ -1,6 +1,5 @@
 #include "CloudsFactory.h"
 
-#include "../../common/AssetManager.h"
 #include "../../render/renderer/sky/pipeline/CloudsPipeline.h"
 #include "../../render/renderer/sky/shader/CloudsShader.h"
 
@@ -27,7 +26,7 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsFactory::Create(c
     auto computeAllocator = prev::scene::ComputeProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory{};
-    auto shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::CloudsShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/clouds_comp.spv") } });
+    auto shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::CloudsShader>(*device, prev_test::render::renderer::sky::shader::CloudsShader::GetPaths());
 
     auto pipeline = std::make_unique<prev_test::render::renderer::sky::pipeline::CloudsPipeline>(*device, *shader);
     pipeline->Init();

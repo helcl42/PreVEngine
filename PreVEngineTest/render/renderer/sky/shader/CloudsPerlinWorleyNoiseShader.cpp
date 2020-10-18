@@ -1,5 +1,5 @@
 #include "CloudsPerlinWorleyNoiseShader.h"
-
+#include "../../../../common/AssetManager.h"
 #include "../../../VertexLayout.h"
 
 #include <prev/util/VkUtils.h>
@@ -8,6 +8,13 @@ namespace prev_test::render::renderer::sky::shader {
 CloudsPerlinWorleyNoiseShader::CloudsPerlinWorleyNoiseShader(const VkDevice device)
     : Shader(device)
 {
+}
+
+std::map<VkShaderStageFlagBits, std::string> CloudsPerlinWorleyNoiseShader::GetPaths()
+{
+    return {
+        { VK_SHADER_STAGE_COMPUTE_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/clouds_perlin_worley_noise_3d_comp.spv") }
+    };
 }
 
 std::vector<VkVertexInputBindingDescription> CloudsPerlinWorleyNoiseShader::CreateVertexInputBindingDescriptors() const

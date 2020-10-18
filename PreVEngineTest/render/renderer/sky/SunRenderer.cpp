@@ -1,11 +1,9 @@
 #include "SunRenderer.h"
-
 #include "pipeline/SunOcclusionPipeline.h"
 #include "shader/SunOcclusionShader.h"
 
 #include "SkyEvents.h"
 
-#include "../../../common/AssetManager.h"
 #include "../../../component/sky/ISunComponent.h"
 
 #include <prev/core/DeviceProvider.h>
@@ -28,12 +26,12 @@ void SunRenderer::Init()
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::SunOcclusionShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sun_occlusion_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sun_occlusion_frag.spv") } });
+    m_shader = shaderFactory.CreateShaderFromFiles<shader::SunOcclusionShader>(*device, shader::SunOcclusionShader::GetPaths());
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Sun Shader created\n");
 
-    m_pipeline = std::make_unique<prev_test::render::renderer::sky::pipeline::SunOcclusionPipeline>(*device, *m_renderPass, *m_shader);
+    m_pipeline = std::make_unique<pipeline::SunOcclusionPipeline>(*device, *m_renderPass, *m_shader);
     m_pipeline->Init();
 
     LOGI("Sun Pipeline created\n");

@@ -1,12 +1,9 @@
 #include "TextureDebugRenderer.h"
-
+#include "../../mesh/QuadMesh.h"
+#include "../../model/ModelFactory.h"
 #include "pipeline/TextureDebugPipeline.h"
 #include "shader/TextureDebugShader.h"
 
-#include "../../mesh/QuadMesh.h"
-#include "../../model/ModelFactory.h"
-
-#include "../../../common/AssetManager.h"
 #include "../../../component/water/IWaterOffscreenRenderPassComponent.h"
 
 #include <prev/core/DeviceProvider.h>
@@ -28,12 +25,12 @@ void TextureDebugRenderer::Init()
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::debug::shader::TextureDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/texture_debug_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/texture_debug_frag.spv") } });
+    m_shader = shaderFactory.CreateShaderFromFiles<shader::TextureDebugShader>(*device, shader::TextureDebugShader::GetPaths());
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Texture Debug Shader created\n");
 
-    m_pipeline = std::make_unique<prev_test::render::renderer::debug::pipeline::TextureDebugPipeline>(*device, *m_renderPass, *m_shader);
+    m_pipeline = std::make_unique<pipeline::TextureDebugPipeline>(*device, *m_renderPass, *m_shader);
     m_pipeline->Init();
 
     LOGI("Texture Debug Pipeline created\n");

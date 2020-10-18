@@ -1,5 +1,5 @@
 #include "WaterShader.h"
-
+#include "../../../../common/AssetManager.h"
 #include "../../../VertexLayout.h"
 
 #include <prev/util/VkUtils.h>
@@ -8,6 +8,14 @@ namespace prev_test::render::renderer::water::shader {
 WaterShader::WaterShader(const VkDevice device)
     : Shader(device)
 {
+}
+
+std::map<VkShaderStageFlagBits, std::string> WaterShader::GetPaths()
+{
+    return {
+        { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/water/water_vert.spv") },
+        { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/water/water_frag.spv") }
+    };
 }
 
 std::vector<VkVertexInputBindingDescription> WaterShader::CreateVertexInputBindingDescriptors() const

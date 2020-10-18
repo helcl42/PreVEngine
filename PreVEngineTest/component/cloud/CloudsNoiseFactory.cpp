@@ -1,6 +1,5 @@
 #include "CloudsNoiseFactory.h"
 
-#include "../../common/AssetManager.h"
 #include "../../render/renderer/sky/pipeline/CloudsPerlinWorleyNoisePipeline.h"
 #include "../../render/renderer/sky/shader/CloudsPerlinWorleyNoiseShader.h"
 
@@ -18,7 +17,7 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsNoiseFactory::Cre
     auto computeAllocator = prev::scene::ComputeProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory{};
-    auto shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::CloudsPerlinWorleyNoiseShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/clouds_perlin_worley_noise_3d_comp.spv") } });
+    auto shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::CloudsPerlinWorleyNoiseShader>(*device, prev_test::render::renderer::sky::shader::CloudsPerlinWorleyNoiseShader::GetPaths());
 
     auto pipeline = std::make_unique<prev_test::render::renderer::sky::pipeline::CloudsPerlinWorleyNoisePipeline>(*device, *shader);
     pipeline->Init();

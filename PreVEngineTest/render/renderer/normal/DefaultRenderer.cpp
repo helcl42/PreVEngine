@@ -1,9 +1,7 @@
 #include "DefaultRenderer.h"
-
 #include "pipeline/DefaultPipeline.h"
 #include "shader/DefaultShader.h"
 
-#include "../../../common/AssetManager.h"
 #include "../../../component/light/ILightComponent.h"
 #include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../../component/ray_casting/ISelectableComponent.h"
@@ -32,12 +30,12 @@ void DefaultRenderer::Init()
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::normal::shader::DefaultShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/default_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/default_frag.spv") } });
+    m_shader = shaderFactory.CreateShaderFromFiles<shader::DefaultShader>(*device, shader::DefaultShader::GetPaths());
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Default Shader created\n");
 
-    m_pipeline = std::make_unique<prev_test::render::renderer::normal::pipeline::DefaultPipeline>(*device, *m_renderPass, *m_shader);
+    m_pipeline = std::make_unique<pipeline::DefaultPipeline>(*device, *m_renderPass, *m_shader);
     m_pipeline->Init();
 
     LOGI("Default Pipeline created\n");

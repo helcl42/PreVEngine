@@ -1,5 +1,5 @@
 #include "ScreenSpaceShader.h"
-
+#include "../../../../common/AssetManager.h"
 #include "../../../VertexLayout.h"
 
 #include <prev/util/VkUtils.h>
@@ -8,6 +8,14 @@ namespace prev_test::render::renderer::common::shader {
 ScreenSpaceShader::ScreenSpaceShader(const VkDevice device)
     : Shader(device)
 {
+}
+
+std::map<VkShaderStageFlagBits, std::string> ScreenSpaceShader::GetPaths()
+{
+    return {
+        { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/common/screen_space_vert.spv") },
+        { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/common/screen_space_frag.spv") }
+    };
 }
 
 std::vector<VkVertexInputBindingDescription> ScreenSpaceShader::CreateVertexInputBindingDescriptors() const

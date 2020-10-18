@@ -1,5 +1,5 @@
 #include "FonttShader.h"
-
+#include "../../../../common/AssetManager.h"
 #include "../../../VertexLayout.h"
 
 #include <prev/util/VkUtils.h>
@@ -8,6 +8,14 @@ namespace prev_test::render::renderer::font::shader {
 FonttShader::FonttShader(const VkDevice device)
     : Shader(device)
 {
+}
+
+std::map<VkShaderStageFlagBits, std::string> FonttShader::GetPaths()
+{
+    return {
+        { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/font/font_vert.spv") },
+        { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/font/font_frag.spv") }
+    };
 }
 
 std::vector<VkVertexInputBindingDescription> FonttShader::CreateVertexInputBindingDescriptors() const

@@ -10,6 +10,9 @@ public:
 
     ~ParticlesShader() = default;
 
+public:
+    static std::map<VkShaderStageFlagBits, std::string> GetPaths();
+
 private:
     std::vector<VkVertexInputBindingDescription> CreateVertexInputBindingDescriptors() const override;
 

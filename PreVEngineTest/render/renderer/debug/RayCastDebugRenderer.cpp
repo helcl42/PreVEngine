@@ -5,7 +5,6 @@
 #include "pipeline/RayCastDebugPipeline.h"
 #include "shader/RayCastDebugShader.h"
 
-#include "../../../common/AssetManager.h"
 #include "../../../component/ray_casting/IRayCasterComponent.h"
 
 #include <prev/core/DeviceProvider.h>
@@ -27,12 +26,12 @@ void RayCastDebugRenderer::Init()
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::debug::shader::RayCastDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/raycast_debug_vert.spv") }, { VK_SHADER_STAGE_GEOMETRY_BIT, AssetManager::Instance().GetAssetPath("Shaders/raycast_debug_geom.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/raycast_debug_frag.spv") } });
+    m_shader = shaderFactory.CreateShaderFromFiles<shader::RayCastDebugShader>(*device, );
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("RayCast Debug Shader created\n");
 
-    m_pipeline = std::make_unique<prev_test::render::renderer::debug::pipeline::RayCastDebugPipeline>(*device, *m_renderPass, *m_shader);
+    m_pipeline = std::make_unique<pipeline::RayCastDebugPipeline>(*device, *m_renderPass, *m_shader);
     m_pipeline->Init();
 
     LOGI("RayCast Debug Pipeline created\n");

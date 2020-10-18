@@ -1,4 +1,5 @@
 #include "SkyShader.h"
+#include "../../../../common/AssetManager.h"
 
 #include <prev/render/shader/Shader.h>
 
@@ -6,6 +7,13 @@ namespace prev_test::render::renderer::sky::shader {
 SkyShader::SkyShader(const VkDevice device)
     : Shader(device)
 {
+}
+
+std::map<VkShaderStageFlagBits, std::string> SkyShader::GetPaths()
+{
+    return {
+        { VK_SHADER_STAGE_COMPUTE_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_comp.spv") }
+    };
 }
 
 std::vector<VkVertexInputBindingDescription> SkyShader::CreateVertexInputBindingDescriptors() const
