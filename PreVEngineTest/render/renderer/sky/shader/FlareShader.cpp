@@ -10,29 +10,34 @@ FlareShader::FlareShader(const VkDevice device)
 {
 }
 
-void FlareShader::InitVertexInputs()
+std::vector<VkVertexInputBindingDescription> FlareShader::CreateVertexInputBindingDescriptors() const
 {
-    m_inputBindingDescriptions = {
+    return {
         prev::util::VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
     };
+}
 
-    m_inputAttributeDescriptions = {
+std::vector<VkVertexInputAttributeDescription> FlareShader::CreateInputAttributeDescriptors() const
+{
+    return {
         prev::util::VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0)
     };
 }
 
-void FlareShader::InitDescriptorSets()
+std::vector<prev::render::shader::Shader::DescriptorSet> FlareShader::CreateDescriptorSets() const
 {
-    // vertex shader
-    AddDescriptorSet("uboVS", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT);
+    return {
+        // vertex shader
+        { "uboVS", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT },
 
-    // fragment shader
-    AddDescriptorSet("uboFS", 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
-
-    AddDescriptorSet("textureSampler", 2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
+        // fragment shader
+        { "uboFS", 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT },
+        { "textureSampler", 2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT },
+    };
 }
 
-void FlareShader::InitPushConstantsBlocks()
+std::vector<prev::render::shader::Shader::PushConstantBlock> FlareShader::CreatePushConstantBlocks() const
 {
+    return {};
 }
 } // namespace prev_test::render::renderer::sky::shader

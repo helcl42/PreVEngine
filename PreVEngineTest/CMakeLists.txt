@@ -242,6 +242,9 @@ add_executable(${PROJECT_NAME}
 )
 
 add_compile_definitions(RENDER_SELECTION)
+# add_compile_definitions(RENDER_RAYCASTS)
+# add_compile_definitions(RENDER_BOUNDING_VOLUMES)
+# add_compile_definitions(PARALLEL_RENDERING)
 
 #---------------Find PreVEngine---------------
 if(NOT TARGET PreVEngine)
