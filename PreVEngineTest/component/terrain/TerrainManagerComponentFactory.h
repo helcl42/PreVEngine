@@ -6,7 +6,7 @@
 namespace prev_test::component::terrain {
 class TerrainManagerComponentFactory final {
 public:
-    std::unique_ptr<ITerrainManagerComponent> TerrainManagerComponentFactory::Create() const;
+    std::unique_ptr<ITerrainManagerComponent> Create() const;
 };
 } // namespace prev_test::component::terrain
 

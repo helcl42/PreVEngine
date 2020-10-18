@@ -4,6 +4,8 @@
 #include "../../render/IModel.h"
 #include "IParticleFactory.h"
 
+#include <list>
+
 namespace prev_test::component::particle {
 class IParticleSystemComponent {
 public:
