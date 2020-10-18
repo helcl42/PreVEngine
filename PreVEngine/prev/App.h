@@ -32,8 +32,10 @@ public:
         m_engine->InitScene();
 
         auto root = CreateRootNode();
+        m_engine->InitSceneGraph(root);
+
         auto rootRenderer = CreateRootRenderer();
-        m_engine->PostInitScene(root, rootRenderer);
+        m_engine->InitRenderer(rootRenderer);
     }
 
     void Run()

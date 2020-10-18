@@ -49,14 +49,16 @@ public:
         ComputeProvider::Instance().Set(m_computeQueue, m_computeAllocator);
     }
 
-    void PostInitScene(const std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> >& rootNode, const std::shared_ptr<prev::render::IRenderer<NodeFlagsType, prev::render::DefaultRenderContextUserData> >& rootRenderer) override
+    void InitSceneGraph(const std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> >& rootNode) override
     {
+        prev::scene::graph::GraphTraversal<NodeFlagsType>::Instance().SetRootNode(rootNode);
         m_rootNode = rootNode;
-        m_rootRenderer = rootRenderer;
-
-        prev::scene::graph::GraphTraversal<NodeFlagsType>::Instance().SetRootNode(m_rootNode);
-
         m_rootNode->Init();
+    }
+
+    void InitRenderer(const std::shared_ptr<prev::render::IRenderer<NodeFlagsType, prev::render::DefaultRenderContextUserData> >& rootRenderer) override
+    {
+        m_rootRenderer = rootRenderer;
         m_rootRenderer->Init();
     }
 
@@ -83,13 +85,19 @@ public:
         }
     }
 
-    void ShutDown() override
+    void ShutDownRenderer() override
     {
         m_rootRenderer->ShutDown();
+    }
+
+    void ShutDownSceneGraph() override
+    {
         m_rootNode->ShutDown();
-
         prev::scene::graph::GraphTraversal<NodeFlagsType>::Instance().SetRootNode(nullptr);
+    }
 
+    void ShutDown() override
+    {
         ComputeProvider::Instance().Reset();
         AllocatorProvider::Instance().SetAllocator(nullptr);
     }

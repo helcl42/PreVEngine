@@ -58,9 +58,14 @@ public:
         m_scene->Init();
     }
 
-    void PostInitScene(const std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> >& rootNode, const std::shared_ptr<prev::render::IRenderer<NodeFlagsType, prev::render::DefaultRenderContextUserData> >& rootRenderer)
+    void InitSceneGraph(const std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> >& rootNode)
     {
-        m_scene->PostInitScene(rootNode, rootRenderer);
+        m_scene->InitSceneGraph(rootNode);
+    }
+
+    void InitRenderer(const std::shared_ptr<prev::render::IRenderer<NodeFlagsType, prev::render::DefaultRenderContextUserData> >& rootRenderer)
+    {
+        m_scene->InitRenderer(rootRenderer);
     }
 
     void MainLoop()
@@ -89,6 +94,8 @@ public:
 
     void ShutDown()
     {
+        m_scene->ShutDownRenderer();
+        m_scene->ShutDownSceneGraph();
         m_scene->ShutDown();
 
         DeviceProvider::Instance().SetDevice(nullptr);
