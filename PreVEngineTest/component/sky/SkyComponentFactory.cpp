@@ -1,6 +1,6 @@
 #include "SkyComponentFactory.h"
 #include "../../render/mesh/FullScreenQuadMesh.h"
-#include "../../render/model/Model.h"
+#include "../../render/model/ModelFactory.h"
 #include "SkyCommon.h"
 #include "SkyComponent.h"
 
@@ -25,6 +25,8 @@ std::unique_ptr<prev_test::render::IModel> SkyComponentFactory::CreateModel(prev
     vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
     auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
     indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
-    return std::make_unique<prev_test::render::model::Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
+
+    prev_test::render::model::ModelFactory modelFactory{};
+    return modelFactory.Create(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
 }
 } // namespace prev_test::component::sky

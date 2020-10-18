@@ -2,8 +2,8 @@
 #include "LensFlareComponent.h"
 
 #include "../../common/AssetManager.h"
-#include "../../render/model/Model.h"
 #include "../../render/mesh/CentricQuadMesh.h"
+#include "../../render/model/ModelFactory.h"
 
 #include <prev/scene/AllocatorProvider.h>
 
@@ -42,7 +42,9 @@ std::unique_ptr<prev_test::render::IModel> LensFlareComponentFactory::CreateMode
     vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
     auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
     indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
-    return std::make_unique<prev_test::render::model::Model>(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
+
+    prev_test::render::model::ModelFactory modelFactory{};
+    return modelFactory.Create(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
 }
 
 std::unique_ptr<Flare> LensFlareComponentFactory::CreateFlare(prev::core::memory::Allocator& allocator, const std::string& filePath, const float scale) const
