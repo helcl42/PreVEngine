@@ -15,6 +15,7 @@ constexpr float WATER_CLIP_PLANE_OFFSET{ 0.08f };
 constexpr float WATER_WAVE_SPEED{ 0.03f };
 constexpr uint32_t REFRACTION_EXTENT_DIVIDER{ 3 };
 constexpr uint32_t REFLECTION_EXTENT_DIVIDER{ 4 };
+constexpr glm::vec4 WATER_COLOR{ 0.0f, 0.3f, 0.5f, 1.0f };
 
 } // namespace prev_test::component::water
 
