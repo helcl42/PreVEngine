@@ -1,9 +1,7 @@
 #include "AnimationShadowsRenderer.h"
-
 #include "pipeline/AnimatedShadowsPipeline.h"
 #include "shader/AnimatedShadowsShader.h"
 
-#include "../../../common/AssetManager.h"
 #include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../../component/render/IAnimationRenderComponent.h"
 #include "../../../component/transform/ITransformComponent.h"
@@ -27,12 +25,12 @@ void AnimationShadowsRenderer::Init()
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::shadow::shader::AnimatedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/animation_shadows_vert.spv") } });
+    m_shader = shaderFactory.CreateShaderFromFiles<shader::AnimatedShadowsShader>(*device, shader::AnimatedShadowsShader::GetPaths());
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Animation Shadows Shader created\n");
 
-    m_pipeline = std::make_unique<prev_test::render::renderer::shadow::pipeline::AnimatedShadowsPipeline>(*device, *m_renderPass, *m_shader);
+    m_pipeline = std::make_unique<pipeline::AnimatedShadowsPipeline>(*device, *m_renderPass, *m_shader);
     m_pipeline->Init();
 
     LOGI("Animation Shadows Pipeline created\n");

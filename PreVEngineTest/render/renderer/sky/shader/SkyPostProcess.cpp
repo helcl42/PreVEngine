@@ -1,5 +1,5 @@
 #include "SkyPostProcess.h"
-
+#include "../../../../common/AssetManager.h"
 #include "../../../VertexLayout.h"
 
 #include <prev/util/VkUtils.h>
@@ -8,6 +8,13 @@ namespace prev_test::render::renderer::sky::shader {
 SkyPostProcessShader::SkyPostProcessShader(const VkDevice device)
     : Shader(device)
 {
+}
+
+std::map<VkShaderStageFlagBits, std::string> SkyPostProcessShader::GetPaths()
+{
+    return {
+        { VK_SHADER_STAGE_COMPUTE_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_post_process_comp.spv") }
+    };
 }
 
 std::vector<VkVertexInputBindingDescription> SkyPostProcessShader::CreateVertexInputBindingDescriptors() const

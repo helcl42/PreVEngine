@@ -1,4 +1,5 @@
 #include "ShadowMapDebugShader.h"
+#include "../../../../common/AssetManager.h"
 #include "../../../VertexLayout.h"
 
 #include <prev/util/VkUtils.h>
@@ -7,6 +8,14 @@ namespace prev_test::render::renderer::debug::shader {
 ShadowMapDebugShader::ShadowMapDebugShader(const VkDevice device)
     : Shader(device)
 {
+}
+
+std::map<VkShaderStageFlagBits, std::string> ShadowMapDebugShader::GetPaths()
+{
+    return {
+        { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/debug/shadow_map_debug_vert.spv") },
+        { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/debug/shadow_map_debug_frag.spv") }
+    };
 }
 
 std::vector<VkVertexInputBindingDescription> ShadowMapDebugShader::CreateVertexInputBindingDescriptors() const

@@ -8,7 +8,6 @@
 #include "shader/SkyPostProcess.h"
 #include "shader/SkyShader.h"
 
-#include "../../../common/AssetManager.h"
 #include "../../../component/cloud/ICloudsComponent.h"
 #include "../../../component/light/ILightComponent.h"
 #include "../../../component/sky/ISkyComponent.h"
@@ -38,12 +37,12 @@ void SkyRenderer::Init()
     prev::render::shader::ShaderFactory shaderFactory;
 
     // compute sky
-    m_conmputeSkyShader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::SkyShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky_comp.spv") } });
+    m_conmputeSkyShader = shaderFactory.CreateShaderFromFiles<shader::SkyShader>(*device, shader::SkyShader::GetPaths());
     m_conmputeSkyShader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Sky Compute Shader created\n");
 
-    m_computeSkyPipeline = std::make_unique<prev_test::render::renderer::sky::pipeline::SkyPipeline>(*device, *m_conmputeSkyShader);
+    m_computeSkyPipeline = std::make_unique<pipeline::SkyPipeline>(*device, *m_conmputeSkyShader);
     m_computeSkyPipeline->Init();
 
     LOGI("Sky Compute Pipeline created\n");
@@ -52,12 +51,12 @@ void SkyRenderer::Init()
     m_uniformsPoolSkyCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
     // compute sky post process
-    m_conmputeSkyPostProcessShader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::SkyPostProcessShader>(*device, { { VK_SHADER_STAGE_COMPUTE_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky_post_process_comp.spv") } });
+    m_conmputeSkyPostProcessShader = shaderFactory.CreateShaderFromFiles<shader::SkyPostProcessShader>(*device, shader::SkyPostProcessShader::GetPaths());
     m_conmputeSkyPostProcessShader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Sky PostProcess Compute Shader created\n");
 
-    m_computeSkyPostProcessPipeline = std::make_unique<prev_test::render::renderer::sky::pipeline::SkyPostProcessPipeline>(*device, *m_conmputeSkyPostProcessShader);
+    m_computeSkyPostProcessPipeline = std::make_unique<pipeline::SkyPostProcessPipeline>(*device, *m_conmputeSkyPostProcessShader);
     m_computeSkyPostProcessPipeline->Init();
 
     LOGI("Sky PostProcess Compute Pipeline created\n");
@@ -66,7 +65,7 @@ void SkyRenderer::Init()
     m_uniformsPoolSkyPorstProcessCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
     // compositor
-    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::common::shader::ScreenSpaceShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/screen_space_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/screen_space_frag.spv") } });
+    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::common::shader::ScreenSpaceShader>(*device, prev_test::render::renderer::common::shader::ScreenSpaceShader::GetPaths());
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Sky Screen Space Shader created\n");

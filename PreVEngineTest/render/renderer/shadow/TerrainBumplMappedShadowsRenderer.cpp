@@ -1,9 +1,7 @@
 #include "TerrainBumplMappedShadowsRenderer.h"
-
 #include "pipeline/TerrainBumpMappedShadowsPipeline.h"
 #include "shader/TerrainBumpMappedShadowsShader.h"
 
-#include "../../../common/AssetManager.h"
 #include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../../component/terrain/ITerrainComponent.h"
 #include "../../../component/transform/ITransformComponent.h"
@@ -27,12 +25,12 @@ void TerrainBumplMappedShadowsRenderer::Init()
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::shadow::shader::TerrainBumpMappedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/terrain_bump_mapped_shadows_vert.spv") } });
+    m_shader = shaderFactory.CreateShaderFromFiles<shader::TerrainBumpMappedShadowsShader>(*device, shader::TerrainBumpMappedShadowsShader::GetPaths());
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Terrain Bump Mapped Shadows Shader created\n");
 
-    m_pipeline = std::make_unique<prev_test::render::renderer::shadow::pipeline::TerrainBumpMappedShadowsPipeline>(*device, *m_renderPass, *m_shader);
+    m_pipeline = std::make_unique<pipeline::TerrainBumpMappedShadowsPipeline>(*device, *m_renderPass, *m_shader);
     m_pipeline->Init();
 
     LOGI("Terrain Bump Mapped Shadows Pipeline created\n");

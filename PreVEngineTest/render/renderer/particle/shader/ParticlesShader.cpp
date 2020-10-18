@@ -1,5 +1,5 @@
 #include "ParticlesShader.h"
-
+#include "../../../../common/AssetManager.h"
 #include "../../../VertexLayout.h"
 
 #include <prev/util/VkUtils.h>
@@ -8,6 +8,14 @@ namespace prev_test::render::renderer::particle::shader {
 ParticlesShader::ParticlesShader(const VkDevice device)
     : Shader(device)
 {
+}
+
+std::map<VkShaderStageFlagBits, std::string> ParticlesShader::GetPaths()
+{
+    return {
+        { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/particle/particles_vert.spv") },
+        { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/particle/particles_frag.spv") }
+    };
 }
 
 std::vector<VkVertexInputBindingDescription> ParticlesShader::CreateVertexInputBindingDescriptors() const

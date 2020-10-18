@@ -1,9 +1,7 @@
 #include "BumpMappedShadowsRenderer.h"
-
 #include "pipeline/BumpMappedShadowsPipeline.h"
 #include "shader/BumpMappedShadowsShader.h"
 
-#include "../../../common/AssetManager.h"
 #include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../../component/render/IRenderComponent.h"
 #include "../../../component/transform/ITransformComponent.h"
@@ -27,12 +25,12 @@ void BumpMappedShadowsRenderer::Init()
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::shadow::shader::BumpMappedShadowsShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/bump_mapped_shadows_vert.spv") } });
+    m_shader = shaderFactory.CreateShaderFromFiles<shader::BumpMappedShadowsShader>(*device, shader::BumpMappedShadowsShader::GetPaths());
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Bump Mapped Shadows Shader created\n");
 
-    m_pipeline = std::make_unique<prev_test::render::renderer::shadow::pipeline::BumpMappedShadowsPipeline>(*device, *m_renderPass, *m_shader);
+    m_pipeline = std::make_unique<pipeline::BumpMappedShadowsPipeline>(*device, *m_renderPass, *m_shader);
     m_pipeline->Init();
 
     LOGI("Bump Mapped Shadows Pipeline created\n");

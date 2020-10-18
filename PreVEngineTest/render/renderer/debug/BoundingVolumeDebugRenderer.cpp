@@ -5,7 +5,6 @@
 #include "pipeline/BoundingVolumeDebugPipeline.h"
 #include "shader/BoundingVolumeDebugShader.h"
 
-#include "../../../common/AssetManager.h"
 #include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../../component/ray_casting/RayCastingCommon.h"
 
@@ -28,12 +27,12 @@ void BoundingVolumeDebugRenderer::Init()
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::debug::shader::BoundingVolumeDebugShader>(*device, { { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/bounding_volume_debug_vert.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/bounding_volume_debug_frag.spv") } });
+    m_shader = shaderFactory.CreateShaderFromFiles<shader::BoundingVolumeDebugShader>(*device, shader::BoundingVolumeDebugShader::GetPaths());
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Bounding Volume Debug Shader created\n");
 
-    m_pipeline = std::make_unique<prev_test::render::renderer::debug::pipeline::BoundingVolumeDebugPipeline>(*device, *m_renderPass, *m_shader);
+    m_pipeline = std::make_unique<pipeline::BoundingVolumeDebugPipeline>(*device, *m_renderPass, *m_shader);
     m_pipeline->Init();
 
     LOGI("Bounding Volume Debug Pipeline created\n");

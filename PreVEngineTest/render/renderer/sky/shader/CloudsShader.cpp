@@ -1,9 +1,17 @@
 #include "CloudsShader.h"
+#include "../../../../common/AssetManager.h"
 
 namespace prev_test::render::renderer::sky::shader {
 CloudsShader::CloudsShader(const VkDevice device)
     : Shader(device)
 {
+}
+
+std::map<VkShaderStageFlagBits, std::string> CloudsShader::GetPaths()
+{
+    return {
+        { VK_SHADER_STAGE_COMPUTE_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/clouds_comp.spv") }
+    };
 }
 
 std::vector<VkVertexInputBindingDescription> CloudsShader::CreateVertexInputBindingDescriptors() const

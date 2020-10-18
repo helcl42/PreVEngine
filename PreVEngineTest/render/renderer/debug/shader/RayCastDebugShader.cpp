@@ -1,4 +1,5 @@
 #include "RayCastDebugShader.h"
+#include "../../../../common/AssetManager.h"
 #include "../../../VertexLayout.h"
 
 #include <prev/util/VkUtils.h>
@@ -7,6 +8,14 @@ namespace prev_test::render::renderer::debug::shader {
 RayCastDebugShader::RayCastDebugShader(const VkDevice device)
     : Shader(device)
 {
+}
+
+std::map<VkShaderStageFlagBits, std::string> RayCastDebugShader::GetPaths()
+{
+    return {
+        { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/debug/raycast_debug_vert.spv") },
+        { VK_SHADER_STAGE_GEOMETRY_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/debug/raycast_debug_geom.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/raycast_debug_frag.spv") }
+    };
 }
 
 std::vector<VkVertexInputBindingDescription> RayCastDebugShader::CreateVertexInputBindingDescriptors() const

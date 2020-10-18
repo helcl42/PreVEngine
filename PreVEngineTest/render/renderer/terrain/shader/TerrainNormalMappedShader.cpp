@@ -1,4 +1,5 @@
 #include "TerrainNormalMappedShader.h"
+#include "../../../../common/AssetManager.h"
 #include "../../../VertexLayout.h"
 
 #include <prev/util/VkUtils.h>
@@ -7,6 +8,14 @@ namespace prev_test::render::renderer::terrain::shader {
 TerrainNormalMappedShader::TerrainNormalMappedShader(const VkDevice device)
     : Shader(device)
 {
+}
+
+std::map<VkShaderStageFlagBits, std::string> TerrainNormalMappedShader::GetPaths()
+{
+    return {
+        { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/terrain/terrain_normal_mapped_vert.spv") },
+        { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/terrain/terrain_normal_mapped_frag.spv") }
+    };
 }
 
 std::vector<VkVertexInputBindingDescription> TerrainNormalMappedShader::CreateVertexInputBindingDescriptors() const

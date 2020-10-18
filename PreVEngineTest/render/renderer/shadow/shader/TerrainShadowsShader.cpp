@@ -1,4 +1,5 @@
 #include "TerrainShadowsShader.h"
+#include "../../../../common/AssetManager.h"
 #include "../../../VertexLayout.h"
 
 #include <prev/util/VkUtils.h>
@@ -7,6 +8,13 @@ namespace prev_test::render::renderer::shadow::shader {
 TerrainShadowsShader::TerrainShadowsShader(const VkDevice device)
     : Shader(device)
 {
+}
+
+std::map<VkShaderStageFlagBits, std::string> TerrainShadowsShader::GetPaths()
+{
+    return {
+        { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/shadow/terrain_shadows_vert.spv") }
+    };
 }
 
 std::vector<VkVertexInputBindingDescription> TerrainShadowsShader::CreateVertexInputBindingDescriptors() const
