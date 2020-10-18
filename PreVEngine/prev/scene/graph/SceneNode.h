@@ -2,6 +2,7 @@
 #define __SCENE_GRAPH_H__
 
 #include "../../util/Utils.h"
+#include "../../event/EventsChannel.h"
 #include "../SceneEvents.h"
 
 #include "ISceneNode.h"
