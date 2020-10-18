@@ -3,6 +3,7 @@
 #include "../../common/AssetManager.h"
 #include "../../render/material/MaterialFactory.h"
 #include "../../render/model/Model.h"
+#include "WaterCommon.h"
 #include "WaterComponent.h"
 #include "WaterOffscreenRenderPassComponent.h"
 #include "WaterTileMesh.h"
@@ -16,11 +17,10 @@ std::unique_ptr<IWaterComponent> WaterComponentFactory::Create(const int x, cons
 {
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
-    const glm::vec4 waterColor{ 0.0f, 0.3f, 0.5f, 1.0f };
     const std::string dudvMapPath{ prev_test::common::AssetManager::Instance().GetAssetPath("Textures/waterDUDV.png") };
     const std::string normalMapPath{ prev_test::common::AssetManager::Instance().GetAssetPath("Textures/matchingNormalMap.png") };
 
-    auto material = CreateMaterial(*allocator, waterColor, dudvMapPath, normalMapPath, 1.0f, 0.4f);
+    auto material = CreateMaterial(*allocator, WATER_COLOR, dudvMapPath, normalMapPath, 1.0f, 0.4f);
     auto model = CreateModel(*allocator);
 
     return std::make_unique<WaterComponent>(x, z, std::move(material), std::move(model));
@@ -55,7 +55,7 @@ std::unique_ptr<prev_test::render::IMaterial> WaterComponentFactory::CreateMater
     normalImageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ normalImage->GetWidth(), normalImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)normalImage->GetBuffer() });
 
     prev_test::render::material::MaterialFactory materialFactory{};
-    return materialFactory.Create({ glm::vec3{ 1.0f }, 1.0f, 0.0f }, { image, std::move(imageBuffer) }, { normalImage, std::move(normalImageBuffer) });
+    return materialFactory.Create({ color, 1.0f, 0.0f }, { image, std::move(imageBuffer) }, { normalImage, std::move(normalImageBuffer) });
 }
 
 std::unique_ptr<prev_test::render::IModel> WaterComponentFactory::CreateModel(prev::core::memory::Allocator& allocator) const
