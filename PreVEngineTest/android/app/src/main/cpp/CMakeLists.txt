@@ -7,6 +7,7 @@ add_definitions(-DVK_USE_PLATFORM_ANDROID_KHR)
 add_definitions(-DUSE_VULKAN_WRAPPER)
 add_definitions(-DGLM_FORCE_CXX17)
 add_definitions(-DVK_NO_PROTOTYPES)
+add_definitions(-DRENDER_SELECTION)
 
 message("Platform = ${ANDROID_PLATFORM}")
 
@@ -14,9 +15,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17")
 
 # Set path to header files.
 include_directories(${ANDROID_NDK}/sources/android/native_app_glue)
-include_directories(../../../../..)
 include_directories(../../../../../../PreVEngine)
-include_directories(../../../../../../PreVEngine/prev/android)
+include_directories(../../../../../../PreVEngine/android)
 include_directories(../../../../../../PreVEngine/external)
 include_directories(../../../../../../PreVEngine/vk_wrapper)
 include_directories(../../../../../../Dependencies/glm)
@@ -50,7 +50,6 @@ aux_source_directory(../../../../../scene/shadow                            SRC_
 aux_source_directory(../../../../../scene/sky                               SRC_LIST)
 aux_source_directory(../../../../../scene/terrain                           SRC_LIST)
 aux_source_directory(../../../../../scene/water                             SRC_LIST)
-
 aux_source_directory(../../../../../render                                  SRC_LIST)
 aux_source_directory(../../../../../render/animation                        SRC_LIST)
 aux_source_directory(../../../../../render/font                             SRC_LIST)
@@ -120,8 +119,8 @@ aux_source_directory(../../../../../../PreVEngine/prev/window/impl           SRC
 aux_source_directory(../../../../../../PreVEngine/prev/window/impl/android   SRC_LIST)
 aux_source_directory(../../../../../../PreVEngine/prev/window/impl/linux     SRC_LIST)
 aux_source_directory(../../../../../../PreVEngine/prev/window/impl/windows   SRC_LIST)
-aux_source_directory(../../../../../../PreVEngine/prev/android               SRC_LIST)
 
+aux_source_directory(../../../../../../PreVEngine/android                    SRC_LIST)
 aux_source_directory(../../../../../../PreVEngine/vk_wrapper                 SRC_LIST)
 aux_source_directory(../../../../../../PreVEngine/external                   SRC_LIST)
 

@@ -1,10 +1,6 @@
 #ifndef __WINDOW_H__
 #define __WINDOW_H__
 
-#ifdef ANDROID
-#include "../android/android_native.h"
-#endif
-
 #include "../common/Common.h"
 #include "../event/EventHandler.h"
 #include "../event/EventsChannel.h"

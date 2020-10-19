@@ -2,15 +2,29 @@
 
 #include <prev/util/Utils.h>
 
+#if defined(__ANDROID__)
+#include <android_native.h>
+#endif
+#include <fstream>
+
 namespace prev_test::render::font {
 FontMetadataFile::FontMetadataFile(const std::string& path)
 {
-    std::ifstream fileStram{ path };
-    if (!fileStram.is_open()) {
+#if defined(__ANDROID__)
+    FILE* file = fopen(path.c_str(), "r");
+    if(!file) {
+        throw std::runtime_error("Could not open metadata file: " + path);
+    }
+    stdiobuf sbuf(file);
+    std::istream inStream(&sbuf);
+#else
+    std::ifstream inStream{path};
+#endif
+    if (!inStream.good()) {
         throw std::runtime_error("Could not open metadata file: " + path);
     }
 
-    m_allLinesKeyValues = GetAllLinesTokens(fileStram);
+    m_allLinesKeyValues = GetAllLinesTokens(inStream);
     if (m_allLinesKeyValues.size() > 0) {
         m_currentLine = m_allLinesKeyValues.at(0);
     }
@@ -46,12 +60,12 @@ std::vector<int> FontMetadataFile::GetValueAsInts(const std::string& variable) c
     return actualValues;
 }
 
-bool FontMetadataFile::ProcessNextLine(std::ifstream& inOutFileStream, std::map<std::string, std::string>& outTokens) const
+bool FontMetadataFile::ProcessNextLine(std::istream& inOutStream, std::map<std::string, std::string>& outTokens) const
 {
     outTokens.clear();
 
     std::string line;
-    std::getline(inOutFileStream, line);
+    std::getline(inOutStream, line);
 
     if (line.empty()) {
         return false;
@@ -67,12 +81,12 @@ bool FontMetadataFile::ProcessNextLine(std::ifstream& inOutFileStream, std::map<
     return true;
 }
 
-std::vector<std::map<std::string, std::string> > FontMetadataFile::GetAllLinesTokens(std::ifstream& inOutFileStream) const
+std::vector<std::map<std::string, std::string> > FontMetadataFile::GetAllLinesTokens(std::istream& inOutStream) const
 {
     std::vector<std::map<std::string, std::string> > result{};
 
     std::map<std::string, std::string> lineTokens{};
-    while (ProcessNextLine(inOutFileStream, lineTokens)) {
+    while (ProcessNextLine(inOutStream, lineTokens)) {
         result.emplace_back(lineTokens);
     }
 

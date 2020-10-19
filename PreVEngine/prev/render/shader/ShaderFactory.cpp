@@ -1,5 +1,8 @@
 #include "ShaderFactory.h"
 
+#if defined(__ANDROID__)
+#include <android_native.h>
+#endif
 #include <fstream>
 
 namespace prev::render::shader {
@@ -7,24 +10,21 @@ std::vector<char> ShaderFactory::LoadByteCodeFromFile(const std::string& filenam
 {
     LOGI("Load Shader: %s\n", filename.c_str());
 
-    std::ifstream fileStream(filename, std::ios_base::binary);
-
-    if (!fileStream.good()) {
+#if defined(__ANDROID__)
+    FILE* file = fopen(filename.c_str(), "rb");
+    if(!file) {
+        throw std::runtime_error("Could not open shader file: " + filename);
+    }
+    stdiobuf sbuf(file);
+    std::istream inStream(&sbuf);
+#else
+    std::ifstream inStream(filename, std::ios_base::binary);
+#endif
+    if (!inStream.good()) {
         throw std::runtime_error("Could not open shader file: " + filename);
     }
 
-    fileStream.seekg(0, fileStream.end);
-    size_t length = fileStream.tellg();
-    fileStream.seekg(0, fileStream.beg);
-
-    assert(length > 0 && "Could not read file content");
-
-    std::vector<char> buffer;
-
-    buffer.resize(length);
-    fileStream.read(&buffer[0], length);
-
-    fileStream.close();
+    std::vector<char> buffer((std::istreambuf_iterator<char>(inStream)), (std::istreambuf_iterator<char>()));
 
     return buffer;
 }

@@ -25,9 +25,9 @@ public:
     std::vector<int> GetValueAsInts(const std::string& variable) const;
 
 private:
-    bool ProcessNextLine(std::ifstream& inOutFileStream, std::map<std::string, std::string>& outTokens) const;
+    bool ProcessNextLine(std::istream& inOutStream, std::map<std::string, std::string>& outTokens) const;
 
-    std::vector<std::map<std::string, std::string> > GetAllLinesTokens(std::ifstream& inOutFileStream) const;
+    std::vector<std::map<std::string, std::string> > GetAllLinesTokens(std::istream& inOutStream) const;
 
 private:
     std::vector<std::map<std::string, std::string> > m_allLinesKeyValues;
