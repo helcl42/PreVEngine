@@ -23,7 +23,7 @@
 #define cTICK "\xFB" /* On Windows, use Square-root as tick mark */
 #define PAUSE system("pause")
 #elif __ANDROID__
-#include "../../android/android_native.h"
+#include <android_native.h>
 #define cTICK "\u2713"
 #define PAUSE
 #elif __LINUX__
