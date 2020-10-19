@@ -3,6 +3,8 @@
 
 #include <prev/common/Common.h>
 
+#include <vector>
+
 namespace prev_test::component::terrain {
 struct HeightMapInfo {
     std::vector<std::vector<float> > heights;
