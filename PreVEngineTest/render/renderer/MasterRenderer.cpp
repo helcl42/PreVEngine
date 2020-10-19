@@ -1,4 +1,5 @@
 #include "MasterRenderer.h"
+#include "CommandBuffersGroupFactory.h"
 
 #include "../../common/intersection/Frustum.h"
 #include "../../component/camera/ICameraComponent.h"
@@ -195,7 +196,7 @@ void MasterRenderer::InitShadows()
 
 #ifdef PARALLEL_RENDERING
     CommandBuffersGroupFactory buffersGroupFactory{};
-    for (uint32_t i = 0; i < ShadowsComponent::CASCADES_COUNT; i++) {
+    for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; i++) {
         m_shadowsCommandBufferGroups.emplace_back(buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetmageCount(), static_cast<uint32_t>(m_shadowRenderers.size())));
     }
 #endif
