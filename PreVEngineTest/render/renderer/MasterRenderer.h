@@ -4,6 +4,7 @@
 #include "../../General.h"
 #include "../pipeline/IPipeline.h"
 #include "RenderContextUserData.h"
+#include "CommandBuffersGroup.h"
 
 #include "../../General.h"
 
@@ -111,7 +112,7 @@ private:
 
     std::unique_ptr<CommandBuffersGroup> m_refractionCommandBufferGroups;
 
-    ThreadPool m_threadPool{ 8 };
+    prev::common::ThreadPool m_threadPool{ 8 };
 #endif
 };
 
@@ -138,7 +139,7 @@ void MasterRenderer::RenderParallel(const std::shared_ptr<prev::render::pass::Re
 
             VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 
-            RenderContext parallelRenderContext{ renderContext.frameBuffer, commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
+            prev::render::RenderContext parallelRenderContext{ renderContext.frameBuffer, commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
 
             renderer->PreRender(parallelRenderContext, userData);
             renderer->Render(parallelRenderContext, root, userData);
