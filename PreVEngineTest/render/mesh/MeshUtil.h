@@ -3,6 +3,8 @@
 
 #include <prev/common/Common.h>
 
+#include <vector>
+
 namespace prev_test::render::mesh {
 class MeshUtil {
 public:
