@@ -18,9 +18,9 @@ void EventChannelQueueManager::Remove(IEventChannelQueue& queue)
     m_eventChannelQueues.erase(it);
 }
 
-void EventChannelQueueManager::BroadcastAll()
+void EventChannelQueueManager::DispatchAll()
 {
-    std::vector<IEventChannelQueue*> queues(m_eventChannelQueues.size());
+    std::vector<IEventChannelQueue*> queues;
 
     {
         std::lock_guard<std::mutex> lock(m_mutex);

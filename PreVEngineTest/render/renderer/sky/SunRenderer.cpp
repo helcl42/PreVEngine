@@ -114,7 +114,7 @@ void SunRenderer::AfterRender(const prev::render::RenderContext& renderContext, 
     //#endif
     const float ratio = glm::clamp((static_cast<float>(m_passedSamples) / static_cast<float>(m_maxNumberOfSamples)), 0.0f, 1.0f) * 1.2f;
     //LOGI("Result: %s Passed samples: %lld Max: %lld Ratio: %f\n", VkResultStr(result),  m_passedSamples,  m_maxNumberOfSamples, ratio);
-    prev::event::EventChannel::Broadcast(prev_test::render::renderer::sky::SunVisibilityEvent{ ratio });
+    prev::event::EventChannel::Post(prev_test::render::renderer::sky::SunVisibilityEvent{ ratio });
 }
 
 void SunRenderer::ShutDown()
