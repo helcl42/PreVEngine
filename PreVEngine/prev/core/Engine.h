@@ -79,7 +79,7 @@ public:
             m_clock->UpdateClock();
             const auto deltaTime = m_clock->GetDelta();
 
-            prev::event::EventChannel::Broadcast(NewIterationEvent{ deltaTime, m_window->GetSize().width, m_window->GetSize().height });
+            prev::event::EventChannel::Post(NewIterationEvent{ deltaTime, m_window->GetSize().width, m_window->GetSize().height });
 
             if (m_window->HasFocus()) {
                 m_scene->Update(deltaTime);
@@ -112,7 +112,7 @@ public:
 
         InitSurface();
 
-        prev::event::EventChannel::Broadcast(prev::window::SurfaceChanged{ m_surface });
+        prev::event::EventChannel::Post(prev::window::SurfaceChanged{ m_surface });
     }
 
 private:

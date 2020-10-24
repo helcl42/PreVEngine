@@ -51,7 +51,7 @@ public:
             child->ShutDown();
         }
 
-        prev::event::EventChannel::Broadcast(prev::scene::SceneNodeShutDownEvent{ GetId() });
+        prev::event::EventChannel::Post(prev::scene::SceneNodeShutDownEvent{ GetId() });
         m_flags = prev::common::FlagSet<NodeFlagsType>();
     }
 

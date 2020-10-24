@@ -5,21 +5,13 @@
 #include "internal/EventChannelQueueManager.h"
 
 namespace prev::event {
+enum class DispatchType {
+    SYNC,
+    ASYNC,
+    QUEUED
+};
+
 class EventChannel final {
-private:
-    EventChannel() = default;
-
-    ~EventChannel() = default;
-
-private:
-    EventChannel(const EventChannel& other) = delete;
-
-    EventChannel& operator=(const EventChannel& other) = delete;
-
-    EventChannel(const EventChannel&& other) = delete;
-
-    EventChannel& operator=(const EventChannel&& other) = delete;
-
 public:
     template <typename MessageType, typename EventHandlerType>
     static void Add(EventHandlerType& handler)
@@ -33,24 +25,40 @@ public:
         internal::EventChannelQueue<MessageType>::Instance().Remove(handler);
     }
 
-    // Should I add new function PostToDispatch instead of enum ??
     template <typename MessageType>
-    static void Broadcast(const MessageType& message)
+    static void Post(const MessageType& message, const DispatchType dispatchType = DispatchType::SYNC)
     {
-        internal::EventChannelQueue<MessageType>::Instance().Broadcast(message);
+        switch (dispatchType) {
+        case DispatchType::ASYNC:
+            internal::EventChannelQueue<MessageType>::Instance().PostAsync(message);
+            break;
+        case DispatchType::QUEUED:
+            internal::EventChannelQueue<MessageType>::Instance().PostQueued(message);
+            break;
+        default:
+            internal::EventChannelQueue<MessageType>::Instance().Post(message);
+            break;
+        }
     }
 
-    template <typename MessageType>
-    static void BroadcastWithDispatch(const MessageType& message)
-    {
-        internal::EventChannelQueue<MessageType>::Instance().BroadcastWithDispatch(message);
-    }
-
-    // rename it BroadcastDispatched
     static void DispatchAll()
     {
-        internal::EventChannelQueueManager::Instance().BroadcastAll();
+        internal::EventChannelQueueManager::Instance().DispatchAll();
     }
+
+private:
+    EventChannel() = default;
+
+    ~EventChannel() = default;
+
+private:
+    EventChannel(const EventChannel& other) = delete;
+
+    EventChannel& operator=(const EventChannel& other) = delete;
+
+    EventChannel(const EventChannel&& other) = delete;
+
+    EventChannel& operator=(const EventChannel&& other) = delete;
 };
 } // namespace prev::event
 

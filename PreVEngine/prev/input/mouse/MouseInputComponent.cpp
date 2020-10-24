@@ -77,7 +77,7 @@ void MouseInputComponent::SetLocked(bool locked)
 
     m_locked = locked;
 
-    prev::event::EventChannel::Broadcast(MouseLockRequest{ locked });
+    prev::event::EventChannel::Post(MouseLockRequest{ locked });
 }
 
 bool MouseInputComponent::IsCursorVisible() const
@@ -93,7 +93,7 @@ void MouseInputComponent::SetCursorVisible(bool visible)
 
     m_cursorVisible = visible;
 
-    prev::event::EventChannel::Broadcast(MouseCursorVisibilityRequest{ visible });
+    prev::event::EventChannel::Post(MouseCursorVisibilityRequest{ visible });
 }
 
 void MouseInputComponent::operator()(const MouseEvent& action)

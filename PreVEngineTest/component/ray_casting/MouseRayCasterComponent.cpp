@@ -25,7 +25,7 @@ void MouseRayCasterComponent::Update(float deltaTime)
     }
 
     prev_test::common::intersection::Ray ray{ m_rayStartPosition, m_rayDirection, m_rayLength };
-    prev::event::EventChannel::Broadcast(RayEvent{ ray });
+    prev::event::EventChannel::Post(RayEvent{ ray });
 
 #ifdef RENDER_RAYCASTS
     RayModelFactory modelFactory{};

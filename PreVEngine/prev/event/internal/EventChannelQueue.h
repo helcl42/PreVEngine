@@ -1,6 +1,7 @@
 #ifndef __EVENT_CHANNEL_QUEUE_H__
 #define __EVENT_CHANNEL_QUEUE_H__
 
+#include "../../common/ThreadPool.h"
 #include "../../common/pattern/Singleton.h"
 #include "EventChannelQueueManager.h"
 #include "IEventChannelQueue.h"
@@ -12,27 +13,6 @@
 namespace prev::event::internal {
 template <typename EventType>
 class EventChannelQueue final : public prev::common::pattern::Singleton<EventChannelQueue<EventType> >, public IEventChannelQueue {
-private:
-    EventChannelQueue(EventChannelQueue&& other) = delete;
-
-    EventChannelQueue& operator=(EventChannelQueue&& other) = delete;
-
-    EventChannelQueue(const EventChannelQueue& other) = delete;
-
-    EventChannelQueue& operator=(const EventChannelQueue& other) = delete;
-
-private:
-    EventChannelQueue()
-        : prev::common::pattern::Singleton<EventChannelQueue<EventType> >()
-    {
-        EventChannelQueueManager::Instance().Add(*this);
-    }
-
-    ~EventChannelQueue()
-    {
-        EventChannelQueueManager::Instance().Remove(*this);
-    }
-
 public:
     template <typename EventHandlerType>
     void Add(EventHandlerType& handler)
@@ -59,12 +39,13 @@ public:
         m_originalPointers.erase(it);
     }
 
-    void Broadcast(const EventType& message)
+    void Post(const EventType& message)
     {
-        std::vector<std::function<void(const EventType&)> > currentHandlersCopy(m_handlers.size());
+        std::vector<std::function<void(const EventType&)> > currentHandlersCopy;
 
         {
             std::lock_guard<std::mutex> lock(m_mutex);
+
             currentHandlersCopy = m_handlers;
         }
 
@@ -73,24 +54,40 @@ public:
         }
     }
 
-    void BroadcastWithDispatch(const EventType& message)
+    void PostQueued(const EventType& message)
     {
         std::lock_guard<std::mutex> lock(m_mutex);
 
-        m_unsedMessages.emplace_back(message);
+        m_eventsToDeliver.emplace_back(message);
+    }
+
+    void PostAsync(const EventType& message)
+    {
+        m_threadPool.Enqueue([this, message]() {
+            std::vector<std::function<void(const EventType&)> > currentHandlersCopy;
+
+            {
+                std::lock_guard<std::mutex> lock(this->m_mutex);
+                currentHandlersCopy = m_handlers;
+            }
+
+            for (const auto& handler : m_handlers) {
+                handler(message);
+            }
+        });
     }
 
     void DispatchAll() override
     {
-        std::vector<std::function<void(const EventType&)> > currentHandlersCopy(m_handlers.size());
-        std::vector<EventType> currentUnsendMessages(m_unsedMessages.size());
+        std::vector<std::function<void(const EventType&)> > currentHandlersCopy;
+        std::vector<EventType> currentUnsendMessages;
 
         {
             std::lock_guard<std::mutex> lock(m_mutex);
-            currentHandlersCopy = m_handlers;
 
-            currentUnsendMessages = m_unsedMessages;
-            m_unsedMessages.clear();
+            currentHandlersCopy = m_handlers;
+            currentUnsendMessages = m_eventsToDeliver;
+            m_eventsToDeliver.clear();
         }
 
         for (const auto& message : currentUnsendMessages) {
@@ -99,6 +96,27 @@ public:
             }
         }
     }
+
+private:
+    EventChannelQueue()
+        : Singleton<EventChannelQueue<EventType> >()
+    {
+        EventChannelQueueManager::Instance().Add(*this);
+    }
+
+    ~EventChannelQueue()
+    {
+        EventChannelQueueManager::Instance().Remove(*this);
+    }
+
+private:
+    EventChannelQueue(EventChannelQueue&& other) = delete;
+
+    EventChannelQueue& operator=(EventChannelQueue&& other) = delete;
+
+    EventChannelQueue(const EventChannelQueue& other) = delete;
+
+    EventChannelQueue& operator=(const EventChannelQueue& other) = delete;
 
 private:
     template <typename EventHandlerType>
@@ -117,7 +135,9 @@ private:
 
     std::vector<void*> m_originalPointers;
 
-    std::vector<EventType> m_unsedMessages;
+    std::vector<EventType> m_eventsToDeliver;
+
+    prev::common::ThreadPool m_threadPool{ 1 };
 };
 } // namespace prev::event::internal
 
