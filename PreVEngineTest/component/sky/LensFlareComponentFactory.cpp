@@ -2,7 +2,7 @@
 #include "LensFlareComponent.h"
 
 #include "../../common/AssetManager.h"
-#include "../../render/mesh/CentricQuadMesh.h"
+#include "../../render/mesh/MeshFactory.h"
 #include "../../render/model/ModelFactory.h"
 
 #include <prev/scene/AllocatorProvider.h>
@@ -37,7 +37,8 @@ std::unique_ptr<ILensFlareComponent> LensFlareComponentFactory::Create() const
 
 std::unique_ptr<prev_test::render::IModel> LensFlareComponentFactory::CreateModel(prev::core::memory::Allocator& allocator) const
 {
-    auto mesh = std::make_unique<prev_test::render::mesh::CentricQuadMesh>();
+    prev_test::render::mesh::MeshFactory meshFactory{};
+    auto mesh = meshFactory.CreateCentricQuad();
     auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
     vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
     auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);

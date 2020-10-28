@@ -1,13 +1,12 @@
 #include "SelectionDebugRenderer.h"
 
 #ifdef RENDER_SELECTION
-
-#include "../../mesh/SphereMesh.h"
-#include "../../model/ModelFactory.h"
 #include "pipeline/SelectionDebugPipeline.h"
 #include "shader/SelectionDebugShader.h"
 
 #include "../../../component/ray_casting/ISelectableComponent.h"
+#include "../../mesh/MeshFactory.h"
+#include "../../model/ModelFactory.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
@@ -44,7 +43,9 @@ void SelectionDebugRenderer::Init()
     m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
     m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-    m_selectionPointModel = CreateModel(*allocator, std::make_unique<prev_test::render::mesh::SphereMesh>(1.0f, 32, 32));
+    prev_test::render::mesh::MeshFactory meshFactory{};
+    auto mesh = meshFactory.CreateSphere(1.0f, 32, 32);
+    m_selectionPointModel = CreateModel(*allocator, std::move(mesh));
 }
 
 void SelectionDebugRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)

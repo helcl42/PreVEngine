@@ -1,11 +1,12 @@
 #include "ParticleSystemComponentFactory.h"
-#include "../../common/AssetManager.h"
-#include "../../render/material/MaterialFactory.h"
-#include "../../render/mesh/QuadMesh.h"
-#include "../../render/model/ModelFactory.h"
 #include "ParticleSystemComponent.h"
 #include "RandomDirectionParticleFactory.h"
 #include "RandomInConeParticleFactory.h"
+
+#include "../../common/AssetManager.h"
+#include "../../render/material/MaterialFactory.h"
+#include "../../render/mesh/MeshFactory.h"
+#include "../../render/model/ModelFactory.h"
 
 #include <prev/core/memory/image/ImageBuffer.h>
 #include <prev/render/image/ImageFactory.h>
@@ -68,7 +69,8 @@ std::shared_ptr<prev_test::render::IMaterial> ParticleSystemComponentFactory::Cr
 
 std::shared_ptr<prev_test::render::IModel> ParticleSystemComponentFactory::CreateModel(prev::core::memory::Allocator& allocator) const
 {
-    auto mesh = std::make_unique<prev_test::render::mesh::QuadMesh>();
+    prev_test::render::mesh::MeshFactory meshFactory{};
+    auto mesh = meshFactory.CreateQuad();
     auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
     vertexBuffer->Data(mesh->GetVertexData(), static_cast<uint32_t>(mesh->GetVertices().size()), mesh->GetVertexLayout().GetStride());
     auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);

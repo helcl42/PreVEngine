@@ -1,9 +1,10 @@
 #include "SkyBoxComponentFactory.h"
+#include "SkyBoxComponent.h"
+
 #include "../../common/AssetManager.h"
 #include "../../render/material/MaterialFactory.h"
-#include "../../render/mesh/CubeMesh.h"
+#include "../../render/mesh/MeshFactory.h"
 #include "../../render/model/ModelFactory.h"
-#include "SkyBoxComponent.h"
 
 #include <prev/core/memory/image/ImageBuffer.h>
 #include <prev/render/image/ImageFactory.h>
@@ -31,7 +32,8 @@ std::unique_ptr<ISkyBoxComponent> SkyBoxComponentFactory::Create() const
 
 std::unique_ptr<prev_test::render::IModel> SkyBoxComponentFactory::CreateModel(prev::core::memory::Allocator& allocator) const
 {
-    auto mesh = std::make_unique<prev_test::render::mesh::CubeMesh>();
+    prev_test::render::mesh::MeshFactory meshFactory{};
+    auto mesh = meshFactory.CreateCube();
     auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
     vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
     auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);

@@ -1,8 +1,9 @@
 #include "SkyComponentFactory.h"
-#include "../../render/mesh/FullScreenQuadMesh.h"
-#include "../../render/model/ModelFactory.h"
 #include "SkyCommon.h"
 #include "SkyComponent.h"
+
+#include "../../render/mesh/MeshFactory.h"
+#include "../../render/model/ModelFactory.h"
 
 #include <prev/scene/AllocatorProvider.h>
 
@@ -20,7 +21,8 @@ std::unique_ptr<ISkyComponent> SkyComponentFactory::Create() const
 
 std::unique_ptr<prev_test::render::IModel> SkyComponentFactory::CreateModel(prev::core::memory::Allocator& allocator) const
 {
-    auto mesh = std::make_unique<prev_test::render::mesh::FullScreenQuadMesh>();
+    prev_test::render::mesh::MeshFactory meshFactory{};
+    auto mesh = meshFactory.CreateFullScreenQuad();
     auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
     vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
     auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
