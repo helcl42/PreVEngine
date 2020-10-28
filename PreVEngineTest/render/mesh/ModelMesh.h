@@ -1,13 +1,13 @@
-#ifndef __MESH_H__
-#define __MESH_H__
+#ifndef __MODEL_MESH_H__
+#define __MODEL_MESH_H__
 
 #include "../IMesh.h"
 #include "../VertexDataBuffer.h"
 
 namespace prev_test::render::mesh {
-class MeshFactory;
+class ModelMeshFactory;
 
-class Mesh final : public prev_test::render::IMesh {
+class ModelMesh final : public prev_test::render::IMesh {
 public:
     const prev_test::render::VertexLayout& GetVertexLayout() const override;
 
@@ -22,7 +22,7 @@ public:
     const std::vector<prev_test::render::MeshPart>& GetMeshParts() const override;
 
 private:
-    friend MeshFactory;
+    friend ModelMeshFactory;
 
 private:
     prev_test::render::VertexLayout m_vertexLayout;
@@ -39,4 +39,4 @@ private:
 };
 } // namespace prev_test::render::mesh
 
-#endif // !__MESH_H__
+#endif // !__MODEL_MESH_H__

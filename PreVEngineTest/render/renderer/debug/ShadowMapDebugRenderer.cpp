@@ -1,11 +1,11 @@
 #include "ShadowMapDebugRenderer.h"
-#include "../../mesh/QuadMesh.h"
-#include "../../model/ModelFactory.h"
 #include "pipeline/ShadowMapDebugPipeline.h"
 #include "shader/ShadowMapDebugShader.h"
 
 #include "../../../component/shadow/IShadowsComponent.h"
 #include "../../../component/shadow/ShadowsCommon.h"
+#include "../../mesh/MeshFactory.h"
+#include "../../model/ModelFactory.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
@@ -37,7 +37,8 @@ void ShadowMapDebugRenderer::Init()
     LOGI("ShadowMapDebug Pipeline created\n");
 
     // create quad model
-    auto quadMesh = std::make_unique<prev_test::render::mesh::QuadMesh>();
+    prev_test::render::mesh::MeshFactory meshFactory{};
+    auto quadMesh = meshFactory.CreateQuad();
 
     auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator);
     vertexBuffer->Data(quadMesh->GetVertexData(), quadMesh->GerVerticesCount(), quadMesh->GetVertexLayout().GetStride());

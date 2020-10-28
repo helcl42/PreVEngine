@@ -5,10 +5,8 @@
 
 #include "../../render/animation/AnimationFactory.h"
 #include "../../render/material/MaterialFactory.h"
-#include "../../render/mesh/CubeMesh.h"
 #include "../../render/mesh/MeshFactory.h"
-#include "../../render/mesh/PlaneMesh.h"
-#include "../../render/mesh/SphereMesh.h"
+#include "../../render/mesh/ModelMeshFactory.h"
 #include "../../render/model/ModelFactory.h"
 
 #include <prev/core/memory/image/ImageBuffer.h>
@@ -22,7 +20,8 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateCubeRenderCompon
 
     auto material = CreateMaterial(*allocator, texturePath, false, 10.0f, 1.0f);
 
-    auto mesh = std::make_unique<prev_test::render::mesh::CubeMesh>();
+    prev_test::render::mesh::MeshFactory meshFactory{};
+    auto mesh = meshFactory.CreateCube();
     auto model = CreateModel(*allocator, std::move(mesh));
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -34,7 +33,8 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateCubeRenderCompon
 
     auto material = CreateMaterial(*allocator, texturePath, normalPath, false, 10.0f, 1.0f);
 
-    auto mesh = std::make_unique<prev_test::render::mesh::CubeMesh>(true);
+    prev_test::render::mesh::MeshFactory meshFactory{};
+    auto mesh = meshFactory.CreateCube(true);
     auto model = CreateModel(*allocator, std::move(mesh));
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -46,7 +46,8 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateCubeRenderCompon
 
     auto material = CreateMaterial(*allocator, texturePath, normalPath, heightOrConeMapPath, false, 10.0f, 1.0f);
 
-    auto mesh = std::make_unique<prev_test::render::mesh::CubeMesh>(true);
+    prev_test::render::mesh::MeshFactory meshFactory{};
+    auto mesh = meshFactory.CreateCube(true);
     auto model = CreateModel(*allocator, std::move(mesh));
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -58,7 +59,8 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderCompo
 
     auto material = CreateMaterial(*allocator, texturePath, true, 2.0f, 0.3f);
 
-    auto mesh = std::make_shared<prev_test::render::mesh::PlaneMesh>(40.0f, 40.0f, 1, 1, 10.0f, 10.0f, false);
+    prev_test::render::mesh::MeshFactory meshFactory{};
+    auto mesh = meshFactory.CreatePlane(40.0f, 40.0f, 1, 1, 10.0f, 10.0f, false);
     auto model = CreateModel(*allocator, std::move(mesh));
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -70,7 +72,8 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderCompo
 
     auto material = CreateMaterial(*allocator, texturePath, normalMapPath, true, 2.0f, 0.3f);
 
-    auto mesh = std::make_shared<prev_test::render::mesh::PlaneMesh>(40.0f, 40.0f, 1, 1, 1.0f, 1.0f, true);
+    prev_test::render::mesh::MeshFactory meshFactory{};
+    auto mesh = meshFactory.CreatePlane(40.0f, 40.0f, 1, 1, 1.0f, 1.0f, true);
     auto model = CreateModel(*allocator, std::move(mesh));
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -82,7 +85,8 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderCompo
 
     auto material = CreateMaterial(*allocator, texturePath, normalMapPath, heightOrConeMapPath, true, 2.0f, 0.3f);
 
-    auto mesh = std::make_shared<prev_test::render::mesh::PlaneMesh>(40.0f, 40.0f, 1, 1, 1.0f, 1.0f, true);
+    prev_test::render::mesh::MeshFactory meshFactory{};
+    auto mesh = meshFactory.CreatePlane(40.0f, 40.0f, 1, 1, 1.0f, 1.0f, true);
     auto model = CreateModel(*allocator, std::move(mesh));
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -94,7 +98,8 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateSphereRenderComp
 
     auto material = CreateMaterial(*allocator, texturePath, true, 2.0f, 0.3f);
 
-    auto mesh = std::make_shared<prev_test::render::mesh::SphereMesh>(1.0f, 64, 64, 360.0f, 180.0f, false);
+    prev_test::render::mesh::MeshFactory meshFactory{};
+    auto mesh = meshFactory.CreateSphere(1.0f, 64, 64, 360.0f, 180.0f, false);
     auto model = CreateModel(*allocator, std::move(mesh));
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -106,7 +111,8 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateSphereRenderComp
 
     auto material = CreateMaterial(*allocator, texturePath, normalMapPath, true, 2.0f, 0.3f);
 
-    auto mesh = std::make_shared<prev_test::render::mesh::SphereMesh>(1.0f, 64, 64, 360.0f, 180.0f, true);
+    prev_test::render::mesh::MeshFactory meshFactory{};
+    auto mesh = meshFactory.CreateSphere(1.0f, 64, 64, 360.0f, 180.0f, true);
     auto model = CreateModel(*allocator, std::move(mesh));
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -118,7 +124,8 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateSphereRenderComp
 
     auto material = CreateMaterial(*allocator, texturePath, normalMapPath, heightOrConeMapPath, true, 2.0f, 0.3f);
 
-    auto mesh = std::make_shared<prev_test::render::mesh::SphereMesh>(1.0f, 64, 64, 360.0f, 180.0f, true);
+    prev_test::render::mesh::MeshFactory meshFactory{};
+    auto mesh = meshFactory.CreateSphere(1.0f, 64, 64, 360.0f, 180.0f, true);
     auto model = CreateModel(*allocator, std::move(mesh));
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -130,7 +137,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateModelRenderCompo
 
     auto material = CreateMaterial(*allocator, texturePath, true, 2.0f, 0.3f);
 
-    prev_test::render::mesh::MeshFactory meshFactory{};
+    prev_test::render::mesh::ModelMeshFactory meshFactory{};
     auto mesh = meshFactory.Create(modelPath);
     auto model = CreateModel(*allocator, std::move(mesh));
 
@@ -146,7 +153,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateModelRenderCompo
         materials.emplace_back(CreateMaterial(*allocator, texturePath, true, 2.0f, 0.3f));
     }
 
-    prev_test::render::mesh::MeshFactory meshFactory{};
+    prev_test::render::mesh::ModelMeshFactory meshFactory{};
     auto mesh = meshFactory.Create(modelPath);
     auto model = CreateModel(*allocator, std::move(mesh));
 
@@ -159,8 +166,8 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateModelRenderCompo
 
     auto material = CreateMaterial(*allocator, texturePath, normalMapPath, true, 10.0f, 0.7f);
 
-    prev_test::render::mesh::MeshFactory meshFactory{};
-    auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
+    prev_test::render::mesh::ModelMeshFactory meshFactory{};
+    auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT });
     auto model = CreateModel(*allocator, std::move(mesh));
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -175,8 +182,8 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateModelRenderCompo
         materials.emplace_back(CreateMaterial(*allocator, texturePaths.at(i), normalMapPaths.at(i), true, 10.0f, 0.7f));
     }
 
-    prev_test::render::mesh::MeshFactory meshFactory{};
-    auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
+    prev_test::render::mesh::ModelMeshFactory meshFactory{};
+    auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT });
     auto model = CreateModel(*allocator, std::move(mesh));
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), materials, castsShadows, isCastedByShadows);
@@ -188,8 +195,8 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateModelRenderCompo
 
     auto material = CreateMaterial(*allocator, texturePath, normalMapPath, heightOrConeMapPath, true, 3.0f, 0.3f);
 
-    prev_test::render::mesh::MeshFactory meshFactory{};
-    auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
+    prev_test::render::mesh::ModelMeshFactory meshFactory{};
+    auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT });
     auto model = CreateModel(*allocator, std::move(mesh));
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -204,8 +211,8 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateModelRenderCompo
         materials.emplace_back(CreateMaterial(*allocator, texturePaths.at(i), normalMapPaths.at(i), heightOrConeMapPaths.at(i), true, 10.0f, 0.7f));
     }
 
-    prev_test::render::mesh::MeshFactory meshFactory{};
-    auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
+    prev_test::render::mesh::ModelMeshFactory meshFactory{};
+    auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT });
     auto model = CreateModel(*allocator, std::move(mesh));
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), materials, castsShadows, isCastedByShadows);
@@ -217,8 +224,8 @@ std::unique_ptr<IAnimationRenderComponent> RenderComponentFactory::CreateAnimate
 
     auto material = CreateMaterial(*allocator, texturePath, true, 1.5f, 0.3f);
 
-    prev_test::render::mesh::MeshFactory meshFactory{};
-    auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::ANIMATION });
+    prev_test::render::mesh::ModelMeshFactory meshFactory{};
+    auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION });
     auto model = CreateModel(*allocator, std::move(mesh));
 
     prev_test::render::animation::AnimationFactory animationFactory{};
@@ -236,8 +243,8 @@ std::unique_ptr<IAnimationRenderComponent> RenderComponentFactory::CreateAnimate
         materials.emplace_back(CreateMaterial(*allocator, texturePath, true, 1.5f, 0.3f));
     }
 
-    prev_test::render::mesh::MeshFactory meshFactory{};
-    auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::ANIMATION });
+    prev_test::render::mesh::ModelMeshFactory meshFactory{};
+    auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION });
     auto model = CreateModel(*allocator, std::move(mesh));
 
     prev_test::render::animation::AnimationFactory animationFactory{};
@@ -252,8 +259,8 @@ std::unique_ptr<IAnimationRenderComponent> RenderComponentFactory::CreateAnimate
 
     auto material = CreateMaterial(*allocator, texturePath, normalMapPath, true, 1.5f, 0.3f);
 
-    prev_test::render::mesh::MeshFactory meshFactory{};
-    auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
+    prev_test::render::mesh::ModelMeshFactory meshFactory{};
+    auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT });
     auto model = CreateModel(*allocator, std::move(mesh));
 
     prev_test::render::animation::AnimationFactory animationFactory{};
@@ -271,8 +278,8 @@ std::unique_ptr<IAnimationRenderComponent> RenderComponentFactory::CreateAnimate
         materials.emplace_back(CreateMaterial(*allocator, texturePaths.at(i), normalMapPaths.at(i), true, 1.5f, 0.3f));
     }
 
-    prev_test::render::mesh::MeshFactory meshFactory{};
-    auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
+    prev_test::render::mesh::ModelMeshFactory meshFactory{};
+    auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT });
     auto model = CreateModel(*allocator, std::move(mesh));
 
     prev_test::render::animation::AnimationFactory animationFactory{};
@@ -287,8 +294,8 @@ std::unique_ptr<IAnimationRenderComponent> RenderComponentFactory::CreateAnimate
 
     auto material = CreateMaterial(*allocator, texturePath, normalMapPath, heightOrConeMapPath, true, 1.5f, 0.3f);
 
-    prev_test::render::mesh::MeshFactory meshFactory{};
-    auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
+    prev_test::render::mesh::ModelMeshFactory meshFactory{};
+    auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT });
     auto model = CreateModel(*allocator, std::move(mesh));
 
     prev_test::render::animation::AnimationFactory animationFactory{};
@@ -306,8 +313,8 @@ std::unique_ptr<IAnimationRenderComponent> RenderComponentFactory::CreateAnimate
         materials.emplace_back(CreateMaterial(*allocator, texturePaths.at(i), normalMapPaths.at(i), heightOrConeMapPaths.at(i), true, 1.5f, 0.3f));
     }
 
-    prev_test::render::mesh::MeshFactory meshFactory{};
-    auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::MeshFactory::CreateFlags>{ prev_test::render::mesh::MeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::MeshFactory::CreateFlags::TANGENT_BITANGENT });
+    prev_test::render::mesh::ModelMeshFactory meshFactory{};
+    auto mesh = meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT });
     auto model = CreateModel(*allocator, std::move(mesh));
 
     prev_test::render::animation::AnimationFactory animationFactory{};
