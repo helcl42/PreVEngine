@@ -12,191 +12,60 @@
 #include "AllocatorProvider.h"
 #include "ComputeProvider.h"
 #include "IScene.h"
+#include "Scene.h"
+#include "SceneConfig.h"
 #include "graph/GraphTraversal.h"
 
-#include <inttypes.h>
-#include <memory>
-
 namespace prev::scene {
-struct SceneConfig {
-    // swapchain
-    bool VSync{ true };
-
-    uint32_t framesInFlight{ 3 };
-};
-
 class Scene : public IScene {
 public:
-    Scene(const std::shared_ptr<SceneConfig>& sceneConfig, const std::shared_ptr<prev::core::device::Device>& device, VkSurfaceKHR surface)
-        : m_config(sceneConfig)
-        , m_device(device)
-        , m_surface(surface)
-    {
-    }
+    Scene(const std::shared_ptr<SceneConfig>& sceneConfig, const std::shared_ptr<prev::core::device::Device>& device, VkSurfaceKHR surface);
 
     virtual ~Scene() = default;
 
 public:
-    void Init() override
-    {
-        InitQueues();
-        InitRenderPass();
-        InitAllocator();
-        InitSwapchain();
+    void Init() override;
 
-        AllocatorProvider::Instance().SetAllocator(m_allocator);
-        ComputeProvider::Instance().Set(m_computeQueue, m_computeAllocator);
-    }
+    void InitSceneGraph(const std::shared_ptr<prev::scene::graph::ISceneNode>& rootNode) override;
 
-    void InitSceneGraph(const std::shared_ptr<prev::scene::graph::ISceneNode>& rootNode) override
-    {
-        prev::scene::graph::GraphTraversal::Instance().SetRootNode(rootNode);
-        m_rootNode = rootNode;
-        m_rootNode->Init();
-    }
+    void InitRenderer(const std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> >& rootRenderer) override;
 
-    void InitRenderer(const std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> >& rootRenderer) override
-    {
-        m_rootRenderer = rootRenderer;
-        m_rootRenderer->Init();
-    }
+    void Update(float deltaTime) override;
 
-    void Update(float deltaTime) override
-    {
-        m_rootNode->Update(deltaTime);
-    }
+    void Render() override;
 
-    void Render() override
-    {
-        VkFramebuffer frameBuffer;
-        VkCommandBuffer commandBuffer;
-        uint32_t frameInFlightIndex;
-        if (m_swapchain->BeginFrame(frameBuffer, commandBuffer, frameInFlightIndex)) {
-            prev::render::RenderContext renderContext{ frameBuffer, commandBuffer, frameInFlightIndex, m_swapchain->GetExtent() };
+    void ShutDownRenderer() override;
 
-            m_rootRenderer->BeforeRender(renderContext);
-            m_rootRenderer->PreRender(renderContext);
-            m_rootRenderer->Render(renderContext, m_rootNode);
-            m_rootRenderer->PostRender(renderContext);
-            m_rootRenderer->AfterRender(renderContext);
+    void ShutDownSceneGraph() override;
 
-            m_swapchain->EndFrame();
-        }
-    }
-
-    void ShutDownRenderer() override
-    {
-        m_rootRenderer->ShutDown();
-    }
-
-    void ShutDownSceneGraph() override
-    {
-        m_rootNode->ShutDown();
-        prev::scene::graph::GraphTraversal::Instance().SetRootNode(nullptr);
-    }
-
-    void ShutDown() override
-    {
-        ComputeProvider::Instance().Reset();
-        AllocatorProvider::Instance().SetAllocator(nullptr);
-    }
+    void ShutDown() override;
 
 public:
-    std::shared_ptr<prev::core::device::Device> GetDevice() const override
-    {
-        return m_device;
-    }
+    std::shared_ptr<prev::core::device::Device> GetDevice() const override;
 
-    std::shared_ptr<prev::render::Swapchain> GetSwapchain() const override
-    {
-        return m_swapchain;
-    }
+    std::shared_ptr<prev::render::Swapchain> GetSwapchain() const override;
 
-    std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const override
-    {
-        return m_renderPass;
-    }
+    std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const override;
 
-    std::shared_ptr<prev::core::memory::Allocator> GetAllocator() const override
-    {
-        return m_allocator;
-    }
+    std::shared_ptr<prev::core::memory::Allocator> GetAllocator() const override;
 
-    std::shared_ptr<prev::scene::graph::ISceneNode> GetRootNode() const override
-    {
-        return m_rootNode;
-    }
+    std::shared_ptr<prev::scene::graph::ISceneNode> GetRootNode() const override;
 
-    std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> > GetRootRenderer() const override
-    {
-        return m_rootRenderer;
-    }
+    std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> > GetRootRenderer() const override;
 
 public:
-    void operator()(const prev::window::WindowResizeEvent& resizeEvent)
-    {
-        m_swapchain->UpdateExtent();
-    }
+    void operator()(const prev::window::WindowResizeEvent& resizeEvent);
 
-    void operator()(const prev::window::SurfaceChanged& surfaceChangedEvent)
-    {
-        m_surface = surfaceChangedEvent.surface;
-        InitSwapchain();
-        m_swapchain->UpdateExtent();
-    }
+    void operator()(const prev::window::SurfaceChanged& surfaceChangedEvent);
 
 private:
-    void InitQueues()
-    {
-        m_presentQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, m_surface); // compute + graphics + present queue
-        m_graphicsQueue = m_presentQueue; // they might be the same or not
-        m_computeQueue = m_presentQueue;
-        if (!m_presentQueue) {
-            m_presentQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT, m_surface); // graphics + present-queue
-            m_graphicsQueue = m_presentQueue;
-            if (!m_presentQueue) {
-                m_presentQueue = m_device->AddQueue(0, m_surface); // create present-queue
-                m_graphicsQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT); // create graphics queue
-            }
-            m_computeQueue = m_device->AddQueue(VK_QUEUE_COMPUTE_BIT);
-        }
-    }
+    void InitQueues();
 
-    void InitRenderPass()
-    {
-        const auto colorFormat = m_device->GetGPU().FindSurfaceFormat(m_surface);
-        const auto depthFormat = m_device->GetGPU().FindDepthFormat();
+    void InitRenderPass();
 
-        m_renderPass = std::make_shared<prev::render::pass::RenderPass>(*m_device);
-        m_renderPass->AddColorAttachment(colorFormat, { 0.5f, 0.5f, 0.5f, 1.0f });
-        m_renderPass->AddDepthAttachment(depthFormat);
-        m_renderPass->AddSubpass({ 0, 1 });
-    }
+    void InitAllocator();
 
-    void InitAllocator()
-    {
-        m_allocator = std::make_shared<prev::core::memory::Allocator>(*m_graphicsQueue); // Create "Vulkan Memory Aloocator"
-        printf("Allocator created\n");
-
-        if (m_computeQueue != nullptr && m_graphicsQueue != m_computeQueue) {
-            m_computeAllocator = std::make_shared<prev::core::memory::Allocator>(*m_computeQueue);
-            printf("Allocator Compute created\n");
-        } else {
-            m_computeAllocator = m_allocator;
-        }
-    }
-
-    void InitSwapchain()
-    {
-        m_swapchain = std::make_shared<prev::render::Swapchain>(*m_presentQueue, *m_graphicsQueue, *m_renderPass, *m_allocator);
-#if defined(__ANDROID__)
-        m_swapchain->SetPresentMode(m_config->VSync ? VK_PRESENT_MODE_MAILBOX_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
-#else
-        m_swapchain->SetPresentMode(m_config->VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
-#endif
-        m_swapchain->SetImageCount(m_config->framesInFlight);
-        m_swapchain->Print();
-    }
+    void InitSwapchain();
 
 protected:
     std::shared_ptr<SceneConfig> m_config;

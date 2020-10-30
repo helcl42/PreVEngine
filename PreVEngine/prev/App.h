@@ -7,45 +7,25 @@
 
 namespace prev {
 class App {
-protected:
-    std::unique_ptr<prev::core::Engine> m_engine;
-
 public:
-    App(const std::shared_ptr<prev::core::EngineConfig>& config)
-        : m_engine(std::make_unique<prev::core::Engine>(config))
-    {
-    }
+    App(const std::shared_ptr<prev::core::EngineConfig>& config);
 
     virtual ~App() = default;
+
+public:
+    void Init();
+
+    void Run();
+
+    void ShutDown();
 
 protected:
     virtual std::shared_ptr<prev::scene::graph::ISceneNode> CreateRootNode() const = 0;
 
     virtual std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> > CreateRootRenderer() const = 0;
 
-public:
-    void Init()
-    {
-        m_engine->Init();
-
-        m_engine->InitScene();
-
-        auto root = CreateRootNode();
-        m_engine->InitSceneGraph(root);
-
-        auto rootRenderer = CreateRootRenderer();
-        m_engine->InitRenderer(rootRenderer);
-    }
-
-    void Run()
-    {
-        m_engine->MainLoop();
-    }
-
-    void ShutDown()
-    {
-        m_engine->ShutDown();
-    }
+protected:
+    std::unique_ptr<prev::core::Engine> m_engine;
 };
 } // namespace prev
 
