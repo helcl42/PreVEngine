@@ -3,157 +3,52 @@
 
 #include "../core/device/PhysicalDevices.h"
 #include "../core/instance/Instance.h"
+#include "../event/EventHandler.h"
 #include "../render/IRenderer.h"
-#include "../scene/Scene.h"
+#include "../scene/IScene.h"
 #include "../scene/graph/ISceneNode.h"
 #include "../util/Utils.h"
-#include "../window/Window.h"
+#include "../window/WindowEvents.h"
+
 #include "CoreEvents.h"
-#include "DeviceProvider.h"
+#include "EngineConfig.h"
 #include "device/Device.h"
 
-#include <memory>
-#include <string>
-
 namespace prev::core {
-struct EngineConfig {
-    bool validation{ true };
-
-    std::string appName{ "PreVEngine - Demo" };
-
-    bool fullScreen{ false };
-
-    prev::window::impl::Size windowSize{ 1920, 1080 };
-
-    prev::window::impl::Position windowPosition{ 40, 40 };
-
-    std::shared_ptr<prev::scene::SceneConfig> sceneConfig{ std::make_shared<prev::scene::SceneConfig>() };
-};
-
 class Engine final {
 public:
-    Engine(const std::shared_ptr<EngineConfig>& config)
-        : m_config(config)
-    {
-    }
+    Engine(const std::shared_ptr<EngineConfig>& config);
 
     ~Engine() = default;
 
 public:
-    void Init()
-    {
-        InitTiming();
-        InitInstance();
-        InitWindow();
-        InitSurface();
-        InitDevice();
+    void Init();
 
-        DeviceProvider::Instance().SetDevice(m_device);
-    }
+    void InitScene();
 
-    void InitScene()
-    {
-        m_scene = std::make_shared<prev::scene::Scene>(m_config->sceneConfig, m_device, m_surface);
-        m_scene->Init();
-    }
+    void InitSceneGraph(const std::shared_ptr<prev::scene::graph::ISceneNode>& rootNode);
 
-    void InitSceneGraph(const std::shared_ptr<prev::scene::graph::ISceneNode>& rootNode)
-    {
-        m_scene->InitSceneGraph(rootNode);
-    }
+    void InitRenderer(const std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> >& rootRenderer);
 
-    void InitRenderer(const std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> >& rootRenderer)
-    {
-        m_scene->InitRenderer(rootRenderer);
-    }
+    void MainLoop();
 
-    void MainLoop()
-    {
-        m_clock->Reset();
+    void ShutDown();
 
-        while (m_window->ProcessEvents()) // Main event loop, runs until window is closed.
-        {
-            prev::event::EventChannel::DispatchAll();
+    std::shared_ptr<prev::scene::IScene> GetScene() const;
 
-            m_clock->UpdateClock();
-            const auto deltaTime = m_clock->GetDelta();
-
-            prev::event::EventChannel::Post(NewIterationEvent{ deltaTime, m_window->GetSize().width, m_window->GetSize().height });
-
-            if (m_window->HasFocus()) {
-                m_scene->Update(deltaTime);
-                m_scene->Render();
-            } else {
-                std::this_thread::sleep_for(std::chrono::milliseconds(200));
-            }
-
-            m_fpsService->Update(deltaTime);
-        }
-    }
-
-    void ShutDown()
-    {
-        m_scene->ShutDownRenderer();
-        m_scene->ShutDownSceneGraph();
-        m_scene->ShutDown();
-
-        DeviceProvider::Instance().SetDevice(nullptr);
-    }
-
-    std::shared_ptr<prev::scene::IScene> GetScene() const
-    {
-        return m_scene;
-    }
-
-    void operator()(const prev::window::WindowChangeEvent& windowChangeEvent)
-    {
-        vkDeviceWaitIdle(*m_device);
-
-        InitSurface();
-
-        prev::event::EventChannel::Post(prev::window::SurfaceChanged{ m_surface });
-    }
+public:
+    void operator()(const prev::window::WindowChangeEvent& windowChangeEvent);
 
 private:
-    void InitTiming()
-    {
-        m_clock = std::make_unique<prev::util::Clock<float> >();
-        m_fpsService = std::make_unique<prev::util::FPSService>();
-    }
+    void InitTiming();
 
-    void InitInstance()
-    {
-        m_instance = std::make_unique<prev::core::instance::Instance>(m_config->validation);
-    }
+    void InitInstance();
 
-    void InitWindow()
-    {
-        if (m_config->fullScreen) {
-            m_window = std::make_unique<prev::window::Window>(m_config->appName.c_str());
-        } else {
-            m_window = std::make_unique<prev::window::Window>(m_config->appName.c_str(), m_config->windowSize.width, m_config->windowSize.height);
-            m_window->SetPosition(m_config->windowPosition);
-        }
-    }
+    void InitWindow();
 
-    void InitSurface()
-    {
-        m_surface = m_window->GetSurface(*m_instance);
-    }
+    void InitSurface();
 
-    void InitDevice()
-    {
-        auto physicalDevices = std::make_shared<prev::core::device::PhysicalDevices>(*m_instance);
-        physicalDevices->Print();
-
-        auto physicalDevice = physicalDevices->FindPresentable(m_surface);
-        if (!physicalDevice) {
-            throw std::runtime_error("No suitable GPU found?!");
-        }
-
-        m_device = std::make_shared<prev::core::device::Device>(*physicalDevice);
-        m_device->Print();
-    }
+    void InitDevice();
 
 private:
     prev::event::EventHandler<Engine, prev::window::WindowChangeEvent> m_windowChangedHandler{ *this };

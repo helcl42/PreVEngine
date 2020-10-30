@@ -1,130 +1,46 @@
 #ifndef __SCENE_GRAPH_H__
 #define __SCENE_GRAPH_H__
 
-#include "../../event/EventsChannel.h"
-#include "../../util/Utils.h"
-#include "../SceneEvents.h"
-
 #include "ISceneNode.h"
 
 namespace prev::scene::graph {
 class SceneNode : public std::enable_shared_from_this<ISceneNode>, public ISceneNode {
 public:
-    SceneNode()
-        : m_id(prev::util::IDGenerator::Instance().GenrateNewId())
-    {
-    }
+    SceneNode();
 
-    SceneNode(const prev::common::TagSet& tags)
-        : m_id(prev::util::IDGenerator::Instance().GenrateNewId())
-        , m_tags(tags)
-    {
-    }
+    SceneNode(const prev::common::TagSet& tags);
 
     virtual ~SceneNode() = default;
 
 public:
-    virtual void Init() override
-    {
-        for (auto& child : m_children) {
-            child->Init();
-        }
-    }
+    virtual void Init() override;
 
-    virtual void Update(float deltaTime) override
-    {
-        for (auto& child : m_children) {
-            child->Update(deltaTime);
-        }
-    }
+    virtual void Update(float deltaTime) override;
 
-    virtual void ShutDown() override
-    {
-        for (auto& child : m_children) {
-            child->ShutDown();
-        }
-
-        prev::event::EventChannel::Post(prev::scene::SceneNodeShutDownEvent{ GetId() });
-        m_tags = prev::common::TagSet();
-    }
+    virtual void ShutDown() override;
 
 public:
-    const std::vector<std::shared_ptr<ISceneNode> >& GetChildren() const override
-    {
-        return m_children;
-    }
+    const std::vector<std::shared_ptr<ISceneNode> >& GetChildren() const override;
 
-    void AddChild(const std::shared_ptr<ISceneNode>& child) override
-    {
-        child->SetParent(this->shared_from_this());
+    void AddChild(const std::shared_ptr<ISceneNode>& child) override;
 
-        m_children.emplace_back(child);
-    }
+    void RemoveChild(const std::shared_ptr<ISceneNode>& child) override;
 
-    void RemoveChild(const std::shared_ptr<ISceneNode>& child) override
-    {
-        child->SetParent(nullptr);
+    std::shared_ptr<ISceneNode> GetThis() override;
 
-        for (auto it = m_children.begin(); it != m_children.end(); ++it) {
-            if ((*it)->GetId() == child->GetId()) {
-                m_children.erase(it);
-                break;
-            }
-        }
-    }
+    void SetParent(const std::shared_ptr<ISceneNode>& parent) override;
 
-    std::shared_ptr<ISceneNode> GetThis() override
-    {
-        return this->shared_from_this();
-    }
+    std::shared_ptr<ISceneNode> GetParent() const override;
 
-    void SetParent(const std::shared_ptr<ISceneNode>& parent) override
-    {
-        m_parent = parent;
-    }
+    bool IsRoot() const override;
 
-    std::shared_ptr<ISceneNode> GetParent() const override
-    {
-        return m_parent.lock();
-    }
+    std::shared_ptr<ISceneNode> GetRoot() override;
 
-    bool IsRoot() const override
-    {
-        return !m_parent.lock();
-    }
+    uint64_t GetId() const override;
 
-    std::shared_ptr<ISceneNode> GetRoot() override
-    {
-        auto parent = m_parent.lock();
-        if (parent == nullptr) {
-            return GetThis();
-        }
+    void SetTags(const prev::common::TagSet& tagSet) override;
 
-        while (parent != nullptr) {
-            auto tempParent = parent->GetParent();
-            if (tempParent == nullptr) {
-                break;
-            }
-            parent = tempParent;
-        }
-
-        return parent;
-    }
-
-    uint64_t GetId() const override
-    {
-        return m_id;
-    }
-
-    void SetTags(const prev::common::TagSet& tagSet) override
-    {
-        m_tags = tagSet;
-    }
-
-    const prev::common::TagSet& GetTags() const override
-    {
-        return m_tags;
-    }
+    const prev::common::TagSet& GetTags() const override;
 
 protected:
     uint64_t m_id;
