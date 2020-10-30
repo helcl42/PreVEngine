@@ -183,7 +183,6 @@ private:
 };
 } // namespace prev::common
 
-
 template <typename T, typename = void>
 struct is_enum_that_contains_sentinel : std::false_type {
 };

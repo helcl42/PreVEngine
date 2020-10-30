@@ -9,14 +9,13 @@
 #include <memory>
 
 namespace prev::scene {
-template <typename NodeFlagsType>
 class IScene {
 public:
     virtual void Init() = 0;
 
-    virtual void InitSceneGraph(const std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> >& rootNode) = 0;
+    virtual void InitSceneGraph(const std::shared_ptr<prev::scene::graph::ISceneNode>& rootNode) = 0;
 
-    virtual void InitRenderer(const std::shared_ptr<prev::render::IRenderer<NodeFlagsType, prev::render::DefaultRenderContextUserData> >& rootRenderer) = 0;
+    virtual void InitRenderer(const std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> >& rootRenderer) = 0;
 
     virtual void Update(float deltaTime) = 0;
 
@@ -28,9 +27,9 @@ public:
 
     virtual void ShutDown() = 0;
 
-    virtual std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> > GetRootNode() const = 0;
+    virtual std::shared_ptr<prev::scene::graph::ISceneNode> GetRootNode() const = 0;
 
-    virtual std::shared_ptr<prev::render::IRenderer<NodeFlagsType, prev::render::DefaultRenderContextUserData> > GetRootRenderer() const = 0;
+    virtual std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> > GetRootRenderer() const = 0;
 
     virtual std::shared_ptr<prev::core::device::Device> GetDevice() const = 0;
 

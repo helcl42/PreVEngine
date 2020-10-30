@@ -8,7 +8,7 @@
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene::sky {
-class SkyBox final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
+class SkyBox final : public prev::scene::graph::SceneNode {
 public:
     SkyBox();
 

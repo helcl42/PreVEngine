@@ -11,7 +11,7 @@
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene {
-class Root final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
+class Root final : public prev::scene::graph::SceneNode {
 public:
     Root();
 

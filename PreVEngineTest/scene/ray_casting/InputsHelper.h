@@ -9,7 +9,7 @@
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene::ray_casting {
-class InputsHelper final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
+class InputsHelper final : public prev::scene::graph::SceneNode {
 public:
     InputsHelper();
 

@@ -6,7 +6,7 @@ int main(int argc, char* argv[])
 
     auto config = std::make_shared<prev::core::EngineConfig>();
 
-    prev_test::TestApp<prev_test::SceneNodeFlags> app(config);
+    prev_test::TestApp app(config);
     app.Init();
     app.Run();
     app.ShutDown();

@@ -6,7 +6,7 @@
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene::sky {
-class Clouds final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
+class Clouds final : public prev::scene::graph::SceneNode {
 public:
     Clouds();
 

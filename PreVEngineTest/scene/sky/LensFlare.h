@@ -9,7 +9,7 @@
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene::sky {
-class LensFlare final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
+class LensFlare final : public prev::scene::graph::SceneNode {
 public:
     LensFlare();
 

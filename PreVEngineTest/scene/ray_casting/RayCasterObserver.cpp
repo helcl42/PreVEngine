@@ -49,7 +49,7 @@ void RayCastObserver::Update(float deltaTime)
         }
 
         if (intersectionType == IntersectionType::TERRAIN) {
-            auto terrainManagerNode = prev::scene::graph::GraphTraversal<SceneNodeFlags>::Instance().FindOneWithFlags(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT | SceneNodeFlags::SELECTABLE_COMPONENT }, prev::scene::graph::LogicOperation::AND);
+            auto terrainManagerNode = prev::scene::graph::GraphTraversal::Instance().FindOneWithTags({ TAG_TERRAIN_MANAGER_COMPONENT, TAG_SELECTABLE_COMPONENT }, prev::scene::graph::LogicOperation::AND);
             auto selectableComponent = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::ISelectableComponent>::Instance().Get(terrainManagerNode->GetId());
             selectableComponent->SetSelected(true);
             selectableComponent->SetPosition(currentTerrainIntersectionPoint.GetValue());
@@ -173,28 +173,28 @@ bool RayCastObserver::IsUnderGround(const std::shared_ptr<prev_test::component::
 
 std::shared_ptr<prev_test::component::terrain::ITerrainComponenet> RayCastObserver::GetTerrain(const glm::vec3& position) const
 {
-    const auto terrainManager = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::terrain::ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
+    const auto terrainManager = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::terrain::ITerrainManagerComponent>({ TAG_TERRAIN_MANAGER_COMPONENT });
     return terrainManager->GetTerrainAt(position);
 }
 
-std::vector<std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> > > RayCastObserver::GetSelectableNodes() const
+std::vector<std::shared_ptr<prev::scene::graph::ISceneNode> > RayCastObserver::GetSelectableNodes() const
 {
-    return prev::scene::graph::GraphTraversal<SceneNodeFlags>::Instance().FindAllWithFlags(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SELECTABLE_COMPONENT });
+    return prev::scene::graph::GraphTraversal::Instance().FindAllWithTags({ TAG_SELECTABLE_COMPONENT });
 }
 
-prev::common::pattern::Nullable<std::tuple<std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >, prev_test::common::intersection::RayCastResult> > RayCastObserver::FindTheClosestIntersectingNode(const prev_test::common::intersection::Ray& ray) const
+prev::common::pattern::Nullable<std::tuple<std::shared_ptr<prev::scene::graph::ISceneNode>, prev_test::common::intersection::RayCastResult> > RayCastObserver::FindTheClosestIntersectingNode(const prev_test::common::intersection::Ray& ray) const
 {
-    prev::common::pattern::Nullable<std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags> >, prev_test::common::intersection::RayCastResult> > theClosestNode;
+    prev::common::pattern::Nullable<std::tuple<std::shared_ptr<ISceneNode>, prev_test::common::intersection::RayCastResult> > theClosestNode;
     float minDistance = std::numeric_limits<float>::max();
 
-    auto selectableNodes = prev::scene::graph::GraphTraversal<SceneNodeFlags>::Instance().FindAllWithFlags(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SELECTABLE_COMPONENT | SceneNodeFlags::BOUNDING_VOLUME_COMPONENT }, prev::scene::graph::LogicOperation::AND);
+    auto selectableNodes = prev::scene::graph::GraphTraversal::Instance().FindAllWithTags({ TAG_SELECTABLE_COMPONENT, TAG_BOUNDING_VOLUME_COMPONENT }, prev::scene::graph::LogicOperation::AND);
     for (auto selectable : selectableNodes) {
         const auto boundingVolume = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(selectable->GetId());
 
         prev_test::common::intersection::RayCastResult rayCastResult{};
         if (boundingVolume->Intersects(ray, rayCastResult)) {
             if (rayCastResult.t < minDistance) {
-                theClosestNode = prev::common::pattern::Nullable<std::tuple<std::shared_ptr<ISceneNode<SceneNodeFlags> >, prev_test::common::intersection::RayCastResult> >({ selectable, rayCastResult });
+                theClosestNode = prev::common::pattern::Nullable<std::tuple<std::shared_ptr<ISceneNode>, prev_test::common::intersection::RayCastResult> >({ selectable, rayCastResult });
                 minDistance = rayCastResult.t;
             }
         }

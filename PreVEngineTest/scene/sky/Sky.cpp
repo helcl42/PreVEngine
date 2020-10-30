@@ -16,7 +16,7 @@ void Sky::Init()
 
     prev_test::component::sky::SkyComponentFactory skyComponentFactory{};
     std::shared_ptr<prev_test::component::sky::ISkyComponent> skyComponent = skyComponentFactory.Create();
-    prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::sky::ISkyComponent>(GetThis(), skyComponent, SceneNodeFlags::SKY_RENDER_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::sky::ISkyComponent>(GetThis(), skyComponent, TAG_SKY_RENDER_COMPONENT);
 }
 
 void Sky::Update(float deltaTime)

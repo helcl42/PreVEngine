@@ -64,7 +64,7 @@ void MasterRenderer::PreRender(const prev::render::RenderContext& renderContext,
 {
 }
 
-void MasterRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const prev::render::DefaultRenderContextUserData& renderContextUserData)
+void MasterRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const prev::render::DefaultRenderContextUserData& renderContextUserData)
 {
     // Shadows render pass
     RenderShadows(renderContext, node);
@@ -181,7 +181,7 @@ void MasterRenderer::ShutDownDebug()
 
 void MasterRenderer::InitShadows()
 {
-    const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
+    const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
 
     m_shadowRenderers.push_back(std::make_unique<prev_test::render::renderer::shadow::DefaultShadowsRenderer>(shadowsComponent->GetRenderPass()));
     m_shadowRenderers.push_back(std::make_unique<prev_test::render::renderer::shadow::BumpMappedShadowsRenderer>(shadowsComponent->GetRenderPass()));
@@ -215,7 +215,7 @@ void MasterRenderer::ShutDownShadows()
 
 void MasterRenderer::InitReflection()
 {
-    const auto reflectionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::water::IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT });
+    const auto reflectionComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::water::IWaterOffscreenRenderPassComponent>({ TAG_WATER_REFLECTION_RENDER_COMPONENT });
 
     m_reflectionRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyBoxRenderer>(reflectionComponent->GetRenderPass()));
     m_reflectionRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyRenderer>(reflectionComponent->GetRenderPass()));
@@ -256,7 +256,7 @@ void MasterRenderer::ShutDownReflection()
 
 void MasterRenderer::InitRefraction()
 {
-    const auto refractionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::water::IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT });
+    const auto refractionComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::water::IWaterOffscreenRenderPassComponent>({ TAG_WATER_REFRACTION_RENDER_COMPONENT });
 
     m_refractionRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyBoxRenderer>(refractionComponent->GetRenderPass()));
     m_refractionRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyRenderer>(refractionComponent->GetRenderPass()));
@@ -295,9 +295,9 @@ void MasterRenderer::ShutDownRefraction()
     }
 }
 
-void MasterRenderer::RenderShadows(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root)
+void MasterRenderer::RenderShadows(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root)
 {
-    const auto shadows = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
+    const auto shadows = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
 
     for (uint32_t cascadeIndex = 0; cascadeIndex < prev_test::component::shadow::CASCADES_COUNT; cascadeIndex++) {
 
@@ -322,10 +322,10 @@ void MasterRenderer::RenderShadows(const prev::render::RenderContext& renderCont
     }
 }
 
-void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root)
+void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root)
 {
-    const auto reflectionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::water::IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT });
-    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
+    const auto reflectionComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::water::IWaterOffscreenRenderPassComponent>({ TAG_WATER_REFLECTION_RENDER_COMPONENT });
+    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
 
     const auto cameraPosition{ cameraComponent->GetPosition() };
     const auto cameraViewPosition{ cameraComponent->GetPosition() + cameraComponent->GetForwardDirection() };
@@ -365,10 +365,10 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
     }
 }
 
-void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root)
+void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root)
 {
-    const auto refractionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::water::IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT });
-    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
+    const auto refractionComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::water::IWaterOffscreenRenderPassComponent>({ TAG_WATER_REFRACTION_RENDER_COMPONENT });
+    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
 
     const auto viewMatrix = cameraComponent->LookAt();
     const auto projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(refractionComponent->GetExtent().width, refractionComponent->GetExtent().height);
@@ -400,9 +400,9 @@ void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& re
     }
 }
 
-void MasterRenderer::RenderScene(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root)
+void MasterRenderer::RenderScene(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root)
 {
-    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
+    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
 
     const auto viewMatrix = cameraComponent->LookAt();
     const auto projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
@@ -432,7 +432,7 @@ void MasterRenderer::RenderScene(const prev::render::RenderContext& renderContex
     }
 }
 
-void MasterRenderer::RenderDebug(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& root)
+void MasterRenderer::RenderDebug(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root)
 {
     for (auto& renderer : m_debugRenderers) {
         renderer->BeforeRender(renderContext);

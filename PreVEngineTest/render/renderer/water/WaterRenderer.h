@@ -13,7 +13,7 @@
 #include <prev/scene/graph/ISceneNode.h>
 
 namespace prev_test::render::renderer::water {
-class WaterRenderer final : public prev::render::IRenderer<SceneNodeFlags, NormalRenderContextUserData> {
+class WaterRenderer final : public prev::render::IRenderer<NormalRenderContextUserData> {
 public:
     WaterRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass);
 
@@ -26,7 +26,7 @@ public:
 
     void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override;
 
-    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override;
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData) override;
 
     void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override;
 

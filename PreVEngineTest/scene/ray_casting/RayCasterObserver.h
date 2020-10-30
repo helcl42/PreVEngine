@@ -11,7 +11,7 @@
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene::ray_casting {
-class RayCastObserver final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
+class RayCastObserver final : public prev::scene::graph::SceneNode {
 private:
     enum class IntersectionType {
         NONE,
@@ -48,9 +48,9 @@ private:
     std::shared_ptr<prev_test::component::terrain::ITerrainComponenet> GetTerrain(const glm::vec3& position) const;
 
     // Objects
-    std::vector<std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> > > GetSelectableNodes() const;
+    std::vector<std::shared_ptr<prev::scene::graph::ISceneNode > > GetSelectableNodes() const;
 
-    prev::common::pattern::Nullable<std::tuple<std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >, prev_test::common::intersection::RayCastResult> > FindTheClosestIntersectingNode(const prev_test::common::intersection::Ray& ray) const;
+    prev::common::pattern::Nullable<std::tuple<std::shared_ptr<prev::scene::graph::ISceneNode >, prev_test::common::intersection::RayCastResult> > FindTheClosestIntersectingNode(const prev_test::common::intersection::Ray& ray) const;
 
 public:
     void operator()(const prev_test::component::ray_casting::RayEvent& rayEvt);

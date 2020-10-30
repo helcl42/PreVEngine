@@ -12,7 +12,7 @@
 #include <prev/scene/graph/ISceneNode.h>
 
 namespace prev_test::render::renderer::font {
-class FontRenderer final : public prev::render::IRenderer<SceneNodeFlags, NormalRenderContextUserData> {
+class FontRenderer final : public prev::render::IRenderer<NormalRenderContextUserData> {
 private:
     struct alignas(16) UniformsVS
     {
@@ -67,7 +67,7 @@ public:
 
     void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override;
 
-    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData) override;
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData) override;
 
     void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override;
 

@@ -6,7 +6,7 @@
 #include "RenderContext.h"
 
 namespace prev::render {
-template <typename NodeFlagsType, typename UserDataType = DefaultRenderContextUserData>
+template <typename UserDataType = DefaultRenderContextUserData>
 class IRenderer {
 public:
     virtual void Init() = 0;
@@ -15,7 +15,7 @@ public:
 
     virtual void PreRender(const prev::render::RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
-    virtual void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> >& node, const UserDataType& renderContextUserData = UserDataType{}) = 0;
+    virtual void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 
     virtual void PostRender(const prev::render::RenderContext& renderContext, const UserDataType& renderContextUserData = UserDataType{}) = 0;
 

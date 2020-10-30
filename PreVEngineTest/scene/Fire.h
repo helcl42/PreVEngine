@@ -7,7 +7,7 @@
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene {
-class Fire final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
+class Fire final : public prev::scene::graph::SceneNode {
 public:
     Fire(const glm::vec3& initPosition)
         : SceneNode()

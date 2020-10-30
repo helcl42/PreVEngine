@@ -8,7 +8,7 @@
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene {
-class Plane final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
+class Plane final : public prev::scene::graph::SceneNode {
 public:
     Plane(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const float heightScale);
 

@@ -8,7 +8,7 @@
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene::robot {
-class CubeRobotPart : public prev::scene::graph::SceneNode<SceneNodeFlags> {
+class CubeRobotPart : public prev::scene::graph::SceneNode {
 public:
     CubeRobotPart(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath);
 

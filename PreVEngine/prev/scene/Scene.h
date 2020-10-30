@@ -25,8 +25,7 @@ struct SceneConfig {
     uint32_t framesInFlight{ 3 };
 };
 
-template <typename NodeFlagsType>
-class Scene : public IScene<NodeFlagsType> {
+class Scene : public IScene {
 public:
     Scene(const std::shared_ptr<SceneConfig>& sceneConfig, const std::shared_ptr<prev::core::device::Device>& device, VkSurfaceKHR surface)
         : m_config(sceneConfig)
@@ -49,14 +48,14 @@ public:
         ComputeProvider::Instance().Set(m_computeQueue, m_computeAllocator);
     }
 
-    void InitSceneGraph(const std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> >& rootNode) override
+    void InitSceneGraph(const std::shared_ptr<prev::scene::graph::ISceneNode>& rootNode) override
     {
-        prev::scene::graph::GraphTraversal<NodeFlagsType>::Instance().SetRootNode(rootNode);
+        prev::scene::graph::GraphTraversal::Instance().SetRootNode(rootNode);
         m_rootNode = rootNode;
         m_rootNode->Init();
     }
 
-    void InitRenderer(const std::shared_ptr<prev::render::IRenderer<NodeFlagsType, prev::render::DefaultRenderContextUserData> >& rootRenderer) override
+    void InitRenderer(const std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> >& rootRenderer) override
     {
         m_rootRenderer = rootRenderer;
         m_rootRenderer->Init();
@@ -93,7 +92,7 @@ public:
     void ShutDownSceneGraph() override
     {
         m_rootNode->ShutDown();
-        prev::scene::graph::GraphTraversal<NodeFlagsType>::Instance().SetRootNode(nullptr);
+        prev::scene::graph::GraphTraversal::Instance().SetRootNode(nullptr);
     }
 
     void ShutDown() override
@@ -123,12 +122,12 @@ public:
         return m_allocator;
     }
 
-    std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> > GetRootNode() const override
+    std::shared_ptr<prev::scene::graph::ISceneNode> GetRootNode() const override
     {
         return m_rootNode;
     }
 
-    std::shared_ptr<prev::render::IRenderer<NodeFlagsType, prev::render::DefaultRenderContextUserData> > GetRootRenderer() const override
+    std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> > GetRootRenderer() const override
     {
         return m_rootRenderer;
     }
@@ -221,9 +220,9 @@ protected:
 
     std::shared_ptr<prev::render::Swapchain> m_swapchain;
 
-    std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> > m_rootNode;
+    std::shared_ptr<prev::scene::graph::ISceneNode> m_rootNode;
 
-    std::shared_ptr<prev::render::IRenderer<NodeFlagsType, prev::render::DefaultRenderContextUserData> > m_rootRenderer;
+    std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> > m_rootRenderer;
 
 private:
     prev::event::EventHandler<Scene, prev::window::WindowResizeEvent> m_windowResizeEvent{ *this };

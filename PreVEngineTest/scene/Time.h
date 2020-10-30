@@ -7,7 +7,7 @@
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene {
-class Time final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
+class Time final : public prev::scene::graph::SceneNode {
 public:
     Time();
 

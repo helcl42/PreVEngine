@@ -10,23 +10,12 @@ enum class LogicOperation {
     AND
 };
 
-template <typename NodeFlagsType>
-class GraphTraversal final : public prev::common::pattern::Singleton<GraphTraversal<NodeFlagsType> > {
+class GraphTraversal final : public prev::common::pattern::Singleton<GraphTraversal > {
 public:
     ~GraphTraversal() = default;
 
 private:
-    bool HasFlags(const std::shared_ptr<ISceneNode<NodeFlagsType> >& node, const prev::common::FlagSet<NodeFlagsType>& flagsToCheck, const LogicOperation operation) const
-    {
-        if (operation == LogicOperation::AND) {
-            return node->GetFlags().HasAll(flagsToCheck);
-        } else if (operation == LogicOperation::OR) {
-            return node->GetFlags().HasAny(flagsToCheck);
-        }
-        return false;
-    }
-
-    bool HasTags(const std::shared_ptr<ISceneNode<NodeFlagsType> >& node, const prev::common::TagSet& tagsToCheck, const LogicOperation operation) const
+    bool HasTags(const std::shared_ptr<ISceneNode >& node, const prev::common::TagSet& tagsToCheck, const LogicOperation operation) const
     {
         if (operation == LogicOperation::AND) {
             return node->GetTags().HasAll(tagsToCheck);
@@ -36,7 +25,7 @@ private:
         return false;
     }
 
-    std::shared_ptr<ISceneNode<NodeFlagsType> > FindByIdInternal(const std::shared_ptr<ISceneNode<NodeFlagsType> >& parent, const uint64_t id) const
+    std::shared_ptr<ISceneNode > FindByIdInternal(const std::shared_ptr<ISceneNode >& parent, const uint64_t id) const
     {
         if (parent->GetId() == id) {
             return parent;
@@ -52,36 +41,7 @@ private:
         return nullptr;
     }
 
-    std::shared_ptr<ISceneNode<NodeFlagsType> > FindOneWithFlagsInternal(const std::shared_ptr<ISceneNode<NodeFlagsType> >& parent, const prev::common::FlagSet<NodeFlagsType>& flags, const LogicOperation operation) const
-    {
-        if (HasFlags(parent, flags, operation)) {
-            return parent;
-        }
-
-        auto& children = parent->GetChildren();
-        for (auto& child : children) {
-            auto result = FindOneWithFlagsInternal(child, flags, operation);
-            if (result != nullptr) {
-                return result;
-            }
-        }
-
-        return nullptr;
-    }
-
-    void FindAllWithFlagsInternal(const std::shared_ptr<ISceneNode<NodeFlagsType> >& parent, const prev::common::FlagSet<NodeFlagsType>& flags, const LogicOperation operation, std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > >& result) const
-    {
-        if (HasFlags(parent, flags, operation)) {
-            result.push_back(parent);
-        }
-
-        auto& children = parent->GetChildren();
-        for (auto& child : children) {
-            FindAllWithFlagsInternal(child, flags, operation, result);
-        }
-    }
-
-    std::shared_ptr<ISceneNode<NodeFlagsType> > FindOneWithTagsInternal(const std::shared_ptr<ISceneNode<NodeFlagsType> >& parent, const prev::common::TagSet& tags, const LogicOperation operation) const
+    std::shared_ptr<ISceneNode > FindOneWithTagsInternal(const std::shared_ptr<ISceneNode >& parent, const prev::common::TagSet& tags, const LogicOperation operation) const
     {
         if (HasTags(parent, tags, operation)) {
             return parent;
@@ -98,7 +58,7 @@ private:
         return nullptr;
     }
 
-    void FindAllWithTagsInternal(const std::shared_ptr<ISceneNode<NodeFlagsType> >& parent, const prev::common::TagSet& tags, const LogicOperation operation, std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > >& result) const
+    void FindAllWithTagsInternal(const std::shared_ptr<ISceneNode >& parent, const prev::common::TagSet& tags, const LogicOperation operation, std::vector<std::shared_ptr<ISceneNode > >& result) const
     {
         if (HasTags(parent, tags, operation)) {
             result.push_back(parent);
@@ -111,41 +71,29 @@ private:
     }
 
 public:
-    void SetRootNode(const std::shared_ptr<ISceneNode<NodeFlagsType> >& root)
+    void SetRootNode(const std::shared_ptr<ISceneNode >& root)
     {
         m_root = root;
     }
 
-    std::shared_ptr<ISceneNode<NodeFlagsType> > GetRootNode() const
+    std::shared_ptr<ISceneNode > GetRootNode() const
     {
         return m_root;
     }
 
-    std::shared_ptr<ISceneNode<NodeFlagsType> > FindById(const uint64_t id) const
+    std::shared_ptr<ISceneNode > FindById(const uint64_t id) const
     {
         return FindByIdInternal(m_root, id);
     }
 
-    std::shared_ptr<ISceneNode<NodeFlagsType> > FindOneWithFlags(const prev::common::FlagSet<NodeFlagsType>& flags, const LogicOperation operation = LogicOperation::OR) const
-    {
-        return FindOneWithFlagsInternal(m_root, flags, operation);
-    }
-
-    std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > > FindAllWithFlags(const prev::common::FlagSet<NodeFlagsType>& flags, const LogicOperation operation = LogicOperation::OR) const
-    {
-        std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > > result;
-        FindAllWithFlagsInternal(m_root, flags, operation, result);
-        return result;
-    }
-
-    std::shared_ptr<ISceneNode<NodeFlagsType> > FindOneWithTags(const prev::common::TagSet& tags, const LogicOperation operation = LogicOperation::OR) const
+    std::shared_ptr<ISceneNode > FindOneWithTags(const prev::common::TagSet& tags, const LogicOperation operation = LogicOperation::OR) const
     {
         return FindOneWithTagsInternal(m_root, tags, operation);
     }
 
-    std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > > FindAllWithTags(const prev::common::TagSet& tags, const LogicOperation operation = LogicOperation::OR) const
+    std::vector<std::shared_ptr<ISceneNode > > FindAllWithTags(const prev::common::TagSet& tags, const LogicOperation operation = LogicOperation::OR) const
     {
-        std::vector<std::shared_ptr<ISceneNode<NodeFlagsType> > > result;
+        std::vector<std::shared_ptr<ISceneNode > > result;
         FindAllWithTagsInternal(m_root, tags, operation, result);
         return result;
     }
@@ -154,10 +102,10 @@ private:
     GraphTraversal() = default;
 
 private:
-    friend class prev::common::pattern::Singleton<GraphTraversal<NodeFlagsType> >;
+    friend class prev::common::pattern::Singleton<GraphTraversal >;
 
 private:
-    std::shared_ptr<ISceneNode<NodeFlagsType> > m_root;
+    std::shared_ptr<ISceneNode > m_root;
 };
 } // namespace prev::scene::graph
 

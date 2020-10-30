@@ -62,9 +62,9 @@ void SelectionDebugRenderer::PreRender(const prev::render::RenderContext& render
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void SelectionDebugRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData)
+void SelectionDebugRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData)
 {
-    if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SELECTABLE_COMPONENT })) {
+    if (node->GetTags().HasAll({ TAG_SELECTABLE_COMPONENT })) {
         const auto selectableComponent = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::ISelectableComponent>::Instance().Get(node->GetId());
         if (selectableComponent->IsSelected()) {
             auto uboVS = m_uniformsPoolVS->GetNext();

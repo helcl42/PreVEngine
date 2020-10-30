@@ -24,8 +24,8 @@ void RayCaster::Init()
 
 void RayCaster::Update(float deltaTime)
 {
-    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
-    const auto playerTransformComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::transform::ITransformComponent>({ TAG_PLAYER });
+    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
+    const auto playerTransformComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::transform::ITransformComponent>({ TAG_PLAYER });
 
     if (m_inputFacade.IsMouseLocked()) {
         m_rayCasterComponent->SetRayLength(RAY_LENGTH);
@@ -50,17 +50,17 @@ void RayCaster::ShutDown()
 
 void RayCaster::RemoveRayCastComponnet()
 {
-    if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, prev_test::component::ray_casting::IRayCasterComponent>(GetThis())) {
-        prev::scene::component::NodeComponentHelper::RemoveComponent<SceneNodeFlags, prev_test::component::ray_casting::IRayCasterComponent>(GetThis(), SceneNodeFlags::RAYCASTER_COMPONENT);
+    if (prev::scene::component::NodeComponentHelper::HasComponent<prev_test::component::ray_casting::IRayCasterComponent>(GetThis())) {
+        prev::scene::component::NodeComponentHelper::RemoveComponent<prev_test::component::ray_casting::IRayCasterComponent>(GetThis(), TAG_RAYCASTER_COMPONENT);
     }
 }
 
 void RayCaster::AddRayCastComponent(const bool mouseLocked)
 {
     if (mouseLocked) {
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::ray_casting::IRayCasterComponent>(GetThis(), m_rayCasterComponent, SceneNodeFlags::RAYCASTER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::IRayCasterComponent>(GetThis(), m_rayCasterComponent, TAG_RAYCASTER_COMPONENT);
     } else {
-        prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::ray_casting::IRayCasterComponent>(GetThis(), m_mouseRayCasterComponent, SceneNodeFlags::RAYCASTER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::IRayCasterComponent>(GetThis(), m_mouseRayCasterComponent, TAG_RAYCASTER_COMPONENT);
     }
 }
 

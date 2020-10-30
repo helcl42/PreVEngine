@@ -11,7 +11,7 @@
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene::terrain {
-class Terrain final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
+class Terrain final : public prev::scene::graph::SceneNode {
 public:
     Terrain(const int x, const int z);
 

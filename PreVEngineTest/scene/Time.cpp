@@ -14,7 +14,7 @@ void Time::Init()
 {
     prev_test::component::time::TimeComponentFactory timeComponentFactory{};
     m_timeComponent = timeComponentFactory.Create();
-    prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::time::ITimeComponent>(GetThis(), m_timeComponent, SceneNodeFlags::TIME_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::time::ITimeComponent>(GetThis(), m_timeComponent, TAG_TIME_COMPONENT);
 
     SceneNode::Init();
 }

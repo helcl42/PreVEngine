@@ -22,23 +22,23 @@ void Player::Init()
 {
     prev_test::component::transform::TrasnformComponentFactory transformComponentFactory{};
     m_transformComponent = transformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
-    if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent())) {
-        m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent()));
+    if (prev::scene::component::NodeComponentHelper::HasComponent<prev_test::component::transform::ITransformComponent>(GetParent())) {
+        m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(GetParent()));
     }
-    prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, TAG_TRANSFORM_COMPONENT);
 
     prev_test::component::render::RenderComponentFactory renderComponentFactory{};
     m_animatonRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin.dae"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_texture.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_normal_texture_2.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_cone_texture.png"), true, true);
     m_animatonRenderComponent->GetMaterial()->SetHeightScale(0.004f);
-    prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::render::IAnimationRenderComponent>(GetThis(), m_animatonRenderComponent, SceneNodeFlags::ANIMATION_CONE_STEP_MAPPED_RENDER_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::render::IAnimationRenderComponent>(GetThis(), m_animatonRenderComponent, TAG_ANIMATION_CONE_STEP_MAPPED_RENDER_COMPONENT);
 
     prev_test::component::camera::CameraComponentFactory cameraFactory{};
     m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 60.0f, 180.0f));
-    prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::camera::ICameraComponent>(GetThis(), m_cameraComponent, SceneNodeFlags::CAMERA_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::camera::ICameraComponent>(GetThis(), m_cameraComponent, TAG_CAMERA_COMPONENT);
 
     prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{};
     m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_animatonRenderComponent->GetModel()->GetMesh()->GetVertices(), 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-    prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, TAG_BOUNDING_VOLUME_COMPONENT);
 
     m_animatonRenderComponent->GetAnimation()->SetIndex(0);
     m_animatonRenderComponent->GetAnimation()->SetState(prev_test::render::AnimationState::RUNNING);
@@ -52,7 +52,7 @@ void Player::Init()
 
 void Player::Update(float deltaTime)
 {
-    const auto terrain = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::terrain::ITerrainManagerComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TERRAIN_MANAGER_COMPONENT });
+    const auto terrain = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::terrain::ITerrainManagerComponent>({ TAG_TERRAIN_MANAGER_COMPONENT });
 
     if ((m_shouldGoForward || m_shouldGoBackward || m_shouldGoLeft || m_shouldGoRight) && !m_isInTheAir) {
         m_animatonRenderComponent->GetAnimation()->SetState(prev_test::render::AnimationState::RUNNING);

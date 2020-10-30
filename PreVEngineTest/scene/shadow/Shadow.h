@@ -7,7 +7,7 @@
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene::shadow {
-class Shadows final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
+class Shadows final : public prev::scene::graph::SceneNode {
 public:
     Shadows();
 

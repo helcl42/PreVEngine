@@ -9,7 +9,7 @@
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene::sky {
-class Sun final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
+class Sun final : public prev::scene::graph::SceneNode {
 public:
     Sun();
 

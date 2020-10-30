@@ -30,7 +30,6 @@ struct EngineConfig {
     std::shared_ptr<prev::scene::SceneConfig> sceneConfig{ std::make_shared<prev::scene::SceneConfig>() };
 };
 
-template <typename NodeFlagsType>
 class Engine final {
 public:
     Engine(const std::shared_ptr<EngineConfig>& config)
@@ -54,16 +53,16 @@ public:
 
     void InitScene()
     {
-        m_scene = std::make_shared<prev::scene::Scene<NodeFlagsType> >(m_config->sceneConfig, m_device, m_surface);
+        m_scene = std::make_shared<prev::scene::Scene>(m_config->sceneConfig, m_device, m_surface);
         m_scene->Init();
     }
 
-    void InitSceneGraph(const std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> >& rootNode)
+    void InitSceneGraph(const std::shared_ptr<prev::scene::graph::ISceneNode>& rootNode)
     {
         m_scene->InitSceneGraph(rootNode);
     }
 
-    void InitRenderer(const std::shared_ptr<prev::render::IRenderer<NodeFlagsType, prev::render::DefaultRenderContextUserData> >& rootRenderer)
+    void InitRenderer(const std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> >& rootRenderer)
     {
         m_scene->InitRenderer(rootRenderer);
     }
@@ -101,7 +100,7 @@ public:
         DeviceProvider::Instance().SetDevice(nullptr);
     }
 
-    std::shared_ptr<prev::scene::IScene<NodeFlagsType> > GetScene() const
+    std::shared_ptr<prev::scene::IScene> GetScene() const
     {
         return m_scene;
     }
@@ -172,7 +171,7 @@ private:
 
     std::shared_ptr<prev::core::device::Device> m_device;
 
-    std::shared_ptr<prev::scene::IScene<NodeFlagsType> > m_scene;
+    std::shared_ptr<prev::scene::IScene> m_scene;
 
     VkSurfaceKHR m_surface;
 };

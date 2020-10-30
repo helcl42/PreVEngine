@@ -13,7 +13,7 @@
 #include <prev/scene/graph/ISceneNode.h>
 
 namespace prev_test::render::renderer::shadow {
-class TerrainShadowsRenderer final : public prev::render::IRenderer<SceneNodeFlags, ShadowsRenderContextUserData> {
+class TerrainShadowsRenderer final : public prev::render::IRenderer<ShadowsRenderContextUserData> {
 public:
     TerrainShadowsRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass);
 
@@ -26,7 +26,7 @@ public:
 
     void PreRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override;
 
-    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext) override;
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const ShadowsRenderContextUserData& shadowsRenderContext) override;
 
     void PostRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override;
 
