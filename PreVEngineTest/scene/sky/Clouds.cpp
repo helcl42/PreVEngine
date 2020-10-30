@@ -16,7 +16,7 @@ void Clouds::Init()
 
     prev_test::component::cloud::CloudsComponentFactory cloudsComponentFactory{};
     std::shared_ptr<prev_test::component::cloud::ICloudsComponent> cloudsComponent = cloudsComponentFactory.Create();
-    prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::cloud::ICloudsComponent>(GetThis(), cloudsComponent, SceneNodeFlags::CLOUDS_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::cloud::ICloudsComponent>(GetThis(), cloudsComponent, TAG_CLOUDS_COMPONENT);
 }
 
 void Clouds::Update(float deltaTime)

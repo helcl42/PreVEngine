@@ -6,23 +6,22 @@
 #include "scene/graph/ISceneNode.h"
 
 namespace prev {
-template <typename NodeFlagsType>
 class App {
 protected:
-    std::unique_ptr<prev::core::Engine<NodeFlagsType> > m_engine;
+    std::unique_ptr<prev::core::Engine> m_engine;
 
 public:
     App(const std::shared_ptr<prev::core::EngineConfig>& config)
-        : m_engine(std::make_unique<prev::core::Engine<NodeFlagsType> >(config))
+        : m_engine(std::make_unique<prev::core::Engine>(config))
     {
     }
 
     virtual ~App() = default;
 
 protected:
-    virtual std::shared_ptr<prev::scene::graph::ISceneNode<NodeFlagsType> > CreateRootNode() const = 0;
+    virtual std::shared_ptr<prev::scene::graph::ISceneNode> CreateRootNode() const = 0;
 
-    virtual std::shared_ptr<prev::render::IRenderer<NodeFlagsType, prev::render::DefaultRenderContextUserData> > CreateRootRenderer() const = 0;
+    virtual std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> > CreateRootRenderer() const = 0;
 
 public:
     void Init()

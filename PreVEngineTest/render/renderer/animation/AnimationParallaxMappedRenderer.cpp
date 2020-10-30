@@ -60,9 +60,9 @@ void AnimationParallaxMappedRenderer::PreRender(const prev::render::RenderContex
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void AnimationParallaxMappedRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData)
+void AnimationParallaxMappedRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData)
 {
-    if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::ANIMATION_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
+    if (node->GetTags().HasAll({ TAG_ANIMATION_PARALLAX_MAPPED_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
 
         bool visible = true;
         if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
@@ -70,9 +70,9 @@ void AnimationParallaxMappedRenderer::Render(const prev::render::RenderContext& 
         }
 
         if (visible) {
-            const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
-            const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
-            const auto lightComponents = prev::scene::component::NodeComponentHelper::FindAll<SceneNodeFlags, prev_test::component::light::ILightComponent>({ TAG_LIGHT });
+            const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
+            const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
+            const auto lightComponents = prev::scene::component::NodeComponentHelper::FindAll<prev_test::component::light::ILightComponent>({ TAG_LIGHT });
 
             const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());
             const auto nodeRenderComponent = prev::scene::component::ComponentRepository<prev_test::component::render::IAnimationRenderComponent>::Instance().Get(node->GetId());

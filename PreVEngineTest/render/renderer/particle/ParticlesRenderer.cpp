@@ -59,9 +59,9 @@ void ParticlesRenderer::PreRender(const prev::render::RenderContext& renderConte
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void ParticlesRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData)
+void ParticlesRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData)
 {
-    if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::PARTICLE_SYSTEM_COMPONENT })) {
+    if (node->GetTags().HasAll({ TAG_PARTICLE_SYSTEM_COMPONENT })) {
         const auto particlesComponent = prev::scene::component::ComponentRepository<prev_test::component::particle::IParticleSystemComponent>::Instance().Get(node->GetId());
         const auto& particles = particlesComponent->GetParticles();
 

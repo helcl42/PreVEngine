@@ -56,9 +56,9 @@ void SkyBoxRenderer::PreRender(const prev::render::RenderContext& renderContext,
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void SkyBoxRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData)
+void SkyBoxRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData)
 {
-    if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SKYBOX_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
+    if (node->GetTags().HasAll({ TAG_SKYBOX_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
         const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());
         const auto skyBoxComponent = prev::scene::component::ComponentRepository<prev_test::component::sky::ISkyBoxComponent>::Instance().Get(node->GetId());
 

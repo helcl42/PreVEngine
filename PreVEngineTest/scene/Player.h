@@ -14,7 +14,7 @@
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene {
-class Player final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
+class Player final : public prev::scene::graph::SceneNode {
 public:
     Player(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale);
 

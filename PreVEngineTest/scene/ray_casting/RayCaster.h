@@ -12,7 +12,7 @@
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene::ray_casting {
-class RayCaster final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
+class RayCaster final : public prev::scene::graph::SceneNode {
 public:
     RayCaster();
 

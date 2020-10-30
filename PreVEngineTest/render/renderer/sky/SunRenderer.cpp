@@ -61,9 +61,9 @@ void SunRenderer::PreRender(const prev::render::RenderContext& renderContext, co
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void SunRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData)
+void SunRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData)
 {
-    if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SUN_RENDER_COMPONENT })) {
+    if (node->GetTags().HasAll({ TAG_SUN_RENDER_COMPONENT })) {
         const auto sunComponent = prev::scene::component::ComponentRepository<prev_test::component::sky::ISunComponent>::Instance().Get(node->GetId());
 
         const float xScale = sunComponent->GetFlare()->GetScale();

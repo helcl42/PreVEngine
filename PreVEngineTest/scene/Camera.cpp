@@ -15,14 +15,14 @@ void Camera::Init()
 {
     prev_test::component::transform::TrasnformComponentFactory transformComponentFactory{};
     m_transformComponent = transformComponentFactory.Create();
-    if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent())) {
-        m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent()));
+    if (prev::scene::component::NodeComponentHelper::HasComponent<prev_test::component::transform::ITransformComponent>(GetParent())) {
+        m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(GetParent()));
     }
-    prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, TAG_TRANSFORM_COMPONENT);
 
     prev_test::component::camera::CameraComponentFactory cameraFactory{};
     m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 60.0f, 180.0f));
-    prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::camera::ICameraComponent>(GetThis(), m_cameraComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::camera::ICameraComponent>(GetThis(), m_cameraComponent, TAG_TRANSFORM_COMPONENT);
 
     SceneNode::Init();
 

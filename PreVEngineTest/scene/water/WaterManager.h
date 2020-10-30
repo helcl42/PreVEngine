@@ -6,7 +6,7 @@
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene::water {
-class WaterManager final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
+class WaterManager final : public prev::scene::graph::SceneNode {
 public:
     WaterManager(const int maxX, const int maxZ);
 

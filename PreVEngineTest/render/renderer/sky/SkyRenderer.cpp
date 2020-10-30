@@ -78,10 +78,10 @@ void SkyRenderer::Init()
 
 void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
 {
-    const auto skyComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::sky::ISkyComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SKY_RENDER_COMPONENT });
-    const auto cloudsComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::cloud::ICloudsComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::CLOUDS_COMPONENT });
-    const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
-    const auto timeComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::time::ITimeComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TIME_COMPONENT });
+    const auto skyComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::sky::ISkyComponent>({ TAG_SKY_RENDER_COMPONENT });
+    const auto cloudsComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::cloud::ICloudsComponent>({ TAG_CLOUDS_COMPONENT });
+    const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
+    const auto timeComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::time::ITimeComponent>({ TAG_TIME_COMPONENT });
 
     auto device = prev::core::DeviceProvider::Instance().GetDevice();
 
@@ -214,9 +214,9 @@ void SkyRenderer::PreRender(const prev::render::RenderContext& renderContext, co
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void SkyRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData)
+void SkyRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData)
 {
-    if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::SKY_RENDER_COMPONENT })) {
+    if (node->GetTags().HasAll({ TAG_SKY_RENDER_COMPONENT })) {
         const auto skyComponent = prev::scene::component::ComponentRepository<prev_test::component::sky::ISkyComponent>::Instance().Get(node->GetId());
 
         m_shader->Bind("image", *m_skyPostProcessColorImageBuffer, VK_IMAGE_LAYOUT_GENERAL);

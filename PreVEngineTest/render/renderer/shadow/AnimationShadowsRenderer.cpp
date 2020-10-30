@@ -53,9 +53,9 @@ void AnimationShadowsRenderer::PreRender(const prev::render::RenderContext& rend
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void AnimationShadowsRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderContext)
+void AnimationShadowsRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const ShadowsRenderContextUserData& shadowsRenderContext)
 {
-    if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::ANIMATION_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
+    if (node->GetTags().HasAll({ TAG_ANIMATION_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
         bool visible = true;
         if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
             visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);

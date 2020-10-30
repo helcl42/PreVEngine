@@ -7,7 +7,7 @@
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene::terrain {
-class TerrainManager final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
+class TerrainManager final : public prev::scene::graph::SceneNode {
 public:
     TerrainManager(const uint32_t maxX, const uint32_t maxZ);
 

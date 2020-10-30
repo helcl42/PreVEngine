@@ -9,7 +9,7 @@
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene {
-class Camera final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
+class Camera final : public prev::scene::graph::SceneNode {
 public:
     Camera();
 

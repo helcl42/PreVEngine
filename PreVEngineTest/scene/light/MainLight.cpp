@@ -17,14 +17,14 @@ void MainLight::Init()
 {
     prev_test::component::transform::TrasnformComponentFactory transformComponentFactory{};
     m_transformComponent = transformComponentFactory.Create();
-    if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent())) {
-        m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent()));
+    if (prev::scene::component::NodeComponentHelper::HasComponent<prev_test::component::transform::ITransformComponent>(GetParent())) {
+        m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(GetParent()));
     }
-    prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, TAG_TRANSFORM_COMPONENT);
 
     prev_test::component::light::LightComponentFactory lightFactory{};
     m_lightComponent = lightFactory.CreateLightCompoennt(m_initialPosition);
-    prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::light::ILightComponent>(GetThis(), m_lightComponent, SceneNodeFlags::LIGHT_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::light::ILightComponent>(GetThis(), m_lightComponent, TAG_LIGHT_COMPONENT);
 
     SceneNode::Init();
 }

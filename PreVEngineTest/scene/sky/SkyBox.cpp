@@ -17,21 +17,21 @@ void SkyBox::Init()
 {
     prev_test::component::transform::TrasnformComponentFactory transformComponentFactory{};
     m_transformComponent = transformComponentFactory.Create();
-    if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent())) {
-        m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent()));
+    if (prev::scene::component::NodeComponentHelper::HasComponent<prev_test::component::transform::ITransformComponent>(GetParent())) {
+        m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(GetParent()));
     }
-    prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, TAG_TRANSFORM_COMPONENT);
 
     prev_test::component::sky::SkyBoxComponentFactory factory{};
     m_skyBoxComponent = factory.Create();
-    prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::sky::ISkyBoxComponent>(GetThis(), m_skyBoxComponent, SceneNodeFlags::SKYBOX_RENDER_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::sky::ISkyBoxComponent>(GetThis(), m_skyBoxComponent, TAG_SKYBOX_RENDER_COMPONENT);
 
     SceneNode::Init();
 }
 
 void SkyBox::Update(float deltaTime)
 {
-    auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::camera::ICameraComponent>(prev::common::TagSet{ TAG_MAIN_CAMERA });
+    auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>(prev::common::TagSet{ TAG_MAIN_CAMERA });
 
     const float ROTATION_ANGLE = ROTATION_SPEED_DEGS_PER_SEC * deltaTime;
 

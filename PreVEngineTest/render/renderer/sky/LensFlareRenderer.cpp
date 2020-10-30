@@ -54,9 +54,9 @@ void LensFlareRenderer::PreRender(const prev::render::RenderContext& renderConte
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void LensFlareRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData)
+void LensFlareRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData)
 {
-    if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::LENS_FLARE_RENDER_COMPONENT })) {
+    if (node->GetTags().HasAll({ TAG_LENS_FLARE_RENDER_COMPONENT })) {
         const auto lensFlareComponent = prev::scene::component::ComponentRepository<prev_test::component::sky::ILensFlareComponent>::Instance().Get(node->GetId());
 
         for (const auto& lensFlare : lensFlareComponent->GetFlares()) {

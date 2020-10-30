@@ -53,9 +53,9 @@ void AnimationBumpMappedShadowsRenderer::PreRender(const prev::render::RenderCon
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void AnimationBumpMappedShadowsRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const ShadowsRenderContextUserData& shadowsRenderUserData)
+void AnimationBumpMappedShadowsRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const ShadowsRenderContextUserData& shadowsRenderUserData)
 {
-    if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::TRANSFORM_COMPONENT }) && node->GetFlags().HasAny(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT | SceneNodeFlags::ANIMATION_PARALLAX_MAPPED_RENDER_COMPONENT | SceneNodeFlags::ANIMATION_CONE_STEP_MAPPED_RENDER_COMPONENT })) {
+    if (node->GetTags().HasAll({ TAG_TRANSFORM_COMPONENT }) && node->GetTags().HasAny({ TAG_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT, TAG_ANIMATION_PARALLAX_MAPPED_RENDER_COMPONENT, TAG_ANIMATION_CONE_STEP_MAPPED_RENDER_COMPONENT })) {
         bool visible = true;
         if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
             visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderUserData.frustum);

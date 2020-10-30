@@ -8,7 +8,7 @@
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene::light {
-class Light final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
+class Light final : public prev::scene::graph::SceneNode {
 public:
     Light(const glm::vec3& position, const glm::vec3& color);
 

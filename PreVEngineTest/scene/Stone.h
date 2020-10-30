@@ -8,7 +8,7 @@
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene {
-class Stone final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
+class Stone final : public prev::scene::graph::SceneNode {
 public:
     Stone(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale);
 

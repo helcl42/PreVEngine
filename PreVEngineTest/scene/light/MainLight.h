@@ -8,7 +8,7 @@
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene::light {
-class MainLight final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
+class MainLight final : public prev::scene::graph::SceneNode {
 public:
     MainLight(const glm::vec3& pos);
 

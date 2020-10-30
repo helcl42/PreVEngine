@@ -9,7 +9,7 @@
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene::water {
-class Water final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
+class Water final : public prev::scene::graph::SceneNode {
 public:
     Water(const int x, const int z);
 

@@ -60,9 +60,9 @@ void WaterRenderer::BeforeRender(const prev::render::RenderContext& renderContex
 {
 }
 
-void WaterRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData)
+void WaterRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData)
 {
-    if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_RENDER_COMPONENT | SceneNodeFlags::TRANSFORM_COMPONENT })) {
+    if (node->GetTags().HasAll({ TAG_WATER_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
         bool visible = true;
         if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
             visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
@@ -70,10 +70,10 @@ void WaterRenderer::Render(const prev::render::RenderContext& renderContext, con
 
         if (visible) {
             const auto waterComponent = prev::scene::component::ComponentRepository<prev_test::component::water::IWaterComponent>::Instance().Get(node->GetId());
-            const auto waterReflectionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::water::IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFLECTION_RENDER_COMPONENT });
-            const auto waterRefractionComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::water::IWaterOffscreenRenderPassComponent>(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::WATER_REFRACTION_RENDER_COMPONENT });
-            const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
-            const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
+            const auto waterReflectionComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::water::IWaterOffscreenRenderPassComponent>({ TAG_WATER_REFLECTION_RENDER_COMPONENT });
+            const auto waterRefractionComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::water::IWaterOffscreenRenderPassComponent>({ TAG_WATER_REFRACTION_RENDER_COMPONENT });
+            const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
+            const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
 
             const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());
 

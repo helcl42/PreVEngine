@@ -16,15 +16,15 @@ void Shadows::Init()
     prev_test::component::shadow::ShadowsComponentFactory shadowsFactory{};
     m_shadowsCompoent = shadowsFactory.Create();
     m_shadowsCompoent->Init();
-    prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::shadow::IShadowsComponent>(GetThis(), m_shadowsCompoent, SceneNodeFlags::SHADOWS_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::shadow::IShadowsComponent>(GetThis(), m_shadowsCompoent, TAG_SHADOWS_COMPONENT);
 
     SceneNode::Init();
 }
 
 void Shadows::Update(float deltaTime)
 {
-    const auto lightComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
-    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<SceneNodeFlags, prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
+    const auto lightComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
+    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
 
     m_shadowsCompoent->Update(lightComponent->GetDirection(), lightComponent->GetViewFrustum().GetNearClippingPlane(), lightComponent->GetViewFrustum().GetFarClippingPlane(), lightComponent->GetViewFrustum().CreateProjectionMatrix(1.0f), cameraComponent->LookAt());
 

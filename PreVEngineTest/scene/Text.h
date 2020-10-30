@@ -8,7 +8,7 @@
 #include <prev/util/Utils.h>
 
 namespace prev_test::scene {
-class Text final : public prev::scene::graph::SceneNode<SceneNodeFlags> {
+class Text final : public prev::scene::graph::SceneNode {
 public:
     Text();
 

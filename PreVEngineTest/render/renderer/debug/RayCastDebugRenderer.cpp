@@ -60,9 +60,9 @@ void RayCastDebugRenderer::PreRender(const prev::render::RenderContext& renderCo
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void RayCastDebugRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode<SceneNodeFlags> >& node, const NormalRenderContextUserData& renderContextUserData)
+void RayCastDebugRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData)
 {
-    if (node->GetFlags().HasAll(prev::common::FlagSet<SceneNodeFlags>{ SceneNodeFlags::RAYCASTER_COMPONENT })) {
+    if (node->GetTags().HasAll({ TAG_RAYCASTER_COMPONENT })) {
         const auto rayCastingComponent = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IRayCasterComponent>::Instance().Get(node->GetId());
 
         auto uboVS = m_uniformsPoolVS->GetNext();

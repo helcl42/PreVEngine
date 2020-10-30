@@ -24,18 +24,18 @@ void Plane::Init()
     prev_test::component::render::RenderComponentFactory renderComponentFactory{};
     std::shared_ptr<prev_test::component::render::IRenderComponent> renderComponent = renderComponentFactory.CreatePlaneRenderComponent(m_texturePath, m_normalMapPath, m_heightMapPath, false, true);
     renderComponent->GetMaterial()->SetHeightScale(m_heightScale);
-    prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::render::IRenderComponent>(GetThis(), renderComponent, SceneNodeFlags::RENDER_CONE_STEP_MAPPED_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::render::IRenderComponent>(GetThis(), renderComponent, TAG_RENDER_CONE_STEP_MAPPED_COMPONENT);
 
     prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{};
     m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(renderComponent->GetModel()->GetMesh()->GetVertices());
-    prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, SceneNodeFlags::BOUNDING_VOLUME_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, TAG_BOUNDING_VOLUME_COMPONENT);
 
     prev_test::component::transform::TrasnformComponentFactory transformComponentFactory{};
     m_transformComponent = transformComponentFactory.Create(m_initialPosition, m_initialOrientation, m_initialScale);
-    if (prev::scene::component::NodeComponentHelper::HasComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent())) {
-        m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetParent()));
+    if (prev::scene::component::NodeComponentHelper::HasComponent<prev_test::component::transform::ITransformComponent>(GetParent())) {
+        m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(GetParent()));
     }
-    prev::scene::component::NodeComponentHelper::AddComponent<SceneNodeFlags, prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, SceneNodeFlags::TRANSFORM_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, TAG_TRANSFORM_COMPONENT);
 
     SceneNode::Init();
 }
