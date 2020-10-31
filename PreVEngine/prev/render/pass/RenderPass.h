@@ -14,12 +14,12 @@ public:
     ~RenderPass();
 
 private:
-    static VkAttachmentDescription CreateAttachmentDescription(VkFormat format, VkImageLayout finalLayout);
+    static VkAttachmentDescription CreateAttachmentDescription(VkFormat format, VkImageLayout finalLayout, VkSampleCountFlagBits sampleCount);
 
 public:
-    uint32_t AddColorAttachment(VkFormat format, VkClearColorValue clearVal = {}, VkImageLayout finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+    uint32_t AddColorAttachment(VkFormat format, VkClearColorValue clearVal = {}, VkImageLayout finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT);
 
-    uint32_t AddDepthAttachment(VkFormat format, VkClearDepthStencilValue clearVal = { 1.0f, 0 });
+    uint32_t AddDepthAttachment(VkFormat format, VkClearDepthStencilValue clearVal = { 1.0f, 0 }, VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT);
 
     SubPass& AddSubpass(const std::vector<uint32_t>& attachmentIndexes = {});
 
