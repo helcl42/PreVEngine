@@ -11,21 +11,21 @@ RenderPass::~RenderPass()
     Destroy();
 }
 
-VkAttachmentDescription RenderPass::CreateAttachmentDescription(VkFormat format, VkImageLayout finalLayout)
+VkAttachmentDescription RenderPass::CreateAttachmentDescription(VkFormat format, VkImageLayout finalLayout, VkSampleCountFlagBits sampleCount)
 {
     VkAttachmentDescription attachment = {};
     attachment.format = format;
-    attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    attachment.samples = sampleCount;
     attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
     attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    attachment.finalLayout = finalLayout; //VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    attachment.finalLayout = finalLayout;
     return attachment;
 }
 
-uint32_t RenderPass::AddColorAttachment(VkFormat format, VkClearColorValue clearVal, VkImageLayout finalLayout)
+uint32_t RenderPass::AddColorAttachment(VkFormat format, VkClearColorValue clearVal, VkImageLayout finalLayout, VkSampleCountFlagBits sampleCount)
 {
     m_clearValues.push_back({});
     m_clearValues.back().color = clearVal;
@@ -34,20 +34,20 @@ uint32_t RenderPass::AddColorAttachment(VkFormat format, VkClearColorValue clear
         m_surfaceFormat = format;
     }
 
-    m_attachments.push_back(CreateAttachmentDescription(format, finalLayout));
+    m_attachments.push_back(CreateAttachmentDescription(format, finalLayout, sampleCount));
 
     return static_cast<uint32_t>(m_attachments.size() - 1);
 }
 
-uint32_t RenderPass::AddDepthAttachment(VkFormat format, VkClearDepthStencilValue clearVal)
+uint32_t RenderPass::AddDepthAttachment(VkFormat format, VkClearDepthStencilValue clearVal, VkSampleCountFlagBits sampleCount)
 {
-    // ASSERT(m_depthFormat == VK_FORMAT_UNDEFINED, "Renderpass can't have more than one depth buffer. ");
+    ASSERT(m_depthFormat == VK_FORMAT_UNDEFINED, "Renderpass can't have more than one depth buffer. ");
     m_depthFormat = format;
 
     m_clearValues.push_back({});
     m_clearValues.back().depthStencil = clearVal;
 
-    m_attachments.push_back(CreateAttachmentDescription(format, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL));
+    m_attachments.push_back(CreateAttachmentDescription(format, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, sampleCount));
 
     return static_cast<uint32_t>(m_attachments.size() - 1);
 }
