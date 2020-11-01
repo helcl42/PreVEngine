@@ -31,7 +31,7 @@ void SunRenderer::Init()
 
     LOGI("Sun Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::SunOcclusionPipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
+    m_pipeline = std::make_unique<pipeline::SunOcclusionPipeline>(*device, *m_shader, *m_renderPass);
     m_pipeline->Init();
 
     LOGI("Sun Pipeline created\n");

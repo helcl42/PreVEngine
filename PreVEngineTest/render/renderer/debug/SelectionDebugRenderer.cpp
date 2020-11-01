@@ -32,7 +32,7 @@ void SelectionDebugRenderer::Init()
 
     LOGI("Selection Debug Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::SelectionDebugPipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
+    m_pipeline = std::make_unique<pipeline::SelectionDebugPipeline>(*device, *m_shader, *m_renderPass);
     m_pipeline->Init();
 
     LOGI("Selection Debug Pipeline created\n");

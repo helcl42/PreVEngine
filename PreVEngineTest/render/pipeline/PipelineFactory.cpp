@@ -1,7 +1,7 @@
 #include "PipelineFactory.h"
 
 namespace prev_test::render::pipeline {
-void PipelineFactory::CreateShadowsPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const VkRenderPass& renderPass, const VkSampleCountFlagBits sampleCount, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
+void PipelineFactory::CreateShadowsPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const prev::render::pass::RenderPass& renderPass, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
 {
     // Pipeline layout
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
@@ -52,13 +52,13 @@ void PipelineFactory::CreateShadowsPipeline(const VkDevice& device, const prev::
     rasterizer.depthBiasEnable = VK_FALSE;
 
     VkPipelineMultisampleStateCreateInfo multisampling = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
-    if (sampleCount > VK_SAMPLE_COUNT_1_BIT) {
+    if (renderPass.GetSamplesCount() > VK_SAMPLE_COUNT_1_BIT) {
         multisampling.sampleShadingEnable = VK_TRUE;
-        multisampling.rasterizationSamples = sampleCount;
+        multisampling.rasterizationSamples = renderPass.GetSamplesCount();
         multisampling.minSampleShading = 0.2f;
     } else {
         multisampling.sampleShadingEnable = VK_FALSE;
-        multisampling.rasterizationSamples = sampleCount;
+        multisampling.rasterizationSamples = renderPass.GetSamplesCount();
     }
 
     VkPipelineDepthStencilStateCreateInfo depthStencilState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
@@ -94,12 +94,12 @@ void PipelineFactory::CreateShadowsPipeline(const VkDevice& device, const prev::
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDynamicState = &dynamicState;
     pipelineInfo.layout = outPipelineLayout;
-    pipelineInfo.renderPass = renderPass;
+    pipelineInfo.renderPass = renderPass.GetNativeHandle();
 
     VKERRCHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &outPipeline));
 }
 
-void PipelineFactory::CreateDefaultPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const VkRenderPass& renderPass, const VkSampleCountFlagBits sampleCount, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool fillMode, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
+void PipelineFactory::CreateDefaultPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const prev::render::pass::RenderPass& renderPass, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool fillMode, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
 {
     // Pipeline layout
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
@@ -150,13 +150,13 @@ void PipelineFactory::CreateDefaultPipeline(const VkDevice& device, const prev::
     rasterizer.depthBiasEnable = VK_FALSE;
 
     VkPipelineMultisampleStateCreateInfo multisampling = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
-    if (sampleCount > VK_SAMPLE_COUNT_1_BIT) {
+    if (renderPass.GetSamplesCount() > VK_SAMPLE_COUNT_1_BIT) {
         multisampling.sampleShadingEnable = VK_TRUE;
-        multisampling.rasterizationSamples = sampleCount;
+        multisampling.rasterizationSamples = renderPass.GetSamplesCount();
         multisampling.minSampleShading = 0.2f;
     } else {
         multisampling.sampleShadingEnable = VK_FALSE;
-        multisampling.rasterizationSamples = sampleCount;
+        multisampling.rasterizationSamples = renderPass.GetSamplesCount();
     }
 
     VkPipelineDepthStencilStateCreateInfo depthStencilState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
@@ -203,12 +203,12 @@ void PipelineFactory::CreateDefaultPipeline(const VkDevice& device, const prev::
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDynamicState = &dynamicState;
     pipelineInfo.layout = outPipelineLayout;
-    pipelineInfo.renderPass = renderPass;
+    pipelineInfo.renderPass = renderPass.GetNativeHandle();
 
     VKERRCHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &outPipeline));
 }
 
-void PipelineFactory::CreateParticlesPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const VkRenderPass& renderPass, const VkSampleCountFlagBits sampleCount, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool fillMode, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
+void PipelineFactory::CreateParticlesPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const prev::render::pass::RenderPass& renderPass, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool fillMode, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
 {
     // Pipeline layout
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
@@ -259,13 +259,13 @@ void PipelineFactory::CreateParticlesPipeline(const VkDevice& device, const prev
     rasterizer.depthBiasEnable = VK_FALSE;
 
     VkPipelineMultisampleStateCreateInfo multisampling = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
-    if (sampleCount > VK_SAMPLE_COUNT_1_BIT) {
+    if (renderPass.GetSamplesCount() > VK_SAMPLE_COUNT_1_BIT) {
         multisampling.sampleShadingEnable = VK_TRUE;
-        multisampling.rasterizationSamples = sampleCount;
+        multisampling.rasterizationSamples = renderPass.GetSamplesCount();
         multisampling.minSampleShading = 0.2f;
     } else {
         multisampling.sampleShadingEnable = VK_FALSE;
-        multisampling.rasterizationSamples = sampleCount;
+        multisampling.rasterizationSamples = renderPass.GetSamplesCount();
     }
 
     VkPipelineDepthStencilStateCreateInfo depthStencilState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
@@ -312,12 +312,12 @@ void PipelineFactory::CreateParticlesPipeline(const VkDevice& device, const prev
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDynamicState = &dynamicState;
     pipelineInfo.layout = outPipelineLayout;
-    pipelineInfo.renderPass = renderPass;
+    pipelineInfo.renderPass = renderPass.GetNativeHandle();
 
     VKERRCHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &outPipeline));
 }
 
-void PipelineFactory::CreateDebugPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const VkRenderPass& renderPass, const VkSampleCountFlagBits sampleCount, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
+void PipelineFactory::CreateDebugPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const prev::render::pass::RenderPass& renderPass, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
 {
     // Pipeline layout
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
@@ -368,13 +368,13 @@ void PipelineFactory::CreateDebugPipeline(const VkDevice& device, const prev::re
     rasterizer.depthBiasEnable = VK_FALSE;
 
     VkPipelineMultisampleStateCreateInfo multisampling = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
-    if (sampleCount > VK_SAMPLE_COUNT_1_BIT) {
+    if (renderPass.GetSamplesCount() > VK_SAMPLE_COUNT_1_BIT) {
         multisampling.sampleShadingEnable = VK_TRUE;
-        multisampling.rasterizationSamples = sampleCount;
+        multisampling.rasterizationSamples = renderPass.GetSamplesCount();
         multisampling.minSampleShading = 0.2f;
     } else {
         multisampling.sampleShadingEnable = VK_FALSE;
-        multisampling.rasterizationSamples = sampleCount;
+        multisampling.rasterizationSamples = renderPass.GetSamplesCount();
     }
 
     VkPipelineDepthStencilStateCreateInfo depthStencilState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
@@ -421,7 +421,7 @@ void PipelineFactory::CreateDebugPipeline(const VkDevice& device, const prev::re
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDynamicState = &dynamicState;
     pipelineInfo.layout = outPipelineLayout;
-    pipelineInfo.renderPass = renderPass;
+    pipelineInfo.renderPass = renderPass.GetNativeHandle();
 
     VKERRCHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &outPipeline));
 }

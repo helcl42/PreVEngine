@@ -70,7 +70,7 @@ void SkyRenderer::Init()
 
     LOGI("Sky Screen Space Shader created\n");
 
-    m_pipeline = std::make_unique<prev_test::render::renderer::common::pipeline::ScreenSpacePipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
+    m_pipeline = std::make_unique<prev_test::render::renderer::common::pipeline::ScreenSpacePipeline>(*device, *m_shader, *m_renderPass);
     m_pipeline->Init();
 
     LOGI("Sky Screen Space Pipeline created\n");

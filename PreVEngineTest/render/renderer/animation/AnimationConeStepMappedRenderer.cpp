@@ -35,7 +35,7 @@ void AnimationConeStepMappedRenderer::Init()
 
     LOGI("Animation Cone Step Mapped Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::AnimationConeStepMappedPipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
+    m_pipeline = std::make_unique<pipeline::AnimationConeStepMappedPipeline>(*device, *m_shader, *m_renderPass);
     m_pipeline->Init();
 
     LOGI("Animation Cone Step Mapped Pipeline created\n");

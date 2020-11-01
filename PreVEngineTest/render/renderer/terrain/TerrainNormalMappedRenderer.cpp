@@ -34,7 +34,7 @@ void TerrainNormalMappedRenderer::Init()
 
     LOGI("Terrain Normal Mapped Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::TerrainNormalMappedPipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
+    m_pipeline = std::make_unique<pipeline::TerrainNormalMappedPipeline>(*device, *m_shader, *m_renderPass);
     m_pipeline->Init();
 
     LOGI("Terrain Normal Mapped Pipeline created\n");
