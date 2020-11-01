@@ -53,7 +53,7 @@ std::unique_ptr<Flare> LensFlareComponentFactory::CreateFlare(prev::core::memory
     prev::render::image::ImageFactory imageFactory{};
     auto image = imageFactory.CreateImage(filePath);
     auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
-    imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
+    imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
     return std::make_unique<Flare>(std::move(image), std::move(imageBuffer), scale);
 }
 } // namespace prev_test::component::sky

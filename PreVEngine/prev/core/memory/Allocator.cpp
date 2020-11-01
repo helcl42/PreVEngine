@@ -188,7 +188,7 @@ void Allocator::DestroyBuffer(VkBuffer buffer, VmaAllocation alloc)
     vmaDestroyBuffer(m_allocator, buffer, alloc);
 }
 
-void Allocator::CreateImage(const VkExtent3D& extent, const VkImageType imageType, const VkFormat format, const uint32_t mipLevels, const uint32_t layerCount, const VkImageTiling tiling, const VkImageUsageFlags usage, const VkImageCreateFlags flags, VkImage& outImage, VmaAllocation& outAlloc)
+void Allocator::CreateImage(const VkExtent3D& extent, const VkImageType imageType, const VkFormat format, const VkSampleCountFlagBits sampleCount, const uint32_t mipLevels, const uint32_t layerCount, const VkImageTiling tiling, const VkImageUsageFlags usage, const VkImageCreateFlags flags, VkImage& outImage, VmaAllocation& outAlloc)
 {
     VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
     imageInfo.flags = flags;
@@ -197,7 +197,7 @@ void Allocator::CreateImage(const VkExtent3D& extent, const VkImageType imageTyp
     imageInfo.extent = extent;
     imageInfo.mipLevels = mipLevels;
     imageInfo.arrayLayers = layerCount;
-    imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.samples = sampleCount;
     imageInfo.tiling = tiling;
     imageInfo.usage = usage;
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;

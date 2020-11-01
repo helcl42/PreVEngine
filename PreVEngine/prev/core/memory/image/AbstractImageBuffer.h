@@ -26,6 +26,8 @@ public:
 
     VkFormat GetFormat() const override;
 
+    VkSampleCountFlagBits GetSampleCount() const override;
+
     VkExtent3D GetExtent() const override;
 
     VkImageType GetImageType() const override;
@@ -52,6 +54,8 @@ protected:
     VkImageCreateFlags m_flags;
 
     VkFormat m_format;
+
+    VkSampleCountFlagBits m_sampleCount;
 
     VkImageView m_imageView;
 

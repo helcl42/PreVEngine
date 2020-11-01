@@ -341,7 +341,7 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> RenderComponentFactory:
     const VkExtent2D imageExtent = { image->GetWidth(), image->GetHeight() };
 
     auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
-    imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ imageExtent, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, filtering, VK_IMAGE_VIEW_TYPE_2D, 1, repeatAddressMode ? VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT : VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
+    imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ imageExtent, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, filtering, VK_IMAGE_VIEW_TYPE_2D, 1, repeatAddressMode ? VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT : VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
 
     return imageBuffer;
 }

@@ -58,11 +58,11 @@ void WaterOffScreenRenderPassComponent::InitBuffers()
     auto device = prev::core::DeviceProvider::Instance().GetDevice();
 
     m_imageBuffer = std::make_shared<prev::core::memory::image::ColorImageBuffer>(*allocator);
-    m_imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, COLOR_FORMAT, 0, false, true, VK_IMAGE_VIEW_TYPE_2D });
+    m_imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, COLOR_FORMAT, VK_SAMPLE_COUNT_1_BIT, 0, false, true, VK_IMAGE_VIEW_TYPE_2D });
     m_imageBuffer->CreateSampler();
 
     m_depthBuffer = std::make_shared<prev::core::memory::image::DepthImageBuffer>(*allocator);
-    m_depthBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, DEPTH_FORMAT, 0, false, false, VK_IMAGE_VIEW_TYPE_2D });
+    m_depthBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, DEPTH_FORMAT, VK_SAMPLE_COUNT_1_BIT, 0, false, false, VK_IMAGE_VIEW_TYPE_2D });
     m_depthBuffer->CreateSampler(1.0f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, false);
 
     m_frameBuffer = prev::util::VkUtils::CreateFrameBuffer(*device, *m_renderPass, { m_imageBuffer->GetImageView(), m_depthBuffer->GetImageView() }, GetExtent());
