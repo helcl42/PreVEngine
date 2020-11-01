@@ -10,6 +10,7 @@ AbstractImageBuffer::AbstractImageBuffer(Allocator& allocator)
     , m_imageType(VkImageType::VK_IMAGE_TYPE_2D)
     , m_flags()
     , m_format(VkFormat::VK_FORMAT_UNDEFINED)
+    , m_sampleCount(VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT)
     , m_imageView(nullptr)
     , m_sampler(nullptr)
     , m_mipLevels(0)
@@ -105,6 +106,11 @@ VkFormat AbstractImageBuffer::GetFormat() const
     return m_format;
 }
 
+VkSampleCountFlagBits AbstractImageBuffer::GetSampleCount() const
+{
+    return m_sampleCount;
+}
+
 VkExtent3D AbstractImageBuffer::GetExtent() const
 {
     return m_extent;
@@ -134,4 +140,4 @@ VkImageViewType AbstractImageBuffer::GetViewType() const
 {
     return m_imageViewType;
 }
-} // namespace prev::memory::image
+} // namespace prev::core::memory::image

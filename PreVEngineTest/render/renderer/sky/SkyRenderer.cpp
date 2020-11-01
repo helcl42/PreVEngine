@@ -291,7 +291,7 @@ void SkyRenderer::UpdateImageBufferExtents(const VkExtent2D& extent, std::shared
             imageBuffer = nullptr;
         }
 
-        const prev::core::memory::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ extent.width, extent.height }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE };
+        const prev::core::memory::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ extent.width, extent.height }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE };
         imageBuffer = std::make_unique<prev::core::memory::image::ImageStorageBuffer>(*computeAllocator);
         imageBuffer->Create(bufferCreateInfo);
     }

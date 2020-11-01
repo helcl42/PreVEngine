@@ -61,7 +61,7 @@ std::shared_ptr<prev_test::render::IMaterial> ParticleSystemComponentFactory::Cr
 {
     auto image = CreateImage(texturePath);
     auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
-    imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER, (uint8_t*)image->GetBuffer() });
+    imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER, (uint8_t*)image->GetBuffer() });
 
     prev_test::render::material::MaterialFactory materialFactory{};
     return materialFactory.Create({ glm::vec3{ 1.0f }, 0.0f, 0.0f }, { std::move(image), std::move(imageBuffer) });

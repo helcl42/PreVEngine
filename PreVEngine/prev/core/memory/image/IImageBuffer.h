@@ -24,6 +24,8 @@ public:
 
     virtual VkFormat GetFormat() const = 0;
 
+    virtual VkSampleCountFlagBits GetSampleCount() const = 0;
+
     virtual VkExtent3D GetExtent() const = 0;
 
     virtual VkImageType GetImageType() const = 0;

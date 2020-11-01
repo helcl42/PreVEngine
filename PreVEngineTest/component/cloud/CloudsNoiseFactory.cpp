@@ -27,7 +27,7 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsNoiseFactory::Cre
 
     auto fence = prev::util::VkUtils::CreateFence(*device);
 
-    prev::core::memory::image::ImageBufferCreateInfo imageBufferCreateInfo{ VkExtent3D{ width, height, depth }, VK_IMAGE_TYPE_3D, VK_FORMAT_R8G8B8A8_UNORM, 0, true, true, VK_IMAGE_VIEW_TYPE_3D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT };
+    prev::core::memory::image::ImageBufferCreateInfo imageBufferCreateInfo{ VkExtent3D{ width, height, depth }, VK_IMAGE_TYPE_3D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, true, VK_IMAGE_VIEW_TYPE_3D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT };
 
     auto noiseImageBuffer = std::make_unique<prev::core::memory::image::ImageStorageBuffer>(*computeAllocator);
     noiseImageBuffer->Create(imageBufferCreateInfo);

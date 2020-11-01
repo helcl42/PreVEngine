@@ -12,6 +12,7 @@ ImageBuffer::ImageBuffer(Allocator& allocator)
 void ImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
 {
     m_format = createInfo.format;
+    m_sampleCount = createInfo.samplesCount;
     m_layerCount = createInfo.layerCount;
     m_imageViewType = createInfo.viewType;
     m_imageType = createInfo.imageType;
@@ -23,7 +24,7 @@ void ImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
         m_mipLevels = prev::util::MathUtil::Log2(std::max(createInfo.extent.width, createInfo.extent.height)) + 1;
     }
 
-    m_allocator.CreateImage(createInfo.extent, createInfo.imageType, createInfo.format, m_mipLevels, createInfo.layerCount, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, createInfo.flags, m_image, m_allocation);
+    m_allocator.CreateImage(createInfo.extent, createInfo.imageType, createInfo.format, createInfo.samplesCount, m_mipLevels, createInfo.layerCount, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, createInfo.flags, m_image, m_allocation);
     m_allocator.CopyDataToImage(createInfo.extent, createInfo.format, m_mipLevels, createInfo.layerData, createInfo.layerCount, m_image);
 
     if (m_mipLevels > 1) {

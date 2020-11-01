@@ -101,7 +101,7 @@ void ShadowsComponent::InitCascades()
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
     m_depthBuffer = std::make_shared<prev::core::memory::image::DepthImageBuffer>(*allocator);
-    m_depthBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, DEPTH_FORMAT, 0, false, false, VK_IMAGE_VIEW_TYPE_2D_ARRAY, m_cascadesCount });
+    m_depthBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, DEPTH_FORMAT, VK_SAMPLE_COUNT_1_BIT, 0, false, false, VK_IMAGE_VIEW_TYPE_2D_ARRAY, m_cascadesCount });
     m_depthBuffer->CreateSampler(1.0f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, false);
 
     m_cascades.resize(m_cascadesCount);
