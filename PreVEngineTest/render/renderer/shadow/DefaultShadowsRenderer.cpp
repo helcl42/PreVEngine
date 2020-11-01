@@ -30,7 +30,7 @@ void DefaultShadowsRenderer::Init()
 
     LOGI("Default Shadows Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::DefaultShadowsPipeline>(*device, *m_renderPass, *m_shader);
+    m_pipeline = std::make_unique<pipeline::DefaultShadowsPipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
     m_pipeline->Init();
 
     LOGI("Default Shadows Pipeline created\n");

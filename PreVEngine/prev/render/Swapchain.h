@@ -2,7 +2,7 @@
 #define __SWAPCHAIN_H__
 
 #include "../core/memory/Allocator.h"
-#include "../core/memory/image/DepthImageBuffer.h"
+#include "../core/memory/image/IImageBuffer.h"
 #include "pass/RenderPass.h"
 
 #ifdef ANDROID
@@ -35,7 +35,7 @@ struct SwapchainBuffer {
 
 class Swapchain {
 public:
-    Swapchain(const prev::core::Queue& presentQueue, const prev::core::Queue& graphicsQueue, pass::RenderPass& renderPass, prev::core::memory::Allocator& allocator);
+    Swapchain(const prev::core::Queue& presentQueue, const prev::core::Queue& graphicsQueue, pass::RenderPass& renderPass, prev::core::memory::Allocator& allocator, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT);
 
     virtual ~Swapchain();
 
@@ -63,7 +63,7 @@ public:
 public:
     const VkExtent2D& GetExtent() const;
 
-    uint32_t GetmageCount() const;
+    uint32_t GetImageCount() const;
 
 private:
     void Init();
@@ -89,13 +89,15 @@ private:
 
     prev::core::memory::Allocator& m_allocator;
 
+    const VkSampleCountFlagBits m_sampleCount;
+
     VkPhysicalDevice m_gpu;
 
     VkDevice m_device;
 
     VkSurfaceKHR m_surface;
 
-    prev::core::memory::image::DepthImageBuffer m_depthBuffer;
+    std::unique_ptr<prev::core::memory::image::IImageBuffer> m_depthBuffer;
 
     VkSwapchainKHR m_swapchain;
 
@@ -116,6 +118,11 @@ private:
     uint32_t m_currentFrameIndex;
 
     uint32_t m_swapchainImagesCount;
+
+    // MSAA
+    std::unique_ptr<prev::core::memory::image::IImageBuffer> m_msaaColorBuffer;
+
+    std::unique_ptr<prev::core::memory::image::IImageBuffer> m_msaaDepthBuffer;
 };
 } // namespace prev::render
 

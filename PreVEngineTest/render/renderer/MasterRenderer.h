@@ -3,8 +3,8 @@
 
 #include "../../General.h"
 #include "../pipeline/IPipeline.h"
-#include "RenderContextUserData.h"
 #include "CommandBuffersGroup.h"
+#include "RenderContextUserData.h"
 
 #include "../../General.h"
 
@@ -31,7 +31,7 @@ public:
 
     void PreRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData) override;
 
-    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode >& node, const prev::render::DefaultRenderContextUserData& renderContextUserData) override;
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const prev::render::DefaultRenderContextUserData& renderContextUserData) override;
 
     void PostRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData) override;
 
@@ -60,22 +60,22 @@ private:
 
     void ShutDownRefraction();
 
-    void RenderShadows(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode >& root);
+    void RenderShadows(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root);
 
-    void RenderSceneReflection(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode >& root);
+    void RenderSceneReflection(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root);
 
-    void RenderSceneRefraction(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode >& root);
+    void RenderSceneRefraction(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root);
 
-    void RenderScene(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode >& root);
+    void RenderScene(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root);
 
-    void RenderDebug(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode >& root);
+    void RenderDebug(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root);
 
 #ifdef PARALLEL_RENDERING
     template <typename ContextUserDataType>
-    void RenderParallel(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode >& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const std::vector<VkCommandBuffer>& commandBuffers, const ContextUserDataType& userData, const VkRect2D& area);
+    void RenderParallel(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const std::vector<VkCommandBuffer>& commandBuffers, const ContextUserDataType& userData, const VkRect2D& area);
 #else
     template <typename ContextUserDataType>
-    void RenderSerial(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode >& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const ContextUserDataType& userData, const VkRect2D& area);
+    void RenderSerial(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const ContextUserDataType& userData, const VkRect2D& area);
 #endif
 private:
     static const inline glm::vec4 DEFAULT_CLIP_PLANE{ 0.0f, -1.0f, 0.0f, 1000.0f };
@@ -118,7 +118,7 @@ private:
 
 #ifdef PARALLEL_RENDERING
 template <typename ContextUserDataType>
-void MasterRenderer::RenderParallel(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode >& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const std::vector<VkCommandBuffer>& commandBuffers, const ContextUserDataType& userData, const VkRect2D& area)
+void MasterRenderer::RenderParallel(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const std::vector<VkCommandBuffer>& commandBuffers, const ContextUserDataType& userData, const VkRect2D& area)
 {
     renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, area, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
@@ -159,7 +159,7 @@ void MasterRenderer::RenderParallel(const std::shared_ptr<prev::render::pass::Re
 }
 #else
 template <typename ContextUserDataType>
-void MasterRenderer::RenderSerial(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode >& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const ContextUserDataType& userData, const VkRect2D& area)
+void MasterRenderer::RenderSerial(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const ContextUserDataType& userData, const VkRect2D& area)
 {
     renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, area);
 

@@ -131,6 +131,17 @@ VkFormat RenderPass::GetDepthFormat() const
     return m_depthFormat;
 }
 
+VkSampleCountFlagBits RenderPass::GetSamplesCount() const
+{
+    VkSampleCountFlagBits samplesCount{ VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT };
+    for (const auto& a : m_attachments) {
+        if (a.samples > samplesCount) {
+            samplesCount = a.samples;
+        }
+    }
+    return samplesCount;
+}
+
 const std::vector<VkClearValue>& RenderPass::GetClearValues() const
 {
     return m_clearValues;

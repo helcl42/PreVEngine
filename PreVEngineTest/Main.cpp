@@ -7,6 +7,7 @@ int main(int argc, char* argv[])
     auto sceneConfig = std::make_shared<prev::scene::SceneConfig>();
     sceneConfig->framesInFlight = 3;
     sceneConfig->VSync = true;
+    sceneConfig->samplesCount = 1;
 
     auto config = std::make_shared<prev::core::EngineConfig>();
     config->appName = "Test App";

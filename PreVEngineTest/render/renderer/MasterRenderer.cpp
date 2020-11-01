@@ -138,7 +138,7 @@ void MasterRenderer::InitDefault()
 
 #ifdef PARALLEL_RENDERING
     CommandBuffersGroupFactory buffersGroupFactory{};
-    m_defaultCommandBuffersGroup = buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetmageCount(), static_cast<uint32_t>(m_defaultRenderers.size()));
+    m_defaultCommandBuffersGroup = buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_defaultRenderers.size()));
 #endif
 }
 
@@ -164,7 +164,7 @@ void MasterRenderer::InitDebug()
 
 #ifdef PARALLEL_RENDERING
     CommandBuffersGroupFactory buffersGroupFactory{};
-    m_debugCommandBuffersGroup = buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetmageCount(), static_cast<uint32_t>(m_debugRenderers.size()));
+    m_debugCommandBuffersGroup = buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_debugRenderers.size()));
 #endif
 }
 
@@ -197,7 +197,7 @@ void MasterRenderer::InitShadows()
 #ifdef PARALLEL_RENDERING
     CommandBuffersGroupFactory buffersGroupFactory{};
     for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; i++) {
-        m_shadowsCommandBufferGroups.emplace_back(buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetmageCount(), static_cast<uint32_t>(m_shadowRenderers.size())));
+        m_shadowsCommandBufferGroups.emplace_back(buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_shadowRenderers.size())));
     }
 #endif
 }
@@ -239,7 +239,7 @@ void MasterRenderer::InitReflection()
 
 #ifdef PARALLEL_RENDERING
     CommandBuffersGroupFactory buffersGroupFactory{};
-    m_reflectionCommandBufferGroups = buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetmageCount(), static_cast<uint32_t>(m_reflectionRenderers.size()));
+    m_reflectionCommandBufferGroups = buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_reflectionRenderers.size()));
 #endif
 }
 
@@ -280,7 +280,7 @@ void MasterRenderer::InitRefraction()
 
 #ifdef PARALLEL_RENDERING
     CommandBuffersGroupFactory buffersGroupFactory{};
-    m_refractionCommandBufferGroups = buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetmageCount(), static_cast<uint32_t>(m_refractionRenderers.size()));
+    m_refractionCommandBufferGroups = buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_refractionRenderers.size()));
 #endif
 }
 

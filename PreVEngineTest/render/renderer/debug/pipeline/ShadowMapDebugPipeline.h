@@ -6,7 +6,7 @@
 namespace prev_test::render::renderer::debug::pipeline {
 class ShadowMapDebugPipeline final : public prev_test::render::pipeline::AbstractGraphicsPipeline {
 public:
-    ShadowMapDebugPipeline(const VkDevice device, const VkRenderPass renderpass, const prev::render::shader::Shader& shaders);
+    ShadowMapDebugPipeline(const VkDevice device, const prev::render::shader::Shader& shaders, const VkRenderPass renderpass, const VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT);
 
     ~ShadowMapDebugPipeline() = default;
 

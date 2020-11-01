@@ -34,7 +34,7 @@ void WaterRenderer::Init()
 
     LOGI("Water Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::WaterPipeline>(*device, *m_renderPass, *m_shader);
+    m_pipeline = std::make_unique<pipeline::WaterPipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
     m_pipeline->Init();
 
     LOGI("Water Pipeline created\n");

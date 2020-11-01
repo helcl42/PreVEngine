@@ -1,4 +1,5 @@
 #include "Scene.h"
+#include "../util/VkUtils.h"
 
 namespace prev::scene {
 Scene::Scene(const std::shared_ptr<SceneConfig>& sceneConfig, const std::shared_ptr<prev::core::device::Device>& device, VkSurfaceKHR surface)
@@ -134,11 +135,39 @@ void Scene::InitRenderPass()
 {
     const auto colorFormat = m_device->GetGPU().FindSurfaceFormat(m_surface);
     const auto depthFormat = m_device->GetGPU().FindDepthFormat();
+    const VkClearColorValue clearColor{ 0.5f, 0.5f, 0.5f, 1.0f };
+    const VkSampleCountFlagBits sampleCount = prev::util::VkUtils::GetSampleCountBit(m_config->samplesCount);
 
     m_renderPass = std::make_shared<prev::render::pass::RenderPass>(*m_device);
-    m_renderPass->AddColorAttachment(colorFormat, { 0.5f, 0.5f, 0.5f, 1.0f });
-    m_renderPass->AddDepthAttachment(depthFormat);
-    m_renderPass->AddSubpass({ 0, 1 });
+    if (sampleCount > VK_SAMPLE_COUNT_1_BIT) {
+        std::vector<VkSubpassDependency> dependencies{ 2 };
+        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[0].dstSubpass = 0;
+        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+        dependencies[1].srcSubpass = 0;
+        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+        m_renderPass->AddColorAttachment(colorFormat, sampleCount, clearColor, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL); // color buffer, multisampled
+        m_renderPass->AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, clearColor, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR); // color buffer, resolve buffer
+        m_renderPass->AddDepthAttachment(depthFormat, sampleCount, { 1.0f, 0 }); // depth buffer, multisampled
+        m_renderPass->AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, { 1.0f, 0 }); // depth buffer, resolve buffer
+        m_renderPass->AddSubpass({ 0, 2 }, { 1 }); // resolve ref will be at index 1
+        m_renderPass->AddSubpassDependencies(dependencies);
+    } else {
+        m_renderPass->AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, { 0.5f, 0.5f, 0.5f, 1.0f });
+        m_renderPass->AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT);
+        m_renderPass->AddSubpass({ 0, 1 });
+    }
 }
 
 void Scene::InitAllocator()
@@ -156,7 +185,7 @@ void Scene::InitAllocator()
 
 void Scene::InitSwapchain()
 {
-    m_swapchain = std::make_shared<prev::render::Swapchain>(*m_presentQueue, *m_graphicsQueue, *m_renderPass, *m_allocator);
+    m_swapchain = std::make_shared<prev::render::Swapchain>(*m_presentQueue, *m_graphicsQueue, *m_renderPass, *m_allocator, prev::util::VkUtils::GetSampleCountBit(m_config->samplesCount));
 #if defined(__ANDROID__)
     m_swapchain->SetPresentMode(m_config->VSync ? VK_PRESENT_MODE_MAILBOX_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
 #else

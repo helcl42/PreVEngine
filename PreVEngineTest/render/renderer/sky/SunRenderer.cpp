@@ -31,7 +31,7 @@ void SunRenderer::Init()
 
     LOGI("Sun Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::SunOcclusionPipeline>(*device, *m_renderPass, *m_shader);
+    m_pipeline = std::make_unique<pipeline::SunOcclusionPipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
     m_pipeline->Init();
 
     LOGI("Sun Pipeline created\n");
@@ -112,7 +112,7 @@ void SunRenderer::AfterRender(const prev::render::RenderContext& renderContext, 
     //#else
     //        auto result = vkGetQueryPoolResults(*device, m_queryPool, 0, 1, sizeof(m_passedSamples), &m_passedSamples, sizeof(uint64_t), VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT);
     //#endif
-    const float ratio = glm::clamp((static_cast<float>(m_passedSamples) / static_cast<float>(m_maxNumberOfSamples)), 0.0f, 1.0f) * 1.2f;
+    const float ratio = glm::clamp((static_cast<float>(m_passedSamples) / static_cast<float>(m_maxNumberOfSamples * m_renderPass->GetSamplesCount())), 0.0f, 1.0f) * 1.2f;
     //LOGI("Result: %s Passed samples: %lld Max: %lld Ratio: %f\n", VkResultStr(result),  m_passedSamples,  m_maxNumberOfSamples, ratio);
     prev::event::EventChannel::Post(prev_test::render::renderer::sky::SunVisibilityEvent{ ratio });
 }

@@ -1,5 +1,6 @@
 #include "ShadowsComponent.h"
 
+#include "../../General.h"
 #include "../../common/intersection/AABB.h"
 
 #include <prev/core/DeviceProvider.h>
@@ -86,7 +87,7 @@ void ShadowsComponent::InitRenderPass()
     m_renderPass = std::make_shared<prev::render::pass::RenderPass>(*device);
     m_renderPass->AddDepthAttachment(DEPTH_FORMAT);
     m_renderPass->AddSubpass({ 0 });
-    m_renderPass->AddSubpassDependency(dependencies);
+    m_renderPass->AddSubpassDependencies(dependencies);
     m_renderPass->Create();
 }
 

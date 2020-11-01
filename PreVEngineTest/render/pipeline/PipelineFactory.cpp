@@ -1,7 +1,7 @@
 #include "PipelineFactory.h"
 
 namespace prev_test::render::pipeline {
-void PipelineFactory::CreateShadowsPipeline(const VkDevice& device, const VkRenderPass& renderPass, const prev::render::shader::Shader& shader, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
+void PipelineFactory::CreateShadowsPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const VkRenderPass& renderPass, const VkSampleCountFlagBits sampleCount, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
 {
     // Pipeline layout
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
@@ -52,8 +52,14 @@ void PipelineFactory::CreateShadowsPipeline(const VkDevice& device, const VkRend
     rasterizer.depthBiasEnable = VK_FALSE;
 
     VkPipelineMultisampleStateCreateInfo multisampling = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
-    multisampling.sampleShadingEnable = VK_FALSE;
-    multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+    if (sampleCount > VK_SAMPLE_COUNT_1_BIT) {
+        multisampling.sampleShadingEnable = VK_TRUE;
+        multisampling.rasterizationSamples = sampleCount;
+        multisampling.minSampleShading = 0.2f;
+    } else {
+        multisampling.sampleShadingEnable = VK_FALSE;
+        multisampling.rasterizationSamples = sampleCount;
+    }
 
     VkPipelineDepthStencilStateCreateInfo depthStencilState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
     depthStencilState.depthTestEnable = VK_TRUE;
@@ -93,7 +99,7 @@ void PipelineFactory::CreateShadowsPipeline(const VkDevice& device, const VkRend
     VKERRCHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &outPipeline));
 }
 
-void PipelineFactory::CreateDefaultPipeline(const VkDevice& device, const VkRenderPass& renderPass, const prev::render::shader::Shader& shader, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool fillMode, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
+void PipelineFactory::CreateDefaultPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const VkRenderPass& renderPass, const VkSampleCountFlagBits sampleCount, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool fillMode, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
 {
     // Pipeline layout
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
@@ -137,19 +143,21 @@ void PipelineFactory::CreateDefaultPipeline(const VkDevice& device, const VkRend
     VkPipelineRasterizationStateCreateInfo rasterizer = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
     rasterizer.depthClampEnable = VK_TRUE;
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
-    if (fillMode) {
-        rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-    } else {
-        rasterizer.polygonMode = VK_POLYGON_MODE_LINE;
-    }
+    rasterizer.polygonMode = fillMode ? VK_POLYGON_MODE_FILL : VK_POLYGON_MODE_LINE;
     rasterizer.lineWidth = 1.0f;
     rasterizer.cullMode = VK_CULL_MODE_NONE;
     rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
 
     VkPipelineMultisampleStateCreateInfo multisampling = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
-    multisampling.sampleShadingEnable = VK_FALSE;
-    multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+    if (sampleCount > VK_SAMPLE_COUNT_1_BIT) {
+        multisampling.sampleShadingEnable = VK_TRUE;
+        multisampling.rasterizationSamples = sampleCount;
+        multisampling.minSampleShading = 0.2f;
+    } else {
+        multisampling.sampleShadingEnable = VK_FALSE;
+        multisampling.rasterizationSamples = sampleCount;
+    }
 
     VkPipelineDepthStencilStateCreateInfo depthStencilState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
     depthStencilState.depthTestEnable = depthTestEnabled ? VK_TRUE : VK_FALSE;
@@ -200,7 +208,7 @@ void PipelineFactory::CreateDefaultPipeline(const VkDevice& device, const VkRend
     VKERRCHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &outPipeline));
 }
 
-void PipelineFactory::CreateParticlesPipeline(const VkDevice& device, const VkRenderPass& renderPass, const prev::render::shader::Shader& shader, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool fillMode, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
+void PipelineFactory::CreateParticlesPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const VkRenderPass& renderPass, const VkSampleCountFlagBits sampleCount, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool fillMode, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
 {
     // Pipeline layout
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
@@ -244,19 +252,21 @@ void PipelineFactory::CreateParticlesPipeline(const VkDevice& device, const VkRe
     VkPipelineRasterizationStateCreateInfo rasterizer = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
     rasterizer.depthClampEnable = VK_TRUE;
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
-    if (fillMode) {
-        rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-    } else {
-        rasterizer.polygonMode = VK_POLYGON_MODE_LINE;
-    }
+    rasterizer.polygonMode = fillMode ? VK_POLYGON_MODE_FILL : VK_POLYGON_MODE_LINE;
     rasterizer.lineWidth = 1.0f;
     rasterizer.cullMode = VK_CULL_MODE_NONE;
     rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
 
     VkPipelineMultisampleStateCreateInfo multisampling = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
-    multisampling.sampleShadingEnable = VK_FALSE;
-    multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+    if (sampleCount > VK_SAMPLE_COUNT_1_BIT) {
+        multisampling.sampleShadingEnable = VK_TRUE;
+        multisampling.rasterizationSamples = sampleCount;
+        multisampling.minSampleShading = 0.2f;
+    } else {
+        multisampling.sampleShadingEnable = VK_FALSE;
+        multisampling.rasterizationSamples = sampleCount;
+    }
 
     VkPipelineDepthStencilStateCreateInfo depthStencilState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
     depthStencilState.depthTestEnable = depthTestEnabled ? VK_TRUE : VK_FALSE;
@@ -307,7 +317,7 @@ void PipelineFactory::CreateParticlesPipeline(const VkDevice& device, const VkRe
     VKERRCHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &outPipeline));
 }
 
-void PipelineFactory::CreateDebugPipeline(const VkDevice& device, const VkRenderPass& renderPass, const prev::render::shader::Shader& shader, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
+void PipelineFactory::CreateDebugPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const VkRenderPass& renderPass, const VkSampleCountFlagBits sampleCount, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
 {
     // Pipeline layout
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
@@ -358,8 +368,14 @@ void PipelineFactory::CreateDebugPipeline(const VkDevice& device, const VkRender
     rasterizer.depthBiasEnable = VK_FALSE;
 
     VkPipelineMultisampleStateCreateInfo multisampling = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
-    multisampling.sampleShadingEnable = VK_FALSE;
-    multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+    if (sampleCount > VK_SAMPLE_COUNT_1_BIT) {
+        multisampling.sampleShadingEnable = VK_TRUE;
+        multisampling.rasterizationSamples = sampleCount;
+        multisampling.minSampleShading = 0.2f;
+    } else {
+        multisampling.sampleShadingEnable = VK_FALSE;
+        multisampling.rasterizationSamples = sampleCount;
+    }
 
     VkPipelineDepthStencilStateCreateInfo depthStencilState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
     depthStencilState.depthTestEnable = VK_FALSE;

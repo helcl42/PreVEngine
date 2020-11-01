@@ -31,7 +31,7 @@ void RayCastDebugRenderer::Init()
 
     LOGI("RayCast Debug Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::RayCastDebugPipeline>(*device, *m_renderPass, *m_shader);
+    m_pipeline = std::make_unique<pipeline::RayCastDebugPipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
     m_pipeline->Init();
 
     LOGI("RayCast Debug Pipeline created\n");

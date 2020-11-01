@@ -30,7 +30,7 @@ void AnimationBumpMappedShadowsRenderer::Init()
 
     LOGI("Animation Bump Mapped Shadows Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::AnimatedBumpMappedShadowsPipeline>(*device, *m_renderPass, *m_shader);
+    m_pipeline = std::make_unique<pipeline::AnimatedBumpMappedShadowsPipeline>(*device, *m_shader, * m_renderPass, m_renderPass->GetSamplesCount());
     m_pipeline->Init();
 
     LOGI("Animation Bump Mapped Shadows Pipeline created\n");

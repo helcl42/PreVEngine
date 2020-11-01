@@ -31,6 +31,9 @@ PhysicalDevice::PhysicalDevice(VkPhysicalDevice gpu)
     if (m_availableFeatures.geometryShader) {
         m_enabledFeatures.geometryShader = VK_TRUE;
     }
+    if (m_availableFeatures.sampleRateShading) {
+        m_enabledFeatures.sampleRateShading = VK_TRUE;
+    }
 
     uint32_t familyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(gpu, &familyCount, nullptr);
