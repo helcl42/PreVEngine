@@ -15,7 +15,7 @@ SubPass::operator VkSubpassDescription()
     subPass.pInputAttachments = m_inputReferences.data();
     subPass.colorAttachmentCount = static_cast<uint32_t>(m_colorReferences.size());
     subPass.pColorAttachments = m_colorReferences.data();
-    subPass.pResolveAttachments = nullptr;
+    subPass.pResolveAttachments = m_resolveReferences.data();
     subPass.pDepthStencilAttachment = m_depthReference.attachment != UINT32_MAX ? &m_depthReference : nullptr;
     subPass.preserveAttachmentCount = 0;
     subPass.pPreserveAttachments = nullptr;
@@ -40,6 +40,22 @@ void SubPass::UseAttachments(const std::vector<uint32_t>& attachmentIndexes)
 {
     for (const auto& i : attachmentIndexes) {
         UseAttachment(i);
+    }
+}
+
+void SubPass::UseResolveAttachment(uint32_t attachmentIndex)
+{
+    VkAttachmentReference ref = {};
+    ref.attachment = attachmentIndex;
+    ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+    m_resolveReferences.push_back(ref);
+}
+
+void SubPass::UseResolveAttachments(const std::vector<uint32_t>& attachmentIndexes)
+{
+    for (const auto& i : attachmentIndexes) {
+        UseResolveAttachment(i);
     }
 }
 
