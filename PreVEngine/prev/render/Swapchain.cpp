@@ -5,6 +5,53 @@
 #include <algorithm>
 
 namespace prev::render {
+namespace {
+    static const char* GetFormatString(const VkFormat fmt)
+    {
+#define STR(f) \
+    case f:    \
+        return #f
+        switch (fmt) {
+            STR(VK_FORMAT_UNDEFINED); //  0
+            //Color
+            STR(VK_FORMAT_R5G6B5_UNORM_PACK16); //  4
+            STR(VK_FORMAT_R8G8B8A8_UNORM); // 37
+            STR(VK_FORMAT_R8G8B8A8_SRGB); // 43
+            STR(VK_FORMAT_B8G8R8A8_UNORM); // 44
+            STR(VK_FORMAT_B8G8R8A8_SRGB); // 50
+            //Depth
+            STR(VK_FORMAT_D32_SFLOAT); //126
+            STR(VK_FORMAT_D32_SFLOAT_S8_UINT); //130
+            STR(VK_FORMAT_D24_UNORM_S8_UINT); //129
+            STR(VK_FORMAT_D16_UNORM_S8_UINT); //128
+            STR(VK_FORMAT_D16_UNORM); //124
+        default:
+            return "";
+        }
+#undef STR
+    }
+
+    static const char* PresentModeName(const VkPresentModeKHR mode)
+    {
+        switch (mode) {
+        case VK_PRESENT_MODE_IMMEDIATE_KHR:
+            return "VK_PRESENT_MODE_IMMEDIATE_KHR";
+        case VK_PRESENT_MODE_MAILBOX_KHR:
+            return "VK_PRESENT_MODE_MAILBOX_KHR";
+        case VK_PRESENT_MODE_FIFO_KHR:
+            return "VK_PRESENT_MODE_FIFO_KHR";
+        case VK_PRESENT_MODE_FIFO_RELAXED_KHR:
+            return "VK_PRESENT_MODE_FIFO_RELAXED_KHR";
+        case VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR:
+            return "VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR";
+        case VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR:
+            return "VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR";
+        default:
+            return "UNKNOWN";
+        }
+    }
+} // namespace
+
 Swapchain::Swapchain(const prev::core::Queue& presentQueue, const prev::core::Queue& graphicsQueue, pass::RenderPass& renderPass, prev::core::memory::Allocator& allocator)
     : m_presentQueue(presentQueue)
     , m_graphicsQueue(graphicsQueue)
@@ -46,11 +93,8 @@ Swapchain::~Swapchain()
 
     if (m_swapchain != VK_NULL_HANDLE) {
         vkDestroySwapchainKHR(m_device, m_swapchain, 0);
-
         for (auto& swapchainBuffer : m_swapchainBuffers) {
-            vkDestroyFence(m_device, swapchainBuffer.fence, nullptr);
-            vkDestroyFramebuffer(m_device, swapchainBuffer.framebuffer, nullptr);
-            vkDestroyImageView(m_device, swapchainBuffer.view, nullptr);
+            swapchainBuffer.Destroy(m_device);
         }
 
         LOGI("Swapchain destroyed\n");
@@ -185,57 +229,12 @@ bool Swapchain::SetPresentMode(VkPresentModeKHR preferredMode)
     return mode == preferredMode;
 }
 
-static const char* FormatStr(const VkFormat fmt)
-{
-#define STR(f) \
-    case f:    \
-        return #f
-    switch (fmt) {
-        STR(VK_FORMAT_UNDEFINED); //  0
-        //Color
-        STR(VK_FORMAT_R5G6B5_UNORM_PACK16); //  4
-        STR(VK_FORMAT_R8G8B8A8_UNORM); // 37
-        STR(VK_FORMAT_R8G8B8A8_SRGB); // 43
-        STR(VK_FORMAT_B8G8R8A8_UNORM); // 44
-        STR(VK_FORMAT_B8G8R8A8_SRGB); // 50
-        //Depth
-        STR(VK_FORMAT_D32_SFLOAT); //126
-        STR(VK_FORMAT_D32_SFLOAT_S8_UINT); //130
-        STR(VK_FORMAT_D24_UNORM_S8_UINT); //129
-        STR(VK_FORMAT_D16_UNORM_S8_UINT); //128
-        STR(VK_FORMAT_D16_UNORM); //124
-    default:
-        return "";
-    }
-#undef STR
-}
-
-static const char* PresentModeName(const VkPresentModeKHR mode)
-{
-    switch (mode) {
-    case VK_PRESENT_MODE_IMMEDIATE_KHR:
-        return "VK_PRESENT_MODE_IMMEDIATE_KHR";
-    case VK_PRESENT_MODE_MAILBOX_KHR:
-        return "VK_PRESENT_MODE_MAILBOX_KHR";
-    case VK_PRESENT_MODE_FIFO_KHR:
-        return "VK_PRESENT_MODE_FIFO_KHR";
-    case VK_PRESENT_MODE_FIFO_RELAXED_KHR:
-        return "VK_PRESENT_MODE_FIFO_RELAXED_KHR";
-    case VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR:
-        return "VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR";
-    case VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR:
-        return "VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR";
-    default:
-        return "UNKNOWN";
-    }
-}
-
 void Swapchain::Print() const
 {
     printf("Swapchain:\n");
 
-    printf("\tFormat  = %3d : %s\n", m_swapchainCreateInfo.imageFormat, FormatStr(m_swapchainCreateInfo.imageFormat));
-    printf("\tDepth   = %3d : %s\n", m_depthBuffer.GetFormat(), FormatStr(m_depthBuffer.GetFormat()));
+    printf("\tFormat  = %3d : %s\n", m_swapchainCreateInfo.imageFormat, GetFormatString(m_swapchainCreateInfo.imageFormat));
+    printf("\tDepth   = %3d : %s\n", m_depthBuffer.GetFormat(), GetFormatString(m_depthBuffer.GetFormat()));
 
     const auto& extent = m_swapchainCreateInfo.imageExtent;
     printf("\tExtent  = %d x %d\n", extent.width, extent.height);
@@ -266,13 +265,9 @@ void Swapchain::Apply()
 
     if (m_swapchainCreateInfo.oldSwapchain != VK_NULL_HANDLE) {
         vkDeviceWaitIdle(m_device);
-
         vkDestroySwapchainKHR(m_device, m_swapchainCreateInfo.oldSwapchain, 0);
-
         for (auto& swapchainBuffer : m_swapchainBuffers) {
-            vkDestroyFence(m_device, swapchainBuffer.fence, nullptr);
-            vkDestroyFramebuffer(m_device, swapchainBuffer.framebuffer, nullptr);
-            vkDestroyImageView(m_device, swapchainBuffer.view, nullptr);
+            swapchainBuffer.Destroy(m_device);
         }
     }
 
@@ -286,20 +281,20 @@ void Swapchain::Apply()
 
     m_swapchainBuffers.resize(m_swapchainImagesCount);
     for (uint32_t i = 0; i < m_swapchainImagesCount; i++) {
-        SwapchainBuffer& swapchainBuffer = m_swapchainBuffers[i];
+        auto image = swapchainImages[i];
+        auto imageView = prev::util::VkUtils::CreateImageView(m_device, image, m_swapchainCreateInfo.imageFormat, VK_IMAGE_VIEW_TYPE_2D, 1, VK_IMAGE_ASPECT_COLOR_BIT);
 
-        swapchainBuffer.image = swapchainImages[i];
-        swapchainBuffer.view = prev::util::VkUtils::CreateImageView(m_device, swapchainImages[i], m_swapchainCreateInfo.imageFormat, VK_IMAGE_VIEW_TYPE_2D, 1, VK_IMAGE_ASPECT_COLOR_BIT);
-
-        std::vector<VkImageView> views;
-        views.push_back(swapchainBuffer.view); // Add color buffer (unique)
-
+        std::vector<VkImageView> swapchainImageViews;
+        swapchainImageViews.push_back(imageView); // Add color buffer (unique)
         VkImageView depthBufferImageView = m_depthBuffer.GetImageView();
         if (depthBufferImageView != VK_NULL_HANDLE) {
-            views.push_back(depthBufferImageView); // Add depth buffer (shared)
+            swapchainImageViews.push_back(depthBufferImageView); // Add depth buffer (shared)
         }
 
-        swapchainBuffer.framebuffer = prev::util::VkUtils::CreateFrameBuffer(m_device, m_renderPass, views, m_swapchainCreateInfo.imageExtent);
+        auto& swapchainBuffer = m_swapchainBuffers[i];
+        swapchainBuffer.image = image;
+        swapchainBuffer.view = imageView;
+        swapchainBuffer.framebuffer = prev::util::VkUtils::CreateFrameBuffer(m_device, m_renderPass, swapchainImageViews, m_swapchainCreateInfo.imageExtent);
         swapchainBuffer.commandBuffer = prev::util::VkUtils::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
         swapchainBuffer.fence = prev::util::VkUtils::CreateFence(m_device);
         swapchainBuffer.extent = m_swapchainCreateInfo.imageExtent;
@@ -347,7 +342,7 @@ bool Swapchain::AcquireNext(SwapchainBuffer& next)
     m_acquiredIndex = acquireIndex;
     m_isAcquired = true;
 
-    SwapchainBuffer& swapchainBuffer = m_swapchainBuffers.at(m_acquiredIndex);
+    auto& swapchainBuffer = m_swapchainBuffers.at(m_acquiredIndex);
 
     vkWaitForFences(m_device, 1, &swapchainBuffer.fence, VK_TRUE, UINT64_MAX);
 
@@ -360,7 +355,7 @@ void Swapchain::Submit()
 {
     ASSERT(!!m_isAcquired, "CSwapchain: A buffer must be acquired before submitting.\n");
 
-    SwapchainBuffer& swapchainBuffer = m_swapchainBuffers[m_acquiredIndex];
+    auto& swapchainBuffer = m_swapchainBuffers[m_acquiredIndex];
 
     VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 

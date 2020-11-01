@@ -24,6 +24,13 @@ struct SwapchainBuffer {
     VkCommandBuffer commandBuffer;
 
     VkFence fence;
+
+    void Destroy(VkDevice device)
+    {
+        vkDestroyFence(device, fence, nullptr);
+        vkDestroyFramebuffer(device, framebuffer, nullptr);
+        vkDestroyImageView(device, view, nullptr);
+    }
 };
 
 class Swapchain {
@@ -110,6 +117,6 @@ private:
 
     uint32_t m_swapchainImagesCount;
 };
-} // namespace prev
+} // namespace prev::render
 
 #endif
