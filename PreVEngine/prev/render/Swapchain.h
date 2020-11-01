@@ -33,6 +33,8 @@ public:
     virtual ~Swapchain();
 
 public:
+    std::vector<VkPresentModeKHR> GetPresentModes() const;
+
     bool SetPresentMode(bool noTearing, bool poweSave = IS_ANDROID); // ANDROID: default to power-save mode (limit to 60fps)
 
     bool SetPresentMode(VkPresentModeKHR preferredMode);
