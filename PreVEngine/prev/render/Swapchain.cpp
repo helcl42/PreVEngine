@@ -144,12 +144,12 @@ bool Swapchain::SetImageCount(uint32_t imageCount)
     return count == imageCount;
 }
 
-static std::vector<VkPresentModeKHR> GetPresentModes(VkPhysicalDevice gpu, VkSurfaceKHR surface)
+std::vector<VkPresentModeKHR> Swapchain::GetPresentModes() const
 {
     uint32_t count;
-    vkGetPhysicalDeviceSurfacePresentModesKHR(gpu, surface, &count, nullptr);
+    vkGetPhysicalDeviceSurfacePresentModesKHR(m_gpu, m_surface, &count, nullptr);
     std::vector<VkPresentModeKHR> modes(count);
-    VKERRCHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(gpu, surface, &count, modes.data()));
+    VKERRCHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(m_gpu, m_surface, &count, modes.data()));
     return modes;
 }
 
@@ -165,7 +165,7 @@ bool Swapchain::SetPresentMode(bool noTearing, bool powersave)
 bool Swapchain::SetPresentMode(VkPresentModeKHR preferredMode)
 {
     VkPresentModeKHR& mode = m_swapchainCreateInfo.presentMode;
-    auto modes = GetPresentModes(m_gpu, m_surface);
+    auto modes = GetPresentModes();
 
     mode = VK_PRESENT_MODE_FIFO_KHR; // default to FIFO mode
     for (auto m : modes) {
@@ -241,7 +241,7 @@ void Swapchain::Print() const
     printf("\tExtent  = %d x %d\n", extent.width, extent.height);
     printf("\tBuffers = %d\n", (int)m_swapchainBuffers.size());
 
-    auto modes = GetPresentModes(m_gpu, m_surface);
+    auto modes = GetPresentModes();
     printf("\tPresentMode:\n");
     const auto& mode = m_swapchainCreateInfo.presentMode;
     for (auto m : modes) {
