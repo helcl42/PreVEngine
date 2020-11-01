@@ -130,10 +130,10 @@ void WaterOffScreenRenderPassComponent::InitRenderPass()
     // dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
     m_renderPass = std::make_shared<prev::render::pass::RenderPass>(*device);
-    m_renderPass->AddColorAttachment(COLOR_FORMAT, { 0.5f, 0.5f, 0.5f, 1.0f }, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    m_renderPass->AddDepthAttachment(DEPTH_FORMAT);
+    m_renderPass->AddColorAttachment(COLOR_FORMAT, VK_SAMPLE_COUNT_1_BIT, { 0.5f, 0.5f, 0.5f, 1.0f }, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_renderPass->AddDepthAttachment(DEPTH_FORMAT, VK_SAMPLE_COUNT_1_BIT);
     m_renderPass->AddSubpass({ 0, 1 });
-    m_renderPass->AddSubpassDependency(dependencies);
+    m_renderPass->AddSubpassDependencies(dependencies);
     m_renderPass->Create();
 }
 

@@ -30,7 +30,7 @@ void AnimationShadowsRenderer::Init()
 
     LOGI("Animation Shadows Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::AnimatedShadowsPipeline>(*device, *m_renderPass, *m_shader);
+    m_pipeline = std::make_unique<pipeline::AnimatedShadowsPipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
     m_pipeline->Init();
 
     LOGI("Animation Shadows Pipeline created\n");

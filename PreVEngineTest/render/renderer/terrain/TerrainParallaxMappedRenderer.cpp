@@ -34,7 +34,7 @@ void TerrainParallaxMappedRenderer::Init()
 
     LOGI("Terrain Parallax Mapped Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::TerrainParallaxMappedPipeline>(*device, *m_renderPass, *m_shader);
+    m_pipeline = std::make_unique<pipeline::TerrainParallaxMappedPipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
     m_pipeline->Init();
 
     LOGI("Terrain Parallax Mapped Pipeline created\n");

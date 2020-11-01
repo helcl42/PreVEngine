@@ -34,7 +34,7 @@ void AnimationRenderer::Init()
 
     LOGI("Animation Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::AnimationPipeline>(*device, *m_renderPass, *m_shader);
+    m_pipeline = std::make_unique<pipeline::AnimationPipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
     m_pipeline->Init();
 
     LOGI("Animation Pipeline created\n");

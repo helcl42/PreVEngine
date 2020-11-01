@@ -29,7 +29,7 @@ void FontRenderer::Init()
 
     LOGI("Fonts Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::FontPipeline>(*device, *m_renderPass, *m_shader);
+    m_pipeline = std::make_unique<pipeline::FontPipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
     m_pipeline->Init();
 
     LOGI("Fonts Pipeline created\n");

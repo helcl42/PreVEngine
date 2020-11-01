@@ -38,6 +38,8 @@ public:
 
     VkFormat GetDepthFormat() const;
 
+    VkSampleCountFlagBits GetSamplesCount() const;
+
     const std::vector<VkClearValue>& GetClearValues() const;
 
     const std::vector<SubPass>& GetSubPasses() const;

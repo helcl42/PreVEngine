@@ -35,7 +35,7 @@ void ParallaxMappedRenderer::Init()
 
     LOGI("Prallax Mapped Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::ParallaxMappedPipeline>(*device, *m_renderPass, *m_shader);
+    m_pipeline = std::make_unique<pipeline::ParallaxMappedPipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
     m_pipeline->Init();
 
     LOGI("Prallax Mapped Pipeline created\n");

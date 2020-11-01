@@ -1,72 +1,35 @@
 #include "Swapchain.h"
+#include "../core/memory/image/ColorImageBuffer.h"
+#include "../core/memory/image/DepthImageBuffer.h"
 #include "../util/MathUtils.h"
 #include "../util/VkUtils.h"
 
 #include <algorithm>
 
 namespace prev::render {
-namespace {
-    static const char* GetFormatString(const VkFormat fmt)
-    {
-#define STR(f) \
-    case f:    \
-        return #f
-        switch (fmt) {
-            STR(VK_FORMAT_UNDEFINED); //  0
-            //Color
-            STR(VK_FORMAT_R5G6B5_UNORM_PACK16); //  4
-            STR(VK_FORMAT_R8G8B8A8_UNORM); // 37
-            STR(VK_FORMAT_R8G8B8A8_SRGB); // 43
-            STR(VK_FORMAT_B8G8R8A8_UNORM); // 44
-            STR(VK_FORMAT_B8G8R8A8_SRGB); // 50
-            //Depth
-            STR(VK_FORMAT_D32_SFLOAT); //126
-            STR(VK_FORMAT_D32_SFLOAT_S8_UINT); //130
-            STR(VK_FORMAT_D24_UNORM_S8_UINT); //129
-            STR(VK_FORMAT_D16_UNORM_S8_UINT); //128
-            STR(VK_FORMAT_D16_UNORM); //124
-        default:
-            return "";
-        }
-#undef STR
-    }
-
-    static const char* PresentModeName(const VkPresentModeKHR mode)
-    {
-        switch (mode) {
-        case VK_PRESENT_MODE_IMMEDIATE_KHR:
-            return "VK_PRESENT_MODE_IMMEDIATE_KHR";
-        case VK_PRESENT_MODE_MAILBOX_KHR:
-            return "VK_PRESENT_MODE_MAILBOX_KHR";
-        case VK_PRESENT_MODE_FIFO_KHR:
-            return "VK_PRESENT_MODE_FIFO_KHR";
-        case VK_PRESENT_MODE_FIFO_RELAXED_KHR:
-            return "VK_PRESENT_MODE_FIFO_RELAXED_KHR";
-        case VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR:
-            return "VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR";
-        case VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR:
-            return "VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR";
-        default:
-            return "UNKNOWN";
-        }
-    }
-} // namespace
-
-Swapchain::Swapchain(const prev::core::Queue& presentQueue, const prev::core::Queue& graphicsQueue, pass::RenderPass& renderPass, prev::core::memory::Allocator& allocator)
+Swapchain::Swapchain(const prev::core::Queue& presentQueue, const prev::core::Queue& graphicsQueue, pass::RenderPass& renderPass, prev::core::memory::Allocator& allocator, VkSampleCountFlagBits sampleCount)
     : m_presentQueue(presentQueue)
     , m_graphicsQueue(graphicsQueue)
     , m_renderPass(renderPass)
     , m_allocator(allocator)
+    , m_sampleCount(sampleCount)
     , m_gpu(presentQueue.gpu)
     , m_device(presentQueue.device)
     , m_surface(presentQueue.surface)
-    , m_depthBuffer(prev::core::memory::image::DepthImageBuffer(allocator))
 {
     Init();
 
     m_commandPool = graphicsQueue.CreateCommandPool();
 
-    m_depthBuffer.Create(prev::core::memory::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, renderPass.GetDepthFormat(), VK_SAMPLE_COUNT_1_BIT, 0, false, false, VK_IMAGE_VIEW_TYPE_2D });
+    m_depthBuffer = std::make_unique<prev::core::memory::image::DepthImageBuffer>(allocator);
+    m_depthBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, renderPass.GetDepthFormat(), VK_SAMPLE_COUNT_1_BIT, 0, false, false, VK_IMAGE_VIEW_TYPE_2D });
+
+    if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
+        m_msaaColorBuffer = std::make_unique<prev::core::memory::image::ColorImageBuffer>(m_allocator);
+        m_msaaColorBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, m_renderPass.GetSurfaceFormat(), m_sampleCount, 0, false, false, VK_IMAGE_VIEW_TYPE_2D });
+        m_msaaDepthBuffer = std::make_unique<prev::core::memory::image::DepthImageBuffer>(m_allocator);
+        m_msaaDepthBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, m_renderPass.GetDepthFormat(), m_sampleCount, 0, false, false, VK_IMAGE_VIEW_TYPE_2D });
+    }
 
     VkSemaphoreCreateInfo semaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
     VKERRCHECK(vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_acquireSemaphore));
@@ -99,6 +62,10 @@ Swapchain::~Swapchain()
 
         LOGI("Swapchain destroyed\n");
     }
+
+    m_msaaColorBuffer = nullptr;
+    m_msaaDepthBuffer = nullptr;
+    m_depthBuffer = nullptr;
 }
 
 void Swapchain::Init()
@@ -133,7 +100,6 @@ void Swapchain::Init()
     m_swapchainCreateInfo.compositeAlpha = (surfaceCapabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR) ? VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR : VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 
     UpdateExtent();
-
     SetImageCount(2);
 }
 
@@ -233,8 +199,8 @@ void Swapchain::Print() const
 {
     printf("Swapchain:\n");
 
-    printf("\tFormat  = %3d : %s\n", m_swapchainCreateInfo.imageFormat, GetFormatString(m_swapchainCreateInfo.imageFormat));
-    printf("\tDepth   = %3d : %s\n", m_depthBuffer.GetFormat(), GetFormatString(m_depthBuffer.GetFormat()));
+    printf("\tFormat  = %3d : %s\n", m_swapchainCreateInfo.imageFormat, prev::util::VkUtils::FormatToString(m_swapchainCreateInfo.imageFormat).c_str());
+    printf("\tDepth   = %3d : %s\n", m_depthBuffer->GetFormat(), prev::util::VkUtils::FormatToString(m_depthBuffer->GetFormat()).c_str());
 
     const auto& extent = m_swapchainCreateInfo.imageExtent;
     printf("\tExtent  = %d x %d\n", extent.width, extent.height);
@@ -244,7 +210,7 @@ void Swapchain::Print() const
     printf("\tPresentMode:\n");
     const auto& mode = m_swapchainCreateInfo.presentMode;
     for (auto m : modes) {
-        print((m == mode) ? ConsoleColor::RESET : ConsoleColor::FAINT, "\t\t%s %s\n", (m == mode) ? cTICK : " ", PresentModeName(m));
+        print((m == mode) ? ConsoleColor::RESET : ConsoleColor::FAINT, "\t\t%s %s\n", (m == mode) ? cTICK : " ", prev::util::VkUtils::PresentModeToString(m).c_str());
     }
 }
 
@@ -253,7 +219,7 @@ const VkExtent2D& Swapchain::GetExtent() const
     return m_swapchainCreateInfo.imageExtent;
 }
 
-uint32_t Swapchain::GetmageCount() const
+uint32_t Swapchain::GetImageCount() const
 {
     return m_swapchainImagesCount;
 }
@@ -273,8 +239,12 @@ void Swapchain::Apply()
 
     m_currentFrameIndex = 0;
 
-    const VkExtent3D extent3D{ m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height, 1 };
-    m_depthBuffer.Resize(extent3D); // resize depth buffer
+    const VkExtent3D newExtent{ m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height, 1 };
+    m_depthBuffer->Resize(newExtent);
+    if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
+        m_msaaColorBuffer->Resize(newExtent);
+        m_msaaDepthBuffer->Resize(newExtent);
+    }
 
     std::vector<VkImage> swapchainImages = GetSwapchainImages();
     m_swapchainImagesCount = static_cast<uint32_t>(swapchainImages.size());
@@ -285,10 +255,14 @@ void Swapchain::Apply()
         auto imageView = prev::util::VkUtils::CreateImageView(m_device, image, m_swapchainCreateInfo.imageFormat, VK_IMAGE_VIEW_TYPE_2D, 1, VK_IMAGE_ASPECT_COLOR_BIT);
 
         std::vector<VkImageView> swapchainImageViews;
-        swapchainImageViews.push_back(imageView); // Add color buffer (unique)
-        VkImageView depthBufferImageView = m_depthBuffer.GetImageView();
-        if (depthBufferImageView != VK_NULL_HANDLE) {
-            swapchainImageViews.push_back(depthBufferImageView); // Add depth buffer (shared)
+        if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
+            swapchainImageViews.push_back(m_msaaColorBuffer->GetImageView());
+            swapchainImageViews.push_back(imageView); // Add color buffer (unique)
+            swapchainImageViews.push_back(m_msaaDepthBuffer->GetImageView());
+            swapchainImageViews.push_back(m_depthBuffer->GetImageView()); // Add depth buffer (shared)
+        } else {
+            swapchainImageViews.push_back(imageView); // Add color buffer (unique)
+            swapchainImageViews.push_back(m_depthBuffer->GetImageView()); // Add depth buffer (shared)
         }
 
         auto& swapchainBuffer = m_swapchainBuffers[i];
@@ -300,7 +274,7 @@ void Swapchain::Apply()
         swapchainBuffer.extent = m_swapchainCreateInfo.imageExtent;
     }
 
-    printf("---Extent = %d x %d\n", m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height);
+    printf("---Extent = %d x %d\n", newExtent.width, newExtent.height);
 
     if (m_swapchainCreateInfo.oldSwapchain == VK_NULL_HANDLE) {
         LOGI("Swapchain created\n");

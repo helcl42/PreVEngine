@@ -7,6 +7,8 @@ struct SceneConfig {
     bool VSync{ true };
 
     uint32_t framesInFlight{ 3 };
+
+    uint32_t samplesCount{ 1 };
 };
 } // namespace prev::scene
 

@@ -31,7 +31,7 @@ void ShadowMapDebugRenderer::Init()
 
     LOGI("ShadowMapDebug Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::ShadowMapDebugPipeline>(*device, *m_renderPass, *m_shader);
+    m_pipeline = std::make_unique<pipeline::ShadowMapDebugPipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
     m_pipeline->Init();
 
     LOGI("ShadowMapDebug Pipeline created\n");

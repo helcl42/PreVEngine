@@ -34,7 +34,7 @@ void AnimationNormalMappedRenderer::Init()
 
     LOGI("Animation Normal Mapped Shader created\n");
 
-    m_pipeline = std::make_unique<prev_test::render::renderer::animation::pipeline::AnimationNormalMappedPipeline>(*device, *m_renderPass, *m_shader);
+    m_pipeline = std::make_unique<prev_test::render::renderer::animation::pipeline::AnimationNormalMappedPipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
     m_pipeline->Init();
 
     LOGI("Animation Normal Mapped Pipeline created\n");
