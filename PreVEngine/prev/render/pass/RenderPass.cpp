@@ -169,4 +169,9 @@ RenderPass::operator VkRenderPass()
     }
     return m_renderPass;
 }
+
+VkRenderPass RenderPass::GetNativeHandle() const
+{
+    return m_renderPass;
+}
 } // namespace prev::render::pass

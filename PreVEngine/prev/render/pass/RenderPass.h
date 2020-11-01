@@ -51,6 +51,8 @@ public:
 public:
     operator VkRenderPass();
 
+    VkRenderPass GetNativeHandle() const;
+
 private:
     VkDevice m_device;
 

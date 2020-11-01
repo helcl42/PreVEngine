@@ -34,7 +34,7 @@ void TerrainConeStepMappedRenderer::Init()
 
     LOGI("Terrain Cone Step Mapped Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::TerrainConeStepMappedPipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
+    m_pipeline = std::make_unique<pipeline::TerrainConeStepMappedPipeline>(*device, *m_shader, *m_renderPass);
     m_pipeline->Init();
 
     LOGI("Terrain Cone Step Mapped Pipeline created\n");

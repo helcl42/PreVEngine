@@ -30,7 +30,7 @@ void SkyBoxRenderer::Init()
 
     LOGI("Skybox Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::SkyBoxPipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
+    m_pipeline = std::make_unique<pipeline::SkyBoxPipeline>(*device, *m_shader, *m_renderPass);
     m_pipeline->Init();
 
     LOGI("Skybox Pipeline created\n");

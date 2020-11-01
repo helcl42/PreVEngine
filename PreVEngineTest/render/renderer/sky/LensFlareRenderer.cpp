@@ -28,7 +28,7 @@ void LensFlareRenderer::Init()
 
     LOGI("LensFlare Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::FlarePipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
+    m_pipeline = std::make_unique<pipeline::FlarePipeline>(*device, *m_shader, *m_renderPass);
     m_pipeline->Init();
 
     LOGI("LensFlare Pipeline created\n");

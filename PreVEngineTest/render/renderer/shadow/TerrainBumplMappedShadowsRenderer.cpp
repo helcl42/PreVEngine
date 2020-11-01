@@ -30,7 +30,7 @@ void TerrainBumplMappedShadowsRenderer::Init()
 
     LOGI("Terrain Bump Mapped Shadows Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::TerrainBumpMappedShadowsPipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
+    m_pipeline = std::make_unique<pipeline::TerrainBumpMappedShadowsPipeline>(*device, *m_shader, *m_renderPass);
     m_pipeline->Init();
 
     LOGI("Terrain Bump Mapped Shadows Pipeline created\n");

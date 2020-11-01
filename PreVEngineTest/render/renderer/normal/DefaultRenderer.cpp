@@ -35,7 +35,7 @@ void DefaultRenderer::Init()
 
     LOGI("Default Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::DefaultPipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
+    m_pipeline = std::make_unique<pipeline::DefaultPipeline>(*device, *m_shader, *m_renderPass);
     m_pipeline->Init();
 
     LOGI("Default Pipeline created\n");

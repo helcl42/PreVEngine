@@ -30,7 +30,7 @@ void TextureDebugRenderer::Init()
 
     LOGI("Texture Debug Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::TextureDebugPipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
+    m_pipeline = std::make_unique<pipeline::TextureDebugPipeline>(*device, *m_shader, *m_renderPass);
     m_pipeline->Init();
 
     LOGI("Texture Debug Pipeline created\n");

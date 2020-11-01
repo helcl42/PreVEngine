@@ -6,7 +6,7 @@
 namespace prev_test::render::renderer::shadow::pipeline {
 class TerrainBumpMappedShadowsPipeline final : public prev_test::render::pipeline::AbstractGraphicsPipeline {
 public:
-    TerrainBumpMappedShadowsPipeline(const VkDevice device, const prev::render::shader::Shader& shaders, const VkRenderPass renderpass, const VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT);
+    TerrainBumpMappedShadowsPipeline(const VkDevice device, const prev::render::shader::Shader& shaders, const prev::render::pass::RenderPass& renderPass);
 
     ~TerrainBumpMappedShadowsPipeline() = default;
 

@@ -34,7 +34,7 @@ void AnimationParallaxMappedRenderer::Init()
 
     LOGI("Animation Parallax Mapped Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::AnimationParallaxMappedPipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
+    m_pipeline = std::make_unique<pipeline::AnimationParallaxMappedPipeline>(*device, *m_shader, *m_renderPass);
     m_pipeline->Init();
 
     LOGI("Animation Parallax Mapped Pipeline created\n");

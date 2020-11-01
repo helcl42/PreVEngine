@@ -35,7 +35,7 @@ void NormalMappedRenderer::Init()
 
     LOGI("Normal Mapped Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::NormalMappedPipeline>(*device, *m_shader, *m_renderPass, m_renderPass->GetSamplesCount());
+    m_pipeline = std::make_unique<pipeline::NormalMappedPipeline>(*device, *m_shader, *m_renderPass);
     m_pipeline->Init();
 
     LOGI("Normal Mapped Pipeline created\n");
