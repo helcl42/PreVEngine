@@ -8,19 +8,16 @@
 namespace prev_test::render::pipeline {
 class AbstractGraphicsPipeline : public AbstractPipeline {
 protected:
-    AbstractGraphicsPipeline(const VkDevice device, const prev::render::shader::Shader& shaders, const prev::render::pass::RenderPass& renderPass, const VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT)
+    AbstractGraphicsPipeline(const VkDevice device, const prev::render::shader::Shader& shaders, const prev::render::pass::RenderPass& renderPass)
         : AbstractPipeline(device, shaders)
         , m_renderPass(renderPass)
-        , m_samplesCount(sampleCount)
     {
     }
 
     virtual ~AbstractGraphicsPipeline() = default;
 
 protected:
-    const prev::render::pass::RenderPass m_renderPass;
-
-    const VkSampleCountFlagBits m_samplesCount;
+    const prev::render::pass::RenderPass& m_renderPass;
 };
 } // namespace prev_test::render::pipeline
 
