@@ -19,6 +19,10 @@ public:
 
     void UseAttachments(const std::vector<uint32_t>& attachmentIndexes = {});
 
+    void UseResolveAttachment(uint32_t attachmentIndex); // for write
+
+    void UseResolveAttachments(const std::vector<uint32_t>& attachmentIndexes = {});
+
     void InputAttachment(uint32_t attachmentIndex); // for read
 
     void InputAttachments(const std::vector<uint32_t>& attachmentIndices = {});
@@ -32,6 +36,8 @@ private:
     std::vector<VkAttachmentReference> m_inputReferences;
 
     std::vector<VkAttachmentReference> m_colorReferences;
+
+    std::vector<VkAttachmentReference> m_resolveReferences;
 
     VkAttachmentReference m_depthReference = { UINT32_MAX, VK_IMAGE_LAYOUT_UNDEFINED };
 };

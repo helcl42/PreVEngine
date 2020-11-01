@@ -11,7 +11,7 @@ RenderPass::~RenderPass()
     Destroy();
 }
 
-VkAttachmentDescription RenderPass::CreateAttachmentDescription(VkFormat format, VkImageLayout finalLayout, VkSampleCountFlagBits sampleCount)
+VkAttachmentDescription RenderPass::CreateAttachmentDescription(VkFormat format, VkSampleCountFlagBits sampleCount, VkImageLayout finalLayout)
 {
     VkAttachmentDescription attachment = {};
     attachment.format = format;
@@ -25,7 +25,7 @@ VkAttachmentDescription RenderPass::CreateAttachmentDescription(VkFormat format,
     return attachment;
 }
 
-uint32_t RenderPass::AddColorAttachment(VkFormat format, VkClearColorValue clearVal, VkImageLayout finalLayout, VkSampleCountFlagBits sampleCount)
+uint32_t RenderPass::AddColorAttachment(VkFormat format, VkSampleCountFlagBits sampleCount, VkClearColorValue clearVal, VkImageLayout finalLayout)
 {
     m_clearValues.push_back({});
     m_clearValues.back().color = clearVal;
@@ -34,37 +34,35 @@ uint32_t RenderPass::AddColorAttachment(VkFormat format, VkClearColorValue clear
         m_surfaceFormat = format;
     }
 
-    m_attachments.push_back(CreateAttachmentDescription(format, finalLayout, sampleCount));
+    m_attachments.push_back(CreateAttachmentDescription(format, sampleCount, finalLayout));
 
     return static_cast<uint32_t>(m_attachments.size() - 1);
 }
 
-uint32_t RenderPass::AddDepthAttachment(VkFormat format, VkClearDepthStencilValue clearVal, VkSampleCountFlagBits sampleCount)
+uint32_t RenderPass::AddDepthAttachment(VkFormat format, VkSampleCountFlagBits sampleCount, VkClearDepthStencilValue clearVal)
 {
-    ASSERT(m_depthFormat == VK_FORMAT_UNDEFINED, "Renderpass can't have more than one depth buffer. ");
     m_depthFormat = format;
 
     m_clearValues.push_back({});
     m_clearValues.back().depthStencil = clearVal;
 
-    m_attachments.push_back(CreateAttachmentDescription(format, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, sampleCount));
+    m_attachments.push_back(CreateAttachmentDescription(format, sampleCount, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL));
 
     return static_cast<uint32_t>(m_attachments.size() - 1);
 }
 
-SubPass& RenderPass::AddSubpass(const std::vector<uint32_t>& attachmentIndexes)
+SubPass& RenderPass::AddSubpass(const std::vector<uint32_t>& attachmentIndexes, const std::vector<uint32_t>& resolveIndices)
 {
     m_subpasses.push_back(SubPass(*this));
 
     SubPass& subpass = m_subpasses.back();
-    for (const auto& i : attachmentIndexes) {
-        subpass.UseAttachment(i);
-    }
+    subpass.UseAttachments(attachmentIndexes);
+    subpass.UseResolveAttachments(resolveIndices);
 
     return subpass;
 }
 
-void RenderPass::AddSubpassDependency(const std::vector<VkSubpassDependency>& dependencies)
+void RenderPass::AddSubpassDependencies(const std::vector<VkSubpassDependency>& dependencies)
 {
     m_dependencies.insert(m_dependencies.end(), dependencies.cbegin(), dependencies.cend());
 }

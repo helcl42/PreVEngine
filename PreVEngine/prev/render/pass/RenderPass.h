@@ -14,16 +14,16 @@ public:
     ~RenderPass();
 
 private:
-    static VkAttachmentDescription CreateAttachmentDescription(VkFormat format, VkImageLayout finalLayout, VkSampleCountFlagBits sampleCount);
+    static VkAttachmentDescription CreateAttachmentDescription(VkFormat format, VkSampleCountFlagBits sampleCount, VkImageLayout finalLayout);
 
 public:
-    uint32_t AddColorAttachment(VkFormat format, VkClearColorValue clearVal = {}, VkImageLayout finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT);
+    uint32_t AddColorAttachment(VkFormat format, VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, VkClearColorValue clearVal = {}, VkImageLayout finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
-    uint32_t AddDepthAttachment(VkFormat format, VkClearDepthStencilValue clearVal = { 1.0f, 0 }, VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT);
+    uint32_t AddDepthAttachment(VkFormat format, VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, VkClearDepthStencilValue clearVal = { 1.0f, 0 });
 
-    SubPass& AddSubpass(const std::vector<uint32_t>& attachmentIndexes = {});
+    SubPass& AddSubpass(const std::vector<uint32_t>& attachmentIndexes = {}, const std::vector<uint32_t>& resolveIndices = {});
 
-    void AddSubpassDependency(const std::vector<VkSubpassDependency>& dependencies);
+    void AddSubpassDependencies(const std::vector<VkSubpassDependency>& dependencies);
 
     void Create();
 
