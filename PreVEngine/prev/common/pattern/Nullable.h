@@ -10,7 +10,7 @@ public:
     {
     }
 
-    Nullable(const ObjectType& value)
+    Nullable(const ObjectType* value)
         : m_null(false)
         , m_value(value)
     {
@@ -26,13 +26,13 @@ public:
 
     const ObjectType& GetValue() const
     {
-        return m_value;
+        return *m_value;
     }
 
 private:
     bool m_null;
 
-    ObjectType m_value;
+    const ObjectType* m_value;
 };
 } // namespace prev::common::pattern
 #endif
