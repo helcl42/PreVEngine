@@ -10,9 +10,9 @@ public:
     {
     }
 
-    Nullable(const ObjectType* value)
+    Nullable(const ObjectType& value)
         : m_null(false)
-        , m_value(value)
+        , m_value(&value)
     {
     }
 
