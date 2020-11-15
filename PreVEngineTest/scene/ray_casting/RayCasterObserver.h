@@ -6,9 +6,10 @@
 #include "../../component/ray_casting/RayCastingEvents.h"
 #include "../../component/terrain/ITerrainComponent.h"
 
-#include <prev/common/pattern/Nullable.h>
 #include <prev/event/EventHandler.h>
 #include <prev/scene/graph/SceneNode.h>
+
+#include <optional>
 
 namespace prev_test::scene::ray_casting {
 class RayCastObserver final : public prev::scene::graph::SceneNode {
@@ -33,13 +34,13 @@ public:
 
 private:
     // Terrain
-    prev::common::pattern::Nullable<glm::vec3> FindTheClosestTerrainIntersection(const prev_test::common::intersection::Ray& ray) const;
+    std::optional<glm::vec3> FindTheClosestTerrainIntersection(const prev_test::common::intersection::Ray& ray) const;
 
-    prev::common::pattern::Nullable<glm::vec3> GetFirstPositionUnderAlongRay(const prev_test::common::intersection::Ray& ray) const;
+    std::optional<glm::vec3> GetFirstPositionUnderAlongRay(const prev_test::common::intersection::Ray& ray) const;
 
     std::vector<glm::vec3> GenerateSegmentPositions(const prev_test::common::intersection::Ray& ray) const;
 
-    prev::common::pattern::Nullable<glm::vec3> BinarySearch(const uint32_t count, const float start, const float finish, const prev_test::common::intersection::Ray& ray) const;
+    std::optional<glm::vec3> BinarySearch(const uint32_t count, const float start, const float finish, const prev_test::common::intersection::Ray& ray) const;
 
     bool IntersectsInRange(const float start, const float finish, const prev_test::common::intersection::Ray& ray) const;
 
@@ -48,9 +49,9 @@ private:
     std::shared_ptr<prev_test::component::terrain::ITerrainComponenet> GetTerrain(const glm::vec3& position) const;
 
     // Objects
-    std::vector<std::shared_ptr<prev::scene::graph::ISceneNode > > GetSelectableNodes() const;
+    std::vector<std::shared_ptr<prev::scene::graph::ISceneNode> > GetSelectableNodes() const;
 
-    prev::common::pattern::Nullable<std::tuple<std::shared_ptr<prev::scene::graph::ISceneNode >, prev_test::common::intersection::RayCastResult> > FindTheClosestIntersectingNode(const prev_test::common::intersection::Ray& ray) const;
+    std::optional<std::tuple<std::shared_ptr<prev::scene::graph::ISceneNode>, prev_test::common::intersection::RayCastResult> > FindTheClosestIntersectingNode(const prev_test::common::intersection::Ray& ray) const;
 
 public:
     void operator()(const prev_test::component::ray_casting::RayEvent& rayEvt);
@@ -58,7 +59,7 @@ public:
 private:
     const uint32_t RECURSION_COUNT{ 200 };
 
-    prev::common::pattern::Nullable<prev_test::common::intersection::Ray> m_currentRay;
+    std::optional<prev_test::common::intersection::Ray> m_currentRay;
 
     prev::event::EventHandler<RayCastObserver, prev_test::component::ray_casting::RayEvent> m_rayHandler{ *this };
 };

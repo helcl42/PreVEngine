@@ -19,7 +19,7 @@ void RayCastObserver::Init()
 
 void RayCastObserver::Update(float deltaTime)
 {
-    if (!m_currentRay.IsNull()) {
+    if (m_currentRay.has_value()) {
 
         // reset any selectable components
         auto selectableNodes = GetSelectableNodes();
@@ -29,21 +29,21 @@ void RayCastObserver::Update(float deltaTime)
         }
 
         IntersectionType intersectionType{ IntersectionType::NONE };
-        const auto& currentRayValue = m_currentRay.GetValue();
+        const auto& currentRayValue = m_currentRay.value();
         const auto currentTerrainIntersectionPoint = FindTheClosestTerrainIntersection(currentRayValue);
         const auto closestIntersectingObject = FindTheClosestIntersectingNode(currentRayValue);
-        if (!currentTerrainIntersectionPoint.IsNull() && !closestIntersectingObject.IsNull()) {
-            const float terrainRayLength = glm::distance(currentTerrainIntersectionPoint.GetValue(), currentRayValue.origin);
-            const float objectRayLength = std::get<1>(closestIntersectingObject.GetValue()).t;
+        if (currentTerrainIntersectionPoint.has_value() && closestIntersectingObject.has_value()) {
+            const float terrainRayLength = glm::distance(currentTerrainIntersectionPoint.value(), currentRayValue.origin);
+            const float objectRayLength = std::get<1>(closestIntersectingObject.value()).t;
             if (terrainRayLength < objectRayLength) {
                 intersectionType = IntersectionType::TERRAIN;
             } else {
                 intersectionType = IntersectionType::OBJECT;
             }
         } else {
-            if (!currentTerrainIntersectionPoint.IsNull()) {
+            if (currentTerrainIntersectionPoint.has_value()) {
                 intersectionType = IntersectionType::TERRAIN;
-            } else if (!closestIntersectingObject.IsNull()) {
+            } else if (closestIntersectingObject.has_value()) {
                 intersectionType = IntersectionType::OBJECT;
             }
         }
@@ -52,17 +52,14 @@ void RayCastObserver::Update(float deltaTime)
             auto terrainManagerNode = prev::scene::graph::GraphTraversal::Instance().FindOneWithTags({ TAG_TERRAIN_MANAGER_COMPONENT, TAG_SELECTABLE_COMPONENT }, prev::scene::graph::LogicOperation::AND);
             auto selectableComponent = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::ISelectableComponent>::Instance().Get(terrainManagerNode->GetId());
             selectableComponent->SetSelected(true);
-            selectableComponent->SetPosition(currentTerrainIntersectionPoint.GetValue());
+            selectableComponent->SetPosition(currentTerrainIntersectionPoint.value());
         } else if (intersectionType == IntersectionType::OBJECT) {
-            const auto node = std::get<0>(closestIntersectingObject.GetValue());
-            const auto& rayCastResult = std::get<1>(closestIntersectingObject.GetValue());
+            const auto node = std::get<0>(closestIntersectingObject.value());
+            const auto& rayCastResult = std::get<1>(closestIntersectingObject.value());
             auto selectableComponent = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::ISelectableComponent>::Instance().Get(node->GetId());
             selectableComponent->SetSelected(true);
             selectableComponent->SetPosition(rayCastResult.point);
         }
-
-        // TODO
-        // render node collision points -> it is stored in selectableComponent
     }
 
     SceneNode::Update(deltaTime);
@@ -73,9 +70,9 @@ void RayCastObserver::ShutDown()
     SceneNode::ShutDown();
 }
 
-prev::common::pattern::Nullable<glm::vec3> RayCastObserver::FindTheClosestTerrainIntersection(const prev_test::common::intersection::Ray& ray) const
+std::optional<glm::vec3> RayCastObserver::FindTheClosestTerrainIntersection(const prev_test::common::intersection::Ray& ray) const
 {
-    prev::common::pattern::Nullable<glm::vec3> currentTerrainIntersectionPoint{};
+    std::optional<glm::vec3> currentTerrainIntersectionPoint{};
     if (IntersectsInRange(0.0f, ray.length, ray)) {
         currentTerrainIntersectionPoint = BinarySearch(0, 0, ray.length, ray);
     } else {
@@ -84,7 +81,7 @@ prev::common::pattern::Nullable<glm::vec3> RayCastObserver::FindTheClosestTerrai
     return currentTerrainIntersectionPoint;
 }
 
-prev::common::pattern::Nullable<glm::vec3> RayCastObserver::GetFirstPositionUnderAlongRay(const prev_test::common::intersection::Ray& ray) const
+std::optional<glm::vec3> RayCastObserver::GetFirstPositionUnderAlongRay(const prev_test::common::intersection::Ray& ray) const
 {
     const auto segmentPositions = GenerateSegmentPositions(ray);
     for (const auto& segmentPosition : segmentPositions) {
@@ -95,11 +92,11 @@ prev::common::pattern::Nullable<glm::vec3> RayCastObserver::GetFirstPositionUnde
                 continue;
             }
             if (segmentPosition.y < currentTerrainHeight) {
-                return prev::common::pattern::Nullable<glm::vec3>({ segmentPosition.x, currentTerrainHeight, segmentPosition.z });
+                return std::optional<glm::vec3>({ segmentPosition.x, currentTerrainHeight, segmentPosition.z });
             }
         }
     }
-    return prev::common::pattern::Nullable<glm::vec3>();
+    return std::optional<glm::vec3>();
 }
 
 std::vector<glm::vec3> RayCastObserver::GenerateSegmentPositions(const prev_test::common::intersection::Ray& ray) const
@@ -118,16 +115,16 @@ std::vector<glm::vec3> RayCastObserver::GenerateSegmentPositions(const prev_test
     return result;
 }
 
-prev::common::pattern::Nullable<glm::vec3> RayCastObserver::BinarySearch(const uint32_t count, const float start, const float finish, const prev_test::common::intersection::Ray& ray) const
+std::optional<glm::vec3> RayCastObserver::BinarySearch(const uint32_t count, const float start, const float finish, const prev_test::common::intersection::Ray& ray) const
 {
     const float half = start + ((finish - start) / 2.0f);
     if (count >= RECURSION_COUNT) {
         const glm::vec3 endPoint = ray.GetPointAtDistances(half);
         const auto terrain = GetTerrain(endPoint);
         if (terrain != nullptr) {
-            return prev::common::pattern::Nullable<glm::vec3>(endPoint);
+            return std::optional<glm::vec3>(endPoint);
         } else {
-            return prev::common::pattern::Nullable<glm::vec3>();
+            return std::optional<glm::vec3>();
         }
     }
 
@@ -182,9 +179,9 @@ std::vector<std::shared_ptr<prev::scene::graph::ISceneNode> > RayCastObserver::G
     return prev::scene::graph::GraphTraversal::Instance().FindAllWithTags({ TAG_SELECTABLE_COMPONENT });
 }
 
-prev::common::pattern::Nullable<std::tuple<std::shared_ptr<prev::scene::graph::ISceneNode>, prev_test::common::intersection::RayCastResult> > RayCastObserver::FindTheClosestIntersectingNode(const prev_test::common::intersection::Ray& ray) const
+std::optional<std::tuple<std::shared_ptr<prev::scene::graph::ISceneNode>, prev_test::common::intersection::RayCastResult> > RayCastObserver::FindTheClosestIntersectingNode(const prev_test::common::intersection::Ray& ray) const
 {
-    prev::common::pattern::Nullable<std::tuple<std::shared_ptr<ISceneNode>, prev_test::common::intersection::RayCastResult> > theClosestNode;
+    std::optional<std::tuple<std::shared_ptr<ISceneNode>, prev_test::common::intersection::RayCastResult> > theClosestNode;
     float minDistance = std::numeric_limits<float>::max();
 
     auto selectableNodes = prev::scene::graph::GraphTraversal::Instance().FindAllWithTags({ TAG_SELECTABLE_COMPONENT, TAG_BOUNDING_VOLUME_COMPONENT }, prev::scene::graph::LogicOperation::AND);
@@ -194,7 +191,7 @@ prev::common::pattern::Nullable<std::tuple<std::shared_ptr<prev::scene::graph::I
         prev_test::common::intersection::RayCastResult rayCastResult{};
         if (boundingVolume->Intersects(ray, rayCastResult)) {
             if (rayCastResult.t < minDistance) {
-                theClosestNode = prev::common::pattern::Nullable<std::tuple<std::shared_ptr<ISceneNode>, prev_test::common::intersection::RayCastResult> >({ selectable, rayCastResult });
+                theClosestNode = std::optional<std::tuple<std::shared_ptr<ISceneNode>, prev_test::common::intersection::RayCastResult> >({ selectable, rayCastResult });
                 minDistance = rayCastResult.t;
             }
         }
@@ -204,6 +201,6 @@ prev::common::pattern::Nullable<std::tuple<std::shared_ptr<prev::scene::graph::I
 
 void RayCastObserver::operator()(const prev_test::component::ray_casting::RayEvent& rayEvt)
 {
-    m_currentRay = prev::common::pattern::Nullable<prev_test::common::intersection::Ray>{ rayEvt.ray };
+    m_currentRay = std::optional<prev_test::common::intersection::Ray>{ rayEvt.ray };
 }
 } // namespace prev_test::scene::ray_casting
