@@ -38,7 +38,7 @@ private:
 
     void ReadVertexData(const aiMesh& mesh, const prev::common::FlagSet<CreateFlags>& flags, const std::vector<VertexBoneData>& vertexBoneData, const uint32_t vertexBaseOffset, prev_test::render::VertexDataBuffer& inOutVertexBuffer) const;
 
-    std::vector<VertexBoneData> LoadAnimationBones(const aiMesh& mesh, const uint32_t vertexBaseOffset) const;
+    std::vector<VertexBoneData> LoadAnimationBones(const aiMesh& mesh) const;
 
     unsigned int GetAllVertexCount(const aiScene& scene) const;
 
