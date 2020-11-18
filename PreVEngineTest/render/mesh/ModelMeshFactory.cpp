@@ -104,7 +104,7 @@ void ModelMeshFactory::ReadVertexData(const aiMesh& mesh, const prev::common::Fl
     }
 }
 
-std::vector<VertexBoneData> ModelMeshFactory::LoadAnimationBones(const aiMesh& mesh, const uint32_t vertexBaseOffset) const
+std::vector<VertexBoneData> ModelMeshFactory::LoadAnimationBones(const aiMesh& mesh) const
 {
     std::vector<VertexBoneData> bones(mesh.mNumVertices);
     std::map<std::string, uint32_t> boneMapping;
@@ -121,7 +121,7 @@ std::vector<VertexBoneData> ModelMeshFactory::LoadAnimationBones(const aiMesh& m
         }
 
         for (uint32_t j = 0; j < mesh.mBones[boneIndex]->mNumWeights; j++) {
-            const uint32_t vertexId = vertexBaseOffset + mesh.mBones[boneIndex]->mWeights[j].mVertexId;
+            const uint32_t vertexId = mesh.mBones[boneIndex]->mWeights[j].mVertexId;
             const float weight = mesh.mBones[boneIndex]->mWeights[j].mWeight;
             bones[vertexId].AddBoneData(currentBoneIndex, weight);
         }
@@ -148,7 +148,7 @@ unsigned int ModelMeshFactory::ReadMeshes(const aiScene& scene, const prev::comm
         uint32_t vertexBaseOffset = 0;
         for (uint32_t meshIndex = 0; meshIndex < scene.mNumMeshes; meshIndex++) {
             const aiMesh& assMesh = *scene.mMeshes[meshIndex];
-            const auto vertexBonePart = LoadAnimationBones(assMesh, vertexBaseOffset);
+            const auto vertexBonePart = LoadAnimationBones(assMesh);
             for (size_t j = 0; j < vertexBonePart.size(); j++) {
                 vertexBoneData[j + vertexBaseOffset] = vertexBonePart[j];
             }
