@@ -164,7 +164,7 @@ unsigned int ModelMeshFactory::ReadMeshes(const aiScene& scene, const prev::comm
     for (uint32_t meshIndex = 0; meshIndex < scene.mNumMeshes; meshIndex++) {
         const aiMesh& assMesh = *scene.mMeshes[meshIndex];
 
-        const auto currentTransform = transforms.at(meshIndex);
+        const auto& currentTransform = transforms.at(meshIndex);
         for (uint32_t vi = 0; vi < assMesh.mNumVertices; vi++) {
             inOutVertices.push_back(currentTransform * glm::vec4(prev_test::render::util::assimp::AssimpGlmConvertor::ToGlmVec3(assMesh.mVertices[vi]), 1.0f));
         }

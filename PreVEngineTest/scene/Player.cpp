@@ -28,7 +28,7 @@ void Player::Init()
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, TAG_TRANSFORM_COMPONENT);
 
     prev_test::component::render::RenderComponentFactory renderComponentFactory{};
-    m_animatonRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin.dae"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_texture.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_normal_texture_2.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_cone_texture.png"), true, true);
+    m_animatonRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin.dae"), { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin.dae") }, { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_texture.png") }, { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_normal_texture_2.png") }, { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_cone_texture.png") }, true, true);
     m_animatonRenderComponent->GetMaterial()->SetHeightScale(0.004f);
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::render::IAnimationRenderComponent>(GetThis(), m_animatonRenderComponent, TAG_ANIMATION_CONE_STEP_MAPPED_RENDER_COMPONENT);
 

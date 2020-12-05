@@ -6,9 +6,7 @@
 namespace prev_test::component::render {
 class DefaultAnimationRenderComponent : public IAnimationRenderComponent {
 public:
-    DefaultAnimationRenderComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::vector<std::shared_ptr<prev_test::render::IMaterial> >& materials, const std::shared_ptr<prev_test::render::IAnimation>& animation, const bool castsShadows, const bool isCastedByShadows);
-
-    DefaultAnimationRenderComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::shared_ptr<prev_test::render::IMaterial>& material, const std::shared_ptr<prev_test::render::IAnimation>& animation, const bool castsShadows, const bool isCastedByShadows);
+    DefaultAnimationRenderComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::vector<std::shared_ptr<prev_test::render::IMaterial> >& materials, const std::vector<std::shared_ptr<prev_test::render::IAnimation>>& animations, const bool castsShadows, const bool isCastedByShadows);
 
     virtual ~DefaultAnimationRenderComponent() = default;
 
@@ -19,7 +17,9 @@ public:
 
     const std::vector<std::shared_ptr<prev_test::render::IMaterial> >& GetMaterials() const override;
 
-    std::shared_ptr<prev_test::render::IAnimation> GetAnimation() const override;
+    std::shared_ptr<prev_test::render::IAnimation> GetAnimation(const uint32_t index = 0) const override;
+
+    const std::vector<std::shared_ptr<prev_test::render::IAnimation> >& GetAnimations() const override;
 
     bool CastsShadows() const override;
 
@@ -30,7 +30,7 @@ private:
 
     std::vector<std::shared_ptr<prev_test::render::IMaterial> > m_materials;
 
-    std::shared_ptr<prev_test::render::IAnimation> m_animation;
+    std::vector<std::shared_ptr<prev_test::render::IAnimation>> m_animations;
 
     bool m_castsShadows;
 
