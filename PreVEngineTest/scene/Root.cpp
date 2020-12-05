@@ -84,9 +84,10 @@ void Root::Init()
         }
     }
 
-    auto goblin = std::make_shared<Player>(glm::vec3(0.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(5.0f));
-    goblin->SetTags({ TAG_MAIN_CAMERA, TAG_PLAYER });
-    AddChild(goblin);
+    auto player = std::make_shared<Player>(glm::vec3(0.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(5.0f));
+    //auto player = std::make_shared<Player>(glm::vec3(0.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(0.05f));
+    player->SetTags({ TAG_MAIN_CAMERA, TAG_PLAYER });
+    AddChild(player);
 
     auto text = std::make_shared<Text>();
     AddChild(text);
@@ -112,7 +113,7 @@ void Root::Init()
     std::uniform_real_distribution<float> positionDistribution(ITEMS_TERRAIN_BORDER_PADDING, prev_test::component::terrain::TERRAIN_TILE_SIZE * TERRAIN_GRID_MAX_X - ITEMS_TERRAIN_BORDER_PADDING);
 
     std::default_random_engine scaleRandom{ r() };
-    std::uniform_real_distribution<float> scaleDistribution(6000.0f, 9000.0f);
+    std::uniform_real_distribution<float> scaleDistribution(0.005f, 0.01f);
 
     const uint32_t STONES_COUNT{ 12 };
     for (uint32_t i = 0; i < STONES_COUNT; i++) {

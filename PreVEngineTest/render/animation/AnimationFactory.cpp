@@ -1,9 +1,8 @@
 #include "AnimationFactory.h"
-
 #include "Animation.h"
 
-#include "../util/assimp/AssimpSceneLoader.h"
 #include "../util/assimp/AssimpGlmConvertor.h"
+#include "../util/assimp/AssimpSceneLoader.h"
 
 namespace prev_test::render::animation {
 std::unique_ptr<prev_test::render::IAnimation> AnimationFactory::Create(const std::string& modelPath) const
@@ -21,17 +20,15 @@ std::unique_ptr<prev_test::render::IAnimation> AnimationFactory::Create(const st
     for (unsigned int meshIndex = 0; meshIndex < animation->m_scene->mNumMeshes; meshIndex++) {
         const auto& mesh = *animation->m_scene->mMeshes[meshIndex];
         for (unsigned int i = 0; i < mesh.mNumBones; i++) {
-            const std::string boneName{ mesh.mBones[i]->mName.data };
-
-            unsigned int boneIndex;
+            const auto bone = mesh.mBones[i];
+            const std::string boneName{ bone->mName.data };
             if (animation->m_boneMapping.find(boneName) == animation->m_boneMapping.end()) {
-                boneIndex = animation->m_numBones;
-                animation->m_numBones++;
-                animation->m_boneInfos.push_back(Animation::BoneInfo{});
-                animation->m_boneInfos[boneIndex].boneOffset = prev_test::render::util::assimp::AssimpGlmConvertor::ToGlmMat4(mesh.mBones[i]->mOffsetMatrix);
-                animation->m_boneMapping[boneName] = boneIndex;
-            } else {
-                boneIndex = animation->m_boneMapping[boneName];
+
+                animation->m_boneMapping[boneName] = static_cast<unsigned int>(animation->m_boneInfos.size());
+
+                auto boneInfo = Animation::BoneInfo{};
+                boneInfo.boneOffset = prev_test::render::util::assimp::AssimpGlmConvertor::ToGlmMat4(mesh.mBones[i]->mOffsetMatrix);
+                animation->m_boneInfos.push_back(boneInfo);
             }
         }
     }

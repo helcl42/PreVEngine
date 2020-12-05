@@ -26,8 +26,8 @@ void Animation::Update(const float deltaTime)
 
     UpdateNodeHeirarchy(animationTime, m_scene->mRootNode, glm::mat4(1.0f));
 
-    m_boneTransforms.resize(m_numBones);
-    for (unsigned int i = 0; i < m_numBones; i++) {
+    m_boneTransforms.resize(m_boneInfos.size());
+    for (size_t i = 0; i < m_boneInfos.size(); i++) {
         m_boneTransforms[i] = m_boneInfos[i].finalTransformation;
     }
 }

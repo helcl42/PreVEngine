@@ -7,7 +7,7 @@
 namespace prev_test::render::util::assimp {
 bool AssimpSceneLoader::LoadScene(const std::string& modelPath, Assimp::Importer* importer, const aiScene** scene) const
 {
-    const unsigned int flags = aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType | aiProcess_GenSmoothNormals | aiProcess_FixInfacingNormals | aiProcess_FindInvalidData;
+    const unsigned int flags = aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType | aiProcess_GenSmoothNormals | aiProcess_FixInfacingNormals | aiProcess_FindInvalidData | aiProcess_ForceGenNormals | aiProcess_ValidateDataStructure;
 
 #if defined(__ANDROID__)
     AAsset* asset = android_open_asset(modelPath.c_str(), AASSET_MODE_STREAMING);

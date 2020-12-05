@@ -1,17 +1,12 @@
 #include "DefaultAnimationRenderComponent.h"
 
 namespace prev_test::component::render {
-DefaultAnimationRenderComponent::DefaultAnimationRenderComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::vector<std::shared_ptr<prev_test::render::IMaterial> >& materials, const std::shared_ptr<prev_test::render::IAnimation>& animation, const bool castsShadows, const bool isCastedByShadows)
+DefaultAnimationRenderComponent::DefaultAnimationRenderComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::vector<std::shared_ptr<prev_test::render::IMaterial> >& materials, const std::vector<std::shared_ptr<prev_test::render::IAnimation> >& animations, const bool castsShadows, const bool isCastedByShadows)
     : m_model(model)
     , m_materials(materials)
-    , m_animation(animation)
+    , m_animations(animations)
     , m_castsShadows(castsShadows)
     , m_isCastedByShadows(isCastedByShadows)
-{
-}
-
-DefaultAnimationRenderComponent::DefaultAnimationRenderComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::shared_ptr<prev_test::render::IMaterial>& material, const std::shared_ptr<prev_test::render::IAnimation>& animation, const bool castsShadows, const bool isCastedByShadows)
-    : DefaultAnimationRenderComponent(model, std::vector<std::shared_ptr<prev_test::render::IMaterial> >{ material }, animation, castsShadows, isCastedByShadows)
 {
 }
 
@@ -30,9 +25,14 @@ const std::vector<std::shared_ptr<prev_test::render::IMaterial> >& DefaultAnimat
     return m_materials;
 }
 
-std::shared_ptr<prev_test::render::IAnimation> DefaultAnimationRenderComponent::GetAnimation() const
+std::shared_ptr<prev_test::render::IAnimation> DefaultAnimationRenderComponent::GetAnimation(const uint32_t index) const
 {
-    return m_animation;
+    return m_animations.at(index);
+}
+
+const std::vector<std::shared_ptr<prev_test::render::IAnimation> >& DefaultAnimationRenderComponent::GetAnimations() const
+{
+    return m_animations;
 }
 
 bool DefaultAnimationRenderComponent::CastsShadows() const
