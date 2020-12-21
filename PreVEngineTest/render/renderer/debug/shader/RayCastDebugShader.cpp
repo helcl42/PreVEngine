@@ -14,7 +14,8 @@ std::map<VkShaderStageFlagBits, std::string> RayCastDebugShader::GetPaths()
 {
     return {
         { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/debug/raycast_debug_vert.spv") },
-        { VK_SHADER_STAGE_GEOMETRY_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/debug/raycast_debug_geom.spv") }, { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/raycast_debug_frag.spv") }
+        { VK_SHADER_STAGE_GEOMETRY_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/debug/raycast_debug_geom.spv") },
+        { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/debug/raycast_debug_frag.spv") }
     };
 }
 

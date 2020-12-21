@@ -1,5 +1,6 @@
 #include "MouseRayCasterComponent.h"
 #include "RayCastingEvents.h"
+#include "RayModelFactory.h"
 
 #include <prev/util/MathUtils.h>
 

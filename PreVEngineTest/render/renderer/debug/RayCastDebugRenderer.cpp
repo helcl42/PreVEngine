@@ -26,7 +26,7 @@ void RayCastDebugRenderer::Init()
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<shader::RayCastDebugShader>(*device, );
+    m_shader = shaderFactory.CreateShaderFromFiles<shader::RayCastDebugShader>(*device, shader::RayCastDebugShader::GetPaths());
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("RayCast Debug Shader created\n");

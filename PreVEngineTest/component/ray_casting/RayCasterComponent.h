@@ -27,10 +27,7 @@ public:
     prev_test::common::intersection::Ray GetRay() const override;
 
 #ifdef RENDER_RAYCASTS
-    std::shared_ptr<prev_test::render::IModel> GetModel() const override
-    {
-        return m_model;
-    }
+    std::shared_ptr<prev_test::render::IModel> GetModel() const override;
 #endif
 private:
     glm::vec3 m_rayDirection;
