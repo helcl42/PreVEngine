@@ -59,7 +59,7 @@ BoundingVolumeType AABBBoundingVolumeComponent::GetType() const
 }
 
 #ifdef RENDER_BOUNDING_VOLUMES
-std::shared_ptr<prev_test::render::IModel> GetModel() const
+std::shared_ptr<prev_test::render::IModel> AABBBoundingVolumeComponent::GetModel() const
 {
     return m_model;
 }
