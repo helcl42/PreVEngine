@@ -44,4 +44,9 @@ const std::vector<prev_test::render::MeshPart>& TextMesh::GetMeshParts() const
 {
     return m_meshParts;
 }
+
+const MeshNode& TextMesh::GetRootNode() const
+{
+    return m_meshRootNode;
+}
 } // namespace prev_test::render::font

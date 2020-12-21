@@ -111,6 +111,7 @@ SphereMesh::SphereMesh(const float radius, const int subDivY, const int subDivZ,
     }
 
     m_meshParts.push_back(prev_test::render::MeshPart(static_cast<uint32_t>(m_indices.size())));
+    m_meshRootNode = prev_test::render::MeshNode{ { 0 }, glm::mat4(1.0f), {} };
 }
 
 const prev_test::render::VertexLayout& SphereMesh::GetVertexLayout() const
@@ -143,4 +144,8 @@ const std::vector<prev_test::render::MeshPart>& SphereMesh::GetMeshParts() const
     return m_meshParts;
 }
 
+const MeshNode& SphereMesh::GetRootNode() const
+{
+    return m_meshRootNode;
+}
 } // namespace prev_test::render::mesh

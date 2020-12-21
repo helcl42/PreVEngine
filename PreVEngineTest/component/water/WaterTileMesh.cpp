@@ -30,4 +30,9 @@ const std::vector<prev_test::render::MeshPart>& WaterTileMesh::GetMeshParts() co
 {
     return meshParts;
 }
+
+const prev_test::render::MeshNode& WaterTileMesh::GetRootNode() const
+{
+    return meshRootNode;
+}
 } // namespace prev_test::component::water

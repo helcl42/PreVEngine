@@ -39,4 +39,9 @@ const std::vector<MeshPart>& FullScreenQuadMesh::GetMeshParts() const
 {
     return meshParts;
 }
+
+const MeshNode& FullScreenQuadMesh::GetRootNode() const
+{
+    return meshRootNode;
+}
 } // namespace prev_test::render::mesh

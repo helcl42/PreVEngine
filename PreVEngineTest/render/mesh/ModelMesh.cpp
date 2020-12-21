@@ -31,4 +31,8 @@ const std::vector<prev_test::render::MeshPart>& ModelMesh::GetMeshParts() const
     return m_meshParts;
 }
 
+const MeshNode& ModelMesh::GetRootNode() const
+{
+    return m_meshRootNode;
+}
 } // namespace prev_test::render::mesh

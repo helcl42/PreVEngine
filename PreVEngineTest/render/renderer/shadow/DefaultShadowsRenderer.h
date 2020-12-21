@@ -1,7 +1,7 @@
 #ifndef __DEFAULT_SHADOWS_RENDERER_H__
 #define __DEFAULT_SHADOWS_RENDERER_H__
 
-#include "../../../General.h"
+#include "../../IMesh.h"
 #include "../../pipeline/IPipeline.h"
 #include "../RenderContextUserData.h"
 
@@ -33,6 +33,9 @@ public:
     void AfterRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override;
 
     void ShutDown() override;
+
+private:
+    void RenderMeshNode(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const ShadowsRenderContextUserData& renderContextUserData, const prev_test::render::MeshNode& meshNode);
 
 private:
     struct Uniforms {

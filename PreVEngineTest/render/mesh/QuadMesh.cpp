@@ -54,4 +54,9 @@ const std::vector<prev_test::render::MeshPart>& QuadMesh::GetMeshParts() const
 {
     return meshParts;
 }
+
+const MeshNode& QuadMesh::GetRootNode() const
+{
+    return meshRootNode;
+}
 } // namespace prev_test::render::mesh

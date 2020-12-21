@@ -30,4 +30,9 @@ const std::vector<prev_test::render::MeshPart>& CentricQuadMesh::GetMeshParts() 
 {
     return meshParts;
 }
+
+const MeshNode& CentricQuadMesh::GetRootNode() const
+{
+    return meshRootNode;
+}
 } // namespace prev_test::render::mesh

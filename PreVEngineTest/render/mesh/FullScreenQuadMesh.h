@@ -24,6 +24,8 @@ public:
 
     const std::vector<MeshPart>& GetMeshParts() const override;
 
+    const MeshNode& GetRootNode() const override;
+
 private:
     prev_test::render::VertexDataBuffer m_vertexDataBuffer;
 
@@ -58,6 +60,8 @@ private:
     static const inline std::vector<MeshPart> meshParts = {
         MeshPart(static_cast<uint32_t>(indices.size()))
     };
+
+    static const inline prev_test::render::MeshNode meshRootNode{ { 0 }, glm::mat4(1.0f), {} };
 };
 } // namespace prev_test::render::mesh
 

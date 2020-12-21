@@ -7,6 +7,7 @@
 #include "../../../General.h"
 #include "../../../component/light/LightCommon.h"
 #include "../../../component/shadow//ShadowsCommon.h"
+#include "../../../render/IMesh.h"
 
 #include <prev/render/IRenderer.h>
 #include <prev/render/pass/RenderPass.h>
@@ -34,6 +35,9 @@ public:
     void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override;
 
     void ShutDown() override;
+
+private:
+    void RenderMeshNode(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData, const prev_test::render::MeshNode& meshNode);
 
 private:
     struct ShadowsCascadeUniform {
