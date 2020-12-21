@@ -20,6 +20,8 @@ public:
 
     const std::vector<prev_test::render::MeshPart>& GetMeshParts() const override;
 
+    const prev_test::render::MeshNode& GetRootNode() const override;
+
 private:
     friend TerrainComponentFactory;
 
@@ -35,6 +37,8 @@ private:
     std::vector<uint32_t> m_indices;
 
     std::vector<prev_test::render::MeshPart> m_meshParts;
+
+    prev_test::render::MeshNode m_meshRootNode;
 };
 } // namespace prev_test::component::terrain
 

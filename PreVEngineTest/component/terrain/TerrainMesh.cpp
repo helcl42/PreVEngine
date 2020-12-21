@@ -30,4 +30,9 @@ const std::vector<prev_test::render::MeshPart>& TerrainMesh::GetMeshParts() cons
 {
     return m_meshParts;
 }
+
+const prev_test::render::MeshNode& TerrainMesh::GetRootNode() const
+{
+    return m_meshRootNode;
+}
 } // namespace prev_test::component::terrain

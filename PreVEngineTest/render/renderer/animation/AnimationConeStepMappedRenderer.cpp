@@ -71,91 +71,8 @@ void AnimationConeStepMappedRenderer::Render(const prev::render::RenderContext& 
         }
 
         if (visible) {
-            const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
-            const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
-            const auto lightComponents = prev::scene::component::NodeComponentHelper::FindAll<prev_test::component::light::ILightComponent>({ TAG_LIGHT });
-
-            const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());
             const auto nodeRenderComponent = prev::scene::component::ComponentRepository<prev_test::component::render::IAnimationRenderComponent>::Instance().Get(node->GetId());
-
-            const auto vertexStride = nodeRenderComponent->GetModel()->GetMesh()->GetVertexLayout().GetStride();
-
-            const auto meshParts = nodeRenderComponent->GetModel()->GetMesh()->GetMeshParts();
-            for (const auto& meshPart : meshParts) {
-                const auto modelMatrix = transformComponent->GetWorldTransformScaled() * meshPart.transform;
-
-                auto uboVS = m_uniformsPoolVS->GetNext();
-
-                UniformsVS uniformsVS{};
-                const auto& bones = nodeRenderComponent->GetAnimation()->GetBoneTransforms();
-                for (size_t i = 0; i < bones.size(); i++) {
-                    uniformsVS.bones[i] = bones[i];
-                }
-                uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
-                uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
-                uniformsVS.modelMatrix = modelMatrix;
-                uniformsVS.normalMatrix = glm::inverse(modelMatrix);
-                uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
-                for (size_t i = 0; i < lightComponents.size(); i++) {
-                    uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
-                }
-                uniformsVS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
-                uniformsVS.lightning.ambientFactor = prev_test::component::light::AMBIENT_LIGHT_INTENSITY;
-                uniformsVS.textureNumberOfRows = nodeRenderComponent->GetMaterial()->GetAtlasNumberOfRows();
-                uniformsVS.textureOffset = glm::vec4(nodeRenderComponent->GetMaterial()->GetTextureOffset(), 0.0f, 0.0f);
-                uniformsVS.density = prev_test::component::sky::FOG_DENSITY;
-                uniformsVS.gradient = prev_test::component::sky::FOG_GRADIENT;
-                uniformsVS.clipPlane = renderContextUserData.clipPlane;
-
-                uboVS->Update(&uniformsVS);
-
-                auto uboFS = m_uniformsPoolFS->GetNext();
-
-                UniformsFS uniformsFS{};
-                // shadows
-                for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; i++) {
-                    auto& cascade = shadowsComponent->GetCascade(i);
-                    uniformsFS.shadows.cascades[i] = ShadowsCascadeUniform(cascade.GetBiasedViewProjectionMatrix(), glm::vec4(cascade.endSplitDepth));
-                }
-                uniformsFS.shadows.enabled = prev_test::component::shadow::SHADOWS_ENABLED;
-
-                // lightning
-                for (size_t i = 0; i < lightComponents.size(); i++) {
-                    uniformsFS.lightning.lights[i] = LightUniform(renderContextUserData.viewMatrix * glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
-                }
-                uniformsFS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
-                uniformsFS.lightning.ambientFactor = prev_test::component::light::AMBIENT_LIGHT_INTENSITY;
-
-                // material
-                uniformsFS.material = MaterialUniform(nodeRenderComponent->GetMaterial()->GetShineDamper(), nodeRenderComponent->GetMaterial()->GetReflectivity());
-
-                // common
-                uniformsFS.fogColor = prev_test::component::sky::FOG_COLOR;
-                uniformsFS.selectedColor = prev_test::component::ray_casting::SELECTED_COLOR;
-                uniformsFS.selected = false;
-                uniformsFS.castedByShadows = nodeRenderComponent->IsCastedByShadows();
-                uniformsFS.heightScale = nodeRenderComponent->GetMaterial()->GetHeightScale();
-                uniformsFS.numLayers = 12;
-
-                uboFS->Update(&uniformsFS);
-
-                m_shader->Bind("textureSampler", *nodeRenderComponent->GetMaterial(meshPart.materialIndex)->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-                m_shader->Bind("normalSampler", *nodeRenderComponent->GetMaterial(meshPart.materialIndex)->GetNormalmageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-                m_shader->Bind("heightSampler", *nodeRenderComponent->GetMaterial(meshPart.materialIndex)->GetHeightImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-                m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), shadowsComponent->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-                m_shader->Bind("uboVS", *uboVS);
-                m_shader->Bind("uboFS", *uboFS);
-
-                const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-                const VkBuffer vertexBuffers[] = { *nodeRenderComponent->GetModel()->GetVertexBuffer() };
-                const VkDeviceSize offsets[] = { meshPart.firstVertexIndex * vertexStride };
-
-                vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-                vkCmdBindIndexBuffer(renderContext.commandBuffer, *nodeRenderComponent->GetModel()->GetIndexBuffer(), 0, nodeRenderComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-                vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-
-                vkCmdDrawIndexed(renderContext.commandBuffer, meshPart.indicesCount, 1, meshPart.firstIndicesIndex, 0, 0);
-            }
+            RenderMeshNode(renderContext, node, renderContextUserData, nodeRenderComponent->GetModel()->GetMesh()->GetRootNode());
         }
     }
 
@@ -177,5 +94,103 @@ void AnimationConeStepMappedRenderer::ShutDown()
     m_shader->ShutDown();
 
     m_pipeline->ShutDown();
+}
+
+void AnimationConeStepMappedRenderer::RenderMeshNode(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData, const prev_test::render::MeshNode& meshNode)
+{
+    const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
+    const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
+    const auto lightComponents = prev::scene::component::NodeComponentHelper::FindAll<prev_test::component::light::ILightComponent>({ TAG_LIGHT });
+
+    const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());
+    const auto nodeRenderComponent = prev::scene::component::ComponentRepository<prev_test::component::render::IAnimationRenderComponent>::Instance().Get(node->GetId());
+
+    const auto model = nodeRenderComponent->GetModel();
+    const auto mesh = model->GetMesh();
+    const auto animation = nodeRenderComponent->GetAnimation();
+
+    const auto& meshParts{ mesh->GetMeshParts() };
+    for (const auto meshPartIndex : meshNode.meshPartIndices) {
+        const auto& meshPart = meshParts.at(meshPartIndex);
+        const auto& animationPart = animation->GetAnimationPart(meshPartIndex);
+        const auto material = nodeRenderComponent->GetMaterial(meshPart.materialIndex);
+        const auto modelMatrix = transformComponent->GetWorldTransformScaled();
+
+        auto uboVS = m_uniformsPoolVS->GetNext();
+
+        UniformsVS uniformsVS{};
+        const auto& bones = animationPart->GetBoneTransforms();
+        for (size_t i = 0; i < bones.size(); i++) {
+            uniformsVS.bones[i] = bones[i];
+        }
+        uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
+        uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
+        uniformsVS.modelMatrix = modelMatrix;
+        uniformsVS.normalMatrix = glm::inverse(modelMatrix);
+        uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
+        for (size_t i = 0; i < lightComponents.size(); i++) {
+            uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
+        }
+        uniformsVS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
+        uniformsVS.lightning.ambientFactor = prev_test::component::light::AMBIENT_LIGHT_INTENSITY;
+        uniformsVS.textureNumberOfRows = material->GetAtlasNumberOfRows();
+        uniformsVS.textureOffset = glm::vec4(material->GetTextureOffset(), 0.0f, 0.0f);
+        uniformsVS.density = prev_test::component::sky::FOG_DENSITY;
+        uniformsVS.gradient = prev_test::component::sky::FOG_GRADIENT;
+        uniformsVS.clipPlane = renderContextUserData.clipPlane;
+
+        uboVS->Update(&uniformsVS);
+
+        auto uboFS = m_uniformsPoolFS->GetNext();
+
+        UniformsFS uniformsFS{};
+        // shadows
+        for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; i++) {
+            auto& cascade = shadowsComponent->GetCascade(i);
+            uniformsFS.shadows.cascades[i] = ShadowsCascadeUniform(cascade.GetBiasedViewProjectionMatrix(), glm::vec4(cascade.endSplitDepth));
+        }
+        uniformsFS.shadows.enabled = prev_test::component::shadow::SHADOWS_ENABLED;
+
+        // lightning
+        for (size_t i = 0; i < lightComponents.size(); i++) {
+            uniformsFS.lightning.lights[i] = LightUniform(renderContextUserData.viewMatrix * glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
+        }
+        uniformsFS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
+        uniformsFS.lightning.ambientFactor = prev_test::component::light::AMBIENT_LIGHT_INTENSITY;
+
+        // material
+        uniformsFS.material = MaterialUniform(material->GetShineDamper(), material->GetReflectivity());
+
+        // common
+        uniformsFS.fogColor = prev_test::component::sky::FOG_COLOR;
+        uniformsFS.selectedColor = prev_test::component::ray_casting::SELECTED_COLOR;
+        uniformsFS.selected = false;
+        uniformsFS.castedByShadows = nodeRenderComponent->IsCastedByShadows();
+        uniformsFS.heightScale = material->GetHeightScale();
+        uniformsFS.numLayers = 12;
+
+        uboFS->Update(&uniformsFS);
+
+        m_shader->Bind("textureSampler", *material->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_shader->Bind("normalSampler", *material->GetNormalmageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_shader->Bind("heightSampler", *material->GetHeightImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), shadowsComponent->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+        m_shader->Bind("uboVS", *uboVS);
+        m_shader->Bind("uboFS", *uboFS);
+
+        const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+        const VkBuffer vertexBuffers[] = { *model->GetVertexBuffer() };
+        const VkDeviceSize offsets[] = { meshPart.firstVertexIndex * mesh->GetVertexLayout().GetStride() };
+
+        vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+        vkCmdBindIndexBuffer(renderContext.commandBuffer, *model->GetIndexBuffer(), 0, model->GetIndexBuffer()->GetIndexType());
+        vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+        vkCmdDrawIndexed(renderContext.commandBuffer, meshPart.indicesCount, 1, meshPart.firstIndicesIndex, 0, 0);
+    }
+
+    for (const auto& childMeshNode : meshNode.children) {
+        RenderMeshNode(renderContext, node, renderContextUserData, childMeshNode);
+    }
 }
 } // namespace prev_test::render::renderer::animation

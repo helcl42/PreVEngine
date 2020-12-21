@@ -14,9 +14,9 @@ enum class AnimationState {
     STOPPED
 };
 
-class IAnimation {
+class IAnimationPart {
 public:
-    virtual ~IAnimation() = default;
+    virtual ~IAnimationPart() = default;
 
 public:
     virtual void Update(const float deltaTime) = 0;
@@ -25,19 +25,27 @@ public:
 
     virtual void SetState(const AnimationState animationState) = 0;
 
-    virtual AnimationState GetState() const = 0;
+    virtual void SetSpeed(const float speed) = 0;
 
-    virtual void SetIndex(const unsigned int index) = 0;
+    virtual void SetTime(const float elapsed) = 0;
+};
 
-    virtual unsigned int GetIndex() const = 0;
+class IAnimation {
+public:
+    virtual ~IAnimation() = default;
+
+public:
+    virtual void Update(const float deltaTime) = 0;
+
+    virtual std::shared_ptr<IAnimationPart> GetAnimationPart(unsigned int partIndex) const = 0;
+
+    virtual const std::vector<std::shared_ptr<IAnimationPart> >& GetAnimationParts() const = 0;
+
+    virtual void SetState(const AnimationState animationState) = 0;
 
     virtual void SetSpeed(const float speed) = 0;
 
-    virtual float GetSpeed() const = 0;
-
     virtual void SetTime(const float elapsed) = 0;
-
-    virtual float GetTime() const = 0;
 };
 } // namespace prev_test::render
 

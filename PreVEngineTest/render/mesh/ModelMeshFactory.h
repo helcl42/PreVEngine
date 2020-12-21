@@ -24,25 +24,25 @@ public:
     std::unique_ptr<prev_test::render::IMesh> Create(const std::string& modelPath, const prev::common::FlagSet<CreateFlags>& flags = prev::common::FlagSet<ModelMeshFactory::CreateFlags>{}) const;
 
 private:
-    void ReadNodeHierarchy(const aiNode* node, const glm::mat4& parentTransform, std::vector<glm::mat4>& transforms) const;
+    void ReadNodeHierarchy(const aiNode* node, const glm::mat4& parentTransform, MeshNode& intOutRootMeshNode) const;
 
     prev_test::render::VertexLayout GetVertexLayout(const prev::common::FlagSet<CreateFlags>& flags) const;
 
     void ReadIndices(const aiMesh& mesh, std::vector<uint32_t>& inOutIndices) const;
 
-    void AddDefaultVertexData(const aiMesh& mesh, const uint32_t vertexIndex, prev_test::render::VertexDataBuffer& inOutVertexBuffer) const;
+    void AddDefaultVertexData(const aiMesh& mesh, const uint32_t vertexIndex, prev_test::render::VertexDataBuffer& inOutVertexBuffer, std::vector<glm::vec3>& inOutVertices) const;
 
     void AddAnimationData(const std::vector<VertexBoneData>& vertexBoneData, const uint32_t vertexIndex, prev_test::render::VertexDataBuffer& inOutVertexBuffer) const;
 
     void AddBumpMappingData(const aiMesh& mesh, const unsigned int vertexIndex, prev_test::render::VertexDataBuffer& inOutVertexBuffer) const;
 
-    void ReadVertexData(const aiMesh& mesh, const prev::common::FlagSet<CreateFlags>& flags, const std::vector<VertexBoneData>& vertexBoneData, const uint32_t vertexBaseOffset, prev_test::render::VertexDataBuffer& inOutVertexBuffer) const;
+    void ReadVertexData(const aiMesh& mesh, const prev::common::FlagSet<CreateFlags>& flags, const std::vector<VertexBoneData>& vertexBoneData, const uint32_t vertexBaseOffset, prev_test::render::VertexDataBuffer& inOutVertexBuffer, std::vector<glm::vec3>& inOutVertices) const;
 
     std::vector<VertexBoneData> LoadAnimationBones(const aiMesh& mesh) const;
 
     unsigned int GetAllVertexCount(const aiScene& scene) const;
 
-    unsigned int ReadMeshes(const aiScene& scene, const prev::common::FlagSet<CreateFlags>& flags, prev_test::render::VertexDataBuffer& inOutVertexBuffer, std::vector<glm::vec3>& inOutVertices, std::vector<uint32_t>& inOutIndices, std::vector<MeshPart>& inOutMeshParts) const;
+    unsigned int ReadMeshes(const aiScene& scene, const prev::common::FlagSet<CreateFlags>& flags, prev_test::render::VertexDataBuffer& inOutVertexBuffer, std::vector<glm::vec3>& inOutVertices, std::vector<uint32_t>& inOutIndices, std::vector<MeshPart>& inOutMeshParts, MeshNode& intOutRootMeshNode) const;
 };
 
 } // namespace prev_test::render::mesh

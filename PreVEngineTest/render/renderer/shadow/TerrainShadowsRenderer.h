@@ -1,7 +1,6 @@
 #ifndef __TERRAIN_SHADOWS_RENDERER_H__
 #define __TERRAIN_SHADOWS_RENDERER_H__
 
-#include "../../../General.h"
 #include "../../pipeline/IPipeline.h"
 #include "../RenderContextUserData.h"
 

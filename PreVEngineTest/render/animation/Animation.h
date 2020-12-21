@@ -11,32 +11,22 @@
 namespace prev_test::render::animation {
 class AnimationFactory;
 
-class Animation : public prev_test::render::IAnimation {
+class AnimationPart : public prev_test::render::IAnimationPart {
 public:
-    Animation() = default;
+    AnimationPart(const aiScene* scene);
 
-    ~Animation() = default;
+    ~AnimationPart() = default;
 
 public:
     void Update(const float deltaTime) override;
 
     const std::vector<glm::mat4>& GetBoneTransforms() const override;
 
-    void SetState(const prev_test::render::AnimationState animationState) override;
-
-    prev_test::render::AnimationState GetState() const override;
-
-    void SetIndex(const unsigned int index) override;
-
-    unsigned int GetIndex() const override;
+    void SetState(const prev_test::render::AnimationState state) override;
 
     void SetSpeed(const float speed) override;
 
-    float GetSpeed() const override;
-
     void SetTime(const float elapsed) override;
-
-    float GetTime() const override;
 
 private:
     unsigned int FindPosition(const float animationTime, const aiNodeAnim* nodeAnimation) const;
@@ -66,11 +56,11 @@ private:
     };
 
 private:
+    const aiScene* m_scene;
+
     float m_elapsedTime{ 0.0f };
 
     std::map<std::string, unsigned int> m_boneMapping; // maps a bone name to its index
-
-    unsigned int m_numBones{ 0 };
 
     std::vector<BoneInfo> m_boneInfos;
 
@@ -78,16 +68,43 @@ private:
 
     std::vector<glm::mat4> m_boneTransforms;
 
-    const aiScene* m_scene{ nullptr };
-
-    Assimp::Importer m_importer; // TODO get rid of that
-
     prev_test::render::AnimationState m_animationState{ prev_test::render::AnimationState::RUNNING };
 
     unsigned int m_animationIndex{ 0 };
 
     float m_animationSpeed{ 1.0f };
 };
+
+class Animation : public prev_test::render::IAnimation {
+public:
+    Animation() = default;
+
+    ~Animation() = default;
+
+public:
+    void Update(const float deltaTime) override;
+
+    std::shared_ptr<IAnimationPart> GetAnimationPart(unsigned int partIndex) const override;
+
+    const std::vector<std::shared_ptr<IAnimationPart> >& GetAnimationParts() const override;
+
+    void SetState(const AnimationState state) override;
+
+    void SetSpeed(const float speed) override;
+
+    void SetTime(const float elapsed) override;
+
+private:
+    friend AnimationFactory;
+
+private:
+    const aiScene* m_scene{ nullptr };
+
+    Assimp::Importer m_importer; // TODO get rid of that
+
+    std::vector<std::shared_ptr<IAnimationPart> > m_parts;
+};
+
 } // namespace prev_test::render::animation
 
 #endif // !__ANIMATION_H__

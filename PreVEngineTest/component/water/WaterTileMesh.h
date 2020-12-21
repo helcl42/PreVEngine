@@ -18,6 +18,8 @@ public:
 
     const std::vector<prev_test::render::MeshPart>& GetMeshParts() const override;
 
+    const prev_test::render::MeshNode& GetRootNode() const override;
+
 private:
     static const inline prev_test::render::VertexLayout vertexLayout{ { prev_test::render::VertexLayoutComponent::VEC3 } };
 
@@ -35,6 +37,8 @@ private:
     static const inline std::vector<prev_test::render::MeshPart> meshParts = {
         prev_test::render::MeshPart(static_cast<uint32_t>(indices.size()))
     };
+
+    static const inline prev_test::render::MeshNode meshRootNode{};
 };
 } // namespace prev_test::component::water
 

@@ -74,6 +74,7 @@ PlaneMesh::PlaneMesh(const float xSize, const float zSize, const uint32_t xDivs,
     }
 
     m_meshParts.push_back(prev_test::render::MeshPart(static_cast<uint32_t>(m_indices.size())));
+    m_meshRootNode = prev_test::render::MeshNode{ { 0 }, glm::mat4(1.0f), {} };
 }
 
 const prev_test::render::VertexLayout& PlaneMesh::GetVertexLayout() const
@@ -104,5 +105,10 @@ const std::vector<uint32_t>& PlaneMesh::GetIndices() const
 const std::vector<prev_test::render::MeshPart>& PlaneMesh::GetMeshParts() const
 {
     return m_meshParts;
+}
+
+const MeshNode& PlaneMesh::GetRootNode() const
+{
+    return m_meshRootNode;
 }
 } // namespace prev_test::render::mesh

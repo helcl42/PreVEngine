@@ -24,6 +24,8 @@ public:
 
     const std::vector<prev_test::render::MeshPart>& GetMeshParts() const;
 
+    const MeshNode& GetRootNode() const override;
+
 private:
     prev_test::render::VertexLayout m_vertexLayout;
 
@@ -36,6 +38,8 @@ private:
     prev_test::render::VertexDataBuffer m_vertexDataBuffer;
 
     std::vector<prev_test::render::MeshPart> m_meshParts;
+
+    prev_test::render::MeshNode m_meshRootNode;
 };
 } // namespace prev_test::render::font
 

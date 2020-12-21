@@ -3,7 +3,15 @@
 #include "../util/assimp/AssimpGlmConvertor.h"
 
 namespace prev_test::render::animation {
-void Animation::Update(const float deltaTime)
+
+/// ANIMATION PART
+
+AnimationPart::AnimationPart(const aiScene* scene)
+    : m_scene(scene)
+{
+}
+
+void AnimationPart::Update(const float deltaTime)
 {
     m_animationIndex %= m_scene->mNumAnimations;
 
@@ -32,52 +40,27 @@ void Animation::Update(const float deltaTime)
     }
 }
 
-const std::vector<glm::mat4>& Animation::GetBoneTransforms() const
+const std::vector<glm::mat4>& AnimationPart::GetBoneTransforms() const
 {
     return m_boneTransforms;
 }
 
-void Animation::SetState(const prev_test::render::AnimationState animationState)
+void AnimationPart::SetState(const prev_test::render::AnimationState state)
 {
-    m_animationState = animationState;
+    m_animationState = state;
 }
 
-prev_test::render::AnimationState Animation::GetState() const
-{
-    return m_animationState;
-}
-
-void Animation::SetIndex(const unsigned int index)
-{
-    m_animationIndex = index;
-}
-
-unsigned int Animation::GetIndex() const
-{
-    return m_animationIndex;
-}
-
-void Animation::SetSpeed(const float speed)
+void AnimationPart::SetSpeed(const float speed)
 {
     m_animationSpeed = speed;
 }
 
-float Animation::GetSpeed() const
-{
-    return m_animationSpeed;
-}
-
-void Animation::SetTime(const float elapsed)
+void AnimationPart::SetTime(const float elapsed)
 {
     m_elapsedTime = elapsed;
 }
 
-float Animation::GetTime() const
-{
-    return m_elapsedTime;
-}
-
-unsigned int Animation::FindPosition(const float animationTime, const aiNodeAnim* nodeAnimation) const
+unsigned int AnimationPart::FindPosition(const float animationTime, const aiNodeAnim* nodeAnimation) const
 {
     for (unsigned int i = 0; i < nodeAnimation->mNumPositionKeys - 1; i++) {
         if (animationTime < static_cast<float>(nodeAnimation->mPositionKeys[i + 1].mTime)) {
@@ -88,7 +71,7 @@ unsigned int Animation::FindPosition(const float animationTime, const aiNodeAnim
     return 0;
 }
 
-unsigned int Animation::FindRotation(const float animationTime, const aiNodeAnim* nodeAnimation) const
+unsigned int AnimationPart::FindRotation(const float animationTime, const aiNodeAnim* nodeAnimation) const
 {
     assert(nodeAnimation->mNumRotationKeys > 0);
     for (unsigned int i = 0; i < nodeAnimation->mNumRotationKeys - 1; i++) {
@@ -100,7 +83,7 @@ unsigned int Animation::FindRotation(const float animationTime, const aiNodeAnim
     return 0;
 }
 
-unsigned int Animation::FindScaling(const float animationTime, const aiNodeAnim* nodeAnimation) const
+unsigned int AnimationPart::FindScaling(const float animationTime, const aiNodeAnim* nodeAnimation) const
 {
     assert(nodeAnimation->mNumScalingKeys > 0);
     for (unsigned int i = 0; i < nodeAnimation->mNumScalingKeys - 1; i++) {
@@ -112,7 +95,7 @@ unsigned int Animation::FindScaling(const float animationTime, const aiNodeAnim*
     return 0;
 }
 
-const aiNodeAnim* Animation::FindNodeAnimByName(const aiAnimation* animation, const std::string& nodeName) const
+const aiNodeAnim* AnimationPart::FindNodeAnimByName(const aiAnimation* animation, const std::string& nodeName) const
 {
     for (unsigned int i = 0; i < animation->mNumChannels; i++) {
         const auto nodeAnimation = animation->mChannels[i];
@@ -123,7 +106,7 @@ const aiNodeAnim* Animation::FindNodeAnimByName(const aiAnimation* animation, co
     return nullptr;
 }
 
-aiVector3D Animation::CalculateInterpolatedPosition(const float animationTime, const aiNodeAnim* nodeAnimation) const
+aiVector3D AnimationPart::CalculateInterpolatedPosition(const float animationTime, const aiNodeAnim* nodeAnimation) const
 {
     aiVector3D outVector;
     if (nodeAnimation->mNumPositionKeys == 1) {
@@ -143,7 +126,7 @@ aiVector3D Animation::CalculateInterpolatedPosition(const float animationTime, c
     return outVector;
 }
 
-aiQuaternion Animation::CalculateInterpolatedRotation(const float animationTime, const aiNodeAnim* nodeAnimation) const
+aiQuaternion AnimationPart::CalculateInterpolatedRotation(const float animationTime, const aiNodeAnim* nodeAnimation) const
 {
     aiQuaternion outQuanternion;
     if (nodeAnimation->mNumRotationKeys == 1) {
@@ -163,7 +146,7 @@ aiQuaternion Animation::CalculateInterpolatedRotation(const float animationTime,
     return outQuanternion;
 }
 
-aiVector3D Animation::CalculateInterpolatedScaling(const float animationTime, const aiNodeAnim* nodeAnimation) const
+aiVector3D AnimationPart::CalculateInterpolatedScaling(const float animationTime, const aiNodeAnim* nodeAnimation) const
 {
     aiVector3D outVector;
     if (nodeAnimation->mNumScalingKeys == 1) {
@@ -183,7 +166,7 @@ aiVector3D Animation::CalculateInterpolatedScaling(const float animationTime, co
     return outVector;
 }
 
-void Animation::UpdateNodeHeirarchy(const float animationTime, const aiNode* node, const glm::mat4& parentTransformation)
+void AnimationPart::UpdateNodeHeirarchy(const float animationTime, const aiNode* node, const glm::mat4& parentTransformation)
 {
     const std::string nodeName{ node->mName.data };
     const auto currentAnimation = m_scene->mAnimations[m_animationIndex];
@@ -211,6 +194,46 @@ void Animation::UpdateNodeHeirarchy(const float animationTime, const aiNode* nod
 
     for (unsigned int i = 0; i < node->mNumChildren; i++) {
         UpdateNodeHeirarchy(animationTime, node->mChildren[i], globalTransformation);
+    }
+}
+
+/// ANIMATION
+
+void Animation::Update(const float deltaTime)
+{
+    for (auto& part : m_parts) {
+        part->Update(deltaTime);
+    }
+}
+
+std::shared_ptr<IAnimationPart> Animation::GetAnimationPart(unsigned int partIndex) const
+{
+    return m_parts.at(partIndex);
+}
+
+const std::vector<std::shared_ptr<IAnimationPart> >& Animation::GetAnimationParts() const
+{
+    return m_parts;
+}
+
+void Animation::SetState(const AnimationState state)
+{
+    for (auto& part : m_parts) {
+        part->SetState(state);
+    }
+}
+
+void Animation::SetSpeed(const float speed)
+{
+    for (auto& part : m_parts) {
+        part->SetSpeed(speed);
+    }
+}
+
+void Animation::SetTime(const float elapsed)
+{
+    for (auto& part : m_parts) {
+        part->SetTime(elapsed);
     }
 }
 

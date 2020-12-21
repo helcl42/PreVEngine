@@ -53,4 +53,9 @@ const std::vector<prev_test::render::MeshPart>& CubeMesh::GetMeshParts() const
 {
     return meshParts;
 }
+
+const MeshNode& CubeMesh::GetRootNode() const
+{
+    return meshRootNode;
+}
 } // namespace prev_test::render::mesh
