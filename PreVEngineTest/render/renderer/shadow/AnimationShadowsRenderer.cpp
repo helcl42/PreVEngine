@@ -94,7 +94,7 @@ void AnimationShadowsRenderer::RenderMeshNode(const prev::render::RenderContext&
 
     const auto model = renderComponent->GetModel();
     const auto mesh = model->GetMesh();
-    const auto animation = renderComponent->GetAnimation();
+    const auto animation = renderComponent->GetCurrentAnimation();
 
     const auto& meshParts{ mesh->GetMeshParts() };
     for (const auto meshPartIndex : meshNode.meshPartIndices) {
@@ -110,7 +110,7 @@ void AnimationShadowsRenderer::RenderMeshNode(const prev::render::RenderContext&
         }
         uniforms.projectionMatrix = shadowsRenderContextUserData.projectionMatrix;
         uniforms.viewMatrix = shadowsRenderContextUserData.viewMatrix;
-        uniforms.modelMatrix = transformComponent->GetWorldTransformScaled();
+        uniforms.modelMatrix = transformComponent->GetWorldTransformScaled() * meshNode.transform;
         ubo->Update(&uniforms);
 
         m_shader->Bind("ubo", *ubo);

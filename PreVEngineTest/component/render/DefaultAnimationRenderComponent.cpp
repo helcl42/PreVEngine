@@ -7,6 +7,7 @@ DefaultAnimationRenderComponent::DefaultAnimationRenderComponent(const std::shar
     , m_animations(animations)
     , m_castsShadows(castsShadows)
     , m_isCastedByShadows(isCastedByShadows)
+    , m_currentAnimationIndex(0)
 {
 }
 
@@ -25,6 +26,16 @@ const std::vector<std::shared_ptr<prev_test::render::IMaterial> >& DefaultAnimat
     return m_materials;
 }
 
+bool DefaultAnimationRenderComponent::CastsShadows() const
+{
+    return m_castsShadows;
+}
+
+bool DefaultAnimationRenderComponent::IsCastedByShadows() const
+{
+    return m_isCastedByShadows;
+}
+
 std::shared_ptr<prev_test::render::IAnimation> DefaultAnimationRenderComponent::GetAnimation(const uint32_t index) const
 {
     return m_animations.at(index);
@@ -35,13 +46,13 @@ const std::vector<std::shared_ptr<prev_test::render::IAnimation> >& DefaultAnima
     return m_animations;
 }
 
-bool DefaultAnimationRenderComponent::CastsShadows() const
+std::shared_ptr<prev_test::render::IAnimation> DefaultAnimationRenderComponent::GetCurrentAnimation() const
 {
-    return m_castsShadows;
+    return m_animations.at(m_currentAnimationIndex);
 }
 
-bool DefaultAnimationRenderComponent::IsCastedByShadows() const
+void DefaultAnimationRenderComponent::SetCurrentAnimationIndex(const uint32_t index)
 {
-    return m_isCastedByShadows;
+    m_currentAnimationIndex = index;
 }
 } // namespace prev_test::component::render
