@@ -105,14 +105,14 @@ void AnimationRenderer::RenderMeshNode(const prev::render::RenderContext& render
 
     const auto model = nodeRenderComponent->GetModel();
     const auto mesh = model->GetMesh();
-    const auto animation = nodeRenderComponent->GetAnimation();
+    const auto animation = nodeRenderComponent->GetCurrentAnimation();
 
     const auto& meshParts{ mesh->GetMeshParts() };
     for (const auto meshPartIndex : meshNode.meshPartIndices) {
         const auto& meshPart = meshParts.at(meshPartIndex);
         const auto& animationPart = animation->GetAnimationPart(meshPartIndex);
         const auto material = nodeRenderComponent->GetMaterial(meshPart.materialIndex);
-        const auto modelMatrix = transformComponent->GetWorldTransformScaled();
+        const auto modelMatrix = transformComponent->GetWorldTransformScaled() * meshNode.transform;
 
         auto uboVS = m_uniformsPoolVS->GetNext();
 

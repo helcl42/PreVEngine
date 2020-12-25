@@ -94,7 +94,7 @@ void AnimationBumpMappedShadowsRenderer::RenderMeshNode(const prev::render::Rend
 
     const auto model = renderComponent->GetModel();
     const auto mesh = model->GetMesh();
-    const auto animation = renderComponent->GetAnimation();
+    const auto animation = renderComponent->GetCurrentAnimation();
 
     const auto& meshParts{ mesh->GetMeshParts() };
     for (const auto meshPartIndex : meshNode.meshPartIndices) {
@@ -110,7 +110,7 @@ void AnimationBumpMappedShadowsRenderer::RenderMeshNode(const prev::render::Rend
         }
         uniforms.projectionMatrix = renderContextUserData.projectionMatrix;
         uniforms.viewMatrix = renderContextUserData.viewMatrix;
-        uniforms.modelMatrix = transformComponent->GetWorldTransformScaled();
+        uniforms.modelMatrix = transformComponent->GetWorldTransformScaled() * meshNode.transform;
         ubo->Update(&uniforms);
 
         m_shader->Bind("ubo", *ubo);

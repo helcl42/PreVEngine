@@ -17,13 +17,17 @@ public:
 
     const std::vector<std::shared_ptr<prev_test::render::IMaterial> >& GetMaterials() const override;
 
+    bool CastsShadows() const override;
+
+    bool IsCastedByShadows() const override;
+
     std::shared_ptr<prev_test::render::IAnimation> GetAnimation(const uint32_t index = 0) const override;
 
     const std::vector<std::shared_ptr<prev_test::render::IAnimation> >& GetAnimations() const override;
 
-    bool CastsShadows() const override;
+    std::shared_ptr<prev_test::render::IAnimation> GetCurrentAnimation() const override;
 
-    bool IsCastedByShadows() const override;
+    void SetCurrentAnimationIndex(const uint32_t index) override;
 
 private:
     std::shared_ptr<prev_test::render::IModel> m_model;
@@ -35,6 +39,8 @@ private:
     bool m_castsShadows;
 
     bool m_isCastedByShadows;
+
+    uint32_t m_currentAnimationIndex;
 };
 } // namespace prev_test::component::render
 
