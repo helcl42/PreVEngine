@@ -84,8 +84,7 @@ void Root::Init()
         }
     }
 
-    auto player = std::make_shared<Player>(glm::vec3(0.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(5.0f));
-    //auto player = std::make_shared<Player>(glm::vec3(0.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(0.05f));
+    auto player = std::make_shared<Player>(glm::vec3(0.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(0.06f));
     player->SetTags({ TAG_MAIN_CAMERA, TAG_PLAYER });
     AddChild(player);
 

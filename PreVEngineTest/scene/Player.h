@@ -37,17 +37,19 @@ public:
     void operator()(const prev::input::mouse::MouseScrollEvent& scrollEvent);
 
 private:
-    const float RUN_SPEED{ 14.0f };
+    static const inline float RUN_SPEED{ 14.0f };
 
-    const float YAW_TURN_SPEED{ 3.0f };
+    static const inline float YAW_TURN_SPEED{ 3.0f };
 
-    const float PITCH_TURN_SPEED{ 0.5f };
+    static const inline float PITCH_TURN_SPEED{ 0.5f };
 
-    const float GRAVITY_Y{ -5.0f };
+    static const inline float GRAVITY_Y{ -10.0f };
 
-    const float JUMP_POWER{ 2.5f };
+    static const inline float JUMP_POWER{ 4.0f };
 
-    const float MIN_Y_POS{ 5.5f };
+    static const inline uint32_t WALKING_ANIMATION_INDEX{ 0 };
+
+    static const inline uint32_t JUMP_ANIMATION_INDEX{ 1 };
 
 private:
     const glm::vec3 m_initialPosition;

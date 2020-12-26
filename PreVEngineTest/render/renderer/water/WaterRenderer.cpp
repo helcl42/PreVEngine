@@ -93,7 +93,7 @@ void WaterRenderer::Render(const prev::render::RenderContext& renderContext, con
 
             UniformsFS uniformsFS{};
             uniformsFS.fogColor = prev_test::component::sky::FOG_COLOR;
-            uniformsFS.waterColor = glm::vec4(waterComponent->GetMaterial()->GetColor(), 1.0f);
+            uniformsFS.waterColor = waterComponent->GetMaterial()->GetColor();
             uniformsFS.light.color = glm::vec4(mainLightComponent->GetColor(), 1.0f);
             uniformsFS.light.position = glm::vec4(mainLightComponent->GetPosition(), 1.0f);
             uniformsFS.nearFarClippingPlane = glm::vec4(renderContextUserData.nearFarClippingPlane, 0.0f, 0.0f);

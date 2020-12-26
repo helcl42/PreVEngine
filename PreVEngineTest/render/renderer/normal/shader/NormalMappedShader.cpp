@@ -1,4 +1,5 @@
 #include "NormalMappedShader.h"
+
 #include "../../../../common/AssetManager.h"
 #include "../../../VertexLayout.h"
 

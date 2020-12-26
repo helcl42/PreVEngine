@@ -1,4 +1,5 @@
 #include "AnimationParallaxMappedShader.h"
+
 #include "../../../../common/AssetManager.h"
 #include "../../../VertexLayout.h"
 

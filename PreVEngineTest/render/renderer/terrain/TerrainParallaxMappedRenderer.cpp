@@ -121,7 +121,7 @@ void TerrainParallaxMappedRenderer::Render(const prev::render::RenderContext& re
             uniformsFS.maxHeight = terrainComponent->GetHeightMapInfo()->GetGlobalMaxHeight();
             for (auto i = 0; i < terrainComponent->GetMaterials().size(); i++) {
                 const auto material = terrainComponent->GetMaterials().at(i);
-                uniformsFS.material[i] = MaterialUniform(material->GetShineDamper(), material->GetReflectivity());
+                uniformsFS.material[i] = MaterialUniform(material->GetColor(), material->GetShineDamper(), material->GetReflectivity());
                 uniformsFS.heightScale[i] = glm::vec4(material->GetHeightScale());
                 uniformsFS.heightSteps[i] = glm::vec4(terrainComponent->GetHeightSteps().at(i));
             }

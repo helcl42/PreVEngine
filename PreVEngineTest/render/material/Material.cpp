@@ -56,7 +56,7 @@ bool Material::HasImage() const
     return m_image != nullptr;
 }
 
-const glm::vec3& Material::GetColor() const
+const glm::vec4& Material::GetColor() const
 {
     return m_color;
 }

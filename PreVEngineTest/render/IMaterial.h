@@ -9,7 +9,7 @@
 
 namespace prev_test::render {
 struct MaterialProperties {
-    glm::vec3 color;
+    glm::vec4 color;
     float shineDamper;
     float reflectivity;
 };
@@ -59,7 +59,7 @@ public:
 
     virtual void SetTextureOffset(const glm::vec2& textureOffset) = 0;
 
-    virtual const glm::vec3& GetColor() const = 0;
+    virtual const glm::vec4& GetColor() const = 0;
 
     virtual float GetHeightScale() const = 0;
 

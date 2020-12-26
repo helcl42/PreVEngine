@@ -62,6 +62,6 @@ std::unique_ptr<prev_test::render::IMaterial> SkyBoxComponentFactory::CreateMate
     imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ images[0]->GetWidth(), images[0]->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT, true, true, VK_IMAGE_VIEW_TYPE_CUBE, static_cast<uint32_t>(images.size()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, layersData });
 
     prev_test::render::material::MaterialFactory materialFactory{};
-    return materialFactory.Create({ glm::vec3{ 1.0f }, 1.0f, 0.0f }, { std::move(images[0]), std::move(imageBuffer) });
+    return materialFactory.Create({ glm::vec4{ 1.0f }, 1.0f, 0.0f }, { std::move(images[0]), std::move(imageBuffer) });
 }
 } // namespace prev_test::component::sky
