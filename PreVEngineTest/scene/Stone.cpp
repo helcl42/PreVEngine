@@ -27,9 +27,9 @@ void Stone::Init()
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, TAG_TRANSFORM_COMPONENT);
 
     prev_test::component::render::RenderComponentFactory componentFactory{};
-    std::shared_ptr<prev_test::component::render::IRenderComponent> renderComponent = componentFactory.CreateModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.fbx"), { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.png") }, { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_normal.png") }, { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_height.png") }, true, true);
+    std::shared_ptr<prev_test::component::render::IRenderComponent> renderComponent = componentFactory.CreateModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.fbx"), { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.png") }, { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_normal.png") }, { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_cone.png") }, true, true);
     renderComponent->GetMaterial()->SetHeightScale(0.01f);
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::render::IRenderComponent>(GetThis(), renderComponent, TAG_RENDER_PARALLAX_MAPPED_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::render::IRenderComponent>(GetThis(), renderComponent, TAG_RENDER_CONE_STEP_MAPPED_COMPONENT);
 
     prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{};
     m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(renderComponent->GetModel()->GetMesh()->GetVertices(), 80.0f);
