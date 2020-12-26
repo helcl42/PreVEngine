@@ -28,21 +28,16 @@ void Player::Init()
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, TAG_TRANSFORM_COMPONENT);
 
     prev_test::component::render::RenderComponentFactory renderComponentFactory{};
-    m_animatonRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin.dae"), { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin.dae") }, { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_texture.png") }, { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_normal_texture_2.png") }, { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Goblin/goblin_cone_texture.png") }, true, true);
-    m_animatonRenderComponent->GetMaterial()->SetHeightScale(0.004f);
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::render::IAnimationRenderComponent>(GetThis(), m_animatonRenderComponent, TAG_ANIMATION_CONE_STEP_MAPPED_RENDER_COMPONENT);
+    m_animatonRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Xbot/XBot.fbx"), { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Xbot/Walking.fbx"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Xbot/Jump.fbx") }, { glm::vec4(0.49f, 0.3f, 0.28f, 1.0f), glm::vec4(0.52f, 0.42f, 0.4f, 1.0f) }, true, true);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::render::IAnimationRenderComponent>(GetThis(), m_animatonRenderComponent, TAG_ANIMATION_TEXTURELESS_RENDER_COMPONENT);
 
     prev_test::component::camera::CameraComponentFactory cameraFactory{};
     m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 60.0f, 180.0f));
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::camera::ICameraComponent>(GetThis(), m_cameraComponent, TAG_CAMERA_COMPONENT);
 
     prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{};
-    m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_animatonRenderComponent->GetModel()->GetMesh()->GetVertices(), 1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+    m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_animatonRenderComponent->GetModel()->GetMesh()->GetVertices());
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, TAG_BOUNDING_VOLUME_COMPONENT);
-
-    m_animatonRenderComponent->GetAnimation()->SetIndex(0);
-    m_animatonRenderComponent->GetAnimation()->SetState(prev_test::render::AnimationState::RUNNING);
-    m_animatonRenderComponent->GetAnimation()->SetSpeed(1.0f);
 
     m_cameraComponent->AddOrientation(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), m_cameraComponent->GetUpDirection())));
     m_cameraComponent->AddOrientation(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(m_cameraPitch), m_cameraComponent->GetRightDirection())));
@@ -54,16 +49,20 @@ void Player::Update(float deltaTime)
 {
     const auto terrain = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::terrain::ITerrainManagerComponent>({ TAG_TERRAIN_MANAGER_COMPONENT });
 
+    // set default animation
+    m_animatonRenderComponent->SetCurrentAnimationIndex(WALKING_ANIMATION_INDEX);
+
+    auto walkingAnimation{ m_animatonRenderComponent->GetAnimation(WALKING_ANIMATION_INDEX) };
     if ((m_shouldGoForward || m_shouldGoBackward || m_shouldGoLeft || m_shouldGoRight) && !m_isInTheAir) {
-        m_animatonRenderComponent->GetAnimation()->SetState(prev_test::render::AnimationState::RUNNING);
-        m_animatonRenderComponent->GetAnimation()->Update(m_shouldGoBackward ? -deltaTime : deltaTime);
+        walkingAnimation->SetState(prev_test::render::AnimationState::RUNNING);
+        walkingAnimation->Update(m_shouldGoBackward ? -deltaTime : deltaTime);
 
         glm::vec3 positionOffset{ 0.0f };
         if (m_shouldGoForward) {
-            positionOffset += deltaTime * prev::util::MathUtil::GetUpVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
+            positionOffset += deltaTime * prev::util::MathUtil::GetForwardVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
         }
         if (m_shouldGoBackward) {
-            positionOffset -= deltaTime * prev::util::MathUtil::GetUpVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
+            positionOffset -= deltaTime * prev::util::MathUtil::GetForwardVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
         }
         if (m_shouldGoLeft) {
             positionOffset += deltaTime * prev::util::MathUtil::GetRightVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
@@ -73,32 +72,38 @@ void Player::Update(float deltaTime)
         }
         m_transformComponent->Translate(positionOffset);
     } else {
-        m_animatonRenderComponent->GetAnimation()->SetState(prev_test::render::AnimationState::PAUSED);
-        m_animatonRenderComponent->GetAnimation()->Update(deltaTime);
+        walkingAnimation->SetState(prev_test::render::AnimationState::STOPPED);
+        walkingAnimation->Update(deltaTime);
     }
 
-    auto currentPosition = m_transformComponent->GetPosition();
-    float height = 0.0f;
-    terrain->GetHeightAt(currentPosition, height);
-    const auto currentY = height + MIN_Y_POS;
+    const auto currentPosition{ m_transformComponent->GetPosition() };
 
+    float height{ 0.0f };
+    terrain->GetHeightAt(currentPosition, height);
+
+    auto jumpAnimation{ m_animatonRenderComponent->GetAnimation(JUMP_ANIMATION_INDEX) };
     if (m_isInTheAir) {
+        m_animatonRenderComponent->SetCurrentAnimationIndex(JUMP_ANIMATION_INDEX);
+        jumpAnimation->SetState(prev_test::render::AnimationState::RUNNING);
+        jumpAnimation->Update(deltaTime);
         m_upwardSpeed += GRAVITY_Y * deltaTime;
         m_transformComponent->Translate(glm::vec3(0.0f, m_upwardSpeed, 0.0f));
-        if (currentPosition.y < currentY) {
-            m_transformComponent->SetPosition(glm::vec3(currentPosition.x, currentY, currentPosition.z));
+        if (currentPosition.y < height) {
+            m_transformComponent->SetPosition(glm::vec3(currentPosition.x, height, currentPosition.z));
             m_upwardSpeed = 0.0f;
             m_isInTheAir = false;
         }
     } else {
-        m_transformComponent->SetPosition(glm::vec3(currentPosition.x, currentY, currentPosition.z));
+        m_transformComponent->SetPosition(glm::vec3(currentPosition.x, height, currentPosition.z));
+        jumpAnimation->SetState(prev_test::render::AnimationState::STOPPED);
+        jumpAnimation->Update(deltaTime);
     }
 
     if (m_shouldRotate) {
-        const float yawAmount = YAW_TURN_SPEED * m_rotationAroundY * deltaTime;
-        const float pitchAmount = PITCH_TURN_SPEED * m_pitchDiff * deltaTime;
+        const auto yawAmount{ YAW_TURN_SPEED * m_rotationAroundY * deltaTime };
+        const auto pitchAmount{ PITCH_TURN_SPEED * m_pitchDiff * deltaTime };
 
-        m_transformComponent->Rotate(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(-yawAmount), glm::vec3(0.0f, 0.0f, 1.0f))));
+        m_transformComponent->Rotate(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(yawAmount), glm::vec3(0.0f, 1.0f, 0.0f))));
 
         m_cameraComponent->AddYaw(yawAmount);
         m_cameraComponent->AddPitch(pitchAmount);
@@ -109,7 +114,7 @@ void Player::Update(float deltaTime)
 
     m_transformComponent->Update(deltaTime);
 
-    const glm::vec3 cameraPosition = m_transformComponent->GetPosition() + (-m_cameraComponent->GetForwardDirection() * m_distanceFromPerson) + glm::vec3(0.0f, 8.0f, 0.0f);
+    const glm::vec3 cameraPosition{ m_transformComponent->GetPosition() + (-m_cameraComponent->GetForwardDirection() * m_distanceFromPerson) + glm::vec3(0.0f, 8.0f, 0.0f) };
     m_cameraComponent->SetPosition(cameraPosition);
 
     m_boundingVolumeComponent->Update(m_transformComponent->GetWorldTransformScaled());

@@ -107,9 +107,9 @@ void ParallaxMappedRenderer::RenderMeshNode(const prev::render::RenderContext& r
     const auto model = nodeRenderComponent->GetModel();
     const auto mesh = model->GetMesh();
 
-    const auto meshParts = mesh->GetMeshParts();
+    const auto& meshParts{ mesh->GetMeshParts() };
     for (const auto meshPartIndex : meshNode.meshPartIndices) {
-        const auto meshPart = meshParts.at(meshPartIndex);
+        const auto& meshPart{ meshParts.at(meshPartIndex) };
         const auto material = nodeRenderComponent->GetMaterial(meshPart.materialIndex);
         const auto modelMatrix = transformComponent->GetWorldTransformScaled() * meshNode.transform;
 
@@ -152,7 +152,7 @@ void ParallaxMappedRenderer::RenderMeshNode(const prev::render::RenderContext& r
         uniformsFS.lightning.ambientFactor = prev_test::component::light::AMBIENT_LIGHT_INTENSITY;
 
         // material
-        uniformsFS.material = MaterialUniform(material->GetShineDamper(), material->GetReflectivity());
+        uniformsFS.material = MaterialUniform(material->GetColor(), material->GetShineDamper(), material->GetReflectivity());
 
         bool selected = false;
         if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::ISelectableComponent>::Instance().Contains(node->GetId())) {

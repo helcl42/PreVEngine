@@ -167,7 +167,7 @@ std::unique_ptr<prev_test::render::IMaterial> TerrainComponentFactory::CreateMat
     auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
     imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer() });
 
-    return prev_test::render::material::MaterialFactory{}.Create({ glm::vec3{ 1.0f }, shineDamper, reflectivity }, { image, std::move(imageBuffer) });
+    return prev_test::render::material::MaterialFactory{}.Create({ glm::vec4{ 1.0f }, shineDamper, reflectivity }, { image, std::move(imageBuffer) });
 }
 
 std::unique_ptr<prev_test::render::IMaterial> TerrainComponentFactory::CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const float shineDamper, const float reflectivity) const
@@ -180,7 +180,7 @@ std::unique_ptr<prev_test::render::IMaterial> TerrainComponentFactory::CreateMat
     auto normalImageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
     normalImageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ normalImage->GetWidth(), normalImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)normalImage->GetBuffer() });
 
-    return prev_test::render::material::MaterialFactory{}.Create({ glm::vec3{ 1.0f }, shineDamper, reflectivity }, { image, std::move(imageBuffer) }, { normalImage, std::move(normalImageBuffer) });
+    return prev_test::render::material::MaterialFactory{}.Create({ glm::vec4{ 1.0f }, shineDamper, reflectivity }, { image, std::move(imageBuffer) }, { normalImage, std::move(normalImageBuffer) });
 }
 
 std::unique_ptr<prev_test::render::IMaterial> TerrainComponentFactory::CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightPath, const float shineDamper, const float reflectivity) const
@@ -197,7 +197,7 @@ std::unique_ptr<prev_test::render::IMaterial> TerrainComponentFactory::CreateMat
     auto heightImageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
     heightImageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ heightImage->GetWidth(), heightImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)heightImage->GetBuffer() });
 
-    return prev_test::render::material::MaterialFactory{}.Create({ glm::vec3{ 1.0f }, shineDamper, reflectivity }, { image, std::move(imageBuffer) }, { normalImage, std::move(normalImageBuffer) }, { heightImage, std::move(heightImageBuffer) });
+    return prev_test::render::material::MaterialFactory{}.Create({ glm::vec4{ 1.0f }, shineDamper, reflectivity }, { image, std::move(imageBuffer) }, { normalImage, std::move(normalImageBuffer) }, { heightImage, std::move(heightImageBuffer) });
 }
 
 std::unique_ptr<prev_test::render::IMesh> TerrainComponentFactory::GenerateMesh(const std::shared_ptr<VertexData>& vertexData, const bool normalMapped) const

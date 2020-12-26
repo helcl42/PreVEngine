@@ -19,6 +19,8 @@ struct Lightning {
 };
 
 struct Material {
+	vec4 color;
+
 	float shineDamper;
 
 	float reflectivity;

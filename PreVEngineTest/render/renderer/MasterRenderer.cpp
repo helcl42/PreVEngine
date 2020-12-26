@@ -11,6 +11,7 @@
 #include "animation/AnimationNormalMappedRenderer.h"
 #include "animation/AnimationParallaxMappedRenderer.h"
 #include "animation/AnimationRenderer.h"
+#include "animation/AnimationTexturelessRenderer.h"
 #include "debug/BoundingVolumeDebugRenderer.h"
 #include "debug/RayCastDebugRenderer.h"
 #include "debug/SelectionDebugRenderer.h"
@@ -21,6 +22,7 @@
 #include "normal/DefaultRenderer.h"
 #include "normal/NormalMappedRenderer.h"
 #include "normal/ParallaxMappedRenderer.h"
+#include "normal/TexturelessRenderer.h"
 #include "particle/ParticlesRenderer.h"
 #include "shadow/AnimationBumpMappedShadowsRenderer.h"
 #include "shadow/AnimationShadowsRenderer.h"
@@ -106,6 +108,7 @@ void MasterRenderer::InitDefault()
     m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyBoxRenderer>(m_defaultRenderPass));
     m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyRenderer>(m_defaultRenderPass));
     m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::normal::DefaultRenderer>(m_defaultRenderPass));
+    m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::normal::TexturelessRenderer>(m_defaultRenderPass));
     m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::normal::NormalMappedRenderer>(m_defaultRenderPass));
     m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::normal::ParallaxMappedRenderer>(m_defaultRenderPass));
     m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::normal::ConeStepMappedRenderer>(m_defaultRenderPass));
@@ -114,6 +117,7 @@ void MasterRenderer::InitDefault()
     m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::terrain::TerrainParallaxMappedRenderer>(m_defaultRenderPass));
     m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::terrain::TerrainConeStepMappedRenderer>(m_defaultRenderPass));
     m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::animation::AnimationRenderer>(m_defaultRenderPass));
+    m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::animation::AnimationTexturelessRenderer>(m_defaultRenderPass));
     m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::animation::AnimationNormalMappedRenderer>(m_defaultRenderPass));
     m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::animation::AnimationParallaxMappedRenderer>(m_defaultRenderPass));
     m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::animation::AnimationConeStepMappedRenderer>(m_defaultRenderPass));
@@ -220,6 +224,7 @@ void MasterRenderer::InitReflection()
     m_reflectionRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyBoxRenderer>(reflectionComponent->GetRenderPass()));
     m_reflectionRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyRenderer>(reflectionComponent->GetRenderPass()));
     m_reflectionRenderers.push_back(std::make_unique<prev_test::render::renderer::normal::DefaultRenderer>(reflectionComponent->GetRenderPass()));
+    m_reflectionRenderers.push_back(std::make_unique<prev_test::render::renderer::normal::TexturelessRenderer>(reflectionComponent->GetRenderPass()));
     m_reflectionRenderers.push_back(std::make_unique<prev_test::render::renderer::normal::NormalMappedRenderer>(reflectionComponent->GetRenderPass()));
     m_reflectionRenderers.push_back(std::make_unique<prev_test::render::renderer::normal::ParallaxMappedRenderer>(reflectionComponent->GetRenderPass()));
     m_reflectionRenderers.push_back(std::make_unique<prev_test::render::renderer::normal::ConeStepMappedRenderer>(reflectionComponent->GetRenderPass()));
@@ -228,6 +233,7 @@ void MasterRenderer::InitReflection()
     m_reflectionRenderers.push_back(std::make_unique<prev_test::render::renderer::terrain::TerrainParallaxMappedRenderer>(reflectionComponent->GetRenderPass()));
     m_reflectionRenderers.push_back(std::make_unique<prev_test::render::renderer::terrain::TerrainConeStepMappedRenderer>(reflectionComponent->GetRenderPass()));
     m_reflectionRenderers.push_back(std::make_unique<prev_test::render::renderer::animation::AnimationRenderer>(reflectionComponent->GetRenderPass()));
+    m_reflectionRenderers.push_back(std::make_unique<prev_test::render::renderer::animation::AnimationTexturelessRenderer>(reflectionComponent->GetRenderPass()));
     m_reflectionRenderers.push_back(std::make_unique<prev_test::render::renderer::animation::AnimationNormalMappedRenderer>(reflectionComponent->GetRenderPass()));
     m_reflectionRenderers.push_back(std::make_unique<prev_test::render::renderer::animation::AnimationParallaxMappedRenderer>(reflectionComponent->GetRenderPass()));
     m_reflectionRenderers.push_back(std::make_unique<prev_test::render::renderer::animation::AnimationConeStepMappedRenderer>(reflectionComponent->GetRenderPass()));
@@ -261,6 +267,7 @@ void MasterRenderer::InitRefraction()
     m_refractionRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyBoxRenderer>(refractionComponent->GetRenderPass()));
     m_refractionRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyRenderer>(refractionComponent->GetRenderPass()));
     m_refractionRenderers.push_back(std::make_unique<prev_test::render::renderer::normal::DefaultRenderer>(refractionComponent->GetRenderPass()));
+    m_refractionRenderers.push_back(std::make_unique<prev_test::render::renderer::normal::TexturelessRenderer>(refractionComponent->GetRenderPass()));
     m_refractionRenderers.push_back(std::make_unique<prev_test::render::renderer::normal::NormalMappedRenderer>(refractionComponent->GetRenderPass()));
     m_refractionRenderers.push_back(std::make_unique<prev_test::render::renderer::normal::ParallaxMappedRenderer>(refractionComponent->GetRenderPass()));
     m_refractionRenderers.push_back(std::make_unique<prev_test::render::renderer::normal::ConeStepMappedRenderer>(refractionComponent->GetRenderPass()));
@@ -269,6 +276,7 @@ void MasterRenderer::InitRefraction()
     m_refractionRenderers.push_back(std::make_unique<prev_test::render::renderer::terrain::TerrainParallaxMappedRenderer>(refractionComponent->GetRenderPass()));
     m_refractionRenderers.push_back(std::make_unique<prev_test::render::renderer::terrain::TerrainConeStepMappedRenderer>(refractionComponent->GetRenderPass()));
     m_refractionRenderers.push_back(std::make_unique<prev_test::render::renderer::animation::AnimationRenderer>(refractionComponent->GetRenderPass()));
+    m_refractionRenderers.push_back(std::make_unique<prev_test::render::renderer::animation::AnimationTexturelessRenderer>(refractionComponent->GetRenderPass()));
     m_refractionRenderers.push_back(std::make_unique<prev_test::render::renderer::animation::AnimationNormalMappedRenderer>(refractionComponent->GetRenderPass()));
     m_refractionRenderers.push_back(std::make_unique<prev_test::render::renderer::animation::AnimationParallaxMappedRenderer>(refractionComponent->GetRenderPass()));
     m_refractionRenderers.push_back(std::make_unique<prev_test::render::renderer::animation::AnimationConeStepMappedRenderer>(refractionComponent->GetRenderPass()));

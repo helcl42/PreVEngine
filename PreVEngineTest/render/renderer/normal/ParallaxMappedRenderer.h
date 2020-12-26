@@ -86,14 +86,17 @@ private:
     };
 
     struct MaterialUniform {
+        glm::vec4 color;
+
         float shineDamper;
 
         float reflectivity;
 
         MaterialUniform() = default;
 
-        MaterialUniform(const float shineDaperr, const float reflect)
-            : shineDamper(shineDaperr)
+        MaterialUniform(const glm::vec4& col, const float shineDaperr, const float reflect)
+            : color(col)
+            , shineDamper(shineDaperr)
             , reflectivity(reflect)
         {
         }

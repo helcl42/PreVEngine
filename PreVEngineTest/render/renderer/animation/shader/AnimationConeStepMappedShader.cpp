@@ -1,4 +1,5 @@
 #include "AnimationConeStepMappedShader.h"
+
 #include "../../../../common/AssetManager.h"
 #include "../../../VertexLayout.h"
 

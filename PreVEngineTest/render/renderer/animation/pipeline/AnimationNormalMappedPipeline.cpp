@@ -1,4 +1,5 @@
 #include "AnimationNormalMappedPipeline.h"
+
 #include "../../../pipeline/PipelineFactory.h"
 
 namespace prev_test::render::renderer::animation::pipeline {

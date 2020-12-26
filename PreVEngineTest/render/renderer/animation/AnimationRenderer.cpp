@@ -158,7 +158,7 @@ void AnimationRenderer::RenderMeshNode(const prev::render::RenderContext& render
         uniformsFS.lightning.ambientFactor = prev_test::component::light::AMBIENT_LIGHT_INTENSITY;
 
         // material
-        uniformsFS.material = MaterialUniform(material->GetShineDamper(), material->GetReflectivity());
+        uniformsFS.material = MaterialUniform(material->GetColor(), material->GetShineDamper(), material->GetReflectivity());
 
         // common
         uniformsFS.fogColor = prev_test::component::sky::FOG_COLOR;

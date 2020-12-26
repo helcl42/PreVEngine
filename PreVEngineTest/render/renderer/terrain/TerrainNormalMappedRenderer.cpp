@@ -122,7 +122,7 @@ void TerrainNormalMappedRenderer::Render(const prev::render::RenderContext& rend
             for (auto i = 0; i < terrainComponent->GetMaterials().size(); i++) {
                 const auto material = terrainComponent->GetMaterials().at(i);
                 uniformsFS.heightSteps[i] = glm::vec4(terrainComponent->GetHeightSteps().at(i));
-                uniformsFS.material[i] = MaterialUniform(material->GetShineDamper(), material->GetReflectivity());
+                uniformsFS.material[i] = MaterialUniform(material->GetColor(), material->GetShineDamper(), material->GetReflectivity());
             }
             uniformsFS.heightTransitionRange = terrainComponent->GetTransitionRange();
 

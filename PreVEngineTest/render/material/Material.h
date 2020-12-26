@@ -23,7 +23,7 @@ public:
 
     bool HasImage() const override;
 
-    const glm::vec3& GetColor() const override;
+    const glm::vec4& GetColor() const override;
 
     std::shared_ptr<prev::render::image::Image> GetNormalImage() const override;
 
@@ -62,7 +62,7 @@ public:
     void SetHeightScale(const float scale) override;
 
 private:
-    glm::vec3 m_color{ 1.0f, 1.0f, 1.0f };
+    glm::vec4 m_color{ 1.0f, 1.0f, 1.0f, 1.0f };
 
     float m_shineDamper{ 10.0f };
 
