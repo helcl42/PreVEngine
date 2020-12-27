@@ -186,9 +186,9 @@ void AnimationPart::UpdateNodeHeirarchy(const float animationTime, const aiNode*
         nodeTransformation = translationMatrix * rotationMatrix * scaleMatrix;
     }
 
-    auto globalTransformation = parentTransformation * nodeTransformation;
-    if (m_boneMapping.find(nodeName) != m_boneMapping.end()) {
-        const auto boneIndex = m_boneMapping[nodeName];
+    const auto globalTransformation{ parentTransformation * nodeTransformation };
+    if (m_boneMapping.find(nodeName) != m_boneMapping.cend()) {
+        const auto boneIndex{ m_boneMapping[nodeName] };
         m_boneInfos[boneIndex].finalTransformation = m_globalInverseTransform * globalTransformation * m_boneInfos[boneIndex].boneOffset;
     }
 
