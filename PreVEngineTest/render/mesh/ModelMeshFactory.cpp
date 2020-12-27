@@ -71,7 +71,7 @@ std::vector<uint32_t> ModelMeshFactory::ReadMeshIndices(const aiMesh& mesh) cons
 void ModelMeshFactory::AddDefaultVertexData(const aiMesh& mesh, const uint32_t vertexIndex, prev_test::render::VertexDataBuffer& inOutVertexBuffer, std::vector<glm::vec3>& inOutVertices) const
 {
     const glm::vec3 pos{ glm::make_vec3(&mesh.mVertices[vertexIndex].x) };
-    const glm::vec2 uv{ mesh.mTextureCoords[0] != nullptr ? glm::make_vec3(&mesh.mTextureCoords[0][vertexIndex].x) : glm::vec2(1.0f, 1.0f) };
+    const glm::vec2 uv{ mesh.HasTextureCoords(0) ? glm::make_vec3(&mesh.mTextureCoords[0][vertexIndex].x) : glm::vec2(1.0f, 1.0f) };
     const glm::vec3 normal{ mesh.HasNormals() ? glm::make_vec3(&mesh.mNormals[vertexIndex].x) : glm::vec3(0.0f, 1.0f, 0.0f) };
 
     inOutVertexBuffer.Add(pos);
@@ -115,11 +115,12 @@ void ModelMeshFactory::ReadMeshVertexData(const aiMesh& mesh, const prev::common
 
 std::vector<VertexBoneData> ModelMeshFactory::ReadMeshBones(const aiMesh& mesh) const
 {
-    std::vector<VertexBoneData> bones(mesh.mNumVertices);
+    std::vector<VertexBoneData> vertexBoneData(mesh.mNumVertices);
 
     std::map<std::string, uint32_t> boneMapping;
     for (uint32_t boneIndex = 0; boneIndex < mesh.mNumBones; boneIndex++) {
-        const std::string currentBoneName{ mesh.mBones[boneIndex]->mName.data };
+        const auto& meshBone{ *mesh.mBones[boneIndex] };
+        const std::string currentBoneName{ meshBone.mName.data };
 
         uint32_t currentBoneIndex{ 0 };
         if (boneMapping.find(currentBoneName) == boneMapping.end()) {
@@ -129,13 +130,17 @@ std::vector<VertexBoneData> ModelMeshFactory::ReadMeshBones(const aiMesh& mesh) 
             currentBoneIndex = boneMapping[currentBoneName];
         }
 
-        for (uint32_t j = 0; j < mesh.mBones[boneIndex]->mNumWeights; j++) {
-            const uint32_t vertexId = mesh.mBones[boneIndex]->mWeights[j].mVertexId;
-            const float weight = mesh.mBones[boneIndex]->mWeights[j].mWeight;
-            bones[vertexId].AddBoneData(currentBoneIndex, weight);
+        for (uint32_t i = 0; i < meshBone.mNumWeights; i++) {
+            const auto& vertexWeight{ meshBone.mWeights[i] };
+            auto& singleVertexBoneData{ vertexBoneData[vertexWeight.mVertexId] };
+            singleVertexBoneData.AddBoneData(currentBoneIndex, vertexWeight.mWeight);
         }
     }
-    return bones;
+
+    for (auto& bone : vertexBoneData) {
+        bone.Normalize();
+    }
+    return vertexBoneData;
 }
 
 std::vector<VertexBoneData> ModelMeshFactory::ReadSceneBones(const aiScene& scene) const

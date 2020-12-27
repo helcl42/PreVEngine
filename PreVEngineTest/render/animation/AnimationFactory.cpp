@@ -22,12 +22,12 @@ std::unique_ptr<prev_test::render::IAnimation> AnimationFactory::Create(const st
 
         auto animationPart = std::make_shared<AnimationPart>(animation->m_scene);
         animationPart->m_globalInverseTransform = glm::inverse(prev_test::render::util::assimp::AssimpGlmConvertor::ToGlmMat4(animation->m_scene->mRootNode->mTransformation));
-        animationPart->m_animationIndex;
+        animationPart->m_animationIndex = animationIndex;
 
         for (unsigned int i = 0; i < mesh->mNumBones; i++) {
             const auto bone = mesh->mBones[i];
             const std::string boneName{ bone->mName.data };
-            if (animationPart->m_boneMapping.find(boneName) == animationPart->m_boneMapping.end()) {
+            if (animationPart->m_boneMapping.find(boneName) == animationPart->m_boneMapping.cend()) {
                 animationPart->m_boneMapping[boneName] = static_cast<unsigned int>(animationPart->m_boneInfos.size());
 
                 AnimationPart::BoneInfo boneInfo{};

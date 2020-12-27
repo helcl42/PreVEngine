@@ -16,6 +16,8 @@ struct VertexBoneData {
     void Reset();
 
     void AddBoneData(const unsigned int boneId, const float weight);
+
+    void Normalize();
 };
 } // namespace prev_test::render::mesh
 

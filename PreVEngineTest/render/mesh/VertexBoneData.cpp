@@ -30,15 +30,18 @@ void VertexBoneData::AddBoneData(const unsigned int boneId, const float weight)
     if (minWeight < weight) {
         ids[minWeightIndex] = boneId;
         weights[minWeightIndex] = weight;
+    }
+}
 
-        float weightSum = 0.0f;
-        for (unsigned int i = 0; i < prev::util::ArraySize(ids); i++) {
-            weightSum += weights[i];
-        }
+void VertexBoneData::Normalize()
+{
+    float weightSum{ 0.0f };
+    for (unsigned int i = 0; i < prev::util::ArraySize(ids); i++) {
+        weightSum += weights[i];
+    }
 
-        for (unsigned int i = 0; i < prev::util::ArraySize(ids); i++) {
-            weights[i] /= weightSum;
-        }
+    for (unsigned int i = 0; i < prev::util::ArraySize(ids); i++) {
+        weights[i] /= weightSum;
     }
 }
 } // namespace prev_test::render::mesh
