@@ -17,17 +17,11 @@ public:
 public:
     void Add(const void* data, const unsigned int size);
 
-    void Add(const float data);
-
-    void Add(const glm::vec2& data);
-
-    void Add(const glm::vec3& data);
-
-    void Add(const glm::vec4& data);
-
-    void Add(const glm::mat3& data);
-
-    void Add(const glm::mat4& data);
+    template <typename Type>
+    void Add(const Type& data)
+    {
+        Add(&data, sizeof(Type));
+    }
 
     void Reset();
 
