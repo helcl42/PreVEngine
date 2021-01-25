@@ -48,6 +48,24 @@ std::unique_ptr<Image> ImageFactory::CreateImage(const std::string& filename, bo
     return image;
 }
 
+std::unique_ptr<Image> ImageFactory::CreateImageFromMemory(const uint8_t* data, const int dataLength) const
+{
+    LOGI("Loading image from memory: %d bytes\n", dataLength);
+
+    int w, h, c;
+    uint8_t* imageBytes = (uint8_t*)stbi_load_from_memory(data, dataLength, &w, &h, &c, sizeof(PixelRGBA));
+    if (!imageBytes) {
+        LOGE("Image: Failed to load texture from memory");
+        return nullptr;
+    }
+
+    auto image = std::make_unique<Image>(w, h, imageBytes);
+
+    LOGI("Loaded image from memory: %d bytes (%dx%d)\n", dataLength, w, h);
+
+    return image;
+}
+
 std::unique_ptr<Image> ImageFactory::CreateImageWithPattern(const uint32_t width, const uint32_t height, const bool gradient, const int checkers) const
 {
     auto image = std::make_unique<Image>(width, height);
