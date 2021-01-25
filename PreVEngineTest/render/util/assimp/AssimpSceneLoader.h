@@ -6,7 +6,7 @@
 #include <assimp/scene.h>
 
 namespace prev_test::render::util::assimp {
-class AssimpSceneLoader {
+class AssimpSceneLoader final {
 public:
     bool LoadScene(const std::string& modelPath, Assimp::Importer* importer, const aiScene** scene) const;
 };
