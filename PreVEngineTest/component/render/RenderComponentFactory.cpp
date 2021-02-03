@@ -258,7 +258,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateModelRenderCompo
     auto materials{ materialFactory.Create(modelPath) };
 
     prev_test::render::mesh::ModelMeshFactory meshFactory{};
-    auto mesh{ meshFactory.Create(modelPath) };
+    auto mesh{ meshFactory.Create(modelPath, materials[0]->HasNormalImage() ? prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT } : prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{}) };
     auto model{ CreateModel(*allocator, std::move(mesh)) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(materials), castsShadows, isCastedByShadows);
@@ -364,7 +364,7 @@ std::unique_ptr<IAnimationRenderComponent> RenderComponentFactory::CreateAnimate
     auto materials{ materialFactory.Create(modelPath) };
 
     prev_test::render::mesh::ModelMeshFactory meshFactory{};
-    auto mesh{ meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION }) };
+    auto mesh{ meshFactory.Create(modelPath, materials[0]->HasNormalImage() ? prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT } : prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION }) };
     auto model{ CreateModel(*allocator, std::move(mesh)) };
 
     prev_test::render::animation::AnimationFactory animationFactory{};
