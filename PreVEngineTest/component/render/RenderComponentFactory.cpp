@@ -250,6 +250,20 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateModelRenderCompo
     return std::make_unique<DefaultRenderComponent>(std::move(model), materials, castsShadows, isCastedByShadows);
 }
 
+std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateModelRenderComponent(const std::string& modelPath, const bool castsShadows, const bool isCastedByShadows) const
+{
+    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
+
+    prev_test::render::material::MaterialFactory materialFactory{};
+    auto materials{ materialFactory.Create(modelPath) };
+
+    prev_test::render::mesh::ModelMeshFactory meshFactory{};
+    auto mesh{ meshFactory.Create(modelPath) };
+    auto model{ CreateModel(*allocator, std::move(mesh)) };
+
+    return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(materials), castsShadows, isCastedByShadows);
+}
+
 std::unique_ptr<IAnimationRenderComponent> RenderComponentFactory::CreateAnimatedModelRenderComponent(const std::string& modelPath, const std::vector<std::string>& animationPaths, const std::vector<glm::vec4>& colors, const bool castsShadows, const bool isCastedByShadows) const
 {
     auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
@@ -331,6 +345,26 @@ std::unique_ptr<IAnimationRenderComponent> RenderComponentFactory::CreateAnimate
 
     prev_test::render::mesh::ModelMeshFactory meshFactory{};
     auto mesh{ meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT }) };
+    auto model{ CreateModel(*allocator, std::move(mesh)) };
+
+    prev_test::render::animation::AnimationFactory animationFactory{};
+    std::vector<std::shared_ptr<prev_test::render::IAnimation> > animations;
+    for (const auto& animationPath : animationPaths) {
+        animations.emplace_back(animationFactory.Create(animationPath));
+    }
+
+    return std::make_unique<DefaultAnimationRenderComponent>(std::move(model), materials, animations, castsShadows, isCastedByShadows);
+}
+
+std::unique_ptr<IAnimationRenderComponent> RenderComponentFactory::CreateAnimatedModelRenderComponent(const std::string& modelPath, const std::vector<std::string>& animationPaths, const bool castsShadows, const bool isCastedByShadows) const
+{
+    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
+
+    prev_test::render::material::MaterialFactory materialFactory{};
+    auto materials{ materialFactory.Create(modelPath) };
+
+    prev_test::render::mesh::ModelMeshFactory meshFactory{};
+    auto mesh{ meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION }) };
     auto model{ CreateModel(*allocator, std::move(mesh)) };
 
     prev_test::render::animation::AnimationFactory animationFactory{};

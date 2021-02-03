@@ -78,7 +78,7 @@ private:
 
     float m_cameraPitch{ -20.0f };
 
-    float m_distanceFromPerson{ 50.0f };
+    float m_distanceFromPerson{ 30.0f };
 
     glm::vec2 m_prevTouchPosition{ 0.0f, 0.0f };
 

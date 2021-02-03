@@ -68,9 +68,9 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::CreateCubeMap(con
     return std::make_unique<prev_test::render::material::Material>(materialProps, ImagePair{ images[0], std::move(imageBuffer) });
 }
 
-std::vector<std::unique_ptr<prev_test::render::IMaterial> > MaterialFactory::Create(const std::string& modelPath) const
+std::vector<std::shared_ptr<prev_test::render::IMaterial> > MaterialFactory::Create(const std::string& modelPath) const
 {
-    std::vector<std::unique_ptr<prev_test::render::IMaterial> > result;
+    std::vector<std::shared_ptr<prev_test::render::IMaterial> > result;
 
     Assimp::Importer importer{};
     const aiScene* scene;
