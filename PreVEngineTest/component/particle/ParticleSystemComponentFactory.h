@@ -11,10 +11,6 @@ public:
     std::unique_ptr<IParticleSystemComponent> CreateRandomInCone(const glm::vec3& coneDirection, const float angle) const;
 
 private:
-    std::unique_ptr<prev::render::image::Image> CreateImage(const std::string& textureFilename) const;
-
-    std::shared_ptr<prev_test::render::IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath) const;
-
     std::shared_ptr<prev_test::render::IModel> CreateModel(prev::core::memory::Allocator& allocator) const;
 };
 } // namespace prev_test::component::particle

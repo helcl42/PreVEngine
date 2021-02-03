@@ -4,9 +4,19 @@
 #include "IAnimationRenderComponent.h"
 #include "IRenderComponent.h"
 
-#include <map>
-
 namespace prev_test::component::render {
+struct RenderComponentShadowsCreateInfo {
+    bool castsShadows;
+    bool isCastedByShadows;
+};
+
+struct RenderComponentMaterialCreateInfo {
+    glm::vec4 color;
+    std::string texturePath;
+    std::string normalMapPath;
+    std::string heightOrConeMapPaths;
+};
+
 class RenderComponentFactory {
 public:
     std::unique_ptr<IRenderComponent> CreateCubeRenderComponent(const glm::vec4& color, const bool castsShadows, const bool isCastedByShadows) const;
@@ -49,23 +59,9 @@ public:
 
     std::unique_ptr<IAnimationRenderComponent> CreateAnimatedModelRenderComponent(const std::string& modelPath, const std::vector<std::string>& animationPaths, const std::vector<std::string>& texturePaths, const std::vector<std::string>& normalMapPaths, const std::vector<std::string>& heightOrConeMapPaths, const bool castsShadows, const bool isCastedByShadows) const;
 
-private:
-    std::shared_ptr<prev::render::image::Image> CreateImage(const std::string& textureFilename) const;
-
-    std::unique_ptr<prev::core::memory::image::IImageBuffer> CreateImageBuffer(prev::core::memory::Allocator& allocator, const std::shared_ptr<prev::render::image::Image>& image, const bool filtering, const bool repeatAddressMode) const;
-
-    std::unique_ptr<prev_test::render::IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const glm::vec4& color, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const;
-
-    std::unique_ptr<prev_test::render::IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const;
-
-    std::unique_ptr<prev_test::render::IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const;
-
-    std::unique_ptr<prev_test::render::IMaterial> CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const bool repeatAddressMode, const float shineDamper, const float reflectivity) const;
-
+private:   
     std::unique_ptr<prev_test::render::IModel> CreateModel(prev::core::memory::Allocator& allocator, const std::shared_ptr<prev_test::render::IMesh>& mesh) const;
 
-private:
-    static inline std::map<std::string, std::shared_ptr<prev::render::image::Image> > s_imagesCache;
 };
 } // namespace prev_test::component::render
 

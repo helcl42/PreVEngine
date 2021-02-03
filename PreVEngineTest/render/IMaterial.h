@@ -12,6 +12,7 @@ struct MaterialProperties {
     glm::vec4 color;
     float shineDamper;
     float reflectivity;
+    bool repeatAddressMode;
 };
 
 struct ImagePair {
