@@ -3,18 +3,30 @@
 
 #include "../IMaterial.h"
 
+#include <map>
+
 namespace prev_test::render::material {
 class MaterialFactory final {
 public:
     std::unique_ptr<prev_test::render::IMaterial> Create(const MaterialProperties& materialProps) const;
 
-    std::unique_ptr<prev_test::render::IMaterial> Create(const MaterialProperties& materialProps, const ImagePair& image) const;
+    std::unique_ptr<prev_test::render::IMaterial> Create(const MaterialProperties& materialProps, const std::string& colorImagePath, prev::core::memory::Allocator& allocator) const;
 
-    std::unique_ptr<prev_test::render::IMaterial> Create(const MaterialProperties& materialProps, const ImagePair& image, const ImagePair& normalMap) const;
+    std::unique_ptr<prev_test::render::IMaterial> Create(const MaterialProperties& materialProps, const std::string& colorImagePath, const std::string& normalMapPath, prev::core::memory::Allocator& allocator) const;
 
-    std::unique_ptr<prev_test::render::IMaterial> Create(const MaterialProperties& materialProps, const ImagePair& image, const ImagePair& normalMap, const ImagePair& heightMap) const;
+    std::unique_ptr<prev_test::render::IMaterial> Create(const MaterialProperties& materialProps, const std::string& colorImagePath, const std::string& normalMapPath, const std::string& heightMapPath, prev::core::memory::Allocator& allocator) const;
+
+    std::unique_ptr<prev_test::render::IMaterial> CreateCubeMap(const MaterialProperties& materialProps, const std::vector<std::string>& sidePaths, prev::core::memory::Allocator& allocator) const;
 
     std::vector<std::unique_ptr<prev_test::render::IMaterial> > Create(const std::string& modelPath) const;
+
+private:
+    std::shared_ptr<prev::render::image::Image> CreateImage(const std::string& textureFilename) const;
+
+    std::shared_ptr<prev::core::memory::image::IImageBuffer> CreateImageBuffer(const std::shared_ptr<prev::render::image::Image>& image, const bool filtering, const bool repeatAddressMode, prev::core::memory::Allocator& allocator) const;
+
+private:
+    static inline std::map<std::string, std::shared_ptr<prev::render::image::Image> > s_imagesCache;
 };
 } // namespace prev_test::render::material
 

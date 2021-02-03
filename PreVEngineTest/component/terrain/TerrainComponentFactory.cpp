@@ -20,10 +20,15 @@ TerrainComponentFactory::TerrainComponentFactory(const unsigned int seed, const 
 
 std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain(const int x, const int z, const float size) const
 {
-    auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-    const auto heightGenerator = std::make_shared<HeightGenerator>(x, z, m_vertexCount, m_seed);
+    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
 
-    const float layerTransitionWidth = 0.1f;
+    HeightGenerator heightGenerator(x, z, m_vertexCount, m_seed);
+    const std::shared_ptr<HeightMapInfo> heightMap{ CreateHeightMap(heightGenerator) };
+    const std::shared_ptr<VertexData> vertexData{ GenerateVertexData(heightMap, size) };
+
+    prev_test::render::material::MaterialFactory materialFactory{};
+
+    const float layerTransitionWidth{ 0.1f };
     const TerrainLayerCreateInfo terrainLayers[] = {
         { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus.png"), 10.0f, 0.2f, 0.2f },
         { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), 10.0f, 0.2f, 0.42f },
@@ -31,16 +36,12 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
         { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand.png"), 10.0f, 0.2f, 0.9f }
     };
 
-    const std::shared_ptr<HeightMapInfo> heightMap = CreateHeightMap(heightGenerator);
-    const std::shared_ptr<VertexData> vertexData = GenerateVertexData(heightMap, size);
-
-    auto result = std::make_unique<TerrainComponent>(x, z);
+    auto result{ std::make_unique<TerrainComponent>(x, z) };
     result->m_model = std::move(CreateModel(*allocator, vertexData, false));
     result->m_heightsInfo = heightMap;
     result->m_vertexData = vertexData;
     for (const auto& layer : terrainLayers) {
-        auto material = CreateMaterial(*allocator, layer.materialPath, layer.shineDamper, layer.reflectivity);
-        result->m_materials.emplace_back(std::move(material));
+        result->m_materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, true }, layer.materialPath, *allocator));
         result->m_heightSteps.emplace_back(layer.heightStep);
     }
     result->m_transitionRange = layerTransitionWidth;
@@ -49,10 +50,15 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
 
 std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrainNormalMapped(const int x, const int z, const float size) const
 {
-    auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-    const auto heightGenerator = std::make_shared<HeightGenerator>(x, z, m_vertexCount, m_seed);
+    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
 
-    const float layerTransitionWidth = 0.1f;
+    HeightGenerator heightGenerator(x, z, m_vertexCount, m_seed);
+    const std::shared_ptr<HeightMapInfo> heightMap{ CreateHeightMap(heightGenerator) };
+    const std::shared_ptr<VertexData> vertexData{ GenerateVertexData(heightMap, size) };
+
+    prev_test::render::material::MaterialFactory materialFactory{};
+
+    const float layerTransitionWidth{ 0.1f };
     const TerrainLayerCreateInfo terrainLayers[] = {
         { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus_normal.png"), 10.0f, 0.2f, 0.2f },
         { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal.png"), 10.0f, 0.2f, 0.42f },
@@ -60,16 +66,12 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
         { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_normal.png"), 10.0f, 0.2f, 0.9f }
     };
 
-    const std::shared_ptr<HeightMapInfo> heightMap = CreateHeightMap(heightGenerator);
-    const std::shared_ptr<VertexData> vertexData = GenerateVertexData(heightMap, size);
-
-    auto result = std::make_unique<TerrainComponent>(x, z);
+    auto result{ std::make_unique<TerrainComponent>(x, z) };
     result->m_model = std::move(CreateModel(*allocator, vertexData, true));
-    result->m_heightsInfo = CreateHeightMap(heightGenerator);
+    result->m_heightsInfo = heightMap;
     result->m_vertexData = vertexData;
     for (const auto& layer : terrainLayers) {
-        auto material = CreateMaterial(*allocator, layer.materialPath, layer.materialNormalPath, layer.shineDamper, layer.reflectivity);
-        result->m_materials.emplace_back(std::move(material));
+        result->m_materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, true }, layer.materialPath, layer.materialNormalPath, *allocator));
         result->m_heightSteps.emplace_back(layer.heightStep);
     }
     result->m_transitionRange = layerTransitionWidth;
@@ -78,10 +80,15 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
 
 std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrainParallaxMapped(const int x, const int z, const float size) const
 {
-    auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-    const auto heightGenerator = std::make_shared<HeightGenerator>(x, z, m_vertexCount, m_seed);
+    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
 
-    const float layerTransitionWidth = 0.1f;
+    HeightGenerator heightGenerator(x, z, m_vertexCount, m_seed);
+    const std::shared_ptr<HeightMapInfo> heightMap{ CreateHeightMap(heightGenerator) };
+    const std::shared_ptr<VertexData> vertexData{ GenerateVertexData(heightMap, size) };
+
+    prev_test::render::material::MaterialFactory materialFactory{};
+
+    const float layerTransitionWidth{ 0.1f };
     const TerrainLayerCreateInfo terrainLayers[] = {
         { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus_normal_2.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus_height.png"), 10.0f, 0.2f, 0.000002f, 0.2f },
         { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal_2.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass_height.png"), 10.0f, 0.2f, 0.005f, 0.42f },
@@ -89,15 +96,12 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
         { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_normal_2.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_height.png"), 10.0f, 0.2f, 0.03f, 0.9f }
     };
 
-    const std::shared_ptr<HeightMapInfo> heightMap = CreateHeightMap(heightGenerator);
-    const std::shared_ptr<VertexData> vertexData = GenerateVertexData(heightMap, size);
-
-    auto result = std::make_unique<TerrainComponent>(x, z);
+    auto result{ std::make_unique<TerrainComponent>(x, z) };
     result->m_model = std::move(CreateModel(*allocator, vertexData, true));
-    result->m_heightsInfo = CreateHeightMap(heightGenerator);
+    result->m_heightsInfo = heightMap;
     result->m_vertexData = vertexData;
     for (const auto& layer : terrainLayers) {
-        auto material = CreateMaterial(*allocator, layer.materialPath, layer.materialNormalPath, layer.materialHeightPath, layer.shineDamper, layer.reflectivity);
+        auto material{ materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, true }, layer.materialPath, layer.materialNormalPath, layer.materialHeightPath, *allocator) };
         material->SetHeightScale(layer.heightScale);
         result->m_materials.emplace_back(std::move(material));
         result->m_heightSteps.emplace_back(layer.heightStep);
@@ -108,10 +112,15 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
 
 std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrainConeStepMapped(const int x, const int z, const float size) const
 {
-    auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-    const auto heightGenerator = std::make_shared<HeightGenerator>(x, z, m_vertexCount, m_seed);
+    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
 
-    const float layerTransitionWidth = 0.1f;
+    HeightGenerator heightGenerator(x, z, m_vertexCount, m_seed);
+    const std::shared_ptr<HeightMapInfo> heightMap{ CreateHeightMap(heightGenerator) };
+    const std::shared_ptr<VertexData> vertexData{ GenerateVertexData(heightMap, size) };
+
+    prev_test::render::material::MaterialFactory materialFactory{};
+
+    const float layerTransitionWidth{ 0.1f };
     const TerrainLayerCreateInfo terrainLayers[] = {
         { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus_normal_2.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus_cone.png"), 10.0f, 0.2f, 0.00002f, 0.2f },
         { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal_2.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass_cone.png"), 10.0f, 0.2f, 0.01f, 0.42f },
@@ -119,34 +128,18 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
         { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_normal_2.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_cone.png"), 10.0f, 0.2f, 0.05f, 0.9f }
     };
 
-    const std::shared_ptr<HeightMapInfo> heightMap = CreateHeightMap(heightGenerator);
-    const std::shared_ptr<VertexData> vertexData = GenerateVertexData(heightMap, size);
-
-    auto result = std::make_unique<TerrainComponent>(x, z);
+    auto result{ std::make_unique<TerrainComponent>(x, z) };
     result->m_model = std::move(CreateModel(*allocator, vertexData, true));
-    result->m_heightsInfo = CreateHeightMap(heightGenerator);
+    result->m_heightsInfo = heightMap;
     result->m_vertexData = vertexData;
     for (const auto& layer : terrainLayers) {
-        auto material = CreateMaterial(*allocator, layer.materialPath, layer.materialNormalPath, layer.materialHeightPath, layer.shineDamper, layer.reflectivity);
+        auto material{ materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, true }, layer.materialPath, layer.materialNormalPath, layer.materialHeightPath, *allocator) };
         material->SetHeightScale(layer.heightScale);
         result->m_materials.emplace_back(std::move(material));
         result->m_heightSteps.emplace_back(layer.heightStep);
     }
     result->m_transitionRange = layerTransitionWidth;
     return result;
-}
-
-std::shared_ptr<prev::render::image::Image> TerrainComponentFactory::CreateImage(const std::string& textureFilename) const
-{
-    std::shared_ptr<prev::render::image::Image> image;
-    if (s_terrainImageCache.find(textureFilename) != s_terrainImageCache.cend()) {
-        image = s_terrainImageCache[textureFilename];
-    } else {
-        prev::render::image::ImageFactory imageFactory{};
-        image = imageFactory.CreateImage(textureFilename);
-        s_terrainImageCache[textureFilename] = image;
-    }
-    return image;
 }
 
 std::unique_ptr<prev_test::render::IModel> TerrainComponentFactory::CreateModel(prev::core::memory::Allocator& allocator, const std::shared_ptr<VertexData>& vertexData, const bool normalMapped) const
@@ -161,48 +154,9 @@ std::unique_ptr<prev_test::render::IModel> TerrainComponentFactory::CreateModel(
     return modelFactory.Create(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
 }
 
-std::unique_ptr<prev_test::render::IMaterial> TerrainComponentFactory::CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const float shineDamper, const float reflectivity) const
-{
-    auto image = CreateImage(texturePath);
-    auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
-    imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer() });
-
-    return prev_test::render::material::MaterialFactory{}.Create({ glm::vec4{ 1.0f }, shineDamper, reflectivity }, { image, std::move(imageBuffer) });
-}
-
-std::unique_ptr<prev_test::render::IMaterial> TerrainComponentFactory::CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const float shineDamper, const float reflectivity) const
-{
-    auto image = CreateImage(texturePath);
-    auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
-    imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer() });
-
-    auto normalImage = CreateImage(normalMapPath);
-    auto normalImageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
-    normalImageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ normalImage->GetWidth(), normalImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)normalImage->GetBuffer() });
-
-    return prev_test::render::material::MaterialFactory{}.Create({ glm::vec4{ 1.0f }, shineDamper, reflectivity }, { image, std::move(imageBuffer) }, { normalImage, std::move(normalImageBuffer) });
-}
-
-std::unique_ptr<prev_test::render::IMaterial> TerrainComponentFactory::CreateMaterial(prev::core::memory::Allocator& allocator, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightPath, const float shineDamper, const float reflectivity) const
-{
-    auto image = CreateImage(texturePath);
-    auto imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
-    imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)image->GetBuffer() });
-
-    auto normalImage = CreateImage(normalMapPath);
-    auto normalImageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
-    normalImageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ normalImage->GetWidth(), normalImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)normalImage->GetBuffer() });
-
-    auto heightImage = CreateImage(heightPath);
-    auto heightImageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(allocator);
-    heightImageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ heightImage->GetWidth(), heightImage->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT, (uint8_t*)heightImage->GetBuffer() });
-
-    return prev_test::render::material::MaterialFactory{}.Create({ glm::vec4{ 1.0f }, shineDamper, reflectivity }, { image, std::move(imageBuffer) }, { normalImage, std::move(normalImageBuffer) }, { heightImage, std::move(heightImageBuffer) });
-}
-
 std::unique_ptr<prev_test::render::IMesh> TerrainComponentFactory::GenerateMesh(const std::shared_ptr<VertexData>& vertexData, const bool normalMapped) const
 {
-    auto mesh = std::make_unique<TerrainMesh>();
+    auto mesh{ std::make_unique<TerrainMesh>() };
     mesh->m_indices = vertexData->indices;
     mesh->m_verticesCount = static_cast<uint32_t>(vertexData->vertices.size());
     if (normalMapped) {
@@ -232,8 +186,8 @@ std::unique_ptr<prev_test::render::IMesh> TerrainComponentFactory::GenerateMesh(
 
 std::unique_ptr<VertexData> TerrainComponentFactory::GenerateVertexData(const std::shared_ptr<HeightMapInfo>& heightMap, const float size) const
 {
-    const auto verticesCount = m_vertexCount * m_vertexCount;
-    auto result = std::make_unique<VertexData>();
+    const auto verticesCount{ m_vertexCount * m_vertexCount };
+    auto result{ std::make_unique<VertexData>() };
     result->vertices.reserve(verticesCount);
     result->textureCoords.reserve(verticesCount);
     result->normals.reserve(verticesCount);
@@ -245,7 +199,7 @@ std::unique_ptr<VertexData> TerrainComponentFactory::GenerateVertexData(const st
         }
     }
 
-    const auto indicesCount = 6 * (m_vertexCount - 1) * (m_vertexCount - 1);
+    const auto indicesCount{ 6 * (m_vertexCount - 1) * (m_vertexCount - 1) };
     result->indices.reserve(indicesCount);
     for (unsigned int z = 0; z < m_vertexCount - 1; z++) {
         for (unsigned int x = 0; x < m_vertexCount - 1; x++) {
@@ -287,24 +241,24 @@ glm::vec2 TerrainComponentFactory::CalculateTextureCoordinates(const int x, cons
 
 glm::vec3 TerrainComponentFactory::CalculateNormal(const std::shared_ptr<HeightMapInfo>& heightMap, const int x, const int z) const
 {
-    const float heightLeft = heightMap->GetHeightAt(x - 1, z);
-    const float heightRight = heightMap->GetHeightAt(x + 1, z);
-    const float heightBottom = heightMap->GetHeightAt(x, z - 1);
-    const float heightTop = heightMap->GetHeightAt(x, z + 1);
+    const float heightLeft{ heightMap->GetHeightAt(x - 1, z) };
+    const float heightRight{ heightMap->GetHeightAt(x + 1, z) };
+    const float heightBottom{ heightMap->GetHeightAt(x, z - 1) };
+    const float heightTop{ heightMap->GetHeightAt(x, z + 1) };
 
     glm::vec3 result(heightLeft - heightRight, 2.0f, heightBottom - heightTop);
     result = glm::normalize(result);
     return result;
 }
 
-std::unique_ptr<HeightMapInfo> TerrainComponentFactory::CreateHeightMap(const std::shared_ptr<HeightGenerator>& generator) const
+std::unique_ptr<HeightMapInfo> TerrainComponentFactory::CreateHeightMap(const HeightGenerator& generator) const
 {
-    float minHeight = std::numeric_limits<float>::max();
-    float maxHeight = std::numeric_limits<float>::min();
-    auto heightMapInfo = std::make_unique<HeightMapInfo>(m_vertexCount);
+    float minHeight{ std::numeric_limits<float>::max() };
+    float maxHeight{ std::numeric_limits<float>::min() };
+    auto heightMapInfo{ std::make_unique<HeightMapInfo>(m_vertexCount) };
     for (unsigned int z = 0; z < m_vertexCount; z++) {
         for (unsigned int x = 0; x < m_vertexCount; x++) {
-            float height = generator->GenerateHeight(x, z);
+            const float height{ generator.GenerateHeight(x, z) };
             heightMapInfo->heights[x][z] = height;
             minHeight = std::min(minHeight, height);
             maxHeight = std::max(maxHeight, height);
