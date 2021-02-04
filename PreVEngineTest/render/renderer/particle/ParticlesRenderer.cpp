@@ -4,10 +4,8 @@
 
 #include "../../../component/particle/IParticleSystemComponent.h"
 #include "../../VertexDataBuffer.h"
-#include "../../model/ModelFactory.h"
 
 #include <prev/core/DeviceProvider.h>
-#include <prev/core/memory/buffer/UniformBuffer.h>
 #include <prev/core/memory/buffer/VertexBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/AllocatorProvider.h>
@@ -125,16 +123,5 @@ void ParticlesRenderer::ShutDown()
     m_shader->ShutDown();
 
     m_pipeline->ShutDown();
-}
-
-std::unique_ptr<IModel> ParticlesRenderer::CreateModel(prev::core::memory::Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const
-{
-    auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
-    vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
-
-    auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
-    indexBuffer->Data(mesh->GetIndices().data(), (uint32_t)mesh->GetIndices().size());
-
-    return prev_test::render::model::ModelFactory{}.Create(mesh, std::move(vertexBuffer), std::move(indexBuffer));
 }
 } // namespace prev_test::render::renderer::particle

@@ -7,9 +7,6 @@ namespace prev_test::component::sky {
 class SkyComponentFactory final {
 public:
     std::unique_ptr<ISkyComponent> Create() const;
-
-private:
-    std::unique_ptr<prev_test::render::IModel> CreateModel(prev::core::memory::Allocator& allocator) const;
 };
 } // namespace prev_test::component::sky
 

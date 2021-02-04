@@ -8,7 +8,7 @@
 namespace prev_test::render::model {
 class ModelFactory final {
 public:
-    std::unique_ptr<prev_test::render::IModel> Create(const std::shared_ptr<IMesh>& mesh, const std::shared_ptr<prev::core::memory::buffer::VertexBuffer>& vbo, const std::shared_ptr<prev::core::memory::buffer::IndexBuffer>& ibo) const;
+    std::unique_ptr<prev_test::render::IModel> Create(const std::shared_ptr<IMesh>& mesh, prev::core::memory::Allocator& allocator) const;
 };
 } // namespace prev_test::render::model
 

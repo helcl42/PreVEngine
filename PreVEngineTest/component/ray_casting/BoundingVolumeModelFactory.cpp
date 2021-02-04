@@ -1,12 +1,12 @@
 #include "BoundingVolumeModelFactory.h"
-#include "../../render/model/ModelFactory.h"
+#include "../../render/model/Model.h"
 
 #include <prev/scene/AllocatorProvider.h>
 
 namespace prev_test::component::ray_casting {
 std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateAABBModel(const prev_test::common::intersection::AABB& aabb) const
 {
-    const auto aabbPoints = aabb.GetPoints();
+    const auto aabbPoints{ aabb.GetPoints() };
 
     const std::vector<glm::vec3> vertices = {
         // front
@@ -50,14 +50,14 @@ std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateAAB
         20, 21, 22, 22, 23, 20
     };
 
-    auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-    auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator);
+    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
+
+    auto vertexBuffer{ std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator) };
     vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
-    auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(*allocator);
+    auto indexBuffer{ std::make_unique<prev::core::memory::buffer::IndexBuffer>(*allocator) };
     indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
 
-    prev_test::render::model::ModelFactory modelFactory{};
-    return modelFactory.Create(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
+    return std::make_unique<prev_test::render::model::Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
 }
 
 std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateSphereModel(const prev_test::common::intersection::Sphere& sphere) const
@@ -122,13 +122,13 @@ std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateSph
         curAngleY += addAngleY;
     }
 
-    auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-    auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator);
+    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
+
+    auto vertexBuffer{ std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator) };
     vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
-    auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(*allocator);
+    auto indexBuffer{ std::make_unique<prev::core::memory::buffer::IndexBuffer>(*allocator) };
     indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
 
-    prev_test::render::model::ModelFactory modelFactory{};
-    return modelFactory.Create(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
+    return std::make_unique<prev_test::render::model::Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
 }
 } // namespace prev_test::component::ray_casting

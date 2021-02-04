@@ -7,7 +7,7 @@
 #include <prev/core/memory/image/ImageBuffer.h>
 #include <prev/render/image/ImageFactory.h>
 
-#include <prev/scene/AllocatorProvider.h>
+#include <prev/core/memory/Allocator.h>
 
 namespace prev_test::render::material {
 std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const MaterialProperties& materialProps) const
@@ -68,7 +68,7 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::CreateCubeMap(con
     return std::make_unique<prev_test::render::material::Material>(materialProps, ImagePair{ images[0], std::move(imageBuffer) });
 }
 
-std::vector<std::shared_ptr<prev_test::render::IMaterial> > MaterialFactory::Create(const std::string& modelPath) const
+std::vector<std::shared_ptr<prev_test::render::IMaterial> > MaterialFactory::Create(const std::string& modelPath, prev::core::memory::Allocator& allocator) const
 {
     std::vector<std::shared_ptr<prev_test::render::IMaterial> > result;
 
@@ -80,8 +80,6 @@ std::vector<std::shared_ptr<prev_test::render::IMaterial> > MaterialFactory::Cre
         throw std::runtime_error("Could not load model: " + modelPath);
     }
 
-    auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-
     prev_test::render::util::assimp::AssimpMaterialFactory assimpMaterialFactory{};
     for (uint32_t i = 0; i < scene->mNumMaterials; i++) {
         const auto& material{ *scene->mMaterials[i] };
@@ -89,19 +87,19 @@ std::vector<std::shared_ptr<prev_test::render::IMaterial> > MaterialFactory::Cre
         ImagePair colorImage;
         if (auto image = assimpMaterialFactory.CreateModelImage(*scene, material, aiTextureType_DIFFUSE)) {
             colorImage.image = image;
-            colorImage.imageBuffer = CreateImageBuffer(image, true, false, *allocator);
+            colorImage.imageBuffer = CreateImageBuffer(image, true, false, allocator);
         }
 
         ImagePair normalImage;
         if (auto image = assimpMaterialFactory.CreateModelImage(*scene, material, aiTextureType_NORMALS)) {
             normalImage.image = image;
-            normalImage.imageBuffer = CreateImageBuffer(image, true, false, *allocator);
+            normalImage.imageBuffer = CreateImageBuffer(image, true, false, allocator);
         }
 
         ImagePair heightImage;
         if (auto image = assimpMaterialFactory.CreateModelImage(*scene, material, aiTextureType_HEIGHT)) {
             normalImage.image = image;
-            heightImage.imageBuffer = CreateImageBuffer(image, false, false, *allocator);
+            heightImage.imageBuffer = CreateImageBuffer(image, false, false, allocator);
         }
 
         aiColor3D color(1.0f, 1.0f, 1.0f);
