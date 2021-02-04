@@ -37,15 +37,10 @@ void TextureDebugRenderer::Init()
 
     // create quad model
     prev_test::render::mesh::MeshFactory meshFactory{};
-    auto quadMesh = meshFactory.CreateQuad();
+    auto quadMesh{ meshFactory.CreateQuad() };
 
-    auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator);
-    vertexBuffer->Data(quadMesh->GetVertexData(), quadMesh->GerVerticesCount(), quadMesh->GetVertexLayout().GetStride());
-
-    auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(*allocator);
-    indexBuffer->Data(quadMesh->GetIndices().data(), static_cast<uint32_t>(quadMesh->GetIndices().size()));
-
-    m_quadModel = prev_test::render::model::ModelFactory{}.Create(std::move(quadMesh), std::move(vertexBuffer), std::move(indexBuffer));
+    prev_test::render::model::ModelFactory modelFactory{};
+    m_quadModel = modelFactory.Create(std::move(quadMesh), *allocator);
 }
 
 void TextureDebugRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData)

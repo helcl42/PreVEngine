@@ -45,7 +45,9 @@ void SelectionDebugRenderer::Init()
 
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh = meshFactory.CreateSphere(1.0f, 32, 32);
-    m_selectionPointModel = CreateModel(*allocator, std::move(mesh));
+
+    prev_test::render::model::ModelFactory modelFactoru{};
+    m_selectionPointModel = modelFactoru.Create(std::move(mesh), *allocator);
 }
 
 void SelectionDebugRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
@@ -116,18 +118,6 @@ void SelectionDebugRenderer::ShutDown()
     m_shader->ShutDown();
 
     m_pipeline->ShutDown();
-}
-
-std::unique_ptr<IModel> SelectionDebugRenderer::CreateModel(prev::core::memory::Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const
-{
-    auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
-    vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
-
-    auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
-    indexBuffer->Data(mesh->GetIndices().data(), (uint32_t)mesh->GetIndices().size());
-
-    prev_test::render::model::ModelFactory modelFactory{};
-    return modelFactory.Create(mesh, std::move(vertexBuffer), std::move(indexBuffer));
 }
 } // namespace prev_test::render::renderer::debug
 

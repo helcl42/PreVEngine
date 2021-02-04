@@ -9,8 +9,6 @@
 #include "../../render/mesh/ModelMeshFactory.h"
 #include "../../render/model/ModelFactory.h"
 
-#include <prev/core/memory/image/ImageBuffer.h>
-#include <prev/render/image/ImageFactory.h>
 #include <prev/scene/AllocatorProvider.h>
 
 namespace prev_test::component::render {
@@ -23,7 +21,9 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateCubeRenderCompon
 
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh{ meshFactory.CreateCube() };
-    auto model{ CreateModel(*allocator, std::move(mesh)) };
+
+    prev_test::render::model::ModelFactory modelFactoru{};
+    auto model{ modelFactoru.Create(std::move(mesh), *allocator) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
 }
@@ -37,7 +37,9 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateCubeRenderCompon
 
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh{ meshFactory.CreateCube() };
-    auto model{ CreateModel(*allocator, std::move(mesh)) };
+    
+    prev_test::render::model::ModelFactory modelFactoru{};
+    auto model{ modelFactoru.Create(std::move(mesh), *allocator) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
 }
@@ -51,7 +53,9 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateCubeRenderCompon
 
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh{ meshFactory.CreateCube(true) };
-    auto model{ CreateModel(*allocator, std::move(mesh)) };
+    
+    prev_test::render::model::ModelFactory modelFactoru{};
+    auto model{ modelFactoru.Create(std::move(mesh), *allocator) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
 }
@@ -65,7 +69,9 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateCubeRenderCompon
 
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh{ meshFactory.CreateCube(true) };
-    auto model{ CreateModel(*allocator, std::move(mesh)) };
+    
+    prev_test::render::model::ModelFactory modelFactoru{};
+    auto model{ modelFactoru.Create(std::move(mesh), *allocator) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
 }
@@ -79,7 +85,9 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderCompo
 
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh{ meshFactory.CreatePlane(40.0f, 40.0f, 1, 1, 10.0f, 10.0f, false) };
-    auto model{ CreateModel(*allocator, std::move(mesh)) };
+    
+    prev_test::render::model::ModelFactory modelFactoru{};
+    auto model{ modelFactoru.Create(std::move(mesh), *allocator) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
 }
@@ -93,7 +101,9 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderCompo
 
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh{ meshFactory.CreatePlane(40.0f, 40.0f, 1, 1, 10.0f, 10.0f, false) };
-    auto model{ CreateModel(*allocator, std::move(mesh)) };
+    
+    prev_test::render::model::ModelFactory modelFactoru{};
+    auto model{ modelFactoru.Create(std::move(mesh), *allocator) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
 }
@@ -107,7 +117,9 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderCompo
 
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh{ meshFactory.CreatePlane(40.0f, 40.0f, 1, 1, 1.0f, 1.0f, true) };
-    auto model{ CreateModel(*allocator, std::move(mesh)) };
+    
+    prev_test::render::model::ModelFactory modelFactoru{};
+    auto model{ modelFactoru.Create(std::move(mesh), *allocator) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
 }
@@ -121,7 +133,9 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderCompo
 
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh{ meshFactory.CreatePlane(40.0f, 40.0f, 1, 1, 1.0f, 1.0f, true) };
-    auto model{ CreateModel(*allocator, std::move(mesh)) };
+    
+    prev_test::render::model::ModelFactory modelFactoru{};
+    auto model{ modelFactoru.Create(std::move(mesh), *allocator) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
 }
@@ -135,7 +149,9 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateSphereRenderComp
 
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh{ meshFactory.CreateSphere(1.0f, 64, 64, 360.0f, 180.0f, false) };
-    auto model{ CreateModel(*allocator, std::move(mesh)) };
+    
+    prev_test::render::model::ModelFactory modelFactoru{};
+    auto model{ modelFactoru.Create(std::move(mesh), *allocator) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
 }
@@ -149,7 +165,9 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateSphereRenderComp
 
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh{ meshFactory.CreateSphere(1.0f, 64, 64, 360.0f, 180.0f, false) };
-    auto model{ CreateModel(*allocator, std::move(mesh)) };
+    
+    prev_test::render::model::ModelFactory modelFactoru{};
+    auto model{ modelFactoru.Create(std::move(mesh), *allocator) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
 }
@@ -163,7 +181,9 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateSphereRenderComp
 
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh{ meshFactory.CreateSphere(1.0f, 64, 64, 360.0f, 180.0f, true) };
-    auto model{ CreateModel(*allocator, std::move(mesh)) };
+    
+    prev_test::render::model::ModelFactory modelFactoru{};
+    auto model{ modelFactoru.Create(std::move(mesh), *allocator) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
 }
@@ -177,7 +197,9 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateSphereRenderComp
 
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh{ meshFactory.CreateSphere(1.0f, 64, 64, 360.0f, 180.0f, true) };
-    auto model{ CreateModel(*allocator, std::move(mesh)) };
+    
+    prev_test::render::model::ModelFactory modelFactoru{};
+    auto model{ modelFactoru.Create(std::move(mesh), *allocator) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
 }
@@ -194,7 +216,9 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateModelRenderCompo
 
     prev_test::render::mesh::ModelMeshFactory meshFactory{};
     auto mesh{ meshFactory.Create(modelPath) };
-    auto model{ CreateModel(*allocator, std::move(mesh)) };
+    
+    prev_test::render::model::ModelFactory modelFactoru{};
+    auto model{ modelFactoru.Create(std::move(mesh), *allocator) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), materials, castsShadows, isCastedByShadows);
 }
@@ -211,7 +235,9 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateModelRenderCompo
 
     prev_test::render::mesh::ModelMeshFactory meshFactory{};
     auto mesh{ meshFactory.Create(modelPath) };
-    auto model{ CreateModel(*allocator, std::move(mesh)) };
+    
+    prev_test::render::model::ModelFactory modelFactoru{};
+    auto model{ modelFactoru.Create(std::move(mesh), *allocator) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), materials, castsShadows, isCastedByShadows);
 }
@@ -228,7 +254,9 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateModelRenderCompo
 
     prev_test::render::mesh::ModelMeshFactory meshFactory{};
     auto mesh{ meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT }) };
-    auto model{ CreateModel(*allocator, std::move(mesh)) };
+
+    prev_test::render::model::ModelFactory modelFactoru{};
+    auto model{ modelFactoru.Create(std::move(mesh), *allocator) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), materials, castsShadows, isCastedByShadows);
 }
@@ -245,7 +273,9 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateModelRenderCompo
 
     prev_test::render::mesh::ModelMeshFactory meshFactory{};
     auto mesh{ meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT }) };
-    auto model{ CreateModel(*allocator, std::move(mesh)) };
+    
+    prev_test::render::model::ModelFactory modelFactoru{};
+    auto model{ modelFactoru.Create(std::move(mesh), *allocator) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), materials, castsShadows, isCastedByShadows);
 }
@@ -255,11 +285,13 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateModelRenderCompo
     auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
 
     prev_test::render::material::MaterialFactory materialFactory{};
-    auto materials{ materialFactory.Create(modelPath) };
+    auto materials{ materialFactory.Create(modelPath, *allocator) };
 
     prev_test::render::mesh::ModelMeshFactory meshFactory{};
     auto mesh{ meshFactory.Create(modelPath, materials[0]->HasNormalImage() ? prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT } : prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{}) };
-    auto model{ CreateModel(*allocator, std::move(mesh)) };
+
+    prev_test::render::model::ModelFactory modelFactoru{};
+    auto model{ modelFactoru.Create(std::move(mesh), *allocator) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(materials), castsShadows, isCastedByShadows);
 }
@@ -276,7 +308,9 @@ std::unique_ptr<IAnimationRenderComponent> RenderComponentFactory::CreateAnimate
 
     prev_test::render::mesh::ModelMeshFactory meshFactory{};
     auto mesh{ meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION }) };
-    auto model{ CreateModel(*allocator, std::move(mesh)) };
+
+    prev_test::render::model::ModelFactory modelFactoru{};
+    auto model{ modelFactoru.Create(std::move(mesh), *allocator) };
 
     prev_test::render::animation::AnimationFactory animationFactory{};
     std::vector<std::shared_ptr<prev_test::render::IAnimation> > animations;
@@ -299,7 +333,9 @@ std::unique_ptr<IAnimationRenderComponent> RenderComponentFactory::CreateAnimate
 
     prev_test::render::mesh::ModelMeshFactory meshFactory{};
     auto mesh{ meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION }) };
-    auto model{ CreateModel(*allocator, std::move(mesh)) };
+
+    prev_test::render::model::ModelFactory modelFactoru{};
+    auto model{ modelFactoru.Create(std::move(mesh), *allocator) };
 
     prev_test::render::animation::AnimationFactory animationFactory{};
     std::vector<std::shared_ptr<prev_test::render::IAnimation> > animations;
@@ -322,7 +358,9 @@ std::unique_ptr<IAnimationRenderComponent> RenderComponentFactory::CreateAnimate
 
     prev_test::render::mesh::ModelMeshFactory meshFactory{};
     auto mesh{ meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT }) };
-    auto model{ CreateModel(*allocator, std::move(mesh)) };
+
+    prev_test::render::model::ModelFactory modelFactoru{};
+    auto model{ modelFactoru.Create(std::move(mesh), *allocator) };
 
     prev_test::render::animation::AnimationFactory animationFactory{};
     std::vector<std::shared_ptr<prev_test::render::IAnimation> > animations;
@@ -345,7 +383,9 @@ std::unique_ptr<IAnimationRenderComponent> RenderComponentFactory::CreateAnimate
 
     prev_test::render::mesh::ModelMeshFactory meshFactory{};
     auto mesh{ meshFactory.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT }) };
-    auto model{ CreateModel(*allocator, std::move(mesh)) };
+
+    prev_test::render::model::ModelFactory modelFactoru{};
+    auto model{ modelFactoru.Create(std::move(mesh), *allocator) };
 
     prev_test::render::animation::AnimationFactory animationFactory{};
     std::vector<std::shared_ptr<prev_test::render::IAnimation> > animations;
@@ -361,11 +401,13 @@ std::unique_ptr<IAnimationRenderComponent> RenderComponentFactory::CreateAnimate
     auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
 
     prev_test::render::material::MaterialFactory materialFactory{};
-    auto materials{ materialFactory.Create(modelPath) };
+    auto materials{ materialFactory.Create(modelPath, *allocator) };
 
     prev_test::render::mesh::ModelMeshFactory meshFactory{};
     auto mesh{ meshFactory.Create(modelPath, materials[0]->HasNormalImage() ? prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT } : prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION }) };
-    auto model{ CreateModel(*allocator, std::move(mesh)) };
+
+    prev_test::render::model::ModelFactory modelFactoru{};
+    auto model{ modelFactoru.Create(std::move(mesh), *allocator) };
 
     prev_test::render::animation::AnimationFactory animationFactory{};
     std::vector<std::shared_ptr<prev_test::render::IAnimation> > animations;
@@ -374,17 +416,5 @@ std::unique_ptr<IAnimationRenderComponent> RenderComponentFactory::CreateAnimate
     }
 
     return std::make_unique<DefaultAnimationRenderComponent>(std::move(model), materials, animations, castsShadows, isCastedByShadows);
-}
-
-std::unique_ptr<prev_test::render::IModel> RenderComponentFactory::CreateModel(prev::core::memory::Allocator& allocator, const std::shared_ptr<prev_test::render::IMesh>& mesh) const
-{
-    auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
-    vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
-
-    auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
-    indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
-
-    prev_test::render::model::ModelFactory modelFactory{};
-    return modelFactory.Create(mesh, std::move(vertexBuffer), std::move(indexBuffer));
 }
 } // namespace prev_test::component::render

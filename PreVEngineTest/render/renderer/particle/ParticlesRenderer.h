@@ -36,9 +36,6 @@ public:
     void ShutDown() override;
 
 private:
-    std::unique_ptr<prev_test::render::IModel> CreateModel(prev::core::memory::Allocator& allocator, const std::shared_ptr<IMesh>& mesh) const;
-
-private:
     struct alignas(16) UniformsVS
     {
         alignas(16) glm::mat4 viewMatrix;

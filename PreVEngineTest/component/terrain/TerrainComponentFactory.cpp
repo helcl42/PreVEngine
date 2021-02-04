@@ -7,8 +7,6 @@
 #include "TerrainComponent.h"
 #include "TerrainMesh.h"
 
-#include <prev/core/memory/image/ImageBuffer.h>
-#include <prev/render/image/ImageFactory.h>
 #include <prev/scene/AllocatorProvider.h>
 
 namespace prev_test::component::terrain {
@@ -144,14 +142,12 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
 
 std::unique_ptr<prev_test::render::IModel> TerrainComponentFactory::CreateModel(prev::core::memory::Allocator& allocator, const std::shared_ptr<VertexData>& vertexData, const bool normalMapped) const
 {
-    auto mesh = GenerateMesh(vertexData, normalMapped);
-    auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(allocator);
-    vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
-    auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(allocator);
-    indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
+    auto mesh{ GenerateMesh(vertexData, normalMapped) };
 
     prev_test::render::model::ModelFactory modelFactory{};
-    return modelFactory.Create(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
+    auto model{ modelFactory.Create(std::move(mesh), allocator) };
+
+    return model;
 }
 
 std::unique_ptr<prev_test::render::IMesh> TerrainComponentFactory::GenerateMesh(const std::shared_ptr<VertexData>& vertexData, const bool normalMapped) const

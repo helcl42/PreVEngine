@@ -23,20 +23,15 @@ std::shared_ptr<prev_test::render::font::FontMetadata> DefaultFontRenderComponen
 
 void DefaultFontRenderComponent::AddText(const std::shared_ptr<prev_test::render::font::ScreenSpaceText>& text)
 {
+    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
+
     prev_test::render::font::TextMeshFactory meshFactory;
-    auto mesh = meshFactory.CreateTextMesh(text, m_fontMetaData);
-
-    auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-    auto vertexBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator);
-    vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
-
-    auto indexBuffer = std::make_unique<prev::core::memory::buffer::IndexBuffer>(*allocator);
-    indexBuffer->Data(mesh->GetIndices().data(), (uint32_t)mesh->GetIndices().size());
+    auto mesh{ meshFactory.CreateTextMesh(text, m_fontMetaData) };
 
     prev_test::render::model::ModelFactory modelFactory{};
-    std::shared_ptr<prev_test::render::IModel> model = modelFactory.Create(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
+    auto model{ modelFactory.Create(std::move(mesh), *allocator) };
 
-    m_renderableTexts.push_back(RenderableText{ text, model });
+    m_renderableTexts.push_back(RenderableText{ text, std::move(model) });
 }
 
 void DefaultFontRenderComponent::Reset()

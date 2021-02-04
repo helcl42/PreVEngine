@@ -9,9 +9,6 @@ public:
     std::unique_ptr<IParticleSystemComponent> CreateRandom() const;
 
     std::unique_ptr<IParticleSystemComponent> CreateRandomInCone(const glm::vec3& coneDirection, const float angle) const;
-
-private:
-    std::shared_ptr<prev_test::render::IModel> CreateModel(prev::core::memory::Allocator& allocator) const;
 };
 } // namespace prev_test::component::particle
 
