@@ -216,7 +216,7 @@ void Player::operator()(const prev::input::touch::TouchEvent& touchEvent)
     if (touchEvent.action == prev::input::touch::TouchActionType::MOVE) {
         const glm::vec2 angleInDegrees = (touchEvent.position - m_prevTouchPosition) * 0.1f;
 
-        m_transformComponent->Rotate(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(-angleInDegrees.x), glm::vec3(0.0f, 0.0f, 1.0f))));
+        m_transformComponent->Rotate(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(angleInDegrees.x), glm::vec3(0.0f, 1.0f, 0.0f))));
 
         m_cameraComponent->AddYaw(angleInDegrees.x);
         m_cameraComponent->AddPitch(angleInDegrees.y);
