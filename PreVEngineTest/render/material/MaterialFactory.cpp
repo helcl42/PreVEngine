@@ -43,7 +43,7 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const Mate
     auto normalImageBuffer{ CreateImageBuffer(normalImage, true, materialProps.repeatAddressMode, allocator) };
 
     auto heightImage{ CreateImage(heightMapPath) };
-    auto heightImageBuffer{ CreateImageBuffer(heightImage, false, materialProps.repeatAddressMode, allocator) };
+    auto heightImageBuffer{ CreateImageBuffer(heightImage, true, materialProps.repeatAddressMode, allocator) };
 
     return std::make_unique<prev_test::render::material::Material>(materialProps, ImagePair{ image, std::move(imageBuffer) }, ImagePair{ normalImage, std::move(normalImageBuffer) }, ImagePair{ heightImage, std::move(heightImageBuffer) });
 }
@@ -99,7 +99,7 @@ std::vector<std::shared_ptr<prev_test::render::IMaterial> > MaterialFactory::Cre
         ImagePair heightImage;
         if (auto image = assimpMaterialFactory.CreateModelImage(*scene, material, aiTextureType_HEIGHT)) {
             normalImage.image = image;
-            heightImage.imageBuffer = CreateImageBuffer(image, false, false, allocator);
+            heightImage.imageBuffer = CreateImageBuffer(image, true, false, allocator);
         }
 
         aiColor3D color(1.0f, 1.0f, 1.0f);
