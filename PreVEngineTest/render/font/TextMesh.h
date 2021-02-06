@@ -12,17 +12,17 @@ public:
     ~TextMesh() = default;
 
 public:
-    const prev_test::render::VertexLayout& GetVertexLayout() const;
+    const prev_test::render::VertexLayout& GetVertexLayout() const override;
 
-    const void* GetVertexData() const;
+    const void* GetVertexData() const override;
 
-    const std::vector<glm::vec3>& GetVertices() const;
+    const std::vector<glm::vec3>& GetVertices() const override;
 
-    uint32_t GerVerticesCount() const;
+    uint32_t GerVerticesCount() const override;
 
-    const std::vector<uint32_t>& GetIndices() const;
+    const std::vector<uint32_t>& GetIndices() const override;
 
-    const std::vector<prev_test::render::MeshPart>& GetMeshParts() const;
+    const std::vector<prev_test::render::MeshPart>& GetMeshParts() const override;
 
     const MeshNode& GetRootNode() const override;
 
