@@ -35,7 +35,7 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
     };
 
     auto result{ std::make_unique<TerrainComponent>(x, z) };
-    result->m_model = std::move(CreateModel(*allocator, vertexData, false));
+    result->m_model = CreateModel(*allocator, vertexData, false);
     result->m_heightsInfo = heightMap;
     result->m_vertexData = vertexData;
     for (const auto& layer : terrainLayers) {
@@ -65,7 +65,7 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
     };
 
     auto result{ std::make_unique<TerrainComponent>(x, z) };
-    result->m_model = std::move(CreateModel(*allocator, vertexData, true));
+    result->m_model = CreateModel(*allocator, vertexData, true);
     result->m_heightsInfo = heightMap;
     result->m_vertexData = vertexData;
     for (const auto& layer : terrainLayers) {
@@ -95,7 +95,7 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
     };
 
     auto result{ std::make_unique<TerrainComponent>(x, z) };
-    result->m_model = std::move(CreateModel(*allocator, vertexData, true));
+    result->m_model = CreateModel(*allocator, vertexData, true);
     result->m_heightsInfo = heightMap;
     result->m_vertexData = vertexData;
     for (const auto& layer : terrainLayers) {
@@ -127,7 +127,7 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
     };
 
     auto result{ std::make_unique<TerrainComponent>(x, z) };
-    result->m_model = std::move(CreateModel(*allocator, vertexData, true));
+    result->m_model = CreateModel(*allocator, vertexData, true);
     result->m_heightsInfo = heightMap;
     result->m_vertexData = vertexData;
     for (const auto& layer : terrainLayers) {

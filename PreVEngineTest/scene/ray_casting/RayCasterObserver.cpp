@@ -102,9 +102,6 @@ std::optional<glm::vec3> RayCastObserver::GetFirstPositionUnderAlongRay(const pr
 std::vector<glm::vec3> RayCastObserver::GenerateSegmentPositions(const prev_test::common::intersection::Ray& ray) const
 {
     const float distanceBetweenNodes = ray.length / RECURSION_COUNT;
-    const glm::vec3 start = ray.GetStartPoint();
-    const glm::vec3 end = ray.GetEndPoint();
-
     std::vector<glm::vec3> result;
     float currentDistance = 0.0f;
     while (currentDistance < ray.length) {

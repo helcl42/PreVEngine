@@ -50,8 +50,8 @@ std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::Create
     auto model{ modelFactory.Create(std::move(mesh), *allocator) };
 
     auto particleFactory{ std::make_shared<RandomInConeParticleFactory>(material, -0.1f, 4.0f, 4.0f, 7.0f) };
-    particleFactory->SetConeDirection(glm::vec3(0.0f, 1.0f, 0.0f));
-    particleFactory->SetConeDirectionDeviation(1.0f);
+    particleFactory->SetConeDirection(coneDirection);
+    particleFactory->SetConeDirectionDeviation(angle);
     //particleFactory->SetRandomRotationEnabled(true);
     particleFactory->SetLifeLengthError(0.5f);
     particleFactory->SetSpeedError(1.0f);

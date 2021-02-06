@@ -14,7 +14,7 @@ LensFlare::LensFlare()
 void LensFlare::Init()
 {
     prev_test::component::sky::LensFlareComponentFactory componentFactory{};
-    m_lensFlareComponent = std::move(componentFactory.Create());
+    m_lensFlareComponent = componentFactory.Create();
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::sky::ILensFlareComponent>(GetThis(), m_lensFlareComponent, TAG_LENS_FLARE_RENDER_COMPONENT);
 
     SceneNode::Init();

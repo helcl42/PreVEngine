@@ -35,8 +35,8 @@ class UBOPool final : public Buffer {
 public:
     UBOPool(Allocator& allocator)
         : Buffer(allocator)
-        , m_index(0)
         , m_capacity(0)
+        , m_index(0)
         , m_mapped(nullptr)
     {
     }

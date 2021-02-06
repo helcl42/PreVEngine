@@ -14,7 +14,7 @@ Sun::Sun()
 void Sun::Init()
 {
     prev_test::component::sky::SunComponentFactory componentFactory{};
-    m_sunComponent = std::move(componentFactory.Create());
+    m_sunComponent = componentFactory.Create();
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::sky::ISunComponent>(GetThis(), m_sunComponent, TAG_SUN_RENDER_COMPONENT);
 
     SceneNode::Init();

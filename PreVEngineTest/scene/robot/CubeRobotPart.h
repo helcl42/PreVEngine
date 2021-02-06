@@ -22,13 +22,13 @@ public:
     void ShutDown() override;
 
 protected:
-    const std::string m_texturePath;
-
     const glm::vec3 m_initialPosition;
 
     const glm::quat m_initialOrientation;
 
     const glm::vec3 m_initialScale;
+
+    const std::string m_texturePath;
 
 private:
     std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;

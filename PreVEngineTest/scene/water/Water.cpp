@@ -25,7 +25,7 @@ void Water::Init()
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, TAG_TRANSFORM_COMPONENT);
 
     prev_test::component::water::WaterComponentFactory componentFactory{};
-    m_waterComponent = std::move(componentFactory.Create(m_x, m_z));
+    m_waterComponent = componentFactory.Create(m_x, m_z);
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::water::IWaterComponent>(GetThis(), m_waterComponent, TAG_WATER_RENDER_COMPONENT);
 
     prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{};

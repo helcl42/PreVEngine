@@ -45,7 +45,7 @@ void WaterReflection::operator()(const prev::core::NewIterationEvent& newIterati
 void WaterReflection::CreateReflectionComponent()
 {
     prev_test::component::water::WaterComponentFactory componentFactory{};
-    m_reflectionComponent = std::move(componentFactory.CreateOffScreenComponent(m_viewPortSize.x / prev_test::component::water::REFLECTION_EXTENT_DIVIDER, m_viewPortSize.y / prev_test::component::water::REFLECTION_EXTENT_DIVIDER));
+    m_reflectionComponent = componentFactory.CreateOffScreenComponent(m_viewPortSize.x / prev_test::component::water::REFLECTION_EXTENT_DIVIDER, m_viewPortSize.y / prev_test::component::water::REFLECTION_EXTENT_DIVIDER);
     m_reflectionComponent->Init();
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::water::IWaterOffscreenRenderPassComponent>(GetThis(), m_reflectionComponent, TAG_WATER_REFLECTION_RENDER_COMPONENT);
 }
