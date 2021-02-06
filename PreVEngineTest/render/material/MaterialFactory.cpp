@@ -111,7 +111,7 @@ std::vector<std::shared_ptr<prev_test::render::IMaterial> > MaterialFactory::Cre
         float reflectivity;
         material.Get(AI_MATKEY_REFLECTIVITY, reflectivity);
 
-        MaterialProperties materialProperties{ { color.r, color.g, color.b, 1.0 }, shineness, std::max(reflectivity, 1.0f) };
+        MaterialProperties materialProperties{ { color.r, color.g, color.b, 1.0 }, shineness, std::max(reflectivity, 1.0f), false };
 
         result.emplace_back(std::make_unique<prev_test::render::material::Material>(materialProperties, colorImage, normalImage, heightImage));
     }

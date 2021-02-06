@@ -97,7 +97,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderCompo
     auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
 
     prev_test::render::material::MaterialFactory materialFactory{};
-    auto material{ materialFactory.Create({ glm::vec4(1.0f), 2.0f, 0.3f, true }) };
+    auto material{ materialFactory.Create({ glm::vec4(1.0f), 2.0f, 0.3f, true }, texturePath, *allocator) };
 
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh{ meshFactory.CreatePlane(40.0f, 40.0f, 1, 1, 10.0f, 10.0f, false) };

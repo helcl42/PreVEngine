@@ -107,7 +107,6 @@ void Swapchain::UpdateExtent()
 {
     VkSurfaceCapabilitiesKHR surfaceCapabilities = GetSurfaceCapabilities();
     VkExtent2D& currentSurfaceExtent = surfaceCapabilities.currentExtent;
-    VkExtent2D& swapchainExtent = m_swapchainCreateInfo.imageExtent;
 
     if (currentSurfaceExtent.width == 0xFFFFFFFF) // 0xFFFFFFFF indicates surface size is set from extent
     {
