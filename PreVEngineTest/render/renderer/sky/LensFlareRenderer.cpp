@@ -74,7 +74,7 @@ void LensFlareRenderer::Render(const prev::render::RenderContext& renderContext,
             uniformsFS.brightness = glm::vec4(m_sunVisibilityFactor);
             uboFS->Update(&uniformsFS);
 
-            m_shader->Bind("textureSampler", *lensFlare->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            m_shader->Bind("colorSampler", *lensFlare->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             m_shader->Bind("uboVS", *uboVS);
             m_shader->Bind("uboFS", *uboFS);
 

@@ -175,7 +175,7 @@ void ParallaxMappedRenderer::RenderMeshNode(const prev::render::RenderContext& r
         uboFS->Update(&uniformsFS);
 
         m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), shadowsComponent->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-        m_shader->Bind("textureSampler", *material->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_shader->Bind("colorSampler", *material->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         if (material->GetNormalmageBuffer()) {
             m_shader->Bind("normalSampler", *material->GetNormalmageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }

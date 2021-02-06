@@ -24,7 +24,7 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 	uint numLayers;
 } uboFS;
 
-layout(binding = 2) uniform sampler2D textureSampler;
+layout(binding = 2) uniform sampler2D colorSampler;
 layout(binding = 3) uniform sampler2D normalSampler;
 layout(binding = 4) uniform sampler2D heightSampler;
 layout(binding = 5) uniform sampler2DArray depthSampler;
@@ -57,7 +57,7 @@ void main()
 	}
 
 	const vec3 normal = NormalMapping(normalSampler, uv);
-	const vec4 textureColor = texture(textureSampler, uv);
+	const vec4 textureColor = texture(colorSampler, uv);
 
 	// if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) 
     // {
