@@ -29,7 +29,7 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 	float heightTransitionRange;
 } uboFS;
 
-layout(binding = 2) uniform sampler2D textureSampler[MATERIAL_COUNT];
+layout(binding = 2) uniform sampler2D colorSampler[MATERIAL_COUNT];
 layout(binding = 3) uniform sampler2D normalSampler[MATERIAL_COUNT];
 layout(binding = 4) uniform sampler2DArray depthSampler;
 
@@ -63,8 +63,8 @@ void main()
             {
                 float ratio = (normalizedHeight - uboFS.heightSteps[i].x + uboFS.heightTransitionRange) / (2 * uboFS.heightTransitionRange);
 
-                vec4 color1 = texture(textureSampler[i], inTextureCoord);
-                vec4 color2 = texture(textureSampler[i + 1], inTextureCoord);
+                vec4 color1 = texture(colorSampler[i], inTextureCoord);
+                vec4 color2 = texture(colorSampler[i + 1], inTextureCoord);
                 textureColor = mix(color1, color2, ratio);
 
 				vec3 normal1 = NormalMapping(normalSampler[i], inTextureCoord);
@@ -82,7 +82,7 @@ void main()
             }
 			else if(normalizedHeight < uboFS.heightSteps[i].x - uboFS.heightTransitionRange)
 			{
-				textureColor = texture(textureSampler[i], inTextureCoord);
+				textureColor = texture(colorSampler[i], inTextureCoord);
 				normal = NormalMapping(normalSampler[i], inTextureCoord);
 				shineDamper = uboFS.material[i].shineDamper;
 				reflectivity = uboFS.material[i].reflectivity;
@@ -90,7 +90,7 @@ void main()
 			}
             else if(normalizedHeight > uboFS.heightSteps[i].x + uboFS.heightTransitionRange && normalizedHeight < uboFS.heightSteps[i + 1].x - uboFS.heightTransitionRange)
             {
-				textureColor = texture(textureSampler[i], inTextureCoord);
+				textureColor = texture(colorSampler[i], inTextureCoord);
 				normal = NormalMapping(normalSampler[i], inTextureCoord);
 				shineDamper = uboFS.material[i].shineDamper;
 				reflectivity = uboFS.material[i].reflectivity;
@@ -98,7 +98,7 @@ void main()
         }
         else
         {
-			textureColor = texture(textureSampler[i], inTextureCoord);
+			textureColor = texture(colorSampler[i], inTextureCoord);
 			normal = NormalMapping(normalSampler[i], inTextureCoord);
 			shineDamper = uboFS.material[i].shineDamper;
 			reflectivity = uboFS.material[i].reflectivity;

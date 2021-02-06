@@ -168,7 +168,7 @@ void AnimationNormalMappedRenderer::RenderMeshNode(const prev::render::RenderCon
 
         uboFS->Update(&uniformsFS);
 
-        m_shader->Bind("textureSampler", *material->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_shader->Bind("colorSampler", *material->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         if (material->GetNormalmageBuffer()) {
             m_shader->Bind("normalSampler", *material->GetNormalmageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }

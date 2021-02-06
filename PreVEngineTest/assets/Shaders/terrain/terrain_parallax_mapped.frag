@@ -35,7 +35,7 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 	float maxAngleToFallback;
 } uboFS;
 
-layout(binding = 2) uniform sampler2D textureSampler[MATERIAL_COUNT];
+layout(binding = 2) uniform sampler2D colorSampler[MATERIAL_COUNT];
 layout(binding = 3) uniform sampler2D normalSampler[MATERIAL_COUNT];
 layout(binding = 4) uniform sampler2D heightSampler[MATERIAL_COUNT];
 layout(binding = 5) uniform sampler2DArray depthSampler;
@@ -95,8 +95,8 @@ void main()
 					normal = normalize(mix(normal1, normal2, ratio));
 				}
 
-                vec4 color1 = texture(textureSampler[i], uv1);
-                vec4 color2 = texture(textureSampler[i + 1], uv2);
+                vec4 color1 = texture(colorSampler[i], uv1);
+                vec4 color2 = texture(colorSampler[i + 1], uv2);
                 textureColor = mix(color1, color2, ratio);
 
 				float shineDamper1 = uboFS.material[i].shineDamper;
@@ -117,7 +117,7 @@ void main()
 					uv = inTextureCoord;
 					normal = NormalMapping(normalSampler[i], uv);
 				}
-				textureColor = texture(textureSampler[i], uv);
+				textureColor = texture(colorSampler[i], uv);
 				shineDamper = uboFS.material[i].shineDamper;
 				reflectivity = uboFS.material[i].reflectivity;
 				break;
@@ -131,7 +131,7 @@ void main()
 					uv = inTextureCoord;
 					normal = NormalMapping(normalSampler[i], uv);
 				}
-				textureColor = texture(textureSampler[i], uv);
+				textureColor = texture(colorSampler[i], uv);
 				shineDamper = uboFS.material[i].shineDamper;
 				reflectivity = uboFS.material[i].reflectivity;
             }
@@ -145,7 +145,7 @@ void main()
 				uv = inTextureCoord;
 				normal = NormalMapping(normalSampler[i], uv);
 			}
-			textureColor = texture(textureSampler[i], uv);
+			textureColor = texture(colorSampler[i], uv);
 			shineDamper = uboFS.material[i].shineDamper;
 			reflectivity = uboFS.material[i].reflectivity;
         }

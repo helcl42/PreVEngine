@@ -130,7 +130,7 @@ void TerrainNormalMappedRenderer::Render(const prev::render::RenderContext& rend
 
             for (auto i = 0; i < terrainComponent->GetMaterials().size(); i++) {
                 const auto material = terrainComponent->GetMaterials().at(i);
-                m_shader->Bind("textureSampler[" + std::to_string(i) + "]", *material->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                m_shader->Bind("colorSampler[" + std::to_string(i) + "]", *material->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
                 m_shader->Bind("normalSampler[" + std::to_string(i) + "]", *material->GetNormalmageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             }
             m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), shadowsComponent->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
