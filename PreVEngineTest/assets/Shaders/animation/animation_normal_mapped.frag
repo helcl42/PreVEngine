@@ -38,7 +38,7 @@ layout(location = 0) out vec4 outColor;
 
 void main() 
 {	
-	float shadow = 1.0;	
+	float shadow = 1.0;
 	if(uboFS.castedByShadows != 0)
 	{
 		shadow = GetShadow(depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.005);
@@ -65,7 +65,9 @@ void main()
 
 		const float attenuationFactor = GetAttenuationFactor(light.attenuation.xyz, toLightVector);
 		totalDiffuse += GetDiffuseColor(normal, unitToLightVector, light.color.xyz, attenuationFactor);
-		totalSpecular += GetSpecularColor(normal, unitToLightVector, unitToCameraVector, light.color.xyz, attenuationFactor, uboFS.material.shineDamper, uboFS.material.reflectivity);
+		if(shadow > 0.99) {
+			totalSpecular += GetSpecularColor(normal, unitToLightVector, unitToCameraVector, light.color.xyz, attenuationFactor, uboFS.material.shineDamper, uboFS.material.reflectivity);
+		}
 	}
 	totalDiffuse = max(totalDiffuse * shadow, 0.0) + uboFS.lightning.ambientFactor;
 	totalSpecular = totalSpecular * shadow;
