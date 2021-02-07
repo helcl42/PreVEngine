@@ -1,23 +1,23 @@
-#ifndef __WATER_OFFSCREEN_RENDER_PASS_COMPONENT_H__
-#define __WATER_OFFSCREEN_RENDER_PASS_COMPONENT_H__
+#ifndef __OFF_SCREEN_RENDER_PASS_COMPONENT_H__
+#define __OFF_SCREEN_RENDER_PASS_COMPONENT_H__
 
-#include "IWaterOffscreenRenderPassComponent.h"
+#include "IOffScreenRenderPassComponent.h"
 
 #include <prev/common/Common.h>
 #include <prev/core/memory/image/ColorImageBuffer.h>
 #include <prev/core/memory/image/DepthImageBuffer.h>
 
-namespace prev_test::component::water {
-class WaterOffScreenRenderPassComponent : public IWaterOffscreenRenderPassComponent {
+namespace prev_test::component::common {
+class OffScreenRenderPassComponent : public IOffScreenRenderPassComponent {
 public:
     static const inline VkFormat COLOR_FORMAT{ VK_FORMAT_B8G8R8A8_UNORM };
 
     static const inline VkFormat DEPTH_FORMAT{ VK_FORMAT_D32_SFLOAT };
 
 public:
-    WaterOffScreenRenderPassComponent(const uint32_t w, const uint32_t h);
+    OffScreenRenderPassComponent(const uint32_t w, const uint32_t h);
 
-    ~WaterOffScreenRenderPassComponent() = default;
+    ~OffScreenRenderPassComponent() = default;
 
 public:
     void Init() override;
@@ -56,6 +56,6 @@ private:
 
     VkFramebuffer m_frameBuffer;
 };
-} // namespace prev_test::component::water
+} // namespace prev_test::component::common
 
 #endif

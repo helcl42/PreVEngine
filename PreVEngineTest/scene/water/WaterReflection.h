@@ -2,7 +2,7 @@
 #define __WATER_REFLECTION_H__
 
 #include "../../General.h"
-#include "../../component/water/IWaterOffscreenRenderPassComponent.h"
+#include "../../component/common/IOffScreenRenderPassComponent.h"
 
 #include <prev/core/CoreEvents.h>
 #include <prev/event/EventHandler.h>
@@ -31,7 +31,7 @@ private:
     void DestroyReflectionComponent();
 
 private:
-    std::shared_ptr<prev_test::component::water::IWaterOffscreenRenderPassComponent> m_reflectionComponent;
+    std::shared_ptr<prev_test::component::common::IOffScreenRenderPassComponent> m_reflectionComponent;
 
     glm::uvec2 m_viewPortSize{ 0, 0 };
 

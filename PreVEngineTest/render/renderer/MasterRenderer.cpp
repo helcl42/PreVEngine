@@ -3,9 +3,9 @@
 
 #include "../../common/intersection/Frustum.h"
 #include "../../component/camera/ICameraComponent.h"
+#include "../../component/common/IOffscreenRenderPassComponent.h"
 #include "../../component/shadow/IShadowsComponent.h"
 #include "../../component/water/IWaterComponent.h"
-#include "../../component/water/IWaterOffscreenRenderPassComponent.h"
 #include "../../component/water/WaterCommon.h"
 #include "animation/AnimationConeStepMappedRenderer.h"
 #include "animation/AnimationNormalMappedRenderer.h"
@@ -219,7 +219,7 @@ void MasterRenderer::ShutDownShadows()
 
 void MasterRenderer::InitReflection()
 {
-    const auto reflectionComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::water::IWaterOffscreenRenderPassComponent>({ TAG_WATER_REFLECTION_RENDER_COMPONENT }) };
+    const auto reflectionComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::common::IOffScreenRenderPassComponent>({ TAG_WATER_REFLECTION_RENDER_COMPONENT }) };
 
     m_reflectionRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyBoxRenderer>(reflectionComponent->GetRenderPass()));
     m_reflectionRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyRenderer>(reflectionComponent->GetRenderPass()));
@@ -262,7 +262,7 @@ void MasterRenderer::ShutDownReflection()
 
 void MasterRenderer::InitRefraction()
 {
-    const auto refractionComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::water::IWaterOffscreenRenderPassComponent>({ TAG_WATER_REFRACTION_RENDER_COMPONENT }) };
+    const auto refractionComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::common::IOffScreenRenderPassComponent>({ TAG_WATER_REFRACTION_RENDER_COMPONENT }) };
 
     m_refractionRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyBoxRenderer>(refractionComponent->GetRenderPass()));
     m_refractionRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyRenderer>(refractionComponent->GetRenderPass()));
@@ -332,7 +332,7 @@ void MasterRenderer::RenderShadows(const prev::render::RenderContext& renderCont
 
 void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root)
 {
-    const auto reflectionComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::water::IWaterOffscreenRenderPassComponent>({ TAG_WATER_REFLECTION_RENDER_COMPONENT }) };
+    const auto reflectionComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::common::IOffScreenRenderPassComponent>({ TAG_WATER_REFLECTION_RENDER_COMPONENT }) };
     const auto cameraComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA }) };
 
     const auto& cameraPosition{ cameraComponent->GetPosition() };
@@ -375,7 +375,7 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
 
 void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root)
 {
-    const auto refractionComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::water::IWaterOffscreenRenderPassComponent>({ TAG_WATER_REFRACTION_RENDER_COMPONENT }) };
+    const auto refractionComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::common::IOffScreenRenderPassComponent>({ TAG_WATER_REFRACTION_RENDER_COMPONENT }) };
     const auto cameraComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA }) };
 
     const auto& viewMatrix{ cameraComponent->LookAt() };

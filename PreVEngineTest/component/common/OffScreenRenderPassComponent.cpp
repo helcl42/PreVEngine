@@ -1,11 +1,11 @@
-#include "WaterOffscreenRenderPassComponent.h"
+#include "OffScreenRenderPassComponent.h"
 
 #include <prev/core/DeviceProvider.h>
 #include <prev/scene/AllocatorProvider.h>
 #include <prev/util/VkUtils.h>
 
-namespace prev_test::component::water {
-WaterOffScreenRenderPassComponent::WaterOffScreenRenderPassComponent(const uint32_t w, const uint32_t h)
+namespace prev_test::component::common {
+OffScreenRenderPassComponent::OffScreenRenderPassComponent(const uint32_t w, const uint32_t h)
     : m_width(w)
     , m_height(h)
     , m_renderPass(nullptr)
@@ -15,44 +15,44 @@ WaterOffScreenRenderPassComponent::WaterOffScreenRenderPassComponent(const uint3
 {
 }
 
-void WaterOffScreenRenderPassComponent::Init()
+void OffScreenRenderPassComponent::Init()
 {
     InitRenderPass();
     InitBuffers();
 }
 
-void WaterOffScreenRenderPassComponent::ShutDown()
+void OffScreenRenderPassComponent::ShutDown()
 {
     ShutDownBuffers();
     ShutDownRenderPass();
 }
 
-std::shared_ptr<prev::render::pass::RenderPass> WaterOffScreenRenderPassComponent::GetRenderPass() const
+std::shared_ptr<prev::render::pass::RenderPass> OffScreenRenderPassComponent::GetRenderPass() const
 {
     return m_renderPass;
 }
 
-VkExtent2D WaterOffScreenRenderPassComponent::GetExtent() const
+VkExtent2D OffScreenRenderPassComponent::GetExtent() const
 {
     return VkExtent2D{ m_width, m_height };
 }
 
-std::shared_ptr<prev::core::memory::image::IImageBuffer> WaterOffScreenRenderPassComponent::GetColorImageBuffer() const
+std::shared_ptr<prev::core::memory::image::IImageBuffer> OffScreenRenderPassComponent::GetColorImageBuffer() const
 {
     return m_imageBuffer;
 }
 
-std::shared_ptr<prev::core::memory::image::IImageBuffer> WaterOffScreenRenderPassComponent::GetDepthImageBuffer() const
+std::shared_ptr<prev::core::memory::image::IImageBuffer> OffScreenRenderPassComponent::GetDepthImageBuffer() const
 {
     return m_depthBuffer;
 }
 
-VkFramebuffer WaterOffScreenRenderPassComponent::GetFrameBuffer() const
+VkFramebuffer OffScreenRenderPassComponent::GetFrameBuffer() const
 {
     return m_frameBuffer;
 }
 
-void WaterOffScreenRenderPassComponent::InitBuffers()
+void OffScreenRenderPassComponent::InitBuffers()
 {
     auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
     auto device = prev::core::DeviceProvider::Instance().GetDevice();
@@ -68,7 +68,7 @@ void WaterOffScreenRenderPassComponent::InitBuffers()
     m_frameBuffer = prev::util::VkUtils::CreateFrameBuffer(*device, *m_renderPass, { m_imageBuffer->GetImageView(), m_depthBuffer->GetImageView() }, GetExtent());
 }
 
-void WaterOffScreenRenderPassComponent::ShutDownBuffers()
+void OffScreenRenderPassComponent::ShutDownBuffers()
 {
     auto device = prev::core::DeviceProvider::Instance().GetDevice();
 
@@ -80,7 +80,7 @@ void WaterOffScreenRenderPassComponent::ShutDownBuffers()
     m_imageBuffer->Destroy();
 }
 
-void WaterOffScreenRenderPassComponent::InitRenderPass()
+void OffScreenRenderPassComponent::InitRenderPass()
 {
     auto device = prev::core::DeviceProvider::Instance().GetDevice();
 
@@ -137,8 +137,8 @@ void WaterOffScreenRenderPassComponent::InitRenderPass()
     m_renderPass->Create();
 }
 
-void WaterOffScreenRenderPassComponent::ShutDownRenderPass()
+void OffScreenRenderPassComponent::ShutDownRenderPass()
 {
     m_renderPass->Destroy();
 }
-} // namespace prev_test::component::water
+} // namespace prev_test::component::common
