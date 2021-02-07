@@ -51,9 +51,8 @@ private:
 
     static const inline uint32_t SHADOW_MAP_DIMENSIONS{ 2048 };
 
-    static const inline VkFilter SHADOW_MAP_FILTER{ VK_FILTER_NEAREST };
 
-    static const inline float CASCADES_SPLIT_LAMBDA{ 0.86f };
+    static const inline float CASCADES_SPLIT_LAMBDA{ 0.78f };
 
 private:
     const uint32_t m_cascadesCount;
