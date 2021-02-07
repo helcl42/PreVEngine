@@ -23,10 +23,10 @@ void ShadowsComponent::Init()
 
 void ShadowsComponent::Update(const glm::vec3& lightDirection, const float nearClippingPlane, const float farClippingPlane, const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix)
 {
-    const auto cascadeSplits = GenerateCaascadeSplits(nearClippingPlane, farClippingPlane);
-    const glm::mat4 inverseWorldToClipSpaceTransform = glm::inverse(projectionMatrix * viewMatrix);
+    const auto cascadeSplits{ GenerateCaascadeSplits(nearClippingPlane, farClippingPlane) };
+    const auto inverseWorldToClipSpaceTransform = glm::inverse(projectionMatrix * viewMatrix);
 
-    float lastSplitDistance = 0.0;
+    float lastSplitDistance{ 0.0 };
     for (uint32_t i = 0; i < m_cascadesCount; i++) {
         const float splitDistance = cascadeSplits[i];
 
@@ -65,7 +65,7 @@ std::shared_ptr<prev::core::memory::image::IImageBuffer> ShadowsComponent::GetIm
 
 void ShadowsComponent::InitRenderPass()
 {
-    auto device = prev::core::DeviceProvider::Instance().GetDevice();
+    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
 
     std::vector<VkSubpassDependency> dependencies{ 2 };
     dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -98,8 +98,8 @@ void ShadowsComponent::ShutDownRenderPass()
 
 void ShadowsComponent::InitCascades()
 {
-    auto device = prev::core::DeviceProvider::Instance().GetDevice();
-    auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
+    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
+    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
 
     m_depthBuffer = std::make_shared<prev::core::memory::image::DepthImageBuffer>(*allocator);
     m_depthBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, DEPTH_FORMAT, VK_SAMPLE_COUNT_1_BIT, 0, false, false, VK_IMAGE_VIEW_TYPE_2D_ARRAY, m_cascadesCount });
@@ -107,8 +107,7 @@ void ShadowsComponent::InitCascades()
 
     m_cascades.resize(m_cascadesCount);
     for (uint32_t i = 0; i < m_cascadesCount; i++) {
-        auto& cascade = m_cascades.at(i);
-
+        auto& cascade{ m_cascades.at(i) };
         cascade.imageView = prev::util::VkUtils::CreateImageView(*device, m_depthBuffer->GetImage(), m_depthBuffer->GetFormat(), VK_IMAGE_VIEW_TYPE_2D_ARRAY, m_depthBuffer->GetMipLevels(), VK_IMAGE_ASPECT_DEPTH_BIT, 1, i);
         cascade.frameBuffer = prev::util::VkUtils::CreateFrameBuffer(*device, *m_renderPass, { cascade.imageView }, GetExtent());
     }
@@ -116,12 +115,12 @@ void ShadowsComponent::InitCascades()
 
 void ShadowsComponent::ShutDownCascades()
 {
-    auto device = prev::core::DeviceProvider::Instance().GetDevice();
+    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
 
     vkDeviceWaitIdle(*device);
 
     for (uint32_t i = 0; i < m_cascadesCount; i++) {
-        auto& cascade = m_cascades.at(i);
+        auto& cascade{ m_cascades.at(i) };
         cascade.Destroy(*device);
     }
 
@@ -132,20 +131,18 @@ std::vector<float> ShadowsComponent::GenerateCaascadeSplits(const float nearClip
 {
     std::vector<float> cascadeSplits(m_cascadesCount);
 
-    const float clipRange = farClippingPlane - nearClippingPlane;
-
-    const float minZ = nearClippingPlane;
-    const float maxZ = nearClippingPlane + clipRange;
-
-    const float range = maxZ - minZ;
-    const float ratio = maxZ / minZ;
+    const float clipRange{ farClippingPlane - nearClippingPlane };
+    const float minZ{ nearClippingPlane };
+    const float maxZ{ nearClippingPlane + clipRange };
+    const float range{ maxZ - minZ };
+    const float ratio{ maxZ / minZ };
 
     // Calculate split depths based on view camera furstum
     for (uint32_t i = 0; i < m_cascadesCount; i++) {
-        float p = (i + 1) / static_cast<float>(m_cascadesCount);
-        float log = minZ * powf(ratio, p);
-        float uniform = minZ + range * p;
-        float d = CASCADES_SPLIT_LAMBDA * (log - uniform) + uniform;
+        const float p{ (i + 1) / static_cast<float>(m_cascadesCount) };
+        const float log{ minZ * powf(ratio, p) };
+        const float uniform{ minZ + range * p };
+        const float d{ CASCADES_SPLIT_LAMBDA * (log - uniform) + uniform };
         cascadeSplits[i] = (d - nearClippingPlane) / clipRange;
     }
 
@@ -154,10 +151,10 @@ std::vector<float> ShadowsComponent::GenerateCaascadeSplits(const float nearClip
 
 std::vector<glm::vec3> ShadowsComponent::GenerateFrustumCorners(const glm::mat4& inverseWorldToClipSpaceTransform, const float splitDistance, const float lastSplitDistance) const
 {
-    auto frustumCorners = prev::util::MathUtil::GetFrustumCorners(inverseWorldToClipSpaceTransform);
+    auto frustumCorners{ prev::util::MathUtil::GetFrustumCorners(inverseWorldToClipSpaceTransform) };
 
     for (uint32_t i = 0; i < 4; i++) {
-        glm::vec3 dist = frustumCorners[i + 4] - frustumCorners[i];
+        const glm::vec3 dist{ frustumCorners[i + 4] - frustumCorners[i] };
         frustumCorners[i + 4] = frustumCorners[i] + (dist * splitDistance);
         frustumCorners[i] = frustumCorners[i] + (dist * lastSplitDistance);
     }
@@ -177,9 +174,9 @@ glm::vec3 ShadowsComponent::CalculateFrustumCenter(const std::vector<glm::vec3>&
 
 float ShadowsComponent::CalculateFrustumRadius(const std::vector<glm::vec3>& frustumCorners, const glm::vec3& frustumCenter) const
 {
-    float radius = 0.0f;
+    float radius{ 0.0f };
     for (uint32_t i = 0; i < 8; i++) {
-        float distance = glm::length(frustumCorners[i] - frustumCenter);
+        const float distance{ glm::length(frustumCorners[i] - frustumCenter) };
         radius = glm::max(radius, distance);
     }
     radius = std::ceil(radius * 16.0f) / 16.0f;
@@ -188,15 +185,15 @@ float ShadowsComponent::CalculateFrustumRadius(const std::vector<glm::vec3>& fru
 
 void ShadowsComponent::UpdateCascade(const glm::vec3& lightDirection, const glm::mat4& inverseCameraTransform, const float nearClippingPlane, const float farClippingPlane, const float splitDistance, const float lastSplitDistance, ShadowsCascade& outCascade) const
 {
-    const auto clipRange = farClippingPlane - nearClippingPlane;
-    const auto frustumCorners = GenerateFrustumCorners(inverseCameraTransform, splitDistance, lastSplitDistance);
-    const auto frustumCenter = CalculateFrustumCenter(frustumCorners);
-    const auto radius = CalculateFrustumRadius(frustumCorners, frustumCenter);
+    const auto clipRange{ farClippingPlane - nearClippingPlane };
+    const auto frustumCorners{ GenerateFrustumCorners(inverseCameraTransform, splitDistance, lastSplitDistance) };
+    const auto frustumCenter{ CalculateFrustumCenter(frustumCorners) };
+    const auto radius{ CalculateFrustumRadius(frustumCorners, frustumCenter) };
 
     prev_test::common::intersection::AABB aabb{ radius };
 
-    const glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDirection * -aabb.minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
-    const glm::mat4 lightOrthoProjectionMatrix = glm::ortho(aabb.minExtents.x, aabb.maxExtents.x, aabb.minExtents.y, aabb.maxExtents.y, 0.0f, aabb.maxExtents.z - aabb.minExtents.z);
+    const glm::mat4 lightViewMatrix{ glm::lookAt(frustumCenter - lightDirection * -aabb.minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f)) };
+    const glm::mat4 lightOrthoProjectionMatrix{ glm::ortho(aabb.minExtents.x, aabb.maxExtents.x, aabb.minExtents.y, aabb.maxExtents.y, 0.0f, aabb.maxExtents.z - aabb.minExtents.z) };
 
     outCascade.startSplitDepth = (nearClippingPlane + lastSplitDistance * clipRange) * -1.0f;
     outCascade.endSplitDepth = (nearClippingPlane + splitDistance * clipRange) * -1.0f;
