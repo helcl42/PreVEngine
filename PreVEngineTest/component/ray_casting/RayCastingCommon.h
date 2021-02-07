@@ -3,10 +3,6 @@
 
 #include <prev/common/Common.h>
 
-//#define RENDER_BOUNDING_VOLUMES
-//#define RENDER_RAYCASTS
-//#define RENDER_SELECTION
-
 namespace prev_test::component::ray_casting {
 
 constexpr glm::vec4 SELECTED_COLOR{ 1.0f, 0.0f, 0.0f, 1.0f };

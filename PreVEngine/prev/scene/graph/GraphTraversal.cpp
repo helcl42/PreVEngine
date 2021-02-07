@@ -17,8 +17,8 @@ std::shared_ptr<ISceneNode> GraphTraversal::FindByIdInternal(const std::shared_p
         return parent;
     }
 
-    auto& children = parent->GetChildren();
-    for (auto& child : children) {
+    const auto& children = parent->GetChildren();
+    for (const auto& child : children) {
         auto result = FindByIdInternal(child, id);
         if (result != nullptr) {
             return result;
@@ -33,8 +33,8 @@ std::shared_ptr<ISceneNode> GraphTraversal::FindOneWithTagsInternal(const std::s
         return parent;
     }
 
-    auto& children = parent->GetChildren();
-    for (auto& child : children) {
+    const auto& children = parent->GetChildren();
+    for (const auto& child : children) {
         auto result = FindOneWithTagsInternal(child, tags, operation);
         if (result != nullptr) {
             return result;
@@ -50,8 +50,8 @@ void GraphTraversal::FindAllWithTagsInternal(const std::shared_ptr<ISceneNode>& 
         result.push_back(parent);
     }
 
-    auto& children = parent->GetChildren();
-    for (auto& child : children) {
+    const auto& children = parent->GetChildren();
+    for (const auto& child : children) {
         FindAllWithTagsInternal(child, tags, operation, result);
     }
 }

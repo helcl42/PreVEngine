@@ -15,8 +15,6 @@
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
 
-//#define PARALLEL_RENDERING
-
 namespace prev_test::render::renderer {
 class MasterRenderer final : public prev::render::IRenderer<prev::render::DefaultRenderContextUserData> {
 public:
