@@ -62,11 +62,6 @@ void main()
 		discard;
 	}
 
-	if (textureColor.a < 0.5) 
-	{
-		discard;
-	}
-
 	vec3 totalDiffuse = vec3(0.0);
 	vec3 totalSpecular = vec3(0.0);
 	for (uint i = 0; i < uboFS.lightning.realCountOfLights; i++)

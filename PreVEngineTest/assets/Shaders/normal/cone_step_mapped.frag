@@ -64,11 +64,6 @@ void main()
 	// 	discard;
 	// }
 
-	if (textureColor.a < 0.5) 
-	{
-		discard;
-	}
-
 	const vec3 unitToCameraVector = normalize(inToCameraVectorTangentSpace - inWorldPositionTangentSpace);
 
 	vec3 totalDiffuse = vec3(0.0);

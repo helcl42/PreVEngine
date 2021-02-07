@@ -37,11 +37,7 @@ layout(location = 0) out vec4 outColor;
 void main() 
 {
 	vec4 textureColor = texture(colorSampler, inTextureCoord);
-	if (textureColor.a < 0.5) 
-	{
-		discard;
-	}
-
+	
 	float shadow = 1.0;	
 	if(uboFS.castedByShadows != 0)
 	{
