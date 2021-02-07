@@ -44,11 +44,6 @@ void main()
 		shadow = GetShadow(depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.005);
 	}
 
-	if (textureColor.a < 0.5)
-	{
-		discard;
-	}
-
 	const vec3 unitNormal = normalize(inNormal);
 	const vec3 unitToCameraVector = normalize(inToCameraVector);
 
