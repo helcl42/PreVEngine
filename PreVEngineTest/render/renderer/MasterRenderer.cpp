@@ -185,7 +185,7 @@ void MasterRenderer::ShutDownDebug()
 
 void MasterRenderer::InitShadows()
 {
-    const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
+    const auto shadowsComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW }) };
 
     m_shadowRenderers.push_back(std::make_unique<prev_test::render::renderer::shadow::DefaultShadowsRenderer>(shadowsComponent->GetRenderPass()));
     m_shadowRenderers.push_back(std::make_unique<prev_test::render::renderer::shadow::BumpMappedShadowsRenderer>(shadowsComponent->GetRenderPass()));
@@ -219,7 +219,7 @@ void MasterRenderer::ShutDownShadows()
 
 void MasterRenderer::InitReflection()
 {
-    const auto reflectionComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::water::IWaterOffscreenRenderPassComponent>({ TAG_WATER_REFLECTION_RENDER_COMPONENT });
+    const auto reflectionComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::water::IWaterOffscreenRenderPassComponent>({ TAG_WATER_REFLECTION_RENDER_COMPONENT }) };
 
     m_reflectionRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyBoxRenderer>(reflectionComponent->GetRenderPass()));
     m_reflectionRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyRenderer>(reflectionComponent->GetRenderPass()));
@@ -262,7 +262,7 @@ void MasterRenderer::ShutDownReflection()
 
 void MasterRenderer::InitRefraction()
 {
-    const auto refractionComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::water::IWaterOffscreenRenderPassComponent>({ TAG_WATER_REFRACTION_RENDER_COMPONENT });
+    const auto refractionComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::water::IWaterOffscreenRenderPassComponent>({ TAG_WATER_REFRACTION_RENDER_COMPONENT }) };
 
     m_refractionRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyBoxRenderer>(refractionComponent->GetRenderPass()));
     m_refractionRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyRenderer>(refractionComponent->GetRenderPass()));
@@ -305,11 +305,11 @@ void MasterRenderer::ShutDownRefraction()
 
 void MasterRenderer::RenderShadows(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root)
 {
-    const auto shadows = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
+    const auto shadows{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW }) };
 
     for (uint32_t cascadeIndex = 0; cascadeIndex < prev_test::component::shadow::CASCADES_COUNT; cascadeIndex++) {
 
-        const auto cascade = shadows->GetCascade(cascadeIndex);
+        const auto& cascade{ shadows->GetCascade(cascadeIndex) };
 
         const ShadowsRenderContextUserData userData{ cascade.viewMatrix, cascade.projectionMatrix, cascadeIndex, prev_test::common::intersection::Frustum{ cascade.projectionMatrix, cascade.viewMatrix }, shadows->GetExtent() };
         const prev::render::RenderContext customRenderContext{ cascade.frameBuffer, renderContext.commandBuffer, renderContext.frameInFlightIndex, shadows->GetExtent() };
@@ -319,7 +319,7 @@ void MasterRenderer::RenderShadows(const prev::render::RenderContext& renderCont
         }
 
 #ifdef PARALLEL_RENDERING
-        const auto& cascadeCommandBuffers = m_shadowsCommandBufferGroups.at(cascadeIndex)->GetBuffersGroup(renderContext.frameInFlightIndex);
+        const auto& cascadeCommandBuffers{ m_shadowsCommandBufferGroups.at(cascadeIndex)->GetBuffersGroup(renderContext.frameInFlightIndex) };
         RenderParallel(shadows->GetRenderPass(), customRenderContext, root, m_shadowRenderers, cascadeCommandBuffers, userData, { { 0, 0 }, shadows->GetExtent() });
 #else
         RenderSerial(shadows->GetRenderPass(), customRenderContext, root, m_shadowRenderers, userData, { { 0, 0 }, shadows->GetExtent() });
@@ -332,10 +332,10 @@ void MasterRenderer::RenderShadows(const prev::render::RenderContext& renderCont
 
 void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root)
 {
-    const auto reflectionComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::water::IWaterOffscreenRenderPassComponent>({ TAG_WATER_REFLECTION_RENDER_COMPONENT });
-    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
+    const auto reflectionComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::water::IWaterOffscreenRenderPassComponent>({ TAG_WATER_REFLECTION_RENDER_COMPONENT }) };
+    const auto cameraComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA }) };
 
-    const auto cameraPosition{ cameraComponent->GetPosition() };
+    const auto& cameraPosition{ cameraComponent->GetPosition() };
     const auto cameraViewPosition{ cameraComponent->GetPosition() + cameraComponent->GetForwardDirection() };
     const float cameraPositionOffset{ 2.0f * (cameraPosition.y - prev_test::component::water::WATER_LEVEL) };
     const float cameraViewOffset{ 2.0f * (prev_test::component::water::WATER_LEVEL - cameraViewPosition.y) };
@@ -349,7 +349,7 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
         viewMatrix,
         projectionMatrix,
         newCameraPosition,
-        glm::vec4(0.0f, 1.0f, 0.0f, -prev_test::component::water::WATER_LEVEL + prev_test::component::water::WATER_CLIP_PLANE_OFFSET),
+        glm::vec4(0.0f, 1.0f, 0.0f, -(prev_test::component::water::WATER_LEVEL + prev_test::component::water::WATER_CLIP_PLANE_OFFSET)),
         reflectionComponent->GetExtent(),
         glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane()),
         prev_test::common::intersection::Frustum{ projectionMatrix, viewMatrix }
@@ -362,7 +362,7 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
     }
 
 #ifdef PARALLEL_RENDERING
-    const auto& commandBuffers = m_reflectionCommandBufferGroups->GetBuffersGroup(renderContext.frameInFlightIndex);
+    const auto& commandBuffers{ m_reflectionCommandBufferGroups->GetBuffersGroup(renderContext.frameInFlightIndex) };
     RenderParallel(reflectionComponent->GetRenderPass(), customRenderContext, root, m_reflectionRenderers, commandBuffers, userData, { { 0, 0 }, reflectionComponent->GetExtent() });
 #else
     RenderSerial(reflectionComponent->GetRenderPass(), customRenderContext, root, m_reflectionRenderers, userData, { { 0, 0 }, reflectionComponent->GetExtent() });
@@ -375,11 +375,11 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
 
 void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root)
 {
-    const auto refractionComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::water::IWaterOffscreenRenderPassComponent>({ TAG_WATER_REFRACTION_RENDER_COMPONENT });
-    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
+    const auto refractionComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::water::IWaterOffscreenRenderPassComponent>({ TAG_WATER_REFRACTION_RENDER_COMPONENT }) };
+    const auto cameraComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA }) };
 
-    const auto viewMatrix = cameraComponent->LookAt();
-    const auto projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(refractionComponent->GetExtent().width, refractionComponent->GetExtent().height);
+    const auto& viewMatrix{ cameraComponent->LookAt() };
+    const auto projectionMatrix{ cameraComponent->GetViewFrustum().CreateProjectionMatrix(refractionComponent->GetExtent().width, refractionComponent->GetExtent().height) };
     const NormalRenderContextUserData userData{
         viewMatrix,
         projectionMatrix,
@@ -397,7 +397,7 @@ void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& re
     }
 
 #ifdef PARALLEL_RENDERING
-    const auto& commandBuffers = m_refractionCommandBufferGroups->GetBuffersGroup(renderContext.frameInFlightIndex);
+    const auto& commandBuffers{ m_refractionCommandBufferGroups->GetBuffersGroup(renderContext.frameInFlightIndex) };
     RenderParallel(refractionComponent->GetRenderPass(), customRenderContext, root, m_refractionRenderers, commandBuffers, userData, { { 0, 0 }, refractionComponent->GetExtent() });
 #else
     RenderSerial(refractionComponent->GetRenderPass(), customRenderContext, root, m_refractionRenderers, userData, { { 0, 0 }, refractionComponent->GetExtent() });
@@ -410,10 +410,10 @@ void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& re
 
 void MasterRenderer::RenderScene(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root)
 {
-    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
+    const auto cameraComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA }) };
 
-    const auto viewMatrix = cameraComponent->LookAt();
-    const auto projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height);
+    const auto& viewMatrix{ cameraComponent->LookAt() };
+    const auto projectionMatrix{ cameraComponent->GetViewFrustum().CreateProjectionMatrix(renderContext.fullExtent.width, renderContext.fullExtent.height) };
     const NormalRenderContextUserData userData{
         viewMatrix,
         projectionMatrix,
@@ -429,7 +429,7 @@ void MasterRenderer::RenderScene(const prev::render::RenderContext& renderContex
     }
 
 #ifdef PARALLEL_RENDERING
-    const auto& commandBuffers = m_defaultCommandBuffersGroup->GetBuffersGroup(renderContext.frameInFlightIndex);
+    const auto& commandBuffers{ m_defaultCommandBuffersGroup->GetBuffersGroup(renderContext.frameInFlightIndex) };
     RenderParallel(m_defaultRenderPass, renderContext, root, m_defaultRenderers, commandBuffers, userData, { { 0, 0 }, renderContext.fullExtent });
 #else
     RenderSerial(m_defaultRenderPass, renderContext, root, m_defaultRenderers, userData, { { 0, 0 }, renderContext.fullExtent });
@@ -447,7 +447,7 @@ void MasterRenderer::RenderDebug(const prev::render::RenderContext& renderContex
     }
 
 #ifdef PARALLEL_RENDERING
-    const auto& debugCommandBuffers = m_debugCommandBuffersGroup->GetBuffersGroup(renderContext.frameInFlightIndex);
+    const auto& debugCommandBuffers{ m_debugCommandBuffersGroup->GetBuffersGroup(renderContext.frameInFlightIndex) };
     RenderParallel(m_defaultRenderPass, renderContext, root, m_debugRenderers, debugCommandBuffers, {}, { { 0, 0 }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 } });
 #else
     RenderSerial(m_defaultRenderPass, renderContext, root, m_debugRenderers, {}, { { 0, 0 }, { renderContext.fullExtent.width / 2, renderContext.fullExtent.height / 2 } });
