@@ -1,11 +1,11 @@
-#ifndef __IWATER_OFFSCREEN_RENDER_PASS_COMPONENT_H__
-#define __IWATER_OFFSCREEN_RENDER_PASS_COMPONENT_H__
+#ifndef __IOFF_SCREEN_RENDER_PASS_COMPONENT_H__
+#define __IOFF_SCREEN_RENDER_PASS_COMPONENT_H__
 
 #include <prev/core/memory/image/IImageBuffer.h>
 #include <prev/render/pass/RenderPass.h>
 
-namespace prev_test::component::water {
-class IWaterOffscreenRenderPassComponent {
+namespace prev_test::component::common {
+class IOffScreenRenderPassComponent {
 public:
     virtual void Init() = 0;
 
@@ -22,8 +22,8 @@ public:
     virtual VkFramebuffer GetFrameBuffer() const = 0;
 
 public:
-    virtual ~IWaterOffscreenRenderPassComponent() = default;
+    virtual ~IOffScreenRenderPassComponent() = default;
 };
-} // namespace prev_test::component::water
+} // namespace prev_test::component::common
 
-#endif // !__IWATER_OFFSCREEN_RENDER_PASS_COMPONENT_H__
+#endif // !__IOFFSCREEN_RENDER_PASS_COMPONENT_H__

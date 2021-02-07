@@ -1,7 +1,7 @@
 #include "WaterRefraction.h"
 
+#include "../../component/common/OffscreenRenderPassComponentFactory.h"
 #include "../../component/water/WaterCommon.h"
-#include "../../component/water/WaterComponentFactory.h"
 
 #include <prev/scene/component/NodeComponentHelper.h>
 
@@ -44,16 +44,16 @@ void WaterRefraction::operator()(const prev::core::NewIterationEvent& newIterati
 
 void WaterRefraction::CreateRefractionComponent()
 {
-    prev_test::component::water::WaterComponentFactory componentFactory{};
-    m_refractionComponent = componentFactory.CreateOffScreenComponent(m_viewPortSize.x / prev_test::component::water::REFRACTION_EXTENT_DIVIDER, m_viewPortSize.y / prev_test::component::water::REFRACTION_EXTENT_DIVIDER);
+    prev_test::component::common::OffScreenRenderPassComponentFactory componentFactory{};
+    m_refractionComponent = componentFactory.Create(m_viewPortSize.x / prev_test::component::water::REFRACTION_EXTENT_DIVIDER, m_viewPortSize.y / prev_test::component::water::REFRACTION_EXTENT_DIVIDER);
     m_refractionComponent->Init();
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::water::IWaterOffscreenRenderPassComponent>(GetThis(), m_refractionComponent, TAG_WATER_REFRACTION_RENDER_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::common::IOffScreenRenderPassComponent>(GetThis(), m_refractionComponent, TAG_WATER_REFRACTION_RENDER_COMPONENT);
 }
 
 void WaterRefraction::DestroyRefractionComponent()
 {
     if (m_refractionComponent) {
-        prev::scene::component::NodeComponentHelper::RemoveComponent<prev_test::component::water::IWaterOffscreenRenderPassComponent>(GetThis(), TAG_WATER_REFRACTION_RENDER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::RemoveComponent<prev_test::component::common::IOffScreenRenderPassComponent>(GetThis(), TAG_WATER_REFRACTION_RENDER_COMPONENT);
         m_refractionComponent->ShutDown();
     }
 }

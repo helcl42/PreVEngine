@@ -5,7 +5,6 @@
 #include "../../render/model/ModelFactory.h"
 #include "WaterCommon.h"
 #include "WaterComponent.h"
-#include "WaterOffscreenRenderPassComponent.h"
 #include "WaterTileMesh.h"
 
 #include <prev/scene/AllocatorProvider.h>
@@ -27,10 +26,5 @@ std::unique_ptr<IWaterComponent> WaterComponentFactory::Create(const int x, cons
     auto model{ modelFactory.Create(std::move(mesh), *allocator) };
 
     return std::make_unique<WaterComponent>(x, z, std::move(material), std::move(model));
-}
-
-std::unique_ptr<IWaterOffscreenRenderPassComponent> WaterComponentFactory::CreateOffScreenComponent(const uint32_t w, const uint32_t h) const
-{
-    return std::make_unique<WaterOffScreenRenderPassComponent>(w, h);
 }
 } // namespace prev_test::component::water

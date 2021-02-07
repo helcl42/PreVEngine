@@ -14,6 +14,7 @@ FILE(GLOB COMMON_INTERSECTION_SRC_LIST "common/intersection/*.h" "common/interse
 
 FILE(GLOB COMPONENT_SRC_LIST "component/*.h" "component/*.cpp")
 FILE(GLOB COMPONENT_TRANSFORM_SRC_LIST "component/transform/*.h" "component/transform/*.cpp")
+FILE(GLOB COMPONENT_COMMON_SRC_LIST "component/common/*.h" "component/common/*.cpp")
 FILE(GLOB COMPONENT_TIME_SRC_LIST "component/time/*.h" "component/time/*.cpp")
 FILE(GLOB COMPONENT_TERRAIN_SRC_LIST "component/terrain/*.h" "component/terrain/*.cpp")
 FILE(GLOB COMPONENT_SKY_SRC_LIST "component/sky/*.h" "component/sky/*.cpp")
@@ -97,6 +98,7 @@ SOURCE_GROUP("common/intersection" FILES ${COMMON_INTERSECTION_SRC_LIST})
 
 SOURCE_GROUP("component" FILES ${COMPONENT_SRC_LIST})
 SOURCE_GROUP("component/transform" FILES ${COMPONENT_TRANSFORM_SRC_LIST})
+SOURCE_GROUP("component/common" FILES ${COMPONENT_COMMON_SRC_LIST})
 SOURCE_GROUP("component/time" FILES ${COMPONENT_TIME_SRC_LIST})
 SOURCE_GROUP("component/terrain" FILES ${COMPONENT_TERRAIN_SRC_LIST})
 SOURCE_GROUP("component/sky" FILES ${COMPONENT_SKY_SRC_LIST})
@@ -179,6 +181,7 @@ add_executable(${PROJECT_NAME}
     ${COMMON_INTERSECTION_SRC_LIST}
     ${COMPONENT_SRC_LIST}
     ${COMPONENT_TRANSFORM_SRC_LIST}
+    ${COMPONENT_COMMON_SRC_LIST}
     ${COMPONENT_TIME_SRC_LIST}
     ${COMPONENT_TERRAIN_SRC_LIST}
     ${COMPONENT_SKY_SRC_LIST}
