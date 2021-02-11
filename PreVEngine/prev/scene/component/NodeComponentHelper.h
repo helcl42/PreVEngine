@@ -37,7 +37,7 @@ public:
     template <typename ComponentType>
     static void AddComponent(const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const std::shared_ptr<ComponentType>& component, const std::string& tag)
     {
-        ComponentRepository<ComponentType>::Instance().Add(node->GetId(), std::move(component));
+        ComponentRepository<ComponentType>::Instance().Add(node->GetId(), component);
 
         auto tags = node->GetTags();
         tags.Add(tag);
