@@ -53,7 +53,7 @@ void WaterRefraction::CreateRefractionComponent()
 void WaterRefraction::DestroyRefractionComponent()
 {
     if (m_refractionComponent) {
-        prev::scene::component::NodeComponentHelper::RemoveComponent<prev_test::component::common::IOffScreenRenderPassComponent>(GetThis(), TAG_WATER_REFRACTION_RENDER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::RemoveComponents<prev_test::component::common::IOffScreenRenderPassComponent>(GetThis(), TAG_WATER_REFRACTION_RENDER_COMPONENT);
         m_refractionComponent->ShutDown();
     }
 }

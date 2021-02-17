@@ -15,7 +15,7 @@ public:
     template <typename ComponentType>
     static std::shared_ptr<ComponentType> FindOne(const prev::common::TagSet& tagSet, const prev::scene::graph::LogicOperation operation = prev::scene::graph::LogicOperation::OR)
     {
-        const auto node = prev::scene::graph::GraphTraversal::Instance().FindOneWithTags(tagSet, operation);
+        const auto node{ prev::scene::graph::GraphTraversal::Instance().FindOneWithTags(tagSet, operation) };
         if (node == nullptr) {
             throw std::runtime_error("There is no such node..");
         }
@@ -25,19 +25,19 @@ public:
     template <typename ComponentType>
     static std::vector<std::shared_ptr<ComponentType> > FindAll(const prev::common::TagSet& tagSet, const prev::scene::graph::LogicOperation operation = prev::scene::graph::LogicOperation::OR)
     {
-        const auto nodes = prev::scene::graph::GraphTraversal::Instance().FindAllWithTags(tagSet, operation);
-
-        std::vector<std::shared_ptr<ComponentType> > resultComponents(nodes.size());
-        for (size_t i = 0; i < nodes.size(); i++) {
-            resultComponents[i] = ComponentRepository<ComponentType>::Instance().Get(nodes[i]->GetId());
+        std::vector<std::shared_ptr<ComponentType> > resultComponents;
+        const auto nodes{ prev::scene::graph::GraphTraversal::Instance().FindAllWithTags(tagSet, operation) };
+        for (const auto& node : nodes) {
+            const auto nodeComponents{ ComponentRepository<ComponentType>::Instance().GetAll(node->GetId()) };
+            resultComponents.insert(resultComponents.end(), nodeComponents.cbegin(), nodeComponents.cend());
         }
         return resultComponents;
     }
 
     template <typename ComponentType>
-    static void AddComponent(const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const std::shared_ptr<ComponentType>& component, const std::string& tag)
+    static void AddComponents(const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const std::vector<std::shared_ptr<ComponentType> >& components, const std::string& tag)
     {
-        ComponentRepository<ComponentType>::Instance().Add(node->GetId(), component);
+        ComponentRepository<ComponentType>::Instance().Add(node->GetId(), components);
 
         auto tags = node->GetTags();
         tags.Add(tag);
@@ -45,9 +45,15 @@ public:
     }
 
     template <typename ComponentType>
-    static void RemoveComponent(const std::shared_ptr<prev::scene::graph::ISceneNode >& node, const std::string& tag)
+    static void AddComponent(const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const std::shared_ptr<ComponentType>& component, const std::string& tag)
     {
-        const auto component = ComponentRepository<ComponentType>::Instance().Get(node->GetId());
+        AddComponents<ComponentType>(node, { component }, tag);
+    }
+
+    template <typename ComponentType>
+    static void RemoveComponents(const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const std::string& tag)
+    {
+        const auto components{ ComponentRepository<ComponentType>::Instance().Get(node->GetId()) };
 
         ComponentRepository<ComponentType>::Instance().Remove(node->GetId());
 
@@ -57,13 +63,19 @@ public:
     }
 
     template <typename ComponentType>
-    static std::shared_ptr<ComponentType> GetComponent(const std::shared_ptr<prev::scene::graph::ISceneNode >& node)
+    static std::shared_ptr<ComponentType> GetComponent(const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
     {
         return ComponentRepository<ComponentType>::Instance().Get(node->GetId());
     }
 
     template <typename ComponentType>
-    static bool HasComponent(const std::shared_ptr<prev::scene::graph::ISceneNode >& node)
+    static std::vector<std::shared_ptr<ComponentType> > GetComponents(const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
+    {
+        return ComponentRepository<ComponentType>::Instance().GetAll(node->GetId());
+    }
+
+    template <typename ComponentType>
+    static bool HasComponent(const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
     {
         if (node) {
             return ComponentRepository<ComponentType>::Instance().Contains(node->GetId());

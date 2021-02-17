@@ -51,7 +51,7 @@ void RayCaster::ShutDown()
 void RayCaster::RemoveRayCastComponnet()
 {
     if (prev::scene::component::NodeComponentHelper::HasComponent<prev_test::component::ray_casting::IRayCasterComponent>(GetThis())) {
-        prev::scene::component::NodeComponentHelper::RemoveComponent<prev_test::component::ray_casting::IRayCasterComponent>(GetThis(), TAG_RAYCASTER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::RemoveComponents<prev_test::component::ray_casting::IRayCasterComponent>(GetThis(), TAG_RAYCASTER_COMPONENT);
     }
 }
 
