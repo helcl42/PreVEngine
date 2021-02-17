@@ -53,7 +53,7 @@ void WaterReflection::CreateReflectionComponent()
 void WaterReflection::DestroyReflectionComponent()
 {
     if (m_reflectionComponent) {
-        prev::scene::component::NodeComponentHelper::RemoveComponent<prev_test::component::common::IOffScreenRenderPassComponent>(GetThis(), TAG_WATER_REFLECTION_RENDER_COMPONENT);
+        prev::scene::component::NodeComponentHelper::RemoveComponents<prev_test::component::common::IOffScreenRenderPassComponent>(GetThis(), TAG_WATER_REFLECTION_RENDER_COMPONENT);
         m_reflectionComponent->ShutDown();
     }
 }

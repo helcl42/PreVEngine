@@ -8,6 +8,7 @@
 
 #include <map>
 #include <memory>
+#include <vector>
 
 namespace prev::scene::component {
 template <typename ItemType>
@@ -22,16 +23,34 @@ public:
             throw std::runtime_error("Entitity with id = " + std::to_string(id) + " does not exist in this repository.");
         }
 
+        return m_components.at(id).front();
+    }
+
+    const std::vector<std::shared_ptr<ItemType> >& GetAll(const uint64_t id) const
+    {
+        if (!Contains(id)) {
+            throw std::runtime_error("Entitity with id = " + std::to_string(id) + " does not exist in this repository.");
+        }
+
         return m_components.at(id);
     }
 
-    void Add(const uint64_t id, const std::shared_ptr<ItemType>& component)
+    void Add(const uint64_t id, const std::vector<std::shared_ptr<ItemType> >& components)
     {
         if (Contains(id)) {
-            throw std::runtime_error("Entitity with id = " + std::to_string(id) + " already exist in this repository.");
+            const auto& addedComponents{ m_components.at(id) };
+            for (const auto component : components) {
+                if (std::find(addedComponents.cbegin(), addedComponents.cend(), component) != std::end(addedComponents)) {
+                    throw std::runtime_error("Entitity with id = " + std::to_string(id) + " already exist in this repository.");
+                }
+            }
         }
 
-        m_components[id] = component;
+
+
+        for (const auto component : components) {
+            m_components[id].push_back(component);
+        }
     }
 
     void Remove(const uint64_t id)
@@ -48,6 +67,7 @@ public:
         return m_components.find(id) != m_components.cend();
     }
 
+public:
     void operator()(const prev::scene::SceneNodeShutDownEvent& evt)
     {
         if (Contains(evt.id)) {
@@ -62,7 +82,7 @@ private:
     friend class prev::common::pattern::Singleton<ComponentRepository<ItemType> >;
 
 private:
-    std::map<uint64_t, std::shared_ptr<ItemType> > m_components;
+    std::map<uint64_t, std::vector<std::shared_ptr<ItemType> > > m_components;
 
     prev::event::EventHandler<ComponentRepository<ItemType>, prev::scene::SceneNodeShutDownEvent> m_shutDownHandler{ *this };
 };
