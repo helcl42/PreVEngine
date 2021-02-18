@@ -14,9 +14,8 @@ Shadows::Shadows()
 void Shadows::Init()
 {
     prev_test::component::shadow::ShadowsComponentFactory shadowsFactory{};
-    m_shadowsCompoent = shadowsFactory.Create();
-    m_shadowsCompoent->Init();
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::shadow::IShadowsComponent>(GetThis(), m_shadowsCompoent, TAG_SHADOWS_COMPONENT);
+    auto shadowsCompoent{ shadowsFactory.Create() };
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::shadow::IShadowsComponent>(GetThis(), std::move(shadowsCompoent), TAG_SHADOWS_COMPONENT);
 
     SceneNode::Init();
 }
@@ -26,15 +25,16 @@ void Shadows::Update(float deltaTime)
     const auto lightComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
     const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
 
-    m_shadowsCompoent->Update(lightComponent->GetDirection(), lightComponent->GetViewFrustum().GetNearClippingPlane(), lightComponent->GetViewFrustum().GetFarClippingPlane(), lightComponent->GetViewFrustum().CreateProjectionMatrix(1.0f), cameraComponent->LookAt());
+    auto shadowsComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOWS_COMPONENT }) };
+    shadowsComponent->Update(lightComponent->GetDirection(), lightComponent->GetViewFrustum().GetNearClippingPlane(), lightComponent->GetViewFrustum().GetFarClippingPlane(), lightComponent->GetViewFrustum().CreateProjectionMatrix(1.0f), cameraComponent->LookAt());
 
     SceneNode::Update(deltaTime);
 }
 
 void Shadows::ShutDown()
 {
-    SceneNode::ShutDown();
+    prev::scene::component::NodeComponentHelper::RemoveComponents<prev_test::component::shadow::IShadowsComponent>(GetThis(), TAG_SHADOWS_COMPONENT);
 
-    m_shadowsCompoent->ShutDown();
+    SceneNode::ShutDown();
 }
 } // namespace prev_test::scene::shadow
