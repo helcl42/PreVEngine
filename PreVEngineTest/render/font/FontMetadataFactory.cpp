@@ -22,7 +22,7 @@ std::unique_ptr<FontMetadata> FontMetadataFactory::CreateFontMetadata(const std:
     std::map<int, Character> characterMetaData{};
     ExtractCharactersData(metaDataFile, state, characterMetaData);
 
-    std::unique_ptr<FontMetadata> metaData = std::make_unique<FontMetadata>();
+    auto metaData{ std::make_unique<FontMetadata>() };
     metaData->m_image = image;
     metaData->m_imageBuffer = imagwBuffer;
     metaData->m_spaceWidth = state.spaceWidth;
