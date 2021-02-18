@@ -8,16 +8,12 @@
 namespace prev_test::component::shadow {
 class ShadowsComponent : public IShadowsComponent {
 public:
-    ShadowsComponent(const uint32_t cascadesCount);
+    ShadowsComponent(const uint32_t cascadesCount, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::core::memory::image::IImageBuffer>& depthBuffer, const std::vector<ShadowsCascade>& cascades);
 
-    virtual ~ShadowsComponent() = default;
+    virtual ~ShadowsComponent();
 
 public:
-    void Init() override;
-
     void Update(const glm::vec3& lightDirection, const float nearClippingPlane, const float farClippingPlane, const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix) override;
-
-    void ShutDown() override;
 
     std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const override;
 
@@ -28,31 +24,15 @@ public:
     std::shared_ptr<prev::core::memory::image::IImageBuffer> GetImageBuffer() const override;
 
 private:
-    void InitRenderPass();
-
-    void ShutDownRenderPass();
-
-    void InitCascades();
-
-    void ShutDownCascades();
-
-    std::vector<float> GenerateCaascadeSplits(const float nearClippingPlane, const float farClippingPlane) const;
-
     std::vector<glm::vec3> GenerateFrustumCorners(const glm::mat4& inverseWorldToClipSpaceTransform, const float splitDistance, const float lastSplitDistance) const;
 
     glm::vec3 CalculateFrustumCenter(const std::vector<glm::vec3>& frustumCorners) const;
 
     float CalculateFrustumRadius(const std::vector<glm::vec3>& frustumCorners, const glm::vec3& frustumCenter) const;
 
+    std::vector<float> GenerateCaascadeSplits(const float nearClippingPlane, const float farClippingPlane) const;
+
     void UpdateCascade(const glm::vec3& lightDirection, const glm::mat4& inverseCameraTransform, const float nearClippingPlane, const float farClippingPlane, const float splitDistance, const float lastSplitDistance, ShadowsCascade& outCascade) const;
-
-private:
-    static const inline VkFormat DEPTH_FORMAT{ VK_FORMAT_D32_SFLOAT };
-
-    static const inline uint32_t SHADOW_MAP_DIMENSIONS{ 2048 };
-
-
-    static const inline float CASCADES_SPLIT_LAMBDA{ 0.78f };
 
 private:
     const uint32_t m_cascadesCount;
@@ -62,6 +42,9 @@ private:
     std::shared_ptr<prev::core::memory::image::IImageBuffer> m_depthBuffer;
 
     std::vector<ShadowsCascade> m_cascades;
+
+private:
+    static const inline float CASCADES_SPLIT_LAMBDA{ 0.78f };
 };
 } // namespace prev_test::component::shadow
 

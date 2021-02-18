@@ -2,7 +2,6 @@
 #define __SHADOW_H__
 
 #include "../../General.h"
-#include "../../component/shadow/IShadowsComponent.h"
 
 #include <prev/scene/graph/SceneNode.h>
 
@@ -19,9 +18,6 @@ public:
     void Update(float deltaTime) override;
 
     void ShutDown() override;
-
-private:
-    std::shared_ptr<prev_test::component::shadow::IShadowsComponent> m_shadowsCompoent;
 };
 } // namespace prev_test::scene::shadow
 
