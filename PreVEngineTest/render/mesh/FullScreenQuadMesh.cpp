@@ -20,11 +20,6 @@ const void* FullScreenQuadMesh::GetVertexData() const
     return m_vertexDataBuffer.GetData();
 }
 
-const std::vector<glm::vec3>& FullScreenQuadMesh::GetVertices() const
-{
-    return vertices;
-}
-
 uint32_t FullScreenQuadMesh::GerVerticesCount() const
 {
     return static_cast<uint32_t>(vertices.size());

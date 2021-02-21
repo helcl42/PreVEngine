@@ -16,8 +16,6 @@ public:
 
     const void* GetVertexData() const override;
 
-    const std::vector<glm::vec3>& GetVertices() const override;
-
     uint32_t GerVerticesCount() const override;
 
     const std::vector<uint32_t>& GetIndices() const override;

@@ -29,7 +29,7 @@ void Terrain::Init()
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::terrain::ITerrainComponenet>(GetThis(), m_terrainComponent, TAG_TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT);
 
     prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{};
-    m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_terrainComponent->GetModel()->GetMesh()->GetVertices());
+    m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_terrainComponent->GetModel()->GetMesh());
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, TAG_BOUNDING_VOLUME_COMPONENT);
 
     m_transformComponent->SetPosition(m_terrainComponent->GetPosition());

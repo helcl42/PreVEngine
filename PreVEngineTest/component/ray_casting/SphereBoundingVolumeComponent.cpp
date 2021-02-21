@@ -1,13 +1,17 @@
 #include "SphereBoundingVolumeComponent.h"
+
 #include "../../common/intersection/IntersectionTester.h"
+
+#ifdef RENDER_BOUNDING_VOLUMES
 #include "BoundingVolumeModelFactory.h"
+#endif
 
 namespace prev_test::component::ray_casting {
 SphereBoundingVolumeComponent::SphereBoundingVolumeComponent(const prev_test::common::intersection::Sphere& sphere, const float scale, const glm::vec3& offset)
     : m_scale(scale)
     , m_offset(offset)
 {
-    prev_test::common::intersection::Sphere newSphere = OffsetSphere(sphere, offset);
+    auto newSphere = OffsetSphere(sphere, offset);
     m_original = newSphere;
     m_working = newSphere;
 }

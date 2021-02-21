@@ -11,11 +11,6 @@ const void* ModelMesh::GetVertexData() const
     return m_vertexDataBuffer.GetData();
 }
 
-const std::vector<glm::vec3>& ModelMesh::GetVertices() const
-{
-    return m_vertices;
-}
-
 uint32_t ModelMesh::GerVerticesCount() const
 {
     return m_verticesCount;

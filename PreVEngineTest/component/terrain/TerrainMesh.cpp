@@ -11,11 +11,6 @@ const void* TerrainMesh::GetVertexData() const
     return m_vertexDataBuffer.GetData();
 }
 
-const std::vector<glm::vec3>& TerrainMesh::GetVertices() const
-{
-    return m_vertices;
-}
-
 uint32_t TerrainMesh::GerVerticesCount() const
 {
     return m_verticesCount;

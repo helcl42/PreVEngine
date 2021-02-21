@@ -23,7 +23,7 @@ std::unique_ptr<prev_test::render::IMesh> ModelMeshFactory::Create(const std::st
     mesh->m_vertexLayout = GetVertexLayout(flags);
     mesh->m_verticesCount = GetSceneVertexCount(*scene);
     ReadNodeHierarchy(scene->mRootNode, prev_test::render::util::assimp::AssimpGlmConvertor::ToGlmMat4(scene->mRootNode->mTransformation), mesh->m_meshRootNode);
-    ReadMeshes(*scene, flags, mesh->m_vertexDataBuffer, mesh->m_vertices, mesh->m_indices, mesh->m_meshParts);
+    ReadMeshes(*scene, flags, mesh->m_vertexDataBuffer, mesh->m_indices, mesh->m_meshParts);
     return mesh;
 }
 
@@ -169,7 +169,7 @@ uint32_t ModelMeshFactory::GetSceneVertexCount(const aiScene& scene) const
     return vertexCount;
 }
 
-void ModelMeshFactory::ReadMeshes(const aiScene& scene, const prev::common::FlagSet<CreateFlags>& flags, prev_test::render::VertexDataBuffer& inOutVertexBuffer, std::vector<glm::vec3>& inOutVertices, std::vector<uint32_t>& inOutIndices, std::vector<MeshPart>& inOutMeshParts) const
+void ModelMeshFactory::ReadMeshes(const aiScene& scene, const prev::common::FlagSet<CreateFlags>& flags, prev_test::render::VertexDataBuffer& inOutVertexBuffer, std::vector<uint32_t>& inOutIndices, std::vector<MeshPart>& inOutMeshParts) const
 {
     std::vector<VertexBoneData> vertexBoneData;
     if (flags & CreateFlags::ANIMATION) {
@@ -179,14 +179,15 @@ void ModelMeshFactory::ReadMeshes(const aiScene& scene, const prev::common::Flag
     uint32_t vertexBaseOffset{ 0 };
     uint32_t indexBaseOffset{ 0 };
     for (uint32_t meshIndex = 0; meshIndex < scene.mNumMeshes; meshIndex++) {
-        const aiMesh& assMesh = *scene.mMeshes[meshIndex];
+        const aiMesh& assMesh{ *scene.mMeshes[meshIndex] };
 
-        ReadMeshVertexData(assMesh, flags, vertexBoneData, vertexBaseOffset, inOutVertexBuffer, inOutVertices);
+        std::vector<glm::vec3> vertices;
+        ReadMeshVertexData(assMesh, flags, vertexBoneData, vertexBaseOffset, inOutVertexBuffer, vertices);
 
-        const auto meshIndices = ReadMeshIndices(assMesh);
+        const auto meshIndices{ ReadMeshIndices(assMesh) };
         inOutIndices.insert(inOutIndices.end(), meshIndices.begin(), meshIndices.end());
 
-        inOutMeshParts.push_back(MeshPart{ vertexBaseOffset, indexBaseOffset, static_cast<uint32_t>(meshIndices.size()), assMesh.mMaterialIndex });
+        inOutMeshParts.push_back(MeshPart{ vertexBaseOffset, indexBaseOffset, static_cast<uint32_t>(meshIndices.size()), vertices, assMesh.mMaterialIndex });
 
         vertexBaseOffset += assMesh.mNumVertices;
         indexBaseOffset += static_cast<uint32_t>(meshIndices.size());

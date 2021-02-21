@@ -34,11 +34,6 @@ const void* CubeMesh::GetVertexData() const
     return m_vertexDataBuffer.GetData();
 }
 
-const std::vector<glm::vec3>& CubeMesh::GetVertices() const
-{
-    return vertices;
-}
-
 uint32_t CubeMesh::GerVerticesCount() const
 {
     return static_cast<uint32_t>(vertices.size());

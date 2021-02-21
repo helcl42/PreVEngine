@@ -12,11 +12,11 @@
 #include <glm/vec4.hpp>
 
 #include <array>
+#include <cinttypes>
 #include <cmath>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
 #include <thread>
-#include <cinttypes>
 
 #endif

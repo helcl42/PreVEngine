@@ -11,17 +11,20 @@ struct MeshPart {
 
     uint32_t indicesCount;
 
+    std::vector<glm::vec3> vertices;
+
     uint32_t materialIndex;
 
-    MeshPart(const uint32_t indicesCnt)
-        : MeshPart(0, 0, indicesCnt, 0)
+    MeshPart(const uint32_t indicesCnt, const std::vector<glm::vec3>& verts)
+        : MeshPart(0, 0, indicesCnt, verts, 0)
     {
     }
 
-    MeshPart(const uint32_t firstVertex, const uint32_t firstIndex, const uint32_t indicesCnt, const uint32_t materialIdx)
+    MeshPart(const uint32_t firstVertex, const uint32_t firstIndex, const uint32_t indicesCnt, const std::vector<glm::vec3>& verts, const uint32_t materialIdx)
         : firstVertexIndex(firstVertex)
         , firstIndicesIndex(firstIndex)
         , indicesCount(indicesCnt)
+        , vertices(verts)
         , materialIndex(materialIdx)
     {
     }
@@ -33,8 +36,6 @@ struct MeshNode {
     glm::mat4 transform;
 
     std::vector<MeshNode> children;
-
-    MeshNode() = default;
 };
 
 class IMesh {
@@ -42,8 +43,6 @@ public:
     virtual const prev_test::render::VertexLayout& GetVertexLayout() const = 0;
 
     virtual const void* GetVertexData() const = 0;
-
-    virtual const std::vector<glm::vec3>& GetVertices() const = 0;
 
     virtual uint32_t GerVerticesCount() const = 0;
 
