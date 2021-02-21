@@ -9,7 +9,8 @@
 namespace prev_test::component::ray_casting {
 enum class BoundingVolumeType {
     SPHERE = 0,
-    AABB
+    AABB,
+    OBB
 };
 
 class IBoundingVolumeComponent {

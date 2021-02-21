@@ -4,6 +4,71 @@
     (fabsf(x - y) <= FLT_EPSILON * fmaxf(1.0f, fmaxf(fabsf(x), fabsf(y))))
 
 namespace prev_test::common::intersection {
+namespace {
+    struct Interval {
+        float min;
+        float max;
+    };
+
+    static Interval GetInterval(const std::vector<glm::vec3>& points, const glm::vec3& axis)
+    {
+        Interval result{};
+        result.min = result.max = glm::dot(axis, points[0]);
+        for (int i = 1; i < 8; i++) {
+            const float projection{ glm::dot(axis, points[i]) };
+            result.min = (projection < result.min) ? projection : result.min;
+            result.max = (projection > result.max) ? projection : result.max;
+        }
+        return result;
+    }
+
+    static Interval GetInterval(const OBB& obb, const glm::vec3& axis)
+    {
+        const auto obbPoints{ obb.GetPoints() };
+        return GetInterval(obbPoints, axis);
+    }
+
+    static Interval GetInterval(const AABB& aabb, const glm::vec3& axis)
+    {
+        const auto aabbPoints{ aabb.GetPoints() };
+        return GetInterval(aabbPoints, axis);
+    }
+
+    static bool OverlapOnAxis(const AABB& aabb, const OBB& obb, const glm::vec3& axis)
+    {
+        const Interval a{ GetInterval(aabb, axis) };
+        const Interval b{ GetInterval(obb, axis) };
+        return (b.min <= a.max) && (a.min <= b.max);
+    }
+
+    static bool OverlapOnAxis(const OBB& obb1, const OBB& obb2, const glm::vec3& axis)
+    {
+        const Interval a{ GetInterval(obb1, axis) };
+        const Interval b{ GetInterval(obb2, axis) };
+        return (b.min <= a.max) && (a.min <= b.max);
+    }
+
+    static glm::vec3 GetClosestPoint(const OBB& obb, const glm::vec3& point)
+    {
+        const glm::vec3 dir{ point - obb.position };
+        const glm::mat3 orientationMatrix{ glm::mat3_cast(obb.orientation) };
+
+        glm::vec3 result{ obb.position };
+        for (int i = 0; i < 3; i++) {
+            const glm::vec3 axis{ orientationMatrix[i] };
+            float distance{ glm::dot(dir, axis) };
+            if (distance > obb.halfExtents[i]) {
+                distance = obb.halfExtents[i];
+            }
+            if (distance < -obb.halfExtents[i]) {
+                distance = -obb.halfExtents[i];
+            }
+            result = result + (axis * distance);
+        }
+        return result;
+    }
+} // namespace
+
 bool IntersectionTester::Intersects(const Sphere& sphere, const Plane& plane)
 {
     if ((plane.normal.x * sphere.position.x) + (plane.normal.y * sphere.position.y) + (plane.normal.z * sphere.position.z) + plane.distance <= -sphere.radius) {
@@ -14,11 +79,10 @@ bool IntersectionTester::Intersects(const Sphere& sphere, const Plane& plane)
 
 bool IntersectionTester::Intersects(const AABB& box, const Plane& plane)
 {
-    const auto aabbPoints = box.GetPoints();
+    const auto aabbPoints{ box.GetPoints() };
 
-    // TODO - optimize ?
     uint32_t missCount{ 0 };
-    for (const auto aabbPoint : aabbPoints) {
+    for (const auto& aabbPoint : aabbPoints) {
         if (glm::dot(glm::vec4(plane.normal, plane.distance), glm::vec4(aabbPoint, 1.0f)) < 0.0f) {
             missCount++;
         }
@@ -125,6 +189,124 @@ bool IntersectionTester::Intersects(const Frustum& frustum, const AABB& box)
     return true;
 }
 
+bool IntersectionTester::Intersects(const OBB& obb1, const OBB& obb2)
+{
+    const glm::mat3 obbAOrientationMatrix{ glm::mat3_cast(obb1.orientation) };
+    const glm::mat3 obbBOrientationMatrix{ glm::mat3_cast(obb2.orientation) };
+
+    glm::vec3 testAxis[15] = {
+        obbAOrientationMatrix[0],
+        obbAOrientationMatrix[1],
+        obbAOrientationMatrix[2],
+        obbBOrientationMatrix[0],
+        obbBOrientationMatrix[1],
+        obbBOrientationMatrix[2]
+    };
+    for (int i = 0; i < 3; i++) // Fill out rest of axis
+    {
+        testAxis[6 + i * 3 + 0] = glm::cross(testAxis[i], testAxis[0]);
+        testAxis[6 + i * 3 + 1] = glm::cross(testAxis[i], testAxis[1]);
+        testAxis[6 + i * 3 + 2] = glm::cross(testAxis[i], testAxis[2]);
+    }
+
+    for (int i = 0; i < 15; i++) {
+        if (!OverlapOnAxis(obb1, obb2, testAxis[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool IntersectionTester::Intersects(const OBB& obb, const AABB& box)
+{
+    const glm::mat3 obbOrientationMatrix{ glm::mat3_cast(obb.orientation) };
+
+    glm::vec3 test[15] = {
+        glm::vec3(1, 0, 0), // AABB axis 1
+        glm::vec3(0, 1, 0), // AABB axis 2
+        glm::vec3(0, 0, 1), // AABB axis 3
+        glm::vec3(obbOrientationMatrix[0]),
+        glm::vec3(obbOrientationMatrix[1]),
+        glm::vec3(obbOrientationMatrix[2])
+    };
+
+    for (int i = 0; i < 3; i++) // Fill out rest of axis
+    {
+        test[6 + i * 3 + 0] = glm::cross(test[i], test[0]);
+        test[6 + i * 3 + 1] = glm::cross(test[i], test[1]);
+        test[6 + i * 3 + 2] = glm::cross(test[i], test[2]);
+    }
+
+    for (int i = 0; i < 15; i++) {
+        if (!OverlapOnAxis(box, obb, test[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool IntersectionTester::Intersects(const OBB& obb, const Sphere& sphere)
+{
+    const glm::vec3 closestPoint{ GetClosestPoint(obb, sphere.position) };
+    const float distance{ glm::length(closestPoint - sphere.position) };
+    if (distance > sphere.radius) {
+        return false;
+    }
+    return true;
+}
+
+bool IntersectionTester::Intersects(const OBB& obb, const Point& point)
+{
+    const glm::vec3 dir{ point.position - obb.position };
+    const glm::mat3 orientationMatrix{ glm::mat3_cast(obb.orientation) };
+    for (int i = 0; i < 3; i++) {
+        const glm::vec3 axis{ orientationMatrix[i] };
+        const float distance{ glm::dot(dir, axis) };
+        if (distance > obb.halfExtents[i]) {
+            return false;
+        }
+        if (distance < -obb.halfExtents[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool IntersectionTester::Intersects(const OBB& obb, const Frustum& frustum)
+{
+    // check box outside/inside of frustum
+    for (const auto plane : frustum.planes) {
+        if (!Intersects(obb, plane)) {
+            return false;
+        }
+    }
+
+    size_t missedPointsCount{ 0 };
+    for (const auto& frustumPoint : frustum.points) {
+        if (!Intersects(obb, frustumPoint)) {
+            missedPointsCount++;
+        }
+    }
+
+    if (missedPointsCount == frustum.points.size()) {
+        return false;
+    }
+    return true;
+}
+
+bool IntersectionTester::Intersects(const OBB& obb, const Plane& plane)
+{
+    const auto obbPoints{ obb.GetPoints() };
+
+    uint32_t missCount{ 0 };
+    for (const auto& obbPoint : obbPoints) {
+        if (glm::dot(glm::vec4(plane.normal, plane.distance), glm::vec4(obbPoint, 1.0f)) < 0.0f) {
+            missCount++;
+        }
+    }
+    return missCount != obbPoints.size();
+}
+
 bool IntersectionTester::Intersects(const Ray& ray, const AABB& box, RayCastResult& result)
 {
     const glm::vec3 min = box.minExtents;
@@ -226,5 +408,66 @@ bool IntersectionTester::Intersects(const Ray& ray, const Plane& plane, RayCastR
         }
     }
     return false;
+}
+
+bool IntersectionTester::Intersects(const Ray& ray, const OBB& obb, RayCastResult& result)
+{
+    const glm::vec3 size{ obb.halfExtents };
+    const glm::vec3 p{ obb.position - ray.origin };
+
+    const glm::mat3 orientationMatrix{ glm::mat3_cast(obb.orientation) };
+    const glm::vec3 X(orientationMatrix[0]);
+    const glm::vec3 Y(orientationMatrix[1]);
+    const glm::vec3 Z(orientationMatrix[2]);
+
+    const glm::vec3 f{ std::max(glm::dot(X, ray.direction), 0.00001f), std::max(glm::dot(Y, ray.direction), 0.00001f), std::max(glm::dot(Z, ray.direction), 0.00001f) };
+    const glm::vec3 e{ glm::dot(X, p), glm::dot(Y, p), glm::dot(Z, p) };
+    float tArray[] = { 0, 0, 0, 0, 0, 0 };
+    for (int i = 0; i < 3; i++) {
+        if (CMP(f[i], 0)) {
+            if (-e[i] - size[i] > 0 || -e[i] + size[i] < 0) {
+                return false;
+            }
+        }
+
+        tArray[i * 2 + 0] = (e[i] + size[i]) / f[i]; // tmin[x, y, z]
+        tArray[i * 2 + 1] = (e[i] - size[i]) / f[i]; // tmax[x, y, z]
+    }
+
+    const float tmin{ std::fmaxf(std::fmaxf(std::fminf(tArray[0], tArray[1]), std::fminf(tArray[2], tArray[3])), std::fminf(tArray[4], tArray[5])) };
+    const float tmax{ std::fminf(std::fminf(std::fmaxf(tArray[0], tArray[1]), std::fmaxf(tArray[2], tArray[3])), std::fmaxf(tArray[4], tArray[5])) };
+
+    if (tmax < 0) {
+        return false;
+    }
+    if (tmin > tmax) {
+        return false;
+    }
+
+    // If tmin is < 0, tmax is closer
+    float t{ tmin };
+    if (tmin < 0.0f) {
+        t = tmax;
+    }
+
+    glm::vec3 normals[] = {
+        X, // +x
+        X * -1.0f, // -x
+        Y, // +y
+        Y * -1.0f, // -y
+        Z, // +z
+        Z * -1.0f // -z
+    };
+
+    for (int i = 0; i < 6; ++i) {
+        if (CMP(t, tArray[i])) {
+            result.normal = glm::normalize(normals[i]);
+        }
+    }
+    result.hit = true;
+    result.t = t;
+    result.point = ray.origin + t * ray.direction;
+
+    return true;
 }
 } // namespace prev_test::common::intersection

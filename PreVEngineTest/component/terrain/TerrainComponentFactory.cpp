@@ -175,7 +175,8 @@ std::unique_ptr<prev_test::render::IMesh> TerrainComponentFactory::GenerateMesh(
         }
     }
 
-    mesh->m_meshParts.push_back(prev_test::render::MeshPart(static_cast<uint32_t>(vertexData->indices.size())));
+    mesh->m_meshParts.push_back(prev_test::render::MeshPart(static_cast<uint32_t>(vertexData->indices.size()), vertexData->vertices));
+    mesh->m_meshRootNode = prev_test::render::MeshNode{ { 0 }, glm::mat4(1.0f), {} };
 
     return mesh;
 }

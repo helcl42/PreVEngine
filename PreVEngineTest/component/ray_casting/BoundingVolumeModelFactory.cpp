@@ -1,4 +1,5 @@
 #include "BoundingVolumeModelFactory.h"
+
 #include "../../render/model/Model.h"
 
 #include <prev/scene/AllocatorProvider.h>
@@ -39,6 +40,62 @@ std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateAAB
         aabbPoints[7],
         aabbPoints[5],
         aabbPoints[4]
+    };
+
+    const std::vector<uint32_t> indices = {
+        0, 1, 2, 2, 3, 0,
+        4, 5, 6, 6, 7, 4,
+        8, 9, 10, 10, 11, 8,
+        12, 13, 14, 14, 15, 12,
+        16, 17, 18, 18, 19, 16,
+        20, 21, 22, 22, 23, 20
+    };
+
+    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
+
+    auto vertexBuffer{ std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator) };
+    vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
+    auto indexBuffer{ std::make_unique<prev::core::memory::buffer::IndexBuffer>(*allocator) };
+    indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
+
+    return std::make_unique<prev_test::render::model::Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
+}
+
+std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateOBBModel(const prev_test::common::intersection::OBB& obb) const
+{
+    const auto obbPoints{ obb.GetPoints() };
+
+    const std::vector<glm::vec3> vertices = {
+        // front
+        obbPoints[2],
+        obbPoints[6],
+        obbPoints[7],
+        obbPoints[3],
+        // back
+        obbPoints[0],
+        obbPoints[4],
+        obbPoints[5],
+        obbPoints[1],
+        // top
+        obbPoints[3],
+        obbPoints[7],
+        obbPoints[5],
+        obbPoints[1],
+        // bottom
+        obbPoints[2],
+        obbPoints[6],
+        obbPoints[4],
+        obbPoints[0],
+        // left
+        obbPoints[2],
+        obbPoints[3],
+        obbPoints[1],
+        obbPoints[0],
+        // rightt
+        obbPoints[1],
+        obbPoints[7],
+        obbPoints[5],
+        obbPoints[4]
     };
 
     const std::vector<uint32_t> indices = {

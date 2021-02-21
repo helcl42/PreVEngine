@@ -1,19 +1,19 @@
-#ifndef __AABB_BOUNDING_VOLUME_COMPONENT_H__
-#define __AABB_BOUNDING_VOLUME_COMPONENT_H__
+#ifndef __OBB_BOUNDING_VOLUME_COMPONENT_H__
+#define __OBB_BOUNDING_VOLUME_COMPONENT_H__
 
 #include "IBoundingVolumeComponent.h"
 #include "RayCastingCommon.h"
 
-#include "../../common/intersection/AABB.h"
 #include "../../common/intersection/Frustum.h"
+#include "../../common/intersection/OBB.h"
 #include "../../render/IModel.h"
 
 namespace prev_test::component::ray_casting {
-class AABBBoundingVolumeComponent : public IBoundingVolumeComponent {
+class OBBBoundingVolumeComponent : public IBoundingVolumeComponent {
 public:
-    AABBBoundingVolumeComponent(const prev_test::common::intersection::AABB& box, const glm::vec3& scale, const glm::vec3& offset);
+    OBBBoundingVolumeComponent(const prev_test::common::intersection::OBB& obb, const glm::vec3& scale, const glm::vec3& offset);
 
-    ~AABBBoundingVolumeComponent() = default;
+    ~OBBBoundingVolumeComponent() = default;
 
 public:
     bool IsInFrustum(const prev_test::common::intersection::Frustum& frustum) override;
@@ -28,25 +28,25 @@ public:
     std::shared_ptr<prev_test::render::IModel> GetModel() const override;
 #endif
 private:
-    static prev_test::common::intersection::AABB ScaleBox(const prev_test::common::intersection::AABB& box, const glm::vec3& scale);
+    static prev_test::common::intersection::OBB ScaleOBB(const prev_test::common::intersection::OBB& obb, const glm::vec3& scale);
 
-    static prev_test::common::intersection::AABB OffsetBox(const prev_test::common::intersection::AABB& box, const glm::vec3& offset);
+    static prev_test::common::intersection::OBB OffsetOBB(const prev_test::common::intersection::OBB& obb, const glm::vec3& offset);
 
 private:
-    const glm::vec3 m_scale;
+    const glm::vec3& m_scale;
 
     const glm::vec3 m_offset;
 
 #ifdef RENDER_BOUNDING_VOLUMES
     std::shared_ptr<prev_test::render::IModel> m_model;
 #endif
-    prev_test::common::intersection::AABB m_original;
+    prev_test::common::intersection::OBB m_original;
 
-    std::vector<glm::vec3> m_originalAABBPoints;
+    std::vector<glm::vec3> m_originalOBBPoints;
 
-    prev_test::common::intersection::AABB m_working;
+    prev_test::common::intersection::OBB m_working;
 
-    std::vector<glm::vec3> m_vorkingAABBPoints;
+    std::vector<glm::vec3> m_vorkingOBBPoints;
 };
 } // namespace prev_test::component::ray_casting
 

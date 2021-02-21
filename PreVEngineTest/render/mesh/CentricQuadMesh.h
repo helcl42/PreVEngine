@@ -11,8 +11,6 @@ public:
 
     const void* GetVertexData() const override;
 
-    const std::vector<glm::vec3>& GetVertices() const override;
-
     uint32_t GerVerticesCount() const override;
 
     const std::vector<uint32_t>& GetIndices() const override;
@@ -36,7 +34,7 @@ private:
     };
 
     static const inline std::vector<prev_test::render::MeshPart> meshParts = {
-        prev_test::render::MeshPart(static_cast<uint32_t>(indices.size()))
+        prev_test::render::MeshPart(static_cast<uint32_t>(indices.size()), vertices)
     };
 
     static const inline prev_test::render::MeshNode meshRootNode{ { 0 }, glm::mat4(1.0f), {} };

@@ -1,6 +1,23 @@
 #include "MeshUtil.h"
 
 namespace prev_test::render::mesh {
+namespace {
+    void GetAllMeshVerticies(const std::shared_ptr<prev_test::render::IMesh>& mesh, const prev_test::render::MeshNode& parent, std::vector<glm::vec3>& inOutVertices)
+    {
+        const auto& meshParts{ mesh->GetMeshParts() };
+        for (const auto idx : parent.meshPartIndices) {
+            const auto& meshPart{ meshParts[idx] };
+            for (const auto& v : meshPart.vertices) {
+                inOutVertices.push_back(parent.transform * glm::vec4(v, 1.0f));
+            }
+        }
+
+        for (const auto& ch : parent.children) {
+            GetAllMeshVerticies(mesh, ch, inOutVertices);
+        }
+    }
+} // namespace
+
 void MeshUtil::GenerateTangetsAndBiTangents(const std::vector<glm::vec3>& vertices, const std::vector<glm::vec2>& textureCoords, const std::vector<uint32_t>& indices, std::vector<glm::vec3>& outTangents, std::vector<glm::vec3>& outBiTangents)
 {
     outTangents.resize(vertices.size());
@@ -38,5 +55,12 @@ void MeshUtil::GenerateTangetsAndBiTangents(const std::vector<glm::vec3>& vertic
         outTangents[indexC] += tangent;
         outBiTangents[indexC] += biTangent;
     }
+}
+
+std::vector<glm::vec3> MeshUtil::GetMeshTransformedVertices(const std::shared_ptr<prev_test::render::IMesh>& mesh)
+{
+    std::vector<glm::vec3> vertices;
+    GetAllMeshVerticies(mesh, mesh->GetRootNode(), vertices);
+    return vertices;
 }
 } // namespace prev_test::render::mesh

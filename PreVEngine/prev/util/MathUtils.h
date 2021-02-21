@@ -88,6 +88,11 @@ public:
         return (val < min ? min : val > max ? max : val);
     }
 
+    static glm::vec3 ExtractScale(const glm::mat4& transform)
+    {
+        return glm::vec3(transform[0][0], transform[1][1], transform[2][2]);
+    }
+
     static glm::vec3 ExtractTranslation(const glm::mat4& transform)
     {
         return glm::vec3(transform[3][0], transform[3][1], transform[3][2]);
@@ -95,17 +100,21 @@ public:
 
     static glm::mat4 ExtractRotation(const glm::mat4& transform)
     {
-        return glm::mat4(glm::mat3(transform));
+        const auto scale{ ExtractScale(transform) };
+        glm::mat3 transform33(transform);
+        transform33 /= scale;
+        return glm::mat4(transform33);
     }
 
-    static glm::quat ExtractOrientation(const glm::mat4& transform)
+    static glm::quat ExtractRotationAsQuaternion(const glm::mat4& transform)
     {
-        return glm::quat_cast(transform);
+        const auto rotation{ ExtractRotation(transform) };
+        return glm::normalize(glm::quat_cast(rotation));
     }
 
     static uint32_t Log2(const uint32_t x)
     {
-        return (uint32_t)(log(x) / log(2));
+        return static_cast<uint32_t>(log(x) / log(2));
     }
 
     static uint32_t RoundUp(const uint32_t val, const uint32_t toDivBy)

@@ -11,11 +11,6 @@ const void* WaterTileMesh::GetVertexData() const
     return (const void*)vertices.data();
 }
 
-const std::vector<glm::vec3>& WaterTileMesh::GetVertices() const
-{
-    return vertices;
-}
-
 uint32_t WaterTileMesh::GerVerticesCount() const
 {
     return static_cast<uint32_t>(vertices.size());

@@ -7,12 +7,14 @@ TextMesh::TextMesh(const std::vector<glm::vec2>& vertices, const std::vector<glm
     , m_indices(indices)
 {
     for (size_t i = 0; i < vertices.size(); i++) {
-        m_vertexDataBuffer.Add(vertices[i]);
+        const auto pt2d{ vertices[i] };
+        const auto pt3d{ glm::vec3{ pt2d.x, pt2d.y, 0.0f } };
+        m_vertexDataBuffer.Add(pt2d);
         m_vertexDataBuffer.Add(textureCoords[i]);
-        m_vertices.push_back(glm::vec3(vertices[i].x, vertices[i].y, 0.0f));
+        m_vertices.push_back(pt3d);
     }
 
-    m_meshParts.push_back(prev_test::render::MeshPart(static_cast<uint32_t>(m_indices.size())));
+    m_meshParts.push_back(prev_test::render::MeshPart(static_cast<uint32_t>(m_indices.size()), m_vertices));
 }
 
 const prev_test::render::VertexLayout& TextMesh::GetVertexLayout() const
@@ -23,11 +25,6 @@ const prev_test::render::VertexLayout& TextMesh::GetVertexLayout() const
 const void* TextMesh::GetVertexData() const
 {
     return m_vertexDataBuffer.GetData();
-}
-
-const std::vector<glm::vec3>& TextMesh::GetVertices() const
-{
-    return m_vertices;
 }
 
 uint32_t TextMesh::GerVerticesCount() const

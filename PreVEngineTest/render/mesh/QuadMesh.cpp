@@ -35,11 +35,6 @@ const void* QuadMesh::GetVertexData() const
     return m_vertexDataBuffer.GetData();
 }
 
-const std::vector<glm::vec3>& QuadMesh::GetVertices() const
-{
-    return vertices;
-}
-
 uint32_t QuadMesh::GerVerticesCount() const
 {
     return static_cast<uint32_t>(vertices.size());

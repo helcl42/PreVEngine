@@ -44,7 +44,7 @@ private:
 
     uint32_t GetSceneVertexCount(const aiScene& scene) const;
 
-    void ReadMeshes(const aiScene& scene, const prev::common::FlagSet<CreateFlags>& flags, prev_test::render::VertexDataBuffer& inOutVertexBuffer, std::vector<glm::vec3>& inOutVertices, std::vector<uint32_t>& inOutIndices, std::vector<MeshPart>& inOutMeshParts) const;
+    void ReadMeshes(const aiScene& scene, const prev::common::FlagSet<CreateFlags>& flags, prev_test::render::VertexDataBuffer& inOutVertexBuffer, std::vector<uint32_t>& inOutIndices, std::vector<MeshPart>& inOutMeshParts) const;
 };
 
 } // namespace prev_test::render::mesh

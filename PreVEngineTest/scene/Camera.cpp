@@ -67,7 +67,7 @@ void Camera::Update(float deltaTime)
     glm::mat4 cameraTransformInWorldSpace = glm::inverse(viewMatrix);
 
     m_transformComponent->SetPosition(prev::util::MathUtil::ExtractTranslation(cameraTransformInWorldSpace));
-    m_transformComponent->SetOrientation(prev::util::MathUtil::ExtractOrientation(cameraTransformInWorldSpace));
+    m_transformComponent->SetOrientation(prev::util::MathUtil::ExtractRotationAsQuaternion(cameraTransformInWorldSpace));
 
     m_transformComponent->Update(deltaTime);
 
