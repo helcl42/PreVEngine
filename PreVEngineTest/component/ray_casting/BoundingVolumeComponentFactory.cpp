@@ -51,7 +51,6 @@ prev_test::common::intersection::OBB BoundingVolumeComponentFactory::CreateOBBFr
     }
     centroid /= static_cast<float>(vertices.size());
 
-    // TODO -> find eigen vectors
     glm::mat3 covarianceMatrix{ 0.0f };
     for (const auto& v : vertices) {
         covarianceMatrix += glm::outerProduct(v - centroid, v - centroid);
