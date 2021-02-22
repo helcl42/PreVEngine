@@ -24,7 +24,8 @@ OBBBoundingVolumeComponent::OBBBoundingVolumeComponent(const prev_test::common::
 
 bool OBBBoundingVolumeComponent::IsInFrustum(const prev_test::common::intersection::Frustum& frustum)
 {
-    return prev_test::common::intersection::IntersectionTester::Intersects(m_working, frustum);
+    //return prev_test::common::intersection::IntersectionTester::Intersects(m_working, frustum);
+    return true;
 }
 
 bool OBBBoundingVolumeComponent::Intersects(const prev_test::common::intersection::Ray& ray, prev_test::common::intersection::RayCastResult& result)
@@ -38,7 +39,7 @@ void OBBBoundingVolumeComponent::Update(const glm::mat4& worldTransform)
     const auto translation{ prev::util::MathUtil::ExtractTranslation(worldTransform) };
     const auto scale{ prev::util::MathUtil::ExtractScale(worldTransform) };
 
-    m_working = prev_test::common::intersection::OBB{ rotation * m_original.orientation, m_original.position + translation, m_original.halfExtents * scale };
+    m_working = prev_test::common::intersection::OBB{ m_original.orientation * rotation, m_original.position + translation, m_original.halfExtents * scale };
     m_vorkingOBBPoints = m_working.GetPoints();
 
 #ifdef RENDER_BOUNDING_VOLUMES

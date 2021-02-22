@@ -5,6 +5,7 @@
 
 #include "../../common/intersection/AABB.h"
 #include "../../common/intersection/OBB.h"
+#include "../../common/intersection/Sphere.h"
 
 namespace prev_test::component::ray_casting {
 class BoundingVolumeComponentFactory final {
@@ -19,6 +20,12 @@ private:
     prev_test::common::intersection::AABB CreateAABBFromVertices(const std::vector<glm::vec3>& vertices) const;
 
     prev_test::common::intersection::OBB CreateOBBFromVertices(const std::vector<glm::vec3>& vertices) const;
+
+    prev_test::common::intersection::Sphere CreateSphereFromVertices(const std::vector<glm::vec3>& vertices) const;
+
+    prev_test::common::intersection::OBB CreateOBBFromAABB(const prev_test::common::intersection::AABB& box) const;
+
+    prev_test::common::intersection::Sphere CreateSphereFromAABB(const prev_test::common::intersection::AABB& box) const;
 };
 } // namespace prev_test::component::ray_casting
 
