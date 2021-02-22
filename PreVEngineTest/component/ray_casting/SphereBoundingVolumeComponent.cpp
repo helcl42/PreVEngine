@@ -6,12 +6,15 @@
 #include "BoundingVolumeModelFactory.h"
 #endif
 
+#include <prev/util/MathUtils.h>
+
 namespace prev_test::component::ray_casting {
 SphereBoundingVolumeComponent::SphereBoundingVolumeComponent(const prev_test::common::intersection::Sphere& sphere, const float scale, const glm::vec3& offset)
     : m_scale(scale)
     , m_offset(offset)
 {
     auto newSphere = OffsetSphere(sphere, offset);
+    newSphere = ScaleSphere(newSphere, scale);
     m_original = newSphere;
     m_working = newSphere;
 }
@@ -28,8 +31,10 @@ bool SphereBoundingVolumeComponent::Intersects(const prev_test::common::intersec
 
 void SphereBoundingVolumeComponent::Update(const glm::mat4& worldTransform)
 {
-    m_working.position = worldTransform * glm::vec4(m_original.position, 1.0f);
-    m_working.radius = m_original.radius * m_scale;
+    const auto translation{ prev::util::MathUtil::ExtractTranslation(worldTransform) };
+    const auto scale{ prev::util::MathUtil::ExtractScale(worldTransform) };
+
+    m_working = prev_test::common::intersection::Sphere{ translation + m_original.position * scale, m_original.radius * glm::length(scale) };
 #ifdef RENDER_BOUNDING_VOLUMES
     BoundingVolumeModelFactory modelFactory{};
     m_model = modelFactory.CreateSphereModel(m_working);
@@ -50,17 +55,11 @@ std::shared_ptr<prev_test::render::IModel> SphereBoundingVolumeComponent::GetMod
 
 prev_test::common::intersection::Sphere SphereBoundingVolumeComponent::ScaleSphere(const prev_test::common::intersection::Sphere& sphere, const float scale)
 {
-    prev_test::common::intersection::Sphere result{};
-    result.radius = sphere.radius * scale;
-    result.position = sphere.position;
-    return result;
+    return prev_test::common::intersection::Sphere{ sphere.position, sphere.radius * scale };
 }
 
 prev_test::common::intersection::Sphere SphereBoundingVolumeComponent::OffsetSphere(const prev_test::common::intersection::Sphere& sphere, const glm::vec3& offset)
 {
-    prev_test::common::intersection::Sphere result{};
-    result.radius = sphere.radius;
-    result.position = sphere.position + offset;
-    return result;
+    return prev_test::common::intersection::Sphere{ sphere.position + offset, sphere.radius };
 }
 } // namespace prev_test::component::ray_casting

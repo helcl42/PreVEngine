@@ -72,17 +72,11 @@ std::shared_ptr<prev_test::render::IModel> AABBBoundingVolumeComponent::GetModel
 
 prev_test::common::intersection::AABB AABBBoundingVolumeComponent::ScaleBox(const prev_test::common::intersection::AABB& box, const glm::vec3& scale)
 {
-    prev_test::common::intersection::AABB result{};
-    result.minExtents = box.minExtents * scale;
-    result.maxExtents = box.maxExtents * scale;
-    return result;
+    return prev_test::common::intersection::AABB{ box.minExtents * scale, box.maxExtents * scale };
 }
 
 prev_test::common::intersection::AABB AABBBoundingVolumeComponent::OffsetBox(const prev_test::common::intersection::AABB& box, const glm::vec3& offset)
 {
-    prev_test::common::intersection::AABB result{};
-    result.minExtents = box.minExtents + offset;
-    result.maxExtents = box.maxExtents + offset;
-    return result;
+    return prev_test::common::intersection::AABB{ box.minExtents + offset, box.maxExtents + offset };
 }
 } // namespace prev_test::component::ray_casting
