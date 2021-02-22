@@ -39,7 +39,7 @@ void OBBBoundingVolumeComponent::Update(const glm::mat4& worldTransform)
     const auto translation{ prev::util::MathUtil::ExtractTranslation(worldTransform) };
     const auto scale{ prev::util::MathUtil::ExtractScale(worldTransform) };
 
-    m_working = prev_test::common::intersection::OBB{ m_original.orientation * rotation, m_original.position + translation, m_original.halfExtents * scale };
+    m_working = prev_test::common::intersection::OBB{ rotation * m_original.orientation, m_original.position * scale + translation, m_original.halfExtents * scale };
     m_vorkingOBBPoints = m_working.GetPoints();
 
 #ifdef RENDER_BOUNDING_VOLUMES
