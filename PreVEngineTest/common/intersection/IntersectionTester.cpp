@@ -129,9 +129,9 @@ bool IntersectionTester::Intersects(const Sphere& sphere1, const Sphere& sphere2
 bool IntersectionTester::Intersects(const Sphere& sphere, const AABB& box)
 {
     // get box closest point to sphere center by clamping
-    const float x = std::max(box.minExtents.x, std::min(sphere.position.x, box.maxExtents.x));
-    const float y = std::max(box.minExtents.y, std::min(sphere.position.y, box.maxExtents.y));
-    const float z = std::max(box.minExtents.z, std::min(sphere.position.z, box.maxExtents.z));
+    const float x{ std::max(box.minExtents.x, std::min(sphere.position.x, box.maxExtents.x)) };
+    const float y{ std::max(box.minExtents.y, std::min(sphere.position.y, box.maxExtents.y)) };
+    const float z{ std::max(box.minExtents.z, std::min(sphere.position.z, box.maxExtents.z)) };
 
     return Intersects(sphere, Point{ glm::vec3{ x, y, z } });
 }
@@ -159,33 +159,23 @@ bool IntersectionTester::Intersects(const Frustum& frustum, const Sphere& sphere
 bool IntersectionTester::Intersects(const Frustum& frustum, const AABB& box)
 {
     // check box outside/inside of frustum
-    for (const auto plane : frustum.planes) {
+    for (const auto& plane : frustum.planes) {
         if (!Intersects(box, plane)) {
             return false;
         }
     }
 
-    // check frustum corners outside/inside box
-    for (auto i = 0; i < box.maxExtents.length(); i++) {
-        uint32_t out = 0;
-        for (const auto point : frustum.points) {
-            if (point.position[i] > box.maxExtents[i]) {
-                out++;
-            }
-        }
-        if (out == frustum.points.size()) {
-            return false;
-        }
-        out = 0;
-        for (const auto point : frustum.points) {
-            if (point.position[i] < box.minExtents[i]) {
-                out++;
-            }
-        }
-        if (out == frustum.points.size()) {
-            return false;
+    uint32_t missCount{ 9 };
+    for (const auto& point : frustum.points) {
+        if (!Intersects(box, point.position)) {
+            missCount++;
         }
     }
+
+    if (missCount == frustum.points.size()) {
+        return false;
+    }
+
     return true;
 }
 
@@ -275,22 +265,23 @@ bool IntersectionTester::Intersects(const OBB& obb, const Point& point)
 bool IntersectionTester::Intersects(const OBB& obb, const Frustum& frustum)
 {
     // check box outside/inside of frustum
-    for (const auto plane : frustum.planes) {
+    for (const auto& plane : frustum.planes) {
         if (!Intersects(obb, plane)) {
             return false;
         }
     }
 
-    size_t missedPointsCount{ 0 };
-    for (const auto& frustumPoint : frustum.points) {
-        if (!Intersects(obb, frustumPoint)) {
-            missedPointsCount++;
+    uint32_t missCount{ 9 };
+    for (const auto& point : frustum.points) {
+        if (!Intersects(obb, point.position)) {
+            missCount++;
         }
     }
 
-    if (missedPointsCount == frustum.points.size()) {
+    if (missCount == frustum.points.size()) {
         return false;
     }
+
     return true;
 }
 
@@ -312,13 +303,13 @@ bool IntersectionTester::Intersects(const Ray& ray, const AABB& box, RayCastResu
     const glm::vec3 min = box.minExtents;
     const glm::vec3 max = box.maxExtents;
 
-    const float SMALL_FLOAT = 0.00001f;
-    float t1 = (min.x - ray.origin.x) / (CMP(ray.direction.x, 0.0f) ? SMALL_FLOAT : ray.direction.x);
-    float t2 = (max.x - ray.origin.x) / (CMP(ray.direction.x, 0.0f) ? SMALL_FLOAT : ray.direction.x);
-    float t3 = (min.y - ray.origin.y) / (CMP(ray.direction.y, 0.0f) ? SMALL_FLOAT : ray.direction.y);
-    float t4 = (max.y - ray.origin.y) / (CMP(ray.direction.y, 0.0f) ? SMALL_FLOAT : ray.direction.y);
-    float t5 = (min.z - ray.origin.z) / (CMP(ray.direction.z, 0.0f) ? SMALL_FLOAT : ray.direction.z);
-    float t6 = (max.z - ray.origin.z) / (CMP(ray.direction.z, 0.0f) ? SMALL_FLOAT : ray.direction.z);
+    const float EPSILON{ 0.00001f };
+    float t1 = (min.x - ray.origin.x) / (CMP(ray.direction.x, 0.0f) ? EPSILON : ray.direction.x);
+    float t2 = (max.x - ray.origin.x) / (CMP(ray.direction.x, 0.0f) ? EPSILON : ray.direction.x);
+    float t3 = (min.y - ray.origin.y) / (CMP(ray.direction.y, 0.0f) ? EPSILON : ray.direction.y);
+    float t4 = (max.y - ray.origin.y) / (CMP(ray.direction.y, 0.0f) ? EPSILON : ray.direction.y);
+    float t5 = (min.z - ray.origin.z) / (CMP(ray.direction.z, 0.0f) ? EPSILON : ray.direction.z);
+    float t6 = (max.z - ray.origin.z) / (CMP(ray.direction.z, 0.0f) ? EPSILON : ray.direction.z);
 
     float tmin = std::fmaxf(std::fmaxf(std::fminf(t1, t2), std::fminf(t3, t4)), std::fminf(t5, t6));
     float tmax = std::fminf(std::fminf(std::fmaxf(t1, t2), std::fmaxf(t3, t4)), std::fmaxf(t5, t6));
@@ -348,7 +339,7 @@ bool IntersectionTester::Intersects(const Ray& ray, const AABB& box, RayCastResu
     };
 
     glm::vec3 resultNormal;
-    float t[] = { t1, t2, t3, t4, t5, t6 };
+    const float t[] = { t1, t2, t3, t4, t5, t6 };
     for (auto i = 0; i < 6; ++i) {
         if (CMP(tResult, t[i])) {
             resultNormal = normals[i];
@@ -365,18 +356,18 @@ bool IntersectionTester::Intersects(const Ray& ray, const AABB& box, RayCastResu
 
 bool IntersectionTester::Intersects(const Ray& ray, const Sphere& sphere, RayCastResult& result)
 {
-    const glm::vec3 e = sphere.position - ray.origin;
-    const float radiusSquared = sphere.radius * sphere.radius;
+    const auto e{ sphere.position - ray.origin };
+    const float radiusSquared{ sphere.radius * sphere.radius };
 
-    float eSq = glm::dot(e, e); // squared distance
-    float a = glm::dot(e, ray.direction);
+    const float eSq{ glm::dot(e, e) }; // squared distance
+    const float a{ glm::dot(e, ray.direction) };
 
     if (radiusSquared - (eSq - a * a) < 0.0f) {
         return false;
     }
 
-    float bSq = eSq - (a * a);
-    float f = sqrt(fabsf(radiusSquared - bSq));
+    const float bSq{ eSq - (a * a) };
+    const float f{ sqrt(fabsf(radiusSquared - bSq)) };
 
     float t;
     if (eSq < radiusSquared) { // Ray starts inside the sphere
@@ -394,7 +385,7 @@ bool IntersectionTester::Intersects(const Ray& ray, const Sphere& sphere, RayCas
 
 bool IntersectionTester::Intersects(const Ray& ray, const Plane& plane, RayCastResult& result)
 {
-    const float EPSILON = 0.0001f;
+    const float EPSILON{ 0.0001f };
     float denom = glm::dot(ray.direction, plane.normal);
     if (fabsf(denom) > EPSILON) {
         float pn = glm::dot(ray.origin, plane.normal);
@@ -420,16 +411,20 @@ bool IntersectionTester::Intersects(const Ray& ray, const OBB& obb, RayCastResul
     const glm::vec3 Y(orientationMatrix[1]);
     const glm::vec3 Z(orientationMatrix[2]);
 
-    const glm::vec3 f{ std::max(glm::dot(X, ray.direction), 0.00001f), std::max(glm::dot(Y, ray.direction), 0.00001f), std::max(glm::dot(Z, ray.direction), 0.00001f) };
-    const glm::vec3 e{ glm::dot(X, p), glm::dot(Y, p), glm::dot(Z, p) };
+    const float EPSILON{ 0.0001f };
+
+    glm::vec3 f{ glm::dot(X, ray.direction), glm::dot(Y, ray.direction), glm::dot(Z, ray.direction) };
+    glm::vec3 e{ glm::dot(X, p), glm::dot(Y, p), glm::dot(Z, p) };
+
     float tArray[] = { 0, 0, 0, 0, 0, 0 };
     for (int i = 0; i < 3; i++) {
         if (CMP(f[i], 0)) {
             if (-e[i] - size[i] > 0 || -e[i] + size[i] < 0) {
                 return false;
             }
-        }
 
+            f[i] = EPSILON; // Avoid div by 0!
+        }
         tArray[i * 2 + 0] = (e[i] + size[i]) / f[i]; // tmin[x, y, z]
         tArray[i * 2 + 1] = (e[i] - size[i]) / f[i]; // tmax[x, y, z]
     }

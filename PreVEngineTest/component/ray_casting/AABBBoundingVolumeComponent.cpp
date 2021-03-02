@@ -34,12 +34,12 @@ bool AABBBoundingVolumeComponent::Intersects(const prev_test::common::intersecti
 
 void AABBBoundingVolumeComponent::Update(const glm::mat4& worldTransform)
 {
-    const auto rotation{ prev::util::MathUtil::ExtractRotation(worldTransform) };
-    const auto translation{ prev::util::MathUtil::ExtractTranslation(worldTransform) };
-    const auto scale{ prev::util::MathUtil::ExtractScale(worldTransform) };
+    glm::quat rotation;
+    glm::vec3 translation, scale;
+    prev::util::MathUtil::DecomposeTransform(worldTransform, rotation, translation, scale);
 
     for (auto i = 0; i < m_originalAABBPoints.size(); i++) {
-        m_vorkingAABBPoints[i] = glm::scale(glm::mat4(1.0f), scale) * rotation * glm::vec4(m_originalAABBPoints[i], 1.0f);
+        m_vorkingAABBPoints[i] = glm::scale(glm::mat4(1.0f), scale) * glm::mat4_cast(rotation) * glm::vec4(m_originalAABBPoints[i], 1.0f);
     }
 
     glm::vec3 minBound{ std::numeric_limits<float>::max() };
