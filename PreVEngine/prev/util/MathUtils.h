@@ -45,10 +45,10 @@ public:
 
     static float BarryCentric(const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, const glm::vec2& pos)
     {
-        float det = (p2.z - p3.z) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.z - p3.z);
-        float l1 = ((p2.z - p3.z) * (pos.x - p3.x) + (p3.x - p2.x) * (pos.y - p3.z)) / det;
-        float l2 = ((p3.z - p1.z) * (pos.x - p3.x) + (p1.x - p3.x) * (pos.y - p3.z)) / det;
-        float l3 = 1.0f - l1 - l2;
+        const float det{ (p2.z - p3.z) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.z - p3.z) };
+        const float l1{ ((p2.z - p3.z) * (pos.x - p3.x) + (p3.x - p2.x) * (pos.y - p3.z)) / det };
+        const float l2{ ((p3.z - p1.z) * (pos.x - p3.x) + (p1.x - p3.x) * (pos.y - p3.z)) / det };
+        const float l3{ 1.0f - l1 - l2 };
         return l1 * p1.y + l2 * p2.y + l3 * p3.y;
     }
 
@@ -88,28 +88,36 @@ public:
         return (val < min ? min : val > max ? max : val);
     }
 
+    static bool DecomposeTransform(const glm::mat4& transform, glm::quat& rotation, glm::vec3& translation, glm::vec3& scale)
+    {
+        return glm::decompose(transform, scale, rotation, translation, glm::vec3{}, glm::vec4{});
+    }
+
     static glm::vec3 ExtractScale(const glm::mat4& transform)
     {
-        return glm::vec3(transform[0][0], transform[1][1], transform[2][2]);
+        glm::vec3 scale;
+        DecomposeTransform(transform, glm::quat{}, glm::vec3{}, scale);
+        return scale;
     }
 
     static glm::vec3 ExtractTranslation(const glm::mat4& transform)
     {
-        return glm::vec3(transform[3][0], transform[3][1], transform[3][2]);
+        glm::vec3 translation;
+        DecomposeTransform(transform, glm::quat{}, translation, glm::vec3{});
+        return translation;
     }
 
     static glm::mat4 ExtractRotation(const glm::mat4& transform)
     {
-        const auto scale{ ExtractScale(transform) };
-        glm::mat3 transform33(transform);
-        transform33 /= scale;
-        return glm::mat4(transform33);
+        const auto rotAsQuat{ ExtractRotationAsQuaternion(transform) };
+        return glm::mat4_cast(rotAsQuat);
     }
 
     static glm::quat ExtractRotationAsQuaternion(const glm::mat4& transform)
     {
-        const auto rotation{ ExtractRotation(transform) };
-        return glm::normalize(glm::quat_cast(rotation));
+        glm::quat rot;
+        DecomposeTransform(transform, rot, glm::vec3{}, glm::vec3{});
+        return rot;
     }
 
     static uint32_t Log2(const uint32_t x)
