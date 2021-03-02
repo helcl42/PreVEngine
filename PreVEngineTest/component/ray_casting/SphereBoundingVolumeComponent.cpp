@@ -31,8 +31,9 @@ bool SphereBoundingVolumeComponent::Intersects(const prev_test::common::intersec
 
 void SphereBoundingVolumeComponent::Update(const glm::mat4& worldTransform)
 {
-    const auto translation{ prev::util::MathUtil::ExtractTranslation(worldTransform) };
-    const auto scale{ prev::util::MathUtil::ExtractScale(worldTransform) };
+    glm::quat rotation;
+    glm::vec3 translation, scale;
+    prev::util::MathUtil::DecomposeTransform(worldTransform, rotation, translation, scale);
 
     m_working = prev_test::common::intersection::Sphere{ translation + m_original.position * scale, m_original.radius * glm::length(scale) };
 #ifdef RENDER_BOUNDING_VOLUMES

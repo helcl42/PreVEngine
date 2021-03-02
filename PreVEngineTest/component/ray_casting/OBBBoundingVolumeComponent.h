@@ -42,11 +42,7 @@ private:
 #endif
     prev_test::common::intersection::OBB m_original;
 
-    std::vector<glm::vec3> m_originalOBBPoints;
-
     prev_test::common::intersection::OBB m_working;
-
-    std::vector<glm::vec3> m_vorkingOBBPoints;
 };
 } // namespace prev_test::component::ray_casting
 

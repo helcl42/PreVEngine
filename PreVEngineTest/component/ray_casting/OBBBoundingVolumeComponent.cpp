@@ -18,14 +18,11 @@ OBBBoundingVolumeComponent::OBBBoundingVolumeComponent(const prev_test::common::
 
     m_original = newBox;
     m_working = newBox;
-    m_originalOBBPoints = newBox.GetPoints();
-    m_vorkingOBBPoints = newBox.GetPoints();
 }
 
 bool OBBBoundingVolumeComponent::IsInFrustum(const prev_test::common::intersection::Frustum& frustum)
 {
-    //return prev_test::common::intersection::IntersectionTester::Intersects(m_working, frustum);
-    return true;
+    return prev_test::common::intersection::IntersectionTester::Intersects(m_working, frustum);
 }
 
 bool OBBBoundingVolumeComponent::Intersects(const prev_test::common::intersection::Ray& ray, prev_test::common::intersection::RayCastResult& result)
@@ -35,12 +32,11 @@ bool OBBBoundingVolumeComponent::Intersects(const prev_test::common::intersectio
 
 void OBBBoundingVolumeComponent::Update(const glm::mat4& worldTransform)
 {
-    const auto rotation{ prev::util::MathUtil::ExtractRotationAsQuaternion(worldTransform) };
-    const auto translation{ prev::util::MathUtil::ExtractTranslation(worldTransform) };
-    const auto scale{ prev::util::MathUtil::ExtractScale(worldTransform) };
+    glm::quat rotation;
+    glm::vec3 translation, scale;
+    prev::util::MathUtil::DecomposeTransform(worldTransform, rotation, translation, scale);
 
-    m_working = prev_test::common::intersection::OBB{ rotation * m_original.orientation, m_original.position * scale + translation, m_original.halfExtents * scale };
-    m_vorkingOBBPoints = m_working.GetPoints();
+    m_working = prev_test::common::intersection::OBB{ rotation, m_original.position * scale + translation, m_original.GetHalfSize() * scale };
 
 #ifdef RENDER_BOUNDING_VOLUMES
     BoundingVolumeModelFactory modelFactory{};
