@@ -335,7 +335,6 @@ Event WindowWin32::GetEvent(bool waitForEvent)
             }
         }
         case WM_CLOSE: {
-            LOGI("WM_CLOSE\n");
             return OnCloseEvent();
         }
 #ifdef ENABLE_MULTITOUCH
@@ -371,7 +370,6 @@ LRESULT CALLBACK WindowWin32::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
         PostMessage(hWnd, WM_CLOSE, 0, 0); // for OnCloseEvent
         return 0;
     case WM_DESTROY:
-        LOGI("WM_DESTROY\n");
         PostQuitMessage(0);
         return 0;
     case WM_PAINT:
