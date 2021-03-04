@@ -1,6 +1,6 @@
 #include "WaterReflection.h"
 
-#include "../../component/common/OffscreenRenderPassComponentFactory.h"
+#include "../../component/common/OffScreenRenderPassComponentFactory.h"
 #include "../../component/water/WaterCommon.h"
 
 #include <prev/scene/component/NodeComponentHelper.h>

@@ -2,7 +2,7 @@
 #define __WATER_REFRACTION_H__
 
 #include "../../General.h"
-#include "../../component/common/IOffscreenRenderPassComponent.h"
+#include "../../component/common/IOffScreenRenderPassComponent.h"
 
 #include <prev/core/CoreEvents.h>
 #include <prev/event/EventHandler.h>

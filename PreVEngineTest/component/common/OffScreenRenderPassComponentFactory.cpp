@@ -1,6 +1,6 @@
-#include "OffscreenRenderPassComponentFactory.h"
+#include "OffScreenRenderPassComponentFactory.h"
 
-#include "OffscreenRenderPassComponent.h"
+#include "OffScreenRenderPassComponent.h"
 
 namespace prev_test::component::common {
 std::unique_ptr<IOffScreenRenderPassComponent> OffScreenRenderPassComponentFactory::Create(const int width, const int height) const

@@ -3,7 +3,7 @@
 
 #include "../../common/intersection/Frustum.h"
 #include "../../component/camera/ICameraComponent.h"
-#include "../../component/common/IOffscreenRenderPassComponent.h"
+#include "../../component/common/IOffScreenRenderPassComponent.h"
 #include "../../component/shadow/IShadowsComponent.h"
 #include "../../component/water/IWaterComponent.h"
 #include "../../component/water/WaterCommon.h"
