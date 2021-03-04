@@ -90,20 +90,24 @@ public:
 
     static bool DecomposeTransform(const glm::mat4& transform, glm::quat& rotation, glm::vec3& translation, glm::vec3& scale)
     {
-        return glm::decompose(transform, scale, rotation, translation, glm::vec3{}, glm::vec4{});
+        glm::vec3 skew;
+        glm::vec4 perspective;
+        return glm::decompose(transform, scale, rotation, translation, skew, perspective);
     }
 
     static glm::vec3 ExtractScale(const glm::mat4& transform)
     {
-        glm::vec3 scale;
-        DecomposeTransform(transform, glm::quat{}, glm::vec3{}, scale);
+        glm::quat rotation;
+        glm::vec3 translation, scale;
+        DecomposeTransform(transform, rotation, translation, scale);
         return scale;
     }
 
     static glm::vec3 ExtractTranslation(const glm::mat4& transform)
     {
-        glm::vec3 translation;
-        DecomposeTransform(transform, glm::quat{}, translation, glm::vec3{});
+        glm::quat rotation;
+        glm::vec3 translation, scale;
+        DecomposeTransform(transform, rotation, translation, scale);
         return translation;
     }
 
@@ -115,9 +119,10 @@ public:
 
     static glm::quat ExtractRotationAsQuaternion(const glm::mat4& transform)
     {
-        glm::quat rot;
-        DecomposeTransform(transform, rot, glm::vec3{}, glm::vec3{});
-        return rot;
+        glm::quat rotation;
+        glm::vec3 translation, scale;
+        DecomposeTransform(transform, rotation, translation, scale);
+        return rotation;
     }
 
     static uint32_t Log2(const uint32_t x)

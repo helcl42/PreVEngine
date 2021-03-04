@@ -367,7 +367,7 @@ bool IntersectionTester::Intersects(const Ray& ray, const Sphere& sphere, RayCas
     }
 
     const float bSq{ eSq - (a * a) };
-    const float f{ sqrt(fabsf(radiusSquared - bSq)) };
+    const float f{ sqrtf(fabsf(radiusSquared - bSq)) };
 
     float t;
     if (eSq < radiusSquared) { // Ray starts inside the sphere
