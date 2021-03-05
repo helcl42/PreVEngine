@@ -29,6 +29,7 @@ aux_source_directory(../../../../..                                         SRC_
 aux_source_directory(../../../../../common                                  SRC_LIST)
 aux_source_directory(../../../../../common/intersection                     SRC_LIST)
 aux_source_directory(../../../../../component                               SRC_LIST)
+aux_source_directory(../../../../../component/common                        SRC_LIST)
 aux_source_directory(../../../../../component/camera                        SRC_LIST)
 aux_source_directory(../../../../../component/cloud                         SRC_LIST)
 aux_source_directory(../../../../../component/font                          SRC_LIST)
