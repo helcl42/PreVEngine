@@ -69,10 +69,11 @@ std::string PhysicalDevice::GetVendorName() const
 
 // Find queue-family with requred flags, and can present to given surface. (if provided)
 // Returns the QueueFamily index, or -1 if not found.
-int PhysicalDevice::FindQueueFamily(VkQueueFlags flags, VkSurfaceKHR surface) const
+int32_t PhysicalDevice::FindQueueFamily(VkQueueFlags flags, VkQueueFlags unwantedFlags, VkSurfaceKHR surface) const
 {
-    for (size_t i = 0; i < m_queueFamilies.size(); i++) {
-        if ((m_queueFamilies[i].queueFlags & flags) != flags) {
+    for (int32_t i = 0; i < static_cast<int32_t>(m_queueFamilies.size()); i++) {
+        const auto& qqueueFamily{ m_queueFamilies[i] };
+        if ((qqueueFamily.queueFlags & flags) != flags || (qqueueFamily.queueFlags & unwantedFlags) != 0) {
             continue;
         }
 
@@ -84,7 +85,7 @@ int PhysicalDevice::FindQueueFamily(VkQueueFlags flags, VkSurfaceKHR surface) co
             }
         }
 
-        return static_cast<int>(i);
+        return static_cast<int32_t>(i);
     }
 
     return -1;

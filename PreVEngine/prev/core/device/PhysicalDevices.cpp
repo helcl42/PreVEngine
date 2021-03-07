@@ -21,7 +21,7 @@ PhysicalDevices::PhysicalDevices(const VkInstance instance)
 PhysicalDevice* PhysicalDevices::FindPresentable(VkSurfaceKHR surface)
 {
     for (auto& gpu : m_gpuList) {
-        if (gpu.FindQueueFamily(0, surface) >= 0) {
+        if (gpu.FindQueueFamily(0, 0, surface) >= 0) {
             return &gpu;
         }
     }

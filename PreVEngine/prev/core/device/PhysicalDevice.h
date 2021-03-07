@@ -20,7 +20,7 @@ public:
 public:
     std::string GetVendorName() const;
 
-    int FindQueueFamily(VkQueueFlags flags, VkSurfaceKHR surface = VK_NULL_HANDLE) const; // Returns a QueueFamlyIndex, or -1 if none found.
+    int32_t FindQueueFamily(VkQueueFlags flags, VkQueueFlags unwantedFlags = 0, VkSurfaceKHR surface = VK_NULL_HANDLE) const; // Returns a QueueFamlyIndex, or -1 if none found.
 
     std::vector<VkSurfaceFormatKHR> SurfaceFormats(VkSurfaceKHR surface) const; // Returns list of supported surface formats.
 

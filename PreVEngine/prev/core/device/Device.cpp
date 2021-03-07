@@ -1,11 +1,16 @@
 ﻿#include "Device.h"
 
 namespace prev::core::device {
-std::shared_ptr<Queue> Device::AddQueue(VkQueueFlags flags, VkSurfaceKHR surface)
+bool Device::HasQueue(VkQueueFlags flags, VkQueueFlags unwantedFlags, VkSurfaceKHR surface)
+{
+    return m_gpu.FindQueueFamily(flags, unwantedFlags, surface) >= 0;
+}
+
+std::shared_ptr<Queue> Device::AddQueue(VkQueueFlags flags, VkQueueFlags unwantedFlags, VkSurfaceKHR surface)
 {
     ASSERT(!m_handle, "Can't add queues after device is already in use. ");
 
-    uint32_t familyIndex = m_gpu.FindQueueFamily(flags, surface);
+    int32_t familyIndex = m_gpu.FindQueueFamily(flags, unwantedFlags, surface);
     if (familyIndex < 0) {
         LOGW("Could not create queue with requested properties.");
         return nullptr;
