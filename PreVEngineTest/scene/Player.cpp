@@ -56,7 +56,7 @@ void Player::Init()
 
 void Player::Update(float deltaTime)
 {
-    const auto terrain = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::terrain::ITerrainManagerComponent>({ TAG_TERRAIN_MANAGER_COMPONENT });
+    const auto terrain{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::terrain::ITerrainManagerComponent>({ TAG_TERRAIN_MANAGER_COMPONENT }) };
 
     // set default animation
     m_animatonRenderComponent->SetCurrentAnimationIndex(WALKING_ANIMATION_INDEX);
@@ -118,7 +118,7 @@ void Player::Update(float deltaTime)
     m_cameraComponent->SetOrientation(cameraOrientation);
 #else
     if (m_shouldRotate) {
-        const auto yawAmount{ YAW_TURN_SPEED * m_rotationAroundY * deltaTime };
+        const auto yawAmount{ YAW_TURN_SPEED * m_yawDiff * deltaTime };
         const auto pitchAmount{ PITCH_TURN_SPEED * m_pitchDiff * deltaTime };
 
         m_transformComponent->Rotate(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(yawAmount), glm::vec3(0.0f, 1.0f, 0.0f))));
@@ -126,7 +126,7 @@ void Player::Update(float deltaTime)
         m_cameraComponent->AddYaw(yawAmount);
         m_cameraComponent->AddPitch(pitchAmount);
 
-        m_rotationAroundY = 0.0f;
+        m_yawDiff = 0.0f;
         m_pitchDiff = 0.0f;
     }
 #endif
@@ -195,7 +195,7 @@ void Player::operator()(const prev::input::mouse::MouseEvent& mouseEvent)
         } else if (mouseEvent.action == prev::input::mouse::MouseActionType::RELEASE) {
             m_shouldRotate = false;
         } else if (m_shouldRotate && mouseEvent.action == prev::input::mouse::MouseActionType::MOVE) {
-            m_rotationAroundY = mouseEvent.position.x;
+            m_yawDiff = mouseEvent.position.x;
             m_pitchDiff = mouseEvent.position.y;
         }
     }
