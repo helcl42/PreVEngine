@@ -242,7 +242,7 @@ private:
 
     float m_upwardSpeed{ 0.0f };
 
-    float m_rotationAroundY{ 0.0f };
+    float m_yawDiff{ 0.0f };
 
     float m_pitchDiff{ 0.0f };
 
