@@ -15,7 +15,9 @@ public:
     ~Device();
 
 public:
-    std::shared_ptr<Queue> AddQueue(VkQueueFlags flags, VkSurfaceKHR surface = 0);
+    bool HasQueue(VkQueueFlags flags, VkQueueFlags unwantedFlags = 0, VkSurfaceKHR surface = VK_NULL_HANDLE);
+
+    std::shared_ptr<Queue> AddQueue(VkQueueFlags flags, VkQueueFlags unwantedFlags = 0, VkSurfaceKHR surface = VK_NULL_HANDLE);   
 
     PhysicalDevice& GetGPU();
 
