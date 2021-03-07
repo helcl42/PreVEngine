@@ -117,20 +117,22 @@ void Scene::operator()(const prev::window::SurfaceChanged& surfaceChangedEvent)
 
 void Scene::InitQueues()
 {
-    VkQueueFlags flagsToIgnore{ 0 };
     if (m_device->HasQueue(VK_QUEUE_COMPUTE_BIT, VK_QUEUE_GRAPHICS_BIT)) { // there is dedicated compute queue
         m_computeQueue = m_device->AddQueue(VK_QUEUE_COMPUTE_BIT);
-        flagsToIgnore = VK_QUEUE_COMPUTE_BIT;
     }
 
-    m_presentQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT | (flagsToIgnore == 0 ? VK_QUEUE_COMPUTE_BIT : 0), flagsToIgnore, m_surface); // ?compute? + graphics + present queue
-    m_graphicsQueue = m_presentQueue; // they might be the same or not
-    if (!m_computeQueue) {
+    if (m_computeQueue) {
+        m_presentQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT, VK_QUEUE_COMPUTE_BIT, m_surface); // ?compute? + graphics + present queue
+        m_graphicsQueue = m_presentQueue;
+    } else {
+        m_presentQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, m_surface); // compute + graphics + present queue
+        m_graphicsQueue = m_presentQueue;
         m_computeQueue = m_presentQueue;
     }
 
+    // TODO -> this not correct, but...
     if (!m_presentQueue) {
-        m_presentQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT, flagsToIgnore, m_surface); // graphics + present-queue
+        m_presentQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT, 0, m_surface); // graphics + present-queue
         m_graphicsQueue = m_presentQueue;
         if (!m_presentQueue) {
             m_presentQueue = m_device->AddQueue(0, 0, m_surface); // create present-queue
