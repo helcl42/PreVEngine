@@ -1,12 +1,12 @@
-#ifndef __CAMERA_COMPONENET_H__
-#define __CAMERA_COMPONENET_H__
+#ifndef __SIX_DOF_CAMERA_COMPONENT_H__
+#define __SIX_DOF_CAMERA_COMPONENT_H__
 
 #include "ICameraComponent.h"
 
 namespace prev_test::component::camera {
 class CameraComponent : public ICameraComponent {
 public:
-    CameraComponent(const glm::quat initialOrientation, const glm::vec3& initialPosition);
+    CameraComponent(const glm::quat initialOrientation, const glm::vec3& initialPosition, const bool useFixedUp);
 
     virtual ~CameraComponent() = default;
 
@@ -15,15 +15,17 @@ public:
 
     void Reset() override;
 
-    void AddPitch(float amountInDegrees) override;
+    void AddPitch(const float amountInDegrees) override;
 
-    void AddYaw(float amountInDegrees) override;
+    void AddYaw(const float amountInDegrees) override;
+
+    void AddRoll(const float amountInDegrees) override;
 
     void AddOrientation(const glm::quat& orientationDiff) override;
 
     void SetOrientation(const glm::quat& orientation) override;
 
-    void SetOrientation(const float pitchAmountInDegrees, const float yawAmountInDegrees) override;
+    void SetOrientation(const float pitchAmountInDegrees, const float yawAmountInDegrees, const float rollInDegrees) override;
 
     void AddPosition(const glm::vec3& positionDiff) override;
 
@@ -51,13 +53,15 @@ private:
     void Update();
 
 private:
-    const glm::vec3 m_defaultUpDirection{ 0.0f, 1.0f, 0.0f };
-
-    const glm::vec3 m_defaultForwardDirection{ 0.0f, 0.0f, -1.0f };
-
     const glm::quat m_initialOrientation;
 
     const glm::vec3 m_initialPosition;
+
+    const bool m_useFixedUp;
+
+    static const inline glm::vec3 defaultUpDirection{0.0f, 1.0f, 0.0f };
+
+    static const inline glm::vec3 defaultForwardDirection{0.0f, 0.0f, 1.0f };
 
 private:
     glm::vec3 m_position;
@@ -67,6 +71,8 @@ private:
     glm::vec3 m_positionDelta;
 
     glm::vec3 m_rightDirection;
+
+    glm::vec3 m_upDirection;
 
     glm::vec3 m_forwardDirection;
 
@@ -82,4 +88,4 @@ private:
 };
 } // namespace prev_test::component::camera
 
-#endif // !__CAMERA_COMPONENET_H__
+#endif // !__SIX_DOF_CAMERA_COMPONENT_H__
