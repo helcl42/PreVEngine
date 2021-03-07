@@ -23,7 +23,7 @@ public:
 
     void SetOrientation(const glm::quat& orientation) override;
 
-    void SetOrientation(const float pitchAmountInDegrees, const float yawAmountInDeregrees) override;
+    void SetOrientation(const float pitchAmountInDegrees, const float yawAmountInDegrees) override;
 
     void AddPosition(const glm::vec3& positionDiff) override;
 
@@ -51,7 +51,7 @@ private:
     void Update();
 
 private:
-    const glm::vec3 m_upDirection{ 0.0f, 1.0f, 0.0f };
+    const glm::vec3 m_defaultUpDirection{ 0.0f, 1.0f, 0.0f };
 
     const glm::vec3 m_defaultForwardDirection{ 0.0f, 0.0f, -1.0f };
 
@@ -66,15 +66,13 @@ private:
 
     glm::vec3 m_positionDelta;
 
-    glm::vec3 m_forwardDirection;
-
     glm::vec3 m_rightDirection;
+
+    glm::vec3 m_forwardDirection;
 
     glm::quat m_orientationDelta;
 
     glm::mat4 m_viewMatrix;
-
-    glm::vec2 m_prevTouchPosition;
 
     prev_test::render::ViewFrustum m_viewFrustum{ 45.0f, 10.0f, 300.0f };
 
