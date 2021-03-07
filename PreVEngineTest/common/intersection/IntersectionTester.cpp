@@ -1,7 +1,8 @@
 #include "IntersectionTester.h"
 
-#define CMP(x, y) \
-    (fabsf(x - y) <= FLT_EPSILON * fmaxf(1.0f, fmaxf(fabsf(x), fabsf(y))))
+constexpr bool CMP(float x, float y) {
+    return std::abs(x - y) <= FLT_EPSILON * std::max(1.0f, std::max(std::abs(x), std::abs(y)));
+}
 
 namespace prev_test::common::intersection {
 namespace {
@@ -367,7 +368,7 @@ bool IntersectionTester::Intersects(const Ray& ray, const Sphere& sphere, RayCas
     }
 
     const float bSq{ eSq - (a * a) };
-    const float f{ sqrtf(fabsf(radiusSquared - bSq)) };
+    const float f{ std::sqrt(std::abs(radiusSquared - bSq)) };
 
     float t;
     if (eSq < radiusSquared) { // Ray starts inside the sphere
@@ -386,8 +387,8 @@ bool IntersectionTester::Intersects(const Ray& ray, const Sphere& sphere, RayCas
 bool IntersectionTester::Intersects(const Ray& ray, const Plane& plane, RayCastResult& result)
 {
     const float EPSILON{ 0.0001f };
-    float denom = glm::dot(ray.direction, plane.normal);
-    if (fabsf(denom) > EPSILON) {
+    const float denom{ glm::dot(ray.direction, plane.normal) };
+    if (std::abs(denom) > EPSILON) {
         float pn = glm::dot(ray.origin, plane.normal);
         float t = -(plane.distance + pn) / denom;
         if (t >= EPSILON) {
