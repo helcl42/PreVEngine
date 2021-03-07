@@ -14,11 +14,13 @@ public:
 
     virtual void AddYaw(const float amountInDegrees) = 0;
 
+    virtual void AddRoll(const float amountInDegrees) = 0;
+
     virtual void AddOrientation(const glm::quat& orientationDiff) = 0;
 
     virtual void SetOrientation(const glm::quat& orientation) = 0;
 
-    virtual void SetOrientation(const float pitch, const float yaw) = 0;
+    virtual void SetOrientation(const float pitch, const float yaw, const float roll) = 0;
 
     virtual void AddPosition(const glm::vec3& positionDiff) = 0;
 

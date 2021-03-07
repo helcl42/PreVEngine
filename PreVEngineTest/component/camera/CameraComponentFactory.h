@@ -6,7 +6,7 @@
 namespace prev_test::component::camera {
 class CameraComponentFactory {
 public:
-    std::unique_ptr<ICameraComponent> Create(const glm::quat& orient, const glm::vec3& pos) const;
+    std::unique_ptr<ICameraComponent> Create(const glm::quat& orient, const glm::vec3& pos, const bool useFixedUp) const;
 };
 } // namespace prev_test::component::camera
 

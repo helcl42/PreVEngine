@@ -32,16 +32,24 @@ void Player::Init()
     m_animatonRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Archer/erika_archer_bow_arrow.fbx"), { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Archer/Walking.fbx"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Archer/Jumping.fbx") }, true, true);
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::render::IAnimationRenderComponent>(GetThis(), m_animatonRenderComponent, TAG_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT);
 
+    bool fixedCameraUp{ true };
+#if defined(__ANDROID__)
+    fixedCameraUp = false;
+#endif
     prev_test::component::camera::CameraComponentFactory cameraFactory{};
-    m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 60.0f, 180.0f));
+    m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 60.0f, 180.0f), fixedCameraUp);
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::camera::ICameraComponent>(GetThis(), m_cameraComponent, TAG_CAMERA_COMPONENT);
 
     prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{};
     m_boundingVolumeComponent = bondingVolumeFactory.CreateOBB(m_animatonRenderComponent->GetModel()->GetMesh(), glm::vec3(0.4f, 1.0f, 0.4f));
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, TAG_BOUNDING_VOLUME_COMPONENT);
 
-    m_cameraComponent->AddOrientation(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), m_cameraComponent->GetUpDirection())));
     m_cameraComponent->AddOrientation(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(m_cameraPitch), m_cameraComponent->GetRightDirection())));
+
+#if defined(__ANDROID__)
+    m_orientationProvider = std::make_unique<AndroidOrientationProvider>();
+    m_orientationProvider->Init();
+#endif
 
     SceneNode::Init();
 }
@@ -100,6 +108,15 @@ void Player::Update(float deltaTime)
         jumpAnimation->Update(deltaTime);
     }
 
+#if defined(__ANDROID__)
+    const auto sensorOrientation{ m_orientationProvider->GetCurrentOrientation() };
+
+    const auto playerOrientation{ glm::normalize(glm::quat(sensorOrientation.w, 0.0f, sensorOrientation.x, 0.0f)) };
+    m_transformComponent->SetOrientation(playerOrientation);
+
+    const auto cameraOrientation( glm::normalize(glm::quat(sensorOrientation.w, sensorOrientation.y, sensorOrientation.x, -sensorOrientation.z)) );
+    m_cameraComponent->SetOrientation(cameraOrientation);
+#else
     if (m_shouldRotate) {
         const auto yawAmount{ YAW_TURN_SPEED * m_rotationAroundY * deltaTime };
         const auto pitchAmount{ PITCH_TURN_SPEED * m_pitchDiff * deltaTime };
@@ -112,7 +129,7 @@ void Player::Update(float deltaTime)
         m_rotationAroundY = 0.0f;
         m_pitchDiff = 0.0f;
     }
-
+#endif
     m_transformComponent->Update(deltaTime);
 
     const glm::vec3 cameraPosition{ m_transformComponent->GetPosition() + (-m_cameraComponent->GetForwardDirection() * m_distanceFromPerson) + glm::vec3(0.0f, 8.0f, 0.0f) };
@@ -126,6 +143,11 @@ void Player::Update(float deltaTime)
 void Player::ShutDown()
 {
     SceneNode::ShutDown();
+
+#if defined(__ANDROID__)
+    m_orientationProvider->ShutDown();
+    m_orientationProvider = nullptr;
+#endif
 }
 
 void Player::operator()(const prev::input::keyboard::KeyEvent& keyEvent)
@@ -213,7 +235,7 @@ void Player::operator()(const prev::input::touch::TouchEvent& touchEvent)
     }
 #endif
     if (touchEvent.action == prev::input::touch::TouchActionType::MOVE) {
-        const glm::vec2 angleInDegrees = (touchEvent.position - m_prevTouchPosition) * 0.1f;
+        const glm::vec2 angleInDegrees{ (touchEvent.position - m_prevTouchPosition) * 0.1f };
 
         m_transformComponent->Rotate(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(angleInDegrees.x), glm::vec3(0.0f, 1.0f, 0.0f))));
 
