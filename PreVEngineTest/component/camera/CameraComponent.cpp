@@ -20,10 +20,9 @@ void CameraComponent::Reset()
     m_orientation = m_initialOrientation;
 
     if(m_useFixedUp) {
-        m_upDirection = defaultUpDirection;
-        m_forwardDirection = defaultForwardDirection;
-        m_forwardDirection = glm::normalize(m_initialOrientation * m_forwardDirection);
-        m_rightDirection = glm::cross(m_forwardDirection, m_upDirection);
+        m_upDirection = DEFAULT_UP_DIRECTION;
+        m_forwardDirection = glm::normalize(m_initialOrientation * DEFAULT_FORWARD_DIRECTION);
+        m_rightDirection = glm::cross(m_forwardDirection, DEFAULT_UP_DIRECTION);
     } else {
         m_positionDelta = glm::vec3{};
         m_orientationDelta = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
@@ -140,7 +139,7 @@ void CameraComponent::UpdateOrientation()
 {
     if(m_useFixedUp) {
         m_forwardDirection = glm::normalize(m_orientationDelta * m_forwardDirection);
-        m_rightDirection = glm::normalize(glm::cross(m_forwardDirection, defaultUpDirection));
+        m_rightDirection = glm::normalize(glm::cross(m_forwardDirection, m_upDirection));
     } else {
         m_orientation = glm::normalize(m_orientation * m_orientationDelta);
         const auto orientationMat{glm::mat3_cast(m_orientation)};
