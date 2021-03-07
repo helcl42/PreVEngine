@@ -1,6 +1,6 @@
 #include "IntersectionTester.h"
 
-constexpr bool CMP(float x, float y) {
+bool CMP(float x, float y) {
     return std::abs(x - y) <= FLT_EPSILON * std::max(1.0f, std::max(std::abs(x), std::abs(y)));
 }
 
