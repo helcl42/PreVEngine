@@ -59,26 +59,26 @@ private:
 
     const bool m_useFixedUp;
 
-    static const inline glm::vec3 defaultUpDirection{0.0f, 1.0f, 0.0f };
+    static const inline glm::vec3 DEFAULT_UP_DIRECTION{ 0.0f, 1.0f, 0.0f };
 
-    static const inline glm::vec3 defaultForwardDirection{0.0f, 0.0f, 1.0f };
+    static const inline glm::vec3 DEFAULT_FORWARD_DIRECTION{ 0.0f, 0.0f, 1.0f };
 
 private:
-    glm::vec3 m_position;
+    glm::vec3 m_position{ 0.0f, 0.0f, 0.0f };
 
-    glm::quat m_orientation;
+    glm::quat m_orientation{ 1.0f, 0.0f, 0.0f, 0.0f };
 
-    glm::vec3 m_positionDelta;
+    glm::vec3 m_rightDirection{ 0.0f, 0.0f, 0.0f };
 
-    glm::vec3 m_rightDirection;
+    glm::vec3 m_upDirection{ 0.0f, 0.0f, 0.0f };
 
-    glm::vec3 m_upDirection;
+    glm::vec3 m_forwardDirection{ 0.0f, 0.0f, 0.0f };
 
-    glm::vec3 m_forwardDirection;
+    glm::vec3 m_positionDelta{ 0.0f, 0.0f, 0.0f };
 
-    glm::quat m_orientationDelta;
+    glm::quat m_orientationDelta{ 1.0f, 0.0f, 0.0f, 0.0f };
 
-    glm::mat4 m_viewMatrix;
+    glm::mat4 m_viewMatrix{ 1.0f };
 
     prev_test::render::ViewFrustum m_viewFrustum{ 45.0f, 10.0f, 300.0f };
 
