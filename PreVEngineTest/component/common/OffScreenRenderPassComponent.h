@@ -50,9 +50,9 @@ private:
 
     std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
-    std::shared_ptr<prev::core::memory::image::ColorImageBuffer> m_imageBuffer;
+    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_imageBuffer;
 
-    std::shared_ptr<prev::core::memory::image::DepthImageBuffer> m_depthBuffer;
+    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_depthBuffer;
 
     VkFramebuffer m_frameBuffer;
 };
