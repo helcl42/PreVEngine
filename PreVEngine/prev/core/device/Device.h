@@ -21,7 +21,10 @@ struct QueueMetadata {
 
     friend bool operator<(const QueueMetadata& a, const QueueMetadata& b)
     {
-        if (a.family < b.family && a.index < b.index) {
+        if (a.family < b.family) {
+            return true;
+        }
+        if (a.index < b.index) {
             return true;
         }
         return false;
