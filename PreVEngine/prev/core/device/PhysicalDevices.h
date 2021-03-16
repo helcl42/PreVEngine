@@ -4,15 +4,16 @@
 #include "PhysicalDevice.h"
 
 #include <vector>
+#include <memory>
 
 namespace prev::core::device {
 class PhysicalDevices {
 public:
     PhysicalDevices(const VkInstance instance);
 
-    PhysicalDevice* FindPresentable(VkSurfaceKHR surface); // Returns first device able to present to surface, or null if none.
+    std::shared_ptr<PhysicalDevice> FindPresentable(VkSurfaceKHR surface) const; // Returns first device able to present to surface, or null if none.
 
-    void Print(bool showQueues = false);
+    void Print(bool showQueues = false) const;
 
 public:
     size_t GetCount() const;
@@ -20,8 +21,8 @@ public:
     const PhysicalDevice& operator[](const size_t i) const;
 
 private:
-    std::vector<PhysicalDevice> m_gpuList;
+    std::vector<std::shared_ptr<PhysicalDevice>> m_gpuList;
 };
-} // namespace prev
+} // namespace prev::core::device
 
 #endif

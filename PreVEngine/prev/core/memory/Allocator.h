@@ -1,7 +1,8 @@
 #ifndef __ALLOCATOR_H__
 #define __ALLOCATOR_H__
 
-#include "../Queue.h"
+#include "../device/Device.h"
+
 #include <external/vk_mem_alloc.h>
 
 #include <vector>
@@ -9,14 +10,9 @@
 namespace prev::core::memory {
 class Allocator final {
 public:
-    Allocator(const Queue& queue, const VkDeviceSize blockSize = 256);
+    Allocator(const std::shared_ptr<prev::core::device::Device>& device, const VkDeviceSize blockSize = 256);
 
     ~Allocator();
-
-public:
-    void BeginCommandBuffer();
-
-    void EndCommandBuffer();
 
 public:
     void TransitionImageLayout(const VkImage image, const VkImageLayout oldLayout, const VkImageLayout newLayout, const VkFormat format, const uint32_t mipLevels = 1, const uint32_t layersCount = 1);
@@ -40,20 +36,21 @@ public:
     void GenerateMipmaps(const VkImage image, const VkFormat imageFormat, const VkExtent3D& extent, const uint32_t mipLevels, const uint32_t layersCount = 1);
 
 public:
-    VkPhysicalDevice GetPhysicalDevice() const;
+    std::shared_ptr<prev::core::device::Device> GetDevice() const;
 
-    VkDevice GetDevice() const;
-
-    VkQueue GetQueue() const;
+    std::shared_ptr<prev::core::device::Queue> GetQueue() const;
 
 private:
+    void BeginCommandBuffer();
+
+    void EndCommandBuffer();
+
+private:
+    std::shared_ptr<prev::core::device::Device> m_device;
+
     VmaAllocator m_allocator;
 
-    VkPhysicalDevice m_gpu;
-
-    VkDevice m_device;
-
-    VkQueue m_queue;
+    std::shared_ptr<prev::core::device::Queue> m_queue;
 
     VkCommandPool m_commandPool;
 

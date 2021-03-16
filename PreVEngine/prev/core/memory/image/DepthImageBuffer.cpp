@@ -18,6 +18,8 @@ void DepthImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
     m_sampler = VK_NULL_HANDLE;
 
     Resize(createInfo.extent);
+
+    m_allocator.TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, m_format, m_mipLevels, m_layerCount);
 }
 
 void DepthImageBuffer::Resize(const VkExtent3D& extent)
@@ -25,7 +27,6 @@ void DepthImageBuffer::Resize(const VkExtent3D& extent)
     Destroy();
 
     m_allocator.CreateImage(extent, m_imageType, m_format, m_sampleCount, m_mipLevels, m_layerCount, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_flags, m_image, m_allocation);
-    m_allocator.TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, m_format, m_mipLevels, m_layerCount);
     m_allocator.CreateImageView(m_image, m_format, m_imageViewType, m_mipLevels, m_layerCount, VK_IMAGE_ASPECT_DEPTH_BIT, m_imageView);
 
     m_extent = extent;

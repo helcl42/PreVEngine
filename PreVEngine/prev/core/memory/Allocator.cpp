@@ -13,17 +13,17 @@
 #include <external/vk_mem_alloc.h>
 
 namespace prev::core::memory {
-Allocator::Allocator(const Queue& q, const VkDeviceSize blockSize)
+Allocator::Allocator(const std::shared_ptr<prev::core::device::Device>& device, const VkDeviceSize blockSize)
+    : m_device(device)
 {
-    m_gpu = q.gpu;
-    m_device = q.device;
-    m_queue = q.handle;
-    m_commandPool = q.CreateCommandPool();
-    m_commandBuffer = prev::util::VkUtils::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+    m_queue = m_device->GetQueue(prev::core::device::QueueType::GRAPHICS);
+
+    m_commandPool = m_queue->CreateCommandPool();
+    m_commandBuffer = prev::util::VkUtils::CreateCommandBuffer(*m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
     VmaAllocatorCreateInfo allocatorInfo = {};
-    allocatorInfo.physicalDevice = m_gpu;
-    allocatorInfo.device = m_device;
+    allocatorInfo.physicalDevice = *m_device->GetGPU();
+    allocatorInfo.device = *m_device;
     allocatorInfo.preferredLargeHeapBlockSize = blockSize;
 
     VmaVulkanFunctions fn;
@@ -54,11 +54,11 @@ Allocator::Allocator(const Queue& q, const VkDeviceSize blockSize)
 Allocator::~Allocator()
 {
     if (m_commandBuffer) {
-        vkFreeCommandBuffers(m_device, m_commandPool, 1, &m_commandBuffer);
+        vkFreeCommandBuffers(*m_device, m_commandPool, 1, &m_commandBuffer);
     }
 
     if (m_commandPool) {
-        vkDestroyCommandPool(m_device, m_commandPool, nullptr);
+        vkDestroyCommandPool(*m_device, m_commandPool, nullptr);
     }
 
     if (m_allocator) {
@@ -80,9 +80,9 @@ void Allocator::EndCommandBuffer()
     VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &m_commandBuffer;
-    VKERRCHECK(vkQueueSubmit(m_queue, 1, &submitInfo, VK_NULL_HANDLE));
+    VKERRCHECK(vkQueueSubmit(*m_queue, 1, &submitInfo, VK_NULL_HANDLE));
 
-    VKERRCHECK(vkQueueWaitIdle(m_queue));
+    VKERRCHECK(vkQueueWaitIdle(*m_queue));
 }
 
 void Allocator::CreateBuffer(const void* data, uint64_t size, VkBufferUsageFlags usage, VmaMemoryUsage memtype, VkBuffer& buffer, VmaAllocation& alloc, void** mapped)
@@ -258,14 +258,14 @@ void Allocator::CreateImageView(const VkImage image, const VkFormat format, cons
     imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
     imageViewCreateInfo.subresourceRange.layerCount = layerCount;
 
-    VKERRCHECK(vkCreateImageView(m_device, &imageViewCreateInfo, nullptr, &outImagaView));
+    VKERRCHECK(vkCreateImageView(*m_device, &imageViewCreateInfo, nullptr, &outImagaView));
 }
 
 void Allocator::GenerateMipmaps(const VkImage image, VkFormat imageFormat, const VkExtent3D& extent, const uint32_t mipLevels, const uint32_t layersCount)
 {
     // Check if image format supports linear blitting
     VkFormatProperties formatProperties;
-    vkGetPhysicalDeviceFormatProperties(m_gpu, imageFormat, &formatProperties);
+    vkGetPhysicalDeviceFormatProperties(*m_device->GetGPU(), imageFormat, &formatProperties);
 
     if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) {
         LOGE("Texture image format does not support linear blitting!");
@@ -443,23 +443,18 @@ void Allocator::TransitionImageLayout(const VkImage image, const VkImageLayout o
 void Allocator::DestroyImage(VkImage image, VkImageView view, VmaAllocation alloc)
 {
     if (view) {
-        vkDestroyImageView(m_device, view, nullptr);
+        vkDestroyImageView(*m_device, view, nullptr);
     }
 
     vmaDestroyImage(m_allocator, image, alloc);
 }
 
-VkPhysicalDevice Allocator::GetPhysicalDevice() const
-{
-    return m_gpu;
-}
-
-VkDevice Allocator::GetDevice() const
+std::shared_ptr<prev::core::device::Device> Allocator::GetDevice() const
 {
     return m_device;
 }
 
-VkQueue Allocator::GetQueue() const
+std::shared_ptr<prev::core::device::Queue> Allocator::GetQueue() const
 {
     return m_queue;
 }

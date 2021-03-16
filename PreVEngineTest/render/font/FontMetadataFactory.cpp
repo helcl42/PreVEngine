@@ -1,8 +1,8 @@
 #include "FontMetadataFactory.h"
 
+#include <prev/core/AllocatorProvider.h>
 #include <prev/core/memory/image/ImageBuffer.h>
 #include <prev/render/image/ImageFactory.h>
-#include <prev/scene/AllocatorProvider.h>
 
 namespace prev_test::render::font {
 std::unique_ptr<FontMetadata> FontMetadataFactory::CreateFontMetadata(const std::string& metadataFilePath, const std::string& textureFilePath, const float aspectRatio, const int desiredPadding) const
@@ -54,9 +54,11 @@ void FontMetadataFactory::ExtractMeasureInfo(FontMetadataFile& metaDataFile, Fon
 
 void FontMetadataFactory::CreateImage(const std::string& textureFilePath, std::shared_ptr<prev::render::image::Image>& image, std::shared_ptr<prev::core::memory::image::IImageBuffer>& imageBuffer) const
 {
+    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
+
     prev::render::image::ImageFactory imageFactory;
     image = imageFactory.CreateImage(textureFilePath);
-    imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(*prev::scene::AllocatorProvider::Instance().GetAllocator());
+    imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(*allocator);
     imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
 }
 

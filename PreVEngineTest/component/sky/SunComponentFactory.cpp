@@ -5,12 +5,12 @@
 #include "../../render/mesh/MeshFactory.h"
 #include "../../render/model/ModelFactory.h"
 
-#include <prev/scene/AllocatorProvider.h>
+#include <prev/core/AllocatorProvider.h>
 
 namespace prev_test::component::sky {
 std::unique_ptr<ISunComponent> SunComponentFactory::Create() const
 {
-    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
+    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     auto flare{ CreateFlare(*allocator, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sun.png"), 0.2f) };
     flare->SetScreenSpacePosition(glm::vec2(-100.0f, -100.0f));

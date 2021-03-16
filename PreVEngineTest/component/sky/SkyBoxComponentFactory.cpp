@@ -6,7 +6,7 @@
 #include "../../render/mesh/MeshFactory.h"
 #include "../../render/model/ModelFactory.h"
 
-#include <prev/scene/AllocatorProvider.h>
+#include <prev/core/AllocatorProvider.h>
 
 namespace prev_test::component::sky {
 std::unique_ptr<ISkyBoxComponent> SkyBoxComponentFactory::Create() const
@@ -20,7 +20,7 @@ std::unique_ptr<ISkyBoxComponent> SkyBoxComponentFactory::Create() const
         prev_test::common::AssetManager::Instance().GetAssetPath("SkyBoxes/Sky/front.png"),
     };
 
-    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
+    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     prev_test::render::material::MaterialFactory materialFactory{};
     auto material{ materialFactory.CreateCubeMap({ glm::vec4{ 1.0f }, 1.0f, 0.0f, false }, materialPaths, *allocator) };

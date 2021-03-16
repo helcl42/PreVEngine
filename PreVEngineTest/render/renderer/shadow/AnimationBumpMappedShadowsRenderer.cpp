@@ -6,10 +6,10 @@
 #include "../../../component/render/IAnimationRenderComponent.h"
 #include "../../../component/transform/ITransformComponent.h"
 
+#include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
-#include <prev/scene/AllocatorProvider.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 
@@ -21,8 +21,8 @@ AnimationBumpMappedShadowsRenderer::AnimationBumpMappedShadowsRenderer(const std
 
 void AnimationBumpMappedShadowsRenderer::Init()
 {
-    auto device = prev::core::DeviceProvider::Instance().GetDevice();
-    auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
+    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
+    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     prev::render::shader::ShaderFactory shaderFactory;
     m_shader = shaderFactory.CreateShaderFromFiles<shader::AnimatedBumplMappedShadowsShader>(*device, shader::AnimatedBumplMappedShadowsShader::GetPaths());
@@ -36,7 +36,7 @@ void AnimationBumpMappedShadowsRenderer::Init()
     LOGI("Animation Bump Mapped Shadows Pipeline created\n");
 
     m_uniformsPool = std::make_unique<prev::core::memory::buffer::UBOPool<Uniforms> >(*allocator);
-    m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
 void AnimationBumpMappedShadowsRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext)

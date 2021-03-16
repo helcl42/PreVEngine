@@ -1,9 +1,9 @@
 #include "ShadowsComponentFactory.h"
 #include "ShadowsComponent.h"
 
+#include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/image/DepthImageBuffer.h>
-#include <prev/scene/AllocatorProvider.h>
 #include <prev/util/VkUtils.h>
 
 #include <memory>
@@ -12,7 +12,7 @@ namespace prev_test::component::shadow {
 std::unique_ptr<IShadowsComponent> ShadowsComponentFactory::Create() const
 {
     auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
-    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
+    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
     const VkExtent2D extent{ SHADOW_MAP_DIMENSIONS, SHADOW_MAP_DIMENSIONS };
 
     auto renderPass{ CreateRenderPass(*device) };

@@ -8,12 +8,12 @@
 #include "../../render/mesh/MeshFactory.h"
 #include "../../render/model/ModelFactory.h"
 
-#include <prev/scene/AllocatorProvider.h>
+#include <prev/core/AllocatorProvider.h>
 
 namespace prev_test::component::particle {
 std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::CreateRandom() const
 {
-    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
+    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     prev_test::render::material::MaterialFactory materialFactory{};
 
@@ -37,7 +37,7 @@ std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::Create
 
 std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::CreateRandomInCone(const glm::vec3& coneDirection, const float angle) const
 {
-    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
+    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     prev_test::render::material::MaterialFactory materialFactory{};
     std::shared_ptr<prev_test::render::IMaterial> material{ materialFactory.Create({ glm::vec4{ 1.0f }, 0.0f, 0.0f, true }, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fire-texture-atlas.png"), *allocator) };

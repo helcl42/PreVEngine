@@ -3,7 +3,7 @@
 #include "../../render/font/TextMeshFactory.h"
 #include "../../render/model/ModelFactory.h"
 
-#include <prev/scene/AllocatorProvider.h>
+#include <prev/core/AllocatorProvider.h>
 
 namespace prev_test::component::font {
 DefaultFontRenderComponent::DefaultFontRenderComponent(const std::shared_ptr<prev_test::render::font::FontMetadata>& fontMetaData)
@@ -23,7 +23,7 @@ std::shared_ptr<prev_test::render::font::FontMetadata> DefaultFontRenderComponen
 
 void DefaultFontRenderComponent::AddText(const std::shared_ptr<prev_test::render::font::ScreenSpaceText>& text)
 {
-    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
+    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     prev_test::render::font::TextMeshFactory meshFactory;
     auto mesh{ meshFactory.CreateTextMesh(text, m_fontMetaData) };
