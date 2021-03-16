@@ -12,6 +12,8 @@
 namespace prev_test::component::cloud {
 std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t width, const uint32_t height, const uint32_t depth) const
 {
+    const auto noiseImageFormat{ VK_FORMAT_R8G8B8A8_UNORM };
+
     auto device = prev::core::DeviceProvider::Instance().GetDevice();
     auto computeQueue = prev::scene::ComputeProvider::Instance().GetQueue();
     auto computeAllocator = prev::scene::ComputeProvider::Instance().GetAllocator();
@@ -27,7 +29,7 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsNoiseFactory::Cre
 
     auto fence = prev::util::VkUtils::CreateFence(*device);
 
-    prev::core::memory::image::ImageBufferCreateInfo imageBufferCreateInfo{ VkExtent3D{ width, height, depth }, VK_IMAGE_TYPE_3D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, true, VK_IMAGE_VIEW_TYPE_3D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT };
+    prev::core::memory::image::ImageBufferCreateInfo imageBufferCreateInfo{ VkExtent3D{ width, height, depth }, VK_IMAGE_TYPE_3D, noiseImageFormat, VK_SAMPLE_COUNT_1_BIT, 0, true, true, VK_IMAGE_VIEW_TYPE_3D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT };
 
     auto noiseImageBuffer = std::make_unique<prev::core::memory::image::ImageStorageBuffer>(*computeAllocator);
     noiseImageBuffer->Create(imageBufferCreateInfo);
@@ -64,7 +66,7 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsNoiseFactory::Cre
     vkDestroyFence(*device, fence, nullptr);
     vkDestroyCommandPool(*device, commandPool, nullptr);
 
-    computeAllocator->TransitionImageLayout(noiseImageBuffer->GetImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, noiseImageBuffer->GetMipLevels());
+    computeAllocator->TransitionImageLayout(noiseImageBuffer->GetImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, noiseImageFormat, noiseImageBuffer->GetMipLevels());
 
     computeAllocator->GenerateMipmaps(noiseImageBuffer->GetImage(), noiseImageBuffer->GetFormat(), noiseImageBuffer->GetExtent(), noiseImageBuffer->GetMipLevels(), noiseImageBuffer->GetLayerCount());
 

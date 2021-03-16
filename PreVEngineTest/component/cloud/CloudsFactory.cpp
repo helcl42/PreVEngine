@@ -21,6 +21,8 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsFactory::Create(c
         int perlinOctaves;
     };
 
+    const auto weatherImageFormat{ VK_FORMAT_R8G8B8A8_UNORM };
+
     auto device = prev::core::DeviceProvider::Instance().GetDevice();
     auto computeQueue = prev::scene::ComputeProvider::Instance().GetQueue();
     auto computeAllocator = prev::scene::ComputeProvider::Instance().GetAllocator();
@@ -39,7 +41,7 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsFactory::Create(c
 
     auto fence = prev::util::VkUtils::CreateFence(*device);
 
-    prev::core::memory::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ width, height }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, false, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT };
+    prev::core::memory::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ width, height }, VK_IMAGE_TYPE_2D, weatherImageFormat, VK_SAMPLE_COUNT_1_BIT, 0, false, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT };
     auto weatherImageBuffer = std::make_unique<prev::core::memory::image::ImageStorageBuffer>(*computeAllocator);
     weatherImageBuffer->Create(bufferCreateInfo);
 
@@ -74,7 +76,7 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsFactory::Create(c
     // Submit compute work
     vkResetFences(*device, 1, &fence);
 
-    const VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    const VkPipelineStageFlags waitStageMask{ VK_PIPELINE_STAGE_TRANSFER_BIT };
     VkSubmitInfo computeSubmitInfo{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
     computeSubmitInfo.pWaitDstStageMask = &waitStageMask;
     computeSubmitInfo.commandBufferCount = 1;
@@ -87,7 +89,7 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsFactory::Create(c
     vkDestroyFence(*device, fence, nullptr);
     vkDestroyCommandPool(*device, commandPool, nullptr);
 
-    computeAllocator->TransitionImageLayout(weatherImageBuffer->GetImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, weatherImageBuffer->GetMipLevels());
+    computeAllocator->TransitionImageLayout(weatherImageBuffer->GetImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, weatherImageFormat, weatherImageBuffer->GetMipLevels());
 
     pipeline->ShutDown();
 
