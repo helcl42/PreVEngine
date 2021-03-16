@@ -374,7 +374,7 @@ void Allocator::TransitionImageLayout(const VkImage image, const VkImageLayout o
         barrier.subresourceRange.baseArrayLayer = layerIndex;
         barrier.subresourceRange.layerCount = 1;
 
-        if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+        if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL || newLayout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL) {
             barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
             if (HasStencilComponent(format)) {
                 barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
