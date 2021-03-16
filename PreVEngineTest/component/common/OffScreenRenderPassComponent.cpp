@@ -1,7 +1,7 @@
 #include "OffScreenRenderPassComponent.h"
 
+#include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
-#include <prev/scene/AllocatorProvider.h>
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::component::common {
@@ -54,8 +54,8 @@ VkFramebuffer OffScreenRenderPassComponent::GetFrameBuffer() const
 
 void OffScreenRenderPassComponent::InitBuffers()
 {
-    auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
-    auto device = prev::core::DeviceProvider::Instance().GetDevice();
+    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
+    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
 
     m_imageBuffer = std::make_shared<prev::core::memory::image::ColorImageBuffer>(*allocator);
     m_imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, COLOR_FORMAT, VK_SAMPLE_COUNT_1_BIT, 0, false, true, VK_IMAGE_VIEW_TYPE_2D });
@@ -70,7 +70,7 @@ void OffScreenRenderPassComponent::InitBuffers()
 
 void OffScreenRenderPassComponent::ShutDownBuffers()
 {
-    auto device = prev::core::DeviceProvider::Instance().GetDevice();
+    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
 
     vkDeviceWaitIdle(*device);
 
@@ -82,7 +82,7 @@ void OffScreenRenderPassComponent::ShutDownBuffers()
 
 void OffScreenRenderPassComponent::InitRenderPass()
 {
-    auto device = prev::core::DeviceProvider::Instance().GetDevice();
+    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
 
     std::vector<VkSubpassDependency> dependencies{ 2 };
     dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;

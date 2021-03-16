@@ -2,18 +2,18 @@
 #include "pipeline/WaterPipeline.h"
 #include "shader/WaterShader.h"
 
+#include "../../../component/common/IOffScreenRenderPassComponent.h"
 #include "../../../component/light/ILightComponent.h"
 #include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../../component/shadow/IShadowsComponent.h"
 #include "../../../component/sky/SkyCommon.h"
 #include "../../../component/transform/ITransformComponent.h"
 #include "../../../component/water/IWaterComponent.h"
-#include "../../../component/common/IOffScreenRenderPassComponent.h"
 
+#include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
-#include <prev/scene/AllocatorProvider.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 
@@ -25,8 +25,8 @@ WaterRenderer::WaterRenderer(const std::shared_ptr<prev::render::pass::RenderPas
 
 void WaterRenderer::Init()
 {
-    auto device = prev::core::DeviceProvider::Instance().GetDevice();
-    auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
+    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
+    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     prev::render::shader::ShaderFactory shaderFactory;
     m_shader = shaderFactory.CreateShaderFromFiles<shader::WaterShader>(*device, shader::WaterShader::GetPaths());
@@ -40,10 +40,10 @@ void WaterRenderer::Init()
     LOGI("Water Pipeline created\n");
 
     m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
-    m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
     m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
-    m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
 void WaterRenderer::PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)

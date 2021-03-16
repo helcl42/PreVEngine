@@ -8,10 +8,10 @@
 #include "../../mesh/MeshFactory.h"
 #include "../../model/ModelFactory.h"
 
+#include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
-#include <prev/scene/AllocatorProvider.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 
@@ -23,8 +23,8 @@ SelectionDebugRenderer::SelectionDebugRenderer(const std::shared_ptr<prev::rende
 
 void SelectionDebugRenderer::Init()
 {
-    auto device = prev::core::DeviceProvider::Instance().GetDevice();
-    auto allocator = prev::scene::AllocatorProvider::Instance().GetAllocator();
+    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
+    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     prev::render::shader::ShaderFactory shaderFactory;
     m_shader = shaderFactory.CreateShaderFromFiles<shader::SelectionDebugShader>(*device, shader::SelectionDebugShader::GetPaths());
@@ -38,10 +38,10 @@ void SelectionDebugRenderer::Init()
     LOGI("Selection Debug Pipeline created\n");
 
     m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
-    m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
     m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
-    m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh = meshFactory.CreateSphere(1.0f, 32, 32);

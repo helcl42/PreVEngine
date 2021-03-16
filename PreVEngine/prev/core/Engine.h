@@ -3,6 +3,7 @@
 
 #include "../core/device/PhysicalDevices.h"
 #include "../core/instance/Instance.h"
+#include "../core/memory/Allocator.h"
 #include "../event/EventHandler.h"
 #include "../render/IRenderer.h"
 #include "../scene/IScene.h"
@@ -36,6 +37,8 @@ public:
 
     std::shared_ptr<prev::scene::IScene> GetScene() const;
 
+    std::shared_ptr<prev::core::device::Device> GetDevice() const;
+
 public:
     void operator()(const prev::window::WindowChangeEvent& windowChangeEvent);
 
@@ -49,6 +52,8 @@ private:
     void InitSurface();
 
     void InitDevice();
+
+    void InitAllocator();
 
 private:
     prev::event::EventHandler<Engine, prev::window::WindowChangeEvent> m_windowChangedHandler{ *this };
@@ -65,6 +70,8 @@ private:
     std::unique_ptr<prev::window::IWindow> m_window;
 
     std::shared_ptr<prev::core::device::Device> m_device;
+
+    std::shared_ptr<prev::core::memory::Allocator> m_allocator;
 
     std::shared_ptr<prev::scene::IScene> m_scene;
 

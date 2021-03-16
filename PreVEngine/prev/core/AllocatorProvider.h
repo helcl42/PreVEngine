@@ -6,7 +6,7 @@
 
 #include <memory>
 
-namespace prev::scene {
+namespace prev::core {
 class AllocatorProvider final : public prev::common::pattern::Singleton<AllocatorProvider> {
 public:
     ~AllocatorProvider() = default;
@@ -25,6 +25,6 @@ private:
 private:
     std::shared_ptr<prev::core::memory::Allocator> m_allocator;
 };
-} // namespace prev::scene
+} // namespace prev::core
 
 #endif // !__ALLOCATOR_PROVIDER_H__

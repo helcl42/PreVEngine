@@ -35,7 +35,7 @@ struct SwapchainBuffer {
 
 class Swapchain {
 public:
-    Swapchain(const prev::core::Queue& presentQueue, const prev::core::Queue& graphicsQueue, pass::RenderPass& renderPass, prev::core::memory::Allocator& allocator, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT);
+    Swapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT);
 
     virtual ~Swapchain();
 
@@ -55,10 +55,6 @@ public:
     void EndFrame();
 
     void Print() const;
-
-    const prev::core::Queue& GetPresentQueue() const;
-
-    const prev::core::Queue& GetGraphicsQueue() const;
 
 public:
     const VkExtent2D& GetExtent() const;
@@ -81,21 +77,19 @@ private:
     virtual std::vector<VkImage> GetSwapchainImages() const;
 
 private:
-    const prev::core::Queue& m_presentQueue;
+    core::device::Device& m_device;
 
-    const prev::core::Queue& m_graphicsQueue;
+    core::memory::Allocator& m_allocator;
 
     pass::RenderPass& m_renderPass;
 
-    prev::core::memory::Allocator& m_allocator;
-
-    const VkSampleCountFlagBits m_sampleCount;
-
-    VkPhysicalDevice m_gpu;
-
-    VkDevice m_device;
-
     VkSurfaceKHR m_surface;
+
+    VkSampleCountFlagBits m_sampleCount;
+
+    std::shared_ptr<prev::core::device::Queue> m_presentQueue;
+
+    std::shared_ptr<prev::core::device::Queue> m_graphicsQueue;
 
     std::unique_ptr<prev::core::memory::image::IImageBuffer> m_depthBuffer;
 

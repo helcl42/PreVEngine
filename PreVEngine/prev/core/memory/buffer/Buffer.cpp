@@ -20,7 +20,7 @@ Buffer::~Buffer()
 
 void Buffer::Clear()
 {
-    vkQueueWaitIdle(m_allocator.GetQueue());
+    vkQueueWaitIdle(*m_allocator.GetQueue());
 
     if (m_buffer) {
         m_allocator.DestroyBuffer(m_buffer, m_allocation);

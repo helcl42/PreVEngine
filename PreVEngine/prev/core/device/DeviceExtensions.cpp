@@ -20,7 +20,7 @@ DeviceExtensions::DeviceExtensions(const DeviceExtensions& other)
 
 void DeviceExtensions::Init(VkPhysicalDevice phy, const char* layerName)
 {
-    uint32_t count = 0;
+    uint32_t count{ 0 };
     VKERRCHECK(vkEnumerateDeviceExtensionProperties(phy, layerName, &count, nullptr));
 
     m_itemList.resize(count); // Resize buffer

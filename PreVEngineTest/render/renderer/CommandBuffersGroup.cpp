@@ -9,7 +9,7 @@ CommandBuffersGroup::CommandBuffersGroup(const std::vector<std::vector<VkCommand
 
 CommandBuffersGroup::~CommandBuffersGroup()
 {
-    auto device = prev::core::DeviceProvider::Instance().GetDevice();
+    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
 
     vkDeviceWaitIdle(*device);
 

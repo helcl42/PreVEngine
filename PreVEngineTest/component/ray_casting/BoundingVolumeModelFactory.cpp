@@ -2,7 +2,7 @@
 
 #include "../../render/model/Model.h"
 
-#include <prev/scene/AllocatorProvider.h>
+#include <prev/core/AllocatorProvider.h>
 
 namespace prev_test::component::ray_casting {
 std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateAABBModel(const prev_test::common::intersection::AABB& aabb) const
@@ -51,7 +51,7 @@ std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateAAB
         20, 21, 22, 22, 23, 20
     };
 
-    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
+    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     auto vertexBuffer{ std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator) };
     vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
@@ -107,7 +107,7 @@ std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateOBB
         20, 21, 22, 22, 23, 20
     };
 
-    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
+    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     auto vertexBuffer{ std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator) };
     vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
@@ -179,7 +179,7 @@ std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateSph
         curAngleY += addAngleY;
     }
 
-    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
+    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     auto vertexBuffer{ std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator) };
     vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));

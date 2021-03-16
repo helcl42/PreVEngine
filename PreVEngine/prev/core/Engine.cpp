@@ -1,9 +1,13 @@
 #include "Engine.h"
+#include "AllocatorProvider.h"
+#include "DeviceProvider.h"
+#include "device/DeviceFactory.h"
 
 #include "../scene/Scene.h"
 #include "../util/Utils.h"
 #include "../window/Window.h"
-#include "DeviceProvider.h"
+
+#include <map>
 
 namespace prev::core {
 Engine::Engine(const std::shared_ptr<EngineConfig>& config)
@@ -18,13 +22,15 @@ void Engine::Init()
     InitWindow();
     InitSurface();
     InitDevice();
+    InitAllocator();
 
     DeviceProvider::Instance().SetDevice(m_device);
+    AllocatorProvider::Instance().SetAllocator(m_allocator);
 }
 
 void Engine::InitScene()
 {
-    m_scene = std::make_shared<prev::scene::Scene>(m_config->sceneConfig, m_device, m_surface);
+    m_scene = std::make_shared<prev::scene::Scene>(m_config->sceneConfig, m_device, m_allocator, m_surface);
     m_scene->Init();
 }
 
@@ -68,12 +74,18 @@ void Engine::ShutDown()
     m_scene->ShutDownSceneGraph();
     m_scene->ShutDown();
 
+    AllocatorProvider::Instance().SetAllocator(nullptr);
     DeviceProvider::Instance().SetDevice(nullptr);
 }
 
 std::shared_ptr<prev::scene::IScene> Engine::GetScene() const
 {
     return m_scene;
+}
+
+std::shared_ptr<prev::core::device::Device> Engine::GetDevice() const
+{
+    return m_device;
 }
 
 void Engine::operator()(const prev::window::WindowChangeEvent& windowChangeEvent)
@@ -113,15 +125,27 @@ void Engine::InitSurface()
 
 void Engine::InitDevice()
 {
-    auto physicalDevices = std::make_shared<prev::core::device::PhysicalDevices>(*m_instance);
+    auto physicalDevices{ std::make_shared<prev::core::device::PhysicalDevices>(*m_instance) };
     physicalDevices->Print();
 
-    auto physicalDevice = physicalDevices->FindPresentable(m_surface);
-    if (!physicalDevice) {
+    auto presentablePhysicalDevice{ physicalDevices->FindPresentable(m_surface) };
+    if (!presentablePhysicalDevice) {
         throw std::runtime_error("No suitable GPU found?!");
     }
 
-    m_device = std::make_shared<prev::core::device::Device>(*physicalDevice);
+    prev::core::device::DeviceFactory deviceFactory{};
+    auto device{ deviceFactory.Create(presentablePhysicalDevice, m_surface) };
+    if (!device) {
+        throw std::runtime_error("Could not create logical device");
+    }
+
+    m_device = device;
     m_device->Print();
+}
+
+void Engine::InitAllocator()
+{
+    m_allocator = std::make_shared<prev::core::memory::Allocator>(m_device); // Create "Vulkan Memory Aloocator"
+    printf("Allocator created\n");
 }
 } // namespace prev::core

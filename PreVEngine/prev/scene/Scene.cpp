@@ -2,22 +2,18 @@
 #include "../util/VkUtils.h"
 
 namespace prev::scene {
-Scene::Scene(const std::shared_ptr<SceneConfig>& sceneConfig, const std::shared_ptr<prev::core::device::Device>& device, VkSurfaceKHR surface)
+Scene::Scene(const std::shared_ptr<SceneConfig>& sceneConfig, const std::shared_ptr<prev::core::device::Device>& device, const std::shared_ptr<prev::core::memory::Allocator>& allocator, VkSurfaceKHR surface)
     : m_config(sceneConfig)
     , m_device(device)
+    , m_allocator(allocator)
     , m_surface(surface)
 {
 }
 
 void Scene::Init()
 {
-    InitQueues();
     InitRenderPass();
-    InitAllocator();
     InitSwapchain();
-
-    AllocatorProvider::Instance().SetAllocator(m_allocator);
-    ComputeProvider::Instance().Set(m_computeQueue, m_computeAllocator);
 }
 
 void Scene::InitSceneGraph(const std::shared_ptr<prev::scene::graph::ISceneNode>& rootNode)
@@ -69,13 +65,8 @@ void Scene::ShutDownSceneGraph()
 
 void Scene::ShutDown()
 {
-    ComputeProvider::Instance().Reset();
-    AllocatorProvider::Instance().SetAllocator(nullptr);
-}
-
-std::shared_ptr<prev::core::device::Device> Scene::GetDevice() const
-{
-    return m_device;
+    m_swapchain = nullptr;
+    m_renderPass->Destroy();
 }
 
 std::shared_ptr<prev::render::Swapchain> Scene::GetSwapchain() const
@@ -86,11 +77,6 @@ std::shared_ptr<prev::render::Swapchain> Scene::GetSwapchain() const
 std::shared_ptr<prev::render::pass::RenderPass> Scene::GetRenderPass() const
 {
     return m_renderPass;
-}
-
-std::shared_ptr<prev::core::memory::Allocator> Scene::GetAllocator() const
-{
-    return m_allocator;
 }
 
 std::shared_ptr<prev::scene::graph::ISceneNode> Scene::GetRootNode() const
@@ -115,36 +101,10 @@ void Scene::operator()(const prev::window::SurfaceChanged& surfaceChangedEvent)
     m_swapchain->UpdateExtent();
 }
 
-void Scene::InitQueues()
-{
-    if (m_device->HasQueue(VK_QUEUE_COMPUTE_BIT, VK_QUEUE_GRAPHICS_BIT)) { // there is dedicated compute queue
-        m_computeQueue = m_device->AddQueue(VK_QUEUE_COMPUTE_BIT);
-    }
-
-    if (m_computeQueue) {
-        m_presentQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT, VK_QUEUE_COMPUTE_BIT, m_surface); // ?compute? + graphics + present queue
-        m_graphicsQueue = m_presentQueue;
-    } else {
-        m_presentQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, m_surface); // compute + graphics + present queue
-        m_graphicsQueue = m_presentQueue;
-        m_computeQueue = m_presentQueue;
-    }
-
-    // TODO -> this not correct, but...
-    if (!m_presentQueue) {
-        m_presentQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT, 0, m_surface); // graphics + present-queue
-        m_graphicsQueue = m_presentQueue;
-        if (!m_presentQueue) {
-            m_presentQueue = m_device->AddQueue(0, 0, m_surface); // create present-queue
-            m_graphicsQueue = m_device->AddQueue(VK_QUEUE_GRAPHICS_BIT); // create graphics queue
-        }
-    }
-}
-
 void Scene::InitRenderPass()
 {
-    const auto colorFormat = m_device->GetGPU().FindSurfaceFormat(m_surface);
-    const auto depthFormat = m_device->GetGPU().FindDepthFormat();
+    const auto colorFormat{ m_device->GetGPU()->FindSurfaceFormat(m_surface) };
+    const auto depthFormat{ m_device->GetGPU()->FindDepthFormat() };
     const VkClearColorValue clearColor{ 0.5f, 0.5f, 0.5f, 1.0f };
     const VkSampleCountFlagBits sampleCount = prev::util::VkUtils::GetSampleCountBit(m_config->samplesCount);
 
@@ -180,22 +140,9 @@ void Scene::InitRenderPass()
     }
 }
 
-void Scene::InitAllocator()
-{
-    m_allocator = std::make_shared<prev::core::memory::Allocator>(*m_graphicsQueue); // Create "Vulkan Memory Aloocator"
-    printf("Allocator created\n");
-
-    if (m_computeQueue != nullptr && m_graphicsQueue != m_computeQueue) {
-        m_computeAllocator = std::make_shared<prev::core::memory::Allocator>(*m_computeQueue);
-        printf("Allocator Compute created\n");
-    } else {
-        m_computeAllocator = m_allocator;
-    }
-}
-
 void Scene::InitSwapchain()
 {
-    m_swapchain = std::make_shared<prev::render::Swapchain>(*m_presentQueue, *m_graphicsQueue, *m_renderPass, *m_allocator, prev::util::VkUtils::GetSampleCountBit(m_config->samplesCount));
+    m_swapchain = std::make_shared<prev::render::Swapchain>(*m_device, *m_allocator, *m_renderPass, m_surface, prev::util::VkUtils::GetSampleCountBit(m_config->samplesCount));
 #if defined(__ANDROID__)
     m_swapchain->SetPresentMode(m_config->VSync ? VK_PRESENT_MODE_MAILBOX_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
 #else

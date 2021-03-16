@@ -7,7 +7,7 @@
 #include "TerrainComponent.h"
 #include "TerrainMesh.h"
 
-#include <prev/scene/AllocatorProvider.h>
+#include <prev/core/AllocatorProvider.h>
 
 namespace prev_test::component::terrain {
 TerrainComponentFactory::TerrainComponentFactory(const unsigned int seed, const unsigned int vertexCount)
@@ -18,7 +18,7 @@ TerrainComponentFactory::TerrainComponentFactory(const unsigned int seed, const 
 
 std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain(const int x, const int z, const float size) const
 {
-    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
+    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     HeightGenerator heightGenerator(x, z, m_vertexCount, m_seed);
     const std::shared_ptr<HeightMapInfo> heightMap{ CreateHeightMap(heightGenerator) };
@@ -48,7 +48,7 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
 
 std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrainNormalMapped(const int x, const int z, const float size) const
 {
-    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
+    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     HeightGenerator heightGenerator(x, z, m_vertexCount, m_seed);
     const std::shared_ptr<HeightMapInfo> heightMap{ CreateHeightMap(heightGenerator) };
@@ -78,7 +78,7 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
 
 std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrainParallaxMapped(const int x, const int z, const float size) const
 {
-    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
+    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     HeightGenerator heightGenerator(x, z, m_vertexCount, m_seed);
     const std::shared_ptr<HeightMapInfo> heightMap{ CreateHeightMap(heightGenerator) };
@@ -110,7 +110,7 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
 
 std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrainConeStepMapped(const int x, const int z, const float size) const
 {
-    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
+    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     HeightGenerator heightGenerator(x, z, m_vertexCount, m_seed);
     const std::shared_ptr<HeightMapInfo> heightMap{ CreateHeightMap(heightGenerator) };
