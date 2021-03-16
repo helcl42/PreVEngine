@@ -105,7 +105,7 @@ std::map<QueueType, std::vector<std::shared_ptr<Queue> > > Device::GetAllQueues(
 std::vector<QueueType> Device::GetAllQueueTypes() const
 {
     std::vector<QueueType> result;
-    std::transform(m_queues.begin(), m_queues.end(), std::back_inserter(result), [](const std::map<int, int>::value_type& pair) { return pair.first; });
+    std::transform(m_queues.begin(), m_queues.end(), std::back_inserter(result), [](const auto& pair) { return pair.first; });
     return result;
 }
 
