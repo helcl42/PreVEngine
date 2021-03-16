@@ -3,7 +3,7 @@
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer {
-std::unique_ptr<CommandBuffersGroup> CommandBuffersGroupFactory::CreateGroup(const prev::core::Queue& queue, const uint32_t dim0Size, const uint32_t groupSize) const
+std::unique_ptr<CommandBuffersGroup> CommandBuffersGroupFactory::CreateGroup(const prev::core::Queue& queue, const uint32_t dim0Size, const uint32_t groupSize, const VkCommandBufferLevel level) const
 {
     auto device = prev::core::DeviceProvider::Instance().GetDevice();
 
@@ -18,7 +18,7 @@ std::unique_ptr<CommandBuffersGroup> CommandBuffersGroupFactory::CreateGroup(con
         for (uint32_t shadowRendererIndex = 0; shadowRendererIndex < groupSize; shadowRendererIndex++) {
             auto pool = queue.CreateCommandPool();
             pools.push_back(pool);
-            buffers.push_back(prev::util::VkUtils::CreateCommandBuffer(*device, pool, VK_COMMAND_BUFFER_LEVEL_SECONDARY));
+            buffers.push_back(prev::util::VkUtils::CreateCommandBuffer(*device, pool, level));
         }
         commandPools.push_back(pools);
         commandBuffers.push_back(buffers);
