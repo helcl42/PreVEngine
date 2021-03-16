@@ -30,7 +30,7 @@ void ImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
     if (m_mipLevels > 1) {
         m_allocator.GenerateMipmaps(m_image, createInfo.format, m_extent, m_mipLevels, createInfo.layerCount);
     } else {
-        m_allocator.TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, m_mipLevels, createInfo.layerCount);
+        m_allocator.TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, m_format, m_mipLevels, createInfo.layerCount);
     }
 
     m_allocator.CreateImageView(m_image, createInfo.format, createInfo.viewType, m_mipLevels, createInfo.layerCount, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
