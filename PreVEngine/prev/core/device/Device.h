@@ -89,6 +89,12 @@ public:
 public:
     std::shared_ptr<Queue> GetQueue(const QueueType queueType, const uint32_t index = 0) const;
 
+    std::vector<std::shared_ptr<Queue> > GetQueues(const QueueType queueType) const;
+
+    std::map<QueueType, std::vector<std::shared_ptr<Queue> > > GetAllQueues() const;
+
+    std::vector<QueueType> GetAllQueueTypes() const;
+
     std::shared_ptr<PhysicalDevice> GetGPU() const;
 
     void Print() const;
