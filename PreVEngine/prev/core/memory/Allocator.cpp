@@ -16,6 +16,7 @@ namespace prev::core::memory {
 Allocator::Allocator(const std::shared_ptr<prev::core::device::Device>& device, const VkDeviceSize blockSize)
     : m_device(device)
 {
+    // TODO -> grahics queue only ??!!
     m_queue = m_device->GetQueue(prev::core::device::QueueType::GRAPHICS);
 
     m_commandPool = m_queue->CreateCommandPool();

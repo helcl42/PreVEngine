@@ -1,5 +1,8 @@
 ﻿#include "Device.h"
 
+#include <algorithm>
+#include <iterator>
+
 namespace prev::core::device {
 Device::Device(const std::shared_ptr<PhysicalDevice>& gpu, const QueueMetadataStorage& queuesMetadata)
     : m_gpu(gpu)
@@ -83,6 +86,27 @@ std::shared_ptr<Queue> Device::GetQueue(const QueueType queueType, const uint32_
     }
 
     return queuesGroup.at(index);
+}
+
+std::vector<std::shared_ptr<Queue> > Device::GetQueues(const QueueType queueType) const
+{
+    if (m_queues.find(queueType) == m_queues.cend()) {
+        LOGE("Trying to retrieve invalid QueueType.\n");
+        return {};
+    }
+    return m_queues.at(queueType);
+}
+
+std::map<QueueType, std::vector<std::shared_ptr<Queue> > > Device::GetAllQueues() const
+{
+    return m_queues;
+}
+
+std::vector<QueueType> Device::GetAllQueueTypes() const
+{
+    std::vector<QueueType> result;
+    std::transform(m_queues.begin(), m_queues.end(), std::back_inserter(result), [](const std::map<int, int>::value_type& pair) { return pair.first; });
+    return result;
 }
 
 std::shared_ptr<PhysicalDevice> Device::GetGPU() const
