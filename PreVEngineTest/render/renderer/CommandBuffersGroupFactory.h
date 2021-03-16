@@ -8,7 +8,7 @@
 namespace prev_test::render::renderer {
 class CommandBuffersGroupFactory {
 public:
-    std::unique_ptr<CommandBuffersGroup> CreateGroup(const prev::core::Queue& queue, const uint32_t dim0Size, const uint32_t groupSize) const;
+    std::unique_ptr<CommandBuffersGroup> CreateGroup(const prev::core::Queue& queue, const uint32_t dim0Size, const uint32_t groupSize, const VkCommandBufferLevel level) const;
 };
 } // namespace prev_test::render::renderer
 
