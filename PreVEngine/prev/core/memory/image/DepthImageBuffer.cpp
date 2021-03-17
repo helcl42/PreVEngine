@@ -19,7 +19,11 @@ void DepthImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
 
     Resize(createInfo.extent);
 
+#if defined(__ANDROID__)
+    // nothing on android ??
+#else
     m_allocator.TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, m_format, m_mipLevels, m_layerCount);
+#endif
 }
 
 void DepthImageBuffer::Resize(const VkExtent3D& extent)

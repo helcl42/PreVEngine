@@ -40,7 +40,7 @@ std::shared_ptr<Device> DeviceFactory::Create(const std::shared_ptr<PhysicalDevi
 
     if (!queuesMetadataStorage.HasAny(QueueType::GRAPHICS) || !queuesMetadataStorage.HasAny(QueueType::PRESENT) || !queuesMetadataStorage.HasAny(QueueType::COMPUTE)) {
         LOGE("Could not find all necessary queues.\n");
-        return false;
+        return nullptr;
     }
 
     return std::make_shared<Device>(gpu, queuesMetadataStorage);
