@@ -13,12 +13,10 @@
 #include <external/vk_mem_alloc.h>
 
 namespace prev::core::memory {
-Allocator::Allocator(const std::shared_ptr<prev::core::device::Device>& device, const VkDeviceSize blockSize)
+Allocator::Allocator(const std::shared_ptr<prev::core::device::Device>& device, const prev::core::device::QueueType queueType, const VkDeviceSize blockSize)
     : m_device(device)
 {
-    // TODO -> grahics queue only ??!!
-    m_queue = m_device->GetQueue(prev::core::device::QueueType::GRAPHICS);
-
+    m_queue = m_device->GetQueue(queueType);
     m_commandPool = m_queue->CreateCommandPool();
     m_commandBuffer = prev::util::VkUtils::CreateCommandBuffer(*m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
@@ -65,25 +63,6 @@ Allocator::~Allocator()
     if (m_allocator) {
         vmaDestroyAllocator(m_allocator);
     }
-}
-
-void Allocator::BeginCommandBuffer()
-{
-    VkCommandBufferBeginInfo cmdBufBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-    cmdBufBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    VKERRCHECK(vkBeginCommandBuffer(m_commandBuffer, &cmdBufBeginInfo));
-}
-
-void Allocator::EndCommandBuffer()
-{
-    VKERRCHECK(vkEndCommandBuffer(m_commandBuffer));
-
-    VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &m_commandBuffer;
-    VKERRCHECK(vkQueueSubmit(*m_queue, 1, &submitInfo, VK_NULL_HANDLE));
-
-    VKERRCHECK(vkQueueWaitIdle(*m_queue));
 }
 
 void Allocator::CreateBuffer(const void* data, uint64_t size, VkBufferUsageFlags usage, VmaMemoryUsage memtype, VkBuffer& buffer, VmaAllocation& alloc, void** mapped)
@@ -148,6 +127,60 @@ void Allocator::CreateBuffer(const void* data, uint64_t size, VkBufferUsageFlags
     }
 }
 
+void Allocator::DestroyBuffer(VkBuffer buffer, VmaAllocation alloc)
+{
+    vmaDestroyBuffer(m_allocator, buffer, alloc);
+}
+
+void Allocator::CreateImage(const VkExtent3D& extent, const VkImageType imageType, const VkFormat format, const VkSampleCountFlagBits sampleCount, const uint32_t mipLevels, const uint32_t layerCount, const VkImageTiling tiling, const VkImageUsageFlags usage, const VkImageCreateFlags flags, VkImage& outImage, VmaAllocation& outAlloc)
+{
+    VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+    imageInfo.flags = flags;
+    imageInfo.imageType = imageType;
+    imageInfo.format = format;
+    imageInfo.extent = extent;
+    imageInfo.mipLevels = mipLevels;
+    imageInfo.arrayLayers = layerCount;
+    imageInfo.samples = sampleCount;
+    imageInfo.tiling = tiling;
+    imageInfo.usage = usage;
+    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+    VmaAllocationCreateInfo allocGpuOnlyCreateInfo = {};
+    allocGpuOnlyCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    allocGpuOnlyCreateInfo.flags = 0;
+    vmaCreateImage(m_allocator, &imageInfo, &allocGpuOnlyCreateInfo, &outImage, &outAlloc, nullptr);
+}
+
+void Allocator::DestroyImage(VkImage image, VkImageView view, VmaAllocation alloc)
+{
+    if (view) {
+        vkDestroyImageView(*m_device, view, nullptr);
+    }
+
+    vmaDestroyImage(m_allocator, image, alloc);
+}
+
+void Allocator::CreateImageView(const VkImage image, const VkFormat format, const VkImageViewType viewType, const uint32_t mipLevels, const uint32_t layerCount, const VkImageAspectFlags aspectFlags, VkImageView& outImagaView)
+{
+    VkImageViewCreateInfo imageViewCreateInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+    imageViewCreateInfo.image = image;
+    imageViewCreateInfo.viewType = viewType;
+    imageViewCreateInfo.format = format;
+    imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_R;
+    imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_G;
+    imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_B;
+    imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_A;
+    imageViewCreateInfo.subresourceRange.aspectMask = aspectFlags;
+    imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
+    imageViewCreateInfo.subresourceRange.levelCount = mipLevels;
+    imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
+    imageViewCreateInfo.subresourceRange.layerCount = layerCount;
+
+    VKERRCHECK(vkCreateImageView(*m_device, &imageViewCreateInfo, nullptr, &outImagaView));
+}
+
 void Allocator::CopyBuffer(const VkBuffer srcBuffer, const VkDeviceSize size, VkBuffer dstBuffer)
 {
     BeginCommandBuffer();
@@ -184,32 +217,6 @@ void Allocator::CopyBufferToImage(const VkExtent3D& extent, const VkBuffer buffe
     EndCommandBuffer();
 }
 
-void Allocator::DestroyBuffer(VkBuffer buffer, VmaAllocation alloc)
-{
-    vmaDestroyBuffer(m_allocator, buffer, alloc);
-}
-
-void Allocator::CreateImage(const VkExtent3D& extent, const VkImageType imageType, const VkFormat format, const VkSampleCountFlagBits sampleCount, const uint32_t mipLevels, const uint32_t layerCount, const VkImageTiling tiling, const VkImageUsageFlags usage, const VkImageCreateFlags flags, VkImage& outImage, VmaAllocation& outAlloc)
-{
-    VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
-    imageInfo.flags = flags;
-    imageInfo.imageType = imageType;
-    imageInfo.format = format;
-    imageInfo.extent = extent;
-    imageInfo.mipLevels = mipLevels;
-    imageInfo.arrayLayers = layerCount;
-    imageInfo.samples = sampleCount;
-    imageInfo.tiling = tiling;
-    imageInfo.usage = usage;
-    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-
-    VmaAllocationCreateInfo allocGpuOnlyCreateInfo = {};
-    allocGpuOnlyCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-    allocGpuOnlyCreateInfo.flags = 0;
-    vmaCreateImage(m_allocator, &imageInfo, &allocGpuOnlyCreateInfo, &outImage, &outAlloc, nullptr);
-}
-
 void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const std::vector<const uint8_t*> layerData, const uint32_t layerCount, VkImage& image)
 {
     for (uint32_t layerIndex = 0; layerIndex < layerCount; layerIndex++) {
@@ -241,25 +248,6 @@ void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format,
 
         vmaDestroyBuffer(m_allocator, stageBuffer, stageBufferAlloc);
     }
-}
-
-void Allocator::CreateImageView(const VkImage image, const VkFormat format, const VkImageViewType viewType, const uint32_t mipLevels, const uint32_t layerCount, const VkImageAspectFlags aspectFlags, VkImageView& outImagaView)
-{
-    VkImageViewCreateInfo imageViewCreateInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-    imageViewCreateInfo.image = image;
-    imageViewCreateInfo.viewType = viewType;
-    imageViewCreateInfo.format = format;
-    imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_R;
-    imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_G;
-    imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_B;
-    imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_A;
-    imageViewCreateInfo.subresourceRange.aspectMask = aspectFlags;
-    imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-    imageViewCreateInfo.subresourceRange.levelCount = mipLevels;
-    imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-    imageViewCreateInfo.subresourceRange.layerCount = layerCount;
-
-    VKERRCHECK(vkCreateImageView(*m_device, &imageViewCreateInfo, nullptr, &outImagaView));
 }
 
 void Allocator::GenerateMipmaps(const VkImage image, VkFormat imageFormat, const VkExtent3D& extent, const uint32_t mipLevels, const uint32_t layersCount)
@@ -448,15 +436,6 @@ void Allocator::TransitionImageLayout(const VkImage image, const VkImageLayout o
     EndCommandBuffer();
 }
 
-void Allocator::DestroyImage(VkImage image, VkImageView view, VmaAllocation alloc)
-{
-    if (view) {
-        vkDestroyImageView(*m_device, view, nullptr);
-    }
-
-    vmaDestroyImage(m_allocator, image, alloc);
-}
-
 std::shared_ptr<prev::core::device::Device> Allocator::GetDevice() const
 {
     return m_device;
@@ -466,4 +445,24 @@ std::shared_ptr<prev::core::device::Queue> Allocator::GetQueue() const
 {
     return m_queue;
 }
+
+void Allocator::BeginCommandBuffer()
+{
+    VkCommandBufferBeginInfo cmdBufBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+    cmdBufBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    VKERRCHECK(vkBeginCommandBuffer(m_commandBuffer, &cmdBufBeginInfo));
+}
+
+void Allocator::EndCommandBuffer()
+{
+    VKERRCHECK(vkEndCommandBuffer(m_commandBuffer));
+
+    VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &m_commandBuffer;
+    VKERRCHECK(vkQueueSubmit(*m_queue, 1, &submitInfo, VK_NULL_HANDLE));
+
+    VKERRCHECK(vkQueueWaitIdle(*m_queue));
+}
+
 } // namespace prev::core::memory
