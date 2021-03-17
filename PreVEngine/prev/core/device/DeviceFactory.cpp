@@ -65,7 +65,7 @@ bool DeviceFactory::FindQueue(const std::shared_ptr<PhysicalDevice>& gpu, VkQueu
         return false;
     }
 
-    const auto& queueFamily{ gpu->GetQueueFamilies().at(familyIndex) };
+    const auto queueFamily{ gpu->GetQueueFamilies().at(familyIndex) };
     uint32_t queueIndex{ FamilyQueueCount(addedQueues, familyIndex) };
     if (queueIndex == queueFamily.queueCount) {
         LOGW("No more queues available from this family.\n");
