@@ -10,7 +10,7 @@
 namespace prev::core::memory {
 class Allocator final {
 public:
-    Allocator(const std::shared_ptr<prev::core::device::Device>& device, const prev::core::device::QueueType queueType, const VkDeviceSize blockSize = 256);
+    Allocator(prev::core::device::Device& device, prev::core::device::Queue& queue, const VkDeviceSize blockSize = 256);
 
     ~Allocator();
 
@@ -37,9 +37,9 @@ public:
     void TransitionImageLayout(const VkImage image, const VkImageLayout oldLayout, const VkImageLayout newLayout, const VkFormat format, const uint32_t mipLevels = 1, const uint32_t layersCount = 1);
 
 public:
-    std::shared_ptr<prev::core::device::Device> GetDevice() const;
+    prev::core::device::Device& GetDevice() const;
 
-    std::shared_ptr<prev::core::device::Queue> GetQueue() const;
+    prev::core::device::Queue& GetQueue() const;
 
 private:
     void BeginCommandBuffer();
@@ -47,15 +47,15 @@ private:
     void EndCommandBuffer();
 
 private:
-    std::shared_ptr<prev::core::device::Device> m_device;
+    prev::core::device::Device& m_device;
 
-    VmaAllocator m_allocator;
-
-    std::shared_ptr<prev::core::device::Queue> m_queue;
+    prev::core::device::Queue& m_queue;
 
     VkCommandPool m_commandPool;
 
     VkCommandBuffer m_commandBuffer;
+
+    VmaAllocator m_allocator;
 };
 } // namespace prev::core::memory
 
