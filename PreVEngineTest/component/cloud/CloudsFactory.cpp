@@ -3,10 +3,10 @@
 #include "../../render/renderer/sky/pipeline/CloudsPipeline.h"
 #include "../../render/renderer/sky/shader/CloudsShader.h"
 
+#include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/image/ImageStorageBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
-#include <prev/scene/ComputeProvider.h>
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::component::cloud {
@@ -23,9 +23,9 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsFactory::Create(c
 
     const auto weatherImageFormat{ VK_FORMAT_R8G8B8A8_UNORM };
 
-    auto device = prev::core::DeviceProvider::Instance().GetDevice();
-    auto computeQueue = prev::scene::ComputeProvider::Instance().GetQueue();
-    auto computeAllocator = prev::scene::ComputeProvider::Instance().GetAllocator();
+    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
+    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
+    auto computeQueue{ device->GetQueue(prev::core::device::QueueType::COMPUTE) };
 
     prev::render::shader::ShaderFactory shaderFactory{};
     auto shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::CloudsShader>(*device, prev_test::render::renderer::sky::shader::CloudsShader::GetPaths());
@@ -33,8 +33,8 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsFactory::Create(c
     auto pipeline = std::make_unique<prev_test::render::renderer::sky::pipeline::CloudsPipeline>(*device, *shader);
     pipeline->Init();
 
-    auto uniformsPool = std::make_unique<prev::core::memory::buffer::UBOPool<Uniforms> >(*computeAllocator);
-    uniformsPool->AdjustCapactity(3, static_cast<uint32_t>(device->GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    auto uniformsPool = std::make_unique<prev::core::memory::buffer::UBOPool<Uniforms> >(*allocator);
+    uniformsPool->AdjustCapactity(3, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
     auto commandPool = computeQueue->CreateCommandPool();
     auto commandBuffer = prev::util::VkUtils::CreateCommandBuffer(*device, commandPool);
@@ -42,7 +42,7 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsFactory::Create(c
     auto fence = prev::util::VkUtils::CreateFence(*device);
 
     prev::core::memory::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ width, height }, VK_IMAGE_TYPE_2D, weatherImageFormat, VK_SAMPLE_COUNT_1_BIT, 0, false, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT };
-    auto weatherImageBuffer = std::make_unique<prev::core::memory::image::ImageStorageBuffer>(*computeAllocator);
+    auto weatherImageBuffer = std::make_unique<prev::core::memory::image::ImageStorageBuffer>(*allocator);
     weatherImageBuffer->Create(bufferCreateInfo);
 
     VKERRCHECK(vkQueueWaitIdle(*computeQueue));
@@ -89,7 +89,7 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsFactory::Create(c
     vkDestroyFence(*device, fence, nullptr);
     vkDestroyCommandPool(*device, commandPool, nullptr);
 
-    computeAllocator->TransitionImageLayout(weatherImageBuffer->GetImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, weatherImageFormat, weatherImageBuffer->GetMipLevels());
+    allocator->TransitionImageLayout(weatherImageBuffer->GetImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, weatherImageFormat, weatherImageBuffer->GetMipLevels());
 
     pipeline->ShutDown();
 

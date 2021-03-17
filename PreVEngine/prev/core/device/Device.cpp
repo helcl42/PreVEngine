@@ -1,145 +1,121 @@
 ﻿#include "Device.h"
 
+#include <algorithm>
+#include <iterator>
+
 namespace prev::core::device {
-bool Device::HasQueue(VkQueueFlags flags, VkQueueFlags unwantedFlags, VkSurfaceKHR surface)
+Device::Device(const std::shared_ptr<PhysicalDevice>& gpu, const QueueMetadataStorage& queuesMetadata)
+    : m_gpu(gpu)
 {
-    return m_gpu.FindQueueFamily(flags, unwantedFlags, surface) >= 0;
-}
-
-std::shared_ptr<Queue> Device::AddQueue(VkQueueFlags flags, VkQueueFlags unwantedFlags, VkSurfaceKHR surface)
-{
-    ASSERT(!m_handle, "Can't add queues after device is already in use. ");
-
-    int32_t familyIndex = m_gpu.FindQueueFamily(flags, unwantedFlags, surface);
-    if (familyIndex < 0) {
-        LOGW("Could not create queue with requested properties.");
-        return nullptr;
-    }
-
-    uint32_t max = m_gpu.GetQueueFamilies().at(familyIndex).queueCount;
-    uint32_t queueIndex = FamilyQueueCount(familyIndex);
-    if (queueIndex == max) {
-        LOGW("No more queues available from this family.");
-        return nullptr;
-    }
-
-    auto queue = std::make_shared<Queue>(nullptr, familyIndex, queueIndex, flags, surface, m_handle, m_gpu);
-    m_queues.push_back(queue);
-
-    LOGI("Queue: %d  flags: [ %s%s%s%s]%s\n", queueIndex, (flags & 1) ? "GRAPHICS " : "", (flags & 2) ? "COMPUTE " : "", (flags & 4) ? "TRANSFER " : "", (flags & 8) ? "SPARSE " : "", surface ? " (can present)" : "");
-
-    return queue;
-}
-
-PhysicalDevice& Device::GetGPU()
-{
-    return m_gpu;
-}
-
-Device::operator VkDevice()
-{
-    if (m_handle == nullptr) // make it lazy or const ??!
-    {
-        Create();
-    }
-    return m_handle;
-}
-
-uint32_t Device::FamilyQueueCount(uint32_t family) const
-{
-    uint32_t count = 0;
-    for (auto& q : m_queues) {
-        if (q->family == family) {
-            count++;
-        }
-    }
-    return count;
-}
-
-void Device::Create()
-{
-    if (m_handle != nullptr) {
-        Destroy();
-    }
-
-    std::vector<float> priorities(m_queues.size(), 0.0f);
-    std::vector<VkDeviceQueueCreateInfo> infoList;
-
-    const auto queueFamilies = m_gpu.GetQueueFamilies();
-
-    const uint32_t queueFamiliesCount = static_cast<uint32_t>(queueFamilies.size());
-    for (uint32_t i = 0; i < queueFamiliesCount; i++) {
-        uint32_t queueCount = FamilyQueueCount(i);
-        if (queueCount > 0) {
-            VkDeviceQueueCreateInfo info = {};
-            info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-            info.queueFamilyIndex = static_cast<uint32_t>(i);
-            info.queueCount = queueCount;
-            info.pQueuePriorities = priorities.data();
-            infoList.push_back(info);
-        }
-    }
-
-    DeviceExtensions& extensions = m_gpu.GetExtensions();
-    VkDeviceCreateInfo deviceCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
-    deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(infoList.size());
-    deviceCreateInfo.pQueueCreateInfos = infoList.data();
-    deviceCreateInfo.enabledExtensionCount = extensions.PickCount();
-    deviceCreateInfo.ppEnabledExtensionNames = extensions.GetPickList();
-    deviceCreateInfo.pEnabledFeatures = &m_gpu.GetEnabledFeatures();
-    VKERRCHECK(vkCreateDevice(m_gpu, &deviceCreateInfo, nullptr, &m_handle)); // create device
-
-    for (auto& q : m_queues) {
-        q->device = m_handle;
-        vkGetDeviceQueue(m_handle, q->family, q->index, &q->handle); // get queue handles
-    }
-}
-
-void Device::Destroy()
-{
-    if (m_handle == nullptr) {
-        return;
-    }
-
-    vkDeviceWaitIdle(m_handle);
-    vkDestroyDevice(m_handle, nullptr);
-
-    m_handle = nullptr;
-}
-
-Device::Device(PhysicalDevice& inGpu)
-    : m_handle(nullptr)
-    , m_gpu(inGpu)
-{
-    m_queues.reserve(16);
-
-    LOGI("Logical Device using GPU: %s\n", m_gpu.GetProperties().deviceName);
+    LOGI("Logical Device using GPU: %s\n", m_gpu->GetProperties().deviceName);
 
 #ifdef ENABLE_VALIDATION
-    m_gpu.GetExtensions().Print();
+    m_gpu->GetExtensions().Print();
 #endif
+
+    const auto distinctQueueFamilyIndices{ queuesMetadata.GetDistinctQueueFamiies() };
+
+    std::vector<float> priorities(distinctQueueFamilyIndices.size(), 0.0f);
+    std::vector<VkDeviceQueueCreateInfo> queueCreateInfoList;
+    for (const auto queueFamilyIndex : distinctQueueFamilyIndices) {
+        const auto queueCount{ queuesMetadata.GetQueueFamilyCount(queueFamilyIndex) };
+        VkDeviceQueueCreateInfo info = { VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
+        info.queueFamilyIndex = queueFamilyIndex;
+        info.queueCount = queueCount;
+        info.pQueuePriorities = priorities.data();
+        queueCreateInfoList.push_back(info);
+    }
+
+    const auto& extensions{ m_gpu->GetExtensions() };
+    VkDeviceCreateInfo deviceCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+    deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfoList.size());
+    deviceCreateInfo.pQueueCreateInfos = queueCreateInfoList.data();
+    deviceCreateInfo.enabledExtensionCount = extensions.PickCount();
+    deviceCreateInfo.ppEnabledExtensionNames = extensions.GetPickList();
+    deviceCreateInfo.pEnabledFeatures = &m_gpu->GetEnabledFeatures();
+    VKERRCHECK(vkCreateDevice(*m_gpu, &deviceCreateInfo, nullptr, &m_handle)); // create device
+
+    for (const auto& [queueGroupKey, queueGroupList] : queuesMetadata.queueGroups) {
+        for (const auto& groupItem : queueGroupList) {
+            VkQueue vkQueue;
+            vkGetDeviceQueue(m_handle, groupItem.family, groupItem.index, &vkQueue);
+            m_queues[queueGroupKey].push_back(std::make_shared<Queue>(vkQueue, groupItem.family, groupItem.index, groupItem.flags, groupItem.surface, m_handle));
+        }
+    }
 }
 
 Device::~Device()
 {
-    Destroy();
+    vkDeviceWaitIdle(m_handle);
+    vkDestroyDevice(m_handle, nullptr);
+    m_handle = nullptr;
+
     LOGI("Logical device destroyed\n");
 }
 
 void Device::Print() const
 {
-    printf("Logical Device used queues:\n");
-    for (size_t i = 0; i < m_queues.size(); i++) {
-        const auto& q = m_queues.at(i);
-        printf("\t%zd: family=%d index=%d presentable=%s flags=", i, q->family, q->index, (q->surface == VK_NULL_HANDLE ? "False" : "True"));
+    const std::map<QueueType, std::string> queuNames = {
+        { QueueType::PRESENT, "PRESENT" },
+        { QueueType::GRAPHICS, "GRAPHICS" },
+        { QueueType::COMPUTE, "COMPUTE" },
+        { QueueType::TRANSFER, "TRANSFER" },
+        { QueueType::SPARSE, "SPARSE" },
+        { QueueType::PROTECTED, "PROTECTED" }
+    };
 
-        const char* famillyNames[] = { "GRAPHICS", "COMPUTE", "TRANSFER", "SPARSE", "PROTECTED" };
-        for (int j = 0; j < 5; j++) {
-            if (q->flags & 1 << j) {
-                printf("%s ", famillyNames[j]);
-            }
+    printf("Logical Device used queues:\n");
+    for (const auto& [qGroupKey, gQroupList] : m_queues) {
+        for (const auto& qGroupItem : gQroupList) {
+            LOGI("Queue: %s index: %d family: %d flags: [ %s%s%s%s%s]%s\n", queuNames.at(qGroupKey).c_str(), qGroupItem->index, qGroupItem->family, (qGroupItem->flags & 1) ? "GRAPHICS " : "", (qGroupItem->flags & 2) ? "COMPUTE " : "", (qGroupItem->flags & 4) ? "TRANSFER " : "", (qGroupItem->flags & 8) ? "SPARSE " : "", (qGroupItem->flags & 16) ? "PROTECTED" : "", qGroupItem->surface ? " (can present)" : "");
         }
-        printf("\n");
     }
+}
+
+std::shared_ptr<Queue> Device::GetQueue(const QueueType queueType, const uint32_t index) const
+{
+    if (m_queues.find(queueType) == m_queues.cend()) {
+        LOGE("Trying to retrieve invalid QueueType.\n");
+        return nullptr;
+    }
+
+    const auto& queuesGroup{ m_queues.at(queueType) };
+    if (index >= queuesGroup.size()) {
+        LOGE("Trying access queue at invalid index %ud.\n", index);
+        return nullptr;
+    }
+
+    return queuesGroup.at(index);
+}
+
+std::vector<std::shared_ptr<Queue> > Device::GetQueues(const QueueType queueType) const
+{
+    if (m_queues.find(queueType) == m_queues.cend()) {
+        LOGE("Trying to retrieve invalid QueueType.\n");
+        return {};
+    }
+    return m_queues.at(queueType);
+}
+
+std::map<QueueType, std::vector<std::shared_ptr<Queue> > > Device::GetAllQueues() const
+{
+    return m_queues;
+}
+
+std::vector<QueueType> Device::GetAllQueueTypes() const
+{
+    std::vector<QueueType> result;
+    std::transform(m_queues.begin(), m_queues.end(), std::back_inserter(result), [](const auto& pair) { return pair.first; });
+    return result;
+}
+
+std::shared_ptr<PhysicalDevice> Device::GetGPU() const
+{
+    return m_gpu;
+}
+
+Device::operator VkDevice() const
+{
+    return m_handle;
 }
 } // namespace prev::core::device

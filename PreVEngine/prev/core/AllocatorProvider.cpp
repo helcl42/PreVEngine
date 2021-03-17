@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-namespace prev::scene {
+namespace prev::core {
 std::shared_ptr<prev::core::memory::Allocator> AllocatorProvider::GetAllocator() const
 {
     return m_allocator;
@@ -12,4 +12,4 @@ void AllocatorProvider::SetAllocator(const std::shared_ptr<prev::core::memory::A
 {
     m_allocator = alloc;
 }
-} // namespace prev::scene
+} // namespace prev::core

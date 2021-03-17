@@ -3,14 +3,11 @@
 
 #include "../common/pattern/Singleton.h"
 #include "../core/device/Device.h"
-#include "../core/memory/Allocator.h"
 #include "../event/EventHandler.h"
 #include "../render/IRenderer.h"
 #include "../render/Swapchain.h"
 #include "../window/WindowEvents.h"
 
-#include "AllocatorProvider.h"
-#include "ComputeProvider.h"
 #include "IScene.h"
 #include "Scene.h"
 #include "SceneConfig.h"
@@ -19,7 +16,7 @@
 namespace prev::scene {
 class Scene : public IScene {
 public:
-    Scene(const std::shared_ptr<SceneConfig>& sceneConfig, const std::shared_ptr<prev::core::device::Device>& device, VkSurfaceKHR surface);
+    Scene(const std::shared_ptr<SceneConfig>& sceneConfig, const std::shared_ptr<prev::core::device::Device>& device, const std::shared_ptr<prev::core::memory::Allocator>& allocator, VkSurfaceKHR surface);
 
     virtual ~Scene() = default;
 
@@ -41,13 +38,9 @@ public:
     void ShutDown() override;
 
 public:
-    std::shared_ptr<prev::core::device::Device> GetDevice() const override;
-
     std::shared_ptr<prev::render::Swapchain> GetSwapchain() const override;
 
     std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const override;
-
-    std::shared_ptr<prev::core::memory::Allocator> GetAllocator() const override;
 
     std::shared_ptr<prev::scene::graph::ISceneNode> GetRootNode() const override;
 
@@ -59,11 +52,7 @@ public:
     void operator()(const prev::window::SurfaceChanged& surfaceChangedEvent);
 
 private:
-    void InitQueues();
-
     void InitRenderPass();
-
-    void InitAllocator();
 
     void InitSwapchain();
 
@@ -72,19 +61,11 @@ protected:
 
     std::shared_ptr<prev::core::device::Device> m_device;
 
-    std::shared_ptr<prev::core::Queue> m_presentQueue;
-
-    std::shared_ptr<prev::core::Queue> m_graphicsQueue;
-
-    std::shared_ptr<prev::core::Queue> m_computeQueue;
+    std::shared_ptr<prev::core::memory::Allocator> m_allocator;
 
     VkSurfaceKHR m_surface;
 
 protected:
-    std::shared_ptr<prev::core::memory::Allocator> m_allocator;
-
-    std::shared_ptr<prev::core::memory::Allocator> m_computeAllocator;
-
     std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
     std::shared_ptr<prev::render::Swapchain> m_swapchain;

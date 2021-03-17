@@ -31,13 +31,9 @@ public:
 
     virtual std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> > GetRootRenderer() const = 0;
 
-    virtual std::shared_ptr<prev::core::device::Device> GetDevice() const = 0;
-
     virtual std::shared_ptr<prev::render::Swapchain> GetSwapchain() const = 0;
 
     virtual std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const = 0;
-
-    virtual std::shared_ptr<prev::core::memory::Allocator> GetAllocator() const = 0;
 
 public:
     virtual ~IScene() = default;

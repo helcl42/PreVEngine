@@ -242,7 +242,7 @@ static uint32_t FormatChannels(VkFormat format)
 
 static bool HasStencilComponent(VkFormat format)
 {
-    return VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
+    return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
 }
 } // namespace prev::core
 

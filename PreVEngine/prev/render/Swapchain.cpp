@@ -1,4 +1,6 @@
 #include "Swapchain.h"
+#include "../core/AllocatorProvider.h"
+#include "../core/DeviceProvider.h"
 #include "../core/memory/image/ColorImageBuffer.h"
 #include "../core/memory/image/DepthImageBuffer.h"
 #include "../util/MathUtils.h"
@@ -7,28 +9,58 @@
 #include <algorithm>
 
 namespace prev::render {
-Swapchain::Swapchain(const prev::core::Queue& presentQueue, const prev::core::Queue& graphicsQueue, pass::RenderPass& renderPass, prev::core::memory::Allocator& allocator, VkSampleCountFlagBits sampleCount)
-    : m_presentQueue(presentQueue)
-    , m_graphicsQueue(graphicsQueue)
-    , m_renderPass(renderPass)
+Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount)
+    : m_device(device)
     , m_allocator(allocator)
+    , m_renderPass(renderPass)
+    , m_surface(surface)
     , m_sampleCount(sampleCount)
-    , m_gpu(presentQueue.gpu)
-    , m_device(presentQueue.device)
-    , m_surface(presentQueue.surface)
 {
-    Init();
+    m_graphicsQueue = m_device.GetQueue(core::device::QueueType::GRAPHICS);
+    m_presentQueue = m_device.GetQueue(core::device::QueueType::PRESENT);
 
-    m_commandPool = graphicsQueue.CreateCommandPool();
+    m_swapchain = VK_NULL_HANDLE;
+    m_isAcquired = false;
 
-    m_depthBuffer = std::make_unique<prev::core::memory::image::DepthImageBuffer>(allocator);
-    m_depthBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, renderPass.GetDepthFormat(), VK_SAMPLE_COUNT_1_BIT, 0, false, false, VK_IMAGE_VIEW_TYPE_2D });
+    VkSurfaceCapabilitiesKHR surfaceCapabilities = GetSurfaceCapabilities();
+    assert(surfaceCapabilities.supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+    assert(surfaceCapabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR);
+    assert(surfaceCapabilities.supportedCompositeAlpha & (VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR | VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR));
+
+    m_swapchainCreateInfo = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
+    m_swapchainCreateInfo.surface = m_surface;
+    m_swapchainCreateInfo.imageFormat = m_renderPass.GetSurfaceFormat();
+    m_swapchainCreateInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+    m_swapchainCreateInfo.imageArrayLayers = 1; // 2 for stereo
+    m_swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    m_swapchainCreateInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+    m_swapchainCreateInfo.clipped = VK_TRUE;
+    m_swapchainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+
+    if (m_presentQueue->family != m_graphicsQueue->family) {
+        const uint32_t families[] = { m_presentQueue->family, m_graphicsQueue->family };
+        m_swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+        m_swapchainCreateInfo.queueFamilyIndexCount = 2;
+        m_swapchainCreateInfo.pQueueFamilyIndices = families;
+    } else {
+        m_swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    }
+
+    m_swapchainCreateInfo.compositeAlpha = (surfaceCapabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR) ? VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR : VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+
+    UpdateExtent();
+    SetImageCount(3);
+
+    m_commandPool = m_graphicsQueue->CreateCommandPool();
+
+    m_depthBuffer = std::make_unique<core::memory::image::DepthImageBuffer>(m_allocator);
+    m_depthBuffer->Create(core::memory::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, renderPass.GetDepthFormat(), VK_SAMPLE_COUNT_1_BIT, 0, false, false, VK_IMAGE_VIEW_TYPE_2D });
 
     if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
-        m_msaaColorBuffer = std::make_unique<prev::core::memory::image::ColorImageBuffer>(m_allocator);
-        m_msaaColorBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, m_renderPass.GetSurfaceFormat(), m_sampleCount, 0, false, false, VK_IMAGE_VIEW_TYPE_2D });
-        m_msaaDepthBuffer = std::make_unique<prev::core::memory::image::DepthImageBuffer>(m_allocator);
-        m_msaaDepthBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, m_renderPass.GetDepthFormat(), m_sampleCount, 0, false, false, VK_IMAGE_VIEW_TYPE_2D });
+        m_msaaColorBuffer = std::make_unique<core::memory::image::ColorImageBuffer>(m_allocator);
+        m_msaaColorBuffer->Create(core::memory::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, m_renderPass.GetSurfaceFormat(), m_sampleCount, 0, false, false, VK_IMAGE_VIEW_TYPE_2D });
+        m_msaaDepthBuffer = std::make_unique<core::memory::image::DepthImageBuffer>(m_allocator);
+        m_msaaDepthBuffer->Create(core::memory::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, m_renderPass.GetDepthFormat(), m_sampleCount, 0, false, false, VK_IMAGE_VIEW_TYPE_2D });
     }
 
     VkSemaphoreCreateInfo semaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
@@ -68,45 +100,10 @@ Swapchain::~Swapchain()
     m_depthBuffer = nullptr;
 }
 
-void Swapchain::Init()
-{
-    m_swapchain = VK_NULL_HANDLE;
-    m_isAcquired = false;
-
-    VkSurfaceCapabilitiesKHR surfaceCapabilities = GetSurfaceCapabilities();
-    assert(surfaceCapabilities.supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
-    assert(surfaceCapabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR);
-    assert(surfaceCapabilities.supportedCompositeAlpha & (VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR | VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR));
-
-    m_swapchainCreateInfo = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
-    m_swapchainCreateInfo.surface = m_surface;
-    m_swapchainCreateInfo.imageFormat = m_renderPass.GetSurfaceFormat();
-    m_swapchainCreateInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-    m_swapchainCreateInfo.imageArrayLayers = 1; // 2 for stereo
-    m_swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    m_swapchainCreateInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
-    m_swapchainCreateInfo.clipped = VK_TRUE;
-    m_swapchainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-
-    if (m_presentQueue.family != m_graphicsQueue.family) {
-        const uint32_t families[] = { m_presentQueue.family, m_graphicsQueue.family };
-        m_swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-        m_swapchainCreateInfo.queueFamilyIndexCount = 2;
-        m_swapchainCreateInfo.pQueueFamilyIndices = families;
-    } else {
-        m_swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    }
-
-    m_swapchainCreateInfo.compositeAlpha = (surfaceCapabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR) ? VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR : VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-
-    UpdateExtent();
-    SetImageCount(2);
-}
-
 void Swapchain::UpdateExtent()
 {
-    VkSurfaceCapabilitiesKHR surfaceCapabilities = GetSurfaceCapabilities();
-    VkExtent2D& currentSurfaceExtent = surfaceCapabilities.currentExtent;
+    const VkSurfaceCapabilitiesKHR surfaceCapabilities{ GetSurfaceCapabilities() };
+    const VkExtent2D& currentSurfaceExtent{ surfaceCapabilities.currentExtent };
 
     if (currentSurfaceExtent.width == 0xFFFFFFFF) // 0xFFFFFFFF indicates surface size is set from extent
     {
@@ -115,8 +112,8 @@ void Swapchain::UpdateExtent()
 
         LOGW("Can't determine current window surface extent from surface caps. Using defaults instead. (%d x %d)\n", defaultWidth, defaultHeight);
 
-        m_swapchainCreateInfo.imageExtent.width = prev::util::MathUtil::Clamp(defaultWidth, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width);
-        m_swapchainCreateInfo.imageExtent.height = prev::util::MathUtil::Clamp(defaultHeight, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
+        m_swapchainCreateInfo.imageExtent.width = util::MathUtil::Clamp(defaultWidth, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width);
+        m_swapchainCreateInfo.imageExtent.height = util::MathUtil::Clamp(defaultHeight, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
     } else {
         // because of android notifies about SUBOPTIMAL presence -> it internaly transforms image(rotates) because we use preTransform == VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
         if (currentSurfaceExtent.width == m_swapchainCreateInfo.imageExtent.width && currentSurfaceExtent.height == m_swapchainCreateInfo.imageExtent.height) {
@@ -133,9 +130,9 @@ void Swapchain::UpdateExtent()
 
 bool Swapchain::SetImageCount(uint32_t imageCount)
 {
-    VkSurfaceCapabilitiesKHR surfaceCapabilities = GetSurfaceCapabilities();
+    const VkSurfaceCapabilitiesKHR surfaceCapabilities{ GetSurfaceCapabilities() };
 
-    uint32_t count = std::max(imageCount, surfaceCapabilities.minImageCount);
+    uint32_t count{ std::max(imageCount, surfaceCapabilities.minImageCount) };
     if (surfaceCapabilities.maxImageCount > 0) {
         count = std::min(count, surfaceCapabilities.maxImageCount);
     }
@@ -156,9 +153,9 @@ bool Swapchain::SetImageCount(uint32_t imageCount)
 std::vector<VkPresentModeKHR> Swapchain::GetPresentModes() const
 {
     uint32_t count;
-    vkGetPhysicalDeviceSurfacePresentModesKHR(m_gpu, m_surface, &count, nullptr);
+    vkGetPhysicalDeviceSurfacePresentModesKHR(*m_device.GetGPU(), m_surface, &count, nullptr);
     std::vector<VkPresentModeKHR> modes(count);
-    VKERRCHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(m_gpu, m_surface, &count, modes.data()));
+    VKERRCHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(*m_device.GetGPU(), m_surface, &count, modes.data()));
     return modes;
 }
 
@@ -198,8 +195,8 @@ void Swapchain::Print() const
 {
     printf("Swapchain:\n");
 
-    printf("\tFormat  = %3d : %s\n", m_swapchainCreateInfo.imageFormat, prev::util::VkUtils::FormatToString(m_swapchainCreateInfo.imageFormat).c_str());
-    printf("\tDepth   = %3d : %s\n", m_depthBuffer->GetFormat(), prev::util::VkUtils::FormatToString(m_depthBuffer->GetFormat()).c_str());
+    printf("\tFormat  = %3d : %s\n", m_swapchainCreateInfo.imageFormat, util::VkUtils::FormatToString(m_swapchainCreateInfo.imageFormat).c_str());
+    printf("\tDepth   = %3d : %s\n", m_depthBuffer->GetFormat(), util::VkUtils::FormatToString(m_depthBuffer->GetFormat()).c_str());
 
     const auto& extent = m_swapchainCreateInfo.imageExtent;
     printf("\tExtent  = %d x %d\n", extent.width, extent.height);
@@ -209,7 +206,7 @@ void Swapchain::Print() const
     printf("\tPresentMode:\n");
     const auto& mode = m_swapchainCreateInfo.presentMode;
     for (auto m : modes) {
-        print((m == mode) ? ConsoleColor::RESET : ConsoleColor::FAINT, "\t\t%s %s\n", (m == mode) ? cTICK : " ", prev::util::VkUtils::PresentModeToString(m).c_str());
+        print((m == mode) ? ConsoleColor::RESET : ConsoleColor::FAINT, "\t\t%s %s\n", (m == mode) ? cTICK : " ", util::VkUtils::PresentModeToString(m).c_str());
     }
 }
 
@@ -250,8 +247,8 @@ void Swapchain::Apply()
 
     m_swapchainBuffers.resize(m_swapchainImagesCount);
     for (uint32_t i = 0; i < m_swapchainImagesCount; i++) {
-        auto image = swapchainImages[i];
-        auto imageView = prev::util::VkUtils::CreateImageView(m_device, image, m_swapchainCreateInfo.imageFormat, VK_IMAGE_VIEW_TYPE_2D, 1, VK_IMAGE_ASPECT_COLOR_BIT);
+        auto image{ swapchainImages[i] };
+        auto imageView{ util::VkUtils::CreateImageView(m_device, image, m_swapchainCreateInfo.imageFormat, VK_IMAGE_VIEW_TYPE_2D, 1, VK_IMAGE_ASPECT_COLOR_BIT) };
 
         std::vector<VkImageView> swapchainImageViews;
         if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
@@ -267,9 +264,9 @@ void Swapchain::Apply()
         auto& swapchainBuffer = m_swapchainBuffers[i];
         swapchainBuffer.image = image;
         swapchainBuffer.view = imageView;
-        swapchainBuffer.framebuffer = prev::util::VkUtils::CreateFrameBuffer(m_device, m_renderPass, swapchainImageViews, m_swapchainCreateInfo.imageExtent);
-        swapchainBuffer.commandBuffer = prev::util::VkUtils::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-        swapchainBuffer.fence = prev::util::VkUtils::CreateFence(m_device);
+        swapchainBuffer.framebuffer = util::VkUtils::CreateFrameBuffer(m_device, m_renderPass, swapchainImageViews, m_swapchainCreateInfo.imageExtent);
+        swapchainBuffer.commandBuffer = util::VkUtils::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+        swapchainBuffer.fence = util::VkUtils::CreateFence(m_device);
         swapchainBuffer.extent = m_swapchainCreateInfo.imageExtent;
     }
 
@@ -283,7 +280,7 @@ void Swapchain::Apply()
 VkSurfaceCapabilitiesKHR Swapchain::GetSurfaceCapabilities() const
 {
     VkSurfaceCapabilitiesKHR surfaceCapabilities;
-    VKERRCHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_gpu, m_surface, &surfaceCapabilities));
+    VKERRCHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(*m_device.GetGPU(), m_surface, &surfaceCapabilities));
     return surfaceCapabilities;
 }
 
@@ -343,7 +340,7 @@ void Swapchain::Submit()
 
     vkResetFences(m_device, 1, &swapchainBuffer.fence);
 
-    VKERRCHECK(vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, swapchainBuffer.fence));
+    VKERRCHECK(vkQueueSubmit(*m_graphicsQueue, 1, &submitInfo, swapchainBuffer.fence));
 }
 
 void Swapchain::Present()
@@ -357,7 +354,7 @@ void Swapchain::Present()
     presentInfo.pSwapchains = &m_swapchain;
     presentInfo.pImageIndices = &m_acquiredIndex;
 
-    VkResult result = vkQueuePresentKHR(m_presentQueue, &presentInfo);
+    VkResult result = vkQueuePresentKHR(*m_presentQueue, &presentInfo);
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
         UpdateExtent();
     } else {
@@ -394,15 +391,4 @@ void Swapchain::EndFrame()
 
     m_currentFrameIndex = (m_currentFrameIndex + 1) % m_swapchainImagesCount;
 }
-
-const prev::core::Queue& Swapchain::GetPresentQueue() const
-{
-    return m_presentQueue;
-}
-
-const prev::core::Queue& Swapchain::GetGraphicsQueue() const
-{
-    return m_graphicsQueue;
-}
-
 } // namespace prev::render
