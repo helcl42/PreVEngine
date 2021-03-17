@@ -1,7 +1,7 @@
 #include "RayModelFactory.h"
 #include "../../render/model/Model.h"
 
-#include <prev/scene/AllocatorProvider.h>
+#include <prev/core/AllocatorProvider.h>
 
 namespace prev_test::component::ray_casting {
 std::unique_ptr<prev_test::render::IModel> RayModelFactory::Create(const prev_test::common::intersection::Ray& ray) const
@@ -16,7 +16,7 @@ std::unique_ptr<prev_test::render::IModel> RayModelFactory::Create(const prev_te
         indices.emplace_back(i);
     }
 
-    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
+    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     auto vertexBuffer{ std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator) };
     vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));

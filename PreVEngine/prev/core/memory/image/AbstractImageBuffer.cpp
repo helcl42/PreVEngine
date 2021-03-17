@@ -27,7 +27,7 @@ AbstractImageBuffer::~AbstractImageBuffer()
 void AbstractImageBuffer::CreateSampler(const float maxLod, const VkSamplerAddressMode addressMode, const bool enableFiltering)
 {
     if (m_sampler) {
-        vkDestroySampler(m_allocator.GetDevice(), m_sampler, nullptr);
+        vkDestroySampler(*m_allocator.GetDevice(), m_sampler, nullptr);
     }
 
     VkSamplerCreateInfo samplerCreateInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
@@ -57,24 +57,24 @@ void AbstractImageBuffer::CreateSampler(const float maxLod, const VkSamplerAddre
     samplerCreateInfo.maxLod = maxLod;
     samplerCreateInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
     samplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
-    VKERRCHECK(vkCreateSampler(m_allocator.GetDevice(), &samplerCreateInfo, nullptr, &m_sampler));
+    VKERRCHECK(vkCreateSampler(*m_allocator.GetDevice(), &samplerCreateInfo, nullptr, &m_sampler));
 }
 
 void AbstractImageBuffer::UpdateSampler(const VkSamplerCreateInfo& samplerInfo)
 {
     if (m_sampler) {
-        vkDestroySampler(m_allocator.GetDevice(), m_sampler, nullptr);
+        vkDestroySampler(*m_allocator.GetDevice(), m_sampler, nullptr);
     }
 
-    VKERRCHECK(vkCreateSampler(m_allocator.GetDevice(), &samplerInfo, nullptr, &m_sampler));
+    VKERRCHECK(vkCreateSampler(*m_allocator.GetDevice(), &samplerInfo, nullptr, &m_sampler));
 }
 
 void AbstractImageBuffer::Destroy()
 {
-    vkQueueWaitIdle(m_allocator.GetQueue());
+    vkQueueWaitIdle(*m_allocator.GetQueue());
 
     if (m_sampler) {
-        vkDestroySampler(m_allocator.GetDevice(), m_sampler, nullptr);
+        vkDestroySampler(*m_allocator.GetDevice(), m_sampler, nullptr);
     }
 
     if (m_image) {

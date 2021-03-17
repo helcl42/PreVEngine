@@ -2,43 +2,115 @@
 #define __DEVICES_H__
 
 #include "PhysicalDevice.h"
+#include "Queue.h"
 
-#include "../Queue.h"
-
+#include <map>
 #include <memory>
+#include <optional>
+#include <set>
 
 namespace prev::core::device {
+struct QueueMetadata {
+    uint32_t family; // queue family
+
+    uint32_t index; // queue index
+
+    VkQueueFlags flags; // Graphics / Compute / Transfer / Sparse / Protected
+
+    VkSurfaceKHR surface; // VK_NULL_HANDLE if queue can not present
+
+    friend bool operator<(const QueueMetadata& a, const QueueMetadata& b)
+    {
+        if (a.family < b.family) {
+            return true;
+        }
+        if (a.index < b.index) {
+            return true;
+        }
+        return false;
+    }
+};
+
+struct QueueMetadataStorage {
+    std::map<QueueType, std::set<QueueMetadata> > queueGroups;
+
+    std::set<QueueMetadata> uniqueQueue;
+
+    void Add(const std::initializer_list<QueueType>& queueTypes, const std::initializer_list<QueueMetadata>& metadatas)
+    {
+        for (const auto& qt : queueTypes) {
+            auto& group{ queueGroups[qt] };
+            group.insert(metadatas.begin(), metadatas.end());
+        }
+
+        uniqueQueue.insert(metadatas.begin(), metadatas.end());
+    }
+
+    std::set<uint32_t> GetDistinctQueueFamiies() const
+    {
+        std::set<uint32_t> queueFamilies;
+        for (const auto& group : queueGroups) {
+            for (const auto& item : group.second) {
+                queueFamilies.insert(item.family);
+            }
+        }
+        return queueFamilies;
+    }
+
+    uint32_t GetQueueFamilyCount(const uint32_t familly) const
+    {
+        uint32_t count{ 0 };
+        for (const auto& item : uniqueQueue) {
+            if (item.family == familly) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    std::vector<QueueMetadata> GetAllQueues() const
+    {
+        std::vector<QueueMetadata> result;
+        for (const auto& group : queueGroups) {
+            result.insert(result.end(), group.second.cbegin(), group.second.cend());
+        }
+        return result;
+    }
+
+    bool HasAny(const QueueType queueType) const
+    {
+        return queueGroups.find(queueType) != queueGroups.cend();
+    }
+};
+
 class Device {
 public:
-    Device(PhysicalDevice& gpu);
+    Device(const std::shared_ptr<PhysicalDevice>& gpu, const QueueMetadataStorage& queuesMetadata);
 
     ~Device();
 
 public:
-    bool HasQueue(VkQueueFlags flags, VkQueueFlags unwantedFlags = 0, VkSurfaceKHR surface = VK_NULL_HANDLE);
+    std::shared_ptr<Queue> GetQueue(const QueueType queueType, const uint32_t index = 0) const;
 
-    std::shared_ptr<Queue> AddQueue(VkQueueFlags flags, VkQueueFlags unwantedFlags = 0, VkSurfaceKHR surface = VK_NULL_HANDLE);   
+    std::vector<std::shared_ptr<Queue> > GetQueues(const QueueType queueType) const;
 
-    PhysicalDevice& GetGPU();
+    std::map<QueueType, std::vector<std::shared_ptr<Queue> > > GetAllQueues() const;
+
+    std::vector<QueueType> GetAllQueueTypes() const;
+
+    std::shared_ptr<PhysicalDevice> GetGPU() const;
 
     void Print() const;
 
 public:
-    operator VkDevice();
+    operator VkDevice() const;
 
 private:
-    uint32_t FamilyQueueCount(uint32_t family) const;
+    std::shared_ptr<PhysicalDevice> m_gpu;
 
-    void Create();
-
-    void Destroy();
-
-private:
     VkDevice m_handle;
 
-    PhysicalDevice m_gpu;
-
-    std::vector<std::shared_ptr<Queue> > m_queues;
+    std::map<QueueType, std::vector<std::shared_ptr<Queue> > > m_queues;
 };
 } // namespace prev::core::device
 

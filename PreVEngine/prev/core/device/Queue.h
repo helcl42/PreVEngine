@@ -1,14 +1,22 @@
 #ifndef __QUEUE_H__
 #define __QUEUE_H__
 
-#include "device/PhysicalDevice.h"
-#include "instance/Validation.h"
+#include <prev/core/instance/Validation.h>
 
 #include <memory>
 
-namespace prev::core {
+namespace prev::core::device {
+enum class QueueType {
+    PRESENT,
+    GRAPHICS,
+    COMPUTE,
+    TRANSFER,
+    SPARSE,
+    PROTECTED
+};
+
 struct Queue {
-    Queue(VkQueue h, uint32_t f, uint32_t idx, VkQueueFlags flgs, VkSurfaceKHR surf, VkDevice dvc, prev::core::device::PhysicalDevice& physDevice);
+    Queue(VkQueue h, uint32_t f, uint32_t idx, VkQueueFlags flgs, VkSurfaceKHR surf, VkDevice dvc);
 
     VkCommandPool CreateCommandPool() const;
 
@@ -24,10 +32,8 @@ struct Queue {
 
     VkSurfaceKHR surface; // VK_NULL_HANDLE if queue can not present
 
-    VkDevice device; // (used by Swapchain)
-
-    prev::core::device::PhysicalDevice gpu; // (used by Swapchain)
+    VkDevice device;
 };
-} // namespace prev::core
+} // namespace prev::core::device
 
 #endif

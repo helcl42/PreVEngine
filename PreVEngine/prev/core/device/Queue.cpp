@@ -1,14 +1,13 @@
 #include "Queue.h"
 
-namespace prev::core {
-Queue::Queue(VkQueue h, uint32_t f, uint32_t idx, VkQueueFlags flgs, VkSurfaceKHR surf, VkDevice dvc, prev::core::device::PhysicalDevice& physDevice)
+namespace prev::core::device {
+Queue::Queue(VkQueue h, uint32_t f, uint32_t idx, VkQueueFlags flgs, VkSurfaceKHR surf, VkDevice dvc)
     : handle(h)
     , family(f)
     , index(idx)
     , flags(flgs)
     , surface(surf)
     , device(dvc)
-    , gpu(physDevice)
 {
 }
 
@@ -29,4 +28,4 @@ Queue::operator VkQueue() const
 
     return handle;
 }
-} // namespace prev::core
+} // namespace prev::core::device

@@ -5,7 +5,7 @@
 #include "../../render/mesh/MeshFactory.h"
 #include "../../render/model/ModelFactory.h"
 
-#include <prev/scene/AllocatorProvider.h>
+#include <prev/core/AllocatorProvider.h>
 
 namespace prev_test::component::sky {
 std::unique_ptr<ILensFlareComponent> LensFlareComponentFactory::Create() const
@@ -22,7 +22,7 @@ std::unique_ptr<ILensFlareComponent> LensFlareComponentFactory::Create() const
         { prev_test::common::AssetManager::Instance().GetAssetPath("LensFlares/tex9.png"), 0.24f },
     };
 
-    auto allocator{ prev::scene::AllocatorProvider::Instance().GetAllocator() };
+    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     std::vector<std::shared_ptr<Flare> > flares{};
     for (const auto& flareCreateInfo : flareCreateInfos) {

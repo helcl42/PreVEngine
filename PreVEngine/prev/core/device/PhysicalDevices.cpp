@@ -3,7 +3,7 @@
 namespace prev::core::device {
 PhysicalDevices::PhysicalDevices(const VkInstance instance)
 {
-    uint32_t gpuCount = 0;
+    uint32_t gpuCount{ 0 };
     VKERRCHECK(vkEnumeratePhysicalDevices(instance, &gpuCount, nullptr)); // Get number of gpu's
     if (gpuCount == 0) {
         LOGW("No GPU devices found."); // Vulkan driver missing?
@@ -14,35 +14,34 @@ PhysicalDevices::PhysicalDevices(const VkInstance instance)
 
     m_gpuList.resize(gpuCount);
     for (size_t i = 0; i < vkGpus.size(); i++) {
-        m_gpuList[i] = PhysicalDevice(vkGpus.at(i));
+        m_gpuList[i] = std::make_shared<PhysicalDevice>(vkGpus.at(i));
     }
 }
 
-PhysicalDevice* PhysicalDevices::FindPresentable(VkSurfaceKHR surface)
+std::shared_ptr<PhysicalDevice> PhysicalDevices::FindPresentable(VkSurfaceKHR surface) const
 {
-    for (auto& gpu : m_gpuList) {
-        if (gpu.FindQueueFamily(0, 0, surface) >= 0) {
-            return &gpu;
+    for (const auto& gpu : m_gpuList) {
+        if (gpu->FindQueueFamily(0, 0, surface) >= 0) {
+            return gpu;
         }
     }
-
     LOGW("No devices can present to this surface. (Is DRI3 enabled?)\n");
     return nullptr;
 }
 
-void PhysicalDevices::Print(bool showQueues)
+void PhysicalDevices::Print(bool showQueues) const
 {
     printf("Physical Devices: %zd\n", GetCount());
 
     size_t j = 0;
     for (const auto& gpu : m_gpuList) {
-        const VkPhysicalDeviceProperties& props = gpu.GetProperties();
+        const VkPhysicalDeviceProperties& props = gpu->GetProperties();
         std::string devType[] = { "OTHER", "INTEGRATED", "DISCRETE", "VIRTUAL", "CPU" };
-        std::string vendor = gpu.GetVendorName();
+        std::string vendor = gpu->GetVendorName();
         printf("\t%zd: %s %s %s\n", j, devType[props.deviceType].c_str(), vendor.c_str(), props.deviceName);
 
         if (showQueues) {
-            const auto queueFamilies = gpu.GetQueueFamilies();
+            const auto queueFamilies{ gpu->GetQueueFamilies() };
             for (size_t i = 0; i < queueFamilies.size(); i++) {
                 const VkQueueFamilyProperties& props = queueFamilies.at(i);
 
@@ -61,6 +60,6 @@ size_t PhysicalDevices::GetCount() const
 
 const PhysicalDevice& PhysicalDevices::operator[](const size_t i) const
 {
-    return m_gpuList.at(i);
+    return *m_gpuList.at(i);
 }
 } // namespace prev::core::device
