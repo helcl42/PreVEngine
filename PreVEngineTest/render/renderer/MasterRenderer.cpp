@@ -40,6 +40,7 @@
 #include "terrain/TerrainRenderer.h"
 #include "water/WaterRenderer.h"
 
+#include <prev/core/DeviceProvider.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::render::renderer {
@@ -105,6 +106,8 @@ void MasterRenderer::ShutDown()
 
 void MasterRenderer::InitDefault()
 {
+    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
+
     m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyBoxRenderer>(m_defaultRenderPass));
     m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyRenderer>(m_defaultRenderPass));
     m_defaultRenderers.push_back(std::make_unique<prev_test::render::renderer::normal::DefaultRenderer>(m_defaultRenderPass));
@@ -142,7 +145,7 @@ void MasterRenderer::InitDefault()
 
 #ifdef PARALLEL_RENDERING
     CommandBuffersGroupFactory buffersGroupFactory{};
-    m_defaultCommandBuffersGroup = buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_defaultRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
+    m_defaultCommandBuffersGroup = buffersGroupFactory.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_defaultRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
 #endif
 }
 
@@ -159,6 +162,8 @@ void MasterRenderer::ShutDownDefault()
 
 void MasterRenderer::InitDebug()
 {
+    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
+
     m_debugRenderers.push_back(std::make_unique<prev_test::render::renderer::debug::ShadowMapDebugRenderer>(m_defaultRenderPass));
     m_debugRenderers.push_back(std::make_unique<prev_test::render::renderer::debug::TextureDebugRenderer>(m_defaultRenderPass));
 
@@ -168,7 +173,7 @@ void MasterRenderer::InitDebug()
 
 #ifdef PARALLEL_RENDERING
     CommandBuffersGroupFactory buffersGroupFactory{};
-    m_debugCommandBuffersGroup = buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_debugRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
+    m_debugCommandBuffersGroup = buffersGroupFactory.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_debugRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
 #endif
 }
 
@@ -185,6 +190,8 @@ void MasterRenderer::ShutDownDebug()
 
 void MasterRenderer::InitShadows()
 {
+    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
+
     const auto shadowsComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW }) };
 
     m_shadowRenderers.push_back(std::make_unique<prev_test::render::renderer::shadow::DefaultShadowsRenderer>(shadowsComponent->GetRenderPass()));
@@ -201,7 +208,7 @@ void MasterRenderer::InitShadows()
 #ifdef PARALLEL_RENDERING
     CommandBuffersGroupFactory buffersGroupFactory{};
     for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; i++) {
-        m_shadowsCommandBufferGroups.emplace_back(buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_shadowRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY));
+        m_shadowsCommandBufferGroups.emplace_back(buffersGroupFactory.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_shadowRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY));
     }
 #endif
 }
@@ -219,6 +226,8 @@ void MasterRenderer::ShutDownShadows()
 
 void MasterRenderer::InitReflection()
 {
+    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
+
     const auto reflectionComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::common::IOffScreenRenderPassComponent>({ TAG_WATER_REFLECTION_RENDER_COMPONENT }) };
 
     m_reflectionRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyBoxRenderer>(reflectionComponent->GetRenderPass()));
@@ -245,7 +254,7 @@ void MasterRenderer::InitReflection()
 
 #ifdef PARALLEL_RENDERING
     CommandBuffersGroupFactory buffersGroupFactory{};
-    m_reflectionCommandBufferGroups = buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_reflectionRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
+    m_reflectionCommandBufferGroups = buffersGroupFactory.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_reflectionRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
 #endif
 }
 
@@ -262,6 +271,8 @@ void MasterRenderer::ShutDownReflection()
 
 void MasterRenderer::InitRefraction()
 {
+    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
+
     const auto refractionComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::common::IOffScreenRenderPassComponent>({ TAG_WATER_REFRACTION_RENDER_COMPONENT }) };
 
     m_refractionRenderers.push_back(std::make_unique<prev_test::render::renderer::sky::SkyBoxRenderer>(refractionComponent->GetRenderPass()));
@@ -288,7 +299,7 @@ void MasterRenderer::InitRefraction()
 
 #ifdef PARALLEL_RENDERING
     CommandBuffersGroupFactory buffersGroupFactory{};
-    m_refractionCommandBufferGroups = buffersGroupFactory.CreateGroup(m_swapchain->GetGraphicsQueue(), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_refractionRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
+    m_refractionCommandBufferGroups = buffersGroupFactory.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_refractionRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
 #endif
 }
 
