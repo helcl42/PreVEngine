@@ -1,21 +1,20 @@
 #include "CommandBuffersGroup.h"
 
 namespace prev_test::render::renderer {
-CommandBuffersGroup::CommandBuffersGroup(const std::vector<std::vector<VkCommandPool> >& pools, const std::vector<std::vector<VkCommandBuffer> >& commandBuffers)
-    : m_commandPoolGroups(pools)
+CommandBuffersGroup::CommandBuffersGroup(const prev::core::device::Device& device, const std::vector<std::vector<VkCommandPool> >& pools, const std::vector<std::vector<VkCommandBuffer> >& commandBuffers)
+    : m_device(device)
+    , m_commandPoolGroups(pools)
     , m_commandBufferGroups(commandBuffers)
 {
 }
 
 CommandBuffersGroup::~CommandBuffersGroup()
 {
-    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
-
-    vkDeviceWaitIdle(*device);
+    vkDeviceWaitIdle(m_device);
 
     for (auto& poolGroup : m_commandPoolGroups) {
         for (auto& pool : poolGroup) {
-            vkDestroyCommandPool(*device, pool, nullptr);
+            vkDestroyCommandPool(m_device, pool, nullptr);
         }
     }
 }

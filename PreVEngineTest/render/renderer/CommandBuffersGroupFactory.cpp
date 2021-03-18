@@ -3,10 +3,8 @@
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer {
-std::unique_ptr<CommandBuffersGroup> CommandBuffersGroupFactory::CreateGroup(const prev::core::device::Queue& queue, const uint32_t dim0Size, const uint32_t groupSize, const VkCommandBufferLevel level) const
+std::unique_ptr<CommandBuffersGroup> CommandBuffersGroupFactory::CreateGroup(const prev::core::device::Device& device, const prev::core::device::Queue& queue, const uint32_t dim0Size, const uint32_t groupSize, const VkCommandBufferLevel level) const
 {
-    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
-
     std::vector<std::vector<VkCommandPool> > commandPools{};
     std::vector<std::vector<VkCommandBuffer> > commandBuffers{};
     commandPools.reserve(dim0Size);
@@ -18,12 +16,12 @@ std::unique_ptr<CommandBuffersGroup> CommandBuffersGroupFactory::CreateGroup(con
         for (uint32_t shadowRendererIndex = 0; shadowRendererIndex < groupSize; shadowRendererIndex++) {
             auto pool = queue.CreateCommandPool();
             pools.push_back(pool);
-            buffers.push_back(prev::util::VkUtils::CreateCommandBuffer(*device, pool, level));
+            buffers.push_back(prev::util::VkUtils::CreateCommandBuffer(device, pool, level));
         }
         commandPools.push_back(pools);
         commandBuffers.push_back(buffers);
     }
 
-    return std::make_unique<CommandBuffersGroup>(commandPools, commandBuffers);
+    return std::make_unique<CommandBuffersGroup>(device, commandPools, commandBuffers);
 }
 } // namespace prev_test::render::renderer
