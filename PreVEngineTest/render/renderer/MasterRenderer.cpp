@@ -366,7 +366,7 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
         prev_test::common::intersection::Frustum{ projectionMatrix, viewMatrix }
     };
 
-    const prev::render::RenderContext customRenderContext{ reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
+    const prev::render::RenderContext customRenderContext{ reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, reflectionComponent->GetExtent() };
 
     for (auto& renderer : m_reflectionRenderers) {
         renderer->BeforeRender(customRenderContext, userData);
@@ -401,7 +401,7 @@ void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& re
         prev_test::common::intersection::Frustum{ projectionMatrix, viewMatrix }
     };
 
-    const prev::render::RenderContext customRenderContext{ refractionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
+    const prev::render::RenderContext customRenderContext{ refractionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, refractionComponent->GetExtent() };
 
     for (auto& renderer : m_refractionRenderers) {
         renderer->BeforeRender(customRenderContext, userData);
