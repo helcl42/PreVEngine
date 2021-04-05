@@ -438,7 +438,7 @@ void MasterRenderer::RenderScene(const prev::render::RenderContext& renderContex
 
 #ifdef PARALLEL_RENDERING
     const auto& commandBuffers{ m_defaultCommandBuffersGroup->GetBuffersGroup(renderContext.frameInFlightIndex) };
-    RenderParallel(m_defaultRenderPass, renderContext, root, m_defaultRenderers, commandBuffers, userData;
+    RenderParallel(m_defaultRenderPass, renderContext, root, m_defaultRenderers, commandBuffers, userData);
 #else
     RenderSerial(m_defaultRenderPass, renderContext, root, m_defaultRenderers, userData);
 #endif
