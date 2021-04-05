@@ -5,13 +5,13 @@
 
 namespace prev::render {
 struct RenderContext {
-    VkFramebuffer frameBuffer;
+    VkFramebuffer frameBuffer{};
 
-    VkCommandBuffer commandBuffer;
+    VkCommandBuffer commandBuffer{};
 
-    uint32_t frameInFlightIndex;
+    uint32_t frameInFlightIndex{};
 
-    VkExtent2D fullExtent;
+    VkRect2D rect{};
 };
 } // namespace prev::scene
 

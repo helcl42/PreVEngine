@@ -41,8 +41,8 @@ void DefaultShadowsRenderer::Init()
 
 void DefaultShadowsRenderer::PreRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext)
 {
-    const VkRect2D scissor{ { 0, 0 }, shadowsRenderContext.extent };
-    const VkViewport viewport{ 0, 0, static_cast<float>(shadowsRenderContext.extent.width), static_cast<float>(shadowsRenderContext.extent.height), 0, 1 };
+    const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
+    const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
 
     vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
     vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -56,7 +56,7 @@ void DefaultShadowsRenderer::BeforeRender(const prev::render::RenderContext& ren
 void DefaultShadowsRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const ShadowsRenderContextUserData& shadowsRenderContext)
 {
     if (node->GetTags().HasAny({ TAG_RENDER_COMPONENT, TAG_RENDER_TEXTURELESS_COMPONENT }) && node->GetTags().HasAll({ TAG_TRANSFORM_COMPONENT })) {
-        bool visible = true;
+        bool visible{ true };
         if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
             visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);
         }
@@ -67,7 +67,7 @@ void DefaultShadowsRenderer::Render(const prev::render::RenderContext& renderCon
         }
     }
 
-    for (auto child : node->GetChildren()) {
+    for (auto& child : node->GetChildren()) {
         Render(renderContext, child, shadowsRenderContext);
     }
 }

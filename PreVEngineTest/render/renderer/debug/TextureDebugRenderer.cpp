@@ -49,25 +49,8 @@ void TextureDebugRenderer::BeforeRender(const prev::render::RenderContext& rende
 
 void TextureDebugRenderer::PreRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData)
 {
-    VkRect2D renderRect{};
-    renderRect.extent.width = renderContext.fullExtent.width / 2;
-    renderRect.extent.height = renderContext.fullExtent.height / 2;
-    renderRect.offset.x = 0;
-    renderRect.offset.y = 0;
-
-    VkRect2D scissor{};
-    scissor.extent.width = renderContext.fullExtent.width;
-    scissor.extent.height = renderContext.fullExtent.height;
-    scissor.offset.x = 0;
-    scissor.offset.y = 0;
-
-    VkViewport viewport{};
-    viewport.width = static_cast<float>(renderContext.fullExtent.width);
-    viewport.height = static_cast<float>(renderContext.fullExtent.height);
-    viewport.x = -static_cast<float>(renderContext.fullExtent.width / 2.0f);
-    viewport.y = -static_cast<float>(renderContext.fullExtent.height / 2.0f);
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
+    const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
+    const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
 
     vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
     vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);

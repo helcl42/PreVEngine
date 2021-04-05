@@ -70,10 +70,10 @@ private:
 
 #ifdef PARALLEL_RENDERING
     template <typename ContextUserDataType>
-    void RenderParallel(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const std::vector<VkCommandBuffer>& commandBuffers, const ContextUserDataType& userData, const VkRect2D& area);
+    void RenderParallel(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const std::vector<VkCommandBuffer>& commandBuffers, const ContextUserDataType& userData);
 #else
     template <typename ContextUserDataType>
-    void RenderSerial(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const ContextUserDataType& userData, const VkRect2D& area);
+    void RenderSerial(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const ContextUserDataType& userData);
 #endif
 private:
     static const inline glm::vec4 DEFAULT_CLIP_PLANE{ 0.0f, -1.0f, 0.0f, 1000.0f };
@@ -116,9 +116,9 @@ private:
 
 #ifdef PARALLEL_RENDERING
 template <typename ContextUserDataType>
-void MasterRenderer::RenderParallel(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const std::vector<VkCommandBuffer>& commandBuffers, const ContextUserDataType& userData, const VkRect2D& area)
+void MasterRenderer::RenderParallel(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const std::vector<VkCommandBuffer>& commandBuffers, const ContextUserDataType& userData)
 {
-    renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, area, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+    renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, renderContext.rect, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
     std::vector<std::future<void> > tasks;
     for (size_t i = 0; i < renderers.size(); i++) {
@@ -137,7 +137,7 @@ void MasterRenderer::RenderParallel(const std::shared_ptr<prev::render::pass::Re
 
             VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 
-            prev::render::RenderContext parallelRenderContext{ renderContext.frameBuffer, commandBuffer, renderContext.frameInFlightIndex, renderContext.fullExtent };
+            prev::render::RenderContext parallelRenderContext{ renderContext.frameBuffer, commandBuffer, renderContext.frameInFlightIndex, renderContext.rect };
 
             renderer->PreRender(parallelRenderContext, userData);
             renderer->Render(parallelRenderContext, root, userData);
@@ -157,9 +157,9 @@ void MasterRenderer::RenderParallel(const std::shared_ptr<prev::render::pass::Re
 }
 #else
 template <typename ContextUserDataType>
-void MasterRenderer::RenderSerial(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const ContextUserDataType& userData, const VkRect2D& area)
+void MasterRenderer::RenderSerial(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<ContextUserDataType> > >& renderers, const ContextUserDataType& userData)
 {
-    renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, area);
+    renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, renderContext.rect);
 
     for (auto& renderer : renderers) {
         renderer->PreRender(renderContext, userData);

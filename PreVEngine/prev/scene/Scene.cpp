@@ -40,7 +40,7 @@ void Scene::Render()
     VkCommandBuffer commandBuffer;
     uint32_t frameInFlightIndex;
     if (m_swapchain->BeginFrame(frameBuffer, commandBuffer, frameInFlightIndex)) {
-        prev::render::RenderContext renderContext{ frameBuffer, commandBuffer, frameInFlightIndex, m_swapchain->GetExtent() };
+        const prev::render::RenderContext renderContext{ frameBuffer, commandBuffer, frameInFlightIndex, { { 0, 0 }, m_swapchain->GetExtent() } };
 
         m_rootRenderer->BeforeRender(renderContext);
         m_rootRenderer->PreRender(renderContext);
