@@ -52,8 +52,8 @@ void AnimationParallaxMappedRenderer::BeforeRender(const prev::render::RenderCon
 
 void AnimationParallaxMappedRenderer::PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
 {
-    const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
-    const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+    const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
+    const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
 
     vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
     vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -64,7 +64,7 @@ void AnimationParallaxMappedRenderer::Render(const prev::render::RenderContext& 
 {
     if (node->GetTags().HasAll({ TAG_ANIMATION_PARALLAX_MAPPED_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
 
-        bool visible = true;
+        bool visible{ true };
         if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
             visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
         }
@@ -75,7 +75,7 @@ void AnimationParallaxMappedRenderer::Render(const prev::render::RenderContext& 
         }
     }
 
-    for (auto child : node->GetChildren()) {
+    for (auto& child : node->GetChildren()) {
         Render(renderContext, child, renderContextUserData);
     }
 }

@@ -46,8 +46,8 @@ void LensFlareRenderer::BeforeRender(const prev::render::RenderContext& renderCo
 
 void LensFlareRenderer::PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
 {
-    const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
-    const VkViewport viewport{ 0, 0, static_cast<float>(renderContext.fullExtent.width), static_cast<float>(renderContext.fullExtent.height), 0, 1 };
+    const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
+    const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
 
     vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
     vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -57,11 +57,12 @@ void LensFlareRenderer::PreRender(const prev::render::RenderContext& renderConte
 void LensFlareRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData)
 {
     if (node->GetTags().HasAll({ TAG_LENS_FLARE_RENDER_COMPONENT })) {
-        const auto lensFlareComponent = prev::scene::component::ComponentRepository<prev_test::component::sky::ILensFlareComponent>::Instance().Get(node->GetId());
+        const auto lensFlareComponent{ prev::scene::component::ComponentRepository<prev_test::component::sky::ILensFlareComponent>::Instance().Get(node->GetId()) };
 
         for (const auto& lensFlare : lensFlareComponent->GetFlares()) {
-            const float xScale = lensFlare->GetScale();
-            const float yScale = xScale * renderContext.fullExtent.width / renderContext.fullExtent.height;
+            const float aspectRatio{ static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) / static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y)};
+            const float xScale{ lensFlare->GetScale() };
+            const float yScale{ xScale * aspectRatio };
 
             auto uboVS = m_uniformsPoolVS->GetNext();
             UniformsVS uniformsVS{};
@@ -90,7 +91,7 @@ void LensFlareRenderer::Render(const prev::render::RenderContext& renderContext,
         }
     }
 
-    for (auto child : node->GetChildren()) {
+    for (auto& child : node->GetChildren()) {
         Render(renderContext, child, renderContextUserData);
     }
 }

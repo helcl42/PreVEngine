@@ -17,14 +17,11 @@ struct ShadowsRenderContextUserData : prev::render::DefaultRenderContextUserData
 
     const prev_test::common::intersection::Frustum frustum;
 
-    const VkExtent2D extent;
-
-    ShadowsRenderContextUserData(const glm::mat4& vm, const glm::mat4& pm, const uint32_t index, const prev_test::common::intersection::Frustum& frst, const VkExtent2D& ext)
+    ShadowsRenderContextUserData(const glm::mat4& vm, const glm::mat4& pm, const uint32_t index, const prev_test::common::intersection::Frustum& frst)
         : viewMatrix(vm)
         , projectionMatrix(pm)
         , cascadeIndex(index)
         , frustum(frst)
-        , extent(ext)
     {
     }
 };
@@ -38,18 +35,15 @@ struct NormalRenderContextUserData : prev::render::DefaultRenderContextUserData 
 
     const glm::vec4 clipPlane;
 
-    const VkExtent2D extent;
-
     const glm::vec2 nearFarClippingPlane;
 
     const prev_test::common::intersection::Frustum frustum;
 
-    NormalRenderContextUserData(const glm::mat4& vm, const glm::mat4& pm, const glm::vec3& camPos, const glm::vec4& cp, const VkExtent2D& ext, const glm::vec2& nearFar, const prev_test::common::intersection::Frustum& frst)
+    NormalRenderContextUserData(const glm::mat4& vm, const glm::mat4& pm, const glm::vec3& camPos, const glm::vec4& cp, const glm::vec2& nearFar, const prev_test::common::intersection::Frustum& frst)
         : viewMatrix(vm)
         , projectionMatrix(pm)
         , cameraPosition(camPos)
         , clipPlane(cp)
-        , extent(ext)
         , nearFarClippingPlane(nearFar)
         , frustum(frst)
     {

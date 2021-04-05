@@ -88,11 +88,14 @@ void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext,
     // generate clouds usgin compute queue
     auto computeQueue{ device->GetQueue(prev::core::device::QueueType::COMPUTE) };
 
-    UpdateImageBufferExtents(VkExtent2D{ renderContextUserData.extent.width, renderContextUserData.extent.height }, m_skyColorImageBuffer);
-    UpdateImageBufferExtents(VkExtent2D{ renderContextUserData.extent.width, renderContextUserData.extent.height }, m_skyBloomImageBuffer);
-    UpdateImageBufferExtents(VkExtent2D{ renderContextUserData.extent.width, renderContextUserData.extent.height }, m_skyAlphanessImageBuffer);
-    UpdateImageBufferExtents(VkExtent2D{ renderContextUserData.extent.width, renderContextUserData.extent.height }, m_skyCloudDistanceImageBuffer);
-    UpdateImageBufferExtents(VkExtent2D{ renderContextUserData.extent.width, renderContextUserData.extent.height }, m_skyPostProcessColorImageBuffer);
+    const auto imageWidth{ renderContext.rect.extent.width - renderContext.rect.offset.x };
+    const auto imageHeight{ renderContext.rect.extent.height - renderContext.rect.offset.y };
+
+    UpdateImageBufferExtents(VkExtent2D{ imageWidth, imageHeight }, m_skyColorImageBuffer);
+    UpdateImageBufferExtents(VkExtent2D{ imageWidth, imageHeight }, m_skyBloomImageBuffer);
+    UpdateImageBufferExtents(VkExtent2D{ imageWidth, imageHeight }, m_skyAlphanessImageBuffer);
+    UpdateImageBufferExtents(VkExtent2D{ imageWidth, imageHeight }, m_skyCloudDistanceImageBuffer);
+    UpdateImageBufferExtents(VkExtent2D{ imageWidth, imageHeight }, m_skyPostProcessColorImageBuffer);
 
     auto commandPool = computeQueue->CreateCommandPool();
     auto commandBuffer = prev::util::VkUtils::CreateCommandBuffer(*device, commandPool);
@@ -107,7 +110,7 @@ void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext,
     auto uboCS = m_uniformsPoolSkyCS->GetNext();
 
     UniformsSkyCS uniformsCS{};
-    uniformsCS.resolution = glm::vec4(renderContextUserData.extent.width, renderContextUserData.extent.height, 0.0f, 0.0f);
+    uniformsCS.resolution = glm::vec4(imageWidth, imageHeight, 0.0f, 0.0f);
     uniformsCS.inverseProjectionMatrix = glm::inverse(renderContextUserData.projectionMatrix);
     uniformsCS.inverseViewMatrix = glm::inverse(renderContextUserData.viewMatrix);
     uniformsCS.lightColor = glm::vec4(mainLightComponent->GetColor(), 1.0f);
@@ -163,7 +166,7 @@ void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext,
     lightPositionNdc = lightPositionNdc * 0.5f + 0.5f;
 
     UniformsSkyPostProcessCS uniformsPostCS{};
-    uniformsPostCS.resolution = glm::vec4(renderContextUserData.extent.width, renderContextUserData.extent.height, 0.0f, 0.0f);
+    uniformsPostCS.resolution = glm::vec4(imageWidth, imageHeight, 0.0f, 0.0f);
     uniformsPostCS.lisghtPosition = lightPositionNdc;
     uniformsPostCS.enableGodRays = 1;
     uniformsPostCS.lightDotCameraFront = -glm::dot(glm::normalize(mainLightComponent->GetPosition() - renderContextUserData.cameraPosition), glm::normalize(prev::util::MathUtil::GetForwardVector(renderContextUserData.viewMatrix)));
@@ -205,8 +208,8 @@ void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext,
 
 void SkyRenderer::PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
 {
-    const VkRect2D scissor{ { 0, 0 }, renderContext.fullExtent };
-    const VkViewport viewport{ 0, 0, static_cast<float>(renderContextUserData.extent.width), static_cast<float>(renderContextUserData.extent.height), 0, 1 };
+    const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
+    const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
 
     vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
     vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
@@ -231,7 +234,7 @@ void SkyRenderer::Render(const prev::render::RenderContext& renderContext, const
         vkCmdDrawIndexed(renderContext.commandBuffer, skyComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
     }
 
-    for (auto child : node->GetChildren()) {
+    for (auto& child : node->GetChildren()) {
         Render(renderContext, child, renderContextUserData);
     }
 }
