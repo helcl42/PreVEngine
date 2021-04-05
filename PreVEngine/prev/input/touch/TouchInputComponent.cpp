@@ -5,21 +5,21 @@ bool TouchInputComponent::RegisterTouchActionListener(ITouchActionListener& list
 {
     std::lock_guard<std::mutex> lock(m_mutex);
 
-    return m_touchObservers.RegisterListener(listener);
+    return m_touchObservers.Register(listener);
 }
 
 bool TouchInputComponent::UnregisterTouchActionListener(ITouchActionListener& listener)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
 
-    return m_touchObservers.UnregisterListener(listener);
+    return m_touchObservers.Unregister(listener);
 }
 
 bool TouchInputComponent::IsTouchActionListenerRegistered(ITouchActionListener& listener) const
 {
     std::lock_guard<std::mutex> lock(m_mutex);
 
-    return m_touchObservers.IsListenerRegistered(listener);
+    return m_touchObservers.IsLRegistered(listener);
 }
 
 std::map<uint8_t, Touch> TouchInputComponent::GetTouches() const

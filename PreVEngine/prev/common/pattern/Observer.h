@@ -12,15 +12,15 @@ public:
     virtual ~Observer() = default;
 
 public:
-    bool RegisterListener(ObserverType& listener)
+    bool Register(ObserverType& o)
     {
-        m_observers.insert(&listener);
+        m_observers.insert(&o);
         return true;
     }
 
-    bool UnregisterListener(ObserverType& listener)
+    bool Unregister(ObserverType& o)
     {
-        auto it = std::find(m_observers.begin(), m_observers.end(), &listener);
+        auto it = std::find(m_observers.begin(), m_observers.end(), &o);
         if (it != m_observers.end()) {
             m_observers.erase(it);
             return true;
@@ -28,9 +28,9 @@ public:
         return false;
     }
 
-    bool IsListenerRegistered(ObserverType& listener) const
+    bool IsLRegistered(ObserverType& o) const
     {
-        return m_observers.find(&listener) != m_observers.cend();
+        return m_observers.find(&o) != m_observers.cend();
     }
 
     const std::set<ObserverType*>& GetObservers() const
