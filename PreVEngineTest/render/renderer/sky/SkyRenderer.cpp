@@ -23,6 +23,18 @@
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::sky {
+namespace {
+    constexpr uint32_t GetGroupSize(const uint32_t val, const uint32_t blockSize)
+    {
+        const auto div{ val / blockSize };
+        if (val % blockSize == 0) {
+            return div;
+        } else {
+            return div + blockSize;
+        }
+    }
+} // namespace
+
 SkyRenderer::SkyRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
     : m_renderPass(renderPass)
 {
@@ -150,7 +162,7 @@ void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext,
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *m_computeSkyPipeline);
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_computeSkyPipeline->GetLayout(), 0, 1, &descriptorSetCompute, 0, 0);
 
-    vkCmdDispatch(commandBuffer, 128, 128, 1);
+    vkCmdDispatch(commandBuffer, GetGroupSize(imageWidth, 16), GetGroupSize(imageHeight, 16), 1);
 
     // barrier input - output image
     AddInterComputeImageBufferBarrier(m_skyColorImageBuffer->GetImage(), commandBuffer);
@@ -185,7 +197,7 @@ void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext,
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *m_computeSkyPostProcessPipeline);
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_computeSkyPostProcessPipeline->GetLayout(), 0, 1, &descriptorSetComputePost, 0, 0);
 
-    vkCmdDispatch(commandBuffer, 128, 128, 1);
+    vkCmdDispatch(commandBuffer, GetGroupSize(imageWidth, 16), GetGroupSize(imageHeight, 16), 1);
 
     VKERRCHECK(vkEndCommandBuffer(commandBuffer));
 
