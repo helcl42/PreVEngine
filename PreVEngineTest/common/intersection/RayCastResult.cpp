@@ -21,8 +21,8 @@ RayCastResult::RayCastResult(const glm::vec3& p, const glm::vec3& n, const float
 
 std::ostream& operator<<(std::ostream& out, const RayCastResult& result)
 {
-    out << "Point: " << prev::util::StringUtils::GetAsString(result.point, 2) << std::endl;
-    out << "Normal:    " << prev::util::StringUtils::GetAsString(result.normal, 2) << std::endl;
+    out << "Point: " << prev::util::string::GetAsString(result.point, 2) << std::endl;
+    out << "Normal:    " << prev::util::string::GetAsString(result.normal, 2) << std::endl;
     out << "T:    " << result.t << std::endl;
     out << "hit: " << result.hit << std::endl;
     return out;

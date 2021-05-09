@@ -69,7 +69,7 @@ std::shared_ptr<prev::core::memory::image::IImageBuffer> ShadowsComponent::GetIm
 
 std::vector<glm::vec3> ShadowsComponent::GenerateFrustumCorners(const glm::mat4& inverseWorldToClipSpaceTransform, const float splitDistance, const float lastSplitDistance) const
 {
-    auto frustumCorners{ prev::util::MathUtil::GetFrustumCorners(inverseWorldToClipSpaceTransform) };
+    auto frustumCorners{ prev::util::math::GetFrustumCorners(inverseWorldToClipSpaceTransform) };
 
     for (uint32_t i = 0; i < 4; i++) {
         const glm::vec3 dist{ frustumCorners[i + 4] - frustumCorners[i] };

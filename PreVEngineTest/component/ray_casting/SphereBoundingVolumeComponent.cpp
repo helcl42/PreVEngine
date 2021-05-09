@@ -33,7 +33,7 @@ void SphereBoundingVolumeComponent::Update(const glm::mat4& worldTransform)
 {
     glm::quat rotation;
     glm::vec3 translation, scale;
-    prev::util::MathUtil::DecomposeTransform(worldTransform, rotation, translation, scale);
+    prev::util::math::DecomposeTransform(worldTransform, rotation, translation, scale);
 
     m_working = prev_test::common::intersection::Sphere{ translation + m_original.position * scale, m_original.radius * glm::length(scale) };
 #ifdef RENDER_BOUNDING_VOLUMES

@@ -181,7 +181,7 @@ void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext,
     uniformsPostCS.resolution = glm::vec4(imageWidth, imageHeight, 0.0f, 0.0f);
     uniformsPostCS.lisghtPosition = lightPositionNdc;
     uniformsPostCS.enableGodRays = 1;
-    uniformsPostCS.lightDotCameraFront = -glm::dot(glm::normalize(mainLightComponent->GetPosition() - renderContextUserData.cameraPosition), glm::normalize(prev::util::MathUtil::GetForwardVector(renderContextUserData.viewMatrix)));
+    uniformsPostCS.lightDotCameraFront = -glm::dot(glm::normalize(mainLightComponent->GetPosition() - renderContextUserData.cameraPosition), glm::normalize(prev::util::math::GetForwardVector(renderContextUserData.viewMatrix)));
 
     uboPostCS->Update(&uniformsPostCS);
 

@@ -36,7 +36,7 @@ void AABBBoundingVolumeComponent::Update(const glm::mat4& worldTransform)
 {
     glm::quat rotation;
     glm::vec3 translation, scale;
-    prev::util::MathUtil::DecomposeTransform(worldTransform, rotation, translation, scale);
+    prev::util::math::DecomposeTransform(worldTransform, rotation, translation, scale);
 
     for (auto i = 0; i < m_originalAABBPoints.size(); i++) {
         m_vorkingAABBPoints[i] = glm::scale(glm::mat4(1.0f), scale) * glm::mat4_cast(rotation) * glm::vec4(m_originalAABBPoints[i], 1.0f);

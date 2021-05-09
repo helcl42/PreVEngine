@@ -53,7 +53,7 @@ void Engine::MainLoop()
         prev::event::EventChannel::DispatchAll();
 
         m_clock->UpdateClock();
-        const auto deltaTime = m_clock->GetDelta();
+        const auto deltaTime{ m_clock->GetDelta() };
 
         prev::event::EventChannel::Post(NewIterationEvent{ deltaTime, m_window->GetSize().width, m_window->GetSize().height });
 
@@ -64,7 +64,9 @@ void Engine::MainLoop()
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
         }
 
-        m_fpsService->Update(deltaTime);
+        if (m_fpsCounter->Tick()) {
+            LOGI("FPS %f\n", m_fpsCounter->GetAverageFPS());
+        }
     }
 }
 
@@ -100,7 +102,7 @@ void Engine::operator()(const prev::window::WindowChangeEvent& windowChangeEvent
 void Engine::InitTiming()
 {
     m_clock = std::make_unique<prev::util::Clock<float> >();
-    m_fpsService = std::make_unique<prev::util::FPSService>();
+    m_fpsCounter = std::make_unique<prev::util::FPSCounter>();
 }
 
 void Engine::InitInstance()

@@ -52,8 +52,8 @@ std::vector<glm::vec3> AABB::GetPoints() const
 
 std::ostream& operator<<(std::ostream& out, const AABB& aabb)
 {
-    out << "MinExtents:    " << prev::util::StringUtils::GetAsString(aabb.minExtents, 2) << std::endl;
-    out << "MaxExtents:    " << prev::util::StringUtils::GetAsString(aabb.maxExtents, 2) << std::endl;
+    out << "MinExtents:    " << prev::util::string::GetAsString(aabb.minExtents, 2) << std::endl;
+    out << "MaxExtents:    " << prev::util::string::GetAsString(aabb.maxExtents, 2) << std::endl;
     return out;
 }
 } // namespace prev_test::common::intersection

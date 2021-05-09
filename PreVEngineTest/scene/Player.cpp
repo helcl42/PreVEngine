@@ -68,16 +68,16 @@ void Player::Update(float deltaTime)
 
         glm::vec3 positionOffset{ 0.0f };
         if (m_shouldGoForward) {
-            positionOffset += deltaTime * prev::util::MathUtil::GetForwardVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
+            positionOffset += deltaTime * prev::util::math::GetForwardVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
         }
         if (m_shouldGoBackward) {
-            positionOffset -= deltaTime * prev::util::MathUtil::GetForwardVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
+            positionOffset -= deltaTime * prev::util::math::GetForwardVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
         }
         if (m_shouldGoLeft) {
-            positionOffset += deltaTime * prev::util::MathUtil::GetRightVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
+            positionOffset += deltaTime * prev::util::math::GetRightVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
         }
         if (m_shouldGoRight) {
-            positionOffset -= deltaTime * prev::util::MathUtil::GetRightVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
+            positionOffset -= deltaTime * prev::util::math::GetRightVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
         }
         m_transformComponent->Translate(positionOffset);
     } else {
@@ -114,7 +114,7 @@ void Player::Update(float deltaTime)
     const auto playerOrientation{ glm::normalize(glm::quat(sensorOrientation.w, 0.0f, sensorOrientation.x, 0.0f)) };
     m_transformComponent->SetOrientation(playerOrientation);
 
-    const auto cameraOrientation( glm::normalize(glm::quat(sensorOrientation.w, sensorOrientation.y, sensorOrientation.x, -sensorOrientation.z)) );
+    const auto cameraOrientation(glm::normalize(glm::quat(sensorOrientation.w, sensorOrientation.y, sensorOrientation.x, -sensorOrientation.z)));
     m_cameraComponent->SetOrientation(cameraOrientation);
 #else
     if (m_shouldRotate) {

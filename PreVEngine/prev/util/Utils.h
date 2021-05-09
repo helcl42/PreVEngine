@@ -3,7 +3,6 @@
 
 #include "../common/Common.h"
 #include "../common/pattern/Singleton.h"
-#include "../core/instance/Validation.h"
 
 #include <chrono>
 #include <cmath>
@@ -15,36 +14,34 @@
 #include <vector>
 
 namespace prev::util {
-// Global functions !!!
-template <typename Type, ptrdiff_t n>
-ptrdiff_t ArraySize(Type (&)[n])
+
+template <typename T, ptrdiff_t N>
+ptrdiff_t ArraySize(T (&)[N])
 {
-    return n;
+    return N;
 }
 
-class File {
-public:
-    static bool Exists(const std::string& filePath)
+namespace file {
+    inline bool Exists(const std::string& filePath)
     {
         return std::filesystem::exists(filePath);
     }
 
-    static bool CreateDirectoryByPath(const std::string& path)
+    inline bool CreateDirectoryByPath(const std::string& path)
     {
         return std::filesystem::create_directories(path);
     }
 
-    static std::string GetDirectoryPath(const std::string& filePath)
+    inline std::string GetDirectoryPath(const std::string& filePath)
     {
         std::filesystem::path p(filePath);
         std::filesystem::path parent = p.parent_path();
         return parent.string();
     }
-};
+} // namespace file
 
-class StringUtils {
-public:
-    static std::vector<std::string> Split(const std::string& s, const char delim)
+namespace string {
+    inline std::vector<std::string> Split(const std::string& s, const char delim)
     {
         std::vector<std::string> elems;
         std::istringstream ss(s);
@@ -55,7 +52,7 @@ public:
         return elems;
     }
 
-    static std::vector<std::wstring> Split(const std::wstring& s, const wchar_t delim)
+    inline std::vector<std::wstring> Split(const std::wstring& s, const wchar_t delim)
     {
         std::vector<std::wstring> elems;
         std::wstringstream ss(s);
@@ -66,7 +63,7 @@ public:
         return elems;
     }
 
-    static std::vector<std::string> Split(const std::string& s, const std::string& t)
+    inline std::vector<std::string> Split(const std::string& s, const std::string& t)
     {
         std::string copy{ s };
         std::vector<std::string> res;
@@ -82,7 +79,7 @@ public:
         return res;
     }
 
-    static std::vector<std::wstring> Split(const std::wstring& s, const std::wstring& t)
+    inline std::vector<std::wstring> Split(const std::wstring& s, const std::wstring& t)
     {
         std::wstring copy{ s };
         std::vector<std::wstring> res;
@@ -98,7 +95,7 @@ public:
         return res;
     }
 
-    static std::string Replace(const std::string& subject, const std::string& search, const std::string& replace)
+    inline std::string Replace(const std::string& subject, const std::string& search, const std::string& replace)
     {
         std::string copy{ subject };
         size_t pos{ 0 };
@@ -109,7 +106,7 @@ public:
         return copy;
     }
 
-    static std::wstring Replace(const std::wstring& subject, const std::wstring& search, const std::wstring& replace)
+    inline std::wstring Replace(const std::wstring& subject, const std::wstring& search, const std::wstring& replace)
     {
         std::wstring copy{ subject };
         size_t pos{ 0 };
@@ -120,108 +117,38 @@ public:
         return copy;
     }
 
-    static std::string GetAsString(const glm::vec2& v, const uint32_t precission)
+    inline std::string GetAsString(const glm::vec2& v, const uint32_t precission)
     {
         std::stringstream ss;
         ss << std::setprecision(precission) << "(" << v.x << ", " << v.y << ")";
         return ss.str();
     }
 
-    static std::string GetAsString(const glm::vec3& v, const uint32_t precission)
+    inline std::string GetAsString(const glm::vec3& v, const uint32_t precission)
     {
         std::stringstream ss;
         ss << std::setprecision(precission) << "(" << v.x << ", " << v.y << ", " << v.z << ")";
         return ss.str();
     }
 
-    static std::string GetAsString(const glm::vec4& v, const uint32_t precission)
+    inline std::string GetAsString(const glm::vec4& v, const uint32_t precission)
     {
         std::stringstream ss;
         ss << std::setprecision(precission) << "(" << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ")";
         return ss.str();
     }
 
-    static std::string GetAsString(const glm::quat& q, const uint32_t precission)
+    inline std::string GetAsString(const glm::quat& q, const uint32_t precission)
     {
         std::stringstream ss;
         ss << std::setprecision(precission) << "(" << q.x << ", " << q.y << ", " << q.z << ", " << q.w << ")";
         return ss.str();
     }
-};
-
-class FPSService final {
-private:
-    float m_refreshTimeout = 1.0f;
-
-    bool m_printInfo{ true };
-
-    std::vector<float> m_deltaTimeSnapshots;
-
-    float m_elpasedTime = 0.0f;
-
-    float m_averageDeltaTime = 0.0f;
-
-    mutable std::mutex m_lock;
-
-public:
-    FPSService(float refreshTimeInS = 1.0f, bool printInfo = true)
-        : m_refreshTimeout(refreshTimeInS)
-        , m_printInfo(printInfo)
-    {
-    }
-
-    ~FPSService() = default;
-
-public:
-    bool Update(float deltaTime)
-    {
-        std::lock_guard<std::mutex> lock(m_lock);
-
-        m_elpasedTime += deltaTime;
-
-        m_deltaTimeSnapshots.push_back(deltaTime);
-
-        if (m_elpasedTime > m_refreshTimeout) {
-            float deltasSum = 0.0f;
-            for (auto& snapshot : m_deltaTimeSnapshots) {
-                deltasSum += snapshot;
-            }
-            m_averageDeltaTime = deltasSum / static_cast<float>(m_deltaTimeSnapshots.size());
-            m_elpasedTime = 0.0f;
-
-            m_deltaTimeSnapshots.clear();
-
-            if (m_printInfo) {
-                LOGI("FPS %f\n", (1.0f / m_averageDeltaTime));
-            }
-            return true;
-        }
-        return false;
-    }
-
-    float GetAverageDeltaTime() const
-    {
-        std::lock_guard<std::mutex> lock(m_lock);
-
-        return m_averageDeltaTime;
-    }
-
-    float GetAverageFPS() const
-    {
-        std::lock_guard<std::mutex> lock(m_lock);
-
-        if (m_averageDeltaTime > 0.0f) {
-            return (1.0f / m_averageDeltaTime);
-        }
-        return 0.0f;
-    }
-};
+} // namespace string
 
 class FPSCounter final {
 private:
     float m_refreshTimeoutInS{ 1.0f };
-
-    bool m_printInfo{ true };
 
     std::vector<float> m_deltaTimeSnapshots;
 
@@ -234,9 +161,8 @@ private:
     mutable std::mutex m_lock;
 
 public:
-    FPSCounter(float refreshTimeInS = 2.0f, bool printInfo = true)
+    FPSCounter(float refreshTimeInS = 2.0f)
         : m_refreshTimeoutInS(refreshTimeInS)
-        , m_printInfo(printInfo)
     {
     }
 
@@ -264,10 +190,6 @@ public:
                 deltasSum += snapshot;
             }
             m_averageDeltaTime = deltasSum / m_deltaTimeSnapshots.size();
-
-            if (m_printInfo) {
-                LOGI("FPS %f\n", (1.0f / m_averageDeltaTime));
-            }
 
             m_elpasedTimeInS = 0.0f;
             m_deltaTimeSnapshots.clear();
@@ -303,7 +225,6 @@ private:
 
 public:
     Clock()
-        : m_frameInterval(0.0f)
     {
         Reset();
     }
@@ -319,11 +240,8 @@ public:
 
     void UpdateClock()
     {
-        auto now = std::chrono::steady_clock::now();
-        std::chrono::duration<Type, std::milli> fpMS = now - m_lastFrameTimestamp;
-
-        m_frameInterval = static_cast<Type>(fpMS.count() / 1000.0);
-
+        const auto now{ std::chrono::steady_clock::now() };
+        m_frameInterval = std::chrono::duration<Type>(now - m_lastFrameTimestamp).count();
         m_lastFrameTimestamp = now;
     }
 

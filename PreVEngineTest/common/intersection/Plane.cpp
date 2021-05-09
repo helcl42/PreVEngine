@@ -26,7 +26,7 @@ Plane::Plane(const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3)
 
 std::ostream& operator<<(std::ostream& out, const Plane& plane)
 {
-    out << "Normal:    " << prev::util::StringUtils::GetAsString(plane.normal, 2) << std::endl;
+    out << "Normal:    " << prev::util::string::GetAsString(plane.normal, 2) << std::endl;
     out << "Distance: " << plane.distance << std::endl;
     return out;
 }

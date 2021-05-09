@@ -52,9 +52,9 @@ std::vector<glm::vec3> OBB::GetPoints() const
 
 std::ostream& operator<<(std::ostream& out, const OBB& aabb)
 {
-    out << "Orientation: " << prev::util::StringUtils::GetAsString(aabb.orientation, 2) << std::endl;
-    out << "Position:    " << prev::util::StringUtils::GetAsString(aabb.position, 2) << std::endl;
-    out << "HalfExtents: " << prev::util::StringUtils::GetAsString(aabb.halfExtents, 2) << std::endl;
+    out << "Orientation: " << prev::util::string::GetAsString(aabb.orientation, 2) << std::endl;
+    out << "Position:    " << prev::util::string::GetAsString(aabb.position, 2) << std::endl;
+    out << "HalfExtents: " << prev::util::string::GetAsString(aabb.halfExtents, 2) << std::endl;
     return out;
 }
 } // namespace prev_test::common::intersection

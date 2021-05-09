@@ -63,7 +63,7 @@ private:
 
     std::unique_ptr<prev::util::Clock<float> > m_clock;
 
-    std::unique_ptr<prev::util::FPSService> m_fpsService;
+    std::unique_ptr<prev::util::FPSCounter> m_fpsCounter;
 
     std::unique_ptr<prev::core::instance::Instance> m_instance;
 

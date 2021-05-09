@@ -17,7 +17,7 @@ Sphere::Sphere(const glm::vec3& pos, const float rad)
 
 std::ostream& operator<<(std::ostream& out, const Sphere& sphere)
 {
-    out << "Position:    " << prev::util::StringUtils::GetAsString(sphere.position, 2) << std::endl;
+    out << "Position:    " << prev::util::string::GetAsString(sphere.position, 2) << std::endl;
     out << "Radius: " << sphere.radius << std::endl;
     return out;
 }

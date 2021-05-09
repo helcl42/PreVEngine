@@ -44,8 +44,8 @@ void MainLight::Update(float deltaTime)
 
     auto lightTransformInWorldSpace = glm::inverse(m_lightComponent->LookAt());
 
-    m_transformComponent->SetPosition(prev::util::MathUtil::ExtractTranslation(lightTransformInWorldSpace));
-    m_transformComponent->SetOrientation(prev::util::MathUtil::ExtractRotationAsQuaternion(lightTransformInWorldSpace));
+    m_transformComponent->SetPosition(prev::util::math::ExtractTranslation(lightTransformInWorldSpace));
+    m_transformComponent->SetOrientation(prev::util::math::ExtractRotationAsQuaternion(lightTransformInWorldSpace));
 
     m_transformComponent->Update(deltaTime);
 

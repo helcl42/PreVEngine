@@ -7,10 +7,10 @@
 namespace prev_test::component::ray_casting {
 void MouseRayCasterComponent::Update(float deltaTime)
 {
-    const glm::vec2 normalizeDeviceCoords = prev::util::MathUtil::FromViewPortSpaceToNormalizedDeviceSpace(m_viewPortDimensions, glm::vec2(m_currentMousePosition.x, m_currentMousePosition.y));
-    const glm::vec4 clipSpaceCoords = prev::util::MathUtil::FromNormalizedDeviceSpaceToClipSpace(normalizeDeviceCoords);
-    const glm::vec4 eyeSpaceCoords = prev::util::MathUtil::FromClipSpaceToCameraSpace(m_projectionMatrix, clipSpaceCoords);
-    const glm::vec3 worldCoords = prev::util::MathUtil::FromCameraSpaceToWorldSpace(m_viewMatrix, eyeSpaceCoords);
+    const glm::vec2 normalizeDeviceCoords = prev::util::math::FromViewPortSpaceToNormalizedDeviceSpace(m_viewPortDimensions, glm::vec2(m_currentMousePosition.x, m_currentMousePosition.y));
+    const glm::vec4 clipSpaceCoords = prev::util::math::FromNormalizedDeviceSpaceToClipSpace(normalizeDeviceCoords);
+    const glm::vec4 eyeSpaceCoords = prev::util::math::FromClipSpaceToCameraSpace(m_projectionMatrix, clipSpaceCoords);
+    const glm::vec3 worldCoords = prev::util::math::FromCameraSpaceToWorldSpace(m_viewMatrix, eyeSpaceCoords);
 
     m_rayDirection = glm::normalize(worldCoords);
 

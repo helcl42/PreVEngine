@@ -34,8 +34,8 @@ glm::vec3 Ray::GetPointAtDistances(const float distance) const
 
 std::ostream& operator<<(std::ostream& out, const Ray& ray)
 {
-    out << "Direction: " << prev::util::StringUtils::GetAsString(ray.direction, 2) << std::endl;
-    out << "Origin:    " << prev::util::StringUtils::GetAsString(ray.origin, 2) << std::endl;
+    out << "Direction: " << prev::util::string::GetAsString(ray.direction, 2) << std::endl;
+    out << "Origin:    " << prev::util::string::GetAsString(ray.origin, 2) << std::endl;
     out << "Length:    " << ray.length << std::endl;
     return out;
 }

@@ -15,7 +15,7 @@ Point::Point(const glm::vec3& pos)
 
 std::ostream& operator<<(std::ostream& out, const Point& point)
 {
-    out << "Position: " << prev::util::StringUtils::GetAsString(point.position, 2) << std::endl;
+    out << "Position: " << prev::util::string::GetAsString(point.position, 2) << std::endl;
     return out;
 }
 } // namespace prev_test::common::intersection
