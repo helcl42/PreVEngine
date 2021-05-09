@@ -74,7 +74,7 @@ void SelectionDebugRenderer::Render(const prev::render::RenderContext& renderCon
             UniformsVS uniformsVS{};
             uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
             uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
-            uniformsVS.modelMatrix = prev::util::MathUtil::CreateTransformationMatrix(selectableComponent->GetPostiion(), glm::quat(), 0.6f);
+            uniformsVS.modelMatrix = prev::util::math::CreateTransformationMatrix(selectableComponent->GetPostiion(), glm::quat(), 0.6f);
 
             uboVS->Update(&uniformsVS);
 

@@ -53,8 +53,7 @@ public:
         m_capacity = capacity;
         m_index = 0;
 
-        const uint32_t itemSize = prev::util::MathUtil::RoundUp(static_cast<uint32_t>(sizeof(ItemType)), alignment);
-
+        const uint32_t itemSize = prev::util::math::RoundUp(static_cast<uint32_t>(sizeof(ItemType)), alignment);
         Data(nullptr, capacity, itemSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &m_mapped);
 
         for (uint32_t i = 0; i < capacity; i++) {

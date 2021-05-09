@@ -85,12 +85,12 @@ void TransformComponent::SetScale(const glm::vec3& scale)
 
 glm::mat4 TransformComponent::GetTransform() const
 {
-    return prev::util::MathUtil::CreateTransformationMatrix(m_position, m_orientation, glm::vec3(1.0f));
+    return prev::util::math::CreateTransformationMatrix(m_position, m_orientation, glm::vec3(1.0f));
 }
 
 glm::mat4 TransformComponent::GetTransformScaled() const
 {
-    return prev::util::MathUtil::CreateTransformationMatrix(m_position, m_orientation, m_scaler);
+    return prev::util::math::CreateTransformationMatrix(m_position, m_orientation, m_scaler);
 }
 
 glm::mat4 TransformComponent::GetWorldTransform() const

@@ -67,7 +67,7 @@ void ParticlesRenderer::Render(const prev::render::RenderContext& renderContext,
             const size_t singleInstanceSizeInBytes = sizeof(glm::mat4) + sizeof(glm::vec2) + sizeof(glm::vec2) + sizeof(float);
             prev_test::render::VertexDataBuffer instanceDataBuffer(singleInstanceSizeInBytes * particles.size());
             for (const auto& particle : particles) {
-                instanceDataBuffer.Add(prev::util::MathUtil::CreateTransformationMatrix(particle->GetPosition(), glm::inverse(glm::quat_cast(renderContextUserData.viewMatrix)) * glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, particle->GetRotation()))), particle->GetScale()));
+                instanceDataBuffer.Add(prev::util::math::CreateTransformationMatrix(particle->GetPosition(), glm::inverse(glm::quat_cast(renderContextUserData.viewMatrix)) * glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, particle->GetRotation()))), particle->GetScale()));
                 instanceDataBuffer.Add(particle->GetCurrentStageTextureOffset());
                 instanceDataBuffer.Add(particle->GetNextStageTextureOffset());
                 instanceDataBuffer.Add(particle->GetStagesBlendFactor());

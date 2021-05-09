@@ -12,13 +12,13 @@ FontMetadataFile::FontMetadataFile(const std::string& path)
 {
 #if defined(__ANDROID__)
     FILE* file = fopen(path.c_str(), "r");
-    if(!file) {
+    if (!file) {
         throw std::runtime_error("Could not open metadata file: " + path);
     }
     stdiobuf sbuf(file);
     std::istream inStream(&sbuf);
 #else
-    std::ifstream inStream{path};
+    std::ifstream inStream{ path };
 #endif
     if (!inStream.good()) {
         throw std::runtime_error("Could not open metadata file: " + path);
@@ -53,7 +53,7 @@ int FontMetadataFile::GetValueAsInt(const std::string& variable) const
 std::vector<int> FontMetadataFile::GetValueAsInts(const std::string& variable) const
 {
     std::vector<int> actualValues;
-    auto numberStrings = prev::util::StringUtils::Split(m_currentLine.at(variable), ',');
+    auto numberStrings = prev::util::string::Split(m_currentLine.at(variable), ',');
     for (size_t i = 0; i < numberStrings.size(); i++) {
         actualValues.push_back(std::stoi(numberStrings[i]));
     }
@@ -71,9 +71,9 @@ bool FontMetadataFile::ProcessNextLine(std::istream& inOutStream, std::map<std::
         return false;
     }
 
-    auto items = prev::util::StringUtils::Split(line, ' ');
+    auto items = prev::util::string::Split(line, ' ');
     for (auto& part : items) {
-        auto valuePairs = prev::util::StringUtils::Split(part, '=');
+        auto valuePairs = prev::util::string::Split(part, '=');
         if (valuePairs.size() == 2) {
             outTokens.insert({ valuePairs[0], valuePairs[1] });
         }
