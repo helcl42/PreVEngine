@@ -1,8 +1,6 @@
 #include "IntersectionTester.h"
 
-bool CMP(float x, float y) {
-    return std::abs(x - y) <= FLT_EPSILON * std::max(1.0f, std::max(std::abs(x), std::abs(y)));
-}
+#include <prev/util/MathUtils.h>
 
 namespace prev_test::common::intersection {
 namespace {
@@ -93,7 +91,7 @@ bool IntersectionTester::Intersects(const AABB& box, const Plane& plane)
 
 bool IntersectionTester::Intersects(const Plane& plane, const Point& point)
 {
-    return CMP(glm::dot(point.position, plane.normal) - plane.distance, 0.0f);
+    return prev::util::math::AlmostZero(glm::dot(point.position, plane.normal) - plane.distance);
 }
 
 bool IntersectionTester::Intersects(const AABB& box, const Point& point)
@@ -305,12 +303,12 @@ bool IntersectionTester::Intersects(const Ray& ray, const AABB& box, RayCastResu
     const glm::vec3 max = box.maxExtents;
 
     const float EPSILON{ 0.00001f };
-    float t1 = (min.x - ray.origin.x) / (CMP(ray.direction.x, 0.0f) ? EPSILON : ray.direction.x);
-    float t2 = (max.x - ray.origin.x) / (CMP(ray.direction.x, 0.0f) ? EPSILON : ray.direction.x);
-    float t3 = (min.y - ray.origin.y) / (CMP(ray.direction.y, 0.0f) ? EPSILON : ray.direction.y);
-    float t4 = (max.y - ray.origin.y) / (CMP(ray.direction.y, 0.0f) ? EPSILON : ray.direction.y);
-    float t5 = (min.z - ray.origin.z) / (CMP(ray.direction.z, 0.0f) ? EPSILON : ray.direction.z);
-    float t6 = (max.z - ray.origin.z) / (CMP(ray.direction.z, 0.0f) ? EPSILON : ray.direction.z);
+    float t1 = (min.x - ray.origin.x) / (prev::util::math::AlmostZero(ray.direction.x) ? EPSILON : ray.direction.x);
+    float t2 = (max.x - ray.origin.x) / (prev::util::math::AlmostZero(ray.direction.x) ? EPSILON : ray.direction.x);
+    float t3 = (min.y - ray.origin.y) / (prev::util::math::AlmostZero(ray.direction.y) ? EPSILON : ray.direction.y);
+    float t4 = (max.y - ray.origin.y) / (prev::util::math::AlmostZero(ray.direction.y) ? EPSILON : ray.direction.y);
+    float t5 = (min.z - ray.origin.z) / (prev::util::math::AlmostZero(ray.direction.z) ? EPSILON : ray.direction.z);
+    float t6 = (max.z - ray.origin.z) / (prev::util::math::AlmostZero(ray.direction.z) ? EPSILON : ray.direction.z);
 
     float tmin = std::fmaxf(std::fmaxf(std::fminf(t1, t2), std::fminf(t3, t4)), std::fminf(t5, t6));
     float tmax = std::fminf(std::fminf(std::fmaxf(t1, t2), std::fmaxf(t3, t4)), std::fmaxf(t5, t6));
@@ -342,7 +340,7 @@ bool IntersectionTester::Intersects(const Ray& ray, const AABB& box, RayCastResu
     glm::vec3 resultNormal;
     const float t[] = { t1, t2, t3, t4, t5, t6 };
     for (auto i = 0; i < 6; ++i) {
-        if (CMP(tResult, t[i])) {
+        if (prev::util::math::AlmostEqual(tResult, t[i])) {
             resultNormal = normals[i];
         }
     }
@@ -419,7 +417,7 @@ bool IntersectionTester::Intersects(const Ray& ray, const OBB& obb, RayCastResul
 
     float tArray[] = { 0, 0, 0, 0, 0, 0 };
     for (int i = 0; i < 3; i++) {
-        if (CMP(f[i], 0)) {
+        if (prev::util::math::AlmostZero(f[i])) {
             if (-e[i] - size[i] > 0 || -e[i] + size[i] < 0) {
                 return false;
             }
@@ -456,7 +454,7 @@ bool IntersectionTester::Intersects(const Ray& ray, const OBB& obb, RayCastResul
     };
 
     for (int i = 0; i < 6; ++i) {
-        if (CMP(t, tArray[i])) {
+        if (prev::util::math::AlmostEqual(t, tArray[i])) {
             result.normal = glm::normalize(normals[i]);
         }
     }
