@@ -18,7 +18,7 @@ Allocator::Allocator(prev::core::device::Device& device, prev::core::device::Que
     , m_queue(queue)
 {
     m_commandPool = m_queue.CreateCommandPool();
-    m_commandBuffer = prev::util::VkUtils::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+    m_commandBuffer = prev::util::vk::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
     VmaAllocatorCreateInfo allocatorInfo = {};
     allocatorInfo.physicalDevice = *m_device.GetGPU();

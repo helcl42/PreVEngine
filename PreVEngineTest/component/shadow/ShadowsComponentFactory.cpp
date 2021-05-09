@@ -64,8 +64,8 @@ std::vector<ShadowsCascade> ShadowsComponentFactory::CreateCascades(const VkExte
     cascades.resize(cascadesCount);
     for (uint32_t i = 0; i < cascadesCount; i++) {
         auto& cascade{ cascades.at(i) };
-        cascade.imageView = prev::util::VkUtils::CreateImageView(device, depthBuffer->GetImage(), depthBuffer->GetFormat(), VK_IMAGE_VIEW_TYPE_2D_ARRAY, depthBuffer->GetMipLevels(), VK_IMAGE_ASPECT_DEPTH_BIT, 1, i);
-        cascade.frameBuffer = prev::util::VkUtils::CreateFrameBuffer(device, *renderPass, { cascade.imageView }, extent);
+        cascade.imageView = prev::util::vk::CreateImageView(device, depthBuffer->GetImage(), depthBuffer->GetFormat(), VK_IMAGE_VIEW_TYPE_2D_ARRAY, depthBuffer->GetMipLevels(), VK_IMAGE_ASPECT_DEPTH_BIT, 1, i);
+        cascade.frameBuffer = prev::util::vk::CreateFrameBuffer(device, *renderPass, { cascade.imageView }, extent);
     }
     return cascades;
 }

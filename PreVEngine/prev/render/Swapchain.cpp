@@ -195,8 +195,8 @@ void Swapchain::Print() const
 {
     printf("Swapchain:\n");
 
-    printf("\tFormat  = %3d : %s\n", m_swapchainCreateInfo.imageFormat, util::VkUtils::FormatToString(m_swapchainCreateInfo.imageFormat).c_str());
-    printf("\tDepth   = %3d : %s\n", m_depthBuffer->GetFormat(), util::VkUtils::FormatToString(m_depthBuffer->GetFormat()).c_str());
+    printf("\tFormat  = %3d : %s\n", m_swapchainCreateInfo.imageFormat, util::vk::FormatToString(m_swapchainCreateInfo.imageFormat).c_str());
+    printf("\tDepth   = %3d : %s\n", m_depthBuffer->GetFormat(), util::vk::FormatToString(m_depthBuffer->GetFormat()).c_str());
 
     const auto& extent = m_swapchainCreateInfo.imageExtent;
     printf("\tExtent  = %d x %d\n", extent.width, extent.height);
@@ -206,7 +206,7 @@ void Swapchain::Print() const
     printf("\tPresentMode:\n");
     const auto& mode = m_swapchainCreateInfo.presentMode;
     for (auto m : modes) {
-        print((m == mode) ? ConsoleColor::RESET : ConsoleColor::FAINT, "\t\t%s %s\n", (m == mode) ? cTICK : " ", util::VkUtils::PresentModeToString(m).c_str());
+        print((m == mode) ? ConsoleColor::RESET : ConsoleColor::FAINT, "\t\t%s %s\n", (m == mode) ? cTICK : " ", util::vk::PresentModeToString(m).c_str());
     }
 }
 
@@ -248,7 +248,7 @@ void Swapchain::Apply()
     m_swapchainBuffers.resize(m_swapchainImagesCount);
     for (uint32_t i = 0; i < m_swapchainImagesCount; i++) {
         auto image{ swapchainImages[i] };
-        auto imageView{ util::VkUtils::CreateImageView(m_device, image, m_swapchainCreateInfo.imageFormat, VK_IMAGE_VIEW_TYPE_2D, 1, VK_IMAGE_ASPECT_COLOR_BIT) };
+        auto imageView{ util::vk::CreateImageView(m_device, image, m_swapchainCreateInfo.imageFormat, VK_IMAGE_VIEW_TYPE_2D, 1, VK_IMAGE_ASPECT_COLOR_BIT) };
 
         std::vector<VkImageView> swapchainImageViews;
         if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
@@ -264,9 +264,9 @@ void Swapchain::Apply()
         auto& swapchainBuffer = m_swapchainBuffers[i];
         swapchainBuffer.image = image;
         swapchainBuffer.view = imageView;
-        swapchainBuffer.framebuffer = util::VkUtils::CreateFrameBuffer(m_device, m_renderPass, swapchainImageViews, m_swapchainCreateInfo.imageExtent);
-        swapchainBuffer.commandBuffer = util::VkUtils::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-        swapchainBuffer.fence = util::VkUtils::CreateFence(m_device);
+        swapchainBuffer.framebuffer = util::vk::CreateFrameBuffer(m_device, m_renderPass, swapchainImageViews, m_swapchainCreateInfo.imageExtent);
+        swapchainBuffer.commandBuffer = util::vk::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+        swapchainBuffer.fence = util::vk::CreateFence(m_device);
         swapchainBuffer.extent = m_swapchainCreateInfo.imageExtent;
     }
 

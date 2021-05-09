@@ -137,8 +137,8 @@ bool Shader::AdjustDescriptorPoolCapacity(const uint32_t desiredCount)
 
 void Shader::AddDescriptorSet(const std::string& name, const uint32_t binding, const VkDescriptorType descType, const uint32_t descCount, const VkShaderStageFlags stageFlags)
 {
-    m_layoutBindings.emplace_back(prev::util::VkUtils::CreteDescriptorSetLayoutBinding(binding, descType, descCount, stageFlags));
-    m_descriptorWrites.emplace_back(prev::util::VkUtils::CreateWriteDescriptorSet(binding, descType, descCount));
+    m_layoutBindings.emplace_back(prev::util::vk::CreteDescriptorSetLayoutBinding(binding, descType, descCount, stageFlags));
+    m_descriptorWrites.emplace_back(prev::util::vk::CreateWriteDescriptorSet(binding, descType, descCount));
     if (descCount > 1) {
         for (uint32_t i = 0; i < descCount; i++) {
             m_descriptorSetInfos[name + "[" + std::to_string(i) + "]"] = { m_descriptorWrites.size() - 1 };

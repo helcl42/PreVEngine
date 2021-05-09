@@ -25,9 +25,9 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsNoiseFactory::Cre
     pipeline->Init();
 
     auto commandPool = computeQueue->CreateCommandPool();
-    auto commandBuffer = prev::util::VkUtils::CreateCommandBuffer(*device, commandPool);
+    auto commandBuffer = prev::util::vk::CreateCommandBuffer(*device, commandPool);
 
-    auto fence = prev::util::VkUtils::CreateFence(*device);
+    auto fence = prev::util::vk::CreateFence(*device);
 
     prev::core::memory::image::ImageBufferCreateInfo imageBufferCreateInfo{ VkExtent3D{ width, height, depth }, VK_IMAGE_TYPE_3D, noiseImageFormat, VK_SAMPLE_COUNT_1_BIT, 0, true, true, VK_IMAGE_VIEW_TYPE_3D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT };
 
