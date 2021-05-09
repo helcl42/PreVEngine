@@ -106,7 +106,7 @@ void Scene::InitRenderPass()
     const auto colorFormat{ m_device->GetGPU()->FindSurfaceFormat(m_surface) };
     const auto depthFormat{ m_device->GetGPU()->FindDepthFormat() };
     const VkClearColorValue clearColor{ 0.5f, 0.5f, 0.5f, 1.0f };
-    const VkSampleCountFlagBits sampleCount = prev::util::VkUtils::GetSampleCountBit(m_config->samplesCount);
+    const VkSampleCountFlagBits sampleCount = prev::util::vk::GetSampleCountBit(m_config->samplesCount);
 
     m_renderPass = std::make_shared<prev::render::pass::RenderPass>(*m_device);
     if (sampleCount > VK_SAMPLE_COUNT_1_BIT) {
@@ -142,7 +142,7 @@ void Scene::InitRenderPass()
 
 void Scene::InitSwapchain()
 {
-    m_swapchain = std::make_shared<prev::render::Swapchain>(*m_device, *m_allocator, *m_renderPass, m_surface, prev::util::VkUtils::GetSampleCountBit(m_config->samplesCount));
+    m_swapchain = std::make_shared<prev::render::Swapchain>(*m_device, *m_allocator, *m_renderPass, m_surface, prev::util::vk::GetSampleCountBit(m_config->samplesCount));
 #if defined(__ANDROID__)
     m_swapchain->SetPresentMode(m_config->VSync ? VK_PRESENT_MODE_MAILBOX_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
 #else

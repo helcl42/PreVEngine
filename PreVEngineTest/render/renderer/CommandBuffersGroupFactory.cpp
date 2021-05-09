@@ -16,7 +16,7 @@ std::unique_ptr<CommandBuffersGroup> CommandBuffersGroupFactory::CreateGroup(con
         for (uint32_t shadowRendererIndex = 0; shadowRendererIndex < groupSize; shadowRendererIndex++) {
             auto pool = queue.CreateCommandPool();
             pools.push_back(pool);
-            buffers.push_back(prev::util::VkUtils::CreateCommandBuffer(device, pool, level));
+            buffers.push_back(prev::util::vk::CreateCommandBuffer(device, pool, level));
         }
         commandPools.push_back(pools);
         commandBuffers.push_back(buffers);

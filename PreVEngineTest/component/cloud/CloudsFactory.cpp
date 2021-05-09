@@ -37,9 +37,9 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsFactory::Create(c
     uniformsPool->AdjustCapactity(3, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
     auto commandPool = computeQueue->CreateCommandPool();
-    auto commandBuffer = prev::util::VkUtils::CreateCommandBuffer(*device, commandPool);
+    auto commandBuffer = prev::util::vk::CreateCommandBuffer(*device, commandPool);
 
-    auto fence = prev::util::VkUtils::CreateFence(*device);
+    auto fence = prev::util::vk::CreateFence(*device);
 
     prev::core::memory::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ width, height }, VK_IMAGE_TYPE_2D, weatherImageFormat, VK_SAMPLE_COUNT_1_BIT, 0, false, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT };
     auto weatherImageBuffer = std::make_unique<prev::core::memory::image::ImageStorageBuffer>(*allocator);

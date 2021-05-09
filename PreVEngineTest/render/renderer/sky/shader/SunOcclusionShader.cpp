@@ -21,14 +21,14 @@ std::map<VkShaderStageFlagBits, std::string> SunOcclusionShader::GetPaths()
 std::vector<VkVertexInputBindingDescription> SunOcclusionShader::CreateVertexInputBindingDescriptors() const
 {
     return {
-        prev::util::VkUtils::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        prev::util::vk::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
     };
 }
 
 std::vector<VkVertexInputAttributeDescription> SunOcclusionShader::CreateInputAttributeDescriptors() const
 {
     return {
-        prev::util::VkUtils::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0)
+        prev::util::vk::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0)
     };
 }
 

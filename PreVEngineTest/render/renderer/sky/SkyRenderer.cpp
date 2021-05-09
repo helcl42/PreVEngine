@@ -110,9 +110,9 @@ void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext,
     UpdateImageBufferExtents(VkExtent2D{ imageWidth, imageHeight }, m_skyPostProcessColorImageBuffer);
 
     auto commandPool = computeQueue->CreateCommandPool();
-    auto commandBuffer = prev::util::VkUtils::CreateCommandBuffer(*device, commandPool);
+    auto commandBuffer = prev::util::vk::CreateCommandBuffer(*device, commandPool);
 
-    auto fence = prev::util::VkUtils::CreateFence(*device);
+    auto fence = prev::util::vk::CreateFence(*device);
 
     VkCommandBufferBeginInfo commandBufferBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
     commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
