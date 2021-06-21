@@ -14,12 +14,12 @@ public:
     ~RenderPass();
 
 private:
-    static VkAttachmentDescription CreateAttachmentDescription(VkFormat format, VkSampleCountFlagBits sampleCount, VkImageLayout finalLayout);
+    static VkAttachmentDescription CreateAttachmentDescription(const VkFormat format, const VkSampleCountFlagBits sampleCount, const VkImageLayout finalLayout);
 
 public:
-    uint32_t AddColorAttachment(VkFormat format, VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, VkClearColorValue clearVal = {}, VkImageLayout finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+    uint32_t AddColorAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, const VkClearColorValue clearVal = {}, const VkImageLayout finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
-    uint32_t AddDepthAttachment(VkFormat format, VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, VkClearDepthStencilValue clearVal = { 1.0f, 0 });
+    uint32_t AddDepthAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, const VkClearDepthStencilValue clearVal = { 1.0f, 0 });
 
     SubPass& AddSubpass(const std::vector<uint32_t>& attachmentIndexes = {}, const std::vector<uint32_t>& resolveIndices = {});
 
@@ -34,7 +34,7 @@ public:
     void End(VkCommandBuffer commadBuffer);
 
 public:
-    VkFormat GetSurfaceFormat() const;
+    VkFormat GetColorFormat(const int attachmentIndex = 0) const;
 
     VkFormat GetDepthFormat() const;
 
@@ -49,7 +49,7 @@ public:
     const std::vector<VkSubpassDependency>& GetSubPassDependencies() const;
 
 public:
-    operator VkRenderPass();
+    operator VkRenderPass() const;
 
     VkRenderPass GetNativeHandle() const;
 
@@ -57,8 +57,6 @@ private:
     VkDevice m_device;
 
     VkRenderPass m_renderPass{ VK_NULL_HANDLE };
-
-    VkFormat m_surfaceFormat{ VkFormat::VK_FORMAT_UNDEFINED };
 
     VkFormat m_depthFormat{ VkFormat::VK_FORMAT_UNDEFINED };
 
@@ -69,6 +67,8 @@ private:
     std::vector<VkAttachmentDescription> m_attachments;
 
     std::vector<VkSubpassDependency> m_dependencies;
+
+    std::vector<VkFormat> m_surfaceFormats;
 };
 } // namespace prev::render::pass
 

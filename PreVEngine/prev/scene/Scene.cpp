@@ -106,7 +106,7 @@ void Scene::InitRenderPass()
     const auto colorFormat{ m_device->GetGPU()->FindSurfaceFormat(m_surface) };
     const auto depthFormat{ m_device->GetGPU()->FindDepthFormat() };
     const VkClearColorValue clearColor{ 0.5f, 0.5f, 0.5f, 1.0f };
-    const VkSampleCountFlagBits sampleCount = prev::util::vk::GetSampleCountBit(m_config->samplesCount);
+    const VkSampleCountFlagBits sampleCount{ prev::util::vk::GetSampleCountBit(m_config->samplesCount) };
 
     m_renderPass = std::make_shared<prev::render::pass::RenderPass>(*m_device);
     if (sampleCount > VK_SAMPLE_COUNT_1_BIT) {
@@ -138,6 +138,7 @@ void Scene::InitRenderPass()
         m_renderPass->AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT);
         m_renderPass->AddSubpass({ 0, 1 });
     }
+    m_renderPass->Create();
 }
 
 void Scene::InitSwapchain()
