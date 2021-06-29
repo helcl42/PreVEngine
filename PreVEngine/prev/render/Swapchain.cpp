@@ -105,6 +105,10 @@ void Swapchain::UpdateExtent()
     const VkSurfaceCapabilitiesKHR surfaceCapabilities{ GetSurfaceCapabilities() };
     const VkExtent2D& currentSurfaceExtent{ surfaceCapabilities.currentExtent };
 
+    if (currentSurfaceExtent.width == 0 || currentSurfaceExtent.height == 0) {
+        return;
+    }
+
     if (currentSurfaceExtent.width == 0xFFFFFFFF) // 0xFFFFFFFF indicates surface size is set from extent
     {
         const uint32_t defaultWidth = 256;
@@ -116,7 +120,7 @@ void Swapchain::UpdateExtent()
         m_swapchainCreateInfo.imageExtent.height = util::math::Clamp(defaultHeight, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
     } else {
         // because of android notifies about SUBOPTIMAL presence -> it internaly transforms image(rotates) because we use preTransform == VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
-        if (currentSurfaceExtent.width == m_swapchainCreateInfo.imageExtent.width && currentSurfaceExtent.height == m_swapchainCreateInfo.imageExtent.height || currentSurfaceExtent.width == 0 || currentSurfaceExtent.height == 0) {
+        if (currentSurfaceExtent.width == m_swapchainCreateInfo.imageExtent.width && currentSurfaceExtent.height == m_swapchainCreateInfo.imageExtent.height) {
             return;
         }
 
