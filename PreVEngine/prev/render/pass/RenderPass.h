@@ -7,36 +7,23 @@
 #include <vector>
 
 namespace prev::render::pass {
+class RenderPassBuilder;
+
 class RenderPass final {
 public:
-    RenderPass(VkDevice device);
+    RenderPass(VkDevice device); // TODO - this should be private - accesible from builder only!
 
     ~RenderPass();
 
-private:
-    static VkAttachmentDescription CreateAttachmentDescription(const VkFormat format, const VkSampleCountFlagBits sampleCount, const VkImageLayout finalLayout);
-
 public:
-    uint32_t AddColorAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, const VkClearColorValue clearVal = {}, const VkImageLayout finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
-
-    uint32_t AddDepthAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, const VkClearDepthStencilValue clearVal = { 1.0f, 0 });
-
-    SubPass& AddSubpass(const std::vector<uint32_t>& attachmentIndexes = {}, const std::vector<uint32_t>& resolveIndices = {});
-
-    void AddSubpassDependencies(const std::vector<VkSubpassDependency>& dependencies);
-
-    void Create();
-
-    void Destroy();
-
     void Begin(const VkFramebuffer frambuffer, const VkCommandBuffer commandBuffer, const VkRect2D& renderArea, const VkSubpassContents contents = VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
 
     void End(VkCommandBuffer commadBuffer);
 
 public:
-    VkFormat GetColorFormat(const int attachmentIndex = 0) const;
+    VkFormat GetFormat(const int attachmentIndex = 0) const;
 
-    VkFormat GetDepthFormat() const;
+    VkFormat GetDepthFormat(const int attachmentIndex = 0) const;
 
     VkSampleCountFlagBits GetSamplesCount() const;
 
@@ -54,21 +41,24 @@ public:
     VkRenderPass GetNativeHandle() const;
 
 private:
+    friend class RenderPassBuilder;
+
+private:
     VkDevice m_device;
 
-    VkRenderPass m_renderPass{ VK_NULL_HANDLE };
-
-    VkFormat m_depthFormat{ VkFormat::VK_FORMAT_UNDEFINED };
+    VkRenderPass m_renderPass;
 
     std::vector<VkClearValue> m_clearValues;
+
+    std::vector<VkFormat> m_colorFormats;
+
+    std::vector<VkFormat> m_depthFormats;
 
     std::vector<SubPass> m_subpasses;
 
     std::vector<VkAttachmentDescription> m_attachments;
 
     std::vector<VkSubpassDependency> m_dependencies;
-
-    std::vector<VkFormat> m_surfaceFormats;
 };
 } // namespace prev::render::pass
 

@@ -2,7 +2,7 @@
 #include "RenderPass.h"
 
 namespace prev::render::pass {
-SubPass::SubPass(RenderPass& renderpass)
+SubPass::SubPass(const RenderPass& renderpass)
     : m_renderPass(renderpass)
 {
 }
@@ -22,7 +22,7 @@ SubPass::operator VkSubpassDescription()
     return subPass;
 }
 
-void SubPass::UseAttachment(uint32_t attachmentIndex)
+void SubPass::UseAttachment(const uint32_t attachmentIndex)
 {
     if (m_renderPass.GetAttachments().at(attachmentIndex).finalLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL) { // depth-stencil attachment
         m_depthReference.attachment = attachmentIndex;
@@ -43,7 +43,7 @@ void SubPass::UseAttachments(const std::vector<uint32_t>& attachmentIndexes)
     }
 }
 
-void SubPass::UseResolveAttachment(uint32_t attachmentIndex)
+void SubPass::UseResolveAttachment(const uint32_t attachmentIndex)
 {
     VkAttachmentReference ref = {};
     ref.attachment = attachmentIndex;
@@ -59,7 +59,7 @@ void SubPass::UseResolveAttachments(const std::vector<uint32_t>& attachmentIndex
     }
 }
 
-void SubPass::InputAttachment(uint32_t attachmentIndex)
+void SubPass::InputAttachment(const uint32_t attachmentIndex)
 {
     VkAttachmentReference reference = {};
     reference.attachment = attachmentIndex;
@@ -70,7 +70,7 @@ void SubPass::InputAttachment(uint32_t attachmentIndex)
 
 void SubPass::InputAttachments(const std::vector<uint32_t>& attachmentIndexes)
 {
-    for (auto i : attachmentIndexes) {
+    for (const auto& i : attachmentIndexes) {
         InputAttachment(i);
     }
 }

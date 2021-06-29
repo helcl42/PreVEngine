@@ -10,20 +10,20 @@ class RenderPass;
 
 class SubPass final {
 public:
-    SubPass(RenderPass& renderpass);
+    explicit SubPass(const RenderPass& renderpass);
 
     ~SubPass() = default;
 
 public:
-    void UseAttachment(uint32_t attachmentIndex); // for write
+    void UseAttachment(const uint32_t attachmentIndex); // for write
 
     void UseAttachments(const std::vector<uint32_t>& attachmentIndexes = {});
 
-    void UseResolveAttachment(uint32_t attachmentIndex); // for write
+    void UseResolveAttachment(const uint32_t attachmentIndex); // for write
 
     void UseResolveAttachments(const std::vector<uint32_t>& attachmentIndexes = {});
 
-    void InputAttachment(uint32_t attachmentIndex); // for read
+    void InputAttachment(const uint32_t attachmentIndex); // for read
 
     void InputAttachments(const std::vector<uint32_t>& attachmentIndices = {});
 
@@ -31,7 +31,7 @@ public:
     operator VkSubpassDescription();
 
 private:
-    RenderPass& m_renderPass;
+    const RenderPass& m_renderPass;
 
     std::vector<VkAttachmentReference> m_inputReferences;
 

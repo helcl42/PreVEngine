@@ -2,6 +2,7 @@
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
+#include <prev/render/pass/RenderPassBuilder.h>
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::component::common {
@@ -129,16 +130,17 @@ void OffScreenRenderPassComponent::InitRenderPass()
     // dependencies[1].dstAccessMask = 0;
     // dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-    m_renderPass = std::make_shared<prev::render::pass::RenderPass>(*device);
-    m_renderPass->AddColorAttachment(COLOR_FORMAT, VK_SAMPLE_COUNT_1_BIT, { 0.5f, 0.5f, 0.5f, 1.0f }, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    m_renderPass->AddDepthAttachment(DEPTH_FORMAT, VK_SAMPLE_COUNT_1_BIT);
-    m_renderPass->AddSubpass({ 0, 1 });
-    m_renderPass->AddSubpassDependencies(dependencies);
-    m_renderPass->Create();
+    prev::render::pass::RenderPassBuilder renderPassBuilder{ *device };
+    m_renderPass = renderPassBuilder
+                       .AddColorAttachment(COLOR_FORMAT, VK_SAMPLE_COUNT_1_BIT, { 0.5f, 0.5f, 0.5f, 1.0f }, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+                       .AddDepthAttachment(DEPTH_FORMAT, VK_SAMPLE_COUNT_1_BIT)
+                       .AddSubpass({ 0, 1 })
+                       .AddSubpassDependencies(dependencies)
+                       .Build();
 }
 
 void OffScreenRenderPassComponent::ShutDownRenderPass()
 {
-    m_renderPass->Destroy();
+    m_renderPass = nullptr;
 }
 } // namespace prev_test::component::common
