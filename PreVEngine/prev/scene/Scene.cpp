@@ -1,4 +1,5 @@
 #include "Scene.h"
+#include "../render/pass/RenderPassBuilder.h"
 #include "../util/VkUtils.h"
 
 namespace prev::scene {
@@ -66,7 +67,7 @@ void Scene::ShutDownSceneGraph()
 void Scene::ShutDown()
 {
     m_swapchain = nullptr;
-    m_renderPass->Destroy();
+    m_renderPass = nullptr;
 }
 
 std::shared_ptr<prev::render::Swapchain> Scene::GetSwapchain() const
@@ -103,12 +104,13 @@ void Scene::operator()(const prev::window::SurfaceChanged& surfaceChangedEvent)
 
 void Scene::InitRenderPass()
 {
+    prev::render::pass::RenderPassBuilder renderPassBuilder{ *m_device };
+
     const auto colorFormat{ m_device->GetGPU()->FindSurfaceFormat(m_surface) };
     const auto depthFormat{ m_device->GetGPU()->FindDepthFormat() };
     const VkClearColorValue clearColor{ 0.5f, 0.5f, 0.5f, 1.0f };
     const VkSampleCountFlagBits sampleCount{ prev::util::vk::GetSampleCountBit(m_config->samplesCount) };
 
-    m_renderPass = std::make_shared<prev::render::pass::RenderPass>(*m_device);
     if (sampleCount > VK_SAMPLE_COUNT_1_BIT) {
         std::vector<VkSubpassDependency> dependencies{ 2 };
         dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -127,18 +129,21 @@ void Scene::InitRenderPass()
         dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
         dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-        m_renderPass->AddColorAttachment(colorFormat, sampleCount, clearColor, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL); // color buffer, multisampled
-        m_renderPass->AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, clearColor, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR); // color buffer, resolve buffer
-        m_renderPass->AddDepthAttachment(depthFormat, sampleCount, { 1.0f, 0 }); // depth buffer, multisampled
-        m_renderPass->AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, { 1.0f, 0 }); // depth buffer, resolve buffer
-        m_renderPass->AddSubpass({ 0, 2 }, { 1 }); // resolve ref will be at index 1
-        m_renderPass->AddSubpassDependencies(dependencies);
+        m_renderPass = renderPassBuilder
+                           .AddColorAttachment(colorFormat, sampleCount, clearColor, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) // color buffer, multisampled
+                           .AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, clearColor, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) // color buffer, resolve buffer
+                           .AddDepthAttachment(depthFormat, sampleCount, { 1.0f, 0 }) // depth buffer, multisampled
+                           .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, { 1.0f, 0 }) // depth buffer, resolve buffer
+                           .AddSubpass({ 0, 2 }, { 1 }) // resolve ref will be at index 1
+                           .AddSubpassDependencies(dependencies)
+                           .Build();
     } else {
-        m_renderPass->AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, { 0.5f, 0.5f, 0.5f, 1.0f });
-        m_renderPass->AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT);
-        m_renderPass->AddSubpass({ 0, 1 });
+        m_renderPass = renderPassBuilder
+                           .AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, { 0.5f, 0.5f, 0.5f, 1.0f })
+                           .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT)
+                           .AddSubpass({ 0, 1 })
+                           .Build();
     }
-    m_renderPass->Create();
 }
 
 void Scene::InitSwapchain()

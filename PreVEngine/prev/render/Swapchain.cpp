@@ -29,7 +29,7 @@ Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allo
 
     m_swapchainCreateInfo = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
     m_swapchainCreateInfo.surface = m_surface;
-    m_swapchainCreateInfo.imageFormat = m_renderPass.GetColorFormat();
+    m_swapchainCreateInfo.imageFormat = m_renderPass.GetFormat();
     m_swapchainCreateInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
     m_swapchainCreateInfo.imageArrayLayers = 1; // 2 for stereo
     m_swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
@@ -58,7 +58,7 @@ Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allo
 
     if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
         m_msaaColorBuffer = std::make_unique<core::memory::image::ColorImageBuffer>(m_allocator);
-        m_msaaColorBuffer->Create(core::memory::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, m_renderPass.GetColorFormat(), m_sampleCount, 0, false, false, VK_IMAGE_VIEW_TYPE_2D });
+        m_msaaColorBuffer->Create(core::memory::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, m_renderPass.GetFormat(), m_sampleCount, 0, false, false, VK_IMAGE_VIEW_TYPE_2D });
         m_msaaDepthBuffer = std::make_unique<core::memory::image::DepthImageBuffer>(m_allocator);
         m_msaaDepthBuffer->Create(core::memory::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, m_renderPass.GetDepthFormat(), m_sampleCount, 0, false, false, VK_IMAGE_VIEW_TYPE_2D });
     }

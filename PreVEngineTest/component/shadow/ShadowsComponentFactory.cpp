@@ -4,6 +4,7 @@
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/image/DepthImageBuffer.h>
+#include <prev/render/pass/RenderPassBuilder.h>
 #include <prev/util/VkUtils.h>
 
 #include <memory>
@@ -15,15 +16,15 @@ std::unique_ptr<IShadowsComponent> ShadowsComponentFactory::Create() const
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
     const VkExtent2D extent{ SHADOW_MAP_DIMENSIONS, SHADOW_MAP_DIMENSIONS };
 
-    auto renderPass{ CreateRenderPass(*device) };
-    auto depthBuffer{ CreateDepthBuffer(extent, CASCADES_COUNT, *allocator) };
+    std::shared_ptr<prev::render::pass::RenderPass> renderPass{ CreateRenderPass(*device) };
+    std::shared_ptr<prev::core::memory::image::IImageBuffer> depthBuffer{ CreateDepthBuffer(extent, CASCADES_COUNT, *allocator) };
     auto cascades{ CreateCascades(extent, CASCADES_COUNT, depthBuffer, renderPass, *device) };
 
     auto result{ std::make_unique<ShadowsComponent>(CASCADES_COUNT, renderPass, depthBuffer, cascades) };
     return result;
 }
 
-std::shared_ptr<prev::render::pass::RenderPass> ShadowsComponentFactory::CreateRenderPass(prev::core::device::Device& device) const
+std::unique_ptr<prev::render::pass::RenderPass> ShadowsComponentFactory::CreateRenderPass(prev::core::device::Device& device) const
 {
     std::vector<VkSubpassDependency> dependencies{ 2 };
     dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -42,17 +43,17 @@ std::shared_ptr<prev::render::pass::RenderPass> ShadowsComponentFactory::CreateR
     dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
     dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-    auto renderPass{ std::make_shared<prev::render::pass::RenderPass>(device) };
-    renderPass->AddDepthAttachment(DEPTH_FORMAT);
-    renderPass->AddSubpass({ 0 });
-    renderPass->AddSubpassDependencies(dependencies);
-    renderPass->Create();
-    return renderPass;
+    prev::render::pass::RenderPassBuilder renderPassBuilder{ device };
+    return renderPassBuilder
+        .AddDepthAttachment(DEPTH_FORMAT)
+        .AddSubpass({ 0 })
+        .AddSubpassDependencies(dependencies)
+        .Build();
 }
 
-std::shared_ptr<prev::core::memory::image::IImageBuffer> ShadowsComponentFactory::CreateDepthBuffer(const VkExtent2D& extent, const uint32_t cascadesCount, prev::core::memory::Allocator& allocator) const
+std::unique_ptr<prev::core::memory::image::IImageBuffer> ShadowsComponentFactory::CreateDepthBuffer(const VkExtent2D& extent, const uint32_t cascadesCount, prev::core::memory::Allocator& allocator) const
 {
-    auto depthBuffer{ std::make_shared<prev::core::memory::image::DepthImageBuffer>(allocator) };
+    auto depthBuffer{ std::make_unique<prev::core::memory::image::DepthImageBuffer>(allocator) };
     depthBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ extent, VK_IMAGE_TYPE_2D, DEPTH_FORMAT, VK_SAMPLE_COUNT_1_BIT, 0, false, false, VK_IMAGE_VIEW_TYPE_2D_ARRAY, cascadesCount });
     depthBuffer->CreateSampler(1.0f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, false);
     return depthBuffer;

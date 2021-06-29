@@ -21,7 +21,7 @@ ShadowsComponent::~ShadowsComponent()
 
     vkDeviceWaitIdle(*device);
 
-    m_renderPass->Destroy();
+    m_renderPass = nullptr;
 
     for (uint32_t i = 0; i < m_cascadesCount; i++) {
         auto& cascade{ m_cascades.at(i) };

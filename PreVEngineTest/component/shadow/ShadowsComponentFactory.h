@@ -13,9 +13,9 @@ public:
     std::unique_ptr<IShadowsComponent> Create() const;
 
 private:
-    std::shared_ptr<prev::render::pass::RenderPass> CreateRenderPass(prev::core::device::Device& device) const;
+    std::unique_ptr<prev::render::pass::RenderPass> CreateRenderPass(prev::core::device::Device& device) const;
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> CreateDepthBuffer(const VkExtent2D& extent, const uint32_t cascadesCount, prev::core::memory::Allocator& allocator) const;
+    std::unique_ptr<prev::core::memory::image::IImageBuffer> CreateDepthBuffer(const VkExtent2D& extent, const uint32_t cascadesCount, prev::core::memory::Allocator& allocator) const;
 
     std::vector<ShadowsCascade> CreateCascades(const VkExtent2D& extent, const uint32_t cascadesCount, const std::shared_ptr<prev::core::memory::image::IImageBuffer>& depthBuffer, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, prev::core::device::Device& device) const;
 
