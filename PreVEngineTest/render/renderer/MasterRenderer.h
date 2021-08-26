@@ -6,8 +6,6 @@
 #include "CommandBuffersGroup.h"
 #include "RenderContextUserData.h"
 
-#include "../../General.h"
-
 #include <prev/common/ThreadPool.h>
 #include <prev/render/IRenderer.h>
 #include <prev/render/Swapchain.h>
@@ -123,8 +121,8 @@ void MasterRenderer::RenderParallel(const std::shared_ptr<prev::render::pass::Re
     std::vector<std::future<void> > tasks;
     for (size_t i = 0; i < renderers.size(); i++) {
 
-        auto& renderer = renderers.at(i);
-        auto& commandBuffer = commandBuffers.at(i);
+        auto& renderer{ renderers.at(i) };
+        auto& commandBuffer{ commandBuffers.at(i) };
 
         tasks.emplace_back(m_threadPool.Enqueue([&]() {
             VkCommandBufferInheritanceInfo inheritanceInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO };
@@ -137,7 +135,7 @@ void MasterRenderer::RenderParallel(const std::shared_ptr<prev::render::pass::Re
 
             VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 
-            prev::render::RenderContext parallelRenderContext{ renderContext.frameBuffer, commandBuffer, renderContext.frameInFlightIndex, renderContext.rect };
+            const prev::render::RenderContext parallelRenderContext{ renderContext.frameBuffer, commandBuffer, renderContext.frameInFlightIndex, renderContext.rect };
 
             renderer->PreRender(parallelRenderContext, userData);
             renderer->Render(parallelRenderContext, root, userData);

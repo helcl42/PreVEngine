@@ -30,11 +30,11 @@ Frustum::Frustum(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix)
 std::ostream& operator<<(std::ostream& out, const Frustum& frustum)
 {
     out << "Planes:" << std::endl;
-    for (auto plane : frustum.planes) {
+    for (const auto& plane : frustum.planes) {
         out << plane << std::endl;
     }
     out << "Points:" << std::endl;
-    for (auto point : frustum.points) {
+    for (const auto& point : frustum.points) {
         out << point << std::endl;
     }
     return out;

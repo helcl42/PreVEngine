@@ -3,7 +3,7 @@
 #include "../util/VkUtils.h"
 
 namespace prev::scene {
-Scene::Scene(const std::shared_ptr<SceneConfig>& sceneConfig, const std::shared_ptr<prev::core::device::Device>& device, const std::shared_ptr<prev::core::memory::Allocator>& allocator, VkSurfaceKHR surface)
+Scene::Scene(const SceneConfig& sceneConfig, const std::shared_ptr<prev::core::device::Device>& device, const std::shared_ptr<prev::core::memory::Allocator>& allocator, VkSurfaceKHR surface)
     : m_config(sceneConfig)
     , m_device(device)
     , m_allocator(allocator)
@@ -109,7 +109,7 @@ void Scene::InitRenderPass()
     const auto colorFormat{ m_device->GetGPU()->FindSurfaceFormat(m_surface) };
     const auto depthFormat{ m_device->GetGPU()->FindDepthFormat() };
     const VkClearColorValue clearColor{ 0.5f, 0.5f, 0.5f, 1.0f };
-    const VkSampleCountFlagBits sampleCount{ prev::util::vk::GetSampleCountBit(m_config->samplesCount) };
+    const VkSampleCountFlagBits sampleCount{ prev::util::vk::GetSampleCountBit(m_config.samplesCount) };
 
     if (sampleCount > VK_SAMPLE_COUNT_1_BIT) {
         std::vector<VkSubpassDependency> dependencies{ 2 };
@@ -148,13 +148,13 @@ void Scene::InitRenderPass()
 
 void Scene::InitSwapchain()
 {
-    m_swapchain = std::make_shared<prev::render::Swapchain>(*m_device, *m_allocator, *m_renderPass, m_surface, prev::util::vk::GetSampleCountBit(m_config->samplesCount));
+    m_swapchain = std::make_shared<prev::render::Swapchain>(*m_device, *m_allocator, *m_renderPass, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount));
 #if defined(__ANDROID__)
-    m_swapchain->SetPresentMode(m_config->VSync ? VK_PRESENT_MODE_MAILBOX_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
+    m_swapchain->SetPresentMode(m_config.VSync ? VK_PRESENT_MODE_MAILBOX_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
 #else
-    m_swapchain->SetPresentMode(m_config->VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
+    m_swapchain->SetPresentMode(m_config.VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
 #endif
-    m_swapchain->SetImageCount(m_config->framesInFlight);
+    m_swapchain->SetImageCount(m_config.framesInFlight);
     m_swapchain->Print();
 }
 } // namespace prev::scene
