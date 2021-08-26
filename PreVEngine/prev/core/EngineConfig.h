@@ -16,7 +16,7 @@ struct EngineConfig {
 
     glm::ivec2 windowPosition{ 40, 40 };
 
-    std::shared_ptr<prev::scene::SceneConfig> sceneConfig{ std::make_shared<prev::scene::SceneConfig>() };
+    prev::scene::SceneConfig sceneConfig{};
 };
 } // namespace prev::core
 

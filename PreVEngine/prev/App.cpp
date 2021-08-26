@@ -1,7 +1,7 @@
 #include "App.h"
 
 namespace prev {
-App::App(const std::shared_ptr<prev::core::EngineConfig>& config)
+App::App(const prev::core::EngineConfig& config)
     : m_engine(std::make_unique<prev::core::Engine>(config))
 {
 }

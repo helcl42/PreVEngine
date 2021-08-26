@@ -8,7 +8,7 @@
 namespace prev {
 class App {
 public:
-    App(const std::shared_ptr<prev::core::EngineConfig>& config);
+    App(const prev::core::EngineConfig& config);
 
     virtual ~App() = default;
 

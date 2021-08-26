@@ -16,7 +16,7 @@
 namespace prev::scene {
 class Scene : public IScene {
 public:
-    Scene(const std::shared_ptr<SceneConfig>& sceneConfig, const std::shared_ptr<prev::core::device::Device>& device, const std::shared_ptr<prev::core::memory::Allocator>& allocator, VkSurfaceKHR surface);
+    Scene(const SceneConfig& sceneConfig, const std::shared_ptr<prev::core::device::Device>& device, const std::shared_ptr<prev::core::memory::Allocator>& allocator, VkSurfaceKHR surface);
 
     virtual ~Scene() = default;
 
@@ -57,7 +57,7 @@ private:
     void InitSwapchain();
 
 protected:
-    std::shared_ptr<SceneConfig> m_config;
+    const SceneConfig& m_config;
 
     std::shared_ptr<prev::core::device::Device> m_device;
 

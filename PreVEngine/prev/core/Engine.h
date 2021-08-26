@@ -18,7 +18,7 @@
 namespace prev::core {
 class Engine final {
 public:
-    Engine(const std::shared_ptr<EngineConfig>& config);
+    Engine(const EngineConfig& config);
 
     ~Engine() = default;
 
@@ -59,7 +59,7 @@ private:
     prev::event::EventHandler<Engine, prev::window::WindowChangeEvent> m_windowChangedHandler{ *this };
 
 private:
-    std::shared_ptr<EngineConfig> m_config;
+    const EngineConfig& m_config;
 
     std::unique_ptr<prev::util::Clock<float> > m_clock;
 

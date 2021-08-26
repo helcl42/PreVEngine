@@ -10,7 +10,7 @@
 #include <map>
 
 namespace prev::core {
-Engine::Engine(const std::shared_ptr<EngineConfig>& config)
+Engine::Engine(const EngineConfig& config)
     : m_config(config)
 {
 }
@@ -30,7 +30,7 @@ void Engine::Init()
 
 void Engine::InitScene()
 {
-    m_scene = std::make_shared<prev::scene::Scene>(m_config->sceneConfig, m_device, m_allocator, m_surface);
+    m_scene = std::make_shared<prev::scene::Scene>(m_config.sceneConfig, m_device, m_allocator, m_surface);
     m_scene->Init();
 }
 
@@ -107,16 +107,16 @@ void Engine::InitTiming()
 
 void Engine::InitInstance()
 {
-    m_instance = std::make_unique<prev::core::instance::Instance>(m_config->validation);
+    m_instance = std::make_unique<prev::core::instance::Instance>(m_config.validation);
 }
 
 void Engine::InitWindow()
 {
-    if (m_config->fullScreen) {
-        m_window = std::make_unique<prev::window::Window>(m_config->appName.c_str());
+    if (m_config.fullScreen) {
+        m_window = std::make_unique<prev::window::Window>(m_config.appName.c_str());
     } else {
-        m_window = std::make_unique<prev::window::Window>(m_config->appName.c_str(), m_config->windowSize.x, m_config->windowSize.y);
-        m_window->SetPosition({ static_cast<int16_t>(m_config->windowPosition.x), static_cast<int16_t>(m_config->windowPosition.y) });
+        m_window = std::make_unique<prev::window::Window>(m_config.appName.c_str(), m_config.windowSize.x, m_config.windowSize.y);
+        m_window->SetPosition({ static_cast<int16_t>(m_config.windowPosition.x), static_cast<int16_t>(m_config.windowPosition.y) });
     }
 }
 
