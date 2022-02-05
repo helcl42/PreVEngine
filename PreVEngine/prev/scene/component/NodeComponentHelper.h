@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <vector>
+#include <sstream>
 
 namespace prev::scene::component {
 class NodeComponentHelper {
@@ -17,7 +18,9 @@ public:
     {
         const auto node{ prev::scene::graph::GraphTraversal::Instance().FindOneWithTags(tagSet, operation) };
         if (node == nullptr) {
-            throw std::runtime_error("There is no such node..");
+            std::stringstream ss;
+            ss << tagSet;
+            throw std::runtime_error("There is no such node with tags: " + ss.str());
         }
         return ComponentRepository<ComponentType>::Instance().Get(node->GetId());
     }
@@ -53,8 +56,6 @@ public:
     template <typename ComponentType>
     static void RemoveComponents(const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const std::string& tag)
     {
-        const auto components{ ComponentRepository<ComponentType>::Instance().Get(node->GetId()) };
-
         ComponentRepository<ComponentType>::Instance().Remove(node->GetId());
 
         auto tags = node->GetTags();
