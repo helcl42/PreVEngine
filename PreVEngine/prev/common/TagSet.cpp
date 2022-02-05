@@ -1,5 +1,7 @@
 #include "TagSet.h"
 
+#include <iostream>
+
 namespace prev::common {
 TagSet::TagSet(const std::set<std::string>& tags)
     : m_tags(tags)
@@ -19,6 +21,11 @@ void TagSet::Set(const std::set<std::string>& tags)
 void TagSet::Set(const std::initializer_list<std::string>& tags)
 {
     m_tags = tags;
+}
+
+const std::set<std::string>& TagSet::Get() const
+{
+    return m_tags;
 }
 
 void TagSet::Add(const std::string& tag)
@@ -59,5 +66,13 @@ bool TagSet::HasAll(const TagSet& tags) const
 bool TagSet::operator[](const std::string& val) const
 {
     return m_tags.find(val) != m_tags.cend();
+}
+
+std::ostream& operator<< (std::ostream& out, const TagSet& tagSet)
+{
+    for(const auto& tag : tagSet.m_tags) {
+        out << tag << ' ';
+    }
+    return out;
 }
 } // namespace prev::common

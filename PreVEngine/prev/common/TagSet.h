@@ -13,9 +13,12 @@ public:
 
     TagSet(const std::initializer_list<std::string>& tags);
 
+public:
     void Set(const std::set<std::string>& tags);
 
     void Set(const std::initializer_list<std::string>& tags);
+
+    const std::set<std::string>& Get() const;
 
     void Add(const std::string& tag);
 
@@ -28,6 +31,8 @@ public:
     bool HasAll(const TagSet& tags) const;
 
     bool operator[](const std::string& val) const;
+
+    friend std::ostream& operator<< (std::ostream& out, const TagSet& tagSet);
 
 private:
     std::set<std::string> m_tags;
