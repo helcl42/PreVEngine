@@ -23,7 +23,7 @@ void MeshUtil::GenerateTangetsAndBiTangents(const std::vector<glm::vec3>& vertic
     outTangents.resize(vertices.size());
     outBiTangents.resize(vertices.size());
 
-    for (auto i = 0; i < indices.size() - 2; i += 3) {
+    for (size_t i = 0; i < indices.size() - 2; i += 3) {
         const auto indexA{ indices[i + 0] };
         const auto indexB{ indices[i + 1] };
         const auto indexC{ indices[i + 2] };

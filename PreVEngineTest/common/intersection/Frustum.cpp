@@ -22,7 +22,7 @@ Frustum::Frustum(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix)
     planes[5] = Plane(col4 - col3, viewProjectionMatrix[3].w - viewProjectionMatrix[3].z); // back - far
 
     auto frustumCorners = prev::util::math::GetFrustumCorners(inverseViewProjectionMatrix);
-    for (auto i = 0; i < frustumCorners.size(); i++) {
+    for (size_t i = 0; i < frustumCorners.size(); i++) {
         points[i] = Point(frustumCorners[i]);
     }
 }

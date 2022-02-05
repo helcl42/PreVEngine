@@ -3,7 +3,7 @@
 namespace prev_test::render::mesh {
 FullScreenQuadMesh::FullScreenQuadMesh()
 {
-    for (auto i = 0; i < vertices.size(); i++) {
+    for (size_t i = 0; i < vertices.size(); i++) {
         m_vertexDataBuffer.Add(vertices[i]);
         m_vertexDataBuffer.Add(textureCoords[i]);
         m_vertexDataBuffer.Add(normals[i]);

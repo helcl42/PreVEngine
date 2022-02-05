@@ -147,7 +147,7 @@ bool IntersectionTester::Intersects(const Frustum& frustum, const Point& point)
 
 bool IntersectionTester::Intersects(const Frustum& frustum, const Sphere& sphere)
 {
-    for (auto i = 0; i < frustum.planes.size(); i++) {
+    for (size_t i = 0; i < frustum.planes.size(); i++) {
         if (!Intersects(sphere, frustum.planes[i])) {
             return false;
         }

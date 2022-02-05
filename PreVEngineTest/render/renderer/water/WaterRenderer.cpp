@@ -100,7 +100,7 @@ void WaterRenderer::Render(const prev::render::RenderContext& renderContext, con
             uniformsFS.moveFactor = waterComponent->GetMoveFactor();
             // shadows
             for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; i++) {
-                const auto& cascade = shadowsComponent->GetCascade(i);
+                const auto& cascade{ shadowsComponent->GetCascade(i) };
                 uniformsFS.shadows.cascades[i].split = glm::vec4(cascade.endSplitDepth);
                 uniformsFS.shadows.cascades[i].viewProjectionMatrix = cascade.GetBiasedViewProjectionMatrix();
             }

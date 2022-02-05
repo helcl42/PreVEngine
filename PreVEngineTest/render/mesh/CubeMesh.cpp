@@ -13,7 +13,7 @@ CubeMesh::CubeMesh(const bool includeTangentBiTangent)
         m_vertexLayout = { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC2, prev_test::render::VertexLayoutComponent::VEC3 } };
     }
 
-    for (auto i = 0; i < vertices.size(); i++) {
+    for (size_t i = 0; i < vertices.size(); i++) {
         m_vertexDataBuffer.Add(vertices[i]);
         m_vertexDataBuffer.Add(textureCoords[i]);
         m_vertexDataBuffer.Add(normals[i]);
