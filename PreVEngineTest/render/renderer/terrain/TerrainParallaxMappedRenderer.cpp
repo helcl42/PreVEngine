@@ -84,7 +84,7 @@ void TerrainParallaxMappedRenderer::Render(const prev::render::RenderContext& re
             uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
             uniformsVS.normalMatrix = glm::inverse(transformComponent->GetWorldTransformScaled());
             uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
-            for (auto i = 0; i < lightComponents.size(); i++) {
+            for (size_t i = 0; i < lightComponents.size(); i++) {
                 uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
             }
             uniformsVS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
@@ -99,14 +99,14 @@ void TerrainParallaxMappedRenderer::Render(const prev::render::RenderContext& re
 
             UniformsFS uniformsFS{};
             // shadows
-            for (auto i = 0; i < prev_test::component::shadow::CASCADES_COUNT; i++) {
-                const auto& cascade = shadowsComponent->GetCascade(i);
+            for (size_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; i++) {
+                const auto& cascade{ shadowsComponent->GetCascade(i) };
                 uniformsFS.shadows.cascades[i] = ShadowsCascadeUniform(cascade.GetBiasedViewProjectionMatrix(), glm::vec4(cascade.endSplitDepth));
             }
             uniformsFS.shadows.enabled = prev_test::component::shadow::SHADOWS_ENABLED;
 
             // lightning
-            for (auto i = 0; i < lightComponents.size(); i++) {
+            for (size_t i = 0; i < lightComponents.size(); i++) {
                 uniformsFS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
             }
             uniformsFS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
@@ -119,8 +119,8 @@ void TerrainParallaxMappedRenderer::Render(const prev::render::RenderContext& re
             uniformsFS.castedByShadows = true;
             uniformsFS.minHeight = terrainComponent->GetHeightMapInfo()->GetGlobalMinHeight();
             uniformsFS.maxHeight = terrainComponent->GetHeightMapInfo()->GetGlobalMaxHeight();
-            for (auto i = 0; i < terrainComponent->GetMaterials().size(); i++) {
-                const auto material = terrainComponent->GetMaterials().at(i);
+            for (size_t i = 0; i < terrainComponent->GetMaterials().size(); i++) {
+                const auto material{ terrainComponent->GetMaterials().at(i) };
                 uniformsFS.material[i] = MaterialUniform(material->GetColor(), material->GetShineDamper(), material->GetReflectivity());
                 uniformsFS.heightScale[i] = glm::vec4(material->GetHeightScale());
                 uniformsFS.heightSteps[i] = glm::vec4(terrainComponent->GetHeightSteps().at(i));
@@ -133,11 +133,11 @@ void TerrainParallaxMappedRenderer::Render(const prev::render::RenderContext& re
 
             uboFS->Update(&uniformsFS);
 
-            for (auto i = 0; i < terrainComponent->GetMaterials().size(); i++) {
-                const auto meterial = terrainComponent->GetMaterials().at(i);
-                m_shader->Bind("colorSampler[" + std::to_string(i) + "]", *meterial->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-                m_shader->Bind("normalSampler[" + std::to_string(i) + "]", *meterial->GetNormalmageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-                m_shader->Bind("heightSampler[" + std::to_string(i) + "]", *meterial->GetHeightImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            for (size_t i = 0; i < terrainComponent->GetMaterials().size(); i++) {
+                const auto material{ terrainComponent->GetMaterials().at(i) };
+                m_shader->Bind("colorSampler[" + std::to_string(i) + "]", *material->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                m_shader->Bind("normalSampler[" + std::to_string(i) + "]", *material->GetNormalmageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                m_shader->Bind("heightSampler[" + std::to_string(i) + "]", *material->GetHeightImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             }
             m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), shadowsComponent->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
             m_shader->Bind("uboVS", *uboVS);

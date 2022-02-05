@@ -63,7 +63,7 @@ PlaneMesh::PlaneMesh(const float xSize, const float zSize, const uint32_t xDivs,
         prev_test::render::mesh::MeshUtil::GenerateTangetsAndBiTangents(m_vertices, textureCoords, m_indices, tangents, biTangents);
     }
 
-    for (auto vertexIndex = 0; vertexIndex < m_vertices.size(); vertexIndex++) {
+    for (size_t vertexIndex = 0; vertexIndex < m_vertices.size(); vertexIndex++) {
         m_vertexDataBuffer.Add(m_vertices[vertexIndex]);
         m_vertexDataBuffer.Add(textureCoords[vertexIndex]);
         m_vertexDataBuffer.Add(normals[vertexIndex]);
@@ -73,7 +73,7 @@ PlaneMesh::PlaneMesh(const float xSize, const float zSize, const uint32_t xDivs,
         }
     }
 
-    m_meshParts.push_back(prev_test::render::MeshPart(static_cast<uint32_t>(m_indices.size()), m_vertices));
+    m_meshParts.emplace_back(prev_test::render::MeshPart(static_cast<uint32_t>(m_indices.size()), m_vertices));
     m_meshRootNode = prev_test::render::MeshNode{ { 0 }, glm::mat4(1.0f), {} };
 }
 

@@ -14,7 +14,7 @@ TextMesh::TextMesh(const std::vector<glm::vec2>& vertices, const std::vector<glm
         m_vertices.push_back(pt3d);
     }
 
-    m_meshParts.push_back(prev_test::render::MeshPart(static_cast<uint32_t>(m_indices.size()), m_vertices));
+    m_meshParts.emplace_back(prev_test::render::MeshPart(static_cast<uint32_t>(m_indices.size()), m_vertices));
 }
 
 const prev_test::render::VertexLayout& TextMesh::GetVertexLayout() const
