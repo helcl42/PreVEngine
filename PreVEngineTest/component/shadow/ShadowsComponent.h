@@ -17,7 +17,7 @@ public:
 
     std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const override;
 
-    const ShadowsCascade& GetCascade(const uint32_t cascadeIndex) const override;
+    const ShadowsCascade& GetCascade(const size_t cascadeIndex) const override;
 
     VkExtent2D GetExtent() const override;
 

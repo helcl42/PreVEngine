@@ -52,7 +52,7 @@ std::shared_ptr<prev::render::pass::RenderPass> ShadowsComponent::GetRenderPass(
     return m_renderPass;
 }
 
-const ShadowsCascade& ShadowsComponent::GetCascade(const uint32_t cascadeIndex) const
+const ShadowsCascade& ShadowsComponent::GetCascade(const size_t cascadeIndex) const
 {
     return m_cascades.at(cascadeIndex);
 }
