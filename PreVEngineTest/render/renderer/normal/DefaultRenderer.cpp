@@ -124,7 +124,8 @@ void DefaultRenderer::RenderMeshNode(const prev::render::RenderContext& renderCo
         uniformsVS.textureOffset = glm::vec4(material->GetTextureOffset(), 0.0f, 0.0f);
         uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
         for (size_t i = 0; i < lightComponents.size(); i++) {
-            uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
+            const auto& lightComponent{ lightComponents[i] };
+            uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponent->GetPosition(), 1.0f), glm::vec4(lightComponent->GetColor(), 1.0f), glm::vec4(lightComponent->GetAttenuation(), 1.0f));
         }
         uniformsVS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
         uniformsVS.lightning.ambientFactor = prev_test::component::light::AMBIENT_LIGHT_INTENSITY;
@@ -140,14 +141,15 @@ void DefaultRenderer::RenderMeshNode(const prev::render::RenderContext& renderCo
         UniformsFS uniformsFS{};
         // shadows
         for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; i++) {
-            auto& cascade = shadowsComponent->GetCascade(i);
+            const auto& cascade{ shadowsComponent->GetCascade(i) };
             uniformsFS.shadows.cascades[i] = ShadowsCascadeUniform(cascade.GetBiasedViewProjectionMatrix(), glm::vec4(cascade.endSplitDepth));
         }
         uniformsFS.shadows.enabled = prev_test::component::shadow::SHADOWS_ENABLED;
 
         // lightning
         for (size_t i = 0; i < lightComponents.size(); i++) {
-            uniformsFS.lightning.lights[i] = LightUniform(glm::vec4(lightComponents[i]->GetPosition(), 1.0f), glm::vec4(lightComponents[i]->GetColor(), 1.0f), glm::vec4(lightComponents[i]->GetAttenuation(), 1.0f));
+            const auto& lightComponent{ lightComponents[i] };
+            uniformsFS.lightning.lights[i] = LightUniform(glm::vec4(lightComponent->GetPosition(), 1.0f), glm::vec4(lightComponent->GetColor(), 1.0f), glm::vec4(lightComponent->GetAttenuation(), 1.0f));
         }
         uniformsFS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
         uniformsFS.lightning.ambientFactor = prev_test::component::light::AMBIENT_LIGHT_INTENSITY;

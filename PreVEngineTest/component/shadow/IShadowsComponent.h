@@ -13,7 +13,7 @@ public:
 
     virtual std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const = 0;
 
-    virtual const ShadowsCascade& GetCascade(const uint32_t cascadeIndex) const = 0;
+    virtual const ShadowsCascade& GetCascade(const size_t cascadeIndex) const = 0;
 
     virtual VkExtent2D GetExtent() const = 0;
 
