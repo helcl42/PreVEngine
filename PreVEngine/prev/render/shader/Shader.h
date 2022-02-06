@@ -104,25 +104,25 @@ protected:
 protected:
     VkDevice m_device;
 
+    VkDescriptorPool m_descriptorPool;
+
+    VkDescriptorSetLayout m_descriptorSetLayout;
+
+    uint32_t m_poolCapacity;
+
+    uint32_t m_currentDescriptorSetIndex;
+
     // Shader Stages
     std::map<VkShaderStageFlagBits, VkShaderModule> m_shaderModules;
 
     std::vector<VkPipelineShaderStageCreateInfo> m_shaderStages;
 
     // Descriptor Sets
-    uint32_t m_poolCapacity;
-
-    uint32_t m_currentDescriptorSetIndex;
-
-    VkDescriptorPool m_descriptorPool;
-
     std::vector<VkDescriptorSet> m_descriptorSets;
 
     std::vector<VkDescriptorSetLayoutBinding> m_layoutBindings;
 
     std::vector<VkWriteDescriptorSet> m_descriptorWrites;
-
-    VkDescriptorSetLayout m_descriptorSetLayout;
 
     std::map<std::string, DescriptorSetInfo> m_descriptorSetInfos;
 
