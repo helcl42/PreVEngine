@@ -16,18 +16,22 @@
 #if defined(__ANDROID__)
 #include <android/looper.h>
 #include <android/sensor.h>
-#include <chrono>
-#include <prev/util/MathUtils.h>
 
+#include <prev/util/MathUtils.h>
 #endif
 
 namespace prev_test::scene {
 #if defined(__ANDROID__)
-    class AndroidOrientationProvider final {
-    public:
-        AndroidOrientationProvider() = default;
+    struct Pose {
+        glm::quat orientation;
+        glm::vec3 position;
+    };
 
-        ~AndroidOrientationProvider() = default;
+    class AndroidPoseProvider final {
+    public:
+        AndroidPoseProvider() = default;
+
+        ~AndroidPoseProvider() = default;
 
     public:
         bool Init()
@@ -37,7 +41,7 @@ namespace prev_test::scene {
             }
 
             m_running = true;
-            m_mainLoopThread = std::thread(&AndroidOrientationProvider::MainLoop, this);
+            m_mainLoopThread = std::thread(&AndroidPoseProvider::MainLoop, this);
 
             m_initialized = true;
             return true;
@@ -57,9 +61,9 @@ namespace prev_test::scene {
             m_initialized = false;
         }
 
-        glm::quat GetCurrentOrientation() const {
+        Pose GetCurrentPose() const {
             std::scoped_lock lock(m_mutex);
-            return m_currentOrientation;
+            return { m_currentOrientation, m_currentPosition };
         }
 
     private:
@@ -84,36 +88,46 @@ namespace prev_test::scene {
                 return;
             }
 
-            ASensorRef sensor;
-            bool sensorFound{ false };
-            for (int i = 0; i < sensorCount; i++) {
-                sensor = sensorList[i];
-                if (ASensor_getType(sensor) != sensorType) {
-                    continue;
+            const std::vector<int> sensorTypes = {
+                    ASENSOR_TYPE_GYROSCOPE,
+                    ASENSOR_TYPE_LINEAR_ACCELERATION
+            };
+
+            std::vector<ASensorRef> sensors;
+            for(const auto& sensorType : sensorTypes) {
+                ASensorRef sensor;
+                bool sensorFound{false};
+                for (int i = 0; i < sensorCount; i++) {
+                    sensor = sensorList[i];
+                    if (ASensor_getType(sensor) != sensorType) {
+                        continue;
+                    }
+                    if (ASensorEventQueue_enableSensor(sensorEventQueue, sensor) < 0) {
+                        continue;
+                    }
+                    if (ASensorEventQueue_setEventRate(sensorEventQueue, sensor, timeoutMicroSeconds) < 0) {
+                        LOGE("Failed to set the %s sample rate\n", ASensor_getName(sensor));
+                        continue;
+                    }
+                    sensorFound = true;
+                    break;
                 }
-                if (ASensorEventQueue_enableSensor(sensorEventQueue, sensor) < 0) {
-                    continue;
+
+                if (!sensorFound) {
+                    LOGE("No sensor of the specified type found\n");
+                    int ret = ASensorManager_destroyEventQueue(sensorManager, sensorEventQueue);
+                    if (ret < 0) {
+                        LOGE("Failed to destroy event queue: %s\n", strerror(-ret));
+                    }
+                    return;
                 }
-                if (ASensorEventQueue_setEventRate(sensorEventQueue, sensor, timeoutMicroSeconds) < 0) {
-                    LOGE("Failed to set the %s sample rate\n", ASensor_getName(sensor));
-                    continue;
-                }
-                sensorFound = true;
-                break;
+
+                LOGI("Sensor %s activated\n", ASensor_getName(sensor));
+                sensors.push_back(sensor);
             }
 
-            if(!sensorFound) {
-                LOGE("No sensor of the specified type found\n");
-                int ret = ASensorManager_destroyEventQueue(sensorManager, sensorEventQueue);
-                if (ret < 0) {
-                    LOGE("Failed to destroy event queue: %s\n", strerror(-ret));
-                }
-                return;
-            }
-
-            LOGI("Sensor %s activated\n", ASensor_getName(sensor));
-
-            m_lastOrientationTimestamp = std::chrono::steady_clock::now();
+            m_lastOrientationTimestamp = 0;
+            m_lastAccelerationTimestamp = 0;
 
             while(m_running) {
                 if(ALooper_pollAll(timeoutMicroSeconds,nullptr, nullptr, nullptr) != looperId) {
@@ -127,36 +141,53 @@ namespace prev_test::scene {
                     continue;
                 }
 
-                if(event.type == sensorType) {
+                if(event.type == ASENSOR_TYPE_GYROSCOPE) {
                     std::scoped_lock lock(m_mutex);
+                    if(m_lastOrientationTimestamp != 0) {
+                        const auto deltaTime{ static_cast<float>(event.timestamp - m_lastOrientationTimestamp) / 1000000000.0f };
+                        const glm::vec3 angularVelocity{ event.data[0], event.data[1], event.data[2] };
+                        m_currentOrientation = IntegrateGyroscopeRotation(m_currentOrientation, angularVelocity, deltaTime);
+                    }
+                    m_lastOrientationTimestamp = event.timestamp;
+                } else if(event.type == ASENSOR_TYPE_LINEAR_ACCELERATION) {
+                    std::scoped_lock lock(m_mutex);
+                    if(m_lastAccelerationTimestamp != 0) {
+                        const auto deltaTime{ static_cast<float>(event.timestamp - m_lastAccelerationTimestamp) / 1000000000.0f };
 
-                    const auto now{ std::chrono::steady_clock::now() };
-                    const auto deltaTime{ std::chrono::duration<float>(now - m_lastOrientationTimestamp).count() };
-                    const glm::vec3 angularVelocity{ event.data[0], event.data[1], event.data[2] };
+                        const glm::vec3 acceleration{ event.data[0], event.data[1], event.data[2] };
 
-                    m_currentOrientation = IntegrateGyroscopeRotation(m_currentOrientation, angularVelocity, deltaTime);
+                        // TODO - naive double integral here without any scale & bias calibration
+                        const auto velocityDiff{ acceleration * deltaTime };
+                        m_currentVelocity += velocityDiff;
 
-                    m_lastOrientationTimestamp = now;
+                        const auto positionDIff{ m_currentVelocity * deltaTime };
+                        m_currentPosition += positionDIff;
+
+                        //LOGE("Got acceleration: (%f, %f, %f), dt: %f", acceleration.x, acceleration.y, acceleration.z, deltaTime);
+                    }
+                    m_lastAccelerationTimestamp = event.timestamp;
                 }
             }
 
-            int ret = ASensorEventQueue_disableSensor(sensorEventQueue, sensor);
-            if (ret < 0) {
-                LOGE("Failed to disable %s: %s\n", ASensor_getName(sensor), strerror(-ret));
-            }
-            ret = ASensorManager_destroyEventQueue(sensorManager, sensorEventQueue);
-            if (ret < 0) {
-                LOGE("Failed to destroy event queue: %s\n", strerror(-ret));
+            for(const auto& sensor : sensors) {
+                int ret = ASensorEventQueue_disableSensor(sensorEventQueue, sensor);
+                if (ret < 0) {
+                    LOGE("Failed to disable %s: %s\n", ASensor_getName(sensor), strerror(-ret));
+                }
+                ret = ASensorManager_destroyEventQueue(sensorManager, sensorEventQueue);
+                if (ret < 0) {
+                    LOGE("Failed to destroy event queue: %s\n", strerror(-ret));
+                }
             }
         }
 
     private:
         static glm::quat IntegrateGyroscopeRotation(const glm::quat& previousOrientation, const glm::vec3& angularVelocity, const float dt) {
-            const float angularVelociryMagnitude{ glm::length(angularVelocity) };
+            const float angularVelocityMagnitude{glm::length(angularVelocity) };
             const glm::vec3 angularVelocityDirection{ glm::normalize(angularVelocity) };
 
             // construct orientation diff from angular velocity and elapsed time
-            const float thetaOverTwo{angularVelociryMagnitude * dt / 2.0f };
+            const float thetaOverTwo{angularVelocityMagnitude * dt / 2.0f };
             const float sinThetaOverTwo{ std::sin(thetaOverTwo) };
             const float cosThetaOverTwo{ std::cos(thetaOverTwo) };
             const glm::quat orientationDelta{ cosThetaOverTwo, sinThetaOverTwo * angularVelocityDirection.x, sinThetaOverTwo * angularVelocityDirection.y, sinThetaOverTwo * angularVelocityDirection.z };
@@ -168,7 +199,13 @@ namespace prev_test::scene {
     private:
         glm::quat m_currentOrientation{ 1.0f, 0.0f, 0.0f, 0.0f };
 
-        std::chrono::steady_clock::time_point m_lastOrientationTimestamp;
+        int64_t m_lastOrientationTimestamp;
+
+        glm::vec3 m_currentPosition;
+
+        glm::vec3 m_currentVelocity;
+
+        int64_t m_lastAccelerationTimestamp;
 
         std::atomic_bool m_initialized;
 
@@ -177,8 +214,6 @@ namespace prev_test::scene {
         std::thread m_mainLoopThread;
 
         mutable std::mutex m_mutex;
-
-        static const inline int sensorType{ ASENSOR_TYPE_GYROSCOPE };
 
         static const inline int timeoutMicroSeconds{ 10000 };
 
@@ -255,7 +290,7 @@ private:
     glm::vec2 m_prevTouchPosition{ 0.0f, 0.0f };
 
 #if defined(__ANDROID__)
-    std::unique_ptr<AndroidOrientationProvider> m_orientationProvider;
+    std::unique_ptr<AndroidPoseProvider> m_poseProvider;
 #endif
 
 private:
@@ -270,7 +305,7 @@ private:
 private:
     std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
-    std::shared_ptr<prev_test::component::render::IAnimationRenderComponent> m_animatonRenderComponent;
+    std::shared_ptr<prev_test::component::render::IAnimationRenderComponent> m_animationRenderComponent;
 
     std::shared_ptr<prev_test::component::camera::ICameraComponent> m_cameraComponent;
 
