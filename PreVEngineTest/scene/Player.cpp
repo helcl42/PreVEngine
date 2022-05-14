@@ -28,9 +28,9 @@ void Player::Init()
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, TAG_TRANSFORM_COMPONENT);
 
     prev_test::component::render::RenderComponentFactory renderComponentFactory{};
-    //m_animatonRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Xbot/XBot.fbx"), { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Xbot/Walking.fbx"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Xbot/Jump.fbx") }, { glm::vec4(0.49f, 0.3f, 0.28f, 1.0f), glm::vec4(0.52f, 0.42f, 0.4f, 1.0f) }, true, true);
-    m_animatonRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Archer/erika_archer_bow_arrow.fbx"), { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Archer/Walking.fbx"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Archer/Jumping.fbx") }, true, true);
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::render::IAnimationRenderComponent>(GetThis(), m_animatonRenderComponent, TAG_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT);
+    //m_animationRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Xbot/XBot.fbx"), { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Xbot/Walking.fbx"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Xbot/Jump.fbx") }, { glm::vec4(0.49f, 0.3f, 0.28f, 1.0f), glm::vec4(0.52f, 0.42f, 0.4f, 1.0f) }, true, true);
+    m_animationRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Archer/erika_archer_bow_arrow.fbx"), {prev_test::common::AssetManager::Instance().GetAssetPath("Models/Archer/Walking.fbx"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Archer/Jumping.fbx") }, true, true);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::render::IAnimationRenderComponent>(GetThis(), m_animationRenderComponent, TAG_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT);
 
     bool fixedCameraUp{ true };
 #if defined(__ANDROID__)
@@ -41,14 +41,14 @@ void Player::Init()
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::camera::ICameraComponent>(GetThis(), m_cameraComponent, TAG_CAMERA_COMPONENT);
 
     prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{};
-    m_boundingVolumeComponent = bondingVolumeFactory.CreateOBB(m_animatonRenderComponent->GetModel()->GetMesh(), glm::vec3(0.4f, 1.0f, 0.4f));
+    m_boundingVolumeComponent = bondingVolumeFactory.CreateOBB(m_animationRenderComponent->GetModel()->GetMesh(), glm::vec3(0.4f, 1.0f, 0.4f));
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, TAG_BOUNDING_VOLUME_COMPONENT);
 
     m_cameraComponent->AddOrientation(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(m_cameraPitch), m_cameraComponent->GetRightDirection())));
 
 #if defined(__ANDROID__)
-    m_orientationProvider = std::make_unique<AndroidOrientationProvider>();
-    m_orientationProvider->Init();
+    m_poseProvider = std::make_unique<AndroidPoseProvider>();
+    m_poseProvider->Init();
 #endif
 
     SceneNode::Init();
@@ -59,9 +59,9 @@ void Player::Update(float deltaTime)
     const auto terrain{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::terrain::ITerrainManagerComponent>({ TAG_TERRAIN_MANAGER_COMPONENT }) };
 
     // set default animation
-    m_animatonRenderComponent->SetCurrentAnimationIndex(WALKING_ANIMATION_INDEX);
+    m_animationRenderComponent->SetCurrentAnimationIndex(WALKING_ANIMATION_INDEX);
 
-    auto walkingAnimation{ m_animatonRenderComponent->GetAnimation(WALKING_ANIMATION_INDEX) };
+    auto walkingAnimation{m_animationRenderComponent->GetAnimation(WALKING_ANIMATION_INDEX) };
     if ((m_shouldGoForward || m_shouldGoBackward || m_shouldGoLeft || m_shouldGoRight) && !m_isInTheAir) {
         walkingAnimation->SetState(prev_test::render::AnimationState::RUNNING);
         walkingAnimation->Update(m_shouldGoBackward ? -deltaTime : deltaTime);
@@ -90,9 +90,9 @@ void Player::Update(float deltaTime)
     float height{ 0.0f };
     terrain->GetHeightAt(currentPosition, height);
 
-    auto jumpAnimation{ m_animatonRenderComponent->GetAnimation(JUMP_ANIMATION_INDEX) };
+    auto jumpAnimation{m_animationRenderComponent->GetAnimation(JUMP_ANIMATION_INDEX) };
     if (m_isInTheAir) {
-        m_animatonRenderComponent->SetCurrentAnimationIndex(JUMP_ANIMATION_INDEX);
+        m_animationRenderComponent->SetCurrentAnimationIndex(JUMP_ANIMATION_INDEX);
         jumpAnimation->SetState(prev_test::render::AnimationState::RUNNING);
         jumpAnimation->Update(deltaTime);
         m_upwardSpeed += GRAVITY_Y * deltaTime;
@@ -109,12 +109,12 @@ void Player::Update(float deltaTime)
     }
 
 #if defined(__ANDROID__)
-    const auto sensorOrientation{ m_orientationProvider->GetCurrentOrientation() };
+    const auto pose{ m_poseProvider->GetCurrentPose() };
 
-    const auto playerOrientation{ glm::normalize(glm::quat(sensorOrientation.w, 0.0f, sensorOrientation.x, 0.0f)) };
+    const auto playerOrientation{ glm::normalize(glm::quat(pose.orientation.w, 0.0f, pose.orientation.x, 0.0f)) };
     m_transformComponent->SetOrientation(playerOrientation);
 
-    const auto cameraOrientation(glm::normalize(glm::quat(sensorOrientation.w, sensorOrientation.y, sensorOrientation.x, -sensorOrientation.z)));
+    const auto cameraOrientation(glm::normalize(glm::quat(pose.orientation.w, pose.orientation.y, pose.orientation.x, -pose.orientation.z)));
     m_cameraComponent->SetOrientation(cameraOrientation);
 #else
     if (m_shouldRotate) {
@@ -145,8 +145,8 @@ void Player::ShutDown()
     SceneNode::ShutDown();
 
 #if defined(__ANDROID__)
-    m_orientationProvider->ShutDown();
-    m_orientationProvider = nullptr;
+    m_poseProvider->ShutDown();
+    m_poseProvider = nullptr;
 #endif
 }
 
@@ -250,6 +250,6 @@ void Player::operator()(const prev::input::touch::TouchEvent& touchEvent)
 
 void Player::operator()(const prev::input::mouse::MouseScrollEvent& scrollEvent)
 {
-    m_distanceFromPerson += scrollEvent.delta;
+    m_distanceFromPerson += static_cast<float>(scrollEvent.delta);
 }
 } // namespace prev_test::scene
