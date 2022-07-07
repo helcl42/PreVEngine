@@ -258,7 +258,7 @@ target_link_libraries(${PROJECT_NAME} PreVEngine)
 
 if(WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
-    target_link_libraries(${PROJECT_NAME} "../../Dependencies/assimp/lib/Windows/assimp-vc142-mt")
+    target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Windows/assimp-vc142-mt.lib")
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
