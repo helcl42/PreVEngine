@@ -31,4 +31,6 @@
 build
 *.user
 
+/.vs/
+
 Dependencies/
