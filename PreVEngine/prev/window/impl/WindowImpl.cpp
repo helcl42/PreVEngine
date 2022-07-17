@@ -27,7 +27,13 @@ Event WindowImpl::OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonTy
         m_mouseButtonsState[buttonIndex] = (action == ActionType::DOWN); // Keep track of button state
     }
 
-    Event e = { Event::EventType::MOUSE, { action, x, y, btn, (int16_t)m_shape.width, (int16_t)m_shape.height } };
+    Event e{ Event::EventType::MOUSE };
+    e.mouse.action = action;
+    e.mouse.x = x;
+    e.mouse.y = y;
+    e.mouse.btn = btn;
+    e.mouse.w = static_cast<int16_t>(m_shape.width);
+    e.mouse.h = static_cast<int16_t>(m_shape.height);
     return e;
 }
 

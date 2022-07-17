@@ -108,7 +108,7 @@ void Scene::InitRenderPass()
 
     const auto colorFormat{ m_device->GetGPU()->FindSurfaceFormat(m_surface) };
     const auto depthFormat{ m_device->GetGPU()->FindDepthFormat() };
-    const VkClearColorValue clearColor{ 0.5f, 0.5f, 0.5f, 1.0f };
+    const VkClearColorValue clearColor{ { 0.5f, 0.5f, 0.5f, 1.0f } };
     const VkSampleCountFlagBits sampleCount{ prev::util::vk::GetSampleCountBit(m_config.samplesCount) };
 
     if (sampleCount > VK_SAMPLE_COUNT_1_BIT) {
@@ -139,7 +139,7 @@ void Scene::InitRenderPass()
                            .Build();
     } else {
         m_renderPass = renderPassBuilder
-                           .AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, { 0.5f, 0.5f, 0.5f, 1.0f })
+                           .AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, clearColor)
                            .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT)
                            .AddSubpass({ 0, 1 })
                            .Build();

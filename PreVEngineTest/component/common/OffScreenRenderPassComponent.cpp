@@ -132,7 +132,7 @@ void OffScreenRenderPassComponent::InitRenderPass()
 
     prev::render::pass::RenderPassBuilder renderPassBuilder{ *device };
     m_renderPass = renderPassBuilder
-                       .AddColorAttachment(COLOR_FORMAT, VK_SAMPLE_COUNT_1_BIT, { 0.5f, 0.5f, 0.5f, 1.0f }, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+                       .AddColorAttachment(COLOR_FORMAT, VK_SAMPLE_COUNT_1_BIT, { { 0.5f, 0.5f, 0.5f, 1.0f } }, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
                        .AddDepthAttachment(DEPTH_FORMAT, VK_SAMPLE_COUNT_1_BIT)
                        .AddSubpass({ 0, 1 })
                        .AddSubpassDependencies(dependencies)
