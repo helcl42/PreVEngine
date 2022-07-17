@@ -165,7 +165,7 @@ void DebugReport::Init(VkInstance inst)
         VK_DEBUG_REPORT_WARNING_BIT_EXT | // 2
         VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | // 4
         VK_DEBUG_REPORT_ERROR_BIT_EXT | // 8
-        VK_DEBUG_REPORT_DEBUG_BIT_EXT | //16
+        VK_DEBUG_REPORT_DEBUG_BIT_EXT | // 16
         0;
 
     VkDebugReportCallbackCreateInfoEXT createInfo = {};
@@ -208,11 +208,18 @@ void DebugReport::Destroy()
 #endif // ENABLE_VALIDATION
 
 DebugReport::DebugReport()
-    : m_vkCreateDebugCallbackEXT(VK_NULL_HANDLE)
+    : m_instance(nullptr)
+#ifdef VK_USE_PLATFORM_ANDROID_KHR
+    , m_vkCreateDebugCallbackEXT(VK_NULL_HANDLE)
     , m_vkDestroyDebugCallbackEXT(VK_NULL_HANDLE)
     , m_debugCallback(VK_NULL_HANDLE)
-    , m_instance(nullptr)
     , m_flags(0)
+#else
+    , m_vkCreateDebugCallbackEXT(VK_NULL_HANDLE)
+    , m_vkDestroyDebugCallbackEXT(VK_NULL_HANDLE)
+    , m_debugCallback(VK_NULL_HANDLE)
+    , m_flags(0)
+#endif
 {
 }
 } // namespace prev::core::instance

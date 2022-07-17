@@ -221,26 +221,26 @@ static const std::map<VkFormat, FormatInfo> formats = {
 };
 
 // Return size in bytes for given format
-static uint32_t FormatSize(VkFormat format)
+[[maybe_unused]] static uint32_t FormatSize(const VkFormat format)
 {
-    auto item = formats.find(format);
-    if (item != formats.end()) {
-        return item->second.size;
+    const auto& iter{ formats.find(format) };
+    if (iter != formats.end()) {
+        return iter->second.size;
     }
     return 0;
 }
 
 // Return number of channels for given format
-static uint32_t FormatChannels(VkFormat format)
+[[maybe_unused]] static uint32_t FormatChannels(const VkFormat format)
 {
-    auto item = formats.find(format);
-    if (item != formats.end()) {
-        return item->second.channels;
+    const auto& iter{ formats.find(format) };
+    if (iter != formats.end()) {
+        return iter->second.channels;
     }
     return 0;
 }
 
-static bool HasStencilComponent(VkFormat format)
+[[maybe_unused]] static bool HasStencilComponent(const VkFormat format)
 {
     return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
 }
