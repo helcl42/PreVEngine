@@ -81,10 +81,12 @@ const char* VkResultStr(const VkResult err)
 
 void ShowVkResult(const VkResult err)
 {
-    if (err > 0)
+    if (err > 0) {
         _LOGW("%s ", VkResultStr(err)); // Print warning
-    if (err < 0)
+    }
+    if (err < 0) {
         _LOGE("%s ", VkResultStr(err)); // Print error
+    }
 }
 #else
 void ShowVkResult(VkResult err)
@@ -98,8 +100,9 @@ namespace prev::core::instance {
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugReportFlagsEXT msgFlags, VkDebugReportObjectTypeEXT objType, uint64_t srcObject, size_t location, int32_t msgCode, const char* pLayerPrefix, const char* pMsg, void* pUserData)
 {
-    if (objType == VK_DEBUG_REPORT_OBJECT_TYPE_DEBUG_REPORT_EXT && msgCode <= 1)
+    if (objType == VK_DEBUG_REPORT_OBJECT_TYPE_DEBUG_REPORT_EXT && msgCode <= 1) {
         return false;
+    }
 
     char buf[1024];
     snprintf(buf, sizeof(buf), "[%s] : %s\n", pLayerPrefix, pMsg);

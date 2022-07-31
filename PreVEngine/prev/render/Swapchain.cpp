@@ -202,13 +202,13 @@ void Swapchain::Print() const
     printf("\tFormat  = %3d : %s\n", m_swapchainCreateInfo.imageFormat, util::vk::FormatToString(m_swapchainCreateInfo.imageFormat).c_str());
     printf("\tDepth   = %3d : %s\n", m_depthBuffer->GetFormat(), util::vk::FormatToString(m_depthBuffer->GetFormat()).c_str());
 
-    const auto& extent = m_swapchainCreateInfo.imageExtent;
+    const auto& extent{ m_swapchainCreateInfo.imageExtent };
     printf("\tExtent  = %d x %d\n", extent.width, extent.height);
     printf("\tBuffers = %d\n", (int)m_swapchainBuffers.size());
 
-    auto modes = GetPresentModes();
+    const auto modes{ GetPresentModes() };
     printf("\tPresentMode:\n");
-    const auto& mode = m_swapchainCreateInfo.presentMode;
+    const auto& mode{ m_swapchainCreateInfo.presentMode };
     for (auto m : modes) {
         print((m == mode) ? ConsoleColor::RESET : ConsoleColor::FAINT, "\t\t%s %s\n", (m == mode) ? cTICK : " ", util::vk::PresentModeToString(m).c_str());
     }

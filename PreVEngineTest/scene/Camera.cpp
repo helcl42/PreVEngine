@@ -63,8 +63,8 @@ void Camera::Update(float deltaTime)
 
     m_cameraComponent->AddPosition(positionDelta);
 
-    glm::mat4 viewMatrix = m_cameraComponent->LookAt();
-    glm::mat4 cameraTransformInWorldSpace = glm::inverse(viewMatrix);
+    const glm::mat4 viewMatrix{ m_cameraComponent->LookAt() };
+    const glm::mat4 cameraTransformInWorldSpace{ glm::inverse(viewMatrix) };
 
     m_transformComponent->SetPosition(prev::util::math::ExtractTranslation(cameraTransformInWorldSpace));
     m_transformComponent->SetOrientation(prev::util::math::ExtractRotationAsQuaternion(cameraTransformInWorldSpace));
@@ -82,9 +82,9 @@ void Camera::ShutDown()
 void Camera::operator()(const prev::input::mouse::MouseEvent& mouseEvent)
 {
     if (mouseEvent.action == prev::input::mouse::MouseActionType::MOVE && mouseEvent.button == prev::input::mouse::MouseButtonType::LEFT) {
-        const glm::vec2 angleInDegrees = mouseEvent.position * m_sensitivity;
+        const glm::vec2 angleInDegrees{ mouseEvent.position * m_sensitivity };
+        const float newPitch{ m_pitchAngle + angleInDegrees.y };
 
-        const float newPitch = m_pitchAngle + angleInDegrees.y;
         if (newPitch > -m_absMinMaxPitch && newPitch < m_absMinMaxPitch) {
             m_cameraComponent->AddPitch(angleInDegrees.y);
             m_pitchAngle += angleInDegrees.y;
@@ -96,11 +96,11 @@ void Camera::operator()(const prev::input::mouse::MouseEvent& mouseEvent)
 void Camera::operator()(const prev::input::touch::TouchEvent& touchEvent)
 {
 #if defined(__ANDROID__)
-    const float MAX_RATIO_FOR_MOVE_CONTROL = 0.25; //
+    const float MAX_RATIO_FOR_MOVE_CONTROL{ 0.25 };
     if (touchEvent.action == prev::input::touch::TouchActionType::MOVE || touchEvent.action == prev::input::touch::TouchActionType::DOWN) {
-        const auto MAX_X_COORD_TO_CONTROL = touchEvent.extent.x * MAX_RATIO_FOR_MOVE_CONTROL;
-        const auto MAX_Y_COORD_TO_BACKWARD_CONTROL = touchEvent.extent.y * MAX_RATIO_FOR_MOVE_CONTROL;
-        const auto MIN_Y_COORD_TO_BACKWARD_CONTROL = touchEvent.extent.y - touchEvent.extent.y * MAX_RATIO_FOR_MOVE_CONTROL;
+        const auto MAX_X_COORD_TO_CONTROL{ touchEvent.extent.x * MAX_RATIO_FOR_MOVE_CONTROL };
+        const auto MAX_Y_COORD_TO_BACKWARD_CONTROL{ touchEvent.extent.y * MAX_RATIO_FOR_MOVE_CONTROL };
+        const auto MIN_Y_COORD_TO_BACKWARD_CONTROL{ touchEvent.extent.y - touchEvent.extent.y * MAX_RATIO_FOR_MOVE_CONTROL };
         if (touchEvent.position.x < MAX_X_COORD_TO_CONTROL && touchEvent.position.y < MAX_Y_COORD_TO_BACKWARD_CONTROL) {
             m_autoMoveForward = true;
         }
@@ -115,7 +115,7 @@ void Camera::operator()(const prev::input::touch::TouchEvent& touchEvent)
     }
 #endif
     if (touchEvent.action == prev::input::touch::TouchActionType::MOVE) {
-        const glm::vec2 angleInDegrees = (touchEvent.position - m_prevTouchPosition) * m_sensitivity;
+        const glm::vec2 angleInDegrees{ (touchEvent.position - m_prevTouchPosition) * m_sensitivity };
 
         m_cameraComponent->AddPitch(angleInDegrees.y);
         m_cameraComponent->AddYaw(angleInDegrees.x);
