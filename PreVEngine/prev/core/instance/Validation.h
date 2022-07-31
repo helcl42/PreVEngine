@@ -1,8 +1,3 @@
-/*
-*  #define ENABLE_VALIDATION 1          // Enables Vulkan Validation
-*  #define ENABLE_LOGGING    1          // Enables LOG* print messages
-*/
-
 #ifndef __VALIDATION_H__
 #define __VALIDATION_H__
 
@@ -13,12 +8,11 @@
 #if defined(__ANDROID__) && !defined(NDEBUG)
 #define ENABLE_VALIDATION 1
 #define ENABLE_LOGGING 1
-//#define NDEBUG               //cuts 4kb off apk size
 #endif
 
 #ifdef _WIN32
 #define NOMINMAX
-//#define WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #define cTICK "\xFB" /* On Windows, use Square-root as tick mark */
 #define PAUSE system("pause")
@@ -77,20 +71,20 @@ void SetConsoleTextColor(const ConsoleColor color);
     {                        \
         printf(__VA_ARGS__); \
     }
-#define _LOGV(...)                            \
-    {                                         \
+#define _LOGV(...)                           \
+    {                                        \
         print(ConsoleColor::CYAN, "PERF: "); \
-        printf(__VA_ARGS__);                  \
+        printf(__VA_ARGS__);                 \
     }
 #define _LOGD(...)                            \
     {                                         \
         print(ConsoleColor::BLUE, "DEBUG: "); \
         printf(__VA_ARGS__);                  \
     }
-#define _LOGI(...)                             \
-    {                                          \
+#define _LOGI(...)                            \
+    {                                         \
         print(ConsoleColor::GREEN, "INFO: "); \
-        printf(__VA_ARGS__);                   \
+        printf(__VA_ARGS__);                  \
     }
 #define _LOGW(...)                                \
     {                                             \
@@ -214,6 +208,6 @@ private:
 
 #endif
 };
-} // namespace prev
+} // namespace prev::core::instance
 
 #endif
