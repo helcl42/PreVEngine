@@ -12,7 +12,7 @@
 #include <xkbcommon/xkbcommon.h> // Keyboard
 //-------------------------------------------------
 
-namespace prev::window::impl::linux {
+namespace prev::window::impl::xcb {
 class WindowXcb final : public WindowImpl {
 public:
     WindowXcb(const char* title);
@@ -70,8 +70,8 @@ private:
     int m_xiDevId; // 2
     //------------------
 };
+} // namespace prev::window::impl::xcb
 
 #endif
-}
 
 #endif // VK_USE_PLATFORM_XCB_KHR

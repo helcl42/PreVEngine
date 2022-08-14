@@ -3,6 +3,10 @@
 #include "impl/linux/WindowXcb.h"
 #include "impl/windows/WindowWin32.h"
 
+// change const char* to const std::string& 
+// create factory for WindowImpl
+// remove Abstract Window vs. WIndow -> no need to inherit here !!!
+
 namespace prev::window {
 AbstractWindow::AbstractWindow(const char* title)
 {
@@ -19,9 +23,9 @@ void AbstractWindow::InitWindow(const char* title, const uint32_t width, const u
 #ifdef VK_USE_PLATFORM_XCB_KHR
     LOGI("PLATFORM: XCB\n");
     if (tryFullscreen) {
-        m_windowImpl = std::make_shared<prev::window::impl::linux::WindowXcb>(title);
+        m_windowImpl = std::make_shared<prev::window::impl::xcb::WindowXcb>(title);
     } else {
-        m_windowImpl = std::make_shared<prev::window::impl::linux::WindowXcb>(title, width, height);
+        m_windowImpl = std::make_shared<prev::window::impl::xcb::WindowXcb>(title, width, height);
     }
 #elif VK_USE_PLATFORM_WIN32_KHR
     LOGI("PLATFORM: WIN32\n");
