@@ -6,7 +6,7 @@
 #include <X11/extensions/XInput2.h> // MultiTouch
 #endif
 
-namespace prev::window::impl::linux {
+namespace prev::window::impl::xcb {
 
 #ifdef ENABLE_MULTITOUCH
 typedef uint16_t xcb_input_device_id_t;
@@ -100,11 +100,11 @@ void WindowXcb::Init(const char* title, const uint32_t width, const uint32_t hei
         XCB_EVENT_MASK_BUTTON_RELEASE | // 8
         XCB_EVENT_MASK_POINTER_MOTION | // 64       motion with no mouse button held
         XCB_EVENT_MASK_BUTTON_MOTION | // 8192     motion with one or more mouse buttons held
-        //XCB_EVENT_MASK_KEYMAP_STATE |       // 16384
-        //XCB_EVENT_MASK_EXPOSURE |           // 32768
-        //XCB_EVENT_MASK_VISIBILITY_CHANGE,   // 65536,
+        // XCB_EVENT_MASK_KEYMAP_STATE |       // 16384
+        // XCB_EVENT_MASK_EXPOSURE |           // 32768
+        // XCB_EVENT_MASK_VISIBILITY_CHANGE,   // 65536,
         XCB_EVENT_MASK_STRUCTURE_NOTIFY | // 131072   Window move/resize events
-        //XCB_EVENT_MASK_RESIZE_REDIRECT |    // 262144
+        // XCB_EVENT_MASK_RESIZE_REDIRECT |    // 262144
         XCB_EVENT_MASK_FOCUS_CHANGE; // 2097152  Window focus
 
     if (tryFullscreen) {
@@ -291,7 +291,9 @@ Event WindowXcb::TranslateEvent(xcb_generic_event_t* x_event)
 
     uint8_t key = e.detail;
     ButtonType btn = e.detail < 4 ? (ButtonType)e.detail : ButtonType::NONE;
-    ButtonType bestBtn = ButtonType(IsMouseButtonPressed(ButtonType::LEFT) ? 1 : IsMouseButtonPressed(ButtonType::MIDDLE) ? 2 : IsMouseButtonPressed(ButtonType::RIGHT) ? 3 : 0); // If multiple buttons pressed, pick left one.
+    ButtonType bestBtn = ButtonType(IsMouseButtonPressed(ButtonType::LEFT) ? 1 : IsMouseButtonPressed(ButtonType::MIDDLE) ? 2
+            : IsMouseButtonPressed(ButtonType::RIGHT)                                                                     ? 3
+                                                                                                                          : 0); // If multiple buttons pressed, pick left one.
 
     switch (x_event->response_type & ~0x80) {
     case XCB_MOTION_NOTIFY: {
@@ -333,7 +335,7 @@ Event WindowXcb::TranslateEvent(xcb_generic_event_t* x_event)
     case XCB_CONFIGURE_NOTIFY: // Window Reshape (move or resize)
     {
         auto& e = *(xcb_configure_notify_event_t*)x_event;
-        //bool se = (e.response_type & 128);                 // True if message was sent with "SendEvent"
+        // bool se = (e.response_type & 128);                 // True if message was sent with "SendEvent"
 
         if (e.width != m_shape.width || e.height != m_shape.height) {
             return OnResizeEvent(e.width, e.height); // window resized
@@ -416,6 +418,6 @@ bool WindowXcb::CanPresent(VkPhysicalDevice gpu, uint32_t queue_family) const
 {
     return vkGetPhysicalDeviceXcbPresentationSupportKHR(gpu, queue_family, m_xcbConnection, m_xcbScreen->root_visual) == VK_TRUE;
 }
-} // namespace prev::window::impl::linux
+} // namespace prev::window::impl::xcb
 
 #endif
