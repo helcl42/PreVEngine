@@ -168,17 +168,17 @@ std::vector<VkPresentModeKHR> Swapchain::GetPresentModes() const
 // powersave  : TRUE = Limit framerate to vsync (60 fps).    FALSE = lower latency.
 bool Swapchain::SetPresentMode(bool noTearing, bool powersave)
 {
-    VkPresentModeKHR mode = static_cast<VkPresentModeKHR>((noTearing ? VK_PRESENT_MODE_MAILBOX_KHR : 0) ^ (powersave ? VK_PRESENT_MODE_FIFO_RELAXED_KHR : 0));
+    const VkPresentModeKHR mode{ static_cast<VkPresentModeKHR>((noTearing ? VK_PRESENT_MODE_MAILBOX_KHR : 0) ^ (powersave ? VK_PRESENT_MODE_FIFO_RELAXED_KHR : 0)) };
     return SetPresentMode(mode); // if not found, use FIFO
 }
 
 bool Swapchain::SetPresentMode(VkPresentModeKHR preferredMode)
 {
-    VkPresentModeKHR& mode = m_swapchainCreateInfo.presentMode;
-    auto modes = GetPresentModes();
+    const auto modes{ GetPresentModes() };
 
+    VkPresentModeKHR& mode{ m_swapchainCreateInfo.presentMode };
     mode = VK_PRESENT_MODE_FIFO_KHR; // default to FIFO mode
-    for (auto m : modes) {
+    for (const auto& m : modes) {
         if (m == preferredMode) {
             mode = preferredMode; // if prefered mode is available, select it.
         }
@@ -318,7 +318,7 @@ bool Swapchain::AcquireNext(SwapchainBuffer& next)
 
     const auto& swapchainBuffer{ m_swapchainBuffers.at(m_acquiredIndex) };
 
-    vkWaitForFences(m_device, 1, &swapchainBuffer.fence, VK_TRUE, UINT64_MAX);
+    VKERRCHECK(vkWaitForFences(m_device, 1, &swapchainBuffer.fence, VK_TRUE, UINT64_MAX));
 
     next = swapchainBuffer;
 
@@ -329,7 +329,7 @@ void Swapchain::Submit()
 {
     ASSERT(!!m_isAcquired, "CSwapchain: A buffer must be acquired before submitting.\n");
 
-    auto& swapchainBuffer = m_swapchainBuffers[m_acquiredIndex];
+    const auto& swapchainBuffer{ m_swapchainBuffers[m_acquiredIndex] };
 
     VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
@@ -342,7 +342,7 @@ void Swapchain::Submit()
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = &m_submitSemaphore;
 
-    vkResetFences(m_device, 1, &swapchainBuffer.fence);
+    VKERRCHECK(vkResetFences(m_device, 1, &swapchainBuffer.fence));
 
     VKERRCHECK(vkQueueSubmit(*m_graphicsQueue, 1, &submitInfo, swapchainBuffer.fence));
 }
