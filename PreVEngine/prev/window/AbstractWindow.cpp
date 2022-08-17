@@ -1,49 +1,11 @@
 #include "AbstractWindow.h"
-#include "impl/android//WindowAndroid.h"
-#include "impl/linux/WindowXcb.h"
-#include "impl/windows/WindowWin32.h"
 
-// change const char* to const std::string& 
-// create factory for WindowImpl
-// remove Abstract Window vs. WIndow -> no need to inherit here !!!
+#include "impl/WindowImplFactory.h"
 
 namespace prev::window {
-AbstractWindow::AbstractWindow(const char* title)
+AbstractWindow::AbstractWindow(const WindowCreateInfo& createInfo)
 {
-    InitWindow(title, 640, 480, true);
-}
-
-AbstractWindow::AbstractWindow(const char* title, const uint32_t width, const uint32_t height)
-{
-    InitWindow(title, width, height, false);
-}
-
-void AbstractWindow::InitWindow(const char* title, const uint32_t width, const uint32_t height, bool tryFullscreen)
-{
-#ifdef VK_USE_PLATFORM_XCB_KHR
-    LOGI("PLATFORM: XCB\n");
-    if (tryFullscreen) {
-        m_windowImpl = std::make_shared<prev::window::impl::xcb::WindowXcb>(title);
-    } else {
-        m_windowImpl = std::make_shared<prev::window::impl::xcb::WindowXcb>(title, width, height);
-    }
-#elif VK_USE_PLATFORM_WIN32_KHR
-    LOGI("PLATFORM: WIN32\n");
-    if (tryFullscreen) {
-        m_windowImpl = std::make_shared<prev::window::impl::windows::WindowWin32>(title);
-    } else {
-        m_windowImpl = std::make_shared<prev::window::impl::windows::WindowWin32>(title, width, height);
-    }
-#elif VK_USE_PLATFORM_ANDROID_KHR
-    LOGI("PLATFORM: ANDROID\n");
-    m_windowImpl = std::make_shared<prev::window::impl::android::WindowAndroid>(title, width, height);
-#else
-#error NOT IMPLEMENTED PLATFORM
-#endif
-    // TODO:
-    //    #ifdef VK_USE_PLATFORM_XLIB_KHR
-    //    #ifdef VK_USE_PLATFORM_MIR_KHR
-    //    #ifdef VK_USE_PLATFORM_WAYLAND_KHR
+    m_windowImpl = impl::WindowImplFactory{}.Create(impl::WindowInfo{ createInfo.title, { createInfo.left, createInfo.top }, { createInfo.width, createInfo.height }, createInfo.fullScreen });
 }
 
 impl::Surface& AbstractWindow::GetSurface(VkInstance instance)
@@ -60,16 +22,14 @@ bool AbstractWindow::CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) cons
 
 impl::Position AbstractWindow::GetPosition() const
 {
-    const auto& shape = m_windowImpl->GetShape();
-
-    return impl::Position{ shape.x, shape.y };
+    const auto& shape{ m_windowImpl->GetInfo() };
+    return shape.position;
 }
 
 impl::Size AbstractWindow::GetSize() const
 {
-    const auto& shape = m_windowImpl->GetShape();
-
-    return impl::Size{ shape.width, shape.height };
+    const auto& shape{ m_windowImpl->GetInfo() };
+    return shape.size;
 }
 
 bool AbstractWindow::IsKeyPressed(const prev::input::keyboard::KeyCode key) const
@@ -102,7 +62,7 @@ bool AbstractWindow::IsMouseCursorVisible() const
     return m_windowImpl->IsMouseCursorVisible();
 }
 
-void AbstractWindow::SetTitle(const char* title)
+void AbstractWindow::SetTitle(const std::string& title)
 {
     m_windowImpl->SetTitle(title);
 }

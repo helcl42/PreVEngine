@@ -1,21 +1,11 @@
-#ifndef __WINDOWIMPL_H__
-#define __WINDOWIMPL_H__
+#ifndef __WINDOW_IMPL_H__
+#define __WINDOW_IMPL_H__
 
-#include "../../input/keyboard/KeyCodes.h"
-#include "WindowIImplCommon.h"
 #include "Surface.h"
-
-#include <string.h>
+#include "WindowImplCommon.h"
 
 namespace prev::window::impl {
 class EventFIFO {
-public:
-    EventFIFO()
-        : m_head(0)
-        , m_tail(0)
-    {
-    }
-
 public:
     bool IsEmpty() const
     {
@@ -40,13 +30,22 @@ public:
         return &m_eventBuffer[m_tail %= SIZE];
     }
 
+    void Clear()
+    {
+        for (int i = 0; i < SIZE; ++i) {
+            m_eventBuffer[i] = {};
+        }
+        m_head = 0;
+        m_tail = 0;
+    }
+
 private:
     static const inline int SIZE{ 10 }; // The queue should never contains more than 2 items.
 
 private:
-    int m_head;
+    int m_head{};
 
-    int m_tail;
+    int m_tail{};
 
     Event m_eventBuffer[SIZE] = {};
 };
@@ -55,7 +54,10 @@ class MultiTouch {
 public:
     void Clear()
     {
-        memset(this, 0, sizeof(*this));
+        for (int i = 0; i < MAX_POINTER_COUNT; ++i) {
+            m_touchID[i] = 0;
+            m_pointers[i] = {};
+        }
     }
 
     int GetCount() const
@@ -71,7 +73,7 @@ public:
     // Convert desktop-style touch-id's to an android-style finger-id.
     Event OnEventById(ActionType action, float x, float y, uint32_t findval, uint32_t setval, float w, float h)
     {
-        for (uint32_t i = 0; i < MAX_POINTERS; ++i) {
+        for (uint32_t i = 0; i < MAX_POINTER_COUNT; ++i) {
             if (m_touchID[i] == findval) // lookup finger-id
             {
                 m_touchID[i] = setval;
@@ -84,7 +86,7 @@ public:
 
     Event OnEvent(ActionType action, float x, float y, uint8_t id, float w, float h)
     {
-        if (id >= MAX_POINTERS) {
+        if (id >= MAX_POINTER_COUNT) {
             return Event{}; // Exit if too many fingers
         }
 
@@ -110,26 +112,14 @@ private:
         float y;
     };
 
-    static const int MAX_POINTERS = 10; // Max 10 fingers
+    static const int MAX_POINTER_COUNT{ 10 }; // Max 10 fingers
 
 private:
-    uint32_t m_touchID[MAX_POINTERS] = {}; // finger-id lookup table (Desktop)
+    uint32_t m_touchID[MAX_POINTER_COUNT] = {}; // finger-id lookup table (Desktop)
 
-    Pointer m_pointers[MAX_POINTERS] = {};
+    Pointer m_pointers[MAX_POINTER_COUNT] = {};
 
-    int m_count; // number of active touch-id's (Android only)
-};
-
-struct WindowShape {
-    int16_t x;
-
-    int16_t y;
-
-    uint16_t width;
-
-    uint16_t height;
-
-    bool fullscreen;
+    int m_count{}; // number of active touch-id's (Android only)
 };
 
 class WindowImpl : public Surface {
@@ -149,7 +139,7 @@ public:
 
     bool IsRunning() const;
 
-    const WindowShape& GetShape() const;
+    const WindowInfo& GetInfo() const;
 
     bool IsMouseLocked() const;
 
@@ -169,9 +159,9 @@ public:
 
     virtual bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const = 0; // Checks if window can present the given queue type.
 
-    virtual Event GetEvent(bool wait_for_event = false) = 0; // Fetch one event from the queue.
+    virtual Event GetEvent(bool waitForEvent = false) = 0; // Fetch one event from the queue.
 
-    virtual void SetTitle(const char* title) = 0;
+    virtual void SetTitle(const std::string& title) = 0;
 
     virtual void SetPosition(uint32_t x, uint32_t y) = 0;
 
@@ -209,7 +199,7 @@ protected:
 
     bool m_hasFocus;
 
-    WindowShape m_shape;
+    WindowInfo m_info;
 
     bool m_mouseLocked;
 

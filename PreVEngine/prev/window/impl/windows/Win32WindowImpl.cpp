@@ -1,44 +1,46 @@
-#include "WindowWin32.h"
+#include "Win32WindowImpl.h"
 
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 
 namespace prev::window::impl::windows {
-// Convert native Win32 keyboard scancode to cross-platform USB HID code.
-const unsigned char WIN32_TO_HID[256] = {
-    0, 0, 0, 0, 0, 0, 0, 0, 42, 43, 0, 0, 0, 40, 0, 0, // 16
-    225, 224, 226, 72, 57, 0, 0, 0, 0, 0, 0, 41, 0, 0, 0, 0, // 32
-    44, 75, 78, 77, 74, 80, 82, 79, 81, 0, 0, 0, 70, 73, 76, 0, // 48
-    39, 30, 31, 32, 33, 34, 35, 36, 37, 38, 0, 0, 0, 0, 0, 0, // 64
-    0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, // 80
-    19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 0, 0, 0, 0, 0, // 96
-    98, 89, 90, 91, 92, 93, 94, 95, 96, 97, 85, 87, 0, 86, 99, 84, //112
-    58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 104, 105, 106, 107, //128
-    108, 109, 110, 111, 112, 113, 114, 115, 0, 0, 0, 0, 0, 0, 0, 0, //144
-    83, 71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //160
-    225, 229, 224, 228, 226, 230, 0, 0, 0, 0, 0, 0, 0, 127, 128, 129, //176    L/R shift/ctrl/alt  mute/vol+/vol-
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 51, 46, 54, 45, 55, 56, //192
-    53, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //208
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 47, 49, 48, 52, 0, //224
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //240
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 //256
-};
+namespace {
+    // Convert native Win32 keyboard scancode to cross-platform USB HID code.
+    const unsigned char WIN32_TO_HID[256] = {
+        0, 0, 0, 0, 0, 0, 0, 0, 42, 43, 0, 0, 0, 40, 0, 0, // 16
+        225, 224, 226, 72, 57, 0, 0, 0, 0, 0, 0, 41, 0, 0, 0, 0, // 32
+        44, 75, 78, 77, 74, 80, 82, 79, 81, 0, 0, 0, 70, 73, 76, 0, // 48
+        39, 30, 31, 32, 33, 34, 35, 36, 37, 38, 0, 0, 0, 0, 0, 0, // 64
+        0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, // 80
+        19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 0, 0, 0, 0, 0, // 96
+        98, 89, 90, 91, 92, 93, 94, 95, 96, 97, 85, 87, 0, 86, 99, 84, // 112
+        58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 104, 105, 106, 107, // 128
+        108, 109, 110, 111, 112, 113, 114, 115, 0, 0, 0, 0, 0, 0, 0, 0, // 144
+        83, 71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 160
+        225, 229, 224, 228, 226, 230, 0, 0, 0, 0, 0, 0, 0, 127, 128, 129, // 176    L/R shift/ctrl/alt  mute/vol+/vol-
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 51, 46, 54, 45, 55, 56, // 192
+        53, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 208
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 47, 49, 48, 52, 0, // 224
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 240
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 // 256
+    };
 
-void WindowWin32::GetDesktopResolution(uint32_t& horizontal, uint32_t& vertical) const
-{
-    RECT desktop;
-    // Get a handle to the desktop window
-    const HWND hDesktop = GetDesktopWindow();
-    // Get the size of screen to the variable desktop
-    GetWindowRect(hDesktop, &desktop);
+    void GetDesktopResolution(uint32_t& horizontal, uint32_t& vertical)
+    {
+        RECT desktop;
+        // Get a handle to the desktop window
+        const HWND hDesktop = GetDesktopWindow();
+        // Get the size of screen to the variable desktop
+        GetWindowRect(hDesktop, &desktop);
 
-    // The top left corner will have coordinates (0,0)
-    // and the bottom right corner will have coordinates
-    // (horizontal, vertical)
-    horizontal = static_cast<uint32_t>(desktop.right);
-    vertical = static_cast<uint32_t>(desktop.bottom);
-}
+        // The top left corner will have coordinates (0,0)
+        // and the bottom right corner will have coordinates
+        // (horizontal, vertical)
+        horizontal = static_cast<uint32_t>(desktop.right);
+        vertical = static_cast<uint32_t>(desktop.bottom);
+    }
+} // namespace
 
-void WindowWin32::Init(const char* title, uint32_t width, uint32_t height, bool tryFullScreen)
+Win32WindowImpl::Win32WindowImpl(const WindowInfo& windowInfo)
 {
     SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
@@ -58,7 +60,7 @@ void WindowWin32::Init(const char* title, uint32_t width, uint32_t height, bool 
     winClass.hCursor = LoadCursor(NULL, IDC_ARROW);
     winClass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
     winClass.lpszMenuName = NULL;
-    winClass.lpszClassName = title;
+    winClass.lpszClassName = windowInfo.title.c_str();
     winClass.hInstance = m_hInstance;
     winClass.hIconSm = LoadIcon(NULL, IDI_WINLOGO);
     // Register window class:
@@ -69,7 +71,7 @@ void WindowWin32::Init(const char* title, uint32_t width, uint32_t height, bool 
     GetDesktopResolution(screenWidth, screenHeight);
 
     bool fullScreen = false;
-    if (tryFullScreen) {
+    if (windowInfo.fullScreen) {
         fullScreen = true;
 
         DEVMODE dmScreenSettings;
@@ -80,7 +82,7 @@ void WindowWin32::Init(const char* title, uint32_t width, uint32_t height, bool 
         dmScreenSettings.dmBitsPerPel = 32;
         dmScreenSettings.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
 
-        if ((width != (uint32_t)screenWidth) && (height != (uint32_t)screenHeight)) {
+        if (windowInfo.size.width != static_cast<uint32_t>(screenWidth) && windowInfo.size.height != static_cast<uint32_t>(screenHeight)) {
             if (ChangeDisplaySettings(&dmScreenSettings, CDS_FULLSCREEN) != DISP_CHANGE_SUCCESSFUL) {
                 MessageBox(NULL, "Fullscreen Mode not supported!\n Switch to window mode?", "Error", MB_OK | MB_ICONERROR);
                 fullScreen = false;
@@ -99,80 +101,75 @@ void WindowWin32::Init(const char* title, uint32_t width, uint32_t height, bool 
         dwStyle = WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
     }
 
-    m_shape.x = 0;
-    m_shape.y = 0;
-    m_shape.width = uint16_t(fullScreen ? screenWidth : width);
-    m_shape.height = uint16_t(fullScreen ? screenHeight : height);
-    m_shape.fullscreen = fullScreen;
+    m_info.title = windowInfo.title;
+    m_info.fullScreen = fullScreen;
+    if (fullScreen) {
+        m_info.position = {};
+        m_info.size = { static_cast<uint16_t>(screenWidth), static_cast<uint16_t>(screenHeight) };
+    } else {
+        m_info.position = { windowInfo.position.x, windowInfo.position.y };
+        m_info.size = { static_cast<uint16_t>(windowInfo.size.width), static_cast<uint16_t>(windowInfo.size.height) };
+    }
 
     RECT windowRect;
-    windowRect.left = 0L;
-    windowRect.top = 0L;
-    windowRect.right = (long)m_shape.width;
-    windowRect.bottom = (long)m_shape.height;
+    windowRect.left = m_info.position.x;
+    windowRect.top = m_info.position.y;
+    windowRect.right = static_cast<long>(m_info.size.width);
+    windowRect.bottom = static_cast<long>(m_info.size.height);
 
     AdjustWindowRectEx(&windowRect, dwStyle, FALSE, dwExStyle);
 
-    m_hWnd = CreateWindowEx(0, title, title, dwStyle | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0, 0, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, NULL, NULL, m_hInstance, NULL);
+    m_hWnd = CreateWindowEx(0, m_info.title.c_str(), m_info.title.c_str(), dwStyle | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0, 0, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, NULL, NULL, m_hInstance, NULL);
     assert(m_hWnd && "Failed to create a window.");
 
     ShowWindow(m_hWnd, SW_SHOW);
     SetForegroundWindow(m_hWnd);
     SetFocus(m_hWnd);
+    SetWindowPos(m_hWnd, NULL, m_info.position.x, m_info.position.y, 0, 0, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE);
 
-    m_eventQueue.Push(OnResizeEvent(m_shape.width, m_shape.height));
+    m_eventQueue.Push(OnResizeEvent(m_info.size.width, m_info.size.height));
 
     m_eventQueue.Push(OnInitEvent());
 }
 
-WindowWin32::WindowWin32(const char* title)
-{
-    Init(title, 640, 480, true);
-}
-
-WindowWin32::WindowWin32(const char* title, uint32_t width, uint32_t height)
-{
-    Init(title, width, height, false);
-}
-
-WindowWin32::~WindowWin32()
+Win32WindowImpl::~Win32WindowImpl()
 {
     DestroyWindow(m_hWnd);
 }
 
-void WindowWin32::SetTitle(const char* title)
+void Win32WindowImpl::SetTitle(const std::string& title)
 {
-    SetWindowText(m_hWnd, title);
+    SetWindowText(m_hWnd, title.c_str());
 }
 
-void WindowWin32::SetPosition(uint32_t x, uint32_t y)
+void Win32WindowImpl::SetPosition(uint32_t x, uint32_t y)
 {
     SetWindowPos(m_hWnd, NULL, x, y, 0, 0, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE);
 
-    if (x != m_shape.x || y != m_shape.y) {
+    if (x != m_info.position.x || y != m_info.position.y) {
         m_eventQueue.Push(OnMoveEvent(x, y)); // Trigger window moved event
     }
 }
 
-void WindowWin32::SetSize(uint32_t w, uint32_t h)
+void Win32WindowImpl::SetSize(uint32_t w, uint32_t h)
 {
-    if (m_shape.fullscreen) {
+    if (m_info.fullScreen) {
         return;
     }
 
-    RECT wr = { 0, 0, (LONG)w, (LONG)h };
+    RECT wr = { 0, 0, static_cast<long>(w), static_cast<long>(h) };
     AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE); // Add border size to create desired client area size
 
-    int total_width = wr.right - wr.left;
-    int total_height = wr.bottom - wr.top;
-    SetWindowPos(m_hWnd, NULL, 0, 0, total_width, total_height, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE);
+    int totalWidth = wr.right - wr.left;
+    int totalHeight = wr.bottom - wr.top;
+    SetWindowPos(m_hWnd, NULL, 0, 0, totalWidth, totalHeight, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE);
 
-    if ((w != m_shape.width) || (h != m_shape.height)) {
+    if (w != m_info.size.width || h != m_info.size.height) {
         m_eventQueue.Push(OnResizeEvent(w, h)); // Trigger resize event
     }
 }
 
-void WindowWin32::SetMouseCursorVisible(bool visible)
+void Win32WindowImpl::SetMouseCursorVisible(bool visible)
 {
     m_mouseCursorVisible = visible;
 
@@ -184,7 +181,7 @@ void WindowWin32::SetMouseCursorVisible(bool visible)
     }
 }
 
-bool WindowWin32::CreateSurface(VkInstance instance)
+bool Win32WindowImpl::CreateSurface(VkInstance instance)
 {
     if (m_vkSurface) {
         return false;
@@ -207,7 +204,7 @@ bool WindowWin32::CreateSurface(VkInstance instance)
 #define WM_RESHAPE (WM_USER + 0)
 #define WM_ACTIVE (WM_USER + 1)
 
-Event WindowWin32::GetEvent(bool waitForEvent)
+Event Win32WindowImpl::GetEvent(bool waitForEvent)
 {
     // Event event;
     if (!m_eventQueue.IsEmpty()) {
@@ -227,8 +224,8 @@ Event WindowWin32::GetEvent(bool waitForEvent)
         int16_t y = GET_Y_LPARAM(msg.lParam);
 
         if (m_hasFocus && m_mouseLocked) {
-            uint16_t widhtHalf = m_shape.width / 2;
-            uint16_t heightHalf = m_shape.height / 2;
+            uint16_t widhtHalf = m_info.size.width / 2;
+            uint16_t heightHalf = m_info.size.height / 2;
 
             POINT pt;
             pt.x = widhtHalf;
@@ -264,7 +261,9 @@ Event WindowWin32::GetEvent(bool waitForEvent)
         //-----------------------------------------------------------------------------------------------------------------
 
         static char buf[4] = {};
-        ButtonType bestBtn = ButtonType(IsMouseButtonPressed(ButtonType::LEFT) ? 1 : IsMouseButtonPressed(ButtonType::MIDDLE) ? 2 : IsMouseButtonPressed(ButtonType::RIGHT) ? 3 : 0);
+        ButtonType bestBtn = ButtonType(IsMouseButtonPressed(ButtonType::LEFT) ? 1 : IsMouseButtonPressed(ButtonType::MIDDLE) ? 2
+                : IsMouseButtonPressed(ButtonType::RIGHT)                                                                     ? 3
+                                                                                                                              : 0);
 
         switch (msg.message) {
         //--Mouse events--
@@ -321,16 +320,16 @@ Event WindowWin32::GetEvent(bool waitForEvent)
 
             RECT r;
             GetClientRect(m_hWnd, &r);
-            uint16_t w = (uint16_t)(r.right - r.left);
-            uint16_t h = (uint16_t)(r.bottom - r.top);
-            if (w != m_shape.width || h != m_shape.height) {
+            uint16_t w = static_cast<uint16_t>(r.right - r.left);
+            uint16_t h = static_cast<uint16_t>(r.bottom - r.top);
+            if (w != m_info.size.width || h != m_info.size.height) {
                 return OnResizeEvent(w, h); // window resized
             }
 
             GetWindowRect(m_hWnd, &r);
             int16_t x = (int16_t)r.left;
             int16_t y = (int16_t)r.top;
-            if (x != m_shape.x || y != m_shape.y) {
+            if (x != m_info.position.x || y != m_info.position.y) {
                 return OnMoveEvent(x, y); // window moved
             }
         }
@@ -363,7 +362,7 @@ Event WindowWin32::GetEvent(bool waitForEvent)
     return { Event::EventType::NONE };
 }
 
-LRESULT CALLBACK WindowWin32::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK Win32WindowImpl::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg) {
     case WM_CLOSE:
@@ -391,7 +390,7 @@ LRESULT CALLBACK WindowWin32::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 }
 
 // Return true if this window can present the given queue type
-bool WindowWin32::CanPresent(VkPhysicalDevice gpu, uint32_t queue_family) const
+bool Win32WindowImpl::CanPresent(VkPhysicalDevice gpu, uint32_t queue_family) const
 {
     return vkGetPhysicalDeviceWin32PresentationSupportKHR(gpu, queue_family) == VK_TRUE;
 }

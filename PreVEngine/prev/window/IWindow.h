@@ -1,12 +1,12 @@
 #ifndef __IWINDOW_H__
 #define __IWINDOW_H__
 
+#include "impl/Surface.h"
+#include "impl/WindowImplCommon.h"
+
 #include "../common/Common.h"
 #include "../core/instance/Validation.h"
 #include "../input/keyboard/KeyCodes.h"
-
-#include "impl/Surface.h"
-#include "impl/WindowIImplCommon.h"
 
 namespace prev::window {
 class IWindow {
@@ -31,7 +31,7 @@ public:
 
     virtual bool HasFocus() const = 0;
 
-    virtual void SetTitle(const char* title) = 0;
+    virtual void SetTitle(const std::string& title) = 0;
 
     virtual void SetPosition(const impl::Position& position) = 0;
 

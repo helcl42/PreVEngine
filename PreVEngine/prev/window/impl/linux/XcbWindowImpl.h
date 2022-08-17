@@ -1,7 +1,7 @@
 #ifdef VK_USE_PLATFORM_XCB_KHR
 
-#ifndef __WINDOW_XCB__
-#define __WINDOW_XCB__
+#ifndef __XCB_WINDOW_IMPL__
+#define __XCB_WINDOW_IMPL__
 
 //-------------------------------------------------
 #include "../WindowImpl.h"

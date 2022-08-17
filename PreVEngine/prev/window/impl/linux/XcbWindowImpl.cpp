@@ -1,4 +1,4 @@
-#include "WindowXcb.h"
+#include "XcbWindowImpl.h"
 
 #ifdef VK_USE_PLATFORM_XCB_KHR
 
