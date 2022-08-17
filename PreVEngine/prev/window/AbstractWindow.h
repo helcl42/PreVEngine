@@ -1,20 +1,20 @@
 #ifndef __ABSTRACT_WINDOW_H__
 #define __ABSTRACT_WINDOW_H__
 
+#include "IWindow.h"
+#include "WindowCommon.h"
+#include "WindowEvents.h"
+
+#include "impl/WindowImpl.h"
+
 #include "../input/keyboard/KeyboardEvents.h"
 #include "../input/mouse/MouseEvents.h"
 #include "../input/touch/TouchEvents.h"
-#include "WindowEvents.h"
-
-#include "IWindow.h"
-#include "impl/WindowImpl.h"
 
 namespace prev::window {
 class AbstractWindow : public IWindow {
 public:
-    AbstractWindow(const char* title);
-
-    AbstractWindow(const char* title, const uint32_t width, const uint32_t height);
+    AbstractWindow(const WindowCreateInfo& createInfo);
 
     virtual ~AbstractWindow() = default;
 
@@ -39,7 +39,7 @@ public:
 
     bool IsMouseCursorVisible() const override;
 
-    void SetTitle(const char* title) override;
+    void SetTitle(const std::string& title) override;
 
     void SetPosition(const impl::Position& position) override;
 
@@ -82,12 +82,9 @@ public:
     virtual void OnTouchEvent(impl::ActionType action, float x, float y, uint8_t id, float w, float h) = 0;
 
 private:
-    void InitWindow(const char* title, const uint32_t width, const uint32_t height, bool tryFullscreen);
-
-private:
     std::shared_ptr<impl::WindowImpl> m_windowImpl;
 };
 
-}
+} // namespace prev::window
 
 #endif

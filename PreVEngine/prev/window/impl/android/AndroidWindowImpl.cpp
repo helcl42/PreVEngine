@@ -1,4 +1,4 @@
-#include "WindowAndroid.h"
+#include "AndroidWindowImpl.h"
 
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 
@@ -30,7 +30,7 @@ WindowAndroid::WindowAndroid(const char* title, uint32_t width, uint32_t height)
 {
     m_shape.width = 0;
     m_shape.height = 0;
-    m_shape.fullscreen = true;
+    m_shape.fullScreen = true;
 
     m_app = g_AndroidApp;
 
@@ -109,7 +109,7 @@ Event WindowAndroid::GetEvent(bool waitForEvent)
             m_eventQueue.Push(OnResizeEvent(m_shape.width, m_shape.height));
             break;
         case APP_CMD_TERM_WINDOW:
-            //event = OnCloseEvent();
+            // event = OnCloseEvent();
             break;
         default:
             break;
@@ -270,6 +270,6 @@ bool WindowAndroid::CreateSurface(VkInstance instance)
     LOGI("Vulkan Surface created\n");
     return true;
 }
-} // namespace prev::window::android
+} // namespace prev::window::impl::android
 
 #endif

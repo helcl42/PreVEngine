@@ -1,7 +1,10 @@
 #ifndef __WINDOW_IMPL_COMMON_H__
 #define __WINDOW_IMPL_COMMON_H__
 
-#include <inttypes.h>
+#include <cinttypes>
+#include <string>
+
+#include "../../input/keyboard/KeyCodes.h"
 
 namespace prev::window::impl {
 struct Position {
@@ -14,6 +17,16 @@ struct Size {
     uint16_t width;
 
     uint16_t height;
+};
+
+struct WindowInfo {
+    std::string title;
+
+    Position position;
+
+    Size size;
+
+    bool fullScreen;
 };
 
 enum class ActionType // keyboard / mouse / touchscreen actions

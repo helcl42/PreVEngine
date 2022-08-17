@@ -1,7 +1,7 @@
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 
-#ifndef __WINDOW_ANDROID__
-#define __WINDOW_ANDROID__
+#ifndef __ANDROID_WINDOW_IMPL__
+#define __ANDROID_WINDOW_IMPL__
 
 #include "../WindowImpl.h"
 #include <android_native.h> // for Android_App
@@ -10,7 +10,7 @@ namespace prev::window::impl::android {
 class WindowAndroid : public WindowImpl {
 public:
     WindowAndroid(const char* title, uint32_t width, uint32_t height);
-    
+
     ~WindowAndroid();
 
     Event GetEvent(bool waitForEvent = false);
@@ -35,7 +35,7 @@ private:
 
     MultiTouch m_MTouch;
 };
-} // namespace prev::window::android
+} // namespace prev::window::impl::android
 
 #endif
 

@@ -10,11 +10,9 @@
 #include "AbstractWindow.h"
 
 namespace prev::window {
-class Window final : public AbstractWindow {
+class Window : public AbstractWindow {
 public:
-    Window(const char* title);
-
-    Window(const char* title, const uint32_t width, const uint32_t height);
+    Window(const WindowCreateInfo& createInfo);
 
     ~Window() = default;
 

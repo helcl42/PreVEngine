@@ -112,12 +112,15 @@ void Engine::InitInstance()
 
 void Engine::InitWindow()
 {
-    if (m_config.fullScreen) {
-        m_window = std::make_unique<prev::window::Window>(m_config.appName.c_str());
-    } else {
-        m_window = std::make_unique<prev::window::Window>(m_config.appName.c_str(), m_config.windowSize.x, m_config.windowSize.y);
-        m_window->SetPosition({ static_cast<int16_t>(m_config.windowPosition.x), static_cast<int16_t>(m_config.windowPosition.y) });
-    }
+    prev::window::WindowCreateInfo windowCreateInfo{};
+    windowCreateInfo.title = m_config.appName;
+    windowCreateInfo.fullScreen = m_config.fullScreen;
+    windowCreateInfo.left = static_cast<int16_t>(m_config.windowPosition.x);
+    windowCreateInfo.top = static_cast<int16_t>(m_config.windowPosition.y);
+    windowCreateInfo.width = static_cast<uint16_t>(m_config.windowSize.x);
+    windowCreateInfo.height = static_cast<uint16_t>(m_config.windowSize.y);
+
+    m_window = std::make_unique<prev::window::Window>(windowCreateInfo);
 }
 
 void Engine::InitSurface()

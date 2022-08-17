@@ -32,8 +32,8 @@ Event WindowImpl::OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonTy
     e.mouse.x = x;
     e.mouse.y = y;
     e.mouse.btn = btn;
-    e.mouse.w = static_cast<int16_t>(m_shape.width);
-    e.mouse.h = static_cast<int16_t>(m_shape.height);
+    e.mouse.w = static_cast<int16_t>(m_info.size.width);
+    e.mouse.h = static_cast<int16_t>(m_info.size.height);
     return e;
 }
 
@@ -66,8 +66,7 @@ Event WindowImpl::OnTextEvent(const char* str)
 
 Event WindowImpl::OnMoveEvent(int16_t x, int16_t y)
 {
-    m_shape.x = x;
-    m_shape.y = y;
+    m_info.position = { x, y };
 
     Event e{ Event::EventType::MOVE };
     e.move = { x, y };
@@ -76,8 +75,7 @@ Event WindowImpl::OnMoveEvent(int16_t x, int16_t y)
 
 Event WindowImpl::OnResizeEvent(uint16_t width, uint16_t height)
 {
-    m_shape.width = width;
-    m_shape.height = height;
+    m_info.size = { width, height };
 
     Event e{ Event::EventType::RESIZE };
     e.resize = { width, height };
@@ -132,9 +130,9 @@ void WindowImpl::Close()
     m_eventQueue.Push(OnCloseEvent());
 }
 
-const WindowShape& WindowImpl::GetShape() const
+const WindowInfo& WindowImpl::GetInfo() const
 {
-    return m_shape;
+    return m_info;
 }
 
 bool WindowImpl::IsRunning() const
@@ -144,13 +142,13 @@ bool WindowImpl::IsRunning() const
 
 bool WindowImpl::IsKeyPressed(const prev::input::keyboard::KeyCode key) const
 {
-    uint32_t keyIndex = static_cast<uint32_t>(key);
+    const auto keyIndex{ static_cast<uint32_t>(key) };
     return m_keyboardKeysState[keyIndex];
 }
 
 bool WindowImpl::IsMouseButtonPressed(const ButtonType btn) const
 {
-    uint32_t buttonIndex = static_cast<uint32_t>(btn);
+    const auto buttonIndex{ static_cast<uint32_t>(btn) };
     return m_mouseButtonsState[buttonIndex];
 }
 

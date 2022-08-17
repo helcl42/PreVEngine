@@ -1,13 +1,8 @@
 #include "Window.h"
 
 namespace prev::window {
-Window::Window(const char* title)
-    : AbstractWindow(title)
-{
-}
-
-Window::Window(const char* title, const uint32_t width, const uint32_t height)
-    : AbstractWindow(title, width, height)
+Window::Window(const WindowCreateInfo& createInfo)
+    : AbstractWindow(createInfo)
 {
 }
 
