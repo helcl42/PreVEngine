@@ -2,7 +2,7 @@
 
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 
-namespace prev::window::impl::windows {
+namespace prev::window::impl::win32 {
 namespace {
     // Convert native Win32 keyboard scancode to cross-platform USB HID code.
     const unsigned char WIN32_TO_HID[256] = {
@@ -394,6 +394,6 @@ bool Win32WindowImpl::CanPresent(VkPhysicalDevice gpu, uint32_t queue_family) co
 {
     return vkGetPhysicalDeviceWin32PresentationSupportKHR(gpu, queue_family) == VK_TRUE;
 }
-} // namespace prev::window::impl::windows
+} // namespace prev::window::impl::win32
 
 #endif

@@ -112,7 +112,7 @@ private:
         float y;
     };
 
-    static const int MAX_POINTER_COUNT{ 10 }; // Max 10 fingers
+    static const inline int MAX_POINTER_COUNT{ 10 }; // Max 10 fingers
 
 private:
     uint32_t m_touchID[MAX_POINTER_COUNT] = {}; // finger-id lookup table (Desktop)

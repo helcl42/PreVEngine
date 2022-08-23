@@ -3,31 +3,28 @@
 #ifndef __XCB_WINDOW_IMPL__
 #define __XCB_WINDOW_IMPL__
 
-//-------------------------------------------------
 #include "../WindowImpl.h"
-//#include <xcb/xcb.h>            // XCB only
-//#include <X11/Xlib.h>           // XLib only
+
+//#include <xcb/xcb.h>              // XCB only
+//#include <X11/Xlib.h>             // XLib only
 #include <X11/Xlib-xcb.h> // Xlib + XCB
 #include <X11/cursorfont.h>
 #include <xkbcommon/xkbcommon.h> // Keyboard
-//-------------------------------------------------
 
 namespace prev::window::impl::xcb {
-class WindowXcb final : public WindowImpl {
+class XcbWindowImpl final : public WindowImpl {
 public:
-    WindowXcb(const char* title);
+    XcbWindowImpl(const WindowInfo& windowInfo);
 
-    WindowXcb(const char* title, uint32_t width, uint32_t height);
-
-    ~WindowXcb();
+    ~XcbWindowImpl();
 
 public:
-    Event GetEvent(bool wait_for_event = false);
+    Event GetEvent(bool waitForEvent = false);
 
-    bool CanPresent(VkPhysicalDevice phy, uint32_t queue_family) const; // check if this window can present this queue type
+    bool CanPresent(VkPhysicalDevice phy, uint32_t queueFamily) const; // check if this window can present this queue type
 
 private:
-    void SetTitle(const char* title);
+    void SetTitle(const std::string& title);
 
     void SetPosition(uint32_t x, uint32_t y);
 
@@ -40,8 +37,6 @@ private:
     bool InitTouch(); // Returns false if no touch-device was found.
 
     Event TranslateEvent(xcb_generic_event_t* x_event); // Convert x_event to Window event
-
-    void Init(const char* title, const uint32_t width, const uint32_t height, bool tryFullscreen);
 
 private:
     Display* m_display; // for XLib
@@ -65,9 +60,9 @@ private:
     //---Touch Device---
     MultiTouch m_MTouch;
 
-    int m_xiOpcode; // 131
+    int m_xiOpcode;
 
-    int m_xiDevId; // 2
+    int m_xiDevId;
     //------------------
 };
 } // namespace prev::window::impl::xcb

@@ -7,7 +7,7 @@
 
 #include <windowsx.h> // Mouse
 
-namespace prev::window::impl::windows {
+namespace prev::window::impl::win32 {
 class Win32WindowImpl final : public WindowImpl {
 public:
     Win32WindowImpl(const WindowInfo& windowInfo);
@@ -40,7 +40,7 @@ private:
 
     MultiTouch m_MTouch; // Multi-Touch device
 };
-} // namespace prev::window::impl::windows
+} // namespace prev::window::impl::win32
 
 #endif
 
