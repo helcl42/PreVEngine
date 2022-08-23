@@ -35,7 +35,7 @@ file(GLOB UTIL_SRC_LIST "prev/util/*.h" "prev/util/*.cpp")
 file(GLOB WINDOW_SRC_LIST "prev/window/*.h" "prev/window/*.cpp")
 file(GLOB WINDOW_IMPL_SRC_LIST "prev/window/impl/*.h" "prev/window/impl/*.cpp")
 file(GLOB WINDOW_IMPL_WINDOWS_SRC_LIST "prev/window/impl/windows/*.h" "prev/window/impl/windows/*.cpp")
-file(GLOB WINDOW_IMPL_LINUX_SRC_LIST "prev/window/impl/linux/*.h" "prev/window/impl/linux/*.cpp")
+file(GLOB WINDOW_IMPL_LINUX_SRC_LIST "prev/window/impl/xcb/*.h" "prev/window/impl/xcb/*.cpp")
 file(GLOB WINDOW_IMPL_ANDROID_SRC_LIST "prev/window/impl/android/*.h" "prev/window/impl/android/*.cpp")
 file(GLOB EXTERNAL_SRC_LIST "external/*.h" "external/*.cpp")
 

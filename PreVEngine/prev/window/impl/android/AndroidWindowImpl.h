@@ -4,6 +4,7 @@
 #define __ANDROID_WINDOW_IMPL__
 
 #include "../WindowImpl.h"
+
 #include <android_native.h> // for Android_App
 
 namespace prev::window::impl::android {
@@ -13,6 +14,7 @@ public:
 
     ~WindowAndroid();
 
+public:
     Event GetEvent(bool waitForEvent = false);
 
     void SetTextInput(bool enabled);
@@ -26,7 +28,7 @@ private:
 
     void SetMouseCursorVisible(bool visible);
 
-    bool CanPresent(VkPhysicalDevice gpu, uint32_t queue_family) const;
+    bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const;
 
     bool CreateSurface(VkInstance instance);
 

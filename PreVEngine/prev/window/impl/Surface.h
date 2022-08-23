@@ -4,7 +4,7 @@
 #include "../../core/instance/Validation.h"
 
 namespace prev::window::impl {
-class Surface { // Vulkan Surface
+class Surface {
 public:
     Surface() = default;
 

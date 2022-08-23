@@ -2,79 +2,72 @@
 
 #ifdef VK_USE_PLATFORM_XCB_KHR
 
+#include <string.h>
+
 #ifdef ENABLE_MULTITOUCH
 #include <X11/extensions/XInput2.h> // MultiTouch
 #endif
 
 namespace prev::window::impl::xcb {
-
+namespace {
 #ifdef ENABLE_MULTITOUCH
-typedef uint16_t xcb_input_device_id_t;
-typedef uint32_t xcb_input_fp1616_t;
-typedef struct xcb_input_touch_begin_event_t { // from xinput.h in XCB 1.12 (current version is 1.11)
-    uint8_t response_type;
-    uint8_t extension;
-    uint16_t sequence;
-    uint32_t length;
-    uint16_t event_type;
-    xcb_input_device_id_t deviceid;
-    xcb_timestamp_t time;
-    uint32_t detail;
-    xcb_window_t root;
-    xcb_window_t event;
-    xcb_window_t child;
-    uint32_t full_sequence;
-    xcb_input_fp1616_t root_x;
-    xcb_input_fp1616_t root_y;
-    xcb_input_fp1616_t event_x;
-    xcb_input_fp1616_t event_y;
-    uint16_t buttons_len;
-    uint16_t valuators_len;
-    xcb_input_device_id_t sourceid;
-    // uint8_t                   pad0[2];
-    // uint32_t                  flags;
-    // xcb_input_modifier_info_t mods;
-    // xcb_input_group_info_t    group;
-} xcb_input_touch_begin_event_t;
+    typedef uint16_t xcb_input_device_id_t;
+    typedef uint32_t xcb_input_fp1616_t;
+    typedef struct xcb_input_touch_begin_event_t { // from xinput.h in XCB 1.12 (current version is 1.11)
+        uint8_t response_type;
+        uint8_t extension;
+        uint16_t sequence;
+        uint32_t length;
+        uint16_t event_type;
+        xcb_input_device_id_t deviceid;
+        xcb_timestamp_t time;
+        uint32_t detail;
+        xcb_window_t root;
+        xcb_window_t event;
+        xcb_window_t child;
+        uint32_t full_sequence;
+        xcb_input_fp1616_t root_x;
+        xcb_input_fp1616_t root_y;
+        xcb_input_fp1616_t event_x;
+        xcb_input_fp1616_t event_y;
+        uint16_t buttons_len;
+        uint16_t valuators_len;
+        xcb_input_device_id_t sourceid;
+        // uint8_t                   pad0[2];
+        // uint32_t                  flags;
+        // xcb_input_modifier_info_t mods;
+        // xcb_input_group_info_t    group;
+    } xcb_input_touch_begin_event_t;
 #endif
 
-// Convert native EVDEV key-code to cross-platform USB HID code.
-const unsigned char EVDEV_TO_HID[256] = {
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 41, 30, 31, 32, 33, 34, 35,
-    36, 37, 38, 39, 45, 46, 42, 43, 20, 26, 8, 21, 23, 28, 24, 12,
-    18, 19, 47, 48, 40, 224, 4, 22, 7, 9, 10, 11, 13, 14, 15, 51,
-    52, 53, 225, 49, 29, 27, 6, 25, 5, 17, 16, 54, 55, 56, 229, 85,
-    226, 44, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 83, 71, 95,
-    96, 97, 86, 92, 93, 94, 87, 89, 90, 91, 98, 99, 0, 0, 100, 68,
-    69, 0, 0, 0, 0, 0, 0, 0, 88, 228, 84, 70, 230, 0, 74, 82,
-    75, 80, 79, 77, 81, 78, 73, 76, 0, 127, 128, 129, 0, 103, 0, 72,
-    0, 0, 0, 0, 0, 227, 231, 118, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 104,
-    105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
+    // Convert native EVDEV key-code to cross-platform USB HID code.
+    const unsigned char EVDEV_TO_HID[256] = {
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 41, 30, 31, 32, 33, 34, 35,
+        36, 37, 38, 39, 45, 46, 42, 43, 20, 26, 8, 21, 23, 28, 24, 12,
+        18, 19, 47, 48, 40, 224, 4, 22, 7, 9, 10, 11, 13, 14, 15, 51,
+        52, 53, 225, 49, 29, 27, 6, 25, 5, 17, 16, 54, 55, 56, 229, 85,
+        226, 44, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 83, 71, 95,
+        96, 97, 86, 92, 93, 94, 87, 89, 90, 91, 98, 99, 0, 0, 100, 68,
+        69, 0, 0, 0, 0, 0, 0, 0, 88, 228, 84, 70, 230, 0, 74, 82,
+        75, 80, 79, 77, 81, 78, 73, 76, 0, 127, 128, 129, 0, 103, 0, 72,
+        0, 0, 0, 0, 0, 227, 231, 118, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 104,
+        105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    };
 
-static inline xcb_intern_atom_reply_t* intern_atom_helper(xcb_connection_t* conn, bool only_if_exists, const char* str)
-{
-    xcb_intern_atom_cookie_t cookie = xcb_intern_atom(conn, only_if_exists, strlen(str), str);
-    return xcb_intern_atom_reply(conn, cookie, 0);
-}
+    static inline xcb_intern_atom_reply_t* intern_atom_helper(xcb_connection_t* conn, bool onlyIfExists, const char* str)
+    {
+        xcb_intern_atom_cookie_t cookie = xcb_intern_atom(conn, onlyIfExists, strlen(str), str);
+        return xcb_intern_atom_reply(conn, cookie, 0);
+    }
+} // namespace
 
-WindowXcb::WindowXcb(const char* title)
-{
-    Init(title, 640, 480, true);
-}
-
-WindowXcb::WindowXcb(const char* title, uint32_t width, uint32_t height)
-{
-    Init(title, width, height, false);
-}
-
-void WindowXcb::Init(const char* title, const uint32_t width, const uint32_t height, bool tryFullscreen)
+XcbWindowImpl::XcbWindowImpl(const WindowInfo& windowInfo)
 {
     LOGI("Creating XCB-Window...\n");
 
@@ -107,27 +100,28 @@ void WindowXcb::Init(const char* title, const uint32_t width, const uint32_t hei
         // XCB_EVENT_MASK_RESIZE_REDIRECT |    // 262144
         XCB_EVENT_MASK_FOCUS_CHANGE; // 2097152  Window focus
 
-    if (tryFullscreen) {
-        m_shape.width = m_xcbScreen->width_in_pixels;
-        m_shape.height = m_xcbScreen->height_in_pixels;
-        m_shape.fullscreen = true;
+    m_info.title = windowInfo.title;
+    if (windowInfo.fullScreen) {
+        m_info.size = { m_xcbScreen->width_in_pixels, m_xcbScreen->height_in_pixels };
+        m_info.position = {};
+        m_info.fullScreen = true;
     } else {
-        m_shape.width = width;
-        m_shape.height = height;
-        m_shape.fullscreen = false;
+        m_info.size = windowInfo.size;
+        m_info.position = windowInfo.position;
+        m_info.fullScreen = false;
     }
 
     m_xcbWindow = xcb_generate_id(m_xcbConnection);
-    xcb_create_window(m_xcbConnection, XCB_COPY_FROM_PARENT, m_xcbWindow, m_xcbScreen->root, 0, 0, width, height, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT, m_xcbScreen->root_visual, valueMask, valueList);
+    xcb_create_window(m_xcbConnection, XCB_COPY_FROM_PARENT, m_xcbWindow, m_xcbScreen->root, 0, 0, windowInfo.size.width, windowInfo.size.height, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT, m_xcbScreen->root_visual, valueMask, valueList);
 
     xcb_intern_atom_reply_t* reply = intern_atom_helper(m_xcbConnection, true, "WM_PROTOCOLS");
 
     m_atomWmDeleteWindow = intern_atom_helper(m_xcbConnection, false, "WM_DELETE_WINDOW");
-    xcb_change_property(m_xcbConnection, XCB_PROP_MODE_REPLACE, m_xcbWindow, (*reply).atom, 4, 32, 1, &(*m_atomWmDeleteWindow).atom);
+    xcb_change_property(m_xcbConnection, XCB_PROP_MODE_REPLACE, m_xcbWindow, reply->atom, 4, 32, 1, &(*m_atomWmDeleteWindow).atom);
 
     free(reply);
 
-    if (tryFullscreen) {
+    if (m_info.fullScreen) {
         xcb_intern_atom_reply_t* atom_wm_state = intern_atom_helper(m_xcbConnection, false, "_NET_WM_STATE");
         xcb_intern_atom_reply_t* atom_wm_fullscreen = intern_atom_helper(m_xcbConnection, false, "_NET_WM_STATE_FULLSCREEN");
         xcb_change_property(m_xcbConnection, XCB_PROP_MODE_REPLACE, m_xcbWindow, atom_wm_state->atom, XCB_ATOM_ATOM, 32, 1, &(atom_wm_fullscreen->atom));
@@ -141,43 +135,44 @@ void WindowXcb::Init(const char* title, const uint32_t width, const uint32_t hei
 
     InitTouch();
 
-    SetTitle(title);
+    SetTitle(m_info.title);
+    SetPosition(m_info.position.x, m_info.position.y);
 
-    m_eventQueue.Push(OnResizeEvent(width, height)); // OnResizeEvent BEFORE focus, for consistency with win32 and android
+    m_eventQueue.Push(OnResizeEvent(m_info.size.width, m_info.size.height)); // OnResizeEvent BEFORE focus, for consistency with win32 and android
 
     m_eventQueue.Push(OnInitEvent());
 }
 
-WindowXcb::~WindowXcb()
+XcbWindowImpl::~XcbWindowImpl()
 {
     free(m_atomWmDeleteWindow);
     xcb_disconnect(m_xcbConnection);
     free(m_keyboardContext); // xkb keyboard
 }
 
-void WindowXcb::SetTitle(const char* title)
+void XcbWindowImpl::SetTitle(const std::string& title)
 {
-    xcb_change_property(m_xcbConnection, XCB_PROP_MODE_REPLACE, m_xcbWindow, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8, strlen(title), title); // set window title
-    xcb_change_property(m_xcbConnection, XCB_PROP_MODE_REPLACE, m_xcbWindow, XCB_ATOM_WM_ICON_NAME, XCB_ATOM_STRING, 8, strlen(title), title); // set icon title
+    xcb_change_property(m_xcbConnection, XCB_PROP_MODE_REPLACE, m_xcbWindow, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8, title.size(), title.c_str()); // set window title
+    xcb_change_property(m_xcbConnection, XCB_PROP_MODE_REPLACE, m_xcbWindow, XCB_ATOM_WM_ICON_NAME, XCB_ATOM_STRING, 8, title.size(), title.c_str()); // set icon title
     xcb_map_window(m_xcbConnection, m_xcbWindow);
     xcb_flush(m_xcbConnection);
 }
 
-void WindowXcb::SetPosition(uint32_t x, uint32_t y)
+void XcbWindowImpl::SetPosition(uint32_t x, uint32_t y)
 {
     uint32_t values[] = { x, y };
     xcb_configure_window(m_xcbConnection, m_xcbWindow, XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, values);
     xcb_flush(m_xcbConnection);
 }
 
-void WindowXcb::SetSize(uint32_t w, uint32_t h)
+void XcbWindowImpl::SetSize(uint32_t w, uint32_t h)
 {
     uint32_t values[] = { w, h };
     xcb_configure_window(m_xcbConnection, m_xcbWindow, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, values);
     xcb_flush(m_xcbConnection);
 }
 
-void WindowXcb::SetMouseCursorVisible(bool visible)
+void XcbWindowImpl::SetMouseCursorVisible(bool visible)
 {
     m_mouseCursorVisible = visible;
 
@@ -198,7 +193,7 @@ void WindowXcb::SetMouseCursorVisible(bool visible)
     }
 }
 
-bool WindowXcb::CreateSurface(VkInstance instance)
+bool XcbWindowImpl::CreateSurface(VkInstance instance)
 {
     if (m_vkSurface) {
         return false;
@@ -219,7 +214,7 @@ bool WindowXcb::CreateSurface(VkInstance instance)
 }
 
 //---------------------------------------------------------------------------
-bool WindowXcb::InitTouch()
+bool XcbWindowImpl::InitTouch()
 {
 #ifdef ENABLE_MULTITOUCH
     int ev, err;
@@ -271,7 +266,7 @@ bool WindowXcb::InitTouch()
 }
 //---------------------------------------------------------------------------
 
-Event WindowXcb::TranslateEvent(xcb_generic_event_t* x_event)
+Event XcbWindowImpl::TranslateEvent(xcb_generic_event_t* x_event)
 {
     static char buf[4] = {}; // store char for text event
 
@@ -280,8 +275,8 @@ Event WindowXcb::TranslateEvent(xcb_generic_event_t* x_event)
     int16_t my = e.event_y;
 
     if (m_hasFocus && m_mouseLocked) {
-        uint16_t widthHalf = m_shape.width / 2;
-        uint16_t heightHalf = m_shape.height / 2;
+        uint16_t widthHalf = m_info.size.width / 2;
+        uint16_t heightHalf = m_info.size.height / 2;
 
         xcb_warp_pointer(m_xcbConnection, XCB_NONE, m_xcbWindow, 0, 0, 0, 0, widthHalf, heightHalf);
 
@@ -337,9 +332,9 @@ Event WindowXcb::TranslateEvent(xcb_generic_event_t* x_event)
         auto& e = *(xcb_configure_notify_event_t*)x_event;
         // bool se = (e.response_type & 128);                 // True if message was sent with "SendEvent"
 
-        if (e.width != m_shape.width || e.height != m_shape.height) {
+        if (e.width != m_info.size.width || e.height != m_info.size.height) {
             return OnResizeEvent(e.width, e.height); // window resized
-        } else if (e.x != m_shape.x || e.y != m_shape.y) {
+        } else if (e.x != m_info.position.x || e.y != m_info.position.y) {
             return OnMoveEvent(e.x, e.y); // window moved
         }
         break;
@@ -385,7 +380,7 @@ Event WindowXcb::TranslateEvent(xcb_generic_event_t* x_event)
     return { Event::EventType::NONE };
 }
 
-Event WindowXcb::GetEvent(bool waitForEvent)
+Event XcbWindowImpl::GetEvent(bool waitForEvent)
 {
     if (!m_eventQueue.IsEmpty()) {
         return *m_eventQueue.Pop(); // Pop message from message queue buffer
@@ -414,9 +409,9 @@ Event WindowXcb::GetEvent(bool waitForEvent)
 }
 
 // Return true if this window can present the given queue type
-bool WindowXcb::CanPresent(VkPhysicalDevice gpu, uint32_t queue_family) const
+bool XcbWindowImpl::CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const
 {
-    return vkGetPhysicalDeviceXcbPresentationSupportKHR(gpu, queue_family, m_xcbConnection, m_xcbScreen->root_visual) == VK_TRUE;
+    return vkGetPhysicalDeviceXcbPresentationSupportKHR(gpu, queueFamily, m_xcbConnection, m_xcbScreen->root_visual) == VK_TRUE;
 }
 } // namespace prev::window::impl::xcb
 

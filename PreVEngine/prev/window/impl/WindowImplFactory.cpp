@@ -4,7 +4,7 @@
 #include "android/AndroidWindowImpl.h"
 #endif
 #ifdef VK_USE_PLATFORM_XCB_KHR
-#include "linux/XcbWindowImpl.h"
+#include "xcb/XcbWindowImpl.h"
 #endif
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #include "windows/Win32WindowImpl.h"
@@ -14,15 +14,18 @@ namespace prev::window::impl {
 std::unique_ptr<WindowImpl> WindowImplFactory::Create(const WindowInfo& info) const
 {
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
+    // TODO
 #elif VK_USE_PLATFORM_XCB_KHR
+    return std::make_unique<xcb::XcbWindowImpl>(info);
 #elif VK_USE_PLATFORM_WIN32_KHR
-    return std::make_unique<windows::Win32WindowImpl>(info);
+    return std::make_unique<win32::Win32WindowImpl>(info);
 #else
-#error NOT IMPLEMENTED PLATFORM !
+#error NOT IMPLEMENTED PLATFORM!
 #endif
-    // TODO:
-    //    #ifdef VK_USE_PLATFORM_XLIB_KHR
-    //    #ifdef VK_USE_PLATFORM_MIR_KHR
-    //    #ifdef VK_USE_PLATFORM_WAYLAND_KHR
+
+// TODO:
+// #ifdef VK_USE_PLATFORM_XLIB_KHR
+// #ifdef VK_USE_PLATFORM_MIR_KHR
+// #ifdef VK_USE_PLATFORM_WAYLAND_KHR
 }
 } // namespace prev::window::impl
