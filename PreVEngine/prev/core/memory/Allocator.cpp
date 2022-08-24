@@ -375,8 +375,13 @@ void Allocator::TransitionImageLayout(const VkImage image, const VkImageLayout o
             barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         }
 
-        VkPipelineStageFlags srcStage{ VK_PIPELINE_STAGE_NONE};
+#if defined(__ANDROID__)
+        VkPipelineStageFlags srcStage{ VK_PIPELINE_STAGE_FLAG_BITS_MAX_ENUM };
+        VkPipelineStageFlags dstStage{ VK_PIPELINE_STAGE_FLAG_BITS_MAX_ENUM };
+#else
+        VkPipelineStageFlags srcStage{ VK_PIPELINE_STAGE_NONE };
         VkPipelineStageFlags dstStage{ VK_PIPELINE_STAGE_NONE };
+#endif
         if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
             barrier.srcAccessMask = 0;
             barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;

@@ -27,11 +27,10 @@ namespace {
     };
 } // namespace
 
-WindowAndroid::WindowAndroid(const char* title, uint32_t width, uint32_t height)
+AndroidWindowImpl::AndroidWindowImpl(const WindowInfo& windowInfo)
 {
-    m_shape.width = 0;
-    m_shape.height = 0;
-    m_shape.fullScreen = true;
+    m_info.size = {};
+    m_info.fullScreen = true;
 
     m_app = g_AndroidApp;
 
@@ -50,9 +49,8 @@ WindowAndroid::WindowAndroid(const char* title, uint32_t width, uint32_t height)
             }
 
             if (cmd == APP_CMD_INIT_WINDOW) {
-                m_shape.width = (uint16_t)ANativeWindow_getWidth(m_app->window);
-                m_shape.height = (uint16_t)ANativeWindow_getHeight(m_app->window);
-                m_eventQueue.Push(OnResizeEvent(m_shape.width, m_shape.height)); // post window-resize event
+                m_info.size = { static_cast<uint16_t>(ANativeWindow_getWidth(m_app->window)), static_cast<uint16_t>(ANativeWindow_getHeight(m_app->window)) };
+                m_eventQueue.Push(OnResizeEvent(m_info.size.width, m_info.size.height)); // post window-resize event
             }
 
             if (cmd == APP_CMD_GAINED_FOCUS) {
@@ -68,11 +66,11 @@ WindowAndroid::WindowAndroid(const char* title, uint32_t width, uint32_t height)
     m_eventQueue.Push(OnInitEvent());
 }
 
-WindowAndroid::~WindowAndroid()
+AndroidWindowImpl::~AndroidWindowImpl()
 {
 }
 
-Event WindowAndroid::GetEvent(bool waitForEvent)
+Event AndroidWindowImpl::GetEvent(bool waitForEvent)
 {
     Event event = {};
     static char buf[4] = {}; // store char for text event
@@ -104,10 +102,9 @@ Event WindowAndroid::GetEvent(bool waitForEvent)
         case APP_CMD_INIT_WINDOW:
         case APP_CMD_CONFIG_CHANGED:
             event = OnChangeEvent();
-            std::this_thread::sleep_for(std::chrono::milliseconds(150));
-            m_shape.width = (uint16_t)ANativeWindow_getWidth(m_app->window);
-            m_shape.height = (uint16_t)ANativeWindow_getHeight(m_app->window);
-            m_eventQueue.Push(OnResizeEvent(m_shape.width, m_shape.height));
+            std::this_thread::sleep_for(std::chrono::milliseconds(300)); // TODO
+            m_info.size = { static_cast<uint16_t>(ANativeWindow_getWidth(m_app->window)), static_cast<uint16_t>(ANativeWindow_getHeight(m_app->window)) };
+            m_eventQueue.Push(OnResizeEvent(m_info.size.width, m_info.size.height));
             break;
         case APP_CMD_TERM_WINDOW:
             // event = OnCloseEvent();
@@ -171,8 +168,7 @@ Event WindowAndroid::GetEvent(bool waitForEvent)
                         uint8_t finger_id = (uint8_t)AMotionEvent_getPointerId(a_event, i);
                         float x = AMotionEvent_getX(a_event, i);
                         float y = AMotionEvent_getY(a_event, i);
-
-                        event = m_MTouch.OnEvent(ActionType::MOVE, x, y, finger_id, (float)m_shape.width, (float)m_shape.height);
+                        event = m_MTouch.OnEvent(ActionType::MOVE, x, y, finger_id, (float)m_info.size.width, (float)m_info.size.height);
                     }
                 } else {
                     size_t inx = (size_t)(a_action >> 8); // get index from top 24 bits
@@ -183,11 +179,11 @@ Event WindowAndroid::GetEvent(bool waitForEvent)
                     switch (action) {
                     case AMOTION_EVENT_ACTION_POINTER_DOWN:
                     case AMOTION_EVENT_ACTION_DOWN:
-                        event = m_MTouch.OnEvent(ActionType::DOWN, x, y, finger_id, (float)m_shape.width, (float)m_shape.height);
+                        event = m_MTouch.OnEvent(ActionType::DOWN, x, y, finger_id, (float)m_info.size.width, (float)m_info.size.height);
                         break;
                     case AMOTION_EVENT_ACTION_POINTER_UP:
                     case AMOTION_EVENT_ACTION_UP:
-                        event = m_MTouch.OnEvent(ActionType::UP, x, y, finger_id, (float)m_shape.width, (float)m_shape.height);
+                        event = m_MTouch.OnEvent(ActionType::UP, x, y, finger_id, (float)m_info.size.width, (float)m_info.size.height);
                         break;
                     case AMOTION_EVENT_ACTION_CANCEL:
                         m_MTouch.Clear();
@@ -223,35 +219,35 @@ Event WindowAndroid::GetEvent(bool waitForEvent)
 }
 
 //--Show / Hide keyboard--
-void WindowAndroid::SetTextInput(bool enabled)
+void AndroidWindowImpl::SetTextInput(bool enabled)
 {
     m_hasTextInput = enabled;
     ShowKeyboard(enabled);
     LOGI("%s keyboard", enabled ? "Show" : "Hide");
 }
 
-void WindowAndroid::SetTitle(const char* title)
+void AndroidWindowImpl::SetTitle(const std::string& title)
 {
 }
 
-void WindowAndroid::SetPosition(uint32_t x, uint32_t y)
+void AndroidWindowImpl::SetPosition(uint32_t x, uint32_t y)
 {
 }
 
-void WindowAndroid::SetSize(uint32_t w, uint32_t h)
+void AndroidWindowImpl::SetSize(uint32_t w, uint32_t h)
 {
 }
 
-void WindowAndroid::SetMouseCursorVisible(bool visible)
+void AndroidWindowImpl::SetMouseCursorVisible(bool visible)
 {
 }
 
-bool WindowAndroid::CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const
+bool AndroidWindowImpl::CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const
 {
     return true;
 }
 
-bool WindowAndroid::CreateSurface(VkInstance instance)
+bool AndroidWindowImpl::CreateSurface(VkInstance instance)
 {
     if (m_vkSurface) {
         return false;

@@ -8,11 +8,11 @@
 #include <android_native.h> // for Android_App
 
 namespace prev::window::impl::android {
-class WindowAndroid : public WindowImpl {
+class AndroidWindowImpl : public WindowImpl {
 public:
-    WindowAndroid(const char* title, uint32_t width, uint32_t height);
+    AndroidWindowImpl(const WindowInfo& windowInfo);
 
-    ~WindowAndroid();
+    ~AndroidWindowImpl();
 
 public:
     Event GetEvent(bool waitForEvent = false);
@@ -20,7 +20,7 @@ public:
     void SetTextInput(bool enabled);
 
 private:
-    void SetTitle(const char* title);
+    void SetTitle(const std::string& title);
 
     void SetPosition(uint32_t x, uint32_t y);
 
