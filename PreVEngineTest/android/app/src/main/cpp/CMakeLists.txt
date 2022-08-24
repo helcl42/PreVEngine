@@ -11,7 +11,7 @@ add_definitions(-DRENDER_SELECTION)
 
 message("Platform = ${ANDROID_PLATFORM}")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17 -O3")
 
 # Set path to header files.
 include_directories(${ANDROID_NDK}/sources/android/native_app_glue)
@@ -118,7 +118,7 @@ aux_source_directory(../../../../../../PreVEngine/prev/util                  SRC
 aux_source_directory(../../../../../../PreVEngine/prev/window                SRC_LIST)
 aux_source_directory(../../../../../../PreVEngine/prev/window/impl           SRC_LIST)
 aux_source_directory(../../../../../../PreVEngine/prev/window/impl/android   SRC_LIST)
-aux_source_directory(../../../../../../PreVEngine/prev/window/impl/linux     SRC_LIST)
+aux_source_directory(../../../../../../PreVEngine/prev/window/impl/xcb       SRC_LIST)
 aux_source_directory(../../../../../../PreVEngine/prev/window/impl/windows   SRC_LIST)
 
 aux_source_directory(../../../../../../PreVEngine/android                    SRC_LIST)

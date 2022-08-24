@@ -14,7 +14,7 @@ namespace prev::window::impl {
 std::unique_ptr<WindowImpl> WindowImplFactory::Create(const WindowInfo& info) const
 {
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
-    // TODO
+    return std::make_unique<android::AndroidWindowImpl>(info);
 #elif VK_USE_PLATFORM_XCB_KHR
     return std::make_unique<xcb::XcbWindowImpl>(info);
 #elif VK_USE_PLATFORM_WIN32_KHR
