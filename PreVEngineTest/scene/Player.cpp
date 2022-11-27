@@ -28,8 +28,8 @@ void Player::Init()
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, TAG_TRANSFORM_COMPONENT);
 
     prev_test::component::render::RenderComponentFactory renderComponentFactory{};
-    //m_animationRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Xbot/XBot.fbx"), { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Xbot/Walking.fbx"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Xbot/Jump.fbx") }, { glm::vec4(0.49f, 0.3f, 0.28f, 1.0f), glm::vec4(0.52f, 0.42f, 0.4f, 1.0f) }, true, true);
-    m_animationRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Archer/erika_archer_bow_arrow.fbx"), {prev_test::common::AssetManager::Instance().GetAssetPath("Models/Archer/Walking.fbx"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Archer/Jumping.fbx") }, true, true);
+    // m_animationRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Xbot/XBot.fbx"), { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Xbot/Walking.fbx"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Xbot/Jump.fbx") }, { glm::vec4(0.49f, 0.3f, 0.28f, 1.0f), glm::vec4(0.52f, 0.42f, 0.4f, 1.0f) }, true, true);
+    m_animationRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Archer/erika_archer_bow_arrow.fbx"), { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Archer/Walking.fbx"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Archer/Jumping.fbx") }, true, true);
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::render::IAnimationRenderComponent>(GetThis(), m_animationRenderComponent, TAG_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT);
 
     bool fixedCameraUp{ true };
@@ -61,7 +61,7 @@ void Player::Update(float deltaTime)
     // set default animation
     m_animationRenderComponent->SetCurrentAnimationIndex(WALKING_ANIMATION_INDEX);
 
-    auto walkingAnimation{m_animationRenderComponent->GetAnimation(WALKING_ANIMATION_INDEX) };
+    auto walkingAnimation{ m_animationRenderComponent->GetAnimation(WALKING_ANIMATION_INDEX) };
     if ((m_shouldGoForward || m_shouldGoBackward || m_shouldGoLeft || m_shouldGoRight) && !m_isInTheAir) {
         walkingAnimation->SetState(prev_test::render::AnimationState::RUNNING);
         walkingAnimation->Update(m_shouldGoBackward ? -deltaTime : deltaTime);
@@ -90,7 +90,7 @@ void Player::Update(float deltaTime)
     float height{ 0.0f };
     terrain->GetHeightAt(currentPosition, height);
 
-    auto jumpAnimation{m_animationRenderComponent->GetAnimation(JUMP_ANIMATION_INDEX) };
+    auto jumpAnimation{ m_animationRenderComponent->GetAnimation(JUMP_ANIMATION_INDEX) };
     if (m_isInTheAir) {
         m_animationRenderComponent->SetCurrentAnimationIndex(JUMP_ANIMATION_INDEX);
         jumpAnimation->SetState(prev_test::render::AnimationState::RUNNING);
