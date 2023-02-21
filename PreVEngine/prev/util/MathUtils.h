@@ -163,10 +163,10 @@ inline glm::mat4 ExtractRotation(const glm::mat4& transform)
 inline std::vector<glm::vec3> GetFrustumCorners(const glm::mat4& inverseWorldToClipSpaceTransform)
 {
     const std::vector<glm::vec3> cubeFrustumCorners{
-        { -1.0f, 1.0f, -1.0f },
-        { 1.0f, 1.0f, -1.0f },
-        { 1.0f, -1.0f, -1.0f },
-        { -1.0f, -1.0f, -1.0f },
+        { -1.0f, 1.0f, 0.0f },
+        { 1.0f, 1.0f, 0.0f },
+        { 1.0f, -1.0f, 0.0f },
+        { -1.0f, -1.0f, 0.0f },
         { -1.0f, 1.0f, 1.0f },
         { 1.0f, 1.0f, 1.0f },
         { 1.0f, -1.0f, 1.0f },
