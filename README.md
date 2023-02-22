@@ -14,34 +14,17 @@ Here is a video:
     https://drive.google.com/file/d/1_9gK0mHCFIuXkZlF7yv9HmXcr4KabK0c/view?usp=sharing
 
 
-## Build Linux
-    In case you want to use `clang`
-    - Use `clang`
-    - Run `export CC=/usr/bin/clang`
-    - Run `export CXX=/usr/bin/clang++`
+## Build Linux & Windows
  
  - Set up `USE_VULKAN_WRAPPER` to `OFF` in `CMakeLists.txt`
  
-  - Run `mkdir build`
+ - Run `mkdir build`
 
  - Run `cd build`
 
- - Run `cmake ..
+ - Run `cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
 
- - Run `make
-
-## Build Windows
-
-- Set up `USE_VULKAN_WRAPPER` to `OFF` in `CMakeLists.txt`
-
-- Run `mkdir build`
-
-- Run `cd build`
-
-- Run `cmake -G "Visual Studio 16 2019" -A x64 ..`
-
- ### 
-    Runtime library dependencies are included in the downloaded pack and has to be placed in the same folder as build results.
+ - Run `ninja
 
 ## Build Android
 
