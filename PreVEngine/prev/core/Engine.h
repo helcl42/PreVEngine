@@ -75,7 +75,7 @@ private:
 
     std::shared_ptr<prev::scene::IScene> m_scene;
 
-    VkSurfaceKHR m_surface;
+    VkSurfaceKHR m_surface{};
 };
 } // namespace prev::core
 

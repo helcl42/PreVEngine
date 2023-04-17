@@ -2,6 +2,7 @@
 #define __ALLOCATOR_H__
 
 #include "../device/Device.h"
+#include "../instance/Instance.h"
 
 #include <external/vk_mem_alloc.h>
 
@@ -10,7 +11,7 @@
 namespace prev::core::memory {
 class Allocator final {
 public:
-    Allocator(prev::core::device::Device& device, prev::core::device::Queue& queue, const VkDeviceSize blockSize = 256);
+    Allocator(prev::core::instance::Instance& instance, prev::core::device::Device& device, prev::core::device::Queue& queue, const VkDeviceSize blockSize = 256);
 
     ~Allocator();
 
@@ -47,6 +48,8 @@ private:
     void EndCommandBuffer();
 
 private:
+    prev::core::instance::Instance& m_instance;
+
     prev::core::device::Device& m_device;
 
     prev::core::device::Queue& m_queue;

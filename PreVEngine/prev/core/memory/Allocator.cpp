@@ -4,23 +4,25 @@
 #include "../instance/Validation.h"
 
 #define NOMINMAX
-//#define VMA_RECORDING_ENABLED   0
-//#define VMA_DEDICATED_ALLOCATION   0
-//#define VMA_STATS_STRING_ENABLED   1
+// #define VMA_RECORDING_ENABLED   0
+// #define VMA_DEDICATED_ALLOCATION   0
+// #define VMA_STATS_STRING_ENABLED   1
 #define VMA_STATIC_VULKAN_FUNCTIONS 0
 
 #define VMA_IMPLEMENTATION
 #include <external/vk_mem_alloc.h>
 
 namespace prev::core::memory {
-Allocator::Allocator(prev::core::device::Device& device, prev::core::device::Queue& queue, const VkDeviceSize blockSize)
-    : m_device(device)
+Allocator::Allocator(prev::core::instance::Instance& instance, prev::core::device::Device& device, prev::core::device::Queue& queue, const VkDeviceSize blockSize)
+    : m_instance(instance)
+    , m_device(device)
     , m_queue(queue)
 {
     m_commandPool = m_queue.CreateCommandPool();
     m_commandBuffer = prev::util::vk::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
     VmaAllocatorCreateInfo allocatorInfo = {};
+    allocatorInfo.instance = m_instance;
     allocatorInfo.physicalDevice = *m_device.GetGPU();
     allocatorInfo.device = m_device;
     allocatorInfo.preferredLargeHeapBlockSize = blockSize;
