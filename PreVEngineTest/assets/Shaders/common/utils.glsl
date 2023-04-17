@@ -62,10 +62,9 @@ float Luminance(in vec3 rgb)
 	return max(dot(rgb, kLum), 0.0001); // prevent zero result
 }
 
-float LinearizeDepth(in float depth, in float znear, in float zfar)
+float LinearizeDepth(in float depth, in float zNear, in float zFar)
 {
-	float zn = depth * 2.0 - 1.0; // convert back to ndc
-	return 2.0 * znear * zfar / (zfar + znear - (zfar - znear) * zn);
+	return zNear * zFar / (zFar + depth * (zNear - zFar));
 }
 
 float Median(in float r, in float g, in float b)

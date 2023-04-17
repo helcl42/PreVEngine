@@ -32,7 +32,7 @@ layout(binding = 5) uniform sampler2D dudvMapTexture;
 layout(binding = 6) uniform sampler2D normalMapTexture;
 layout(binding = 7) uniform sampler2D depthMapTexture;
 
-const float waveStrength = 0.05;
+const float waveStrength = 0.04;
 const float shineDamper = 20.0;
 const float reflectivity = 0.45;
 const float waterReflectivness = 0.7;
@@ -57,19 +57,7 @@ float CalculateWaterDepth(in vec2 texCoords)
 
 void main()
 {
-	float shadow = 1.0;
-    uint cascadeIndex = 0;
-    for(uint i = 0; i < SHADOW_MAP_CASCADE_COUNT - 1; i++) 
-    {
-        if(inViewPosition.z < uboFS.shadows.cascades[i].split.x)
-        {
-            cascadeIndex = i + 1;
-        }
-    }
-
-    vec4 shadowCoord = uboFS.shadows.cascades[cascadeIndex].viewProjectionMatrix * vec4(inWorldPosition, 1.0);
-    vec4 normalizedShadowCoord = shadowCoord / shadowCoord.w;
-    shadow = GetShadow(depthSampler, normalizedShadowCoord, cascadeIndex, 0.02);
+	float shadow = GetShadow(depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.005);
 	if(shadow < 0.999) {
 		shadow = 0.0;
 	}
@@ -85,7 +73,7 @@ void main()
     // distortion
 	vec2 distortedTexCoords = texture(dudvMapTexture, vec2(inTextureCoord.x + uboFS.moveFactor, inTextureCoord.y)).rg * 0.1;
 	distortedTexCoords = inTextureCoord + vec2(distortedTexCoords.x, distortedTexCoords.y + uboFS.moveFactor);
-	vec2 totalDistortion = (texture(dudvMapTexture, distortedTexCoords).rg * 2.0 - 1.0) * waveStrength * clamp(waterDepth / 5.0, 0.0, 1.0);
+	vec2 totalDistortion = (texture(dudvMapTexture, distortedTexCoords).rg * 2.0 - 1.0) * waveStrength * clamp(waterDepth / 12.0, 0.0, 1.0);
 
 	reflectTexCoord += totalDistortion;
 	reflectTexCoord = clamp(reflectTexCoord, 0.001, 0.999);
