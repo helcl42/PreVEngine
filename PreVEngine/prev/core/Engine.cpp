@@ -39,7 +39,7 @@ void Engine::InitSceneGraph(const std::shared_ptr<prev::scene::graph::ISceneNode
     m_scene->InitSceneGraph(rootNode);
 }
 
-void Engine::InitRenderer(const std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> >& rootRenderer)
+void Engine::InitRenderer(const std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData>>& rootRenderer)
 {
     m_scene->InitRenderer(rootRenderer);
 }
@@ -101,7 +101,7 @@ void Engine::operator()(const prev::window::WindowChangeEvent& windowChangeEvent
 
 void Engine::InitTiming()
 {
-    m_clock = std::make_unique<prev::util::Clock<float> >();
+    m_clock = std::make_unique<prev::util::Clock<float>>();
     m_fpsCounter = std::make_unique<prev::util::FPSCounter>();
 }
 
@@ -150,7 +150,7 @@ void Engine::InitDevice()
 
 void Engine::InitAllocator()
 {
-    m_allocator = std::make_shared<prev::core::memory::Allocator>(*m_device, *m_device->GetQueue(device::QueueType::GRAPHICS)); // Create "Vulkan Memory Aloocator"
+    m_allocator = std::make_shared<prev::core::memory::Allocator>(*m_instance, *m_device, *m_device->GetQueue(device::QueueType::GRAPHICS)); // Create "Vulkan Memory Aloocator"
     printf("Allocator created\n");
 }
 } // namespace prev::core
