@@ -48,7 +48,6 @@ Device::~Device()
 {
     vkDeviceWaitIdle(m_handle);
     vkDestroyDevice(m_handle, nullptr);
-    m_handle = nullptr;
 
     LOGI("Logical device destroyed\n");
 }
@@ -74,12 +73,13 @@ void Device::Print() const
 
 std::shared_ptr<Queue> Device::GetQueue(const QueueType queueType, const uint32_t index) const
 {
-    if (m_queues.find(queueType) == m_queues.cend()) {
+    const auto queuesIter{ m_queues.find(queueType) };
+    if (queuesIter == m_queues.cend()) {
         LOGE("Trying to retrieve invalid QueueType.\n");
         return nullptr;
     }
 
-    const auto& queuesGroup{ m_queues.at(queueType) };
+    const auto& queuesGroup{ queuesIter->second };
     if (index >= queuesGroup.size()) {
         LOGE("Trying access queue at invalid index %ud.\n", index);
         return nullptr;
@@ -88,16 +88,17 @@ std::shared_ptr<Queue> Device::GetQueue(const QueueType queueType, const uint32_
     return queuesGroup.at(index);
 }
 
-std::vector<std::shared_ptr<Queue> > Device::GetQueues(const QueueType queueType) const
+std::vector<std::shared_ptr<Queue>> Device::GetQueues(const QueueType queueType) const
 {
-    if (m_queues.find(queueType) == m_queues.cend()) {
+    const auto queuesIter{ m_queues.find(queueType) };
+    if (queuesIter == m_queues.cend()) {
         LOGE("Trying to retrieve invalid QueueType.\n");
         return {};
     }
-    return m_queues.at(queueType);
+    return queuesIter->second;
 }
 
-std::map<QueueType, std::vector<std::shared_ptr<Queue> > > Device::GetAllQueues() const
+std::map<QueueType, std::vector<std::shared_ptr<Queue>>> Device::GetAllQueues() const
 {
     return m_queues;
 }
