@@ -32,7 +32,7 @@ struct QueueMetadata {
 };
 
 struct QueueMetadataStorage {
-    std::map<QueueType, std::set<QueueMetadata> > queueGroups;
+    std::map<QueueType, std::set<QueueMetadata>> queueGroups;
 
     std::set<QueueMetadata> uniqueQueue;
 
@@ -62,7 +62,7 @@ struct QueueMetadataStorage {
         uint32_t count{ 0 };
         for (const auto& item : uniqueQueue) {
             if (item.family == familly) {
-                count++;
+                ++count;
             }
         }
         return count;
@@ -92,9 +92,9 @@ public:
 public:
     std::shared_ptr<Queue> GetQueue(const QueueType queueType, const uint32_t index = 0) const;
 
-    std::vector<std::shared_ptr<Queue> > GetQueues(const QueueType queueType) const;
+    std::vector<std::shared_ptr<Queue>> GetQueues(const QueueType queueType) const;
 
-    std::map<QueueType, std::vector<std::shared_ptr<Queue> > > GetAllQueues() const;
+    std::map<QueueType, std::vector<std::shared_ptr<Queue>>> GetAllQueues() const;
 
     std::vector<QueueType> GetAllQueueTypes() const;
 
@@ -110,7 +110,7 @@ private:
 
     VkDevice m_handle;
 
-    std::map<QueueType, std::vector<std::shared_ptr<Queue> > > m_queues;
+    std::map<QueueType, std::vector<std::shared_ptr<Queue>>> m_queues;
 };
 } // namespace prev::core::device
 
