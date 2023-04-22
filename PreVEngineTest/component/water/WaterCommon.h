@@ -11,7 +11,7 @@ constexpr float WATER_LEVEL{ -12.0f };
 #else
 constexpr float WATER_LEVEL{ -4.0f };
 #endif // WIN32
-constexpr float WATER_CLIP_PLANE_OFFSET{ 0.2f };
+constexpr float WATER_CLIP_PLANE_OFFSET{ 0.3f };
 constexpr float WATER_WAVE_SPEED{ 0.03f };
 constexpr uint32_t REFRACTION_EXTENT_DIVIDER{ 3 };
 constexpr uint32_t REFLECTION_EXTENT_DIVIDER{ 4 };
