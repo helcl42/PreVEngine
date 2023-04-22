@@ -11,8 +11,8 @@ public:
     ~ScreenSpacePipeline() = default;
 
 public:
-    VkPipeline Init() override;
+    bool Init() override;
 };
-}
+} // namespace prev_test::render::renderer::common::pipeline
 
 #endif // !__SCREE_SPACE_PIPELINE_H__

@@ -90,9 +90,11 @@ void ShadowMapDebugRenderer::AfterRender(const prev::render::RenderContext& rend
 
 void ShadowMapDebugRenderer::ShutDown()
 {
-    m_shader->ShutDown();
-
     m_pipeline->ShutDown();
+    m_pipeline = nullptr;
+
+    m_shader->ShutDown();
+    m_shader = nullptr;
 }
 
 void ShadowMapDebugRenderer::operator()(const prev::input::keyboard::KeyEvent& keyEvent)

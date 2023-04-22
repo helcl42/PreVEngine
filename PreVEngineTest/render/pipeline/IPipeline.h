@@ -6,7 +6,7 @@
 namespace prev_test::render::pipeline {
 class IPipeline {
 public:
-    virtual VkPipeline Init() = 0;
+    virtual bool Init() = 0;
 
     virtual void ShutDown() = 0;
 

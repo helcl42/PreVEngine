@@ -35,7 +35,7 @@ void TerrainShadowsRenderer::Init()
 
     LOGI("Terrain Shadows Pipeline created\n");
 
-    m_uniformsPool = std::make_unique<prev::core::memory::buffer::UBOPool<Uniforms> >(*allocator);
+    m_uniformsPool = std::make_unique<prev::core::memory::buffer::UBOPool<Uniforms>>(*allocator);
     m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
@@ -102,7 +102,9 @@ void TerrainShadowsRenderer::AfterRender(const prev::render::RenderContext& rend
 void TerrainShadowsRenderer::ShutDown()
 {
     m_pipeline->ShutDown();
+    m_pipeline = nullptr;
 
     m_shader->ShutDown();
+    m_shader = nullptr;
 }
 } // namespace prev_test::render::renderer::shadow

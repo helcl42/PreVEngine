@@ -8,10 +8,10 @@ CloudsPipeline::CloudsPipeline(const VkDevice device, const prev::render::shader
 {
 }
 
-VkPipeline CloudsPipeline::Init()
+bool CloudsPipeline::Init()
 {
     prev_test::render::pipeline::PipelineFactory pipelineFactory{};
     pipelineFactory.CreateDefaultComputePipeline(m_device, m_shaders, m_pipelineLayout, m_pipeline);
-    return m_pipeline;
+    return m_pipeline != VK_NULL_HANDLE;
 }
 } // namespace prev_test::render::renderer::sky::pipeline

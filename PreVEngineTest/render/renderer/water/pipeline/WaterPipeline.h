@@ -11,7 +11,7 @@ public:
     ~WaterPipeline() = default;
 
 public:
-    VkPipeline Init() override;
+    bool Init() override;
 };
 } // namespace prev_test::render::renderer::water::pipeline
 
