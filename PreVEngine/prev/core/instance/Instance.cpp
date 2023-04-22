@@ -89,7 +89,7 @@ void Instance::Create(const Layers& layers, const Extensions& extensions, const 
 
 void Instance::Print() const
 {
-    printf("->Instance %s created.\n", (!!m_instance) ? "" : "NOT");
+    LOGI("->Instance %s created.\n", (!!m_instance) ? "" : "NOT");
 }
 
 DebugReport& Instance::GetDebugReport()

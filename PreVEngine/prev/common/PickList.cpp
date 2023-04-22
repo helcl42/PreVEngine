@@ -112,7 +112,7 @@ uint32_t PickList::PickCount() const
 
 void PickList::Print() const
 {
-    printf("%s picked: %d of %d\n", GetName().c_str(), PickCount(), GetPickedCount());
+    LOGI("%s picked: %d of %d\n", GetName().c_str(), PickCount(), GetPickedCount());
     for (uint32_t i = 0; i < GetPickedCount(); i++) {
         bool picked = false;
         const char* name = GetNameByIndex(i);
@@ -121,7 +121,7 @@ void PickList::Print() const
         }
 
         if (picked) {
-            print(ConsoleColor::RESET, "\t%s %s\n", cTICK, name);
+            print(ConsoleColor::RESET, "\t%s %s\n", TICK_CHARACTER, name);
         } else {
             print(ConsoleColor::FAINT, "\t%s %s\n", " ", name);
         }

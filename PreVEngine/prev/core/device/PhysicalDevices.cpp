@@ -31,14 +31,14 @@ std::shared_ptr<PhysicalDevice> PhysicalDevices::FindPresentable(VkSurfaceKHR su
 
 void PhysicalDevices::Print(bool showQueues) const
 {
-    printf("Physical Devices: %zd\n", GetCount());
+    LOGI("Physical Devices: %zd\n", GetCount());
 
     size_t j = 0;
     for (const auto& gpu : m_gpuList) {
         const VkPhysicalDeviceProperties& props = gpu->GetProperties();
         std::string devType[] = { "OTHER", "INTEGRATED", "DISCRETE", "VIRTUAL", "CPU" };
         std::string vendor = gpu->GetVendorName();
-        printf("\t%zd: %s %s %s\n", j, devType[props.deviceType].c_str(), vendor.c_str(), props.deviceName);
+        LOGI("\t%zd: %s %s %s\n", j, devType[props.deviceType].c_str(), vendor.c_str(), props.deviceName);
 
         if (showQueues) {
             const auto queueFamilies{ gpu->GetQueueFamilies() };
@@ -46,7 +46,7 @@ void PhysicalDevices::Print(bool showQueues) const
                 const VkQueueFamilyProperties& props = queueFamilies.at(i);
 
                 uint32_t flags = props.queueFlags;
-                printf("\t\tQueue-family:%zd  count:%2d  flags:[ %s%s%s%s]\n", i, props.queueCount, (flags & 1) ? "GRAPHICS " : "", (flags & 2) ? "COMPUTE " : "", (flags & 4) ? "TRANSFER " : "", (flags & 8) ? "SPARSE " : "");
+                LOGI("\t\tQueue-family:%zd  count:%2d  flags:[ %s%s%s%s]\n", i, props.queueCount, (flags & 1) ? "GRAPHICS " : "", (flags & 2) ? "COMPUTE " : "", (flags & 4) ? "TRANSFER " : "", (flags & 8) ? "SPARSE " : "");
             }
         }
         j++;

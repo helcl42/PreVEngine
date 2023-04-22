@@ -151,6 +151,6 @@ void Engine::InitDevice()
 void Engine::InitAllocator()
 {
     m_allocator = std::make_shared<prev::core::memory::Allocator>(*m_instance, *m_device, *m_device->GetQueue(device::QueueType::GRAPHICS)); // Create "Vulkan Memory Aloocator"
-    printf("Allocator created\n");
+    LOGI("Allocator created\n");
 }
 } // namespace prev::core

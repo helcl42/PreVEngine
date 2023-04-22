@@ -14,16 +14,16 @@
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
-#define cTICK "\xFB" /* On Windows, use Square-root as tick mark */
+#define TICK_CHARACTER "\xFB" // On Windows, use Square-root as tick mark
 #define PAUSE system("pause")
 #elif __ANDROID__
 #include <android_native.h>
-#define cTICK "\u2713"
+#define TICK_CHARACTER "\u2713"
 #define PAUSE
 #elif __LINUX__
 #include <stdlib.h>
 #include <xkbcommon/xkbcommon.h>
-#define cTICK "\u2713"
+#define TICK_CHARACTER "\u2713"
 #define PAUSE
 #endif
 
@@ -65,7 +65,6 @@ void SetConsoleTextColor(const ConsoleColor color);
 #define _LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define _LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
 #define _LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
-//#define printf(...)  __android_log_print(ANDROID_LOG_INFO   ,LOG_TAG,__VA_ARGS__)
 #else
 #define _LOG(...)            \
     {                        \
@@ -149,7 +148,7 @@ void SetConsoleTextColor(const ConsoleColor color);
 //
 //  WARNING: If you enable USE_VULKAN_WRAPPER, make sure vulkan.h is NEVER #included before vulkan_wrapper.h
 //
-//#define USE_VULKAN_WRAPPER
+// #define USE_VULKAN_WRAPPER
 
 #ifdef USE_VULKAN_WRAPPER
 #include <vulkan_wrapper.h> // Android: This must be included AFTER native.h

@@ -197,20 +197,20 @@ bool Swapchain::SetPresentMode(VkPresentModeKHR preferredMode)
 
 void Swapchain::Print() const
 {
-    printf("Swapchain:\n");
+    LOGI("Swapchain:\n");
 
-    printf("\tFormat  = %3d : %s\n", m_swapchainCreateInfo.imageFormat, util::vk::FormatToString(m_swapchainCreateInfo.imageFormat).c_str());
-    printf("\tDepth   = %3d : %s\n", m_depthBuffer->GetFormat(), util::vk::FormatToString(m_depthBuffer->GetFormat()).c_str());
+    LOGI("\tFormat  = %3d : %s\n", m_swapchainCreateInfo.imageFormat, util::vk::FormatToString(m_swapchainCreateInfo.imageFormat).c_str());
+    LOGI("\tDepth   = %3d : %s\n", m_depthBuffer->GetFormat(), util::vk::FormatToString(m_depthBuffer->GetFormat()).c_str());
 
     const auto& extent{ m_swapchainCreateInfo.imageExtent };
-    printf("\tExtent  = %d x %d\n", extent.width, extent.height);
-    printf("\tBuffers = %d\n", (int)m_swapchainBuffers.size());
+    LOGI("\tExtent  = %d x %d\n", extent.width, extent.height);
+    LOGI("\tBuffers = %d\n", (int)m_swapchainBuffers.size());
 
     const auto modes{ GetPresentModes() };
-    printf("\tPresentMode:\n");
+    LOGI("\tPresentMode:\n");
     const auto& mode{ m_swapchainCreateInfo.presentMode };
     for (auto m : modes) {
-        print((m == mode) ? ConsoleColor::RESET : ConsoleColor::FAINT, "\t\t%s %s\n", (m == mode) ? cTICK : " ", util::vk::PresentModeToString(m).c_str());
+        print((m == mode) ? ConsoleColor::RESET : ConsoleColor::FAINT, "\t\t%s %s\n", (m == mode) ? TICK_CHARACTER : " ", util::vk::PresentModeToString(m).c_str());
     }
 }
 
@@ -274,7 +274,7 @@ void Swapchain::Apply()
         swapchainBuffer.extent = m_swapchainCreateInfo.imageExtent;
     }
 
-    printf("---Extent = %d x %d\n", newExtent.width, newExtent.height);
+    LOGI("---Extent = %d x %d\n", newExtent.width, newExtent.height);
 
     if (m_swapchainCreateInfo.oldSwapchain == VK_NULL_HANDLE) {
         LOGI("Swapchain created\n");

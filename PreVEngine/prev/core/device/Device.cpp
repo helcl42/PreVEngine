@@ -63,7 +63,7 @@ void Device::Print() const
         { QueueType::PROTECTED, "PROTECTED" }
     };
 
-    printf("Logical Device used queues:\n");
+    LOGI("Logical Device used queues:\n");
     for (const auto& [qGroupKey, gQroupList] : m_queues) {
         for (const auto& qGroupItem : gQroupList) {
             LOGI("Queue: %s index: %d family: %d flags: [ %s%s%s%s%s]%s\n", queuNames.at(qGroupKey).c_str(), qGroupItem->index, qGroupItem->family, (qGroupItem->flags & 1) ? "GRAPHICS " : "", (qGroupItem->flags & 2) ? "COMPUTE " : "", (qGroupItem->flags & 4) ? "TRANSFER " : "", (qGroupItem->flags & 8) ? "SPARSE " : "", (qGroupItem->flags & 16) ? "PROTECTED" : "", qGroupItem->surface ? " (can present)" : "");

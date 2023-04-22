@@ -61,7 +61,7 @@ bool DeviceFactory::FindQueue(const std::shared_ptr<PhysicalDevice>& gpu, VkQueu
 {
     auto familyIndex{ gpu->FindQueueFamily(flags, unwantedFlags, surface) };
     if (familyIndex < 0) {
-        LOGW("Could not create queueFamily with requested properties.\n");
+        LOGW("Could not find queueFamily with requested properties.\n");
         return false;
     }
 
