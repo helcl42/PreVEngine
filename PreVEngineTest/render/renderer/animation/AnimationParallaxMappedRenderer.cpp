@@ -30,6 +30,7 @@ void AnimationParallaxMappedRenderer::Init()
 
     prev::render::shader::ShaderFactory shaderFactory;
     m_shader = shaderFactory.CreateShaderFromFiles<shader::AnimationParallaxMappedShader>(*device, shader::AnimationParallaxMappedShader::GetPaths());
+    m_shader->Init();
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Animation Parallax Mapped Shader created\n");

@@ -31,6 +31,7 @@ void NormalMappedRenderer::Init()
 
     prev::render::shader::ShaderFactory shaderFactory;
     m_shader = shaderFactory.CreateShaderFromFiles<shader::NormalMappedShader>(*device, shader::NormalMappedShader::GetPaths());
+    m_shader->Init();
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Normal Mapped Shader created\n");

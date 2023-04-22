@@ -25,6 +25,7 @@ void ParticlesRenderer::Init()
 
     prev::render::shader::ShaderFactory shaderFactory;
     m_shader = shaderFactory.CreateShaderFromFiles<shader::ParticlesShader>(*device, shader::ParticlesShader::GetPaths());
+    m_shader->Init();
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Particles Shader created\n");

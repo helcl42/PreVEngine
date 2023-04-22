@@ -30,6 +30,7 @@ void TerrainParallaxMappedRenderer::Init()
 
     prev::render::shader::ShaderFactory shaderFactory;
     m_shader = shaderFactory.CreateShaderFromFiles<shader::TerrainParallaxMappedShader>(*device, shader::TerrainParallaxMappedShader::GetPaths());
+    m_shader->Init();
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Terrain Parallax Mapped Shader created\n");

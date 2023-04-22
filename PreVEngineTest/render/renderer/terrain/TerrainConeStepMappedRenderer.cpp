@@ -30,6 +30,7 @@ void TerrainConeStepMappedRenderer::Init()
 
     prev::render::shader::ShaderFactory shaderFactory;
     m_shader = shaderFactory.CreateShaderFromFiles<shader::TerrainConeStepMappedShader>(*device, shader::TerrainConeStepMappedShader::GetPaths());
+    m_shader->Init();
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Terrain Cone Step Mapped Shader created\n");

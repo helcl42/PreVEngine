@@ -27,6 +27,7 @@ void SunRenderer::Init()
 
     prev::render::shader::ShaderFactory shaderFactory;
     m_shader = shaderFactory.CreateShaderFromFiles<shader::SunOcclusionShader>(*device, shader::SunOcclusionShader::GetPaths());
+    m_shader->Init();
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Sun Shader created\n");

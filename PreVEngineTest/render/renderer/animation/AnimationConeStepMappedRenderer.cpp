@@ -31,6 +31,7 @@ void AnimationConeStepMappedRenderer::Init()
 
     prev::render::shader::ShaderFactory shaderFactory;
     m_shader = shaderFactory.CreateShaderFromFiles<shader::AnimationConeStepMappedShader>(*device, shader::AnimationConeStepMappedShader::GetPaths());
+    m_shader->Init();
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Animation Cone Step Mapped Shader created\n");

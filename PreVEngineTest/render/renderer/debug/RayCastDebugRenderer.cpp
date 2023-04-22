@@ -27,6 +27,7 @@ void RayCastDebugRenderer::Init()
 
     prev::render::shader::ShaderFactory shaderFactory;
     m_shader = shaderFactory.CreateShaderFromFiles<shader::RayCastDebugShader>(*device, shader::RayCastDebugShader::GetPaths());
+    m_shader->Init();
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("RayCast Debug Shader created\n");

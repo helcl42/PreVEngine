@@ -26,6 +26,7 @@ void BumpMappedShadowsRenderer::Init()
 
     prev::render::shader::ShaderFactory shaderFactory;
     m_shader = shaderFactory.CreateShaderFromFiles<shader::BumpMappedShadowsShader>(*device, shader::BumpMappedShadowsShader::GetPaths());
+    m_shader->Init();
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Bump Mapped Shadows Shader created\n");

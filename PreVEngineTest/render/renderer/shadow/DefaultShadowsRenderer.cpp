@@ -26,6 +26,7 @@ void DefaultShadowsRenderer::Init()
 
     prev::render::shader::ShaderFactory shaderFactory;
     m_shader = shaderFactory.CreateShaderFromFiles<shader::DefaultShadowsShader>(*device, shader::DefaultShadowsShader::GetPaths());
+    m_shader->Init();
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Default Shadows Shader created\n");
