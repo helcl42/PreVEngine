@@ -83,18 +83,15 @@ void FontMetadataFactory::ExtractCharactersData(FontMetadataFile& metaDataFile, 
 
 Character FontMetadataFactory::CreateSingleCharacter(FontMetadataFile& metaDataFile, const FontMetadataState& state, const int charCode) const
 {
-    const float xTex = (static_cast<float>(metaDataFile.GetValueAsInt("x")) + (state.padding[PADDING_LEFT_INDEX] - state.desiredPadding)) / state.imageWidth;
-    const float yTex = (static_cast<float>(metaDataFile.GetValueAsInt("y")) + (state.padding[PADDING_TOP_INDEX] - state.desiredPadding)) / state.imageWidth;
-    const int width = metaDataFile.GetValueAsInt("width") - (state.paddingWidth - (2 * state.desiredPadding));
-    const int height = metaDataFile.GetValueAsInt("height") - ((state.paddingHeight) - (2 * state.desiredPadding));
-    const float quadWidth = width * state.horizontalPerPixelSize;
-    const float quadHeight = height * state.verticalPerPixelSize;
-    const float xTexSize = static_cast<float>(width) / state.imageWidth;
-    const float yTexSize = static_cast<float>(height) / state.imageWidth;
-    const float xOff = (metaDataFile.GetValueAsInt("xoffset") + state.padding[PADDING_LEFT_INDEX] - state.desiredPadding) * state.horizontalPerPixelSize;
-    const float yOff = (metaDataFile.GetValueAsInt("yoffset") + (state.padding[PADDING_TOP_INDEX] - state.desiredPadding)) * state.verticalPerPixelSize;
+    const int width{ metaDataFile.GetValueAsInt("width") - (state.paddingWidth - (2 * state.desiredPadding)) };
+    const int height{ metaDataFile.GetValueAsInt("height") - ((state.paddingHeight) - (2 * state.desiredPadding)) };
+
+    const glm::vec2 textureCoord{ (static_cast<float>(metaDataFile.GetValueAsInt("x")) + (state.padding[PADDING_LEFT_INDEX] - state.desiredPadding)) / state.imageWidth, (static_cast<float>(metaDataFile.GetValueAsInt("y")) + (state.padding[PADDING_TOP_INDEX] - state.desiredPadding)) / state.imageWidth };
+    const glm::vec2 textureSize{ static_cast<float>(width) / state.imageWidth, static_cast<float>(height) / state.imageWidth };
+    const glm::vec2 offset{ (metaDataFile.GetValueAsInt("xoffset") + state.padding[PADDING_LEFT_INDEX] - state.desiredPadding) * state.horizontalPerPixelSize, (metaDataFile.GetValueAsInt("yoffset") + (state.padding[PADDING_TOP_INDEX] - state.desiredPadding)) * state.verticalPerPixelSize };
+    const glm::vec2 quadSize{ width * state.horizontalPerPixelSize, height * state.verticalPerPixelSize };
     const float xAdvance = (metaDataFile.GetValueAsInt("xadvance") - state.paddingWidth) * state.horizontalPerPixelSize;
-    return Character(charCode, glm::vec2(xTex, yTex), glm::vec2(xTexSize, yTexSize), glm::vec2(xOff, yOff), glm::vec2(quadWidth, quadHeight), xAdvance);
+    return Character(charCode, textureCoord, textureSize, offset, quadSize, xAdvance);
 }
 
 } // namespace prev_test::render::font
