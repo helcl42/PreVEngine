@@ -30,6 +30,7 @@ void AnimationTexturelessRenderer::Init()
 
     prev::render::shader::ShaderFactory shaderFactory;
     m_shader = shaderFactory.CreateShaderFromFiles<shader::AnimationTexturelessShader>(*device, shader::AnimationTexturelessShader::GetPaths());
+    m_shader->Init();
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Animation Textureless Shader created\n");

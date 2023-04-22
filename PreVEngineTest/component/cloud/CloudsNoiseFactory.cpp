@@ -20,6 +20,7 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsNoiseFactory::Cre
 
     prev::render::shader::ShaderFactory shaderFactory{};
     auto shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::CloudsPerlinWorleyNoiseShader>(*device, prev_test::render::renderer::sky::shader::CloudsPerlinWorleyNoiseShader::GetPaths());
+    shader->Init();
 
     auto pipeline = std::make_unique<prev_test::render::renderer::sky::pipeline::CloudsPerlinWorleyNoisePipeline>(*device, *shader);
     pipeline->Init();
@@ -71,8 +72,10 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsNoiseFactory::Cre
     allocator->GenerateMipmaps(noiseImageBuffer->GetImage(), noiseImageBuffer->GetFormat(), noiseImageBuffer->GetExtent(), noiseImageBuffer->GetMipLevels(), noiseImageBuffer->GetLayerCount());
 
     pipeline->ShutDown();
+    pipeline = nullptr;
 
     shader->ShutDown();
+    shader = nullptr;
 
     return noiseImageBuffer;
 }

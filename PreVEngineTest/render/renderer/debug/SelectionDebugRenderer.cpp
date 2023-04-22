@@ -28,6 +28,7 @@ void SelectionDebugRenderer::Init()
 
     prev::render::shader::ShaderFactory shaderFactory;
     m_shader = shaderFactory.CreateShaderFromFiles<shader::SelectionDebugShader>(*device, shader::SelectionDebugShader::GetPaths());
+    m_shader->Init();
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Selection Debug Shader created\n");

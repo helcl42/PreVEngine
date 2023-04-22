@@ -31,6 +31,7 @@ void ParallaxMappedRenderer::Init()
 
     prev::render::shader::ShaderFactory shaderFactory;
     m_shader = shaderFactory.CreateShaderFromFiles<shader::ParallaxMappedShader>(*device, shader::ParallaxMappedShader::GetPaths());
+    m_shader->Init();
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Prallax Mapped Shader created\n");

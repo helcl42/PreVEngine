@@ -30,6 +30,7 @@ void TerrainNormalMappedRenderer::Init()
 
     prev::render::shader::ShaderFactory shaderFactory;
     m_shader = shaderFactory.CreateShaderFromFiles<shader::TerrainNormalMappedShader>(*device, shader::TerrainNormalMappedShader::GetPaths());
+    m_shader->Init();
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Terrain Normal Mapped Shader created\n");

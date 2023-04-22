@@ -49,6 +49,7 @@ void SkyRenderer::Init()
 
     // compute sky
     m_conmputeSkyShader = shaderFactory.CreateShaderFromFiles<shader::SkyShader>(*device, shader::SkyShader::GetPaths());
+    m_conmputeSkyShader->Init();
     m_conmputeSkyShader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Sky Compute Shader created\n");
@@ -63,6 +64,7 @@ void SkyRenderer::Init()
 
     // compute sky post process
     m_conmputeSkyPostProcessShader = shaderFactory.CreateShaderFromFiles<shader::SkyPostProcessShader>(*device, shader::SkyPostProcessShader::GetPaths());
+    m_conmputeSkyPostProcessShader->Init();
     m_conmputeSkyPostProcessShader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Sky PostProcess Compute Shader created\n");
@@ -77,6 +79,7 @@ void SkyRenderer::Init()
 
     // compositor
     m_shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::common::shader::ScreenSpaceShader>(*device, prev_test::render::renderer::common::shader::ScreenSpaceShader::GetPaths());
+    m_shader->Init();
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Sky Screen Space Shader created\n");

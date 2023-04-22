@@ -29,11 +29,12 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsFactory::Create(c
 
     prev::render::shader::ShaderFactory shaderFactory{};
     auto shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::CloudsShader>(*device, prev_test::render::renderer::sky::shader::CloudsShader::GetPaths());
+    shader->Init();
 
     auto pipeline = std::make_unique<prev_test::render::renderer::sky::pipeline::CloudsPipeline>(*device, *shader);
     pipeline->Init();
 
-    auto uniformsPool = std::make_unique<prev::core::memory::buffer::UBOPool<Uniforms> >(*allocator);
+    auto uniformsPool = std::make_unique<prev::core::memory::buffer::UBOPool<Uniforms>>(*allocator);
     uniformsPool->AdjustCapactity(3, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
     auto commandPool = computeQueue->CreateCommandPool();
@@ -92,8 +93,10 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsFactory::Create(c
     allocator->TransitionImageLayout(weatherImageBuffer->GetImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, weatherImageFormat, weatherImageBuffer->GetMipLevels());
 
     pipeline->ShutDown();
+    pipeline = nullptr;
 
     shader->ShutDown();
+    shader = nullptr;
 
     return weatherImageBuffer;
 }

@@ -26,6 +26,7 @@ void TextureDebugRenderer::Init()
 
     prev::render::shader::ShaderFactory shaderFactory;
     m_shader = shaderFactory.CreateShaderFromFiles<shader::TextureDebugShader>(*device, shader::TextureDebugShader::GetPaths());
+    m_shader->Init();
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Texture Debug Shader created\n");

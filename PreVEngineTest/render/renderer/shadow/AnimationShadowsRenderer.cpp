@@ -26,6 +26,7 @@ void AnimationShadowsRenderer::Init()
 
     prev::render::shader::ShaderFactory shaderFactory;
     m_shader = shaderFactory.CreateShaderFromFiles<shader::AnimatedShadowsShader>(*device, shader::AnimatedShadowsShader::GetPaths());
+    m_shader->Init();
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
     LOGI("Animation Shadows Shader created\n");
