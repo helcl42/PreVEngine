@@ -36,13 +36,13 @@ void RayCastDebugRenderer::Init()
 
     LOGI("RayCast Debug Pipeline created\n");
 
-    m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
+    m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS>>(*allocator);
     m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
-    m_uniformsPoolGS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsGS> >(*allocator);
+    m_uniformsPoolGS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsGS>>(*allocator);
     m_uniformsPoolGS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
-    m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
+    m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS>>(*allocator);
     m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
@@ -118,9 +118,11 @@ void RayCastDebugRenderer::AfterRender(const prev::render::RenderContext& render
 
 void RayCastDebugRenderer::ShutDown()
 {
-    m_shader->ShutDown();
-
     m_pipeline->ShutDown();
+    m_pipeline = nullptr;
+
+    m_shader->ShutDown();
+    m_shader = nullptr;
 }
 } // namespace prev_test::render::renderer::debug
 

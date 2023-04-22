@@ -36,7 +36,7 @@ void SunRenderer::Init()
 
     LOGI("Sun Pipeline created\n");
 
-    m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
+    m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS>>(*allocator);
     m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
     VkQueryPoolCreateInfo queryPoolInfo = { VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO };
@@ -108,11 +108,11 @@ void SunRenderer::AfterRender(const prev::render::RenderContext& renderContext, 
 {
     auto device = prev::core::DeviceProvider::Instance().GetDevice();
 
-    //#if defined(__ANDROID__)
+    // #if defined(__ANDROID__)
     const auto result{ vkGetQueryPoolResults(*device, m_queryPool, 0, 1, sizeof(m_passedSamples), &m_passedSamples, sizeof(uint64_t), VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_PARTIAL_BIT) };
-    //#else
-    // const auto result{ vkGetQueryPoolResults(*device, m_queryPool, 0, 1, sizeof(m_passedSamples), &m_passedSamples, sizeof(uint64_t), VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT) };
-    //#endif
+    // #else
+    //  const auto result{ vkGetQueryPoolResults(*device, m_queryPool, 0, 1, sizeof(m_passedSamples), &m_passedSamples, sizeof(uint64_t), VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT) };
+    // #endif
     const float ratio{ glm::clamp((static_cast<float>(m_passedSamples) / static_cast<float>(m_maxNumberOfSamples * m_renderPass->GetSamplesCount())), 0.0f, 1.0f) * 1.2f };
     // LOGI("Result: %s Passed samples: %lld Max: %lld Ratio: %f\n", VkResultStr(result),  m_passedSamples,  m_maxNumberOfSamples, ratio);
     prev::event::EventChannel::Post(prev_test::render::renderer::sky::SunVisibilityEvent{ ratio });
@@ -123,8 +123,10 @@ void SunRenderer::ShutDown()
     auto device = prev::core::DeviceProvider::Instance().GetDevice();
     vkDestroyQueryPool(*device, m_queryPool, nullptr);
 
-    m_shader->ShutDown();
-
     m_pipeline->ShutDown();
+    m_pipeline = nullptr;
+
+    m_shader->ShutDown();
+    m_shader = nullptr;
 }
 } // namespace prev_test::render::renderer::sky

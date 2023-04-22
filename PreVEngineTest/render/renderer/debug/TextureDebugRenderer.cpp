@@ -84,8 +84,10 @@ void TextureDebugRenderer::AfterRender(const prev::render::RenderContext& render
 
 void TextureDebugRenderer::ShutDown()
 {
-    m_shader->ShutDown();
-
     m_pipeline->ShutDown();
+    m_pipeline = nullptr;
+
+    m_shader->ShutDown();
+    m_shader = nullptr;
 }
 } // namespace prev_test::render::renderer::debug

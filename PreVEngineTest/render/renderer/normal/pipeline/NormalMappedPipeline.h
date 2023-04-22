@@ -11,7 +11,7 @@ public:
     ~NormalMappedPipeline() = default;
 
 public:
-    VkPipeline Init() override;
+    bool Init() override;
 };
 } // namespace prev_test::render::renderer::normal::pipeline
 

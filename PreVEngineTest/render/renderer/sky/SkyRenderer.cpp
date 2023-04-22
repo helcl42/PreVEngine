@@ -58,7 +58,7 @@ void SkyRenderer::Init()
 
     LOGI("Sky Compute Pipeline created\n");
 
-    m_uniformsPoolSkyCS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsSkyCS> >(*allocator);
+    m_uniformsPoolSkyCS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsSkyCS>>(*allocator);
     m_uniformsPoolSkyCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
     // compute sky post process
@@ -72,7 +72,7 @@ void SkyRenderer::Init()
 
     LOGI("Sky PostProcess Compute Pipeline created\n");
 
-    m_uniformsPoolSkyPorstProcessCS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsSkyPostProcessCS> >(*allocator);
+    m_uniformsPoolSkyPorstProcessCS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsSkyPostProcessCS>>(*allocator);
     m_uniformsPoolSkyPorstProcessCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
     // compositor
@@ -286,14 +286,23 @@ void SkyRenderer::ShutDown()
         m_skyColorImageBuffer = nullptr;
     }
 
-    m_shader->ShutDown();
     m_pipeline->ShutDown();
+    m_pipeline = nullptr;
+
+    m_shader->ShutDown();
+    m_shader = nullptr;
+
+    m_computeSkyPostProcessPipeline->ShutDown();
+    m_computeSkyPostProcessPipeline = nullptr;
 
     m_conmputeSkyPostProcessShader->ShutDown();
-    m_computeSkyPostProcessPipeline->ShutDown();
+    m_conmputeSkyPostProcessShader = nullptr;
+
+    m_computeSkyPipeline->ShutDown();
+    m_computeSkyPipeline = nullptr;
 
     m_conmputeSkyShader->ShutDown();
-    m_computeSkyPipeline->ShutDown();
+    m_conmputeSkyShader = nullptr;
 }
 
 void SkyRenderer::UpdateImageBufferExtents(const VkExtent2D& extent, std::shared_ptr<prev::core::memory::image::IImageBuffer>& imageBuffer)

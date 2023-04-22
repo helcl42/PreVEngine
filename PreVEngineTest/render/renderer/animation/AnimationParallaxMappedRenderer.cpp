@@ -39,10 +39,10 @@ void AnimationParallaxMappedRenderer::Init()
 
     LOGI("Animation Parallax Mapped Pipeline created\n");
 
-    m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
+    m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS>>(*allocator);
     m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
-    m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
+    m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS>>(*allocator);
     m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
@@ -90,9 +90,11 @@ void AnimationParallaxMappedRenderer::AfterRender(const prev::render::RenderCont
 
 void AnimationParallaxMappedRenderer::ShutDown()
 {
-    m_shader->ShutDown();
-
     m_pipeline->ShutDown();
+    m_pipeline = nullptr;
+
+    m_shader->ShutDown();
+    m_shader = nullptr;
 }
 
 void AnimationParallaxMappedRenderer::RenderMeshNode(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData, const prev_test::render::MeshNode& meshNode)

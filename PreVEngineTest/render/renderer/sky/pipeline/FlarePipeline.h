@@ -11,7 +11,7 @@ public:
     ~FlarePipeline() = default;
 
 public:
-    VkPipeline Init() override;
+    bool Init() override;
 };
 } // namespace prev_test::render::renderer::sky::pipeline
 

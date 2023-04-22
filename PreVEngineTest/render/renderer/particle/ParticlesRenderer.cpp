@@ -34,10 +34,10 @@ void ParticlesRenderer::Init()
 
     LOGI("Particles Pipeline created\n");
 
-    m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS> >(*allocator);
+    m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS>>(*allocator);
     m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
-    m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS> >(*allocator);
+    m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS>>(*allocator);
     m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
     m_instanceDataBuffer = std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator);
@@ -100,7 +100,7 @@ void ParticlesRenderer::Render(const prev::render::RenderContext& renderContext,
             vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
             vkCmdBindVertexBuffers(renderContext.commandBuffer, 1, 1, instanceBuffers, offsets);
             vkCmdBindIndexBuffer(renderContext.commandBuffer, *particlesComponent->GetModel()->GetIndexBuffer(), 0, particlesComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-            //vkCmdDrawIndexed(renderContext.commandBuffer, particlesComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+            // vkCmdDrawIndexed(renderContext.commandBuffer, particlesComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
             vkCmdDrawIndexed(renderContext.commandBuffer, particlesComponent->GetModel()->GetIndexBuffer()->GetCount(), static_cast<uint32_t>(particles.size()), 0, 0, 0);
         }
     }
@@ -120,8 +120,10 @@ void ParticlesRenderer::AfterRender(const prev::render::RenderContext& renderCon
 
 void ParticlesRenderer::ShutDown()
 {
-    m_shader->ShutDown();
-
     m_pipeline->ShutDown();
+    m_pipeline = nullptr;
+
+    m_shader->ShutDown();
+    m_shader = nullptr;
 }
 } // namespace prev_test::render::renderer::particle

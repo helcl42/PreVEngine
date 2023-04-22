@@ -6,10 +6,10 @@
 #include "../../../component/render/IAnimationRenderComponent.h"
 #include "../../../component/transform/ITransformComponent.h"
 
+#include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/buffer/UniformBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
-#include <prev/core/AllocatorProvider.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 
@@ -35,7 +35,7 @@ void AnimationShadowsRenderer::Init()
 
     LOGI("Animation Shadows Pipeline created\n");
 
-    m_uniformsPool = std::make_unique<prev::core::memory::buffer::UBOPool<Uniforms> >(*allocator);
+    m_uniformsPool = std::make_unique<prev::core::memory::buffer::UBOPool<Uniforms>>(*allocator);
     m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
@@ -83,8 +83,10 @@ void AnimationShadowsRenderer::AfterRender(const prev::render::RenderContext& re
 void AnimationShadowsRenderer::ShutDown()
 {
     m_pipeline->ShutDown();
+    m_pipeline = nullptr;
 
     m_shader->ShutDown();
+    m_shader = nullptr;
 }
 
 void AnimationShadowsRenderer::RenderMeshNode(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const ShadowsRenderContextUserData& shadowsRenderContextUserData, const prev_test::render::MeshNode& meshNode)

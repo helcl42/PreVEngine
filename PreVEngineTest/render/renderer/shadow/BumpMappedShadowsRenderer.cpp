@@ -35,7 +35,7 @@ void BumpMappedShadowsRenderer::Init()
 
     LOGI("Bump Mapped Shadows Pipeline created\n");
 
-    m_uniformsPool = std::make_unique<prev::core::memory::buffer::UBOPool<Uniforms> >(*allocator);
+    m_uniformsPool = std::make_unique<prev::core::memory::buffer::UBOPool<Uniforms>>(*allocator);
     m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
@@ -84,8 +84,10 @@ void BumpMappedShadowsRenderer::AfterRender(const prev::render::RenderContext& r
 void BumpMappedShadowsRenderer::ShutDown()
 {
     m_pipeline->ShutDown();
+    m_pipeline = nullptr;
 
     m_shader->ShutDown();
+    m_shader = nullptr;
 }
 
 void BumpMappedShadowsRenderer::RenderMeshNode(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const ShadowsRenderContextUserData& renderContextUserData, const prev_test::render::MeshNode& meshNode)

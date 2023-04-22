@@ -8,10 +8,10 @@ AnimatedBumpMappedShadowsPipeline::AnimatedBumpMappedShadowsPipeline(const VkDev
 {
 }
 
-VkPipeline AnimatedBumpMappedShadowsPipeline::Init()
+bool AnimatedBumpMappedShadowsPipeline::Init()
 {
     prev_test::render::pipeline::PipelineFactory pipelineFactory{};
     pipelineFactory.CreateShadowsPipeline(m_device, m_shaders, m_renderPass, m_pipelineLayout, m_pipeline);
-    return m_pipeline;
+    return m_pipeline != VK_NULL_HANDLE;
 }
 } // namespace prev_test::render::renderer::shadow::pipeline
