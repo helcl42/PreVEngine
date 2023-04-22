@@ -360,7 +360,7 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
         viewMatrix,
         projectionMatrix,
         newCameraPosition,
-        glm::vec4(0.0f, 1.0f, 0.0f, -(prev_test::component::water::WATER_LEVEL + prev_test::component::water::WATER_CLIP_PLANE_OFFSET)),
+        glm::vec4(0.0f, 1.0f, 0.0f, -(prev_test::component::water::WATER_LEVEL + prev_test::component::water::WATER_CLIP_PLANE_OFFSET / 20.0)),
         glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane()),
         prev_test::common::intersection::Frustum{ projectionMatrix, viewMatrix }
     };
