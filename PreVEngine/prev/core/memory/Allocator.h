@@ -24,8 +24,6 @@ public:
 
     void DestroyImage(VkImage image, VkImageView view, VmaAllocation alloc);
 
-    void CreateImageView(const VkImage image, const VkFormat format, const VkImageViewType viewType, const uint32_t mipLevels, const uint32_t layerCount, const VkImageAspectFlags aspectFlags, VkImageView& outImagaView);
-
 public:
     void CopyBuffer(const VkBuffer srcBuffer, const VkDeviceSize size, VkBuffer dstBuffer);
 

@@ -1,5 +1,7 @@
 #include "DepthImageBuffer.h"
 
+#include "../../../util/VkUtils.h"
+
 namespace prev::core::memory::image {
 DepthImageBuffer::DepthImageBuffer(Allocator& allocator)
     : AbstractImageBuffer(allocator)
@@ -30,7 +32,8 @@ void DepthImageBuffer::Resize(const VkExtent3D& extent)
 #else
     m_allocator.TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, m_format, m_mipLevels, m_layerCount);
 #endif
-    m_allocator.CreateImageView(m_image, m_format, m_imageViewType, m_mipLevels, m_layerCount, VK_IMAGE_ASPECT_DEPTH_BIT, m_imageView);
+
+    m_imageView = prev::util::vk::CreateImageView(m_allocator.GetDevice(), m_image, m_format, m_imageViewType, m_mipLevels, VK_IMAGE_ASPECT_DEPTH_BIT, m_layerCount);
 
     m_extent = extent;
 }

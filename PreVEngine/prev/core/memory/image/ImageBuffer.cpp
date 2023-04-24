@@ -1,6 +1,7 @@
 #include "ImageBuffer.h"
 
 #include "../../../util/MathUtils.h"
+#include "../../../util/VkUtils.h"
 #include "../../instance/Validation.h"
 
 namespace prev::core::memory::image {
@@ -33,7 +34,7 @@ void ImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
         m_allocator.TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, m_format, m_mipLevels, createInfo.layerCount);
     }
 
-    m_allocator.CreateImageView(m_image, createInfo.format, createInfo.viewType, m_mipLevels, createInfo.layerCount, VK_IMAGE_ASPECT_COLOR_BIT, m_imageView);
+    m_imageView = prev::util::vk::CreateImageView(m_allocator.GetDevice(), m_image, m_format, m_imageViewType, m_mipLevels, VK_IMAGE_ASPECT_COLOR_BIT, createInfo.layerCount);
 
     CreateSampler(static_cast<float>(m_mipLevels), createInfo.addressMode, createInfo.filteringEnabled);
 }
