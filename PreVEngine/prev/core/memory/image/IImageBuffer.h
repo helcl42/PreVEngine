@@ -12,15 +12,9 @@ public:
 
     virtual void Destroy() = 0;
 
-    virtual void CreateSampler(const float maxLod = 1.0f, const VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, const bool enableFiltering = true) = 0;
-
-    virtual void UpdateSampler(const VkSamplerCreateInfo& samplerInfo) = 0;
-
     virtual VkImage GetImage() const = 0;
 
     virtual VkImageView GetImageView() const = 0;
-
-    virtual VkSampler GetSampler() const = 0;
 
     virtual VkFormat GetFormat() const = 0;
 

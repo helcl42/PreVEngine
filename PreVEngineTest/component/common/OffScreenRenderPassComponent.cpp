@@ -43,9 +43,19 @@ std::shared_ptr<prev::core::memory::image::IImageBuffer> OffScreenRenderPassComp
     return m_imageBuffer;
 }
 
+std::shared_ptr<prev::render::sampler::Sampler> OffScreenRenderPassComponent::GetColorSampler() const
+{
+    return m_colorSampler;
+}
+
 std::shared_ptr<prev::core::memory::image::IImageBuffer> OffScreenRenderPassComponent::GetDepthImageBuffer() const
 {
     return m_depthBuffer;
+}
+
+std::shared_ptr<prev::render::sampler::Sampler> OffScreenRenderPassComponent::GetDepthSampler() const
+{
+    return m_depthSampler;
 }
 
 VkFramebuffer OffScreenRenderPassComponent::GetFrameBuffer() const
@@ -59,12 +69,14 @@ void OffScreenRenderPassComponent::InitBuffers()
     auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
 
     m_imageBuffer = std::make_shared<prev::core::memory::image::ColorImageBuffer>(*allocator);
-    m_imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, COLOR_FORMAT, VK_SAMPLE_COUNT_1_BIT, 0, false, true, VK_IMAGE_VIEW_TYPE_2D });
-    m_imageBuffer->CreateSampler();
+    m_imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, COLOR_FORMAT, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D });
+
+    m_colorSampler = std::make_shared<prev::render::sampler::Sampler>(*device, static_cast<float>(m_imageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f);
 
     m_depthBuffer = std::make_shared<prev::core::memory::image::DepthImageBuffer>(*allocator);
-    m_depthBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, DEPTH_FORMAT, VK_SAMPLE_COUNT_1_BIT, 0, false, false, VK_IMAGE_VIEW_TYPE_2D });
-    m_depthBuffer->CreateSampler(1.0f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, false);
+    m_depthBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, DEPTH_FORMAT, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D });
+
+    m_depthSampler = std::make_shared<prev::render::sampler::Sampler>(*device, 1.0f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_NEAREST, VK_FILTER_NEAREST, VK_SAMPLER_MIPMAP_MODE_NEAREST);
 
     m_frameBuffer = prev::util::vk::CreateFrameBuffer(*device, *m_renderPass, { m_imageBuffer->GetImageView(), m_depthBuffer->GetImageView() }, GetExtent());
 }
@@ -77,8 +89,15 @@ void OffScreenRenderPassComponent::ShutDownBuffers()
 
     vkDestroyFramebuffer(*device, m_frameBuffer, nullptr);
 
+    m_depthSampler = nullptr;
+
     m_depthBuffer->Destroy();
+    m_depthBuffer = nullptr;
+
+    m_colorSampler = nullptr;
+
     m_imageBuffer->Destroy();
+    m_imageBuffer = nullptr;
 }
 
 void OffScreenRenderPassComponent::InitRenderPass()

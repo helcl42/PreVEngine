@@ -33,7 +33,7 @@ std::unique_ptr<Image> ImageFactory::CreateImage(const std::string& filename, bo
     int w, h, n;
     stbi_set_flip_vertically_on_load(flipVertically);
 
-    uint8_t* imageBytes = (uint8_t*)stbi_load(filename.c_str(), &w, &h, &n, sizeof(PixelRGBA));
+    uint8_t* imageBytes = reinterpret_cast<uint8_t*>(stbi_load(filename.c_str(), &w, &h, &n, sizeof(PixelRGBA)));
     if (!imageBytes) {
         LOGE("Image: Failed to load texture: %s", filename.c_str());
         return nullptr;
@@ -53,7 +53,7 @@ std::unique_ptr<Image> ImageFactory::CreateImageFromMemory(const uint8_t* data, 
     LOGI("Loading image from memory: %d bytes\n", dataLength);
 
     int w, h, c;
-    uint8_t* imageBytes = (uint8_t*)stbi_load_from_memory(data, dataLength, &w, &h, &c, sizeof(PixelRGBA));
+    uint8_t* imageBytes = reinterpret_cast<uint8_t*>(stbi_load_from_memory(data, dataLength, &w, &h, &c, sizeof(PixelRGBA)));
     if (!imageBytes) {
         LOGE("Image: Failed to load texture from memory");
         return nullptr;

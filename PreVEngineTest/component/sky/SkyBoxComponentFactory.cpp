@@ -23,7 +23,7 @@ std::unique_ptr<ISkyBoxComponent> SkyBoxComponentFactory::Create() const
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     prev_test::render::material::MaterialFactory materialFactory{};
-    auto material{ materialFactory.CreateCubeMap({ glm::vec4{ 1.0f }, 1.0f, 0.0f, false }, materialPaths, *allocator) };
+    auto material{ materialFactory.CreateCubeMap({ glm::vec4{ 1.0f }, 1.0f, 0.0f, VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE }, materialPaths, *allocator) };
 
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh{ meshFactory.CreateCube() };

@@ -131,10 +131,10 @@ void TerrainRenderer::Render(const prev::render::RenderContext& renderContext, c
 
             uboFS->Update(&uniformsFS);
 
-            m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), shadowsComponent->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+            m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), *shadowsComponent->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
             for (size_t i = 0; i < 4; i++) {
                 const auto material{ terrainComponent->GetMaterials().at(i) };
-                m_shader->Bind("colorSampler[" + std::to_string(i) + "]", *material->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                m_shader->Bind("colorSampler[" + std::to_string(i) + "]", material->GetImageBuffer()->GetImageView(), *material->GetImageSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             }
             m_shader->Bind("uboVS", *uboVS);
             m_shader->Bind("uboFS", *uboFS);

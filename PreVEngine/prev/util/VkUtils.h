@@ -151,6 +151,39 @@ inline VkVertexInputAttributeDescription CreateVertexInputAttributeDescription(c
     return inputAttrDescription;
 }
 
+inline VkSampler CreateSampler(const VkDevice device, const float maxLod, const VkSamplerAddressMode addressMode, const VkFilter minFilter, const VkFilter magFilter, const VkSamplerMipmapMode mipMapMode, const bool enableAnisotropyFilter = false, const float maxAnisotropy = 16.0f)
+{
+    VkSampler sampler;
+
+    VkSamplerCreateInfo samplerCreateInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
+    if (enableAnisotropyFilter) {
+        samplerCreateInfo.anisotropyEnable = VK_TRUE;
+        samplerCreateInfo.maxAnisotropy = maxAnisotropy;
+    } else {
+        samplerCreateInfo.anisotropyEnable = VK_FALSE;
+        samplerCreateInfo.maxAnisotropy = 1.0;
+    }
+
+    samplerCreateInfo.minFilter = minFilter;
+    samplerCreateInfo.magFilter = magFilter;
+    samplerCreateInfo.mipmapMode = mipMapMode;
+
+    samplerCreateInfo.addressModeU = addressMode;
+    samplerCreateInfo.addressModeV = addressMode;
+    samplerCreateInfo.addressModeW = addressMode;
+    samplerCreateInfo.mipLodBias = 0.0f;
+
+    samplerCreateInfo.compareEnable = VK_FALSE;
+    samplerCreateInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+    samplerCreateInfo.minLod = 0.0f;
+    samplerCreateInfo.maxLod = maxLod;
+    samplerCreateInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    samplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
+    VKERRCHECK(vkCreateSampler(device, &samplerCreateInfo, nullptr, &sampler));
+
+    return sampler;
+}
+
 inline VkSampleCountFlagBits GetMaxUsableSampleCount(const VkPhysicalDevice physicalDevice)
 {
     VkPhysicalDeviceProperties physicalDeviceProperties;
@@ -201,18 +234,18 @@ inline std::string FormatToString(const VkFormat fmt)
         return #f
     switch (fmt) {
         STR(VK_FORMAT_UNDEFINED); //  0
-        //Color
+        // Color
         STR(VK_FORMAT_R5G6B5_UNORM_PACK16); //  4
         STR(VK_FORMAT_R8G8B8A8_UNORM); // 37
         STR(VK_FORMAT_R8G8B8A8_SRGB); // 43
         STR(VK_FORMAT_B8G8R8A8_UNORM); // 44
         STR(VK_FORMAT_B8G8R8A8_SRGB); // 50
-        //Depth
-        STR(VK_FORMAT_D32_SFLOAT); //126
-        STR(VK_FORMAT_D32_SFLOAT_S8_UINT); //130
-        STR(VK_FORMAT_D24_UNORM_S8_UINT); //129
-        STR(VK_FORMAT_D16_UNORM_S8_UINT); //128
-        STR(VK_FORMAT_D16_UNORM); //124
+        // Depth
+        STR(VK_FORMAT_D32_SFLOAT); // 126
+        STR(VK_FORMAT_D32_SFLOAT_S8_UINT); // 130
+        STR(VK_FORMAT_D24_UNORM_S8_UINT); // 129
+        STR(VK_FORMAT_D16_UNORM_S8_UINT); // 128
+        STR(VK_FORMAT_D16_UNORM); // 124
     default:
         return "";
     }

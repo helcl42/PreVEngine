@@ -1,7 +1,7 @@
 #include "LensFlareComponent.h"
 
 namespace prev_test::component::sky {
-LensFlareComponent::LensFlareComponent(const std::vector<std::shared_ptr<Flare> >& flares, float spacing, const std::shared_ptr<prev_test::render::IModel>& model)
+LensFlareComponent::LensFlareComponent(const std::vector<std::shared_ptr<Flare>>& flares, float spacing, const std::shared_ptr<prev_test::render::IModel>& model)
     : m_flares(flares)
     , m_spacing(spacing)
     , m_model(model)
@@ -25,7 +25,7 @@ void LensFlareComponent::Update(const glm::mat4& projectionMatrix, const glm::ma
     }
 }
 
-const std::vector<std::shared_ptr<Flare> >& LensFlareComponent::GetFlares() const
+const std::vector<std::shared_ptr<Flare>>& LensFlareComponent::GetFlares() const
 {
     return m_flares;
 }
@@ -48,9 +48,10 @@ bool LensFlareComponent::ConvertWorldSpaceToScreenSpaceCoord(const glm::vec3& wo
 void LensFlareComponent::UpdateFlareTexrures(const glm::vec2& sunToCenterDirection, const glm::vec2& sunPositionInScreenSpace)
 {
     for (unsigned int i = 0; i < m_flares.size(); i++) {
-        const auto direction = sunToCenterDirection * ((i + 1) * m_spacing);
-        const auto flarePosition = sunPositionInScreenSpace + direction;
-        m_flares[i]->SetScreenSpacePosition(flarePosition);
+        auto& flare{ m_flares[i] };
+        const auto direction{ sunToCenterDirection * ((i + 1) * m_spacing) };
+        const auto flarePosition{ sunPositionInScreenSpace + direction };
+        flare->SetScreenSpacePosition(flarePosition);
     }
 }
 } // namespace prev_test::component::sky

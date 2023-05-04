@@ -3,6 +3,7 @@
 
 #include <prev/core/memory/image/IImageBuffer.h>
 #include <prev/render/pass/RenderPass.h>
+#include <prev/render/sampler/Sampler.h>
 
 namespace prev_test::component::common {
 class IOffScreenRenderPassComponent {
@@ -17,7 +18,11 @@ public:
 
     virtual std::shared_ptr<prev::core::memory::image::IImageBuffer> GetColorImageBuffer() const = 0;
 
+    virtual std::shared_ptr<prev::render::sampler::Sampler> GetColorSampler() const = 0;
+
     virtual std::shared_ptr<prev::core::memory::image::IImageBuffer> GetDepthImageBuffer() const = 0;
+
+    virtual std::shared_ptr<prev::render::sampler::Sampler> GetDepthSampler() const = 0;
 
     virtual VkFramebuffer GetFrameBuffer() const = 0;
 

@@ -1,22 +1,37 @@
 #include "Flare.h"
 
+#include <prev/core/DeviceProvider.h>
+
 namespace prev_test::component::sky {
-Flare::Flare(const std::shared_ptr<prev::render::image::Image>& image, const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const float scale)
-    : m_image(image)
-    , m_imageBuffer(imageBuffer)
+Flare::Flare(const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const std::shared_ptr<prev::render::sampler::Sampler>& sampler, const float scale)
+    : m_imageBuffer(imageBuffer)
+    , m_sampler(sampler)
     , m_scale(scale)
     , m_screenSpacePosition({ 0.0f, 0.0f })
 {
 }
 
-std::shared_ptr<prev::render::image::Image> Flare::GetImage() const
+Flare::~Flare()
 {
-    return m_image;
+    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
+
+    vkDeviceWaitIdle(*device);
+
+    m_imageBuffer->Destroy();
+    m_imageBuffer = nullptr;
+
+    // TODO - have one sampler in renderer instead ???
+    m_sampler = nullptr;
 }
 
 std::shared_ptr<prev::core::memory::image::IImageBuffer> Flare::GetImageBuffer() const
 {
     return m_imageBuffer;
+}
+
+std::shared_ptr<prev::render::sampler::Sampler> Flare::GetSampler() const
+{
+    return m_sampler;
 }
 
 float Flare::GetScale() const

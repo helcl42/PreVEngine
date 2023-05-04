@@ -1,11 +1,12 @@
 #include "TerrainComponentFactory.h"
+#include "HeightGenerator.h"
+#include "TerrainComponent.h"
+#include "TerrainMesh.h"
+
 #include "../../common/AssetManager.h"
 #include "../../render/material/MaterialFactory.h"
 #include "../../render/mesh/MeshUtil.h"
 #include "../../render/model/ModelFactory.h"
-#include "HeightGenerator.h"
-#include "TerrainComponent.h"
-#include "TerrainMesh.h"
 
 #include <prev/core/AllocatorProvider.h>
 
@@ -39,7 +40,7 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
     result->m_heightsInfo = heightMap;
     result->m_vertexData = vertexData;
     for (const auto& layer : terrainLayers) {
-        result->m_materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, true }, layer.materialPath, *allocator));
+        result->m_materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, VK_SAMPLER_ADDRESS_MODE_REPEAT }, layer.materialPath, *allocator));
         result->m_heightSteps.emplace_back(layer.heightStep);
     }
     result->m_transitionRange = layerTransitionWidth;
@@ -69,7 +70,7 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
     result->m_heightsInfo = heightMap;
     result->m_vertexData = vertexData;
     for (const auto& layer : terrainLayers) {
-        result->m_materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, true }, layer.materialPath, layer.materialNormalPath, *allocator));
+        result->m_materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, VK_SAMPLER_ADDRESS_MODE_REPEAT }, layer.materialPath, layer.materialNormalPath, *allocator));
         result->m_heightSteps.emplace_back(layer.heightStep);
     }
     result->m_transitionRange = layerTransitionWidth;
@@ -99,7 +100,7 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
     result->m_heightsInfo = heightMap;
     result->m_vertexData = vertexData;
     for (const auto& layer : terrainLayers) {
-        auto material{ materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, true }, layer.materialPath, layer.materialNormalPath, layer.materialHeightPath, *allocator) };
+        auto material{ materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, VK_SAMPLER_ADDRESS_MODE_REPEAT }, layer.materialPath, layer.materialNormalPath, layer.materialHeightPath, *allocator) };
         material->SetHeightScale(layer.heightScale);
         result->m_materials.emplace_back(std::move(material));
         result->m_heightSteps.emplace_back(layer.heightStep);
@@ -131,7 +132,7 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
     result->m_heightsInfo = heightMap;
     result->m_vertexData = vertexData;
     for (const auto& layer : terrainLayers) {
-        auto material{ materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, true }, layer.materialPath, layer.materialNormalPath, layer.materialHeightPath, *allocator) };
+        auto material{ materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, VK_SAMPLER_ADDRESS_MODE_REPEAT }, layer.materialPath, layer.materialNormalPath, layer.materialHeightPath, *allocator) };
         material->SetHeightScale(layer.heightScale);
         result->m_materials.emplace_back(std::move(material));
         result->m_heightSteps.emplace_back(layer.heightStep);

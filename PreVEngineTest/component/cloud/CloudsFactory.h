@@ -2,11 +2,17 @@
 #define __CLOUDS_FACTORY_H__
 
 #include <prev/core/memory/image/IImageBuffer.h>
+#include <prev/render/sampler/Sampler.h>
 
 namespace prev_test::component::cloud {
+struct CloudsImage {
+    std::unique_ptr<prev::core::memory::image::IImageBuffer> imageBuffer{};
+    std::unique_ptr<prev::render::sampler::Sampler> imageSampler{};
+};
+
 class CloudsFactory final {
 public:
-    std::unique_ptr<prev::core::memory::image::IImageBuffer> Create(const uint32_t width, const uint32_t height) const;
+    CloudsImage Create(const uint32_t width, const uint32_t height) const;
 };
 } // namespace prev_test::component::cloud
 

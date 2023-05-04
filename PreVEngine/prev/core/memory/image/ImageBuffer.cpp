@@ -35,8 +35,6 @@ void ImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
     }
 
     m_imageView = prev::util::vk::CreateImageView(m_allocator.GetDevice(), m_image, m_format, m_imageViewType, m_mipLevels, VK_IMAGE_ASPECT_COLOR_BIT, createInfo.layerCount);
-
-    CreateSampler(static_cast<float>(m_mipLevels), createInfo.addressMode, createInfo.filteringEnabled);
 }
 
 void ImageBuffer::Resize(const VkExtent3D& extent)

@@ -30,7 +30,11 @@ public:
 
     std::shared_ptr<prev::core::memory::image::IImageBuffer> GetColorImageBuffer() const override;
 
+    std::shared_ptr<prev::render::sampler::Sampler> GetColorSampler() const override;
+
     std::shared_ptr<prev::core::memory::image::IImageBuffer> GetDepthImageBuffer() const override;
+
+    std::shared_ptr<prev::render::sampler::Sampler> GetDepthSampler() const override;
 
     VkFramebuffer GetFrameBuffer() const override;
 
@@ -44,17 +48,21 @@ private:
     void ShutDownRenderPass();
 
 private:
-    const uint32_t m_width;
+    const uint32_t m_width{};
 
-    const uint32_t m_height;
+    const uint32_t m_height{};
 
-    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
+    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass{};
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_imageBuffer;
+    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_imageBuffer{};
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_depthBuffer;
+    std::shared_ptr<prev::render::sampler::Sampler> m_colorSampler{};
 
-    VkFramebuffer m_frameBuffer;
+    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_depthBuffer{};
+
+    std::shared_ptr<prev::render::sampler::Sampler> m_depthSampler{};
+
+    VkFramebuffer m_frameBuffer{};
 };
 } // namespace prev_test::component::common
 

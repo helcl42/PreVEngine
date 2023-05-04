@@ -3,7 +3,7 @@
 
 #include <prev/common/Common.h>
 #include <prev/core/memory/image/IImageBuffer.h>
-#include <prev/render/image/Image.h>
+#include <prev/render/sampler/Sampler.h>
 
 #include <memory>
 
@@ -12,31 +12,26 @@ struct MaterialProperties {
     glm::vec4 color;
     float shineDamper;
     float reflectivity;
-    bool repeatAddressMode;
-};
-
-struct ImagePair {
-    std::shared_ptr<prev::render::image::Image> image;
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> imageBuffer;
+    VkSamplerAddressMode addressMode;
 };
 
 class IMaterial {
 public:
-    virtual std::shared_ptr<prev::render::image::Image> GetImage() const = 0;
-
     virtual std::shared_ptr<prev::core::memory::image::IImageBuffer> GetImageBuffer() const = 0;
+
+    virtual std::shared_ptr<prev::render::sampler::Sampler> GetImageSampler() const = 0;
 
     virtual bool HasImage() const = 0;
 
-    virtual std::shared_ptr<prev::render::image::Image> GetNormalImage() const = 0;
-
     virtual std::shared_ptr<prev::core::memory::image::IImageBuffer> GetNormalmageBuffer() const = 0;
+
+    virtual std::shared_ptr<prev::render::sampler::Sampler> GetNormalImageSampler() const = 0;
 
     virtual bool HasNormalImage() const = 0;
 
-    virtual std::shared_ptr<prev::render::image::Image> GetHeightImage() const = 0;
-
     virtual std::shared_ptr<prev::core::memory::image::IImageBuffer> GetHeightImageBuffer() const = 0;
+
+    virtual std::shared_ptr<prev::render::sampler::Sampler> GetHeightImageSampler() const = 0;
 
     virtual bool HasHeightImage() const = 0;
 

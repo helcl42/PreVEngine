@@ -10,7 +10,7 @@
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::component::cloud {
-std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsFactory::Create(const uint32_t width, const uint32_t height) const
+CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) const
 {
     struct Uniforms {
         alignas(16) glm::vec4 textureSize;
@@ -42,9 +42,11 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsFactory::Create(c
 
     auto fence = prev::util::vk::CreateFence(*device);
 
-    prev::core::memory::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ width, height }, VK_IMAGE_TYPE_2D, weatherImageFormat, VK_SAMPLE_COUNT_1_BIT, 0, false, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT };
+    prev::core::memory::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ width, height }, VK_IMAGE_TYPE_2D, weatherImageFormat, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D, 1 };
     auto weatherImageBuffer = std::make_unique<prev::core::memory::image::ImageStorageBuffer>(*allocator);
     weatherImageBuffer->Create(bufferCreateInfo);
+
+    auto sampler = std::make_unique<prev::render::sampler::Sampler>(*device, static_cast<float>(weatherImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f);
 
     VKERRCHECK(vkQueueWaitIdle(*computeQueue));
 
@@ -64,7 +66,7 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsFactory::Create(c
     ubo->Update(&uniforms);
 
     shader->Bind("uboCS", *ubo);
-    shader->Bind("outWeatherTexture", *weatherImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
+    shader->Bind("outWeatherTexture", weatherImageBuffer->GetImageView(), *sampler, VK_IMAGE_LAYOUT_GENERAL);
     const VkDescriptorSet descriptorSet = shader->UpdateNextDescriptorSet();
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *pipeline);
@@ -98,6 +100,6 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsFactory::Create(c
     shader->ShutDown();
     shader = nullptr;
 
-    return weatherImageBuffer;
+    return { std::move(weatherImageBuffer), std::move(sampler) };
 }
 } // namespace prev_test::component::cloud

@@ -10,7 +10,7 @@
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::component::cloud {
-std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t width, const uint32_t height, const uint32_t depth) const
+CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t width, const uint32_t height, const uint32_t depth) const
 {
     const auto noiseImageFormat{ VK_FORMAT_R8G8B8A8_UNORM };
 
@@ -30,10 +30,12 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsNoiseFactory::Cre
 
     auto fence = prev::util::vk::CreateFence(*device);
 
-    prev::core::memory::image::ImageBufferCreateInfo imageBufferCreateInfo{ VkExtent3D{ width, height, depth }, VK_IMAGE_TYPE_3D, noiseImageFormat, VK_SAMPLE_COUNT_1_BIT, 0, true, true, VK_IMAGE_VIEW_TYPE_3D, 1, VK_SAMPLER_ADDRESS_MODE_REPEAT };
+    prev::core::memory::image::ImageBufferCreateInfo imageBufferCreateInfo{ VkExtent3D{ width, height, depth }, VK_IMAGE_TYPE_3D, noiseImageFormat, VK_SAMPLE_COUNT_1_BIT, 0, true, VK_IMAGE_VIEW_TYPE_3D, 1 };
 
     auto noiseImageBuffer = std::make_unique<prev::core::memory::image::ImageStorageBuffer>(*allocator);
     noiseImageBuffer->Create(imageBufferCreateInfo);
+
+    auto sampler = std::make_unique<prev::render::sampler::Sampler>(*device, static_cast<float>(noiseImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f);
 
     VKERRCHECK(vkQueueWaitIdle(*computeQueue));
 
@@ -41,7 +43,7 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsNoiseFactory::Cre
     cmdBufBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &cmdBufBeginInfo));
 
-    shader->Bind("outVolumeTexture", *noiseImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
+    shader->Bind("outVolumeTexture", noiseImageBuffer->GetImageView(), *sampler, VK_IMAGE_LAYOUT_GENERAL);
     const VkDescriptorSet descriptorSet = shader->UpdateNextDescriptorSet();
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *pipeline);
@@ -77,6 +79,6 @@ std::unique_ptr<prev::core::memory::image::IImageBuffer> CloudsNoiseFactory::Cre
     shader->ShutDown();
     shader = nullptr;
 
-    return noiseImageBuffer;
+    return { std::move(noiseImageBuffer), std::move(sampler) };
 }
 } // namespace prev_test::component::cloud

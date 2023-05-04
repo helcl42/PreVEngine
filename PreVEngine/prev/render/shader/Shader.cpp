@@ -61,9 +61,7 @@ bool Shader::Init()
 
 void Shader::ShutDown()
 {
-    if (m_device) {
-        vkDeviceWaitIdle(m_device);
-    }
+    vkDeviceWaitIdle(m_device);
 
     if (m_descriptorPool) {
         vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
@@ -224,8 +222,8 @@ VkDescriptorSet Shader::UpdateNextDescriptorSet()
 
     VkDescriptorSet descriptorSet = m_descriptorSets[m_currentDescriptorSetIndex];
 
-    std::vector<std::vector<VkDescriptorBufferInfo> > bufferInfos(m_descriptorWrites.size());
-    std::vector<std::vector<VkDescriptorImageInfo> > imageInfos(m_descriptorWrites.size());
+    std::vector<std::vector<VkDescriptorBufferInfo>> bufferInfos(m_descriptorWrites.size());
+    std::vector<std::vector<VkDescriptorImageInfo>> imageInfos(m_descriptorWrites.size());
     for (size_t writeIndex = 0; writeIndex < m_descriptorWrites.size(); writeIndex++) {
 
         auto& currentBufferInfos = bufferInfos[writeIndex];
@@ -253,52 +251,50 @@ VkDescriptorSet Shader::UpdateNextDescriptorSet()
 
 void Shader::Bind(const std::string& name, const prev::core::memory::buffer::UniformBuffer& ubo)
 {
-    if (m_descriptorSetInfos.find(name) == m_descriptorSetInfos.cend()) {
+    const auto descriptorSetInfoIter{ m_descriptorSetInfos.find(name) };
+    if (descriptorSetInfoIter == m_descriptorSetInfos.cend()) {
         LOGE("Could not find uniform with name: %s", name.c_str());
     }
 
-    auto& item = m_descriptorSetInfos[name];
+    auto& item = descriptorSetInfoIter->second;
 
     item.bufferInfo.buffer = ubo;
     item.bufferInfo.offset = ubo.GetOffset();
     item.bufferInfo.range = ubo.GetRange();
 
-    //LOGI("Bind UniformBuffer to shader-in: \"%s\"\n", name.c_str());
+    // LOGI("Bind UniformBuffer to shader-in: \"%s\"\n", name.c_str());
 }
 
 void Shader::Bind(const std::string& name, const prev::core::memory::buffer::Buffer& buffer)
 {
-    if (m_descriptorSetInfos.find(name) == m_descriptorSetInfos.cend()) {
+    const auto descriptorSetInfoIter{ m_descriptorSetInfos.find(name) };
+    if (descriptorSetInfoIter == m_descriptorSetInfos.cend()) {
         LOGE("Could not find uniform with name: %s", name.c_str());
     }
 
-    auto& item = m_descriptorSetInfos[name];
+    auto& item = descriptorSetInfoIter->second;
 
     item.bufferInfo.buffer = buffer;
     item.bufferInfo.offset = 0;
     item.bufferInfo.range = buffer.GetSize();
 
-    //LOGI("Bind Buffer to shader-in: \"%s\"\n", name.c_str());
+    // LOGI("Bind Buffer to shader-in: \"%s\"\n", name.c_str());
 }
 
 void Shader::Bind(const std::string& name, const VkImageView imageView, const VkSampler sampler, const VkImageLayout imageLayout)
 {
-    if (m_descriptorSetInfos.find(name) == m_descriptorSetInfos.cend()) {
+    const auto descriptorSetInfoIter{ m_descriptorSetInfos.find(name) };
+    if (descriptorSetInfoIter == m_descriptorSetInfos.cend()) {
         LOGE("Could not find uniform with name: %s", name.c_str());
     }
 
-    auto& item = m_descriptorSetInfos[name];
+    auto& item = descriptorSetInfoIter->second;
 
     item.imageInfo.imageView = imageView;
     item.imageInfo.sampler = sampler;
     item.imageInfo.imageLayout = imageLayout;
 
-    //LOGI("Bind Image to shader-in: \"%s\"\n", name.c_str());
-}
-
-void Shader::Bind(const std::string& name, const prev::core::memory::image::IImageBuffer& image, const VkImageLayout imageLayout)
-{
-    Bind(name, image.GetImageView(), image.GetSampler(), imageLayout);
+    // LOGI("Bind Image to shader-in: \"%s\"\n", name.c_str());
 }
 
 void Shader::CheckBindings() const

@@ -12,8 +12,8 @@ Material::Material(const MaterialProperties& materialProps, const ImagePair& ima
     : m_color(materialProps.color)
     , m_shineDamper(materialProps.shineDamper)
     , m_reflectivity(materialProps.reflectivity)
-    , m_image(image.image)
     , m_imageBuffer(image.imageBuffer)
+    , m_imageSampler(image.imageSampler)
 {
 }
 
@@ -21,10 +21,10 @@ Material::Material(const MaterialProperties& materialProps, const ImagePair& ima
     : m_color(materialProps.color)
     , m_shineDamper(materialProps.shineDamper)
     , m_reflectivity(materialProps.reflectivity)
-    , m_image(image.image)
     , m_imageBuffer(image.imageBuffer)
-    , m_normalImage(normalMap.image)
+    , m_imageSampler(image.imageSampler)
     , m_normalImageBuffer(normalMap.imageBuffer)
+    , m_normalImageSampler(normalMap.imageSampler)
 {
 }
 
@@ -32,18 +32,13 @@ Material::Material(const MaterialProperties& materialProps, const ImagePair& ima
     : m_color(materialProps.color)
     , m_shineDamper(materialProps.shineDamper)
     , m_reflectivity(materialProps.reflectivity)
-    , m_image(image.image)
     , m_imageBuffer(image.imageBuffer)
-    , m_normalImage(normalMap.image)
+    , m_imageSampler(image.imageSampler)
     , m_normalImageBuffer(normalMap.imageBuffer)
-    , m_heightmage(heightMap.image)
+    , m_normalImageSampler(normalMap.imageSampler)
     , m_heightImageBuffer(heightMap.imageBuffer)
+    , m_heightImageSampler(heightMap.imageSampler)
 {
-}
-
-std::shared_ptr<prev::render::image::Image> Material::GetImage() const
-{
-    return m_image;
 }
 
 std::shared_ptr<prev::core::memory::image::IImageBuffer> Material::GetImageBuffer() const
@@ -51,19 +46,14 @@ std::shared_ptr<prev::core::memory::image::IImageBuffer> Material::GetImageBuffe
     return m_imageBuffer;
 }
 
+std::shared_ptr<prev::render::sampler::Sampler> Material::GetImageSampler() const
+{
+    return m_imageSampler;
+}
+
 bool Material::HasImage() const
 {
-    return m_image != nullptr;
-}
-
-const glm::vec4& Material::GetColor() const
-{
-    return m_color;
-}
-
-std::shared_ptr<prev::render::image::Image> Material::GetNormalImage() const
-{
-    return m_normalImage;
+    return m_imageBuffer != nullptr;
 }
 
 std::shared_ptr<prev::core::memory::image::IImageBuffer> Material::GetNormalmageBuffer() const
@@ -71,14 +61,14 @@ std::shared_ptr<prev::core::memory::image::IImageBuffer> Material::GetNormalmage
     return m_normalImageBuffer;
 }
 
-bool Material::HasNormalImage() const
+std::shared_ptr<prev::render::sampler::Sampler> Material::GetNormalImageSampler() const
 {
-    return m_normalImage != nullptr;
+    return m_normalImageSampler;
 }
 
-std::shared_ptr<prev::render::image::Image> Material::GetHeightImage() const
+bool Material::HasNormalImage() const
 {
-    return m_heightmage;
+    return m_normalImageBuffer != nullptr;
 }
 
 std::shared_ptr<prev::core::memory::image::IImageBuffer> Material::GetHeightImageBuffer() const
@@ -86,9 +76,14 @@ std::shared_ptr<prev::core::memory::image::IImageBuffer> Material::GetHeightImag
     return m_heightImageBuffer;
 }
 
+std::shared_ptr<prev::render::sampler::Sampler> Material::GetHeightImageSampler() const
+{
+    return m_heightImageSampler;
+}
+
 bool Material::HasHeightImage() const
 {
-    return m_heightmage != nullptr;
+    return m_heightImageBuffer != nullptr;
 }
 
 float Material::GetShineDamper() const
@@ -139,6 +134,11 @@ const glm::vec2& Material::GetTextureOffset() const
 void Material::SetTextureOffset(const glm::vec2& textureOffset)
 {
     m_textureOffset = textureOffset;
+}
+
+const glm::vec4& Material::GetColor() const
+{
+    return m_color;
 }
 
 float Material::GetHeightScale() const

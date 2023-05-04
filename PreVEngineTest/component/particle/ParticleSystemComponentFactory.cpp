@@ -17,7 +17,7 @@ std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::Create
 
     prev_test::render::material::MaterialFactory materialFactory{};
 
-    std::shared_ptr<prev_test::render::IMaterial> material{ materialFactory.Create({ glm::vec4{ 1.0f }, 0.0f, 0.0f, true }, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fire-ember-particles-png-4-transparent.png"), *allocator) };
+    std::shared_ptr<prev_test::render::IMaterial> material{ materialFactory.Create({ glm::vec4{ 1.0f }, 0.0f, 0.0f, VK_SAMPLER_ADDRESS_MODE_REPEAT }, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fire-ember-particles-png-4-transparent.png"), *allocator) };
     material->SetAtlasNumberOfRows(8);
 
     prev_test::render::mesh::MeshFactory meshFactory{};
@@ -40,7 +40,7 @@ std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::Create
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     prev_test::render::material::MaterialFactory materialFactory{};
-    std::shared_ptr<prev_test::render::IMaterial> material{ materialFactory.Create({ glm::vec4{ 1.0f }, 0.0f, 0.0f, true }, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fire-texture-atlas.png"), *allocator) };
+    std::shared_ptr<prev_test::render::IMaterial> material{ materialFactory.Create({ glm::vec4{ 1.0f }, 0.0f, 0.0f, VK_SAMPLER_ADDRESS_MODE_REPEAT }, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fire-texture-atlas.png"), *allocator) };
     material->SetAtlasNumberOfRows(4);
 
     prev_test::render::mesh::MeshFactory meshFactory{};
@@ -52,7 +52,7 @@ std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::Create
     auto particleFactory{ std::make_shared<RandomInConeParticleFactory>(material, -0.1f, 4.0f, 4.0f, 7.0f) };
     particleFactory->SetConeDirection(coneDirection);
     particleFactory->SetConeDirectionDeviation(angle);
-    //particleFactory->SetRandomRotationEnabled(true);
+    // particleFactory->SetRandomRotationEnabled(true);
     particleFactory->SetLifeLengthError(0.5f);
     particleFactory->SetSpeedError(1.0f);
     particleFactory->SetScaleError(2.0f);

@@ -17,7 +17,6 @@ void DepthImageBuffer::Create(const ImageBufferCreateInfo& createInfo)
     m_imageViewType = createInfo.viewType;
     m_imageType = createInfo.imageType;
     m_flags = createInfo.flags;
-    m_sampler = VK_NULL_HANDLE;
 
     Resize(createInfo.extent);
 }

@@ -6,6 +6,8 @@
 #include "../../render/model/ModelFactory.h"
 
 #include <prev/core/AllocatorProvider.h>
+#include <prev/render/sampler/Sampler.h>
+#include <prev/util/VkUtils.h>
 
 namespace prev_test::component::sky {
 std::unique_ptr<ILensFlareComponent> LensFlareComponentFactory::Create() const
@@ -24,7 +26,7 @@ std::unique_ptr<ILensFlareComponent> LensFlareComponentFactory::Create() const
 
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
-    std::vector<std::shared_ptr<Flare> > flares{};
+    std::vector<std::shared_ptr<Flare>> flares{};
     for (const auto& flareCreateInfo : flareCreateInfos) {
         auto flare = CreateFlare(*allocator, flareCreateInfo.path, flareCreateInfo.scale);
         flare->SetScreenSpacePosition(glm::vec2(-100.0f, -100.0f));
@@ -42,10 +44,10 @@ std::unique_ptr<ILensFlareComponent> LensFlareComponentFactory::Create() const
 
 std::unique_ptr<Flare> LensFlareComponentFactory::CreateFlare(prev::core::memory::Allocator& allocator, const std::string& filePath, const float scale) const
 {
-    prev::render::image::ImageFactory imageFactory{};
-    auto image{ imageFactory.CreateImage(filePath) };
-    auto imageBuffer{ std::make_unique<prev::core::memory::image::ImageBuffer>(allocator) };
-    imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
-    return std::make_unique<Flare>(std::move(image), std::move(imageBuffer), scale);
+    auto image{ prev::render::image::ImageFactory{}.CreateImage(filePath) };
+    auto imageBuffer{ std::make_shared<prev::core::memory::image::ImageBuffer>(allocator) };
+    imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, reinterpret_cast<uint8_t*>(image->GetBuffer()) });
+    auto sampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(imageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f) };
+    return std::make_unique<Flare>(std::move(imageBuffer), sampler, scale);
 }
 } // namespace prev_test::component::sky

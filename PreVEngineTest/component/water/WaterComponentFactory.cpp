@@ -18,7 +18,7 @@ std::unique_ptr<IWaterComponent> WaterComponentFactory::Create(const int x, cons
     const std::string normalMapPath{ prev_test::common::AssetManager::Instance().GetAssetPath("Textures/matchingNormalMap.png") };
 
     prev_test::render::material::MaterialFactory materialFactory{};
-    auto material{ materialFactory.Create({ WATER_COLOR, 1.0f, 0.0f, true }, dudvMapPath, normalMapPath, *allocator) };
+    auto material{ materialFactory.Create({ WATER_COLOR, 1.0f, 0.0f, VK_SAMPLER_ADDRESS_MODE_REPEAT }, dudvMapPath, normalMapPath, *allocator) };
 
     auto mesh{ std::make_unique<WaterTileMesh>() };
 

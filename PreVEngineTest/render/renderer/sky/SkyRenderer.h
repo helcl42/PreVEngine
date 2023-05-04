@@ -1,13 +1,14 @@
 #ifndef __SKY_RENDERER_H__
 #define __SKY_RENDERER_H__
 
+#include "../../../General.h"
 #include "../../pipeline/IPipeline.h"
 #include "../RenderContextUserData.h"
 
-#include "../../../General.h"
-
+#include <prev/core/memory/image/IImageBuffer.h>
 #include <prev/render/IRenderer.h>
 #include <prev/render/pass/RenderPass.h>
+#include <prev/render/sampler/Sampler.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
 
@@ -34,15 +35,14 @@ public:
     void ShutDown() override;
 
 private:
-    void UpdateImageBufferExtents(const VkExtent2D& extent, std::shared_ptr<prev::core::memory::image::IImageBuffer>& imageBuffer);
+    void UpdateImageBufferExtents(const VkExtent2D& extent, std::shared_ptr<prev::core::memory::image::IImageBuffer>& imageBuffer, std::shared_ptr<prev::render::sampler::Sampler>& sampler);
 
     void AddInterComputeImageBufferBarrier(const VkImage image, VkCommandBuffer commandBuffer);
 
     void AddImageBufferBarrier(const VkImage image, VkCommandBuffer commandBuffer);
 
 private:
-    struct alignas(16) UniformsSkyCS
-    {
+    struct alignas(16) UniformsSkyCS {
         alignas(16) glm::vec4 resolution;
 
         alignas(16) glm::mat4 inverseProjectionMatrix;
@@ -73,8 +73,7 @@ private:
         float cloudTopOffset;
     };
 
-    struct alignas(16) UniformsSkyPostProcessCS
-    {
+    struct alignas(16) UniformsSkyPostProcessCS {
         alignas(16) glm::vec4 resolution;
         alignas(16) glm::vec4 lisghtPosition;
         alignas(16) uint32_t enableGodRays;
@@ -92,13 +91,13 @@ private:
 
     std::unique_ptr<prev_test::render::pipeline::IPipeline> m_computeSkyPipeline;
 
-    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsSkyCS> > m_uniformsPoolSkyCS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsSkyCS>> m_uniformsPoolSkyCS;
 
     std::unique_ptr<prev::render::shader::Shader> m_conmputeSkyPostProcessShader;
 
     std::unique_ptr<prev_test::render::pipeline::IPipeline> m_computeSkyPostProcessPipeline;
 
-    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsSkyPostProcessCS> > m_uniformsPoolSkyPorstProcessCS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsSkyPostProcessCS>> m_uniformsPoolSkyPorstProcessCS;
 
     std::unique_ptr<prev::render::shader::Shader> m_shader;
 
@@ -106,13 +105,23 @@ private:
 
     std::shared_ptr<prev::core::memory::image::IImageBuffer> m_skyColorImageBuffer;
 
+    std::shared_ptr<prev::render::sampler::Sampler> m_skyColorImageSampler;
+
     std::shared_ptr<prev::core::memory::image::IImageBuffer> m_skyBloomImageBuffer;
+
+    std::shared_ptr<prev::render::sampler::Sampler> m_skyBloomImageSampler;
 
     std::shared_ptr<prev::core::memory::image::IImageBuffer> m_skyAlphanessImageBuffer;
 
+    std::shared_ptr<prev::render::sampler::Sampler> m_skyAlphanessImageSampler;
+
     std::shared_ptr<prev::core::memory::image::IImageBuffer> m_skyCloudDistanceImageBuffer;
 
+    std::shared_ptr<prev::render::sampler::Sampler> m_skyCloudDistanceImageSampler;
+
     std::shared_ptr<prev::core::memory::image::IImageBuffer> m_skyPostProcessColorImageBuffer;
+
+    std::shared_ptr<prev::render::sampler::Sampler> m_skyPostProcessImageSampler;
 };
 } // namespace prev_test::render::renderer::sky
 
