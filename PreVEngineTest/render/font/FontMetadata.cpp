@@ -11,20 +11,21 @@ float FontMetadata::GetFontSizeScaledSpaceWidth(const float fontSize)
     return m_spaceWidth * fontSize;
 }
 
-std::shared_ptr<prev::render::image::Image> FontMetadata::GetImage() const
-{
-    return m_image;
-}
-
 std::shared_ptr<prev::core::memory::image::IImageBuffer> FontMetadata::GetImageBuffer() const
 {
     return m_imageBuffer;
 }
 
+std::shared_ptr<prev::render::sampler::Sampler> FontMetadata::GetSampler() const
+{
+    return m_sampler;
+}
+
 bool FontMetadata::GetCharacter(const int charCode, Character& outCharacter) const
 {
-    if (m_characterMetaData.find(charCode) != m_characterMetaData.cend()) {
-        outCharacter = m_characterMetaData.at(charCode);
+    const auto charIter{ m_characterMetaData.find(charCode) };
+    if (charIter != m_characterMetaData.cend()) {
+        outCharacter = charIter->second;
         return true;
     }
     return false;

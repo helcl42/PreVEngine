@@ -82,7 +82,7 @@ void SkyBoxRenderer::Render(const prev::render::RenderContext& renderContext, co
         uniformsFS.upperLimit = glm::vec4(0.03f);
         uboFS->Update(&uniformsFS);
 
-        m_shader->Bind("cubeMap1", *skyBoxComponent->GetMaterial()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_shader->Bind("cubeMap1", skyBoxComponent->GetMaterial()->GetImageBuffer()->GetImageView(), *skyBoxComponent->GetMaterial()->GetImageSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         m_shader->Bind("uboVS", *uboVS);
         m_shader->Bind("uboFS", *uboFS);
 

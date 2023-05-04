@@ -3,6 +3,9 @@
 
 #include "../IMaterial.h"
 
+#include <prev/core/memory/image/IImageBuffer.h>
+#include <prev/render/image/Image.h>
+
 #include <map>
 
 namespace prev_test::render::material {
@@ -18,15 +21,15 @@ public:
 
     std::unique_ptr<prev_test::render::IMaterial> CreateCubeMap(const MaterialProperties& materialProps, const std::vector<std::string>& sidePaths, prev::core::memory::Allocator& allocator) const;
 
-    std::vector<std::shared_ptr<prev_test::render::IMaterial> > Create(const std::string& modelPath, prev::core::memory::Allocator& allocator) const;
+    std::vector<std::shared_ptr<prev_test::render::IMaterial>> Create(const std::string& modelPath, prev::core::memory::Allocator& allocator) const;
 
 private:
     std::shared_ptr<prev::render::image::Image> CreateImage(const std::string& textureFilename) const;
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> CreateImageBuffer(const std::shared_ptr<prev::render::image::Image>& image, const bool filtering, const bool repeatAddressMode, prev::core::memory::Allocator& allocator) const;
+    std::shared_ptr<prev::core::memory::image::IImageBuffer> CreateImageBuffer(const std::shared_ptr<prev::render::image::Image>& image, prev::core::memory::Allocator& allocator) const;
 
 private:
-    static inline std::map<std::string, std::shared_ptr<prev::render::image::Image> > s_imagesCache;
+    static inline std::map<std::string, std::shared_ptr<prev::render::image::Image>> s_imagesCache;
 };
 } // namespace prev_test::render::material
 

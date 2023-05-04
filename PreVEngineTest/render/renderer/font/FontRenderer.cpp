@@ -79,7 +79,7 @@ void FontRenderer::Render(const prev::render::RenderContext& renderContext, cons
             uniformsFS.outlineOffset = glm::vec4(renderableText.text->GetOutlineOffset(), 0.0f, 1.0f);
             uboFS->Update(&uniformsFS);
 
-            m_shader->Bind("alphaSampler", *nodeFontRenderComponent->GetFontMetadata()->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            m_shader->Bind("alphaSampler", nodeFontRenderComponent->GetFontMetadata()->GetImageBuffer()->GetImageView(), *nodeFontRenderComponent->GetFontMetadata()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             m_shader->Bind("uboVS", *uboVS);
             m_shader->Bind("uboFS", *uboFS);
 

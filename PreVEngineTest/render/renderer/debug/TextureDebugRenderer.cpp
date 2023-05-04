@@ -62,7 +62,7 @@ void TextureDebugRenderer::Render(const prev::render::RenderContext& renderConte
 {
     const auto component = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::common::IOffScreenRenderPassComponent>({ TAG_WATER_REFLECTION_RENDER_COMPONENT });
 
-    m_shader->Bind("imageSampler", component->GetColorImageBuffer()->GetImageView(), component->GetColorImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_shader->Bind("imageSampler", component->GetColorImageBuffer()->GetImageView(), *component->GetColorSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
     const VkBuffer vertexBuffers[] = { *m_quadModel->GetVertexBuffer() };

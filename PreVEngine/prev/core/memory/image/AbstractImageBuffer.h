@@ -11,18 +11,12 @@ public:
     virtual ~AbstractImageBuffer();
 
 public:
-    void UpdateSampler(const VkSamplerCreateInfo& samplerInfo) override;
-
     void Destroy() override;
-
-    void CreateSampler(const float maxLod = 1.0f, const VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, const bool enableFiltering = true) override;
 
 public:
     VkImage GetImage() const override;
 
     VkImageView GetImageView() const override;
-
-    VkSampler GetSampler() const override;
 
     VkFormat GetFormat() const override;
 
@@ -58,8 +52,6 @@ protected:
     VkSampleCountFlagBits m_sampleCount;
 
     VkImageView m_imageView;
-
-    VkSampler m_sampler;
 
     uint32_t m_mipLevels;
 

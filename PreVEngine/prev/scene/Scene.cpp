@@ -24,7 +24,7 @@ void Scene::InitSceneGraph(const std::shared_ptr<prev::scene::graph::ISceneNode>
     m_rootNode->Init();
 }
 
-void Scene::InitRenderer(const std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> >& rootRenderer)
+void Scene::InitRenderer(const std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData>>& rootRenderer)
 {
     m_rootRenderer = rootRenderer;
     m_rootRenderer->Init();
@@ -61,6 +61,7 @@ void Scene::ShutDownRenderer()
 void Scene::ShutDownSceneGraph()
 {
     m_rootNode->ShutDown();
+    m_rootNode = nullptr;
     prev::scene::graph::GraphTraversal::Instance().SetRootNode(nullptr);
 }
 
@@ -85,7 +86,7 @@ std::shared_ptr<prev::scene::graph::ISceneNode> Scene::GetRootNode() const
     return m_rootNode;
 }
 
-std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> > Scene::GetRootRenderer() const
+std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData>> Scene::GetRootRenderer() const
 {
     return m_rootRenderer;
 }

@@ -7,10 +7,11 @@
 #include <prev/util/MathUtils.h>
 
 namespace prev_test::component::shadow {
-ShadowsComponent::ShadowsComponent(const uint32_t cascadesCount, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::core::memory::image::IImageBuffer>& depthBuffer, const std::vector<ShadowsCascade>& cascades)
+ShadowsComponent::ShadowsComponent(const uint32_t cascadesCount, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::core::memory::image::IImageBuffer>& depthBuffer, const std::shared_ptr<prev::render::sampler::Sampler>& sampler, const std::vector<ShadowsCascade>& cascades)
     : m_cascadesCount(cascadesCount)
     , m_renderPass(renderPass)
     , m_depthBuffer(depthBuffer)
+    , m_sampler(sampler)
     , m_cascades(cascades)
 {
 }
@@ -21,6 +22,7 @@ ShadowsComponent::~ShadowsComponent()
 
     vkDeviceWaitIdle(*device);
 
+    m_sampler = nullptr;
     m_renderPass = nullptr;
 
     for (uint32_t i = 0; i < m_cascadesCount; i++) {
@@ -65,6 +67,11 @@ VkExtent2D ShadowsComponent::GetExtent() const
 std::shared_ptr<prev::core::memory::image::IImageBuffer> ShadowsComponent::GetImageBuffer() const
 {
     return m_depthBuffer;
+}
+
+std::shared_ptr<prev::render::sampler::Sampler> ShadowsComponent::GetSampler() const
+{
+    return m_sampler;
 }
 
 std::vector<glm::vec3> ShadowsComponent::GenerateFrustumCorners(const glm::mat4& inverseWorldToClipSpaceTransform, const float splitDistance, const float lastSplitDistance) const

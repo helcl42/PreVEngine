@@ -29,8 +29,6 @@ void ImageStorageBuffer::Create(const ImageBufferCreateInfo& createInfo)
     m_allocator.TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, m_format, m_mipLevels, m_layerCount);
 
     m_imageView = prev::util::vk::CreateImageView(m_allocator.GetDevice(), m_image, m_format, m_imageViewType, m_mipLevels, VK_IMAGE_ASPECT_COLOR_BIT, m_layerCount);
-
-    CreateSampler(static_cast<float>(m_mipLevels), createInfo.addressMode, createInfo.filteringEnabled);
 }
 
 void ImageStorageBuffer::Resize(const VkExtent3D& extent)

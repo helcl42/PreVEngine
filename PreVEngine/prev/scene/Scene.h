@@ -1,17 +1,17 @@
 #ifndef __SCENE_H__
 #define __SCENE_H__
 
+#include "IScene.h"
+#include "Scene.h"
+#include "SceneConfig.h"
+#include "graph/GraphTraversal.h"
+
 #include "../common/pattern/Singleton.h"
 #include "../core/device/Device.h"
 #include "../event/EventHandler.h"
 #include "../render/IRenderer.h"
 #include "../render/Swapchain.h"
 #include "../window/WindowEvents.h"
-
-#include "IScene.h"
-#include "Scene.h"
-#include "SceneConfig.h"
-#include "graph/GraphTraversal.h"
 
 namespace prev::scene {
 class Scene : public IScene {
@@ -25,7 +25,7 @@ public:
 
     void InitSceneGraph(const std::shared_ptr<prev::scene::graph::ISceneNode>& rootNode) override;
 
-    void InitRenderer(const std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> >& rootRenderer) override;
+    void InitRenderer(const std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData>>& rootRenderer) override;
 
     void Update(float deltaTime) override;
 
@@ -44,7 +44,7 @@ public:
 
     std::shared_ptr<prev::scene::graph::ISceneNode> GetRootNode() const override;
 
-    std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> > GetRootRenderer() const override;
+    std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData>> GetRootRenderer() const override;
 
 public:
     void operator()(const prev::window::WindowResizeEvent& resizeEvent);
@@ -72,7 +72,7 @@ protected:
 
     std::shared_ptr<prev::scene::graph::ISceneNode> m_rootNode;
 
-    std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> > m_rootRenderer;
+    std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData>> m_rootRenderer;
 
 private:
     prev::event::EventHandler<Scene, prev::window::WindowResizeEvent> m_windowResizeEvent{ *this };

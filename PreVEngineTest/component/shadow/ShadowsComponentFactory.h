@@ -17,6 +17,8 @@ private:
 
     std::unique_ptr<prev::core::memory::image::IImageBuffer> CreateDepthBuffer(const VkExtent2D& extent, const uint32_t cascadesCount, prev::core::memory::Allocator& allocator) const;
 
+    std::unique_ptr<prev::render::sampler::Sampler> CreateSampler(const VkDevice device, const float maxMipMapLevels) const;
+
     std::vector<ShadowsCascade> CreateCascades(const VkExtent2D& extent, const uint32_t cascadesCount, const std::shared_ptr<prev::core::memory::image::IImageBuffer>& depthBuffer, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, prev::core::device::Device& device) const;
 };
 } // namespace prev_test::component::shadow

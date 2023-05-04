@@ -5,6 +5,7 @@
 
 #include <prev/core/memory/image/IImageBuffer.h>
 #include <prev/render/pass/RenderPass.h>
+#include <prev/render/sampler/Sampler.h>
 
 namespace prev_test::component::shadow {
 class IShadowsComponent {
@@ -18,6 +19,8 @@ public:
     virtual VkExtent2D GetExtent() const = 0;
 
     virtual std::shared_ptr<prev::core::memory::image::IImageBuffer> GetImageBuffer() const = 0;
+
+    virtual std::shared_ptr<prev::render::sampler::Sampler> GetSampler() const = 0;
 
 public:
     virtual ~IShadowsComponent() = default;

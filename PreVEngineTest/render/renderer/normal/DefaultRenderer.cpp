@@ -173,8 +173,8 @@ void DefaultRenderer::RenderMeshNode(const prev::render::RenderContext& renderCo
 
         uboFS->Update(&uniformsFS);
 
-        m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), shadowsComponent->GetImageBuffer()->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-        m_shader->Bind("colorSampler", *material->GetImageBuffer(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), *shadowsComponent->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+        m_shader->Bind("colorSampler", material->GetImageBuffer()->GetImageView(), *material->GetImageSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         m_shader->Bind("uboVS", *uboVS);
         m_shader->Bind("uboFS", *uboFS);
 

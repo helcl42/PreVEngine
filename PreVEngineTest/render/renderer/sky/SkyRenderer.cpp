@@ -106,11 +106,11 @@ void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext,
     const auto imageWidth{ renderContext.rect.extent.width - renderContext.rect.offset.x };
     const auto imageHeight{ renderContext.rect.extent.height - renderContext.rect.offset.y };
 
-    UpdateImageBufferExtents(VkExtent2D{ imageWidth, imageHeight }, m_skyColorImageBuffer);
-    UpdateImageBufferExtents(VkExtent2D{ imageWidth, imageHeight }, m_skyBloomImageBuffer);
-    UpdateImageBufferExtents(VkExtent2D{ imageWidth, imageHeight }, m_skyAlphanessImageBuffer);
-    UpdateImageBufferExtents(VkExtent2D{ imageWidth, imageHeight }, m_skyCloudDistanceImageBuffer);
-    UpdateImageBufferExtents(VkExtent2D{ imageWidth, imageHeight }, m_skyPostProcessColorImageBuffer);
+    UpdateImageBufferExtents(VkExtent2D{ imageWidth, imageHeight }, m_skyColorImageBuffer, m_skyColorImageSampler);
+    UpdateImageBufferExtents(VkExtent2D{ imageWidth, imageHeight }, m_skyBloomImageBuffer, m_skyBloomImageSampler);
+    UpdateImageBufferExtents(VkExtent2D{ imageWidth, imageHeight }, m_skyAlphanessImageBuffer, m_skyAlphanessImageSampler);
+    UpdateImageBufferExtents(VkExtent2D{ imageWidth, imageHeight }, m_skyCloudDistanceImageBuffer, m_skyCloudDistanceImageSampler);
+    UpdateImageBufferExtents(VkExtent2D{ imageWidth, imageHeight }, m_skyPostProcessColorImageBuffer, m_skyPostProcessImageSampler);
 
     auto commandPool = computeQueue->CreateCommandPool();
     auto commandBuffer = prev::util::vk::CreateCommandBuffer(*device, commandPool);
@@ -152,13 +152,13 @@ void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext,
 
     m_conmputeSkyShader->Bind("uboCS", *uboCS);
 
-    m_conmputeSkyShader->Bind("perlinNoiseTex", *cloudsComponent->GetPerlineNoise(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    m_conmputeSkyShader->Bind("weatherTex", *cloudsComponent->GetWeather(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_conmputeSkyShader->Bind("perlinNoiseTex", cloudsComponent->GetPerlinWorleyNoise()->GetImageView(), *cloudsComponent->GetPerlinWorleyNoiseSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_conmputeSkyShader->Bind("weatherTex", cloudsComponent->GetWeather()->GetImageView(), *cloudsComponent->GetWeatherSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-    m_conmputeSkyShader->Bind("outFragColor", *m_skyColorImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
-    m_conmputeSkyShader->Bind("outBloom", *m_skyBloomImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
-    m_conmputeSkyShader->Bind("outAlphaness", *m_skyAlphanessImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
-    m_conmputeSkyShader->Bind("outCloudDistance", *m_skyCloudDistanceImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
+    m_conmputeSkyShader->Bind("outFragColor", m_skyColorImageBuffer->GetImageView(), *m_skyColorImageSampler, VK_IMAGE_LAYOUT_GENERAL);
+    m_conmputeSkyShader->Bind("outBloom", m_skyBloomImageBuffer->GetImageView(), *m_skyBloomImageSampler, VK_IMAGE_LAYOUT_GENERAL);
+    m_conmputeSkyShader->Bind("outAlphaness", m_skyAlphanessImageBuffer->GetImageView(), *m_skyAlphanessImageSampler, VK_IMAGE_LAYOUT_GENERAL);
+    m_conmputeSkyShader->Bind("outCloudDistance", m_skyCloudDistanceImageBuffer->GetImageView(), *m_skyCloudDistanceImageSampler, VK_IMAGE_LAYOUT_GENERAL);
 
     const VkDescriptorSet descriptorSetCompute = m_conmputeSkyShader->UpdateNextDescriptorSet();
 
@@ -190,10 +190,10 @@ void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext,
 
     m_conmputeSkyPostProcessShader->Bind("uboCS", *uboPostCS);
 
-    m_conmputeSkyPostProcessShader->Bind("skyTex", *m_skyColorImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
-    m_conmputeSkyPostProcessShader->Bind("bloomTex", *m_skyBloomImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
+    m_conmputeSkyPostProcessShader->Bind("skyTex", m_skyColorImageBuffer->GetImageView(), *m_skyColorImageSampler, VK_IMAGE_LAYOUT_GENERAL);
+    m_conmputeSkyPostProcessShader->Bind("bloomTex", m_skyBloomImageBuffer->GetImageView(), *m_skyBloomImageSampler, VK_IMAGE_LAYOUT_GENERAL);
 
-    m_conmputeSkyPostProcessShader->Bind("outFragColor", *m_skyPostProcessColorImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
+    m_conmputeSkyPostProcessShader->Bind("outFragColor", m_skyPostProcessColorImageBuffer->GetImageView(), *m_skyPostProcessImageSampler, VK_IMAGE_LAYOUT_GENERAL);
 
     const VkDescriptorSet descriptorSetComputePost = m_conmputeSkyPostProcessShader->UpdateNextDescriptorSet();
 
@@ -236,7 +236,7 @@ void SkyRenderer::Render(const prev::render::RenderContext& renderContext, const
     if (node->GetTags().HasAll({ TAG_SKY_RENDER_COMPONENT })) {
         const auto skyComponent = prev::scene::component::ComponentRepository<prev_test::component::sky::ISkyComponent>::Instance().Get(node->GetId());
 
-        m_shader->Bind("image", *m_skyPostProcessColorImageBuffer, VK_IMAGE_LAYOUT_GENERAL);
+        m_shader->Bind("image", m_skyPostProcessColorImageBuffer->GetImageView(), *m_skyPostProcessImageSampler, VK_IMAGE_LAYOUT_GENERAL);
 
         const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
         const VkBuffer vertexBuffers[] = { *skyComponent->GetModel()->GetVertexBuffer() };
@@ -308,18 +308,19 @@ void SkyRenderer::ShutDown()
     m_conmputeSkyShader = nullptr;
 }
 
-void SkyRenderer::UpdateImageBufferExtents(const VkExtent2D& extent, std::shared_ptr<prev::core::memory::image::IImageBuffer>& imageBuffer)
+void SkyRenderer::UpdateImageBufferExtents(const VkExtent2D& extent, std::shared_ptr<prev::core::memory::image::IImageBuffer>& imageBuffer, std::shared_ptr<prev::render::sampler::Sampler>& sampler)
 {
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
     if (imageBuffer == nullptr || imageBuffer->GetExtent().width != extent.width || imageBuffer->GetExtent().height != extent.height) {
         if (imageBuffer) {
             imageBuffer->Destroy();
-            imageBuffer = nullptr;
         }
 
-        const prev::core::memory::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ extent.width, extent.height }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE };
+        const prev::core::memory::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ extent.width, extent.height }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1 };
         imageBuffer = std::make_unique<prev::core::memory::image::ImageStorageBuffer>(*allocator);
         imageBuffer->Create(bufferCreateInfo);
+
+        sampler = std::make_shared<prev::render::sampler::Sampler>(allocator->GetDevice(), static_cast<float>(imageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f);
     }
 }
 

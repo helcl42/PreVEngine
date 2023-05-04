@@ -1,6 +1,7 @@
 #include "FontMetadataFactory.h"
 
 #include <prev/core/AllocatorProvider.h>
+#include <prev/core/DeviceProvider.h>
 #include <prev/core/memory/image/ImageBuffer.h>
 #include <prev/render/image/ImageFactory.h>
 
@@ -15,16 +16,12 @@ std::unique_ptr<FontMetadata> FontMetadataFactory::CreateFontMetadata(const std:
     ExtractPaddingData(metaDataFile, state);
     ExtractMeasureInfo(metaDataFile, state);
 
-    std::shared_ptr<prev::render::image::Image> image;
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> imagwBuffer;
-    CreateImage(textureFilePath, image, imagwBuffer);
-
     std::map<int, Character> characterMetaData{};
     ExtractCharactersData(metaDataFile, state, characterMetaData);
 
     auto metaData{ std::make_unique<FontMetadata>() };
-    metaData->m_image = image;
-    metaData->m_imageBuffer = imagwBuffer;
+    metaData->m_imageBuffer = CreateImageBuffer(textureFilePath);
+    metaData->m_sampler = CreateSampler(static_cast<float>(metaData->m_imageBuffer->GetMipLevels()));
     metaData->m_spaceWidth = state.spaceWidth;
     metaData->m_characterMetaData = characterMetaData;
 
@@ -52,14 +49,21 @@ void FontMetadataFactory::ExtractMeasureInfo(FontMetadataFile& metaDataFile, Fon
     state.imageHeight = metaDataFile.GetValueAsInt("scaleH");
 }
 
-void FontMetadataFactory::CreateImage(const std::string& textureFilePath, std::shared_ptr<prev::render::image::Image>& image, std::shared_ptr<prev::core::memory::image::IImageBuffer>& imageBuffer) const
+std::unique_ptr<prev::render::sampler::Sampler> FontMetadataFactory::CreateSampler(const float maxLod) const
+{
+    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
+
+    return std::make_unique<prev::render::sampler::Sampler>(*device, maxLod, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f);
+}
+
+std::shared_ptr<prev::core::memory::image::IImageBuffer> FontMetadataFactory::CreateImageBuffer(const std::string& textureFilePath) const
 {
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
-    prev::render::image::ImageFactory imageFactory;
-    image = imageFactory.CreateImage(textureFilePath);
-    imageBuffer = std::make_unique<prev::core::memory::image::ImageBuffer>(*allocator);
-    imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, true, VK_IMAGE_VIEW_TYPE_2D, 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, (uint8_t*)image->GetBuffer() });
+    const auto image{ prev::render::image::ImageFactory{}.CreateImage(textureFilePath) };
+    auto imageBuffer{ std::make_shared<prev::core::memory::image::ImageBuffer>(*allocator) };
+    imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, reinterpret_cast<uint8_t*>(image->GetBuffer()) });
+    return imageBuffer;
 }
 
 void FontMetadataFactory::ExtractCharactersData(FontMetadataFile& metaDataFile, FontMetadataState& state, std::map<int, Character>& characters) const

@@ -1,13 +1,12 @@
 #ifndef __SHADER_H__
 #define __SHADER_H__
 
+#include "../../core/instance/Validation.h"
+#include "../../core/memory/buffer/UniformBuffer.h"
+
 #include <map>
 #include <memory>
 #include <vector>
-
-#include "../../core/instance/Validation.h"
-#include "../../core/memory/buffer/UniformBuffer.h"
-#include "../../core/memory/image/IImageBuffer.h"
 
 namespace prev::render::shader {
 class Shader {
@@ -30,8 +29,6 @@ public:
     void Bind(const std::string& name, const prev::core::memory::buffer::Buffer& buffer);
 
     void Bind(const std::string& name, const VkImageView imageView, const VkSampler sampler, const VkImageLayout imageLayout);
-
-    void Bind(const std::string& name, const prev::core::memory::image::IImageBuffer& image, const VkImageLayout imageLayout);
 
     VkDescriptorSet UpdateNextDescriptorSet();
 
@@ -128,7 +125,7 @@ protected:
 
     std::vector<VkPushConstantRange> m_pushConstantRanges;
 
-    //Vertex Inputs
+    // Vertex Inputs
     std::vector<VkVertexInputBindingDescription> m_inputBindingDescriptions;
 
     std::vector<VkVertexInputAttributeDescription> m_inputAttributeDescriptions;

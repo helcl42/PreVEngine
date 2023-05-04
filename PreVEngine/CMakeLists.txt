@@ -28,6 +28,7 @@ file(GLOB RENDER_SRC_LIST "prev/render/*.h" "prev/render/*.cpp")
 file(GLOB RENDER_IMAGE_SRC_LIST "prev/render/image/*.h" "prev/render/image/*.cpp")
 file(GLOB RENDER_PASS_SRC_LIST "prev/render/pass/*.h" "prev/render/pass/*.cpp")
 file(GLOB RENDER_SHADER_SRC_LIST "prev/render/shader/*.h" "prev/render/shader/*.cpp")
+file(GLOB RENDER_SAMPLER_SRC_LIST "prev/render/sampler/*.h" "prev/render/sampler/*.cpp")
 file(GLOB SCENE_SRC_LIST "prev/scene/*.h" "prev/scene/*.cpp")
 file(GLOB SCENE_COMPONENT_SRC_LIST "prev/scene/component/*.h" "prev/scene/component/*.cpp")
 file(GLOB SCENE_GRAPH_SRC_LIST "prev/scene/graph/*.h" "prev/scene/graph/*.cpp")
@@ -58,6 +59,7 @@ source_group("prev/render" FILES ${RENDER_SRC_LIST})
 source_group("prev/render/image" FILES ${RENDER_IMAGE_SRC_LIST})
 source_group("prev/render/pass" FILES ${RENDER_PASS_SRC_LIST})
 source_group("prev/render/shader" FILES ${RENDER_SHADER_SRC_LIST})
+source_group("prev/render/sampler" FILES ${RENDER_SAMPLER_SRC_LIST})
 source_group("prev/scene" FILES ${SCENE_SRC_LIST})
 source_group("prev/scene/component" FILES ${SCENE_COMPONENT_SRC_LIST})
 source_group("prev/scene/graph" FILES ${SCENE_GRAPH_SRC_LIST})
@@ -89,6 +91,7 @@ add_library(${LIBRARY_NAME} STATIC
     ${RENDER_IMAGE_SRC_LIST}
     ${RENDER_PASS_SRC_LIST}
     ${RENDER_SHADER_SRC_LIST}
+    ${RENDER_SAMPLER_SRC_LIST}
     ${SCENE_SRC_LIST}
     ${SCENE_COMPONENT_SRC_LIST}
     ${SCENE_GRAPH_SRC_LIST}
@@ -104,6 +107,7 @@ add_library(${LIBRARY_NAME} STATIC
 target_include_directories(${LIBRARY_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 include_directories("../Dependencies/glm")
+include_directories("../Dependencies/spdlog/include")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")  #for find_package
 
