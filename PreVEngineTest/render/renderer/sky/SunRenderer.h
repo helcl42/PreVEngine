@@ -7,6 +7,7 @@
 #include "../../../General.h"
 
 #include <prev/render/IRenderer.h>
+#include <prev/render/buffer/UniformBuffer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
@@ -34,8 +35,7 @@ public:
     void ShutDown() override;
 
 private:
-    struct alignas(16) UniformsVS
-    {
+    struct alignas(16) UniformsVS {
         alignas(16) glm::vec4 translation;
 
         alignas(16) glm::vec4 scale;
@@ -52,7 +52,7 @@ private:
 
     std::unique_ptr<prev_test::render::pipeline::IPipeline> m_pipeline;
 
-    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::render::buffer::UBOPool<UniformsVS>> m_uniformsPoolVS;
 
 private:
     uint64_t m_passedSamples{ 0 };

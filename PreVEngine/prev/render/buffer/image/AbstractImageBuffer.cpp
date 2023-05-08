@@ -1,8 +1,7 @@
 #include "AbstractImageBuffer.h"
-#include "../../instance/Validation.h"
 
-namespace prev::core::memory::image {
-AbstractImageBuffer::AbstractImageBuffer(Allocator& allocator)
+namespace prev::render::buffer::image {
+AbstractImageBuffer::AbstractImageBuffer(prev::core::memory::Allocator& allocator)
     : m_allocator(allocator)
     , m_allocation(nullptr)
     , m_image(nullptr)
@@ -84,4 +83,4 @@ VkImageViewType AbstractImageBuffer::GetViewType() const
 {
     return m_imageViewType;
 }
-} // namespace prev::core::memory::image
+} // namespace prev::render::buffer::image

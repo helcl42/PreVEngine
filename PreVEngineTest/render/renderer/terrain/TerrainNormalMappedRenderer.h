@@ -9,6 +9,7 @@
 #include "../../../component/shadow/ShadowsCommon.h"
 
 #include <prev/render/IRenderer.h>
+#include <prev/render/buffer/UniformBuffer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
@@ -36,8 +37,7 @@ public:
     void ShutDown() override;
 
 private:
-    struct alignas(16) ShadowsCascadeUniform
-    {
+    struct alignas(16) ShadowsCascadeUniform {
         glm::mat4 viewProjectionMatrix;
 
         glm::vec4 split;
@@ -51,15 +51,13 @@ private:
         }
     };
 
-    struct alignas(16) ShadowsUniform
-    {
+    struct alignas(16) ShadowsUniform {
         ShadowsCascadeUniform cascades[prev_test::component::shadow::CASCADES_COUNT];
 
         uint32_t enabled;
     };
 
-    struct alignas(16) LightUniform
-    {
+    struct alignas(16) LightUniform {
         glm::vec4 position;
 
         glm::vec4 color;
@@ -76,8 +74,7 @@ private:
         }
     };
 
-    struct alignas(16) LightningUniform
-    {
+    struct alignas(16) LightningUniform {
         LightUniform lights[prev_test::component::light::MAX_LIGHT_COUNT];
 
         uint32_t realCountOfLights;
@@ -85,8 +82,7 @@ private:
         float ambientFactor;
     };
 
-    struct alignas(16) MaterialUniform
-    {
+    struct alignas(16) MaterialUniform {
         glm::vec4 color;
 
         float shineDamper;
@@ -103,8 +99,7 @@ private:
         }
     };
 
-    struct alignas(16) UniformsVS
-    {
+    struct alignas(16) UniformsVS {
         alignas(16) glm::mat4 modelMatrix;
 
         alignas(16) glm::mat4 viewMatrix;
@@ -123,8 +118,7 @@ private:
         float gradient;
     };
 
-    struct alignas(16) UniformsFS
-    {
+    struct alignas(16) UniformsFS {
         alignas(16) ShadowsUniform shadows;
 
         alignas(16) LightningUniform lightning;
@@ -155,9 +149,9 @@ private:
 
     std::unique_ptr<prev_test::render::pipeline::IPipeline> m_pipeline;
 
-    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::render::buffer::UBOPool<UniformsVS>> m_uniformsPoolVS;
 
-    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::render::buffer::UBOPool<UniformsFS>> m_uniformsPoolFS;
 };
 } // namespace prev_test::render::renderer::terrain
 

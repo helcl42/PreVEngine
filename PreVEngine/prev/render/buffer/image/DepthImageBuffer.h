@@ -3,10 +3,10 @@
 
 #include "AbstractImageBuffer.h"
 
-namespace prev::core::memory::image {
+namespace prev::render::buffer::image {
 class DepthImageBuffer : public AbstractImageBuffer {
 public:
-    DepthImageBuffer(Allocator& allocator);
+    DepthImageBuffer(prev::core::memory::Allocator& allocator);
 
     ~DepthImageBuffer() = default;
 
@@ -15,6 +15,6 @@ public:
 
     void Resize(const VkExtent3D& extent) override;
 };
-} // namespace prev::core::memory::image
+} // namespace prev::render::buffer::image
 
 #endif

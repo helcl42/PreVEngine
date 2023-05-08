@@ -2,7 +2,7 @@
 #define __IMATERIAL_H__
 
 #include <prev/common/Common.h>
-#include <prev/core/memory/image/IImageBuffer.h>
+#include <prev/render/buffer/image/IImageBuffer.h>
 #include <prev/render/sampler/Sampler.h>
 
 #include <memory>
@@ -17,19 +17,19 @@ struct MaterialProperties {
 
 class IMaterial {
 public:
-    virtual std::shared_ptr<prev::core::memory::image::IImageBuffer> GetImageBuffer() const = 0;
+    virtual std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetImageBuffer() const = 0;
 
     virtual std::shared_ptr<prev::render::sampler::Sampler> GetImageSampler() const = 0;
 
     virtual bool HasImage() const = 0;
 
-    virtual std::shared_ptr<prev::core::memory::image::IImageBuffer> GetNormalmageBuffer() const = 0;
+    virtual std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetNormalmageBuffer() const = 0;
 
     virtual std::shared_ptr<prev::render::sampler::Sampler> GetNormalImageSampler() const = 0;
 
     virtual bool HasNormalImage() const = 0;
 
-    virtual std::shared_ptr<prev::core::memory::image::IImageBuffer> GetHeightImageBuffer() const = 0;
+    virtual std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetHeightImageBuffer() const = 0;
 
     virtual std::shared_ptr<prev::render::sampler::Sampler> GetHeightImageSampler() const = 0;
 

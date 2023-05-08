@@ -4,8 +4,8 @@
 #include "IOffScreenRenderPassComponent.h"
 
 #include <prev/common/Common.h>
-#include <prev/core/memory/image/ColorImageBuffer.h>
-#include <prev/core/memory/image/DepthImageBuffer.h>
+#include <prev/render/buffer/image/ColorImageBuffer.h>
+#include <prev/render/buffer/image/DepthImageBuffer.h>
 
 namespace prev_test::component::common {
 class OffScreenRenderPassComponent : public IOffScreenRenderPassComponent {
@@ -28,11 +28,11 @@ public:
 
     VkExtent2D GetExtent() const override;
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> GetColorImageBuffer() const override;
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetColorImageBuffer() const override;
 
     std::shared_ptr<prev::render::sampler::Sampler> GetColorSampler() const override;
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> GetDepthImageBuffer() const override;
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetDepthImageBuffer() const override;
 
     std::shared_ptr<prev::render::sampler::Sampler> GetDepthSampler() const override;
 
@@ -54,11 +54,11 @@ private:
 
     std::shared_ptr<prev::render::pass::RenderPass> m_renderPass{};
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_imageBuffer{};
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_imageBuffer{};
 
     std::shared_ptr<prev::render::sampler::Sampler> m_colorSampler{};
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_depthBuffer{};
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_depthBuffer{};
 
     std::shared_ptr<prev::render::sampler::Sampler> m_depthSampler{};
 

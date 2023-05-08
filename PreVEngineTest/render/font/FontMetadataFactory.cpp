@@ -2,7 +2,7 @@
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
-#include <prev/core/memory/image/ImageBuffer.h>
+#include <prev/render/buffer/image/ImageBuffer.h>
 #include <prev/render/image/ImageFactory.h>
 
 namespace prev_test::render::font {
@@ -56,13 +56,13 @@ std::unique_ptr<prev::render::sampler::Sampler> FontMetadataFactory::CreateSampl
     return std::make_unique<prev::render::sampler::Sampler>(*device, maxLod, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f);
 }
 
-std::shared_ptr<prev::core::memory::image::IImageBuffer> FontMetadataFactory::CreateImageBuffer(const std::string& textureFilePath) const
+std::shared_ptr<prev::render::buffer::image::IImageBuffer> FontMetadataFactory::CreateImageBuffer(const std::string& textureFilePath) const
 {
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     const auto image{ prev::render::image::ImageFactory{}.CreateImage(textureFilePath) };
-    auto imageBuffer{ std::make_shared<prev::core::memory::image::ImageBuffer>(*allocator) };
-    imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, reinterpret_cast<uint8_t*>(image->GetBuffer()) });
+    auto imageBuffer{ std::make_shared<prev::render::buffer::image::ImageBuffer>(*allocator) };
+    imageBuffer->Create(prev::render::buffer::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, reinterpret_cast<uint8_t*>(image->GetBuffer()) });
     return imageBuffer;
 }
 

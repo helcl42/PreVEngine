@@ -4,7 +4,7 @@
 #include "../util/assimp/AssimpMaterialFactory.h"
 #include "../util/assimp/AssimpSceneLoader.h"
 
-#include <prev/core/memory/image/ImageBuffer.h>
+#include <prev/render/buffer/image/ImageBuffer.h>
 #include <prev/render/image/ImageFactory.h>
 
 #include <prev/core/memory/Allocator.h>
@@ -69,8 +69,8 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::CreateCubeMap(con
         layersData.emplace_back(reinterpret_cast<const uint8_t*>(image->GetBuffer()));
     }
 
-    auto cubeMapImageBuffer{ std::make_shared<prev::core::memory::image::ImageBuffer>(allocator) };
-    cubeMapImageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ VkExtent2D{ images[0]->GetWidth(), images[0]->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT, true, VK_IMAGE_VIEW_TYPE_CUBE, static_cast<uint32_t>(images.size()), layersData });
+    auto cubeMapImageBuffer{ std::make_shared<prev::render::buffer::image::ImageBuffer>(allocator) };
+    cubeMapImageBuffer->Create(prev::render::buffer::image::ImageBufferCreateInfo{ VkExtent2D{ images[0]->GetWidth(), images[0]->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT, true, VK_IMAGE_VIEW_TYPE_CUBE, static_cast<uint32_t>(images.size()), layersData });
     auto cubeMapSampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(cubeMapImageBuffer->GetMipLevels()), materialProps.addressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f) };
 
     return std::make_unique<prev_test::render::material::Material>(materialProps, ImagePair{ cubeMapImageBuffer, cubeMapSampler });
@@ -142,12 +142,12 @@ std::shared_ptr<prev::render::image::Image> MaterialFactory::CreateImage(const s
     return image;
 }
 
-std::shared_ptr<prev::core::memory::image::IImageBuffer> MaterialFactory::CreateImageBuffer(const std::shared_ptr<prev::render::image::Image>& image, prev::core::memory::Allocator& allocator) const
+std::shared_ptr<prev::render::buffer::image::IImageBuffer> MaterialFactory::CreateImageBuffer(const std::shared_ptr<prev::render::image::Image>& image, prev::core::memory::Allocator& allocator) const
 {
     const VkExtent2D imageExtent{ image->GetWidth(), image->GetHeight() };
 
-    auto imageBuffer{ std::make_unique<prev::core::memory::image::ImageBuffer>(allocator) };
-    imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ imageExtent, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, reinterpret_cast<uint8_t*>(image->GetBuffer()) });
+    auto imageBuffer{ std::make_unique<prev::render::buffer::image::ImageBuffer>(allocator) };
+    imageBuffer->Create(prev::render::buffer::image::ImageBufferCreateInfo{ imageExtent, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, reinterpret_cast<uint8_t*>(image->GetBuffer()) });
 
     return imageBuffer;
 }

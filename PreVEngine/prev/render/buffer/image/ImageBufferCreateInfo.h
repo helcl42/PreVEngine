@@ -1,9 +1,11 @@
 #ifndef __IMAGE_BUFFER_CREATE_INFO_H__
 #define __IMAGE_BUFFER_CREATE_INFO_H__
 
-#include "../Allocator.h"
+#include "../../../core/instance/Validation.h"
 
-namespace prev::core::memory::image {
+#include <vector>
+
+namespace prev::render::buffer::image {
 struct ImageBufferCreateInfo {
     ImageBufferCreateInfo(const VkExtent2D& ext, const VkImageType imgType, const VkFormat fmt, const VkSampleCountFlagBits samplesCnt = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, const VkImageCreateFlags flgs = 0, const bool mipmap = false, const VkImageViewType vwType = VK_IMAGE_VIEW_TYPE_2D, const uint32_t lrCount = 1, const uint8_t* data = nullptr);
 
@@ -34,6 +36,6 @@ struct ImageBufferCreateInfo {
     const std::vector<const uint8_t*> layerData;
 };
 
-} // namespace prev::core::memory::image
+} // namespace prev::render::buffer::image
 
 #endif // !__IIMAGE_BUFFER_H__

@@ -249,7 +249,7 @@ VkDescriptorSet Shader::UpdateNextDescriptorSet()
     return descriptorSet;
 }
 
-void Shader::Bind(const std::string& name, const prev::core::memory::buffer::UniformBuffer& ubo)
+void Shader::Bind(const std::string& name, const prev::render::buffer::UniformBuffer& ubo)
 {
     const auto descriptorSetInfoIter{ m_descriptorSetInfos.find(name) };
     if (descriptorSetInfoIter == m_descriptorSetInfos.cend()) {
@@ -265,7 +265,7 @@ void Shader::Bind(const std::string& name, const prev::core::memory::buffer::Uni
     // LOGI("Bind UniformBuffer to shader-in: \"%s\"\n", name.c_str());
 }
 
-void Shader::Bind(const std::string& name, const prev::core::memory::buffer::Buffer& buffer)
+void Shader::Bind(const std::string& name, const prev::render::buffer::Buffer& buffer)
 {
     const auto descriptorSetInfoIter{ m_descriptorSetInfos.find(name) };
     if (descriptorSetInfoIter == m_descriptorSetInfos.cend()) {

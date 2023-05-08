@@ -8,7 +8,6 @@
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
-#include <prev/core/memory/buffer/UniformBuffer.h>
 #include <prev/event/EventsChannel.h>
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/component/ComponentRepository.h>
@@ -37,7 +36,7 @@ void SunRenderer::Init()
 
     LOGI("Sun Pipeline created\n");
 
-    m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS>>(*allocator);
+    m_uniformsPoolVS = std::make_unique<prev::render::buffer::UBOPool<UniformsVS>>(*allocator);
     m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
     VkQueryPoolCreateInfo queryPoolInfo = { VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO };

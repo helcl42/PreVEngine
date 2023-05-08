@@ -2,8 +2,8 @@
 
 #include "../../../util/VkUtils.h"
 
-namespace prev::core::memory::image {
-DepthImageBuffer::DepthImageBuffer(Allocator& allocator)
+namespace prev::render::buffer::image {
+DepthImageBuffer::DepthImageBuffer(prev::core::memory::Allocator& allocator)
     : AbstractImageBuffer(allocator)
 {
 }
@@ -36,4 +36,4 @@ void DepthImageBuffer::Resize(const VkExtent3D& extent)
 
     m_extent = extent;
 }
-} // namespace prev::core::memory::image
+} // namespace prev::render::buffer::image

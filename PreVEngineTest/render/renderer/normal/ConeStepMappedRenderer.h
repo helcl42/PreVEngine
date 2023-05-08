@@ -10,6 +10,7 @@
 #include "../../../render/IMesh.h"
 
 #include <prev/render/IRenderer.h>
+#include <prev/render/buffer/UniformBuffer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
@@ -102,8 +103,7 @@ private:
         }
     };
 
-    struct alignas(16) UniformsVS
-    {
+    struct alignas(16) UniformsVS {
         alignas(16) glm::mat4 modelMatrix;
 
         alignas(16) glm::mat4 viewMatrix;
@@ -125,8 +125,7 @@ private:
         float gradient;
     };
 
-    struct alignas(16) UniformsFS
-    {
+    struct alignas(16) UniformsFS {
         alignas(16) ShadowsUniform shadows;
 
         alignas(16) LightningUniform lightning;
@@ -154,9 +153,9 @@ private:
 
     std::unique_ptr<prev_test::render::pipeline::IPipeline> m_pipeline;
 
-    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::render::buffer::UBOPool<UniformsVS>> m_uniformsPoolVS;
 
-    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::render::buffer::UBOPool<UniformsFS>> m_uniformsPoolFS;
 };
 } // namespace prev_test::render::renderer::normal
 

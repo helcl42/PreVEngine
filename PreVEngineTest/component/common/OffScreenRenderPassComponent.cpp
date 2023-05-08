@@ -38,7 +38,7 @@ VkExtent2D OffScreenRenderPassComponent::GetExtent() const
     return VkExtent2D{ m_width, m_height };
 }
 
-std::shared_ptr<prev::core::memory::image::IImageBuffer> OffScreenRenderPassComponent::GetColorImageBuffer() const
+std::shared_ptr<prev::render::buffer::image::IImageBuffer> OffScreenRenderPassComponent::GetColorImageBuffer() const
 {
     return m_imageBuffer;
 }
@@ -48,7 +48,7 @@ std::shared_ptr<prev::render::sampler::Sampler> OffScreenRenderPassComponent::Ge
     return m_colorSampler;
 }
 
-std::shared_ptr<prev::core::memory::image::IImageBuffer> OffScreenRenderPassComponent::GetDepthImageBuffer() const
+std::shared_ptr<prev::render::buffer::image::IImageBuffer> OffScreenRenderPassComponent::GetDepthImageBuffer() const
 {
     return m_depthBuffer;
 }
@@ -68,13 +68,13 @@ void OffScreenRenderPassComponent::InitBuffers()
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
     auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
 
-    m_imageBuffer = std::make_shared<prev::core::memory::image::ColorImageBuffer>(*allocator);
-    m_imageBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, COLOR_FORMAT, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D });
+    m_imageBuffer = std::make_shared<prev::render::buffer::image::ColorImageBuffer>(*allocator);
+    m_imageBuffer->Create(prev::render::buffer::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, COLOR_FORMAT, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D });
 
     m_colorSampler = std::make_shared<prev::render::sampler::Sampler>(*device, static_cast<float>(m_imageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f);
 
-    m_depthBuffer = std::make_shared<prev::core::memory::image::DepthImageBuffer>(*allocator);
-    m_depthBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, DEPTH_FORMAT, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D });
+    m_depthBuffer = std::make_shared<prev::render::buffer::image::DepthImageBuffer>(*allocator);
+    m_depthBuffer->Create(prev::render::buffer::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, DEPTH_FORMAT, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D });
 
     m_depthSampler = std::make_shared<prev::render::sampler::Sampler>(*device, 1.0f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_NEAREST, VK_FILTER_NEAREST, VK_SAMPLER_MIPMAP_MODE_NEAREST);
 

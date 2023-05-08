@@ -15,8 +15,7 @@
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
-#include <prev/core/memory/buffer/UniformBuffer.h>
-#include <prev/core/memory/image/ImageStorageBuffer.h>
+#include <prev/render/buffer/image/ImageStorageBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
@@ -59,7 +58,7 @@ void SkyRenderer::Init()
 
     LOGI("Sky Compute Pipeline created\n");
 
-    m_uniformsPoolSkyCS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsSkyCS>>(*allocator);
+    m_uniformsPoolSkyCS = std::make_unique<prev::render::buffer::UBOPool<UniformsSkyCS>>(*allocator);
     m_uniformsPoolSkyCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
     // compute sky post process
@@ -74,7 +73,7 @@ void SkyRenderer::Init()
 
     LOGI("Sky PostProcess Compute Pipeline created\n");
 
-    m_uniformsPoolSkyPorstProcessCS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsSkyPostProcessCS>>(*allocator);
+    m_uniformsPoolSkyPorstProcessCS = std::make_unique<prev::render::buffer::UBOPool<UniformsSkyPostProcessCS>>(*allocator);
     m_uniformsPoolSkyPorstProcessCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
     // compositor
@@ -308,7 +307,7 @@ void SkyRenderer::ShutDown()
     m_conmputeSkyShader = nullptr;
 }
 
-void SkyRenderer::UpdateImageBufferExtents(const VkExtent2D& extent, std::shared_ptr<prev::core::memory::image::IImageBuffer>& imageBuffer, std::shared_ptr<prev::render::sampler::Sampler>& sampler)
+void SkyRenderer::UpdateImageBufferExtents(const VkExtent2D& extent, std::shared_ptr<prev::render::buffer::image::IImageBuffer>& imageBuffer, std::shared_ptr<prev::render::sampler::Sampler>& sampler)
 {
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
     if (imageBuffer == nullptr || imageBuffer->GetExtent().width != extent.width || imageBuffer->GetExtent().height != extent.height) {
@@ -316,8 +315,8 @@ void SkyRenderer::UpdateImageBufferExtents(const VkExtent2D& extent, std::shared
             imageBuffer->Destroy();
         }
 
-        const prev::core::memory::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ extent.width, extent.height }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1 };
-        imageBuffer = std::make_unique<prev::core::memory::image::ImageStorageBuffer>(*allocator);
+        const prev::render::buffer::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ extent.width, extent.height }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1 };
+        imageBuffer = std::make_unique<prev::render::buffer::image::ImageStorageBuffer>(*allocator);
         imageBuffer->Create(bufferCreateInfo);
 
         sampler = std::make_shared<prev::render::sampler::Sampler>(allocator->GetDevice(), static_cast<float>(imageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f);

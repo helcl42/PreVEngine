@@ -3,7 +3,7 @@
 #include <prev/core/DeviceProvider.h>
 
 namespace prev_test::component::sky {
-Flare::Flare(const std::shared_ptr<prev::core::memory::image::ImageBuffer>& imageBuffer, const std::shared_ptr<prev::render::sampler::Sampler>& sampler, const float scale)
+Flare::Flare(const std::shared_ptr<prev::render::buffer::image::ImageBuffer>& imageBuffer, const std::shared_ptr<prev::render::sampler::Sampler>& sampler, const float scale)
     : m_imageBuffer(imageBuffer)
     , m_sampler(sampler)
     , m_scale(scale)
@@ -24,7 +24,7 @@ Flare::~Flare()
     m_sampler = nullptr;
 }
 
-std::shared_ptr<prev::core::memory::image::IImageBuffer> Flare::GetImageBuffer() const
+std::shared_ptr<prev::render::buffer::image::IImageBuffer> Flare::GetImageBuffer() const
 {
     return m_imageBuffer;
 }

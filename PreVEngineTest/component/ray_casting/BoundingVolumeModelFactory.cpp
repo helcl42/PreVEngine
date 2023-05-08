@@ -53,9 +53,9 @@ std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateAAB
 
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
-    auto vertexBuffer{ std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator) };
+    auto vertexBuffer{ std::make_unique<prev::render::buffer::VertexBuffer>(*allocator) };
     vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
-    auto indexBuffer{ std::make_unique<prev::core::memory::buffer::IndexBuffer>(*allocator) };
+    auto indexBuffer{ std::make_unique<prev::render::buffer::IndexBuffer>(*allocator) };
     indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
 
     return std::make_unique<prev_test::render::model::Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
@@ -109,9 +109,9 @@ std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateOBB
 
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
-    auto vertexBuffer{ std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator) };
+    auto vertexBuffer{ std::make_unique<prev::render::buffer::VertexBuffer>(*allocator) };
     vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
-    auto indexBuffer{ std::make_unique<prev::core::memory::buffer::IndexBuffer>(*allocator) };
+    auto indexBuffer{ std::make_unique<prev::render::buffer::IndexBuffer>(*allocator) };
     indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
 
     return std::make_unique<prev_test::render::model::Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
@@ -181,9 +181,9 @@ std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateSph
 
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
-    auto vertexBuffer{ std::make_unique<prev::core::memory::buffer::VertexBuffer>(*allocator) };
+    auto vertexBuffer{ std::make_unique<prev::render::buffer::VertexBuffer>(*allocator) };
     vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
-    auto indexBuffer{ std::make_unique<prev::core::memory::buffer::IndexBuffer>(*allocator) };
+    auto indexBuffer{ std::make_unique<prev::render::buffer::IndexBuffer>(*allocator) };
     indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
 
     return std::make_unique<prev_test::render::model::Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));

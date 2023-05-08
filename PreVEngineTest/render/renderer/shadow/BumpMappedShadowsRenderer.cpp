@@ -8,7 +8,7 @@
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
-#include <prev/core/memory/buffer/UniformBuffer.h>
+#include <prev/render/buffer/UniformBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
@@ -36,7 +36,7 @@ void BumpMappedShadowsRenderer::Init()
 
     LOGI("Bump Mapped Shadows Pipeline created\n");
 
-    m_uniformsPool = std::make_unique<prev::core::memory::buffer::UBOPool<Uniforms>>(*allocator);
+    m_uniformsPool = std::make_unique<prev::render::buffer::UBOPool<Uniforms>>(*allocator);
     m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 

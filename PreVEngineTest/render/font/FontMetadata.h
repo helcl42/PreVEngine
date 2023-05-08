@@ -3,7 +3,7 @@
 
 #include "Character.h"
 
-#include <prev/core/memory/image/IImageBuffer.h>
+#include <prev/render/buffer/image/IImageBuffer.h>
 #include <prev/render/sampler/Sampler.h>
 
 #include <map>
@@ -27,7 +27,7 @@ public:
 
     float GetFontSizeScaledSpaceWidth(const float fontSize);
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> GetImageBuffer() const;
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetImageBuffer() const;
 
     std::shared_ptr<prev::render::sampler::Sampler> GetSampler() const;
 
@@ -41,7 +41,7 @@ private:
 
     std::map<int, Character> m_characterMetaData;
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_imageBuffer{};
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_imageBuffer{};
 
     std::shared_ptr<prev::render::sampler::Sampler> m_sampler{};
 };

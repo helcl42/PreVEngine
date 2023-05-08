@@ -3,7 +3,7 @@
 
 #include "ImageBufferCreateInfo.h"
 
-namespace prev::core::memory::image {
+namespace prev::render::buffer::image {
 class IImageBuffer {
 public:
     virtual void Create(const ImageBufferCreateInfo& createInfo) = 0;
@@ -35,6 +35,6 @@ public:
 public:
     virtual ~IImageBuffer() = default;
 };
-} // namespace prev::core::memory::image
+} // namespace prev::render::buffer::image
 
 #endif
