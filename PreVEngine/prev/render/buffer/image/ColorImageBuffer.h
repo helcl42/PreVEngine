@@ -3,10 +3,10 @@
 
 #include "AbstractImageBuffer.h"
 
-namespace prev::core::memory::image {
+namespace prev::render::buffer::image {
 class ColorImageBuffer : public AbstractImageBuffer {
 public:
-    ColorImageBuffer(Allocator& allocator);
+    ColorImageBuffer(prev::core::memory::Allocator& allocator);
 
     ~ColorImageBuffer() = default;
 
@@ -15,6 +15,6 @@ public:
 
     void Resize(const VkExtent3D& extent) override;
 };
-} // namespace prev::core::memory::image
+} // namespace prev::render::buffer::image
 
 #endif // !__COLOR_IMAGE_BUFFER_H__

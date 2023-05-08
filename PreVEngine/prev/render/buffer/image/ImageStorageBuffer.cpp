@@ -1,11 +1,11 @@
 #include "ImageStorageBuffer.h"
 
+#include "../../../core/instance/Validation.h"
 #include "../../../util/MathUtils.h"
 #include "../../../util/VkUtils.h"
-#include "../../instance/Validation.h"
 
-namespace prev::core::memory::image {
-ImageStorageBuffer::ImageStorageBuffer(Allocator& allocator)
+namespace prev::render::buffer::image {
+ImageStorageBuffer::ImageStorageBuffer(prev::core::memory::Allocator& allocator)
     : AbstractImageBuffer(allocator)
 {
 }
@@ -35,4 +35,4 @@ void ImageStorageBuffer::Resize(const VkExtent3D& extent)
 {
     LOGW("ImageStorageBuffer can not be resized - it has fixed size");
 }
-} // namespace prev::core::memory::image
+} // namespace prev::render::buffer::image

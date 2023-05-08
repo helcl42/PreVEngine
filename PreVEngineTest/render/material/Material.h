@@ -5,7 +5,7 @@
 
 namespace prev_test::render::material {
 struct ImagePair {
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> imageBuffer;
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> imageBuffer;
     std::shared_ptr<prev::render::sampler::Sampler> imageSampler;
 };
 
@@ -22,19 +22,19 @@ public:
     virtual ~Material() = default;
 
 public:
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> GetImageBuffer() const override;
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetImageBuffer() const override;
 
     std::shared_ptr<prev::render::sampler::Sampler> GetImageSampler() const override;
 
     bool HasImage() const override;
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> GetNormalmageBuffer() const override;
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetNormalmageBuffer() const override;
 
     std::shared_ptr<prev::render::sampler::Sampler> GetNormalImageSampler() const override;
 
     bool HasNormalImage() const override;
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> GetHeightImageBuffer() const override;
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetHeightImageBuffer() const override;
 
     std::shared_ptr<prev::render::sampler::Sampler> GetHeightImageSampler() const override;
 
@@ -73,15 +73,15 @@ private:
 
     float m_reflectivity{ 1.0f };
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_imageBuffer{};
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_imageBuffer{};
 
     std::shared_ptr<prev::render::sampler::Sampler> m_imageSampler{};
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_normalImageBuffer{};
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_normalImageBuffer{};
 
     std::shared_ptr<prev::render::sampler::Sampler> m_normalImageSampler{};
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_heightImageBuffer{};
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_heightImageBuffer{};
 
     std::shared_ptr<prev::render::sampler::Sampler> m_heightImageSampler{};
 

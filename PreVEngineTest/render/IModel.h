@@ -3,8 +3,8 @@
 
 #include "IMesh.h"
 
-#include <prev/core/memory/buffer/VertexBuffer.h>
-#include <prev/core/memory/buffer/IndexBuffer.h>
+#include <prev/render/buffer/IndexBuffer.h>
+#include <prev/render/buffer/VertexBuffer.h>
 
 #include <memory>
 
@@ -13,9 +13,9 @@ class IModel {
 public:
     virtual std::shared_ptr<IMesh> GetMesh() const = 0;
 
-    virtual std::shared_ptr<prev::core::memory::buffer::VertexBuffer> GetVertexBuffer() const = 0;
+    virtual std::shared_ptr<prev::render::buffer::VertexBuffer> GetVertexBuffer() const = 0;
 
-    virtual std::shared_ptr<prev::core::memory::buffer::IndexBuffer> GetIndexBuffer() const = 0;
+    virtual std::shared_ptr<prev::render::buffer::IndexBuffer> GetIndexBuffer() const = 0;
 
 public:
     virtual ~IModel() = default;

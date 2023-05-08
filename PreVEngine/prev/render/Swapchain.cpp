@@ -1,8 +1,9 @@
 #include "Swapchain.h"
+#include "buffer/image/ColorImageBuffer.h"
+#include "buffer/image/DepthImageBuffer.h"
+
 #include "../core/AllocatorProvider.h"
 #include "../core/DeviceProvider.h"
-#include "../core/memory/image/ColorImageBuffer.h"
-#include "../core/memory/image/DepthImageBuffer.h"
 #include "../util/MathUtils.h"
 #include "../util/VkUtils.h"
 
@@ -53,14 +54,14 @@ Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allo
 
     m_commandPool = m_graphicsQueue->CreateCommandPool();
 
-    m_depthBuffer = std::make_unique<core::memory::image::DepthImageBuffer>(m_allocator);
-    m_depthBuffer->Create(core::memory::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, renderPass.GetDepthFormat(), VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D });
+    m_depthBuffer = std::make_unique<buffer::image::DepthImageBuffer>(m_allocator);
+    m_depthBuffer->Create(buffer::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, renderPass.GetDepthFormat(), VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D });
 
     if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
-        m_msaaColorBuffer = std::make_unique<core::memory::image::ColorImageBuffer>(m_allocator);
-        m_msaaColorBuffer->Create(core::memory::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, m_renderPass.GetFormat(), m_sampleCount, 0, false, VK_IMAGE_VIEW_TYPE_2D });
-        m_msaaDepthBuffer = std::make_unique<core::memory::image::DepthImageBuffer>(m_allocator);
-        m_msaaDepthBuffer->Create(core::memory::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, m_renderPass.GetDepthFormat(), m_sampleCount, 0, false, VK_IMAGE_VIEW_TYPE_2D });
+        m_msaaColorBuffer = std::make_unique<buffer::image::ColorImageBuffer>(m_allocator);
+        m_msaaColorBuffer->Create(buffer::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, m_renderPass.GetFormat(), m_sampleCount, 0, false, VK_IMAGE_VIEW_TYPE_2D });
+        m_msaaDepthBuffer = std::make_unique<buffer::image::DepthImageBuffer>(m_allocator);
+        m_msaaDepthBuffer->Create(buffer::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, m_renderPass.GetDepthFormat(), m_sampleCount, 0, false, VK_IMAGE_VIEW_TYPE_2D });
     }
 
     VkSemaphoreCreateInfo semaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };

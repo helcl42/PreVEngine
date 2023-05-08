@@ -8,11 +8,11 @@ class CloudsComponentFactory;
 
 class CloudsComponent : public ICloudsComponent {
 public:
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> GetPerlinWorleyNoise() const override;
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetPerlinWorleyNoise() const override;
 
     std::shared_ptr<prev::render::sampler::Sampler> GetPerlinWorleyNoiseSampler() const override;
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> GetWeather() const override;
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetWeather() const override;
 
     std::shared_ptr<prev::render::sampler::Sampler> GetWeatherSampler() const override;
 
@@ -22,11 +22,11 @@ private:
     friend class CloudsComponentFactory;
 
 private:
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_weatherImageBuffer{};
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_weatherImageBuffer{};
 
     std::shared_ptr<prev::render::sampler::Sampler> m_weatehrImageSampler{};
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_perlinWorleyNoiseImageBuffer{};
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_perlinWorleyNoiseImageBuffer{};
 
     std::shared_ptr<prev::render::sampler::Sampler> m_perlinWorleyNoiseSampler{};
 

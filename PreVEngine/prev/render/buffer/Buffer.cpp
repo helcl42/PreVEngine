@@ -3,8 +3,8 @@
 #include <stdexcept>
 #include <string>
 
-namespace prev::core::memory::buffer {
-Buffer::Buffer(Allocator& allocator)
+namespace prev::render::buffer {
+Buffer::Buffer(prev::core::memory::Allocator& allocator)
     : m_allocator(allocator)
     , m_allocation(nullptr)
     , m_buffer(VK_NULL_HANDLE)
@@ -59,4 +59,4 @@ Buffer::operator VkBuffer() const
 {
     return m_buffer;
 }
-} // namespace prev::core::memory::buffer
+} // namespace prev::render::buffer

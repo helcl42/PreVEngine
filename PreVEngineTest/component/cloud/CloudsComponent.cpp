@@ -1,7 +1,7 @@
 #include "CloudsComponent.h"
 
 namespace prev_test::component::cloud {
-std::shared_ptr<prev::core::memory::image::IImageBuffer> CloudsComponent::GetPerlinWorleyNoise() const
+std::shared_ptr<prev::render::buffer::image::IImageBuffer> CloudsComponent::GetPerlinWorleyNoise() const
 {
     return m_perlinWorleyNoiseImageBuffer;
 }
@@ -11,7 +11,7 @@ std::shared_ptr<prev::render::sampler::Sampler> CloudsComponent::GetPerlinWorley
     return m_perlinWorleyNoiseSampler;
 }
 
-std::shared_ptr<prev::core::memory::image::IImageBuffer> CloudsComponent::GetWeather() const
+std::shared_ptr<prev::render::buffer::image::IImageBuffer> CloudsComponent::GetWeather() const
 {
     return m_weatherImageBuffer;
 }

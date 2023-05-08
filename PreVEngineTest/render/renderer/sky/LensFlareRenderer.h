@@ -10,6 +10,7 @@
 
 #include <prev/event/EventHandler.h>
 #include <prev/render/IRenderer.h>
+#include <prev/render/buffer/UniformBuffer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
@@ -45,15 +46,13 @@ private:
     float m_sunVisibilityFactor{ 0.0f };
 
 private:
-    struct alignas(16) UniformsVS
-    {
+    struct alignas(16) UniformsVS {
         alignas(16) glm::vec4 translation;
 
         alignas(16) glm::vec4 scale;
     };
 
-    struct alignas(16) UniformsFS
-    {
+    struct alignas(16) UniformsFS {
         alignas(16) glm::vec4 brightness;
     };
 
@@ -68,9 +67,9 @@ private:
 
     std::unique_ptr<prev_test::render::pipeline::IPipeline> m_pipeline;
 
-    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::render::buffer::UBOPool<UniformsVS>> m_uniformsPoolVS;
 
-    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::render::buffer::UBOPool<UniformsFS>> m_uniformsPoolFS;
 };
 } // namespace prev_test::render::renderer::sky
 

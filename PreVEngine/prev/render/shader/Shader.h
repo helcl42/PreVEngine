@@ -1,8 +1,9 @@
 #ifndef __SHADER_H__
 #define __SHADER_H__
 
+#include "../buffer/UniformBuffer.h"
+
 #include "../../core/instance/Validation.h"
-#include "../../core/memory/buffer/UniformBuffer.h"
 
 #include <map>
 #include <memory>
@@ -24,9 +25,9 @@ public:
 
     bool AddShaderModule(const VkShaderStageFlagBits stage, const std::vector<char>& spirv);
 
-    void Bind(const std::string& name, const prev::core::memory::buffer::UniformBuffer& ubo);
+    void Bind(const std::string& name, const prev::render::buffer::UniformBuffer& ubo);
 
-    void Bind(const std::string& name, const prev::core::memory::buffer::Buffer& buffer);
+    void Bind(const std::string& name, const prev::render::buffer::Buffer& buffer);
 
     void Bind(const std::string& name, const VkImageView imageView, const VkSampler sampler, const VkImageLayout imageLayout);
 

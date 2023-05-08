@@ -3,10 +3,12 @@
 
 #include "IImageBuffer.h"
 
-namespace prev::core::memory::image {
+#include "../../../core/memory/Allocator.h"
+
+namespace prev::render::buffer::image {
 class AbstractImageBuffer : public IImageBuffer {
 public:
-    AbstractImageBuffer(Allocator& allocator);
+    AbstractImageBuffer(prev::core::memory::Allocator& allocator);
 
     virtual ~AbstractImageBuffer();
 
@@ -35,7 +37,7 @@ public:
     VkImageViewType GetViewType() const override;
 
 protected:
-    Allocator& m_allocator;
+    prev::core::memory::Allocator& m_allocator;
 
     VmaAllocation m_allocation;
 
@@ -59,6 +61,6 @@ protected:
 
     VkImageViewType m_imageViewType;
 };
-} // namespace prev::core::memory::image
+} // namespace prev::render::buffer::image
 
 #endif

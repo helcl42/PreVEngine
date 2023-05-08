@@ -3,7 +3,7 @@
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
-#include <prev/core/memory/image/DepthImageBuffer.h>
+#include <prev/render/buffer/image/DepthImageBuffer.h>
 #include <prev/render/pass/RenderPassBuilder.h>
 #include <prev/util/VkUtils.h>
 
@@ -17,7 +17,7 @@ std::unique_ptr<IShadowsComponent> ShadowsComponentFactory::Create() const
     const VkExtent2D extent{ SHADOW_MAP_DIMENSIONS, SHADOW_MAP_DIMENSIONS };
 
     std::shared_ptr<prev::render::pass::RenderPass> renderPass{ CreateRenderPass(*device) };
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> depthBuffer{ CreateDepthBuffer(extent, CASCADES_COUNT, *allocator) };
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> depthBuffer{ CreateDepthBuffer(extent, CASCADES_COUNT, *allocator) };
     std::shared_ptr<prev::render::sampler::Sampler> depthSampler{ CreateSampler(allocator->GetDevice(), static_cast<float>(depthBuffer->GetMipLevels())) };
     auto cascades{ CreateCascades(extent, CASCADES_COUNT, depthBuffer, renderPass, *device) };
 
@@ -52,10 +52,10 @@ std::unique_ptr<prev::render::pass::RenderPass> ShadowsComponentFactory::CreateR
         .Build();
 }
 
-std::unique_ptr<prev::core::memory::image::IImageBuffer> ShadowsComponentFactory::CreateDepthBuffer(const VkExtent2D& extent, const uint32_t cascadesCount, prev::core::memory::Allocator& allocator) const
+std::unique_ptr<prev::render::buffer::image::IImageBuffer> ShadowsComponentFactory::CreateDepthBuffer(const VkExtent2D& extent, const uint32_t cascadesCount, prev::core::memory::Allocator& allocator) const
 {
-    auto depthBuffer{ std::make_unique<prev::core::memory::image::DepthImageBuffer>(allocator) };
-    depthBuffer->Create(prev::core::memory::image::ImageBufferCreateInfo{ extent, VK_IMAGE_TYPE_2D, DEPTH_FORMAT, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D_ARRAY, cascadesCount });
+    auto depthBuffer{ std::make_unique<prev::render::buffer::image::DepthImageBuffer>(allocator) };
+    depthBuffer->Create(prev::render::buffer::image::ImageBufferCreateInfo{ extent, VK_IMAGE_TYPE_2D, DEPTH_FORMAT, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D_ARRAY, cascadesCount });
     return depthBuffer;
 }
 
@@ -64,7 +64,7 @@ std::unique_ptr<prev::render::sampler::Sampler> ShadowsComponentFactory::CreateS
     return std::make_unique<prev::render::sampler::Sampler>(device, maxLod, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_NEAREST, VK_FILTER_NEAREST, VK_SAMPLER_MIPMAP_MODE_NEAREST);
 }
 
-std::vector<ShadowsCascade> ShadowsComponentFactory::CreateCascades(const VkExtent2D& extent, const uint32_t cascadesCount, const std::shared_ptr<prev::core::memory::image::IImageBuffer>& depthBuffer, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, prev::core::device::Device& device) const
+std::vector<ShadowsCascade> ShadowsComponentFactory::CreateCascades(const VkExtent2D& extent, const uint32_t cascadesCount, const std::shared_ptr<prev::render::buffer::image::IImageBuffer>& depthBuffer, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, prev::core::device::Device& device) const
 {
     std::vector<ShadowsCascade> cascades;
     cascades.resize(cascadesCount);

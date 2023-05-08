@@ -7,20 +7,39 @@
 #include "../../../General.h"
 
 #include <prev/render/IRenderer.h>
+#include <prev/render/buffer/UniformBuffer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
 
 namespace prev_test::render::renderer::font {
 class FontRenderer final : public prev::render::IRenderer<NormalRenderContextUserData> {
+public:
+    FontRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass);
+
+    ~FontRenderer() = default;
+
+public:
+    void Init() override;
+
+    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override;
+
+    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override;
+
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData) override;
+
+    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override;
+
+    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override;
+
+    void ShutDown() override;
+
 private:
-    struct alignas(16) UniformsVS
-    {
+    struct alignas(16) UniformsVS {
         alignas(16) glm::vec4 translation;
     };
 
-    struct alignas(16) UniformsFS
-    {
+    struct alignas(16) UniformsFS {
         alignas(16) glm::vec4 color;
 
         alignas(16) glm::vec4 width;
@@ -51,29 +70,9 @@ private:
 
     std::unique_ptr<prev_test::render::pipeline::IPipeline> m_pipeline;
 
-    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::render::buffer::UBOPool<UniformsVS>> m_uniformsPoolVS;
 
-    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
-
-public:
-    FontRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass);
-
-    ~FontRenderer() = default;
-
-public:
-    void Init() override;
-
-    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override;
-
-    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override;
-
-    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData) override;
-
-    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override;
-
-    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override;
-
-    void ShutDown() override;
+    std::unique_ptr<prev::render::buffer::UBOPool<UniformsFS>> m_uniformsPoolFS;
 };
 } // namespace prev_test::render::renderer::font
 

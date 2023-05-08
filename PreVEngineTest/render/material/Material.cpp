@@ -41,7 +41,7 @@ Material::Material(const MaterialProperties& materialProps, const ImagePair& ima
 {
 }
 
-std::shared_ptr<prev::core::memory::image::IImageBuffer> Material::GetImageBuffer() const
+std::shared_ptr<prev::render::buffer::image::IImageBuffer> Material::GetImageBuffer() const
 {
     return m_imageBuffer;
 }
@@ -56,7 +56,7 @@ bool Material::HasImage() const
     return m_imageBuffer != nullptr;
 }
 
-std::shared_ptr<prev::core::memory::image::IImageBuffer> Material::GetNormalmageBuffer() const
+std::shared_ptr<prev::render::buffer::image::IImageBuffer> Material::GetNormalmageBuffer() const
 {
     return m_normalImageBuffer;
 }
@@ -71,7 +71,7 @@ bool Material::HasNormalImage() const
     return m_normalImageBuffer != nullptr;
 }
 
-std::shared_ptr<prev::core::memory::image::IImageBuffer> Material::GetHeightImageBuffer() const
+std::shared_ptr<prev::render::buffer::image::IImageBuffer> Material::GetHeightImageBuffer() const
 {
     return m_heightImageBuffer;
 }

@@ -1,12 +1,12 @@
 #ifndef __BUFFER_H__
 #define __BUFFER_H__
 
-#include "../Allocator.h"
+#include "../../core/memory/Allocator.h"
 
-namespace prev::core::memory::buffer {
+namespace prev::render::buffer {
 class Buffer {
 public:
-    Buffer(Allocator& allocator);
+    Buffer(prev::core::memory::Allocator& allocator);
 
     virtual ~Buffer();
 
@@ -24,7 +24,7 @@ public:
     operator VkBuffer() const;
 
 protected:
-    Allocator& m_allocator;
+    prev::core::memory::Allocator& m_allocator;
 
     VmaAllocation m_allocation;
 
@@ -34,6 +34,6 @@ protected:
 
     uint32_t m_stride;
 };
-} // namespace prev::core::memory::buffer
+} // namespace prev::render::buffer
 
 #endif // !__BUFFER_H__

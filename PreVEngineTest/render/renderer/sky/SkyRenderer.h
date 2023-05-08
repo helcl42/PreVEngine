@@ -5,8 +5,9 @@
 #include "../../pipeline/IPipeline.h"
 #include "../RenderContextUserData.h"
 
-#include <prev/core/memory/image/IImageBuffer.h>
 #include <prev/render/IRenderer.h>
+#include <prev/render/buffer/UniformBuffer.h>
+#include <prev/render/buffer/image/IImageBuffer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/sampler/Sampler.h>
 #include <prev/render/shader/Shader.h>
@@ -35,7 +36,7 @@ public:
     void ShutDown() override;
 
 private:
-    void UpdateImageBufferExtents(const VkExtent2D& extent, std::shared_ptr<prev::core::memory::image::IImageBuffer>& imageBuffer, std::shared_ptr<prev::render::sampler::Sampler>& sampler);
+    void UpdateImageBufferExtents(const VkExtent2D& extent, std::shared_ptr<prev::render::buffer::image::IImageBuffer>& imageBuffer, std::shared_ptr<prev::render::sampler::Sampler>& sampler);
 
     void AddInterComputeImageBufferBarrier(const VkImage image, VkCommandBuffer commandBuffer);
 
@@ -91,35 +92,35 @@ private:
 
     std::unique_ptr<prev_test::render::pipeline::IPipeline> m_computeSkyPipeline;
 
-    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsSkyCS>> m_uniformsPoolSkyCS;
+    std::unique_ptr<prev::render::buffer::UBOPool<UniformsSkyCS>> m_uniformsPoolSkyCS;
 
     std::unique_ptr<prev::render::shader::Shader> m_conmputeSkyPostProcessShader;
 
     std::unique_ptr<prev_test::render::pipeline::IPipeline> m_computeSkyPostProcessPipeline;
 
-    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsSkyPostProcessCS>> m_uniformsPoolSkyPorstProcessCS;
+    std::unique_ptr<prev::render::buffer::UBOPool<UniformsSkyPostProcessCS>> m_uniformsPoolSkyPorstProcessCS;
 
     std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<prev_test::render::pipeline::IPipeline> m_pipeline;
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_skyColorImageBuffer;
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_skyColorImageBuffer;
 
     std::shared_ptr<prev::render::sampler::Sampler> m_skyColorImageSampler;
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_skyBloomImageBuffer;
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_skyBloomImageBuffer;
 
     std::shared_ptr<prev::render::sampler::Sampler> m_skyBloomImageSampler;
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_skyAlphanessImageBuffer;
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_skyAlphanessImageBuffer;
 
     std::shared_ptr<prev::render::sampler::Sampler> m_skyAlphanessImageSampler;
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_skyCloudDistanceImageBuffer;
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_skyCloudDistanceImageBuffer;
 
     std::shared_ptr<prev::render::sampler::Sampler> m_skyCloudDistanceImageSampler;
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> m_skyPostProcessColorImageBuffer;
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_skyPostProcessColorImageBuffer;
 
     std::shared_ptr<prev::render::sampler::Sampler> m_skyPostProcessImageSampler;
 };

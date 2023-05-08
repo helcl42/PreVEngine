@@ -3,7 +3,7 @@
 
 #include "Buffer.h"
 
-namespace prev::core::memory::buffer {
+namespace prev::render::buffer {
 class VertexBuffer final : public Buffer {
 public:
     using Buffer::Buffer;
@@ -11,6 +11,6 @@ public:
 public:
     void Data(const void* data, const uint32_t count, const uint32_t stride);
 };
-} // namespace prev::core::memory::buffer
+} // namespace prev::render::buffer
 
 #endif

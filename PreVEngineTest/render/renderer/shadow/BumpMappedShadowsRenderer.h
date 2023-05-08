@@ -8,6 +8,7 @@
 #include "../../../General.h"
 
 #include <prev/render/IRenderer.h>
+#include <prev/render/buffer/UniformBuffer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
@@ -55,7 +56,7 @@ private:
 
     std::unique_ptr<prev_test::render::pipeline::IPipeline> m_pipeline;
 
-    std::unique_ptr<prev::core::memory::buffer::UBOPool<Uniforms> > m_uniformsPool;
+    std::unique_ptr<prev::render::buffer::UBOPool<Uniforms>> m_uniformsPool;
 };
 } // namespace prev_test::render::renderer::shadow
 

@@ -3,7 +3,8 @@
 
 #include "../IMaterial.h"
 
-#include <prev/core/memory/image/IImageBuffer.h>
+#include <prev/core/memory/Allocator.h>
+#include <prev/render/buffer/image/IImageBuffer.h>
 #include <prev/render/image/Image.h>
 
 #include <map>
@@ -26,7 +27,7 @@ public:
 private:
     std::shared_ptr<prev::render::image::Image> CreateImage(const std::string& textureFilename) const;
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> CreateImageBuffer(const std::shared_ptr<prev::render::image::Image>& image, prev::core::memory::Allocator& allocator) const;
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> CreateImageBuffer(const std::shared_ptr<prev::render::image::Image>& image, prev::core::memory::Allocator& allocator) const;
 
 private:
     static inline std::map<std::string, std::shared_ptr<prev::render::image::Image>> s_imagesCache;

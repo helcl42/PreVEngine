@@ -1,10 +1,11 @@
 #ifndef __UNIFORM_BUFFER_H__
 #define __UNIFORM_BUFFER_H__
 
-#include "../../../util/MathUtils.h"
 #include "Buffer.h"
 
-namespace prev::core::memory::buffer {
+#include "../../util/MathUtils.h"
+
+namespace prev::render::buffer {
 class UniformBuffer final {
 public:
     UniformBuffer(VkBuffer buffer, void* data, const uint32_t offset, const uint32_t range);
@@ -33,7 +34,7 @@ private:
 template <typename ItemType>
 class UBOPool final : public Buffer {
 public:
-    UBOPool(Allocator& allocator)
+    UBOPool(prev::core::memory::Allocator& allocator)
         : Buffer(allocator)
         , m_capacity(0)
         , m_index(0)
@@ -69,7 +70,7 @@ public:
     }
 
 private:
-    std::vector<std::shared_ptr<UniformBuffer> > m_poolItems;
+    std::vector<std::shared_ptr<UniformBuffer>> m_poolItems;
 
     uint32_t m_capacity;
 
@@ -77,6 +78,6 @@ private:
 
     void* m_mapped;
 };
-} // namespace prev::core::memory::buffer
+} // namespace prev::render::buffer
 
 #endif

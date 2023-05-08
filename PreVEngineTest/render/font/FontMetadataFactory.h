@@ -4,7 +4,7 @@
 #include "FontMetadata.h"
 #include "FontMetadataFile.h"
 
-#include <prev/core/memory/image/IImageBuffer.h>
+#include <prev/render/buffer/image/IImageBuffer.h>
 #include <prev/render/sampler/Sampler.h>
 
 #include <map>
@@ -42,7 +42,7 @@ private:
 
     void ExtractMeasureInfo(FontMetadataFile& metaDataFile, FontMetadataState& state) const;
 
-    std::shared_ptr<prev::core::memory::image::IImageBuffer> CreateImageBuffer(const std::string& textureFilePath) const;
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> CreateImageBuffer(const std::string& textureFilePath) const;
 
     std::unique_ptr<prev::render::sampler::Sampler> CreateSampler(const float maxLod) const;
 

@@ -14,8 +14,6 @@ file(GLOB COMMON_SRC_LIST "prev/common/*.h" "prev/common/*.cpp")
 file(GLOB COMMON_PATTERN_SRC_LIST "prev/common/pattern/*.h" "prev/common/pattern/*.cpp")
 file(GLOB CORE_SRC_LIST "prev/core/*.h" "prev/core/*.cpp")
 file(GLOB CORE_MEMORY_SRC_LIST "prev/core/memory/*.h" "prev/core/memory/*.cpp")
-file(GLOB CORE_MEMORY_BUFFER_SRC_LIST "prev/core/memory/buffer/*.h" "prev/core/memory/buffer/*.cpp")
-file(GLOB CORE_MEMORY_IMAGE_SRC_LIST "prev/core/memory/image/*.h" "prev/core/memory/image/*.cpp")
 file(GLOB CORE_DEVICE_SRC_LIST "prev/core/device/*.h" "prev/core/device/*.cpp")
 file(GLOB CORE_INSTANCE_SRC_LIST "prev/core/instance/*.h" "prev/core/instance/*.cpp")
 file(GLOB EVENT_SRC_LIST "prev/event/*.h" "prev/event/*.cpp")
@@ -25,6 +23,8 @@ file(GLOB INPUT_MOUSE_SRC_LIST "prev/input/mouse/*.h" "prev/input/mouse/*.cpp")
 file(GLOB INPUT_KEYBOARD_SRC_LIST "prev/input/keyboard/*.h" "prev/input/keyboard/*.cpp")
 file(GLOB INPUT_TOUCH_SRC_LIST "prev/input/touch/*.h" "prev/input/touch/*.cpp")
 file(GLOB RENDER_SRC_LIST "prev/render/*.h" "prev/render/*.cpp")
+file(GLOB RENDER_BUFFER_SRC_LIST "prev/render/buffer/*.h" "prev/render/buffer/*.cpp")
+file(GLOB RENDER_BUFFER_IMAGE_SRC_LIST "prev/render/buffer/image/*.h" "prev/render/buffer/image/*.cpp")
 file(GLOB RENDER_IMAGE_SRC_LIST "prev/render/image/*.h" "prev/render/image/*.cpp")
 file(GLOB RENDER_PASS_SRC_LIST "prev/render/pass/*.h" "prev/render/pass/*.cpp")
 file(GLOB RENDER_SHADER_SRC_LIST "prev/render/shader/*.h" "prev/render/shader/*.cpp")
@@ -45,8 +45,8 @@ source_group("prev/common" FILES ${COMMON_SRC_LIST})
 source_group("prev/common/pattern" FILES ${COMMON_PATTERN_SRC_LIST})
 source_group("prev/core" FILES ${CORE_SRC_LIST})
 source_group("prev/core/memory" FILES ${CORE_MEMORY_SRC_LIST})
-source_group("prev/core/memory/buffer" FILES ${CORE_MEMORY_BUFFER_SRC_LIST})
-source_group("prev/core/memory/image" FILES ${CORE_MEMORY_IMAGE_SRC_LIST})
+source_group("prev/render/buffer" FILES ${RENDER_BUFFER_SRC_LIST})
+source_group("prev/render/buffer/image" FILES ${RENDER_BUFFER_IMAGE_SRC_LIST})
 source_group("prev/core/device" FILES ${CORE_DEVICE_SRC_LIST})
 source_group("prev/core/instance" FILES ${CORE_INSTANCE_SRC_LIST})
 source_group("prev/event" FILES ${EVENT_SRC_LIST})
@@ -77,8 +77,6 @@ add_library(${LIBRARY_NAME} STATIC
     ${COMMON_PATTERN_SRC_LIST}
     ${CORE_SRC_LIST}
     ${CORE_MEMORY_SRC_LIST}
-    ${CORE_MEMORY_BUFFER_SRC_LIST}
-    ${CORE_MEMORY_IMAGE_SRC_LIST}
     ${CORE_DEVICE_SRC_LIST}
     ${CORE_INSTANCE_SRC_LIST}
     ${EVENT_SRC_LIST}
@@ -88,6 +86,8 @@ add_library(${LIBRARY_NAME} STATIC
     ${INPUT_KEYBOARD_SRC_LIST}
     ${INPUT_TOUCH_SRC_LIST}
     ${RENDER_SRC_LIST}
+    ${RENDER_BUFFER_SRC_LIST}
+    ${RENDER_BUFFER_IMAGE_SRC_LIST}
     ${RENDER_IMAGE_SRC_LIST}
     ${RENDER_PASS_SRC_LIST}
     ${RENDER_SHADER_SRC_LIST}

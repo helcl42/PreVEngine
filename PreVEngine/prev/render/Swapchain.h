@@ -1,9 +1,10 @@
 #ifndef __SWAPCHAIN_H__
 #define __SWAPCHAIN_H__
 
-#include "../core/memory/Allocator.h"
-#include "../core/memory/image/IImageBuffer.h"
+#include "buffer/image/IImageBuffer.h"
 #include "pass/RenderPass.h"
+
+#include "../core/memory/Allocator.h"
 
 #ifdef ANDROID
 #define IS_ANDROID true // ANDROID: default to power-save (limit to 60fps)
@@ -15,7 +16,7 @@ namespace prev::render {
 struct SwapchainBuffer {
     VkImage image;
 
-    VkImageView view; // TODO: MRT?
+    VkImageView view;
 
     VkExtent2D extent;
 
@@ -91,7 +92,7 @@ private:
 
     std::shared_ptr<prev::core::device::Queue> m_graphicsQueue;
 
-    std::unique_ptr<prev::core::memory::image::IImageBuffer> m_depthBuffer;
+    std::unique_ptr<prev::render::buffer::image::IImageBuffer> m_depthBuffer;
 
     VkSwapchainKHR m_swapchain;
 
@@ -114,9 +115,9 @@ private:
     uint32_t m_swapchainImagesCount;
 
     // MSAA
-    std::unique_ptr<prev::core::memory::image::IImageBuffer> m_msaaColorBuffer;
+    std::unique_ptr<prev::render::buffer::image::IImageBuffer> m_msaaColorBuffer;
 
-    std::unique_ptr<prev::core::memory::image::IImageBuffer> m_msaaDepthBuffer;
+    std::unique_ptr<prev::render::buffer::image::IImageBuffer> m_msaaDepthBuffer;
 };
 } // namespace prev::render
 

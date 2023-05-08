@@ -1,6 +1,6 @@
 #include "ImageBufferCreateInfo.h"
 
-namespace prev::core::memory::image {
+namespace prev::render::buffer::image {
 ImageBufferCreateInfo::ImageBufferCreateInfo(const VkExtent2D& ext, const VkImageType imgType, const VkFormat fmt, const VkSampleCountFlagBits samplesCnt, const VkImageCreateFlags flgs, const bool mipmap, const VkImageViewType vwType, const uint32_t lrCount, const uint8_t* data)
     : ImageBufferCreateInfo(VkExtent3D{ ext.width, ext.height, 1 }, imgType, fmt, samplesCnt, flgs, mipmap, vwType, lrCount, std::vector<const uint8_t*>{ data })
 {
@@ -28,4 +28,4 @@ ImageBufferCreateInfo::ImageBufferCreateInfo(const VkExtent3D& ext, const VkImag
     , layerData(lrImageData)
 {
 }
-} // namespace prev::core::memory::image
+} // namespace prev::render::buffer::image
