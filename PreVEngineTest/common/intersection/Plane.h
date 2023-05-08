@@ -3,6 +3,8 @@
 
 #include <prev/common/Common.h>
 
+#include <iostream>
+
 namespace prev_test::common::intersection {
 struct Plane {
     glm::vec3 normal;

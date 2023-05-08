@@ -24,7 +24,7 @@ std::ostream& operator<<(std::ostream& out, const RayCastResult& result)
     out << "Point: " << prev::util::string::GetAsString(result.point, 2) << std::endl;
     out << "Normal:    " << prev::util::string::GetAsString(result.normal, 2) << std::endl;
     out << "T:    " << result.t << std::endl;
-    out << "hit: " << result.hit << std::endl;
+    out << "Hit: " << (result.hit ? "True" : "False") << std::endl;
     return out;
 }
 } // namespace prev_test::common::intersection

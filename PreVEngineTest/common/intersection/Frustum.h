@@ -4,6 +4,8 @@
 #include "Plane.h"
 #include "Point.h"
 
+#include <iostream>
+
 namespace prev_test::common::intersection {
 struct Frustum {
     std::array<Plane, 6> planes;

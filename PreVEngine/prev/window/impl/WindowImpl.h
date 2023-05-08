@@ -12,7 +12,7 @@ public:
         return m_head == m_tail;
     }
 
-    void Push(Event const& item)
+    void Push(const Event& item)
     {
         ++m_head;
 

@@ -5,6 +5,7 @@
 
 #include <prev/scene/component/NodeComponentHelper.h>
 
+#include <iomanip>
 #include <sstream>
 
 namespace prev_test::scene {
