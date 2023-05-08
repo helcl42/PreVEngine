@@ -128,7 +128,7 @@ void TerrainConeStepMappedRenderer::Render(const prev::render::RenderContext& re
                 uniformsFS.heightSteps[i] = glm::vec4(terrainComponent->GetHeightSteps().at(i));
             }
             uniformsFS.heightTransitionRange = terrainComponent->GetTransitionRange();
-            uniformsFS.numLayers = 8;
+            uniformsFS.numLayers = 32;
 
             uboFS->Update(&uniformsFS);
 
