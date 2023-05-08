@@ -25,42 +25,46 @@ Shader::~Shader()
 
 bool Shader::Init()
 {
-    if (m_descriptorSetLayout == VK_NULL_HANDLE) {
-        for (const auto& module : m_shaderModules) {
-            VkPipelineShaderStageCreateInfo stageInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
-            stageInfo.stage = module.first;
-            stageInfo.module = m_shaderModules[module.first];
-            stageInfo.pName = DEFAULT_ENTRY_POINT_NAME.c_str();
-            m_shaderStages.push_back(stageInfo);
-        }
-
-        m_inputBindingDescriptions = CreateVertexInputBindingDescriptors();
-        m_inputAttributeDescriptions = CreateInputAttributeDescriptors();
-
-        auto descriptorSets = CreateDescriptorSets();
-        for (const auto& ds : descriptorSets) {
-            AddDescriptorSet(ds.name, ds.binding, ds.descType, ds.descCount, ds.stageFlags);
-        }
-
-        auto pushConstantBlocks = CreatePushConstantBlocks();
-        for (const auto& pcb : pushConstantBlocks) {
-            AddPushConstantBlock(pcb.stageFlags, pcb.offset, pcb.size);
-        }
-
-        m_currentDescriptorSetIndex = 0;
-
-        m_descriptorSetLayout = CreateDescriptorSetLayout();
-
-        AdjustDescriptorPoolCapacity(20);
-
-        return true;
+    if (!m_shaderStages.empty()) {
+        return false;
     }
 
-    return false;
+    for (const auto& module : m_shaderModules) {
+        VkPipelineShaderStageCreateInfo stageInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
+        stageInfo.stage = module.first;
+        stageInfo.module = m_shaderModules[module.first];
+        stageInfo.pName = DEFAULT_ENTRY_POINT_NAME.c_str();
+        m_shaderStages.push_back(stageInfo);
+    }
+
+    m_inputBindingDescriptions = CreateVertexInputBindingDescriptors();
+    m_inputAttributeDescriptions = CreateInputAttributeDescriptors();
+
+    auto descriptorSets = CreateDescriptorSets();
+    for (const auto& ds : descriptorSets) {
+        AddDescriptorSet(ds.name, ds.binding, ds.descType, ds.descCount, ds.stageFlags);
+    }
+
+    auto pushConstantBlocks = CreatePushConstantBlocks();
+    for (const auto& pcb : pushConstantBlocks) {
+        AddPushConstantBlock(pcb.stageFlags, pcb.offset, pcb.size);
+    }
+
+    m_currentDescriptorSetIndex = 0;
+
+    m_descriptorSetLayout = CreateDescriptorSetLayout();
+
+    AdjustDescriptorPoolCapacity(20);
+
+    return true;
 }
 
 void Shader::ShutDown()
 {
+    if (m_shaderStages.empty()) {
+        return;
+    }
+
     vkDeviceWaitIdle(m_device);
 
     if (m_descriptorPool) {
