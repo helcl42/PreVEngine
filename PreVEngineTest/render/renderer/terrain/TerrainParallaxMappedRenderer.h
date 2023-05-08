@@ -37,7 +37,7 @@ public:
     void ShutDown() override;
 
 private:
-    struct alignas(16) ShadowsCascadeUniform {
+    struct DEFAULT_ALIGNMENT ShadowsCascadeUniform {
         glm::mat4 viewProjectionMatrix;
 
         glm::vec4 split;
@@ -51,13 +51,13 @@ private:
         }
     };
 
-    struct alignas(16) ShadowsUniform {
+    struct DEFAULT_ALIGNMENT ShadowsUniform {
         ShadowsCascadeUniform cascades[prev_test::component::shadow::CASCADES_COUNT];
 
         uint32_t enabled;
     };
 
-    struct alignas(16) LightUniform {
+    struct DEFAULT_ALIGNMENT LightUniform {
         glm::vec4 position;
 
         glm::vec4 color;
@@ -74,7 +74,7 @@ private:
         }
     };
 
-    struct alignas(16) LightningUniform {
+    struct DEFAULT_ALIGNMENT LightningUniform {
         LightUniform lights[prev_test::component::light::MAX_LIGHT_COUNT];
 
         uint32_t realCountOfLights;
@@ -82,7 +82,7 @@ private:
         float ambientFactor;
     };
 
-    struct alignas(16) MaterialUniform {
+    struct DEFAULT_ALIGNMENT MaterialUniform {
         glm::vec4 color;
 
         float shineDamper;
@@ -99,49 +99,49 @@ private:
         }
     };
 
-    struct alignas(16) UniformsVS {
-        alignas(16) glm::mat4 modelMatrix;
+    struct DEFAULT_ALIGNMENT UniformsVS {
+        DEFAULT_ALIGNMENT glm::mat4 modelMatrix;
 
-        alignas(16) glm::mat4 viewMatrix;
+        DEFAULT_ALIGNMENT glm::mat4 viewMatrix;
 
-        alignas(16) glm::mat4 projectionMatrix;
+        DEFAULT_ALIGNMENT glm::mat4 projectionMatrix;
 
-        alignas(16) glm::mat4 normalMatrix;
+        DEFAULT_ALIGNMENT glm::mat4 normalMatrix;
 
-        alignas(16) glm::vec4 clipPlane;
+        DEFAULT_ALIGNMENT glm::vec4 clipPlane;
 
-        alignas(16) glm::vec4 cameraPosition;
+        DEFAULT_ALIGNMENT glm::vec4 cameraPosition;
 
-        alignas(16) LightningUniform lightning;
+        DEFAULT_ALIGNMENT LightningUniform lightning;
 
-        alignas(16) float density;
+        DEFAULT_ALIGNMENT float density;
         float gradient;
     };
 
-    struct alignas(16) UniformsFS {
-        alignas(16) ShadowsUniform shadows;
+    struct DEFAULT_ALIGNMENT UniformsFS {
+        DEFAULT_ALIGNMENT ShadowsUniform shadows;
 
-        alignas(16) LightningUniform lightning;
+        DEFAULT_ALIGNMENT LightningUniform lightning;
 
-        alignas(16) MaterialUniform material[4];
+        DEFAULT_ALIGNMENT MaterialUniform material[4];
 
-        alignas(16) glm::vec4 fogColor;
+        DEFAULT_ALIGNMENT glm::vec4 fogColor;
 
-        alignas(16) glm::vec4 selectedColor;
+        DEFAULT_ALIGNMENT glm::vec4 selectedColor;
 
-        alignas(16) uint32_t selected;
+        DEFAULT_ALIGNMENT uint32_t selected;
         uint32_t castedByShadows;
         float minHeight;
         float maxHeight;
 
-        alignas(16) glm::vec4 heightSteps[4];
-        alignas(16) glm::vec4 heightScale[4];
+        DEFAULT_ALIGNMENT glm::vec4 heightSteps[4];
+        DEFAULT_ALIGNMENT glm::vec4 heightScale[4];
 
-        alignas(16) float heightTransitionRange;
+        DEFAULT_ALIGNMENT float heightTransitionRange;
         uint32_t numLayers;
         uint32_t mappingMode;
 
-        alignas(16) float maxAngleToFallback;
+        DEFAULT_ALIGNMENT float maxAngleToFallback;
     };
 
 private:

@@ -41,10 +41,10 @@ private:
 
 private:
     struct Uniforms {
-        alignas(16) glm::mat4 modelMatrix;
-        alignas(16) glm::mat4 viewMatrix;
-        alignas(16) glm::mat4 projectionMatrix;
-        alignas(16) glm::mat4 bones[MAX_BONES_COUNT];
+        DEFAULT_ALIGNMENT glm::mat4 modelMatrix;
+        DEFAULT_ALIGNMENT glm::mat4 viewMatrix;
+        DEFAULT_ALIGNMENT glm::mat4 projectionMatrix;
+        DEFAULT_ALIGNMENT glm::mat4 bones[MAX_BONES_COUNT];
     };
 
 private:

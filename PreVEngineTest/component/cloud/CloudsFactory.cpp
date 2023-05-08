@@ -14,9 +14,9 @@ namespace prev_test::component::cloud {
 CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) const
 {
     struct Uniforms {
-        alignas(16) glm::vec4 textureSize;
-        alignas(16) glm::vec4 seed;
-        alignas(16) float perlinAmplitude;
+        DEFAULT_ALIGNMENT glm::vec4 textureSize;
+        DEFAULT_ALIGNMENT glm::vec4 seed;
+        DEFAULT_ALIGNMENT float perlinAmplitude;
         float perlinFrequency;
         float perlinScale;
         int perlinOctaves;

@@ -35,28 +35,28 @@ public:
     void ShutDown() override;
 
 private:
-    struct alignas(16) UniformsVS {
-        alignas(16) glm::vec4 translation;
+    struct DEFAULT_ALIGNMENT UniformsVS {
+        DEFAULT_ALIGNMENT glm::vec4 translation;
     };
 
-    struct alignas(16) UniformsFS {
-        alignas(16) glm::vec4 color;
+    struct DEFAULT_ALIGNMENT UniformsFS {
+        DEFAULT_ALIGNMENT glm::vec4 color;
 
-        alignas(16) glm::vec4 width;
+        DEFAULT_ALIGNMENT glm::vec4 width;
 
-        alignas(16) glm::vec4 edge;
+        DEFAULT_ALIGNMENT glm::vec4 edge;
 
-        alignas(16) glm::vec4 bias;
+        DEFAULT_ALIGNMENT glm::vec4 bias;
 
-        alignas(16) uint32_t hasEffect;
+        DEFAULT_ALIGNMENT uint32_t hasEffect;
 
-        alignas(16) glm::vec4 borderWidth;
+        DEFAULT_ALIGNMENT glm::vec4 borderWidth;
 
-        alignas(16) glm::vec4 borderEdge;
+        DEFAULT_ALIGNMENT glm::vec4 borderEdge;
 
-        alignas(16) glm::vec4 outlineColor;
+        DEFAULT_ALIGNMENT glm::vec4 outlineColor;
 
-        alignas(16) glm::vec4 outlineOffset;
+        DEFAULT_ALIGNMENT glm::vec4 outlineOffset;
     };
 
 private:

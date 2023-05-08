@@ -35,10 +35,10 @@ public:
     void ShutDown() override;
 
 private:
-    struct alignas(16) UniformsVS {
-        alignas(16) glm::vec4 translation;
+    struct DEFAULT_ALIGNMENT UniformsVS {
+        DEFAULT_ALIGNMENT glm::vec4 translation;
 
-        alignas(16) glm::vec4 scale;
+        DEFAULT_ALIGNMENT glm::vec4 scale;
     };
 
 private:

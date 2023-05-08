@@ -37,23 +37,23 @@ public:
     void ShutDown() override;
 
 private:
-    struct alignas(16) UniformsVS
+    struct DEFAULT_ALIGNMENT UniformsVS
     {
-        alignas(16) glm::vec3 color;
+        DEFAULT_ALIGNMENT glm::vec3 color;
     };
 
-    struct alignas(16) UniformsGS
+    struct DEFAULT_ALIGNMENT UniformsGS
     {
-        alignas(16) glm::mat4 modelMatrix;
+        DEFAULT_ALIGNMENT glm::mat4 modelMatrix;
 
-        alignas(16) glm::mat4 viewMatrix;
+        DEFAULT_ALIGNMENT glm::mat4 viewMatrix;
 
-        alignas(16) glm::mat4 projectionMatrix;
+        DEFAULT_ALIGNMENT glm::mat4 projectionMatrix;
     };
 
-    struct alignas(16) UniformsFS
+    struct DEFAULT_ALIGNMENT UniformsFS
     {
-        alignas(16) float alpha;
+        DEFAULT_ALIGNMENT float alpha;
     };
 
 private:

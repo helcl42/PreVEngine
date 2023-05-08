@@ -46,14 +46,14 @@ private:
     float m_sunVisibilityFactor{ 0.0f };
 
 private:
-    struct alignas(16) UniformsVS {
-        alignas(16) glm::vec4 translation;
+    struct DEFAULT_ALIGNMENT UniformsVS {
+        DEFAULT_ALIGNMENT glm::vec4 translation;
 
-        alignas(16) glm::vec4 scale;
+        DEFAULT_ALIGNMENT glm::vec4 scale;
     };
 
-    struct alignas(16) UniformsFS {
-        alignas(16) glm::vec4 brightness;
+    struct DEFAULT_ALIGNMENT UniformsFS {
+        DEFAULT_ALIGNMENT glm::vec4 brightness;
     };
 
 private:
