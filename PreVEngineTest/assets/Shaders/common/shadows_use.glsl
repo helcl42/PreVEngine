@@ -2,6 +2,7 @@
 
 const bool enablePCF = true;
 const float defaultShadowFactor = 0.2;
+const float cascadeBiasDamper = 1.4;
 const uint SHADOW_MAP_CASCADE_COUNT = 4;
 
 struct ShadowsCascade {
@@ -17,7 +18,7 @@ struct Shadows {
 float GetShadowRawInternal(in sampler2DArray depthSampler, in vec4 shadowCoord, in vec2 shadowCoordOffset, in uint cascadeIndex, in float depthBias)
 {
 	float shadow = 1.0;
-	if (shadowCoord.z > -1.0 && shadowCoord.z < 1.0)
+	if (shadowCoord.z >= 0.0 && shadowCoord.z <= 1.0)
 	{
 		float depth = texture(depthSampler, vec3(shadowCoord.xy + shadowCoordOffset, cascadeIndex)).r;
 		if (shadowCoord.w > 0.0 && depth < shadowCoord.z - depthBias) 
@@ -67,6 +68,7 @@ float GetShadow(in sampler2DArray depthSampler, in vec4 shadowCoord, in uint cas
 float GetShadow(in sampler2DArray depthSampler, in Shadows shadows, in vec3 viewPosition, in vec3 worldPosition, in float depthBias)
 {
 	float shadow = 1.0;	
+	float bias = depthBias;
 	if(shadows.enabled != 0)
 	{
 		uint cascadeIndex = 0;
@@ -75,12 +77,13 @@ float GetShadow(in sampler2DArray depthSampler, in Shadows shadows, in vec3 view
 			if(viewPosition.z < shadows.cascades[i].split.x)
 			{
 				cascadeIndex = i + 1;
+				bias /= cascadeBiasDamper;
 			}
 		}
 
 	    vec4 shadowCoord = shadows.cascades[cascadeIndex].viewProjectionMatrix * vec4(worldPosition, 1.0);
 		vec4 normalizedShadowCoord = shadowCoord / shadowCoord.w;
-		shadow = GetShadow(depthSampler, normalizedShadowCoord, cascadeIndex, depthBias);
+		shadow = GetShadow(depthSampler, normalizedShadowCoord, cascadeIndex, bias);
 	}
 	return shadow;
 }
