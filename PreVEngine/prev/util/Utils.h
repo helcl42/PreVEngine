@@ -6,144 +6,46 @@
 
 #include <chrono>
 #include <cmath>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
+#include <mutex>
 #include <random>
-#include <sstream>
 #include <vector>
 
 namespace prev::util {
 
 template <typename T, ptrdiff_t N>
-ptrdiff_t ArraySize(T (&)[N])
+inline ptrdiff_t ArraySize(T (&)[N])
 {
     return N;
 }
 
 namespace file {
-    inline bool Exists(const std::string& filePath)
-    {
-        return std::filesystem::exists(filePath);
-    }
+    bool Exists(const std::string& filePath);
 
-    inline bool CreateDirectoryByPath(const std::string& path)
-    {
-        return std::filesystem::create_directories(path);
-    }
+    bool CreateDirectoryByPath(const std::string& path);
 
-    inline std::string GetDirectoryPath(const std::string& filePath)
-    {
-        std::filesystem::path p(filePath);
-        std::filesystem::path parent = p.parent_path();
-        return parent.string();
-    }
+    std::string GetDirectoryPath(const std::string& filePath);
 } // namespace file
 
 namespace string {
-    inline std::vector<std::string> Split(const std::string& s, const char delim)
-    {
-        std::vector<std::string> elems;
-        std::istringstream ss(s);
-        std::string item;
-        while (std::getline(ss, item, delim)) {
-            elems.push_back(item);
-        }
-        return elems;
-    }
+    std::vector<std::string> Split(const std::string& s, const char delim);
 
-    inline std::vector<std::wstring> Split(const std::wstring& s, const wchar_t delim)
-    {
-        std::vector<std::wstring> elems;
-        std::wstringstream ss(s);
-        std::wstring item;
-        while (std::getline(ss, item, delim)) {
-            elems.push_back(item);
-        }
-        return elems;
-    }
+    std::vector<std::wstring> Split(const std::wstring& s, const wchar_t delim);
 
-    inline std::vector<std::string> Split(const std::string& s, const std::string& t)
-    {
-        std::string copy{ s };
-        std::vector<std::string> res;
-        while (true) {
-            size_t pos = copy.find(t);
-            if (pos == std::string::npos) {
-                res.push_back(copy);
-                break;
-            }
-            res.push_back(copy.substr(0, pos));
-            copy = copy.substr(pos + 1, copy.size() - pos - 1);
-        }
-        return res;
-    }
+    std::vector<std::string> Split(const std::string& s, const std::string& t);
 
-    inline std::vector<std::wstring> Split(const std::wstring& s, const std::wstring& t)
-    {
-        std::wstring copy{ s };
-        std::vector<std::wstring> res;
-        while (true) {
-            size_t pos = copy.find(t);
-            if (pos == std::string::npos) {
-                res.push_back(copy);
-                break;
-            }
-            res.push_back(copy.substr(0, pos));
-            copy = copy.substr(pos + 1, copy.size() - pos - 1);
-        }
-        return res;
-    }
+    std::vector<std::wstring> Split(const std::wstring& s, const std::wstring& t);
 
-    inline std::string Replace(const std::string& subject, const std::string& search, const std::string& replace)
-    {
-        std::string copy{ subject };
-        size_t pos{ 0 };
-        while ((pos = copy.find(search, pos)) != std::string::npos) {
-            copy.replace(pos, search.length(), replace);
-            pos += replace.length();
-        }
-        return copy;
-    }
+    std::string Replace(const std::string& subject, const std::string& search, const std::string& replace);
 
-    inline std::wstring Replace(const std::wstring& subject, const std::wstring& search, const std::wstring& replace)
-    {
-        std::wstring copy{ subject };
-        size_t pos{ 0 };
-        while ((pos = copy.find(search, pos)) != std::wstring::npos) {
-            copy.replace(pos, search.length(), replace);
-            pos += replace.length();
-        }
-        return copy;
-    }
+    std::wstring Replace(const std::wstring& subject, const std::wstring& search, const std::wstring& replace);
 
-    inline std::string GetAsString(const glm::vec2& v, const uint32_t precission)
-    {
-        std::stringstream ss;
-        ss << std::setprecision(precission) << "(" << v.x << ", " << v.y << ")";
-        return ss.str();
-    }
+    std::string GetAsString(const glm::vec2& v, const uint32_t precission);
 
-    inline std::string GetAsString(const glm::vec3& v, const uint32_t precission)
-    {
-        std::stringstream ss;
-        ss << std::setprecision(precission) << "(" << v.x << ", " << v.y << ", " << v.z << ")";
-        return ss.str();
-    }
+    std::string GetAsString(const glm::vec3& v, const uint32_t precission);
 
-    inline std::string GetAsString(const glm::vec4& v, const uint32_t precission)
-    {
-        std::stringstream ss;
-        ss << std::setprecision(precission) << "(" << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ")";
-        return ss.str();
-    }
+    std::string GetAsString(const glm::vec4& v, const uint32_t precission);
 
-    inline std::string GetAsString(const glm::quat& q, const uint32_t precission)
-    {
-        std::stringstream ss;
-        ss << std::setprecision(precission) << "(" << q.x << ", " << q.y << ", " << q.z << ", " << q.w << ")";
-        return ss.str();
-    }
+    std::string GetAsString(const glm::quat& q, const uint32_t precission);
 } // namespace string
 
 class FPSCounter final {
@@ -256,7 +158,7 @@ private:
     friend class prev::common::pattern::Singleton<IDGenerator>;
 
 private:
-    uint64_t m_id = 0;
+    uint64_t m_id{ 0 };
 
     std::mutex m_mutex;
 
@@ -271,25 +173,13 @@ public:
     {
         std::lock_guard<std::mutex> lock(m_mutex);
 
-        m_id++;
+        ++m_id;
 
         return m_id;
     }
 };
 
 class UUIDGenerator {
-private:
-    static char GetRandomSymbol()
-    {
-        static const std::string validSymbols = "0123456789abcdef";
-
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<> dis(0, static_cast<int>(validSymbols.size() - 1));
-        const auto index = dis(gen);
-        return validSymbols[index];
-    }
-
 public:
     static std::string GenerateNew()
     {
@@ -319,6 +209,18 @@ public:
         uuid[23] = '-';
 
         return uuid;
+    }
+
+private:
+    static char GetRandomSymbol()
+    {
+        static const std::string validSymbols = "0123456789abcdef";
+
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dis(0, static_cast<int>(validSymbols.size() - 1));
+        const auto index = dis(gen);
+        return validSymbols[index];
     }
 };
 

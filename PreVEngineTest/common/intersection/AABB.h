@@ -3,6 +3,8 @@
 
 #include <prev/common/Common.h>
 
+#include <iostream>
+
 namespace prev_test::common::intersection {
 struct AABB {
     glm::vec3 minExtents;
