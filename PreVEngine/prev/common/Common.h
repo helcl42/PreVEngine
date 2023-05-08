@@ -22,4 +22,7 @@
 
 #define STRINGIFY(f) #f
 
+#define ALIGN_TO(alignmentInBytes) alignas(alignmentInBytes)
+#define DEFAULT_ALIGNMENT ALIGN_TO(16)
+
 #endif

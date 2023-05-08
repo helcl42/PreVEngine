@@ -43,41 +43,41 @@ private:
     void AddImageBufferBarrier(const VkImage image, VkCommandBuffer commandBuffer);
 
 private:
-    struct alignas(16) UniformsSkyCS {
-        alignas(16) glm::vec4 resolution;
+    struct DEFAULT_ALIGNMENT UniformsSkyCS {
+        DEFAULT_ALIGNMENT glm::vec4 resolution;
 
-        alignas(16) glm::mat4 inverseProjectionMatrix;
-        alignas(16) glm::mat4 inverseViewMatrix;
+        DEFAULT_ALIGNMENT glm::mat4 inverseProjectionMatrix;
+        DEFAULT_ALIGNMENT glm::mat4 inverseViewMatrix;
 
-        alignas(16) glm::vec4 lightColor;
-        alignas(16) glm::vec4 lightDirection;
-        alignas(16) glm::vec4 cameraPosition;
+        DEFAULT_ALIGNMENT glm::vec4 lightColor;
+        DEFAULT_ALIGNMENT glm::vec4 lightDirection;
+        DEFAULT_ALIGNMENT glm::vec4 cameraPosition;
 
-        alignas(16) glm::vec4 baseCloudColor;
-        alignas(16) glm::vec4 skyColorBottom;
-        alignas(16) glm::vec4 skyColorTop;
-        alignas(16) glm::vec4 windDirection;
+        DEFAULT_ALIGNMENT glm::vec4 baseCloudColor;
+        DEFAULT_ALIGNMENT glm::vec4 skyColorBottom;
+        DEFAULT_ALIGNMENT glm::vec4 skyColorTop;
+        DEFAULT_ALIGNMENT glm::vec4 windDirection;
 
-        alignas(16) float time;
+        DEFAULT_ALIGNMENT float time;
         float coverageFactor;
         float cloudSpeed;
         float crispiness;
 
-        alignas(16) float absorption;
+        DEFAULT_ALIGNMENT float absorption;
         float curliness;
         uint32_t enablePowder;
         float densityFactor;
 
-        alignas(16) float earthRadius;
+        DEFAULT_ALIGNMENT float earthRadius;
         float sphereInnerRadius;
         float sphereOuterRadius;
         float cloudTopOffset;
     };
 
-    struct alignas(16) UniformsSkyPostProcessCS {
-        alignas(16) glm::vec4 resolution;
-        alignas(16) glm::vec4 lisghtPosition;
-        alignas(16) uint32_t enableGodRays;
+    struct DEFAULT_ALIGNMENT UniformsSkyPostProcessCS {
+        DEFAULT_ALIGNMENT glm::vec4 resolution;
+        DEFAULT_ALIGNMENT glm::vec4 lisghtPosition;
+        DEFAULT_ALIGNMENT uint32_t enableGodRays;
         float lightDotCameraFront;
     };
 

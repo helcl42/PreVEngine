@@ -37,16 +37,16 @@ public:
     void ShutDown() override;
 
 private:
-    struct alignas(16) UniformsVS {
-        alignas(16) glm::mat4 viewMatrix;
+    struct DEFAULT_ALIGNMENT UniformsVS {
+        DEFAULT_ALIGNMENT glm::mat4 viewMatrix;
 
-        alignas(16) glm::mat4 projectionMatrix;
+        DEFAULT_ALIGNMENT glm::mat4 projectionMatrix;
 
-        alignas(16) uint32_t textureNumberOfRows;
+        DEFAULT_ALIGNMENT uint32_t textureNumberOfRows;
     };
 
-    struct alignas(16) UniformsFS {
-        alignas(16) glm::vec4 color;
+    struct DEFAULT_ALIGNMENT UniformsFS {
+        DEFAULT_ALIGNMENT glm::vec4 color;
     };
 
 private:

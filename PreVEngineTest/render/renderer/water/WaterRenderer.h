@@ -54,32 +54,32 @@ private:
         glm::vec4 color;
     };
 
-    struct alignas(16) UniformsVS {
-        alignas(16) glm::mat4 modelMatrix;
+    struct DEFAULT_ALIGNMENT UniformsVS {
+        DEFAULT_ALIGNMENT glm::mat4 modelMatrix;
 
-        alignas(16) glm::mat4 viewMatrix;
+        DEFAULT_ALIGNMENT glm::mat4 viewMatrix;
 
-        alignas(16) glm::mat4 projectionMatrix;
+        DEFAULT_ALIGNMENT glm::mat4 projectionMatrix;
 
-        alignas(16) glm::vec4 cameraPosition;
+        DEFAULT_ALIGNMENT glm::vec4 cameraPosition;
 
-        alignas(16) float density;
+        DEFAULT_ALIGNMENT float density;
 
-        alignas(16) float gradient;
+        DEFAULT_ALIGNMENT float gradient;
     };
 
-    struct alignas(16) UniformsFS {
-        alignas(16) ShadowsUniform shadows;
+    struct DEFAULT_ALIGNMENT UniformsFS {
+        DEFAULT_ALIGNMENT ShadowsUniform shadows;
 
-        alignas(16) glm::vec4 fogColor;
+        DEFAULT_ALIGNMENT glm::vec4 fogColor;
 
-        alignas(16) glm::vec4 waterColor;
+        DEFAULT_ALIGNMENT glm::vec4 waterColor;
 
-        alignas(16) LightUniform light;
+        DEFAULT_ALIGNMENT LightUniform light;
 
-        alignas(16) glm::vec4 nearFarClippingPlane;
+        DEFAULT_ALIGNMENT glm::vec4 nearFarClippingPlane;
 
-        alignas(16) float moveFactor;
+        DEFAULT_ALIGNMENT float moveFactor;
     };
 
 private:
