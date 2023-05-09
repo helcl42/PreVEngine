@@ -1,6 +1,7 @@
 #ifndef __FONT_METADATA_FILE_H__
 #define __FONT_METADATA_FILE_H__
 
+#include <cinttypes>
 #include <map>
 #include <string>
 #include <vector>
