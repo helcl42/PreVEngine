@@ -4,7 +4,11 @@
 #include "../device/Device.h"
 #include "../instance/Instance.h"
 
+#ifdef ANDROID
+#include <external/android/vk_mem_alloc.h>
+#else
 #include <external/vk_mem_alloc.h>
+#endif
 
 #include <vector>
 

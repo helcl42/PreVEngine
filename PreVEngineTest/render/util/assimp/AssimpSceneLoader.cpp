@@ -4,6 +4,8 @@
 #include <android_native.h>
 #endif
 
+#include <assert.h>
+
 namespace prev_test::render::util::assimp {
 bool AssimpSceneLoader::LoadScene(const std::string& modelPath, Assimp::Importer* importer, const aiScene** scene) const
 {
