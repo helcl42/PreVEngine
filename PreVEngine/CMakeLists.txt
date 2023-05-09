@@ -107,7 +107,6 @@ add_library(${LIBRARY_NAME} STATIC
 target_include_directories(${LIBRARY_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 include_directories("../Dependencies/glm")
-include_directories("../Dependencies/spdlog/include")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")  #for find_package
 
