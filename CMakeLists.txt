@@ -1,5 +1,5 @@
-project(PreVEngine)
 cmake_minimum_required(VERSION 3.0)
+project(PreVEngine)
 
 option(USE_VULKAN_WRAPPER "Build a dispatch-table, to skip loader trampoline code." OFF)
 
