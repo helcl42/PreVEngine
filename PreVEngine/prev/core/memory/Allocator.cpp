@@ -10,7 +10,11 @@
 #define VMA_STATIC_VULKAN_FUNCTIONS 0
 
 #define VMA_IMPLEMENTATION
+#ifdef ANDROID
+#include <external/android/vk_mem_alloc.h>
+#else
 #include <external/vk_mem_alloc.h>
+#endif
 
 namespace prev::core::memory {
 Allocator::Allocator(prev::core::instance::Instance& instance, prev::core::device::Device& device, prev::core::device::Queue& queue, const VkDeviceSize blockSize)

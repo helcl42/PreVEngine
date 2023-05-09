@@ -4,6 +4,8 @@
 #include "../common/Common.h"
 #include "../core/instance/Validation.h"
 
+#include <vector>
+
 namespace prev::util::vk {
 
 uint32_t FindMemoryType(const VkPhysicalDevice gpu, const uint32_t typeFilter, const VkMemoryPropertyFlags properties);
