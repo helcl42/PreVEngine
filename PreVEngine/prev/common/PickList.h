@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <string>
 #include <vector>
+#include <cinttypes>
 
 namespace prev::common {
 class PickList {
