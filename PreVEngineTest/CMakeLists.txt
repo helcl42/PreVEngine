@@ -1,5 +1,6 @@
-project(PreVEngineTest)
 cmake_minimum_required(VERSION 3.0)
+
+project(PreVEngineTest)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(SOURCE_GROUP_DELIMITER "/")
