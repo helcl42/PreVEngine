@@ -1,5 +1,7 @@
 #include "PipelineFactory.h"
 
+#include <vector>
+
 namespace prev_test::render::pipeline {
 void PipelineFactory::CreateShadowsPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const prev::render::pass::RenderPass& renderPass, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
 {
@@ -48,7 +50,7 @@ void PipelineFactory::CreateShadowsPipeline(const VkDevice& device, const prev::
     rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizer.lineWidth = 1.0f;
     rasterizer.cullMode = VK_CULL_MODE_NONE;
-    rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;    
+    rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_TRUE;
     rasterizer.depthBiasConstantFactor = 1.0f;
     rasterizer.depthBiasClamp = 0.0f;
@@ -102,7 +104,7 @@ void PipelineFactory::CreateShadowsPipeline(const VkDevice& device, const prev::
     VKERRCHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &outPipeline));
 }
 
-void PipelineFactory::CreateDefaultPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const prev::render::pass::RenderPass& renderPass, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool fillMode, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
+void PipelineFactory::CreateDefaultPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const prev::render::pass::RenderPass& renderPass, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool blendingEnabled, const bool fillMode, const uint32_t colorAttachmentCount, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
 {
     // Pipeline layout
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
@@ -169,21 +171,26 @@ void PipelineFactory::CreateDefaultPipeline(const VkDevice& device, const prev::
     depthStencilState.depthBoundsTestEnable = VK_FALSE;
     depthStencilState.stencilTestEnable = VK_FALSE;
 
-    VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
-    colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-    colorBlendAttachment.blendEnable = VK_TRUE;
-    colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-    colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-    colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-    colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-    colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-    colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+    std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments(colorAttachmentCount);
+
+    for (uint32_t i = 0; i < colorAttachmentCount; ++i) {
+        VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
+        colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        colorBlendAttachment.blendEnable = blendingEnabled ? VK_TRUE : VK_FALSE;
+        colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+        colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+        colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+        colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+        colorBlendAttachments[i] = colorBlendAttachment;
+    }
 
     VkPipelineColorBlendStateCreateInfo colorBlending = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
     colorBlending.logicOpEnable = VK_FALSE;
     colorBlending.logicOp = VK_LOGIC_OP_COPY;
-    colorBlending.attachmentCount = 1;
-    colorBlending.pAttachments = &colorBlendAttachment;
+    colorBlending.attachmentCount = static_cast<uint32_t>(colorBlendAttachments.size());
+    colorBlending.pAttachments = colorBlendAttachments.data();
     colorBlending.blendConstants[0] = 0.0f;
     colorBlending.blendConstants[1] = 0.0f;
     colorBlending.blendConstants[2] = 0.0f;
