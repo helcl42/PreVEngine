@@ -211,7 +211,7 @@ std::shared_ptr<IAnimationPart> Animation::GetAnimationPart(unsigned int partInd
     return m_parts.at(partIndex);
 }
 
-const std::vector<std::shared_ptr<IAnimationPart> >& Animation::GetAnimationParts() const
+const std::vector<std::shared_ptr<IAnimationPart>>& Animation::GetAnimationParts() const
 {
     return m_parts;
 }

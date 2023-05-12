@@ -22,7 +22,7 @@ public:
 protected:
     virtual std::shared_ptr<prev::scene::graph::ISceneNode> CreateRootNode() const = 0;
 
-    virtual std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> > CreateRootRenderer() const = 0;
+    virtual std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData>> CreateRootRenderer() const = 0;
 
 protected:
     std::unique_ptr<prev::core::Engine> m_engine;

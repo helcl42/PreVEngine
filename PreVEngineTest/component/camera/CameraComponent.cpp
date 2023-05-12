@@ -1,7 +1,7 @@
 #include "CameraComponent.h"
 
 namespace prev_test::component::camera {
-    CameraComponent::CameraComponent(const glm::quat initialOrientation, const glm::vec3& initialPosition, const bool useFixedUp)
+CameraComponent::CameraComponent(const glm::quat initialOrientation, const glm::vec3& initialPosition, const bool useFixedUp)
     : m_initialOrientation(initialOrientation)
     , m_initialPosition(initialPosition)
     , m_useFixedUp(useFixedUp)
@@ -19,7 +19,7 @@ void CameraComponent::Reset()
     m_position = m_initialPosition;
     m_orientation = m_initialOrientation;
 
-    if(m_useFixedUp) {
+    if (m_useFixedUp) {
         m_upDirection = DEFAULT_UP_DIRECTION;
         m_forwardDirection = glm::normalize(m_initialOrientation * DEFAULT_FORWARD_DIRECTION);
         m_rightDirection = glm::cross(m_forwardDirection, DEFAULT_UP_DIRECTION);
@@ -64,7 +64,7 @@ void CameraComponent::AddOrientation(const glm::quat& orientationDiff)
 
 void CameraComponent::SetOrientation(const glm::quat& orientation)
 {
-    if(m_useFixedUp) {
+    if (m_useFixedUp) {
         m_orientationDelta = m_orientation * glm::inverse(orientation); // orientation delta to previous orientation
     } else {
         m_orientation = orientation;
@@ -75,7 +75,7 @@ void CameraComponent::SetOrientation(const glm::quat& orientation)
 
 void CameraComponent::SetOrientation(const float pitchAmountInDegrees, const float yawAmountInDegrees, const float rollAmountInDegrees)
 {
-    const glm::quat newOrientation( glm::angleAxis(glm::radians(pitchAmountInDegrees), m_rightDirection) * glm::angleAxis(glm::radians(yawAmountInDegrees), m_upDirection) * glm::angleAxis(glm::radians(rollAmountInDegrees), m_forwardDirection) );
+    const glm::quat newOrientation(glm::angleAxis(glm::radians(pitchAmountInDegrees), m_rightDirection) * glm::angleAxis(glm::radians(yawAmountInDegrees), m_upDirection) * glm::angleAxis(glm::radians(rollAmountInDegrees), m_forwardDirection));
     SetOrientation(newOrientation);
 }
 
@@ -137,12 +137,12 @@ void CameraComponent::UpdatePosition()
 
 void CameraComponent::UpdateOrientation()
 {
-    if(m_useFixedUp) {
+    if (m_useFixedUp) {
         m_forwardDirection = glm::normalize(m_orientationDelta * m_forwardDirection);
         m_rightDirection = glm::normalize(glm::cross(m_forwardDirection, m_upDirection));
     } else {
         m_orientation = glm::normalize(m_orientation * m_orientationDelta);
-        const auto orientationMat{glm::mat3_cast(m_orientation)};
+        const auto orientationMat{ glm::mat3_cast(m_orientation) };
         m_rightDirection = orientationMat[0];
         m_upDirection = orientationMat[1];
         m_forwardDirection = orientationMat[2];

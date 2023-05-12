@@ -15,7 +15,7 @@ std::shared_ptr<prev_test::render::IModel> TerrainComponent::GetModel() const
     return m_model;
 }
 
-std::vector<std::shared_ptr<prev_test::render::IMaterial> > TerrainComponent::GetMaterials() const
+std::vector<std::shared_ptr<prev_test::render::IMaterial>> TerrainComponent::GetMaterials() const
 {
     return m_materials;
 }

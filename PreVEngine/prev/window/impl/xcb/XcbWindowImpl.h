@@ -5,8 +5,8 @@
 
 #include "../WindowImpl.h"
 
-//#include <xcb/xcb.h>              // XCB only
-//#include <X11/Xlib.h>             // XLib only
+// #include <xcb/xcb.h>              // XCB only
+// #include <X11/Xlib.h>             // XLib only
 #include <X11/Xlib-xcb.h> // Xlib + XCB
 #include <X11/cursorfont.h>
 #include <xkbcommon/xkbcommon.h> // Keyboard

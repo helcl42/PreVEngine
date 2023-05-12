@@ -18,7 +18,7 @@ public:
     bool GetHeightAt(const glm::vec3& position, float& outHeight) const override;
 
 private:
-    std::map<TerrainKey, std::weak_ptr<ITerrainComponenet> > m_terrains;
+    std::map<TerrainKey, std::weak_ptr<ITerrainComponenet>> m_terrains;
 };
 } // namespace prev_test::component::terrain
 

@@ -83,7 +83,7 @@ void MasterRenderer::Render(const prev::render::RenderContext& renderContext, co
 
 #ifndef ANDROID
     // Debug quad with shadowMap
-    //RenderDebug(renderContext, node);
+    // RenderDebug(renderContext, node);
 #endif
 }
 

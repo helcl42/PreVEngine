@@ -8,7 +8,7 @@ class SunComponentFactory final {
 public:
     std::unique_ptr<ISunComponent> Create() const;
 
-private:    
+private:
     std::unique_ptr<Flare> CreateFlare(prev::core::memory::Allocator& allocator, const std::string& filePath, const float scale) const;
 };
 } // namespace prev_test::component::sky

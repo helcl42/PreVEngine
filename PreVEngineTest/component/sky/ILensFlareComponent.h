@@ -10,7 +10,7 @@ class ILensFlareComponent {
 public:
     virtual void Update(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, const glm::vec3& eyePosition, const glm::vec3& sunPosition) = 0;
 
-    virtual const std::vector<std::shared_ptr<Flare> >& GetFlares() const = 0;
+    virtual const std::vector<std::shared_ptr<Flare>>& GetFlares() const = 0;
 
     virtual std::shared_ptr<prev_test::render::IModel> GetModel() const = 0;
 

@@ -43,8 +43,8 @@ void Root::Init()
     auto rayCastObserver = std::make_shared<ray_casting::RayCastObserver>();
     AddChild(rayCastObserver);
 
-    //auto skyBox = std::make_shared<sky::SkyBox>();
-    //AddChild(skyBox);
+    // auto skyBox = std::make_shared<sky::SkyBox>();
+    // AddChild(skyBox);
 
     auto sky = std::make_shared<sky::Sky>();
     AddChild(sky);
@@ -53,25 +53,25 @@ void Root::Init()
     sunLight->SetTags({ TAG_MAIN_LIGHT, TAG_LIGHT });
     AddChild(sunLight);
 
-    //auto light1 = std::make_shared<light::Light>(glm::vec3(30.0f, 20.0f, 35.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    //light1->SetTags({ TAG_LIGHT });
-    //AddChild(light1);
+    // auto light1 = std::make_shared<light::Light>(glm::vec3(30.0f, 20.0f, 35.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    // light1->SetTags({ TAG_LIGHT });
+    // AddChild(light1);
     //
-    //auto light2 = std::make_shared<light::Light>(glm::vec3(-30.0f, 20.0f, 35.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    //light2->SetTags({ TAG_LIGHT });
-    //AddChild(light2);
+    // auto light2 = std::make_shared<light::Light>(glm::vec3(-30.0f, 20.0f, 35.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    // light2->SetTags({ TAG_LIGHT });
+    // AddChild(light2);
     //
-    //auto light3 = std::make_shared<light::Light>(glm::vec3(0.0f, 10.0f, -10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    //light3->SetTags({ TAG_LIGHT });
-    //AddChild(light3);
+    // auto light3 = std::make_shared<light::Light>(glm::vec3(0.0f, 10.0f, -10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    // light3->SetTags({ TAG_LIGHT });
+    // AddChild(light3);
 
     auto shadows = std::make_shared<shadow::Shadows>();
     shadows->SetTags({ TAG_SHADOW });
     AddChild(shadows);
 
-    //auto freeCamera = std::make_shared<Camera>();
-    //freeCamera->SetTags({ TAG_MAIN_CAMERA });
-    //AddChild(freeCamera);
+    // auto freeCamera = std::make_shared<Camera>();
+    // freeCamera->SetTags({ TAG_MAIN_CAMERA });
+    // AddChild(freeCamera);
 
     const int32_t MAX_GENERATED_HEIGHT{ 1 };
     const float DISTANCE{ 40.0f };
@@ -125,23 +125,23 @@ void Root::Init()
     auto fire = std::make_shared<Fire>(glm::vec3(30.0f, 0.0f, 100.0f));
     AddChild(fire);
 
-    //auto cube1 = std::make_shared<Cube>(glm::vec3(-35.0f, 0.0f, -35.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/example_1_texture.png"), AssetManager::Instance().GetAssetPath("Textures/example_1_normal.png"), AssetManager::Instance().GetAssetPath("Textures/ouput_cv.png"), 0.1f);
-    //AddChild(cube1);
+    // auto cube1 = std::make_shared<Cube>(glm::vec3(-35.0f, 0.0f, -35.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/example_1_texture.png"), AssetManager::Instance().GetAssetPath("Textures/example_1_normal.png"), AssetManager::Instance().GetAssetPath("Textures/ouput_cv.png"), 0.1f);
+    // AddChild(cube1);
 
-    //auto cube2 = std::make_shared<Cube>(glm::vec3(-65.0f, 0.0f, -65.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 90.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/rock.png"), AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), AssetManager::Instance().GetAssetPath("Textures/rock_cone.png"), 0.1f);
-    //AddChild(cube2);
+    // auto cube2 = std::make_shared<Cube>(glm::vec3(-65.0f, 0.0f, -65.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 90.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/rock.png"), AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), AssetManager::Instance().GetAssetPath("Textures/rock_cone.png"), 0.1f);
+    // AddChild(cube2);
 
-    //auto cube3 = std::make_shared<Cube>(glm::vec3(-10.0f, 0.0f, -110.0f), glm::quat(glm::radians(glm::vec3(90.0f, 90.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/fungus.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_cone.png"), 0.05f);
-    //AddChild(cube3);
+    // auto cube3 = std::make_shared<Cube>(glm::vec3(-10.0f, 0.0f, -110.0f), glm::quat(glm::radians(glm::vec3(90.0f, 90.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/fungus.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_cone.png"), 0.05f);
+    // AddChild(cube3);
 
-    //auto cube4 = std::make_shared<Cube>(glm::vec3(-120.0f, 0.0f, -50.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_cone.png"), 0.05f);
-    //AddChild(cube4);
+    // auto cube4 = std::make_shared<Cube>(glm::vec3(-120.0f, 0.0f, -50.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_cone.png"), 0.05f);
+    // AddChild(cube4);
 
-    //auto cube5 = std::make_shared<Cube>(glm::vec3(-90.0f, 0.0f, -90.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/sand.png"), AssetManager::Instance().GetAssetPath("Textures/sand_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_cone.png"), 0.1f);
-    //AddChild(cube5);
+    // auto cube5 = std::make_shared<Cube>(glm::vec3(-90.0f, 0.0f, -90.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/sand.png"), AssetManager::Instance().GetAssetPath("Textures/sand_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_cone.png"), 0.1f);
+    // AddChild(cube5);
 
-    //auto compute = std::make_shared<ComputeNode>();
-    //AddChild(compute);
+    // auto compute = std::make_shared<ComputeNode>();
+    // AddChild(compute);
 
     auto clouds = std::make_shared<sky::Clouds>();
     AddChild(clouds);
@@ -173,9 +173,9 @@ void Root::operator()(const prev::input::keyboard::KeyEvent& keyEvent)
 void Root::operator()(const prev::input::touch::TouchEvent& touchEvent)
 {
     if (touchEvent.action == prev::input::touch::TouchActionType::DOWN) {
-        //AddNode();
+        // AddNode();
     } else if (touchEvent.action == prev::input::touch::TouchActionType::UP) {
-        //RemoveNode();
+        // RemoveNode();
     }
 }
 

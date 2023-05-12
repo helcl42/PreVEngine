@@ -25,7 +25,7 @@ class ITerrainComponenet {
 public:
     virtual std::shared_ptr<prev_test::render::IModel> GetModel() const = 0;
 
-    virtual std::vector<std::shared_ptr<prev_test::render::IMaterial> > GetMaterials() const = 0; // TODO make pack of materials controlled by height
+    virtual std::vector<std::shared_ptr<prev_test::render::IMaterial>> GetMaterials() const = 0; // TODO make pack of materials controlled by height
 
     virtual bool GetHeightAt(const glm::vec3& position, float& outHeight) const = 0;
 

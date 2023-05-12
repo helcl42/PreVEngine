@@ -8,7 +8,7 @@ namespace prev_test::component::shadow {
 
 constexpr const bool SHADOWS_ENABLED{ true };
 
-constexpr const  uint32_t CASCADES_COUNT{ 4 };
+constexpr const uint32_t CASCADES_COUNT{ 4 };
 
 constexpr const VkFormat DEPTH_FORMAT{ VK_FORMAT_D32_SFLOAT };
 

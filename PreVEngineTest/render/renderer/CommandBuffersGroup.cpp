@@ -1,7 +1,7 @@
 #include "CommandBuffersGroup.h"
 
 namespace prev_test::render::renderer {
-CommandBuffersGroup::CommandBuffersGroup(const prev::core::device::Device& device, const std::vector<std::vector<VkCommandPool> >& pools, const std::vector<std::vector<VkCommandBuffer> >& commandBuffers)
+CommandBuffersGroup::CommandBuffersGroup(const prev::core::device::Device& device, const std::vector<std::vector<VkCommandPool>>& pools, const std::vector<std::vector<VkCommandBuffer>>& commandBuffers)
     : m_device(device)
     , m_commandPoolGroups(pools)
     , m_commandBufferGroups(commandBuffers)

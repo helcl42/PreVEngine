@@ -6,7 +6,7 @@
 namespace prev_test::component::render {
 class DefaultRenderComponent : public IRenderComponent {
 public:
-    DefaultRenderComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::vector<std::shared_ptr<prev_test::render::IMaterial> >& materials, const bool castsShadows, const bool isCastedByShadows);
+    DefaultRenderComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::vector<std::shared_ptr<prev_test::render::IMaterial>>& materials, const bool castsShadows, const bool isCastedByShadows);
 
     DefaultRenderComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::shared_ptr<prev_test::render::IMaterial>& material, const bool castsShadows, const bool isCastedByShadows);
 
@@ -17,7 +17,7 @@ public:
 
     std::shared_ptr<prev_test::render::IMaterial> GetMaterial(const uint32_t index = 0) const override;
 
-    const std::vector<std::shared_ptr<prev_test::render::IMaterial> >& GetMaterials() const override;
+    const std::vector<std::shared_ptr<prev_test::render::IMaterial>>& GetMaterials() const override;
 
     bool CastsShadows() const override;
 
@@ -26,7 +26,7 @@ public:
 private:
     std::shared_ptr<prev_test::render::IModel> m_model;
 
-    std::vector<std::shared_ptr<prev_test::render::IMaterial> > m_materials;
+    std::vector<std::shared_ptr<prev_test::render::IMaterial>> m_materials;
 
     bool m_castsShadows;
 

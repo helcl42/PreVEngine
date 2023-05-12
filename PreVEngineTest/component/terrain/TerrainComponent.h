@@ -16,7 +16,7 @@ public:
 public:
     std::shared_ptr<prev_test::render::IModel> GetModel() const override;
 
-    std::vector<std::shared_ptr<prev_test::render::IMaterial> > GetMaterials() const override;
+    std::vector<std::shared_ptr<prev_test::render::IMaterial>> GetMaterials() const override;
 
     bool GetHeightAt(const glm::vec3& position, float& outHeight) const override;
 
@@ -50,7 +50,7 @@ private:
 
     std::shared_ptr<prev_test::render::IModel> m_model;
 
-    std::vector<std::shared_ptr<prev_test::render::IMaterial> > m_materials;
+    std::vector<std::shared_ptr<prev_test::render::IMaterial>> m_materials;
 
     std::vector<float> m_heightSteps;
 

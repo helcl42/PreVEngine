@@ -7,8 +7,8 @@
 #include "ComponentRepository.h"
 
 #include <memory>
-#include <vector>
 #include <sstream>
+#include <vector>
 
 namespace prev::scene::component {
 class NodeComponentHelper {
@@ -26,9 +26,9 @@ public:
     }
 
     template <typename ComponentType>
-    static std::vector<std::shared_ptr<ComponentType> > FindAll(const prev::common::TagSet& tagSet, const prev::scene::graph::LogicOperation operation = prev::scene::graph::LogicOperation::OR)
+    static std::vector<std::shared_ptr<ComponentType>> FindAll(const prev::common::TagSet& tagSet, const prev::scene::graph::LogicOperation operation = prev::scene::graph::LogicOperation::OR)
     {
-        std::vector<std::shared_ptr<ComponentType> > resultComponents;
+        std::vector<std::shared_ptr<ComponentType>> resultComponents;
         const auto nodes{ prev::scene::graph::GraphTraversal::Instance().FindAllWithTags(tagSet, operation) };
         for (const auto& node : nodes) {
             const auto nodeComponents{ ComponentRepository<ComponentType>::Instance().GetAll(node->GetId()) };
@@ -38,7 +38,7 @@ public:
     }
 
     template <typename ComponentType>
-    static void AddComponents(const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const std::vector<std::shared_ptr<ComponentType> >& components, const std::string& tag)
+    static void AddComponents(const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const std::vector<std::shared_ptr<ComponentType>>& components, const std::string& tag)
     {
         ComponentRepository<ComponentType>::Instance().Add(node->GetId(), components);
 
@@ -70,7 +70,7 @@ public:
     }
 
     template <typename ComponentType>
-    static std::vector<std::shared_ptr<ComponentType> > GetComponents(const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
+    static std::vector<std::shared_ptr<ComponentType>> GetComponents(const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
     {
         return ComponentRepository<ComponentType>::Instance().GetAll(node->GetId());
     }

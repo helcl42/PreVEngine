@@ -20,7 +20,7 @@ public:
     virtual void ShutDown() override;
 
 public:
-    const std::vector<std::shared_ptr<ISceneNode> >& GetChildren() const override;
+    const std::vector<std::shared_ptr<ISceneNode>>& GetChildren() const override;
 
     void AddChild(const std::shared_ptr<ISceneNode>& child) override;
 
@@ -49,7 +49,7 @@ protected:
 
     std::weak_ptr<ISceneNode> m_parent;
 
-    std::vector<std::shared_ptr<ISceneNode> > m_children;
+    std::vector<std::shared_ptr<ISceneNode>> m_children;
 };
 } // namespace prev::scene::graph
 

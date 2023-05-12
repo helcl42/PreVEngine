@@ -10,7 +10,7 @@ class IAnimationRenderComponent : public IRenderComponent {
 public:
     virtual std::shared_ptr<prev_test::render::IAnimation> GetAnimation(const uint32_t index = 0) const = 0;
 
-    virtual const std::vector<std::shared_ptr<prev_test::render::IAnimation> >& GetAnimations() const = 0;
+    virtual const std::vector<std::shared_ptr<prev_test::render::IAnimation>>& GetAnimations() const = 0;
 
     virtual std::shared_ptr<prev_test::render::IAnimation> GetCurrentAnimation() const = 0;
 

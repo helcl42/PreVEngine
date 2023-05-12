@@ -15,7 +15,7 @@ HeightGenerator::HeightGenerator(const int x, const int z, const int size, const
 {
 }
 
- float HeightGenerator::GenerateHeight(const int x, const int z) const
+float HeightGenerator::GenerateHeight(const int x, const int z) const
 {
     const float d = static_cast<float>(powf(2.0f, static_cast<float>(HeightGenerator::OCTAVES - 1)));
 

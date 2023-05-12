@@ -13,6 +13,6 @@ struct RenderContext {
 
     VkRect2D rect{};
 };
-} // namespace prev::scene
+} // namespace prev::render
 
 #endif

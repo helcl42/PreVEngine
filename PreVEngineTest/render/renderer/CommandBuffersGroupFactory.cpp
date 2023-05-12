@@ -5,8 +5,8 @@
 namespace prev_test::render::renderer {
 std::unique_ptr<CommandBuffersGroup> CommandBuffersGroupFactory::CreateGroup(const prev::core::device::Device& device, const prev::core::device::Queue& queue, const uint32_t dim0Size, const uint32_t groupSize, const VkCommandBufferLevel level) const
 {
-    std::vector<std::vector<VkCommandPool> > commandPools{};
-    std::vector<std::vector<VkCommandBuffer> > commandBuffers{};
+    std::vector<std::vector<VkCommandPool>> commandPools{};
+    std::vector<std::vector<VkCommandBuffer>> commandBuffers{};
     commandPools.reserve(dim0Size);
     commandBuffers.reserve(dim0Size);
 

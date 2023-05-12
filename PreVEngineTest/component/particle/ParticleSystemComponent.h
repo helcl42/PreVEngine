@@ -23,7 +23,7 @@ public:
 
     std::shared_ptr<prev_test::render::IMaterial> GetMaterial() const override;
 
-    std::list<std::shared_ptr<Particle> > GetParticles() const override;
+    std::list<std::shared_ptr<Particle>> GetParticles() const override;
 
 private:
     void AddNewParticles(const float deltaTime, const glm::vec3& centerPosition);
@@ -37,7 +37,7 @@ private:
 
     const std::shared_ptr<IParticleFactory> m_particleFactory;
 
-    std::list<std::shared_ptr<Particle> > m_particles;
+    std::list<std::shared_ptr<Particle>> m_particles;
 
     float m_particlesPerSecond;
 };

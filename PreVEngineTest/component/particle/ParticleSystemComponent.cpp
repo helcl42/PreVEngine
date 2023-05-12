@@ -15,8 +15,6 @@ void ParticleSystemComponent::Update(const float deltaTime, const glm::vec3& cen
 {
     AddNewParticles(deltaTime, centerPosition);
     UpdateParticles(deltaTime);
-
-    //std::cout << "Particles Count: " << m_particles.size() << std::endl;
 }
 
 void ParticleSystemComponent::SetParticlesPerSecond(const float pps)
@@ -44,7 +42,7 @@ std::shared_ptr<prev_test::render::IMaterial> ParticleSystemComponent::GetMateri
     return m_material;
 }
 
-std::list<std::shared_ptr<Particle> > ParticleSystemComponent::GetParticles() const
+std::list<std::shared_ptr<Particle>> ParticleSystemComponent::GetParticles() const
 {
     return m_particles;
 }

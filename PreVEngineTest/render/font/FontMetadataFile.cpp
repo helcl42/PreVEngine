@@ -81,9 +81,9 @@ bool FontMetadataFile::ProcessNextLine(std::istream& inOutStream, std::map<std::
     return true;
 }
 
-std::vector<std::map<std::string, std::string> > FontMetadataFile::GetAllLinesTokens(std::istream& inOutStream) const
+std::vector<std::map<std::string, std::string>> FontMetadataFile::GetAllLinesTokens(std::istream& inOutStream) const
 {
-    std::vector<std::map<std::string, std::string> > result{};
+    std::vector<std::map<std::string, std::string>> result{};
 
     std::map<std::string, std::string> lineTokens{};
     while (ProcessNextLine(inOutStream, lineTokens)) {

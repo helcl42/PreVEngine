@@ -32,7 +32,7 @@ public:
 
     bool operator[](const std::string& val) const;
 
-    friend std::ostream& operator<< (std::ostream& out, const TagSet& tagSet);
+    friend std::ostream& operator<<(std::ostream& out, const TagSet& tagSet);
 
 private:
     std::set<std::string> m_tags;

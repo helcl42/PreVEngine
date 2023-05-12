@@ -40,7 +40,7 @@ void SceneNode::ShutDown()
     m_tags = prev::common::TagSet();
 }
 
-const std::vector<std::shared_ptr<ISceneNode> >& SceneNode::GetChildren() const
+const std::vector<std::shared_ptr<ISceneNode>>& SceneNode::GetChildren() const
 {
     return m_children;
 }
