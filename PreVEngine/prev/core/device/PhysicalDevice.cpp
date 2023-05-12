@@ -116,7 +116,7 @@ VkFormat PhysicalDevice::FindSurfaceFormat(VkSurfaceKHR surface, const std::vect
         }
     }
 
-    //return formats[0].format;  //first supported format
+    // return formats[0].format;  //first supported format
     return VK_FORMAT_UNDEFINED;
 }
 

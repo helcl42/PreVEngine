@@ -39,7 +39,7 @@ public:
 
     virtual std::shared_ptr<IAnimationPart> GetAnimationPart(unsigned int partIndex) const = 0;
 
-    virtual const std::vector<std::shared_ptr<IAnimationPart> >& GetAnimationParts() const = 0;
+    virtual const std::vector<std::shared_ptr<IAnimationPart>>& GetAnimationParts() const = 0;
 
     virtual void SetState(const AnimationState animationState) = 0;
 

@@ -45,6 +45,6 @@ public:
 public:
     virtual ~ITransformComponent() = default;
 };
-}
+} // namespace prev_test::component::transform
 
 #endif // !__ITRANSFORM_COMPONENT_H__

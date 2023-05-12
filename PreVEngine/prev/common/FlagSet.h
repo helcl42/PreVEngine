@@ -194,7 +194,7 @@ struct is_enum_that_contains_sentinel<T, decltype(static_cast<void>(T::_))> : st
 // Operator that combines two enumeration values into a FlagSet only if the
 // enumeration contains the sentinel `_`.
 template <typename T>
-std::enable_if_t<is_enum_that_contains_sentinel<T>::value, prev::common::FlagSet<T> > operator|(const T& lhs, const T& rhs)
+std::enable_if_t<is_enum_that_contains_sentinel<T>::value, prev::common::FlagSet<T>> operator|(const T& lhs, const T& rhs)
 {
     prev::common::FlagSet<T> fs;
     fs |= lhs;

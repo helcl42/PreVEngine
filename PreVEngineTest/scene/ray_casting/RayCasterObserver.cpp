@@ -171,14 +171,14 @@ std::shared_ptr<prev_test::component::terrain::ITerrainComponenet> RayCastObserv
     return terrainManager->GetTerrainAt(position);
 }
 
-std::vector<std::shared_ptr<prev::scene::graph::ISceneNode> > RayCastObserver::GetSelectableNodes() const
+std::vector<std::shared_ptr<prev::scene::graph::ISceneNode>> RayCastObserver::GetSelectableNodes() const
 {
     return prev::scene::graph::GraphTraversal::Instance().FindAllWithTags({ TAG_SELECTABLE_COMPONENT });
 }
 
-std::optional<std::tuple<std::shared_ptr<prev::scene::graph::ISceneNode>, prev_test::common::intersection::RayCastResult> > RayCastObserver::FindTheClosestIntersectingNode(const prev_test::common::intersection::Ray& ray) const
+std::optional<std::tuple<std::shared_ptr<prev::scene::graph::ISceneNode>, prev_test::common::intersection::RayCastResult>> RayCastObserver::FindTheClosestIntersectingNode(const prev_test::common::intersection::Ray& ray) const
 {
-    std::optional<std::tuple<std::shared_ptr<ISceneNode>, prev_test::common::intersection::RayCastResult> > theClosestNode;
+    std::optional<std::tuple<std::shared_ptr<ISceneNode>, prev_test::common::intersection::RayCastResult>> theClosestNode;
     float minDistance = std::numeric_limits<float>::max();
 
     auto selectableNodes = prev::scene::graph::GraphTraversal::Instance().FindAllWithTags({ TAG_SELECTABLE_COMPONENT, TAG_BOUNDING_VOLUME_COMPONENT }, prev::scene::graph::LogicOperation::AND);
@@ -188,7 +188,7 @@ std::optional<std::tuple<std::shared_ptr<prev::scene::graph::ISceneNode>, prev_t
         prev_test::common::intersection::RayCastResult rayCastResult{};
         if (boundingVolume->Intersects(ray, rayCastResult)) {
             if (rayCastResult.t < minDistance) {
-                theClosestNode = std::optional<std::tuple<std::shared_ptr<ISceneNode>, prev_test::common::intersection::RayCastResult> >({ selectable, rayCastResult });
+                theClosestNode = std::optional<std::tuple<std::shared_ptr<ISceneNode>, prev_test::common::intersection::RayCastResult>>({ selectable, rayCastResult });
                 minDistance = rayCastResult.t;
             }
         }

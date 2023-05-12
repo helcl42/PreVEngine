@@ -1,7 +1,7 @@
 #include "DefaultRenderComponent.h"
 
 namespace prev_test::component::render {
-DefaultRenderComponent::DefaultRenderComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::vector<std::shared_ptr<prev_test::render::IMaterial> >& materials, const bool castsShadows, const bool isCastedByShadows)
+DefaultRenderComponent::DefaultRenderComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::vector<std::shared_ptr<prev_test::render::IMaterial>>& materials, const bool castsShadows, const bool isCastedByShadows)
     : m_model(model)
     , m_materials(materials)
     , m_castsShadows(castsShadows)
@@ -10,7 +10,7 @@ DefaultRenderComponent::DefaultRenderComponent(const std::shared_ptr<prev_test::
 }
 
 DefaultRenderComponent::DefaultRenderComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::shared_ptr<prev_test::render::IMaterial>& material, const bool castsShadows, const bool isCastedByShadows)
-    : DefaultRenderComponent(model, std::vector<std::shared_ptr<prev_test::render::IMaterial> >{ material }, castsShadows, isCastedByShadows)
+    : DefaultRenderComponent(model, std::vector<std::shared_ptr<prev_test::render::IMaterial>>{ material }, castsShadows, isCastedByShadows)
 {
 }
 
@@ -24,7 +24,7 @@ std::shared_ptr<prev_test::render::IMaterial> DefaultRenderComponent::GetMateria
     return m_materials.at(index);
 }
 
-const std::vector<std::shared_ptr<prev_test::render::IMaterial> >& DefaultRenderComponent::GetMaterials() const
+const std::vector<std::shared_ptr<prev_test::render::IMaterial>>& DefaultRenderComponent::GetMaterials() const
 {
     return m_materials;
 }

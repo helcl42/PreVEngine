@@ -86,7 +86,7 @@ public:
 
     std::shared_ptr<IAnimationPart> GetAnimationPart(unsigned int partIndex) const override;
 
-    const std::vector<std::shared_ptr<IAnimationPart> >& GetAnimationParts() const override;
+    const std::vector<std::shared_ptr<IAnimationPart>>& GetAnimationParts() const override;
 
     void SetState(const AnimationState state) override;
 
@@ -102,7 +102,7 @@ private:
 
     Assimp::Importer m_importer; // TODO get rid of that
 
-    std::vector<std::shared_ptr<IAnimationPart> > m_parts;
+    std::vector<std::shared_ptr<IAnimationPart>> m_parts;
 };
 
 } // namespace prev_test::render::animation

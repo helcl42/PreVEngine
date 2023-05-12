@@ -1,8 +1,8 @@
 #ifndef __IRENDER_COMPONENT_H__
 #define __IRENDER_COMPONENT_H__
 
-#include "../../render/IModel.h"
 #include "../../render/IMaterial.h"
+#include "../../render/IModel.h"
 
 #include <memory>
 
@@ -13,7 +13,7 @@ public:
 
     virtual std::shared_ptr<prev_test::render::IMaterial> GetMaterial(const uint32_t = 0) const = 0;
 
-    virtual const std::vector<std::shared_ptr<prev_test::render::IMaterial> >& GetMaterials() const = 0;
+    virtual const std::vector<std::shared_ptr<prev_test::render::IMaterial>>& GetMaterials() const = 0;
 
     virtual bool CastsShadows() const = 0;
 

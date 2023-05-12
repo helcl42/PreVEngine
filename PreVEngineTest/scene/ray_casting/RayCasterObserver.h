@@ -49,9 +49,9 @@ private:
     std::shared_ptr<prev_test::component::terrain::ITerrainComponenet> GetTerrain(const glm::vec3& position) const;
 
     // Objects
-    std::vector<std::shared_ptr<prev::scene::graph::ISceneNode> > GetSelectableNodes() const;
+    std::vector<std::shared_ptr<prev::scene::graph::ISceneNode>> GetSelectableNodes() const;
 
-    std::optional<std::tuple<std::shared_ptr<prev::scene::graph::ISceneNode>, prev_test::common::intersection::RayCastResult> > FindTheClosestIntersectingNode(const prev_test::common::intersection::Ray& ray) const;
+    std::optional<std::tuple<std::shared_ptr<prev::scene::graph::ISceneNode>, prev_test::common::intersection::RayCastResult>> FindTheClosestIntersectingNode(const prev_test::common::intersection::Ray& ray) const;
 
 public:
     void operator()(const prev_test::component::ray_casting::RayEvent& rayEvt);

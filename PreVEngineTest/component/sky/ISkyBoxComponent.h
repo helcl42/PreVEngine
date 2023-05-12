@@ -1,8 +1,8 @@
 #ifndef __ISKY_BOX_COMPONENT_H__
 #define __ISKY_BOX_COMPONENT_H__
 
-#include "../../render/IModel.h"
 #include "../../render/IMaterial.h"
+#include "../../render/IModel.h"
 
 namespace prev_test::component::sky {
 class ISkyBoxComponent {

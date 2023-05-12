@@ -12,7 +12,7 @@ std::vector<char> ShaderFactory::LoadByteCodeFromFile(const std::string& filenam
 
 #if defined(__ANDROID__)
     FILE* file = fopen(filename.c_str(), "rb");
-    if(!file) {
+    if (!file) {
         throw std::runtime_error("Could not open shader file: " + filename);
     }
     stdiobuf sbuf(file);

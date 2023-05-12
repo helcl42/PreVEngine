@@ -16,7 +16,7 @@ public:
 
     virtual void Update(float deltaTime) = 0;
 
-    virtual const std::vector<std::shared_ptr<ISceneNode> >& GetChildren() const = 0;
+    virtual const std::vector<std::shared_ptr<ISceneNode>>& GetChildren() const = 0;
 
     virtual void AddChild(const std::shared_ptr<ISceneNode>& child) = 0;
 

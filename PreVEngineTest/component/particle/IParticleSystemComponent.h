@@ -21,7 +21,7 @@ public:
 
     virtual std::shared_ptr<prev_test::render::IMaterial> GetMaterial() const = 0;
 
-    virtual std::list<std::shared_ptr<Particle> > GetParticles() const = 0;
+    virtual std::list<std::shared_ptr<Particle>> GetParticles() const = 0;
 
 public:
     virtual ~IParticleSystemComponent() = default;

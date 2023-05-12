@@ -24,4 +24,4 @@ std::string Extensions::GetName() const
 {
     return "Extensions";
 }
-} // namespace prev
+} // namespace prev::core::instance

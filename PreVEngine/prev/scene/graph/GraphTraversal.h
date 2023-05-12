@@ -22,7 +22,7 @@ private:
 
     std::shared_ptr<ISceneNode> FindOneWithTagsInternal(const std::shared_ptr<ISceneNode>& parent, const prev::common::TagSet& tags, const LogicOperation operation) const;
 
-    void FindAllWithTagsInternal(const std::shared_ptr<ISceneNode>& parent, const prev::common::TagSet& tags, const LogicOperation operation, std::vector<std::shared_ptr<ISceneNode> >& result) const;
+    void FindAllWithTagsInternal(const std::shared_ptr<ISceneNode>& parent, const prev::common::TagSet& tags, const LogicOperation operation, std::vector<std::shared_ptr<ISceneNode>>& result) const;
 
 public:
     void SetRootNode(const std::shared_ptr<ISceneNode>& root);
@@ -33,7 +33,7 @@ public:
 
     std::shared_ptr<ISceneNode> FindOneWithTags(const prev::common::TagSet& tags, const LogicOperation operation = LogicOperation::OR) const;
 
-    std::vector<std::shared_ptr<ISceneNode> > FindAllWithTags(const prev::common::TagSet& tags, const LogicOperation operation = LogicOperation::OR) const;
+    std::vector<std::shared_ptr<ISceneNode>> FindAllWithTags(const prev::common::TagSet& tags, const LogicOperation operation = LogicOperation::OR) const;
 
 private:
     GraphTraversal() = default;

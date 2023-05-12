@@ -1,9 +1,9 @@
 #ifndef __TERRAIN_COMPONENT_FACTORY_H__
 #define __TERRAIN_COMPONENT_FACTORY_H__
 
+#include "HeightGenerator.h"
 #include "ITerrainComponent.h"
 #include "TerrainLayerCreateInfo.h"
-#include "HeightGenerator.h"
 
 #include <map>
 

@@ -41,6 +41,6 @@ public:
 protected:
     std::set<ObserverType*> m_observers;
 };
-} // namespace prev
+} // namespace prev::common::pattern
 
 #endif

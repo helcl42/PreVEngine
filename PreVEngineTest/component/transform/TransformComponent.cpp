@@ -21,9 +21,9 @@ TransformComponent::TransformComponent(const glm::vec3& position, const glm::qua
 
 void TransformComponent::Update(float deltaTime)
 {
-    if (auto parent = m_parent.lock()) { //This node has a parent...
+    if (auto parent = m_parent.lock()) { // This node has a parent...
         m_worldTransform = parent->GetWorldTransform() * GetTransform();
-    } else { //Root node, world transform is local transform!
+    } else { // Root node, world transform is local transform!
         m_worldTransform = GetTransform();
     }
 }

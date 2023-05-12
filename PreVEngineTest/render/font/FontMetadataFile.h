@@ -2,10 +2,10 @@
 #define __FONT_METADATA_FILE_H__
 
 #include <cinttypes>
+#include <fstream>
 #include <map>
 #include <string>
 #include <vector>
-#include <fstream>
 
 namespace prev_test::render::font {
 class FontMetadataFile {
@@ -28,10 +28,10 @@ public:
 private:
     bool ProcessNextLine(std::istream& inOutStream, std::map<std::string, std::string>& outTokens) const;
 
-    std::vector<std::map<std::string, std::string> > GetAllLinesTokens(std::istream& inOutStream) const;
+    std::vector<std::map<std::string, std::string>> GetAllLinesTokens(std::istream& inOutStream) const;
 
 private:
-    std::vector<std::map<std::string, std::string> > m_allLinesKeyValues;
+    std::vector<std::map<std::string, std::string>> m_allLinesKeyValues;
 
     std::map<std::string, std::string> m_currentLine;
 

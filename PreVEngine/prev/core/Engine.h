@@ -29,7 +29,7 @@ public:
 
     void InitSceneGraph(const std::shared_ptr<prev::scene::graph::ISceneNode>& rootNode);
 
-    void InitRenderer(const std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> >& rootRenderer);
+    void InitRenderer(const std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData>>& rootRenderer);
 
     void MainLoop();
 
@@ -61,7 +61,7 @@ private:
 private:
     const EngineConfig& m_config;
 
-    std::unique_ptr<prev::util::Clock<float> > m_clock;
+    std::unique_ptr<prev::util::Clock<float>> m_clock;
 
     std::unique_ptr<prev::util::FPSCounter> m_fpsCounter;
 

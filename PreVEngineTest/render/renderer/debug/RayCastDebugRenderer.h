@@ -37,13 +37,11 @@ public:
     void ShutDown() override;
 
 private:
-    struct DEFAULT_ALIGNMENT UniformsVS
-    {
+    struct DEFAULT_ALIGNMENT UniformsVS {
         DEFAULT_ALIGNMENT glm::vec3 color;
     };
 
-    struct DEFAULT_ALIGNMENT UniformsGS
-    {
+    struct DEFAULT_ALIGNMENT UniformsGS {
         DEFAULT_ALIGNMENT glm::mat4 modelMatrix;
 
         DEFAULT_ALIGNMENT glm::mat4 viewMatrix;
@@ -51,8 +49,7 @@ private:
         DEFAULT_ALIGNMENT glm::mat4 projectionMatrix;
     };
 
-    struct DEFAULT_ALIGNMENT UniformsFS
-    {
+    struct DEFAULT_ALIGNMENT UniformsFS {
         DEFAULT_ALIGNMENT float alpha;
     };
 
@@ -67,11 +64,11 @@ private:
 
     std::unique_ptr<prev_test::render::pipeline::IPipeline> m_pipeline;
 
-    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS> > m_uniformsPoolVS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsVS>> m_uniformsPoolVS;
 
-    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsGS> > m_uniformsPoolGS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsGS>> m_uniformsPoolGS;
 
-    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS> > m_uniformsPoolFS;
+    std::unique_ptr<prev::core::memory::buffer::UBOPool<UniformsFS>> m_uniformsPoolFS;
 };
 } // namespace prev_test::render::renderer::debug
 

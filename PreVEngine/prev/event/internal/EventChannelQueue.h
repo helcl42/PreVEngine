@@ -12,7 +12,7 @@
 
 namespace prev::event::internal {
 template <typename EventType>
-class EventChannelQueue final : public prev::common::pattern::Singleton<EventChannelQueue<EventType> >, public IEventChannelQueue {
+class EventChannelQueue final : public prev::common::pattern::Singleton<EventChannelQueue<EventType>>, public IEventChannelQueue {
 public:
     template <typename EventHandlerType>
     void Add(EventHandlerType& handler)
@@ -41,7 +41,7 @@ public:
 
     void Post(const EventType& message)
     {
-        std::vector<std::function<void(const EventType&)> > currentHandlersCopy;
+        std::vector<std::function<void(const EventType&)>> currentHandlersCopy;
 
         {
             std::lock_guard<std::mutex> lock(m_mutex);
@@ -64,7 +64,7 @@ public:
     void PostAsync(const EventType& message)
     {
         m_threadPool.Enqueue([this, message]() {
-            std::vector<std::function<void(const EventType&)> > currentHandlersCopy;
+            std::vector<std::function<void(const EventType&)>> currentHandlersCopy;
 
             {
                 std::lock_guard<std::mutex> lock(this->m_mutex);
@@ -79,7 +79,7 @@ public:
 
     void DispatchAll() override
     {
-        std::vector<std::function<void(const EventType&)> > currentHandlersCopy;
+        std::vector<std::function<void(const EventType&)>> currentHandlersCopy;
         std::vector<EventType> currentUnsendMessages;
 
         {
@@ -99,7 +99,7 @@ public:
 
 private:
     EventChannelQueue()
-        : prev::common::pattern::Singleton<EventChannelQueue<EventType> >()
+        : prev::common::pattern::Singleton<EventChannelQueue<EventType>>()
     {
         EventChannelQueueManager::Instance().Add(*this);
     }
@@ -126,12 +126,12 @@ private:
     }
 
 private:
-    friend class prev::common::pattern::Singleton<EventChannelQueue<EventType> >;
+    friend class prev::common::pattern::Singleton<EventChannelQueue<EventType>>;
 
 private:
     std::mutex m_mutex;
 
-    std::vector<std::function<void(const EventType&)> > m_handlers;
+    std::vector<std::function<void(const EventType&)>> m_handlers;
 
     std::vector<void*> m_originalPointers;
 

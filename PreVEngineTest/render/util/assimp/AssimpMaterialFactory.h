@@ -21,7 +21,7 @@ private:
     std::shared_ptr<prev::render::image::Image> CreateImage(const aiTexture& texture) const;
 
 private:
-    static inline std::map<std::string, std::shared_ptr<prev::render::image::Image> > s_imagesCache;
+    static inline std::map<std::string, std::shared_ptr<prev::render::image::Image>> s_imagesCache;
 };
 } // namespace prev_test::render::util::assimp
 

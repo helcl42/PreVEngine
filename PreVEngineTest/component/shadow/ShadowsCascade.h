@@ -18,7 +18,6 @@ struct ShadowsCascade {
 
     glm::mat4 projectionMatrix;
 
-
     void Destroy(VkDevice device);
 
     glm::mat4 GetBiasedViewProjectionMatrix() const;

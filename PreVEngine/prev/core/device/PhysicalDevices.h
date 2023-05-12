@@ -3,8 +3,8 @@
 
 #include "PhysicalDevice.h"
 
-#include <vector>
 #include <memory>
+#include <vector>
 
 namespace prev::core::device {
 class PhysicalDevices {

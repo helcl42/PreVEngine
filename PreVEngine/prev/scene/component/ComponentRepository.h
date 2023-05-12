@@ -12,7 +12,7 @@
 
 namespace prev::scene::component {
 template <typename ItemType>
-class ComponentRepository final : public prev::common::pattern::Singleton<ComponentRepository<ItemType> > {
+class ComponentRepository final : public prev::common::pattern::Singleton<ComponentRepository<ItemType>> {
 public:
     ~ComponentRepository() = default;
 
@@ -26,7 +26,7 @@ public:
         return m_components.at(id).front();
     }
 
-    const std::vector<std::shared_ptr<ItemType> >& GetAll(const uint64_t id) const
+    const std::vector<std::shared_ptr<ItemType>>& GetAll(const uint64_t id) const
     {
         if (!Contains(id)) {
             throw std::runtime_error("Entitity with id = " + std::to_string(id) + " does not exist in this repository.");
@@ -35,7 +35,7 @@ public:
         return m_components.at(id);
     }
 
-    void Add(const uint64_t id, const std::vector<std::shared_ptr<ItemType> >& components)
+    void Add(const uint64_t id, const std::vector<std::shared_ptr<ItemType>>& components)
     {
         if (Contains(id)) {
             const auto& addedComponents{ m_components.at(id) };
@@ -45,8 +45,6 @@ public:
                 }
             }
         }
-
-
 
         for (const auto component : components) {
             m_components[id].push_back(component);
@@ -79,10 +77,10 @@ private:
     ComponentRepository() = default;
 
 private:
-    friend class prev::common::pattern::Singleton<ComponentRepository<ItemType> >;
+    friend class prev::common::pattern::Singleton<ComponentRepository<ItemType>>;
 
 private:
-    std::map<uint64_t, std::vector<std::shared_ptr<ItemType> > > m_components;
+    std::map<uint64_t, std::vector<std::shared_ptr<ItemType>>> m_components;
 
     prev::event::EventHandler<ComponentRepository<ItemType>, prev::scene::SceneNodeShutDownEvent> m_shutDownHandler{ *this };
 };

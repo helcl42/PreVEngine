@@ -15,7 +15,7 @@ public:
 
     virtual void InitSceneGraph(const std::shared_ptr<prev::scene::graph::ISceneNode>& rootNode) = 0;
 
-    virtual void InitRenderer(const std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> >& rootRenderer) = 0;
+    virtual void InitRenderer(const std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData>>& rootRenderer) = 0;
 
     virtual void Update(float deltaTime) = 0;
 
@@ -29,7 +29,7 @@ public:
 
     virtual std::shared_ptr<prev::scene::graph::ISceneNode> GetRootNode() const = 0;
 
-    virtual std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData> > GetRootRenderer() const = 0;
+    virtual std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData>> GetRootRenderer() const = 0;
 
     virtual std::shared_ptr<prev::render::Swapchain> GetSwapchain() const = 0;
 

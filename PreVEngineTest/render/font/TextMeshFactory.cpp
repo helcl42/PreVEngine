@@ -10,7 +10,6 @@ std::unique_ptr<prev_test::render::IMesh> TextMeshFactory::CreateTextMesh(const 
     return CreateQuadVertices(text, fontMetaData, lines);
 }
 
-
 void TextMeshFactory::CreateStructure(const std::shared_ptr<AbstractText>& text, const std::shared_ptr<FontMetadata> fontMetaData, std::vector<TextLine>& lines) const
 {
     TextLine currentLine{ text->GetMaxLineSize(), fontMetaData->GetFontSizeScaledSpaceWidth(text->GetFontSize()) };
@@ -122,4 +121,4 @@ void TextMeshFactory::AddIndices(const size_t verticesCount, std::vector<uint32_
         inOutIndices.push_back(baseIndex + indices[i]);
     }
 }
-}
+} // namespace prev_test::render::font

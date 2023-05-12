@@ -7,7 +7,7 @@
 
 namespace prev_test::component::terrain {
 struct HeightMapInfo {
-    std::vector<std::vector<float> > heights;
+    std::vector<std::vector<float>> heights;
 
     float minHeight{ 0.0f };
 

@@ -22,203 +22,205 @@
 
 namespace prev_test::scene {
 #if defined(__ANDROID__)
-    struct Pose {
-        glm::quat orientation;
-        glm::vec3 position;
-    };
+struct Pose {
+    glm::quat orientation;
+    glm::vec3 position;
+};
 
-    class AndroidPoseProvider final {
-    public:
-        AndroidPoseProvider() = default;
+class AndroidPoseProvider final {
+public:
+    AndroidPoseProvider() = default;
 
-        ~AndroidPoseProvider() = default;
+    ~AndroidPoseProvider() = default;
 
-    public:
-        bool Init()
-        {
-            if(m_initialized) {
-                return false;
-            }
-
-            m_running = true;
-            m_mainLoopThread = std::thread(&AndroidPoseProvider::MainLoop, this);
-
-            m_initialized = true;
-            return true;
+public:
+    bool Init()
+    {
+        if (m_initialized) {
+            return false;
         }
 
-        void ShutDown()
-        {
-            if(!m_initialized) {
-                return;
-            }
+        m_running = true;
+        m_mainLoopThread = std::thread(&AndroidPoseProvider::MainLoop, this);
 
-            m_running = false;
-            if(m_mainLoopThread.joinable()) {
-                m_mainLoopThread.join();
-            }
+        m_initialized = true;
+        return true;
+    }
 
-            m_initialized = false;
+    void ShutDown()
+    {
+        if (!m_initialized) {
+            return;
         }
 
-        Pose GetCurrentPose() const {
-            std::scoped_lock lock(m_mutex);
-            return { m_currentOrientation, m_currentPosition };
+        m_running = false;
+        if (m_mainLoopThread.joinable()) {
+            m_mainLoopThread.join();
         }
 
-    private:
-        void MainLoop()
-        {
-            ASensorManager* sensorManager = ASensorManager_getInstance();
-            if (!sensorManager) {
-                LOGE("Failed to get a sensor manager\n");
-                return;
-            }
+        m_initialized = false;
+    }
 
-            ASensorList sensorList{ nullptr };
-            int sensorCount = ASensorManager_getSensorList(sensorManager, &sensorList);
-            LOGI("Found %d supported sensors\n", sensorCount);
+    Pose GetCurrentPose() const
+    {
+        std::scoped_lock lock(m_mutex);
+        return { m_currentOrientation, m_currentPosition };
+    }
+
+private:
+    void MainLoop()
+    {
+        ASensorManager* sensorManager = ASensorManager_getInstance();
+        if (!sensorManager) {
+            LOGE("Failed to get a sensor manager\n");
+            return;
+        }
+
+        ASensorList sensorList{ nullptr };
+        int sensorCount = ASensorManager_getSensorList(sensorManager, &sensorList);
+        LOGI("Found %d supported sensors\n", sensorCount);
+        for (int i = 0; i < sensorCount; i++) {
+            LOGI("HAL supports sensor %s\n", ASensor_getName(sensorList[i]));
+        }
+
+        ASensorEventQueue* sensorEventQueue = ASensorManager_createEventQueue(sensorManager, ALooper_prepare(ALOOPER_PREPARE_ALLOW_NON_CALLBACKS), looperId, nullptr, nullptr);
+        if (!sensorEventQueue) {
+            LOGE("Failed to create a sensor event queue\n");
+            return;
+        }
+
+        const std::vector<int> sensorTypes = {
+            ASENSOR_TYPE_GYROSCOPE,
+            ASENSOR_TYPE_LINEAR_ACCELERATION
+        };
+
+        std::vector<ASensorRef> sensors;
+        for (const auto& sensorType : sensorTypes) {
+            ASensorRef sensor;
+            bool sensorFound{ false };
             for (int i = 0; i < sensorCount; i++) {
-                LOGI("HAL supports sensor %s\n", ASensor_getName(sensorList[i]));
-            }
-
-            ASensorEventQueue* sensorEventQueue = ASensorManager_createEventQueue(sensorManager, ALooper_prepare(ALOOPER_PREPARE_ALLOW_NON_CALLBACKS), looperId, nullptr, nullptr);
-            if (!sensorEventQueue) {
-                LOGE("Failed to create a sensor event queue\n");
-                return;
-            }
-
-            const std::vector<int> sensorTypes = {
-                    ASENSOR_TYPE_GYROSCOPE,
-                    ASENSOR_TYPE_LINEAR_ACCELERATION
-            };
-
-            std::vector<ASensorRef> sensors;
-            for(const auto& sensorType : sensorTypes) {
-                ASensorRef sensor;
-                bool sensorFound{false};
-                for (int i = 0; i < sensorCount; i++) {
-                    sensor = sensorList[i];
-                    if (ASensor_getType(sensor) != sensorType) {
-                        continue;
-                    }
-                    if (ASensorEventQueue_enableSensor(sensorEventQueue, sensor) < 0) {
-                        continue;
-                    }
-                    if (ASensorEventQueue_setEventRate(sensorEventQueue, sensor, timeoutMicroSeconds) < 0) {
-                        LOGE("Failed to set the %s sample rate\n", ASensor_getName(sensor));
-                        continue;
-                    }
-                    sensorFound = true;
-                    break;
-                }
-
-                if (!sensorFound) {
-                    LOGE("No sensor of the specified type found\n");
-                    int ret = ASensorManager_destroyEventQueue(sensorManager, sensorEventQueue);
-                    if (ret < 0) {
-                        LOGE("Failed to destroy event queue: %s\n", strerror(-ret));
-                    }
-                    return;
-                }
-
-                LOGI("Sensor %s activated\n", ASensor_getName(sensor));
-                sensors.push_back(sensor);
-            }
-
-            m_lastOrientationTimestamp = 0;
-            m_lastAccelerationTimestamp = 0;
-
-            while(m_running) {
-                if(ALooper_pollAll(timeoutMicroSeconds,nullptr, nullptr, nullptr) != looperId) {
-                    LOGE("Incorrect Looper ident read from poll.\n");
+                sensor = sensorList[i];
+                if (ASensor_getType(sensor) != sensorType) {
                     continue;
                 }
-
-                ASensorEvent event;
-                if (ASensorEventQueue_getEvents(sensorEventQueue, &event, 1) <= 0) {
-                    LOGE("Failed to read data from the sensor.\n");
+                if (ASensorEventQueue_enableSensor(sensorEventQueue, sensor) < 0) {
                     continue;
                 }
-
-                if(event.type == ASENSOR_TYPE_GYROSCOPE) {
-                    std::scoped_lock lock(m_mutex);
-                    if(m_lastOrientationTimestamp != 0) {
-                        const auto deltaTime{ static_cast<float>(event.timestamp - m_lastOrientationTimestamp) / 1000000000.0f };
-                        const glm::vec3 angularVelocity{ event.data[0], event.data[1], event.data[2] };
-                        m_currentOrientation = IntegrateGyroscopeRotation(m_currentOrientation, angularVelocity, deltaTime);
-                    }
-                    m_lastOrientationTimestamp = event.timestamp;
-                } else if(event.type == ASENSOR_TYPE_LINEAR_ACCELERATION) {
-                    std::scoped_lock lock(m_mutex);
-                    if(m_lastAccelerationTimestamp != 0) {
-                        const auto deltaTime{ static_cast<float>(event.timestamp - m_lastAccelerationTimestamp) / 1000000000.0f };
-
-                        const glm::vec3 acceleration{ event.data[0], event.data[1], event.data[2] };
-
-                        // TODO - naive double integral here without any scale & bias calibration
-                        const auto velocityDiff{ acceleration * deltaTime };
-                        m_currentVelocity += velocityDiff;
-
-                        const auto positionDIff{ m_currentVelocity * deltaTime };
-                        m_currentPosition += positionDIff;
-
-                        //LOGE("Got acceleration: (%f, %f, %f), dt: %f", acceleration.x, acceleration.y, acceleration.z, deltaTime);
-                    }
-                    m_lastAccelerationTimestamp = event.timestamp;
+                if (ASensorEventQueue_setEventRate(sensorEventQueue, sensor, timeoutMicroSeconds) < 0) {
+                    LOGE("Failed to set the %s sample rate\n", ASensor_getName(sensor));
+                    continue;
                 }
+                sensorFound = true;
+                break;
             }
 
-            for(const auto& sensor : sensors) {
-                int ret = ASensorEventQueue_disableSensor(sensorEventQueue, sensor);
-                if (ret < 0) {
-                    LOGE("Failed to disable %s: %s\n", ASensor_getName(sensor), strerror(-ret));
-                }
-                ret = ASensorManager_destroyEventQueue(sensorManager, sensorEventQueue);
+            if (!sensorFound) {
+                LOGE("No sensor of the specified type found\n");
+                int ret = ASensorManager_destroyEventQueue(sensorManager, sensorEventQueue);
                 if (ret < 0) {
                     LOGE("Failed to destroy event queue: %s\n", strerror(-ret));
                 }
+                return;
+            }
+
+            LOGI("Sensor %s activated\n", ASensor_getName(sensor));
+            sensors.push_back(sensor);
+        }
+
+        m_lastOrientationTimestamp = 0;
+        m_lastAccelerationTimestamp = 0;
+
+        while (m_running) {
+            if (ALooper_pollAll(timeoutMicroSeconds, nullptr, nullptr, nullptr) != looperId) {
+                LOGE("Incorrect Looper ident read from poll.\n");
+                continue;
+            }
+
+            ASensorEvent event;
+            if (ASensorEventQueue_getEvents(sensorEventQueue, &event, 1) <= 0) {
+                LOGE("Failed to read data from the sensor.\n");
+                continue;
+            }
+
+            if (event.type == ASENSOR_TYPE_GYROSCOPE) {
+                std::scoped_lock lock(m_mutex);
+                if (m_lastOrientationTimestamp != 0) {
+                    const auto deltaTime{ static_cast<float>(event.timestamp - m_lastOrientationTimestamp) / 1000000000.0f };
+                    const glm::vec3 angularVelocity{ event.data[0], event.data[1], event.data[2] };
+                    m_currentOrientation = IntegrateGyroscopeRotation(m_currentOrientation, angularVelocity, deltaTime);
+                }
+                m_lastOrientationTimestamp = event.timestamp;
+            } else if (event.type == ASENSOR_TYPE_LINEAR_ACCELERATION) {
+                std::scoped_lock lock(m_mutex);
+                if (m_lastAccelerationTimestamp != 0) {
+                    const auto deltaTime{ static_cast<float>(event.timestamp - m_lastAccelerationTimestamp) / 1000000000.0f };
+
+                    const glm::vec3 acceleration{ event.data[0], event.data[1], event.data[2] };
+
+                    // TODO - naive double integral here without any scale & bias calibration
+                    const auto velocityDiff{ acceleration * deltaTime };
+                    m_currentVelocity += velocityDiff;
+
+                    const auto positionDIff{ m_currentVelocity * deltaTime };
+                    m_currentPosition += positionDIff;
+
+                    // LOGE("Got acceleration: (%f, %f, %f), dt: %f", acceleration.x, acceleration.y, acceleration.z, deltaTime);
+                }
+                m_lastAccelerationTimestamp = event.timestamp;
             }
         }
 
-    private:
-        static glm::quat IntegrateGyroscopeRotation(const glm::quat& previousOrientation, const glm::vec3& angularVelocity, const float dt) {
-            const float angularVelocityMagnitude{glm::length(angularVelocity) };
-            const glm::vec3 angularVelocityDirection{ glm::normalize(angularVelocity) };
-
-            // construct orientation diff from angular velocity and elapsed time
-            const float thetaOverTwo{angularVelocityMagnitude * dt / 2.0f };
-            const float sinThetaOverTwo{ std::sin(thetaOverTwo) };
-            const float cosThetaOverTwo{ std::cos(thetaOverTwo) };
-            const glm::quat orientationDelta{ cosThetaOverTwo, sinThetaOverTwo * angularVelocityDirection.x, sinThetaOverTwo * angularVelocityDirection.y, sinThetaOverTwo * angularVelocityDirection.z };
-
-            // concatenate diff with previous orientation
-            return previousOrientation * orientationDelta;
+        for (const auto& sensor : sensors) {
+            int ret = ASensorEventQueue_disableSensor(sensorEventQueue, sensor);
+            if (ret < 0) {
+                LOGE("Failed to disable %s: %s\n", ASensor_getName(sensor), strerror(-ret));
+            }
+            ret = ASensorManager_destroyEventQueue(sensorManager, sensorEventQueue);
+            if (ret < 0) {
+                LOGE("Failed to destroy event queue: %s\n", strerror(-ret));
+            }
         }
+    }
 
-    private:
-        glm::quat m_currentOrientation{ 1.0f, 0.0f, 0.0f, 0.0f };
+private:
+    static glm::quat IntegrateGyroscopeRotation(const glm::quat& previousOrientation, const glm::vec3& angularVelocity, const float dt)
+    {
+        const float angularVelocityMagnitude{ glm::length(angularVelocity) };
+        const glm::vec3 angularVelocityDirection{ glm::normalize(angularVelocity) };
 
-        int64_t m_lastOrientationTimestamp;
+        // construct orientation diff from angular velocity and elapsed time
+        const float thetaOverTwo{ angularVelocityMagnitude * dt / 2.0f };
+        const float sinThetaOverTwo{ std::sin(thetaOverTwo) };
+        const float cosThetaOverTwo{ std::cos(thetaOverTwo) };
+        const glm::quat orientationDelta{ cosThetaOverTwo, sinThetaOverTwo * angularVelocityDirection.x, sinThetaOverTwo * angularVelocityDirection.y, sinThetaOverTwo * angularVelocityDirection.z };
 
-        glm::vec3 m_currentPosition;
+        // concatenate diff with previous orientation
+        return previousOrientation * orientationDelta;
+    }
 
-        glm::vec3 m_currentVelocity;
+private:
+    glm::quat m_currentOrientation{ 1.0f, 0.0f, 0.0f, 0.0f };
 
-        int64_t m_lastAccelerationTimestamp;
+    int64_t m_lastOrientationTimestamp;
 
-        std::atomic_bool m_initialized;
+    glm::vec3 m_currentPosition;
 
-        std::atomic_bool m_running;
+    glm::vec3 m_currentVelocity;
 
-        std::thread m_mainLoopThread;
+    int64_t m_lastAccelerationTimestamp;
 
-        mutable std::mutex m_mutex;
+    std::atomic_bool m_initialized;
 
-        static const inline int timeoutMicroSeconds{ 10000 };
+    std::atomic_bool m_running;
 
-        static const inline int looperId{ 1 };
-    };
+    std::thread m_mainLoopThread;
+
+    mutable std::mutex m_mutex;
+
+    static const inline int timeoutMicroSeconds{ 10000 };
+
+    static const inline int looperId{ 1 };
+};
 #endif
 
 class Player final : public prev::scene::graph::SceneNode {
