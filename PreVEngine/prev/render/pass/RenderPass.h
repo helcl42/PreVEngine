@@ -1,8 +1,9 @@
 #ifndef __RENDER_PASS_H__
 #define __RENDER_PASS_H__
 
-#include "../../core/instance/Validation.h"
 #include "SubPass.h"
+
+#include "../../core/instance/Validation.h"
 
 #include <vector>
 
@@ -21,7 +22,9 @@ public:
     void End(VkCommandBuffer commadBuffer);
 
 public:
-    VkFormat GetFormat(const int attachmentIndex = 0) const;
+    VkFormat GetColorFormat(const int attachmentIndex = 0) const;
+
+    std::vector<VkFormat> GetColorFormats(const bool includeResolveAttachments = false) const;
 
     VkFormat GetDepthFormat(const int attachmentIndex = 0) const;
 
@@ -38,8 +41,6 @@ public:
 public:
     operator VkRenderPass() const;
 
-    VkRenderPass GetNativeHandle() const;
-
 private:
     friend class RenderPassBuilder;
 
@@ -51,6 +52,8 @@ private:
     std::vector<VkClearValue> m_clearValues;
 
     std::vector<VkFormat> m_colorFormats;
+
+    std::vector<bool> m_resolveAttachments;
 
     std::vector<VkFormat> m_depthFormats;
 

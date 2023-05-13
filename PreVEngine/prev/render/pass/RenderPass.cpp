@@ -32,12 +32,27 @@ void RenderPass::End(const VkCommandBuffer commandBuffer)
     vkCmdEndRenderPass(commandBuffer);
 }
 
-VkFormat RenderPass::GetFormat(const int attachmentIndex) const
+VkFormat RenderPass::GetColorFormat(const int attachmentIndex) const
 {
     if (attachmentIndex >= 0 && attachmentIndex < static_cast<int>(m_colorFormats.size())) {
         return m_colorFormats.at(attachmentIndex);
     }
     return VkFormat::VK_FORMAT_UNDEFINED;
+}
+
+std::vector<VkFormat> RenderPass::GetColorFormats(const bool includeResolveAttachments) const
+{
+    if (includeResolveAttachments) {
+        return m_colorFormats;
+    } else {
+        std::vector<VkFormat> result;
+        for (size_t i = 0; i < m_colorFormats.size(); ++i) {
+            if (!m_resolveAttachments[i]) {
+                result.push_back(m_colorFormats[i]);
+            }
+        }
+        return result;
+    }
 }
 
 VkFormat RenderPass::GetDepthFormat(const int attachmentIndex) const
@@ -83,11 +98,6 @@ RenderPass::operator VkRenderPass() const
 {
     ASSERT(m_renderPass, "Renderpass has to be created first: Use RenderPassBuilder.\n");
 
-    return m_renderPass;
-}
-
-VkRenderPass RenderPass::GetNativeHandle() const
-{
     return m_renderPass;
 }
 } // namespace prev::render::pass
