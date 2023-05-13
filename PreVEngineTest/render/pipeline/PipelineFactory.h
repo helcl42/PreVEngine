@@ -9,15 +9,15 @@
 namespace prev_test::render::pipeline {
 class PipelineFactory {
 public:
-    void CreateShadowsPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const prev::render::pass::RenderPass& renderPass, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const;
+    VkPipelineLayout CreatePipelineLayout(const VkDevice& device, const prev::render::shader::Shader& shader);
 
-    void CreateDefaultPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const prev::render::pass::RenderPass& renderPass, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool blendingEnabled, const bool fillMode, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const;
+    VkPipeline CreateShadowsPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const prev::render::pass::RenderPass& renderPass, const VkPipelineLayout pipelineLayout) const;
 
-    void CreateParticlesPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const prev::render::pass::RenderPass& renderPass, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool fillMode, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const;
+    VkPipeline CreateDefaultPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const prev::render::pass::RenderPass& renderPass, const VkPipelineLayout pipelineLayout, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool blendingEnabled, const bool fillMode) const;
 
-    void CreateDebugPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const prev::render::pass::RenderPass& renderPass, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const;
+    VkPipeline CreateParticlesPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const prev::render::pass::RenderPass& renderPass, const VkPipelineLayout pipelineLayout, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool fillMode) const;
 
-    void CreateDefaultComputePipeline(const VkDevice& device, const prev::render::shader::Shader& shader, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const;
+    VkPipeline CreateDefaultComputePipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const VkPipelineLayout pipelineLayout) const;
 };
 } // namespace prev_test::render::pipeline
 

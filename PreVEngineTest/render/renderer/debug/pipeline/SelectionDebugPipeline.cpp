@@ -11,7 +11,8 @@ SelectionDebugPipeline::SelectionDebugPipeline(const VkDevice device, const prev
 bool SelectionDebugPipeline::Init()
 {
     prev_test::render::pipeline::PipelineFactory pipelineFactory{};
-    pipelineFactory.CreateDefaultPipeline(m_device, m_shaders, m_renderPass, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, false, false, m_pipelineLayout, m_pipeline);
+    m_pipelineLayout = pipelineFactory.CreatePipelineLayout(m_device, m_shaders);
+    m_pipeline = pipelineFactory.CreateDefaultPipeline(m_device, m_shaders, m_renderPass, m_pipelineLayout, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, true, false, false);
     return m_pipeline != VK_NULL_HANDLE;
 }
 } // namespace prev_test::render::renderer::debug::pipeline

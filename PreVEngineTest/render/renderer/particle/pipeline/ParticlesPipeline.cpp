@@ -11,7 +11,8 @@ ParticlesPipeline::ParticlesPipeline(const VkDevice device, const prev::render::
 bool ParticlesPipeline::Init()
 {
     prev_test::render::pipeline::PipelineFactory pipelineFactory{};
-    pipelineFactory.CreateParticlesPipeline(m_device, m_shaders, m_renderPass, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, false, true, m_pipelineLayout, m_pipeline);
+    m_pipelineLayout = pipelineFactory.CreatePipelineLayout(m_device, m_shaders);
+    m_pipeline = pipelineFactory.CreateParticlesPipeline(m_device, m_shaders, m_renderPass, m_pipelineLayout, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, true, false, true);
     return m_pipeline != VK_NULL_HANDLE;
 }
 } // namespace prev_test::render::renderer::particle::pipeline
