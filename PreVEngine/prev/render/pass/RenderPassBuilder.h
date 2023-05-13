@@ -15,9 +15,9 @@ public:
     RenderPassBuilder() = default;
 
 public:
-    RenderPassBuilder& AddColorAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, const VkClearColorValue clearVal = {}, const VkImageLayout finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+    RenderPassBuilder& AddColorAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, const VkClearColorValue clearVal = {}, const VkImageLayout finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, const bool resolveAttachment = false);
 
-    RenderPassBuilder& AddDepthAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, const VkClearDepthStencilValue clearVal = { 1.0f, 0 });
+    RenderPassBuilder& AddDepthAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, const VkClearDepthStencilValue clearVal = { 1.0f, 0 }, const bool resolveAttachment = false);
 
     RenderPassBuilder& AddSubpass(const std::vector<uint32_t>& attachmentIndexes = {}, const std::vector<uint32_t>& resolveIndices = {});
 
@@ -39,6 +39,7 @@ private:
         VkFormat format;
         VkSampleCountFlagBits sampleCount;
         VkImageLayout finalLayout;
+        bool resolveAttachment;
     };
 
 private:

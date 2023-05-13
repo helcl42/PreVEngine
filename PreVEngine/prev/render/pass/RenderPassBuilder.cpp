@@ -6,22 +6,22 @@ RenderPassBuilder::RenderPassBuilder(VkDevice device)
 {
 }
 
-RenderPassBuilder& RenderPassBuilder::AddColorAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount, const VkClearColorValue clearVal, const VkImageLayout finalLayout)
+RenderPassBuilder& RenderPassBuilder::AddColorAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount, const VkClearColorValue clearVal, const VkImageLayout finalLayout, const bool resolveAttachment)
 {
     VkClearValue clearColor{};
     clearColor.color = clearVal;
 
-    m_attachmentInfos.push_back(AttachmentCreateInfo{ clearColor, format, sampleCount, finalLayout });
+    m_attachmentInfos.push_back(AttachmentCreateInfo{ clearColor, format, sampleCount, finalLayout, resolveAttachment });
 
     return *this;
 }
 
-RenderPassBuilder& RenderPassBuilder::AddDepthAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount, const VkClearDepthStencilValue clearVal)
+RenderPassBuilder& RenderPassBuilder::AddDepthAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount, const VkClearDepthStencilValue clearVal, const bool resolveAttachment)
 {
     VkClearValue clearDepth{};
     clearDepth.depthStencil = clearVal;
 
-    m_attachmentInfos.push_back(AttachmentCreateInfo{ clearDepth, format, sampleCount, DEFAULT_DEPTH_LAYOUT });
+    m_attachmentInfos.push_back(AttachmentCreateInfo{ clearDepth, format, sampleCount, DEFAULT_DEPTH_LAYOUT, resolveAttachment });
 
     return *this;
 }
@@ -45,14 +45,15 @@ std::unique_ptr<RenderPass> RenderPassBuilder::Build() const
     auto renderPass{ std::make_unique<RenderPass>(m_device) };
     renderPass->m_dependencies = m_dependencies;
 
-    for (const auto& attchmentCreateInfo : m_attachmentInfos) {
-        renderPass->m_clearValues.push_back(attchmentCreateInfo.clearValue);
-        if (attchmentCreateInfo.finalLayout == DEFAULT_DEPTH_LAYOUT) {
-            renderPass->m_depthFormats.push_back(attchmentCreateInfo.format);
+    for (const auto& attachmentCreateInfo : m_attachmentInfos) {
+        renderPass->m_clearValues.push_back(attachmentCreateInfo.clearValue);
+        if (attachmentCreateInfo.finalLayout == DEFAULT_DEPTH_LAYOUT) {
+            renderPass->m_depthFormats.push_back(attachmentCreateInfo.format);
         } else {
-            renderPass->m_colorFormats.push_back(attchmentCreateInfo.format);
+            renderPass->m_colorFormats.push_back(attachmentCreateInfo.format);
         }
-        renderPass->m_attachments.push_back(CreateAttachmentDescription(attchmentCreateInfo.format, attchmentCreateInfo.sampleCount, attchmentCreateInfo.finalLayout));
+        renderPass->m_resolveAttachments.push_back(attachmentCreateInfo.resolveAttachment);
+        renderPass->m_attachments.push_back(CreateAttachmentDescription(attachmentCreateInfo.format, attachmentCreateInfo.sampleCount, attachmentCreateInfo.finalLayout));
     }
 
     for (const auto& subPassCreateInfo : m_subPassCreateInfos) {

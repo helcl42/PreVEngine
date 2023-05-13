@@ -99,12 +99,12 @@ void PipelineFactory::CreateShadowsPipeline(const VkDevice& device, const prev::
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDynamicState = &dynamicState;
     pipelineInfo.layout = outPipelineLayout;
-    pipelineInfo.renderPass = renderPass.GetNativeHandle();
+    pipelineInfo.renderPass = renderPass;
 
     VKERRCHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &outPipeline));
 }
 
-void PipelineFactory::CreateDefaultPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const prev::render::pass::RenderPass& renderPass, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool blendingEnabled, const bool fillMode, const uint32_t colorAttachmentCount, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
+void PipelineFactory::CreateDefaultPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const prev::render::pass::RenderPass& renderPass, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool blendingEnabled, const bool fillMode, VkPipelineLayout& outPipelineLayout, VkPipeline& outPipeline) const
 {
     // Pipeline layout
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
@@ -171,9 +171,9 @@ void PipelineFactory::CreateDefaultPipeline(const VkDevice& device, const prev::
     depthStencilState.depthBoundsTestEnable = VK_FALSE;
     depthStencilState.stencilTestEnable = VK_FALSE;
 
-    std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments(colorAttachmentCount);
+    std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments(renderPass.GetColorFormats().size());
 
-    for (uint32_t i = 0; i < colorAttachmentCount; ++i) {
+    for (uint32_t i = 0; i < static_cast<uint32_t>(renderPass.GetColorFormats().size()); ++i) {
         VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
         colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
         colorBlendAttachment.blendEnable = blendingEnabled ? VK_TRUE : VK_FALSE;
@@ -213,7 +213,7 @@ void PipelineFactory::CreateDefaultPipeline(const VkDevice& device, const prev::
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDynamicState = &dynamicState;
     pipelineInfo.layout = outPipelineLayout;
-    pipelineInfo.renderPass = renderPass.GetNativeHandle();
+    pipelineInfo.renderPass = renderPass;
 
     VKERRCHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &outPipeline));
 }
@@ -322,7 +322,7 @@ void PipelineFactory::CreateParticlesPipeline(const VkDevice& device, const prev
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDynamicState = &dynamicState;
     pipelineInfo.layout = outPipelineLayout;
-    pipelineInfo.renderPass = renderPass.GetNativeHandle();
+    pipelineInfo.renderPass = renderPass;
 
     VKERRCHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &outPipeline));
 }
@@ -431,7 +431,7 @@ void PipelineFactory::CreateDebugPipeline(const VkDevice& device, const prev::re
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDynamicState = &dynamicState;
     pipelineInfo.layout = outPipelineLayout;
-    pipelineInfo.renderPass = renderPass.GetNativeHandle();
+    pipelineInfo.renderPass = renderPass;
 
     VKERRCHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &outPipeline));
 }

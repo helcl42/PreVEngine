@@ -11,7 +11,7 @@ ScreenSpacePipeline::ScreenSpacePipeline(const VkDevice device, const prev::rend
 bool ScreenSpacePipeline::Init()
 {
     prev_test::render::pipeline::PipelineFactory pipelineFactory{};
-    pipelineFactory.CreateDefaultPipeline(m_device, m_shaders, m_renderPass, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, false, false, false, true, 1, m_pipelineLayout, m_pipeline);
+    pipelineFactory.CreateDefaultPipeline(m_device, m_shaders, m_renderPass, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, false, false, false, true, m_pipelineLayout, m_pipeline);
     return m_pipeline != VK_NULL_HANDLE;
 }
 } // namespace prev_test::render::renderer::common::pipeline

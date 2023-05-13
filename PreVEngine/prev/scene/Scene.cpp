@@ -132,9 +132,9 @@ void Scene::InitRenderPass()
 
         m_renderPass = renderPassBuilder
                            .AddColorAttachment(colorFormat, sampleCount, clearColor, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) // color buffer, multisampled
-                           .AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, clearColor, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) // color buffer, resolve buffer
+                           .AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, clearColor, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, true) // color buffer, resolve buffer
                            .AddDepthAttachment(depthFormat, sampleCount, { 1.0f, 0 }) // depth buffer, multisampled
-                           .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, { 1.0f, 0 }) // depth buffer, resolve buffer
+                           .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, { 1.0f, 0 }, true) // depth buffer, resolve buffer
                            .AddSubpass({ 0, 2 }, { 1 }) // resolve ref will be at index 1
                            .AddSubpassDependencies(dependencies)
                            .Build();
