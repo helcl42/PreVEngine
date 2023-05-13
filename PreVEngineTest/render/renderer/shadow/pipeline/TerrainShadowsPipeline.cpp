@@ -11,7 +11,8 @@ TerrainShadowsPipeline::TerrainShadowsPipeline(const VkDevice device, const prev
 bool TerrainShadowsPipeline::Init()
 {
     prev_test::render::pipeline::PipelineFactory pipelineFactory{};
-    pipelineFactory.CreateShadowsPipeline(m_device, m_shaders, m_renderPass, m_pipelineLayout, m_pipeline);
+    m_pipelineLayout = pipelineFactory.CreatePipelineLayout(m_device, m_shaders);
+    m_pipeline = pipelineFactory.CreateShadowsPipeline(m_device, m_shaders, m_renderPass, m_pipelineLayout);
     return m_pipeline != VK_NULL_HANDLE;
 }
 
