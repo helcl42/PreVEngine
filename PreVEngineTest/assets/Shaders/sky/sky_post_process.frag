@@ -5,7 +5,7 @@ layout(std140, binding = 0) uniform UniformBufferObject {
     vec4 resolution;
     vec4 lightPosition;
     uint enableGodRays;
-    float lightDotCameraFront;
+    float lightDotCameraForward;
 } uboFS;
 
 layout(binding = 1) uniform sampler2D skyTex;
@@ -61,9 +61,7 @@ void main()
 	vec4 fragColor = GaussianBlur(skyTex, uv);
 
 	// RADIAL BLUR + CREPUSCOLAR RAYS
-	bvec2 lowerLimit = greaterThan(uboFS.lightPosition.xy, vec2(0.0));
-	bvec2 upperLimit = lessThan(uboFS.lightPosition.xy, vec2(1.0));
-	if(uboFS.lightDotCameraFront > 0.0 && uboFS.enableGodRays != 0)
+	if(uboFS.lightDotCameraForward > 0.0 && uboFS.enableGodRays != 0)
 	{
         // Radial blur factors
         float decay = 0.98;
@@ -90,7 +88,7 @@ void main()
         }
 
         vec3 colorWithRays = fragColor.rgb + (smoothstep(0.0, 1.0, colRays) * exposure);
-        fragColor.rgb = mix(fragColor.rgb, colorWithRays * 0.9, uboFS.lightDotCameraFront * uboFS.lightDotCameraFront);
+        fragColor.rgb = mix(fragColor.rgb, colorWithRays * 0.9, uboFS.lightDotCameraForward * uboFS.lightDotCameraForward);
 	}
 
     outFragColor = fragColor;

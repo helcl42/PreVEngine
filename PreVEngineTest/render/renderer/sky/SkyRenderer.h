@@ -78,7 +78,7 @@ private:
         DEFAULT_ALIGNMENT glm::vec4 resolution;
         DEFAULT_ALIGNMENT glm::vec4 lisghtPosition;
         DEFAULT_ALIGNMENT uint32_t enableGodRays;
-        float lightDotCameraFront;
+        float lightDotCameraForward;
     };
 
 private:

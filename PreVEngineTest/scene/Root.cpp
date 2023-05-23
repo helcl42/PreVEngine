@@ -49,7 +49,7 @@ void Root::Init()
     auto sky = std::make_shared<sky::Sky>();
     AddChild(sky);
 
-    auto sunLight = std::make_shared<light::MainLight>(glm::vec3(150.0f, 50.0f, 150.0f));
+    auto sunLight = std::make_shared<light::MainLight>(glm::vec3(15000.0f, 5000.0f, 15000.0f));
     sunLight->SetTags({ TAG_MAIN_LIGHT, TAG_LIGHT });
     AddChild(sunLight);
 

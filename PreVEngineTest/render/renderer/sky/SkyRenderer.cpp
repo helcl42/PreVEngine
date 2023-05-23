@@ -169,15 +169,15 @@ void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext,
 
         auto uboPostFS{ m_uniformsPoolSkyPostProcessFS->GetNext() };
 
-        glm::vec4 lightPositionNdc = renderContextUserData.projectionMatrix * renderContextUserData.viewMatrix * glm::vec4(mainLightComponent->GetPosition(), 1.0f);
-        lightPositionNdc = lightPositionNdc / lightPositionNdc.w;
-        lightPositionNdc = lightPositionNdc * 0.5f + 0.5f;
+        glm::vec4 lightPositionClipSpace = renderContextUserData.projectionMatrix * renderContextUserData.viewMatrix * glm::vec4(mainLightComponent->GetPosition(), 1.0f);
+        glm::vec3 lightPositionNdc = lightPositionClipSpace / lightPositionClipSpace.w;
+        glm::vec2 lightPositionO1 = lightPositionNdc * 0.5f + 0.5f;
 
         UniformsSkyPostProcessFS uniformsPostFS{};
         uniformsPostFS.resolution = glm::vec4(extent.width, extent.height, 0.0f, 0.0f);
-        uniformsPostFS.lisghtPosition = lightPositionNdc;
+        uniformsPostFS.lisghtPosition = glm::vec4(lightPositionO1, 0.0f, 1.0f);
         uniformsPostFS.enableGodRays = 1;
-        uniformsPostFS.lightDotCameraFront = -glm::dot(glm::normalize(mainLightComponent->GetPosition() - renderContextUserData.cameraPosition), glm::normalize(prev::util::math::GetForwardVector(renderContextUserData.viewMatrix)));
+        uniformsPostFS.lightDotCameraForward = glm::dot(glm::normalize(renderContextUserData.cameraPosition - mainLightComponent->GetPosition()), glm::normalize(prev::util::math::GetForwardVector(renderContextUserData.viewMatrix)));
 
         uboPostFS->Update(&uniformsPostFS);
 
