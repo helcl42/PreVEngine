@@ -272,4 +272,14 @@ std::string PresentModeToString(const VkPresentModeKHR mode)
         return "UNKNOWN_PRESENT_MODE";
     }
 }
+
+uint32_t GetGroupSize(const uint32_t val, const uint32_t blockSize)
+{
+    const auto div{ val / blockSize };
+    if (val % blockSize == 0) {
+        return div;
+    } else {
+        return div + blockSize;
+    }
+}
 } // namespace prev::util::vk
