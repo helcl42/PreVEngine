@@ -17,11 +17,11 @@ public:
 public:
     void UseAttachment(const uint32_t attachmentIndex); // for write
 
-    void UseAttachments(const std::vector<uint32_t>& attachmentIndexes = {});
+    void UseAttachments(const std::vector<uint32_t>& attachmentIndices = {});
 
     void UseResolveAttachment(const uint32_t attachmentIndex); // for write
 
-    void UseResolveAttachments(const std::vector<uint32_t>& attachmentIndexes = {});
+    void UseResolveAttachments(const std::vector<uint32_t>& attachmentIndices = {});
 
     void InputAttachment(const uint32_t attachmentIndex); // for read
 
