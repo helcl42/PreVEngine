@@ -26,9 +26,9 @@ RenderPassBuilder& RenderPassBuilder::AddDepthAttachment(const VkFormat format, 
     return *this;
 }
 
-RenderPassBuilder& RenderPassBuilder::AddSubpass(const std::vector<uint32_t>& attachmentIndexes, const std::vector<uint32_t>& resolveIndices)
+RenderPassBuilder& RenderPassBuilder::AddSubpass(const std::vector<uint32_t>& attachmentIndices, const std::vector<uint32_t>& resolveIndices)
 {
-    m_subPassCreateInfos.push_back({ attachmentIndexes, resolveIndices });
+    m_subPassCreateInfos.push_back({ attachmentIndices, resolveIndices });
 
     return *this;
 }
@@ -59,7 +59,7 @@ std::unique_ptr<RenderPass> RenderPassBuilder::Build() const
     for (const auto& subPassCreateInfo : m_subPassCreateInfos) {
         renderPass->m_subpasses.push_back(SubPass(*renderPass));
         auto& subpass{ renderPass->m_subpasses.back() };
-        subpass.UseAttachments(subPassCreateInfo.attachmentIndexes);
+        subpass.UseAttachments(subPassCreateInfo.attachmentIndices);
         subpass.UseResolveAttachments(subPassCreateInfo.resolveIndices);
     }
 

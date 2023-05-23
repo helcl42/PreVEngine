@@ -19,7 +19,7 @@ public:
 
     RenderPassBuilder& AddDepthAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, const VkClearDepthStencilValue clearVal = { 1.0f, 0 }, const bool resolveAttachment = false);
 
-    RenderPassBuilder& AddSubpass(const std::vector<uint32_t>& attachmentIndexes = {}, const std::vector<uint32_t>& resolveIndices = {});
+    RenderPassBuilder& AddSubpass(const std::vector<uint32_t>& attachmentIndices = {}, const std::vector<uint32_t>& resolveIndices = {});
 
     RenderPassBuilder& AddSubpassDependencies(const std::vector<VkSubpassDependency>& dependencies);
 
@@ -30,7 +30,7 @@ private:
 
 private:
     struct SubPassCreateInfo {
-        std::vector<uint32_t> attachmentIndexes;
+        std::vector<uint32_t> attachmentIndices;
         std::vector<uint32_t> resolveIndices;
     };
 

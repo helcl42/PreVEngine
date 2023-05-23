@@ -36,9 +36,9 @@ void SubPass::UseAttachment(const uint32_t attachmentIndex)
     }
 }
 
-void SubPass::UseAttachments(const std::vector<uint32_t>& attachmentIndexes)
+void SubPass::UseAttachments(const std::vector<uint32_t>& attachmentIndices)
 {
-    for (const auto& i : attachmentIndexes) {
+    for (const auto& i : attachmentIndices) {
         UseAttachment(i);
     }
 }
@@ -52,9 +52,9 @@ void SubPass::UseResolveAttachment(const uint32_t attachmentIndex)
     m_resolveReferences.push_back(ref);
 }
 
-void SubPass::UseResolveAttachments(const std::vector<uint32_t>& attachmentIndexes)
+void SubPass::UseResolveAttachments(const std::vector<uint32_t>& attachmentIndices)
 {
-    for (const auto& i : attachmentIndexes) {
+    for (const auto& i : attachmentIndices) {
         UseResolveAttachment(i);
     }
 }
@@ -68,9 +68,9 @@ void SubPass::InputAttachment(const uint32_t attachmentIndex)
     m_inputReferences.push_back(reference);
 }
 
-void SubPass::InputAttachments(const std::vector<uint32_t>& attachmentIndexes)
+void SubPass::InputAttachments(const std::vector<uint32_t>& attachmentIndices)
 {
-    for (const auto& i : attachmentIndexes) {
+    for (const auto& i : attachmentIndices) {
         InputAttachment(i);
     }
 }
