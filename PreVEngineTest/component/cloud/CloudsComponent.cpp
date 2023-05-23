@@ -21,6 +21,11 @@ std::shared_ptr<prev::render::sampler::Sampler> CloudsComponent::GetWeatherSampl
     return m_weatehrImageSampler;
 }
 
+std::shared_ptr<prev_test::render::IModel> CloudsComponent::GetModel() const
+{
+    return m_model;
+}
+
 const glm::vec4& CloudsComponent::GetColor() const
 {
     return m_color;

@@ -5,6 +5,8 @@
 #include <prev/render/buffer/image/IImageBuffer.h>
 #include <prev/render/sampler/Sampler.h>
 
+#include "../../render/IModel.h"
+
 namespace prev_test::component::cloud {
 class ICloudsComponent {
 public:
@@ -15,6 +17,8 @@ public:
     virtual std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetWeather() const = 0;
 
     virtual std::shared_ptr<prev::render::sampler::Sampler> GetWeatherSampler() const = 0;
+
+    virtual std::shared_ptr<prev_test::render::IModel> GetModel() const = 0;
 
     virtual const glm::vec4& GetColor() const = 0;
 

@@ -44,8 +44,10 @@ void WaterRefraction::operator()(const prev::core::NewIterationEvent& newIterati
 
 void WaterRefraction::CreateRefractionComponent()
 {
+    const VkExtent2D extent{ m_viewPortSize.x / prev_test::component::water::REFRACTION_EXTENT_DIVIDER, m_viewPortSize.y / prev_test::component::water::REFRACTION_EXTENT_DIVIDER };
+
     prev_test::component::common::OffScreenRenderPassComponentFactory componentFactory{};
-    m_refractionComponent = componentFactory.Create(m_viewPortSize.x / prev_test::component::water::REFRACTION_EXTENT_DIVIDER, m_viewPortSize.y / prev_test::component::water::REFRACTION_EXTENT_DIVIDER);
+    m_refractionComponent = componentFactory.Create(extent, VK_FORMAT_D32_SFLOAT, { VK_FORMAT_B8G8R8A8_UNORM });
     m_refractionComponent->Init();
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::common::IOffScreenRenderPassComponent>(GetThis(), m_refractionComponent, TAG_WATER_REFRACTION_RENDER_COMPONENT);
 }

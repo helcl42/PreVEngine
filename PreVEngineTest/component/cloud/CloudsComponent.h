@@ -16,6 +16,8 @@ public:
 
     std::shared_ptr<prev::render::sampler::Sampler> GetWeatherSampler() const override;
 
+    std::shared_ptr<prev_test::render::IModel> GetModel() const override;
+
     const glm::vec4& GetColor() const override;
 
 private:
@@ -29,6 +31,8 @@ private:
     std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_perlinWorleyNoiseImageBuffer{};
 
     std::shared_ptr<prev::render::sampler::Sampler> m_perlinWorleyNoiseSampler{};
+
+    std::shared_ptr<prev_test::render::IModel> m_model{};
 
     glm::vec4 m_color{};
 };

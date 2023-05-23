@@ -1,23 +1,25 @@
 #version 450
+#extension GL_ARB_separate_shader_objects : enable
 
-layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
-
-layout(binding = 0, rgba8) uniform image2D outFragColor;
-
-layout(binding = 1) uniform sampler2D skyTex;
-layout(binding = 2) uniform sampler2D bloomTex;
-
-layout(std140, binding = 3) uniform UniformBufferObject {
+layout(std140, binding = 0) uniform UniformBufferObject {
     vec4 resolution;
     vec4 lightPosition;
     uint enableGodRays;
     float lightDotCameraFront;
-} uboCS;
+} uboFS;
 
-#define  BLUR_OFFSET_X  1.0 / uboCS.resolution.x
-#define  BLUR_OFFSET_Y  1.0 / uboCS.resolution.y
+layout(binding = 1) uniform sampler2D skyTex;
+layout(binding = 2) uniform sampler2D bloomTex;
 
-vec4 GaussianBlur(in sampler2D tex, in vec2 uv) 
+layout(location = 0) in vec2 inTextureCoord;
+
+layout(location = 0) out vec4 outFragColor;
+
+
+#define  BLUR_OFFSET_X  1.0 / uboFS.resolution.x
+#define  BLUR_OFFSET_Y  1.0 / uboFS.resolution.y
+
+vec4 GaussianBlur(in sampler2D tex, in vec2 uv)
 {
     vec2 offsets[9] = vec2[](
         vec2(-BLUR_OFFSET_X,  BLUR_OFFSET_Y),
@@ -54,15 +56,14 @@ vec4 GaussianBlur(in sampler2D tex, in vec2 uv)
 
 void main()
 {
-    ivec2 fragCoord = ivec2(gl_GlobalInvocationID.xy);
-    vec2 uv = vec2(fragCoord.xy) / uboCS.resolution.xy;
+    vec2 uv = inTextureCoord;
 
 	vec4 fragColor = GaussianBlur(skyTex, uv);
 
 	// RADIAL BLUR + CREPUSCOLAR RAYS
-	bvec2 lowerLimit = greaterThan(uboCS.lightPosition.xy, vec2(0.0));
-	bvec2 upperLimit = lessThan(uboCS.lightPosition.xy, vec2(1.0));
-	if(uboCS.lightDotCameraFront > 0.0 && uboCS.enableGodRays != 0)
+	bvec2 lowerLimit = greaterThan(uboFS.lightPosition.xy, vec2(0.0));
+	bvec2 upperLimit = lessThan(uboFS.lightPosition.xy, vec2(1.0));
+	if(uboFS.lightDotCameraFront > 0.0 && uboFS.enableGodRays != 0)
 	{
         // Radial blur factors
         float decay = 0.98;
@@ -71,13 +72,13 @@ void main()
         float exposure = 0.45;
 
         // Light offset
-        vec3 l = vec3(uboCS.lightPosition.xy, 0.5);
+        vec3 l = vec3(uboFS.lightPosition.xy, 0.5);
 
         const int SAMPLES = 64;
         float illuminationDecay = 1.0;
 
         vec2 textureCoord = uv;
-        vec2 textureCoordDelta = textureCoord - uboCS.lightPosition.xy;
+        vec2 textureCoordDelta = textureCoord - uboFS.lightPosition.xy;
         textureCoordDelta *= density / float(SAMPLES);
 
         vec3 colRays = GaussianBlur(bloomTex, uv).rgb * 0.4;
@@ -89,8 +90,8 @@ void main()
         }
 
         vec3 colorWithRays = fragColor.rgb + (smoothstep(0.0, 1.0, colRays) * exposure);
-        fragColor.rgb = mix(fragColor.rgb, colorWithRays * 0.9, uboCS.lightDotCameraFront * uboCS.lightDotCameraFront);
+        fragColor.rgb = mix(fragColor.rgb, colorWithRays * 0.9, uboFS.lightDotCameraFront * uboFS.lightDotCameraFront);
 	}
 
-    imageStore(outFragColor, fragCoord, fragColor);
+    outFragColor = fragColor;
 }

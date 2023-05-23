@@ -1,14 +1,14 @@
-#include "SkyPipeline.h"
+#include "SkyCompositePipeline.h"
 
 #include "../../../pipeline/PipelineFactory.h"
 
 namespace prev_test::render::renderer::sky::pipeline {
-SkyPipeline::SkyPipeline(const VkDevice device, const prev::render::shader::Shader& shaders, const prev::render::pass::RenderPass& renderPass)
+SkyCompositePipeline::SkyCompositePipeline(const VkDevice device, const prev::render::shader::Shader& shaders, const prev::render::pass::RenderPass& renderPass)
     : AbstractGraphicsPipeline(device, shaders, renderPass)
 {
 }
 
-bool SkyPipeline::Init()
+bool SkyCompositePipeline::Init()
 {
     prev_test::render::pipeline::PipelineFactory pipelineFactory{};
     m_pipelineLayout = pipelineFactory.CreatePipelineLayout(m_device, m_shaders);
