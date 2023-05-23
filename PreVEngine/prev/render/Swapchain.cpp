@@ -258,8 +258,8 @@ void Swapchain::Apply()
         std::vector<VkImageView> swapchainImageViews;
         if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
             swapchainImageViews.push_back(m_msaaColorBuffer->GetImageView());
-            swapchainImageViews.push_back(imageView); // Add color buffer (unique)
             swapchainImageViews.push_back(m_msaaDepthBuffer->GetImageView());
+            swapchainImageViews.push_back(imageView); // Add color buffer (unique)
             swapchainImageViews.push_back(m_depthBuffer->GetImageView()); // Add depth buffer (shared)
         } else {
             swapchainImageViews.push_back(imageView); // Add color buffer (unique)

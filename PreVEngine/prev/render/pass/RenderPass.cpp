@@ -47,7 +47,7 @@ std::vector<VkFormat> RenderPass::GetColorFormats(const bool includeResolveAttac
     } else {
         std::vector<VkFormat> result;
         for (size_t i = 0; i < m_colorFormats.size(); ++i) {
-            if (!m_resolveAttachments[i]) {
+            if (!m_colorResolveAttachments[i]) {
                 result.push_back(m_colorFormats[i]);
             }
         }

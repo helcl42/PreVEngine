@@ -49,10 +49,11 @@ std::unique_ptr<RenderPass> RenderPassBuilder::Build() const
         renderPass->m_clearValues.push_back(attachmentCreateInfo.clearValue);
         if (attachmentCreateInfo.finalLayout == DEFAULT_DEPTH_LAYOUT) {
             renderPass->m_depthFormats.push_back(attachmentCreateInfo.format);
+            renderPass->m_depthResolveAttachments.push_back(attachmentCreateInfo.resolveAttachment);
         } else {
             renderPass->m_colorFormats.push_back(attachmentCreateInfo.format);
+            renderPass->m_colorResolveAttachments.push_back(attachmentCreateInfo.resolveAttachment);
         }
-        renderPass->m_resolveAttachments.push_back(attachmentCreateInfo.resolveAttachment);
         renderPass->m_attachments.push_back(CreateAttachmentDescription(attachmentCreateInfo.format, attachmentCreateInfo.sampleCount, attachmentCreateInfo.finalLayout));
     }
 
