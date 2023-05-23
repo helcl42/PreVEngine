@@ -53,9 +53,11 @@ private:
 
     std::vector<VkFormat> m_colorFormats;
 
-    std::vector<bool> m_resolveAttachments;
+    std::vector<bool> m_colorResolveAttachments;
 
     std::vector<VkFormat> m_depthFormats;
+
+    std::vector<bool> m_depthResolveAttachments;
 
     std::vector<SubPass> m_subpasses;
 
