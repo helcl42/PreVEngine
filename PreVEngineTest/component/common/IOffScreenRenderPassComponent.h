@@ -16,11 +16,11 @@ public:
 
     virtual std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const = 0;
 
-    virtual VkExtent2D GetExtent() const = 0;
+    virtual const VkExtent2D& GetExtent() const = 0;
 
-    virtual std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetColorImageBuffer() const = 0;
+    virtual std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetColorImageBuffer(const uint32_t index = 0) const = 0;
 
-    virtual std::shared_ptr<prev::render::sampler::Sampler> GetColorSampler() const = 0;
+    virtual std::shared_ptr<prev::render::sampler::Sampler> GetColorSampler(const uint32_t index = 0) const = 0;
 
     virtual std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetDepthImageBuffer() const = 0;
 

@@ -5,6 +5,8 @@
 #include "../../pipeline/IPipeline.h"
 #include "../RenderContextUserData.h"
 
+#include "../../../component/common/IOffScreenRenderPassComponent.h"
+
 #include <prev/render/IRenderer.h>
 #include <prev/render/buffer/UniformBuffer.h>
 #include <prev/render/buffer/image/IImageBuffer.h>
@@ -36,17 +38,15 @@ public:
     void ShutDown() override;
 
 private:
-    void UpdateImageBufferExtents(const VkExtent2D& extent, std::shared_ptr<prev::render::buffer::image::IImageBuffer>& imageBuffer, std::shared_ptr<prev::render::sampler::Sampler>& sampler);
-
-    void AddInterComputeImageBufferBarrier(const VkImage image, VkCommandBuffer commandBuffer);
-
-    void AddImageBufferBarrier(const VkImage image, VkCommandBuffer commandBuffer);
+    bool UpdateOffScreenRenderTarget(const VkExtent2D& extent, const VkFormat& depthFormat, const std::vector<VkFormat>& colorFormats, std::shared_ptr<prev_test::component::common::IOffScreenRenderPassComponent>& offScreenRenderTarget);
 
 private:
-    struct DEFAULT_ALIGNMENT UniformsSkyCS {
+    struct DEFAULT_ALIGNMENT UniformsSkyFS {
         DEFAULT_ALIGNMENT glm::vec4 resolution;
 
+        DEFAULT_ALIGNMENT glm::mat4 projectionMatrix;
         DEFAULT_ALIGNMENT glm::mat4 inverseProjectionMatrix;
+        DEFAULT_ALIGNMENT glm::mat4 viewMatrix;
         DEFAULT_ALIGNMENT glm::mat4 inverseViewMatrix;
 
         DEFAULT_ALIGNMENT glm::vec4 lightColor;
@@ -74,7 +74,7 @@ private:
         float cloudTopOffset;
     };
 
-    struct DEFAULT_ALIGNMENT UniformsSkyPostProcessCS {
+    struct DEFAULT_ALIGNMENT UniformsSkyPostProcessFS {
         DEFAULT_ALIGNMENT glm::vec4 resolution;
         DEFAULT_ALIGNMENT glm::vec4 lisghtPosition;
         DEFAULT_ALIGNMENT uint32_t enableGodRays;
@@ -88,41 +88,38 @@ private:
     std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
 
 private:
-    std::unique_ptr<prev::render::shader::Shader> m_conmputeSkyShader;
+    // sky
+    std::unique_ptr<prev::render::shader::Shader> m_skyShader;
 
-    std::unique_ptr<prev_test::render::pipeline::IPipeline> m_computeSkyPipeline;
+    std::unique_ptr<prev_test::render::pipeline::IPipeline> m_skyPipeline;
 
-    std::unique_ptr<prev::render::buffer::UBOPool<UniformsSkyCS>> m_uniformsPoolSkyCS;
+    std::unique_ptr<prev::render::buffer::UBOPool<UniformsSkyFS>> m_uniformsPoolSkyFS;
 
-    std::unique_ptr<prev::render::shader::Shader> m_conmputeSkyPostProcessShader;
+    // sky post-process
+    std::unique_ptr<prev::render::shader::Shader> m_skyPostProcessShader;
 
-    std::unique_ptr<prev_test::render::pipeline::IPipeline> m_computeSkyPostProcessPipeline;
+    std::unique_ptr<prev_test::render::pipeline::IPipeline> m_skyPostProcessPipeline;
 
-    std::unique_ptr<prev::render::buffer::UBOPool<UniformsSkyPostProcessCS>> m_uniformsPoolSkyPorstProcessCS;
+    std::unique_ptr<prev::render::buffer::UBOPool<UniformsSkyPostProcessFS>> m_uniformsPoolSkyPostProcessFS;
 
-    std::unique_ptr<prev::render::shader::Shader> m_shader;
+    // composite render
+    std::unique_ptr<prev::render::shader::Shader> m_skyCompositeShader;
 
-    std::unique_ptr<prev_test::render::pipeline::IPipeline> m_pipeline;
+    std::unique_ptr<prev_test::render::pipeline::IPipeline> m_skyCompositePipeline;
 
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_skyColorImageBuffer;
+    // off-screen render target
+    std::shared_ptr<prev_test::component::common::IOffScreenRenderPassComponent> m_skyOffScreenRenderTarget;
 
-    std::shared_ptr<prev::render::sampler::Sampler> m_skyColorImageSampler;
+    static const inline VkFormat m_skyOffScreenRenderTargetDepthFormat{ VK_FORMAT_D32_SFLOAT };
 
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_skyBloomImageBuffer;
+    static const inline std::vector<VkFormat> m_skyOffScreenRenderTargetColorFormats{ VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_B8G8R8A8_UNORM };
 
-    std::shared_ptr<prev::render::sampler::Sampler> m_skyBloomImageSampler;
+    // off-screen post-process render target
+    std::shared_ptr<prev_test::component::common::IOffScreenRenderPassComponent> m_skyPostProcessOffScreenRenderTarget;
 
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_skyAlphanessImageBuffer;
+    static const inline VkFormat m_skyPostProcessOffScreenRenderTargetDepthFormat{ VK_FORMAT_UNDEFINED };
 
-    std::shared_ptr<prev::render::sampler::Sampler> m_skyAlphanessImageSampler;
-
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_skyCloudDistanceImageBuffer;
-
-    std::shared_ptr<prev::render::sampler::Sampler> m_skyCloudDistanceImageSampler;
-
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_skyPostProcessColorImageBuffer;
-
-    std::shared_ptr<prev::render::sampler::Sampler> m_skyPostProcessImageSampler;
+    static const inline std::vector<VkFormat> m_skyPostProcessOffScreenRenderTargetColorFormats{ VK_FORMAT_B8G8R8A8_UNORM };
 };
 } // namespace prev_test::render::renderer::sky
 

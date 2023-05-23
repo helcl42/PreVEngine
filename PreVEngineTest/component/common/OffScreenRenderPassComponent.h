@@ -7,15 +7,12 @@
 #include <prev/render/buffer/image/ColorImageBuffer.h>
 #include <prev/render/buffer/image/DepthImageBuffer.h>
 
+#include <vector>
+
 namespace prev_test::component::common {
 class OffScreenRenderPassComponent : public IOffScreenRenderPassComponent {
 public:
-    static const inline VkFormat COLOR_FORMAT{ VK_FORMAT_B8G8R8A8_UNORM };
-
-    static const inline VkFormat DEPTH_FORMAT{ VK_FORMAT_D32_SFLOAT };
-
-public:
-    OffScreenRenderPassComponent(const uint32_t w, const uint32_t h);
+    OffScreenRenderPassComponent(const VkExtent2D& extent, const VkFormat depthFormat, const std::vector<VkFormat>& colorFormats);
 
     ~OffScreenRenderPassComponent() = default;
 
@@ -26,11 +23,11 @@ public:
 
     std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const override;
 
-    VkExtent2D GetExtent() const override;
+    const VkExtent2D& GetExtent() const override;
 
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetColorImageBuffer() const override;
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetColorImageBuffer(const uint32_t index = 0) const override;
 
-    std::shared_ptr<prev::render::sampler::Sampler> GetColorSampler() const override;
+    std::shared_ptr<prev::render::sampler::Sampler> GetColorSampler(const uint32_t index = 0) const override;
 
     std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetDepthImageBuffer() const override;
 
@@ -39,31 +36,25 @@ public:
     VkFramebuffer GetFrameBuffer() const override;
 
 private:
-    void InitBuffers();
+    VkExtent2D m_extent{};
 
-    void ShutDownBuffers();
+    VkFormat m_depthFormat{ VK_FORMAT_UNDEFINED };
 
-    void InitRenderPass();
-
-    void ShutDownRenderPass();
-
-private:
-    const uint32_t m_width{};
-
-    const uint32_t m_height{};
+    std::vector<VkFormat> m_colorFormats{};
 
     std::shared_ptr<prev::render::pass::RenderPass> m_renderPass{};
-
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_imageBuffer{};
-
-    std::shared_ptr<prev::render::sampler::Sampler> m_colorSampler{};
 
     std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_depthBuffer{};
 
     std::shared_ptr<prev::render::sampler::Sampler> m_depthSampler{};
 
+    std::vector<std::shared_ptr<prev::render::buffer::image::IImageBuffer>> m_colorBuffers{};
+
+    std::vector<std::shared_ptr<prev::render::sampler::Sampler>> m_colorSamplers{};
+
     VkFramebuffer m_frameBuffer{};
 };
+
 } // namespace prev_test::component::common
 
 #endif
