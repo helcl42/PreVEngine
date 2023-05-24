@@ -2,6 +2,20 @@
 #include "RenderPass.h"
 
 namespace prev::render::pass {
+namespace {
+    VkAttachmentReference CreateAttachmentReference(const RenderPass& renderpass, const uint32_t attachmentIndex)
+    {
+        VkAttachmentReference reference = {};
+        reference.attachment = attachmentIndex;
+        if (renderpass.GetAttachments().at(attachmentIndex).finalLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL) {
+            reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        } else {
+            reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        }
+        return reference;
+    }
+} // namespace
+
 SubPass::SubPass(const RenderPass& renderpass)
     : m_renderPass(renderpass)
 {
@@ -24,14 +38,10 @@ SubPass::operator VkSubpassDescription()
 
 void SubPass::UseAttachment(const uint32_t attachmentIndex)
 {
-    if (m_renderPass.GetAttachments().at(attachmentIndex).finalLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL) { // depth-stencil attachment
-        m_depthReference.attachment = attachmentIndex;
-        m_depthReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    const auto ref{ CreateAttachmentReference(m_renderPass, attachmentIndex) };
+    if (ref.layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) { // depth-stencil attachment
+        m_depthReference = ref;
     } else { // color attachment
-        VkAttachmentReference ref = {};
-        ref.attachment = attachmentIndex;
-        ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
         m_colorReferences.push_back(ref);
     }
 }
@@ -45,14 +55,7 @@ void SubPass::UseAttachments(const std::vector<uint32_t>& attachmentIndices)
 
 void SubPass::UseResolveAttachment(const uint32_t attachmentIndex)
 {
-    VkAttachmentReference ref = {};
-    ref.attachment = attachmentIndex;
-    if (m_renderPass.GetAttachments().at(attachmentIndex).finalLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL) {
-        ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-    } else {
-        ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    }
-
+    const auto ref{ CreateAttachmentReference(m_renderPass, attachmentIndex) };
     m_resolveReferences.push_back(ref);
 }
 
@@ -65,11 +68,8 @@ void SubPass::UseResolveAttachments(const std::vector<uint32_t>& attachmentIndic
 
 void SubPass::InputAttachment(const uint32_t attachmentIndex)
 {
-    VkAttachmentReference reference = {};
-    reference.attachment = attachmentIndex;
-    reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-    m_inputReferences.push_back(reference);
+    const auto ref{ CreateAttachmentReference(m_renderPass, attachmentIndex) };
+    m_inputReferences.push_back(ref);
 }
 
 void SubPass::InputAttachments(const std::vector<uint32_t>& attachmentIndices)

@@ -135,7 +135,7 @@ void Scene::InitRenderPass()
                            .AddDepthAttachment(depthFormat, sampleCount, { 1.0f, 0 }) // depth buffer, multisampled
                            .AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, clearColor, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, true) // color buffer, resolve buffer
                            .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, { 1.0f, 0 }, true) // depth buffer, resolve buffer
-                           .AddSubpass({ 0, 1 }, { 2, 3 }) // resolve ref will be at index 1
+                           .AddSubpass({ 0, 1 }, { 2, 3 }) // resolve ref will be at index 2 & 3
                            .AddSubpassDependencies(dependencies)
                            .Build();
     } else {
