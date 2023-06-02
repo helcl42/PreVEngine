@@ -273,7 +273,7 @@ std::string PresentModeToString(const VkPresentModeKHR mode)
     }
 }
 
-uint32_t GetGroupSize(const uint32_t val, const uint32_t blockSize)
+uint32_t GetComputeGroupSize(const uint32_t val, const uint32_t blockSize)
 {
     const auto div{ val / blockSize };
     if (val % blockSize == 0) {

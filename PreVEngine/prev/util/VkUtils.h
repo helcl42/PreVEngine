@@ -38,7 +38,7 @@ std::string FormatToString(const VkFormat fmt);
 
 std::string PresentModeToString(const VkPresentModeKHR mode);
 
-uint32_t GetGroupSize(const uint32_t val, const uint32_t blockSize);
+uint32_t GetComputeGroupSize(const uint32_t val, const uint32_t blockSize);
 
 } // namespace prev::util::vk
 
