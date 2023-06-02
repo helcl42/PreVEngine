@@ -230,8 +230,8 @@ VkDescriptorSet Shader::UpdateNextDescriptorSet()
     std::vector<std::vector<VkDescriptorImageInfo>> imageInfos(m_descriptorWrites.size());
     for (size_t writeIndex = 0; writeIndex < m_descriptorWrites.size(); writeIndex++) {
 
-        auto& currentBufferInfos = bufferInfos[writeIndex];
-        auto& currentImageInfos = imageInfos[writeIndex];
+        auto& currentBufferInfos{ bufferInfos[writeIndex] };
+        auto& currentImageInfos{ imageInfos[writeIndex] };
 
         for (const auto& info : m_descriptorSetInfos) {
             if (info.second.writeIndex == writeIndex) {
@@ -240,7 +240,7 @@ VkDescriptorSet Shader::UpdateNextDescriptorSet()
             }
         }
 
-        auto& write = m_descriptorWrites[writeIndex];
+        auto& write{ m_descriptorWrites[writeIndex] };
         write.dstSet = descriptorSet;
         write.pBufferInfo = currentBufferInfos.data();
         write.pImageInfo = currentImageInfos.data();
@@ -260,7 +260,7 @@ void Shader::Bind(const std::string& name, const prev::render::buffer::UniformBu
         LOGE("Could not find uniform with name: %s", name.c_str());
     }
 
-    auto& item = descriptorSetInfoIter->second;
+    auto& item{ descriptorSetInfoIter->second };
 
     item.bufferInfo.buffer = ubo;
     item.bufferInfo.offset = ubo.GetOffset();
@@ -276,7 +276,7 @@ void Shader::Bind(const std::string& name, const prev::render::buffer::Buffer& b
         LOGE("Could not find uniform with name: %s", name.c_str());
     }
 
-    auto& item = descriptorSetInfoIter->second;
+    auto& item{ descriptorSetInfoIter->second };
 
     item.bufferInfo.buffer = buffer;
     item.bufferInfo.offset = 0;
@@ -292,7 +292,7 @@ void Shader::Bind(const std::string& name, const VkImageView imageView, const Vk
         LOGE("Could not find uniform with name: %s", name.c_str());
     }
 
-    auto& item = descriptorSetInfoIter->second;
+    auto& item{ descriptorSetInfoIter->second };
 
     item.imageInfo.imageView = imageView;
     item.imageInfo.sampler = sampler;

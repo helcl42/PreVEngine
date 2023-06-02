@@ -1,5 +1,4 @@
 #include "ScreenSpaceShader.h"
-
 #include "../../../../common/AssetManager.h"
 #include "../../../VertexLayout.h"
 
