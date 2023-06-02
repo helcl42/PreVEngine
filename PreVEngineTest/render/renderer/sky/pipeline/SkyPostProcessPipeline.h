@@ -1,12 +1,12 @@
 #ifndef __SKY_POST_PROCESS_PIPELINE_H__
 #define __SKY_POST_PROCESS_PIPELINE_H__
 
-#include "../../../pipeline/AbstractGraphicsPipeline.h"
+#include "../../../pipeline/AbstractComputePipeline.h"
 
 namespace prev_test::render::renderer::sky::pipeline {
-class SkyPostProcessPipeline final : public prev_test::render::pipeline::AbstractGraphicsPipeline {
+class SkyPostProcessPipeline final : public prev_test::render::pipeline::AbstractComputePipeline {
 public:
-    SkyPostProcessPipeline(const VkDevice device, const prev::render::shader::Shader& shaders, const prev::render::pass::RenderPass& renderPass);
+    SkyPostProcessPipeline(const VkDevice device, const prev::render::shader::Shader& shaders);
 
     ~SkyPostProcessPipeline() = default;
 
