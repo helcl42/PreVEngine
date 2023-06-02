@@ -1,24 +1,12 @@
 #!/bin/bash
 
-glslangValidator -V clouds.comp
+glslangValidator -V sky.comp
 
-mv comp.spv clouds_comp.spv
+mv comp.spv sky_comp.spv
 
-glslangValidator -V clouds_perlin_worley_noise_3d.comp
+glslangValidator -V sky_post_process.comp
 
-mv comp.spv clouds_perlin_worley_noise_3d_comp.spv
-
-glslangValidator -V sky.vert
-glslangValidator -V sky.frag
-
-mv frag.spv sky_frag.spv
-mv vert.spv sky_vert.spv
-
-glslangValidator -V sky_post_process.vert
-glslangValidator -V sky_post_process.frag
-
-mv frag.spv sky_post_process_frag.spv
-mv vert.spv sky_post_process_vert.spv
+mv comp.spv sky_post_process_comp.spv
 
 glslangValidator -V sky_composite.vert
 glslangValidator -V sky_composite.frag

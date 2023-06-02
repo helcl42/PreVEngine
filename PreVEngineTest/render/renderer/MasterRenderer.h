@@ -1,10 +1,11 @@
 #ifndef __MASTER_RENDERER_H__
 #define __MASTER_RENDERER_H__
 
-#include "../../General.h"
-#include "../pipeline/IPipeline.h"
 #include "CommandBuffersGroup.h"
 #include "RenderContextUserData.h"
+
+#include "../../General.h"
+#include "../pipeline/IPipeline.h"
 
 #include <prev/common/ThreadPool.h>
 #include <prev/render/IRenderer.h>
