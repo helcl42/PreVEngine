@@ -16,13 +16,11 @@ Here is a video:
 
 ## Build Linux & Windows
  
- - Set up `USE_VULKAN_WRAPPER` to `OFF` in `CMakeLists.txt`
- 
  - Run `mkdir build`
 
  - Run `cd build`
 
- - Run `cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
+ - Run `cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DUSE_VULKAN_WRAPPER=OFF ..`
 
  - Run `ninja
 
@@ -30,11 +28,9 @@ Here is a video:
 
  - Install `NDK-20+`
 
- - Set up `USE_VULKAN_WRAPPER` to `ON`in `CMakeLists.txt`
-
  - Run `cd PreVEngineTest`
 
- - Run `cmake -DANDROID=ON -DABI_NAME=arm64-v8a`
+ - Run `cmake -DANDROID=ON -DUSE_VULKAN_WRAPPER=ON -DABI_NAME=arm64-v8a`
 
  - Import to android studio and deploy as usuall
 
