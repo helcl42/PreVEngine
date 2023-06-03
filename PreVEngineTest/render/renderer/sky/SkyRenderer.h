@@ -129,7 +129,7 @@ private:
 private:
     static const inline VkFormat COLOR_FORMAT{ VK_FORMAT_R8G8B8A8_UNORM };
 
-    static const inline VkFormat DEPTH_FORMAT{ VK_FORMAT_R8G8B8A8_UNORM };
+    static const inline VkFormat DEPTH_FORMAT{ VK_FORMAT_R32_SFLOAT };
 };
 } // namespace prev_test::render::renderer::sky
 
