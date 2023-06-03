@@ -1,5 +1,7 @@
 #include "PipelineFactory.h"
 
+#include <prev/core/instance/Validation.h>
+
 #include <vector>
 
 namespace prev_test::render::pipeline {
@@ -112,6 +114,10 @@ VkPipeline PipelineFactory::CreateShadowsPipeline(const VkDevice& device, const 
 
 VkPipeline PipelineFactory::CreateDefaultPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const prev::render::pass::RenderPass& renderPass, const VkPipelineLayout pipelineLayout, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool blendingEnabled, const bool fillMode) const
 {
+    if (!depthTestEnabled && depthWriteEnabled) {
+        LOGW("Invalid pipeline configuration: Depth test is disabled but depth write enabled. In case depth test is disabled the depth write value is ignored.");
+    }
+
     VkPipelineInputAssemblyStateCreateInfo inputAssembly = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
     inputAssembly.topology = topology;
     inputAssembly.primitiveRestartEnable = VK_FALSE;
@@ -219,6 +225,10 @@ VkPipeline PipelineFactory::CreateDefaultPipeline(const VkDevice& device, const 
 
 VkPipeline PipelineFactory::CreateParticlesPipeline(const VkDevice& device, const prev::render::shader::Shader& shader, const prev::render::pass::RenderPass& renderPass, const VkPipelineLayout pipelineLayout, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool fillMode) const
 {
+    if (!depthTestEnabled && depthWriteEnabled) {
+        LOGW("Invalid pipeline configuration: Depth test is disabled but depth write enabled. In case depth test is disabled the depth write value is ignored.");
+    }
+
     VkPipelineInputAssemblyStateCreateInfo inputAssembly = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
     inputAssembly.topology = topology;
     inputAssembly.primitiveRestartEnable = VK_FALSE;
