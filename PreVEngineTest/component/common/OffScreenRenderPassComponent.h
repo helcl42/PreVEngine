@@ -4,8 +4,7 @@
 #include "IOffScreenRenderPassComponent.h"
 
 #include <prev/common/Common.h>
-#include <prev/render/buffer/image/ColorImageBuffer.h>
-#include <prev/render/buffer/image/DepthImageBuffer.h>
+#include <prev/render/buffer/image/IImageBuffer.h>
 
 #include <vector>
 

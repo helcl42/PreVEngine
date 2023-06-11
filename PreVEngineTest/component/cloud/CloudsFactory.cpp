@@ -6,7 +6,7 @@
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
 #include <prev/render/buffer/UniformBuffer.h>
-#include <prev/render/buffer/image/ImageStorageBuffer.h>
+#include <prev/render/buffer/image/ImageBufferFactory.h>
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/util/VkUtils.h>
 
@@ -43,10 +43,8 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
 
     auto fence = prev::util::vk::CreateFence(*device);
 
-    prev::render::buffer::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ width, height }, VK_IMAGE_TYPE_2D, weatherImageFormat, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D, 1 };
-    auto weatherImageBuffer = std::make_unique<prev::render::buffer::image::ImageStorageBuffer>(*allocator);
-    weatherImageBuffer->Create(bufferCreateInfo);
-
+    const prev::render::buffer::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ width, height }, VK_IMAGE_TYPE_2D, weatherImageFormat, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D, 1 };
+    auto weatherImageBuffer = prev::render::buffer::image::ImageBufferFactory{}.CreateStorage(bufferCreateInfo, *allocator);
     auto sampler = std::make_unique<prev::render::sampler::Sampler>(*device, static_cast<float>(weatherImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f);
 
     VKERRCHECK(vkQueueWaitIdle(*computeQueue));
