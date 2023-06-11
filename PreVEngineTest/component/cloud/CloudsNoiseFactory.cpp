@@ -5,7 +5,7 @@
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
-#include <prev/render/buffer/image/ImageStorageBuffer.h>
+#include <prev/render/buffer/image/ImageBufferFactory.h>
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/util/VkUtils.h>
 
@@ -30,10 +30,8 @@ CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t widt
 
     auto fence = prev::util::vk::CreateFence(*device);
 
-    prev::render::buffer::image::ImageBufferCreateInfo imageBufferCreateInfo{ VkExtent3D{ width, height, depth }, VK_IMAGE_TYPE_3D, noiseImageFormat, VK_SAMPLE_COUNT_1_BIT, 0, true, VK_IMAGE_VIEW_TYPE_3D, 1 };
-
-    auto noiseImageBuffer = std::make_unique<prev::render::buffer::image::ImageStorageBuffer>(*allocator);
-    noiseImageBuffer->Create(imageBufferCreateInfo);
+    const prev::render::buffer::image::ImageBufferCreateInfo imageBufferCreateInfo{ VkExtent3D{ width, height, depth }, VK_IMAGE_TYPE_3D, noiseImageFormat, VK_SAMPLE_COUNT_1_BIT, 0, true, VK_IMAGE_VIEW_TYPE_3D, 1 };
+    auto noiseImageBuffer = prev::render::buffer::image::ImageBufferFactory{}.CreateStorage(imageBufferCreateInfo, *allocator);
 
     auto sampler = std::make_unique<prev::render::sampler::Sampler>(*device, static_cast<float>(noiseImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f);
 

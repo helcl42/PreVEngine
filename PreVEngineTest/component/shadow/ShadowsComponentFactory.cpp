@@ -3,7 +3,7 @@
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
-#include <prev/render/buffer/image/DepthImageBuffer.h>
+#include <prev/render/buffer/image/ImageBufferFactory.h>
 #include <prev/render/pass/RenderPassBuilder.h>
 #include <prev/util/VkUtils.h>
 
@@ -54,8 +54,8 @@ std::unique_ptr<prev::render::pass::RenderPass> ShadowsComponentFactory::CreateR
 
 std::unique_ptr<prev::render::buffer::image::IImageBuffer> ShadowsComponentFactory::CreateDepthBuffer(const VkExtent2D& extent, const uint32_t cascadesCount, prev::core::memory::Allocator& allocator) const
 {
-    auto depthBuffer{ std::make_unique<prev::render::buffer::image::DepthImageBuffer>(allocator) };
-    depthBuffer->Create(prev::render::buffer::image::ImageBufferCreateInfo{ extent, VK_IMAGE_TYPE_2D, DEPTH_FORMAT, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D_ARRAY, cascadesCount });
+    prev::render::buffer::image::ImageBufferFactory imageBufferFactory{};
+    auto depthBuffer{ imageBufferFactory.CreateDepth(prev::render::buffer::image::ImageBufferCreateInfo{ extent, VK_IMAGE_TYPE_2D, DEPTH_FORMAT, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D_ARRAY, cascadesCount }, allocator) };
     return depthBuffer;
 }
 

@@ -15,7 +15,7 @@
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
-#include <prev/render/buffer/image/ImageStorageBuffer.h>
+#include <prev/render/buffer/image/ImageBufferFactory.h>
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
@@ -306,9 +306,9 @@ void SkyRenderer::UpdateImageBufferExtents(const VkExtent2D& extent, const VkFor
         }
 
         auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
+
         const prev::render::buffer::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ extent.width, extent.height }, VK_IMAGE_TYPE_2D, format, VK_SAMPLE_COUNT_1_BIT, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1 };
-        imageBuffer = std::make_unique<prev::render::buffer::image::ImageStorageBuffer>(*allocator);
-        imageBuffer->Create(bufferCreateInfo);
+        imageBuffer = prev::render::buffer::image::ImageBufferFactory{}.CreateStorage(bufferCreateInfo, *allocator);
 
         sampler = std::make_shared<prev::render::sampler::Sampler>(allocator->GetDevice(), static_cast<float>(imageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f);
     }

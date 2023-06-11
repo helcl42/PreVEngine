@@ -2,6 +2,7 @@
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
+#include <prev/render/buffer/image/ImageBufferFactory.h>
 #include <prev/render/pass/RenderPassBuilder.h>
 #include <prev/util/VkUtils.h>
 
@@ -11,10 +12,10 @@ OffScreenRenderPassComponent::OffScreenRenderPassComponent(const VkExtent2D& ext
     , m_depthFormat{ depthFormat }
     , m_colorFormats{ colorFormats }
     , m_renderPass{}
-    , m_colorBuffers{}
-    , m_colorSamplers{}
     , m_depthBuffer{}
     , m_depthSampler{}
+    , m_colorBuffers{}
+    , m_colorSamplers{}
     , m_frameBuffer{}
 {
 }
@@ -90,22 +91,21 @@ void OffScreenRenderPassComponent::Init()
                        .AddSubpassDependencies(dependencies)
                        .Build();
 
+    prev::render::buffer::image::ImageBufferFactory imageBufferFactory{};
+
     // create image buffers and corresponding samplers
     for (uint32_t i = 0; i < m_colorFormats.size(); ++i) {
         const auto colorFormat{ m_colorFormats[i] };
-        auto colorImageBuffer{ std::make_shared<prev::render::buffer::image::ColorImageBuffer>(*allocator) };
-        colorImageBuffer->Create(prev::render::buffer::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, colorFormat, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D });
 
-        auto colorImageBufferSampler{ std::make_shared<prev::render::sampler::Sampler>(*device, static_cast<float>(colorImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f) };
+        std::shared_ptr<prev::render::buffer::image::IImageBuffer> colorImageBuffer{ imageBufferFactory.CreateColor(prev::render::buffer::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, colorFormat, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D }, *allocator) };
+        std::shared_ptr<prev::render::sampler::Sampler> colorImageBufferSampler{ std::make_shared<prev::render::sampler::Sampler>(*device, static_cast<float>(colorImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f) };
 
-        m_colorBuffers.push_back(colorImageBuffer);
-        m_colorSamplers.push_back(colorImageBufferSampler);
+        m_colorBuffers.emplace_back(colorImageBuffer);
+        m_colorSamplers.emplace_back(colorImageBufferSampler);
     }
 
     if (m_depthFormat != VK_FORMAT_UNDEFINED) {
-        m_depthBuffer = std::make_shared<prev::render::buffer::image::DepthImageBuffer>(*allocator);
-        m_depthBuffer->Create(prev::render::buffer::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, m_depthFormat, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D });
-
+        m_depthBuffer = imageBufferFactory.CreateDepth(prev::render::buffer::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, m_depthFormat, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D }, *allocator);
         m_depthSampler = std::make_shared<prev::render::sampler::Sampler>(*device, 1.0f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_NEAREST, VK_FILTER_NEAREST, VK_SAMPLER_MIPMAP_MODE_NEAREST);
     }
 
@@ -130,18 +130,10 @@ void OffScreenRenderPassComponent::ShutDown()
     m_frameBuffer = nullptr;
 
     m_depthSampler = nullptr;
+    m_depthBuffer = nullptr;
 
-    if (m_depthBuffer) {
-        m_depthBuffer->Destroy();
-        m_depthBuffer = nullptr;
-    }
-
-    for (size_t i = 0; i < m_colorFormats.size(); ++i) {
-        m_colorSamplers[i] = nullptr;
-
-        m_colorBuffers[i]->Destroy();
-        m_colorBuffers[i] = nullptr;
-    }
+    m_colorSamplers.clear();
+    m_colorBuffers.clear();
 
     m_renderPass = nullptr;
 }
