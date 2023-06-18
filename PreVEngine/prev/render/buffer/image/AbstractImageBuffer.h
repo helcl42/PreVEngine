@@ -8,12 +8,12 @@
 namespace prev::render::buffer::image {
 class AbstractImageBuffer : public IImageBuffer {
 public:
-    AbstractImageBuffer(prev::core::memory::Allocator& allocator);
+    AbstractImageBuffer(prev::core::memory::Allocator& allocator, const VkExtent3D& ext, const VkImageType imgType, const VkFormat fmt, const VkImageCreateFlags flags, const VkSampleCountFlagBits samplesCnt, const bool mipMap, const VkImageViewType vwType, const uint32_t lrCount);
 
     virtual ~AbstractImageBuffer();
 
-public:
-    void Destroy() override;
+protected:
+    void Destroy();
 
 public:
     VkImage GetImage() const override;
@@ -39,27 +39,29 @@ public:
 protected:
     prev::core::memory::Allocator& m_allocator;
 
-    VmaAllocation m_allocation;
-
-    VkImage m_image;
-
     VkExtent3D m_extent;
 
     VkImageType m_imageType;
 
-    VkImageCreateFlags m_flags;
-
     VkFormat m_format;
+
+    VkImageCreateFlags m_flags;
 
     VkSampleCountFlagBits m_sampleCount;
 
-    VkImageView m_imageView;
+    bool m_mipMap;
 
-    uint32_t m_mipLevels;
+    VkImageViewType m_imageViewType;
 
     uint32_t m_layerCount;
 
-    VkImageViewType m_imageViewType;
+    uint32_t m_mipLevels;
+
+    VmaAllocation m_allocation;
+
+    VkImage m_image;
+
+    VkImageView m_imageView;
 };
 } // namespace prev::render::buffer::image
 

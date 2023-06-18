@@ -6,13 +6,9 @@
 namespace prev::render::buffer::image {
 class DepthImageBuffer : public AbstractImageBuffer {
 public:
-    DepthImageBuffer(prev::core::memory::Allocator& allocator);
-
-    ~DepthImageBuffer() = default;
+    DepthImageBuffer(prev::core::memory::Allocator& allocator, const VkExtent3D& ext, const VkImageType imgType, const VkFormat fmt, const VkImageCreateFlags flags, const VkSampleCountFlagBits samplesCnt, const bool mipMap, const VkImageViewType vwType, const uint32_t lrCount);
 
 public:
-    void Create(const ImageBufferCreateInfo& createInfo) override;
-
     void Resize(const VkExtent3D& extent) override;
 };
 } // namespace prev::render::buffer::image

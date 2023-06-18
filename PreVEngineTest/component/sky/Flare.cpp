@@ -3,7 +3,7 @@
 #include <prev/core/DeviceProvider.h>
 
 namespace prev_test::component::sky {
-Flare::Flare(const std::shared_ptr<prev::render::buffer::image::ImageBuffer>& imageBuffer, const std::shared_ptr<prev::render::sampler::Sampler>& sampler, const float scale)
+Flare::Flare(const std::shared_ptr<prev::render::buffer::image::IImageBuffer>& imageBuffer, const std::shared_ptr<prev::render::sampler::Sampler>& sampler, const float scale)
     : m_imageBuffer(imageBuffer)
     , m_sampler(sampler)
     , m_scale(scale)
@@ -17,7 +17,6 @@ Flare::~Flare()
 
     vkDeviceWaitIdle(*device);
 
-    m_imageBuffer->Destroy();
     m_imageBuffer = nullptr;
 
     // TODO - have one sampler in renderer instead ???

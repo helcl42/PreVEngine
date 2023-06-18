@@ -6,7 +6,7 @@
 #include "../../render/model/ModelFactory.h"
 
 #include <prev/core/AllocatorProvider.h>
-#include <prev/render/buffer/image/ImageBuffer.h>
+#include <prev/render/buffer/image/ImageBufferFactory.h>
 #include <prev/render/sampler/Sampler.h>
 #include <prev/util/VkUtils.h>
 
@@ -30,9 +30,8 @@ std::unique_ptr<ISunComponent> SunComponentFactory::Create() const
 std::unique_ptr<Flare> SunComponentFactory::CreateFlare(prev::core::memory::Allocator& allocator, const std::string& filePath, const float scale) const
 {
     auto image{ prev::render::image::ImageFactory{}.CreateImage(filePath) };
-    auto imageBuffer{ std::make_shared<prev::render::buffer::image::ImageBuffer>(allocator) };
-    imageBuffer->Create(prev::render::buffer::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, reinterpret_cast<uint8_t*>(image->GetBuffer()) });
-    auto sampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(imageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f) };
-    return std::make_unique<Flare>(imageBuffer, sampler, scale);
+    auto imageBuffer{ prev::render::buffer::image::ImageBufferFactory{}.CreateFromData(prev::render::buffer::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, reinterpret_cast<uint8_t*>(image->GetBuffer()) }, allocator) };
+    auto sampler{ std::make_unique<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(imageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f) };
+    return std::make_unique<Flare>(std::move(imageBuffer), std::move(sampler), scale);
 }
 } // namespace prev_test::component::sky

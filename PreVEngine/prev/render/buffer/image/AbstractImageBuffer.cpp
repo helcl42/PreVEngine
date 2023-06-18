@@ -1,19 +1,20 @@
 #include "AbstractImageBuffer.h"
 
 namespace prev::render::buffer::image {
-AbstractImageBuffer::AbstractImageBuffer(prev::core::memory::Allocator& allocator)
+AbstractImageBuffer::AbstractImageBuffer(prev::core::memory::Allocator& allocator, const VkExtent3D& ext, const VkImageType imgType, const VkFormat fmt, const VkImageCreateFlags flags, const VkSampleCountFlagBits samplesCnt, const bool mipMap, const VkImageViewType vwType, const uint32_t lrCount)
     : m_allocator(allocator)
+    , m_extent(ext)
+    , m_imageType(imgType)
+    , m_format(fmt)
+    , m_flags(flags)
+    , m_sampleCount(samplesCnt)
+    , m_mipMap(mipMap)
+    , m_imageViewType(vwType)
+    , m_layerCount(lrCount)
+    , m_mipLevels(0)
     , m_allocation(nullptr)
     , m_image(nullptr)
-    , m_extent({ 0, 0, 0 })
-    , m_imageType(VkImageType::VK_IMAGE_TYPE_2D)
-    , m_flags()
-    , m_format(VkFormat::VK_FORMAT_UNDEFINED)
-    , m_sampleCount(VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT)
     , m_imageView(nullptr)
-    , m_mipLevels(0)
-    , m_layerCount(0)
-    , m_imageViewType()
 {
 }
 
@@ -31,7 +32,6 @@ void AbstractImageBuffer::Destroy()
     }
 
     m_image = VK_NULL_HANDLE;
-    m_extent = {};
 }
 
 VkImage AbstractImageBuffer::GetImage() const
