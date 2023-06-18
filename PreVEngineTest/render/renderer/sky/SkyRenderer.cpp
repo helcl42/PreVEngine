@@ -254,30 +254,11 @@ void SkyRenderer::AfterRender(const prev::render::RenderContext& renderContext, 
 
 void SkyRenderer::ShutDown()
 {
-    if (m_skyPostProcessColorImageBuffer) {
-        m_skyPostProcessColorImageBuffer->Destroy();
-        m_skyPostProcessColorImageBuffer = nullptr;
-    }
-
-    if (m_skyCloudDistanceImageBuffer) {
-        m_skyCloudDistanceImageBuffer->Destroy();
-        m_skyCloudDistanceImageBuffer = nullptr;
-    }
-
-    if (m_skyAlphanessImageBuffer) {
-        m_skyAlphanessImageBuffer->Destroy();
-        m_skyAlphanessImageBuffer = nullptr;
-    }
-
-    if (m_skyBloomImageBuffer) {
-        m_skyBloomImageBuffer->Destroy();
-        m_skyBloomImageBuffer = nullptr;
-    }
-
-    if (m_skyColorImageBuffer) {
-        m_skyColorImageBuffer->Destroy();
-        m_skyColorImageBuffer = nullptr;
-    }
+    m_skyPostProcessColorImageBuffer = nullptr;
+    m_skyCloudDistanceImageBuffer = nullptr;
+    m_skyAlphanessImageBuffer = nullptr;
+    m_skyBloomImageBuffer = nullptr;
+    m_skyColorImageBuffer = nullptr;
 
     m_compositePipeline->ShutDown();
     m_compositePipeline = nullptr;
@@ -301,15 +282,9 @@ void SkyRenderer::ShutDown()
 void SkyRenderer::UpdateImageBufferExtents(const VkExtent2D& extent, const VkFormat format, std::shared_ptr<prev::render::buffer::image::IImageBuffer>& imageBuffer, std::shared_ptr<prev::render::sampler::Sampler>& sampler)
 {
     if (imageBuffer == nullptr || imageBuffer->GetExtent().width != extent.width || imageBuffer->GetExtent().height != extent.height) {
-        if (imageBuffer) {
-            imageBuffer->Destroy();
-        }
-
         auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
-        const prev::render::buffer::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ extent.width, extent.height }, VK_IMAGE_TYPE_2D, format, VK_SAMPLE_COUNT_1_BIT, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1 };
-        imageBuffer = prev::render::buffer::image::ImageBufferFactory{}.CreateStorage(bufferCreateInfo, *allocator);
-
+        imageBuffer = prev::render::buffer::image::ImageBufferFactory{}.CreateStorage(prev::render::buffer::image::ImageBufferCreateInfo{ VkExtent2D{ extent.width, extent.height }, VK_IMAGE_TYPE_2D, format, VK_SAMPLE_COUNT_1_BIT, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1 }, *allocator);
         sampler = std::make_shared<prev::render::sampler::Sampler>(allocator->GetDevice(), static_cast<float>(imageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f);
     }
 }

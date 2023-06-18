@@ -30,7 +30,7 @@ ShadowsComponent::~ShadowsComponent()
         cascade.Destroy(*device);
     }
 
-    m_depthBuffer->Destroy();
+    m_depthBuffer = nullptr;
 }
 
 void ShadowsComponent::Update(const glm::vec3& lightDirection, const float nearClippingPlane, const float farClippingPlane, const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix)

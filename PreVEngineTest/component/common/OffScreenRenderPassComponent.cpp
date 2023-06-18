@@ -97,11 +97,11 @@ void OffScreenRenderPassComponent::Init()
     for (uint32_t i = 0; i < m_colorFormats.size(); ++i) {
         const auto colorFormat{ m_colorFormats[i] };
 
-        std::shared_ptr<prev::render::buffer::image::IImageBuffer> colorImageBuffer{ imageBufferFactory.CreateColor(prev::render::buffer::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, colorFormat, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D }, *allocator) };
-        std::shared_ptr<prev::render::sampler::Sampler> colorImageBufferSampler{ std::make_shared<prev::render::sampler::Sampler>(*device, static_cast<float>(colorImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f) };
+        auto colorImageBuffer{ imageBufferFactory.CreateColor(prev::render::buffer::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, colorFormat, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D }, *allocator) };
+        auto colorImageBufferSampler{ std::make_shared<prev::render::sampler::Sampler>(*device, static_cast<float>(colorImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f) };
 
-        m_colorBuffers.emplace_back(colorImageBuffer);
-        m_colorSamplers.emplace_back(colorImageBufferSampler);
+        m_colorBuffers.emplace_back(std::move(colorImageBuffer));
+        m_colorSamplers.emplace_back(std::move(colorImageBufferSampler));
     }
 
     if (m_depthFormat != VK_FORMAT_UNDEFINED) {

@@ -16,6 +16,8 @@ public:
     std::unique_ptr<IImageBuffer> CreateDepth(const ImageBufferCreateInfo& createInfo, prev::core::memory::Allocator& allocator) const;
 
     std::unique_ptr<IImageBuffer> CreateStorage(const ImageBufferCreateInfo& createInfo, prev::core::memory::Allocator& allocator) const;
+
+    std::unique_ptr<IImageBuffer> CreateFromData(const ImageBufferCreateInfo& createInfo, prev::core::memory::Allocator& allocator) const;
 };
 } // namespace prev::render::buffer::image
 

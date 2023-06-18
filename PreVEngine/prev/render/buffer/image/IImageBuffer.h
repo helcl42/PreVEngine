@@ -6,11 +6,7 @@
 namespace prev::render::buffer::image {
 class IImageBuffer {
 public:
-    virtual void Create(const ImageBufferCreateInfo& createInfo) = 0;
-
     virtual void Resize(const VkExtent3D& extent) = 0;
-
-    virtual void Destroy() = 0;
 
     virtual VkImage GetImage() const = 0;
 
