@@ -14,9 +14,6 @@ public:
 
 public:
     void Resize(const VkExtent3D& extent) override;
-
-private:
-    std::vector<const uint8_t*> m_layerData;
 };
 } // namespace prev::render::buffer::image
 
