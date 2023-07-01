@@ -5,7 +5,6 @@
 #include "../../util/VkUtils.h"
 
 #include <algorithm>
-#include <iostream>
 #include <sstream>
 
 namespace prev::render::shader {
