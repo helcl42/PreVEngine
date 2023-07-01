@@ -22,6 +22,6 @@ mv vert.spv animation_bump_mapped_shadows_vert.spv
 
 glslangValidator -V terrain_bump_mapped_shadows.vert
 
-mv /y vert.spv terrain_bump_mapped_shadows_vert.spv
+mv vert.spv terrain_bump_mapped_shadows_vert.spv
 
 exit
