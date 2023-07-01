@@ -1,5 +1,9 @@
 #include "Utils.h"
 
+#if defined(__ANDROID__)
+#include <android_native.h>
+#endif
+
 #include <filesystem>
 #include <iostream>
 #include <sstream>
@@ -9,7 +13,16 @@ namespace prev::util {
 namespace file {
     bool Exists(const std::string& filePath)
     {
+#if defined(__ANDROID__)
+        AAsset* asset = android_open_asset(filePath.c_str(), AASSET_MODE_STREAMING);
+        if (asset != nullptr) {
+            AAsset_close(asset);
+            return true;
+        }
+        return false;
+#else
         return std::filesystem::exists(filePath);
+#endif
     }
 
     bool CreateDirectoryByPath(const std::string& path)
