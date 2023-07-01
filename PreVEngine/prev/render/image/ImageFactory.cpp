@@ -1,29 +1,15 @@
 #include "ImageFactory.h"
+
 #include "../../core/instance/Validation.h"
+#include "../../util/Utils.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <external/stb_image.h>
 
-#include <filesystem>
-
 namespace prev::render::image {
-bool ImageFactory::FileExists(const std::string& fileName)
-{
-#if defined(__ANDROID__)
-    AAsset* asset = android_open_asset(fileName.c_str(), AASSET_MODE_STREAMING);
-    if (asset != nullptr) {
-        AAsset_close(asset);
-        return true;
-    }
-    return false;
-#else
-    return std::filesystem::exists(fileName);
-#endif
-}
-
 std::unique_ptr<Image> ImageFactory::CreateImage(const std::string& filename, bool flipVertically) const
 {
-    if (!FileExists(filename)) {
+    if (!prev::util::file::Exists(filename)) {
         LOGE("Image: File not found: %s\n", filename.c_str());
         return nullptr;
     }
