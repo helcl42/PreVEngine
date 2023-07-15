@@ -39,6 +39,10 @@ void DefaultShadowsRenderer::Init()
     m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
+void DefaultShadowsRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext)
+{
+}
+
 void DefaultShadowsRenderer::PreRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext)
 {
     const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
@@ -47,10 +51,6 @@ void DefaultShadowsRenderer::PreRender(const prev::render::RenderContext& render
     vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
     vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
-}
-
-void DefaultShadowsRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext)
-{
 }
 
 void DefaultShadowsRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const ShadowsRenderContextUserData& shadowsRenderContext)
