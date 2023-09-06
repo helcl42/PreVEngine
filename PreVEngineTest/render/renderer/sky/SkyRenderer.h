@@ -38,9 +38,7 @@ public:
 private:
     void UpdateImageBufferExtents(const VkExtent2D& extent, const VkFormat format, std::shared_ptr<prev::render::buffer::image::IImageBuffer>& imageBuffer, std::shared_ptr<prev::render::sampler::Sampler>& sampler);
 
-    void AddInterComputeImageBufferBarrier(const VkImage image, VkCommandBuffer commandBuffer);
-
-    void AddImageBufferBarrier(const VkImage image, VkCommandBuffer commandBuffer);
+    void AddImageBufferPipelineBarrierCommand(const VkImage image, const VkAccessFlags srcAccessMask, const VkAccessFlags dstAccessMask, const VkPipelineStageFlags srcShaderStageMask, const VkPipelineStageFlags dstShaderStageMask, const uint32_t srcQueueFamilyIndex, const uint32_t dstQueueFamilyIndex, VkCommandBuffer commandBuffer);
 
 private:
     struct DEFAULT_ALIGNMENT UniformsSkyCS {
@@ -125,6 +123,8 @@ private:
     std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_skyPostProcessColorImageBuffer;
 
     std::shared_ptr<prev::render::sampler::Sampler> m_skyPostProcessImageSampler;
+
+    VkCommandPool m_commandPool{};
 
 private:
     static const inline VkFormat COLOR_FORMAT{ VK_FORMAT_R8G8B8A8_UNORM };
