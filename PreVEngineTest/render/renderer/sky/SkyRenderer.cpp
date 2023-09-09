@@ -61,8 +61,8 @@ void SkyRenderer::Init()
 
     LOGI("Sky PostProcess Compute Pipeline created\n");
 
-    m_uniformsPoolSkyPorstProcessCS = std::make_unique<prev::render::buffer::UBOPool<UniformsSkyPostProcessCS>>(*allocator);
-    m_uniformsPoolSkyPorstProcessCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolSkyPostProcessCS = std::make_unique<prev::render::buffer::UBOPool<UniformsSkyPostProcessCS>>(*allocator);
+    m_uniformsPoolSkyPostProcessCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
     // compositor
     m_compositeShader = shaderFactory.CreateShaderFromFiles<shader::SkyCompositeShader>(*device, shader::SkyCompositeShader::GetPaths());
@@ -158,7 +158,7 @@ void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext,
     AddImageBufferPipelineBarrierCommand(m_skyAlphanessImageBuffer->GetImage(), VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, renderContext.commandBuffer);
 
     // sky post process render
-    auto uboPostCS = m_uniformsPoolSkyPorstProcessCS->GetNext();
+    auto uboPostCS = m_uniformsPoolSkyPostProcessCS->GetNext();
 
     glm::vec4 lightPositionClipSpace = renderContextUserData.projectionMatrix * renderContextUserData.viewMatrix * glm::vec4(mainLightComponent->GetPosition(), 1.0f);
     glm::vec3 lightPositionNdc = lightPositionClipSpace / lightPositionClipSpace.w;
