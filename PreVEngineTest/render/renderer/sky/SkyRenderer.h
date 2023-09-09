@@ -98,7 +98,7 @@ private:
 
     std::unique_ptr<prev_test::render::pipeline::IPipeline> m_skyPostProcessPipeline;
 
-    std::unique_ptr<prev::render::buffer::UBOPool<UniformsSkyPostProcessCS>> m_uniformsPoolSkyPorstProcessCS;
+    std::unique_ptr<prev::render::buffer::UBOPool<UniformsSkyPostProcessCS>> m_uniformsPoolSkyPostProcessCS;
 
     std::unique_ptr<prev::render::shader::Shader> m_compositeShader;
 
