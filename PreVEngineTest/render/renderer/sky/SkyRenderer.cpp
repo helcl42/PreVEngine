@@ -31,8 +31,6 @@ void SkyRenderer::Init()
 {
     auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
-    auto computeQueue{ device->GetQueue(prev::core::device::QueueType::COMPUTE) };
-    auto graphicsQueue{ device->GetQueue(prev::core::device::QueueType::GRAPHICS) };
 
     prev::render::shader::ShaderFactory shaderFactory;
 
@@ -77,8 +75,6 @@ void SkyRenderer::Init()
     m_compositePipeline->Init();
 
     LOGI("Sky Composite Pipeline created\n");
-
-    m_commandPool = graphicsQueue->CreateCommandPool();
 }
 
 void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
@@ -91,11 +87,10 @@ void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext,
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
     auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
 
-    auto computeQueue{ device->GetQueue(prev::core::device::QueueType::COMPUTE) };
-    auto graphicsQueue{ device->GetQueue(prev::core::device::QueueType::GRAPHICS) };
-
     // generate clouds usgin compute queue
     const VkExtent2D extent{ renderContext.rect.extent.width - renderContext.rect.offset.x, renderContext.rect.extent.height - renderContext.rect.offset.y };
+
+    // TODO - put this work on dedicated compute queue if available
 
     UpdateImageBufferExtents(extent, COLOR_FORMAT, m_skyColorImageBuffer, m_skyColorImageSampler);
     UpdateImageBufferExtents(extent, COLOR_FORMAT, m_skyBloomImageBuffer, m_skyBloomImageSampler);
@@ -103,17 +98,12 @@ void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext,
     UpdateImageBufferExtents(extent, DEPTH_FORMAT, m_skyCloudDistanceImageBuffer, m_skyCloudDistanceImageSampler);
     UpdateImageBufferExtents(extent, COLOR_FORMAT, m_skyPostProcessColorImageBuffer, m_skyPostProcessImageSampler);
 
-    auto commandBuffer = prev::util::vk::CreateCommandBuffer(*device, m_commandPool);
+    AddImageBufferPipelineBarrierCommand(m_skyCloudDistanceImageBuffer->GetImage(), VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, renderContext.commandBuffer);
+    AddImageBufferPipelineBarrierCommand(m_skyPostProcessColorImageBuffer->GetImage(), VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, renderContext.commandBuffer);
 
-    VkCommandBufferBeginInfo commandBufferBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-    commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
-
-    // barrier - sky output images for write
-    AddImageBufferPipelineBarrierCommand(m_skyColorImageBuffer->GetImage(), VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, computeQueue->family, computeQueue->family, commandBuffer);
-    AddImageBufferPipelineBarrierCommand(m_skyBloomImageBuffer->GetImage(), VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, computeQueue->family, computeQueue->family, commandBuffer);
-    AddImageBufferPipelineBarrierCommand(m_skyAlphanessImageBuffer->GetImage(), VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, computeQueue->family, computeQueue->family, commandBuffer);
-    AddImageBufferPipelineBarrierCommand(m_skyCloudDistanceImageBuffer->GetImage(), VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, computeQueue->family, computeQueue->family, commandBuffer);
+    AddImageBufferPipelineBarrierCommand(m_skyColorImageBuffer->GetImage(), VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, renderContext.commandBuffer);
+    AddImageBufferPipelineBarrierCommand(m_skyBloomImageBuffer->GetImage(), VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, renderContext.commandBuffer);
+    AddImageBufferPipelineBarrierCommand(m_skyAlphanessImageBuffer->GetImage(), VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, renderContext.commandBuffer);
 
     // regular sky render
     auto uboCS = m_uniformsPoolSkyCS->GetNext();
@@ -158,20 +148,14 @@ void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext,
 
     const VkDescriptorSet descriptorSetCompute = m_skyShader->UpdateNextDescriptorSet();
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *m_skyPipeline);
-    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_skyPipeline->GetLayout(), 0, 1, &descriptorSetCompute, 0, 0);
+    vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *m_skyPipeline);
+    vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_skyPipeline->GetLayout(), 0, 1, &descriptorSetCompute, 0, 0);
 
-    vkCmdDispatch(commandBuffer, prev::util::vk::GetComputeGroupSize(extent.width, 16), prev::util::vk::GetComputeGroupSize(extent.height, 16), 1);
+    vkCmdDispatch(renderContext.commandBuffer, prev::util::vk::GetComputeGroupSize(extent.width, 16), prev::util::vk::GetComputeGroupSize(extent.height, 16), 1);
 
-    // barrier - post process input images for read
-    AddImageBufferPipelineBarrierCommand(m_skyColorImageBuffer->GetImage(), VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, computeQueue->family, computeQueue->family, commandBuffer);
-    AddImageBufferPipelineBarrierCommand(m_skyBloomImageBuffer->GetImage(), VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, computeQueue->family, computeQueue->family, commandBuffer);
-    AddImageBufferPipelineBarrierCommand(m_skyAlphanessImageBuffer->GetImage(), VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, computeQueue->family, computeQueue->family, commandBuffer);
-    AddImageBufferPipelineBarrierCommand(m_skyCloudDistanceImageBuffer->GetImage(), VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, computeQueue->family, computeQueue->family, commandBuffer);
-
-    // barrier - post process output images for write
-    AddImageBufferPipelineBarrierCommand(m_skyPostProcessColorImageBuffer->GetImage(), VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, graphicsQueue->family, computeQueue->family, commandBuffer);
-    AddImageBufferPipelineBarrierCommand(m_skyCloudDistanceImageBuffer->GetImage(), VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, graphicsQueue->family, computeQueue->family, commandBuffer);
+    AddImageBufferPipelineBarrierCommand(m_skyColorImageBuffer->GetImage(), VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, renderContext.commandBuffer);
+    AddImageBufferPipelineBarrierCommand(m_skyBloomImageBuffer->GetImage(), VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, renderContext.commandBuffer);
+    AddImageBufferPipelineBarrierCommand(m_skyAlphanessImageBuffer->GetImage(), VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, renderContext.commandBuffer);
 
     // sky post process render
     auto uboPostCS = m_uniformsPoolSkyPorstProcessCS->GetNext();
@@ -197,24 +181,13 @@ void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext,
 
     const VkDescriptorSet descriptorSetComputePost = m_skyPostProcessShader->UpdateNextDescriptorSet();
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *m_skyPostProcessPipeline);
-    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_skyPostProcessPipeline->GetLayout(), 0, 1, &descriptorSetComputePost, 0, 0);
+    vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *m_skyPostProcessPipeline);
+    vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_skyPostProcessPipeline->GetLayout(), 0, 1, &descriptorSetComputePost, 0, 0);
 
-    vkCmdDispatch(commandBuffer, prev::util::vk::GetComputeGroupSize(extent.width, 16), prev::util::vk::GetComputeGroupSize(extent.height, 16), 1);
+    vkCmdDispatch(renderContext.commandBuffer, prev::util::vk::GetComputeGroupSize(extent.width, 16), prev::util::vk::GetComputeGroupSize(extent.height, 16), 1);
 
-    VKERRCHECK(vkEndCommandBuffer(commandBuffer));
-
-    // Submit compute work
-    const VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
-    VkSubmitInfo computeSubmitInfo{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
-    computeSubmitInfo.pWaitDstStageMask = &waitStageMask;
-    computeSubmitInfo.commandBufferCount = 1;
-    computeSubmitInfo.pCommandBuffers = &commandBuffer;
-    VKERRCHECK(vkQueueSubmit(*graphicsQueue, 1, &computeSubmitInfo, nullptr));
-
-    // barrier - post process output images for read from fragment shader
-    AddImageBufferPipelineBarrierCommand(m_skyPostProcessColorImageBuffer->GetImage(), VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, computeQueue->family, graphicsQueue->family, renderContext.commandBuffer);
-    AddImageBufferPipelineBarrierCommand(m_skyCloudDistanceImageBuffer->GetImage(), VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, computeQueue->family, graphicsQueue->family, renderContext.commandBuffer);
+    AddImageBufferPipelineBarrierCommand(m_skyPostProcessColorImageBuffer->GetImage(), VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, renderContext.commandBuffer);
+    AddImageBufferPipelineBarrierCommand(m_skyCloudDistanceImageBuffer->GetImage(), VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, renderContext.commandBuffer);
 }
 
 void SkyRenderer::PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
@@ -261,9 +234,6 @@ void SkyRenderer::AfterRender(const prev::render::RenderContext& renderContext, 
 
 void SkyRenderer::ShutDown()
 {
-    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
-    vkDestroyCommandPool(*device, m_commandPool, nullptr);
-
     m_skyPostProcessColorImageBuffer = nullptr;
     m_skyCloudDistanceImageBuffer = nullptr;
     m_skyAlphanessImageBuffer = nullptr;
@@ -301,7 +271,7 @@ void SkyRenderer::UpdateImageBufferExtents(const VkExtent2D& extent, const VkFor
     }
 }
 
-void SkyRenderer::AddImageBufferPipelineBarrierCommand(const VkImage image, const VkAccessFlags srcAccessMask, const VkAccessFlags dstAccessMask, const VkPipelineStageFlags srcShaderStageMask, const VkPipelineStageFlags dstShaderStageMask, const uint32_t srcQueueFamilyIndex, const uint32_t dstQueueFamilyIndex, VkCommandBuffer commandBuffer)
+void SkyRenderer::AddImageBufferPipelineBarrierCommand(const VkImage image, const VkAccessFlags srcAccessMask, const VkAccessFlags dstAccessMask, const VkPipelineStageFlags srcShaderStageMask, const VkPipelineStageFlags dstShaderStageMask, VkCommandBuffer commandBuffer)
 {
     VkImageMemoryBarrier barrierDescription{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
     barrierDescription.srcAccessMask = srcAccessMask,
