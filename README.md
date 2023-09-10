@@ -26,7 +26,7 @@ Here is a video:
 
 ## Build Android
 
- - Install `NDK-20+`
+ - Install `NDK-25+`
 
  - Run `cd PreVEngineTest`
 
