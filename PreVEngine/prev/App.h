@@ -3,7 +3,7 @@
 
 #include "core/Engine.h"
 #include "render/IRenderer.h"
-#include "scene/graph/ISceneNode.h"
+#include "scene/IScene.h"
 
 namespace prev {
 class App {
@@ -20,12 +20,12 @@ public:
     void ShutDown();
 
 protected:
-    virtual std::shared_ptr<prev::scene::graph::ISceneNode> CreateRootNode() const = 0;
+    virtual std::shared_ptr<prev::scene::IScene> CreateScene() const = 0;
 
     virtual std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData>> CreateRootRenderer() const = 0;
 
 protected:
-    std::unique_ptr<prev::core::Engine> m_engine;
+    std::unique_ptr<prev::core::Engine> m_engine{};
 };
 } // namespace prev
 

@@ -3,15 +3,18 @@
 #include "DeviceProvider.h"
 #include "device/DeviceFactory.h"
 
+#include "../core/device/PhysicalDevices.h"
+#include "../render/pass/RenderPassBuilder.h"
 #include "../scene/Scene.h"
 #include "../util/Utils.h"
+#include "../util/VkUtils.h"
 #include "../window/Window.h"
 
 #include <map>
 
 namespace prev::core {
 Engine::Engine(const EngineConfig& config)
-    : m_config(config)
+    : m_config{ config }
 {
 }
 
@@ -23,25 +26,23 @@ void Engine::Init()
     InitSurface();
     InitDevice();
     InitAllocator();
+    InitRenderPass();
+    InitSwapchain();
 
     DeviceProvider::Instance().SetDevice(m_device);
     AllocatorProvider::Instance().SetAllocator(m_allocator);
 }
 
-void Engine::InitScene()
+void Engine::InitScene(const std::shared_ptr<prev::scene::IScene>& scene)
 {
-    m_scene = std::make_shared<prev::scene::Scene>(m_config.sceneConfig, m_device, m_allocator, m_surface);
+    m_scene = scene;
     m_scene->Init();
-}
-
-void Engine::InitSceneGraph(const std::shared_ptr<prev::scene::graph::ISceneNode>& rootNode)
-{
-    m_scene->InitSceneGraph(rootNode);
 }
 
 void Engine::InitRenderer(const std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData>>& rootRenderer)
 {
-    m_scene->InitRenderer(rootRenderer);
+    m_rootRenderer = rootRenderer;
+    m_rootRenderer->Init();
 }
 
 void Engine::MainLoop()
@@ -59,7 +60,22 @@ void Engine::MainLoop()
 
         if (m_window->HasFocus()) {
             m_scene->Update(deltaTime);
-            m_scene->Render();
+
+            VkFramebuffer frameBuffer;
+            VkCommandBuffer commandBuffer;
+            uint32_t frameInFlightIndex;
+            if (m_swapchain->BeginFrame(frameBuffer, commandBuffer, frameInFlightIndex)) {
+                const prev::render::RenderContext renderContext{ frameBuffer, commandBuffer, frameInFlightIndex, { { 0, 0 }, m_swapchain->GetExtent() } };
+
+                // TODO - this is still weird
+                m_rootRenderer->BeforeRender(renderContext);
+                m_rootRenderer->PreRender(renderContext);
+                m_rootRenderer->Render(renderContext, m_scene->GetRootNode());
+                m_rootRenderer->PostRender(renderContext);
+                m_rootRenderer->AfterRender(renderContext);
+
+                m_swapchain->EndFrame();
+            }
         } else {
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
         }
@@ -72,8 +88,7 @@ void Engine::MainLoop()
 
 void Engine::ShutDown()
 {
-    m_scene->ShutDownRenderer();
-    m_scene->ShutDownSceneGraph();
+    m_rootRenderer->ShutDown();
     m_scene->ShutDown();
 
     AllocatorProvider::Instance().SetAllocator(nullptr);
@@ -90,6 +105,21 @@ std::shared_ptr<prev::core::device::Device> Engine::GetDevice() const
     return m_device;
 }
 
+std::shared_ptr<prev::render::Swapchain> Engine::GetSwapchain() const
+{
+    return m_swapchain;
+}
+
+std::shared_ptr<prev::render::pass::RenderPass> Engine::GetRenderPass() const
+{
+    return m_renderPass;
+}
+
+std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData>> Engine::GetRootRenderer() const
+{
+    return m_rootRenderer;
+}
+
 void Engine::operator()(const prev::window::WindowChangeEvent& windowChangeEvent)
 {
     vkDeviceWaitIdle(*m_device);
@@ -97,6 +127,18 @@ void Engine::operator()(const prev::window::WindowChangeEvent& windowChangeEvent
     InitSurface();
 
     prev::event::EventChannel::Post(prev::window::SurfaceChanged{ m_surface });
+}
+
+void Engine::operator()(const prev::window::WindowResizeEvent& resizeEvent)
+{
+    m_swapchain->UpdateExtent();
+}
+
+void Engine::operator()(const prev::window::SurfaceChanged& surfaceChangedEvent)
+{
+    m_surface = surfaceChangedEvent.surface;
+    InitSwapchain();
+    m_swapchain->UpdateExtent();
 }
 
 void Engine::InitTiming()
@@ -152,5 +194,61 @@ void Engine::InitAllocator()
 {
     m_allocator = std::make_shared<prev::core::memory::Allocator>(*m_instance, *m_device, *m_device->GetQueue(device::QueueType::GRAPHICS)); // Create "Vulkan Memory Aloocator"
     LOGI("Allocator created\n");
+}
+
+void Engine::InitRenderPass()
+{
+    prev::render::pass::RenderPassBuilder renderPassBuilder{ *m_device };
+
+    const auto colorFormat{ m_device->GetGPU()->FindSurfaceFormat(m_surface) };
+    const auto depthFormat{ m_device->GetGPU()->FindDepthFormat() };
+    const VkClearColorValue clearColor{ { 0.5f, 0.5f, 0.5f, 1.0f } };
+    const VkSampleCountFlagBits sampleCount{ prev::util::vk::GetSampleCountBit(m_config.samplesCount) };
+
+    if (sampleCount > VK_SAMPLE_COUNT_1_BIT) {
+        std::vector<VkSubpassDependency> dependencies{ 2 };
+        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[0].dstSubpass = 0;
+        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+        dependencies[1].srcSubpass = 0;
+        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+        m_renderPass = renderPassBuilder
+                           .AddColorAttachment(colorFormat, sampleCount, clearColor, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) // color buffer, multisampled
+                           .AddDepthAttachment(depthFormat, sampleCount, { 1.0f, 0 }) // depth buffer, multisampled
+                           .AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, clearColor, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, true) // color buffer, resolve buffer
+                           .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, { 1.0f, 0 }, true) // depth buffer, resolve buffer
+                           .AddSubpass({ 0, 1 }, { 2, 3 }) // resolve ref will be at index 2 & 3
+                           .AddSubpassDependencies(dependencies)
+                           .Build();
+    } else {
+        m_renderPass = renderPassBuilder
+                           .AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, clearColor)
+                           .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT)
+                           .AddSubpass({ 0, 1 })
+                           .Build();
+    }
+}
+
+void Engine::InitSwapchain()
+{
+    m_swapchain = std::make_shared<prev::render::Swapchain>(*m_device, *m_allocator, *m_renderPass, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount));
+#if defined(__ANDROID__)
+    m_swapchain->SetPresentMode(m_config.VSync ? VK_PRESENT_MODE_MAILBOX_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
+#else
+    m_swapchain->SetPresentMode(m_config.VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
+#endif
+    m_swapchain->SetImageCount(m_config.framesInFlight);
+    m_swapchain->Print();
 }
 } // namespace prev::core

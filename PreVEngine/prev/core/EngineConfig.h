@@ -2,7 +2,6 @@
 #define __ENGINE_CONFIG_H__
 
 #include "../common/Common.h"
-#include "../scene/SceneConfig.h"
 
 namespace prev::core {
 struct EngineConfig {
@@ -16,7 +15,11 @@ struct EngineConfig {
 
     glm::ivec2 windowPosition{ 40, 40 };
 
-    prev::scene::SceneConfig sceneConfig{};
+    bool VSync{ true };
+
+    uint32_t framesInFlight{ 3 };
+
+    uint32_t samplesCount{ 1 };
 };
 } // namespace prev::core
 
