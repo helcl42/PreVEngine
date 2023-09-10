@@ -1,7 +1,4 @@
-# Sets the minimum version of CMake required to build the native
-# library. You should either keep the default value or only pass a
-# value of 3.4.0 or lower.
-cmake_minimum_required(VERSION 3.4.1)
+cmake_minimum_required(VERSION 3.18.1)
 
 add_definitions(-DVK_USE_PLATFORM_ANDROID_KHR)
 add_definitions(-DUSE_VULKAN_WRAPPER)
