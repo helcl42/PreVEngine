@@ -75,7 +75,7 @@ void ParallaxMappedRenderer::Render(const prev::render::RenderContext& renderCon
         }
     }
 
-    for (auto& child : node->GetChildren()) {
+    for (const auto& child : node->GetChildren()) {
         Render(renderContext, child, renderContextUserData);
     }
 }

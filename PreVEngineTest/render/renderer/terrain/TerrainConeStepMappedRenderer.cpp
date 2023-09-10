@@ -154,7 +154,7 @@ void TerrainConeStepMappedRenderer::Render(const prev::render::RenderContext& re
         }
     }
 
-    for (auto& child : node->GetChildren()) {
+    for (const auto& child : node->GetChildren()) {
         Render(renderContext, child, renderContextUserData);
     }
 }

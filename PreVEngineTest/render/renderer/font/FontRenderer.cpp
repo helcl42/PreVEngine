@@ -94,7 +94,7 @@ void FontRenderer::Render(const prev::render::RenderContext& renderContext, cons
         }
     }
 
-    for (auto& child : node->GetChildren()) {
+    for (const auto& child : node->GetChildren()) {
         Render(renderContext, child, renderContextUserData);
     }
 }

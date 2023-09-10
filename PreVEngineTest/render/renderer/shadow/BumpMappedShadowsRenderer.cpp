@@ -69,7 +69,7 @@ void BumpMappedShadowsRenderer::Render(const prev::render::RenderContext& render
         }
     }
 
-    for (auto& child : node->GetChildren()) {
+    for (const auto& child : node->GetChildren()) {
         Render(renderContext, child, shadowsRenderContext);
     }
 }

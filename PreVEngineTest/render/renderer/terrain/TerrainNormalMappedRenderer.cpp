@@ -151,7 +151,7 @@ void TerrainNormalMappedRenderer::Render(const prev::render::RenderContext& rend
         }
     }
 
-    for (auto& child : node->GetChildren()) {
+    for (const auto& child : node->GetChildren()) {
         Render(renderContext, child, renderContextUserData);
     }
 }

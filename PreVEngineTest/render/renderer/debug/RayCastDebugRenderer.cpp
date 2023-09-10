@@ -104,7 +104,7 @@ void RayCastDebugRenderer::Render(const prev::render::RenderContext& renderConte
         vkCmdDrawIndexed(renderContext.commandBuffer, rayCastingComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
     }
 
-    for (auto& child : node->GetChildren()) {
+    for (const auto& child : node->GetChildren()) {
         Render(renderContext, child, renderContextUserData);
     }
 }

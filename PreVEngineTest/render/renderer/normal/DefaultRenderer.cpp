@@ -75,7 +75,7 @@ void DefaultRenderer::Render(const prev::render::RenderContext& renderContext, c
         }
     }
 
-    for (auto& child : node->GetChildren()) {
+    for (const auto& child : node->GetChildren()) {
         Render(renderContext, child, renderContextUserData);
     }
 }

@@ -67,7 +67,7 @@ void AnimationBumpMappedShadowsRenderer::Render(const prev::render::RenderContex
         }
     }
 
-    for (auto& child : node->GetChildren()) {
+    for (const auto& child : node->GetChildren()) {
         Render(renderContext, child, shadowsRenderUserData);
     }
 }
