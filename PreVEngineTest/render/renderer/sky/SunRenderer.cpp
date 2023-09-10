@@ -95,7 +95,7 @@ void SunRenderer::Render(const prev::render::RenderContext& renderContext, const
         vkCmdEndQuery(renderContext.commandBuffer, m_queryPool, 0);
     }
 
-    for (auto& child : node->GetChildren()) {
+    for (const auto& child : node->GetChildren()) {
         Render(renderContext, child, renderContextUserData);
     }
 }

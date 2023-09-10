@@ -67,7 +67,7 @@ void AnimationShadowsRenderer::Render(const prev::render::RenderContext& renderC
         }
     }
 
-    for (auto& child : node->GetChildren()) {
+    for (const auto& child : node->GetChildren()) {
         Render(renderContext, child, shadowsRenderContextUserData);
     }
 }

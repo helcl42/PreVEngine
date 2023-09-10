@@ -75,7 +75,7 @@ void NormalMappedRenderer::Render(const prev::render::RenderContext& renderConte
         }
     }
 
-    for (auto& child : node->GetChildren()) {
+    for (const auto& child : node->GetChildren()) {
         Render(renderContext, child, renderContextUserData);
     }
 }

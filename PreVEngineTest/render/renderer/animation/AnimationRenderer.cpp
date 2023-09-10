@@ -74,7 +74,7 @@ void AnimationRenderer::Render(const prev::render::RenderContext& renderContext,
         }
     }
 
-    for (auto& child : node->GetChildren()) {
+    for (const auto& child : node->GetChildren()) {
         Render(renderContext, child, renderContextUserData);
     }
 }
