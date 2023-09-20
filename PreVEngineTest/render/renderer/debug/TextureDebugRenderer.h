@@ -4,16 +4,16 @@
 #include "../../../General.h"
 #include "../../IModel.h"
 #include "../../pipeline/IPipeline.h"
+#include "../IRenderer.h"
 
 #include "../../../General.h"
 
-#include <prev/render/IRenderer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
 
 namespace prev_test::render::renderer::debug {
-class TextureDebugRenderer final : public prev::render::IRenderer<prev::render::DefaultRenderContextUserData> {
+class TextureDebugRenderer final : public IRenderer<prev::render::RenderContext> {
 public:
     TextureDebugRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass);
 
@@ -22,15 +22,15 @@ public:
 public:
     void Init() override;
 
-    void BeforeRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData) override;
+    void BeforeRender(const prev::render::RenderContext& renderContext) override;
 
-    void PreRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData) override;
+    void PreRender(const prev::render::RenderContext& renderContext) override;
 
-    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const prev::render::DefaultRenderContextUserData& renderContextUserData) override;
+    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node) override;
 
-    void PostRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData) override;
+    void PostRender(const prev::render::RenderContext& renderContext) override;
 
-    void AfterRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData) override;
+    void AfterRender(const prev::render::RenderContext& renderContext) override;
 
     void ShutDown() override;
 

@@ -46,11 +46,11 @@ void AnimationNormalMappedRenderer::Init()
     m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
-void AnimationNormalMappedRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void AnimationNormalMappedRenderer::BeforeRender(const NormalRenderContext& renderContext)
 {
 }
 
-void AnimationNormalMappedRenderer::PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void AnimationNormalMappedRenderer::PreRender(const NormalRenderContext& renderContext)
 {
     const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
     const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
@@ -60,31 +60,31 @@ void AnimationNormalMappedRenderer::PreRender(const prev::render::RenderContext&
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void AnimationNormalMappedRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData)
+void AnimationNormalMappedRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAll({ TAG_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
 
         bool visible{ true };
         if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
+            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContext.frustum);
         }
 
         if (visible) {
             const auto nodeRenderComponent = prev::scene::component::ComponentRepository<prev_test::component::render::IAnimationRenderComponent>::Instance().Get(node->GetId());
-            RenderMeshNode(renderContext, node, renderContextUserData, nodeRenderComponent->GetModel()->GetMesh()->GetRootNode());
+            RenderMeshNode(renderContext, node, nodeRenderComponent->GetModel()->GetMesh()->GetRootNode());
         }
     }
 
     for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child, renderContextUserData);
+        Render(renderContext, child);
     }
 }
 
-void AnimationNormalMappedRenderer::PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void AnimationNormalMappedRenderer::PostRender(const NormalRenderContext& renderContext)
 {
 }
 
-void AnimationNormalMappedRenderer::AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void AnimationNormalMappedRenderer::AfterRender(const NormalRenderContext& renderContext)
 {
 }
 
@@ -97,7 +97,7 @@ void AnimationNormalMappedRenderer::ShutDown()
     m_shader = nullptr;
 }
 
-void AnimationNormalMappedRenderer::RenderMeshNode(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData, const prev_test::render::MeshNode& meshNode)
+void AnimationNormalMappedRenderer::RenderMeshNode(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const prev_test::render::MeshNode& meshNode)
 {
     const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
     const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
@@ -124,13 +124,13 @@ void AnimationNormalMappedRenderer::RenderMeshNode(const prev::render::RenderCon
         for (size_t i = 0; i < bones.size(); i++) {
             uniformsVS.bones[i] = bones[i];
         }
-        uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
-        uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
+        uniformsVS.projectionMatrix = renderContext.projectionMatrix;
+        uniformsVS.viewMatrix = renderContext.viewMatrix;
         uniformsVS.modelMatrix = modelMatrix;
         uniformsVS.normalMatrix = glm::inverse(modelMatrix);
         uniformsVS.textureNumberOfRows = material->GetAtlasNumberOfRows();
         uniformsVS.textureOffset = glm::vec4(material->GetTextureOffset(), 0.0f, 0.0f);
-        uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
+        uniformsVS.cameraPosition = glm::vec4(renderContext.cameraPosition, 1.0f);
         for (size_t i = 0; i < lightComponents.size(); i++) {
             const auto& lightComponent{ lightComponents[i] };
             uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponent->GetPosition(), 1.0f), glm::vec4(lightComponent->GetColor(), 1.0f), glm::vec4(lightComponent->GetAttenuation(), 1.0f));
@@ -139,7 +139,7 @@ void AnimationNormalMappedRenderer::RenderMeshNode(const prev::render::RenderCon
         uniformsVS.lightning.ambientFactor = prev_test::component::light::AMBIENT_LIGHT_INTENSITY;
         uniformsVS.density = prev_test::component::sky::FOG_DENSITY;
         uniformsVS.gradient = prev_test::component::sky::FOG_GRADIENT;
-        uniformsVS.clipPlane = renderContextUserData.clipPlane;
+        uniformsVS.clipPlane = renderContext.clipPlane;
 
         uboVS->Update(&uniformsVS);
 
@@ -192,7 +192,7 @@ void AnimationNormalMappedRenderer::RenderMeshNode(const prev::render::RenderCon
     }
 
     for (const auto& childMeshNode : meshNode.children) {
-        RenderMeshNode(renderContext, node, renderContextUserData, childMeshNode);
+        RenderMeshNode(renderContext, node, childMeshNode);
     }
 }
 } // namespace prev_test::render::renderer::animation

@@ -4,18 +4,18 @@
 #include "../../IAnimation.h"
 #include "../../IMesh.h"
 #include "../../pipeline/IPipeline.h"
-#include "../RenderContextUserData.h"
+#include "../IRenderer.h"
+#include "../RenderContexts.h"
 
 #include "../../../General.h"
 
-#include <prev/render/IRenderer.h>
 #include <prev/render/buffer/UniformBuffer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
 
 namespace prev_test::render::renderer::shadow {
-class AnimationShadowsRenderer final : public prev::render::IRenderer<ShadowsRenderContextUserData> {
+class AnimationShadowsRenderer final : public IRenderer<ShadowsRenderContext> {
 public:
     AnimationShadowsRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass);
 
@@ -24,20 +24,20 @@ public:
 public:
     void Init() override;
 
-    void BeforeRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override;
+    void BeforeRender(const ShadowsRenderContext& renderContext) override;
 
-    void PreRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override;
+    void PreRender(const ShadowsRenderContext& renderContext) override;
 
-    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const ShadowsRenderContextUserData& shadowsRenderContext) override;
+    void Render(const ShadowsRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node) override;
 
-    void PostRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext) override;
+    void PostRender(const ShadowsRenderContext& renderContext) override;
 
-    void AfterRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData) override;
+    void AfterRender(const ShadowsRenderContext& renderContext) override;
 
     void ShutDown() override;
 
 private:
-    void RenderMeshNode(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const ShadowsRenderContextUserData& renderContextUserData, const prev_test::render::MeshNode& meshNode);
+    void RenderMeshNode(const ShadowsRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const prev_test::render::MeshNode& meshNode);
 
 private:
     struct Uniforms {

@@ -46,7 +46,11 @@ void WaterRenderer::Init()
     m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
-void WaterRenderer::PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void WaterRenderer::BeforeRender(const NormalRenderContext& renderContext)
+{
+}
+
+void WaterRenderer::PreRender(const NormalRenderContext& renderContext)
 {
     const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
     const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
@@ -56,16 +60,12 @@ void WaterRenderer::PreRender(const prev::render::RenderContext& renderContext, 
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void WaterRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
-{
-}
-
-void WaterRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData)
+void WaterRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAll({ TAG_WATER_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
         bool visible{ true };
         if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
+            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContext.frustum);
         }
 
         if (visible) {
@@ -80,10 +80,10 @@ void WaterRenderer::Render(const prev::render::RenderContext& renderContext, con
             auto uboVS = m_uniformsPoolVS->GetNext();
 
             UniformsVS uniformsVS{};
-            uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
-            uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
+            uniformsVS.projectionMatrix = renderContext.projectionMatrix;
+            uniformsVS.viewMatrix = renderContext.viewMatrix;
             uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
-            uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
+            uniformsVS.cameraPosition = glm::vec4(renderContext.cameraPosition, 1.0f);
             uniformsVS.density = prev_test::component::sky::FOG_DENSITY;
             uniformsVS.gradient = prev_test::component::sky::FOG_GRADIENT;
 
@@ -96,7 +96,7 @@ void WaterRenderer::Render(const prev::render::RenderContext& renderContext, con
             uniformsFS.waterColor = waterComponent->GetMaterial()->GetColor();
             uniformsFS.light.color = glm::vec4(mainLightComponent->GetColor(), 1.0f);
             uniformsFS.light.position = glm::vec4(mainLightComponent->GetPosition(), 1.0f);
-            uniformsFS.nearFarClippingPlane = glm::vec4(renderContextUserData.nearFarClippingPlane, 0.0f, 0.0f);
+            uniformsFS.nearFarClippingPlane = glm::vec4(renderContext.nearFarClippingPlane, 0.0f, 0.0f);
             uniformsFS.moveFactor = waterComponent->GetMoveFactor();
             // shadows
             for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; i++) {
@@ -130,15 +130,15 @@ void WaterRenderer::Render(const prev::render::RenderContext& renderContext, con
     }
 
     for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child, renderContextUserData);
+        Render(renderContext, child);
     }
 }
 
-void WaterRenderer::PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void WaterRenderer::PostRender(const NormalRenderContext& renderContext)
 {
 }
 
-void WaterRenderer::AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void WaterRenderer::AfterRender(const NormalRenderContext& renderContext)
 {
 }
 

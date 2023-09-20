@@ -45,13 +45,13 @@ void SunRenderer::Init()
     VKERRCHECK(vkCreateQueryPool(*device, &queryPoolInfo, nullptr, &m_queryPool));
 }
 
-void SunRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void SunRenderer::BeforeRender(const NormalRenderContext& renderContext)
 {
     m_passedSamples = 0;
     vkCmdResetQueryPool(renderContext.commandBuffer, m_queryPool, 0, 1);
 }
 
-void SunRenderer::PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void SunRenderer::PreRender(const NormalRenderContext& renderContext)
 {
     const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
     const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
@@ -61,7 +61,7 @@ void SunRenderer::PreRender(const prev::render::RenderContext& renderContext, co
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void SunRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData)
+void SunRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAll({ TAG_SUN_RENDER_COMPONENT })) {
         const auto sunComponent{ prev::scene::component::ComponentRepository<prev_test::component::sky::ISunComponent>::Instance().Get(node->GetId()) };
@@ -96,15 +96,15 @@ void SunRenderer::Render(const prev::render::RenderContext& renderContext, const
     }
 
     for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child, renderContextUserData);
+        Render(renderContext, child);
     }
 }
 
-void SunRenderer::PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void SunRenderer::PostRender(const NormalRenderContext& renderContext)
 {
 }
 
-void SunRenderer::AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void SunRenderer::AfterRender(const NormalRenderContext& renderContext)
 {
     auto device = prev::core::DeviceProvider::Instance().GetDevice();
 

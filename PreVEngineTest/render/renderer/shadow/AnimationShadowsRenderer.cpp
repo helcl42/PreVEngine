@@ -39,11 +39,11 @@ void AnimationShadowsRenderer::Init()
     m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
-void AnimationShadowsRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext)
+void AnimationShadowsRenderer::BeforeRender(const ShadowsRenderContext& renderContext)
 {
 }
 
-void AnimationShadowsRenderer::PreRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext)
+void AnimationShadowsRenderer::PreRender(const ShadowsRenderContext& renderContext)
 {
     const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
     const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
@@ -53,30 +53,30 @@ void AnimationShadowsRenderer::PreRender(const prev::render::RenderContext& rend
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void AnimationShadowsRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const ShadowsRenderContextUserData& shadowsRenderContextUserData)
+void AnimationShadowsRenderer::Render(const ShadowsRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAny({ TAG_ANIMATION_RENDER_COMPONENT, TAG_ANIMATION_TEXTURELESS_RENDER_COMPONENT }) && node->GetTags().HasAll({ TAG_TRANSFORM_COMPONENT })) {
         bool visible{ true };
         if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContextUserData.frustum);
+            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContext.frustum);
         }
 
         const auto renderComponent = prev::scene::component::ComponentRepository<prev_test::component::render::IAnimationRenderComponent>::Instance().Get(node->GetId());
         if (renderComponent->CastsShadows() && visible) {
-            RenderMeshNode(renderContext, node, shadowsRenderContextUserData, renderComponent->GetModel()->GetMesh()->GetRootNode());
+            RenderMeshNode(renderContext, node, renderComponent->GetModel()->GetMesh()->GetRootNode());
         }
     }
 
     for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child, shadowsRenderContextUserData);
+        Render(renderContext, child);
     }
 }
 
-void AnimationShadowsRenderer::PostRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext)
+void AnimationShadowsRenderer::PostRender(const ShadowsRenderContext& renderContext)
 {
 }
 
-void AnimationShadowsRenderer::AfterRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData)
+void AnimationShadowsRenderer::AfterRender(const ShadowsRenderContext& renderContext)
 {
 }
 
@@ -89,7 +89,7 @@ void AnimationShadowsRenderer::ShutDown()
     m_shader = nullptr;
 }
 
-void AnimationShadowsRenderer::RenderMeshNode(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const ShadowsRenderContextUserData& shadowsRenderContextUserData, const prev_test::render::MeshNode& meshNode)
+void AnimationShadowsRenderer::RenderMeshNode(const ShadowsRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const prev_test::render::MeshNode& meshNode)
 {
     const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());
     const auto renderComponent = prev::scene::component::ComponentRepository<prev_test::component::render::IAnimationRenderComponent>::Instance().Get(node->GetId());
@@ -110,8 +110,8 @@ void AnimationShadowsRenderer::RenderMeshNode(const prev::render::RenderContext&
         for (size_t i = 0; i < bones.size(); i++) {
             uniforms.bones[i] = bones[i];
         }
-        uniforms.projectionMatrix = shadowsRenderContextUserData.projectionMatrix;
-        uniforms.viewMatrix = shadowsRenderContextUserData.viewMatrix;
+        uniforms.projectionMatrix = renderContext.projectionMatrix;
+        uniforms.viewMatrix = renderContext.viewMatrix;
         uniforms.modelMatrix = transformComponent->GetWorldTransformScaled() * meshNode.transform;
         ubo->Update(&uniforms);
 
@@ -129,7 +129,7 @@ void AnimationShadowsRenderer::RenderMeshNode(const prev::render::RenderContext&
     }
 
     for (const auto& childMeshNode : meshNode.children) {
-        RenderMeshNode(renderContext, node, shadowsRenderContextUserData, childMeshNode);
+        RenderMeshNode(renderContext, node, childMeshNode);
     }
 }
 } // namespace prev_test::render::renderer::shadow

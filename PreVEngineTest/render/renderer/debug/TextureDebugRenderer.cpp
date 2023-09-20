@@ -43,11 +43,11 @@ void TextureDebugRenderer::Init()
     m_quadModel = modelFactory.Create(std::move(quadMesh), *allocator);
 }
 
-void TextureDebugRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData)
+void TextureDebugRenderer::BeforeRender(const prev::render::RenderContext& renderContext)
 {
 }
 
-void TextureDebugRenderer::PreRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData)
+void TextureDebugRenderer::PreRender(const prev::render::RenderContext& renderContext)
 {
     const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
     const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
@@ -57,7 +57,7 @@ void TextureDebugRenderer::PreRender(const prev::render::RenderContext& renderCo
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void TextureDebugRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const prev::render::DefaultRenderContextUserData& renderContextUserData)
+void TextureDebugRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     const auto component = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::common::IOffScreenRenderPassComponent>({ TAG_WATER_REFLECTION_RENDER_COMPONENT });
 
@@ -74,11 +74,11 @@ void TextureDebugRenderer::Render(const prev::render::RenderContext& renderConte
     vkCmdDrawIndexed(renderContext.commandBuffer, m_quadModel->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
 }
 
-void TextureDebugRenderer::PostRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData)
+void TextureDebugRenderer::PostRender(const prev::render::RenderContext& renderContext)
 {
 }
 
-void TextureDebugRenderer::AfterRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData)
+void TextureDebugRenderer::AfterRender(const prev::render::RenderContext& renderContext)
 {
 }
 

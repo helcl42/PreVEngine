@@ -2,7 +2,7 @@
 #define __APP_H__
 
 #include "core/Engine.h"
-#include "render/IRenderer.h"
+#include "render/IRootRenderer.h"
 #include "scene/IScene.h"
 
 namespace prev {
@@ -22,7 +22,7 @@ public:
 protected:
     virtual std::shared_ptr<prev::scene::IScene> CreateScene() const = 0;
 
-    virtual std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData>> CreateRootRenderer() const = 0;
+    virtual std::shared_ptr<prev::render::IRootRenderer> CreateRootRenderer() const = 0;
 
 protected:
     std::unique_ptr<prev::core::Engine> m_engine{};

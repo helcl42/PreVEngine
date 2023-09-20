@@ -46,11 +46,11 @@ void TerrainParallaxMappedRenderer::Init()
     m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
-void TerrainParallaxMappedRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void TerrainParallaxMappedRenderer::BeforeRender(const NormalRenderContext& renderContext)
 {
 }
 
-void TerrainParallaxMappedRenderer::PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void TerrainParallaxMappedRenderer::PreRender(const NormalRenderContext& renderContext)
 {
     const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
     const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
@@ -60,12 +60,12 @@ void TerrainParallaxMappedRenderer::PreRender(const prev::render::RenderContext&
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void TerrainParallaxMappedRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData)
+void TerrainParallaxMappedRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAll({ TAG_TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
         bool visible{ true };
         if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContextUserData.frustum);
+            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContext.frustum);
         }
 
         if (visible) {
@@ -79,11 +79,11 @@ void TerrainParallaxMappedRenderer::Render(const prev::render::RenderContext& re
             auto uboVS = m_uniformsPoolVS->GetNext();
 
             UniformsVS uniformsVS{};
-            uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
-            uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
+            uniformsVS.projectionMatrix = renderContext.projectionMatrix;
+            uniformsVS.viewMatrix = renderContext.viewMatrix;
             uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
             uniformsVS.normalMatrix = glm::inverse(transformComponent->GetWorldTransformScaled());
-            uniformsVS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
+            uniformsVS.cameraPosition = glm::vec4(renderContext.cameraPosition, 1.0f);
             for (size_t i = 0; i < lightComponents.size(); i++) {
                 const auto& lightComponent{ lightComponents[i] };
                 uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponent->GetPosition(), 1.0f), glm::vec4(lightComponent->GetColor(), 1.0f), glm::vec4(lightComponent->GetAttenuation(), 1.0f));
@@ -92,7 +92,7 @@ void TerrainParallaxMappedRenderer::Render(const prev::render::RenderContext& re
             uniformsVS.lightning.ambientFactor = prev_test::component::light::AMBIENT_LIGHT_INTENSITY;
             uniformsVS.density = prev_test::component::sky::FOG_DENSITY;
             uniformsVS.gradient = prev_test::component::sky::FOG_GRADIENT;
-            uniformsVS.clipPlane = renderContextUserData.clipPlane;
+            uniformsVS.clipPlane = renderContext.clipPlane;
 
             uboVS->Update(&uniformsVS);
 
@@ -158,15 +158,15 @@ void TerrainParallaxMappedRenderer::Render(const prev::render::RenderContext& re
     }
 
     for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child, renderContextUserData);
+        Render(renderContext, child);
     }
 }
 
-void TerrainParallaxMappedRenderer::PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void TerrainParallaxMappedRenderer::PostRender(const NormalRenderContext& renderContext)
 {
 }
 
-void TerrainParallaxMappedRenderer::AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void TerrainParallaxMappedRenderer::AfterRender(const NormalRenderContext& renderContext)
 {
 }
 

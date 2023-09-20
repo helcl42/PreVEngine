@@ -42,11 +42,11 @@ void SkyBoxRenderer::Init()
     m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
-void SkyBoxRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void SkyBoxRenderer::BeforeRender(const NormalRenderContext& renderContext)
 {
 }
 
-void SkyBoxRenderer::PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void SkyBoxRenderer::PreRender(const NormalRenderContext& renderContext)
 {
     const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
     const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
@@ -56,7 +56,7 @@ void SkyBoxRenderer::PreRender(const prev::render::RenderContext& renderContext,
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void SkyBoxRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData)
+void SkyBoxRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAll({ TAG_SKYBOX_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
         const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());
@@ -65,8 +65,8 @@ void SkyBoxRenderer::Render(const prev::render::RenderContext& renderContext, co
         auto uboVS = m_uniformsPoolVS->GetNext();
 
         UniformsVS uniformsVS{};
-        uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
-        uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
+        uniformsVS.projectionMatrix = renderContext.projectionMatrix;
+        uniformsVS.viewMatrix = renderContext.viewMatrix;
         uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
 
         // TODO should we use CLIP_PLANE here?
@@ -97,15 +97,15 @@ void SkyBoxRenderer::Render(const prev::render::RenderContext& renderContext, co
     }
 
     for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child, renderContextUserData);
+        Render(renderContext, child);
     }
 }
 
-void SkyBoxRenderer::PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void SkyBoxRenderer::PostRender(const NormalRenderContext& renderContext)
 {
 }
 
-void SkyBoxRenderer::AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void SkyBoxRenderer::AfterRender(const NormalRenderContext& renderContext)
 {
 }
 

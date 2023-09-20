@@ -13,7 +13,7 @@ public:
 protected:
     std::shared_ptr<prev::scene::IScene> CreateScene() const override;
 
-    std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData>> CreateRootRenderer() const override;
+    std::shared_ptr<prev::render::IRootRenderer> CreateRootRenderer() const override;
 };
 } // namespace prev_test
 

@@ -1,12 +1,5 @@
 #include "MasterRenderer.h"
 #include "CommandBuffersGroupFactory.h"
-
-#include "../../common/intersection/Frustum.h"
-#include "../../component/camera/ICameraComponent.h"
-#include "../../component/common/IOffScreenRenderPassComponent.h"
-#include "../../component/shadow/IShadowsComponent.h"
-#include "../../component/water/IWaterComponent.h"
-#include "../../component/water/WaterCommon.h"
 #include "animation/AnimationConeStepMappedRenderer.h"
 #include "animation/AnimationNormalMappedRenderer.h"
 #include "animation/AnimationParallaxMappedRenderer.h"
@@ -40,6 +33,13 @@
 #include "terrain/TerrainRenderer.h"
 #include "water/WaterRenderer.h"
 
+#include "../../common/intersection/Frustum.h"
+#include "../../component/camera/ICameraComponent.h"
+#include "../../component/common/IOffScreenRenderPassComponent.h"
+#include "../../component/shadow/IShadowsComponent.h"
+#include "../../component/water/IWaterComponent.h"
+#include "../../component/water/WaterCommon.h"
+
 #include <prev/core/DeviceProvider.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 
@@ -59,40 +59,24 @@ void MasterRenderer::Init()
     InitRefraction();
 }
 
-void MasterRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData)
-{
-}
-
-void MasterRenderer::PreRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData)
-{
-}
-
-void MasterRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const prev::render::DefaultRenderContextUserData& renderContextUserData)
+void MasterRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::IScene>& scene)
 {
     // Shadows render pass
-    RenderShadows(renderContext, node);
+    RenderShadows(renderContext, scene->GetRootNode());
 
     // Reflection
-    RenderSceneReflection(renderContext, node);
+    RenderSceneReflection(renderContext, scene->GetRootNode());
 
     // Refraction
-    RenderSceneRefraction(renderContext, node);
+    RenderSceneRefraction(renderContext, scene->GetRootNode());
 
     // Default Scene Render
-    RenderScene(renderContext, node);
+    RenderScene(renderContext, scene->GetRootNode());
 
 #ifndef ANDROID
     // Debug quad with shadowMap
     // RenderDebug(renderContext, node);
 #endif
-}
-
-void MasterRenderer::PostRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData)
-{
-}
-
-void MasterRenderer::AfterRender(const prev::render::RenderContext& renderContext, const prev::render::DefaultRenderContextUserData& renderContextUserData)
-{
 }
 
 void MasterRenderer::ShutDown()
@@ -322,21 +306,21 @@ void MasterRenderer::RenderShadows(const prev::render::RenderContext& renderCont
 
         const auto& cascade{ shadows->GetCascade(cascadeIndex) };
 
-        const ShadowsRenderContextUserData userData{ cascade.viewMatrix, cascade.projectionMatrix, cascadeIndex, prev_test::common::intersection::Frustum{ cascade.projectionMatrix, cascade.viewMatrix } };
-        const prev::render::RenderContext customRenderContext{ cascade.frameBuffer, renderContext.commandBuffer, renderContext.frameInFlightIndex, { { 0, 0 }, shadows->GetExtent() } };
+        const prev::render::RenderContext customRenderContextBase{ cascade.frameBuffer, renderContext.commandBuffer, renderContext.frameInFlightIndex, { { 0, 0 }, shadows->GetExtent() } };
+        const ShadowsRenderContext customRenderContext{ customRenderContextBase, cascade.viewMatrix, cascade.projectionMatrix, cascadeIndex, prev_test::common::intersection::Frustum{ cascade.projectionMatrix, cascade.viewMatrix } };
 
         for (auto& renderer : m_shadowRenderers) {
-            renderer->BeforeRender(customRenderContext, userData);
+            renderer->BeforeRender(customRenderContext);
         }
 
 #ifdef PARALLEL_RENDERING
-        const auto& cascadeCommandBuffers{ m_shadowsCommandBufferGroups.at(cascadeIndex)->GetBuffersGroup(renderContext.frameInFlightIndex) };
-        RenderParallel(shadows->GetRenderPass(), customRenderContext, root, m_shadowRenderers, cascadeCommandBuffers, userData);
+        const auto& cascadeCommandBuffers{ m_shadowsCommandBufferGroups.at(cascadeIndex)->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
+        RenderParallel(shadows->GetRenderPass(), customRenderContext, root, m_shadowRenderers, cascadeCommandBuffers);
 #else
-        RenderSerial(shadows->GetRenderPass(), customRenderContext, root, m_shadowRenderers, userData);
+        RenderSerial(shadows->GetRenderPass(), customRenderContext, root, m_shadowRenderers);
 #endif
         for (auto& renderer : m_shadowRenderers) {
-            renderer->AfterRender(customRenderContext, userData);
+            renderer->AfterRender(customRenderContext);
         }
     }
 }
@@ -356,7 +340,10 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
     const glm::mat4 viewMatrix = glm::lookAt(newCameraPosition, newCameraViewPosition, cameraComponent->GetUpDirection());
     const glm::mat4 projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(reflectionComponent->GetExtent().width, reflectionComponent->GetExtent().height);
 
-    const NormalRenderContextUserData userData{
+    const prev::render::RenderContext customRenderContextBase{ reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, { { 0, 0 }, reflectionComponent->GetExtent() } };
+
+    const NormalRenderContext customRenderContext{
+        customRenderContextBase,
         viewMatrix,
         projectionMatrix,
         newCameraPosition,
@@ -365,21 +352,19 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
         prev_test::common::intersection::Frustum{ projectionMatrix, viewMatrix }
     };
 
-    const prev::render::RenderContext customRenderContext{ reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, { { 0, 0 }, reflectionComponent->GetExtent() } };
-
     for (auto& renderer : m_reflectionRenderers) {
-        renderer->BeforeRender(customRenderContext, userData);
+        renderer->BeforeRender(customRenderContext);
     }
 
 #ifdef PARALLEL_RENDERING
-    const auto& commandBuffers{ m_reflectionCommandBufferGroups->GetBuffersGroup(renderContext.frameInFlightIndex) };
-    RenderParallel(reflectionComponent->GetRenderPass(), customRenderContext, root, m_reflectionRenderers, commandBuffers, userData);
+    const auto& commandBuffers{ m_reflectionCommandBufferGroups->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
+    RenderParallel(reflectionComponent->GetRenderPass(), customRenderContext, root, m_reflectionRenderers, commandBuffers);
 #else
-    RenderSerial(reflectionComponent->GetRenderPass(), customRenderContext, root, m_reflectionRenderers, userData);
+    RenderSerial(reflectionComponent->GetRenderPass(), customRenderContext, root, m_reflectionRenderers);
 #endif
 
     for (auto& renderer : m_reflectionRenderers) {
-        renderer->AfterRender(customRenderContext, userData);
+        renderer->AfterRender(customRenderContext);
     }
 }
 
@@ -390,7 +375,11 @@ void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& re
 
     const auto& viewMatrix{ cameraComponent->LookAt() };
     const auto projectionMatrix{ cameraComponent->GetViewFrustum().CreateProjectionMatrix(refractionComponent->GetExtent().width, refractionComponent->GetExtent().height) };
-    const NormalRenderContextUserData userData{
+
+    const prev::render::RenderContext customRenderContextBase{ refractionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, { { 0, 0 }, refractionComponent->GetExtent() } };
+
+    const NormalRenderContext customRenderContext{
+        customRenderContextBase,
         viewMatrix,
         projectionMatrix,
         cameraComponent->GetPosition(),
@@ -399,21 +388,19 @@ void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& re
         prev_test::common::intersection::Frustum{ projectionMatrix, viewMatrix }
     };
 
-    const prev::render::RenderContext customRenderContext{ refractionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, { { 0, 0 }, refractionComponent->GetExtent() } };
-
     for (auto& renderer : m_refractionRenderers) {
-        renderer->BeforeRender(customRenderContext, userData);
+        renderer->BeforeRender(customRenderContext);
     }
 
 #ifdef PARALLEL_RENDERING
-    const auto& commandBuffers{ m_refractionCommandBufferGroups->GetBuffersGroup(renderContext.frameInFlightIndex) };
-    RenderParallel(refractionComponent->GetRenderPass(), customRenderContext, root, m_refractionRenderers, commandBuffers, userData);
+    const auto& commandBuffers{ m_refractionCommandBufferGroups->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
+    RenderParallel(refractionComponent->GetRenderPass(), customRenderContext, root, m_refractionRenderers, commandBuffers);
 #else
-    RenderSerial(refractionComponent->GetRenderPass(), customRenderContext, root, m_refractionRenderers, userData);
+    RenderSerial(refractionComponent->GetRenderPass(), customRenderContext, root, m_refractionRenderers);
 #endif
 
     for (auto& renderer : m_refractionRenderers) {
-        renderer->AfterRender(customRenderContext, userData);
+        renderer->AfterRender(customRenderContext);
     }
 }
 
@@ -423,7 +410,9 @@ void MasterRenderer::RenderScene(const prev::render::RenderContext& renderContex
 
     const auto& viewMatrix{ cameraComponent->LookAt() };
     const auto projectionMatrix{ cameraComponent->GetViewFrustum().CreateProjectionMatrix(renderContext.rect.extent.width, renderContext.rect.extent.height) };
-    const NormalRenderContextUserData userData{
+
+    const NormalRenderContext customRenderContext{
+        renderContext,
         viewMatrix,
         projectionMatrix,
         cameraComponent->GetPosition(),
@@ -433,18 +422,18 @@ void MasterRenderer::RenderScene(const prev::render::RenderContext& renderContex
     };
 
     for (auto& renderer : m_defaultRenderers) {
-        renderer->BeforeRender(renderContext, userData);
+        renderer->BeforeRender(customRenderContext);
     }
 
 #ifdef PARALLEL_RENDERING
-    const auto& commandBuffers{ m_defaultCommandBuffersGroup->GetBuffersGroup(renderContext.frameInFlightIndex) };
-    RenderParallel(m_defaultRenderPass, renderContext, root, m_defaultRenderers, commandBuffers, userData);
+    const auto& commandBuffers{ m_defaultCommandBuffersGroup->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
+    RenderParallel(m_defaultRenderPass, customRenderContext, root, m_defaultRenderers, commandBuffers);
 #else
-    RenderSerial(m_defaultRenderPass, renderContext, root, m_defaultRenderers, userData);
+    RenderSerial(m_defaultRenderPass, customRenderContext, root, m_defaultRenderers);
 #endif
 
     for (auto& renderer : m_defaultRenderers) {
-        renderer->AfterRender(renderContext, userData);
+        renderer->AfterRender(customRenderContext);
     }
 }
 
@@ -457,10 +446,10 @@ void MasterRenderer::RenderDebug(const prev::render::RenderContext& renderContex
     const prev::render::RenderContext customRenderContext{ renderContext.frameBuffer, renderContext.commandBuffer, renderContext.frameInFlightIndex, { { 0, 0 }, { renderContext.rect.extent.width / 2, renderContext.rect.extent.height / 2 } } };
 
 #ifdef PARALLEL_RENDERING
-    const auto& debugCommandBuffers{ m_debugCommandBuffersGroup->GetBuffersGroup(renderContext.frameInFlightIndex) };
-    RenderParallel(m_defaultRenderPass, customRenderContext, root, m_debugRenderers, debugCommandBuffers, {});
+    const auto& debugCommandBuffers{ m_debugCommandBuffersGroup->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
+    RenderParallel(m_defaultRenderPass, customRenderContext, root, m_debugRenderers, debugCommandBuffers);
 #else
-    RenderSerial(m_defaultRenderPass, customRenderContext, root, m_debugRenderers, {});
+    RenderSerial(m_defaultRenderPass, customRenderContext, root, m_debugRenderers);
 #endif
 
     for (auto& renderer : m_debugRenderers) {
