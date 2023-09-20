@@ -2,18 +2,18 @@
 #define __SKY_BOX_RENDEreR_H__
 
 #include "../../pipeline/IPipeline.h"
-#include "../RenderContextUserData.h"
+#include "../IRenderer.h"
+#include "../RenderContexts.h"
 
 #include "../../../General.h"
 
-#include <prev/render/IRenderer.h>
 #include <prev/render/buffer/UniformBuffer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
 
 namespace prev_test::render::renderer::sky {
-class SkyBoxRenderer final : public prev::render::IRenderer<NormalRenderContextUserData> {
+class SkyBoxRenderer final : public IRenderer<NormalRenderContext> {
 public:
     SkyBoxRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass);
 
@@ -22,15 +22,15 @@ public:
 public:
     void Init() override;
 
-    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override;
+    void BeforeRender(const NormalRenderContext& renderContext) override;
 
-    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override;
+    void PreRender(const NormalRenderContext& renderContext) override;
 
-    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData) override;
+    void Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node) override;
 
-    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override;
+    void PostRender(const NormalRenderContext& renderContext) override;
 
-    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override;
+    void AfterRender(const NormalRenderContext& renderContext) override;
 
     void ShutDown() override;
 

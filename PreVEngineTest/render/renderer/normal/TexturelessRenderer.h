@@ -3,20 +3,20 @@
 
 #include "../../IMesh.h"
 #include "../../pipeline/IPipeline.h"
-#include "../RenderContextUserData.h"
+#include "../IRenderer.h"
+#include "../RenderContexts.h"
 
 #include "../../../General.h"
 #include "../../../component/light/LightCommon.h"
 #include "../../../component/shadow/ShadowsCommon.h"
 
-#include <prev/render/IRenderer.h>
 #include <prev/render/buffer/UniformBuffer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
 
 namespace prev_test::render::renderer::normal {
-class TexturelessRenderer final : public prev::render::IRenderer<NormalRenderContextUserData> {
+class TexturelessRenderer final : public IRenderer<NormalRenderContext> {
 public:
     TexturelessRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass);
 
@@ -25,20 +25,20 @@ public:
 public:
     void Init() override;
 
-    void BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override;
+    void BeforeRender(const NormalRenderContext& renderContext) override;
 
-    void PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override;
+    void PreRender(const NormalRenderContext& renderContext) override;
 
-    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData) override;
+    void Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node) override;
 
-    void PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override;
+    void PostRender(const NormalRenderContext& renderContext) override;
 
-    void AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData) override;
+    void AfterRender(const NormalRenderContext& renderContext) override;
 
     void ShutDown() override;
 
 private:
-    void RenderMeshNode(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData, const prev_test::render::MeshNode& meshNode);
+    void RenderMeshNode(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const prev_test::render::MeshNode& meshNode);
 
 private:
     struct ShadowsCascadeUniform {

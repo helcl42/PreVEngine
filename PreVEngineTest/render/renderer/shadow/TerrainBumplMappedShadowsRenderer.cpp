@@ -39,11 +39,11 @@ void TerrainBumplMappedShadowsRenderer::Init()
     m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
-void TerrainBumplMappedShadowsRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext)
+void TerrainBumplMappedShadowsRenderer::BeforeRender(const ShadowsRenderContext& renderContext)
 {
 }
 
-void TerrainBumplMappedShadowsRenderer::PreRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext)
+void TerrainBumplMappedShadowsRenderer::PreRender(const ShadowsRenderContext& renderContext)
 {
     const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
     const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
@@ -53,12 +53,12 @@ void TerrainBumplMappedShadowsRenderer::PreRender(const prev::render::RenderCont
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void TerrainBumplMappedShadowsRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const ShadowsRenderContextUserData& shadowsRenderContext)
+void TerrainBumplMappedShadowsRenderer::Render(const ShadowsRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAll({ TAG_TRANSFORM_COMPONENT }) && node->GetTags().HasAny({ TAG_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT, TAG_TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT, TAG_TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT })) {
         bool visible{ true };
         if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);
+            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContext.frustum);
         }
 
         if (visible) {
@@ -67,8 +67,8 @@ void TerrainBumplMappedShadowsRenderer::Render(const prev::render::RenderContext
             auto ubo = m_uniformsPool->GetNext();
 
             Uniforms uniforms{};
-            uniforms.projectionMatrix = shadowsRenderContext.projectionMatrix;
-            uniforms.viewMatrix = shadowsRenderContext.viewMatrix;
+            uniforms.projectionMatrix = renderContext.projectionMatrix;
+            uniforms.viewMatrix = renderContext.viewMatrix;
             uniforms.modelMatrix = transformComponent->GetWorldTransformScaled();
             ubo->Update(&uniforms);
 
@@ -87,15 +87,15 @@ void TerrainBumplMappedShadowsRenderer::Render(const prev::render::RenderContext
     }
 
     for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child, shadowsRenderContext);
+        Render(renderContext, child);
     }
 }
 
-void TerrainBumplMappedShadowsRenderer::PostRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext)
+void TerrainBumplMappedShadowsRenderer::PostRender(const ShadowsRenderContext& renderContext)
 {
 }
 
-void TerrainBumplMappedShadowsRenderer::AfterRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData)
+void TerrainBumplMappedShadowsRenderer::AfterRender(const ShadowsRenderContext& renderContext)
 {
 }
 

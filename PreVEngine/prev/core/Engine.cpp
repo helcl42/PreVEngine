@@ -39,7 +39,7 @@ void Engine::InitScene(const std::shared_ptr<prev::scene::IScene>& scene)
     m_scene->Init();
 }
 
-void Engine::InitRenderer(const std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData>>& rootRenderer)
+void Engine::InitRenderer(const std::shared_ptr<prev::render::IRootRenderer>& rootRenderer)
 {
     m_rootRenderer = rootRenderer;
     m_rootRenderer->Init();
@@ -66,14 +66,7 @@ void Engine::MainLoop()
             uint32_t frameInFlightIndex;
             if (m_swapchain->BeginFrame(frameBuffer, commandBuffer, frameInFlightIndex)) {
                 const prev::render::RenderContext renderContext{ frameBuffer, commandBuffer, frameInFlightIndex, { { 0, 0 }, m_swapchain->GetExtent() } };
-
-                // TODO - this is still weird
-                m_rootRenderer->BeforeRender(renderContext);
-                m_rootRenderer->PreRender(renderContext);
-                m_rootRenderer->Render(renderContext, m_scene->GetRootNode());
-                m_rootRenderer->PostRender(renderContext);
-                m_rootRenderer->AfterRender(renderContext);
-
+                m_rootRenderer->Render(renderContext, m_scene);
                 m_swapchain->EndFrame();
             }
         } else {
@@ -115,7 +108,7 @@ std::shared_ptr<prev::render::pass::RenderPass> Engine::GetRenderPass() const
     return m_renderPass;
 }
 
-std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData>> Engine::GetRootRenderer() const
+std::shared_ptr<prev::render::IRootRenderer> Engine::GetRootRenderer() const
 {
     return m_rootRenderer;
 }

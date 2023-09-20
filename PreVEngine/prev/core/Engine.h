@@ -4,7 +4,7 @@
 #include "../core/instance/Instance.h"
 #include "../core/memory/Allocator.h"
 #include "../event/EventHandler.h"
-#include "../render/IRenderer.h"
+#include "../render/IRootRenderer.h"
 #include "../render/Swapchain.h"
 #include "../scene/IScene.h"
 #include "../scene/graph/ISceneNode.h"
@@ -27,7 +27,7 @@ public:
 
     void InitScene(const std::shared_ptr<prev::scene::IScene>& scene);
 
-    void InitRenderer(const std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData>>& rootRenderer);
+    void InitRenderer(const std::shared_ptr<prev::render::IRootRenderer>& rootRenderer);
 
     void MainLoop();
 
@@ -42,7 +42,7 @@ public:
 
     std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const;
 
-    std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData>> GetRootRenderer() const;
+    std::shared_ptr<prev::render::IRootRenderer> GetRootRenderer() const;
 
 public:
     void operator()(const prev::window::WindowChangeEvent& windowChangeEvent);
@@ -98,7 +98,7 @@ private:
 
     std::shared_ptr<prev::scene::IScene> m_scene{};
 
-    std::shared_ptr<prev::render::IRenderer<prev::render::DefaultRenderContextUserData>> m_rootRenderer{};
+    std::shared_ptr<prev::render::IRootRenderer> m_rootRenderer{};
 };
 } // namespace prev::core
 

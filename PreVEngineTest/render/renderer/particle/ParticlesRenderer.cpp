@@ -44,11 +44,11 @@ void ParticlesRenderer::Init()
     m_instanceDataBuffer = std::make_unique<prev::render::buffer::VertexBuffer>(*allocator);
 }
 
-void ParticlesRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void ParticlesRenderer::BeforeRender(const NormalRenderContext& renderContext)
 {
 }
 
-void ParticlesRenderer::PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void ParticlesRenderer::PreRender(const NormalRenderContext& renderContext)
 {
     const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
     const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
@@ -58,7 +58,7 @@ void ParticlesRenderer::PreRender(const prev::render::RenderContext& renderConte
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void ParticlesRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData)
+void ParticlesRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAll({ TAG_PARTICLE_SYSTEM_COMPONENT })) {
         const auto particlesComponent = prev::scene::component::ComponentRepository<prev_test::component::particle::IParticleSystemComponent>::Instance().Get(node->GetId());
@@ -68,7 +68,7 @@ void ParticlesRenderer::Render(const prev::render::RenderContext& renderContext,
             const size_t singleInstanceSizeInBytes = sizeof(glm::mat4) + sizeof(glm::vec2) + sizeof(glm::vec2) + sizeof(float);
             prev_test::render::VertexDataBuffer instanceDataBuffer(singleInstanceSizeInBytes * particles.size());
             for (const auto& particle : particles) {
-                instanceDataBuffer.Add(prev::util::math::CreateTransformationMatrix(particle->GetPosition(), glm::inverse(glm::quat_cast(renderContextUserData.viewMatrix)) * glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, particle->GetRotation()))), particle->GetScale()));
+                instanceDataBuffer.Add(prev::util::math::CreateTransformationMatrix(particle->GetPosition(), glm::inverse(glm::quat_cast(renderContext.viewMatrix)) * glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, particle->GetRotation()))), particle->GetScale()));
                 instanceDataBuffer.Add(particle->GetCurrentStageTextureOffset());
                 instanceDataBuffer.Add(particle->GetNextStageTextureOffset());
                 instanceDataBuffer.Add(particle->GetStagesBlendFactor());
@@ -77,8 +77,8 @@ void ParticlesRenderer::Render(const prev::render::RenderContext& renderContext,
 
             auto uboVS = m_uniformsPoolVS->GetNext();
             UniformsVS uniformsVS{};
-            uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
-            uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
+            uniformsVS.projectionMatrix = renderContext.projectionMatrix;
+            uniformsVS.viewMatrix = renderContext.viewMatrix;
             uniformsVS.textureNumberOfRows = particlesComponent->GetMaterial()->GetAtlasNumberOfRows();
             uboVS->Update(&uniformsVS);
 
@@ -101,21 +101,21 @@ void ParticlesRenderer::Render(const prev::render::RenderContext& renderContext,
             vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
             vkCmdBindVertexBuffers(renderContext.commandBuffer, 1, 1, instanceBuffers, offsets);
             vkCmdBindIndexBuffer(renderContext.commandBuffer, *particlesComponent->GetModel()->GetIndexBuffer(), 0, particlesComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-            // vkCmdDrawIndexed(renderContext.commandBuffer, particlesComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+
             vkCmdDrawIndexed(renderContext.commandBuffer, particlesComponent->GetModel()->GetIndexBuffer()->GetCount(), static_cast<uint32_t>(particles.size()), 0, 0, 0);
         }
     }
 
     for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child, renderContextUserData);
+        Render(renderContext, child);
     }
 }
 
-void ParticlesRenderer::PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void ParticlesRenderer::PostRender(const NormalRenderContext& renderContext)
 {
 }
 
-void ParticlesRenderer::AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void ParticlesRenderer::AfterRender(const NormalRenderContext& renderContext)
 {
 }
 

@@ -40,11 +40,11 @@ void BumpMappedShadowsRenderer::Init()
     m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
-void BumpMappedShadowsRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext)
+void BumpMappedShadowsRenderer::BeforeRender(const ShadowsRenderContext& renderContext)
 {
 }
 
-void BumpMappedShadowsRenderer::PreRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext)
+void BumpMappedShadowsRenderer::PreRender(const ShadowsRenderContext& renderContext)
 {
     const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
     const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
@@ -54,31 +54,31 @@ void BumpMappedShadowsRenderer::PreRender(const prev::render::RenderContext& ren
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void BumpMappedShadowsRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const ShadowsRenderContextUserData& shadowsRenderContext)
+void BumpMappedShadowsRenderer::Render(const ShadowsRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAll({ TAG_TRANSFORM_COMPONENT }) && node->GetTags().HasAny({ TAG_RENDER_NORMAL_MAPPED_COMPONENT, TAG_RENDER_PARALLAX_MAPPED_COMPONENT, TAG_RENDER_CONE_STEP_MAPPED_COMPONENT })) {
         bool visible{ true };
         if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);
+            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContext.frustum);
         }
 
         const auto renderComponent = prev::scene::component::ComponentRepository<prev_test::component::render::IRenderComponent>::Instance().Get(node->GetId());
         if (renderComponent->CastsShadows() && visible) {
             const auto nodeRenderComponent = prev::scene::component::ComponentRepository<prev_test::component::render::IRenderComponent>::Instance().Get(node->GetId());
-            RenderMeshNode(renderContext, node, shadowsRenderContext, nodeRenderComponent->GetModel()->GetMesh()->GetRootNode());
+            RenderMeshNode(renderContext, node, nodeRenderComponent->GetModel()->GetMesh()->GetRootNode());
         }
     }
 
     for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child, shadowsRenderContext);
+        Render(renderContext, child);
     }
 }
 
-void BumpMappedShadowsRenderer::PostRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext)
+void BumpMappedShadowsRenderer::PostRender(const ShadowsRenderContext& renderContext)
 {
 }
 
-void BumpMappedShadowsRenderer::AfterRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData)
+void BumpMappedShadowsRenderer::AfterRender(const ShadowsRenderContext& renderContext)
 {
 }
 
@@ -91,7 +91,7 @@ void BumpMappedShadowsRenderer::ShutDown()
     m_shader = nullptr;
 }
 
-void BumpMappedShadowsRenderer::RenderMeshNode(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const ShadowsRenderContextUserData& renderContextUserData, const prev_test::render::MeshNode& meshNode)
+void BumpMappedShadowsRenderer::RenderMeshNode(const ShadowsRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const prev_test::render::MeshNode& meshNode)
 {
     const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());
     const auto renderComponent = prev::scene::component::ComponentRepository<prev_test::component::render::IRenderComponent>::Instance().Get(node->GetId());
@@ -106,8 +106,8 @@ void BumpMappedShadowsRenderer::RenderMeshNode(const prev::render::RenderContext
         auto ubo = m_uniformsPool->GetNext();
 
         Uniforms uniforms{};
-        uniforms.projectionMatrix = renderContextUserData.projectionMatrix;
-        uniforms.viewMatrix = renderContextUserData.viewMatrix;
+        uniforms.projectionMatrix = renderContext.projectionMatrix;
+        uniforms.viewMatrix = renderContext.viewMatrix;
         uniforms.modelMatrix = transformComponent->GetWorldTransformScaled();
         ubo->Update(&uniforms);
 
@@ -125,7 +125,7 @@ void BumpMappedShadowsRenderer::RenderMeshNode(const prev::render::RenderContext
     }
 
     for (const auto& childMeshNode : meshNode.children) {
-        RenderMeshNode(renderContext, node, renderContextUserData, childMeshNode);
+        RenderMeshNode(renderContext, node, childMeshNode);
     }
 }
 } // namespace prev_test::render::renderer::shadow

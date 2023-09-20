@@ -9,7 +9,6 @@
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
-#include <prev/core/memory/buffer/UniformBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
@@ -37,21 +36,21 @@ void RayCastDebugRenderer::Init()
 
     LOGI("RayCast Debug Pipeline created\n");
 
-    m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS>>(*allocator);
+    m_uniformsPoolVS = std::make_unique<prev::render::buffer::UBOPool<UniformsVS>>(*allocator);
     m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
-    m_uniformsPoolGS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsGS>>(*allocator);
+    m_uniformsPoolGS = std::make_unique<prev::render::buffer::UBOPool<UniformsGS>>(*allocator);
     m_uniformsPoolGS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
-    m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS>>(*allocator);
+    m_uniformsPoolFS = std::make_unique<prev::render::buffer::UBOPool<UniformsFS>>(*allocator);
     m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
-void RayCastDebugRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void RayCastDebugRenderer::BeforeRender(const NormalRenderContext& renderContext)
 {
 }
 
-void RayCastDebugRenderer::PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void RayCastDebugRenderer::PreRender(const NormalRenderContext& renderContext)
 {
     const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
     const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
@@ -61,7 +60,7 @@ void RayCastDebugRenderer::PreRender(const prev::render::RenderContext& renderCo
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void RayCastDebugRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData)
+void RayCastDebugRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAll({ TAG_RAYCASTER_COMPONENT })) {
         const auto rayCastingComponent = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IRayCasterComponent>::Instance().Get(node->GetId());
@@ -76,8 +75,8 @@ void RayCastDebugRenderer::Render(const prev::render::RenderContext& renderConte
         auto uboGS = m_uniformsPoolGS->GetNext();
 
         UniformsGS uniformsGS{};
-        uniformsGS.projectionMatrix = renderContextUserData.projectionMatrix;
-        uniformsGS.viewMatrix = renderContextUserData.viewMatrix;
+        uniformsGS.projectionMatrix = renderContext.projectionMatrix;
+        uniformsGS.viewMatrix = renderContext.viewMatrix;
         uniformsGS.modelMatrix = glm::mat4(1.0f);
 
         uboGS->Update(&uniformsGS);
@@ -105,15 +104,15 @@ void RayCastDebugRenderer::Render(const prev::render::RenderContext& renderConte
     }
 
     for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child, renderContextUserData);
+        Render(renderContext, child);
     }
 }
 
-void RayCastDebugRenderer::PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void RayCastDebugRenderer::PostRender(const NormalRenderContext& renderContext)
 {
 }
 
-void RayCastDebugRenderer::AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void RayCastDebugRenderer::AfterRender(const NormalRenderContext& renderContext)
 {
 }
 

@@ -77,7 +77,7 @@ void SkyRenderer::Init()
     LOGI("Sky Composite Pipeline created\n");
 }
 
-void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
 {
     const auto skyComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::sky::ISkyComponent>({ TAG_SKY_RENDER_COMPONENT });
     const auto cloudsComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::cloud::ICloudsComponent>({ TAG_CLOUDS_COMPONENT });
@@ -110,13 +110,13 @@ void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext,
 
     UniformsSkyCS uniformsCS{};
     uniformsCS.resolution = glm::vec4(extent.width, extent.height, 0.0f, 0.0f);
-    uniformsCS.projectionMatrix = renderContextUserData.projectionMatrix;
-    uniformsCS.inverseProjectionMatrix = glm::inverse(renderContextUserData.projectionMatrix);
-    uniformsCS.viewMatrix = renderContextUserData.viewMatrix;
-    uniformsCS.inverseViewMatrix = glm::inverse(renderContextUserData.viewMatrix);
+    uniformsCS.projectionMatrix = renderContext.projectionMatrix;
+    uniformsCS.inverseProjectionMatrix = glm::inverse(renderContext.projectionMatrix);
+    uniformsCS.viewMatrix = renderContext.viewMatrix;
+    uniformsCS.inverseViewMatrix = glm::inverse(renderContext.viewMatrix);
     uniformsCS.lightColor = glm::vec4(mainLightComponent->GetColor(), 1.0f);
     uniformsCS.lightDirection = glm::vec4(-mainLightComponent->GetDirection(), 0.0f);
-    uniformsCS.cameraPosition = glm::vec4(renderContextUserData.cameraPosition, 1.0f);
+    uniformsCS.cameraPosition = glm::vec4(renderContext.cameraPosition, 1.0f);
     uniformsCS.baseCloudColor = cloudsComponent->GetColor();
     uniformsCS.skyColorBottom = glm::vec4(skyComponent->GetBottomColor(), 1.0f);
     uniformsCS.skyColorTop = glm::vec4(skyComponent->GetTopColor(), 1.0f);
@@ -160,7 +160,7 @@ void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext,
     // sky post process render
     auto uboPostCS = m_uniformsPoolSkyPostProcessCS->GetNext();
 
-    glm::vec4 lightPositionClipSpace = renderContextUserData.projectionMatrix * renderContextUserData.viewMatrix * glm::vec4(mainLightComponent->GetPosition(), 1.0f);
+    glm::vec4 lightPositionClipSpace = renderContext.projectionMatrix * renderContext.viewMatrix * glm::vec4(mainLightComponent->GetPosition(), 1.0f);
     glm::vec3 lightPositionNdc = lightPositionClipSpace / lightPositionClipSpace.w;
     glm::vec2 lightPositionO1 = lightPositionNdc * 0.5f + 0.5f;
 
@@ -168,7 +168,7 @@ void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext,
     uniformsPostCS.resolution = glm::vec4(extent.width, extent.height, 0.0f, 0.0f);
     uniformsPostCS.lisghtPosition = glm::vec4(lightPositionO1, 0.0f, 1.0f);
     uniformsPostCS.enableGodRays = 1;
-    uniformsPostCS.lightDotCameraForward = glm::dot(glm::normalize(renderContextUserData.cameraPosition - mainLightComponent->GetPosition()), glm::normalize(prev::util::math::GetForwardVector(renderContextUserData.viewMatrix)));
+    uniformsPostCS.lightDotCameraForward = glm::dot(glm::normalize(renderContext.cameraPosition - mainLightComponent->GetPosition()), glm::normalize(prev::util::math::GetForwardVector(renderContext.viewMatrix)));
 
     uboPostCS->Update(&uniformsPostCS);
 
@@ -190,7 +190,7 @@ void SkyRenderer::BeforeRender(const prev::render::RenderContext& renderContext,
     AddImageBufferPipelineBarrierCommand(m_skyCloudDistanceImageBuffer->GetImage(), VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, renderContext.commandBuffer);
 }
 
-void SkyRenderer::PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void SkyRenderer::PreRender(const NormalRenderContext& renderContext)
 {
     const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
     const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
@@ -200,7 +200,7 @@ void SkyRenderer::PreRender(const prev::render::RenderContext& renderContext, co
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void SkyRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData)
+void SkyRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAll({ TAG_SKY_RENDER_COMPONENT })) {
         const auto skyComponent = prev::scene::component::ComponentRepository<prev_test::component::sky::ISkyComponent>::Instance().Get(node->GetId());
@@ -220,15 +220,15 @@ void SkyRenderer::Render(const prev::render::RenderContext& renderContext, const
     }
 
     for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child, renderContextUserData);
+        Render(renderContext, child);
     }
 }
 
-void SkyRenderer::PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void SkyRenderer::PostRender(const NormalRenderContext& renderContext)
 {
 }
 
-void SkyRenderer::AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void SkyRenderer::AfterRender(const NormalRenderContext& renderContext)
 {
 }
 

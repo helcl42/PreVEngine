@@ -39,11 +39,11 @@ void TerrainShadowsRenderer::Init()
     m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
-void TerrainShadowsRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext)
+void TerrainShadowsRenderer::BeforeRender(const ShadowsRenderContext& renderContext)
 {
 }
 
-void TerrainShadowsRenderer::PreRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext)
+void TerrainShadowsRenderer::PreRender(const ShadowsRenderContext& renderContext)
 {
     const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
     const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
@@ -53,12 +53,12 @@ void TerrainShadowsRenderer::PreRender(const prev::render::RenderContext& render
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void TerrainShadowsRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const ShadowsRenderContextUserData& shadowsRenderContext)
+void TerrainShadowsRenderer::Render(const ShadowsRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAll({ TAG_TERRAIN_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
         bool visible{ true };
         if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(shadowsRenderContext.frustum);
+            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContext.frustum);
         }
 
         if (visible) {
@@ -67,8 +67,8 @@ void TerrainShadowsRenderer::Render(const prev::render::RenderContext& renderCon
             auto ubo = m_uniformsPool->GetNext();
 
             Uniforms uniforms{};
-            uniforms.projectionMatrix = shadowsRenderContext.projectionMatrix;
-            uniforms.viewMatrix = shadowsRenderContext.viewMatrix;
+            uniforms.projectionMatrix = renderContext.projectionMatrix;
+            uniforms.viewMatrix = renderContext.viewMatrix;
             uniforms.modelMatrix = transformComponent->GetWorldTransformScaled();
             ubo->Update(&uniforms);
 
@@ -87,15 +87,15 @@ void TerrainShadowsRenderer::Render(const prev::render::RenderContext& renderCon
     }
 
     for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child, shadowsRenderContext);
+        Render(renderContext, child);
     }
 }
 
-void TerrainShadowsRenderer::PostRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& shadowsRenderContext)
+void TerrainShadowsRenderer::PostRender(const ShadowsRenderContext& renderContext)
 {
 }
 
-void TerrainShadowsRenderer::AfterRender(const prev::render::RenderContext& renderContext, const ShadowsRenderContextUserData& renderContextUserData)
+void TerrainShadowsRenderer::AfterRender(const ShadowsRenderContext& renderContext)
 {
 }
 

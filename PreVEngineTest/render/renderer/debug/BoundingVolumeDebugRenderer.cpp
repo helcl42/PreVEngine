@@ -10,7 +10,6 @@
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
-#include <prev/core/memory/buffer/UniformBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
@@ -38,18 +37,18 @@ void BoundingVolumeDebugRenderer::Init()
 
     LOGI("Bounding Volume Debug Pipeline created\n");
 
-    m_uniformsPoolVS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsVS>>(*allocator);
+    m_uniformsPoolVS = std::make_unique<prev::render::buffer::UBOPool<UniformsVS>>(*allocator);
     m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
-    m_uniformsPoolFS = std::make_unique<prev::core::memory::buffer::UBOPool<UniformsFS>>(*allocator);
+    m_uniformsPoolFS = std::make_unique<prev::render::buffer::UBOPool<UniformsFS>>(*allocator);
     m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
-void BoundingVolumeDebugRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void BoundingVolumeDebugRenderer::BeforeRender(const NormalRenderContext& renderContext)
 {
 }
 
-void BoundingVolumeDebugRenderer::PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void BoundingVolumeDebugRenderer::PreRender(const NormalRenderContext& renderContext)
 {
     const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
     const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
@@ -59,7 +58,7 @@ void BoundingVolumeDebugRenderer::PreRender(const prev::render::RenderContext& r
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void BoundingVolumeDebugRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData)
+void BoundingVolumeDebugRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAll({ TAG_BOUNDING_VOLUME_COMPONENT })) {
         const auto boundingVolumeComponent = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId());
@@ -67,8 +66,8 @@ void BoundingVolumeDebugRenderer::Render(const prev::render::RenderContext& rend
         auto uboVS = m_uniformsPoolVS->GetNext();
 
         UniformsVS uniformsVS{};
-        uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
-        uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
+        uniformsVS.projectionMatrix = renderContext.projectionMatrix;
+        uniformsVS.viewMatrix = renderContext.viewMatrix;
         uniformsVS.modelMatrix = glm::mat4(1.0f);
 
         uboVS->Update(&uniformsVS);
@@ -97,15 +96,15 @@ void BoundingVolumeDebugRenderer::Render(const prev::render::RenderContext& rend
     }
 
     for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child, renderContextUserData);
+        Render(renderContext, child);
     }
 }
 
-void BoundingVolumeDebugRenderer::PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void BoundingVolumeDebugRenderer::PostRender(const NormalRenderContext& renderContext)
 {
 }
 
-void BoundingVolumeDebugRenderer::AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void BoundingVolumeDebugRenderer::AfterRender(const NormalRenderContext& renderContext)
 {
 }
 

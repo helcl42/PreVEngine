@@ -50,11 +50,11 @@ void SelectionDebugRenderer::Init()
     m_selectionPointModel = modelFactoru.Create(std::move(mesh), *allocator);
 }
 
-void SelectionDebugRenderer::BeforeRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void SelectionDebugRenderer::BeforeRender(const NormalRenderContext& renderContext)
 {
 }
 
-void SelectionDebugRenderer::PreRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void SelectionDebugRenderer::PreRender(const NormalRenderContext& renderContext)
 {
     const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
     const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
@@ -64,7 +64,7 @@ void SelectionDebugRenderer::PreRender(const prev::render::RenderContext& render
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void SelectionDebugRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const NormalRenderContextUserData& renderContextUserData)
+void SelectionDebugRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAll({ TAG_SELECTABLE_COMPONENT })) {
         const auto selectableComponent = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::ISelectableComponent>::Instance().Get(node->GetId());
@@ -72,8 +72,8 @@ void SelectionDebugRenderer::Render(const prev::render::RenderContext& renderCon
             auto uboVS = m_uniformsPoolVS->GetNext();
 
             UniformsVS uniformsVS{};
-            uniformsVS.projectionMatrix = renderContextUserData.projectionMatrix;
-            uniformsVS.viewMatrix = renderContextUserData.viewMatrix;
+            uniformsVS.projectionMatrix = renderContext.projectionMatrix;
+            uniformsVS.viewMatrix = renderContext.viewMatrix;
             uniformsVS.modelMatrix = prev::util::math::CreateTransformationMatrix(selectableComponent->GetPostiion(), glm::quat(), 0.6f);
 
             uboVS->Update(&uniformsVS);
@@ -101,15 +101,15 @@ void SelectionDebugRenderer::Render(const prev::render::RenderContext& renderCon
     }
 
     for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child, renderContextUserData);
+        Render(renderContext, child);
     }
 }
 
-void SelectionDebugRenderer::PostRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void SelectionDebugRenderer::PostRender(const NormalRenderContext& renderContext)
 {
 }
 
-void SelectionDebugRenderer::AfterRender(const prev::render::RenderContext& renderContext, const NormalRenderContextUserData& renderContextUserData)
+void SelectionDebugRenderer::AfterRender(const NormalRenderContext& renderContext)
 {
 }
 
