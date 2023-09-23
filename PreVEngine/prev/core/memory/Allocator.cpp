@@ -352,7 +352,7 @@ void Allocator::TransitionImageLayout(const VkImage image, const VkImageLayout o
 #if defined(__ANDROID__)
         if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
 #else
-        if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL || newLayout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL) {
+        if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL || newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL || newLayout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL) {
 #endif
             barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
             if (HasStencilComponent(format)) {
@@ -362,8 +362,13 @@ void Allocator::TransitionImageLayout(const VkImage image, const VkImageLayout o
             barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         }
 
+#if defined(__ANDROID__)
         VkPipelineStageFlags srcStage{ 0 };
         VkPipelineStageFlags dstStage{ 0 };
+#else
+        VkPipelineStageFlags srcStage{ VK_PIPELINE_STAGE_NONE };
+        VkPipelineStageFlags dstStage{ VK_PIPELINE_STAGE_NONE };
+#endif
         if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
             barrier.srcAccessMask = 0;
             barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
