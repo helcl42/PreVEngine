@@ -112,14 +112,14 @@ Win32WindowImpl::Win32WindowImpl(const WindowInfo& windowInfo)
     }
 
     RECT windowRect;
-    windowRect.left = m_info.position.x;
-    windowRect.top = m_info.position.y;
+    windowRect.left = 0;
+    windowRect.top = 0;
     windowRect.right = static_cast<long>(m_info.size.width);
     windowRect.bottom = static_cast<long>(m_info.size.height);
 
     AdjustWindowRectEx(&windowRect, dwStyle, FALSE, dwExStyle);
 
-    m_hWnd = CreateWindowEx(0, m_info.title.c_str(), m_info.title.c_str(), dwStyle | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0, 0, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, NULL, NULL, m_hInstance, NULL);
+    m_hWnd = CreateWindowEx(0, m_info.title.c_str(), m_info.title.c_str(), dwStyle, 0, 0, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, NULL, NULL, m_hInstance, NULL);
     assert(m_hWnd && "Failed to create a window.");
 
     ShowWindow(m_hWnd, SW_SHOW);
