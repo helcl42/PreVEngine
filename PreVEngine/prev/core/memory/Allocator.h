@@ -56,11 +56,13 @@ private:
 
     prev::core::device::Queue& m_queue;
 
-    VkCommandPool m_commandPool;
+    VkCommandPool m_commandPool{};
 
-    VkCommandBuffer m_commandBuffer;
+    VkCommandBuffer m_commandBuffer{};
 
-    VmaAllocator m_allocator;
+    VkFence m_fence{};
+
+    VmaAllocator m_allocator{};
 };
 } // namespace prev::core::memory
 

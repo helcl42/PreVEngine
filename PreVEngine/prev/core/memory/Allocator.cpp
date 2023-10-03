@@ -24,6 +24,7 @@ Allocator::Allocator(prev::core::instance::Instance& instance, prev::core::devic
 {
     m_commandPool = m_queue.CreateCommandPool();
     m_commandBuffer = prev::util::vk::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+    m_fence = prev::util::vk::CreateFence(m_device);
 
     VmaAllocatorCreateInfo allocatorInfo = {};
     allocatorInfo.instance = m_instance;
@@ -58,12 +59,16 @@ Allocator::Allocator(prev::core::instance::Instance& instance, prev::core::devic
 
 Allocator::~Allocator()
 {
+    if (m_fence) {
+        vkDestroyFence(m_device, m_fence, VK_NULL_HANDLE);
+    }
+
     if (m_commandBuffer) {
         vkFreeCommandBuffers(m_device, m_commandPool, 1, &m_commandBuffer);
     }
 
     if (m_commandPool) {
-        vkDestroyCommandPool(m_device, m_commandPool, nullptr);
+        vkDestroyCommandPool(m_device, m_commandPool, VK_NULL_HANDLE);
     }
 
     if (m_allocator) {
@@ -245,7 +250,7 @@ void Allocator::GenerateMipmaps(const VkImage image, VkFormat imageFormat, const
 
     if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) {
         LOGE("Texture image format does not support linear blitting!");
-        exit(0);
+        return;
     }
 
     BeginCommandBuffer();
@@ -445,12 +450,13 @@ void Allocator::EndCommandBuffer()
 {
     VKERRCHECK(vkEndCommandBuffer(m_commandBuffer));
 
+    vkResetFences(m_device, 1, &m_fence);
+
     VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &m_commandBuffer;
-    VKERRCHECK(vkQueueSubmit(m_queue, 1, &submitInfo, VK_NULL_HANDLE));
-
-    VKERRCHECK(vkQueueWaitIdle(m_queue));
+    VKERRCHECK(vkQueueSubmit(m_queue, 1, &submitInfo, m_fence));
+    VKERRCHECK(vkWaitForFences(m_device, 1, &m_fence, VK_TRUE, UINT64_MAX));
 }
 
 } // namespace prev::core::memory
