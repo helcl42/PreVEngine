@@ -14,21 +14,27 @@
 
 namespace prev::render {
 struct SwapchainBuffer {
-    VkImage image;
+    VkImage image{};
 
-    VkImageView view;
+    VkImageView view{};
 
-    VkExtent2D extent;
+    VkExtent2D extent{};
 
-    VkFramebuffer framebuffer;
+    VkFramebuffer framebuffer{};
 
-    VkCommandBuffer commandBuffer;
+    VkCommandBuffer commandBuffer{};
 
-    VkFence fence;
+    VkSemaphore acquireSemaphore{}; // wait
+
+    VkSemaphore submitSemaphore{}; // signal
+
+    VkFence fence{};
 
     void Destroy(VkDevice device)
     {
         vkDestroyFence(device, fence, nullptr);
+        vkDestroySemaphore(device, submitSemaphore, nullptr);
+        vkDestroySemaphore(device, acquireSemaphore, nullptr);
         vkDestroyFramebuffer(device, framebuffer, nullptr);
         vkDestroyImageView(device, view, nullptr);
     }
@@ -63,8 +69,6 @@ public:
     uint32_t GetImageCount() const;
 
 private:
-    void Init();
-
     void Apply();
 
     bool AcquireNext(SwapchainBuffer& next);
@@ -105,10 +109,6 @@ private:
     uint32_t m_acquiredIndex; // index of last acquired image
 
     bool m_isAcquired;
-
-    VkSemaphore m_acquireSemaphore;
-
-    VkSemaphore m_submitSemaphore;
 
     uint32_t m_currentFrameIndex;
 
