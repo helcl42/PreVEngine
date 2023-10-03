@@ -61,10 +61,6 @@ Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allo
         m_msaaDepthBuffer = imageBufferFactory.CreateDepth(buffer::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, m_renderPass.GetDepthFormat(), m_sampleCount, 0, false, VK_IMAGE_VIEW_TYPE_2D }, m_allocator);
     }
 
-    VkSemaphoreCreateInfo semaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
-    VKERRCHECK(vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_acquireSemaphore));
-    VKERRCHECK(vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_submitSemaphore));
-
     Apply();
 }
 
@@ -74,14 +70,6 @@ Swapchain::~Swapchain()
 
     if (m_commandPool != VK_NULL_HANDLE) {
         vkDestroyCommandPool(m_device, m_commandPool, nullptr);
-    }
-
-    if (m_submitSemaphore != VK_NULL_HANDLE) {
-        vkDestroySemaphore(m_device, m_submitSemaphore, nullptr);
-    }
-
-    if (m_acquireSemaphore != VK_NULL_HANDLE) {
-        vkDestroySemaphore(m_device, m_acquireSemaphore, nullptr);
     }
 
     if (m_swapchain != VK_NULL_HANDLE) {
@@ -179,6 +167,7 @@ bool Swapchain::SetPresentMode(VkPresentModeKHR preferredMode)
     for (const auto& m : modes) {
         if (m == preferredMode) {
             mode = preferredMode; // if prefered mode is available, select it.
+            break;
         }
     }
 
@@ -268,7 +257,9 @@ void Swapchain::Apply()
         swapchainBuffer.view = imageView;
         swapchainBuffer.framebuffer = util::vk::CreateFrameBuffer(m_device, m_renderPass, swapchainImageViews, m_swapchainCreateInfo.imageExtent);
         swapchainBuffer.commandBuffer = util::vk::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-        swapchainBuffer.fence = util::vk::CreateFence(m_device);
+        swapchainBuffer.fence = util::vk::CreateFence(m_device, VK_FENCE_CREATE_SIGNALED_BIT);
+        swapchainBuffer.acquireSemaphore = util::vk::CreateSemaphore(m_device);
+        swapchainBuffer.submitSemaphore = util::vk::CreateSemaphore(m_device);
         swapchainBuffer.extent = m_swapchainCreateInfo.imageExtent;
     }
 
@@ -300,10 +291,14 @@ std::vector<VkImage> Swapchain::GetSwapchainImages() const
 
 bool Swapchain::AcquireNext(SwapchainBuffer& next)
 {
-    ASSERT(!m_isAcquired, "CSwapchain: Previous swapchain buffer has not yet been presented.\n");
+    ASSERT(!m_isAcquired, "Swapchain: Previous swapchain buffer has not yet been presented.\n");
+
+    const auto& swapchainBuffer{ m_swapchainBuffers.at(m_currentFrameIndex) };
+
+    VKERRCHECK(vkWaitForFences(m_device, 1, &swapchainBuffer.fence, VK_TRUE, UINT64_MAX));
 
     uint32_t acquireIndex;
-    const auto result{ vkAcquireNextImageKHR(m_device, m_swapchain, UINT64_MAX, m_acquireSemaphore, VK_NULL_HANDLE, &acquireIndex) };
+    const auto result{ vkAcquireNextImageKHR(m_device, m_swapchain, UINT64_MAX, swapchainBuffer.acquireSemaphore, VK_NULL_HANDLE, &acquireIndex) };
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
         UpdateExtent();
         return false;
@@ -311,13 +306,10 @@ bool Swapchain::AcquireNext(SwapchainBuffer& next)
         ASSERT(true, "failed to acquire swap chain image!");
     }
 
+    VKERRCHECK(vkResetFences(m_device, 1, &swapchainBuffer.fence));
+
     m_acquiredIndex = acquireIndex;
     m_isAcquired = true;
-
-    const auto& swapchainBuffer{ m_swapchainBuffers.at(m_acquiredIndex) };
-
-    VKERRCHECK(vkWaitForFences(m_device, 1, &swapchainBuffer.fence, VK_TRUE, UINT64_MAX));
-
     next = swapchainBuffer;
 
     return true;
@@ -325,33 +317,33 @@ bool Swapchain::AcquireNext(SwapchainBuffer& next)
 
 void Swapchain::Submit()
 {
-    ASSERT(!!m_isAcquired, "CSwapchain: A buffer must be acquired before submitting.\n");
+    ASSERT(!!m_isAcquired, "Swapchain: A buffer must be acquired before submitting.\n");
 
-    const auto& swapchainBuffer{ m_swapchainBuffers[m_acquiredIndex] };
+    const auto& swapchainBuffer{ m_swapchainBuffers[m_currentFrameIndex] };
 
     VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
     VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
     submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = &m_acquireSemaphore;
+    submitInfo.pWaitSemaphores = &swapchainBuffer.acquireSemaphore;
     submitInfo.pWaitDstStageMask = waitStages;
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &swapchainBuffer.commandBuffer;
     submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = &m_submitSemaphore;
-
-    VKERRCHECK(vkResetFences(m_device, 1, &swapchainBuffer.fence));
+    submitInfo.pSignalSemaphores = &swapchainBuffer.submitSemaphore;
 
     VKERRCHECK(vkQueueSubmit(*m_graphicsQueue, 1, &submitInfo, swapchainBuffer.fence));
 }
 
 void Swapchain::Present()
 {
-    ASSERT(!!m_isAcquired, "CSwapchain: A buffer must be acquired before presenting.\n");
+    ASSERT(!!m_isAcquired, "Swapchain: A buffer must be acquired before presenting.\n");
+
+    const auto& swapchainBuffer{ m_swapchainBuffers[m_currentFrameIndex] };
 
     VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
     presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = &m_submitSemaphore;
+    presentInfo.pWaitSemaphores = &swapchainBuffer.submitSemaphore;
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = &m_swapchain;
     presentInfo.pImageIndices = &m_acquiredIndex;
@@ -359,8 +351,10 @@ void Swapchain::Present()
     const auto result{ vkQueuePresentKHR(*m_presentQueue, &presentInfo) };
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
         UpdateExtent();
-    } else {
+    } else if (result != VK_SUCCESS) {
         ShowVkResult(result);
+    } else {
+        m_currentFrameIndex = (m_currentFrameIndex + 1) % m_swapchainImagesCount;
     }
 
     m_isAcquired = false;
@@ -385,12 +379,10 @@ bool Swapchain::BeginFrame(VkFramebuffer& frmmeBuffer, VkCommandBuffer& commandB
 
 void Swapchain::EndFrame()
 {
-    auto& swapchainBuffer = m_swapchainBuffers[m_acquiredIndex];
+    const auto& swapchainBuffer{ m_swapchainBuffers[m_currentFrameIndex] };
     VKERRCHECK(vkEndCommandBuffer(swapchainBuffer.commandBuffer));
 
     Submit();
     Present();
-
-    m_currentFrameIndex = (m_currentFrameIndex + 1) % m_swapchainImagesCount;
 }
 } // namespace prev::render
