@@ -108,6 +108,17 @@ VkFence CreateFence(const VkDevice device, const VkFenceCreateFlags createFlags)
     return fence;
 }
 
+VkSemaphore CreateSemaphore(const VkDevice device, const VkSemaphoreCreateFlags createFlags)
+{
+    VkSemaphore semaphore;
+
+    VkSemaphoreCreateInfo createInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
+    createInfo.flags = createFlags;
+    VKERRCHECK(vkCreateSemaphore(device, &createInfo, nullptr, &semaphore));
+
+    return semaphore;
+}
+
 VkDescriptorSetLayoutBinding CreteDescriptorSetLayoutBinding(const uint32_t binding, const VkDescriptorType descType, const uint32_t descCount, const VkShaderStageFlags stageFlags, const VkSampler* immutableSamplers)
 {
     VkDescriptorSetLayoutBinding vertexZeroLayoutBinding = {};

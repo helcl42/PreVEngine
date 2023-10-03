@@ -6,6 +6,8 @@
 
 #include <vector>
 
+#undef CreateSemaphore
+
 namespace prev::util::vk {
 
 uint32_t FindMemoryType(const VkPhysicalDevice gpu, const uint32_t typeFilter, const VkMemoryPropertyFlags properties);
@@ -19,6 +21,8 @@ VkFramebuffer CreateFrameBuffer(const VkDevice device, const VkRenderPass& rende
 VkCommandBuffer CreateCommandBuffer(const VkDevice device, const VkCommandPool commandPool, const VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
 VkFence CreateFence(const VkDevice device, const VkFenceCreateFlags createFlags = VK_FENCE_CREATE_SIGNALED_BIT);
+
+VkSemaphore CreateSemaphore(const VkDevice device, const VkSemaphoreCreateFlags createFlags = 0);
 
 VkDescriptorSetLayoutBinding CreteDescriptorSetLayoutBinding(const uint32_t binding, const VkDescriptorType descType, const uint32_t descCount, const VkShaderStageFlags stageFlags, const VkSampler* immutableSamplers = nullptr);
 
