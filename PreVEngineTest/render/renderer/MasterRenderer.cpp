@@ -185,8 +185,8 @@ void MasterRenderer::InitShadows()
     m_shadowRenderers.emplace_back(std::make_unique<prev_test::render::renderer::shadow::AnimationShadowsRenderer>(shadowsComponent->GetRenderPass()));
     m_shadowRenderers.emplace_back(std::make_unique<prev_test::render::renderer::shadow::AnimationBumpMappedShadowsRenderer>(shadowsComponent->GetRenderPass()));
 
-    for (auto& shadowRenderer : m_shadowRenderers) {
-        shadowRenderer->Init();
+    for (auto& renderer : m_shadowRenderers) {
+        renderer->Init();
     }
 
 #ifdef PARALLEL_RENDERING
@@ -232,8 +232,8 @@ void MasterRenderer::InitReflection()
     m_reflectionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::animation::AnimationConeStepMappedRenderer>(reflectionComponent->GetRenderPass()));
     m_reflectionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::particle::ParticlesRenderer>(reflectionComponent->GetRenderPass()));
 
-    for (auto& shadowRenderer : m_reflectionRenderers) {
-        shadowRenderer->Init();
+    for (auto& renderer : m_reflectionRenderers) {
+        renderer->Init();
     }
 
 #ifdef PARALLEL_RENDERING
@@ -277,8 +277,8 @@ void MasterRenderer::InitRefraction()
     m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::animation::AnimationConeStepMappedRenderer>(refractionComponent->GetRenderPass()));
     m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::particle::ParticlesRenderer>(refractionComponent->GetRenderPass()));
 
-    for (auto& shadowRenderer : m_refractionRenderers) {
-        shadowRenderer->Init();
+    for (auto& renderer : m_refractionRenderers) {
+        renderer->Init();
     }
 
 #ifdef PARALLEL_RENDERING
@@ -309,19 +309,12 @@ void MasterRenderer::RenderShadows(const prev::render::RenderContext& renderCont
         const prev::render::RenderContext customRenderContextBase{ cascade.frameBuffer, renderContext.commandBuffer, renderContext.frameInFlightIndex, { { 0, 0 }, shadows->GetExtent() } };
         const ShadowsRenderContext customRenderContext{ customRenderContextBase, cascade.viewMatrix, cascade.projectionMatrix, cascadeIndex, prev_test::common::intersection::Frustum{ cascade.projectionMatrix, cascade.viewMatrix } };
 
-        for (auto& renderer : m_shadowRenderers) {
-            renderer->BeforeRender(customRenderContext);
-        }
-
 #ifdef PARALLEL_RENDERING
         const auto& cascadeCommandBuffers{ m_shadowsCommandBufferGroups.at(cascadeIndex)->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
         RenderParallel(shadows->GetRenderPass(), customRenderContext, root, m_shadowRenderers, cascadeCommandBuffers);
 #else
         RenderSerial(shadows->GetRenderPass(), customRenderContext, root, m_shadowRenderers);
 #endif
-        for (auto& renderer : m_shadowRenderers) {
-            renderer->AfterRender(customRenderContext);
-        }
     }
 }
 
@@ -337,8 +330,8 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
 
     const glm::vec3 newCameraPosition{ cameraPosition.x, cameraPosition.y - cameraPositionOffset, cameraPosition.z };
     const glm::vec3 newCameraViewPosition{ cameraViewPosition.x, cameraViewPosition.y + cameraViewOffset, cameraViewPosition.z };
-    const glm::mat4 viewMatrix = glm::lookAt(newCameraPosition, newCameraViewPosition, cameraComponent->GetUpDirection());
-    const glm::mat4 projectionMatrix = cameraComponent->GetViewFrustum().CreateProjectionMatrix(reflectionComponent->GetExtent().width, reflectionComponent->GetExtent().height);
+    const glm::mat4 viewMatrix{ glm::lookAt(newCameraPosition, newCameraViewPosition, cameraComponent->GetUpDirection()) };
+    const glm::mat4 projectionMatrix{ cameraComponent->GetViewFrustum().CreateProjectionMatrix(reflectionComponent->GetExtent().width, reflectionComponent->GetExtent().height) };
 
     const prev::render::RenderContext customRenderContextBase{ reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, { { 0, 0 }, reflectionComponent->GetExtent() } };
 
@@ -352,20 +345,12 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
         prev_test::common::intersection::Frustum{ projectionMatrix, viewMatrix }
     };
 
-    for (auto& renderer : m_reflectionRenderers) {
-        renderer->BeforeRender(customRenderContext);
-    }
-
 #ifdef PARALLEL_RENDERING
     const auto& commandBuffers{ m_reflectionCommandBufferGroups->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
     RenderParallel(reflectionComponent->GetRenderPass(), customRenderContext, root, m_reflectionRenderers, commandBuffers);
 #else
     RenderSerial(reflectionComponent->GetRenderPass(), customRenderContext, root, m_reflectionRenderers);
 #endif
-
-    for (auto& renderer : m_reflectionRenderers) {
-        renderer->AfterRender(customRenderContext);
-    }
 }
 
 void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root)
@@ -388,20 +373,12 @@ void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& re
         prev_test::common::intersection::Frustum{ projectionMatrix, viewMatrix }
     };
 
-    for (auto& renderer : m_refractionRenderers) {
-        renderer->BeforeRender(customRenderContext);
-    }
-
 #ifdef PARALLEL_RENDERING
     const auto& commandBuffers{ m_refractionCommandBufferGroups->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
     RenderParallel(refractionComponent->GetRenderPass(), customRenderContext, root, m_refractionRenderers, commandBuffers);
 #else
     RenderSerial(refractionComponent->GetRenderPass(), customRenderContext, root, m_refractionRenderers);
 #endif
-
-    for (auto& renderer : m_refractionRenderers) {
-        renderer->AfterRender(customRenderContext);
-    }
 }
 
 void MasterRenderer::RenderScene(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root)
@@ -421,28 +398,16 @@ void MasterRenderer::RenderScene(const prev::render::RenderContext& renderContex
         prev_test::common::intersection::Frustum{ projectionMatrix, viewMatrix }
     };
 
-    for (auto& renderer : m_defaultRenderers) {
-        renderer->BeforeRender(customRenderContext);
-    }
-
 #ifdef PARALLEL_RENDERING
     const auto& commandBuffers{ m_defaultCommandBuffersGroup->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
     RenderParallel(m_defaultRenderPass, customRenderContext, root, m_defaultRenderers, commandBuffers);
 #else
     RenderSerial(m_defaultRenderPass, customRenderContext, root, m_defaultRenderers);
 #endif
-
-    for (auto& renderer : m_defaultRenderers) {
-        renderer->AfterRender(customRenderContext);
-    }
 }
 
 void MasterRenderer::RenderDebug(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root)
 {
-    for (auto& renderer : m_debugRenderers) {
-        renderer->BeforeRender(renderContext);
-    }
-
     const prev::render::RenderContext customRenderContext{ renderContext.frameBuffer, renderContext.commandBuffer, renderContext.frameInFlightIndex, { { 0, 0 }, { renderContext.rect.extent.width / 2, renderContext.rect.extent.height / 2 } } };
 
 #ifdef PARALLEL_RENDERING
@@ -451,9 +416,5 @@ void MasterRenderer::RenderDebug(const prev::render::RenderContext& renderContex
 #else
     RenderSerial(m_defaultRenderPass, customRenderContext, root, m_debugRenderers);
 #endif
-
-    for (auto& renderer : m_debugRenderers) {
-        renderer->AfterRender(renderContext);
-    }
 }
 } // namespace prev_test::render::renderer

@@ -110,6 +110,10 @@ private:
 template <typename RenderContextType>
 void MasterRenderer::RenderParallel(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<RenderContextType>>>& renderers, const std::vector<VkCommandBuffer>& commandBuffers)
 {
+    for (auto& renderer : renderers) {
+        renderer->BeforeRender(renderContext);
+    }
+
     renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, renderContext.rect, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
     std::vector<std::future<void>> tasks;
@@ -147,11 +151,19 @@ void MasterRenderer::RenderParallel(const std::shared_ptr<prev::render::pass::Re
     vkCmdExecuteCommands(renderContext.commandBuffer, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
     renderPass->End(renderContext.commandBuffer);
+
+    for (auto& renderer : renderers) {
+        renderer->AfterRender(renderContext);
+    }
 }
 #else
 template <typename RenderContextType>
 void MasterRenderer::RenderSerial(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<RenderContextType>>>& renderers)
 {
+    for (auto& renderer : renderers) {
+        renderer->BeforeRender(renderContext);
+    }
+
     renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, renderContext.rect);
 
     for (auto& renderer : renderers) {
@@ -161,6 +173,10 @@ void MasterRenderer::RenderSerial(const std::shared_ptr<prev::render::pass::Rend
     }
 
     renderPass->End(renderContext.commandBuffer);
+
+    for (auto& renderer : renderers) {
+        renderer->AfterRender(renderContext);
+    }
 }
 #endif
 
