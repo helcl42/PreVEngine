@@ -89,7 +89,7 @@ void ShowVkResult(const VkResult err)
     }
 }
 #else
-void ShowVkResult(VkResult err)
+void ShowVkResult(const VkResult err)
 {
 }
 #endif
