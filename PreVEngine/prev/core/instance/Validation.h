@@ -156,7 +156,7 @@ void SetConsoleTextColor(const ConsoleColor color);
 #include <vulkan/vulkan.h> // PC: Build dispatch table, so we can skip loader trampoline-code
 #endif
 
-void ShowVkResult(VkResult err);
+void ShowVkResult(const VkResult err);
 const char* VkResultStr(const VkResult err);
 
 #ifdef NDEBUG
