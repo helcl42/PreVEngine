@@ -26,50 +26,48 @@ void OffScreenRenderPassComponent::Init()
     auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
 
     // create render pass
-    std::vector<VkSubpassDependency> dependencies{ 2 };
-    dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-    dependencies[0].dstSubpass = 0;
-    dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependencies[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-    dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+    std::vector<VkSubpassDependency> dependencies;
+    if (m_depthFormat != VK_FORMAT_UNDEFINED) {
+        const auto origSize{ dependencies.size() };
+        dependencies.resize(origSize + 2);
 
-    dependencies[1].srcSubpass = 0;
-    dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-    dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-    dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+        dependencies[origSize + 0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[origSize + 0].dstSubpass = 0;
+        dependencies[origSize + 0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[origSize + 0].dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dependencies[origSize + 0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        dependencies[origSize + 0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependencies[origSize + 0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-    // Setup subpass dependencies
-    // These will add the implicit attachment layout transitions specified by the attachment descriptions
-    // The actual usage layout is preserved through the layout specified in the attachment reference
-    // Each subpass dependency will introduce a memory and execution dependency between the source and dest subpass described by
-    // srcStageMask, dstStageMask, srcAccessMask, dstAccessMask (and dependencyFlags is set)
-    // Note: VK_SUBPASS_EXTERNAL is a special constant that refers to all commands executed outside of the actual renderpass)
+        dependencies[origSize + 1].srcSubpass = 0;
+        dependencies[origSize + 1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[origSize + 1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        dependencies[origSize + 1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[origSize + 1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependencies[origSize + 1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        dependencies[origSize + 1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+    }
 
-    //// First dependency at the start of the renderpass
-    // // Does the transition from final to initial layout
-    // dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL; // Producer of the dependency
-    // dependencies[0].dstSubpass = 0; // Consumer is our single subpass that will wait for the execution depdendency
-    // dependencies[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // Match our pWaitDstStageMask when we vkQueueSubmit
-    // dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // is a loadOp stage for color attachments
-    // dependencies[0].srcAccessMask = 0; // semaphore wait already does memory dependency for us
-    // dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; // is a loadOp CLEAR access mask for color attachments
-    // dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+    if (m_colorFormats.size() > 0) {
+        const auto origSize{ dependencies.size() };
+        dependencies.resize(origSize + 2);
 
-    // // Second dependency at the end the renderpass
-    // // Does the transition from the initial to the final layout
-    // // Technically this is the same as the implicit subpass dependency, but we are gonna state it explicitly here
-    // dependencies[1].srcSubpass = 0; // Producer of the dependency is our single subpass
-    // dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL; // Consumer are all commands outside of the renderpass
-    // dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // is a storeOp stage for color attachments
-    // dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT; // Do not block any subsequent work
-    // dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; // is a storeOp `STORE` access mask for color attachments
-    // dependencies[1].dstAccessMask = 0;
-    // dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+        dependencies[origSize + 0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[origSize + 0].dstSubpass = 0;
+        dependencies[origSize + 0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[origSize + 0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[origSize + 0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        dependencies[origSize + 0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[origSize + 0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+        dependencies[origSize + 1].srcSubpass = 0;
+        dependencies[origSize + 1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[origSize + 1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[origSize + 1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[origSize + 1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[origSize + 1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        dependencies[origSize + 1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+    }
 
     std::vector<uint32_t> attachmentIndices;
     uint32_t attachmentIndex{ 0 };

@@ -185,6 +185,9 @@ void Engine::InitDevice()
 
 void Engine::InitAllocator()
 {
+    // TODO
+    //  -> Allocator uses only graphics queue for it's internal commands
+    //     - make queue type as a parameter or even better decouple it from queue completely
     m_allocator = std::make_shared<prev::core::memory::Allocator>(*m_instance, *m_device, *m_device->GetQueue(device::QueueType::GRAPHICS)); // Create "Vulkan Memory Aloocator"
     LOGI("Allocator created\n");
 }
@@ -198,24 +201,40 @@ void Engine::InitRenderPass()
     const VkClearColorValue clearColor{ { 0.5f, 0.5f, 0.5f, 1.0f } };
     const VkSampleCountFlagBits sampleCount{ prev::util::vk::GetSampleCountBit(m_config.samplesCount) };
 
+    std::vector<VkSubpassDependency> dependencies{ 4 };
+    dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+    dependencies[0].dstSubpass = 0;
+    dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+    dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+    dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+    dependencies[1].srcSubpass = 0;
+    dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+    dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+    dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+    dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+    dependencies[2].srcSubpass = VK_SUBPASS_EXTERNAL;
+    dependencies[2].dstSubpass = 0;
+    dependencies[2].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+    dependencies[2].dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+    dependencies[2].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+    dependencies[2].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+    dependencies[2].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+    dependencies[3].srcSubpass = 0;
+    dependencies[3].dstSubpass = VK_SUBPASS_EXTERNAL;
+    dependencies[3].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+    dependencies[3].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+    dependencies[3].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+    dependencies[3].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+    dependencies[3].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
     if (sampleCount > VK_SAMPLE_COUNT_1_BIT) {
-        std::vector<VkSubpassDependency> dependencies{ 2 };
-        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependencies[0].dstSubpass = 0;
-        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-        dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
-        dependencies[1].srcSubpass = 0;
-        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-        dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-        dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
         m_renderPass = renderPassBuilder
                            .AddColorAttachment(colorFormat, sampleCount, clearColor, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) // color buffer, multisampled
                            .AddDepthAttachment(depthFormat, sampleCount, { 1.0f, 0 }) // depth buffer, multisampled
@@ -229,6 +248,7 @@ void Engine::InitRenderPass()
                            .AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, clearColor)
                            .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT)
                            .AddSubpass({ 0, 1 })
+                           .AddSubpassDependencies(dependencies)
                            .Build();
     }
 }
