@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
     config.windowSize = { 1920, 1080 };
     config.framesInFlight = 3;
     config.VSync = true;
-    config.samplesCount = 4;
+    config.samplesCount = 1;
 
     prev_test::TestApp app(config);
     app.Init();
