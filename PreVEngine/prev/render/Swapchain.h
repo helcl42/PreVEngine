@@ -24,17 +24,11 @@ struct SwapchainBuffer {
 
     VkCommandBuffer commandBuffer{};
 
-    VkSemaphore acquireSemaphore{}; // wait
-
-    VkSemaphore submitSemaphore{}; // signal
-
     VkFence fence{};
 
     void Destroy(VkDevice device)
     {
         vkDestroyFence(device, fence, nullptr);
-        vkDestroySemaphore(device, submitSemaphore, nullptr);
-        vkDestroySemaphore(device, acquireSemaphore, nullptr);
         vkDestroyFramebuffer(device, framebuffer, nullptr);
         vkDestroyImageView(device, view, nullptr);
     }
@@ -88,36 +82,40 @@ private:
 
     pass::RenderPass& m_renderPass;
 
-    VkSurfaceKHR m_surface;
+    VkSurfaceKHR m_surface{};
 
-    VkSampleCountFlagBits m_sampleCount;
+    VkSampleCountFlagBits m_sampleCount{ VK_SAMPLE_COUNT_1_BIT };
 
-    std::shared_ptr<prev::core::device::Queue> m_presentQueue;
+    std::shared_ptr<prev::core::device::Queue> m_presentQueue{};
 
-    std::shared_ptr<prev::core::device::Queue> m_graphicsQueue;
+    std::shared_ptr<prev::core::device::Queue> m_graphicsQueue{};
 
-    std::unique_ptr<prev::render::buffer::image::IImageBuffer> m_depthBuffer;
+    std::unique_ptr<prev::render::buffer::image::IImageBuffer> m_depthBuffer{};
 
-    VkSwapchainKHR m_swapchain;
+    VkSwapchainKHR m_swapchain{};
 
-    VkSwapchainCreateInfoKHR m_swapchainCreateInfo;
+    VkSwapchainCreateInfoKHR m_swapchainCreateInfo{};
 
-    VkCommandPool m_commandPool;
+    VkCommandPool m_commandPool{};
 
     std::vector<SwapchainBuffer> m_swapchainBuffers;
 
-    uint32_t m_acquiredIndex; // index of last acquired image
+    uint32_t m_acquiredIndex{}; // index of last acquired image
 
-    bool m_isAcquired;
+    bool m_isAcquired{};
 
-    uint32_t m_currentFrameIndex;
+    VkSemaphore m_acquireSemaphore{};
 
-    uint32_t m_swapchainImagesCount;
+    VkSemaphore m_submitSemaphore{};
+
+    uint32_t m_currentFrameIndex{};
+
+    uint32_t m_swapchainImagesCount{};
 
     // MSAA
-    std::unique_ptr<prev::render::buffer::image::IImageBuffer> m_msaaColorBuffer;
+    std::unique_ptr<prev::render::buffer::image::IImageBuffer> m_msaaColorBuffer{};
 
-    std::unique_ptr<prev::render::buffer::image::IImageBuffer> m_msaaDepthBuffer;
+    std::unique_ptr<prev::render::buffer::image::IImageBuffer> m_msaaDepthBuffer{};
 };
 } // namespace prev::render
 
