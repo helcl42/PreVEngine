@@ -86,17 +86,21 @@ Swapchain::~Swapchain()
     m_depthBuffer = nullptr;
 }
 
-void Swapchain::UpdateExtent()
+bool Swapchain::UpdateExtent()
 {
     const VkSurfaceCapabilitiesKHR surfaceCapabilities{ GetSurfaceCapabilities() };
     const VkExtent2D& currentSurfaceExtent{ surfaceCapabilities.currentExtent };
 
     if (currentSurfaceExtent.width == 0 || currentSurfaceExtent.height == 0) {
-        return;
+        return false;
     }
 
-    if (currentSurfaceExtent.width == 0xFFFFFFFF) // 0xFFFFFFFF indicates surface size is set from extent
-    {
+    // because of android notifies about SUBOPTIMAL presence -> it internaly transforms image(rotates) because we use preTransform == VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
+    if (currentSurfaceExtent.width == m_swapchainCreateInfo.imageExtent.width && currentSurfaceExtent.height == m_swapchainCreateInfo.imageExtent.height) {
+        return false;
+    }
+
+    if (currentSurfaceExtent.width == 0xFFFFFFFF) { // 0xFFFFFFFF indicates surface size is set from extent
         const uint32_t defaultWidth = 256;
         const uint32_t defaultHeight = 256;
 
@@ -105,17 +109,13 @@ void Swapchain::UpdateExtent()
         m_swapchainCreateInfo.imageExtent.width = util::math::Clamp(defaultWidth, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width);
         m_swapchainCreateInfo.imageExtent.height = util::math::Clamp(defaultHeight, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
     } else {
-        // because of android notifies about SUBOPTIMAL presence -> it internaly transforms image(rotates) because we use preTransform == VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
-        if (currentSurfaceExtent.width == m_swapchainCreateInfo.imageExtent.width && currentSurfaceExtent.height == m_swapchainCreateInfo.imageExtent.height) {
-            return;
-        }
-
         m_swapchainCreateInfo.imageExtent = currentSurfaceExtent;
     }
 
     if (!!m_swapchain) {
         Apply();
     }
+    return true;
 }
 
 bool Swapchain::SetImageCount(uint32_t imageCount)
@@ -348,12 +348,16 @@ void Swapchain::Present()
     presentInfo.pSwapchains = &m_swapchain;
     presentInfo.pImageIndices = &m_acquiredIndex;
 
+    bool swapchainChanged{ false };
+
     const auto result{ vkQueuePresentKHR(*m_presentQueue, &presentInfo) };
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
-        UpdateExtent();
+        swapchainChanged = UpdateExtent();
     } else if (result != VK_SUCCESS) {
         ShowVkResult(result);
-    } else {
+    }
+
+    if(!swapchainChanged) {
         m_currentFrameIndex = (m_currentFrameIndex + 1) % m_swapchainImagesCount;
     }
 
