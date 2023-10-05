@@ -44,6 +44,7 @@ android {
             jniLibs.srcDirs = [ 'libs' ]
         }
     }
+    namespace 'com.prevengine.PreVEngineTest'
 }
 
 dependencies {
