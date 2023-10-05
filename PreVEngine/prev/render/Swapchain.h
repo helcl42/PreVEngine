@@ -55,7 +55,7 @@ public:
 
     bool SetImageCount(uint32_t imageCount = 2);
 
-    void UpdateExtent();
+    bool UpdateExtent();
 
     bool BeginFrame(VkFramebuffer& frmmeBuffer, VkCommandBuffer& buffer, uint32_t& acquiredIndex);
 
