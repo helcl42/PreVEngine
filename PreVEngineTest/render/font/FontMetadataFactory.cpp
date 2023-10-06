@@ -53,7 +53,7 @@ std::unique_ptr<prev::render::sampler::Sampler> FontMetadataFactory::CreateSampl
 {
     auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
 
-    return std::make_unique<prev::render::sampler::Sampler>(*device, maxLod, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f);
+    return std::make_unique<prev::render::sampler::Sampler>(*device, maxLod, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR);
 }
 
 std::shared_ptr<prev::render::buffer::image::IImageBuffer> FontMetadataFactory::CreateImageBuffer(const std::string& textureFilePath) const
