@@ -6,7 +6,7 @@
 namespace prev_test::component::font {
 class FontRenderComponentsFactory {
 public:
-    std::unique_ptr<IFontRenderComponent> Create(const std::string& fontPath, const std::string& fontTexture, const float aspectRatio) const;
+    std::unique_ptr<IFontRenderComponent> Create(const std::string& fontPath, const std::string& fontTexture, const float aspectRatio, const int padding) const;
 };
 } // namespace prev_test::component::font
 
