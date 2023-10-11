@@ -279,15 +279,15 @@ private:
 
     float m_upwardSpeed{ 0.0f };
 
-    float m_yawDiff{ 0.0f };
-
-    float m_pitchDiff{ 0.0f };
+    glm::vec3 m_pitchYawRollDiff{ 0.0f };
 
     bool m_isInTheAir{ false };
 
-    float m_cameraPitch{ -20.0f };
+    float m_cameraPitch{ 20.0f };
 
-    float m_distanceFromPerson{ 30.0f };
+    float m_cameraDistanceFromPerson{ 30.0f };
+
+    float m_cameraPositionOffset{ 8.0 };
 
     glm::vec2 m_prevTouchPosition{ 0.0f, 0.0f };
 
