@@ -15,17 +15,17 @@ public:
 
     void Reset() override;
 
-    void AddPitch(const float amountInDegrees) override;
+    void AddPitch(const float angle) override;
 
-    void AddYaw(const float amountInDegrees) override;
+    void AddYaw(const float angle) override;
 
-    void AddRoll(const float amountInDegrees) override;
+    void AddRoll(const float angle) override;
+
+    void AddOrientation(const float angle, const glm::vec3& axis) override;
 
     void AddOrientation(const glm::quat& orientationDiff) override;
 
     void SetOrientation(const glm::quat& orientation) override;
-
-    void SetOrientation(const float pitchAmountInDegrees, const float yawAmountInDegrees, const float rollInDegrees) override;
 
     void AddPosition(const glm::vec3& positionDiff) override;
 
@@ -36,6 +36,8 @@ public:
     const glm::vec3& GetRightDirection() const override;
 
     const glm::vec3& GetUpDirection() const override;
+
+    const glm::vec3& GetDefaultUpDirection() const override;
 
     const glm::vec3& GetPosition() const override;
 
@@ -53,15 +55,14 @@ private:
     void Update();
 
 private:
-    const glm::quat m_initialOrientation;
+    glm::quat m_initialOrientation;
 
-    const glm::vec3 m_initialPosition;
+    glm::vec3 m_initialPosition;
 
-    const bool m_useFixedUp;
+    bool m_useFixedUp;
 
+private:
     static const inline glm::vec3 DEFAULT_UP_DIRECTION{ 0.0f, 1.0f, 0.0f };
-
-    static const inline glm::vec3 DEFAULT_FORWARD_DIRECTION{ 0.0f, 0.0f, 1.0f };
 
 private:
     glm::vec3 m_position{ 0.0f, 0.0f, 0.0f };

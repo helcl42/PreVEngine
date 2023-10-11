@@ -2,9 +2,9 @@
 
 namespace prev_test::component::camera {
 CameraComponent::CameraComponent(const glm::quat initialOrientation, const glm::vec3& initialPosition, const bool useFixedUp)
-    : m_initialOrientation(initialOrientation)
-    , m_initialPosition(initialPosition)
-    , m_useFixedUp(useFixedUp)
+    : m_initialOrientation{ initialOrientation }
+    , m_initialPosition{ initialPosition }
+    , m_useFixedUp{ useFixedUp }
 {
     Reset();
 }
@@ -19,14 +19,8 @@ void CameraComponent::Reset()
     m_position = m_initialPosition;
     m_orientation = m_initialOrientation;
 
-    if (m_useFixedUp) {
-        m_upDirection = DEFAULT_UP_DIRECTION;
-        m_forwardDirection = glm::normalize(m_initialOrientation * DEFAULT_FORWARD_DIRECTION);
-        m_rightDirection = glm::cross(m_forwardDirection, DEFAULT_UP_DIRECTION);
-    } else {
-        m_positionDelta = glm::vec3{};
-        m_orientationDelta = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-    }
+    m_positionDelta = glm::vec3{};
+    m_orientationDelta = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 
     m_positionChanged = true;
     m_orientationChanged = true;
@@ -34,49 +28,39 @@ void CameraComponent::Reset()
     Update();
 }
 
-void CameraComponent::AddPitch(float amountInDegrees)
+void CameraComponent::AddPitch(const float angle)
 {
-    m_orientationDelta *= glm::angleAxis(glm::radians(amountInDegrees), m_rightDirection);
-    m_orientationChanged = true;
-    Update();
+    AddOrientation(angle, GetRightDirection());
 }
 
-void CameraComponent::AddYaw(float amountInDegrees)
+void CameraComponent::AddYaw(const float angle)
 {
-    m_orientationDelta *= glm::angleAxis(glm::radians(amountInDegrees), m_upDirection);
-    m_orientationChanged = true;
-    Update();
+    AddOrientation(angle, GetUpDirection());
 }
 
-void CameraComponent::AddRoll(const float amountInDegrees)
+void CameraComponent::AddRoll(const float angle)
 {
-    m_orientationDelta *= glm::angleAxis(glm::radians(amountInDegrees), m_forwardDirection);
-    m_orientationChanged = true;
-    Update();
+    AddOrientation(angle, GetForwardDirection());
+}
+
+void CameraComponent::AddOrientation(const float angle, const glm::vec3& axis)
+{
+    const auto orientationDelta{ glm::angleAxis(angle, axis) };
+    AddOrientation(orientationDelta);
 }
 
 void CameraComponent::AddOrientation(const glm::quat& orientationDiff)
 {
-    m_orientationDelta *= orientationDiff;
+    m_orientationDelta = glm::normalize(orientationDiff * m_orientationDelta);
     m_orientationChanged = true;
     Update();
 }
 
 void CameraComponent::SetOrientation(const glm::quat& orientation)
 {
-    if (m_useFixedUp) {
-        m_orientationDelta = m_orientation * glm::inverse(orientation); // orientation delta to previous orientation
-    } else {
-        m_orientation = orientation;
-    }
+    m_orientation = orientation;
     m_orientationChanged = true;
     Update();
-}
-
-void CameraComponent::SetOrientation(const float pitchAmountInDegrees, const float yawAmountInDegrees, const float rollAmountInDegrees)
-{
-    const glm::quat newOrientation(glm::angleAxis(glm::radians(pitchAmountInDegrees), m_rightDirection) * glm::angleAxis(glm::radians(yawAmountInDegrees), m_upDirection) * glm::angleAxis(glm::radians(rollAmountInDegrees), m_forwardDirection));
-    SetOrientation(newOrientation);
 }
 
 void CameraComponent::AddPosition(const glm::vec3& positionDiff)
@@ -105,7 +89,15 @@ const glm::vec3& CameraComponent::GetRightDirection() const
 
 const glm::vec3& CameraComponent::GetUpDirection() const
 {
+    if (m_useFixedUp) {
+        return DEFAULT_UP_DIRECTION;
+    }
     return m_upDirection;
+}
+
+const glm::vec3& CameraComponent::GetDefaultUpDirection() const
+{
+    return DEFAULT_UP_DIRECTION;
 }
 
 const glm::vec3& CameraComponent::GetPosition() const
@@ -137,16 +129,24 @@ void CameraComponent::UpdatePosition()
 
 void CameraComponent::UpdateOrientation()
 {
+    m_orientation = glm::normalize(m_orientationDelta * m_orientation);
+
+    const auto orientationMat{ glm::mat3_cast(m_orientation) };
+
+    // TODO -> should be minus because of OpenGL coord system - RHS -> forward goes towards me
+    m_forwardDirection = orientationMat[2];
     if (m_useFixedUp) {
-        m_forwardDirection = glm::normalize(m_orientationDelta * m_forwardDirection);
-        m_rightDirection = glm::normalize(glm::cross(m_forwardDirection, m_upDirection));
+        m_upDirection = DEFAULT_UP_DIRECTION;
+        m_rightDirection = glm::normalize(glm::cross(m_upDirection, m_forwardDirection));
     } else {
-        m_orientation = glm::normalize(m_orientation * m_orientationDelta);
-        const auto orientationMat{ glm::mat3_cast(m_orientation) };
         m_rightDirection = orientationMat[0];
         m_upDirection = orientationMat[1];
-        m_forwardDirection = orientationMat[2];
     }
+
+    printf("U: %f, %f, %f\n", m_upDirection.x, m_upDirection.y, m_upDirection.z);
+    printf("R: %f, %f, %f\n", m_rightDirection.x, m_rightDirection.y, m_rightDirection.z);
+    printf("F: %f, %f, %f\n", m_forwardDirection.x, m_forwardDirection.y, m_forwardDirection.z);
+
     m_orientationDelta = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 }
 
@@ -162,6 +162,9 @@ void CameraComponent::Update()
 
     if (m_orientationChanged || m_positionChanged) {
         m_viewMatrix = glm::lookAt(m_position, m_position + m_forwardDirection, m_upDirection);
+
+        // TODO -> we want to do something like this but we still need a mechanism for locking UP axis
+        // m_viewMatrix = glm::translate(glm::mat4_cast(m_orientation), m_position);
     }
 
     m_orientationChanged = false;
