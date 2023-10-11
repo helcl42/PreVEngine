@@ -36,11 +36,11 @@ ShadowsComponent::~ShadowsComponent()
 void ShadowsComponent::Update(const glm::vec3& lightDirection, const float nearClippingPlane, const float farClippingPlane, const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix)
 {
     const auto cascadeSplits{ GenerateCaascadeSplits(nearClippingPlane, farClippingPlane) };
-    const auto inverseWorldToClipSpaceTransform = glm::inverse(projectionMatrix * viewMatrix);
+    const auto inverseWorldToClipSpaceTransform{ glm::inverse(projectionMatrix * viewMatrix) };
 
     float lastSplitDistance{ 0.0 };
     for (uint32_t i = 0; i < m_cascadesCount; i++) {
-        const float splitDistance = cascadeSplits[i];
+        const float splitDistance{ cascadeSplits[i] };
 
         // Calculate orthographic projection matrix for ith cascade
         UpdateCascade(lightDirection, inverseWorldToClipSpaceTransform, nearClippingPlane, farClippingPlane, splitDistance, lastSplitDistance, m_cascades[i]);
