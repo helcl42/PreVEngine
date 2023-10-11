@@ -44,7 +44,7 @@ void Player::Init()
     m_boundingVolumeComponent = bondingVolumeFactory.CreateOBB(m_animationRenderComponent->GetModel()->GetMesh(), glm::vec3(0.4f, 1.0f, 0.4f));
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, TAG_BOUNDING_VOLUME_COMPONENT);
 
-    m_cameraComponent->AddOrientation(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(m_cameraPitch), m_cameraComponent->GetRightDirection())));
+    m_cameraComponent->AddPitch(glm::radians(m_cameraPitch));
 
 #if defined(__ANDROID__)
     m_poseProvider = std::make_unique<AndroidPoseProvider>();
@@ -118,21 +118,21 @@ void Player::Update(float deltaTime)
     m_cameraComponent->SetOrientation(cameraOrientation);
 #else
     if (m_shouldRotate) {
-        const auto yawAmount{ YAW_TURN_SPEED * m_yawDiff * deltaTime };
-        const auto pitchAmount{ PITCH_TURN_SPEED * m_pitchDiff * deltaTime };
+        const auto pitchAmount{ glm::radians(PITCH_TURN_SPEED * m_pitchYawRollDiff.x * deltaTime) };
+        const auto yawAmount{ glm::radians(YAW_TURN_SPEED * m_pitchYawRollDiff.y * deltaTime) };
 
-        m_transformComponent->Rotate(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(yawAmount), glm::vec3(0.0f, 1.0f, 0.0f))));
+        m_transformComponent->Rotate(glm::quat_cast(glm::rotate(glm::mat4(1.0f), yawAmount, glm::vec3(0.0f, 1.0f, 0.0f))));
 
         m_cameraComponent->AddYaw(yawAmount);
         m_cameraComponent->AddPitch(pitchAmount);
 
-        m_yawDiff = 0.0f;
-        m_pitchDiff = 0.0f;
+
+        m_pitchYawRollDiff = {};
     }
 #endif
     m_transformComponent->Update(deltaTime);
 
-    const glm::vec3 cameraPosition{ m_transformComponent->GetPosition() + (-m_cameraComponent->GetForwardDirection() * m_distanceFromPerson) + glm::vec3(0.0f, 8.0f, 0.0f) };
+    const glm::vec3 cameraPosition{ m_transformComponent->GetPosition() + (-m_cameraComponent->GetForwardDirection() * m_cameraDistanceFromPerson) + m_cameraComponent->GetDefaultUpDirection() * m_cameraPositionOffset };
     m_cameraComponent->SetPosition(cameraPosition);
 
     m_boundingVolumeComponent->Update(m_transformComponent->GetWorldTransformScaled());
@@ -195,8 +195,8 @@ void Player::operator()(const prev::input::mouse::MouseEvent& mouseEvent)
         } else if (mouseEvent.action == prev::input::mouse::MouseActionType::RELEASE) {
             m_shouldRotate = false;
         } else if (m_shouldRotate && mouseEvent.action == prev::input::mouse::MouseActionType::MOVE) {
-            m_yawDiff = mouseEvent.position.x;
-            m_pitchDiff = mouseEvent.position.y;
+            m_pitchYawRollDiff.y = mouseEvent.position.x;
+            m_pitchYawRollDiff.x = mouseEvent.position.y;
         }
     }
 }
@@ -235,12 +235,12 @@ void Player::operator()(const prev::input::touch::TouchEvent& touchEvent)
     }
 #endif
     if (touchEvent.action == prev::input::touch::TouchActionType::MOVE) {
-        const glm::vec2 angleInDegrees{ (touchEvent.position - m_prevTouchPosition) * 0.1f };
+        const glm::vec2 angles{ glm::radians(touchEvent.position - m_prevTouchPosition) * 0.1f };
 
-        m_transformComponent->Rotate(glm::quat_cast(glm::rotate(glm::mat4(1.0f), glm::radians(angleInDegrees.x), glm::vec3(0.0f, 1.0f, 0.0f))));
+        m_transformComponent->Rotate(glm::quat_cast(glm::rotate(glm::mat4(1.0f), angles.x, glm::vec3(0.0f, 1.0f, 0.0f))));
 
-        m_cameraComponent->AddYaw(angleInDegrees.x);
-        m_cameraComponent->AddPitch(angleInDegrees.y);
+        m_cameraComponent->AddYaw(angles.x);
+        m_cameraComponent->AddPitch(angles.y);
     }
 
     if (touchEvent.action == prev::input::touch::TouchActionType::MOVE || touchEvent.action == prev::input::touch::TouchActionType::DOWN) {
@@ -250,6 +250,6 @@ void Player::operator()(const prev::input::touch::TouchEvent& touchEvent)
 
 void Player::operator()(const prev::input::mouse::MouseScrollEvent& scrollEvent)
 {
-    m_distanceFromPerson += static_cast<float>(scrollEvent.delta);
+    m_cameraDistanceFromPerson += static_cast<float>(scrollEvent.delta);
 }
 } // namespace prev_test::scene
