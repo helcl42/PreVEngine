@@ -96,7 +96,7 @@ void main()
 	refractiveFactor = clamp(refractiveFactor, 0.001, 0.999);
 
     vec3 toLightVector = uboFS.light.position.xyz - inWorldPosition.xyz;
-	vec3 reflectedLight = reflect(normalize(toLightVector), normal);
+	vec3 reflectedLight = reflect(normalize(-toLightVector), normal);
 	float specular = max(dot(reflectedLight, viewVector), 0.0);
 	specular = pow(specular, shineDamper);
 	vec3 specularHighlights = uboFS.light.color.xyz * specular * reflectivity * clamp(waterDepth / 5.0, 0.0, 1.0);
