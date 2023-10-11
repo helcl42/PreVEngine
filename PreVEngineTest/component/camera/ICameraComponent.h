@@ -10,17 +10,17 @@ public:
 
     virtual void Reset() = 0;
 
-    virtual void AddPitch(const float amountInDegrees) = 0;
+    virtual void AddPitch(const float angle) = 0;
 
-    virtual void AddYaw(const float amountInDegrees) = 0;
+    virtual void AddYaw(const float angle) = 0;
 
-    virtual void AddRoll(const float amountInDegrees) = 0;
+    virtual void AddRoll(const float angle) = 0;
+
+    virtual void AddOrientation(const float angle, const glm::vec3& axis) = 0;
 
     virtual void AddOrientation(const glm::quat& orientationDiff) = 0;
 
     virtual void SetOrientation(const glm::quat& orientation) = 0;
-
-    virtual void SetOrientation(const float pitch, const float yaw, const float roll) = 0;
 
     virtual void AddPosition(const glm::vec3& positionDiff) = 0;
 
@@ -31,6 +31,8 @@ public:
     virtual const glm::vec3& GetRightDirection() const = 0;
 
     virtual const glm::vec3& GetUpDirection() const = 0;
+
+    virtual const glm::vec3& GetDefaultUpDirection() const = 0;
 
     virtual const glm::vec3& GetPosition() const = 0;
 
