@@ -143,10 +143,6 @@ void CameraComponent::UpdateOrientation()
         m_upDirection = orientationMat[1];
     }
 
-    printf("U: %f, %f, %f\n", m_upDirection.x, m_upDirection.y, m_upDirection.z);
-    printf("R: %f, %f, %f\n", m_rightDirection.x, m_rightDirection.y, m_rightDirection.z);
-    printf("F: %f, %f, %f\n", m_forwardDirection.x, m_forwardDirection.y, m_forwardDirection.z);
-
     m_orientationDelta = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 }
 
