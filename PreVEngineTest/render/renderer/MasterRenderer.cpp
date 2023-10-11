@@ -325,12 +325,16 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
 
     const auto& cameraPosition{ cameraComponent->GetPosition() };
     const auto cameraViewPosition{ cameraComponent->GetPosition() + cameraComponent->GetForwardDirection() };
+
     const float cameraPositionOffset{ 2.0f * (cameraPosition.y - prev_test::component::water::WATER_LEVEL) };
-    const float cameraViewOffset{ 2.0f * (prev_test::component::water::WATER_LEVEL - cameraViewPosition.y) };
+    const float cameraViewOffset{ 2.0f * (cameraViewPosition.y - prev_test::component::water::WATER_LEVEL) };
 
     const glm::vec3 newCameraPosition{ cameraPosition.x, cameraPosition.y - cameraPositionOffset, cameraPosition.z };
-    const glm::vec3 newCameraViewPosition{ cameraViewPosition.x, cameraViewPosition.y + cameraViewOffset, cameraViewPosition.z };
-    const glm::mat4 viewMatrix{ glm::lookAt(newCameraPosition, newCameraViewPosition, cameraComponent->GetUpDirection()) };
+    const glm::vec3 newCameraViewPosition{ cameraViewPosition.x, cameraViewPosition.y - cameraViewOffset, cameraViewPosition.z };
+
+    const auto reflectedUpDirection{ glm::reflect(-cameraComponent->GetUpDirection(), cameraComponent->GetDefaultUpDirection()) };
+    
+    const glm::mat4 viewMatrix{ glm::lookAt(newCameraPosition, newCameraViewPosition, reflectedUpDirection) };
     const glm::mat4 projectionMatrix{ cameraComponent->GetViewFrustum().CreateProjectionMatrix(reflectionComponent->GetExtent().width, reflectionComponent->GetExtent().height) };
 
     const prev::render::RenderContext customRenderContextBase{ reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, { { 0, 0 }, reflectionComponent->GetExtent() } };
@@ -340,7 +344,7 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
         viewMatrix,
         projectionMatrix,
         newCameraPosition,
-        glm::vec4(0.0f, 1.0f, 0.0f, -(prev_test::component::water::WATER_LEVEL + prev_test::component::water::WATER_CLIP_PLANE_OFFSET / 20.0f)),
+        glm::vec4(0.0f, 1.0f, 0.0f, -(prev_test::component::water::WATER_LEVEL + prev_test::component::water::WATER_CLIP_PLANE_OFFSET)),
         glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane()),
         prev_test::common::intersection::Frustum{ projectionMatrix, viewMatrix }
     };
