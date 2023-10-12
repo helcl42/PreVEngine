@@ -23,7 +23,7 @@ Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allo
     m_swapchain = VK_NULL_HANDLE;
     m_isAcquired = false;
 
-    VkSurfaceCapabilitiesKHR surfaceCapabilities = GetSurfaceCapabilities();
+    const VkSurfaceCapabilitiesKHR surfaceCapabilities{ GetSurfaceCapabilities() };
     assert(surfaceCapabilities.supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
     assert(surfaceCapabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR);
     assert(surfaceCapabilities.supportedCompositeAlpha & (VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR | VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR));
@@ -348,8 +348,6 @@ void Swapchain::Present()
 {
     ASSERT(!!m_isAcquired, "Swapchain: A buffer must be acquired before presenting.\n");
 
-    const auto& swapchainBuffer{ m_swapchainBuffers[m_currentFrameIndex] };
-
     VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
     presentInfo.waitSemaphoreCount = 1;
     presentInfo.pWaitSemaphores = &m_submitSemaphore;
@@ -373,7 +371,7 @@ void Swapchain::Present()
     m_isAcquired = false;
 }
 
-bool Swapchain::BeginFrame(VkFramebuffer& frmmeBuffer, VkCommandBuffer& commandBuffer, uint32_t& acquiredIndex)
+bool Swapchain::BeginFrame(VkFramebuffer& frameBuffer, VkCommandBuffer& commandBuffer, uint32_t& acquiredIndex)
 {
     SwapchainBuffer swapchainBuffer;
     if (!AcquireNext(swapchainBuffer)) {
@@ -384,7 +382,7 @@ bool Swapchain::BeginFrame(VkFramebuffer& frmmeBuffer, VkCommandBuffer& commandB
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
     VKERRCHECK(vkBeginCommandBuffer(swapchainBuffer.commandBuffer, &beginInfo));
 
-    frmmeBuffer = swapchainBuffer.framebuffer;
+    frameBuffer = swapchainBuffer.framebuffer;
     commandBuffer = swapchainBuffer.commandBuffer;
     acquiredIndex = m_acquiredIndex;
     return true;
