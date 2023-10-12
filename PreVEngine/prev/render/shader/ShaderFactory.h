@@ -12,9 +12,9 @@ public:
     std::unique_ptr<Shader> CreateShaderFromFiles(const VkDevice device, const std::map<VkShaderStageFlagBits, std::string>& stagePaths) const
     {
         std::map<VkShaderStageFlagBits, std::vector<char>> byteCodes;
-        for (const auto& stagePath : stagePaths) {
-            const auto spirv = LoadByteCodeFromFile(stagePath.second);
-            byteCodes.insert(std::make_pair(stagePath.first, spirv));
+        for (const auto& [stage, path] : stagePaths) {
+            const auto spirv{ LoadByteCodeFromFile(path) };
+            byteCodes.insert({stage, spirv });
         }
         return CreateShaderFromByteCodes<ShaderType>(device, byteCodes);
     }
@@ -23,8 +23,8 @@ public:
     std::unique_ptr<Shader> CreateShaderFromByteCodes(const VkDevice device, const std::map<VkShaderStageFlagBits, std::vector<char>>& byteCodes) const
     {
         auto shaders{ std::make_unique<ShaderType>(device) };
-        for (const auto& byteCode : byteCodes) {
-            shaders->AddShaderModule(byteCode.first, byteCode.second);
+        for (const auto& [stage, spirv] : byteCodes) {
+            shaders->AddShaderModule(stage, spirv);
         }
         return shaders;
     }
