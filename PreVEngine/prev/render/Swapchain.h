@@ -51,7 +51,7 @@ public:
 
     bool UpdateExtent();
 
-    bool BeginFrame(VkFramebuffer& frmmeBuffer, VkCommandBuffer& buffer, uint32_t& acquiredIndex);
+    bool BeginFrame(VkFramebuffer& frameBuffer, VkCommandBuffer& commandBuffer, uint32_t& acquiredIndex);
 
     void EndFrame();
 
