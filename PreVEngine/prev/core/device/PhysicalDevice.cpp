@@ -107,11 +107,11 @@ std::vector<VkSurfaceFormatKHR> PhysicalDevice::SurfaceFormats(VkSurfaceKHR surf
 //--Returns the first supported surface color format from the preferredFormats list, or VK_FORMAT_UNDEFINED if no match found.
 VkFormat PhysicalDevice::FindSurfaceFormat(VkSurfaceKHR surface, const std::vector<VkFormat>& preferredFormats) const
 {
-    auto formats = SurfaceFormats(surface); // get list of supported surface formats
-    for (auto& pf : preferredFormats) {
-        for (auto& f : formats) {
-            if (f.format == pf) {
-                return f.format;
+    const auto formats{ SurfaceFormats(surface) }; // get list of supported surface formats
+    for (const auto& preferedFormat : preferredFormats) {
+        for (const auto& format : formats) {
+            if (format.format == preferedFormat) {
+                return format.format;
             }
         }
     }
@@ -122,12 +122,12 @@ VkFormat PhysicalDevice::FindSurfaceFormat(VkSurfaceKHR surface, const std::vect
 
 VkFormat PhysicalDevice::FindDepthFormat(const std::vector<VkFormat>& preferredFormats) const
 {
-    for (auto& format : preferredFormats) {
+    for (const auto& preferedFormat : preferredFormats) {
         VkFormatProperties formatProps;
-        vkGetPhysicalDeviceFormatProperties(m_handle, format, &formatProps);
+        vkGetPhysicalDeviceFormatProperties(m_handle, preferedFormat, &formatProps);
 
         if (formatProps.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) {
-            return format;
+            return preferedFormat;
         }
     }
 
