@@ -5,11 +5,6 @@
 #define __LINUX__ 1
 #endif
 
-#if defined(__ANDROID__) && !defined(NDEBUG)
-#define ENABLE_VALIDATION 1
-#define ENABLE_LOGGING 1
-#endif
-
 #ifdef _WIN32
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
