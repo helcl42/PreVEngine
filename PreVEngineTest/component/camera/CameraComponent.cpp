@@ -89,9 +89,6 @@ const glm::vec3& CameraComponent::GetRightDirection() const
 
 const glm::vec3& CameraComponent::GetUpDirection() const
 {
-    if (m_useFixedUp) {
-        return DEFAULT_UP_DIRECTION;
-    }
     return m_upDirection;
 }
 
