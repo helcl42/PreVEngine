@@ -150,10 +150,6 @@ void TerrainNormalMappedRenderer::Render(const NormalRenderContext& renderContex
             vkCmdDrawIndexed(renderContext.commandBuffer, terrainComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
         }
     }
-
-    for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child);
-    }
 }
 
 void TerrainNormalMappedRenderer::PostRender(const NormalRenderContext& renderContext)

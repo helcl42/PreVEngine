@@ -90,10 +90,6 @@ void LensFlareRenderer::Render(const NormalRenderContext& renderContext, const s
             vkCmdDrawIndexed(renderContext.commandBuffer, lensFlareComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
         }
     }
-
-    for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child);
-    }
 }
 
 void LensFlareRenderer::PostRender(const NormalRenderContext& renderContext)

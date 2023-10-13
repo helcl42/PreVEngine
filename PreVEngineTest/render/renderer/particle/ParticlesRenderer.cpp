@@ -105,10 +105,6 @@ void ParticlesRenderer::Render(const NormalRenderContext& renderContext, const s
             vkCmdDrawIndexed(renderContext.commandBuffer, particlesComponent->GetModel()->GetIndexBuffer()->GetCount(), static_cast<uint32_t>(particles.size()), 0, 0, 0);
         }
     }
-
-    for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child);
-    }
 }
 
 void ParticlesRenderer::PostRender(const NormalRenderContext& renderContext)

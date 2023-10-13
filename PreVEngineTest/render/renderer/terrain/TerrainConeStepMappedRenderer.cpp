@@ -153,10 +153,6 @@ void TerrainConeStepMappedRenderer::Render(const NormalRenderContext& renderCont
             vkCmdDrawIndexed(renderContext.commandBuffer, terrainComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
         }
     }
-
-    for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child);
-    }
 }
 
 void TerrainConeStepMappedRenderer::PostRender(const NormalRenderContext& renderContext)

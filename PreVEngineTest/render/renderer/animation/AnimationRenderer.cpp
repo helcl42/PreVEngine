@@ -73,10 +73,6 @@ void AnimationRenderer::Render(const NormalRenderContext& renderContext, const s
             RenderMeshNode(renderContext, node, nodeRenderComponent->GetModel()->GetMesh()->GetRootNode());
         }
     }
-
-    for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child);
-    }
 }
 
 void AnimationRenderer::PostRender(const NormalRenderContext& renderContext)

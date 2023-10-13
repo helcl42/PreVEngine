@@ -68,10 +68,6 @@ void BumpMappedShadowsRenderer::Render(const ShadowsRenderContext& renderContext
             RenderMeshNode(renderContext, node, nodeRenderComponent->GetModel()->GetMesh()->GetRootNode());
         }
     }
-
-    for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child);
-    }
 }
 
 void BumpMappedShadowsRenderer::PostRender(const ShadowsRenderContext& renderContext)

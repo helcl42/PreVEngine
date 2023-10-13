@@ -74,10 +74,6 @@ void AnimationNormalMappedRenderer::Render(const NormalRenderContext& renderCont
             RenderMeshNode(renderContext, node, nodeRenderComponent->GetModel()->GetMesh()->GetRootNode());
         }
     }
-
-    for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child);
-    }
 }
 
 void AnimationNormalMappedRenderer::PostRender(const NormalRenderContext& renderContext)

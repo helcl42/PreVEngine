@@ -95,10 +95,6 @@ void SkyBoxRenderer::Render(const NormalRenderContext& renderContext, const std:
 
         vkCmdDrawIndexed(renderContext.commandBuffer, skyBoxComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
     }
-
-    for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child);
-    }
 }
 
 void SkyBoxRenderer::PostRender(const NormalRenderContext& renderContext)

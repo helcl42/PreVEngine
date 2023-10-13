@@ -75,10 +75,6 @@ void AnimationConeStepMappedRenderer::Render(const NormalRenderContext& renderCo
             RenderMeshNode(renderContext, node, nodeRenderComponent->GetModel()->GetMesh()->GetRootNode());
         }
     }
-
-    for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child);
-    }
 }
 
 void AnimationConeStepMappedRenderer::PostRender(const NormalRenderContext& renderContext)

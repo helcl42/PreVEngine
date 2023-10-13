@@ -94,10 +94,6 @@ void BoundingVolumeDebugRenderer::Render(const NormalRenderContext& renderContex
 
         vkCmdDrawIndexed(renderContext.commandBuffer, boundingVolumeComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
     }
-
-    for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child);
-    }
 }
 
 void BoundingVolumeDebugRenderer::PostRender(const NormalRenderContext& renderContext)

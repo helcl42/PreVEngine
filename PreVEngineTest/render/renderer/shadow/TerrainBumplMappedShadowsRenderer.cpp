@@ -85,10 +85,6 @@ void TerrainBumplMappedShadowsRenderer::Render(const ShadowsRenderContext& rende
             vkCmdDrawIndexed(renderContext.commandBuffer, terrainComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
         }
     }
-
-    for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child);
-    }
 }
 
 void TerrainBumplMappedShadowsRenderer::PostRender(const ShadowsRenderContext& renderContext)
