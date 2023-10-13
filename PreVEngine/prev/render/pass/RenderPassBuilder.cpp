@@ -6,22 +6,22 @@ RenderPassBuilder::RenderPassBuilder(VkDevice device)
 {
 }
 
-RenderPassBuilder& RenderPassBuilder::AddColorAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount, const VkClearColorValue clearVal, const VkImageLayout finalLayout, const bool resolveAttachment)
+RenderPassBuilder& RenderPassBuilder::AddColorAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount, const VkClearColorValue clearVal, const VkImageLayout finalLayout, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp, const bool resolveAttachment)
 {
     VkClearValue clearColor{};
     clearColor.color = clearVal;
 
-    m_attachmentInfos.push_back(AttachmentCreateInfo{ clearColor, format, sampleCount, finalLayout, resolveAttachment });
+    m_attachmentInfos.push_back(AttachmentCreateInfo{ clearColor, format, sampleCount, finalLayout, loadOp, storeOp, resolveAttachment });
 
     return *this;
 }
 
-RenderPassBuilder& RenderPassBuilder::AddDepthAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount, const VkClearDepthStencilValue clearVal, const bool resolveAttachment)
+RenderPassBuilder& RenderPassBuilder::AddDepthAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount, const VkClearDepthStencilValue clearVal, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp, const bool resolveAttachment)
 {
     VkClearValue clearDepth{};
     clearDepth.depthStencil = clearVal;
 
-    m_attachmentInfos.push_back(AttachmentCreateInfo{ clearDepth, format, sampleCount, DEFAULT_DEPTH_LAYOUT, resolveAttachment });
+    m_attachmentInfos.push_back(AttachmentCreateInfo{ clearDepth, format, sampleCount, DEFAULT_DEPTH_LAYOUT, loadOp, storeOp, resolveAttachment });
 
     return *this;
 }
@@ -54,7 +54,7 @@ std::unique_ptr<RenderPass> RenderPassBuilder::Build() const
             renderPass->m_colorFormats.push_back(attachmentCreateInfo.format);
             renderPass->m_colorResolveAttachments.push_back(attachmentCreateInfo.resolveAttachment);
         }
-        renderPass->m_attachments.push_back(CreateAttachmentDescription(attachmentCreateInfo.format, attachmentCreateInfo.sampleCount, attachmentCreateInfo.finalLayout));
+        renderPass->m_attachments.push_back(CreateAttachmentDescription(attachmentCreateInfo.format, attachmentCreateInfo.sampleCount, attachmentCreateInfo.finalLayout, attachmentCreateInfo.loadOp, attachmentCreateInfo.storeOp));
     }
 
     for (const auto& subPassCreateInfo : m_subPassCreateInfos) {
@@ -81,15 +81,15 @@ std::unique_ptr<RenderPass> RenderPassBuilder::Build() const
     return renderPass;
 }
 
-VkAttachmentDescription RenderPassBuilder::CreateAttachmentDescription(const VkFormat format, const VkSampleCountFlagBits sampleCount, const VkImageLayout finalLayout)
+VkAttachmentDescription RenderPassBuilder::CreateAttachmentDescription(const VkFormat format, const VkSampleCountFlagBits sampleCount, const VkImageLayout finalLayout, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp)
 {
     VkAttachmentDescription attachment = {};
     attachment.format = format;
     attachment.samples = sampleCount;
-    attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+    attachment.loadOp = loadOp;
+    attachment.storeOp = storeOp;
+    attachment.stencilLoadOp = loadOp;
+    attachment.stencilStoreOp = storeOp;
     attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     attachment.finalLayout = finalLayout;
     return attachment;
