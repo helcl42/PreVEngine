@@ -30,14 +30,15 @@ Instance::Instance(const bool enableValidation, const char* appName, const char*
     }
 
 #ifdef ENABLE_VALIDATION
+    if (enableValidation) {
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
-    extensions.Pick(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+        extensions.Pick(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
 #else
-    extensions.Pick(VK_EXT_DEBUG_UTILS_EXTENSION_NAME); // in Debug mode, Enable Validation
+        extensions.Pick(VK_EXT_DEBUG_UTILS_EXTENSION_NAME); // in Debug mode, Enable Validation
+    }
 #endif
     extensions.Print();
 #endif
-    assert(extensions.PickCount() >= 2);
 
     Create(layers, extensions, appName, engineName);
 }
