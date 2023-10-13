@@ -46,6 +46,9 @@ void Root::Init()
     // auto skyBox = std::make_shared<sky::SkyBox>();
     // AddChild(skyBox);
 
+    auto clouds = std::make_shared<sky::Clouds>();
+    AddChild(clouds);
+    
     auto sky = std::make_shared<sky::Sky>();
     AddChild(sky);
 
@@ -88,9 +91,6 @@ void Root::Init()
     player->SetTags({ TAG_MAIN_CAMERA, TAG_PLAYER });
     AddChild(player);
 
-    auto text = std::make_shared<Text>();
-    AddChild(text);
-
     const uint32_t TERRAIN_GRID_MAX_X{ 3 };
     const uint32_t TERRAIN_GRID_MAX_Z{ 3 };
     auto terrainManager = std::make_shared<terrain::TerrainManager>(TERRAIN_GRID_MAX_X, TERRAIN_GRID_MAX_Z);
@@ -101,9 +101,6 @@ void Root::Init()
 
     auto sun = std::make_shared<sky::Sun>();
     AddChild(sun);
-
-    auto lensFlare = std::make_shared<sky::LensFlare>();
-    AddChild(lensFlare);
 
     const float ITEMS_TERRAIN_BORDER_PADDING{ 10.0f };
 
@@ -143,8 +140,11 @@ void Root::Init()
     // auto compute = std::make_shared<ComputeNode>();
     // AddChild(compute);
 
-    auto clouds = std::make_shared<sky::Clouds>();
-    AddChild(clouds);
+    auto lensFlare = std::make_shared<sky::LensFlare>();
+    AddChild(lensFlare);
+
+    auto text = std::make_shared<Text>();
+    AddChild(text);
 
     SceneNode::Init();
 }
