@@ -99,10 +99,6 @@ void SelectionDebugRenderer::Render(const NormalRenderContext& renderContext, co
             vkCmdDrawIndexed(renderContext.commandBuffer, m_selectionPointModel->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
         }
     }
-
-    for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child);
-    }
 }
 
 void SelectionDebugRenderer::PostRender(const NormalRenderContext& renderContext)

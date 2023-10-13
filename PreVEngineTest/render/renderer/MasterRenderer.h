@@ -60,6 +60,9 @@ private:
 
     void RenderDebug(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root);
 
+    template <typename RenderContextType>
+    void TraverseScene(const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const std::unique_ptr<IRenderer<RenderContextType>>& renderer);
+
 #ifdef PARALLEL_RENDERING
     template <typename RenderContextType>
     void RenderParallel(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<RenderContextType>>>& renderers, const std::vector<VkCommandBuffer>& commandBuffers);
@@ -102,9 +105,19 @@ private:
 
     std::unique_ptr<CommandBuffersGroup> m_refractionCommandBufferGroups;
 
-    prev::common::ThreadPool m_threadPool{ 8 };
+    prev::common::ThreadPool m_threadPool{ std::thread::hardware_concurrency() };
 #endif
 };
+
+template <typename RenderContextType>
+void MasterRenderer::TraverseScene(const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const std::unique_ptr<IRenderer<RenderContextType>>& renderer)
+{
+    renderer->Render(renderContext, node);
+
+    for (const auto& child : node->GetChildren()) {
+        TraverseScene(renderContext, child, renderer);
+    }
+}
 
 #ifdef PARALLEL_RENDERING
 template <typename RenderContextType>
@@ -117,10 +130,11 @@ void MasterRenderer::RenderParallel(const std::shared_ptr<prev::render::pass::Re
     renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, renderContext.rect, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
     std::vector<std::future<void>> tasks;
-    for (size_t i = 0; i < renderers.size(); i++) {
+    tasks.reserve(renderers.size());
 
-        auto& renderer{ renderers.at(i) };
-        auto& commandBuffer{ commandBuffers.at(i) };
+    for (size_t i = 0; i < renderers.size(); ++i) {
+        auto& renderer{ renderers[i] };
+        auto& commandBuffer{ commandBuffers[i] };
 
         tasks.emplace_back(m_threadPool.Enqueue([&]() {
             VkCommandBufferInheritanceInfo inheritanceInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO };
@@ -137,7 +151,9 @@ void MasterRenderer::RenderParallel(const std::shared_ptr<prev::render::pass::Re
             parallelRenderContext.commandBuffer = commandBuffer;
 
             renderer->PreRender(parallelRenderContext);
-            renderer->Render(parallelRenderContext, root);
+
+            TraverseScene(parallelRenderContext, root, renderer);
+
             renderer->PostRender(parallelRenderContext);
 
             VKERRCHECK(vkEndCommandBuffer(commandBuffer));
@@ -168,7 +184,9 @@ void MasterRenderer::RenderSerial(const std::shared_ptr<prev::render::pass::Rend
 
     for (auto& renderer : renderers) {
         renderer->PreRender(renderContext);
-        renderer->Render(renderContext, root);
+
+        TraverseScene(renderContext, root, renderer);
+
         renderer->PostRender(renderContext);
     }
 

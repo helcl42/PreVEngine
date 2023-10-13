@@ -66,10 +66,6 @@ void AnimationShadowsRenderer::Render(const ShadowsRenderContext& renderContext,
             RenderMeshNode(renderContext, node, renderComponent->GetModel()->GetMesh()->GetRootNode());
         }
     }
-
-    for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child);
-    }
 }
 
 void AnimationShadowsRenderer::PostRender(const ShadowsRenderContext& renderContext)

@@ -74,10 +74,6 @@ void AnimationParallaxMappedRenderer::Render(const NormalRenderContext& renderCo
             RenderMeshNode(renderContext, node, nodeRenderComponent->GetModel()->GetMesh()->GetRootNode());
         }
     }
-
-    for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child);
-    }
 }
 
 void AnimationParallaxMappedRenderer::PostRender(const NormalRenderContext& renderContext)

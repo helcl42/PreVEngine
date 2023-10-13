@@ -75,10 +75,6 @@ void ConeStepMappedRenderer::Render(const NormalRenderContext& renderContext, co
             RenderMeshNode(renderContext, node, nodeRenderComponent->GetModel()->GetMesh()->GetRootNode());
         }
     }
-
-    for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child);
-    }
 }
 
 void ConeStepMappedRenderer::PostRender(const NormalRenderContext& renderContext)

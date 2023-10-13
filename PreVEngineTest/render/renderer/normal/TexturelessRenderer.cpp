@@ -74,10 +74,6 @@ void TexturelessRenderer::Render(const NormalRenderContext& renderContext, const
             RenderMeshNode(renderContext, node, nodeRenderComponent->GetModel()->GetMesh()->GetRootNode());
         }
     }
-
-    for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child);
-    }
 }
 
 void TexturelessRenderer::PostRender(const NormalRenderContext& renderContext)

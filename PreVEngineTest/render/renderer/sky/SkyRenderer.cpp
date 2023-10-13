@@ -238,10 +238,6 @@ void SkyRenderer::Render(const NormalRenderContext& renderContext, const std::sh
 
         vkCmdDrawIndexed(renderContext.commandBuffer, skyComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
     }
-
-    for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child);
-    }
 }
 
 void SkyRenderer::PostRender(const NormalRenderContext& renderContext)

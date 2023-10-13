@@ -128,10 +128,6 @@ void WaterRenderer::Render(const NormalRenderContext& renderContext, const std::
             vkCmdDrawIndexed(renderContext.commandBuffer, waterComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
         }
     }
-
-    for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child);
-    }
 }
 
 void WaterRenderer::PostRender(const NormalRenderContext& renderContext)

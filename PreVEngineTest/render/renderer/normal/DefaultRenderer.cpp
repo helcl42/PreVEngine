@@ -74,10 +74,6 @@ void DefaultRenderer::Render(const NormalRenderContext& renderContext, const std
             RenderMeshNode(renderContext, node, nodeRenderComponent->GetModel()->GetMesh()->GetRootNode());
         }
     }
-
-    for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child);
-    }
 }
 
 void DefaultRenderer::PostRender(const NormalRenderContext& renderContext)

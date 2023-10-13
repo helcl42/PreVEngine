@@ -66,10 +66,6 @@ void DefaultShadowsRenderer::Render(const ShadowsRenderContext& renderContext, c
             RenderMeshNode(renderContext, node, renderComponent->GetModel()->GetMesh()->GetRootNode());
         }
     }
-
-    for (const auto& child : node->GetChildren()) {
-        Render(renderContext, child);
-    }
 }
 
 void DefaultShadowsRenderer::PostRender(const ShadowsRenderContext& renderContext)
