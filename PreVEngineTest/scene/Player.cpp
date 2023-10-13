@@ -37,7 +37,7 @@ void Player::Init()
     fixedCameraUp = false;
 #endif
     prev_test::component::camera::CameraComponentFactory cameraFactory{};
-    m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 60.0f, 180.0f), fixedCameraUp);
+    m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), fixedCameraUp);
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::camera::ICameraComponent>(GetThis(), m_cameraComponent, TAG_CAMERA_COMPONENT);
 
     prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{};
