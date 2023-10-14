@@ -35,8 +35,8 @@ Instance::Instance(const bool enableValidation, const char* appName, const char*
         extensions.Pick(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
 #else
         extensions.Pick(VK_EXT_DEBUG_UTILS_EXTENSION_NAME); // in Debug mode, Enable Validation
-    }
 #endif
+    }
     extensions.Print();
 #endif
 
