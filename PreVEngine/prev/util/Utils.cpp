@@ -6,25 +6,12 @@
 
 #include <filesystem>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 
 namespace prev::util {
 
 namespace file {
-    bool Exists(const std::string& filePath)
-    {
-#if defined(__ANDROID__)
-        AAsset* asset = android_open_asset(filePath.c_str(), AASSET_MODE_STREAMING);
-        if (asset != nullptr) {
-            AAsset_close(asset);
-            return true;
-        }
-        return false;
-#else
-        return std::filesystem::exists(filePath);
-#endif
-    }
-
     bool CreateDirectoryByPath(const std::string& path)
     {
         return std::filesystem::create_directories(path);
@@ -36,6 +23,77 @@ namespace file {
         std::filesystem::path parent = p.parent_path();
         return parent.string();
     }
+
+#if defined(__ANDROID__)
+bool Exists(const std::string& filePath)
+{
+    AAsset* file = android_open_asset(filePath.c_str(), AASSET_MODE_STREAMING);
+    if (!file) {
+        return false;
+    }
+    AAsset_close(file);
+    return true;
+}
+
+std::string ReadTextFile(const std::string& filePath)
+{
+    AAsset* file = android_open_asset(filePath.c_str(), AASSET_MODE_BUFFER);
+    if (!file) {
+        throw std::runtime_error("Could not open file: " + filePath);
+    }
+    size_t fileLength = AAsset_getLength(file);
+    std::string text;
+    text.resize(fileLength);
+    AAsset_read(file, (void *)text.data(), fileLength);
+    AAsset_close(file);
+    return text;
+}
+
+std::vector<char> ReadBinaryFile(const std::string& filePath)
+{
+    AAsset* file = android_open_asset(filePath.c_str(), AASSET_MODE_BUFFER);
+    size_t fileLength = AAsset_getLength(file);
+    std::vector<char> binary(fileLength);
+    AAsset_read(file, (void *)binary.data(), fileLength);
+    AAsset_close(file);
+    return binary;
+}
+#else
+bool Exists(const std::string& filePath)
+{
+    return std::filesystem::exists(filePath);
+}
+
+std::string ReadTextFile(const std::string& filePath)
+{
+    std::ifstream stream(filePath, std::fstream::in);
+    if (!stream.is_open()) {
+        throw std::runtime_error("Could not open file: " + filePath);
+    }
+    std::string output;
+    std::string line;
+    while (!stream.eof()) {
+        std::getline(stream, line);
+        output.append(line + "\n");
+    }
+    stream.close();
+    return output;
+}
+
+std::vector<char> ReadBinaryFile(const std::string& filePath)
+{
+    std::ifstream stream(filePath, std::fstream::in | std::fstream::binary | std::fstream::ate);
+    if (!stream.is_open()) {
+        throw std::runtime_error("Could not open file: " + filePath);
+    }
+    std::streamoff size = stream.tellg();
+    std::vector<char> output(static_cast<size_t>(size));
+    stream.seekg(0, std::fstream::beg);
+    stream.read(output.data(), size);
+    stream.close();
+    return output;
+}
+#endif
 } // namespace file
 
 namespace string {
