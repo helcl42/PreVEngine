@@ -25,6 +25,12 @@ namespace prev_test::scene {
 struct Pose {
     glm::quat orientation;
     glm::vec3 position;
+
+    Pose Inverse() const {
+        const auto invOrientation{ glm::inverse(orientation) };
+        const auto invPosition{ invOrientation * -position };
+        return { invOrientation, invPosition };
+    }
 };
 
 class AndroidPoseProvider final {
@@ -151,22 +157,23 @@ private:
                 }
                 m_lastOrientationTimestamp = event.timestamp;
             } else if (event.type == ASENSOR_TYPE_LINEAR_ACCELERATION) {
-                std::scoped_lock lock(m_mutex);
-                if (m_lastAccelerationTimestamp != 0) {
-                    const auto deltaTime{ static_cast<float>(event.timestamp - m_lastAccelerationTimestamp) / 1000000000.0f };
-
-                    const glm::vec3 acceleration{ event.data[0], event.data[1], event.data[2] };
-
-                    // TODO - naive double integral here without any scale & bias calibration
-                    const auto velocityDiff{ acceleration * deltaTime };
-                    m_currentVelocity += velocityDiff;
-
-                    const auto positionDIff{ m_currentVelocity * deltaTime };
-                    m_currentPosition += positionDIff;
-
-                    // LOGE("Got acceleration: (%f, %f, %f), dt: %f", acceleration.x, acceleration.y, acceleration.z, deltaTime);
-                }
-                m_lastAccelerationTimestamp = event.timestamp;
+                // TODO - this is completely wrong
+//                std::scoped_lock lock(m_mutex);
+//                if (m_lastAccelerationTimestamp != 0) {
+//                    const auto deltaTime{ static_cast<float>(event.timestamp - m_lastAccelerationTimestamp) / 1000000000.0f };
+//
+//                    const glm::vec3 acceleration{ event.data[0], event.data[1], event.data[2] };
+//
+//                    // TODO - naive double integral here without any scale & bias calibration
+//                    const auto velocityDiff{ acceleration * deltaTime };
+//                    m_currentVelocity += velocityDiff;
+//
+//                    const auto positionDIff{ m_currentVelocity * deltaTime };
+//                    m_currentPosition += positionDIff;
+//
+//                    // LOGE("Got acceleration: (%f, %f, %f), dt: %f", acceleration.x, acceleration.y, acceleration.z, deltaTime);
+//                }
+//                m_lastAccelerationTimestamp = event.timestamp;
             }
         }
 

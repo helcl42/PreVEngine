@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.18.1)
 
 add_definitions(-DVK_USE_PLATFORM_ANDROID_KHR)
 add_definitions(-DUSE_VULKAN_WRAPPER)
+add_definitions(-DENABLE_VALIDATION)
+add_definitions(-DENABLE_LOGGING)
 add_definitions(-DGLM_FORCE_CXX17)
 add_definitions(-DVK_NO_PROTOTYPES)
 add_definitions(-DRENDER_SELECTION)
