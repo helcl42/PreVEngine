@@ -22,7 +22,7 @@ Here is a video:
 
  - Run `cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DUSE_VULKAN_WRAPPER=OFF ..`
 
- - Run `ninja
+ - Run `ninja`
 
 ## Build Android
 
