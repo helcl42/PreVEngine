@@ -3,6 +3,8 @@
 
 #include "Shader.h"
 
+#include "../../util/Utils.h"
+
 #include <vector>
 
 namespace prev::render::shader {
@@ -13,7 +15,7 @@ public:
     {
         std::map<VkShaderStageFlagBits, std::vector<char>> byteCodes;
         for (const auto& [stage, path] : stagePaths) {
-            const auto spirv{ LoadByteCodeFromFile(path) };
+            const auto spirv{ prev::util::file::ReadBinaryFile(path) };
             byteCodes.insert({stage, spirv });
         }
         return CreateShaderFromByteCodes<ShaderType>(device, byteCodes);
@@ -28,9 +30,6 @@ public:
         }
         return shaders;
     }
-
-private:
-    std::vector<char> LoadByteCodeFromFile(const std::string& filename) const;
 };
 } // namespace prev::render::shader
 

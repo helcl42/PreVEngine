@@ -1,6 +1,6 @@
 #include "android_native.h"
 
-//----------------------------------------printf for Android----------------------------------------
+//----------------------------------------printf for Android---------------------
 // Uses a 256 byte buffer to allow concatenating multiple printf's onto one log line.
 // The buffer gets flushed when the printf string ends in a '\n', or the buffer is full.
 // Alternative with no concatenation:
@@ -10,12 +10,12 @@ struct printBuf {
     static const int SIZE = 256;
     char buf[SIZE];
     printBuf() { clear(); }
-    printBuf(const char* c) {memset(buf, 0, SIZE); strncpy(buf, c, SIZE - 1);}
-    printBuf& operator+=(const char* c) {strncat(buf, c, SIZE - len() - 1); if(len() >= SIZE - 1) flush(); return *this;}
-    int len() {return strlen(buf);}
+    printBuf(const char* c) { memset(buf, 0, SIZE); strncpy(buf, c, SIZE - 1); }
+    printBuf& operator+=(const char* c) { strncat(buf, c, SIZE - len() - 1); if(len() >= SIZE - 1) flush(); return *this;}
+    int len() { return strlen(buf); }
     void clear(){ memset(buf, 0, SIZE); }
-    void flush() {__android_log_print(ANDROID_LOG_INFO, "PreVEngine", "%s", buf); clear();}
-}printBuf;
+    void flush() { __android_log_print(ANDROID_LOG_INFO, "PreVEngine", "%s", buf); clear(); }
+} printBuf;
 
 int printf(const char* format, ...) {  // printf for Android
     char buf[printBuf.SIZE];
@@ -30,49 +30,10 @@ int printf(const char* format, ...) {  // printf for Android
 }
 //--------------------------------------------------------------------------------------------------
 
-android_app* g_AndroidApp = 0;  // Android native-actvity state
-/*
-//--------------------TEMP------------------------
-//--Window event handler--
-static void handle_cmd(struct android_app* app, int32_t cmd) {
-    //printf(" -> handle_cmd");
-    switch(cmd){
-        case APP_CMD_INPUT_CHANGED  : printf("APP_CMD_INPUT_CHANGED");  break;
-        case APP_CMD_INIT_WINDOW    : printf("APP_CMD_INIT_WINDOW");    break;
-        case APP_CMD_TERM_WINDOW    : printf("APP_CMD_TERM_WINDOW");    break;
-        case APP_CMD_WINDOW_RESIZED       : printf("APP_CMD_WINDOW_RESIZED");       break;
-        case APP_CMD_WINDOW_REDRAW_NEEDED : printf("APP_CMD_WINDOW_REDRAW_NEEDED"); break;
-        case APP_CMD_CONTENT_RECT_CHANGED : printf("APP_CMD_CONTENT_RECT_CHANGED"); break;
-        case APP_CMD_GAINED_FOCUS   : printf("APP_CMD_GAINED_FOCUS");   break;
-        case APP_CMD_LOST_FOCUS     : printf("APP_CMD_LOST_FOCUS");     break;
-        case APP_CMD_CONFIG_CHANGED : printf("APP_CMD_CONFIG_CHANGED"); break;
-        case APP_CMD_LOW_MEMORY     : printf("APP_CMD_LOW_MEMORY");     break;
-        case APP_CMD_START          : printf("APP_CMD_START");          break;
-        case APP_CMD_RESUME         : printf("APP_CMD_RESUME");         break;
-        case APP_CMD_SAVE_STATE     : printf("APP_CMD_SAVE_STATE");     break;
-        case APP_CMD_PAUSE          : printf("APP_CMD_PAUSE");          break;
-        case APP_CMD_STOP           : printf("APP_CMD_STOP");           break;
-        case APP_CMD_DESTROY        : printf("APP_CMD_DESTROY");        break;
-        default : printf("handle_cmd : UNKNOWN EVENT");
-    }
-}
+android_app* g_AndroidApp = NULL; // Android native-actvity state
 
-//--Input event handler--
-static int32_t handle_input(struct android_app* app, AInputEvent* event) {
-    //printf(" -> handle_input\n");
-    int32_t type=AInputEvent_getType(event);
-    if (type == AINPUT_EVENT_TYPE_MOTION) {
-        float mx = AMotionEvent_getX(event, 0);
-        float my = AMotionEvent_getY(event, 0);
-        printf("%f x %f\n",mx,my);
-        return 1;
-    }
-    return 0;
-}
-//------------------------------------------------
-*/
 //====================Main====================
-int main(int argc, char *argv[]);          // Forward declaration of main function
+int main(int argc, char *argv[]); // Forward declaration of main function
 
 static void activity_force_finish(void) {
     JavaVM* javaVM = g_AndroidApp->activity->vm;
@@ -92,18 +53,14 @@ static void activity_force_finish(void) {
     pthread_exit(NULL);
 }
 
-
 void android_main(struct android_app* state) {
     printf("Native Activity\n");
 
-    // state->onAppCmd     = handle_cmd;      // Register window event callback  (Temporary)
-    // state->onInputEvent = handle_input;    // Register input event callback   (Temporary)
+    g_AndroidApp = state; // Pass android app state to window_andoid.cpp
 
-    g_AndroidApp = state;                     // Pass android app state to window_andoid.cpp
+    android_fopen_set_asset_manager(state->activity->assetManager); // Re-direct fopen to read assets from our APK.
 
-    android_fopen_set_asset_manager(state->activity->assetManager);  // Re-direct fopen to read assets from our APK.
-
-    main(0, NULL);
+    main(0, NULL); // call the common main
 
     printf("Exiting.\n");
     ANativeActivity_finish(state->activity);
@@ -118,12 +75,15 @@ void android_main(struct android_app* state) {
 #define CALL_OBJ_METHOD( OBJ,METHOD,SIGNATURE, ...) jniEnv->CallObjectMethod (OBJ, jniEnv->GetMethodID(jniEnv->GetObjectClass(OBJ),METHOD,SIGNATURE), __VA_ARGS__)
 #define CALL_BOOL_METHOD(OBJ,METHOD,SIGNATURE, ...) jniEnv->CallBooleanMethod(OBJ, jniEnv->GetMethodID(jniEnv->GetObjectClass(OBJ),METHOD,SIGNATURE), __VA_ARGS__)
 
-void ShowKeyboard(bool visible,int flags){
+void ShowKeyboard(bool visible, int flags) {
     // Attach current thread to the JVM.
     JavaVM* javaVM = g_AndroidApp->activity->vm;
     JNIEnv* jniEnv = g_AndroidApp->activity->env;
-    JavaVMAttachArgs Args = {JNI_VERSION_1_6, "NativeThread", NULL};
-    javaVM->AttachCurrentThread(&jniEnv, &Args);
+    JavaVMAttachArgs Args = { JNI_VERSION_1_6, "NativeThread", NULL };
+    jint result = javaVM->AttachCurrentThread(&jniEnv, &Args);
+    if (result == JNI_ERR) {
+        return;
+    }
 
     // Retrieve NativeActivity.
     jobject lNativeActivity = g_AndroidApp->activity->clazz;
@@ -134,10 +94,10 @@ void ShowKeyboard(bool visible,int flags){
     jobject INPUT_METHOD_SERVICE =jniEnv->GetStaticObjectField(ClassContext, FieldINPUT_METHOD_SERVICE);
 
     // getSystemService(Context.INPUT_METHOD_SERVICE).
-    jobject   lInputMethodManager = CALL_OBJ_METHOD(lNativeActivity, "getSystemService", "(Ljava/lang/String;)Ljava/lang/Object;", INPUT_METHOD_SERVICE);
+    jobject lInputMethodManager = CALL_OBJ_METHOD(lNativeActivity, "getSystemService", "(Ljava/lang/String;)Ljava/lang/Object;", INPUT_METHOD_SERVICE);
 
     // getWindow().getDecorView().
-    jobject lWindow    = CALL_OBJ_METHOD(lNativeActivity,"getWindow", "()Landroid/view/Window;",0);
+    jobject lWindow = CALL_OBJ_METHOD(lNativeActivity,"getWindow", "()Landroid/view/Window;",0);
     jobject lDecorView = CALL_OBJ_METHOD(lWindow, "getDecorView", "()Landroid/view/View;",0);
     if (visible) {
         jboolean lResult = CALL_BOOL_METHOD(lInputMethodManager, "showSoftInput", "(Landroid/view/View;I)Z", lDecorView, flags);
@@ -151,13 +111,15 @@ void ShowKeyboard(bool visible,int flags){
 //======================================================================================
 
 //===============================Get Unicode from Keyboard==============================
-int GetUnicodeChar(int eventType, int keyCode, int metaState){
+int GetUnicodeChar(int eventType, int keyCode, int metaState) {
     JavaVM* javaVM = g_AndroidApp->activity->vm;
     JNIEnv* jniEnv = g_AndroidApp->activity->env;
 
-    JavaVMAttachArgs Args={JNI_VERSION_1_6, "NativeThread", NULL};
+    JavaVMAttachArgs Args = { JNI_VERSION_1_6, "NativeThread", NULL };
     jint result = javaVM->AttachCurrentThread(&jniEnv, &Args);
-    if (result == JNI_ERR) return 0;
+    if (result == JNI_ERR) {
+        return 0;
+    }
 
     jclass class_key_event = jniEnv->FindClass("android/view/KeyEvent");
 

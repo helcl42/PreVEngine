@@ -19,11 +19,15 @@ inline ptrdiff_t ArraySize(T (&)[N])
 }
 
 namespace file {
-    bool Exists(const std::string& filePath);
-
     bool CreateDirectoryByPath(const std::string& path);
 
     std::string GetDirectoryPath(const std::string& filePath);
+
+    bool Exists(const std::string& filePath);
+
+    std::string ReadTextFile(const std::string &filePath);
+
+    std::vector<char> ReadBinaryFile(const std::string &filePath);
 } // namespace file
 
 namespace string {

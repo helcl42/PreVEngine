@@ -2,7 +2,6 @@
 #define __FONT_METADATA_FILE_H__
 
 #include <cinttypes>
-#include <fstream>
 #include <map>
 #include <string>
 #include <vector>
@@ -26,9 +25,9 @@ public:
     std::vector<int> GetValueAsInts(const std::string& variable) const;
 
 private:
-    bool ProcessNextLine(std::istream& inOutStream, std::map<std::string, std::string>& outTokens) const;
+    std::map<std::string, std::string> GetLineTokens(const std::string& line) const;
 
-    std::vector<std::map<std::string, std::string>> GetAllLinesTokens(std::istream& inOutStream) const;
+    std::vector<std::map<std::string, std::string>> GetAllLinesTokens(const std::vector<std::string>& lines) const;
 
 private:
     std::vector<std::map<std::string, std::string>> m_allLinesKeyValues;

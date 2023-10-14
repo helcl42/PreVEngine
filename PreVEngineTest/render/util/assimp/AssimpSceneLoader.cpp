@@ -1,33 +1,14 @@
 #include "AssimpSceneLoader.h"
 
-#if defined(__ANDROID__)
-#include <android_native.h>
-#endif
-
-#include <assert.h>
+#include <prev/util/Utils.h>
 
 namespace prev_test::render::util::assimp {
 bool AssimpSceneLoader::LoadScene(const std::string& modelPath, Assimp::Importer* importer, const aiScene** scene) const
 {
     const unsigned int flags = aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType | aiProcess_GenSmoothNormals | aiProcess_FixInfacingNormals | aiProcess_FindInvalidData | aiProcess_ForceGenNormals | aiProcess_ValidateDataStructure;
 
-#if defined(__ANDROID__)
-    AAsset* asset = android_open_asset(modelPath.c_str(), AASSET_MODE_STREAMING);
-    assert(asset);
-    size_t size = AAsset_getLength(asset);
-
-    assert(size > 0);
-
-    void* meshData = malloc(size);
-    AAsset_read(asset, meshData, size);
-    AAsset_close(asset);
-
-    *scene = importer->ReadFileFromMemory(meshData, size, flags);
-
-    free(meshData);
-#else
-    *scene = importer->ReadFile(modelPath, flags);
-#endif
+    const std::vector<char> fileData{ prev::util::file::ReadBinaryFile(modelPath) };
+    *scene = importer->ReadFileFromMemory(fileData.data(), fileData.size(), flags);
     if (!*scene) {
         return false;
     }
