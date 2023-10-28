@@ -2,29 +2,20 @@
 #define __DEVICE_EXTENSIONS_H__
 
 #include "../../common/PickList.h"
+
 #include "../instance/Validation.h"
 
 namespace prev::core::device {
-class DeviceExtensions final : public prev::common::PickList {
+class DeviceExtensions final : public prev::common::PickList<VkExtensionProperties> {
 public:
     DeviceExtensions() = default;
 
-    DeviceExtensions& operator=(const DeviceExtensions& other);
-
-    DeviceExtensions(const DeviceExtensions& other);
+    DeviceExtensions(const VkPhysicalDevice gpu, const char* layerName = nullptr);
 
 public:
-    void Init(VkPhysicalDevice phy, const char* layerName = nullptr);
-
-public:
-    const char* GetNameByIndex(uint32_t inx) const override;
-
-    uint32_t GetPickedCount() const override;
+    std::string GetNameByIndex(const uint32_t index) const override;
 
     std::string GetName() const override;
-
-private:
-    std::vector<VkExtensionProperties> m_itemList;
 };
 } // namespace prev::core::device
 

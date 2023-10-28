@@ -3,21 +3,16 @@
 namespace prev::core::instance {
 Layers::Layers()
 {
-    uint32_t count = 0;
+    uint32_t count{ 0 };
     VKERRCHECK(vkEnumerateInstanceLayerProperties(&count, nullptr));
 
     m_itemList.resize(count);
     VKERRCHECK(vkEnumerateInstanceLayerProperties(&count, m_itemList.data()));
 }
 
-const char* Layers::GetNameByIndex(uint32_t inx) const
+std::string Layers::GetNameByIndex(const uint32_t index) const
 {
-    return static_cast<const char*>(m_itemList.at(inx).layerName);
-}
-
-uint32_t Layers::GetPickedCount() const
-{
-    return static_cast<uint32_t>(m_itemList.size());
+    return m_itemList[index].layerName;
 }
 
 std::string Layers::GetName() const

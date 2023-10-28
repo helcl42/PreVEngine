@@ -66,10 +66,10 @@ void Instance::Create(const Layers& layers, const Extensions& extensions, const 
     instanceInfo.pNext = nullptr;
     instanceInfo.flags = 0;
     instanceInfo.pApplicationInfo = &appInfo;
-    instanceInfo.enabledExtensionCount = extensions.PickCount();
-    instanceInfo.ppEnabledExtensionNames = extensions.GetPickList();
-    instanceInfo.enabledLayerCount = layers.PickCount();
-    instanceInfo.ppEnabledLayerNames = layers.GetPickList();
+    instanceInfo.enabledExtensionCount = extensions.GetPickCount();
+    instanceInfo.ppEnabledExtensionNames = extensions.GetPickListRaw();
+    instanceInfo.enabledLayerCount = layers.GetPickCount();
+    instanceInfo.ppEnabledLayerNames = layers.GetPickListRaw();
 
     VKERRCHECK(vkCreateInstance(&instanceInfo, nullptr, &m_instance));
 

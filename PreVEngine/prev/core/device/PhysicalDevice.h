@@ -40,9 +40,9 @@ public:
 
     const std::vector<VkQueueFamilyProperties> GetQueueFamilies() const;
 
-    DeviceExtensions& GetExtensions();
+    const DeviceExtensions& GetExtensions() const;
 
-    VkPhysicalDeviceFeatures& GetEnabledFeatures();
+    const VkPhysicalDeviceFeatures& GetEnabledFeatures() const;
 
 public:
     operator VkPhysicalDevice() const;

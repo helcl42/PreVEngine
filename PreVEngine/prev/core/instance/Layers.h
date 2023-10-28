@@ -5,19 +5,14 @@
 #include "Validation.h"
 
 namespace prev::core::instance {
-class Layers final : public prev::common::PickList {
+class Layers final : public prev::common::PickList<VkLayerProperties> {
 public:
     Layers();
 
 public:
-    const char* GetNameByIndex(uint32_t inx) const override;
-
-    uint32_t GetPickedCount() const override;
+    std::string GetNameByIndex(const uint32_t index) const override;
 
     std::string GetName() const override;
-
-private:
-    std::vector<VkLayerProperties> m_itemList;
 };
 } // namespace prev::core::instance
 

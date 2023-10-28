@@ -11,6 +11,7 @@ PhysicalDevice::PhysicalDevice()
 
 PhysicalDevice::PhysicalDevice(VkPhysicalDevice gpu)
     : m_handle(gpu)
+    , m_extensions(gpu)
 {
     vkGetPhysicalDeviceFeatures(gpu, &m_availableFeatures);
     vkGetPhysicalDeviceProperties(gpu, &m_availableProperties);
@@ -40,7 +41,6 @@ PhysicalDevice::PhysicalDevice(VkPhysicalDevice gpu)
     m_queueFamilies.resize(familyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(gpu, &familyCount, m_queueFamilies.data());
 
-    m_extensions.Init(gpu);
     m_extensions.Pick(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 }
 
@@ -149,12 +149,12 @@ const std::vector<VkQueueFamilyProperties> PhysicalDevice::GetQueueFamilies() co
     return m_queueFamilies;
 }
 
-DeviceExtensions& PhysicalDevice::GetExtensions()
+const DeviceExtensions& PhysicalDevice::GetExtensions() const
 {
     return m_extensions;
 }
 
-VkPhysicalDeviceFeatures& PhysicalDevice::GetEnabledFeatures()
+const VkPhysicalDeviceFeatures& PhysicalDevice::GetEnabledFeatures() const
 {
     return m_enabledFeatures;
 }

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <sstream>
 
 namespace prev::core::device {
 Device::Device(const std::shared_ptr<PhysicalDevice>& gpu, const QueueMetadataStorage& queuesMetadata)
@@ -30,8 +31,8 @@ Device::Device(const std::shared_ptr<PhysicalDevice>& gpu, const QueueMetadataSt
     VkDeviceCreateInfo deviceCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
     deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfoList.size());
     deviceCreateInfo.pQueueCreateInfos = queueCreateInfoList.data();
-    deviceCreateInfo.enabledExtensionCount = extensions.PickCount();
-    deviceCreateInfo.ppEnabledExtensionNames = extensions.GetPickList();
+    deviceCreateInfo.enabledExtensionCount = extensions.GetPickCount();
+    deviceCreateInfo.ppEnabledExtensionNames = extensions.GetPickListRaw();
     deviceCreateInfo.pEnabledFeatures = &m_gpu->GetEnabledFeatures();
     VKERRCHECK(vkCreateDevice(*m_gpu, &deviceCreateInfo, nullptr, &m_handle)); // create device
 
@@ -54,19 +55,44 @@ Device::~Device()
 
 void Device::Print() const
 {
-    const std::map<QueueType, std::string> queuNames = {
-        { QueueType::PRESENT, "PRESENT" },
-        { QueueType::GRAPHICS, "GRAPHICS" },
-        { QueueType::COMPUTE, "COMPUTE" },
-        { QueueType::TRANSFER, "TRANSFER" },
-        { QueueType::SPARSE, "SPARSE" },
-        { QueueType::PROTECTED, "PROTECTED" }
+    auto queueTypeToString = [](const QueueType type) {
+        static const std::map<QueueType, std::string> queuNames = {
+            { QueueType::PRESENT, "PRESENT" },
+            { QueueType::GRAPHICS, "GRAPHICS" },
+            { QueueType::COMPUTE, "COMPUTE" },
+            { QueueType::TRANSFER, "TRANSFER" },
+            { QueueType::SPARSE, "SPARSE" },
+            { QueueType::PROTECTED, "PROTECTED" }
+        };
+        return queuNames.at(type);
+    };
+
+    auto queueFlagsToString = [](const VkQueueFlags quueFlags) {
+        static const std::map<uint32_t, std::string> flagsNames = {
+            { 1, "GRAPHICS" },
+            { 2, "COMPUTE" },
+            { 4, "TRANSFER" },
+            { 8, "SPARSE" },
+            { 16, "PROTECTED" }
+        };
+
+        std::stringstream ss;
+        for (const auto& [flags, name] : flagsNames) {
+            if (quueFlags & flags) {
+                ss << name << " ";
+            }
+        }
+        return ss.str();
+    };
+
+    auto canPresentToString = [](const VkSurfaceKHR surface) -> std::string {
+        return surface ? "(can present)" : "";
     };
 
     LOGI("Logical Device used queues:\n");
     for (const auto& [qGroupKey, gQroupList] : m_queues) {
         for (const auto& qGroupItem : gQroupList) {
-            LOGI("Queue: %s index: %d family: %d flags: [ %s%s%s%s%s]%s\n", queuNames.at(qGroupKey).c_str(), qGroupItem->index, qGroupItem->family, (qGroupItem->flags & 1) ? "GRAPHICS " : "", (qGroupItem->flags & 2) ? "COMPUTE " : "", (qGroupItem->flags & 4) ? "TRANSFER " : "", (qGroupItem->flags & 8) ? "SPARSE " : "", (qGroupItem->flags & 16) ? "PROTECTED" : "", qGroupItem->surface ? " (can present)" : "");
+            LOGI("Queue: %s index: %d family: %d flags: [ %s] %s\n", queueTypeToString(qGroupKey).c_str(), qGroupItem->index, qGroupItem->family, queueFlagsToString(qGroupItem->flags).c_str(), canPresentToString(qGroupItem->surface).c_str());
         }
     }
 }

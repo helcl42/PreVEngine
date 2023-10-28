@@ -1,44 +1,22 @@
 #include "DeviceExtensions.h"
 
 namespace prev::core::device {
-DeviceExtensions& DeviceExtensions::operator=(const DeviceExtensions& other)
-{
-    if (this != &other) {
-        this->m_itemList = other.m_itemList;
-        this->m_pickListIndices = other.m_pickListIndices;
-        Refresh();
-    }
-    return *this;
-}
-
-DeviceExtensions::DeviceExtensions(const DeviceExtensions& other)
-{
-    this->m_itemList = other.m_itemList;
-    this->m_pickListIndices = other.m_pickListIndices;
-    Refresh();
-}
-
-void DeviceExtensions::Init(VkPhysicalDevice phy, const char* layerName)
+DeviceExtensions::DeviceExtensions(const VkPhysicalDevice gpu, const char* layerName)
 {
     uint32_t count{ 0 };
-    VKERRCHECK(vkEnumerateDeviceExtensionProperties(phy, layerName, &count, nullptr));
+    VKERRCHECK(vkEnumerateDeviceExtensionProperties(gpu, layerName, &count, nullptr));
 
-    m_itemList.resize(count); // Resize buffer
-    VKERRCHECK(vkEnumerateDeviceExtensionProperties(phy, layerName, &count, m_itemList.data())); // Fetch list
+    m_itemList.resize(count);
+    VKERRCHECK(vkEnumerateDeviceExtensionProperties(gpu, layerName, &count, m_itemList.data()));
 }
 
-const char* DeviceExtensions::GetNameByIndex(uint32_t inx) const
+std::string DeviceExtensions::GetNameByIndex(const uint32_t index) const
 {
-    return static_cast<const char*>(m_itemList.at(inx).extensionName);
-}
-
-uint32_t DeviceExtensions::GetPickedCount() const
-{
-    return static_cast<uint32_t>(m_itemList.size());
+    return m_itemList[index].extensionName;
 }
 
 std::string DeviceExtensions::GetName() const
 {
-    return "Device-Extensions";
+    return "DeviceExtensions";
 }
 } // namespace prev::core::device
