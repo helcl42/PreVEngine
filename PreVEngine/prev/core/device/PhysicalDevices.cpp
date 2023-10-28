@@ -18,14 +18,22 @@ PhysicalDevices::PhysicalDevices(const VkInstance instance)
     }
 }
 
-std::shared_ptr<PhysicalDevice> PhysicalDevices::FindPresentable(VkSurfaceKHR surface) const
+std::shared_ptr<PhysicalDevice> PhysicalDevices::FindPresentable(const VkSurfaceKHR surface, const int32_t hintIndex) const
 {
-    for (const auto& gpu : m_gpuList) {
+    if (hintIndex < 0 || hintIndex >= static_cast<int32_t>(m_gpuList.size())) {
+        for (const auto& gpu : m_gpuList) {
+            if (gpu->FindQueueFamily(0, 0, surface) >= 0) {
+                return gpu;
+            }
+        }
+        LOGW("No devices can present to this surface.\n");
+    } else {
+        const auto& gpu{ m_gpuList[hintIndex] };
         if (gpu->FindQueueFamily(0, 0, surface) >= 0) {
             return gpu;
         }
+        LOGW("Devices at index %d can not present to this surface.\n", hintIndex);
     }
-    LOGW("No devices can present to this surface. (Is DRI3 enabled?)\n");
     return nullptr;
 }
 

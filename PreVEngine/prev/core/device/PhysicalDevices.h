@@ -11,11 +11,11 @@ class PhysicalDevices {
 public:
     PhysicalDevices(const VkInstance instance);
 
-    std::shared_ptr<PhysicalDevice> FindPresentable(VkSurfaceKHR surface) const; // Returns first device able to present to surface, or null if none.
+public:
+    std::shared_ptr<PhysicalDevice> FindPresentable(const VkSurfaceKHR surface, const int32_t hintIndex = -1) const; // Returns first device able to present to surface, or null if none.
 
     void Print(bool showQueues = false) const;
 
-public:
     size_t GetCount() const;
 
     const PhysicalDevice& operator[](const size_t i) const;
