@@ -168,7 +168,7 @@ void Engine::InitDevice()
     auto physicalDevices{ std::make_shared<prev::core::device::PhysicalDevices>(*m_instance) };
     physicalDevices->Print();
 
-    auto presentablePhysicalDevice{ physicalDevices->FindPresentable(m_surface) };
+    auto presentablePhysicalDevice{ physicalDevices->FindPresentable(m_surface, m_config.gpuIndex) };
     if (!presentablePhysicalDevice) {
         throw std::runtime_error("No suitable GPU found?!");
     }

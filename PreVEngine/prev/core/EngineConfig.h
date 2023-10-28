@@ -20,6 +20,8 @@ struct EngineConfig {
     uint32_t framesInFlight{ 3 };
 
     uint32_t samplesCount{ 1 };
+
+    int32_t gpuIndex{ -1 };
 };
 } // namespace prev::core
 
