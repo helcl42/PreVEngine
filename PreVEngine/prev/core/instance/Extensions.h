@@ -2,22 +2,18 @@
 #define __EXTENSIONS_H__
 
 #include "../../common/PickList.h"
+
 #include "Validation.h"
 
 namespace prev::core::instance {
-class Extensions final : public prev::common::PickList {
+class Extensions final : public prev::common::PickList<VkExtensionProperties> {
 public:
     Extensions(const char* layerName = nullptr);
 
 public:
-    const char* GetNameByIndex(uint32_t inx) const override;
-
-    uint32_t GetPickedCount() const override;
+    std::string GetNameByIndex(const uint32_t inx) const override;
 
     std::string GetName() const override;
-
-private:
-    std::vector<VkExtensionProperties> m_itemList;
 };
 } // namespace prev::core::instance
 
