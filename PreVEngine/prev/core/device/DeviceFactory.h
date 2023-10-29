@@ -7,7 +7,6 @@
 
 namespace prev::core::device {
 class Device;
-struct QueueMetadata;
 
 class DeviceFactory {
 public:
@@ -16,12 +15,7 @@ public:
     ~DeviceFactory() = default;
 
 public:
-    std::shared_ptr<Device> Create(const std::shared_ptr<PhysicalDevice>& gpu, VkSurfaceKHR surface) const;
-
-private:
-    uint32_t FamilyQueueCount(const std::vector<QueueMetadata>& queues, const uint32_t family) const;
-
-    bool FindQueue(const std::shared_ptr<PhysicalDevice>& gpu, VkQueueFlags flags, VkQueueFlags unwantedFlags, VkSurfaceKHR surface, const std::vector<QueueMetadata>& addedQueues, QueueMetadata& outQueueMeta) const;
+    std::shared_ptr<Device> Create(const std::shared_ptr<PhysicalDevice>& gpu, const VkSurfaceKHR surface) const;
 };
 } // namespace prev::core::device
 

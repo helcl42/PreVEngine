@@ -1,12 +1,72 @@
 ﻿#include "Device.h"
 
+#include "../../util/VkUtils.h"
+
 #include <algorithm>
 #include <iterator>
 #include <sstream>
 
 namespace prev::core::device {
-Device::Device(const std::shared_ptr<PhysicalDevice>& gpu, const QueueMetadataStorage& queuesMetadata)
-    : m_gpu(gpu)
+// QueueMetadata
+bool operator<(const QueueMetadata& a, const QueueMetadata& b)
+{
+    if (a.family < b.family) {
+        return true;
+    }
+    if (a.index < b.index) {
+        return true;
+    }
+    return false;
+}
+
+// QueuesMetadata
+void QueuesMetadata::Add(const std::vector<QueueType>& queueTypes, const std::vector<QueueMetadata>& metadatas)
+{
+    for (const auto& queueTyoe : queueTypes) {
+        queueGroups[queueTyoe].insert(metadatas.begin(), metadatas.end());
+    }
+    uniqueQueues.insert(metadatas.begin(), metadatas.end());
+}
+
+std::vector<uint32_t> QueuesMetadata::GetDistinctQueueFamiies() const
+{
+    std::set<uint32_t> distinctQueueFamilies;
+    for (const auto& [queueType, queues] : queueGroups) {
+        for (const auto& queue : queues) {
+            distinctQueueFamilies.insert(queue.family);
+        }
+    }
+    return std::vector<uint32_t>(distinctQueueFamilies.cbegin(), distinctQueueFamilies.cend());
+}
+
+uint32_t QueuesMetadata::GetQueueFamilyCount(const uint32_t family) const
+{
+    uint32_t count{ 0 };
+    for (const auto& item : uniqueQueues) {
+        if (item.family == family) {
+            ++count;
+        }
+    }
+    return count;
+}
+
+std::vector<QueueMetadata> QueuesMetadata::GetAllQueues() const
+{
+    std::vector<QueueMetadata> result;
+    for (const auto& group : queueGroups) {
+        result.insert(result.end(), group.second.cbegin(), group.second.cend());
+    }
+    return result;
+}
+
+bool QueuesMetadata::HasAny(const QueueType queueType) const
+{
+    return queueGroups.find(queueType) != queueGroups.cend();
+}
+
+// Device
+Device::Device(const std::shared_ptr<PhysicalDevice>& gpu, const QueuesMetadata& queuesMetadata)
+    : m_gpu{ gpu }
 {
     LOGI("Logical Device using GPU: %s\n", m_gpu->GetProperties().deviceName);
 
@@ -16,10 +76,20 @@ Device::Device(const std::shared_ptr<PhysicalDevice>& gpu, const QueueMetadataSt
 
     const auto distinctQueueFamilyIndices{ queuesMetadata.GetDistinctQueueFamiies() };
 
-    std::vector<float> priorities(distinctQueueFamilyIndices.size(), 0.0f);
-    std::vector<VkDeviceQueueCreateInfo> queueCreateInfoList;
-    for (const auto queueFamilyIndex : distinctQueueFamilyIndices) {
+    const float DefaultQueuePriority{ 1.0f };
+    std::vector<std::vector<float>> allQueuesPriorities(distinctQueueFamilyIndices.size());
+    for (size_t i = 0; i < distinctQueueFamilyIndices.size(); ++i) {
+        const auto queueFamilyIndex{ distinctQueueFamilyIndices[i] };
         const auto queueCount{ queuesMetadata.GetQueueFamilyCount(queueFamilyIndex) };
+        allQueuesPriorities[i] = std::vector<float>(queueCount, DefaultQueuePriority);
+    }
+
+    std::vector<VkDeviceQueueCreateInfo> queueCreateInfoList;
+    for (size_t i = 0; i < distinctQueueFamilyIndices.size(); ++i) {
+        const auto queueFamilyIndex{ distinctQueueFamilyIndices[i] };
+        const auto queueCount{ queuesMetadata.GetQueueFamilyCount(queueFamilyIndex) };
+        const auto& priorities{ allQueuesPriorities[i] };
+
         VkDeviceQueueCreateInfo info = { VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
         info.queueFamilyIndex = queueFamilyIndex;
         info.queueCount = queueCount;
@@ -38,9 +108,7 @@ Device::Device(const std::shared_ptr<PhysicalDevice>& gpu, const QueueMetadataSt
 
     for (const auto& [queueGroupKey, queueGroupList] : queuesMetadata.queueGroups) {
         for (const auto& groupItem : queueGroupList) {
-            VkQueue vkQueue;
-            vkGetDeviceQueue(m_handle, groupItem.family, groupItem.index, &vkQueue);
-            m_queues[queueGroupKey].push_back(std::make_shared<Queue>(vkQueue, groupItem.family, groupItem.index, groupItem.flags, groupItem.surface, m_handle));
+            m_queues[queueGroupKey].push_back(std::make_shared<Queue>(m_handle, groupItem.family, groupItem.index, groupItem.flags, groupItem.surface));
         }
     }
 }
@@ -56,7 +124,7 @@ Device::~Device()
 void Device::Print() const
 {
     auto queueTypeToString = [](const QueueType type) {
-        static const std::map<QueueType, std::string> queuNames = {
+        static const std::map<QueueType, std::string> queueNames = {
             { QueueType::PRESENT, "PRESENT" },
             { QueueType::GRAPHICS, "GRAPHICS" },
             { QueueType::COMPUTE, "COMPUTE" },
@@ -64,25 +132,7 @@ void Device::Print() const
             { QueueType::SPARSE, "SPARSE" },
             { QueueType::PROTECTED, "PROTECTED" }
         };
-        return queuNames.at(type);
-    };
-
-    auto queueFlagsToString = [](const VkQueueFlags quueFlags) {
-        static const std::map<uint32_t, std::string> flagsNames = {
-            { 1, "GRAPHICS" },
-            { 2, "COMPUTE" },
-            { 4, "TRANSFER" },
-            { 8, "SPARSE" },
-            { 16, "PROTECTED" }
-        };
-
-        std::stringstream ss;
-        for (const auto& [flags, name] : flagsNames) {
-            if (quueFlags & flags) {
-                ss << name << " ";
-            }
-        }
-        return ss.str();
+        return queueNames.at(type);
     };
 
     auto canPresentToString = [](const VkSurfaceKHR surface) -> std::string {
@@ -92,7 +142,7 @@ void Device::Print() const
     LOGI("Logical Device used queues:\n");
     for (const auto& [qGroupKey, gQroupList] : m_queues) {
         for (const auto& qGroupItem : gQroupList) {
-            LOGI("Queue: %s index: %d family: %d flags: [ %s] %s\n", queueTypeToString(qGroupKey).c_str(), qGroupItem->index, qGroupItem->family, queueFlagsToString(qGroupItem->flags).c_str(), canPresentToString(qGroupItem->surface).c_str());
+            LOGI("Queue purpose: %s family: %d index: %d flags: [ %s] %s\n", queueTypeToString(qGroupKey).c_str(), qGroupItem->family, qGroupItem->index, prev::util::vk::QueueFlagsToString(qGroupItem->flags).c_str(), canPresentToString(qGroupItem->surface).c_str());
         }
     }
 }
@@ -111,7 +161,7 @@ std::shared_ptr<Queue> Device::GetQueue(const QueueType queueType, const uint32_
         return nullptr;
     }
 
-    return queuesGroup.at(index);
+    return queuesGroup[index];
 }
 
 std::vector<std::shared_ptr<Queue>> Device::GetQueues(const QueueType queueType) const

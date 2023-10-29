@@ -1,6 +1,8 @@
 #include "VkUtils.h"
 
 #include <limits>
+#include <map>
+#include <sstream>
 
 namespace prev::util::vk {
 uint32_t FindMemoryType(const VkPhysicalDevice gpu, const uint32_t typeFilter, const VkMemoryPropertyFlags properties)
@@ -291,6 +293,48 @@ uint32_t GetComputeGroupSize(const uint32_t val, const uint32_t blockSize)
         return div;
     } else {
         return div + blockSize;
+    }
+}
+
+std::string QueueFlagsToString(const VkQueueFlags quueFlags)
+{
+    static const std::map<uint32_t, std::string> flagsNames = {
+        { 0x1, "GRAPHICS" },
+        { 0x2, "COMPUTE" },
+        { 0x4, "TRANSFER" },
+        { 0x8, "SPARSE" },
+        { 0x10, "PROTECTED" },
+        { 0x20, "VIDEO_DECODE" },
+        { 0x40, "VIDEO_ENCODE" },
+        { 0x100, "OPTICAL_FLOW" }
+    };
+
+    std::stringstream ss;
+    for (const auto& [flags, name] : flagsNames) {
+        if (quueFlags & flags) {
+            ss << name << " ";
+        }
+    }
+    return ss.str();
+}
+
+std::string VendorIdToString(const uint32_t vendorId)
+{
+    switch (vendorId) {
+    case 0x1002:
+        return "AMD";
+    case 0x8086:
+        return "INTEL";
+    case 0x10DE:
+        return "NVIDIA";
+    case 0x13B5:
+        return "ARM";
+    case 0x5143:
+        return "Qualcomm";
+    case 0x1010:
+        return "Imagination";
+    default:
+        return "UNKNOWN";
     }
 }
 } // namespace prev::util::vk

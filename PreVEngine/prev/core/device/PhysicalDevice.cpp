@@ -1,5 +1,10 @@
 #include "PhysicalDevice.h"
 
+#include "../../util/VkUtils.h"
+
+#include <map>
+#include <sstream>
+
 namespace prev::core::device {
 PhysicalDevice::PhysicalDevice()
     : m_handle(VK_NULL_HANDLE)
@@ -9,7 +14,7 @@ PhysicalDevice::PhysicalDevice()
 {
 }
 
-PhysicalDevice::PhysicalDevice(VkPhysicalDevice gpu)
+PhysicalDevice::PhysicalDevice(const VkPhysicalDevice gpu)
     : m_handle(gpu)
     , m_extensions(gpu)
 {
@@ -36,7 +41,7 @@ PhysicalDevice::PhysicalDevice(VkPhysicalDevice gpu)
         m_enabledFeatures.sampleRateShading = VK_TRUE;
     }
 
-    uint32_t familyCount = 0;
+    uint32_t familyCount{ 0 };
     vkGetPhysicalDeviceQueueFamilyProperties(gpu, &familyCount, nullptr);
     m_queueFamilies.resize(familyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(gpu, &familyCount, m_queueFamilies.data());
@@ -44,36 +49,13 @@ PhysicalDevice::PhysicalDevice(VkPhysicalDevice gpu)
     m_extensions.Pick(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 }
 
-std::string PhysicalDevice::GetVendorName() const
-{
-    struct
-    {
-        const uint32_t id;
-        const char* name;
-    } vendors[] = {
-        { 0x1002, "AMD" },
-        { 0x10DE, "NVIDIA" },
-        { 0x8086, "INTEL" },
-        { 0x13B5, "ARM" },
-        { 0x5143, "Qualcomm" },
-        { 0x1010, "Imagination" }
-    };
-
-    for (auto vendor : vendors) {
-        if (vendor.id == m_availableProperties.vendorID) {
-            return vendor.name;
-        }
-    }
-    return "UNKNOWN";
-}
-
 // Find queue-family with requred flags, and can present to given surface. (if provided)
 // Returns the QueueFamily index, or -1 if not found.
-int32_t PhysicalDevice::FindQueueFamily(VkQueueFlags flags, VkQueueFlags unwantedFlags, VkSurfaceKHR surface) const
+int32_t PhysicalDevice::FindQueueFamily(const VkQueueFlags flags, const VkQueueFlags unwantedFlags, const VkSurfaceKHR surface) const
 {
-    for (int32_t i = 0; i < static_cast<int32_t>(m_queueFamilies.size()); i++) {
-        const auto& qqueueFamily{ m_queueFamilies[i] };
-        if ((qqueueFamily.queueFlags & flags) != flags || (qqueueFamily.queueFlags & unwantedFlags) != 0) {
+    for (int32_t i = 0; i < static_cast<int32_t>(m_queueFamilies.size()); ++i) {
+        const auto& queueFamily{ m_queueFamilies[i] };
+        if ((queueFamily.queueFlags & flags) != flags || (queueFamily.queueFlags & unwantedFlags) != 0) {
             continue;
         }
 
@@ -87,13 +69,12 @@ int32_t PhysicalDevice::FindQueueFamily(VkQueueFlags flags, VkQueueFlags unwante
 
         return static_cast<int32_t>(i);
     }
-
     return -1;
 }
 
-std::vector<VkSurfaceFormatKHR> PhysicalDevice::SurfaceFormats(VkSurfaceKHR surface) const
+std::vector<VkSurfaceFormatKHR> PhysicalDevice::SurfaceFormats(const VkSurfaceKHR surface) const
 {
-    uint32_t count = 0;
+    uint32_t count{ 0 };
     vkGetPhysicalDeviceSurfaceFormatsKHR(m_handle, surface, &count, nullptr);
 
     ASSERT(!!count, "No supported surface formats found.");
@@ -105,7 +86,7 @@ std::vector<VkSurfaceFormatKHR> PhysicalDevice::SurfaceFormats(VkSurfaceKHR surf
 }
 
 //--Returns the first supported surface color format from the preferredFormats list, or VK_FORMAT_UNDEFINED if no match found.
-VkFormat PhysicalDevice::FindSurfaceFormat(VkSurfaceKHR surface, const std::vector<VkFormat>& preferredFormats) const
+VkFormat PhysicalDevice::FindSurfaceFormat(const VkSurfaceKHR surface, const std::vector<VkFormat>& preferredFormats) const
 {
     const auto formats{ SurfaceFormats(surface) }; // get list of supported surface formats
     for (const auto& preferedFormat : preferredFormats) {
@@ -144,7 +125,7 @@ const VkPhysicalDeviceFeatures& PhysicalDevice::GetAvailableFeatures() const
     return m_availableFeatures;
 }
 
-const std::vector<VkQueueFamilyProperties> PhysicalDevice::GetQueueFamilies() const
+const std::vector<VkQueueFamilyProperties>& PhysicalDevice::GetQueueFamilies() const
 {
     return m_queueFamilies;
 }
@@ -162,5 +143,31 @@ const VkPhysicalDeviceFeatures& PhysicalDevice::GetEnabledFeatures() const
 PhysicalDevice::operator VkPhysicalDevice() const
 {
     return m_handle;
+}
+
+void PhysicalDevice::Print(const bool showQueues) const
+{
+    auto deviceTypeToString = [](const VkPhysicalDeviceType type) -> std::string {
+        static const std::string devTypea[] = {
+            "OTHER",
+            "INTEGRATED",
+            "DISCRETE",
+            "VIRTUAL",
+            "CPU"
+        };
+        return devTypea[type];
+    };
+
+    const auto vendor{ prev::util::vk::VendorIdToString(m_availableProperties.vendorID) };
+    const auto& gpuProps{ GetProperties() };
+    LOGI("\t%s %s %s\n", deviceTypeToString(gpuProps.deviceType).c_str(), vendor.c_str(), gpuProps.deviceName);
+
+    if (showQueues) {
+        const auto queueFamilies{ GetQueueFamilies() };
+        for (size_t i = 0; i < queueFamilies.size(); ++i) {
+            const auto& queueProps{ queueFamilies[i] };
+            LOGI("\t\tQueue-family: %zd count: %2d flags: [ %s]\n", i, queueProps.queueCount, prev::util::vk::QueueFlagsToString(queueProps.queueFlags).c_str());
+        }
+    }
 }
 } // namespace prev::core::device

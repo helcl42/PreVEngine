@@ -1,14 +1,14 @@
 #include "Queue.h"
 
 namespace prev::core::device {
-Queue::Queue(VkQueue h, uint32_t f, uint32_t idx, VkQueueFlags flgs, VkSurfaceKHR surf, VkDevice dvc)
-    : handle(h)
-    , family(f)
-    , index(idx)
-    , flags(flgs)
-    , surface(surf)
-    , device(dvc)
+Queue::Queue(VkDevice dev, uint32_t f, uint32_t idx, VkQueueFlags flgs, VkSurfaceKHR surf)
+    : device{ dev }
+    , family{ f }
+    , index{ idx }
+    , flags{ flgs }
+    , surface{ surf }
 {
+    vkGetDeviceQueue(device, family, index, &handle);
 }
 
 VkCommandPool Queue::CreateCommandPool() const
@@ -24,8 +24,6 @@ VkCommandPool Queue::CreateCommandPool() const
 
 Queue::operator VkQueue() const
 {
-    ASSERT(!!handle, "Queue not yet initialized. ");
-
     return handle;
 }
 } // namespace prev::core::device
