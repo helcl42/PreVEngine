@@ -19,73 +19,28 @@ struct QueueMetadata {
 
     VkSurfaceKHR surface; // VK_NULL_HANDLE if queue can not present
 
-    friend bool operator<(const QueueMetadata& a, const QueueMetadata& b)
-    {
-        if (a.family < b.family) {
-            return true;
-        }
-        if (a.index < b.index) {
-            return true;
-        }
-        return false;
-    }
+    friend bool operator<(const QueueMetadata& a, const QueueMetadata& b);
 };
 
-struct QueueMetadataStorage {
+struct QueuesMetadata {
+    void Add(const std::vector<QueueType>& queueTypes, const std::vector<QueueMetadata>& metadatas);
+
+    std::vector<uint32_t> GetDistinctQueueFamiies() const;
+
+    uint32_t GetQueueFamilyCount(const uint32_t family) const;
+
+    std::vector<QueueMetadata> GetAllQueues() const;
+
+    bool HasAny(const QueueType queueType) const;
+
     std::map<QueueType, std::set<QueueMetadata>> queueGroups;
 
-    std::set<QueueMetadata> uniqueQueue;
-
-    void Add(const std::initializer_list<QueueType>& queueTypes, const std::initializer_list<QueueMetadata>& metadatas)
-    {
-        for (const auto& qt : queueTypes) {
-            auto& group{ queueGroups[qt] };
-            group.insert(metadatas.begin(), metadatas.end());
-        }
-
-        uniqueQueue.insert(metadatas.begin(), metadatas.end());
-    }
-
-    std::set<uint32_t> GetDistinctQueueFamiies() const
-    {
-        std::set<uint32_t> queueFamilies;
-        for (const auto& group : queueGroups) {
-            for (const auto& item : group.second) {
-                queueFamilies.insert(item.family);
-            }
-        }
-        return queueFamilies;
-    }
-
-    uint32_t GetQueueFamilyCount(const uint32_t familly) const
-    {
-        uint32_t count{ 0 };
-        for (const auto& item : uniqueQueue) {
-            if (item.family == familly) {
-                ++count;
-            }
-        }
-        return count;
-    }
-
-    std::vector<QueueMetadata> GetAllQueues() const
-    {
-        std::vector<QueueMetadata> result;
-        for (const auto& group : queueGroups) {
-            result.insert(result.end(), group.second.cbegin(), group.second.cend());
-        }
-        return result;
-    }
-
-    bool HasAny(const QueueType queueType) const
-    {
-        return queueGroups.find(queueType) != queueGroups.cend();
-    }
+    std::set<QueueMetadata> uniqueQueues;
 };
 
 class Device {
 public:
-    Device(const std::shared_ptr<PhysicalDevice>& gpu, const QueueMetadataStorage& queuesMetadata);
+    Device(const std::shared_ptr<PhysicalDevice>& gpu, const QueuesMetadata& queuesMetadata);
 
     ~Device();
 

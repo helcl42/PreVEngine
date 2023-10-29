@@ -16,13 +16,13 @@ enum class QueueType {
 };
 
 struct Queue {
-    Queue(VkQueue h, uint32_t f, uint32_t idx, VkQueueFlags flgs, VkSurfaceKHR surf, VkDevice dvc);
+    Queue(VkDevice dev, uint32_t f, uint32_t idx, VkQueueFlags flgs, VkSurfaceKHR surf);
 
     VkCommandPool CreateCommandPool() const;
 
     operator VkQueue() const;
 
-    VkQueue handle;
+    VkDevice device;
 
     uint32_t family; // queue family
 
@@ -32,7 +32,7 @@ struct Queue {
 
     VkSurfaceKHR surface; // VK_NULL_HANDLE if queue can not present
 
-    VkDevice device;
+    VkQueue handle;
 };
 } // namespace prev::core::device
 

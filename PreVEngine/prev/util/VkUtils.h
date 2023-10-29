@@ -44,6 +44,10 @@ std::string PresentModeToString(const VkPresentModeKHR mode);
 
 uint32_t GetComputeGroupSize(const uint32_t val, const uint32_t blockSize);
 
+std::string QueueFlagsToString(const VkQueueFlags flags);
+
+std::string VendorIdToString(const uint32_t vendorId);
+
 } // namespace prev::util::vk
 
 #endif
