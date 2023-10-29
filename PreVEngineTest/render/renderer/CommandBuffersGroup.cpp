@@ -21,6 +21,6 @@ CommandBuffersGroup::~CommandBuffersGroup()
 
 const std::vector<VkCommandBuffer>& CommandBuffersGroup::GetBuffersGroup(const uint32_t index) const
 {
-    return m_commandBufferGroups.at(index);
+    return m_commandBufferGroups[index];
 }
 } // namespace prev_test::render::renderer

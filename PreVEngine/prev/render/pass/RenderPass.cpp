@@ -35,7 +35,7 @@ void RenderPass::End(const VkCommandBuffer commandBuffer)
 VkFormat RenderPass::GetColorFormat(const int attachmentIndex) const
 {
     if (attachmentIndex >= 0 && attachmentIndex < static_cast<int>(m_colorFormats.size())) {
-        return m_colorFormats.at(attachmentIndex);
+        return m_colorFormats[attachmentIndex];
     }
     return VkFormat::VK_FORMAT_UNDEFINED;
 }
@@ -58,7 +58,7 @@ std::vector<VkFormat> RenderPass::GetColorFormats(const bool includeResolveAttac
 VkFormat RenderPass::GetDepthFormat(const int attachmentIndex) const
 {
     if (attachmentIndex >= 0 && attachmentIndex < static_cast<int>(m_depthFormats.size())) {
-        return m_depthFormats.at(attachmentIndex);
+        return m_depthFormats[attachmentIndex];
     }
     return VkFormat::VK_FORMAT_UNDEFINED;
 }

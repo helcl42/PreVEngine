@@ -66,7 +66,7 @@ public:
     std::shared_ptr<UniformBuffer> GetNext()
     {
         m_index = (m_index + 1) % m_poolItems.size();
-        return m_poolItems.at(m_index);
+        return m_poolItems[m_index];
     }
 
 private:

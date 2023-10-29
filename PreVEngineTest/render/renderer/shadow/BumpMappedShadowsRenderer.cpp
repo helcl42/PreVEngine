@@ -95,9 +95,9 @@ void BumpMappedShadowsRenderer::RenderMeshNode(const ShadowsRenderContext& rende
     const auto model = renderComponent->GetModel();
     const auto mesh = model->GetMesh();
 
-    const auto meshParts = mesh->GetMeshParts();
+    const auto& meshParts{ mesh->GetMeshParts() };
     for (const auto meshPartIndex : meshNode.meshPartIndices) {
-        const auto meshPart = meshParts.at(meshPartIndex);
+        const auto& meshPart = meshParts[meshPartIndex];
 
         auto ubo = m_uniformsPool->GetNext();
 

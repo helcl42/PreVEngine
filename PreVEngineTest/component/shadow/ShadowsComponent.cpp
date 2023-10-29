@@ -25,9 +25,8 @@ ShadowsComponent::~ShadowsComponent()
     m_sampler = nullptr;
     m_renderPass = nullptr;
 
-    for (uint32_t i = 0; i < m_cascadesCount; i++) {
-        auto& cascade{ m_cascades.at(i) };
-        cascade.Destroy(*device);
+    for (uint32_t i = 0; i < m_cascadesCount; ++i) {
+        m_cascades[i].Destroy(*device);
     }
 
     m_depthBuffer = nullptr;
@@ -56,7 +55,7 @@ std::shared_ptr<prev::render::pass::RenderPass> ShadowsComponent::GetRenderPass(
 
 const ShadowsCascade& ShadowsComponent::GetCascade(const size_t cascadeIndex) const
 {
-    return m_cascades.at(cascadeIndex);
+    return m_cascades[cascadeIndex];
 }
 
 VkExtent2D ShadowsComponent::GetExtent() const
@@ -78,7 +77,7 @@ std::vector<glm::vec3> ShadowsComponent::GenerateFrustumCorners(const glm::mat4&
 {
     auto frustumCorners{ prev::util::math::GetFrustumCorners(inverseWorldToClipSpaceTransform) };
 
-    for (uint32_t i = 0; i < 4; i++) {
+    for (uint32_t i = 0; i < 4; ++i) {
         const glm::vec3 dist{ frustumCorners[i + 4] - frustumCorners[i] };
         frustumCorners[i + 4] = frustumCorners[i] + (dist * splitDistance);
         frustumCorners[i] = frustumCorners[i] + (dist * lastSplitDistance);
@@ -90,7 +89,7 @@ std::vector<glm::vec3> ShadowsComponent::GenerateFrustumCorners(const glm::mat4&
 glm::vec3 ShadowsComponent::CalculateFrustumCenter(const std::vector<glm::vec3>& frustumCorners) const
 {
     glm::vec3 frustumCenter{ 0.0f };
-    for (uint32_t i = 0; i < 8; i++) {
+    for (uint32_t i = 0; i < 8; ++i) {
         frustumCenter += frustumCorners[i];
     }
     frustumCenter /= 8.0f;
@@ -100,7 +99,7 @@ glm::vec3 ShadowsComponent::CalculateFrustumCenter(const std::vector<glm::vec3>&
 float ShadowsComponent::CalculateFrustumRadius(const std::vector<glm::vec3>& frustumCorners, const glm::vec3& frustumCenter) const
 {
     float radius{ 0.0f };
-    for (uint32_t i = 0; i < 8; i++) {
+    for (uint32_t i = 0; i < 8; ++i) {
         const float distance{ glm::length(frustumCorners[i] - frustumCenter) };
         radius = glm::max(radius, distance);
     }
@@ -119,7 +118,7 @@ std::vector<float> ShadowsComponent::GenerateCaascadeSplits(const float nearClip
     const float ratio{ maxZ / minZ };
 
     // Calculate split depths based on view camera furstum
-    for (uint32_t i = 0; i < m_cascadesCount; i++) {
+    for (uint32_t i = 0; i < m_cascadesCount; ++i) {
         const float p{ (i + 1) / static_cast<float>(m_cascadesCount) };
         const float log{ minZ * powf(ratio, p) };
         const float uniform{ minZ + range * p };

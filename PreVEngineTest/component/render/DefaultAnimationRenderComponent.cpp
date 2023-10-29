@@ -18,7 +18,7 @@ std::shared_ptr<prev_test::render::IModel> DefaultAnimationRenderComponent::GetM
 
 std::shared_ptr<prev_test::render::IMaterial> DefaultAnimationRenderComponent::GetMaterial(const uint32_t index) const
 {
-    return m_materials.at(index);
+    return m_materials[index];
 }
 
 const std::vector<std::shared_ptr<prev_test::render::IMaterial>>& DefaultAnimationRenderComponent::GetMaterials() const
@@ -38,7 +38,7 @@ bool DefaultAnimationRenderComponent::IsCastedByShadows() const
 
 std::shared_ptr<prev_test::render::IAnimation> DefaultAnimationRenderComponent::GetAnimation(const uint32_t index) const
 {
-    return m_animations.at(index);
+    return m_animations[index];
 }
 
 const std::vector<std::shared_ptr<prev_test::render::IAnimation>>& DefaultAnimationRenderComponent::GetAnimations() const
@@ -48,7 +48,7 @@ const std::vector<std::shared_ptr<prev_test::render::IAnimation>>& DefaultAnimat
 
 std::shared_ptr<prev_test::render::IAnimation> DefaultAnimationRenderComponent::GetCurrentAnimation() const
 {
-    return m_animations.at(m_currentAnimationIndex);
+    return m_animations[m_currentAnimationIndex];
 }
 
 void DefaultAnimationRenderComponent::SetCurrentAnimationIndex(const uint32_t index)
