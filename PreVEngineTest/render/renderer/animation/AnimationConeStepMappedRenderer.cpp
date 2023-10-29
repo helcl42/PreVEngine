@@ -109,7 +109,7 @@ void AnimationConeStepMappedRenderer::RenderMeshNode(const NormalRenderContext& 
 
     const auto& meshParts{ mesh->GetMeshParts() };
     for (const auto meshPartIndex : meshNode.meshPartIndices) {
-        const auto& meshPart = meshParts.at(meshPartIndex);
+        const auto& meshPart = meshParts[meshPartIndex];
         const auto& animationPart = animation->GetAnimationPart(meshPartIndex);
         const auto material = nodeRenderComponent->GetMaterial(meshPart.materialIndex);
         const auto modelMatrix = transformComponent->GetWorldTransformScaled() * meshNode.transform;

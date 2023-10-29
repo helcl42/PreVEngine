@@ -310,7 +310,7 @@ void MasterRenderer::RenderShadows(const prev::render::RenderContext& renderCont
         const ShadowsRenderContext customRenderContext{ customRenderContextBase, cascade.viewMatrix, cascade.projectionMatrix, cascadeIndex, prev_test::common::intersection::Frustum{ cascade.projectionMatrix, cascade.viewMatrix } };
 
 #ifdef PARALLEL_RENDERING
-        const auto& cascadeCommandBuffers{ m_shadowsCommandBufferGroups.at(cascadeIndex)->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
+        const auto& cascadeCommandBuffers{ m_shadowsCommandBufferGroups[cascadeIndex]->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
         RenderParallel(shadows->GetRenderPass(), customRenderContext, root, m_shadowRenderers, cascadeCommandBuffers);
 #else
         RenderSerial(shadows->GetRenderPass(), customRenderContext, root, m_shadowRenderers);
@@ -333,7 +333,7 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
     const glm::vec3 newCameraViewPosition{ cameraViewPosition.x, cameraViewPosition.y - cameraViewOffset, cameraViewPosition.z };
 
     const auto reflectedUpDirection{ glm::reflect(-cameraComponent->GetUpDirection(), cameraComponent->GetDefaultUpDirection()) };
-    
+
     const glm::mat4 viewMatrix{ glm::lookAt(newCameraPosition, newCameraViewPosition, reflectedUpDirection) };
     const glm::mat4 projectionMatrix{ cameraComponent->GetViewFrustum().CreateProjectionMatrix(reflectionComponent->GetExtent().width, reflectionComponent->GetExtent().height) };
 

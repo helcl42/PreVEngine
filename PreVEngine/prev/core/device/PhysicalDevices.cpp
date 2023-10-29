@@ -56,6 +56,6 @@ size_t PhysicalDevices::GetCount() const
 
 const PhysicalDevice& PhysicalDevices::operator[](const size_t i) const
 {
-    return *m_gpuList.at(i);
+    return *m_gpuList[i];
 }
 } // namespace prev::core::device

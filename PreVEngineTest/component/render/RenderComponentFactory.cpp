@@ -249,7 +249,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateModelRenderCompo
     prev_test::render::material::MaterialFactory materialFactory{};
     std::vector<std::shared_ptr<prev_test::render::IMaterial>> materials;
     for (size_t i = 0; i < texturePaths.size(); i++) {
-        materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), 10.0f, 0.7f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE }, texturePaths.at(i), normalMapPaths.at(i), *allocator));
+        materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), 10.0f, 0.7f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE }, texturePaths[i], normalMapPaths[i], *allocator));
     }
 
     prev_test::render::mesh::ModelMeshFactory meshFactory{};
@@ -268,7 +268,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateModelRenderCompo
     prev_test::render::material::MaterialFactory materialFactory{};
     std::vector<std::shared_ptr<prev_test::render::IMaterial>> materials;
     for (size_t i = 0; i < texturePaths.size(); i++) {
-        materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), 10.0f, 0.7f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE }, texturePaths.at(i), normalMapPaths.at(i), heightOrConeMapPaths.at(i), *allocator));
+        materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), 10.0f, 0.7f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE }, texturePaths[i], normalMapPaths[i], heightOrConeMapPaths[i], *allocator));
     }
 
     prev_test::render::mesh::ModelMeshFactory meshFactory{};
@@ -353,7 +353,7 @@ std::unique_ptr<IAnimationRenderComponent> RenderComponentFactory::CreateAnimate
     prev_test::render::material::MaterialFactory materialFactory{};
     std::vector<std::shared_ptr<prev_test::render::IMaterial>> materials;
     for (size_t i = 0; i < texturePaths.size(); i++) {
-        materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), 1.5f, 0.3f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE }, texturePaths.at(i), normalMapPaths.at(i), *allocator));
+        materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), 1.5f, 0.3f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE }, texturePaths[i], normalMapPaths[i], *allocator));
     }
 
     prev_test::render::mesh::ModelMeshFactory meshFactory{};
@@ -378,7 +378,7 @@ std::unique_ptr<IAnimationRenderComponent> RenderComponentFactory::CreateAnimate
     prev_test::render::material::MaterialFactory materialFactory{};
     std::vector<std::shared_ptr<prev_test::render::IMaterial>> materials;
     for (size_t i = 0; i < texturePaths.size(); i++) {
-        materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), 1.5f, 0.3f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE }, texturePaths.at(i), normalMapPaths.at(i), heightOrConeMapPaths.at(i), *allocator));
+        materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), 1.5f, 0.3f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE }, texturePaths[i], normalMapPaths[i], heightOrConeMapPaths[i], *allocator));
     }
 
     prev_test::render::mesh::ModelMeshFactory meshFactory{};

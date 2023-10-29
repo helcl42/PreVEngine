@@ -208,7 +208,7 @@ void Animation::Update(const float deltaTime)
 
 std::shared_ptr<IAnimationPart> Animation::GetAnimationPart(unsigned int partIndex) const
 {
-    return m_parts.at(partIndex);
+    return m_parts[partIndex];
 }
 
 const std::vector<std::shared_ptr<IAnimationPart>>& Animation::GetAnimationParts() const

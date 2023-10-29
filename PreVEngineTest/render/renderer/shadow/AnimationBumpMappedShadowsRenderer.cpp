@@ -96,7 +96,7 @@ void AnimationBumpMappedShadowsRenderer::RenderMeshNode(const ShadowsRenderConte
 
     const auto& meshParts{ mesh->GetMeshParts() };
     for (const auto meshPartIndex : meshNode.meshPartIndices) {
-        const auto& meshPart = meshParts.at(meshPartIndex);
+        const auto& meshPart = meshParts[meshPartIndex];
         const auto& animationPart = animation->GetAnimationPart(meshPartIndex);
 
         auto ubo = m_uniformsPool->GetNext();

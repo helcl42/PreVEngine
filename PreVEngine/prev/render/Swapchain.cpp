@@ -1,4 +1,5 @@
 #include "Swapchain.h"
+
 #include "buffer/image/DepthImageBuffer.h"
 #include "buffer/image/ImageBufferFactory.h"
 
@@ -11,11 +12,11 @@
 
 namespace prev::render {
 Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount)
-    : m_device(device)
-    , m_allocator(allocator)
-    , m_renderPass(renderPass)
-    , m_surface(surface)
-    , m_sampleCount(sampleCount)
+    : m_device{ device }
+    , m_allocator{ allocator }
+    , m_renderPass{ renderPass }
+    , m_surface{ surface }
+    , m_sampleCount{ sampleCount }
 {
     m_graphicsQueue = m_device.GetQueue(core::device::QueueType::GRAPHICS);
     m_presentQueue = m_device.GetQueue(core::device::QueueType::PRESENT);
@@ -302,7 +303,7 @@ bool Swapchain::AcquireNext(SwapchainBuffer& next)
 {
     ASSERT(!m_isAcquired, "Swapchain: Previous swapchain buffer has not yet been presented.\n");
 
-    const auto& swapchainBuffer{ m_swapchainBuffers.at(m_currentFrameIndex) };
+    const auto& swapchainBuffer{ m_swapchainBuffers[m_currentFrameIndex] };
 
     VKERRCHECK(vkWaitForFences(m_device, 1, &swapchainBuffer.fence, VK_TRUE, UINT64_MAX));
 
@@ -364,7 +365,7 @@ void Swapchain::Present()
         ShowVkResult(result);
     }
 
-    if(!swapchainChanged) {
+    if (!swapchainChanged) {
         m_currentFrameIndex = (m_currentFrameIndex + 1) % m_swapchainImagesCount;
     }
 

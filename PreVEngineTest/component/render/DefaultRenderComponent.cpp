@@ -21,7 +21,7 @@ std::shared_ptr<prev_test::render::IModel> DefaultRenderComponent::GetModel() co
 
 std::shared_ptr<prev_test::render::IMaterial> DefaultRenderComponent::GetMaterial(const uint32_t index) const
 {
-    return m_materials.at(index);
+    return m_materials[index];
 }
 
 const std::vector<std::shared_ptr<prev_test::render::IMaterial>>& DefaultRenderComponent::GetMaterials() const
