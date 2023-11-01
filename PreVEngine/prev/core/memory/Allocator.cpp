@@ -211,7 +211,7 @@ void Allocator::CopyBufferToImage(const VkExtent3D& extent, const VkBuffer buffe
 
 void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const std::vector<const uint8_t*> layerData, const uint32_t layerCount, VkImage& image)
 {
-    for (uint32_t layerIndex = 0; layerIndex < layerCount; layerIndex++) {
+    for (uint32_t layerIndex = 0; layerIndex < layerCount; ++layerIndex) {
         // Copy image data to staging buffer in CPU memory
         uint32_t formatSize = FormatSize(format);
         uint64_t size = extent.width * extent.height * extent.depth * formatSize;
@@ -242,7 +242,7 @@ void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format,
     }
 }
 
-void Allocator::GenerateMipmaps(const VkImage image, VkFormat imageFormat, const VkExtent3D& extent, const uint32_t mipLevels, const uint32_t layersCount)
+void Allocator::GenerateMipmaps(const VkImage image, VkFormat imageFormat, const VkExtent3D& extent, const uint32_t mipLevels, const uint32_t layersCount, const VkImageLayout newLayout)
 {
     // Check if image format supports linear blitting
     VkFormatProperties formatProperties;
@@ -255,7 +255,7 @@ void Allocator::GenerateMipmaps(const VkImage image, VkFormat imageFormat, const
 
     BeginCommandBuffer();
 
-    for (uint32_t layerIndex = 0; layerIndex < layersCount; layerIndex++) {
+    for (uint32_t layerIndex = 0; layerIndex < layersCount; ++layerIndex) {
         VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
         barrier.image = image;
         barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -269,7 +269,7 @@ void Allocator::GenerateMipmaps(const VkImage image, VkFormat imageFormat, const
         int32_t mipHeight = extent.height;
         int32_t mipDepth = extent.depth;
 
-        for (uint32_t i = 1; i < mipLevels; i++) {
+        for (uint32_t i = 1; i < mipLevels; ++i) {
             barrier.subresourceRange.baseMipLevel = i - 1;
             barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
             barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
@@ -278,48 +278,29 @@ void Allocator::GenerateMipmaps(const VkImage image, VkFormat imageFormat, const
 
             vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
-            if (mipDepth > 1) {
-                for (int32_t d = 0; d < mipDepth; d += 2) {
-                    VkImageBlit blit = {};
-                    blit.srcOffsets[0] = { 0, 0, d };
-                    blit.srcOffsets[1] = { mipWidth, mipHeight, d + 2 };
-                    blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-                    blit.srcSubresource.mipLevel = i - 1;
-                    blit.srcSubresource.baseArrayLayer = layerIndex;
-                    blit.srcSubresource.layerCount = 1;
-                    blit.dstOffsets[0] = { 0, 0, d / 2 };
-                    blit.dstOffsets[1] = { std::max(1, mipWidth / 2), std::max(1, mipHeight / 2), d / 2 + 1 };
-                    blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-                    blit.dstSubresource.mipLevel = i;
-                    blit.dstSubresource.baseArrayLayer = layerIndex;
-                    blit.dstSubresource.layerCount = 1;
+            VkImageBlit blit = {};
+            blit.srcOffsets[0] = { 0, 0, 0 };
+            blit.srcOffsets[1] = { mipWidth, mipHeight, mipDepth };
+            blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            blit.srcSubresource.mipLevel = i - 1;
+            blit.srcSubresource.baseArrayLayer = layerIndex;
+            blit.srcSubresource.layerCount = 1;
+            blit.dstOffsets[0] = { 0, 0, 0 };
+            blit.dstOffsets[1] = { std::max(1, mipWidth / 2), std::max(1, mipHeight / 2), std::max(1, mipDepth / 2) };
+            blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            blit.dstSubresource.mipLevel = i;
+            blit.dstSubresource.baseArrayLayer = layerIndex;
+            blit.dstSubresource.layerCount = 1;
 
-                    vkCmdBlitImage(m_commandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR);
-                }
-            } else {
-                VkImageBlit blit = {};
-                blit.srcOffsets[0] = { 0, 0, 0 };
-                blit.srcOffsets[1] = { mipWidth, mipHeight, 1 };
-                blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-                blit.srcSubresource.mipLevel = i - 1;
-                blit.srcSubresource.baseArrayLayer = layerIndex;
-                blit.srcSubresource.layerCount = 1;
-                blit.dstOffsets[0] = { 0, 0, 0 };
-                blit.dstOffsets[1] = { std::max(1, mipWidth / 2), std::max(1, mipHeight / 2), 1 };
-                blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-                blit.dstSubresource.mipLevel = i;
-                blit.dstSubresource.baseArrayLayer = layerIndex;
-                blit.dstSubresource.layerCount = 1;
+            vkCmdBlitImage(m_commandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR);
 
-                vkCmdBlitImage(m_commandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR);
-            }
-
+            barrier.subresourceRange.baseMipLevel = i - 1;
             barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-            barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            barrier.newLayout = newLayout;
             barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
             barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-            vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+            vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
             mipWidth = std::max(1, mipWidth / 2);
             mipHeight = std::max(1, mipHeight / 2);
@@ -328,11 +309,11 @@ void Allocator::GenerateMipmaps(const VkImage image, VkFormat imageFormat, const
 
         barrier.subresourceRange.baseMipLevel = mipLevels - 1;
         barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        barrier.newLayout = newLayout;
         barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-        vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+        vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
     }
 
     EndCommandBuffer();
@@ -342,7 +323,7 @@ void Allocator::TransitionImageLayout(const VkImage image, const VkImageLayout o
 {
     BeginCommandBuffer();
 
-    for (uint32_t layerIndex = 0; layerIndex < layersCount; layerIndex++) {
+    for (uint32_t layerIndex = 0; layerIndex < layersCount; ++layerIndex) {
         VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
         barrier.oldLayout = oldLayout;
         barrier.newLayout = newLayout;
