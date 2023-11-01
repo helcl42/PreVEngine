@@ -43,7 +43,7 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
 
     auto fence = prev::util::vk::CreateFence(*device);
 
-    const prev::render::buffer::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ width, height }, VK_IMAGE_TYPE_2D, weatherImageFormat, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D, 1 };
+    const prev::render::buffer::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ width, height }, VK_IMAGE_TYPE_2D, weatherImageFormat, VK_SAMPLE_COUNT_1_BIT, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1 };
     auto weatherImageBuffer = prev::render::buffer::image::ImageBufferFactory{}.CreateStorage(bufferCreateInfo, *allocator);
     auto sampler = std::make_unique<prev::render::sampler::Sampler>(*device, static_cast<float>(weatherImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR);
 
@@ -78,9 +78,7 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
     // Submit compute work
     vkResetFences(*device, 1, &fence);
 
-    const VkPipelineStageFlags waitStageMask{ VK_PIPELINE_STAGE_TRANSFER_BIT };
     VkSubmitInfo computeSubmitInfo{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
-    computeSubmitInfo.pWaitDstStageMask = &waitStageMask;
     computeSubmitInfo.commandBufferCount = 1;
     computeSubmitInfo.pCommandBuffers = &commandBuffer;
     VKERRCHECK(vkQueueSubmit(*computeQueue, 1, &computeSubmitInfo, fence));
@@ -91,7 +89,8 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
     vkDestroyFence(*device, fence, nullptr);
     vkDestroyCommandPool(*device, commandPool, nullptr);
 
-    allocator->TransitionImageLayout(weatherImageBuffer->GetImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, weatherImageFormat, weatherImageBuffer->GetMipLevels());
+    allocator->TransitionImageLayout(weatherImageBuffer->GetImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, weatherImageFormat, weatherImageBuffer->GetMipLevels());
+    allocator->GenerateMipmaps(weatherImageBuffer->GetImage(), weatherImageBuffer->GetFormat(), weatherImageBuffer->GetExtent(), weatherImageBuffer->GetMipLevels(), weatherImageBuffer->GetLayerCount());
 
     pipeline->ShutDown();
     pipeline = nullptr;

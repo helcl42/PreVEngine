@@ -54,9 +54,7 @@ CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t widt
     // Submit compute work
     vkResetFences(*device, 1, &fence);
 
-    const VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
     VkSubmitInfo computeSubmitInfo{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
-    computeSubmitInfo.pWaitDstStageMask = &waitStageMask;
     computeSubmitInfo.commandBufferCount = 1;
     computeSubmitInfo.pCommandBuffers = &commandBuffer;
     VKERRCHECK(vkQueueSubmit(*computeQueue, 1, &computeSubmitInfo, fence));
@@ -68,7 +66,6 @@ CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t widt
     vkDestroyCommandPool(*device, commandPool, nullptr);
 
     allocator->TransitionImageLayout(noiseImageBuffer->GetImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, noiseImageFormat, noiseImageBuffer->GetMipLevels());
-
     allocator->GenerateMipmaps(noiseImageBuffer->GetImage(), noiseImageBuffer->GetFormat(), noiseImageBuffer->GetExtent(), noiseImageBuffer->GetMipLevels(), noiseImageBuffer->GetLayerCount());
 
     pipeline->ShutDown();
