@@ -43,11 +43,23 @@ void SunRenderer::Init()
     queryPoolInfo.queryType = VK_QUERY_TYPE_OCCLUSION;
     queryPoolInfo.queryCount = 1;
     VKERRCHECK(vkCreateQueryPool(*device, &queryPoolInfo, nullptr, &m_queryPool));
+
+    m_firstFrame = true;
+    m_passedSamples = 0;
 }
 
 void SunRenderer::BeforeRender(const NormalRenderContext& renderContext)
 {
-    m_passedSamples = 0;
+    if (!m_firstFrame) {
+        auto device = prev::core::DeviceProvider::Instance().GetDevice();
+
+        const auto result{ vkGetQueryPoolResults(*device, m_queryPool, 0, 1, sizeof(m_passedSamples), &m_passedSamples, sizeof(uint64_t), VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_PARTIAL_BIT) };
+        const float ratio{ glm::clamp((static_cast<float>(m_passedSamples) / static_cast<float>(m_maxNumberOfSamples * m_renderPass->GetSamplesCount())), 0.0f, 1.0f) * 1.2f };
+
+        prev::event::EventChannel::Post(prev_test::render::renderer::sky::SunVisibilityEvent{ ratio });
+    }
+    m_firstFrame = false;
+
     vkCmdResetQueryPool(renderContext.commandBuffer, m_queryPool, 0, 1);
 }
 
@@ -102,12 +114,6 @@ void SunRenderer::PostRender(const NormalRenderContext& renderContext)
 
 void SunRenderer::AfterRender(const NormalRenderContext& renderContext)
 {
-    auto device = prev::core::DeviceProvider::Instance().GetDevice();
-
-    const auto result{ vkGetQueryPoolResults(*device, m_queryPool, 0, 1, sizeof(m_passedSamples), &m_passedSamples, sizeof(uint64_t), VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_PARTIAL_BIT) };
-    const float ratio{ glm::clamp((static_cast<float>(m_passedSamples) / static_cast<float>(m_maxNumberOfSamples * m_renderPass->GetSamplesCount())), 0.0f, 1.0f) * 1.2f };
-
-    prev::event::EventChannel::Post(prev_test::render::renderer::sky::SunVisibilityEvent{ ratio });
 }
 
 void SunRenderer::ShutDown()
