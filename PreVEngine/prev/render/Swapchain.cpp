@@ -211,6 +211,7 @@ void Swapchain::Print() const
     for (auto m : modes) {
         print((m == mode) ? ConsoleColor::RESET : ConsoleColor::FAINT, "\t\t%s %s\n", (m == mode) ? TICK_CHARACTER : " ", util::vk::PresentModeToString(m).c_str());
     }
+    LOGI("\tSharingMode: %s\n", m_swapchainCreateInfo.imageSharingMode == VK_SHARING_MODE_EXCLUSIVE ? "Exclusive" : "Shared");
 }
 
 const VkExtent2D& Swapchain::GetExtent() const
@@ -291,7 +292,7 @@ std::vector<VkImage> Swapchain::GetSwapchainImages() const
 {
     std::vector<VkImage> swapchainImages;
 
-    uint32_t swapchainImagesCount = 0;
+    uint32_t swapchainImagesCount{ 0 };
     VKERRCHECK(vkGetSwapchainImagesKHR(m_device, m_swapchain, &swapchainImagesCount, nullptr));
     swapchainImages.resize(swapchainImagesCount);
     VKERRCHECK(vkGetSwapchainImagesKHR(m_device, m_swapchain, &swapchainImagesCount, swapchainImages.data()));
