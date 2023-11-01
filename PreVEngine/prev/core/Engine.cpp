@@ -188,7 +188,7 @@ void Engine::InitAllocator()
     // TODO
     //  -> Allocator uses only graphics queue for it's internal commands
     //     - make queue type as a parameter or even better decouple it from queue completely
-    m_allocator = std::make_shared<prev::core::memory::Allocator>(*m_instance, *m_device, *m_device->GetQueue(device::QueueType::GRAPHICS)); // Create "Vulkan Memory Aloocator"
+    m_allocator = std::make_shared<prev::core::memory::Allocator>(*m_instance, *m_device, *m_device->GetQueue(device::QueueType::GRAPHICS)); // Create "Vulkan Memory Allocator"
     LOGI("Allocator created\n");
 }
 
