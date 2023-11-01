@@ -25,7 +25,7 @@ struct QueueMetadata {
 struct QueuesMetadata {
     void Add(const std::vector<QueueType>& queueTypes, const std::vector<QueueMetadata>& metadatas);
 
-    std::vector<uint32_t> GetDistinctQueueFamiies() const;
+    std::vector<uint32_t> GetQueueFamiies() const;
 
     uint32_t GetQueueFamilyCount(const uint32_t family) const;
 
@@ -34,8 +34,6 @@ struct QueuesMetadata {
     bool HasAny(const QueueType queueType) const;
 
     std::map<QueueType, std::set<QueueMetadata>> queueGroups;
-
-    std::set<QueueMetadata> uniqueQueues;
 };
 
 class Device {

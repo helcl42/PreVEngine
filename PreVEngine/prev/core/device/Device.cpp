@@ -10,13 +10,13 @@ namespace prev::core::device {
 // QueueMetadata
 bool operator<(const QueueMetadata& a, const QueueMetadata& b)
 {
-    if (a.family < b.family) {
-        return true;
+    if (a.family >= b.family) {
+        return false;
     }
-    if (a.index < b.index) {
-        return true;
+    if (a.index >= b.index) {
+        return false;
     }
-    return false;
+    return true;
 }
 
 // QueuesMetadata
@@ -25,10 +25,9 @@ void QueuesMetadata::Add(const std::vector<QueueType>& queueTypes, const std::ve
     for (const auto& queueTyoe : queueTypes) {
         queueGroups[queueTyoe].insert(metadatas.begin(), metadatas.end());
     }
-    uniqueQueues.insert(metadatas.begin(), metadatas.end());
 }
 
-std::vector<uint32_t> QueuesMetadata::GetDistinctQueueFamiies() const
+std::vector<uint32_t> QueuesMetadata::GetQueueFamiies() const
 {
     std::set<uint32_t> distinctQueueFamilies;
     for (const auto& [queueType, queues] : queueGroups) {
@@ -41,13 +40,15 @@ std::vector<uint32_t> QueuesMetadata::GetDistinctQueueFamiies() const
 
 uint32_t QueuesMetadata::GetQueueFamilyCount(const uint32_t family) const
 {
-    uint32_t count{ 0 };
-    for (const auto& item : uniqueQueues) {
-        if (item.family == family) {
-            ++count;
+    std::set<uint32_t> distinctQueues;
+    for (const auto& [queueType, queues] : queueGroups) {
+        for (const auto& queue : queues) {
+            if (queue.family == family) {
+                distinctQueues.insert(queue.index);
+            }
         }
     }
-    return count;
+    return static_cast<uint32_t>(distinctQueues.size());
 }
 
 std::vector<QueueMetadata> QueuesMetadata::GetAllQueues() const
@@ -74,19 +75,19 @@ Device::Device(const std::shared_ptr<PhysicalDevice>& gpu, const QueuesMetadata&
     m_gpu->GetExtensions().Print();
 #endif
 
-    const auto distinctQueueFamilyIndices{ queuesMetadata.GetDistinctQueueFamiies() };
+    const auto queueFamilyIndices{ queuesMetadata.GetQueueFamiies() };
 
     const float DefaultQueuePriority{ 1.0f };
-    std::vector<std::vector<float>> allQueuesPriorities(distinctQueueFamilyIndices.size());
-    for (size_t i = 0; i < distinctQueueFamilyIndices.size(); ++i) {
-        const auto queueFamilyIndex{ distinctQueueFamilyIndices[i] };
+    std::vector<std::vector<float>> allQueuesPriorities(queueFamilyIndices.size());
+    for (size_t i = 0; i < queueFamilyIndices.size(); ++i) {
+        const auto queueFamilyIndex{ queueFamilyIndices[i] };
         const auto queueCount{ queuesMetadata.GetQueueFamilyCount(queueFamilyIndex) };
         allQueuesPriorities[i] = std::vector<float>(queueCount, DefaultQueuePriority);
     }
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfoList;
-    for (size_t i = 0; i < distinctQueueFamilyIndices.size(); ++i) {
-        const auto queueFamilyIndex{ distinctQueueFamilyIndices[i] };
+    for (size_t i = 0; i < queueFamilyIndices.size(); ++i) {
+        const auto queueFamilyIndex{ queueFamilyIndices[i] };
         const auto queueCount{ queuesMetadata.GetQueueFamilyCount(queueFamilyIndex) };
         const auto& priorities{ allQueuesPriorities[i] };
 
