@@ -60,6 +60,8 @@ private:
     uint64_t m_maxNumberOfSamples{ 0 };
 
     VkQueryPool m_queryPool{ nullptr };
+
+    bool m_firstFrame{ true };
 };
 } // namespace prev_test::render::renderer::sky
 
