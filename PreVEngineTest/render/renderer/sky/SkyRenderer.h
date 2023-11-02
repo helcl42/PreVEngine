@@ -125,8 +125,6 @@ private:
 
     std::shared_ptr<prev::render::sampler::Sampler> m_skyPostProcessImageSampler;
 
-    VkCommandPool m_computeCommandPool{};
-
 private:
     static const inline VkFormat COLOR_FORMAT{ VK_FORMAT_R8G8B8A8_UNORM };
 
