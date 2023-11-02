@@ -26,47 +26,44 @@ void OffScreenRenderPassComponent::Init()
     auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
 
     // create render pass
-    std::vector<VkSubpassDependency> dependencies;
+    const uint32_t depthDependenciesOffset{ (m_depthFormat != VK_FORMAT_UNDEFINED) ? 2u : 0u };
+    const uint32_t allDependenciesCount{ depthDependenciesOffset + 2u * static_cast<uint32_t>(m_colorFormats.size()) };
+
+    std::vector<VkSubpassDependency> dependencies(allDependenciesCount);
     if (m_depthFormat != VK_FORMAT_UNDEFINED) {
-        const auto origSize{ dependencies.size() };
-        dependencies.resize(origSize + 2);
+        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[0].dstSubpass = 0;
+        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dependencies[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        dependencies[0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-        dependencies[origSize + 0].srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependencies[origSize + 0].dstSubpass = 0;
-        dependencies[origSize + 0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        dependencies[origSize + 0].dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        dependencies[origSize + 0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        dependencies[origSize + 0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-        dependencies[origSize + 0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
-        dependencies[origSize + 1].srcSubpass = 0;
-        dependencies[origSize + 1].dstSubpass = VK_SUBPASS_EXTERNAL;
-        dependencies[origSize + 1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-        dependencies[origSize + 1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        dependencies[origSize + 1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-        dependencies[origSize + 1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        dependencies[origSize + 1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+        dependencies[1].srcSubpass = 0;
+        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
     }
 
-    if (m_colorFormats.size() > 0) {
-        const auto origSize{ dependencies.size() };
-        dependencies.resize(origSize + 2);
+    for (uint32_t index = depthDependenciesOffset; index < allDependenciesCount; index += 2) {
+        dependencies[index + 0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[index + 0].dstSubpass = 0;
+        dependencies[index + 0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[index + 0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[index + 0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        dependencies[index + 0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[index + 0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-        dependencies[origSize + 0].srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependencies[origSize + 0].dstSubpass = 0;
-        dependencies[origSize + 0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        dependencies[origSize + 0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependencies[origSize + 0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        dependencies[origSize + 0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        dependencies[origSize + 0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
-        dependencies[origSize + 1].srcSubpass = 0;
-        dependencies[origSize + 1].dstSubpass = VK_SUBPASS_EXTERNAL;
-        dependencies[origSize + 1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependencies[origSize + 1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        dependencies[origSize + 1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        dependencies[origSize + 1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        dependencies[origSize + 1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+        dependencies[index + 1].srcSubpass = 0;
+        dependencies[index + 1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[index + 1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[index + 1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[index + 1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[index + 1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        dependencies[index + 1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
     }
 
     std::vector<uint32_t> attachmentIndices;
@@ -92,6 +89,11 @@ void OffScreenRenderPassComponent::Init()
     prev::render::buffer::image::ImageBufferFactory imageBufferFactory{};
 
     // create image buffers and corresponding samplers
+    if (m_depthFormat != VK_FORMAT_UNDEFINED) {
+        m_depthBuffer = imageBufferFactory.CreateDepth(prev::render::buffer::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, m_depthFormat, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D }, *allocator);
+        m_depthSampler = std::make_shared<prev::render::sampler::Sampler>(*device, 1.0f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_NEAREST, VK_FILTER_NEAREST, VK_SAMPLER_MIPMAP_MODE_NEAREST);
+    }
+
     for (uint32_t i = 0; i < m_colorFormats.size(); ++i) {
         const auto colorFormat{ m_colorFormats[i] };
 
@@ -100,11 +102,6 @@ void OffScreenRenderPassComponent::Init()
 
         m_colorBuffers.emplace_back(std::move(colorImageBuffer));
         m_colorSamplers.emplace_back(std::move(colorImageBufferSampler));
-    }
-
-    if (m_depthFormat != VK_FORMAT_UNDEFINED) {
-        m_depthBuffer = imageBufferFactory.CreateDepth(prev::render::buffer::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, m_depthFormat, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D }, *allocator);
-        m_depthSampler = std::make_shared<prev::render::sampler::Sampler>(*device, 1.0f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_NEAREST, VK_FILTER_NEAREST, VK_SAMPLER_MIPMAP_MODE_NEAREST);
     }
 
     std::vector<VkImageView> imageViews;
