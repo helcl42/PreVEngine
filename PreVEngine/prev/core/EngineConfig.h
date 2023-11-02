@@ -17,7 +17,7 @@ struct EngineConfig {
 
     bool VSync{ true };
 
-    uint32_t framesInFlight{ 3 };
+    uint32_t swapchainFrameCount{ 3 };
 
     uint32_t samplesCount{ 1 };
 

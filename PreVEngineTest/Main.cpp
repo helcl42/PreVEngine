@@ -10,9 +10,9 @@ int main(int argc, char* argv[])
     config.validation = false;
     config.windowPosition = { 40, 40 };
     config.windowSize = { 1920, 1080 };
-    config.framesInFlight = 3;
     config.VSync = true;
     config.samplesCount = 1;
+    config.swapchainFrameCount = 3;
 
     prev_test::TestApp app(config);
     app.Init();
