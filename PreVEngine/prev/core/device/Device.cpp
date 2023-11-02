@@ -20,10 +20,10 @@ bool operator<(const QueueMetadata& a, const QueueMetadata& b)
 }
 
 // QueuesMetadata
-void QueuesMetadata::Add(const std::vector<QueueType>& queueTypes, const std::vector<QueueMetadata>& metadatas)
+void QueuesMetadata::Add(const std::vector<QueueType>& queueTypes, const QueueMetadata& queueMetadata)
 {
-    for (const auto& queueTyoe : queueTypes) {
-        queueGroups[queueTyoe].insert(metadatas.begin(), metadatas.end());
+    for (const auto& queueType : queueTypes) {
+        queueGroups[queueType].insert(queueMetadata);
     }
 }
 

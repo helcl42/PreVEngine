@@ -23,7 +23,7 @@ struct QueueMetadata {
 };
 
 struct QueuesMetadata {
-    void Add(const std::vector<QueueType>& queueTypes, const std::vector<QueueMetadata>& metadatas);
+    void Add(const std::vector<QueueType>& queueTypes, const QueueMetadata& queueMetadata);
 
     std::vector<uint32_t> GetQueueFamiies() const;
 

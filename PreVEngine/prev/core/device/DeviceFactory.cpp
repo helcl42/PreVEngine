@@ -37,44 +37,44 @@ std::shared_ptr<Device> DeviceFactory::Create(const std::shared_ptr<PhysicalDevi
 
     // check if there is pure presenting queue with no other features
     if (FindQueue(gpu, 0, DefaultUnwantedFlags | VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT | VK_QUEUE_SPARSE_BINDING_BIT, surface, queuesMetadata, workingQueueMetadata)) {
-        queuesMetadata.Add({ QueueType::PRESENT }, { workingQueueMetadata });
+        queuesMetadata.Add({ QueueType::PRESENT }, workingQueueMetadata);
     }
 
     if (!queuesMetadata.HasAny(QueueType::PRESENT)) {
         if (FindQueue(gpu, 0, DefaultUnwantedFlags, surface, queuesMetadata, workingQueueMetadata)) {
-            queuesMetadata.Add({ QueueType::PRESENT }, { workingQueueMetadata });
+            queuesMetadata.Add({ QueueType::PRESENT }, workingQueueMetadata);
         }
     }
 
     // check if there is a dedicated compute queue without graphics
     if (FindQueue(gpu, VK_QUEUE_COMPUTE_BIT, DefaultUnwantedFlags | VK_QUEUE_GRAPHICS_BIT, nullptr, queuesMetadata, workingQueueMetadata)) { // there is a dedicated compute queue
-        queuesMetadata.Add({ QueueType::COMPUTE }, { workingQueueMetadata });
+        queuesMetadata.Add({ QueueType::COMPUTE }, workingQueueMetadata);
     }
 
     if (!queuesMetadata.HasAny(QueueType::COMPUTE)) {
         if (FindQueue(gpu, VK_QUEUE_COMPUTE_BIT, DefaultUnwantedFlags, nullptr, queuesMetadata, workingQueueMetadata)) {
-            queuesMetadata.Add({ QueueType::COMPUTE }, { workingQueueMetadata });
+            queuesMetadata.Add({ QueueType::COMPUTE }, workingQueueMetadata);
         }
     }
 
     if (queuesMetadata.HasAny(QueueType::PRESENT)) {
         if (queuesMetadata.HasAny(QueueType::COMPUTE)) {
             if (FindQueue(gpu, VK_QUEUE_GRAPHICS_BIT, DefaultUnwantedFlags, nullptr, queuesMetadata, workingQueueMetadata)) {
-                queuesMetadata.Add({ QueueType::GRAPHICS }, { workingQueueMetadata });
+                queuesMetadata.Add({ QueueType::GRAPHICS }, workingQueueMetadata);
             }
         } else {
             if (FindQueue(gpu, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, DefaultUnwantedFlags, nullptr, queuesMetadata, workingQueueMetadata)) {
-                queuesMetadata.Add({ QueueType::GRAPHICS, QueueType::COMPUTE }, { workingQueueMetadata });
+                queuesMetadata.Add({ QueueType::GRAPHICS, QueueType::COMPUTE }, workingQueueMetadata);
             }
         }
     } else {
         if (queuesMetadata.HasAny(QueueType::COMPUTE)) {
             if (FindQueue(gpu, VK_QUEUE_GRAPHICS_BIT, DefaultUnwantedFlags, surface, queuesMetadata, workingQueueMetadata)) {
-                queuesMetadata.Add({ QueueType::PRESENT, QueueType::GRAPHICS }, { workingQueueMetadata });
+                queuesMetadata.Add({ QueueType::PRESENT, QueueType::GRAPHICS }, workingQueueMetadata);
             }
         } else {
             if (FindQueue(gpu, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, DefaultUnwantedFlags, surface, queuesMetadata, workingQueueMetadata)) {
-                queuesMetadata.Add({ QueueType::PRESENT, QueueType::GRAPHICS, QueueType::COMPUTE }, { workingQueueMetadata });
+                queuesMetadata.Add({ QueueType::PRESENT, QueueType::GRAPHICS, QueueType::COMPUTE }, workingQueueMetadata);
             }
         }
     }
