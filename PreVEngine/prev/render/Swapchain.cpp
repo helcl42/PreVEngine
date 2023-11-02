@@ -373,7 +373,7 @@ void Swapchain::Present()
     m_isAcquired = false;
 }
 
-bool Swapchain::BeginFrame(VkFramebuffer& frameBuffer, VkCommandBuffer& commandBuffer, uint32_t& acquiredIndex)
+bool Swapchain::BeginFrame(SwapChainFrameContext& outContex)
 {
     SwapchainBuffer swapchainBuffer;
     if (!AcquireNext(swapchainBuffer)) {
@@ -384,9 +384,7 @@ bool Swapchain::BeginFrame(VkFramebuffer& frameBuffer, VkCommandBuffer& commandB
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
     VKERRCHECK(vkBeginCommandBuffer(swapchainBuffer.commandBuffer, &beginInfo));
 
-    frameBuffer = swapchainBuffer.framebuffer;
-    commandBuffer = swapchainBuffer.commandBuffer;
-    acquiredIndex = m_acquiredIndex;
+    outContex = { swapchainBuffer.framebuffer, swapchainBuffer.commandBuffer, m_acquiredIndex };
     return true;
 }
 

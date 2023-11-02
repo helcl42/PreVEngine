@@ -61,11 +61,9 @@ void Engine::MainLoop()
         if (m_window->HasFocus()) {
             m_scene->Update(deltaTime);
 
-            VkFramebuffer frameBuffer;
-            VkCommandBuffer commandBuffer;
-            uint32_t frameInFlightIndex;
-            if (m_swapchain->BeginFrame(frameBuffer, commandBuffer, frameInFlightIndex)) {
-                const prev::render::RenderContext renderContext{ frameBuffer, commandBuffer, frameInFlightIndex, { { 0, 0 }, m_swapchain->GetExtent() } };
+            prev::render::SwapChainFrameContext swapchainFrameContext;
+            if (m_swapchain->BeginFrame(swapchainFrameContext)) {
+                const prev::render::RenderContext renderContext{ swapchainFrameContext.frameBuffer, swapchainFrameContext.commandBuffer, swapchainFrameContext.index, { { 0, 0 }, m_swapchain->GetExtent() } };
                 m_rootRenderer->Render(renderContext, m_scene);
                 m_swapchain->EndFrame();
             }

@@ -34,6 +34,12 @@ struct SwapchainBuffer {
     }
 };
 
+struct SwapChainFrameContext {
+    VkFramebuffer frameBuffer{};
+    VkCommandBuffer commandBuffer{};
+    uint32_t index{};
+};
+
 class Swapchain {
 public:
     Swapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT);
@@ -51,7 +57,7 @@ public:
 
     bool UpdateExtent();
 
-    bool BeginFrame(VkFramebuffer& frameBuffer, VkCommandBuffer& commandBuffer, uint32_t& acquiredIndex);
+    bool BeginFrame(SwapChainFrameContext& outContext);
 
     void EndFrame();
 
