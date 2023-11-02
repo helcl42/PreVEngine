@@ -38,16 +38,6 @@ Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allo
     m_swapchainCreateInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
     m_swapchainCreateInfo.clipped = VK_TRUE;
     m_swapchainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-
-    if (m_presentQueue->family != m_graphicsQueue->family) {
-        const uint32_t families[] = { m_presentQueue->family, m_graphicsQueue->family };
-        m_swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-        m_swapchainCreateInfo.queueFamilyIndexCount = 2;
-        m_swapchainCreateInfo.pQueueFamilyIndices = families;
-    } else {
-        m_swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    }
-
     m_swapchainCreateInfo.compositeAlpha = (surfaceCapabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR) ? VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR : VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 
     UpdateExtent();
@@ -227,6 +217,15 @@ uint32_t Swapchain::GetImageCount() const
 void Swapchain::Apply()
 {
     m_swapchainCreateInfo.oldSwapchain = m_swapchain;
+
+    const std::vector<uint32_t> families = { m_presentQueue->family, m_graphicsQueue->family };
+    if (m_presentQueue->family != m_graphicsQueue->family) {
+        m_swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+        m_swapchainCreateInfo.queueFamilyIndexCount = static_cast<uint32_t>(families.size());
+        m_swapchainCreateInfo.pQueueFamilyIndices = families.data();
+    } else {
+        m_swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    }
     VKERRCHECK(vkCreateSwapchainKHR(m_device, &m_swapchainCreateInfo, nullptr, &m_swapchain));
 
     if (m_swapchainCreateInfo.oldSwapchain != VK_NULL_HANDLE) {
