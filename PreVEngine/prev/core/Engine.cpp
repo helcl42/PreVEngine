@@ -259,7 +259,7 @@ void Engine::InitSwapchain()
 #else
     m_swapchain->SetPresentMode(m_config.VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
 #endif
-    m_swapchain->SetImageCount(m_config.framesInFlight);
+    m_swapchain->SetImageCount(m_config.swapchainFrameCount);
     m_swapchain->Print();
 }
 } // namespace prev::core
