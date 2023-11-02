@@ -230,7 +230,7 @@ void Swapchain::Apply()
 
     if (m_swapchainCreateInfo.oldSwapchain != VK_NULL_HANDLE) {
         vkDeviceWaitIdle(m_device);
-        vkDestroySwapchainKHR(m_device, m_swapchainCreateInfo.oldSwapchain, 0);
+        vkDestroySwapchainKHR(m_device, m_swapchainCreateInfo.oldSwapchain, VK_NULL_HANDLE);
         for (auto& swapchainBuffer : m_swapchainBuffers) {
             swapchainBuffer.Destroy(m_device);
         }
