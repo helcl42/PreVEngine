@@ -1,12 +1,11 @@
-#ifndef __DEVICES_H__
-#define __DEVICES_H__
+#ifndef __DEVICE_H__
+#define __DEVICE_H__
 
 #include "PhysicalDevice.h"
 #include "Queue.h"
 
 #include <map>
 #include <memory>
-#include <optional>
 #include <set>
 
 namespace prev::core::device {
