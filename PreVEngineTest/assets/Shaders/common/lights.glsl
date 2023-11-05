@@ -42,10 +42,15 @@ vec3 GetDiffuseColor(in vec3 normal, in vec3 toLightVector, in vec3 lightColor, 
 
 vec3 GetSpecularColor(in vec3 normal, in vec3 toLightVector, in vec3 toCameraVector, in vec3 lightColor, in float attenuationFactor, in float shineDamper, in float reflectivity)
 {
+	// Phong
 	vec3 lightDirection = -toLightVector;
 	vec3 reflectedLightDirection = reflect(lightDirection, normal);
-	float specularFactor = dot(reflectedLightDirection, toCameraVector);
-	specularFactor = max(specularFactor, 0.0);
+	float specularFactor = max(dot(reflectedLightDirection, toCameraVector), 0.0);
+
+//	// Blinn-Phong
+//	vec3 halfwayDir = normalize(toLightVector + toCameraVector);  
+//	float specularFactor = max(dot(normal, halfwayDir), 0.0);
+
 	float dampedFactor = pow(specularFactor, shineDamper);
 	return (dampedFactor * reflectivity * lightColor) / attenuationFactor;
 }
