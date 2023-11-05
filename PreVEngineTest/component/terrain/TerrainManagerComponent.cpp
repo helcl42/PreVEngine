@@ -14,8 +14,10 @@ void TerrainManagerComponent::RemoveTerrain(const std::shared_ptr<ITerrainCompon
 std::shared_ptr<ITerrainComponenet> TerrainManagerComponent::GetTerrainAt(const glm::vec3& position) const
 {
     const TerrainKey key{ position };
-    if (m_terrains.find(key) != m_terrains.cend()) {
-        return m_terrains.at(key).lock();
+
+    auto terrainIter = m_terrains.find(key);
+    if (terrainIter != m_terrains.cend()) {
+        return terrainIter->second.lock();
     }
     return nullptr;
 }
