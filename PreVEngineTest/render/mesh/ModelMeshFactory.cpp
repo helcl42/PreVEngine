@@ -31,10 +31,10 @@ namespace {
         }
     }
 
-    MeshNode ReadNodeHierarchy(const aiNode& rootNode, const glm::mat4& parentTransform)
+    MeshNode ReadNodeHierarchy(const aiScene& scene)
     {
         MeshNode rootNodeMesh;
-        ReadNodeHierarchy(rootNode, prev_test::render::util::assimp::AssimpGlmConvertor::ToGlmMat4(rootNode.mTransformation), rootNodeMesh);
+        ReadNodeHierarchy(*scene.mRootNode, prev_test::render::util::assimp::AssimpGlmConvertor::ToGlmMat4(scene.mRootNode->mTransformation), rootNodeMesh);
         return rootNodeMesh;
     }
 
@@ -208,7 +208,7 @@ std::unique_ptr<prev_test::render::IMesh> ModelMeshFactory::Create(const std::st
     auto mesh = std::make_unique<ModelMesh>();
     mesh->m_vertexLayout = GetVertexLayout(flags);
     mesh->m_verticesCount = GetSceneVertexCount(*scene);
-    mesh->m_meshRootNode = ReadNodeHierarchy(*scene->mRootNode, prev_test::render::util::assimp::AssimpGlmConvertor::ToGlmMat4(scene->mRootNode->mTransformation));
+    mesh->m_meshRootNode = ReadNodeHierarchy(*scene);
     std::tie(mesh->m_vertexDataBuffer, mesh->m_indices, mesh->m_meshParts) = ReadMeshes(*scene, flags);
     return mesh;
 }
