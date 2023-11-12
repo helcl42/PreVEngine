@@ -140,8 +140,6 @@ private:
         DEFAULT_ALIGNMENT float heightTransitionRange;
         uint32_t numLayers;
         uint32_t mappingMode;
-
-        DEFAULT_ALIGNMENT float maxAngleToFallback;
     };
 
 private:

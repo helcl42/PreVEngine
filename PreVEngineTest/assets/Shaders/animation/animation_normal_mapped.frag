@@ -26,13 +26,12 @@ layout(binding = 3) uniform sampler2D normalSampler;
 layout(binding = 4) uniform sampler2DArray depthSampler;
 
 layout(location = 0) in vec2 inTextureCoord;
-layout(location = 1) in vec3 inNormal;
-layout(location = 2) in vec3 inWorldPosition;
-layout(location = 3) in vec3 inViewPosition;
-layout(location = 4) in float inVisibility;
-layout(location = 5) in vec3 inToCameraVectorTangentSpace;
-layout(location = 6) in vec3 inWorldPositionTangentSpace;
-layout(location = 7) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
+layout(location = 1) in vec3 inWorldPosition;
+layout(location = 2) in vec3 inViewPosition;
+layout(location = 3) in float inVisibility;
+layout(location = 4) in vec3 inToCameraVectorTangentSpace;
+layout(location = 5) in vec3 inPositionTangentSpace;
+layout(location = 6) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
 
 layout(location = 0) out vec4 outColor;
 
@@ -47,7 +46,7 @@ void main()
 	const vec3 normal = NormalMapping(normalSampler, inTextureCoord);
 	const vec4 textureColor = texture(colorSampler, inTextureCoord);
 
-	const vec3 unitToCameraVector = normalize(inToCameraVectorTangentSpace - inWorldPositionTangentSpace);
+	const vec3 unitToCameraVector = normalize(inToCameraVectorTangentSpace - inPositionTangentSpace);
 
 	vec3 totalDiffuse = vec3(0.0);
 	vec3 totalSpecular = vec3(0.0);
@@ -55,7 +54,7 @@ void main()
 	{
 		const Light light = uboFS.lightning.lights[i];
 
-		const vec3 toLightVector = inToLightVectorTangentSpace[i] - inWorldPositionTangentSpace;
+		const vec3 toLightVector = inToLightVectorTangentSpace[i] - inPositionTangentSpace;
 		const vec3 unitToLightVector = normalize(toLightVector);
 
 		const float attenuationFactor = GetAttenuationFactor(light.attenuation.xyz, toLightVector);

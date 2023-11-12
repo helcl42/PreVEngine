@@ -162,9 +162,9 @@ std::unique_ptr<prev_test::render::IMesh> TerrainComponentFactory::GenerateMesh(
         mesh->m_vertexLayout = { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3 } };
     }
 
-    for (unsigned int z = 0; z < m_vertexCount; z++) {
-        for (unsigned int x = 0; x < m_vertexCount; x++) {
-            const auto vertexIndex = z * m_vertexCount + x;
+    for (uint32_t z = 0; z < m_vertexCount; ++z) {
+        for (uint32_t x = 0; x < m_vertexCount; ++x) {
+            const auto vertexIndex{ z * m_vertexCount + x };
             mesh->m_vertexDataBuffer.Add(vertexData->vertices[vertexIndex]);
             mesh->m_vertexDataBuffer.Add(vertexData->textureCoords[vertexIndex]);
             mesh->m_vertexDataBuffer.Add(vertexData->normals[vertexIndex]);
@@ -188,34 +188,34 @@ std::unique_ptr<VertexData> TerrainComponentFactory::GenerateVertexData(const st
     auto result{ std::make_unique<VertexData>() };
     result->vertices.reserve(verticesCount);
     result->textureCoords.reserve(verticesCount);
-    result->normals.reserve(verticesCount);
-    for (unsigned int z = 0; z < m_vertexCount; z++) {
-        for (unsigned int x = 0; x < m_vertexCount; x++) {
+    for (uint32_t z = 0; z < m_vertexCount; ++z) {
+        for (uint32_t x = 0; x < m_vertexCount; ++x) {
             result->vertices.push_back(CalculatePosition(heightMap, x, z, size));
             result->textureCoords.push_back(CalculateTextureCoordinates(x, z));
-            result->normals.push_back(CalculateNormal(heightMap, x, z));
         }
     }
 
     const auto indicesCount{ 6 * (m_vertexCount - 1) * (m_vertexCount - 1) };
     result->indices.reserve(indicesCount);
-    for (unsigned int z = 0; z < m_vertexCount - 1; z++) {
-        for (unsigned int x = 0; x < m_vertexCount - 1; x++) {
-            const uint32_t topLeft = (z * m_vertexCount) + x;
-            const uint32_t topRight = topLeft + 1;
-            const uint32_t bottomLeft = ((z + 1) * m_vertexCount) + x;
-            const uint32_t bottomRight = bottomLeft + 1;
+    for (uint32_t z = 0; z < m_vertexCount - 1; ++z) {
+        for (uint32_t x = 0; x < m_vertexCount - 1; ++x) {
+            const uint32_t bottomLeft{ (z * m_vertexCount) + x };
+            const uint32_t bottomRight{ bottomLeft + 1 };
+            const uint32_t topLeft{ ((z + 1) * m_vertexCount) + x };
+            const uint32_t topRight{ topLeft + 1 };
 
             result->indices.push_back(topLeft);
-            result->indices.push_back(bottomLeft);
             result->indices.push_back(topRight);
-            result->indices.push_back(topRight);
-            result->indices.push_back(bottomLeft);
             result->indices.push_back(bottomRight);
+            result->indices.push_back(bottomRight);
+            result->indices.push_back(bottomLeft);
+            result->indices.push_back(topLeft);
         }
     }
 
-    prev_test::render::mesh::MeshUtil::GenerateTangetsAndBiTangents(result->vertices, result->textureCoords, result->indices, result->tangents, result->biTangents);
+    result->normals = prev_test::render::mesh::MeshUtil::GenerateNormals(result->vertices, result->indices, true);
+
+    std::tie(result->tangents, result->biTangents) = prev_test::render::mesh::MeshUtil::GenerateTangetsAndBiTangents(result->vertices, result->textureCoords, result->normals, result->indices);
 
     return result;
 }
@@ -223,29 +223,17 @@ std::unique_ptr<VertexData> TerrainComponentFactory::GenerateVertexData(const st
 glm::vec3 TerrainComponentFactory::CalculatePosition(const std::shared_ptr<HeightMapInfo>& heightMap, const int x, const int z, const float size) const
 {
     glm::vec3 result{};
-    result.x = (static_cast<float>(x) / static_cast<float>(m_vertexCount - 1.0f)) * size;
+    result.x = (static_cast<float>(x) / static_cast<float>(m_vertexCount - 1)) * size;
     result.y = heightMap->GetHeightAt(x, z);
-    result.z = (static_cast<float>(z) / static_cast<float>(m_vertexCount - 1.0f)) * size;
+    result.z = (static_cast<float>(z) / static_cast<float>(m_vertexCount - 1)) * size;
     return result;
 }
 
 glm::vec2 TerrainComponentFactory::CalculateTextureCoordinates(const int x, const int z) const
 {
     glm::vec2 result{};
-    result.x = static_cast<float>(x) / static_cast<float>(m_vertexCount) - 1.0f;
-    result.y = static_cast<float>(z) / static_cast<float>(m_vertexCount) - 1.0f;
-    return result;
-}
-
-glm::vec3 TerrainComponentFactory::CalculateNormal(const std::shared_ptr<HeightMapInfo>& heightMap, const int x, const int z) const
-{
-    const float heightLeft{ heightMap->GetHeightAt(x - 1, z) };
-    const float heightRight{ heightMap->GetHeightAt(x + 1, z) };
-    const float heightBottom{ heightMap->GetHeightAt(x, z - 1) };
-    const float heightTop{ heightMap->GetHeightAt(x, z + 1) };
-
-    glm::vec3 result(heightLeft - heightRight, 2.0f, heightBottom - heightTop);
-    result = glm::normalize(result);
+    result.x = static_cast<float>(x) / static_cast<float>(m_vertexCount - 1) - 1.0f;
+    result.y = static_cast<float>(z) / static_cast<float>(m_vertexCount - 1) - 1.0f;
     return result;
 }
 
@@ -254,8 +242,8 @@ std::unique_ptr<HeightMapInfo> TerrainComponentFactory::CreateHeightMap(const He
     float minHeight{ std::numeric_limits<float>::max() };
     float maxHeight{ std::numeric_limits<float>::min() };
     auto heightMapInfo{ std::make_unique<HeightMapInfo>(m_vertexCount) };
-    for (unsigned int z = 0; z < m_vertexCount; z++) {
-        for (unsigned int x = 0; x < m_vertexCount; x++) {
+    for (unsigned int z = 0; z < m_vertexCount; ++z) {
+        for (unsigned int x = 0; x < m_vertexCount; ++x) {
             const float height{ generator.GenerateHeight(x, z) };
             heightMapInfo->heights[x][z] = height;
             minHeight = std::min(minHeight, height);

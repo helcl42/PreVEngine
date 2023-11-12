@@ -101,7 +101,7 @@ float UnpackDepth24(in vec3 pack)
 
 vec4 PackDepth32(in float depth)
 {
-    depth *= (256.0*256.0*256.0 - 1.0) / (256.0 * 256.0 * 256.0);
+    depth *= (256.0 * 256.0 * 256.0 - 1.0) / (256.0 * 256.0 * 256.0);
     vec4 encode = fract(depth * vec4(1.0, 256.0, 256.0 * 256.0, 256.0 * 256.0 * 256.0));
     return vec4(encode.xyz - encode.yzw / 256.0, encode.w) + 1.0 / 512.0;
 }

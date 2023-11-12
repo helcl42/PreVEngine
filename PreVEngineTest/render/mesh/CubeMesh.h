@@ -30,27 +30,27 @@ private:
     prev_test::render::VertexDataBuffer m_vertexDataBuffer;
 
 private:
-    static const inline std::vector<glm::vec3> vertices{
+    static const inline std::vector<glm::vec3> vertices = {
         // FROMT
+        { -0.5f, 0.5f, 0.5f },
         { -0.5f, -0.5f, 0.5f },
         { 0.5f, -0.5f, 0.5f },
         { 0.5f, 0.5f, 0.5f },
-        { -0.5f, 0.5f, 0.5f },
         // BACK
-        { -0.5f, -0.5f, -0.5f },
-        { 0.5f, -0.5f, -0.5f },
-        { 0.5f, 0.5f, -0.5f },
         { -0.5f, 0.5f, -0.5f },
-        // TOP
-        { -0.5f, 0.5f, 0.5f },
-        { 0.5f, 0.5f, 0.5f },
         { 0.5f, 0.5f, -0.5f },
-        { -0.5f, 0.5f, -0.5f },
-        // BOTTOM
-        { -0.5f, -0.5f, 0.5f },
-        { 0.5f, -0.5f, 0.5f },
         { 0.5f, -0.5f, -0.5f },
         { -0.5f, -0.5f, -0.5f },
+        // TOP
+        { -0.5f, 0.5f, 0.5f },
+        { 0.5f, 0.5f, 0.5f },
+        { 0.5f, 0.5f, -0.5f },
+        { -0.5f, 0.5f, -0.5f },
+        // BOTTOM
+        { -0.5f, -0.5f, 0.5f },
+        { -0.5f, -0.5f, -0.5f },
+        { 0.5f, -0.5f, -0.5f },
+        { 0.5f, -0.5f, 0.5f },
         // LEFT
         { -0.5f, -0.5f, 0.5f },
         { -0.5f, 0.5f, 0.5f },
@@ -58,78 +58,45 @@ private:
         { -0.5f, -0.5f, -0.5f },
         // RIGHT
         { 0.5f, -0.5f, 0.5f },
-        { 0.5f, 0.5f, 0.5f },
+        { 0.5f, -0.5f, -0.5f },
         { 0.5f, 0.5f, -0.5f },
-        { 0.5f, -0.5f, -0.5f }
+        { 0.5f, 0.5f, 0.5f }
     };
 
-    static const inline std::vector<glm::vec2> textureCoords{
+    static const inline std::vector<glm::vec2> textureCoords = {
         // FROMT
-        { 1.0f, 0.0f },
-        { 0.0f, 0.0f },
         { 0.0f, 1.0f },
         { 1.0f, 1.0f },
+        { 1.0f, 0.0f },
+        { 0.0f, 0.0f },
         // BACK
-        { 1.0f, 0.0f },
-        { 0.0f, 0.0f },
         { 0.0f, 1.0f },
         { 1.0f, 1.0f },
+        { 1.0f, 0.0f },
+        { 0.0f, 0.0f },
         // TOP
-        { 1.0f, 0.0f },
-        { 0.0f, 0.0f },
         { 0.0f, 1.0f },
         { 1.0f, 1.0f },
-        // BOTTOM
         { 1.0f, 0.0f },
         { 0.0f, 0.0f },
+        // BOTTOM
         { 0.0f, 1.0f },
+        { 0.0f, 0.0f },
+        { 1.0f, 0.0f },
         { 1.0f, 1.0f },
         // LEFT
-        { 1.0f, 0.0f },
-        { 0.0f, 0.0f },
         { 0.0f, 1.0f },
+        { 0.0f, 0.0f },
+        { 1.0f, 0.0f },
         { 1.0f, 1.0f },
         // RIGHT
-        { 1.0f, 0.0f },
-        { 0.0f, 0.0f },
         { 0.0f, 1.0f },
-        { 1.0f, 1.0f }
+        { 0.0f, 0.0f },
+        { 1.0f, 0.0f },
+        { 1.0f, 1.0f },
     };
 
-    static const inline std::vector<glm::vec3> normals{
-        // FROMT
-        { 0.0f, 0.0f, 1.0f },
-        { 0.0f, 0.0f, 1.0f },
-        { 0.0f, 0.0f, 1.0f },
-        { 0.0f, 0.0f, 1.0f },
-        // BACK
-        { 0.0f, 0.0f, -1.0f },
-        { 0.0f, 0.0f, -1.0f },
-        { 0.0f, 0.0f, -1.0f },
-        { 0.0f, 0.0f, -1.0f },
-        // TOP
-        { 0.0f, 1.0f, 0.0f },
-        { 0.0f, 1.0f, 0.0f },
-        { 0.0f, 1.0f, 0.0f },
-        { 0.0f, 1.0f, 0.0f },
-        // BOTTOM
-        { 0.0f, -1.0f, 0.0f },
-        { 0.0f, -1.0f, 0.0f },
-        { 0.0f, -1.0f, 0.0f },
-        { 0.0f, -1.0f, 0.0f },
-        // LEFT
-        { -1.0f, 0.0f, 0.0f },
-        { -1.0f, 0.0f, 0.0f },
-        { -1.0f, 0.0f, 0.0f },
-        { -1.0f, 0.0f, 0.0f },
-        // RIGHT
-        { 1.0f, 0.0f, 0.0f },
-        { 1.0f, 0.0f, 0.0f },
-        { 1.0f, 0.0f, 0.0f },
-        { 1.0f, 0.0f, 0.0f },
-    };
-
-    static const inline std::vector<uint32_t> indices{
+    static const inline std::vector<uint32_t> indices = {
         0, 1, 2, 2, 3, 0,
         4, 5, 6, 6, 7, 4,
         8, 9, 10, 10, 11, 8,

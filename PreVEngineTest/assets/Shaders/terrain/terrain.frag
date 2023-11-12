@@ -29,7 +29,6 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 
 layout(binding = 2) uniform sampler2D colorSampler[MATERIAL_COUNT];
 layout(binding = 3) uniform sampler2DArray depthSampler;
-layout(binding = 4) uniform sampler2D extraInfoSampler;
 
 layout(location = 0) in vec2 inTextureCoord;
 layout(location = 1) in vec3 inNormal;
@@ -76,12 +75,6 @@ void main()
 				reflectivity = uboFS.material[i].reflectivity;
 				break;
 			}
-			else if(normalizedHeight > uboFS.heightSteps[i].x + uboFS.heightTransitionRange && normalizedHeight < uboFS.heightSteps[i + 1].x - uboFS.heightTransitionRange)
-            {
-				textureColor = texture(colorSampler[i], inTextureCoord);
-				shineDamper = uboFS.material[i].shineDamper;
-				reflectivity = uboFS.material[i].reflectivity;
-            }
         }
         else
         {

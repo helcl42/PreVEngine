@@ -131,7 +131,6 @@ void TerrainParallaxMappedRenderer::Render(const NormalRenderContext& renderCont
 
             uniformsFS.numLayers = 8;
             uniformsFS.mappingMode = 3;
-            uniformsFS.maxAngleToFallback = glm::radians(28.0f);
 
             uboFS->Update(&uniformsFS);
 

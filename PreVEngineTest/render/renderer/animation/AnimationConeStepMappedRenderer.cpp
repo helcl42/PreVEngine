@@ -167,7 +167,7 @@ void AnimationConeStepMappedRenderer::RenderMeshNode(const NormalRenderContext& 
         uniformsFS.selected = false;
         uniformsFS.castedByShadows = nodeRenderComponent->IsCastedByShadows();
         uniformsFS.heightScale = material->GetHeightScale();
-        uniformsFS.numLayers = 12;
+        uniformsFS.numLayers = 15;
 
         uboFS->Update(&uniformsFS);
 

@@ -10,7 +10,9 @@
 namespace prev_test::render::mesh {
 class MeshUtil {
 public:
-    static void GenerateTangetsAndBiTangents(const std::vector<glm::vec3>& vertices, const std::vector<glm::vec2>& textureCoords, const std::vector<uint32_t>& indices, std::vector<glm::vec3>& outTangents, std::vector<glm::vec3>& outBiTangents);
+    static std::vector<glm::vec3> GenerateNormals(const std::vector<glm::vec3>& vertices, const std::vector<uint32_t>& indices, const bool smooth);
+
+    static std::tuple<std::vector<glm::vec3>, std::vector<glm::vec3>> GenerateTangetsAndBiTangents(const std::vector<glm::vec3>& vertices, const std::vector<glm::vec2>& textureCoords, const std::vector<glm::vec3>& normals, const std::vector<uint32_t>& indices);
 
     static std::vector<glm::vec3> GetMeshTransformedVertices(const std::shared_ptr<prev_test::render::IMesh>& mesh);
 };

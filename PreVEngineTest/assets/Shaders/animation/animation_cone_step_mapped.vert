@@ -2,6 +2,7 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive : enable
 
+#include "../common/common.glsl"
 #include "../common/lights.glsl"
 
 const int MAX_BONES_COUNT = 100;
@@ -43,12 +44,9 @@ layout(location = 0) out vec2 outTextureCoord;
 layout(location = 1) out vec3 outWorldPosition;
 layout(location = 2) out vec3 outViewPosition;
 layout(location = 3) out float outVisibility;
-layout(location = 4) out vec3 outTangent;
-layout(location = 5) out vec3 outBiTangent;
-layout(location = 6) out vec3 outNornal;
-layout(location = 7) out vec3 outToCameraVectorTangentSpace;
-layout(location = 8) out vec3 outWorldPositionTangentSpace;
-layout(location = 9) out vec3 outToLightVectorTangentSpace[MAX_LIGHT_COUNT];
+layout(location = 4) out vec3 outToCameraVectorTangentSpace;
+layout(location = 5) out vec3 outPositionTangentSpace;
+layout(location = 6) out vec3 outToLightVectorTangentSpace[MAX_LIGHT_COUNT];
 
 void main()
 {
@@ -72,25 +70,21 @@ void main()
 
 	outTextureCoord = (inTextureCoord / uboVS.textureNumberOfRows) + uboVS.textureOffset.xy;
 
-	float vertexToCameraDistance = length(viewPosition.xyz);
-	outVisibility = clamp(exp(-pow(vertexToCameraDistance * uboVS.density, uboVS.gradient)), 0.0, 1.0);
+	outVisibility = GetVisibility(viewPosition.xyz, uboVS.gradient, uboVS.density);
 
-	mat3 mv3 = mat3(uboVS.viewMatrix) * mat3(uboVS.modelMatrix);
-	outTangent = normalize(mv3 * inTangent);
-	outBiTangent = normalize(mv3 * inBiTangent);
-	outNornal = normalize(mv3 * inNormal);
-	
-	vec3 T = normalize(mat3(uboVS.modelMatrix) * inTangent);
-	vec3 B = normalize(mat3(uboVS.modelMatrix) * inBiTangent);
-	vec3 N = normalize(mat3(uboVS.modelMatrix) * inNormal);
-	mat3 toTangentSpaceMatrix = transpose(mat3(T, B, N));
+	mat3 mv3 = mat3(uboVS.viewMatrix) * mat3(uboVS.modelMatrix);	
+	mat3 TBN = CreateTBNMatrix(mv3, inNormal, inTangent, inBiTangent);
 
-	outToCameraVectorTangentSpace = toTangentSpaceMatrix * uboVS.cameraPosition.xyz;
-	outWorldPositionTangentSpace = toTangentSpaceMatrix * worldPosition.xyz;
+	vec3 cameraPositionViewSpace = (uboVS.viewMatrix * vec4(uboVS.cameraPosition.xyz, 1.0)).xyz;
+
+	outToCameraVectorTangentSpace = TBN * cameraPositionViewSpace;
+	outPositionTangentSpace = TBN * viewPosition.xyz;
 
 	for (int i = 0; i < uboVS.lightning.realCountOfLights; i++)
 	{
 		const Light light = uboVS.lightning.lights[i];
-		outToLightVectorTangentSpace[i] = toTangentSpaceMatrix * light.position.xyz;
+
+		vec3 lightPositionViewSpace = (uboVS.viewMatrix * vec4(light.position.xyz, 1.0)).xyz;
+		outToLightVectorTangentSpace[i] = TBN * lightPositionViewSpace;
 	}
 }

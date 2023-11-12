@@ -34,19 +34,18 @@ layout(binding = 3) uniform sampler2D normalSampler[MATERIAL_COUNT];
 layout(binding = 4) uniform sampler2DArray depthSampler;
 
 layout(location = 0) in vec2 inTextureCoord;
-layout(location = 1) in vec3 inNormal;
-layout(location = 2) in vec3 inWorldPosition;
-layout(location = 3) in vec3 inViewPosition;
-layout(location = 4) in float inVisibility;
-layout(location = 5) in vec3 inToCameraVectorTangentSpace;
-layout(location = 6) in vec3 inWorldPositionTangentSpace;
-layout(location = 7) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
+layout(location = 1) in vec3 inWorldPosition;
+layout(location = 2) in vec3 inViewPosition;
+layout(location = 3) in float inVisibility;
+layout(location = 4) in vec3 inToCameraVectorTangentSpace;
+layout(location = 5) in vec3 inPositionTangentSpace;
+layout(location = 6) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
 
 layout(location = 0) out vec4 outColor;
 
 void main()
 {
-	const vec3 unitToCameraVector = normalize(inToCameraVectorTangentSpace - inWorldPositionTangentSpace);
+	const vec3 unitToCameraVector = normalize(inToCameraVectorTangentSpace - inPositionTangentSpace);
 
     const float heightRange = abs(uboFS.maxHeight) + abs(uboFS.minHeight);
     const float normalizedHeight = (inWorldPosition.y + abs(uboFS.minHeight)) / heightRange;
@@ -88,13 +87,6 @@ void main()
 				reflectivity = uboFS.material[i].reflectivity;
 				break;
 			}
-            else if(normalizedHeight > uboFS.heightSteps[i].x + uboFS.heightTransitionRange && normalizedHeight < uboFS.heightSteps[i + 1].x - uboFS.heightTransitionRange)
-            {
-				textureColor = texture(colorSampler[i], inTextureCoord);
-				normal = NormalMapping(normalSampler[i], inTextureCoord);
-				shineDamper = uboFS.material[i].shineDamper;
-				reflectivity = uboFS.material[i].reflectivity;
-            }
         }
         else
         {
@@ -117,7 +109,7 @@ void main()
 	{
 		const Light light = uboFS.lightning.lights[i];
 
-		const vec3 toLightVector = inToLightVectorTangentSpace[i] - inWorldPositionTangentSpace;
+		const vec3 toLightVector = inToLightVectorTangentSpace[i] - inPositionTangentSpace;
 		const vec3 unitToLightVector = normalize(toLightVector);
 
 		const float attenuationFactor = GetAttenuationFactor(light.attenuation.xyz, toLightVector);

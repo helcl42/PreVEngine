@@ -11,25 +11,24 @@ PlaneMesh::PlaneMesh(const float xSize, const float zSize, const uint32_t xDivs,
         m_vertexLayout = { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC2, prev_test::render::VertexLayoutComponent::VEC3 } };
     }
 
-    const float x2 = xSize / 2.0f;
-    const float z2 = zSize / 2.0f;
-    const float iFactor = zSize / static_cast<float>(zDivs);
-    const float jFactor = xSize / static_cast<float>(xDivs);
-    const float texi = textureCoordUMax / static_cast<float>(zDivs);
-    const float texj = textureCoordVMax / static_cast<float>(xDivs);
+    const float x2{ xSize / 2.0f };
+    const float z2{ zSize / 2.0f };
+    const float iFactor{ zSize / static_cast<float>(zDivs) };
+    const float jFactor{ xSize / static_cast<float>(xDivs) };
+    const float texi{ textureCoordUMax / static_cast<float>(zDivs) };
+    const float texj{ textureCoordVMax / static_cast<float>(xDivs) };
 
     std::vector<glm::vec2> textureCoords;
     std::vector<glm::vec3> normals;
 
-    for (uint32_t i = 0; i <= zDivs; i++) {
-        float z = iFactor * i - z2;
+    for (uint32_t i = 0; i <= zDivs; ++i) {
+        const float z{ iFactor * i - z2 };
+        for (uint32_t j = 0; j <= xDivs; ++j) {
+            const float x{ jFactor * j - x2 };
 
-        for (uint32_t j = 0; j <= xDivs; j++) {
-            float x = jFactor * j - x2;
-
-            glm::vec3 vertex(x, 0.0f, z);
-            glm::vec2 textureCoord(j * texi, i * texj);
-            glm::vec3 normal(0.0f, 1.0f, 0.0f);
+            const glm::vec3 vertex{ x, 0.0f, z };
+            const glm::vec2 textureCoord{ j * texi, i * texj };
+            const glm::vec3 normal{ 0.0f, 1.0f, 0.0f };
 
             m_vertices.push_back(vertex);
             textureCoords.push_back(textureCoord);
@@ -37,10 +36,9 @@ PlaneMesh::PlaneMesh(const float xSize, const float zSize, const uint32_t xDivs,
         }
     }
 
-    for (uint32_t i = 0; i < zDivs; i++) {
-        const uint32_t rowStart = i * (xDivs + 1);
-        const uint32_t nextRowStart = (i + 1) * (xDivs + 1);
-
+    for (uint32_t i = 0; i < zDivs; ++i) {
+        const uint32_t rowStart{ i * (xDivs + 1) };
+        const uint32_t nextRowStart{ (i + 1) * (xDivs + 1) };
         for (uint32_t j = 0; j < xDivs; j++) {
             const uint32_t indices[] = {
                 rowStart + j,
@@ -60,7 +58,7 @@ PlaneMesh::PlaneMesh(const float xSize, const float zSize, const uint32_t xDivs,
     std::vector<glm::vec3> tangents;
     std::vector<glm::vec3> biTangents;
     if (generateTangentBiTangent) {
-        prev_test::render::mesh::MeshUtil::GenerateTangetsAndBiTangents(m_vertices, textureCoords, m_indices, tangents, biTangents);
+        std::tie(tangents, biTangents) = prev_test::render::mesh::MeshUtil::GenerateTangetsAndBiTangents(m_vertices, textureCoords, normals, m_indices);
     }
 
     for (size_t vertexIndex = 0; vertexIndex < m_vertices.size(); vertexIndex++) {

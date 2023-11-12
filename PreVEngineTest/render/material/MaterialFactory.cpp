@@ -32,8 +32,8 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const Mate
     auto imageSampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(imageBuffer->GetMipLevels()), materialProps.addressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f) };
 
     auto normalImage{ CreateImage(normalMapPath) };
-    auto normalImageBuffer{ CreateImageBuffer(normalImage, true, allocator) };
-    auto normalImageSampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(normalImageBuffer->GetMipLevels()), materialProps.addressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f) };
+    auto normalImageBuffer{ CreateImageBuffer(normalImage, false, allocator) };
+    auto normalImageSampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(normalImageBuffer->GetMipLevels()), materialProps.addressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_NEAREST) };
 
     return std::make_unique<prev_test::render::material::Material>(materialProps, ImagePair{ imageBuffer, imageSampler }, ImagePair{ normalImageBuffer, normalImageSampler });
 }
@@ -45,12 +45,12 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const Mate
     auto imageSampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(imageBuffer->GetMipLevels()), materialProps.addressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f) };
 
     auto normalImage{ CreateImage(normalMapPath) };
-    auto normalImageBuffer{ CreateImageBuffer(normalImage, true, allocator) };
-    auto normalImageSampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(normalImageBuffer->GetMipLevels()), materialProps.addressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f) };
+    auto normalImageBuffer{ CreateImageBuffer(normalImage, false, allocator) };
+    auto normalImageSampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(normalImageBuffer->GetMipLevels()), materialProps.addressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_NEAREST) };
 
     auto heightImage{ CreateImage(heightMapPath) };
-    auto heightImageBuffer{ CreateImageBuffer(heightImage, true, allocator) };
-    auto heightImageSampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(heightImageBuffer->GetMipLevels()), materialProps.addressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f) };
+    auto heightImageBuffer{ CreateImageBuffer(heightImage, false, allocator) };
+    auto heightImageSampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(heightImageBuffer->GetMipLevels()), materialProps.addressMode, VK_FILTER_LINEAR, VK_FILTER_NEAREST, VK_SAMPLER_MIPMAP_MODE_NEAREST) };
 
     return std::make_unique<prev_test::render::material::Material>(materialProps, ImagePair{ imageBuffer, imageSampler }, ImagePair{ normalImageBuffer, normalImageSampler }, ImagePair{ heightImageBuffer, heightImageSampler });
 }
@@ -101,14 +101,14 @@ std::vector<std::shared_ptr<prev_test::render::IMaterial>> MaterialFactory::Crea
 
         ImagePair normalImage;
         if (auto image = assimpMaterialFactory.CreateModelImage(*scene, material, aiTextureType_NORMALS)) {
-            normalImage.imageBuffer = CreateImageBuffer(image, true, allocator);
-            normalImage.imageSampler = std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(normalImage.imageBuffer->GetMipLevels()), DefaultAddressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f);
+            normalImage.imageBuffer = CreateImageBuffer(image, false, allocator);
+            normalImage.imageSampler = std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(normalImage.imageBuffer->GetMipLevels()), DefaultAddressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_NEAREST);
         }
 
         ImagePair heightImage;
         if (auto image = assimpMaterialFactory.CreateModelImage(*scene, material, aiTextureType_HEIGHT)) {
-            heightImage.imageBuffer = CreateImageBuffer(image, true, allocator);
-            heightImage.imageSampler = std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(heightImage.imageBuffer->GetMipLevels()), DefaultAddressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f);
+            heightImage.imageBuffer = CreateImageBuffer(image, false, allocator);
+            heightImage.imageSampler = std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(heightImage.imageBuffer->GetMipLevels()), DefaultAddressMode, VK_FILTER_LINEAR, VK_FILTER_NEAREST, VK_SAMPLER_MIPMAP_MODE_NEAREST);
         }
 
         aiColor3D color(1.0f, 1.0f, 1.0f);

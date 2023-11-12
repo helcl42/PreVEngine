@@ -4,8 +4,8 @@ namespace prev_test::component::terrain {
 HeightMapInfo::HeightMapInfo(const size_t size)
 {
     heights.resize(size);
-    for (size_t i = 0; i < size; i++) {
-        heights[i] = std::vector<float>(size);
+    for (size_t i = 0; i < size; ++i) {
+        heights[i].resize(size);
     }
 }
 
