@@ -37,12 +37,8 @@ void TerrainManager::Init()
     auto terrains = prev::scene::component::NodeComponentHelper::FindAll<prev_test::component::terrain::ITerrainComponenet>({ TAG_TERRAIN_RENDER_COMPONENT, TAG_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT, TAG_TERRAIN_PARALLAX_MAPPED_RENDER_COMPONENT, TAG_TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT });
     for (const auto& terrain : terrains) {
         auto heightInfo = terrain->GetHeightMapInfo();
-        if (minHeight > heightInfo->minHeight) {
-            minHeight = heightInfo->minHeight;
-        }
-        if (maxHeight < heightInfo->maxHeight) {
-            maxHeight = heightInfo->maxHeight;
-        }
+        minHeight = std::min(minHeight, heightInfo->minHeight);
+        maxHeight = std::max(maxHeight, heightInfo->maxHeight);
     }
 
     for (auto& terrain : terrains) {

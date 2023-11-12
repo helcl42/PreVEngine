@@ -232,8 +232,8 @@ glm::vec3 TerrainComponentFactory::CalculatePosition(const std::shared_ptr<Heigh
 glm::vec2 TerrainComponentFactory::CalculateTextureCoordinates(const int x, const int z) const
 {
     glm::vec2 result{};
-    result.x = static_cast<float>(x) / static_cast<float>(m_vertexCount - 1) - 1.0f;
-    result.y = static_cast<float>(z) / static_cast<float>(m_vertexCount - 1) - 1.0f;
+    result.x = 2.0f * (static_cast<float>(x) / static_cast<float>(m_vertexCount - 1)) - 1.0f;
+    result.y = 2.0f * (static_cast<float>(z) / static_cast<float>(m_vertexCount - 1)) - 1.0f;
     return result;
 }
 
