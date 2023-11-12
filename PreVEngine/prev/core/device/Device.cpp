@@ -1,5 +1,6 @@
 ﻿#include "Device.h"
 
+#include "../../common/Logger.h"
 #include "../../util/VkUtils.h"
 
 #include <algorithm>

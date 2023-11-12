@@ -2,7 +2,8 @@
 #define __LAYERS_H__
 
 #include "../../common/PickList.h"
-#include "Validation.h"
+
+#include "../Core.h"
 
 namespace prev::core::instance {
 class Layers final : public prev::common::PickList<VkLayerProperties> {

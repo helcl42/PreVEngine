@@ -3,6 +3,7 @@
 #include "DeviceProvider.h"
 #include "device/DeviceFactory.h"
 
+#include "../common/Logger.h"
 #include "../core/device/PhysicalDevices.h"
 #include "../render/pass/RenderPassBuilder.h"
 #include "../scene/Scene.h"

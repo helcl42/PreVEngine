@@ -5,7 +5,7 @@
 #include "impl/WindowImplCommon.h"
 
 #include "../common/Common.h"
-#include "../core/instance/Validation.h"
+#include "../core/Core.h"
 #include "../input/keyboard/KeyCodes.h"
 
 namespace prev::window {

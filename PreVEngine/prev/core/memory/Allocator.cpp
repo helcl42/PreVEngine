@@ -1,7 +1,10 @@
 #include "Allocator.h"
-#include "../../util/VkUtils.h"
+
+#include "../Core.h"
 #include "../Formats.h"
-#include "../instance/Validation.h"
+
+#include "../../common/Logger.h"
+#include "../../util/VkUtils.h"
 
 #define NOMINMAX
 // #define VMA_RECORDING_ENABLED   0

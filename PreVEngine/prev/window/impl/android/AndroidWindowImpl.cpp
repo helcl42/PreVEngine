@@ -2,6 +2,8 @@
 
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 
+#include "../../../common/Logger.h"
+
 #include <thread>
 
 namespace prev::window::impl::android {

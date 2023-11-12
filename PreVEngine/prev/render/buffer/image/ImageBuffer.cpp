@@ -1,6 +1,7 @@
 #include "ImageBuffer.h"
 
-#include "../../../core/instance/Validation.h"
+#include "../../../core/Core.h"
+
 #include "../../../util/MathUtils.h"
 #include "../../../util/VkUtils.h"
 

@@ -1,7 +1,7 @@
 #ifndef __IMAGE_BUFFER_CREATE_INFO_H__
 #define __IMAGE_BUFFER_CREATE_INFO_H__
 
-#include "../../../core/instance/Validation.h"
+#include "../../../core/Core.h"
 
 #include <vector>
 

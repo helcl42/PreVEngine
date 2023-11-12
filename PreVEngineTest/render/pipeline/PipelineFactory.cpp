@@ -1,6 +1,6 @@
 #include "PipelineFactory.h"
 
-#include <prev/core/instance/Validation.h>
+#include <prev/common/Logger.h>
 
 #include <vector>
 

@@ -2,6 +2,8 @@
 #include "Device.h"
 #include "Queue.h"
 
+#include "../../common/Logger.h"
+
 namespace prev::core::device {
 namespace {
     bool FindQueue(const std::shared_ptr<PhysicalDevice>& gpu, const VkQueueFlags flags, const VkQueueFlags unwantedFlags, const VkSurfaceKHR surface, const QueuesMetadata& queuesMetadata, QueueMetadata& outQueueMeta)

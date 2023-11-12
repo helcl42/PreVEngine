@@ -30,7 +30,7 @@ SubPass::operator VkSubpassDescription()
     subPass.colorAttachmentCount = static_cast<uint32_t>(m_colorReferences.size());
     subPass.pColorAttachments = m_colorReferences.data();
     subPass.pResolveAttachments = m_resolveReferences.data();
-    subPass.pDepthStencilAttachment = m_depthReference.attachment != UINT32_MAX ? &m_depthReference : nullptr;
+    subPass.pDepthStencilAttachment = m_depthReference.layout != VK_IMAGE_LAYOUT_UNDEFINED ? &m_depthReference : nullptr;
     subPass.preserveAttachmentCount = 0;
     subPass.pPreserveAttachments = nullptr;
     return subPass;

@@ -3,7 +3,7 @@
 
 #include "../buffer/UniformBuffer.h"
 
-#include "../../core/instance/Validation.h"
+#include "../../core/Core.h"
 
 #include <map>
 #include <memory>

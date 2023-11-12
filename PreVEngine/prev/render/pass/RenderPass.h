@@ -3,7 +3,7 @@
 
 #include "SubPass.h"
 
-#include "../../core/instance/Validation.h"
+#include "../../core/Core.h"
 
 #include <vector>
 

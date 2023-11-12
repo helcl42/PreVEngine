@@ -3,7 +3,7 @@
 
 #include "../../common/PickList.h"
 
-#include "../instance/Validation.h"
+#include "../Core.h"
 
 namespace prev::core::device {
 class DeviceExtensions final : public prev::common::PickList<VkExtensionProperties> {
