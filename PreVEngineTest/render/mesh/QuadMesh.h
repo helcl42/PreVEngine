@@ -30,28 +30,21 @@ private:
     prev_test::render::VertexDataBuffer m_vertexDataBuffer;
 
 private:
-    static const inline std::vector<glm::vec3> vertices{
+    static const inline std::vector<glm::vec3> vertices = {
         { 1.0f, 1.0f, 0.0f },
         { 0.0f, 1.0f, 0.0f },
         { 0.0f, 0.0f, 0.0f },
         { 1.0f, 0.0f, 0.0f }
     };
 
-    static const inline std::vector<glm::vec2> textureCoords{
+    static const inline std::vector<glm::vec2> textureCoords = {
         { 1.0f, 1.0f },
         { 0.0f, 1.0f },
         { 0.0f, 0.0f },
         { 1.0f, 0.0f }
     };
 
-    static const inline std::vector<glm::vec3> normals{
-        { 0.0f, 0.0f, 1.0f },
-        { 0.0f, 0.0f, 1.0f },
-        { 0.0f, 0.0f, 1.0f },
-        { 0.0f, 0.0f, 1.0f }
-    };
-
-    static const inline std::vector<uint32_t> indices{
+    static const inline std::vector<uint32_t> indices = {
         0, 1, 2, 2, 3, 0
     };
 

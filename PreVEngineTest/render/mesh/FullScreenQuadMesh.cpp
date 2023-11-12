@@ -1,8 +1,12 @@
 #include "FullScreenQuadMesh.h"
 
+#include "MeshUtil.h"
+
 namespace prev_test::render::mesh {
 FullScreenQuadMesh::FullScreenQuadMesh()
 {
+    const auto normals{ prev_test::render::mesh::MeshUtil::GenerateNormals(vertices, indices, false) };
+
     for (size_t i = 0; i < vertices.size(); i++) {
         m_vertexDataBuffer.Add(vertices[i]);
         m_vertexDataBuffer.Add(textureCoords[i]);

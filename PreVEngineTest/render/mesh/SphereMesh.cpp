@@ -19,8 +19,8 @@ SphereMesh::SphereMesh(const float radius, const int subDivY, const int subDivZ,
     const float addAngleY{ -degreesHorizontal / static_cast<float>(subDivY) };
     const float addAngleZ{ degreesVertical / static_cast<float>(subDivZ) };
 
-    float curAngleY = 0.0f;
-    int stepsY = 1;
+    float curAngleY{ 0.0f };
+    int stepsY{ 1 };
     while (stepsY <= subDivY) {
         const float sinY = sinf(glm::radians(curAngleY));
         const float cosY = cosf(glm::radians(curAngleY));
@@ -31,8 +31,8 @@ SphereMesh::SphereMesh(const float radius, const int subDivY, const int subDivZ,
         const float nextCosY = cosf(glm::radians(nextAngleY));
         const glm::vec3 nextDirectionY(nextCosY, 0.0f, -nextSinY);
 
-        float currentAngleZ = 0.0f;
-        int stepsZ = 1;
+        float currentAngleZ{ 0.0f };
+        int stepsZ{ 1 };
         while (stepsZ <= subDivZ) {
             const float sinZ = sinf(glm::radians(currentAngleZ));
             const float cosZ = cosf(glm::radians(currentAngleZ));
@@ -59,7 +59,7 @@ SphereMesh::SphereMesh(const float radius, const int subDivY, const int subDivZ,
             float offset = 0.75f;
             float tx1 = 0.0f;
             float ty1 = 0.0f;
-            for (unsigned int i = 0; i < 4; i++) {
+            for (unsigned int i = 0; i < 4; ++i) {
                 float tx = atan2f(ns[i].x, ns[i].z) / glm::radians(fabsf(degreesHorizontal)) + 0.5f;
                 float ty = asinf(ns[i].y) / glm::radians(fabsf(degreesVertical)) + 0.5f;
                 if (i > 0) {
@@ -75,7 +75,7 @@ SphereMesh::SphereMesh(const float radius, const int subDivY, const int subDivZ,
                 tcs[i] = glm::vec2(tx, ty);
             }
 
-            for (auto i = 0; i < 4; i++) {
+            for (auto i = 0; i < 4; ++i) {
                 m_vertices.push_back(quadPoints[i]);
                 textureCoords.push_back(tcs[i]);
                 normals.push_back(ns[i]);
@@ -85,6 +85,7 @@ SphereMesh::SphereMesh(const float radius, const int subDivY, const int subDivZ,
             for (const auto idx : quadIndices) {
                 m_indices.push_back(indexBase + idx);
             }
+
             indexBase += 4;
 
             stepsZ++;
@@ -97,7 +98,7 @@ SphereMesh::SphereMesh(const float radius, const int subDivY, const int subDivZ,
     std::vector<glm::vec3> tangents;
     std::vector<glm::vec3> biTangents;
     if (generateTangentBiTangent) {
-        prev_test::render::mesh::MeshUtil::GenerateTangetsAndBiTangents(m_vertices, textureCoords, m_indices, tangents, biTangents);
+        std::tie(tangents, biTangents) = prev_test::render::mesh::MeshUtil::GenerateTangetsAndBiTangents(m_vertices, textureCoords, normals, m_indices);
     }
 
     for (size_t vertexIndex = 0; vertexIndex < m_vertices.size(); vertexIndex++) {

@@ -67,7 +67,7 @@ namespace {
     {
         const glm::vec3 pos{ glm::make_vec3(&mesh.mVertices[vertexIndex].x) };
         const glm::vec2 uv{ mesh.HasTextureCoords(0) ? glm::make_vec3(&mesh.mTextureCoords[0][vertexIndex].x) : glm::vec2(1.0f, 1.0f) };
-        const glm::vec3 normal{ mesh.HasNormals() ? glm::make_vec3(&mesh.mNormals[vertexIndex].x) : glm::vec3(0.0f, 1.0f, 0.0f) };
+        const glm::vec3 normal{ mesh.HasNormals() ? glm::normalize(glm::make_vec3(&mesh.mNormals[vertexIndex].x)) : glm::vec3(0.0f, 1.0f, 0.0f) };
 
         inOutVertexBuffer.Add(pos);
         inOutVertexBuffer.Add(uv);

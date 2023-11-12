@@ -2,6 +2,7 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive : enable
 
+#include "../common/common.glsl"
 #include "../common/lights.glsl"
 
 const int MAX_BONES_COUNT = 100;
@@ -84,6 +85,5 @@ void main()
 	//vec3 cameraPosition = (inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz; // OPT - passed in UBO
 	outToCameraVector = uboVS.cameraPosition.xyz - worldPosition.xyz;
 
-	float vertexToCameraDistance = length(viewPosition.xyz);
-	outVisibility = clamp(exp(-pow(vertexToCameraDistance * uboVS.density, uboVS.gradient)), 0.0, 1.0);
+	outVisibility = GetVisibility(viewPosition.xyz, uboVS.gradient, uboVS.density);
 }

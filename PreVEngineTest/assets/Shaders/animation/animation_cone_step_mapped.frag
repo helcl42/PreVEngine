@@ -2,6 +2,7 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive : enable
 
+#include "../common/common.glsl"
 #include "../common/shadows_use.glsl"
 #include "../common/lights.glsl"
 #include "../common/cone_step_mapping_use.glsl"
@@ -33,23 +34,17 @@ layout(location = 0) in vec2 inTextureCoord;
 layout(location = 1) in vec3 inWorldPosition;
 layout(location = 2) in vec3 inViewPosition;
 layout(location = 3) in float inVisibility;
-layout(location = 4) in vec3 inTangent;
-layout(location = 5) in vec3 inBiTangent;
-layout(location = 6) in vec3 inNornal;
-layout(location = 7) in vec3 inToCameraVectorTangentSpace;
-layout(location = 8) in vec3 inWorldPositionTangentSpace;
-layout(location = 9) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
+layout(location = 4) in vec3 inToCameraVectorTangentSpace;
+layout(location = 5) in vec3 inPositionTangentSpace;
+layout(location = 6) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
 
 layout(location = 0) out vec4 outColor;
 
 void main() 
 {
-	const float nDotV = dot(inNornal, -inViewPosition);
-	const float faceSign = sign(nDotV);
-	const mat3 tbnMat = mat3(inTangent, inBiTangent, inNornal * faceSign);
-    const vec3 rayDirection = normalize(inverse(tbnMat) * inViewPosition);
-	const vec2 uv = ConeStepMapping(heightSampler, uboFS.heightScale.x, uboFS.numLayers, inTextureCoord, rayDirection);
-
+	const vec3 rayDirection = normalize(inPositionTangentSpace);
+	vec2 uv = ConeStepMapping(heightSampler, uboFS.heightScale.x, uboFS.numLayers, inTextureCoord, rayDirection);
+	
 	float shadow = 1.0;	
 	if(uboFS.castedByShadows != 0)
 	{
@@ -59,12 +54,7 @@ void main()
 	const vec3 normal = NormalMapping(normalSampler, uv);
 	const vec4 textureColor = texture(colorSampler, uv);
 
-	// if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) 
-	// {
-	// 	discard;
-	// }
-
-	const vec3 unitToCameraVector = normalize(inToCameraVectorTangentSpace - inWorldPositionTangentSpace);
+	const vec3 unitToCameraVector = normalize(inToCameraVectorTangentSpace - inPositionTangentSpace);
 
 	vec3 totalDiffuse = vec3(0.0);
 	vec3 totalSpecular = vec3(0.0);
@@ -72,7 +62,7 @@ void main()
 	{
 		const Light light = uboFS.lightning.lights[i];
 
-		const vec3 toLightVector = inToLightVectorTangentSpace[i] - inWorldPositionTangentSpace;
+		const vec3 toLightVector = inToLightVectorTangentSpace[i] - inPositionTangentSpace;
 		const vec3 unitToLightVector = normalize(toLightVector);
 
 		const float attenuationFactor = GetAttenuationFactor(light.attenuation.xyz, toLightVector);

@@ -4,10 +4,12 @@
 namespace prev_test::render::mesh {
 CubeMesh::CubeMesh(const bool includeTangentBiTangent)
 {
+    auto normals{ prev_test::render::mesh::MeshUtil::GenerateNormals(vertices, indices, false) };
+
     std::vector<glm::vec3> tangents;
     std::vector<glm::vec3> biTangents;
     if (includeTangentBiTangent) {
-        prev_test::render::mesh::MeshUtil::GenerateTangetsAndBiTangents(vertices, textureCoords, indices, tangents, biTangents);
+        std::tie(tangents, biTangents) = prev_test::render::mesh::MeshUtil::GenerateTangetsAndBiTangents(vertices, textureCoords, normals, indices);
         m_vertexLayout = { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC2, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3 } };
     } else {
         m_vertexLayout = { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC2, prev_test::render::VertexLayoutComponent::VEC3 } };

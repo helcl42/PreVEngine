@@ -18,9 +18,9 @@ void VertexBoneData::Reset()
 
 void VertexBoneData::AddBoneData(const unsigned int boneId, const float weight)
 {
-    unsigned int minWeightIndex = 0;
+    unsigned int minWeightIndex{ 0 };
     float minWeight = std::numeric_limits<float>::max();
-    for (unsigned int i = 0; i < prev::util::ArraySize(ids); i++) {
+    for (unsigned int i = 0; i < prev::util::ArraySize(ids); ++i) {
         if (weights[i] < minWeight) {
             minWeight = weights[i];
             minWeightIndex = i;
@@ -36,11 +36,11 @@ void VertexBoneData::AddBoneData(const unsigned int boneId, const float weight)
 void VertexBoneData::Normalize()
 {
     float weightSum{ 0.0f };
-    for (unsigned int i = 0; i < prev::util::ArraySize(ids); i++) {
+    for (unsigned int i = 0; i < prev::util::ArraySize(ids); ++i) {
         weightSum += weights[i];
     }
 
-    for (unsigned int i = 0; i < prev::util::ArraySize(ids); i++) {
+    for (unsigned int i = 0; i < prev::util::ArraySize(ids); ++i) {
         weights[i] /= weightSum;
     }
 }

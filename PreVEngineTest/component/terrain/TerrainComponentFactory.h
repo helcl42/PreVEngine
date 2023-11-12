@@ -34,8 +34,6 @@ private:
 
     glm::vec2 CalculateTextureCoordinates(const int x, const int z) const;
 
-    glm::vec3 CalculateNormal(const std::shared_ptr<HeightMapInfo>& heightMap, const int x, const int z) const;
-
     std::unique_ptr<HeightMapInfo> CreateHeightMap(const HeightGenerator& generator) const;
 
 private:
