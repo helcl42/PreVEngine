@@ -4,9 +4,9 @@
 
 // !!!! vulkan_wrapper.h must be #included BEFORE vulkan.h !!!!
 #ifdef VK_NO_PROTOTYPES
-
+#ifdef __LINUX__
 #include <vulkan_wrapper.cpp>
-
+#endif
 struct VulkanInitializer {
     VulkanInitializer()
     {
@@ -15,7 +15,6 @@ struct VulkanInitializer {
         print(success ? ConsoleColor::GREEN : ConsoleColor::RED, success ? "SUCCESS\n" : "FAILED (Vulkan driver not found.)\n");
     }
 } VulkanInitializer{}; // Run this function BEFORE main.
-
 #endif
 
 #if !defined(NDEBUG) || defined(ENABLE_LOGGING) || defined(ENABLE_VALIDATION)
