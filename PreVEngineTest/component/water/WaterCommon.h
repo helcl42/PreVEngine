@@ -5,7 +5,7 @@
 
 namespace prev_test::component::water {
 
-constexpr float WATER_TILE_SIZE{ 20.0f };
+constexpr float WATER_TILE_SIZE{ 40.0f };
 #ifdef WIN32
 constexpr float WATER_LEVEL{ -12.0f };
 #else

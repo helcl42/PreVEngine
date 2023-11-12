@@ -3,7 +3,7 @@
 
 namespace prev_test::component::terrain {
 
-constexpr float TERRAIN_TILE_SIZE{ 40.0f };
+constexpr float TERRAIN_TILE_SIZE{ 80.0f };
 
 }
 
