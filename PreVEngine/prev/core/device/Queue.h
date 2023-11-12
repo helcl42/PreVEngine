@@ -1,7 +1,7 @@
 #ifndef __QUEUE_H__
 #define __QUEUE_H__
 
-#include <prev/core/instance/Validation.h>
+#include <prev/core/Core.h>
 
 #include <memory>
 

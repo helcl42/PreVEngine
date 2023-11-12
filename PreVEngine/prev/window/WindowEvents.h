@@ -4,7 +4,7 @@
 #include "IWindow.h"
 
 #include "../common/Common.h"
-#include "../core/instance/Validation.h"
+#include "../core/Core.h"
 
 #include <inttypes.h>
 

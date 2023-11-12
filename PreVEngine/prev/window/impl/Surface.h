@@ -1,7 +1,7 @@
 #ifndef __SURFACE_H__
 #define __SURFACE_H__
 
-#include "../../core/instance/Validation.h"
+#include "../../core/Core.h"
 
 namespace prev::window::impl {
 class Surface {

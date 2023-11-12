@@ -1,5 +1,6 @@
 #include "Surface.h"
-#include "../../core/instance/Validation.h"
+
+#include "../../core/Core.h"
 
 namespace prev::window::impl {
 Surface::operator VkSurfaceKHR() const // Use *this as a VkSurfaceKHR

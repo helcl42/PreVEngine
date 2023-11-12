@@ -1,7 +1,7 @@
 #ifndef __RENDER_CONTEXT_H__
 #define __RENDER_CONTEXT_H__
 
-#include "../core/instance/Validation.h"
+#include "../core/Core.h"
 
 namespace prev::render {
 struct RenderContext {

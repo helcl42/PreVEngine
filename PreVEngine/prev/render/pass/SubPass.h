@@ -1,7 +1,7 @@
 #ifndef __SUB_PASS_H__
 #define __SUB_PASS_H__
 
-#include "../../core/instance/Validation.h"
+#include "../../core/Core.h"
 
 #include <vector>
 
@@ -39,7 +39,7 @@ private:
 
     std::vector<VkAttachmentReference> m_resolveReferences;
 
-    VkAttachmentReference m_depthReference = { UINT32_MAX, VK_IMAGE_LAYOUT_UNDEFINED };
+    VkAttachmentReference m_depthReference{};
 };
 } // namespace prev::render::pass
 

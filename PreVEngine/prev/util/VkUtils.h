@@ -2,7 +2,7 @@
 #define __VK_UTILS_H__
 
 #include "../common/Common.h"
-#include "../core/instance/Validation.h"
+#include "../core/Core.h"
 
 #include <vector>
 

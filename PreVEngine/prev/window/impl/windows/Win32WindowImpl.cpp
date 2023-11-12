@@ -2,6 +2,8 @@
 
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 
+#include "../../../common/Logger.h"
+
 namespace prev::window::impl::win32 {
 namespace {
     // Convert native Win32 keyboard scancode to cross-platform USB HID code.

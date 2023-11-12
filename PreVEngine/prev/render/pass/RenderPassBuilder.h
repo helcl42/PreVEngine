@@ -1,8 +1,9 @@
 #ifndef __RENDER_PASS_BUILDER_H__
 #define __RENDER_PASS_BUILDER_H__
 
-#include "../../core/instance/Validation.h"
 #include "RenderPass.h"
+
+#include "../../core/Core.h"
 
 #include <memory>
 #include <vector>

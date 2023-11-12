@@ -1,7 +1,7 @@
 #ifndef __SAMPLER_H__
 #define __SAMPLER_H__
 
-#include "../../core/instance/Validation.h"
+#include "../../core/Core.h"
 
 namespace prev::render::sampler {
 class Sampler {

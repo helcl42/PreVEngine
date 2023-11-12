@@ -1,5 +1,7 @@
 #include "PhysicalDevices.h"
 
+#include "../../common/Logger.h"
+
 namespace prev::core::device {
 PhysicalDevices::PhysicalDevices(const VkInstance instance)
 {

@@ -3,8 +3,7 @@
 
 #include "../../common/intersection/Frustum.h"
 
-#include <prev/common/Common.h>
-#include <prev/core/instance/Validation.h>
+#include <prev/core/Core.h>
 #include <prev/render/RenderContext.h>
 
 namespace prev_test::render::renderer {

@@ -1,11 +1,11 @@
 #ifndef __PICK_LIST_H__
 #define __PICK_LIST_H__
 
-#include "../core/instance/Validation.h"
-
 #include <cinttypes>
 #include <string>
 #include <vector>
+
+#include "Logger.h"
 
 namespace prev::common {
 template <typename ItemType>

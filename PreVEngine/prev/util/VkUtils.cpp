@@ -16,7 +16,7 @@ uint32_t FindMemoryType(const VkPhysicalDevice gpu, const uint32_t typeFilter, c
         }
     }
 
-    LOGE("failed to find suitable memory type!");
+    assert(false && "failed to find suitable memory type!");
     return std::numeric_limits<uint32_t>::max();
 }
 

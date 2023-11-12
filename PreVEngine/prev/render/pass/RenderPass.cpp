@@ -1,5 +1,7 @@
 #include "RenderPass.h"
 
+#include "../../common/Logger.h"
+
 namespace prev::render::pass {
 RenderPass::RenderPass(VkDevice device)
     : m_device(device)

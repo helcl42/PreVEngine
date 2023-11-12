@@ -1,6 +1,6 @@
 #include "ImageFactory.h"
 
-#include "../../core/instance/Validation.h"
+#include "../../common/Logger.h"
 #include "../../util/Utils.h"
 
 #define STB_IMAGE_IMPLEMENTATION

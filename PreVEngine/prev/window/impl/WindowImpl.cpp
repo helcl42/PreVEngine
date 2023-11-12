@@ -1,5 +1,6 @@
 #include "WindowImpl.h"
-#include "../../core/instance/Validation.h"
+
+#include "../../core/Core.h"
 
 namespace prev::window::impl {
 WindowImpl::WindowImpl()

@@ -2,6 +2,8 @@
 
 #ifdef VK_USE_PLATFORM_XCB_KHR
 
+#include "../../../common/Logger.h"
+
 #include <string.h>
 
 #ifdef ENABLE_MULTITOUCH

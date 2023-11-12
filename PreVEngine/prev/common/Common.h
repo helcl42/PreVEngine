@@ -1,6 +1,27 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
+#if defined(__linux__) && !defined(__ANDROID__) // Linux (desktop only)
+#define __LINUX__ 1
+#endif
+
+#ifdef _WIN32
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#define TICK_CHARACTER "\xFB" // On Windows, use Square-root as tick mark
+#define PAUSE system("pause")
+#elif __ANDROID__
+#include <android_native.h>
+#define TICK_CHARACTER "\u2713"
+#define PAUSE
+#elif __LINUX__
+#include <stdlib.h>
+#include <xkbcommon/xkbcommon.h>
+#define TICK_CHARACTER "\u2713"
+#define PAUSE
+#endif
+
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 // #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES

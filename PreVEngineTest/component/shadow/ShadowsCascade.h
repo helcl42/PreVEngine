@@ -1,8 +1,7 @@
 #ifndef __SHADOWS_CASCADE_H__
 #define __SHADOWS_CASCADE_H__
 
-#include <prev/common/Common.h>
-#include <prev/core/instance/Validation.h>
+#include <prev/core/Core.h>
 
 namespace prev_test::component::shadow {
 struct ShadowsCascade {
