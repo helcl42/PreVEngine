@@ -75,7 +75,7 @@ public:
     bool UnPick(const std::string& name)
     {
         bool found{ false };
-        for (uint32_t i = 0; i < PickCount(); ++i) {
+        for (uint32_t i = 0; i < GetPickCount(); ++i) {
             const auto& nameAtIndex{ GetNameByIndex(m_pickListIndices[i]) };
             if (nameAtIndex == name) {
                 m_pickListIndices.erase(m_pickListIndices.begin() + i);
@@ -89,7 +89,7 @@ public:
 
     void PickAll()
     {
-        for (uint32_t i = 0; i < GetPickedCount(); ++i) {
+        for (uint32_t i = 0; i < GetPickCount(); ++i) {
             Pick(i);
         }
     }
