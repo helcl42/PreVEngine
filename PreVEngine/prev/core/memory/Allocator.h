@@ -26,7 +26,7 @@ public:
 
     void CreateImage(const VkExtent3D& extent, const VkImageType imageType, const VkFormat format, const VkSampleCountFlagBits sampleCount, const uint32_t mipLevels, const uint32_t layerCount, const VkImageTiling tiling, const VkImageUsageFlags usage, const VkImageCreateFlags flags, VkImage& outImage, VmaAllocation& outAlloc);
 
-    void DestroyImage(VkImage image, VkImageView view, VmaAllocation alloc);
+    void DestroyImage(VkImage image, VmaAllocation alloc);
 
 public:
     void CopyBuffer(const VkBuffer srcBuffer, const VkDeviceSize size, VkBuffer dstBuffer);
