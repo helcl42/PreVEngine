@@ -18,7 +18,7 @@ public:
 private:
     inline static const float AMPLITUDE{ 60.0f };
 
-    inline static const int OCTAVES{ 3 };
+    inline static const int OCTAVES{ 4 };
 
     inline static const float ROUGHNESS{ 0.1f };
 
