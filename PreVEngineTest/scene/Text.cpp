@@ -32,7 +32,7 @@ void Text::Update(float deltaTime)
         fpsString << std::setprecision(1) << std::fixed;
         fpsString << m_fpsCounter.GetAverageFPS() << " FPS";
 
-        auto fancyText = std::make_shared<prev_test::render::font::ScreenSpaceText>(fpsString.str(), 1.6f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0), glm::vec2(0.4f, -0.4f), 1.0f, true, 0.5f, 0.05f);
+        auto fancyText = std::make_shared<prev_test::render::font::ScreenSpaceText>(fpsString.str(), 1.6f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0), glm::vec2(0.9f, 0.93f), 1.0f, false, 0.5f, 0.05f);
         m_fontComponent->AddText(fancyText);
     }
 

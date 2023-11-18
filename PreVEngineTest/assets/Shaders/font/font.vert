@@ -13,6 +13,6 @@ layout(location = 0) out vec2 outTextureCoord;
 
 void main()
 {
-	gl_Position = vec4(inPosition + uboVS.translation.xy * vec2(2.0, -2.0), 0.0, 1.0);
+	gl_Position = vec4(inPosition + uboVS.translation.xy * vec2(2.0, 2.0), 0.0, 1.0);
 	outTextureCoord = inTextureCoord;
 }

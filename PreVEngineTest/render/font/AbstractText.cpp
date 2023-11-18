@@ -33,19 +33,9 @@ const glm::vec4& AbstractText::GetColor() const
     return m_color;
 }
 
-int AbstractText::GetNumberOfLines() const
-{
-    return m_numberOfLines;
-}
-
 float AbstractText::GetFontSize() const
 {
     return m_fontSize;
-}
-
-void AbstractText::SetNumberOfLines(unsigned int number)
-{
-    m_numberOfLines = number;
 }
 
 bool AbstractText::IsCentered() const
