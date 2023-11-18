@@ -17,11 +17,7 @@ public:
 
     const glm::vec4& GetColor() const;
 
-    int GetNumberOfLines() const;
-
     float GetFontSize() const;
-
-    void SetNumberOfLines(unsigned int number);
 
     bool IsCentered() const;
 
@@ -56,9 +52,7 @@ protected:
 
     float m_lineMaxSize;
 
-    unsigned int m_numberOfLines;
-
-    bool m_centerText = false;
+    bool m_centerText{ false };
 
     float m_width;
 
