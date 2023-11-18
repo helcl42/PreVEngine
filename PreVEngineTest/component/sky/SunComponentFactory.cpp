@@ -19,7 +19,7 @@ std::unique_ptr<ISunComponent> SunComponentFactory::Create() const
     flare->SetScreenSpacePosition(glm::vec2(-100.0f, -100.0f));
 
     prev_test::render::mesh::MeshFactory meshFactory{};
-    auto mesh{ meshFactory.CreateCentricQuad() };
+    auto mesh{ meshFactory.CreateQuad() };
 
     prev_test::render::model::ModelFactory modelFactory{};
     auto model{ modelFactory.Create(std::move(mesh), *allocator) };

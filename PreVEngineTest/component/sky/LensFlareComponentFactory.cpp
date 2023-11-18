@@ -35,7 +35,7 @@ std::unique_ptr<ILensFlareComponent> LensFlareComponentFactory::Create() const
     }
 
     prev_test::render::mesh::MeshFactory meshFactory{};
-    auto mesh{ meshFactory.CreateCentricQuad() };
+    auto mesh{ meshFactory.CreateQuad() };
 
     prev_test::render::model::ModelFactory modelFactory{};
     auto model{ modelFactory.Create(std::move(mesh), *allocator) };

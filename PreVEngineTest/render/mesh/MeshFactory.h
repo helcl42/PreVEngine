@@ -13,10 +13,6 @@ public:
     std::unique_ptr<prev_test::render::IMesh> CreateSphere(const float radius, const int subDivY, const int subDivZ, const float degreesHorizontal = 360.0f, const float degreesVertical = 180.0f, bool generateTangentBiTangent = false) const;
 
     std::unique_ptr<prev_test::render::IMesh> CreateQuad(const bool generateTangentBiTangent = false) const;
-
-    std::unique_ptr<prev_test::render::IMesh> CreateCentricQuad() const;
-
-    std::unique_ptr<prev_test::render::IMesh> CreateFullScreenQuad() const;
 };
 } // namespace prev_test::render::mesh
 
