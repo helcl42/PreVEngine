@@ -10,7 +10,7 @@
 namespace prev_test::component::terrain {
 class TerrainComponentFactory {
 public:
-    TerrainComponentFactory(const unsigned int seed = 21236728, const unsigned int vertexCount = 14);
+    TerrainComponentFactory(const unsigned int seed = 21236728, const unsigned int vertexCount = 28);
 
     ~TerrainComponentFactory() = default;
 
