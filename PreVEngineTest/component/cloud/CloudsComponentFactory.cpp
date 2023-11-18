@@ -15,7 +15,7 @@ std::unique_ptr<ICloudsComponent> CloudsComponentFactory::Create() const
 
     auto cloudsNoise{ CloudsNoiseFactory{}.CreatePerlinWorleyNoise(128, 128, 128) };
     auto cloudsImage{ CloudsFactory{}.Create(1024, 1024) };
-    auto model{ prev_test::render::model::ModelFactory{}.Create(prev_test::render::mesh::MeshFactory{}.CreateFullScreenQuad(), *allocator) };
+    auto model{ prev_test::render::model::ModelFactory{}.Create(prev_test::render::mesh::MeshFactory{}.CreateQuad(), *allocator) };
 
     auto clouds = std::make_unique<CloudsComponent>();
     clouds->m_weatherImageBuffer = std::move(cloudsImage.imageBuffer);

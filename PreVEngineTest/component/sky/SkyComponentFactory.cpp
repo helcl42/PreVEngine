@@ -13,7 +13,7 @@ std::unique_ptr<ISkyComponent> SkyComponentFactory::Create() const
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     prev_test::render::mesh::MeshFactory meshFactory{};
-    auto mesh{ meshFactory.CreateFullScreenQuad() };
+    auto mesh{ meshFactory.CreateQuad() };
 
     prev_test::render::model::ModelFactory modelFactory{};
     auto model{ modelFactory.Create(std::move(mesh), *allocator) };

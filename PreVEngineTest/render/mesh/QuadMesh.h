@@ -5,7 +5,7 @@
 #include "../VertexDataBuffer.h"
 
 namespace prev_test::render::mesh {
-class QuadMesh final : public prev_test::render::IMesh {
+class QuadMesh final : public IMesh {
 public:
     QuadMesh(const bool includeTangentBiTangent = false);
 
@@ -20,7 +20,7 @@ public:
 
     const std::vector<uint32_t>& GetIndices() const override;
 
-    const std::vector<prev_test::render::MeshPart>& GetMeshParts() const override;
+    const std::vector<MeshPart>& GetMeshParts() const override;
 
     const MeshNode& GetRootNode() const override;
 
@@ -32,9 +32,9 @@ private:
 private:
     static const inline std::vector<glm::vec3> vertices = {
         { 1.0f, 1.0f, 0.0f },
-        { 0.0f, 1.0f, 0.0f },
-        { 0.0f, 0.0f, 0.0f },
-        { 1.0f, 0.0f, 0.0f }
+        { -1.0f, 1.0f, 0.0f },
+        { -1.0f, -1.0f, 0.0f },
+        { 1.0f, -1.0f, 0.0f }
     };
 
     static const inline std::vector<glm::vec2> textureCoords = {
@@ -48,8 +48,8 @@ private:
         0, 1, 2, 2, 3, 0
     };
 
-    static const inline std::vector<prev_test::render::MeshPart> meshParts = {
-        prev_test::render::MeshPart(static_cast<uint32_t>(indices.size()), vertices)
+    static const inline std::vector<MeshPart> meshParts = {
+        MeshPart(static_cast<uint32_t>(indices.size()), vertices)
     };
 
     static const inline prev_test::render::MeshNode meshRootNode{ { 0 }, glm::mat4(1.0f), {} };

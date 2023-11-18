@@ -47,7 +47,7 @@ const std::vector<uint32_t>& QuadMesh::GetIndices() const
     return indices;
 }
 
-const std::vector<prev_test::render::MeshPart>& QuadMesh::GetMeshParts() const
+const std::vector<MeshPart>& QuadMesh::GetMeshParts() const
 {
     return meshParts;
 }

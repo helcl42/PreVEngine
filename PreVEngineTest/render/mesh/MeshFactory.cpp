@@ -1,10 +1,8 @@
 #include "MeshFactory.h"
 
-#include "CentricQuadMesh.h"
 #include "CubeMesh.h"
-#include "FullScreenQuadMesh.h"
-#include "PlaneMesh.h"
 #include "QuadMesh.h"
+#include "PlaneMesh.h"
 #include "SphereMesh.h"
 
 namespace prev_test::render::mesh {
@@ -26,15 +24,5 @@ std::unique_ptr<prev_test::render::IMesh> MeshFactory::CreateSphere(const float 
 std::unique_ptr<prev_test::render::IMesh> MeshFactory::CreateQuad(const bool generateTangentBiTangent) const
 {
     return std::make_unique<QuadMesh>(generateTangentBiTangent);
-}
-
-std::unique_ptr<prev_test::render::IMesh> MeshFactory::CreateCentricQuad() const
-{
-    return std::make_unique<CentricQuadMesh>();
-}
-
-std::unique_ptr<prev_test::render::IMesh> MeshFactory::CreateFullScreenQuad() const
-{
-    return std::make_unique<FullScreenQuadMesh>();
 }
 } // namespace prev_test::render::mesh
