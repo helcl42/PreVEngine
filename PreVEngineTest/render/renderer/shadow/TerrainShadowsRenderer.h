@@ -52,7 +52,7 @@ private:
 
     std::unique_ptr<prev_test::render::pipeline::IPipeline> m_pipeline;
 
-    std::unique_ptr<prev::render::buffer::UBOPool<Uniforms>> m_uniformsPool;
+    std::unique_ptr<prev::render::buffer::UniformBufferRing<Uniforms>> m_uniformsPool;
 };
 } // namespace prev_test::render::renderer::shadow
 

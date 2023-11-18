@@ -32,9 +32,9 @@ private:
 };
 
 template <typename ItemType>
-class UBOPool final : public Buffer {
+class UniformBufferRing final : public Buffer {
 public:
-    UBOPool(prev::core::memory::Allocator& allocator)
+    UniformBufferRing(prev::core::memory::Allocator& allocator)
         : Buffer(allocator)
         , m_capacity(0)
         , m_index(0)
@@ -42,14 +42,14 @@ public:
     {
     }
 
-    ~UBOPool() = default;
+    ~UniformBufferRing() = default;
 
 public:
     void AdjustCapactity(const uint32_t capacity, const uint32_t alignment = 32)
     {
         Clear();
 
-        m_poolItems.clear();
+        m_buffers.clear();
 
         m_capacity = capacity;
         m_index = 0;
@@ -59,18 +59,18 @@ public:
 
         for (uint32_t i = 0; i < capacity; i++) {
             auto ubo = std::make_shared<UniformBuffer>(m_buffer, m_mapped, i * itemSize, itemSize);
-            m_poolItems.emplace_back(ubo);
+            m_buffers.emplace_back(ubo);
         }
     }
 
     std::shared_ptr<UniformBuffer> GetNext()
     {
-        m_index = (m_index + 1) % m_poolItems.size();
-        return m_poolItems[m_index];
+        m_index = (m_index + 1) % m_buffers.size();
+        return m_buffers[m_index];
     }
 
 private:
-    std::vector<std::shared_ptr<UniformBuffer>> m_poolItems;
+    std::vector<std::shared_ptr<UniformBuffer>> m_buffers;
 
     uint32_t m_capacity;
 

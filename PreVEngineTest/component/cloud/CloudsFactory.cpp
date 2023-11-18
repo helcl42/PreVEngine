@@ -35,7 +35,7 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
     auto pipeline = std::make_unique<prev_test::render::renderer::sky::pipeline::CloudsPipeline>(*device, *shader);
     pipeline->Init();
 
-    auto uniformsPool = std::make_unique<prev::render::buffer::UBOPool<Uniforms>>(*allocator);
+    auto uniformsPool = std::make_unique<prev::render::buffer::UniformBufferRing<Uniforms>>(*allocator);
     uniformsPool->AdjustCapactity(3, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
     auto commandPool = computeQueue->CreateCommandPool();
