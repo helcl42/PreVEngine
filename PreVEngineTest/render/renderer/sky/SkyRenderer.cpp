@@ -115,7 +115,7 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
     uniformsCS.baseCloudColor = cloudsComponent->GetColor();
     uniformsCS.skyColorBottom = glm::vec4(skyComponent->GetBottomColor(), 1.0f);
     uniformsCS.skyColorTop = glm::vec4(skyComponent->GetTopColor(), 1.0f);
-    uniformsCS.windDirection = glm::vec4(0.5f, 0.0f, 0.1f, 0.0f);
+    uniformsCS.windDirection = glm::normalize(glm::vec4(0.5f, 0.0f, 0.1f, 0.0f));
     uniformsCS.time = timeComponent->GetElapsedTime();
     uniformsCS.coverageFactor = 0.45f;
     uniformsCS.cloudSpeed = 450.0f;
