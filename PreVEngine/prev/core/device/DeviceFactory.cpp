@@ -4,6 +4,8 @@
 
 #include "../../common/Logger.h"
 
+static constexpr bool TRY_ENABLE_SWAPCHAIN_CONCURRENT_MODE{ false };
+
 namespace prev::core::device {
 namespace {
     bool FindQueue(const std::shared_ptr<PhysicalDevice>& gpu, const VkQueueFlags flags, const VkQueueFlags unwantedFlags, const VkSurfaceKHR surface, const QueuesMetadata& queuesMetadata, QueueMetadata& outQueueMeta)
@@ -37,14 +39,16 @@ std::shared_ptr<Device> DeviceFactory::Create(const std::shared_ptr<PhysicalDevi
 
     const uint32_t DefaultUnwantedFlags{ 0x20 | 0x40 }; // video decode/encode
 
-    // check if there is pure presenting queue with no other features
-    if (FindQueue(gpu, 0, DefaultUnwantedFlags | VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT | VK_QUEUE_SPARSE_BINDING_BIT, surface, queuesMetadata, workingQueueMetadata)) {
-        queuesMetadata.Add({ QueueType::PRESENT }, workingQueueMetadata);
-    }
-
-    if (!queuesMetadata.HasAny(QueueType::PRESENT)) {
-        if (FindQueue(gpu, 0, DefaultUnwantedFlags, surface, queuesMetadata, workingQueueMetadata)) {
+    if constexpr (TRY_ENABLE_SWAPCHAIN_CONCURRENT_MODE) {
+        // check if there is pure presenting queue with no other features
+        if (FindQueue(gpu, 0, DefaultUnwantedFlags | VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT | VK_QUEUE_SPARSE_BINDING_BIT, surface, queuesMetadata, workingQueueMetadata)) {
             queuesMetadata.Add({ QueueType::PRESENT }, workingQueueMetadata);
+        }
+
+        if (!queuesMetadata.HasAny(QueueType::PRESENT)) {
+            if (FindQueue(gpu, 0, DefaultUnwantedFlags, surface, queuesMetadata, workingQueueMetadata)) {
+                queuesMetadata.Add({ QueueType::PRESENT }, workingQueueMetadata);
+            }
         }
     }
 
