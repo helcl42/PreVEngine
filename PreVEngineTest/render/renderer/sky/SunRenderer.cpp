@@ -54,7 +54,7 @@ void SunRenderer::BeforeRender(const NormalRenderContext& renderContext)
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
 
         const auto result{ vkGetQueryPoolResults(*device, m_queryPool, 0, 1, sizeof(m_passedSamples), &m_passedSamples, sizeof(uint64_t), VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_PARTIAL_BIT) };
-        const float ratio{ glm::clamp((static_cast<float>(m_passedSamples) / static_cast<float>(m_maxNumberOfSamples * m_renderPass->GetSamplesCount())), 0.0f, 1.0f) * 1.2f };
+        const float ratio{ glm::clamp((static_cast<float>(m_passedSamples) / static_cast<float>(m_maxNumberOfSamples * m_renderPass->GetSamplesCount())) * 0.5f, 0.0f, 1.0f) };
 
         prev::event::EventChannel::Post(prev_test::render::renderer::sky::SunVisibilityEvent{ ratio });
     }
@@ -82,7 +82,7 @@ void SunRenderer::Render(const NormalRenderContext& renderContext, const std::sh
         const float xScale{ sunComponent->GetFlare()->GetScale() };
         const float yScale{ xScale * aspectRatio };
 
-        m_maxNumberOfSamples = static_cast<uint64_t>(powf(sunComponent->GetFlare()->GetScale() * static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x), 2.0f));
+        m_maxNumberOfSamples = static_cast<uint64_t>(xScale * static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) * yScale * static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y));
 
         vkCmdBeginQuery(renderContext.commandBuffer, m_queryPool, 0, 0);
 
