@@ -16,6 +16,14 @@ void CreateImage(const VkPhysicalDevice gpu, const VkDevice device, const VkExte
 
 VkImageView CreateImageView(const VkDevice device, const VkImage image, const VkFormat format, const VkImageViewType viewType, const uint32_t mipLevels, const VkImageAspectFlags aspectFlags, const uint32_t arrayLayers = 1, const uint32_t baseArrayLayer = 0);
 
+void TransitionImageLayout(const VkCommandBuffer commandBuffer, const VkImage image, const VkImageLayout oldLayout, const VkImageLayout newLayout, const VkFormat format, const uint32_t mipLevels, const uint32_t layersCount);
+
+void GenerateMipmaps(const VkCommandBuffer commandBuffer, const VkImage image, VkFormat imageFormat, const VkExtent3D& extent, const uint32_t mipLevels, const uint32_t layersCount, const VkImageLayout newLayout);
+
+void CopyBufferToImage(const VkCommandBuffer commandBuffer, const VkExtent3D& extent, const VkBuffer buffer, const uint32_t layerIndex, const VkImageLayout dstImageLayout, VkImage dstImage);
+
+void CopyBuffer(const VkCommandBuffer commandBuffer, const VkBuffer srcBuffer, const VkDeviceSize size, VkBuffer dstBuffer);
+
 VkFramebuffer CreateFrameBuffer(const VkDevice device, const VkRenderPass& renderPass, const std::vector<VkImageView>& imageViews, const VkExtent2D& extent);
 
 VkCommandBuffer CreateCommandBuffer(const VkDevice device, const VkCommandPool commandPool, const VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY);
