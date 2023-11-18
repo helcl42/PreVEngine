@@ -12,9 +12,9 @@ AbstractImageBuffer::AbstractImageBuffer(prev::core::memory::Allocator& allocato
     , m_imageViewType(vwType)
     , m_layerCount(lrCount)
     , m_mipLevels(0)
-    , m_allocation(nullptr)
-    , m_image(nullptr)
-    , m_imageView(nullptr)
+    , m_allocation(VK_NULL_HANDLE)
+    , m_image(VK_NULL_HANDLE)
+    , m_imageView(VK_NULL_HANDLE)
 {
 }
 
@@ -25,10 +25,9 @@ AbstractImageBuffer::~AbstractImageBuffer()
 
 void AbstractImageBuffer::Destroy()
 {
-    vkQueueWaitIdle(m_allocator.GetQueue());
-
     if (m_image) {
-        m_allocator.DestroyImage(m_image, m_imageView, m_allocation);
+        vkQueueWaitIdle(m_allocator.GetQueue());
+
     }
 
     m_image = VK_NULL_HANDLE;
