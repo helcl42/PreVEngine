@@ -60,9 +60,9 @@ private:
 
     std::unique_ptr<prev_test::render::pipeline::IPipeline> m_pipeline;
 
-    std::unique_ptr<prev::render::buffer::UBOPool<UniformsVS>> m_uniformsPoolVS;
+    std::unique_ptr<prev::render::buffer::UniformBufferRing<UniformsVS>> m_uniformsPoolVS;
 
-    std::unique_ptr<prev::render::buffer::UBOPool<UniformsFS>> m_uniformsPoolFS;
+    std::unique_ptr<prev::render::buffer::UniformBufferRing<UniformsFS>> m_uniformsPoolFS;
 
     std::unique_ptr<prev::render::buffer::VertexBuffer> m_instanceDataBuffer;
 };

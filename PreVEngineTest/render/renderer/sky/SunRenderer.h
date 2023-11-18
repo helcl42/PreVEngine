@@ -52,7 +52,7 @@ private:
 
     std::unique_ptr<prev_test::render::pipeline::IPipeline> m_pipeline;
 
-    std::unique_ptr<prev::render::buffer::UBOPool<UniformsVS>> m_uniformsPoolVS;
+    std::unique_ptr<prev::render::buffer::UniformBufferRing<UniformsVS>> m_uniformsPoolVS;
 
 private:
     uint64_t m_passedSamples{ 0 };

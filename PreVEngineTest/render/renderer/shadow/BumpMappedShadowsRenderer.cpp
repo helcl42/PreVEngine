@@ -36,7 +36,7 @@ void BumpMappedShadowsRenderer::Init()
 
     LOGI("Bump Mapped Shadows Pipeline created\n");
 
-    m_uniformsPool = std::make_unique<prev::render::buffer::UBOPool<Uniforms>>(*allocator);
+    m_uniformsPool = std::make_unique<prev::render::buffer::UniformBufferRing<Uniforms>>(*allocator);
     m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
