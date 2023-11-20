@@ -75,7 +75,7 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::CreateCubeMap(con
     return std::make_unique<prev_test::render::material::Material>(materialProps, ImagePair{ std::move(cubeMapImageBuffer), cubeMapSampler });
 }
 
-std::vector<std::shared_ptr<prev_test::render::IMaterial>> MaterialFactory::Create(const std::string& modelPath, prev::core::memory::Allocator& allocator) const
+std::vector<std::shared_ptr<prev_test::render::IMaterial>> MaterialFactory::Create(const std::string& modelPath, const float shineDamperScale, const float reflectivityScale, prev::core::memory::Allocator& allocator) const
 {
     std::vector<std::shared_ptr<prev_test::render::IMaterial>> result;
 
@@ -120,7 +120,7 @@ std::vector<std::shared_ptr<prev_test::render::IMaterial>> MaterialFactory::Crea
         float reflectivity{ 1.0f };
         material.Get(AI_MATKEY_REFLECTIVITY, reflectivity);
 
-        MaterialProperties materialProperties{ { color.r, color.g, color.b, 1.0 }, shineness, std::max(reflectivity, 1.0f), DefaultAddressMode };
+        MaterialProperties materialProperties{ { color.r, color.g, color.b, 1.0 }, shineness * shineDamperScale, std::max(reflectivity * reflectivityScale, 1.0f), DefaultAddressMode };
 
         result.emplace_back(std::make_unique<prev_test::render::material::Material>(materialProperties, colorImage, normalImage, heightImage));
     }

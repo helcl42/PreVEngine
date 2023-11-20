@@ -22,7 +22,7 @@ public:
 
     std::unique_ptr<prev_test::render::IMaterial> CreateCubeMap(const MaterialProperties& materialProps, const std::vector<std::string>& sidePaths, prev::core::memory::Allocator& allocator) const;
 
-    std::vector<std::shared_ptr<prev_test::render::IMaterial>> Create(const std::string& modelPath, prev::core::memory::Allocator& allocator) const;
+    std::vector<std::shared_ptr<prev_test::render::IMaterial>> Create(const std::string& modelPath, const float shineDamperScale, const float reflectivityScale, prev::core::memory::Allocator& allocator) const;
 
 private:
     std::shared_ptr<prev::render::image::Image> CreateImage(const std::string& textureFilename) const;
