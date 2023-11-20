@@ -23,7 +23,7 @@ namespace {
         if (usedFamilyQueueCount < queueFamilyProps.queueCount) {
             queueIndex = usedFamilyQueueCount;
         } else {
-            LOGW("No more queues available from this family - fallback to to the first ones.\n");
+            LOGW("No more queues available from this family - fallback to the first one.\n");
         }
 
         outQueueMeta = QueueMetadata{ static_cast<uint32_t>(familyIndex), queueIndex, queueFamilyProps.queueFlags, surface };
