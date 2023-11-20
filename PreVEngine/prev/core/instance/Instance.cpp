@@ -61,7 +61,7 @@ void Instance::Create(const Layers& layers, const Extensions& extensions, const 
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
     appInfo.apiVersion = VK_API_VERSION_1_0;
 #else
-    appInfo.apiVersion = VK_API_VERSION_1_2;
+    appInfo.apiVersion = VK_API_VERSION_1_3;
 #endif
 
     VkInstanceCreateInfo instanceInfo = { VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
@@ -74,6 +74,8 @@ void Instance::Create(const Layers& layers, const Extensions& extensions, const 
     instanceInfo.ppEnabledLayerNames = layers.GetPickListRaw();
 
     VKERRCHECK(vkCreateInstance(&instanceInfo, nullptr, &m_instance));
+
+    volkLoadInstance(m_instance);
 
     LOGI("Vulkan Instance created\n");
 

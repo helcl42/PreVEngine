@@ -2,20 +2,21 @@
 
 #include "../common/Logger.h"
 
-// !!!! vulkan_wrapper.h must be #included BEFORE vulkan.h !!!!
-#ifdef VK_NO_PROTOTYPES
-#ifdef __LINUX__
-#include <vulkan_wrapper.cpp>
-#endif
+#define VOLK_IMPLEMENTATION
+#include <external/volk/volk.h>
+
 struct VulkanInitializer {
     VulkanInitializer()
     {
-        bool success = (InitVulkan() == 1); // Returns true if this device supports Vulkan.
-        printf("Initialize Vulkan: ");
-        print(success ? ConsoleColor::GREEN : ConsoleColor::RED, success ? "SUCCESS\n" : "FAILED (Vulkan driver not found.)\n");
+        const bool success{ volkInitialize() == VK_SUCCESS };
+        if (success) {
+            const auto version{ volkGetInstanceVersion() };
+            LOGI("Vulkan API version %d.%d.%d initialized.\n", VK_VERSION_MAJOR(version), VK_VERSION_MINOR(version), VK_VERSION_PATCH(version));
+        } else {
+            LOGE("Vulkan API initialization failed.\n");
+        }
     }
 } VulkanInitializer{}; // Run this function BEFORE main.
-#endif
 
 #if !defined(NDEBUG) || defined(ENABLE_LOGGING) || defined(ENABLE_VALIDATION)
 const char* VkResultStr(const VkResult err)

@@ -38,7 +38,6 @@ file(GLOB WINDOW_IMPL_SRC_LIST "prev/window/impl/*.h" "prev/window/impl/*.cpp")
 file(GLOB WINDOW_IMPL_WINDOWS_SRC_LIST "prev/window/impl/windows/*.h" "prev/window/impl/windows/*.cpp")
 file(GLOB WINDOW_IMPL_LINUX_SRC_LIST "prev/window/impl/xcb/*.h" "prev/window/impl/xcb/*.cpp")
 file(GLOB WINDOW_IMPL_ANDROID_SRC_LIST "prev/window/impl/android/*.h" "prev/window/impl/android/*.cpp")
-file(GLOB EXTERNAL_SRC_LIST "external/*.h" "external/*.cpp")
 
 source_group("prev" FILES ${ROOT_SRC_LIST})
 source_group("prev/common" FILES ${COMMON_SRC_LIST})
@@ -69,7 +68,6 @@ source_group("prev/window/impl" FILES ${WINDOW_IMPL_SRC_LIST})
 source_group("prev/window/impl/windows" FILES ${WINDOW_IMPL_WINDOWS_SRC_LIST})
 source_group("prev/window/impl/linux" FILES ${WINDOW_IMPL_LINUX_SRC_LIST})
 source_group("prev/window/impl/android" FILES ${WINDOW_IMPL_ANDROID_SRC_LIST})
-source_group("external" FILES ${EXTERNAL_SRC_LIST})
 
 add_library(${LIBRARY_NAME} STATIC 
     ${ROOT_SRC_LIST}
@@ -101,7 +99,6 @@ add_library(${LIBRARY_NAME} STATIC
     ${WINDOW_IMPL_WINDOWS_SRC_LIST}
     ${WINDOW_IMPL_LINUX_SRC_LIST}
     ${WINDOW_IMPL_ANDROID_SRC_LIST}
-    ${EXTERNAL_SRC_LIST}
 )
 
 target_include_directories(${LIBRARY_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -115,10 +112,6 @@ option(ENABLE_VALIDATION "Enable Vulkan Validation." ON) #adds 5KB to exe size
 option(ENABLE_LOGGING "Prints LOG* messages to Terminal or Android Logcat." ON)
 option(ENABLE_MULTITOUCH "Multi-touch screen support" OFF)
 
-if (USE_VULKAN_WRAPPER)
-    add_subdirectory(vk_wrapper)
-    target_link_libraries(${LIBRARY_NAME} VULKAN_WRAPPER)
-endif()
 if (ENABLE_VALIDATION)
     add_definitions(-DENABLE_VALIDATION)
 endif()
@@ -128,6 +121,8 @@ endif()
 if (ENABLE_MULTITOUCH)
     add_definitions(-DENABLE_MULTITOUCH)
 endif()
+
+add_definitions(-DVK_NO_PROTOTYPES)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(BUILD_PREVENGINE_XCB_SUPPORT ON)  #Other options are not yet supported.
@@ -174,35 +169,12 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 #    if (BUILD_PREVENGINE_MIR_SUPPORT)
 #        add_definitions(-DVK_USE_PLATFORM_MIR_KHR)
 #    endif()
-
-    set (VULKAN_LOADER_NAME "vulkan")
 endif()
 
 if(WIN32)
     add_definitions(-DVK_USE_PLATFORM_WIN32_KHR)
-    set (VULKAN_LOADER_NAME "vulkan-${MAJOR}")
 endif()
 
-if(TARGET ${VULKAN_LOADER_NAME})                                                 # Check if "vulkan" loader target exists
-    target_link_libraries(${LIBRARY_NAME} ${VULKAN_LOADER_NAME})                 # Set dependency and link to loader target
-else()                                                                           # If loader is not being built here,
-    find_library(VULKAN_LOADER                                                   # then search for a pre-built one.
-        NAMES "vulkan" "vulkan-{MAJOR}" "vulkan-1"
-        HINTS "${CMAKE_SOURCE_DIR}/../${BINDATA_DIR}"                            # For SDK build?
-              "${CMAKE_SOURCE_DIR}/../x86_64/lib"                                # for SDK build?
-              "../../../build/${CMAKE_BUILD_TYPE}/loader"                        # Search in VulkanSamples
-              "$ENV{VULKAN_SDK}/lib"                                             # Search in Vulkan SDK on Linux  : /lib/libvulkan.so
-              "$ENV{VULKAN_SDK}/bin"                                             # Search in Vulkan SDK on Windows: /bin/vulkan-1.lib
-        DOC "Path + Filename of Vulkan loader. (libvulkan.so or vulkan-1.lib)")  # MUST INCLUDE FILENAME
-    if(EXISTS ${VULKAN_LOADER})
-        target_link_libraries(${LIBRARY_NAME} ${VULKAN_LOADER})                  # Link to loader
-    endif()
-    message("VULKAN_LOADER path: ${VULKAN_LOADER}")
-endif()
-
-find_path(VULKAN_INCLUDE vulkan/vulkan.h DOC "Path to Vulkan header file. (vulkan.h)")
 find_path(VULKAN_INCLUDE vulkan/vulkan.h PATH "$ENV{VULKAN_SDK}/include")    # Search in Vulkan SDK
-find_path(VULKAN_INCLUDE vulkan/vulkan.h PATH "../../include")               # Search in VulkanSamples
-find_path(VULKAN_INCLUDE vulkan/vulkan.h PATH "vk_wrapper")                  # Search in vk_wrapper
 target_include_directories(${LIBRARY_NAME} PUBLIC "${VULKAN_INCLUDE}")       # include vulkan.h
 message("VULKAN_INCLUDE path: ${VULKAN_INCLUDE}")
