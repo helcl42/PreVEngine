@@ -28,6 +28,7 @@ void AbstractImageBuffer::Destroy()
     if (m_image) {
         vkQueueWaitIdle(m_allocator.GetQueue());
 
+        vkDestroyImageView(m_allocator.GetDevice(), m_imageView, VK_NULL_HANDLE);
         m_allocator.DestroyImage(m_image, m_allocation);
     }
 
