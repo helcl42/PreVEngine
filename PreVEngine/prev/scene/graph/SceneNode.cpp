@@ -1,8 +1,8 @@
 #include "SceneNode.h"
+#include "../SceneEvents.h"
 
 #include "../../event/EventsChannel.h"
 #include "../../util/Utils.h"
-#include "../SceneEvents.h"
 
 namespace prev::scene::graph {
 SceneNode::SceneNode()
@@ -35,6 +35,7 @@ void SceneNode::ShutDown()
     for (auto& child : m_children) {
         child->ShutDown();
     }
+    m_children.clear();
 
     prev::event::EventChannel::Post(prev::scene::SceneNodeShutDownEvent{ GetId() });
     m_tags = prev::common::TagSet();
