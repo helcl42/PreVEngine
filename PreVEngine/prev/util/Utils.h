@@ -4,9 +4,9 @@
 #include "../common/Common.h"
 #include "../common/pattern/Singleton.h"
 
+#include <atomic>
 #include <chrono>
 #include <cmath>
-#include <mutex>
 #include <random>
 #include <vector>
 
@@ -25,9 +25,9 @@ namespace file {
 
     bool Exists(const std::string& filePath);
 
-    std::string ReadTextFile(const std::string &filePath);
+    std::string ReadTextFile(const std::string& filePath);
 
-    std::vector<char> ReadBinaryFile(const std::string &filePath);
+    std::vector<char> ReadBinaryFile(const std::string& filePath);
 } // namespace file
 
 namespace string {
@@ -64,8 +64,6 @@ private:
 
     std::chrono::high_resolution_clock::time_point m_lastTickTimestamp{ std::chrono::high_resolution_clock::time_point::min() };
 
-    mutable std::mutex m_lock;
-
 public:
     FPSCounter(float refreshTimeInS = 2.0f)
         : m_refreshTimeoutInS(refreshTimeInS)
@@ -77,8 +75,6 @@ public:
 public:
     bool Tick()
     {
-        std::lock_guard<std::mutex> lock(m_lock);
-
         const auto NOW = std::chrono::high_resolution_clock::now();
         if (m_lastTickTimestamp == std::chrono::high_resolution_clock::time_point::min()) {
             m_lastTickTimestamp = NOW;
@@ -106,15 +102,11 @@ public:
 
     float GetAverageDeltaTime() const
     {
-        std::lock_guard<std::mutex> lock(m_lock);
-
         return m_averageDeltaTime;
     }
 
     float GetAverageFPS() const
     {
-        std::lock_guard<std::mutex> lock(m_lock);
-
         if (m_averageDeltaTime > 0.0f) {
             return (1.0f / m_averageDeltaTime);
         }
@@ -162,9 +154,7 @@ private:
     friend class prev::common::pattern::Singleton<IDGenerator>;
 
 private:
-    uint64_t m_id{ 0 };
-
-    std::mutex m_mutex;
+    std::atomic_uint64_t m_id{ 0 };
 
 private:
     IDGenerator() = default;
@@ -175,11 +165,7 @@ public:
 public:
     uint64_t GenrateNewId()
     {
-        std::lock_guard<std::mutex> lock(m_mutex);
-
-        ++m_id;
-
-        return m_id;
+        return ++m_id;
     }
 };
 
