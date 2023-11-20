@@ -16,7 +16,6 @@ include_directories(${ANDROID_NDK}/sources/android/native_app_glue)
 include_directories(../../../../../../PreVEngine)
 include_directories(../../../../../../PreVEngine/android)
 include_directories(../../../../../../PreVEngine/external)
-include_directories(../../../../../../PreVEngine/vk_wrapper)
 include_directories(../../../../../../Dependencies/glm)
 include_directories(../../../../../../Dependencies/assimp/include)
 
@@ -121,7 +120,6 @@ aux_source_directory(../../../../../../PreVEngine/prev/window/impl/xcb       SRC
 aux_source_directory(../../../../../../PreVEngine/prev/window/impl/windows   SRC_LIST)
 
 aux_source_directory(../../../../../../PreVEngine/android                    SRC_LIST)
-aux_source_directory(../../../../../../PreVEngine/vk_wrapper                 SRC_LIST)
 aux_source_directory(../../../../../../PreVEngine/external                   SRC_LIST)
 
 # Create native shared library
