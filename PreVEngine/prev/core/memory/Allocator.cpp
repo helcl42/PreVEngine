@@ -13,6 +13,8 @@
 #define VMA_STATIC_VULKAN_FUNCTIONS 0
 
 #define VMA_IMPLEMENTATION
+
+// TODO - remove this android specific branch
 #ifdef ANDROID
 #include <external/android/vk_mem_alloc.h>
 #else
@@ -29,32 +31,34 @@ Allocator::Allocator(prev::core::instance::Instance& instance, prev::core::devic
     m_commandBuffer = prev::util::vk::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
     m_fence = prev::util::vk::CreateFence(m_device);
 
-    VmaAllocatorCreateInfo allocatorInfo = {};
+    VmaVulkanFunctions fn{};
+    fn.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
+    fn.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
+    fn.vkAllocateMemory = vkAllocateMemory;
+    fn.vkBindBufferMemory = vkBindBufferMemory;
+    fn.vkBindImageMemory = vkBindImageMemory;
+    fn.vkCmdCopyBuffer = vkCmdCopyBuffer;
+    fn.vkCreateBuffer = vkCreateBuffer;
+    fn.vkCreateImage = vkCreateImage;
+    fn.vkDestroyBuffer = vkDestroyBuffer;
+    fn.vkDestroyImage = vkDestroyImage;
+    fn.vkFlushMappedMemoryRanges = vkFlushMappedMemoryRanges;
+    fn.vkFreeMemory = vkFreeMemory;
+    fn.vkGetBufferMemoryRequirements = vkGetBufferMemoryRequirements;
+    fn.vkGetImageMemoryRequirements = vkGetImageMemoryRequirements;
+    fn.vkGetPhysicalDeviceMemoryProperties = vkGetPhysicalDeviceMemoryProperties;
+    fn.vkGetPhysicalDeviceProperties = vkGetPhysicalDeviceProperties;
+    fn.vkInvalidateMappedMemoryRanges = vkInvalidateMappedMemoryRanges;
+    fn.vkMapMemory = vkMapMemory;
+    fn.vkUnmapMemory = vkUnmapMemory;
+    // fn.vkGetBufferMemoryRequirements2KHR = vkGetBufferMemoryRequirements2KHR;
+    // fn.vkGetImageMemoryRequirements2KHR = vkGetImageMemoryRequirements2KHR;
+
+    VmaAllocatorCreateInfo allocatorInfo{};
     allocatorInfo.instance = m_instance;
     allocatorInfo.physicalDevice = *m_device.GetGPU();
     allocatorInfo.device = m_device;
     allocatorInfo.preferredLargeHeapBlockSize = blockSize;
-
-    VmaVulkanFunctions fn;
-    fn.vkAllocateMemory = (PFN_vkAllocateMemory)vkAllocateMemory;
-    fn.vkBindBufferMemory = (PFN_vkBindBufferMemory)vkBindBufferMemory;
-    fn.vkBindImageMemory = (PFN_vkBindImageMemory)vkBindImageMemory;
-    fn.vkCmdCopyBuffer = (PFN_vkCmdCopyBuffer)vkCmdCopyBuffer;
-    fn.vkCreateBuffer = (PFN_vkCreateBuffer)vkCreateBuffer;
-    fn.vkCreateImage = (PFN_vkCreateImage)vkCreateImage;
-    fn.vkDestroyBuffer = (PFN_vkDestroyBuffer)vkDestroyBuffer;
-    fn.vkDestroyImage = (PFN_vkDestroyImage)vkDestroyImage;
-    fn.vkFlushMappedMemoryRanges = (PFN_vkFlushMappedMemoryRanges)vkFlushMappedMemoryRanges;
-    fn.vkFreeMemory = (PFN_vkFreeMemory)vkFreeMemory;
-    fn.vkGetBufferMemoryRequirements = (PFN_vkGetBufferMemoryRequirements)vkGetBufferMemoryRequirements;
-    fn.vkGetImageMemoryRequirements = (PFN_vkGetImageMemoryRequirements)vkGetImageMemoryRequirements;
-    fn.vkGetPhysicalDeviceMemoryProperties = (PFN_vkGetPhysicalDeviceMemoryProperties)vkGetPhysicalDeviceMemoryProperties;
-    fn.vkGetPhysicalDeviceProperties = (PFN_vkGetPhysicalDeviceProperties)vkGetPhysicalDeviceProperties;
-    fn.vkInvalidateMappedMemoryRanges = (PFN_vkInvalidateMappedMemoryRanges)vkInvalidateMappedMemoryRanges;
-    fn.vkMapMemory = (PFN_vkMapMemory)vkMapMemory;
-    fn.vkUnmapMemory = (PFN_vkUnmapMemory)vkUnmapMemory;
-    fn.vkGetBufferMemoryRequirements2KHR = 0; //(PFN_vkGetBufferMemoryRequirements2KHR)vkGetBufferMemoryRequirements2KHR;
-    fn.vkGetImageMemoryRequirements2KHR = 0; //(PFN_vkGetImageMemoryRequirements2KHR)vkGetImageMemoryRequirements2KHR;
     allocatorInfo.pVulkanFunctions = &fn;
 
     VKERRCHECK(vmaCreateAllocator(&allocatorInfo, &m_allocator));
@@ -62,6 +66,10 @@ Allocator::Allocator(prev::core::instance::Instance& instance, prev::core::devic
 
 Allocator::~Allocator()
 {
+    if (m_allocator) {
+        vmaDestroyAllocator(m_allocator);
+    }
+
     if (m_fence) {
         vkDestroyFence(m_device, m_fence, VK_NULL_HANDLE);
     }
@@ -72,10 +80,6 @@ Allocator::~Allocator()
 
     if (m_commandPool) {
         vkDestroyCommandPool(m_device, m_commandPool, VK_NULL_HANDLE);
-    }
-
-    if (m_allocator) {
-        vmaDestroyAllocator(m_allocator);
     }
 }
 

@@ -268,6 +268,8 @@ if (PARALLEL_RENDERING)
     add_definitions(-DPARALLEL_RENDERING)
 endif()
 
+add_definitions(-DVK_NO_PROTOTYPES)
+
 if(NOT TARGET PreVEngine)
     add_subdirectory("../PreVEngine" "${CMAKE_BINARY_DIR}/PreVEngine")
 endif()
