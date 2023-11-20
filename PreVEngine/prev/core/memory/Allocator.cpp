@@ -7,19 +7,12 @@
 #include "../../util/VkUtils.h"
 
 #define NOMINMAX
-// #define VMA_RECORDING_ENABLED   0
-// #define VMA_DEDICATED_ALLOCATION   0
-// #define VMA_STATS_STRING_ENABLED   1
+// #define VMA_RECORDING_ENABLED 0
+// #define VMA_DEDICATED_ALLOCATION 0
+// #define VMA_STATS_STRING_ENABLED 1
 #define VMA_STATIC_VULKAN_FUNCTIONS 0
-
 #define VMA_IMPLEMENTATION
-
-// TODO - remove this android specific branch
-#ifdef ANDROID
-#include <external/android/vk_mem_alloc.h>
-#else
 #include <external/vk_mem_alloc.h>
-#endif
 
 namespace prev::core::memory {
 Allocator::Allocator(prev::core::instance::Instance& instance, prev::core::device::Device& device, prev::core::device::Queue& queue, const VkDeviceSize blockSize)
