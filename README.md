@@ -20,7 +20,7 @@ Here is a video:
 
  - Run `cd build`
 
- - Run `cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DUSE_VULKAN_WRAPPER=OFF ..`
+ - Run `cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..`
 
  - Run `ninja`
 
@@ -30,13 +30,11 @@ Here is a video:
 
  - Run `cd PreVEngineTest`
 
- - Run `cmake -DANDROID=ON -DUSE_VULKAN_WRAPPER=ON -DABI_NAME=arm64-v8a`
+ - Run `cmake -DANDROID=ON -DABI_NAME=arm64-v8a`
 
  - Import to android studio and deploy as usuall
 
 ## Todo: 
 
-- Integrate PreVEnginePhysics
-- Integrate PreVEngineNetwork
-- Fix/Feature list is in Trello
+- ...
 
