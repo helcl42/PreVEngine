@@ -35,8 +35,6 @@ CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t widt
 
     auto sampler = std::make_unique<prev::render::sampler::Sampler>(*device, static_cast<float>(noiseImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR);
 
-    VKERRCHECK(vkQueueWaitIdle(*computeQueue));
-
     VkCommandBufferBeginInfo cmdBufBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
     cmdBufBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &cmdBufBeginInfo));
@@ -59,8 +57,6 @@ CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t widt
     computeSubmitInfo.pCommandBuffers = &commandBuffer;
     VKERRCHECK(vkQueueSubmit(*computeQueue, 1, &computeSubmitInfo, fence));
     VKERRCHECK(vkWaitForFences(*device, 1, &fence, VK_TRUE, UINT64_MAX));
-
-    VKERRCHECK(vkQueueWaitIdle(*computeQueue));
 
     vkDestroyFence(*device, fence, nullptr);
     vkDestroyCommandPool(*device, commandPool, nullptr);

@@ -36,7 +36,7 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
     pipeline->Init();
 
     auto uniformsPool = std::make_unique<prev::render::buffer::UniformBufferRing<Uniforms>>(*allocator);
-    uniformsPool->AdjustCapactity(3, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    uniformsPool->AdjustCapactity(1, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
     auto commandPool = computeQueue->CreateCommandPool();
     auto commandBuffer = prev::util::vk::CreateCommandBuffer(*device, commandPool);
@@ -46,8 +46,6 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
     const prev::render::buffer::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ width, height }, VK_IMAGE_TYPE_2D, weatherImageFormat, VK_SAMPLE_COUNT_1_BIT, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1 };
     auto weatherImageBuffer = prev::render::buffer::image::ImageBufferFactory{}.CreateStorage(bufferCreateInfo, *allocator);
     auto sampler = std::make_unique<prev::render::sampler::Sampler>(*device, static_cast<float>(weatherImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR);
-
-    VKERRCHECK(vkQueueWaitIdle(*computeQueue));
 
     VkCommandBufferBeginInfo cmdBufBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
     cmdBufBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -83,8 +81,6 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
     computeSubmitInfo.pCommandBuffers = &commandBuffer;
     VKERRCHECK(vkQueueSubmit(*computeQueue, 1, &computeSubmitInfo, fence));
     VKERRCHECK(vkWaitForFences(*device, 1, &fence, VK_TRUE, UINT64_MAX));
-
-    VKERRCHECK(vkQueueWaitIdle(*computeQueue));
 
     vkDestroyFence(*device, fence, nullptr);
     vkDestroyCommandPool(*device, commandPool, nullptr);
