@@ -1,7 +1,5 @@
 // lightning client code
 
-#include "utils.glsl"
-
 const uint MAX_LIGHT_COUNT = 4;
 const bool USE_BLINN = true;
 
@@ -49,19 +47,19 @@ vec3 GetSpecularColor(in vec3 normal, in vec3 toLightVector, in vec3 toCameraVec
 	vec3 reflectedLightDirection = reflect(lightDirection, normal);
 
 	float specularFactor;
-	float energyConservation;
+	float shinePower;
 	if(USE_BLINN)
 	{
 		vec3 halfwayDir = normalize(toLightVector + toCameraVector);  
 		specularFactor = max(dot(normal, halfwayDir), 0.0);	
-		energyConservation = (4.0 + shineDamper) / (4.0 * PI); 
+		shinePower = shineDamper * 2.4; // TODO - some magic scale 
 	}
 	else 
 	{
 		specularFactor = max(dot(reflectedLightDirection, toCameraVector), 0.0);
-		energyConservation = (2.0 + shineDamper) / (2.0 * PI); 
+		shinePower = shineDamper;
 	}
 	
-	float dampedFactor = energyConservation * pow(specularFactor, shineDamper);
+	float dampedFactor = pow(specularFactor, shinePower);
 	return (dampedFactor * reflectivity * lightColor) / attenuationFactor;
 }
