@@ -13,6 +13,13 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::render::renderer::particle {
+namespace {
+    uint32_t GetStride()
+    {
+        return sizeof(glm::mat4) + sizeof(glm::vec2) + sizeof(glm::vec2) + sizeof(float);
+    }
+} // namespace
+
 ParticlesRenderer::ParticlesRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
     : m_renderPass(renderPass)
 {
@@ -41,7 +48,12 @@ void ParticlesRenderer::Init()
     m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsFS>>(*allocator);
     m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
-    m_instanceDataBuffer = std::make_unique<prev::render::buffer::VertexBuffer>(*allocator);
+    const uint32_t MAX_PARTICLE_COUNT{ 100000 };
+
+    m_instanceDataBuffer.resize(m_bufferCount);
+    for (uint32_t i = 0; i < m_bufferCount; ++i) {
+        m_instanceDataBuffer[i] = std::make_unique<prev::render::buffer::HostVisibleVertexBuffer>(*allocator, MAX_PARTICLE_COUNT, GetStride());
+    }
 }
 
 void ParticlesRenderer::BeforeRender(const NormalRenderContext& renderContext)
@@ -65,15 +77,14 @@ void ParticlesRenderer::Render(const NormalRenderContext& renderContext, const s
         const auto& particles = particlesComponent->GetParticles();
 
         if (particles.size() > 0) {
-            const size_t singleInstanceSizeInBytes = sizeof(glm::mat4) + sizeof(glm::vec2) + sizeof(glm::vec2) + sizeof(float);
-            prev_test::render::VertexDataBuffer instanceDataBuffer(singleInstanceSizeInBytes * particles.size());
+            prev_test::render::VertexDataBuffer instanceDataBuffer(GetStride() * particles.size());
             for (const auto& particle : particles) {
                 instanceDataBuffer.Add(prev::util::math::CreateTransformationMatrix(particle->GetPosition(), glm::inverse(glm::quat_cast(renderContext.viewMatrix)) * glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, particle->GetRotation()))), particle->GetScale()));
                 instanceDataBuffer.Add(particle->GetCurrentStageTextureOffset());
                 instanceDataBuffer.Add(particle->GetNextStageTextureOffset());
                 instanceDataBuffer.Add(particle->GetStagesBlendFactor());
             }
-            m_instanceDataBuffer->Data(instanceDataBuffer.GetData(), static_cast<uint32_t>(particles.size()), singleInstanceSizeInBytes);
+            m_instanceDataBuffer[m_frameIndex]->Data(instanceDataBuffer.GetData(), static_cast<uint32_t>(particles.size()));
 
             auto uboVS = m_uniformsPoolVS->GetNext();
             UniformsVS uniformsVS{};
@@ -93,7 +104,7 @@ void ParticlesRenderer::Render(const NormalRenderContext& renderContext, const s
 
             const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
             const VkBuffer vertexBuffers[] = { *particlesComponent->GetModel()->GetVertexBuffer() };
-            const VkBuffer instanceBuffers[] = { *m_instanceDataBuffer };
+            const VkBuffer instanceBuffers[] = { *m_instanceDataBuffer[m_frameIndex] };
             const VkDeviceSize offsets[] = { 0 };
 
             vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
@@ -113,6 +124,7 @@ void ParticlesRenderer::PostRender(const NormalRenderContext& renderContext)
 
 void ParticlesRenderer::AfterRender(const NormalRenderContext& renderContext)
 {
+    m_frameIndex = (m_frameIndex + 1) % m_bufferCount;
 }
 
 void ParticlesRenderer::ShutDown()

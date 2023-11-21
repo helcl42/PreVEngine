@@ -50,7 +50,7 @@ private:
     };
 
 private:
-    const uint32_t m_descriptorCount{ 2000 };
+    const uint32_t m_descriptorCount{ 20 };
 
 private:
     std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
@@ -64,7 +64,11 @@ private:
 
     std::unique_ptr<prev::render::buffer::UniformBufferRing<UniformsFS>> m_uniformsPoolFS;
 
-    std::unique_ptr<prev::render::buffer::VertexBuffer> m_instanceDataBuffer;
+    std::vector<std::unique_ptr<prev::render::buffer::HostVisibleVertexBuffer>> m_instanceDataBuffer;
+
+    uint32_t m_frameIndex{ 0 };
+
+    uint32_t m_bufferCount{ 2 };
 };
 } // namespace prev_test::render::renderer::particle
 

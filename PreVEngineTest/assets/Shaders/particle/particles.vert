@@ -18,17 +18,16 @@ layout(location = 7) in vec2 textureOffsetsCurrent;
 layout(location = 8) in vec2 textureOffsetNext;
 layout(location = 9) in float blendFactor;
 
-layout(location = 0) out vec2 outTextureCoord;
-layout(location = 1) out vec2 outCurrentStageTextureOffset;
-layout(location = 2) out vec2 outNextStageTextureOffset;
-layout(location = 3) out float outCurrentNextStageBlendFactor;
+layout(location = 0) out vec2 outCurrentStageTextureCoord;
+layout(location = 1) out vec2 outNextStageTextureCoord;
+layout(location = 2) out float outCurrentNextStageBlendFactor;
 
 void main()
 {
 	gl_Position = uboVS.projectionMatrix * uboVS.viewMatrix * modelMatrix * vec4(inPosition, 1.0);
 
-	outTextureCoord = (inTextureCoord / uboVS.textureNumberOfRows);
-    outCurrentStageTextureOffset = textureOffsetsCurrent;
-    outNextStageTextureOffset = textureOffsetNext;
+	vec2 textureCoordBase = inTextureCoord / uboVS.textureNumberOfRows;
+    outCurrentStageTextureCoord = textureCoordBase + textureOffsetsCurrent;
+    outNextStageTextureCoord = textureCoordBase + textureOffsetNext;
     outCurrentNextStageBlendFactor = blendFactor;
 }

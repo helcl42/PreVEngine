@@ -1,8 +1,11 @@
 #ifndef __ENGINE_H__
 #define __ENGINE_H__
 
-#include "../core/instance/Instance.h"
-#include "../core/memory/Allocator.h"
+#include "CoreEvents.h"
+#include "EngineConfig.h"
+#include "device/Device.h"
+#include "instance/Instance.h"
+#include "memory/Allocator.h"
 #include "../event/EventHandler.h"
 #include "../render/IRootRenderer.h"
 #include "../render/Swapchain.h"
@@ -10,10 +13,6 @@
 #include "../scene/graph/ISceneNode.h"
 #include "../util/Utils.h"
 #include "../window/WindowEvents.h"
-
-#include "CoreEvents.h"
-#include "EngineConfig.h"
-#include "device/Device.h"
 
 namespace prev::core {
 class Engine final {
