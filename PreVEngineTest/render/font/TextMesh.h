@@ -37,7 +37,7 @@ private:
 
     std::vector<prev_test::render::MeshPart> m_meshParts;
 
-    prev_test::render::MeshNode m_meshRootNode;
+    static const inline prev_test::render::MeshNode meshRootNode{ { 0 }, glm::mat4(1.0f), {} };
 };
 } // namespace prev_test::render::font
 
