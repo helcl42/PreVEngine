@@ -59,7 +59,7 @@ void FontRenderer::Render(const NormalRenderContext& renderContext, const std::s
 {
     if (node->GetTags().HasAll({ TAG_FONT_RENDER_COMPONENT })) {
         const auto nodeFontRenderComponent = prev::scene::component::ComponentRepository<prev_test::component::font::IFontRenderComponent>::Instance().Get(node->GetId());
-        for (const auto& renderableText : nodeFontRenderComponent->GetRenderableTexts()) {
+        for (const auto& [key, renderableText] : nodeFontRenderComponent->GetRenderableTexts()) {
             auto uboVS = m_uniformsPoolVS->GetNext();
             UniformsVS uniformsVS{};
             uniformsVS.translation = glm::vec4(renderableText.text->GetPosition(), 0.0f, 1.0f);

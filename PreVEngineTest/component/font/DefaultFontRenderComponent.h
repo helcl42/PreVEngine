@@ -11,18 +11,20 @@ public:
     ~DefaultFontRenderComponent() = default;
 
 public:
-    const std::vector<RenderableText>& GetRenderableTexts() const;
+    const std::map<uint32_t, RenderableText>& GetRenderableTexts() const override;
 
-    std::shared_ptr<prev_test::render::font::FontMetadata> GetFontMetadata() const;
+    std::shared_ptr<prev_test::render::font::FontMetadata> GetFontMetadata() const override;
 
-    void AddText(const std::shared_ptr<prev_test::render::font::ScreenSpaceText>& text);
+    void AddText(const uint32_t key, const std::shared_ptr<prev_test::render::font::ScreenSpaceText>& text) override;
 
-    void Reset();
+    void RemoveText(const uint32_t key) override;
+
+    void Reset() override;
 
 private:
     std::shared_ptr<prev_test::render::font::FontMetadata> m_fontMetaData;
 
-    std::vector<RenderableText> m_renderableTexts;
+    std::map<uint32_t, RenderableText> m_renderableTexts;
 };
 } // namespace prev_test::component::font
 

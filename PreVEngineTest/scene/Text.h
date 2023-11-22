@@ -24,7 +24,7 @@ public:
 private:
     std::shared_ptr<prev_test::component::font::IFontRenderComponent> m_fontComponent;
 
-    prev::util::FPSCounter m_fpsCounter{ 1.0f };
+    prev::util::FPSCounter m_fpsCounter{ 0.1f };
 };
 } // namespace prev_test::scene
 

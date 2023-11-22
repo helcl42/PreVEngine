@@ -26,14 +26,14 @@ void Text::Init()
 void Text::Update(float deltaTime)
 {
     if (m_fpsCounter.Tick()) {
-        m_fontComponent->Reset();
+        const uint32_t FpsTextKey{ 0 };
 
         std::stringstream fpsString;
-        fpsString << std::setprecision(1) << std::fixed;
-        fpsString << m_fpsCounter.GetAverageFPS() << " FPS";
+        fpsString << std::fixed << std::setprecision(1) << std::setfill('0');
+        fpsString << std::setw(5) << m_fpsCounter.GetAverageFPS() << " FPS";
 
-        auto fancyText = std::make_shared<prev_test::render::font::ScreenSpaceText>(fpsString.str(), 1.6f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0), glm::vec2(0.9f, 0.93f), 1.0f, false, 0.5f, 0.05f);
-        m_fontComponent->AddText(fancyText);
+        auto fancyText = std::make_shared<prev_test::render::font::ScreenSpaceText>(fpsString.str(), 1.6f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0), glm::vec2(0.87f, 0.93f), 1.0f, false, 0.5f, 0.05f);
+        m_fontComponent->AddText(FpsTextKey, fancyText);
     }
 
     SceneNode::Update(deltaTime);
