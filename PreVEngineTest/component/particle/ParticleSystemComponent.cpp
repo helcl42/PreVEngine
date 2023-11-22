@@ -1,13 +1,25 @@
 #include "ParticleSystemComponent.h"
 
+#include "../../render/VertexDataBuffer.h"
+
 #include <random>
 
 namespace prev_test::component::particle {
-ParticleSystemComponent::ParticleSystemComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::shared_ptr<prev_test::render::IMaterial>& material, const std::shared_ptr<IParticleFactory>& particleFactory, const float particlesPerSecond)
+namespace {
+    uint32_t GetStride()
+    {
+        // position + scale + rotation + currentTextureOffset + nextTextureOffset + blendFactor
+        return sizeof(glm::vec3) + sizeof(glm::vec2) + sizeof(float) + sizeof(glm::vec2) + sizeof(glm::vec2) + sizeof(float);
+    }
+} // namespace
+
+ParticleSystemComponent::ParticleSystemComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::vector<std::shared_ptr<prev::render::buffer::VertexBuffer>>& vertexBuffers, const std::shared_ptr<prev_test::render::IMaterial>& material, const std::shared_ptr<IParticleFactory>& particleFactory, const float particlesPerSecond)
     : m_model(model)
+    , m_vertexBuffers(vertexBuffers)
     , m_material(material)
     , m_particleFactory(particleFactory)
     , m_particlesPerSecond(particlesPerSecond)
+    , m_currentBufferIndex(0)
 {
 }
 
@@ -15,6 +27,21 @@ void ParticleSystemComponent::Update(const float deltaTime, const glm::vec3& cen
 {
     AddNewParticles(deltaTime, centerPosition);
     UpdateParticles(deltaTime);
+
+    m_currentBufferIndex = (m_currentBufferIndex + 1) % static_cast<uint32_t>(m_vertexBuffers.size());
+
+    prev_test::render::VertexDataBuffer instanceDataBuffer(GetStride() * m_particles.size());
+    for (const auto& particle : m_particles) {
+        instanceDataBuffer.Add(particle->GetPosition());
+        instanceDataBuffer.Add(glm::vec2(particle->GetScale())); // TODO do we want non-square particles ??
+        instanceDataBuffer.Add(particle->GetRotation());
+        instanceDataBuffer.Add(particle->GetCurrentStageTextureOffset());
+        instanceDataBuffer.Add(particle->GetNextStageTextureOffset());
+        instanceDataBuffer.Add(particle->GetStagesBlendFactor());
+    }
+
+    auto& currentVetexBuffer{ m_vertexBuffers[m_currentBufferIndex] };
+    currentVetexBuffer->Data(instanceDataBuffer.GetData(), static_cast<uint32_t>(m_particles.size()), GetStride());
 }
 
 void ParticleSystemComponent::SetParticlesPerSecond(const float pps)
@@ -45,6 +72,11 @@ std::shared_ptr<prev_test::render::IMaterial> ParticleSystemComponent::GetMateri
 std::list<std::shared_ptr<Particle>> ParticleSystemComponent::GetParticles() const
 {
     return m_particles;
+}
+
+std::shared_ptr<prev::render::buffer::VertexBuffer> ParticleSystemComponent::GetVertexBuffer() const
+{
+    return m_vertexBuffers[m_currentBufferIndex];
 }
 
 void ParticleSystemComponent::AddNewParticles(const float deltaTime, const glm::vec3& centerPosition)

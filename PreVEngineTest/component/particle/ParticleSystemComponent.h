@@ -3,10 +3,12 @@
 
 #include "IParticleSystemComponent.h"
 
+#include <vector>
+
 namespace prev_test::component::particle {
 class ParticleSystemComponent : public IParticleSystemComponent {
 public:
-    ParticleSystemComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::shared_ptr<prev_test::render::IMaterial>& material, const std::shared_ptr<IParticleFactory>& particleFactory, const float particlesPerSecond);
+    ParticleSystemComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::vector<std::shared_ptr<prev::render::buffer::VertexBuffer>>& vertexBuffers, const std::shared_ptr<prev_test::render::IMaterial>& material, const std::shared_ptr<IParticleFactory>& particleFactory, const float particlesPerSecond);
 
     virtual ~ParticleSystemComponent() = default;
 
@@ -25,21 +27,27 @@ public:
 
     std::list<std::shared_ptr<Particle>> GetParticles() const override;
 
+    std::shared_ptr<prev::render::buffer::VertexBuffer> GetVertexBuffer() const override;
+
 private:
     void AddNewParticles(const float deltaTime, const glm::vec3& centerPosition);
 
     void UpdateParticles(const float deltaTime);
 
 private:
-    const std::shared_ptr<prev_test::render::IModel> m_model;
+    std::shared_ptr<prev_test::render::IModel> m_model;
 
-    const std::shared_ptr<prev_test::render::IMaterial> m_material;
+    std::vector<std::shared_ptr<prev::render::buffer::VertexBuffer>> m_vertexBuffers;
 
-    const std::shared_ptr<IParticleFactory> m_particleFactory;
+    std::shared_ptr<prev_test::render::IMaterial> m_material;
+
+    std::shared_ptr<IParticleFactory> m_particleFactory;
+
+    float m_particlesPerSecond;
 
     std::list<std::shared_ptr<Particle>> m_particles;
 
-    float m_particlesPerSecond;
+    uint32_t m_currentBufferIndex{};
 };
 } // namespace prev_test::component::particle
 

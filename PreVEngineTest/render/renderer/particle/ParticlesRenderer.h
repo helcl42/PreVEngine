@@ -9,7 +9,6 @@
 #include "../../../General.h"
 
 #include <prev/render/buffer/UniformBuffer.h>
-#include <prev/render/buffer/VertexBuffer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
@@ -63,12 +62,6 @@ private:
     std::unique_ptr<prev::render::buffer::UniformBufferRing<UniformsVS>> m_uniformsPoolVS;
 
     std::unique_ptr<prev::render::buffer::UniformBufferRing<UniformsFS>> m_uniformsPoolFS;
-
-    std::vector<std::unique_ptr<prev::render::buffer::HostVisibleVertexBuffer>> m_instanceDataBuffer;
-
-    uint32_t m_frameIndex{ 0 };
-
-    uint32_t m_bufferCount{ 2 };
 };
 } // namespace prev_test::render::renderer::particle
 

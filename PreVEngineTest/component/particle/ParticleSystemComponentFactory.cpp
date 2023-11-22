@@ -9,8 +9,14 @@
 #include "../../render/model/ModelFactory.h"
 
 #include <prev/core/AllocatorProvider.h>
+#include <prev/render/buffer/VertexBuffer.h>
 
 namespace prev_test::component::particle {
+
+static const inline uint32_t BufferCount{ 2 };
+
+static const inline uint32_t MaxParticleCount{ 100000 };
+
 std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::CreateRandom() const
 {
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
@@ -26,13 +32,18 @@ std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::Create
     prev_test::render::model::ModelFactory modelFactory{};
     auto model{ modelFactory.Create(std::move(mesh), *allocator) };
 
+    std::vector<std::shared_ptr<prev::render::buffer::VertexBuffer>> vertexBuffers(BufferCount);
+    for (uint32_t i = 0; i < BufferCount; ++i) {
+        vertexBuffers[i] = std::make_shared<prev::render::buffer::HostVisibleVertexBuffer>(*allocator, MaxParticleCount);
+    }
+
     auto particleFactory{ std::make_shared<RandomDirectionParticleFactory>(material, 0.1f, 5.0f, 4.0f, 10.0f) };
     particleFactory->SetRandomRotationEnabled(true);
     particleFactory->SetLifeLengthError(0.1f);
     particleFactory->SetSpeedError(0.25f);
     particleFactory->SetScaleError(0.1f);
 
-    return std::make_unique<ParticleSystemComponent>(std::move(model), material, particleFactory, 10.0f);
+    return std::make_unique<ParticleSystemComponent>(std::move(model), vertexBuffers, material, particleFactory, 10.0f);
 }
 
 std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::CreateRandomInCone(const glm::vec3& coneDirection, const float angle) const
@@ -49,6 +60,11 @@ std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::Create
     prev_test::render::model::ModelFactory modelFactory{};
     auto model{ modelFactory.Create(std::move(mesh), *allocator) };
 
+    std::vector<std::shared_ptr<prev::render::buffer::VertexBuffer>> vertexBuffers(BufferCount);
+    for (uint32_t i = 0; i < BufferCount; ++i) {
+        vertexBuffers[i] = std::make_shared<prev::render::buffer::HostVisibleVertexBuffer>(*allocator, MaxParticleCount);
+    }
+
     auto particleFactory{ std::make_shared<RandomInConeParticleFactory>(material, -0.1f, 4.0f, 4.0f, 7.0f) };
     particleFactory->SetConeDirection(coneDirection);
     particleFactory->SetConeDirectionDeviation(angle);
@@ -58,6 +74,6 @@ std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::Create
     particleFactory->SetScaleError(2.0f);
     particleFactory->SetRadius(10.0f);
 
-    return std::make_unique<ParticleSystemComponent>(std::move(model), material, particleFactory, 120.0f);
+    return std::make_unique<ParticleSystemComponent>(std::move(model), vertexBuffers, material, particleFactory, 100.0f);
 }
 } // namespace prev_test::component::particle
