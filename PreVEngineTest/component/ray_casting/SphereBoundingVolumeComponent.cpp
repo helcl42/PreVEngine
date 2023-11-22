@@ -17,6 +17,10 @@ SphereBoundingVolumeComponent::SphereBoundingVolumeComponent(const prev_test::co
     newSphere = ScaleSphere(newSphere, scale);
     m_original = newSphere;
     m_working = newSphere;
+
+#ifdef RENDER_BOUNDING_VOLUMES
+    m_model = BoundingVolumeModelFactory{}.CreateSphereModel(m_working);
+#endif
 }
 
 bool SphereBoundingVolumeComponent::IsInFrustum(const prev_test::common::intersection::Frustum& frustum)
@@ -37,8 +41,7 @@ void SphereBoundingVolumeComponent::Update(const glm::mat4& worldTransform)
 
     m_working = prev_test::common::intersection::Sphere{ translation + m_original.position * scale, m_original.radius * glm::length(scale) };
 #ifdef RENDER_BOUNDING_VOLUMES
-    BoundingVolumeModelFactory modelFactory{};
-    m_model = modelFactory.CreateSphereModel(m_working);
+    m_model = BoundingVolumeModelFactory{}.CreateSphereModel(m_working, m_model);
 #endif
 }
 
