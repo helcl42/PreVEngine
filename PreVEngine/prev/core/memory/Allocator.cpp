@@ -76,9 +76,9 @@ Allocator::~Allocator()
     }
 }
 
-void Allocator::CreateBuffer(const void* data, uint64_t size, VkBufferUsageFlags usage, VmaMemoryUsage memtype, VkBuffer& buffer, VmaAllocation& alloc, void** mapped)
+void Allocator::CreateBuffer(const void* data, const uint64_t size, const VkBufferUsageFlags usage, const MemoryType memtype, VkBuffer& buffer, VmaAllocation& alloc, void** mapped)
 {
-    if (memtype != VMA_MEMORY_USAGE_GPU_ONLY) // For CPU-visible memory, skip staging buffer
+    if (memtype != MemoryType::DEVICE_LOCAL) // For CPU-visible memory, skip staging buffer
     {
         VkBufferCreateInfo bufInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
         bufInfo.size = size;
@@ -86,8 +86,8 @@ void Allocator::CreateBuffer(const void* data, uint64_t size, VkBufferUsageFlags
         bufInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
         VmaAllocationCreateInfo allocCreateInfo = {};
-        allocCreateInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
-        allocCreateInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+        allocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+        allocCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
         VmaAllocationInfo allocInfo = {};
         VKERRCHECK(vmaCreateBuffer(m_allocator, &bufInfo, &allocCreateInfo, &buffer, &alloc, &allocInfo));
@@ -111,8 +111,8 @@ void Allocator::CreateBuffer(const void* data, uint64_t size, VkBufferUsageFlags
         stagingBufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
         VmaAllocationCreateInfo stagingAllocCreateInfo = {};
-        stagingAllocCreateInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
-        stagingAllocCreateInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+        stagingAllocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+        stagingAllocCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
         VkBuffer stageBuffer = VK_NULL_HANDLE;
         VmaAllocation stageBufferAlloc = VK_NULL_HANDLE;
@@ -128,8 +128,8 @@ void Allocator::CreateBuffer(const void* data, uint64_t size, VkBufferUsageFlags
         bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage;
 
         VmaAllocationCreateInfo allocCreateInfo = {};
-        allocCreateInfo.usage = memtype;
-        allocCreateInfo.flags = 0;
+        allocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+        allocCreateInfo.flags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
         VKERRCHECK(vmaCreateBuffer(m_allocator, &bufferCreateInfo, &allocCreateInfo, &buffer, &alloc, nullptr));
 
         CopyBuffer(stageBuffer, bufferCreateInfo.size, buffer);
@@ -159,8 +159,8 @@ void Allocator::CreateImage(const VkExtent3D& extent, const VkImageType imageTyp
     imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
     VmaAllocationCreateInfo allocGpuOnlyCreateInfo = {};
-    allocGpuOnlyCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-    allocGpuOnlyCreateInfo.flags = 0;
+    allocGpuOnlyCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+    allocGpuOnlyCreateInfo.flags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
     vmaCreateImage(m_allocator, &imageInfo, &allocGpuOnlyCreateInfo, &outImage, &outAlloc, nullptr);
 }
 
@@ -200,8 +200,8 @@ void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format,
         bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
         VmaAllocationCreateInfo allocStagingMemoryCreateInfo = {};
-        allocStagingMemoryCreateInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
-        allocStagingMemoryCreateInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+        allocStagingMemoryCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+        allocStagingMemoryCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
         VmaAllocationInfo allocStagingBufferInfo = {};
         VkBuffer stageBuffer = VK_NULL_HANDLE;

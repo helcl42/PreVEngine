@@ -55,7 +55,7 @@ public:
         m_index = 0;
 
         const uint32_t itemSize = prev::util::math::RoundUp(static_cast<uint32_t>(sizeof(ItemType)), alignment);
-        Data(nullptr, capacity, itemSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &m_mapped);
+        Data(nullptr, capacity, itemSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, prev::core::memory::MemoryType::HOST_MAPPED, &m_mapped);
 
         for (uint32_t i = 0; i < capacity; i++) {
             auto ubo = std::make_shared<UniformBuffer>(m_buffer, m_mapped, i * itemSize, itemSize);
