@@ -3,23 +3,14 @@
 #include "shader/ParticlesShader.h"
 
 #include "../../../component/particle/IParticleSystemComponent.h"
-#include "../../VertexDataBuffer.h"
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
-#include <prev/render/buffer/VertexBuffer.h>
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::render::renderer::particle {
-namespace {
-    uint32_t GetStride()
-    {
-        return sizeof(glm::mat4) + sizeof(glm::vec2) + sizeof(glm::vec2) + sizeof(float);
-    }
-} // namespace
-
 ParticlesRenderer::ParticlesRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
     : m_renderPass(renderPass)
 {
@@ -47,13 +38,6 @@ void ParticlesRenderer::Init()
 
     m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsFS>>(*allocator);
     m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
-
-    const uint32_t MAX_PARTICLE_COUNT{ 100000 };
-
-    m_instanceDataBuffer.resize(m_bufferCount);
-    for (uint32_t i = 0; i < m_bufferCount; ++i) {
-        m_instanceDataBuffer[i] = std::make_unique<prev::render::buffer::HostVisibleVertexBuffer>(*allocator, MAX_PARTICLE_COUNT, GetStride());
-    }
 }
 
 void ParticlesRenderer::BeforeRender(const NormalRenderContext& renderContext)
@@ -74,47 +58,35 @@ void ParticlesRenderer::Render(const NormalRenderContext& renderContext, const s
 {
     if (node->GetTags().HasAll({ TAG_PARTICLE_SYSTEM_COMPONENT })) {
         const auto particlesComponent = prev::scene::component::ComponentRepository<prev_test::component::particle::IParticleSystemComponent>::Instance().Get(node->GetId());
-        const auto& particles = particlesComponent->GetParticles();
 
-        if (particles.size() > 0) {
-            prev_test::render::VertexDataBuffer instanceDataBuffer(GetStride() * particles.size());
-            for (const auto& particle : particles) {
-                instanceDataBuffer.Add(prev::util::math::CreateTransformationMatrix(particle->GetPosition(), glm::inverse(glm::quat_cast(renderContext.viewMatrix)) * glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, particle->GetRotation()))), particle->GetScale()));
-                instanceDataBuffer.Add(particle->GetCurrentStageTextureOffset());
-                instanceDataBuffer.Add(particle->GetNextStageTextureOffset());
-                instanceDataBuffer.Add(particle->GetStagesBlendFactor());
-            }
-            m_instanceDataBuffer[m_frameIndex]->Data(instanceDataBuffer.GetData(), static_cast<uint32_t>(particles.size()));
+        auto uboVS = m_uniformsPoolVS->GetNext();
+        UniformsVS uniformsVS{};
+        uniformsVS.projectionMatrix = renderContext.projectionMatrix;
+        uniformsVS.viewMatrix = renderContext.viewMatrix;
+        uniformsVS.textureNumberOfRows = particlesComponent->GetMaterial()->GetAtlasNumberOfRows();
+        uboVS->Update(&uniformsVS);
 
-            auto uboVS = m_uniformsPoolVS->GetNext();
-            UniformsVS uniformsVS{};
-            uniformsVS.projectionMatrix = renderContext.projectionMatrix;
-            uniformsVS.viewMatrix = renderContext.viewMatrix;
-            uniformsVS.textureNumberOfRows = particlesComponent->GetMaterial()->GetAtlasNumberOfRows();
-            uboVS->Update(&uniformsVS);
+        auto uboFS = m_uniformsPoolFS->GetNext();
+        UniformsFS uniformsFS{};
+        uniformsFS.color = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
+        uboFS->Update(&uniformsFS);
 
-            auto uboFS = m_uniformsPoolFS->GetNext();
-            UniformsFS uniformsFS{};
-            uniformsFS.color = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
-            uboFS->Update(&uniformsFS);
+        m_shader->Bind("uboVS", *uboVS);
+        m_shader->Bind("uboFS", *uboFS);
+        m_shader->Bind("colorSampler", particlesComponent->GetMaterial()->GetImageBuffer()->GetImageView(), *particlesComponent->GetMaterial()->GetImageSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-            m_shader->Bind("uboVS", *uboVS);
-            m_shader->Bind("uboFS", *uboFS);
-            m_shader->Bind("colorSampler", particlesComponent->GetMaterial()->GetImageBuffer()->GetImageView(), *particlesComponent->GetMaterial()->GetImageSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+        const VkBuffer vertexBuffers[] = { *particlesComponent->GetModel()->GetVertexBuffer() };
+        const VkBuffer instanceBuffers[] = { *particlesComponent->GetVertexBuffer() };
+        const VkDeviceSize offsets[] = { 0 };
 
-            const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-            const VkBuffer vertexBuffers[] = { *particlesComponent->GetModel()->GetVertexBuffer() };
-            const VkBuffer instanceBuffers[] = { *m_instanceDataBuffer[m_frameIndex] };
-            const VkDeviceSize offsets[] = { 0 };
+        vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-            vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+        vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+        vkCmdBindVertexBuffers(renderContext.commandBuffer, 1, 1, instanceBuffers, offsets);
+        vkCmdBindIndexBuffer(renderContext.commandBuffer, *particlesComponent->GetModel()->GetIndexBuffer(), 0, particlesComponent->GetModel()->GetIndexBuffer()->GetIndexType());
 
-            vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindVertexBuffers(renderContext.commandBuffer, 1, 1, instanceBuffers, offsets);
-            vkCmdBindIndexBuffer(renderContext.commandBuffer, *particlesComponent->GetModel()->GetIndexBuffer(), 0, particlesComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-
-            vkCmdDrawIndexed(renderContext.commandBuffer, particlesComponent->GetModel()->GetIndexBuffer()->GetCount(), static_cast<uint32_t>(particles.size()), 0, 0, 0);
-        }
+        vkCmdDrawIndexed(renderContext.commandBuffer, particlesComponent->GetModel()->GetIndexBuffer()->GetCount(), static_cast<uint32_t>(particlesComponent->GetParticles().size()), 0, 0, 0);
     }
 }
 
@@ -124,7 +96,6 @@ void ParticlesRenderer::PostRender(const NormalRenderContext& renderContext)
 
 void ParticlesRenderer::AfterRender(const NormalRenderContext& renderContext)
 {
-    m_frameIndex = (m_frameIndex + 1) % m_bufferCount;
 }
 
 void ParticlesRenderer::ShutDown()

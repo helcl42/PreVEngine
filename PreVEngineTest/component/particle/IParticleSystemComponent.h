@@ -1,8 +1,11 @@
 #ifndef __IPARTICLE_SYSTEM_COMPONENT_H__
 #define __IPARTICLE_SYSTEM_COMPONENT_H__
 
-#include "../../render/IModel.h"
 #include "IParticleFactory.h"
+
+#include "../../render/IModel.h"
+
+#include <prev/render/buffer/VertexBuffer.h>
 
 #include <list>
 
@@ -22,6 +25,8 @@ public:
     virtual std::shared_ptr<prev_test::render::IMaterial> GetMaterial() const = 0;
 
     virtual std::list<std::shared_ptr<Particle>> GetParticles() const = 0;
+
+    virtual std::shared_ptr<prev::render::buffer::VertexBuffer> GetVertexBuffer() const = 0;
 
 public:
     virtual ~IParticleSystemComponent() = default;

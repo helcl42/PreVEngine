@@ -111,3 +111,10 @@ float UnpackDepth32(in vec4 pack)
     float depth = dot(pack, 1.0 / vec4(1.0, 256.0, 256.0 * 256.0, 256.0 * 256.0 * 256.0));
     return depth * (256.0 * 256.0 * 256.0) / (256.0 * 256.0 * 256.0 - 1.0);
 }
+
+mat2 MakeRotation(in float angle)
+{
+    float s = sin(angle);
+    float c = cos(angle);
+    return mat2(c, -s, s, c);
+}
