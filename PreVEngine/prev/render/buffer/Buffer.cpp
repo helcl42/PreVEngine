@@ -31,7 +31,7 @@ void Buffer::Clear()
     m_stride = 0;
 }
 
-void Buffer::Data(const void* data, const uint32_t count, const uint32_t stride, const VkBufferUsageFlags usage, const VmaMemoryUsage memtype, void** mapped)
+void Buffer::Data(const void* data, const uint32_t count, const uint32_t stride, const VkBufferUsageFlags usage, const prev::core::memory::MemoryType memtype, void** mapped)
 {
     Clear();
 

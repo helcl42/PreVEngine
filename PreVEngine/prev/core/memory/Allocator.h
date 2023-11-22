@@ -9,6 +9,11 @@
 #include <vector>
 
 namespace prev::core::memory {
+enum class MemoryType {
+    DEVICE_LOCAL = 0,
+    HOST_MAPPED = 1
+};
+
 class Allocator final {
 public:
     Allocator(prev::core::instance::Instance& instance, prev::core::device::Device& device, prev::core::device::Queue& queue, const VkDeviceSize blockSize = 256);
@@ -16,7 +21,7 @@ public:
     ~Allocator();
 
 public:
-    void CreateBuffer(const void* data, uint64_t size, VkBufferUsageFlags usage, VmaMemoryUsage memtype, VkBuffer& buffer, VmaAllocation& alloc, void** mapped = 0);
+    void CreateBuffer(const void* data, const uint64_t size, const VkBufferUsageFlags usage, const MemoryType memtype, VkBuffer& buffer, VmaAllocation& alloc, void** mapped = 0);
 
     void DestroyBuffer(VkBuffer buffer, VmaAllocation alloc);
 

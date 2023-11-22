@@ -4,25 +4,23 @@
 #include "Buffer.h"
 
 namespace prev::render::buffer {
-class VertexBuffer final : public Buffer {
+class VertexBuffer : public Buffer {
 public:
     using Buffer::Buffer;
 
 public:
-    void Data(const void* data, const uint32_t count, const uint32_t stride);
+    virtual void Data(const void* data, const uint32_t count, const uint32_t stride);
 };
 
-class HostVisibleVertexBuffer final : public Buffer {
+class HostVisibleVertexBuffer final : public VertexBuffer {
 public:
-    HostVisibleVertexBuffer(prev::core::memory::Allocator& allocator, const uint32_t maxCount, const uint32_t stride);
+    HostVisibleVertexBuffer(prev::core::memory::Allocator& allocator, const uint32_t maxCoun);
 
 public:
-    void Data(const void* data, const uint32_t count);
+    void Data(const void* data, const uint32_t count, const uint32_t stride) override;
 
 private:
     uint32_t m_maxCount;
-
-    uint32_t m_stride;
 
     void* m_mapped;
 };

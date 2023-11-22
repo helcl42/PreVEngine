@@ -13,7 +13,7 @@ public:
 public:
     void Clear();
 
-    void Data(const void* data, const uint32_t count, const uint32_t stride, const VkBufferUsageFlags usage, const VmaMemoryUsage memtype = VMA_MEMORY_USAGE_GPU_ONLY, void** mapped = nullptr);
+    void Data(const void* data, const uint32_t count, const uint32_t stride, const VkBufferUsageFlags usage, const prev::core::memory::MemoryType memtype = prev::core::memory::MemoryType::DEVICE_LOCAL, void** mapped = nullptr);
 
 public:
     uint32_t GetCount() const;

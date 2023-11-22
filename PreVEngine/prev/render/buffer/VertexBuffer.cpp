@@ -3,24 +3,25 @@
 namespace prev::render::buffer {
 void VertexBuffer::Data(const void* data, const uint32_t count, const uint32_t stride)
 {
-    Buffer::Data(data, count, stride, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
+    Buffer::Data(data, count, stride, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, prev::core::memory::MemoryType::DEVICE_LOCAL);
 }
 
-HostVisibleVertexBuffer::HostVisibleVertexBuffer(prev::core::memory::Allocator& allocator, const uint32_t maxCount, const uint32_t stride)
-    : Buffer(allocator)
+HostVisibleVertexBuffer::HostVisibleVertexBuffer(prev::core::memory::Allocator& allocator, const uint32_t maxCount)
+    : VertexBuffer(allocator)
     , m_maxCount(maxCount)
-    , m_stride(stride)
     , m_mapped(nullptr)
 {
 }
 
-void HostVisibleVertexBuffer::Data(const void* data, const uint32_t count)
+void HostVisibleVertexBuffer::Data(const void* data, const uint32_t count, const uint32_t stride)
 {
     if (!m_mapped) {
-        Buffer::Data(nullptr, m_maxCount, m_stride, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &m_mapped);
+        Buffer::Data(nullptr, m_maxCount, stride, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, prev::core::memory::MemoryType::HOST_MAPPED, &m_mapped);
     }
 
-    uint32_t finalCount{ std::min(m_maxCount, count) };
-    memcpy(m_mapped, data, finalCount * m_stride);
+    const uint32_t finalCount{ std::min(m_maxCount, count) };
+    memcpy(m_mapped, data, finalCount * stride);
+
+    m_count = finalCount;
 }
 } // namespace prev::render::buffer
