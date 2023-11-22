@@ -18,6 +18,10 @@ OBBBoundingVolumeComponent::OBBBoundingVolumeComponent(const prev_test::common::
 
     m_original = newBox;
     m_working = newBox;
+
+#ifdef RENDER_BOUNDING_VOLUMES
+    m_model = BoundingVolumeModelFactory{}.CreateOBBModel(m_working);
+#endif
 }
 
 bool OBBBoundingVolumeComponent::IsInFrustum(const prev_test::common::intersection::Frustum& frustum)
@@ -39,8 +43,7 @@ void OBBBoundingVolumeComponent::Update(const glm::mat4& worldTransform)
     m_working = prev_test::common::intersection::OBB{ rotation, m_original.position * scale + translation, m_original.GetHalfSize() * scale };
 
 #ifdef RENDER_BOUNDING_VOLUMES
-    BoundingVolumeModelFactory modelFactory{};
-    m_model = modelFactory.CreateOBBModel(m_working);
+    m_model = BoundingVolumeModelFactory{}.CreateOBBModel(m_working, m_model);
 #endif
 }
 

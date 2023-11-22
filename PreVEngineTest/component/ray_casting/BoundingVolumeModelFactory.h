@@ -11,9 +11,15 @@ class BoundingVolumeModelFactory final {
 public:
     std::unique_ptr<prev_test::render::IModel> CreateAABBModel(const prev_test::common::intersection::AABB& aabb) const;
 
+    std::unique_ptr<prev_test::render::IModel> CreateAABBModel(const prev_test::common::intersection::AABB& aabb, const std::shared_ptr<prev_test::render::IModel>& model) const;
+
     std::unique_ptr<prev_test::render::IModel> CreateOBBModel(const prev_test::common::intersection::OBB& obb) const;
 
+    std::unique_ptr<prev_test::render::IModel> CreateOBBModel(const prev_test::common::intersection::OBB& obb, const std::shared_ptr<prev_test::render::IModel>& model) const;
+
     std::unique_ptr<prev_test::render::IModel> CreateSphereModel(const prev_test::common::intersection::Sphere& sphere) const;
+
+    std::unique_ptr<prev_test::render::IModel> CreateSphereModel(const prev_test::common::intersection::Sphere& sphere, const std::shared_ptr<prev_test::render::IModel>& model) const;
 };
 } // namespace prev_test::component::ray_casting
 

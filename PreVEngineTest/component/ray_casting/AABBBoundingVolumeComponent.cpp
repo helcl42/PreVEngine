@@ -20,6 +20,10 @@ AABBBoundingVolumeComponent::AABBBoundingVolumeComponent(const prev_test::common
     m_working = newBox;
     m_originalAABBPoints = newBox.GetPoints();
     m_vorkingAABBPoints = newBox.GetPoints();
+
+#ifdef RENDER_BOUNDING_VOLUMES
+    m_model = BoundingVolumeModelFactory{}.CreateAABBModel(m_working);
+#endif
 }
 
 bool AABBBoundingVolumeComponent::IsInFrustum(const prev_test::common::intersection::Frustum& frustum)
@@ -53,8 +57,7 @@ void AABBBoundingVolumeComponent::Update(const glm::mat4& worldTransform)
 
     m_working = prev_test::common::intersection::AABB(glm::vec3(translation + minBound), glm::vec3(translation + maxBound));
 #ifdef RENDER_BOUNDING_VOLUMES
-    BoundingVolumeModelFactory modelFactory{};
-    m_model = modelFactory.CreateAABBModel(m_working);
+    m_model = BoundingVolumeModelFactory{}.CreateAABBModel(m_working, m_model);
 #endif
 }
 
