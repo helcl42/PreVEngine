@@ -10,9 +10,15 @@
 namespace prev_test::component::ray_casting {
 class BoundingVolumeComponentFactory final {
 public:
+    std::unique_ptr<IBoundingVolumeComponent> CreateAABB(const prev_test::common::intersection::AABB& aabb, const glm::vec3& scale, const glm::vec3& offset) const;
+
     std::unique_ptr<IBoundingVolumeComponent> CreateAABB(const std::shared_ptr<prev_test::render::IMesh>& mesh, const glm::vec3& scale = glm::vec3{ 1.0f }, const glm::vec3& offset = glm::vec3{ 0.0f }) const;
 
+    std::unique_ptr<IBoundingVolumeComponent> CreateOBB(const prev_test::common::intersection::OBB& obb, const glm::vec3& scale = glm::vec3{ 1.0f }, const glm::vec3& offset = glm::vec3{ 0.0f }) const;
+
     std::unique_ptr<IBoundingVolumeComponent> CreateOBB(const std::shared_ptr<prev_test::render::IMesh>& mesh, const glm::vec3& scale = glm::vec3{ 1.0f }, const glm::vec3& offset = glm::vec3{ 0.0f }) const;
+
+    std::unique_ptr<IBoundingVolumeComponent> CreateSphere(const prev_test::common::intersection::Sphere& sphere, const float scale, const glm::vec3& offset) const;
 
     std::unique_ptr<IBoundingVolumeComponent> CreateSphere(const std::shared_ptr<prev_test::render::IMesh>& mesh, const float scale = 1.0f, const glm::vec3& offset = glm::vec3{ 0.0f }) const;
 

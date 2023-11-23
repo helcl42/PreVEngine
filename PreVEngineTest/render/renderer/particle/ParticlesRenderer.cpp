@@ -3,6 +3,7 @@
 #include "shader/ParticlesShader.h"
 
 #include "../../../component/particle/IParticleSystemComponent.h"
+#include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
@@ -57,36 +58,43 @@ void ParticlesRenderer::PreRender(const NormalRenderContext& renderContext)
 void ParticlesRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAll({ TAG_PARTICLE_SYSTEM_COMPONENT })) {
-        const auto particlesComponent = prev::scene::component::ComponentRepository<prev_test::component::particle::IParticleSystemComponent>::Instance().Get(node->GetId());
+        bool visible{ true };
+        if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
+            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContext.frustum);
+        }
 
-        auto uboVS = m_uniformsPoolVS->GetNext();
-        UniformsVS uniformsVS{};
-        uniformsVS.projectionMatrix = renderContext.projectionMatrix;
-        uniformsVS.viewMatrix = renderContext.viewMatrix;
-        uniformsVS.textureNumberOfRows = particlesComponent->GetMaterial()->GetAtlasNumberOfRows();
-        uboVS->Update(&uniformsVS);
+        if (visible) {
+            const auto particlesComponent = prev::scene::component::ComponentRepository<prev_test::component::particle::IParticleSystemComponent>::Instance().Get(node->GetId());
 
-        auto uboFS = m_uniformsPoolFS->GetNext();
-        UniformsFS uniformsFS{};
-        uniformsFS.color = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
-        uboFS->Update(&uniformsFS);
+            auto uboVS = m_uniformsPoolVS->GetNext();
+            UniformsVS uniformsVS{};
+            uniformsVS.projectionMatrix = renderContext.projectionMatrix;
+            uniformsVS.viewMatrix = renderContext.viewMatrix;
+            uniformsVS.textureNumberOfRows = particlesComponent->GetMaterial()->GetAtlasNumberOfRows();
+            uboVS->Update(&uniformsVS);
 
-        m_shader->Bind("uboVS", *uboVS);
-        m_shader->Bind("uboFS", *uboFS);
-        m_shader->Bind("colorSampler", particlesComponent->GetMaterial()->GetImageBuffer()->GetImageView(), *particlesComponent->GetMaterial()->GetImageSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            auto uboFS = m_uniformsPoolFS->GetNext();
+            UniformsFS uniformsFS{};
+            uniformsFS.color = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
+            uboFS->Update(&uniformsFS);
 
-        const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-        const VkBuffer vertexBuffers[] = { *particlesComponent->GetModel()->GetVertexBuffer() };
-        const VkBuffer instanceBuffers[] = { *particlesComponent->GetVertexBuffer() };
-        const VkDeviceSize offsets[] = { 0 };
+            m_shader->Bind("uboVS", *uboVS);
+            m_shader->Bind("uboFS", *uboFS);
+            m_shader->Bind("colorSampler", particlesComponent->GetMaterial()->GetImageBuffer()->GetImageView(), *particlesComponent->GetMaterial()->GetImageSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-        vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+            const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+            const VkBuffer vertexBuffers[] = { *particlesComponent->GetModel()->GetVertexBuffer() };
+            const VkBuffer instanceBuffers[] = { *particlesComponent->GetVertexBuffer() };
+            const VkDeviceSize offsets[] = { 0 };
 
-        vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindVertexBuffers(renderContext.commandBuffer, 1, 1, instanceBuffers, offsets);
-        vkCmdBindIndexBuffer(renderContext.commandBuffer, *particlesComponent->GetModel()->GetIndexBuffer(), 0, particlesComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+            vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-        vkCmdDrawIndexed(renderContext.commandBuffer, particlesComponent->GetModel()->GetIndexBuffer()->GetCount(), static_cast<uint32_t>(particlesComponent->GetParticles().size()), 0, 0, 0);
+            vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindVertexBuffers(renderContext.commandBuffer, 1, 1, instanceBuffers, offsets);
+            vkCmdBindIndexBuffer(renderContext.commandBuffer, *particlesComponent->GetModel()->GetIndexBuffer(), 0, particlesComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+
+            vkCmdDrawIndexed(renderContext.commandBuffer, particlesComponent->GetModel()->GetIndexBuffer()->GetCount(), static_cast<uint32_t>(particlesComponent->GetParticles().size()), 0, 0, 0);
+        }
     }
 }
 

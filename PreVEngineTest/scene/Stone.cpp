@@ -1,4 +1,5 @@
 #include "Stone.h"
+
 #include "../common/AssetManager.h"
 #include "../component/ray_casting/BoundingVolumeComponentFactory.h"
 #include "../component/ray_casting/SelectableComponentFactory.h"
@@ -48,7 +49,7 @@ void Stone::Update(float deltaTime)
 
     auto currentPosition = m_transformComponent->GetPosition();
 
-    float height = 0.0f;
+    float height{ 0.0f };
     terrain->GetHeightAt(currentPosition, height);
 
     m_transformComponent->SetPosition(glm::vec3(currentPosition.x, height, currentPosition.z));
