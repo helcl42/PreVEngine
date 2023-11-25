@@ -26,9 +26,11 @@ Here is a video:
 
 ## Build Android
 
- - Install `NDK-25+`
+ - Make sure you have `NDK-25+` installed.
 
- - Run `cd PreVEngineTest`
+ - Run `mkdir build`
+
+ - Run `cd build`
 
  - Run `cmake -DANDROID=ON -DABI_NAME=arm64-v8a`
 
