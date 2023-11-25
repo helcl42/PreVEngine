@@ -131,9 +131,7 @@ if(ANDROID)
 
     add_definitions(-DGLM_FORCE_CXX17)
 
-    include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../PreVEngine")
     include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../PreVEngine/android")
-
     include_directories("${ANDROID_NDK}/sources/android/native_app_glue")
 
     add_library(${PROJECT_NAME} SHARED ${SRC_LIST})
