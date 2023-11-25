@@ -140,8 +140,8 @@ std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateAAB
 
     const auto [vertices, indices] = GetBoxData(aabbPoints);
 
-    auto& vertexBuffer{ model->GetVertexBuffer() };
-    auto& indexBuffer{ model->GetIndexBuffer() };
+    const auto& vertexBuffer{ model->GetVertexBuffer() };
+    const auto& indexBuffer{ model->GetIndexBuffer() };
     vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
     indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
 
@@ -170,8 +170,8 @@ std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateOBB
 
     const auto [vertices, indices] = GetBoxData(obbPoints);
 
-    auto& vertexBuffer{ model->GetVertexBuffer() };
-    auto& indexBuffer{ model->GetIndexBuffer() };
+    const auto& vertexBuffer{ model->GetVertexBuffer() };
+    const auto& indexBuffer{ model->GetIndexBuffer() };
     vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
     indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
 
@@ -196,8 +196,8 @@ std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateSph
 {
     const auto [vertices, indices] = GenerateSphereData(sphere);
 
-    auto& vertexBuffer{ model->GetVertexBuffer() };
-    auto& indexBuffer{ model->GetIndexBuffer() };
+    const auto& vertexBuffer{ model->GetVertexBuffer() };
+    const auto& indexBuffer{ model->GetIndexBuffer() };
     vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
     indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
 
