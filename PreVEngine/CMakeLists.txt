@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 
+project(PreVEngine)
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(SOURCE_GROUP_DELIMITER "/")
-
-set(LIBRARY_NAME PreVEngine)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -69,40 +69,6 @@ source_group("prev/window/impl/windows" FILES ${WINDOW_IMPL_WINDOWS_SRC_LIST})
 source_group("prev/window/impl/linux" FILES ${WINDOW_IMPL_LINUX_SRC_LIST})
 source_group("prev/window/impl/android" FILES ${WINDOW_IMPL_ANDROID_SRC_LIST})
 
-add_library(${LIBRARY_NAME} STATIC 
-    ${ROOT_SRC_LIST}
-    ${COMMON_SRC_LIST}
-    ${COMMON_PATTERN_SRC_LIST}
-    ${CORE_SRC_LIST}
-    ${CORE_MEMORY_SRC_LIST}
-    ${CORE_DEVICE_SRC_LIST}
-    ${CORE_INSTANCE_SRC_LIST}
-    ${EVENT_SRC_LIST}
-    ${EVENT_INTERNAL_SRC_LIST}
-    ${INPUT_SRC_LIST}
-    ${INPUT_MOUSE_SRC_LIST}
-    ${INPUT_KEYBOARD_SRC_LIST}
-    ${INPUT_TOUCH_SRC_LIST}
-    ${RENDER_SRC_LIST}
-    ${RENDER_BUFFER_SRC_LIST}
-    ${RENDER_BUFFER_IMAGE_SRC_LIST}
-    ${RENDER_IMAGE_SRC_LIST}
-    ${RENDER_PASS_SRC_LIST}
-    ${RENDER_SHADER_SRC_LIST}
-    ${RENDER_SAMPLER_SRC_LIST}
-    ${SCENE_SRC_LIST}
-    ${SCENE_COMPONENT_SRC_LIST}
-    ${SCENE_GRAPH_SRC_LIST}
-    ${UTIL_SRC_LIST}
-    ${WINDOW_SRC_LIST}
-    ${WINDOW_IMPL_SRC_LIST}
-    ${WINDOW_IMPL_WINDOWS_SRC_LIST}
-    ${WINDOW_IMPL_LINUX_SRC_LIST}
-    ${WINDOW_IMPL_ANDROID_SRC_LIST}
-)
-
-target_include_directories(${LIBRARY_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
 include_directories("../Dependencies/glm")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")  #for find_package
@@ -124,36 +90,111 @@ endif()
 
 add_definitions(-DVK_NO_PROTOTYPES)
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+if(WIN32)
+    add_definitions(-DVK_USE_PLATFORM_WIN32_KHR)
+
+    add_library(${PROJECT_NAME} STATIC 
+        ${ROOT_SRC_LIST}
+        ${COMMON_SRC_LIST}
+        ${COMMON_PATTERN_SRC_LIST}
+        ${CORE_SRC_LIST}
+        ${CORE_MEMORY_SRC_LIST}
+        ${CORE_DEVICE_SRC_LIST}
+        ${CORE_INSTANCE_SRC_LIST}
+        ${EVENT_SRC_LIST}
+        ${EVENT_INTERNAL_SRC_LIST}
+        ${INPUT_SRC_LIST}
+        ${INPUT_MOUSE_SRC_LIST}
+        ${INPUT_KEYBOARD_SRC_LIST}
+        ${INPUT_TOUCH_SRC_LIST}
+        ${RENDER_SRC_LIST}
+        ${RENDER_BUFFER_SRC_LIST}
+        ${RENDER_BUFFER_IMAGE_SRC_LIST}
+        ${RENDER_IMAGE_SRC_LIST}
+        ${RENDER_PASS_SRC_LIST}
+        ${RENDER_SHADER_SRC_LIST}
+        ${RENDER_SAMPLER_SRC_LIST}
+        ${SCENE_SRC_LIST}
+        ${SCENE_COMPONENT_SRC_LIST}
+        ${SCENE_GRAPH_SRC_LIST}
+        ${UTIL_SRC_LIST}
+        ${WINDOW_SRC_LIST}
+        ${WINDOW_IMPL_SRC_LIST}
+        ${WINDOW_IMPL_WINDOWS_SRC_LIST}
+        ${WINDOW_IMPL_LINUX_SRC_LIST}
+        ${WINDOW_IMPL_ANDROID_SRC_LIST}
+    )
+
+    target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+    find_path(VULKAN_INCLUDE vulkan/vulkan.h PATH "$ENV{VULKAN_SDK}/include")    # Search in Vulkan SDK
+    target_include_directories(${PROJECT_NAME} PUBLIC "${VULKAN_INCLUDE}")       # include vulkan.h
+    message("VULKAN_INCLUDE path: ${VULKAN_INCLUDE}")
+
+endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     set(BUILD_PREVENGINE_XCB_SUPPORT ON)  #Other options are not yet supported.
     #option(BUILD_PREVENGINE_XCB_SUPPORT     "Build XCB PREVENGINE support"      ON)
     #option(BUILD_PREVENGINE_XLIB_SUPPORT    "Build Xlib PREVENGINE support"    OFF)
     #option(BUILD_PREVENGINE_WAYLAND_SUPPORT "Build Wayland PREVENGINE support" OFF)
     #option(BUILD_PREVENGINE_MIR_SUPPORT     "Build Mir PREVENGINE support"     OFF)
 
-    target_link_libraries(${LIBRARY_NAME} pthread)
+    add_library(${PROJECT_NAME} STATIC 
+        ${ROOT_SRC_LIST}
+        ${COMMON_SRC_LIST}
+        ${COMMON_PATTERN_SRC_LIST}
+        ${CORE_SRC_LIST}
+        ${CORE_MEMORY_SRC_LIST}
+        ${CORE_DEVICE_SRC_LIST}
+        ${CORE_INSTANCE_SRC_LIST}
+        ${EVENT_SRC_LIST}
+        ${EVENT_INTERNAL_SRC_LIST}
+        ${INPUT_SRC_LIST}
+        ${INPUT_MOUSE_SRC_LIST}
+        ${INPUT_KEYBOARD_SRC_LIST}
+        ${INPUT_TOUCH_SRC_LIST}
+        ${RENDER_SRC_LIST}
+        ${RENDER_BUFFER_SRC_LIST}
+        ${RENDER_BUFFER_IMAGE_SRC_LIST}
+        ${RENDER_IMAGE_SRC_LIST}
+        ${RENDER_PASS_SRC_LIST}
+        ${RENDER_SHADER_SRC_LIST}
+        ${RENDER_SAMPLER_SRC_LIST}
+        ${SCENE_SRC_LIST}
+        ${SCENE_COMPONENT_SRC_LIST}
+        ${SCENE_GRAPH_SRC_LIST}
+        ${UTIL_SRC_LIST}
+        ${WINDOW_SRC_LIST}
+        ${WINDOW_IMPL_SRC_LIST}
+        ${WINDOW_IMPL_WINDOWS_SRC_LIST}
+        ${WINDOW_IMPL_LINUX_SRC_LIST}
+        ${WINDOW_IMPL_ANDROID_SRC_LIST}
+    )
+
+    target_link_libraries(${PROJECT_NAME} pthread)
 
     if (BUILD_PREVENGINE_XCB_SUPPORT)
         add_definitions(-DVK_USE_PLATFORM_XCB_KHR)
         #---XCB---  (window)
         find_package(XCB REQUIRED)
         include_directories(${XCB_INCLUDE_DIRS})                 # /usr/include
-        target_link_libraries(${LIBRARY_NAME} ${XCB_LIBRARIES})  # /usr/lib/x86_64-linux-gnu/libxcb.so
+        target_link_libraries(${PROJECT_NAME} ${XCB_LIBRARIES})  # /usr/lib/x86_64-linux-gnu/libxcb.so
         #---XKB--- (keyboard)
         find_library(XKB "xkbcommon" DOC "XKB Keyboard library") # xkb keyboard support
-        target_link_libraries(${LIBRARY_NAME} ${XKB})            # /usr/lib/x86_64-linux-gnu/libxkbcommon.so
+        target_link_libraries(${PROJECT_NAME} ${XKB})            # /usr/lib/x86_64-linux-gnu/libxkbcommon.so
 
         #---X11---
         find_package(X11 REQUIRED)
         include_directories(${X11_INCLUDE_DIR})
-        target_link_libraries(${LIBRARY_NAME} ${X11_LIBRARIES})
+        target_link_libraries(${PROJECT_NAME} ${X11_LIBRARIES})
         #---X11-XCB---
         find_package(X11_XCB REQUIRED)
         include_directories(${X11_XCB_INCLUDE_DIR})
-        target_link_libraries(${LIBRARY_NAME} ${X11_XCB_LIBRARIES})
+        target_link_libraries(${PROJECT_NAME} ${X11_XCB_LIBRARIES})
         #---XInput--- (MultiTouch)
         if (ENABLE_MULTITOUCH)               #adds 8.5KB to exe size
-            target_link_libraries(${LIBRARY_NAME} ${X11_Xinput_LIB})
+            target_link_libraries(${PROJECT_NAME} ${X11_Xinput_LIB})
             add_definitions(-DENABLE_MULTITOUCH)
         endif()
     endif()
@@ -169,12 +210,67 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 #    if (BUILD_PREVENGINE_MIR_SUPPORT)
 #        add_definitions(-DVK_USE_PLATFORM_MIR_KHR)
 #    endif()
+
+    target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+    find_path(VULKAN_INCLUDE vulkan/vulkan.h PATH "$ENV{VULKAN_SDK}/include")    # Search in Vulkan SDK
+    target_include_directories(${PROJECT_NAME} PUBLIC "${VULKAN_INCLUDE}")       # include vulkan.h
+    message("VULKAN_INCLUDE path: ${VULKAN_INCLUDE}")
 endif()
 
-if(WIN32)
-    add_definitions(-DVK_USE_PLATFORM_WIN32_KHR)
-endif()
+if(ANDROID)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17 -O3")
 
-find_path(VULKAN_INCLUDE vulkan/vulkan.h PATH "$ENV{VULKAN_SDK}/include")    # Search in Vulkan SDK
-target_include_directories(${LIBRARY_NAME} PUBLIC "${VULKAN_INCLUDE}")       # include vulkan.h
-message("VULKAN_INCLUDE path: ${VULKAN_INCLUDE}")
+    add_definitions(-DVK_USE_PLATFORM_ANDROID_KHR)
+    add_definitions(-DENABLE_VALIDATION)
+    add_definitions(-DENABLE_LOGGING)
+    add_definitions(-DGLM_FORCE_CXX17)
+    add_definitions(-DRENDER_SELECTION)
+
+    include_directories("android")
+    include_directories(${ANDROID_NDK}/sources/android/native_app_glue)
+
+    file(GLOB ANDROID_SRC_LIST "android/*.h" "android/*.c" "android/*.cpp")
+    file(GLOB ANDROID_NATIVE_GLUE_SRC_LIST "${ANDROID_NDK}/sources/android/native_app_glue/*.h" "${ANDROID_NDK}/sources/android/native_app_glue/*.c" "${ANDROID_NDK}/sources/android/native_app_glue/*.cpp")
+
+    source_group("android" FILES ${ANDROID_SRC_LIST})
+    source_group("${ANDROID_NDK}/sources/android/native_app_glue" ${ANDROID_NATIVE_GLUE_SRC_LIST})
+
+    add_library(${PROJECT_NAME} STATIC 
+        ${ROOT_SRC_LIST}
+        ${COMMON_SRC_LIST}
+        ${COMMON_PATTERN_SRC_LIST}
+        ${CORE_SRC_LIST}
+        ${CORE_MEMORY_SRC_LIST}
+        ${CORE_DEVICE_SRC_LIST}
+        ${CORE_INSTANCE_SRC_LIST}
+        ${EVENT_SRC_LIST}
+        ${EVENT_INTERNAL_SRC_LIST}
+        ${INPUT_SRC_LIST}
+        ${INPUT_MOUSE_SRC_LIST}
+        ${INPUT_KEYBOARD_SRC_LIST}
+        ${INPUT_TOUCH_SRC_LIST}
+        ${RENDER_SRC_LIST}
+        ${RENDER_BUFFER_SRC_LIST}
+        ${RENDER_BUFFER_IMAGE_SRC_LIST}
+        ${RENDER_IMAGE_SRC_LIST}
+        ${RENDER_PASS_SRC_LIST}
+        ${RENDER_SHADER_SRC_LIST}
+        ${RENDER_SAMPLER_SRC_LIST}
+        ${SCENE_SRC_LIST}
+        ${SCENE_COMPONENT_SRC_LIST}
+        ${SCENE_GRAPH_SRC_LIST}
+        ${UTIL_SRC_LIST}
+        ${WINDOW_SRC_LIST}
+        ${WINDOW_IMPL_SRC_LIST}
+        ${WINDOW_IMPL_WINDOWS_SRC_LIST}
+        ${WINDOW_IMPL_LINUX_SRC_LIST}
+        ${WINDOW_IMPL_ANDROID_SRC_LIST}
+        ${ANDROID_SRC_LIST}
+        ${ANDROID_NATIVE_GLUE_SRC_LIST}
+    )
+
+    target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+    target_link_libraries(${PROJECT_NAME} android)
+endif()

@@ -10,7 +10,7 @@ android {
             keyPassword 'kaktus42'
         }
     }
-    compileSdkVersion 30
+    compileSdk 30
 
     defaultConfig {
         applicationId = 'com.prevengine.PreVEngineTest'
@@ -35,7 +35,7 @@ android {
     externalNativeBuild {
         cmake {
             version '3.18.1'
-            path 'src/main/cpp/CMakeLists.txt'
+            path '../../CMakeLists.txt'
         }
     }
     sourceSets {
