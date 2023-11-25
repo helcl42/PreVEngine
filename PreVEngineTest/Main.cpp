@@ -2,8 +2,6 @@
 
 int main(int argc, char* argv[])
 {
-    setvbuf(stdout, NULL, _IONBF, 0); // avoid buffering
-
     prev::core::EngineConfig config{};
     config.appName = "Test App";
     config.fullScreen = false;
