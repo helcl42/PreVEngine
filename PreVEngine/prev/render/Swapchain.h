@@ -6,12 +6,6 @@
 
 #include "../core/memory/Allocator.h"
 
-#ifdef ANDROID
-#define IS_ANDROID true // ANDROID: default to power-save (limit to 60fps)
-#else
-#define IS_ANDROID false // PC: default to low-latency (no fps limit)
-#endif
-
 namespace prev::render {
 struct SwapchainBuffer {
     VkImage image{};
@@ -49,7 +43,7 @@ public:
 public:
     std::vector<VkPresentModeKHR> GetPresentModes() const;
 
-    bool SetPresentMode(bool noTearing, bool poweSave = IS_ANDROID); // ANDROID: default to power-save mode (limit to 60fps)
+    bool SetPresentMode(bool noTearing, bool powerSave);
 
     bool SetPresentMode(VkPresentModeKHR preferredMode);
 
