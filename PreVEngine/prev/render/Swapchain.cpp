@@ -154,9 +154,9 @@ std::vector<VkPresentModeKHR> Swapchain::GetPresentModes() const
 // ---------------------------- Present Mode ----------------------------
 // noTearing : TRUE = Wait for next vsync, to swap buffers.  FALSE = faster fps.
 // powersave  : TRUE = Limit framerate to vsync (60 fps).    FALSE = lower latency.
-bool Swapchain::SetPresentMode(bool noTearing, bool powersave)
+bool Swapchain::SetPresentMode(bool noTearing, bool powerSave)
 {
-    const VkPresentModeKHR mode{ static_cast<VkPresentModeKHR>((noTearing ? VK_PRESENT_MODE_MAILBOX_KHR : 0) ^ (powersave ? VK_PRESENT_MODE_FIFO_RELAXED_KHR : 0)) };
+    const VkPresentModeKHR mode{ static_cast<VkPresentModeKHR>((noTearing ? VK_PRESENT_MODE_MAILBOX_KHR : 0) ^ (powerSave ? VK_PRESENT_MODE_FIFO_RELAXED_KHR : 0)) };
     return SetPresentMode(mode); // if not found, use FIFO
 }
 
