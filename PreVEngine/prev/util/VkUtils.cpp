@@ -252,6 +252,17 @@ void CopyBuffer(const VkCommandBuffer commandBuffer, const VkBuffer srcBuffer, c
     vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &bufCopyRegion);
 }
 
+VkCommandPool CreateCommandPool(const VkDevice device, const uint32_t queueFamilyIndex)
+{
+    VkCommandPoolCreateInfo poolInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
+    poolInfo.queueFamilyIndex = queueFamilyIndex;
+    poolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
+    VkCommandPool commandPool;
+    VKERRCHECK(vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool));
+    return commandPool;
+}
+
 VkFramebuffer CreateFrameBuffer(const VkDevice device, const VkRenderPass& renderPass, const std::vector<VkImageView>& imageViews, const VkExtent2D& extent)
 {
     VkFramebuffer frameBuffer;

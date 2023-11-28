@@ -26,6 +26,8 @@ void CopyBuffer(const VkCommandBuffer commandBuffer, const VkBuffer srcBuffer, c
 
 VkFramebuffer CreateFrameBuffer(const VkDevice device, const VkRenderPass& renderPass, const std::vector<VkImageView>& imageViews, const VkExtent2D& extent);
 
+VkCommandPool CreateCommandPool(const VkDevice device, const uint32_t queueFamilyIndex);
+
 VkCommandBuffer CreateCommandBuffer(const VkDevice device, const VkCommandPool commandPool, const VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
 VkFence CreateFence(const VkDevice device, const VkFenceCreateFlags createFlags = VK_FENCE_CREATE_SIGNALED_BIT);

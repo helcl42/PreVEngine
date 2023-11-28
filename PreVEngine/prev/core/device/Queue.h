@@ -18,8 +18,6 @@ enum class QueueType {
 struct Queue {
     Queue(VkDevice dev, uint32_t f, uint32_t idx, VkQueueFlags flgs, VkSurfaceKHR surf);
 
-    VkCommandPool CreateCommandPool() const;
-
     operator VkQueue() const;
 
     VkDevice device;

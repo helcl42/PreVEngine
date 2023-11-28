@@ -20,7 +20,7 @@ Allocator::Allocator(prev::core::instance::Instance& instance, prev::core::devic
     , m_device(device)
     , m_queue(queue)
 {
-    m_commandPool = m_queue.CreateCommandPool();
+    m_commandPool = prev::util::vk::CreateCommandPool(m_device, m_queue.family);
     m_commandBuffer = prev::util::vk::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
     m_fence = prev::util::vk::CreateFence(m_device);
 
