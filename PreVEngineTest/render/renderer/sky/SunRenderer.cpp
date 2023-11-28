@@ -53,7 +53,12 @@ void SunRenderer::BeforeRender(const NormalRenderContext& renderContext)
     if (!m_firstFrame) {
         auto device = prev::core::DeviceProvider::Instance().GetDevice();
 
-        const auto result{ vkGetQueryPoolResults(*device, m_queryPool, 0, 1, sizeof(m_passedSamples), &m_passedSamples, sizeof(uint64_t), VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_PARTIAL_BIT) };
+#if defined(__ANDROID__)
+        VkQueryResultFlags queryResultFlags{ VK_QUERY_RESULT_PARTIAL_BIT };
+#else
+        VkQueryResultFlags queryResultFlags{ VK_QUERY_RESULT_STATUS_COMPLETE_KHR };
+#endif
+        const auto result{ vkGetQueryPoolResults(*device, m_queryPool, 0, 1, sizeof(m_passedSamples), &m_passedSamples, sizeof(uint64_t), VK_QUERY_RESULT_64_BIT | queryResultFlags) };
         const float ratio{ glm::clamp((static_cast<float>(m_passedSamples) / static_cast<float>(m_maxNumberOfSamples * m_renderPass->GetSamplesCount())) * 0.5f, 0.0f, 1.0f) };
 
         prev::event::EventChannel::Post(prev_test::render::renderer::sky::SunVisibilityEvent{ ratio });
