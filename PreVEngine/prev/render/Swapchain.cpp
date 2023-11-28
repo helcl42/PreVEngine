@@ -43,7 +43,7 @@ Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allo
     UpdateExtent();
     SetImageCount(3);
 
-    m_commandPool = m_graphicsQueue->CreateCommandPool();
+    m_commandPool = prev::util::vk::CreateCommandPool(m_device, m_graphicsQueue->family);
 
     buffer::image::ImageBufferFactory imageBufferFactory{};
     m_depthBuffer = imageBufferFactory.CreateDepth(buffer::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, renderPass.GetDepthFormat(), VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D }, m_allocator);

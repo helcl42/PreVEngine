@@ -38,7 +38,7 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
     auto uniformsPool = std::make_unique<prev::render::buffer::UniformBufferRing<Uniforms>>(*allocator);
     uniformsPool->AdjustCapactity(1, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
-    auto commandPool = computeQueue->CreateCommandPool();
+    auto commandPool = prev::util::vk::CreateCommandPool(*device, computeQueue->family);
     auto commandBuffer = prev::util::vk::CreateCommandBuffer(*device, commandPool);
 
     auto fence = prev::util::vk::CreateFence(*device);

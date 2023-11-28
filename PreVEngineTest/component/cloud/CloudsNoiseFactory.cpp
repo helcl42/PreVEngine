@@ -25,7 +25,7 @@ CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t widt
     auto pipeline = std::make_unique<prev_test::render::renderer::sky::pipeline::CloudsPerlinWorleyNoisePipeline>(*device, *shader);
     pipeline->Init();
 
-    auto commandPool = computeQueue->CreateCommandPool();
+    auto commandPool = prev::util::vk::CreateCommandPool(*device, computeQueue->family);
     auto commandBuffer = prev::util::vk::CreateCommandBuffer(*device, commandPool);
 
     auto fence = prev::util::vk::CreateFence(*device);
