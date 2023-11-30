@@ -15,9 +15,7 @@ Here is a video:
 
 ## Build Linux & Windows
 
- - Run `mkdir build`
-
- - Run `cd build`
+ - Run `cd build && cd build`
 
  - Run `cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..`
 
@@ -27,9 +25,7 @@ Here is a video:
 
  - Make sure you have `NDK-25+` installed.
 
- - Run `mkdir build`
-
- - Run `cd build`
+ - Run `mkdir build && cd build`
 
  - Run `cmake -DANDROID=ON -DABI_NAME=arm64-v8a`
 
