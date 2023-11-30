@@ -9,13 +9,12 @@ Here is a video:
 ## Download Dependencies (glm, assimp with platform builds ~100MB)
  - Run `python download_dependencies.py`
 
- ### 
-    The package is hosted on `Google Drive` and the script might not work properly. If it is your case please download zip archive manually from following link and unpack it in the root folder.
-    https://drive.google.com/file/d/1_9gK0mHCFIuXkZlF7yv9HmXcr4KabK0c/view?usp=sharing
+**Note:** If you have a problem with the script, the package is hosted on `Google Drive.` You can download it directly from the following link. Just unpack it in the root folder.
+[https://drive.google.com/file/d/1_9gK0mHCFIuXkZlF7yv9HmXcr4KabK0c/view?usp=sharing](https://drive.google.com/file/d/1_9gK0mHCFIuXkZlF7yv9HmXcr4KabK0c/view?usp=sharing)
 
 
 ## Build Linux & Windows
- 
+
  - Run `mkdir build`
 
  - Run `cd build`
@@ -36,7 +35,7 @@ Here is a video:
 
  - Import to android studio and deploy as usuall
 
-## Todo: 
+## Todo:
 
 - ...
 
