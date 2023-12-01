@@ -16,14 +16,6 @@ def download_file_from_google_drive(file_id, destination, chunk_size=32768):
         yield i, chunk_size_, int(file_size)
 
 
-def get_confirm_token(response):
-    for key, value in response.cookies.items():
-        if key.startswith('download_warning'):
-            return value
-
-    return None
-
-
 def save_response_content(response, destination, chunk_size):
     with open(destination, "wb") as f:
         for i, chunk in enumerate(response.iter_content(chunk_size)):
@@ -37,7 +29,7 @@ def download_file(file_id, destination):
     for i, chunk_size, file_size in download_file_from_google_drive(file_id, destination):
         bytes_downloaded += chunk_size
         downloaded_percentage = (bytes_downloaded / file_size) * 100.0
-        print(f'Downloaded {bytes_downloaded} from {file_size} - {downloaded_percentage:.1f}%', end = '\r')
+        print(f'Downloaded {bytes_downloaded} from {file_size} - {downloaded_percentage:.1f}%', end='\r')
     print('')
 
 
