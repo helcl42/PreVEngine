@@ -8,7 +8,7 @@
 namespace prev_test::render::renderer {
 class CommandBuffersGroup {
 public:
-    CommandBuffersGroup(const prev::core::device::Device& device, const VkCommandPool& commandPool, const std::vector<std::vector<VkCommandBuffer>>& commandBuffers);
+    CommandBuffersGroup(const prev::core::device::Device& device, const std::vector<std::vector<VkCommandPool>>& commandPools, const std::vector<std::vector<VkCommandBuffer>>& commandBuffers);
 
     ~CommandBuffersGroup();
 
@@ -18,7 +18,7 @@ public:
 private:
     const prev::core::device::Device& m_device;
 
-    VkCommandPool m_commandPool{};
+    std::vector<std::vector<VkCommandPool>> m_commandPoolGroups{};
 
     std::vector<std::vector<VkCommandBuffer>> m_commandBufferGroups{};
 };
