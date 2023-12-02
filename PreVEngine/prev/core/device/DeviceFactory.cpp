@@ -4,7 +4,8 @@
 
 #include "../../common/Logger.h"
 
-static constexpr bool TRY_ENABLE_SWAPCHAIN_CONCURRENT_MODE{ false };
+static constexpr bool QUERY_DEDICATED_PRESENT_QUEUE{ true };
+static constexpr bool QUERY_DEDICATED_COMPUTE_QUEUE{ true };
 
 namespace prev::core::device {
 namespace {
@@ -39,7 +40,7 @@ std::shared_ptr<Device> DeviceFactory::Create(const std::shared_ptr<PhysicalDevi
 
     const uint32_t DefaultUnwantedFlags{ 0x20 | 0x40 }; // video decode/encode
 
-    if constexpr (TRY_ENABLE_SWAPCHAIN_CONCURRENT_MODE) {
+    if constexpr (QUERY_DEDICATED_PRESENT_QUEUE) {
         // check if there is pure presenting queue with no other features
         if (FindQueue(gpu, 0, DefaultUnwantedFlags | VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT | VK_QUEUE_SPARSE_BINDING_BIT, surface, queuesMetadata, workingQueueMetadata)) {
             queuesMetadata.Add({ QueueType::PRESENT }, workingQueueMetadata);
@@ -52,14 +53,16 @@ std::shared_ptr<Device> DeviceFactory::Create(const std::shared_ptr<PhysicalDevi
         }
     }
 
-    // check if there is a dedicated compute queue without graphics
-    if (FindQueue(gpu, VK_QUEUE_COMPUTE_BIT, DefaultUnwantedFlags | VK_QUEUE_GRAPHICS_BIT, nullptr, queuesMetadata, workingQueueMetadata)) { // there is a dedicated compute queue
-        queuesMetadata.Add({ QueueType::COMPUTE }, workingQueueMetadata);
-    }
+    if constexpr (QUERY_DEDICATED_COMPUTE_QUEUE) {
+        // check if there is a dedicated compute queue without graphics
+        if (FindQueue(gpu, VK_QUEUE_COMPUTE_BIT, DefaultUnwantedFlags | VK_QUEUE_GRAPHICS_BIT, nullptr, queuesMetadata, workingQueueMetadata)) { // there is a dedicated compute queue
+            queuesMetadata.Add({QueueType::COMPUTE}, workingQueueMetadata);
+        }
 
-    if (!queuesMetadata.HasAny(QueueType::COMPUTE)) {
-        if (FindQueue(gpu, VK_QUEUE_COMPUTE_BIT, DefaultUnwantedFlags, nullptr, queuesMetadata, workingQueueMetadata)) {
-            queuesMetadata.Add({ QueueType::COMPUTE }, workingQueueMetadata);
+        if (!queuesMetadata.HasAny(QueueType::COMPUTE)) {
+            if (FindQueue(gpu, VK_QUEUE_COMPUTE_BIT, DefaultUnwantedFlags, nullptr, queuesMetadata, workingQueueMetadata)) {
+                queuesMetadata.Add({QueueType::COMPUTE}, workingQueueMetadata);
+            }
         }
     }
 
