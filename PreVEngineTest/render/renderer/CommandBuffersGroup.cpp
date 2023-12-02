@@ -1,9 +1,9 @@
 #include "CommandBuffersGroup.h"
 
 namespace prev_test::render::renderer {
-CommandBuffersGroup::CommandBuffersGroup(const prev::core::device::Device& device, const VkCommandPool& commandPool, const std::vector<std::vector<VkCommandBuffer>>& commandBuffers)
+CommandBuffersGroup::CommandBuffersGroup(const prev::core::device::Device& device, const std::vector<std::vector<VkCommandPool>>& commandPools, const std::vector<std::vector<VkCommandBuffer>>& commandBuffers)
     : m_device(device)
-    , m_commandPool(commandPool)
+    , m_commandPoolGroups(commandPools)
     , m_commandBufferGroups(commandBuffers)
 {
 }
@@ -12,7 +12,11 @@ CommandBuffersGroup::~CommandBuffersGroup()
 {
     vkDeviceWaitIdle(m_device);
 
-    vkDestroyCommandPool(m_device, m_commandPool, nullptr);
+    for(auto& poolGroup : m_commandPoolGroups) {
+        for (auto &pool: poolGroup) {
+            vkDestroyCommandPool(m_device, pool, nullptr);
+        }
+    }
 }
 
 const std::vector<VkCommandBuffer>& CommandBuffersGroup::GetBuffersGroup(const uint32_t index) const
