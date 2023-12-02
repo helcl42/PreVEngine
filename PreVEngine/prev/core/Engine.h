@@ -6,6 +6,8 @@
 #include "device/Device.h"
 #include "instance/Instance.h"
 #include "memory/Allocator.h"
+#include "memory/TaskEngine.h"
+
 #include "../event/EventHandler.h"
 #include "../render/IRootRenderer.h"
 #include "../render/Swapchain.h"
@@ -51,21 +53,21 @@ public:
     void operator()(const prev::window::SurfaceChanged& surfaceChangedEvent);
 
 private:
-    void InitTiming();
+    void ResetTiming();
 
-    void InitInstance();
+    void ResetInstance();
 
-    void InitWindow();
+    void ResetWindow();
 
-    void InitSurface();
+    void ResetSurface();
 
-    void InitDevice();
+    void ResetDevice();
 
-    void InitAllocator();
+    void ResetAllocator();
 
-    void InitRenderPass();
+    void ResetRenderPass();
 
-    void InitSwapchain();
+    void ResetSwapchain();
 
 private:
     prev::event::EventHandler<Engine, prev::window::WindowChangeEvent> m_windowChangedHandler{ *this };
