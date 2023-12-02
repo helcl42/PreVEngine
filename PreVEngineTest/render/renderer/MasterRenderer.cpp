@@ -128,8 +128,7 @@ void MasterRenderer::InitDefault()
     }
 
 #ifdef PARALLEL_RENDERING
-    CommandBuffersGroupFactory buffersGroupFactory{};
-    m_defaultCommandBuffersGroup = buffersGroupFactory.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_defaultRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
+    m_defaultCommandBuffersGroup = CommandBuffersGroupFactory{}.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_defaultRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
 #endif
 }
 
@@ -156,8 +155,7 @@ void MasterRenderer::InitDebug()
     }
 
 #ifdef PARALLEL_RENDERING
-    CommandBuffersGroupFactory buffersGroupFactory{};
-    m_debugCommandBuffersGroup = buffersGroupFactory.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_debugRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
+    m_debugCommandBuffersGroup = CommandBuffersGroupFactory{}.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_debugRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
 #endif
 }
 
@@ -190,9 +188,9 @@ void MasterRenderer::InitShadows()
     }
 
 #ifdef PARALLEL_RENDERING
-    CommandBuffersGroupFactory buffersGroupFactory{};
-    for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; i++) {
-        m_shadowsCommandBufferGroups.emplace_back(buffersGroupFactory.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_shadowRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY));
+    m_shadowsCommandBufferGroups.resize(prev_test::component::shadow::CASCADES_COUNT);
+    for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; ++i) {
+        m_shadowsCommandBufferGroups[i] = CommandBuffersGroupFactory{}.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_shadowRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
     }
 #endif
 }
@@ -237,8 +235,7 @@ void MasterRenderer::InitReflection()
     }
 
 #ifdef PARALLEL_RENDERING
-    CommandBuffersGroupFactory buffersGroupFactory{};
-    m_reflectionCommandBufferGroups = buffersGroupFactory.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_reflectionRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
+    m_reflectionCommandBufferGroups = CommandBuffersGroupFactory{}.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_reflectionRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
 #endif
 }
 
@@ -282,8 +279,7 @@ void MasterRenderer::InitRefraction()
     }
 
 #ifdef PARALLEL_RENDERING
-    CommandBuffersGroupFactory buffersGroupFactory{};
-    m_refractionCommandBufferGroups = buffersGroupFactory.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_refractionRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
+    m_refractionCommandBufferGroups = CommandBuffersGroupFactory{}.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_refractionRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
 #endif
 }
 
@@ -302,7 +298,7 @@ void MasterRenderer::RenderShadows(const prev::render::RenderContext& renderCont
 {
     const auto shadows{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW }) };
 
-    for (uint32_t cascadeIndex = 0; cascadeIndex < prev_test::component::shadow::CASCADES_COUNT; cascadeIndex++) {
+    for (uint32_t cascadeIndex = 0; cascadeIndex < prev_test::component::shadow::CASCADES_COUNT; ++cascadeIndex) {
 
         const auto& cascade{ shadows->GetCascade(cascadeIndex) };
 
