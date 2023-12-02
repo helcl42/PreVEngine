@@ -21,14 +21,14 @@ Engine::Engine(const EngineConfig& config)
 
 void Engine::Init()
 {
-    InitTiming();
-    InitInstance();
-    InitWindow();
-    InitSurface();
-    InitDevice();
-    InitAllocator();
-    InitRenderPass();
-    InitSwapchain();
+    ResetTiming();
+    ResetInstance();
+    ResetWindow();
+    ResetSurface();
+    ResetDevice();
+    ResetAllocator();
+    ResetRenderPass();
+    ResetSwapchain();
 
     DeviceProvider::Instance().SetDevice(m_device);
     AllocatorProvider::Instance().SetAllocator(m_allocator);
@@ -116,7 +116,7 @@ void Engine::operator()(const prev::window::WindowChangeEvent& windowChangeEvent
 {
     vkDeviceWaitIdle(*m_device);
 
-    InitSurface();
+    ResetSurface();
 
     prev::event::EventChannel::Post(prev::window::SurfaceChanged{ m_surface });
 }
@@ -129,22 +129,22 @@ void Engine::operator()(const prev::window::WindowResizeEvent& resizeEvent)
 void Engine::operator()(const prev::window::SurfaceChanged& surfaceChangedEvent)
 {
     m_surface = surfaceChangedEvent.surface;
-    InitSwapchain();
+    ResetSwapchain();
     m_swapchain->UpdateExtent();
 }
 
-void Engine::InitTiming()
+void Engine::ResetTiming()
 {
     m_clock = std::make_unique<prev::util::Clock<float>>();
     m_fpsCounter = std::make_unique<prev::util::FPSCounter>();
 }
 
-void Engine::InitInstance()
+void Engine::ResetInstance()
 {
     m_instance = std::make_unique<prev::core::instance::Instance>(m_config.validation);
 }
 
-void Engine::InitWindow()
+void Engine::ResetWindow()
 {
     prev::window::WindowCreateInfo windowCreateInfo{};
     windowCreateInfo.title = m_config.appName;
@@ -157,12 +157,12 @@ void Engine::InitWindow()
     m_window = std::make_unique<prev::window::Window>(windowCreateInfo);
 }
 
-void Engine::InitSurface()
+void Engine::ResetSurface()
 {
     m_surface = m_window->GetSurface(*m_instance);
 }
 
-void Engine::InitDevice()
+void Engine::ResetDevice()
 {
     auto physicalDevices{ std::make_shared<prev::core::device::PhysicalDevices>(*m_instance) };
     physicalDevices->Print();
@@ -182,7 +182,7 @@ void Engine::InitDevice()
     m_device->Print();
 }
 
-void Engine::InitAllocator()
+void Engine::ResetAllocator()
 {
     // TODO
     //  -> Allocator uses only graphics queue for it's internal commands
@@ -191,7 +191,7 @@ void Engine::InitAllocator()
     LOGI("Allocator created\n");
 }
 
-void Engine::InitRenderPass()
+void Engine::ResetRenderPass()
 {
     prev::render::pass::RenderPassBuilder renderPassBuilder{ *m_device };
 
@@ -252,7 +252,7 @@ void Engine::InitRenderPass()
     }
 }
 
-void Engine::InitSwapchain()
+void Engine::ResetSwapchain()
 {
     m_swapchain = std::make_shared<prev::render::Swapchain>(*m_device, *m_allocator, *m_renderPass, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount));
 #if defined(__ANDROID__)
