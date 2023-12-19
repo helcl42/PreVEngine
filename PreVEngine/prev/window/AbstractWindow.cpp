@@ -10,8 +10,9 @@ AbstractWindow::AbstractWindow(const WindowCreateInfo& createInfo)
 
 impl::Surface& AbstractWindow::GetSurface(VkInstance instance)
 {
-    m_windowImpl->CreateSurface(instance);
-
+    if (!m_windowImpl->CreateSurface(instance)) {
+        throw std::runtime_error("Could not create surface.");
+    }
     return *m_windowImpl;
 }
 
