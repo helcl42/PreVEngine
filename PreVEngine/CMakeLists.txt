@@ -91,7 +91,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
         include_directories(${XCB_INCLUDE_DIRS})                 # /usr/include
         target_link_libraries(${PROJECT_NAME} ${XCB_LIBRARIES})  # /usr/lib/x86_64-linux-gnu/libxcb.so
         #---XKB--- (keyboard)
-        find_package(XKB REQUIRED)
+        # find_package(XKB REQUIRED)
         find_library(XKB "xkbcommon" DOC "XKB Keyboard library") # xkb keyboard support
         target_link_libraries(${PROJECT_NAME} ${XKB})            # /usr/lib/x86_64-linux-gnu/libxkbcommon.so
         #---X11---
