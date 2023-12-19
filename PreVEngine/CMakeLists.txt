@@ -123,7 +123,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
 
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-    find_path(VULKAN_INCLUDE vulkan/vulkan.h PATH "$ENV{VULKAN_SDK}/include")    # Search in Vulkan SDK
+    find_path(VULKAN_INCLUDE vulkan/vulkan.h PATH "$ENV{VULKAN_SDK}/Include")    # Search in Vulkan SDK
     target_include_directories(${PROJECT_NAME} PUBLIC "${VULKAN_INCLUDE}")       # include vulkan.h
     message("VULKAN_INCLUDE path: ${VULKAN_INCLUDE}")
 endif()
