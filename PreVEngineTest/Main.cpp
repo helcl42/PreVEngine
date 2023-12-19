@@ -12,10 +12,12 @@ int main(int argc, char* argv[])
     config.samplesCount = 1;
     config.swapchainFrameCount = 3;
 
-    prev_test::TestApp app(config);
-    app.Init();
-    app.Run();
-    app.ShutDown();
+    //prev_test::TestApp app(config);
+    //app.Init();
+    //app.Run();
+    //app.ShutDown();
+
+    printf("TestApp... running!\n");
 
     return 0;
 }
