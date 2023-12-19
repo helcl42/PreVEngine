@@ -57,7 +57,7 @@ jobs:
       #       python3 download_dependencies.py
 
       env:
-        VULKAN_SDK: C:\VulkanSDK\
+        VULKAN_SDK: C:/VulkanSDK/
       run: |
           $ver = (Invoke-WebRequest -Uri "https://vulkan.lunarg.com/sdk/latest.json" | ConvertFrom-Json).windows
           echo Version $ver
