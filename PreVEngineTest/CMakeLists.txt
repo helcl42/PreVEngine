@@ -149,3 +149,9 @@ if(ANDROID)
     # Link to external libraries
     target_link_libraries(${PROJECT_NAME} log android assimp)
 endif()
+
+# testing
+enable_testing()
+
+add_test(NAME DefaultTest COMMAND $<TARGET_FILE:${PROJECT_NAME}>)
+
