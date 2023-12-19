@@ -12,12 +12,14 @@ int main(int argc, char* argv[])
     config.samplesCount = 1;
     config.swapchainFrameCount = 3;
 
-    //prev_test::TestApp app(config);
-    //app.Init();
-    //app.Run();
-    //app.ShutDown();
-
-    printf("TestApp... running!\n");
+    try {
+        prev_test::TestApp app{ config };
+        app.Init();
+        app.Run();
+        app.ShutDown();
+    } catch (const std::runtime_error& err) {
+        LOGE("Unhandled error: %s", err.what());
+    }
 
     return 0;
 }
