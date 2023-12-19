@@ -65,8 +65,6 @@ jobs:
 
     - name: Install dependencies Windows            
       if: runner.os == 'Windows'
-      env:
-        VULKAN_SDK: C:\VulkanSDK\    
       run: |
           $ver = (Invoke-WebRequest -Uri "https://vulkan.lunarg.com/sdk/latest.json" | ConvertFrom-Json).windows
           echo Version $ver
@@ -74,6 +72,8 @@ jobs:
           Invoke-WebRequest -Uri "https://sdk.lunarg.com/sdk/download/$ver/windows/VulkanSDK-$ver-Installer.exe" -OutFile VulkanSDK.exe
           echo Downloaded
           .\VulkanSDK.exe --root C:\VulkanSDK  --accept-licenses --default-answer --confirm-command install
+          $Env:VULKAN_SDK = "C:/VulkanSDK/"
+          $Env:Path += "C:/VulkanSDK/Bin"
           python3 -m pip install -U pip
           pip3 install requests
           python3 download_dependencies.py
@@ -88,8 +88,6 @@ jobs:
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      env:
-        VULKAN_SDK: C:\VulkanSDK\
       run: >
         cmake -B ${{ steps.strings.outputs.build-output-dir }}
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
