@@ -47,6 +47,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Install python version
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.8
+
     - name: Install dependencies
       # run: |
       #       wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo tee /etc/apt/trusted.gpg.d/lunarg.asc
@@ -65,6 +70,8 @@ jobs:
           Invoke-WebRequest -Uri "https://sdk.lunarg.com/sdk/download/$ver/windows/VulkanSDK-$ver-Installer.exe" -OutFile VulkanSDK.exe
           echo Downloaded
           .\VulkanSDK.exe --root C:\VulkanSDK  --accept-licenses --default-answer --confirm-command install
+          python3 -m pip install -U pip
+          python3 download_dependencies.py
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
