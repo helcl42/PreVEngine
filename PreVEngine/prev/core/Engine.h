@@ -6,7 +6,6 @@
 #include "device/Device.h"
 #include "instance/Instance.h"
 #include "memory/Allocator.h"
-#include "memory/TaskEngine.h"
 
 #include "../event/EventHandler.h"
 #include "../render/IRootRenderer.h"
