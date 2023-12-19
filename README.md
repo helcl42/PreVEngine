@@ -14,7 +14,7 @@ Here is a video:
 
 ## Build Linux & Windows
 
- - Run `cd build && cd build`
+ - Run `mkdir build && cd build`
 
  - Run `cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..`
 
@@ -31,7 +31,7 @@ Here is a video:
  - Import to android studio and deploy as usuall
 
 
-**Note:** If you have a problem with the script, the package is hosted on `Google Drive.` You can download it directly from the following link. Just unpack it in the root folder.
+**Note:** If you have a problem with the script, the package is hosted on `Google Drive`. You can download it directly from the following link. Just unpack it in the root folder.
 [https://drive.google.com/file/d/1_9gK0mHCFIuXkZlF7yv9HmXcr4KabK0c/view?usp=sharing](https://drive.google.com/file/d/1_9gK0mHCFIuXkZlF7yv9HmXcr4KabK0c/view?usp=sharing)
 
 
