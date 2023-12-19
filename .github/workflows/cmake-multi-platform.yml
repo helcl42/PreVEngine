@@ -102,6 +102,7 @@ jobs:
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
 
     - name: Setup xvfb for screen 0
+      if: runner.os != 'Windows'
       run: Xvfb :1 -screen 0 1920x1080x24 &
 
     - name: Test
@@ -113,5 +114,6 @@ jobs:
         DISPLAY: :1
 
     - name: Tear down xvfb
+      if: runner.os != 'Windows'
       run: killall Xvfb
       
