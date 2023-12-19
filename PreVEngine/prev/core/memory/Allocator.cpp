@@ -273,7 +273,7 @@ void Allocator::EndCommandBuffer()
     VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &m_commandBuffer;
-    VKERRCHECK(vkQueueSubmit(m_queue, 1, &submitInfo, m_fence));
+    VKERRCHECK(m_queue.Submit(1, &submitInfo, m_fence));
     VKERRCHECK(vkWaitForFences(m_device, 1, &m_fence, VK_TRUE, UINT64_MAX));
 }
 

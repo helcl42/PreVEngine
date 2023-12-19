@@ -342,7 +342,7 @@ void Swapchain::Submit()
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = &m_submitSemaphore;
 
-    VKERRCHECK(vkQueueSubmit(*m_graphicsQueue, 1, &submitInfo, swapchainBuffer.fence));
+    VKERRCHECK(m_graphicsQueue->Submit(1, &submitInfo, swapchainBuffer.fence));
 }
 
 void Swapchain::Present()
