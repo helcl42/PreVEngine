@@ -4,3 +4,5 @@ project(PreVEngine)
 add_subdirectory(PreVEngine)
 add_subdirectory(PreVEngineTest)
 
+# testing
+enable_testing()
