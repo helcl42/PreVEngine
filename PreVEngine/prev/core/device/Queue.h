@@ -4,6 +4,7 @@
 #include <prev/core/Core.h>
 
 #include <memory>
+#include <mutex>
 
 namespace prev::core::device {
 enum class QueueType {
@@ -20,6 +21,10 @@ struct Queue {
 
     operator VkQueue() const;
 
+    VkResult Submit(uint32_t submitCount, const VkSubmitInfo* submitInfo, VkFence fence) const;
+
+    VkResult WaitIdle() const;
+
     VkDevice device;
 
     uint32_t family; // queue family
@@ -31,6 +36,8 @@ struct Queue {
     VkSurfaceKHR surface; // VK_NULL_HANDLE if queue can not present
 
     VkQueue handle;
+
+    mutable std::mutex mutex;
 };
 } // namespace prev::core::device
 

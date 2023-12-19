@@ -79,7 +79,7 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
     VkSubmitInfo computeSubmitInfo{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
     computeSubmitInfo.commandBufferCount = 1;
     computeSubmitInfo.pCommandBuffers = &commandBuffer;
-    VKERRCHECK(vkQueueSubmit(*computeQueue, 1, &computeSubmitInfo, fence));
+    VKERRCHECK(computeQueue->Submit(1, &computeSubmitInfo, fence));
     VKERRCHECK(vkWaitForFences(*device, 1, &fence, VK_TRUE, UINT64_MAX));
 
     vkDestroyFence(*device, fence, nullptr);
