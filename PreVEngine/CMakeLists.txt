@@ -75,11 +75,10 @@ if(WIN32)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
-    set(BUILD_PREVENGINE_XCB_SUPPORT ON)  #Other options are not yet supported.
-    #option(BUILD_PREVENGINE_XCB_SUPPORT     "Build XCB PREVENGINE support"      ON)
-    #option(BUILD_PREVENGINE_XLIB_SUPPORT    "Build Xlib PREVENGINE support"    OFF)
+    option(BUILD_PREVENGINE_XCB_SUPPORT "Build XCB PREVENGINE support" ON)
+    #option(BUILD_PREVENGINE_XLIB_SUPPORT "Build Xlib PREVENGINE support" OFF)
     #option(BUILD_PREVENGINE_WAYLAND_SUPPORT "Build Wayland PREVENGINE support" OFF)
-    #option(BUILD_PREVENGINE_MIR_SUPPORT     "Build Mir PREVENGINE support"     OFF)
+    #option(BUILD_PREVENGINE_MIR_SUPPORT "Build Mir PREVENGINE support" OFF)
 
     add_library(${PROJECT_NAME} STATIC ${SRC_LIST})
 
@@ -92,9 +91,9 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
         include_directories(${XCB_INCLUDE_DIRS})                 # /usr/include
         target_link_libraries(${PROJECT_NAME} ${XCB_LIBRARIES})  # /usr/lib/x86_64-linux-gnu/libxcb.so
         #---XKB--- (keyboard)
+        find_package(XKB REQUIRED)
         find_library(XKB "xkbcommon" DOC "XKB Keyboard library") # xkb keyboard support
         target_link_libraries(${PROJECT_NAME} ${XKB})            # /usr/lib/x86_64-linux-gnu/libxkbcommon.so
-
         #---X11---
         find_package(X11 REQUIRED)
         include_directories(${X11_INCLUDE_DIR})
