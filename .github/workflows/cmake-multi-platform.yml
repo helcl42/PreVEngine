@@ -62,7 +62,7 @@ jobs:
         ndk-version: r25c
         link-to-sdk: true
         
-    - name: Install dependencies            
+    - name: Install dependencies Windows        
       if: runner.os == 'Windows'
       run: |
           $ver = (Invoke-WebRequest -Uri "https://vulkan.lunarg.com/sdk/latest.json" | ConvertFrom-Json).windows
@@ -72,6 +72,7 @@ jobs:
           echo Downloaded
           .\VulkanSDK.exe --root C:\VulkanSDK  --accept-licenses --default-answer --confirm-command install    
 
+    - name: Install dependencies NonWindows           
       if: runner.os != 'Windows'
       run: |
           wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo tee /etc/apt/trusted.gpg.d/lunarg.asc
@@ -101,10 +102,13 @@ jobs:
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         -S ${{ github.workspace }}
+        -DANDROID
+        -DABI_NAME=arm64-v8a
 
     - name: Build
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+      # run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+      run: ./gradlew clean build
 
     - name: Setup xvfb for screen 0
       if: runner.os != 'Windows'
