@@ -74,6 +74,9 @@ void Instance::Create(const Layers& layers, const Extensions& extensions, const 
     instanceInfo.ppEnabledLayerNames = layers.GetPickListRaw();
 
     VKERRCHECK(vkCreateInstance(&instanceInfo, nullptr, &m_instance));
+    if (!m_instance) {
+        throw std::runtime_error("Could not create VK instance.");
+    }
 
     volkLoadInstance(m_instance);
 
