@@ -55,6 +55,13 @@ jobs:
       with:
         python-version: 3.8
 
+    - name:  Setup Android environment
+      uses: nttld/setup-ndk@v1
+      id: setup-ndk
+      with:
+        ndk-version: r25c
+        link-to-sdk: true
+        
     - name: Install dependencies NonWindows
       if: runner.os != 'Windows'
       run: |
