@@ -14,24 +14,24 @@ public:
     void Destroy();
 
 private:
-    VkInstance m_instance;
+    VkInstance m_instance{};
 
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
-    PFN_vkCreateDebugReportCallbackEXT m_vkCreateDebugCallbackEXT;
+    PFN_vkCreateDebugReportCallbackEXT m_vkCreateDebugCallbackEXT{};
 
-    PFN_vkDestroyDebugReportCallbackEXT m_vkDestroyDebugCallbackEXT;
+    PFN_vkDestroyDebugReportCallbackEXT m_vkDestroyDebugCallbackEXT{};
 
-    VkDebugReportCallbackEXT m_debugCallback;
+    VkDebugReportCallbackEXT m_debugCallback{};
 
-    VkDebugReportFlagsEXT m_flags;
+    VkDebugReportFlagsEXT m_flags{};
 #else
-    PFN_vkCreateDebugUtilsMessengerEXT m_vkCreateDebugCallbackEXT;
+    PFN_vkCreateDebugUtilsMessengerEXT m_vkCreateDebugCallbackEXT{};
 
-    PFN_vkDestroyDebugUtilsMessengerEXT m_vkDestroyDebugCallbackEXT;
+    PFN_vkDestroyDebugUtilsMessengerEXT m_vkDestroyDebugCallbackEXT{};
 
-    VkDebugUtilsMessengerEXT m_debugCallback;
+    VkDebugUtilsMessengerEXT m_debugCallback{};
 
-    VkDebugUtilsMessageSeverityFlagsEXT m_flags;
+    VkDebugUtilsMessageSeverityFlagsEXT m_flags{};
 
 #endif
 };
