@@ -55,7 +55,13 @@ jobs:
       with:
         python-version: 3.8
 
-    - name:  Setup Android environment
+    - name: Setup Android SDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+        
+    - name: Setup Android NDK
       uses: nttld/setup-ndk@v1
       id: setup-ndk
       with:
