@@ -110,6 +110,7 @@ jobs:
       # run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
       run: |
         cd PreVEngineTest/android
+        chmod a+x gradlew
         ./gradlew clean build
 
     - name: Setup xvfb for screen 0
