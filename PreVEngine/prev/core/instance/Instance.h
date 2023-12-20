@@ -25,9 +25,9 @@ private:
     void Create(const Layers& layers, const Extensions& extensions, const char* appName, const char* engineName);
 
 private:
-    VkInstance m_instance;
+    VkInstance m_instance{};
 
-    DebugReport m_debugReport; // Configure debug report flags here.
+    DebugReport m_debugReport{}; // Configure debug report flags here.
 };
 } // namespace prev::core::instance
 
