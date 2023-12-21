@@ -1,6 +1,7 @@
 # PreVEngine
 
 [![CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/cmake-multi-platform.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/cmake-multi-platform.yml)
+[![Android - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/cmake-single-platform.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/cmake-single-platform.yml)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/88a3ed1e12e04eb09882db2c7e5ea794)](https://app.codacy.com/gh/helcl42/PreVEngine/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
 A multiplatform Vulkan based rendering engine. This repository is under active development.
