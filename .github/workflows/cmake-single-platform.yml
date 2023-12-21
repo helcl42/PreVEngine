@@ -24,6 +24,7 @@ jobs:
       matrix:
         build_type: [Release]
         c_compiler: [clang]
+        c_compiler: [clang++]
 
     steps:
     - uses: actions/checkout@v3
