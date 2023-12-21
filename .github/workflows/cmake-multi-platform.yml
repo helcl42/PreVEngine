@@ -55,19 +55,6 @@ jobs:
       with:
         python-version: 3.8
 
-    - name: Setup Android SDK
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'zulu'
-        java-version: '17'
-        
-    - name: Setup Android NDK
-      uses: nttld/setup-ndk@v1
-      id: setup-ndk
-      with:
-        ndk-version: r25c
-        link-to-sdk: true
-        
     - name: Install dependencies Windows        
       if: runner.os == 'Windows'
       run: |
@@ -107,18 +94,12 @@ jobs:
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -DANDROID=ON
-        -DABI_NAME=arm64-v8a
         -S ${{ github.workspace }}
 
     - name: Build
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-      # run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
-      run: |
-        cd PreVEngineTest/android
-        chmod a+x gradlew
-        ./gradlew clean build
-
+      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+      
     - name: Setup xvfb for screen 0
       if: runner.os != 'Windows'
       run: Xvfb :1 -screen 0 1920x1080x24 &
