@@ -144,7 +144,7 @@ if(ANDROID)
 
     # add external library
     add_library(assimp SHARED IMPORTED)
-    set_target_properties(assimp PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/../libs/arm64-v8a/libassimp.so")
+    set_target_properties(assimp PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/android/app/src/main/libs/arm64-v8a/libassimp.so")
 
     # Link to external libraries
     target_link_libraries(${PROJECT_NAME} log android assimp)
