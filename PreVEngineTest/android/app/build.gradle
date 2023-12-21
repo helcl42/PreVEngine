@@ -10,12 +10,12 @@ android {
             keyPassword 'kaktus42'
         }
     }
-    compileSdk 30
+    compileSdk 31
 
     defaultConfig {
         applicationId = 'com.prevengine.PreVEngineTest'
         minSdkVersion 14
-        targetSdkVersion 30
+        targetSdkVersion 31
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++17"
