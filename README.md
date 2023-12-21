@@ -22,13 +22,13 @@ Here is a video:
 
 ## Build Android
 
- - Make sure you have `NDK-25+` installed.
+ - Make sure you have `JDK-17` and `NDK-25+` installed.
 
  - Run `mkdir build && cd build`
 
- - Run `cmake -DANDROID=ON -DABI_NAME=arm64-v8a`
+ - Run `cmake -DANDROID=ON -DABI_NAME=arm64-v8a ..`
 
- - Import to android studio and deploy as usuall
+ - Run `cd ../PreVEngineTest/android && chmod a+x gradlew && ./gradlew clean build` or import to android studio and deploy as usuall from `PreVEngineTest/android`
 
 
 **Note:** If you have a problem with the script, the package is hosted on `Google Drive`. You can download it directly from the following link. Just unpack it in the root folder.
