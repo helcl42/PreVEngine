@@ -77,7 +77,7 @@ jobs:
       run: |
         cd PreVEngineTest/android
         chmod a+x gradlew
-        ./gradlew clean build
+        ./gradlew clean assembleDebug
 
     # - name: Test
     #   working-directory: ${{github.workspace}}/build
