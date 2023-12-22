@@ -120,10 +120,11 @@ jobs:
       if: runner.os != 'Windows'
       run: |
         mkdir build-linux-${{ matrix.c_compiler }}
-        mkdir build-linux-${{ matrix.c_compiler }}/assets
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/assets build-linux-${{ matrix.c_compiler }}/assets
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/PreVEngineTest build-linux-${{ matrix.c_compiler }}
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/*.so build-linux-${{ matrix.c_compiler }}
+        # mkdir build-linux-${{ matrix.c_compiler }}/assets
+        # cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/assets build-linux-${{ matrix.c_compiler }}/assets
+        # cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/PreVEngineTest build-linux-${{ matrix.c_compiler }}
+        # cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/*.so build-linux-${{ matrix.c_compiler }}
+        cp -r ${{ steps.strings.outputs.build-output-dir }} build-linux-${{ matrix.c_compiler }}
     
     - name: Publish Artifact NonWindows
       if: runner.os != 'Windows'
