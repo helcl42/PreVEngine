@@ -100,11 +100,6 @@ void Instance::Print() const
     LOGI("->Instance %s created.\n", (!!m_instance) ? "" : "NOT");
 }
 
-DebugReport& Instance::GetDebugReport()
-{
-    return m_debugReport;
-}
-
 Instance::~Instance()
 {
 #ifdef ENABLE_VALIDATION
