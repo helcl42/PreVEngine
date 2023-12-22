@@ -104,8 +104,9 @@ jobs:
       if: runner.os == 'Windows'
       run: |
         mkdir release-win32
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/assets build-win32
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/${{ matrix.build_type }} build-win32
+        mkdir release-win32/assets
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/assets build-win32/assets
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/Release/PreVEngineTest.exe build-win32
         cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/*.dll build-win32
     
     - name: Publish Artifact Windows
