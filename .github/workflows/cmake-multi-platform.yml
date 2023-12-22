@@ -100,16 +100,20 @@ jobs:
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
 
-    - name: Create Artifact
+    - name: Create Artifact Windows
+      if: runner.os == 'Windows'
       run: |
-        mkdir release
-        cp -r ${{ steps.strings.outputs.build-output-dir }} release
+        mkdir release-win32
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/*.exe release-win32
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/*.dll release-win32
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/assets release-win32
     
-    - name: Publish Artifact
+    - name: Publish Artifact Windows
+      if: runner.os == 'Windows'
       uses: actions/upload-artifact@v2
       with:
-        name: release
-        path: release
+        name: release-win32
+        path: release-win32
       
     - name: Setup xvfb for screen 0
       if: runner.os != 'Windows'
