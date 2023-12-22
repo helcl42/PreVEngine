@@ -125,7 +125,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Linux/libassimp.so")
 
     # Copy assimp so to output bin dir.
-    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Linux/assimp.so" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Linux/libassimp.so" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
     #  Copy all files from ./Assets to the binary directory.
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
 endif()
