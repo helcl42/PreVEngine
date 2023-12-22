@@ -106,7 +106,7 @@ jobs:
         mkdir release-win32
         cp -r ${{ steps.strings.outputs.build-output-dir }}/*.exe release-win32
         cp -r ${{ steps.strings.outputs.build-output-dir }}/*.dll release-win32
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/assets release-win32
+        # cp -r ${{ steps.strings.outputs.build-output-dir }}/assets release-win32
     
     - name: Publish Artifact Windows
       if: runner.os == 'Windows'
