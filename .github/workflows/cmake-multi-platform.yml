@@ -100,21 +100,37 @@ jobs:
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
 
-    - name: Create Artifact Windows
-      if: runner.os == 'Windows'
-      run: |
-        mkdir release-win32
-        mkdir release-win32/assets
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/assets build-win32/assets
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/Release/PreVEngineTest.exe build-win32
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/*.dll build-win32
+    # - name: Create Artifact Windows
+    #   if: runner.os == 'Windows'
+    #   run: |
+    #     mkdir release-win32
+    #     mkdir release-win32/assets
+    #     cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/assets build-win32/assets
+    #     cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/Release/PreVEngineTest.exe build-win32
+    #     cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/*.dll build-win32
     
-    - name: Publish Artifact Windows
-      if: runner.os == 'Windows'
+    # - name: Publish Artifact Windows
+    #   if: runner.os == 'Windows'
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: build-win32
+    #     path: build-win32
+
+    - name: Create Artifact NonWindows
+      if: runner.os != 'Windows'
+      run: |
+        mkdir release-linux-${{ matrix.c_compiler }}
+        mkdir release-linux-${{ matrix.c_compiler }}/assets
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/assets build-linux/assets
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/PreVEngineTest build-linux
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/*.so build-linux
+    
+    - name: Publish Artifact NonWindows
+      if: runner.os != 'Windows'
       uses: actions/upload-artifact@v4
       with:
-        name: build-win32
-        path: build-win32
+        name: build-linux
+        path: build-linux
       
     - name: Setup xvfb for screen 0
       if: runner.os != 'Windows'
