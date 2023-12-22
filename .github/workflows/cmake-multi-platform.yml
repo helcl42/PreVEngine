@@ -121,16 +121,16 @@ jobs:
       run: |
         mkdir release-linux-${{ matrix.c_compiler }}
         mkdir release-linux-${{ matrix.c_compiler }}/assets
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/assets build-linux/assets
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/PreVEngineTest build-linux
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/*.so build-linux
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/assets build-linux-${{ matrix.c_compiler }}/assets
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/PreVEngineTest build-linux-${{ matrix.c_compiler }}
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/*.so build-linux-${{ matrix.c_compiler }}
     
     - name: Publish Artifact NonWindows
       if: runner.os != 'Windows'
       uses: actions/upload-artifact@v4
       with:
-        name: build-linux
-        path: build-linux
+        name: build-linux-${{ matrix.c_compiler }}
+        path: build-linux-${{ matrix.c_compiler }}
       
     - name: Setup xvfb for screen 0
       if: runner.os != 'Windows'
