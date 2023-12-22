@@ -17,8 +17,6 @@ public:
 public:
     void Print() const;
 
-    DebugReport& GetDebugReport();
-
     operator VkInstance() const;
 
 private:
