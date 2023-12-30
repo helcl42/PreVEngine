@@ -70,11 +70,11 @@ glm::vec3 GetRightVector(const glm::quat& q);
 
 glm::vec3 GetForwardVector(const glm::quat& q);
 
-glm::vec3 GetRightVector(const glm::mat4 viewMatrix);
+glm::vec3 GetRightVector(const glm::mat4& viewMatrix);
 
-glm::vec3 GetUpVector(const glm::mat4 viewMatrix);
+glm::vec3 GetUpVector(const glm::mat4& viewMatrix);
 
-glm::vec3 GetForwardVector(const glm::mat4 viewMatrix);
+glm::vec3 GetForwardVector(const glm::mat4& viewMatrix);
 
 bool DecomposeTransform(const glm::mat4& transform, glm::quat& rotation, glm::vec3& translation, glm::vec3& scale);
 

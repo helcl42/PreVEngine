@@ -60,17 +60,17 @@ glm::vec3 GetForwardVector(const glm::quat& q)
     return glm::normalize(q * glm::vec3(0.0f, 0.0f, 1.0f));
 }
 
-glm::vec3 GetRightVector(const glm::mat4 viewMatrix)
+glm::vec3 GetRightVector(const glm::mat4& viewMatrix)
 {
     return glm::normalize(glm::vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]));
 }
 
-glm::vec3 GetUpVector(const glm::mat4 viewMatrix)
+glm::vec3 GetUpVector(const glm::mat4& viewMatrix)
 {
     return glm::normalize(glm::vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]));
 }
 
-glm::vec3 GetForwardVector(const glm::mat4 viewMatrix)
+glm::vec3 GetForwardVector(const glm::mat4& viewMatrix)
 {
     return glm::normalize(glm::vec3(viewMatrix[0][2], viewMatrix[1][2], viewMatrix[2][2]));
 }
