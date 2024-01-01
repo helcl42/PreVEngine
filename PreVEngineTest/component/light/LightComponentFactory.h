@@ -3,6 +3,8 @@
 
 #include "ILightComponent.h"
 
+#include <memory>
+
 namespace prev_test::component::light {
 class LightComponentFactory final {
 public:

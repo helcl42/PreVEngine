@@ -4,6 +4,8 @@
 #include "../util/assimp/AssimpGlmConvertor.h"
 #include "../util/assimp/AssimpSceneLoader.h"
 
+#include <stdexcept>
+
 namespace prev_test::render::animation {
 std::unique_ptr<prev_test::render::IAnimation> AnimationFactory::Create(const std::string& modelPath, const unsigned int animationIndex) const
 {

@@ -3,6 +3,7 @@
 
 #include <prev/common/Common.h>
 
+#include <memory>
 #include <vector>
 
 namespace prev_test::render {

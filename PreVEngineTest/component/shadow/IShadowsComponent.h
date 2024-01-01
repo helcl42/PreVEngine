@@ -7,6 +7,8 @@
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/sampler/Sampler.h>
 
+#include <memory>
+
 namespace prev_test::component::shadow {
 class IShadowsComponent {
 public:

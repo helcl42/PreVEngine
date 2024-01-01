@@ -1,5 +1,7 @@
 #include "InputConvertor.h"
 
+#include <stdexcept>
+
 namespace prev::window {
 prev::input::keyboard::KeyActionType InputConvertor::GetKeyActionType(const impl::ActionType action)
 {

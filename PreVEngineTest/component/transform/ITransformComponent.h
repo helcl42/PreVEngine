@@ -3,6 +3,8 @@
 
 #include <prev/common/Common.h>
 
+#include <memory>
+
 namespace prev_test::component::transform {
 class ITransformComponent {
 public:
