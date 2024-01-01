@@ -71,7 +71,7 @@ void OffScreenRenderPassComponent::Init()
 
     prev::render::pass::RenderPassBuilder renderPassBuilder{ *device };
     if (m_depthFormat != VK_FORMAT_UNDEFINED) {
-        renderPassBuilder.AddDepthAttachment(m_depthFormat, VK_SAMPLE_COUNT_1_BIT);
+        renderPassBuilder.AddDepthAttachment(m_depthFormat, VK_SAMPLE_COUNT_1_BIT, { MAX_DEPTH, 0 });
         attachmentIndices.push_back(attachmentIndex);
         ++attachmentIndex;
     }

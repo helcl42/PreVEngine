@@ -18,5 +18,5 @@ void main()
 	outTextureCoord = inPosition.xy + vec2(0.5, 0.5);
 
 	vec2 screenPosition = inPosition.xy * uboVS.scale.xy + uboVS.translation.xy;
-	gl_Position = vec4(screenPosition, 0.0, 1.0);
+	gl_Position = vec4(screenPosition, uboVS.translation.z, 1.0);
 }

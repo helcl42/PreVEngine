@@ -66,7 +66,7 @@ void LensFlareRenderer::Render(const NormalRenderContext& renderContext, const s
 
             auto uboVS = m_uniformsPoolVS->GetNext();
             UniformsVS uniformsVS{};
-            uniformsVS.translation = glm::vec4(lensFlare->GetScreenSpacePosition(), 0.0f, 1.0f);
+            uniformsVS.translation = glm::vec4(lensFlare->GetScreenSpacePosition(), MAX_DEPTH, 1.0f);
             uniformsVS.scale = glm::vec4(xScale, yScale, 0.0f, 0.0f);
             uboVS->Update(&uniformsVS);
 

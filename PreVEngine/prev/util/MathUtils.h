@@ -96,6 +96,12 @@ glm::vec4 FromClipSpaceToCameraSpace(const glm::mat4& projectionMatrix, const gl
 
 glm::vec3 FromCameraSpaceToWorldSpace(const glm::mat4& viewMatrix, const glm::vec4& cameraSpaceCoords);
 
+glm::mat4 CreatePerspectiveProjectionMatrix(const float aspectRatio, const float verticalFovInDegs, const float nearClippingPlane, const float farClippingPlane);
+
+glm::mat4 CreatePerspectiveProjectionMatrixWithReverseDepth(const float aspectRatio, const float verticalFovInDegs, const float nearClippingPlane, const float farClippingPlane);
+
+glm::mat4 CreateOrthographicProjectionMatrix(const float leftPlane, const float rightPlane, const float bottomPlane, const float topPlane, const float nearPlane, const float farPlane);
+
 } // namespace prev::util::math
 
 #endif

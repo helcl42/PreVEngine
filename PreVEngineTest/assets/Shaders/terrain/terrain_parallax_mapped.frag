@@ -93,7 +93,7 @@ void main()
 			{
 				vec2 uv = ParallaxMapping(uboFS.mappingMode, heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, unitToCameraVector);
 
-				normal = NormalMapping(normalSampler[i], uv);				
+				normal = NormalMapping(normalSampler[i], uv);
 				textureColor = texture(colorSampler[i], uv);
 				shineDamper = uboFS.material[i].shineDamper;
 				reflectivity = uboFS.material[i].reflectivity;
@@ -104,7 +104,7 @@ void main()
         {
 			vec2 uv = ParallaxMapping(uboFS.mappingMode, heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, unitToCameraVector);
 
-			normal = NormalMapping(normalSampler[i], uv);			
+			normal = NormalMapping(normalSampler[i], uv);
 			textureColor = texture(colorSampler[i], uv);
 			shineDamper = uboFS.material[i].shineDamper;
 			reflectivity = uboFS.material[i].reflectivity;

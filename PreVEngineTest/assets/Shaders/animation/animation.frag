@@ -33,14 +33,14 @@ layout(location = 6) in vec3 inToLightVector[MAX_LIGHT_COUNT];
 
 layout(location = 0) out vec4 outColor;
 
-void main() 
+void main()
 {
 	vec4 textureColor = texture(colorSampler, inTextureCoord);
-	
-	float shadow = 1.0;	
+
+	float shadow = 1.0;
 	if(uboFS.castedByShadows != 0)
 	{
-		shadow = GetShadow(depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.005);
+		shadow = GetShadow(depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.02);
 	}
 
 	const vec3 unitNormal = normalize(inNormal);

@@ -47,6 +47,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake") 
 option(ENABLE_VALIDATION "Enable Vulkan Validation." ON) # adds 5KB to exe size
 option(ENABLE_LOGGING "Prints LOG* messages to Terminal or Android Logcat." ON)
 option(ENABLE_MULTITOUCH "Multi-touch screen support" OFF)
+option(ENABLE_REVERSE_DEPTH "Enable reverse depth" ON)
 
 if (ENABLE_VALIDATION)
     add_definitions(-DENABLE_VALIDATION)
@@ -56,6 +57,9 @@ if (ENABLE_LOGGING)
 endif()
 if (ENABLE_MULTITOUCH)
     add_definitions(-DENABLE_MULTITOUCH)
+endif()
+if (ENABLE_REVERSE_DEPTH)
+    add_definitions(-DENABLE_REVERSE_DEPTH)
 endif()
 
 add_definitions(-DVK_NO_PROTOTYPES)

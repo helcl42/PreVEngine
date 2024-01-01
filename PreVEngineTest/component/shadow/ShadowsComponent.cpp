@@ -37,8 +37,8 @@ void ShadowsComponent::Update(const glm::vec3& lightDirection, const float nearC
     const auto cascadeSplits{ GenerateCaascadeSplits(nearClippingPlane, farClippingPlane) };
     const auto inverseWorldToClipSpaceTransform{ glm::inverse(projectionMatrix * viewMatrix) };
 
-    float lastSplitDistance{ 0.0 };
-    for (uint32_t i = 0; i < m_cascadesCount; i++) {
+    float lastSplitDistance{ MIN_DEPTH };
+    for (uint32_t i = 0; i < m_cascadesCount; ++i) {
         const float splitDistance{ cascadeSplits[i] };
 
         // Calculate orthographic projection matrix for ith cascade
@@ -109,13 +109,12 @@ float ShadowsComponent::CalculateFrustumRadius(const std::vector<glm::vec3>& fru
 
 std::vector<float> ShadowsComponent::GenerateCaascadeSplits(const float nearClippingPlane, const float farClippingPlane) const
 {
-    std::vector<float> cascadeSplits(m_cascadesCount);
-
-    const float clipRange{ farClippingPlane - nearClippingPlane };
-    const float minZ{ nearClippingPlane };
-    const float maxZ{ nearClippingPlane + clipRange };
+    const float minZ{ std::min(nearClippingPlane, farClippingPlane) };
+    const float maxZ{ std::max(nearClippingPlane, farClippingPlane) };
     const float range{ maxZ - minZ };
     const float ratio{ maxZ / minZ };
+
+    std::vector<float> cascadeSplits(m_cascadesCount);
 
     // Calculate split depths based on view camera furstum
     for (uint32_t i = 0; i < m_cascadesCount; ++i) {
@@ -123,7 +122,12 @@ std::vector<float> ShadowsComponent::GenerateCaascadeSplits(const float nearClip
         const float log{ minZ * powf(ratio, p) };
         const float uniform{ minZ + range * p };
         const float d{ CASCADES_SPLIT_LAMBDA * (log - uniform) + uniform };
-        cascadeSplits[i] = (d - nearClippingPlane) / clipRange;
+        const float split{ (d - minZ) / range };
+        if constexpr (REVERSE_DEPTH) {
+            cascadeSplits[i] = 1.0f - split;
+        } else {
+            cascadeSplits[i] = split;
+        }
     }
 
     return cascadeSplits;
@@ -139,10 +143,19 @@ void ShadowsComponent::UpdateCascade(const glm::vec3& lightDirection, const glm:
     prev_test::common::intersection::AABB aabb{ radius };
 
     const glm::mat4 lightViewMatrix{ glm::lookAt(frustumCenter - lightDirection * -aabb.minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f)) };
-    const glm::mat4 lightOrthoProjectionMatrix{ glm::ortho(aabb.minExtents.x, aabb.maxExtents.x, aabb.minExtents.y, aabb.maxExtents.y, 0.0f, aabb.maxExtents.z - aabb.minExtents.z) };
 
-    outCascade.startSplitDepth = (nearClippingPlane + lastSplitDistance * clipRange) * -1.0f;
-    outCascade.endSplitDepth = (nearClippingPlane + splitDistance * clipRange) * -1.0f;
+    glm::mat4 lightOrthoProjectionMatrix;
+    if constexpr (REVERSE_DEPTH) {
+        lightOrthoProjectionMatrix = prev::util::math::CreateOrthographicProjectionMatrix(aabb.minExtents.x, aabb.maxExtents.x, aabb.minExtents.y, aabb.maxExtents.y, aabb.maxExtents.z - aabb.minExtents.z, 0.0f);
+    } else {
+        lightOrthoProjectionMatrix = prev::util::math::CreateOrthographicProjectionMatrix(aabb.minExtents.x, aabb.maxExtents.x, aabb.minExtents.y, aabb.maxExtents.y, 0.0f, aabb.maxExtents.z - aabb.minExtents.z);
+    }
+
+    const float startSplitDepth{ (nearClippingPlane + lastSplitDistance * clipRange) * -1.0f };
+    const float endSplitDepth{ (nearClippingPlane + splitDistance * clipRange) * -1.0f };
+
+    outCascade.startSplitDepth = startSplitDepth;
+    outCascade.endSplitDepth = endSplitDepth;
     outCascade.viewMatrix = lightViewMatrix;
     outCascade.projectionMatrix = lightOrthoProjectionMatrix;
 }

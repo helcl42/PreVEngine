@@ -105,6 +105,7 @@ void WaterRenderer::Render(const NormalRenderContext& renderContext, const std::
                 uniformsFS.shadows.cascades[i].viewProjectionMatrix = cascade.GetBiasedViewProjectionMatrix();
             }
             uniformsFS.shadows.enabled = prev_test::component::shadow::SHADOWS_ENABLED;
+            uniformsFS.shadows.useReverseDepth = REVERSE_DEPTH ? 1 : 0;
 
             uboFS->Update(&uniformsFS);
 

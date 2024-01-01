@@ -236,16 +236,16 @@ void Engine::ResetRenderPass()
     if (sampleCount > VK_SAMPLE_COUNT_1_BIT) {
         m_renderPass = renderPassBuilder
                            .AddColorAttachment(colorFormat, sampleCount, clearColor, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE) // color buffer, multisampled
-                           .AddDepthAttachment(depthFormat, sampleCount, { 1.0f, 0 }, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE) // depth buffer, multisampled
+                           .AddDepthAttachment(depthFormat, sampleCount, { MAX_DEPTH, 0 }, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE) // depth buffer, multisampled
                            .AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, clearColor, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, true) // color buffer, resolve buffer
-                           .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, { 1.0f, 0 }, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, true) // depth buffer, resolve buffer
+                           .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, { MAX_DEPTH, 0 }, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, true) // depth buffer, resolve buffer
                            .AddSubpass({ 0, 1 }, { 2, 3 }) // resolve ref will be at index 2 & 3
                            .AddSubpassDependencies(dependencies)
                            .Build();
     } else {
         m_renderPass = renderPassBuilder
                            .AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, clearColor)
-                           .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT)
+                           .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, { MAX_DEPTH, 0 })
                            .AddSubpass({ 0, 1 })
                            .AddSubpassDependencies(dependencies)
                            .Build();

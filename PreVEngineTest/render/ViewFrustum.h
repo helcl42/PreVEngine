@@ -6,7 +6,7 @@
 namespace prev_test::render {
 class ViewFrustum {
 public:
-    ViewFrustum(const float fov, const float nCp, const float fCp);
+    ViewFrustum(const float verticalFov, const float nearClippingPlane, const float farClippingPlane);
 
     ~ViewFrustum() = default;
 
@@ -16,20 +16,20 @@ public:
     glm::mat4 CreateProjectionMatrix(const float aspectRatio) const;
 
 public:
-    float GetFov() const; // vertical in degs
+    float GetVerticalFov() const; // vertical in degs
 
-    void SetFov(float fov); // vertical in degs
+    void SetVerticalFov(float fov); // vertical in degs
 
     float GetNearClippingPlane() const;
 
-    void SetNearClippingPlane(float nearCP);
+    void SetNearClippingPlane(float nearClippingPlane);
 
     float GetFarClippingPlane() const;
 
-    void SetFarClippingPlane(float farCP);
+    void SetFarClippingPlane(float farClippingPlane);
 
 private:
-    float m_fov;
+    float m_verticalFov;
 
     float m_nearClippingPlane;
 

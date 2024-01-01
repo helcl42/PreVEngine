@@ -128,6 +128,7 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
     uniformsCS.sphereInnerRadius = uniformsCS.earthRadius + 5000.0f;
     uniformsCS.sphereOuterRadius = uniformsCS.sphereInnerRadius + 17000.0f;
     uniformsCS.cloudTopOffset = 750.0f;
+    uniformsCS.maxDepth = MAX_DEPTH;
 
     uboCS->Update(&uniformsCS);
 
