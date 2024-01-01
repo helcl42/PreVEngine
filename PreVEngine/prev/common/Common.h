@@ -46,4 +46,14 @@
 #define ALIGN_TO(alignmentInBytes) alignas(alignmentInBytes)
 #define DEFAULT_ALIGNMENT ALIGN_TO(16)
 
+#ifdef ENABLE_REVERSE_DEPTH
+constexpr bool REVERSE_DEPTH{ true };
+constexpr float MIN_DEPTH{ 1.0f };
+constexpr float MAX_DEPTH{ 0.0f };
+#else
+constexpr bool REVERSE_DEPTH{ false };
+constexpr float MIN_DEPTH{ 0.0f };
+constexpr float MAX_DEPTH{ 1.0f };
+#endif // ENABLE_REVERSE_DEPTH
+
 #endif

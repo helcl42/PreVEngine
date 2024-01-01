@@ -64,7 +64,8 @@ float Luminance(in vec3 rgb)
 
 float LinearizeDepth(in float depth, in float zNear, in float zFar)
 {
-	return zNear * zFar / (zFar + depth * (zNear - zFar));
+	// regular depth, for reverse depth just swap near and far planes
+	return (zNear * zFar) / (zFar + depth * (zNear - zFar));
 }
 
 float Median(in float r, in float g, in float b)
@@ -117,4 +118,13 @@ mat2 MakeRotation(in float angle)
     float s = sin(angle);
     float c = cos(angle);
     return mat2(c, -s, s, c);
+}
+
+// https://iquilezles.org/articles/raypolys/
+float ComputeDepth(in mat4 projectionMatrix, in mat4 viewMatrix, in vec3 pointInWorldSpace)
+{
+    vec4 pInClipSpace = projectionMatrix * viewMatrix * vec4(pointInWorldSpace, 1.0);
+    vec3 pInNDC = pInClipSpace.xyz / pInClipSpace.w;
+    float depth = pInNDC.z;
+    return depth;
 }

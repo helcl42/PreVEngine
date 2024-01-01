@@ -148,6 +148,7 @@ void AnimationTexturelessRenderer::RenderMeshNode(const NormalRenderContext& ren
             uniformsFS.shadows.cascades[i] = ShadowsCascadeUniform(cascade.GetBiasedViewProjectionMatrix(), glm::vec4(cascade.endSplitDepth));
         }
         uniformsFS.shadows.enabled = prev_test::component::shadow::SHADOWS_ENABLED;
+        uniformsFS.shadows.useReverseDepth = REVERSE_DEPTH ? 1 : 0;
 
         // lightning
         for (size_t i = 0; i < lightComponents.size(); i++) {

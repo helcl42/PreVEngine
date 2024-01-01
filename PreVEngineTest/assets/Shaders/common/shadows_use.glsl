@@ -13,23 +13,34 @@ struct ShadowsCascade {
 struct Shadows {
 	ShadowsCascade cascades[SHADOW_MAP_CASCADE_COUNT];
 	uint enabled;
+	uint useReverseDepth;
 };
 
-float GetShadowRawInternal(in sampler2DArray depthSampler, in vec4 shadowCoord, in vec2 shadowCoordOffset, in uint cascadeIndex, in float depthBias)
+float GetShadowRawInternal(in sampler2DArray depthSampler, in vec4 shadowCoord, in vec2 shadowCoordOffset, in uint cascadeIndex, in float depthBias, in uint useReverseDepth)
 {
 	float shadow = 1.0;
 	if (shadowCoord.z >= 0.0 && shadowCoord.z <= 1.0)
 	{
 		float depth = texture(depthSampler, vec3(shadowCoord.xy + shadowCoordOffset, cascadeIndex)).r;
-		if (shadowCoord.w > 0.0 && depth < shadowCoord.z - depthBias) 
+		if(useReverseDepth != 0)
 		{
-			shadow = defaultShadowFactor;
+			if (depth > shadowCoord.z + depthBias)
+			{
+				shadow = defaultShadowFactor;
+			}
+		}
+		else
+		{
+			if (depth < shadowCoord.z - depthBias)
+			{
+				shadow = defaultShadowFactor;
+			}
 		}
 	}
 	return shadow;
 }
 
-float GetShadowPCFInternal(in sampler2DArray depthSampler, in vec4 shadowCoord, in uint cascadeIndex, in float depthBias)
+float GetShadowPCFInternal(in sampler2DArray depthSampler, in vec4 shadowCoord, in uint cascadeIndex, in float depthBias, in uint useReverseDepth)
 {
 	const ivec2 texDim = textureSize(depthSampler, 0).xy;
 	const float scale = 0.75;
@@ -43,36 +54,35 @@ float GetShadowPCFInternal(in sampler2DArray depthSampler, in vec4 shadowCoord, 
 	{
 		for (int y = -range; y <= range; y++)
 		{
-			shadowFactor += GetShadowRawInternal(depthSampler, shadowCoord, vec2(dx * x, dy * y), cascadeIndex, depthBias);
+			shadowFactor += GetShadowRawInternal(depthSampler, shadowCoord, vec2(dx * x, dy * y), cascadeIndex, depthBias, useReverseDepth);
 			count++;
 		}
-	
 	}
 	return shadowFactor / count;
 }
 
-float GetShadow(in sampler2DArray depthSampler, in vec4 shadowCoord, in uint cascadeIndex, in float depthBias)
+float GetShadow(in sampler2DArray depthSampler, in vec4 shadowCoord, in uint cascadeIndex, in float depthBias, in uint useReverseDepth)
 {
 	float shadow = 1.0f;
 	if(enablePCF)
 	{
-		shadow = GetShadowPCFInternal(depthSampler, shadowCoord, cascadeIndex, depthBias);
+		shadow = GetShadowPCFInternal(depthSampler, shadowCoord, cascadeIndex, depthBias, useReverseDepth);
 	}
 	else
 	{
-		shadow = GetShadowRawInternal(depthSampler, shadowCoord, vec2(0.0), cascadeIndex, depthBias);
+		shadow = GetShadowRawInternal(depthSampler, shadowCoord, vec2(0.0), cascadeIndex, depthBias, useReverseDepth);
 	}
 	return shadow;
 }
 
 float GetShadow(in sampler2DArray depthSampler, in Shadows shadows, in vec3 viewPosition, in vec3 worldPosition, in float depthBias)
 {
-	float shadow = 1.0;	
+	float shadow = 1.0;
 	float bias = depthBias;
 	if(shadows.enabled != 0)
 	{
 		uint cascadeIndex = 0;
-		for(uint i = 0; i < SHADOW_MAP_CASCADE_COUNT - 1; i++) 
+		for(uint i = 0; i < SHADOW_MAP_CASCADE_COUNT - 1; i++)
 		{
 			if(viewPosition.z < shadows.cascades[i].split.x)
 			{
@@ -83,7 +93,7 @@ float GetShadow(in sampler2DArray depthSampler, in Shadows shadows, in vec3 view
 
 	    vec4 shadowCoord = shadows.cascades[cascadeIndex].viewProjectionMatrix * vec4(worldPosition, 1.0);
 		vec4 normalizedShadowCoord = shadowCoord / shadowCoord.w;
-		shadow = GetShadow(depthSampler, normalizedShadowCoord, cascadeIndex, bias);
+		shadow = GetShadow(depthSampler, normalizedShadowCoord, cascadeIndex, bias, shadows.useReverseDepth);
 	}
 	return shadow;
 }

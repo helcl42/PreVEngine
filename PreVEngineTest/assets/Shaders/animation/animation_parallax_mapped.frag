@@ -52,7 +52,7 @@ void main()
 	float shadow = 1.0;	
 	if(uboFS.castedByShadows != 0)
 	{
-		shadow = GetShadow(depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.005);
+		shadow = GetShadow(depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.02);
 	}
 
 	const vec3 normal = NormalMapping(normalSampler, uv);

@@ -73,6 +73,8 @@ private:
         float sphereInnerRadius;
         float sphereOuterRadius;
         float cloudTopOffset;
+
+        DEFAULT_ALIGNMENT float maxDepth;
     };
 
     struct DEFAULT_ALIGNMENT UniformsSkyPostProcessCS {

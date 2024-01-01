@@ -81,7 +81,7 @@ private:
 
     glm::mat4 m_viewMatrix{ 1.0f };
 
-    prev_test::render::ViewFrustum m_viewFrustum{ 45.0f, 10.0f, 300.0f };
+    prev_test::render::ViewFrustum m_viewFrustum{ 45.0f, 0.1f, 300.0f };
 
     bool m_orientationChanged{ false };
 

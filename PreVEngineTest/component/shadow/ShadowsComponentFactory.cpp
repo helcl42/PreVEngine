@@ -46,7 +46,7 @@ std::unique_ptr<prev::render::pass::RenderPass> ShadowsComponentFactory::CreateR
 
     prev::render::pass::RenderPassBuilder renderPassBuilder{ device };
     return renderPassBuilder
-        .AddDepthAttachment(DEPTH_FORMAT)
+        .AddDepthAttachment(DEPTH_FORMAT, VK_SAMPLE_COUNT_1_BIT, { MAX_DEPTH, 0 })
         .AddSubpass({ 0 })
         .AddSubpassDependencies(dependencies)
         .Build();

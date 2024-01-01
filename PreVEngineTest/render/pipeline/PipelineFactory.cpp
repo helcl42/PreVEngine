@@ -75,7 +75,11 @@ VkPipeline PipelineFactory::CreateShadowsPipeline(const VkDevice& device, const 
     VkPipelineDepthStencilStateCreateInfo depthStencilState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
     depthStencilState.depthTestEnable = VK_TRUE;
     depthStencilState.depthWriteEnable = VK_TRUE;
-    depthStencilState.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+    if constexpr (REVERSE_DEPTH) {
+        depthStencilState.depthCompareOp = VK_COMPARE_OP_GREATER_OR_EQUAL;
+    } else {
+        depthStencilState.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+    }
     depthStencilState.depthBoundsTestEnable = VK_FALSE;
     depthStencilState.stencilTestEnable = VK_FALSE;
 
@@ -170,7 +174,11 @@ VkPipeline PipelineFactory::CreateDefaultPipeline(const VkDevice& device, const 
     VkPipelineDepthStencilStateCreateInfo depthStencilState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
     depthStencilState.depthTestEnable = depthTestEnabled ? VK_TRUE : VK_FALSE;
     depthStencilState.depthWriteEnable = depthWriteEnabled ? VK_TRUE : VK_FALSE;
-    depthStencilState.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+    if constexpr (REVERSE_DEPTH) {
+        depthStencilState.depthCompareOp = VK_COMPARE_OP_GREATER_OR_EQUAL;
+    } else {
+        depthStencilState.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+    }
     depthStencilState.depthBoundsTestEnable = VK_FALSE;
     depthStencilState.stencilTestEnable = VK_FALSE;
 
@@ -281,7 +289,11 @@ VkPipeline PipelineFactory::CreateParticlesPipeline(const VkDevice& device, cons
     VkPipelineDepthStencilStateCreateInfo depthStencilState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
     depthStencilState.depthTestEnable = depthTestEnabled ? VK_TRUE : VK_FALSE;
     depthStencilState.depthWriteEnable = depthWriteEnabled ? VK_TRUE : VK_FALSE;
-    depthStencilState.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+    if constexpr (REVERSE_DEPTH) {
+        depthStencilState.depthCompareOp = VK_COMPARE_OP_GREATER_OR_EQUAL;
+    } else {
+        depthStencilState.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+    }
     depthStencilState.depthBoundsTestEnable = VK_FALSE;
     depthStencilState.stencilTestEnable = VK_FALSE;
 

@@ -55,6 +55,8 @@ private:
         ShadowsCascadeUniform cascades[prev_test::component::shadow::CASCADES_COUNT];
 
         uint32_t enabled;
+
+        uint32_t useReverseDepth;
     };
 
     struct DEFAULT_ALIGNMENT LightUniform {
