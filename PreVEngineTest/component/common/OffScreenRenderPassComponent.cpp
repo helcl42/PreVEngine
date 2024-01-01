@@ -6,6 +6,8 @@
 #include <prev/render/pass/RenderPassBuilder.h>
 #include <prev/util/VkUtils.h>
 
+#include <stdexcept>
+
 namespace prev_test::component::common {
 OffScreenRenderPassComponent::OffScreenRenderPassComponent(const VkExtent2D& extent, const VkFormat depthFormat, const std::vector<VkFormat>& colorFormats)
     : m_extent{ extent }
