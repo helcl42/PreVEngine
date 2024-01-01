@@ -2,6 +2,8 @@
 
 #include "impl/WindowImplFactory.h"
 
+#include <stdexcept>
+
 namespace prev::window {
 AbstractWindow::AbstractWindow(const WindowCreateInfo& createInfo)
 {

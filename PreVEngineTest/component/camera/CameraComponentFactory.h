@@ -3,6 +3,8 @@
 
 #include "ICameraComponent.h"
 
+#include <memory>
+
 namespace prev_test::component::camera {
 class CameraComponentFactory {
 public:

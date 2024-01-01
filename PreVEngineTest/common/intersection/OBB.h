@@ -4,6 +4,7 @@
 #include <prev/common/Common.h>
 
 #include <iostream>
+#include <vector>
 
 namespace prev_test::common::intersection {
 struct OBB {

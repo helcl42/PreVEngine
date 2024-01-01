@@ -3,6 +3,8 @@
 
 #include "../IMesh.h"
 
+#include <memory>
+
 namespace prev_test::render::mesh {
 class MeshFactory final {
 public:

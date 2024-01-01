@@ -3,6 +3,8 @@
 
 #include "ISelectableComponent.h"
 
+#include <memory>
+
 namespace prev_test::component::ray_casting {
 class SelectableComponentFacrory final {
 public:

@@ -3,6 +3,8 @@
 
 #include "PerlinNoiseGenerator.h"
 
+#include <memory>
+
 namespace prev_test::component::terrain {
 class HeightGenerator {
 public:

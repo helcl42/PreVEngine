@@ -5,6 +5,7 @@
 
 #include "../IMesh.h"
 
+#include <memory>
 #include <vector>
 
 namespace prev_test::render::mesh {

@@ -2,6 +2,8 @@
 
 #include "../../common/Logger.h"
 
+#include <stdexcept>
+
 namespace prev::core::instance {
 Instance::Instance(const bool enableValidation, const char* appName, const char* engineName)
 {

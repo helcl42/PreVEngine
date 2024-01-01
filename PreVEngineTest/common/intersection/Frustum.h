@@ -4,6 +4,7 @@
 #include "Plane.h"
 #include "Point.h"
 
+#include <array>
 #include <iostream>
 
 namespace prev_test::common::intersection {

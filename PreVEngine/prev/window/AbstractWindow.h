@@ -11,6 +11,8 @@
 #include "../input/mouse/MouseEvents.h"
 #include "../input/touch/TouchEvents.h"
 
+#include <memory>
+
 namespace prev::window {
 class AbstractWindow : public IWindow {
 public:
