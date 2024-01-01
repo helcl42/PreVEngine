@@ -1,6 +1,7 @@
 #ifndef __OBSERVER_H__
 #define __OBSERVER_H__
 
+#include <algorithm>
 #include <set>
 
 namespace prev::common::pattern {
