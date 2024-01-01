@@ -10,6 +10,8 @@
 #include <prev/core/memory/Allocator.h>
 #include <prev/util/VkUtils.h>
 
+#include <stdexcept>
+
 namespace prev_test::render::material {
 std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const MaterialProperties& materialProps) const
 {
