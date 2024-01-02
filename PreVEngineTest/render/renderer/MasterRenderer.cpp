@@ -141,6 +141,8 @@ void MasterRenderer::ShutDownDefault()
     for (auto it = m_defaultRenderers.rbegin(); it != m_defaultRenderers.rend(); ++it) {
         (*it)->ShutDown();
     }
+
+    m_defaultRenderers.clear();
 }
 
 void MasterRenderer::InitDebug()
@@ -168,6 +170,8 @@ void MasterRenderer::ShutDownDebug()
     for (auto it = m_debugRenderers.rbegin(); it != m_debugRenderers.rend(); ++it) {
         (*it)->ShutDown();
     }
+
+    m_debugRenderers.clear();
 }
 
 void MasterRenderer::InitShadows()
@@ -204,6 +208,8 @@ void MasterRenderer::ShutDownShadows()
     for (auto it = m_shadowRenderers.rbegin(); it != m_shadowRenderers.rend(); ++it) {
         (*it)->ShutDown();
     }
+
+    m_shadowRenderers.clear();
 }
 
 void MasterRenderer::InitReflection()
@@ -248,6 +254,8 @@ void MasterRenderer::ShutDownReflection()
     for (auto it = m_reflectionRenderers.rbegin(); it != m_reflectionRenderers.rend(); ++it) {
         (*it)->ShutDown();
     }
+
+    m_reflectionRenderers.clear();
 }
 
 void MasterRenderer::InitRefraction()
@@ -292,6 +300,8 @@ void MasterRenderer::ShutDownRefraction()
     for (auto it = m_refractionRenderers.rbegin(); it != m_refractionRenderers.rend(); ++it) {
         (*it)->ShutDown();
     }
+
+    m_refractionRenderers.clear();
 }
 
 void MasterRenderer::RenderShadows(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root)
