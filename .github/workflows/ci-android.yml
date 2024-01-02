@@ -82,7 +82,7 @@ jobs:
     - name: Create Artifact
       run: |
         mkdir build-android-arm64-v8a
-        cp -r ${{ steps.strings.outputs.build-output-dir }} build-android-arm64-v8a
+        cp -r PreVEngineTest/android/app build-android-arm64-v8a
 
     # - name: Test
     #   working-directory: ${{github.workspace}}/build
