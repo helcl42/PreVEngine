@@ -142,6 +142,5 @@ void main()
 	{
 		resultColor = mix(resultColor, uboFS.selectedColor, 0.5);
 	}
-
 	outColor = resultColor;
 }

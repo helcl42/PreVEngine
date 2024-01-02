@@ -27,7 +27,7 @@ public:
     std::shared_ptr<prev::render::sampler::Sampler> GetSampler() const override;
 
 private:
-    std::vector<glm::vec3> GenerateFrustumCorners(const glm::mat4& inverseWorldToClipSpaceTransform, const float splitDistance, const float lastSplitDistance) const;
+    std::vector<glm::vec3> GenerateFrustumCorners(const glm::mat4& inverseWorldToClipSpaceTransform, const float nearSplitDistance, const float farSplitDistance) const;
 
     glm::vec3 CalculateFrustumCenter(const std::vector<glm::vec3>& frustumCorners) const;
 
@@ -35,7 +35,7 @@ private:
 
     std::vector<float> GenerateCaascadeSplits(const float nearClippingPlane, const float farClippingPlane) const;
 
-    void UpdateCascade(const glm::vec3& lightDirection, const glm::mat4& inverseCameraTransform, const float nearClippingPlane, const float farClippingPlane, const float splitDistance, const float lastSplitDistance, ShadowsCascade& outCascade) const;
+    void UpdateCascade(const glm::vec3& lightDirection, const glm::mat4& inverseCameraTransform, const float nearClippingPlane, const float farClippingPlane, const float nearSplitDistance, const float farSplitDistance, ShadowsCascade& outCascade) const;
 
 private:
     const uint32_t m_cascadesCount{};
