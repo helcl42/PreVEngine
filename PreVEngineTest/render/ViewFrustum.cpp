@@ -7,14 +7,9 @@
 namespace prev_test::render {
 ViewFrustum::ViewFrustum(const float verticalFov, const float nearClippingPlane, const float farClippingPlane)
     : m_verticalFov(verticalFov)
+    , m_nearClippingPlane(nearClippingPlane)
+    , m_farClippingPlane(farClippingPlane)
 {
-    if constexpr (REVERSE_DEPTH) {
-        m_nearClippingPlane = farClippingPlane;
-        m_farClippingPlane = nearClippingPlane;
-    } else {
-        m_nearClippingPlane = nearClippingPlane;
-        m_farClippingPlane = farClippingPlane;
-    }
 }
 
 glm::mat4 ViewFrustum::CreateProjectionMatrix(const uint32_t w, const uint32_t h) const
@@ -34,19 +29,9 @@ float ViewFrustum::GetVerticalFov() const
     return m_verticalFov;
 }
 
-void ViewFrustum::SetVerticalFov(float fov)
-{
-    m_verticalFov = fov;
-}
-
 float ViewFrustum::GetNearClippingPlane() const
 {
     return m_nearClippingPlane;
-}
-
-void ViewFrustum::SetNearClippingPlane(float nearClippingPlane)
-{
-    m_nearClippingPlane = nearClippingPlane;
 }
 
 float ViewFrustum::GetFarClippingPlane() const
@@ -54,8 +39,8 @@ float ViewFrustum::GetFarClippingPlane() const
     return m_farClippingPlane;
 }
 
-void ViewFrustum::SetFarClippingPlane(float farClippingPlane)
+float ViewFrustum::GetClippingRange() const
 {
-    m_farClippingPlane = farClippingPlane;
+    return m_farClippingPlane - m_nearClippingPlane;
 }
 } // namespace prev_test::render

@@ -18,15 +18,11 @@ public:
 public:
     float GetVerticalFov() const; // vertical in degs
 
-    void SetVerticalFov(float fov); // vertical in degs
-
     float GetNearClippingPlane() const;
-
-    void SetNearClippingPlane(float nearClippingPlane);
 
     float GetFarClippingPlane() const;
 
-    void SetFarClippingPlane(float farClippingPlane);
+    float GetClippingRange() const;
 
 private:
     float m_verticalFov;

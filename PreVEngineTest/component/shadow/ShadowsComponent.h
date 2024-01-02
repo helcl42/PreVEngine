@@ -3,9 +3,6 @@
 
 #include "IShadowsComponent.h"
 
-#include <prev/render/buffer/image/IImageBuffer.h>
-#include <prev/render/sampler/Sampler.h>
-
 namespace prev_test::component::shadow {
 class ShadowsComponent : public IShadowsComponent {
 public:
@@ -14,7 +11,7 @@ public:
     ~ShadowsComponent();
 
 public:
-    void Update(const glm::vec3& lightDirection, const float nearClippingPlane, const float farClippingPlane, const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix) override;
+    void Update(const glm::vec3& lightDirection, const prev_test::render::ViewFrustum& viewFurstum, const glm::mat4& viewMatrix) override;
 
     std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const override;
 
@@ -27,15 +24,9 @@ public:
     std::shared_ptr<prev::render::sampler::Sampler> GetSampler() const override;
 
 private:
-    std::vector<glm::vec3> GenerateFrustumCorners(const glm::mat4& inverseWorldToClipSpaceTransform, const float nearSplitDistance, const float farSplitDistance) const;
-
-    glm::vec3 CalculateFrustumCenter(const std::vector<glm::vec3>& frustumCorners) const;
-
-    float CalculateFrustumRadius(const std::vector<glm::vec3>& frustumCorners, const glm::vec3& frustumCenter) const;
-
     std::vector<float> GenerateCaascadeSplits(const float nearClippingPlane, const float farClippingPlane) const;
 
-    void UpdateCascade(const glm::vec3& lightDirection, const glm::mat4& inverseCameraTransform, const float nearClippingPlane, const float farClippingPlane, const float nearSplitDistance, const float farSplitDistance, ShadowsCascade& outCascade) const;
+    void UpdateCascade(const glm::vec3& lightDirection, const prev_test::render::ViewFrustum& cascadeViewFrustum, const glm::mat4& lightViewMatrix, ShadowsCascade& inOutCascade) const;
 
 private:
     const uint32_t m_cascadesCount{};

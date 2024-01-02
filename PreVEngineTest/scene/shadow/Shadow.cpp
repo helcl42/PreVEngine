@@ -26,7 +26,7 @@ void Shadows::Update(float deltaTime)
     const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
 
     auto shadowsComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOWS_COMPONENT }) };
-    shadowsComponent->Update(lightComponent->GetDirection(), lightComponent->GetViewFrustum().GetNearClippingPlane(), lightComponent->GetViewFrustum().GetFarClippingPlane(), lightComponent->GetViewFrustum().CreateProjectionMatrix(1.0f), cameraComponent->LookAt());
+    shadowsComponent->Update(lightComponent->GetDirection(), lightComponent->GetViewFrustum(), cameraComponent->LookAt());
 
     SceneNode::Update(deltaTime);
 }

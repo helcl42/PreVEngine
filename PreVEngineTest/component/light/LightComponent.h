@@ -36,11 +36,16 @@ public:
     void SetViewFrustum(const prev_test::render::ViewFrustum& viewFrustum) override;
 
 private:
+    static const inline float NEAR_CLIPPING_PLANE{ 1.0f };
+
+    static const inline float FAR_CLIPPING_PLANE{ 300.0f };
+
+private:
     glm::vec3 m_lookAtPosition{ 0.0f, 0.0f, 0.0f };
 
     glm::vec3 m_upDirection{ 0.0f, 1.0f, 0.0f };
 
-    prev_test::render::ViewFrustum m_viewFrustum{ 45.0f, 1.0f, 300.0f };
+    prev_test::render::ViewFrustum m_viewFrustum{ 45.0f, REVERSE_DEPTH ? FAR_CLIPPING_PLANE : NEAR_CLIPPING_PLANE, REVERSE_DEPTH ? NEAR_CLIPPING_PLANE : FAR_CLIPPING_PLANE };
 
     glm::vec3 m_position;
 

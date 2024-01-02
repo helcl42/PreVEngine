@@ -27,6 +27,28 @@ Frustum::Frustum(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix)
     }
 }
 
+float Frustum::GetRadius() const
+{
+    const auto center{ GetCenter() };
+
+    float radius{ 0.0f };
+    for (size_t i = 0; i < points.size(); ++i) {
+        const float distance{ glm::length(points[i].position - center.position) };
+        radius = glm::max(radius, distance);
+    }
+    return radius;
+}
+
+Point Frustum::GetCenter() const
+{
+    glm::vec3 frustumCenter{ 0.0f };
+    for (size_t i = 0; i < points.size(); ++i) {
+        frustumCenter += points[i].position;
+    }
+    frustumCenter /= static_cast<float>(points.size());
+    return { frustumCenter };
+}
+
 std::ostream& operator<<(std::ostream& out, const Frustum& frustum)
 {
     out << "Planes:" << std::endl;
