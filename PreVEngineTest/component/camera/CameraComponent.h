@@ -64,6 +64,10 @@ private:
 private:
     static const inline glm::vec3 DEFAULT_UP_DIRECTION{ 0.0f, 1.0f, 0.0f };
 
+    static const inline float NEAR_CLIPPING_PLANE{ 0.1f };
+
+    static const inline float FAR_CLIPPING_PLANE{ 300.0f };
+
 private:
     glm::vec3 m_position{ 0.0f, 0.0f, 0.0f };
 
@@ -81,7 +85,7 @@ private:
 
     glm::mat4 m_viewMatrix{ 1.0f };
 
-    prev_test::render::ViewFrustum m_viewFrustum{ 45.0f, 0.1f, 300.0f };
+    prev_test::render::ViewFrustum m_viewFrustum{ 45.0f, REVERSE_DEPTH ? FAR_CLIPPING_PLANE : NEAR_CLIPPING_PLANE, REVERSE_DEPTH ? NEAR_CLIPPING_PLANE : FAR_CLIPPING_PLANE };
 
     bool m_orientationChanged{ false };
 

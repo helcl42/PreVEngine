@@ -20,7 +20,7 @@ glm::mat4 LightComponent::LookAt() const
 
 glm::mat4 LightComponent::GetProjectionMatrix() const
 {
-    return m_viewFrustum.CreateProjectionMatrix(1.0f); // square on top/bottom of frustum
+    return m_viewFrustum.CreateProjectionMatrix(1.0f); // square frustum base
 }
 
 glm::vec3 LightComponent::GetPosition() const

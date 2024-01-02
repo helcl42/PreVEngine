@@ -17,6 +17,10 @@ struct Frustum {
 
     Frustum(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix);
 
+    float GetRadius() const;
+
+    Point GetCenter() const;
+
     friend std::ostream& operator<<(std::ostream& out, const Frustum& frustum);
 };
 } // namespace prev_test::common::intersection
