@@ -30,8 +30,8 @@ jobs:
           - os: windows-latest
             c_compiler: cl
             cpp_compiler: cl
-    env: 
-      VULKAN_SDK: C:\VulkanSDK\ 
+    env:
+      VULKAN_SDK: C:\VulkanSDK\
 
     steps:
     - uses: actions/checkout@v3
@@ -54,7 +54,7 @@ jobs:
       run: |
           python3 -m pip install -U pip
           pip3 install requests
-          python3 download_dependencies.py
+          python3 Scripts/download_dependencies.py
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
