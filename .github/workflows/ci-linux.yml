@@ -43,7 +43,6 @@ jobs:
         python-version: 3.8
 
     - name: Install dependencies
-      if: runner.os != 'Windows'
       run: |
           wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo tee /etc/apt/trusted.gpg.d/lunarg.asc
           sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-jammy.list http://packages.lunarg.com/vulkan/lunarg-vulkan-jammy.list
@@ -54,7 +53,7 @@ jobs:
       run: |
           python3 -m pip install -U pip
           pip3 install requests
-          python3 download_dependencies.py
+          python3 Scripts/download_dependencies.py
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
@@ -95,7 +94,6 @@ jobs:
       run: Xvfb :1 -screen 0 1920x1080x24 &
 
     - name: Test
-      if: runner.os != 'Windows'
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
