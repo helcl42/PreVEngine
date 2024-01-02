@@ -79,6 +79,11 @@ jobs:
         chmod a+x gradlew
         ./gradlew clean assembleDebug
 
+    - name: Create Artifact
+      run: |
+        mkdir build-android-arm64-v8a
+        cp -r ${{ steps.strings.outputs.build-output-dir }} build-android-arm64-v8a
+
     # - name: Test
     #   working-directory: ${{github.workspace}}/build
     #   # Execute tests defined by the CMake configuration.
