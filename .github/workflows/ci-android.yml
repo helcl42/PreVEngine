@@ -38,7 +38,7 @@ jobs:
       with:
         distribution: 'zulu'
         java-version: '17'
-        
+
     - name: Setup Android NDK
       uses: nttld/setup-ndk@v1
       id: setup-ndk
