@@ -37,18 +37,12 @@ void Root::Init()
     auto inputsHelper = std::make_shared<ray_casting::InputsHelper>();
     AddChild(inputsHelper);
 
-    auto rayCaster = std::make_shared<ray_casting::RayCaster>();
-    AddChild(rayCaster);
-
-    auto rayCastObserver = std::make_shared<ray_casting::RayCastObserver>();
-    AddChild(rayCastObserver);
-
     // auto skyBox = std::make_shared<sky::SkyBox>();
     // AddChild(skyBox);
 
     auto clouds = std::make_shared<sky::Clouds>();
     AddChild(clouds);
-    
+
     auto sky = std::make_shared<sky::Sky>();
     AddChild(sky);
 
@@ -145,6 +139,12 @@ void Root::Init()
 
     auto text = std::make_shared<Text>();
     AddChild(text);
+
+    auto rayCaster = std::make_shared<ray_casting::RayCaster>();
+    AddChild(rayCaster);
+
+    auto rayCastObserver = std::make_shared<ray_casting::RayCastObserver>();
+    AddChild(rayCastObserver);
 
     SceneNode::Init();
 }
