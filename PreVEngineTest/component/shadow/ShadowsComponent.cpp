@@ -37,14 +37,14 @@ void ShadowsComponent::Update(const glm::vec3& lightDirection, const float nearC
     const auto cascadeSplits{ GenerateCaascadeSplits(nearClippingPlane, farClippingPlane) };
     const auto inverseWorldToClipSpaceTransform{ glm::inverse(projectionMatrix * viewMatrix) };
 
-    float lastSplitDistance{ MIN_DEPTH };
+    float nearSplitDistance{ MIN_DEPTH };
     for (uint32_t i = 0; i < m_cascadesCount; ++i) {
-        const float splitDistance{ cascadeSplits[i] };
+        const float farSplitDistance{ cascadeSplits[i] };
 
         // Calculate orthographic projection matrix for ith cascade
-        UpdateCascade(lightDirection, inverseWorldToClipSpaceTransform, nearClippingPlane, farClippingPlane, splitDistance, lastSplitDistance, m_cascades[i]);
+        UpdateCascade(lightDirection, inverseWorldToClipSpaceTransform, nearClippingPlane, farClippingPlane, nearSplitDistance, farSplitDistance, m_cascades[i]);
 
-        lastSplitDistance = splitDistance;
+        nearSplitDistance = farSplitDistance;
     }
 }
 
@@ -73,14 +73,14 @@ std::shared_ptr<prev::render::sampler::Sampler> ShadowsComponent::GetSampler() c
     return m_sampler;
 }
 
-std::vector<glm::vec3> ShadowsComponent::GenerateFrustumCorners(const glm::mat4& inverseWorldToClipSpaceTransform, const float splitDistance, const float lastSplitDistance) const
+std::vector<glm::vec3> ShadowsComponent::GenerateFrustumCorners(const glm::mat4& inverseWorldToClipSpaceTransform, const float nearSplitDistance, const float farSplitDistance) const
 {
     auto frustumCorners{ prev::util::math::GetFrustumCorners(inverseWorldToClipSpaceTransform) };
 
     for (uint32_t i = 0; i < 4; ++i) {
         const glm::vec3 dist{ frustumCorners[i + 4] - frustumCorners[i] };
-        frustumCorners[i + 4] = frustumCorners[i] + (dist * splitDistance);
-        frustumCorners[i] = frustumCorners[i] + (dist * lastSplitDistance);
+        frustumCorners[i + 4] = frustumCorners[i] + (dist * nearSplitDistance);
+        frustumCorners[i] = frustumCorners[i] + (dist * farSplitDistance);
     }
 
     return frustumCorners;
@@ -133,10 +133,10 @@ std::vector<float> ShadowsComponent::GenerateCaascadeSplits(const float nearClip
     return cascadeSplits;
 }
 
-void ShadowsComponent::UpdateCascade(const glm::vec3& lightDirection, const glm::mat4& inverseCameraTransform, const float nearClippingPlane, const float farClippingPlane, const float splitDistance, const float lastSplitDistance, ShadowsCascade& outCascade) const
+void ShadowsComponent::UpdateCascade(const glm::vec3& lightDirection, const glm::mat4& inverseCameraTransform, const float nearClippingPlane, const float farClippingPlane, const float nearSplitDistance, const float farSplitDistance, ShadowsCascade& outCascade) const
 {
     const auto clipRange{ farClippingPlane - nearClippingPlane };
-    const auto frustumCorners{ GenerateFrustumCorners(inverseCameraTransform, splitDistance, lastSplitDistance) };
+    const auto frustumCorners{ GenerateFrustumCorners(inverseCameraTransform, nearSplitDistance, farSplitDistance) };
     const auto frustumCenter{ CalculateFrustumCenter(frustumCorners) };
     const auto radius{ CalculateFrustumRadius(frustumCorners, frustumCenter) };
 
@@ -151,8 +151,8 @@ void ShadowsComponent::UpdateCascade(const glm::vec3& lightDirection, const glm:
         lightOrthoProjectionMatrix = prev::util::math::CreateOrthographicProjectionMatrix(aabb.minExtents.x, aabb.maxExtents.x, aabb.minExtents.y, aabb.maxExtents.y, 0.0f, aabb.maxExtents.z - aabb.minExtents.z);
     }
 
-    const float startSplitDepth{ (nearClippingPlane + lastSplitDistance * clipRange) * -1.0f };
-    const float endSplitDepth{ (nearClippingPlane + splitDistance * clipRange) * -1.0f };
+    const float startSplitDepth{ (nearClippingPlane + nearSplitDistance * clipRange) * -1.0f };
+    const float endSplitDepth{ (nearClippingPlane + farSplitDistance * clipRange) * -1.0f };
 
     outCascade.startSplitDepth = startSplitDepth;
     outCascade.endSplitDepth = endSplitDepth;

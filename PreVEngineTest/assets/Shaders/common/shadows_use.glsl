@@ -2,7 +2,7 @@
 
 const bool enablePCF = true;
 const float defaultShadowFactor = 0.2;
-const float cascadeBiasDamper = 1.4;
+const float cascadeBiasDamper = 1.5;
 const uint SHADOW_MAP_CASCADE_COUNT = 4;
 
 struct ShadowsCascade {
@@ -90,7 +90,6 @@ float GetShadow(in sampler2DArray depthSampler, in Shadows shadows, in vec3 view
 				bias /= cascadeBiasDamper;
 			}
 		}
-
 	    vec4 shadowCoord = shadows.cascades[cascadeIndex].viewProjectionMatrix * vec4(worldPosition, 1.0);
 		vec4 normalizedShadowCoord = shadowCoord / shadowCoord.w;
 		shadow = GetShadow(depthSampler, normalizedShadowCoord, cascadeIndex, bias, shadows.useReverseDepth);

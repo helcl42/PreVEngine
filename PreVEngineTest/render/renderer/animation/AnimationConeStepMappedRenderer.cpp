@@ -149,7 +149,7 @@ void AnimationConeStepMappedRenderer::RenderMeshNode(const NormalRenderContext& 
             uniformsFS.shadows.cascades[i] = ShadowsCascadeUniform(cascade.GetBiasedViewProjectionMatrix(), glm::vec4(cascade.endSplitDepth));
         }
         uniformsFS.shadows.enabled = prev_test::component::shadow::SHADOWS_ENABLED;
-        uniformsFS.shadows.useReverseDepth = REVERSE_DEPTH ? 1 : 0;
+        uniformsFS.shadows.useReverseDepth = REVERSE_DEPTH;
 
         // lightning
         for (size_t i = 0; i < lightComponents.size(); i++) {
