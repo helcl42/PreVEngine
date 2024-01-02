@@ -9,6 +9,8 @@
 #include "../pipeline/IPipeline.h"
 
 #include <prev/common/ThreadPool.h>
+#include <prev/event/EventHandler.h>
+#include <prev/input/keyboard/KeyboardEvents.h>
 #include <prev/render/IRootRenderer.h>
 #include <prev/render/Swapchain.h>
 #include <prev/render/pass/RenderPass.h>
@@ -28,6 +30,9 @@ public:
     void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::IScene>& scene) override;
 
     void ShutDown() override;
+
+public:
+    void operator()(const prev::input::keyboard::KeyEvent& keyEvent);
 
 private:
     void InitDefault();
@@ -107,6 +112,8 @@ private:
 
     prev::common::ThreadPool m_threadPool{ std::thread::hardware_concurrency() };
 #endif
+
+    prev::event::EventHandler<MasterRenderer, prev::input::keyboard::KeyEvent> m_keyboardEventHandler{ *this };
 };
 
 template <typename RenderContextType>

@@ -88,6 +88,19 @@ void MasterRenderer::ShutDown()
     ShutDownDefault();
 }
 
+void MasterRenderer::operator()(const prev::input::keyboard::KeyEvent& keyEvent)
+{
+    if (keyEvent.action == prev::input::keyboard::KeyActionType::PRESS) {
+        if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_R) {
+            auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
+            vkDeviceWaitIdle(*device);
+
+            ShutDown();
+            Init();
+        }
+    }
+}
+
 void MasterRenderer::InitDefault()
 {
     auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
