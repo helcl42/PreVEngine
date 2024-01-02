@@ -96,6 +96,9 @@ endif()
 if (PARALLEL_RENDERING)
     add_definitions(-DPARALLEL_RENDERING)
 endif()
+if (ENABLE_REVERSE_DEPTH)
+    add_definitions(-DENABLE_REVERSE_DEPTH)
+endif()
 
 add_definitions(-DVK_NO_PROTOTYPES)
 
