@@ -8,7 +8,7 @@ import time
 def get_compiler_path():
     VK_SDK_PATH = os.getenv('VULKAN_SDK')
     if VK_SDK_PATH == None:
-        raise 'VULKAN_SDK env variable is not set.'
+        raise Exception('VULKAN_SDK env variable is not set.')
     return os.path.join(VK_SDK_PATH, 'Bin', 'glslc')
 
 def replace_last(input, to_replace, replacement):
@@ -23,7 +23,7 @@ def compile_shader(shader_path, compile_serial, compiler_args):
     print('Compiling:', output_path, '...')
     args = [compiler_path, shader_path, '-o', output_path]
     args.extend(compiler_args)
-    handle = subprocess.Popen(args, shell=True, stdin=subprocess.PIPE, universal_newlines=True)
+    handle = subprocess.Popen(args, shell=False, stdin=subprocess.PIPE, universal_newlines=True)
     if compile_serial == True:
         handle.wait()
         return None
