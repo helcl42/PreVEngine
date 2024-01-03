@@ -14,7 +14,8 @@ Here is a video:
 
 [![PreVEngine In Action](http://img.youtube.com/vi/lSp1hOncLVs/0.jpg)](http://www.youtube.com/watch?v=lSp1hOncLVs "PreVEngine In Action")
 
-## Download Dependencies (glm, assimp with platform builds ~100MB)
+
+## Download Dependencies (assimp with platform prebuilt binaries ~100MB)
  - Run `python Scripts/download_dependencies.py`
 
  **Note:** If you have a problem with the script, the package is hosted on `Google Drive`. You can download it directly from the following link. Just unpack it in the root folder.
