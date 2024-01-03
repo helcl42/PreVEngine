@@ -11,6 +11,8 @@
 namespace prev_test::render::animation {
 class AnimationFactory;
 
+// TODO -> rename to AnimationClip ???
+// TODO -> make AnimationClipImpl* member and hide there all the Assimp specific things 
 class AnimationPart : public prev_test::render::IAnimationPart {
 public:
     AnimationPart(const aiScene* scene);
@@ -75,6 +77,7 @@ private:
     float m_animationSpeed{ 1.0f };
 };
 
+// TODO create AnimationImpl member and hide there all the Assimp specific things ???
 class Animation : public prev_test::render::IAnimation {
 public:
     Animation() = default;
