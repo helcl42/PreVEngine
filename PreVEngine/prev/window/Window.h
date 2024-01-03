@@ -3,7 +3,6 @@
 
 #include "../common/Common.h"
 #include "../event/EventHandler.h"
-#include "../event/EventsChannel.h"
 
 #include "InputConvertor.h"
 

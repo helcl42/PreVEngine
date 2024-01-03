@@ -1,5 +1,7 @@
 #include "Window.h"
 
+#include "../event/EventChannel.h"
+
 namespace prev::window {
 Window::Window(const WindowCreateInfo& createInfo)
     : AbstractWindow(createInfo)
