@@ -64,7 +64,7 @@ endif()
 add_definitions(-DVK_NO_PROTOTYPES)
 
 include_directories("external/WormHoles/WormHoles")
-include_directories("../Dependencies/glm")
+include_directories("external/glm")
 
 if(WIN32)
     add_definitions(-DVK_USE_PLATFORM_WIN32_KHR)
