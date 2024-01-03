@@ -139,10 +139,10 @@ if(ANDROID)
     add_definitions(-DVK_USE_PLATFORM_ANDROID_KHR)
     add_definitions(-DGLM_FORCE_CXX17)
 
-    include_directories("android")
+    include_directories("platform/android")
     include_directories("${ANDROID_NDK}/sources/android/native_app_glue")
 
-    file(GLOB ANDROID_SRC_LIST "android/*.h" "android/*.c" "android/*.cpp")
+    file(GLOB ANDROID_SRC_LIST "platform/android/*.h" "platform/android/*.c" "platform/android/*.cpp")
     file(GLOB ANDROID_NATIVE_GLUE_SRC_LIST "${ANDROID_NDK}/sources/android/native_app_glue/*.h" "${ANDROID_NDK}/sources/android/native_app_glue/*.c" "${ANDROID_NDK}/sources/android/native_app_glue/*.cpp")
 
     add_library(${PROJECT_NAME} STATIC 

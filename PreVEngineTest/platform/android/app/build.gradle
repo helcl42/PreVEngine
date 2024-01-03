@@ -35,12 +35,12 @@ android {
     externalNativeBuild {
         cmake {
             version '3.18.1'
-            path '../../CMakeLists.txt'
+            path '../../../CMakeLists.txt'
         }
     }
     sourceSets {
         main {
-            assets.srcDirs = ['../../assets']
+            assets.srcDirs = ['../../../assets']
             jniLibs.srcDirs = [ 'libs' ]
         }
     }

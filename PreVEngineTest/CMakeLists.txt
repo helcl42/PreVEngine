@@ -140,18 +140,18 @@ if(ANDROID)
 
     add_definitions(-DGLM_FORCE_CXX17)
 
-    include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../PreVEngine/android")
+    include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../PreVEngine/platform/android")
     include_directories("${ANDROID_NDK}/sources/android/native_app_glue")
 
     add_library(${PROJECT_NAME} SHARED ${SRC_LIST})
 
     target_link_libraries(${PROJECT_NAME} PreVEngine)
 
-    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Android/libassimp.so" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/android/app/src/main/libs/arm64-v8a/")
+    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Android/libassimp.so" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/platform/android/app/src/main/libs/arm64-v8a/")
 
     # add external library
     add_library(assimp SHARED IMPORTED)
-    set_target_properties(assimp PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/android/app/src/main/libs/arm64-v8a/libassimp.so")
+    set_target_properties(assimp PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/platform/android/app/src/main/libs/arm64-v8a/libassimp.so")
 
     # Link to external libraries
     target_link_libraries(${PROJECT_NAME} log android assimp)
