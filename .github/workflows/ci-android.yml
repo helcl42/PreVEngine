@@ -77,14 +77,14 @@ jobs:
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       # run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
       run: |
-        cd PreVEngineTest/android
+        cd PreVEngineTest/platform/android
         chmod a+x gradlew
         ./gradlew clean assembleDebug
 
     - name: Create Artifact
       run: |
         mkdir build-android-arm64-v8a
-        cp PreVEngineTest/android/app/build/outputs/apk/debug/app-debug.apk build-android-arm64-v8a
+        cp PreVEngineTest/platform/android/app/build/outputs/apk/debug/app-debug.apk build-android-arm64-v8a
 
     - name: Publish Artifact
       uses: actions/upload-artifact@v4
