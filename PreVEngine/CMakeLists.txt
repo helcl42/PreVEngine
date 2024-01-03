@@ -63,7 +63,7 @@ endif()
 
 add_definitions(-DVK_NO_PROTOTYPES)
 
-include_directories("external/WormHoles/WormHoles")
+include_directories("external/worm_holes/WormHoles")
 include_directories("external/glm")
 
 if(WIN32)
