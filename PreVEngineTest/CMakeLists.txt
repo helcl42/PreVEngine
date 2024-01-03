@@ -103,7 +103,7 @@ endif()
 
 add_definitions(-DVK_NO_PROTOTYPES)
 
-include_directories("../PreVEngine/external/WormHoles/WormHoles")
+include_directories("../PreVEngine/external/worm_holes/WormHoles")
 include_directories("../PreVEngine/external/glm")
 include_directories("../Dependencies/assimp/include")
 

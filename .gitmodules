@@ -1,6 +1,6 @@
-[submodule "PreVEngine/external/WormHoles"]
-	path = PreVEngine/external/WormHoles
-	url = ../WormHoles
 [submodule "PreVEngine/external/glm"]
 	path = PreVEngine/external/glm
 	url = ../../g-truc/glm
+[submodule "PreVEngine/external/worm_holes"]
+	path = PreVEngine/external/worm_holes
+	url = ../WormHoles
