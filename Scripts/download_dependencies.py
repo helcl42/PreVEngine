@@ -40,7 +40,7 @@ def unzip_file(zip_file_path, output_path):
 
 
 if __name__ == '__main__':
-    output_folder = '../'
+    output_folder = './'
     file_id = '1U1hPrwbcQmhGkBqERuSEC4FumTyc0RmO'
     archive_path = os.path.join(output_folder, 'Dependencies.zip')
     download_file(file_id, archive_path)
