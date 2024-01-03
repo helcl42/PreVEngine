@@ -41,6 +41,11 @@ Here is a video:
 
  - Run `cd ../PreVEngineTest/android && chmod a+x gradlew && ./gradlew clean build` or import to android studio and deploy as usuall from `PreVEngineTest/android`
 
-
+## 3rd Party Dependencies
+ - [Assimp](https://github.com/assimp/assimp): Used for model loading.
+ - [GLM](https://github.com/g-truc/glm): Great Math library.
+ - [VMA](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator): Vulkan Memory Allocator.
+ - [stb_image](https://github.com/nothings/stb): Used for image loading.
+ - [volk](https://github.com/zeux/volk): Multiplaform meta loader for Vulkan.
 
 
