@@ -8,7 +8,7 @@
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
-#include <prev/event/EventsChannel.h>
+#include <prev/event/EventChannel.h>
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>

@@ -2,7 +2,7 @@
 #include "RayCastingEvents.h"
 #include "RayModelFactory.h"
 
-#include <prev/event/EventsChannel.h>
+#include <prev/event/EventChannel.h>
 
 namespace prev_test::component::ray_casting {
 void RayCasterComponent::Update(float deltaTime)

@@ -52,7 +52,7 @@ void Engine::MainLoop()
 
     while (m_window->ProcessEvents()) // Main event loop, runs until window is closed.
     {
-        prev::event::EventChannel::DispatchAll();
+        prev::event::EventChannel::DispatchQueued();
 
         m_clock->UpdateClock();
         const auto deltaTime{ m_clock->GetDelta() };

@@ -18,7 +18,6 @@ file(GLOB SRC_LIST
     "prev/core/device/*.h" "prev/core/device/*.cpp"
     "prev/core/instance/*.h" "prev/core/instance/*.cpp"
     "prev/event/*.h" "prev/event/*.cpp"
-    "prev/event/internal/*.h" "prev/event/internal/*.cpp"
     "prev/input/*.h" "prev/input/*.cpp"
     "prev/input/mouse/*.h" "prev/input/mouse/*.cpp"
     "prev/input/keyboard/*.h" "prev/input/keyboard/*.cpp"
@@ -64,6 +63,7 @@ endif()
 
 add_definitions(-DVK_NO_PROTOTYPES)
 
+include_directories("external/WormHoles/WormHoles")
 include_directories("../Dependencies/glm")
 
 if(WIN32)

@@ -1,7 +1,7 @@
 #include "SceneNode.h"
 #include "../SceneEvents.h"
 
-#include "../../event/EventsChannel.h"
+#include "../../event/EventChannel.h"
 #include "../../util/Utils.h"
 
 namespace prev::scene::graph {
