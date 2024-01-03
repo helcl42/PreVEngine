@@ -14,6 +14,8 @@ Here is a video:
 
 [![PreVEngine In Action](http://img.youtube.com/vi/lSp1hOncLVs/0.jpg)](http://www.youtube.com/watch?v=lSp1hOncLVs "PreVEngine In Action")
 
+## Clone
+- Run `git clone --recursive <url>` to init even with submodules.
 
 ## Download Dependencies (assimp with platform prebuilt binaries ~100MB)
  - Run `python Scripts/download_dependencies.py`
