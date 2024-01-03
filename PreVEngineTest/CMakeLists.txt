@@ -96,6 +96,7 @@ endif()
 if (PARALLEL_RENDERING)
     add_definitions(-DPARALLEL_RENDERING)
 endif()
+# Options derived from PreVEngine
 if (ENABLE_REVERSE_DEPTH)
     add_definitions(-DENABLE_REVERSE_DEPTH)
 endif()
@@ -103,7 +104,7 @@ endif()
 add_definitions(-DVK_NO_PROTOTYPES)
 
 include_directories("../PreVEngine/external/WormHoles/WormHoles")
-include_directories("../Dependencies/glm")
+include_directories("../PreVEngine/external/glm")
 include_directories("../Dependencies/assimp/include")
 
 if(NOT TARGET PreVEngine)
