@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
     config.validation = false;
     config.windowPosition = { 40, 40 };
     config.windowSize = { 1920, 1080 };
-    config.VSync = true;
+    config.VSync = false;
     config.samplesCount = 1;
     config.swapchainFrameCount = 3;
 
