@@ -22,7 +22,8 @@ def compile_shader(shader_path, compile_serial, compiler_args):
     output_path = create_output_shader_path(shader_path)
     print('Compiling:', output_path, '...')
     args = [compiler_path, shader_path, '-o', output_path]
-    args.extend(compiler_args)
+    if compiler_args:
+        args.extend(compiler_args)
     handle = subprocess.Popen(args, shell=False, stdin=subprocess.PIPE, universal_newlines=True)
     if compile_serial == True:
         handle.wait()
