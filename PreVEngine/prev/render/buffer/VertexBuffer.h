@@ -12,9 +12,9 @@ public:
     virtual void Data(const void* data, const uint32_t count, const uint32_t stride);
 };
 
-class HostVisibleVertexBuffer final : public VertexBuffer {
+class HostMappedVertexBuffer final : public VertexBuffer {
 public:
-    HostVisibleVertexBuffer(prev::core::memory::Allocator& allocator, const uint32_t maxCoun);
+    HostMappedVertexBuffer(prev::core::memory::Allocator& allocator, const uint32_t maxCount);
 
 public:
     void Data(const void* data, const uint32_t count, const uint32_t stride) override;

@@ -6,14 +6,14 @@ void VertexBuffer::Data(const void* data, const uint32_t count, const uint32_t s
     Buffer::Data(data, count, stride, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, prev::core::memory::MemoryType::DEVICE_LOCAL);
 }
 
-HostVisibleVertexBuffer::HostVisibleVertexBuffer(prev::core::memory::Allocator& allocator, const uint32_t maxCount)
+HostMappedVertexBuffer::HostMappedVertexBuffer(prev::core::memory::Allocator& allocator, const uint32_t maxCount)
     : VertexBuffer(allocator)
     , m_maxCount(maxCount)
     , m_mapped(nullptr)
 {
 }
 
-void HostVisibleVertexBuffer::Data(const void* data, const uint32_t count, const uint32_t stride)
+void HostMappedVertexBuffer::Data(const void* data, const uint32_t count, const uint32_t stride)
 {
     if (!m_mapped) {
         Buffer::Data(nullptr, m_maxCount, stride, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, prev::core::memory::MemoryType::HOST_MAPPED, &m_mapped);

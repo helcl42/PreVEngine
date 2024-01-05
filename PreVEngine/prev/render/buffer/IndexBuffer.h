@@ -19,9 +19,9 @@ protected:
     VkIndexType m_indexType{ VK_INDEX_TYPE_MAX_ENUM };
 };
 
-class HostVisibleIndexBuffer final : public IndexBuffer {
+class HostMappedIndexBuffer final : public IndexBuffer {
 public:
-    HostVisibleIndexBuffer(prev::core::memory::Allocator& allocator, const uint32_t maxCount);
+    HostMappedIndexBuffer(prev::core::memory::Allocator& allocator, const uint32_t maxCount);
 
 public:
     void Data(const uint16_t* data, const uint32_t count) override;

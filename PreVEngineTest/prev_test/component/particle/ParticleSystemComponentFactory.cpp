@@ -34,7 +34,7 @@ std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::Create
 
     std::vector<std::shared_ptr<prev::render::buffer::VertexBuffer>> vertexBuffers(BufferCount);
     for (uint32_t i = 0; i < BufferCount; ++i) {
-        vertexBuffers[i] = std::make_shared<prev::render::buffer::HostVisibleVertexBuffer>(*allocator, MaxParticleCount);
+        vertexBuffers[i] = std::make_shared<prev::render::buffer::HostMappedVertexBuffer>(*allocator, MaxParticleCount);
     }
 
     auto particleFactory{ std::make_shared<RandomDirectionParticleFactory>(material, 0.1f, 5.0f, 4.0f, 10.0f) };
@@ -62,7 +62,7 @@ std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::Create
 
     std::vector<std::shared_ptr<prev::render::buffer::VertexBuffer>> vertexBuffers(BufferCount);
     for (uint32_t i = 0; i < BufferCount; ++i) {
-        vertexBuffers[i] = std::make_shared<prev::render::buffer::HostVisibleVertexBuffer>(*allocator, MaxParticleCount);
+        vertexBuffers[i] = std::make_shared<prev::render::buffer::HostMappedVertexBuffer>(*allocator, MaxParticleCount);
     }
 
     auto particleFactory{ std::make_shared<RandomInConeParticleFactory>(material, -0.1f, 4.0f, 4.0f, 7.0f) };
