@@ -100,6 +100,9 @@ endif()
 if (ENABLE_REVERSE_DEPTH)
     add_definitions(-DENABLE_REVERSE_DEPTH)
 endif()
+if (ENABLE_LOGGING)
+    add_definitions(-DENABLE_LOGGING)
+endif()
 
 add_definitions(-DVK_NO_PROTOTYPES)
 
