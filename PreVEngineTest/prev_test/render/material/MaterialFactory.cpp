@@ -13,6 +13,9 @@
 #include <stdexcept>
 
 namespace prev_test::render::material {
+constexpr bool ANISOTROPIC_FILTERING_ENABLED{ false };
+constexpr float MAX_ANISOTROPY_LEVEL{ 4.0f };
+
 std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const MaterialProperties& materialProps) const
 {
     return std::make_unique<prev_test::render::material::Material>(materialProps);
@@ -22,7 +25,7 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const Mate
 {
     auto image{ CreateImage(colorImagePath) };
     auto imageBuffer{ CreateImageBuffer(image, true, allocator) };
-    auto imageSampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(imageBuffer->GetMipLevels()), materialProps.addressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f) };
+    auto imageSampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(imageBuffer->GetMipLevels()), materialProps.addressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, ANISOTROPIC_FILTERING_ENABLED, MAX_ANISOTROPY_LEVEL) };
 
     return std::make_unique<prev_test::render::material::Material>(materialProps, ImagePair{ imageBuffer, imageSampler });
 }
@@ -31,7 +34,7 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const Mate
 {
     auto image{ CreateImage(colorImagePath) };
     auto imageBuffer{ CreateImageBuffer(image, true, allocator) };
-    auto imageSampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(imageBuffer->GetMipLevels()), materialProps.addressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f) };
+    auto imageSampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(imageBuffer->GetMipLevels()), materialProps.addressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, ANISOTROPIC_FILTERING_ENABLED, MAX_ANISOTROPY_LEVEL) };
 
     auto normalImage{ CreateImage(normalMapPath) };
     auto normalImageBuffer{ CreateImageBuffer(normalImage, false, allocator) };
@@ -44,7 +47,7 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const Mate
 {
     auto image{ CreateImage(colorImagePath) };
     auto imageBuffer{ CreateImageBuffer(image, true, allocator) };
-    auto imageSampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(imageBuffer->GetMipLevels()), materialProps.addressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f) };
+    auto imageSampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(imageBuffer->GetMipLevels()), materialProps.addressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, ANISOTROPIC_FILTERING_ENABLED, MAX_ANISOTROPY_LEVEL) };
 
     auto normalImage{ CreateImage(normalMapPath) };
     auto normalImageBuffer{ CreateImageBuffer(normalImage, false, allocator) };
@@ -72,7 +75,7 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::CreateCubeMap(con
     }
 
     auto cubeMapImageBuffer{ prev::render::buffer::image::ImageBufferFactory{}.CreateFromData(prev::render::buffer::image::ImageBufferCreateInfo{ VkExtent2D{ images[0]->GetWidth(), images[0]->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT, true, VK_IMAGE_VIEW_TYPE_CUBE, static_cast<uint32_t>(images.size()), layersData }, allocator) };
-    auto cubeMapSampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(cubeMapImageBuffer->GetMipLevels()), materialProps.addressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f) };
+    auto cubeMapSampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(cubeMapImageBuffer->GetMipLevels()), materialProps.addressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, ANISOTROPIC_FILTERING_ENABLED, MAX_ANISOTROPY_LEVEL) };
 
     return std::make_unique<prev_test::render::material::Material>(materialProps, ImagePair{ std::move(cubeMapImageBuffer), cubeMapSampler });
 }
@@ -98,7 +101,7 @@ std::vector<std::shared_ptr<prev_test::render::IMaterial>> MaterialFactory::Crea
         ImagePair colorImage;
         if (auto image = assimpMaterialFactory.CreateModelImage(*scene, material, aiTextureType_DIFFUSE)) {
             colorImage.imageBuffer = CreateImageBuffer(image, true, allocator);
-            colorImage.imageSampler = std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(colorImage.imageBuffer->GetMipLevels()), DefaultAddressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f);
+            colorImage.imageSampler = std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(colorImage.imageBuffer->GetMipLevels()), DefaultAddressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, ANISOTROPIC_FILTERING_ENABLED, MAX_ANISOTROPY_LEVEL);
         }
 
         ImagePair normalImage;
