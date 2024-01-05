@@ -1,6 +1,8 @@
 #ifndef __WINDOW_COMMON_H__
 #define __WINDOW_COMMON_H__
 
+#include <string>
+
 namespace prev::window {
 struct WindowCreateInfo {
     std::string title;
