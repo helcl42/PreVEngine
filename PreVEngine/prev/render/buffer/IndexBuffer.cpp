@@ -18,14 +18,14 @@ VkIndexType IndexBuffer::GetIndexType() const
     return m_indexType;
 }
 
-HostVisibleIndexBuffer::HostVisibleIndexBuffer(prev::core::memory::Allocator& allocator, const uint32_t maxCount)
+HostMappedIndexBuffer::HostMappedIndexBuffer(prev::core::memory::Allocator& allocator, const uint32_t maxCount)
     : IndexBuffer(allocator)
     , m_maxCount(maxCount)
     , m_mapped(nullptr)
 {
 }
 
-void HostVisibleIndexBuffer::Data(const uint16_t* data, const uint32_t count)
+void HostMappedIndexBuffer::Data(const uint16_t* data, const uint32_t count)
 {
     if (!m_mapped) {
         Buffer::Data(nullptr, m_maxCount, sizeof(uint16_t), VK_BUFFER_USAGE_INDEX_BUFFER_BIT, prev::core::memory::MemoryType::HOST_MAPPED, &m_mapped);
@@ -38,7 +38,7 @@ void HostVisibleIndexBuffer::Data(const uint16_t* data, const uint32_t count)
     m_indexType = VK_INDEX_TYPE_UINT16;
 }
 
-void HostVisibleIndexBuffer::Data(const uint32_t* data, const uint32_t count)
+void HostMappedIndexBuffer::Data(const uint32_t* data, const uint32_t count)
 {
     if (!m_mapped) {
         Buffer::Data(nullptr, m_maxCount, sizeof(uint32_t), VK_BUFFER_USAGE_INDEX_BUFFER_BIT, prev::core::memory::MemoryType::HOST_MAPPED, &m_mapped);
