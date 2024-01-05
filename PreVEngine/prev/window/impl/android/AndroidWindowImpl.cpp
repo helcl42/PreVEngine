@@ -232,7 +232,7 @@ void AndroidWindowImpl::SetTitle(const std::string& title)
 {
 }
 
-void AndroidWindowImpl::SetPosition(uint32_t x, uint32_t y)
+void AndroidWindowImpl::SetPosition(int32_t x, int32_t y)
 {
 }
 

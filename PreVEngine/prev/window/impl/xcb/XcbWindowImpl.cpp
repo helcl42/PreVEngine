@@ -140,8 +140,6 @@ XcbWindowImpl::XcbWindowImpl(const WindowInfo& windowInfo)
     SetTitle(m_info.title);
     SetPosition(m_info.position.x, m_info.position.y);
 
-    m_eventQueue.Push(OnResizeEvent(m_info.size.width, m_info.size.height)); // OnResizeEvent BEFORE focus, for consistency with win32 and android
-
     m_eventQueue.Push(OnInitEvent());
 }
 
@@ -160,9 +158,9 @@ void XcbWindowImpl::SetTitle(const std::string& title)
     xcb_flush(m_xcbConnection);
 }
 
-void XcbWindowImpl::SetPosition(uint32_t x, uint32_t y)
+void XcbWindowImpl::SetPosition(int32_t x, int32_t y)
 {
-    uint32_t values[] = { x, y };
+    uint32_t values[] = { static_cast<uint32_t>(x), static_cast<uint32_t>(y) }; // no option for negative vaules ??
     xcb_configure_window(m_xcbConnection, m_xcbWindow, XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, values);
     xcb_flush(m_xcbConnection);
 }

@@ -40,6 +40,38 @@ namespace {
         horizontal = static_cast<uint32_t>(desktop.right);
         vertical = static_cast<uint32_t>(desktop.bottom);
     }
+
+    DWORD GetStyleFlags(bool fullScreen)
+    {
+        DWORD styleFlags;
+        if (fullScreen) {
+            styleFlags = WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
+        } else {
+            styleFlags = WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
+        }
+        return styleFlags;
+    }
+
+    DWORD GetStyleExFlags(bool fullScreen)
+    {
+        DWORD exStyleFlags;
+        if (fullScreen) {
+            exStyleFlags = WS_EX_APPWINDOW;
+        } else {
+            exStyleFlags = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
+        }
+        return fullScreen;
+    }
+
+    RECT ComputeWindowRect(uint32_t clientAreaWidth, uint32_t clientAreaHeight, bool fullScreen)
+    {
+        const auto dwStyle{ GetStyleFlags(fullScreen) };
+        const auto dwExStyle{ GetStyleExFlags(fullScreen) };
+
+        RECT windowRect{ 0, 0, static_cast<long>(clientAreaWidth), static_cast<long>(clientAreaHeight) };
+        AdjustWindowRectEx(&windowRect, dwStyle, FALSE, dwExStyle);
+        return windowRect;
+    }
 } // namespace
 
 Win32WindowImpl::Win32WindowImpl(const WindowInfo& windowInfo)
@@ -74,8 +106,6 @@ Win32WindowImpl::Win32WindowImpl(const WindowInfo& windowInfo)
 
     bool fullScreen = false;
     if (windowInfo.fullScreen) {
-        fullScreen = true;
-
         DEVMODE dmScreenSettings;
         memset(&dmScreenSettings, 0, sizeof(dmScreenSettings));
         dmScreenSettings.dmSize = sizeof(dmScreenSettings);
@@ -85,22 +115,12 @@ Win32WindowImpl::Win32WindowImpl(const WindowInfo& windowInfo)
         dmScreenSettings.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
 
         if (windowInfo.size.width != static_cast<uint32_t>(screenWidth) && windowInfo.size.height != static_cast<uint32_t>(screenHeight)) {
-            if (ChangeDisplaySettings(&dmScreenSettings, CDS_FULLSCREEN) != DISP_CHANGE_SUCCESSFUL) {
+            if (ChangeDisplaySettings(&dmScreenSettings, CDS_FULLSCREEN) == DISP_CHANGE_SUCCESSFUL) {
+                fullScreen = true;
+            } else {
                 MessageBox(NULL, "Fullscreen Mode not supported!\n Switch to window mode?", "Error", MB_OK | MB_ICONERROR);
-                fullScreen = false;
             }
         }
-    }
-
-    DWORD dwExStyle;
-    DWORD dwStyle;
-
-    if (fullScreen) {
-        dwExStyle = WS_EX_APPWINDOW;
-        dwStyle = WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
-    } else {
-        dwExStyle = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
-        dwStyle = WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
     }
 
     m_info.title = windowInfo.title;
@@ -113,23 +133,15 @@ Win32WindowImpl::Win32WindowImpl(const WindowInfo& windowInfo)
         m_info.size = { static_cast<uint16_t>(windowInfo.size.width), static_cast<uint16_t>(windowInfo.size.height) };
     }
 
-    RECT windowRect;
-    windowRect.left = 0;
-    windowRect.top = 0;
-    windowRect.right = static_cast<long>(m_info.size.width);
-    windowRect.bottom = static_cast<long>(m_info.size.height);
+    const auto windowRect{ ComputeWindowRect(m_info.size.width, m_info.size.height, fullScreen) };
+    const auto dwStyle{ GetStyleFlags(fullScreen) };
 
-    AdjustWindowRectEx(&windowRect, dwStyle, FALSE, dwExStyle);
-
-    m_hWnd = CreateWindowEx(0, m_info.title.c_str(), m_info.title.c_str(), dwStyle, 0, 0, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, NULL, NULL, m_hInstance, NULL);
+    m_hWnd = CreateWindowEx(0, m_info.title.c_str(), m_info.title.c_str(), dwStyle, m_info.position.x, m_info.position.y, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, NULL, NULL, m_hInstance, NULL);
     assert(m_hWnd && "Failed to create a window.");
 
     ShowWindow(m_hWnd, SW_SHOW);
     SetForegroundWindow(m_hWnd);
     SetFocus(m_hWnd);
-    SetWindowPos(m_hWnd, NULL, m_info.position.x, m_info.position.y, 0, 0, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE);
-
-    m_eventQueue.Push(OnResizeEvent(m_info.size.width, m_info.size.height));
 
     m_eventQueue.Push(OnInitEvent());
 }
@@ -144,8 +156,15 @@ void Win32WindowImpl::SetTitle(const std::string& title)
     SetWindowText(m_hWnd, title.c_str());
 }
 
-void Win32WindowImpl::SetPosition(uint32_t x, uint32_t y)
+void Win32WindowImpl::SetPosition(int32_t x, int32_t y)
 {
+    if (m_info.fullScreen) {
+        return;
+    }
+
+    m_info.position.x = static_cast<int16_t>(x);
+    m_info.position.y = static_cast<int16_t>(y);
+
     SetWindowPos(m_hWnd, NULL, x, y, 0, 0, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE);
 
     if (x != m_info.position.x || y != m_info.position.y) {
@@ -159,12 +178,12 @@ void Win32WindowImpl::SetSize(uint32_t w, uint32_t h)
         return;
     }
 
-    RECT wr = { 0, 0, static_cast<long>(w), static_cast<long>(h) };
-    AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE); // Add border size to create desired client area size
+    m_info.size.width = static_cast<uint16_t>(w);
+    m_info.size.height = static_cast<uint16_t>(h);
 
-    int totalWidth = wr.right - wr.left;
-    int totalHeight = wr.bottom - wr.top;
-    SetWindowPos(m_hWnd, NULL, 0, 0, totalWidth, totalHeight, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE);
+    const auto windowRect{ ComputeWindowRect(w, h, false) };
+
+    SetWindowPos(m_hWnd, NULL, 0, 0, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE);
 
     if (w != m_info.size.width || h != m_info.size.height) {
         m_eventQueue.Push(OnResizeEvent(w, h)); // Trigger resize event

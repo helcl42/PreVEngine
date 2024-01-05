@@ -163,7 +163,7 @@ public:
 
     virtual void SetTitle(const std::string& title) = 0;
 
-    virtual void SetPosition(uint32_t x, uint32_t y) = 0;
+    virtual void SetPosition(int32_t x, int32_t y) = 0;
 
     virtual void SetSize(uint32_t w, uint32_t h) = 0;
 

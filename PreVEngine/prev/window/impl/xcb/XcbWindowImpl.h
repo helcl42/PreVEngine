@@ -26,7 +26,7 @@ public:
 private:
     void SetTitle(const std::string& title);
 
-    void SetPosition(uint32_t x, uint32_t y);
+    void SetPosition(int32_t x, int32_t y);
 
     void SetSize(uint32_t w, uint32_t h);
 
