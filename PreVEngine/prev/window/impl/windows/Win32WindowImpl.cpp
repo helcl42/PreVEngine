@@ -60,7 +60,7 @@ namespace {
         } else {
             exStyleFlags = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
         }
-        return fullScreen;
+        return exStyleFlags;
     }
 
     RECT ComputeWindowRect(uint32_t clientAreaWidth, uint32_t clientAreaHeight, bool fullScreen)
