@@ -1,7 +1,7 @@
 #include "CloudsNoiseFactory.h"
 
-#include "../../render/renderer/sky/pipeline/CloudsPerlinWorleyNoisePipeline.h"
-#include "../../render/renderer/sky/shader/CloudsPerlinWorleyNoiseShader.h"
+#include "../../../render/renderer/sky/pipeline/CloudsPerlinWorleyNoisePipeline.h"
+#include "../../../render/renderer/sky/shader/CloudsPerlinWorleyNoiseShader.h"
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
@@ -9,7 +9,7 @@
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/util/VkUtils.h>
 
-namespace prev_test::component::cloud {
+namespace prev_test::component::sky::cloud {
 CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t width, const uint32_t height, const uint32_t depth) const
 {
     const auto noiseImageFormat{ VK_FORMAT_R8G8B8A8_UNORM };
@@ -72,4 +72,4 @@ CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t widt
 
     return { std::move(noiseImageBuffer), std::move(sampler) };
 }
-} // namespace prev_test::component::cloud
+} // namespace prev_test::component::sky::cloud

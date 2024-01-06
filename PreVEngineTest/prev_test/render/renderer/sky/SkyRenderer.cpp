@@ -8,7 +8,6 @@
 #include "shader/SkyPostProcessShader.h"
 #include "shader/SkyShader.h"
 
-#include "../../../component/cloud/ICloudsComponent.h"
 #include "../../../component/light/ILightComponent.h"
 #include "../../../component/sky/ISkyComponent.h"
 #include "../../../component/time/ITimeComponent.h"
@@ -31,7 +30,7 @@ void SkyRenderer::Init()
 {
     auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
-    
+
     prev::render::shader::ShaderFactory shaderFactory;
 
     // compute sky
@@ -80,7 +79,6 @@ void SkyRenderer::Init()
 void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
 {
     const auto skyComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::sky::ISkyComponent>({ TAG_SKY_RENDER_COMPONENT });
-    const auto cloudsComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::cloud::ICloudsComponent>({ TAG_CLOUDS_COMPONENT });
     const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
     const auto timeComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::time::ITimeComponent>({ TAG_TIME_COMPONENT });
 
@@ -112,7 +110,7 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
     uniformsCS.lightColor = glm::vec4(mainLightComponent->GetColor(), 1.0f);
     uniformsCS.lightDirection = glm::vec4(-mainLightComponent->GetDirection(), 0.0f);
     uniformsCS.cameraPosition = glm::vec4(renderContext.cameraPosition, 1.0f);
-    uniformsCS.baseCloudColor = cloudsComponent->GetColor();
+    uniformsCS.baseCloudColor = glm::vec4(skyComponent->GetCloudBaseColor(), 1.0f);
     uniformsCS.skyColorBottom = glm::vec4(skyComponent->GetBottomColor(), 1.0f);
     uniformsCS.skyColorTop = glm::vec4(skyComponent->GetTopColor(), 1.0f);
     uniformsCS.windDirection = glm::normalize(glm::vec4(0.5f, 0.0f, 0.1f, 0.0f));
@@ -134,8 +132,8 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
 
     m_skyShader->Bind("uboCS", *uboCS);
 
-    m_skyShader->Bind("perlinNoiseTex", cloudsComponent->GetPerlinWorleyNoise()->GetImageView(), *cloudsComponent->GetPerlinWorleyNoiseSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    m_skyShader->Bind("weatherTex", cloudsComponent->GetWeather()->GetImageView(), *cloudsComponent->GetWeatherSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_skyShader->Bind("perlinNoiseTex", skyComponent->GetPerlinWorleyNoise()->GetImageView(), *skyComponent->GetPerlinWorleyNoiseSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_skyShader->Bind("weatherTex", skyComponent->GetWeather()->GetImageView(), *skyComponent->GetWeatherSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     m_skyShader->Bind("outFragColor", m_skyColorImageBuffer->GetImageView(), *m_skyColorImageSampler, VK_IMAGE_LAYOUT_GENERAL);
     m_skyShader->Bind("outBloom", m_skyBloomImageBuffer->GetImageView(), *m_skyBloomImageSampler, VK_IMAGE_LAYOUT_GENERAL);

@@ -6,8 +6,6 @@
 #include <prev/event/EventHandler.h>
 #include <prev/input/keyboard/KeyboardEvents.h>
 #include <prev/input/touch/TouchEvents.h>
-#include <prev/render/Swapchain.h>
-#include <prev/render/pass/RenderPass.h>
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene {
