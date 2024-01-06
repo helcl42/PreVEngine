@@ -104,7 +104,7 @@ private:
 
     bool m_isAcquired{};
 
-    VkSemaphore m_presentSemaphore{};
+    VkSemaphore m_acquireSemaphore{};
 
     VkSemaphore m_renderSemaphore{};
 
