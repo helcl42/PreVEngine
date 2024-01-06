@@ -4,7 +4,7 @@
 
 #include "../../common/Logger.h"
 
-static constexpr bool QUERY_DEDICATED_PRESENT_QUEUE{ true };
+static constexpr bool QUERY_DEDICATED_PRESENT_QUEUE{ false };
 static constexpr bool QUERY_DEDICATED_COMPUTE_QUEUE{ true };
 
 namespace prev::core::device {
