@@ -41,7 +41,6 @@ constexpr auto TAG_SUN_RENDER_COMPONENT{ "SunRenderComponent" };
 constexpr auto TAG_BOUNDING_VOLUME_COMPONENT{ "BoundingVolumeComponent" };
 constexpr auto TAG_SELECTABLE_COMPONENT{ "SelectableComponent" };
 constexpr auto TAG_PARTICLE_SYSTEM_COMPONENT{ "ParticleSystemComponent" };
-constexpr auto TAG_CLOUDS_COMPONENT{ "CloudsComponent" };
 constexpr auto TAG_SKY_RENDER_COMPONENT{ "SkyRenderComponent" };
 constexpr auto TAG_TIME_COMPONENT{ "TimeComponent" };
 } // namespace prev_test

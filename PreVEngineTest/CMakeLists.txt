@@ -19,7 +19,7 @@ file(GLOB SRC_LIST
     "prev_test/component/time/*.h" "prev_test/component/time/*.cpp"
     "prev_test/component/terrain/*.h" "prev_test/component/terrain/*.cpp"
     "prev_test/component/sky/*.h" "prev_test/component/sky/*.cpp"
-    "prev_test/component/cloud/*.h" "prev_test/component/cloud/*.cpp"
+    "prev_test/component/sky/cloud/*.h" "prev_test/component/sky/cloud/*.cpp"
     "prev_test/component/render/*.h" "prev_test/component/render/*.cpp"
     "prev_test/component/light/*.h" "prev_test/component/light/*.cpp"
     "prev_test/component/font/*.h" "prev_test/component/font/*.cpp"

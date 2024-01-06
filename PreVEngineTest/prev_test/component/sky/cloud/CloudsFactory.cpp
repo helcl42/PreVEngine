@@ -1,7 +1,7 @@
 #include "CloudsFactory.h"
 
-#include "../../render/renderer/sky/pipeline/CloudsPipeline.h"
-#include "../../render/renderer/sky/shader/CloudsShader.h"
+#include "../../../render/renderer/sky/pipeline/CloudsPipeline.h"
+#include "../../../render/renderer/sky/shader/CloudsShader.h"
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
@@ -10,7 +10,7 @@
 #include <prev/render/shader/ShaderFactory.h>
 #include <prev/util/VkUtils.h>
 
-namespace prev_test::component::cloud {
+namespace prev_test::component::sky::cloud {
 CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) const
 {
     struct Uniforms {
@@ -96,4 +96,4 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
 
     return { std::move(weatherImageBuffer), std::move(sampler) };
 }
-} // namespace prev_test::component::cloud
+} // namespace prev_test::component::sky::cloud
