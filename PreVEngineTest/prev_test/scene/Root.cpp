@@ -15,7 +15,6 @@
 #include "ray_casting/RayCasterObserver.h"
 #include "robot/CubeRobot.h"
 #include "shadow/Shadow.h"
-#include "sky/Clouds.h"
 #include "sky/LensFlare.h"
 #include "sky/Sky.h"
 #include "sky/SkyBox.h"
@@ -39,9 +38,6 @@ void Root::Init()
 
     // auto skyBox = std::make_shared<sky::SkyBox>();
     // AddChild(skyBox);
-
-    auto clouds = std::make_shared<sky::Clouds>();
-    AddChild(clouds);
 
     auto sky = std::make_shared<sky::Sky>();
     AddChild(sky);
