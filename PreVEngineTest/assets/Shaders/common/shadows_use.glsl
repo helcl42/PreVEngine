@@ -42,23 +42,23 @@ float GetShadowRawInternal(in sampler2DArray depthSampler, in vec4 shadowCoord, 
 
 float GetShadowPCFInternal(in sampler2DArray depthSampler, in vec4 shadowCoord, in uint cascadeIndex, in float depthBias, in uint useReverseDepth)
 {
-	const ivec2 texDim = textureSize(depthSampler, 0).xy;
-	const float scale = 0.75;
-	const float dx = scale * 1.0 / float(texDim.x);
-	const float dy = scale * 1.0 / float(texDim.y);
-	const int range = 1; // 3 x 3
+	const vec2 textureDim = vec2(textureSize(depthSampler, 0).xy);
+	const vec2 texelSize = 1.0 / textureDim;
 
-	float shadowFactor = 0.0;
-	int count = 0;
-	for (int x = -range; x <= range; x++)
+	float shadow = 0.0;
+	int sampleCount = 0;
+	for(float y = -1.5; y <= 1.5; y += 1.0)
 	{
-		for (int y = -range; y <= range; y++)
+		for(float x = -1.5; x <= 1.5; x += 1.0)
 		{
-			shadowFactor += GetShadowRawInternal(depthSampler, shadowCoord, vec2(dx * x, dy * y), cascadeIndex, depthBias, useReverseDepth);
-			count++;
+			if(x >= 0.0 && x < textureDim.x && y >= 0.0 && y < textureDim.y)
+			{
+				shadow += GetShadowRawInternal(depthSampler, shadowCoord, vec2(texelSize.x * x, texelSize.y * y), cascadeIndex, depthBias, useReverseDepth);
+				++sampleCount;
+			}
 		}
 	}
-	return shadowFactor / count;
+	return shadow / max(sampleCount, 1); // avoid zero division
 }
 
 float GetShadow(in sampler2DArray depthSampler, in vec4 shadowCoord, in uint cascadeIndex, in float depthBias, in uint useReverseDepth)
