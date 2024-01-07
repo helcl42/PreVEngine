@@ -46,19 +46,35 @@ float GetShadowPCFInternal(in sampler2DArray depthSampler, in vec4 shadowCoord, 
 	const vec2 texelSize = 1.0 / textureDim;
 
 	float shadow = 0.0;
-	int sampleCount = 0;
-	for(float y = -1.5; y <= 1.5; y += 1.0)
+
+	//// Naive PCF impl -> 16 samples
+	// int sampleCount = 0;
+	// for(float y = -1.5; y <= 1.5; y += 1.0)
+	// {
+	// 	for(float x = -1.5; x <= 1.5; x += 1.0)
+	// 	{
+	// 		if(x >= 0.0 && x < textureDim.x && y >= 0.0 && y < textureDim.y)
+	// 		{
+	// 			shadow += GetShadowRawInternal(depthSampler, shadowCoord, vec2(texelSize.x * x, texelSize.y * y), cascadeIndex, depthBias, useReverseDepth);
+	// 			++sampleCount;
+	// 		}
+	// 	}
+	// }
+	// return shadow / max(sampleCount, 1); // avoid zero division
+
+	// Optimized PCF impl -> 4 samples
+	vec2 offset = fract(gl_FragCoord.xy * 0.5) + 0.25;  // mod offset.y += offset.x;  // y ^= x in floating point
+   	if (offset.y > 1.1)
 	{
-		for(float x = -1.5; x <= 1.5; x += 1.0)
-		{
-			if(x >= 0.0 && x < textureDim.x && y >= 0.0 && y < textureDim.y)
-			{
-				shadow += GetShadowRawInternal(depthSampler, shadowCoord, vec2(texelSize.x * x, texelSize.y * y), cascadeIndex, depthBias, useReverseDepth);
-				++sampleCount;
-			}
-		}
+		offset.y = 0;
 	}
-	return shadow / max(sampleCount, 1); // avoid zero division
+	shadow = (
+				GetShadowRawInternal(depthSampler, shadowCoord, texelSize * (offset + vec2(-1.5, 0.5)), cascadeIndex, depthBias, useReverseDepth)
+				+ GetShadowRawInternal(depthSampler, shadowCoord, texelSize * (offset + vec2(0.5, 0.5)), cascadeIndex, depthBias, useReverseDepth)
+				+ GetShadowRawInternal(depthSampler, shadowCoord, texelSize * (offset + vec2(-1.5, -1.5)), cascadeIndex, depthBias, useReverseDepth)
+				+ GetShadowRawInternal(depthSampler, shadowCoord, texelSize * (offset + vec2(0.5, -1.5)), cascadeIndex, depthBias, useReverseDepth)
+				) * 0.25;	
+	return shadow;
 }
 
 float GetShadow(in sampler2DArray depthSampler, in vec4 shadowCoord, in uint cascadeIndex, in float depthBias, in uint useReverseDepth)
