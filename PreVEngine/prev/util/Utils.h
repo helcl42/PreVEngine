@@ -53,21 +53,11 @@ namespace string {
 } // namespace string
 
 class FPSCounter final {
-private:
-    float m_refreshTimeoutInS{ 1.0f };
-
-    std::vector<float> m_deltaTimeSnapshots;
-
-    float m_elpasedTimeInS{ 0.0f };
-
-    float m_averageDeltaTime{ 0.0f };
-
-    std::chrono::high_resolution_clock::time_point m_lastTickTimestamp{ std::chrono::high_resolution_clock::time_point::min() };
-
 public:
     FPSCounter(float refreshTimeInS = 2.0f)
         : m_refreshTimeoutInS(refreshTimeInS)
     {
+        Reset();
     }
 
     ~FPSCounter() = default;
@@ -75,29 +65,25 @@ public:
 public:
     bool Tick()
     {
-        const auto NOW = std::chrono::high_resolution_clock::now();
-        if (m_lastTickTimestamp == std::chrono::high_resolution_clock::time_point::min()) {
-            m_lastTickTimestamp = NOW;
+        const auto Now{ std::chrono::high_resolution_clock::now() };
+        if (m_lastTickTimestamp != std::chrono::high_resolution_clock::time_point::min()) {
+            m_deltaSum += std::chrono::duration<float>(Now - m_lastTickTimestamp).count();
+            ++m_deltaCount;
         }
+        m_lastTickTimestamp = Now;
 
-        float elapsedInS = std::chrono::duration<float>(NOW - m_lastTickTimestamp).count();
-        m_deltaTimeSnapshots.push_back(elapsedInS);
-        m_elpasedTimeInS += elapsedInS;
-
-        m_lastTickTimestamp = NOW;
-
-        if (m_elpasedTimeInS > m_refreshTimeoutInS) {
-            float deltasSum = 0.0f;
-            for (const auto& snapshot : m_deltaTimeSnapshots) {
-                deltasSum += snapshot;
-            }
-            m_averageDeltaTime = deltasSum / m_deltaTimeSnapshots.size();
-
-            m_elpasedTimeInS = 0.0f;
-            m_deltaTimeSnapshots.clear();
+        if (m_deltaSum > m_refreshTimeoutInS) {
+            m_averageDeltaTime = m_deltaSum / static_cast<float>(m_deltaCount);
+            m_deltaSum = 0.0f;
+            m_deltaCount = 0;
             return true;
         }
         return false;
+    }
+
+    void Reset()
+    {
+        m_lastTickTimestamp = std::chrono::high_resolution_clock::time_point::min();
     }
 
     float GetAverageDeltaTime() const
@@ -112,15 +98,18 @@ public:
         }
         return 0.0f;
     }
-};
 
-template <class Type>
-class Clock final {
 private:
-    std::chrono::time_point<std::chrono::steady_clock> m_lastFrameTimestamp;
+    float m_refreshTimeoutInS{ 1.0f };
 
-    Type m_frameInterval;
+    float m_deltaSum{ 0.0f };
 
+    uint32_t m_deltaCount{ 0 };
+
+    float m_averageDeltaTime{ 0.0f };
+
+    std::chrono::high_resolution_clock::time_point m_lastTickTimestamp{};
+};
 public:
     Clock()
     {
