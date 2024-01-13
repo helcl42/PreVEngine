@@ -9,9 +9,9 @@ AABB::AABB()
 {
 }
 
-AABB::AABB(const float radius)
-    : minExtents(glm::vec3{ -radius })
-    , maxExtents(glm::vec3{ radius })
+AABB::AABB(const float radius, const bool inscribed)
+    : minExtents(glm::vec3{ inscribed ? (-radius / std::sqrt(1.0f / 3.0f)) : -radius })
+    , maxExtents(glm::vec3{ inscribed ? (radius / std::sqrt(1.0f / 3.0f)) : radius })
 {
 }
 
@@ -19,6 +19,15 @@ AABB::AABB(const glm::vec3& minExtents, const glm::vec3& maxExtents)
     : minExtents(minExtents)
     , maxExtents(maxExtents)
 {
+}
+
+AABB::AABB(const std::vector<glm::vec3>& points)
+    : AABB()
+{
+    for (const auto& p : points) {
+        minExtents = glm::min(minExtents, p);
+        maxExtents = glm::max(maxExtents, p);
+    }
 }
 
 glm::vec3 AABB::GetCenter() const

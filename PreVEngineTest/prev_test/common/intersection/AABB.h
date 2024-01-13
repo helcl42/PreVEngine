@@ -14,9 +14,11 @@ struct AABB {
 
     AABB();
 
-    AABB(const float radius);
+    AABB(const float radius, const bool inscribed = false); // inscribed vs. circumscribed
 
     AABB(const glm::vec3& minExtents, const glm::vec3& maxExtents);
+
+    AABB(const std::vector<glm::vec3>& points);
 
     glm::vec3 GetCenter() const;
 
