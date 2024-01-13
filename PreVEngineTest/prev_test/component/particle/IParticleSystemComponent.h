@@ -3,6 +3,7 @@
 
 #include "IParticleFactory.h"
 
+#include "../../common/intersection/AABB.h"
 #include "../../render/IModel.h"
 
 #include <prev/render/buffer/VertexBuffer.h>
@@ -27,6 +28,8 @@ public:
     virtual std::list<std::shared_ptr<Particle>> GetParticles() const = 0;
 
     virtual std::shared_ptr<prev::render::buffer::VertexBuffer> GetVertexBuffer() const = 0;
+
+    virtual const prev_test::common::intersection::AABB& GetBoundingBox() const = 0;
 
 public:
     virtual ~IParticleSystemComponent() = default;

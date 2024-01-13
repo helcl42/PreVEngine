@@ -31,6 +31,8 @@ public:
 
     std::shared_ptr<prev::render::buffer::VertexBuffer> GetVertexBuffer() const override;
 
+    const prev_test::common::intersection::AABB& GetBoundingBox() const override;
+
 private:
     void AddNewParticles(const float deltaTime, const glm::vec3& centerPosition);
 
@@ -50,6 +52,8 @@ private:
     std::list<std::shared_ptr<Particle>> m_particles;
 
     uint32_t m_currentBufferIndex{};
+
+    prev_test::common::intersection::AABB m_boundingBox{};
 
     prev::util::RandomNumberGenerator m_rng{};
 };
