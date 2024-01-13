@@ -25,7 +25,7 @@ private:
 private:
     VkInstance m_instance{};
 
-    DebugReport m_debugReport{}; // Configure debug report flags here.
+    ValidationReporter m_validationReporter{};
 };
 } // namespace prev::core::instance
 
