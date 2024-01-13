@@ -87,11 +87,11 @@ void Instance::Create(const Layers& layers, const Extensions& extensions, const 
 
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
     if (extensions.IsPicked(VK_EXT_DEBUG_REPORT_EXTENSION_NAME)) {
-        m_debugReport.Init(m_instance); // If VK_EXT_debug_report is loaded, initialize it.
+        m_validationReporter.Init(m_instance); // If VK_EXT_debug_report is loaded, initialize it.
     }
 #else
     if (extensions.IsPicked(VK_EXT_DEBUG_UTILS_EXTENSION_NAME)) {
-        m_debugReport.Init(m_instance); // If VK_EXT_utils is loaded, initialize it.
+        m_validationReporter.Init(m_instance); // If VK_EXT_utils is loaded, initialize it.
     }
 #endif
 }
@@ -103,7 +103,7 @@ void Instance::Print() const
 
 Instance::~Instance()
 {
-    m_debugReport.Destroy(); // Must be called BEFORE vkDestroyInstance()
+    m_validationReporter.Destroy(); // Must be called BEFORE vkDestroyInstance()
 
     vkDestroyInstance(m_instance, nullptr);
     LOGI("Vulkan Instance destroyed\n");

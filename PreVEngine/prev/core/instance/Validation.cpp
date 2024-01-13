@@ -15,19 +15,19 @@ VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugReportFlagsEXT msgFlags, VkD
 
     switch (msgFlags) {
     case VK_DEBUG_REPORT_INFORMATION_BIT_EXT:
-        _LOGI("%s", buf);
+        LOGI("%s", buf);
         return VK_FALSE;
     case VK_DEBUG_REPORT_WARNING_BIT_EXT:
-        _LOGW("%s", buf);
+        LOGW("%s", buf);
         return VK_FALSE;
     case VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT:
-        _LOGV("%s", buf);
+        LOGV("%s", buf);
         return VK_FALSE;
     case VK_DEBUG_REPORT_ERROR_BIT_EXT:
-        _LOGE("%s\n", buf);
+        LOGE("%s\n", buf);
         return VK_TRUE;
     case VK_DEBUG_REPORT_DEBUG_BIT_EXT:
-        _LOGD("%s", buf);
+        LOGD("%s", buf);
         return VK_FALSE;
     default:
         return VK_FALSE;
@@ -41,16 +41,16 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityF
 
     switch (messageSeverity) {
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-        _LOGD("%s", buf);
+        LOGD("%s", buf);
         return VK_FALSE;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-        _LOGI("%s", buf);
+        LOGI("%s", buf);
         return VK_FALSE;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-        _LOGW("%s", buf);
+        LOGW("%s", buf);
         return VK_FALSE;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-        _LOGE("%s\n", buf);
+        LOGE("%s\n", buf);
         return VK_TRUE;
     default:
         return VK_FALSE;
@@ -58,7 +58,23 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityF
 }
 #endif
 
-void DebugReport::Init(VkInstance inst)
+ValidationReporter::ValidationReporter()
+    : m_instance(nullptr)
+#ifdef VK_USE_PLATFORM_ANDROID_KHR
+    , m_vkCreateDebugCallbackEXT(VK_NULL_HANDLE)
+    , m_vkDestroyDebugCallbackEXT(VK_NULL_HANDLE)
+    , m_debugCallback(VK_NULL_HANDLE)
+    , m_flags(0)
+#else
+    , m_vkCreateDebugCallbackEXT(VK_NULL_HANDLE)
+    , m_vkDestroyDebugCallbackEXT(VK_NULL_HANDLE)
+    , m_debugCallback(VK_NULL_HANDLE)
+    , m_flags(0)
+#endif
+{
+}
+
+void ValidationReporter::Init(VkInstance inst)
 {
     assert(!!inst);
 
@@ -105,26 +121,10 @@ void DebugReport::Init(VkInstance inst)
 #endif
 }
 
-void DebugReport::Destroy()
+void ValidationReporter::Destroy()
 {
     if (m_debugCallback) {
         m_vkDestroyDebugCallbackEXT(m_instance, m_debugCallback, nullptr);
     }
-}
-
-DebugReport::DebugReport()
-    : m_instance(nullptr)
-#ifdef VK_USE_PLATFORM_ANDROID_KHR
-    , m_vkCreateDebugCallbackEXT(VK_NULL_HANDLE)
-    , m_vkDestroyDebugCallbackEXT(VK_NULL_HANDLE)
-    , m_debugCallback(VK_NULL_HANDLE)
-    , m_flags(0)
-#else
-    , m_vkCreateDebugCallbackEXT(VK_NULL_HANDLE)
-    , m_vkDestroyDebugCallbackEXT(VK_NULL_HANDLE)
-    , m_debugCallback(VK_NULL_HANDLE)
-    , m_flags(0)
-#endif
-{
 }
 } // namespace prev::core::instance

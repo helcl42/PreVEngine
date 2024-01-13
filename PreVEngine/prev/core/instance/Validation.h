@@ -4,9 +4,9 @@
 #include "../Core.h"
 
 namespace prev::core::instance {
-class DebugReport {
+class ValidationReporter {
 public:
-    DebugReport();
+    ValidationReporter();
 
 public:
     void Init(VkInstance inst);
