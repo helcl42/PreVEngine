@@ -2,8 +2,6 @@
 
 #include "../../render/VertexDataBuffer.h"
 
-#include <random>
-
 namespace prev_test::component::particle {
 namespace {
     uint32_t GetStride()
@@ -81,18 +79,15 @@ std::shared_ptr<prev::render::buffer::VertexBuffer> ParticleSystemComponent::Get
 
 void ParticleSystemComponent::AddNewParticles(const float deltaTime, const glm::vec3& centerPosition)
 {
-    const float particlesToCreate = m_particlesPerSecond * deltaTime;
-    const auto particlesToCreateCount = static_cast<int>(floorf(particlesToCreate));
-    for (auto i = 0; i < particlesToCreateCount; i++) {
+    const float particlesToCreate{ m_particlesPerSecond * deltaTime };
+    const int particlesToCreateCount{ static_cast<int>(std::floor(particlesToCreate)) };
+    for (int i = 0; i < particlesToCreateCount; ++i) {
         m_particles.emplace_back(m_particleFactory->EmitParticle(centerPosition));
     }
 
-    std::random_device rd;
-    std::mt19937 mt(rd());
     std::uniform_real_distribution<float> dist(0.0, 1.0);
-
-    float partialCount = fmodf(particlesToCreate, 1.0f);
-    if (dist(mt) < partialCount) {
+    const float partialCount{ fmodf(particlesToCreate, 1.0f) };
+    if (dist(m_rng.GetRandomEngine()) < partialCount) {
         m_particles.emplace_back(m_particleFactory->EmitParticle(centerPosition));
     }
 }

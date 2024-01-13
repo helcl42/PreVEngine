@@ -1,7 +1,5 @@
 #include "RandomInConeParticleFactory.h"
 
-#include <random>
-
 namespace prev_test::component::particle {
 RandomInConeParticleFactory::RandomInConeParticleFactory(const std::shared_ptr<prev_test::render::IMaterial>& mt, const float gravityComp, const float avgSpeed, const float avgLifeLength, const float avgScale)
     : AbstractParticleFactory(mt, gravityComp, avgSpeed, avgLifeLength, avgScale)
@@ -30,13 +28,11 @@ float RandomInConeParticleFactory::GetConeDirectionDeviation() const
 
 glm::vec3 RandomInConeParticleFactory::GenerateVelocty() const
 {
-    std::random_device rd;
-    std::mt19937 mt(rd());
     std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
 
     float cosAngle = cosf(glm::radians(m_directionDeviationInDegs));
-    float theta = dist(mt) * 2.0f * glm::pi<float>();
-    float z = cosAngle + (dist(mt) * (1.0f - cosAngle));
+    float theta = dist(m_rng.GetRandomEngine()) * 2.0f * glm::pi<float>();
+    float z = cosAngle + (dist(m_rng.GetRandomEngine()) * (1.0f - cosAngle));
     float rootOneMinusZSquared = sqrtf(1.0f - z * z);
     float x = rootOneMinusZSquared * cosf(theta);
     float y = rootOneMinusZSquared * sinf(theta);
@@ -63,12 +59,11 @@ glm::vec3 RandomInConeParticleFactory::GenerateRadiusOffset() const
         normalToCone = glm::normalize(glm::cross(m_coneDirection, glm::vec3(1.0f, 0.0f, 0.0f)));
     }
 
-    std::random_device rd;
-    std::mt19937 mt(rd());
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-    const float theta = dist(mt) * 2.0f * glm::pi<float>();
+
+    const float theta = dist(m_rng.GetRandomEngine()) * 2.0f * glm::pi<float>();
     glm::mat4 rotationMat = glm::rotate(glm::mat4(1.0), theta, m_coneDirection);
-    glm::vec3 offset = glm::normalize(rotationMat * glm::vec4(normalToCone, 1.0f)) * dist(mt) * m_radius;
+    glm::vec3 offset = glm::normalize(rotationMat * glm::vec4(normalToCone, 1.0f)) * dist(m_rng.GetRandomEngine()) * m_radius;
     return offset;
 }
 } // namespace prev_test::component::particle

@@ -1,7 +1,5 @@
 #include "RandomDirectionParticleFactory.h"
 
-#include <random>
-
 namespace prev_test::component::particle {
 RandomDirectionParticleFactory::RandomDirectionParticleFactory(const std::shared_ptr<prev_test::render::IMaterial>& mt, const float gravityComp, const float avgSpeed, const float avgLifeLength, const float avgScale)
     : AbstractParticleFactory(mt, gravityComp, avgSpeed, avgLifeLength, avgScale)
@@ -10,12 +8,10 @@ RandomDirectionParticleFactory::RandomDirectionParticleFactory(const std::shared
 
 glm::vec3 RandomDirectionParticleFactory::GenerateVelocty() const
 {
-    std::random_device rd;
-    std::mt19937 mt(rd());
     std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
 
-    float theta = dist(mt) * 2.0f * glm::pi<float>();
-    float z = dist(mt) * 2.0f - 1;
+    float theta = dist(m_rng.GetRandomEngine()) * 2.0f * glm::pi<float>();
+    float z = dist(m_rng.GetRandomEngine()) * 2.0f - 1;
     float rootOneMinusZSquared = sqrtf(1.0f - z * z);
     float x = rootOneMinusZSquared * cosf(theta);
     float y = rootOneMinusZSquared * sinf(theta);

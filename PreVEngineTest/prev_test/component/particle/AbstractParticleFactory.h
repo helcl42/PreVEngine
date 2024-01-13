@@ -3,6 +3,8 @@
 
 #include "IParticleFactory.h"
 
+#include <prev/util/Utils.h>
+
 namespace prev_test::component::particle {
 class AbstractParticleFactory : public IParticleFactory {
 public:
@@ -40,9 +42,9 @@ public:
     float GetRadius() const;
 
 protected:
-    static float GenerateRotation();
+    float GenerateRotation() const;
 
-    static float GenerateValue(const float average, const float errorMargin);
+    float GenerateValue(const float average, const float errorMargin) const;
 
 protected:
     const std::shared_ptr<prev_test::render::IMaterial> m_material;
@@ -64,6 +66,8 @@ protected:
     float m_radius{ 0.0f };
 
     bool m_randomRotation{ false };
+
+    mutable prev::util::RandomNumberGenerator m_rng{};
 };
 } // namespace prev_test::component::particle
 

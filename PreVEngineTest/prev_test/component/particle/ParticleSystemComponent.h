@@ -3,6 +3,8 @@
 
 #include "IParticleSystemComponent.h"
 
+#include <prev/util/Utils.h>
+
 #include <vector>
 
 namespace prev_test::component::particle {
@@ -48,6 +50,8 @@ private:
     std::list<std::shared_ptr<Particle>> m_particles;
 
     uint32_t m_currentBufferIndex{};
+
+    prev::util::RandomNumberGenerator m_rng{};
 };
 } // namespace prev_test::component::particle
 
