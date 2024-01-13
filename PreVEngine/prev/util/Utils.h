@@ -110,6 +110,9 @@ private:
 
     std::chrono::high_resolution_clock::time_point m_lastTickTimestamp{};
 };
+
+template <class Type>
+class Clock final {
 public:
     Clock()
     {
@@ -127,23 +130,25 @@ public:
 
     void UpdateClock()
     {
-        const auto now{ std::chrono::steady_clock::now() };
-        m_frameInterval = std::chrono::duration<Type>(now - m_lastFrameTimestamp).count();
-        m_lastFrameTimestamp = now;
+        const auto Now{ std::chrono::steady_clock::now() };
+        m_frameInterval = std::chrono::duration<Type>(Now - m_lastFrameTimestamp).count();
+        m_lastFrameTimestamp = Now;
     }
 
     Type GetDelta() const
     {
         return m_frameInterval;
     }
+
+private:
+    std::chrono::time_point<std::chrono::steady_clock> m_lastFrameTimestamp;
+
+    Type m_frameInterval;
 };
 
 class IDGenerator final : public prev::common::pattern::Singleton<IDGenerator> {
 private:
     friend class prev::common::pattern::Singleton<IDGenerator>;
-
-private:
-    std::atomic_uint64_t m_id{ 0 };
 
 private:
     IDGenerator() = default;
@@ -156,6 +161,16 @@ public:
     {
         return ++m_id;
     }
+
+    void Reset()
+    {
+        m_id = 0;
+    }
+
+private:
+    std::atomic_uint64_t m_id{ 0 };
+};
+
 };
 
 class UUIDGenerator {
