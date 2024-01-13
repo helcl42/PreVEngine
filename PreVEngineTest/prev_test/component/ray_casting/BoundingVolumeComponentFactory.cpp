@@ -49,10 +49,8 @@ prev_test::common::intersection::AABB BoundingVolumeComponentFactory::CreateAABB
 {
     prev_test::common::intersection::AABB aabb{};
     for (const auto& v : vertices) {
-        for (auto i = 0; i < aabb.minExtents.length(); i++) {
-            aabb.minExtents[i] = std::min(aabb.minExtents[i], v[i]);
-            aabb.maxExtents[i] = std::max(aabb.maxExtents[i], v[i]);
-        }
+        aabb.minExtents = glm::min(aabb.minExtents, v);
+        aabb.maxExtents = glm::max(aabb.maxExtents, v);
     }
     return aabb;
 }
@@ -108,7 +106,7 @@ prev_test::common::intersection::OBB BoundingVolumeComponentFactory::CreateOBBFr
 prev_test::common::intersection::Sphere BoundingVolumeComponentFactory::CreateSphereFromAABB(const prev_test::common::intersection::AABB& box) const
 {
     const auto boxHalfExtents{ box.GetHalfSize() };
-    float maxExtent{ std::numeric_limits<float>::min() };
+    float maxExtent{ -std::numeric_limits<float>::max() };
     for (auto i = 0; i < boxHalfExtents.length(); i++) {
         maxExtent = std::max(maxExtent, boxHalfExtents[i]);
     }

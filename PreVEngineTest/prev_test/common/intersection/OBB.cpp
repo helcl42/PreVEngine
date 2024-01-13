@@ -5,8 +5,8 @@
 namespace prev_test::common::intersection {
 OBB::OBB()
     : orientation()
-    , position(std::numeric_limits<float>::min())
-    , halfExtents(std::numeric_limits<float>::min())
+    , position(-std::numeric_limits<float>::max())
+    , halfExtents(-std::numeric_limits<float>::max())
 {
 }
 
