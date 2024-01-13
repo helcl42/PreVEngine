@@ -6,6 +6,7 @@
 
 #include <array>
 #include <iostream>
+#include <vector>
 
 namespace prev_test::common::intersection {
 struct Frustum {
@@ -20,6 +21,8 @@ struct Frustum {
     float GetRadius() const;
 
     Point GetCenter() const;
+
+    std::vector<glm::vec3> GetPoints() const;
 
     friend std::ostream& operator<<(std::ostream& out, const Frustum& frustum);
 };

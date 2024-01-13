@@ -49,6 +49,15 @@ Point Frustum::GetCenter() const
     return { frustumCenter };
 }
 
+std::vector<glm::vec3> Frustum::GetPoints() const
+{
+    std::vector<glm::vec3> result(points.size());
+    for (size_t i = 0; i < points.size(); ++i) {
+        result[i] = points[i].position;
+    }
+    return result;
+}
+
 std::ostream& operator<<(std::ostream& out, const Frustum& frustum)
 {
     out << "Planes:" << std::endl;
