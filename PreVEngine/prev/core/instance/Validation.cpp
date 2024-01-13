@@ -3,8 +3,6 @@
 #include "../../common/Logger.h"
 
 namespace prev::core::instance {
-#ifdef ENABLE_VALIDATION
-
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugReportFlagsEXT msgFlags, VkDebugReportObjectTypeEXT objType, uint64_t srcObject, size_t location, int32_t msgCode, const char* pLayerPrefix, const char* pMsg, void* pUserData)
 {
@@ -113,10 +111,6 @@ void DebugReport::Destroy()
         m_vkDestroyDebugCallbackEXT(m_instance, m_debugCallback, nullptr);
     }
 }
-
-#else // No Validation
-
-#endif // ENABLE_VALIDATION
 
 DebugReport::DebugReport()
     : m_instance(nullptr)

@@ -18,7 +18,7 @@ struct VulkanInitializer {
     }
 } VulkanInitializer{}; // Run this function BEFORE main.
 
-#if !defined(NDEBUG) || defined(ENABLE_LOGGING) || defined(ENABLE_VALIDATION)
+#if !defined(NDEBUG) || defined(ENABLE_LOGGING)
 const char* VkResultStr(const VkResult err)
 {
     switch (err) {

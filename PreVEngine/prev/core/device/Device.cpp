@@ -71,10 +71,7 @@ Device::Device(const std::shared_ptr<PhysicalDevice>& gpu, const QueuesMetadata&
     : m_gpu{ gpu }
 {
     LOGI("Logical Device using GPU: %s\n", m_gpu->GetProperties().deviceName);
-
-#ifdef ENABLE_VALIDATION
     m_gpu->GetExtensions().Print();
-#endif
 
     const auto queueFamilyIndices{ queuesMetadata.GetQueueFamiies() };
 

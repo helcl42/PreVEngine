@@ -43,14 +43,10 @@ file(GLOB SRC_LIST
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")  # for find_package
 
 # Options to set
-option(ENABLE_VALIDATION "Enable Vulkan Validation." ON) # adds 5KB to exe size
 option(ENABLE_LOGGING "Prints LOG* messages to Terminal or Android Logcat." ON)
 option(ENABLE_MULTITOUCH "Multi-touch screen support" OFF)
 option(ENABLE_REVERSE_DEPTH "Enable reverse depth" OFF)
 
-if (ENABLE_VALIDATION)
-    add_definitions(-DENABLE_VALIDATION)
-endif()
 if (ENABLE_LOGGING)
     add_definitions(-DENABLE_LOGGING)
 endif()
