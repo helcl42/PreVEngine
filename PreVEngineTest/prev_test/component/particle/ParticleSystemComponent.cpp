@@ -94,14 +94,23 @@ void ParticleSystemComponent::AddNewParticles(const float deltaTime, const glm::
 
 void ParticleSystemComponent::UpdateParticles(const float deltaTime)
 {
+    prev_test::common::intersection::AABB boundingBox{};
     for (auto pi = m_particles.begin(); pi != m_particles.end();) {
-        auto& particle = (*pi);
+        auto& particle{ *pi };
         particle->Update(deltaTime);
         if (!particle->IsAlive()) {
             pi = m_particles.erase(pi);
         } else {
+            boundingBox.minExtents = glm::min(boundingBox.minExtents, particle->GetPosition());
+            boundingBox.maxExtents = glm::max(boundingBox.maxExtents, particle->GetPosition());
             pi++;
         }
     }
+    m_boundingBox = boundingBox;
+}
+
+const prev_test::common::intersection::AABB& ParticleSystemComponent::GetBoundingBox() const
+{
+    return m_boundingBox;
 }
 } // namespace prev_test::component::particle

@@ -7,6 +7,12 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::scene {
+Fire::Fire(const glm::vec3& initPosition)
+    : SceneNode()
+    , m_initialPosition(initPosition)
+{
+}
+
 void Fire::Init()
 {
     prev_test::component::particle::ParticleSystemComponentFactory particleSystemComponentFactory{};
@@ -14,7 +20,7 @@ void Fire::Init()
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::particle::IParticleSystemComponent>(GetThis(), m_particleSystemComponent, TAG_PARTICLE_SYSTEM_COMPONENT);
 
     prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{};
-    m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(prev_test::common::intersection::AABB(glm::vec3(-1.0), glm::vec3(1.0)), glm::vec3(6.0f, 15.0f, 6.0f), {});
+    m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(prev_test::common::intersection::AABB(glm::vec3{ -0.5 }, glm::vec3{ 0.5 }), glm::vec3{ 1.0f }, {});
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, TAG_BOUNDING_VOLUME_COMPONENT);
 
     SceneNode::Init();
@@ -22,15 +28,19 @@ void Fire::Init()
 
 void Fire::Update(float deltaTime)
 {
-    const auto terrain = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::terrain::ITerrainManagerComponent>({ TAG_TERRAIN_MANAGER_COMPONENT });
+    const auto terrain{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::terrain::ITerrainManagerComponent>({ TAG_TERRAIN_MANAGER_COMPONENT }) };
 
-    float height{ 0.0f };
-    terrain->GetHeightAt(m_initialPosition, height);
+    float groundHeight{ 0.0f };
+    terrain->GetHeightAt(m_initialPosition, groundHeight);
 
-    const glm::vec3 position{ m_initialPosition.x, height - 4.0f, m_initialPosition.z };
+    const float GroundOffset{ -4.0f };
+    const glm::vec3 position{ m_initialPosition.x, groundHeight + GroundOffset, m_initialPosition.z };
 
     m_particleSystemComponent->Update(deltaTime, position);
-    m_boundingVolumeComponent->Update(glm::translate(glm::mat4(1.0f), position + glm::vec3(0.0f, 15.0f, 0.0f)));
+
+    const auto& aabb{ m_particleSystemComponent->GetBoundingBox() };
+
+    m_boundingVolumeComponent->Update(glm::scale(glm::translate(glm::mat4(1.0f), aabb.GetCenter()), aabb.GetSize()));
 
     SceneNode::Update(deltaTime);
 }

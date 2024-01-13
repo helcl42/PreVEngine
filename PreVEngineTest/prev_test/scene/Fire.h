@@ -10,11 +10,7 @@
 namespace prev_test::scene {
 class Fire final : public prev::scene::graph::SceneNode {
 public:
-    Fire(const glm::vec3& initPosition)
-        : SceneNode()
-        , m_initialPosition(initPosition)
-    {
-    }
+    Fire(const glm::vec3& initPosition);
 
 public:
     void Init() override;
