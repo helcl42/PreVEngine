@@ -8,12 +8,15 @@ namespace prev::core::instance {
 Instance::Instance(const bool enableValidation, const char* appName, const char* engineName)
 {
     Layers layers;
-#ifdef ENABLE_VALIDATION
     if (enableValidation) {
+#ifdef VK_USE_PLATFORM_ANDROID_KHR
         layers.Pick("VK_LAYER_KHRONOS_validation");
+#else
+        layers.Pick("VK_LAYER_KHRONOS_validation");
+#endif
     }
     layers.Print();
-#endif
+
     Extensions extensions;
     if (extensions.Pick(VK_KHR_SURFACE_EXTENSION_NAME)) {
 #ifdef VK_USE_PLATFORM_WIN32_KHR
@@ -33,7 +36,6 @@ Instance::Instance(const bool enableValidation, const char* appName, const char*
         LOGE("Failed to load VK_KHR_Surface");
     }
 
-#ifdef ENABLE_VALIDATION
     if (enableValidation) {
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
         extensions.Pick(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
@@ -42,7 +44,6 @@ Instance::Instance(const bool enableValidation, const char* appName, const char*
 #endif
     }
     extensions.Print();
-#endif
 
     Create(layers, extensions, appName, engineName);
 }
@@ -84,7 +85,6 @@ void Instance::Create(const Layers& layers, const Extensions& extensions, const 
 
     LOGI("Vulkan Instance created\n");
 
-#ifdef ENABLE_VALIDATION
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
     if (extensions.IsPicked(VK_EXT_DEBUG_REPORT_EXTENSION_NAME)) {
         m_debugReport.Init(m_instance); // If VK_EXT_debug_report is loaded, initialize it.
@@ -93,7 +93,6 @@ void Instance::Create(const Layers& layers, const Extensions& extensions, const 
     if (extensions.IsPicked(VK_EXT_DEBUG_UTILS_EXTENSION_NAME)) {
         m_debugReport.Init(m_instance); // If VK_EXT_utils is loaded, initialize it.
     }
-#endif
 #endif
 }
 
@@ -104,9 +103,8 @@ void Instance::Print() const
 
 Instance::~Instance()
 {
-#ifdef ENABLE_VALIDATION
     m_debugReport.Destroy(); // Must be called BEFORE vkDestroyInstance()
-#endif
+
     vkDestroyInstance(m_instance, nullptr);
     LOGI("Vulkan Instance destroyed\n");
 }
