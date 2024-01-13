@@ -24,6 +24,6 @@ void SelectableComponent::SetPosition(const glm::vec3& at)
 void SelectableComponent::Reset()
 {
     m_selected = false;
-    m_position = glm::vec3(std::numeric_limits<float>::min());
+    m_position = glm::vec3(-std::numeric_limits<float>::max());
 }
 } // namespace prev_test::component::ray_casting

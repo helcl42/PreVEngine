@@ -240,7 +240,7 @@ glm::vec2 TerrainComponentFactory::CalculateTextureCoordinates(const int x, cons
 std::unique_ptr<HeightMapInfo> TerrainComponentFactory::CreateHeightMap(const HeightGenerator& generator) const
 {
     float minHeight{ std::numeric_limits<float>::max() };
-    float maxHeight{ std::numeric_limits<float>::min() };
+    float maxHeight{ -std::numeric_limits<float>::max() };
     auto heightMapInfo{ std::make_unique<HeightMapInfo>(m_vertexCount) };
     for (unsigned int z = 0; z < m_vertexCount; ++z) {
         for (unsigned int x = 0; x < m_vertexCount; ++x) {

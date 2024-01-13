@@ -19,7 +19,7 @@ public:
 private:
     bool m_selected{ false };
 
-    glm::vec3 m_position{ std::numeric_limits<float>::min() };
+    glm::vec3 m_position{ -std::numeric_limits<float>::max() };
 };
 } // namespace prev_test::component::ray_casting
 

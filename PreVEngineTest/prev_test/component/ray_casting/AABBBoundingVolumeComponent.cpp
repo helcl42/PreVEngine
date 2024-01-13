@@ -47,12 +47,10 @@ void AABBBoundingVolumeComponent::Update(const glm::mat4& worldTransform)
     }
 
     glm::vec3 minBound{ std::numeric_limits<float>::max() };
-    glm::vec3 maxBound{ std::numeric_limits<float>::min() };
+    glm::vec3 maxBound{ -std::numeric_limits<float>::max() };
     for (const auto& pt : m_vorkingAABBPoints) {
-        for (int i = 0; i < minBound.length(); i++) {
-            minBound[i] = std::min(minBound[i], pt[i]);
-            maxBound[i] = std::max(maxBound[i], pt[i]);
-        }
+        minBound = glm::min(minBound, pt);
+        maxBound = glm::max(maxBound, pt);
     }
 
     m_working = prev_test::common::intersection::AABB(glm::vec3(translation + minBound), glm::vec3(translation + maxBound));

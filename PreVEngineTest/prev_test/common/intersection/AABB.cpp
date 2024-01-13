@@ -5,7 +5,7 @@
 namespace prev_test::common::intersection {
 AABB::AABB()
     : minExtents(glm::vec3(std::numeric_limits<float>::max()))
-    , maxExtents(glm::vec3(std::numeric_limits<float>::min()))
+    , maxExtents(-glm::vec3(std::numeric_limits<float>::max()))
 {
 }
 
