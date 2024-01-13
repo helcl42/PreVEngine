@@ -171,22 +171,37 @@ private:
     std::atomic_uint64_t m_id{ 0 };
 };
 
+class RandomNumberGenerator {
+public:
+    RandomNumberGenerator()
+        : m_gen(std::random_device()())
+    {
+    }
+
+    RandomNumberGenerator(unsigned long seed)
+        : m_gen(seed)
+    {
+    }
+
+    std::default_random_engine& GetRandomEngine()
+    {
+        return m_gen;
+    }
+
+private:
+    std::default_random_engine m_gen;
 };
 
 class UUIDGenerator {
 public:
     static std::string GenerateNew()
     {
-        std::string uuid = std::string(36, ' ');
+        std::string uuid = std::string(36, '-');
 
-        uuid[8] = '-';
-        uuid[13] = '-';
-        uuid[18] = '-';
-        uuid[23] = '-';
-
-        for (uint32_t i = 0; i < 36; i++) {
+        RandomNumberGenerator rng{};
+        for (uint32_t i = 0; i < 36; ++i) {
             if (i != 8 && i != 13 && i != 18 && i != 23) {
-                uuid[i] = GetRandomSymbol();
+                uuid[i] = GetRandomSymbol(rng);
             }
         }
 
@@ -206,14 +221,12 @@ public:
     }
 
 private:
-    static char GetRandomSymbol()
+    static char GetRandomSymbol(RandomNumberGenerator& rng)
     {
-        static const std::string validSymbols = "0123456789abcdef";
+        static const std::string validSymbols{ "0123456789abcdef" };
 
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<> dis(0, static_cast<int>(validSymbols.size() - 1));
-        const auto index = dis(gen);
+        std::uniform_int_distribution<> dist(0, static_cast<int>(validSymbols.size() - 1));
+        const auto index{ dist(rng.GetRandomEngine()) };
         return validSymbols[index];
     }
 };

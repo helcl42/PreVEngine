@@ -1,7 +1,5 @@
 #include "AbstractParticleFactory.h"
 
-#include <random>
-
 namespace prev_test::component::particle {
 AbstractParticleFactory::AbstractParticleFactory(const std::shared_ptr<prev_test::render::IMaterial>& mt, const float gravityComp, const float avgSpeed, const float avgLifeLength, const float avgScale)
     : m_material(mt)
@@ -22,23 +20,6 @@ std::unique_ptr<Particle> AbstractParticleFactory::EmitParticle(const glm::vec3&
     float scale = GenerateValue(m_averageScale, m_scaleError);
     glm::vec3 radiusOffset = GenerateRadiusOffset();
     return std::make_unique<Particle>(m_material, centerPosition + radiusOffset, velocity, m_gravityCompliment, lifeLength, rotation, scale);
-}
-
-float AbstractParticleFactory::GenerateRotation()
-{
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    std::uniform_real_distribution<float> dist(0.0f, 360.0f);
-    return dist(mt);
-}
-
-float AbstractParticleFactory::GenerateValue(const float average, const float errorMargin)
-{
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
-    float offset = dist(mt) * errorMargin;
-    return average + offset;
 }
 
 void AbstractParticleFactory::SetSpeedError(const float err)
@@ -90,4 +71,18 @@ float AbstractParticleFactory::GetRadius() const
 {
     return m_radius;
 }
+
+float AbstractParticleFactory::GenerateRotation() const
+{
+    std::uniform_real_distribution<float> dist(0.0f, 360.0f);
+    return dist(m_rng.GetRandomEngine());
+}
+
+float AbstractParticleFactory::GenerateValue(const float average, const float errorMargin) const
+{
+    std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
+    float offset = dist(m_rng.GetRandomEngine()) * errorMargin;
+    return average + offset;
+}
+
 } // namespace prev_test::component::particle

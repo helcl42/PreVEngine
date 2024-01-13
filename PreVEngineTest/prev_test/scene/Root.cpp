@@ -1,6 +1,5 @@
 #include "Root.h"
 
-#include "../common/AssetManager.h"
 #include "Cube.h"
 #include "Fire.h"
 #include "Plane.h"
@@ -21,6 +20,10 @@
 #include "sky/Sun.h"
 #include "terrain/TerrainManager.h"
 #include "water/WaterManager.h"
+
+#include "../common/AssetManager.h"
+
+#include <prev/util/Utils.h>
 
 namespace prev_test::scene {
 Root::Root()
@@ -94,18 +97,15 @@ void Root::Init()
 
     const float ITEMS_TERRAIN_BORDER_PADDING{ 10.0f };
 
-    std::random_device r;
-    std::default_random_engine positionRandom{ r() };
+    prev::util::RandomNumberGenerator rng{};
     std::uniform_real_distribution<float> positionDistribution(ITEMS_TERRAIN_BORDER_PADDING, prev_test::component::terrain::TERRAIN_TILE_SIZE * TERRAIN_GRID_MAX_X - ITEMS_TERRAIN_BORDER_PADDING);
-
-    std::default_random_engine scaleRandom{ r() };
     std::uniform_real_distribution<float> scaleDistribution(0.005f, 0.01f);
 
     const uint32_t STONES_COUNT{ 12 };
     for (uint32_t i = 0; i < STONES_COUNT; i++) {
-        const auto x = positionDistribution(positionRandom);
-        const auto z = positionDistribution(positionRandom);
-        auto stone = std::make_shared<Stone>(glm::vec3(x, 0.0f, z), glm::quat(glm::vec3(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f)))), glm::vec3(scaleDistribution(scaleRandom)));
+        const auto x{ positionDistribution(rng.GetRandomEngine()) };
+        const auto z{ positionDistribution(rng.GetRandomEngine()) };
+        auto stone = std::make_shared<Stone>(glm::vec3(x, 0.0f, z), glm::quat(glm::vec3(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f)))), glm::vec3(scaleDistribution(rng.GetRandomEngine())));
         AddChild(stone);
     }
 
@@ -178,12 +178,13 @@ void Root::operator()(const prev::input::touch::TouchEvent& touchEvent)
 void Root::AddNode()
 {
     const float DISTANCE{ 40.0f };
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(0, 4);
-    const auto i = dis(gen);
-    const auto j = dis(gen);
-    const auto k = dis(gen);
+
+    prev::util::RandomNumberGenerator rng{};
+    std::uniform_int_distribution<> dist(0, 4);
+
+    const auto i{ dist(rng.GetRandomEngine()) };
+    const auto j{ dist(rng.GetRandomEngine()) };
+    const auto k{ dist(rng.GetRandomEngine()) };
 
     auto robot = std::make_shared<robot::CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
     robot->Init();

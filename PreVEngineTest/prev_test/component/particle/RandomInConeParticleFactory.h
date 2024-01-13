@@ -3,6 +3,8 @@
 
 #include "AbstractParticleFactory.h"
 
+#include <prev/util/Utils.h>
+
 namespace prev_test::component::particle {
 class RandomInConeParticleFactory final : public AbstractParticleFactory {
 public:
@@ -28,6 +30,8 @@ private:
     glm::vec3 m_coneDirection{ 0.0f, 1.0f, 0.0f };
 
     float m_directionDeviationInDegs{ 20.0f };
+
+    mutable prev::util::RandomNumberGenerator m_rng{};
 };
 } // namespace prev_test::component::particle
 
