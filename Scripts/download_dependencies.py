@@ -4,10 +4,10 @@ import os
 
 
 def download_file_from_google_drive(file_id, destination, chunk_size=32768):
-    url = "https://docs.google.com/uc?export=download"
+    url = "https://drive.usercontent.google.com/download"
 
     session = requests.Session()
-    params = {'id': file_id, 'confirm': 1}
+    params = {'id': file_id, 'confirm': 1, 'export': 'download'}
     response = session.get(url, params=params, stream=True)
 
     file_size = response.headers.get('content-length')
