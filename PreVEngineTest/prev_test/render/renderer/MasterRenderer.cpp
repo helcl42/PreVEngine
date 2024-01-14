@@ -364,6 +364,7 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
         projectionMatrix,
         newCameraPosition,
         glm::vec4(0.0f, 1.0f, 0.0f, -(prev_test::component::water::WATER_LEVEL + prev_test::component::water::WATER_CLIP_PLANE_OFFSET)),
+        cameraComponent->GetViewFrustum().GetVerticalFov(),
         glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane()),
         prev_test::common::intersection::Frustum{ projectionMatrix, viewMatrix }
     };
@@ -392,6 +393,7 @@ void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& re
         projectionMatrix,
         cameraComponent->GetPosition(),
         glm::vec4(0.0f, -1.0f, 0.0f, prev_test::component::water::WATER_LEVEL + prev_test::component::water::WATER_CLIP_PLANE_OFFSET),
+        cameraComponent->GetViewFrustum().GetVerticalFov(),
         glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane()),
         prev_test::common::intersection::Frustum{ projectionMatrix, viewMatrix }
     };
@@ -417,6 +419,7 @@ void MasterRenderer::RenderScene(const prev::render::RenderContext& renderContex
         projectionMatrix,
         cameraComponent->GetPosition(),
         DEFAULT_CLIP_PLANE,
+        cameraComponent->GetViewFrustum().GetVerticalFov(),
         glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane()),
         prev_test::common::intersection::Frustum{ projectionMatrix, viewMatrix }
     };
