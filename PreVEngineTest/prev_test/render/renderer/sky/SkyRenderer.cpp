@@ -99,12 +99,18 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
     AddImageBufferPipelineBarrierCommand(m_skyAlphanessImageBuffer->GetImage(), VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, renderContext.commandBuffer);
     AddImageBufferPipelineBarrierCommand(m_skyCloudDistanceImageBuffer->GetImage(), VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, renderContext.commandBuffer);
 
+    const float skyNearClippingPlane{ std::min(renderContext.nearFarClippingPlane.y * 100.0f, 10.0f) };
+    const float skyFarClippingPlane{ renderContext.nearFarClippingPlane.y };
+
+    const prev_test::render::ViewFrustum skyViewFrustum(renderContext.verticalFov, skyNearClippingPlane, skyFarClippingPlane);
+    const auto projectionMatrix{ skyViewFrustum.CreateProjectionMatrix(extent.width, extent.height) };
+
     auto uboCS = m_uniformsPoolSkyCS->GetNext();
 
     UniformsSkyCS uniformsCS{};
     uniformsCS.resolution = glm::vec4(extent.width, extent.height, 0.0f, 0.0f);
-    uniformsCS.projectionMatrix = renderContext.projectionMatrix;
-    uniformsCS.inverseProjectionMatrix = glm::inverse(renderContext.projectionMatrix);
+    uniformsCS.projectionMatrix = projectionMatrix;
+    uniformsCS.inverseProjectionMatrix = glm::inverse(projectionMatrix);
     uniformsCS.viewMatrix = renderContext.viewMatrix;
     uniformsCS.inverseViewMatrix = glm::inverse(renderContext.viewMatrix);
     uniformsCS.lightColor = glm::vec4(mainLightComponent->GetColor(), 1.0f);

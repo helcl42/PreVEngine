@@ -35,16 +35,19 @@ struct NormalRenderContext : prev::render::RenderContext {
 
     const glm::vec4 clipPlane;
 
+    const float verticalFov;
+
     const glm::vec2 nearFarClippingPlane;
 
     const prev_test::common::intersection::Frustum frustum;
 
-    NormalRenderContext(const RenderContext& ctx, const glm::mat4& vm, const glm::mat4& pm, const glm::vec3& camPos, const glm::vec4& cp, const glm::vec2& nearFar, const prev_test::common::intersection::Frustum& frst)
+    NormalRenderContext(const RenderContext& ctx, const glm::mat4& vm, const glm::mat4& pm, const glm::vec3& camPos, const glm::vec4& cp, const float vertFov, const glm::vec2& nearFar, const prev_test::common::intersection::Frustum& frst)
         : RenderContext{ ctx }
         , viewMatrix{ vm }
         , projectionMatrix{ pm }
         , cameraPosition{ camPos }
         , clipPlane{ cp }
+        , verticalFov{ vertFov }
         , nearFarClippingPlane{ nearFar }
         , frustum{ frst }
     {
