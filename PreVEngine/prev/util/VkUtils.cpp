@@ -2,6 +2,7 @@
 
 #include "../core/Formats.h"
 
+#include <algorithm>>
 #include <limits>
 #include <map>
 #include <sstream>
@@ -481,12 +482,7 @@ std::string PresentModeToString(const VkPresentModeKHR mode)
 
 uint32_t GetComputeGroupSize(const uint32_t val, const uint32_t blockSize)
 {
-    const auto div{ val / blockSize };
-    if (val % blockSize == 0) {
-        return div;
-    } else {
-        return div + blockSize;
-    }
+    return std::max((val + blockSize - 1) / blockSize, 1u);
 }
 
 std::string QueueFlagsToString(const VkQueueFlags quueFlags)
