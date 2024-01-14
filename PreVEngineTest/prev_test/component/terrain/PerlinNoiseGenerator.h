@@ -26,7 +26,7 @@ private:
     static float Interpolate(const float a, const float b, const float blend);
 
 private:
-    const unsigned int m_seed;
+    const unsigned long m_seed;
 };
 } // namespace prev_test::component::terrain
 
