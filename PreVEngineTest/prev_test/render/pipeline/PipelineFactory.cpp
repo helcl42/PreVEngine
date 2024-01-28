@@ -1,6 +1,7 @@
 #include "PipelineFactory.h"
 
 #include <prev/common/Logger.h>
+#include <prev/util/Utils.h>
 
 #include <vector>
 
