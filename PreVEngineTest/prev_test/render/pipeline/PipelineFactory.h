@@ -4,8 +4,6 @@
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/shader/Shader.h>
 
-#include <prev/util/Utils.h>
-
 namespace prev_test::render::pipeline {
 class PipelineFactory {
 public:
