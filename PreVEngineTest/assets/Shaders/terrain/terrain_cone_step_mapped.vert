@@ -38,7 +38,7 @@ layout(location = 4) out vec3 outToCameraVectorTangentSpace;
 layout(location = 5) out vec3 outPositionTangentSpace;
 layout(location = 6) out vec3 outToLightVectorTangentSpace[MAX_LIGHT_COUNT];
 
-void main() 
+void main()
 {
 	vec4 worldPosition = uboVS.modelMatrix * vec4(inPosition, 1.0);
 	outWorldPosition = worldPosition.xyz;
@@ -54,14 +54,15 @@ void main()
 
 	outVisibility = GetVisibility(viewPosition.xyz, uboVS.gradient, uboVS.density);
 
-	mat3 mv3 = mat3(uboVS.viewMatrix) * mat3(uboVS.modelMatrix);	
+	mat3 mv3 = mat3(uboVS.viewMatrix) * mat3(uboVS.modelMatrix);
 	mat3 TBN = CreateTBNMatrix(mv3, inNormal, inTangent, inBiTangent);
 
-	vec3 cameraPositionViewSpace = (uboVS.viewMatrix * vec4(uboVS.cameraPosition.xyz, 1.0)).xyz;
+	vec4 cameraPositionViewSpaceVec4 = uboVS.viewMatrix * vec4(uboVS.cameraPosition.xyz, 1.0);
+	vec3 cameraPositionViewSpace = cameraPositionViewSpaceVec4.xyz / cameraPositionViewSpaceVec4.w;
 
 	outToCameraVectorTangentSpace = TBN * cameraPositionViewSpace;
 	outPositionTangentSpace = TBN * viewPosition.xyz;
- 
+
 	for (int i = 0; i < uboVS.lightning.realCountOfLights; i++)
 	{
 		const Light light = uboVS.lightning.lights[i];
