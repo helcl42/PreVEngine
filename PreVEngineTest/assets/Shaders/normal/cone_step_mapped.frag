@@ -45,7 +45,7 @@ void main()
 	const vec3 rayDirection = normalize(inPositionTangentSpace);
 	vec2 uv = ConeStepMapping(heightSampler, uboFS.heightScale, uboFS.numLayers, inTextureCoord, rayDirection);
 
-	float shadow = 1.0;	
+	float shadow = 1.0;
 	if(uboFS.castedByShadows != 0)
 	{
 		shadow = GetShadow(depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.02);

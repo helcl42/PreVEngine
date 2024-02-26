@@ -16,7 +16,7 @@ vec2 ConeStepMapping(in sampler2D coneMapSampler, in float heightScale, in uint 
 
         vec2 heightAndCone = clamp(texture(coneMapSampler, samplePoint.xy).rg, 0.0, 1.0);
         float h = heightAndCone.x * heightScale;
-        float c = heightAndCone.y * heightAndCone.y / heightScale; // should be here the brackets ???
+        float c = heightAndCone.y * heightAndCone.y / heightScale; // cone ratio is stored as sqrt(cone_ratio) due to better distribution so we need to multiply it by itself to get real cone_ratio
 
         vec2 C = P + R * t;
         if (C.y <= h)
