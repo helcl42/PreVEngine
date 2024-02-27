@@ -40,7 +40,7 @@ layout(location = 6) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
 
 layout(location = 0) out vec4 outColor;
 
-void main() 
+void main()
 {
 	const vec3 rayDirection = normalize(inPositionTangentSpace);
 	vec2 uv = ConeStepMapping(heightSampler, uboFS.heightScale, uboFS.numLayers, inTextureCoord, rayDirection);
