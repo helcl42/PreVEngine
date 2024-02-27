@@ -30,6 +30,6 @@ vec2 ConeStepMapping(in sampler2D coneMapSampler, in float heightScale, in uint 
         t = max(t + minStep, newT);
     }
 
-    vec2  texC = uv.xy + texDir3D.xy * t;
+    vec2 texC = uv.xy + texDir3D.xy * t;
     return texC.xy;
 }

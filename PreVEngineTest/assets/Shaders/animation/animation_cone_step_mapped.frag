@@ -40,12 +40,12 @@ layout(location = 6) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
 
 layout(location = 0) out vec4 outColor;
 
-void main() 
+void main()
 {
 	const vec3 rayDirection = normalize(inPositionTangentSpace);
 	vec2 uv = ConeStepMapping(heightSampler, uboFS.heightScale.x, uboFS.numLayers, inTextureCoord, rayDirection);
-	
-	float shadow = 1.0;	
+
+	float shadow = 1.0;
 	if(uboFS.castedByShadows != 0)
 	{
 		shadow = GetShadow(depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.02);
