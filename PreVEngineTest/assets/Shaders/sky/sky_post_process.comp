@@ -17,7 +17,7 @@ layout(std140, binding = 3) uniform UniformBufferObject {
 #define  BLUR_OFFSET_X  1.0 / uboCS.resolution.x
 #define  BLUR_OFFSET_Y  1.0 / uboCS.resolution.y
 
-vec4 GaussianBlur(in sampler2D tex, in vec2 uv) 
+vec4 GaussianBlur(in sampler2D tex, in vec2 uv)
 {
     vec2 offsets[9] = vec2[](
         vec2(-BLUR_OFFSET_X,  BLUR_OFFSET_Y),
