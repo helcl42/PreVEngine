@@ -33,3 +33,66 @@ vec2 ConeStepMapping(in sampler2D coneMapSampler, in float heightScale, in uint 
     vec2 texC = uv.xy + texDir3D.xy * t;
     return texC.xy;
 }
+
+// relaxed cone step mapping client code
+
+const bool useDepthBias = true;
+
+vec3 GetRayDirection(in vec3 viewDirection, in float heightScale)
+{
+	vec3 v = normalize(viewDirection);
+	v.z = abs(v.z);
+	if (useDepthBias)
+	{
+		float db = 1.0 - v.z;
+		db *= db;
+		db *= db;
+		db = 1.0 - db * db;
+		v.xy *= db;
+	}
+	v.xy *= heightScale;
+    return v;
+}
+
+float GetInverseHeight(float height)
+{
+    return 1.0 - height;
+}
+
+vec2 RelaxeConeStepMapping(in sampler2D coneMapSampler, in float heightScale, in uint numLayers, in vec2 uv, in vec3 texDir3D)
+{
+    const uint binarySteps = 6;
+
+    vec3 rayPos = vec3(uv, 0.0);
+    vec3 rayDir = GetRayDirection(texDir3D, heightScale);
+
+    rayDir /= rayDir.z; // Scale rayDir
+    float rayRatio = length(rayDir.xy);
+    vec3 pos = rayPos;
+    for(uint i = 0; i < numLayers; ++i)
+    {
+        vec2 heightAndCone = clamp(texture(coneMapSampler, pos.xy).rg, 0.0, 1.0);
+        float coneRatio = heightAndCone.g * heightAndCone.g; // cone ratio is stored as sqrt(cone_ratio) due to better distribution so we need to multiply it by itself to get real cone_ratio
+        float height = GetInverseHeight(heightAndCone.r) - pos.z;
+        float d = coneRatio * height / (rayRatio + coneRatio);
+        pos += rayDir * d;
+    }
+
+    // Binary search initial range and initial position
+    vec3 bsRange = 0.5 * rayDir * pos.z;
+    vec3 bsPosition = rayPos + bsRange;
+    for(uint i = 0; i < binarySteps; ++i)
+    {
+        vec2 heightAndCone = clamp(texture(coneMapSampler, pos.xy).rg, 0.0, 1.0);
+        bsRange *= 0.5;
+        if (bsPosition.z < GetInverseHeight(heightAndCone.r)) // If outside
+        {
+            bsPosition += bsRange; // Move forward
+        }
+        else
+        {
+            bsPosition -= bsRange; // Move backward
+        }
+    }
+    return bsPosition.xy;
+}
