@@ -43,7 +43,7 @@ layout(location = 0) out vec4 outColor;
 void main()
 {
 	const vec3 rayDirection = normalize(inPositionTangentSpace);
-	vec2 uv = ConeStepMapping(heightSampler, uboFS.heightScale, uboFS.numLayers, inTextureCoord, rayDirection);
+	vec2 uv = RelaxeConeStepMapping(heightSampler, uboFS.heightScale, uboFS.numLayers, inTextureCoord, rayDirection);
 
 	float shadow = 1.0;
 	if(uboFS.castedByShadows != 0)
