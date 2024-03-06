@@ -39,12 +39,15 @@ void SunRenderer::Init()
     m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsVS>>(*allocator);
     m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
-    VkQueryPoolCreateInfo queryPoolInfo = { VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO };
-    queryPoolInfo.queryType = VK_QUERY_TYPE_OCCLUSION;
-    queryPoolInfo.queryCount = 1;
-    VKERRCHECK(vkCreateQueryPool(*device, &queryPoolInfo, nullptr, &m_queryPool));
+    for (uint32_t i = 0; i < QueryPoolCount; ++i) {
+        VkQueryPoolCreateInfo queryPoolInfo = { VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO };
+        queryPoolInfo.queryType = VK_QUERY_TYPE_OCCLUSION;
+        queryPoolInfo.queryCount = 1;
+        VKERRCHECK(vkCreateQueryPool(*device, &queryPoolInfo, nullptr, &m_queryPools[i]));
+    }
 
     m_firstFrame = true;
+    m_queryPoolIndex = 0;
     m_passedSamples = 0;
 }
 
@@ -58,14 +61,14 @@ void SunRenderer::BeforeRender(const NormalRenderContext& renderContext)
 #else
         VkQueryResultFlags queryResultFlags{ VK_QUERY_RESULT_STATUS_COMPLETE_KHR };
 #endif
-        const auto result{ vkGetQueryPoolResults(*device, m_queryPool, 0, 1, sizeof(m_passedSamples), &m_passedSamples, sizeof(uint64_t), VK_QUERY_RESULT_64_BIT | queryResultFlags) };
+        const auto result{ vkGetQueryPoolResults(*device, m_queryPools[m_queryPoolIndex], 0, 1, sizeof(m_passedSamples), &m_passedSamples, sizeof(uint64_t), VK_QUERY_RESULT_64_BIT | queryResultFlags) };
         const float ratio{ glm::clamp((static_cast<float>(m_passedSamples) / static_cast<float>(m_maxNumberOfSamples * m_renderPass->GetSamplesCount())) * 0.5f, 0.0f, 1.0f) };
 
         prev::event::EventChannel::Post(prev_test::render::renderer::sky::SunVisibilityEvent{ ratio });
     }
     m_firstFrame = false;
 
-    vkCmdResetQueryPool(renderContext.commandBuffer, m_queryPool, 0, 1);
+    vkCmdResetQueryPool(renderContext.commandBuffer, m_queryPools[m_queryPoolIndex], 0, 1);
 }
 
 void SunRenderer::PreRender(const NormalRenderContext& renderContext)
@@ -89,7 +92,7 @@ void SunRenderer::Render(const NormalRenderContext& renderContext, const std::sh
 
         m_maxNumberOfSamples = static_cast<uint64_t>(xScale * static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) * yScale * static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y));
 
-        vkCmdBeginQuery(renderContext.commandBuffer, m_queryPool, 0, 0);
+        vkCmdBeginQuery(renderContext.commandBuffer, m_queryPools[m_queryPoolIndex], 0, 0);
 
         auto uboVS = m_uniformsPoolVS->GetNext();
         UniformsVS uniformsVS{};
@@ -109,7 +112,7 @@ void SunRenderer::Render(const NormalRenderContext& renderContext, const std::sh
 
         vkCmdDrawIndexed(renderContext.commandBuffer, sunComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
 
-        vkCmdEndQuery(renderContext.commandBuffer, m_queryPool, 0);
+        vkCmdEndQuery(renderContext.commandBuffer, m_queryPools[m_queryPoolIndex], 0);
     }
 }
 
@@ -119,12 +122,15 @@ void SunRenderer::PostRender(const NormalRenderContext& renderContext)
 
 void SunRenderer::AfterRender(const NormalRenderContext& renderContext)
 {
+    m_queryPoolIndex = (m_queryPoolIndex + 1) % QueryPoolCount;
 }
 
 void SunRenderer::ShutDown()
 {
     auto device = prev::core::DeviceProvider::Instance().GetDevice();
-    vkDestroyQueryPool(*device, m_queryPool, nullptr);
+    for (uint32_t i = 0; i < QueryPoolCount; ++i) {
+        vkDestroyQueryPool(*device, m_queryPools[i], nullptr);
+    }
 
     m_pipeline->ShutDown();
     m_pipeline = nullptr;

@@ -59,7 +59,11 @@ private:
 
     uint64_t m_maxNumberOfSamples{ 0 };
 
-    VkQueryPool m_queryPool{ nullptr };
+    static const uint32_t QueryPoolCount{ 3 };
+
+    VkQueryPool m_queryPools[QueryPoolCount] = {};
+
+    uint32_t m_queryPoolIndex{ 0 };
 
     bool m_firstFrame{ true };
 };
