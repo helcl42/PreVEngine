@@ -82,7 +82,6 @@ jobs:
     - name: Create Artifact
       run: |
         mkdir build-win32
-        mkdir build-win32/assets
         cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/assets build-win32
         cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/Release/PreVEngineTest.exe build-win32
         cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/*.dll build-win32
