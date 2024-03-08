@@ -65,7 +65,7 @@ private:
 
     uint32_t m_queryPoolIndex{ 0 };
 
-    bool m_firstFrame{ true };
+    uint64_t m_frameIndex{ 0 };
 };
 } // namespace prev_test::render::renderer::sky
 
