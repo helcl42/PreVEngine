@@ -2,7 +2,7 @@
 
 #include "../core/Formats.h"
 
-#include <algorithm>>
+#include <algorithm>
 #include <limits>
 #include <map>
 #include <sstream>
