@@ -150,7 +150,7 @@ private:
 
             if (event.type == ASENSOR_TYPE_GYROSCOPE) {
                 std::scoped_lock lock(m_mutex);
-                if (m_lastOrientationTimestamp != 0) {
+                if (event.timestamp > m_lastOrientationTimestamp && m_lastOrientationTimestamp != 0) {
                     const auto deltaTime{ static_cast<float>(event.timestamp - m_lastOrientationTimestamp) / 1000000000.0f };
                     const glm::vec3 angularVelocity{ event.data[0], event.data[1], event.data[2] };
                     m_currentOrientation = IntegrateGyroscopeRotation(m_currentOrientation, angularVelocity, deltaTime);
