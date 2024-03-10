@@ -147,6 +147,22 @@ void Root::Init()
 
 void Root::Update(float deltaTime)
 {
+    if (m_addNode) {
+        AddNode();
+    }
+
+    if (m_removeNode) {
+        RemoveNode();
+    }
+
+    if (m_reloadAll) {
+        LOGW("Reloading whole scene.");
+        ShutDown();
+        Init();
+    }
+
+    m_addNode = m_removeNode = m_reloadAll = false;
+
     SceneNode::Update(deltaTime);
 }
 
@@ -159,9 +175,11 @@ void Root::operator()(const prev::input::keyboard::KeyEvent& keyEvent)
 {
     if (keyEvent.action == prev::input::keyboard::KeyActionType::PRESS) {
         if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_J) {
-            RemoveNode();
+            m_removeNode = true;
         } else if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_K) {
-            AddNode();
+            m_addNode = true;
+        } else if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_I) {
+            m_reloadAll = true;
         }
     }
 }
@@ -169,9 +187,9 @@ void Root::operator()(const prev::input::keyboard::KeyEvent& keyEvent)
 void Root::operator()(const prev::input::touch::TouchEvent& touchEvent)
 {
     if (touchEvent.action == prev::input::touch::TouchActionType::DOWN) {
-        // AddNode();
+        // m_addNode = true;
     } else if (touchEvent.action == prev::input::touch::TouchActionType::UP) {
-        // RemoveNode();
+        // m_removeNode = true;
     }
 }
 
