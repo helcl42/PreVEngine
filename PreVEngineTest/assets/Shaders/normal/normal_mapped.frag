@@ -19,11 +19,6 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 
 	uint selected;
 	uint castedByShadows;
-	float heightScale;
-	float parallaxBias;
-
-	float numLayers;
-	uint mappingMode;
 } uboFS;
 
 layout(binding = 2) uniform sampler2D colorSampler;
