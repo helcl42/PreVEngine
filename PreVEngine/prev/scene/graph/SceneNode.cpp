@@ -35,7 +35,7 @@ void SceneNode::ShutDown()
     for (auto& child : m_children) {
         child->ShutDown();
     }
-    m_children.clear();
+    RemoveAllChildren();
 
     prev::event::EventChannel::Post(prev::scene::SceneNodeShutDownEvent{ GetId() });
     m_tags = prev::common::TagSet();
@@ -63,6 +63,14 @@ void SceneNode::RemoveChild(const std::shared_ptr<ISceneNode>& child)
             break;
         }
     }
+}
+
+void SceneNode::RemoveAllChildren()
+{
+    for (auto& child : m_children) {
+        child->SetParent(nullptr);
+    }
+    m_children.clear();
 }
 
 std::shared_ptr<ISceneNode> SceneNode::GetThis()
