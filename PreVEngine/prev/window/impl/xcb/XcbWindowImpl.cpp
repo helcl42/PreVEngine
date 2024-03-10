@@ -145,9 +145,12 @@ XcbWindowImpl::XcbWindowImpl(const WindowInfo& windowInfo)
 
 XcbWindowImpl::~XcbWindowImpl()
 {
+    xkb_state_unref(m_keyboardState); // xcb keyboard state
+    xkb_keymap_unref(m_keyboardKeymap); // xcb keymap
+    xkb_context_unref(m_keyboardContext); // xkb keyboard
+
     free(m_atomWmDeleteWindow);
     xcb_disconnect(m_xcbConnection);
-    free(m_keyboardContext); // xkb keyboard
 }
 
 void XcbWindowImpl::SetTitle(const std::string& title)
