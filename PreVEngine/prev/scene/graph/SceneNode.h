@@ -26,6 +26,8 @@ public:
 
     void RemoveChild(const std::shared_ptr<ISceneNode>& child) override;
 
+    void RemoveAllChildren() override;
+
     std::shared_ptr<ISceneNode> GetThis() override;
 
     void SetParent(const std::shared_ptr<ISceneNode>& parent) override;

@@ -22,6 +22,8 @@ public:
 
     virtual void RemoveChild(const std::shared_ptr<ISceneNode>& child) = 0;
 
+    virtual void RemoveAllChildren() = 0;
+
     virtual void SetParent(const std::shared_ptr<ISceneNode>& parent) = 0;
 
     virtual std::shared_ptr<ISceneNode> GetParent() const = 0;
