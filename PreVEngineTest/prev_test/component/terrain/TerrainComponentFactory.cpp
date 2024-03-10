@@ -77,38 +77,6 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
     return result;
 }
 
-std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrainParallaxMapped(const int x, const int z, const float size) const
-{
-    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
-
-    HeightGenerator heightGenerator(x, z, m_vertexCount, m_seed);
-    const std::shared_ptr<HeightMapInfo> heightMap{ CreateHeightMap(heightGenerator) };
-    const std::shared_ptr<VertexData> vertexData{ GenerateVertexData(heightMap, size) };
-
-    prev_test::render::material::MaterialFactory materialFactory{};
-
-    const float layerTransitionWidth{ 0.1f };
-    const TerrainLayerCreateInfo terrainLayers[] = {
-        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus_normal.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus_height.png"), 10.0f, 0.2f, 0.000002f, 0.2f },
-        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass_height.png"), 10.0f, 0.2f, 0.005f, 0.42f },
-        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock_height.png"), 10.0f, 0.2f, 0.02f, 0.62f },
-        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_normal.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_height.png"), 10.0f, 0.2f, 0.03f, 0.9f }
-    };
-
-    auto result{ std::make_unique<TerrainComponent>(x, z) };
-    result->m_model = CreateModel(*allocator, vertexData, true);
-    result->m_heightsInfo = heightMap;
-    result->m_vertexData = vertexData;
-    for (const auto& layer : terrainLayers) {
-        auto material{ materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, VK_SAMPLER_ADDRESS_MODE_REPEAT }, layer.materialPath, layer.materialNormalPath, layer.materialHeightPath, *allocator) };
-        material->SetHeightScale(layer.heightScale);
-        result->m_materials.emplace_back(std::move(material));
-        result->m_heightSteps.emplace_back(layer.heightStep);
-    }
-    result->m_transitionRange = layerTransitionWidth;
-    return result;
-}
-
 std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrainConeStepMapped(const int x, const int z, const float size) const
 {
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
