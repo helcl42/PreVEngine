@@ -55,7 +55,7 @@ void AnimationBumpMappedShadowsRenderer::PreRender(const ShadowsRenderContext& r
 
 void AnimationBumpMappedShadowsRenderer::Render(const ShadowsRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
-    if (node->GetTags().HasAll({ TAG_TRANSFORM_COMPONENT }) && node->GetTags().HasAny({ TAG_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT, TAG_ANIMATION_PARALLAX_MAPPED_RENDER_COMPONENT, TAG_ANIMATION_CONE_STEP_MAPPED_RENDER_COMPONENT })) {
+    if (node->GetTags().HasAll({ TAG_TRANSFORM_COMPONENT }) && node->GetTags().HasAny({ TAG_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT, TAG_ANIMATION_CONE_STEP_MAPPED_RENDER_COMPONENT })) {
         bool visible{ true };
         if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
             visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContext.frustum);

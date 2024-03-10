@@ -19,8 +19,6 @@ public:
 
     std::unique_ptr<ITerrainComponenet> CreateRandomTerrainNormalMapped(const int x, const int z, const float size) const;
 
-    std::unique_ptr<ITerrainComponenet> CreateRandomTerrainParallaxMapped(const int x, const int z, const float size) const;
-
     std::unique_ptr<ITerrainComponenet> CreateRandomTerrainConeStepMapped(const int x, const int z, const float size) const;
 
 private:
