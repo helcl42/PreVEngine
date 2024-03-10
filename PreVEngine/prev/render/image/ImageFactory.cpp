@@ -49,6 +49,8 @@ std::unique_ptr<Image> ImageFactory::CreateImageFromMemory(const uint8_t* data, 
 
     LOGI("Loaded image from memory: %d bytes (%dx%d)\n", dataLength, w, h);
 
+    stbi_image_free(imageBytes);
+
     return image;
 }
 
