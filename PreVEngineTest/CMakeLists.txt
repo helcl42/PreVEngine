@@ -82,7 +82,7 @@ file(GLOB SRC_LIST
 option(RENDER_SELECTION "Render selection" ON)
 option(RENDER_RAYCASTS "Render ray casts" OFF)
 option(RENDER_BOUNDING_VOLUMES "Render bounding volumes" OFF)
-option(PARALLEL_RENDERING "Parallel rendering" ON)
+option(PARALLEL_RENDERING "Parallel rendering" OFF)
 
 if (RENDER_SELECTION)
     add_definitions(-DRENDER_SELECTION)
@@ -137,8 +137,6 @@ elseif(ANDROID)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17 -O3")
 
     add_definitions(-DGLM_FORCE_CXX17)
-
-    add_subdirectory("${CMAKE_BINARY_DIR}/PreVEngine")
 
     include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../PreVEngine/platform/android")
     include_directories("${ANDROID_NDK}/sources/android/native_app_glue")
