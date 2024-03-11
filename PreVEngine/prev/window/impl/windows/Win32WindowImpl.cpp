@@ -411,7 +411,7 @@ LRESULT CALLBACK Win32WindowImpl::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 }
 
 // Return true if this window can present the given queue type
-bool Win32WindowImpl::CanPresent(VkPhysicalDevice gpu, uint32_t queue_family) const
+bool Win32WindowImpl::CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const
 {
     return vkGetPhysicalDeviceWin32PresentationSupportKHR(gpu, queue_family) == VK_TRUE;
 }
