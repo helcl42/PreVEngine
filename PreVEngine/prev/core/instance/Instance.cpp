@@ -9,11 +9,7 @@ Instance::Instance(const bool enableValidation, const char* appName, const char*
 {
     Layers layers;
     if (enableValidation) {
-#ifdef VK_USE_PLATFORM_ANDROID_KHR
         layers.Pick("VK_LAYER_KHRONOS_validation");
-#else
-        layers.Pick("VK_LAYER_KHRONOS_validation");
-#endif
     }
     layers.Print();
 
@@ -31,6 +27,10 @@ Instance::Instance(const bool enableValidation, const char* appName, const char*
         extensions.Pick(VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
 #elif VK_USE_PLATFORM_MIR_KHR
         extensions.Pick(VK_KHR_MIR_SURFACE_EXTENSION_NAME);
+#elif VK_USE_PLATFORM_MACOS_MVK
+        extensions.Pick(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+        extensions.Pick(VK_MVK_MACOS_SURFACE_EXTENSION_NAME);
+        extensions.Pick(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
 #endif
     } else {
         LOGE("Failed to load VK_KHR_Surface");
@@ -69,7 +69,11 @@ void Instance::Create(const Layers& layers, const Extensions& extensions, const 
 
     VkInstanceCreateInfo instanceInfo = { VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
     instanceInfo.pNext = nullptr;
+#if VK_USE_PLATFORM_MACOS_MVK
+    instanceInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#else
     instanceInfo.flags = 0;
+#endif
     instanceInfo.pApplicationInfo = &appInfo;
     instanceInfo.enabledExtensionCount = extensions.GetPickCount();
     instanceInfo.ppEnabledExtensionNames = extensions.GetPickListRaw();
