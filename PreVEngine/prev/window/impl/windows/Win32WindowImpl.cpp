@@ -210,7 +210,7 @@ bool Win32WindowImpl::CreateSurface(VkInstance instance)
 
     m_vkInstance = instance;
 
-    VkWin32SurfaceCreateInfoKHR win32CreateInfo;
+    VkWin32SurfaceCreateInfoKHR win32CreateInfo{};
     win32CreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
     win32CreateInfo.pNext = nullptr;
     win32CreateInfo.flags = 0;

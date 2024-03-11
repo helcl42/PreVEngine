@@ -204,7 +204,7 @@ bool XcbWindowImpl::CreateSurface(VkInstance instance)
 
     m_vkInstance = instance;
 
-    VkXcbSurfaceCreateInfoKHR xcbCreateInfo;
+    VkXcbSurfaceCreateInfoKHR xcbCreateInfo{};
     xcbCreateInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
     xcbCreateInfo.pNext = nullptr;
     xcbCreateInfo.flags = 0;

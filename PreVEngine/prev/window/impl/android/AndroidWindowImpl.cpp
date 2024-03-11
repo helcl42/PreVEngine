@@ -259,7 +259,7 @@ bool AndroidWindowImpl::CreateSurface(VkInstance instance)
 
     m_vkInstance = instance;
 
-    VkAndroidSurfaceCreateInfoKHR androidCreateInfo;
+    VkAndroidSurfaceCreateInfoKHR androidCreateInfo{};
     androidCreateInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
     androidCreateInfo.pNext = NULL;
     androidCreateInfo.flags = 0;
