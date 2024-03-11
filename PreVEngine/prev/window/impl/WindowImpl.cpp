@@ -14,10 +14,7 @@ WindowImpl::WindowImpl()
 
 WindowImpl::~WindowImpl()
 {
-    if (m_vkSurface != VK_NULL_HANDLE) {
-        vkDestroySurfaceKHR(m_vkInstance, m_vkSurface, nullptr);
-        m_vkSurface = VK_NULL_HANDLE;
-    }
+    DestroySurface(m_vkInstance);
 }
 
 Event WindowImpl::OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType btn)
@@ -106,14 +103,18 @@ Event WindowImpl::OnCloseEvent()
 
 Event WindowImpl::OnChangeEvent()
 {
-    if (m_vkSurface != VK_NULL_HANDLE) {
-        vkDestroySurfaceKHR(m_vkInstance, m_vkSurface, nullptr);
-        m_vkSurface = VK_NULL_HANDLE;
-    }
-
+    DestroySurface(m_vkInstance);
     CreateSurface(m_vkInstance);
 
     return { Event::EventType::CHANGE };
+}
+
+void WindowImpl::DestroySurface(VkInstance instance)
+{
+    if (m_vkSurface != VK_NULL_HANDLE) {
+        vkDestroySurfaceKHR(instance, m_vkSurface, nullptr);
+        m_vkSurface = VK_NULL_HANDLE;
+    }
 }
 
 void WindowImpl::SetTextInput(bool enabled)
