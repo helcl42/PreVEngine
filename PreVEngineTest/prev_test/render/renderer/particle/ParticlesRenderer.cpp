@@ -80,7 +80,7 @@ void ParticlesRenderer::Render(const NormalRenderContext& renderContext, const s
 
             m_shader->Bind("uboVS", *uboVS);
             m_shader->Bind("uboFS", *uboFS);
-            m_shader->Bind("colorSampler", particlesComponent->GetMaterial()->GetImageBuffer()->GetImageView(), *particlesComponent->GetMaterial()->GetImageSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            m_shader->Bind("colorSampler", particlesComponent->GetMaterial()->GetImageBuffer()->GetImageView(), *particlesComponent->GetMaterial()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
             const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
             const VkBuffer vertexBuffers[] = { *particlesComponent->GetModel()->GetVertexBuffer() };

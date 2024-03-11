@@ -17,6 +17,10 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::render::renderer::terrain {
+
+constexpr uint32_t COLOR_INDEX{ 0 };
+constexpr uint32_t NORMAL_INDEX{ 1 };
+
 TerrainNormalMappedRenderer::TerrainNormalMappedRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
     : m_renderPass(renderPass)
 {
@@ -133,8 +137,8 @@ void TerrainNormalMappedRenderer::Render(const NormalRenderContext& renderContex
 
             for (size_t i = 0; i < terrainComponent->GetMaterials().size(); i++) {
                 const auto material{ terrainComponent->GetMaterials().at(i) };
-                m_shader->Bind("colorSampler[" + std::to_string(i) + "]", material->GetImageBuffer()->GetImageView(), *material->GetImageSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-                m_shader->Bind("normalSampler[" + std::to_string(i) + "]", material->GetNormalmageBuffer()->GetImageView(), *material->GetNormalImageSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                m_shader->Bind("colorSampler[" + std::to_string(i) + "]", material->GetImageBuffer(COLOR_INDEX)->GetImageView(), *material->GetSampler(COLOR_INDEX), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                m_shader->Bind("normalSampler[" + std::to_string(i) + "]", material->GetImageBuffer(NORMAL_INDEX)->GetImageView(), *material->GetSampler(NORMAL_INDEX), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             }
             m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), *shadowsComponent->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
             m_shader->Bind("uboVS", *uboVS);

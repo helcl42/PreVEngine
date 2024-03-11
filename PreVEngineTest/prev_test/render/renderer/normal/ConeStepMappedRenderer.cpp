@@ -19,6 +19,11 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::render::renderer::normal {
+
+constexpr uint32_t COLOR_INDEX{ 0 };
+constexpr uint32_t NORMAL_INDEX{ 1 };
+constexpr uint32_t HEIGHT_AND_CONE_INDEX{ 2 };
+
 ConeStepMappedRenderer::ConeStepMappedRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
     : m_renderPass(renderPass)
 {
@@ -172,12 +177,12 @@ void ConeStepMappedRenderer::RenderMeshNode(const NormalRenderContext& renderCon
         uboFS->Update(&uniformsFS);
 
         m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), *shadowsComponent->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-        m_shader->Bind("colorSampler", material->GetImageBuffer()->GetImageView(), *material->GetImageSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-        if (material->GetNormalmageBuffer()) {
-            m_shader->Bind("normalSampler", material->GetNormalmageBuffer()->GetImageView(), *material->GetNormalImageSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_shader->Bind("colorSampler", material->GetImageBuffer(COLOR_INDEX)->GetImageView(), *material->GetSampler(COLOR_INDEX), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        if (material->HasImageBuffer(NORMAL_INDEX)) {
+            m_shader->Bind("normalSampler", material->GetImageBuffer(NORMAL_INDEX)->GetImageView(), *material->GetSampler(NORMAL_INDEX), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
-        if (material->GetHeightImageBuffer()) {
-            m_shader->Bind("heightSampler", material->GetHeightImageBuffer()->GetImageView(), *material->GetHeightImageSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        if (material->HasImageBuffer(HEIGHT_AND_CONE_INDEX)) {
+            m_shader->Bind("heightSampler", material->GetImageBuffer(HEIGHT_AND_CONE_INDEX)->GetImageView(), *material->GetSampler(HEIGHT_AND_CONE_INDEX), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
         m_shader->Bind("uboVS", *uboVS);
         m_shader->Bind("uboFS", *uboFS);
