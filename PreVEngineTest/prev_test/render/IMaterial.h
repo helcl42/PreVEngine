@@ -17,23 +17,11 @@ struct MaterialProperties {
 
 class IMaterial {
 public:
-    virtual std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetImageBuffer() const = 0;
+    virtual std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetImageBuffer(uint32_t index = 0) const = 0;
 
-    virtual std::shared_ptr<prev::render::sampler::Sampler> GetImageSampler() const = 0;
+    virtual std::shared_ptr<prev::render::sampler::Sampler> GetSampler(uint32_t index = 0) const = 0;
 
-    virtual bool HasImage() const = 0;
-
-    virtual std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetNormalmageBuffer() const = 0;
-
-    virtual std::shared_ptr<prev::render::sampler::Sampler> GetNormalImageSampler() const = 0;
-
-    virtual bool HasNormalImage() const = 0;
-
-    virtual std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetHeightImageBuffer() const = 0;
-
-    virtual std::shared_ptr<prev::render::sampler::Sampler> GetHeightImageSampler() const = 0;
-
-    virtual bool HasHeightImage() const = 0;
+    virtual bool HasImageBuffer(uint32_t index) = 0;
 
     virtual float GetShineDamper() const = 0;
 
@@ -49,7 +37,7 @@ public:
 
     virtual unsigned int GetAtlasNumberOfRows() const = 0;
 
-    virtual void SetAtlasNumberOfRows(unsigned int rows) = 0;
+    virtual void SetAtlasNumberOfRows(uint32_t rows) = 0;
 
     virtual const glm::vec2& GetTextureOffset() const = 0;
 

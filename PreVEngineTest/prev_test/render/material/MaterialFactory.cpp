@@ -27,7 +27,7 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const Mate
     auto imageBuffer{ CreateImageBuffer(image, true, allocator) };
     auto imageSampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(imageBuffer->GetMipLevels()), materialProps.addressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, ANISOTROPIC_FILTERING_ENABLED, MAX_ANISOTROPY_LEVEL) };
 
-    return std::make_unique<prev_test::render::material::Material>(materialProps, ImagePair{ imageBuffer, imageSampler });
+    return std::make_unique<prev_test::render::material::Material>(materialProps, std::vector<ImagePair>{ ImagePair{ imageBuffer, imageSampler } });
 }
 
 std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const MaterialProperties& materialProps, const std::string& colorImagePath, const std::string& normalMapPath, prev::core::memory::Allocator& allocator) const
@@ -40,7 +40,7 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const Mate
     auto normalImageBuffer{ CreateImageBuffer(normalImage, true, allocator) };
     auto normalImageSampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(normalImageBuffer->GetMipLevels()), materialProps.addressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR) };
 
-    return std::make_unique<prev_test::render::material::Material>(materialProps, ImagePair{ imageBuffer, imageSampler }, ImagePair{ normalImageBuffer, normalImageSampler });
+    return std::make_unique<prev_test::render::material::Material>(materialProps, std::vector<ImagePair>{ ImagePair{ imageBuffer, imageSampler }, ImagePair{ normalImageBuffer, normalImageSampler } });
 }
 
 std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const MaterialProperties& materialProps, const std::string& colorImagePath, const std::string& normalMapPath, const std::string& heightMapPath, prev::core::memory::Allocator& allocator) const
@@ -57,7 +57,7 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const Mate
     auto heightImageBuffer{ CreateImageBuffer(heightImage, true, allocator) };
     auto heightImageSampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(heightImageBuffer->GetMipLevels()), materialProps.addressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR) };
 
-    return std::make_unique<prev_test::render::material::Material>(materialProps, ImagePair{ imageBuffer, imageSampler }, ImagePair{ normalImageBuffer, normalImageSampler }, ImagePair{ heightImageBuffer, heightImageSampler });
+    return std::make_unique<prev_test::render::material::Material>(materialProps, std::vector<ImagePair>{ ImagePair{ imageBuffer, imageSampler }, ImagePair{ normalImageBuffer, normalImageSampler }, ImagePair{ heightImageBuffer, heightImageSampler } });
 }
 
 std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::CreateCubeMap(const MaterialProperties& materialProps, const std::vector<std::string>& sidePaths, prev::core::memory::Allocator& allocator) const
@@ -77,7 +77,7 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::CreateCubeMap(con
     auto cubeMapImageBuffer{ prev::render::buffer::image::ImageBufferFactory{}.CreateFromData(prev::render::buffer::image::ImageBufferCreateInfo{ VkExtent2D{ images[0]->GetWidth(), images[0]->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT, true, VK_IMAGE_VIEW_TYPE_CUBE, static_cast<uint32_t>(images.size()), layersData }, allocator) };
     auto cubeMapSampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(cubeMapImageBuffer->GetMipLevels()), materialProps.addressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, ANISOTROPIC_FILTERING_ENABLED, MAX_ANISOTROPY_LEVEL) };
 
-    return std::make_unique<prev_test::render::material::Material>(materialProps, ImagePair{ std::move(cubeMapImageBuffer), cubeMapSampler });
+    return std::make_unique<prev_test::render::material::Material>(materialProps, std::vector<ImagePair>{ ImagePair{ std::move(cubeMapImageBuffer), cubeMapSampler } });
 }
 
 std::vector<std::shared_ptr<prev_test::render::IMaterial>> MaterialFactory::Create(const std::string& modelPath, prev::core::memory::Allocator& allocator) const
@@ -127,7 +127,7 @@ std::vector<std::shared_ptr<prev_test::render::IMaterial>> MaterialFactory::Crea
 
         MaterialProperties materialProperties{ { color.r, color.g, color.b, 1.0 }, shineness, std::max(reflectivity, 1.0f), DefaultAddressMode };
 
-        result.emplace_back(std::make_unique<prev_test::render::material::Material>(materialProperties, colorImage, normalImage, heightImage));
+        result.emplace_back(std::make_unique<prev_test::render::material::Material>(materialProperties, std::vector<ImagePair>{ colorImage, normalImage, heightImage }));
     }
 
     return result;

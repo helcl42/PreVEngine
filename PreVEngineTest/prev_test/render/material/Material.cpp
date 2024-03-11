@@ -1,5 +1,7 @@
 #include "Material.h"
 
+#include <stdexcept>
+
 namespace prev_test::render::material {
 Material::Material(const MaterialProperties& materialProps)
     : m_color(materialProps.color)
@@ -8,82 +10,38 @@ Material::Material(const MaterialProperties& materialProps)
 {
 }
 
-Material::Material(const MaterialProperties& materialProps, const ImagePair& image)
+Material::Material(const MaterialProperties& materialProps, const std::vector<ImagePair>& imagePairs)
     : m_color(materialProps.color)
     , m_shineDamper(materialProps.shineDamper)
     , m_reflectivity(materialProps.reflectivity)
-    , m_imageBuffer(image.imageBuffer)
-    , m_imageSampler(image.imageSampler)
 {
+    for (const auto& imagePair : imagePairs) {
+        if (imagePair.imageBuffer) {
+            m_imageBuffers.emplace_back(imagePair.imageBuffer);
+            m_samplers.emplace_back(imagePair.imageSampler);
+        }
+    }
 }
 
-Material::Material(const MaterialProperties& materialProps, const ImagePair& image, const ImagePair& normalMap)
-    : m_color(materialProps.color)
-    , m_shineDamper(materialProps.shineDamper)
-    , m_reflectivity(materialProps.reflectivity)
-    , m_imageBuffer(image.imageBuffer)
-    , m_imageSampler(image.imageSampler)
-    , m_normalImageBuffer(normalMap.imageBuffer)
-    , m_normalImageSampler(normalMap.imageSampler)
+std::shared_ptr<prev::render::buffer::image::IImageBuffer> Material::GetImageBuffer(uint32_t index) const
 {
+    if (index >= m_imageBuffers.size()) {
+        throw std::runtime_error("Invalid image buffer index: " + std::to_string(index));
+    }
+    return m_imageBuffers[index];
 }
 
-Material::Material(const MaterialProperties& materialProps, const ImagePair& image, const ImagePair& normalMap, const ImagePair& heightMap)
-    : m_color(materialProps.color)
-    , m_shineDamper(materialProps.shineDamper)
-    , m_reflectivity(materialProps.reflectivity)
-    , m_imageBuffer(image.imageBuffer)
-    , m_imageSampler(image.imageSampler)
-    , m_normalImageBuffer(normalMap.imageBuffer)
-    , m_normalImageSampler(normalMap.imageSampler)
-    , m_heightImageBuffer(heightMap.imageBuffer)
-    , m_heightImageSampler(heightMap.imageSampler)
+std::shared_ptr<prev::render::sampler::Sampler> Material::GetSampler(uint32_t index) const
 {
+    if (index >= m_samplers.size()) {
+        throw std::runtime_error("Invalid sampler index: " + std::to_string(index));
+    }
+    return m_samplers[index];
 }
 
-std::shared_ptr<prev::render::buffer::image::IImageBuffer> Material::GetImageBuffer() const
+bool Material::HasImageBuffer(uint32_t index)
 {
-    return m_imageBuffer;
-}
-
-std::shared_ptr<prev::render::sampler::Sampler> Material::GetImageSampler() const
-{
-    return m_imageSampler;
-}
-
-bool Material::HasImage() const
-{
-    return m_imageBuffer != nullptr;
-}
-
-std::shared_ptr<prev::render::buffer::image::IImageBuffer> Material::GetNormalmageBuffer() const
-{
-    return m_normalImageBuffer;
-}
-
-std::shared_ptr<prev::render::sampler::Sampler> Material::GetNormalImageSampler() const
-{
-    return m_normalImageSampler;
-}
-
-bool Material::HasNormalImage() const
-{
-    return m_normalImageBuffer != nullptr;
-}
-
-std::shared_ptr<prev::render::buffer::image::IImageBuffer> Material::GetHeightImageBuffer() const
-{
-    return m_heightImageBuffer;
-}
-
-std::shared_ptr<prev::render::sampler::Sampler> Material::GetHeightImageSampler() const
-{
-    return m_heightImageSampler;
-}
-
-bool Material::HasHeightImage() const
-{
-    return m_heightImageBuffer != nullptr;
+    return index < static_cast<uint32_t>(m_imageBuffers.size());
 }
 
 float Material::GetShineDamper() const

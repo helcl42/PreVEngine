@@ -3,6 +3,8 @@
 
 #include "../IMaterial.h"
 
+#include <vector>
+
 namespace prev_test::render::material {
 struct ImagePair {
     std::shared_ptr<prev::render::buffer::image::IImageBuffer> imageBuffer;
@@ -13,32 +15,16 @@ class Material : public IMaterial {
 public:
     Material(const MaterialProperties& materialPros);
 
-    Material(const MaterialProperties& materialProps, const ImagePair& image);
-
-    Material(const MaterialProperties& materialProps, const ImagePair& image, const ImagePair& normalMap);
-
-    Material(const MaterialProperties& materialProps, const ImagePair& image, const ImagePair& normalMap, const ImagePair& heightMap);
+    Material(const MaterialProperties& materialProps, const std::vector<ImagePair>& imagePairs);
 
     virtual ~Material() = default;
 
 public:
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetImageBuffer() const override;
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetImageBuffer(uint32_t index = 0) const override;
 
-    std::shared_ptr<prev::render::sampler::Sampler> GetImageSampler() const override;
+    std::shared_ptr<prev::render::sampler::Sampler> GetSampler(uint32_t index = 0) const override;
 
-    bool HasImage() const override;
-
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetNormalmageBuffer() const override;
-
-    std::shared_ptr<prev::render::sampler::Sampler> GetNormalImageSampler() const override;
-
-    bool HasNormalImage() const override;
-
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetHeightImageBuffer() const override;
-
-    std::shared_ptr<prev::render::sampler::Sampler> GetHeightImageSampler() const override;
-
-    bool HasHeightImage() const override;
+    bool HasImageBuffer(uint32_t index) override;
 
     float GetShineDamper() const override;
 
@@ -73,17 +59,9 @@ private:
 
     float m_reflectivity{ 1.0f };
 
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_imageBuffer{};
+    std::vector<std::shared_ptr<prev::render::buffer::image::IImageBuffer>> m_imageBuffers;
 
-    std::shared_ptr<prev::render::sampler::Sampler> m_imageSampler{};
-
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_normalImageBuffer{};
-
-    std::shared_ptr<prev::render::sampler::Sampler> m_normalImageSampler{};
-
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_heightImageBuffer{};
-
-    std::shared_ptr<prev::render::sampler::Sampler> m_heightImageSampler{};
+    std::vector<std::shared_ptr<prev::render::sampler::Sampler>> m_samplers;
 
     bool m_hasTransparency{ false };
 

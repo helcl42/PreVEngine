@@ -288,7 +288,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateModelRenderCompo
     auto materials{ materialFactory.Create(modelPath, *allocator) };
 
     prev_test::render::mesh::ModelMeshFactory meshFactory{};
-    auto mesh{ meshFactory.Create(modelPath, materials[0]->HasNormalImage() ? prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT } : prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{}) };
+    auto mesh{ meshFactory.Create(modelPath, materials.size() > 1 ? prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT } : prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{}) };
 
     prev_test::render::model::ModelFactory modelFactory{};
     auto model{ modelFactory.Create(std::move(mesh), *allocator) };
@@ -404,7 +404,7 @@ std::unique_ptr<IAnimationRenderComponent> RenderComponentFactory::CreateAnimate
     auto materials{ materialFactory.Create(modelPath, *allocator) };
 
     prev_test::render::mesh::ModelMeshFactory meshFactory{};
-    auto mesh{ meshFactory.Create(modelPath, materials[0]->HasNormalImage() ? prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT } : prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION }) };
+    auto mesh{ meshFactory.Create(modelPath, materials.size() > 1 ? prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT } : prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION }) };
 
     prev_test::render::model::ModelFactory modelFactory{};
     auto model{ modelFactory.Create(std::move(mesh), *allocator) };
