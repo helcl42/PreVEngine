@@ -73,9 +73,8 @@ if(WIN32)
     find_path(VULKAN_INCLUDE vulkan/vulkan.h PATH "$ENV{VULKAN_SDK}/Include")    # Search in Vulkan SDK
     target_include_directories(${PROJECT_NAME} PUBLIC "${VULKAN_INCLUDE}")       # include vulkan.h
     message("VULKAN_INCLUDE path: ${VULKAN_INCLUDE}")
-endif()
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     option(BUILD_PREVENGINE_XCB_SUPPORT "Build XCB PREVENGINE support" ON)
     #option(BUILD_PREVENGINE_XLIB_SUPPORT "Build Xlib PREVENGINE support" OFF)
     #option(BUILD_PREVENGINE_WAYLAND_SUPPORT "Build Wayland PREVENGINE support" OFF)
@@ -127,9 +126,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     find_path(VULKAN_INCLUDE vulkan/vulkan.h PATH "$ENV{VULKAN_SDK}/include")    # Search in Vulkan SDK
     target_include_directories(${PROJECT_NAME} PUBLIC "${VULKAN_INCLUDE}")       # include vulkan.h
     message("VULKAN_INCLUDE path: ${VULKAN_INCLUDE}")
-endif()
 
-if(ANDROID)
+elseif(ANDROID)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17 -O3")
 
     add_definitions(-DVK_USE_PLATFORM_ANDROID_KHR)

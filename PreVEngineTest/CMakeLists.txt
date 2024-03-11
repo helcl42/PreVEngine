@@ -106,13 +106,10 @@ endif()
 
 add_definitions(-DVK_NO_PROTOTYPES)
 
+include_directories("../PreVEngine")
 include_directories("../PreVEngine/external/worm_holes/WormHoles")
 include_directories("../PreVEngine/external/glm")
 include_directories("../Dependencies/assimp/include")
-
-if(NOT TARGET PreVEngine)
-    add_subdirectory("../PreVEngine" "${CMAKE_BINARY_DIR}/PreVEngine")
-endif()
 
 if(WIN32)
     add_executable(${PROJECT_NAME} ${SRC_LIST})
@@ -124,9 +121,8 @@ if(WIN32)
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Windows/assimp-vc142-mt.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
     # Copy all files from ./Assets to the binary directory.
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
-endif()
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     add_executable(${PROJECT_NAME} ${SRC_LIST})
 
     target_link_libraries(${PROJECT_NAME} PreVEngine)
@@ -136,9 +132,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Linux/libassimp.so" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
     #  Copy all files from ./Assets to the binary directory.
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
-endif()
 
-if(ANDROID)
+elseif(ANDROID)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17 -O3")
 
     add_definitions(-DGLM_FORCE_CXX17)
