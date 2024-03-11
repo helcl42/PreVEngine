@@ -190,6 +190,9 @@ protected:
 
     Event OnChangeEvent();
 
+private:
+    void DestroySurface(VkInstance instance);
+
 protected:
     EventFIFO m_eventQueue;
 
