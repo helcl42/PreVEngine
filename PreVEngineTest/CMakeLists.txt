@@ -138,6 +138,8 @@ elseif(ANDROID)
 
     add_definitions(-DGLM_FORCE_CXX17)
 
+    add_subdirectory("${CMAKE_BINARY_DIR}/PreVEngine")
+
     include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../PreVEngine/platform/android")
     include_directories("${ANDROID_NDK}/sources/android/native_app_glue")
 
