@@ -166,6 +166,9 @@ elseif(ANDROID)
 
     # Link to external libraries
     target_link_libraries(${PROJECT_NAME} log android assimp)
+
+else()
+    message(FATAL_ERROR "Unsupported plafrom.")
 endif()
 
 # testing

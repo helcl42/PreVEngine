@@ -158,4 +158,6 @@ elseif(ANDROID)
     )
 
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+else()
+    message(FATAL_ERROR "Unsupported plafrom.")
 endif()
