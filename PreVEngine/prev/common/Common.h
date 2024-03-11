@@ -1,7 +1,9 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
-#if defined(__linux__) && !defined(__ANDROID__) // Linux (desktop only)
+#if defined(__APPLE__)
+#define __MAC_OS__ 1
+#elif defined(__linux__) && !defined(__ANDROID__) // Linux (desktop only)
 #define __LINUX__ 1
 #endif
 
@@ -11,6 +13,10 @@
 #include <Windows.h>
 #define TICK_CHARACTER "\xFB" // On Windows, use Square-root as tick mark
 #define PAUSE system("pause")
+#elif __MAC_OS__
+#include <stdlib.h>
+#define TICK_CHARACTER "\u2713"
+#define PAUSE
 #elif __ANDROID__
 #include <android_native.h>
 #define TICK_CHARACTER "\u2713"

@@ -122,6 +122,19 @@ if(WIN32)
     # Copy all files from ./Assets to the binary directory.
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
 
+elseif(APPLE)
+    message("This is apple: ${PROJECT_NAME}")
+
+    add_executable(${PROJECT_NAME} ${SRC_LIST})
+
+    target_link_libraries(${PROJECT_NAME} PreVEngine)
+    target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/MacOS/libassimp.dylib")
+
+    # Copy assimp so to output bin dir.
+    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/MacOS/libassimp.dylib" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+    #  Copy all files from ./Assets to the binary directory.
+    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
+
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     add_executable(${PROJECT_NAME} ${SRC_LIST})
 
@@ -158,5 +171,7 @@ endif()
 # testing
 enable_testing()
 
-add_test(NAME DefaultTest COMMAND $<TARGET_FILE:${PROJECT_NAME}>)
+if(NOT APPLE)
+    add_test(NAME DefaultTest COMMAND $<TARGET_FILE:${PROJECT_NAME}>)
+endif()
 

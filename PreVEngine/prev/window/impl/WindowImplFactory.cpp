@@ -9,6 +9,9 @@
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #include "windows/Win32WindowImpl.h"
 #endif
+#ifdef VK_USE_PLATFORM_MACOS_MVK
+#include "macos/MacOSWindowImpl.h"
+#endif
 
 namespace prev::window::impl {
 std::unique_ptr<WindowImpl> WindowImplFactory::Create(const WindowInfo& info) const
@@ -19,6 +22,8 @@ std::unique_ptr<WindowImpl> WindowImplFactory::Create(const WindowInfo& info) co
     return std::make_unique<xcb::XcbWindowImpl>(info);
 #elif VK_USE_PLATFORM_WIN32_KHR
     return std::make_unique<win32::Win32WindowImpl>(info);
+#elif VK_USE_PLATFORM_MACOS_MVK
+    return std::make_unique<macos::MacOSWindowImpl>(info);
 #else
 #error NOT IMPLEMENTED PLATFORM!
 #endif
