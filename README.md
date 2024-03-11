@@ -39,7 +39,7 @@ Here is a video:
 
  - Run `cmake -DANDROID=ON -DABI_NAME=arm64-v8a ..`
 
- - Run `cd ../PreVEngineTest/android && chmod a+x gradlew && ./gradlew clean build` or import to android studio and deploy as usuall from `PreVEngineTest/android`
+ - Run `cd ../PreVEngineTest/platform/android && chmod a+x gradlew && ./gradlew clean build` or import to android studio from location `PreVEngineTest/platform/android` and deploy as usuall.
 
 ## 3rd Party Dependencies
  - [Assimp](https://github.com/assimp/assimp): Used for model loading.
