@@ -156,7 +156,7 @@ void Root::Update(float deltaTime)
     }
 
     if (m_reloadAll) {
-        LOGW("Reloading whole scene.");
+        LOGW("Reloading whole scene.\n");
         ShutDown();
         Init();
     }
