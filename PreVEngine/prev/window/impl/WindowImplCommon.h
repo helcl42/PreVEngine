@@ -84,7 +84,7 @@ struct Event {
         struct // Keyboard key state
         {
             ActionType action;
-            prev::input::keyboard::KeyCode keycode;
+            prev::input::keyboard::KeyCode keyCode;
         } key;
 
         struct // Text entered
