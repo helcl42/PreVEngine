@@ -118,7 +118,7 @@ bool AbstractWindow::ProcessEvents(bool waitForEvent)
             OnMouseScrollEvent(e.scroll.delta, e.scroll.x, e.scroll.y);
             break;
         case impl::Event::EventType::KEY:
-            OnKeyEvent(e.key.action, e.key.keycode);
+            OnKeyEvent(e.key.action, e.key.keyCode);
             break;
         case impl::Event::EventType::TEXT:
             OnTextEvent(e.text.str);

@@ -209,7 +209,7 @@ protected:
     bool m_mouseCursorVisible;
 
 private:
-    Position m_mousePosition;
+    Position m_mousePosition{};
 
     bool m_mouseButtonsState[4] = {};
 
