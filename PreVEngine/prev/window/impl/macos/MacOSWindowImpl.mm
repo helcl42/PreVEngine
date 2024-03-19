@@ -40,7 +40,7 @@ MacOSWindowImpl::MacOSWindowImpl(const WindowInfo& windowInfo)
     
     NSString* title = [NSString stringWithCString:windowInfo.title.c_str()
                                          encoding:[NSString defaultCStringEncoding]];
-    [window setTitle: (NSString*)title];
+    [window setTitle:title];
     
     point = [window convertPointToScreen:point];
     [window setFrameOrigin:point];
@@ -143,23 +143,52 @@ bool MacOSWindowImpl::CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) con
 }
 
 void MacOSWindowImpl::SetTitle(const std::string& title)
-{
-
+{    
+    NSString* nsTitle = [NSString stringWithCString:title.c_str()
+                                          encoding:[NSString defaultCStringEncoding]];
+    [(MacWindow*)m_window setTitle: nsTitle];
 }
 
 void MacOSWindowImpl::SetPosition(int32_t x, int32_t y)
-{
-
+{    
+    if(m_info.fullScreen) {
+        return;
+    }
+    
+    if(m_info.position == Position{ static_cast<int16_t>(x), static_cast<int16_t>(y) }) {
+        return;
+    }
+    
+    NSPoint point = NSMakePoint(x, y);
+    NSPoint screenPoint = [(MacWindow*)m_window convertPointToScreen:point];
+    [(MacWindow*)m_window setFrameOrigin:screenPoint];
+    
+    OnMoveEvent(static_cast<int16_t>(x), static_cast<int16_t>(y));
 }
 
 void MacOSWindowImpl::SetSize(uint32_t w, uint32_t h)
 {
-
+    if(m_info.fullScreen) {
+        return;
+    }
+    
+    if(m_info.size == Size{ static_cast<uint16_t>(w), static_cast<uint16_t>(h) }) {
+        return;
+    }
+    
+    NSSize newSize = NSMakeSize(w, h);
+    [(MacWindow*)m_window setContentSize:newSize];
+    
+    OnResizeEvent(static_cast<uint16_t>(w), static_cast<uint16_t>(h));
 }
 
 void MacOSWindowImpl::SetMouseCursorVisible(bool visible)
 {
-
+    if(visible) {
+        [NSCursor unhide];
+    } else {
+        [NSCursor hide];
+    }
 }
 
 bool MacOSWindowImpl::CreateSurface(VkInstance instance)
