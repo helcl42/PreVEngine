@@ -64,6 +64,7 @@ include_directories("external/worm_holes/WormHoles")
 include_directories("external/glm")
 
 if(WIN32)
+    message("${PROJECT_NAME} - Windows")
     add_definitions(-DVK_USE_PLATFORM_WIN32_KHR)
 
     add_library(${PROJECT_NAME} STATIC ${SRC_LIST})
@@ -78,6 +79,7 @@ if(WIN32)
 elseif(APPLE)
     add_library(${PROJECT_NAME} STATIC ${SRC_LIST})
 
+    message("${PROJECT_NAME} - MacOS")
     add_definitions(-DVK_USE_PLATFORM_MACOS_MVK)
 
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -87,6 +89,7 @@ elseif(APPLE)
     message("VULKAN_INCLUDE path: ${VULKAN_INCLUDE}")
 
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
+    message("${PROJECT_NAME} - Linux")
     option(BUILD_PREVENGINE_XCB_SUPPORT "Build XCB PREVENGINE support" ON)
     #option(BUILD_PREVENGINE_XLIB_SUPPORT "Build Xlib PREVENGINE support" OFF)
     #option(BUILD_PREVENGINE_WAYLAND_SUPPORT "Build Wayland PREVENGINE support" OFF)
@@ -140,6 +143,7 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     message("VULKAN_INCLUDE path: ${VULKAN_INCLUDE}")
 
 elseif(ANDROID)
+    message("${PROJECT_NAME} - Android")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17 -O3")
 
     add_definitions(-DVK_USE_PLATFORM_ANDROID_KHR)
@@ -159,5 +163,5 @@ elseif(ANDROID)
 
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 else()
-    message(FATAL_ERROR "Unsupported plafrom.")
+    message(FATAL_ERROR "Unsupported plaform.")
 endif()
