@@ -76,11 +76,25 @@ if(WIN32)
     target_include_directories(${PROJECT_NAME} PUBLIC "${VULKAN_INCLUDE}")       # include vulkan.h
     message("VULKAN_INCLUDE path: ${VULKAN_INCLUDE}")
 
-elseif(APPLE)
-    add_library(${PROJECT_NAME} STATIC ${SRC_LIST})
 
+elseif(APPLE)
     message("${PROJECT_NAME} - MacOS")
     add_definitions(-DVK_USE_PLATFORM_MACOS_MVK)
+
+    include_directories("platform/macos")
+
+    file(GLOB MACOS_SRC_LIST 
+        "platform/macos/*.h" "platform/macos/*.mm"
+        "prev/window/impl/macos/*.h" "prev/window/impl/macos/*.mm"
+    )
+    
+    find_library(COCOA_LIB Cocoa)
+    find_library(QUARTZ_CORE_LIB QuartzCore)
+
+    add_library(${PROJECT_NAME} STATIC
+        ${SRC_LIST}
+        ${MACOS_SRC_LIST}
+    )
 
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 

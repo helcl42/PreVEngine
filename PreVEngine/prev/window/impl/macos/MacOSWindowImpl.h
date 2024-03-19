@@ -1,7 +1,7 @@
 #ifdef VK_USE_PLATFORM_MACOS_MVK
 
-#ifndef __MACOS_WINDOW_IMPL__
-#define __MACOS_WINDOW_IMPL__
+#ifndef __MACOS_WINDOW_IMPL_H__
+#define __MACOS_WINDOW_IMPL_H__
 
 #include "../WindowImpl.h"
 
@@ -15,7 +15,7 @@ public:
 public:
     Event GetEvent(bool waitForEvent = false);
 
-    bool CanPresent(VkPhysicalDevice phy, uint32_t queueFamily) const; // check if this window can present this queue type
+    bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const; // check if this window can present this queue type
 
 private:
     void SetTitle(const std::string& title);
@@ -27,6 +27,13 @@ private:
     void SetMouseCursorVisible(bool visible);
 
     bool CreateSurface(VkInstance instance);
+
+private:
+    void* m_window{};
+
+    void* m_view{};
+
+    void* m_layer{};
 };
 } // namespace prev::window::impl::macos
 

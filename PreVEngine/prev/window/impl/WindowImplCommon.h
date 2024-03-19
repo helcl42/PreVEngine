@@ -13,11 +13,31 @@ struct Position {
     int16_t y;
 };
 
+inline bool operator==(const Position& a, const Position& b)
+{
+    return a.x == b.x && a.y == b.y;
+}
+
+inline bool operator!=(const Position& a, const Position& b)
+{
+    return !(a == b);
+}
+
 struct Size {
     uint16_t width;
 
     uint16_t height;
 };
+
+inline bool operator==(const Size& a, const Size& b)
+{
+    return a.width == b.width && a.height == b.height;
+}
+
+inline bool operator!=(const Size& a, const Size& b)
+{
+    return !(a == b);
+}
 
 struct WindowInfo {
     std::string title;
