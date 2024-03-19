@@ -6,11 +6,6 @@
 
 @implementation MacWindowDelegate
 
-- (void)windowDidResize:(NSNotification *)notification
-{
-    NSLog(@"Resized !!!");
-}
-
 - (BOOL)windowShouldClose:(NSWindow *)sender
 {
     MacWindow* window = (MacWindow*)sender;
