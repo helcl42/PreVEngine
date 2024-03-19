@@ -6,8 +6,6 @@
 #include "../common/Common.h"
 #include "../core/Core.h"
 
-#include <inttypes.h>
-
 namespace prev::window {
 struct WindowCreatedEvent {
     IWindow* window;
