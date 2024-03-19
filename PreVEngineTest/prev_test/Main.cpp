@@ -1,6 +1,6 @@
 #include "TestApp.h"
 
-int main(int argc, char* argv[])
+int main(int argc, char** argv)
 {
     prev::core::EngineConfig config{};
     config.appName = "Test App";
