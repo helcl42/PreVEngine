@@ -1,7 +1,7 @@
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 
-#ifndef __WIN32_WINDOW_IMPL__
-#define __WIN32_WINDOW_IMPL__
+#ifndef __WIN32_WINDOW_IMPL_H__
+#define __WIN32_WINDOW_IMPL_H__
 
 #include "../WindowImpl.h"
 
