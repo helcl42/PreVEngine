@@ -112,6 +112,7 @@ include_directories("../PreVEngine/external/glm")
 include_directories("../Dependencies/assimp/include")
 
 if(WIN32)
+    message("${PROJECT_NAME} - Windows")
     add_executable(${PROJECT_NAME} ${SRC_LIST})
 
     target_link_libraries(${PROJECT_NAME} PreVEngine)
@@ -123,6 +124,7 @@ if(WIN32)
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
 
 elseif(APPLE)
+    message("${PROJECT_NAME} - MacOS")
     add_executable(${PROJECT_NAME} ${SRC_LIST})
 
     target_link_libraries(${PROJECT_NAME} PreVEngine)
@@ -145,6 +147,7 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
 
 elseif(ANDROID)
+    message("${PROJECT_NAME} - Android")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17 -O3")
 
     add_definitions(-DGLM_FORCE_CXX17)
@@ -166,7 +169,7 @@ elseif(ANDROID)
     target_link_libraries(${PROJECT_NAME} log android assimp)
 
 else()
-    message(FATAL_ERROR "Unsupported plafrom.")
+    message(FATAL_ERROR "Unsupported plaform.")
 endif()
 
 # testing
