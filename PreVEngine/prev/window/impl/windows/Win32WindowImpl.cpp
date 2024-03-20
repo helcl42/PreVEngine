@@ -204,7 +204,7 @@ void Win32WindowImpl::SetMouseCursorVisible(bool visible)
 bool Win32WindowImpl::CreateSurface()
 {
     if (m_vkSurface) {
-        return false;
+        return true;
     }
 
     VkWin32SurfaceCreateInfoKHR win32CreateInfo;

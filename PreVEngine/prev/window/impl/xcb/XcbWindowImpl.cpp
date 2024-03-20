@@ -200,7 +200,7 @@ void XcbWindowImpl::SetMouseCursorVisible(bool visible)
 bool XcbWindowImpl::CreateSurface()
 {
     if (m_vkSurface) {
-        return false;
+        return true;
     }
 
     VkXcbSurfaceCreateInfoKHR xcbCreateInfo;
