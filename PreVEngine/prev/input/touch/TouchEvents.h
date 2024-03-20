@@ -5,15 +5,15 @@
 
 namespace prev::input::touch {
 enum class TouchActionType {
-    DOWN,
-    UP,
-    MOVE
+    DOWN = 0,
+    UP = 1,
+    MOVE = 2
 };
 
 struct TouchEvent {
-    TouchActionType action;
+    TouchActionType action{};
 
-    uint8_t pointerId;
+    uint8_t pointerId{};
 
     glm::vec2 position;
 

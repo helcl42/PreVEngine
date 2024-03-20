@@ -2,18 +2,19 @@
 #define __KEYBOARD_EVENTS_H__
 
 #include "../../common/Common.h"
+
 #include "KeyCodes.h"
 
 namespace prev::input::keyboard {
 enum class KeyActionType : uint32_t {
-    PRESS,
-    RELEASE
+    PRESS = 0,
+    RELEASE = 1
 };
 
 struct KeyEvent {
-    KeyActionType action;
+    KeyActionType action{};
 
-    KeyCode keyCode;
+    KeyCode keyCode{};
 };
 
 struct TextEvent {

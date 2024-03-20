@@ -7,8 +7,8 @@
 
 namespace prev_test::render::material {
 struct ImagePair {
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> imageBuffer;
-    std::shared_ptr<prev::render::sampler::Sampler> imageSampler;
+    std::shared_ptr<prev::render::buffer::image::IImageBuffer> imageBuffer{};
+    std::shared_ptr<prev::render::sampler::Sampler> imageSampler{};
 };
 
 class Material : public IMaterial {
