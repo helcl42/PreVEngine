@@ -75,7 +75,8 @@ namespace {
     }
 } // namespace
 
-Win32WindowImpl::Win32WindowImpl(const WindowInfo& windowInfo)
+Win32WindowImpl::Win32WindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo)
+    : WindowImpl(instance)
 {
     SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
@@ -200,13 +201,11 @@ void Win32WindowImpl::SetMouseCursorVisible(bool visible)
     }
 }
 
-bool Win32WindowImpl::CreateSurface(VkInstance instance)
+bool Win32WindowImpl::CreateSurface()
 {
     if (m_vkSurface) {
         return false;
     }
-
-    m_vkInstance = instance;
 
     VkWin32SurfaceCreateInfoKHR win32CreateInfo;
     win32CreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
@@ -214,7 +213,7 @@ bool Win32WindowImpl::CreateSurface(VkInstance instance)
     win32CreateInfo.flags = 0;
     win32CreateInfo.hinstance = m_hInstance;
     win32CreateInfo.hwnd = m_hWnd;
-    VKERRCHECK(vkCreateWin32SurfaceKHR(instance, &win32CreateInfo, nullptr, &m_vkSurface));
+    VKERRCHECK(vkCreateWin32SurfaceKHR(m_instance, &win32CreateInfo, nullptr, &m_vkSurface));
 
     LOGI("Vulkan Surface created\n");
     return true;
@@ -232,12 +231,12 @@ Event Win32WindowImpl::GetEvent(bool waitForEvent)
 
     MSG msg = {};
     if (waitForEvent) {
-        m_isRunning = (GetMessage(&msg, NULL, 16, 0) > 0); // Blocking mode
+        m_running = (GetMessage(&msg, NULL, 16, 0) > 0); // Blocking mode
     } else {
-        m_isRunning = (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) > 0); // Non-blocking mode
+        m_running = (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) > 0); // Non-blocking mode
     }
 
-    if (m_isRunning) {
+    if (m_running) {
         TranslateMessage(&msg);
         int32_t x = GET_X_LPARAM(msg.lParam);
         int32_t y = GET_Y_LPARAM(msg.lParam);

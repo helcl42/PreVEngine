@@ -14,7 +14,7 @@
 namespace prev::window::impl::xcb {
 class XcbWindowImpl final : public WindowImpl {
 public:
-    XcbWindowImpl(const WindowInfo& windowInfo);
+    XcbWindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo);
 
     ~XcbWindowImpl();
 

@@ -144,12 +144,12 @@ void Engine::ResetWindow()
     windowCreateInfo.width = m_config.windowSize.x;
     windowCreateInfo.height = m_config.windowSize.y;
 
-    m_window = std::make_unique<prev::window::Window>(windowCreateInfo);
+    m_window = std::make_unique<prev::window::Window>(*m_instance, windowCreateInfo);
 }
 
 void Engine::ResetSurface()
 {
-    m_surface = m_window->GetSurface(*m_instance);
+    m_surface = m_window->GetSurface();
 }
 
 void Engine::ResetDevice()
