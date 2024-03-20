@@ -1,47 +1,76 @@
 #ifndef __WINDOW_H__
 #define __WINDOW_H__
 
-#include "../common/Common.h"
+#include "IWindow.h"
+#include "WindowCommon.h"
+#include "WindowEvents.h"
+
+#include "impl/WindowImpl.h"
+
 #include "../event/EventHandler.h"
+#include "../input/keyboard/KeyboardEvents.h"
+#include "../input/mouse/MouseEvents.h"
+#include "../input/touch/TouchEvents.h"
 
-#include "InputConvertor.h"
-
-#include "AbstractWindow.h"
+#include <memory>
 
 namespace prev::window {
-class Window : public AbstractWindow {
+class Window final : public IWindow {
 public:
     Window(const WindowCreateInfo& createInfo);
 
-    ~Window() = default;
+    virtual ~Window() = default;
 
 public:
-    virtual void OnInitEvent() override;
+    impl::Surface& GetSurface(VkInstance instance) override;
 
-    virtual void OnCloseEvent() override;
+    bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const override;
 
-    virtual void OnChangeEvent() override;
+    impl::Position GetPosition() const override;
 
-    virtual void OnResizeEvent(uint32_t width, uint32_t height) override;
+    impl::Size GetSize() const override;
 
-    virtual void OnMoveEvent(int32_t x, int32_t y) override;
+    bool IsKeyPressed(const prev::input::keyboard::KeyCode key) const override;
 
-    virtual void OnFocusEvent(bool hasFocus) override;
+    bool IsMouseButtonPressed(const impl::ButtonType btn) const override;
 
-    virtual void OnKeyEvent(impl::ActionType action, prev::input::keyboard::KeyCode keyCode) override;
+    impl::Position GetMousePosition() const override;
 
-    virtual void OnMouseEvent(impl::ActionType action, int32_t x, int32_t y, impl::ButtonType button, uint32_t w, uint32_t h) override;
+    bool HasFocus() const override;
 
-    virtual void OnMouseScrollEvent(int32_t delta, int32_t x, int32_t y) override;
+    bool IsMouseLocked() const override;
 
-    virtual void OnTouchEvent(impl::ActionType action, float x, float y, uint8_t pointerId, float w, float h) override;
+    bool IsMouseCursorVisible() const override;
 
-    virtual void OnTextEvent(const char* str) override;
+    void SetTitle(const std::string& title) override;
+
+    void SetPosition(const impl::Position& position) override;
+
+    void SetSize(const impl::Size& size) override;
+
+    void ShowKeyboard(bool enabled) override;
+
+    void SetMouseLocked(bool locked) override;
+
+    void SetMouseCursorVisible(bool visible) override;
+
+    void Close() override;
+
+public:
+    impl::Event GetEvent(bool waitForEvent = false) override; // Return a single event from the queue (Alternative to using ProcessEvents.)
+
+    bool ProcessEvents(bool waitForEvent = false) override; // Poll events, and call event handlers. Returns false if window is closing.
 
 public:
     void operator()(const prev::input::mouse::MouseLockRequest& mouseLock);
 
     void operator()(const prev::input::mouse::MouseCursorVisibilityRequest& cursorVisibility);
+
+private:
+    bool ProcessEvent(const impl::Event& e);
+
+private:
+    std::unique_ptr<impl::WindowImpl> m_windowImpl{};
 
 private:
     prev::event::EventHandler<Window, prev::input::mouse::MouseLockRequest> m_mouseLockHandler{ *this };
