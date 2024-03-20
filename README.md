@@ -18,6 +18,7 @@ Here is a video:
 - Run `git clone --recursive <url>` to init even with submodules.
 
 ## Download Dependencies (assimp with platform prebuilt binaries ~100MB)
+ - Install Vulkan SDK for you platform: [link](https://vulkan.lunarg.com/)
  - Run `python Scripts/download_dependencies.py`
 
  **Note:** If you have a problem with the script, the package is hosted on `Google Drive`. You can download it directly from the following link. Just unpack it in the root folder.
