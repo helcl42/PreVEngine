@@ -197,22 +197,19 @@ void XcbWindowImpl::SetMouseCursorVisible(bool visible)
     }
 }
 
-bool XcbWindowImpl::CreateSurface()
+Surface& XcbWindowImpl::CreateSurface()
 {
-    if (m_vkSurface) {
-        return true;
+    if (m_vkSurface == VK_NULL_HANDLE) {
+        VkXcbSurfaceCreateInfoKHR xcbCreateInfo;
+        xcbCreateInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
+        xcbCreateInfo.pNext = nullptr;
+        xcbCreateInfo.flags = 0;
+        xcbCreateInfo.connection = m_xcbConnection;
+        xcbCreateInfo.window = m_xcbWindow;
+        VKERRCHECK(vkCreateXcbSurfaceKHR(m_instance, &xcbCreateInfo, nullptr, &m_vkSurface));
+        LOGI("XCB - Vulkan Surface created\n");
     }
-
-    VkXcbSurfaceCreateInfoKHR xcbCreateInfo;
-    xcbCreateInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
-    xcbCreateInfo.pNext = nullptr;
-    xcbCreateInfo.flags = 0;
-    xcbCreateInfo.connection = m_xcbConnection;
-    xcbCreateInfo.window = m_xcbWindow;
-    VKERRCHECK(vkCreateXcbSurfaceKHR(m_instance, &xcbCreateInfo, nullptr, &m_vkSurface));
-
-    LOGI("Vulkan Surface created\n");
-    return true;
+    return *this;
 }
 
 //---------------------------------------------------------------------------

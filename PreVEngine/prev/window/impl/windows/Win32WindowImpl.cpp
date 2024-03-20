@@ -201,22 +201,20 @@ void Win32WindowImpl::SetMouseCursorVisible(bool visible)
     }
 }
 
-bool Win32WindowImpl::CreateSurface()
+Surface& Win32WindowImpl::CreateSurface()
 {
-    if (m_vkSurface) {
-        return true;
+    if (m_vkSurface == VK_NULL_HANDLE) {
+        VkWin32SurfaceCreateInfoKHR win32CreateInfo;
+        win32CreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+        win32CreateInfo.pNext = nullptr;
+        win32CreateInfo.flags = 0;
+        win32CreateInfo.hinstance = m_hInstance;
+        win32CreateInfo.hwnd = m_hWnd;
+        VKERRCHECK(vkCreateWin32SurfaceKHR(m_instance, &win32CreateInfo, nullptr, &m_vkSurface));
+
+        LOGI("Win32 - Vulkan Surface created\n");
     }
-
-    VkWin32SurfaceCreateInfoKHR win32CreateInfo;
-    win32CreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-    win32CreateInfo.pNext = nullptr;
-    win32CreateInfo.flags = 0;
-    win32CreateInfo.hinstance = m_hInstance;
-    win32CreateInfo.hwnd = m_hWnd;
-    VKERRCHECK(vkCreateWin32SurfaceKHR(m_instance, &win32CreateInfo, nullptr, &m_vkSurface));
-
-    LOGI("Vulkan Surface created\n");
-    return true;
+    return *this;
 }
 
 #define WM_RESHAPE (WM_USER + 0)

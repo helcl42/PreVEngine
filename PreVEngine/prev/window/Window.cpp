@@ -10,8 +10,7 @@ Window::Window(const prev::core::instance::Instance& instance, const WindowCreat
 
 impl::Surface& Window::GetSurface()
 {
-    m_windowImpl->CreateSurface();
-    return *m_windowImpl;
+    return m_windowImpl->CreateSurface();
 }
 
 impl::Position Window::GetPosition() const

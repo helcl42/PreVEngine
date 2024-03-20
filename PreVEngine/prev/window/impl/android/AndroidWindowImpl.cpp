@@ -246,21 +246,19 @@ void AndroidWindowImpl::SetMouseCursorVisible(bool visible)
 {
 }
 
-bool AndroidWindowImpl::CreateSurface()
+Surface& AndroidWindowImpl::CreateSurface()
 {
-    if (m_vkSurface) {
-        return true;
+    if (m_vkSurface == VK_NULL_HANDLE) {
+        VkAndroidSurfaceCreateInfoKHR androidCreateInfo;
+        androidCreateInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
+        androidCreateInfo.pNext = NULL;
+        androidCreateInfo.flags = 0;
+        androidCreateInfo.window = m_app->window;
+        VKERRCHECK(vkCreateAndroidSurfaceKHR(m_instance, &androidCreateInfo, NULL, &m_vkSurface));
+
+        LOGI("Android - Vulkan Surface created\n");
     }
-
-    VkAndroidSurfaceCreateInfoKHR androidCreateInfo;
-    androidCreateInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
-    androidCreateInfo.pNext = NULL;
-    androidCreateInfo.flags = 0;
-    androidCreateInfo.window = m_app->window;
-    VKERRCHECK(vkCreateAndroidSurfaceKHR(m_instance, &androidCreateInfo, NULL, &m_vkSurface));
-
-    LOGI("Vulkan Surface created\n");
-    return true;
+    return *this;
 }
 } // namespace prev::window::impl::android
 
