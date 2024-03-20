@@ -12,6 +12,26 @@
 #import <QuartzCore/CAMetalLayer.h>
 
 namespace prev::window::impl::macos {
+struct MacState {
+    MacWindow* window{};
+    MacView* view{};
+    CALayer* layer{};
+    
+    MacState(MacWindow* w, MacView* v, CALayer* l)
+    : window{ w }
+    , view{ v }
+    , layer{ l }
+    {
+    }
+    
+    ~MacState()
+    {
+        [layer release];
+        [view release];
+        [window release];
+    }
+};
+
 MacOSWindowImpl::MacOSWindowImpl(const WindowInfo& windowInfo)
 {
     [NSApplication sharedApplication];
@@ -70,10 +90,7 @@ MacOSWindowImpl::MacOSWindowImpl(const WindowInfo& windowInfo)
 
     window->opened = YES;
     
-    m_window = window;
-    m_view = view;
-    m_layer = layer;
-    
+    m_state = std::make_unique<MacState>(window, view, layer);
     m_info = windowInfo;
 
     m_eventQueue.Push(OnInitEvent());
@@ -83,13 +100,7 @@ MacOSWindowImpl::MacOSWindowImpl(const WindowInfo& windowInfo)
 
 MacOSWindowImpl::~MacOSWindowImpl()
 {
-    [(CAMetalLayer*)m_layer release];
-    [(MacView*)m_view release];
-    [(MacWindow*)m_window release];
-    
-    m_layer = nullptr;
-    m_view = nullptr;
-    m_window = nullptr;
+    m_state = nullptr;
 }
 
 Event MacOSWindowImpl::GetEvent(bool waitForEvent)
@@ -105,6 +116,7 @@ Event MacOSWindowImpl::GetEvent(bool waitForEvent)
             {
                 case NSEventTypeSystemDefined:
                     break;
+                // keyboerd mapping, mouse move/clicks/wheel
                 case NSEventTypeKeyDown:
                 {
                     NSLog(@"Key down evt: %d", [event keyCode]);
@@ -124,13 +136,13 @@ Event MacOSWindowImpl::GetEvent(bool waitForEvent)
         [NSApp updateWindows];
     } // autoreleasepool
     
-    NSSize size = [[(MacWindow*)m_window contentView] frame].size;
+    NSSize size = [[m_state->window contentView] frame].size;
     Size windowSize{ static_cast<uint32_t>(size.width), static_cast<uint32_t>(size.height) };
     if(m_info.size != windowSize) {
         return OnResizeEvent(windowSize.width, windowSize.height);
     }
     
-    if(((MacWindow*)m_window)->opened == NO) {
+    if(m_state->window->opened == NO) {
         return OnCloseEvent();
     }
 
@@ -146,7 +158,7 @@ void MacOSWindowImpl::SetTitle(const std::string& title)
 {    
     NSString* nsTitle = [NSString stringWithCString:title.c_str()
                                           encoding:[NSString defaultCStringEncoding]];
-    [(MacWindow*)m_window setTitle: nsTitle];
+    [m_state->window setTitle: nsTitle];
 }
 
 void MacOSWindowImpl::SetPosition(int32_t x, int32_t y)
@@ -160,10 +172,10 @@ void MacOSWindowImpl::SetPosition(int32_t x, int32_t y)
     }
     
     NSPoint point = NSMakePoint(x, y);
-    NSPoint screenPoint = [(MacWindow*)m_window convertPointToScreen:point];
-    [(MacWindow*)m_window setFrameOrigin:screenPoint];
+    NSPoint screenPoint = [m_state->window convertPointToScreen:point];
+    [m_state->window setFrameOrigin:screenPoint];
     
-    OnMoveEvent(static_cast<int16_t>(x), static_cast<int16_t>(y));
+    OnMoveEvent(x, y);
 }
 
 void MacOSWindowImpl::SetSize(uint32_t w, uint32_t h)
@@ -177,9 +189,9 @@ void MacOSWindowImpl::SetSize(uint32_t w, uint32_t h)
     }
     
     NSSize newSize = NSMakeSize(w, h);
-    [(MacWindow*)m_window setContentSize:newSize];
+    [m_state->window setContentSize:newSize];
     
-    OnResizeEvent(static_cast<uint16_t>(w), static_cast<uint16_t>(h));
+    OnResizeEvent(w, h);
 }
 
 void MacOSWindowImpl::SetMouseCursorVisible(bool visible)
@@ -203,7 +215,7 @@ bool MacOSWindowImpl::CreateSurface(VkInstance instance)
     macOsSurfaceCreateInfo.sType = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
     macOsSurfaceCreateInfo.pNext = nullptr;
     macOsSurfaceCreateInfo.flags = 0;
-    macOsSurfaceCreateInfo.pView = m_layer;
+    macOsSurfaceCreateInfo.pView = m_state->layer;
     VKERRCHECK(vkCreateMacOSSurfaceMVK(instance, &macOsSurfaceCreateInfo, nullptr, &m_vkSurface));
 
     LOGI("Vulkan Surface created\n");

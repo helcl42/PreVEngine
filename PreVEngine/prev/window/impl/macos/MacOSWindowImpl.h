@@ -6,6 +6,8 @@
 #include "../WindowImpl.h"
 
 namespace prev::window::impl::macos {
+struct MacState;
+
 class MacOSWindowImpl final : public WindowImpl {
 public:
     MacOSWindowImpl(const WindowInfo& windowInfo);
@@ -29,11 +31,7 @@ private:
     bool CreateSurface(VkInstance instance);
 
 private:
-    void* m_window{};
-
-    void* m_view{};
-
-    void* m_layer{};
+    std::unique_ptr<MacState> m_state{};
 };
 } // namespace prev::window::impl::macos
 
