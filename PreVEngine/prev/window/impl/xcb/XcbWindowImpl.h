@@ -30,7 +30,7 @@ private:
 
     void SetMouseCursorVisible(bool visible);
 
-    bool CreateSurface();
+    Surface& CreateSurface();
 
     bool InitTouch(); // Returns false if no touch-device was found.
 

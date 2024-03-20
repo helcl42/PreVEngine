@@ -28,7 +28,7 @@ private:
 
     void SetMouseCursorVisible(bool visible);
 
-    bool CreateSurface();
+    Surface& CreateSurface();
 
 private:
     android_app* m_app{};

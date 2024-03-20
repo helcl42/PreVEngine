@@ -24,7 +24,7 @@ private:
 
     void SetMouseCursorVisible(bool visible);
 
-    bool CreateSurface();
+    Surface& CreateSurface();
 
 private:
     static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
