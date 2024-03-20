@@ -103,7 +103,10 @@ Event AndroidWindowImpl::GetEvent(bool waitForEvent)
             break;
         case APP_CMD_INIT_WINDOW:
         case APP_CMD_CONFIG_CHANGED:
+            // THIS is hack: due to unreliable surface extent readouts
             std::this_thread::sleep_for(std::chrono::milliseconds(300));
+            m_info.size = { static_cast<uint32_t>(ANativeWindow_getWidth(m_app->window)), static_cast<uint32_t>(ANativeWindow_getHeight(m_app->window)) };
+            m_eventQueue.Push(OnResizeEvent(m_info.size.width, m_info.size.height));
             event = OnChangeEvent();
             break;
         case APP_CMD_TERM_WINDOW:
