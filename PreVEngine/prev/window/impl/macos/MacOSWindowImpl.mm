@@ -125,7 +125,7 @@ Event MacOSWindowImpl::GetEvent(bool waitForEvent)
     } // autoreleasepool
     
     NSSize size = [[(MacWindow*)m_window contentView] frame].size;
-    Size windowSize{ static_cast<uint16_t>(size.width), static_cast<uint16_t>(size.height) };
+    Size windowSize{ static_cast<uint32_t>(size.width), static_cast<uint32_t>(size.height) };
     if(m_info.size != windowSize) {
         return OnResizeEvent(windowSize.width, windowSize.height);
     }
@@ -155,7 +155,7 @@ void MacOSWindowImpl::SetPosition(int32_t x, int32_t y)
         return;
     }
     
-    if(m_info.position == Position{ static_cast<int16_t>(x), static_cast<int16_t>(y) }) {
+    if(m_info.position == Position{ x, y }) {
         return;
     }
     
@@ -172,7 +172,7 @@ void MacOSWindowImpl::SetSize(uint32_t w, uint32_t h)
         return;
     }
     
-    if(m_info.size == Size{ static_cast<uint16_t>(w), static_cast<uint16_t>(h) }) {
+    if(m_info.size == Size{ w, h }) {
         return;
     }
     
@@ -203,7 +203,7 @@ bool MacOSWindowImpl::CreateSurface(VkInstance instance)
     macOsSurfaceCreateInfo.sType = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
     macOsSurfaceCreateInfo.pNext = nullptr;
     macOsSurfaceCreateInfo.flags = 0;
-    macOsSurfaceCreateInfo.pView = m_layer; // TODO or view ???
+    macOsSurfaceCreateInfo.pView = m_layer;
     VKERRCHECK(vkCreateMacOSSurfaceMVK(instance, &macOsSurfaceCreateInfo, nullptr, &m_vkSurface));
 
     LOGI("Vulkan Surface created\n");
