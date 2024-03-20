@@ -30,11 +30,11 @@ private:
     static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 private:
-    HINSTANCE m_hInstance;
+    HINSTANCE m_hInstance{};
 
-    HWND m_hWnd;
+    HWND m_hWnd{};
 
-    MultiTouch m_MTouch; // Multi-Touch device
+    MultiTouch m_MTouch{}; // Multi-Touch device
 };
 } // namespace prev::window::impl::win32
 
