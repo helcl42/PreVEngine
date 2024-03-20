@@ -410,12 +410,6 @@ Event XcbWindowImpl::GetEvent(bool waitForEvent)
 
     return { Event::EventType::NONE };
 }
-
-// Return true if this window can present the given queue type
-bool XcbWindowImpl::CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const
-{
-    return vkGetPhysicalDeviceXcbPresentationSupportKHR(gpu, queueFamily, m_xcbConnection, m_xcbScreen->root_visual) == VK_TRUE;
-}
 } // namespace prev::window::impl::xcb
 
 #endif

@@ -18,11 +18,6 @@ impl::Surface& Window::GetSurface(VkInstance instance)
     return *m_windowImpl;
 }
 
-bool Window::CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const
-{
-    return m_windowImpl->CanPresent(gpu, queueFamily);
-}
-
 impl::Position Window::GetPosition() const
 {
     const auto& shape{ m_windowImpl->GetInfo() };

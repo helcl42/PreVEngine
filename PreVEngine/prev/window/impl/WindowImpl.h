@@ -157,8 +157,6 @@ public:
 public:
     virtual bool CreateSurface(VkInstance instance) = 0;
 
-    virtual bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const = 0; // Checks if window can present the given queue type.
-
     virtual Event GetEvent(bool waitForEvent = false) = 0; // Fetch one event from the queue.
 
     virtual void SetTitle(const std::string& title) = 0;

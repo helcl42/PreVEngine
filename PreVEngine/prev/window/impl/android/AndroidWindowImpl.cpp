@@ -244,11 +244,6 @@ void AndroidWindowImpl::SetMouseCursorVisible(bool visible)
 {
 }
 
-bool AndroidWindowImpl::CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const
-{
-    return true;
-}
-
 bool AndroidWindowImpl::CreateSurface(VkInstance instance)
 {
     if (m_vkSurface) {
