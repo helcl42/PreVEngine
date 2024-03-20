@@ -8,9 +8,9 @@
 
 namespace prev::window::impl {
 struct Position {
-    int32_t x;
+    int32_t x{};
 
-    int32_t y;
+    int32_t y{};
 };
 
 inline bool operator==(const Position& a, const Position& b)
@@ -24,9 +24,9 @@ inline bool operator!=(const Position& a, const Position& b)
 }
 
 struct Size {
-    uint32_t width;
+    uint32_t width{};
 
-    uint32_t height;
+    uint32_t height{};
 };
 
 inline bool operator==(const Size& a, const Size& b)
@@ -46,14 +46,14 @@ struct WindowInfo {
 
     Size size;
 
-    bool fullScreen;
+    bool fullScreen{};
 };
 
 enum class ActionType // keyboard / mouse / touchscreen actions
 {
-    UP,
-    DOWN,
-    MOVE
+    UP = 0,
+    DOWN = 1,
+    MOVE = 2
 };
 
 enum class ButtonType {
