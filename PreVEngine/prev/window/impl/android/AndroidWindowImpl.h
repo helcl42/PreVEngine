@@ -10,7 +10,7 @@
 namespace prev::window::impl::android {
 class AndroidWindowImpl : public WindowImpl {
 public:
-    AndroidWindowImpl(const WindowInfo& windowInfo);
+    AndroidWindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo);
 
     ~AndroidWindowImpl();
 
@@ -28,10 +28,10 @@ private:
 
     void SetMouseCursorVisible(bool visible);
 
-    bool CreateSurface(VkInstance instance);
+    bool CreateSurface();
 
 private:
-    android_app* m_app{ nullptr };
+    android_app* m_app{};
 
     MultiTouch m_MTouch;
 };

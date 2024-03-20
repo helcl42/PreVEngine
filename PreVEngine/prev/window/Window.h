@@ -7,6 +7,7 @@
 
 #include "impl/WindowImpl.h"
 
+#include "../core/instance/Instance.h"
 #include "../event/EventHandler.h"
 #include "../input/keyboard/KeyboardEvents.h"
 #include "../input/mouse/MouseEvents.h"
@@ -17,12 +18,12 @@
 namespace prev::window {
 class Window final : public IWindow {
 public:
-    Window(const WindowCreateInfo& createInfo);
+    Window(const prev::core::instance::Instance& instance, const WindowCreateInfo& createInfo);
 
     virtual ~Window() = default;
 
 public:
-    impl::Surface& GetSurface(VkInstance instance) override;
+    impl::Surface& GetSurface() override;
 
     impl::Position GetPosition() const override;
 

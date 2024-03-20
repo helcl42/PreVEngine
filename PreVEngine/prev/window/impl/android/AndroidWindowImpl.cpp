@@ -29,7 +29,8 @@ namespace {
     };
 } // namespace
 
-AndroidWindowImpl::AndroidWindowImpl(const WindowInfo& windowInfo)
+AndroidWindowImpl::AndroidWindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo)
+    : WindowImpl(instance)
 {
     m_info.size = {};
     m_info.fullScreen = true;
@@ -245,20 +246,18 @@ void AndroidWindowImpl::SetMouseCursorVisible(bool visible)
 {
 }
 
-bool AndroidWindowImpl::CreateSurface(VkInstance instance)
+bool AndroidWindowImpl::CreateSurface()
 {
     if (m_vkSurface) {
         return true;
     }
-
-    m_vkInstance = instance;
 
     VkAndroidSurfaceCreateInfoKHR androidCreateInfo;
     androidCreateInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
     androidCreateInfo.pNext = NULL;
     androidCreateInfo.flags = 0;
     androidCreateInfo.window = m_app->window;
-    VKERRCHECK(vkCreateAndroidSurfaceKHR(instance, &androidCreateInfo, NULL, &m_vkSurface));
+    VKERRCHECK(vkCreateAndroidSurfaceKHR(m_instance, &androidCreateInfo, NULL, &m_vkSurface));
 
     LOGI("Vulkan Surface created\n");
     return true;

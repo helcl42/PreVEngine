@@ -8,7 +8,7 @@
 namespace prev::window::impl::win32 {
 class Win32WindowImpl final : public WindowImpl {
 public:
-    Win32WindowImpl(const WindowInfo& windowInfo);
+    Win32WindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo);
 
     ~Win32WindowImpl();
 
@@ -24,7 +24,7 @@ private:
 
     void SetMouseCursorVisible(bool visible);
 
-    bool CreateSurface(VkInstance instance);
+    bool CreateSurface();
 
 private:
     static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

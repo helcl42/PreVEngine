@@ -5,13 +5,12 @@
 #include "impl/WindowImplCommon.h"
 
 #include "../common/Common.h"
-#include "../core/Core.h"
 #include "../input/keyboard/KeyCodes.h"
 
 namespace prev::window {
 class IWindow {
 public:
-    virtual impl::Surface& GetSurface(VkInstance instance) = 0;
+    virtual impl::Surface& GetSurface() = 0;
 
     virtual impl::Position GetPosition() const = 0;
 

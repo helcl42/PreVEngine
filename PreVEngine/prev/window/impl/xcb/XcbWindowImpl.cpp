@@ -69,7 +69,8 @@ namespace {
     }
 } // namespace
 
-XcbWindowImpl::XcbWindowImpl(const WindowInfo& windowInfo)
+XcbWindowImpl::XcbWindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo)
+    : WindowImpl(instance)
 {
     LOGI("Creating XCB-Window...\n");
 
@@ -196,13 +197,11 @@ void XcbWindowImpl::SetMouseCursorVisible(bool visible)
     }
 }
 
-bool XcbWindowImpl::CreateSurface(VkInstance instance)
+bool XcbWindowImpl::CreateSurface()
 {
     if (m_vkSurface) {
         return false;
     }
-
-    m_vkInstance = instance;
 
     VkXcbSurfaceCreateInfoKHR xcbCreateInfo;
     xcbCreateInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
@@ -210,7 +209,7 @@ bool XcbWindowImpl::CreateSurface(VkInstance instance)
     xcbCreateInfo.flags = 0;
     xcbCreateInfo.connection = m_xcbConnection;
     xcbCreateInfo.window = m_xcbWindow;
-    VKERRCHECK(vkCreateXcbSurfaceKHR(instance, &xcbCreateInfo, nullptr, &m_vkSurface));
+    VKERRCHECK(vkCreateXcbSurfaceKHR(m_instance, &xcbCreateInfo, nullptr, &m_vkSurface));
 
     LOGI("Vulkan Surface created\n");
     return true;

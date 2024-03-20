@@ -3,16 +3,14 @@
 #include "impl/WindowImplFactory.h"
 
 namespace prev::window {
-Window::Window(const WindowCreateInfo& createInfo)
+Window::Window(const prev::core::instance::Instance& instance, const WindowCreateInfo& createInfo)
 {
-    m_windowImpl = impl::WindowImplFactory{}.Create(impl::WindowInfo{ createInfo.title, { createInfo.left, createInfo.top }, { createInfo.width, createInfo.height }, createInfo.fullScreen });
+    m_windowImpl = impl::WindowImplFactory{}.Create(instance, impl::WindowInfo{ createInfo.title, { createInfo.left, createInfo.top }, { createInfo.width, createInfo.height }, createInfo.fullScreen });
 }
 
-impl::Surface& Window::GetSurface(VkInstance instance)
+impl::Surface& Window::GetSurface()
 {
-    if (!m_windowImpl->CreateSurface(instance)) {
-        //throw std::runtime_error("Could not create surface.");
-    }
+    m_windowImpl->CreateSurface();
     return *m_windowImpl;
 }
 
