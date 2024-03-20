@@ -145,18 +145,18 @@ elseif(ANDROID)
 
     target_link_libraries(${PROJECT_NAME} PreVEngine)
 
-    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Android/libassimp.so" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/platform/android/app/src/main/libs/arm64-v8a/")
+    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Android/libassimp.so" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/platform/android/app/src/main/jniLibs/${ANDROID_ABI}/")
 
     # add external library
     add_library(assimp SHARED IMPORTED)
-    set_target_properties(assimp PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/platform/android/app/src/main/libs/arm64-v8a/libassimp.so")
+    set_target_properties(assimp PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/platform/android/app/src/main/jniLibs/${ANDROID_ABI}/libassimp.so")
 
     # Link to external libraries
     target_link_libraries(${PROJECT_NAME} log android assimp)
 endif()
 
-# testing
-enable_testing()
-
-add_test(NAME DefaultTest COMMAND $<TARGET_FILE:${PROJECT_NAME}>)
-
+# Testing
+if(NOT ANDROID)
+    enable_testing()
+    add_test(NAME DefaultTest COMMAND $<TARGET_FILE:${PROJECT_NAME}>)
+endif()
