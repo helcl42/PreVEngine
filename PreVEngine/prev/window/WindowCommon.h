@@ -7,13 +7,13 @@ namespace prev::window {
 struct WindowCreateInfo {
     std::string title;
 
-    int16_t left;
+    int32_t left;
 
-    int16_t top;
+    int32_t top;
 
-    uint16_t width;
+    uint32_t width;
 
-    uint16_t height;
+    uint32_t height;
 
     bool fullScreen;
 };

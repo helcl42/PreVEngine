@@ -5,8 +5,6 @@
 
 #include "../WindowImpl.h"
 
-#include <windowsx.h> // Mouse
-
 namespace prev::window::impl::win32 {
 class Win32WindowImpl final : public WindowImpl {
 public:

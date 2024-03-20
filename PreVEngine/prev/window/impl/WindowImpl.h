@@ -170,17 +170,17 @@ public:
     virtual void SetMouseCursorVisible(bool visible) = 0;
 
 protected:
-    Event OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType btn); // Mouse event
+    Event OnMouseEvent(ActionType action, int32_t x, int32_t y, ButtonType btn); // Mouse event
 
-    Event OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y);
+    Event OnMouseScrollEvent(int32_t delta, int32_t x, int32_t y);
 
     Event OnKeyEvent(ActionType action, uint8_t key); // Keyboard event
 
     Event OnTextEvent(const char* str); // Text event
 
-    Event OnMoveEvent(int16_t x, int16_t y); // Window moved
+    Event OnMoveEvent(int32_t x, int32_t y); // Window moved
 
-    Event OnResizeEvent(uint16_t width, uint16_t height); // Window resized
+    Event OnResizeEvent(uint32_t width, uint32_t height); // Window resized
 
     Event OnFocusEvent(bool hasFocus); // Window gained/lost focus
 
@@ -189,6 +189,9 @@ protected:
     Event OnCloseEvent(); // Window closing
 
     Event OnChangeEvent();
+
+private:
+    void DestroySurface(VkInstance instance);
 
 protected:
     EventFIFO m_eventQueue;
@@ -206,7 +209,7 @@ protected:
     bool m_mouseCursorVisible;
 
 private:
-    Position m_mousePosition;
+    Position m_mousePosition{};
 
     bool m_mouseButtonsState[4] = {};
 

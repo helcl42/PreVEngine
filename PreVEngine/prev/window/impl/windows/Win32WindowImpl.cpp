@@ -3,6 +3,7 @@
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 
 #include "../../../common/Logger.h"
+#include <windowsx.h> // Mouse
 
 namespace prev::window::impl::win32 {
 namespace {
@@ -127,10 +128,10 @@ Win32WindowImpl::Win32WindowImpl(const WindowInfo& windowInfo)
     m_info.fullScreen = fullScreen;
     if (fullScreen) {
         m_info.position = {};
-        m_info.size = { static_cast<uint16_t>(screenWidth), static_cast<uint16_t>(screenHeight) };
+        m_info.size = { screenWidth, screenHeight };
     } else {
         m_info.position = { windowInfo.position.x, windowInfo.position.y };
-        m_info.size = { static_cast<uint16_t>(windowInfo.size.width), static_cast<uint16_t>(windowInfo.size.height) };
+        m_info.size = { windowInfo.size.width, windowInfo.size.height };
     }
 
     const auto windowRect{ ComputeWindowRect(m_info.size.width, m_info.size.height, fullScreen) };
@@ -162,14 +163,13 @@ void Win32WindowImpl::SetPosition(int32_t x, int32_t y)
         return;
     }
 
-    m_info.position.x = static_cast<int16_t>(x);
-    m_info.position.y = static_cast<int16_t>(y);
+    if (m_info.position == Position{ x, y }) {
+        return;
+    }
 
     SetWindowPos(m_hWnd, NULL, x, y, 0, 0, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE);
 
-    if (x != m_info.position.x || y != m_info.position.y) {
-        m_eventQueue.Push(OnMoveEvent(x, y)); // Trigger window moved event
-    }
+    m_eventQueue.Push(OnMoveEvent(x, y)); // Trigger window moved event
 }
 
 void Win32WindowImpl::SetSize(uint32_t w, uint32_t h)
@@ -178,16 +178,14 @@ void Win32WindowImpl::SetSize(uint32_t w, uint32_t h)
         return;
     }
 
-    m_info.size.width = static_cast<uint16_t>(w);
-    m_info.size.height = static_cast<uint16_t>(h);
+    if (m_info.size == Size{ w, h }) {
+        return;
+    }
 
     const auto windowRect{ ComputeWindowRect(w, h, false) };
-
     SetWindowPos(m_hWnd, NULL, 0, 0, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE);
 
-    if (w != m_info.size.width || h != m_info.size.height) {
-        m_eventQueue.Push(OnResizeEvent(w, h)); // Trigger resize event
-    }
+    m_eventQueue.Push(OnResizeEvent(w, h)); // Trigger resize event
 }
 
 void Win32WindowImpl::SetMouseCursorVisible(bool visible)
@@ -241,12 +239,12 @@ Event Win32WindowImpl::GetEvent(bool waitForEvent)
 
     if (m_isRunning) {
         TranslateMessage(&msg);
-        int16_t x = GET_X_LPARAM(msg.lParam);
-        int16_t y = GET_Y_LPARAM(msg.lParam);
+        int32_t x = GET_X_LPARAM(msg.lParam);
+        int32_t y = GET_Y_LPARAM(msg.lParam);
 
         if (m_hasFocus && m_mouseLocked) {
-            uint16_t widhtHalf = m_info.size.width / 2;
-            uint16_t heightHalf = m_info.size.height / 2;
+            uint32_t widhtHalf = m_info.size.width / 2;
+            uint32_t heightHalf = m_info.size.height / 2;
 
             POINT pt;
             pt.x = widhtHalf;
@@ -305,7 +303,7 @@ Event Win32WindowImpl::GetEvent(bool waitForEvent)
 
             //--Mouse wheel events--
         case WM_MOUSEWHEEL: {
-            uint16_t wheel = GET_WHEEL_DELTA_WPARAM(msg.wParam) / 120;
+            uint32_t wheel = GET_WHEEL_DELTA_WPARAM(msg.wParam) / 120;
             return OnMouseScrollEvent(wheel, x, y);
         }
 
@@ -341,18 +339,19 @@ Event Win32WindowImpl::GetEvent(bool waitForEvent)
 
             RECT r;
             GetClientRect(m_hWnd, &r);
-            uint16_t w = static_cast<uint16_t>(r.right - r.left);
-            uint16_t h = static_cast<uint16_t>(r.bottom - r.top);
-            if (w != m_info.size.width || h != m_info.size.height) {
+            uint32_t w{ static_cast<uint32_t>(r.right - r.left) };
+            uint32_t h{ static_cast<uint32_t>(r.bottom - r.top) };
+            if (m_info.size != Size{ w, h }) {
                 return OnResizeEvent(w, h); // window resized
             }
 
             GetWindowRect(m_hWnd, &r);
-            int16_t x = (int16_t)r.left;
-            int16_t y = (int16_t)r.top;
-            if (x != m_info.position.x || y != m_info.position.y) {
+            int32_t x{ static_cast<int32_t>(r.left) };
+            int32_t y{ static_cast<int32_t>(r.top) };
+            if (m_info.position != Position{ x, y }) {
                 return OnMoveEvent(x, y); // window moved
             }
+            break;
         }
         case WM_CLOSE: {
             return OnCloseEvent();

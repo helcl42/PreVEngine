@@ -5,22 +5,22 @@
 
 namespace prev::input::mouse {
 enum class MouseActionType : uint32_t {
-    PRESS,
-    RELEASE,
-    MOVE
+    PRESS = 0,
+    RELEASE = 1,
+    MOVE = 2
 };
 
 enum class MouseButtonType : uint32_t {
     NONE = 0,
-    LEFT,
-    MIDDLE,
-    RIGHT
+    LEFT = 1,
+    MIDDLE = 2,
+    RIGHT = 3
 };
 
 struct MouseEvent {
-    MouseActionType action;
+    MouseActionType action{};
 
-    MouseButtonType button;
+    MouseButtonType button{};
 
     glm::vec2 position;
 
@@ -28,17 +28,17 @@ struct MouseEvent {
 };
 
 struct MouseScrollEvent {
-    int32_t delta;
+    int32_t delta{};
 
     glm::vec2 position;
 };
 
 struct MouseLockRequest {
-    bool lock;
+    bool lock{};
 };
 
 struct MouseCursorVisibilityRequest {
-    bool visible;
+    bool visible{};
 };
 } // namespace prev::input::mouse
 
