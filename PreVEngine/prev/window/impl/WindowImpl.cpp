@@ -17,7 +17,7 @@ WindowImpl::~WindowImpl()
     DestroySurface(m_vkInstance);
 }
 
-Event WindowImpl::OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonType btn)
+Event WindowImpl::OnMouseEvent(ActionType action, int32_t x, int32_t y, ButtonType btn)
 {
     m_mousePosition = { x, y };
     if (action != ActionType::MOVE) {
@@ -30,12 +30,12 @@ Event WindowImpl::OnMouseEvent(ActionType action, int16_t x, int16_t y, ButtonTy
     e.mouse.x = x;
     e.mouse.y = y;
     e.mouse.btn = btn;
-    e.mouse.w = static_cast<int16_t>(m_info.size.width);
-    e.mouse.h = static_cast<int16_t>(m_info.size.height);
+    e.mouse.w = m_info.size.width;
+    e.mouse.h = m_info.size.height;
     return e;
 }
 
-Event WindowImpl::OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y)
+Event WindowImpl::OnMouseScrollEvent(int32_t delta, int32_t x, int32_t y)
 {
     m_mousePosition = { x, y };
 
@@ -62,7 +62,7 @@ Event WindowImpl::OnTextEvent(const char* str)
     return e;
 }
 
-Event WindowImpl::OnMoveEvent(int16_t x, int16_t y)
+Event WindowImpl::OnMoveEvent(int32_t x, int32_t y)
 {
     m_info.position = { x, y };
 
@@ -71,7 +71,7 @@ Event WindowImpl::OnMoveEvent(int16_t x, int16_t y)
     return e;
 }
 
-Event WindowImpl::OnResizeEvent(uint16_t width, uint16_t height)
+Event WindowImpl::OnResizeEvent(uint32_t width, uint32_t height)
 {
     m_info.size = { width, height };
 

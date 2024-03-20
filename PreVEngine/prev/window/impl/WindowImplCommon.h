@@ -8,16 +8,36 @@
 
 namespace prev::window::impl {
 struct Position {
-    int16_t x;
+    int32_t x;
 
-    int16_t y;
+    int32_t y;
 };
+
+inline bool operator==(const Position& a, const Position& b)
+{
+    return a.x == b.x && a.y == b.y;
+}
+
+inline bool operator!=(const Position& a, const Position& b)
+{
+    return !(a == b);
+}
 
 struct Size {
-    uint16_t width;
+    uint32_t width;
 
-    uint16_t height;
+    uint32_t height;
 };
+
+inline bool operator==(const Size& a, const Size& b)
+{
+    return a.width == b.width && a.height == b.height;
+}
+
+inline bool operator!=(const Size& a, const Size& b)
+{
+    return !(a == b);
+}
 
 struct WindowInfo {
     std::string title;
@@ -67,18 +87,18 @@ struct Event {
         struct // mouse move/click
         {
             ActionType action;
-            int16_t x;
-            int16_t y;
+            int32_t x;
+            int32_t y;
             ButtonType btn;
-            int16_t w;
-            int16_t h;
+            uint32_t w;
+            uint32_t h;
         } mouse;
 
         struct // mouse scroll
         {
-            int16_t delta;
-            int16_t x;
-            int16_t y;
+            int32_t delta;
+            int32_t x;
+            int32_t y;
         } scroll;
 
         struct // Keyboard key state
@@ -94,14 +114,14 @@ struct Event {
 
         struct // Window move
         {
-            int16_t x;
-            int16_t y;
+            int32_t x;
+            int32_t y;
         } move;
 
         struct // Window resize
         {
-            uint16_t width;
-            uint16_t height;
+            uint32_t width;
+            uint32_t height;
         } resize;
 
         struct // Window gained/lost focus
