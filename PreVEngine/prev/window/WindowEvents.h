@@ -3,9 +3,6 @@
 
 #include "IWindow.h"
 
-#include "../common/Common.h"
-#include "../core/Core.h"
-
 namespace prev::window {
 struct WindowCreatedEvent {
     IWindow* window;
@@ -37,10 +34,6 @@ struct WindowFocusChangeEvent {
     IWindow* window;
 
     bool hasFocus;
-};
-
-struct SurfaceChanged {
-    VkSurfaceKHR surface;
 };
 } // namespace prev::window
 

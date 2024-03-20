@@ -13,8 +13,6 @@ class IWindow {
 public:
     virtual impl::Surface& GetSurface(VkInstance instance) = 0;
 
-    virtual bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const = 0;
-
     virtual impl::Position GetPosition() const = 0;
 
     virtual impl::Size GetSize() const = 0;

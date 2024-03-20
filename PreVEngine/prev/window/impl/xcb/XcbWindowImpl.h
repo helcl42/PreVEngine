@@ -21,8 +21,6 @@ public:
 public:
     Event GetEvent(bool waitForEvent = false);
 
-    bool CanPresent(VkPhysicalDevice phy, uint32_t queueFamily) const; // check if this window can present this queue type
-
 private:
     void SetTitle(const std::string& title);
 

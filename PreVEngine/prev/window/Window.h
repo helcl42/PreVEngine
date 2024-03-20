@@ -24,8 +24,6 @@ public:
 public:
     impl::Surface& GetSurface(VkInstance instance) override;
 
-    bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const override;
-
     impl::Position GetPosition() const override;
 
     impl::Size GetSize() const override;

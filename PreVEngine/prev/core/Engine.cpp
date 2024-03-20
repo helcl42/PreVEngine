@@ -115,19 +115,12 @@ void Engine::operator()(const prev::window::WindowChangeEvent& windowChangeEvent
     vkDeviceWaitIdle(*m_device);
 
     ResetSurface();
-
-    prev::event::EventChannel::Post(prev::window::SurfaceChanged{ m_surface });
+    ResetSwapchain();
+    m_swapchain->UpdateExtent(); // TODO needed ??
 }
 
 void Engine::operator()(const prev::window::WindowResizeEvent& resizeEvent)
 {
-    m_swapchain->UpdateExtent();
-}
-
-void Engine::operator()(const prev::window::SurfaceChanged& surfaceChangedEvent)
-{
-    m_surface = surfaceChangedEvent.surface;
-    ResetSwapchain();
     m_swapchain->UpdateExtent();
 }
 

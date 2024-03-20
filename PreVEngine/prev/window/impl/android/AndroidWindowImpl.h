@@ -28,8 +28,6 @@ private:
 
     void SetMouseCursorVisible(bool visible);
 
-    bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const;
-
     bool CreateSurface(VkInstance instance);
 
 private:

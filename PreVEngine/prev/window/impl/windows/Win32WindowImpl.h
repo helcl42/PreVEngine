@@ -15,8 +15,6 @@ public:
 public:
     Event GetEvent(bool waitForEvent = false);
 
-    bool CanPresent(VkPhysicalDevice phy, uint32_t queueFamily) const;
-
 private:
     void SetTitle(const std::string& title);
 
