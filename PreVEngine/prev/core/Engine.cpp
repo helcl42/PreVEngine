@@ -116,7 +116,6 @@ void Engine::operator()(const prev::window::WindowChangeEvent& windowChangeEvent
 
     ResetSurface();
     ResetSwapchain();
-    m_swapchain->UpdateExtent(); // TODO needed ??
 }
 
 void Engine::operator()(const prev::window::WindowResizeEvent& resizeEvent)

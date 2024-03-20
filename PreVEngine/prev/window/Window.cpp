@@ -2,8 +2,6 @@
 #include "InputConvertor.h"
 #include "impl/WindowImplFactory.h"
 
-#include <stdexcept>
-
 namespace prev::window {
 Window::Window(const WindowCreateInfo& createInfo)
 {
@@ -13,7 +11,7 @@ Window::Window(const WindowCreateInfo& createInfo)
 impl::Surface& Window::GetSurface(VkInstance instance)
 {
     if (!m_windowImpl->CreateSurface(instance)) {
-        throw std::runtime_error("Could not create surface.");
+        //throw std::runtime_error("Could not create surface.");
     }
     return *m_windowImpl;
 }

@@ -39,7 +39,7 @@ AndroidWindowImpl::AndroidWindowImpl(const WindowInfo& windowInfo)
     //---Wait for window to be created AND gain focus---
     while (!m_hasFocus) {
         int events = 0;
-        struct android_poll_source* source;
+        android_poll_source* source;
         int id = ALooper_pollOnce(100, NULL, &events, (void**)&source);
         if (id == LOOPER_ID_MAIN) {
             int8_t cmd = android_app_read_cmd(m_app);
@@ -81,7 +81,7 @@ Event AndroidWindowImpl::GetEvent(bool waitForEvent)
     }
 
     int events = 0;
-    struct android_poll_source* source;
+    android_poll_source* source;
     int timeoutMillis = waitForEvent ? -1 : 0; // Blocking or non-blocking mode
     int id = ALooper_pollOnce(timeoutMillis, NULL, &events, (void**)&source);
 
@@ -103,10 +103,8 @@ Event AndroidWindowImpl::GetEvent(bool waitForEvent)
             break;
         case APP_CMD_INIT_WINDOW:
         case APP_CMD_CONFIG_CHANGED:
+            std::this_thread::sleep_for(std::chrono::milliseconds(300));
             event = OnChangeEvent();
-            std::this_thread::sleep_for(std::chrono::milliseconds(300)); // TODO
-            m_info.size = { static_cast<uint32_t>(ANativeWindow_getWidth(m_app->window)), static_cast<uint32_t>(ANativeWindow_getHeight(m_app->window)) };
-            m_eventQueue.Push(OnResizeEvent(m_info.size.width, m_info.size.height));
             break;
         case APP_CMD_TERM_WINDOW:
             // event = OnCloseEvent();
@@ -247,10 +245,8 @@ void AndroidWindowImpl::SetMouseCursorVisible(bool visible)
 bool AndroidWindowImpl::CreateSurface(VkInstance instance)
 {
     if (m_vkSurface) {
-        return false;
+        return true;
     }
-
-    LOGE("NativeWindow Ptr: %p", m_app->window);
 
     m_vkInstance = instance;
 
