@@ -67,15 +67,15 @@ public:
 
     virtual void OnChangeEvent() = 0;
 
-    virtual void OnResizeEvent(uint16_t width, uint16_t height) = 0;
+    virtual void OnResizeEvent(uint32_t width, uint32_t height) = 0;
 
-    virtual void OnMoveEvent(int16_t x, int16_t y) = 0;
+    virtual void OnMoveEvent(int32_t x, int32_t y) = 0;
 
     virtual void OnFocusEvent(bool hasFocus) = 0;
 
-    virtual void OnMouseEvent(impl::ActionType action, int16_t x, int16_t y, impl::ButtonType btn, int16_t w, int16_t h) = 0;
+    virtual void OnMouseEvent(impl::ActionType action, int32_t x, int32_t y, impl::ButtonType btn, uint32_t w, uint32_t h) = 0;
 
-    virtual void OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y) = 0;
+    virtual void OnMouseScrollEvent(int32_t delta, int32_t x, int32_t y) = 0;
 
     virtual void OnKeyEvent(impl::ActionType action, prev::input::keyboard::KeyCode keycode) = 0;
 

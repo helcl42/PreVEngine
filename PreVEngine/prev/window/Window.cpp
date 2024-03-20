@@ -23,12 +23,12 @@ void Window::OnChangeEvent()
     prev::event::EventChannel::Post(WindowChangeEvent{ this });
 }
 
-void Window::OnResizeEvent(uint16_t width, uint16_t height)
+void Window::OnResizeEvent(uint32_t width, uint32_t height)
 {
     prev::event::EventChannel::Post(WindowResizeEvent{ this, width, height });
 }
 
-void Window::OnMoveEvent(int16_t x, int16_t y)
+void Window::OnMoveEvent(int32_t x, int32_t y)
 {
     prev::event::EventChannel::Post(WindowMovedEvent{ this, glm::vec2(x, y) });
 }
@@ -43,12 +43,12 @@ void Window::OnKeyEvent(impl::ActionType action, prev::input::keyboard::KeyCode 
     prev::event::EventChannel::Post(prev::input::keyboard::KeyEvent{ InputConvertor::GetKeyActionType(action), keyCode });
 }
 
-void Window::OnMouseEvent(impl::ActionType action, int16_t x, int16_t y, impl::ButtonType button, int16_t w, int16_t h)
+void Window::OnMouseEvent(impl::ActionType action, int32_t x, int32_t y, impl::ButtonType button, uint32_t w, uint32_t h)
 {
     prev::event::EventChannel::Post(prev::input::mouse::MouseEvent{ InputConvertor::GetMouseActionType(action), InputConvertor::GetMouseButtonType(button), glm::vec2(x, y), glm::vec2(w, h) });
 }
 
-void Window::OnMouseScrollEvent(int16_t delta, int16_t x, int16_t y)
+void Window::OnMouseScrollEvent(int32_t delta, int32_t x, int32_t y)
 {
     prev::event::EventChannel::Post(prev::input::mouse::MouseScrollEvent{ delta, glm::vec2(x, y) });
 }

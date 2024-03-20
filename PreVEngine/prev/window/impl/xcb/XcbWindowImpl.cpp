@@ -274,14 +274,14 @@ Event XcbWindowImpl::TranslateEvent(xcb_generic_event_t* x_event)
     static char buf[4] = {}; // store char for text event
 
     xcb_button_press_event_t& e = *(xcb_button_press_event_t*)x_event; // xcb_motion_notify_event_t
-    int16_t mx = e.event_x;
-    int16_t my = e.event_y;
+    int32_t mx = e.event_x;
+    int32_t my = e.event_y;
 
     if (m_hasFocus && m_mouseLocked) {
-        uint16_t widthHalf = m_info.size.width / 2;
-        uint16_t heightHalf = m_info.size.height / 2;
+        uint32_t widthHalf = m_info.size.width / 2;
+        uint32_t heightHalf = m_info.size.height / 2;
 
-        xcb_warp_pointer(m_xcbConnection, XCB_NONE, m_xcbWindow, 0, 0, 0, 0, widthHalf, heightHalf);
+        xcb_warp_pointer(m_xcbConnection, XCB_NONE, m_xcbWindow, 0, 0, 0, 0, static_cast<uint16_t>(widthHalf), static_cast<uint16_t>(heightHalf));
 
         mx -= widthHalf;
         my -= heightHalf;

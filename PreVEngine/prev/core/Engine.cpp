@@ -147,10 +147,10 @@ void Engine::ResetWindow()
     prev::window::WindowCreateInfo windowCreateInfo{};
     windowCreateInfo.title = m_config.appName;
     windowCreateInfo.fullScreen = m_config.fullScreen;
-    windowCreateInfo.left = static_cast<int16_t>(m_config.windowPosition.x);
-    windowCreateInfo.top = static_cast<int16_t>(m_config.windowPosition.y);
-    windowCreateInfo.width = static_cast<uint16_t>(m_config.windowSize.x);
-    windowCreateInfo.height = static_cast<uint16_t>(m_config.windowSize.y);
+    windowCreateInfo.left = m_config.windowPosition.x;
+    windowCreateInfo.top = m_config.windowPosition.y;
+    windowCreateInfo.width = m_config.windowSize.x;
+    windowCreateInfo.height = m_config.windowSize.y;
 
     m_window = std::make_unique<prev::window::Window>(windowCreateInfo);
 }
