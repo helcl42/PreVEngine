@@ -37,30 +37,30 @@ private:
     Event TranslateEvent(xcb_generic_event_t* x_event); // Convert x_event to Window event
 
 private:
-    Display* m_display; // for XLib
+    Display* m_display{}; // for XLib
 
-    xcb_connection_t* m_xcbConnection; // for XCB
+    xcb_connection_t* m_xcbConnection{}; // for XCB
 
-    xcb_screen_t* m_xcbScreen;
+    xcb_screen_t* m_xcbScreen{};
 
-    xcb_window_t m_xcbWindow;
+    xcb_window_t m_xcbWindow{};
 
-    xcb_intern_atom_reply_t* m_atomWmDeleteWindow;
+    xcb_intern_atom_reply_t* m_atomWmDeleteWindow{};
 
     //---xkb Keyboard---
-    xkb_context* m_keyboardContext; // context for xkbcommon keyboard input
+    xkb_context* m_keyboardContext{}; // context for xkbcommon keyboard input
 
-    xkb_keymap* m_keyboardKeymap;
+    xkb_keymap* m_keyboardKeymap{};
 
-    xkb_state* m_keyboardState;
+    xkb_state* m_keyboardState{};
     //------------------
 
     //---Touch Device---
-    MultiTouch m_MTouch;
+    MultiTouch m_MTouch{};
 
-    int m_xiOpcode;
+    int m_xiOpcode{};
 
-    int m_xiDevId;
+    int m_xiDevId{};
     //------------------
 };
 } // namespace prev::window::impl::xcb
