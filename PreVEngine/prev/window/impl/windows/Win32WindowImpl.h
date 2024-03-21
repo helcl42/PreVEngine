@@ -8,14 +8,12 @@
 namespace prev::window::impl::win32 {
 class Win32WindowImpl final : public WindowImpl {
 public:
-    Win32WindowImpl(const WindowInfo& windowInfo);
+    Win32WindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo);
 
     ~Win32WindowImpl();
 
 public:
     Event GetEvent(bool waitForEvent = false);
-
-    bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const;
 
 private:
     void SetTitle(const std::string& title);
@@ -26,17 +24,17 @@ private:
 
     void SetMouseCursorVisible(bool visible);
 
-    bool CreateSurface(VkInstance instance);
+    Surface& CreateSurface();
 
 private:
     static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 private:
-    HINSTANCE m_hInstance;
+    HINSTANCE m_hInstance{};
 
-    HWND m_hWnd;
+    HWND m_hWnd{};
 
-    MultiTouch m_MTouch; // Multi-Touch device
+    MultiTouch m_MTouch{}; // Multi-Touch device
 };
 } // namespace prev::window::impl::win32
 

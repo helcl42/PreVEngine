@@ -38,7 +38,7 @@ Here is a video:
 
  - Run `mkdir build && cd build`
 
- - Run `cmake -DANDROID=ON -DABI_NAME=arm64-v8a ..`
+ - Run `cmake -DANDROID=ON -DANDROID_ABI=arm64-v8a ..`
 
  - Run `cd ../PreVEngineTest/platform/android && chmod a+x gradlew && ./gradlew clean build` or import to android studio from location `PreVEngineTest/platform/android` and deploy as usuall.
 

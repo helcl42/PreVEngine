@@ -16,8 +16,6 @@ public:
     bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const; // Checks if surface can present given queue type.
 
 protected:
-    VkInstance m_vkInstance{ VK_NULL_HANDLE };
-
     VkSurfaceKHR m_vkSurface{ VK_NULL_HANDLE };
 };
 } // namespace prev::window::impl

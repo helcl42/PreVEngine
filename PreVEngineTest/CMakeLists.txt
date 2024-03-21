@@ -159,11 +159,11 @@ elseif(ANDROID)
 
     target_link_libraries(${PROJECT_NAME} PreVEngine)
 
-    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Android/libassimp.so" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/platform/android/app/src/main/libs/arm64-v8a/")
+    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Android/libassimp.so" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/platform/android/app/src/main/jniLibs/${ANDROID_ABI}/")
 
     # add external library
     add_library(assimp SHARED IMPORTED)
-    set_target_properties(assimp PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/platform/android/app/src/main/libs/arm64-v8a/libassimp.so")
+    set_target_properties(assimp PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/platform/android/app/src/main/jniLibs/${ANDROID_ABI}/libassimp.so")
 
     # Link to external libraries
     target_link_libraries(${PROJECT_NAME} log android assimp)
@@ -172,10 +172,8 @@ else()
     message(FATAL_ERROR "Unsupported plaform.")
 endif()
 
-# testing
-enable_testing()
-
-if(NOT APPLE)
+# Testing
+if(NOT ANDROID AND NOT APPLE)
+    enable_testing()
     add_test(NAME DefaultTest COMMAND $<TARGET_FILE:${PROJECT_NAME}>)
 endif()
-

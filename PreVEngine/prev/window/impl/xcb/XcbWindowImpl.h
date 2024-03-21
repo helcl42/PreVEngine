@@ -14,14 +14,12 @@
 namespace prev::window::impl::xcb {
 class XcbWindowImpl final : public WindowImpl {
 public:
-    XcbWindowImpl(const WindowInfo& windowInfo);
+    XcbWindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo);
 
     ~XcbWindowImpl();
 
 public:
     Event GetEvent(bool waitForEvent = false);
-
-    bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const; // check if this window can present this queue type
 
 private:
     void SetTitle(const std::string& title);
@@ -32,37 +30,37 @@ private:
 
     void SetMouseCursorVisible(bool visible);
 
-    bool CreateSurface(VkInstance instance);
+    Surface& CreateSurface();
 
     bool InitTouch(); // Returns false if no touch-device was found.
 
     Event TranslateEvent(xcb_generic_event_t* x_event); // Convert x_event to Window event
 
 private:
-    Display* m_display; // for XLib
+    Display* m_display{}; // for XLib
 
-    xcb_connection_t* m_xcbConnection; // for XCB
+    xcb_connection_t* m_xcbConnection{}; // for XCB
 
-    xcb_screen_t* m_xcbScreen;
+    xcb_screen_t* m_xcbScreen{};
 
-    xcb_window_t m_xcbWindow;
+    xcb_window_t m_xcbWindow{};
 
-    xcb_intern_atom_reply_t* m_atomWmDeleteWindow;
+    xcb_intern_atom_reply_t* m_atomWmDeleteWindow{};
 
     //---xkb Keyboard---
-    xkb_context* m_keyboardContext; // context for xkbcommon keyboard input
+    xkb_context* m_keyboardContext{}; // context for xkbcommon keyboard input
 
-    xkb_keymap* m_keyboardKeymap;
+    xkb_keymap* m_keyboardKeymap{};
 
-    xkb_state* m_keyboardState;
+    xkb_state* m_keyboardState{};
     //------------------
 
     //---Touch Device---
-    MultiTouch m_MTouch;
+    MultiTouch m_MTouch{};
 
-    int m_xiOpcode;
+    int m_xiOpcode{};
 
-    int m_xiDevId;
+    int m_xiDevId{};
     //------------------
 };
 } // namespace prev::window::impl::xcb

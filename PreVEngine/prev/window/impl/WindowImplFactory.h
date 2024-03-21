@@ -9,7 +9,7 @@
 namespace prev::window::impl {
 class WindowImplFactory final {
 public:
-    std::unique_ptr<WindowImpl> Create(const WindowInfo& info) const;
+    std::unique_ptr<WindowImpl> Create(const prev::core::instance::Instance& instance, const WindowInfo& info) const;
 };
 } // namespace prev::window::impl
 

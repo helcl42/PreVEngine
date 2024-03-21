@@ -3,18 +3,19 @@
 #include "../../core/Core.h"
 
 namespace prev::window::impl {
-WindowImpl::WindowImpl()
-    : m_isRunning(false)
-    , m_hasTextInput(false)
-    , m_hasFocus(false)
-    , m_mouseLocked(false)
-    , m_mouseCursorVisible(true)
+WindowImpl::WindowImpl(const prev::core::instance::Instance& instance)
+    : m_instance{ instance }
+    , m_running{false }
+    , m_hasTextInput{ false }
+    , m_hasFocus{ false }
+    , m_mouseLocked{ false }
+    , m_mouseCursorVisible{ true }
 {
 }
 
 WindowImpl::~WindowImpl()
 {
-    DestroySurface(m_vkInstance);
+    DestroySurface();
 }
 
 Event WindowImpl::OnMouseEvent(ActionType action, int32_t x, int32_t y, ButtonType btn)
@@ -91,28 +92,28 @@ Event WindowImpl::OnFocusEvent(bool hasFocus)
 
 Event WindowImpl::OnInitEvent()
 {
-    m_isRunning = true;
+    m_running = true;
     return { Event::EventType::INIT };
 }
 
 Event WindowImpl::OnCloseEvent()
 {
-    m_isRunning = false;
+    m_running = false;
     return { Event::EventType::CLOSE };
 }
 
 Event WindowImpl::OnChangeEvent()
 {
-    DestroySurface(m_vkInstance);
-    CreateSurface(m_vkInstance);
+    DestroySurface();
+    CreateSurface();
 
     return { Event::EventType::CHANGE };
 }
 
-void WindowImpl::DestroySurface(VkInstance instance)
+void WindowImpl::DestroySurface()
 {
     if (m_vkSurface != VK_NULL_HANDLE) {
-        vkDestroySurfaceKHR(instance, m_vkSurface, nullptr);
+        vkDestroySurfaceKHR(m_instance, m_vkSurface, nullptr);
         m_vkSurface = VK_NULL_HANDLE;
     }
 }
@@ -139,7 +140,7 @@ const WindowInfo& WindowImpl::GetInfo() const
 
 bool WindowImpl::IsRunning() const
 {
-    return m_isRunning;
+    return m_running;
 }
 
 bool WindowImpl::IsKeyPressed(const prev::input::keyboard::KeyCode key) const
