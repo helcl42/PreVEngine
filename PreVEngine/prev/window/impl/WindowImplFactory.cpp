@@ -14,16 +14,16 @@
 #endif
 
 namespace prev::window::impl {
-std::unique_ptr<WindowImpl> WindowImplFactory::Create(const WindowInfo& info) const
+std::unique_ptr<WindowImpl> WindowImplFactory::Create(const prev::core::instance::Instance& instance, const WindowInfo& info) const
 {
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
-    return std::make_unique<android::AndroidWindowImpl>(info);
+    return std::make_unique<android::AndroidWindowImpl>(instance, info);
 #elif VK_USE_PLATFORM_XCB_KHR
-    return std::make_unique<xcb::XcbWindowImpl>(info);
+    return std::make_unique<xcb::XcbWindowImpl>(instance, info);
 #elif VK_USE_PLATFORM_WIN32_KHR
-    return std::make_unique<win32::Win32WindowImpl>(info);
+    return std::make_unique<win32::Win32WindowImpl>(instance, info);
 #elif VK_USE_PLATFORM_MACOS_MVK
-    return std::make_unique<macos::MacOSWindowImpl>(info);
+    return std::make_unique<macos::MacOSWindowImpl>(instance, info);
 #else
 #error NOT IMPLEMENTED PLATFORM!
 #endif

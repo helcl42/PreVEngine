@@ -14,8 +14,8 @@ android {
 
     defaultConfig {
         applicationId = 'com.prevengine.PreVEngineTest'
-        minSdkVersion 14
-        targetSdkVersion 31
+        minSdkVersion 19
+        targetSdkVersion 33
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++17"
@@ -41,7 +41,6 @@ android {
     sourceSets {
         main {
             assets.srcDirs = ['../../../assets']
-            jniLibs.srcDirs = [ 'libs' ]
         }
     }
     namespace 'com.prevengine.PreVEngineTest'

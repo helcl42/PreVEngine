@@ -4,6 +4,8 @@
 #include "Surface.h"
 #include "WindowImplCommon.h"
 
+#include "../../core/instance/Instance.h"
+
 namespace prev::window::impl {
 class EventFIFO {
 public:
@@ -124,7 +126,7 @@ private:
 
 class WindowImpl : public Surface {
 public:
-    WindowImpl();
+    WindowImpl(const prev::core::instance::Instance& instance);
 
     virtual ~WindowImpl();
 
@@ -155,9 +157,7 @@ public:
     virtual void Close();
 
 public:
-    virtual bool CreateSurface(VkInstance instance) = 0;
-
-    virtual bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const = 0; // Checks if window can present the given queue type.
+    virtual Surface& CreateSurface() = 0;
 
     virtual Event GetEvent(bool waitForEvent = false) = 0; // Fetch one event from the queue.
 
@@ -191,22 +191,24 @@ protected:
     Event OnChangeEvent();
 
 private:
-    void DestroySurface(VkInstance instance);
+    void DestroySurface();
 
 protected:
-    EventFIFO m_eventQueue;
+    const prev::core::instance::Instance& m_instance;
 
-    bool m_isRunning;
+    EventFIFO m_eventQueue{};
 
-    bool m_hasTextInput;
+    bool m_running{};
 
-    bool m_hasFocus;
+    bool m_hasTextInput{};
 
-    WindowInfo m_info;
+    bool m_hasFocus{};
 
-    bool m_mouseLocked;
+    WindowInfo m_info{};
 
-    bool m_mouseCursorVisible;
+    bool m_mouseLocked{};
+
+    bool m_mouseCursorVisible{};
 
 private:
     Position m_mousePosition{};

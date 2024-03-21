@@ -49,8 +49,6 @@ public:
 
     void operator()(const prev::window::WindowResizeEvent& resizeEvent);
 
-    void operator()(const prev::window::SurfaceChanged& surfaceChangedEvent);
-
 private:
     void ResetTiming();
 
@@ -72,8 +70,6 @@ private:
     prev::event::EventHandler<Engine, prev::window::WindowChangeEvent> m_windowChangedHandler{ *this };
 
     prev::event::EventHandler<Engine, prev::window::WindowResizeEvent> m_windowResizeEvent{ *this };
-
-    prev::event::EventHandler<Engine, prev::window::SurfaceChanged> m_surfaceChangedEvent{ *this };
 
 private:
     const EngineConfig& m_config;

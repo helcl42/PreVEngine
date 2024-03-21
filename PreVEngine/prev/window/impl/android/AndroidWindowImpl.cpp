@@ -29,7 +29,8 @@ namespace {
     };
 } // namespace
 
-AndroidWindowImpl::AndroidWindowImpl(const WindowInfo& windowInfo)
+AndroidWindowImpl::AndroidWindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo)
+    : WindowImpl(instance)
 {
     m_info.size = {};
     m_info.fullScreen = true;
@@ -39,7 +40,7 @@ AndroidWindowImpl::AndroidWindowImpl(const WindowInfo& windowInfo)
     //---Wait for window to be created AND gain focus---
     while (!m_hasFocus) {
         int events = 0;
-        struct android_poll_source* source;
+        android_poll_source* source;
         int id = ALooper_pollOnce(100, NULL, &events, (void**)&source);
         if (id == LOOPER_ID_MAIN) {
             int8_t cmd = android_app_read_cmd(m_app);
@@ -51,8 +52,7 @@ AndroidWindowImpl::AndroidWindowImpl(const WindowInfo& windowInfo)
             }
 
             if (cmd == APP_CMD_INIT_WINDOW) {
-                m_info.size = { static_cast<uint32_t>(ANativeWindow_getWidth(m_app->window)), static_cast<uint32_t>(ANativeWindow_getHeight(m_app->window)) };
-                m_eventQueue.Push(OnResizeEvent(m_info.size.width, m_info.size.height)); // post window-resize event
+                m_eventQueue.Push(OnResizeEvent(static_cast<uint32_t>(ANativeWindow_getWidth(m_app->window)), static_cast<uint32_t>(ANativeWindow_getHeight(m_app->window)))); // post window-resize event
             }
 
             if (cmd == APP_CMD_GAINED_FOCUS) {
@@ -81,7 +81,7 @@ Event AndroidWindowImpl::GetEvent(bool waitForEvent)
     }
 
     int events = 0;
-    struct android_poll_source* source;
+    android_poll_source* source;
     int timeoutMillis = waitForEvent ? -1 : 0; // Blocking or non-blocking mode
     int id = ALooper_pollOnce(timeoutMillis, NULL, &events, (void**)&source);
 
@@ -103,10 +103,10 @@ Event AndroidWindowImpl::GetEvent(bool waitForEvent)
             break;
         case APP_CMD_INIT_WINDOW:
         case APP_CMD_CONFIG_CHANGED:
+            // THIS is hack: due to unreliable surface extent readouts
+            std::this_thread::sleep_for(std::chrono::milliseconds(300));
+            m_eventQueue.Push(OnResizeEvent(static_cast<uint32_t>(ANativeWindow_getWidth(m_app->window)), static_cast<uint32_t>(ANativeWindow_getHeight(m_app->window))));
             event = OnChangeEvent();
-            std::this_thread::sleep_for(std::chrono::milliseconds(300)); // TODO
-            m_info.size = { static_cast<uint32_t>(ANativeWindow_getWidth(m_app->window)), static_cast<uint32_t>(ANativeWindow_getHeight(m_app->window)) };
-            m_eventQueue.Push(OnResizeEvent(m_info.size.width, m_info.size.height));
             break;
         case APP_CMD_TERM_WINDOW:
             // event = OnCloseEvent();
@@ -244,30 +244,19 @@ void AndroidWindowImpl::SetMouseCursorVisible(bool visible)
 {
 }
 
-bool AndroidWindowImpl::CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const
+Surface& AndroidWindowImpl::CreateSurface()
 {
-    return true;
-}
+    if (m_vkSurface == VK_NULL_HANDLE) {
+        VkAndroidSurfaceCreateInfoKHR androidCreateInfo;
+        androidCreateInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
+        androidCreateInfo.pNext = NULL;
+        androidCreateInfo.flags = 0;
+        androidCreateInfo.window = m_app->window;
+        VKERRCHECK(vkCreateAndroidSurfaceKHR(m_instance, &androidCreateInfo, NULL, &m_vkSurface));
 
-bool AndroidWindowImpl::CreateSurface(VkInstance instance)
-{
-    if (m_vkSurface) {
-        return false;
+        LOGI("Android - Vulkan Surface created\n");
     }
-
-    LOGE("NativeWindow Ptr: %p", m_app->window);
-
-    m_vkInstance = instance;
-
-    VkAndroidSurfaceCreateInfoKHR androidCreateInfo{};
-    androidCreateInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
-    androidCreateInfo.pNext = NULL;
-    androidCreateInfo.flags = 0;
-    androidCreateInfo.window = m_app->window;
-    VKERRCHECK(vkCreateAndroidSurfaceKHR(instance, &androidCreateInfo, NULL, &m_vkSurface));
-
-    LOGI("Vulkan Surface created\n");
-    return true;
+    return *this;
 }
 } // namespace prev::window::impl::android
 
