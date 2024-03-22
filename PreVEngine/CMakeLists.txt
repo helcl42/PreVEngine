@@ -102,6 +102,11 @@ elseif(APPLE)
     target_include_directories(${PROJECT_NAME} PUBLIC "${VULKAN_INCLUDE}")       # include vulkan.h
     message("VULKAN_INCLUDE path: ${VULKAN_INCLUDE}")
 
+    target_link_libraries(${PROJECT_NAME} 
+        ${COCOA_LIB}
+        ${QUARTZ_CORE_LIB}
+    )
+
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     message("${PROJECT_NAME} - Linux")
     option(BUILD_PREVENGINE_XCB_SUPPORT "Build XCB PREVENGINE support" ON)
