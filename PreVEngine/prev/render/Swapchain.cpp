@@ -305,7 +305,13 @@ bool Swapchain::AcquireNext(SwapchainBuffer& next)
 
     const auto& swapchainBuffer{ m_swapchainBuffers[m_currentFrameIndex] };
 
+// TODO: on apple we have to wait for previous frame to complete
+#if defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_IOS_MVK)
+    const auto previousSwapchainBuffer{ m_swapchainBuffers[GetPreviousIndex()] };
+    VKERRCHECK(vkWaitForFences(m_device, 1, &previousSwapchainBuffer.fence, VK_TRUE, UINT64_MAX));
+#else
     VKERRCHECK(vkWaitForFences(m_device, 1, &swapchainBuffer.fence, VK_TRUE, UINT64_MAX));
+#endif
     VKERRCHECK(vkResetFences(m_device, 1, &swapchainBuffer.fence));
 
     uint32_t acquireIndex;
@@ -365,7 +371,7 @@ void Swapchain::Present()
     }
 
     if (!swapchainChanged) {
-        m_currentFrameIndex = (m_currentFrameIndex + 1) % m_swapchainImagesCount;
+        m_currentFrameIndex = GetNextIndex();
     }
 
     m_isAcquired = false;
@@ -393,5 +399,15 @@ void Swapchain::EndFrame()
 
     Submit();
     Present();
+}
+
+uint32_t Swapchain::GetNextIndex() const
+{
+    return (m_currentFrameIndex + 1) % m_swapchainImagesCount;
+}
+
+uint32_t Swapchain::GetPreviousIndex() const
+{
+    return (m_currentFrameIndex + m_swapchainImagesCount - 1) % m_swapchainImagesCount;
 }
 } // namespace prev::render

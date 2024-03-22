@@ -74,6 +74,11 @@ private:
     virtual VkSurfaceCapabilitiesKHR GetSurfaceCapabilities() const;
 
     virtual std::vector<VkImage> GetSwapchainImages() const;
+    
+private:
+    uint32_t GetNextIndex() const;
+    
+    uint32_t GetPreviousIndex() const;
 
 private:
     core::device::Device& m_device;
