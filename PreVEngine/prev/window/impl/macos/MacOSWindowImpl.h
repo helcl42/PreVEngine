@@ -10,14 +10,12 @@ struct MacState;
 
 class MacOSWindowImpl final : public WindowImpl {
 public:
-    MacOSWindowImpl(const WindowInfo& windowInfo);
+    MacOSWindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo);
 
     ~MacOSWindowImpl();
 
 public:
     Event GetEvent(bool waitForEvent = false);
-
-    bool CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const; // check if this window can present this queue type
 
 private:
     void SetTitle(const std::string& title);
@@ -28,7 +26,7 @@ private:
 
     void SetMouseCursorVisible(bool visible);
 
-    bool CreateSurface(VkInstance instance);
+    Surface& CreateSurface();
 
 private:
     std::unique_ptr<MacState> m_state{};
