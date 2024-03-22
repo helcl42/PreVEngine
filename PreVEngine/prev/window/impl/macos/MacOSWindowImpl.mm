@@ -209,7 +209,7 @@ Surface& MacOSWindowImpl::CreateSurface()
         macOsSurfaceCreateInfo.pView = m_state->layer;
         VKERRCHECK(vkCreateMacOSSurfaceMVK(m_instance, &macOsSurfaceCreateInfo, nullptr, &m_vkSurface));
         
-        LOGI("Vulkan Surface created\n");
+        LOGI("MacOS - Vulkan Surface created\n");
     }
     return *this;
 }
