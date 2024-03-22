@@ -32,7 +32,8 @@ struct MacState {
     }
 };
 
-MacOSWindowImpl::MacOSWindowImpl(const WindowInfo& windowInfo)
+MacOSWindowImpl::MacOSWindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo)
+    : WindowImpl(instance)
 {
     [NSApplication sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
@@ -149,11 +150,6 @@ Event MacOSWindowImpl::GetEvent(bool waitForEvent)
     return { Event::EventType::NONE };
 }
 
-bool MacOSWindowImpl::CanPresent(VkPhysicalDevice gpu, uint32_t queueFamily) const
-{
-    return true;
-}
-
 void MacOSWindowImpl::SetTitle(const std::string& title)
 {    
     NSString* nsTitle = [NSString stringWithCString:title.c_str()
@@ -203,23 +199,19 @@ void MacOSWindowImpl::SetMouseCursorVisible(bool visible)
     }
 }
 
-bool MacOSWindowImpl::CreateSurface(VkInstance instance)
+Surface& MacOSWindowImpl::CreateSurface()
 {
-    if (m_vkSurface) {
-        return false;
+    if (m_vkSurface == VK_NULL_HANDLE) {
+        VkMacOSSurfaceCreateInfoMVK macOsSurfaceCreateInfo{};
+        macOsSurfaceCreateInfo.sType = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
+        macOsSurfaceCreateInfo.pNext = nullptr;
+        macOsSurfaceCreateInfo.flags = 0;
+        macOsSurfaceCreateInfo.pView = m_state->layer;
+        VKERRCHECK(vkCreateMacOSSurfaceMVK(m_instance, &macOsSurfaceCreateInfo, nullptr, &m_vkSurface));
+        
+        LOGI("Vulkan Surface created\n");
     }
-
-    m_vkInstance = instance;
-
-    VkMacOSSurfaceCreateInfoMVK macOsSurfaceCreateInfo{};
-    macOsSurfaceCreateInfo.sType = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
-    macOsSurfaceCreateInfo.pNext = nullptr;
-    macOsSurfaceCreateInfo.flags = 0;
-    macOsSurfaceCreateInfo.pView = m_state->layer;
-    VKERRCHECK(vkCreateMacOSSurfaceMVK(instance, &macOsSurfaceCreateInfo, nullptr, &m_vkSurface));
-
-    LOGI("Vulkan Surface created\n");
-    return true;
+    return *this;
 }
 }
 
