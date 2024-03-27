@@ -3,9 +3,6 @@
 
 #import <Cocoa/Cocoa.h>
 
-// TODO
-//bool running{ true };
-
 @interface MacWindow : NSWindow
 {
 @public Boolean opened;
