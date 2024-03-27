@@ -19,12 +19,15 @@ namespace file {
 
     std::string GetDirectoryPath(const std::string& filePath)
     {
-        std::filesystem::path p(filePath);
-        std::filesystem::path parent = p.parent_path();
-        return parent.string();
+        return std::filesystem::path(filePath).parent_path().string();
     }
 
-#if defined(__ANDROID__)
+    std::string GetFileName(const std::string& filePath)
+    {
+        return std::filesystem::path(filePath).filename().string();
+    }
+
+#ifdef TARGET_PLATFORM_ANDROID
     bool Exists(const std::string& filePath)
     {
         AAsset* file = android_open_asset(filePath.c_str(), AASSET_MODE_STREAMING);

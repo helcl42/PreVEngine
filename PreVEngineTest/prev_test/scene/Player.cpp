@@ -33,7 +33,7 @@ void Player::Init()
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::render::IAnimationRenderComponent>(GetThis(), m_animationRenderComponent, TAG_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT);
 
     bool fixedCameraUp{ true };
-#if defined(__ANDROID__)
+#ifdef TARGET_PLATFORM_ANDROID
     fixedCameraUp = false;
 #endif
     prev_test::component::camera::CameraComponentFactory cameraFactory{};
@@ -46,7 +46,7 @@ void Player::Init()
 
     m_cameraComponent->AddPitch(glm::radians(m_cameraPitch));
 
-#if defined(__ANDROID__)
+#ifdef TARGET_PLATFORM_ANDROID
     m_poseProvider = std::make_unique<AndroidPoseProvider>();
     m_poseProvider->Init();
 #endif
@@ -108,7 +108,7 @@ void Player::Update(float deltaTime)
         jumpAnimation->Update(deltaTime);
     }
 
-#if defined(__ANDROID__)
+#ifdef TARGET_PLATFORM_ANDROID
     const auto pose{ m_poseProvider->GetCurrentPose() };
 
     const auto playerOrientation{ glm::normalize(glm::quat(pose.orientation.w, 0.0f, pose.orientation.x, 0.0f)) };
@@ -144,7 +144,7 @@ void Player::ShutDown()
 {
     SceneNode::ShutDown();
 
-#if defined(__ANDROID__)
+#ifdef TARGET_PLATFORM_ANDROID
     m_poseProvider->ShutDown();
     m_poseProvider = nullptr;
 #endif
@@ -203,7 +203,7 @@ void Player::operator()(const prev::input::mouse::MouseEvent& mouseEvent)
 
 void Player::operator()(const prev::input::touch::TouchEvent& touchEvent)
 {
-#if defined(__ANDROID__)
+#ifdef TARGET_PLATFORM_ANDROID
     if (touchEvent.action == prev::input::touch::TouchActionType::DOWN) {
         const float MAX_RATIO_FOR_JUMP_CONTROL = 0.25f;
         const auto MAX_X = touchEvent.extent.x * MAX_RATIO_FOR_JUMP_CONTROL;
