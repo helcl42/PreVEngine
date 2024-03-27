@@ -90,8 +90,8 @@ void ShowKeyboard(bool visible, int flags) {
 
     // Retrieve Context.INPUT_METHOD_SERVICE.
     jclass ClassContext = jniEnv->FindClass("android/content/Context");
-    jfieldID FieldINPUT_METHOD_SERVICE =jniEnv->GetStaticFieldID(ClassContext, "INPUT_METHOD_SERVICE", "Ljava/lang/String;");
-    jobject INPUT_METHOD_SERVICE =jniEnv->GetStaticObjectField(ClassContext, FieldINPUT_METHOD_SERVICE);
+    jfieldID FieldINPUT_METHOD_SERVICE = jniEnv->GetStaticFieldID(ClassContext, "INPUT_METHOD_SERVICE", "Ljava/lang/String;");
+    jobject INPUT_METHOD_SERVICE = jniEnv->GetStaticObjectField(ClassContext, FieldINPUT_METHOD_SERVICE);
 
     // getSystemService(Context.INPUT_METHOD_SERVICE).
     jobject lInputMethodManager = CALL_OBJ_METHOD(lNativeActivity, "getSystemService", "(Ljava/lang/String;)Ljava/lang/Object;", INPUT_METHOD_SERVICE);
