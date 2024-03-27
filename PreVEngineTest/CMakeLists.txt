@@ -113,6 +113,8 @@ include_directories("../Dependencies/assimp/include")
 
 if(WIN32)
     message("${PROJECT_NAME} - Windows")
+    add_definitions(-DTARGET_PLATFORM_WINDOWS)
+
     add_executable(${PROJECT_NAME} ${SRC_LIST})
 
     target_link_libraries(${PROJECT_NAME} PreVEngine)
@@ -125,6 +127,8 @@ if(WIN32)
 
 elseif(APPLE)
     message("${PROJECT_NAME} - MacOS")
+    add_definitions(-DTARGET_PLATFORM_MACOS)
+
     add_executable(${PROJECT_NAME} ${SRC_LIST})
 
     target_link_libraries(${PROJECT_NAME} PreVEngine)
@@ -136,6 +140,9 @@ elseif(APPLE)
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
 
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
+    message("${PROJECT_NAME} - Linux")
+    add_definitions(-DTARGET_PLATFORM_LINUX)
+
     add_executable(${PROJECT_NAME} ${SRC_LIST})
 
     target_link_libraries(${PROJECT_NAME} PreVEngine)
@@ -148,6 +155,8 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
 
 elseif(ANDROID)
     message("${PROJECT_NAME} - Android")
+    add_definitions(-DTARGET_PLATFORM_ANDROID)
+
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17 -O3")
 
     add_definitions(-DGLM_FORCE_CXX17)

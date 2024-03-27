@@ -65,6 +65,7 @@ include_directories("external/glm")
 
 if(WIN32)
     message("${PROJECT_NAME} - Windows")
+    add_definitions(-DTARGET_PLATFORM_WINDOWS)
     add_definitions(-DVK_USE_PLATFORM_WIN32_KHR)
 
     add_library(${PROJECT_NAME} STATIC ${SRC_LIST})
@@ -79,6 +80,7 @@ if(WIN32)
 
 elseif(APPLE)
     message("${PROJECT_NAME} - MacOS")
+    add_definitions(-DTARGET_PLATFORM_MACOS)
     add_definitions(-DVK_USE_PLATFORM_MACOS_MVK)
 
     include_directories("platform/macos")
@@ -109,6 +111,8 @@ elseif(APPLE)
 
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     message("${PROJECT_NAME} - Linux")
+    add_definitions(-DTARGET_PLATFORM_LINUX)
+
     option(BUILD_PREVENGINE_XCB_SUPPORT "Build XCB PREVENGINE support" ON)
     #option(BUILD_PREVENGINE_XLIB_SUPPORT "Build Xlib PREVENGINE support" OFF)
     #option(BUILD_PREVENGINE_WAYLAND_SUPPORT "Build Wayland PREVENGINE support" OFF)
@@ -163,6 +167,8 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
 
 elseif(ANDROID)
     message("${PROJECT_NAME} - Android")
+    add_definitions(-DTARGET_PLATFORM_ANDROID)
+
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17 -O3")
 
     add_definitions(-DVK_USE_PLATFORM_ANDROID_KHR)

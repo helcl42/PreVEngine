@@ -23,6 +23,8 @@ namespace file {
 
     std::string GetDirectoryPath(const std::string& filePath);
 
+    std::string GetFileName(const std::string& filePath);
+    
     bool Exists(const std::string& filePath);
 
     std::string ReadTextFile(const std::string& filePath);
