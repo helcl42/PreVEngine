@@ -522,6 +522,8 @@ std::string VendorIdToString(const uint32_t vendorId)
         return "Qualcomm";
     case 0x1010:
         return "Imagination";
+    case 0x106B:
+        return "Apple";
     default:
         return "UNKNOWN";
     }
