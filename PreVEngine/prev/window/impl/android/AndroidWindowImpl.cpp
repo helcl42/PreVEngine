@@ -9,7 +9,7 @@
 namespace prev::window::impl::android {
 namespace {
     // Convert native Android key-code to cross-platform USB HID code.
-    const unsigned char ANDROID_TO_HID[256] = {
+    const uint8_t ANDROID_TO_HID[256] = {
         0, 227, 231, 0, 0, 0, 0, 39, 30, 31, 32, 33, 34, 35, 36, 37,
         38, 0, 0, 82, 81, 80, 79, 0, 0, 0, 0, 0, 0, 4, 5, 6,
         7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
