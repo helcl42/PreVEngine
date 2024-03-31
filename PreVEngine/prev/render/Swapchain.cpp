@@ -52,7 +52,7 @@ Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allo
         m_msaaDepthBuffer = imageBufferFactory.CreateDepth(buffer::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, m_renderPass.GetDepthFormat(), m_sampleCount, 0, false, VK_IMAGE_VIEW_TYPE_2D }, m_allocator);
     }
 
-    m_acquireSemaphore = prev::util::vk::CreateSemaphore(m_device);
+    m_presentSemaphore = prev::util::vk::CreateSemaphore(m_device);
     m_renderSemaphore = prev::util::vk::CreateSemaphore(m_device);
 
     Apply();
@@ -70,8 +70,8 @@ Swapchain::~Swapchain()
         vkDestroySemaphore(m_device, m_renderSemaphore, nullptr);
     }
 
-    if (m_acquireSemaphore != VK_NULL_HANDLE) {
-        vkDestroySemaphore(m_device, m_acquireSemaphore, nullptr);
+    if (m_presentSemaphore != VK_NULL_HANDLE) {
+        vkDestroySemaphore(m_device, m_presentSemaphore, nullptr);
     }
 
     if (m_swapchain != VK_NULL_HANDLE) {
@@ -257,14 +257,11 @@ void Swapchain::Apply()
         if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
             swapchainImageViews.push_back(m_msaaColorBuffer->GetImageView());
             swapchainImageViews.push_back(m_msaaDepthBuffer->GetImageView());
-            swapchainImageViews.push_back(imageView); // Add color buffer (unique)
-            swapchainImageViews.push_back(m_depthBuffer->GetImageView()); // Add depth buffer (shared)
-        } else {
-            swapchainImageViews.push_back(imageView); // Add color buffer (unique)
-            swapchainImageViews.push_back(m_depthBuffer->GetImageView()); // Add depth buffer (shared)
         }
+        swapchainImageViews.push_back(imageView); // Add color buffer (unique)
+        swapchainImageViews.push_back(m_depthBuffer->GetImageView()); // Add depth buffer (shared)
 
-        auto& swapchainBuffer = m_swapchainBuffers[i];
+        auto& swapchainBuffer{ m_swapchainBuffers[i] };
         swapchainBuffer.image = image;
         swapchainBuffer.view = imageView;
         swapchainBuffer.framebuffer = util::vk::CreateFrameBuffer(m_device, m_renderPass, swapchainImageViews, m_swapchainCreateInfo.imageExtent);
@@ -309,7 +306,7 @@ bool Swapchain::AcquireNext(SwapchainBuffer& next)
     VKERRCHECK(vkResetFences(m_device, 1, &swapchainBuffer.fence));
 
     uint32_t acquireIndex;
-    const auto result{ vkAcquireNextImageKHR(m_device, m_swapchain, UINT64_MAX, m_acquireSemaphore, VK_NULL_HANDLE, &acquireIndex) };
+    const auto result{ vkAcquireNextImageKHR(m_device, m_swapchain, UINT64_MAX, m_presentSemaphore, VK_NULL_HANDLE, &acquireIndex) };
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
         UpdateExtent();
         return false;
@@ -334,7 +331,7 @@ void Swapchain::Submit()
 
     VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
     submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = &m_acquireSemaphore;
+    submitInfo.pWaitSemaphores = &m_presentSemaphore;
     submitInfo.pWaitDstStageMask = waitStages;
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &swapchainBuffer.commandBuffer;
