@@ -2,9 +2,6 @@
 
 #include "../../util/VkUtils.h"
 
-#include <map>
-#include <sstream>
-
 namespace prev::core::device {
 PhysicalDevice::PhysicalDevice()
     : m_handle(VK_NULL_HANDLE)
