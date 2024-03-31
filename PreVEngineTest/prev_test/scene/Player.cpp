@@ -194,12 +194,12 @@ void Player::operator()(const prev::input::mouse::MouseEvent& mouseEvent)
             m_shouldRotate = true;
         } else if (mouseEvent.action == prev::input::mouse::MouseActionType::RELEASE) {
             m_shouldRotate = false;
-        } else if (m_shouldRotate && mouseEvent.action == prev::input::mouse::MouseActionType::MOVE) {
-            if(mouseEvent.position.x != 0 || mouseEvent.position.y != 0) {
-                m_pitchYawRollDiff.y = mouseEvent.position.x;
-                m_pitchYawRollDiff.x = -mouseEvent.position.y;
-            }
         }
+    }
+
+    if (m_shouldRotate && mouseEvent.action == prev::input::mouse::MouseActionType::MOVE) {
+        m_pitchYawRollDiff.y += mouseEvent.position.x;
+        m_pitchYawRollDiff.x += -mouseEvent.position.y;
     }
 }
 
