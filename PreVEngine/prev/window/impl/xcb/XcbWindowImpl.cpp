@@ -269,7 +269,7 @@ Event XcbWindowImpl::TranslateEvent(xcb_generic_event_t* xEvent)
 {
     static char buf[4] = {}; // store char for text event
 
-    const auto event{ reinterpret_cast<xcb_button_press_event_t*>(xEvent) };
+    const auto event{ (xcb_button_press_event_t*)(xEvent) };
     int32_t mx{ event->event_x };
     int32_t my{ event->event_y };
 
@@ -284,10 +284,8 @@ Event XcbWindowImpl::TranslateEvent(xcb_generic_event_t* xEvent)
     }
 
     const uint8_t key{ event->detail };
-    ButtonType btn = event->detail < 4 ? (ButtonType)event->detail : ButtonType::NONE;
-    ButtonType bestBtn = ButtonType(IsMouseButtonPressed(ButtonType::LEFT) ? 1 : IsMouseButtonPressed(ButtonType::MIDDLE) ? 2
-            : IsMouseButtonPressed(ButtonType::RIGHT)                                                                     ? 3
-                                                                                                                          : 0); // If multiple buttons pressed, pick left one.
+    const ButtonType btn{ event->detail < 4 ? (ButtonType)event->detail : ButtonType::NONE };
+    const ButtonType bestBtn{ IsMouseButtonPressed(ButtonType::LEFT) ? ButtonType::LEFT : IsMouseButtonPressed(ButtonType::MIDDLE) ? ButtonType::MIDDLE : IsMouseButtonPressed(ButtonType::RIGHT) ? ButtonType::RIGHT : ButtonType::NONE }; // If multiple buttons pressed, pick left one.
 
     switch (xEvent->response_type & ~0x80) {
     case XCB_MOTION_NOTIFY: {
@@ -336,14 +334,9 @@ Event XcbWindowImpl::TranslateEvent(xcb_generic_event_t* xEvent)
         break;
     }
     case XCB_FOCUS_IN:
-        if (!m_hasFocus) {
-            return OnFocusEvent(true); // window gained focus
-        }
+        return OnFocusEvent(true); // window gained focus
     case XCB_FOCUS_OUT:
-        if (m_hasFocus) {
-            return OnFocusEvent(false); // window lost focus
-        }
-
+        return OnFocusEvent(false); // window lost focus
     case XCB_GE_GENERIC: { // Multi touch screen events
 #ifdef ENABLE_MULTITOUCH
         const auto toutchEvent{ (xcb_input_touch_begin_event_t*)(xEvent) };
@@ -366,10 +359,8 @@ Event XcbWindowImpl::TranslateEvent(xcb_generic_event_t* xEvent)
         return { Event::EventType::UNKNOWN };
     }
     default:
-        // printf("EVENT: %d\n",(xEvent->response_type & ~0x80));  //get event numerical value
         break;
     }
-
     return { Event::EventType::NONE };
 }
 
