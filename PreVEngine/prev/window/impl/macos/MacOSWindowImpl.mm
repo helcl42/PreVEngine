@@ -202,13 +202,23 @@ void MacOSWindowImpl::SetMouseCursorVisible(bool visible)
 Surface& MacOSWindowImpl::CreateSurface()
 {
     if (m_vkSurface == VK_NULL_HANDLE) {
-        VkMacOSSurfaceCreateInfoMVK macOsSurfaceCreateInfo{};
-        macOsSurfaceCreateInfo.sType = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
-        macOsSurfaceCreateInfo.pNext = nullptr;
-        macOsSurfaceCreateInfo.flags = 0;
-        macOsSurfaceCreateInfo.pView = m_state->layer;
-        VKERRCHECK(vkCreateMacOSSurfaceMVK(m_instance, &macOsSurfaceCreateInfo, nullptr, &m_vkSurface));
-        
+        // TODO - used due to deprecation warning. Has worse performance.
+        auto FN_vkCreateMetalSurfaceEXT = PFN_vkCreateMetalSurfaceEXT(vkGetInstanceProcAddr(m_instance, "vkCreateMetalSurfaceEXT"));
+        if(FN_vkCreateMetalSurfaceEXT) {
+            VkMetalSurfaceCreateInfoEXT macOsSurfaceCreateInfo{};
+            macOsSurfaceCreateInfo.sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
+            macOsSurfaceCreateInfo.pNext = nullptr;
+            macOsSurfaceCreateInfo.flags = 0;
+            macOsSurfaceCreateInfo.pLayer = static_cast<CAMetalLayer*>(m_state->view.layer);
+            VKERRCHECK(FN_vkCreateMetalSurfaceEXT(m_instance, &macOsSurfaceCreateInfo, nullptr, &m_vkSurface));
+        } else {
+            VkMacOSSurfaceCreateInfoMVK macOsSurfaceCreateInfo{};
+            macOsSurfaceCreateInfo.sType = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
+            macOsSurfaceCreateInfo.pNext = nullptr;
+            macOsSurfaceCreateInfo.flags = 0;
+            macOsSurfaceCreateInfo.pView = m_state->layer;
+            VKERRCHECK(vkCreateMacOSSurfaceMVK(m_instance, &macOsSurfaceCreateInfo, nullptr, &m_vkSurface));
+        }
         LOGI("MacOS - Vulkan Surface created\n");
     }
     return *this;
