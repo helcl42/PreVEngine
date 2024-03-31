@@ -30,6 +30,8 @@ Instance::Instance(const bool enableValidation, const char* appName, const char*
 #elif VK_USE_PLATFORM_MACOS_MVK
         extensions.Pick(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
         extensions.Pick(VK_MVK_MACOS_SURFACE_EXTENSION_NAME);
+        extensions.Pick(VK_EXT_METAL_SURFACE_EXTENSION_NAME);
+        extensions.Pick(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
         extensions.Pick(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
 #endif
     } else {
