@@ -2,19 +2,30 @@
 
 #include "../common/Logger.h"
 
+#ifdef ENABLE_VK_LOADER
 #define VOLK_IMPLEMENTATION
 #include <external/volk/volk.h>
+#endif
 
 struct VulkanInitializer {
     VulkanInitializer()
     {
+#ifdef ENABLE_VK_LOADER
         const bool success{ volkInitialize() == VK_SUCCESS };
         if (success) {
             const auto version{ volkGetInstanceVersion() };
-            LOGI("Vulkan API version %d.%d.%d initialized.\n", VK_VERSION_MAJOR(version), VK_VERSION_MINOR(version), VK_VERSION_PATCH(version));
+            LOGI("Vulkan API version %d.%d.%d available (Loaded).\n", VK_VERSION_MAJOR(version), VK_VERSION_MINOR(version), VK_VERSION_PATCH(version));
         } else {
-            LOGE("Vulkan API initialization failed.\n");
+            LOGE("Vulkan API load failed.\n");
         }
+#else
+        auto version{ VK_API_VERSION_1_0 };
+        auto FN_vkEnumerateInstanceVersion = PFN_vkEnumerateInstanceVersion(vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
+        if(vkEnumerateInstanceVersion) {
+            vkEnumerateInstanceVersion(&version);
+        }
+        LOGI("Vulkan API version %d.%d.%d available.\n", VK_VERSION_MAJOR(version), VK_VERSION_MINOR(version), VK_VERSION_PATCH(version));
+#endif
     }
 } VulkanInitializer{}; // Run this function BEFORE main.
 

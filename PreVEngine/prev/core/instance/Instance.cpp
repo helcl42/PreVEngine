@@ -87,7 +87,9 @@ void Instance::Create(const Layers& layers, const Extensions& extensions, const 
         throw std::runtime_error("Could not create VK instance.");
     }
 
+#ifdef ENABLE_VK_LOADER
     volkLoadInstance(m_instance);
+#endif
 
     LOGI("Vulkan Instance created\n");
 

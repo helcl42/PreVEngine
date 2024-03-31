@@ -3,7 +3,11 @@
 
 #include "../common/Common.h"
 
+#ifdef ENABLE_VK_LOADER
 #include <external/volk/volk.h>
+#else
+#include <vulkan/vulkan.h>
+#endif
 
 void ShowVkResult(const VkResult err);
 const char* VkResultStr(const VkResult err);
