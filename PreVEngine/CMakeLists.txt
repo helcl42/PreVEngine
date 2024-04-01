@@ -39,6 +39,7 @@ file(GLOB SRC_LIST
     "prev/window/impl/xcb/*.h" "prev/window/impl/xcb/*.cpp"
     "prev/window/impl/android/*.h" "prev/window/impl/android/*.cpp"
     "prev/window/impl/macos/*.h" "prev/window/impl/macos/*.cpp"
+    "prev/window/impl/ios/*.h" "prev/window/impl/ios/*.cpp"
 )
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")  # for find_package
@@ -79,8 +80,35 @@ if(WIN32)
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
     target_include_directories(${PROJECT_NAME} PUBLIC "$ENV{VULKAN_SDK}/include")
 
+elseif(APPLE AND IOS)
+    message("${PROJECT_NAME} - iOS")
+    add_definitions(-DTARGET_PLATFORM_IOS)
+    add_definitions(-DVK_USE_PLATFORM_IOS_MVK)
 
+    include_directories("platform/ios")
 
+    file(GLOB IOS_SRC_LIST 
+        "platform/ios/*.h" "platform/ios/*.mm"
+        "prev/window/impl/ios/*.h" "prev/window/impl/ios/*.mm"
+    )
+    
+    find_library(UIKIT_LIB UIKit)
+    find_library(METALKIT_LIB METALKit)
+  
+    add_library(${PROJECT_NAME} STATIC
+        ${SRC_LIST}
+        ${IOS_SRC_LIST}
+    )
+
+    target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+    # TODO: avoid hardcoded paths
+    target_include_directories(${PROJECT_NAME} PUBLIC "/Users/lubos/VulkanSDK/1.3.280.0/macOS/include")
+
+    target_link_libraries(${PROJECT_NAME} 
+        ${UIKIT_LIB}
+        ${METALKIT_LIB}
+    )
+    
 elseif(APPLE)
     message("${PROJECT_NAME} - MacOS")
     add_definitions(-DTARGET_PLATFORM_MACOS)

@@ -137,6 +137,45 @@ if(WIN32)
     # Copy all files from ./Assets to the binary directory.
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
 
+elseif(APPLE AND IOS)
+    message("${PROJECT_NAME} - iOS")
+    add_definitions(-DTARGET_PLATFORM_IOS)
+
+    set(APP_BUNDLE_IDENTIFIER "com.prevengine.PreVEngineTest")
+    set(MACOSX_BUNDLE_INFO_STRING ${APP_BUNDLE_IDENTIFIER})
+    set(MACOSX_BUNDLE_GUI_IDENTIFIER ${APP_BUNDLE_IDENTIFIER})
+    set(MACOSX_BUNDLE_BUNDLE_NAME ${APP_BUNDLE_IDENTIFIER})
+    set(MACOSX_BUNDLE_BUNDLE_NAME ${APP_BUNDLE_IDENTIFIER})
+    set(MACOSX_BUNDLE_LONG_VERSION_STRING "1.0")
+    set(MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0")
+    set(MACOSX_BUNDLE_BUNDLE_VERSION "1.0")
+
+    find_library(UIKIT_LIB UIKit)
+    find_library(METALKIT_LIB METALKit)
+
+    file(GLOB IOS_SRC_LIST 
+        "platform/ios/*.h" "platform/ios/*.mm"
+    )
+
+    include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../PreVEngine/platform/ios")
+
+    add_executable(${PROJECT_NAME} 
+        ${SRC_LIST}
+        ${IOS_SRC_LIST}
+    )
+
+    target_link_libraries(${PROJECT_NAME} PreVEngine)
+    # TODO: import 3rd party libraries and frameworks manually
+    # target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/IOS/libassimp.dylib")
+
+    target_link_libraries(${PROJECT_NAME} 
+        ${UIKIT_LIB}
+        ${METALKIT_LIB}
+    )
+
+    #  Copy all files from ./Assets to the binary directory.
+    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
+
 elseif(APPLE)
     message("${PROJECT_NAME} - MacOS")
     add_definitions(-DTARGET_PLATFORM_MACOS)
