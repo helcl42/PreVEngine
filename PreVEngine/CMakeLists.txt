@@ -77,11 +77,8 @@ if(WIN32)
     add_library(${PROJECT_NAME} STATIC ${SRC_LIST})
 
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+    target_include_directories(${PROJECT_NAME} PUBLIC "$ENV{VULKAN_SDK}/include")
 
-    message("VULKAN_SDK path: $ENV{VULKAN_SDK}")
-    find_path(VULKAN_INCLUDE vulkan/vulkan.h PATH "$ENV{VULKAN_SDK}/Include")    # Search in Vulkan SDK
-    target_include_directories(${PROJECT_NAME} PUBLIC "${VULKAN_INCLUDE}")       # include vulkan.h
-    message("VULKAN_INCLUDE path: ${VULKAN_INCLUDE}")
 
 
 elseif(APPLE)
@@ -105,10 +102,7 @@ elseif(APPLE)
     )
 
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
-    find_path(VULKAN_INCLUDE vulkan/vulkan.h PATH "$ENV{VULKAN_SDK}/include")    # Search in Vulkan SDK
-    target_include_directories(${PROJECT_NAME} PUBLIC "${VULKAN_INCLUDE}")       # include vulkan.h
-    message("VULKAN_INCLUDE path: ${VULKAN_INCLUDE}")
+    target_include_directories(${PROJECT_NAME} PUBLIC "$ENV{VULKAN_SDK}/include")
 
     target_link_libraries(${PROJECT_NAME} 
         ${COCOA_LIB}
@@ -166,10 +160,7 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
 #    endif()
 
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
-    find_path(VULKAN_INCLUDE vulkan/vulkan.h PATH "$ENV{VULKAN_SDK}/include")    # Search in Vulkan SDK
-    target_include_directories(${PROJECT_NAME} PUBLIC "${VULKAN_INCLUDE}")       # include vulkan.h
-    message("VULKAN_INCLUDE path: ${VULKAN_INCLUDE}")
+    target_include_directories(${PROJECT_NAME} PUBLIC "$ENV{VULKAN_SDK}/include")
 
 elseif(ANDROID)
     message("${PROJECT_NAME} - Android")
