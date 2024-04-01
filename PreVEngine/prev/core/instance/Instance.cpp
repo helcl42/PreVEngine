@@ -15,19 +15,19 @@ Instance::Instance(const bool enableValidation, const char* appName, const char*
 
     Extensions extensions;
     if (extensions.Pick(VK_KHR_SURFACE_EXTENSION_NAME)) {
-#ifdef VK_USE_PLATFORM_WIN32_KHR
+#if defined(VK_USE_PLATFORM_WIN32_KHR)
         extensions.Pick(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
-#elif VK_USE_PLATFORM_ANDROID_KHR
+#elif defined(VK_USE_PLATFORM_ANDROID_KHR)
         extensions.Pick(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
-#elif VK_USE_PLATFORM_XCB_KHR
+#elif defined(VK_USE_PLATFORM_XCB_KHR)
         extensions.Pick(VK_KHR_XCB_SURFACE_EXTENSION_NAME);
-#elif VK_USE_PLATFORM_XLIB_KHR
+#elif defined(VK_USE_PLATFORM_XLIB_KHR)
         extensions.Pick(VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
-#elif VK_USE_PLATFORM_WAYLAND_KHR
+#elif defined(VK_USE_PLATFORM_WAYLAND_KHR)
         extensions.Pick(VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
-#elif VK_USE_PLATFORM_MIR_KHR
+#elif defined(VK_USE_PLATFORM_MIR_KHR)
         extensions.Pick(VK_KHR_MIR_SURFACE_EXTENSION_NAME);
-#elif VK_USE_PLATFORM_MACOS_MVK
+#elif defined(VK_USE_PLATFORM_MACOS_MVK)
         extensions.Pick(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
         extensions.Pick(VK_MVK_MACOS_SURFACE_EXTENSION_NAME);
         extensions.Pick(VK_EXT_METAL_SURFACE_EXTENSION_NAME);
