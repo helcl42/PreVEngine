@@ -35,7 +35,7 @@ struct IOSState {
 };
 
 IOSWindowImpl::IOSWindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo)
-: WindowImpl(instance)
+    : WindowImpl(instance)
 {
     float scale = [[UIScreen mainScreen] scale];
     CGRect rect = [[UIScreen mainScreen] bounds];
@@ -46,25 +46,23 @@ IOSWindowImpl::IOSWindowImpl(const prev::core::instance::Instance& instance, con
     [view setHidden:NO];
     [view setOpaque:YES];
     [view setAutoResizeDrawable:YES];
-    [view setBackgroundColor:[UIColor greenColor]];
+    [view setBackgroundColor:[UIColor blackColor]];
+    
+    [view.layer setHidden:NO];
+    [view.layer setOpaque:YES];
+    [view.layer setNeedsDisplay];
     
     IOSViewController* viewController = [[IOSViewController alloc] init];
     [viewController setView:view];
     [viewController setNeedsUpdateOfHomeIndicatorAutoHidden];
     [viewController setNeedsStatusBarAppearanceUpdate];
-    //[viewController ModalPresentationStyle:UIModalPresentationFullScreen];
     
     IOSWindow* window = [[IOSWindow alloc] initWithFrame:rect];
     [window setRootViewController:viewController];
     [window setContentMode:UIViewContentModeScaleToFill];
     [window makeKeyAndVisible];
     [window setBounds:rect];
-    [window setBackgroundColor:[UIColor greenColor]];
-    
-    [view.layer setHidden:NO];
-    [view.layer setOpaque:YES];
-    [view.layer setNeedsDisplay];
-    //[view.layer setContentsGravity:kCAGravityResize];
+    [window setBackgroundColor:[UIColor blackColor]];
     
     m_state = std::make_unique<IOSState>(view, viewController, window);
     m_info = windowInfo;
@@ -85,12 +83,31 @@ Event IOSWindowImpl::GetEvent(bool waitForEvent)
     while(CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.0001, true) == kCFRunLoopRunHandledSource);
     
     float scale = [[UIScreen mainScreen] scale];
+    
     CGRect rect = [[UIScreen mainScreen] bounds];
     Size windowSize{ static_cast<uint32_t>(rect.size.width * scale), static_cast<uint32_t>(rect.size.height * scale) };
     if(m_info.size != windowSize) {
         return OnResizeEvent(windowSize.width, windowSize.height);
     }
     
+    if(m_state->view->touchState != NONE) {
+        CGPoint scaledPoint = CGPointMake(m_state->view->point.x * scale, m_state->view->point.y * scale);
+        CGPoint size = CGPointMake(static_cast<float>(m_info.size.width), static_cast<float>(m_info.size.height));
+        TouchEventState state = m_state->view->touchState;
+        
+        [m_state->view resetTouchState]; // reset the view touch state now
+        
+        switch (state) {
+            case DOWN:
+                return m_MTouch.OnEvent(ActionType::DOWN, scaledPoint.x, scaledPoint.y, 0, size.x, size.y);
+            case MOVE:
+                return m_MTouch.OnEvent(ActionType::MOVE, scaledPoint.x, scaledPoint.y, 0, size.x, size.y);
+            case UP:
+                return m_MTouch.OnEvent(ActionType::UP, scaledPoint.x, scaledPoint.y, 0, size.x, size.y);
+            default:
+                break;
+        }
+    }
     return {};
 }
 

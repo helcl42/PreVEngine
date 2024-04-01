@@ -4,8 +4,19 @@
 #import <UIKit/UIKit.h>
 #import <MetalKit/MetalKit.h>
 
- @interface IOSView : MTKView
+enum TouchEventState {
+    NONE = 0,
+    DOWN,
+    MOVE,
+    UP
+};
 
- @end
+@interface IOSView : MTKView
+{
+@public TouchEventState touchState;
+@public CGPoint point;
+}
+- (void)resetTouchState;
+@end
 
 #endif
