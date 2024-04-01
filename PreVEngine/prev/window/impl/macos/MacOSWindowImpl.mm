@@ -89,8 +89,6 @@ MacOSWindowImpl::MacOSWindowImpl(const prev::core::instance::Instance& instance,
     MacWindowDelegate* windowDelegate = [[MacWindowDelegate alloc] init];
     [window setDelegate: windowDelegate];
 
-    window->opened = YES;
-    
     m_state = std::make_unique<MacState>(window, view, layer);
     m_info = windowInfo;
 
