@@ -108,6 +108,17 @@ Event IOSWindowImpl::GetEvent(bool waitForEvent)
                 break;
         }
     }
+    
+    UIApplicationState state = [[UIApplication sharedApplication] applicationState];
+    if (state == UIApplicationStateBackground || state == UIApplicationStateInactive) {
+        if(m_hasFocus) {
+            return OnFocusEvent(false);
+        }
+    } else {
+        if(!m_hasFocus) {
+            return OnFocusEvent(true);
+        }
+    }
     return {};
 }
 
