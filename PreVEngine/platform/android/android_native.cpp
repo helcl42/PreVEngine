@@ -33,7 +33,7 @@ int printf(const char* format, ...) {  // printf for Android
 android_app* g_AndroidApp = NULL; // Android native-actvity state
 
 //====================Main====================
-int main(int argc, char *argv[]); // Forward declaration of main function
+int PreVMain(int argc, char** argv); // Forward declaration of main function
 
 static void activity_force_finish(void) {
     JavaVM* javaVM = g_AndroidApp->activity->vm;
@@ -60,7 +60,7 @@ void android_main(struct android_app* state) {
 
     android_fopen_set_asset_manager(state->activity->assetManager); // Re-direct fopen to read assets from our APK.
 
-    main(0, NULL); // call the common main
+    PreVMain(0, NULL); // call the common main
 
     printf("Exiting.\n");
     ANativeActivity_finish(state->activity);

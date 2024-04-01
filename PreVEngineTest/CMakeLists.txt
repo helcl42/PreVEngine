@@ -120,7 +120,14 @@ if(WIN32)
     message("${PROJECT_NAME} - Windows")
     add_definitions(-DTARGET_PLATFORM_WINDOWS)
 
-    add_executable(${PROJECT_NAME} ${SRC_LIST})
+    file(GLOB COMMON_SRC_LIST 
+        "platform/common/*.h" "platform/common/*.cpp"
+    )
+
+    add_executable(${PROJECT_NAME} 
+        ${SRC_LIST}
+        ${COMMON_SRC_LIST}
+    )
 
     target_link_libraries(${PROJECT_NAME} PreVEngine)
     target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Windows/assimp-vc142-mt.lib")
@@ -134,7 +141,14 @@ elseif(APPLE)
     message("${PROJECT_NAME} - MacOS")
     add_definitions(-DTARGET_PLATFORM_MACOS)
 
-    add_executable(${PROJECT_NAME} ${SRC_LIST})
+    file(GLOB COMMON_SRC_LIST 
+        "platform/common/*.h" "platform/common/*.cpp"
+    )
+
+    add_executable(${PROJECT_NAME} 
+        ${SRC_LIST}
+        ${COMMON_SRC_LIST}
+    )
 
     target_link_libraries(${PROJECT_NAME} PreVEngine)
     target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/MacOS/libassimp.dylib")
