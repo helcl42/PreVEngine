@@ -255,9 +255,9 @@ public:
 private:
     static const inline float RUN_SPEED{ 14.0f };
 
-    static const inline float YAW_TURN_SPEED{ 3.0f };
+    static const inline float YAW_TURN_SPEED{ 1.0f };
 
-    static const inline float PITCH_TURN_SPEED{ 0.5f };
+    static const inline float PITCH_TURN_SPEED{ 0.15f };
 
     static const inline float GRAVITY_Y{ -10.0f };
 

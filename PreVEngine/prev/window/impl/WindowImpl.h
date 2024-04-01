@@ -76,10 +76,8 @@ public:
     Event OnEventById(ActionType action, float x, float y, uint32_t findval, uint32_t setval, float w, float h)
     {
         for (uint32_t i = 0; i < MAX_POINTER_COUNT; ++i) {
-            if (m_touchID[i] == findval) // lookup finger-id
-            {
+            if (m_touchID[i] == findval) { // lookup finger-id
                 m_touchID[i] = setval;
-
                 return OnEvent(action, x, y, i, w, h);
             }
         }
