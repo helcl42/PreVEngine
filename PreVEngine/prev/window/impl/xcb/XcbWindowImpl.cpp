@@ -120,7 +120,7 @@ XcbWindowImpl::XcbWindowImpl(const prev::core::instance::Instance& instance, con
     xcb_intern_atom_reply_t* reply = intern_atom_helper(m_xcbConnection, true, "WM_PROTOCOLS");
 
     m_atomWmDeleteWindow = intern_atom_helper(m_xcbConnection, false, "WM_DELETE_WINDOW");
-    xcb_change_property(m_xcbConnection, XCB_PROP_MODE_REPLACE, m_xcbWindow, reply->atom, 4, 32, 1, &(*m_atomWmDeleteWindow).atom);
+    xcb_change_property(m_xcbConnection, XCB_PROP_MODE_REPLACE, m_xcbWindow, reply->atom, 4, 32, 1, &(m_atomWmDeleteWindow->atom));
 
     free(reply);
 
@@ -265,17 +265,17 @@ bool XcbWindowImpl::InitTouch()
 }
 //---------------------------------------------------------------------------
 
-Event XcbWindowImpl::TranslateEvent(xcb_generic_event_t* x_event)
+Event XcbWindowImpl::TranslateEvent(xcb_generic_event_t* xEvent)
 {
     static char buf[4] = {}; // store char for text event
 
-    xcb_button_press_event_t& e = *(xcb_button_press_event_t*)x_event; // xcb_motion_notify_event_t
-    int32_t mx = e.event_x;
-    int32_t my = e.event_y;
+    const auto event{ (xcb_button_press_event_t*)(xEvent) };
+    int32_t mx{ event->event_x };
+    int32_t my{ event->event_y };
 
     if (m_hasFocus && m_mouseLocked) {
-        uint32_t widthHalf = m_info.size.width / 2;
-        uint32_t heightHalf = m_info.size.height / 2;
+        const uint32_t widthHalf{ m_info.size.width / 2 };
+        const uint32_t heightHalf{ m_info.size.height / 2 };
 
         xcb_warp_pointer(m_xcbConnection, XCB_NONE, m_xcbWindow, 0, 0, 0, 0, static_cast<uint16_t>(widthHalf), static_cast<uint16_t>(heightHalf));
 
@@ -283,16 +283,14 @@ Event XcbWindowImpl::TranslateEvent(xcb_generic_event_t* x_event)
         my -= heightHalf;
     }
 
-    uint8_t key = e.detail;
-    ButtonType btn = e.detail < 4 ? (ButtonType)e.detail : ButtonType::NONE;
-    ButtonType bestBtn = ButtonType(IsMouseButtonPressed(ButtonType::LEFT) ? 1 : IsMouseButtonPressed(ButtonType::MIDDLE) ? 2
-            : IsMouseButtonPressed(ButtonType::RIGHT)                                                                     ? 3
-                                                                                                                          : 0); // If multiple buttons pressed, pick left one.
+    const uint8_t key{ event->detail };
+    const ButtonType btn{ event->detail < 4 ? (ButtonType)event->detail : ButtonType::NONE };
+    const ButtonType bestBtn{ IsMouseButtonPressed(ButtonType::LEFT) ? ButtonType::LEFT : IsMouseButtonPressed(ButtonType::MIDDLE) ? ButtonType::MIDDLE : IsMouseButtonPressed(ButtonType::RIGHT) ? ButtonType::RIGHT : ButtonType::NONE }; // If multiple buttons pressed, pick left one.
 
-    switch (x_event->response_type & ~0x80) {
+    switch (xEvent->response_type & ~0x80) {
     case XCB_MOTION_NOTIFY: {
-        if (e.detail == 4 || e.detail == 5) {
-            return OnMouseScrollEvent(e.detail == 4 ? -1 : 1, mx, my);
+        if (event->detail == 4 || event->detail == 5) {
+            return OnMouseScrollEvent(event->detail == 4 ? -1 : 1, mx, my);
         } else {
             return OnMouseEvent(ActionType::MOVE, mx, my, bestBtn); // mouse move
         }
@@ -302,8 +300,6 @@ Event XcbWindowImpl::TranslateEvent(xcb_generic_event_t* x_event)
     case XCB_BUTTON_RELEASE:
         return OnMouseEvent(ActionType::UP, mx, my, btn); // mouse btn release
     case XCB_KEY_PRESS: {
-        uint8_t keycode = EVDEV_TO_HID[key];
-
         xkb_state_key_get_utf8(m_keyboardState, key, buf, sizeof(buf));
         xkb_state_update_key(m_keyboardState, key, XKB_KEY_DOWN);
 
@@ -311,53 +307,44 @@ Event XcbWindowImpl::TranslateEvent(xcb_generic_event_t* x_event)
             m_eventQueue.Push(OnTextEvent(buf)); // text typed event (store in FIFO for next run)
         }
 
-        return OnKeyEvent(ActionType::DOWN, keycode); // key pressed event
+        const uint8_t keyCode{ EVDEV_TO_HID[key] };
+        return OnKeyEvent(ActionType::DOWN, keyCode); // key pressed event
     }
     case XCB_KEY_RELEASE: {
         xkb_state_update_key(m_keyboardState, key, XKB_KEY_UP);
-        uint8_t keycode = EVDEV_TO_HID[key];
 
-        return OnKeyEvent(ActionType::UP, keycode); // key released event
+        const uint8_t keyCode{ EVDEV_TO_HID[key] };
+        return OnKeyEvent(ActionType::UP, keyCode); // key released event
     }
     case XCB_CLIENT_MESSAGE: { // window close event
-        if ((*(xcb_client_message_event_t*)x_event).data.data32[0] == (*m_atomWmDeleteWindow).atom) {
+        const auto clientMessageEvent{ (xcb_client_message_event_t*)xEvent };
+        if (clientMessageEvent->data.data32[0] == m_atomWmDeleteWindow->atom) {
             LOGI("Closing Window\n");
             return OnCloseEvent();
         }
         break;
     }
-    case XCB_CONFIGURE_NOTIFY: // Window Reshape (move or resize)
-    {
-        auto& e = *(xcb_configure_notify_event_t*)x_event;
-        // bool se = (e.response_type & 128);                 // True if message was sent with "SendEvent"
-
-        if (e.width != m_info.size.width || e.height != m_info.size.height) {
-            return OnResizeEvent(e.width, e.height); // window resized
-        } else if (e.x != m_info.position.x || e.y != m_info.position.y) {
-            return OnMoveEvent(e.x, e.y); // window moved
+    case XCB_CONFIGURE_NOTIFY: { // Window Reshape (move or resize)
+        const auto configureEvent{ (xcb_configure_notify_event_t*)(xEvent) };
+        if (m_info.size != Size{ configureEvent->width, configureEvent->height }) {
+            return OnResizeEvent(configureEvent->width, configureEvent->height); // window resized
+        } else if (m_info.position != Position{ configureEvent->x, configureEvent->y }) {
+            return OnMoveEvent(configureEvent->x, configureEvent->y); // window moved
         }
         break;
     }
     case XCB_FOCUS_IN:
-        if (!m_hasFocus) {
-            return OnFocusEvent(true); // window gained focus
-        }
+        return OnFocusEvent(true); // window gained focus
     case XCB_FOCUS_OUT:
-        if (m_hasFocus) {
-            return OnFocusEvent(false); // window lost focus
-        }
-
+        return OnFocusEvent(false); // window lost focus
     case XCB_GE_GENERIC: { // Multi touch screen events
 #ifdef ENABLE_MULTITOUCH
-        xcb_input_touch_begin_event_t& te = *(xcb_input_touch_begin_event_t*)x_event;
-
-        if (te.extension == m_xiOpcode) // check if this event is from the touch device
-        {
-            float x = te.event_x / 65536.f;
-            float y = te.event_y / 65536.f;
-            uint32_t id = te.detail;
-
-            switch (te.event_type) {
+        const auto toutchEvent{ (xcb_input_touch_begin_event_t*)(xEvent) };
+        if (toutchEvent.extension == m_xiOpcode) { // check if this event is from the touch device
+            const float x{ toutchEvent.event_x / 65536.0f };
+            const float y{ toutchEvent.event_y / 65536.0f };
+            const uint32_t id{ toutchEvent.detail };
+            switch (toutchEvent.event_type) {
             case XI_TouchBegin:
                 return m_MTouch.OnEventById(ActionType::DOWN, x, y, 0, id, m_shape.width, m_shape.hegiht); // touch down event
             case XI_TouchUpdate:
@@ -372,10 +359,8 @@ Event XcbWindowImpl::TranslateEvent(xcb_generic_event_t* x_event)
         return { Event::EventType::UNKNOWN };
     }
     default:
-        // printf("EVENT: %d\n",(x_event->response_type & ~0x80));  //get event numerical value
         break;
     }
-
     return { Event::EventType::NONE };
 }
 
@@ -385,20 +370,19 @@ Event XcbWindowImpl::GetEvent(bool waitForEvent)
         return *m_eventQueue.Pop(); // Pop message from message queue buffer
     }
 
-    xcb_generic_event_t* x_event;
-
+    xcb_generic_event_t* xEvent;
     if (waitForEvent) {
-        x_event = xcb_wait_for_event(m_xcbConnection); // Blocking mode
+        xEvent = xcb_wait_for_event(m_xcbConnection); // Blocking mode
     } else {
-        x_event = xcb_poll_for_event(m_xcbConnection); // Non-blocking mode
+        xEvent = xcb_poll_for_event(m_xcbConnection); // Non-blocking mode
     }
 
-    while (x_event) {
-        Event event = TranslateEvent(x_event);
-        free(x_event);
+    while (xEvent) {
+        Event event = TranslateEvent(xEvent);
+        free(xEvent);
 
         if (event.tag == Event::EventType::UNKNOWN) {
-            x_event = xcb_poll_for_event(m_xcbConnection); // Discard unknown events (Intel Mesa drivers spams event 35)
+            xEvent = xcb_poll_for_event(m_xcbConnection); // Discard unknown events (Intel Mesa drivers spams event 35)
         } else {
             return event;
         }

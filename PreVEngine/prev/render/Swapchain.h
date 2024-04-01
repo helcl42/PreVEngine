@@ -109,9 +109,9 @@ private:
 
     bool m_isAcquired{};
 
-    VkSemaphore m_acquireSemaphore{};
-
     VkSemaphore m_renderSemaphore{};
+
+    VkSemaphore m_presentSemaphore{};
 
     uint32_t m_currentFrameIndex{};
 
