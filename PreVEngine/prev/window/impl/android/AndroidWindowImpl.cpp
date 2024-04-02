@@ -103,6 +103,11 @@ Event AndroidWindowImpl::GetEvent(bool waitForEvent)
             break;
         case APP_CMD_INIT_WINDOW:
         case APP_CMD_CONFIG_CHANGED:
+            // THIS is workaround
+            if(m_app->window == NULL) {
+                LOGW("APP_CMD_CONFIG_CHANGED - but window is NULL - skipping event.");
+                break;
+            }
             // THIS is hack: due to unreliable surface extent readouts
             std::this_thread::sleep_for(std::chrono::milliseconds(300));
             m_eventQueue.Push(OnResizeEvent(static_cast<uint32_t>(ANativeWindow_getWidth(m_app->window)), static_cast<uint32_t>(ANativeWindow_getHeight(m_app->window))));
