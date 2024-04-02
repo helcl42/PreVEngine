@@ -236,12 +236,12 @@ Event Win32WindowImpl::GetEvent(bool waitForEvent)
 
     if (m_running) {
         TranslateMessage(&msg);
-        int32_t x = GET_X_LPARAM(msg.lParam);
-        int32_t y = GET_Y_LPARAM(msg.lParam);
+        int32_t x{ GET_X_LPARAM(msg.lParam) };
+        int32_t y{ GET_Y_LPARAM(msg.lParam) };
 
         if (m_hasFocus && m_mouseLocked) {
-            uint32_t widhtHalf = m_info.size.width / 2;
-            uint32_t heightHalf = m_info.size.height / 2;
+            const uint32_t widhtHalf{ m_info.size.width / 2 };
+            const uint32_t heightHalf{ m_info.size.height / 2 };
 
             POINT pt;
             pt.x = widhtHalf;
@@ -359,16 +359,16 @@ Event Win32WindowImpl::GetEvent(bool waitForEvent)
         case WM_POINTERUP: {
             POINTER_INFO pointerInfo;
             if (GetPointerInfo(GET_POINTERID_WPARAM(msg.wParam), &pointerInfo)) {
-                uint id = pointerInfo.pointerId;
+                uint32_t id = pointerInfo.pointerId;
                 POINT pt = pointerInfo.ptPixelLocation;
-                ScreenToClient(hWnd, &pt);
+                ScreenToClient(m_hWnd, &pt);
                 switch (msg.message) {
                 case WM_POINTERDOWN:
-                    return m_MTouch.OnEventById(DOWN, x, y, 0, id); // touch down event
+                    return m_MTouch.OnEventById(ActionType::DOWN, static_cast<float>(pt.x), static_cast<float>(pt.y), 0, id, static_cast<float>(m_info.size.width), static_cast<float>(m_info.size.height)); // touch down event
                 case WM_POINTERUPDATE:
-                    return m_MTouch.OnEventById(MOVE, x, y, id, id); // touch move event
+                    return m_MTouch.OnEventById(ActionType::MOVE, static_cast<float>(pt.x), static_cast<float>(pt.y), id, id, static_cast<float>(m_info.size.width), static_cast<float>(m_info.size.height)); // touch move event
                 case WM_POINTERUP:
-                    return m_MTouch.OnEventById(UP, x, y, id, 0); // touch up event
+                    return m_MTouch.OnEventById(ActionType::UP, static_cast<float>(pt.x), static_cast<float>(pt.y), id, 0, static_cast<float>(m_info.size.width), static_cast<float>(m_info.size.height)); // touch up event
                 }
             }
         }
