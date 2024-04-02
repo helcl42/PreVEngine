@@ -9,8 +9,6 @@
 #import <IOSViewController.h>
 #import <IOSWindow.h>
 
-#import <QuartzCore/CALayer.h>
-
 #include <vulkan/vulkan_metal.h>
 
 namespace prev::window::impl::ios {
