@@ -136,11 +136,11 @@ std::vector<std::shared_ptr<prev_test::render::IMaterial>> MaterialFactory::Crea
 std::shared_ptr<prev::render::image::Image> MaterialFactory::CreateImage(const std::string& textureFilename) const
 {
     std::shared_ptr<prev::render::image::Image> image;
-    if (s_imagesCache.find(textureFilename) != s_imagesCache.cend()) {
-        image = s_imagesCache[textureFilename];
+    const auto imageIter{ s_imagesCache.find(textureFilename) };
+    if (imageIter != s_imagesCache.cend()) {
+        image = imageIter->second;
     } else {
-        prev::render::image::ImageFactory imageFactory;
-        image = imageFactory.CreateImage(textureFilename);
+        image = prev::render::image::ImageFactory{}.CreateImage(textureFilename);
         s_imagesCache[textureFilename] = image;
     }
     return image;
