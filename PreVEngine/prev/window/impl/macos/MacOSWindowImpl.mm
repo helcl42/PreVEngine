@@ -11,6 +11,8 @@
 #import <Cocoa/Cocoa.h>
 #import <QuartzCore/CAMetalLayer.h>
 
+#include <vulkan/vulkan_metal.h>
+
 namespace prev::window::impl::macos {
 struct MacState {
     MacWindow* window{};
