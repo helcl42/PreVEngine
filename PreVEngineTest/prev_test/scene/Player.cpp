@@ -33,9 +33,6 @@ void Player::Init()
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::render::IAnimationRenderComponent>(GetThis(), m_animationRenderComponent, TAG_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT);
 
     bool fixedCameraUp{ true };
-#ifdef TARGET_PLATFORM_ANDROID
-    fixedCameraUp = false;
-#endif
     prev_test::component::camera::CameraComponentFactory cameraFactory{};
     m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), fixedCameraUp);
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::camera::ICameraComponent>(GetThis(), m_cameraComponent, TAG_CAMERA_COMPONENT);
@@ -45,11 +42,6 @@ void Player::Init()
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, TAG_BOUNDING_VOLUME_COMPONENT);
 
     m_cameraComponent->AddPitch(glm::radians(m_cameraPitch));
-
-#ifdef TARGET_PLATFORM_ANDROID
-    m_poseProvider = std::make_unique<AndroidPoseProvider>();
-    m_poseProvider->Init();
-#endif
 
     SceneNode::Init();
 }
@@ -108,15 +100,6 @@ void Player::Update(float deltaTime)
         jumpAnimation->Update(deltaTime);
     }
 
-#ifdef TARGET_PLATFORM_ANDROID
-    const auto pose{ m_poseProvider->GetCurrentPose() };
-
-    const auto playerOrientation{ glm::normalize(glm::quat(pose.orientation.w, 0.0f, pose.orientation.x, 0.0f)) };
-    m_transformComponent->SetOrientation(playerOrientation);
-
-    const auto cameraOrientation(glm::normalize(glm::quat(pose.orientation.w, pose.orientation.y, pose.orientation.x, -pose.orientation.z)));
-    m_cameraComponent->SetOrientation(cameraOrientation);
-#else
     if (m_shouldRotate) {
         const auto pitchAmount{ glm::radians(PITCH_TURN_SPEED * m_pitchYawRollDiff.x * deltaTime) };
         const auto yawAmount{ glm::radians(YAW_TURN_SPEED * m_pitchYawRollDiff.y * deltaTime) };
@@ -126,10 +109,9 @@ void Player::Update(float deltaTime)
         m_cameraComponent->AddYaw(yawAmount);
         m_cameraComponent->AddPitch(pitchAmount);
 
-
         m_pitchYawRollDiff = {};
     }
-#endif
+
     m_transformComponent->Update(deltaTime);
 
     const glm::vec3 cameraPosition{ m_transformComponent->GetPosition() + (-m_cameraComponent->GetForwardDirection() * m_cameraDistanceFromPerson) + m_cameraComponent->GetDefaultUpDirection() * m_cameraPositionOffset };
@@ -143,11 +125,6 @@ void Player::Update(float deltaTime)
 void Player::ShutDown()
 {
     SceneNode::ShutDown();
-
-#ifdef TARGET_PLATFORM_ANDROID
-    m_poseProvider->ShutDown();
-    m_poseProvider = nullptr;
-#endif
 }
 
 void Player::operator()(const prev::input::keyboard::KeyEvent& keyEvent)
@@ -205,12 +182,10 @@ void Player::operator()(const prev::input::mouse::MouseEvent& mouseEvent)
 
 void Player::operator()(const prev::input::touch::TouchEvent& touchEvent)
 {
-#ifdef TARGET_PLATFORM_ANDROID
     if (touchEvent.action == prev::input::touch::TouchActionType::DOWN) {
-        const float MAX_RATIO_FOR_JUMP_CONTROL = 0.25f;
-        const auto MAX_X = touchEvent.extent.x * MAX_RATIO_FOR_JUMP_CONTROL;
-        const auto MAX_Y = touchEvent.extent.y * MAX_RATIO_FOR_JUMP_CONTROL;
-        if (touchEvent.position.x < MAX_X && touchEvent.position.y < MAX_Y) {
+        const float MAX_RATIO_FOR_JUMP_CONTROL{ 0.25f };
+        const auto MaxPoint{ touchEvent.extent * MAX_RATIO_FOR_JUMP_CONTROL };
+        if (touchEvent.position.x < MaxPoint.x && touchEvent.position.y < MaxPoint.y) {
             if (!m_isInTheAir) {
                 m_upwardSpeed = JUMP_POWER;
                 m_isInTheAir = true;
@@ -219,30 +194,30 @@ void Player::operator()(const prev::input::touch::TouchEvent& touchEvent)
     }
 
     if (touchEvent.action == prev::input::touch::TouchActionType::MOVE || touchEvent.action == prev::input::touch::TouchActionType::DOWN) {
-        const float MAX_RATIO_FOR_MOVE_CONTROL = 0.35f;
-        const auto MIN_X = touchEvent.extent.x - touchEvent.extent.x * MAX_RATIO_FOR_MOVE_CONTROL;
-        const auto MAX_Y = touchEvent.extent.y * MAX_RATIO_FOR_MOVE_CONTROL;
-        const auto MIN_Y = touchEvent.extent.y - touchEvent.extent.y * MAX_RATIO_FOR_MOVE_CONTROL;
-        if (touchEvent.position.x > MIN_X && touchEvent.position.y < MAX_Y) {
+        const float MAX_RATIO_FOR_MOVE_CONTROL{ 0.25f };
+        const auto MinPoint{ touchEvent.extent - touchEvent.extent * MAX_RATIO_FOR_MOVE_CONTROL };
+        const auto MaxPoint{ touchEvent.extent * MAX_RATIO_FOR_MOVE_CONTROL };
+        if (touchEvent.position.x > MinPoint.x && touchEvent.position.y < MaxPoint.y) {
             m_shouldGoForward = true;
+            m_shouldGoBackward = false;
         }
 
-        if (touchEvent.position.x > MIN_X && touchEvent.position.y > MIN_Y) {
+        if (touchEvent.position.x > MinPoint.x && touchEvent.position.y > MinPoint.y) {
             m_shouldGoBackward = true;
+            m_shouldGoForward = false;
         }
     } else {
         m_shouldGoForward = false;
         m_shouldGoBackward = false;
-        return;
     }
-#endif
+
     if (touchEvent.action == prev::input::touch::TouchActionType::MOVE) {
-        const glm::vec2 angles{ glm::radians(touchEvent.position - m_prevTouchPosition) * 0.1f };
-
-        m_transformComponent->Rotate(glm::quat_cast(glm::rotate(glm::mat4(1.0f), angles.x, glm::vec3(0.0f, 1.0f, 0.0f))));
-
-        m_cameraComponent->AddYaw(angles.x);
-        m_cameraComponent->AddPitch(angles.y);
+        const glm::vec2 angles{ (touchEvent.position - m_prevTouchPosition) * 1.0f };
+        m_pitchYawRollDiff.y += angles.x;
+        m_pitchYawRollDiff.x += -angles.y;
+        m_shouldRotate = true;
+    } else {
+        m_shouldRotate = false;
     }
 
     if (touchEvent.action == prev::input::touch::TouchActionType::MOVE || touchEvent.action == prev::input::touch::TouchActionType::DOWN) {
