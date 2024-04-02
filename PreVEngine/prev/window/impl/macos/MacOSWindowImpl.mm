@@ -143,6 +143,17 @@ Event MacOSWindowImpl::GetEvent(bool waitForEvent)
         return OnResizeEvent(windowSize.width, windowSize.height);
     }
     
+    bool isActive = [NSApp isActive];
+    if (isActive) {
+        if(!m_hasFocus) {
+            return OnFocusEvent(true);
+        }
+    } else {
+        if(m_hasFocus) {
+            return OnFocusEvent(false);
+        }
+    }
+    
     if(m_state->window->opened == NO) {
         return OnCloseEvent();
     }
