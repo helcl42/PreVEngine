@@ -88,14 +88,12 @@ Event IOSWindowImpl::GetEvent(bool waitForEvent)
         return OnResizeEvent(windowSize.width, windowSize.height);
     }
     
-    if(m_state->view->touchState != NONE) {
-        CGPoint scaledPoint = CGPointMake(m_state->view->point.x * scale, m_state->view->point.y * scale);
+    if([m_state->view hasTouchEvent]) {
+        TouchEvent evt = [m_state->view popTouchEvent];
+        CGPoint scaledPoint = CGPointMake(evt.location.x * scale, evt.location.y * scale);
         CGPoint size = CGPointMake(static_cast<float>(m_info.size.width), static_cast<float>(m_info.size.height));
-        TouchEventState state = m_state->view->touchState;
         
-        [m_state->view resetTouchState]; // reset the view touch state now
-        
-        switch (state) {
+        switch (evt.state) {
             case DOWN:
                 return m_MTouch.OnEvent(ActionType::DOWN, scaledPoint.x, scaledPoint.y, 0, size.x, size.y);
             case MOVE:

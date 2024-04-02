@@ -4,6 +4,8 @@
 #import <UIKit/UIKit.h>
 #import <MetalKit/MetalKit.h>
 
+#include <queue>
+
 enum TouchEventState {
     NONE = 0,
     DOWN,
@@ -11,12 +13,17 @@ enum TouchEventState {
     UP
 };
 
+struct TouchEvent {
+    TouchEventState state{};
+    CGPoint location{};
+};
+
 @interface IOSView : MTKView
 {
-@public TouchEventState touchState;
-@public CGPoint point;
+@public std::queue<TouchEvent> touchEvents;
 }
-- (void)resetTouchState;
+- (TouchEvent)popTouchEvent;
+- (Boolean)hasTouchEvent;
 @end
 
 #endif
