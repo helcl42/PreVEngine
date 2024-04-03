@@ -274,8 +274,6 @@ Event Win32WindowImpl::GetEvent(bool waitForEvent)
         }
     }
     //-----------------------------------------------------------------------------------------------------------------
-
-    static char buf[4] = {};
     ButtonType bestBtn = ButtonType(IsMouseButtonPressed(ButtonType::LEFT) ? 1 : IsMouseButtonPressed(ButtonType::MIDDLE) ? 2
             : IsMouseButtonPressed(ButtonType::RIGHT)                                                                     ? 3
                                                                                                                           : 0);
@@ -328,8 +326,8 @@ Event Win32WindowImpl::GetEvent(bool waitForEvent)
         break;
     //--Char event--
     case WM_CHAR: {
-        strncpy_s(buf, (const char*)&msg.wParam, 4);
-        m_eventQueue.Push(OnTextEvent(buf));
+        strncpy_s(m_textBuffer, (const char*)&msg.wParam, 4);
+        m_eventQueue.Push(OnTextEvent(m_textBuffer));
         break;
     } // return UTF8 code of key pressed
 
