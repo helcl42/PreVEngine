@@ -52,9 +52,6 @@ Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allo
         m_msaaDepthBuffer = imageBufferFactory.CreateDepth(buffer::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, m_renderPass.GetDepthFormat(), m_sampleCount, 0, false, VK_IMAGE_VIEW_TYPE_2D }, m_allocator);
     }
 
-    m_presentSemaphore = prev::util::vk::CreateSemaphore(m_device);
-    m_renderSemaphore = prev::util::vk::CreateSemaphore(m_device);
-
     Apply();
 }
 
@@ -64,14 +61,6 @@ Swapchain::~Swapchain()
 
     if (m_commandPool != VK_NULL_HANDLE) {
         vkDestroyCommandPool(m_device, m_commandPool, nullptr);
-    }
-
-    if (m_renderSemaphore != VK_NULL_HANDLE) {
-        vkDestroySemaphore(m_device, m_renderSemaphore, nullptr);
-    }
-
-    if (m_presentSemaphore != VK_NULL_HANDLE) {
-        vkDestroySemaphore(m_device, m_presentSemaphore, nullptr);
     }
 
     if (m_swapchain != VK_NULL_HANDLE) {
@@ -268,6 +257,8 @@ void Swapchain::Apply()
         swapchainBuffer.commandBuffer = util::vk::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
         swapchainBuffer.fence = util::vk::CreateFence(m_device, VK_FENCE_CREATE_SIGNALED_BIT);
         swapchainBuffer.extent = m_swapchainCreateInfo.imageExtent;
+        swapchainBuffer.renderSemaphore = util::vk::CreateSemaphore(m_device);
+        swapchainBuffer.presentSemaphore = util::vk::CreateSemaphore(m_device);
     }
 
     LOGI("---Extent = %d x %d\n", newExtent.width, newExtent.height);
@@ -306,7 +297,7 @@ bool Swapchain::AcquireNext(SwapchainBuffer& next)
     VKERRCHECK(vkResetFences(m_device, 1, &swapchainBuffer.fence));
 
     uint32_t acquireIndex;
-    const auto result{ vkAcquireNextImageKHR(m_device, m_swapchain, UINT64_MAX, m_presentSemaphore, VK_NULL_HANDLE, &acquireIndex) };
+    const auto result{ vkAcquireNextImageKHR(m_device, m_swapchain, UINT64_MAX, swapchainBuffer.presentSemaphore, VK_NULL_HANDLE, &acquireIndex) };
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
         UpdateExtent();
         return false;
@@ -331,12 +322,12 @@ void Swapchain::Submit()
 
     VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
     submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = &m_presentSemaphore;
+    submitInfo.pWaitSemaphores = &swapchainBuffer.presentSemaphore;
     submitInfo.pWaitDstStageMask = waitStages;
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &swapchainBuffer.commandBuffer;
     submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = &m_renderSemaphore;
+    submitInfo.pSignalSemaphores = &swapchainBuffer.renderSemaphore;
 
     VKERRCHECK(m_graphicsQueue->Submit(1, &submitInfo, swapchainBuffer.fence));
 }
@@ -345,9 +336,11 @@ void Swapchain::Present()
 {
     ASSERT(!!m_isAcquired, "Swapchain: A buffer must be acquired before presenting.\n");
 
+    const auto& swapchainBuffer{ m_swapchainBuffers[m_currentFrameIndex] };
+
     VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
     presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = &m_renderSemaphore;
+    presentInfo.pWaitSemaphores = &swapchainBuffer.renderSemaphore;
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = &m_swapchain;
     presentInfo.pImageIndices = &m_acquiredIndex;
