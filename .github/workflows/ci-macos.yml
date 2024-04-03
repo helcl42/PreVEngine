@@ -1,15 +1,17 @@
 # This starter workflow is for a CMake project running on multiple platforms. There is a different starter workflow if you just want a single platform.
 # See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
 name: Windows - CI Build/Test
-inputs:
-  vulkan_sdk_version:
-    description: If installing the SDK, which version to install
-    default: 1.3.280.1
+
 on:
   push:
     branches: [ "macos" ]
   pull_request:
     branches: [ "macos" ]
+  workflow_dispatch:
+    inputs:
+      vulkan_sdk_version:
+        description: If installing the SDK, which version to install
+        default: 1.3.280.1
 
 jobs:
   build:
