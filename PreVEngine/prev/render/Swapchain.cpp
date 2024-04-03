@@ -293,13 +293,7 @@ bool Swapchain::AcquireNext(SwapchainBuffer& next)
 
     const auto& swapchainBuffer{ m_swapchainBuffers[m_currentFrameIndex] };
 
-// TODO: on apple we have to wait for previous frame to complete
-#if defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_IOS_MVK)
-    const auto previousSwapchainBuffer{ m_swapchainBuffers[GetPreviousIndex()] };
-    VKERRCHECK(vkWaitForFences(m_device, 1, &previousSwapchainBuffer.fence, VK_TRUE, UINT64_MAX));
-#else
     VKERRCHECK(vkWaitForFences(m_device, 1, &swapchainBuffer.fence, VK_TRUE, UINT64_MAX));
-#endif
     VKERRCHECK(vkResetFences(m_device, 1, &swapchainBuffer.fence));
 
     uint32_t acquireIndex;
