@@ -35,6 +35,8 @@ private:
     HWND m_hWnd{};
 
     MultiTouch m_MTouch{}; // Multi-Touch device
+
+    char m_textBuffer[4] = {}; // store char for text event
 };
 } // namespace prev::window::impl::win32
 
