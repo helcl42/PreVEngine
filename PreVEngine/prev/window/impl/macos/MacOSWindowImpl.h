@@ -30,13 +30,6 @@ private:
 
 private:
     std::unique_ptr<MacState> m_state{};
-    
-    struct Pos {
-        double x{};
-        double y{};
-    };
-    
-    Pos m_prevMousePosition{};
 };
 } // namespace prev::window::impl::macos
 

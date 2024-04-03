@@ -192,39 +192,31 @@ Event MacOSWindowImpl::GetEvent(bool waitForEvent)
                 break;
             }
             
-            NSPoint screenPoint = [NSEvent mouseLocation];
-            NSRect rect = [m_state->window convertRectFromScreen:NSMakeRect(screenPoint.x, screenPoint.y, 0, 0)];
+            NSPoint screenMouseLocation = [NSEvent mouseLocation];
+            NSRect rect = [m_state->window convertRectFromScreen:NSMakeRect(screenMouseLocation.x, screenMouseLocation.y, 0, 0)];
             NSPoint mouseLocation = [m_state->view convertPoint: rect.origin fromView: nil];
-            if(NSPointInRect(mouseLocation, [m_state->view bounds])) {
+            if(NSPointInRect(mouseLocation, [m_state->view bounds])) { // ignore mouse moves outisde window/view
                 // y mouse coord is inverted
-                NSPoint windowMouseLocation = NSMakePoint(mouseLocation.x, m_info.size.height - mouseLocation.y);
+                mouseLocation = NSMakePoint(mouseLocation.x, m_info.size.height - mouseLocation.y);
                 
                 if (m_hasFocus && m_mouseLocked) {
-                    /*const auto widhtHalf{ m_info.size.width / 2.0f };
+                    const auto widhtHalf{ m_info.size.width / 2.0f };
                     const auto heightHalf{ m_info.size.height / 2.0f };
-                    NSRect screeRect = [m_state->window convertRectToScreen:NSMakeRect(0, 0, 0, 0)];
-                    CGPoint pt = CGPointMake(rect.origin.x + widhtHalf, rect.origin.y + heightHalf);
-                    CGWarpMouseCursorPosition(pt);
-                    //NSLog(@"New mouse location: (%.1f, %.1f)", pt.x, pt.y);
+                    
+                    CGPoint newMouseScreenLocation = CGPointMake(m_state->window.frame.origin.x + widhtHalf, m_state->window.frame.origin.y + heightHalf);
+                    CGAssociateMouseAndMouseCursorPosition(false);
+                    CGWarpMouseCursorPosition(newMouseScreenLocation);
+                    CGAssociateMouseAndMouseCursorPosition(true);
+                
                     mouseLocation.x -= widhtHalf;
-                    mouseLocation.y -= heightHalf;*/
-                    mouseLocation.x = m_prevMousePosition.x - windowMouseLocation.x;
-                    mouseLocation.y = m_prevMousePosition.y - windowMouseLocation.y;
-                    //NSLog(@"diff X=%f, Y=%f", mouseLocation.x, mouseLocation.y);
-                } else {
-                    mouseLocation = windowMouseLocation;
+                    mouseLocation.y -= heightHalf;
                 }
                 
                 m_eventQueue.Push(OnMouseEvent(ActionType::MOVE, static_cast<int32_t>(mouseLocation.x), static_cast<int32_t>(mouseLocation.y), ButtonType::NONE));
-                
-                m_prevMousePosition = Pos{ windowMouseLocation.x, windowMouseLocation.y };
             }
             
             switch([event type])
             {
-                case NSEventTypeMouseMoved:
-                    //NSLog(@"diff X=%f, Y=%f", event.deltaX, event.deltaY);
-                    break;
                 case NSEventTypeLeftMouseDown:
                 {
                     m_eventQueue.Push(OnMouseEvent(ActionType::DOWN, static_cast<int32_t>(mouseLocation.x), static_cast<int32_t>(mouseLocation.y), ButtonType::LEFT));
