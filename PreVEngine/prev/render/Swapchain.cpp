@@ -188,7 +188,7 @@ void Swapchain::Print() const
     LOGI("\tPresentMode:\n");
     const auto& mode{ m_swapchainCreateInfo.presentMode };
     for (auto m : modes) {
-        print((m == mode) ? ConsoleColor::RESET : ConsoleColor::FAINT, "\t\t%s %s\n", (m == mode) ? TICK_CHARACTER : " ", util::vk::PresentModeToString(m).c_str());
+        LOGI("\t\t%s %s\n", (m == mode) ? TICK_CHARACTER : " ", util::vk::PresentModeToString(m).c_str());
     }
     LOGI("\tSharingMode: %s\n", m_swapchainCreateInfo.imageSharingMode == VK_SHARING_MODE_EXCLUSIVE ? "Exclusive" : "Shared");
 }
