@@ -77,8 +77,6 @@ AndroidWindowImpl::~AndroidWindowImpl()
 
 Event AndroidWindowImpl::GetEvent(bool waitForEvent)
 {
-    Event event = {};
-    static char buf[4] = {}; // store char for text event
     if (!m_eventQueue.IsEmpty()) {
         return m_eventQueue.Pop(); // Pop message from message queue buffer
     }
@@ -99,10 +97,10 @@ Event AndroidWindowImpl::GetEvent(bool waitForEvent)
 
         switch (cmd) {
         case APP_CMD_GAINED_FOCUS:
-            event = OnFocusEvent(true);
+            m_eventQueue.Push(OnFocusEvent(true));
             break;
         case APP_CMD_LOST_FOCUS:
-            event = OnFocusEvent(false);
+            m_eventQueue.Push(OnFocusEvent(false));
             break;
         case APP_CMD_INIT_WINDOW:
         case APP_CMD_CONFIG_CHANGED:
@@ -113,8 +111,8 @@ Event AndroidWindowImpl::GetEvent(bool waitForEvent)
             }
             // THIS is hack: due to unreliable surface extent readouts
             std::this_thread::sleep_for(std::chrono::milliseconds(300));
+            m_eventQueue.Push(OnChangeEvent());
             m_eventQueue.Push(OnResizeEvent(static_cast<uint32_t>(ANativeWindow_getWidth(m_app->window)), static_cast<uint32_t>(ANativeWindow_getHeight(m_app->window))));
-            event = OnChangeEvent();
             break;
         case APP_CMD_TERM_WINDOW:
             // event = OnCloseEvent();
@@ -125,7 +123,6 @@ Event AndroidWindowImpl::GetEvent(bool waitForEvent)
 
         android_app_post_exec_cmd(m_app, cmd);
 
-        return event;
     } else if (id == LOOPER_ID_INPUT) {
         AInputEvent* aEvent = NULL;
         while (AInputQueue_getEvent(m_app->inputQueue, &aEvent) >= 0) {
@@ -150,16 +147,16 @@ Event AndroidWindowImpl::GetEvent(bool waitForEvent)
                     int metaState = AKeyEvent_getMetaState(aEvent);
                     int unicode = GetUnicodeChar(AKEY_EVENT_ACTION_DOWN, keyCode, metaState);
 
-                    event = OnKeyEvent(ActionType::DOWN, hidCode); // key pressed event (returned on this run)
+                    m_eventQueue.Push(OnKeyEvent(ActionType::DOWN, hidCode)); // key pressed event (returned on this run)
 
-                    (int&)buf = unicode;
-                    if (buf[0]) {
-                        m_eventQueue.Push(OnTextEvent(buf)); // text typed event (store in FIFO for next run)
+                    (int&)m_textBuffer = unicode;
+                    if (m_textBuffer[0]) {
+                        m_eventQueue.Push(OnTextEvent(m_textBuffer)); // text typed event (store in FIFO for next run)
                     }
                     break;
                 }
                 case AKEY_EVENT_ACTION_UP: {
-                    event = OnKeyEvent(ActionType::UP, hidCode);
+                    m_eventQueue.Push(OnKeyEvent(ActionType::UP, hidCode));
                     break;
                 }
                 default:
@@ -176,7 +173,7 @@ Event AndroidWindowImpl::GetEvent(bool waitForEvent)
                         uint8_t finger_id = (uint8_t)AMotionEvent_getPointerId(aEvent, i);
                         float x = AMotionEvent_getX(aEvent, i);
                         float y = AMotionEvent_getY(aEvent, i);
-                        event = m_MTouch.OnEvent(ActionType::MOVE, x, y, finger_id, (float)m_info.size.width, (float)m_info.size.height);
+                        m_eventQueue.Push(m_MTouch.OnEvent(ActionType::MOVE, x, y, finger_id, (float)m_info.size.width, (float)m_info.size.height));
                     }
                 } else {
                     size_t inx = (size_t)(a_action >> 8); // get index from top 24 bits
@@ -187,11 +184,11 @@ Event AndroidWindowImpl::GetEvent(bool waitForEvent)
                     switch (action) {
                     case AMOTION_EVENT_ACTION_POINTER_DOWN:
                     case AMOTION_EVENT_ACTION_DOWN:
-                        event = m_MTouch.OnEvent(ActionType::DOWN, x, y, finger_id, (float)m_info.size.width, (float)m_info.size.height);
+                        m_eventQueue.Push(m_MTouch.OnEvent(ActionType::DOWN, x, y, finger_id, (float)m_info.size.width, (float)m_info.size.height));
                         break;
                     case AMOTION_EVENT_ACTION_POINTER_UP:
                     case AMOTION_EVENT_ACTION_UP:
-                        event = m_MTouch.OnEvent(ActionType::UP, x, y, finger_id, (float)m_info.size.width, (float)m_info.size.height);
+                        m_eventQueue.Push(m_MTouch.OnEvent(ActionType::UP, x, y, finger_id, (float)m_info.size.width, (float)m_info.size.height));
                         break;
                     case AMOTION_EVENT_ACTION_CANCEL:
                         m_MTouch.Clear();
@@ -209,8 +206,6 @@ Event AndroidWindowImpl::GetEvent(bool waitForEvent)
             }
 
             AInputQueue_finishEvent(m_app->inputQueue, aEvent, handled);
-
-            return event;
         }
 
     } else if (id == LOOPER_ID_USER) {
@@ -219,9 +214,12 @@ Event AndroidWindowImpl::GetEvent(bool waitForEvent)
 
     //if (m_app->destroyRequested) {
     //  LOGI("destroyRequested");
-    //	return { Event::EventType::CLOSE };
+    //	m_eventQueue.Push({ Event::EventType::CLOSE });
     //}
 
+    if (!m_eventQueue.IsEmpty()) {
+        return m_eventQueue.Pop();
+    }
     return { Event::EventType::NONE };
 }
 
