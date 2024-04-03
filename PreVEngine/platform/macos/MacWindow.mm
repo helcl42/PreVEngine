@@ -19,6 +19,7 @@
 {
     MacWindow* window = (MacWindow*)sender;
     window->opened = NO;
+    return YES;
 }
 
 @end
