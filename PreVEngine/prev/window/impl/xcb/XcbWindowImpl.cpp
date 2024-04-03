@@ -367,7 +367,7 @@ Event XcbWindowImpl::TranslateEvent(xcb_generic_event_t* xEvent)
 Event XcbWindowImpl::GetEvent(bool waitForEvent)
 {
     if (!m_eventQueue.IsEmpty()) {
-        return *m_eventQueue.Pop(); // Pop message from message queue buffer
+        return m_eventQueue.Pop(); // Pop message from message queue buffer
     }
 
     xcb_generic_event_t* xEvent;
