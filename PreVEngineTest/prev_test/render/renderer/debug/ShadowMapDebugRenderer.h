@@ -6,8 +6,6 @@
 #include "../../pipeline/IPipeline.h"
 #include "../IRenderer.h"
 
-#include "../../../General.h"
-
 #include <prev/event/EventHandler.h>
 #include <prev/input/keyboard/KeyboardEvents.h>
 #include <prev/render/pass/RenderPass.h>
