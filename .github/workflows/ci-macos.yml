@@ -84,7 +84,7 @@ jobs:
       run: |
         mkdir build-macos
         cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/assets build-macos
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/Release/PreVEngineTest build-macos
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/PreVEngineTest build-macos
         cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/*.dylib build-macos
         cp -r $VULKAN_SDK/lib/libvulkan*.dylib build-macos
 
