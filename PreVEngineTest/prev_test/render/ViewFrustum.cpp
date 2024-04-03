@@ -20,7 +20,6 @@ glm::mat4 ViewFrustum::CreateProjectionMatrix(const uint32_t w, const uint32_t h
 
 glm::mat4 ViewFrustum::CreateProjectionMatrix(const float aspectRatio) const
 {
-
     return prev::util::math::CreatePerspectiveProjectionMatrix(aspectRatio, m_verticalFov, m_nearClippingPlane, m_farClippingPlane);
 }
 

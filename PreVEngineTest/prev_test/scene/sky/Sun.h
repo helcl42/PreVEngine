@@ -23,10 +23,7 @@ public:
     void ShutDown() override;
 
 public:
-    void operator()(const prev::core::NewIterationEvent& newIterationEvent)
-    {
-        m_viewPortSize = glm::vec2(newIterationEvent.windowWidth, newIterationEvent.windowHeight);
-    }
+    void operator()(const prev::core::NewIterationEvent& newIterationEvent);
 
 private:
     std::shared_ptr<prev_test::component::sky::ISunComponent> m_sunComponent;
