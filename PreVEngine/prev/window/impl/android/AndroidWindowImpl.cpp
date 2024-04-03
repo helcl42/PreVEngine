@@ -80,7 +80,7 @@ Event AndroidWindowImpl::GetEvent(bool waitForEvent)
     Event event = {};
     static char buf[4] = {}; // store char for text event
     if (!m_eventQueue.IsEmpty()) {
-        return *m_eventQueue.Pop(); // Pop message from message queue buffer
+        return m_eventQueue.Pop(); // Pop message from message queue buffer
     }
 
     int events = 0;
