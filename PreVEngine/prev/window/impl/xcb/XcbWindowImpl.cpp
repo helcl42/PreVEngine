@@ -265,10 +265,8 @@ bool XcbWindowImpl::InitTouch()
 }
 //---------------------------------------------------------------------------
 
-Event XcbWindowImpl::TranslateEvent(xcb_generic_event_t* xEvent)
+void XcbWindowImpl::ProcessXEvent(xcb_generic_event_t* xEvent)
 {
-    static char buf[4] = {}; // store char for text event
-
     const auto event{ (xcb_button_press_event_t*)(xEvent) };
     int32_t mx{ event->event_x };
     int32_t my{ event->event_y };
@@ -290,53 +288,60 @@ Event XcbWindowImpl::TranslateEvent(xcb_generic_event_t* xEvent)
     switch (xEvent->response_type & ~0x80) {
     case XCB_MOTION_NOTIFY: {
         if (event->detail == 4 || event->detail == 5) {
-            return OnMouseScrollEvent(event->detail == 4 ? -1 : 1, mx, my);
+            m_eventQueue.Push(OnMouseScrollEvent(event->detail == 4 ? -1 : 1, mx, my));
         } else {
-            return OnMouseEvent(ActionType::MOVE, mx, my, bestBtn); // mouse move
+            m_eventQueue.Push(OnMouseEvent(ActionType::MOVE, mx, my, bestBtn)); // mouse move
         }
+        break;
     }
     case XCB_BUTTON_PRESS:
-        return OnMouseEvent(ActionType::DOWN, mx, my, btn); // mouse btn press
+        m_eventQueue.Push(OnMouseEvent(ActionType::DOWN, mx, my, btn)); // mouse btn press
+        break;
     case XCB_BUTTON_RELEASE:
-        return OnMouseEvent(ActionType::UP, mx, my, btn); // mouse btn release
+        m_eventQueue.Push(OnMouseEvent(ActionType::UP, mx, my, btn)); // mouse btn release
+        break;
     case XCB_KEY_PRESS: {
-        xkb_state_key_get_utf8(m_keyboardState, key, buf, sizeof(buf));
+        xkb_state_key_get_utf8(m_keyboardState, key, m_textBuffer, sizeof(m_textBuffer));
         xkb_state_update_key(m_keyboardState, key, XKB_KEY_DOWN);
 
-        if (buf[0]) {
-            m_eventQueue.Push(OnTextEvent(buf)); // text typed event (store in FIFO for next run)
+        if (m_textBuffer[0]) {
+            m_eventQueue.Push(OnTextEvent(m_textBuffer)); // text typed event (store in FIFO for next run)
         }
 
         const uint8_t keyCode{ EVDEV_TO_HID[key] };
-        return OnKeyEvent(ActionType::DOWN, keyCode); // key pressed event
+        m_eventQueue.Push(OnKeyEvent(ActionType::DOWN, keyCode)); // key pressed event
+        break;
     }
     case XCB_KEY_RELEASE: {
         xkb_state_update_key(m_keyboardState, key, XKB_KEY_UP);
 
         const uint8_t keyCode{ EVDEV_TO_HID[key] };
-        return OnKeyEvent(ActionType::UP, keyCode); // key released event
+        m_eventQueue.Push(OnKeyEvent(ActionType::UP, keyCode)); // key released event
+        break;
     }
     case XCB_CLIENT_MESSAGE: { // window close event
         const auto clientMessageEvent{ (xcb_client_message_event_t*)xEvent };
         if (clientMessageEvent->data.data32[0] == m_atomWmDeleteWindow->atom) {
             LOGI("Closing Window\n");
-            return OnCloseEvent();
+            m_eventQueue.Push(OnCloseEvent());
         }
         break;
     }
     case XCB_CONFIGURE_NOTIFY: { // Window Reshape (move or resize)
         const auto configureEvent{ (xcb_configure_notify_event_t*)(xEvent) };
         if (m_info.size != Size{ configureEvent->width, configureEvent->height }) {
-            return OnResizeEvent(configureEvent->width, configureEvent->height); // window resized
+            m_eventQueue.Push(OnResizeEvent(configureEvent->width, configureEvent->height)); // window resized
         } else if (m_info.position != Position{ configureEvent->x, configureEvent->y }) {
-            return OnMoveEvent(configureEvent->x, configureEvent->y); // window moved
+            m_eventQueue.Push(OnMoveEvent(configureEvent->x, configureEvent->y)); // window moved
         }
         break;
     }
     case XCB_FOCUS_IN:
-        return OnFocusEvent(true); // window gained focus
+        m_eventQueue.Push(OnFocusEvent(true)); // window gained focus
+        break;
     case XCB_FOCUS_OUT:
-        return OnFocusEvent(false); // window lost focus
+        m_eventQueue.Push(OnFocusEvent(false)); // window lost focus
+        break;
     case XCB_GE_GENERIC: { // Multi touch screen events
 #ifdef ENABLE_MULTITOUCH
         const auto toutchEvent{ (xcb_input_touch_begin_event_t*)(xEvent) };
@@ -346,28 +351,31 @@ Event XcbWindowImpl::TranslateEvent(xcb_generic_event_t* xEvent)
             const uint32_t id{ toutchEvent.detail };
             switch (toutchEvent.event_type) {
             case XI_TouchBegin:
-                return m_MTouch.OnEventById(ActionType::DOWN, x, y, 0, id, m_shape.width, m_shape.hegiht); // touch down event
+                m_eventQueue.Push(m_MTouch.OnEventById(ActionType::DOWN, x, y, 0, id, m_shape.width, m_shape.hegiht)); // touch down event
+                break;
             case XI_TouchUpdate:
-                return m_MTouch.OnEventById(ActionType::MOVE, x, y, id, id, m_shape.width, m_shape.hegiht); // touch move event
+                m_eventQueue.Push(m_MTouch.OnEventById(ActionType::MOVE, x, y, id, id, m_shape.width, m_shape.hegiht)); // touch move event
+                break;
             case XI_TouchEnd:
-                return m_MTouch.OnEventById(ActionType::UP, x, y, id, 0, m_shape.width, m_shape.hegiht); // touch up event
+                m_eventQueue.Push(m_MTouch.OnEventById(ActionType::UP, x, y, id, 0, m_shape.width, m_shape.hegiht)); // touch up event
+                break;
             default:
                 break;
             }
         }
 #endif
-        return { Event::EventType::UNKNOWN };
+        m_eventQueue.Push({ Event::EventType::UNKNOWN });
+        break;
     }
     default:
         break;
     }
-    return { Event::EventType::NONE };
 }
 
 Event XcbWindowImpl::GetEvent(bool waitForEvent)
 {
     if (!m_eventQueue.IsEmpty()) {
-        return *m_eventQueue.Pop(); // Pop message from message queue buffer
+        return m_eventQueue.Pop(); // Pop message from message queue buffer
     }
 
     xcb_generic_event_t* xEvent;
@@ -378,16 +386,19 @@ Event XcbWindowImpl::GetEvent(bool waitForEvent)
     }
 
     while (xEvent) {
-        Event event = TranslateEvent(xEvent);
+        ProcessXEvent(xEvent);
         free(xEvent);
+        xEvent = nullptr;
 
-        if (event.tag == Event::EventType::UNKNOWN) {
-            xEvent = xcb_poll_for_event(m_xcbConnection); // Discard unknown events (Intel Mesa drivers spams event 35)
-        } else {
-            return event;
+        if (!m_eventQueue.IsEmpty()) {
+            Event event = m_eventQueue.Pop();
+            if (event.tag == Event::EventType::UNKNOWN) {
+                xEvent = xcb_poll_for_event(m_xcbConnection); // Discard unknown events (Intel Mesa drivers spams event 35)
+            } else {
+                return event;
+            }    
         }
     }
-
     return { Event::EventType::NONE };
 }
 } // namespace prev::window::impl::xcb

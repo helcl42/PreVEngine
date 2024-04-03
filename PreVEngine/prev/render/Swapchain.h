@@ -20,8 +20,14 @@ struct SwapchainBuffer {
 
     VkFence fence{};
 
+    VkSemaphore renderSemaphore{};
+
+    VkSemaphore presentSemaphore{};
+
     void Destroy(VkDevice device)
     {
+        vkDestroySemaphore(device, presentSemaphore, nullptr);
+        vkDestroySemaphore(device, renderSemaphore, nullptr);
         vkDestroyFence(device, fence, nullptr);
         vkDestroyFramebuffer(device, framebuffer, nullptr);
         vkDestroyImageView(device, view, nullptr);
@@ -108,10 +114,6 @@ private:
     uint32_t m_acquiredIndex{}; // index of last acquired image
 
     bool m_isAcquired{};
-
-    VkSemaphore m_renderSemaphore{};
-
-    VkSemaphore m_presentSemaphore{};
 
     uint32_t m_currentFrameIndex{};
 
