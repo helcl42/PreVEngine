@@ -34,6 +34,8 @@ private:
     android_app* m_app{};
 
     MultiTouch m_MTouch;
+
+    char m_textBuffer[4] = {}; // store char for text event
 };
 } // namespace prev::window::impl::android
 

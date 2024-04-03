@@ -113,6 +113,43 @@ private:
     std::chrono::high_resolution_clock::time_point m_lastTickTimestamp{};
 };
 
+template <typename Type, size_t Size>
+class CircularQueue {
+public:
+    bool IsEmpty() const
+    {
+        return m_head == m_tail;
+    }
+
+    void Push(const Type& item)
+    {
+        m_head = ++m_head % Size;
+        m_buffer[m_head] = item;
+    }
+
+    Type& Pop()
+    {
+        m_tail = ++m_tail % Size;
+        return m_buffer[m_tail];
+    }
+
+    void Clear()
+    {
+        for (int i = 0; i < Size; ++i) {
+            m_buffer[i] = {};
+        }
+        m_head = 0;
+        m_tail = 0;
+    }
+
+private:
+    uint32_t m_head{};
+
+    uint32_t m_tail{};
+
+    Type m_buffer[Size] = {};
+};
+
 template <class Type>
 class Clock final {
 public:

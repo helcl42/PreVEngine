@@ -3,6 +3,7 @@
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 
 #include "../../../common/Logger.h"
+
 #include <windowsx.h> // Mouse
 
 namespace prev::window::impl::win32 {
@@ -221,9 +222,8 @@ Surface& Win32WindowImpl::CreateSurface()
 
 Event Win32WindowImpl::GetEvent(bool waitForEvent)
 {
-    // Event event;
     if (!m_eventQueue.IsEmpty()) {
-        return *m_eventQueue.Pop();
+        return m_eventQueue.Pop();
     }
 
     MSG msg = {};
@@ -233,147 +233,165 @@ Event Win32WindowImpl::GetEvent(bool waitForEvent)
         m_running = (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) > 0); // Non-blocking mode
     }
 
-    if (m_running) {
-        TranslateMessage(&msg);
-        int32_t x{ GET_X_LPARAM(msg.lParam) };
-        int32_t y{ GET_Y_LPARAM(msg.lParam) };
+    TranslateMessage(&msg);
+    int32_t x{ GET_X_LPARAM(msg.lParam) };
+    int32_t y{ GET_Y_LPARAM(msg.lParam) };
 
-        if (m_hasFocus && m_mouseLocked) {
-            const uint32_t widhtHalf{ m_info.size.width / 2 };
-            const uint32_t heightHalf{ m_info.size.height / 2 };
+    if (m_hasFocus && m_mouseLocked) {
+        const uint32_t widhtHalf{ m_info.size.width / 2 };
+        const uint32_t heightHalf{ m_info.size.height / 2 };
 
-            POINT pt;
-            pt.x = widhtHalf;
-            pt.y = heightHalf;
-            ClientToScreen(m_hWnd, &pt);
-            SetCursorPos(pt.x, pt.y);
-            x -= widhtHalf;
-            y -= heightHalf;
+        POINT pt;
+        pt.x = widhtHalf;
+        pt.y = heightHalf;
+        ClientToScreen(m_hWnd, &pt);
+        SetCursorPos(pt.x, pt.y);
+        x -= widhtHalf;
+        y -= heightHalf;
+    }
+
+    //--Convert Shift / Ctrl / Alt key messages to LeftShift / RightShift / LeftCtrl / RightCtrl / LeftAlt / RightAlt--
+    if (msg.message == WM_KEYDOWN || msg.message == WM_KEYUP) {
+        if (msg.wParam == VK_CONTROL) {
+            msg.wParam = (msg.lParam & (1 << 24)) ? VK_RCONTROL : VK_LCONTROL;
         }
 
-        //--Convert Shift / Ctrl / Alt key messages to LeftShift / RightShift / LeftCtrl / RightCtrl / LeftAlt / RightAlt--
-        if (msg.message == WM_KEYDOWN || msg.message == WM_KEYUP) {
-            if (msg.wParam == VK_CONTROL) {
-                msg.wParam = (msg.lParam & (1 << 24)) ? VK_RCONTROL : VK_LCONTROL;
+        if (msg.wParam == VK_SHIFT) {
+            if (!!(GetKeyState(VK_LSHIFT) & 128) != IsKeyPressed(prev::input::keyboard::KeyCode::KEY_LeftShift)) {
+                PostMessage(m_hWnd, msg.message, VK_LSHIFT, 0);
             }
 
-            if (msg.wParam == VK_SHIFT) {
-                if (!!(GetKeyState(VK_LSHIFT) & 128) != IsKeyPressed(prev::input::keyboard::KeyCode::KEY_LeftShift)) {
-                    PostMessage(m_hWnd, msg.message, VK_LSHIFT, 0);
-                }
-
-                if (!!(GetKeyState(VK_RSHIFT) & 128) != IsKeyPressed(prev::input::keyboard::KeyCode::KEY_RightShift)) {
-                    PostMessage(m_hWnd, msg.message, VK_RSHIFT, 0);
-                }
-
-                return { Event::EventType::NONE };
+            if (!!(GetKeyState(VK_RSHIFT) & 128) != IsKeyPressed(prev::input::keyboard::KeyCode::KEY_RightShift)) {
+                PostMessage(m_hWnd, msg.message, VK_RSHIFT, 0);
             }
-        } else if (msg.message == WM_SYSKEYDOWN || msg.message == WM_SYSKEYUP) {
-            if (msg.wParam == VK_MENU) {
-                msg.wParam = (msg.lParam & (1 << 24)) ? VK_RMENU : VK_LMENU;
-            }
+
+            m_eventQueue.Push({ Event::EventType::NONE });
         }
-        //-----------------------------------------------------------------------------------------------------------------
-
-        static char buf[4] = {};
-        ButtonType bestBtn = ButtonType(IsMouseButtonPressed(ButtonType::LEFT) ? 1 : IsMouseButtonPressed(ButtonType::MIDDLE) ? 2
-                : IsMouseButtonPressed(ButtonType::RIGHT)                                                                     ? 3
-                                                                                                                              : 0);
-
-        switch (msg.message) {
-        //--Mouse events--
-        case WM_MOUSEMOVE:
-            return OnMouseEvent(ActionType::MOVE, x, y, bestBtn);
-        case WM_LBUTTONDOWN:
-            return OnMouseEvent(ActionType::DOWN, x, y, ButtonType::LEFT);
-        case WM_MBUTTONDOWN:
-            return OnMouseEvent(ActionType::DOWN, x, y, ButtonType::MIDDLE);
-        case WM_RBUTTONDOWN:
-            return OnMouseEvent(ActionType::DOWN, x, y, ButtonType::RIGHT);
-        case WM_LBUTTONUP:
-            return OnMouseEvent(ActionType::UP, x, y, ButtonType::LEFT);
-        case WM_MBUTTONUP:
-            return OnMouseEvent(ActionType::UP, x, y, ButtonType::MIDDLE);
-        case WM_RBUTTONUP:
-            return OnMouseEvent(ActionType::UP, x, y, ButtonType::RIGHT);
-
-            //--Mouse wheel events--
-        case WM_MOUSEWHEEL: {
-            uint32_t wheel = GET_WHEEL_DELTA_WPARAM(msg.wParam) / 120;
-            return OnMouseScrollEvent(wheel, x, y);
+    } else if (msg.message == WM_SYSKEYDOWN || msg.message == WM_SYSKEYUP) {
+        if (msg.wParam == VK_MENU) {
+            msg.wParam = (msg.lParam & (1 << 24)) ? VK_RMENU : VK_LMENU;
         }
+    }
+    //-----------------------------------------------------------------------------------------------------------------
+    ButtonType bestBtn = ButtonType(IsMouseButtonPressed(ButtonType::LEFT) ? 1 : IsMouseButtonPressed(ButtonType::MIDDLE) ? 2
+            : IsMouseButtonPressed(ButtonType::RIGHT)                                                                     ? 3
+                                                                                                                          : 0);
+    switch (msg.message) {
+    //--Mouse events--
+    case WM_MOUSEMOVE:
+        m_eventQueue.Push(OnMouseEvent(ActionType::MOVE, x, y, bestBtn));
+        break;
+    case WM_LBUTTONDOWN:
+        m_eventQueue.Push(OnMouseEvent(ActionType::DOWN, x, y, ButtonType::LEFT));
+        break;
+    case WM_MBUTTONDOWN:
+        m_eventQueue.Push(OnMouseEvent(ActionType::DOWN, x, y, ButtonType::MIDDLE));
+        break;
+    case WM_RBUTTONDOWN:
+        m_eventQueue.Push(OnMouseEvent(ActionType::DOWN, x, y, ButtonType::RIGHT));
+        break;
+    case WM_LBUTTONUP:
+        m_eventQueue.Push(OnMouseEvent(ActionType::UP, x, y, ButtonType::LEFT));
+        break;
+    case WM_MBUTTONUP:
+        m_eventQueue.Push(OnMouseEvent(ActionType::UP, x, y, ButtonType::MIDDLE));
+        break;
+    case WM_RBUTTONUP:
+        m_eventQueue.Push(OnMouseEvent(ActionType::UP, x, y, ButtonType::RIGHT));
+        break;
 
-        //--Keyboard events--
-        case WM_KEYDOWN:
-            return OnKeyEvent(ActionType::DOWN, WIN32_TO_HID[msg.wParam]);
-        case WM_KEYUP:
-            return OnKeyEvent(ActionType::UP, WIN32_TO_HID[msg.wParam]);
-        case WM_SYSKEYDOWN: {
-            MSG discard;
-            GetMessage(&discard, NULL, 0, 0); // Alt-key triggers a WM_MOUSEMOVE message... Discard it.
-            return OnKeyEvent(ActionType::DOWN, WIN32_TO_HID[msg.wParam]);
-        } // +alt key
-        case WM_SYSKEYUP:
-            return OnKeyEvent(ActionType::UP, WIN32_TO_HID[msg.wParam]); // +alt key
+        //--Mouse wheel events--
+    case WM_MOUSEWHEEL: {
+        const int32_t wheel{ GET_WHEEL_DELTA_WPARAM(msg.wParam) / 120 };
+        m_eventQueue.Push(OnMouseScrollEvent(wheel, x, y));
+        break;
+    }
 
-        //--Char event--
-        case WM_CHAR: {
-            strncpy_s(buf, (const char*)&msg.wParam, 4);
-            return OnTextEvent(buf);
-        } // return UTF8 code of key pressed
+    //--Keyboard events--
+    case WM_KEYDOWN:
+        m_eventQueue.Push(OnKeyEvent(ActionType::DOWN, WIN32_TO_HID[msg.wParam]));
+        break;
+    case WM_KEYUP:
+        m_eventQueue.Push(OnKeyEvent(ActionType::UP, WIN32_TO_HID[msg.wParam]));
+        break;
+    case WM_SYSKEYDOWN: {
+        MSG discard;
+        GetMessage(&discard, NULL, 0, 0); // Alt-key triggers a WM_MOUSEMOVE message... Discard it.
+        m_eventQueue.Push(OnKeyEvent(ActionType::DOWN, WIN32_TO_HID[msg.wParam]));
+        break;
+    } // +alt key
+    case WM_SYSKEYUP:
+        m_eventQueue.Push(OnKeyEvent(ActionType::UP, WIN32_TO_HID[msg.wParam])); // +alt key
+        break;
+    //--Char event--
+    case WM_CHAR: {
+        strncpy_s(m_textBuffer, (const char*)&msg.wParam, 4);
+        m_eventQueue.Push(OnTextEvent(m_textBuffer));
+        break;
+    } // return UTF8 code of key pressed
 
-        //--Window events--
-        case WM_ACTIVE: {
-            return OnFocusEvent(msg.wParam != WA_INACTIVE);
-        }
+    //--Window events--
+    case WM_ACTIVE:
+        m_eventQueue.Push(OnFocusEvent(msg.wParam != WA_INACTIVE));
+        break;
 
-        case WM_RESHAPE: {
-            if (!m_hasFocus) {
-                PostMessage(m_hWnd, WM_RESHAPE, msg.wParam, msg.lParam); // Repost this event to the queue
-                return OnFocusEvent(true); // Activate window before reshape
-            }
-
-            RECT r;
-            GetClientRect(m_hWnd, &r);
-            uint32_t w{ static_cast<uint32_t>(r.right - r.left) };
-            uint32_t h{ static_cast<uint32_t>(r.bottom - r.top) };
-            if (m_info.size != Size{ w, h }) {
-                return OnResizeEvent(w, h); // window resized
-            }
-
-            GetWindowRect(m_hWnd, &r);
-            int32_t x{ static_cast<int32_t>(r.left) };
-            int32_t y{ static_cast<int32_t>(r.top) };
-            if (m_info.position != Position{ x, y }) {
-                return OnMoveEvent(x, y); // window moved
-            }
+    case WM_RESHAPE: {
+        if (!m_hasFocus) {
+            PostMessage(m_hWnd, WM_RESHAPE, msg.wParam, msg.lParam); // Repost this event to the queue
+            m_eventQueue.Push(OnFocusEvent(true)); // Activate window before reshape
             break;
         }
-        case WM_CLOSE: {
-            return OnCloseEvent();
+
+        RECT r;
+        GetClientRect(m_hWnd, &r);
+        uint32_t w{ static_cast<uint32_t>(r.right - r.left) };
+        uint32_t h{ static_cast<uint32_t>(r.bottom - r.top) };
+        if (m_info.size != Size{ w, h }) {
+            m_eventQueue.Push(OnResizeEvent(w, h)); // window resized
+            break;
         }
+
+        GetWindowRect(m_hWnd, &r);
+        int32_t x{ static_cast<int32_t>(r.left) };
+        int32_t y{ static_cast<int32_t>(r.top) };
+        if (m_info.position != Position{ x, y }) {
+            m_eventQueue.Push(OnMoveEvent(x, y)); // window moved
+            break;
+        }
+        break;
+    }
+    case WM_CLOSE:
+        m_eventQueue.Push(OnCloseEvent());
+        break;
+
 #ifdef ENABLE_MULTITOUCH
-        case WM_POINTERUPDATE:
-        case WM_POINTERDOWN:
-        case WM_POINTERUP: {
-            POINTER_INFO pointerInfo;
-            if (GetPointerInfo(GET_POINTERID_WPARAM(msg.wParam), &pointerInfo)) {
-                uint32_t id = pointerInfo.pointerId;
-                POINT pt = pointerInfo.ptPixelLocation;
-                ScreenToClient(m_hWnd, &pt);
-                switch (msg.message) {
-                case WM_POINTERDOWN:
-                    return m_MTouch.OnEventById(ActionType::DOWN, static_cast<float>(pt.x), static_cast<float>(pt.y), 0, id, static_cast<float>(m_info.size.width), static_cast<float>(m_info.size.height)); // touch down event
-                case WM_POINTERUPDATE:
-                    return m_MTouch.OnEventById(ActionType::MOVE, static_cast<float>(pt.x), static_cast<float>(pt.y), id, id, static_cast<float>(m_info.size.width), static_cast<float>(m_info.size.height)); // touch move event
-                case WM_POINTERUP:
-                    return m_MTouch.OnEventById(ActionType::UP, static_cast<float>(pt.x), static_cast<float>(pt.y), id, 0, static_cast<float>(m_info.size.width), static_cast<float>(m_info.size.height)); // touch up event
-                }
+    case WM_POINTERUPDATE:
+    case WM_POINTERDOWN:
+    case WM_POINTERUP: {
+        POINTER_INFO pointerInfo;
+        if (GetPointerInfo(GET_POINTERID_WPARAM(msg.wParam), &pointerInfo)) {
+            uint32_t id = pointerInfo.pointerId;
+            POINT pt = pointerInfo.ptPixelLocation;
+            ScreenToClient(m_hWnd, &pt);
+            switch (msg.message) {
+            case WM_POINTERDOWN:
+                m_eventQueue.Push(m_MTouch.OnEventById(ActionType::DOWN, static_cast<float>(pt.x), static_cast<float>(pt.y), 0, id, static_cast<float>(m_info.size.width), static_cast<float>(m_info.size.height))); // touch down event
+                break;
+            case WM_POINTERUPDATE:
+                m_eventQueue.Push(m_MTouch.OnEventById(ActionType::MOVE, static_cast<float>(pt.x), static_cast<float>(pt.y), id, id, static_cast<float>(m_info.size.width), static_cast<float>(m_info.size.height))); // touch move event
+                break;
+            case WM_POINTERUP:
+                m_eventQueue.Push(m_MTouch.OnEventById(ActionType::UP, static_cast<float>(pt.x), static_cast<float>(pt.y), id, 0, static_cast<float>(m_info.size.width), static_cast<float>(m_info.size.height))); // touch up event
+                break;
             }
         }
+    }
 #endif
-        }
-        DispatchMessage(&msg);
+    }
+    DispatchMessage(&msg);
+
+    if (!m_eventQueue.IsEmpty()) {
+        return m_eventQueue.Pop();
     }
     return { Event::EventType::NONE };
 }
@@ -391,14 +409,12 @@ LRESULT CALLBACK Win32WindowImpl::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
         return 0;
     case WM_GETMINMAXINFO:
         return 0;
-    case WM_EXITSIZEMOVE: {
+    case WM_EXITSIZEMOVE:
         PostMessage(hWnd, WM_RESHAPE, 0, 0);
         break;
-    }
-    case WM_ACTIVATE: {
+    case WM_ACTIVATE:
         PostMessage(hWnd, WM_ACTIVE, wParam, lParam);
         break;
-    }
     default:
         break;
     }

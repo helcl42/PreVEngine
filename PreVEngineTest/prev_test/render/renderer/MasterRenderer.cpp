@@ -72,7 +72,7 @@ void MasterRenderer::Render(const prev::render::RenderContext& renderContext, co
 
 #ifndef ANDROID
     // Debug quad with shadowMap
-    // RenderDebug(renderContext, node);
+    // RenderDebug(renderContext, scene->GetRootNode());
 #endif
 }
 
@@ -156,7 +156,7 @@ void MasterRenderer::InitDebug()
 {
     auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
 
-    m_debugRenderers.emplace_back(std::make_unique<prev_test::render::renderer::debug::ShadowMapDebugRenderer>(m_defaultRenderPass));
+    // m_debugRenderers.emplace_back(std::make_unique<prev_test::render::renderer::debug::ShadowMapDebugRenderer>(m_defaultRenderPass));
     m_debugRenderers.emplace_back(std::make_unique<prev_test::render::renderer::debug::TextureDebugRenderer>(m_defaultRenderPass));
 
     for (auto& renderer : m_debugRenderers) {
