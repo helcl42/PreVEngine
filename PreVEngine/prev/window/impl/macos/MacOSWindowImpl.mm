@@ -14,6 +14,76 @@
 #include <vulkan/vulkan_metal.h>
 
 namespace prev::window::impl::macos {
+namespace {
+// Convert native COCOA key-code to cross-platform USB HID code.
+const uint8_t COCOA_TO_HID[256] = {
+    4, 22, 7, 9,
+    11, 10, 29, 27, // 8
+    6, 25, 53, 5,
+    20, 26, 8, 21, // 16
+    28, 23, 30, 31,
+    32, 33, 35, 34, // 24
+    46, 38, 36, 45,
+    37, 39, 48, 18, // 32
+    24, 47, 12, 19,
+    40, 15, 13, 52, // 40
+    14, 51, 48, 54,
+    56, 17, 16, 55, // 48
+    43, 44, 0, 0,
+    0, 41, 0, 0, // 56
+    0, 0, 0, 0,
+    0, 0, 0, 0, // 64
+    0, 99, 0, 85,
+    0, 87, 0, 83, // 72
+    0, 0, 0, 84,
+    88, 0, 86, 0, // 80
+    0, 0, 98, 89,
+    90, 91, 92, 93, // 88
+    94, 95, 0, 96,
+    97, 0, 0, 0, // 96
+    62, 63, 64, 60,
+    65, 66, 0, 0, // 104
+    0, 70, 71, 72,
+    0, 67, 68, 69, // 112
+    0, 0, 73, 74,
+    75, 42, 61, 77, // 120
+    59, 78, 58, 80,
+    79, 81, 82, 0, // 128
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0, // 144
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0, 
+    0, 0, 0, 0, // 160
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0, // 176    L/R shift/ctrl/alt  mute/vol+/vol-
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0, // 192
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0, 
+    0, 0, 0, 0, // 208
+    0, 0, 0, 0, 
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0, // 224
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0, 
+    0, 0, 0, 0, // 240
+    0, 0, 0, 0, 
+    0, 0, 0, 0,
+    0, 0, 0, 0, 
+    0, 0, 0, 0 // 256
+};
+}
+
 struct MacState {
     MacWindow* window{};
     MacView* view{};
@@ -74,6 +144,7 @@ MacOSWindowImpl::MacOSWindowImpl(const prev::core::instance::Instance& instance,
         [window toggleFullScreen:nil];
     }
     [window makeKeyAndOrderFront:nil];
+    [window setAcceptsMouseMovedEvents:YES];
     [NSApp activateIgnoringOtherApps:YES];
     
     rect = [window backingAlignedRect:rect options:NSAlignAllEdgesOutward];
@@ -106,58 +177,134 @@ MacOSWindowImpl::~MacOSWindowImpl()
 
 Event MacOSWindowImpl::GetEvent(bool waitForEvent)
 {
+    if (!m_eventQueue.IsEmpty()) {
+        return m_eventQueue.Pop(); // Pop message from message queue buffer
+    }
+    
     @autoreleasepool {
         for (;;)
         {
             NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny
                                                 untilDate:[NSDate distantPast]
-                                                    inMode:NSDefaultRunLoopMode
-                                                    dequeue:YES];
+                                                   inMode:NSDefaultRunLoopMode
+                                                  dequeue:YES];
+            if (event == nil) {
+                break;
+            }
+            
+            NSPoint screenPoint = [NSEvent mouseLocation];
+            NSRect rect = [m_state->window convertRectFromScreen:NSMakeRect(screenPoint.x, screenPoint.y, 0, 0)];
+            NSPoint mouseLocation = [m_state->view convertPoint: rect.origin fromView: nil];
+            if(NSPointInRect(mouseLocation, [m_state->view bounds])) {
+                // y mouse coord is inverted
+                NSPoint windowMouseLocation = NSMakePoint(mouseLocation.x, m_info.size.height - mouseLocation.y);
+                
+                if (m_hasFocus && m_mouseLocked) {
+                    /*const auto widhtHalf{ m_info.size.width / 2.0f };
+                    const auto heightHalf{ m_info.size.height / 2.0f };
+                    NSRect screeRect = [m_state->window convertRectToScreen:NSMakeRect(0, 0, 0, 0)];
+                    CGPoint pt = CGPointMake(rect.origin.x + widhtHalf, rect.origin.y + heightHalf);
+                    CGWarpMouseCursorPosition(pt);
+                    //NSLog(@"New mouse location: (%.1f, %.1f)", pt.x, pt.y);
+                    mouseLocation.x -= widhtHalf;
+                    mouseLocation.y -= heightHalf;*/
+                    mouseLocation.x = m_prevMousePosition.x - windowMouseLocation.x;
+                    mouseLocation.y = m_prevMousePosition.y - windowMouseLocation.y;
+                    //NSLog(@"diff X=%f, Y=%f", mouseLocation.x, mouseLocation.y);
+                } else {
+                    mouseLocation = windowMouseLocation;
+                }
+                
+                m_eventQueue.Push(OnMouseEvent(ActionType::MOVE, static_cast<int32_t>(mouseLocation.x), static_cast<int32_t>(mouseLocation.y), ButtonType::NONE));
+                
+                m_prevMousePosition = Pos{ windowMouseLocation.x, windowMouseLocation.y };
+            }
+            
             switch([event type])
             {
-                case NSEventTypeSystemDefined:
+                case NSEventTypeMouseMoved:
+                    //NSLog(@"diff X=%f, Y=%f", event.deltaX, event.deltaY);
                     break;
-                // keyboerd mapping, mouse move/clicks/wheel
+                case NSEventTypeLeftMouseDown:
+                {
+                    m_eventQueue.Push(OnMouseEvent(ActionType::DOWN, static_cast<int32_t>(mouseLocation.x), static_cast<int32_t>(mouseLocation.y), ButtonType::LEFT));
+                    break;
+                }
+                case NSEventTypeLeftMouseUp:
+                {
+                    m_eventQueue.Push(OnMouseEvent(ActionType::UP, static_cast<int32_t>(mouseLocation.x), static_cast<int32_t>(mouseLocation.y), ButtonType::LEFT));
+                    break;
+                }
+                case NSEventTypeRightMouseDown:
+                {
+                    m_eventQueue.Push(OnMouseEvent(ActionType::DOWN, static_cast<int32_t>(mouseLocation.x), static_cast<int32_t>(mouseLocation.y), ButtonType::RIGHT));
+                    break;
+                }
+                case NSEventTypeRightMouseUp:
+                {
+                    m_eventQueue.Push(OnMouseEvent(ActionType::UP, static_cast<int32_t>(mouseLocation.x), static_cast<int32_t>(mouseLocation.y), ButtonType::RIGHT));
+                    break;
+                }
+                case NSEventTypeOtherMouseDown:
+                {
+                    m_eventQueue.Push(OnMouseEvent(ActionType::DOWN, static_cast<int32_t>(mouseLocation.x), static_cast<int32_t>(mouseLocation.y), ButtonType::MIDDLE));
+                    break;
+                }
+                case NSEventTypeOtherMouseUp:
+                {
+                    m_eventQueue.Push(OnMouseEvent(ActionType::UP, static_cast<int32_t>(mouseLocation.x), static_cast<int32_t>(mouseLocation.y), ButtonType::MIDDLE));
+                    break;
+                }
+                case NSEventTypeScrollWheel:
+                {
+                    m_eventQueue.Push(OnMouseScrollEvent(static_cast<int32_t>(event.deltaY), mouseLocation.x, mouseLocation.y));
+                    break;
+                }
                 case NSEventTypeKeyDown:
                 {
-                    NSLog(@"Key down evt: %d", [event keyCode]);
+                    const uint8_t key{ COCOA_TO_HID[[event keyCode]] };
+                    m_eventQueue.Push(OnKeyEvent(ActionType::DOWN, key));
+                    break;
+                }
+                case NSEventTypeKeyUp:
+                {
+                    const uint8_t key{ COCOA_TO_HID[[event keyCode]] };
+                    m_eventQueue.Push(OnKeyEvent(ActionType::UP, key));
                     break;
                 }
                 default:
                     break;
             }
             
-            if (event == nil) {
-                break;
-            }
-            
             [NSApp sendEvent:event];
         }
-            
+        
         [NSApp updateWindows];
     } // autoreleasepool
     
     NSSize size = [[m_state->window contentView] frame].size;
     Size windowSize{ static_cast<uint32_t>(size.width), static_cast<uint32_t>(size.height) };
     if(m_info.size != windowSize) {
-        return OnResizeEvent(windowSize.width, windowSize.height);
+        m_eventQueue.Push(OnResizeEvent(windowSize.width, windowSize.height));
     }
     
-    bool isActive = [NSApp isActive];
-    if (isActive) {
+    if ([NSApp isActive]) {
         if(!m_hasFocus) {
-            return OnFocusEvent(true);
+            m_eventQueue.Push(OnFocusEvent(true));
         }
     } else {
         if(m_hasFocus) {
-            return OnFocusEvent(false);
+            m_eventQueue.Push(OnFocusEvent(false));
         }
     }
     
     if(m_state->window->opened == NO) {
-        return OnCloseEvent();
+        m_eventQueue.Push(OnCloseEvent());
     }
-
+    
+    if (!m_eventQueue.IsEmpty()) {
+        return m_eventQueue.Pop(); // Pop message from message queue buffer
+    }
     return { Event::EventType::NONE };
 }
 
