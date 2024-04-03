@@ -78,6 +78,10 @@ IOSWindowImpl::~IOSWindowImpl()
 
 Event IOSWindowImpl::GetEvent(bool waitForEvent)
 {
+    if (!m_eventQueue.IsEmpty()) {
+        return m_eventQueue.Pop(); // Pop message from message queue buffer
+    }
+    
     while(CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.0001, true) == kCFRunLoopRunHandledSource);
     
     float scale = [[UIScreen mainScreen] scale];
@@ -85,21 +89,24 @@ Event IOSWindowImpl::GetEvent(bool waitForEvent)
     CGRect rect = [[UIScreen mainScreen] bounds];
     Size windowSize{ static_cast<uint32_t>(rect.size.width * scale), static_cast<uint32_t>(rect.size.height * scale) };
     if(m_info.size != windowSize) {
-        return OnResizeEvent(windowSize.width, windowSize.height);
+        m_eventQueue.Push(OnResizeEvent(windowSize.width, windowSize.height));
     }
     
-    if([m_state->view hasTouchEvent]) {
+    while([m_state->view hasTouchEvent]) {
         TouchEvent evt = [m_state->view popTouchEvent];
         CGPoint scaledPoint = CGPointMake(evt.location.x * scale, evt.location.y * scale);
         CGPoint size = CGPointMake(static_cast<float>(m_info.size.width), static_cast<float>(m_info.size.height));
         
         switch (evt.state) {
             case DOWN:
-                return m_MTouch.OnEvent(ActionType::DOWN, scaledPoint.x, scaledPoint.y, 0, size.x, size.y);
+                m_eventQueue.Push(m_MTouch.OnEvent(ActionType::DOWN, scaledPoint.x, scaledPoint.y, 0, size.x, size.y));
+                break;
             case MOVE:
-                return m_MTouch.OnEvent(ActionType::MOVE, scaledPoint.x, scaledPoint.y, 0, size.x, size.y);
+                m_eventQueue.Push(m_MTouch.OnEvent(ActionType::MOVE, scaledPoint.x, scaledPoint.y, 0, size.x, size.y));
+                break;
             case UP:
-                return m_MTouch.OnEvent(ActionType::UP, scaledPoint.x, scaledPoint.y, 0, size.x, size.y);
+                m_eventQueue.Push(m_MTouch.OnEvent(ActionType::UP, scaledPoint.x, scaledPoint.y, 0, size.x, size.y));
+                break;
             default:
                 break;
         }
@@ -108,14 +115,18 @@ Event IOSWindowImpl::GetEvent(bool waitForEvent)
     UIApplicationState state = [[UIApplication sharedApplication] applicationState];
     if (state == UIApplicationStateBackground || state == UIApplicationStateInactive) {
         if(m_hasFocus) {
-            return OnFocusEvent(false);
+            m_eventQueue.Push(OnFocusEvent(false));
         }
     } else {
         if(!m_hasFocus) {
-            return OnFocusEvent(true);
+            m_eventQueue.Push(OnFocusEvent(true));
         }
     }
-    return {};
+    
+    if (!m_eventQueue.IsEmpty()) {
+        return m_eventQueue.Pop();
+    }
+    return { Event::EventType::NONE };
 }
 
 void IOSWindowImpl::SetTitle(const std::string& title)

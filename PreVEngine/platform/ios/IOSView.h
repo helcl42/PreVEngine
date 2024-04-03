@@ -4,7 +4,7 @@
 #import <UIKit/UIKit.h>
 #import <MetalKit/MetalKit.h>
 
-#include <queue>
+#include "../../prev/util/Utils.h"
 
 enum TouchEventState {
     NONE = 0,
@@ -20,7 +20,7 @@ struct TouchEvent {
 
 @interface IOSView : MTKView
 {
-@public std::queue<TouchEvent> touchEvents;
+@public prev::util::CircularQueue<TouchEvent, 32> touchEvents;
 }
 - (TouchEvent)popTouchEvent;
 - (Boolean)hasTouchEvent;
