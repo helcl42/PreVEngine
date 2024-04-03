@@ -7,14 +7,14 @@
     UITouch* firstTouch = [touches anyObject];
     CGPoint touchLocation = [firstTouch locationInView:self];
     
-    touchEvents.push({ DOWN, touchLocation });}
+    touchEvents.Push({ DOWN, touchLocation });}
 
 - (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
     UITouch* firstTouch = [touches anyObject];
     CGPoint touchLocation = [firstTouch locationInView:self];
     
-    touchEvents.push({ MOVE, touchLocation });
+    touchEvents.Push({ MOVE, touchLocation });
 }
 
 - (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
@@ -22,7 +22,7 @@
     UITouch* firstTouch = [touches anyObject];
     CGPoint touchLocation = [firstTouch locationInView:self];
     
-    touchEvents.push({ UP, touchLocation });
+    touchEvents.Push({ UP, touchLocation });
 }
 
 - (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
@@ -31,13 +31,11 @@
 
 - (TouchEvent)popTouchEvent
 {
-    TouchEvent evt = touchEvents.front();
-    touchEvents.pop();
-    return evt;
+    return touchEvents.Pop();
 }
 
 - (Boolean)hasTouchEvent
 {
-    return touchEvents.empty() ? NO : YES;
+    return touchEvents.IsEmpty() ? NO : YES;
 }
 @end
