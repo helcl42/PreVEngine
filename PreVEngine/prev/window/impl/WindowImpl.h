@@ -6,52 +6,9 @@
 
 #include "../../core/instance/Instance.h"
 
+#include "../../util/Utils.h"
+
 namespace prev::window::impl {
-class EventFIFO {
-public:
-    bool IsEmpty() const
-    {
-        return m_head == m_tail;
-    }
-
-    void Push(const Event& item)
-    {
-        ++m_head;
-
-        m_eventBuffer[m_head %= SIZE] = item;
-    }
-
-    Event* Pop()
-    {
-        if (IsEmpty()) {
-            return nullptr;
-        }
-
-        ++m_tail;
-
-        return &m_eventBuffer[m_tail %= SIZE];
-    }
-
-    void Clear()
-    {
-        for (int i = 0; i < SIZE; ++i) {
-            m_eventBuffer[i] = {};
-        }
-        m_head = 0;
-        m_tail = 0;
-    }
-
-private:
-    static const inline int SIZE{ 10 }; // The queue should never contains more than 2 items.
-
-private:
-    int m_head{};
-
-    int m_tail{};
-
-    Event m_eventBuffer[SIZE] = {};
-};
-
 class MultiTouch {
 public:
     void Clear()
@@ -194,7 +151,7 @@ private:
 protected:
     const prev::core::instance::Instance& m_instance;
 
-    EventFIFO m_eventQueue{};
+    prev::util::CircularQueue<Event, 32> m_eventQueue{};
 
     bool m_running{};
 

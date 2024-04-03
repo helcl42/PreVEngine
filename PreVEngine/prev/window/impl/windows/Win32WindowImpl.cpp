@@ -224,7 +224,7 @@ Event Win32WindowImpl::GetEvent(bool waitForEvent)
 {
     // Event event;
     if (!m_eventQueue.IsEmpty()) {
-        return *m_eventQueue.Pop();
+        return m_eventQueue.Pop();
     }
 
     MSG msg = {};
