@@ -23,7 +23,7 @@ jobs:
       #
       # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
       matrix:
-        os: [macos-latest]
+        os: [macos-latest-xlarge]
         build_type: [Release]
         c_compiler: [clang]
         include:
@@ -51,8 +51,6 @@ jobs:
           hdiutil detach /Volumes/vulkansdk-macos-$VULKAN_VERSION
           echo "VULKAN_SDK_PATH=$GITHUB_WORKSPACE/vulkansdk-macos-$VULKAN_VERSION" >> $GITHUB_ENV
           echo "VULKAN_SDK=$GITHUB_WORKSPACE/vulkansdk-macos-$VULKAN_VERSION/macOS" >> $GITHUB_ENV
-          echo "DYLD_LIBRARY_PATH=$VULKAN_SDK/lib:$DYLD_LIBRARY_PATH" >> $GITHUB_ENV
-          echo "PATH=$VULKAN_SDK/bin:$PATH" >> $GITHUB_ENV
           echo $GITHUB_ENV
 
     - name: Install PreVEngine dependencies
