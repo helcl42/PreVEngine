@@ -34,7 +34,7 @@ private:
 
     bool InitTouch(); // Returns false if no touch-device was found.
 
-    Event TranslateEvent(xcb_generic_event_t* x_event); // Convert x_event to Window event
+    void ProcessXEvent(xcb_generic_event_t* xEvent); // Convert x_event to Window event
 
 private:
     Display* m_display{}; // for XLib
@@ -46,6 +46,8 @@ private:
     xcb_window_t m_xcbWindow{};
 
     xcb_intern_atom_reply_t* m_atomWmDeleteWindow{};
+
+    char m_textBuffer[4] = {}; // store char for text event
 
     //---xkb Keyboard---
     xkb_context* m_keyboardContext{}; // context for xkbcommon keyboard input
