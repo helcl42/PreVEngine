@@ -8,7 +8,8 @@ A multiplatform Vulkan based rendering engine. This repository is under active d
 |---|---:|
 | Windows | [![Windows - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-windows.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-windows.yml) |
 | Linux | [![Linux - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux.yml) |
-| Android  | [![Android - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-android.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-android.yml)  |
+| Android  | [![Android - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-android.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-android.yml) |
+| MacOS | [![MacOS - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-macos.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-macos.yml) |
 
 Here is a video:
 
@@ -24,7 +25,7 @@ Here is a video:
  **Note:** If you have a problem with the script, the package is hosted on `Google Drive`. You can download it directly from the following link. Just unpack it in the root folder.
 [https://drive.google.com/file/d/1_9gK0mHCFIuXkZlF7yv9HmXcr4KabK0c/view?usp=sharing](https://drive.google.com/file/d/1_9gK0mHCFIuXkZlF7yv9HmXcr4KabK0c/view?usp=sharing)
 
-## Build Linux & Windows
+## Build Linux & Windows & MacOS
 
  - Run `mkdir build && cd build`
 
@@ -41,6 +42,19 @@ Here is a video:
  - Run `cmake -DANDROID=ON -DANDROID_ABI=arm64-v8a ..`
 
  - Run `cd ../PreVEngineTest/platform/android && chmod a+x gradlew && ./gradlew clean build` or import to android studio from location `PreVEngineTest/platform/android` and deploy as usuall.
+
+ ## Build iOS
+
+- Run `mkdir build && cd build`
+
+- Run `cmake -G Xcode -DCMAKE_BUILD_TYPE=Debug -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_SYSROOT=iphoneos -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 -DCMAKE_OSX_ARCHITECTURES="arm64" -DENABLE_VK_LOADER=OFF ..`
+
+- Open in Xcode.
+
+- Add reference to MoltenVK framework.
+
+- Add all assets to app bundle resources.
+
 
 ## 3rd Party Dependencies
  - [Assimp](https://github.com/assimp/assimp): Used for model loading.
