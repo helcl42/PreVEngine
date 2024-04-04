@@ -94,6 +94,7 @@ elseif(APPLE AND IOS)
     
     find_library(UIKIT_LIB UIKit)
     find_library(METALKIT_LIB METALKit)
+    find_library(FOUNDATION_LIB Foundation)
   
     add_library(${PROJECT_NAME} STATIC
         ${SRC_LIST}
@@ -101,12 +102,12 @@ elseif(APPLE AND IOS)
     )
 
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-    # TODO: avoid hardcoded paths
-    target_include_directories(${PROJECT_NAME} PUBLIC "/Users/lubos/VulkanSDK/1.3.280.0/macOS/include")
+    target_include_directories(${PROJECT_NAME} PUBLIC "$ENV{VULKAN_SDK}/include")
 
     target_link_libraries(${PROJECT_NAME} 
         ${UIKIT_LIB}
         ${METALKIT_LIB}
+        ${FOUNDATION_LIB}
     )
     
 elseif(APPLE)
