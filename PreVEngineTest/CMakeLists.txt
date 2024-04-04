@@ -145,13 +145,25 @@ elseif(APPLE AND IOS)
     set(MACOSX_BUNDLE_INFO_STRING ${APP_BUNDLE_IDENTIFIER})
     set(MACOSX_BUNDLE_GUI_IDENTIFIER ${APP_BUNDLE_IDENTIFIER})
     set(MACOSX_BUNDLE_BUNDLE_NAME ${APP_BUNDLE_IDENTIFIER})
-    set(MACOSX_BUNDLE_BUNDLE_NAME ${APP_BUNDLE_IDENTIFIER})
     set(MACOSX_BUNDLE_LONG_VERSION_STRING "1.0")
     set(MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0")
     set(MACOSX_BUNDLE_BUNDLE_VERSION "1.0")
 
+    # set(MACOSX_BUNDLE_INFO_PLIST path/to/Info.plist)
+    # set(XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "NO")
+    # set(OUTPUT_NAME ${PROJECT_NAME})
+    # set(MACOSX_BUNDLE TRUE)
+    # set(MACOSX_BUNDLE_COPYRIGHT "(C) 2024")
+    # set(MACOSX_RPATH TRUE)
+    # set(MACOSX_FRAMEWORK_IDENTIFIER "com.prevengine.PreVEngineTest")
+    # set(XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@loader_path/Libraries")
+    # set(RESOURCE "${RESOURCE_FILES}")
+    # set(XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME TRUE)
+    # set(XCODE_ATTRIBUTE_EXECUTABLE_NAME ${PROJECT_NAME})
+
     find_library(UIKIT_LIB UIKit)
     find_library(METALKIT_LIB METALKit)
+    find_library(FOUNDATION_LIB Foundation)
 
     file(GLOB IOS_SRC_LIST 
         "platform/ios/*.h" "platform/ios/*.mm"
@@ -165,12 +177,28 @@ elseif(APPLE AND IOS)
     )
 
     target_link_libraries(${PROJECT_NAME} PreVEngine)
-    # TODO: import 3rd party libraries and frameworks manually
-    # target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/IOS/libassimp.dylib")
+    if(${CMAKE_OSX_SYSROOT} MATCHES "iPhoneSimulator")
+        message("${PROJECT_NAME} - simulator")
+        if (${CMAKE_OSX_ARCHITECTURES} MATCHES "arm64")
+            target_link_libraries(${PROJECT_NAME} "-framework $ENV{VULKAN_SDK}/../iOS/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator/MoltenVK.framework/MoltenVK")
+            target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/IOS_simulator/libassimp.5.dylib")
+        else()
+            message(FATAL_ERROR "Unsupported architecture: ${CMAKE_OSX_ARCHITECTURES}.")
+        endif()    
+    else()
+        message("${PROJECT_NAME} - iphone")
+        if (${CMAKE_OSX_ARCHITECTURES} MATCHES "arm64")
+            # target_link_libraries(${PROJECT_NAME} "-framework $ENV{VULKAN_SDK}/../iOS/lib/MoltenVK.xcframework/ios-arm64/MoltenVK.framework/MoltenVK")
+            # target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/IOS/libassimp.5.dylib")
+        else()
+            message(FATAL_ERROR "Unsupported architecture: ${CMAKE_OSX_ARCHITECTURES}.")
+        endif()
+    endif()
 
     target_link_libraries(${PROJECT_NAME} 
         ${UIKIT_LIB}
         ${METALKIT_LIB}
+        ${FOUNDATION_LIB}
     )
 
     #  Copy all files from ./Assets to the binary directory.
