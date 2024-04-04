@@ -218,10 +218,10 @@ elseif(APPLE)
     )
 
     target_link_libraries(${PROJECT_NAME} PreVEngine)
-    target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/MacOS/libassimp.dylib")
+    target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/MacOS/libassimp.5.dylib")
 
     # Copy assimp so to output bin dir.
-    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/MacOS/libassimp.dylib" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/MacOS/libassimp.5.dylib" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
     #  Copy all files from ./Assets to the binary directory.
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
 
