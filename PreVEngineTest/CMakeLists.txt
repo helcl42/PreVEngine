@@ -229,7 +229,14 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     message("${PROJECT_NAME} - Linux")
     add_definitions(-DTARGET_PLATFORM_LINUX)
 
-    add_executable(${PROJECT_NAME} ${SRC_LIST})
+    file(GLOB COMMON_SRC_LIST 
+        "platform/common/*.h" "platform/common/*.cpp"
+    )
+
+    add_executable(${PROJECT_NAME} 
+        ${SRC_LIST}
+        ${COMMON_SRC_LIST}
+    )
 
     target_link_libraries(${PROJECT_NAME} PreVEngine)
     target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Linux/libassimp.so")
