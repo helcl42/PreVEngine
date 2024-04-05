@@ -4,9 +4,9 @@ name: MacOS - CI Build/Test
 
 on:
   push:
-    branches: [ "macos" ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ "macos" ]
+    branches: [ "master" ]
 
 jobs:
   build:
