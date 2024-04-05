@@ -44,17 +44,17 @@ private:
 
     const glm::vec3 m_position;
 
-    std::shared_ptr<HeightMapInfo> m_heightsInfo;
+    std::shared_ptr<HeightMapInfo> m_heightsInfo{};
 
-    std::shared_ptr<VertexData> m_vertexData;
+    std::shared_ptr<VertexData> m_vertexData{};
 
-    std::shared_ptr<prev_test::render::IModel> m_model;
+    std::shared_ptr<prev_test::render::IModel> m_model{};
 
     std::vector<std::shared_ptr<prev_test::render::IMaterial>> m_materials;
 
     std::vector<float> m_heightSteps;
 
-    float m_transitionRange;
+    float m_transitionRange{};
 };
 } // namespace prev_test::component::terrain
 
