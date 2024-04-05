@@ -20,8 +20,9 @@ glm::mat4 ViewFrustum::CreateProjectionMatrix(const uint32_t w, const uint32_t h
 
 glm::mat4 ViewFrustum::CreateProjectionMatrix(const float aspectRatio) const
 {
-
-    return prev::util::math::CreatePerspectiveProjectionMatrix(aspectRatio, m_verticalFov, m_nearClippingPlane, m_farClippingPlane);
+    // TODO - this is workaround for corner cases - should be removed in the future
+    const float finalAspectRatio{ std::max(0.0001f, aspectRatio) };
+    return prev::util::math::CreatePerspectiveProjectionMatrix(finalAspectRatio, m_verticalFov, m_nearClippingPlane, m_farClippingPlane);
 }
 
 float ViewFrustum::GetVerticalFov() const

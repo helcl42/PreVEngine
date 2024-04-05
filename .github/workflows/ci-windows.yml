@@ -34,14 +34,14 @@ jobs:
       VULKAN_SDK: C:\VulkanSDK\
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: 'true'
 
     - name: Install python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: 3.8
+        python-version: 3.12.2
 
     - name: Install dependencies
       run: |

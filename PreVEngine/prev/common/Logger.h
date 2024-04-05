@@ -34,7 +34,7 @@ void SetConsoleTextColor(const ConsoleColor color);
         SetConsoleTextColor(ConsoleColor::RESET); \
     }
 
-#ifdef ANDROID
+#ifdef TARGET_PLATFORM_ANDROID
 #include <android/log.h>
 #include <jni.h>
 #define LOG_TAG "PreVEngine"

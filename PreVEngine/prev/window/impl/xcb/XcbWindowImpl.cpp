@@ -43,7 +43,7 @@ namespace {
 #endif
 
     // Convert native EVDEV key-code to cross-platform USB HID code.
-    const unsigned char EVDEV_TO_HID[256] = {
+    const uint8_t EVDEV_TO_HID[256] = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 41, 30, 31, 32, 33, 34, 35,
         36, 37, 38, 39, 45, 46, 42, 43, 20, 26, 8, 21, 23, 28, 24, 12,
         18, 19, 47, 48, 40, 224, 4, 22, 7, 9, 10, 11, 13, 14, 15, 51,

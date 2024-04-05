@@ -9,7 +9,7 @@
 namespace prev::window::impl::win32 {
 namespace {
     // Convert native Win32 keyboard scancode to cross-platform USB HID code.
-    const unsigned char WIN32_TO_HID[256] = {
+    const uint8_t WIN32_TO_HID[256] = {
         0, 0, 0, 0, 0, 0, 0, 0, 42, 43, 0, 0, 0, 40, 0, 0, // 16
         225, 224, 226, 72, 57, 0, 0, 0, 0, 0, 0, 41, 0, 0, 0, 0, // 32
         44, 75, 78, 77, 74, 80, 82, 79, 81, 0, 0, 0, 70, 73, 76, 0, // 48
@@ -212,7 +212,6 @@ Surface& Win32WindowImpl::CreateSurface()
         win32CreateInfo.hinstance = m_hInstance;
         win32CreateInfo.hwnd = m_hWnd;
         VKERRCHECK(vkCreateWin32SurfaceKHR(m_instance, &win32CreateInfo, nullptr, &m_vkSurface));
-
         LOGI("Win32 - Vulkan Surface created\n");
     }
     return *this;
