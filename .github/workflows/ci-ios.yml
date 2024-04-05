@@ -47,7 +47,7 @@ jobs:
       run: |
           wget "https://sdk.lunarg.com/sdk/download/$VULKAN_VERSION/mac/vulkansdk-macos-$VULKAN_VERSION.dmg?Human=true" -O vulkansdk.dmg
           hdiutil attach vulkansdk.dmg
-          sudo /Volumes/vulkansdk-macos-$VULKAN_VERSION/InstallVulkan.app/Contents/MacOS/InstallVulkan --root $GITHUB_WORKSPACE/vulkansdk-macos-$VULKAN_VERSION --accept-licenses --default-answer --confirm-command install
+          sudo /Volumes/vulkansdk-macos-$VULKAN_VERSION/InstallVulkan.app/Contents/MacOS/InstallVulkan --root $GITHUB_WORKSPACE/vulkansdk-macos-$VULKAN_VERSION --accept-licenses --default-answer --confirm-command install com.lunarg.vulkan.core com.lunarg.vulkan.usr com.lunarg.vulkan.ios
           hdiutil detach /Volumes/vulkansdk-macos-$VULKAN_VERSION
           echo "VULKAN_SDK_PATH=$GITHUB_WORKSPACE/vulkansdk-macos-$VULKAN_VERSION" >> $GITHUB_ENV
           echo "VULKAN_SDK=$GITHUB_WORKSPACE/vulkansdk-macos-$VULKAN_VERSION/macOS" >> $GITHUB_ENV
