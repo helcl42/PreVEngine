@@ -51,21 +51,7 @@ jobs:
           hdiutil detach /Volumes/vulkansdk-macos-$VULKAN_VERSION
           echo "VULKAN_SDK_PATH=$GITHUB_WORKSPACE/vulkansdk-macos-$VULKAN_VERSION" >> $GITHUB_ENV
           echo "VULKAN_SDK=$GITHUB_WORKSPACE/vulkansdk-macos-$VULKAN_VERSION/macOS" >> $GITHUB_ENV
-          echo $VULKAN_SDK
-          cd $VULKAN_SDK
-          ls 
-          cd ..
-          ls
-          cd iOS
-          ls 
-          cd lib
-          ls 
-          cd MoltenVK.xcframework
-          ls
-          cd os-arm64_x86_64-simulator
-          ls
-          cd MoltenVK.framework
-          ls
+          echo "VK sdk path: $VULKAN_SDK"
 
     - name: Install PreVEngine dependencies
       run: |
