@@ -4,33 +4,43 @@
 
 #include <stdexcept>
 
+#if defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_IOS_MVK)
+#include <vulkan/vulkan_metal.h>
+#endif
+
 namespace prev::core::instance {
 Instance::Instance(const bool enableValidation, const char* appName, const char* engineName)
 {
     Layers layers;
     if (enableValidation) {
-#ifdef VK_USE_PLATFORM_ANDROID_KHR
         layers.Pick("VK_LAYER_KHRONOS_validation");
-#else
-        layers.Pick("VK_LAYER_KHRONOS_validation");
-#endif
     }
     layers.Print();
 
     Extensions extensions;
     if (extensions.Pick(VK_KHR_SURFACE_EXTENSION_NAME)) {
-#ifdef VK_USE_PLATFORM_WIN32_KHR
+#if defined(VK_USE_PLATFORM_WIN32_KHR)
         extensions.Pick(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
-#elif VK_USE_PLATFORM_ANDROID_KHR
+#elif defined(VK_USE_PLATFORM_ANDROID_KHR)
         extensions.Pick(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
-#elif VK_USE_PLATFORM_XCB_KHR
+#elif defined(VK_USE_PLATFORM_XCB_KHR)
         extensions.Pick(VK_KHR_XCB_SURFACE_EXTENSION_NAME);
-#elif VK_USE_PLATFORM_XLIB_KHR
+#elif defined(VK_USE_PLATFORM_XLIB_KHR)
         extensions.Pick(VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
-#elif VK_USE_PLATFORM_WAYLAND_KHR
+#elif defined(VK_USE_PLATFORM_WAYLAND_KHR)
         extensions.Pick(VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
-#elif VK_USE_PLATFORM_MIR_KHR
+#elif defined(VK_USE_PLATFORM_MIR_KHR)
         extensions.Pick(VK_KHR_MIR_SURFACE_EXTENSION_NAME);
+#elif defined(VK_USE_PLATFORM_MACOS_MVK)
+        extensions.Pick(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+        extensions.Pick(VK_MVK_MACOS_SURFACE_EXTENSION_NAME);
+        extensions.Pick(VK_EXT_METAL_SURFACE_EXTENSION_NAME);
+        extensions.Pick(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+#elif defined(VK_USE_PLATFORM_IOS_MVK)
+        extensions.Pick(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+        extensions.Pick(VK_MVK_IOS_SURFACE_EXTENSION_NAME);
+        extensions.Pick(VK_EXT_METAL_SURFACE_EXTENSION_NAME);
+        extensions.Pick(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
 #endif
     } else {
         LOGE("Failed to load VK_KHR_Surface");
@@ -69,7 +79,11 @@ void Instance::Create(const Layers& layers, const Extensions& extensions, const 
 
     VkInstanceCreateInfo instanceInfo = { VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
     instanceInfo.pNext = nullptr;
+#if defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_IOS_MVK)
+    instanceInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#else
     instanceInfo.flags = 0;
+#endif
     instanceInfo.pApplicationInfo = &appInfo;
     instanceInfo.enabledExtensionCount = extensions.GetPickCount();
     instanceInfo.ppEnabledExtensionNames = extensions.GetPickListRaw();
@@ -81,7 +95,9 @@ void Instance::Create(const Layers& layers, const Extensions& extensions, const 
         throw std::runtime_error("Could not create VK instance.");
     }
 
+#ifdef ENABLE_VK_LOADER
     volkLoadInstance(m_instance);
+#endif
 
     LOGI("Vulkan Instance created\n");
 

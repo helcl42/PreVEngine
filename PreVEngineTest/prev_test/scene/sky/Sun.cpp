@@ -34,4 +34,9 @@ void Sun::ShutDown()
 {
     SceneNode::ShutDown();
 }
+
+void Sun::operator()(const prev::core::NewIterationEvent& newIterationEvent)
+{
+    m_viewPortSize = glm::vec2(newIterationEvent.windowWidth, newIterationEvent.windowHeight);
+}
 } // namespace prev_test::scene::sky

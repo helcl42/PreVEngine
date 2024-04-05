@@ -1,21 +1,25 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
-#if defined(__linux__) && !defined(__ANDROID__) // Linux (desktop only)
-#define __LINUX__ 1
-#endif
-
-#ifdef _WIN32
+#if defined(TARGET_PLATFORM_WINDOWS)
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #define TICK_CHARACTER "\xFB" // On Windows, use Square-root as tick mark
 #define PAUSE system("pause")
-#elif __ANDROID__
+#elif defined(TARGET_PLATFORM_IOS)
+#include <stdlib.h>
+#define TICK_CHARACTER "\u2713"
+#define PAUSE
+#elif TARGET_PLATFORM_MACOS
+#include <stdlib.h>
+#define TICK_CHARACTER "\u2713"
+#define PAUSE
+#elif defined(TARGET_PLATFORM_ANDROID)
 #include <android_native.h>
 #define TICK_CHARACTER "\u2713"
 #define PAUSE
-#elif __LINUX__
+#elif defined(TARGET_PLATFORM_LINUX)
 #include <stdlib.h>
 #include <xkbcommon/xkbcommon.h>
 #define TICK_CHARACTER "\u2713"

@@ -1,7 +1,7 @@
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 
-#ifndef __ANDROID_WINDOW_IMPL__
-#define __ANDROID_WINDOW_IMPL__
+#ifndef __ANDROID_WINDOW_IMPL_H__
+#define __ANDROID_WINDOW_IMPL_H__
 
 #include "../WindowImpl.h"
 

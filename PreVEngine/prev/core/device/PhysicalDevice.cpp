@@ -2,9 +2,6 @@
 
 #include "../../util/VkUtils.h"
 
-#include <map>
-#include <sstream>
-
 namespace prev::core::device {
 PhysicalDevice::PhysicalDevice()
     : m_handle(VK_NULL_HANDLE)
@@ -47,6 +44,9 @@ PhysicalDevice::PhysicalDevice(const VkPhysicalDevice gpu)
     vkGetPhysicalDeviceQueueFamilyProperties(gpu, &familyCount, m_queueFamilies.data());
 
     m_extensions.Pick(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+#if defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_IOS_MVK)
+    m_extensions.Pick("VK_KHR_portability_subset");
+#endif
 }
 
 // Find queue-family with requred flags, and can present to given surface. (if provided)

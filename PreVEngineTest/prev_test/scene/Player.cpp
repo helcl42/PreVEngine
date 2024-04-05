@@ -220,9 +220,7 @@ void Player::operator()(const prev::input::touch::TouchEvent& touchEvent)
         m_shouldRotate = false;
     }
 
-    if (touchEvent.action == prev::input::touch::TouchActionType::MOVE || touchEvent.action == prev::input::touch::TouchActionType::DOWN) {
-        m_prevTouchPosition = touchEvent.position;
-    }
+    m_prevTouchPosition = touchEvent.position;
 }
 
 void Player::operator()(const prev::input::mouse::MouseScrollEvent& scrollEvent)

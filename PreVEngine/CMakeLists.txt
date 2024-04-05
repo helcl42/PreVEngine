@@ -38,6 +38,8 @@ file(GLOB SRC_LIST
     "prev/window/impl/windows/*.h" "prev/window/impl/windows/*.cpp"
     "prev/window/impl/xcb/*.h" "prev/window/impl/xcb/*.cpp"
     "prev/window/impl/android/*.h" "prev/window/impl/android/*.cpp"
+    "prev/window/impl/macos/*.h" "prev/window/impl/macos/*.cpp"
+    "prev/window/impl/ios/*.h" "prev/window/impl/ios/*.cpp"
 )
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")  # for find_package
@@ -46,6 +48,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake") 
 option(ENABLE_LOGGING "Prints LOG* messages to Terminal or Android Logcat." ON)
 option(ENABLE_MULTITOUCH "Multi-touch screen support" OFF)
 option(ENABLE_REVERSE_DEPTH "Enable reverse depth" OFF)
+option(ENABLE_VK_LOADER "Enable Vulkan loader" ON)
 
 if (ENABLE_LOGGING)
     add_definitions(-DENABLE_LOGGING)
@@ -56,25 +59,89 @@ endif()
 if (ENABLE_REVERSE_DEPTH)
     add_definitions(-DENABLE_REVERSE_DEPTH)
 endif()
+if (ENABLE_VK_LOADER)
+    add_definitions(-DENABLE_VK_LOADER)
+endif()
 
-add_definitions(-DVK_NO_PROTOTYPES)
+if(ENABLE_VK_LOADER)
+    add_definitions(-DVK_NO_PROTOTYPES)
+endif()
 
 include_directories("external/worm_holes/WormHoles")
 include_directories("external/glm")
 
 if(WIN32)
+    message("${PROJECT_NAME} - Windows")
+    add_definitions(-DTARGET_PLATFORM_WINDOWS)
     add_definitions(-DVK_USE_PLATFORM_WIN32_KHR)
 
     add_library(${PROJECT_NAME} STATIC ${SRC_LIST})
 
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+    target_include_directories(${PROJECT_NAME} PUBLIC "$ENV{VULKAN_SDK}/include")
 
-    message("VULKAN_SDK path: $ENV{VULKAN_SDK}")
-    find_path(VULKAN_INCLUDE vulkan/vulkan.h PATH "$ENV{VULKAN_SDK}/Include")    # Search in Vulkan SDK
-    target_include_directories(${PROJECT_NAME} PUBLIC "${VULKAN_INCLUDE}")       # include vulkan.h
-    message("VULKAN_INCLUDE path: ${VULKAN_INCLUDE}")
+elseif(APPLE AND IOS)
+    message("${PROJECT_NAME} - iOS")
+    add_definitions(-DTARGET_PLATFORM_IOS)
+    add_definitions(-DVK_USE_PLATFORM_IOS_MVK)
+
+    include_directories("platform/ios")
+
+    file(GLOB IOS_SRC_LIST 
+        "platform/ios/*.h" "platform/ios/*.mm"
+        "prev/window/impl/ios/*.h" "prev/window/impl/ios/*.mm"
+    )
+    
+    find_library(UIKIT_LIB UIKit)
+    find_library(METALKIT_LIB METALKit)
+    find_library(FOUNDATION_LIB Foundation)
+  
+    add_library(${PROJECT_NAME} STATIC
+        ${SRC_LIST}
+        ${IOS_SRC_LIST}
+    )
+
+    target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+    target_include_directories(${PROJECT_NAME} PUBLIC "$ENV{VULKAN_SDK}/include")
+
+    target_link_libraries(${PROJECT_NAME} 
+        ${UIKIT_LIB}
+        ${METALKIT_LIB}
+        ${FOUNDATION_LIB}
+    )
+    
+elseif(APPLE)
+    message("${PROJECT_NAME} - MacOS")
+    add_definitions(-DTARGET_PLATFORM_MACOS)
+    add_definitions(-DVK_USE_PLATFORM_MACOS_MVK)
+
+    include_directories("platform/macos")
+
+    file(GLOB MACOS_SRC_LIST 
+        "platform/macos/*.h" "platform/macos/*.mm"
+        "prev/window/impl/macos/*.h" "prev/window/impl/macos/*.mm"
+    )
+    
+    find_library(COCOA_LIB Cocoa)
+    find_library(QUARTZ_CORE_LIB QuartzCore)
+
+    add_library(${PROJECT_NAME} STATIC
+        ${SRC_LIST}
+        ${MACOS_SRC_LIST}
+    )
+
+    target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+    target_include_directories(${PROJECT_NAME} PUBLIC "$ENV{VULKAN_SDK}/include")
+
+    target_link_libraries(${PROJECT_NAME} 
+        ${COCOA_LIB}
+        ${QUARTZ_CORE_LIB}
+    )
 
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
+    message("${PROJECT_NAME} - Linux")
+    add_definitions(-DTARGET_PLATFORM_LINUX)
+
     option(BUILD_PREVENGINE_XCB_SUPPORT "Build XCB PREVENGINE support" ON)
     #option(BUILD_PREVENGINE_XLIB_SUPPORT "Build Xlib PREVENGINE support" OFF)
     #option(BUILD_PREVENGINE_WAYLAND_SUPPORT "Build Wayland PREVENGINE support" OFF)
@@ -122,12 +189,12 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
 #    endif()
 
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
-    find_path(VULKAN_INCLUDE vulkan/vulkan.h PATH "$ENV{VULKAN_SDK}/include")    # Search in Vulkan SDK
-    target_include_directories(${PROJECT_NAME} PUBLIC "${VULKAN_INCLUDE}")       # include vulkan.h
-    message("VULKAN_INCLUDE path: ${VULKAN_INCLUDE}")
+    target_include_directories(${PROJECT_NAME} PUBLIC "$ENV{VULKAN_SDK}/include")
 
 elseif(ANDROID)
+    message("${PROJECT_NAME} - Android")
+    add_definitions(-DTARGET_PLATFORM_ANDROID)
+
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17 -O3")
 
     add_definitions(-DVK_USE_PLATFORM_ANDROID_KHR)
@@ -146,4 +213,6 @@ elseif(ANDROID)
     )
 
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+else()
+    message(FATAL_ERROR "Unsupported plaform.")
 endif()

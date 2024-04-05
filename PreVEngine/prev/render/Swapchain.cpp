@@ -188,7 +188,7 @@ void Swapchain::Print() const
     LOGI("\tPresentMode:\n");
     const auto& mode{ m_swapchainCreateInfo.presentMode };
     for (auto m : modes) {
-        print((m == mode) ? ConsoleColor::RESET : ConsoleColor::FAINT, "\t\t%s %s\n", (m == mode) ? TICK_CHARACTER : " ", util::vk::PresentModeToString(m).c_str());
+        LOGI("\t\t%s %s\n", (m == mode) ? TICK_CHARACTER : " ", util::vk::PresentModeToString(m).c_str());
     }
     LOGI("\tSharingMode: %s\n", m_swapchainCreateInfo.imageSharingMode == VK_SHARING_MODE_EXCLUSIVE ? "Exclusive" : "Shared");
 }
@@ -355,7 +355,7 @@ void Swapchain::Present()
     }
 
     if (!swapchainChanged) {
-        m_currentFrameIndex = (m_currentFrameIndex + 1) % m_swapchainImagesCount;
+        m_currentFrameIndex = GetNextIndex();
     }
 
     m_isAcquired = false;
@@ -383,5 +383,15 @@ void Swapchain::EndFrame()
 
     Submit();
     Present();
+}
+
+uint32_t Swapchain::GetNextIndex() const
+{
+    return (m_currentFrameIndex + 1) % m_swapchainImagesCount;
+}
+
+uint32_t Swapchain::GetPreviousIndex() const
+{
+    return (m_currentFrameIndex + m_swapchainImagesCount - 1) % m_swapchainImagesCount;
 }
 } // namespace prev::render

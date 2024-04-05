@@ -2,11 +2,11 @@
 
 void SetConsoleTextColor(const ConsoleColor color)
 {
-#ifdef _WIN32
+#if defined(TARGET_PLATFORM_WINDOWS)
     const char bgr[] = { 7, 4, 2, 6, 1, 5, 3, 7, 8, 12, 10, 14, 9, 13, 11, 15 }; // RGB-to-BGR
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(hConsole, bgr[static_cast<uint32_t>(color)]);
-#elif __LINUX__
+#elif defined(TARGET_PLATFORM_LINUX)
     if (color == ConsoleColor::FAINT) {
         printf("\033[37m\033[2m"); // set faint white
         return;

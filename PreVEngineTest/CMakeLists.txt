@@ -103,8 +103,13 @@ endif()
 if (ENABLE_LOGGING)
     add_definitions(-DENABLE_LOGGING)
 endif()
+if (ENABLE_VK_LOADER)
+    add_definitions(-DENABLE_VK_LOADER)
+endif()
 
-add_definitions(-DVK_NO_PROTOTYPES)
+if(ENABLE_VK_LOADER)
+    add_definitions(-DVK_NO_PROTOTYPES)
+endif()
 
 include_directories("../PreVEngine")
 include_directories("../PreVEngine/external/worm_holes/WormHoles")
@@ -112,7 +117,17 @@ include_directories("../PreVEngine/external/glm")
 include_directories("../Dependencies/assimp/include")
 
 if(WIN32)
-    add_executable(${PROJECT_NAME} ${SRC_LIST})
+    message("${PROJECT_NAME} - Windows")
+    add_definitions(-DTARGET_PLATFORM_WINDOWS)
+
+    file(GLOB COMMON_SRC_LIST 
+        "platform/common/*.h" "platform/common/*.cpp"
+    )
+
+    add_executable(${PROJECT_NAME} 
+        ${SRC_LIST}
+        ${COMMON_SRC_LIST}
+    )
 
     target_link_libraries(${PROJECT_NAME} PreVEngine)
     target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Windows/assimp-vc142-mt.lib")
@@ -122,8 +137,106 @@ if(WIN32)
     # Copy all files from ./Assets to the binary directory.
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
 
+elseif(APPLE AND IOS)
+    message("${PROJECT_NAME} - iOS")
+    add_definitions(-DTARGET_PLATFORM_IOS)
+
+    set(APP_BUNDLE_IDENTIFIER "com.prevengine.PreVEngineTest")
+    set(MACOSX_BUNDLE_INFO_STRING ${APP_BUNDLE_IDENTIFIER})
+    set(MACOSX_BUNDLE_GUI_IDENTIFIER ${APP_BUNDLE_IDENTIFIER})
+    set(MACOSX_BUNDLE_BUNDLE_NAME ${APP_BUNDLE_IDENTIFIER})
+    set(MACOSX_BUNDLE_LONG_VERSION_STRING "1.0")
+    set(MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0")
+    set(MACOSX_BUNDLE_BUNDLE_VERSION "1.0")
+
+    # set(MACOSX_BUNDLE_INFO_PLIST path/to/Info.plist)
+    # set(XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "NO")
+    # set(OUTPUT_NAME ${PROJECT_NAME})
+    # set(MACOSX_BUNDLE TRUE)
+    # set(MACOSX_BUNDLE_COPYRIGHT "(C) 2024")
+    # set(MACOSX_RPATH TRUE)
+    # set(MACOSX_FRAMEWORK_IDENTIFIER "com.prevengine.PreVEngineTest")
+    # set(XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@loader_path/Libraries")
+    # set(RESOURCE "${RESOURCE_FILES}")
+    # set(XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME TRUE)
+    # set(XCODE_ATTRIBUTE_EXECUTABLE_NAME ${PROJECT_NAME})
+
+    find_library(UIKIT_LIB UIKit)
+    find_library(METALKIT_LIB METALKit)
+    find_library(FOUNDATION_LIB Foundation)
+
+    file(GLOB IOS_SRC_LIST 
+        "platform/ios/*.h" "platform/ios/*.mm"
+    )
+
+    include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../PreVEngine/platform/ios")
+
+    add_executable(${PROJECT_NAME} 
+        ${SRC_LIST}
+        ${IOS_SRC_LIST}
+    )
+
+    target_link_libraries(${PROJECT_NAME} PreVEngine)
+    if(${CMAKE_OSX_SYSROOT} MATCHES "iPhoneSimulator")
+        message("${PROJECT_NAME} - simulator")
+        if (${CMAKE_OSX_ARCHITECTURES} MATCHES "arm64")
+            target_link_libraries(${PROJECT_NAME} "-framework $ENV{VULKAN_SDK}/../iOS/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator/MoltenVK.framework/MoltenVK")
+            target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/IOS_simulator/libassimp.5.dylib")
+        else()
+            message(FATAL_ERROR "Unsupported architecture: ${CMAKE_OSX_ARCHITECTURES}.")
+        endif()    
+    else()
+        message("${PROJECT_NAME} - iphone")
+        if (${CMAKE_OSX_ARCHITECTURES} MATCHES "arm64")
+            # target_link_libraries(${PROJECT_NAME} "-framework $ENV{VULKAN_SDK}/../iOS/lib/MoltenVK.xcframework/ios-arm64/MoltenVK.framework/MoltenVK")
+            # target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/IOS/libassimp.5.dylib")
+        else()
+            message(FATAL_ERROR "Unsupported architecture: ${CMAKE_OSX_ARCHITECTURES}.")
+        endif()
+    endif()
+
+    target_link_libraries(${PROJECT_NAME} 
+        ${UIKIT_LIB}
+        ${METALKIT_LIB}
+        ${FOUNDATION_LIB}
+    )
+
+    #  Copy all files from ./Assets to the binary directory.
+    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
+
+elseif(APPLE)
+    message("${PROJECT_NAME} - MacOS")
+    add_definitions(-DTARGET_PLATFORM_MACOS)
+
+    file(GLOB COMMON_SRC_LIST 
+        "platform/common/*.h" "platform/common/*.cpp"
+    )
+
+    add_executable(${PROJECT_NAME} 
+        ${SRC_LIST}
+        ${COMMON_SRC_LIST}
+    )
+
+    target_link_libraries(${PROJECT_NAME} PreVEngine)
+    target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/MacOS/libassimp.5.dylib")
+
+    # Copy assimp so to output bin dir.
+    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/MacOS/libassimp.5.dylib" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+    #  Copy all files from ./Assets to the binary directory.
+    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
+
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
-    add_executable(${PROJECT_NAME} ${SRC_LIST})
+    message("${PROJECT_NAME} - Linux")
+    add_definitions(-DTARGET_PLATFORM_LINUX)
+
+    file(GLOB COMMON_SRC_LIST 
+        "platform/common/*.h" "platform/common/*.cpp"
+    )
+
+    add_executable(${PROJECT_NAME} 
+        ${SRC_LIST}
+        ${COMMON_SRC_LIST}
+    )
 
     target_link_libraries(${PROJECT_NAME} PreVEngine)
     target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Linux/libassimp.so")
@@ -134,6 +247,9 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
 
 elseif(ANDROID)
+    message("${PROJECT_NAME} - Android")
+    add_definitions(-DTARGET_PLATFORM_ANDROID)
+
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17 -O3")
 
     add_definitions(-DGLM_FORCE_CXX17)
@@ -153,10 +269,13 @@ elseif(ANDROID)
 
     # Link to external libraries
     target_link_libraries(${PROJECT_NAME} log android assimp)
+
+else()
+    message(FATAL_ERROR "Unsupported plaform.")
 endif()
 
 # Testing
-if(NOT ANDROID)
+if(NOT ANDROID AND NOT APPLE)
     enable_testing()
     add_test(NAME DefaultTest COMMAND $<TARGET_FILE:${PROJECT_NAME}>)
 endif()
