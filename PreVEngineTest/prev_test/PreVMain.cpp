@@ -7,7 +7,7 @@ int PreVMain(int argc, char** argv)
    config.fullScreen = false;
    config.validation = true;
    config.windowPosition = { 40, 40 };
-   config.windowSize = { 1024, 768 };
+   config.windowSize = { 1600, 900 };
    config.VSync = true;
    config.samplesCount = 1;
    config.swapchainFrameCount = 3;
