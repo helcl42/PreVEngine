@@ -80,7 +80,7 @@ if(WIN32)
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
     target_include_directories(${PROJECT_NAME} PUBLIC "$ENV{VULKAN_SDK}/include")
 
-elseif(APPLE AND IOS)
+elseif(IOS)
     message("${PROJECT_NAME} - iOS")
     add_definitions(-DTARGET_PLATFORM_IOS)
     add_definitions(-DVK_USE_PLATFORM_IOS_MVK)
@@ -137,7 +137,6 @@ elseif(APPLE)
         ${COCOA_LIB}
         ${QUARTZ_CORE_LIB}
     )
-
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     message("${PROJECT_NAME} - Linux")
     add_definitions(-DTARGET_PLATFORM_LINUX)
