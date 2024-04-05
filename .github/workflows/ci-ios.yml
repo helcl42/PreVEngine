@@ -51,7 +51,7 @@ jobs:
           hdiutil detach /Volumes/vulkansdk-macos-$VULKAN_VERSION
           echo "VULKAN_SDK_PATH=$GITHUB_WORKSPACE/vulkansdk-macos-$VULKAN_VERSION" >> $GITHUB_ENV
           echo "VULKAN_SDK=$GITHUB_WORKSPACE/vulkansdk-macos-$VULKAN_VERSION/macOS" >> $GITHUB_ENV
-          echo "VK sdk path: $VULKAN_SDK"
+          echo "VK sdk path: $GITHUB_WORKSPACE/vulkansdk-macos-$VULKAN_VERSION"
 
     - name: Install PreVEngine dependencies
       run: |
