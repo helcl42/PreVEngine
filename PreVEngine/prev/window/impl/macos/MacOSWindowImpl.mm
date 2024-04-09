@@ -159,10 +159,11 @@ MacOSWindowImpl::~MacOSWindowImpl()
     m_state = nullptr;
 }
 
-Event MacOSWindowImpl::GetEvent(bool waitForEvent)
+bool MacOSWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
 {
     if (!m_eventQueue.IsEmpty()) {
-        return m_eventQueue.Pop(); // Pop message from message queue buffer
+        outEvent = m_eventQueue.Pop(); // Pop message from message queue buffer
+        return true;
     }
 
     @autoreleasepool {
@@ -278,9 +279,10 @@ Event MacOSWindowImpl::GetEvent(bool waitForEvent)
     }
     
     if (!m_eventQueue.IsEmpty()) {
-        return m_eventQueue.Pop(); // Pop message from message queue buffer
+        outEvent = m_eventQueue.Pop(); // Pop message from message queue buffer
+        return true;
     }
-    return { Event::EventType::NONE };
+    return false;
 }
 
 void MacOSWindowImpl::SetTitle(const std::string& title)
