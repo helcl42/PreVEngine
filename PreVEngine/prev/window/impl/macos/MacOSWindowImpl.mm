@@ -299,15 +299,6 @@ void MacOSWindowImpl::PollEvents(bool waitForEvent)
     }
 }
 
-bool MacOSWindowImpl::GetEvent(Event& outEvent)
-{
-    if (!m_eventQueue.IsEmpty()) {
-        outEvent = m_eventQueue.Pop(); // Pop message from message queue buffer
-        return true;
-    }
-    return false;
-}
-
 void MacOSWindowImpl::SetTitle(const std::string& title)
 {
     NSString* nsTitle = [NSString stringWithCString:title.c_str()
