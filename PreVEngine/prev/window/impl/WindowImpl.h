@@ -112,9 +112,7 @@ public:
     virtual void Close();
 
 public:
-    virtual Surface& CreateSurface() = 0;
-
-    virtual Event GetEvent(bool waitForEvent = false) = 0; // Fetch one event from the queue.
+    virtual bool PollEvent(bool waitForEvent, Event& outEvent) = 0;
 
     virtual void SetTitle(const std::string& title) = 0;
 
@@ -123,6 +121,8 @@ public:
     virtual void SetSize(uint32_t w, uint32_t h) = 0;
 
     virtual void SetMouseCursorVisible(bool visible) = 0;
+
+    virtual Surface& CreateSurface() = 0;
 
 protected:
     Event OnMouseEvent(ActionType action, int32_t x, int32_t y, ButtonType btn); // Mouse event
