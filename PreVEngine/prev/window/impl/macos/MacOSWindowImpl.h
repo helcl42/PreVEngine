@@ -18,7 +18,9 @@ public:
     Surface& CreateSurface() override;
     
     void PollEvents(bool waitForEvent = false) override;
- 
+    
+    bool GetEvent(Event& outEvent) override;
+
     void SetTitle(const std::string& title) override;
 
     void SetPosition(int32_t x, int32_t y) override;

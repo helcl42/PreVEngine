@@ -76,22 +76,12 @@ IOSWindowImpl::~IOSWindowImpl()
     m_state = nullptr;
 }
 
-Surface& IOSWindowImpl::CreateSurface()
+Event IOSWindowImpl::GetEvent(bool waitForEvent)
 {
-    if (m_vkSurface == VK_NULL_HANDLE) {
-        VkMetalSurfaceCreateInfoEXT iosSurfaceCreateInfo{};
-        iosSurfaceCreateInfo.sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
-        iosSurfaceCreateInfo.pNext = nullptr;
-        iosSurfaceCreateInfo.flags = 0;
-        iosSurfaceCreateInfo.pLayer = static_cast<CAMetalLayer*>(m_state->view.layer);
-        VKERRCHECK(vkCreateMetalSurfaceEXT(m_instance, &iosSurfaceCreateInfo, nullptr, &m_vkSurface));
-        LOGI("iOS - Vulkan Surface created\n");
+    if (!m_eventQueue.IsEmpty()) {
+        return m_eventQueue.Pop(); // Pop message from message queue buffer
     }
-    return *this;
-}
-
-void IOSWindowImpl::PollEvents(bool waitForEvent)
-{
+    
     while(CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.0001, true) == kCFRunLoopRunHandledSource);
     
     float scale = [[UIScreen mainScreen] scale];
@@ -132,6 +122,11 @@ void IOSWindowImpl::PollEvents(bool waitForEvent)
             m_eventQueue.Push(OnFocusEvent(true));
         }
     }
+    
+    if (!m_eventQueue.IsEmpty()) {
+        return m_eventQueue.Pop();
+    }
+    return { Event::EventType::NONE };
 }
 
 void IOSWindowImpl::SetTitle(const std::string& title)
@@ -152,6 +147,20 @@ void IOSWindowImpl::SetSize(uint32_t w, uint32_t h)
 void IOSWindowImpl::SetMouseCursorVisible(bool visible)
 {
     
+}
+
+Surface& IOSWindowImpl::CreateSurface()
+{
+    if (m_vkSurface == VK_NULL_HANDLE) {
+        VkMetalSurfaceCreateInfoEXT iosSurfaceCreateInfo{};
+        iosSurfaceCreateInfo.sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
+        iosSurfaceCreateInfo.pNext = nullptr;
+        iosSurfaceCreateInfo.flags = 0;
+        iosSurfaceCreateInfo.pLayer = static_cast<CAMetalLayer*>(m_state->view.layer);
+        VKERRCHECK(vkCreateMetalSurfaceEXT(m_instance, &iosSurfaceCreateInfo, nullptr, &m_vkSurface));
+        LOGI("iOS - Vulkan Surface created\n");
+    }
+    return *this;
 }
 }
 
