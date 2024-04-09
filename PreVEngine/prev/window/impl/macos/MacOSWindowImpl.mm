@@ -56,6 +56,38 @@ struct MacState {
     }
 };
 
+NSRect MakeRectFromPoint(NSPoint point)
+{
+    return NSMakeRect(point.x, point.y, 0, 0);
+}
+
+NSPoint ConvertPointFromScreenToView(NSWindow* window, NSView* view, NSPoint screenPoint)
+{
+    NSRect rect = [window convertRectFromScreen:MakeRectFromPoint(screenPoint)];
+    NSPoint viewPoint = [view convertPoint: rect.origin fromView: nil];
+    return viewPoint;
+}
+
+NSPoint ConvertPointFromViewToScreen(NSWindow* window, NSView* view, NSPoint viewPoint)
+{
+    NSPoint point = [view convertPoint:viewPoint toView:nil];
+    NSPoint screenPoint = [window convertRectToScreen:MakeRectFromPoint(point)].origin;
+    return screenPoint;
+}
+
+NSRect GetCurrentScreenResolution()
+{
+    NSRect screenRect;
+    NSArray *screens = [NSScreen screens];
+    uint32_t screenCount = static_cast<uint32_t>([screens count]);
+    for (uint32_t i = 0; i < screenCount; ++i)
+    {
+        NSScreen *screen = [screens objectAtIndex:i];
+        screenRect = [screen frame];
+    }
+    return screenRect;
+}
+
 MacOSWindowImpl::MacOSWindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo)
     : WindowImpl(instance)
 {
@@ -132,7 +164,7 @@ Event MacOSWindowImpl::GetEvent(bool waitForEvent)
     if (!m_eventQueue.IsEmpty()) {
         return m_eventQueue.Pop(); // Pop message from message queue buffer
     }
-    
+
     @autoreleasepool {
         for (;;)
         {
@@ -143,30 +175,29 @@ Event MacOSWindowImpl::GetEvent(bool waitForEvent)
             if (event == nil) {
                 break;
             }
-            
+
             NSPoint screenMouseLocation = [NSEvent mouseLocation];
-            NSRect rect = [m_state->window convertRectFromScreen:NSMakeRect(screenMouseLocation.x, screenMouseLocation.y, 0, 0)];
-            NSPoint mouseLocation = [m_state->view convertPoint: rect.origin fromView: nil];
+            NSPoint mouseLocation = ConvertPointFromScreenToView(m_state->window, m_state->view, screenMouseLocation);
             if(NSPointInRect(mouseLocation, [m_state->view bounds])) { // ignore mouse moves outisde window/view
-                // y mouse coord is inverted
-                mouseLocation = NSMakePoint(mouseLocation.x, m_info.size.height - mouseLocation.y);
-                
                 if (m_hasFocus && m_mouseLocked) {
-                    const auto widhtHalf{ m_info.size.width / 2.0f };
-                    const auto heightHalf{ m_info.size.height / 2.0f };
-                    
-                    CGPoint newMouseScreenLocation = CGPointMake(m_state->window.frame.origin.x + widhtHalf, m_state->window.frame.origin.y + heightHalf);
+                    NSRect resolutionRect = GetCurrentScreenResolution();
+                    NSRect frame = m_state->window.frame;
+                    NSPoint viewCenterPoint = NSMakePoint(frame.size.width / 2.0f, frame.size.height / 2.0);
+                    NSPoint origin = NSMakePoint(frame.origin.x, (resolutionRect.origin.y + resolutionRect.size.height) - (frame.origin.y + frame.size.height));
+                   
                     CGAssociateMouseAndMouseCursorPosition(false);
-                    CGWarpMouseCursorPosition(newMouseScreenLocation);
+                    CGWarpMouseCursorPosition(CGPointMake(origin.x + viewCenterPoint.x, origin.y + viewCenterPoint.y));
                     CGAssociateMouseAndMouseCursorPosition(true);
-                
-                    mouseLocation.x -= widhtHalf;
-                    mouseLocation.y -= heightHalf;
+                    
+                    mouseLocation.x -= viewCenterPoint.x;
+                    mouseLocation.y -= viewCenterPoint.y;
+                } else {
+                    mouseLocation = NSMakePoint(mouseLocation.x, m_info.size.height - mouseLocation.y);
                 }
                 
                 m_eventQueue.Push(OnMouseEvent(ActionType::MOVE, static_cast<int32_t>(mouseLocation.x), static_cast<int32_t>(mouseLocation.y), ButtonType::NONE));
             }
-            
+
             switch([event type])
             {
                 case NSEventTypeLeftMouseDown:
@@ -253,14 +284,14 @@ Event MacOSWindowImpl::GetEvent(bool waitForEvent)
 }
 
 void MacOSWindowImpl::SetTitle(const std::string& title)
-{    
+{
     NSString* nsTitle = [NSString stringWithCString:title.c_str()
                                           encoding:[NSString defaultCStringEncoding]];
     [m_state->window setTitle: nsTitle];
 }
 
 void MacOSWindowImpl::SetPosition(int32_t x, int32_t y)
-{    
+{
     if(m_info.fullScreen) {
         return;
     }
