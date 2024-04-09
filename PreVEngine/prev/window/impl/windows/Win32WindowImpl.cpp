@@ -6,6 +6,9 @@
 
 #include <windowsx.h> // Mouse
 
+#define WM_RESHAPE (WM_USER + 0)
+#define WM_ACTIVE (WM_USER + 1)
+
 namespace prev::window::impl::win32 {
 namespace {
     // Convert native Win32 keyboard scancode to cross-platform USB HID code.
@@ -153,72 +156,6 @@ Win32WindowImpl::~Win32WindowImpl()
 {
     DestroyWindow(m_hWnd);
 }
-
-void Win32WindowImpl::SetTitle(const std::string& title)
-{
-    SetWindowText(m_hWnd, title.c_str());
-}
-
-void Win32WindowImpl::SetPosition(int32_t x, int32_t y)
-{
-    if (m_info.fullScreen) {
-        return;
-    }
-
-    if (m_info.position == Position{ x, y }) {
-        return;
-    }
-
-    SetWindowPos(m_hWnd, NULL, x, y, 0, 0, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE);
-
-    m_eventQueue.Push(OnMoveEvent(x, y)); // Trigger window moved event
-}
-
-void Win32WindowImpl::SetSize(uint32_t w, uint32_t h)
-{
-    if (m_info.fullScreen) {
-        return;
-    }
-
-    if (m_info.size == Size{ w, h }) {
-        return;
-    }
-
-    const auto windowRect{ ComputeWindowRect(w, h, false) };
-    SetWindowPos(m_hWnd, NULL, 0, 0, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE);
-
-    m_eventQueue.Push(OnResizeEvent(w, h)); // Trigger resize event
-}
-
-void Win32WindowImpl::SetMouseCursorVisible(bool visible)
-{
-    m_mouseCursorVisible = visible;
-
-    if (visible) {
-        ShowCursor(true);
-    } else {
-        while (ShowCursor(false) >= 0)
-            ;
-    }
-}
-
-Surface& Win32WindowImpl::CreateSurface()
-{
-    if (m_vkSurface == VK_NULL_HANDLE) {
-        VkWin32SurfaceCreateInfoKHR win32CreateInfo;
-        win32CreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-        win32CreateInfo.pNext = nullptr;
-        win32CreateInfo.flags = 0;
-        win32CreateInfo.hinstance = m_hInstance;
-        win32CreateInfo.hwnd = m_hWnd;
-        VKERRCHECK(vkCreateWin32SurfaceKHR(m_instance, &win32CreateInfo, nullptr, &m_vkSurface));
-        LOGI("Win32 - Vulkan Surface created\n");
-    }
-    return *this;
-}
-
-#define WM_RESHAPE (WM_USER + 0)
-#define WM_ACTIVE (WM_USER + 1)
 
 Event Win32WindowImpl::GetEvent(bool waitForEvent)
 {
@@ -394,6 +331,69 @@ Event Win32WindowImpl::GetEvent(bool waitForEvent)
         return m_eventQueue.Pop();
     }
     return { Event::EventType::NONE };
+}
+
+void Win32WindowImpl::SetTitle(const std::string& title)
+{
+    SetWindowText(m_hWnd, title.c_str());
+}
+
+void Win32WindowImpl::SetPosition(int32_t x, int32_t y)
+{
+    if (m_info.fullScreen) {
+        return;
+    }
+
+    if (m_info.position == Position{ x, y }) {
+        return;
+    }
+
+    SetWindowPos(m_hWnd, NULL, x, y, 0, 0, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE);
+
+    m_eventQueue.Push(OnMoveEvent(x, y)); // Trigger window moved event
+}
+
+void Win32WindowImpl::SetSize(uint32_t w, uint32_t h)
+{
+    if (m_info.fullScreen) {
+        return;
+    }
+
+    if (m_info.size == Size{ w, h }) {
+        return;
+    }
+
+    const auto windowRect{ ComputeWindowRect(w, h, false) };
+    SetWindowPos(m_hWnd, NULL, 0, 0, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE);
+
+    m_eventQueue.Push(OnResizeEvent(w, h)); // Trigger resize event
+}
+
+void Win32WindowImpl::SetMouseCursorVisible(bool visible)
+{
+    m_mouseCursorVisible = visible;
+
+    if (visible) {
+        ShowCursor(true);
+    } else {
+        while (ShowCursor(false) >= 0)
+            ;
+    }
+}
+
+Surface& Win32WindowImpl::CreateSurface()
+{
+    if (m_vkSurface == VK_NULL_HANDLE) {
+        VkWin32SurfaceCreateInfoKHR win32CreateInfo;
+        win32CreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+        win32CreateInfo.pNext = nullptr;
+        win32CreateInfo.flags = 0;
+        win32CreateInfo.hinstance = m_hInstance;
+        win32CreateInfo.hwnd = m_hWnd;
+        VKERRCHECK(vkCreateWin32SurfaceKHR(m_instance, &win32CreateInfo, nullptr, &m_vkSurface));
+        LOGI("Win32 - Vulkan Surface created\n");
+    }
+    return *this;
 }
 
 LRESULT CALLBACK Win32WindowImpl::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
