@@ -86,8 +86,6 @@ public:
     virtual ~WindowImpl();
 
 public:
-    bool GetEvent(Event& outEvent);
-    
     bool IsKeyPressed(const prev::input::keyboard::KeyCode key) const;
 
     bool IsMouseButtonPressed(const ButtonType btn) const;
@@ -105,7 +103,7 @@ public:
     void SetMouseLocked(bool locked);
 
     bool IsMouseCursorVisible() const;
-    
+
 public:
     virtual void SetTextInput(bool enabled); // Shows the Android soft-keyboard. //TODO: Enable OnTextEvent?
 
@@ -117,6 +115,8 @@ public:
     virtual Surface& CreateSurface() = 0;
 
     virtual void PollEvents(bool waitForEvent = false) = 0;
+    
+    virtual bool GetEvent(Event& outEvent) = 0;
     
     virtual void SetTitle(const std::string& title) = 0;
 
