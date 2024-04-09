@@ -55,6 +55,9 @@ public:
 
     void Close() override;
 
+public:
+    impl::Event GetEvent(bool waitForEvent = false) override; // Return a single event from the queue (Alternative to using ProcessEvents.)
+
     bool ProcessEvents(bool waitForEvent = false) override; // Poll events, and call event handlers. Returns false if window is closing.
 
 public:
