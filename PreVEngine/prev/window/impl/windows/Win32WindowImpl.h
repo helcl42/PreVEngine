@@ -13,7 +13,7 @@ public:
     ~Win32WindowImpl();
 
 public:
-    Event GetEvent(bool waitForEvent = false) override;
+    bool PollEvent(bool waitForEvent, Event& outEvent) override;
 
     void SetTitle(const std::string& title) override;
 
