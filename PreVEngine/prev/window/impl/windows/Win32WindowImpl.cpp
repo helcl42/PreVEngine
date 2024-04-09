@@ -157,10 +157,11 @@ Win32WindowImpl::~Win32WindowImpl()
     DestroyWindow(m_hWnd);
 }
 
-Event Win32WindowImpl::GetEvent(bool waitForEvent)
+bool Win32WindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
 {
     if (!m_eventQueue.IsEmpty()) {
-        return m_eventQueue.Pop();
+        outEvent = m_eventQueue.Pop();
+        return true;
     }
 
     MSG msg = {};
@@ -328,9 +329,10 @@ Event Win32WindowImpl::GetEvent(bool waitForEvent)
     DispatchMessage(&msg);
 
     if (!m_eventQueue.IsEmpty()) {
-        return m_eventQueue.Pop();
+        outEvent = m_eventQueue.Pop();
+        return true;
     }
-    return { Event::EventType::NONE };
+    return false;
 }
 
 void Win32WindowImpl::SetTitle(const std::string& title)
