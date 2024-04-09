@@ -42,8 +42,6 @@ public:
 
     virtual void Close() = 0;
 
-    virtual impl::Event GetEvent(bool waitForEvent = false) = 0;
-
     virtual bool ProcessEvents(bool waitForEvent = false) = 0;
 
 public:
