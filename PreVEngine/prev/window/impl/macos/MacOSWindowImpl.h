@@ -15,19 +15,18 @@ public:
     ~MacOSWindowImpl();
 
 public:
-    Surface& CreateSurface() override;
-    
-    void PollEvents(bool waitForEvent = false) override;
-    
-    bool GetEvent(Event& outEvent) override;
+    Event GetEvent(bool waitForEvent = false);
 
-    void SetTitle(const std::string& title) override;
+private:
+    void SetTitle(const std::string& title);
 
-    void SetPosition(int32_t x, int32_t y) override;
+    void SetPosition(int32_t x, int32_t y);
 
-    void SetSize(uint32_t w, uint32_t h) override;
+    void SetSize(uint32_t w, uint32_t h);
 
-    void SetMouseCursorVisible(bool visible) override;
+    void SetMouseCursorVisible(bool visible);
+
+    Surface& CreateSurface();
 
 private:
     std::unique_ptr<MacState> m_state{};
