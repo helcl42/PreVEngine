@@ -13,18 +13,17 @@ public:
     ~Win32WindowImpl();
 
 public:
-    Event GetEvent(bool waitForEvent = false);
+    Event GetEvent(bool waitForEvent = false) override;
 
-private:
-    void SetTitle(const std::string& title);
+    void SetTitle(const std::string& title) override;
 
-    void SetPosition(int32_t x, int32_t y);
+    void SetPosition(int32_t x, int32_t y) override;
 
-    void SetSize(uint32_t w, uint32_t h);
+    void SetSize(uint32_t w, uint32_t h) override;
 
-    void SetMouseCursorVisible(bool visible);
+    void SetMouseCursorVisible(bool visible) override;
 
-    Surface& CreateSurface();
+    Surface& CreateSurface() override;
 
 private:
     static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
