@@ -15,18 +15,17 @@ public:
     ~IOSWindowImpl();
 
 public:
-    Event GetEvent(bool waitForEvent = false);
+    Surface& CreateSurface() override;
+    
+    void PollEvents(bool waitForEvent = false) override;
+    
+    void SetTitle(const std::string& title) override;
 
-private:
-    void SetTitle(const std::string& title);
+    void SetPosition(int32_t x, int32_t y) override;
 
-    void SetPosition(int32_t x, int32_t y);
+    void SetSize(uint32_t w, uint32_t h) override;
 
-    void SetSize(uint32_t w, uint32_t h);
-
-    void SetMouseCursorVisible(bool visible);
-
-    Surface& CreateSurface();
+    void SetMouseCursorVisible(bool visible) override;
 
 private:
     std::unique_ptr<IOSState> m_state{};
