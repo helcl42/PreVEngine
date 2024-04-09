@@ -76,10 +76,11 @@ IOSWindowImpl::~IOSWindowImpl()
     m_state = nullptr;
 }
 
-Event IOSWindowImpl::GetEvent(bool waitForEvent)
+bool IOSWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
 {
     if (!m_eventQueue.IsEmpty()) {
-        return m_eventQueue.Pop(); // Pop message from message queue buffer
+        outEvent = m_eventQueue.Pop(); // Pop message from message queue buffer
+        return true;
     }
     
     while(CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.0001, true) == kCFRunLoopRunHandledSource);
@@ -124,9 +125,10 @@ Event IOSWindowImpl::GetEvent(bool waitForEvent)
     }
     
     if (!m_eventQueue.IsEmpty()) {
-        return m_eventQueue.Pop();
+        outEvent = m_eventQueue.Pop();
+        return true;
     }
-    return { Event::EventType::NONE };
+    return false;
 }
 
 void IOSWindowImpl::SetTitle(const std::string& title)

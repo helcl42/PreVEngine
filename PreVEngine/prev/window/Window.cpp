@@ -90,21 +90,16 @@ void Window::Close()
     m_windowImpl->Close();
 }
 
-impl::Event Window::GetEvent(bool waitForEvent)
-{
-    return m_windowImpl->GetEvent(waitForEvent);
-}
-
 bool Window::ProcessEvents(bool waitForEvent)
 {
-    impl::Event e = m_windowImpl->GetEvent(waitForEvent);
-    while (e.tag != impl::Event::EventType::NONE) {
-        if (!ProcessEvent(e)) {
+    impl::Event evt{};
+    while (m_windowImpl->PollEvent(waitForEvent, evt)) {
+        if (!ProcessEvent(evt)) {
             return false;
         }
-        e = m_windowImpl->GetEvent();
+        waitForEvent = false;
     }
-    return m_windowImpl->IsRunning();
+    return true;
 }
 
 void Window::operator()(const prev::input::mouse::MouseLockRequest& mouseLock)
