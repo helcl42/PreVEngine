@@ -159,12 +159,33 @@ MacOSWindowImpl::~MacOSWindowImpl()
     m_state = nullptr;
 }
 
-Event MacOSWindowImpl::GetEvent(bool waitForEvent)
+Surface& MacOSWindowImpl::CreateSurface()
 {
-    if (!m_eventQueue.IsEmpty()) {
-        return m_eventQueue.Pop(); // Pop message from message queue buffer
+    if (m_vkSurface == VK_NULL_HANDLE) {
+        // TODO - used due to deprecation warning. Has worse performance.
+        auto FN_vkCreateMetalSurfaceEXT = PFN_vkCreateMetalSurfaceEXT(vkGetInstanceProcAddr(m_instance, "vkCreateMetalSurfaceEXT"));
+        if(FN_vkCreateMetalSurfaceEXT) {
+            VkMetalSurfaceCreateInfoEXT macOsSurfaceCreateInfo{};
+            macOsSurfaceCreateInfo.sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
+            macOsSurfaceCreateInfo.pNext = nullptr;
+            macOsSurfaceCreateInfo.flags = 0;
+            macOsSurfaceCreateInfo.pLayer = static_cast<CAMetalLayer*>(m_state->view.layer);
+            VKERRCHECK(FN_vkCreateMetalSurfaceEXT(m_instance, &macOsSurfaceCreateInfo, nullptr, &m_vkSurface));
+        } else {
+            VkMacOSSurfaceCreateInfoMVK macOsSurfaceCreateInfo{};
+            macOsSurfaceCreateInfo.sType = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
+            macOsSurfaceCreateInfo.pNext = nullptr;
+            macOsSurfaceCreateInfo.flags = 0;
+            macOsSurfaceCreateInfo.pView = m_state->layer;
+            VKERRCHECK(vkCreateMacOSSurfaceMVK(m_instance, &macOsSurfaceCreateInfo, nullptr, &m_vkSurface));
+        }
+        LOGI("MacOS - Vulkan Surface created\n");
     }
+    return *this;
+}
 
+void MacOSWindowImpl::PollEvents(bool waitForEvent)
+{
     @autoreleasepool {
         for (;;)
         {
@@ -175,7 +196,7 @@ Event MacOSWindowImpl::GetEvent(bool waitForEvent)
             if (event == nil) {
                 break;
             }
-
+            
             NSPoint screenMouseLocation = [NSEvent mouseLocation];
             NSPoint mouseLocation = ConvertPointFromScreenToView(m_state->window, m_state->view, screenMouseLocation);
             if(NSPointInRect(mouseLocation, [m_state->view bounds])) { // ignore mouse moves outisde window/view
@@ -184,7 +205,7 @@ Event MacOSWindowImpl::GetEvent(bool waitForEvent)
                     NSRect frame = m_state->window.frame;
                     NSPoint viewCenterPoint = NSMakePoint(frame.size.width / 2.0f, frame.size.height / 2.0);
                     NSPoint origin = NSMakePoint(frame.origin.x, (resolutionRect.origin.y + resolutionRect.size.height) - (frame.origin.y + frame.size.height));
-                   
+                    
                     CGAssociateMouseAndMouseCursorPosition(false);
                     CGWarpMouseCursorPosition(CGPointMake(origin.x + viewCenterPoint.x, origin.y + viewCenterPoint.y));
                     CGAssociateMouseAndMouseCursorPosition(true);
@@ -197,7 +218,7 @@ Event MacOSWindowImpl::GetEvent(bool waitForEvent)
                 
                 m_eventQueue.Push(OnMouseEvent(ActionType::MOVE, static_cast<int32_t>(mouseLocation.x), static_cast<int32_t>(mouseLocation.y), ButtonType::NONE));
             }
-
+            
             switch([event type])
             {
                 case NSEventTypeLeftMouseDown:
@@ -276,11 +297,15 @@ Event MacOSWindowImpl::GetEvent(bool waitForEvent)
     if(m_state->window->opened == NO) {
         m_eventQueue.Push(OnCloseEvent());
     }
-    
+}
+
+bool MacOSWindowImpl::GetEvent(Event& outEvent)
+{
     if (!m_eventQueue.IsEmpty()) {
-        return m_eventQueue.Pop(); // Pop message from message queue buffer
+        outEvent = m_eventQueue.Pop(); // Pop message from message queue buffer
+        return true;
     }
-    return { Event::EventType::NONE };
+    return false;
 }
 
 void MacOSWindowImpl::SetTitle(const std::string& title)
@@ -330,31 +355,6 @@ void MacOSWindowImpl::SetMouseCursorVisible(bool visible)
     } else {
         [NSCursor hide];
     }
-}
-
-Surface& MacOSWindowImpl::CreateSurface()
-{
-    if (m_vkSurface == VK_NULL_HANDLE) {
-        // TODO - used due to deprecation warning. Has worse performance.
-        auto FN_vkCreateMetalSurfaceEXT = PFN_vkCreateMetalSurfaceEXT(vkGetInstanceProcAddr(m_instance, "vkCreateMetalSurfaceEXT"));
-        if(FN_vkCreateMetalSurfaceEXT) {
-            VkMetalSurfaceCreateInfoEXT macOsSurfaceCreateInfo{};
-            macOsSurfaceCreateInfo.sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
-            macOsSurfaceCreateInfo.pNext = nullptr;
-            macOsSurfaceCreateInfo.flags = 0;
-            macOsSurfaceCreateInfo.pLayer = static_cast<CAMetalLayer*>(m_state->view.layer);
-            VKERRCHECK(FN_vkCreateMetalSurfaceEXT(m_instance, &macOsSurfaceCreateInfo, nullptr, &m_vkSurface));
-        } else {
-            VkMacOSSurfaceCreateInfoMVK macOsSurfaceCreateInfo{};
-            macOsSurfaceCreateInfo.sType = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
-            macOsSurfaceCreateInfo.pNext = nullptr;
-            macOsSurfaceCreateInfo.flags = 0;
-            macOsSurfaceCreateInfo.pView = m_state->layer;
-            VKERRCHECK(vkCreateMacOSSurfaceMVK(m_instance, &macOsSurfaceCreateInfo, nullptr, &m_vkSurface));
-        }
-        LOGI("MacOS - Vulkan Surface created\n");
-    }
-    return *this;
 }
 }
 

@@ -114,8 +114,10 @@ public:
 public:
     virtual Surface& CreateSurface() = 0;
 
-    virtual Event GetEvent(bool waitForEvent = false) = 0; // Fetch one event from the queue.
-
+    virtual void PollEvents(bool waitForEvent = false) = 0;
+    
+    virtual bool GetEvent(Event& outEvent) = 0;
+    
     virtual void SetTitle(const std::string& title) = 0;
 
     virtual void SetPosition(int32_t x, int32_t y) = 0;
