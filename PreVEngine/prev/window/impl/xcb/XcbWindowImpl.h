@@ -19,20 +19,22 @@ public:
     ~XcbWindowImpl();
 
 public:
-    Event GetEvent(bool waitForEvent = false);
+    bool PollEvent(bool waitForEvent, Event& outEvent) override;
+
+    void SetTitle(const std::string& title) override;
+
+    void SetPosition(int32_t x, int32_t y) override;
+
+    void SetSize(uint32_t w, uint32_t h) override;
+
+    void SetMouseCursorVisible(bool visible) override;
+
+    Surface& CreateSurface() override;
 
 private:
-    void SetTitle(const std::string& title);
-
-    void SetPosition(int32_t x, int32_t y);
-
-    void SetSize(uint32_t w, uint32_t h);
-
-    void SetMouseCursorVisible(bool visible);
-
-    Surface& CreateSurface();
-
     bool InitTouch(); // Returns false if no touch-device was found.
+
+    void ShutDownTouch();
 
     void ProcessXEvent(xcb_generic_event_t* xEvent); // Convert x_event to Window event
 

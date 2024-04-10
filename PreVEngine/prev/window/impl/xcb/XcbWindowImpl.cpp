@@ -146,12 +146,46 @@ XcbWindowImpl::XcbWindowImpl(const prev::core::instance::Instance& instance, con
 
 XcbWindowImpl::~XcbWindowImpl()
 {
+    ShutDownTouch();
+
     xkb_state_unref(m_keyboardState); // xcb keyboard state
     xkb_keymap_unref(m_keyboardKeymap); // xcb keymap
     xkb_context_unref(m_keyboardContext); // xkb keyboard
 
     free(m_atomWmDeleteWindow);
     xcb_disconnect(m_xcbConnection);
+}
+
+bool XcbWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
+{
+    if (!m_eventQueue.IsEmpty()) {
+        outEvent = m_eventQueue.Pop(); // Pop message from message queue buffer
+        return true;
+    }
+
+    xcb_generic_event_t* xEvent;
+    if (waitForEvent) {
+        xEvent = xcb_wait_for_event(m_xcbConnection); // Blocking mode
+    } else {
+        xEvent = xcb_poll_for_event(m_xcbConnection); // Non-blocking mode
+    }
+
+    while (xEvent) {
+        ProcessXEvent(xEvent);
+        free(xEvent);
+        xEvent = nullptr;
+
+        if (!m_eventQueue.IsEmpty()) {
+            Event event = m_eventQueue.Pop();
+            if (event.tag == Event::EventType::UNKNOWN) {
+                xEvent = xcb_poll_for_event(m_xcbConnection); // Discard unknown events (Intel Mesa drivers spams event 35)
+            } else {
+                outEvent = event;
+                return true;
+            }    
+        }
+    }
+    return false;
 }
 
 void XcbWindowImpl::SetTitle(const std::string& title)
@@ -263,6 +297,13 @@ bool XcbWindowImpl::InitTouch()
     return false;
 #endif
 }
+
+void XcbWindowImpl::ShutDownTouch()
+{
+#ifdef ENABLE_MULTITOUCH
+    XIFreeDeviceInfo(m_xiDevId);
+#endif
+}
 //---------------------------------------------------------------------------
 
 void XcbWindowImpl::ProcessXEvent(xcb_generic_event_t* xEvent)
@@ -370,36 +411,6 @@ void XcbWindowImpl::ProcessXEvent(xcb_generic_event_t* xEvent)
     default:
         break;
     }
-}
-
-Event XcbWindowImpl::GetEvent(bool waitForEvent)
-{
-    if (!m_eventQueue.IsEmpty()) {
-        return m_eventQueue.Pop(); // Pop message from message queue buffer
-    }
-
-    xcb_generic_event_t* xEvent;
-    if (waitForEvent) {
-        xEvent = xcb_wait_for_event(m_xcbConnection); // Blocking mode
-    } else {
-        xEvent = xcb_poll_for_event(m_xcbConnection); // Non-blocking mode
-    }
-
-    while (xEvent) {
-        ProcessXEvent(xEvent);
-        free(xEvent);
-        xEvent = nullptr;
-
-        if (!m_eventQueue.IsEmpty()) {
-            Event event = m_eventQueue.Pop();
-            if (event.tag == Event::EventType::UNKNOWN) {
-                xEvent = xcb_poll_for_event(m_xcbConnection); // Discard unknown events (Intel Mesa drivers spams event 35)
-            } else {
-                return event;
-            }    
-        }
-    }
-    return { Event::EventType::NONE };
 }
 } // namespace prev::window::impl::xcb
 
