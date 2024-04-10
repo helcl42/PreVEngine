@@ -75,14 +75,15 @@ AndroidWindowImpl::~AndroidWindowImpl()
 {
 }
 
-Event AndroidWindowImpl::GetEvent(bool waitForEvent)
+bool AndroidWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
 {
     if (!m_eventQueue.IsEmpty()) {
-        return m_eventQueue.Pop(); // Pop message from message queue buffer
+        outEvent = m_eventQueue.Pop(); // Pop message from message queue buffer
+        return true;
     }
 
-    int events = 0;
-    android_poll_source* source;
+    int events{};
+    android_poll_source* source{};
     int timeoutMillis = waitForEvent ? -1 : 0; // Blocking or non-blocking mode
     int id = ALooper_pollOnce(timeoutMillis, NULL, &events, (void**)&source);
 
@@ -163,32 +164,32 @@ Event AndroidWindowImpl::GetEvent(bool waitForEvent)
                     break;
                 }
             } else if (type == AINPUT_EVENT_TYPE_MOTION) { // TOUCH-SCREEN
-                int32_t a_action = AMotionEvent_getAction(aEvent);
-                int action = (a_action & 255); // get action-code from bottom 8 bits
+                int32_t aAction = AMotionEvent_getAction(aEvent);
+                int action = (aAction & 255); // get action-code from bottom 8 bits
 
                 m_MTouch.SetCount((int)AMotionEvent_getPointerCount(aEvent));
 
                 if (action == AMOTION_EVENT_ACTION_MOVE) {
-                    for (int i = 0; i < m_MTouch.GetCount(); i++) {
-                        uint8_t finger_id = (uint8_t)AMotionEvent_getPointerId(aEvent, i);
+                    for (int i = 0; i < m_MTouch.GetCount(); ++i) {
+                        uint8_t fingerId = (uint8_t)AMotionEvent_getPointerId(aEvent, i);
                         float x = AMotionEvent_getX(aEvent, i);
                         float y = AMotionEvent_getY(aEvent, i);
-                        m_eventQueue.Push(m_MTouch.OnEvent(ActionType::MOVE, x, y, finger_id, (float)m_info.size.width, (float)m_info.size.height));
+                        m_eventQueue.Push(m_MTouch.OnEvent(ActionType::MOVE, x, y, fingerId, (float)m_info.size.width, (float)m_info.size.height));
                     }
                 } else {
-                    size_t inx = (size_t)(a_action >> 8); // get index from top 24 bits
-                    uint8_t finger_id = (uint8_t)AMotionEvent_getPointerId(aEvent, inx);
+                    size_t inx = (size_t)(aAction >> 8); // get index from top 24 bits
+                    uint8_t fingerId = (uint8_t)AMotionEvent_getPointerId(aEvent, inx);
                     float x = AMotionEvent_getX(aEvent, inx);
                     float y = AMotionEvent_getY(aEvent, inx);
 
                     switch (action) {
                     case AMOTION_EVENT_ACTION_POINTER_DOWN:
                     case AMOTION_EVENT_ACTION_DOWN:
-                        m_eventQueue.Push(m_MTouch.OnEvent(ActionType::DOWN, x, y, finger_id, (float)m_info.size.width, (float)m_info.size.height));
+                        m_eventQueue.Push(m_MTouch.OnEvent(ActionType::DOWN, x, y, fingerId, (float)m_info.size.width, (float)m_info.size.height));
                         break;
                     case AMOTION_EVENT_ACTION_POINTER_UP:
                     case AMOTION_EVENT_ACTION_UP:
-                        m_eventQueue.Push(m_MTouch.OnEvent(ActionType::UP, x, y, finger_id, (float)m_info.size.width, (float)m_info.size.height));
+                        m_eventQueue.Push(m_MTouch.OnEvent(ActionType::UP, x, y, fingerId, (float)m_info.size.width, (float)m_info.size.height));
                         break;
                     case AMOTION_EVENT_ACTION_CANCEL:
                         m_MTouch.Clear();
@@ -218,9 +219,10 @@ Event AndroidWindowImpl::GetEvent(bool waitForEvent)
     //}
 
     if (!m_eventQueue.IsEmpty()) {
-        return m_eventQueue.Pop();
+        outEvent = m_eventQueue.Pop();
+        return true;
     }
-    return { Event::EventType::NONE };
+    return false;
 }
 
 //--Show / Hide keyboard--
@@ -256,7 +258,6 @@ Surface& AndroidWindowImpl::CreateSurface()
         androidCreateInfo.flags = 0;
         androidCreateInfo.window = m_app->window;
         VKERRCHECK(vkCreateAndroidSurfaceKHR(m_instance, &androidCreateInfo, NULL, &m_vkSurface));
-
         LOGI("Android - Vulkan Surface created\n");
     }
     return *this;
