@@ -29,10 +29,10 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
 
     const float layerTransitionWidth{ 0.1f };
     const TerrainLayerCreateInfo terrainLayers[] = {
-        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus.png"), 10.0f, 0.2f, 0.2f },
-        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), 10.0f, 0.2f, 0.42f },
-        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock.png"), 10.0f, 0.2f, 0.62f },
-        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand.png"), 10.0f, 0.2f, 0.9f }
+        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus.png"), 20.0f, 0.05f, 0.2f },
+        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), 20.0f, 0.05f, 0.42f },
+        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock.png"), 20.0f, 0.05f, 0.62f },
+        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand.png"), 20.0f, 0.05f, 0.9f }
     };
 
     auto result{ std::make_unique<TerrainComponent>(x, z) };
@@ -59,10 +59,10 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
 
     const float layerTransitionWidth{ 0.1f };
     const TerrainLayerCreateInfo terrainLayers[] = {
-        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus_normal.png"), 10.0f, 0.2f, 0.2f },
-        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal.png"), 10.0f, 0.2f, 0.42f },
-        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), 10.0f, 0.2f, 0.62f },
-        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_normal.png"), 10.0f, 0.2f, 0.9f }
+        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus_normal.png"), 20.0f, 0.05f, 0.2f },
+        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal.png"), 20.0f, 0.05f, 0.42f },
+        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), 20.0f, 0.05f, 0.62f },
+        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_normal.png"), 20.0f, 0.05f, 0.9f }
     };
 
     auto result{ std::make_unique<TerrainComponent>(x, z) };
@@ -89,10 +89,10 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
 
     const float layerTransitionWidth{ 0.1f };
     const TerrainLayerCreateInfo terrainLayers[] = {
-        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus_normal.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus_cone.png"), 10.0f, 0.2f, 0.00002f, 0.2f },
-        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass_cone.png"), 10.0f, 0.2f, 0.01f, 0.42f },
-        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock_cone.png"), 10.0f, 0.2f, 0.03f, 0.62f },
-        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_normal.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_cone.png"), 10.0f, 0.2f, 0.05f, 0.9f }
+        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus_normal.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus_cone.png"), 20.0f, 0.05f, 0.00002f, 0.2f },
+        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass_cone.png"), 20.0f, 0.05f, 0.01f, 0.42f },
+        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock_cone.png"), 20.0f, 0.05f, 0.03f, 0.62f },
+        { prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_normal.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_cone.png"), 20.0f, 0.05f, 0.05f, 0.9f }
     };
 
     auto result{ std::make_unique<TerrainComponent>(x, z) };

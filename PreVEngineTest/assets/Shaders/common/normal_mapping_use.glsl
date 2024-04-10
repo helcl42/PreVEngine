@@ -2,5 +2,5 @@
 
 vec3 NormalMapping(in sampler2D normalMapSampler, in vec2 uv)
 {
-    return 2.0 * normalize(texture(normalMapSampler, uv).xyz) - 1.0;
+    return normalize(2.0 * normalize(texture(normalMapSampler, uv).xyz) - 1.0);
 }
