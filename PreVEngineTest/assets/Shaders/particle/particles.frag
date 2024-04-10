@@ -13,7 +13,7 @@ layout(location = 2) in float inCurrentNextStageBlendFactor;
 
 layout(location = 0) out vec4 outColor;
 
-void main() 
+void main()
 {
     vec4 stage1Color = texture(colorSampler, inCurrentStageTextureCoord);
     vec4 stage2Color = texture(colorSampler, inNextStageTextureCoord);

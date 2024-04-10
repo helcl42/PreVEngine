@@ -59,7 +59,7 @@ void main()
 	totalDiffuse = totalDiffuse * shadow + uboFS.lightning.ambientFactor;
 	totalSpecular = totalSpecular * shadow;
 
-	vec4 baseResultColor = vec4(totalDiffuse, 1.0) * uboFS.material.color + vec4(totalSpecular, 1.0);
+	vec4 baseResultColor = vec4(totalDiffuse, 1.0) * uboFS.material.color + vec4(totalSpecular, 0.0);
 	vec4 resultColor = mix(vec4(uboFS.fogColor.xyz, 1.0), baseResultColor, inVisibility);
 
 	if (uboFS.selected != 0)
