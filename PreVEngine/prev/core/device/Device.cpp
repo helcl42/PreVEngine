@@ -1,4 +1,4 @@
-#include "Device.h"
+﻿#include "Device.h"
 
 #include "../../common/Logger.h"
 #include "../../util/VkUtils.h"
@@ -97,12 +97,14 @@ Device::Device(const std::shared_ptr<PhysicalDevice>& gpu, const QueuesMetadata&
     }
 
     const auto& extensions{ m_gpu->GetExtensions() };
+    const auto& features{ m_gpu->GetEnabledFeatures() };
+
     VkDeviceCreateInfo deviceCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
     deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfoList.size());
     deviceCreateInfo.pQueueCreateInfos = queueCreateInfoList.data();
     deviceCreateInfo.enabledExtensionCount = extensions.GetPickCount();
     deviceCreateInfo.ppEnabledExtensionNames = extensions.GetPickListRaw();
-    deviceCreateInfo.pEnabledFeatures = &m_gpu->GetEnabledFeatures();
+    deviceCreateInfo.pEnabledFeatures = &features;
     VKERRCHECK(vkCreateDevice(*m_gpu, &deviceCreateInfo, nullptr, &m_handle)); // create device
 
 #ifdef ENABLE_VK_LOADER

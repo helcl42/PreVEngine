@@ -50,15 +50,15 @@ public:
 private:
     VkPhysicalDevice m_handle{};
 
-    VkPhysicalDeviceProperties m_availableProperties{}; // properties and limits
+    VkPhysicalDeviceProperties2 m_availableProperties{}; // properties2 and limits
 
-    VkPhysicalDeviceFeatures m_availableFeatures{}; // list of available features
+    VkPhysicalDeviceFeatures2 m_availableFeatures{}; // list of available features2
 
     std::vector<VkQueueFamilyProperties> m_queueFamilies; // array of queue families
 
     DeviceExtensions m_extensions{};
 
-    VkPhysicalDeviceFeatures m_enabledFeatures{}; // Set required features.   TODO: finish this.
+    VkPhysicalDeviceFeatures2 m_enabledFeatures{};
 };
 } // namespace prev::core::device
 
