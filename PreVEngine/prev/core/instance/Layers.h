@@ -10,6 +10,10 @@ class Layers final : public prev::common::PickList<VkLayerProperties> {
 public:
     Layers();
 
+    Layers(const Layers& other);
+
+    Layers& operator=(const Layers& other);
+
 public:
     std::string GetNameByIndex(const uint32_t index) const override;
 
