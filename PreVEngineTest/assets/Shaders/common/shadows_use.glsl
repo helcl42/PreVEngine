@@ -1,5 +1,7 @@
 // shadows client code
 
+#extension GL_EXT_nonuniform_qualifier : require
+
 const bool enablePCF = true;
 const float defaultShadowFactor = 0.2;
 const float cascadeBiasDamper = 1.5;
@@ -21,7 +23,7 @@ float GetShadowRawInternal(in sampler2DArray depthSampler, in vec4 shadowCoord, 
 	float shadow = 1.0;
 	if (shadowCoord.z >= 0.0 && shadowCoord.z <= 1.0)
 	{
-		float depth = texture(depthSampler, vec3(shadowCoord.xy + shadowCoordOffset, cascadeIndex)).r;
+		float depth = textureLod(depthSampler, vec3(shadowCoord.xy + shadowCoordOffset, cascadeIndex), 0.0).r;
 		if(useReverseDepth != 0)
 		{
 			if (depth > shadowCoord.z + depthBias)
@@ -73,7 +75,7 @@ float GetShadowPCFInternal(in sampler2DArray depthSampler, in vec4 shadowCoord, 
 				+ GetShadowRawInternal(depthSampler, shadowCoord, texelSize * (offset + vec2(0.5, 0.5)), cascadeIndex, depthBias, useReverseDepth)
 				+ GetShadowRawInternal(depthSampler, shadowCoord, texelSize * (offset + vec2(-1.5, -1.5)), cascadeIndex, depthBias, useReverseDepth)
 				+ GetShadowRawInternal(depthSampler, shadowCoord, texelSize * (offset + vec2(0.5, -1.5)), cascadeIndex, depthBias, useReverseDepth)
-				) * 0.25;	
+				) * 0.25;
 	return shadow;
 }
 
@@ -106,9 +108,10 @@ float GetShadow(in sampler2DArray depthSampler, in Shadows shadows, in vec3 view
 				bias /= cascadeBiasDamper;
 			}
 		}
-	    vec4 shadowCoord = shadows.cascades[cascadeIndex].viewProjectionMatrix * vec4(worldPosition, 1.0);
+		uint uniformCascadeIndex = nonuniformEXT(cascadeIndex);
+	    vec4 shadowCoord = shadows.cascades[uniformCascadeIndex].viewProjectionMatrix * vec4(worldPosition, 1.0);
 		vec4 normalizedShadowCoord = shadowCoord / shadowCoord.w;
-		shadow = GetShadow(depthSampler, normalizedShadowCoord, cascadeIndex, bias, shadows.useReverseDepth);
+		shadow = GetShadow(depthSampler, normalizedShadowCoord, uniformCascadeIndex, bias, shadows.useReverseDepth);
 	}
 	return shadow;
 }
