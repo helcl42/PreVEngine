@@ -59,7 +59,7 @@ float GetInverseHeight(float height)
     return 1.0 - height;
 }
 
-vec2 RelaxeConeStepMapping(in sampler2D coneMapSampler, in float heightScale, in uint numLayers, in vec2 uv, in vec3 texDir3D)
+vec2 RelaxedConeStepMapping(in sampler2D coneMapSampler, in float heightScale, in uint numLayers, in vec2 uv, in vec3 texDir3D)
 {
     const uint binarySteps = 6;
 

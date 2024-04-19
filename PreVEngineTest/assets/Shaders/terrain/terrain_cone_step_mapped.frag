@@ -73,8 +73,8 @@ void main()
             {
                 float ratio = (normalizedHeight - uboFS.heightSteps[uniformIndex].x + uboFS.heightTransitionRange) / (2.0 * uboFS.heightTransitionRange);
 
-				vec2 uv1 = RelaxeConeStepMapping(heightSampler[uniformIndex], uboFS.heightScale[uniformIndex].x, uboFS.numLayers, inTextureCoord, rayDirection);
-				vec2 uv2 = RelaxeConeStepMapping(heightSampler[nextUniformIndex], uboFS.heightScale[nextUniformIndex].x, uboFS.numLayers, inTextureCoord, rayDirection);
+				vec2 uv1 = RelaxedConeStepMapping(heightSampler[uniformIndex], uboFS.heightScale[uniformIndex].x, uboFS.numLayers, inTextureCoord, rayDirection);
+				vec2 uv2 = RelaxedConeStepMapping(heightSampler[nextUniformIndex], uboFS.heightScale[nextUniformIndex].x, uboFS.numLayers, inTextureCoord, rayDirection);
 
 				vec3 normal1 = NormalMapping(normalSampler[uniformIndex], uv1);
 				vec3 normal2 = NormalMapping(normalSampler[nextUniformIndex], uv2);
@@ -95,7 +95,7 @@ void main()
             }
 			else if(normalizedHeight < uboFS.heightSteps[uniformIndex].x - uboFS.heightTransitionRange)
 			{
-				vec2 uv = RelaxeConeStepMapping(heightSampler[uniformIndex], uboFS.heightScale[uniformIndex].x, uboFS.numLayers, inTextureCoord, rayDirection);
+				vec2 uv = RelaxedConeStepMapping(heightSampler[uniformIndex], uboFS.heightScale[uniformIndex].x, uboFS.numLayers, inTextureCoord, rayDirection);
 
 				normal = NormalMapping(normalSampler[uniformIndex], uv);
 				textureColor = texture(colorSampler[uniformIndex], uv);
@@ -106,7 +106,7 @@ void main()
         }
         else
         {
-			vec2 uv = RelaxeConeStepMapping(heightSampler[uniformIndex], uboFS.heightScale[uniformIndex].x, uboFS.numLayers, inTextureCoord, rayDirection);
+			vec2 uv = RelaxedConeStepMapping(heightSampler[uniformIndex], uboFS.heightScale[uniformIndex].x, uboFS.numLayers, inTextureCoord, rayDirection);
 
 			normal = NormalMapping(normalSampler[uniformIndex], uv);
 			textureColor = texture(colorSampler[uniformIndex], uv);
