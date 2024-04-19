@@ -1,6 +1,7 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive : enable
+#extension GL_EXT_nonuniform_qualifier : enable
 
 #include "../common/shadows_use.glsl"
 #include "../common/lights.glsl"
@@ -48,39 +49,43 @@ void main()
     vec4 textureColor = vec4(1.0, 1.0, 0.0, 1.0);
 	float shineDamper = 1.0f;
 	float reflectivity = 1.0f;
-    for(uint i = 0; i < MATERIAL_COUNT; i++)
+    for(uint i = 0; i < MATERIAL_COUNT; ++i)
     {
+		const uint uniformIndex = nonuniformEXT(i);
+		const uint nextUniformIndex = nonuniformEXT(i + 1);
+
         if(i < MATERIAL_COUNT - 1)
         {
-            if(normalizedHeight > uboFS.heightSteps[i].x - uboFS.heightTransitionRange && normalizedHeight < uboFS.heightSteps[i].x + uboFS.heightTransitionRange)
+            if(normalizedHeight > uboFS.heightSteps[uniformIndex].x - uboFS.heightTransitionRange && normalizedHeight < uboFS.heightSteps[uniformIndex].x + uboFS.heightTransitionRange)
             {
-                float ratio = (normalizedHeight - uboFS.heightSteps[i].x + uboFS.heightTransitionRange) / (2 * uboFS.heightTransitionRange);
-                vec4 color1 = texture(colorSampler[i], inTextureCoord);
-                vec4 color2 = texture(colorSampler[i + 1], inTextureCoord);
+                float ratio = (normalizedHeight - uboFS.heightSteps[uniformIndex].x + uboFS.heightTransitionRange) / (2.0 * uboFS.heightTransitionRange);
+
+				vec4 color1 = texture(colorSampler[uniformIndex], inTextureCoord);
+                vec4 color2 = texture(colorSampler[nextUniformIndex], inTextureCoord);
                 textureColor = mix(color1, color2, ratio);
 
-				float shineDamper1 = uboFS.material[i].shineDamper;
-				float shineDamper2 = uboFS.material[i + 1].shineDamper;
+				float shineDamper1 = uboFS.material[uniformIndex].shineDamper;
+				float shineDamper2 = uboFS.material[nextUniformIndex].shineDamper;
 				shineDamper = mix(shineDamper1, shineDamper2, ratio);
 
-				float reflectivity1 = uboFS.material[i].reflectivity;
-				float reflectivity2 = uboFS.material[i + 1].reflectivity;
+				float reflectivity1 = uboFS.material[uniformIndex].reflectivity;
+				float reflectivity2 = uboFS.material[nextUniformIndex].reflectivity;
 				reflectivity = mix(reflectivity1, reflectivity2, ratio);
                 break;
             }
-			else if(normalizedHeight < uboFS.heightSteps[i].x - uboFS.heightTransitionRange)
+			else if(normalizedHeight < uboFS.heightSteps[uniformIndex].x - uboFS.heightTransitionRange)
 			{
-				textureColor = texture(colorSampler[i], inTextureCoord);
-				shineDamper = uboFS.material[i].shineDamper;
-				reflectivity = uboFS.material[i].reflectivity;
+				textureColor = texture(colorSampler[uniformIndex], inTextureCoord);
+				shineDamper = uboFS.material[uniformIndex].shineDamper;
+				reflectivity = uboFS.material[uniformIndex].reflectivity;
 				break;
 			}
         }
         else
         {
-			textureColor = texture(colorSampler[i], inTextureCoord);
-			shineDamper = uboFS.material[i].shineDamper;
-			reflectivity = uboFS.material[i].reflectivity;
+			textureColor = texture(colorSampler[uniformIndex], inTextureCoord);
+			shineDamper = uboFS.material[uniformIndex].shineDamper;
+			reflectivity = uboFS.material[uniformIndex].reflectivity;
             break;
         }
     }
@@ -96,7 +101,7 @@ void main()
 
 	vec3 totalDiffuse = vec3(0.0);
 	vec3 totalSpecular = vec3(0.0);
-	for (uint i = 0; i < uboFS.lightning.realCountOfLights; i++)
+	for (uint i = 0; i < uboFS.lightning.realCountOfLights; ++i)
 	{
 		const Light light = uboFS.lightning.lights[i];
 

@@ -1,6 +1,6 @@
 // shadows client code
 
-#extension GL_EXT_nonuniform_qualifier : require
+#extension GL_EXT_nonuniform_qualifier : enable
 
 const bool enablePCF = true;
 const float defaultShadowFactor = 0.2;
