@@ -50,15 +50,15 @@ public:
 private:
     VkPhysicalDevice m_handle{};
 
-    VkPhysicalDeviceProperties2 m_availableProperties{}; // properties2 and limits
+    VkPhysicalDeviceProperties2 m_availableProperties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2, VK_NULL_HANDLE, {} }; // properties2 and limits
 
-    VkPhysicalDeviceFeatures2 m_availableFeatures{}; // list of available features2
+    VkPhysicalDeviceFeatures2 m_availableFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, VK_NULL_HANDLE, {} }; // list of available features2
 
     std::vector<VkQueueFamilyProperties> m_queueFamilies; // array of queue families
 
     DeviceExtensions m_extensions{};
 
-    VkPhysicalDeviceFeatures2 m_enabledFeatures{};
+    VkPhysicalDeviceFeatures2 m_enabledFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, VK_NULL_HANDLE, {} };
 };
 } // namespace prev::core::device
 
