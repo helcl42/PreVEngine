@@ -130,6 +130,11 @@ public:
         return static_cast<uint32_t>(m_pickListIndices.size());
     }
 
+    bool Contains(const std::string& name) const
+    {
+        return IndexOf(name) >= 0;
+    }
+
     void Print() const
     {
         LOGI("%s picked: %d of %d\n", GetName().c_str(), GetPickCount(), GetCount());
