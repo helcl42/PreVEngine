@@ -18,7 +18,6 @@ PhysicalDevice::PhysicalDevice(const VkPhysicalDevice gpu)
     vkGetPhysicalDeviceFeatures2(gpu, &m_availableFeatures);
     vkGetPhysicalDeviceProperties2(gpu, &m_availableProperties);
     
-    // enable features here -> might be overriden by an inherited class ??
     if (m_availableFeatures.features.samplerAnisotropy) {
         m_enabledFeatures.features.samplerAnisotropy = VK_TRUE;
     }
@@ -37,9 +36,16 @@ PhysicalDevice::PhysicalDevice(const VkPhysicalDevice gpu)
     if (m_availableFeatures.features.sampleRateShading) {
         m_enabledFeatures.features.sampleRateShading = VK_TRUE;
     }
+    if(m_availableFeatures.features.shaderUniformBufferArrayDynamicIndexing) {
+        m_enabledFeatures.features.shaderUniformBufferArrayDynamicIndexing = VK_TRUE;
+    }
     if(m_availableFeatures.features.shaderSampledImageArrayDynamicIndexing) {
         m_enabledFeatures.features.shaderSampledImageArrayDynamicIndexing = VK_TRUE;
     }
+
+    m_descriptorIndexingFeatures.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
+
+    m_enabledFeatures.pNext = &m_descriptorIndexingFeatures;
 
     uint32_t familyCount{ 0 };
     vkGetPhysicalDeviceQueueFamilyProperties(gpu, &familyCount, nullptr);
@@ -143,6 +149,11 @@ const DeviceExtensions& PhysicalDevice::GetExtensions() const
 const VkPhysicalDeviceFeatures& PhysicalDevice::GetEnabledFeatures() const
 {
     return m_enabledFeatures.features;
+}
+
+const VkPhysicalDeviceFeatures2& PhysicalDevice::GetEnabledFeatures2() const
+{
+    return m_enabledFeatures;
 }
 
 PhysicalDevice::operator VkPhysicalDevice() const

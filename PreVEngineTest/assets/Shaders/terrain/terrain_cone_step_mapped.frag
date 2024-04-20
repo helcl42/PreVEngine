@@ -64,54 +64,51 @@ void main()
 
     for(uint i = 0; i < MATERIAL_COUNT; ++i)
     {
-		const uint uniformIndex = nonuniformEXT(i);
-		const uint nextUniformIndex = nonuniformEXT(i + 1);
-
         if(i < MATERIAL_COUNT - 1)
         {
-            if(normalizedHeight > uboFS.heightSteps[uniformIndex].x - uboFS.heightTransitionRange && normalizedHeight < uboFS.heightSteps[uniformIndex].x + uboFS.heightTransitionRange)
+            if(normalizedHeight > uboFS.heightSteps[nonuniformEXT(i)].x - uboFS.heightTransitionRange && normalizedHeight < uboFS.heightSteps[nonuniformEXT(i)].x + uboFS.heightTransitionRange)
             {
-                float ratio = (normalizedHeight - uboFS.heightSteps[uniformIndex].x + uboFS.heightTransitionRange) / (2.0 * uboFS.heightTransitionRange);
+                float ratio = (normalizedHeight - uboFS.heightSteps[nonuniformEXT(i)].x + uboFS.heightTransitionRange) / (2.0 * uboFS.heightTransitionRange);
 
-				vec2 uv1 = RelaxedConeStepMapping(heightSampler[uniformIndex], uboFS.heightScale[uniformIndex].x, uboFS.numLayers, inTextureCoord, rayDirection);
-				vec2 uv2 = RelaxedConeStepMapping(heightSampler[nextUniformIndex], uboFS.heightScale[nextUniformIndex].x, uboFS.numLayers, inTextureCoord, rayDirection);
+				vec2 uv1 = RelaxedConeStepMapping(heightSampler[nonuniformEXT(i)], uboFS.heightScale[nonuniformEXT(i)].x, uboFS.numLayers, inTextureCoord, rayDirection);
+				vec2 uv2 = RelaxedConeStepMapping(heightSampler[nonuniformEXT(i + 1)], uboFS.heightScale[nonuniformEXT(i + 1)].x, uboFS.numLayers, inTextureCoord, rayDirection);
 
-				vec3 normal1 = NormalMapping(normalSampler[uniformIndex], uv1);
-				vec3 normal2 = NormalMapping(normalSampler[nextUniformIndex], uv2);
+				vec3 normal1 = NormalMapping(normalSampler[nonuniformEXT(i)], uv1);
+				vec3 normal2 = NormalMapping(normalSampler[nonuniformEXT(i + 1)], uv2);
 				normal = mix(normal1, normal2, ratio);
 
-                vec4 color1 = texture(colorSampler[uniformIndex], uv1);
-                vec4 color2 = texture(colorSampler[nextUniformIndex], uv2);
+                vec4 color1 = texture(colorSampler[nonuniformEXT(i)], uv1);
+                vec4 color2 = texture(colorSampler[nonuniformEXT(i + 1)], uv2);
                 textureColor = mix(color1, color2, ratio);
 
-				float shineDamper1 = uboFS.material[uniformIndex].shineDamper;
-				float shineDamper2 = uboFS.material[nextUniformIndex].shineDamper;
+				float shineDamper1 = uboFS.material[nonuniformEXT(i)].shineDamper;
+				float shineDamper2 = uboFS.material[nonuniformEXT(i + 1)].shineDamper;
 				shineDamper = mix(shineDamper1, shineDamper2, ratio);
 
-				float reflectivity1 = uboFS.material[uniformIndex].reflectivity;
-				float reflectivity2 = uboFS.material[nextUniformIndex].reflectivity;
+				float reflectivity1 = uboFS.material[nonuniformEXT(i)].reflectivity;
+				float reflectivity2 = uboFS.material[nonuniformEXT(i + 1)].reflectivity;
 				reflectivity = mix(reflectivity1, reflectivity2, ratio);
                 break;
             }
-			else if(normalizedHeight < uboFS.heightSteps[uniformIndex].x - uboFS.heightTransitionRange)
+			else if(normalizedHeight < uboFS.heightSteps[nonuniformEXT(i)].x - uboFS.heightTransitionRange)
 			{
-				vec2 uv = RelaxedConeStepMapping(heightSampler[uniformIndex], uboFS.heightScale[uniformIndex].x, uboFS.numLayers, inTextureCoord, rayDirection);
+				vec2 uv = RelaxedConeStepMapping(heightSampler[nonuniformEXT(i)], uboFS.heightScale[nonuniformEXT(i)].x, uboFS.numLayers, inTextureCoord, rayDirection);
 
-				normal = NormalMapping(normalSampler[uniformIndex], uv);
-				textureColor = texture(colorSampler[uniformIndex], uv);
-				shineDamper = uboFS.material[uniformIndex].shineDamper;
-				reflectivity = uboFS.material[uniformIndex].reflectivity;
+				normal = NormalMapping(normalSampler[nonuniformEXT(i)], uv);
+				textureColor = texture(colorSampler[nonuniformEXT(i)], uv);
+				shineDamper = uboFS.material[nonuniformEXT(i)].shineDamper;
+				reflectivity = uboFS.material[nonuniformEXT(i)].reflectivity;
 				break;
 			}
         }
         else
         {
-			vec2 uv = RelaxedConeStepMapping(heightSampler[uniformIndex], uboFS.heightScale[uniformIndex].x, uboFS.numLayers, inTextureCoord, rayDirection);
+			vec2 uv = RelaxedConeStepMapping(heightSampler[nonuniformEXT(i)], uboFS.heightScale[nonuniformEXT(i)].x, uboFS.numLayers, inTextureCoord, rayDirection);
 
-			normal = NormalMapping(normalSampler[uniformIndex], uv);
-			textureColor = texture(colorSampler[uniformIndex], uv);
-			shineDamper = uboFS.material[uniformIndex].shineDamper;
-			reflectivity = uboFS.material[uniformIndex].reflectivity;
+			normal = NormalMapping(normalSampler[nonuniformEXT(i)], uv);
+			textureColor = texture(colorSampler[nonuniformEXT(i)], uv);
+			shineDamper = uboFS.material[nonuniformEXT(i)].shineDamper;
+			reflectivity = uboFS.material[nonuniformEXT(i)].reflectivity;
         }
     }
 

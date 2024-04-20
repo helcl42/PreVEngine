@@ -108,10 +108,9 @@ float GetShadow(in sampler2DArray depthSampler, in Shadows shadows, in vec3 view
 				bias /= cascadeBiasDamper;
 			}
 		}
-		uint uniformCascadeIndex = nonuniformEXT(cascadeIndex);
-	    vec4 shadowCoord = shadows.cascades[uniformCascadeIndex].viewProjectionMatrix * vec4(worldPosition, 1.0);
+	    vec4 shadowCoord = shadows.cascades[nonuniformEXT(cascadeIndex)].viewProjectionMatrix * vec4(worldPosition, 1.0);
 		vec4 normalizedShadowCoord = shadowCoord / shadowCoord.w;
-		shadow = GetShadow(depthSampler, normalizedShadowCoord, uniformCascadeIndex, bias, shadows.useReverseDepth);
+		shadow = GetShadow(depthSampler, normalizedShadowCoord, nonuniformEXT(cascadeIndex), bias, shadows.useReverseDepth);
 	}
 	return shadow;
 }

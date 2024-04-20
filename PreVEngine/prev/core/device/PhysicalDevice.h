@@ -42,6 +42,8 @@ public:
 
     const VkPhysicalDeviceFeatures& GetEnabledFeatures() const;
 
+    const VkPhysicalDeviceFeatures2& GetEnabledFeatures2() const;
+
     void Print(const bool showQueues) const;
 
 public:
@@ -59,6 +61,8 @@ private:
     DeviceExtensions m_extensions{};
 
     VkPhysicalDeviceFeatures2 m_enabledFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, VK_NULL_HANDLE, {} };
+
+    VkPhysicalDeviceDescriptorIndexingFeatures m_descriptorIndexingFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES, VK_NULL_HANDLE };
 };
 } // namespace prev::core::device
 
