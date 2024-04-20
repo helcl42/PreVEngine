@@ -58,6 +58,8 @@ std::string QueueFlagsToString(const VkQueueFlags flags);
 
 std::string VendorIdToString(const uint32_t vendorId);
 
+VkFormatProperties GetFormatProperties(const VkPhysicalDevice physicalDevice, const VkFormat format);
+
 } // namespace prev::util::vk
 
 #endif
