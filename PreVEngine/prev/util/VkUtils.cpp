@@ -528,4 +528,12 @@ std::string VendorIdToString(const uint32_t vendorId)
         return "UNKNOWN";
     }
 }
+
+VkFormatProperties GetFormatProperties(const VkPhysicalDevice physicalDevice, const VkFormat format)
+{
+    VkFormatProperties formatProperties;
+    vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &formatProperties);
+    return formatProperties;
+}
+
 } // namespace prev::util::vk

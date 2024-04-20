@@ -261,11 +261,15 @@ void SkyRenderer::UpdateImageBufferExtents(const VkExtent2D& extent, const VkFor
 {
     if (imageBuffer == nullptr || imageBuffer->GetExtent().width != extent.width || imageBuffer->GetExtent().height != extent.height) {
         auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
+        auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
+
+        const auto formatProperties{ prev::util::vk::GetFormatProperties(*device->GetGPU(), format) };
+        const auto samplingFilter{ (formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT) ? VK_FILTER_LINEAR : VK_FILTER_NEAREST };
 
         imageBuffer = prev::render::buffer::image::ImageBufferFactory{}.CreateStorage(prev::render::buffer::image::ImageBufferCreateInfo{ VkExtent2D{ extent.width, extent.height }, VK_IMAGE_TYPE_2D, format, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D, 1 }, *allocator);
         allocator->TransitionImageLayout(imageBuffer->GetImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, imageBuffer->GetFormat(), imageBuffer->GetMipLevels(), imageBuffer->GetLayerCount());
 
-        sampler = std::make_shared<prev::render::sampler::Sampler>(allocator->GetDevice(), static_cast<float>(imageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR);
+        sampler = std::make_shared<prev::render::sampler::Sampler>(allocator->GetDevice(), static_cast<float>(imageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, samplingFilter, samplingFilter, VK_SAMPLER_MIPMAP_MODE_NEAREST);
     }
 }
 
