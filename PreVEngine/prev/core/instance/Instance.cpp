@@ -18,33 +18,30 @@ Instance::Instance(const bool enableValidation, const char* appName, const char*
     layers.Print();
 
     Extensions extensions;
-    if (extensions.Pick(VK_KHR_SURFACE_EXTENSION_NAME)) {
+    extensions.Pick(VK_KHR_SURFACE_EXTENSION_NAME);
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        extensions.Pick(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+    extensions.Pick(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
 #elif defined(VK_USE_PLATFORM_ANDROID_KHR)
-        extensions.Pick(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
+    extensions.Pick(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
 #elif defined(VK_USE_PLATFORM_XCB_KHR)
-        extensions.Pick(VK_KHR_XCB_SURFACE_EXTENSION_NAME);
+    extensions.Pick(VK_KHR_XCB_SURFACE_EXTENSION_NAME);
 #elif defined(VK_USE_PLATFORM_XLIB_KHR)
-        extensions.Pick(VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
+    extensions.Pick(VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
 #elif defined(VK_USE_PLATFORM_WAYLAND_KHR)
-        extensions.Pick(VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
+    extensions.Pick(VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
 #elif defined(VK_USE_PLATFORM_MIR_KHR)
-        extensions.Pick(VK_KHR_MIR_SURFACE_EXTENSION_NAME);
+    extensions.Pick(VK_KHR_MIR_SURFACE_EXTENSION_NAME);
 #elif defined(VK_USE_PLATFORM_MACOS_MVK)
-        extensions.Pick(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-        extensions.Pick(VK_MVK_MACOS_SURFACE_EXTENSION_NAME);
-        extensions.Pick(VK_EXT_METAL_SURFACE_EXTENSION_NAME);
-        extensions.Pick(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+    extensions.Pick(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+    extensions.Pick(VK_MVK_MACOS_SURFACE_EXTENSION_NAME);
+    extensions.Pick(VK_EXT_METAL_SURFACE_EXTENSION_NAME);
+    extensions.Pick(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
 #elif defined(VK_USE_PLATFORM_IOS_MVK)
-        extensions.Pick(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-        extensions.Pick(VK_MVK_IOS_SURFACE_EXTENSION_NAME);
-        extensions.Pick(VK_EXT_METAL_SURFACE_EXTENSION_NAME);
-        extensions.Pick(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+    extensions.Pick(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+    extensions.Pick(VK_MVK_IOS_SURFACE_EXTENSION_NAME);
+    extensions.Pick(VK_EXT_METAL_SURFACE_EXTENSION_NAME);
+    extensions.Pick(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
 #endif
-    } else {
-        LOGE("Failed to load VK_KHR_Surface");
-    }
 
     if (enableValidation) {
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
