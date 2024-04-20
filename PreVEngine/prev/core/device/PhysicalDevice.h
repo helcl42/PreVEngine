@@ -48,17 +48,17 @@ public:
     operator VkPhysicalDevice() const;
 
 private:
-    VkPhysicalDevice m_handle;
+    VkPhysicalDevice m_handle{};
 
-    VkPhysicalDeviceProperties m_availableProperties; // properties and limits
+    VkPhysicalDeviceProperties m_availableProperties{}; // properties and limits
 
-    VkPhysicalDeviceFeatures m_availableFeatures; // list of available features
+    VkPhysicalDeviceFeatures m_availableFeatures{}; // list of available features
 
     std::vector<VkQueueFamilyProperties> m_queueFamilies; // array of queue families
 
-    DeviceExtensions m_extensions; // picklist: select extensions to load (Defaults to "VK_KHR_swapchain" only.)
+    DeviceExtensions m_extensions{};
 
-    VkPhysicalDeviceFeatures m_enabledFeatures = {}; // Set required features.   TODO: finish this.
+    VkPhysicalDeviceFeatures m_enabledFeatures{}; // Set required features.   TODO: finish this.
 };
 } // namespace prev::core::device
 
