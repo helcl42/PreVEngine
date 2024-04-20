@@ -10,6 +10,10 @@ class Extensions final : public prev::common::PickList<VkExtensionProperties> {
 public:
     Extensions(const char* layerName = nullptr);
 
+    Extensions(const Extensions& other);
+
+    Extensions& operator=(const Extensions& other);
+
 public:
     std::string GetNameByIndex(const uint32_t inx) const override;
 

@@ -12,6 +12,10 @@ public:
 
     DeviceExtensions(const VkPhysicalDevice gpu, const char* layerName = nullptr);
 
+    DeviceExtensions(const DeviceExtensions& other);
+
+    DeviceExtensions& operator=(const DeviceExtensions& other);
+
 public:
     std::string GetNameByIndex(const uint32_t index) const override;
 

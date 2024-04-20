@@ -19,14 +19,12 @@ public:
         : m_itemList{ other.m_itemList }
         , m_pickListIndices{ other.m_pickListIndices }
     {
-        Refresh();
     }
 
     PickList& operator=(const PickList& rhs)
     {
         this->m_itemList = rhs.m_itemList;
         this->m_pickListIndices = rhs.m_pickListIndices;
-        Refresh();
         return *this;
     }
 
@@ -164,7 +162,8 @@ protected:
         m_pickListNamesPtrs.resize(m_pickListIndices.size());
 
         for (size_t i = 0; i < m_pickListIndices.size(); ++i) {
-            const auto& nameAtIndex{ GetNameByIndex(m_pickListIndices[i]) };
+            const auto index{ m_pickListIndices[i] };
+            const auto& nameAtIndex{ GetNameByIndex(index) };
             m_pickListNames[i] = nameAtIndex;
             m_pickListNamesPtrs[i] = m_pickListNames[i].c_str();
         }
