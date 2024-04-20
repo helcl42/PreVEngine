@@ -6,10 +6,11 @@ import subprocess
 import time
 
 def get_compiler_path():
+    COMPILER_NAME = 'glslc'
     VK_SDK_PATH = os.getenv('VULKAN_SDK')
-    if VK_SDK_PATH == None:
-        raise Exception('VULKAN_SDK env variable is not set.')
-    return os.path.join(VK_SDK_PATH, 'Bin', 'glslc')
+    if VK_SDK_PATH != None:
+        return os.path.join(VK_SDK_PATH, 'Bin', COMPILER_NAME)
+    return COMPILER_NAME
 
 def replace_last(input, to_replace, replacement):
     return replacement.join(input.rsplit(to_replace, 1))
