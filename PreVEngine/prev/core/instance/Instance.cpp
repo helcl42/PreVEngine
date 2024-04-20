@@ -68,11 +68,7 @@ void Instance::Create(const Layers& layers, const Extensions& extensions, const 
     appInfo.applicationVersion = 1;
     appInfo.pEngineName = engineName;
     appInfo.engineVersion = 1;
-#ifdef VK_USE_PLATFORM_ANDROID_KHR
     appInfo.apiVersion = VK_API_VERSION_1_0;
-#else
-    appInfo.apiVersion = VK_API_VERSION_1_1;
-#endif
 
     VkInstanceCreateInfo instanceInfo = { VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
     instanceInfo.pNext = nullptr;
