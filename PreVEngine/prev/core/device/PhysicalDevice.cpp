@@ -44,8 +44,9 @@ PhysicalDevice::PhysicalDevice(const VkPhysicalDevice gpu)
     }
 
     m_descriptorIndexingFeatures.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
-
-    m_enabledFeatures.pNext = &m_descriptorIndexingFeatures;
+    if(m_extensions.Contains(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME)) {
+        m_enabledFeatures.pNext = &m_descriptorIndexingFeatures;
+    }
 
     uint32_t familyCount{ 0 };
     vkGetPhysicalDeviceQueueFamilyProperties(gpu, &familyCount, nullptr);
