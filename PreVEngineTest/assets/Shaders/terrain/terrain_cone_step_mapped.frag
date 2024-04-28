@@ -61,6 +61,9 @@ void main()
 	float shineDamper = 1.0f;
 	float reflectivity = 1.0f;
 
+	const vec2 ddx = dFdx(inTextureCoord);
+	const vec2 ddy = dFdy(inTextureCoord);
+
     for(uint i = 0; i < MATERIAL_COUNT; i++)
     {
         if(i < MATERIAL_COUNT - 1)
@@ -69,15 +72,15 @@ void main()
             {
                 float ratio = (normalizedHeight - uboFS.heightSteps[i].x + uboFS.heightTransitionRange) / (2 * uboFS.heightTransitionRange);
 
-				vec2 uv1 = RelaxeConeStepMapping(heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, rayDirection);
-				vec2 uv2 = RelaxeConeStepMapping(heightSampler[i + 1], uboFS.heightScale[i + 1].x, uboFS.numLayers, inTextureCoord, rayDirection);
+				vec2 uv1 = RelaxedConeStepMapping(heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
+				vec2 uv2 = RelaxedConeStepMapping(heightSampler[i + 1], uboFS.heightScale[i + 1].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
 
-				vec3 normal1 = NormalMapping(normalSampler[i], uv1);
-				vec3 normal2 = NormalMapping(normalSampler[i + 1], uv2);
+				vec3 normal1 = NormalMapping(normalSampler[i], uv1, ddx, ddy);
+				vec3 normal2 = NormalMapping(normalSampler[i + 1], uv2, ddx, ddy);
 				normal = mix(normal1, normal2, ratio);
 
-                vec4 color1 = texture(colorSampler[i], uv1);
-                vec4 color2 = texture(colorSampler[i + 1], uv2);
+                vec4 color1 = textureGrad(colorSampler[i], uv1, ddx, ddy);
+                vec4 color2 = textureGrad(colorSampler[i + 1], uv2, ddx, ddy);
                 textureColor = mix(color1, color2, ratio);
 
 				float shineDamper1 = uboFS.material[i].shineDamper;
@@ -91,10 +94,10 @@ void main()
             }
 			else if(normalizedHeight < uboFS.heightSteps[i].x - uboFS.heightTransitionRange)
 			{
-				vec2 uv = RelaxeConeStepMapping(heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, rayDirection);
+				vec2 uv = RelaxedConeStepMapping(heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
 
-				normal = NormalMapping(normalSampler[i], uv);
-				textureColor = texture(colorSampler[i], uv);
+				normal = NormalMapping(normalSampler[i], uv, ddx, ddy);
+				textureColor = textureGrad(colorSampler[i], uv, ddx, ddy);
 				shineDamper = uboFS.material[i].shineDamper;
 				reflectivity = uboFS.material[i].reflectivity;
 				break;
@@ -102,10 +105,10 @@ void main()
         }
         else
         {
-			vec2 uv = RelaxeConeStepMapping(heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, rayDirection);
+			vec2 uv = RelaxedConeStepMapping(heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
 
-			normal = NormalMapping(normalSampler[i], uv);
-			textureColor = texture(colorSampler[i], uv);
+			normal = NormalMapping(normalSampler[i], uv, ddx, ddy);
+			textureColor = textureGrad(colorSampler[i], uv, ddx, ddy);
 			shineDamper = uboFS.material[i].shineDamper;
 			reflectivity = uboFS.material[i].reflectivity;
         }

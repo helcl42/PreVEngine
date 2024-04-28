@@ -42,8 +42,11 @@ layout(location = 0) out vec4 outColor;
 
 void main()
 {
+	const vec2 ddx = dFdx(inTextureCoord);
+	const vec2 ddy = dFdy(inTextureCoord);
+
 	const vec3 rayDirection = normalize(inPositionTangentSpace);
-	vec2 uv = RelaxeConeStepMapping(heightSampler, uboFS.heightScale, uboFS.numLayers, inTextureCoord, rayDirection);
+	vec2 uv = RelaxedConeStepMapping(heightSampler, uboFS.heightScale, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
 
 	float shadow = 1.0;
 	if(uboFS.castedByShadows != 0)
@@ -51,8 +54,8 @@ void main()
 		shadow = GetShadow(depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.02);
 	}
 
-	const vec3 normal = NormalMapping(normalSampler, uv);
-	const vec4 textureColor = texture(colorSampler, uv);
+	const vec3 normal = NormalMapping(normalSampler, uv, ddx, ddy);
+	const vec4 textureColor = textureGrad(colorSampler, uv, ddx, ddy);
 
 	const vec3 unitToCameraVector = normalize(inToCameraVectorTangentSpace - inPositionTangentSpace);
 

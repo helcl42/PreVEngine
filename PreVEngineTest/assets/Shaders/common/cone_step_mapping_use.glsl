@@ -1,6 +1,6 @@
 // cone step mapping client code
 
-vec2 ConeStepMapping(in sampler2D coneMapSampler, in float heightScale, in uint numLayers, in vec2 uv, in vec3 texDir3D)
+vec2 ConeStepMapping(in sampler2D coneMapSampler, in float heightScale, in uint numLayers, in vec2 uv, in vec2 ddx, in vec2 ddy, in vec3 texDir3D)
 {
     vec2 R = normalize(vec2(length(texDir3D.xy), texDir3D.z));
     vec2 P = R * heightScale / texDir3D.z;
@@ -14,7 +14,7 @@ vec2 ConeStepMapping(in sampler2D coneMapSampler, in float heightScale, in uint 
     {
         vec3 samplePoint = vec3(uv.xy, heightScale) + texDir3D * t;
 
-        vec2 heightAndCone = clamp(texture(coneMapSampler, samplePoint.xy).rg, 0.0, 1.0);
+        vec2 heightAndCone = clamp(textureGrad(coneMapSampler, samplePoint.xy, ddx, ddy).rg, 0.0, 1.0);
         float h = heightAndCone.x * heightScale;
         float c = heightAndCone.y * heightAndCone.y / heightScale; // cone ratio is stored as sqrt(cone_ratio) due to better distribution so we need to multiply it by itself to get real cone_ratio
 
@@ -59,7 +59,7 @@ float GetInverseHeight(float height)
     return 1.0 - height;
 }
 
-vec2 RelaxeConeStepMapping(in sampler2D coneMapSampler, in float heightScale, in uint numLayers, in vec2 uv, in vec3 texDir3D)
+vec2 RelaxedConeStepMapping(in sampler2D coneMapSampler, in float heightScale, in uint numLayers, in vec2 uv, in vec2 ddx, in vec2 ddy, in vec3 texDir3D)
 {
     const uint binarySteps = 6;
 
@@ -71,7 +71,7 @@ vec2 RelaxeConeStepMapping(in sampler2D coneMapSampler, in float heightScale, in
     vec3 pos = rayPos;
     for(uint i = 0; i < numLayers; ++i)
     {
-        vec2 heightAndCone = clamp(texture(coneMapSampler, pos.xy).rg, 0.0, 1.0);
+        vec2 heightAndCone = clamp(textureGrad(coneMapSampler, pos.xy, ddx, ddy).rg, 0.0, 1.0);
         float coneRatio = heightAndCone.g * heightAndCone.g; // cone ratio is stored as sqrt(cone_ratio) due to better distribution so we need to multiply it by itself to get real cone_ratio
         float height = GetInverseHeight(heightAndCone.r) - pos.z;
         float d = coneRatio * height / (rayRatio + coneRatio);
@@ -83,7 +83,7 @@ vec2 RelaxeConeStepMapping(in sampler2D coneMapSampler, in float heightScale, in
     vec3 bsPosition = rayPos + bsRange;
     for(uint i = 0; i < binarySteps; ++i)
     {
-        vec2 heightAndCone = clamp(texture(coneMapSampler, pos.xy).rg, 0.0, 1.0);
+        vec2 heightAndCone = clamp(textureGrad(coneMapSampler, pos.xy, ddx, ddy).rg, 0.0, 1.0);
         bsRange *= 0.5;
         if (bsPosition.z < GetInverseHeight(heightAndCone.r)) // If outside
         {
