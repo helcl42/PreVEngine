@@ -114,6 +114,7 @@ void Engine::operator()(const prev::window::WindowChangeEvent& windowChangeEvent
 {
     vkDeviceWaitIdle(*m_device);
 
+    m_swapchain = nullptr; // swapchain needs to be destroyed before surface
     ResetSurface();
     ResetSwapchain();
 }
@@ -149,7 +150,7 @@ void Engine::ResetWindow()
 
 void Engine::ResetSurface()
 {
-    m_surface = m_window->GetSurface();
+    m_surface = m_window->ResetSurface();
 }
 
 void Engine::ResetDevice()

@@ -18,6 +18,6 @@ std::shared_ptr<prev::scene::IScene> TestApp::CreateScene() const
 
 std::shared_ptr<prev::render::IRootRenderer> TestApp::CreateRootRenderer() const
 {
-    return std::make_shared<prev_test::render::renderer::MasterRenderer>(this->m_engine->GetRenderPass(), this->m_engine->GetSwapchain());
+    return std::make_shared<prev_test::render::renderer::MasterRenderer>(this->m_engine->GetRenderPass(), this->m_engine->GetSwapchain()->GetImageCount());
 }
 } // namespace prev_test

@@ -5,35 +5,35 @@
 
 namespace prev::window {
 struct WindowCreatedEvent {
-    IWindow* window;
+    IWindow* window{};
 };
 
 struct WindowDestroyedEvent {
-    IWindow* window;
+    IWindow* window{};
 };
 
 struct WindowChangeEvent {
-    IWindow* window;
+    IWindow* window{};
 };
 
 struct WindowResizeEvent {
-    IWindow* window;
+    IWindow* window{};
 
-    uint32_t width;
+    uint32_t width{};
 
-    uint32_t height;
+    uint32_t height{};
 };
 
 struct WindowMovedEvent {
-    IWindow* window;
+    IWindow* window{};
 
-    glm::vec2 position;
+    glm::vec2 position{};
 };
 
 struct WindowFocusChangeEvent {
-    IWindow* window;
+    IWindow* window{};
 
-    bool hasFocus;
+    bool hasFocus{};
 };
 } // namespace prev::window
 

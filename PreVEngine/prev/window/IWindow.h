@@ -10,7 +10,7 @@
 namespace prev::window {
 class IWindow {
 public:
-    virtual impl::Surface& GetSurface() = 0;
+    virtual impl::Surface& ResetSurface() = 0;
 
     virtual impl::Position GetPosition() const = 0;
 
