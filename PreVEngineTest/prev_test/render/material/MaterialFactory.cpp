@@ -13,7 +13,7 @@
 #include <stdexcept>
 
 namespace prev_test::render::material {
-constexpr bool ANISOTROPIC_FILTERING_ENABLED{ false };
+constexpr bool ANISOTROPIC_FILTERING_ENABLED{ true };
 constexpr float MAX_ANISOTROPY_LEVEL{ 4.0f };
 
 std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const MaterialProperties& materialProps) const
