@@ -110,8 +110,6 @@ bool AndroidWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
                 LOGW("APP_CMD_CONFIG_CHANGED - but window is NULL - skipping event.");
                 break;
             }
-            // THIS is hack: due to unreliable surface extent readouts
-            std::this_thread::sleep_for(std::chrono::milliseconds(300));
             m_eventQueue.Push(OnChangeEvent());
             m_eventQueue.Push(OnResizeEvent(static_cast<uint32_t>(ANativeWindow_getWidth(m_app->window)), static_cast<uint32_t>(ANativeWindow_getHeight(m_app->window))));
             break;

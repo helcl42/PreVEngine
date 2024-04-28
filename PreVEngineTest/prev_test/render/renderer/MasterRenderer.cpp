@@ -41,9 +41,9 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::render::renderer {
-MasterRenderer::MasterRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::Swapchain>& swapchain)
+MasterRenderer::MasterRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const uint32_t swapchainImageCount)
     : m_defaultRenderPass(renderPass)
-    , m_swapchain(swapchain)
+    , m_swapchainImageCount(swapchainImageCount)
 {
 }
 
@@ -135,7 +135,7 @@ void MasterRenderer::InitDefault()
     }
 
 #ifdef PARALLEL_RENDERING
-    m_defaultCommandBuffersGroup = CommandBuffersGroupFactory{}.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_defaultRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
+    m_defaultCommandBuffersGroup = CommandBuffersGroupFactory{}.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchainImageCount, static_cast<uint32_t>(m_defaultRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
 #endif
 }
 
@@ -164,7 +164,7 @@ void MasterRenderer::InitDebug()
     }
 
 #ifdef PARALLEL_RENDERING
-    m_debugCommandBuffersGroup = CommandBuffersGroupFactory{}.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_debugRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
+    m_debugCommandBuffersGroup = CommandBuffersGroupFactory{}.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchainImageCount, static_cast<uint32_t>(m_debugRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
 #endif
 }
 
@@ -201,7 +201,7 @@ void MasterRenderer::InitShadows()
 #ifdef PARALLEL_RENDERING
     m_shadowsCommandBufferGroups.resize(prev_test::component::shadow::CASCADES_COUNT);
     for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; ++i) {
-        m_shadowsCommandBufferGroups[i] = CommandBuffersGroupFactory{}.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_shadowRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
+        m_shadowsCommandBufferGroups[i] = CommandBuffersGroupFactory{}.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchainImageCount, static_cast<uint32_t>(m_shadowRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
     }
 #endif
 }
@@ -245,7 +245,7 @@ void MasterRenderer::InitReflection()
     }
 
 #ifdef PARALLEL_RENDERING
-    m_reflectionCommandBufferGroups = CommandBuffersGroupFactory{}.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_reflectionRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
+    m_reflectionCommandBufferGroups = CommandBuffersGroupFactory{}.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchainImageCount, static_cast<uint32_t>(m_reflectionRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
 #endif
 }
 
@@ -288,7 +288,7 @@ void MasterRenderer::InitRefraction()
     }
 
 #ifdef PARALLEL_RENDERING
-    m_refractionCommandBufferGroups = CommandBuffersGroupFactory{}.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchain->GetImageCount(), static_cast<uint32_t>(m_refractionRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
+    m_refractionCommandBufferGroups = CommandBuffersGroupFactory{}.CreateGroup(*device, *device->GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchainImageCount, static_cast<uint32_t>(m_refractionRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
 #endif
 }
 

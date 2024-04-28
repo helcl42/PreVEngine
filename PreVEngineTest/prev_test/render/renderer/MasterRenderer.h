@@ -20,7 +20,7 @@
 namespace prev_test::render::renderer {
 class MasterRenderer final : public prev::render::IRootRenderer {
 public:
-    MasterRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::Swapchain>& swapchain);
+    MasterRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const uint32_t swapchainImageCount);
 
     ~MasterRenderer() = default;
 
@@ -80,7 +80,7 @@ private:
 
     std::shared_ptr<prev::render::pass::RenderPass> m_defaultRenderPass;
 
-    std::shared_ptr<prev::render::Swapchain> m_swapchain;
+    uint32_t m_swapchainImageCount;
 
 private:
     // Default

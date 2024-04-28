@@ -104,6 +104,8 @@ public:
 
     bool IsMouseCursorVisible() const;
 
+    void DestroySurface();
+
 public:
     virtual void SetTextInput(bool enabled); // Shows the Android soft-keyboard. //TODO: Enable OnTextEvent?
 
@@ -144,9 +146,6 @@ protected:
     Event OnCloseEvent(); // Window closing
 
     Event OnChangeEvent();
-
-private:
-    void DestroySurface();
 
 protected:
     const prev::core::instance::Instance& m_instance;

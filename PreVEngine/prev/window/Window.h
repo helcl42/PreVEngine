@@ -23,7 +23,7 @@ public:
     virtual ~Window() = default;
 
 public:
-    impl::Surface& GetSurface() override;
+    impl::Surface& ResetSurface() override;
 
     impl::Position GetPosition() const override;
 

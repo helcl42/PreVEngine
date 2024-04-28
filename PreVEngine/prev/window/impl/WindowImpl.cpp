@@ -18,6 +18,76 @@ WindowImpl::~WindowImpl()
     DestroySurface();
 }
 
+bool WindowImpl::IsKeyPressed(const prev::input::keyboard::KeyCode key) const
+{
+    const auto keyIndex{ static_cast<uint32_t>(key) };
+    return m_keyboardKeysState[keyIndex];
+}
+
+bool WindowImpl::IsMouseButtonPressed(const ButtonType btn) const
+{
+    const auto buttonIndex{ static_cast<uint32_t>(btn) };
+    return m_mouseButtonsState[buttonIndex];
+}
+
+Position WindowImpl::GetMousePosition() const
+{
+    return m_mousePosition;
+}
+
+bool WindowImpl::HasFocus() const
+{
+    return m_hasFocus;
+}
+
+const WindowInfo& WindowImpl::GetInfo() const
+{
+    return m_info;
+}
+
+bool WindowImpl::IsRunning() const
+{
+    return m_running;
+}
+
+bool WindowImpl::IsMouseLocked() const
+{
+    return m_mouseLocked;
+}
+
+void WindowImpl::SetMouseLocked(bool locked)
+{
+    m_mouseLocked = locked;
+}
+
+bool WindowImpl::IsMouseCursorVisible() const
+{
+    return m_mouseCursorVisible;
+}
+
+void WindowImpl::DestroySurface()
+{
+    if (m_vkSurface != VK_NULL_HANDLE) {
+        vkDestroySurfaceKHR(m_instance, m_vkSurface, nullptr);
+        m_vkSurface = VK_NULL_HANDLE;
+    }
+}
+
+void WindowImpl::SetTextInput(bool enabled)
+{
+    m_hasTextInput = enabled;
+}
+
+bool WindowImpl::HasTextInput() const
+{
+    return m_hasTextInput;
+}
+
+void WindowImpl::Close()
+{
+    m_eventQueue.Push(OnCloseEvent());
+}
+
 Event WindowImpl::OnMouseEvent(ActionType action, int32_t x, int32_t y, ButtonType btn)
 {
     m_mousePosition = { x, y };
@@ -104,79 +174,6 @@ Event WindowImpl::OnCloseEvent()
 
 Event WindowImpl::OnChangeEvent()
 {
-    DestroySurface();
-    CreateSurface();
-
     return { Event::EventType::CHANGE };
-}
-
-void WindowImpl::DestroySurface()
-{
-    if (m_vkSurface != VK_NULL_HANDLE) {
-        vkDestroySurfaceKHR(m_instance, m_vkSurface, nullptr);
-        m_vkSurface = VK_NULL_HANDLE;
-    }
-}
-
-void WindowImpl::SetTextInput(bool enabled)
-{
-    m_hasTextInput = enabled;
-}
-
-bool WindowImpl::HasTextInput() const
-{
-    return m_hasTextInput;
-}
-
-void WindowImpl::Close()
-{
-    m_eventQueue.Push(OnCloseEvent());
-}
-
-const WindowInfo& WindowImpl::GetInfo() const
-{
-    return m_info;
-}
-
-bool WindowImpl::IsRunning() const
-{
-    return m_running;
-}
-
-bool WindowImpl::IsKeyPressed(const prev::input::keyboard::KeyCode key) const
-{
-    const auto keyIndex{ static_cast<uint32_t>(key) };
-    return m_keyboardKeysState[keyIndex];
-}
-
-bool WindowImpl::IsMouseButtonPressed(const ButtonType btn) const
-{
-    const auto buttonIndex{ static_cast<uint32_t>(btn) };
-    return m_mouseButtonsState[buttonIndex];
-}
-
-Position WindowImpl::GetMousePosition() const
-{
-    return m_mousePosition;
-}
-
-bool WindowImpl::HasFocus() const
-{
-    return m_hasFocus;
-}
-
-bool WindowImpl::IsMouseLocked() const
-{
-    return m_mouseLocked;
-}
-
-void WindowImpl::SetMouseLocked(bool locked)
-{
-    m_mouseLocked = locked;
-}
-
-bool WindowImpl::IsMouseCursorVisible() const
-{
-    return m_mouseCursorVisible;
 }
 } // namespace prev::window::impl
