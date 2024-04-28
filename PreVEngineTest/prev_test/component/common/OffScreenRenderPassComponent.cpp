@@ -9,6 +9,9 @@
 #include <stdexcept>
 
 namespace prev_test::component::common {
+constexpr bool ANISOTROPIC_FILTERING_ENABLED{ true };
+constexpr float MAX_ANISOTROPY_LEVEL{ 4.0f };
+
 OffScreenRenderPassComponent::OffScreenRenderPassComponent(const VkExtent2D& extent, const VkFormat depthFormat, const std::vector<VkFormat>& colorFormats)
     : m_extent{ extent }
     , m_depthFormat{ depthFormat }
@@ -100,7 +103,7 @@ void OffScreenRenderPassComponent::Init()
         const auto colorFormat{ m_colorFormats[i] };
 
         auto colorImageBuffer{ imageBufferFactory.CreateColor(prev::render::buffer::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, colorFormat, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D }, *allocator) };
-        auto colorImageBufferSampler{ std::make_shared<prev::render::sampler::Sampler>(*device, static_cast<float>(colorImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f) };
+        auto colorImageBufferSampler{ std::make_shared<prev::render::sampler::Sampler>(*device, static_cast<float>(colorImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, ANISOTROPIC_FILTERING_ENABLED, MAX_ANISOTROPY_LEVEL) };
 
         m_colorBuffers.emplace_back(std::move(colorImageBuffer));
         m_colorSamplers.emplace_back(std::move(colorImageBufferSampler));
