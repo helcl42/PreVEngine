@@ -21,7 +21,7 @@ float GetShadowRawInternal(in sampler2DArray depthSampler, in vec4 shadowCoord, 
 	float shadow = 1.0;
 	if (shadowCoord.z >= 0.0 && shadowCoord.z <= 1.0)
 	{
-		float depth = texture(depthSampler, vec3(shadowCoord.xy + shadowCoordOffset, cascadeIndex)).r;
+		float depth = textureLod(depthSampler, vec3(shadowCoord.xy + shadowCoordOffset, cascadeIndex), 0).r;
 		if(useReverseDepth != 0)
 		{
 			if (depth > shadowCoord.z + depthBias)
