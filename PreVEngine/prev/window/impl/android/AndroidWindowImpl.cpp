@@ -53,6 +53,7 @@ AndroidWindowImpl::AndroidWindowImpl(const prev::core::instance::Instance& insta
 
             switch (cmd) {
                 case APP_CMD_INIT_WINDOW:
+                    m_eventQueue.Push(OnInitEvent());
                     m_eventQueue.Push(OnResizeEvent(static_cast<uint32_t>(ANativeWindow_getWidth(m_app->window)), static_cast<uint32_t>(ANativeWindow_getHeight(m_app->window)))); // post window-resize event
                     break;
                 case APP_CMD_GAINED_FOCUS:
@@ -67,8 +68,6 @@ AndroidWindowImpl::AndroidWindowImpl(const prev::core::instance::Instance& insta
     }
 
     ALooper_pollAll(10, NULL, NULL, NULL); // for keyboard
-
-    m_eventQueue.Push(OnInitEvent());
 }
 
 AndroidWindowImpl::~AndroidWindowImpl()
