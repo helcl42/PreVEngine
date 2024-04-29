@@ -184,7 +184,7 @@ void Engine::ResetAllocator()
 
 void Engine::ResetRenderPass()
 {
-    prev::render::pass::RenderPassBuilder renderPassBuilder{ *m_device };
+    prev::render::pass::RenderPassBuilder renderPassBuilder{ *m_device, m_config.viewCount };
 
     const auto colorFormat{ m_device->GetGPU()->FindSurfaceFormat(m_surface) };
     const auto depthFormat{ m_device->GetGPU()->FindDepthFormat() };
@@ -242,7 +242,7 @@ void Engine::ResetRenderPass()
 
 void Engine::ResetSwapchain()
 {
-    m_swapchain = std::make_shared<prev::render::Swapchain>(*m_device, *m_allocator, *m_renderPass, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount));
+    m_swapchain = std::make_shared<prev::render::Swapchain>(*m_device, *m_allocator, *m_renderPass, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount), m_config.viewCount);
 #if defined(__ANDROID__)
     m_swapchain->SetPresentMode(m_config.VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_MAILBOX_KHR);
 #else

@@ -42,7 +42,7 @@ struct SwapChainFrameContext {
 
 class Swapchain {
 public:
-    Swapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT);
+    Swapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT, uint32_t viewCount = 1);
 
     virtual ~Swapchain();
 
@@ -80,10 +80,10 @@ private:
     virtual VkSurfaceCapabilitiesKHR GetSurfaceCapabilities() const;
 
     virtual std::vector<VkImage> GetSwapchainImages() const;
-    
+
 private:
     uint32_t GetNextIndex() const;
-    
+
     uint32_t GetPreviousIndex() const;
 
 private:
@@ -96,6 +96,8 @@ private:
     VkSurfaceKHR m_surface{};
 
     VkSampleCountFlagBits m_sampleCount{ VK_SAMPLE_COUNT_1_BIT };
+
+    uint32_t m_viewCount{ 1 };
 
     std::shared_ptr<prev::core::device::Queue> m_presentQueue{};
 

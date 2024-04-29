@@ -42,7 +42,7 @@ void SunRenderer::Init()
     for (uint32_t i = 0; i < QueryPoolCount; ++i) {
         VkQueryPoolCreateInfo queryPoolInfo = { VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO };
         queryPoolInfo.queryType = VK_QUERY_TYPE_OCCLUSION;
-        queryPoolInfo.queryCount = 1;
+        queryPoolInfo.queryCount = 2; // TODO this should be uqual to view count - pass by arg
         VKERRCHECK(vkCreateQueryPool(*device, &queryPoolInfo, nullptr, &m_queryPools[i]));
     }
 

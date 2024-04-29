@@ -56,6 +56,17 @@ inline constexpr T AlmostZero(T value1, T epsilon = T(1e-7))
     return AlmostEqual(value1, static_cast<T>(0.0), epsilon);
 }
 
+template <typename T>
+T SetBits(const uint32_t& leastSignificantBitCount)
+{
+    T result{ 0 };
+    for (uint32_t i = 0; i < leastSignificantBitCount; ++i) {
+        result <<= 1;
+        result ^= 1;
+    }
+    return result;
+}
+
 glm::mat4 CreateTransformationMatrix(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale);
 
 glm::mat4 CreateTransformationMatrix(const glm::vec3& position, const glm::quat& orientation, const float scale);

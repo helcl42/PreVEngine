@@ -1,10 +1,12 @@
 #include "RenderPassBuilder.h"
 
 #include "../../common/Logger.h"
+#include "../../util/MathUtils.h"
 
 namespace prev::render::pass {
-RenderPassBuilder::RenderPassBuilder(VkDevice device)
+RenderPassBuilder::RenderPassBuilder(VkDevice device, uint32_t viewCount)
     : m_device(device)
+    , m_viewCount(viewCount)
 {
 }
 
@@ -76,6 +78,20 @@ std::unique_ptr<RenderPass> RenderPassBuilder::Build() const
     renderPassCreateInfo.pSubpasses = subpassDescriptions.data();
     renderPassCreateInfo.dependencyCount = static_cast<uint32_t>(renderPass->m_dependencies.size());
     renderPassCreateInfo.pDependencies = renderPass->m_dependencies.data();
+
+    if (m_viewCount > 1) {
+        const uint32_t viewMask{ prev::util::math::SetBits<uint32_t>(m_viewCount) };
+        const uint32_t correlationMask{ prev::util::math::SetBits<uint32_t>(m_viewCount) };
+
+        VkRenderPassMultiviewCreateInfo renderPassMultiviewCreateInfo{ VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO };
+        renderPassMultiviewCreateInfo.subpassCount = static_cast<uint32_t>(subpassDescriptions.size());
+        renderPassMultiviewCreateInfo.pViewMasks = &viewMask;
+        renderPassMultiviewCreateInfo.correlationMaskCount = 1;
+        renderPassMultiviewCreateInfo.pCorrelationMasks = &correlationMask;
+
+        renderPassCreateInfo.pNext = &renderPassMultiviewCreateInfo;
+    }
+
     VKERRCHECK(vkCreateRenderPass(m_device, &renderPassCreateInfo, nullptr, &renderPass->m_renderPass));
 
     LOGI("Renderpass created\n");

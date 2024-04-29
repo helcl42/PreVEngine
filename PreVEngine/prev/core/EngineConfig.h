@@ -22,6 +22,8 @@ struct EngineConfig {
     uint32_t samplesCount{ 1 };
 
     int32_t gpuIndex{ -1 };
+
+    uint32_t viewCount{ 2 };
 };
 } // namespace prev::core
 

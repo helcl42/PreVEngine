@@ -15,28 +15,40 @@ PhysicalDevice::PhysicalDevice(const VkPhysicalDevice gpu)
     : m_handle(gpu)
     , m_extensions(gpu)
 {
-    vkGetPhysicalDeviceFeatures(gpu, &m_availableFeatures);
-    vkGetPhysicalDeviceProperties(gpu, &m_availableProperties);
+    m_availableProperties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2, {}, {} };
+    m_availableFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, {}, {} };
+    m_enabledFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, {}, {} };
+
+    vkGetPhysicalDeviceFeatures2(gpu, &m_availableFeatures);
+    vkGetPhysicalDeviceProperties2(gpu, &m_availableProperties);
 
     // enable features here -> might be overriden by an inherited class ??
-    if (m_availableFeatures.samplerAnisotropy) {
-        m_enabledFeatures.samplerAnisotropy = VK_TRUE;
+    if (m_availableFeatures.features.samplerAnisotropy) {
+        m_enabledFeatures.features.samplerAnisotropy = VK_TRUE;
     }
-    if (m_availableFeatures.depthClamp) {
-        m_enabledFeatures.depthClamp = VK_TRUE;
+    if (m_availableFeatures.features.depthClamp) {
+        m_enabledFeatures.features.depthClamp = VK_TRUE;
     }
-    if (m_availableFeatures.shaderClipDistance) {
-        m_enabledFeatures.shaderClipDistance = VK_TRUE;
+    if (m_availableFeatures.features.shaderClipDistance) {
+        m_enabledFeatures.features.shaderClipDistance = VK_TRUE;
     }
-    if (m_availableFeatures.fillModeNonSolid) {
-        m_enabledFeatures.fillModeNonSolid = VK_TRUE;
+    if (m_availableFeatures.features.fillModeNonSolid) {
+        m_enabledFeatures.features.fillModeNonSolid = VK_TRUE;
     }
-    if (m_availableFeatures.geometryShader) {
-        m_enabledFeatures.geometryShader = VK_TRUE;
+    if (m_availableFeatures.features.geometryShader) {
+        m_enabledFeatures.features.geometryShader = VK_TRUE;
     }
-    if (m_availableFeatures.sampleRateShading) {
-        m_enabledFeatures.sampleRateShading = VK_TRUE;
+    if (m_availableFeatures.features.sampleRateShading) {
+        m_enabledFeatures.features.sampleRateShading = VK_TRUE;
     }
+    if (m_availableFeatures.features.multiViewport) {
+        m_enabledFeatures.features.multiViewport = VK_TRUE;
+    }
+
+    m_physicalDeviceMultiviewFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES_KHR, {} };
+    m_physicalDeviceMultiviewFeatures.multiview = VK_TRUE;
+
+    m_enabledFeatures.pNext = &m_physicalDeviceMultiviewFeatures;
 
     uint32_t familyCount{ 0 };
     vkGetPhysicalDeviceQueueFamilyProperties(gpu, &familyCount, nullptr);
@@ -44,6 +56,7 @@ PhysicalDevice::PhysicalDevice(const VkPhysicalDevice gpu)
     vkGetPhysicalDeviceQueueFamilyProperties(gpu, &familyCount, m_queueFamilies.data());
 
     m_extensions.Pick(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+    m_extensions.Pick(VK_KHR_MULTIVIEW_EXTENSION_NAME);
 #if defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_IOS_MVK)
     m_extensions.Pick("VK_KHR_portability_subset");
 #endif
@@ -117,12 +130,12 @@ VkFormat PhysicalDevice::FindDepthFormat(const std::vector<VkFormat>& preferredF
 
 const VkPhysicalDeviceProperties& PhysicalDevice::GetProperties() const
 {
-    return m_availableProperties;
+    return m_availableProperties.properties;
 }
 
 const VkPhysicalDeviceFeatures& PhysicalDevice::GetAvailableFeatures() const
 {
-    return m_availableFeatures;
+    return m_availableFeatures.features;
 }
 
 const std::vector<VkQueueFamilyProperties>& PhysicalDevice::GetQueueFamilies() const
@@ -136,6 +149,11 @@ const DeviceExtensions& PhysicalDevice::GetExtensions() const
 }
 
 const VkPhysicalDeviceFeatures& PhysicalDevice::GetEnabledFeatures() const
+{
+    return m_enabledFeatures.features;
+}
+
+const VkPhysicalDeviceFeatures2& PhysicalDevice::GetEnabledFeatures2() const
 {
     return m_enabledFeatures;
 }
@@ -158,7 +176,7 @@ void PhysicalDevice::Print(const bool showQueues) const
         return devTypea[type];
     };
 
-    const auto vendor{ prev::util::vk::VendorIdToString(m_availableProperties.vendorID) };
+    const auto vendor{ prev::util::vk::VendorIdToString(m_availableProperties.properties.vendorID) };
     const auto& gpuProps{ GetProperties() };
     LOGI("\t%s %s %s\n", deviceTypeToString(gpuProps.deviceType).c_str(), vendor.c_str(), gpuProps.deviceName);
 

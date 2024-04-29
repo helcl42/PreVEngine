@@ -11,12 +11,13 @@
 #include <algorithm>
 
 namespace prev::render {
-Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount)
+Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount, uint32_t viewCount)
     : m_device{ device }
     , m_allocator{ allocator }
     , m_renderPass{ renderPass }
     , m_surface{ surface }
     , m_sampleCount{ sampleCount }
+    , m_viewCount{ viewCount }
 {
     m_graphicsQueue = m_device.GetQueue(core::device::QueueType::GRAPHICS);
     m_presentQueue = m_device.GetQueue(core::device::QueueType::PRESENT);
@@ -33,7 +34,7 @@ Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allo
     m_swapchainCreateInfo.surface = m_surface;
     m_swapchainCreateInfo.imageFormat = m_renderPass.GetColorFormat();
     m_swapchainCreateInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-    m_swapchainCreateInfo.imageArrayLayers = 1; // 2 for stereo
+    m_swapchainCreateInfo.imageArrayLayers = m_viewCount;
     m_swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     m_swapchainCreateInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
     m_swapchainCreateInfo.clipped = VK_TRUE;
@@ -45,11 +46,13 @@ Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allo
 
     m_commandPool = prev::util::vk::CreateCommandPool(m_device, m_graphicsQueue->family);
 
+    const auto imageViewType{ prev::util::vk::GetImageViewType(m_viewCount) };
+
     buffer::image::ImageBufferFactory imageBufferFactory{};
-    m_depthBuffer = imageBufferFactory.CreateDepth(buffer::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, renderPass.GetDepthFormat(), VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D }, m_allocator);
+    m_depthBuffer = imageBufferFactory.CreateDepth(buffer::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, renderPass.GetDepthFormat(), VK_SAMPLE_COUNT_1_BIT, 0, false, imageViewType, m_viewCount }, m_allocator);
     if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
-        m_msaaColorBuffer = imageBufferFactory.CreateColor(buffer::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, m_renderPass.GetColorFormat(), m_sampleCount, 0, false, VK_IMAGE_VIEW_TYPE_2D }, m_allocator);
-        m_msaaDepthBuffer = imageBufferFactory.CreateDepth(buffer::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, m_renderPass.GetDepthFormat(), m_sampleCount, 0, false, VK_IMAGE_VIEW_TYPE_2D }, m_allocator);
+        m_msaaColorBuffer = imageBufferFactory.CreateColor(buffer::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, m_renderPass.GetColorFormat(), m_sampleCount, 0, false, imageViewType, m_viewCount }, m_allocator);
+        m_msaaDepthBuffer = imageBufferFactory.CreateDepth(buffer::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, m_renderPass.GetDepthFormat(), m_sampleCount, 0, false, imageViewType, m_viewCount }, m_allocator);
     }
 
     Apply();
@@ -237,10 +240,12 @@ void Swapchain::Apply()
     std::vector<VkImage> swapchainImages = GetSwapchainImages();
     m_swapchainImagesCount = static_cast<uint32_t>(swapchainImages.size());
 
+    const auto imageViewType{ prev::util::vk::GetImageViewType(m_viewCount) };
+
     m_swapchainBuffers.resize(m_swapchainImagesCount);
     for (uint32_t i = 0; i < m_swapchainImagesCount; i++) {
         auto image{ swapchainImages[i] };
-        auto imageView{ util::vk::CreateImageView(m_device, image, m_swapchainCreateInfo.imageFormat, VK_IMAGE_VIEW_TYPE_2D, 1, VK_IMAGE_ASPECT_COLOR_BIT) };
+        auto imageView{ util::vk::CreateImageView(m_device, image, m_swapchainCreateInfo.imageFormat, imageViewType, 1, VK_IMAGE_ASPECT_COLOR_BIT, m_viewCount) };
 
         std::vector<VkImageView> swapchainImageViews;
         if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
