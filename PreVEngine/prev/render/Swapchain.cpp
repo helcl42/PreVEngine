@@ -261,8 +261,6 @@ void Swapchain::Apply()
         swapchainBuffer.presentSemaphore = util::vk::CreateSemaphore(m_device);
     }
 
-    LOGI("---Extent = %d x %d\n", newExtent.width, newExtent.height);
-
     if (m_swapchainCreateInfo.oldSwapchain == VK_NULL_HANDLE) {
         LOGI("Swapchain created\n");
     }
