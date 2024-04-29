@@ -42,6 +42,8 @@ public:
 
     const VkPhysicalDeviceFeatures& GetEnabledFeatures() const;
 
+    const VkPhysicalDeviceFeatures2& GetEnabledFeatures2() const;
+
     void Print(const bool showQueues) const;
 
 public:
@@ -50,15 +52,17 @@ public:
 private:
     VkPhysicalDevice m_handle{};
 
-    VkPhysicalDeviceProperties m_availableProperties{}; // properties and limits
+    VkPhysicalDeviceProperties2 m_availableProperties{}; // properties and limits
 
-    VkPhysicalDeviceFeatures m_availableFeatures{}; // list of available features
+    VkPhysicalDeviceFeatures2 m_availableFeatures{}; // list of available features
 
     std::vector<VkQueueFamilyProperties> m_queueFamilies; // array of queue families
 
     DeviceExtensions m_extensions{};
 
-    VkPhysicalDeviceFeatures m_enabledFeatures{}; // Set required features.   TODO: finish this.
+    VkPhysicalDeviceFeatures2 m_enabledFeatures{};
+
+    VkPhysicalDeviceMultiviewFeatures m_physicalDeviceMultiviewFeatures{};
 };
 } // namespace prev::core::device
 

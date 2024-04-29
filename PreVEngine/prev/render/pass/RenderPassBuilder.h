@@ -11,9 +11,9 @@
 namespace prev::render::pass {
 class RenderPassBuilder final {
 public:
-    RenderPassBuilder(VkDevice device);
+    RenderPassBuilder(VkDevice device, uint32_t viewCount = 1);
 
-    RenderPassBuilder() = default;
+    ~RenderPassBuilder() = default;
 
 public:
     RenderPassBuilder& AddColorAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, const VkClearColorValue clearVal = {}, const VkImageLayout finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE, const bool resolveAttachment = false);
@@ -47,6 +47,8 @@ private:
 
 private:
     VkDevice m_device;
+
+    uint32_t m_viewCount;
 
     std::vector<AttachmentCreateInfo> m_attachmentInfos;
 

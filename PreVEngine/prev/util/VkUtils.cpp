@@ -536,4 +536,9 @@ VkFormatProperties GetFormatProperties(const VkPhysicalDevice physicalDevice, co
     return formatProperties;
 }
 
+VkImageViewType GetImageViewType(const uint32_t viewCount)
+{
+    return viewCount > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
+}
+
 } // namespace prev::util::vk

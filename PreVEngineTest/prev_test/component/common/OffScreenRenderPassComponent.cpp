@@ -9,8 +9,13 @@
 #include <stdexcept>
 
 namespace prev_test::component::common {
-constexpr bool ANISOTROPIC_FILTERING_ENABLED{ true };
-constexpr float MAX_ANISOTROPY_LEVEL{ 4.0f };
+namespace {
+    constexpr bool ANISOTROPIC_FILTERING_ENABLED{ true };
+    constexpr float MAX_ANISOTROPY_LEVEL{ 4.0f };
+
+    // TODO pass by arg or retrieve through a config
+    constexpr uint32_t ViewCount{ 2 };
+} // namespace
 
 OffScreenRenderPassComponent::OffScreenRenderPassComponent(const VkExtent2D& extent, const VkFormat depthFormat, const std::vector<VkFormat>& colorFormats)
     : m_extent{ extent }
@@ -74,7 +79,7 @@ void OffScreenRenderPassComponent::Init()
     std::vector<uint32_t> attachmentIndices;
     uint32_t attachmentIndex{ 0 };
 
-    prev::render::pass::RenderPassBuilder renderPassBuilder{ *device };
+    prev::render::pass::RenderPassBuilder renderPassBuilder{ *device, ViewCount };
     if (m_depthFormat != VK_FORMAT_UNDEFINED) {
         renderPassBuilder.AddDepthAttachment(m_depthFormat, VK_SAMPLE_COUNT_1_BIT, { MAX_DEPTH, 0 });
         attachmentIndices.push_back(attachmentIndex);
@@ -95,14 +100,14 @@ void OffScreenRenderPassComponent::Init()
 
     // create image buffers and corresponding samplers
     if (m_depthFormat != VK_FORMAT_UNDEFINED) {
-        m_depthBuffer = imageBufferFactory.CreateDepth(prev::render::buffer::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, m_depthFormat, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D }, *allocator);
+        m_depthBuffer = imageBufferFactory.CreateDepth(prev::render::buffer::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, m_depthFormat, VK_SAMPLE_COUNT_1_BIT, 0, false, prev::util::vk::GetImageViewType(ViewCount), ViewCount }, *allocator);
         m_depthSampler = std::make_shared<prev::render::sampler::Sampler>(*device, 1.0f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_NEAREST, VK_FILTER_NEAREST, VK_SAMPLER_MIPMAP_MODE_NEAREST);
     }
 
     for (uint32_t i = 0; i < m_colorFormats.size(); ++i) {
         const auto colorFormat{ m_colorFormats[i] };
 
-        auto colorImageBuffer{ imageBufferFactory.CreateColor(prev::render::buffer::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, colorFormat, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D }, *allocator) };
+        auto colorImageBuffer{ imageBufferFactory.CreateColor(prev::render::buffer::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, colorFormat, VK_SAMPLE_COUNT_1_BIT, 0, false, prev::util::vk::GetImageViewType(ViewCount), ViewCount }, *allocator) };
         auto colorImageBufferSampler{ std::make_shared<prev::render::sampler::Sampler>(*device, static_cast<float>(colorImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, ANISOTROPIC_FILTERING_ENABLED, MAX_ANISOTROPY_LEVEL) };
 
         m_colorBuffers.emplace_back(std::move(colorImageBuffer));

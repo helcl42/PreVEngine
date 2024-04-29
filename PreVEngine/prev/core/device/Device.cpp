@@ -97,18 +97,21 @@ Device::Device(const std::shared_ptr<PhysicalDevice>& gpu, const QueuesMetadata&
     }
 
     const auto& extensions{ m_gpu->GetExtensions() };
+    const auto& features{ m_gpu->GetEnabledFeatures2() };
+
     VkDeviceCreateInfo deviceCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
     deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfoList.size());
     deviceCreateInfo.pQueueCreateInfos = queueCreateInfoList.data();
     deviceCreateInfo.enabledExtensionCount = extensions.GetPickCount();
     deviceCreateInfo.ppEnabledExtensionNames = extensions.GetPickListRaw();
-    deviceCreateInfo.pEnabledFeatures = &m_gpu->GetEnabledFeatures();
+    deviceCreateInfo.pEnabledFeatures = nullptr;
+    deviceCreateInfo.pNext = &features;
     VKERRCHECK(vkCreateDevice(*m_gpu, &deviceCreateInfo, nullptr, &m_handle)); // create device
 
 #ifdef ENABLE_VK_LOADER
     volkLoadDevice(m_handle);
 #endif
-    
+
     for (const auto& [queueGroupKey, queueGroupList] : queuesMetadata.queueGroups) {
         for (const auto& groupItem : queueGroupList) {
             m_queues[queueGroupKey].push_back(std::make_shared<Queue>(m_handle, groupItem.family, groupItem.index, groupItem.flags, groupItem.surface));
