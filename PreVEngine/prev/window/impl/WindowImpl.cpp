@@ -70,6 +70,7 @@ void WindowImpl::DestroySurface()
     if (m_vkSurface != VK_NULL_HANDLE) {
         vkDestroySurfaceKHR(m_instance, m_vkSurface, nullptr);
         m_vkSurface = VK_NULL_HANDLE;
+        LOGI("Vulkan Surface destroyed\n");
     }
 }
 
