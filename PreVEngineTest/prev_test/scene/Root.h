@@ -36,12 +36,6 @@ private:
     prev::event::EventHandler<Root, prev::input::keyboard::KeyEvent> m_keyEventHnadler{ *this };
 
     prev::event::EventHandler<Root, prev::input::touch::TouchEvent> m_touchEventHnadler{ *this };
-
-    bool m_addNode{};
-
-    bool m_removeNode{};
-
-    bool m_reloadAll{};
 };
 } // namespace prev_test::scene
 
