@@ -1,14 +1,14 @@
-#ifndef __DEFAULT_FONT_RENDER_COMPONENT_H__
-#define __DEFAULT_FONT_RENDER_COMPONENT_H__
+#ifndef __FONT_RENDER_COMPONENT_H__
+#define __FONT_RENDER_COMPONENT_H__
 
 #include "IFontRenderComponent.h"
 
 namespace prev_test::component::font {
-class DefaultFontRenderComponent : public IFontRenderComponent {
+class FontRenderComponent : public IFontRenderComponent {
 public:
-    DefaultFontRenderComponent(const std::shared_ptr<prev_test::render::font::FontMetadata>& fontMetaData);
+    FontRenderComponent(const std::shared_ptr<prev_test::render::font::FontMetadata>& fontMetaData);
 
-    ~DefaultFontRenderComponent() = default;
+    ~FontRenderComponent() = default;
 
 public:
     const std::map<uint32_t, RenderableText>& GetRenderableTexts() const override;
@@ -28,4 +28,4 @@ private:
 };
 } // namespace prev_test::component::font
 
-#endif // !__DEFAULT_FONT_RENDER_COMPONENT_H__
+#endif // !__FONT_RENDER_COMPONENT_H__

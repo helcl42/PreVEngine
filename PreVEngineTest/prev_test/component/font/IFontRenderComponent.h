@@ -4,12 +4,15 @@
 #include "../../render/IModel.h"
 #include "../../render/font/FontMetadata.h"
 #include "../../render/font/ScreenSpaceText.h"
+#include "../../render/font/WorldSpaceText.h"
+
+#include <prev/util/Utils.h>
 
 #include <map>
 
 namespace prev_test::component::font {
 struct RenderableText {
-    static const inline uint32_t ModelCount{ 2 };
+    static constexpr inline uint32_t ModelCount{ 2 };
 
     std::shared_ptr<prev_test::render::font::ScreenSpaceText> text{};
 
@@ -17,7 +20,7 @@ struct RenderableText {
 
     std::shared_ptr<prev_test::render::IModel> model{};
 
-    uint32_t modelIndex{};
+    prev::util::CircularIndex<uint32_t> modelIndex{ ModelCount };
 };
 
 class IFontRenderComponent {
