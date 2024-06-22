@@ -4,11 +4,11 @@
 #include <prev/render/shader/Shader.h>
 
 namespace prev_test::render::renderer::font::shader {
-class FonttShader final : public prev::render::shader::Shader {
+class FontShader final : public prev::render::shader::Shader {
 public:
-    FonttShader(const VkDevice device);
+    FontShader(const VkDevice device);
 
-    ~FonttShader() = default;
+    ~FontShader() = default;
 
 public:
     static std::map<VkShaderStageFlagBits, std::string> GetPaths();

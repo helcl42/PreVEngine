@@ -1,6 +1,6 @@
 #include "FontRenderer.h"
 #include "pipeline/FontPipeline.h"
-#include "shader/FonttShader.h"
+#include "shader/FontShader.h"
 
 #include "../../../component/font/IFontRenderComponent.h"
 
@@ -23,7 +23,7 @@ void FontRenderer::Init()
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<shader::FonttShader>(*device, shader::FonttShader::GetPaths());
+    m_shader = shaderFactory.CreateShaderFromFiles<shader::FontShader>(*device, shader::FontShader::GetPaths());
     m_shader->Init();
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
