@@ -26,6 +26,29 @@ private:
 
     std::map<uint32_t, RenderableText> m_renderableTexts;
 };
+
+class Font3dRenderComponent : public IFont3dRenderComponent {
+public:
+    Font3dRenderComponent(const std::shared_ptr<prev_test::render::font::FontMetadata>& fontMetaData);
+
+    ~Font3dRenderComponent() = default;
+
+public:
+    const std::map<uint32_t, RenderableText3d>& GetRenderableTexts() const override;
+
+    std::shared_ptr<prev_test::render::font::FontMetadata> GetFontMetadata() const override;
+
+    void AddText(const uint32_t key, const std::shared_ptr<prev_test::render::font::WorldSpaceText>& text) override;
+
+    void RemoveText(const uint32_t key) override;
+
+    void Reset() override;
+
+private:
+    std::shared_ptr<prev_test::render::font::FontMetadata> m_fontMetaData;
+
+    std::map<uint32_t, RenderableText3d> m_renderableTexts;
+};
 } // namespace prev_test::component::font
 
 #endif // !__FONT_RENDER_COMPONENT_H__
