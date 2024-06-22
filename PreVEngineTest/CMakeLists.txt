@@ -69,6 +69,7 @@ file(GLOB SRC_LIST
     "prev_test/render/renderer/water/pipeline/*.h" "prev_test/render/renderer/water/pipeline/*.cpp"
     "prev_test/render/renderer/water/shader/*.h" "prev_test/render/renderer/water/shader/*.cpp"
     "prev_test/scene/*.h" "prev_test/scene/*.cpp"
+    "prev_test/scene/text/*.h" "prev_test/scene/text/*.cpp"
     "prev_test/scene/light/*.h" "prev_test/scene/light/*.cpp"
     "prev_test/scene/ray_casting/*.h" "prev_test/scene/ray_casting/*.cpp"
     "prev_test/scene/robot/*.h" "prev_test/scene/robot/*.cpp"

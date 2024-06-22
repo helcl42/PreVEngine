@@ -1,13 +1,13 @@
 #ifndef __TEXT_H__
 #define __TEXT_H__
 
-#include "../General.h"
-#include "../component/font/IFontRenderComponent.h"
+#include "../../General.h"
+#include "../../component/font/IFontRenderComponent.h"
 
 #include <prev/scene/graph/SceneNode.h>
 #include <prev/util/Utils.h>
 
-namespace prev_test::scene {
+namespace prev_test::scene::text {
 class Text final : public prev::scene::graph::SceneNode {
 public:
     Text();
@@ -26,6 +26,6 @@ private:
 
     prev::util::FPSCounter m_fpsCounter{ 0.1f };
 };
-} // namespace prev_test::scene
+} // namespace prev_test::scene::text
 
 #endif // !__TEXT_H__

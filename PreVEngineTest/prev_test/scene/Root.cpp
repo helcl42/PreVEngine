@@ -5,7 +5,6 @@
 #include "Plane.h"
 #include "Player.h"
 #include "Stone.h"
-#include "Text.h"
 #include "Time.h"
 #include "light/Light.h"
 #include "light/MainLight.h"
@@ -19,6 +18,8 @@
 #include "sky/SkyBox.h"
 #include "sky/Sun.h"
 #include "terrain/TerrainManager.h"
+#include "text/Text.h"
+#include "text/Text3d.h"
 #include "water/WaterManager.h"
 
 #include "../common/AssetManager.h"
@@ -133,8 +134,11 @@ void Root::Init()
     auto lensFlare = std::make_shared<sky::LensFlare>();
     AddChild(lensFlare);
 
-    auto text = std::make_shared<Text>();
+    auto text = std::make_shared<text::Text>();
     AddChild(text);
+
+    auto text3d = std::make_shared<text::Text3d>();
+    AddChild(text3d);
 
     auto rayCaster = std::make_shared<ray_casting::RayCaster>();
     AddChild(rayCaster);
