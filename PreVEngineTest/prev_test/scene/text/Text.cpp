@@ -17,8 +17,8 @@ Text::Text()
 void Text::Init()
 {
     prev_test::component::font::FontRenderComponentsFactory factory{};
-    m_fontComponent = factory.Create2d(prev_test::common::AssetManager::Instance().GetAssetPath("Fonts/verdana.fnt"), prev_test::common::AssetManager::Instance().GetAssetPath("Fonts/verdana.png"), 16.0f / 9.0f, 2);
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::font::IFontRenderComponent>(GetThis(), m_fontComponent, TAG_FONT_RENDER_COMPONENT);
+    m_fontComponent = factory.Create<prev_test::render::font::ScreenSpaceText>(prev_test::common::AssetManager::Instance().GetAssetPath("Fonts/verdana.fnt"), prev_test::common::AssetManager::Instance().GetAssetPath("Fonts/verdana.png"), 16.0f / 9.0f, 2);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::font::IFontRenderComponent<prev_test::render::font::ScreenSpaceText>>(GetThis(), m_fontComponent, TAG_FONT_RENDER_COMPONENT);
 
     SceneNode::Init();
 }
