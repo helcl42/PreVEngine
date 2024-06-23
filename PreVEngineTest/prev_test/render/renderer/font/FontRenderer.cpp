@@ -3,6 +3,7 @@
 #include "shader/FontShader.h"
 
 #include "../../../component/font/IFontRenderComponent.h"
+#include "../../../render/font/ScreenSpaceText.h"
 
 #include <prev/common/Common.h>
 #include <prev/core/AllocatorProvider.h>
@@ -58,7 +59,7 @@ void FontRenderer::PreRender(const NormalRenderContext& renderContext)
 void FontRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAll({ TAG_FONT_RENDER_COMPONENT })) {
-        const auto nodeFontRenderComponent = prev::scene::component::ComponentRepository<prev_test::component::font::IFontRenderComponent>::Instance().Get(node->GetId());
+        const auto nodeFontRenderComponent = prev::scene::component::ComponentRepository<prev_test::component::font::IFontRenderComponent<prev_test::render::font::ScreenSpaceText>>::Instance().Get(node->GetId());
         for (const auto& [key, renderableText] : nodeFontRenderComponent->GetRenderableTexts()) {
             auto uboVS = m_uniformsPoolVS->GetNext();
             UniformsVS uniformsVS{};

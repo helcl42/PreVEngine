@@ -3,6 +3,7 @@
 
 #include "../../General.h"
 #include "../../component/font/IFontRenderComponent.h"
+#include "../../render/font/WorldSpaceText.h"
 
 #include <prev/scene/graph/SceneNode.h>
 #include <prev/util/Utils.h>
@@ -22,7 +23,7 @@ public:
     void ShutDown() override;
 
 private:
-    std::shared_ptr<prev_test::component::font::IFont3dRenderComponent> m_fontComponent;
+    std::shared_ptr<prev_test::component::font::IFontRenderComponent<prev_test::render::font::WorldSpaceText>> m_fontComponent;
 
     prev::util::FPSCounter m_fpsCounter{ 0.1f };
 };
