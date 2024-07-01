@@ -82,7 +82,7 @@ void TerrainRenderer::Render(const NormalRenderContext& renderContext, const std
             uniformsVS.projectionMatrix = renderContext.projectionMatrix;
             uniformsVS.viewMatrix = renderContext.viewMatrix;
             uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
-            uniformsVS.normalMatrix = glm::inverse(transformComponent->GetWorldTransformScaled());
+            uniformsVS.normalMatrix = glm::transpose(glm::inverse(transformComponent->GetWorldTransformScaled()));
             uniformsVS.cameraPosition = glm::vec4(renderContext.cameraPosition, 1.0f);
             for (size_t i = 0; i < lightComponents.size(); i++) {
                 const auto& lightComponent{ lightComponents[i] };

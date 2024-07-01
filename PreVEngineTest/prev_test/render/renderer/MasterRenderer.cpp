@@ -9,6 +9,7 @@
 #include "debug/SelectionDebugRenderer.h"
 #include "debug/ShadowMapDebugRenderer.h"
 #include "debug/TextureDebugRenderer.h"
+#include "font/Font3dRenderer.h"
 #include "font/FontRenderer.h"
 #include "normal/ConeStepMappedRenderer.h"
 #include "normal/DefaultRenderer.h"
@@ -117,6 +118,7 @@ void MasterRenderer::InitDefault()
     m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::animation::AnimationConeStepMappedRenderer>(m_defaultRenderPass));
     m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::water::WaterRenderer>(m_defaultRenderPass));
     m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::font::FontRenderer>(m_defaultRenderPass));
+    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::font::Font3dRenderer>(m_defaultRenderPass));
     m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::particle::ParticlesRenderer>(m_defaultRenderPass));
 #ifdef RENDER_BOUNDING_VOLUMES
     m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::debug::BoundingVolumeDebugRenderer>(m_defaultRenderPass));

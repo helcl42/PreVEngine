@@ -203,7 +203,7 @@ const VkExtent2D& Swapchain::GetExtent() const
 
 uint32_t Swapchain::GetImageCount() const
 {
-    return m_swapchainImagesCount;
+    return m_frameIndex.GetCount();
 }
 
 void Swapchain::Apply()
@@ -228,8 +228,6 @@ void Swapchain::Apply()
         }
     }
 
-    m_currentFrameIndex = 0;
-
     const VkExtent3D newExtent{ m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height, 1 };
     m_depthBuffer->Resize(newExtent);
     if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
@@ -237,13 +235,15 @@ void Swapchain::Apply()
         m_msaaDepthBuffer->Resize(newExtent);
     }
 
-    std::vector<VkImage> swapchainImages = GetSwapchainImages();
-    m_swapchainImagesCount = static_cast<uint32_t>(swapchainImages.size());
+    const auto swapchainImages{ GetSwapchainImages() };
+    const auto swapchainImagesCount{ static_cast<uint32_t>(swapchainImages.size()) };
+
+    m_frameIndex = util::CircularIndex{ swapchainImagesCount };
 
     const auto imageViewType{ prev::util::vk::GetImageViewType(m_viewCount) };
 
-    m_swapchainBuffers.resize(m_swapchainImagesCount);
-    for (uint32_t i = 0; i < m_swapchainImagesCount; i++) {
+    m_swapchainBuffers.resize(swapchainImagesCount);
+    for (uint32_t i = 0; i < swapchainImagesCount; i++) {
         auto image{ swapchainImages[i] };
         auto imageView{ util::vk::CreateImageView(m_device, image, m_swapchainCreateInfo.imageFormat, imageViewType, 1, VK_IMAGE_ASPECT_COLOR_BIT, m_viewCount) };
 
@@ -294,7 +294,7 @@ bool Swapchain::AcquireNext(SwapchainBuffer& next)
 {
     ASSERT(!m_isAcquired, "Swapchain: Previous swapchain buffer has not yet been presented.\n");
 
-    const auto& swapchainBuffer{ m_swapchainBuffers[m_currentFrameIndex] };
+    const auto& swapchainBuffer{ m_swapchainBuffers[m_frameIndex] };
 
     VKERRCHECK(vkWaitForFences(m_device, 1, &swapchainBuffer.fence, VK_TRUE, UINT64_MAX));
     VKERRCHECK(vkResetFences(m_device, 1, &swapchainBuffer.fence));
@@ -319,7 +319,7 @@ void Swapchain::Submit()
 {
     ASSERT(!!m_isAcquired, "Swapchain: A buffer must be acquired before submitting.\n");
 
-    const auto& swapchainBuffer{ m_swapchainBuffers[m_currentFrameIndex] };
+    const auto& swapchainBuffer{ m_swapchainBuffers[m_frameIndex] };
 
     VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
@@ -339,7 +339,7 @@ void Swapchain::Present()
 {
     ASSERT(!!m_isAcquired, "Swapchain: A buffer must be acquired before presenting.\n");
 
-    const auto& swapchainBuffer{ m_swapchainBuffers[m_currentFrameIndex] };
+    const auto& swapchainBuffer{ m_swapchainBuffers[m_frameIndex] };
 
     VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
     presentInfo.waitSemaphoreCount = 1;
@@ -358,7 +358,7 @@ void Swapchain::Present()
     }
 
     if (!swapchainChanged) {
-        m_currentFrameIndex = GetNextIndex();
+        ++m_frameIndex;
     }
 
     m_isAcquired = false;
@@ -381,20 +381,10 @@ bool Swapchain::BeginFrame(SwapChainFrameContext& outContex)
 
 void Swapchain::EndFrame()
 {
-    const auto& swapchainBuffer{ m_swapchainBuffers[m_currentFrameIndex] };
+    const auto& swapchainBuffer{ m_swapchainBuffers[m_frameIndex] };
     VKERRCHECK(vkEndCommandBuffer(swapchainBuffer.commandBuffer));
 
     Submit();
     Present();
-}
-
-uint32_t Swapchain::GetNextIndex() const
-{
-    return (m_currentFrameIndex + 1) % m_swapchainImagesCount;
-}
-
-uint32_t Swapchain::GetPreviousIndex() const
-{
-    return (m_currentFrameIndex + m_swapchainImagesCount - 1) % m_swapchainImagesCount;
 }
 } // namespace prev::render

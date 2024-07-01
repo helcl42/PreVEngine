@@ -1,31 +1,32 @@
-#include "FonttShader.h"
+#include "Font3dShader.h"
+
 #include "../../../../common/AssetManager.h"
 #include "../../../VertexLayout.h"
 
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::font::shader {
-FonttShader::FonttShader(const VkDevice device)
+Font3dShader::Font3dShader(const VkDevice device)
     : Shader(device)
 {
 }
 
-std::map<VkShaderStageFlagBits, std::string> FonttShader::GetPaths()
+std::map<VkShaderStageFlagBits, std::string> Font3dShader::GetPaths()
 {
     return {
-        { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/font/font_vert.spv") },
+        { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/font/font_3d_vert.spv") },
         { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/font/font_frag.spv") }
     };
 }
 
-std::vector<VkVertexInputBindingDescription> FonttShader::CreateVertexInputBindingDescriptors() const
+std::vector<VkVertexInputBindingDescription> Font3dShader::CreateVertexInputBindingDescriptors() const
 {
     return {
         prev::util::vk::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC2 }), VK_VERTEX_INPUT_RATE_VERTEX)
     };
 }
 
-std::vector<VkVertexInputAttributeDescription> FonttShader::CreateInputAttributeDescriptors() const
+std::vector<VkVertexInputAttributeDescription> Font3dShader::CreateInputAttributeDescriptors() const
 {
     return {
         prev::util::vk::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32_SFLOAT, 0),
@@ -33,7 +34,7 @@ std::vector<VkVertexInputAttributeDescription> FonttShader::CreateInputAttribute
     };
 }
 
-std::vector<prev::render::shader::Shader::DescriptorSet> FonttShader::CreateDescriptorSets() const
+std::vector<prev::render::shader::Shader::DescriptorSet> Font3dShader::CreateDescriptorSets() const
 {
     return {
         // vertex shader
@@ -45,7 +46,7 @@ std::vector<prev::render::shader::Shader::DescriptorSet> FonttShader::CreateDesc
     };
 }
 
-std::vector<prev::render::shader::Shader::PushConstantBlock> FonttShader::CreatePushConstantBlocks() const
+std::vector<prev::render::shader::Shader::PushConstantBlock> Font3dShader::CreatePushConstantBlocks() const
 {
     return {};
 }

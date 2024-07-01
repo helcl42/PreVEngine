@@ -122,7 +122,7 @@ void AnimationRenderer::RenderMeshNode(const NormalRenderContext& renderContext,
         uniformsVS.projectionMatrix = renderContext.projectionMatrix;
         uniformsVS.viewMatrix = renderContext.viewMatrix;
         uniformsVS.modelMatrix = modelMatrix;
-        uniformsVS.normalMatrix = glm::inverse(modelMatrix);
+        uniformsVS.normalMatrix = glm::transpose(glm::inverse(modelMatrix));
         uniformsVS.textureNumberOfRows = material->GetAtlasNumberOfRows();
         uniformsVS.textureOffset = glm::vec4(material->GetTextureOffset(), 0.0f, 0.0f);
         uniformsVS.cameraPosition = glm::vec4(renderContext.cameraPosition, 1.0f);

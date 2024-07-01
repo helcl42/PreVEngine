@@ -22,6 +22,7 @@ constexpr auto TAG_ANIMATION_TEXTURELESS_RENDER_COMPONENT{ "AnimationTextureless
 constexpr auto TAG_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT{ "AnimationNormalMappedRenderComponent" };
 constexpr auto TAG_ANIMATION_CONE_STEP_MAPPED_RENDER_COMPONENT{ "AnimationConeStepMappedRenderComponent" };
 constexpr auto TAG_FONT_RENDER_COMPONENT{ "FontRenderComponent" };
+constexpr auto TAG_FONT_3D_RENDER_COMPONENT{ "Font3dRenderComponent" };
 constexpr auto TAG_SKYBOX_RENDER_COMPONENT{ "SkyBoxRenderComponent" };
 constexpr auto TAG_TERRAIN_MANAGER_COMPONENT{ "TerrainManagerComponent" };
 constexpr auto TAG_TERRAIN_RENDER_COMPONENT{ "TerrainRenderComponent" };
