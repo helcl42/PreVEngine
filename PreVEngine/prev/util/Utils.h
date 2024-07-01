@@ -24,7 +24,7 @@ namespace file {
     std::string GetDirectoryPath(const std::string& filePath);
 
     std::string GetFileName(const std::string& filePath);
-    
+
     bool Exists(const std::string& filePath);
 
     std::string ReadTextFile(const std::string& filePath);
@@ -268,6 +268,83 @@ private:
         const auto index{ dist(rng.GetRandomEngine()) };
         return validSymbols[index];
     }
+};
+
+template <typename IndexType>
+class CircularIndex {
+public:
+    CircularIndex(const IndexType count)
+        : m_count{ count }
+        , m_index{ 0 }
+    {
+    }
+
+public:
+    IndexType GetIndex() const
+    {
+        return m_index;
+    }
+
+    IndexType GetCount() const
+    {
+        return m_count;
+    }
+
+    void SetCount(IndexType count)
+    {
+        m_count = count;
+    }
+
+    void Reset()
+    {
+        m_index = 0;
+    }
+
+    void Increment(IndexType step = 1)
+    {
+        m_index = (m_index + step) % m_count;
+    }
+
+    void Decrement(IndexType step = 1)
+    {
+        m_index = (m_index + (m_count - (step % m_count))) % m_count;
+    }
+
+    CircularIndex operator++()
+    {
+        auto prev{ *this };
+        Increment(1);
+        return prev;
+    }
+
+    CircularIndex operator++(int)
+    {
+        Increment(1);
+        return *this;
+    }
+
+    CircularIndex operator--()
+    {
+        auto prev{ *this };
+        Decrement(1);
+        return prev;
+    }
+
+    CircularIndex operator--(int)
+    {
+        Decrement(1);
+        return *this;
+    }
+
+    operator IndexType() const
+    {
+        return m_index;
+    }
+
+public:
+    IndexType m_count{};
+
+    IndexType m_index{};
 };
 
 } // namespace prev::util

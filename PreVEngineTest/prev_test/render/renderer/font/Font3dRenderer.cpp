@@ -1,9 +1,10 @@
-#include "FontRenderer.h"
-#include "pipeline/FontPipeline.h"
-#include "shader/FontShader.h"
+#include "Font3dRenderer.h"
+
+#include "pipeline/Font3dPipeline.h"
+#include "shader/Font3dShader.h"
 
 #include "../../../component/font/IFontRenderComponent.h"
-#include "../../../render/font/ScreenSpaceText.h"
+#include "../../../render/font/WorldSpaceText.h"
 
 #include <prev/common/Common.h>
 #include <prev/core/AllocatorProvider.h>
@@ -13,27 +14,27 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::render::renderer::font {
-FontRenderer::FontRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
+Font3dRenderer::Font3dRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
     : m_renderPass(renderPass)
 {
 }
 
-void FontRenderer::Init()
+void Font3dRenderer::Init()
 {
     auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<shader::FontShader>(*device, shader::FontShader::GetPaths());
+    m_shader = shaderFactory.CreateShaderFromFiles<shader::Font3dShader>(*device, shader::Font3dShader::GetPaths());
     m_shader->Init();
     m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
 
-    LOGI("Fonts Shader created\n");
+    LOGI("Fonts 3d Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::FontPipeline>(*device, *m_shader, *m_renderPass);
+    m_pipeline = std::make_unique<pipeline::Font3dPipeline>(*device, *m_shader, *m_renderPass);
     m_pipeline->Init();
 
-    LOGI("Fonts Pipeline created\n");
+    LOGI("Fonts 3d Pipeline created\n");
 
     m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsVS>>(*allocator);
     m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
@@ -42,11 +43,11 @@ void FontRenderer::Init()
     m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
-void FontRenderer::BeforeRender(const NormalRenderContext& renderContext)
+void Font3dRenderer::BeforeRender(const NormalRenderContext& renderContext)
 {
 }
 
-void FontRenderer::PreRender(const NormalRenderContext& renderContext)
+void Font3dRenderer::PreRender(const NormalRenderContext& renderContext)
 {
     const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
     const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
@@ -56,14 +57,17 @@ void FontRenderer::PreRender(const NormalRenderContext& renderContext)
     vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
 }
 
-void FontRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
+void Font3dRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
-    if (node->GetTags().HasAll({ TAG_FONT_RENDER_COMPONENT })) {
-        const auto nodeFontRenderComponent = prev::scene::component::ComponentRepository<prev_test::component::font::IFontRenderComponent<prev_test::render::font::ScreenSpaceText>>::Instance().Get(node->GetId());
+    if (node->GetTags().HasAll({ TAG_FONT_3D_RENDER_COMPONENT })) {
+        const auto nodeFontRenderComponent = prev::scene::component::ComponentRepository<prev_test::component::font::IFontRenderComponent<prev_test::render::font::WorldSpaceText>>::Instance().Get(node->GetId());
         for (const auto& [key, renderableText] : nodeFontRenderComponent->GetRenderableTexts()) {
             auto uboVS = m_uniformsPoolVS->GetNext();
             UniformsVS uniformsVS{};
-            uniformsVS.translation = glm::vec4(renderableText.text->GetPosition(), 0.0f, 1.0f);
+            uniformsVS.projectionMatrix = renderContext.projectionMatrix;
+            uniformsVS.viewMatrix = renderContext.viewMatrix;
+            uniformsVS.modelMatrix = prev::util::math::CreateTransformationMatrix(renderableText.text->GetPosition(), renderableText.text->IsAwaysFacingCamera() ? (glm::inverse(glm::quat_cast(renderContext.viewMatrix)) * renderableText.text->GetOrientation()) : (renderableText.text->GetOrientation() * glm::quat(glm::radians(glm::vec3(0.0f, 180.0f, 0.0f)))));
+            uniformsVS.clipPlane = renderContext.clipPlane;
             uboVS->Update(&uniformsVS);
 
             auto uboFS = m_uniformsPoolFS->GetNext();
@@ -96,15 +100,15 @@ void FontRenderer::Render(const NormalRenderContext& renderContext, const std::s
     }
 }
 
-void FontRenderer::PostRender(const NormalRenderContext& renderContext)
+void Font3dRenderer::PostRender(const NormalRenderContext& renderContext)
 {
 }
 
-void FontRenderer::AfterRender(const NormalRenderContext& renderContext)
+void Font3dRenderer::AfterRender(const NormalRenderContext& renderContext)
 {
 }
 
-void FontRenderer::ShutDown()
+void Font3dRenderer::ShutDown()
 {
     m_pipeline->ShutDown();
     m_pipeline = nullptr;

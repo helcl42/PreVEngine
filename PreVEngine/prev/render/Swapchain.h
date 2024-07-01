@@ -5,6 +5,7 @@
 #include "pass/RenderPass.h"
 
 #include "../core/memory/Allocator.h"
+#include "../util/Utils.h"
 
 namespace prev::render {
 struct SwapchainBuffer {
@@ -82,11 +83,6 @@ private:
     virtual std::vector<VkImage> GetSwapchainImages() const;
 
 private:
-    uint32_t GetNextIndex() const;
-
-    uint32_t GetPreviousIndex() const;
-
-private:
     core::device::Device& m_device;
 
     core::memory::Allocator& m_allocator;
@@ -117,9 +113,7 @@ private:
 
     bool m_isAcquired{};
 
-    uint32_t m_currentFrameIndex{};
-
-    uint32_t m_swapchainImagesCount{};
+    util::CircularIndex<uint32_t> m_frameIndex{ 3 };
 
     // MSAA
     std::unique_ptr<prev::render::buffer::image::IImageBuffer> m_msaaColorBuffer{};

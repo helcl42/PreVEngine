@@ -123,7 +123,7 @@ void ConeStepMappedRenderer::RenderMeshNode(const NormalRenderContext& renderCon
         uniformsVS.projectionMatrix = renderContext.projectionMatrix;
         uniformsVS.viewMatrix = renderContext.viewMatrix;
         uniformsVS.modelMatrix = modelMatrix;
-        uniformsVS.normalMatrix = glm::inverse(modelMatrix);
+        uniformsVS.normalMatrix = glm::transpose(glm::inverse(modelMatrix));
         uniformsVS.cameraPosition = glm::vec4(renderContext.cameraPosition, 1.0f);
         for (size_t i = 0; i < lightComponents.size(); i++) {
             const auto& lightComponent{ lightComponents[i] };
