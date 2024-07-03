@@ -109,7 +109,7 @@ void Shader::RecreateDescriptorSets(const uint32_t size)
     }
 }
 
-bool Shader::ShouldAdjustCapacity(const uint32_t size)
+bool Shader::ShouldAdjustCapacity(const uint32_t size) const
 {
     const float MIN_CAPACITY_RATIO_TO_SHRINK = 0.5f;
 
