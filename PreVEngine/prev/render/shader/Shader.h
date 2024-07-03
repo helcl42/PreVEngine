@@ -46,17 +46,17 @@ public:
 
 protected:
     struct DescriptorSet {
-        std::string name;
-        uint32_t binding;
-        VkDescriptorType descType;
-        uint32_t descCount;
-        VkShaderStageFlags stageFlags;
+        std::string name{};
+        uint32_t binding{};
+        VkDescriptorType descType{};
+        uint32_t descCount{};
+        VkShaderStageFlags stageFlags{};
     };
 
     struct PushConstantBlock {
-        VkShaderStageFlags stageFlags;
-        uint32_t offset;
-        uint32_t size;
+        VkShaderStageFlags stageFlags{};
+        uint32_t offset{};
+        uint32_t size{};
     };
 
 protected:
@@ -70,7 +70,7 @@ protected:
 
 private:
     struct DescriptorSetInfo {
-        size_t writeIndex;
+        size_t writeIndex{};
         union {
             VkDescriptorBufferInfo bufferInfo;
             VkDescriptorImageInfo imageInfo;
@@ -94,7 +94,7 @@ private:
 
     void RecreateDescriptorSets(const uint32_t size);
 
-    bool ShouldAdjustCapacity(const uint32_t size);
+    bool ShouldAdjustCapacity(const uint32_t size) const;
 
 protected:
     static inline const std::string DEFAULT_ENTRY_POINT_NAME{ "main" };
