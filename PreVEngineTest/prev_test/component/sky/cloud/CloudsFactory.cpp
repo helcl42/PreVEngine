@@ -72,7 +72,7 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
     ubo->Update(&uniforms);
 
     shader->Bind("uboCS", *ubo);
-    shader->Bind("outWeatherTexture", weatherImageBuffer->GetImageView(), *sampler, VK_IMAGE_LAYOUT_GENERAL);
+    shader->Bind("outWeatherTexture", *weatherImageBuffer, *sampler, VK_IMAGE_LAYOUT_GENERAL);
     const VkDescriptorSet descriptorSet = shader->UpdateNextDescriptorSet();
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *pipeline);

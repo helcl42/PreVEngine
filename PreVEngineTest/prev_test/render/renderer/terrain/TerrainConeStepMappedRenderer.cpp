@@ -164,11 +164,11 @@ void TerrainConeStepMappedRenderer::Render(const NormalRenderContext& renderCont
 
             for (size_t i = 0; i < terrainComponent->GetMaterials().size(); i++) {
                 const auto material{ terrainComponent->GetMaterials().at(i) };
-                m_shader->Bind("colorSampler[" + std::to_string(i) + "]", material->GetImageBuffer(COLOR_INDEX)->GetImageView(), *material->GetSampler(COLOR_INDEX), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-                m_shader->Bind("normalSampler[" + std::to_string(i) + "]", material->GetImageBuffer(NORMAL_INDEX)->GetImageView(), *material->GetSampler(NORMAL_INDEX), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-                m_shader->Bind("heightSampler[" + std::to_string(i) + "]", material->GetImageBuffer(HEIGHT_AND_CONE_INDEX)->GetImageView(), *material->GetSampler(HEIGHT_AND_CONE_INDEX), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                m_shader->Bind("colorSampler[" + std::to_string(i) + "]", *material->GetImageBuffer(COLOR_INDEX), *material->GetSampler(COLOR_INDEX), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                m_shader->Bind("normalSampler[" + std::to_string(i) + "]", *material->GetImageBuffer(NORMAL_INDEX), *material->GetSampler(NORMAL_INDEX), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                m_shader->Bind("heightSampler[" + std::to_string(i) + "]", *material->GetImageBuffer(HEIGHT_AND_CONE_INDEX), *material->GetSampler(HEIGHT_AND_CONE_INDEX), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             }
-            m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), *shadowsComponent->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+            m_shader->Bind("depthSampler", *shadowsComponent->GetImageBuffer(), *shadowsComponent->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
             m_shader->Bind("uboVS", *uboVS);
             m_shader->Bind("uboFS", *uboFS);
 

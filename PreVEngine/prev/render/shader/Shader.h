@@ -3,6 +3,8 @@
 
 #include "../buffer/Buffer.h"
 #include "../buffer/UniformBuffer.h"
+#include "../buffer/image/IImageBuffer.h"
+#include "../sampler/Sampler.h"
 
 #include "../../core/Core.h"
 
@@ -25,7 +27,7 @@ public:
 
     void Bind(const std::string& name, const prev::render::buffer::Buffer& buffer);
 
-    void Bind(const std::string& name, const VkImageView imageView, const VkSampler sampler, const VkImageLayout imageLayout);
+    void Bind(const std::string& name, const prev::render::buffer::image::IImageBuffer& imageBuffer, const prev::render::sampler::Sampler& sampler, const VkImageLayout layout);
 
     VkDescriptorSet UpdateNextDescriptorSet();
 
