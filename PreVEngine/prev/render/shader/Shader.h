@@ -6,24 +6,19 @@
 #include "../../core/Core.h"
 
 #include <map>
-#include <memory>
 #include <vector>
 
 namespace prev::render::shader {
-class Shader {
+class ShaderBuilder;
+
+class Shader final {
 public:
-    Shader(const VkDevice device);
+    Shader(const VkDevice device); // TODO - this should be private - accesible from builder only!;
 
-    virtual ~Shader();
+    ~Shader();
 
 public:
-    bool Init();
-
-    void ShutDown();
-
     bool AdjustDescriptorPoolCapacity(const uint32_t desiredCount);
-
-    bool AddShaderModule(const VkShaderStageFlagBits stage, const std::vector<char>& spirv);
 
     void Bind(const std::string& name, const prev::render::buffer::UniformBuffer& ubo);
 
@@ -44,7 +39,7 @@ public:
 
     const std::vector<VkVertexInputAttributeDescription>& GetVertexInputAttributeDescriptions() const;
 
-protected:
+private:
     struct DescriptorSet {
         std::string name{};
         uint32_t binding{};
@@ -59,16 +54,6 @@ protected:
         uint32_t size{};
     };
 
-protected:
-    virtual std::vector<VkVertexInputBindingDescription> CreateVertexInputBindingDescriptors() const = 0;
-
-    virtual std::vector<VkVertexInputAttributeDescription> CreateInputAttributeDescriptors() const = 0;
-
-    virtual std::vector<DescriptorSet> CreateDescriptorSets() const = 0;
-
-    virtual std::vector<PushConstantBlock> CreatePushConstantBlocks() const = 0;
-
-private:
     struct DescriptorSetInfo {
         size_t writeIndex{};
         union {
@@ -78,15 +63,7 @@ private:
     };
 
 private:
-    void AddDescriptorSet(const std::string& name, const uint32_t binding, const VkDescriptorType descType, const uint32_t descCount, const VkShaderStageFlags stageFlags);
-
-    void AddPushConstantBlock(const VkShaderStageFlags stageFlags, const uint32_t offset, const uint32_t size);
-
-    VkShaderModule CreateShaderModule(const std::vector<char>& spirv) const;
-
     void CheckBindings() const;
-
-    VkDescriptorSetLayout CreateDescriptorSetLayout() const;
 
     VkDescriptorPool CreateDescriptorPool(const uint32_t size) const;
 
@@ -96,10 +73,13 @@ private:
 
     bool ShouldAdjustCapacity(const uint32_t size) const;
 
-protected:
+private:
+    friend class ShaderBuilder;
+
+private:
     static inline const std::string DEFAULT_ENTRY_POINT_NAME{ "main" };
 
-protected:
+private:
     VkDevice m_device;
 
     VkDescriptorPool m_descriptorPool;

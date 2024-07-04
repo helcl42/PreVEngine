@@ -1,13 +1,13 @@
 #include "CloudsFactory.h"
 
+#include "../../../common/AssetManager.h"
 #include "../../../render/renderer/sky/pipeline/CloudsPipeline.h"
-#include "../../../render/renderer/sky/shader/CloudsShader.h"
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
 #include <prev/render/buffer/UniformBuffer.h>
 #include <prev/render/buffer/image/ImageBufferFactory.h>
-#include <prev/render/shader/ShaderFactory.h>
+#include <prev/render/shader/ShaderBuilder.h>
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::component::sky::cloud {
@@ -28,9 +28,18 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
     auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
     auto computeQueue{ device->GetQueue(prev::core::device::QueueType::COMPUTE) };
 
-    prev::render::shader::ShaderFactory shaderFactory{};
-    auto shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::CloudsShader>(*device, prev_test::render::renderer::sky::shader::CloudsShader::GetPaths());
-    shader->Init();
+    // clang-format off
+    auto shader = prev::render::shader::ShaderBuilder{ *device }
+        .AddShaderStagePaths({
+            { VK_SHADER_STAGE_COMPUTE_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/clouds_comp.spv") }
+        })
+        .AddDescriptorSets({
+            { "uboCS", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT },
+            { "outWeatherTexture", 1, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT }
+        })
+	    .SetDescriptorPoolCapacity(1)
+        .Build();
+    // clang-format on
 
     auto pipeline = std::make_unique<prev_test::render::renderer::sky::pipeline::CloudsPipeline>(*device, *shader);
     pipeline->Init();
@@ -90,8 +99,6 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
 
     pipeline->ShutDown();
     pipeline = nullptr;
-
-    shader->ShutDown();
     shader = nullptr;
 
     return { std::move(weatherImageBuffer), std::move(sampler) };

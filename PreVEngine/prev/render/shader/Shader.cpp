@@ -4,66 +4,18 @@
 #include "../../util/MathUtils.h"
 #include "../../util/VkUtils.h"
 
-#include <algorithm>
-#include <sstream>
-
 namespace prev::render::shader {
 Shader::Shader(const VkDevice device)
-    : m_device(device)
-    , m_descriptorPool(VK_NULL_HANDLE)
-    , m_descriptorSetLayout(VK_NULL_HANDLE)
-    , m_poolCapacity(0)
-    , m_currentDescriptorSetIndex(0)
+    : m_device{ device }
+    , m_descriptorPool{ VK_NULL_HANDLE }
+    , m_descriptorSetLayout{ VK_NULL_HANDLE }
+    , m_poolCapacity{ 0 }
+    , m_currentDescriptorSetIndex{ 0 }
 {
 }
 
 Shader::~Shader()
 {
-    ShutDown();
-}
-
-bool Shader::Init()
-{
-    if (!m_shaderStages.empty()) {
-        return false;
-    }
-
-    for (const auto& module : m_shaderModules) {
-        VkPipelineShaderStageCreateInfo stageInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
-        stageInfo.stage = module.first;
-        stageInfo.module = m_shaderModules[module.first];
-        stageInfo.pName = DEFAULT_ENTRY_POINT_NAME.c_str();
-        m_shaderStages.push_back(stageInfo);
-    }
-
-    m_inputBindingDescriptions = CreateVertexInputBindingDescriptors();
-    m_inputAttributeDescriptions = CreateInputAttributeDescriptors();
-
-    auto descriptorSets = CreateDescriptorSets();
-    for (const auto& ds : descriptorSets) {
-        AddDescriptorSet(ds.name, ds.binding, ds.descType, ds.descCount, ds.stageFlags);
-    }
-
-    auto pushConstantBlocks = CreatePushConstantBlocks();
-    for (const auto& pcb : pushConstantBlocks) {
-        AddPushConstantBlock(pcb.stageFlags, pcb.offset, pcb.size);
-    }
-
-    m_currentDescriptorSetIndex = 0;
-
-    m_descriptorSetLayout = CreateDescriptorSetLayout();
-
-    AdjustDescriptorPoolCapacity(20);
-
-    return true;
-}
-
-void Shader::ShutDown()
-{
-    if (m_shaderStages.empty()) {
-        return;
-    }
-
     vkDeviceWaitIdle(m_device);
 
     if (m_descriptorPool) {
@@ -96,24 +48,23 @@ void Shader::RecreateDescriptorSets(const uint32_t size)
 {
     m_descriptorSets.resize(size);
 
-    for (uint32_t i = 0; i < size; i++) {
-        VkDescriptorSet descriptorSet = {};
-
+    for (uint32_t i = 0; i < size; ++i) {
         VkDescriptorSetAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
         allocInfo.descriptorPool = m_descriptorPool;
         allocInfo.descriptorSetCount = 1;
         allocInfo.pSetLayouts = &m_descriptorSetLayout;
-        VKERRCHECK(vkAllocateDescriptorSets(m_device, &allocInfo, &descriptorSet););
 
+        VkDescriptorSet descriptorSet;
+        VKERRCHECK(vkAllocateDescriptorSets(m_device, &allocInfo, &descriptorSet));
         m_descriptorSets[i] = descriptorSet;
     }
 }
 
 bool Shader::ShouldAdjustCapacity(const uint32_t size) const
 {
-    const float MIN_CAPACITY_RATIO_TO_SHRINK = 0.5f;
+    const float MIN_CAPACITY_RATIO_TO_SHRINK{ 0.5f };
 
-    bool shouldAdjust = false;
+    bool shouldAdjust{ false };
     if (size > m_poolCapacity) {
         shouldAdjust = true;
     } else if (float(size) / float(m_poolCapacity) < MIN_CAPACITY_RATIO_TO_SHRINK) {
@@ -124,86 +75,22 @@ bool Shader::ShouldAdjustCapacity(const uint32_t size) const
 
 bool Shader::AdjustDescriptorPoolCapacity(const uint32_t desiredCount)
 {
-    bool shouldRecreate = ShouldAdjustCapacity(desiredCount);
-
+    bool shouldRecreate{ ShouldAdjustCapacity(desiredCount) };
     if (shouldRecreate) {
         RecreateDescriptorPool(desiredCount);
         RecreateDescriptorSets(desiredCount);
-
         return true;
     }
-
     return false;
-}
-
-void Shader::AddDescriptorSet(const std::string& name, const uint32_t binding, const VkDescriptorType descType, const uint32_t descCount, const VkShaderStageFlags stageFlags)
-{
-    m_layoutBindings.emplace_back(prev::util::vk::CreteDescriptorSetLayoutBinding(binding, descType, descCount, stageFlags));
-    m_descriptorWrites.emplace_back(prev::util::vk::CreateWriteDescriptorSet(binding, descType, descCount));
-    if (descCount > 1) {
-        for (uint32_t i = 0; i < descCount; i++) {
-            m_descriptorSetInfos[name + "[" + std::to_string(i) + "]"] = { m_descriptorWrites.size() - 1 };
-        }
-    } else {
-        m_descriptorSetInfos[name] = { m_descriptorWrites.size() - 1 };
-    }
-}
-
-void Shader::AddPushConstantBlock(const VkShaderStageFlags stageFlags, const uint32_t offset, const uint32_t size)
-{
-    VkPushConstantRange pushConstantRange = {};
-    pushConstantRange.stageFlags = stageFlags;
-    pushConstantRange.offset = offset;
-    pushConstantRange.size = size;
-    m_pushConstantRanges.emplace_back(pushConstantRange);
-}
-
-bool Shader::AddShaderModule(const VkShaderStageFlagBits stage, const std::vector<char>& spirv)
-{
-    assert(!m_shaderModules[stage] && "Shader stage already loaded.");
-
-    m_shaderModules[stage] = CreateShaderModule(spirv);
-
-    return !!m_shaderModules[stage];
-}
-
-VkShaderModule Shader::CreateShaderModule(const std::vector<char>& spirv) const
-{
-    VkShaderModuleCreateInfo createInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
-    createInfo.codeSize = spirv.size();
-
-    std::vector<uint32_t> codeAligned(spirv.size() / 4 + 1);
-    memcpy(codeAligned.data(), spirv.data(), spirv.size());
-    createInfo.pCode = codeAligned.data();
-
-    VkShaderModule shaderModule;
-    VKERRCHECK(vkCreateShaderModule(m_device, &createInfo, nullptr, &shaderModule));
-
-    return shaderModule;
-}
-
-VkDescriptorSetLayout Shader::CreateDescriptorSetLayout() const
-{
-    VkDescriptorSetLayout descriptorSetLayout;
-
-    VkDescriptorSetLayoutCreateInfo createInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
-    createInfo.bindingCount = static_cast<uint32_t>(m_layoutBindings.size());
-    createInfo.pBindings = m_layoutBindings.data();
-
-    VKERRCHECK(vkCreateDescriptorSetLayout(m_device, &createInfo, nullptr, &descriptorSetLayout));
-
-    return descriptorSetLayout;
 }
 
 VkDescriptorPool Shader::CreateDescriptorPool(const uint32_t size) const
 {
-    VkDescriptorPool descriptorPool;
-
-    const size_t itemsSize = m_layoutBindings.size() * size;
+    const size_t itemsSize{ m_layoutBindings.size() * size };
 
     std::vector<VkDescriptorPoolSize> poolSizes(itemsSize);
     for (size_t i = 0; i < itemsSize; ++i) {
-        const auto& binding = m_layoutBindings[i % m_layoutBindings.size()];
+        const auto& binding{ m_layoutBindings[i % m_layoutBindings.size()] };
 
         poolSizes[i].type = binding.descriptorType;
         poolSizes[i].descriptorCount = binding.descriptorCount;
@@ -214,8 +101,8 @@ VkDescriptorPool Shader::CreateDescriptorPool(const uint32_t size) const
     poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
     poolInfo.pPoolSizes = poolSizes.data();
 
+    VkDescriptorPool descriptorPool;
     VKERRCHECK(vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &descriptorPool));
-
     return descriptorPool;
 }
 
