@@ -23,6 +23,13 @@ VkResult Queue::Submit(uint32_t submitCount, const VkSubmitInfo* submitInfo, VkF
     return vkQueueSubmit(handle, submitCount, submitInfo, fence);
 }
 
+VkResult Queue::Present(const VkPresentInfoKHR* presentInfo) const
+{
+    std::scoped_lock lock{ mutex };
+
+    return vkQueuePresentKHR(handle, presentInfo);
+}
+
 VkResult Queue::WaitIdle() const
 {
     std::scoped_lock lock{ mutex };
