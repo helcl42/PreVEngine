@@ -133,8 +133,8 @@ bool Swapchain::SetImageCount(uint32_t imageCount)
 
 std::vector<VkPresentModeKHR> Swapchain::GetPresentModes() const
 {
-    uint32_t count;
-    vkGetPhysicalDeviceSurfacePresentModesKHR(*m_device.GetGPU(), m_surface, &count, nullptr);
+    uint32_t count{};
+    VKERRCHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(*m_device.GetGPU(), m_surface, &count, nullptr));
     std::vector<VkPresentModeKHR> modes(count);
     VKERRCHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(*m_device.GetGPU(), m_surface, &count, modes.data()));
     return modes;
