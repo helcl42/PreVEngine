@@ -87,7 +87,7 @@ void ShadowMapDebugRenderer::Render(const prev::render::RenderContext& renderCon
     PushConstantBlock pushConstBlock{ static_cast<uint32_t>(m_cascadeIndex), -cascade.startSplitDepth, -cascade.endSplitDepth };
     vkCmdPushConstants(renderContext.commandBuffer, m_pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantBlock), &pushConstBlock);
 
-    m_shader->Bind("depthSampler", shadows->GetImageBuffer()->GetImageView(), *shadows->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+    m_shader->Bind("depthSampler", *shadows->GetImageBuffer(), *shadows->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 
     const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
     const VkBuffer vertexBuffers[] = { *m_quadModel->GetVertexBuffer() };

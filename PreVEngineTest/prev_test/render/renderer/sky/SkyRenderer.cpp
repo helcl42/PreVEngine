@@ -176,13 +176,13 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
 
     m_skyShader->Bind("uboCS", *uboCS);
 
-    m_skyShader->Bind("perlinNoiseTex", skyComponent->GetPerlinWorleyNoise()->GetImageView(), *skyComponent->GetPerlinWorleyNoiseSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    m_skyShader->Bind("weatherTex", skyComponent->GetWeather()->GetImageView(), *skyComponent->GetWeatherSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_skyShader->Bind("perlinNoiseTex", *skyComponent->GetPerlinWorleyNoise(), *skyComponent->GetPerlinWorleyNoiseSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_skyShader->Bind("weatherTex", *skyComponent->GetWeather(), *skyComponent->GetWeatherSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-    m_skyShader->Bind("outFragColor", m_skyColorImageBuffer->GetImageView(), *m_skyColorImageSampler, VK_IMAGE_LAYOUT_GENERAL);
-    m_skyShader->Bind("outBloom", m_skyBloomImageBuffer->GetImageView(), *m_skyBloomImageSampler, VK_IMAGE_LAYOUT_GENERAL);
-    m_skyShader->Bind("outAlphaness", m_skyAlphanessImageBuffer->GetImageView(), *m_skyAlphanessImageSampler, VK_IMAGE_LAYOUT_GENERAL);
-    m_skyShader->Bind("outCloudDistance", m_skyCloudDistanceImageBuffer->GetImageView(), *m_skyCloudDistanceImageSampler, VK_IMAGE_LAYOUT_GENERAL);
+    m_skyShader->Bind("outFragColor", *m_skyColorImageBuffer, *m_skyColorImageSampler, VK_IMAGE_LAYOUT_GENERAL);
+    m_skyShader->Bind("outBloom", *m_skyBloomImageBuffer, *m_skyBloomImageSampler, VK_IMAGE_LAYOUT_GENERAL);
+    m_skyShader->Bind("outAlphaness", *m_skyAlphanessImageBuffer, *m_skyAlphanessImageSampler, VK_IMAGE_LAYOUT_GENERAL);
+    m_skyShader->Bind("outCloudDistance", *m_skyCloudDistanceImageBuffer, *m_skyCloudDistanceImageSampler, VK_IMAGE_LAYOUT_GENERAL);
 
     const VkDescriptorSet descriptorSetCompute = m_skyShader->UpdateNextDescriptorSet();
 
@@ -215,10 +215,10 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
 
     m_skyPostProcessShader->Bind("uboCS", *uboPostCS);
 
-    m_skyPostProcessShader->Bind("skyTex", m_skyColorImageBuffer->GetImageView(), *m_skyColorImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    m_skyPostProcessShader->Bind("bloomTex", m_skyBloomImageBuffer->GetImageView(), *m_skyBloomImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_skyPostProcessShader->Bind("skyTex", *m_skyColorImageBuffer, *m_skyColorImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_skyPostProcessShader->Bind("bloomTex", *m_skyBloomImageBuffer, *m_skyBloomImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-    m_skyPostProcessShader->Bind("outFragColor", m_skyPostProcessColorImageBuffer->GetImageView(), *m_skyPostProcessImageSampler, VK_IMAGE_LAYOUT_GENERAL);
+    m_skyPostProcessShader->Bind("outFragColor", *m_skyPostProcessColorImageBuffer, *m_skyPostProcessImageSampler, VK_IMAGE_LAYOUT_GENERAL);
 
     const VkDescriptorSet descriptorSetComputePost = m_skyPostProcessShader->UpdateNextDescriptorSet();
 
@@ -245,8 +245,8 @@ void SkyRenderer::Render(const NormalRenderContext& renderContext, const std::sh
     if (node->GetTags().HasAll({ TAG_SKY_RENDER_COMPONENT })) {
         const auto skyComponent = prev::scene::component::ComponentRepository<prev_test::component::sky::ISkyComponent>::Instance().Get(node->GetId());
 
-        m_compositeShader->Bind("colorTex", m_skyPostProcessColorImageBuffer->GetImageView(), *m_skyPostProcessImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-        m_compositeShader->Bind("depthTex", m_skyCloudDistanceImageBuffer->GetImageView(), *m_skyCloudDistanceImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_compositeShader->Bind("colorTex", *m_skyPostProcessColorImageBuffer, *m_skyPostProcessImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_compositeShader->Bind("depthTex", *m_skyCloudDistanceImageBuffer, *m_skyCloudDistanceImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
         const VkDescriptorSet descriptorSet = m_compositeShader->UpdateNextDescriptorSet();
         const VkBuffer vertexBuffers[] = { *skyComponent->GetModel()->GetVertexBuffer() };

@@ -47,7 +47,7 @@ CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t widt
     cmdBufBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &cmdBufBeginInfo));
 
-    shader->Bind("outVolumeTexture", noiseImageBuffer->GetImageView(), *sampler, VK_IMAGE_LAYOUT_GENERAL);
+    shader->Bind("outVolumeTexture", *noiseImageBuffer, *sampler, VK_IMAGE_LAYOUT_GENERAL);
     const VkDescriptorSet descriptorSet = shader->UpdateNextDescriptorSet();
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *pipeline);

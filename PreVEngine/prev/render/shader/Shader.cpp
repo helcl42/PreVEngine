@@ -171,7 +171,7 @@ void Shader::Bind(const std::string& name, const prev::render::buffer::Buffer& b
     // LOGI("Bind Buffer to shader-in: \"%s\"\n", name.c_str());
 }
 
-void Shader::Bind(const std::string& name, const VkImageView imageView, const VkSampler sampler, const VkImageLayout imageLayout)
+void Shader::Bind(const std::string& name, const prev::render::buffer::image::IImageBuffer& imageBuffer, const prev::render::sampler::Sampler& sampler, const VkImageLayout layout)
 {
     const auto descriptorSetInfoIter{ m_descriptorSetInfos.find(name) };
     if (descriptorSetInfoIter == m_descriptorSetInfos.cend()) {
@@ -180,9 +180,9 @@ void Shader::Bind(const std::string& name, const VkImageView imageView, const Vk
 
     auto& item{ descriptorSetInfoIter->second };
 
-    item.imageInfo.imageView = imageView;
+    item.imageInfo.imageView = imageBuffer.GetImageView();
+    item.imageInfo.imageLayout = layout;
     item.imageInfo.sampler = sampler;
-    item.imageInfo.imageLayout = imageLayout;
 
     // LOGI("Bind Image to shader-in: \"%s\"\n", name.c_str());
 }
