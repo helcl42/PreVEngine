@@ -1,12 +1,12 @@
 #include "CloudsNoiseFactory.h"
 
+#include "../../../common/AssetManager.h"
 #include "../../../render/renderer/sky/pipeline/CloudsPerlinWorleyNoisePipeline.h"
-#include "../../../render/renderer/sky/shader/CloudsPerlinWorleyNoiseShader.h"
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
 #include <prev/render/buffer/image/ImageBufferFactory.h>
-#include <prev/render/shader/ShaderFactory.h>
+#include <prev/render/shader/ShaderBuilder.h>
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::component::sky::cloud {
@@ -18,9 +18,17 @@ CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t widt
     auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
     auto computeQueue{ device->GetQueue(prev::core::device::QueueType::COMPUTE) };
 
-    prev::render::shader::ShaderFactory shaderFactory{};
-    auto shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::CloudsPerlinWorleyNoiseShader>(*device, prev_test::render::renderer::sky::shader::CloudsPerlinWorleyNoiseShader::GetPaths());
-    shader->Init();
+    // clang-format off
+    auto shader = prev::render::shader::ShaderBuilder{ *device }
+        .AddShaderStagePaths({
+            { VK_SHADER_STAGE_COMPUTE_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/clouds_perlin_worley_noise_3d_comp.spv") }
+        })
+        .AddDescriptorSets({
+            { "outVolumeTexture", 0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT }
+        })
+	    .SetDescriptorPoolCapacity(1)
+        .Build();
+    // clang-format on
 
     auto pipeline = std::make_unique<prev_test::render::renderer::sky::pipeline::CloudsPerlinWorleyNoisePipeline>(*device, *shader);
     pipeline->Init();
@@ -66,8 +74,6 @@ CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t widt
 
     pipeline->ShutDown();
     pipeline = nullptr;
-
-    shader->ShutDown();
     shader = nullptr;
 
     return { std::move(noiseImageBuffer), std::move(sampler) };
