@@ -41,6 +41,8 @@ public:
 
     ShaderBuilder& SetDescriptorPoolCapacity(const uint32_t size);
 
+    ShaderBuilder& SetEntryPointName(const std::string& name);
+
     std::unique_ptr<Shader> Build() const;
 
 private:
@@ -70,6 +72,11 @@ private:
     std::vector<Shader::PushConstantBlock> m_pushConstantBlocks;
 
     uint32_t m_descriptorPoolSize{};
+
+    std::string m_entryPointName;
+
+private:
+    static inline const std::string DEFAULT_ENTRY_POINT_NAME{ "main" };
 };
 } // namespace prev::render::shader
 

@@ -103,6 +103,12 @@ ShaderBuilder& ShaderBuilder::SetDescriptorPoolCapacity(const uint32_t size)
     return *this;
 }
 
+ShaderBuilder& ShaderBuilder::SetEntryPointName(const std::string& name)
+{
+    m_entryPointName = name;
+    return *this;
+}
+
 std::unique_ptr<Shader> ShaderBuilder::Build() const
 {
     auto byteCodes{ m_stageByteCodes };
@@ -193,7 +199,7 @@ VkPipelineShaderStageCreateInfo ShaderBuilder::CreateShaderStageCreateInfo(const
     VkPipelineShaderStageCreateInfo stageInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
     stageInfo.stage = stage;
     stageInfo.module = module;
-    stageInfo.pName = Shader::DEFAULT_ENTRY_POINT_NAME.c_str();
+    stageInfo.pName = m_entryPointName.empty() ? DEFAULT_ENTRY_POINT_NAME.c_str() : m_entryPointName.c_str(); // this changes name for all stages
     return stageInfo;
 }
 

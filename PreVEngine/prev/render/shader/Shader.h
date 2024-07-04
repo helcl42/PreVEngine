@@ -77,9 +77,6 @@ private:
     friend class ShaderBuilder;
 
 private:
-    static inline const std::string DEFAULT_ENTRY_POINT_NAME{ "main" };
-
-private:
     VkDevice m_device;
 
     VkDescriptorPool m_descriptorPool;
