@@ -1,6 +1,7 @@
 #ifndef __SHADER_H__
 #define __SHADER_H__
 
+#include "../buffer/Buffer.h"
 #include "../buffer/UniformBuffer.h"
 
 #include "../../core/Core.h"
@@ -20,7 +21,7 @@ public:
 public:
     bool AdjustDescriptorPoolCapacity(const uint32_t desiredCount);
 
-    void Bind(const std::string& name, const prev::render::buffer::UniformBuffer& ubo);
+    void Bind(const std::string& name, const prev::render::buffer::UniformBuffer& uniformBuffer);
 
     void Bind(const std::string& name, const prev::render::buffer::Buffer& buffer);
 

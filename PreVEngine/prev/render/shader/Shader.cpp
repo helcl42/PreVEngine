@@ -139,7 +139,7 @@ VkDescriptorSet Shader::UpdateNextDescriptorSet()
     return descriptorSet;
 }
 
-void Shader::Bind(const std::string& name, const prev::render::buffer::UniformBuffer& ubo)
+void Shader::Bind(const std::string& name, const prev::render::buffer::UniformBuffer& uniformBuffer)
 {
     const auto descriptorSetInfoIter{ m_descriptorSetInfos.find(name) };
     if (descriptorSetInfoIter == m_descriptorSetInfos.cend()) {
@@ -148,9 +148,9 @@ void Shader::Bind(const std::string& name, const prev::render::buffer::UniformBu
 
     auto& item{ descriptorSetInfoIter->second };
 
-    item.bufferInfo.buffer = ubo;
-    item.bufferInfo.offset = ubo.GetOffset();
-    item.bufferInfo.range = ubo.GetRange();
+    item.bufferInfo.buffer = uniformBuffer;
+    item.bufferInfo.offset = uniformBuffer.GetOffset();
+    item.bufferInfo.range = uniformBuffer.GetRange();
 
     // LOGI("Bind UniformBuffer to shader-in: \"%s\"\n", name.c_str());
 }
