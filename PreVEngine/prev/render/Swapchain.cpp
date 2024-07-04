@@ -345,7 +345,7 @@ void Swapchain::Present()
 
     bool swapchainChanged{ false };
 
-    const auto result{ vkQueuePresentKHR(*m_presentQueue, &presentInfo) };
+    const auto result{ m_presentQueue->Present(&presentInfo) };
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
         swapchainChanged = UpdateExtent();
     } else if (result != VK_SUCCESS) {
