@@ -8,7 +8,7 @@
 #include <vector>
 
 namespace prev::render::shader {
-class ShaderBuilder {
+class ShaderBuilder final {
 public:
     ShaderBuilder(VkDevice device);
 
