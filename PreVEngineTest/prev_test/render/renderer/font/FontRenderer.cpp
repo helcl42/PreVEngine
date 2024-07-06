@@ -1,5 +1,4 @@
 #include "FontRenderer.h"
-#include "pipeline/FontPipeline.h"
 
 #include "../../../common/AssetManager.h"
 #include "../../../component/font/IFontRenderComponent.h"
@@ -8,6 +7,7 @@
 #include <prev/common/Common.h>
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
+#include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
@@ -48,8 +48,16 @@ void FontRenderer::Init()
 
     LOGI("Fonts Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::FontPipeline>(*device, *m_shader, *m_renderPass);
-    m_pipeline->Init();
+    // clang-format off
+    m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ *device, *m_shader, *m_renderPass }
+        .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+        .SetDepthTestEnabled(false)
+        .SetDepthWriteEnabled(false)
+        .SetBlendingModeEnabled(true)
+        .SetAdditiveBlendingEnabled(false)
+        .SetPolygonMode(VK_POLYGON_MODE_FILL)
+        .Build();
+    // clang-format on
 
     LOGI("Fonts Pipeline created\n");
 
@@ -124,7 +132,6 @@ void FontRenderer::AfterRender(const NormalRenderContext& renderContext)
 
 void FontRenderer::ShutDown()
 {
-    m_pipeline->ShutDown();
     m_pipeline = nullptr;
     m_shader = nullptr;
 }

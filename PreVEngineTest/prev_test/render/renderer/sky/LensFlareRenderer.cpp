@@ -1,11 +1,11 @@
 #include "LensFlareRenderer.h"
-#include "pipeline/FlarePipeline.h"
 
 #include "../../../common/AssetManager.h"
 #include "../../../component/sky/ILensFlareComponent.h"
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
+#include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
@@ -47,8 +47,16 @@ void LensFlareRenderer::Init()
 
     LOGI("LensFlare Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::FlarePipeline>(*device, *m_shader, *m_renderPass);
-    m_pipeline->Init();
+    // clang-format off
+    m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ *device, *m_shader, *m_renderPass }
+        .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+        .SetDepthTestEnabled(true)
+        .SetDepthWriteEnabled(true)
+        .SetBlendingModeEnabled(true)
+        .SetAdditiveBlendingEnabled(false)
+        .SetPolygonMode(VK_POLYGON_MODE_FILL)
+        .Build();
+    // clang-format on
 
     LOGI("LensFlare Pipeline created\n");
 
@@ -121,7 +129,6 @@ void LensFlareRenderer::AfterRender(const NormalRenderContext& renderContext)
 
 void LensFlareRenderer::ShutDown()
 {
-    m_pipeline->ShutDown();
     m_pipeline = nullptr;
     m_shader = nullptr;
 }

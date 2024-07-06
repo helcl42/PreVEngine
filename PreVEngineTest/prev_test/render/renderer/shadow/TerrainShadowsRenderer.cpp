@@ -1,5 +1,4 @@
 #include "TerrainShadowsRenderer.h"
-#include "pipeline/TerrainShadowsPipeline.h"
 
 #include "../../../common/AssetManager.h"
 #include "../../../component/ray_casting/IBoundingVolumeComponent.h"
@@ -8,6 +7,7 @@
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
+#include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
@@ -46,8 +46,16 @@ void TerrainShadowsRenderer::Init()
 
     LOGI("Terrain Shadows Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::TerrainShadowsPipeline>(*device, *m_shader, *m_renderPass);
-    m_pipeline->Init();
+    // clang-format off
+    m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ *device, *m_shader, *m_renderPass }
+        .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+        .SetDepthTestEnabled(true)
+        .SetDepthWriteEnabled(true)
+        .SetBlendingModeEnabled(false)
+        .SetAdditiveBlendingEnabled(false)
+        .SetPolygonMode(VK_POLYGON_MODE_FILL)
+        .Build();
+    // clang-format on
 
     LOGI("Terrain Shadows Pipeline created\n");
 
@@ -113,7 +121,6 @@ void TerrainShadowsRenderer::AfterRender(const ShadowsRenderContext& renderConte
 
 void TerrainShadowsRenderer::ShutDown()
 {
-    m_pipeline->ShutDown();
     m_pipeline = nullptr;
     m_shader = nullptr;
 }

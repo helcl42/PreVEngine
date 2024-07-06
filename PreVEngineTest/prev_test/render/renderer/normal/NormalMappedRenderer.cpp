@@ -1,5 +1,4 @@
 #include "NormalMappedRenderer.h"
-#include "pipeline/NormalMappedPipeline.h"
 
 #include "../../../common/AssetManager.h"
 #include "../../../component/light/ILightComponent.h"
@@ -13,6 +12,7 @@
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
+#include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
@@ -62,8 +62,16 @@ void NormalMappedRenderer::Init()
 
     LOGI("Normal Mapped Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::NormalMappedPipeline>(*device, *m_shader, *m_renderPass);
-    m_pipeline->Init();
+    // clang-format off
+    m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ *device, *m_shader, *m_renderPass }
+        .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+        .SetDepthTestEnabled(true)
+        .SetDepthWriteEnabled(true)
+        .SetBlendingModeEnabled(true)
+        .SetAdditiveBlendingEnabled(false)
+        .SetPolygonMode(VK_POLYGON_MODE_FILL)
+        .Build();
+    // clang-format on
 
     LOGI("Normal Mapped Pipeline created\n");
 
@@ -113,7 +121,6 @@ void NormalMappedRenderer::AfterRender(const NormalRenderContext& renderContext)
 
 void NormalMappedRenderer::ShutDown()
 {
-    m_pipeline->ShutDown();
     m_pipeline = nullptr;
     m_shader = nullptr;
 }

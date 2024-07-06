@@ -1,11 +1,11 @@
 #include "CloudsNoiseFactory.h"
 
 #include "../../../common/AssetManager.h"
-#include "../../../render/renderer/sky/pipeline/CloudsPerlinWorleyNoisePipeline.h"
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
 #include <prev/render/buffer/image/ImageBufferFactory.h>
+#include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/util/VkUtils.h>
 
@@ -30,8 +30,10 @@ CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t widt
         .Build();
     // clang-format on
 
-    auto pipeline = std::make_unique<prev_test::render::renderer::sky::pipeline::CloudsPerlinWorleyNoisePipeline>(*device, *shader);
-    pipeline->Init();
+    // clang-format off
+    auto pipeline = prev::render::pipeline::ComputePipelineBuilder{ *device, *shader }
+        .Build();
+    // clang-format on
 
     auto commandPool = prev::util::vk::CreateCommandPool(*device, computeQueue->family);
     auto commandBuffer = prev::util::vk::CreateCommandBuffer(*device, commandPool);
@@ -72,7 +74,6 @@ CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t widt
     allocator->TransitionImageLayout(noiseImageBuffer->GetImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, noiseImageFormat, noiseImageBuffer->GetMipLevels());
     allocator->GenerateMipmaps(noiseImageBuffer->GetImage(), noiseImageBuffer->GetFormat(), noiseImageBuffer->GetExtent(), noiseImageBuffer->GetMipLevels(), noiseImageBuffer->GetLayerCount());
 
-    pipeline->ShutDown();
     pipeline = nullptr;
     shader = nullptr;
 

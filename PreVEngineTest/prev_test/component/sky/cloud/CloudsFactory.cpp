@@ -1,12 +1,12 @@
 #include "CloudsFactory.h"
 
 #include "../../../common/AssetManager.h"
-#include "../../../render/renderer/sky/pipeline/CloudsPipeline.h"
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
 #include <prev/render/buffer/UniformBuffer.h>
 #include <prev/render/buffer/image/ImageBufferFactory.h>
+#include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/util/VkUtils.h>
 
@@ -41,8 +41,10 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
         .Build();
     // clang-format on
 
-    auto pipeline = std::make_unique<prev_test::render::renderer::sky::pipeline::CloudsPipeline>(*device, *shader);
-    pipeline->Init();
+    // clang-format off
+    auto pipeline = prev::render::pipeline::ComputePipelineBuilder{ *device, *shader }
+        .Build();
+    // clang-format on
 
     auto uniformsPool = std::make_unique<prev::render::buffer::UniformBufferRing<Uniforms>>(*allocator);
     uniformsPool->AdjustCapactity(1, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
@@ -97,7 +99,6 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
     allocator->TransitionImageLayout(weatherImageBuffer->GetImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, weatherImageFormat, weatherImageBuffer->GetMipLevels());
     allocator->GenerateMipmaps(weatherImageBuffer->GetImage(), weatherImageBuffer->GetFormat(), weatherImageBuffer->GetExtent(), weatherImageBuffer->GetMipLevels(), weatherImageBuffer->GetLayerCount());
 
-    pipeline->ShutDown();
     pipeline = nullptr;
     shader = nullptr;
 
