@@ -1,9 +1,5 @@
 #include "SkyRenderer.h"
 
-#include "pipeline/SkyCompositePipeline.h"
-#include "pipeline/SkyPipeline.h"
-#include "pipeline/SkyPostProcessPipeline.h"
-
 #include "../../../common/AssetManager.h"
 #include "../../../component/light/ILightComponent.h"
 #include "../../../component/sky/ISkyComponent.h"
@@ -12,6 +8,7 @@
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
 #include <prev/render/buffer/image/ImageBufferFactory.h>
+#include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
@@ -49,8 +46,10 @@ void SkyRenderer::Init()
 
     LOGI("Sky Compute Shader created\n");
 
-    m_skyPipeline = std::make_unique<pipeline::SkyPipeline>(*device, *m_skyShader);
-    m_skyPipeline->Init();
+    // clang-format off
+    m_skyPipeline = prev::render::pipeline::ComputePipelineBuilder{ *device, *m_skyShader }
+        .Build();
+    // clang-format on
 
     LOGI("Sky Compute Pipeline created\n");
 
@@ -75,8 +74,10 @@ void SkyRenderer::Init()
 
     LOGI("Sky PostProcess Compute Shader created\n");
 
-    m_skyPostProcessPipeline = std::make_unique<pipeline::SkyPostProcessPipeline>(*device, *m_skyPostProcessShader);
-    m_skyPostProcessPipeline->Init();
+    // clang-format off
+    m_skyPostProcessPipeline = prev::render::pipeline::ComputePipelineBuilder{ *device, *m_skyPostProcessShader }
+        .Build();
+    // clang-format on
 
     LOGI("Sky PostProcess Compute Pipeline created\n");
 
@@ -108,8 +109,16 @@ void SkyRenderer::Init()
 
     LOGI("Sky Composite Shader created\n");
 
-    m_compositePipeline = std::make_unique<pipeline::SkyCompositePipeline>(*device, *m_compositeShader, *m_renderPass);
-    m_compositePipeline->Init();
+    // clang-format off
+    m_compositePipeline = prev::render::pipeline::GraphicsPipelineBuilder{ *device, *m_compositeShader, *m_renderPass }
+        .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+        .SetDepthTestEnabled(true)
+        .SetDepthWriteEnabled(true)
+        .SetBlendingModeEnabled(false)
+        .SetAdditiveBlendingEnabled(false)
+        .SetPolygonMode(VK_POLYGON_MODE_FILL)
+        .Build();
+    // clang-format on
 
     LOGI("Sky Composite Pipeline created\n");
 }
@@ -276,15 +285,12 @@ void SkyRenderer::ShutDown()
     m_skyBloomImageBuffer = nullptr;
     m_skyColorImageBuffer = nullptr;
 
-    m_compositePipeline->ShutDown();
     m_compositePipeline = nullptr;
     m_compositeShader = nullptr;
 
-    m_skyPostProcessPipeline->ShutDown();
     m_skyPostProcessPipeline = nullptr;
     m_skyPostProcessShader = nullptr;
 
-    m_skyPipeline->ShutDown();
     m_skyPipeline = nullptr;
     m_skyShader = nullptr;
 }

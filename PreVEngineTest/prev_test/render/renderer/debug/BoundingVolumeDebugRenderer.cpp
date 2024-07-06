@@ -2,14 +2,13 @@
 
 #ifdef RENDER_BOUNDING_VOLUMES
 
-#include "pipeline/BoundingVolumeDebugPipeline.h"
-
 #include "../../../common/AssetManager.h"
 #include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../../component/ray_casting/RayCastingCommon.h"
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
+#include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
@@ -48,8 +47,16 @@ void BoundingVolumeDebugRenderer::Init()
 
     LOGI("Bounding Volume Debug Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::BoundingVolumeDebugPipeline>(*device, *m_shader, *m_renderPass);
-    m_pipeline->Init();
+    // clang-format off
+    m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ *device, *m_shader, *m_renderPass }
+        .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+        .SetDepthTestEnabled(true)
+        .SetDepthWriteEnabled(true)
+        .SetBlendingModeEnabled(false)
+        .SetAdditiveBlendingEnabled(false)
+        .SetPolygonMode(VK_POLYGON_MODE_LINE)
+        .Build();
+    // clang-format on
 
     LOGI("Bounding Volume Debug Pipeline created\n");
 
@@ -122,7 +129,6 @@ void BoundingVolumeDebugRenderer::AfterRender(const NormalRenderContext& renderC
 
 void BoundingVolumeDebugRenderer::ShutDown()
 {
-    m_pipeline->ShutDown();
     m_pipeline = nullptr;
     m_shader = nullptr;
 }

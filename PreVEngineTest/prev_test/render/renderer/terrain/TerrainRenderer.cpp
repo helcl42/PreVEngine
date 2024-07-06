@@ -1,5 +1,4 @@
 #include "TerrainRenderer.h"
-#include "pipeline/TerrainPipeline.h"
 
 #include "../../../common/AssetManager.h"
 #include "../../../component/light/ILightComponent.h"
@@ -12,6 +11,7 @@
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
+#include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
@@ -54,8 +54,16 @@ void TerrainRenderer::Init()
 
     LOGI("Terrain Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::TerrainPipeline>(*device, *m_shader, *m_renderPass);
-    m_pipeline->Init();
+    // clang-format off
+    m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ *device, *m_shader, *m_renderPass }
+        .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+        .SetDepthTestEnabled(true)
+        .SetDepthWriteEnabled(true)
+        .SetBlendingModeEnabled(true)
+        .SetAdditiveBlendingEnabled(false)
+        .SetPolygonMode(VK_POLYGON_MODE_FILL)
+        .Build();
+    // clang-format on
 
     LOGI("Terrain Pipeline created\n");
 
@@ -182,7 +190,6 @@ void TerrainRenderer::AfterRender(const NormalRenderContext& renderContext)
 
 void TerrainRenderer::ShutDown()
 {
-    m_pipeline->ShutDown();
     m_pipeline = nullptr;
     m_shader = nullptr;
 }

@@ -1,8 +1,6 @@
 #include "SelectionDebugRenderer.h"
 
 #ifdef RENDER_SELECTION
-#include "pipeline/SelectionDebugPipeline.h"
-
 #include "../../../common/AssetManager.h"
 #include "../../../component/ray_casting/ISelectableComponent.h"
 #include "../../mesh/MeshFactory.h"
@@ -10,6 +8,7 @@
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
+#include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
@@ -50,8 +49,16 @@ void SelectionDebugRenderer::Init()
 
     LOGI("Selection Debug Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::SelectionDebugPipeline>(*device, *m_shader, *m_renderPass);
-    m_pipeline->Init();
+    // clang-format off
+    m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ *device, *m_shader, *m_renderPass }
+        .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+        .SetDepthTestEnabled(true)
+        .SetDepthWriteEnabled(true)
+        .SetBlendingModeEnabled(false)
+        .SetAdditiveBlendingEnabled(false)
+        .SetPolygonMode(VK_POLYGON_MODE_LINE)
+        .Build();
+    // clang-format on
 
     LOGI("Selection Debug Pipeline created\n");
 
@@ -129,7 +136,6 @@ void SelectionDebugRenderer::AfterRender(const NormalRenderContext& renderContex
 
 void SelectionDebugRenderer::ShutDown()
 {
-    m_pipeline->ShutDown();
     m_pipeline = nullptr;
     m_shader = nullptr;
 }

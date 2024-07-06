@@ -1,19 +1,18 @@
 #include "ConeStepMappedRenderer.h"
-#include "pipeline/ConeStepMappedPipeline.h"
-
-#include "../../../component/render/IRenderComponent.h"
-#include "../../../component/transform/ITransformComponent.h"
 
 #include "../../../common/AssetManager.h"
 #include "../../../component/light/ILightComponent.h"
 #include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../../component/ray_casting/ISelectableComponent.h"
 #include "../../../component/ray_casting/RayCastingCommon.h"
+#include "../../../component/render/IRenderComponent.h"
 #include "../../../component/shadow/IShadowsComponent.h"
 #include "../../../component/sky/SkyCommon.h"
+#include "../../../component/transform/ITransformComponent.h"
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
+#include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
@@ -65,8 +64,16 @@ void ConeStepMappedRenderer::Init()
 
     LOGI("Cone Step Mapped Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::ConeStepMappedPipeline>(*device, *m_shader, *m_renderPass);
-    m_pipeline->Init();
+    // clang-format off
+    m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ *device, *m_shader, *m_renderPass }
+        .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+        .SetDepthTestEnabled(true)
+        .SetDepthWriteEnabled(true)
+        .SetBlendingModeEnabled(true)
+        .SetAdditiveBlendingEnabled(false)
+        .SetPolygonMode(VK_POLYGON_MODE_FILL)
+        .Build();
+    // clang-format on
 
     LOGI("Cone Step Mapped Pipeline created\n");
 
@@ -116,7 +123,6 @@ void ConeStepMappedRenderer::AfterRender(const NormalRenderContext& renderContex
 
 void ConeStepMappedRenderer::ShutDown()
 {
-    m_pipeline->ShutDown();
     m_pipeline = nullptr;
     m_shader = nullptr;
 }

@@ -29,6 +29,7 @@ file(GLOB SRC_LIST
     "prev/render/pass/*.h" "prev/render/pass/*.cpp"
     "prev/render/shader/*.h" "prev/render/shader/*.cpp"
     "prev/render/sampler/*.h" "prev/render/sampler/*.cpp"
+    "prev/render/pipeline/*.h" "prev/render/pipeline/*.cpp"
     "prev/scene/*.h" "prev/scene/*.cpp"
     "prev/scene/component/*.h" "prev/scene/component/*.cpp"
     "prev/scene/graph/*.h" "prev/scene/graph/*.cpp"

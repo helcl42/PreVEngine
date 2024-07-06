@@ -1,5 +1,4 @@
 #include "TextureDebugRenderer.h"
-#include "pipeline/TextureDebugPipeline.h"
 
 #include "../../../common/AssetManager.h"
 #include "../../../component/common/IOffScreenRenderPassComponent.h"
@@ -8,6 +7,7 @@
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
+#include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
@@ -47,8 +47,16 @@ void TextureDebugRenderer::Init()
 
     LOGI("Texture Debug Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::TextureDebugPipeline>(*device, *m_shader, *m_renderPass);
-    m_pipeline->Init();
+    // clang-format off
+    m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ *device, *m_shader, *m_renderPass }
+        .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+        .SetDepthTestEnabled(false)
+        .SetDepthWriteEnabled(false)
+        .SetBlendingModeEnabled(false)
+        .SetAdditiveBlendingEnabled(false)
+        .SetPolygonMode(VK_POLYGON_MODE_LINE)
+        .Build();
+    // clang-format on
 
     LOGI("Texture Debug Pipeline created\n");
 
@@ -101,7 +109,6 @@ void TextureDebugRenderer::AfterRender(const prev::render::RenderContext& render
 
 void TextureDebugRenderer::ShutDown()
 {
-    m_pipeline->ShutDown();
     m_pipeline = nullptr;
     m_shader = nullptr;
 }

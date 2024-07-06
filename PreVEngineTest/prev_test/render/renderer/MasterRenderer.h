@@ -6,7 +6,6 @@
 #include "RenderContexts.h"
 
 #include "../../General.h"
-#include "../pipeline/IPipeline.h"
 
 #include <prev/common/ThreadPool.h>
 #include <prev/event/EventHandler.h>
@@ -14,7 +13,6 @@
 #include <prev/render/IRootRenderer.h>
 #include <prev/render/Swapchain.h>
 #include <prev/render/pass/RenderPass.h>
-#include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
 
 namespace prev_test::render::renderer {
