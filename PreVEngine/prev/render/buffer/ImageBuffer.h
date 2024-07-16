@@ -15,7 +15,11 @@ public:
 public:
     void UpdateLayout(const VkImageLayout newLayout);
 
+    void UpdateLayout(const VkImageLayout newLayout, VkCommandBuffer commandBuffer);
+
     void GenerateMipMaps(const VkImageLayout newLLayout);
+
+    void GenerateMipMaps(const VkImageLayout newLLayout, VkCommandBuffer commandBuffer);
 
     VkExtent3D GetExtent() const;
 
