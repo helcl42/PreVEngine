@@ -43,6 +43,8 @@ public:
 
     VkImageLayout GetLayout() const;
 
+    operator VkImage() const;
+
 private:
     friend class ImageBufferBuilder;
 
