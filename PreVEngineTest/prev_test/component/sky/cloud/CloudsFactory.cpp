@@ -88,6 +88,8 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
 
     vkCmdDispatch(commandBuffer, 128, 128, 1);
 
+    weatherImageBuffer->GenerateMipMaps(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, commandBuffer);
+
     VKERRCHECK(vkEndCommandBuffer(commandBuffer));
 
     // Submit compute work
@@ -101,8 +103,6 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
 
     vkDestroyFence(*device, fence, nullptr);
     vkDestroyCommandPool(*device, commandPool, nullptr);
-
-    weatherImageBuffer->GenerateMipMaps(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     pipeline = nullptr;
     shader = nullptr;

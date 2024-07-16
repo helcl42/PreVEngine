@@ -62,6 +62,8 @@ CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t widt
 
     vkCmdDispatch(commandBuffer, 32, 32, 32);
 
+    noiseImageBuffer->GenerateMipMaps(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, commandBuffer);
+
     VKERRCHECK(vkEndCommandBuffer(commandBuffer));
 
     // Submit compute work
@@ -75,8 +77,6 @@ CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t widt
 
     vkDestroyFence(*device, fence, nullptr);
     vkDestroyCommandPool(*device, commandPool, nullptr);
-
-    noiseImageBuffer->GenerateMipMaps(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     pipeline = nullptr;
     shader = nullptr;
