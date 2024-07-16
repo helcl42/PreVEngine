@@ -187,12 +187,12 @@ void Allocator::CopyBufferToImage(const VkExtent3D& extent, const VkBuffer buffe
     EndCommandBuffer();
 }
 
-void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const std::vector<const uint8_t*>& layerData, const uint32_t layerCount, VkImage& image)
+void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const std::vector<const uint8_t*>& layerData, const uint32_t layerCount, const VkImageAspectFlags aspectMask, const VkImageLayout layout, VkImage& image)
 {
     for (uint32_t layerIndex = 0; layerIndex < layerCount; ++layerIndex) {
         // Copy image data to staging buffer in CPU memory
-        uint32_t formatSize = FormatSize(format);
-        uint64_t size = extent.width * extent.height * extent.depth * formatSize;
+        const uint32_t formatSize{ format::FormatSize(format) };
+        const uint64_t size{ extent.width * extent.height * extent.depth * formatSize };
 
         VkBufferCreateInfo bufferCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
         bufferCreateInfo.size = size;
@@ -208,19 +208,20 @@ void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format,
         VmaAllocation stageBufferAlloc = VK_NULL_HANDLE;
         VKERRCHECK(vmaCreateBuffer(m_allocator, &bufferCreateInfo, &allocStagingMemoryCreateInfo, &stageBuffer, &stageBufferAlloc, &allocStagingBufferInfo));
 
-        // copy image data to staging memory
+        // Copy image data to staging memory
         memcpy(allocStagingBufferInfo.pMappedData, layerData[layerIndex], size);
 
-        //  Copy image from staging buffer to image
-        TransitionImageLayout(image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, format, mipLevels, layerCount);
+        // Transition image layout to dst transfer
+        TransitionImageLayout(image, layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels, aspectMask, layerCount);
 
+        // Copy image from staging buffer to image
         CopyBufferToImage(extent, stageBuffer, layerIndex, image);
 
         vmaDestroyBuffer(m_allocator, stageBuffer, stageBufferAlloc);
     }
 }
 
-void Allocator::GenerateMipmaps(const VkImage image, VkFormat imageFormat, const VkExtent3D& extent, const uint32_t mipLevels, const uint32_t layersCount, const VkImageLayout newLayout)
+void Allocator::GenerateMipmaps(const VkImage image, VkFormat imageFormat, const VkExtent3D& extent, const uint32_t mipLevels, const uint32_t layersCount, const VkImageAspectFlags aspectMask, const VkImageLayout newLayout)
 {
     // Check if image format supports linear blitting
     VkFormatProperties formatProperties;
@@ -233,16 +234,17 @@ void Allocator::GenerateMipmaps(const VkImage image, VkFormat imageFormat, const
 
     BeginCommandBuffer();
 
-    prev::util::vk::GenerateMipmaps(m_commandBuffer, image, imageFormat, extent, mipLevels, layersCount, newLayout);
+    // Image layout will be internally transitioned back to newlayout
+    prev::util::vk::GenerateMipmaps(m_commandBuffer, image, extent, mipLevels, layersCount, aspectMask, newLayout);
 
     EndCommandBuffer();
 }
 
-void Allocator::TransitionImageLayout(const VkImage image, const VkImageLayout oldLayout, const VkImageLayout newLayout, const VkFormat format, const uint32_t mipLevels, const uint32_t layersCount)
+void Allocator::TransitionImageLayout(const VkImage image, const VkImageLayout oldLayout, const VkImageLayout newLayout, const uint32_t mipLevels, const VkImageAspectFlags aspectMask, const uint32_t layersCount)
 {
     BeginCommandBuffer();
 
-    prev::util::vk::TransitionImageLayout(m_commandBuffer, image, oldLayout, newLayout, format, mipLevels, layersCount);
+    prev::util::vk::TransitionImageLayout(m_commandBuffer, image, oldLayout, newLayout, mipLevels, aspectMask, layersCount);
 
     EndCommandBuffer();
 }

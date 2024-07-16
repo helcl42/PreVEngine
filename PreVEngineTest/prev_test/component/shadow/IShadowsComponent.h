@@ -5,7 +5,7 @@
 
 #include "../../render/ViewFrustum.h"
 
-#include <prev/render/buffer/image/IImageBuffer.h>
+#include <prev/render/buffer/ImageBuffer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/sampler/Sampler.h>
 
@@ -22,7 +22,7 @@ public:
 
     virtual VkExtent2D GetExtent() const = 0;
 
-    virtual std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetImageBuffer() const = 0;
+    virtual std::shared_ptr<prev::render::buffer::ImageBuffer> GetImageBuffer() const = 0;
 
     virtual std::shared_ptr<prev::render::sampler::Sampler> GetSampler() const = 0;
 

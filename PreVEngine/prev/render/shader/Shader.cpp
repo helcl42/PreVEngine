@@ -171,7 +171,7 @@ void Shader::Bind(const std::string& name, const prev::render::buffer::Buffer& b
     // LOGI("Bind Buffer to shader-in: \"%s\"\n", name.c_str());
 }
 
-void Shader::Bind(const std::string& name, const prev::render::buffer::image::IImageBuffer& imageBuffer, const prev::render::sampler::Sampler& sampler, const VkImageLayout layout)
+void Shader::Bind(const std::string& name, const prev::render::buffer::ImageBuffer& imageBuffer, const prev::render::sampler::Sampler& sampler, const VkImageLayout layout)
 {
     const auto descriptorSetInfoIter{ m_descriptorSetInfos.find(name) };
     if (descriptorSetInfoIter == m_descriptorSetInfos.cend()) {

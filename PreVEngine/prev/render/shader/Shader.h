@@ -2,8 +2,8 @@
 #define __SHADER_H__
 
 #include "../buffer/Buffer.h"
+#include "../buffer/ImageBuffer.h"
 #include "../buffer/UniformBuffer.h"
-#include "../buffer/image/IImageBuffer.h"
 #include "../sampler/Sampler.h"
 
 #include "../../core/Core.h"
@@ -27,7 +27,7 @@ public:
 
     void Bind(const std::string& name, const prev::render::buffer::Buffer& buffer);
 
-    void Bind(const std::string& name, const prev::render::buffer::image::IImageBuffer& imageBuffer, const prev::render::sampler::Sampler& sampler, const VkImageLayout layout);
+    void Bind(const std::string& name, const prev::render::buffer::ImageBuffer& imageBuffer, const prev::render::sampler::Sampler& sampler, const VkImageLayout layout);
 
     VkDescriptorSet UpdateNextDescriptorSet();
 

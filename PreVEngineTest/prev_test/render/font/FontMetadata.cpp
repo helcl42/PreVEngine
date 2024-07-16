@@ -11,7 +11,7 @@ float FontMetadata::GetFontSizeScaledSpaceWidth(const float fontSize)
     return m_spaceWidth * fontSize;
 }
 
-std::shared_ptr<prev::render::buffer::image::IImageBuffer> FontMetadata::GetImageBuffer() const
+std::shared_ptr<prev::render::buffer::ImageBuffer> FontMetadata::GetImageBuffer() const
 {
     return m_imageBuffer;
 }

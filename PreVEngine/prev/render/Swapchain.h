@@ -1,7 +1,7 @@
 #ifndef __SWAPCHAIN_H__
 #define __SWAPCHAIN_H__
 
-#include "buffer/image/IImageBuffer.h"
+#include "buffer/ImageBuffer.h"
 #include "pass/RenderPass.h"
 
 #include "../core/memory/Allocator.h"
@@ -97,7 +97,7 @@ private:
 
     std::shared_ptr<prev::core::device::Queue> m_graphicsQueue{};
 
-    std::unique_ptr<prev::render::buffer::image::IImageBuffer> m_depthBuffer{};
+    std::unique_ptr<prev::render::buffer::ImageBuffer> m_depthBuffer{};
 
     VkSwapchainKHR m_swapchain{};
 
@@ -114,9 +114,9 @@ private:
     util::CircularIndex<uint32_t> m_frameIndex{ 3 };
 
     // MSAA
-    std::unique_ptr<prev::render::buffer::image::IImageBuffer> m_msaaColorBuffer{};
+    std::unique_ptr<prev::render::buffer::ImageBuffer> m_msaaColorBuffer{};
 
-    std::unique_ptr<prev::render::buffer::image::IImageBuffer> m_msaaDepthBuffer{};
+    std::unique_ptr<prev::render::buffer::ImageBuffer> m_msaaDepthBuffer{};
 };
 } // namespace prev::render
 

@@ -6,7 +6,7 @@
 namespace prev_test::component::shadow {
 class ShadowsComponent : public IShadowsComponent {
 public:
-    ShadowsComponent(const uint32_t cascadesCount, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::image::IImageBuffer>& depthBuffer, const std::shared_ptr<prev::render::sampler::Sampler>& sampler, const std::vector<ShadowsCascade>& cascades);
+    ShadowsComponent(const uint32_t cascadesCount, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, const std::shared_ptr<prev::render::sampler::Sampler>& sampler, const std::vector<ShadowsCascade>& cascades);
 
     ~ShadowsComponent();
 
@@ -19,7 +19,7 @@ public:
 
     VkExtent2D GetExtent() const override;
 
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetImageBuffer() const override;
+    std::shared_ptr<prev::render::buffer::ImageBuffer> GetImageBuffer() const override;
 
     std::shared_ptr<prev::render::sampler::Sampler> GetSampler() const override;
 
@@ -33,7 +33,7 @@ private:
 
     std::shared_ptr<prev::render::pass::RenderPass> m_renderPass{};
 
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_depthBuffer{};
+    std::shared_ptr<prev::render::buffer::ImageBuffer> m_depthBuffer{};
 
     std::shared_ptr<prev::render::sampler::Sampler> m_sampler{};
 
