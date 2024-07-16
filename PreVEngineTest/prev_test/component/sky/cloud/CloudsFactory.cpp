@@ -4,8 +4,8 @@
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
+#include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/buffer/UniformBuffer.h>
-#include <prev/render/buffer/image/ImageBufferFactory.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/util/VkUtils.h>
@@ -54,8 +54,14 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
 
     auto fence = prev::util::vk::CreateFence(*device);
 
-    const prev::render::buffer::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ width, height }, VK_IMAGE_TYPE_2D, weatherImageFormat, VK_SAMPLE_COUNT_1_BIT, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1 };
-    auto weatherImageBuffer = prev::render::buffer::image::ImageBufferFactory{}.CreateStorage(bufferCreateInfo, *allocator);
+    auto weatherImageBuffer = prev::render::buffer::ImageBufferBuilder{ *allocator }
+                                  .SetExtent({ width, height, 1 })
+                                  .SetFormat(VK_FORMAT_R8G8B8A8_UNORM)
+                                  .SetType(VK_IMAGE_TYPE_2D)
+                                  .SetMipMapEnabled(true)
+                                  .SetUsageFlags(VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT)
+                                  .SetLayout(VK_IMAGE_LAYOUT_GENERAL)
+                                  .Build();
     auto sampler = std::make_unique<prev::render::sampler::Sampler>(*device, static_cast<float>(weatherImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR);
 
     VkCommandBufferBeginInfo cmdBufBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
@@ -96,8 +102,7 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
     vkDestroyFence(*device, fence, nullptr);
     vkDestroyCommandPool(*device, commandPool, nullptr);
 
-    allocator->TransitionImageLayout(weatherImageBuffer->GetImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, weatherImageFormat, weatherImageBuffer->GetMipLevels());
-    allocator->GenerateMipmaps(weatherImageBuffer->GetImage(), weatherImageBuffer->GetFormat(), weatherImageBuffer->GetExtent(), weatherImageBuffer->GetMipLevels(), weatherImageBuffer->GetLayerCount());
+    weatherImageBuffer->GenerateMipMaps(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     pipeline = nullptr;
     shader = nullptr;

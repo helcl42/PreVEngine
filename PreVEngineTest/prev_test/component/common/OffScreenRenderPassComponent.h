@@ -4,7 +4,7 @@
 #include "IOffScreenRenderPassComponent.h"
 
 #include <prev/common/Common.h>
-#include <prev/render/buffer/image/IImageBuffer.h>
+#include <prev/render/buffer/ImageBuffer.h>
 
 #include <vector>
 
@@ -24,11 +24,11 @@ public:
 
     const VkExtent2D& GetExtent() const override;
 
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetColorImageBuffer(const uint32_t index = 0) const override;
+    std::shared_ptr<prev::render::buffer::ImageBuffer> GetColorImageBuffer(const uint32_t index = 0) const override;
 
     std::shared_ptr<prev::render::sampler::Sampler> GetColorSampler(const uint32_t index = 0) const override;
 
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetDepthImageBuffer() const override;
+    std::shared_ptr<prev::render::buffer::ImageBuffer> GetDepthImageBuffer() const override;
 
     std::shared_ptr<prev::render::sampler::Sampler> GetDepthSampler() const override;
 
@@ -43,11 +43,11 @@ private:
 
     std::shared_ptr<prev::render::pass::RenderPass> m_renderPass{};
 
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_depthBuffer{};
+    std::shared_ptr<prev::render::buffer::ImageBuffer> m_depthBuffer{};
 
     std::shared_ptr<prev::render::sampler::Sampler> m_depthSampler{};
 
-    std::vector<std::shared_ptr<prev::render::buffer::image::IImageBuffer>> m_colorBuffers{};
+    std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>> m_colorBuffers{};
 
     std::vector<std::shared_ptr<prev::render::sampler::Sampler>> m_colorSamplers{};
 

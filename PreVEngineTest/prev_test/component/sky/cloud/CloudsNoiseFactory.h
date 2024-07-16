@@ -1,14 +1,14 @@
 #ifndef __CLOUDS_NOISE_FACTORY_H__
 #define __CLOUDS_NOISE_FACTORY_H__
 
-#include <prev/render/buffer/image/IImageBuffer.h>
+#include <prev/render/buffer/ImageBuffer.h>
 #include <prev/render/sampler/Sampler.h>
 
 #include <memory>
 
 namespace prev_test::component::sky::cloud {
 struct CloudsNoiseImage {
-    std::unique_ptr<prev::render::buffer::image::IImageBuffer> imageBuffer{};
+    std::unique_ptr<prev::render::buffer::ImageBuffer> imageBuffer{};
     std::unique_ptr<prev::render::sampler::Sampler> imageSampler{};
 };
 

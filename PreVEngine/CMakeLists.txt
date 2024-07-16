@@ -24,7 +24,6 @@ file(GLOB SRC_LIST
     "prev/input/touch/*.h" "prev/input/touch/*.cpp"
     "prev/render/*.h" "prev/render/*.cpp"
     "prev/render/buffer/*.h" "prev/render/buffer/*.cpp"
-    "prev/render/buffer/image/*.h" "prev/render/buffer/image/*.cpp"
     "prev/render/image/*.h" "prev/render/image/*.cpp"
     "prev/render/pass/*.h" "prev/render/pass/*.cpp"
     "prev/render/shader/*.h" "prev/render/shader/*.cpp"

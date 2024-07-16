@@ -7,7 +7,7 @@
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
-#include <prev/render/buffer/image/ImageBufferFactory.h>
+#include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/ComponentRepository.h>
@@ -295,7 +295,7 @@ void SkyRenderer::ShutDown()
     m_skyShader = nullptr;
 }
 
-void SkyRenderer::UpdateImageBufferExtents(const VkExtent2D& extent, const VkFormat format, std::shared_ptr<prev::render::buffer::image::IImageBuffer>& imageBuffer, std::shared_ptr<prev::render::sampler::Sampler>& sampler)
+void SkyRenderer::UpdateImageBufferExtents(const VkExtent2D& extent, const VkFormat format, std::shared_ptr<prev::render::buffer::ImageBuffer>& imageBuffer, std::shared_ptr<prev::render::sampler::Sampler>& sampler)
 {
     if (imageBuffer == nullptr || imageBuffer->GetExtent().width != extent.width || imageBuffer->GetExtent().height != extent.height) {
         auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
@@ -304,13 +304,18 @@ void SkyRenderer::UpdateImageBufferExtents(const VkExtent2D& extent, const VkFor
         const auto formatProperties{ prev::util::vk::GetFormatProperties(*device->GetGPU(), format) };
         const auto samplingFilter{ (formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT) ? VK_FILTER_LINEAR : VK_FILTER_NEAREST };
 
-        imageBuffer = prev::render::buffer::image::ImageBufferFactory{}.CreateStorage(prev::render::buffer::image::ImageBufferCreateInfo{ VkExtent2D{ extent.width, extent.height }, VK_IMAGE_TYPE_2D, format, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D, 1 }, *allocator);
-        allocator->TransitionImageLayout(imageBuffer->GetImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, imageBuffer->GetFormat(), imageBuffer->GetMipLevels(), imageBuffer->GetLayerCount());
-
+        imageBuffer = prev::render::buffer::ImageBufferBuilder{ *allocator }
+                          .SetExtent({ extent.width, extent.height, 1 })
+                          .SetFormat(format)
+                          .SetType(VK_IMAGE_TYPE_2D)
+                          .SetUsageFlags(VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT)
+                          .SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+                          .Build();
         sampler = std::make_shared<prev::render::sampler::Sampler>(allocator->GetDevice(), static_cast<float>(imageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, samplingFilter, samplingFilter, VK_SAMPLER_MIPMAP_MODE_NEAREST);
     }
 }
 
+// TODO - rework TransitionImageLayout to remove this
 void SkyRenderer::AddImageBufferPipelineBarrierCommand(const VkImage image, const VkAccessFlags srcAccessMask, const VkAccessFlags dstAccessMask, const VkImageLayout oldLayout, const VkImageLayout newLayout, const VkPipelineStageFlags srcShaderStageMask, const VkPipelineStageFlags dstShaderStageMask, VkCommandBuffer commandBuffer)
 {
     VkImageMemoryBarrier barrierDescription{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
@@ -319,7 +324,11 @@ void SkyRenderer::AddImageBufferPipelineBarrierCommand(const VkImage image, cons
     barrierDescription.oldLayout = oldLayout;
     barrierDescription.newLayout = newLayout;
     barrierDescription.image = image;
-    barrierDescription.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+    barrierDescription.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    barrierDescription.subresourceRange.layerCount = 1;
+    barrierDescription.subresourceRange.baseArrayLayer = 0;
+    barrierDescription.subresourceRange.baseMipLevel = 0;
+    barrierDescription.subresourceRange.levelCount = 1;
     barrierDescription.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     barrierDescription.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 

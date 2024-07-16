@@ -23,7 +23,7 @@ Material::Material(const MaterialProperties& materialProps, const std::vector<Im
     }
 }
 
-std::shared_ptr<prev::render::buffer::image::IImageBuffer> Material::GetImageBuffer(uint32_t index) const
+std::shared_ptr<prev::render::buffer::ImageBuffer> Material::GetImageBuffer(uint32_t index) const
 {
     if (index >= m_imageBuffers.size()) {
         throw std::runtime_error("Invalid image buffer index: " + std::to_string(index));

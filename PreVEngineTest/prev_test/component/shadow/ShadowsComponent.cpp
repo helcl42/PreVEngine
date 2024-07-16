@@ -8,7 +8,7 @@
 #include <prev/util/MathUtils.h>
 
 namespace prev_test::component::shadow {
-ShadowsComponent::ShadowsComponent(const uint32_t cascadesCount, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::image::IImageBuffer>& depthBuffer, const std::shared_ptr<prev::render::sampler::Sampler>& sampler, const std::vector<ShadowsCascade>& cascades)
+ShadowsComponent::ShadowsComponent(const uint32_t cascadesCount, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, const std::shared_ptr<prev::render::sampler::Sampler>& sampler, const std::vector<ShadowsCascade>& cascades)
     : m_cascadesCount(cascadesCount)
     , m_renderPass(renderPass)
     , m_depthBuffer(depthBuffer)
@@ -67,7 +67,7 @@ VkExtent2D ShadowsComponent::GetExtent() const
     return { m_depthBuffer->GetExtent().width, m_depthBuffer->GetExtent().height };
 }
 
-std::shared_ptr<prev::render::buffer::image::IImageBuffer> ShadowsComponent::GetImageBuffer() const
+std::shared_ptr<prev::render::buffer::ImageBuffer> ShadowsComponent::GetImageBuffer() const
 {
     return m_depthBuffer;
 }
