@@ -97,4 +97,9 @@ VkImageLayout ImageBuffer::GetLayout() const
     return m_layout;
 }
 
+ImageBuffer::operator VkImage() const
+{
+    return m_image;
+}
+
 } // namespace prev::render::buffer
