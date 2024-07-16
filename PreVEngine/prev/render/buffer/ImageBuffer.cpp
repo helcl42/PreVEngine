@@ -18,25 +18,10 @@ ImageBuffer::~ImageBuffer()
     m_allocator.DestroyImage(m_image, m_allocation);
 }
 
-void ImageBuffer::UpdateLayout(const VkImageLayout newLayout)
-{
-    // TODO -> use task engine for this !?
-    m_allocator.TransitionImageLayout(m_image, m_layout, newLayout, m_mipLevels, m_aspectMask, m_layerCount);
-    m_layout = newLayout;
-}
-
 void ImageBuffer::UpdateLayout(const VkImageLayout newLayout, VkCommandBuffer commandBuffer)
 {
     util::vk::TransitionImageLayout(commandBuffer, m_image, m_layout, newLayout, m_mipLevels, m_aspectMask, m_layerCount);
     m_layout = newLayout;
-}
-
-void ImageBuffer::GenerateMipMaps(const VkImageLayout newLLayout)
-{
-    m_mipLevels = prev::util::math::Log2(std::max(m_extent.width, m_extent.height)) + 1;
-    m_allocator.TransitionImageLayout(m_image, m_layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_mipLevels, m_aspectMask, m_layerCount);
-    m_allocator.GenerateMipmaps(m_image, m_format, m_extent, m_mipLevels, m_layerCount, m_aspectMask, newLLayout);
-    m_layout = newLLayout;
 }
 
 void ImageBuffer::GenerateMipMaps(const VkImageLayout newLLayout, VkCommandBuffer commandBuffer)
