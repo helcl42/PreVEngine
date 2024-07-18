@@ -172,7 +172,7 @@ std::unique_ptr<ImageBuffer> ImageBufferBuilder::Build() const
     });
 
     if (!m_layersData.empty()) {
-        m_allocator.CopyDataToImage(m_extent, m_format, mipMapLevels, m_layersData, m_layerCount, aspectMask, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, image);
+        m_allocator.CopyDataToImage(m_extent, m_format, m_layersData, m_layerCount, image);
     }
 
     commandsExecutor.ExecuteImmediate([&](VkCommandBuffer commandBuffer) {
