@@ -138,7 +138,7 @@ std::unique_ptr<ImageBuffer> ImageBufferBuilder::Build() const
 
     // some logic is automatic to minimize boiler plate code for common usa cases
     const auto imageViewType{ m_viewType == VK_IMAGE_VIEW_TYPE_MAX_ENUM ? DeduceImageViewTypeFromImageType(m_type) : m_viewType };
-    const auto aspectMask{ m_aspectMask == VK_IMAGE_ASPECT_NONE ? DeduceApectMaskFromFormat(m_format) : m_aspectMask };
+    const auto aspectMask{ m_aspectMask == 0 ? DeduceApectMaskFromFormat(m_format) : m_aspectMask };
     const auto mipMapLevels{ m_mipMapEnabled ? prev::util::math::Log2(std::max(m_extent.width, m_extent.height)) + 1 : 1 };
 
     VkImage image;
