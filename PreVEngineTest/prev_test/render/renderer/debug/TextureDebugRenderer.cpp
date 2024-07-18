@@ -1,16 +1,17 @@
 #include "TextureDebugRenderer.h"
-#include "pipeline/TextureDebugPipeline.h"
-#include "shader/TextureDebugShader.h"
 
+#include "../../../common/AssetManager.h"
 #include "../../../component/common/IOffScreenRenderPassComponent.h"
 #include "../../mesh/MeshFactory.h"
 #include "../../model/ModelFactory.h"
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
-#include <prev/render/shader/ShaderFactory.h>
+#include <prev/render/pipeline/PipelineBuilder.h>
+#include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
+#include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::debug {
 TextureDebugRenderer::TextureDebugRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
@@ -23,15 +24,39 @@ void TextureDebugRenderer::Init()
     auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
-    prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<shader::TextureDebugShader>(*device, shader::TextureDebugShader::GetPaths());
-    m_shader->Init();
-    m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
+    // clang-format off
+    m_shader = prev::render::shader::ShaderBuilder{ *device }
+        .AddShaderStagePaths({
+            { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/debug/texture_debug_vert.spv") },
+            { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/debug/texture_debug_frag.spv") }
+        })
+        .AddVertexInputAttributeDescriptions({
+            prev::util::vk::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
+            prev::util::vk::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
+            prev::util::vk::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 }))
+        })
+        .AddVertexInputBindingDescriptions({
+            prev::util::vk::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        })
+        .AddDescriptorSets({
+            { "imageSampler", 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }
+        })
+	    .SetDescriptorPoolCapacity(m_descriptorCount)
+        .Build();
+    // clang-format on
 
     LOGI("Texture Debug Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::TextureDebugPipeline>(*device, *m_shader, *m_renderPass);
-    m_pipeline->Init();
+    // clang-format off
+    m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ *device, *m_shader, *m_renderPass }
+        .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+        .SetDepthTestEnabled(false)
+        .SetDepthWriteEnabled(false)
+        .SetBlendingModeEnabled(false)
+        .SetAdditiveBlendingEnabled(false)
+        .SetPolygonMode(VK_POLYGON_MODE_LINE)
+        .Build();
+    // clang-format on
 
     LOGI("Texture Debug Pipeline created\n");
 
@@ -61,7 +86,7 @@ void TextureDebugRenderer::Render(const prev::render::RenderContext& renderConte
 {
     const auto component = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::common::IOffScreenRenderPassComponent>({ TAG_WATER_REFLECTION_RENDER_COMPONENT });
 
-    m_shader->Bind("imageSampler", component->GetColorImageBuffer()->GetImageView(), *component->GetColorSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_shader->Bind("imageSampler", *component->GetColorImageBuffer(), *component->GetColorSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
     const VkBuffer vertexBuffers[] = { *m_quadModel->GetVertexBuffer() };
@@ -84,10 +109,7 @@ void TextureDebugRenderer::AfterRender(const prev::render::RenderContext& render
 
 void TextureDebugRenderer::ShutDown()
 {
-    m_pipeline->ShutDown();
     m_pipeline = nullptr;
-
-    m_shader->ShutDown();
     m_shader = nullptr;
 }
 } // namespace prev_test::render::renderer::debug

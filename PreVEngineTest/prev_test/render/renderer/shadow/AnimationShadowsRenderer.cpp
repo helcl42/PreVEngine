@@ -1,16 +1,17 @@
 #include "AnimationShadowsRenderer.h"
-#include "pipeline/AnimatedShadowsPipeline.h"
-#include "shader/AnimatedShadowsShader.h"
 
+#include "../../../common/AssetManager.h"
 #include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../../component/render/IAnimationRenderComponent.h"
 #include "../../../component/transform/ITransformComponent.h"
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
-#include <prev/render/shader/ShaderFactory.h>
+#include <prev/render/pipeline/PipelineBuilder.h>
+#include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
+#include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::shadow {
 AnimationShadowsRenderer::AnimationShadowsRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
@@ -23,15 +24,40 @@ void AnimationShadowsRenderer::Init()
     auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
-    prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<shader::AnimatedShadowsShader>(*device, shader::AnimatedShadowsShader::GetPaths());
-    m_shader->Init();
-    m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
+    // clang-format off
+    m_shader = prev::render::shader::ShaderBuilder{ *device }
+        .AddShaderStagePaths({
+            { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/shadow/animation_shadows_vert.spv") }
+        })
+        .AddVertexInputAttributeDescriptions({
+            prev::util::vk::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
+            prev::util::vk::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
+            prev::util::vk::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })),
+            prev::util::vk::CreateVertexInputAttributeDescription(0, 3, VK_FORMAT_R32G32B32A32_SINT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 })),
+            prev::util::vk::CreateVertexInputAttributeDescription(0, 4, VK_FORMAT_R32G32B32A32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4 }))
+        })
+        .AddVertexInputBindingDescriptions({
+            prev::util::vk::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4, VertexLayoutComponent::VEC4 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        })
+        .AddDescriptorSets({
+            { "ubo", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT }
+        })
+	    .SetDescriptorPoolCapacity(m_descriptorCount)
+        .Build();
+    // clang-format on
 
     LOGI("Animation Shadows Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::AnimatedShadowsPipeline>(*device, *m_shader, *m_renderPass);
-    m_pipeline->Init();
+    // clang-format off
+    m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ *device, *m_shader, *m_renderPass }
+        .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+        .SetDepthTestEnabled(true)
+        .SetDepthWriteEnabled(true)
+        .SetBlendingModeEnabled(false)
+        .SetAdditiveBlendingEnabled(false)
+        .SetPolygonMode(VK_POLYGON_MODE_FILL)
+        .Build();
+    // clang-format on
 
     LOGI("Animation Shadows Pipeline created\n");
 
@@ -78,10 +104,7 @@ void AnimationShadowsRenderer::AfterRender(const ShadowsRenderContext& renderCon
 
 void AnimationShadowsRenderer::ShutDown()
 {
-    m_pipeline->ShutDown();
     m_pipeline = nullptr;
-
-    m_shader->ShutDown();
     m_shader = nullptr;
 }
 

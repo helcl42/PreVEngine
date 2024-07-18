@@ -1,21 +1,15 @@
 #include "SkyRenderer.h"
 
-#include "pipeline/SkyCompositePipeline.h"
-#include "pipeline/SkyPipeline.h"
-#include "pipeline/SkyPostProcessPipeline.h"
-
-#include "shader/SkyCompositeShader.h"
-#include "shader/SkyPostProcessShader.h"
-#include "shader/SkyShader.h"
-
+#include "../../../common/AssetManager.h"
 #include "../../../component/light/ILightComponent.h"
 #include "../../../component/sky/ISkyComponent.h"
 #include "../../../component/time/ITimeComponent.h"
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
-#include <prev/render/buffer/image/ImageBufferFactory.h>
-#include <prev/render/shader/ShaderFactory.h>
+#include <prev/render/buffer/ImageBufferBuilder.h>
+#include <prev/render/pipeline/PipelineBuilder.h>
+#include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/VkUtils.h>
@@ -31,17 +25,31 @@ void SkyRenderer::Init()
     auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
-    prev::render::shader::ShaderFactory shaderFactory;
-
     // compute sky
-    m_skyShader = shaderFactory.CreateShaderFromFiles<shader::SkyShader>(*device, shader::SkyShader::GetPaths());
-    m_skyShader->Init();
-    m_skyShader->AdjustDescriptorPoolCapacity(m_descriptorCount);
+    // clang-format off
+    m_skyShader = prev::render::shader::ShaderBuilder{ *device }
+        .AddShaderStagePaths({
+            { VK_SHADER_STAGE_COMPUTE_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_comp.spv") }
+        })
+        .AddDescriptorSets({
+            { "outFragColor", 0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT },
+            { "outBloom", 1, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT },
+            { "outAlphaness", 2, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT },
+            { "outCloudDistance", 3, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT },
+            { "perlinNoiseTex", 4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_COMPUTE_BIT },
+            { "weatherTex", 5, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_COMPUTE_BIT },
+            { "uboCS", 6, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT }
+        })
+        .SetDescriptorPoolCapacity(m_descriptorCount)
+        .Build();
+    // clang-format on
 
     LOGI("Sky Compute Shader created\n");
 
-    m_skyPipeline = std::make_unique<pipeline::SkyPipeline>(*device, *m_skyShader);
-    m_skyPipeline->Init();
+    // clang-format off
+    m_skyPipeline = prev::render::pipeline::ComputePipelineBuilder{ *device, *m_skyShader }
+        .Build();
+    // clang-format on
 
     LOGI("Sky Compute Pipeline created\n");
 
@@ -49,14 +57,27 @@ void SkyRenderer::Init()
     m_uniformsPoolSkyCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
     // compute sky post process
-    m_skyPostProcessShader = shaderFactory.CreateShaderFromFiles<shader::SkyPostProcessShader>(*device, shader::SkyPostProcessShader::GetPaths());
-    m_skyPostProcessShader->Init();
-    m_skyPostProcessShader->AdjustDescriptorPoolCapacity(m_descriptorCount);
+    // clang-format off
+    m_skyPostProcessShader = prev::render::shader::ShaderBuilder{ *device }
+        .AddShaderStagePaths({
+            { VK_SHADER_STAGE_COMPUTE_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_post_process_comp.spv") }
+        })
+        .AddDescriptorSets({
+            { "outFragColor", 0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT },
+            { "skyTex", 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_COMPUTE_BIT },
+            { "bloomTex", 2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_COMPUTE_BIT },
+            { "uboCS", 3, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT }
+        })
+        .SetDescriptorPoolCapacity(m_descriptorCount)
+        .Build();
+    // clang-format on
 
     LOGI("Sky PostProcess Compute Shader created\n");
 
-    m_skyPostProcessPipeline = std::make_unique<pipeline::SkyPostProcessPipeline>(*device, *m_skyPostProcessShader);
-    m_skyPostProcessPipeline->Init();
+    // clang-format off
+    m_skyPostProcessPipeline = prev::render::pipeline::ComputePipelineBuilder{ *device, *m_skyPostProcessShader }
+        .Build();
+    // clang-format on
 
     LOGI("Sky PostProcess Compute Pipeline created\n");
 
@@ -64,14 +85,40 @@ void SkyRenderer::Init()
     m_uniformsPoolSkyPostProcessCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
     // compositor
-    m_compositeShader = shaderFactory.CreateShaderFromFiles<shader::SkyCompositeShader>(*device, shader::SkyCompositeShader::GetPaths());
-    m_compositeShader->Init();
-    m_compositeShader->AdjustDescriptorPoolCapacity(m_descriptorCount);
+    // clang-format off
+    m_compositeShader = prev::render::shader::ShaderBuilder{ *device }
+        .AddShaderStagePaths({
+            { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_composite_vert.spv") },
+            { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_composite_frag.spv") }
+        })
+        .AddVertexInputAttributeDescriptions({
+            prev::util::vk::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
+            prev::util::vk::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
+            prev::util::vk::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 }))
+        })
+        .AddVertexInputBindingDescriptions({
+            prev::util::vk::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        })
+        .AddDescriptorSets({
+            { "colorTex", 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT },
+            { "depthTex", 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT },
+        })
+        .SetDescriptorPoolCapacity(m_descriptorCount)
+        .Build();
+    // clang-format on
 
     LOGI("Sky Composite Shader created\n");
 
-    m_compositePipeline = std::make_unique<pipeline::SkyCompositePipeline>(*device, *m_compositeShader, *m_renderPass);
-    m_compositePipeline->Init();
+    // clang-format off
+    m_compositePipeline = prev::render::pipeline::GraphicsPipelineBuilder{ *device, *m_compositeShader, *m_renderPass }
+        .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+        .SetDepthTestEnabled(true)
+        .SetDepthWriteEnabled(true)
+        .SetBlendingModeEnabled(false)
+        .SetAdditiveBlendingEnabled(false)
+        .SetPolygonMode(VK_POLYGON_MODE_FILL)
+        .Build();
+    // clang-format on
 
     LOGI("Sky Composite Pipeline created\n");
 }
@@ -94,10 +141,10 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
     UpdateImageBufferExtents(extent, COLOR_FORMAT, m_skyPostProcessColorImageBuffer, m_skyPostProcessImageSampler);
 
     // regular sky render
-    AddImageBufferPipelineBarrierCommand(m_skyColorImageBuffer->GetImage(), VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, renderContext.commandBuffer);
-    AddImageBufferPipelineBarrierCommand(m_skyBloomImageBuffer->GetImage(), VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, renderContext.commandBuffer);
-    AddImageBufferPipelineBarrierCommand(m_skyAlphanessImageBuffer->GetImage(), VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, renderContext.commandBuffer);
-    AddImageBufferPipelineBarrierCommand(m_skyCloudDistanceImageBuffer->GetImage(), VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, renderContext.commandBuffer);
+    m_skyColorImageBuffer->UpdateLayout(VK_IMAGE_LAYOUT_GENERAL, renderContext.commandBuffer);
+    m_skyBloomImageBuffer->UpdateLayout(VK_IMAGE_LAYOUT_GENERAL, renderContext.commandBuffer);
+    m_skyAlphanessImageBuffer->UpdateLayout(VK_IMAGE_LAYOUT_GENERAL, renderContext.commandBuffer);
+    m_skyCloudDistanceImageBuffer->UpdateLayout(VK_IMAGE_LAYOUT_GENERAL, renderContext.commandBuffer);
 
     const float skyNearClippingPlane{ std::min(renderContext.nearFarClippingPlane.y * 100.0f, 10.0f) };
     const float skyFarClippingPlane{ renderContext.nearFarClippingPlane.y };
@@ -138,13 +185,13 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
 
     m_skyShader->Bind("uboCS", *uboCS);
 
-    m_skyShader->Bind("perlinNoiseTex", skyComponent->GetPerlinWorleyNoise()->GetImageView(), *skyComponent->GetPerlinWorleyNoiseSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    m_skyShader->Bind("weatherTex", skyComponent->GetWeather()->GetImageView(), *skyComponent->GetWeatherSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_skyShader->Bind("perlinNoiseTex", *skyComponent->GetPerlinWorleyNoise(), *skyComponent->GetPerlinWorleyNoiseSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_skyShader->Bind("weatherTex", *skyComponent->GetWeather(), *skyComponent->GetWeatherSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-    m_skyShader->Bind("outFragColor", m_skyColorImageBuffer->GetImageView(), *m_skyColorImageSampler, VK_IMAGE_LAYOUT_GENERAL);
-    m_skyShader->Bind("outBloom", m_skyBloomImageBuffer->GetImageView(), *m_skyBloomImageSampler, VK_IMAGE_LAYOUT_GENERAL);
-    m_skyShader->Bind("outAlphaness", m_skyAlphanessImageBuffer->GetImageView(), *m_skyAlphanessImageSampler, VK_IMAGE_LAYOUT_GENERAL);
-    m_skyShader->Bind("outCloudDistance", m_skyCloudDistanceImageBuffer->GetImageView(), *m_skyCloudDistanceImageSampler, VK_IMAGE_LAYOUT_GENERAL);
+    m_skyShader->Bind("outFragColor", *m_skyColorImageBuffer, *m_skyColorImageSampler, VK_IMAGE_LAYOUT_GENERAL);
+    m_skyShader->Bind("outBloom", *m_skyBloomImageBuffer, *m_skyBloomImageSampler, VK_IMAGE_LAYOUT_GENERAL);
+    m_skyShader->Bind("outAlphaness", *m_skyAlphanessImageBuffer, *m_skyAlphanessImageSampler, VK_IMAGE_LAYOUT_GENERAL);
+    m_skyShader->Bind("outCloudDistance", *m_skyCloudDistanceImageBuffer, *m_skyCloudDistanceImageSampler, VK_IMAGE_LAYOUT_GENERAL);
 
     const VkDescriptorSet descriptorSetCompute = m_skyShader->UpdateNextDescriptorSet();
 
@@ -153,13 +200,13 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
 
     vkCmdDispatch(renderContext.commandBuffer, prev::util::vk::GetComputeGroupSize(extent.width, 16), prev::util::vk::GetComputeGroupSize(extent.height, 16), 1);
 
-    AddImageBufferPipelineBarrierCommand(m_skyColorImageBuffer->GetImage(), VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, renderContext.commandBuffer);
-    AddImageBufferPipelineBarrierCommand(m_skyBloomImageBuffer->GetImage(), VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, renderContext.commandBuffer);
-    AddImageBufferPipelineBarrierCommand(m_skyAlphanessImageBuffer->GetImage(), VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, renderContext.commandBuffer);
-    AddImageBufferPipelineBarrierCommand(m_skyCloudDistanceImageBuffer->GetImage(), VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, renderContext.commandBuffer);
+    m_skyColorImageBuffer->UpdateLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, renderContext.commandBuffer);
+    m_skyBloomImageBuffer->UpdateLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, renderContext.commandBuffer);
+    m_skyAlphanessImageBuffer->UpdateLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, renderContext.commandBuffer);
+    m_skyCloudDistanceImageBuffer->UpdateLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, renderContext.commandBuffer);
 
     // sky post process render
-    AddImageBufferPipelineBarrierCommand(m_skyPostProcessColorImageBuffer->GetImage(), VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, renderContext.commandBuffer);
+    m_skyPostProcessColorImageBuffer->UpdateLayout(VK_IMAGE_LAYOUT_GENERAL, renderContext.commandBuffer);
 
     auto uboPostCS = m_uniformsPoolSkyPostProcessCS->GetNext();
 
@@ -177,10 +224,10 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
 
     m_skyPostProcessShader->Bind("uboCS", *uboPostCS);
 
-    m_skyPostProcessShader->Bind("skyTex", m_skyColorImageBuffer->GetImageView(), *m_skyColorImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    m_skyPostProcessShader->Bind("bloomTex", m_skyBloomImageBuffer->GetImageView(), *m_skyBloomImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_skyPostProcessShader->Bind("skyTex", *m_skyColorImageBuffer, *m_skyColorImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_skyPostProcessShader->Bind("bloomTex", *m_skyBloomImageBuffer, *m_skyBloomImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-    m_skyPostProcessShader->Bind("outFragColor", m_skyPostProcessColorImageBuffer->GetImageView(), *m_skyPostProcessImageSampler, VK_IMAGE_LAYOUT_GENERAL);
+    m_skyPostProcessShader->Bind("outFragColor", *m_skyPostProcessColorImageBuffer, *m_skyPostProcessImageSampler, VK_IMAGE_LAYOUT_GENERAL);
 
     const VkDescriptorSet descriptorSetComputePost = m_skyPostProcessShader->UpdateNextDescriptorSet();
 
@@ -189,7 +236,7 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
 
     vkCmdDispatch(renderContext.commandBuffer, prev::util::vk::GetComputeGroupSize(extent.width, 16), prev::util::vk::GetComputeGroupSize(extent.height, 16), 1);
 
-    AddImageBufferPipelineBarrierCommand(m_skyPostProcessColorImageBuffer->GetImage(), VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, renderContext.commandBuffer);
+    m_skyPostProcessColorImageBuffer->UpdateLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, renderContext.commandBuffer);
 }
 
 void SkyRenderer::PreRender(const NormalRenderContext& renderContext)
@@ -207,8 +254,8 @@ void SkyRenderer::Render(const NormalRenderContext& renderContext, const std::sh
     if (node->GetTags().HasAll({ TAG_SKY_RENDER_COMPONENT })) {
         const auto skyComponent = prev::scene::component::ComponentRepository<prev_test::component::sky::ISkyComponent>::Instance().Get(node->GetId());
 
-        m_compositeShader->Bind("colorTex", m_skyPostProcessColorImageBuffer->GetImageView(), *m_skyPostProcessImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-        m_compositeShader->Bind("depthTex", m_skyCloudDistanceImageBuffer->GetImageView(), *m_skyCloudDistanceImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_compositeShader->Bind("colorTex", *m_skyPostProcessColorImageBuffer, *m_skyPostProcessImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_compositeShader->Bind("depthTex", *m_skyCloudDistanceImageBuffer, *m_skyCloudDistanceImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
         const VkDescriptorSet descriptorSet = m_compositeShader->UpdateNextDescriptorSet();
         const VkBuffer vertexBuffers[] = { *skyComponent->GetModel()->GetVertexBuffer() };
@@ -238,26 +285,17 @@ void SkyRenderer::ShutDown()
     m_skyBloomImageBuffer = nullptr;
     m_skyColorImageBuffer = nullptr;
 
-    m_compositePipeline->ShutDown();
     m_compositePipeline = nullptr;
-
-    m_compositeShader->ShutDown();
     m_compositeShader = nullptr;
 
-    m_skyPostProcessPipeline->ShutDown();
     m_skyPostProcessPipeline = nullptr;
-
-    m_skyPostProcessShader->ShutDown();
     m_skyPostProcessShader = nullptr;
 
-    m_skyPipeline->ShutDown();
     m_skyPipeline = nullptr;
-
-    m_skyShader->ShutDown();
     m_skyShader = nullptr;
 }
 
-void SkyRenderer::UpdateImageBufferExtents(const VkExtent2D& extent, const VkFormat format, std::shared_ptr<prev::render::buffer::image::IImageBuffer>& imageBuffer, std::shared_ptr<prev::render::sampler::Sampler>& sampler)
+void SkyRenderer::UpdateImageBufferExtents(const VkExtent2D& extent, const VkFormat format, std::shared_ptr<prev::render::buffer::ImageBuffer>& imageBuffer, std::shared_ptr<prev::render::sampler::Sampler>& sampler)
 {
     if (imageBuffer == nullptr || imageBuffer->GetExtent().width != extent.width || imageBuffer->GetExtent().height != extent.height) {
         auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
@@ -266,25 +304,14 @@ void SkyRenderer::UpdateImageBufferExtents(const VkExtent2D& extent, const VkFor
         const auto formatProperties{ prev::util::vk::GetFormatProperties(*device->GetGPU(), format) };
         const auto samplingFilter{ (formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT) ? VK_FILTER_LINEAR : VK_FILTER_NEAREST };
 
-        imageBuffer = prev::render::buffer::image::ImageBufferFactory{}.CreateStorage(prev::render::buffer::image::ImageBufferCreateInfo{ VkExtent2D{ extent.width, extent.height }, VK_IMAGE_TYPE_2D, format, VK_SAMPLE_COUNT_1_BIT, 0, false, VK_IMAGE_VIEW_TYPE_2D, 1 }, *allocator);
-        allocator->TransitionImageLayout(imageBuffer->GetImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, imageBuffer->GetFormat(), imageBuffer->GetMipLevels(), imageBuffer->GetLayerCount());
-
+        imageBuffer = prev::render::buffer::ImageBufferBuilder{ *allocator }
+                          .SetExtent({ extent.width, extent.height, 1 })
+                          .SetFormat(format)
+                          .SetType(VK_IMAGE_TYPE_2D)
+                          .SetUsageFlags(VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT)
+                          .SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+                          .Build();
         sampler = std::make_shared<prev::render::sampler::Sampler>(allocator->GetDevice(), static_cast<float>(imageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, samplingFilter, samplingFilter, VK_SAMPLER_MIPMAP_MODE_NEAREST);
     }
-}
-
-void SkyRenderer::AddImageBufferPipelineBarrierCommand(const VkImage image, const VkAccessFlags srcAccessMask, const VkAccessFlags dstAccessMask, const VkImageLayout oldLayout, const VkImageLayout newLayout, const VkPipelineStageFlags srcShaderStageMask, const VkPipelineStageFlags dstShaderStageMask, VkCommandBuffer commandBuffer)
-{
-    VkImageMemoryBarrier barrierDescription{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
-    barrierDescription.srcAccessMask = srcAccessMask,
-    barrierDescription.dstAccessMask = dstAccessMask;
-    barrierDescription.oldLayout = oldLayout;
-    barrierDescription.newLayout = newLayout;
-    barrierDescription.image = image;
-    barrierDescription.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
-    barrierDescription.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrierDescription.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-
-    vkCmdPipelineBarrier(commandBuffer, srcShaderStageMask, dstShaderStageMask, 0, 0, nullptr, 0, nullptr, 1, &barrierDescription);
 }
 } // namespace prev_test::render::renderer::sky

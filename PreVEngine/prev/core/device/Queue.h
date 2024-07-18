@@ -23,6 +23,8 @@ struct Queue {
 
     VkResult Submit(uint32_t submitCount, const VkSubmitInfo* submitInfo, VkFence fence) const;
 
+    VkResult Present(const VkPresentInfoKHR* presentInfo) const;
+
     VkResult WaitIdle() const;
 
     VkDevice device;

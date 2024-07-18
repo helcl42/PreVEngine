@@ -10,11 +10,11 @@ class SkyComponent : public ISkyComponent {
 public:
     std::shared_ptr<prev_test::render::IModel> GetModel() const override;
 
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetWeather() const override;
+    std::shared_ptr<prev::render::buffer::ImageBuffer> GetWeather() const override;
 
     std::shared_ptr<prev::render::sampler::Sampler> GetWeatherSampler() const override;
 
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetPerlinWorleyNoise() const override;
+    std::shared_ptr<prev::render::buffer::ImageBuffer> GetPerlinWorleyNoise() const override;
 
     std::shared_ptr<prev::render::sampler::Sampler> GetPerlinWorleyNoiseSampler() const override;
 
@@ -30,11 +30,11 @@ private:
 private:
     std::shared_ptr<prev_test::render::IModel> m_model{};
 
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_weatherImageBuffer{};
+    std::shared_ptr<prev::render::buffer::ImageBuffer> m_weatherImageBuffer{};
 
     std::shared_ptr<prev::render::sampler::Sampler> m_weatehrImageSampler{};
 
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_perlinWorleyNoiseImageBuffer{};
+    std::shared_ptr<prev::render::buffer::ImageBuffer> m_perlinWorleyNoiseImageBuffer{};
 
     std::shared_ptr<prev::render::sampler::Sampler> m_perlinWorleyNoiseSampler{};
 

@@ -20,10 +20,6 @@ Allocator::Allocator(prev::core::instance::Instance& instance, prev::core::devic
     , m_device(device)
     , m_queue(queue)
 {
-    m_commandPool = prev::util::vk::CreateCommandPool(m_device, m_queue.family);
-    m_commandBuffer = prev::util::vk::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-    m_fence = prev::util::vk::CreateFence(m_device);
-
     VmaVulkanFunctions fn{};
     fn.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
     fn.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
@@ -55,25 +51,15 @@ Allocator::Allocator(prev::core::instance::Instance& instance, prev::core::devic
     allocatorInfo.pVulkanFunctions = &fn;
 
     VKERRCHECK(vmaCreateAllocator(&allocatorInfo, &m_allocator));
+
+    m_commandsExecutor = std::make_unique<CommandsExecutor>(device, queue);
 }
 
 Allocator::~Allocator()
 {
-    if (m_allocator) {
-        vmaDestroyAllocator(m_allocator);
-    }
+    m_commandsExecutor = nullptr;
 
-    if (m_fence) {
-        vkDestroyFence(m_device, m_fence, VK_NULL_HANDLE);
-    }
-
-    if (m_commandBuffer) {
-        vkFreeCommandBuffers(m_device, m_commandPool, 1, &m_commandBuffer);
-    }
-
-    if (m_commandPool) {
-        vkDestroyCommandPool(m_device, m_commandPool, VK_NULL_HANDLE);
-    }
+    vmaDestroyAllocator(m_allocator);
 }
 
 void Allocator::CreateBuffer(const void* data, const uint64_t size, const VkBufferUsageFlags usage, const MemoryType memtype, VkBuffer& buffer, VmaAllocation& alloc, void** mapped)
@@ -171,28 +157,24 @@ void Allocator::DestroyImage(VkImage image, VmaAllocation alloc)
 
 void Allocator::CopyBuffer(const VkBuffer srcBuffer, const VkDeviceSize size, VkBuffer dstBuffer)
 {
-    BeginCommandBuffer();
-
-    prev::util::vk::CopyBuffer(m_commandBuffer, srcBuffer, size, dstBuffer);
-
-    EndCommandBuffer();
+    m_commandsExecutor->ExecuteImmediate([&](VkCommandBuffer commandBuffer) {
+        prev::util::vk::CopyBuffer(commandBuffer, srcBuffer, size, dstBuffer);
+    });
 }
 
 void Allocator::CopyBufferToImage(const VkExtent3D& extent, const VkBuffer buffer, const uint32_t layerIndex, VkImage image)
 {
-    BeginCommandBuffer();
-
-    prev::util::vk::CopyBufferToImage(m_commandBuffer, extent, buffer, layerIndex, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, image);
-
-    EndCommandBuffer();
+    m_commandsExecutor->ExecuteImmediate([&](VkCommandBuffer commandBuffer) {
+        prev::util::vk::CopyBufferToImage(commandBuffer, extent, buffer, layerIndex, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, image);
+    });
 }
 
-void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const std::vector<const uint8_t*>& layerData, const uint32_t layerCount, VkImage& image)
+void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const std::vector<const uint8_t*>& layerData, const uint32_t layerCount, VkImage& image)
 {
     for (uint32_t layerIndex = 0; layerIndex < layerCount; ++layerIndex) {
         // Copy image data to staging buffer in CPU memory
-        uint32_t formatSize = FormatSize(format);
-        uint64_t size = extent.width * extent.height * extent.depth * formatSize;
+        const uint32_t formatSize{ format::FormatSize(format) };
+        const uint64_t size{ extent.width * extent.height * extent.depth * formatSize };
 
         VkBufferCreateInfo bufferCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
         bufferCreateInfo.size = size;
@@ -208,43 +190,14 @@ void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format,
         VmaAllocation stageBufferAlloc = VK_NULL_HANDLE;
         VKERRCHECK(vmaCreateBuffer(m_allocator, &bufferCreateInfo, &allocStagingMemoryCreateInfo, &stageBuffer, &stageBufferAlloc, &allocStagingBufferInfo));
 
-        // copy image data to staging memory
+        // Copy image data to staging memory
         memcpy(allocStagingBufferInfo.pMappedData, layerData[layerIndex], size);
 
-        //  Copy image from staging buffer to image
-        TransitionImageLayout(image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, format, mipLevels, layerCount);
-
+        // Copy image from staging buffer to image
         CopyBufferToImage(extent, stageBuffer, layerIndex, image);
 
         vmaDestroyBuffer(m_allocator, stageBuffer, stageBufferAlloc);
     }
-}
-
-void Allocator::GenerateMipmaps(const VkImage image, VkFormat imageFormat, const VkExtent3D& extent, const uint32_t mipLevels, const uint32_t layersCount, const VkImageLayout newLayout)
-{
-    // Check if image format supports linear blitting
-    VkFormatProperties formatProperties;
-    vkGetPhysicalDeviceFormatProperties(*m_device.GetGPU(), imageFormat, &formatProperties);
-
-    if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) {
-        LOGE("Texture image format does not support linear blitting!");
-        return;
-    }
-
-    BeginCommandBuffer();
-
-    prev::util::vk::GenerateMipmaps(m_commandBuffer, image, imageFormat, extent, mipLevels, layersCount, newLayout);
-
-    EndCommandBuffer();
-}
-
-void Allocator::TransitionImageLayout(const VkImage image, const VkImageLayout oldLayout, const VkImageLayout newLayout, const VkFormat format, const uint32_t mipLevels, const uint32_t layersCount)
-{
-    BeginCommandBuffer();
-
-    prev::util::vk::TransitionImageLayout(m_commandBuffer, image, oldLayout, newLayout, format, mipLevels, layersCount);
-
-    EndCommandBuffer();
 }
 
 prev::core::device::Device& Allocator::GetDevice() const
@@ -255,26 +208,6 @@ prev::core::device::Device& Allocator::GetDevice() const
 prev::core::device::Queue& Allocator::GetQueue() const
 {
     return m_queue;
-}
-
-void Allocator::BeginCommandBuffer()
-{
-    VkCommandBufferBeginInfo cmdBufBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-    cmdBufBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    VKERRCHECK(vkBeginCommandBuffer(m_commandBuffer, &cmdBufBeginInfo));
-}
-
-void Allocator::EndCommandBuffer()
-{
-    VKERRCHECK(vkEndCommandBuffer(m_commandBuffer));
-
-    vkResetFences(m_device, 1, &m_fence);
-
-    VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &m_commandBuffer;
-    VKERRCHECK(m_queue.Submit(1, &submitInfo, m_fence));
-    VKERRCHECK(vkWaitForFences(m_device, 1, &m_fence, VK_TRUE, UINT64_MAX));
 }
 
 } // namespace prev::core::memory

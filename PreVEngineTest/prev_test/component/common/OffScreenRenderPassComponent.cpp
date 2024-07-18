@@ -2,7 +2,7 @@
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
-#include <prev/render/buffer/image/ImageBufferFactory.h>
+#include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/pass/RenderPassBuilder.h>
 #include <prev/util/VkUtils.h>
 
@@ -96,18 +96,32 @@ void OffScreenRenderPassComponent::Init()
                        .AddSubpassDependencies(dependencies)
                        .Build();
 
-    prev::render::buffer::image::ImageBufferFactory imageBufferFactory{};
-
+    const VkExtent3D extent3d{ GetExtent().width, GetExtent().height, 1 };
     // create image buffers and corresponding samplers
     if (m_depthFormat != VK_FORMAT_UNDEFINED) {
-        m_depthBuffer = imageBufferFactory.CreateDepth(prev::render::buffer::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, m_depthFormat, VK_SAMPLE_COUNT_1_BIT, 0, false, prev::util::vk::GetImageViewType(ViewCount), ViewCount }, *allocator);
+        m_depthBuffer = prev::render::buffer::ImageBufferBuilder{ *allocator }
+                            .SetExtent(extent3d)
+                            .SetFormat(m_depthFormat)
+                            .SetType(VK_IMAGE_TYPE_2D)
+                            .SetViewType(prev::util::vk::GetImageViewType(ViewCount))
+                            .SetLayerCount(ViewCount)
+                            .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
+                            .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+                            .Build();
         m_depthSampler = std::make_shared<prev::render::sampler::Sampler>(*device, 1.0f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_NEAREST, VK_FILTER_NEAREST, VK_SAMPLER_MIPMAP_MODE_NEAREST);
     }
 
     for (uint32_t i = 0; i < m_colorFormats.size(); ++i) {
         const auto colorFormat{ m_colorFormats[i] };
-
-        auto colorImageBuffer{ imageBufferFactory.CreateColor(prev::render::buffer::image::ImageBufferCreateInfo{ GetExtent(), VK_IMAGE_TYPE_2D, colorFormat, VK_SAMPLE_COUNT_1_BIT, 0, false, prev::util::vk::GetImageViewType(ViewCount), ViewCount }, *allocator) };
+        auto colorImageBuffer = prev::render::buffer::ImageBufferBuilder{ *allocator }
+                                    .SetExtent(extent3d)
+                                    .SetFormat(colorFormat)
+                                    .SetType(VK_IMAGE_TYPE_2D)
+                                    .SetViewType(prev::util::vk::GetImageViewType(ViewCount))
+                                    .SetLayerCount(ViewCount)
+                                    .SetUsageFlags(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
+                                    .SetLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+                                    .Build();
         auto colorImageBufferSampler{ std::make_shared<prev::render::sampler::Sampler>(*device, static_cast<float>(colorImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, ANISOTROPIC_FILTERING_ENABLED, MAX_ANISOTROPY_LEVEL) };
 
         m_colorBuffers.emplace_back(std::move(colorImageBuffer));
@@ -153,7 +167,7 @@ const VkExtent2D& OffScreenRenderPassComponent::GetExtent() const
     return m_extent;
 }
 
-std::shared_ptr<prev::render::buffer::image::IImageBuffer> OffScreenRenderPassComponent::GetColorImageBuffer(const uint32_t index) const
+std::shared_ptr<prev::render::buffer::ImageBuffer> OffScreenRenderPassComponent::GetColorImageBuffer(const uint32_t index) const
 {
     if (index >= static_cast<uint32_t>(m_colorBuffers.size())) {
         throw std::runtime_error("Invalid color buffer index used: " + std::to_string(index));
@@ -169,7 +183,7 @@ std::shared_ptr<prev::render::sampler::Sampler> OffScreenRenderPassComponent::Ge
     return m_colorSamplers[index];
 }
 
-std::shared_ptr<prev::render::buffer::image::IImageBuffer> OffScreenRenderPassComponent::GetDepthImageBuffer() const
+std::shared_ptr<prev::render::buffer::ImageBuffer> OffScreenRenderPassComponent::GetDepthImageBuffer() const
 {
     if (!m_depthBuffer) {
         throw std::runtime_error("Invalid depth buffer.");

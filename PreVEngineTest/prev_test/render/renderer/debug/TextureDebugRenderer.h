@@ -3,12 +3,12 @@
 
 #include "../../../General.h"
 #include "../../IModel.h"
-#include "../../pipeline/IPipeline.h"
 #include "../IRenderer.h"
 
 #include "../../../General.h"
 
 #include <prev/render/pass/RenderPass.h>
+#include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
 
@@ -43,7 +43,7 @@ private:
 private:
     std::unique_ptr<prev::render::shader::Shader> m_shader;
 
-    std::unique_ptr<prev_test::render::pipeline::IPipeline> m_pipeline;
+    std::unique_ptr<prev::render::pipeline::Pipeline> m_pipeline;
 
 private:
     std::unique_ptr<prev_test::render::IModel> m_quadModel;

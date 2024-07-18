@@ -1,35 +1,33 @@
 #ifndef __SHADER_H__
 #define __SHADER_H__
 
+#include "../buffer/Buffer.h"
+#include "../buffer/ImageBuffer.h"
 #include "../buffer/UniformBuffer.h"
+#include "../sampler/Sampler.h"
 
 #include "../../core/Core.h"
 
 #include <map>
-#include <memory>
 #include <vector>
 
 namespace prev::render::shader {
-class Shader {
+class ShaderBuilder;
+
+class Shader final {
 public:
-    Shader(const VkDevice device);
+    Shader(const VkDevice device); // TODO - this should be private - accesible from builder only!;
 
-    virtual ~Shader();
+    ~Shader();
 
 public:
-    bool Init();
-
-    void ShutDown();
-
     bool AdjustDescriptorPoolCapacity(const uint32_t desiredCount);
 
-    bool AddShaderModule(const VkShaderStageFlagBits stage, const std::vector<char>& spirv);
-
-    void Bind(const std::string& name, const prev::render::buffer::UniformBuffer& ubo);
+    void Bind(const std::string& name, const prev::render::buffer::UniformBuffer& uniformBuffer);
 
     void Bind(const std::string& name, const prev::render::buffer::Buffer& buffer);
 
-    void Bind(const std::string& name, const VkImageView imageView, const VkSampler sampler, const VkImageLayout imageLayout);
+    void Bind(const std::string& name, const prev::render::buffer::ImageBuffer& imageBuffer, const prev::render::sampler::Sampler& sampler, const VkImageLayout layout);
 
     VkDescriptorSet UpdateNextDescriptorSet();
 
@@ -44,33 +42,23 @@ public:
 
     const std::vector<VkVertexInputAttributeDescription>& GetVertexInputAttributeDescriptions() const;
 
-protected:
+private:
     struct DescriptorSet {
-        std::string name;
-        uint32_t binding;
-        VkDescriptorType descType;
-        uint32_t descCount;
-        VkShaderStageFlags stageFlags;
+        std::string name{};
+        uint32_t binding{};
+        VkDescriptorType descType{};
+        uint32_t descCount{};
+        VkShaderStageFlags stageFlags{};
     };
 
     struct PushConstantBlock {
-        VkShaderStageFlags stageFlags;
-        uint32_t offset;
-        uint32_t size;
+        VkShaderStageFlags stageFlags{};
+        uint32_t offset{};
+        uint32_t size{};
     };
 
-protected:
-    virtual std::vector<VkVertexInputBindingDescription> CreateVertexInputBindingDescriptors() const = 0;
-
-    virtual std::vector<VkVertexInputAttributeDescription> CreateInputAttributeDescriptors() const = 0;
-
-    virtual std::vector<DescriptorSet> CreateDescriptorSets() const = 0;
-
-    virtual std::vector<PushConstantBlock> CreatePushConstantBlocks() const = 0;
-
-private:
     struct DescriptorSetInfo {
-        size_t writeIndex;
+        size_t writeIndex{};
         union {
             VkDescriptorBufferInfo bufferInfo;
             VkDescriptorImageInfo imageInfo;
@@ -78,15 +66,7 @@ private:
     };
 
 private:
-    void AddDescriptorSet(const std::string& name, const uint32_t binding, const VkDescriptorType descType, const uint32_t descCount, const VkShaderStageFlags stageFlags);
-
-    void AddPushConstantBlock(const VkShaderStageFlags stageFlags, const uint32_t offset, const uint32_t size);
-
-    VkShaderModule CreateShaderModule(const std::vector<char>& spirv) const;
-
     void CheckBindings() const;
-
-    VkDescriptorSetLayout CreateDescriptorSetLayout() const;
 
     VkDescriptorPool CreateDescriptorPool(const uint32_t size) const;
 
@@ -94,12 +74,12 @@ private:
 
     void RecreateDescriptorSets(const uint32_t size);
 
-    bool ShouldAdjustCapacity(const uint32_t size);
+    bool ShouldAdjustCapacity(const uint32_t size) const;
 
-protected:
-    static inline const std::string DEFAULT_ENTRY_POINT_NAME{ "main" };
+private:
+    friend class ShaderBuilder;
 
-protected:
+private:
     VkDevice m_device;
 
     VkDescriptorPool m_descriptorPool;

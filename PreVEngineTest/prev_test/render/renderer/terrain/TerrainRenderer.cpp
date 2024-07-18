@@ -1,7 +1,6 @@
 #include "TerrainRenderer.h"
-#include "pipeline/TerrainPipeline.h"
-#include "shader/TerrainShader.h"
 
+#include "../../../common/AssetManager.h"
 #include "../../../component/light/ILightComponent.h"
 #include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../../component/ray_casting/RayCastingCommon.h"
@@ -12,9 +11,11 @@
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
-#include <prev/render/shader/ShaderFactory.h>
+#include <prev/render/pipeline/PipelineBuilder.h>
+#include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
+#include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::terrain {
 TerrainRenderer::TerrainRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
@@ -27,15 +28,42 @@ void TerrainRenderer::Init()
     auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
-    prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<shader::TerrainShader>(*device, shader::TerrainShader::GetPaths());
-    m_shader->Init();
-    m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
+    // clang-format off
+    m_shader = prev::render::shader::ShaderBuilder{ *device }
+        .AddShaderStagePaths({
+            { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/terrain/terrain_vert.spv") },
+            { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/terrain/terrain_frag.spv") }
+        })
+        .AddVertexInputAttributeDescriptions({
+            prev::util::vk::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
+            prev::util::vk::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
+            prev::util::vk::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 }))
+        })
+        .AddVertexInputBindingDescriptions({
+            prev::util::vk::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        })
+        .AddDescriptorSets({
+            { "uboVS", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT },
+            { "uboFS", 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT },
+            { "colorSampler", 2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4, VK_SHADER_STAGE_FRAGMENT_BIT },
+            { "depthSampler", 3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }
+        })
+	    .SetDescriptorPoolCapacity(m_descriptorCount)
+        .Build();
+    // clang-format on
 
     LOGI("Terrain Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::TerrainPipeline>(*device, *m_shader, *m_renderPass);
-    m_pipeline->Init();
+    // clang-format off
+    m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ *device, *m_shader, *m_renderPass }
+        .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+        .SetDepthTestEnabled(true)
+        .SetDepthWriteEnabled(true)
+        .SetBlendingModeEnabled(true)
+        .SetAdditiveBlendingEnabled(false)
+        .SetPolygonMode(VK_POLYGON_MODE_FILL)
+        .Build();
+    // clang-format on
 
     LOGI("Terrain Pipeline created\n");
 
@@ -131,10 +159,10 @@ void TerrainRenderer::Render(const NormalRenderContext& renderContext, const std
 
             uboFS->Update(&uniformsFS);
 
-            m_shader->Bind("depthSampler", shadowsComponent->GetImageBuffer()->GetImageView(), *shadowsComponent->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+            m_shader->Bind("depthSampler", *shadowsComponent->GetImageBuffer(), *shadowsComponent->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
             for (size_t i = 0; i < 4; i++) {
                 const auto material{ terrainComponent->GetMaterials().at(i) };
-                m_shader->Bind("colorSampler[" + std::to_string(i) + "]", material->GetImageBuffer()->GetImageView(), *material->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                m_shader->Bind("colorSampler[" + std::to_string(i) + "]", *material->GetImageBuffer(), *material->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             }
             m_shader->Bind("uboVS", *uboVS);
             m_shader->Bind("uboFS", *uboFS);
@@ -162,10 +190,7 @@ void TerrainRenderer::AfterRender(const NormalRenderContext& renderContext)
 
 void TerrainRenderer::ShutDown()
 {
-    m_pipeline->ShutDown();
     m_pipeline = nullptr;
-
-    m_shader->ShutDown();
     m_shader = nullptr;
 }
 } // namespace prev_test::render::renderer::terrain

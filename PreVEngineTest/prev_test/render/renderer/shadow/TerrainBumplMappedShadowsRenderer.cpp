@@ -1,16 +1,17 @@
 #include "TerrainBumplMappedShadowsRenderer.h"
-#include "pipeline/TerrainBumpMappedShadowsPipeline.h"
-#include "shader/TerrainBumpMappedShadowsShader.h"
 
+#include "../../../common/AssetManager.h"
 #include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../../component/terrain/ITerrainComponent.h"
 #include "../../../component/transform/ITransformComponent.h"
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
-#include <prev/render/shader/ShaderFactory.h>
+#include <prev/render/pipeline/PipelineBuilder.h>
+#include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
+#include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::shadow {
 TerrainBumplMappedShadowsRenderer::TerrainBumplMappedShadowsRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
@@ -23,15 +24,40 @@ void TerrainBumplMappedShadowsRenderer::Init()
     auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
-    prev::render::shader::ShaderFactory shaderFactory;
-    m_shader = shaderFactory.CreateShaderFromFiles<shader::TerrainBumpMappedShadowsShader>(*device, shader::TerrainBumpMappedShadowsShader::GetPaths());
-    m_shader->Init();
-    m_shader->AdjustDescriptorPoolCapacity(m_descriptorCount);
+    // clang-format off
+    m_shader = prev::render::shader::ShaderBuilder{ *device }
+        .AddShaderStagePaths({
+            { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/shadow/terrain_bump_mapped_shadows_vert.spv") }
+        })
+        .AddVertexInputAttributeDescriptions({
+            prev::util::vk::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
+            prev::util::vk::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
+            prev::util::vk::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })),
+            prev::util::vk::CreateVertexInputAttributeDescription(0, 3, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 })),
+            prev::util::vk::CreateVertexInputAttributeDescription(0, 4, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 })),
+        })
+        .AddVertexInputBindingDescriptions({
+            prev::util::vk::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        })
+        .AddDescriptorSets({
+            { "ubo", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT }
+        })
+	    .SetDescriptorPoolCapacity(m_descriptorCount)
+        .Build();
+    // clang-format on
 
     LOGI("Terrain Bump Mapped Shadows Shader created\n");
 
-    m_pipeline = std::make_unique<pipeline::TerrainBumpMappedShadowsPipeline>(*device, *m_shader, *m_renderPass);
-    m_pipeline->Init();
+    // clang-format off
+    m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ *device, *m_shader, *m_renderPass }
+        .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+        .SetDepthTestEnabled(true)
+        .SetDepthWriteEnabled(true)
+        .SetBlendingModeEnabled(false)
+        .SetAdditiveBlendingEnabled(false)
+        .SetPolygonMode(VK_POLYGON_MODE_FILL)
+        .Build();
+    // clang-format on
 
     LOGI("Terrain Bump Mapped Shadows Pipeline created\n");
 
@@ -97,10 +123,7 @@ void TerrainBumplMappedShadowsRenderer::AfterRender(const ShadowsRenderContext& 
 
 void TerrainBumplMappedShadowsRenderer::ShutDown()
 {
-    m_pipeline->ShutDown();
     m_pipeline = nullptr;
-
-    m_shader->ShutDown();
     m_shader = nullptr;
 }
 } // namespace prev_test::render::renderer::shadow

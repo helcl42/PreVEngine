@@ -4,7 +4,7 @@
 #include "FontMetadata.h"
 #include "FontMetadataFile.h"
 
-#include <prev/render/buffer/image/IImageBuffer.h>
+#include <prev/render/buffer/ImageBuffer.h>
 #include <prev/render/sampler/Sampler.h>
 
 #include <map>
@@ -17,32 +17,32 @@ public:
 
 private:
     struct FontMetadataState {
-        float aspectRatio;
+        float aspectRatio{};
 
-        float verticalPerPixelSize;
+        float verticalPerPixelSize{};
 
-        float horizontalPerPixelSize;
+        float horizontalPerPixelSize{};
 
         std::vector<int> padding;
 
-        int paddingWidth;
+        int paddingWidth{};
 
-        int paddingHeight;
+        int paddingHeight{};
 
-        float spaceWidth;
+        float spaceWidth{};
 
-        int imageWidth;
+        int imageWidth{};
 
-        int imageHeight;
+        int imageHeight{};
 
-        int desiredPadding;
+        int desiredPadding{};
     };
 
     void ExtractPaddingData(FontMetadataFile& metaDataFile, FontMetadataState& state) const;
 
     void ExtractMeasureInfo(FontMetadataFile& metaDataFile, FontMetadataState& state) const;
 
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> CreateImageBuffer(const std::string& textureFilePath) const;
+    std::shared_ptr<prev::render::buffer::ImageBuffer> CreateImageBuffer(const std::string& textureFilePath) const;
 
     std::unique_ptr<prev::render::sampler::Sampler> CreateSampler(const float maxLod) const;
 
