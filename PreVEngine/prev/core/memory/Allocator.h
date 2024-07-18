@@ -1,6 +1,7 @@
 #ifndef __ALLOCATOR_H__
 #define __ALLOCATOR_H__
 
+#include "../CommandsExecutor.h"
 #include "../device/Device.h"
 #include "../instance/Instance.h"
 
@@ -16,7 +17,7 @@ enum class MemoryType {
 
 class Allocator final {
 public:
-    Allocator(prev::core::instance::Instance& instance, prev::core::device::Device& device, prev::core::device::Queue& queue, const VkDeviceSize blockSize = 256);
+    Allocator(instance::Instance& instance, device::Device& device, device::Queue& queue, const VkDeviceSize blockSize = 256);
 
     ~Allocator();
 
@@ -36,34 +37,21 @@ public:
 
     void CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const std::vector<const uint8_t*>& layerData, const uint32_t layerCount, const VkImageAspectFlags aspectMask, const VkImageLayout layout, VkImage& image);
 
-    void GenerateMipmaps(const VkImage image, const VkFormat imageFormat, const VkExtent3D& extent, const uint32_t mipLevels, const uint32_t layersCount, const VkImageAspectFlags aspectMask, const VkImageLayout newLayout);
-
-    void TransitionImageLayout(const VkImage image, const VkImageLayout oldLayout, const VkImageLayout newLayout, const uint32_t mipLevels, const VkImageAspectFlags aspectMask, const uint32_t layersCount);
-
 public:
-    prev::core::device::Device& GetDevice() const;
+    device::Device& GetDevice() const;
 
-    prev::core::device::Queue& GetQueue() const;
-
-private:
-    void BeginCommandBuffer();
-
-    void EndCommandBuffer();
+    device::Queue& GetQueue() const;
 
 private:
-    prev::core::instance::Instance& m_instance;
+    instance::Instance& m_instance;
 
-    prev::core::device::Device& m_device;
+    device::Device& m_device;
 
-    prev::core::device::Queue& m_queue;
-
-    VkCommandPool m_commandPool{};
-
-    VkCommandBuffer m_commandBuffer{};
-
-    VkFence m_fence{};
+    device::Queue& m_queue;
 
     VmaAllocator m_allocator{};
+
+    std::unique_ptr<CommandsExecutor> m_commandsExecutor{};
 };
 } // namespace prev::core::memory
 

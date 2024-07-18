@@ -1,5 +1,6 @@
 #include "ImageBufferBuilder.h"
 
+#include "../../core/CommandsExecutor.h"
 #include "../../core/Formats.h"
 #include "../../util/MathUtils.h"
 #include "../../util/VkUtils.h"
@@ -144,17 +145,6 @@ std::unique_ptr<ImageBuffer> ImageBufferBuilder::Build() const
     VmaAllocation allocation;
     m_allocator.CreateImage(m_extent, m_type, m_format, m_sampleCount, mipMapLevels, m_layerCount, m_tiling, m_usageFlags, m_createFlags, image, allocation);
 
-    if (!m_layersData.empty()) {
-        m_allocator.CopyDataToImage(m_extent, m_format, mipMapLevels, m_layersData, m_layerCount, aspectMask, VK_IMAGE_LAYOUT_UNDEFINED, image);
-        if (mipMapLevels > 1) {
-            m_allocator.GenerateMipmaps(image, m_format, m_extent, mipMapLevels, m_layerCount, aspectMask, m_layout);
-        } else {
-            m_allocator.TransitionImageLayout(image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_layout, mipMapLevels, aspectMask, m_layerCount);
-        }
-    } else {
-        m_allocator.TransitionImageLayout(image, VK_IMAGE_LAYOUT_UNDEFINED, m_layout, mipMapLevels, aspectMask, m_layerCount);
-    }
-
     auto imageView{ prev::util::vk::CreateImageView(m_allocator.GetDevice(), image, m_format, imageViewType, mipMapLevels, aspectMask, m_layerCount) };
 
     auto imageBuffer{ std::make_unique<ImageBuffer>(m_allocator) };
@@ -172,7 +162,32 @@ std::unique_ptr<ImageBuffer> ImageBufferBuilder::Build() const
     imageBuffer->m_layerCount = m_layerCount;
     imageBuffer->m_createFlags = m_createFlags;
     imageBuffer->m_usageFlags = m_usageFlags;
-    imageBuffer->m_layout = m_layout;
+    imageBuffer->m_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+    prev::core::CommandsExecutor commandsExecutor{ m_allocator.GetDevice(), m_allocator.GetQueue() };
+    commandsExecutor.ExecuteImmediate([&](VkCommandBuffer commandBuffer) {
+        if (!m_layersData.empty()) {
+            imageBuffer->UpdateLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, commandBuffer);
+        }
+    });
+
+    if (!m_layersData.empty()) {
+        m_allocator.CopyDataToImage(m_extent, m_format, mipMapLevels, m_layersData, m_layerCount, aspectMask, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, image);
+    }
+
+    commandsExecutor.ExecuteImmediate([&](VkCommandBuffer commandBuffer) {
+        if (!m_layersData.empty()) {
+            if (mipMapLevels > 1) {
+                // prev::util::vk::GetFormatProperties(); // check if possible -> is linear sanpler available?
+                imageBuffer->GenerateMipMaps(m_layout, commandBuffer);
+            } else {
+                imageBuffer->UpdateLayout(m_layout, commandBuffer);
+            }
+        } else {
+            imageBuffer->UpdateLayout(m_layout, commandBuffer);
+        }
+    });
+
     return imageBuffer;
 }
 
