@@ -169,7 +169,7 @@ void Allocator::CopyBufferToImage(const VkExtent3D& extent, const VkBuffer buffe
     });
 }
 
-void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const std::vector<const uint8_t*>& layerData, const uint32_t layerCount, const VkImageAspectFlags aspectMask, const VkImageLayout layout, VkImage& image)
+void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const std::vector<const uint8_t*>& layerData, const uint32_t layerCount, VkImage& image)
 {
     for (uint32_t layerIndex = 0; layerIndex < layerCount; ++layerIndex) {
         // Copy image data to staging buffer in CPU memory

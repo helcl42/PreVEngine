@@ -35,7 +35,7 @@ public:
 
     void CopyBufferToImage(const VkExtent3D& extent, const VkBuffer buffer, const uint32_t layerIndex, VkImage image);
 
-    void CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const uint32_t mipLevels, const std::vector<const uint8_t*>& layerData, const uint32_t layerCount, const VkImageAspectFlags aspectMask, const VkImageLayout layout, VkImage& image);
+    void CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const std::vector<const uint8_t*>& layerData, const uint32_t layerCount, VkImage& image);
 
 public:
     device::Device& GetDevice() const;
