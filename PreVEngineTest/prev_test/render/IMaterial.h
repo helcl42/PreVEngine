@@ -2,22 +2,22 @@
 #define __IMATERIAL_H__
 
 #include <prev/common/Common.h>
-#include <prev/render/buffer/image/IImageBuffer.h>
+#include <prev/render/buffer/ImageBuffer.h>
 #include <prev/render/sampler/Sampler.h>
 
 #include <memory>
 
 namespace prev_test::render {
 struct MaterialProperties {
-    glm::vec4 color;
-    float shineDamper;
-    float reflectivity;
-    VkSamplerAddressMode addressMode;
+    glm::vec4 color{};
+    float shineDamper{};
+    float reflectivity{};
+    VkSamplerAddressMode addressMode{};
 };
 
 class IMaterial {
 public:
-    virtual std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetImageBuffer(uint32_t index = 0) const = 0;
+    virtual std::shared_ptr<prev::render::buffer::ImageBuffer> GetImageBuffer(uint32_t index = 0) const = 0;
 
     virtual std::shared_ptr<prev::render::sampler::Sampler> GetSampler(uint32_t index = 0) const = 0;
 

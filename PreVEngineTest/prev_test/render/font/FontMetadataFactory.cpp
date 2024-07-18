@@ -2,7 +2,7 @@
 
 #include <prev/core/AllocatorProvider.h>
 #include <prev/core/DeviceProvider.h>
-#include <prev/render/buffer/image/ImageBufferFactory.h>
+#include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/image/ImageFactory.h>
 
 namespace prev_test::render::font {
@@ -56,12 +56,20 @@ std::unique_ptr<prev::render::sampler::Sampler> FontMetadataFactory::CreateSampl
     return std::make_unique<prev::render::sampler::Sampler>(*device, maxLod, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR);
 }
 
-std::shared_ptr<prev::render::buffer::image::IImageBuffer> FontMetadataFactory::CreateImageBuffer(const std::string& textureFilePath) const
+std::shared_ptr<prev::render::buffer::ImageBuffer> FontMetadataFactory::CreateImageBuffer(const std::string& textureFilePath) const
 {
     auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
 
     const auto image{ prev::render::image::ImageFactory{}.CreateImage(textureFilePath) };
-    auto imageBuffer{ prev::render::buffer::image::ImageBufferFactory{}.CreateFromData(prev::render::buffer::image::ImageBufferCreateInfo{ VkExtent2D{ image->GetWidth(), image->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1, reinterpret_cast<uint8_t*>(image->GetBuffer()) }, *allocator) };
+    auto imageBuffer = prev::render::buffer::ImageBufferBuilder{ *allocator }
+                           .SetExtent({ image->GetWidth(), image->GetHeight(), 1 })
+                           .SetFormat(VK_FORMAT_R8G8B8A8_UNORM)
+                           .SetType(VK_IMAGE_TYPE_2D)
+                           .SetMipMapEnabled(true)
+                           .SetUsageFlags(VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
+                           .SetLayerData({ reinterpret_cast<uint8_t*>(image->GetBuffer()) })
+                           .SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+                           .Build();
     return imageBuffer;
 }
 

@@ -1,7 +1,7 @@
 #ifndef __IOFF_SCREEN_RENDER_PASS_COMPONENT_H__
 #define __IOFF_SCREEN_RENDER_PASS_COMPONENT_H__
 
-#include <prev/render/buffer/image/IImageBuffer.h>
+#include <prev/render/buffer/ImageBuffer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/sampler/Sampler.h>
 
@@ -18,11 +18,11 @@ public:
 
     virtual const VkExtent2D& GetExtent() const = 0;
 
-    virtual std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetColorImageBuffer(const uint32_t index = 0) const = 0;
+    virtual std::shared_ptr<prev::render::buffer::ImageBuffer> GetColorImageBuffer(const uint32_t index = 0) const = 0;
 
     virtual std::shared_ptr<prev::render::sampler::Sampler> GetColorSampler(const uint32_t index = 0) const = 0;
 
-    virtual std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetDepthImageBuffer() const = 0;
+    virtual std::shared_ptr<prev::render::buffer::ImageBuffer> GetDepthImageBuffer() const = 0;
 
     virtual std::shared_ptr<prev::render::sampler::Sampler> GetDepthSampler() const = 0;
 

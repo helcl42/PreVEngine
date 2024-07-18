@@ -5,11 +5,11 @@
 
 #include "Core.h"
 
-namespace prev::core {
+namespace prev::core::format {
 struct FormatInfo {
-    uint32_t size;
+    uint32_t size{};
 
-    uint32_t channels;
+    uint32_t channels{};
 };
 
 static const std::map<VkFormat, FormatInfo> formats = {
@@ -240,10 +240,16 @@ static const std::map<VkFormat, FormatInfo> formats = {
     return 0;
 }
 
+[[maybe_unused]] static bool HasDepthComponent(const VkFormat format)
+{
+    return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT || format == VK_FORMAT_D16_UNORM_S8_UINT
+        || format == VK_FORMAT_D32_SFLOAT || format == VK_FORMAT_D16_UNORM;
+}
+
 [[maybe_unused]] static bool HasStencilComponent(const VkFormat format)
 {
-    return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
+    return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT || format == VK_FORMAT_D16_UNORM_S8_UINT || format == VK_FORMAT_S8_UINT;
 }
-} // namespace prev::core
+} // namespace prev::core::format
 
 #endif

@@ -4,7 +4,7 @@
 #include "../util/assimp/AssimpMaterialFactory.h"
 #include "../util/assimp/AssimpSceneLoader.h"
 
-#include <prev/render/buffer/image/ImageBufferFactory.h>
+#include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/image/ImageFactory.h>
 
 #include <prev/core/memory/Allocator.h>
@@ -74,7 +74,18 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::CreateCubeMap(con
         layersData.emplace_back(reinterpret_cast<const uint8_t*>(image->GetBuffer()));
     }
 
-    auto cubeMapImageBuffer{ prev::render::buffer::image::ImageBufferFactory{}.CreateFromData(prev::render::buffer::image::ImageBufferCreateInfo{ VkExtent2D{ images[0]->GetWidth(), images[0]->GetHeight() }, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT, true, VK_IMAGE_VIEW_TYPE_CUBE, static_cast<uint32_t>(images.size()), layersData }, allocator) };
+    auto cubeMapImageBuffer = prev::render::buffer::ImageBufferBuilder{ allocator }
+                                  .SetExtent({ images[0]->GetWidth(), images[0]->GetHeight(), 1 })
+                                  .SetFormat(VK_FORMAT_R8G8B8A8_UNORM)
+                                  .SetType(VK_IMAGE_TYPE_2D)
+                                  .SetMipMapEnabled(true)
+                                  .SetUsageFlags(VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
+                                  .SetCreateFlags(VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT)
+                                  .SetLayerData(layersData)
+                                  .SetLayerCount(static_cast<uint32_t>(images.size()))
+                                  .SetViewType(VK_IMAGE_VIEW_TYPE_CUBE)
+                                  .SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+                                  .Build();
     auto cubeMapSampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(cubeMapImageBuffer->GetMipLevels()), materialProps.addressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, ANISOTROPIC_FILTERING_ENABLED, MAX_ANISOTROPY_LEVEL) };
 
     return std::make_unique<prev_test::render::material::Material>(materialProps, std::vector<ImagePair>{ ImagePair{ std::move(cubeMapImageBuffer), cubeMapSampler } });
@@ -146,11 +157,17 @@ std::shared_ptr<prev::render::image::Image> MaterialFactory::CreateImage(const s
     return image;
 }
 
-std::shared_ptr<prev::render::buffer::image::IImageBuffer> MaterialFactory::CreateImageBuffer(const std::shared_ptr<prev::render::image::Image>& image, const bool generateMipMaps, prev::core::memory::Allocator& allocator) const
+std::shared_ptr<prev::render::buffer::ImageBuffer> MaterialFactory::CreateImageBuffer(const std::shared_ptr<prev::render::image::Image>& image, const bool generateMipMaps, prev::core::memory::Allocator& allocator) const
 {
-    const VkExtent2D imageExtent{ image->GetWidth(), image->GetHeight() };
-
-    auto imageBuffer{ prev::render::buffer::image::ImageBufferFactory{}.CreateFromData(prev::render::buffer::image::ImageBufferCreateInfo{ imageExtent, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, 0, generateMipMaps, VK_IMAGE_VIEW_TYPE_2D, 1, reinterpret_cast<uint8_t*>(image->GetBuffer()) }, allocator) };
+    auto imageBuffer = prev::render::buffer::ImageBufferBuilder{ allocator }
+                           .SetExtent({ image->GetWidth(), image->GetHeight(), 1 })
+                           .SetFormat(VK_FORMAT_R8G8B8A8_UNORM)
+                           .SetType(VK_IMAGE_TYPE_2D)
+                           .SetMipMapEnabled(generateMipMaps)
+                           .SetUsageFlags(VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
+                           .SetLayerData({ reinterpret_cast<uint8_t*>(image->GetBuffer()) })
+                           .SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+                           .Build();
     return imageBuffer;
 }
 

@@ -7,7 +7,7 @@
 
 namespace prev_test::render::material {
 struct ImagePair {
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> imageBuffer{};
+    std::shared_ptr<prev::render::buffer::ImageBuffer> imageBuffer{};
     std::shared_ptr<prev::render::sampler::Sampler> imageSampler{};
 };
 
@@ -20,7 +20,7 @@ public:
     virtual ~Material() = default;
 
 public:
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetImageBuffer(uint32_t index = 0) const override;
+    std::shared_ptr<prev::render::buffer::ImageBuffer> GetImageBuffer(uint32_t index = 0) const override;
 
     std::shared_ptr<prev::render::sampler::Sampler> GetSampler(uint32_t index = 0) const override;
 
@@ -59,7 +59,7 @@ private:
 
     float m_reflectivity{ 1.0f };
 
-    std::vector<std::shared_ptr<prev::render::buffer::image::IImageBuffer>> m_imageBuffers;
+    std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>> m_imageBuffers;
 
     std::vector<std::shared_ptr<prev::render::sampler::Sampler>> m_samplers;
 

@@ -1,13 +1,14 @@
 #include "CloudsFactory.h"
 
-#include "../../../render/renderer/sky/pipeline/CloudsPipeline.h"
-#include "../../../render/renderer/sky/shader/CloudsShader.h"
+#include "../../../common/AssetManager.h"
 
 #include <prev/core/AllocatorProvider.h>
+#include <prev/core/CommandsExecutor.h>
 #include <prev/core/DeviceProvider.h>
+#include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/buffer/UniformBuffer.h>
-#include <prev/render/buffer/image/ImageBufferFactory.h>
-#include <prev/render/shader/ShaderFactory.h>
+#include <prev/render/pipeline/PipelineBuilder.h>
+#include <prev/render/shader/ShaderBuilder.h>
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::component::sky::cloud {
@@ -28,70 +29,63 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
     auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
     auto computeQueue{ device->GetQueue(prev::core::device::QueueType::COMPUTE) };
 
-    prev::render::shader::ShaderFactory shaderFactory{};
-    auto shader = shaderFactory.CreateShaderFromFiles<prev_test::render::renderer::sky::shader::CloudsShader>(*device, prev_test::render::renderer::sky::shader::CloudsShader::GetPaths());
-    shader->Init();
+    // clang-format off
+    auto shader = prev::render::shader::ShaderBuilder{ *device }
+        .AddShaderStagePaths({
+            { VK_SHADER_STAGE_COMPUTE_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/clouds_comp.spv") }
+        })
+        .AddDescriptorSets({
+            { "uboCS", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT },
+            { "outWeatherTexture", 1, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT }
+        })
+	    .SetDescriptorPoolCapacity(1)
+        .Build();
+    // clang-format on
 
-    auto pipeline = std::make_unique<prev_test::render::renderer::sky::pipeline::CloudsPipeline>(*device, *shader);
-    pipeline->Init();
+    // clang-format off
+    auto pipeline = prev::render::pipeline::ComputePipelineBuilder{ *device, *shader }
+        .Build();
+    // clang-format on
 
     auto uniformsPool = std::make_unique<prev::render::buffer::UniformBufferRing<Uniforms>>(*allocator);
     uniformsPool->AdjustCapactity(1, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
-    auto commandPool = prev::util::vk::CreateCommandPool(*device, computeQueue->family);
-    auto commandBuffer = prev::util::vk::CreateCommandBuffer(*device, commandPool);
-
-    auto fence = prev::util::vk::CreateFence(*device);
-
-    const prev::render::buffer::image::ImageBufferCreateInfo bufferCreateInfo{ VkExtent2D{ width, height }, VK_IMAGE_TYPE_2D, weatherImageFormat, VK_SAMPLE_COUNT_1_BIT, 0, true, VK_IMAGE_VIEW_TYPE_2D, 1 };
-    auto weatherImageBuffer = prev::render::buffer::image::ImageBufferFactory{}.CreateStorage(bufferCreateInfo, *allocator);
+    auto weatherImageBuffer = prev::render::buffer::ImageBufferBuilder{ *allocator }
+                                  .SetExtent({ width, height, 1 })
+                                  .SetFormat(VK_FORMAT_R8G8B8A8_UNORM)
+                                  .SetType(VK_IMAGE_TYPE_2D)
+                                  .SetMipMapEnabled(true)
+                                  .SetUsageFlags(VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT)
+                                  .SetLayout(VK_IMAGE_LAYOUT_GENERAL)
+                                  .Build();
     auto sampler = std::make_unique<prev::render::sampler::Sampler>(*device, static_cast<float>(weatherImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR);
 
-    VkCommandBufferBeginInfo cmdBufBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-    cmdBufBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &cmdBufBeginInfo));
+    prev::core::CommandsExecutor commandsExecutor{ *device, *computeQueue };
+    commandsExecutor.ExecuteImmediate([&](VkCommandBuffer commandBuffer) {
+        Uniforms uniforms{};
+        uniforms.textureSize = glm::vec4(width, height, 0, 0);
+        uniforms.seed = glm::vec4(10, 20, 0, 0);
+        uniforms.perlinAmplitude = 0.5f;
+        uniforms.perlinFrequency = 0.8f;
+        uniforms.perlinScale = 100.0f;
+        uniforms.perlinOctaves = 4;
 
-    Uniforms uniforms{};
-    uniforms.textureSize = glm::vec4(width, height, 0, 0);
-    uniforms.seed = glm::vec4(10, 20, 0, 0);
-    uniforms.perlinAmplitude = 0.5f;
-    uniforms.perlinFrequency = 0.8f;
-    uniforms.perlinScale = 100.0f;
-    uniforms.perlinOctaves = 4;
+        auto ubo = uniformsPool->GetNext();
+        ubo->Update(&uniforms);
 
-    auto ubo = uniformsPool->GetNext();
-    ubo->Update(&uniforms);
+        shader->Bind("uboCS", *ubo);
+        shader->Bind("outWeatherTexture", *weatherImageBuffer, *sampler, VK_IMAGE_LAYOUT_GENERAL);
+        const VkDescriptorSet descriptorSet = shader->UpdateNextDescriptorSet();
 
-    shader->Bind("uboCS", *ubo);
-    shader->Bind("outWeatherTexture", weatherImageBuffer->GetImageView(), *sampler, VK_IMAGE_LAYOUT_GENERAL);
-    const VkDescriptorSet descriptorSet = shader->UpdateNextDescriptorSet();
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *pipeline);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, &descriptorSet, 0, 0);
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *pipeline);
-    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, &descriptorSet, 0, 0);
+        vkCmdDispatch(commandBuffer, 128, 128, 1);
 
-    vkCmdDispatch(commandBuffer, 128, 128, 1);
+        weatherImageBuffer->GenerateMipMaps(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, commandBuffer);
+    });
 
-    VKERRCHECK(vkEndCommandBuffer(commandBuffer));
-
-    // Submit compute work
-    vkResetFences(*device, 1, &fence);
-
-    VkSubmitInfo computeSubmitInfo{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
-    computeSubmitInfo.commandBufferCount = 1;
-    computeSubmitInfo.pCommandBuffers = &commandBuffer;
-    VKERRCHECK(computeQueue->Submit(1, &computeSubmitInfo, fence));
-    VKERRCHECK(vkWaitForFences(*device, 1, &fence, VK_TRUE, UINT64_MAX));
-
-    vkDestroyFence(*device, fence, nullptr);
-    vkDestroyCommandPool(*device, commandPool, nullptr);
-
-    allocator->TransitionImageLayout(weatherImageBuffer->GetImage(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, weatherImageFormat, weatherImageBuffer->GetMipLevels());
-    allocator->GenerateMipmaps(weatherImageBuffer->GetImage(), weatherImageBuffer->GetFormat(), weatherImageBuffer->GetExtent(), weatherImageBuffer->GetMipLevels(), weatherImageBuffer->GetLayerCount());
-
-    pipeline->ShutDown();
     pipeline = nullptr;
-
-    shader->ShutDown();
     shader = nullptr;
 
     return { std::move(weatherImageBuffer), std::move(sampler) };

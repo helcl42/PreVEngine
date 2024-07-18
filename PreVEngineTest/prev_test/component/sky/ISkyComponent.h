@@ -3,7 +3,7 @@
 
 #include "../../render/IModel.h"
 
-#include <prev/render/buffer/image/IImageBuffer.h>
+#include <prev/render/buffer/ImageBuffer.h>
 #include <prev/render/sampler/Sampler.h>
 
 namespace prev_test::component::sky {
@@ -11,11 +11,11 @@ class ISkyComponent {
 public:
     virtual std::shared_ptr<prev_test::render::IModel> GetModel() const = 0;
 
-    virtual std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetWeather() const = 0;
+    virtual std::shared_ptr<prev::render::buffer::ImageBuffer> GetWeather() const = 0;
 
     virtual std::shared_ptr<prev::render::sampler::Sampler> GetWeatherSampler() const = 0;
 
-    virtual std::shared_ptr<prev::render::buffer::image::IImageBuffer> GetPerlinWorleyNoise() const = 0;
+    virtual std::shared_ptr<prev::render::buffer::ImageBuffer> GetPerlinWorleyNoise() const = 0;
 
     virtual std::shared_ptr<prev::render::sampler::Sampler> GetPerlinWorleyNoiseSampler() const = 0;
 

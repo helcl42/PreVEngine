@@ -1,7 +1,6 @@
 #include "Swapchain.h"
 
-#include "buffer/image/DepthImageBuffer.h"
-#include "buffer/image/ImageBufferFactory.h"
+#include "buffer/ImageBufferBuilder.h"
 
 #include "../core/AllocatorProvider.h"
 #include "../core/DeviceProvider.h"
@@ -45,15 +44,6 @@ Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allo
     SetImageCount(3);
 
     m_commandPool = prev::util::vk::CreateCommandPool(m_device, m_graphicsQueue->family);
-
-    const auto imageViewType{ prev::util::vk::GetImageViewType(m_viewCount) };
-
-    buffer::image::ImageBufferFactory imageBufferFactory{};
-    m_depthBuffer = imageBufferFactory.CreateDepth(buffer::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, renderPass.GetDepthFormat(), VK_SAMPLE_COUNT_1_BIT, 0, false, imageViewType, m_viewCount }, m_allocator);
-    if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
-        m_msaaColorBuffer = imageBufferFactory.CreateColor(buffer::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, m_renderPass.GetColorFormat(), m_sampleCount, 0, false, imageViewType, m_viewCount }, m_allocator);
-        m_msaaDepthBuffer = imageBufferFactory.CreateDepth(buffer::image::ImageBufferCreateInfo{ m_swapchainCreateInfo.imageExtent, VK_IMAGE_TYPE_2D, m_renderPass.GetDepthFormat(), m_sampleCount, 0, false, imageViewType, m_viewCount }, m_allocator);
-    }
 
     Apply();
 }
@@ -136,8 +126,8 @@ bool Swapchain::SetImageCount(uint32_t imageCount)
 
 std::vector<VkPresentModeKHR> Swapchain::GetPresentModes() const
 {
-    uint32_t count;
-    vkGetPhysicalDeviceSurfacePresentModesKHR(*m_device.GetGPU(), m_surface, &count, nullptr);
+    uint32_t count{};
+    VKERRCHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(*m_device.GetGPU(), m_surface, &count, nullptr));
     std::vector<VkPresentModeKHR> modes(count);
     VKERRCHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(*m_device.GetGPU(), m_surface, &count, modes.data()));
     return modes;
@@ -229,10 +219,38 @@ void Swapchain::Apply()
     }
 
     const VkExtent3D newExtent{ m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height, 1 };
-    m_depthBuffer->Resize(newExtent);
+    const auto imageViewType{ prev::util::vk::GetImageViewType(m_viewCount) };
+
+    m_depthBuffer = buffer::ImageBufferBuilder{ m_allocator }
+                        .SetExtent(newExtent)
+                        .SetFormat(m_renderPass.GetDepthFormat())
+                        .SetType(VK_IMAGE_TYPE_2D)
+                        .SetViewType(imageViewType)
+                        .SetLayerCount(m_viewCount)
+                        .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
+                        .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+                        .Build();
     if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
-        m_msaaColorBuffer->Resize(newExtent);
-        m_msaaDepthBuffer->Resize(newExtent);
+        m_msaaColorBuffer = buffer::ImageBufferBuilder{ m_allocator }
+                                .SetExtent(newExtent)
+                                .SetFormat(m_renderPass.GetColorFormat())
+                                .SetType(VK_IMAGE_TYPE_2D)
+                                .SetViewType(imageViewType)
+                                .SetLayerCount(m_viewCount)
+                                .SetSampleCount(m_sampleCount)
+                                .SetUsageFlags(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
+                                .SetLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+                                .Build();
+        m_msaaDepthBuffer = buffer::ImageBufferBuilder{ m_allocator }
+                                .SetExtent(newExtent)
+                                .SetFormat(m_renderPass.GetDepthFormat())
+                                .SetType(VK_IMAGE_TYPE_2D)
+                                .SetViewType(imageViewType)
+                                .SetLayerCount(m_viewCount)
+                                .SetSampleCount(m_sampleCount)
+                                .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
+                                .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+                                .Build();
     }
 
     const auto swapchainImages{ GetSwapchainImages() };
@@ -350,7 +368,7 @@ void Swapchain::Present()
 
     bool swapchainChanged{ false };
 
-    const auto result{ vkQueuePresentKHR(*m_presentQueue, &presentInfo) };
+    const auto result{ m_presentQueue->Present(&presentInfo) };
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
         swapchainChanged = UpdateExtent();
     } else if (result != VK_SUCCESS) {

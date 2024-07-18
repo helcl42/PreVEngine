@@ -1,15 +1,15 @@
 #ifndef __SKY_RENDERER_H__
 #define __SKY_RENDERER_H__
 
-#include "../../pipeline/IPipeline.h"
 #include "../IRenderer.h"
 #include "../RenderContexts.h"
 
 #include "../../../General.h"
 
+#include <prev/render/buffer/ImageBuffer.h>
 #include <prev/render/buffer/UniformBuffer.h>
-#include <prev/render/buffer/image/IImageBuffer.h>
 #include <prev/render/pass/RenderPass.h>
+#include <prev/render/pipeline/Pipeline.h>
 #include <prev/render/sampler/Sampler.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
@@ -37,9 +37,7 @@ public:
     void ShutDown() override;
 
 private:
-    void UpdateImageBufferExtents(const VkExtent2D& extent, const VkFormat format, std::shared_ptr<prev::render::buffer::image::IImageBuffer>& imageBuffer, std::shared_ptr<prev::render::sampler::Sampler>& sampler);
-
-    void AddImageBufferPipelineBarrierCommand(const VkImage image, const VkAccessFlags srcAccessMask, const VkAccessFlags dstAccessMask, const VkImageLayout oldLayout, const VkImageLayout newLayout, const VkPipelineStageFlags srcShaderStageMask, const VkPipelineStageFlags dstShaderStageMask, VkCommandBuffer commandBuffer);
+    void UpdateImageBufferExtents(const VkExtent2D& extent, const VkFormat format, std::shared_ptr<prev::render::buffer::ImageBuffer>& imageBuffer, std::shared_ptr<prev::render::sampler::Sampler>& sampler);
 
 private:
     struct DEFAULT_ALIGNMENT UniformsSkyCS {
@@ -93,37 +91,37 @@ private:
 private:
     std::unique_ptr<prev::render::shader::Shader> m_skyShader;
 
-    std::unique_ptr<prev_test::render::pipeline::IPipeline> m_skyPipeline;
+    std::unique_ptr<prev::render::pipeline::Pipeline> m_skyPipeline;
 
     std::unique_ptr<prev::render::buffer::UniformBufferRing<UniformsSkyCS>> m_uniformsPoolSkyCS;
 
     std::unique_ptr<prev::render::shader::Shader> m_skyPostProcessShader;
 
-    std::unique_ptr<prev_test::render::pipeline::IPipeline> m_skyPostProcessPipeline;
+    std::unique_ptr<prev::render::pipeline::Pipeline> m_skyPostProcessPipeline;
 
     std::unique_ptr<prev::render::buffer::UniformBufferRing<UniformsSkyPostProcessCS>> m_uniformsPoolSkyPostProcessCS;
 
     std::unique_ptr<prev::render::shader::Shader> m_compositeShader;
 
-    std::unique_ptr<prev_test::render::pipeline::IPipeline> m_compositePipeline;
+    std::unique_ptr<prev::render::pipeline::Pipeline> m_compositePipeline;
 
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_skyColorImageBuffer;
+    std::shared_ptr<prev::render::buffer::ImageBuffer> m_skyColorImageBuffer;
 
     std::shared_ptr<prev::render::sampler::Sampler> m_skyColorImageSampler;
 
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_skyBloomImageBuffer;
+    std::shared_ptr<prev::render::buffer::ImageBuffer> m_skyBloomImageBuffer;
 
     std::shared_ptr<prev::render::sampler::Sampler> m_skyBloomImageSampler;
 
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_skyAlphanessImageBuffer;
+    std::shared_ptr<prev::render::buffer::ImageBuffer> m_skyAlphanessImageBuffer;
 
     std::shared_ptr<prev::render::sampler::Sampler> m_skyAlphanessImageSampler;
 
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_skyCloudDistanceImageBuffer;
+    std::shared_ptr<prev::render::buffer::ImageBuffer> m_skyCloudDistanceImageBuffer;
 
     std::shared_ptr<prev::render::sampler::Sampler> m_skyCloudDistanceImageSampler;
 
-    std::shared_ptr<prev::render::buffer::image::IImageBuffer> m_skyPostProcessColorImageBuffer;
+    std::shared_ptr<prev::render::buffer::ImageBuffer> m_skyPostProcessColorImageBuffer;
 
     std::shared_ptr<prev::render::sampler::Sampler> m_skyPostProcessImageSampler;
 

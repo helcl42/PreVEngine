@@ -2,7 +2,6 @@
 #define __NORMAL_MAPPED_RENDERER_H__
 
 #include "../../IMesh.h"
-#include "../../pipeline/IPipeline.h"
 #include "../IRenderer.h"
 #include "../RenderContexts.h"
 
@@ -12,6 +11,7 @@
 
 #include <prev/render/buffer/UniformBuffer.h>
 #include <prev/render/pass/RenderPass.h>
+#include <prev/render/pipeline/Pipeline.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
 
@@ -151,7 +151,7 @@ private:
 private:
     std::unique_ptr<prev::render::shader::Shader> m_shader;
 
-    std::unique_ptr<prev_test::render::pipeline::IPipeline> m_pipeline;
+    std::unique_ptr<prev::render::pipeline::Pipeline> m_pipeline;
 
     std::unique_ptr<prev::render::buffer::UniformBufferRing<UniformsVS>> m_uniformsPoolVS;
 
