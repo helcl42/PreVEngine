@@ -63,7 +63,7 @@ private:
 
     VkImageLayout m_layout{ VK_IMAGE_LAYOUT_UNDEFINED };
 
-    VkImageAspectFlags m_aspectMask{ VK_IMAGE_ASPECT_FLAG_BITS_MAX_ENUM };
+    VkImageAspectFlags m_aspectMask{ VK_IMAGE_ASPECT_NONE_KHR };
 
     VkImageTiling m_tiling{ VK_IMAGE_TILING_OPTIMAL };
 

@@ -9,7 +9,7 @@ namespace prev::render::buffer {
 namespace {
     VkImageAspectFlags DeduceApectMaskFromFormat(const VkFormat format)
     {
-        VkImageAspectFlags result{ VK_IMAGE_ASPECT_NONE };
+        VkImageAspectFlags result{ VK_IMAGE_ASPECT_NONE_KHR };
         if (core::format::HasDepthComponent(format)) {
             result |= VK_IMAGE_ASPECT_DEPTH_BIT;
             if (core::format::HasStencilComponent(format)) {
@@ -138,7 +138,7 @@ std::unique_ptr<ImageBuffer> ImageBufferBuilder::Build() const
 
     // some logic is automatic to minimize boiler plate code for common usa cases
     const auto imageViewType{ m_viewType == VK_IMAGE_VIEW_TYPE_MAX_ENUM ? DeduceImageViewTypeFromImageType(m_type) : m_viewType };
-    const auto aspectMask{ m_aspectMask == VK_IMAGE_ASPECT_FLAG_BITS_MAX_ENUM ? DeduceApectMaskFromFormat(m_format) : m_aspectMask };
+    const auto aspectMask{ m_aspectMask == VK_IMAGE_ASPECT_NONE_KHR ? DeduceApectMaskFromFormat(m_format) : m_aspectMask };
     const auto mipMapLevels{ m_mipMapEnabled ? prev::util::math::Log2(std::max(m_extent.width, m_extent.height)) + 1 : 1 };
 
     VkImage image;
