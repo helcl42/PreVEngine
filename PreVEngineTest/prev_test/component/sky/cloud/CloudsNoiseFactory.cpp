@@ -3,6 +3,7 @@
 #include "../../../common/AssetManager.h"
 
 #include <prev/core/AllocatorProvider.h>
+#include <prev/core/CommandsExecutor.h>
 #include <prev/core/DeviceProvider.h>
 #include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
@@ -35,11 +36,6 @@ CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t widt
         .Build();
     // clang-format on
 
-    auto commandPool = prev::util::vk::CreateCommandPool(*device, computeQueue->family);
-    auto commandBuffer = prev::util::vk::CreateCommandBuffer(*device, commandPool);
-
-    auto fence = prev::util::vk::CreateFence(*device);
-
     auto noiseImageBuffer = prev::render::buffer::ImageBufferBuilder{ *allocator }
                                 .SetExtent({ width, height, depth })
                                 .SetFormat(noiseImageFormat)
@@ -50,33 +46,18 @@ CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t widt
                                 .Build();
     auto sampler = std::make_unique<prev::render::sampler::Sampler>(*device, static_cast<float>(noiseImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR);
 
-    VkCommandBufferBeginInfo cmdBufBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-    cmdBufBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &cmdBufBeginInfo));
+    prev::core::CommandsExecutor commandsExecutor{ *device, *computeQueue };
+    commandsExecutor.ExecuteImmediate([&](VkCommandBuffer commandBuffer) {
+        shader->Bind("outVolumeTexture", *noiseImageBuffer, *sampler, VK_IMAGE_LAYOUT_GENERAL);
+        const VkDescriptorSet descriptorSet = shader->UpdateNextDescriptorSet();
 
-    shader->Bind("outVolumeTexture", *noiseImageBuffer, *sampler, VK_IMAGE_LAYOUT_GENERAL);
-    const VkDescriptorSet descriptorSet = shader->UpdateNextDescriptorSet();
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *pipeline);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, &descriptorSet, 0, 0);
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *pipeline);
-    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, &descriptorSet, 0, 0);
+        vkCmdDispatch(commandBuffer, 32, 32, 32);
 
-    vkCmdDispatch(commandBuffer, 32, 32, 32);
-
-    noiseImageBuffer->GenerateMipMaps(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, commandBuffer);
-
-    VKERRCHECK(vkEndCommandBuffer(commandBuffer));
-
-    // Submit compute work
-    vkResetFences(*device, 1, &fence);
-
-    VkSubmitInfo computeSubmitInfo{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
-    computeSubmitInfo.commandBufferCount = 1;
-    computeSubmitInfo.pCommandBuffers = &commandBuffer;
-    VKERRCHECK(computeQueue->Submit(1, &computeSubmitInfo, fence));
-    VKERRCHECK(vkWaitForFences(*device, 1, &fence, VK_TRUE, UINT64_MAX));
-
-    vkDestroyFence(*device, fence, nullptr);
-    vkDestroyCommandPool(*device, commandPool, nullptr);
+        noiseImageBuffer->GenerateMipMaps(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, commandBuffer);
+    });
 
     pipeline = nullptr;
     shader = nullptr;

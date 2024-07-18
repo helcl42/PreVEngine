@@ -3,6 +3,7 @@
 #include "../../../common/AssetManager.h"
 
 #include <prev/core/AllocatorProvider.h>
+#include <prev/core/CommandsExecutor.h>
 #include <prev/core/DeviceProvider.h>
 #include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/buffer/UniformBuffer.h>
@@ -49,11 +50,6 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
     auto uniformsPool = std::make_unique<prev::render::buffer::UniformBufferRing<Uniforms>>(*allocator);
     uniformsPool->AdjustCapactity(1, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
-    auto commandPool = prev::util::vk::CreateCommandPool(*device, computeQueue->family);
-    auto commandBuffer = prev::util::vk::CreateCommandBuffer(*device, commandPool);
-
-    auto fence = prev::util::vk::CreateFence(*device);
-
     auto weatherImageBuffer = prev::render::buffer::ImageBufferBuilder{ *allocator }
                                   .SetExtent({ width, height, 1 })
                                   .SetFormat(VK_FORMAT_R8G8B8A8_UNORM)
@@ -64,45 +60,30 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
                                   .Build();
     auto sampler = std::make_unique<prev::render::sampler::Sampler>(*device, static_cast<float>(weatherImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR);
 
-    VkCommandBufferBeginInfo cmdBufBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-    cmdBufBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &cmdBufBeginInfo));
+    prev::core::CommandsExecutor commandsExecutor{ *device, *computeQueue };
+    commandsExecutor.ExecuteImmediate([&](VkCommandBuffer commandBuffer) {
+        Uniforms uniforms{};
+        uniforms.textureSize = glm::vec4(width, height, 0, 0);
+        uniforms.seed = glm::vec4(10, 20, 0, 0);
+        uniforms.perlinAmplitude = 0.5f;
+        uniforms.perlinFrequency = 0.8f;
+        uniforms.perlinScale = 100.0f;
+        uniforms.perlinOctaves = 4;
 
-    Uniforms uniforms{};
-    uniforms.textureSize = glm::vec4(width, height, 0, 0);
-    uniforms.seed = glm::vec4(10, 20, 0, 0);
-    uniforms.perlinAmplitude = 0.5f;
-    uniforms.perlinFrequency = 0.8f;
-    uniforms.perlinScale = 100.0f;
-    uniforms.perlinOctaves = 4;
+        auto ubo = uniformsPool->GetNext();
+        ubo->Update(&uniforms);
 
-    auto ubo = uniformsPool->GetNext();
-    ubo->Update(&uniforms);
+        shader->Bind("uboCS", *ubo);
+        shader->Bind("outWeatherTexture", *weatherImageBuffer, *sampler, VK_IMAGE_LAYOUT_GENERAL);
+        const VkDescriptorSet descriptorSet = shader->UpdateNextDescriptorSet();
 
-    shader->Bind("uboCS", *ubo);
-    shader->Bind("outWeatherTexture", *weatherImageBuffer, *sampler, VK_IMAGE_LAYOUT_GENERAL);
-    const VkDescriptorSet descriptorSet = shader->UpdateNextDescriptorSet();
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *pipeline);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, &descriptorSet, 0, 0);
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *pipeline);
-    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, &descriptorSet, 0, 0);
+        vkCmdDispatch(commandBuffer, 128, 128, 1);
 
-    vkCmdDispatch(commandBuffer, 128, 128, 1);
-
-    weatherImageBuffer->GenerateMipMaps(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, commandBuffer);
-
-    VKERRCHECK(vkEndCommandBuffer(commandBuffer));
-
-    // Submit compute work
-    vkResetFences(*device, 1, &fence);
-
-    VkSubmitInfo computeSubmitInfo{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
-    computeSubmitInfo.commandBufferCount = 1;
-    computeSubmitInfo.pCommandBuffers = &commandBuffer;
-    VKERRCHECK(computeQueue->Submit(1, &computeSubmitInfo, fence));
-    VKERRCHECK(vkWaitForFences(*device, 1, &fence, VK_TRUE, UINT64_MAX));
-
-    vkDestroyFence(*device, fence, nullptr);
-    vkDestroyCommandPool(*device, commandPool, nullptr);
+        weatherImageBuffer->GenerateMipMaps(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, commandBuffer);
+    });
 
     pipeline = nullptr;
     shader = nullptr;
