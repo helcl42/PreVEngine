@@ -3,6 +3,8 @@
 #include "../../util/Utils.h"
 #include "../../util/VkUtils.h"
 
+#include <stdexcept>
+
 namespace prev::render::shader {
 ShaderBuilder::ShaderBuilder(VkDevice device)
     : m_device{ device }
