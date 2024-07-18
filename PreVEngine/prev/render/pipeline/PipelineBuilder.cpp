@@ -22,7 +22,7 @@ namespace {
 
     VkPipeline CreateComputePipeline(const VkDevice device, const VkPipelineLayout pipelineLayout, const shader::Shader& shader)
     {
-        VkComputePipelineCreateInfo computePipelineCreateInfo{ VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO };
+        VkComputePipelineCreateInfo computePipelineCreateInfo = { VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO };
         computePipelineCreateInfo.layout = pipelineLayout;
         computePipelineCreateInfo.flags = 0;
         computePipelineCreateInfo.stage = shader.GetShaderStages().at(0);
