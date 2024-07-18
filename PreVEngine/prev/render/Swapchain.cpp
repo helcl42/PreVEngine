@@ -258,8 +258,6 @@ void Swapchain::Apply()
 
     m_frameIndex = util::CircularIndex{ swapchainImagesCount };
 
-    const auto imageViewType{ prev::util::vk::GetImageViewType(m_viewCount) };
-
     m_swapchainBuffers.resize(swapchainImagesCount);
     for (uint32_t i = 0; i < swapchainImagesCount; i++) {
         auto image{ swapchainImages[i] };
