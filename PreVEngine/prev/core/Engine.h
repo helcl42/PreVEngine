@@ -20,7 +20,7 @@ class Engine final {
 public:
     Engine(const EngineConfig& config);
 
-    ~Engine() = default;
+    ~Engine();
 
 public:
     void Init();
