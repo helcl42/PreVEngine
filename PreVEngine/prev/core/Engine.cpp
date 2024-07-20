@@ -17,6 +17,11 @@ Engine::Engine(const EngineConfig& config)
 {
 }
 
+Engine::~Engine()
+{
+    ShutDown();
+}
+
 void Engine::Init()
 {
     ResetTiming();

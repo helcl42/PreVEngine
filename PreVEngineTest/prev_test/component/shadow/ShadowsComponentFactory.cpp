@@ -18,7 +18,7 @@ std::unique_ptr<IShadowsComponent> ShadowsComponentFactory::Create() const
 
     std::shared_ptr<prev::render::pass::RenderPass> renderPass{ CreateRenderPass(*device) };
     std::shared_ptr<prev::render::buffer::ImageBuffer> depthBuffer{ CreateDepthBuffer(extent, CASCADES_COUNT, *allocator) };
-    std::shared_ptr<prev::render::sampler::Sampler> depthSampler{ CreateSampler(allocator->GetDevice(), static_cast<float>(depthBuffer->GetMipLevels())) };
+    std::shared_ptr<prev::render::sampler::Sampler> depthSampler{ CreateSampler(*device, static_cast<float>(depthBuffer->GetMipLevels())) };
     auto cascades{ CreateCascades(extent, CASCADES_COUNT, depthBuffer, renderPass, *device) };
 
     auto result{ std::make_unique<ShadowsComponent>(CASCADES_COUNT, renderPass, depthBuffer, depthSampler, cascades) };
