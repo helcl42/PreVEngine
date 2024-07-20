@@ -34,14 +34,6 @@ namespace {
 
     VkPipeline CreateGraphicsPipeline(const VkDevice& device, const shader::Shader& shader, const pass::RenderPass& renderPass, const VkPipelineLayout pipelineLayout, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool blendingEnabled, const bool additiveBlendingEnabled, const VkPolygonMode polygonMode)
     {
-        if (!depthTestEnabled && depthWriteEnabled) {
-            LOGW("Invalid pipeline configuration: Depth test is disabled but depth write enabled - depth write value will be ignored.");
-        }
-
-        if (!blendingEnabled && additiveBlendingEnabled) {
-            LOGW("Invalid pipeline configuration: Blending is disabled and additive blending enabled - additive blending will be ignored.");
-        }
-
         VkPipelineInputAssemblyStateCreateInfo inputAssembly = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
         inputAssembly.topology = topology;
         inputAssembly.primitiveRestartEnable = VK_FALSE;
@@ -219,6 +211,14 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetPolygonMode(VkPolygonMode m
 
 std::unique_ptr<Pipeline> GraphicsPipelineBuilder::Build() const
 {
+    if (!m_depthTestEnabled && m_depthWriteEnabled) {
+        LOGW("Invalid pipeline configuration: Depth test is disabled but depth write enabled - depth write value will be ignored.");
+    }
+
+    if (!m_blendingEnabled && m_additiveBlendingEnabled) {
+        LOGW("Invalid pipeline configuration: Blending is disabled and additive blending enabled - additive blending will be ignored.");
+    }
+
     auto pipelineLayout{ CreatePipelineLayout(m_device, m_shader) };
     auto pipeline{ CreateGraphicsPipeline(m_device, m_shader, m_renderPass, pipelineLayout, m_primitiveTopology, m_depthTestEnabled, m_depthWriteEnabled, m_blendingEnabled, m_additiveBlendingEnabled, m_polygonMode) };
     return std::make_unique<Pipeline>(m_device, pipeline, pipelineLayout);
