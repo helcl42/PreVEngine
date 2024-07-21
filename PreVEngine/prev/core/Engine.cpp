@@ -83,8 +83,15 @@ void Engine::MainLoop()
 
 void Engine::ShutDown()
 {
-    m_rootRenderer->ShutDown();
-    m_scene->ShutDown();
+    if (m_rootRenderer) {
+        m_rootRenderer->ShutDown();
+    }
+    if (m_scene) {
+        m_scene->ShutDown();
+    }
+
+    m_rootRenderer = nullptr;
+    m_scene = nullptr;
 
     AllocatorProvider::Instance().SetAllocator(nullptr);
     DeviceProvider::Instance().SetDevice(nullptr);
