@@ -1,29 +1,27 @@
 #include "WaterComponentFactory.h"
-
-#include "../../common/AssetManager.h"
-#include "../../render/material/MaterialFactory.h"
-#include "../../render/model/ModelFactory.h"
 #include "WaterCommon.h"
 #include "WaterComponent.h"
 #include "WaterTileMesh.h"
 
-#include <prev/core/AllocatorProvider.h>
+#include "../../common/AssetManager.h"
+#include "../../render/material/MaterialFactory.h"
+#include "../../render/model/ModelFactory.h"
 
 namespace prev_test::component::water {
+WaterComponentFactory::WaterComponentFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
+    : m_device{ device }
+    , m_allocator{ allocator }
+{
+}
+
 std::unique_ptr<IWaterComponent> WaterComponentFactory::Create(const int x, const int z) const
 {
-    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
-
     const std::string dudvMapPath{ prev_test::common::AssetManager::Instance().GetAssetPath("Textures/waterDUDV.png") };
     const std::string normalMapPath{ prev_test::common::AssetManager::Instance().GetAssetPath("Textures/matchingNormalMap.png") };
 
-    prev_test::render::material::MaterialFactory materialFactory{};
-    auto material{ materialFactory.Create({ WATER_COLOR, 1.0f, 0.0f, VK_SAMPLER_ADDRESS_MODE_REPEAT }, dudvMapPath, normalMapPath, *allocator) };
-
+    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ WATER_COLOR, 1.0f, 0.0f, VK_SAMPLER_ADDRESS_MODE_REPEAT }, dudvMapPath, normalMapPath) };
     auto mesh{ std::make_unique<WaterTileMesh>() };
-
-    prev_test::render::model::ModelFactory modelFactory{};
-    auto model{ modelFactory.Create(std::move(mesh), *allocator) };
+    auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 
     return std::make_unique<WaterComponent>(x, z, std::move(material), std::move(model));
 }

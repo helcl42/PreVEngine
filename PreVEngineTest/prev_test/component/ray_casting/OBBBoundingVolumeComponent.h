@@ -11,7 +11,7 @@
 namespace prev_test::component::ray_casting {
 class OBBBoundingVolumeComponent : public IBoundingVolumeComponent {
 public:
-    OBBBoundingVolumeComponent(const prev_test::common::intersection::OBB& obb, const glm::vec3& scale, const glm::vec3& offset);
+    OBBBoundingVolumeComponent(prev::core::memory::Allocator& allocator, const prev_test::common::intersection::OBB& obb, const glm::vec3& scale, const glm::vec3& offset);
 
     ~OBBBoundingVolumeComponent() = default;
 
@@ -33,9 +33,11 @@ private:
     static prev_test::common::intersection::OBB OffsetOBB(const prev_test::common::intersection::OBB& obb, const glm::vec3& offset);
 
 private:
-    const glm::vec3& m_scale;
+    prev::core::memory::Allocator& m_allocator;
 
-    const glm::vec3 m_offset;
+    glm::vec3 m_scale;
+
+    glm::vec3 m_offset;
 
 #ifdef RENDER_BOUNDING_VOLUMES
     std::shared_ptr<prev_test::render::IModel> m_model;

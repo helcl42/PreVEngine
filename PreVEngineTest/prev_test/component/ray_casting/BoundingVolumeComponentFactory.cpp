@@ -7,9 +7,14 @@
 #include "../../render/mesh/MeshUtil.h"
 
 namespace prev_test::component::ray_casting {
+BoundingVolumeComponentFactory::BoundingVolumeComponentFactory(prev::core::memory::Allocator& allocator)
+    : m_allocator{ allocator }
+{
+}
+
 std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::CreateAABB(const prev_test::common::intersection::AABB& aabb, const glm::vec3& scale, const glm::vec3& offset) const
 {
-    return std::make_unique<AABBBoundingVolumeComponent>(aabb, scale, offset);
+    return std::make_unique<AABBBoundingVolumeComponent>(m_allocator, aabb, scale, offset);
 }
 
 std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::CreateAABB(const std::shared_ptr<prev_test::render::IMesh>& mesh, const glm::vec3& scale, const glm::vec3& offset) const
@@ -21,7 +26,7 @@ std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::Create
 
 std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::CreateOBB(const prev_test::common::intersection::OBB& obb, const glm::vec3& scale, const glm::vec3& offset) const
 {
-    return std::make_unique<OBBBoundingVolumeComponent>(obb, scale, offset);
+    return std::make_unique<OBBBoundingVolumeComponent>(m_allocator, obb, scale, offset);
 }
 
 std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::CreateOBB(const std::shared_ptr<prev_test::render::IMesh>& mesh, const glm::vec3& scale, const glm::vec3& offset) const
@@ -34,7 +39,7 @@ std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::Create
 
 std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::CreateSphere(const prev_test::common::intersection::Sphere& sphere, const float scale, const glm::vec3& offset) const
 {
-    return std::make_unique<SphereBoundingVolumeComponent>(sphere, scale, offset);
+    return std::make_unique<SphereBoundingVolumeComponent>(m_allocator, sphere, scale, offset);
 }
 
 std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::CreateSphere(const std::shared_ptr<prev_test::render::IMesh>& mesh, const float scale, const glm::vec3& offset) const

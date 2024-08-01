@@ -15,7 +15,7 @@
 namespace prev_test::render::renderer::sky {
 class SkyBoxRenderer final : public IRenderer<NormalRenderContext> {
 public:
-    SkyBoxRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass);
+    SkyBoxRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass);
 
     ~SkyBoxRenderer() = default;
 
@@ -55,7 +55,11 @@ private:
     const uint32_t m_descriptorCount{ 10 };
 
 private:
-    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
+    prev::core::device::Device& m_device;
+
+    prev::core::memory::Allocator& m_allocator;
+
+    prev::render::pass::RenderPass& m_renderPass;
 
 private:
     std::unique_ptr<prev::render::shader::Shader> m_shader;

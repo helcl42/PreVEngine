@@ -5,12 +5,15 @@
 #include "ITerrainComponent.h"
 #include "TerrainLayerCreateInfo.h"
 
+#include <prev/core/device/Device.h>
+#include <prev/core/memory/Allocator.h>
+
 #include <map>
 
 namespace prev_test::component::terrain {
 class TerrainComponentFactory {
 public:
-    TerrainComponentFactory(const unsigned int seed = 21236728, const unsigned int vertexCount = 28);
+    TerrainComponentFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const unsigned int seed = 21236728, const unsigned int vertexCount = 28);
 
     ~TerrainComponentFactory() = default;
 
@@ -22,7 +25,7 @@ public:
     std::unique_ptr<ITerrainComponenet> CreateRandomTerrainConeStepMapped(const int x, const int z, const float size) const;
 
 private:
-    std::unique_ptr<prev_test::render::IModel> CreateModel(prev::core::memory::Allocator& allocator, const std::shared_ptr<VertexData>& vertexData, const bool normalMapped) const;
+    std::unique_ptr<prev_test::render::IModel> CreateModel(const std::shared_ptr<VertexData>& vertexData, const bool normalMapped) const;
 
     std::unique_ptr<prev_test::render::IMesh> GenerateMesh(const std::shared_ptr<VertexData>& vertexData, const bool normalMapped) const;
 
@@ -35,9 +38,14 @@ private:
     std::unique_ptr<HeightMapInfo> CreateHeightMap(const HeightGenerator& generator) const;
 
 private:
-    const unsigned int m_seed;
+private:
+    prev::core::device::Device& m_device;
 
-    const unsigned int m_vertexCount;
+    prev::core::memory::Allocator& m_allocator;
+
+    unsigned int m_seed;
+
+    unsigned int m_vertexCount;
 };
 } // namespace prev_test::component::terrain
 

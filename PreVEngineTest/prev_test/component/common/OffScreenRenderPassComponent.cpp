@@ -1,7 +1,5 @@
 #include "OffScreenRenderPassComponent.h"
 
-#include <prev/core/AllocatorProvider.h>
-#include <prev/core/DeviceProvider.h>
 #include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/pass/RenderPassBuilder.h>
 #include <prev/util/VkUtils.h>
@@ -12,8 +10,10 @@ namespace prev_test::component::common {
 constexpr bool ANISOTROPIC_FILTERING_ENABLED{ true };
 constexpr float MAX_ANISOTROPY_LEVEL{ 4.0f };
 
-OffScreenRenderPassComponent::OffScreenRenderPassComponent(const VkExtent2D& extent, const VkFormat depthFormat, const std::vector<VkFormat>& colorFormats)
-    : m_extent{ extent }
+OffScreenRenderPassComponent::OffScreenRenderPassComponent(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const VkExtent2D& extent, const VkFormat depthFormat, const std::vector<VkFormat>& colorFormats)
+    : m_device{ device }
+    , m_allocator{ allocator }
+    , m_extent{ extent }
     , m_depthFormat{ depthFormat }
     , m_colorFormats{ colorFormats }
     , m_renderPass{}
@@ -27,9 +27,6 @@ OffScreenRenderPassComponent::OffScreenRenderPassComponent(const VkExtent2D& ext
 
 void OffScreenRenderPassComponent::Init()
 {
-    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
-    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
-
     // create render pass
     const uint32_t depthDependenciesOffset{ (m_depthFormat != VK_FORMAT_UNDEFINED) ? 2u : 0u };
     const uint32_t allDependenciesCount{ depthDependenciesOffset + 2u * static_cast<uint32_t>(m_colorFormats.size()) };
@@ -74,7 +71,7 @@ void OffScreenRenderPassComponent::Init()
     std::vector<uint32_t> attachmentIndices;
     uint32_t attachmentIndex{ 0 };
 
-    prev::render::pass::RenderPassBuilder renderPassBuilder{ *device };
+    prev::render::pass::RenderPassBuilder renderPassBuilder{ m_device };
     if (m_depthFormat != VK_FORMAT_UNDEFINED) {
         renderPassBuilder.AddDepthAttachment(m_depthFormat, VK_SAMPLE_COUNT_1_BIT, { MAX_DEPTH, 0 });
         attachmentIndices.push_back(attachmentIndex);
@@ -94,26 +91,26 @@ void OffScreenRenderPassComponent::Init()
     const VkExtent3D extent3d{ GetExtent().width, GetExtent().height, 1 };
     // create image buffers and corresponding samplers
     if (m_depthFormat != VK_FORMAT_UNDEFINED) {
-        m_depthBuffer = prev::render::buffer::ImageBufferBuilder{ *allocator }
+        m_depthBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
                             .SetExtent(extent3d)
                             .SetFormat(m_depthFormat)
                             .SetType(VK_IMAGE_TYPE_2D)
                             .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
                             .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
                             .Build();
-        m_depthSampler = std::make_shared<prev::render::sampler::Sampler>(*device, 1.0f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_NEAREST, VK_FILTER_NEAREST, VK_SAMPLER_MIPMAP_MODE_NEAREST);
+        m_depthSampler = std::make_shared<prev::render::sampler::Sampler>(m_device, 1.0f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_NEAREST, VK_FILTER_NEAREST, VK_SAMPLER_MIPMAP_MODE_NEAREST);
     }
 
     for (uint32_t i = 0; i < m_colorFormats.size(); ++i) {
         const auto colorFormat{ m_colorFormats[i] };
-        auto colorImageBuffer = prev::render::buffer::ImageBufferBuilder{ *allocator }
+        auto colorImageBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
                                     .SetExtent(extent3d)
                                     .SetFormat(colorFormat)
                                     .SetType(VK_IMAGE_TYPE_2D)
                                     .SetUsageFlags(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
                                     .SetLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
                                     .Build();
-        auto colorImageBufferSampler{ std::make_shared<prev::render::sampler::Sampler>(*device, static_cast<float>(colorImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, ANISOTROPIC_FILTERING_ENABLED, MAX_ANISOTROPY_LEVEL) };
+        auto colorImageBufferSampler{ std::make_shared<prev::render::sampler::Sampler>(m_device, static_cast<float>(colorImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, ANISOTROPIC_FILTERING_ENABLED, MAX_ANISOTROPY_LEVEL) };
 
         m_colorBuffers.emplace_back(std::move(colorImageBuffer));
         m_colorSamplers.emplace_back(std::move(colorImageBufferSampler));
@@ -127,16 +124,14 @@ void OffScreenRenderPassComponent::Init()
         imageViews.push_back(colorBuffer->GetImageView());
     }
 
-    m_frameBuffer = prev::util::vk::CreateFrameBuffer(*device, *m_renderPass, imageViews, GetExtent());
+    m_frameBuffer = prev::util::vk::CreateFrameBuffer(m_device, *m_renderPass, imageViews, GetExtent());
 }
 
 void OffScreenRenderPassComponent::ShutDown()
 {
-    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
+    m_device.WaitIdle();
 
-    vkDeviceWaitIdle(*device);
-
-    vkDestroyFramebuffer(*device, m_frameBuffer, nullptr);
+    vkDestroyFramebuffer(m_device, m_frameBuffer, nullptr);
     m_frameBuffer = nullptr;
 
     m_depthSampler = nullptr;

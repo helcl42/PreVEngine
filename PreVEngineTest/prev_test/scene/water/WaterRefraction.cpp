@@ -6,8 +6,10 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::scene::water {
-WaterRefraction::WaterRefraction()
+WaterRefraction::WaterRefraction(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
     : SceneNode()
+    , m_device{ device }
+    , m_allocator{ allocator }
 {
 }
 
@@ -46,7 +48,7 @@ void WaterRefraction::CreateRefractionComponent()
 {
     const VkExtent2D extent{ m_viewPortSize.x / prev_test::component::water::REFRACTION_EXTENT_DIVIDER, m_viewPortSize.y / prev_test::component::water::REFRACTION_EXTENT_DIVIDER };
 
-    prev_test::component::common::OffScreenRenderPassComponentFactory componentFactory{};
+    prev_test::component::common::OffScreenRenderPassComponentFactory componentFactory{ m_device, m_allocator };
     m_refractionComponent = componentFactory.Create(extent, VK_FORMAT_D32_SFLOAT, { VK_FORMAT_B8G8R8A8_UNORM });
     m_refractionComponent->Init();
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::common::IOffScreenRenderPassComponent>(GetThis(), m_refractionComponent, TAG_WATER_REFRACTION_RENDER_COMPONENT);

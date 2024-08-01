@@ -5,8 +5,6 @@
 #include "../../../component/sky/ISkyComponent.h"
 #include "../../../component/time/ITimeComponent.h"
 
-#include <prev/core/AllocatorProvider.h>
-#include <prev/core/DeviceProvider.h>
 #include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
@@ -15,19 +13,18 @@
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::sky {
-SkyRenderer::SkyRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
-    : m_renderPass(renderPass)
+SkyRenderer::SkyRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass)
+    : m_device{ device }
+    , m_allocator{ allocator }
+    , m_renderPass{ renderPass }
 {
 }
 
 void SkyRenderer::Init()
 {
-    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
-    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
-
     // compute sky
     // clang-format off
-    m_skyShader = prev::render::shader::ShaderBuilder{ *device }
+    m_skyShader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
             { VK_SHADER_STAGE_COMPUTE_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_comp.spv") }
         })
@@ -47,18 +44,18 @@ void SkyRenderer::Init()
     LOGI("Sky Compute Shader created\n");
 
     // clang-format off
-    m_skyPipeline = prev::render::pipeline::ComputePipelineBuilder{ *device, *m_skyShader }
+    m_skyPipeline = prev::render::pipeline::ComputePipelineBuilder{ m_device, *m_skyShader }
         .Build();
     // clang-format on
 
     LOGI("Sky Compute Pipeline created\n");
 
-    m_uniformsPoolSkyCS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsSkyCS>>(*allocator);
-    m_uniformsPoolSkyCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolSkyCS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsSkyCS>>(m_allocator);
+    m_uniformsPoolSkyCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
     // compute sky post process
     // clang-format off
-    m_skyPostProcessShader = prev::render::shader::ShaderBuilder{ *device }
+    m_skyPostProcessShader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
             { VK_SHADER_STAGE_COMPUTE_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_post_process_comp.spv") }
         })
@@ -75,18 +72,18 @@ void SkyRenderer::Init()
     LOGI("Sky PostProcess Compute Shader created\n");
 
     // clang-format off
-    m_skyPostProcessPipeline = prev::render::pipeline::ComputePipelineBuilder{ *device, *m_skyPostProcessShader }
+    m_skyPostProcessPipeline = prev::render::pipeline::ComputePipelineBuilder{ m_device, *m_skyPostProcessShader }
         .Build();
     // clang-format on
 
     LOGI("Sky PostProcess Compute Pipeline created\n");
 
-    m_uniformsPoolSkyPostProcessCS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsSkyPostProcessCS>>(*allocator);
-    m_uniformsPoolSkyPostProcessCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolSkyPostProcessCS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsSkyPostProcessCS>>(m_allocator);
+    m_uniformsPoolSkyPostProcessCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
     // compositor
     // clang-format off
-    m_compositeShader = prev::render::shader::ShaderBuilder{ *device }
+    m_compositeShader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
             { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_composite_vert.spv") },
             { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_composite_frag.spv") }
@@ -110,7 +107,7 @@ void SkyRenderer::Init()
     LOGI("Sky Composite Shader created\n");
 
     // clang-format off
-    m_compositePipeline = prev::render::pipeline::GraphicsPipelineBuilder{ *device, *m_compositeShader, *m_renderPass }
+    m_compositePipeline = prev::render::pipeline::GraphicsPipelineBuilder{ m_device, *m_compositeShader, m_renderPass }
         .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
         .SetDepthTestEnabled(true)
         .SetDepthWriteEnabled(true)
@@ -298,20 +295,17 @@ void SkyRenderer::ShutDown()
 void SkyRenderer::UpdateImageBufferExtents(const VkExtent2D& extent, const VkFormat format, std::shared_ptr<prev::render::buffer::ImageBuffer>& imageBuffer, std::shared_ptr<prev::render::sampler::Sampler>& sampler)
 {
     if (imageBuffer == nullptr || imageBuffer->GetExtent().width != extent.width || imageBuffer->GetExtent().height != extent.height) {
-        auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
-        auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
-
-        const auto formatProperties{ prev::util::vk::GetFormatProperties(*device->GetGPU(), format) };
+        const auto formatProperties{ prev::util::vk::GetFormatProperties(*m_device.GetGPU(), format) };
         const auto samplingFilter{ (formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT) ? VK_FILTER_LINEAR : VK_FILTER_NEAREST };
 
-        imageBuffer = prev::render::buffer::ImageBufferBuilder{ *allocator }
+        imageBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
                           .SetExtent({ extent.width, extent.height, 1 })
                           .SetFormat(format)
                           .SetType(VK_IMAGE_TYPE_2D)
                           .SetUsageFlags(VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT)
                           .SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
                           .Build();
-        sampler = std::make_shared<prev::render::sampler::Sampler>(allocator->GetDevice(), static_cast<float>(imageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, samplingFilter, samplingFilter, VK_SAMPLER_MIPMAP_MODE_NEAREST);
+        sampler = std::make_shared<prev::render::sampler::Sampler>(m_device, static_cast<float>(imageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, samplingFilter, samplingFilter, VK_SAMPLER_MIPMAP_MODE_NEAREST);
     }
 }
 } // namespace prev_test::render::renderer::sky

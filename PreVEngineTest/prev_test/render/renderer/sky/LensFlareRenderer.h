@@ -18,7 +18,7 @@
 namespace prev_test::render::renderer::sky {
 class LensFlareRenderer final : public IRenderer<NormalRenderContext> {
 public:
-    LensFlareRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass);
+    LensFlareRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass);
 
     ~LensFlareRenderer() = default;
 
@@ -60,7 +60,11 @@ private:
     const uint32_t m_descriptorCount{ 50 };
 
 private:
-    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
+    prev::core::device::Device& m_device;
+
+    prev::core::memory::Allocator& m_allocator;
+
+    prev::render::pass::RenderPass& m_renderPass;
 
 private:
     std::unique_ptr<prev::render::shader::Shader> m_shader;

@@ -1,6 +1,4 @@
 #include "Engine.h"
-#include "AllocatorProvider.h"
-#include "DeviceProvider.h"
 #include "device/DeviceFactory.h"
 
 #include "../common/Logger.h"
@@ -32,9 +30,6 @@ void Engine::Init()
     ResetAllocator();
     ResetRenderPass();
     ResetSwapchain();
-
-    DeviceProvider::Instance().SetDevice(m_device);
-    AllocatorProvider::Instance().SetAllocator(m_allocator);
 }
 
 void Engine::InitScene(const std::shared_ptr<prev::scene::IScene>& scene)
@@ -92,19 +87,11 @@ void Engine::ShutDown()
 
     m_rootRenderer = nullptr;
     m_scene = nullptr;
-
-    AllocatorProvider::Instance().SetAllocator(nullptr);
-    DeviceProvider::Instance().SetDevice(nullptr);
 }
 
 std::shared_ptr<prev::scene::IScene> Engine::GetScene() const
 {
     return m_scene;
-}
-
-std::shared_ptr<prev::core::device::Device> Engine::GetDevice() const
-{
-    return m_device;
 }
 
 std::shared_ptr<prev::render::Swapchain> Engine::GetSwapchain() const
@@ -122,9 +109,19 @@ std::shared_ptr<prev::render::IRootRenderer> Engine::GetRootRenderer() const
     return m_rootRenderer;
 }
 
+std::shared_ptr<prev::core::device::Device> Engine::GetDevice() const
+{
+    return m_device;
+}
+
+std::shared_ptr<prev::core::memory::Allocator> Engine::GetAllocator() const
+{
+    return m_allocator;
+}
+
 void Engine::operator()(const prev::window::WindowChangeEvent& windowChangeEvent)
 {
-    vkDeviceWaitIdle(*m_device);
+    m_device->WaitIdle();
 
     m_swapchain = nullptr; // swapchain needs to be destroyed before surface
     ResetSurface();

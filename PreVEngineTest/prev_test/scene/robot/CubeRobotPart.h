@@ -10,7 +10,7 @@
 namespace prev_test::scene::robot {
 class CubeRobotPart : public prev::scene::graph::SceneNode {
 public:
-    CubeRobotPart(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath);
+    CubeRobotPart(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath);
 
     virtual ~CubeRobotPart() = default;
 
@@ -22,13 +22,18 @@ public:
     void ShutDown() override;
 
 protected:
-    const glm::vec3 m_initialPosition;
+    prev::core::device::Device& m_device;
 
-    const glm::quat m_initialOrientation;
+    prev::core::memory::Allocator& m_allocator;
 
-    const glm::vec3 m_initialScale;
+protected:
+    glm::vec3 m_initialPosition;
 
-    const std::string m_texturePath;
+    glm::quat m_initialOrientation;
+
+    glm::vec3 m_initialScale;
+
+    std::string m_texturePath;
 
 private:
     std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;

@@ -108,7 +108,7 @@ Device::Device(const std::shared_ptr<PhysicalDevice>& gpu, const QueuesMetadata&
 #ifdef ENABLE_VK_LOADER
     volkLoadDevice(m_handle);
 #endif
-    
+
     for (const auto& [queueGroupKey, queueGroupList] : queuesMetadata.queueGroups) {
         for (const auto& groupItem : queueGroupList) {
             m_queues[queueGroupKey].push_back(std::make_shared<Queue>(m_handle, groupItem.family, groupItem.index, groupItem.flags, groupItem.surface));
@@ -124,30 +124,9 @@ Device::~Device()
     LOGI("Logical device destroyed\n");
 }
 
-void Device::Print() const
+void Device::WaitIdle() const
 {
-    auto queueTypeToString = [](const QueueType type) {
-        static const std::map<QueueType, std::string> queueNames = {
-            { QueueType::PRESENT, "PRESENT" },
-            { QueueType::GRAPHICS, "GRAPHICS" },
-            { QueueType::COMPUTE, "COMPUTE" },
-            { QueueType::TRANSFER, "TRANSFER" },
-            { QueueType::SPARSE, "SPARSE" },
-            { QueueType::PROTECTED, "PROTECTED" }
-        };
-        return queueNames.at(type);
-    };
-
-    auto canPresentToString = [](const VkSurfaceKHR surface) -> std::string {
-        return surface ? "(can present)" : "";
-    };
-
-    LOGI("Logical Device used queues:\n");
-    for (const auto& [qGroupKey, gQroupList] : m_queues) {
-        for (const auto& qGroupItem : gQroupList) {
-            LOGI("Queue purpose: %s family: %d index: %d flags: [ %s] %s\n", queueTypeToString(qGroupKey).c_str(), qGroupItem->family, qGroupItem->index, prev::util::vk::QueueFlagsToString(qGroupItem->flags).c_str(), canPresentToString(qGroupItem->surface).c_str());
-        }
-    }
+    vkDeviceWaitIdle(m_handle);
 }
 
 std::shared_ptr<Queue> Device::GetQueue(const QueueType queueType, const uint32_t index) const
@@ -192,6 +171,32 @@ std::vector<QueueType> Device::GetAllQueueTypes() const
 std::shared_ptr<PhysicalDevice> Device::GetGPU() const
 {
     return m_gpu;
+}
+
+void Device::Print() const
+{
+    auto queueTypeToString = [](const QueueType type) {
+        static const std::map<QueueType, std::string> queueNames = {
+            { QueueType::PRESENT, "PRESENT" },
+            { QueueType::GRAPHICS, "GRAPHICS" },
+            { QueueType::COMPUTE, "COMPUTE" },
+            { QueueType::TRANSFER, "TRANSFER" },
+            { QueueType::SPARSE, "SPARSE" },
+            { QueueType::PROTECTED, "PROTECTED" }
+        };
+        return queueNames.at(type);
+    };
+
+    auto canPresentToString = [](const VkSurfaceKHR surface) -> std::string {
+        return surface ? "(can present)" : "";
+    };
+
+    LOGI("Logical Device used queues:\n");
+    for (const auto& [qGroupKey, gQroupList] : m_queues) {
+        for (const auto& qGroupItem : gQroupList) {
+            LOGI("Queue purpose: %s family: %d index: %d flags: [ %s] %s\n", queueTypeToString(qGroupKey).c_str(), qGroupItem->family, qGroupItem->index, prev::util::vk::QueueFlagsToString(qGroupItem->flags).c_str(), canPresentToString(qGroupItem->surface).c_str());
+        }
+    }
 }
 
 Device::operator VkDevice() const

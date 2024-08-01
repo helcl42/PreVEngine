@@ -5,6 +5,8 @@
 #include "../../IModel.h"
 #include "../IRenderer.h"
 
+#include <prev/core/device/Device.h>
+#include <prev/core/memory/Allocator.h>
 #include <prev/event/EventHandler.h>
 #include <prev/input/keyboard/KeyboardEvents.h>
 #include <prev/render/pass/RenderPass.h>
@@ -15,7 +17,7 @@
 namespace prev_test::render::renderer::debug {
 class ShadowMapDebugRenderer final : public IRenderer<prev::render::RenderContext> {
 public:
-    ShadowMapDebugRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass);
+    ShadowMapDebugRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass);
 
     ~ShadowMapDebugRenderer() = default;
 
@@ -51,7 +53,11 @@ private:
     prev::event::EventHandler<ShadowMapDebugRenderer, prev::input::keyboard::KeyEvent> m_keyEvent{ *this };
 
 private:
-    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
+    prev::core::device::Device& m_device;
+
+    prev::core::memory::Allocator& m_allocator;
+
+    prev::render::pass::RenderPass& m_renderPass;
 
 private:
     std::unique_ptr<prev::render::shader::Shader> m_shader;

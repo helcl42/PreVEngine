@@ -4,6 +4,8 @@
 #include "FontMetadata.h"
 #include "FontMetadataFile.h"
 
+#include <prev/core/device/Device.h>
+#include <prev/core/memory/Allocator.h>
 #include <prev/render/buffer/ImageBuffer.h>
 #include <prev/render/sampler/Sampler.h>
 
@@ -11,7 +13,12 @@
 #include <vector>
 
 namespace prev_test::render::font {
-class FontMetadataFactory {
+class FontMetadataFactory final {
+public:
+    FontMetadataFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator);
+
+    ~FontMetadataFactory() = default;
+
 public:
     std::unique_ptr<FontMetadata> CreateFontMetadata(const std::string& metadataFilePath, const std::string& textureFilePath, const float aspectRatio = 16.0f / 9.0f, const int desiredPadding = 0) const;
 
@@ -49,6 +56,11 @@ private:
     void ExtractCharactersData(FontMetadataFile& metaDataFile, FontMetadataState& state, std::map<int, Character>& characters) const;
 
     Character CreateSingleCharacter(FontMetadataFile& metaDataFile, const FontMetadataState& state, const int charCode) const;
+
+private:
+    prev::core::device::Device& m_device;
+
+    prev::core::memory::Allocator& m_allocator;
 
 private:
     inline static const int PADDING_TOP_INDEX{ 0 };

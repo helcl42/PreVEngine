@@ -27,8 +27,10 @@
 #include <prev/util/Utils.h>
 
 namespace prev_test::scene {
-Root::Root()
+Root::Root(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
     : SceneNode()
+    , m_device{ device }
+    , m_allocator{ allocator }
 {
 }
 
@@ -43,7 +45,7 @@ void Root::Init()
     // auto skyBox = std::make_shared<sky::SkyBox>();
     // AddChild(skyBox);
 
-    auto sky = std::make_shared<sky::Sky>();
+    auto sky = std::make_shared<sky::Sky>(m_device, m_allocator);
     AddChild(sky);
 
     auto sunLight = std::make_shared<light::MainLight>(glm::vec3(15000.0f, 5000.0f, 15000.0f));
@@ -62,7 +64,7 @@ void Root::Init()
     // light3->SetTags({ TAG_LIGHT });
     // AddChild(light3);
 
-    auto shadows = std::make_shared<shadow::Shadows>();
+    auto shadows = std::make_shared<shadow::Shadows>(m_device, m_allocator);
     shadows->SetTags({ TAG_SHADOW });
     AddChild(shadows);
 
@@ -70,30 +72,30 @@ void Root::Init()
     // freeCamera->SetTags({ TAG_MAIN_CAMERA });
     // AddChild(freeCamera);
 
-    const int32_t MAX_GENERATED_HEIGHT{ 1 };
-    const float DISTANCE{ 40.0f };
-    for (int32_t i = 0; i <= MAX_GENERATED_HEIGHT; i++) {
-        for (int32_t j = 0; j <= MAX_GENERATED_HEIGHT; j++) {
-            for (int32_t k = 0; k <= MAX_GENERATED_HEIGHT; k++) {
-                auto robot = std::make_shared<robot::CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
-                AddChild(robot);
-            }
-        }
-    }
+    //const int32_t MAX_GENERATED_HEIGHT{ 1 };
+    //const float DISTANCE{ 40.0f };
+    //for (int32_t i = 0; i <= MAX_GENERATED_HEIGHT; i++) {
+    //    for (int32_t j = 0; j <= MAX_GENERATED_HEIGHT; j++) {
+    //        for (int32_t k = 0; k <= MAX_GENERATED_HEIGHT; k++) {
+    //            auto robot = std::make_shared<robot::CubeRobot>(m_device, m_allocator, glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+    //            AddChild(robot);
+    //        }
+    //    }
+    //}
 
-    auto player = std::make_shared<Player>(glm::vec3(0.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(0.06f));
+    auto player = std::make_shared<Player>(m_device, m_allocator, glm::vec3(0.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(0.06f));
     player->SetTags({ TAG_MAIN_CAMERA, TAG_PLAYER });
     AddChild(player);
 
     const uint32_t TERRAIN_GRID_MAX_X{ 3 };
     const uint32_t TERRAIN_GRID_MAX_Z{ 3 };
-    auto terrainManager = std::make_shared<terrain::TerrainManager>(TERRAIN_GRID_MAX_X, TERRAIN_GRID_MAX_Z);
+    auto terrainManager = std::make_shared<terrain::TerrainManager>(m_device, m_allocator, TERRAIN_GRID_MAX_X, TERRAIN_GRID_MAX_Z);
     AddChild(terrainManager);
 
-    auto water = std::make_shared<water::WaterManager>(TERRAIN_GRID_MAX_X, TERRAIN_GRID_MAX_Z);
+    auto water = std::make_shared<water::WaterManager>(m_device, m_allocator, TERRAIN_GRID_MAX_X, TERRAIN_GRID_MAX_Z);
     AddChild(water);
 
-    auto sun = std::make_shared<sky::Sun>();
+    auto sun = std::make_shared<sky::Sun>(m_device, m_allocator);
     AddChild(sun);
 
     const float ITEMS_TERRAIN_BORDER_PADDING{ 10.0f };
@@ -106,38 +108,35 @@ void Root::Init()
     for (uint32_t i = 0; i < STONES_COUNT; i++) {
         const auto x{ positionDistribution(rng.GetRandomEngine()) };
         const auto z{ positionDistribution(rng.GetRandomEngine()) };
-        auto stone = std::make_shared<Stone>(glm::vec3(x, 0.0f, z), glm::quat(glm::vec3(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f)))), glm::vec3(scaleDistribution(rng.GetRandomEngine())));
+        auto stone = std::make_shared<Stone>(m_device, m_allocator, glm::vec3(x, 0.0f, z), glm::quat(glm::vec3(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f)))), glm::vec3(scaleDistribution(rng.GetRandomEngine())));
         AddChild(stone);
     }
 
-    auto fire = std::make_shared<Fire>(glm::vec3(30.0f, 0.0f, 100.0f));
+    auto fire = std::make_shared<Fire>(m_device, m_allocator, glm::vec3(30.0f, 0.0f, 100.0f));
     AddChild(fire);
 
-    // auto cube1 = std::make_shared<Cube>(glm::vec3(-35.0f, 0.0f, -35.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/example_1_texture.png"), AssetManager::Instance().GetAssetPath("Textures/example_1_normal.png"), AssetManager::Instance().GetAssetPath("Textures/ouput_cv.png"), 0.1f);
-    // AddChild(cube1);
+    auto cube1 = std::make_shared<Cube>(m_device, m_allocator, glm::vec3(-10.0f, 0.0f, -10.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(20.0f), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/ConeStepMapping/example_1_texture.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/ConeStepMapping/example_1_normalmap.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/ConeStepMapping/example_1_conemap.png"), 0.1f);
+    AddChild(cube1);
 
-    // auto cube2 = std::make_shared<Cube>(glm::vec3(-65.0f, 0.0f, -65.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 90.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/rock.png"), AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), AssetManager::Instance().GetAssetPath("Textures/rock_cone.png"), 0.1f);
+    // auto cube2 = std::make_shared<Cube>(m_device, m_allocator, glm::vec3(-65.0f, 0.0f, -65.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 90.0f))), glm::vec3(20.0f), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock_cone.png"), 0.1f);
     // AddChild(cube2);
 
-    // auto cube3 = std::make_shared<Cube>(glm::vec3(-10.0f, 0.0f, -110.0f), glm::quat(glm::radians(glm::vec3(90.0f, 90.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/fungus.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/fungus_cone.png"), 0.05f);
+    // auto cube3 = std::make_shared<Cube>(m_device, m_allocator, glm::vec3(-10.0f, 0.0f, -110.0f), glm::quat(glm::radians(glm::vec3(90.0f, 90.0f, 0.0f))), glm::vec3(20.0f), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus_normal_2.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fungus_cone.png"), 0.05f);
     // AddChild(cube3);
 
-    // auto cube4 = std::make_shared<Cube>(glm::vec3(-120.0f, 0.0f, -50.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_grass_cone.png"), 0.05f);
+    // auto cube4 = std::make_shared<Cube>(m_device, m_allocator, glm::vec3(-120.0f, 0.0f, -50.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(20.0f), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass_normal_2.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_grass_cone.png"), 0.05f);
     // AddChild(cube4);
 
-    // auto cube5 = std::make_shared<Cube>(glm::vec3(-90.0f, 0.0f, -90.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(20.0f), AssetManager::Instance().GetAssetPath("Textures/sand.png"), AssetManager::Instance().GetAssetPath("Textures/sand_normal_2.png"), AssetManager::Instance().GetAssetPath("Textures/sand_cone.png"), 0.1f);
+    // auto cube5 = std::make_shared<Cube>(m_device, m_allocator, glm::vec3(-90.0f, 0.0f, -90.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(20.0f), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_normal_2.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_cone.png"), 0.1f);
     // AddChild(cube5);
 
-    // auto compute = std::make_shared<ComputeNode>();
-    // AddChild(compute);
-
-    auto lensFlare = std::make_shared<sky::LensFlare>();
+    auto lensFlare = std::make_shared<sky::LensFlare>(m_device, m_allocator);
     AddChild(lensFlare);
 
-    auto text = std::make_shared<text::Text>();
+    auto text = std::make_shared<text::Text>(m_device, m_allocator);
     AddChild(text);
 
-    auto text3d = std::make_shared<text::Text3d>();
+    auto text3d = std::make_shared<text::Text3d>(m_device, m_allocator);
     AddChild(text3d);
 
     auto rayCaster = std::make_shared<ray_casting::RayCaster>();
@@ -194,7 +193,7 @@ void Root::AddNode()
     const auto j{ dist(rng.GetRandomEngine()) };
     const auto k{ dist(rng.GetRandomEngine()) };
 
-    auto robot = std::make_shared<robot::CubeRobot>(glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+    auto robot = std::make_shared<robot::CubeRobot>(m_device, m_allocator, glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
     robot->Init();
     AddChild(robot);
 }

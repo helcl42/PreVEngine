@@ -4,20 +4,27 @@
 #include "IAnimationRenderComponent.h"
 #include "IRenderComponent.h"
 
+#include <prev/core/memory/Allocator.h>
+
 namespace prev_test::component::render {
 struct RenderComponentShadowsCreateInfo {
-    bool castsShadows;
-    bool isCastedByShadows;
+    bool castsShadows{};
+    bool isCastedByShadows{};
 };
 
 struct RenderComponentMaterialCreateInfo {
-    glm::vec4 color;
-    std::string texturePath;
-    std::string normalMapPath;
-    std::string heightOrConeMapPaths;
+    glm::vec4 color{};
+    std::string texturePath{};
+    std::string normalMapPath{};
+    std::string heightOrConeMapPaths{};
 };
 
 class RenderComponentFactory {
+public:
+    RenderComponentFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator);
+
+    ~RenderComponentFactory() = default;
+
 public:
     std::unique_ptr<IRenderComponent> CreateCubeRenderComponent(const glm::vec4& color, const bool castsShadows, const bool isCastedByShadows) const;
 
@@ -62,6 +69,11 @@ public:
     std::unique_ptr<IAnimationRenderComponent> CreateAnimatedModelRenderComponent(const std::string& modelPath, const std::vector<std::string>& animationPaths, const std::vector<std::string>& texturePaths, const std::vector<std::string>& normalMapPaths, const std::vector<std::string>& heightOrConeMapPaths, const bool castsShadows, const bool isCastedByShadows) const;
 
     std::unique_ptr<IAnimationRenderComponent> CreateAnimatedModelRenderComponent(const std::string& modelPath, const std::vector<std::string>& animationPaths, const bool castsShadows, const bool isCastedByShadows) const;
+
+private:
+    prev::core::device::Device& m_device;
+
+    prev::core::memory::Allocator& m_allocator;
 };
 } // namespace prev_test::component::render
 

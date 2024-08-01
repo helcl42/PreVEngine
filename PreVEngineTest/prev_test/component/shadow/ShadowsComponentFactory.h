@@ -12,16 +12,26 @@
 namespace prev_test::component::shadow {
 class ShadowsComponentFactory final {
 public:
+    ShadowsComponentFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator);
+
+    ~ShadowsComponentFactory() = default;
+
+public:
     std::unique_ptr<IShadowsComponent> Create() const;
 
 private:
-    std::unique_ptr<prev::render::pass::RenderPass> CreateRenderPass(prev::core::device::Device& device) const;
+    std::unique_ptr<prev::render::pass::RenderPass> CreateRenderPass() const;
 
-    std::unique_ptr<prev::render::buffer::ImageBuffer> CreateDepthBuffer(const VkExtent2D& extent, const uint32_t cascadesCount, prev::core::memory::Allocator& allocator) const;
+    std::unique_ptr<prev::render::buffer::ImageBuffer> CreateDepthBuffer(const VkExtent2D& extent, const uint32_t cascadesCount) const;
 
-    std::unique_ptr<prev::render::sampler::Sampler> CreateSampler(const VkDevice device, const float maxMipMapLevels) const;
+    std::unique_ptr<prev::render::sampler::Sampler> CreateSampler(const float maxMipMapLevels) const;
 
-    std::vector<ShadowsCascade> CreateCascades(const VkExtent2D& extent, const uint32_t cascadesCount, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, prev::core::device::Device& device) const;
+    std::vector<ShadowsCascade> CreateCascades(const VkExtent2D& extent, const uint32_t cascadesCount, const prev::render::buffer::ImageBuffer& depthBuffer, const prev::render::pass::RenderPass& renderPass) const;
+
+private:
+    prev::core::device::Device& m_device;
+
+    prev::core::memory::Allocator& m_allocator;
 };
 } // namespace prev_test::component::shadow
 

@@ -1,24 +1,22 @@
 #include "Flare.h"
 
-#include <prev/core/DeviceProvider.h>
+#include <prev/core/device/Device.h>
 
 namespace prev_test::component::sky {
-Flare::Flare(const std::shared_ptr<prev::render::buffer::ImageBuffer>& imageBuffer, const std::shared_ptr<prev::render::sampler::Sampler>& sampler, const float scale)
-    : m_imageBuffer(imageBuffer)
-    , m_sampler(sampler)
-    , m_scale(scale)
-    , m_screenSpacePosition({ 0.0f, 0.0f })
+Flare::Flare(prev::core::device::Device& device, const std::shared_ptr<prev::render::buffer::ImageBuffer>& imageBuffer, const std::shared_ptr<prev::render::sampler::Sampler>& sampler, const float scale)
+    : m_device{ device }
+    , m_imageBuffer{ imageBuffer }
+    , m_sampler{ sampler }
+    , m_scale{ scale }
+    , m_screenSpacePosition{ 0.0f, 0.0f }
 {
 }
 
 Flare::~Flare()
 {
-    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
-
-    vkDeviceWaitIdle(*device);
+    m_device.WaitIdle();
 
     m_imageBuffer = nullptr;
-
     // TODO - have one sampler in renderer instead ???
     m_sampler = nullptr;
 }

@@ -5,14 +5,16 @@
 #include "../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../component/transform/ITransformComponent.h"
 
+#include <prev/core/device/Device.h>
+#include <prev/core/memory/Allocator.h>
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene {
 class Plane final : public prev::scene::graph::SceneNode {
 public:
-    Plane(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const float heightScale);
+    Plane(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const float heightScale);
 
-    virtual ~Plane() = default;
+    ~Plane() = default;
 
 public:
     void Init() override;
@@ -21,21 +23,26 @@ public:
 
     void ShutDown() override;
 
-protected:
-    const glm::vec3 m_initialPosition;
+private:
+    prev::core::device::Device& m_device;
 
-    const glm::quat m_initialOrientation;
+    prev::core::memory::Allocator& m_allocator;
 
-    const glm::vec3 m_initialScale;
+    glm::vec3 m_initialPosition;
 
-    const std::string m_texturePath;
+    glm::quat m_initialOrientation;
 
-    const std::string m_normalMapPath;
+    glm::vec3 m_initialScale;
 
-    const std::string m_heightMapPath;
+    std::string m_texturePath;
 
-    const float m_heightScale;
+    std::string m_normalMapPath;
 
+    std::string m_heightMapPath;
+
+    float m_heightScale;
+
+private:
     std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
     std::shared_ptr<prev_test::component::ray_casting::IBoundingVolumeComponent> m_boundingVolumeComponent;

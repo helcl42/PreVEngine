@@ -1,4 +1,5 @@
 #include "Sun.h"
+
 #include "../../component/camera/ICameraComponent.h"
 #include "../../component/light/ILightComponent.h"
 #include "../../component/sky/SunComponentFactory.h"
@@ -6,14 +7,16 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::scene::sky {
-Sun::Sun()
+Sun::Sun(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
     : SceneNode()
+    , m_device{ device }
+    , m_allocator{ allocator }
 {
 }
 
 void Sun::Init()
 {
-    prev_test::component::sky::SunComponentFactory componentFactory{};
+    prev_test::component::sky::SunComponentFactory componentFactory{ m_device, m_allocator };
     m_sunComponent = componentFactory.Create();
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::sky::ISunComponent>(GetThis(), m_sunComponent, TAG_SUN_RENDER_COMPONENT);
 

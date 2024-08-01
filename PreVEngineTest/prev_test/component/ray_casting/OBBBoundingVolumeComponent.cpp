@@ -9,9 +9,10 @@
 #include <prev/util/MathUtils.h>
 
 namespace prev_test::component::ray_casting {
-OBBBoundingVolumeComponent::OBBBoundingVolumeComponent(const prev_test::common::intersection::OBB& obb, const glm::vec3& scale, const glm::vec3& offset)
-    : m_scale(scale)
-    , m_offset(offset)
+OBBBoundingVolumeComponent::OBBBoundingVolumeComponent(prev::core::memory::Allocator& allocator, const prev_test::common::intersection::OBB& obb, const glm::vec3& scale, const glm::vec3& offset)
+    : m_allocator{ allocator }
+    , m_scale{ scale }
+    , m_offset{ offset }
 {
     auto newBox = OffsetOBB(obb, offset);
     newBox = ScaleOBB(newBox, scale);
@@ -20,7 +21,7 @@ OBBBoundingVolumeComponent::OBBBoundingVolumeComponent(const prev_test::common::
     m_working = newBox;
 
 #ifdef RENDER_BOUNDING_VOLUMES
-    m_model = BoundingVolumeModelFactory{}.CreateOBBModel(m_working);
+    m_model = BoundingVolumeModelFactory{ m_allocator }.CreateOBBModel(m_working);
 #endif
 }
 
@@ -43,7 +44,7 @@ void OBBBoundingVolumeComponent::Update(const glm::mat4& worldTransform)
     m_working = prev_test::common::intersection::OBB{ rotation, m_original.position * scale + translation, m_original.GetHalfSize() * scale };
 
 #ifdef RENDER_BOUNDING_VOLUMES
-    m_model = BoundingVolumeModelFactory{}.CreateOBBModel(m_working, m_model);
+    m_model = BoundingVolumeModelFactory{ m_allocator }.CreateOBBModel(m_working, m_model);
 #endif
 }
 

@@ -2,8 +2,6 @@
 
 #include "buffer/ImageBufferBuilder.h"
 
-#include "../core/AllocatorProvider.h"
-#include "../core/DeviceProvider.h"
 #include "../util/MathUtils.h"
 #include "../util/VkUtils.h"
 
@@ -49,7 +47,7 @@ Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allo
 
 Swapchain::~Swapchain()
 {
-    vkDeviceWaitIdle(m_device);
+    m_device.WaitIdle();
 
     if (m_commandPool != VK_NULL_HANDLE) {
         vkDestroyCommandPool(m_device, m_commandPool, nullptr);
@@ -210,7 +208,7 @@ void Swapchain::Apply()
     VKERRCHECK(vkCreateSwapchainKHR(m_device, &m_swapchainCreateInfo, nullptr, &m_swapchain));
 
     if (m_swapchainCreateInfo.oldSwapchain != VK_NULL_HANDLE) {
-        vkDeviceWaitIdle(m_device);
+        m_device.WaitIdle();
         vkDestroySwapchainKHR(m_device, m_swapchainCreateInfo.oldSwapchain, VK_NULL_HANDLE);
         for (auto& swapchainBuffer : m_swapchainBuffers) {
             swapchainBuffer.Destroy(m_device);
