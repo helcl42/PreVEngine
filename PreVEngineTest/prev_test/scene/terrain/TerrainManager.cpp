@@ -7,8 +7,10 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::scene::terrain {
-TerrainManager::TerrainManager(const uint32_t maxX, const uint32_t maxZ)
+TerrainManager::TerrainManager(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const uint32_t maxX, const uint32_t maxZ)
     : SceneNode()
+    , m_device{ device }
+    , m_allocator{ allocator }
     , m_gridMaxX(maxX)
     , m_gridMaxZ(maxZ)
 {
@@ -25,7 +27,7 @@ void TerrainManager::Init()
 
     for (uint32_t x = 0; x < m_gridMaxX; x++) {
         for (uint32_t z = 0; z < m_gridMaxZ; z++) {
-            auto terrain = std::make_shared<Terrain>(static_cast<int>(x), static_cast<int>(z));
+            auto terrain = std::make_shared<Terrain>(m_device, m_allocator, static_cast<int>(x), static_cast<int>(z));
             AddChild(terrain);
         }
     }

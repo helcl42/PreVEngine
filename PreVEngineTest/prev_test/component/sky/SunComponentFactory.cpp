@@ -5,32 +5,32 @@
 #include "../../render/mesh/MeshFactory.h"
 #include "../../render/model/ModelFactory.h"
 
-#include <prev/core/AllocatorProvider.h>
 #include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/sampler/Sampler.h>
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::component::sky {
+SunComponentFactory::SunComponentFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
+    : m_device{ device }
+    , m_allocator{ allocator }
+{
+}
+
 std::unique_ptr<ISunComponent> SunComponentFactory::Create() const
 {
-    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
-
-    auto flare{ CreateFlare(*allocator, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sun.png"), 0.2f) };
+    auto flare{ CreateFlare(prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sun.png"), 0.2f) };
     flare->SetScreenSpacePosition(glm::vec2(-100.0f, -100.0f));
 
-    prev_test::render::mesh::MeshFactory meshFactory{};
-    auto mesh{ meshFactory.CreateQuad() };
-
-    prev_test::render::model::ModelFactory modelFactory{};
-    auto model{ modelFactory.Create(std::move(mesh), *allocator) };
+    auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateQuad() };
+    auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 
     return std::make_unique<SunComponent>(std::move(flare), std::move(model));
 }
 
-std::unique_ptr<Flare> SunComponentFactory::CreateFlare(prev::core::memory::Allocator& allocator, const std::string& filePath, const float scale) const
+std::unique_ptr<Flare> SunComponentFactory::CreateFlare(const std::string& filePath, const float scale) const
 {
     auto image{ prev::render::image::ImageFactory{}.CreateImage(filePath) };
-    auto imageBuffer = prev::render::buffer::ImageBufferBuilder{ allocator }
+    auto imageBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
                            .SetExtent({ image->GetWidth(), image->GetHeight(), 1 })
                            .SetFormat(VK_FORMAT_R8G8B8A8_UNORM)
                            .SetType(VK_IMAGE_TYPE_2D)
@@ -39,7 +39,7 @@ std::unique_ptr<Flare> SunComponentFactory::CreateFlare(prev::core::memory::Allo
                            .SetLayerData({ reinterpret_cast<uint8_t*>(image->GetBuffer()) })
                            .SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
                            .Build();
-    auto sampler{ std::make_unique<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(imageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f) };
-    return std::make_unique<Flare>(std::move(imageBuffer), std::move(sampler), scale);
+    auto sampler{ std::make_unique<prev::render::sampler::Sampler>(m_device, static_cast<float>(imageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 4.0f) };
+    return std::make_unique<Flare>(m_device, std::move(imageBuffer), std::move(sampler), scale);
 }
 } // namespace prev_test::component::sky

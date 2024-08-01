@@ -8,7 +8,6 @@
 #include "../../render/mesh/MeshFactory.h"
 #include "../../render/model/ModelFactory.h"
 
-#include <prev/core/AllocatorProvider.h>
 #include <prev/render/buffer/VertexBuffer.h>
 
 namespace prev_test::component::particle {
@@ -17,24 +16,28 @@ static const inline uint32_t BufferCount{ 2 };
 
 static const inline uint32_t MaxParticleCount{ 100000 };
 
+ParticleSystemComponentFactory::ParticleSystemComponentFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
+    : m_device{ device }
+    , m_allocator{ allocator }
+{
+}
+
 std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::CreateRandom() const
 {
-    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
+    prev_test::render::material::MaterialFactory materialFactory{ m_device, m_allocator };
 
-    prev_test::render::material::MaterialFactory materialFactory{};
-
-    std::shared_ptr<prev_test::render::IMaterial> material{ materialFactory.Create({ glm::vec4{ 1.0f }, 0.0f, 0.0f, VK_SAMPLER_ADDRESS_MODE_REPEAT }, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fire-ember-particles-png-4-transparent.png"), *allocator) };
+    std::shared_ptr<prev_test::render::IMaterial> material{ materialFactory.Create({ glm::vec4{ 1.0f }, 0.0f, 0.0f, VK_SAMPLER_ADDRESS_MODE_REPEAT }, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fire-ember-particles-png-4-transparent.png")) };
     material->SetAtlasNumberOfRows(8);
 
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh{ meshFactory.CreateQuad() };
 
-    prev_test::render::model::ModelFactory modelFactory{};
-    auto model{ modelFactory.Create(std::move(mesh), *allocator) };
+    prev_test::render::model::ModelFactory modelFactory{ m_allocator };
+    auto model{ modelFactory.Create(std::move(mesh)) };
 
     std::vector<std::shared_ptr<prev::render::buffer::VertexBuffer>> vertexBuffers(BufferCount);
     for (uint32_t i = 0; i < BufferCount; ++i) {
-        vertexBuffers[i] = std::make_shared<prev::render::buffer::HostMappedVertexBuffer>(*allocator, MaxParticleCount);
+        vertexBuffers[i] = std::make_shared<prev::render::buffer::HostMappedVertexBuffer>(m_allocator, MaxParticleCount);
     }
 
     auto particleFactory{ std::make_shared<RandomDirectionParticleFactory>(material, 0.1f, 5.0f, 4.0f, 10.0f) };
@@ -48,21 +51,19 @@ std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::Create
 
 std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::CreateRandomInCone(const glm::vec3& coneDirection, const float angle) const
 {
-    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
-
-    prev_test::render::material::MaterialFactory materialFactory{};
-    std::shared_ptr<prev_test::render::IMaterial> material{ materialFactory.Create({ glm::vec4{ 1.0f }, 0.0f, 0.0f, VK_SAMPLER_ADDRESS_MODE_REPEAT }, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fire-texture-atlas.png"), *allocator) };
+    prev_test::render::material::MaterialFactory materialFactory{ m_device, m_allocator };
+    std::shared_ptr<prev_test::render::IMaterial> material{ materialFactory.Create({ glm::vec4{ 1.0f }, 0.0f, 0.0f, VK_SAMPLER_ADDRESS_MODE_REPEAT }, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fire-texture-atlas.png")) };
     material->SetAtlasNumberOfRows(4);
 
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh{ meshFactory.CreateQuad() };
 
-    prev_test::render::model::ModelFactory modelFactory{};
-    auto model{ modelFactory.Create(std::move(mesh), *allocator) };
+    prev_test::render::model::ModelFactory modelFactory{ m_allocator };
+    auto model{ modelFactory.Create(std::move(mesh)) };
 
     std::vector<std::shared_ptr<prev::render::buffer::VertexBuffer>> vertexBuffers(BufferCount);
     for (uint32_t i = 0; i < BufferCount; ++i) {
-        vertexBuffers[i] = std::make_shared<prev::render::buffer::HostMappedVertexBuffer>(*allocator, MaxParticleCount);
+        vertexBuffers[i] = std::make_shared<prev::render::buffer::HostMappedVertexBuffer>(m_allocator, MaxParticleCount);
     }
 
     auto particleFactory{ std::make_shared<RandomInConeParticleFactory>(material, -0.1f, 4.0f, 4.0f, 7.0f) };

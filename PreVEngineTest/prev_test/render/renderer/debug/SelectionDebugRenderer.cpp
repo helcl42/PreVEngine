@@ -6,8 +6,6 @@
 #include "../../mesh/MeshFactory.h"
 #include "../../model/ModelFactory.h"
 
-#include <prev/core/AllocatorProvider.h>
-#include <prev/core/DeviceProvider.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/ComponentRepository.h>
@@ -15,18 +13,17 @@
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::debug {
-SelectionDebugRenderer::SelectionDebugRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
-    : m_renderPass(renderPass)
+SelectionDebugRenderer::SelectionDebugRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass)
+    : m_device{ device }
+    , m_allocator{ allocator }
+    , m_renderPass{ renderPass }
 {
 }
 
 void SelectionDebugRenderer::Init()
 {
-    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
-    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
-
     // clang-format off
-    m_shader = prev::render::shader::ShaderBuilder{ *device }
+    m_shader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
             { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/debug/selection_debug_vert.spv") },
             { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/debug/selection_debug_frag.spv") }
@@ -50,7 +47,7 @@ void SelectionDebugRenderer::Init()
     LOGI("Selection Debug Shader created\n");
 
     // clang-format off
-    m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ *device, *m_shader, *m_renderPass }
+    m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ m_device, *m_shader, m_renderPass }
         .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
         .SetDepthTestEnabled(true)
         .SetDepthWriteEnabled(true)
@@ -62,17 +59,17 @@ void SelectionDebugRenderer::Init()
 
     LOGI("Selection Debug Pipeline created\n");
 
-    m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsVS>>(*allocator);
-    m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsVS>>(m_allocator);
+    m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
-    m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsFS>>(*allocator);
-    m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsFS>>(m_allocator);
+    m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh = meshFactory.CreateSphere(1.0f, 32, 32);
 
-    prev_test::render::model::ModelFactory modelFactoru{};
-    m_selectionPointModel = modelFactoru.Create(std::move(mesh), *allocator);
+    prev_test::render::model::ModelFactory modelFactoru{ m_allocator };
+    m_selectionPointModel = modelFactoru.Create(std::move(mesh));
 }
 
 void SelectionDebugRenderer::BeforeRender(const NormalRenderContext& renderContext)

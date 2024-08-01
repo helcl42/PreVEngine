@@ -8,6 +8,8 @@
 #include "../../General.h"
 
 #include <prev/common/ThreadPool.h>
+#include <prev/core/device/Device.h>
+#include <prev/core/memory/Allocator.h>
 #include <prev/event/EventHandler.h>
 #include <prev/input/keyboard/KeyboardEvents.h>
 #include <prev/render/IRootRenderer.h>
@@ -18,7 +20,7 @@
 namespace prev_test::render::renderer {
 class MasterRenderer final : public prev::render::IRootRenderer {
 public:
-    MasterRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const uint32_t swapchainImageCount);
+    MasterRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, uint32_t swapchainImageCount);
 
     ~MasterRenderer() = default;
 
@@ -68,15 +70,20 @@ private:
 
 #ifdef PARALLEL_RENDERING
     template <typename RenderContextType>
-    void RenderParallel(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<RenderContextType>>>& renderers, const std::vector<VkCommandBuffer>& commandBuffers);
+    void RenderParallel(prev::render::pass::RenderPass& renderPass, const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<RenderContextType>>>& renderers, const std::vector<VkCommandBuffer>& commandBuffers);
 #else
     template <typename RenderContextType>
-    void RenderSerial(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<RenderContextType>>>& renderers);
+    void RenderSerial(prev::render::pass::RenderPass& renderPass, const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<RenderContextType>>>& renderers);
 #endif
 private:
     static const inline glm::vec4 DEFAULT_CLIP_PLANE{ 0.0f, -1.0f, 0.0f, 100000.0f };
 
-    std::shared_ptr<prev::render::pass::RenderPass> m_defaultRenderPass;
+private:
+    prev::core::device::Device& m_device;
+
+    prev::core::memory::Allocator& m_allocator;
+
+    prev::render::pass::RenderPass& m_defaultRenderPass;
 
     uint32_t m_swapchainImageCount;
 
@@ -126,13 +133,13 @@ void MasterRenderer::TraverseScene(const RenderContextType& renderContext, const
 
 #ifdef PARALLEL_RENDERING
 template <typename RenderContextType>
-void MasterRenderer::RenderParallel(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<RenderContextType>>>& renderers, const std::vector<VkCommandBuffer>& commandBuffers)
+void MasterRenderer::RenderParallel(prev::render::pass::RenderPass& renderPass, const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<RenderContextType>>>& renderers, const std::vector<VkCommandBuffer>& commandBuffers)
 {
     for (auto& renderer : renderers) {
         renderer->BeforeRender(renderContext);
     }
 
-    renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, renderContext.rect, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+    renderPass.Begin(renderContext.frameBuffer, renderContext.commandBuffer, renderContext.rect, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
     std::vector<std::future<void>> tasks;
     tasks.reserve(renderers.size());
@@ -143,7 +150,7 @@ void MasterRenderer::RenderParallel(const std::shared_ptr<prev::render::pass::Re
 
         tasks.emplace_back(m_threadPool.Enqueue([&]() {
             VkCommandBufferInheritanceInfo inheritanceInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO };
-            inheritanceInfo.renderPass = *renderPass;
+            inheritanceInfo.renderPass = renderPass;
             inheritanceInfo.framebuffer = renderContext.frameBuffer;
 
             VkCommandBufferBeginInfo commandBufferBeginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
@@ -171,7 +178,7 @@ void MasterRenderer::RenderParallel(const std::shared_ptr<prev::render::pass::Re
 
     vkCmdExecuteCommands(renderContext.commandBuffer, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
-    renderPass->End(renderContext.commandBuffer);
+    renderPass.End(renderContext.commandBuffer);
 
     for (auto& renderer : renderers) {
         renderer->AfterRender(renderContext);
@@ -179,13 +186,13 @@ void MasterRenderer::RenderParallel(const std::shared_ptr<prev::render::pass::Re
 }
 #else
 template <typename RenderContextType>
-void MasterRenderer::RenderSerial(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<RenderContextType>>>& renderers)
+void MasterRenderer::RenderSerial(prev::render::pass::RenderPass& renderPass, const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<RenderContextType>>>& renderers)
 {
     for (auto& renderer : renderers) {
         renderer->BeforeRender(renderContext);
     }
 
-    renderPass->Begin(renderContext.frameBuffer, renderContext.commandBuffer, renderContext.rect);
+    renderPass.Begin(renderContext.frameBuffer, renderContext.commandBuffer, renderContext.rect);
 
     for (auto& renderer : renderers) {
         renderer->PreRender(renderContext);
@@ -195,7 +202,7 @@ void MasterRenderer::RenderSerial(const std::shared_ptr<prev::render::pass::Rend
         renderer->PostRender(renderContext);
     }
 
-    renderPass->End(renderContext.commandBuffer);
+    renderPass.End(renderContext.commandBuffer);
 
     for (auto& renderer : renderers) {
         renderer->AfterRender(renderContext);

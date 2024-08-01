@@ -4,6 +4,8 @@
 #include "IOffScreenRenderPassComponent.h"
 
 #include <prev/common/Common.h>
+#include <prev/core/device/Device.h>
+#include <prev/core/memory/Allocator.h>
 #include <prev/render/buffer/ImageBuffer.h>
 
 #include <vector>
@@ -11,7 +13,7 @@
 namespace prev_test::component::common {
 class OffScreenRenderPassComponent : public IOffScreenRenderPassComponent {
 public:
-    OffScreenRenderPassComponent(const VkExtent2D& extent, const VkFormat depthFormat, const std::vector<VkFormat>& colorFormats);
+    OffScreenRenderPassComponent(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const VkExtent2D& extent, const VkFormat depthFormat, const std::vector<VkFormat>& colorFormats);
 
     ~OffScreenRenderPassComponent() = default;
 
@@ -35,6 +37,10 @@ public:
     VkFramebuffer GetFrameBuffer() const override;
 
 private:
+    prev::core::device::Device& m_device;
+
+    prev::core::memory::Allocator& m_allocator;
+
     VkExtent2D m_extent{};
 
     VkFormat m_depthFormat{ VK_FORMAT_UNDEFINED };

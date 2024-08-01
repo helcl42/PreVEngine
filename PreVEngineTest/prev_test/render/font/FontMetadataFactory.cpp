@@ -1,11 +1,15 @@
 #include "FontMetadataFactory.h"
 
-#include <prev/core/AllocatorProvider.h>
-#include <prev/core/DeviceProvider.h>
 #include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/image/ImageFactory.h>
 
 namespace prev_test::render::font {
+FontMetadataFactory::FontMetadataFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
+    : m_device{ device }
+    , m_allocator{ allocator }
+{
+}
+
 std::unique_ptr<FontMetadata> FontMetadataFactory::CreateFontMetadata(const std::string& metadataFilePath, const std::string& textureFilePath, const float aspectRatio, const int desiredPadding) const
 {
     FontMetadataFile metaDataFile{ metadataFilePath };
@@ -51,17 +55,13 @@ void FontMetadataFactory::ExtractMeasureInfo(FontMetadataFile& metaDataFile, Fon
 
 std::unique_ptr<prev::render::sampler::Sampler> FontMetadataFactory::CreateSampler(const float maxLod) const
 {
-    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
-
-    return std::make_unique<prev::render::sampler::Sampler>(*device, maxLod, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR);
+    return std::make_unique<prev::render::sampler::Sampler>(m_device, maxLod, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR);
 }
 
 std::shared_ptr<prev::render::buffer::ImageBuffer> FontMetadataFactory::CreateImageBuffer(const std::string& textureFilePath) const
 {
-    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
-
     const auto image{ prev::render::image::ImageFactory{}.CreateImage(textureFilePath) };
-    auto imageBuffer = prev::render::buffer::ImageBufferBuilder{ *allocator }
+    auto imageBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
                            .SetExtent({ image->GetWidth(), image->GetHeight(), 1 })
                            .SetFormat(VK_FORMAT_R8G8B8A8_UNORM)
                            .SetType(VK_IMAGE_TYPE_2D)

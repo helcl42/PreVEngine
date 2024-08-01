@@ -3,10 +3,23 @@
 
 #include "IOffScreenRenderPassComponent.h"
 
+#include <prev/core/device/Device.h>
+#include <prev/core/memory/Allocator.h>
+
 namespace prev_test::component::common {
 class OffScreenRenderPassComponentFactory final {
 public:
+    OffScreenRenderPassComponentFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator);
+
+    ~OffScreenRenderPassComponentFactory() = default;
+
+public:
     std::unique_ptr<IOffScreenRenderPassComponent> Create(const VkExtent2D& extent, const VkFormat depthFormat, const std::vector<VkFormat>& colorFormats) const;
+
+private:
+    prev::core::device::Device& m_device;
+
+    prev::core::memory::Allocator& m_allocator;
 };
 } // namespace prev_test::component::common
 

@@ -8,24 +8,22 @@
 #include "../../render/mesh/MeshUtil.h"
 #include "../../render/model/ModelFactory.h"
 
-#include <prev/core/AllocatorProvider.h>
-
 namespace prev_test::component::terrain {
-TerrainComponentFactory::TerrainComponentFactory(const unsigned int seed, const unsigned int vertexCount)
-    : m_seed(seed)
-    , m_vertexCount(vertexCount)
+TerrainComponentFactory::TerrainComponentFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const unsigned int seed, const unsigned int vertexCount)
+    : m_device{ device }
+    , m_allocator{ allocator }
+    , m_seed{ seed }
+    , m_vertexCount{ vertexCount }
 {
 }
 
 std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain(const int x, const int z, const float size) const
 {
-    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
-
     HeightGenerator heightGenerator(x, z, m_vertexCount, m_seed);
     const std::shared_ptr<HeightMapInfo> heightMap{ CreateHeightMap(heightGenerator) };
     const std::shared_ptr<VertexData> vertexData{ GenerateVertexData(heightMap, size) };
 
-    prev_test::render::material::MaterialFactory materialFactory{};
+    prev_test::render::material::MaterialFactory materialFactory{ m_device, m_allocator };
 
     const float layerTransitionWidth{ 0.1f };
     const TerrainLayerCreateInfo terrainLayers[] = {
@@ -36,11 +34,11 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
     };
 
     auto result{ std::make_unique<TerrainComponent>(x, z) };
-    result->m_model = CreateModel(*allocator, vertexData, false);
+    result->m_model = CreateModel(vertexData, false);
     result->m_heightsInfo = heightMap;
     result->m_vertexData = vertexData;
     for (const auto& layer : terrainLayers) {
-        result->m_materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, VK_SAMPLER_ADDRESS_MODE_REPEAT }, layer.materialPath, *allocator));
+        result->m_materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, VK_SAMPLER_ADDRESS_MODE_REPEAT }, layer.materialPath));
         result->m_heightSteps.emplace_back(layer.heightStep);
     }
     result->m_transitionRange = layerTransitionWidth;
@@ -49,13 +47,11 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
 
 std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrainNormalMapped(const int x, const int z, const float size) const
 {
-    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
-
     HeightGenerator heightGenerator(x, z, m_vertexCount, m_seed);
     const std::shared_ptr<HeightMapInfo> heightMap{ CreateHeightMap(heightGenerator) };
     const std::shared_ptr<VertexData> vertexData{ GenerateVertexData(heightMap, size) };
 
-    prev_test::render::material::MaterialFactory materialFactory{};
+    prev_test::render::material::MaterialFactory materialFactory{ m_device, m_allocator };
 
     const float layerTransitionWidth{ 0.1f };
     const TerrainLayerCreateInfo terrainLayers[] = {
@@ -66,11 +62,11 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
     };
 
     auto result{ std::make_unique<TerrainComponent>(x, z) };
-    result->m_model = CreateModel(*allocator, vertexData, true);
+    result->m_model = CreateModel(vertexData, true);
     result->m_heightsInfo = heightMap;
     result->m_vertexData = vertexData;
     for (const auto& layer : terrainLayers) {
-        result->m_materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, VK_SAMPLER_ADDRESS_MODE_REPEAT }, layer.materialPath, layer.materialNormalPath, *allocator));
+        result->m_materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, VK_SAMPLER_ADDRESS_MODE_REPEAT }, layer.materialPath, layer.materialNormalPath));
         result->m_heightSteps.emplace_back(layer.heightStep);
     }
     result->m_transitionRange = layerTransitionWidth;
@@ -79,13 +75,11 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
 
 std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrainConeStepMapped(const int x, const int z, const float size) const
 {
-    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
-
     HeightGenerator heightGenerator(x, z, m_vertexCount, m_seed);
     const std::shared_ptr<HeightMapInfo> heightMap{ CreateHeightMap(heightGenerator) };
     const std::shared_ptr<VertexData> vertexData{ GenerateVertexData(heightMap, size) };
 
-    prev_test::render::material::MaterialFactory materialFactory{};
+    prev_test::render::material::MaterialFactory materialFactory{ m_device, m_allocator };
 
     const float layerTransitionWidth{ 0.1f };
     const TerrainLayerCreateInfo terrainLayers[] = {
@@ -96,11 +90,11 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
     };
 
     auto result{ std::make_unique<TerrainComponent>(x, z) };
-    result->m_model = CreateModel(*allocator, vertexData, true);
+    result->m_model = CreateModel(vertexData, true);
     result->m_heightsInfo = heightMap;
     result->m_vertexData = vertexData;
     for (const auto& layer : terrainLayers) {
-        auto material{ materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, VK_SAMPLER_ADDRESS_MODE_REPEAT }, layer.materialPath, layer.materialNormalPath, layer.materialHeightPath, *allocator) };
+        auto material{ materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, VK_SAMPLER_ADDRESS_MODE_REPEAT }, layer.materialPath, layer.materialNormalPath, layer.materialHeightPath) };
         material->SetHeightScale(layer.heightScale);
         result->m_materials.emplace_back(std::move(material));
         result->m_heightSteps.emplace_back(layer.heightStep);
@@ -109,13 +103,10 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
     return result;
 }
 
-std::unique_ptr<prev_test::render::IModel> TerrainComponentFactory::CreateModel(prev::core::memory::Allocator& allocator, const std::shared_ptr<VertexData>& vertexData, const bool normalMapped) const
+std::unique_ptr<prev_test::render::IModel> TerrainComponentFactory::CreateModel(const std::shared_ptr<VertexData>& vertexData, const bool normalMapped) const
 {
     auto mesh{ GenerateMesh(vertexData, normalMapped) };
-
-    prev_test::render::model::ModelFactory modelFactory{};
-    auto model{ modelFactory.Create(std::move(mesh), allocator) };
-
+    auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
     return model;
 }
 

@@ -11,9 +11,9 @@
 namespace prev_test::scene::robot {
 class CubeRobot final : public CubeRobotPart {
 public:
-    CubeRobot(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath);
+    CubeRobot(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath);
 
-    virtual ~CubeRobot() = default;
+    ~CubeRobot() = default;
 
 public:
     void Init() override;

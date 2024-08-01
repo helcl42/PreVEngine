@@ -42,6 +42,8 @@ public:
     ~Device();
 
 public:
+    void WaitIdle() const;
+
     std::shared_ptr<Queue> GetQueue(const QueueType queueType, const uint32_t index = 0) const;
 
     std::vector<std::shared_ptr<Queue>> GetQueues(const QueueType queueType) const;

@@ -9,8 +9,6 @@
 #include "../../../component/terrain/ITerrainComponent.h"
 #include "../../../component/transform/ITransformComponent.h"
 
-#include <prev/core/AllocatorProvider.h>
-#include <prev/core/DeviceProvider.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/ComponentRepository.h>
@@ -18,18 +16,17 @@
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::terrain {
-TerrainRenderer::TerrainRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
-    : m_renderPass(renderPass)
+TerrainRenderer::TerrainRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass)
+    : m_device{ device }
+    , m_allocator{ allocator }
+    , m_renderPass{ renderPass }
 {
 }
 
 void TerrainRenderer::Init()
 {
-    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
-    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
-
     // clang-format off
-    m_shader = prev::render::shader::ShaderBuilder{ *device }
+    m_shader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
             { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/terrain/terrain_vert.spv") },
             { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/terrain/terrain_frag.spv") }
@@ -55,7 +52,7 @@ void TerrainRenderer::Init()
     LOGI("Terrain Shader created\n");
 
     // clang-format off
-    m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ *device, *m_shader, *m_renderPass }
+    m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ m_device, *m_shader, m_renderPass }
         .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
         .SetDepthTestEnabled(true)
         .SetDepthWriteEnabled(true)
@@ -67,11 +64,11 @@ void TerrainRenderer::Init()
 
     LOGI("Terrain Pipeline created\n");
 
-    m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsVS>>(*allocator);
-    m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsVS>>(m_allocator);
+    m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
-    m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsFS>>(*allocator);
-    m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsFS>>(m_allocator);
+    m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
 void TerrainRenderer::BeforeRender(const NormalRenderContext& renderContext)

@@ -7,8 +7,10 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::scene {
-Cube::Cube(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const float heightScale)
+Cube::Cube(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const float heightScale)
     : SceneNode()
+    , m_device{ device }
+    , m_allocator{ allocator }
     , m_initialPosition(position)
     , m_initialOrientation(orientation)
     , m_initialScale(scale)
@@ -21,12 +23,12 @@ Cube::Cube(const glm::vec3& position, const glm::quat& orientation, const glm::v
 
 void Cube::Init()
 {
-    prev_test::component::render::RenderComponentFactory renderComponentFactory{};
-    std::shared_ptr<prev_test::component::render::IRenderComponent> renderComponent = renderComponentFactory.CreateCubeRenderComponent(m_texturePath, m_normalMapPath, m_heightMapPath, false, true);
+    prev_test::component::render::RenderComponentFactory renderComponentFactory{ m_device, m_allocator };
+    std::shared_ptr<prev_test::component::render::IRenderComponent> renderComponent = renderComponentFactory.CreateCubeRenderComponent(m_texturePath, m_normalMapPath, m_heightMapPath, true, true);
     renderComponent->GetMaterial()->SetHeightScale(m_heightScale);
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::render::IRenderComponent>(GetThis(), renderComponent, TAG_RENDER_CONE_STEP_MAPPED_COMPONENT);
 
-    prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{};
+    prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{ m_allocator };
     m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(renderComponent->GetModel()->GetMesh());
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, TAG_BOUNDING_VOLUME_COMPONENT);
 

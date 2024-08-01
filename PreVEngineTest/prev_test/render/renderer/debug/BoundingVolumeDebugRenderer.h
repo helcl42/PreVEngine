@@ -6,6 +6,8 @@
 
 #include "../../../General.h"
 
+#include <prev/core/device/Device.h>
+#include <prev/core/memory/Allocator.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/pipeline/Pipeline.h>
 #include <prev/render/shader/Shader.h>
@@ -14,7 +16,7 @@
 namespace prev_test::render::renderer::debug {
 class BoundingVolumeDebugRenderer final : public IRenderer<NormalRenderContext> {
 public:
-    BoundingVolumeDebugRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass);
+    BoundingVolumeDebugRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass);
 
     ~BoundingVolumeDebugRenderer() = default;
 
@@ -54,7 +56,11 @@ private:
     const uint32_t m_descriptorCount{ 1000 };
 
 private:
-    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
+    prev::core::device::Device& m_device;
+
+    prev::core::memory::Allocator& m_allocator;
+
+    prev::render::pass::RenderPass& m_renderPass;
 
 private:
     std::unique_ptr<prev::render::shader::Shader> m_shader;

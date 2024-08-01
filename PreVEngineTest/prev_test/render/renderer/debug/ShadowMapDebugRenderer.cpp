@@ -6,8 +6,6 @@
 #include "../../mesh/MeshFactory.h"
 #include "../../model/ModelFactory.h"
 
-#include <prev/core/AllocatorProvider.h>
-#include <prev/core/DeviceProvider.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/ComponentRepository.h>
@@ -15,18 +13,17 @@
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::debug {
-ShadowMapDebugRenderer::ShadowMapDebugRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
-    : m_renderPass(renderPass)
+ShadowMapDebugRenderer::ShadowMapDebugRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass)
+    : m_device{ device }
+    , m_allocator{ allocator }
+    , m_renderPass{ renderPass }
 {
 }
 
 void ShadowMapDebugRenderer::Init()
 {
-    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
-    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
-
     // clang-format off
-    m_shader = prev::render::shader::ShaderBuilder{ *device }
+    m_shader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
             { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/debug/shadow_map_debug_vert.spv") },
             { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/debug/shadow_map_debug_frag.spv") }
@@ -52,7 +49,7 @@ void ShadowMapDebugRenderer::Init()
     LOGI("ShadowMapDebug Shader created\n");
 
     // clang-format off
-    m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ *device, *m_shader, *m_renderPass }
+    m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ m_device, *m_shader, m_renderPass }
         .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
         .SetDepthTestEnabled(false)
         .SetDepthWriteEnabled(false)
@@ -68,8 +65,8 @@ void ShadowMapDebugRenderer::Init()
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto quadMesh{ meshFactory.CreateQuad() };
 
-    prev_test::render::model::ModelFactory modelFactory{};
-    m_quadModel = modelFactory.Create(std::move(quadMesh), *allocator);
+    prev_test::render::model::ModelFactory modelFactory{ m_allocator };
+    m_quadModel = modelFactory.Create(std::move(quadMesh));
 }
 
 void ShadowMapDebugRenderer::BeforeRender(const prev::render::RenderContext& renderContext)

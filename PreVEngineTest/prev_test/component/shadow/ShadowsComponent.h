@@ -3,10 +3,12 @@
 
 #include "IShadowsComponent.h"
 
+#include <prev/core/device/Device.h>
+
 namespace prev_test::component::shadow {
 class ShadowsComponent : public IShadowsComponent {
 public:
-    ShadowsComponent(const uint32_t cascadesCount, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, const std::shared_ptr<prev::render::sampler::Sampler>& sampler, const std::vector<ShadowsCascade>& cascades);
+    ShadowsComponent(prev::core::device::Device& device, const uint32_t cascadesCount, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, const std::shared_ptr<prev::render::sampler::Sampler>& sampler, const std::vector<ShadowsCascade>& cascades);
 
     ~ShadowsComponent();
 
@@ -29,7 +31,9 @@ private:
     void UpdateCascade(const glm::vec3& lightDirection, const prev_test::render::ViewFrustum& cascadeViewFrustum, const glm::mat4& lightViewMatrix, ShadowsCascade& inOutCascade) const;
 
 private:
-    const uint32_t m_cascadesCount{};
+    prev::core::device::Device& m_device;
+
+    uint32_t m_cascadesCount{};
 
     std::shared_ptr<prev::render::pass::RenderPass> m_renderPass{};
 
