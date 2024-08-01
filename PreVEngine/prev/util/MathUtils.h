@@ -23,8 +23,11 @@ inline T Log2(const T x)
 template <typename T>
 inline T RoundUp(const T val, const T toDivBy)
 {
-    if(toDivBy <= static_cast<T>(0)) {
+    if (toDivBy <= static_cast<T>(0)) {
         return val;
+    }
+    if (val <= toDivBy) {
+        return toDivBy;
     }
     return val + (toDivBy - (val % toDivBy));
 }
@@ -32,7 +35,7 @@ inline T RoundUp(const T val, const T toDivBy)
 template <typename T>
 inline T RoundDown(const T val, const T toDivBy)
 {
-    if(toDivBy <= static_cast<T>(0)) {
+    if (toDivBy <= static_cast<T>(0)) {
         return val;
     }
     return val - (val % toDivBy);
