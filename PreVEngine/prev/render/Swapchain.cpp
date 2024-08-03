@@ -221,7 +221,7 @@ void Swapchain::Apply()
                         .SetExtent(newExtent)
                         .SetFormat(m_renderPass.GetDepthFormat())
                         .SetType(VK_IMAGE_TYPE_2D)
-                        .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
+                        .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
                         .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
                         .Build();
     if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
@@ -230,7 +230,7 @@ void Swapchain::Apply()
                                 .SetFormat(m_renderPass.GetColorFormat())
                                 .SetType(VK_IMAGE_TYPE_2D)
                                 .SetSampleCount(m_sampleCount)
-                                .SetUsageFlags(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
+                                .SetUsageFlags(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
                                 .SetLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
                                 .Build();
         m_msaaDepthBuffer = buffer::ImageBufferBuilder{ m_allocator }
@@ -238,7 +238,7 @@ void Swapchain::Apply()
                                 .SetFormat(m_renderPass.GetDepthFormat())
                                 .SetType(VK_IMAGE_TYPE_2D)
                                 .SetSampleCount(m_sampleCount)
-                                .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
+                                .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
                                 .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
                                 .Build();
     }
