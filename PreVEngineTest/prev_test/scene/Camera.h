@@ -40,7 +40,7 @@ private:
     prev::event::EventHandler<Camera, prev::input::keyboard::KeyEvent> m_keyHandler{ *this };
 
 private:
-    const float m_sensitivity{ 0.05f };
+    const float m_sensitivity{ 0.03f };
 
     const float m_moveSpeed{ 25.0f };
 
