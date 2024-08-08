@@ -36,7 +36,7 @@ void Player::Init()
 
     bool fixedCameraUp{ true };
     prev_test::component::camera::CameraComponentFactory cameraFactory{};
-    m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), fixedCameraUp);
+    m_cameraComponent = cameraFactory.Create(m_initialOrientation * glm::quat(glm::radians(glm::vec3(0.0f, 180.0f, 0.0f))), glm::vec3(0.0f, 0.0f, 0.0f), fixedCameraUp);
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::camera::ICameraComponent>(GetThis(), m_cameraComponent, TAG_CAMERA_COMPONENT);
 
     prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{ m_allocator };
@@ -62,10 +62,10 @@ void Player::Update(float deltaTime)
 
         glm::vec3 positionOffset{ 0.0f };
         if (m_shouldGoForward) {
-            positionOffset += deltaTime * prev::util::math::GetForwardVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
+            positionOffset -= deltaTime * prev::util::math::GetForwardVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
         }
         if (m_shouldGoBackward) {
-            positionOffset -= deltaTime * prev::util::math::GetForwardVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
+            positionOffset += deltaTime * prev::util::math::GetForwardVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
         }
         if (m_shouldGoLeft) {
             positionOffset += deltaTime * prev::util::math::GetRightVector(m_transformComponent->GetOrientation()) * RUN_SPEED;

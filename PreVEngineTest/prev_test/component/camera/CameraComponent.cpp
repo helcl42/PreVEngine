@@ -1,5 +1,7 @@
 #include "CameraComponent.h"
 
+#include <prev/util/MathUtils.h>
+
 namespace prev_test::component::camera {
 CameraComponent::CameraComponent(const glm::quat initialOrientation, const glm::vec3& initialPosition, const bool useFixedUp)
     : m_initialOrientation{ initialOrientation }
@@ -128,16 +130,13 @@ void CameraComponent::UpdateOrientation()
 {
     m_orientation = glm::normalize(m_orientationDelta * m_orientation);
 
-    const auto orientationMat{ glm::mat3_cast(m_orientation) };
-
-    // TODO -> should be minus because of OpenGL coord system - RHS -> forward goes towards me
-    m_forwardDirection = orientationMat[2];
+    m_forwardDirection = prev::util::math::GetForwardVector(m_orientation);
     if (m_useFixedUp) {
         m_upDirection = DEFAULT_UP_DIRECTION;
         m_rightDirection = glm::normalize(glm::cross(m_upDirection, m_forwardDirection));
     } else {
-        m_rightDirection = orientationMat[0];
-        m_upDirection = orientationMat[1];
+        m_upDirection = prev::util::math::GetUpVector(m_orientation);
+        m_rightDirection = prev::util::math::GetRightVector(m_orientation);
     }
 
     m_orientationDelta = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
@@ -155,9 +154,6 @@ void CameraComponent::Update()
 
     if (m_orientationChanged || m_positionChanged) {
         m_viewMatrix = glm::lookAt(m_position, m_position + m_forwardDirection, m_upDirection);
-
-        // TODO -> we want to do something like this but we still need a mechanism for locking UP axis
-        // m_viewMatrix = glm::translate(glm::mat4_cast(m_orientation), m_position);
     }
 
     m_orientationChanged = false;
