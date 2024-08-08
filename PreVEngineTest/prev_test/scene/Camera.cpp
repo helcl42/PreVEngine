@@ -21,7 +21,7 @@ void Camera::Init()
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, TAG_TRANSFORM_COMPONENT);
 
     prev_test::component::camera::CameraComponentFactory cameraFactory{};
-    m_cameraComponent = cameraFactory.Create(glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -250.0f), true);
+    m_cameraComponent = cameraFactory.Create(glm::quat(glm::radians(glm::vec3(0.0f, 180.0f, 0.0f))), glm::vec3(0.0f, 0.0f, -250.0f), true);
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::camera::ICameraComponent>(GetThis(), m_cameraComponent, TAG_TRANSFORM_COMPONENT);
 
     SceneNode::Init();
@@ -45,10 +45,10 @@ void Camera::Update(float deltaTime)
         positionDelta -= m_cameraComponent->GetRightDirection() * deltaTime * m_moveSpeed;
     }
     if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_Q)) {
-        positionDelta -= m_cameraComponent->GetUpDirection() * deltaTime * m_moveSpeed;
+        positionDelta += m_cameraComponent->GetUpDirection() * deltaTime * m_moveSpeed;
     }
     if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_E)) {
-        positionDelta += m_cameraComponent->GetUpDirection() * deltaTime * m_moveSpeed;
+        positionDelta -= m_cameraComponent->GetUpDirection() * deltaTime * m_moveSpeed;
     }
 
 #if defined(__ANDROID__)
@@ -85,9 +85,9 @@ void Camera::operator()(const prev::input::mouse::MouseEvent& mouseEvent)
         const glm::vec2 angleInDegrees{ mouseEvent.position * m_sensitivity };
         const float newPitch{ m_pitchAngle - angleInDegrees.y };
 
-        if (newPitch > -m_absMinMaxPitch && newPitch < m_absMinMaxPitch) {
-            m_cameraComponent->AddPitch(glm::radians(angleInDegrees.y));
-            m_pitchAngle += angleInDegrees.y;
+        if (std::abs(newPitch) < m_absMinMaxPitch) {
+            m_cameraComponent->AddPitch(glm::radians(-angleInDegrees.y));
+            m_pitchAngle -= angleInDegrees.y;
         }
         m_cameraComponent->AddYaw(glm::radians(angleInDegrees.x));
     }
