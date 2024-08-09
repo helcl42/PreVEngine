@@ -72,16 +72,16 @@ void Root::Init()
     // freeCamera->SetTags({ TAG_MAIN_CAMERA });
     // AddChild(freeCamera);
 
-    //const int32_t MAX_GENERATED_HEIGHT{ 1 };
-    //const float DISTANCE{ 40.0f };
-    //for (int32_t i = 0; i <= MAX_GENERATED_HEIGHT; i++) {
-    //    for (int32_t j = 0; j <= MAX_GENERATED_HEIGHT; j++) {
-    //        for (int32_t k = 0; k <= MAX_GENERATED_HEIGHT; k++) {
-    //            auto robot = std::make_shared<robot::CubeRobot>(m_device, m_allocator, glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
-    //            AddChild(robot);
-    //        }
-    //    }
-    //}
+    // const int32_t MAX_GENERATED_HEIGHT{ 1 };
+    // const float DISTANCE{ 40.0f };
+    // for (int32_t i = 0; i <= MAX_GENERATED_HEIGHT; i++) {
+    //     for (int32_t j = 0; j <= MAX_GENERATED_HEIGHT; j++) {
+    //         for (int32_t k = 0; k <= MAX_GENERATED_HEIGHT; k++) {
+    //             auto robot = std::make_shared<robot::CubeRobot>(m_device, m_allocator, glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+    //             AddChild(robot);
+    //         }
+    //     }
+    // }
 
     auto player = std::make_shared<Player>(m_device, m_allocator, glm::vec3(0.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(0.06f));
     player->SetTags({ TAG_MAIN_CAMERA, TAG_PLAYER });
@@ -115,8 +115,8 @@ void Root::Init()
     auto fire = std::make_shared<Fire>(m_device, m_allocator, glm::vec3(30.0f, 0.0f, 100.0f));
     AddChild(fire);
 
-    auto cube1 = std::make_shared<Cube>(m_device, m_allocator, glm::vec3(-10.0f, 0.0f, -10.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(20.0f), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/ConeStepMapping/example_1_texture.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/ConeStepMapping/example_1_normalmap.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/ConeStepMapping/example_1_conemap.png"), 0.1f);
-    AddChild(cube1);
+    // auto cube1 = std::make_shared<Cube>(m_device, m_allocator, glm::vec3(-10.0f, 0.0f, -10.0f), glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f))), glm::vec3(20.0f), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/ConeStepMapping/example_1_texture.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/ConeStepMapping/example_1_normalmap.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/ConeStepMapping/example_1_conemap.png"), 0.1f);
+    // AddChild(cube1);
 
     // auto cube2 = std::make_shared<Cube>(m_device, m_allocator, glm::vec3(-65.0f, 0.0f, -65.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 90.0f))), glm::vec3(20.0f), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock_normal.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/rock_cone.png"), 0.1f);
     // AddChild(cube2);
