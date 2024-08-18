@@ -53,6 +53,7 @@ void Font3dRenderer::Init()
         .SetBlendingModeEnabled(true)
         .SetAdditiveBlendingEnabled(false)
         .SetPolygonMode(VK_POLYGON_MODE_FILL)
+        .SetCullingMode(VK_CULL_MODE_NONE)
         .Build();
     // clang-format on
 

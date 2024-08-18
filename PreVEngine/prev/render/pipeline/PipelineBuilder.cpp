@@ -32,7 +32,7 @@ namespace {
         return pipeline;
     }
 
-    VkPipeline CreateGraphicsPipeline(const VkDevice& device, const shader::Shader& shader, const pass::RenderPass& renderPass, const VkPipelineLayout pipelineLayout, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool blendingEnabled, const bool additiveBlendingEnabled, const VkPolygonMode polygonMode)
+    VkPipeline CreateGraphicsPipeline(const VkDevice& device, const shader::Shader& shader, const pass::RenderPass& renderPass, const VkPipelineLayout pipelineLayout, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool blendingEnabled, const bool additiveBlendingEnabled, const VkPolygonMode polygonMode, const VkCullModeFlagBits cullingMode)
     {
         VkPipelineInputAssemblyStateCreateInfo inputAssembly = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
         inputAssembly.topology = topology;
@@ -69,8 +69,8 @@ namespace {
         rasterizer.rasterizerDiscardEnable = VK_FALSE;
         rasterizer.polygonMode = polygonMode;
         rasterizer.lineWidth = 1.0f;
-        rasterizer.cullMode = VK_CULL_MODE_NONE;
-        rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+        rasterizer.cullMode = cullingMode;
+        rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         rasterizer.depthBiasEnable = VK_FALSE;
 
         VkPipelineMultisampleStateCreateInfo multisampling = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
@@ -209,6 +209,12 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetPolygonMode(VkPolygonMode m
     return *this;
 }
 
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetCullingMode(VkCullModeFlagBits mode)
+{
+    m_cullingMode = mode;
+    return *this;
+}
+
 std::unique_ptr<Pipeline> GraphicsPipelineBuilder::Build() const
 {
     if (!m_depthTestEnabled && m_depthWriteEnabled) {
@@ -220,7 +226,7 @@ std::unique_ptr<Pipeline> GraphicsPipelineBuilder::Build() const
     }
 
     auto pipelineLayout{ CreatePipelineLayout(m_device, m_shader) };
-    auto pipeline{ CreateGraphicsPipeline(m_device, m_shader, m_renderPass, pipelineLayout, m_primitiveTopology, m_depthTestEnabled, m_depthWriteEnabled, m_blendingEnabled, m_additiveBlendingEnabled, m_polygonMode) };
+    auto pipeline{ CreateGraphicsPipeline(m_device, m_shader, m_renderPass, pipelineLayout, m_primitiveTopology, m_depthTestEnabled, m_depthWriteEnabled, m_blendingEnabled, m_additiveBlendingEnabled, m_polygonMode, m_cullingMode) };
     return std::make_unique<Pipeline>(m_device, pipeline, pipelineLayout);
 }
 

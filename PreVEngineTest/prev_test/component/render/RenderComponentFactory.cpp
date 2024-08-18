@@ -55,7 +55,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateCubeRenderCompon
 std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderComponent(const glm::vec4& color, const bool castsShadows, const bool isCastedByShadows) const
 {
     auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ color, 2.0f, 0.3f, VK_SAMPLER_ADDRESS_MODE_REPEAT }) };
-    auto mesh{ prev_test::render::mesh::MeshFactory{}.CreatePlane(40.0f, 40.0f, 1, 1, 10.0f, 10.0f, false) };
+    auto mesh{ prev_test::render::mesh::MeshFactory{}.CreatePlane(40.0f, 40.0f, 1, 1, 10.0f, 10.0f, prev_test::render::FlatMeshConstellation::ZERO_Y, false) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -64,7 +64,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderCompo
 std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderComponent(const std::string& texturePath, const bool castsShadows, const bool isCastedByShadows) const
 {
     auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 2.0f, 0.3f, VK_SAMPLER_ADDRESS_MODE_REPEAT }, texturePath) };
-    auto mesh{ prev_test::render::mesh::MeshFactory{}.CreatePlane(40.0f, 40.0f, 1, 1, 10.0f, 10.0f, false) };
+    auto mesh{ prev_test::render::mesh::MeshFactory{}.CreatePlane(40.0f, 40.0f, 1, 1, 10.0f, 10.0f, prev_test::render::FlatMeshConstellation::ZERO_Y, false) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -73,7 +73,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderCompo
 std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const bool castsShadows, const bool isCastedByShadows) const
 {
     auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 2.0f, 0.3f, VK_SAMPLER_ADDRESS_MODE_REPEAT }, texturePath, normalMapPath) };
-    auto mesh{ prev_test::render::mesh::MeshFactory{}.CreatePlane(40.0f, 40.0f, 1, 1, 1.0f, 1.0f, true) };
+    auto mesh{ prev_test::render::mesh::MeshFactory{}.CreatePlane(40.0f, 40.0f, 1, 1, 1.0f, 1.0f, prev_test::render::FlatMeshConstellation::ZERO_Y, true) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -82,7 +82,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderCompo
 std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const std::string& heightOrConeMapPath, const bool castsShadows, const bool isCastedByShadows) const
 {
     auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 2.0f, 0.3f, VK_SAMPLER_ADDRESS_MODE_REPEAT }, texturePath, normalMapPath, heightOrConeMapPath) };
-    auto mesh{ prev_test::render::mesh::MeshFactory{}.CreatePlane(40.0f, 40.0f, 1, 1, 1.0f, 1.0f, true) };
+    auto mesh{ prev_test::render::mesh::MeshFactory{}.CreatePlane(40.0f, 40.0f, 1, 1, 1.0f, 1.0f, prev_test::render::FlatMeshConstellation::ZERO_Y, true) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);

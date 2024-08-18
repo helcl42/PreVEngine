@@ -17,6 +17,8 @@ layout(std140, binding = 0) uniform UniformBufferObject {
 const float textureTilingFactor = 1.0;
 
 layout(location = 0) in vec3 inPosition;
+layout(location = 1) in vec2 inTextureCoord;
+layout(location = 2) in vec3 inNormal;
 
 layout(location = 0) out vec4 outClipSpaceCoord;
 layout(location = 1) out vec2 outTextureCoord;
@@ -38,7 +40,7 @@ void main()
     outClipSpaceCoord = uboVS.projectionMatrix * viewPosition;
 	gl_Position = outClipSpaceCoord;
 
-	outTextureCoord = vec2(inPosition.x / 2.0 + 0.5, inPosition.z / 2.0 + 0.5) * textureTilingFactor;
+	outTextureCoord = vec2(inPosition.xz / 2.0 + 0.5) * textureTilingFactor;
 
 	//vec3 cameraPosition = (inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz; // OPT - passed in UBO
 	outToCameraVector = uboVS.cameraPosition.xyz - worldPosition.xyz;

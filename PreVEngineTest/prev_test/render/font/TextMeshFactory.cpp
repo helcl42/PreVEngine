@@ -113,7 +113,7 @@ void TextMeshFactory::AddQuadData(const glm::vec2& tl, const glm::vec2& br, std:
 
 void TextMeshFactory::AddIndices(const size_t verticesCount, std::vector<uint32_t>& inOutIndices) const
 {
-    const uint32_t indices[] = { 0, 1, 2, 2, 3, 0 };
+    const uint32_t indices[] = { 0, 2, 1, 2, 0, 3 };
     const uint32_t baseIndex = static_cast<uint32_t>(verticesCount);
     for (uint32_t i = 0; i < 6; i++) {
         inOutIndices.push_back(baseIndex + indices[i]);

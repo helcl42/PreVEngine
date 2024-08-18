@@ -61,6 +61,7 @@ void ParticlesRenderer::Init()
         .SetBlendingModeEnabled(true)
         .SetAdditiveBlendingEnabled(true)
         .SetPolygonMode(VK_POLYGON_MODE_FILL)
+        .SetCullingMode(VK_CULL_MODE_BACK_BIT)
         .Build();
     // clang-format on
 

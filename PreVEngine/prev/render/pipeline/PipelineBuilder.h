@@ -41,6 +41,8 @@ public:
 
     GraphicsPipelineBuilder& SetPolygonMode(VkPolygonMode mode);
 
+    GraphicsPipelineBuilder& SetCullingMode(VkCullModeFlagBits mode);
+
     std::unique_ptr<Pipeline> Build() const;
 
 private:
@@ -61,6 +63,8 @@ private:
     bool m_additiveBlendingEnabled{ false };
 
     VkPolygonMode m_polygonMode{ VK_POLYGON_MODE_FILL };
+
+    VkCullModeFlagBits m_cullingMode{ VK_CULL_MODE_NONE };
 };
 } // namespace prev::render::pipeline
 
