@@ -6,7 +6,7 @@
 namespace prev_test::component::camera {
 class CameraComponent : public ICameraComponent {
 public:
-    CameraComponent(const glm::quat initialOrientation, const glm::vec3& initialPosition, const bool useFixedUp);
+    CameraComponent(const glm::quat& initialOrientation, const glm::vec3& initialPosition, const bool useFixedUp);
 
     virtual ~CameraComponent() = default;
 
