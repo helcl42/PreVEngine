@@ -54,6 +54,7 @@ void SelectionDebugRenderer::Init()
         .SetBlendingModeEnabled(false)
         .SetAdditiveBlendingEnabled(false)
         .SetPolygonMode(VK_POLYGON_MODE_LINE)
+        .SetCullingMode(VK_CULL_MODE_BACK_BIT)
         .Build();
     // clang-format on
 

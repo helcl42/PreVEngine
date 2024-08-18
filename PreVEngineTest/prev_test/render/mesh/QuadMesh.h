@@ -7,7 +7,7 @@
 namespace prev_test::render::mesh {
 class QuadMesh final : public IMesh {
 public:
-    QuadMesh(const bool includeTangentBiTangent = false);
+    QuadMesh(const FlatMeshConstellation constellation, const bool includeTangentBiTangent = false);
 
     ~QuadMesh() = default;
 
@@ -30,29 +30,13 @@ private:
     prev_test::render::VertexDataBuffer m_vertexDataBuffer;
 
 private:
-    static const inline std::vector<glm::vec3> vertices = {
-        { 1.0f, 1.0f, 0.0f },
-        { -1.0f, 1.0f, 0.0f },
-        { -1.0f, -1.0f, 0.0f },
-        { 1.0f, -1.0f, 0.0f }
-    };
+    std::vector<glm::vec3> m_vertices;
 
-    static const inline std::vector<glm::vec2> textureCoords = {
-        { 1.0f, 1.0f },
-        { 0.0f, 1.0f },
-        { 0.0f, 0.0f },
-        { 1.0f, 0.0f }
-    };
+    std::vector<uint32_t> m_indices;
 
-    static const inline std::vector<uint32_t> indices = {
-        0, 1, 2, 2, 3, 0
-    };
+    std::vector<MeshPart> m_meshParts;
 
-    static const inline std::vector<MeshPart> meshParts = {
-        MeshPart(static_cast<uint32_t>(indices.size()), vertices)
-    };
-
-    static const inline prev_test::render::MeshNode meshRootNode{ { 0 }, glm::mat4(1.0f), {} };
+    prev_test::render::MeshNode m_meshRootNode;
 };
 } // namespace prev_test::render::mesh
 

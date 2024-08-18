@@ -71,6 +71,7 @@ void AnimationConeStepMappedRenderer::Init()
         .SetBlendingModeEnabled(true)
         .SetAdditiveBlendingEnabled(false)
         .SetPolygonMode(VK_POLYGON_MODE_FILL)
+        .SetCullingMode(VK_CULL_MODE_BACK_BIT)
         .Build();
     // clang-format on
 

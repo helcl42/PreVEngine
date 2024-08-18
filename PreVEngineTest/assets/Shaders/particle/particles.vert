@@ -34,7 +34,7 @@ void main()
 
     vec2 localPosition = MakeRotation(rotation) * vec2(inPosition.x * scale.x, inPosition.y * scale.y);
 
-    vec3 vertexPositionWorldspace = position + cameraRightWorldSpace * localPosition.x + cameraUpWorldSpace * localPosition.y;
+    vec3 vertexPositionWorldspace = position + cameraRightWorldSpace * -localPosition.x + cameraUpWorldSpace * localPosition.y;
 
 	gl_Position = uboVS.projectionMatrix * uboVS.viewMatrix * vec4(vertexPositionWorldspace, 1.0);
 
