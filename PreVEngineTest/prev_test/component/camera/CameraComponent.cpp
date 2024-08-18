@@ -3,7 +3,7 @@
 #include <prev/util/MathUtils.h>
 
 namespace prev_test::component::camera {
-CameraComponent::CameraComponent(const glm::quat initialOrientation, const glm::vec3& initialPosition, const bool useFixedUp)
+CameraComponent::CameraComponent(const glm::quat& initialOrientation, const glm::vec3& initialPosition, const bool useFixedUp)
     : m_initialOrientation{ initialOrientation }
     , m_initialPosition{ initialPosition }
     , m_useFixedUp{ useFixedUp }
