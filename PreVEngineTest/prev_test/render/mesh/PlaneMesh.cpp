@@ -22,7 +22,7 @@ namespace {
         case FlatMeshConstellation::ZERO_X:
             return { 1.0f, 0.0f, 0.0f };
         case FlatMeshConstellation::ZERO_Z:
-            return { 0.0f, 1.0f, 1.0f };
+            return { 0.0f, 0.0f, 1.0f };
         default:
             return { 0.0f, 1.0f, 0.0f };
         }
