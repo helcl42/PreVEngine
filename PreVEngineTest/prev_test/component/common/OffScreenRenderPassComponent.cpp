@@ -73,7 +73,7 @@ void OffScreenRenderPassComponent::Init()
 
     prev::render::pass::RenderPassBuilder renderPassBuilder{ m_device };
     if (m_depthFormat != VK_FORMAT_UNDEFINED) {
-        renderPassBuilder.AddDepthAttachment(m_depthFormat, VK_SAMPLE_COUNT_1_BIT, { MAX_DEPTH, 0 });
+        renderPassBuilder.AddDepthAttachment(m_depthFormat, VK_SAMPLE_COUNT_1_BIT, { MAX_DEPTH, 0 }, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
         attachmentIndices.push_back(attachmentIndex);
         ++attachmentIndex;
     }
@@ -96,7 +96,7 @@ void OffScreenRenderPassComponent::Init()
                             .SetFormat(m_depthFormat)
                             .SetType(VK_IMAGE_TYPE_2D)
                             .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
-                            .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+                            .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL)
                             .Build();
         m_depthSampler = std::make_shared<prev::render::sampler::Sampler>(m_device, 1.0f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_NEAREST, VK_FILTER_NEAREST, VK_SAMPLER_MIPMAP_MODE_NEAREST);
     }
@@ -108,7 +108,7 @@ void OffScreenRenderPassComponent::Init()
                                     .SetFormat(colorFormat)
                                     .SetType(VK_IMAGE_TYPE_2D)
                                     .SetUsageFlags(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
-                                    .SetLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+                                    .SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
                                     .Build();
         auto colorImageBufferSampler{ std::make_shared<prev::render::sampler::Sampler>(m_device, static_cast<float>(colorImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, ANISOTROPIC_FILTERING_ENABLED, MAX_ANISOTROPY_LEVEL) };
 
