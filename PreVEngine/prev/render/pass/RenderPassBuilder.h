@@ -16,9 +16,9 @@ public:
     RenderPassBuilder() = default;
 
 public:
-    RenderPassBuilder& AddColorAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, const VkClearColorValue clearVal = {}, const VkImageLayout finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE, const bool resolveAttachment = false);
+    RenderPassBuilder& AddColorAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, const VkClearColorValue clearVal = {}, const VkImageLayout finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE, const bool resolveAttachment = false);
 
-    RenderPassBuilder& AddDepthAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, const VkClearDepthStencilValue clearVal = { MAX_DEPTH, 0 }, const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE, const bool resolveAttachment = false);
+    RenderPassBuilder& AddDepthAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, const VkClearDepthStencilValue clearVal = { MAX_DEPTH, 0 }, const VkImageLayout finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE, const bool resolveAttachment = false);
 
     RenderPassBuilder& AddSubpass(const std::vector<uint32_t>& attachmentIndices = {}, const std::vector<uint32_t>& resolveIndices = {});
 
@@ -53,8 +53,6 @@ private:
     std::vector<SubPassCreateInfo> m_subPassCreateInfos;
 
     std::vector<VkSubpassDependency> m_dependencies;
-
-    static const VkImageLayout DEFAULT_DEPTH_LAYOUT{ VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL };
 };
 } // namespace prev::render::pass
 
