@@ -39,6 +39,8 @@ public:
 
     GraphicsPipelineBuilder& SetAdditiveBlendingEnabled(bool enabled);
 
+    GraphicsPipelineBuilder& SetPatchControlPointCount(const uint32_t count);
+
     GraphicsPipelineBuilder& SetPolygonMode(VkPolygonMode mode);
 
     GraphicsPipelineBuilder& SetCullingMode(VkCullModeFlagBits mode);
@@ -61,6 +63,8 @@ private:
     bool m_blendingEnabled{ true };
 
     bool m_additiveBlendingEnabled{ false };
+
+    uint32_t m_patchControlPointCount{ 0 };
 
     VkPolygonMode m_polygonMode{ VK_POLYGON_MODE_FILL };
 

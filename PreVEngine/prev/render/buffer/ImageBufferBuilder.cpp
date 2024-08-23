@@ -176,16 +176,10 @@ std::unique_ptr<ImageBuffer> ImageBufferBuilder::Build() const
     }
 
     commandsExecutor.ExecuteImmediate([&](VkCommandBuffer commandBuffer) {
-        if (!m_layersData.empty()) {
-            if (mipMapLevels > 1) {
-                // prev::util::vk::GetFormatProperties(); // check if possible -> is linear sanpler available?
-                imageBuffer->GenerateMipMaps(m_layout, commandBuffer);
-            } else {
-                imageBuffer->UpdateLayout(m_layout, commandBuffer);
-            }
-        } else {
-            imageBuffer->UpdateLayout(m_layout, commandBuffer);
+        if (!m_layersData.empty() && mipMapLevels > 1) {
+            imageBuffer->GenerateMipMaps(commandBuffer);
         }
+        imageBuffer->UpdateLayout(m_layout, commandBuffer);
     });
 
     return imageBuffer;

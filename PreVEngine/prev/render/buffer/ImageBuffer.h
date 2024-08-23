@@ -15,7 +15,9 @@ public:
 public:
     void UpdateLayout(const VkImageLayout newLayout, VkCommandBuffer commandBuffer);
 
-    void GenerateMipMaps(const VkImageLayout newLLayout, VkCommandBuffer commandBuffer);
+    void GenerateMipMaps(VkCommandBuffer commandBuffer);
+
+    void Copy(ImageBuffer& dstImage, VkCommandBuffer commandBuffer);
 
     VkExtent3D GetExtent() const;
 
