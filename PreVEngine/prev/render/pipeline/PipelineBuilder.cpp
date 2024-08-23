@@ -32,7 +32,7 @@ namespace {
         return pipeline;
     }
 
-    VkPipeline CreateGraphicsPipeline(const VkDevice& device, const shader::Shader& shader, const pass::RenderPass& renderPass, const VkPipelineLayout pipelineLayout, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool blendingEnabled, const bool additiveBlendingEnabled, const VkPolygonMode polygonMode, const VkCullModeFlagBits cullingMode)
+    VkPipeline CreateGraphicsPipeline(const VkDevice& device, const shader::Shader& shader, const pass::RenderPass& renderPass, const VkPipelineLayout pipelineLayout, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool blendingEnabled, const bool additiveBlendingEnabled, const VkPolygonMode polygonMode, const VkCullModeFlagBits cullingMode, const uint32_t patchPointCount)
     {
         VkPipelineInputAssemblyStateCreateInfo inputAssembly = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
         inputAssembly.topology = topology;
@@ -133,6 +133,9 @@ namespace {
         dynamicState.pDynamicStates = dynamicStates;
         dynamicState.dynamicStateCount = static_cast<uint32_t>(prev::util::ArraySize(dynamicStates));
 
+        VkPipelineTessellationStateCreateInfo tesselationStateCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO };
+        tesselationStateCreateInfo.patchControlPoints = patchPointCount;
+
         VkGraphicsPipelineCreateInfo pipelineInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
         pipelineInfo.stageCount = static_cast<uint32_t>(shader.GetShaderStages().size());
         pipelineInfo.pStages = shader.GetShaderStages().data();
@@ -144,6 +147,7 @@ namespace {
         pipelineInfo.pDepthStencilState = &depthStencilState;
         pipelineInfo.pColorBlendState = &colorBlending;
         pipelineInfo.pDynamicState = &dynamicState;
+        pipelineInfo.pTessellationState = patchPointCount > 0 ? &tesselationStateCreateInfo : nullptr;
         pipelineInfo.layout = pipelineLayout;
         pipelineInfo.renderPass = renderPass;
 
@@ -203,6 +207,12 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetAdditiveBlendingEnabled(boo
     return *this;
 }
 
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetPatchControlPointCount(const uint32_t count)
+{
+    m_patchControlPointCount = count;
+    return *this;
+}
+
 GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetPolygonMode(VkPolygonMode mode)
 {
     m_polygonMode = mode;
@@ -225,8 +235,12 @@ std::unique_ptr<Pipeline> GraphicsPipelineBuilder::Build() const
         LOGW("Invalid pipeline configuration: Blending is disabled and additive blending enabled - additive blending will be ignored.");
     }
 
+    if ((m_primitiveTopology != VK_PRIMITIVE_TOPOLOGY_PATCH_LIST && m_patchControlPointCount > 0) || (m_primitiveTopology == VK_PRIMITIVE_TOPOLOGY_PATCH_LIST && m_patchControlPointCount == 0)) {
+        LOGW("Invalid pipeline configuration: Invalid tesselation configuration - PrimitiveTopology = %d and PatchControlCount = %d.", m_primitiveTopology, m_patchControlPointCount);
+    }
+
     auto pipelineLayout{ CreatePipelineLayout(m_device, m_shader) };
-    auto pipeline{ CreateGraphicsPipeline(m_device, m_shader, m_renderPass, pipelineLayout, m_primitiveTopology, m_depthTestEnabled, m_depthWriteEnabled, m_blendingEnabled, m_additiveBlendingEnabled, m_polygonMode, m_cullingMode) };
+    auto pipeline{ CreateGraphicsPipeline(m_device, m_shader, m_renderPass, pipelineLayout, m_primitiveTopology, m_depthTestEnabled, m_depthWriteEnabled, m_blendingEnabled, m_additiveBlendingEnabled, m_polygonMode, m_cullingMode, m_patchControlPointCount) };
     return std::make_unique<Pipeline>(m_device, pipeline, pipelineLayout);
 }
 

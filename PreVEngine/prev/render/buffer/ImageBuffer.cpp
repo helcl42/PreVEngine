@@ -1,5 +1,6 @@
 #include "ImageBuffer.h"
 
+#include "../../core/Formats.h"
 #include "../../util/MathUtils.h"
 #include "../../util/VkUtils.h"
 
@@ -24,12 +25,34 @@ void ImageBuffer::UpdateLayout(const VkImageLayout newLayout, VkCommandBuffer co
     m_layout = newLayout;
 }
 
-void ImageBuffer::GenerateMipMaps(const VkImageLayout newLLayout, VkCommandBuffer commandBuffer)
+void ImageBuffer::GenerateMipMaps(VkCommandBuffer commandBuffer)
 {
+    const auto newLayout{ m_layout != VK_IMAGE_LAYOUT_UNDEFINED ? m_layout : VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL };
+
+    const auto filter{ prev::core::format::HasDepthComponent(m_format) ? VK_FILTER_NEAREST : VK_FILTER_LINEAR };
+
     m_mipLevels = prev::util::math::Log2(std::max(m_extent.width, m_extent.height)) + 1;
+
     util::vk::TransitionImageLayout(commandBuffer, m_image, m_layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_mipLevels, m_aspectMask, m_layerCount);
-    util::vk::GenerateMipmaps(commandBuffer, m_image, m_extent, m_mipLevels, m_layerCount, m_aspectMask, newLLayout);
-    m_layout = newLLayout;
+    util::vk::GenerateMipmaps(commandBuffer, m_image, m_extent, m_mipLevels, m_layerCount, m_aspectMask, filter, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    util::vk::TransitionImageLayout(commandBuffer, m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, newLayout, m_mipLevels, m_aspectMask, m_layerCount);
+
+    m_layout = newLayout;
+}
+
+void ImageBuffer::Copy(ImageBuffer& dstImage, VkCommandBuffer commandBuffer)
+{
+    const auto newLayout{ m_layout != VK_IMAGE_LAYOUT_UNDEFINED ? m_layout : VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL };
+
+    const auto filter{ prev::core::format::HasDepthComponent(m_format) ? VK_FILTER_NEAREST : VK_FILTER_LINEAR };
+
+    util::vk::TransitionImageLayout(commandBuffer, m_image, m_layout, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, m_mipLevels, m_aspectMask, m_layerCount);
+
+    prev::util::vk::CopyImage(commandBuffer, m_image, m_extent, m_layerCount, m_aspectMask, filter, dstImage.GetLayout(), dstImage);
+
+    util::vk::TransitionImageLayout(commandBuffer, m_image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, newLayout, m_mipLevels, m_aspectMask, m_layerCount);
+
+    m_layout = newLayout;
 }
 
 VkExtent3D ImageBuffer::GetExtent() const

@@ -84,7 +84,8 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
 
         vkCmdDispatch(commandBuffer, 128, 128, 1);
 
-        weatherImageBuffer->GenerateMipMaps(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, commandBuffer);
+        weatherImageBuffer->GenerateMipMaps(commandBuffer);
+        weatherImageBuffer->UpdateLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, commandBuffer);
     });
 
     pipeline = nullptr;

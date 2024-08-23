@@ -58,7 +58,8 @@ CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t widt
 
         vkCmdDispatch(commandBuffer, 32, 32, 32);
 
-        noiseImageBuffer->GenerateMipMaps(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, commandBuffer);
+        noiseImageBuffer->GenerateMipMaps(commandBuffer);
+        noiseImageBuffer->UpdateLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, commandBuffer);
     });
 
     pipeline = nullptr;
