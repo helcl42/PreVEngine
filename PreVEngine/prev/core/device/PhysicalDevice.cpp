@@ -34,6 +34,9 @@ PhysicalDevice::PhysicalDevice(const VkPhysicalDevice gpu)
     if (m_availableFeatures.geometryShader) {
         m_enabledFeatures.geometryShader = VK_TRUE;
     }
+    if (m_availableFeatures.tessellationShader) {
+        m_enabledFeatures.tessellationShader = VK_TRUE;
+    }
     if (m_availableFeatures.sampleRateShading) {
         m_enabledFeatures.sampleRateShading = VK_TRUE;
     }
