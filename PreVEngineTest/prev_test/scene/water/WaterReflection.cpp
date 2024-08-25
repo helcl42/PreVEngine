@@ -36,7 +36,7 @@ void WaterReflection::ShutDown()
 {
     SceneNode::ShutDown();
 
-    m_reflectionComponent->ShutDown();
+    m_reflectionComponent = nullptr;
 }
 
 void WaterReflection::operator()(const prev::core::NewIterationEvent& newIterationEvent)
@@ -50,7 +50,6 @@ void WaterReflection::CreateReflectionComponent()
 
     prev_test::component::common::OffScreenRenderPassComponentFactory componentFactory{ m_device, m_allocator };
     m_reflectionComponent = componentFactory.Create(extent, VK_FORMAT_D32_SFLOAT, { VK_FORMAT_B8G8R8A8_UNORM });
-    m_reflectionComponent->Init();
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::common::IOffScreenRenderPassComponent>(GetThis(), m_reflectionComponent, TAG_WATER_REFLECTION_RENDER_COMPONENT);
 }
 
@@ -58,7 +57,6 @@ void WaterReflection::DestroyReflectionComponent()
 {
     if (m_reflectionComponent) {
         prev::scene::component::NodeComponentHelper::RemoveComponents<prev_test::component::common::IOffScreenRenderPassComponent>(GetThis(), TAG_WATER_REFLECTION_RENDER_COMPONENT);
-        m_reflectionComponent->ShutDown();
     }
 }
 

@@ -10,10 +10,6 @@
 namespace prev_test::component::common {
 class IOffScreenRenderPassComponent {
 public:
-    virtual void Init() = 0;
-
-    virtual void ShutDown() = 0;
-
     virtual std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const = 0;
 
     virtual const VkExtent2D& GetExtent() const = 0;
