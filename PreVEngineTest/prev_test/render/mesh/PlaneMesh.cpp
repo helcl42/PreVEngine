@@ -68,11 +68,12 @@ PlaneMesh::PlaneMesh(const float xSize, const float zSize, const uint32_t xDivs,
         for (uint32_t j = 0; j < xDivs; j++) {
             const uint32_t indices[] = {
                 rowStart + j,
+                rowStart + j + 1,
+                nextRowStart + j + 1,
+
                 nextRowStart + j + 1,
                 nextRowStart + j,
                 rowStart + j,
-                rowStart + j + 1,
-                nextRowStart + j + 1,
             };
 
             for (const auto index : indices) {
