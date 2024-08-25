@@ -11,17 +11,13 @@
 #include <vector>
 
 namespace prev_test::component::common {
-class OffScreenRenderPassComponent : public IOffScreenRenderPassComponent {
+class OffScreenRenderPassComponent final : public IOffScreenRenderPassComponent {
 public:
-    OffScreenRenderPassComponent(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const VkExtent2D& extent, const VkFormat depthFormat, const std::vector<VkFormat>& colorFormats);
+    OffScreenRenderPassComponent(prev::core::device::Device& device, const VkExtent2D& extent, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, const std::shared_ptr<prev::render::sampler::Sampler>& depthSampler, const std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>>& colorBuffers, const std::vector<std::shared_ptr<prev::render::sampler::Sampler>>& colorSamplers, const VkFramebuffer frameBuffer);
 
-    ~OffScreenRenderPassComponent() = default;
+    ~OffScreenRenderPassComponent();
 
 public:
-    void Init() override;
-
-    void ShutDown() override;
-
     std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const override;
 
     const VkExtent2D& GetExtent() const override;
@@ -39,13 +35,7 @@ public:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
-
     VkExtent2D m_extent{};
-
-    VkFormat m_depthFormat{ VK_FORMAT_UNDEFINED };
-
-    std::vector<VkFormat> m_colorFormats{};
 
     std::shared_ptr<prev::render::pass::RenderPass> m_renderPass{};
 

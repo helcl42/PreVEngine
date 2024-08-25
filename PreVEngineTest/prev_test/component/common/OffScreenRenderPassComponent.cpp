@@ -1,133 +1,21 @@
 #include "OffScreenRenderPassComponent.h"
 
-#include <prev/render/buffer/ImageBufferBuilder.h>
-#include <prev/render/pass/RenderPassBuilder.h>
-#include <prev/util/VkUtils.h>
-
 #include <stdexcept>
 
 namespace prev_test::component::common {
-constexpr bool ANISOTROPIC_FILTERING_ENABLED{ true };
-constexpr float MAX_ANISOTROPY_LEVEL{ 4.0f };
-
-OffScreenRenderPassComponent::OffScreenRenderPassComponent(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const VkExtent2D& extent, const VkFormat depthFormat, const std::vector<VkFormat>& colorFormats)
+OffScreenRenderPassComponent::OffScreenRenderPassComponent(prev::core::device::Device& device, const VkExtent2D& extent, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, const std::shared_ptr<prev::render::sampler::Sampler>& depthSampler, const std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>>& colorBuffers, const std::vector<std::shared_ptr<prev::render::sampler::Sampler>>& colorSamplers, const VkFramebuffer frameBuffer)
     : m_device{ device }
-    , m_allocator{ allocator }
     , m_extent{ extent }
-    , m_depthFormat{ depthFormat }
-    , m_colorFormats{ colorFormats }
-    , m_renderPass{}
-    , m_depthBuffer{}
-    , m_depthSampler{}
-    , m_colorBuffers{}
-    , m_colorSamplers{}
-    , m_frameBuffer{}
+    , m_renderPass{ renderPass }
+    , m_depthBuffer{ depthBuffer }
+    , m_depthSampler{ depthSampler }
+    , m_colorBuffers{ colorBuffers }
+    , m_colorSamplers{ colorSamplers }
+    , m_frameBuffer{ frameBuffer }
 {
 }
 
-void OffScreenRenderPassComponent::Init()
-{
-    // create render pass
-    const uint32_t depthDependenciesOffset{ (m_depthFormat != VK_FORMAT_UNDEFINED) ? 2u : 0u };
-    const uint32_t allDependenciesCount{ depthDependenciesOffset + 2u * static_cast<uint32_t>(m_colorFormats.size()) };
-
-    std::vector<VkSubpassDependency> dependencies(allDependenciesCount);
-    if (m_depthFormat != VK_FORMAT_UNDEFINED) {
-        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependencies[0].dstSubpass = 0;
-        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        dependencies[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        dependencies[0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-        dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
-        dependencies[1].srcSubpass = 0;
-        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        dependencies[1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-        dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-    }
-
-    for (uint32_t index = depthDependenciesOffset; index < allDependenciesCount; index += 2) {
-        dependencies[index + 0].srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependencies[index + 0].dstSubpass = 0;
-        dependencies[index + 0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        dependencies[index + 0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependencies[index + 0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        dependencies[index + 0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        dependencies[index + 0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
-        dependencies[index + 1].srcSubpass = 0;
-        dependencies[index + 1].dstSubpass = VK_SUBPASS_EXTERNAL;
-        dependencies[index + 1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependencies[index + 1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        dependencies[index + 1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        dependencies[index + 1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        dependencies[index + 1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-    }
-
-    std::vector<uint32_t> attachmentIndices;
-    uint32_t attachmentIndex{ 0 };
-
-    prev::render::pass::RenderPassBuilder renderPassBuilder{ m_device };
-    if (m_depthFormat != VK_FORMAT_UNDEFINED) {
-        renderPassBuilder.AddDepthAttachment(m_depthFormat, VK_SAMPLE_COUNT_1_BIT, { MAX_DEPTH, 0 }, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-        attachmentIndices.push_back(attachmentIndex);
-        ++attachmentIndex;
-    }
-    for (size_t i = 0; i < m_colorFormats.size(); ++i) {
-        const auto colorFormat{ m_colorFormats[i] };
-        renderPassBuilder.AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, { { 0.5f, 0.5f, 0.5f, 1.0f } }, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-        attachmentIndices.push_back(attachmentIndex);
-        ++attachmentIndex;
-    }
-    m_renderPass = renderPassBuilder
-                       .AddSubpass(attachmentIndices)
-                       .AddSubpassDependencies(dependencies)
-                       .Build();
-
-    const VkExtent3D extent3d{ GetExtent().width, GetExtent().height, 1 };
-    // create image buffers and corresponding samplers
-    if (m_depthFormat != VK_FORMAT_UNDEFINED) {
-        m_depthBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
-                            .SetExtent(extent3d)
-                            .SetFormat(m_depthFormat)
-                            .SetType(VK_IMAGE_TYPE_2D)
-                            .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
-                            .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL)
-                            .Build();
-        m_depthSampler = std::make_shared<prev::render::sampler::Sampler>(m_device, 1.0f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_NEAREST, VK_FILTER_NEAREST, VK_SAMPLER_MIPMAP_MODE_NEAREST);
-    }
-
-    for (uint32_t i = 0; i < m_colorFormats.size(); ++i) {
-        const auto colorFormat{ m_colorFormats[i] };
-        auto colorImageBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
-                                    .SetExtent(extent3d)
-                                    .SetFormat(colorFormat)
-                                    .SetType(VK_IMAGE_TYPE_2D)
-                                    .SetUsageFlags(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
-                                    .SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-                                    .Build();
-        auto colorImageBufferSampler{ std::make_shared<prev::render::sampler::Sampler>(m_device, static_cast<float>(colorImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, ANISOTROPIC_FILTERING_ENABLED, MAX_ANISOTROPY_LEVEL) };
-
-        m_colorBuffers.emplace_back(std::move(colorImageBuffer));
-        m_colorSamplers.emplace_back(std::move(colorImageBufferSampler));
-    }
-
-    std::vector<VkImageView> imageViews;
-    if (m_depthFormat != VK_FORMAT_UNDEFINED) {
-        imageViews.push_back(m_depthBuffer->GetImageView());
-    }
-    for (const auto& colorBuffer : m_colorBuffers) {
-        imageViews.push_back(colorBuffer->GetImageView());
-    }
-
-    m_frameBuffer = prev::util::vk::CreateFrameBuffer(m_device, *m_renderPass, imageViews, GetExtent());
-}
-
-void OffScreenRenderPassComponent::ShutDown()
+OffScreenRenderPassComponent::~OffScreenRenderPassComponent()
 {
     m_device.WaitIdle();
 
