@@ -53,7 +53,7 @@ PlaneMesh::PlaneMesh(const float xSize, const float zSize, const uint32_t xDivs,
             const float x{ jFactor * j - x2 };
 
             const glm::vec3 vertex{ CreateConstellatedVertex(constellation, x, z) };
-            const glm::vec2 textureCoord{ j * texi, i * texj };
+            const glm::vec2 textureCoord{ j * texj, i * texi };
             const glm::vec3 normal{ CreateConstellatedNormal(constellation) };
 
             m_vertices.push_back(vertex);
