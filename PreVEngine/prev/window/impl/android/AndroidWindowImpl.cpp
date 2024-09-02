@@ -41,7 +41,7 @@ AndroidWindowImpl::AndroidWindowImpl(const prev::core::instance::Instance& insta
     while (!m_hasFocus) {
         int events = 0;
         android_poll_source* source;
-        int id = ALooper_pollOnce(100, NULL, &events, (void**)&source);
+        int id = ALooper_pollOnce(10, NULL, &events, (void**)&source);
         if (id == LOOPER_ID_MAIN) {
             int8_t cmd = android_app_read_cmd(m_app);
 
@@ -66,8 +66,6 @@ AndroidWindowImpl::AndroidWindowImpl(const prev::core::instance::Instance& insta
             android_app_post_exec_cmd(m_app, cmd);
         }
     }
-
-    ALooper_pollAll(10, NULL, NULL, NULL); // for keyboard
 }
 
 AndroidWindowImpl::~AndroidWindowImpl()
@@ -84,7 +82,10 @@ bool AndroidWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
     int events{};
     android_poll_source* source{};
     int timeoutMillis = waitForEvent ? -1 : 0; // Blocking or non-blocking mode
-    int id = ALooper_pollOnce(timeoutMillis, NULL, &events, (void**)&source);
+    int id;
+    do {
+       id = ALooper_pollOnce(timeoutMillis, NULL, &events, (void **) &source);
+    } while(id == ALOOPER_POLL_CALLBACK);
 
     if (id == LOOPER_ID_MAIN) {
         int8_t cmd = android_app_read_cmd(m_app);
@@ -203,7 +204,9 @@ bool AndroidWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
                 handled = 0;
             }
 
-            AInputQueue_finishEvent(m_app->inputQueue, aEvent, handled);
+            if(!handled) {
+                AInputQueue_finishEvent(m_app->inputQueue, aEvent, handled);
+            }
         }
 
     } else if (id == LOOPER_ID_USER) {
