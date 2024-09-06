@@ -62,10 +62,9 @@ Allocator::~Allocator()
     vmaDestroyAllocator(m_allocator);
 }
 
-void Allocator::CreateBuffer(const void* data, const uint64_t size, const VkBufferUsageFlags usage, const MemoryType memtype, VkBuffer& buffer, VmaAllocation& alloc, void** mapped)
+void Allocator::CreateBuffer(const void* data, const uint64_t size, const VkBufferUsageFlags usage, const MemoryType memoryType, VkBuffer& outBuffer, VmaAllocation& outAlloc, void** outMapped)
 {
-    if (memtype != MemoryType::DEVICE_LOCAL) // For CPU-visible memory, skip staging buffer
-    {
+    if (memoryType != MemoryType::DEVICE_LOCAL) { // For CPU-visible memory, skip staging buffer
         VkBufferCreateInfo bufInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
         bufInfo.size = size;
         bufInfo.usage = usage;
@@ -76,7 +75,7 @@ void Allocator::CreateBuffer(const void* data, const uint64_t size, const VkBuff
         allocCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
         VmaAllocationInfo allocInfo = {};
-        VKERRCHECK(vmaCreateBuffer(m_allocator, &bufInfo, &allocCreateInfo, &buffer, &alloc, &allocInfo));
+        VKERRCHECK(vmaCreateBuffer(m_allocator, &bufInfo, &allocCreateInfo, &outBuffer, &outAlloc, &allocInfo));
 
         if (data) {
             memcpy(allocInfo.pMappedData, data, size);
@@ -84,13 +83,10 @@ void Allocator::CreateBuffer(const void* data, const uint64_t size, const VkBuff
             memset(allocInfo.pMappedData, 0, size);
         }
 
-        if (mapped) {
-            *mapped = allocInfo.pMappedData;
+        if (outMapped) {
+            *outMapped = allocInfo.pMappedData;
         }
     } else { // For GPU-only memory, copy via staging buffer.
-
-        // TODO: Also skip staging buffer on integrated gpus.
-
         VkBufferCreateInfo stagingBufferCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
         stagingBufferCreateInfo.size = size;
         stagingBufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
@@ -116,9 +112,9 @@ void Allocator::CreateBuffer(const void* data, const uint64_t size, const VkBuff
         VmaAllocationCreateInfo allocCreateInfo = {};
         allocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
         allocCreateInfo.flags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-        VKERRCHECK(vmaCreateBuffer(m_allocator, &bufferCreateInfo, &allocCreateInfo, &buffer, &alloc, nullptr));
+        VKERRCHECK(vmaCreateBuffer(m_allocator, &bufferCreateInfo, &allocCreateInfo, &outBuffer, &outAlloc, nullptr));
 
-        CopyBuffer(stageBuffer, bufferCreateInfo.size, buffer);
+        CopyBuffer(stageBuffer, bufferCreateInfo.size, outBuffer);
 
         vmaDestroyBuffer(m_allocator, stageBuffer, stageBufferAlloc);
     }
@@ -129,7 +125,7 @@ void Allocator::DestroyBuffer(VkBuffer buffer, VmaAllocation alloc)
     vmaDestroyBuffer(m_allocator, buffer, alloc);
 }
 
-void Allocator::CreateImage(const VkExtent3D& extent, const VkImageType imageType, const VkFormat format, const VkSampleCountFlagBits sampleCount, const uint32_t mipLevels, const uint32_t layerCount, const VkImageTiling tiling, const VkImageUsageFlags usage, const VkImageCreateFlags flags, VkImage& outImage, VmaAllocation& outAlloc)
+void Allocator::CreateImage(const VkExtent3D& extent, const VkImageType imageType, const VkFormat format, const VkSampleCountFlagBits sampleCount, const uint32_t mipLevels, const uint32_t layerCount, const VkImageTiling tiling, const VkImageUsageFlags usage, const MemoryType memoryType, const VkImageCreateFlags flags, VkImage& outImage, VmaAllocation& outAlloc, void** outMapped)
 {
     VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
     imageInfo.flags = flags;
@@ -144,10 +140,20 @@ void Allocator::CreateImage(const VkExtent3D& extent, const VkImageType imageTyp
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-    VmaAllocationCreateInfo allocGpuOnlyCreateInfo = {};
-    allocGpuOnlyCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
-    allocGpuOnlyCreateInfo.flags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-    vmaCreateImage(m_allocator, &imageInfo, &allocGpuOnlyCreateInfo, &outImage, &outAlloc, nullptr);
+    VmaAllocationCreateInfo allocCreateInfo = {};
+    allocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+    if (memoryType != MemoryType::DEVICE_LOCAL) {
+        allocCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
+    } else {
+        allocCreateInfo.flags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+    }
+
+    VmaAllocationInfo allocInfo = {};
+    vmaCreateImage(m_allocator, &imageInfo, &allocCreateInfo, &outImage, &outAlloc, &allocInfo);
+
+    if (outMapped && memoryType != MemoryType::DEVICE_LOCAL) {
+        *outMapped = allocInfo.pMappedData;
+    }
 }
 
 void Allocator::DestroyImage(VkImage image, VmaAllocation alloc)
