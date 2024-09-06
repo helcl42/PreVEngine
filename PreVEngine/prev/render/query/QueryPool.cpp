@@ -24,7 +24,7 @@ QueryPool::~QueryPool()
     }
 }
 
-void QueryPool::ResetQuery(const uint32_t poolIndex, VkCommandBuffer commandBuffer)
+void QueryPool::Reset(const uint32_t poolIndex, VkCommandBuffer commandBuffer)
 {
     vkCmdResetQueryPool(commandBuffer, m_queryPools[poolIndex], 0, m_queryCount);
     m_queryPoolsValid[poolIndex] = true;
