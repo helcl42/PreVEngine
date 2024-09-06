@@ -9,8 +9,10 @@
 #include <prev/render/buffer/UniformBuffer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/pipeline/Pipeline.h>
+#include <prev/render/query/QueryPool.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
+#include <prev/util/Utils.h>
 
 namespace prev_test::render::renderer::sky {
 class SunRenderer final : public IRenderer<NormalRenderContext> {
@@ -65,11 +67,9 @@ private:
 
     static const uint32_t QueryPoolCount{ 3 };
 
-    VkQueryPool m_queryPools[QueryPoolCount] = {};
+    prev::util::CircularIndex<uint32_t> m_queryPoolIndex{ QueryPoolCount };
 
-    uint32_t m_queryPoolIndex{ 0 };
-
-    uint64_t m_frameIndex{ 0 };
+    std::unique_ptr<prev::render::query::QueryPool> m_queryPool{};
 };
 } // namespace prev_test::render::renderer::sky
 

@@ -18,7 +18,7 @@ public:
 
     void EndQuery(const uint32_t poolIndex, const uint32_t queryIndex, VkCommandBuffer commandBuffer);
 
-    void ResetQuery(const uint32_t poolIndex, VkCommandBuffer commandBuffer);
+    void Reset(const uint32_t poolIndex, VkCommandBuffer commandBuffer);
 
     VkQueryPool GetQueryPool(const uint32_t poolIndex) const;
 

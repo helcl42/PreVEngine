@@ -61,28 +61,20 @@ void SunRenderer::Init()
     m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsVS>>(m_allocator);
     m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
-    for (uint32_t i = 0; i < QueryPoolCount; ++i) {
-        VkQueryPoolCreateInfo queryPoolInfo = { VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO };
-        queryPoolInfo.queryType = VK_QUERY_TYPE_OCCLUSION;
-        queryPoolInfo.queryCount = 1;
-        VKERRCHECK(vkCreateQueryPool(m_device, &queryPoolInfo, nullptr, &m_queryPools[i]));
-    }
+    m_queryPool = std::make_unique<prev::render::query::QueryPool>(m_device, VK_QUERY_TYPE_OCCLUSION, QueryPoolCount, 1);
+    m_queryPoolIndex = prev::util::CircularIndex<uint32_t>{ QueryPoolCount };
 
-    m_frameIndex = 0;
-    m_queryPoolIndex = 0;
     m_passedSamples = 0;
 }
 
 void SunRenderer::BeforeRender(const NormalRenderContext& renderContext)
 {
-    if (m_frameIndex >= QueryPoolCount) {
 #if defined(TARGET_PLATFORM_ANDROID)
-        VkQueryResultFlags queryResultFlags{ VK_QUERY_RESULT_PARTIAL_BIT };
+    VkQueryResultFlags queryResultFlags{ VK_QUERY_RESULT_PARTIAL_BIT };
 #else
-        VkQueryResultFlags queryResultFlags{ VK_QUERY_RESULT_STATUS_COMPLETE_KHR };
+    VkQueryResultFlags queryResultFlags{ VK_QUERY_RESULT_STATUS_COMPLETE_KHR };
 #endif
-        const auto result{ vkGetQueryPoolResults(m_device, m_queryPools[(m_queryPoolIndex + QueryPoolCount - 1) % QueryPoolCount], 0, 1, sizeof(m_passedSamples), &m_passedSamples, sizeof(uint64_t), VK_QUERY_RESULT_64_BIT | queryResultFlags) };
-
+    if (m_queryPool->GetQueryResult(m_queryPoolIndex.GetNext(), 0, queryResultFlags | VK_QUERY_RESULT_64_BIT, m_passedSamples)) {
 #if defined(TARGET_PLATFORM_IOS) || defined(TARGET_PLATFORM_MACOS)
         const float ratio{ m_passedSamples > 0.0f ? 0.5f : 0.0f };
 #else
@@ -90,8 +82,7 @@ void SunRenderer::BeforeRender(const NormalRenderContext& renderContext)
 #endif
         prev::event::EventChannel::Post(prev_test::render::renderer::sky::SunVisibilityEvent{ ratio });
     }
-
-    vkCmdResetQueryPool(renderContext.commandBuffer, m_queryPools[m_queryPoolIndex], 0, 1);
+    m_queryPool->Reset(m_queryPoolIndex, renderContext.commandBuffer);
 }
 
 void SunRenderer::PreRender(const NormalRenderContext& renderContext)
@@ -115,7 +106,7 @@ void SunRenderer::Render(const NormalRenderContext& renderContext, const std::sh
 
         m_maxNumberOfSamples = static_cast<uint64_t>(xScale * static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) * yScale * static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y));
 
-        vkCmdBeginQuery(renderContext.commandBuffer, m_queryPools[m_queryPoolIndex], 0, 0);
+        m_queryPool->BeginQuery(m_queryPoolIndex, 0, renderContext.commandBuffer);
 
         auto uboVS = m_uniformsPoolVS->GetNext();
         UniformsVS uniformsVS{};
@@ -135,7 +126,7 @@ void SunRenderer::Render(const NormalRenderContext& renderContext, const std::sh
 
         vkCmdDrawIndexed(renderContext.commandBuffer, sunComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
 
-        vkCmdEndQuery(renderContext.commandBuffer, m_queryPools[m_queryPoolIndex], 0);
+        m_queryPool->EndQuery(m_queryPoolIndex, 0, renderContext.commandBuffer);
     }
 }
 
@@ -145,15 +136,12 @@ void SunRenderer::PostRender(const NormalRenderContext& renderContext)
 
 void SunRenderer::AfterRender(const NormalRenderContext& renderContext)
 {
-    m_queryPoolIndex = (m_queryPoolIndex + 1) % QueryPoolCount;
-    ++m_frameIndex;
+    ++m_queryPoolIndex;
 }
 
 void SunRenderer::ShutDown()
 {
-    for (uint32_t i = 0; i < QueryPoolCount; ++i) {
-        vkDestroyQueryPool(m_device, m_queryPools[i], nullptr);
-    }
+    m_queryPool = nullptr;
 
     m_pipeline = nullptr;
     m_shader = nullptr;
