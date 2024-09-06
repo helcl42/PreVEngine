@@ -45,6 +45,8 @@ public:
 
     VkImageLayout GetLayout() const;
 
+    void* GetMappedData() const;
+
     operator VkImage() const;
 
 private:
@@ -80,6 +82,8 @@ private:
     VkImageUsageFlags m_usageFlags;
 
     VkImageLayout m_layout;
+
+    void* m_mappedData;
 };
 
 } // namespace prev::render::buffer

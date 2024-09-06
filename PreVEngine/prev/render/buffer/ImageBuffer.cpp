@@ -15,7 +15,9 @@ ImageBuffer::~ImageBuffer()
 {
     m_allocator.GetQueue().WaitIdle();
 
-    vkDestroyImageView(m_allocator.GetDevice(), m_view, VK_NULL_HANDLE);
+    if (m_view) {
+        vkDestroyImageView(m_allocator.GetDevice(), m_view, VK_NULL_HANDLE);
+    }
     m_allocator.DestroyImage(m_image, m_allocation);
 }
 
@@ -47,9 +49,7 @@ void ImageBuffer::Copy(ImageBuffer& dstImage, VkCommandBuffer commandBuffer)
     const auto filter{ prev::core::format::HasDepthComponent(m_format) ? VK_FILTER_NEAREST : VK_FILTER_LINEAR };
 
     util::vk::TransitionImageLayout(commandBuffer, m_image, m_layout, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, m_mipLevels, m_aspectMask, m_layerCount);
-
     prev::util::vk::CopyImage(commandBuffer, m_image, m_extent, m_layerCount, m_aspectMask, filter, dstImage.GetLayout(), dstImage);
-
     util::vk::TransitionImageLayout(commandBuffer, m_image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, newLayout, m_mipLevels, m_aspectMask, m_layerCount);
 
     m_layout = newLayout;
@@ -112,12 +112,17 @@ VkImageCreateFlags ImageBuffer::GetCreateFlags() const
 
 VkImageUsageFlags ImageBuffer::GetUsageFlags() const
 {
-    return m_createFlags;
+    return m_usageFlags;
 }
 
 VkImageLayout ImageBuffer::GetLayout() const
 {
     return m_layout;
+}
+
+void* ImageBuffer::GetMappedData() const
+{
+    return m_mappedData;
 }
 
 ImageBuffer::operator VkImage() const

@@ -22,11 +22,11 @@ public:
     ~Allocator();
 
 public:
-    void CreateBuffer(const void* data, const uint64_t size, const VkBufferUsageFlags usage, const MemoryType memtype, VkBuffer& buffer, VmaAllocation& alloc, void** mapped = nullptr);
+    void CreateBuffer(const void* data, const uint64_t size, const VkBufferUsageFlags usage, const MemoryType memoryType, VkBuffer& outBuffer, VmaAllocation& outAlloc, void** outMapped = nullptr);
 
     void DestroyBuffer(VkBuffer buffer, VmaAllocation alloc);
 
-    void CreateImage(const VkExtent3D& extent, const VkImageType imageType, const VkFormat format, const VkSampleCountFlagBits sampleCount, const uint32_t mipLevels, const uint32_t layerCount, const VkImageTiling tiling, const VkImageUsageFlags usage, const VkImageCreateFlags flags, VkImage& outImage, VmaAllocation& outAlloc);
+    void CreateImage(const VkExtent3D& extent, const VkImageType imageType, const VkFormat format, const VkSampleCountFlagBits sampleCount, const uint32_t mipLevels, const uint32_t layerCount, const VkImageTiling tiling, const VkImageUsageFlags usage, const MemoryType memoryType, const VkImageCreateFlags flags, VkImage& outImage, VmaAllocation& outAlloc, void** outMapped = nullptr);
 
     void DestroyImage(VkImage image, VmaAllocation alloc);
 
