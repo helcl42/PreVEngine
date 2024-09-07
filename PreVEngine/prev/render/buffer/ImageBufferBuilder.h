@@ -34,9 +34,11 @@ public:
 
     ImageBufferBuilder& SetAspectMask(VkImageAspectFlags aspectMask);
 
-    ImageBufferBuilder& SeTiling(VkImageTiling tiling);
+    ImageBufferBuilder& SetTiling(VkImageTiling tiling);
 
     ImageBufferBuilder& SetLayerData(const std::vector<const uint8_t*>& layerData);
+
+    ImageBufferBuilder& SetHostMapped(bool hostMapped);
 
     std::unique_ptr<ImageBuffer> Build() const;
 
@@ -68,6 +70,8 @@ private:
     VkImageTiling m_tiling{ VK_IMAGE_TILING_OPTIMAL };
 
     std::vector<const uint8_t*> m_layersData;
+
+    bool m_hostMapped{ false };
 };
 
 } // namespace prev::render::buffer

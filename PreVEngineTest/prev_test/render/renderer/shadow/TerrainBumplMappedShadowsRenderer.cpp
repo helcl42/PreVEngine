@@ -5,8 +5,6 @@
 #include "../../../component/terrain/ITerrainComponent.h"
 #include "../../../component/transform/ITransformComponent.h"
 
-#include <prev/core/AllocatorProvider.h>
-#include <prev/core/DeviceProvider.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/ComponentRepository.h>
@@ -14,18 +12,17 @@
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::shadow {
-TerrainBumplMappedShadowsRenderer::TerrainBumplMappedShadowsRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass)
-    : m_renderPass(renderPass)
+TerrainBumplMappedShadowsRenderer::TerrainBumplMappedShadowsRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass)
+    : m_device{ device }
+    , m_allocator{ allocator }
+    , m_renderPass{ renderPass }
 {
 }
 
 void TerrainBumplMappedShadowsRenderer::Init()
 {
-    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
-    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
-
     // clang-format off
-    m_shader = prev::render::shader::ShaderBuilder{ *device }
+    m_shader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
             { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/shadow/terrain_bump_mapped_shadows_vert.spv") }
         })
@@ -49,20 +46,21 @@ void TerrainBumplMappedShadowsRenderer::Init()
     LOGI("Terrain Bump Mapped Shadows Shader created\n");
 
     // clang-format off
-    m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ *device, *m_shader, *m_renderPass }
+    m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ m_device, *m_shader, m_renderPass }
         .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
         .SetDepthTestEnabled(true)
         .SetDepthWriteEnabled(true)
         .SetBlendingModeEnabled(false)
         .SetAdditiveBlendingEnabled(false)
         .SetPolygonMode(VK_POLYGON_MODE_FILL)
+        .SetCullingMode(VK_CULL_MODE_BACK_BIT)
         .Build();
     // clang-format on
 
     LOGI("Terrain Bump Mapped Shadows Pipeline created\n");
 
-    m_uniformsPool = std::make_unique<prev::render::buffer::UniformBufferRing<Uniforms>>(*allocator);
-    m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPool = std::make_unique<prev::render::buffer::UniformBufferRing<Uniforms>>(m_allocator);
+    m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
 void TerrainBumplMappedShadowsRenderer::BeforeRender(const ShadowsRenderContext& renderContext)

@@ -13,9 +13,9 @@
 namespace prev_test::scene::terrain {
 class Terrain final : public prev::scene::graph::SceneNode {
 public:
-    Terrain(const int x, const int z);
+    Terrain(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const int x, const int z);
 
-    virtual ~Terrain() = default;
+    ~Terrain() = default;
 
 public:
     void Init() override;
@@ -25,10 +25,15 @@ public:
     void ShutDown() override;
 
 private:
-    const int m_xIndex;
+    prev::core::device::Device& m_device;
 
-    const int m_zIndex;
+    prev::core::memory::Allocator& m_allocator;
 
+    int m_xIndex;
+
+    int m_zIndex;
+
+private:
     std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
     std::shared_ptr<prev_test::component::terrain::ITerrainComponenet> m_terrainComponent;

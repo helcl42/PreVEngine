@@ -2,8 +2,6 @@
 
 #include "buffer/ImageBufferBuilder.h"
 
-#include "../core/AllocatorProvider.h"
-#include "../core/DeviceProvider.h"
 #include "../util/MathUtils.h"
 #include "../util/VkUtils.h"
 
@@ -50,7 +48,7 @@ Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allo
 
 Swapchain::~Swapchain()
 {
-    vkDeviceWaitIdle(m_device);
+    m_device.WaitIdle();
 
     if (m_commandPool != VK_NULL_HANDLE) {
         vkDestroyCommandPool(m_device, m_commandPool, nullptr);
@@ -211,7 +209,7 @@ void Swapchain::Apply()
     VKERRCHECK(vkCreateSwapchainKHR(m_device, &m_swapchainCreateInfo, nullptr, &m_swapchain));
 
     if (m_swapchainCreateInfo.oldSwapchain != VK_NULL_HANDLE) {
-        vkDeviceWaitIdle(m_device);
+        m_device.WaitIdle();
         vkDestroySwapchainKHR(m_device, m_swapchainCreateInfo.oldSwapchain, VK_NULL_HANDLE);
         for (auto& swapchainBuffer : m_swapchainBuffers) {
             swapchainBuffer.Destroy(m_device);
@@ -227,7 +225,7 @@ void Swapchain::Apply()
                         .SetType(VK_IMAGE_TYPE_2D)
                         .SetViewType(imageViewType)
                         .SetLayerCount(m_viewCount)
-                        .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
+                        .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
                         .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
                         .Build();
     if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
@@ -238,7 +236,7 @@ void Swapchain::Apply()
                                 .SetViewType(imageViewType)
                                 .SetLayerCount(m_viewCount)
                                 .SetSampleCount(m_sampleCount)
-                                .SetUsageFlags(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
+                                .SetUsageFlags(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
                                 .SetLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
                                 .Build();
         m_msaaDepthBuffer = buffer::ImageBufferBuilder{ m_allocator }
@@ -248,7 +246,7 @@ void Swapchain::Apply()
                                 .SetViewType(imageViewType)
                                 .SetLayerCount(m_viewCount)
                                 .SetSampleCount(m_sampleCount)
-                                .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
+                                .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
                                 .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
                                 .Build();
     }

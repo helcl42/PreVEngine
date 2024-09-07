@@ -15,7 +15,9 @@ public:
 public:
     void UpdateLayout(const VkImageLayout newLayout, VkCommandBuffer commandBuffer);
 
-    void GenerateMipMaps(const VkImageLayout newLLayout, VkCommandBuffer commandBuffer);
+    void GenerateMipMaps(VkCommandBuffer commandBuffer);
+
+    void Copy(ImageBuffer& dstImage, VkCommandBuffer commandBuffer);
 
     VkExtent3D GetExtent() const;
 
@@ -42,6 +44,8 @@ public:
     VkImageUsageFlags GetUsageFlags() const;
 
     VkImageLayout GetLayout() const;
+
+    void* GetMappedData() const;
 
     operator VkImage() const;
 
@@ -78,6 +82,8 @@ private:
     VkImageUsageFlags m_usageFlags;
 
     VkImageLayout m_layout;
+
+    void* m_mappedData;
 };
 
 } // namespace prev::render::buffer

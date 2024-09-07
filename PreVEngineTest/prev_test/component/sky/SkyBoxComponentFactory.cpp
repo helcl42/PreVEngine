@@ -6,9 +6,13 @@
 #include "../../render/mesh/MeshFactory.h"
 #include "../../render/model/ModelFactory.h"
 
-#include <prev/core/AllocatorProvider.h>
-
 namespace prev_test::component::sky {
+SkyBoxComponentFactory::SkyBoxComponentFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
+    : m_device{ device }
+    , m_allocator{ allocator }
+{
+}
+
 std::unique_ptr<ISkyBoxComponent> SkyBoxComponentFactory::Create() const
 {
     const std::vector<std::string> materialPaths = {
@@ -20,16 +24,9 @@ std::unique_ptr<ISkyBoxComponent> SkyBoxComponentFactory::Create() const
         prev_test::common::AssetManager::Instance().GetAssetPath("SkyBoxes/Sky/front.png"),
     };
 
-    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
-
-    prev_test::render::material::MaterialFactory materialFactory{};
-    auto material{ materialFactory.CreateCubeMap({ glm::vec4{ 1.0f }, 1.0f, 0.0f, VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE }, materialPaths, *allocator) };
-
-    prev_test::render::mesh::MeshFactory meshFactory{};
-    auto mesh{ meshFactory.CreateCube() };
-
-    prev_test::render::model::ModelFactory modelFactory{};
-    auto model{ modelFactory.Create(std::move(mesh), *allocator) };
+    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.CreateCubeMap({ glm::vec4{ 1.0f }, 1.0f, 0.0f, VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE }, materialPaths) };
+    auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateCube() };
+    auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 
     auto skyBox = std::make_unique<SkyBoxComponent>();
     skyBox->m_model = std::move(model);

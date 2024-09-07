@@ -2,6 +2,7 @@
 #define __FLARE_H__
 
 #include <prev/common/Common.h>
+#include <prev/core/device/Device.h>
 #include <prev/render/buffer/ImageBuffer.h>
 #include <prev/render/image/ImageFactory.h>
 #include <prev/render/sampler/Sampler.h>
@@ -9,7 +10,7 @@
 namespace prev_test::component::sky {
 class Flare {
 public:
-    Flare(const std::shared_ptr<prev::render::buffer::ImageBuffer>& imageBuffer, const std::shared_ptr<prev::render::sampler::Sampler>& sampler, const float scale);
+    Flare(prev::core::device::Device& device, const std::shared_ptr<prev::render::buffer::ImageBuffer>& imageBuffer, const std::shared_ptr<prev::render::sampler::Sampler>& sampler, const float scale);
 
     ~Flare();
 
@@ -25,6 +26,8 @@ public:
     void SetScreenSpacePosition(const glm::vec2& position);
 
 private:
+    prev::core::device::Device& m_device;
+
     std::shared_ptr<prev::render::buffer::ImageBuffer> m_imageBuffer{};
 
     std::shared_ptr<prev::render::sampler::Sampler> m_sampler{};

@@ -3,7 +3,33 @@
 #include "MeshUtil.h"
 
 namespace prev_test::render::mesh {
-PlaneMesh::PlaneMesh(const float xSize, const float zSize, const uint32_t xDivs, const uint32_t zDivs, const float textureCoordUMax, const float textureCoordVMax, bool generateTangentBiTangent)
+namespace {
+    glm::vec3 CreateConstellatedVertex(const FlatMeshConstellation constellation, const float x, const float z)
+    {
+        switch (constellation) {
+        case FlatMeshConstellation::ZERO_X:
+            return { 0.0f, x, z };
+        case FlatMeshConstellation::ZERO_Z:
+            return { x, z, 0.0f };
+        default:
+            return { x, 0.0f, z };
+        }
+    }
+
+    glm::vec3 CreateConstellatedNormal(const FlatMeshConstellation constellation)
+    {
+        switch (constellation) {
+        case FlatMeshConstellation::ZERO_X:
+            return { 1.0f, 0.0f, 0.0f };
+        case FlatMeshConstellation::ZERO_Z:
+            return { 0.0f, 0.0f, 1.0f };
+        default:
+            return { 0.0f, 1.0f, 0.0f };
+        }
+    }
+} // namespace
+
+PlaneMesh::PlaneMesh(const float xSize, const float zSize, const uint32_t xDivs, const uint32_t zDivs, const float textureCoordUMax, const float textureCoordVMax, const FlatMeshConstellation constellation, const bool generateTangentBiTangent)
 {
     if (generateTangentBiTangent) {
         m_vertexLayout = { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC2, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3 } };
@@ -26,9 +52,9 @@ PlaneMesh::PlaneMesh(const float xSize, const float zSize, const uint32_t xDivs,
         for (uint32_t j = 0; j <= xDivs; ++j) {
             const float x{ jFactor * j - x2 };
 
-            const glm::vec3 vertex{ x, 0.0f, z };
-            const glm::vec2 textureCoord{ j * texi, i * texj };
-            const glm::vec3 normal{ 0.0f, 1.0f, 0.0f };
+            const glm::vec3 vertex{ CreateConstellatedVertex(constellation, x, z) };
+            const glm::vec2 textureCoord{ j * texj, i * texi };
+            const glm::vec3 normal{ CreateConstellatedNormal(constellation) };
 
             m_vertices.push_back(vertex);
             textureCoords.push_back(textureCoord);
@@ -42,11 +68,12 @@ PlaneMesh::PlaneMesh(const float xSize, const float zSize, const uint32_t xDivs,
         for (uint32_t j = 0; j < xDivs; j++) {
             const uint32_t indices[] = {
                 rowStart + j,
+                rowStart + j + 1,
+                nextRowStart + j + 1,
+
                 nextRowStart + j + 1,
                 nextRowStart + j,
                 rowStart + j,
-                rowStart + j + 1,
-                nextRowStart + j + 1
             };
 
             for (const auto index : indices) {

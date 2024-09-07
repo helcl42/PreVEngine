@@ -7,7 +7,7 @@
 namespace prev_test::render::mesh {
 class PlaneMesh final : public prev_test::render::IMesh {
 public:
-    PlaneMesh(const float xSize, const float zSize, const uint32_t xDivs, const uint32_t zDivs, const float textureCoordUMax = 1.0f, const float textureCoordVMax = 1.0f, bool generateTangentBiTangent = false);
+    PlaneMesh(const float xSize, const float zSize, const uint32_t xDivs, const uint32_t zDivs, const float textureCoordUMax = 1.0f, const float textureCoordVMax = 1.0f, const FlatMeshConstellation constellation = FlatMeshConstellation::ZERO_Y, const bool generateTangentBiTangent = false);
 
     ~PlaneMesh() = default;
 

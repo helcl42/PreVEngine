@@ -18,11 +18,13 @@ VkImageView CreateImageView(const VkDevice device, const VkImage image, const Vk
 
 void TransitionImageLayout(const VkCommandBuffer commandBuffer, const VkImage image, const VkImageLayout oldLayout, const VkImageLayout newLayout, const uint32_t mipLevels, const VkImageAspectFlags aspectMask, const uint32_t layersCount);
 
-void GenerateMipmaps(const VkCommandBuffer commandBuffer, const VkImage image, const VkExtent3D& extent, const uint32_t mipLevels, const uint32_t layersCount, const VkImageAspectFlags aspectMask, const VkImageLayout newLayout);
+void GenerateMipmaps(const VkCommandBuffer commandBuffer, const VkImage image, const VkExtent3D& extent, const uint32_t mipLevels, const uint32_t layersCount, const VkImageAspectFlags aspectMask, const VkFilter filter, const VkImageLayout layout);
 
 void CopyBufferToImage(const VkCommandBuffer commandBuffer, const VkExtent3D& extent, const VkBuffer buffer, const uint32_t layerIndex, const VkImageLayout dstImageLayout, VkImage dstImage);
 
 void CopyBuffer(const VkCommandBuffer commandBuffer, const VkBuffer srcBuffer, const VkDeviceSize size, VkBuffer dstBuffer);
+
+void CopyImage(const VkCommandBuffer commandBuffer, const VkImage srcImage, const VkExtent3D& extent, const uint32_t layersCount, const VkImageAspectFlags aspectMask, const VkFilter filter, const VkImageLayout layout, VkImage dstImage);
 
 VkFramebuffer CreateFrameBuffer(const VkDevice device, const VkRenderPass& renderPass, const std::vector<VkImageView>& imageViews, const VkExtent2D& extent);
 

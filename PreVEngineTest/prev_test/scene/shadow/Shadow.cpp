@@ -1,4 +1,5 @@
 #include "Shadow.h"
+
 #include "../../component/camera/ICameraComponent.h"
 #include "../../component/light/ILightComponent.h"
 #include "../../component/shadow/ShadowsComponentFactory.h"
@@ -6,14 +7,16 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::scene::shadow {
-Shadows::Shadows()
+Shadows::Shadows(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
     : SceneNode()
+    , m_device{ device }
+    , m_allocator{ allocator }
 {
 }
 
 void Shadows::Init()
 {
-    prev_test::component::shadow::ShadowsComponentFactory shadowsFactory{};
+    prev_test::component::shadow::ShadowsComponentFactory shadowsFactory{ m_device, m_allocator };
     auto shadowsCompoent{ shadowsFactory.Create() };
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::shadow::IShadowsComponent>(GetThis(), std::move(shadowsCompoent), TAG_SHADOWS_COMPONENT);
 

@@ -3,13 +3,26 @@
 
 #include "ISunComponent.h"
 
+#include <prev/core/device/Device.h>
+#include <prev/core/memory/Allocator.h>
+
 namespace prev_test::component::sky {
 class SunComponentFactory final {
+public:
+    SunComponentFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator);
+
+    ~SunComponentFactory() = default;
+
 public:
     std::unique_ptr<ISunComponent> Create() const;
 
 private:
-    std::unique_ptr<Flare> CreateFlare(prev::core::memory::Allocator& allocator, const std::string& filePath, const float scale) const;
+    std::unique_ptr<Flare> CreateFlare(const std::string& filePath, const float scale) const;
+
+private:
+    prev::core::device::Device& m_device;
+
+    prev::core::memory::Allocator& m_allocator;
 };
 } // namespace prev_test::component::sky
 

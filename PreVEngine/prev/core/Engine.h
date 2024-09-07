@@ -36,13 +36,17 @@ public:
 public:
     std::shared_ptr<prev::scene::IScene> GetScene() const;
 
-    std::shared_ptr<prev::core::device::Device> GetDevice() const;
-
     std::shared_ptr<prev::render::Swapchain> GetSwapchain() const;
 
     std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const;
 
     std::shared_ptr<prev::render::IRootRenderer> GetRootRenderer() const;
+
+    std::shared_ptr<prev::core::memory::Allocator> GetAllocator() const;
+
+    std::shared_ptr<prev::core::device::Device> GetDevice() const;
+
+    const EngineConfig& GetConfig() const;
 
 public:
     void operator()(const prev::window::WindowChangeEvent& windowChangeEvent);

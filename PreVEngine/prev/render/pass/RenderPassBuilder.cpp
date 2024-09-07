@@ -1,6 +1,7 @@
 #include "RenderPassBuilder.h"
 
 #include "../../common/Logger.h"
+#include "../../core/Formats.h"
 #include "../../util/MathUtils.h"
 
 namespace prev::render::pass {
@@ -20,12 +21,12 @@ RenderPassBuilder& RenderPassBuilder::AddColorAttachment(const VkFormat format, 
     return *this;
 }
 
-RenderPassBuilder& RenderPassBuilder::AddDepthAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount, const VkClearDepthStencilValue clearVal, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp, const bool resolveAttachment)
+RenderPassBuilder& RenderPassBuilder::AddDepthAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount, const VkClearDepthStencilValue clearVal, const VkImageLayout finalLayout, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp, const bool resolveAttachment)
 {
     VkClearValue clearDepth{};
     clearDepth.depthStencil = clearVal;
 
-    m_attachmentInfos.push_back(AttachmentCreateInfo{ clearDepth, format, sampleCount, DEFAULT_DEPTH_LAYOUT, loadOp, storeOp, resolveAttachment });
+    m_attachmentInfos.push_back(AttachmentCreateInfo{ clearDepth, format, sampleCount, finalLayout, loadOp, storeOp, resolveAttachment });
 
     return *this;
 }
@@ -51,7 +52,7 @@ std::unique_ptr<RenderPass> RenderPassBuilder::Build() const
 
     for (const auto& attachmentCreateInfo : m_attachmentInfos) {
         renderPass->m_clearValues.push_back(attachmentCreateInfo.clearValue);
-        if (attachmentCreateInfo.finalLayout == DEFAULT_DEPTH_LAYOUT) {
+        if (prev::core::format::HasDepthComponent(attachmentCreateInfo.format)) {
             renderPass->m_depthFormats.push_back(attachmentCreateInfo.format);
             renderPass->m_depthResolveAttachments.push_back(attachmentCreateInfo.resolveAttachment);
         } else {

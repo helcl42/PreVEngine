@@ -57,7 +57,7 @@ glm::vec3 GetRightVector(const glm::quat& q)
 
 glm::vec3 GetForwardVector(const glm::quat& q)
 {
-    return glm::normalize(q * glm::vec3(0.0f, 0.0f, 1.0f));
+    return glm::normalize(q * glm::vec3(0.0f, 0.0f, -1.0f));
 }
 
 glm::vec3 GetRightVector(const glm::mat4& viewMatrix)

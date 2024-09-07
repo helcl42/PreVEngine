@@ -106,7 +106,7 @@ ImageBufferBuilder& ImageBufferBuilder::SetAspectMask(VkImageAspectFlags aspectM
     return *this;
 }
 
-ImageBufferBuilder& ImageBufferBuilder::SeTiling(VkImageTiling tiling)
+ImageBufferBuilder& ImageBufferBuilder::SetTiling(VkImageTiling tiling)
 {
     m_tiling = tiling;
     return *this;
@@ -115,6 +115,12 @@ ImageBufferBuilder& ImageBufferBuilder::SeTiling(VkImageTiling tiling)
 ImageBufferBuilder& ImageBufferBuilder::SetLayerData(const std::vector<const uint8_t*>& layerData)
 {
     m_layersData = layerData;
+    return *this;
+}
+
+ImageBufferBuilder& ImageBufferBuilder::SetHostMapped(bool hostMapped)
+{
+    m_hostMapped = hostMapped;
     return *this;
 }
 
@@ -140,12 +146,14 @@ std::unique_ptr<ImageBuffer> ImageBufferBuilder::Build() const
     const auto imageViewType{ m_viewType == VK_IMAGE_VIEW_TYPE_MAX_ENUM ? DeduceImageViewTypeFromImageType(m_type) : m_viewType };
     const auto aspectMask{ m_aspectMask == VK_IMAGE_ASPECT_NONE_KHR ? DeduceApectMaskFromFormat(m_format) : m_aspectMask };
     const auto mipMapLevels{ m_mipMapEnabled ? prev::util::math::Log2(std::max(m_extent.width, m_extent.height)) + 1 : 1 };
+    const auto memoryType{ m_hostMapped ? prev::core::memory::MemoryType::HOST_MAPPED : prev::core::memory::MemoryType::DEVICE_LOCAL };
 
     VkImage image;
     VmaAllocation allocation;
-    m_allocator.CreateImage(m_extent, m_type, m_format, m_sampleCount, mipMapLevels, m_layerCount, m_tiling, m_usageFlags, m_createFlags, image, allocation);
+    void* mappedData{};
+    m_allocator.CreateImage(m_extent, m_type, m_format, m_sampleCount, mipMapLevels, m_layerCount, m_tiling, m_usageFlags, memoryType, m_createFlags, image, allocation, &mappedData);
 
-    auto imageView{ prev::util::vk::CreateImageView(m_allocator.GetDevice(), image, m_format, imageViewType, mipMapLevels, aspectMask, m_layerCount) };
+    auto imageView{ m_hostMapped ? nullptr : prev::util::vk::CreateImageView(m_allocator.GetDevice(), image, m_format, imageViewType, mipMapLevels, aspectMask, m_layerCount) };
 
     auto imageBuffer{ std::make_unique<ImageBuffer>(m_allocator) };
     imageBuffer->m_extent = m_extent;
@@ -163,6 +171,7 @@ std::unique_ptr<ImageBuffer> ImageBufferBuilder::Build() const
     imageBuffer->m_createFlags = m_createFlags;
     imageBuffer->m_usageFlags = m_usageFlags;
     imageBuffer->m_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imageBuffer->m_mappedData = mappedData;
 
     prev::core::CommandsExecutor commandsExecutor{ m_allocator.GetDevice(), m_allocator.GetQueue() };
     commandsExecutor.ExecuteImmediate([&](VkCommandBuffer commandBuffer) {
@@ -176,16 +185,10 @@ std::unique_ptr<ImageBuffer> ImageBufferBuilder::Build() const
     }
 
     commandsExecutor.ExecuteImmediate([&](VkCommandBuffer commandBuffer) {
-        if (!m_layersData.empty()) {
-            if (mipMapLevels > 1) {
-                // prev::util::vk::GetFormatProperties(); // check if possible -> is linear sanpler available?
-                imageBuffer->GenerateMipMaps(m_layout, commandBuffer);
-            } else {
-                imageBuffer->UpdateLayout(m_layout, commandBuffer);
-            }
-        } else {
-            imageBuffer->UpdateLayout(m_layout, commandBuffer);
+        if (!m_layersData.empty() && mipMapLevels > 1) {
+            imageBuffer->GenerateMipMaps(commandBuffer);
         }
+        imageBuffer->UpdateLayout(m_layout, commandBuffer);
     });
 
     return imageBuffer;

@@ -8,10 +8,12 @@
 #include "../../common/intersection/Sphere.h"
 #include "../../render/IModel.h"
 
+#include <prev/core/memory/Allocator.h>
+
 namespace prev_test::component::ray_casting {
 class SphereBoundingVolumeComponent : public IBoundingVolumeComponent {
 public:
-    SphereBoundingVolumeComponent(const prev_test::common::intersection::Sphere& sphere, const float scale, const glm::vec3& offset);
+    SphereBoundingVolumeComponent(prev::core::memory::Allocator& allocator, const prev_test::common::intersection::Sphere& sphere, const float scale, const glm::vec3& offset);
 
     ~SphereBoundingVolumeComponent() = default;
 
@@ -33,9 +35,11 @@ private:
     static prev_test::common::intersection::Sphere OffsetSphere(const prev_test::common::intersection::Sphere& sphere, const glm::vec3& offset);
 
 private:
-    const float m_scale;
+    prev::core::memory::Allocator& m_allocator;
 
-    const glm::vec3 m_offset;
+    float m_scale;
+
+    glm::vec3 m_offset;
 
 #ifdef RENDER_BOUNDING_VOLUMES
     std::shared_ptr<prev_test::render::IModel> m_model;
