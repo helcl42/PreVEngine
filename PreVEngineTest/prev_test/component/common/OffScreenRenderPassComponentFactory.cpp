@@ -88,6 +88,7 @@ std::unique_ptr<IOffScreenRenderPassComponent> OffScreenRenderPassComponentFacto
         depthBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
                           .SetExtent({ extent.width, extent.height, 1 })
                           .SetFormat(depthFormat)
+                          .SetType(VK_IMAGE_TYPE_2D)
                           .SetViewType(prev::util::vk::GetImageViewType(viewCount))
                           .SetLayerCount(viewCount)
                           .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
@@ -103,6 +104,7 @@ std::unique_ptr<IOffScreenRenderPassComponent> OffScreenRenderPassComponentFacto
         auto colorImageBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
                                     .SetExtent({ extent.width, extent.height, 1 })
                                     .SetFormat(colorFormat)
+                                    .SetType(VK_IMAGE_TYPE_2D)
                                     .SetViewType(prev::util::vk::GetImageViewType(viewCount))
                                     .SetLayerCount(viewCount)
                                     .SetUsageFlags(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
