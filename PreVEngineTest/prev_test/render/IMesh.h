@@ -55,6 +55,12 @@ public:
 public:
     virtual ~IMesh() = default;
 };
+
+enum class FlatMeshConstellation {
+    ZERO_X = 0,
+    ZERO_Y = 1,
+    ZERO_Z = 2,
+};
 } // namespace prev_test::render
 
 #endif // !__IMESH_H__

@@ -2,9 +2,7 @@
 
 #include "../../../common/AssetManager.h"
 
-#include <prev/core/AllocatorProvider.h>
 #include <prev/core/CommandsExecutor.h>
-#include <prev/core/DeviceProvider.h>
 #include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/buffer/UniformBuffer.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
@@ -12,6 +10,12 @@
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::component::sky::cloud {
+CloudsFactory::CloudsFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
+    : m_device{ device }
+    , m_allocator{ allocator }
+{
+}
+
 CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) const
 {
     struct Uniforms {
@@ -25,12 +29,10 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
 
     const auto weatherImageFormat{ VK_FORMAT_R8G8B8A8_UNORM };
 
-    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
-    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
-    auto computeQueue{ device->GetQueue(prev::core::device::QueueType::COMPUTE) };
+    auto computeQueue{ m_device.GetQueue(prev::core::device::QueueType::COMPUTE) };
 
     // clang-format off
-    auto shader = prev::render::shader::ShaderBuilder{ *device }
+    auto shader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
             { VK_SHADER_STAGE_COMPUTE_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/clouds_comp.spv") }
         })
@@ -43,14 +45,14 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
     // clang-format on
 
     // clang-format off
-    auto pipeline = prev::render::pipeline::ComputePipelineBuilder{ *device, *shader }
+    auto pipeline = prev::render::pipeline::ComputePipelineBuilder{ m_device, *shader }
         .Build();
     // clang-format on
 
-    auto uniformsPool = std::make_unique<prev::render::buffer::UniformBufferRing<Uniforms>>(*allocator);
-    uniformsPool->AdjustCapactity(1, static_cast<uint32_t>(device->GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    auto uniformsPool = std::make_unique<prev::render::buffer::UniformBufferRing<Uniforms>>(m_allocator);
+    uniformsPool->AdjustCapactity(1, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
 
-    auto weatherImageBuffer = prev::render::buffer::ImageBufferBuilder{ *allocator }
+    auto weatherImageBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
                                   .SetExtent({ width, height, 1 })
                                   .SetFormat(VK_FORMAT_R8G8B8A8_UNORM)
                                   .SetType(VK_IMAGE_TYPE_2D)
@@ -58,9 +60,9 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
                                   .SetUsageFlags(VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT)
                                   .SetLayout(VK_IMAGE_LAYOUT_GENERAL)
                                   .Build();
-    auto sampler = std::make_unique<prev::render::sampler::Sampler>(*device, static_cast<float>(weatherImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR);
+    auto sampler = std::make_unique<prev::render::sampler::Sampler>(m_device, static_cast<float>(weatherImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR);
 
-    prev::core::CommandsExecutor commandsExecutor{ *device, *computeQueue };
+    prev::core::CommandsExecutor commandsExecutor{ m_device, *computeQueue };
     commandsExecutor.ExecuteImmediate([&](VkCommandBuffer commandBuffer) {
         Uniforms uniforms{};
         uniforms.textureSize = glm::vec4(width, height, 0, 0);
@@ -82,7 +84,8 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
 
         vkCmdDispatch(commandBuffer, 128, 128, 1);
 
-        weatherImageBuffer->GenerateMipMaps(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, commandBuffer);
+        weatherImageBuffer->GenerateMipMaps(commandBuffer);
+        weatherImageBuffer->UpdateLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, commandBuffer);
     });
 
     pipeline = nullptr;

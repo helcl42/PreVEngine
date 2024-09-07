@@ -4,30 +4,28 @@
 #include "../../common/intersection/AABB.h"
 #include "../../common/intersection/Frustum.h"
 
-#include <prev/core/DeviceProvider.h>
 #include <prev/util/MathUtils.h>
 
 namespace prev_test::component::shadow {
-ShadowsComponent::ShadowsComponent(const uint32_t cascadesCount, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, const std::shared_ptr<prev::render::sampler::Sampler>& sampler, const std::vector<ShadowsCascade>& cascades)
-    : m_cascadesCount(cascadesCount)
-    , m_renderPass(renderPass)
-    , m_depthBuffer(depthBuffer)
-    , m_sampler(sampler)
-    , m_cascades(cascades)
+ShadowsComponent::ShadowsComponent(prev::core::device::Device& device, const uint32_t cascadesCount, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, const std::shared_ptr<prev::render::sampler::Sampler>& sampler, const std::vector<ShadowsCascade>& cascades)
+    : m_device{ device }
+    , m_cascadesCount{ cascadesCount }
+    , m_renderPass{ renderPass }
+    , m_depthBuffer{ depthBuffer }
+    , m_sampler{ sampler }
+    , m_cascades{ cascades }
 {
 }
 
 ShadowsComponent::~ShadowsComponent()
 {
-    auto device{ prev::core::DeviceProvider::Instance().GetDevice() };
-
-    vkDeviceWaitIdle(*device);
+    m_device.WaitIdle();
 
     m_sampler = nullptr;
     m_renderPass = nullptr;
 
     for (uint32_t i = 0; i < m_cascadesCount; ++i) {
-        m_cascades[i].Destroy(*device);
+        m_cascades[i].Destroy(m_device);
     }
 
     m_depthBuffer = nullptr;

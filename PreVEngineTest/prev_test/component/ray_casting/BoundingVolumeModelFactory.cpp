@@ -2,8 +2,6 @@
 
 #include "../../render/model/Model.h"
 
-#include <prev/core/AllocatorProvider.h>
-
 namespace prev_test::component::ray_casting {
 namespace {
     std::tuple<std::vector<glm::vec3>, std::vector<uint32_t>> GetBoxData(const std::vector<glm::vec3>& boxPoints)
@@ -118,17 +116,19 @@ namespace {
     }
 } // namespace
 
+BoundingVolumeModelFactory::BoundingVolumeModelFactory(prev::core::memory::Allocator& allocator)
+    : m_allocator{ allocator }
+{
+}
+
 std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateAABBModel(const prev_test::common::intersection::AABB& aabb) const
 {
     const auto aabbPoints{ aabb.GetPoints() };
-
     const auto [vertices, indices] = GetBoxData(aabbPoints);
 
-    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
-
-    auto vertexBuffer{ std::make_unique<prev::render::buffer::HostMappedVertexBuffer>(*allocator, static_cast<uint32_t>(vertices.size())) };
+    auto vertexBuffer{ std::make_unique<prev::render::buffer::HostMappedVertexBuffer>(m_allocator, static_cast<uint32_t>(vertices.size())) };
     vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
-    auto indexBuffer{ std::make_unique<prev::render::buffer::HostMappedIndexBuffer>(*allocator, static_cast<uint32_t>(indices.size())) };
+    auto indexBuffer{ std::make_unique<prev::render::buffer::HostMappedIndexBuffer>(m_allocator, static_cast<uint32_t>(indices.size())) };
     indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
 
     return std::make_unique<prev_test::render::model::Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
@@ -137,11 +137,10 @@ std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateAAB
 std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateAABBModel(const prev_test::common::intersection::AABB& aabb, const std::shared_ptr<prev_test::render::IModel>& model) const
 {
     const auto aabbPoints{ aabb.GetPoints() };
-
     const auto [vertices, indices] = GetBoxData(aabbPoints);
 
-    const auto& vertexBuffer{ model->GetVertexBuffer() };
-    const auto& indexBuffer{ model->GetIndexBuffer() };
+    auto vertexBuffer{ model->GetVertexBuffer() };
+    auto indexBuffer{ model->GetIndexBuffer() };
     vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
     indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
 
@@ -151,14 +150,11 @@ std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateAAB
 std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateOBBModel(const prev_test::common::intersection::OBB& obb) const
 {
     const auto obbPoints{ obb.GetPoints() };
-
     const auto [vertices, indices] = GetBoxData(obbPoints);
 
-    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
-
-    auto vertexBuffer{ std::make_unique<prev::render::buffer::HostMappedVertexBuffer>(*allocator, static_cast<uint32_t>(vertices.size())) };
+    auto vertexBuffer{ std::make_unique<prev::render::buffer::HostMappedVertexBuffer>(m_allocator, static_cast<uint32_t>(vertices.size())) };
     vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
-    auto indexBuffer{ std::make_unique<prev::render::buffer::HostMappedIndexBuffer>(*allocator, static_cast<uint32_t>(indices.size())) };
+    auto indexBuffer{ std::make_unique<prev::render::buffer::HostMappedIndexBuffer>(m_allocator, static_cast<uint32_t>(indices.size())) };
     indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
 
     return std::make_unique<prev_test::render::model::Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
@@ -167,11 +163,10 @@ std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateOBB
 std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateOBBModel(const prev_test::common::intersection::OBB& obb, const std::shared_ptr<prev_test::render::IModel>& model) const
 {
     const auto obbPoints{ obb.GetPoints() };
-
     const auto [vertices, indices] = GetBoxData(obbPoints);
 
-    const auto& vertexBuffer{ model->GetVertexBuffer() };
-    const auto& indexBuffer{ model->GetIndexBuffer() };
+    auto vertexBuffer{ model->GetVertexBuffer() };
+    auto indexBuffer{ model->GetIndexBuffer() };
     vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
     indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
 
@@ -182,11 +177,9 @@ std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateSph
 {
     const auto [vertices, indices] = GenerateSphereData(sphere);
 
-    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
-
-    auto vertexBuffer{ std::make_unique<prev::render::buffer::HostMappedVertexBuffer>(*allocator, static_cast<uint32_t>(vertices.size())) };
+    auto vertexBuffer{ std::make_unique<prev::render::buffer::HostMappedVertexBuffer>(m_allocator, static_cast<uint32_t>(vertices.size())) };
     vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
-    auto indexBuffer{ std::make_unique<prev::render::buffer::HostMappedIndexBuffer>(*allocator, static_cast<uint32_t>(indices.size())) };
+    auto indexBuffer{ std::make_unique<prev::render::buffer::HostMappedIndexBuffer>(m_allocator, static_cast<uint32_t>(indices.size())) };
     indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
 
     return std::make_unique<prev_test::render::model::Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
@@ -196,8 +189,8 @@ std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateSph
 {
     const auto [vertices, indices] = GenerateSphereData(sphere);
 
-    const auto& vertexBuffer{ model->GetVertexBuffer() };
-    const auto& indexBuffer{ model->GetIndexBuffer() };
+    auto vertexBuffer{ model->GetVertexBuffer() };
+    auto indexBuffer{ model->GetIndexBuffer() };
     vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
     indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
 

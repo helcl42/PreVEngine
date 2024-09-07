@@ -7,6 +7,8 @@
 #include "../component/render/IAnimationRenderComponent.h"
 #include "../component/transform/ITransformComponent.h"
 
+#include <prev/core/device/Device.h>
+#include <prev/core/memory/Allocator.h>
 #include <prev/event/EventHandler.h>
 #include <prev/input/keyboard/KeyboardEvents.h>
 #include <prev/input/mouse/MouseEvents.h>
@@ -16,9 +18,9 @@
 namespace prev_test::scene {
 class Player final : public prev::scene::graph::SceneNode {
 public:
-    Player(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale);
+    Player(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale);
 
-    virtual ~Player() = default;
+    ~Player() = default;
 
 public:
     void Init() override;
@@ -52,11 +54,15 @@ private:
     static const inline uint32_t JUMP_ANIMATION_INDEX{ 1 };
 
 private:
-    const glm::vec3 m_initialPosition;
+    prev::core::device::Device& m_device;
 
-    const glm::quat m_initialOrientation;
+    prev::core::memory::Allocator& m_allocator;
 
-    const glm::vec3 m_initialScale;
+    glm::vec3 m_initialPosition;
+
+    glm::quat m_initialOrientation;
+
+    glm::vec3 m_initialScale;
 
     bool m_shouldGoForward{ false };
 

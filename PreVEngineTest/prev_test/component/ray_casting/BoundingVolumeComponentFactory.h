@@ -7,8 +7,15 @@
 #include "../../common/intersection/OBB.h"
 #include "../../common/intersection/Sphere.h"
 
+#include <prev/core/memory/Allocator.h>
+
 namespace prev_test::component::ray_casting {
 class BoundingVolumeComponentFactory final {
+public:
+    BoundingVolumeComponentFactory(prev::core::memory::Allocator& allocator);
+
+    ~BoundingVolumeComponentFactory() = default;
+
 public:
     std::unique_ptr<IBoundingVolumeComponent> CreateAABB(const prev_test::common::intersection::AABB& aabb, const glm::vec3& scale, const glm::vec3& offset) const;
 
@@ -32,6 +39,9 @@ private:
     prev_test::common::intersection::OBB CreateOBBFromAABB(const prev_test::common::intersection::AABB& box) const;
 
     prev_test::common::intersection::Sphere CreateSphereFromAABB(const prev_test::common::intersection::AABB& box) const;
+
+private:
+    prev::core::memory::Allocator& m_allocator;
 };
 } // namespace prev_test::component::ray_casting
 

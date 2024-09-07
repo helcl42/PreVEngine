@@ -1,13 +1,15 @@
 #include "SubPass.h"
 #include "RenderPass.h"
 
+#include "../../core/Formats.h"
+
 namespace prev::render::pass {
 namespace {
-    VkAttachmentReference CreateAttachmentReference(const RenderPass& renderpass, const uint32_t attachmentIndex)
+    VkAttachmentReference CreateAttachmentReference(const uint32_t attachmentIndex, const VkFormat format)
     {
         VkAttachmentReference reference = {};
         reference.attachment = attachmentIndex;
-        if (renderpass.GetAttachments().at(attachmentIndex).finalLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL) {
+        if (prev::core::format::HasDepthComponent(format)) {
             reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         } else {
             reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -38,8 +40,9 @@ SubPass::operator VkSubpassDescription()
 
 void SubPass::UseAttachment(const uint32_t attachmentIndex)
 {
-    const auto ref{ CreateAttachmentReference(m_renderPass, attachmentIndex) };
-    if (ref.layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) { // depth-stencil attachment
+    const auto& attachment{ m_renderPass.GetAttachments().at(attachmentIndex) };
+    const auto ref{ CreateAttachmentReference(attachmentIndex, attachment.format) };
+    if (prev::core::format::HasDepthComponent(attachment.format)) {
         m_depthReference = ref;
     } else { // color attachment
         m_colorReferences.push_back(ref);
@@ -55,7 +58,8 @@ void SubPass::UseAttachments(const std::vector<uint32_t>& attachmentIndices)
 
 void SubPass::UseResolveAttachment(const uint32_t attachmentIndex)
 {
-    const auto ref{ CreateAttachmentReference(m_renderPass, attachmentIndex) };
+    const auto& attachment{ m_renderPass.GetAttachments().at(attachmentIndex) };
+    const auto ref{ CreateAttachmentReference(attachmentIndex, attachment.format) };
     m_resolveReferences.push_back(ref);
 }
 
@@ -68,7 +72,8 @@ void SubPass::UseResolveAttachments(const std::vector<uint32_t>& attachmentIndic
 
 void SubPass::InputAttachment(const uint32_t attachmentIndex)
 {
-    const auto ref{ CreateAttachmentReference(m_renderPass, attachmentIndex) };
+    const auto& attachment{ m_renderPass.GetAttachments().at(attachmentIndex) };
+    const auto ref{ CreateAttachmentReference(attachmentIndex, attachment.format) };
     m_inputReferences.push_back(ref);
 }
 

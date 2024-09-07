@@ -1,6 +1,4 @@
 #include "Engine.h"
-#include "AllocatorProvider.h"
-#include "DeviceProvider.h"
 #include "device/DeviceFactory.h"
 
 #include "../common/Logger.h"
@@ -32,9 +30,6 @@ void Engine::Init()
     ResetAllocator();
     ResetRenderPass();
     ResetSwapchain();
-
-    DeviceProvider::Instance().SetDevice(m_device);
-    AllocatorProvider::Instance().SetAllocator(m_allocator);
 }
 
 void Engine::InitScene(const std::shared_ptr<prev::scene::IScene>& scene)
@@ -83,21 +78,20 @@ void Engine::MainLoop()
 
 void Engine::ShutDown()
 {
-    m_rootRenderer->ShutDown();
-    m_scene->ShutDown();
+    if (m_rootRenderer) {
+        m_rootRenderer->ShutDown();
+    }
+    if (m_scene) {
+        m_scene->ShutDown();
+    }
 
-    AllocatorProvider::Instance().SetAllocator(nullptr);
-    DeviceProvider::Instance().SetDevice(nullptr);
+    m_rootRenderer = nullptr;
+    m_scene = nullptr;
 }
 
 std::shared_ptr<prev::scene::IScene> Engine::GetScene() const
 {
     return m_scene;
-}
-
-std::shared_ptr<prev::core::device::Device> Engine::GetDevice() const
-{
-    return m_device;
 }
 
 std::shared_ptr<prev::render::Swapchain> Engine::GetSwapchain() const
@@ -115,9 +109,24 @@ std::shared_ptr<prev::render::IRootRenderer> Engine::GetRootRenderer() const
     return m_rootRenderer;
 }
 
+std::shared_ptr<prev::core::memory::Allocator> Engine::GetAllocator() const
+{
+    return m_allocator;
+}
+
+std::shared_ptr<prev::core::device::Device> Engine::GetDevice() const
+{
+    return m_device;
+}
+
+const EngineConfig& Engine::GetConfig() const
+{
+    return m_config;
+}
+
 void Engine::operator()(const prev::window::WindowChangeEvent& windowChangeEvent)
 {
-    vkDeviceWaitIdle(*m_device);
+    m_device->WaitIdle();
 
     m_swapchain = nullptr; // swapchain needs to be destroyed before surface
     ResetSurface();
@@ -214,9 +223,9 @@ void Engine::ResetRenderPass()
 
         m_renderPass = renderPassBuilder
                            .AddColorAttachment(colorFormat, sampleCount, clearColor, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE) // color buffer, multisampled
-                           .AddDepthAttachment(depthFormat, sampleCount, { MAX_DEPTH, 0 }, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE) // depth buffer, multisampled
+                           .AddDepthAttachment(depthFormat, sampleCount, { MAX_DEPTH, 0 }, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE) // depth buffer, multisampled
                            .AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, clearColor, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, true) // color buffer, resolve buffer
-                           .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, { MAX_DEPTH, 0 }, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, true) // depth buffer, resolve buffer
+                           .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, { MAX_DEPTH, 0 }, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, true) // depth buffer, resolve buffer
                            .AddSubpass({ 0, 1 }, { 2, 3 }) // resolve ref will be at index 2 & 3
                            .AddSubpassDependencies(dependencies)
                            .Build();
@@ -237,8 +246,8 @@ void Engine::ResetRenderPass()
         dependencies[1].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
         m_renderPass = renderPassBuilder
-                           .AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, clearColor)
-                           .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, { MAX_DEPTH, 0 })
+                           .AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, clearColor, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
+                           .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, { MAX_DEPTH, 0 }, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
                            .AddSubpass({ 0, 1 })
                            .AddSubpassDependencies(dependencies)
                            .Build();

@@ -273,9 +273,10 @@ private:
 template <typename IndexType>
 class CircularIndex {
 public:
-    CircularIndex(const IndexType count)
+    CircularIndex(const IndexType count, const IndexType startIndex = 0)
         : m_count{ count }
-        , m_index{ 0 }
+        , m_startIndex{ startIndex }
+        , m_index{ startIndex }
     {
     }
 
@@ -297,17 +298,27 @@ public:
 
     void Reset()
     {
-        m_index = 0;
+        m_index = m_startIndex;
+    }
+
+    IndexType GetPrevious(IndexType step = 1) const
+    {
+        return (m_index + (m_count - (step % m_count))) % m_count;
+    }
+
+    IndexType GetNext(IndexType step = 1) const
+    {
+        return (m_index + step) % m_count;
     }
 
     void Increment(IndexType step = 1)
     {
-        m_index = (m_index + step) % m_count;
+        m_index = GetNext(step);
     }
 
     void Decrement(IndexType step = 1)
     {
-        m_index = (m_index + (m_count - (step % m_count))) % m_count;
+        m_index = GetPrevious(step);
     }
 
     CircularIndex operator++()
@@ -341,8 +352,10 @@ public:
         return m_index;
     }
 
-public:
+private:
     IndexType m_count{};
+
+    IndexType m_startIndex{};
 
     IndexType m_index{};
 };

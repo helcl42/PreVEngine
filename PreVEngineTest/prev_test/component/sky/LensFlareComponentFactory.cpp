@@ -5,12 +5,17 @@
 #include "../../render/mesh/MeshFactory.h"
 #include "../../render/model/ModelFactory.h"
 
-#include <prev/core/AllocatorProvider.h>
 #include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/sampler/Sampler.h>
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::component::sky {
+LensFlareComponentFactory::LensFlareComponentFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
+    : m_device{ device }
+    , m_allocator{ allocator }
+{
+}
+
 std::unique_ptr<ILensFlareComponent> LensFlareComponentFactory::Create() const
 {
     const float spacing{ 0.16f };
@@ -25,11 +30,9 @@ std::unique_ptr<ILensFlareComponent> LensFlareComponentFactory::Create() const
         { prev_test::common::AssetManager::Instance().GetAssetPath("LensFlares/tex9.png"), 0.24f },
     };
 
-    auto allocator{ prev::core::AllocatorProvider::Instance().GetAllocator() };
-
     std::vector<std::shared_ptr<Flare>> flares{};
     for (const auto& flareCreateInfo : flareCreateInfos) {
-        auto flare = CreateFlare(*allocator, flareCreateInfo.path, flareCreateInfo.scale);
+        auto flare = CreateFlare(flareCreateInfo.path, flareCreateInfo.scale);
         flare->SetScreenSpacePosition(glm::vec2(-100.0f, -100.0f));
         flares.emplace_back(std::move(flare));
     }
@@ -37,16 +40,16 @@ std::unique_ptr<ILensFlareComponent> LensFlareComponentFactory::Create() const
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh{ meshFactory.CreateQuad() };
 
-    prev_test::render::model::ModelFactory modelFactory{};
-    auto model{ modelFactory.Create(std::move(mesh), *allocator) };
+    prev_test::render::model::ModelFactory modelFactory{ m_allocator };
+    auto model{ modelFactory.Create(std::move(mesh)) };
 
     return std::make_unique<LensFlareComponent>(flares, spacing, std::move(model));
 }
 
-std::unique_ptr<Flare> LensFlareComponentFactory::CreateFlare(prev::core::memory::Allocator& allocator, const std::string& filePath, const float scale) const
+std::unique_ptr<Flare> LensFlareComponentFactory::CreateFlare(const std::string& filePath, const float scale) const
 {
     auto image{ prev::render::image::ImageFactory{}.CreateImage(filePath) };
-    auto imageBuffer = prev::render::buffer::ImageBufferBuilder{ allocator }
+    auto imageBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
                            .SetExtent({ image->GetWidth(), image->GetHeight(), 1 })
                            .SetFormat(VK_FORMAT_R8G8B8A8_UNORM)
                            .SetType(VK_IMAGE_TYPE_2D)
@@ -55,7 +58,7 @@ std::unique_ptr<Flare> LensFlareComponentFactory::CreateFlare(prev::core::memory
                            .SetLayerData({ reinterpret_cast<uint8_t*>(image->GetBuffer()) })
                            .SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
                            .Build();
-    auto sampler{ std::make_shared<prev::render::sampler::Sampler>(allocator.GetDevice(), static_cast<float>(imageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f) };
-    return std::make_unique<Flare>(std::move(imageBuffer), sampler, scale);
+    auto sampler{ std::make_shared<prev::render::sampler::Sampler>(m_device, static_cast<float>(imageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 16.0f) };
+    return std::make_unique<Flare>(m_device, std::move(imageBuffer), sampler, scale);
 }
 } // namespace prev_test::component::sky

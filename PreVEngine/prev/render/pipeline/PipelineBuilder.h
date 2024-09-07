@@ -39,7 +39,11 @@ public:
 
     GraphicsPipelineBuilder& SetAdditiveBlendingEnabled(bool enabled);
 
+    GraphicsPipelineBuilder& SetPatchControlPointCount(const uint32_t count);
+
     GraphicsPipelineBuilder& SetPolygonMode(VkPolygonMode mode);
+
+    GraphicsPipelineBuilder& SetCullingMode(VkCullModeFlagBits mode);
 
     std::unique_ptr<Pipeline> Build() const;
 
@@ -60,7 +64,11 @@ private:
 
     bool m_additiveBlendingEnabled{ false };
 
+    uint32_t m_patchControlPointCount{ 0 };
+
     VkPolygonMode m_polygonMode{ VK_POLYGON_MODE_FILL };
+
+    VkCullModeFlagBits m_cullingMode{ VK_CULL_MODE_NONE };
 };
 } // namespace prev::render::pipeline
 

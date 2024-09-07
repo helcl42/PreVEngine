@@ -6,20 +6,20 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::scene::robot {
-CubeRobot::CubeRobot(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
-    : CubeRobotPart(position, orientation, scale, texturePath)
+CubeRobot::CubeRobot(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
+    : CubeRobotPart(device, allocator, position, orientation, scale, texturePath)
 {
 }
 
 void CubeRobot::Init()
 {
-    m_body = std::make_shared<CubeRobotPart>(glm::vec3(0, 35, 0), glm::quat(1, 0, 0, 0), glm::vec3(10, 15, 5), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/vulkan.png"));
+    m_body = std::make_shared<CubeRobotPart>(m_device, m_allocator, glm::vec3(0, 35, 0), glm::quat(1, 0, 0, 0), glm::vec3(10, 15, 5), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/vulkan.png"));
 
-    m_head = std::make_shared<CubeRobotPart>(glm::vec3(0, 10, 0), glm::quat(1, 0, 0, 0), glm::vec3(5, 5, 5), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
-    m_leftArm = std::make_shared<CubeRobotPart>(glm::vec3(-8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
-    m_rightArm = std::make_shared<CubeRobotPart>(glm::vec3(8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
-    m_leftLeg = std::make_shared<CubeRobotPart>(glm::vec3(-4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.5, 17.5f, 4.7f), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
-    m_rightLeg = std::make_shared<CubeRobotPart>(glm::vec3(4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.5, 17.5f, 4.7f), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+    m_head = std::make_shared<CubeRobotPart>(m_device, m_allocator, glm::vec3(0, 10, 0), glm::quat(1, 0, 0, 0), glm::vec3(5, 5, 5), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+    m_leftArm = std::make_shared<CubeRobotPart>(m_device, m_allocator, glm::vec3(-8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+    m_rightArm = std::make_shared<CubeRobotPart>(m_device, m_allocator, glm::vec3(8, 10, -1), glm::quat(1, 0, 0, 0), glm::vec3(3, 18, 5), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+    m_leftLeg = std::make_shared<CubeRobotPart>(m_device, m_allocator, glm::vec3(-4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.5, 17.5f, 4.7f), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+    m_rightLeg = std::make_shared<CubeRobotPart>(m_device, m_allocator, glm::vec3(4, -12, 0), glm::quat(1, 0, 0, 0), glm::vec3(2.5, 17.5f, 4.7f), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
 
     m_body->AddChild(m_head);
     m_body->AddChild(m_leftArm);

@@ -8,8 +8,10 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::scene::terrain {
-Terrain::Terrain(const int x, const int z)
+Terrain::Terrain(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const int x, const int z)
     : SceneNode()
+    , m_device{ device }
+    , m_allocator{ allocator }
     , m_xIndex(x)
     , m_zIndex(z)
 {
@@ -24,11 +26,11 @@ void Terrain::Init()
     }
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, TAG_TRANSFORM_COMPONENT);
 
-    prev_test::component::terrain::TerrainComponentFactory terrainComponentFactory{};
+    prev_test::component::terrain::TerrainComponentFactory terrainComponentFactory{ m_device, m_allocator };
     m_terrainComponent = terrainComponentFactory.CreateRandomTerrainConeStepMapped(m_xIndex, m_zIndex, prev_test::component::terrain::TERRAIN_TILE_SIZE);
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::terrain::ITerrainComponenet>(GetThis(), m_terrainComponent, TAG_TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT);
 
-    prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{};
+    prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{ m_allocator };
     m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_terrainComponent->GetModel()->GetMesh());
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, TAG_BOUNDING_VOLUME_COMPONENT);
 

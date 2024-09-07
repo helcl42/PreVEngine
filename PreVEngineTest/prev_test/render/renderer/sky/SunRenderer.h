@@ -9,13 +9,15 @@
 #include <prev/render/buffer/UniformBuffer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/pipeline/Pipeline.h>
+#include <prev/render/query/QueryPool.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
+#include <prev/util/Utils.h>
 
 namespace prev_test::render::renderer::sky {
 class SunRenderer final : public IRenderer<NormalRenderContext> {
 public:
-    SunRenderer(const std::shared_ptr<prev::render::pass::RenderPass>& renderPass);
+    SunRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass);
 
     ~SunRenderer() = default;
 
@@ -45,7 +47,11 @@ private:
     const uint32_t m_descriptorCount{ 50 };
 
 private:
-    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass;
+    prev::core::device::Device& m_device;
+
+    prev::core::memory::Allocator& m_allocator;
+
+    prev::render::pass::RenderPass& m_renderPass;
 
 private:
     std::unique_ptr<prev::render::shader::Shader> m_shader;
@@ -59,13 +65,11 @@ private:
 
     uint64_t m_maxNumberOfSamples{ 0 };
 
-    static const uint32_t QueryPoolCount{ 3 };
+    static const inline uint32_t QueryPoolCount{ 3 };
 
-    VkQueryPool m_queryPools[QueryPoolCount] = {};
+    prev::util::CircularIndex<uint32_t> m_queryPoolIndex{ QueryPoolCount };
 
-    uint32_t m_queryPoolIndex{ 0 };
-
-    uint64_t m_frameIndex{ 0 };
+    std::unique_ptr<prev::render::query::QueryPool> m_queryPool{};
 };
 } // namespace prev_test::render::renderer::sky
 

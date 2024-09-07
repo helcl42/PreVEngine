@@ -253,8 +253,3 @@ else()
     message(FATAL_ERROR "Unsupported plaform.")
 endif()
 
-# Testing
-if(NOT ANDROID AND NOT APPLE)
-    enable_testing()
-    add_test(NAME DefaultTest COMMAND $<TARGET_FILE:${PROJECT_NAME}>)
-endif()
