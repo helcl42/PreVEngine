@@ -1,6 +1,8 @@
 #ifndef __SWAPCHAIN_H__
 #define __SWAPCHAIN_H__
 
+#include "ISwapchain.h"
+
 #include "buffer/ImageBuffer.h"
 #include "pass/RenderPass.h"
 
@@ -8,66 +10,60 @@
 #include "../util/Utils.h"
 
 namespace prev::render {
-struct SwapchainBuffer {
-    VkImage image{};
-
-    VkImageView view{};
-
-    VkExtent2D extent{};
-
-    VkFramebuffer framebuffer{};
-
-    VkCommandBuffer commandBuffer{};
-
-    VkFence fence{};
-
-    VkSemaphore renderSemaphore{};
-
-    VkSemaphore presentSemaphore{};
-
-    void Destroy(VkDevice device)
-    {
-        vkDestroySemaphore(device, presentSemaphore, nullptr);
-        vkDestroySemaphore(device, renderSemaphore, nullptr);
-        vkDestroyFence(device, fence, nullptr);
-        vkDestroyFramebuffer(device, framebuffer, nullptr);
-        vkDestroyImageView(device, view, nullptr);
-    }
-};
-
-struct SwapChainFrameContext {
-    VkFramebuffer frameBuffer{};
-    VkCommandBuffer commandBuffer{};
-    uint32_t index{};
-};
-
-class Swapchain {
+class Swapchain final : public ISwapchain {
 public:
     Swapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT, uint32_t viewCount = 1);
 
-    virtual ~Swapchain();
+    ~Swapchain();
 
 public:
-    std::vector<VkPresentModeKHR> GetPresentModes() const;
+    std::vector<VkPresentModeKHR> GetPresentModes() const override;
 
-    bool SetPresentMode(bool noTearing, bool powerSave);
+    bool SetPresentMode(bool noTearing, bool powerSave) override;
 
-    bool SetPresentMode(VkPresentModeKHR preferredMode);
+    bool SetPresentMode(VkPresentModeKHR preferredMode) override;
 
-    bool SetImageCount(uint32_t imageCount = 2);
+    bool SetImageCount(uint32_t imageCount) override;
 
-    bool UpdateExtent();
+    bool UpdateExtent() override;
 
-    bool BeginFrame(SwapChainFrameContext& outContext);
+    bool BeginFrame(SwapChainFrameContext& outContext) override;
 
-    void EndFrame();
+    void EndFrame() override;
 
     void Print() const;
 
-public:
-    const VkExtent2D& GetExtent() const;
+    const VkExtent2D& GetExtent() const override;
 
-    uint32_t GetImageCount() const;
+    uint32_t GetImageCount() const override;
+
+private:
+    struct SwapchainBuffer {
+        VkImage image{};
+
+        VkImageView view{};
+
+        VkExtent2D extent{};
+
+        VkFramebuffer framebuffer{};
+
+        VkCommandBuffer commandBuffer{};
+
+        VkFence fence{};
+
+        VkSemaphore renderSemaphore{};
+
+        VkSemaphore presentSemaphore{};
+
+        void Destroy(VkDevice device)
+        {
+            vkDestroySemaphore(device, presentSemaphore, nullptr);
+            vkDestroySemaphore(device, renderSemaphore, nullptr);
+            vkDestroyFence(device, fence, nullptr);
+            vkDestroyFramebuffer(device, framebuffer, nullptr);
+            vkDestroyImageView(device, view, nullptr);
+        }
+    };
 
 private:
     void Apply();

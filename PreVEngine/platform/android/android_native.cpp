@@ -1,5 +1,7 @@
 #include "android_native.h"
 
+#include "../prev/xr/OpenXRCommon.h"
+
 //----------------------------------------printf for Android---------------------
 // Uses a 256 byte buffer to allow concatenating multiple printf's onto one log line.
 // The buffer gets flushed when the printf string ends in a '\n', or the buffer is full.
@@ -59,6 +61,22 @@ void android_main(struct android_app* state) {
     g_AndroidApp = state; // Pass android app state to window_andoid.cpp
 
     android_fopen_set_asset_manager(state->activity->assetManager); // Re-direct fopen to read assets from our APK.
+
+    // https://registry.khronos.org/OpenXR/specs/1.0/html/xrspec.html#XR_KHR_loader_init
+    // Load xrInitializeLoaderKHR() function pointer. On Android, the loader must be initialized with variables from android_app *.
+    // Without this, there's is no loader and thus our function calls to OpenXR would fail.
+    XrInstance m_xrInstance = XR_NULL_HANDLE;  // Dummy XrInstance variable for OPENXR_CHECK macro.
+    PFN_xrInitializeLoaderKHR xrInitializeLoaderKHR = nullptr;
+    OPENXR_CHECK(xrGetInstanceProcAddr(XR_NULL_HANDLE, "xrInitializeLoaderKHR", (PFN_xrVoidFunction *)&xrInitializeLoaderKHR), "Failed to get InstanceProcAddr for xrInitializeLoaderKHR.");
+    if (!xrInitializeLoaderKHR) {
+        return;
+    }
+
+    // Fill out an XrLoaderInitInfoAndroidKHR structure and initialize the loader for Android.
+    XrLoaderInitInfoAndroidKHR loaderInitializeInfoAndroid{XR_TYPE_LOADER_INIT_INFO_ANDROID_KHR};
+    loaderInitializeInfoAndroid.applicationVM = state->activity->vm;
+    loaderInitializeInfoAndroid.applicationContext = state->activity->clazz;
+    OPENXR_CHECK(xrInitializeLoaderKHR((XrLoaderInitInfoBaseHeaderKHR *)&loaderInitializeInfoAndroid), "Failed to initialize Loader for Android.");
 
     PreVMain(0, NULL); // call the common main
 

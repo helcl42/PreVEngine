@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId = 'com.prevengine.PreVEngineTest'
-        minSdkVersion 19
+        minSdkVersion 24
         targetSdkVersion 33
         externalNativeBuild {
             cmake {
@@ -34,7 +34,7 @@ android {
     }
     externalNativeBuild {
         cmake {
-            version '3.18.1'
+            version '3.22.1'
             path '../../../../CMakeLists.txt'
         }
     }
@@ -44,8 +44,15 @@ android {
         }
     }
     namespace 'com.prevengine.PreVEngineTest'
+
+//    // Enable prefab support for the OpenXR AAR
+//    buildFeatures {
+//        prefab true
+//    }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+//    implementation 'org.khronos.openxr:openxr_loader_for_android:1.0.34'
+
 }

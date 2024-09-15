@@ -168,7 +168,7 @@ void Swapchain::Print() const
 {
     LOGI("Swapchain:\n");
 
-    LOGI("\tFormat  = %3d : %s\n", m_swapchainCreateInfo.imageFormat, util::vk::FormatToString(m_swapchainCreateInfo.imageFormat).c_str());
+    LOGI("\tColor   = %3d : %s\n", m_swapchainCreateInfo.imageFormat, util::vk::FormatToString(m_swapchainCreateInfo.imageFormat).c_str());
     LOGI("\tDepth   = %3d : %s\n", m_depthBuffer->GetFormat(), util::vk::FormatToString(m_depthBuffer->GetFormat()).c_str());
 
     const auto& extent{ m_swapchainCreateInfo.imageExtent };
@@ -191,7 +191,7 @@ const VkExtent2D& Swapchain::GetExtent() const
 
 uint32_t Swapchain::GetImageCount() const
 {
-    return m_frameIndex.GetCount();
+    return static_cast<uint32_t>(m_swapchainBuffers.size());
 }
 
 void Swapchain::Apply()
@@ -257,7 +257,7 @@ void Swapchain::Apply()
     m_frameIndex = util::CircularIndex{ swapchainImagesCount };
 
     m_swapchainBuffers.resize(swapchainImagesCount);
-    for (uint32_t i = 0; i < swapchainImagesCount; i++) {
+    for (uint32_t i = 0; i < swapchainImagesCount; ++i) {
         auto image{ swapchainImages[i] };
         auto imageView{ util::vk::CreateImageView(m_device, image, m_swapchainCreateInfo.imageFormat, imageViewType, 1, VK_IMAGE_ASPECT_COLOR_BIT, m_viewCount) };
 
@@ -378,7 +378,7 @@ void Swapchain::Present()
     m_isAcquired = false;
 }
 
-bool Swapchain::BeginFrame(SwapChainFrameContext& outContex)
+bool Swapchain::BeginFrame(SwapChainFrameContext& outContext)
 {
     SwapchainBuffer swapchainBuffer;
     if (!AcquireNext(swapchainBuffer)) {
@@ -389,7 +389,7 @@ bool Swapchain::BeginFrame(SwapChainFrameContext& outContex)
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
     VKERRCHECK(vkBeginCommandBuffer(swapchainBuffer.commandBuffer, &beginInfo));
 
-    outContex = { swapchainBuffer.framebuffer, swapchainBuffer.commandBuffer, m_acquiredIndex };
+    outContext = { swapchainBuffer.framebuffer, swapchainBuffer.commandBuffer, m_acquiredIndex };
     return true;
 }
 

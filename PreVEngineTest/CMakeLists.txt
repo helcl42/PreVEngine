@@ -91,6 +91,7 @@ if(ENABLE_VK_LOADER)
 endif()
 
 include_directories("../PreVEngine")
+include_directories("../PreVEngine/external")
 include_directories("../PreVEngine/external/worm_holes/WormHoles")
 include_directories("../PreVEngine/external/glm")
 include_directories("../Dependencies/assimp/include")
@@ -246,8 +247,11 @@ elseif(ANDROID)
     add_library(assimp SHARED IMPORTED)
     set_target_properties(assimp PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/platform/android/app/src/main/jniLibs/${ANDROID_ABI}/libassimp.so")
 
+    add_library(openxr_loader SHARED IMPORTED)
+    set_target_properties(openxr_loader PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/platform/android/app/src/main/jniLibs/${ANDROID_ABI}/libopenxr_loader.so")
+
     # Link to external libraries
-    target_link_libraries(${PROJECT_NAME} log android assimp)
+    target_link_libraries(${PROJECT_NAME} log android assimp openxr_loader)
 
 else()
     message(FATAL_ERROR "Unsupported plaform.")
