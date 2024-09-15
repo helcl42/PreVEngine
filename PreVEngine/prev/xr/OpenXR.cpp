@@ -271,11 +271,7 @@ namespace prev::xr {
             LOGE("The views are not coherent. Unable to create a single Swapchain.");
         }
 
-        XrViewConfigurationView &viewConfigurationView = m_viewConfigurationViews[0];
-
-//        // TODO - hack api reports 1x instead of 4x
-//        viewConfigurationView.recommendedSwapchainSampleCount = viewConfigurationView.maxSwapchainSampleCount = 4;
-
+        const XrViewConfigurationView &viewConfigurationView = m_viewConfigurationViews[0];
         uint32_t viewCount = static_cast<uint32_t>(m_viewConfigurationViews.size());
 
         // Create a color and depth swapchain, and their associated image views.

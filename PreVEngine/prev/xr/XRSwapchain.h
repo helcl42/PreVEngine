@@ -88,6 +88,11 @@ private:
     VkExtent2D m_extent{};
 
     uint32_t m_acquiredIndex{};
+
+    // MSAA
+    std::unique_ptr<prev::render::buffer::ImageBuffer> m_msaaColorBuffer{};
+
+    std::unique_ptr<prev::render::buffer::ImageBuffer> m_msaaDepthBuffer{};
 };
 } // namespace prev::xr
 
