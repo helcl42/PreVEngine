@@ -13,7 +13,7 @@ class PhysicalDevice {
 public:
     PhysicalDevice();
 
-    PhysicalDevice(const VkPhysicalDevice gpu);
+    PhysicalDevice(const VkPhysicalDevice gpu, const std::vector<std::string>& extensions = {});
 
     virtual ~PhysicalDevice() = default;
 

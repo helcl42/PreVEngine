@@ -9,17 +9,22 @@
 #endif
 
 namespace prev::core::instance {
-Instance::Instance(const bool enableValidation, const char* appName, const char* engineName)
+Instance::Instance(const bool enableValidation, const std::vector<std::string>& extLayers, const std::vector<std::string>& extExtensions, const char* appName, const char* engineName)
 {
     Layers layers;
     if (enableValidation) {
         layers.Pick("VK_LAYER_KHRONOS_validation");
+    }
+
+    for(const auto& layer : extLayers) {
+        layers.Pick(layer);
     }
     layers.Print();
 
     Extensions extensions;
     extensions.Pick(VK_KHR_SURFACE_EXTENSION_NAME);
     extensions.Pick(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+    extensions.Pick(VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME); // VK_KHR_external_memory_fd
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
     extensions.Pick(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
 #elif defined(VK_USE_PLATFORM_ANDROID_KHR)
@@ -48,6 +53,10 @@ Instance::Instance(const bool enableValidation, const char* appName, const char*
 #else
         extensions.Pick(VK_EXT_DEBUG_UTILS_EXTENSION_NAME); // in Debug mode, Enable Validation
 #endif
+    }
+
+    for(const auto& ext : extExtensions) {
+        extensions.Pick(ext);
     }
     extensions.Print();
 

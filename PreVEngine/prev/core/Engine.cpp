@@ -9,6 +9,11 @@
 #include "../util/VkUtils.h"
 #include "../window/Window.h"
 
+#include "../xr/XRSwapchain.h"
+#include "../render/Swapchain.h"
+
+#define USE_XR
+
 namespace prev::core {
 Engine::Engine(const EngineConfig& config)
     : m_config{ config }
@@ -22,6 +27,9 @@ Engine::~Engine()
 
 void Engine::Init()
 {
+#ifdef USE_XR
+    m_openXr = std::make_shared<prev::xr::OpenXR>();
+#endif
     ResetTiming();
     ResetInstance();
     ResetWindow();
@@ -29,6 +37,11 @@ void Engine::Init()
     ResetDevice();
     ResetAllocator();
     ResetRenderPass();
+
+#ifdef USE_XR
+    m_openXr->CreateSession();
+#endif
+
     ResetSwapchain();
 }
 
@@ -52,10 +65,20 @@ void Engine::MainLoop()
     {
         prev::event::EventChannel::DispatchQueued();
 
+#ifdef USE_XR
+        m_openXr->PollEvents();
+#endif
+
+#ifdef USE_XR
+        const VkExtent2D extent{ m_openXr->GetExtent() };
+#else
+        const VkExtent2D extent{ m_window->GetSize().width, m_window->GetSize().height };
+#endif
+
         m_clock->UpdateClock();
         const auto deltaTime{ m_clock->GetDelta() };
 
-        prev::event::EventChannel::Post(NewIterationEvent{ deltaTime, m_window->GetSize().width, m_window->GetSize().height });
+        prev::event::EventChannel::Post(NewIterationEvent{ deltaTime, extent.width, extent.height });
 
         if (m_window->HasFocus()) {
             m_scene->Update(deltaTime);
@@ -67,6 +90,7 @@ void Engine::MainLoop()
                 m_swapchain->EndFrame();
             }
         } else {
+            LOGW("No focus...\n");
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
         }
 
@@ -87,6 +111,11 @@ void Engine::ShutDown()
 
     m_rootRenderer = nullptr;
     m_scene = nullptr;
+
+#ifdef USE_XR
+    m_openXr->DestroySession();
+    m_openXr = nullptr;
+#endif
 }
 
 std::shared_ptr<prev::scene::IScene> Engine::GetScene() const
@@ -94,7 +123,7 @@ std::shared_ptr<prev::scene::IScene> Engine::GetScene() const
     return m_scene;
 }
 
-std::shared_ptr<prev::render::Swapchain> Engine::GetSwapchain() const
+std::shared_ptr<prev::render::ISwapchain> Engine::GetSwapchain() const
 {
     return m_swapchain;
 }
@@ -146,7 +175,11 @@ void Engine::ResetTiming()
 
 void Engine::ResetInstance()
 {
+#ifdef USE_XR
+    m_instance = std::make_unique<prev::core::instance::Instance>(m_config.validation, std::vector<std::string>{}, m_openXr->GetVulkanInstanceExtensions());
+#else
     m_instance = std::make_unique<prev::core::instance::Instance>(m_config.validation);
+#endif
 }
 
 void Engine::ResetWindow()
@@ -169,6 +202,9 @@ void Engine::ResetSurface()
 
 void Engine::ResetDevice()
 {
+#ifdef USE_XR
+    auto presentablePhysicalDevice{ std::make_shared<prev::core::device::PhysicalDevice>(m_openXr->GetPhysicalDevice(*m_instance), m_openXr->GetVulkanDeviceExtensions()) };
+#else
     auto physicalDevices{ std::make_shared<prev::core::device::PhysicalDevices>(*m_instance) };
     physicalDevices->Print();
 
@@ -176,7 +212,7 @@ void Engine::ResetDevice()
     if (!presentablePhysicalDevice) {
         throw std::runtime_error("No suitable GPU found?!");
     }
-
+#endif
     prev::core::device::DeviceFactory deviceFactory{};
     auto device{ deviceFactory.Create(presentablePhysicalDevice, m_surface) };
     if (!device) {
@@ -185,6 +221,11 @@ void Engine::ResetDevice()
 
     m_device = device;
     m_device->Print();
+
+#ifdef USE_XR
+    const auto& queue{ m_device->GetQueue(prev::core::device::QueueType::GRAPHICS) };
+    m_openXr->InitializeGraphicsBinding(*m_instance, *m_device->GetGPU(), *m_device, *queue, queue->family, queue->index);
+#endif
 }
 
 void Engine::ResetAllocator()
@@ -246,8 +287,8 @@ void Engine::ResetRenderPass()
         dependencies[1].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
         m_renderPass = renderPassBuilder
-                           .AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, clearColor, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
-                           .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, { MAX_DEPTH, 0 }, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+                           .AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, clearColor, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE)
+                           .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, { MAX_DEPTH, 0 }, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE)
                            .AddSubpass({ 0, 1 })
                            .AddSubpassDependencies(dependencies)
                            .Build();
@@ -256,6 +297,9 @@ void Engine::ResetRenderPass()
 
 void Engine::ResetSwapchain()
 {
+#ifdef USE_XR
+    m_swapchain = std::make_shared<prev::xr::XRSwapchain>(*m_device, *m_allocator, *m_renderPass, *m_openXr, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount));
+#else
     m_swapchain = std::make_shared<prev::render::Swapchain>(*m_device, *m_allocator, *m_renderPass, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount), m_config.viewCount);
 #if defined(__ANDROID__)
     m_swapchain->SetPresentMode(m_config.VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_MAILBOX_KHR);
@@ -263,6 +307,7 @@ void Engine::ResetSwapchain()
     m_swapchain->SetPresentMode(m_config.VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
 #endif
     m_swapchain->SetImageCount(m_config.swapchainFrameCount);
+#endif
     m_swapchain->Print();
 }
 } // namespace prev::core

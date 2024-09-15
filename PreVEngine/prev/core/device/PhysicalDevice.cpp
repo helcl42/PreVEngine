@@ -11,7 +11,7 @@ PhysicalDevice::PhysicalDevice()
 {
 }
 
-PhysicalDevice::PhysicalDevice(const VkPhysicalDevice gpu)
+PhysicalDevice::PhysicalDevice(const VkPhysicalDevice gpu, const std::vector<std::string>& extensions)
     : m_handle(gpu)
     , m_extensions(gpu)
 {
@@ -60,9 +60,14 @@ PhysicalDevice::PhysicalDevice(const VkPhysicalDevice gpu)
 
     m_extensions.Pick(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
     m_extensions.Pick(VK_KHR_MULTIVIEW_EXTENSION_NAME);
+    m_extensions.Pick(VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME); // VK_KHR_external_memory_fd
+    m_extensions.Pick(VK_EXT_FRAGMENT_DENSITY_MAP_EXTENSION_NAME); // VK_EXT_fragment_density_map
 #if defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_IOS_MVK)
     m_extensions.Pick("VK_KHR_portability_subset");
 #endif
+    for(const auto& ext :extensions) {
+        m_extensions.Pick(ext);
+    }
 }
 
 // Find queue-family with requred flags, and can present to given surface. (if provided)

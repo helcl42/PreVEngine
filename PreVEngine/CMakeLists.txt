@@ -41,6 +41,7 @@ file(GLOB SRC_LIST
     "prev/window/impl/android/*.h" "prev/window/impl/android/*.cpp"
     "prev/window/impl/macos/*.h" "prev/window/impl/macos/*.cpp"
     "prev/window/impl/ios/*.h" "prev/window/impl/ios/*.cpp"
+    "prev/xr/*.h" "prev/xr/*.cpp"
 )
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")  # for find_package
@@ -68,6 +69,7 @@ if(ENABLE_VK_LOADER)
     add_definitions(-DVK_NO_PROTOTYPES)
 endif()
 
+include_directories("external")
 include_directories("external/worm_holes/WormHoles")
 include_directories("external/glm")
 

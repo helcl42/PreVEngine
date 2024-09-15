@@ -9,11 +9,13 @@
 
 #include "../event/EventHandler.h"
 #include "../render/IRootRenderer.h"
-#include "../render/Swapchain.h"
+#include "../render/ISwapchain.h"
+#include "../render/pass/RenderPass.h"
 #include "../scene/IScene.h"
 #include "../scene/graph/ISceneNode.h"
 #include "../util/Utils.h"
 #include "../window/WindowEvents.h"
+#include "../xr/OpenXR.h"
 
 namespace prev::core {
 class Engine final {
@@ -36,7 +38,7 @@ public:
 public:
     std::shared_ptr<prev::scene::IScene> GetScene() const;
 
-    std::shared_ptr<prev::render::Swapchain> GetSwapchain() const;
+    std::shared_ptr<prev::render::ISwapchain> GetSwapchain() const;
 
     std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const;
 
@@ -94,11 +96,13 @@ private:
 
     std::shared_ptr<prev::render::pass::RenderPass> m_renderPass{};
 
-    std::shared_ptr<prev::render::Swapchain> m_swapchain{};
+    std::shared_ptr<prev::render::ISwapchain> m_swapchain{};
 
     std::shared_ptr<prev::scene::IScene> m_scene{};
 
     std::shared_ptr<prev::render::IRootRenderer> m_rootRenderer{};
+
+    std::shared_ptr<prev::xr::OpenXR> m_openXr{};
 };
 } // namespace prev::core
 
