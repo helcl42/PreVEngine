@@ -1,5 +1,6 @@
 #include "XRSwapchain.h"
 
+#include "../render/buffer/ImageBufferBuilder.h"
 #include "../util/VkUtils.h"
 
 namespace prev::xr {
@@ -16,6 +17,31 @@ namespace prev::xr {
 
         m_commandPool = prev::util::vk::CreateCommandPool(m_device, m_graphicsQueue->family);
 
+        m_extent = m_openXr.GetExtent();
+
+        if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
+            m_msaaColorBuffer = render::buffer::ImageBufferBuilder{ m_allocator }
+                    .SetExtent(VkExtent3D{ m_extent.width, m_extent.height, 1 })
+                    .SetFormat(m_renderPass.GetColorFormat())
+                    .SetType(VK_IMAGE_TYPE_2D)
+                    .SetViewType(VK_IMAGE_VIEW_TYPE_2D_ARRAY)
+                    .SetLayerCount(2)
+                    .SetSampleCount(m_sampleCount)
+                    .SetUsageFlags(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+                    .SetLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+                    .Build();
+            m_msaaDepthBuffer = render::buffer::ImageBufferBuilder{ m_allocator }
+                    .SetExtent(VkExtent3D{ m_extent.width, m_extent.height, 1 })
+                    .SetFormat(m_renderPass.GetDepthFormat())
+                    .SetType(VK_IMAGE_TYPE_2D)
+                    .SetViewType(VK_IMAGE_VIEW_TYPE_2D_ARRAY)
+                    .SetLayerCount(2)
+                    .SetSampleCount(m_sampleCount)
+                    .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
+                    .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+                    .Build();
+        }
+
         const auto colorImages{ m_openXr.GetColorImages() };
         const auto colorImageViews{ m_openXr.GetColorImagesViews() };
 
@@ -23,8 +49,6 @@ namespace prev::xr {
         const auto depthImageViews{ m_openXr.GetDepthImagesViews() };
 
         const auto swapchainImagesCount{ static_cast<uint32_t>(colorImages.size()) };
-
-        m_extent = m_openXr.GetExtent();
 
         m_swapchainBuffers.resize(swapchainImagesCount);
         for (uint32_t i = 0; i < swapchainImagesCount; ++i) {
@@ -34,7 +58,10 @@ namespace prev::xr {
             const auto& depthImageView{ depthImageViews[i] };
 
             std::vector<VkImageView> swapchainImageViews;
-            // TODO - how to handle multisampling ???
+            if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
+                swapchainImageViews.push_back(m_msaaColorBuffer->GetImageView());
+                swapchainImageViews.push_back(m_msaaDepthBuffer->GetImageView());
+            }
             swapchainImageViews.push_back(colorImageView);
             swapchainImageViews.push_back(depthImageView);
 
@@ -53,6 +80,9 @@ namespace prev::xr {
     XRSwapchain::~XRSwapchain()
     {
         m_device.WaitIdle();
+
+        m_msaaDepthBuffer = nullptr;
+        m_msaaColorBuffer = nullptr;
 
         if (m_commandPool != VK_NULL_HANDLE) {
             vkDestroyCommandPool(m_device, m_commandPool, nullptr);
