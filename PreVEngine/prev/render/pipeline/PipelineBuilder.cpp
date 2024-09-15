@@ -32,7 +32,7 @@ namespace {
         return pipeline;
     }
 
-    VkPipeline CreateGraphicsPipeline(const VkDevice& device, const shader::Shader& shader, const pass::RenderPass& renderPass, const VkPipelineLayout pipelineLayout, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool blendingEnabled, const bool additiveBlendingEnabled, const VkPolygonMode polygonMode, const VkCullModeFlagBits cullingMode, const uint32_t patchPointCount)
+    VkPipeline CreateGraphicsPipeline(const VkDevice& device, const shader::Shader& shader, const pass::RenderPass& renderPass, const VkPipelineLayout pipelineLayout, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool blendingEnabled, const bool additiveBlendingEnabled, const VkPolygonMode polygonMode, const VkCullModeFlagBits cullingMode, const bool sampleShadingEnabled, const float minSampleShadingFraction, const uint32_t patchPointCount)
     {
         VkPipelineInputAssemblyStateCreateInfo inputAssembly = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
         inputAssembly.topology = topology;
@@ -75,9 +75,9 @@ namespace {
 
         VkPipelineMultisampleStateCreateInfo multisampling = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
         if (renderPass.GetSamplesCount() > VK_SAMPLE_COUNT_1_BIT) {
-            multisampling.sampleShadingEnable = VK_TRUE;
+            multisampling.sampleShadingEnable = sampleShadingEnabled;
             multisampling.rasterizationSamples = renderPass.GetSamplesCount();
-            multisampling.minSampleShading = 0.2f;
+            multisampling.minSampleShading = minSampleShadingFraction;
         } else {
             multisampling.sampleShadingEnable = VK_FALSE;
             multisampling.rasterizationSamples = renderPass.GetSamplesCount();
@@ -207,7 +207,7 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetAdditiveBlendingEnabled(boo
     return *this;
 }
 
-GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetPatchControlPointCount(const uint32_t count)
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetPatchControlPointCount(uint32_t count)
 {
     m_patchControlPointCount = count;
     return *this;
@@ -225,6 +225,18 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetCullingMode(VkCullModeFlagB
     return *this;
 }
 
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetSampleShadingEnabled(bool enabled)
+{
+    m_sampleShadingEnabled = enabled;
+    return *this;
+}
+
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetSampleShadingMinimumFraction(float fraction)
+{
+    m_sampleShadingMinFraction = fraction;
+    return *this;
+}
+
 std::unique_ptr<Pipeline> GraphicsPipelineBuilder::Build() const
 {
     if (!m_depthTestEnabled && m_depthWriteEnabled) {
@@ -239,8 +251,12 @@ std::unique_ptr<Pipeline> GraphicsPipelineBuilder::Build() const
         LOGW("Invalid pipeline configuration: Invalid tesselation configuration - PrimitiveTopology = %d and PatchControlCount = %d.", m_primitiveTopology, m_patchControlPointCount);
     }
 
+    if (m_sampleShadingEnabled && m_additiveBlendingEnabled && m_renderPass.GetSamplesCount() == VK_SAMPLE_COUNT_1_BIT) {
+        LOGW("Invalid pipeline configuration: sample shading is enabled while multisampling is disabled - sample shading will be ignored.");
+    }
+
     auto pipelineLayout{ CreatePipelineLayout(m_device, m_shader) };
-    auto pipeline{ CreateGraphicsPipeline(m_device, m_shader, m_renderPass, pipelineLayout, m_primitiveTopology, m_depthTestEnabled, m_depthWriteEnabled, m_blendingEnabled, m_additiveBlendingEnabled, m_polygonMode, m_cullingMode, m_patchControlPointCount) };
+    auto pipeline{ CreateGraphicsPipeline(m_device, m_shader, m_renderPass, pipelineLayout, m_primitiveTopology, m_depthTestEnabled, m_depthWriteEnabled, m_blendingEnabled, m_additiveBlendingEnabled, m_polygonMode, m_cullingMode, m_sampleShadingEnabled, m_sampleShadingMinFraction, m_patchControlPointCount) };
     return std::make_unique<Pipeline>(m_device, pipeline, pipelineLayout);
 }
 
