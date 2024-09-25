@@ -45,6 +45,8 @@ public:
 
     GraphicsPipelineBuilder& SetCullingMode(VkCullModeFlagBits mode);
 
+    GraphicsPipelineBuilder& SetFrontFace(VkFrontFace frontFace);
+
     GraphicsPipelineBuilder& SetSampleShadingEnabled(bool enabled);
 
     GraphicsPipelineBuilder& SetSampleShadingMinimumFraction(float fraction);
@@ -73,6 +75,8 @@ private:
     VkPolygonMode m_polygonMode{ VK_POLYGON_MODE_FILL };
 
     VkCullModeFlagBits m_cullingMode{ VK_CULL_MODE_NONE };
+
+    VkFrontFace m_frontFace{ VK_FRONT_FACE_COUNTER_CLOCKWISE };
 
     bool m_sampleShadingEnabled{ false };
 

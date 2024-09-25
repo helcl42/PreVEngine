@@ -32,7 +32,7 @@ namespace {
         return pipeline;
     }
 
-    VkPipeline CreateGraphicsPipeline(const VkDevice& device, const shader::Shader& shader, const pass::RenderPass& renderPass, const VkPipelineLayout pipelineLayout, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool blendingEnabled, const bool additiveBlendingEnabled, const VkPolygonMode polygonMode, const VkCullModeFlagBits cullingMode, const bool sampleShadingEnabled, const float minSampleShadingFraction, const uint32_t patchPointCount)
+    VkPipeline CreateGraphicsPipeline(const VkDevice& device, const shader::Shader& shader, const pass::RenderPass& renderPass, const VkPipelineLayout pipelineLayout, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool blendingEnabled, const bool additiveBlendingEnabled, const VkPolygonMode polygonMode, const VkCullModeFlagBits cullingMode, const VkFrontFace frontFace, const bool sampleShadingEnabled, const float minSampleShadingFraction, const uint32_t patchPointCount)
     {
         VkPipelineInputAssemblyStateCreateInfo inputAssembly = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
         inputAssembly.topology = topology;
@@ -70,7 +70,7 @@ namespace {
         rasterizer.polygonMode = polygonMode;
         rasterizer.lineWidth = 1.0f;
         rasterizer.cullMode = cullingMode;
-        rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        rasterizer.frontFace = frontFace;
         rasterizer.depthBiasEnable = VK_FALSE;
 
         VkPipelineMultisampleStateCreateInfo multisampling = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
@@ -225,6 +225,12 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetCullingMode(VkCullModeFlagB
     return *this;
 }
 
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetFrontFace(VkFrontFace frontFace)
+{
+    m_frontFace = frontFace;
+    return *this;
+}
+
 GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetSampleShadingEnabled(bool enabled)
 {
     m_sampleShadingEnabled = enabled;
@@ -256,7 +262,7 @@ std::unique_ptr<Pipeline> GraphicsPipelineBuilder::Build() const
     }
 
     auto pipelineLayout{ CreatePipelineLayout(m_device, m_shader) };
-    auto pipeline{ CreateGraphicsPipeline(m_device, m_shader, m_renderPass, pipelineLayout, m_primitiveTopology, m_depthTestEnabled, m_depthWriteEnabled, m_blendingEnabled, m_additiveBlendingEnabled, m_polygonMode, m_cullingMode, m_sampleShadingEnabled, m_sampleShadingMinFraction, m_patchControlPointCount) };
+    auto pipeline{ CreateGraphicsPipeline(m_device, m_shader, m_renderPass, pipelineLayout, m_primitiveTopology, m_depthTestEnabled, m_depthWriteEnabled, m_blendingEnabled, m_additiveBlendingEnabled, m_polygonMode, m_cullingMode, m_frontFace, m_sampleShadingEnabled, m_sampleShadingMinFraction, m_patchControlPointCount) };
     return std::make_unique<Pipeline>(m_device, pipeline, pipelineLayout);
 }
 
