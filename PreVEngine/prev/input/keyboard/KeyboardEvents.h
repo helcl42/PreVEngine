@@ -18,7 +18,7 @@ struct KeyEvent {
 };
 
 struct TextEvent {
-    std::string text;
+    uint32_t unicodeChar{};
 };
 } // namespace prev::input::keyboard
 
