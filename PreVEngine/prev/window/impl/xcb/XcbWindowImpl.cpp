@@ -342,15 +342,18 @@ void XcbWindowImpl::ProcessXEvent(xcb_generic_event_t* xEvent)
         m_eventQueue.Push(OnMouseEvent(ActionType::UP, mx, my, btn)); // mouse btn release
         break;
     case XCB_KEY_PRESS: {
-        xkb_state_key_get_utf8(m_keyboardState, key, m_textBuffer, sizeof(m_textBuffer));
-        xkb_state_update_key(m_keyboardState, key, XKB_KEY_DOWN);
-
-        if (m_textBuffer[0]) {
-            m_eventQueue.Push(OnTextEvent(m_textBuffer)); // text typed event (store in FIFO for next run)
+        uint32_t unicodeChar{};
+        int size = xkb_state_key_get_utf8(m_keyboardState, key, nullptr, 0);
+        if (size > 0) {
+            xkb_state_key_get_utf8(m_keyboardState, key, static_cast<char*>(&unicodeChar), 0);
         }
+        xkb_state_update_key(m_keyboardState, key, XKB_KEY_DOWN);
 
         const uint8_t keyCode{ EVDEV_TO_HID[key] };
         m_eventQueue.Push(OnKeyEvent(ActionType::DOWN, keyCode)); // key pressed event
+        if (unicodeChar) {
+            m_eventQueue.Push(OnTextEvent(unicodeChar)); // text typed event 
+        }
         break;
     }
     case XCB_KEY_RELEASE: {

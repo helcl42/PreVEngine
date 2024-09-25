@@ -127,10 +127,10 @@ Event WindowImpl::OnKeyEvent(ActionType action, uint8_t key)
     return e;
 }
 
-Event WindowImpl::OnTextEvent(const char* str)
+Event WindowImpl::OnTextEvent(uint32_t unicode)
 {
     Event e{ Event::EventType::TEXT };
-    e.text.str = str;
+    e.text.unicode = unicode;
     return e;
 }
 

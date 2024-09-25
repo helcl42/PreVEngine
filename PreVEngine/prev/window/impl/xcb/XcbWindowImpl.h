@@ -49,8 +49,6 @@ private:
 
     xcb_intern_atom_reply_t* m_atomWmDeleteWindow{};
 
-    char m_textBuffer[4] = {}; // store char for text event
-
     //---xkb Keyboard---
     xkb_context* m_keyboardContext{}; // context for xkbcommon keyboard input
 

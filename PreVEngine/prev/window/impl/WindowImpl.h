@@ -133,7 +133,7 @@ protected:
 
     Event OnKeyEvent(ActionType action, uint8_t key); // Keyboard event
 
-    Event OnTextEvent(const char* str); // Text event
+    Event OnTextEvent(uint32_t unicode); // Text event
 
     Event OnMoveEvent(int32_t x, int32_t y); // Window moved
 

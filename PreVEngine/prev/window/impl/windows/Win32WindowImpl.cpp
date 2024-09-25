@@ -263,8 +263,7 @@ bool Win32WindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
         break;
     //--Char event--
     case WM_CHAR: {
-        strncpy_s(m_textBuffer, (const char*)&msg.wParam, 4);
-        m_eventQueue.Push(OnTextEvent(m_textBuffer));
+        m_eventQueue.Push(OnTextEvent(static_cast<uint32_t>(msg.wParam)));
         break;
     } // return UTF8 code of key pressed
 
