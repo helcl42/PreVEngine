@@ -345,7 +345,7 @@ void XcbWindowImpl::ProcessXEvent(xcb_generic_event_t* xEvent)
         uint32_t unicodeChar{};
         int size = xkb_state_key_get_utf8(m_keyboardState, key, nullptr, 0);
         if (size > 0) {
-            xkb_state_key_get_utf8(m_keyboardState, key, (char*)(&unicodeChar), 0);
+            xkb_state_key_get_utf8(m_keyboardState, key, (char*)(&unicodeChar), std::min<size_t>(size, sizeof(uint32_t)));
         }
         xkb_state_update_key(m_keyboardState, key, XKB_KEY_DOWN);
 
