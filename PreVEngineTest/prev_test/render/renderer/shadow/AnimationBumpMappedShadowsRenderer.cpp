@@ -45,7 +45,7 @@ void AnimationBumpMappedShadowsRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Animation Bump Mapped Shadows Shader created\n");
+    LOGI("Animation Bump Mapped Shadows Shader created");
 
     // clang-format off
     m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ m_device, *m_shader, m_renderPass }
@@ -59,7 +59,7 @@ void AnimationBumpMappedShadowsRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Animation Bump Mapped Shadows Pipeline created\n");
+    LOGI("Animation Bump Mapped Shadows Pipeline created");
 
     m_uniformsPool = std::make_unique<prev::render::buffer::UniformBufferRing<Uniforms>>(m_allocator);
     m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));

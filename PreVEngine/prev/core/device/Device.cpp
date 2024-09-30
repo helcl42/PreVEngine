@@ -70,7 +70,7 @@ bool QueuesMetadata::HasAny(const QueueType queueType) const
 Device::Device(const std::shared_ptr<PhysicalDevice>& gpu, const QueuesMetadata& queuesMetadata)
     : m_gpu{ gpu }
 {
-    LOGI("Logical Device using GPU: %s\n", m_gpu->GetProperties().deviceName);
+    LOGI("Logical Device using GPU: %s", m_gpu->GetProperties().deviceName);
     m_gpu->GetExtensions().Print();
 
     const auto queueFamilyIndices{ queuesMetadata.GetQueueFamiies() };
@@ -121,7 +121,7 @@ Device::~Device()
     vkDeviceWaitIdle(m_handle);
     vkDestroyDevice(m_handle, nullptr);
 
-    LOGI("Logical device destroyed\n");
+    LOGI("Logical device destroyed");
 }
 
 void Device::WaitIdle() const
@@ -133,13 +133,13 @@ std::shared_ptr<Queue> Device::GetQueue(const QueueType queueType, const uint32_
 {
     const auto queuesIter{ m_queues.find(queueType) };
     if (queuesIter == m_queues.cend()) {
-        LOGE("Trying to retrieve invalid QueueType.\n");
+        LOGE("Trying to retrieve invalid QueueType.");
         return nullptr;
     }
 
     const auto& queuesGroup{ queuesIter->second };
     if (index >= queuesGroup.size()) {
-        LOGE("Trying access queue at invalid index %ud.\n", index);
+        LOGE("Trying access queue at invalid index %ud.", index);
         return nullptr;
     }
 
@@ -150,7 +150,7 @@ std::vector<std::shared_ptr<Queue>> Device::GetQueues(const QueueType queueType)
 {
     const auto queuesIter{ m_queues.find(queueType) };
     if (queuesIter == m_queues.cend()) {
-        LOGE("Trying to retrieve invalid QueueType.\n");
+        LOGE("Trying to retrieve invalid QueueType.");
         return {};
     }
     return queuesIter->second;
@@ -194,7 +194,7 @@ void Device::Print() const
     LOGI("Logical Device used queues:\n");
     for (const auto& [qGroupKey, gQroupList] : m_queues) {
         for (const auto& qGroupItem : gQroupList) {
-            LOGI("Queue purpose: %s family: %d index: %d flags: [ %s] %s\n", queueTypeToString(qGroupKey).c_str(), qGroupItem->family, qGroupItem->index, prev::util::vk::QueueFlagsToString(qGroupItem->flags).c_str(), canPresentToString(qGroupItem->surface).c_str());
+            LOGI("Queue purpose: %s family: %d index: %d flags: [ %s] %s", queueTypeToString(qGroupKey).c_str(), qGroupItem->family, qGroupItem->index, prev::util::vk::QueueFlagsToString(qGroupItem->flags).c_str(), canPresentToString(qGroupItem->surface).c_str());
         }
     }
 }

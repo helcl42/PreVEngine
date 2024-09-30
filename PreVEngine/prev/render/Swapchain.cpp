@@ -59,7 +59,7 @@ Swapchain::~Swapchain()
             swapchainBuffer.Destroy(m_device);
         }
 
-        LOGI("Swapchain destroyed\n");
+        LOGI("Swapchain destroyed");
     }
 
     m_msaaColorBuffer = nullptr;
@@ -85,7 +85,7 @@ bool Swapchain::UpdateExtent()
         const uint32_t defaultWidth = 256;
         const uint32_t defaultHeight = 256;
 
-        LOGW("Can't determine current window surface extent from surface caps. Using defaults instead. (%d x %d)\n", defaultWidth, defaultHeight);
+        LOGW("Can't determine current window surface extent from surface caps. Using defaults instead. (%d x %d)", defaultWidth, defaultHeight);
 
         m_swapchainCreateInfo.imageExtent.width = util::math::Clamp(defaultWidth, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width);
         m_swapchainCreateInfo.imageExtent.height = util::math::Clamp(defaultHeight, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
@@ -111,7 +111,7 @@ bool Swapchain::SetImageCount(uint32_t imageCount)
     m_swapchainCreateInfo.minImageCount = count;
 
     if (count != imageCount) {
-        LOGW("Swapchain using %d framebuffers, instead of %d.\n", count, imageCount);
+        LOGW("Swapchain using %d framebuffers, instead of %d.", count, imageCount);
     }
 
     if (!!m_swapchain) {
@@ -153,7 +153,7 @@ bool Swapchain::SetPresentMode(VkPresentModeKHR preferredMode)
     }
 
     if (mode != preferredMode) {
-        LOGW("Requested present-mode is not supported. Reverting to FIFO mode.\n");
+        LOGW("Requested present-mode is not supported. Reverting to FIFO mode.");
     }
 
     if (!!m_swapchain) {
@@ -165,22 +165,22 @@ bool Swapchain::SetPresentMode(VkPresentModeKHR preferredMode)
 
 void Swapchain::Print() const
 {
-    LOGI("Swapchain:\n");
+    LOGI("Swapchain:");
 
-    LOGI("\tFormat  = %3d : %s\n", m_swapchainCreateInfo.imageFormat, util::vk::FormatToString(m_swapchainCreateInfo.imageFormat).c_str());
-    LOGI("\tDepth   = %3d : %s\n", m_depthBuffer->GetFormat(), util::vk::FormatToString(m_depthBuffer->GetFormat()).c_str());
+    LOGI("\tFormat  = %3d : %s", m_swapchainCreateInfo.imageFormat, util::vk::FormatToString(m_swapchainCreateInfo.imageFormat).c_str());
+    LOGI("\tDepth   = %3d : %s", m_depthBuffer->GetFormat(), util::vk::FormatToString(m_depthBuffer->GetFormat()).c_str());
 
     const auto& extent{ m_swapchainCreateInfo.imageExtent };
-    LOGI("\tExtent  = %d x %d\n", extent.width, extent.height);
-    LOGI("\tBuffers = %d\n", (int)m_swapchainBuffers.size());
+    LOGI("\tExtent  = %d x %d", extent.width, extent.height);
+    LOGI("\tBuffers = %d", (int)m_swapchainBuffers.size());
 
     const auto modes{ GetPresentModes() };
-    LOGI("\tPresentMode:\n");
+    LOGI("\tPresentMode:");
     const auto& mode{ m_swapchainCreateInfo.presentMode };
     for (auto m : modes) {
-        LOGI("\t\t%s %s\n", (m == mode) ? TICK_CHARACTER : " ", util::vk::PresentModeToString(m).c_str());
+        LOGI("\t\t%s %s", (m == mode) ? TICK_CHARACTER : " ", util::vk::PresentModeToString(m).c_str());
     }
-    LOGI("\tSharingMode: %s\n", m_swapchainCreateInfo.imageSharingMode == VK_SHARING_MODE_EXCLUSIVE ? "Exclusive" : "Shared");
+    LOGI("\tSharingMode: %s", m_swapchainCreateInfo.imageSharingMode == VK_SHARING_MODE_EXCLUSIVE ? "Exclusive" : "Shared");
 }
 
 const VkExtent2D& Swapchain::GetExtent() const
@@ -273,7 +273,7 @@ void Swapchain::Apply()
     }
 
     if (m_swapchainCreateInfo.oldSwapchain == VK_NULL_HANDLE) {
-        LOGI("Swapchain created\n");
+        LOGI("Swapchain created");
     }
 }
 
@@ -298,7 +298,7 @@ std::vector<VkImage> Swapchain::GetSwapchainImages() const
 
 bool Swapchain::AcquireNext(SwapchainBuffer& next)
 {
-    ASSERT(!m_isAcquired, "Swapchain: Previous swapchain buffer has not yet been presented.\n");
+    ASSERT(!m_isAcquired, "Swapchain: Previous swapchain buffer has not yet been presented.");
 
     const auto& swapchainBuffer{ m_swapchainBuffers[m_frameIndex] };
 
@@ -323,7 +323,7 @@ bool Swapchain::AcquireNext(SwapchainBuffer& next)
 
 void Swapchain::Submit()
 {
-    ASSERT(!!m_isAcquired, "Swapchain: A buffer must be acquired before submitting.\n");
+    ASSERT(!!m_isAcquired, "Swapchain: A buffer must be acquired before submitting.");
 
     const auto& swapchainBuffer{ m_swapchainBuffers[m_frameIndex] };
 
@@ -343,7 +343,7 @@ void Swapchain::Submit()
 
 void Swapchain::Present()
 {
-    ASSERT(!!m_isAcquired, "Swapchain: A buffer must be acquired before presenting.\n");
+    ASSERT(!!m_isAcquired, "Swapchain: A buffer must be acquired before presenting.");
 
     const auto& swapchainBuffer{ m_swapchainBuffers[m_frameIndex] };
 

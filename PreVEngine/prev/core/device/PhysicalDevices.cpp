@@ -28,24 +28,24 @@ std::shared_ptr<PhysicalDevice> PhysicalDevices::FindPresentable(const VkSurface
                 return gpu;
             }
         }
-        LOGW("No devices can present to this surface.\n");
+        LOGW("No devices can present to this surface.");
     } else {
         const auto& gpu{ m_gpuList[hintIndex] };
         if (gpu->FindQueueFamily(0, 0, surface) >= 0) {
             return gpu;
         }
-        LOGW("Devices at index %d can not present to this surface.\n", hintIndex);
+        LOGW("Devices at index %d can not present to this surface.", hintIndex);
     }
     return nullptr;
 }
 
 void PhysicalDevices::Print(bool showQueues) const
 {
-    LOGI("Physical Devices: %zd\n", GetCount());
+    LOGI("Physical Devices: %zd", GetCount());
 
     size_t j{ 0 };
     for (const auto& gpu : m_gpuList) {
-        LOGI("GPU: %zd:\n", j);
+        LOGI("GPU: %zd:", j);
         gpu->Print(true);
         ++j;
     }

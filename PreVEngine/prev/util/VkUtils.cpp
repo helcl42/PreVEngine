@@ -119,7 +119,7 @@ void TransitionImageLayout(const VkCommandBuffer commandBuffer, const VkImage im
             barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
             srcStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
         } else { // FULL barrier
-            LOGW("WARN: performance - full barrier is used(src).\n");
+            LOGW("Performance - full barrier is used(src).");
             barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
             srcStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
         }
@@ -147,7 +147,7 @@ void TransitionImageLayout(const VkCommandBuffer commandBuffer, const VkImage im
             barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
             dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT; // TODO this might not be enough in certain cases
         } else { // FULL barrier
-            LOGW("WARN: performance - full barrier is used(dst).\n");
+            LOGW("Performance - full barrier is used(dst).");
             barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
             dstStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
         }
