@@ -56,7 +56,7 @@ void TerrainNormalMappedRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Terrain Normal Mapped Shader created\n");
+    LOGI("Terrain Normal Mapped Shader created");
 
     // clang-format off
     m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ m_device, *m_shader, m_renderPass }
@@ -70,7 +70,7 @@ void TerrainNormalMappedRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Terrain Normal Mapped Pipeline created\n");
+    LOGI("Terrain Normal Mapped Pipeline created");
 
     m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsVS>>(m_allocator);
     m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));

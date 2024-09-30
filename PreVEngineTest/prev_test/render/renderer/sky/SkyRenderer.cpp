@@ -5,6 +5,7 @@
 #include "../../../component/sky/ISkyComponent.h"
 #include "../../../component/time/ITimeComponent.h"
 
+#include <prev/common/Logger.h>
 #include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
@@ -41,14 +42,14 @@ void SkyRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Sky Compute Shader created\n");
+    LOGI("Sky Compute Shader created");
 
     // clang-format off
     m_skyPipeline = prev::render::pipeline::ComputePipelineBuilder{ m_device, *m_skyShader }
         .Build();
     // clang-format on
 
-    LOGI("Sky Compute Pipeline created\n");
+    LOGI("Sky Compute Pipeline created");
 
     m_uniformsPoolSkyCS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsSkyCS>>(m_allocator);
     m_uniformsPoolSkyCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
@@ -69,14 +70,14 @@ void SkyRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Sky PostProcess Compute Shader created\n");
+    LOGI("Sky PostProcess Compute Shader created");
 
     // clang-format off
     m_skyPostProcessPipeline = prev::render::pipeline::ComputePipelineBuilder{ m_device, *m_skyPostProcessShader }
         .Build();
     // clang-format on
 
-    LOGI("Sky PostProcess Compute Pipeline created\n");
+    LOGI("Sky PostProcess Compute Pipeline created");
 
     m_uniformsPoolSkyPostProcessCS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsSkyPostProcessCS>>(m_allocator);
     m_uniformsPoolSkyPostProcessCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
@@ -104,7 +105,7 @@ void SkyRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Sky Composite Shader created\n");
+    LOGI("Sky Composite Shader created");
 
     // clang-format off
     m_compositePipeline = prev::render::pipeline::GraphicsPipelineBuilder{ m_device, *m_compositeShader, m_renderPass }
@@ -118,11 +119,21 @@ void SkyRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Sky Composite Pipeline created\n");
+    LOGI("Sky Composite Pipeline created");
+
+    m_timestampQueryPool = std::make_shared<prev::render::query::QueryPool>(m_device, VK_QUERY_TYPE_TIMESTAMP, 3, 2);
 }
 
 void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
 {
+    std::vector<uint64_t> timestamps;
+    if (m_timestampQueryPool->GetQueryResults(m_timestampQueryPoolIndex.GetIndex(), VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT, timestamps)) {
+        LOGI("Sky elapsed: %f us", static_cast<double>(timestamps[1] - timestamps[0]) * static_cast<double>(m_device.GetGPU()->GetProperties().limits.timestampPeriod) * 1e-3);
+    }
+    m_timestampQueryPool->Reset(m_timestampQueryPoolIndex, renderContext.commandBuffer);
+
+    vkCmdWriteTimestamp(renderContext.commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, m_timestampQueryPool->GetQueryPool(m_timestampQueryPoolIndex), 0);
+
     const auto skyComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::sky::ISkyComponent>({ TAG_SKY_RENDER_COMPONENT });
     const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
     const auto timeComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::time::ITimeComponent>({ TAG_TIME_COMPONENT });
@@ -235,6 +246,8 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
     vkCmdDispatch(renderContext.commandBuffer, prev::util::vk::GetComputeGroupSize(extent.width, 16), prev::util::vk::GetComputeGroupSize(extent.height, 16), 1);
 
     m_skyPostProcessColorImageBuffer->UpdateLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, renderContext.commandBuffer);
+
+    vkCmdWriteTimestamp(renderContext.commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, m_timestampQueryPool->GetQueryPool(m_timestampQueryPoolIndex), 1);
 }
 
 void SkyRenderer::PreRender(const NormalRenderContext& renderContext)

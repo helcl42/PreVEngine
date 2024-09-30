@@ -255,7 +255,7 @@ Surface& AndroidWindowImpl::CreateSurface()
         androidCreateInfo.flags = 0;
         androidCreateInfo.window = m_app->window;
         VKERRCHECK(vkCreateAndroidSurfaceKHR(m_instance, &androidCreateInfo, NULL, &m_vkSurface));
-        LOGI("Android - Vulkan Surface created\n");
+        LOGI("Android - Vulkan Surface created");
     }
     return *this;
 }

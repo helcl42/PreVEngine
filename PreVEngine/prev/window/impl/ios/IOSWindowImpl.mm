@@ -160,7 +160,7 @@ Surface& IOSWindowImpl::CreateSurface()
         iosSurfaceCreateInfo.flags = 0;
         iosSurfaceCreateInfo.pLayer = static_cast<CAMetalLayer*>(m_state->view.layer);
         VKERRCHECK(vkCreateMetalSurfaceEXT(m_instance, &iosSurfaceCreateInfo, nullptr, &m_vkSurface));
-        LOGI("iOS - Vulkan Surface created\n");
+        LOGI("iOS - Vulkan Surface created");
     }
     return *this;
 }

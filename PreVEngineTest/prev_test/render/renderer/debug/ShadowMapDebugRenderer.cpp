@@ -46,7 +46,7 @@ void ShadowMapDebugRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("ShadowMapDebug Shader created\n");
+    LOGI("ShadowMapDebug Shader created");
 
     // clang-format off
     m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ m_device, *m_shader, m_renderPass }
@@ -60,7 +60,7 @@ void ShadowMapDebugRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("ShadowMapDebug Pipeline created\n");
+    LOGI("ShadowMapDebug Pipeline created");
 
     // create quad model
     prev_test::render::mesh::MeshFactory meshFactory{};

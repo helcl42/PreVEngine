@@ -23,8 +23,9 @@ const char* VkResultStr(const VkResult err);
         VkResult VKRESULT = VKFN;                  \
         ShowVkResult(VKRESULT);                    \
         assert(VKRESULT >= 0);                     \
-        if (VKRESULT)                              \
+        if (VKRESULT) {                            \
             printf("%s:%d\n", __FILE__, __LINE__); \
+        }                                          \
     }
 #endif
 

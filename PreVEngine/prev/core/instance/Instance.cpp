@@ -92,7 +92,7 @@ void Instance::Create(const Layers& layers, const Extensions& extensions, const 
     volkLoadInstance(m_instance);
 #endif
 
-    LOGI("Vulkan Instance created\n");
+    LOGI("Vulkan Instance created");
 
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
     if (extensions.IsPicked(VK_EXT_DEBUG_REPORT_EXTENSION_NAME)) {
@@ -107,7 +107,7 @@ void Instance::Create(const Layers& layers, const Extensions& extensions, const 
 
 void Instance::Print() const
 {
-    LOGI("->Instance %s created.\n", (!!m_instance) ? "" : "NOT");
+    LOGI("->Instance %s created.", (!!m_instance) ? "" : "NOT");
 }
 
 Instance::~Instance()
@@ -115,7 +115,7 @@ Instance::~Instance()
     m_validationReporter.Destroy(); // Must be called BEFORE vkDestroyInstance()
 
     vkDestroyInstance(m_instance, nullptr);
-    LOGI("Vulkan Instance destroyed\n");
+    LOGI("Vulkan Instance destroyed");
 }
 
 Instance::operator VkInstance() const

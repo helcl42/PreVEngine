@@ -42,7 +42,7 @@ void SunRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Sun Shader created\n");
+    LOGI("Sun Shader created");
 
     // clang-format off
     m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ m_device, *m_shader, m_renderPass }
@@ -56,7 +56,7 @@ void SunRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Sun Pipeline created\n");
+    LOGI("Sun Pipeline created");
 
     m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsVS>>(m_allocator);
     m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));

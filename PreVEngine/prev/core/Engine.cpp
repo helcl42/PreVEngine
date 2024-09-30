@@ -71,7 +71,7 @@ void Engine::MainLoop()
         }
 
         if (m_fpsCounter->Tick()) {
-            LOGI("FPS %f\n", m_fpsCounter->GetAverageFPS());
+            LOGI("FPS %f", m_fpsCounter->GetAverageFPS());
         }
     }
 }
@@ -188,7 +188,7 @@ void Engine::ResetAllocator()
     //  -> Allocator uses only graphics queue for it's internal commands
     //     - make queue type as a parameter or even better decouple it from queue completely
     m_allocator = std::make_shared<prev::core::memory::Allocator>(*m_instance, *m_device, *m_device->GetQueue(device::QueueType::GRAPHICS)); // Create "Vulkan Memory Allocator"
-    LOGI("Allocator created\n");
+    LOGI("Allocator created");
 }
 
 void Engine::ResetRenderPass()

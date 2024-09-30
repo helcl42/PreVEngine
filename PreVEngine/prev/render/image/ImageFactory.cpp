@@ -10,11 +10,11 @@ namespace prev::render::image {
 std::unique_ptr<Image> ImageFactory::CreateImage(const std::string& filename, bool flipVertically) const
 {
     if (!prev::util::file::Exists(filename)) {
-        LOGE("Image: File not found: %s\n", filename.c_str());
+        LOGE("Image: File not found: %s", filename.c_str());
         return nullptr;
     }
 
-    LOGI("Loading image: %s...\n", filename.c_str());
+    LOGI("Loading image: %s...", filename.c_str());
 
     stbi_set_flip_vertically_on_load(flipVertically);
 #ifdef TARGET_PLATFORM_IOS
@@ -30,7 +30,7 @@ std::unique_ptr<Image> ImageFactory::CreateImage(const std::string& filename, bo
 
     auto image = std::make_unique<Image>(w, h, imageBytes);
 
-    LOGI("Loaded image: %s (%dx%d)\n", filename.c_str(), w, h);
+    LOGI("Loaded image: %s (%dx%d)", filename.c_str(), w, h);
 
     stbi_image_free(imageBytes);
 
@@ -39,7 +39,7 @@ std::unique_ptr<Image> ImageFactory::CreateImage(const std::string& filename, bo
 
 std::unique_ptr<Image> ImageFactory::CreateImageFromMemory(const uint8_t* data, const int dataLength) const
 {
-    LOGI("Loading image from memory: %d bytes\n", dataLength);
+    LOGI("Loading image from memory: %d bytes", dataLength);
 
 #ifdef TARGET_PLATFORM_IOS
     stbi_convert_iphone_png_to_rgb(true);
@@ -54,7 +54,7 @@ std::unique_ptr<Image> ImageFactory::CreateImageFromMemory(const uint8_t* data, 
 
     auto image = std::make_unique<Image>(w, h, imageBytes);
 
-    LOGI("Loaded image from memory: %d bytes (%dx%d)\n", dataLength, w, h);
+    LOGI("Loaded image from memory: %d bytes (%dx%d)", dataLength, w, h);
 
     stbi_image_free(imageBytes);
 
