@@ -10,7 +10,6 @@
 #include <prev/render/buffer/UniformBuffer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/pipeline/Pipeline.h>
-#include <prev/render/query/QueryPool.h>
 #include <prev/render/sampler/Sampler.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
@@ -130,10 +129,6 @@ private:
     std::shared_ptr<prev::render::buffer::ImageBuffer> m_skyPostProcessColorImageBuffer;
 
     std::shared_ptr<prev::render::sampler::Sampler> m_skyPostProcessImageSampler;
-
-    std::shared_ptr<prev::render::query::QueryPool> m_timestampQueryPool{};
-
-    prev::util::CircularIndex<uint32_t> m_timestampQueryPoolIndex{ 3 };
 
 private:
     static const inline VkFormat COLOR_FORMAT{ VK_FORMAT_R8G8B8A8_UNORM };
