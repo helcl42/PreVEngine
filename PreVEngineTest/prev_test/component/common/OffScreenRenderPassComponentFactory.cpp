@@ -6,10 +6,6 @@
 #include <prev/render/pass/RenderPassBuilder.h>
 #include <prev/util/VkUtils.h>
 
-#include <prev/render/buffer/ImageBufferBuilder.h>
-#include <prev/render/pass/RenderPassBuilder.h>
-#include <prev/util/VkUtils.h>
-
 namespace prev_test::component::common {
 
 constexpr bool ANISOTROPIC_FILTERING_ENABLED{ true };
