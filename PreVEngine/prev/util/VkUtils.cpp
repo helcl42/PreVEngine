@@ -300,49 +300,6 @@ void CopyImage(const VkCommandBuffer commandBuffer, const VkImage srcImage, cons
     }
 }
 
-void CopyImage(const VkCommandBuffer commandBuffer, const VkImage srcImage, const VkExtent3D& extent, const uint32_t layersCount, const VkImageAspectFlags aspectMask, const VkFilter filter, const VkImageLayout layout, VkImage dstImage)
-{
-    for (uint32_t layerIndex = 0; layerIndex < layersCount; ++layerIndex) {
-        VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.subresourceRange.aspectMask = aspectMask;
-        barrier.subresourceRange.baseMipLevel = 0;
-        barrier.subresourceRange.levelCount = 1;
-        barrier.subresourceRange.baseArrayLayer = layerIndex;
-        barrier.subresourceRange.layerCount = 1;
-        barrier.image = dstImage;
-
-        barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        barrier.oldLayout = layout;
-        barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1, &barrier);
-
-        VkImageBlit blit{};
-        blit.srcSubresource.aspectMask = aspectMask;
-        blit.srcSubresource.mipLevel = 0;
-        blit.srcSubresource.baseArrayLayer = layerIndex;
-        blit.srcSubresource.layerCount = 1;
-        blit.srcOffsets[0] = { 0, 0, 0 };
-        blit.srcOffsets[1] = { static_cast<int32_t>(extent.width), static_cast<int32_t>(extent.height), static_cast<int32_t>(extent.depth) };
-        blit.dstSubresource.aspectMask = aspectMask;
-        blit.dstSubresource.mipLevel = 0;
-        blit.dstSubresource.baseArrayLayer = layerIndex;
-        blit.dstSubresource.layerCount = 1;
-        blit.dstOffsets[0] = { 0, 0, 0 };
-        blit.dstOffsets[1] = { static_cast<int32_t>(extent.width), static_cast<int32_t>(extent.height), static_cast<int32_t>(extent.depth) };
-
-        vkCmdBlitImage(commandBuffer, srcImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, filter);
-
-        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        barrier.newLayout = layout;
-        vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 0, 0, NULL, 0, NULL, 1, &barrier);
-    }
-}
-
 VkCommandPool CreateCommandPool(const VkDevice device, const uint32_t queueFamilyIndex)
 {
     VkCommandPoolCreateInfo poolInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };

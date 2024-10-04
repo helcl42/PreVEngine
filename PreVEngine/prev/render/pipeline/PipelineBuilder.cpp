@@ -32,7 +32,7 @@ namespace {
         return pipeline;
     }
 
-    VkPipeline CreateGraphicsPipeline(const VkDevice& device, const shader::Shader& shader, const pass::RenderPass& renderPass, const VkPipelineLayout pipelineLayout, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool blendingEnabled, const bool additiveBlendingEnabled, const VkPolygonMode polygonMode, const VkCullModeFlagBits cullingMode, const VkCullModeFlagBits cullingMode, const VkFrontFace frontFace, const bool sampleShadingEnabled, const float minSampleShadingFraction, const uint32_t patchPointCount)
+    VkPipeline CreateGraphicsPipeline(const VkDevice& device, const shader::Shader& shader, const pass::RenderPass& renderPass, const VkPipelineLayout pipelineLayout, const VkPrimitiveTopology topology, const bool depthTestEnabled, const bool depthWriteEnabled, const bool blendingEnabled, const bool additiveBlendingEnabled, const VkPolygonMode polygonMode, const VkCullModeFlagBits cullingMode, const VkFrontFace frontFace, const bool sampleShadingEnabled, const float minSampleShadingFraction, const uint32_t patchPointCount)
     {
         VkPipelineInputAssemblyStateCreateInfo inputAssembly = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
         inputAssembly.topology = topology;
