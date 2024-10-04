@@ -109,7 +109,7 @@ struct Event {
 
         struct // Text entered
         {
-            const char* str;
+            uint32_t unicode;
         } text;
 
         struct // Window move

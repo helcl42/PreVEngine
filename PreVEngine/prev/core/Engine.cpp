@@ -95,7 +95,7 @@ void Engine::MainLoop()
         }
 
         if (m_fpsCounter->Tick()) {
-            LOGI("FPS %f\n", m_fpsCounter->GetAverageFPS());
+            LOGI("FPS %f", m_fpsCounter->GetAverageFPS());
         }
     }
 }
@@ -234,7 +234,7 @@ void Engine::ResetAllocator()
     //  -> Allocator uses only graphics queue for it's internal commands
     //     - make queue type as a parameter or even better decouple it from queue completely
     m_allocator = std::make_shared<prev::core::memory::Allocator>(*m_instance, *m_device, *m_device->GetQueue(device::QueueType::GRAPHICS)); // Create "Vulkan Memory Allocator"
-    LOGI("Allocator created\n");
+    LOGI("Allocator created");
 }
 
 void Engine::ResetRenderPass()
@@ -264,7 +264,7 @@ void Engine::ResetRenderPass()
 
         m_renderPass = renderPassBuilder
                            .AddColorAttachment(colorFormat, sampleCount, clearColor, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE) // color buffer, multisampled
-                           .AddDepthAttachment(depthFormat, sampleCount, { MAX_DEPTH, 0 }, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE) // depth buffer, multisampled
+                           .AddDepthAttachment(depthFormat, sampleCount, { MAX_DEPTH, 0 }, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE)// depth buffer, multisampled
                            .AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, clearColor, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, true) // color buffer, resolve buffer
                            .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, { MAX_DEPTH, 0 }, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, true) // depth buffer, resolve buffer
                            .AddSubpass({ 0, 1 }, { 2, 3 }) // resolve ref will be at index 2 & 3

@@ -43,7 +43,7 @@ void Font3dRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Fonts 3d Shader created\n");
+    LOGI("Fonts 3d Shader created");
 
     // clang-format off
     m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ m_device, *m_shader, m_renderPass }
@@ -57,7 +57,7 @@ void Font3dRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Fonts 3d Pipeline created\n");
+    LOGI("Fonts 3d Pipeline created");
 
     m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsVS>>(m_allocator);
     m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));

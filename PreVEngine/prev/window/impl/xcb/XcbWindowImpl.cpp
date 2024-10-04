@@ -72,7 +72,7 @@ namespace {
 XcbWindowImpl::XcbWindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo)
     : WindowImpl(instance)
 {
-    LOGI("Creating XCB-Window...\n");
+    LOGI("Creating XCB-Window...");
 
     XInitThreads(); // Required by Vulkan, when using XLib. (Vulkan spec section: 30.2.6 Xlib Platform)
 
@@ -182,7 +182,7 @@ bool XcbWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
             } else {
                 outEvent = event;
                 return true;
-            }    
+            }
         }
     }
     return false;
@@ -241,7 +241,7 @@ Surface& XcbWindowImpl::CreateSurface()
         xcbCreateInfo.connection = m_xcbConnection;
         xcbCreateInfo.window = m_xcbWindow;
         VKERRCHECK(vkCreateXcbSurfaceKHR(m_instance, &xcbCreateInfo, nullptr, &m_vkSurface));
-        LOGI("XCB - Vulkan Surface created\n");
+        LOGI("XCB - Vulkan Surface created");
     }
     return *this;
 }
@@ -252,7 +252,7 @@ bool XcbWindowImpl::InitTouch()
 #ifdef ENABLE_MULTITOUCH
     int ev, err;
     if (!XQueryExtension(m_display, "XInputExtension", &m_xiOpcode, &ev, &err)) {
-        LOGW("XInputExtension not available.\n");
+        LOGW("XInputExtension not available.");
         return false;
     }
 
@@ -260,7 +260,7 @@ bool XcbWindowImpl::InitTouch()
     int major = 2;
     int minor = 3;
     if (XIQueryVersion(m_display, &major, &minor) != Success) {
-        LOGW("No XI2 support. (%d.%d only)\n", major, minor);
+        LOGW("No XI2 support. (%d.%d only)", major, minor);
         return false;
     }
 
@@ -324,7 +324,9 @@ void XcbWindowImpl::ProcessXEvent(xcb_generic_event_t* xEvent)
 
     const uint8_t key{ event->detail };
     const ButtonType btn{ event->detail < 4 ? (ButtonType)event->detail : ButtonType::NONE };
-    const ButtonType bestBtn{ IsMouseButtonPressed(ButtonType::LEFT) ? ButtonType::LEFT : IsMouseButtonPressed(ButtonType::MIDDLE) ? ButtonType::MIDDLE : IsMouseButtonPressed(ButtonType::RIGHT) ? ButtonType::RIGHT : ButtonType::NONE }; // If multiple buttons pressed, pick left one.
+    const ButtonType bestBtn{ IsMouseButtonPressed(ButtonType::LEFT) ? ButtonType::LEFT : IsMouseButtonPressed(ButtonType::MIDDLE) ? ButtonType::MIDDLE
+            : IsMouseButtonPressed(ButtonType::RIGHT)                                                                              ? ButtonType::RIGHT
+                                                                                                                                   : ButtonType::NONE }; // If multiple buttons pressed, pick left one.
 
     switch (xEvent->response_type & ~0x80) {
     case XCB_MOTION_NOTIFY: {
@@ -342,15 +344,18 @@ void XcbWindowImpl::ProcessXEvent(xcb_generic_event_t* xEvent)
         m_eventQueue.Push(OnMouseEvent(ActionType::UP, mx, my, btn)); // mouse btn release
         break;
     case XCB_KEY_PRESS: {
-        xkb_state_key_get_utf8(m_keyboardState, key, m_textBuffer, sizeof(m_textBuffer));
-        xkb_state_update_key(m_keyboardState, key, XKB_KEY_DOWN);
-
-        if (m_textBuffer[0]) {
-            m_eventQueue.Push(OnTextEvent(m_textBuffer)); // text typed event (store in FIFO for next run)
+        uint32_t unicodeChar{};
+        int size = xkb_state_key_get_utf8(m_keyboardState, key, nullptr, 0);
+        if (size > 0) {
+            xkb_state_key_get_utf8(m_keyboardState, key, (char*)(&unicodeChar), std::min<size_t>(size, sizeof(uint32_t)));
         }
+        xkb_state_update_key(m_keyboardState, key, XKB_KEY_DOWN);
 
         const uint8_t keyCode{ EVDEV_TO_HID[key] };
         m_eventQueue.Push(OnKeyEvent(ActionType::DOWN, keyCode)); // key pressed event
+        if (unicodeChar) {
+            m_eventQueue.Push(OnTextEvent(unicodeChar)); // text typed event
+        }
         break;
     }
     case XCB_KEY_RELEASE: {
@@ -363,7 +368,7 @@ void XcbWindowImpl::ProcessXEvent(xcb_generic_event_t* xEvent)
     case XCB_CLIENT_MESSAGE: { // window close event
         const auto clientMessageEvent{ (xcb_client_message_event_t*)xEvent };
         if (clientMessageEvent->data.data32[0] == m_atomWmDeleteWindow->atom) {
-            LOGI("Closing Window\n");
+            LOGI("Closing Window");
             m_eventQueue.Push(OnCloseEvent());
         }
         break;

@@ -13,7 +13,7 @@ namespace {
     {
         const auto familyIndex{ gpu->FindQueueFamily(flags, unwantedFlags, surface) };
         if (familyIndex < 0) {
-            LOGW("Could not find queueFamily with requested properties.\n");
+            LOGW("Could not find queueFamily with requested properties.");
             return false;
         }
 
@@ -24,7 +24,7 @@ namespace {
         if (usedFamilyQueueCount < queueFamilyProps.queueCount) {
             queueIndex = usedFamilyQueueCount;
         } else {
-            LOGW("No more queues available from this family - fallback to the first one.\n");
+            LOGW("No more queues available from this family - fallback to the first one.");
         }
 
         outQueueMeta = QueueMetadata{ static_cast<uint32_t>(familyIndex), queueIndex, queueFamilyProps.queueFlags, surface };
@@ -56,12 +56,12 @@ std::shared_ptr<Device> DeviceFactory::Create(const std::shared_ptr<PhysicalDevi
     if constexpr (QUERY_DEDICATED_COMPUTE_QUEUE) {
         // check if there is a dedicated compute queue without graphics
         if (FindQueue(gpu, VK_QUEUE_COMPUTE_BIT, DefaultUnwantedFlags | VK_QUEUE_GRAPHICS_BIT, nullptr, queuesMetadata, workingQueueMetadata)) { // there is a dedicated compute queue
-            queuesMetadata.Add({QueueType::COMPUTE}, workingQueueMetadata);
+            queuesMetadata.Add({ QueueType::COMPUTE }, workingQueueMetadata);
         }
 
         if (!queuesMetadata.HasAny(QueueType::COMPUTE)) {
             if (FindQueue(gpu, VK_QUEUE_COMPUTE_BIT, DefaultUnwantedFlags, nullptr, queuesMetadata, workingQueueMetadata)) {
-                queuesMetadata.Add({QueueType::COMPUTE}, workingQueueMetadata);
+                queuesMetadata.Add({ QueueType::COMPUTE }, workingQueueMetadata);
             }
         }
     }
@@ -89,7 +89,7 @@ std::shared_ptr<Device> DeviceFactory::Create(const std::shared_ptr<PhysicalDevi
     }
 
     if (!queuesMetadata.HasAny(QueueType::PRESENT) || !queuesMetadata.HasAny(QueueType::GRAPHICS) || !queuesMetadata.HasAny(QueueType::COMPUTE)) {
-        LOGE("Could not find all necessary queues.\n");
+        LOGE("Could not find all necessary queues.");
         return nullptr;
     }
 

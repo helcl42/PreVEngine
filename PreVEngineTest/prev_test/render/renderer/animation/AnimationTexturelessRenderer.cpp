@@ -50,7 +50,7 @@ void AnimationTexturelessRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Animation Textureless Shader created\n");
+    LOGI("Animation Textureless Shader created");
 
     // clang-format off
     m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ m_device, *m_shader, m_renderPass }
@@ -64,7 +64,7 @@ void AnimationTexturelessRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Animation Textureless Pipeline created\n");
+    LOGI("Animation Textureless Pipeline created");
 
     m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsVS>>(m_allocator);
     m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));

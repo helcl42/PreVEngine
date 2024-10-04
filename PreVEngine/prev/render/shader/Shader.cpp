@@ -152,7 +152,7 @@ void Shader::Bind(const std::string& name, const prev::render::buffer::UniformBu
     item.bufferInfo.offset = uniformBuffer.GetOffset();
     item.bufferInfo.range = uniformBuffer.GetRange();
 
-    // LOGI("Bind UniformBuffer to shader-in: \"%s\"\n", name.c_str());
+    // LOGI("Bind UniformBuffer to shader-in: \"%s\"", name.c_str());
 }
 
 void Shader::Bind(const std::string& name, const prev::render::buffer::Buffer& buffer)
@@ -168,7 +168,7 @@ void Shader::Bind(const std::string& name, const prev::render::buffer::Buffer& b
     item.bufferInfo.offset = 0;
     item.bufferInfo.range = buffer.GetSize();
 
-    // LOGI("Bind Buffer to shader-in: \"%s\"\n", name.c_str());
+    // LOGI("Bind Buffer to shader-in: \"%s\"", name.c_str());
 }
 
 void Shader::Bind(const std::string& name, const prev::render::buffer::ImageBuffer& imageBuffer, const prev::render::sampler::Sampler& sampler, const VkImageLayout layout)
@@ -184,14 +184,14 @@ void Shader::Bind(const std::string& name, const prev::render::buffer::ImageBuff
     item.imageInfo.imageLayout = layout;
     item.imageInfo.sampler = sampler;
 
-    // LOGI("Bind Image to shader-in: \"%s\"\n", name.c_str());
+    // LOGI("Bind Image to shader-in: \"%s\"", name.c_str());
 }
 
 void Shader::CheckBindings() const
 {
     for (auto& item : m_descriptorSetInfos) {
         if (item.second.bufferInfo.buffer == 0) {
-            LOGE("Shader item: \"%s\" was not bound. Set a binding before creating the DescriptorSet.\n", item.first.c_str());
+            LOGE("Shader item: \"%s\" was not bound. Set a binding before creating the DescriptorSet.", item.first.c_str());
             PAUSE;
             exit(0);
         }

@@ -5,7 +5,7 @@
 namespace prev::window::impl {
 WindowImpl::WindowImpl(const prev::core::instance::Instance& instance)
     : m_instance{ instance }
-    , m_running{false }
+    , m_running{ false }
     , m_hasTextInput{ false }
     , m_hasFocus{ false }
     , m_mouseLocked{ false }
@@ -70,7 +70,7 @@ void WindowImpl::DestroySurface()
     if (m_vkSurface != VK_NULL_HANDLE) {
         vkDestroySurfaceKHR(m_instance, m_vkSurface, nullptr);
         m_vkSurface = VK_NULL_HANDLE;
-        LOGI("Vulkan Surface destroyed\n");
+        LOGI("Vulkan Surface destroyed");
     }
 }
 
@@ -127,10 +127,10 @@ Event WindowImpl::OnKeyEvent(ActionType action, uint8_t key)
     return e;
 }
 
-Event WindowImpl::OnTextEvent(const char* str)
+Event WindowImpl::OnTextEvent(uint32_t unicode)
 {
     Event e{ Event::EventType::TEXT };
-    e.text.str = str;
+    e.text.unicode = unicode;
     return e;
 }
 

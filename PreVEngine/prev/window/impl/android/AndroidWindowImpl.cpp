@@ -145,12 +145,9 @@ bool AndroidWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
                 case AKEY_EVENT_ACTION_DOWN: {
                     int metaState = AKeyEvent_getMetaState(aEvent);
                     int unicode = GetUnicodeChar(AKEY_EVENT_ACTION_DOWN, keyCode, metaState);
-
-                    m_eventQueue.Push(OnKeyEvent(ActionType::DOWN, hidCode)); // key pressed event (returned on this run)
-
-                    (int&)m_textBuffer = unicode;
-                    if (m_textBuffer[0]) {
-                        m_eventQueue.Push(OnTextEvent(m_textBuffer)); // text typed event (store in FIFO for next run)
+                    m_eventQueue.Push(OnKeyEvent(ActionType::DOWN, hidCode)); // key pressed event
+                    if (unicode) {
+                        m_eventQueue.Push(OnTextEvent(static_cast<uint32_t>(unicode))); // text typed event
                     }
                     break;
                 }
@@ -258,7 +255,7 @@ Surface& AndroidWindowImpl::CreateSurface()
         androidCreateInfo.flags = 0;
         androidCreateInfo.window = m_app->window;
         VKERRCHECK(vkCreateAndroidSurfaceKHR(m_instance, &androidCreateInfo, NULL, &m_vkSurface));
-        LOGI("Android - Vulkan Surface created\n");
+        LOGI("Android - Vulkan Surface created");
     }
     return *this;
 }

@@ -42,7 +42,7 @@ void TextureDebugRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Texture Debug Shader created\n");
+    LOGI("Texture Debug Shader created");
 
     // clang-format off
     m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ m_device, *m_shader, m_renderPass }
@@ -56,7 +56,7 @@ void TextureDebugRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Texture Debug Pipeline created\n");
+    LOGI("Texture Debug Pipeline created");
 
     // create quad model
     prev_test::render::mesh::MeshFactory meshFactory{};

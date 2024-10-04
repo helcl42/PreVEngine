@@ -43,7 +43,7 @@ void AnimationShadowsRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Animation Shadows Shader created\n");
+    LOGI("Animation Shadows Shader created");
 
     // clang-format off
     m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ m_device, *m_shader, m_renderPass }
@@ -57,7 +57,7 @@ void AnimationShadowsRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Animation Shadows Pipeline created\n");
+    LOGI("Animation Shadows Pipeline created");
 
     m_uniformsPool = std::make_unique<prev::render::buffer::UniformBufferRing<Uniforms>>(m_allocator);
     m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));

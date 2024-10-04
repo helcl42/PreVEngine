@@ -11,7 +11,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugReportFlagsEXT msgFlags, VkD
     }
 
     char buf[1024];
-    snprintf(buf, sizeof(buf), "[%s] : %s\n", pLayerPrefix, pMsg);
+    snprintf(buf, sizeof(buf), "[%s] : %s", pLayerPrefix, pMsg);
 
     switch (msgFlags) {
     case VK_DEBUG_REPORT_INFORMATION_BIT_EXT:
@@ -24,7 +24,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugReportFlagsEXT msgFlags, VkD
         LOGV("%s", buf);
         return VK_FALSE;
     case VK_DEBUG_REPORT_ERROR_BIT_EXT:
-        LOGE("%s\n", buf);
+        LOGE("%s", buf);
         return VK_TRUE;
     case VK_DEBUG_REPORT_DEBUG_BIT_EXT:
         LOGD("%s", buf);
@@ -37,7 +37,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugReportFlagsEXT msgFlags, VkD
 static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
     char buf[1024];
-    snprintf(buf, sizeof(buf), "[%s] : %s\n", pCallbackData->pMessageIdName, pCallbackData->pMessage);
+    snprintf(buf, sizeof(buf), "[%s] : %s", pCallbackData->pMessageIdName, pCallbackData->pMessage);
 
     switch (messageSeverity) {
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
@@ -50,7 +50,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityF
         LOGW("%s", buf);
         return VK_FALSE;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-        LOGE("%s\n", buf);
+        LOGE("%s", buf);
         return VK_TRUE;
     default:
         return VK_FALSE;
