@@ -93,7 +93,6 @@ void MasterRenderer::operator()(const prev::input::keyboard::KeyEvent& keyEvent)
     if (keyEvent.action == prev::input::keyboard::KeyActionType::PRESS) {
         if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_R) {
             m_device.WaitIdle();
-            m_device.WaitIdle();
 
             ShutDown();
             Init();
@@ -120,37 +119,15 @@ void MasterRenderer::InitDefault()
     m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::font::FontRenderer>(m_device, m_allocator, m_defaultRenderPass));
     m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::font::Font3dRenderer>(m_device, m_allocator, m_defaultRenderPass));
     m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::particle::ParticlesRenderer>(m_device, m_allocator, m_defaultRenderPass));
-    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::sky::SkyBoxRenderer>(m_device, m_allocator, m_defaultRenderPass));
-    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::sky::SkyRenderer>(m_device, m_allocator, m_defaultRenderPass));
-    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::normal::DefaultRenderer>(m_device, m_allocator, m_defaultRenderPass));
-    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::normal::TexturelessRenderer>(m_device, m_allocator, m_defaultRenderPass));
-    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::normal::NormalMappedRenderer>(m_device, m_allocator, m_defaultRenderPass));
-    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::normal::ConeStepMappedRenderer>(m_device, m_allocator, m_defaultRenderPass));
-    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::terrain::TerrainRenderer>(m_device, m_allocator, m_defaultRenderPass));
-    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::terrain::TerrainNormalMappedRenderer>(m_device, m_allocator, m_defaultRenderPass));
-    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::terrain::TerrainConeStepMappedRenderer>(m_device, m_allocator, m_defaultRenderPass));
-    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::animation::AnimationRenderer>(m_device, m_allocator, m_defaultRenderPass));
-    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::animation::AnimationTexturelessRenderer>(m_device, m_allocator, m_defaultRenderPass));
-    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::animation::AnimationNormalMappedRenderer>(m_device, m_allocator, m_defaultRenderPass));
-    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::animation::AnimationConeStepMappedRenderer>(m_device, m_allocator, m_defaultRenderPass));
-    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::water::WaterRenderer>(m_device, m_allocator, m_defaultRenderPass));
-    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::font::FontRenderer>(m_device, m_allocator, m_defaultRenderPass));
-    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::font::Font3dRenderer>(m_device, m_allocator, m_defaultRenderPass));
-    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::particle::ParticlesRenderer>(m_device, m_allocator, m_defaultRenderPass));
 #ifdef RENDER_BOUNDING_VOLUMES
-    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::debug::BoundingVolumeDebugRenderer>(m_device, m_allocator, m_defaultRenderPass));
     m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::debug::BoundingVolumeDebugRenderer>(m_device, m_allocator, m_defaultRenderPass));
 #endif
 #ifdef RENDER_RAYCASTS
     m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::debug::RayCastDebugRenderer>(m_device, m_allocator, m_defaultRenderPass));
-    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::debug::RayCastDebugRenderer>(m_device, m_allocator, m_defaultRenderPass));
 #endif
 #ifdef RENDER_SELECTION
     m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::debug::SelectionDebugRenderer>(m_device, m_allocator, m_defaultRenderPass));
-    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::debug::SelectionDebugRenderer>(m_device, m_allocator, m_defaultRenderPass));
 #endif
-    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::sky::SunRenderer>(m_device, m_allocator, m_defaultRenderPass));
-    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::sky::LensFlareRenderer>(m_device, m_allocator, m_defaultRenderPass));
     m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::sky::SunRenderer>(m_device, m_allocator, m_defaultRenderPass));
     m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::sky::LensFlareRenderer>(m_device, m_allocator, m_defaultRenderPass));
 
@@ -159,7 +136,6 @@ void MasterRenderer::InitDefault()
     }
 
 #ifdef PARALLEL_RENDERING
-    m_defaultCommandBuffersGroup = CommandBuffersGroupFactory{}.CreateGroup(m_device, *m_device.GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchainImageCount, static_cast<uint32_t>(m_defaultRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
     m_defaultCommandBuffersGroup = CommandBuffersGroupFactory{}.CreateGroup(m_device, *m_device.GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchainImageCount, static_cast<uint32_t>(m_defaultRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
 #endif
 }
@@ -181,15 +157,12 @@ void MasterRenderer::InitDebug()
 {
     // m_debugRenderers.emplace_back(std::make_unique<prev_test::render::renderer::debug::ShadowMapDebugRenderer>(m_device, m_allocator, m_defaultRenderPass));
     m_debugRenderers.emplace_back(std::make_unique<prev_test::render::renderer::debug::TextureDebugRenderer>(m_device, m_allocator, m_defaultRenderPass));
-    // m_debugRenderers.emplace_back(std::make_unique<prev_test::render::renderer::debug::ShadowMapDebugRenderer>(m_device, m_allocator, m_defaultRenderPass));
-    m_debugRenderers.emplace_back(std::make_unique<prev_test::render::renderer::debug::TextureDebugRenderer>(m_device, m_allocator, m_defaultRenderPass));
 
     for (auto& renderer : m_debugRenderers) {
         renderer->Init();
     }
 
 #ifdef PARALLEL_RENDERING
-    m_debugCommandBuffersGroup = CommandBuffersGroupFactory{}.CreateGroup(m_device, *m_device.GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchainImageCount, static_cast<uint32_t>(m_debugRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
     m_debugCommandBuffersGroup = CommandBuffersGroupFactory{}.CreateGroup(m_device, *m_device.GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchainImageCount, static_cast<uint32_t>(m_debugRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
 #endif
 }
@@ -217,12 +190,6 @@ void MasterRenderer::InitShadows()
     m_shadowRenderers.emplace_back(std::make_unique<prev_test::render::renderer::shadow::TerrainBumplMappedShadowsRenderer>(m_device, m_allocator, *shadowsComponent->GetRenderPass()));
     m_shadowRenderers.emplace_back(std::make_unique<prev_test::render::renderer::shadow::AnimationShadowsRenderer>(m_device, m_allocator, *shadowsComponent->GetRenderPass()));
     m_shadowRenderers.emplace_back(std::make_unique<prev_test::render::renderer::shadow::AnimationBumpMappedShadowsRenderer>(m_device, m_allocator, *shadowsComponent->GetRenderPass()));
-    m_shadowRenderers.emplace_back(std::make_unique<prev_test::render::renderer::shadow::DefaultShadowsRenderer>(m_device, m_allocator, *shadowsComponent->GetRenderPass()));
-    m_shadowRenderers.emplace_back(std::make_unique<prev_test::render::renderer::shadow::BumpMappedShadowsRenderer>(m_device, m_allocator, *shadowsComponent->GetRenderPass()));
-    m_shadowRenderers.emplace_back(std::make_unique<prev_test::render::renderer::shadow::TerrainShadowsRenderer>(m_device, m_allocator, *shadowsComponent->GetRenderPass()));
-    m_shadowRenderers.emplace_back(std::make_unique<prev_test::render::renderer::shadow::TerrainBumplMappedShadowsRenderer>(m_device, m_allocator, *shadowsComponent->GetRenderPass()));
-    m_shadowRenderers.emplace_back(std::make_unique<prev_test::render::renderer::shadow::AnimationShadowsRenderer>(m_device, m_allocator, *shadowsComponent->GetRenderPass()));
-    m_shadowRenderers.emplace_back(std::make_unique<prev_test::render::renderer::shadow::AnimationBumpMappedShadowsRenderer>(m_device, m_allocator, *shadowsComponent->GetRenderPass()));
 
     for (auto& renderer : m_shadowRenderers) {
         renderer->Init();
@@ -231,7 +198,6 @@ void MasterRenderer::InitShadows()
 #ifdef PARALLEL_RENDERING
     m_shadowsCommandBufferGroups.resize(prev_test::component::shadow::CASCADES_COUNT);
     for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; ++i) {
-        m_shadowsCommandBufferGroups[i] = CommandBuffersGroupFactory{}.CreateGroup(m_device, *m_device.GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchainImageCount, static_cast<uint32_t>(m_shadowRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
         m_shadowsCommandBufferGroups[i] = CommandBuffersGroupFactory{}.CreateGroup(m_device, *m_device.GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchainImageCount, static_cast<uint32_t>(m_shadowRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
     }
 #endif
@@ -268,27 +234,12 @@ void MasterRenderer::InitReflection()
     m_reflectionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::animation::AnimationNormalMappedRenderer>(m_device, m_allocator, *reflectionComponent->GetRenderPass()));
     m_reflectionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::animation::AnimationConeStepMappedRenderer>(m_device, m_allocator, *reflectionComponent->GetRenderPass()));
     m_reflectionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::particle::ParticlesRenderer>(m_device, m_allocator, *reflectionComponent->GetRenderPass()));
-    m_reflectionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::sky::SkyBoxRenderer>(m_device, m_allocator, *reflectionComponent->GetRenderPass()));
-    m_reflectionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::sky::SkyRenderer>(m_device, m_allocator, *reflectionComponent->GetRenderPass()));
-    m_reflectionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::normal::DefaultRenderer>(m_device, m_allocator, *reflectionComponent->GetRenderPass()));
-    m_reflectionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::normal::TexturelessRenderer>(m_device, m_allocator, *reflectionComponent->GetRenderPass()));
-    m_reflectionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::normal::NormalMappedRenderer>(m_device, m_allocator, *reflectionComponent->GetRenderPass()));
-    m_reflectionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::normal::ConeStepMappedRenderer>(m_device, m_allocator, *reflectionComponent->GetRenderPass()));
-    m_reflectionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::terrain::TerrainRenderer>(m_device, m_allocator, *reflectionComponent->GetRenderPass()));
-    m_reflectionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::terrain::TerrainNormalMappedRenderer>(m_device, m_allocator, *reflectionComponent->GetRenderPass()));
-    m_reflectionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::terrain::TerrainConeStepMappedRenderer>(m_device, m_allocator, *reflectionComponent->GetRenderPass()));
-    m_reflectionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::animation::AnimationRenderer>(m_device, m_allocator, *reflectionComponent->GetRenderPass()));
-    m_reflectionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::animation::AnimationTexturelessRenderer>(m_device, m_allocator, *reflectionComponent->GetRenderPass()));
-    m_reflectionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::animation::AnimationNormalMappedRenderer>(m_device, m_allocator, *reflectionComponent->GetRenderPass()));
-    m_reflectionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::animation::AnimationConeStepMappedRenderer>(m_device, m_allocator, *reflectionComponent->GetRenderPass()));
-    m_reflectionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::particle::ParticlesRenderer>(m_device, m_allocator, *reflectionComponent->GetRenderPass()));
 
     for (auto& renderer : m_reflectionRenderers) {
         renderer->Init();
     }
 
 #ifdef PARALLEL_RENDERING
-    m_reflectionCommandBufferGroups = CommandBuffersGroupFactory{}.CreateGroup(m_device, *m_device.GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchainImageCount, static_cast<uint32_t>(m_reflectionRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
     m_reflectionCommandBufferGroups = CommandBuffersGroupFactory{}.CreateGroup(m_device, *m_device.GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchainImageCount, static_cast<uint32_t>(m_reflectionRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
 #endif
 }
@@ -324,27 +275,12 @@ void MasterRenderer::InitRefraction()
     m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::animation::AnimationNormalMappedRenderer>(m_device, m_allocator, *refractionComponent->GetRenderPass()));
     m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::animation::AnimationConeStepMappedRenderer>(m_device, m_allocator, *refractionComponent->GetRenderPass()));
     m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::particle::ParticlesRenderer>(m_device, m_allocator, *refractionComponent->GetRenderPass()));
-    m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::sky::SkyBoxRenderer>(m_device, m_allocator, *refractionComponent->GetRenderPass()));
-    m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::sky::SkyRenderer>(m_device, m_allocator, *refractionComponent->GetRenderPass()));
-    m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::normal::DefaultRenderer>(m_device, m_allocator, *refractionComponent->GetRenderPass()));
-    m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::normal::TexturelessRenderer>(m_device, m_allocator, *refractionComponent->GetRenderPass()));
-    m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::normal::NormalMappedRenderer>(m_device, m_allocator, *refractionComponent->GetRenderPass()));
-    m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::normal::ConeStepMappedRenderer>(m_device, m_allocator, *refractionComponent->GetRenderPass()));
-    m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::terrain::TerrainRenderer>(m_device, m_allocator, *refractionComponent->GetRenderPass()));
-    m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::terrain::TerrainNormalMappedRenderer>(m_device, m_allocator, *refractionComponent->GetRenderPass()));
-    m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::terrain::TerrainConeStepMappedRenderer>(m_device, m_allocator, *refractionComponent->GetRenderPass()));
-    m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::animation::AnimationRenderer>(m_device, m_allocator, *refractionComponent->GetRenderPass()));
-    m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::animation::AnimationTexturelessRenderer>(m_device, m_allocator, *refractionComponent->GetRenderPass()));
-    m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::animation::AnimationNormalMappedRenderer>(m_device, m_allocator, *refractionComponent->GetRenderPass()));
-    m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::animation::AnimationConeStepMappedRenderer>(m_device, m_allocator, *refractionComponent->GetRenderPass()));
-    m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::particle::ParticlesRenderer>(m_device, m_allocator, *refractionComponent->GetRenderPass()));
 
     for (auto& renderer : m_refractionRenderers) {
         renderer->Init();
     }
 
 #ifdef PARALLEL_RENDERING
-    m_refractionCommandBufferGroups = CommandBuffersGroupFactory{}.CreateGroup(m_device, *m_device.GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchainImageCount, static_cast<uint32_t>(m_refractionRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
     m_refractionCommandBufferGroups = CommandBuffersGroupFactory{}.CreateGroup(m_device, *m_device.GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchainImageCount, static_cast<uint32_t>(m_refractionRenderers.size()), VK_COMMAND_BUFFER_LEVEL_SECONDARY);
 #endif
 }
@@ -376,9 +312,7 @@ void MasterRenderer::RenderShadows(const prev::render::RenderContext& renderCont
 #ifdef PARALLEL_RENDERING
         const auto& cascadeCommandBuffers{ m_shadowsCommandBufferGroups[cascadeIndex]->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
         RenderParallel(*shadows->GetRenderPass(), customRenderContext, root, m_shadowRenderers, cascadeCommandBuffers);
-        RenderParallel(*shadows->GetRenderPass(), customRenderContext, root, m_shadowRenderers, cascadeCommandBuffers);
 #else
-        RenderSerial(*shadows->GetRenderPass(), customRenderContext, root, m_shadowRenderers);
         RenderSerial(*shadows->GetRenderPass(), customRenderContext, root, m_shadowRenderers);
 #endif
     }
@@ -419,9 +353,7 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
 #ifdef PARALLEL_RENDERING
     const auto& commandBuffers{ m_reflectionCommandBufferGroups->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
     RenderParallel(*reflectionComponent->GetRenderPass(), customRenderContext, root, m_reflectionRenderers, commandBuffers);
-    RenderParallel(*reflectionComponent->GetRenderPass(), customRenderContext, root, m_reflectionRenderers, commandBuffers);
 #else
-    RenderSerial(*reflectionComponent->GetRenderPass(), customRenderContext, root, m_reflectionRenderers);
     RenderSerial(*reflectionComponent->GetRenderPass(), customRenderContext, root, m_reflectionRenderers);
 #endif
 }
@@ -450,9 +382,7 @@ void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& re
 #ifdef PARALLEL_RENDERING
     const auto& commandBuffers{ m_refractionCommandBufferGroups->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
     RenderParallel(*refractionComponent->GetRenderPass(), customRenderContext, root, m_refractionRenderers, commandBuffers);
-    RenderParallel(*refractionComponent->GetRenderPass(), customRenderContext, root, m_refractionRenderers, commandBuffers);
 #else
-    RenderSerial(*refractionComponent->GetRenderPass(), customRenderContext, root, m_refractionRenderers);
     RenderSerial(*refractionComponent->GetRenderPass(), customRenderContext, root, m_refractionRenderers);
 #endif
 }
