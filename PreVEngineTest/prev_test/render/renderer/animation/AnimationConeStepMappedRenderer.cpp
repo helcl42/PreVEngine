@@ -61,7 +61,7 @@ void AnimationConeStepMappedRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Animation Cone Step Mapped Shader created\n");
+    LOGI("Animation Cone Step Mapped Shader created");
 
     // clang-format off
     m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ m_device, *m_shader, m_renderPass }
@@ -75,7 +75,7 @@ void AnimationConeStepMappedRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Animation Cone Step Mapped Pipeline created\n");
+    LOGI("Animation Cone Step Mapped Pipeline created");
 
     m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsVS>>(m_allocator);
     m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));

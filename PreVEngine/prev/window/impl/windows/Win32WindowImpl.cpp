@@ -84,7 +84,7 @@ Win32WindowImpl::Win32WindowImpl(const prev::core::instance::Instance& instance,
 {
     SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
-    LOGI("Creating Win32 Window...\n");
+    LOGI("Creating Win32 Window...");
 
     m_hInstance = GetModuleHandle(NULL);
 
@@ -263,8 +263,7 @@ bool Win32WindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
         break;
     //--Char event--
     case WM_CHAR: {
-        strncpy_s(m_textBuffer, (const char*)&msg.wParam, 4);
-        m_eventQueue.Push(OnTextEvent(m_textBuffer));
+        m_eventQueue.Push(OnTextEvent(static_cast<uint32_t>(msg.wParam)));
         break;
     } // return UTF8 code of key pressed
 
@@ -393,7 +392,7 @@ Surface& Win32WindowImpl::CreateSurface()
         win32CreateInfo.hinstance = m_hInstance;
         win32CreateInfo.hwnd = m_hWnd;
         VKERRCHECK(vkCreateWin32SurfaceKHR(m_instance, &win32CreateInfo, nullptr, &m_vkSurface));
-        LOGI("Win32 - Vulkan Surface created\n");
+        LOGI("Win32 - Vulkan Surface created");
     }
     return *this;
 }

@@ -97,7 +97,7 @@ std::unique_ptr<RenderPass> RenderPassBuilder::Build() const
 
     VKERRCHECK(vkCreateRenderPass(m_device, &renderPassCreateInfo, nullptr, &renderPass->m_renderPass));
 
-    LOGI("Renderpass created\n");
+    LOGI("Renderpass created");
 
     return renderPass;
 }

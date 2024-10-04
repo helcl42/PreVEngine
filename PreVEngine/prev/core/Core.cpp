@@ -14,17 +14,17 @@ struct VulkanInitializer {
         const bool success{ volkInitialize() == VK_SUCCESS };
         if (success) {
             const auto version{ volkGetInstanceVersion() };
-            LOGI("Vulkan API version %d.%d.%d available (Loaded).\n", VK_VERSION_MAJOR(version), VK_VERSION_MINOR(version), VK_VERSION_PATCH(version));
+            LOGI("Vulkan API version %d.%d.%d available (Loaded).", VK_VERSION_MAJOR(version), VK_VERSION_MINOR(version), VK_VERSION_PATCH(version));
         } else {
-            LOGE("Vulkan API load failed.\n");
+            LOGE("Vulkan API load failed.");
         }
 #else
         auto version{ VK_API_VERSION_1_0 };
         auto FN_vkEnumerateInstanceVersion = PFN_vkEnumerateInstanceVersion(vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
-        if(vkEnumerateInstanceVersion) {
+        if (vkEnumerateInstanceVersion) {
             vkEnumerateInstanceVersion(&version);
         }
-        LOGI("Vulkan API version %d.%d.%d available.\n", VK_VERSION_MAJOR(version), VK_VERSION_MINOR(version), VK_VERSION_PATCH(version));
+        LOGI("Vulkan API version %d.%d.%d available.", VK_VERSION_MAJOR(version), VK_VERSION_MINOR(version), VK_VERSION_PATCH(version));
 #endif
     }
 } VulkanInitializer{}; // Run this function BEFORE main.
@@ -76,10 +76,10 @@ const char* VkResultStr(const VkResult err)
 void ShowVkResult(const VkResult err)
 {
     if (err > 0) {
-        _LOGW("%s ", VkResultStr(err)); // Print warning
+        LOGW("%s ", VkResultStr(err)); // Print warning
     }
     if (err < 0) {
-        _LOGE("%s ", VkResultStr(err)); // Print error
+        LOGE("%s ", VkResultStr(err)); // Print error
     }
 }
 #else

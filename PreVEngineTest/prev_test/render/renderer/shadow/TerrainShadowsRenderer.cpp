@@ -41,7 +41,7 @@ void TerrainShadowsRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Terrain Shadows Shader created\n");
+    LOGI("Terrain Shadows Shader created");
 
     // clang-format off
     m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ m_device, *m_shader, m_renderPass }
@@ -55,7 +55,7 @@ void TerrainShadowsRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Terrain Shadows Pipeline created\n");
+    LOGI("Terrain Shadows Pipeline created");
 
     m_uniformsPool = std::make_unique<prev::render::buffer::UniformBufferRing<Uniforms>>(m_allocator);
     m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));

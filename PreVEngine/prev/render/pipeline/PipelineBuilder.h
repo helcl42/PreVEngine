@@ -39,11 +39,17 @@ public:
 
     GraphicsPipelineBuilder& SetAdditiveBlendingEnabled(bool enabled);
 
-    GraphicsPipelineBuilder& SetPatchControlPointCount(const uint32_t count);
+    GraphicsPipelineBuilder& SetPatchControlPointCount(uint32_t count);
 
     GraphicsPipelineBuilder& SetPolygonMode(VkPolygonMode mode);
 
     GraphicsPipelineBuilder& SetCullingMode(VkCullModeFlagBits mode);
+
+    GraphicsPipelineBuilder& SetFrontFace(VkFrontFace frontFace);
+
+    GraphicsPipelineBuilder& SetSampleShadingEnabled(bool enabled);
+
+    GraphicsPipelineBuilder& SetSampleShadingMinimumFraction(float fraction);
 
     std::unique_ptr<Pipeline> Build() const;
 
@@ -69,6 +75,12 @@ private:
     VkPolygonMode m_polygonMode{ VK_POLYGON_MODE_FILL };
 
     VkCullModeFlagBits m_cullingMode{ VK_CULL_MODE_NONE };
+
+    VkFrontFace m_frontFace{ VK_FRONT_FACE_COUNTER_CLOCKWISE };
+
+    bool m_sampleShadingEnabled{ false };
+
+    float m_sampleShadingMinFraction{ 0.2f };
 };
 } // namespace prev::render::pipeline
 

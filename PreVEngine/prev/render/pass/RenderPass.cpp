@@ -14,7 +14,7 @@ RenderPass::~RenderPass()
     vkDestroyRenderPass(m_device, m_renderPass, nullptr);
     m_renderPass = VK_NULL_HANDLE;
 
-    LOGI("Renderpass destroyed\n");
+    LOGI("Renderpass destroyed");
 }
 
 void RenderPass::Begin(const VkFramebuffer frameBuffer, const VkCommandBuffer commandBuffer, const VkRect2D& renderArea, const VkSubpassContents contents)
@@ -98,7 +98,7 @@ const std::vector<VkSubpassDependency>& RenderPass::GetSubPassDependencies() con
 
 RenderPass::operator VkRenderPass() const
 {
-    ASSERT(m_renderPass, "Renderpass has to be created first: Use RenderPassBuilder.\n");
+    ASSERT(m_renderPass, "Renderpass has to be created first: Use RenderPassBuilder.");
 
     return m_renderPass;
 }

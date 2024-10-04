@@ -41,14 +41,14 @@ void SkyRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Sky Compute Shader created\n");
+    LOGI("Sky Compute Shader created");
 
     // clang-format off
     m_skyPipeline = prev::render::pipeline::ComputePipelineBuilder{ m_device, *m_skyShader }
         .Build();
     // clang-format on
 
-    LOGI("Sky Compute Pipeline created\n");
+    LOGI("Sky Compute Pipeline created");
 
     m_uniformsPoolSkyCS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsSkyCS>>(m_allocator);
     m_uniformsPoolSkyCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
@@ -69,14 +69,14 @@ void SkyRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Sky PostProcess Compute Shader created\n");
+    LOGI("Sky PostProcess Compute Shader created");
 
     // clang-format off
     m_skyPostProcessPipeline = prev::render::pipeline::ComputePipelineBuilder{ m_device, *m_skyPostProcessShader }
         .Build();
     // clang-format on
 
-    LOGI("Sky PostProcess Compute Pipeline created\n");
+    LOGI("Sky PostProcess Compute Pipeline created");
 
     m_uniformsPoolSkyPostProcessCS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsSkyPostProcessCS>>(m_allocator);
     m_uniformsPoolSkyPostProcessCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
@@ -104,7 +104,7 @@ void SkyRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Sky Composite Shader created\n");
+    LOGI("Sky Composite Shader created");
 
     // clang-format off
     m_compositePipeline = prev::render::pipeline::GraphicsPipelineBuilder{ m_device, *m_compositeShader, m_renderPass }
@@ -118,7 +118,7 @@ void SkyRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Sky Composite Pipeline created\n");
+    LOGI("Sky Composite Pipeline created");
 }
 
 void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)

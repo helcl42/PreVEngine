@@ -126,7 +126,7 @@ bool Window::ProcessEvent(const impl::Event& e)
         prev::event::EventChannel::Post(prev::input::keyboard::KeyEvent{ InputConvertor::GetKeyActionType(e.key.action), e.key.keyCode });
         break;
     case impl::Event::EventType::TEXT:
-        prev::event::EventChannel::Post(prev::input::keyboard::TextEvent{ e.text.str });
+        prev::event::EventChannel::Post(prev::input::keyboard::TextEvent{ e.text.unicode });
         break;
     case impl::Event::EventType::MOVE:
         prev::event::EventChannel::Post(WindowMovedEvent{ this, glm::vec2(e.move.x, e.move.y) });

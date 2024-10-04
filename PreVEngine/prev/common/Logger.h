@@ -48,31 +48,37 @@ void SetConsoleTextColor(const ConsoleColor color);
 #define _LOG(...)            \
     {                        \
         printf(__VA_ARGS__); \
+        printf("\n");        \
     }
 #define _LOGV(...)                           \
     {                                        \
         print(ConsoleColor::CYAN, "PERF: "); \
         printf(__VA_ARGS__);                 \
+        printf("\n");                        \
     }
 #define _LOGD(...)                            \
     {                                         \
         print(ConsoleColor::BLUE, "DEBUG: "); \
         printf(__VA_ARGS__);                  \
+        printf("\n");                         \
     }
 #define _LOGI(...)                            \
     {                                         \
         print(ConsoleColor::GREEN, "INFO: "); \
         printf(__VA_ARGS__);                  \
+        printf("\n");                         \
     }
 #define _LOGW(...)                                \
     {                                             \
         print(ConsoleColor::YELLOW, "WARNING: "); \
         printf(__VA_ARGS__);                      \
+        printf("\n");                             \
     }
 #define _LOGE(...)                           \
     {                                        \
         print(ConsoleColor::RED, "ERROR: "); \
         printf(__VA_ARGS__);                 \
+        printf("\n");                        \
     }
 #endif
 
