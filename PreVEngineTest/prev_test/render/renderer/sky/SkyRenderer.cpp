@@ -147,8 +147,9 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
     const float skyNearClippingPlane{ std::min(renderContext.nearFarClippingPlane.y * 100.0f, 10.0f) };
     const float skyFarClippingPlane{ renderContext.nearFarClippingPlane.y };
 
-    const prev_test::render::ViewFrustum skyViewFrustum(renderContext.verticalFov, skyNearClippingPlane, skyFarClippingPlane);
-    const auto projectionMatrix{ skyViewFrustum.CreateProjectionMatrix(extent.width, extent.height) };
+    const auto fov{ prev::util::math::CreateFovFromProjectionMatrix(renderContext.projectionMatrix) };
+    const prev_test::render::ViewFrustum skyViewFrustum(fov.angleLeft, fov.angleRight, fov.angleUp, fov.angleDown, skyNearClippingPlane, skyFarClippingPlane);
+    const auto projectionMatrix{ skyViewFrustum.CreateProjectionMatrix() };
 
     auto uboCS = m_uniformsPoolSkyCS->GetNext();
 

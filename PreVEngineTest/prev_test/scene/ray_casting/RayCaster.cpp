@@ -36,7 +36,7 @@ void RayCaster::Update(float deltaTime)
     } else {
         m_mouseRayCasterComponent->SetRayLength(RAY_LENGTH);
         m_mouseRayCasterComponent->SetViewPortDimensions(m_viewPortSize);
-        m_mouseRayCasterComponent->SetProjectionMatrix(cameraComponent->GetViewFrustum().CreateProjectionMatrix(m_viewPortSize.x / m_viewPortSize.y));
+        m_mouseRayCasterComponent->SetProjectionMatrix(cameraComponent->GetViewFrustum().CreateProjectionMatrix());
         m_mouseRayCasterComponent->SetViewMatrix(cameraComponent->LookAt());
         m_mouseRayCasterComponent->SetRayStartPosition(cameraComponent->GetPosition());
         m_mouseRayCasterComponent->Update(deltaTime);

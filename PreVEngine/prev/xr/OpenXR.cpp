@@ -1,5 +1,7 @@
 #include "OpenXR.h"
+#include "XrEvents.h"
 
+#include "../event/EventChannel.h"
 #include "../util/VkUtils.h"
 
 #include <sstream>
@@ -19,6 +21,28 @@ PFN_xrUpdateSwapchainFB pfnUpdateSwapchainFB{};
 
 namespace prev::xr {
     namespace {
+        const char* SessionStateToString(const XrSessionState state)
+        {
+            switch (state) {
+                case XR_SESSION_STATE_IDLE:
+                    return "XR_SESSION_STATE_IDLE";
+                case XR_SESSION_STATE_READY:
+                    return "XR_SESSION_STATE_READY";
+                case XR_SESSION_STATE_SYNCHRONIZED:
+                    return "XR_SESSION_STATE_SYNCHRONIZED";
+                case XR_SESSION_STATE_VISIBLE:
+                    return "XR_SESSION_STATE_VISIBLE";
+                case XR_SESSION_STATE_FOCUSED:
+                    return "XR_SESSION_STATE_FOCUSED";
+                case XR_SESSION_STATE_STOPPING:
+                    return "XR_SESSION_STATE_STOPPING";
+                case XR_SESSION_STATE_EXITING:
+                    return "XR_SESSION_STATE_EXITING";
+                default:
+                    return "XR_SESSION_STATE_UNKNOWN";
+            }
+        }
+
         inline bool IsStringInVector(std::vector<const char *> list, const char *name) {
             bool found = false;
             for (auto &item: list) {
@@ -196,6 +220,7 @@ namespace prev::xr {
         CreateDebugMessenger();
         GetInstanceProperties();
         GetSystemID();
+        CreateActionSet();
         GetViewConfigurationViews();
         GetEnvironmentBlendModes();
     }
@@ -371,6 +396,7 @@ namespace prev::xr {
 
         CreateReferenceSpace();
         CreateSwapchains();
+        AttachActionSet();
     }
 
     void OpenXR::DestroySession() {
@@ -416,7 +442,23 @@ namespace prev::xr {
         return m_preferredDepthFormat;
     }
 
-    bool OpenXR::BeginFrame(uint32_t& outImageIndex) {
+    uint32_t OpenXR::GetCurrentSwapchainIndex() const
+    {
+        return m_currentSwapchainIndex;
+    }
+
+    float OpenXR::GetCurrentDeltaTime() const
+    {
+        return m_currentDeltaTime;
+    }
+
+    void OpenXR::Update()
+    {
+        PollEvents();
+        PollAction();
+    }
+
+    bool OpenXR::BeginFrame() {
         if(!m_sessionRunning) {
             return false;
         }
@@ -430,13 +472,17 @@ namespace prev::xr {
         XrFrameBeginInfo frameBeginInfo{XR_TYPE_FRAME_BEGIN_INFO};
         OPENXR_CHECK(xrBeginFrame(m_session, &frameBeginInfo), "Failed to begin the XR Frame.");
 
+        if(m_frameState.predictedDisplayTime == 0) {
+            m_currentDeltaTime = 0.0;
+        } else {
+            m_currentDeltaTime = static_cast<float>(frameState.predictedDisplayTime - m_frameState.predictedDisplayTime) * 1e-9f;
+        }
         m_frameState = frameState;
 
         // TODO rework m_renderLayerInfo
         m_renderLayerInfo = {};
         m_renderLayerInfo.predictedDisplayTime = frameState.predictedDisplayTime;
 
-        // TODO - this should not be here ??
         // Locate the views from the view configuration within the (reference) space at the display time.
         std::vector<XrView> views(m_viewConfigurationViews.size(), {XR_TYPE_VIEW});
 
@@ -451,6 +497,15 @@ namespace prev::xr {
             LOGE("Failed to locate Views.");
             return false;
         }
+
+        XrCameraEvent event{};
+        for(size_t i = 0; i < views.size(); ++i) {
+            auto& view{ views[i] };
+            event.poses[i] = prev::util::math::Pose{ { view.pose.orientation.w, view.pose.orientation.x, view.pose.orientation.y, view.pose.orientation.z }, { view.pose.position.x, view.pose.position.y, view.pose.position.z } };
+            event.fovs[i] = prev::util::math::Fov{ view.fov.angleLeft, view.fov.angleRight, view.fov.angleUp, view.fov.angleDown };
+        }
+        event.count = static_cast<uint32_t>(views.size());
+        prev::event::EventChannel::Post(event);
 
         // Resize the layer projection views to match the view count. The layer projection views are used in the layer projection.
         m_renderLayerInfo.layerProjectionViews.resize(viewCount, {XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW});
@@ -474,16 +529,10 @@ namespace prev::xr {
         const uint32_t &width = m_viewConfigurationViews[0].recommendedImageRectWidth;
         const uint32_t &height = m_viewConfigurationViews[0].recommendedImageRectHeight;
 
-        // TODO pass these values here since it won't work with reverse depth
-        const float minDepth = 0.0f;
-        const float maxDepth = 1.0f;
-        const float nearZ = 0.1f;
-        const float farZ = 300.0f;
-
         // Fill out the XrCompositionLayerProjectionView structure specifying the pose and fov from the view.
         // This also associates the swapchain image with this layer projection view.
         // Per view in the view configuration:
-        for (uint32_t i = 0; i < viewCount; i++) {
+        for (uint32_t i = 0; i < viewCount; ++i) {
             // projection color layer
             m_renderLayerInfo.layerProjectionViews[i] = { XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW };
             m_renderLayerInfo.layerProjectionViews[i].pose = views[i].pose;
@@ -504,13 +553,13 @@ namespace prev::xr {
             m_renderLayerInfo.layerDepthInfos[i].subImage.imageRect.offset.y = 0;
             m_renderLayerInfo.layerDepthInfos[i].subImage.imageRect.extent.width = static_cast<int32_t>(width);
             m_renderLayerInfo.layerDepthInfos[i].subImage.imageRect.extent.height = static_cast<int32_t>(height);
-            m_renderLayerInfo.layerDepthInfos[i].minDepth = minDepth;
-            m_renderLayerInfo.layerDepthInfos[i].maxDepth = maxDepth;
-            m_renderLayerInfo.layerDepthInfos[i].nearZ = nearZ;
-            m_renderLayerInfo.layerDepthInfos[i].farZ = farZ;
+            m_renderLayerInfo.layerDepthInfos[i].minDepth = m_minDepth;
+            m_renderLayerInfo.layerDepthInfos[i].maxDepth = m_maxDepth;
+            m_renderLayerInfo.layerDepthInfos[i].nearZ = m_nearClippingPlane;
+            m_renderLayerInfo.layerDepthInfos[i].farZ = m_farClippingPlane;
         }
 
-        outImageIndex = colorImageIndex;
+        m_currentSwapchainIndex = colorImageIndex;
         return true;
     }
 
@@ -549,91 +598,11 @@ namespace prev::xr {
         return true;
     }
 
-    void OpenXR::PollEvents() {
-        // Poll OpenXR for a new event.
-        XrEventDataBuffer eventData{XR_TYPE_EVENT_DATA_BUFFER};
-        auto XrPollEvents = [&]() -> bool {
-            eventData = {XR_TYPE_EVENT_DATA_BUFFER};
-            return xrPollEvent(m_xrInstance, &eventData) == XR_SUCCESS;
-        };
-
-        while (XrPollEvents()) {
-            switch (eventData.type) {
-                // Log the number of lost events from the runtime.
-                case XR_TYPE_EVENT_DATA_EVENTS_LOST: {
-                    XrEventDataEventsLost *eventsLost = reinterpret_cast<XrEventDataEventsLost *>(&eventData);
-                    LOGI("OPENXR: Events Lost: %d\n", eventsLost->lostEventCount);
-                    break;
-                }
-                    // Log that an instance loss is pending and shutdown the application.
-                case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING: {
-                    XrEventDataInstanceLossPending *instanceLossPending = reinterpret_cast<XrEventDataInstanceLossPending *>(&eventData);
-                    LOGI("OPENXR: Instance Loss Pending at: %ld\n", instanceLossPending->lossTime);
-                    m_sessionRunning = false;
-                    m_applicationRunning = false;
-                    break;
-                }
-                    // Log that the interaction profile has changed.
-                case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED: {
-                    XrEventDataInteractionProfileChanged *interactionProfileChanged = reinterpret_cast<XrEventDataInteractionProfileChanged *>(&eventData);
-                    LOGI("OPENXR: Interaction Profile changed for Session: %p\n", interactionProfileChanged->session);
-                    if (interactionProfileChanged->session != m_session) {
-                        LOGW("XrEventDataInteractionProfileChanged for unknown Session");
-                        break;
-                    }
-//                    RecordCurrentBindings();
-                    break;
-                }
-                    // Log that there's a reference space change pending.
-                case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING: {
-                    XrEventDataReferenceSpaceChangePending *referenceSpaceChangePending = reinterpret_cast<XrEventDataReferenceSpaceChangePending *>(&eventData);
-                    LOGI("OPENXR: Reference Space Change pending for Session: %p", referenceSpaceChangePending->session);
-                    if (referenceSpaceChangePending->session != m_session) {
-                        LOGW("XrEventDataReferenceSpaceChangePending for unknown Session");
-                        break;
-                    }
-                    break;
-                }
-                    // Session State changes:
-                case XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: {
-                    XrEventDataSessionStateChanged *sessionStateChanged = reinterpret_cast<XrEventDataSessionStateChanged *>(&eventData);
-                    if (sessionStateChanged->session != m_session) {
-                        LOGW("XrEventDataSessionStateChanged for unknown Session");
-                        break;
-                    }
-
-                    if (sessionStateChanged->state == XR_SESSION_STATE_READY) {
-                        // SessionState is ready. Begin the XrSession using the XrViewConfigurationType.
-                        XrSessionBeginInfo sessionBeginInfo{XR_TYPE_SESSION_BEGIN_INFO};
-                        sessionBeginInfo.primaryViewConfigurationType = m_viewConfiguration;
-                        OPENXR_CHECK(xrBeginSession(m_session, &sessionBeginInfo), "Failed to begin Session.");
-                        m_sessionRunning = true;
-                    }
-                    if (sessionStateChanged->state == XR_SESSION_STATE_STOPPING) {
-                        // SessionState is stopping. End the XrSession.
-                        OPENXR_CHECK(xrEndSession(m_session), "Failed to end Session.");
-                        m_sessionRunning = false;
-                    }
-                    if (sessionStateChanged->state == XR_SESSION_STATE_EXITING) {
-                        // SessionState is exiting. Exit the application.
-                        m_sessionRunning = false;
-                        m_applicationRunning = false;
-                    }
-                    if (sessionStateChanged->state == XR_SESSION_STATE_LOSS_PENDING) {
-                        // SessionState is loss pending. Exit the application.
-                        // It's possible to try a reestablish an XrInstance and XrSession, but we will simply exit here.
-                        m_sessionRunning = false;
-                        m_applicationRunning = false;
-                    }
-                    // Store state for reference across the application.
-                    m_sessionState = sessionStateChanged->state;
-                    break;
-                }
-                default: {
-                    break;
-                }
-            }
-        }
+    void OpenXR::operator() (const XrCameraFeedbackEvent& event) {
+        m_nearClippingPlane = event.nearClippingPlane;
+        m_farClippingPlane = event.fatClippingPlane;
+        m_minDepth = event.minDepth;
+        m_maxDepth = event.maxDepth;
     }
 
     void OpenXR::CreateInstance() {
@@ -800,5 +769,138 @@ namespace prev::xr {
             LOGE("Failed to find a compatible blend mode. Defaulting to XR_ENVIRONMENT_BLEND_MODE_OPAQUE.");
             m_environmentBlendMode = XR_ENVIRONMENT_BLEND_MODE_OPAQUE;
         }
+    }
+
+    void OpenXR::CreateActionSet()
+    {
+        XrActionSetCreateInfo actionSetCI{XR_TYPE_ACTION_SET_CREATE_INFO};
+        // The internal name the runtime uses for this Action Set.
+        strncpy(actionSetCI.actionSetName, "openxr-tutorial-actionset", XR_MAX_ACTION_SET_NAME_SIZE);
+        // Localized names are required so there is a human-readable action name to show the user if they are rebinding Actions in an options screen.
+        strncpy(actionSetCI.localizedActionSetName, "OpenXR Tutorial ActionSet", XR_MAX_LOCALIZED_ACTION_SET_NAME_SIZE);
+        OPENXR_CHECK(xrCreateActionSet(m_xrInstance, &actionSetCI, &m_actionSet), "Failed to create ActionSet.");
+        // Set a priority: this comes into play when we have multiple Action Sets, and determines which Action takes priority in binding to a specific input.
+        actionSetCI.priority = 0;
+    }
+
+    void OpenXR::DestroyActionSet()
+    {
+        // nothing to do here ??
+    }
+
+    void OpenXR::AttachActionSet()
+    {
+        // Attach the action set we just made to the session. We could attach multiple action sets!
+        XrSessionActionSetsAttachInfo actionSetAttachInfo{XR_TYPE_SESSION_ACTION_SETS_ATTACH_INFO};
+        actionSetAttachInfo.countActionSets = 1;
+        actionSetAttachInfo.actionSets = &m_actionSet;
+        OPENXR_CHECK(xrAttachSessionActionSets(m_session, &actionSetAttachInfo), "Failed to attach ActionSet to Session.");
+    }
+
+    void OpenXR::DetachActionSet()
+    {
+        // nothing to do here ??
+    }
+
+    void OpenXR::PollEvents() {
+        // Poll OpenXR for a new event.
+        XrEventDataBuffer eventData{XR_TYPE_EVENT_DATA_BUFFER};
+        auto XrPollEvents = [&]() -> bool {
+            eventData = {XR_TYPE_EVENT_DATA_BUFFER};
+            return xrPollEvent(m_xrInstance, &eventData) == XR_SUCCESS;
+        };
+
+        while (XrPollEvents()) {
+            switch (eventData.type) {
+                // Log the number of lost events from the runtime.
+                case XR_TYPE_EVENT_DATA_EVENTS_LOST: {
+                    XrEventDataEventsLost *eventsLost = reinterpret_cast<XrEventDataEventsLost *>(&eventData);
+                    LOGI("OPENXR: Events Lost: %d\n", eventsLost->lostEventCount);
+                    break;
+                }
+                    // Log that an instance loss is pending and shutdown the application.
+                case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING: {
+                    XrEventDataInstanceLossPending *instanceLossPending = reinterpret_cast<XrEventDataInstanceLossPending *>(&eventData);
+                    LOGI("OPENXR: Instance Loss Pending at: %ld\n", instanceLossPending->lossTime);
+                    m_sessionRunning = false;
+                    m_applicationRunning = false;
+                    break;
+                }
+                    // Log that the interaction profile has changed.
+                case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED: {
+                    XrEventDataInteractionProfileChanged *interactionProfileChanged = reinterpret_cast<XrEventDataInteractionProfileChanged *>(&eventData);
+                    LOGI("OPENXR: Interaction Profile changed for Session: %p\n", interactionProfileChanged->session);
+                    if (interactionProfileChanged->session != m_session) {
+                        LOGW("XrEventDataInteractionProfileChanged for unknown Session");
+                        break;
+                    }
+
+                    //RecordCurrentBindings();
+
+                    break;
+                }
+                    // Log that there's a reference space change pending.
+                case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING: {
+                    XrEventDataReferenceSpaceChangePending *referenceSpaceChangePending = reinterpret_cast<XrEventDataReferenceSpaceChangePending *>(&eventData);
+                    LOGI("OPENXR: Reference Space Change pending for Session: %p\n", referenceSpaceChangePending->session);
+                    if (referenceSpaceChangePending->session != m_session) {
+                        LOGW("XrEventDataReferenceSpaceChangePending for unknown Session");
+                        break;
+                    }
+                    break;
+                }
+                    // Session State changes:
+                case XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: {
+                    XrEventDataSessionStateChanged *sessionStateChanged = reinterpret_cast<XrEventDataSessionStateChanged *>(&eventData);
+                    if (sessionStateChanged->session != m_session) {
+                        LOGW("XrEventDataSessionStateChanged for unknown Session");
+                        break;
+                    }
+
+                    if (sessionStateChanged->state == XR_SESSION_STATE_READY) {
+                        // SessionState is ready. Begin the XrSession using the XrViewConfigurationType.
+                        XrSessionBeginInfo sessionBeginInfo{XR_TYPE_SESSION_BEGIN_INFO};
+                        sessionBeginInfo.primaryViewConfigurationType = m_viewConfiguration;
+                        OPENXR_CHECK(xrBeginSession(m_session, &sessionBeginInfo), "Failed to begin Session.");
+                        m_sessionRunning = true;
+                    }
+                    if (sessionStateChanged->state == XR_SESSION_STATE_STOPPING) {
+                        // SessionState is stopping. End the XrSession.
+                        OPENXR_CHECK(xrEndSession(m_session), "Failed to end Session.");
+                        m_sessionRunning = false;
+                    }
+                    if (sessionStateChanged->state == XR_SESSION_STATE_EXITING) {
+                        // SessionState is exiting. Exit the application.
+                        m_sessionRunning = false;
+                        m_applicationRunning = false;
+                    }
+                    if (sessionStateChanged->state == XR_SESSION_STATE_LOSS_PENDING) {
+                        // SessionState is loss pending. Exit the application.
+                        // It's possible to try a reestablish an XrInstance and XrSession, but we will simply exit here.
+                        m_sessionRunning = false;
+                        m_applicationRunning = false;
+                    }
+                    // Store state for reference across the application.
+                    m_sessionState = sessionStateChanged->state;
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+        }
+    }
+
+    void OpenXR::PollAction()
+    {
+        // poll actions
+        XrActiveActionSet activeActionSet{};
+        activeActionSet.actionSet = m_actionSet;
+        activeActionSet.subactionPath = XR_NULL_PATH;
+        // Now we sync the Actions to make sure they have current data.
+        XrActionsSyncInfo actionsSyncInfo{XR_TYPE_ACTIONS_SYNC_INFO};
+        actionsSyncInfo.countActiveActionSets = 1;
+        actionsSyncInfo.activeActionSets = &activeActionSet;
+        OPENXR_CHECK(xrSyncActions(m_session, &actionsSyncInfo), "Failed to sync Actions.");
     }
 }

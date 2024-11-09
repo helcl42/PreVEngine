@@ -335,7 +335,7 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
     const auto reflectedUpDirection{ glm::reflect(-cameraComponent->GetUpDirection(), cameraComponent->GetDefaultUpDirection()) };
 
     const glm::mat4 viewMatrix{ glm::lookAt(newCameraPosition, newCameraViewPosition, reflectedUpDirection) };
-    const glm::mat4 projectionMatrix{ cameraComponent->GetViewFrustum().CreateProjectionMatrix(reflectionComponent->GetExtent().width, reflectionComponent->GetExtent().height) };
+    const glm::mat4 projectionMatrix{ cameraComponent->GetViewFrustum().CreateProjectionMatrix() };
 
     const prev::render::RenderContext customRenderContextBase{ reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, { { 0, 0 }, reflectionComponent->GetExtent() } };
 
@@ -364,7 +364,7 @@ void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& re
     const auto cameraComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA }) };
 
     const auto& viewMatrix{ cameraComponent->LookAt() };
-    const auto projectionMatrix{ cameraComponent->GetViewFrustum().CreateProjectionMatrix(refractionComponent->GetExtent().width, refractionComponent->GetExtent().height) };
+    const auto projectionMatrix{ cameraComponent->GetViewFrustum().CreateProjectionMatrix() };
 
     const prev::render::RenderContext customRenderContextBase{ refractionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, { { 0, 0 }, refractionComponent->GetExtent() } };
 
@@ -392,7 +392,7 @@ void MasterRenderer::RenderScene(const prev::render::RenderContext& renderContex
     const auto cameraComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA }) };
 
     const auto& viewMatrix{ cameraComponent->LookAt() };
-    const auto projectionMatrix{ cameraComponent->GetViewFrustum().CreateProjectionMatrix(renderContext.rect.extent.width, renderContext.rect.extent.height) };
+    const auto projectionMatrix{ cameraComponent->GetViewFrustum().CreateProjectionMatrix() };
 
     const NormalRenderContext customRenderContext{
         renderContext,

@@ -21,7 +21,7 @@ void Camera::Init()
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, TAG_TRANSFORM_COMPONENT);
 
     prev_test::component::camera::CameraComponentFactory cameraFactory{};
-    m_cameraComponent = cameraFactory.Create(glm::quat(glm::radians(glm::vec3(0.0f, 180.0f, 0.0f))), glm::vec3(0.0f, 0.0f, -250.0f), true);
+    m_cameraComponent = cameraFactory.Create(glm::quat{}, glm::vec3{}, false);
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::camera::ICameraComponent>(GetThis(), m_cameraComponent, TAG_TRANSFORM_COMPONENT);
 
     SceneNode::Init();
@@ -31,6 +31,7 @@ void Camera::Init()
 
 void Camera::Update(float deltaTime)
 {
+#ifndef ENABLE_XR
     glm::vec3 positionDelta{ 0.0f, 0.0f, 0.0f };
     if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_W)) {
         positionDelta += m_cameraComponent->GetForwardDirection() * deltaTime * m_moveSpeed;
@@ -62,6 +63,9 @@ void Camera::Update(float deltaTime)
 #endif
 
     m_cameraComponent->AddPosition(positionDelta);
+
+    m_cameraComponent->SetViewFrustum(m_cameraComponent->GetViewFrustum().GetVerticalFov(), static_cast<float>(m_viewPortSize.x) / static_cast<float>(m_viewPortSize.y), m_cameraComponent->GetViewFrustum().GetNearClippingPlane(), m_cameraComponent->GetViewFrustum().GetFarClippingPlane());
+#endif
 
     const glm::mat4 viewMatrix{ m_cameraComponent->LookAt() };
     const glm::mat4 cameraTransformInWorldSpace{ glm::inverse(viewMatrix) };
@@ -134,6 +138,29 @@ void Camera::operator()(const prev::input::keyboard::KeyEvent& keyEvent)
         }
     }
 }
+
+#ifdef ENABLE_XR
+void Camera::operator()(const prev::xr::XrCameraEvent& cameraEvent)
+{
+    const auto previousFrustum{ m_cameraComponent->GetViewFrustum() };
+
+    // TODO use all cameras
+    const auto fov{ cameraEvent.fovs[0] };
+    prev:prev_test::render::ViewFrustum viewFrustum{ fov.angleLeft, fov.angleRight, fov.angleUp, fov.angleDown, previousFrustum.GetNearClippingPlane(), previousFrustum.GetFarClippingPlane() };
+    m_cameraComponent->SetViewFrustum(viewFrustum);
+
+    const auto pose{ cameraEvent.poses[0] };
+    m_cameraComponent->SetOrientation(pose.orientation);
+    m_cameraComponent->SetPosition(pose.position + glm::vec3{ 5, 5, 5 });
+
+    prev::event::EventChannel::Post(prev::xr::XrCameraFeedbackEvent{ viewFrustum.GetNearClippingPlane(), viewFrustum.GetFarClippingPlane(), 0.0f, 1.0f });
+}
+#else
+void Camera::operator()(const prev::core::NewIterationEvent& newIterationEvent)
+{
+    m_viewPortSize = glm::vec2(newIterationEvent.windowWidth, newIterationEvent.windowHeight);
+}
+#endif
 
 void Camera::Reset()
 {

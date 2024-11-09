@@ -84,10 +84,10 @@ if (ENABLE_LOGGING)
 endif()
 if (ENABLE_VK_LOADER)
     add_definitions(-DENABLE_VK_LOADER)
-endif()
-
-if(ENABLE_VK_LOADER)
     add_definitions(-DVK_NO_PROTOTYPES)
+endif()
+if(ENABLE_XR)
+    add_definitions(-DENABLE_XR)
 endif()
 
 include_directories("../PreVEngine")

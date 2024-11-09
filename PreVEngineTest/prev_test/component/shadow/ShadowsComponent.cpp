@@ -42,7 +42,7 @@ void ShadowsComponent::Update(const glm::vec3& lightDirection, const prev_test::
 
         const float splitNearClippingPlane{ viewFrustum.GetNearClippingPlane() + clippingRange * nearSplitDistance };
         const float splitFarClippingPlane{ viewFrustum.GetNearClippingPlane() + clippingRange * farSplitDistance };
-        const prev_test::render::ViewFrustum splitViewFrustum{ viewFrustum.GetVerticalFov(), splitNearClippingPlane, splitFarClippingPlane };
+        const prev_test::render::ViewFrustum splitViewFrustum{ viewFrustum.GetVerticalFov(), 1.0f, splitNearClippingPlane, splitFarClippingPlane };
 
         UpdateCascade(lightDirection, splitViewFrustum, viewMatrix, m_cascades[i]);
 
@@ -103,7 +103,7 @@ std::vector<float> ShadowsComponent::GenerateCaascadeSplits(const float nearClip
 
 void ShadowsComponent::UpdateCascade(const glm::vec3& lightDirection, const prev_test::render::ViewFrustum& cascadeViewFrustum, const glm::mat4& lightViewMatrix, ShadowsCascade& inOutCascade) const
 {
-    const prev_test::common::intersection::Frustum frustum{ cascadeViewFrustum.CreateProjectionMatrix(1.0f), lightViewMatrix }; // symmetric aspect ratio for shadows, thus 1.0f
+    const prev_test::common::intersection::Frustum frustum{ cascadeViewFrustum.CreateProjectionMatrix(), lightViewMatrix }; // symmetric aspect ratio for shadows, thus 1.0f
     const prev_test::common::intersection::AABB aabb{ frustum.GetRadius() };
 
     const auto frustumCenter{ frustum.GetCenter().position };
