@@ -6,17 +6,19 @@
 namespace prev_test::render {
 class ViewFrustum {
 public:
-    ViewFrustum(const float verticalFov, const float nearClippingPlane, const float farClippingPlane);
+    ViewFrustum(const float verticalFov, const float aspectRatio, const float nearClippingPlane, const float farClippingPlane);
+
+    ViewFrustum(const float angleFovLeft, const float angleFovRight, const float angleFovUp, const float angleFovDown, const float nearClippingPlane, const float farClippingPlane);
 
     ~ViewFrustum() = default;
 
 public:
-    glm::mat4 CreateProjectionMatrix(const uint32_t w, const uint32_t h) const;
-
-    glm::mat4 CreateProjectionMatrix(const float aspectRatio) const;
+    glm::mat4 CreateProjectionMatrix() const;
 
 public:
-    float GetVerticalFov() const; // vertical in degs
+    float GetVerticalFov() const; // degs
+
+    float GetHorizontalFov() const; // degs
 
     float GetNearClippingPlane() const;
 
@@ -25,7 +27,13 @@ public:
     float GetClippingRange() const;
 
 private:
-    float m_verticalFov;
+    float m_angleFovLeft;
+
+    float m_angleFovRight;
+
+    float m_angleFovUp;
+
+    float m_angleFovDown;
 
     float m_nearClippingPlane;
 

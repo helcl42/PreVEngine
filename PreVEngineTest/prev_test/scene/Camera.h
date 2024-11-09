@@ -5,15 +5,20 @@
 #include "../component/camera/ICameraComponent.h"
 #include "../component/transform/ITransformComponent.h"
 
+#include <prev/core/CoreEvents.h>
 #include <prev/input/InputFacade.h>
 #include <prev/scene/graph/SceneNode.h>
+
+#ifdef ENABLE_XR
+#include <prev/xr/XrEvents.h>
+#endif
 
 namespace prev_test::scene {
 class Camera final : public prev::scene::graph::SceneNode {
 public:
     Camera();
 
-    virtual ~Camera() = default;
+    ~Camera() = default;
 
 public:
     void Init() override;
@@ -29,6 +34,12 @@ public:
 
     void operator()(const prev::input::keyboard::KeyEvent& keyEvent);
 
+#ifdef ENABLE_XR
+    void operator()(const prev::xr::XrCameraEvent& cameraEvent);
+#else
+    void operator()(const prev::core::NewIterationEvent& newIterationEvent);
+#endif
+
 private:
     void Reset();
 
@@ -38,6 +49,12 @@ private:
     prev::event::EventHandler<Camera, prev::input::touch::TouchEvent> m_touchHandler{ *this };
 
     prev::event::EventHandler<Camera, prev::input::keyboard::KeyEvent> m_keyHandler{ *this };
+
+#ifdef ENABLE_XR
+    prev::event::EventHandler<Camera, prev::xr::XrCameraEvent> m_xrCameraEventHandler{ *this };
+#else
+    prev::event::EventHandler<Camera, prev::core::NewIterationEvent> m_newIterationEventHandler{ *this };
+#endif
 
 private:
     const float m_sensitivity{ 0.03f };
@@ -61,6 +78,10 @@ private:
     bool m_autoMoveForward{ false };
 
     bool m_autoMoveBackward{ false };
+#endif
+
+#ifndef ENABLE_XR
+    glm::uvec2 m_viewPortSize{ 1920, 1080 };
 #endif
 };
 } // namespace prev_test::scene

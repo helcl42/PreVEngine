@@ -2,6 +2,9 @@
 #define __OPEN_XR_H__
 
 #include "OpenXRCommon.h"
+#include "XrEvents.h"
+
+#include "../event/EventHandler.h"
 
 #include <vector>
 #include <unordered_map>
@@ -42,12 +45,18 @@ public:
 
     VkFormat GetDepthFormat() const;
 
-    // TODO - handle predicted time correctly
-    bool BeginFrame(uint32_t& outImageIndex);
+    uint32_t GetCurrentSwapchainIndex() const;
+
+    float GetCurrentDeltaTime() const;
+
+    void Update();
+
+    bool BeginFrame();
 
     bool EndFrame();
 
-    void PollEvents();
+public:
+    void operator() (const XrCameraFeedbackEvent& event);
 
 private:
     void CreateInstance();
@@ -74,6 +83,18 @@ private:
     void CreateSwapchains();
 
     void DestroySwapchains();
+
+    void CreateActionSet();
+
+    void DestroyActionSet();
+
+    void AttachActionSet();
+
+    void DetachActionSet();
+
+    void PollEvents();
+
+    void PollAction();
 
 private:
     XrInstance m_xrInstance = XR_NULL_HANDLE;
@@ -133,8 +154,20 @@ private:
         std::vector<XrCompositionLayerDepthInfoKHR> layerDepthInfos;
     };
 
-    RenderLayerInfo m_renderLayerInfo = {};
-    XrFrameState m_frameState = {};
+    uint32_t m_currentSwapchainIndex{ 0 };
+    RenderLayerInfo m_renderLayerInfo{};
+    XrFrameState m_frameState{};
+    float m_currentDeltaTime{ 0.0 };
+
+    float m_nearClippingPlane{ 0.1f };
+    float m_farClippingPlane{ 300.0f };
+    float m_minDepth{ 0.0f };
+    float m_maxDepth{ 1.0f };
+
+    XrActionSet m_actionSet{};
+
+private:
+    prev::event::EventHandler<OpenXR, XrCameraFeedbackEvent> m_cameraFeedbackHandler{ *this };
 };
 }
 

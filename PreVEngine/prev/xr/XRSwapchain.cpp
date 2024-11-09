@@ -143,12 +143,7 @@ namespace prev::xr {
 
     bool XRSwapchain::BeginFrame(render::SwapChainFrameContext& outContext)
     {
-        uint32_t newFrameIndex;
-        if(!m_openXr.BeginFrame(newFrameIndex)) {
-            return false;
-        }
-
-        m_acquiredIndex = newFrameIndex;
+        m_acquiredIndex = m_openXr.GetCurrentSwapchainIndex();
 
         const auto& swapchainBuffer{ m_swapchainBuffers[m_acquiredIndex] };
 
@@ -178,7 +173,5 @@ namespace prev::xr {
         submitInfo.pSignalSemaphores = nullptr;
 
         VKERRCHECK(m_graphicsQueue->Submit(1, &submitInfo, swapchainBuffer.fence));
-
-        m_openXr.EndFrame();
     }
 } // namespace prev::render

@@ -1,5 +1,6 @@
 #include "Root.h"
 
+#include "Camera.h"
 #include "Cube.h"
 #include "Fire.h"
 #include "Plane.h"
@@ -84,7 +85,11 @@ void Root::Init()
     //     }
     // }
 
+#ifdef ENABLE_XR
+    auto player = std::make_shared<Camera>();
+#else
     auto player = std::make_shared<Player>(m_device, m_allocator, glm::vec3(0.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(0.06f));
+#endif
     player->SetTags({ TAG_MAIN_CAMERA, TAG_PLAYER });
     AddChild(player);
 

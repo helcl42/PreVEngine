@@ -45,7 +45,7 @@ private:
 
     glm::vec3 m_upDirection{ 0.0f, 1.0f, 0.0f };
 
-    prev_test::render::ViewFrustum m_viewFrustum{ 45.0f, REVERSE_DEPTH ? FAR_CLIPPING_PLANE : NEAR_CLIPPING_PLANE, REVERSE_DEPTH ? NEAR_CLIPPING_PLANE : FAR_CLIPPING_PLANE };
+    prev_test::render::ViewFrustum m_viewFrustum{ 45.0f, 1.0f, REVERSE_DEPTH ? FAR_CLIPPING_PLANE : NEAR_CLIPPING_PLANE, REVERSE_DEPTH ? NEAR_CLIPPING_PLANE : FAR_CLIPPING_PLANE };
 
     glm::vec3 m_position;
 

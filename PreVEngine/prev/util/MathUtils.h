@@ -6,6 +6,17 @@
 #include <vector>
 
 namespace prev::util::math {
+struct Pose {
+    glm::quat orientation{};
+    glm::vec3 position{};
+};
+
+struct Fov {
+    float angleLeft{};
+    float angleRight{};
+    float angleUp{};
+    float angleDown{};
+};
 
 template <typename T>
 inline constexpr T Clamp(T val, T min, T max)
@@ -124,6 +135,13 @@ glm::mat4 CreatePerspectiveProjectionMatrixWithReverseDepth(const float aspectRa
 
 glm::mat4 CreateOrthographicProjectionMatrix(const float leftPlane, const float rightPlane, const float bottomPlane, const float topPlane, const float nearPlane, const float farPlane);
 
+glm::mat4 CreatePerspectiveProjectionMatrix(const float tanAngleLeft, const float tanAngleRight, const float tanAngleUp, float const tanAngleDown, const float nearClippingPlane, const float farClippingPlane);
+
+glm::mat4 CreatePerspectiveProjectionMatrix(const Fov& fov, const float nearClippingPlane, const float farClippingPlane);
+
+glm::vec2 GetClippingPlanes(const glm::mat4& projectionMatrix);
+
+Fov CreateFovFromProjectionMatrix(const glm::mat4& projectionMatrix);
 } // namespace prev::util::math
 
 #endif

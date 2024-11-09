@@ -28,8 +28,7 @@ void LensFlare::Update(float deltaTime)
     const auto lightComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
     const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
 
-    m_lensFlareComponent->Update(cameraComponent->GetViewFrustum().CreateProjectionMatrix(m_viewPortSize.x / m_viewPortSize.y), cameraComponent->LookAt(), cameraComponent->GetPosition(), lightComponent->GetPosition());
-
+    m_lensFlareComponent->Update(cameraComponent->GetViewFrustum().CreateProjectionMatrix(), cameraComponent->LookAt(), cameraComponent->GetPosition(), lightComponent->GetPosition());
     SceneNode::Update(deltaTime);
 }
 

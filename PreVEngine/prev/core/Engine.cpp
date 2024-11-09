@@ -12,8 +12,6 @@
 #include "../xr/XRSwapchain.h"
 #include "../render/Swapchain.h"
 
-#define USE_XR
-
 namespace prev::core {
 Engine::Engine(const EngineConfig& config)
     : m_config{ config }
@@ -27,7 +25,7 @@ Engine::~Engine()
 
 void Engine::Init()
 {
-#ifdef USE_XR
+#ifdef ENABLE_XR
     m_openXr = std::make_shared<prev::xr::OpenXR>();
 #endif
     ResetTiming();
@@ -38,7 +36,7 @@ void Engine::Init()
     ResetAllocator();
     ResetRenderPass();
 
-#ifdef USE_XR
+#ifdef ENABLE_XR
     m_openXr->CreateSession();
 #endif
 
@@ -65,18 +63,22 @@ void Engine::MainLoop()
     {
         prev::event::EventChannel::DispatchQueued();
 
-#ifdef USE_XR
-        m_openXr->PollEvents();
-#endif
+#ifdef ENABLE_XR
+        m_openXr->Update();
 
-#ifdef USE_XR
+        if(!m_openXr->BeginFrame()) {
+            continue;
+        }
+
         const VkExtent2D extent{ m_openXr->GetExtent() };
+
+        const auto deltaTime{ m_openXr->GetCurrentDeltaTime() };
 #else
         const VkExtent2D extent{ m_window->GetSize().width, m_window->GetSize().height };
-#endif
 
         m_clock->UpdateClock();
         const auto deltaTime{ m_clock->GetDelta() };
+#endif
 
         prev::event::EventChannel::Post(NewIterationEvent{ deltaTime, extent.width, extent.height });
 
@@ -93,6 +95,10 @@ void Engine::MainLoop()
             LOGW("No focus...\n");
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
         }
+
+#ifdef ENABLE_XR
+        m_openXr->EndFrame();
+#endif
 
         if (m_fpsCounter->Tick()) {
             LOGI("FPS %f", m_fpsCounter->GetAverageFPS());
@@ -112,7 +118,7 @@ void Engine::ShutDown()
     m_rootRenderer = nullptr;
     m_scene = nullptr;
 
-#ifdef USE_XR
+#ifdef ENABLE_XR
     m_openXr->DestroySession();
     m_openXr = nullptr;
 #endif
@@ -175,7 +181,7 @@ void Engine::ResetTiming()
 
 void Engine::ResetInstance()
 {
-#ifdef USE_XR
+#ifdef ENABLE_XR
     m_instance = std::make_unique<prev::core::instance::Instance>(m_config.validation, std::vector<std::string>{}, m_openXr->GetVulkanInstanceExtensions());
 #else
     m_instance = std::make_unique<prev::core::instance::Instance>(m_config.validation);
@@ -202,7 +208,7 @@ void Engine::ResetSurface()
 
 void Engine::ResetDevice()
 {
-#ifdef USE_XR
+#ifdef ENABLE_XR
     auto presentablePhysicalDevice{ std::make_shared<prev::core::device::PhysicalDevice>(m_openXr->GetPhysicalDevice(*m_instance), m_openXr->GetVulkanDeviceExtensions()) };
 #else
     auto physicalDevices{ std::make_shared<prev::core::device::PhysicalDevices>(*m_instance) };
@@ -222,7 +228,7 @@ void Engine::ResetDevice()
     m_device = device;
     m_device->Print();
 
-#ifdef USE_XR
+#ifdef ENABLE_XR
     const auto& queue{ m_device->GetQueue(prev::core::device::QueueType::GRAPHICS) };
     m_openXr->InitializeGraphicsBinding(*m_instance, *m_device->GetGPU(), *m_device, *queue, queue->family, queue->index);
 #endif
@@ -297,7 +303,7 @@ void Engine::ResetRenderPass()
 
 void Engine::ResetSwapchain()
 {
-#ifdef USE_XR
+#ifdef ENABLE_XR
     m_swapchain = std::make_shared<prev::xr::XRSwapchain>(*m_device, *m_allocator, *m_renderPass, *m_openXr, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount));
 #else
     m_swapchain = std::make_shared<prev::render::Swapchain>(*m_device, *m_allocator, *m_renderPass, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount), m_config.viewCount);
