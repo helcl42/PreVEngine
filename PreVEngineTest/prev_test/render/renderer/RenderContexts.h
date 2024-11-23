@@ -8,48 +8,43 @@
 
 namespace prev_test::render::renderer {
 struct ShadowsRenderContext : prev::render::RenderContext {
-    const glm::mat4 viewMatrix;
+    glm::mat4 viewMatrix;
 
-    const glm::mat4 projectionMatrix;
+    glm::mat4 projectionMatrix;
 
-    const uint32_t cascadeIndex;
+    uint32_t cascadeIndex;
 
-    const prev_test::common::intersection::Frustum frustum;
+    prev_test::common::intersection::Frustum frustum;
 
-    ShadowsRenderContext(const RenderContext& ctx, const glm::mat4& vm, const glm::mat4& pm, const uint32_t index, const prev_test::common::intersection::Frustum& frst)
+    ShadowsRenderContext(const RenderContext& ctx, const glm::mat4& vm, const glm::mat4& pm, const uint32_t index, const prev_test::common::intersection::Frustum& frstm)
         : RenderContext{ ctx }
         , viewMatrix{ vm }
         , projectionMatrix{ pm }
         , cascadeIndex{ index }
-        , frustum{ frst }
+        , frustum{ frstm }
     {
     }
 };
 
 struct NormalRenderContext : prev::render::RenderContext {
-    const glm::mat4 viewMatrix;
+    glm::vec4 clipPlane;
 
-    const glm::mat4 projectionMatrix;
+    uint32_t cameraCount;
 
-    const glm::vec3 cameraPosition;
+    glm::vec2 nearFarClippingPlanes[MAX_VIEW_COUNT]{};
 
-    const glm::vec4 clipPlane;
+    glm::mat4 viewMatrices[MAX_VIEW_COUNT]{};
 
-    const float verticalFov;
+    glm::mat4 projectionMatrices[MAX_VIEW_COUNT]{};
 
-    const glm::vec2 nearFarClippingPlane;
+    glm::vec3 cameraPositions[MAX_VIEW_COUNT]{};
 
-    const prev_test::common::intersection::Frustum frustum;
+    prev_test::common::intersection::Frustum frustums[MAX_VIEW_COUNT]{};
 
-    NormalRenderContext(const RenderContext& ctx, const glm::mat4& vm, const glm::mat4& pm, const glm::vec3& camPos, const glm::vec4& cp, const float vertFov, const glm::vec2& nearFar, const prev_test::common::intersection::Frustum& frst)
+    NormalRenderContext(const RenderContext& ctx, const glm::vec4& cp, const uint32_t cc)
         : RenderContext{ ctx }
-        , viewMatrix{ vm }
-        , projectionMatrix{ pm }
-        , cameraPosition{ camPos }
         , clipPlane{ cp }
-        , verticalFov{ vertFov }
-        , nearFarClippingPlane{ nearFar }
-        , frustum{ frst }
+        , cameraCount{ cc }
     {
     }
 };

@@ -24,6 +24,7 @@ void RayCaster::Init()
 
 void RayCaster::Update(float deltaTime)
 {
+    // TODO: use first view camera(left eye?)
     const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
     const auto playerTransformComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::transform::ITransformComponent>({ TAG_PLAYER });
 

@@ -1,7 +1,7 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive : enable
-#ifdef XR_ENABLED
+#ifdef ENABLE_XR
 #extension GL_EXT_multiview : enable
 #endif
 
@@ -49,9 +49,9 @@ layout(location = 3) in vec3 inViewPosition;
 layout(location = 4) in vec3 inToCameraVector;
 layout(location = 5) in float inVisibility;
 
-float CalculateWaterDepth(in vec2 texCoords)
+float CalculateWaterDepth(in vec2 texCoords, in int viewIndex)
 {
-	float depth = texture(depthMapTexture, vec3(texCoords, gl_ViewIndex)).r;
+	float depth = texture(depthMapTexture, vec3(texCoords, viewIndex)).r;
 	float floorDistance = LinearizeDepth(depth, uboFS.nearFarClippinPlane.x, uboFS.nearFarClippinPlane.y);
 	depth = gl_FragCoord.z;
 	float waterDistance = LinearizeDepth(depth, uboFS.nearFarClippinPlane.x, uboFS.nearFarClippinPlane.y);
@@ -60,6 +60,12 @@ float CalculateWaterDepth(in vec2 texCoords)
 
 void main()
 {
+#ifdef ENABLE_XR
+	const int viewIndex = gl_ViewIndex;
+#else
+	const int viewIndex = 0;
+#endif
+
 	float shadow = GetShadow(depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.005);
 	if(shadow < 0.999) {
 		shadow = 0.0;
@@ -71,7 +77,7 @@ void main()
 	vec2 refractTexCoord = vec2(normalizedDeviceSapceCoord.x, normalizedDeviceSapceCoord.y);
 
     // calculate water depth
-	float waterDepth = CalculateWaterDepth(refractTexCoord);
+	float waterDepth = CalculateWaterDepth(refractTexCoord, viewIndex);
 
     // distortion
 	vec2 distortedTexCoords = texture(dudvMapTexture, vec2(inTextureCoord.x + uboFS.moveFactor, inTextureCoord.y)).rg * 0.1;
@@ -84,8 +90,8 @@ void main()
 	refractTexCoord += totalDistortion;
 	refractTexCoord = clamp(refractTexCoord, 0.001, 0.999);
 
-	vec4 reflectColor = texture(reflectionTexture, vec3(reflectTexCoord, gl_ViewIndex));
-	vec4 refractColor = texture(refractionTexture, vec3(refractTexCoord, gl_ViewIndex));
+	vec4 reflectColor = texture(reflectionTexture, vec3(reflectTexCoord, viewIndex));
+	vec4 refractColor = texture(refractionTexture, vec3(refractTexCoord, viewIndex));
 	vec4 finalWaterColor = uboFS.waterColor * shadow;
 
 	// normal
@@ -110,10 +116,9 @@ void main()
 	outColor = baseResultColor;
 	outColor.a = clamp(waterDepth / 5.0, 0.0, 1.0);
 
-	// TODO get rid of this
-	if(gl_ViewIndex == 0) {
-		outColor = vec4(1.0, 0.0, 0.0, 1.0);
-	} else {
-		outColor = vec4(0.0, 0.0, 1.0, 1.0);
-	}
+//	if(viewIndex == 0) {
+//		outColor = vec4(1.0, 0.0, 0.0, 1.0);
+//	} else {
+//		outColor = vec4(0.0, 0.0, 1.0, 1.0);
+//	}
 }

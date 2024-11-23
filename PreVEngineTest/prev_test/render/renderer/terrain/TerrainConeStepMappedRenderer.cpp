@@ -1,8 +1,9 @@
 #include "TerrainConeStepMappedRenderer.h"
 
+#include "../RendererUtils.h"
+
 #include "../../../common/AssetManager.h"
 #include "../../../component/light/ILightComponent.h"
-#include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../../component/ray_casting/RayCastingCommon.h"
 #include "../../../component/shadow/IShadowsComponent.h"
 #include "../../../component/sky/SkyCommon.h"
@@ -16,10 +17,11 @@
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::terrain {
-
-constexpr uint32_t COLOR_INDEX{ 0 };
-constexpr uint32_t NORMAL_INDEX{ 1 };
-constexpr uint32_t HEIGHT_AND_CONE_INDEX{ 2 };
+namespace {
+    constexpr uint32_t COLOR_INDEX{0};
+    constexpr uint32_t NORMAL_INDEX{1};
+    constexpr uint32_t HEIGHT_AND_CONE_INDEX{2};
+}
 
 TerrainConeStepMappedRenderer::TerrainConeStepMappedRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass)
     : m_device{ device }
@@ -98,12 +100,7 @@ void TerrainConeStepMappedRenderer::PreRender(const NormalRenderContext& renderC
 void TerrainConeStepMappedRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAll({ TAG_TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
-        bool visible = true;
-        if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContext.frustum);
-        }
-
-        if (visible) {
+        if (prev_test::render::renderer::IsVisible(renderContext.frustums, renderContext.cameraCount, node->GetId())) {
             const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
             const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
             const auto lightComponents = prev::scene::component::NodeComponentHelper::FindAll<prev_test::component::light::ILightComponent>({ TAG_LIGHT });
@@ -114,11 +111,13 @@ void TerrainConeStepMappedRenderer::Render(const NormalRenderContext& renderCont
             auto uboVS = m_uniformsPoolVS->GetNext();
 
             UniformsVS uniformsVS{};
-            uniformsVS.projectionMatrix = renderContext.projectionMatrix;
-            uniformsVS.viewMatrix = renderContext.viewMatrix;
             uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
             uniformsVS.normalMatrix = glm::transpose(glm::inverse(transformComponent->GetWorldTransformScaled()));
-            uniformsVS.cameraPosition = glm::vec4(renderContext.cameraPosition, 1.0f);
+            for(uint32_t i = 0; i < renderContext.cameraCount; ++i) {
+                uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
+                uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
+                uniformsVS.cameraPositions[i] = glm::vec4(renderContext.cameraPositions[i], 1.0f);
+            }
             for (size_t i = 0; i < lightComponents.size(); i++) {
                 const auto& lightComponent{ lightComponents[i] };
                 uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponent->GetPosition(), 1.0f), glm::vec4(lightComponent->GetColor(), 1.0f), glm::vec4(lightComponent->GetAttenuation(), 1.0f));

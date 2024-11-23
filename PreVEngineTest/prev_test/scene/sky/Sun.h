@@ -10,10 +10,12 @@
 #include <prev/event/EventHandler.h>
 #include <prev/scene/graph/SceneNode.h>
 
+#include <vector>
+
 namespace prev_test::scene::sky {
 class Sun final : public prev::scene::graph::SceneNode {
 public:
-    Sun(prev::core::device::Device& device, prev::core::memory::Allocator& allocator);
+    Sun(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, uint32_t viewCount);
 
     ~Sun() = default;
 
@@ -32,8 +34,10 @@ private:
 
     prev::core::memory::Allocator& m_allocator;
 
+    uint32_t m_viewCount;
+
 private:
-    std::shared_ptr<prev_test::component::sky::ISunComponent> m_sunComponent;
+    std::vector<std::shared_ptr<prev_test::component::sky::ISunComponent>> m_sunComponents;
 
     glm::vec2 m_viewPortSize{};
 

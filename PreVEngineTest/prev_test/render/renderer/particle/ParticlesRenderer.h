@@ -39,9 +39,9 @@ public:
 
 private:
     struct DEFAULT_ALIGNMENT UniformsVS {
-        DEFAULT_ALIGNMENT glm::mat4 viewMatrix;
+        DEFAULT_ALIGNMENT glm::mat4 viewMatrices[MAX_VIEW_COUNT];
 
-        DEFAULT_ALIGNMENT glm::mat4 projectionMatrix;
+        DEFAULT_ALIGNMENT glm::mat4 projectionMatrices[MAX_VIEW_COUNT];
 
         DEFAULT_ALIGNMENT uint32_t textureNumberOfRows;
     };

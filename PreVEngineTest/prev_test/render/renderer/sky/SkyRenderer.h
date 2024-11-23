@@ -83,7 +83,7 @@ private:
     };
 
 private:
-    const uint32_t m_descriptorCount{ 10 };
+    const uint32_t m_descriptorCount{ 24 };
 
 private:
     prev::core::device::Device& m_device;
@@ -109,6 +109,7 @@ private:
 
     std::unique_ptr<prev::render::pipeline::Pipeline> m_compositePipeline;
 
+private:
     std::shared_ptr<prev::render::buffer::ImageBuffer> m_skyColorImageBuffer;
 
     std::shared_ptr<prev::render::sampler::Sampler> m_skyColorImageSampler;

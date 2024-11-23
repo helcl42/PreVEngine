@@ -50,6 +50,8 @@ public:
 
     const EngineConfig& GetConfig() const;
 
+    uint32_t GetViewCount() const;
+
 public:
     void operator()(const prev::window::WindowChangeEvent& windowChangeEvent);
 
@@ -101,8 +103,9 @@ private:
     std::shared_ptr<prev::scene::IScene> m_scene{};
 
     std::shared_ptr<prev::render::IRootRenderer> m_rootRenderer{};
-
+#ifdef ENABLE_XR
     std::shared_ptr<prev::xr::OpenXR> m_openXr{};
+#endif
 };
 } // namespace prev::core
 

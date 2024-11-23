@@ -33,6 +33,7 @@ void SkyBox::Init()
 
 void SkyBox::Update(float deltaTime)
 {
+    // we can use any camera here since skybox should be always at far plane
     auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>(prev::common::TagSet{ TAG_MAIN_CAMERA });
 
     const float ROTATION_ANGLE = ROTATION_SPEED_DEGS_PER_SEC * deltaTime;

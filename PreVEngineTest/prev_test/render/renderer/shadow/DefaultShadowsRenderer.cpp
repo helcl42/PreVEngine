@@ -1,7 +1,8 @@
 #include "DefaultShadowsRenderer.h"
 
+#include "../RendererUtils.h"
+
 #include "../../../common/AssetManager.h"
-#include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../../component/render/IRenderComponent.h"
 #include "../../../component/transform/ITransformComponent.h"
 
@@ -78,13 +79,8 @@ void DefaultShadowsRenderer::PreRender(const ShadowsRenderContext& renderContext
 void DefaultShadowsRenderer::Render(const ShadowsRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAny({ TAG_RENDER_COMPONENT, TAG_RENDER_TEXTURELESS_COMPONENT }) && node->GetTags().HasAll({ TAG_TRANSFORM_COMPONENT })) {
-        bool visible{ true };
-        if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContext.frustum);
-        }
-
         const auto renderComponent = prev::scene::component::ComponentRepository<prev_test::component::render::IRenderComponent>::Instance().Get(node->GetId());
-        if (renderComponent->CastsShadows() && visible) {
+        if (renderComponent->CastsShadows() && prev_test::render::renderer::IsVisible(&renderContext.frustum, 1, node->GetId())) {
             RenderMeshNode(renderContext, node, renderComponent->GetModel()->GetMesh()->GetRootNode());
         }
     }

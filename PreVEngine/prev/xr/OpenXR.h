@@ -45,6 +45,8 @@ public:
 
     VkFormat GetDepthFormat() const;
 
+    uint32_t GetViewCount() const;
+
     uint32_t GetCurrentSwapchainIndex() const;
 
     float GetCurrentDeltaTime() const;

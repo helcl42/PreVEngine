@@ -113,22 +113,18 @@ private:
 
         DEFAULT_ALIGNMENT glm::mat4 modelMatrix;
 
-        DEFAULT_ALIGNMENT glm::mat4 viewMatrix;
-
-        DEFAULT_ALIGNMENT glm::mat4 projectionMatrix;
-
         DEFAULT_ALIGNMENT glm::mat4 normalMatrix;
+
+        DEFAULT_ALIGNMENT glm::mat4 viewMatrices[MAX_VIEW_COUNT];
+
+        DEFAULT_ALIGNMENT glm::mat4 projectionMatrices[MAX_VIEW_COUNT];
+
+        DEFAULT_ALIGNMENT glm::vec4 cameraPositions[MAX_VIEW_COUNT];
 
         DEFAULT_ALIGNMENT glm::vec4 clipPlane;
 
-        DEFAULT_ALIGNMENT glm::vec4 cameraPosition;
-
         DEFAULT_ALIGNMENT LightningUniform lightning;
 
-        DEFAULT_ALIGNMENT glm::vec4 textureOffset;
-
-        DEFAULT_ALIGNMENT uint32_t textureNumberOfRows;
-        uint32_t useFakeLightning;
         float density;
         float gradient;
     };

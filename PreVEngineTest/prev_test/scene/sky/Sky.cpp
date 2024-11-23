@@ -16,13 +16,14 @@ void Sky::Init()
 {
     SceneNode::Init();
 
-    prev_test::component::sky::SkyComponentFactory skyComponentFactory{ m_device, m_allocator };
-    std::shared_ptr<prev_test::component::sky::ISkyComponent> skyComponent = skyComponentFactory.Create();
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::sky::ISkyComponent>(GetThis(), skyComponent, TAG_SKY_RENDER_COMPONENT);
+    m_skyComponent = prev_test::component::sky::SkyComponentFactory{ m_device, m_allocator }.Create();
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::sky::ISkyComponent>(GetThis(), m_skyComponent, TAG_SKY_RENDER_COMPONENT);
 }
 
 void Sky::Update(float deltaTime)
 {
+    m_skyComponent->Update(deltaTime);
+
     SceneNode::Update(deltaTime);
 }
 
