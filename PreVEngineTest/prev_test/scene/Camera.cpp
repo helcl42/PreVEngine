@@ -1,4 +1,5 @@
 #include "Camera.h"
+
 #include "../component/camera/CameraComponentFactory.h"
 #include "../component/transform/TransformComponentFactory.h"
 
@@ -6,23 +7,27 @@
 #include <prev/util/MathUtils.h>
 
 namespace prev_test::scene {
-Camera::Camera()
+Camera::Camera(uint32_t viewCount)
     : SceneNode()
+    , m_viewCount{ viewCount }
 {
 }
 
 void Camera::Init()
 {
-    prev_test::component::transform::TrasnformComponentFactory transformComponentFactory{};
-    m_transformComponent = transformComponentFactory.Create();
-    if (prev::scene::component::NodeComponentHelper::HasComponent<prev_test::component::transform::ITransformComponent>(GetParent())) {
-        m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(GetParent()));
-    }
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, TAG_TRANSFORM_COMPONENT);
+    for(uint32_t view = 0; view < m_viewCount; ++view) {
+        std::shared_ptr<prev_test::component::transform::ITransformComponent> transformComponent{prev_test::component::transform::TrasnformComponentFactory{}.Create()};
+        if (prev::scene::component::NodeComponentHelper::HasComponent<prev_test::component::transform::ITransformComponent>(GetParent())) {
+            transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(GetParent()));
+        }
+        prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), transformComponent, TAG_TRANSFORM_COMPONENT);
 
-    prev_test::component::camera::CameraComponentFactory cameraFactory{};
-    m_cameraComponent = cameraFactory.Create(glm::quat{}, glm::vec3{}, false);
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::camera::ICameraComponent>(GetThis(), m_cameraComponent, TAG_TRANSFORM_COMPONENT);
+        std::shared_ptr<prev_test::component::camera::ICameraComponent> cameraComponent{prev_test::component::camera::CameraComponentFactory{}.Create(glm::quat{}, glm::vec3{}, false)};
+        prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::camera::ICameraComponent>(GetThis(), cameraComponent, TAG_TRANSFORM_COMPONENT);
+
+        m_transformComponents.push_back(transformComponent);
+        m_cameraComponents.push_back(cameraComponent);
+    }
 
     SceneNode::Init();
 
@@ -31,49 +36,54 @@ void Camera::Init()
 
 void Camera::Update(float deltaTime)
 {
+    for(uint32_t view = 0; view < m_viewCount; ++view) {
+        auto transformComponent{ m_transformComponents[view] };
+        auto cameraComponent{ m_cameraComponents[view] };
+
 #ifndef ENABLE_XR
-    glm::vec3 positionDelta{ 0.0f, 0.0f, 0.0f };
-    if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_W)) {
-        positionDelta += m_cameraComponent->GetForwardDirection() * deltaTime * m_moveSpeed;
-    }
-    if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_S)) {
-        positionDelta -= m_cameraComponent->GetForwardDirection() * deltaTime * m_moveSpeed;
-    }
-    if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_A)) {
-        positionDelta += m_cameraComponent->GetRightDirection() * deltaTime * m_moveSpeed;
-    }
-    if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_D)) {
-        positionDelta -= m_cameraComponent->GetRightDirection() * deltaTime * m_moveSpeed;
-    }
-    if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_Q)) {
-        positionDelta += m_cameraComponent->GetUpDirection() * deltaTime * m_moveSpeed;
-    }
-    if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_E)) {
-        positionDelta -= m_cameraComponent->GetUpDirection() * deltaTime * m_moveSpeed;
-    }
+        glm::vec3 positionDelta{ 0.0f, 0.0f, 0.0f };
+        if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_W)) {
+            positionDelta += cameraComponent->GetForwardDirection() * deltaTime * m_moveSpeed;
+        }
+        if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_S)) {
+            positionDelta -= cameraComponent->GetForwardDirection() * deltaTime * m_moveSpeed;
+        }
+        if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_A)) {
+            positionDelta += cameraComponent->GetRightDirection() * deltaTime * m_moveSpeed;
+        }
+        if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_D)) {
+            positionDelta -= cameraComponent->GetRightDirection() * deltaTime * m_moveSpeed;
+        }
+        if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_Q)) {
+            positionDelta += cameraComponent->GetUpDirection() * deltaTime * m_moveSpeed;
+        }
+        if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_E)) {
+            positionDelta -= cameraComponent->GetUpDirection() * deltaTime * m_moveSpeed;
+        }
 
 #if defined(__ANDROID__)
-    if (m_autoMoveForward) {
-        positionDelta += m_cameraComponent->GetForwardDirection() * deltaTime * m_moveSpeed;
-    }
+        if (m_autoMoveForward) {
+            positionDelta += cameraComponent->GetForwardDirection() * deltaTime * m_moveSpeed;
+        }
 
-    if (m_autoMoveBackward) {
-        positionDelta -= m_cameraComponent->GetForwardDirection() * deltaTime * m_moveSpeed;
-    }
+        if (m_autoMoveBackward) {
+            positionDelta -= cameraComponent->GetForwardDirection() * deltaTime * m_moveSpeed;
+        }
 #endif
 
-    m_cameraComponent->AddPosition(positionDelta);
+        cameraComponent->AddPosition(positionDelta);
 
-    m_cameraComponent->SetViewFrustum(m_cameraComponent->GetViewFrustum().GetVerticalFov(), static_cast<float>(m_viewPortSize.x) / static_cast<float>(m_viewPortSize.y), m_cameraComponent->GetViewFrustum().GetNearClippingPlane(), m_cameraComponent->GetViewFrustum().GetFarClippingPlane());
+        cameraComponent->SetViewFrustum(m_cameraComponent->GetViewFrustum().GetVerticalFov(), static_cast<float>(m_viewPortSize.x) / static_cast<float>(m_viewPortSize.y), m_cameraComponent->GetViewFrustum().GetNearClippingPlane(), m_cameraComponent->GetViewFrustum().GetFarClippingPlane());
 #endif
 
-    const glm::mat4 viewMatrix{ m_cameraComponent->LookAt() };
-    const glm::mat4 cameraTransformInWorldSpace{ glm::inverse(viewMatrix) };
+        const glm::mat4 viewMatrix{cameraComponent->LookAt()};
+        const glm::mat4 cameraTransformInWorldSpace{glm::inverse(viewMatrix)};
 
-    m_transformComponent->SetPosition(prev::util::math::ExtractTranslation(cameraTransformInWorldSpace));
-    m_transformComponent->SetOrientation(prev::util::math::ExtractRotationAsQuaternion(cameraTransformInWorldSpace));
+        transformComponent->SetPosition(prev::util::math::ExtractTranslation(cameraTransformInWorldSpace));
+        transformComponent->SetOrientation(prev::util::math::ExtractRotationAsQuaternion(cameraTransformInWorldSpace));
 
-    m_transformComponent->Update(deltaTime);
+        transformComponent->Update(deltaTime);
+    }
 
     SceneNode::Update(deltaTime);
 }
@@ -86,14 +96,11 @@ void Camera::ShutDown()
 void Camera::operator()(const prev::input::mouse::MouseEvent& mouseEvent)
 {
     if (mouseEvent.action == prev::input::mouse::MouseActionType::MOVE && mouseEvent.button == prev::input::mouse::MouseButtonType::LEFT) {
-        const glm::vec2 angleInDegrees{ mouseEvent.position * m_sensitivity };
-        const float newPitch{ m_pitchAngle - angleInDegrees.y };
-
-        if (std::abs(newPitch) < m_absMinMaxPitch) {
-            m_cameraComponent->AddPitch(glm::radians(-angleInDegrees.y));
-            m_pitchAngle -= angleInDegrees.y;
+        const glm::vec2 angleInDegrees{mouseEvent.position * m_sensitivity};
+        for(auto& cameraComponent : m_cameraComponents) {
+            cameraComponent->AddPitch(glm::radians(-angleInDegrees.y));
+            cameraComponent->AddYaw(glm::radians(angleInDegrees.x));
         }
-        m_cameraComponent->AddYaw(glm::radians(angleInDegrees.x));
     }
 }
 
@@ -120,9 +127,10 @@ void Camera::operator()(const prev::input::touch::TouchEvent& touchEvent)
 #endif
     if (touchEvent.action == prev::input::touch::TouchActionType::MOVE) {
         const glm::vec2 angleInDegrees{ (touchEvent.position - m_prevTouchPosition) * m_sensitivity };
-
-        m_cameraComponent->AddPitch(angleInDegrees.y);
-        m_cameraComponent->AddYaw(angleInDegrees.x);
+        for(auto& cameraComponent : m_cameraComponents) {
+            cameraComponent->AddPitch(angleInDegrees.y);
+            cameraComponent->AddYaw(angleInDegrees.x);
+        }
     }
 
     if (touchEvent.action == prev::input::touch::TouchActionType::MOVE || touchEvent.action == prev::input::touch::TouchActionType::DOWN) {
@@ -142,18 +150,22 @@ void Camera::operator()(const prev::input::keyboard::KeyEvent& keyEvent)
 #ifdef ENABLE_XR
 void Camera::operator()(const prev::xr::XrCameraEvent& cameraEvent)
 {
-    const auto previousFrustum{ m_cameraComponent->GetViewFrustum() };
+    for(uint32_t view = 0; view < cameraEvent.count; ++view) {
+        auto& cameraComponent{ m_cameraComponents[view] };
+        const auto previousFrustum{cameraComponent->GetViewFrustum()};
 
-    // TODO use all cameras
-    const auto fov{ cameraEvent.fovs[0] };
-    prev:prev_test::render::ViewFrustum viewFrustum{ fov.angleLeft, fov.angleRight, fov.angleUp, fov.angleDown, previousFrustum.GetNearClippingPlane(), previousFrustum.GetFarClippingPlane() };
-    m_cameraComponent->SetViewFrustum(viewFrustum);
+        const auto& fov{cameraEvent.fovs[view]};
+        prev_test::render::ViewFrustum viewFrustum{fov.angleLeft, fov.angleRight, fov.angleUp, fov.angleDown, previousFrustum.GetNearClippingPlane(), previousFrustum.GetFarClippingPlane()};
+        cameraComponent->SetViewFrustum(viewFrustum);
 
-    const auto pose{ cameraEvent.poses[0] };
-    m_cameraComponent->SetOrientation(pose.orientation);
-    m_cameraComponent->SetPosition(pose.position + glm::vec3{ 5, 5, 5 });
+        const auto& pose{cameraEvent.poses[view]};
+        cameraComponent->SetOrientation(pose.orientation);
+        // TODO - remove the hardcoded position offset!
+        cameraComponent->SetPosition(pose.position + glm::vec3{5, 25, 5});
+    }
 
-    prev::event::EventChannel::Post(prev::xr::XrCameraFeedbackEvent{ viewFrustum.GetNearClippingPlane(), viewFrustum.GetFarClippingPlane(), 0.0f, 1.0f });
+    const auto viewFrustum{ m_cameraComponents[0]->GetViewFrustum() };
+    prev::event::EventChannel::Post(prev::xr::XrCameraFeedbackEvent{ viewFrustum.GetNearClippingPlane(), viewFrustum.GetFarClippingPlane(), MIN_DEPTH, MAX_DEPTH });
 }
 #else
 void Camera::operator()(const prev::core::NewIterationEvent& newIterationEvent)
@@ -164,7 +176,9 @@ void Camera::operator()(const prev::core::NewIterationEvent& newIterationEvent)
 
 void Camera::Reset()
 {
-    m_cameraComponent->Reset();
+    for(auto& cameraComponent : m_cameraComponents) {
+        cameraComponent->Reset();
+    }
 
     m_prevTouchPosition = glm::vec2(0.0f, 0.0f);
 #if defined(__ANDROID__)

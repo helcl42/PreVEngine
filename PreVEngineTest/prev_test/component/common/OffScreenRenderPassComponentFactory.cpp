@@ -63,7 +63,7 @@ std::unique_ptr<IOffScreenRenderPassComponent> OffScreenRenderPassComponentFacto
     std::vector<uint32_t> attachmentIndices;
     uint32_t attachmentIndex{ 0 };
 
-    prev::render::pass::RenderPassBuilder renderPassBuilder{ m_device };
+    prev::render::pass::RenderPassBuilder renderPassBuilder{ m_device, viewCount };
     if (depthFormat != VK_FORMAT_UNDEFINED) {
         renderPassBuilder.AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, { MAX_DEPTH, 0 }, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
         attachmentIndices.push_back(attachmentIndex);

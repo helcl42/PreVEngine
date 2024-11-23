@@ -87,9 +87,12 @@ void Font3dRenderer::Render(const NormalRenderContext& renderContext, const std:
         for (const auto& [key, renderableText] : nodeFontRenderComponent->GetRenderableTexts()) {
             auto uboVS = m_uniformsPoolVS->GetNext();
             UniformsVS uniformsVS{};
-            uniformsVS.projectionMatrix = renderContext.projectionMatrix;
-            uniformsVS.viewMatrix = renderContext.viewMatrix;
-            uniformsVS.modelMatrix = prev::util::math::CreateTransformationMatrix(renderableText.text->GetPosition(), renderableText.text->IsAwaysFacingCamera() ? (glm::inverse(glm::quat_cast(renderContext.viewMatrix)) * renderableText.text->GetOrientation()) : (renderableText.text->GetOrientation() * glm::quat(glm::radians(glm::vec3(0.0f, 180.0f, 0.0f)))));
+            // TODO - get rid of this crap!!
+            uniformsVS.modelMatrix = prev::util::math::CreateTransformationMatrix(renderableText.text->GetPosition(), renderableText.text->IsAwaysFacingCamera() ? (glm::inverse(glm::quat_cast(renderContext.viewMatrices[0])) * renderableText.text->GetOrientation()) : (renderableText.text->GetOrientation() * glm::quat(glm::radians(glm::vec3(0.0f, 180.0f, 0.0f)))));
+            for(uint32_t i = 0; i < renderContext.cameraCount; ++i) {
+                uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
+                uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
+            }
             uniformsVS.clipPlane = renderContext.clipPlane;
             uboVS->Update(&uniformsVS);
 

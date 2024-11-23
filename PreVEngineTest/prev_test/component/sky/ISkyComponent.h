@@ -25,6 +25,10 @@ public:
 
     virtual const glm::vec3& GetCloudBaseColor() const = 0;
 
+    virtual float GetElapsedTime() const = 0;
+
+    virtual void Update(float deltaTime) = 0;
+
 public:
     virtual ~ISkyComponent() = default;
 };

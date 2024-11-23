@@ -24,6 +24,10 @@ public:
 
     const glm::vec3& GetCloudBaseColor() const override;
 
+    float GetElapsedTime() const override;
+
+    void Update(float deltaTime) override;
+
 private:
     friend class SkyComponentFactory;
 
@@ -43,6 +47,8 @@ private:
     glm::vec3 m_topColor{};
 
     glm::vec3 m_cloudBaseColor{};
+
+    float m_elapsedTime{};
 };
 } // namespace prev_test::component::sky
 

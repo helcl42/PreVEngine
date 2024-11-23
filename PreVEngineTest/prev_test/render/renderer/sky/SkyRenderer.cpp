@@ -3,7 +3,6 @@
 #include "../../../common/AssetManager.h"
 #include "../../../component/light/ILightComponent.h"
 #include "../../../component/sky/ISkyComponent.h"
-#include "../../../component/time/ITimeComponent.h"
 
 #include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
@@ -125,9 +124,8 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
 {
     const auto skyComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::sky::ISkyComponent>({ TAG_SKY_RENDER_COMPONENT });
     const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
-    const auto timeComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::time::ITimeComponent>({ TAG_TIME_COMPONENT });
 
-    // generate clouds usgin compute queue
+    // generate clouds using compute queue
     const VkExtent2D extent{ renderContext.rect.extent.width - renderContext.rect.offset.x, renderContext.rect.extent.height - renderContext.rect.offset.y };
 
     // TODO - put this work on dedicated compute queue if available, double buffering, ...
@@ -144,12 +142,13 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
     m_skyAlphanessImageBuffer->UpdateLayout(VK_IMAGE_LAYOUT_GENERAL, renderContext.commandBuffer);
     m_skyCloudDistanceImageBuffer->UpdateLayout(VK_IMAGE_LAYOUT_GENERAL, renderContext.commandBuffer);
 
-    const float skyNearClippingPlane{ std::min(renderContext.nearFarClippingPlane.y * 100.0f, 10.0f) };
-    const float skyFarClippingPlane{ renderContext.nearFarClippingPlane.y };
+    // TODO -> fix back the further near clipping plane
+    const float skyNearClippingPlane{std::min(renderContext.nearFarClippingPlanes[0].y * 100.0f, 10.0f)};
+    const float skyFarClippingPlane{renderContext.nearFarClippingPlanes[0].y};
 
-    const auto fov{ prev::util::math::CreateFovFromProjectionMatrix(renderContext.projectionMatrix) };
+    const auto fov{prev::util::math::CreateFovFromProjectionMatrix(renderContext.projectionMatrices[0])};
     const prev_test::render::ViewFrustum skyViewFrustum(fov.angleLeft, fov.angleRight, fov.angleUp, fov.angleDown, skyNearClippingPlane, skyFarClippingPlane);
-    const auto projectionMatrix{ skyViewFrustum.CreateProjectionMatrix() };
+    const auto projectionMatrix{skyViewFrustum.CreateProjectionMatrix()};
 
     auto uboCS = m_uniformsPoolSkyCS->GetNext();
 
@@ -157,16 +156,16 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
     uniformsCS.resolution = glm::vec4(extent.width, extent.height, 0.0f, 0.0f);
     uniformsCS.projectionMatrix = projectionMatrix;
     uniformsCS.inverseProjectionMatrix = glm::inverse(projectionMatrix);
-    uniformsCS.viewMatrix = renderContext.viewMatrix;
-    uniformsCS.inverseViewMatrix = glm::inverse(renderContext.viewMatrix);
+    uniformsCS.viewMatrix = renderContext.viewMatrices[0];
+    uniformsCS.inverseViewMatrix = glm::inverse(renderContext.viewMatrices[0]);
     uniformsCS.lightColor = glm::vec4(mainLightComponent->GetColor(), 1.0f);
     uniformsCS.lightDirection = glm::vec4(-mainLightComponent->GetDirection(), 0.0f);
-    uniformsCS.cameraPosition = glm::vec4(renderContext.cameraPosition, 1.0f);
+    uniformsCS.cameraPosition = glm::vec4(renderContext.cameraPositions[0], 1.0f);
     uniformsCS.baseCloudColor = glm::vec4(skyComponent->GetCloudBaseColor(), 1.0f);
     uniformsCS.skyColorBottom = glm::vec4(skyComponent->GetBottomColor(), 1.0f);
     uniformsCS.skyColorTop = glm::vec4(skyComponent->GetTopColor(), 1.0f);
     uniformsCS.windDirection = glm::normalize(glm::vec4(0.5f, 0.0f, 0.1f, 0.0f));
-    uniformsCS.time = timeComponent->GetElapsedTime();
+    uniformsCS.time = skyComponent->GetElapsedTime();
     uniformsCS.coverageFactor = 0.45f;
     uniformsCS.cloudSpeed = 450.0f;
     uniformsCS.crispiness = 40.0f;
@@ -209,7 +208,7 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
 
     auto uboPostCS = m_uniformsPoolSkyPostProcessCS->GetNext();
 
-    glm::vec4 lightPositionClipSpace = renderContext.projectionMatrix * renderContext.viewMatrix * glm::vec4(mainLightComponent->GetPosition(), 1.0f);
+    glm::vec4 lightPositionClipSpace = renderContext.projectionMatrices[0] * renderContext.viewMatrices[0] * glm::vec4(mainLightComponent->GetPosition(), 1.0f);
     glm::vec3 lightPositionNdc = lightPositionClipSpace / lightPositionClipSpace.w;
     glm::vec2 lightPositionO1 = lightPositionNdc * 0.5f + 0.5f;
 
@@ -217,7 +216,7 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
     uniformsPostCS.resolution = glm::vec4(extent.width, extent.height, 0.0f, 0.0f);
     uniformsPostCS.lisghtPosition = glm::vec4(lightPositionO1, 0.0f, 1.0f);
     uniformsPostCS.enableGodRays = 1;
-    uniformsPostCS.lightDotCameraForward = glm::dot(glm::normalize(renderContext.cameraPosition - mainLightComponent->GetPosition()), glm::normalize(prev::util::math::GetForwardVector(renderContext.viewMatrix)));
+    uniformsPostCS.lightDotCameraForward = glm::dot(glm::normalize(renderContext.cameraPositions[0] - mainLightComponent->GetPosition()), glm::normalize(prev::util::math::GetForwardVector(renderContext.viewMatrices[0])));
 
     uboPostCS->Update(&uniformsPostCS);
 

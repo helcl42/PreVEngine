@@ -46,7 +46,7 @@ std::unique_ptr<prev::render::pass::RenderPass> ShadowsComponentFactory::CreateR
     dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
     dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-    prev::render::pass::RenderPassBuilder renderPassBuilder{ m_device };
+    prev::render::pass::RenderPassBuilder renderPassBuilder{ m_device, 1 };
     return renderPassBuilder
         .AddDepthAttachment(DEPTH_FORMAT, VK_SAMPLE_COUNT_1_BIT, { MAX_DEPTH, 0 }, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL)
         .AddSubpass({ 0 })

@@ -1,7 +1,8 @@
 #include "TerrainBumplMappedShadowsRenderer.h"
 
+#include "../RendererUtils.h"
+
 #include "../../../common/AssetManager.h"
-#include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../../component/terrain/ITerrainComponent.h"
 #include "../../../component/transform/ITransformComponent.h"
 
@@ -80,12 +81,7 @@ void TerrainBumplMappedShadowsRenderer::PreRender(const ShadowsRenderContext& re
 void TerrainBumplMappedShadowsRenderer::Render(const ShadowsRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAll({ TAG_TRANSFORM_COMPONENT }) && node->GetTags().HasAny({ TAG_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT, TAG_TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT })) {
-        bool visible{ true };
-        if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContext.frustum);
-        }
-
-        if (visible) {
+        if (prev_test::render::renderer::IsVisible(&renderContext.frustum, 1, node->GetId())) {
             const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());
             const auto terrainComponent = prev::scene::component::ComponentRepository<prev_test::component::terrain::ITerrainComponenet>::Instance().Get(node->GetId());
             auto ubo = m_uniformsPool->GetNext();

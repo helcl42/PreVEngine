@@ -22,9 +22,10 @@ def compile_shader(shader_path, compile_serial, compiler_args):
     compiler_path = get_compiler_path()
     output_path = create_output_shader_path(shader_path)
     print('Compiling:', output_path, '...')
-    args = [compiler_path, shader_path, '-o', output_path]
+    args = [compiler_path, shader_path, '-c', '-o', output_path]
     if compiler_args:
         args.extend(compiler_args)
+#     print(args)
     handle = subprocess.Popen(args, shell=False, stdin=subprocess.PIPE, universal_newlines=True)
     if compile_serial == True:
         handle.wait()
@@ -69,13 +70,15 @@ if __name__ == '__main__':
                         help='Path to a folder with shaders to compile.', required=True)
     parser.add_argument('--output_folder',
                         help='Path to a folder where outputs will be copied.', required=True)
-    parser.add_argument('--compile_serial',
-                        help='This arguments ensures that all shader compilation task will run in serial manner(meant for debugging).', required=False, default=False, action='store_true')
     parser.add_argument('--compiler_args', action='append',
                         help='Specifies optional compiler args.', required=False)
+    parser.add_argument('--compile_serial',
+                        help='This arguments ensures that all shader compilation task will run in serial manner(meant for debugging).', required=False, default=False, action='store_true')
     args = parser.parse_args()
     print(args)
     process(args.input_folder, args.output_folder, args.compile_serial, args.compiler_args)
 
 # Example usage
 #  python .\compile_shaders.py --input_folder "<a_path>" --output_folder "<a_path>" --compiler_args="-O" --compile_serial
+
+# python compile_shaders.py --input_folder ../PreVEngineTest/assets/Shaders/ --output_folder ../build_linux/PreVEngineTest/assets/Shaders/ --compile_serial --compiler_args '-DMAX_VIEW_COUNT=2 ' --compiler_args '-DENABLE_XR=1 '

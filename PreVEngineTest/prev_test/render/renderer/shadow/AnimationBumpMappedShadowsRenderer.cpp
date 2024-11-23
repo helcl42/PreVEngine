@@ -1,7 +1,8 @@
 #include "AnimationBumpMappedShadowsRenderer.h"
 
+#include "../RendererUtils.h"
+
 #include "../../../common/AssetManager.h"
-#include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../../component/render/IAnimationRenderComponent.h"
 #include "../../../component/transform/ITransformComponent.h"
 
@@ -82,13 +83,8 @@ void AnimationBumpMappedShadowsRenderer::PreRender(const ShadowsRenderContext& r
 void AnimationBumpMappedShadowsRenderer::Render(const ShadowsRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAll({ TAG_TRANSFORM_COMPONENT }) && node->GetTags().HasAny({ TAG_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT, TAG_ANIMATION_CONE_STEP_MAPPED_RENDER_COMPONENT })) {
-        bool visible{ true };
-        if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContext.frustum);
-        }
-
         const auto renderComponent = prev::scene::component::ComponentRepository<prev_test::component::render::IAnimationRenderComponent>::Instance().Get(node->GetId());
-        if (renderComponent->CastsShadows() && visible) {
+        if (renderComponent->CastsShadows() && prev_test::render::renderer::IsVisible(&renderContext.frustum, 1, node->GetId())) {
             RenderMeshNode(renderContext, node, renderComponent->GetModel()->GetMesh()->GetRootNode());
         }
     }
@@ -126,7 +122,7 @@ void AnimationBumpMappedShadowsRenderer::RenderMeshNode(const ShadowsRenderConte
 
         Uniforms uniforms{};
         const auto& bones = animationPart->GetBoneTransforms();
-        for (size_t i = 0; i < bones.size(); i++) {
+        for (size_t i = 0; i < bones.size(); ++i) {
             uniforms.bones[i] = bones[i];
         }
         uniforms.projectionMatrix = renderContext.projectionMatrix;

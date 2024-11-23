@@ -14,8 +14,8 @@ layout(std140, binding = 3) uniform UniformBufferObject {
     float lightDotCameraForward;
 } uboCS;
 
-#define  BLUR_OFFSET_X  1.0 / uboCS.resolution.x
-#define  BLUR_OFFSET_Y  1.0 / uboCS.resolution.y
+#define BLUR_OFFSET_X (1.0 / uboCS.resolution.x)
+#define BLUR_OFFSET_Y (1.0 / uboCS.resolution.y)
 
 vec4 GaussianBlur(in sampler2D tex, in vec2 uv)
 {

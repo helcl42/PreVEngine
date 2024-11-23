@@ -95,8 +95,8 @@ void SelectionDebugRenderer::Render(const NormalRenderContext& renderContext, co
             auto uboVS = m_uniformsPoolVS->GetNext();
 
             UniformsVS uniformsVS{};
-            uniformsVS.projectionMatrix = renderContext.projectionMatrix;
-            uniformsVS.viewMatrix = renderContext.viewMatrix;
+            uniformsVS.projectionMatrix = renderContext.projectionMatrices[0]; // TODO -> here we use left eye
+            uniformsVS.viewMatrix = renderContext.viewMatrices[0];
             uniformsVS.modelMatrix = prev::util::math::CreateTransformationMatrix(selectableComponent->GetPostiion(), glm::quat(), 0.6f);
 
             uboVS->Update(&uniformsVS);

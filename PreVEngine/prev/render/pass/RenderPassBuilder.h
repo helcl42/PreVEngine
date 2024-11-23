@@ -11,7 +11,7 @@
 namespace prev::render::pass {
 class RenderPassBuilder final {
 public:
-    RenderPassBuilder(VkDevice device, uint32_t viewCount = 1);
+    RenderPassBuilder(VkDevice device, uint32_t viewCount);
 
     ~RenderPassBuilder() = default;
 

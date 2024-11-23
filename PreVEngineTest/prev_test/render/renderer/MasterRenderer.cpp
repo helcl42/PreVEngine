@@ -321,34 +321,40 @@ void MasterRenderer::RenderShadows(const prev::render::RenderContext& renderCont
 void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root)
 {
     const auto reflectionComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::common::IOffScreenRenderPassComponent>({ TAG_WATER_REFLECTION_RENDER_COMPONENT }) };
-    const auto cameraComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA }) };
+    const auto cameraComponents{ prev::scene::component::NodeComponentHelper::FindAll<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA }) };
 
-    const auto& cameraPosition{ cameraComponent->GetPosition() };
-    const auto cameraViewPosition{ cameraComponent->GetPosition() + cameraComponent->GetForwardDirection() };
-
-    const float cameraPositionOffset{ 2.0f * (cameraPosition.y - prev_test::component::water::WATER_LEVEL) };
-    const float cameraViewOffset{ 2.0f * (cameraViewPosition.y - prev_test::component::water::WATER_LEVEL) };
-
-    const glm::vec3 newCameraPosition{ cameraPosition.x, cameraPosition.y - cameraPositionOffset, cameraPosition.z };
-    const glm::vec3 newCameraViewPosition{ cameraViewPosition.x, cameraViewPosition.y - cameraViewOffset, cameraViewPosition.z };
-
-    const auto reflectedUpDirection{ glm::reflect(-cameraComponent->GetUpDirection(), cameraComponent->GetDefaultUpDirection()) };
-
-    const glm::mat4 viewMatrix{ glm::lookAt(newCameraPosition, newCameraViewPosition, reflectedUpDirection) };
-    const glm::mat4 projectionMatrix{ cameraComponent->GetViewFrustum().CreateProjectionMatrix() };
-
-    const prev::render::RenderContext customRenderContextBase{ reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, { { 0, 0 }, reflectionComponent->GetExtent() } };
-
-    const NormalRenderContext customRenderContext{
+    const prev::render::RenderContext customRenderContextBase{reflectionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex,
+                                                              {{0, 0}, reflectionComponent->GetExtent()}};
+    // TODO -> refactor this - shall we create the customRenderContext in one step - using constructor ??
+    NormalRenderContext customRenderContext{
         customRenderContextBase,
-        viewMatrix,
-        projectionMatrix,
-        newCameraPosition,
         glm::vec4(0.0f, 1.0f, 0.0f, -(prev_test::component::water::WATER_LEVEL + prev_test::component::water::WATER_CLIP_PLANE_OFFSET)),
-        cameraComponent->GetViewFrustum().GetVerticalFov(),
-        glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane()),
-        prev_test::common::intersection::Frustum{ projectionMatrix, viewMatrix }
+        static_cast<uint32_t>(cameraComponents.size())
     };
+
+    for(uint32_t view = 0; view < static_cast<uint32_t>(cameraComponents.size()); ++view) {
+        const auto& cameraComponent{ cameraComponents[view] };
+
+        const auto &cameraPosition{cameraComponent->GetPosition()};
+        const auto cameraViewPosition{cameraComponent->GetPosition() + cameraComponent->GetForwardDirection()};
+
+        const float cameraPositionOffset{2.0f * (cameraPosition.y - prev_test::component::water::WATER_LEVEL)};
+        const float cameraViewOffset{2.0f * (cameraViewPosition.y - prev_test::component::water::WATER_LEVEL)};
+
+        const glm::vec3 newCameraPosition{cameraPosition.x, cameraPosition.y - cameraPositionOffset, cameraPosition.z};
+        const glm::vec3 newCameraViewPosition{cameraViewPosition.x, cameraViewPosition.y - cameraViewOffset, cameraViewPosition.z};
+
+        const auto reflectedUpDirection{glm::reflect(-cameraComponent->GetUpDirection(), cameraComponent->GetDefaultUpDirection())};
+
+        const glm::mat4 viewMatrix{glm::lookAt(newCameraPosition, newCameraViewPosition, reflectedUpDirection)};
+        const glm::mat4 projectionMatrix{cameraComponent->GetViewFrustum().CreateProjectionMatrix()};
+
+        customRenderContext.nearFarClippingPlanes[view] = glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane());
+        customRenderContext.viewMatrices[view] = viewMatrix;
+        customRenderContext.projectionMatrices[view] = projectionMatrix;
+        customRenderContext.cameraPositions[view] = newCameraPosition;
+        customRenderContext.frustums[view] = prev_test::common::intersection::Frustum{projectionMatrix, viewMatrix};
+    }
 
 #ifdef PARALLEL_RENDERING
     const auto& commandBuffers{ m_reflectionCommandBufferGroups->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
@@ -361,23 +367,29 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
 void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root)
 {
     const auto refractionComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::common::IOffScreenRenderPassComponent>({ TAG_WATER_REFRACTION_RENDER_COMPONENT }) };
-    const auto cameraComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA }) };
-
-    const auto& viewMatrix{ cameraComponent->LookAt() };
-    const auto projectionMatrix{ cameraComponent->GetViewFrustum().CreateProjectionMatrix() };
+    const auto cameraComponents{ prev::scene::component::NodeComponentHelper::FindAll<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA }) };
 
     const prev::render::RenderContext customRenderContextBase{ refractionComponent->GetFrameBuffer(), renderContext.commandBuffer, renderContext.frameInFlightIndex, { { 0, 0 }, refractionComponent->GetExtent() } };
 
-    const NormalRenderContext customRenderContext{
+    // TODO -> refactor this - shall we create the customRenderContext in one step - using constructor ??
+    NormalRenderContext customRenderContext{
         customRenderContextBase,
-        viewMatrix,
-        projectionMatrix,
-        cameraComponent->GetPosition(),
         glm::vec4(0.0f, -1.0f, 0.0f, prev_test::component::water::WATER_LEVEL + prev_test::component::water::WATER_CLIP_PLANE_OFFSET),
-        cameraComponent->GetViewFrustum().GetVerticalFov(),
-        glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane()),
-        prev_test::common::intersection::Frustum{ projectionMatrix, viewMatrix }
+        static_cast<uint32_t>(cameraComponents.size())
     };
+
+    for(uint32_t view = 0; view < static_cast<uint32_t>(cameraComponents.size()); ++view) {
+        const auto& cameraComponent{ cameraComponents[view] };
+
+        const auto &viewMatrix{cameraComponent->LookAt()};
+        const auto projectionMatrix{cameraComponent->GetViewFrustum().CreateProjectionMatrix()};
+
+        customRenderContext.nearFarClippingPlanes[view] = glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane());
+        customRenderContext.viewMatrices[view] = viewMatrix;
+        customRenderContext.projectionMatrices[view] = projectionMatrix;
+        customRenderContext.cameraPositions[view] = cameraComponent->GetPosition();
+        customRenderContext.frustums[view] = prev_test::common::intersection::Frustum{projectionMatrix, viewMatrix};
+    }
 
 #ifdef PARALLEL_RENDERING
     const auto& commandBuffers{ m_refractionCommandBufferGroups->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
@@ -389,24 +401,30 @@ void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& re
 
 void MasterRenderer::RenderScene(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root)
 {
-    const auto cameraComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA }) };
+    const auto cameraComponents{ prev::scene::component::NodeComponentHelper::FindAll<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA }) };
 
-    const auto& viewMatrix{ cameraComponent->LookAt() };
-    const auto projectionMatrix{ cameraComponent->GetViewFrustum().CreateProjectionMatrix() };
-
-    const NormalRenderContext customRenderContext{
+    // TODO -> refactor this - shall we create the customRenderContext in one step - using constructor ??
+    NormalRenderContext customRenderContext{
         renderContext,
-        viewMatrix,
-        projectionMatrix,
-        cameraComponent->GetPosition(),
         DEFAULT_CLIP_PLANE,
-        cameraComponent->GetViewFrustum().GetVerticalFov(),
-        glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane()),
-        prev_test::common::intersection::Frustum{ projectionMatrix, viewMatrix }
+        static_cast<uint32_t>(cameraComponents.size())
     };
 
+    for(uint32_t view = 0; view < static_cast<uint32_t>(cameraComponents.size()); ++view) {
+        const auto &cameraComponent{cameraComponents[view]};
+
+        const auto &viewMatrix{cameraComponent->LookAt()};
+        const auto projectionMatrix{cameraComponent->GetViewFrustum().CreateProjectionMatrix()};
+
+        customRenderContext.nearFarClippingPlanes[view] = glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane());
+        customRenderContext.viewMatrices[view] = viewMatrix;
+        customRenderContext.projectionMatrices[view] = projectionMatrix;
+        customRenderContext.cameraPositions[view] = cameraComponent->GetPosition();
+        customRenderContext.frustums[view] = prev_test::common::intersection::Frustum{projectionMatrix, viewMatrix};
+    }
+
 #ifdef PARALLEL_RENDERING
-    const auto& commandBuffers{ m_defaultCommandBuffersGroup->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
+    cameraComponentsconst auto& commandBuffers{ m_defaultCommandBuffersGroup->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
     RenderParallel(m_defaultRenderPass, customRenderContext, root, m_defaultRenderers, commandBuffers);
 #else
     RenderSerial(m_defaultRenderPass, customRenderContext, root, m_defaultRenderers);

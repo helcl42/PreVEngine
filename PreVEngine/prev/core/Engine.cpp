@@ -159,6 +159,15 @@ const EngineConfig& Engine::GetConfig() const
     return m_config;
 }
 
+uint32_t Engine::GetViewCount() const
+{
+#ifdef ENABLE_XR
+    return m_openXr->GetViewCount();
+#elif
+    return 1;
+#endif
+}
+
 void Engine::operator()(const prev::window::WindowChangeEvent& windowChangeEvent)
 {
     m_device->WaitIdle();
@@ -245,7 +254,7 @@ void Engine::ResetAllocator()
 
 void Engine::ResetRenderPass()
 {
-    prev::render::pass::RenderPassBuilder renderPassBuilder{ *m_device, m_config.viewCount };
+    prev::render::pass::RenderPassBuilder renderPassBuilder{ *m_device, GetViewCount() };
 
     const auto colorFormat{ m_device->GetGPU()->FindSurfaceFormat(m_surface) };
     const auto depthFormat{ m_device->GetGPU()->FindDepthFormat() };
@@ -306,7 +315,7 @@ void Engine::ResetSwapchain()
 #ifdef ENABLE_XR
     m_swapchain = std::make_shared<prev::xr::XRSwapchain>(*m_device, *m_allocator, *m_renderPass, *m_openXr, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount));
 #else
-    m_swapchain = std::make_shared<prev::render::Swapchain>(*m_device, *m_allocator, *m_renderPass, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount), m_config.viewCount);
+    m_swapchain = std::make_shared<prev::render::Swapchain>(*m_device, *m_allocator, *m_renderPass, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount), 1);
 #if defined(__ANDROID__)
     m_swapchain->SetPresentMode(m_config.VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_MAILBOX_KHR);
 #else

@@ -442,6 +442,11 @@ namespace prev::xr {
         return m_preferredDepthFormat;
     }
 
+    uint32_t OpenXR::GetViewCount() const
+    {
+        return static_cast<uint32_t>(m_viewConfigurationViews.size());
+    }
+
     uint32_t OpenXR::GetCurrentSwapchainIndex() const
     {
         return m_currentSwapchainIndex;
@@ -500,7 +505,7 @@ namespace prev::xr {
 
         XrCameraEvent event{};
         for(size_t i = 0; i < views.size(); ++i) {
-            auto& view{ views[i] };
+            const auto& view{ views[i] };
             event.poses[i] = prev::util::math::Pose{ { view.pose.orientation.w, view.pose.orientation.x, view.pose.orientation.y, view.pose.orientation.z }, { view.pose.position.x, view.pose.position.y, view.pose.position.z } };
             event.fovs[i] = prev::util::math::Fov{ view.fov.angleLeft, view.fov.angleRight, view.fov.angleUp, view.fov.angleDown };
         }
@@ -749,6 +754,10 @@ namespace prev::xr {
         OPENXR_CHECK(xrEnumerateViewConfigurationViews(m_xrInstance, m_systemID, m_viewConfiguration, 0, &viewConfigurationViewCount, nullptr), "Failed to enumerate ViewConfiguration Views.");
         m_viewConfigurationViews.resize(viewConfigurationViewCount, {XR_TYPE_VIEW_CONFIGURATION_VIEW});
         OPENXR_CHECK(xrEnumerateViewConfigurationViews(m_xrInstance, m_systemID, m_viewConfiguration, viewConfigurationViewCount, &viewConfigurationViewCount, m_viewConfigurationViews.data()), "Failed to enumerate ViewConfiguration Views.");
+
+        if(viewConfigurationCount > MAX_VIEW_COUNT) {
+            LOGE("OpenXR view configuration count > maxViewCount: %d > %d", viewConfigurationCount, MAX_VIEW_COUNT);
+        }
     }
 
     void OpenXR::GetEnvironmentBlendModes() {

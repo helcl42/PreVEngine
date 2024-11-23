@@ -1,7 +1,8 @@
 #include "BumpMappedShadowsRenderer.h"
 
+#include "../RendererUtils.h"
+
 #include "../../../common/AssetManager.h"
-#include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../../component/render/IRenderComponent.h"
 #include "../../../component/transform/ITransformComponent.h"
 
@@ -81,13 +82,8 @@ void BumpMappedShadowsRenderer::PreRender(const ShadowsRenderContext& renderCont
 void BumpMappedShadowsRenderer::Render(const ShadowsRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAll({ TAG_TRANSFORM_COMPONENT }) && node->GetTags().HasAny({ TAG_RENDER_NORMAL_MAPPED_COMPONENT, TAG_RENDER_CONE_STEP_MAPPED_COMPONENT })) {
-        bool visible{ true };
-        if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContext.frustum);
-        }
-
         const auto renderComponent = prev::scene::component::ComponentRepository<prev_test::component::render::IRenderComponent>::Instance().Get(node->GetId());
-        if (renderComponent->CastsShadows() && visible) {
+        if (renderComponent->CastsShadows() && prev_test::render::renderer::IsVisible(&renderContext.frustum, 1, node->GetId())) {
             const auto nodeRenderComponent = prev::scene::component::ComponentRepository<prev_test::component::render::IRenderComponent>::Instance().Get(node->GetId());
             RenderMeshNode(renderContext, node, nodeRenderComponent->GetModel()->GetMesh()->GetRootNode());
         }
