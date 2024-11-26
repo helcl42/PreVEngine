@@ -31,6 +31,8 @@ layout(std140, binding = 6) uniform UniformBufferObject {
 	vec4 skyColorTop;
 	vec4 windDirection;
 
+	vec4 worldOrigin;
+
 	float time;
 	float coverageFactor;
 	float cloudSpeed;
@@ -76,6 +78,12 @@ const vec4 cumulusGradient = vec4(0.00, 0.1625, 0.88, 0.98);
 
 const float cloudsMinTransmitance = 0.1;
 
+vec3 GetEarthCenter()
+{
+	const vec3 sphereCenter = uboCS.worldOrigin.xyz + vec3(0.0, -uboCS.earthRadius, 0.0);
+	return sphereCenter;
+}
+
 float HG(in float sunDotRayDirection, in float g)
 {
 	float gg = g * g;
@@ -109,7 +117,7 @@ bool RaySphereIntersection(in vec3 rayStartPosition, in vec3 rayDirection, in ve
 
 float GetHeightFraction(in vec3 inPos)
 {
-	const vec3 sphereCenter = vec3(uboCS.cameraPosition.x, -uboCS.earthRadius, uboCS.cameraPosition.z);
+	const vec3 sphereCenter = GetEarthCenter();
 	return (length(inPos - sphereCenter) - uboCS.sphereInnerRadius) / (uboCS.sphereOuterRadius - uboCS.sphereInnerRadius);
 }
 
@@ -288,7 +296,7 @@ RaymarchToCloudResult RaymarchToCloud(in vec3 startPos, in vec3 endPos, in vec3 
 
 float ComputeFogAmount(in vec3 startPos, in float factor)
 {
-	const vec3 sphereCenter = vec3(uboCS.cameraPosition.x, -uboCS.earthRadius, uboCS.cameraPosition.z);
+	const vec3 sphereCenter = GetEarthCenter();
 	float dist = length(startPos - uboCS.cameraPosition.xyz);
 	float radius = (uboCS.cameraPosition.y - sphereCenter.y) * 0.3;
 	float alpha = dist / radius;
@@ -324,13 +332,13 @@ vec4 ComputeClipSpaceDirection(in ivec2 fragCoord)
 {
 	vec2 normalizedFragCoord = vec2(fragCoord.xy) / uboCS.resolution.xy;
 	vec2 rayNds = 2.0 * normalizedFragCoord - 1.0;
-	return vec4(rayNds, 1.0, 0.0);
+	return vec4(rayNds, 1.0, 1.0);
 }
 
 vec4 ComputeViewSpaceDirection(in vec4 clipSpaceDir)
 {
 	vec4 rayView = uboCS.inverseProjectionMatrix * clipSpaceDir;
-	return vec4(rayView.xy, -1.0, 0.0);
+	return rayView;
 }
 
 vec3 ComputeWorldSpaceDirection(in vec4 viewSpaceDir)
@@ -351,9 +359,9 @@ void main()
 	// compute background color
 	vec4 backgroundColor = GetBackgroundColor(worldDir);
 
-	// compute raymarching starting and ending point
-	const vec3 sphereCenter = vec3(uboCS.cameraPosition.x, -uboCS.earthRadius, uboCS.cameraPosition.z);
+	const vec3 sphereCenter = GetEarthCenter();
 
+	// compute raymarching starting and ending point
 	vec3 startPos, endPos, fogRay;
 	if(uboCS.cameraPosition.y < uboCS.sphereInnerRadius - uboCS.earthRadius)
 	{
