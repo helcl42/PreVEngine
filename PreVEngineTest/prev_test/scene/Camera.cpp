@@ -160,8 +160,7 @@ void Camera::operator()(const prev::xr::XrCameraEvent& cameraEvent)
 
         const auto& pose{cameraEvent.poses[view]};
         cameraComponent->SetOrientation(pose.orientation);
-        // TODO - remove the hardcoded position offset!
-        cameraComponent->SetPosition(pose.position + glm::vec3{5, 25, 5});
+        cameraComponent->SetPosition(pose.position);
     }
 
     const auto viewFrustum{ m_cameraComponents[0]->GetViewFrustum() };
