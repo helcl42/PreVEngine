@@ -11,14 +11,11 @@ public:
     virtual ~SunComponent() = default;
 
 public:
-    void Update(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, const glm::vec3& eyePosition, const glm::vec3& sunPosition) override;
-
     std::shared_ptr<Flare> GetFlare() const override;
 
     std::shared_ptr<prev_test::render::IModel> GetModel() const override;
 
-private:
-    bool ConvertWorldSpaceToScreenSpaceCoord(const glm::vec3& worldPosition, const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, glm::vec2& convertedSceenPosition);
+    glm::vec2 ComputeFlarePosition(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, const glm::vec3& eyePosition, const glm::vec3& sunPosition) const override;
 
 private:
     std::shared_ptr<Flare> m_flare;

@@ -21,10 +21,6 @@ public:
 
     float GetScale() const;
 
-    const glm::vec2& GetScreenSpacePosition() const;
-
-    void SetScreenSpacePosition(const glm::vec2& position);
-
 private:
     prev::core::device::Device& m_device;
 
@@ -33,8 +29,6 @@ private:
     std::shared_ptr<prev::render::sampler::Sampler> m_sampler{};
 
     float m_scale{};
-
-    glm::vec2 m_screenSpacePosition{};
 };
 } // namespace prev_test::component::sky
 

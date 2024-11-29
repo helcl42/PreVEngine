@@ -1,27 +1,42 @@
 #include "SunComponent.h"
 
 namespace prev_test::component::sky {
+namespace {
+bool ConvertWorldSpaceToNdc(const glm::vec3 &worldPosition, const glm::mat4 &projectionMatrix, const glm::mat4 &viewMatrix, glm::vec2 &outNdcPosition) {
+    const auto clipPosition{projectionMatrix * viewMatrix * glm::vec4(worldPosition, 1.0f)};
+    if (clipPosition.w <= 0.0f) {
+        return false;
+    }
+    outNdcPosition = glm::vec2(clipPosition.x, clipPosition.y) / clipPosition.w;
+    return true;
+}
+
+glm::vec2 GetCameraNdc(const glm::mat4& projectionMatrix)
+{
+    const glm::vec4 cameraClipSpace{ projectionMatrix * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f) };
+    const glm::vec4 cameraNdc{ cameraClipSpace / cameraClipSpace.w };
+    return { cameraNdc.x, cameraNdc.y };
+}
+
+glm::vec2 ComputeFlareNdcPosition(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, const glm::vec3& eyePosition, const glm::vec3& sunPosition)
+{
+    glm::vec2 sunNdcPosition;
+    if (ConvertWorldSpaceToNdc(eyePosition + sunPosition, projectionMatrix, viewMatrix, sunNdcPosition)) {
+        const glm::vec2 cameraNdcPosition{ GetCameraNdc(projectionMatrix) };
+        const glm::vec2 sunToCenter{ cameraNdcPosition - sunNdcPosition };
+        const float brightness{ 1.0f - (glm::length(sunToCenter) / 1.4f) };
+        if (brightness > 0) {
+            return sunNdcPosition;
+        }
+    }
+    return { -100.0f, -100.0f };
+}
+}
+
 SunComponent::SunComponent(const std::shared_ptr<Flare>& flare, const std::shared_ptr<prev_test::render::IModel>& model)
     : m_flare(flare)
     , m_model(model)
 {
-}
-
-void SunComponent::Update(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, const glm::vec3& eyePosition, const glm::vec3& sunPosition)
-{
-    glm::vec2 sunPositionInScreenSpace;
-    if (ConvertWorldSpaceToScreenSpaceCoord(eyePosition + sunPosition, projectionMatrix, viewMatrix, sunPositionInScreenSpace)) {
-        const glm::vec2 screenCenter{ 0.0f, 0.0f };
-        glm::vec2 sunToCenter{ screenCenter - sunPositionInScreenSpace };
-        const float brightness = 1.0f - (glm::length(sunToCenter) / 1.4f);
-        if (brightness > 0) {
-            m_flare->SetScreenSpacePosition(sunPositionInScreenSpace);
-        } else {
-            m_flare->SetScreenSpacePosition(glm::vec2(-100.0f));
-        }
-    } else {
-        m_flare->SetScreenSpacePosition(glm::vec2(-100.0f));
-    }
 }
 
 std::shared_ptr<Flare> SunComponent::GetFlare() const
@@ -34,14 +49,8 @@ std::shared_ptr<prev_test::render::IModel> SunComponent::GetModel() const
     return m_model;
 }
 
-bool SunComponent::ConvertWorldSpaceToScreenSpaceCoord(const glm::vec3& worldPosition, const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, glm::vec2& convertedSceenPosition)
+glm::vec2 SunComponent::ComputeFlarePosition(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, const glm::vec3& eyePosition, const glm::vec3& sunPosition) const
 {
-    const auto coord = projectionMatrix * viewMatrix * glm::vec4{ worldPosition, 1.0f };
-    if (coord.w <= 0.0f) {
-        return false;
-    }
-    convertedSceenPosition = glm::vec2(coord.x / coord.w, coord.y / coord.w);
-    return true;
+    return ComputeFlareNdcPosition(projectionMatrix, viewMatrix, eyePosition, sunPosition);
 }
-
 } // namespace prev_test::component::sky
