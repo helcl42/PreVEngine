@@ -1,9 +1,12 @@
 
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
+#ifdef ENABLE_XR
+#extension GL_EXT_multiview : enable
+#endif
 
 layout(std140, binding = 0) uniform UniformBufferObject {
-    vec4 translation;
+    vec4 translations[MAX_VIEW_COUNT];
     vec4 scale;
 } uboVS;
 
@@ -13,6 +16,13 @@ layout(location = 2) in vec3 inNormal;
 
 void main()
 {
-	vec2 screenPosition = inPosition.xy * uboVS.scale.xy + uboVS.translation.xy;
-	gl_Position = vec4(screenPosition, uboVS.translation.z, 1.0);
+#ifdef ENABLE_XR
+    const int viewIndex = gl_ViewIndex;
+#else
+    const int viewIndex = 0;
+#endif
+
+    vec3 translation = uboVS.translations[viewIndex].xyz;
+	vec2 screenPosition = inPosition.xy * uboVS.scale.xy + translation.xy;
+	gl_Position = vec4(screenPosition, translation.z, 1.0);
 }

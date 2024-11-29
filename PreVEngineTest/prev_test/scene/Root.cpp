@@ -97,7 +97,7 @@ void Root::Init()
     auto water = std::make_shared<water::WaterManager>(m_device, m_allocator, TERRAIN_GRID_MAX_X, TERRAIN_GRID_MAX_Z, m_viewCount);
     AddChild(water);
 
-    auto sun = std::make_shared<sky::Sun>(m_device, m_allocator, m_viewCount);
+    auto sun = std::make_shared<sky::Sun>(m_device, m_allocator);
     AddChild(sun);
 
     const float ITEMS_TERRAIN_BORDER_PADDING{ 10.0f };
@@ -132,7 +132,7 @@ void Root::Init()
     // auto cube5 = std::make_shared<Cube>(m_device, m_allocator, glm::vec3(-90.0f, 0.0f, -90.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(20.0f), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_normal_2.png"), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sand_cone.png"), 0.1f);
     // AddChild(cube5);
 
-    auto lensFlare = std::make_shared<sky::LensFlare>(m_device, m_allocator, m_viewCount);
+    auto lensFlare = std::make_shared<sky::LensFlare>(m_device, m_allocator);
     AddChild(lensFlare);
 
     auto text = std::make_shared<text::Text>(m_device, m_allocator);

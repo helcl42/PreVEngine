@@ -128,7 +128,7 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
     // generate clouds using compute queue
     const VkExtent2D extent{ renderContext.rect.extent.width - renderContext.rect.offset.x, renderContext.rect.extent.height - renderContext.rect.offset.y };
 
-    for(uint32_t viewIndex = 0; viewIndex < MAX_VIEW_COUNT; ++viewIndex) {
+    for(uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
         // TODO - put this work on dedicated compute queue if available, double buffering, ...
 
         auto& skyColorImageBuffer{ m_skyColorImageBuffer[viewIndex] };
@@ -267,7 +267,7 @@ void SkyRenderer::Render(const NormalRenderContext& renderContext, const std::sh
     if (node->GetTags().HasAll({ TAG_SKY_RENDER_COMPONENT })) {
         const auto skyComponent = prev::scene::component::ComponentRepository<prev_test::component::sky::ISkyComponent>::Instance().Get(node->GetId());
 
-        for(uint32_t viewIndex = 0; viewIndex < MAX_VIEW_COUNT; ++viewIndex) {
+        for(uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
             auto& skyCloudDistanceImageBuffer{ m_skyCloudDistanceImageBuffer[viewIndex] };
             auto& skyPostProcessColorImageBuffer{ m_skyPostProcessColorImageBuffer[viewIndex] };
 
