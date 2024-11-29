@@ -1,7 +1,5 @@
 #include "LensFlareComponent.h"
 
-#include <prev/util/MathUtils.h>
-
 namespace prev_test::component::sky {
 namespace {
 bool ConvertWorldSpaceToNdc(const glm::vec3& worldPosition, const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, glm::vec2& outNdcPosition)
