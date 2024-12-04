@@ -14,6 +14,8 @@ file(GLOB SRC_LIST
     "prev/common/*.h" "prev/common/*.cpp"
     "prev/common/pattern/*.h" "prev/common/pattern/*.cpp"
     "prev/core/*.h" "prev/core/*.cpp"
+    "prev/core/engine/*.h" "prev/core/engine/*.cpp"
+    "prev/core/engine/impl/*.h" "prev/core/engine/impl/*.cpp"
     "prev/core/memory/*.h" "prev/core/memory/*.cpp"
     "prev/core/device/*.h" "prev/core/device/*.cpp"
     "prev/core/instance/*.h" "prev/core/instance/*.cpp"

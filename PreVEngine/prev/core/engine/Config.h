@@ -1,10 +1,10 @@
 #ifndef __ENGINE_CONFIG_H__
 #define __ENGINE_CONFIG_H__
 
-#include "../common/Common.h"
+#include "../../common/Common.h"
 
-namespace prev::core {
-struct EngineConfig {
+namespace prev::core::engine {
+struct Config {
     bool validation{ true };
 
     std::string appName{ "PreVEngine - Demo" };

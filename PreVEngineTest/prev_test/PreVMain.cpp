@@ -2,14 +2,14 @@
 
 int PreVMain(int argc, char** argv)
 {
-   prev::core::EngineConfig config{};
+   prev::core::engine::Config config{};
    config.appName = "Test App";
    config.fullScreen = false;
    config.validation = true;
    config.windowPosition = { 40, 40 };
    config.windowSize = { 1600, 900 };
    config.VSync = true;
-   config.samplesCount = 1;
+   config.samplesCount = 4;
    config.swapchainFrameCount = 3;
 
    try {

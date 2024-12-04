@@ -6,7 +6,7 @@
 namespace prev_test {
 class TestApp final : public prev::App {
 public:
-    TestApp(const prev::core::EngineConfig& config);
+    TestApp(const prev::core::engine::Config& config);
 
     ~TestApp() = default;
 
