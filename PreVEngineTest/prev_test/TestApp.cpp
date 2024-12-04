@@ -6,8 +6,7 @@
 #include "scene/Root.h"
 
 namespace prev_test {
-
-TestApp::TestApp(const prev::core::EngineConfig& config)
+TestApp::TestApp(const prev::core::engine::Config& config)
     : prev::App{ config }
 {
 }

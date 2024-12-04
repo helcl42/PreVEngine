@@ -1,14 +1,14 @@
 #ifndef __APP_H__
 #define __APP_H__
 
-#include "core/Engine.h"
+#include "core/engine/Engine.h"
 #include "render/IRootRenderer.h"
 #include "scene/IScene.h"
 
 namespace prev {
 class App {
 public:
-    App(const prev::core::EngineConfig& config);
+    App(const prev::core::engine::Config& config);
 
     virtual ~App() = default;
 
@@ -25,7 +25,7 @@ protected:
     virtual std::shared_ptr<prev::render::IRootRenderer> CreateRootRenderer() const = 0;
 
 protected:
-    std::unique_ptr<prev::core::Engine> m_engine{};
+    std::unique_ptr<prev::core::engine::Engine> m_engine{};
 };
 } // namespace prev
 

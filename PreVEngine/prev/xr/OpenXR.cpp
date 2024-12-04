@@ -351,13 +351,13 @@ namespace prev::xr {
                      "Failed to enumerate Depth Swapchain Images.");
 
         // Per image in the swapchains, fill out a GraphicsAPI::ImageViewCreateInfo structure and create a color/depth image view.
-        for (uint32_t j = 0; j < colorSwapchainImageCount; j++) {
+        for (uint32_t j = 0; j < colorSwapchainImageCount; ++j) {
             const auto image{swapchainImagesMap[m_colorSwapchainInfo.swapchain].second[j].image};
             const auto imageView{prev::util::vk::CreateImageView(m_graphicsBinding.device, image, m_preferredColorFormat, VK_IMAGE_VIEW_TYPE_2D_ARRAY, 1, VK_IMAGE_ASPECT_COLOR_BIT, viewCount, 0)};
             m_colorSwapchainInfo.images.push_back(image);
             m_colorSwapchainInfo.imageViews.push_back(imageView);
         }
-        for (uint32_t j = 0; j < depthSwapchainImageCount; j++) {
+        for (uint32_t j = 0; j < depthSwapchainImageCount; ++j) {
             const auto image{swapchainImagesMap[m_depthSwapchainInfo.swapchain].second[j].image};
             const auto imageView{prev::util::vk::CreateImageView(m_graphicsBinding.device, image, m_preferredDepthFormat, VK_IMAGE_VIEW_TYPE_2D_ARRAY, 1, VK_IMAGE_ASPECT_DEPTH_BIT, viewCount, 0)};
             m_depthSwapchainInfo.images.push_back(image);
@@ -463,7 +463,8 @@ namespace prev::xr {
         PollAction();
     }
 
-    bool OpenXR::BeginFrame() {
+    bool OpenXR::BeginFrame()
+    {
         if(!m_sessionRunning) {
             return false;
         }
