@@ -161,7 +161,6 @@ void TransitionImageLayout(const VkCommandBuffer commandBuffer, const VkImage im
 
 void GenerateMipmaps(const VkCommandBuffer commandBuffer, const VkImage image, const VkExtent3D& extent, const uint32_t mipLevels, const uint32_t layersCount, const VkImageAspectFlags aspectMask, const VkFilter filter, const VkImageLayout layout)
 {
-    // TODO: this function uses internally linear filter -> it might not be supported for the desired imageFormat
     for (uint32_t layerIndex = 0; layerIndex < layersCount; ++layerIndex) {
         VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
         barrier.image = image;
