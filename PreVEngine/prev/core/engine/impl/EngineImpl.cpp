@@ -12,23 +12,28 @@ namespace prev::core::engine::impl {
         ShutDown();
     }
 
-    std::shared_ptr<prev::scene::IScene> EngineImpl::GetScene() const {
+    std::shared_ptr<prev::scene::IScene> EngineImpl::GetScene() const
+    {
         return m_scene;
     }
 
-    std::shared_ptr<prev::render::ISwapchain> EngineImpl::GetSwapchain() const {
+    std::shared_ptr<prev::render::ISwapchain> EngineImpl::GetSwapchain() const
+    {
         return m_swapchain;
     }
 
-    std::shared_ptr<prev::render::pass::RenderPass> EngineImpl::GetRenderPass() const {
+    std::shared_ptr<prev::render::pass::RenderPass> EngineImpl::GetRenderPass() const
+    {
         return m_renderPass;
     }
 
-    std::shared_ptr<prev::render::IRootRenderer> EngineImpl::GetRootRenderer() const {
+    std::shared_ptr<prev::render::IRootRenderer> EngineImpl::GetRootRenderer() const
+    {
         return m_rootRenderer;
     }
 
-    std::shared_ptr<prev::core::memory::Allocator> EngineImpl::GetAllocator() const {
+    std::shared_ptr<prev::core::memory::Allocator> EngineImpl::GetAllocator() const
+    {
         return m_allocator;
     }
 
@@ -36,7 +41,8 @@ namespace prev::core::engine::impl {
         return m_device;
     }
 
-    const Config& EngineImpl::GetConfig() const {
+    const Config& EngineImpl::GetConfig() const
+    {
         return m_config;
     }
 

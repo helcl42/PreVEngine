@@ -177,7 +177,7 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
         uniformsCS.skyColorBottom = glm::vec4(skyComponent->GetBottomColor(), 1.0f);
         uniformsCS.skyColorTop = glm::vec4(skyComponent->GetTopColor(), 1.0f);
         uniformsCS.windDirection = glm::normalize(glm::vec4(0.5f, 0.0f, 0.1f, 0.0f));
-        uniformsCS.worldOrigin = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        uniformsCS.worldOrigin = glm::vec4(renderContext.cameraPositions[0].x, 0.0f, renderContext.cameraPositions[0].z, 1.0f);
         uniformsCS.time = skyComponent->GetElapsedTime();
         uniformsCS.coverageFactor = 0.45f;
         uniformsCS.cloudSpeed = 450.0f;
@@ -273,9 +273,15 @@ void SkyRenderer::Render(const NormalRenderContext& renderContext, const std::sh
 
             auto& skyCloudDistanceImageSampler{ m_skyCloudDistanceImageSampler[viewIndex] };
             auto& skyPostProcessImageSampler{ m_skyPostProcessImageSampler[viewIndex] };
-
-            m_compositeShader->Bind("colorTex[" + std::to_string(viewIndex) + "]", *skyPostProcessColorImageBuffer, *skyPostProcessImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-            m_compositeShader->Bind("depthTex[" + std::to_string(viewIndex) + "]", *skyCloudDistanceImageBuffer, *skyCloudDistanceImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+#ifdef ENABLE_XR
+            const auto colorTexKey{ "colorTex[" + std::to_string(viewIndex) + "]" };
+            const auto depthTexKey{ "depthTex[" + std::to_string(viewIndex) + "]" };
+#else
+            const auto colorTexKey{ "colorTex" };
+            const auto depthTexKey{ "depthTex" };
+#endif
+            m_compositeShader->Bind(colorTexKey, *skyPostProcessColorImageBuffer, *skyPostProcessImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            m_compositeShader->Bind(depthTexKey, *skyCloudDistanceImageBuffer, *skyCloudDistanceImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
 
         const VkDescriptorSet descriptorSet = m_compositeShader->UpdateNextDescriptorSet();

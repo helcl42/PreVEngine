@@ -129,6 +129,16 @@ void Player::ShutDown()
     SceneNode::ShutDown();
 }
 
+void Player::operator()(const prev::core::NewIterationEvent& newIterationEvent)
+{
+    const glm::ivec2 newResolution{ newIterationEvent.windowWidth, newIterationEvent.windowHeight };
+    if(newResolution != m_currentResolution) {
+        const auto& currentFrustum{ m_cameraComponent->GetViewFrustum() };
+        m_cameraComponent->SetViewFrustum(prev_test::render::ViewFrustum{ currentFrustum.GetVerticalFov(), static_cast<float>(newResolution.x) / static_cast<float>(newResolution.y), currentFrustum.GetNearClippingPlane(), currentFrustum.GetFarClippingPlane() });
+        m_currentResolution = newResolution;
+    }
+}
+
 void Player::operator()(const prev::input::keyboard::KeyEvent& keyEvent)
 {
     if (keyEvent.action == prev::input::keyboard::KeyActionType::PRESS) {

@@ -102,7 +102,7 @@ void LensFlareRenderer::Render(const NormalRenderContext& renderContext, const s
             auto uboVS = m_uniformsPoolVS->GetNext();
             UniformsVS uniformsVS{};
             for(uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
-                uniformsVS.translations[viewIndex] = glm::vec4(flarePositions[viewIndex][i], MAX_DEPTH, 1.0f);
+                uniformsVS.translations[viewIndex] = glm::vec4(flarePositions[viewIndex][i], MIN_DEPTH, 1.0f);
             }
             uniformsVS.scale = glm::vec4(xScale, yScale, 0.0f, 0.0f);
             uboVS->Update(&uniformsVS);

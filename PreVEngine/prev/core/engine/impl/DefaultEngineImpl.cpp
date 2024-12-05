@@ -65,6 +65,7 @@ bool DefaultEngineImpl::BeginFrame()
 bool DefaultEngineImpl::EndFrame()
 {
     UpdateFps();
+    return true;
 }
 
 void DefaultEngineImpl::ResetInstance()
@@ -92,7 +93,7 @@ void DefaultEngineImpl::ResetDevice()
     m_device->Print();
 }
 
-void ResetRenderPass()
+void DefaultEngineImpl::ResetRenderPass()
 {
     if(m_config.samplesCount > 1) {
         m_renderPass = CreateDefaultMultisampledRenderPass(*m_device, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount), GetViewCount(), true, false);
@@ -101,7 +102,7 @@ void ResetRenderPass()
     }
 }
 
-void ResetSwapchain()
+void DefaultEngineImpl::ResetSwapchain()
 {
     m_swapchain = std::make_shared<prev::render::Swapchain>(*m_device, *m_allocator, *m_renderPass, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount), 1);
 #if defined(__ANDROID__)
