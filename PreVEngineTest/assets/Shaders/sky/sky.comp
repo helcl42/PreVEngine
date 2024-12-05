@@ -338,7 +338,7 @@ vec4 ComputeClipSpaceDirection(in ivec2 fragCoord)
 vec4 ComputeViewSpaceDirection(in vec4 clipSpaceDir)
 {
 	vec4 rayView = uboCS.inverseProjectionMatrix * clipSpaceDir;
-	return rayView;
+	return vec4(rayView.xy, -1.0, 0.0);
 }
 
 vec3 ComputeWorldSpaceDirection(in vec4 viewSpaceDir)

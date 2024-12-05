@@ -34,13 +34,9 @@ void Engine::InitRenderer(const std::shared_ptr<prev::render::IRootRenderer>& ro
 
 void Engine::MainLoop()
 {
-    auto scene{ m_engineImpl->GetScene() };
-    auto rootRenderer{ m_engineImpl->GetRootRenderer() };
-    auto swapchain{ m_engineImpl->GetSwapchain() };
-
     m_engineImpl->BeginMainLoop();
 
-    while (m_engineImpl->Update()) // Main event loop, runs until window is closed.
+    while (m_engineImpl->Update())
     {
         prev::event::EventChannel::DispatchQueued();
 
@@ -55,6 +51,11 @@ void Engine::MainLoop()
         prev::event::EventChannel::Post(NewIterationEvent{ deltaTime, extent.width, extent.height });
 
         if (m_engineImpl->IsFocused()) {
+            // TODO return reference from engine impl and engine instead of shared ptr (internally use unique_ptr) ???
+            auto scene{ m_engineImpl->GetScene() };
+            auto rootRenderer{ m_engineImpl->GetRootRenderer() };
+            auto swapchain{ m_engineImpl->GetSwapchain() };
+
             scene->Update(deltaTime);
 
             prev::render::SwapChainFrameContext swapchainFrameContext;

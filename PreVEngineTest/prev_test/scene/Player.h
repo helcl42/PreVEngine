@@ -10,6 +10,7 @@
 #include <prev/core/device/Device.h>
 #include <prev/core/memory/Allocator.h>
 #include <prev/event/EventHandler.h>
+#include <prev/core/CoreEvents.h>
 #include <prev/input/keyboard/KeyboardEvents.h>
 #include <prev/input/mouse/MouseEvents.h>
 #include <prev/input/touch/TouchEvents.h>
@@ -30,6 +31,8 @@ public:
     void ShutDown() override;
 
 public:
+    void operator()(const prev::core::NewIterationEvent& newIterationEvent);
+
     void operator()(const prev::input::keyboard::KeyEvent& keyEvent);
 
     void operator()(const prev::input::mouse::MouseEvent& mouseEvent);
@@ -88,7 +91,11 @@ private:
 
     glm::vec2 m_prevTouchPosition{ 0.0f, 0.0f };
 
+    glm::ivec2 m_currentResolution{ 1920, 1080 };
+
 private:
+    prev::event::EventHandler<Player, prev::core::NewIterationEvent> m_newIterationEventsHandler{ *this };
+
     prev::event::EventHandler<Player, prev::input::keyboard::KeyEvent> m_keyboardEventsHandler{ *this };
 
     prev::event::EventHandler<Player, prev::input::mouse::MouseEvent> m_mouseEventsHandler{ *this };

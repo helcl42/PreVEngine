@@ -72,8 +72,7 @@ void Camera::Update(float deltaTime)
 #endif
 
         cameraComponent->AddPosition(positionDelta);
-
-        cameraComponent->SetViewFrustum(m_cameraComponent->GetViewFrustum().GetVerticalFov(), static_cast<float>(m_viewPortSize.x) / static_cast<float>(m_viewPortSize.y), m_cameraComponent->GetViewFrustum().GetNearClippingPlane(), m_cameraComponent->GetViewFrustum().GetFarClippingPlane());
+        cameraComponent->SetViewFrustum(prev_test::render::ViewFrustum{ cameraComponent->GetViewFrustum().GetVerticalFov(), static_cast<float>(m_viewPortSize.x) / static_cast<float>(m_viewPortSize.y), cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane() });
 #endif
 
         const glm::mat4 viewMatrix{cameraComponent->LookAt()};

@@ -15,8 +15,8 @@ namespace {
 ViewFrustum::ViewFrustum(const float verticalFov, const float aspectRatio, const float nearClippingPlane, const float farClippingPlane)
     : m_angleFovLeft{ ScaleAngle(-verticalFov / 2.0f, aspectRatio) }
     , m_angleFovRight{ ScaleAngle(verticalFov / 2.0f, aspectRatio) }
-    , m_angleFovUp{ -verticalFov / 2.0f }
-    , m_angleFovDown{ verticalFov / 2.0f }
+    , m_angleFovUp{ verticalFov / 2.0f }
+    , m_angleFovDown{ -verticalFov / 2.0f }
     , m_nearClippingPlane{ nearClippingPlane }
     , m_farClippingPlane{ farClippingPlane }
 {
