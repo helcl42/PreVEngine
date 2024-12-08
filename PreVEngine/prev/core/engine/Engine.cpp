@@ -22,14 +22,14 @@ void Engine::Init()
     m_engineImpl->Init();
 }
 
-void Engine::InitScene(const std::shared_ptr<prev::scene::IScene>& scene)
+void Engine::InitScene(std::unique_ptr<prev::scene::IScene> scene)
 {
-    m_engineImpl->InitScene(scene);
+    m_engineImpl->InitScene(std::move(scene));
 }
 
-void Engine::InitRenderer(const std::shared_ptr<prev::render::IRootRenderer>& rootRenderer)
+void Engine::InitRenderer(std::unique_ptr<prev::render::IRootRenderer> rootRenderer)
 {
-    m_engineImpl->InitRenderer(rootRenderer);
+    m_engineImpl->InitRenderer(std::move(rootRenderer));
 }
 
 void Engine::MainLoop()
@@ -44,28 +44,27 @@ void Engine::MainLoop()
             continue;
         }
 
-        // TODO - unify extent -> remove & use the swapchain-> GetExtent() ??
-        const VkExtent2D extent{ m_engineImpl->GetExtent() };
+        auto& scene{ m_engineImpl->GetScene() };
+        auto& rootRenderer{ m_engineImpl->GetRootRenderer() };
+        auto& swapchain{ m_engineImpl->GetSwapchain() };
+
+        // TODO -> test if extent works even in XR mode
+        const VkExtent2D extent{ swapchain.GetExtent() };
         const auto deltaTime{ m_engineImpl->GetCurrentDeltaTime() };
 
         prev::event::EventChannel::Post(NewIterationEvent{ deltaTime, extent.width, extent.height });
 
         if (m_engineImpl->IsFocused()) {
-            // TODO return reference from engine impl and engine instead of shared ptr (internally use unique_ptr) ???
-            auto scene{ m_engineImpl->GetScene() };
-            auto rootRenderer{ m_engineImpl->GetRootRenderer() };
-            auto swapchain{ m_engineImpl->GetSwapchain() };
-
-            scene->Update(deltaTime);
+            scene.Update(deltaTime);
 
             prev::render::SwapChainFrameContext swapchainFrameContext;
-            if (swapchain->BeginFrame(swapchainFrameContext)) {
-                const prev::render::RenderContext renderContext{ swapchainFrameContext.frameBuffer, swapchainFrameContext.commandBuffer, swapchainFrameContext.index, { { 0, 0 }, swapchain->GetExtent() } };
-                rootRenderer->Render(renderContext, scene);
-                swapchain->EndFrame();
+            if (swapchain.BeginFrame(swapchainFrameContext)) {
+                const prev::render::RenderContext renderContext{ swapchainFrameContext.frameBuffer, swapchainFrameContext.commandBuffer, swapchainFrameContext.index, { { 0, 0 }, extent } };
+                rootRenderer.Render(renderContext, scene);
+                swapchain.EndFrame();
             }
         } else {
-            LOGW("No focus...\n");
+            LOGW("No focus...");
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
         }
 
@@ -80,32 +79,32 @@ void Engine::ShutDown()
     m_engineImpl->ShutDown();
 }
 
-std::shared_ptr<prev::scene::IScene> Engine::GetScene() const
+prev::scene::IScene& Engine::GetScene() const
 {
     return m_engineImpl->GetScene();
 }
 
-std::shared_ptr<prev::render::ISwapchain> Engine::GetSwapchain() const
-{
-    return m_engineImpl->GetSwapchain();
-}
-
-std::shared_ptr<prev::render::pass::RenderPass> Engine::GetRenderPass() const
-{
-    return m_engineImpl->GetRenderPass();
-}
-
-std::shared_ptr<prev::render::IRootRenderer> Engine::GetRootRenderer() const
+prev::render::IRootRenderer& Engine::GetRootRenderer() const
 {
     return m_engineImpl->GetRootRenderer();
 }
 
-std::shared_ptr<prev::core::memory::Allocator> Engine::GetAllocator() const
+prev::render::ISwapchain& Engine::GetSwapchain() const
+{
+    return m_engineImpl->GetSwapchain();
+}
+
+prev::render::pass::RenderPass& Engine::GetRenderPass() const
+{
+    return m_engineImpl->GetRenderPass();
+}
+
+prev::core::memory::Allocator& Engine::GetAllocator() const
 {
     return m_engineImpl->GetAllocator();
 }
 
-std::shared_ptr<prev::core::device::Device> Engine::GetDevice() const
+prev::core::device::Device& Engine::GetDevice() const
 {
     return m_engineImpl->GetDevice();
 }

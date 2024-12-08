@@ -247,7 +247,7 @@ namespace prev::xr {
         return physicalDeviceFromXR;
     }
 
-    void OpenXR::InitializeGraphicsBinding(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkQueue queue, uint32_t queueFamilyIndex, uint32_t queueIndex) {
+    void OpenXR::InitializeGraphicsBinding(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex) {
         m_graphicsBinding = {XR_TYPE_GRAPHICS_BINDING_VULKAN_KHR};
         m_graphicsBinding.instance = instance;
         m_graphicsBinding.physicalDevice = physicalDevice;

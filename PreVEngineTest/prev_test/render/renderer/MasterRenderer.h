@@ -27,7 +27,7 @@ public:
 public:
     void Init() override;
 
-    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::IScene>& scene) override;
+    void Render(const prev::render::RenderContext& renderContext, const prev::scene::IScene& scene) override;
 
     void ShutDown() override;
 

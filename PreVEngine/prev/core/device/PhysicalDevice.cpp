@@ -4,16 +4,16 @@
 
 namespace prev::core::device {
 PhysicalDevice::PhysicalDevice()
-    : m_handle(VK_NULL_HANDLE)
-    , m_availableProperties()
-    , m_availableFeatures()
-    , m_extensions()
+    : m_handle{ VK_NULL_HANDLE }
+    , m_availableProperties{}
+    , m_availableFeatures{}
+    , m_extensions{}
 {
 }
 
 PhysicalDevice::PhysicalDevice(const VkPhysicalDevice gpu, const std::vector<std::string>& extensions)
-    : m_handle(gpu)
-    , m_extensions(gpu)
+    : m_handle{ gpu }
+    , m_extensions{ gpu }
 {
     m_availableProperties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2, {}, {} };
     m_availableFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, {}, {} };
@@ -22,7 +22,7 @@ PhysicalDevice::PhysicalDevice(const VkPhysicalDevice gpu, const std::vector<std
     vkGetPhysicalDeviceFeatures2(gpu, &m_availableFeatures);
     vkGetPhysicalDeviceProperties2(gpu, &m_availableProperties);
 
-    // enable features here -> might be overriden by an inherited class ??
+    // enable features here -> might be overridden by an inherited class ??
     if (m_availableFeatures.features.samplerAnisotropy) {
         m_enabledFeatures.features.samplerAnisotropy = VK_TRUE;
     }
@@ -44,6 +44,8 @@ PhysicalDevice::PhysicalDevice(const VkPhysicalDevice gpu, const std::vector<std
     if (m_availableFeatures.features.sampleRateShading) {
         m_enabledFeatures.features.sampleRateShading = VK_TRUE;
     }
+
+#ifdef ENABLE_XR
     if (m_availableFeatures.features.multiViewport) {
         m_enabledFeatures.features.multiViewport = VK_TRUE;
     }
@@ -52,6 +54,7 @@ PhysicalDevice::PhysicalDevice(const VkPhysicalDevice gpu, const std::vector<std
     m_physicalDeviceMultiviewFeatures.multiview = VK_TRUE;
 
     m_enabledFeatures.pNext = &m_physicalDeviceMultiviewFeatures;
+#endif
 
     uint32_t familyCount{ 0 };
     vkGetPhysicalDeviceQueueFamilyProperties(gpu, &familyCount, nullptr);
@@ -59,13 +62,15 @@ PhysicalDevice::PhysicalDevice(const VkPhysicalDevice gpu, const std::vector<std
     vkGetPhysicalDeviceQueueFamilyProperties(gpu, &familyCount, m_queueFamilies.data());
 
     m_extensions.Pick(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-    m_extensions.Pick(VK_KHR_MULTIVIEW_EXTENSION_NAME);
-    m_extensions.Pick(VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME); // VK_KHR_external_memory_fd
-    m_extensions.Pick(VK_EXT_FRAGMENT_DENSITY_MAP_EXTENSION_NAME); // VK_EXT_fragment_density_map
 #if defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_IOS_MVK)
     m_extensions.Pick("VK_KHR_portability_subset");
 #endif
-    for(const auto& ext :extensions) {
+#if defined(ENABLE_XR)
+    m_extensions.Pick(VK_KHR_MULTIVIEW_EXTENSION_NAME);
+    m_extensions.Pick(VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME); // VK_KHR_external_memory_fd
+    m_extensions.Pick(VK_EXT_FRAGMENT_DENSITY_MAP_EXTENSION_NAME); // VK_EXT_fragment_density_map
+#endif
+    for(const auto& ext : extensions) {
         m_extensions.Pick(ext);
     }
 }
@@ -163,6 +168,9 @@ const VkPhysicalDeviceFeatures& PhysicalDevice::GetEnabledFeatures() const
 
 const VkPhysicalDeviceFeatures2& PhysicalDevice::GetEnabledFeatures2() const
 {
+#ifdef ENABLE_XR
+    m_enabledFeatures.pNext = &m_physicalDeviceMultiviewFeatures;
+#endif
     return m_enabledFeatures;
 }
 

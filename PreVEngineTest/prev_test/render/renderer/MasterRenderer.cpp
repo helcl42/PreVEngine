@@ -59,19 +59,19 @@ void MasterRenderer::Init()
     InitRefraction();
 }
 
-void MasterRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::IScene>& scene)
+void MasterRenderer::Render(const prev::render::RenderContext& renderContext, const prev::scene::IScene& scene)
 {
     // Shadows render pass
-    RenderShadows(renderContext, scene->GetRootNode());
+    RenderShadows(renderContext, scene.GetRootNode());
 
     // Reflection
-    RenderSceneReflection(renderContext, scene->GetRootNode());
+    RenderSceneReflection(renderContext, scene.GetRootNode());
 
     // Refraction
-    RenderSceneRefraction(renderContext, scene->GetRootNode());
+    RenderSceneRefraction(renderContext, scene.GetRootNode());
 
     // Default Scene Render
-    RenderScene(renderContext, scene->GetRootNode());
+    RenderScene(renderContext, scene.GetRootNode());
 
 #ifndef ANDROID
     // Debug quad with shadowMap

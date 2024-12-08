@@ -20,9 +20,9 @@ public:
     void ShutDown();
 
 protected:
-    virtual std::shared_ptr<prev::scene::IScene> CreateScene() const = 0;
+    virtual std::unique_ptr<prev::scene::IScene> CreateScene() const = 0;
 
-    virtual std::shared_ptr<prev::render::IRootRenderer> CreateRootRenderer() const = 0;
+    virtual std::unique_ptr<prev::render::IRootRenderer> CreateRootRenderer() const = 0;
 
 protected:
     std::unique_ptr<prev::core::engine::Engine> m_engine{};

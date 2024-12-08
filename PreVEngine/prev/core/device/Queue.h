@@ -17,7 +17,9 @@ enum class QueueType {
 };
 
 struct Queue {
-    Queue(VkDevice dev, uint32_t f, uint32_t idx, VkQueueFlags flgs, VkSurfaceKHR surf);
+    Queue() = default;
+
+    Queue(VkQueue q, uint32_t f, uint32_t idx, VkQueueFlags flgs, VkSurfaceKHR surf) noexcept;
 
     operator VkQueue() const;
 
@@ -27,19 +29,17 @@ struct Queue {
 
     VkResult WaitIdle() const;
 
-    VkDevice device;
+    VkQueue handle{};
 
-    uint32_t family; // queue family
+    uint32_t family{}; // queue family
 
-    uint32_t index; // queue index
+    uint32_t index{}; // queue index
 
-    VkQueueFlags flags; // Graphics / Compute / Transfer / Sparse / Protected
+    VkQueueFlags flags{}; // Graphics / Compute / Transfer / Sparse / Protected
 
-    VkSurfaceKHR surface; // VK_NULL_HANDLE if queue can not present
+    VkSurfaceKHR surface{}; // VK_NULL_HANDLE if queue can not present
 
-    VkQueue handle;
-
-    mutable std::mutex mutex;
+    std::unique_ptr<std::mutex> mutex;
 };
 } // namespace prev::core::device
 

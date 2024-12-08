@@ -29,7 +29,7 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
 
     const auto weatherImageFormat{ VK_FORMAT_R8G8B8A8_UNORM };
 
-    auto computeQueue{ m_device.GetQueue(prev::core::device::QueueType::COMPUTE) };
+    const auto& computeQueue{ m_device.GetQueue(prev::core::device::QueueType::COMPUTE) };
 
     // clang-format off
     auto shader = prev::render::shader::ShaderBuilder{ m_device }
@@ -50,7 +50,7 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
     // clang-format on
 
     auto uniformsPool = std::make_unique<prev::render::buffer::UniformBufferRing<Uniforms>>(m_allocator);
-    uniformsPool->AdjustCapactity(1, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    uniformsPool->AdjustCapactity(1, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
     auto weatherImageBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
                                   .SetExtent({ width, height, 1 })
@@ -62,7 +62,7 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
                                   .Build();
     auto sampler = std::make_unique<prev::render::sampler::Sampler>(m_device, static_cast<float>(weatherImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR);
 
-    prev::core::CommandsExecutor commandsExecutor{ m_device, *computeQueue };
+    prev::core::CommandsExecutor commandsExecutor{ m_device, computeQueue };
     commandsExecutor.ExecuteImmediate([&](VkCommandBuffer commandBuffer) {
         Uniforms uniforms{};
         uniforms.textureSize = glm::vec4(width, height, 0, 0);
