@@ -19,11 +19,6 @@ float XrEngineImpl::GetCurrentDeltaTime() const
     return m_openXr->GetCurrentDeltaTime();
 }
 
-VkExtent2D XrEngineImpl::GetExtent() const
-{
-    return m_openXr->GetExtent();
-}
-
 void XrEngineImpl::Init()
 {
     m_openXr = std::make_shared<prev::xr::OpenXR>();
@@ -84,19 +79,19 @@ void XrEngineImpl::ResetInstance()
 
 void XrEngineImpl::ResetDevice()
 {
-    auto presentablePhysicalDevice{ std::make_shared<prev::core::device::PhysicalDevice>(m_openXr->GetPhysicalDevice(*m_instance), m_openXr->GetVulkanDeviceExtensions()) };
+    prev::core::device::PhysicalDevice physicalDevice{ m_openXr->GetPhysicalDevice(*m_instance), m_openXr->GetVulkanDeviceExtensions() };
 
     prev::core::device::DeviceFactory deviceFactory{};
-    auto device{ deviceFactory.Create(presentablePhysicalDevice, m_surface) };
+    auto device{ deviceFactory.Create(physicalDevice, m_surface) };
     if (!device) {
         throw std::runtime_error("Could not create logical device");
     }
 
-    m_device = device;
+    m_device = std::move(device);
     m_device->Print();
 
     const auto& queue{ m_device->GetQueue(prev::core::device::QueueType::GRAPHICS) };
-    m_openXr->InitializeGraphicsBinding(*m_instance, *m_device->GetGPU(), *m_device, *queue, queue->family, queue->index);
+    m_openXr->InitializeGraphicsBinding(*m_instance, m_device->GetGPU(), *m_device, queue.family, queue.index);
 }
 
 void XrEngineImpl::ResetRenderPass()
@@ -110,7 +105,7 @@ void XrEngineImpl::ResetRenderPass()
 
 void XrEngineImpl::ResetSwapchain()
 {
-    m_swapchain = std::make_shared<prev::xr::XRSwapchain>(*m_device, *m_allocator, *m_renderPass, *m_openXr, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount));
+    m_swapchain = std::make_unique<prev::xr::XRSwapchain>(*m_device, *m_allocator, *m_renderPass, *m_openXr, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount));
     m_swapchain->Print();
 }
 }

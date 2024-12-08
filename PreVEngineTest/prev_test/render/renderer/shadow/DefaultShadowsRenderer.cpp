@@ -59,7 +59,7 @@ void DefaultShadowsRenderer::Init()
     LOGI("Default Shadows Pipeline created");
 
     m_uniformsPool = std::make_unique<prev::render::buffer::UniformBufferRing<Uniforms>>(m_allocator);
-    m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPool->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
 void DefaultShadowsRenderer::BeforeRender(const ShadowsRenderContext& renderContext)

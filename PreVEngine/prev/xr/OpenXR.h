@@ -23,7 +23,7 @@ public:
 
     VkPhysicalDevice GetPhysicalDevice(VkInstance instance) const;
 
-    void InitializeGraphicsBinding(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkQueue queue, uint32_t queueFamilyIndex, uint32_t queueIndex);
+    void InitializeGraphicsBinding(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex);
 
     void DestroyGraphicsBinding();
 

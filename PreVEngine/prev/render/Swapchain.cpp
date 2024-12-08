@@ -15,13 +15,12 @@ Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allo
     , m_surface{ surface }
     , m_sampleCount{ sampleCount }
     , m_viewCount{ viewCount }
+    , m_graphicsQueue{ m_device.GetQueue(core::device::QueueType::GRAPHICS) }
+    , m_presentQueue{ m_device.GetQueue(core::device::QueueType::PRESENT) }
+    , m_swapchain{ VK_NULL_HANDLE }
+    , m_acquiredIndex{ 0 }
+    , m_isAcquired{ false }
 {
-    m_graphicsQueue = m_device.GetQueue(core::device::QueueType::GRAPHICS);
-    m_presentQueue = m_device.GetQueue(core::device::QueueType::PRESENT);
-
-    m_swapchain = VK_NULL_HANDLE;
-    m_isAcquired = false;
-
     const VkSurfaceCapabilitiesKHR surfaceCapabilities{ GetSurfaceCapabilities() };
     assert(surfaceCapabilities.supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
     assert(surfaceCapabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR);
@@ -41,7 +40,7 @@ Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allo
     UpdateExtent();
     SetImageCount(3);
 
-    m_commandPool = prev::util::vk::CreateCommandPool(m_device, m_graphicsQueue->family);
+    m_commandPool = prev::util::vk::CreateCommandPool(m_device, m_graphicsQueue.family);
 
     Apply();
 }
@@ -125,9 +124,9 @@ bool Swapchain::SetImageCount(uint32_t imageCount)
 std::vector<VkPresentModeKHR> Swapchain::GetPresentModes() const
 {
     uint32_t count{};
-    VKERRCHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(*m_device.GetGPU(), m_surface, &count, nullptr));
+    VKERRCHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(m_device.GetGPU(), m_surface, &count, nullptr));
     std::vector<VkPresentModeKHR> modes(count);
-    VKERRCHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(*m_device.GetGPU(), m_surface, &count, modes.data()));
+    VKERRCHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(m_device.GetGPU(), m_surface, &count, modes.data()));
     return modes;
 }
 
@@ -198,8 +197,8 @@ void Swapchain::Apply()
 {
     m_swapchainCreateInfo.oldSwapchain = m_swapchain;
 
-    const std::vector<uint32_t> families = { m_presentQueue->family, m_graphicsQueue->family };
-    if (m_presentQueue->family != m_graphicsQueue->family) {
+    const std::vector<uint32_t> families = { m_presentQueue.family, m_graphicsQueue.family };
+    if (m_presentQueue.family != m_graphicsQueue.family) {
         m_swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         m_swapchainCreateInfo.queueFamilyIndexCount = static_cast<uint32_t>(families.size());
         m_swapchainCreateInfo.pQueueFamilyIndices = families.data();
@@ -288,7 +287,7 @@ void Swapchain::Apply()
 VkSurfaceCapabilitiesKHR Swapchain::GetSurfaceCapabilities() const
 {
     VkSurfaceCapabilitiesKHR surfaceCapabilities;
-    VKERRCHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(*m_device.GetGPU(), m_surface, &surfaceCapabilities));
+    VKERRCHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_device.GetGPU(), m_surface, &surfaceCapabilities));
     return surfaceCapabilities;
 }
 
@@ -346,7 +345,7 @@ void Swapchain::Submit()
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = &swapchainBuffer.renderSemaphore;
 
-    VKERRCHECK(m_graphicsQueue->Submit(1, &submitInfo, swapchainBuffer.fence));
+    VKERRCHECK(m_graphicsQueue.Submit(1, &submitInfo, swapchainBuffer.fence));
 }
 
 void Swapchain::Present()
@@ -364,7 +363,7 @@ void Swapchain::Present()
 
     bool swapchainChanged{ false };
 
-    const auto result{ m_presentQueue->Present(&presentInfo) };
+    const auto result{ m_presentQueue.Present(&presentInfo) };
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
         swapchainChanged = UpdateExtent();
     } else if (result != VK_SUCCESS) {

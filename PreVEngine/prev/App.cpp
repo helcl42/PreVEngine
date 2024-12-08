@@ -10,11 +10,11 @@ void App::Init()
 {
     m_engine->Init();
 
-    auto scene = CreateScene();
-    m_engine->InitScene(scene);
+    auto scene{ CreateScene() };
+    m_engine->InitScene(std::move(scene));
 
-    auto rootRenderer = CreateRootRenderer();
-    m_engine->InitRenderer(rootRenderer);
+    auto rootRenderer{ CreateRootRenderer() };
+    m_engine->InitRenderer(std::move(rootRenderer));
 }
 
 void App::Run()

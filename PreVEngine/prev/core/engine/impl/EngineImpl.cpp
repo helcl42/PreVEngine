@@ -12,33 +12,34 @@ namespace prev::core::engine::impl {
         ShutDown();
     }
 
-    std::shared_ptr<prev::scene::IScene> EngineImpl::GetScene() const
+    prev::scene::IScene& EngineImpl::GetScene() const
     {
-        return m_scene;
+        return *m_scene;
     }
 
-    std::shared_ptr<prev::render::ISwapchain> EngineImpl::GetSwapchain() const
+    prev::render::IRootRenderer& EngineImpl::GetRootRenderer() const
     {
-        return m_swapchain;
+        return *m_rootRenderer;
     }
 
-    std::shared_ptr<prev::render::pass::RenderPass> EngineImpl::GetRenderPass() const
+    prev::render::ISwapchain& EngineImpl::GetSwapchain() const
     {
-        return m_renderPass;
+        return *m_swapchain;
     }
 
-    std::shared_ptr<prev::render::IRootRenderer> EngineImpl::GetRootRenderer() const
+    prev::render::pass::RenderPass& EngineImpl::GetRenderPass() const
     {
-        return m_rootRenderer;
+        return *m_renderPass;
     }
 
-    std::shared_ptr<prev::core::memory::Allocator> EngineImpl::GetAllocator() const
+    prev::core::memory::Allocator& EngineImpl::GetAllocator() const
     {
-        return m_allocator;
+        return *m_allocator;
     }
 
-    std::shared_ptr<prev::core::device::Device> EngineImpl::GetDevice() const {
-        return m_device;
+    prev::core::device::Device& EngineImpl::GetDevice() const
+    {
+        return *m_device;
     }
 
     const Config& EngineImpl::GetConfig() const
@@ -46,27 +47,29 @@ namespace prev::core::engine::impl {
         return m_config;
     }
 
-    void EngineImpl::InitScene(const std::shared_ptr<prev::scene::IScene>& scene)
+    void EngineImpl::InitScene(std::unique_ptr<prev::scene::IScene> scene)
     {
-        m_scene = scene;
+        m_scene = std::move(scene);
         m_scene->Init();
     }
 
-    void EngineImpl::InitRenderer(const std::shared_ptr<prev::render::IRootRenderer>& rootRenderer)
+    void EngineImpl::InitRenderer(std::unique_ptr<prev::render::IRootRenderer> rootRenderer)
     {
-        m_rootRenderer = rootRenderer;
+        m_rootRenderer = std::move(rootRenderer);
         m_rootRenderer->Init();
     }
 
-    void EngineImpl::BeginMainLoop() {
+    void EngineImpl::BeginMainLoop()
+    {
         ResetTiming();
     }
 
-    void EngineImpl::EndMainLoop() {
-
+    void EngineImpl::EndMainLoop()
+    {
     }
 
-    bool EngineImpl::IsFocused() const {
+    bool EngineImpl::IsFocused() const
+    {
         return m_window->HasFocus();
     }
 
@@ -113,14 +116,14 @@ namespace prev::core::engine::impl {
         // TODO
         //  -> Allocator uses only graphics queue for it's internal commands
         //     - make queue type as a parameter or even better decouple it from queue completely
-        m_allocator = std::make_shared<prev::core::memory::Allocator>(*m_instance, *m_device, *m_device->GetQueue(device::QueueType::GRAPHICS)); // Create "Vulkan Memory Allocator"
+        m_allocator = std::make_unique<prev::core::memory::Allocator>(*m_instance, *m_device, m_device->GetQueue(device::QueueType::GRAPHICS)); // Create "Vulkan Memory Allocator"
         LOGI("Allocator created");
     }
 
     std::unique_ptr<prev::render::pass::RenderPass> EngineImpl::CreateDefaultMultisampledRenderPass(const prev::core::device::Device& device, const VkSurfaceKHR surface, const VkSampleCountFlagBits sampleCount, const uint32_t viewCount, const bool storeColor, const bool storeDepth)
     {
-        const auto colorFormat{ device.GetGPU()->FindSurfaceFormat(surface) };
-        const auto depthFormat{ device.GetGPU()->FindDepthFormat() };
+        const auto colorFormat{ device.GetGPU().FindSurfaceFormat(surface) };
+        const auto depthFormat{ device.GetGPU().FindDepthFormat() };
 
         const VkClearColorValue clearColor{ { 0.5f, 0.5f, 0.5f, 1.0f } };
         const VkClearDepthStencilValue clearDepth{ MAX_DEPTH, 0 };
@@ -156,8 +159,8 @@ namespace prev::core::engine::impl {
 
     std::unique_ptr<prev::render::pass::RenderPass> EngineImpl::CreateDefaultRenderPass(const prev::core::device::Device& device, const VkSurfaceKHR surface, const uint32_t viewCount, const bool storeColor, const bool storeDepth)
     {
-        const auto colorFormat{ device.GetGPU()->FindSurfaceFormat(surface) };
-        const auto depthFormat{ device.GetGPU()->FindDepthFormat() };
+        const auto colorFormat{ device.GetGPU().FindSurfaceFormat(surface) };
+        const auto depthFormat{ device.GetGPU().FindDepthFormat() };
 
         const VkClearColorValue clearColor{ { 0.5f, 0.5f, 0.5f, 1.0f } };
         const VkClearDepthStencilValue clearDepth{ MAX_DEPTH, 0 };

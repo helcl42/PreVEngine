@@ -11,11 +11,10 @@ namespace prev::xr {
             , m_openXr{ xr }
             , m_surface{ surface }
             , m_sampleCount{ sampleCount }
+            , m_graphicsQueue{ m_device.GetQueue(core::device::QueueType::GRAPHICS) }
+            , m_presentQueue{ m_device.GetQueue(core::device::QueueType::PRESENT) }
     {
-        m_graphicsQueue = m_device.GetQueue(core::device::QueueType::GRAPHICS);
-        m_presentQueue = m_device.GetQueue(core::device::QueueType::PRESENT);
-
-        m_commandPool = prev::util::vk::CreateCommandPool(m_device, m_graphicsQueue->family);
+        m_commandPool = prev::util::vk::CreateCommandPool(m_device, m_graphicsQueue.family);
 
         m_extent = m_openXr.GetExtent();
 
@@ -172,6 +171,6 @@ namespace prev::xr {
         submitInfo.signalSemaphoreCount = 0;
         submitInfo.pSignalSemaphores = nullptr;
 
-        VKERRCHECK(m_graphicsQueue->Submit(1, &submitInfo, swapchainBuffer.fence));
+        VKERRCHECK(m_graphicsQueue.Submit(1, &submitInfo, swapchainBuffer.fence));
     }
 } // namespace prev::render

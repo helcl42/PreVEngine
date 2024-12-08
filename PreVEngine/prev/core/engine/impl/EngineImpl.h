@@ -25,17 +25,17 @@ public:
     virtual ~EngineImpl();
 
 public:
-    std::shared_ptr<prev::scene::IScene> GetScene() const;
+    prev::scene::IScene& GetScene() const;
 
-    std::shared_ptr<prev::render::ISwapchain> GetSwapchain() const;
+    prev::render::IRootRenderer& GetRootRenderer() const;
 
-    std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const;
+    prev::render::ISwapchain& GetSwapchain() const;
 
-    std::shared_ptr<prev::render::IRootRenderer> GetRootRenderer() const;
+    prev::render::pass::RenderPass& GetRenderPass() const;
 
-    std::shared_ptr<prev::core::memory::Allocator> GetAllocator() const;
+    prev::core::memory::Allocator& GetAllocator() const;
 
-    std::shared_ptr<prev::core::device::Device> GetDevice() const;
+    prev::core::device::Device& GetDevice() const;
 
     const Config& GetConfig() const;
 
@@ -54,12 +54,10 @@ public:
 
     virtual float GetCurrentDeltaTime() const = 0;
 
-    virtual VkExtent2D GetExtent() const = 0;
-
 public:
-    void InitScene(const std::shared_ptr<prev::scene::IScene>& scene);
+    void InitScene(std::unique_ptr<prev::scene::IScene> scene);
 
-    void InitRenderer(const std::shared_ptr<prev::render::IRootRenderer>& rootRenderer);
+    void InitRenderer(std::unique_ptr<prev::render::IRootRenderer> rootRenderer);
 
     void BeginMainLoop();
 
@@ -115,17 +113,17 @@ protected:
 
     VkSurfaceKHR m_surface{};
 
-    std::shared_ptr<prev::core::device::Device> m_device{};
+    std::unique_ptr<prev::core::device::Device> m_device{};
 
-    std::shared_ptr<prev::core::memory::Allocator> m_allocator{};
+    std::unique_ptr<prev::core::memory::Allocator> m_allocator{};
 
-    std::shared_ptr<prev::render::pass::RenderPass> m_renderPass{};
+    std::unique_ptr<prev::render::pass::RenderPass> m_renderPass{};
 
-    std::shared_ptr<prev::render::ISwapchain> m_swapchain{};
+    std::unique_ptr<prev::render::ISwapchain> m_swapchain{};
 
-    std::shared_ptr<prev::scene::IScene> m_scene{};
+    std::unique_ptr<prev::scene::IScene> m_scene{};
 
-    std::shared_ptr<prev::render::IRootRenderer> m_rootRenderer{};
+    std::unique_ptr<prev::render::IRootRenderer> m_rootRenderer{};
 };
 }
 

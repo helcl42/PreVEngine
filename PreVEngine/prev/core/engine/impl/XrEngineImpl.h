@@ -17,8 +17,6 @@ public:
 
     float GetCurrentDeltaTime() const override;
 
-    VkExtent2D GetExtent() const override;
-
     void Init() override;
 
     void ShutDown() override;

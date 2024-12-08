@@ -91,9 +91,9 @@ private:
 
     uint32_t m_viewCount{ 1 };
 
-    std::shared_ptr<prev::core::device::Queue> m_presentQueue{};
+    const prev::core::device::Queue& m_graphicsQueue{};
 
-    std::shared_ptr<prev::core::device::Queue> m_graphicsQueue{};
+    const prev::core::device::Queue& m_presentQueue{};
 
     std::unique_ptr<prev::render::buffer::ImageBuffer> m_depthBuffer{};
 

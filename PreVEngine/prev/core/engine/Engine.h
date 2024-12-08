@@ -21,26 +21,26 @@ public:
 public:
     void Init();
 
-    void InitScene(const std::shared_ptr<prev::scene::IScene>& scene);
+    void InitScene(std::unique_ptr<prev::scene::IScene> scene);
 
-    void InitRenderer(const std::shared_ptr<prev::render::IRootRenderer>& rootRenderer);
+    void InitRenderer(std::unique_ptr<prev::render::IRootRenderer> rootRenderer);
 
     void MainLoop();
 
     void ShutDown();
 
 public:
-    std::shared_ptr<prev::scene::IScene> GetScene() const;
+    prev::scene::IScene& GetScene() const;
 
-    std::shared_ptr<prev::render::ISwapchain> GetSwapchain() const;
+    prev::render::IRootRenderer& GetRootRenderer() const;
 
-    std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const;
+    prev::render::ISwapchain& GetSwapchain() const;
 
-    std::shared_ptr<prev::render::IRootRenderer> GetRootRenderer() const;
+    prev::render::pass::RenderPass& GetRenderPass() const;
 
-    std::shared_ptr<prev::core::memory::Allocator> GetAllocator() const;
+    prev::core::memory::Allocator& GetAllocator() const;
 
-    std::shared_ptr<prev::core::device::Device> GetDevice() const;
+    prev::core::device::Device& GetDevice() const;
 
     const Config& GetConfig() const;
 

@@ -11,9 +11,9 @@ public:
     ~TestApp() = default;
 
 protected:
-    std::shared_ptr<prev::scene::IScene> CreateScene() const override;
+    std::unique_ptr<prev::scene::IScene> CreateScene() const override;
 
-    std::shared_ptr<prev::render::IRootRenderer> CreateRootRenderer() const override;
+    std::unique_ptr<prev::render::IRootRenderer> CreateRootRenderer() const override;
 };
 } // namespace prev_test
 

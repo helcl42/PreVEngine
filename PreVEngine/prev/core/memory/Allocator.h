@@ -17,7 +17,7 @@ enum class MemoryType {
 
 class Allocator final {
 public:
-    Allocator(instance::Instance& instance, device::Device& device, device::Queue& queue, const VkDeviceSize blockSize = 256);
+    Allocator(const instance::Instance& instance, const device::Device& device, const device::Queue& queue, const VkDeviceSize blockSize = 256);
 
     ~Allocator();
 
@@ -38,16 +38,16 @@ public:
     void CopyDataToImage(const VkExtent3D& extent, const VkFormat format, const std::vector<const uint8_t*>& layerData, const uint32_t layerCount, VkImage& image);
 
 public:
-    device::Device& GetDevice() const;
+    const device::Device& GetDevice() const;
 
-    device::Queue& GetQueue() const;
+    const device::Queue& GetQueue() const;
 
 private:
-    instance::Instance& m_instance;
+    const instance::Instance& m_instance;
 
-    device::Device& m_device;
+    const device::Device& m_device;
 
-    device::Queue& m_queue;
+    const device::Queue& m_queue;
 
     VmaAllocator m_allocator{};
 

@@ -10,7 +10,7 @@ class IRootRenderer {
 public:
     virtual void Init() = 0;
 
-    virtual void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::IScene>& scene) = 0;
+    virtual void Render(const prev::render::RenderContext& renderContext, const prev::scene::IScene& scene) = 0;
 
     virtual void ShutDown() = 0;
 

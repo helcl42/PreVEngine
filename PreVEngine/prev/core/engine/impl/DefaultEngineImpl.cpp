@@ -20,11 +20,6 @@ float DefaultEngineImpl::GetCurrentDeltaTime() const
     return m_clock->GetDelta();
 }
 
-VkExtent2D DefaultEngineImpl::GetExtent() const
-{
-    return { m_window->GetSize().width, m_window->GetSize().height };
-}
-
 void DefaultEngineImpl::Init()
 {
     ResetTiming();
@@ -75,21 +70,21 @@ void DefaultEngineImpl::ResetInstance()
 
 void DefaultEngineImpl::ResetDevice()
 {
-    auto physicalDevices{ std::make_shared<prev::core::device::PhysicalDevices>(*m_instance) };
-    physicalDevices->Print();
+    prev::core::device::PhysicalDevices physicalDevices{ *m_instance };
+    physicalDevices.Print();
 
-    auto presentablePhysicalDevice{ physicalDevices->FindPresentable(m_surface, m_config.gpuIndex) };
+    auto presentablePhysicalDevice{ physicalDevices.FindPresentable(m_surface, m_config.gpuIndex) };
     if (!presentablePhysicalDevice) {
         throw std::runtime_error("No suitable GPU found?!");
     }
 
     prev::core::device::DeviceFactory deviceFactory{};
-    auto device{ deviceFactory.Create(presentablePhysicalDevice, m_surface) };
+    auto device{ deviceFactory.Create(*presentablePhysicalDevice, m_surface) };
     if (!device) {
         throw std::runtime_error("Could not create logical device");
     }
 
-    m_device = device;
+    m_device = std::move(device);
     m_device->Print();
 }
 
@@ -104,7 +99,7 @@ void DefaultEngineImpl::ResetRenderPass()
 
 void DefaultEngineImpl::ResetSwapchain()
 {
-    m_swapchain = std::make_shared<prev::render::Swapchain>(*m_device, *m_allocator, *m_renderPass, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount), 1);
+    m_swapchain = std::make_unique<prev::render::Swapchain>(*m_device, *m_allocator, *m_renderPass, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount), 1);
 #if defined(__ANDROID__)
     m_swapchain->SetPresentMode(m_config.VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_MAILBOX_KHR);
 #else

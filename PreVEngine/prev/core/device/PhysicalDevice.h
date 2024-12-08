@@ -60,9 +60,13 @@ private:
 
     DeviceExtensions m_extensions{};
 
-    VkPhysicalDeviceFeatures2 m_enabledFeatures{};
+#ifdef ENABLE_XR
+    mutable VkPhysicalDeviceFeatures2 m_enabledFeatures{};
 
-    VkPhysicalDeviceMultiviewFeatures m_physicalDeviceMultiviewFeatures{};
+    mutable VkPhysicalDeviceMultiviewFeatures m_physicalDeviceMultiviewFeatures{};
+#else
+    VkPhysicalDeviceFeatures2 m_enabledFeatures{};
+#endif
 };
 } // namespace prev::core::device
 
