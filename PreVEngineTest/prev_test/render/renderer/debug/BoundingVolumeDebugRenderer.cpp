@@ -87,9 +87,11 @@ void BoundingVolumeDebugRenderer::Render(const NormalRenderContext& renderContex
         auto uboVS = m_uniformsPoolVS->GetNext();
 
         UniformsVS uniformsVS{};
-        uniformsVS.projectionMatrix = renderContext.projectionMatrix;
-        uniformsVS.viewMatrix = renderContext.viewMatrix;
         uniformsVS.modelMatrix = glm::mat4(1.0f);
+        for(uint32_t i = 0; i < renderContext.cameraCount; ++i) {
+            uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
+            uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
+        }
 
         uboVS->Update(&uniformsVS);
 
