@@ -6,12 +6,9 @@
 namespace prev::core::instance {
 class ValidationReporter {
 public:
-    ValidationReporter();
+    ValidationReporter(VkInstance inst);
 
-public:
-    void Init(VkInstance inst);
-
-    void Destroy();
+    ~ValidationReporter();
 
 private:
     VkInstance m_instance{};
@@ -22,17 +19,12 @@ private:
     PFN_vkDestroyDebugReportCallbackEXT m_vkDestroyDebugCallbackEXT{};
 
     VkDebugReportCallbackEXT m_debugCallback{};
-
-    VkDebugReportFlagsEXT m_flags{};
 #else
     PFN_vkCreateDebugUtilsMessengerEXT m_vkCreateDebugCallbackEXT{};
 
     PFN_vkDestroyDebugUtilsMessengerEXT m_vkDestroyDebugCallbackEXT{};
 
     VkDebugUtilsMessengerEXT m_debugCallback{};
-
-    VkDebugUtilsMessageSeverityFlagsEXT m_flags{};
-
 #endif
 };
 } // namespace prev::core::instance
