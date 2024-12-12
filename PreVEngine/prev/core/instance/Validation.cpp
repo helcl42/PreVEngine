@@ -58,70 +58,51 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityF
 }
 #endif
 
-ValidationReporter::ValidationReporter()
-    : m_instance(nullptr)
-#ifdef VK_USE_PLATFORM_ANDROID_KHR
-    , m_vkCreateDebugCallbackEXT(VK_NULL_HANDLE)
-    , m_vkDestroyDebugCallbackEXT(VK_NULL_HANDLE)
-    , m_debugCallback(VK_NULL_HANDLE)
-    , m_flags(0)
-#else
-    , m_vkCreateDebugCallbackEXT(VK_NULL_HANDLE)
-    , m_vkDestroyDebugCallbackEXT(VK_NULL_HANDLE)
-    , m_debugCallback(VK_NULL_HANDLE)
-    , m_flags(0)
-#endif
+ValidationReporter::ValidationReporter(VkInstance instance)
+    : m_instance(instance)
 {
-}
-
-void ValidationReporter::Init(VkInstance inst)
-{
-    assert(!!inst);
-
-    m_instance = inst;
-
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
-    m_vkCreateDebugCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(inst, "vkCreateDebugReportCallbackEXT");
-    m_vkDestroyDebugCallbackEXT = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(inst, "vkDestroyDebugReportCallbackEXT");
+    m_vkCreateDebugCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(m_instance, "vkCreateDebugReportCallbackEXT");
+    m_vkDestroyDebugCallbackEXT = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(m_instance, "vkDestroyDebugReportCallbackEXT");
 
-    Destroy(); // Destroy old report before creating new one
-
-    m_flags = VK_DEBUG_REPORT_INFORMATION_BIT_EXT | // 1
-        VK_DEBUG_REPORT_WARNING_BIT_EXT | // 2
-        VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | // 4
-        VK_DEBUG_REPORT_ERROR_BIT_EXT | // 8
-        VK_DEBUG_REPORT_DEBUG_BIT_EXT | // 16
-        0;
+    const VkDebugReportFlagsEXT flags = VK_DEBUG_REPORT_INFORMATION_BIT_EXT | // 1
+                                        VK_DEBUG_REPORT_WARNING_BIT_EXT | // 2
+                                        VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | // 4
+                                        VK_DEBUG_REPORT_ERROR_BIT_EXT | // 8
+                                        VK_DEBUG_REPORT_DEBUG_BIT_EXT | // 16
+                                        0;
 
     VkDebugReportCallbackCreateInfoEXT createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
     createInfo.pNext = nullptr;
-    createInfo.flags = m_flags;
+    createInfo.flags = flags;
     createInfo.pfnCallback = DebugCallback; // Callback function to call
     createInfo.pUserData = nullptr;
     VKERRCHECK(m_vkCreateDebugCallbackEXT(m_instance, &createInfo, nullptr, &m_debugCallback));
 #else
-    m_vkCreateDebugCallbackEXT = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(inst, "vkCreateDebugUtilsMessengerEXT");
-    m_vkDestroyDebugCallbackEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(inst, "vkDestroyDebugUtilsMessengerEXT");
+    m_vkCreateDebugCallbackEXT = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_instance, "vkCreateDebugUtilsMessengerEXT");
+    m_vkDestroyDebugCallbackEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_instance, "vkDestroyDebugUtilsMessengerEXT");
 
-    Destroy(); // Destroy old report before creating new one
-
-    m_flags = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
+    const VkDebugUtilsMessageSeverityFlagsEXT severity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
         | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
         | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT
         | 0;
 
+    const VkDebugUtilsMessageTypeFlagBitsEXT messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
+            | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT
+            | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+
     VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-    createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+    createInfo.messageType = messageType;
     createInfo.flags = 0;
-    createInfo.messageSeverity = m_flags;
+    createInfo.messageSeverity = severity;
     createInfo.pfnUserCallback = DebugCallback;
     VKERRCHECK(m_vkCreateDebugCallbackEXT(m_instance, &createInfo, nullptr, &m_debugCallback));
 #endif
 }
 
-void ValidationReporter::Destroy()
+ValidationReporter::~ValidationReporter()
 {
     if (m_debugCallback) {
         m_vkDestroyDebugCallbackEXT(m_instance, m_debugCallback, nullptr);

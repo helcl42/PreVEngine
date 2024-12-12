@@ -102,15 +102,9 @@ void Instance::Create(const Layers& layers, const Extensions& extensions, const 
 
     LOGI("Vulkan Instance created");
 
-#ifdef VK_USE_PLATFORM_ANDROID_KHR
-    if (extensions.IsPicked(VK_EXT_DEBUG_REPORT_EXTENSION_NAME)) {
-        m_validationReporter.Init(m_instance); // If VK_EXT_debug_report is loaded, initialize it.
+    if (extensions.IsPicked(VK_EXT_DEBUG_REPORT_EXTENSION_NAME) || extensions.IsPicked(VK_EXT_DEBUG_UTILS_EXTENSION_NAME)) {
+        m_validationReporter = std::make_unique<ValidationReporter>(m_instance); // If VK_EXT_debug_report is loaded, initialize it.
     }
-#else
-    if (extensions.IsPicked(VK_EXT_DEBUG_UTILS_EXTENSION_NAME)) {
-        m_validationReporter.Init(m_instance); // If VK_EXT_utils is loaded, initialize it.
-    }
-#endif
 }
 
 void Instance::Print() const
@@ -120,7 +114,7 @@ void Instance::Print() const
 
 Instance::~Instance()
 {
-    m_validationReporter.Destroy(); // Must be called BEFORE vkDestroyInstance()
+    m_validationReporter = nullptr; // Must be called BEFORE vkDestroyInstance()
 
     vkDestroyInstance(m_instance, nullptr);
     LOGI("Vulkan Instance destroyed");

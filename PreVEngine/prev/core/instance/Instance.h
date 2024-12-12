@@ -7,6 +7,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace prev::core::instance {
 class Instance {
@@ -28,7 +29,7 @@ private:
 private:
     VkInstance m_instance{};
 
-    ValidationReporter m_validationReporter{};
+    std::unique_ptr<ValidationReporter> m_validationReporter{};
 };
 } // namespace prev::core::instance
 
