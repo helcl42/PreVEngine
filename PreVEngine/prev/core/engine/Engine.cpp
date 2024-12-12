@@ -48,7 +48,6 @@ void Engine::MainLoop()
         auto& rootRenderer{ m_engineImpl->GetRootRenderer() };
         auto& swapchain{ m_engineImpl->GetSwapchain() };
 
-        // TODO -> test if extent works even in XR mode
         const VkExtent2D extent{ swapchain.GetExtent() };
         const auto deltaTime{ m_engineImpl->GetCurrentDeltaTime() };
 
