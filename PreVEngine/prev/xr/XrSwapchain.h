@@ -1,7 +1,7 @@
 #ifndef __XR_SWAPCHAIN_H__
 #define __XR_SWAPCHAIN_H__
 
-#include "OpenXR.h"
+#include "OpenXr.h"
 
 #include "../render/ISwapchain.h"
 
@@ -12,11 +12,11 @@
 #include "../util/Utils.h"
 
 namespace prev::xr {
-class XRSwapchain final : public render::ISwapchain {
+class XrSwapchain final : public render::ISwapchain {
 public:
-    XRSwapchain(core::device::Device& device, core::memory::Allocator& allocator, render::pass::RenderPass& renderPass, xr::OpenXR& xr, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT);
+    XrSwapchain(core::device::Device& device, core::memory::Allocator& allocator, render::pass::RenderPass& renderPass, xr::OpenXr& xr, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT);
 
-    ~XRSwapchain();
+    ~XrSwapchain();
 
 public:
     std::vector<VkPresentModeKHR> GetPresentModes() const override;
@@ -71,7 +71,7 @@ private:
 
     render::pass::RenderPass& m_renderPass;
 
-    xr::OpenXR& m_openXr;
+    xr::OpenXr& m_openXr;
 
     VkSurfaceKHR m_surface{};
 

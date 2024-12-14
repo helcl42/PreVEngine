@@ -1,10 +1,10 @@
-#include "XRSwapchain.h"
+#include "XrSwapchain.h"
 
 #include "../render/buffer/ImageBufferBuilder.h"
 #include "../util/VkUtils.h"
 
 namespace prev::xr {
-    XRSwapchain::XRSwapchain(core::device::Device& device, core::memory::Allocator& allocator, render::pass::RenderPass& renderPass, xr::OpenXR& xr, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount)
+    XrSwapchain::XrSwapchain(core::device::Device& device, core::memory::Allocator& allocator, render::pass::RenderPass& renderPass, xr::OpenXr& xr, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount)
             : m_device{ device }
             , m_allocator{ allocator }
             , m_renderPass{ renderPass }
@@ -76,7 +76,7 @@ namespace prev::xr {
         }
     }
 
-    XRSwapchain::~XRSwapchain()
+    XrSwapchain::~XrSwapchain()
     {
         m_device.WaitIdle();
 
@@ -94,32 +94,32 @@ namespace prev::xr {
         LOGI("Swapchain destroyed\n");
     }
 
-    bool XRSwapchain::UpdateExtent()
+    bool XrSwapchain::UpdateExtent()
     {
         return false;
     }
 
-    bool XRSwapchain::SetImageCount(uint32_t imageCount)
+    bool XrSwapchain::SetImageCount(uint32_t imageCount)
     {
         return false;
     }
 
-    std::vector<VkPresentModeKHR> XRSwapchain::GetPresentModes() const
+    std::vector<VkPresentModeKHR> XrSwapchain::GetPresentModes() const
     {
         return {};
     }
 
-    bool XRSwapchain::SetPresentMode(bool noTearing, bool powerSave)
+    bool XrSwapchain::SetPresentMode(bool noTearing, bool powerSave)
     {
        return false;
     }
 
-    bool XRSwapchain::SetPresentMode(VkPresentModeKHR preferredMode)
+    bool XrSwapchain::SetPresentMode(VkPresentModeKHR preferredMode)
     {
         return false;
     }
 
-    void XRSwapchain::Print() const
+    void XrSwapchain::Print() const
     {
         LOGI("XSwapchain:\n");
 
@@ -130,17 +130,17 @@ namespace prev::xr {
         LOGI("\tBuffers = %d\n", (int)m_swapchainBuffers.size());
     }
 
-    const VkExtent2D& XRSwapchain::GetExtent() const
+    const VkExtent2D& XrSwapchain::GetExtent() const
     {
         return m_extent;
     }
 
-    uint32_t XRSwapchain::GetImageCount() const
+    uint32_t XrSwapchain::GetImageCount() const
     {
         return static_cast<uint32_t>(m_swapchainBuffers.size());
     }
 
-    bool XRSwapchain::BeginFrame(render::SwapChainFrameContext& outContext)
+    bool XrSwapchain::BeginFrame(render::SwapChainFrameContext& outContext)
     {
         m_acquiredIndex = m_openXr.GetCurrentSwapchainIndex();
 
@@ -157,7 +157,7 @@ namespace prev::xr {
         return true;
     }
 
-    void XRSwapchain::EndFrame()
+    void XrSwapchain::EndFrame()
     {
         const auto& swapchainBuffer{ m_swapchainBuffers[m_acquiredIndex] };
         VKERRCHECK(vkEndCommandBuffer(swapchainBuffer.commandBuffer));

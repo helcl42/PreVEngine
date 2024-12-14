@@ -1,7 +1,7 @@
 #ifndef __OPEN_XR_H__
 #define __OPEN_XR_H__
 
-#include "OpenXRCommon.h"
+#include "OpenXrCommon.h"
 #include "XrEvents.h"
 
 #include "../event/EventHandler.h"
@@ -10,11 +10,11 @@
 #include <unordered_map>
 
 namespace prev::xr {
-class OpenXR {
+class OpenXr {
 public:
-    OpenXR();
+    OpenXr();
 
-    ~OpenXR();
+    ~OpenXr();
 
 public:
     std::vector<std::string> GetVulkanInstanceExtensions() const;
@@ -169,7 +169,7 @@ private:
     XrActionSet m_actionSet{};
 
 private:
-    prev::event::EventHandler<OpenXR, XrCameraFeedbackEvent> m_cameraFeedbackHandler{ *this };
+    prev::event::EventHandler<OpenXr, XrCameraFeedbackEvent> m_cameraFeedbackHandler{ *this };
 };
 }
 

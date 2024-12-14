@@ -3,7 +3,7 @@
 
 #include "EngineImpl.h"
 
-#include "../../../xr/OpenXR.h"
+#include "../../../xr/OpenXr.h"
 
 namespace prev::core::engine::impl {
 class XrEngineImpl final : public EngineImpl {
@@ -37,7 +37,7 @@ private:
     void ResetSwapchain() override;
 
 private:
-    std::shared_ptr<prev::xr::OpenXR> m_openXr{};
+    std::unique_ptr<prev::xr::OpenXr> m_openXr{};
 };
 }
 

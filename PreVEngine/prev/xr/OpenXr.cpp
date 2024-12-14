@@ -1,4 +1,4 @@
-#include "OpenXR.h"
+#include "OpenXr.h"
 #include "XrEvents.h"
 
 #include "../event/EventChannel.h"
@@ -60,7 +60,7 @@ namespace prev::xr {
         }
 
         XrBool32
-        OpenXRMessageCallbackFunction(XrDebugUtilsMessageSeverityFlagsEXT messageSeverity, XrDebugUtilsMessageTypeFlagsEXT messageType, const XrDebugUtilsMessengerCallbackDataEXT *pCallbackData,
+        OpenXrMessageCallbackFunction(XrDebugUtilsMessageSeverityFlagsEXT messageSeverity, XrDebugUtilsMessageTypeFlagsEXT messageType, const XrDebugUtilsMessengerCallbackDataEXT *pCallbackData,
                                       void *pUserData) {
             // Lambda to covert an XrDebugUtilsMessageSeverityFlagsEXT to std::string. Bitwise check to concatenate multiple severities to the output string.
             auto GetMessageSeverityString = [](XrDebugUtilsMessageSeverityFlagsEXT messageSeverity) -> std::string {
@@ -137,7 +137,7 @@ namespace prev::xr {
             return XrBool32();
         }
 
-        XrDebugUtilsMessengerEXT CreateOpenXRDebugUtilsMessenger(XrInstance m_xrInstance) {
+        XrDebugUtilsMessengerEXT CreateOpenXrDebugUtilsMessenger(XrInstance m_xrInstance) {
             // Fill out a XrDebugUtilsMessengerCreateInfoEXT structure specifying all severities and types.
             // Set the userCallback to OpenXRMessageCallbackFunction().
             XrDebugUtilsMessengerCreateInfoEXT debugUtilsMessengerCI{XR_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT};
@@ -145,7 +145,7 @@ namespace prev::xr {
                                                       XR_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
             debugUtilsMessengerCI.messageTypes = XR_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | XR_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | XR_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT |
                                                  XR_DEBUG_UTILS_MESSAGE_TYPE_CONFORMANCE_BIT_EXT;
-            debugUtilsMessengerCI.userCallback = (PFN_xrDebugUtilsMessengerCallbackEXT) OpenXRMessageCallbackFunction;
+            debugUtilsMessengerCI.userCallback = (PFN_xrDebugUtilsMessengerCallbackEXT) OpenXrMessageCallbackFunction;
             debugUtilsMessengerCI.userData = nullptr;
 
             // Load xrCreateDebugUtilsMessengerEXT() function pointer as it is not default loaded by the OpenXR loader.
@@ -158,7 +158,7 @@ namespace prev::xr {
             return debugUtilsMessenger;
         }
 
-        void DestroyOpenXRDebugUtilsMessenger(XrInstance m_xrInstance, XrDebugUtilsMessengerEXT debugUtilsMessenger) {
+        void DestroyOpenXrDebugUtilsMessenger(XrInstance m_xrInstance, XrDebugUtilsMessengerEXT debugUtilsMessenger) {
             // Load xrDestroyDebugUtilsMessengerEXT() function pointer as it is not default loaded by the OpenXR loader.
             PFN_xrDestroyDebugUtilsMessengerEXT xrDestroyDebugUtilsMessengerEXT;
             OPENXR_CHECK(xrGetInstanceProcAddr(m_xrInstance, "xrDestroyDebugUtilsMessengerEXT", (PFN_xrVoidFunction *) &xrDestroyDebugUtilsMessengerEXT), "Failed to get InstanceProcAddr.");
@@ -167,7 +167,7 @@ namespace prev::xr {
             OPENXR_CHECK(xrDestroyDebugUtilsMessengerEXT(debugUtilsMessenger), "Failed to destroy DebugUtilsMessenger.");
         }
 
-        std::vector<std::string> GetInstanceExtensionsForOpenXR(XrInstance instance, XrSystemId systemId) {
+        std::vector<std::string> GetInstanceExtensionsForOpenXr(XrInstance instance, XrSystemId systemId) {
             uint32_t extensionNamesSize = 0;
             OPENXR_CHECK(xrGetVulkanInstanceExtensionsKHR(instance, systemId, 0, &extensionNamesSize, nullptr), "Failed to get Vulkan Instance Extensions.");
 
@@ -183,7 +183,7 @@ namespace prev::xr {
             return extensions;
         }
 
-        std::vector<std::string> GetDeviceExtensionsForOpenXR(XrInstance instance, XrSystemId systemId) {
+        std::vector<std::string> GetDeviceExtensionsForOpenXr(XrInstance instance, XrSystemId systemId) {
             uint32_t extensionNamesSize = 0;
             OPENXR_CHECK(xrGetVulkanDeviceExtensionsKHR(instance, systemId, 0, &extensionNamesSize, nullptr), "Failed to get Vulkan Device Extensions.");
 
@@ -215,7 +215,7 @@ namespace prev::xr {
         }
     }
 
-    OpenXR::OpenXR() {
+    OpenXr::OpenXr() {
         CreateInstance();
         CreateDebugMessenger();
         GetInstanceProperties();
@@ -225,20 +225,20 @@ namespace prev::xr {
         GetEnvironmentBlendModes();
     }
 
-    OpenXR::~OpenXR() {
+    OpenXr::~OpenXr() {
         DestroyDebugMessenger();
         DestroyInstance();
     }
 
-    std::vector<std::string> OpenXR::GetVulkanInstanceExtensions() const {
-        return GetInstanceExtensionsForOpenXR(m_xrInstance, m_systemID);
+    std::vector<std::string> OpenXr::GetVulkanInstanceExtensions() const {
+        return GetInstanceExtensionsForOpenXr(m_xrInstance, m_systemID);
     }
 
-    std::vector<std::string> OpenXR::GetVulkanDeviceExtensions() const {
-        return GetDeviceExtensionsForOpenXR(m_xrInstance, m_systemID);
+    std::vector<std::string> OpenXr::GetVulkanDeviceExtensions() const {
+        return GetDeviceExtensionsForOpenXr(m_xrInstance, m_systemID);
     }
 
-    VkPhysicalDevice OpenXR::GetPhysicalDevice(VkInstance instance) const {
+    VkPhysicalDevice OpenXr::GetPhysicalDevice(VkInstance instance) const {
         XrGraphicsRequirementsVulkanKHR graphicsRequirements{XR_TYPE_GRAPHICS_REQUIREMENTS_VULKAN_KHR};
         OPENXR_CHECK(xrGetVulkanGraphicsRequirementsKHR(m_xrInstance, m_systemID, &graphicsRequirements), "Failed to get Graphics Requirements for Vulkan.");
 
@@ -247,7 +247,7 @@ namespace prev::xr {
         return physicalDeviceFromXR;
     }
 
-    void OpenXR::InitializeGraphicsBinding(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex) {
+    void OpenXr::InitializeGraphicsBinding(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex) {
         m_graphicsBinding = {XR_TYPE_GRAPHICS_BINDING_VULKAN_KHR};
         m_graphicsBinding.instance = instance;
         m_graphicsBinding.physicalDevice = physicalDevice;
@@ -256,11 +256,11 @@ namespace prev::xr {
         m_graphicsBinding.queueIndex = queueIndex;
     }
 
-    void OpenXR::DestroyGraphicsBinding() {
+    void OpenXr::DestroyGraphicsBinding() {
         m_graphicsBinding = {};
     }
 
-    void OpenXR::CreateReferenceSpace() {
+    void OpenXr::CreateReferenceSpace() {
         // Fill out an XrReferenceSpaceCreateInfo structure and create a reference XrSpace, specifying a Local space with an identity pose as the origin.
         XrReferenceSpaceCreateInfo referenceSpaceCI{XR_TYPE_REFERENCE_SPACE_CREATE_INFO};
         referenceSpaceCI.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_LOCAL;
@@ -269,12 +269,12 @@ namespace prev::xr {
         OPENXR_CHECK(xrCreateReferenceSpace(m_session, &referenceSpaceCI, &m_localSpace), "Failed to create ReferenceSpace.");
     }
 
-    void OpenXR::DestroyReferenceSpace() {
+    void OpenXr::DestroyReferenceSpace() {
         // Destroy the reference XrSpace.
         OPENXR_CHECK(xrDestroySpace(m_localSpace), "Failed to destroy Space.")
     }
 
-    void OpenXR::CreateSwapchains() {
+    void OpenXr::CreateSwapchains() {
         // Get the supported swapchain formats as an array of int64_t and ordered by runtime preference.
         uint32_t formatCount = 0;
         OPENXR_CHECK(xrEnumerateSwapchainFormats(m_session, 0, &formatCount, nullptr), "Failed to enumerate Swapchain Formats");
@@ -365,7 +365,7 @@ namespace prev::xr {
         }
     }
 
-    void OpenXR::DestroySwapchains() {
+    void OpenXr::DestroySwapchains() {
         // Destroy the color and depth image views from GraphicsAPI.
         for (auto& imageView: m_colorSwapchainInfo.imageViews) {
             vkDestroyImageView(m_graphicsBinding.device, imageView, VK_NULL_HANDLE);
@@ -385,7 +385,7 @@ namespace prev::xr {
         OPENXR_CHECK(xrDestroySwapchain(m_depthSwapchainInfo.swapchain), "Failed to destroy Depth Swapchain");
     }
 
-    void OpenXR::CreateSession() {
+    void OpenXr::CreateSession() {
         // Create an XrSessionCreateInfo structure.
         XrSessionCreateInfo sessionCI{XR_TYPE_SESSION_CREATE_INFO};
         sessionCI.next = &m_graphicsBinding;
@@ -399,7 +399,7 @@ namespace prev::xr {
         AttachActionSet();
     }
 
-    void OpenXR::DestroySession() {
+    void OpenXr::DestroySession() {
         DestroySwapchains();
         DestroyReferenceSpace();
 
@@ -407,63 +407,63 @@ namespace prev::xr {
         OPENXR_CHECK(xrDestroySession(m_session), "Failed to destroy Session.");
     }
 
-    std::vector<VkImage> OpenXR::GetColorImages() const
+    std::vector<VkImage> OpenXr::GetColorImages() const
     {
         return m_colorSwapchainInfo.images;
     }
 
-    std::vector<VkImageView> OpenXR::GetColorImagesViews() const
+    std::vector<VkImageView> OpenXr::GetColorImagesViews() const
     {
         return m_colorSwapchainInfo.imageViews;
     }
 
-    std::vector<VkImage> OpenXR::GetDepthImages() const
+    std::vector<VkImage> OpenXr::GetDepthImages() const
     {
         return m_depthSwapchainInfo.images;
     }
 
-    std::vector<VkImageView> OpenXR::GetDepthImagesViews() const
+    std::vector<VkImageView> OpenXr::GetDepthImagesViews() const
     {
         return m_depthSwapchainInfo.imageViews;
     }
 
-    VkExtent2D OpenXR::GetExtent() const
+    VkExtent2D OpenXr::GetExtent() const
     {
         return { m_viewConfigurationViews[0].recommendedImageRectWidth, m_viewConfigurationViews[0].recommendedImageRectHeight };
     }
 
-    VkFormat OpenXR::GetColorFormat() const
+    VkFormat OpenXr::GetColorFormat() const
     {
         return m_preferredColorFormat;
     }
 
-    VkFormat OpenXR::GetDepthFormat() const
+    VkFormat OpenXr::GetDepthFormat() const
     {
         return m_preferredDepthFormat;
     }
 
-    uint32_t OpenXR::GetViewCount() const
+    uint32_t OpenXr::GetViewCount() const
     {
         return static_cast<uint32_t>(m_viewConfigurationViews.size());
     }
 
-    uint32_t OpenXR::GetCurrentSwapchainIndex() const
+    uint32_t OpenXr::GetCurrentSwapchainIndex() const
     {
         return m_currentSwapchainIndex;
     }
 
-    float OpenXR::GetCurrentDeltaTime() const
+    float OpenXr::GetCurrentDeltaTime() const
     {
         return m_currentDeltaTime;
     }
 
-    void OpenXR::Update()
+    void OpenXr::Update()
     {
         PollEvents();
         PollAction();
     }
 
-    bool OpenXR::BeginFrame()
+    bool OpenXr::BeginFrame()
     {
         if(!m_sessionRunning) {
             return false;
@@ -569,7 +569,7 @@ namespace prev::xr {
         return true;
     }
 
-    bool OpenXR::EndFrame()
+    bool OpenXr::EndFrame()
     {
         if(!m_sessionRunning) {
             return false;
@@ -604,14 +604,14 @@ namespace prev::xr {
         return true;
     }
 
-    void OpenXR::operator() (const XrCameraFeedbackEvent& event) {
+    void OpenXr::operator() (const XrCameraFeedbackEvent& event) {
         m_nearClippingPlane = event.nearClippingPlane;
         m_farClippingPlane = event.fatClippingPlane;
         m_minDepth = event.minDepth;
         m_maxDepth = event.maxDepth;
     }
 
-    void OpenXR::CreateInstance() {
+    void OpenXr::CreateInstance() {
         XrApplicationInfo AI;
         strncpy(AI.applicationName, "OpenXR PreVEngineTest", XR_MAX_APPLICATION_NAME_SIZE);
         AI.applicationVersion = 1;
@@ -694,25 +694,25 @@ namespace prev::xr {
         LoadXrFunctions(m_xrInstance);
     }
 
-    void OpenXR::DestroyInstance() {
+    void OpenXr::DestroyInstance() {
         // Destroy the XrInstance.
         OPENXR_CHECK(xrDestroyInstance(m_xrInstance), "Failed to destroy Instance.");
     }
 
-    void OpenXR::CreateDebugMessenger() {
+    void OpenXr::CreateDebugMessenger() {
         // Check that "XR_EXT_debug_utils" is in the active Instance Extensions before creating an XrDebugUtilsMessengerEXT.
         if (IsStringInVector(m_activeInstanceExtensions, XR_EXT_DEBUG_UTILS_EXTENSION_NAME)) {
-            m_debugUtilsMessenger = CreateOpenXRDebugUtilsMessenger(m_xrInstance);  // From OpenXRDebugUtils.h.
+            m_debugUtilsMessenger = CreateOpenXrDebugUtilsMessenger(m_xrInstance);  // From OpenXRDebugUtils.h.
         }
     }
-    void OpenXR::DestroyDebugMessenger() {
+    void OpenXr::DestroyDebugMessenger() {
         // Check that "XR_EXT_debug_utils" is in the active Instance Extensions before destroying the XrDebugUtilsMessengerEXT.
         if (m_debugUtilsMessenger != XR_NULL_HANDLE) {
-            DestroyOpenXRDebugUtilsMessenger(m_xrInstance, m_debugUtilsMessenger);  // From OpenXRDebugUtils.h.
+            DestroyOpenXrDebugUtilsMessenger(m_xrInstance, m_debugUtilsMessenger);  // From OpenXRDebugUtils.h.
         }
     }
 
-    void OpenXR::GetInstanceProperties() {
+    void OpenXr::GetInstanceProperties() {
         // Get the instance's properties and log the runtime name and version.
 
         XrInstanceProperties instanceProperties{XR_TYPE_INSTANCE_PROPERTIES};
@@ -721,7 +721,7 @@ namespace prev::xr {
         LOGI("OpenXR Runtime: %s - %d.%d.%d\n", instanceProperties.runtimeName, XR_VERSION_MAJOR(instanceProperties.runtimeVersion), XR_VERSION_MINOR(instanceProperties.runtimeVersion), XR_VERSION_PATCH(instanceProperties.runtimeVersion));
     }
 
-    void OpenXR::GetSystemID() {
+    void OpenXr::GetSystemID() {
         // Get the XrSystemId from the instance and the supplied XrFormFactor.
         XrSystemGetInfo systemGI{XR_TYPE_SYSTEM_GET_INFO};
         systemGI.formFactor = XR_FORM_FACTOR_HEAD_MOUNTED_DISPLAY;
@@ -731,7 +731,7 @@ namespace prev::xr {
         OPENXR_CHECK(xrGetSystemProperties(m_xrInstance, m_systemID, &m_systemProperties), "Failed to get SystemProperties.");
     }
 
-    void OpenXR::GetViewConfigurationViews() {
+    void OpenXr::GetViewConfigurationViews() {
         // Gets the View Configuration Types. The first call gets the count of the array that will be returned. The next call fills out the array.
         uint32_t viewConfigurationCount = 0;
         OPENXR_CHECK(xrEnumerateViewConfigurations(m_xrInstance, m_systemID, 0, &viewConfigurationCount, nullptr), "Failed to enumerate View Configurations.");
@@ -761,7 +761,7 @@ namespace prev::xr {
         }
     }
 
-    void OpenXR::GetEnvironmentBlendModes() {
+    void OpenXr::GetEnvironmentBlendModes() {
         // Retrieves the available blend modes. The first call gets the count of the array that will be returned. The next call fills out the array.
         uint32_t environmentBlendModeCount = 0;
         OPENXR_CHECK(xrEnumerateEnvironmentBlendModes(m_xrInstance, m_systemID, m_viewConfiguration, 0, &environmentBlendModeCount, nullptr), "Failed to enumerate EnvironmentBlend Modes.");
@@ -781,7 +781,7 @@ namespace prev::xr {
         }
     }
 
-    void OpenXR::CreateActionSet()
+    void OpenXr::CreateActionSet()
     {
         XrActionSetCreateInfo actionSetCI{XR_TYPE_ACTION_SET_CREATE_INFO};
         // The internal name the runtime uses for this Action Set.
@@ -793,12 +793,12 @@ namespace prev::xr {
         actionSetCI.priority = 0;
     }
 
-    void OpenXR::DestroyActionSet()
+    void OpenXr::DestroyActionSet()
     {
         // nothing to do here ??
     }
 
-    void OpenXR::AttachActionSet()
+    void OpenXr::AttachActionSet()
     {
         // Attach the action set we just made to the session. We could attach multiple action sets!
         XrSessionActionSetsAttachInfo actionSetAttachInfo{XR_TYPE_SESSION_ACTION_SETS_ATTACH_INFO};
@@ -807,12 +807,12 @@ namespace prev::xr {
         OPENXR_CHECK(xrAttachSessionActionSets(m_session, &actionSetAttachInfo), "Failed to attach ActionSet to Session.");
     }
 
-    void OpenXR::DetachActionSet()
+    void OpenXr::DetachActionSet()
     {
         // nothing to do here ??
     }
 
-    void OpenXR::PollEvents() {
+    void OpenXr::PollEvents() {
         // Poll OpenXR for a new event.
         XrEventDataBuffer eventData{XR_TYPE_EVENT_DATA_BUFFER};
         auto XrPollEvents = [&]() -> bool {
@@ -901,7 +901,7 @@ namespace prev::xr {
         }
     }
 
-    void OpenXR::PollAction()
+    void OpenXr::PollAction()
     {
         // poll actions
         XrActiveActionSet activeActionSet{};
