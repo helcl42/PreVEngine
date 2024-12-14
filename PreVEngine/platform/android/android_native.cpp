@@ -1,6 +1,8 @@
 #include "android_native.h"
 
-#include "../prev/xr/OpenXRCommon.h"
+#ifdef ENABLE_XR
+#include "../prev/xr/OpenXrCommon.h"
+#endif
 
 //----------------------------------------printf for Android---------------------
 // Uses a 256 byte buffer to allow concatenating multiple printf's onto one log line.
@@ -56,17 +58,17 @@ static void activity_force_finish(void) {
 }
 
 void android_main(struct android_app* state) {
-    printf("Native Activity\n");
+    printf("Native Activity");
 
     g_AndroidApp = state; // Pass android app state to window_andoid.cpp
 
     android_fopen_set_asset_manager(state->activity->assetManager); // Re-direct fopen to read assets from our APK.
 
+#ifdef ENABLE_XR
     // https://registry.khronos.org/OpenXR/specs/1.0/html/xrspec.html#XR_KHR_loader_init
     // Load xrInitializeLoaderKHR() function pointer. On Android, the loader must be initialized with variables from android_app *.
     // Without this, there's is no loader and thus our function calls to OpenXR would fail.
-    XrInstance m_xrInstance = XR_NULL_HANDLE;  // Dummy XrInstance variable for OPENXR_CHECK macro.
-    PFN_xrInitializeLoaderKHR xrInitializeLoaderKHR = nullptr;
+    PFN_xrInitializeLoaderKHR xrInitializeLoaderKHR{};
     OPENXR_CHECK(xrGetInstanceProcAddr(XR_NULL_HANDLE, "xrInitializeLoaderKHR", (PFN_xrVoidFunction *)&xrInitializeLoaderKHR), "Failed to get InstanceProcAddr for xrInitializeLoaderKHR.");
     if (!xrInitializeLoaderKHR) {
         return;
@@ -77,10 +79,11 @@ void android_main(struct android_app* state) {
     loaderInitializeInfoAndroid.applicationVM = state->activity->vm;
     loaderInitializeInfoAndroid.applicationContext = state->activity->clazz;
     OPENXR_CHECK(xrInitializeLoaderKHR((XrLoaderInitInfoBaseHeaderKHR *)&loaderInitializeInfoAndroid), "Failed to initialize Loader for Android.");
+#endif
 
     PreVMain(0, NULL); // call the common main
 
-    printf("Exiting.\n");
+    printf("Exiting.");
     ANativeActivity_finish(state->activity);
 
 //    activity_force_finish();

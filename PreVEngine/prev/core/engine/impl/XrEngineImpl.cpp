@@ -1,6 +1,6 @@
 #include "XrEngineImpl.h"
 
-#include "../../../xr/XRSwapchain.h"
+#include "../../../xr/XrSwapchain.h"
 #include "../../device/DeviceFactory.h"
 
 namespace prev::core::engine::impl {
@@ -21,7 +21,7 @@ float XrEngineImpl::GetCurrentDeltaTime() const
 
 void XrEngineImpl::Init()
 {
-    m_openXr = std::make_shared<prev::xr::OpenXR>();
+    m_openXr = std::make_unique<prev::xr::OpenXr>();
 
     ResetTiming();
     ResetInstance();
@@ -105,7 +105,7 @@ void XrEngineImpl::ResetRenderPass()
 
 void XrEngineImpl::ResetSwapchain()
 {
-    m_swapchain = std::make_unique<prev::xr::XRSwapchain>(*m_device, *m_allocator, *m_renderPass, *m_openXr, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount));
+    m_swapchain = std::make_unique<prev::xr::XrSwapchain>(*m_device, *m_allocator, *m_renderPass, *m_openXr, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount));
     m_swapchain->Print();
 }
 }
