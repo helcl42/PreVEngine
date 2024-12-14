@@ -6,6 +6,9 @@
 
 #include <sstream>
 
+PFN_xrCreateDebugUtilsMessengerEXT xrCreateDebugUtilsMessengerEXT{};
+PFN_xrDestroyDebugUtilsMessengerEXT xrDestroyDebugUtilsMessengerEXT{};
+
 PFN_xrCreateHandTrackerEXT xrCreateHandTrackerEXT{};
 PFN_xrDestroyHandTrackerEXT xrDestroyHandTrackerEXT{};
 PFN_xrLocateHandJointsEXT xrLocateHandJointsEXT{};
@@ -43,7 +46,8 @@ namespace prev::xr {
             }
         }
 
-        inline bool IsStringInVector(std::vector<const char *> list, const char *name) {
+        inline bool IsStringInVector(std::vector<const char *> list, const char *name)
+        {
             bool found = false;
             for (auto &item: list) {
                 if (strcmp(name, item) == 0) {
@@ -55,13 +59,14 @@ namespace prev::xr {
         }
 
         template<typename T>
-        inline bool BitwiseCheck(const T &value, const T &checkValue) {
+        inline bool BitwiseCheck(const T &value, const T &checkValue)
+        {
             return ((value & checkValue) == checkValue);
         }
 
         XrBool32
-        OpenXrMessageCallbackFunction(XrDebugUtilsMessageSeverityFlagsEXT messageSeverity, XrDebugUtilsMessageTypeFlagsEXT messageType, const XrDebugUtilsMessengerCallbackDataEXT *pCallbackData,
-                                      void *pUserData) {
+        OpenXrMessageCallbackFunction(XrDebugUtilsMessageSeverityFlagsEXT messageSeverity, XrDebugUtilsMessageTypeFlagsEXT messageType, const XrDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *pUserData)
+        {
             // Lambda to covert an XrDebugUtilsMessageSeverityFlagsEXT to std::string. Bitwise check to concatenate multiple severities to the output string.
             auto GetMessageSeverityString = [](XrDebugUtilsMessageSeverityFlagsEXT messageSeverity) -> std::string {
                 bool separator = false;
@@ -130,14 +135,15 @@ namespace prev::xr {
             errorMessage << functionName << "(" << messageSeverityStr << " / " << messageTypeStr << "): msgNum: " << messageId << " - " << message;
 
             // Log and debug break.
-            LOGE("%s\n", errorMessage.str().c_str());
+            LOGE("%s", errorMessage.str().c_str());
             if (BitwiseCheck(messageSeverity, XR_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)) {
                 ASSERT(false, "Error...");
             }
             return XrBool32();
         }
 
-        XrDebugUtilsMessengerEXT CreateOpenXrDebugUtilsMessenger(XrInstance m_xrInstance) {
+        XrDebugUtilsMessengerEXT CreateOpenXrDebugUtilsMessenger(XrInstance m_xrInstance)
+        {
             // Fill out a XrDebugUtilsMessengerCreateInfoEXT structure specifying all severities and types.
             // Set the userCallback to OpenXRMessageCallbackFunction().
             XrDebugUtilsMessengerCreateInfoEXT debugUtilsMessengerCI{XR_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT};
@@ -150,24 +156,19 @@ namespace prev::xr {
 
             // Load xrCreateDebugUtilsMessengerEXT() function pointer as it is not default loaded by the OpenXR loader.
             XrDebugUtilsMessengerEXT debugUtilsMessenger{};
-            PFN_xrCreateDebugUtilsMessengerEXT xrCreateDebugUtilsMessengerEXT;
-            OPENXR_CHECK(xrGetInstanceProcAddr(m_xrInstance, "xrCreateDebugUtilsMessengerEXT", (PFN_xrVoidFunction *) &xrCreateDebugUtilsMessengerEXT), "Failed to get InstanceProcAddr.");
 
             // Finally create and return the XrDebugUtilsMessengerEXT.
             OPENXR_CHECK(xrCreateDebugUtilsMessengerEXT(m_xrInstance, &debugUtilsMessengerCI, &debugUtilsMessenger), "Failed to create DebugUtilsMessenger.");
             return debugUtilsMessenger;
         }
 
-        void DestroyOpenXrDebugUtilsMessenger(XrInstance m_xrInstance, XrDebugUtilsMessengerEXT debugUtilsMessenger) {
-            // Load xrDestroyDebugUtilsMessengerEXT() function pointer as it is not default loaded by the OpenXR loader.
-            PFN_xrDestroyDebugUtilsMessengerEXT xrDestroyDebugUtilsMessengerEXT;
-            OPENXR_CHECK(xrGetInstanceProcAddr(m_xrInstance, "xrDestroyDebugUtilsMessengerEXT", (PFN_xrVoidFunction *) &xrDestroyDebugUtilsMessengerEXT), "Failed to get InstanceProcAddr.");
-
-            // Destroy the provided XrDebugUtilsMessengerEXT.
+        void DestroyOpenXrDebugUtilsMessenger(XrInstance m_xrInstance, XrDebugUtilsMessengerEXT debugUtilsMessenger)
+        {
             OPENXR_CHECK(xrDestroyDebugUtilsMessengerEXT(debugUtilsMessenger), "Failed to destroy DebugUtilsMessenger.");
         }
 
-        std::vector<std::string> GetInstanceExtensionsForOpenXr(XrInstance instance, XrSystemId systemId) {
+        std::vector<std::string> GetInstanceExtensionsForOpenXr(XrInstance instance, XrSystemId systemId)
+        {
             uint32_t extensionNamesSize = 0;
             OPENXR_CHECK(xrGetVulkanInstanceExtensionsKHR(instance, systemId, 0, &extensionNamesSize, nullptr), "Failed to get Vulkan Instance Extensions.");
 
@@ -183,7 +184,8 @@ namespace prev::xr {
             return extensions;
         }
 
-        std::vector<std::string> GetDeviceExtensionsForOpenXr(XrInstance instance, XrSystemId systemId) {
+        std::vector<std::string> GetDeviceExtensionsForOpenXr(XrInstance instance, XrSystemId systemId)
+        {
             uint32_t extensionNamesSize = 0;
             OPENXR_CHECK(xrGetVulkanDeviceExtensionsKHR(instance, systemId, 0, &extensionNamesSize, nullptr), "Failed to get Vulkan Device Extensions.");
 
@@ -199,7 +201,11 @@ namespace prev::xr {
             return extensions;
         }
 
-        void LoadXrFunctions(XrInstance m_xrInstance) {
+        void LoadXrFunctions(XrInstance m_xrInstance)
+        {
+            OPENXR_CHECK(xrGetInstanceProcAddr(m_xrInstance, "xrCreateDebugUtilsMessengerEXT", (PFN_xrVoidFunction *) &xrCreateDebugUtilsMessengerEXT), "Failed to get xrCreateDebugUtilsMessengerEXT.");
+            OPENXR_CHECK(xrGetInstanceProcAddr(m_xrInstance, "xrDestroyDebugUtilsMessengerEXT", (PFN_xrVoidFunction *) &xrDestroyDebugUtilsMessengerEXT), "Failed to get xrDestroyDebugUtilsMessengerEXT.");
+
             OPENXR_CHECK(xrGetInstanceProcAddr(m_xrInstance, "xrCreateHandTrackerEXT", (PFN_xrVoidFunction *)&xrCreateHandTrackerEXT), "Failed to get xrCreateHandTrackerEXT.");
             OPENXR_CHECK(xrGetInstanceProcAddr(m_xrInstance, "xrDestroyHandTrackerEXT", (PFN_xrVoidFunction *)&xrDestroyHandTrackerEXT), "Failed to get xrDestroyHandTrackerEXT.");
             OPENXR_CHECK(xrGetInstanceProcAddr(m_xrInstance, "xrLocateHandJointsEXT", (PFN_xrVoidFunction *)&xrLocateHandJointsEXT), "Failed to get xrLocateHandJointsEXT.");
@@ -215,7 +221,8 @@ namespace prev::xr {
         }
     }
 
-    OpenXr::OpenXr() {
+    OpenXr::OpenXr()
+    {
         CreateInstance();
         CreateDebugMessenger();
         GetInstanceProperties();
@@ -225,20 +232,24 @@ namespace prev::xr {
         GetEnvironmentBlendModes();
     }
 
-    OpenXr::~OpenXr() {
+    OpenXr::~OpenXr()
+    {
         DestroyDebugMessenger();
         DestroyInstance();
     }
 
-    std::vector<std::string> OpenXr::GetVulkanInstanceExtensions() const {
+    std::vector<std::string> OpenXr::GetVulkanInstanceExtensions() const
+    {
         return GetInstanceExtensionsForOpenXr(m_xrInstance, m_systemID);
     }
 
-    std::vector<std::string> OpenXr::GetVulkanDeviceExtensions() const {
+    std::vector<std::string> OpenXr::GetVulkanDeviceExtensions() const
+    {
         return GetDeviceExtensionsForOpenXr(m_xrInstance, m_systemID);
     }
 
-    VkPhysicalDevice OpenXr::GetPhysicalDevice(VkInstance instance) const {
+    VkPhysicalDevice OpenXr::GetPhysicalDevice(VkInstance instance) const
+    {
         XrGraphicsRequirementsVulkanKHR graphicsRequirements{XR_TYPE_GRAPHICS_REQUIREMENTS_VULKAN_KHR};
         OPENXR_CHECK(xrGetVulkanGraphicsRequirementsKHR(m_xrInstance, m_systemID, &graphicsRequirements), "Failed to get Graphics Requirements for Vulkan.");
 
@@ -247,7 +258,8 @@ namespace prev::xr {
         return physicalDeviceFromXR;
     }
 
-    void OpenXr::InitializeGraphicsBinding(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex) {
+    void OpenXr::InitializeGraphicsBinding(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex)
+    {
         m_graphicsBinding = {XR_TYPE_GRAPHICS_BINDING_VULKAN_KHR};
         m_graphicsBinding.instance = instance;
         m_graphicsBinding.physicalDevice = physicalDevice;
@@ -256,11 +268,13 @@ namespace prev::xr {
         m_graphicsBinding.queueIndex = queueIndex;
     }
 
-    void OpenXr::DestroyGraphicsBinding() {
+    void OpenXr::DestroyGraphicsBinding()
+    {
         m_graphicsBinding = {};
     }
 
-    void OpenXr::CreateReferenceSpace() {
+    void OpenXr::CreateReferenceSpace()
+    {
         // Fill out an XrReferenceSpaceCreateInfo structure and create a reference XrSpace, specifying a Local space with an identity pose as the origin.
         XrReferenceSpaceCreateInfo referenceSpaceCI{XR_TYPE_REFERENCE_SPACE_CREATE_INFO};
         referenceSpaceCI.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_LOCAL;
@@ -269,20 +283,27 @@ namespace prev::xr {
         OPENXR_CHECK(xrCreateReferenceSpace(m_session, &referenceSpaceCI, &m_localSpace), "Failed to create ReferenceSpace.");
     }
 
-    void OpenXr::DestroyReferenceSpace() {
+    void OpenXr::DestroyReferenceSpace()
+    {
         // Destroy the reference XrSpace.
         OPENXR_CHECK(xrDestroySpace(m_localSpace), "Failed to destroy Space.")
     }
 
-    void OpenXr::CreateSwapchains() {
+    void OpenXr::CreateSwapchains()
+    {
         // Get the supported swapchain formats as an array of int64_t and ordered by runtime preference.
         uint32_t formatCount = 0;
         OPENXR_CHECK(xrEnumerateSwapchainFormats(m_session, 0, &formatCount, nullptr), "Failed to enumerate Swapchain Formats");
         std::vector<int64_t> formats(formatCount);
         OPENXR_CHECK(xrEnumerateSwapchainFormats(m_session, formatCount, &formatCount, formats.data()), "Failed to enumerate Swapchain Formats");
 
-        auto formatIter = std::find(formats.begin(), formats.end(), m_preferredDepthFormat);
-        if (formatIter == formats.cend()) {
+        auto colorFormatIter = std::find(formats.begin(), formats.end(), m_preferredColorFormat);
+        if (colorFormatIter == formats.cend()) {
+            LOGE("Failed to find color format for Swapchain.");
+        }
+
+        auto depthFormatIter = std::find(formats.begin(), formats.end(), m_preferredDepthFormat);
+        if (depthFormatIter == formats.cend()) {
             LOGE("Failed to find depth format for Swapchain.");
         }
 
@@ -297,37 +318,22 @@ namespace prev::xr {
         }
 
         const XrViewConfigurationView &viewConfigurationView = m_viewConfigurationViews[0];
-        uint32_t viewCount = static_cast<uint32_t>(m_viewConfigurationViews.size());
+        const uint32_t viewCount = static_cast<uint32_t>(m_viewConfigurationViews.size());
 
-        // Create a color and depth swapchain, and their associated image views.
-        // Fill out an XrSwapchainCreateInfo structure and create an XrSwapchain.
-        // Color.
-        XrSwapchainCreateInfo swapchainCI{XR_TYPE_SWAPCHAIN_CREATE_INFO};
-        swapchainCI.createFlags = 0;
-        swapchainCI.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
-        swapchainCI.format = m_preferredColorFormat;
-        swapchainCI.sampleCount = viewConfigurationView.recommendedSwapchainSampleCount;  // Use the recommended values from the XrViewConfigurationView.
-        swapchainCI.width = viewConfigurationView.recommendedImageRectWidth;
-        swapchainCI.height = viewConfigurationView.recommendedImageRectHeight;
-        swapchainCI.faceCount = 1;
-        swapchainCI.arraySize = viewCount;
-        swapchainCI.mipCount = 1;
+        // Color
+        XrSwapchainCreateInfo colorSwapchainCI{XR_TYPE_SWAPCHAIN_CREATE_INFO};
+        colorSwapchainCI.createFlags = 0;
+        colorSwapchainCI.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
+        colorSwapchainCI.format = m_preferredColorFormat;
+        colorSwapchainCI.sampleCount = viewConfigurationView.recommendedSwapchainSampleCount;  // Use the recommended values from the XrViewConfigurationView.
+        colorSwapchainCI.width = viewConfigurationView.recommendedImageRectWidth;
+        colorSwapchainCI.height = viewConfigurationView.recommendedImageRectHeight;
+        colorSwapchainCI.faceCount = 1;
+        colorSwapchainCI.arraySize = viewCount;
+        colorSwapchainCI.mipCount = 1;
 
-        OPENXR_CHECK(xrCreateSwapchain(m_session, &swapchainCI, &m_colorSwapchainInfo.swapchain), "Failed to create Color Swapchain");
-        m_colorSwapchainInfo.swapchainFormat = static_cast<VkFormat>(swapchainCI.format);  // Save the swapchain format for later use.
-
-        // Depth.
-        swapchainCI.createFlags = 0;
-        swapchainCI.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-        swapchainCI.format = m_preferredDepthFormat;
-        swapchainCI.sampleCount = viewConfigurationView.recommendedSwapchainSampleCount;  // Use the recommended values from the XrViewConfigurationView.
-        swapchainCI.width = viewConfigurationView.recommendedImageRectWidth;
-        swapchainCI.height = viewConfigurationView.recommendedImageRectHeight;
-        swapchainCI.faceCount = 1;
-        swapchainCI.arraySize = viewCount;
-        swapchainCI.mipCount = 1;
-        OPENXR_CHECK(xrCreateSwapchain(m_session, &swapchainCI, &m_depthSwapchainInfo.swapchain), "Failed to create Depth Swapchain");
-        m_depthSwapchainInfo.swapchainFormat = static_cast<VkFormat>(swapchainCI.format);  // Save the swapchain format for later use.
+        OPENXR_CHECK(xrCreateSwapchain(m_session, &colorSwapchainCI, &m_colorSwapchainInfo.swapchain), "Failed to create Color Swapchain");
+        m_colorSwapchainInfo.swapchainFormat = static_cast<VkFormat>(colorSwapchainCI.format);  // Save the swapchain format for later use.
 
         // Get the number of images in the color/depth swapchain and allocate Swapchain image data via GraphicsAPI to store the returned array.
         uint32_t colorSwapchainImageCount = 0;
@@ -337,8 +343,28 @@ namespace prev::xr {
         swapchainImagesMap[m_colorSwapchainInfo.swapchain].second.resize(colorSwapchainImageCount, {XR_TYPE_SWAPCHAIN_IMAGE_VULKAN_KHR});
         XrSwapchainImageBaseHeader *colorSwapchainImages = reinterpret_cast<XrSwapchainImageBaseHeader *>(swapchainImagesMap[m_colorSwapchainInfo.swapchain].second.data());
 
-        OPENXR_CHECK(xrEnumerateSwapchainImages(m_colorSwapchainInfo.swapchain, colorSwapchainImageCount, &colorSwapchainImageCount, colorSwapchainImages),
-                     "Failed to enumerate Color Swapchain Images.");
+        OPENXR_CHECK(xrEnumerateSwapchainImages(m_colorSwapchainInfo.swapchain, colorSwapchainImageCount, &colorSwapchainImageCount, colorSwapchainImages), "Failed to enumerate Color Swapchain Images.");
+
+        for (uint32_t j = 0; j < colorSwapchainImageCount; ++j) {
+            const auto image{swapchainImagesMap[m_colorSwapchainInfo.swapchain].second[j].image};
+            const auto imageView{prev::util::vk::CreateImageView(m_graphicsBinding.device, image, m_preferredColorFormat, VK_IMAGE_VIEW_TYPE_2D_ARRAY, 1, VK_IMAGE_ASPECT_COLOR_BIT, viewCount, 0)};
+            m_colorSwapchainInfo.images.push_back(image);
+            m_colorSwapchainInfo.imageViews.push_back(imageView);
+        }
+
+        // Depth.
+        XrSwapchainCreateInfo depthSwapchainCI{XR_TYPE_SWAPCHAIN_CREATE_INFO};
+        depthSwapchainCI.createFlags = 0;
+        depthSwapchainCI.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+        depthSwapchainCI.format = m_preferredDepthFormat;
+        depthSwapchainCI.sampleCount = viewConfigurationView.recommendedSwapchainSampleCount;  // Use the recommended values from the XrViewConfigurationView.
+        depthSwapchainCI.width = viewConfigurationView.recommendedImageRectWidth;
+        depthSwapchainCI.height = viewConfigurationView.recommendedImageRectHeight;
+        depthSwapchainCI.faceCount = 1;
+        depthSwapchainCI.arraySize = viewCount;
+        depthSwapchainCI.mipCount = 1;
+        OPENXR_CHECK(xrCreateSwapchain(m_session, &depthSwapchainCI, &m_depthSwapchainInfo.swapchain), "Failed to create Depth Swapchain");
+        m_depthSwapchainInfo.swapchainFormat = static_cast<VkFormat>(depthSwapchainCI.format);  // Save the swapchain format for later use.
 
         uint32_t depthSwapchainImageCount = 0;
         OPENXR_CHECK(xrEnumerateSwapchainImages(m_depthSwapchainInfo.swapchain, 0, &depthSwapchainImageCount, nullptr), "Failed to enumerate Depth Swapchain Images.");
@@ -347,16 +373,8 @@ namespace prev::xr {
         swapchainImagesMap[m_depthSwapchainInfo.swapchain].second.resize(depthSwapchainImageCount, {XR_TYPE_SWAPCHAIN_IMAGE_VULKAN_KHR});
         XrSwapchainImageBaseHeader *depthSwapchainImages = reinterpret_cast<XrSwapchainImageBaseHeader *>(swapchainImagesMap[m_depthSwapchainInfo.swapchain].second.data());
 
-        OPENXR_CHECK(xrEnumerateSwapchainImages(m_depthSwapchainInfo.swapchain, depthSwapchainImageCount, &depthSwapchainImageCount, depthSwapchainImages),
-                     "Failed to enumerate Depth Swapchain Images.");
+        OPENXR_CHECK(xrEnumerateSwapchainImages(m_depthSwapchainInfo.swapchain, depthSwapchainImageCount, &depthSwapchainImageCount, depthSwapchainImages), "Failed to enumerate Depth Swapchain Images.");
 
-        // Per image in the swapchains, fill out a GraphicsAPI::ImageViewCreateInfo structure and create a color/depth image view.
-        for (uint32_t j = 0; j < colorSwapchainImageCount; ++j) {
-            const auto image{swapchainImagesMap[m_colorSwapchainInfo.swapchain].second[j].image};
-            const auto imageView{prev::util::vk::CreateImageView(m_graphicsBinding.device, image, m_preferredColorFormat, VK_IMAGE_VIEW_TYPE_2D_ARRAY, 1, VK_IMAGE_ASPECT_COLOR_BIT, viewCount, 0)};
-            m_colorSwapchainInfo.images.push_back(image);
-            m_colorSwapchainInfo.imageViews.push_back(imageView);
-        }
         for (uint32_t j = 0; j < depthSwapchainImageCount; ++j) {
             const auto image{swapchainImagesMap[m_depthSwapchainInfo.swapchain].second[j].image};
             const auto imageView{prev::util::vk::CreateImageView(m_graphicsBinding.device, image, m_preferredDepthFormat, VK_IMAGE_VIEW_TYPE_2D_ARRAY, 1, VK_IMAGE_ASPECT_DEPTH_BIT, viewCount, 0)};
@@ -365,7 +383,8 @@ namespace prev::xr {
         }
     }
 
-    void OpenXr::DestroySwapchains() {
+    void OpenXr::DestroySwapchains()
+    {
         // Destroy the color and depth image views from GraphicsAPI.
         for (auto& imageView: m_colorSwapchainInfo.imageViews) {
             vkDestroyImageView(m_graphicsBinding.device, imageView, VK_NULL_HANDLE);
@@ -385,7 +404,8 @@ namespace prev::xr {
         OPENXR_CHECK(xrDestroySwapchain(m_depthSwapchainInfo.swapchain), "Failed to destroy Depth Swapchain");
     }
 
-    void OpenXr::CreateSession() {
+    void OpenXr::CreateSession()
+    {
         // Create an XrSessionCreateInfo structure.
         XrSessionCreateInfo sessionCI{XR_TYPE_SESSION_CREATE_INFO};
         sessionCI.next = &m_graphicsBinding;
@@ -399,7 +419,8 @@ namespace prev::xr {
         AttachActionSet();
     }
 
-    void OpenXr::DestroySession() {
+    void OpenXr::DestroySession()
+    {
         DestroySwapchains();
         DestroyReferenceSpace();
 
@@ -604,14 +625,16 @@ namespace prev::xr {
         return true;
     }
 
-    void OpenXr::operator() (const XrCameraFeedbackEvent& event) {
+    void OpenXr::operator() (const XrCameraFeedbackEvent& event)
+    {
         m_nearClippingPlane = event.nearClippingPlane;
         m_farClippingPlane = event.fatClippingPlane;
         m_minDepth = event.minDepth;
         m_maxDepth = event.maxDepth;
     }
 
-    void OpenXr::CreateInstance() {
+    void OpenXr::CreateInstance()
+    {
         XrApplicationInfo AI;
         strncpy(AI.applicationName, "OpenXR PreVEngineTest", XR_MAX_APPLICATION_NAME_SIZE);
         AI.applicationVersion = 1;
@@ -694,12 +717,14 @@ namespace prev::xr {
         LoadXrFunctions(m_xrInstance);
     }
 
-    void OpenXr::DestroyInstance() {
+    void OpenXr::DestroyInstance()
+    {
         // Destroy the XrInstance.
         OPENXR_CHECK(xrDestroyInstance(m_xrInstance), "Failed to destroy Instance.");
     }
 
-    void OpenXr::CreateDebugMessenger() {
+    void OpenXr::CreateDebugMessenger()
+    {
         // Check that "XR_EXT_debug_utils" is in the active Instance Extensions before creating an XrDebugUtilsMessengerEXT.
         if (IsStringInVector(m_activeInstanceExtensions, XR_EXT_DEBUG_UTILS_EXTENSION_NAME)) {
             m_debugUtilsMessenger = CreateOpenXrDebugUtilsMessenger(m_xrInstance);  // From OpenXRDebugUtils.h.
@@ -712,16 +737,18 @@ namespace prev::xr {
         }
     }
 
-    void OpenXr::GetInstanceProperties() {
+    void OpenXr::GetInstanceProperties()
+    {
         // Get the instance's properties and log the runtime name and version.
 
         XrInstanceProperties instanceProperties{XR_TYPE_INSTANCE_PROPERTIES};
         OPENXR_CHECK(xrGetInstanceProperties(m_xrInstance, &instanceProperties), "Failed to get InstanceProperties.");
 
-        LOGI("OpenXR Runtime: %s - %d.%d.%d\n", instanceProperties.runtimeName, XR_VERSION_MAJOR(instanceProperties.runtimeVersion), XR_VERSION_MINOR(instanceProperties.runtimeVersion), XR_VERSION_PATCH(instanceProperties.runtimeVersion));
+        LOGI("OpenXR Runtime: %s - %d.%d.%d", instanceProperties.runtimeName, XR_VERSION_MAJOR(instanceProperties.runtimeVersion), XR_VERSION_MINOR(instanceProperties.runtimeVersion), XR_VERSION_PATCH(instanceProperties.runtimeVersion));
     }
 
-    void OpenXr::GetSystemID() {
+    void OpenXr::GetSystemID()
+    {
         // Get the XrSystemId from the instance and the supplied XrFormFactor.
         XrSystemGetInfo systemGI{XR_TYPE_SYSTEM_GET_INFO};
         systemGI.formFactor = XR_FORM_FACTOR_HEAD_MOUNTED_DISPLAY;
@@ -731,7 +758,8 @@ namespace prev::xr {
         OPENXR_CHECK(xrGetSystemProperties(m_xrInstance, m_systemID, &m_systemProperties), "Failed to get SystemProperties.");
     }
 
-    void OpenXr::GetViewConfigurationViews() {
+    void OpenXr::GetViewConfigurationViews()
+    {
         // Gets the View Configuration Types. The first call gets the count of the array that will be returned. The next call fills out the array.
         uint32_t viewConfigurationCount = 0;
         OPENXR_CHECK(xrEnumerateViewConfigurations(m_xrInstance, m_systemID, 0, &viewConfigurationCount, nullptr), "Failed to enumerate View Configurations.");
@@ -761,7 +789,8 @@ namespace prev::xr {
         }
     }
 
-    void OpenXr::GetEnvironmentBlendModes() {
+    void OpenXr::GetEnvironmentBlendModes()
+    {
         // Retrieves the available blend modes. The first call gets the count of the array that will be returned. The next call fills out the array.
         uint32_t environmentBlendModeCount = 0;
         OPENXR_CHECK(xrEnumerateEnvironmentBlendModes(m_xrInstance, m_systemID, m_viewConfiguration, 0, &environmentBlendModeCount, nullptr), "Failed to enumerate EnvironmentBlend Modes.");
