@@ -506,17 +506,13 @@ namespace prev::xr {
         }
         m_frameState = frameState;
 
-        // TODO rework m_renderLayerInfo
-        m_renderLayerInfo = {};
-        m_renderLayerInfo.predictedDisplayTime = frameState.predictedDisplayTime;
-
         // Locate the views from the view configuration within the (reference) space at the display time.
         std::vector<XrView> views(m_viewConfigurationViews.size(), {XR_TYPE_VIEW});
 
         XrViewState viewState{XR_TYPE_VIEW_STATE};  // Will contain information on whether the position and/or orientation is valid and/or tracked.
         XrViewLocateInfo viewLocateInfo{XR_TYPE_VIEW_LOCATE_INFO};
         viewLocateInfo.viewConfigurationType = m_viewConfiguration;
-        viewLocateInfo.displayTime = m_renderLayerInfo.predictedDisplayTime;
+        viewLocateInfo.displayTime = frameState.predictedDisplayTime;
         viewLocateInfo.space = m_localSpace;
         uint32_t viewCount = 0;
         XrResult result = xrLocateViews(m_session, &viewLocateInfo, &viewState, static_cast<uint32_t>(views.size()), &viewCount, views.data());
@@ -534,7 +530,7 @@ namespace prev::xr {
         event.count = static_cast<uint32_t>(views.size());
         prev::event::EventChannel::Post(event);
 
-        // Resize the layer projection views to match the view count. The layer projection views are used in the layer projection.
+        m_renderLayerInfo.predictedDisplayTime = frameState.predictedDisplayTime;
         m_renderLayerInfo.layerProjectionViews.resize(viewCount, {XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW});
         m_renderLayerInfo.layerDepthInfos.resize(viewCount, {XR_TYPE_COMPOSITION_LAYER_DEPTH_INFO_KHR});
 
@@ -601,17 +597,12 @@ namespace prev::xr {
         OPENXR_CHECK(xrReleaseSwapchainImage(m_colorSwapchainInfo.swapchain, &releaseInfo), "Failed to release Image back to the Color Swapchain");
         OPENXR_CHECK(xrReleaseSwapchainImage(m_depthSwapchainInfo.swapchain, &releaseInfo), "Failed to release Image back to the Depth Swapchain");
 
-        // TODO rework this
-        // Fill out the XrCompositionLayerProjection structure for usage with xrEndFrame().
         m_renderLayerInfo.layerProjection.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT | XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
         m_renderLayerInfo.layerProjection.space = m_localSpace;
         m_renderLayerInfo.layerProjection.viewCount = static_cast<uint32_t>(m_renderLayerInfo.layerProjectionViews.size());
         m_renderLayerInfo.layerProjection.views = m_renderLayerInfo.layerProjectionViews.data();
 
-        // TODO rework this
-        if(m_renderLayerInfo.layers.empty()) {
-            m_renderLayerInfo.layers.resize(1);
-        }
+        m_renderLayerInfo.layers.resize(1);
         m_renderLayerInfo.layers[0] = reinterpret_cast<XrCompositionLayerBaseHeader *>(&m_renderLayerInfo.layerProjection);
 
         // Tell OpenXR that we are finished with this frame; specifying its display time, environment blending and layers.
@@ -621,7 +612,6 @@ namespace prev::xr {
         frameEndInfo.layerCount = static_cast<uint32_t>(m_renderLayerInfo.layers.size());
         frameEndInfo.layers = m_renderLayerInfo.layers.data();
         OPENXR_CHECK(xrEndFrame(m_session, &frameEndInfo), "Failed to end the XR Frame.");
-
         return true;
     }
 
