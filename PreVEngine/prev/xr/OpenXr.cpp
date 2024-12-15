@@ -201,6 +201,28 @@ namespace prev::xr {
             return extensions;
         }
 
+        XrPath ConvertStringToXrPath(const XrInstance xrInstance, const char* pathString)
+        {
+            XrPath xrPath;
+            OPENXR_CHECK(xrStringToPath(xrInstance, pathString, &xrPath), "Failed to create XrPath from string.");
+            return xrPath;
+        }
+
+        std::string ConvertXrPathToString(const XrInstance xrInstance, const XrPath& path)
+        {
+            uint32_t strl;
+            char text[XR_MAX_PATH_LENGTH];
+            XrResult res;
+            res = xrPathToString(xrInstance, path, XR_MAX_PATH_LENGTH, &strl, text);
+            std::string str;
+            if (res == XR_SUCCESS) {
+                str = text;
+            } else {
+                OPENXR_CHECK(res, "Failed to retrieve path.");
+            }
+            return str;
+        }
+
         void LoadXrFunctions(XrInstance m_xrInstance)
         {
             OPENXR_CHECK(xrGetInstanceProcAddr(m_xrInstance, "xrCreateDebugUtilsMessengerEXT", (PFN_xrVoidFunction *) &xrCreateDebugUtilsMessengerEXT), "Failed to get xrCreateDebugUtilsMessengerEXT.");
@@ -227,7 +249,10 @@ namespace prev::xr {
         CreateDebugMessenger();
         GetInstanceProperties();
         GetSystemID();
+
         CreateActionSet();
+        SuggestBindings();
+
         GetViewConfigurationViews();
         GetEnvironmentBlendModes();
     }
@@ -414,9 +439,11 @@ namespace prev::xr {
 
         OPENXR_CHECK(xrCreateSession(m_xrInstance, &sessionCI, &m_session), "Failed to create Session.");
 
+        CreateActionPoses();
+        AttachActionSet();
+
         CreateReferenceSpace();
         CreateSwapchains();
-        AttachActionSet();
     }
 
     void OpenXr::DestroySession()
@@ -476,12 +503,6 @@ namespace prev::xr {
     float OpenXr::GetCurrentDeltaTime() const
     {
         return m_currentDeltaTime;
-    }
-
-    void OpenXr::Update()
-    {
-        PollEvents();
-        PollAction();
     }
 
     bool OpenXr::BeginFrame()
@@ -720,7 +741,9 @@ namespace prev::xr {
             m_debugUtilsMessenger = CreateOpenXrDebugUtilsMessenger(m_xrInstance);  // From OpenXRDebugUtils.h.
         }
     }
-    void OpenXr::DestroyDebugMessenger() {
+
+    void OpenXr::DestroyDebugMessenger()
+    {
         // Check that "XR_EXT_debug_utils" is in the active Instance Extensions before destroying the XrDebugUtilsMessengerEXT.
         if (m_debugUtilsMessenger != XR_NULL_HANDLE) {
             DestroyOpenXrDebugUtilsMessenger(m_xrInstance, m_debugUtilsMessenger);  // From OpenXRDebugUtils.h.
@@ -730,7 +753,6 @@ namespace prev::xr {
     void OpenXr::GetInstanceProperties()
     {
         // Get the instance's properties and log the runtime name and version.
-
         XrInstanceProperties instanceProperties{XR_TYPE_INSTANCE_PROPERTIES};
         OPENXR_CHECK(xrGetInstanceProperties(m_xrInstance, &instanceProperties), "Failed to get InstanceProperties.");
 
@@ -803,13 +825,37 @@ namespace prev::xr {
     void OpenXr::CreateActionSet()
     {
         XrActionSetCreateInfo actionSetCI{XR_TYPE_ACTION_SET_CREATE_INFO};
-        // The internal name the runtime uses for this Action Set.
-        strncpy(actionSetCI.actionSetName, "openxr-tutorial-actionset", XR_MAX_ACTION_SET_NAME_SIZE);
-        // Localized names are required so there is a human-readable action name to show the user if they are rebinding Actions in an options screen.
-        strncpy(actionSetCI.localizedActionSetName, "OpenXR Tutorial ActionSet", XR_MAX_LOCALIZED_ACTION_SET_NAME_SIZE);
-        OPENXR_CHECK(xrCreateActionSet(m_xrInstance, &actionSetCI, &m_actionSet), "Failed to create ActionSet.");
-        // Set a priority: this comes into play when we have multiple Action Sets, and determines which Action takes priority in binding to a specific input.
         actionSetCI.priority = 0;
+        strncpy(actionSetCI.actionSetName, "pre-v-engine-action-set", XR_MAX_ACTION_SET_NAME_SIZE);
+        strncpy(actionSetCI.localizedActionSetName, "pre-v-engine-action-set", XR_MAX_LOCALIZED_ACTION_SET_NAME_SIZE);
+        OPENXR_CHECK(xrCreateActionSet(m_xrInstance, &actionSetCI, &m_actionSet), "Failed to create ActionSet.");
+
+        auto CreateAction = [this](const char* name, const XrActionType xrActionType, std::vector<const char*> subactionPaths = {}) -> XrAction {
+            XrActionCreateInfo actionCI{XR_TYPE_ACTION_CREATE_INFO};
+            actionCI.actionType = xrActionType;
+            std::vector<XrPath> subactionXrPaths;
+            for (const auto& p : subactionPaths) {
+                subactionXrPaths.push_back(ConvertStringToXrPath(m_xrInstance, p));
+            }
+            actionCI.countSubactionPaths = static_cast<uint32_t>(subactionXrPaths.size());
+            actionCI.subactionPaths = subactionXrPaths.data();
+            // The internal name the runtime uses for this Action.
+            strncpy(actionCI.actionName, name, XR_MAX_ACTION_NAME_SIZE);
+            // Localized names are required so there is a human-readable action name to show the user if they are rebinding the Action in an options screen.
+            strncpy(actionCI.localizedActionName, name, XR_MAX_LOCALIZED_ACTION_NAME_SIZE);
+
+            XrAction xrAction{};
+            OPENXR_CHECK(xrCreateAction(m_actionSet, &actionCI, &xrAction), "Failed to create Action.");
+            return xrAction;
+        };
+
+        // TODO - read this from a file - make a general action mechanism?
+        m_squeezeAction = CreateAction("squeeze", XR_ACTION_TYPE_FLOAT_INPUT, {"/user/hand/left", "/user/hand/right"});
+        m_triggerAction = CreateAction("trigger", XR_ACTION_TYPE_BOOLEAN_INPUT, {"/user/hand/left", "/user/hand/right"});
+        m_palmPoseAction = CreateAction("pose", XR_ACTION_TYPE_POSE_INPUT, {"/user/hand/left", "/user/hand/right"});
+
+        m_handPaths[0] = ConvertStringToXrPath(m_xrInstance, "/user/hand/left");
+        m_handPaths[1] = ConvertStringToXrPath(m_xrInstance, "/user/hand/right");
     }
 
     void OpenXr::DestroyActionSet()
@@ -863,9 +909,7 @@ namespace prev::xr {
                         LOGW("XrEventDataInteractionProfileChanged for unknown Session");
                         break;
                     }
-
-                    //RecordCurrentBindings();
-
+                    RecordCurrentBindings();
                     break;
                 }
                     // Log that there's a reference space change pending.
@@ -920,16 +964,126 @@ namespace prev::xr {
         }
     }
 
-    void OpenXr::PollAction()
+    void OpenXr::PollActions()
     {
-        // poll actions
         XrActiveActionSet activeActionSet{};
         activeActionSet.actionSet = m_actionSet;
         activeActionSet.subactionPath = XR_NULL_PATH;
-        // Now we sync the Actions to make sure they have current data.
+
         XrActionsSyncInfo actionsSyncInfo{XR_TYPE_ACTIONS_SYNC_INFO};
         actionsSyncInfo.countActiveActionSets = 1;
         actionsSyncInfo.activeActionSets = &activeActionSet;
         OPENXR_CHECK(xrSyncActions(m_session, &actionsSyncInfo), "Failed to sync Actions.");
+
+        XrHandsEvent handsEvent{};
+        for (int i = 0; i < 2; ++i) {
+            auto& handPoseState{ m_handPoseState[i] };
+            auto& handPose{ m_handPose[i] };
+            auto& squeezeState{ m_squeezeState[i] };
+            auto& triggerState{ m_triggerState[i] };
+
+            XrActionStateGetInfo poseActionStateGetInfo{XR_TYPE_ACTION_STATE_GET_INFO};
+            poseActionStateGetInfo.action = m_palmPoseAction;
+            poseActionStateGetInfo.subactionPath = m_handPaths[i];
+            OPENXR_CHECK(xrGetActionStatePose(m_session, &poseActionStateGetInfo, &handPoseState), "Failed to get Pose State.");
+            if (handPoseState.isActive) {
+                XrSpaceLocation spaceLocation{XR_TYPE_SPACE_LOCATION};
+                XrResult res = xrLocateSpace(m_handPoseSpace[i], m_localSpace, m_frameState.predictedDisplayTime, &spaceLocation);
+                if (XR_UNQUALIFIED_SUCCESS(res) && (spaceLocation.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) != 0 && (spaceLocation.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT) != 0) {
+                    handPose = spaceLocation.pose;
+                } else {
+                    handPoseState.isActive = false;
+                }
+            }
+
+            XrActionStateGetInfo squeezeActionStateGetInfo{XR_TYPE_ACTION_STATE_GET_INFO};
+            squeezeActionStateGetInfo.action = m_squeezeAction;
+            squeezeActionStateGetInfo.subactionPath = m_handPaths[i];
+            OPENXR_CHECK(xrGetActionStateFloat(m_session, &squeezeActionStateGetInfo, &m_squeezeState[i]), "Failed to get Float State of squeeze action.");
+
+            XrActionStateGetInfo triggerActionStateGetInfo{XR_TYPE_ACTION_STATE_GET_INFO};
+            triggerActionStateGetInfo.action = m_triggerAction;
+            triggerActionStateGetInfo.subactionPath = m_handPaths[i];
+            OPENXR_CHECK(xrGetActionStateBoolean(m_session, &triggerActionStateGetInfo, &m_triggerState[i]), "Failed to get Boolean State of trigger action.");
+
+            auto& handEvent{ handsEvent.hands[i] };
+            handEvent.type = i == 0 ? HandType::LEFT : HandType::RIGHT;
+            handEvent.active = handPoseState.isActive;
+            handEvent.pose = prev::util::math::Pose{ { handPose.orientation.w, handPose.orientation.x, handPose.orientation.y, handPose.orientation.z }, { handPose.position.x, handPose.position.y, handPose.position.z } };
+            handEvent.flags = {};
+            handEvent.flags |= (squeezeState.isActive == XR_TRUE) ? HandEventFlags::SQUEEZE : HandEventFlags::NONE;
+            handEvent.flags |= (triggerState.isActive == XR_TRUE && triggerState.currentState == XR_FALSE && triggerState.changedSinceLastSync == XR_TRUE) ? HandEventFlags::TRIGGER : HandEventFlags::NONE;
+            handEvent.squeeze = squeezeState.currentState;
+        }
+        prev::event::EventChannel::Post(handsEvent);
+    }
+
+    bool OpenXr::SuggestBindings()
+    {
+        auto SuggestBindings = [](const XrInstance instance, const char* profilePath, const std::vector<XrActionSuggestedBinding>& bindings) -> bool {
+            XrInteractionProfileSuggestedBinding interactionProfileSuggestedBinding{XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING};
+            interactionProfileSuggestedBinding.interactionProfile = ConvertStringToXrPath(instance, profilePath);
+            interactionProfileSuggestedBinding.suggestedBindings = bindings.data();
+            interactionProfileSuggestedBinding.countSuggestedBindings = static_cast<uint32_t>(bindings.size());
+            if (xrSuggestInteractionProfileBindings(instance, &interactionProfileSuggestedBinding) == XrResult::XR_SUCCESS) {
+                return true;
+            }
+            LOGI("Failed to suggest bindings with %s", profilePath);
+            return false;
+        };
+
+        bool anyOk{ false };
+        anyOk |= SuggestBindings(m_xrInstance, "/interaction_profiles/khr/simple_controller", {
+                                                                                  {m_triggerAction, ConvertStringToXrPath(m_xrInstance, "/user/hand/left/input/select/click")},
+                                                                                  {m_squeezeAction, ConvertStringToXrPath(m_xrInstance, "/user/hand/right/input/select/click")},
+                                                                                  {m_palmPoseAction, ConvertStringToXrPath(m_xrInstance, "/user/hand/left/input/grip/pose")},
+                                                                                  {m_palmPoseAction, ConvertStringToXrPath(m_xrInstance, "/user/hand/right/input/grip/pose")},
+        });
+
+        anyOk |= SuggestBindings(m_xrInstance, "/interaction_profiles/oculus/touch_controller", {
+                                                                                    {m_squeezeAction, ConvertStringToXrPath(m_xrInstance, "/user/hand/left/input/squeeze/value")},
+                                                                                    {m_squeezeAction, ConvertStringToXrPath(m_xrInstance, "/user/hand/right/input/squeeze/value")},
+                                                                                    {m_triggerAction, ConvertStringToXrPath(m_xrInstance, "/user/hand/left/input/trigger/value")},
+                                                                                    {m_triggerAction, ConvertStringToXrPath(m_xrInstance, "/user/hand/right/input/trigger/value")},
+                                                                                    {m_palmPoseAction, ConvertStringToXrPath(m_xrInstance, "/user/hand/left/input/grip/pose")},
+                                                                                    {m_palmPoseAction, ConvertStringToXrPath(m_xrInstance, "/user/hand/right/input/grip/pose")}
+        });
+        return anyOk;
+    }
+
+    void OpenXr::CreateActionPoses()
+    {
+        auto CreateActionPoseSpace = [](const XrInstance instance, const XrSession session, const XrAction xrAction, const char *subactionPath = nullptr) -> XrSpace {
+            const XrPosef xrPoseIdentity = {{0.0f, 0.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 0.0f}};
+            // Create frame of reference for a pose action
+            XrActionSpaceCreateInfo actionSpaceCI{XR_TYPE_ACTION_SPACE_CREATE_INFO};
+            actionSpaceCI.action = xrAction;
+            actionSpaceCI.poseInActionSpace = xrPoseIdentity;
+            if (subactionPath) {
+                actionSpaceCI.subactionPath = ConvertStringToXrPath(instance, subactionPath);
+            }
+
+            XrSpace xrSpace{};
+            OPENXR_CHECK(xrCreateActionSpace(session, &actionSpaceCI, &xrSpace), "Failed to create ActionSpace.");
+            return xrSpace;
+        };
+
+        m_handPoseSpace[0] = CreateActionPoseSpace(m_xrInstance, m_session, m_palmPoseAction, "/user/hand/left");
+        m_handPoseSpace[1] = CreateActionPoseSpace(m_xrInstance, m_session, m_palmPoseAction, "/user/hand/right");
+    }
+
+    void OpenXr::RecordCurrentBindings()
+    {
+        if (m_session) {
+            XrInteractionProfileState interactionProfile = {XR_TYPE_INTERACTION_PROFILE_STATE, 0, 0};
+            OPENXR_CHECK(xrGetCurrentInteractionProfile(m_session, m_handPaths[0], &interactionProfile), "Failed to get profile.");
+            if (interactionProfile.interactionProfile) {
+                LOGI("user/hand/left ActiveProfile: %s", ConvertXrPathToString(m_xrInstance, interactionProfile.interactionProfile).c_str());
+            }
+            OPENXR_CHECK(xrGetCurrentInteractionProfile(m_session, m_handPaths[1], &interactionProfile), "Failed to get profile.");
+            if (interactionProfile.interactionProfile) {
+                LOGI("user/hand/right ActiveProfile: %s", ConvertXrPathToString(m_xrInstance, interactionProfile.interactionProfile).c_str());
+            }
+        }
     }
 }

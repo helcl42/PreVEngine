@@ -57,6 +57,10 @@ bool DefaultEngineImpl::BeginFrame()
     return true;
 }
 
+void DefaultEngineImpl::PollActions()
+{
+}
+
 bool DefaultEngineImpl::EndFrame()
 {
     UpdateFps();

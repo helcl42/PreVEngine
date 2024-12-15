@@ -23,6 +23,8 @@ public:
 
     bool BeginFrame() override;
 
+    void PollActions() override;
+
     bool EndFrame() override;
 
 private:

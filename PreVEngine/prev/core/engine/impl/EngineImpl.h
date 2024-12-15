@@ -48,6 +48,8 @@ public:
 
     virtual bool BeginFrame() = 0;
 
+    virtual void PollActions() = 0;
+
     virtual bool EndFrame() = 0;
 
     virtual uint32_t GetViewCount() const = 0;
