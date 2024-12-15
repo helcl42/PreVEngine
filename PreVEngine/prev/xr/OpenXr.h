@@ -51,7 +51,9 @@ public:
 
     float GetCurrentDeltaTime() const;
 
-    void Update();
+    void PollEvents();
+
+    void PollActions();
 
     bool BeginFrame();
 
@@ -94,9 +96,11 @@ private:
 
     void DetachActionSet();
 
-    void PollEvents();
+    void CreateActionPoses();
 
-    void PollAction();
+    bool SuggestBindings();
+
+    void RecordCurrentBindings();
 
 private:
     XrInstance m_xrInstance = { XR_NULL_HANDLE };
@@ -129,7 +133,7 @@ private:
     bool m_applicationRunning{ true };
     bool m_sessionRunning{ false };
 
-    XrSpace m_localSpace = XR_NULL_HANDLE;
+    XrSpace m_localSpace = { XR_NULL_HANDLE };
 
     struct SwapchainInfo {
         XrSwapchain swapchain = { XR_NULL_HANDLE };
@@ -166,8 +170,22 @@ private:
     float m_minDepth{ 0.0f };
     float m_maxDepth{ 1.0f };
 
+    // inputs
     XrActionSet m_actionSet{};
 
+    XrAction m_squeezeAction{};
+    XrActionStateFloat m_squeezeState[2] = {{XR_TYPE_ACTION_STATE_FLOAT}, {XR_TYPE_ACTION_STATE_FLOAT}};
+
+    XrAction m_triggerAction{};
+    XrActionStateBoolean m_triggerState[2] = {{XR_TYPE_ACTION_STATE_BOOLEAN}, {XR_TYPE_ACTION_STATE_BOOLEAN}};
+
+    XrAction m_palmPoseAction{};
+    XrPath m_handPaths[2] = {0, 0};
+    XrSpace m_handPoseSpace[2];
+    XrActionStatePose m_handPoseState[2] = {{XR_TYPE_ACTION_STATE_POSE}, {XR_TYPE_ACTION_STATE_POSE}};
+    XrPosef m_handPose[2] = {
+            {{1.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}},
+            {{1.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}}};
 private:
     prev::event::EventHandler<OpenXr, XrCameraFeedbackEvent> m_cameraFeedbackHandler{ *this };
 };

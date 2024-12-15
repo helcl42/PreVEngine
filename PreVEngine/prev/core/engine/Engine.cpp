@@ -44,6 +44,8 @@ void Engine::MainLoop()
             continue;
         }
 
+        m_engineImpl->PollActions();
+
         auto& scene{ m_engineImpl->GetScene() };
         auto& rootRenderer{ m_engineImpl->GetRootRenderer() };
         auto& swapchain{ m_engineImpl->GetSwapchain() };

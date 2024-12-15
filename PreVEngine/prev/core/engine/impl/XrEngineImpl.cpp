@@ -55,7 +55,7 @@ void XrEngineImpl::ShutDown()
 bool XrEngineImpl::Update()
 {
     bool result{ m_window->ProcessEvents() };
-    m_openXr->Update();
+    m_openXr->PollEvents();
     m_clock->UpdateClock();
     return result;
 }
@@ -63,6 +63,11 @@ bool XrEngineImpl::Update()
 bool XrEngineImpl::BeginFrame()
 {
     return m_openXr->BeginFrame();
+}
+
+void XrEngineImpl::PollActions()
+{
+    m_openXr->PollActions();
 }
 
 bool XrEngineImpl::EndFrame()
