@@ -1,6 +1,8 @@
 #ifndef __XR_EVENTS_H__
 #define __XR_EVENTS_H__
 
+#ifdef ENABLE_XR
+
 #include "../common/Common.h"
 #include "../common/FlagSet.h"
 #include "../util/MathUtils.h"
@@ -44,5 +46,7 @@ namespace prev::xr {
         XrHandEvent hands[2] = {};
     };
 }
+
+#endif
 
 #endif

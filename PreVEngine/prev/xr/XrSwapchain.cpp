@@ -1,5 +1,7 @@
 #include "XrSwapchain.h"
 
+#ifdef ENABLE_XR
+
 #include "../render/buffer/ImageBufferBuilder.h"
 #include "../util/VkUtils.h"
 
@@ -174,3 +176,5 @@ namespace prev::xr {
         VKERRCHECK(m_graphicsQueue.Submit(1, &submitInfo, swapchainBuffer.fence));
     }
 } // namespace prev::render
+
+#endif

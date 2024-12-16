@@ -1,6 +1,8 @@
 #ifndef __OPEN_XR_H__
 #define __OPEN_XR_H__
 
+#ifdef ENABLE_XR
+
 #include "OpenXrCommon.h"
 #include "XrEvents.h"
 
@@ -190,5 +192,7 @@ private:
     prev::event::EventHandler<OpenXr, XrCameraFeedbackEvent> m_cameraFeedbackHandler{ *this };
 };
 }
+
+#endif
 
 #endif
