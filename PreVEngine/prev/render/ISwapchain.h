@@ -3,6 +3,8 @@
 
 #include "../core/Core.h"
 
+#include <vector>
+
 namespace prev::render {
     struct SwapChainFrameContext {
         VkFramebuffer frameBuffer{};
