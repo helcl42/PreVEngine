@@ -1,6 +1,8 @@
 #ifndef __OPEN_XR_COMMON_H__
 #define __OPEN_XR_COMMON_H__
 
+#ifdef ENABLE_XR
+
 #include "../core/Core.h"
 #include "../common/Logger.h"
 
@@ -18,5 +20,7 @@
             LOGE("OpenXR: %d - %s.", int(result), y); \
         }                                             \
     }
+
+#endif
 
 #endif //__OPEN_XR_COMMON_H__

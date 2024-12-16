@@ -1,6 +1,8 @@
 #ifndef __XR_SWAPCHAIN_H__
 #define __XR_SWAPCHAIN_H__
 
+#ifdef ENABLE_XR
+
 #include "OpenXr.h"
 
 #include "../render/ISwapchain.h"
@@ -95,5 +97,7 @@ private:
     std::unique_ptr<prev::render::buffer::ImageBuffer> m_msaaDepthBuffer{};
 };
 } // namespace prev::xr
+
+#endif
 
 #endif

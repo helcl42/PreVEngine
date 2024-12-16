@@ -1,5 +1,7 @@
 #include "XrEngineImpl.h"
 
+#ifdef ENABLE_XR
+
 #include "../../../xr/XrSwapchain.h"
 #include "../../device/DeviceFactory.h"
 
@@ -119,3 +121,5 @@ void XrEngineImpl::ResetSwapchain()
     m_swapchain->Print();
 }
 }
+
+#endif

@@ -1,4 +1,7 @@
 #include "OpenXr.h"
+
+#ifdef ENABLE_XR
+
 #include "XrEvents.h"
 
 #include "../event/EventChannel.h"
@@ -1087,3 +1090,5 @@ namespace prev::xr {
         }
     }
 }
+
+#endif

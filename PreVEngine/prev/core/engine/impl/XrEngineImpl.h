@@ -1,6 +1,8 @@
 #ifndef __XR_ENGINE_IMPL_H__
 #define __XR_ENGINE_IMPL_H__
 
+#ifdef ENABLE_XR
+
 #include "EngineImpl.h"
 
 #include "../../../xr/OpenXr.h"
@@ -42,5 +44,7 @@ private:
     std::unique_ptr<prev::xr::OpenXr> m_openXr{};
 };
 }
+
+#endif
 
 #endif
