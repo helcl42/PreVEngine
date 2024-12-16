@@ -10,6 +10,11 @@ DefaultEngineImpl::DefaultEngineImpl(const Config& config)
 {
 }
 
+DefaultEngineImpl::~DefaultEngineImpl()
+{
+    ShutDown();
+}
+
 uint32_t DefaultEngineImpl::GetViewCount() const
 {
     return 1;

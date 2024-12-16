@@ -31,7 +31,7 @@ public:
 
     void EndFrame() override;
 
-    void Print() const;
+    void Print() const override;
 
     const VkExtent2D& GetExtent() const override;
 

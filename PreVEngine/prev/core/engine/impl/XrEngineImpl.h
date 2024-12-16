@@ -10,7 +10,7 @@ class XrEngineImpl final : public EngineImpl {
 public:
     XrEngineImpl(const Config& config);
 
-    ~XrEngineImpl() = default;
+    ~XrEngineImpl();
 
 public:
     uint32_t GetViewCount() const override;

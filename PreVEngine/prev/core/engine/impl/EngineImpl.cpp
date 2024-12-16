@@ -8,8 +8,8 @@ namespace prev::core::engine::impl {
             : m_config{config} {
     }
 
-    EngineImpl::~EngineImpl() {
-        ShutDown();
+    EngineImpl::~EngineImpl()
+    {
     }
 
     prev::scene::IScene& EngineImpl::GetScene() const

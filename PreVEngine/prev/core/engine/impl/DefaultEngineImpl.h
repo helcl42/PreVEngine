@@ -8,7 +8,7 @@ class DefaultEngineImpl final : public EngineImpl {
 public:
     DefaultEngineImpl(const Config& config);
 
-    ~DefaultEngineImpl() = default;
+    ~DefaultEngineImpl();
 
 public:
     uint32_t GetViewCount() const override;

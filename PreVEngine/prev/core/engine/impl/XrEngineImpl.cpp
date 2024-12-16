@@ -9,6 +9,11 @@ XrEngineImpl::XrEngineImpl(const Config& config)
 {
 }
 
+XrEngineImpl::~XrEngineImpl()
+{
+    ShutDown();
+}
+
 uint32_t XrEngineImpl::GetViewCount() const
 {
     return m_openXr->GetViewCount();
