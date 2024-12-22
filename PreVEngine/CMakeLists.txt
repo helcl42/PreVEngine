@@ -83,6 +83,7 @@ if(WIN32)
     message("${PROJECT_NAME} - Windows")
     add_definitions(-DTARGET_PLATFORM_WINDOWS)
     add_definitions(-DVK_USE_PLATFORM_WIN32_KHR)
+    add_definitions(-DWIN32_LEAN_AND_MEAN)
 
     add_library(${PROJECT_NAME} STATIC ${SRC_LIST})
 
