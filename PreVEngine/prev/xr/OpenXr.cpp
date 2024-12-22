@@ -9,50 +9,28 @@
 
 #include <sstream>
 
-PFN_xrCreateDebugUtilsMessengerEXT xrCreateDebugUtilsMessengerEXT{};
-PFN_xrDestroyDebugUtilsMessengerEXT xrDestroyDebugUtilsMessengerEXT{};
-
-PFN_xrCreateHandTrackerEXT xrCreateHandTrackerEXT{};
-PFN_xrDestroyHandTrackerEXT xrDestroyHandTrackerEXT{};
-PFN_xrLocateHandJointsEXT xrLocateHandJointsEXT{};
-
-PFN_xrGetVulkanGraphicsRequirementsKHR xrGetVulkanGraphicsRequirementsKHR{};
-PFN_xrGetVulkanInstanceExtensionsKHR xrGetVulkanInstanceExtensionsKHR{};
-PFN_xrGetVulkanDeviceExtensionsKHR xrGetVulkanDeviceExtensionsKHR{};
-PFN_xrGetVulkanGraphicsDeviceKHR xrGetVulkanGraphicsDeviceKHR{};
-
-PFN_xrCreateFoveationProfileFB pfnCreateFoveationProfileFB{};
-PFN_xrDestroyFoveationProfileFB pfnDestroyFoveationProfileFB{};
-PFN_xrUpdateSwapchainFB pfnUpdateSwapchainFB{};
-
 namespace prev::xr {
     namespace {
-        const char* SessionStateToString(const XrSessionState state)
-        {
-            switch (state) {
-                case XR_SESSION_STATE_IDLE:
-                    return "XR_SESSION_STATE_IDLE";
-                case XR_SESSION_STATE_READY:
-                    return "XR_SESSION_STATE_READY";
-                case XR_SESSION_STATE_SYNCHRONIZED:
-                    return "XR_SESSION_STATE_SYNCHRONIZED";
-                case XR_SESSION_STATE_VISIBLE:
-                    return "XR_SESSION_STATE_VISIBLE";
-                case XR_SESSION_STATE_FOCUSED:
-                    return "XR_SESSION_STATE_FOCUSED";
-                case XR_SESSION_STATE_STOPPING:
-                    return "XR_SESSION_STATE_STOPPING";
-                case XR_SESSION_STATE_EXITING:
-                    return "XR_SESSION_STATE_EXITING";
-                default:
-                    return "XR_SESSION_STATE_UNKNOWN";
-            }
-        }
+        PFN_xrCreateDebugUtilsMessengerEXT xrCreateDebugUtilsMessengerEXT{};
+        PFN_xrDestroyDebugUtilsMessengerEXT xrDestroyDebugUtilsMessengerEXT{};
 
-        inline bool IsStringInVector(std::vector<const char *> list, const char *name)
+        PFN_xrCreateHandTrackerEXT xrCreateHandTrackerEXT{};
+        PFN_xrDestroyHandTrackerEXT xrDestroyHandTrackerEXT{};
+        PFN_xrLocateHandJointsEXT xrLocateHandJointsEXT{};
+
+        PFN_xrGetVulkanGraphicsRequirementsKHR xrGetVulkanGraphicsRequirementsKHR{};
+        PFN_xrGetVulkanInstanceExtensionsKHR xrGetVulkanInstanceExtensionsKHR{};
+        PFN_xrGetVulkanDeviceExtensionsKHR xrGetVulkanDeviceExtensionsKHR{};
+        PFN_xrGetVulkanGraphicsDeviceKHR xrGetVulkanGraphicsDeviceKHR{};
+
+        PFN_xrCreateFoveationProfileFB pfnCreateFoveationProfileFB{};
+        PFN_xrDestroyFoveationProfileFB pfnDestroyFoveationProfileFB{};
+        PFN_xrUpdateSwapchainFB pfnUpdateSwapchainFB{};
+
+        inline bool IsStringInVector(const std::vector<const char *>& list, const char *name)
         {
-            bool found = false;
-            for (auto &item: list) {
+            bool found{ false };
+            for (const auto &item: list) {
                 if (strcmp(name, item) == 0) {
                     found = true;
                     break;
@@ -145,7 +123,7 @@ namespace prev::xr {
             return XrBool32();
         }
 
-        XrDebugUtilsMessengerEXT CreateOpenXrDebugUtilsMessenger(XrInstance m_xrInstance)
+        XrDebugUtilsMessengerEXT CreateOpenXrDebugUtilsMessenger(const XrInstance xrInstance)
         {
             // Fill out a XrDebugUtilsMessengerCreateInfoEXT structure specifying all severities and types.
             // Set the userCallback to OpenXRMessageCallbackFunction().
@@ -161,16 +139,16 @@ namespace prev::xr {
             XrDebugUtilsMessengerEXT debugUtilsMessenger{};
 
             // Finally create and return the XrDebugUtilsMessengerEXT.
-            OPENXR_CHECK(xrCreateDebugUtilsMessengerEXT(m_xrInstance, &debugUtilsMessengerCI, &debugUtilsMessenger), "Failed to create DebugUtilsMessenger.");
+            OPENXR_CHECK(xrCreateDebugUtilsMessengerEXT(xrInstance, &debugUtilsMessengerCI, &debugUtilsMessenger), "Failed to create DebugUtilsMessenger.");
             return debugUtilsMessenger;
         }
 
-        void DestroyOpenXrDebugUtilsMessenger(XrInstance m_xrInstance, XrDebugUtilsMessengerEXT debugUtilsMessenger)
+        void DestroyOpenXrDebugUtilsMessenger(const XrInstance xrInstance, XrDebugUtilsMessengerEXT debugUtilsMessenger)
         {
             OPENXR_CHECK(xrDestroyDebugUtilsMessengerEXT(debugUtilsMessenger), "Failed to destroy DebugUtilsMessenger.");
         }
 
-        std::vector<std::string> GetInstanceExtensionsForOpenXr(XrInstance instance, XrSystemId systemId)
+        std::vector<std::string> GetInstanceExtensionsForOpenXr(const XrInstance instance, const XrSystemId systemId)
         {
             uint32_t extensionNamesSize = 0;
             OPENXR_CHECK(xrGetVulkanInstanceExtensionsKHR(instance, systemId, 0, &extensionNamesSize, nullptr), "Failed to get Vulkan Instance Extensions.");
@@ -187,7 +165,7 @@ namespace prev::xr {
             return extensions;
         }
 
-        std::vector<std::string> GetDeviceExtensionsForOpenXr(XrInstance instance, XrSystemId systemId)
+        std::vector<std::string> GetDeviceExtensionsForOpenXr(const XrInstance instance, const XrSystemId systemId)
         {
             uint32_t extensionNamesSize = 0;
             OPENXR_CHECK(xrGetVulkanDeviceExtensionsKHR(instance, systemId, 0, &extensionNamesSize, nullptr), "Failed to get Vulkan Device Extensions.");
@@ -226,23 +204,23 @@ namespace prev::xr {
             return str;
         }
 
-        void LoadXrFunctions(XrInstance m_xrInstance)
+        void LoadXrExtensionFunctions(const XrInstance xrInstance)
         {
-            OPENXR_CHECK(xrGetInstanceProcAddr(m_xrInstance, "xrCreateDebugUtilsMessengerEXT", (PFN_xrVoidFunction *) &xrCreateDebugUtilsMessengerEXT), "Failed to get xrCreateDebugUtilsMessengerEXT.");
-            OPENXR_CHECK(xrGetInstanceProcAddr(m_xrInstance, "xrDestroyDebugUtilsMessengerEXT", (PFN_xrVoidFunction *) &xrDestroyDebugUtilsMessengerEXT), "Failed to get xrDestroyDebugUtilsMessengerEXT.");
+            OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrCreateDebugUtilsMessengerEXT", (PFN_xrVoidFunction *) &xrCreateDebugUtilsMessengerEXT), "Failed to get xrCreateDebugUtilsMessengerEXT.");
+            OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrDestroyDebugUtilsMessengerEXT", (PFN_xrVoidFunction *) &xrDestroyDebugUtilsMessengerEXT), "Failed to get xrDestroyDebugUtilsMessengerEXT.");
 
-            OPENXR_CHECK(xrGetInstanceProcAddr(m_xrInstance, "xrCreateHandTrackerEXT", (PFN_xrVoidFunction *)&xrCreateHandTrackerEXT), "Failed to get xrCreateHandTrackerEXT.");
-            OPENXR_CHECK(xrGetInstanceProcAddr(m_xrInstance, "xrDestroyHandTrackerEXT", (PFN_xrVoidFunction *)&xrDestroyHandTrackerEXT), "Failed to get xrDestroyHandTrackerEXT.");
-            OPENXR_CHECK(xrGetInstanceProcAddr(m_xrInstance, "xrLocateHandJointsEXT", (PFN_xrVoidFunction *)&xrLocateHandJointsEXT), "Failed to get xrLocateHandJointsEXT.");
+            OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrCreateHandTrackerEXT", (PFN_xrVoidFunction *)&xrCreateHandTrackerEXT), "Failed to get xrCreateHandTrackerEXT.");
+            OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrDestroyHandTrackerEXT", (PFN_xrVoidFunction *)&xrDestroyHandTrackerEXT), "Failed to get xrDestroyHandTrackerEXT.");
+            OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrLocateHandJointsEXT", (PFN_xrVoidFunction *)&xrLocateHandJointsEXT), "Failed to get xrLocateHandJointsEXT.");
 
-            OPENXR_CHECK(xrGetInstanceProcAddr(m_xrInstance, "xrGetVulkanGraphicsRequirementsKHR", (PFN_xrVoidFunction *)&xrGetVulkanGraphicsRequirementsKHR), "Failed to get InstanceProcAddr for xrGetVulkanGraphicsRequirementsKHR.");
-            OPENXR_CHECK(xrGetInstanceProcAddr(m_xrInstance, "xrGetVulkanInstanceExtensionsKHR", (PFN_xrVoidFunction *)&xrGetVulkanInstanceExtensionsKHR), "Failed to get InstanceProcAddr for xrGetVulkanInstanceExtensionsKHR.");
-            OPENXR_CHECK(xrGetInstanceProcAddr(m_xrInstance, "xrGetVulkanDeviceExtensionsKHR", (PFN_xrVoidFunction *)&xrGetVulkanDeviceExtensionsKHR), "Failed to get InstanceProcAddr for xrGetVulkanDeviceExtensionsKHR.");
-            OPENXR_CHECK(xrGetInstanceProcAddr(m_xrInstance, "xrGetVulkanGraphicsDeviceKHR", (PFN_xrVoidFunction *)&xrGetVulkanGraphicsDeviceKHR), "Failed to get InstanceProcAddr for xrGetVulkanGraphicsDeviceKHR.");
+            OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrGetVulkanGraphicsRequirementsKHR", (PFN_xrVoidFunction *)&xrGetVulkanGraphicsRequirementsKHR), "Failed to get InstanceProcAddr for xrGetVulkanGraphicsRequirementsKHR.");
+            OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrGetVulkanInstanceExtensionsKHR", (PFN_xrVoidFunction *)&xrGetVulkanInstanceExtensionsKHR), "Failed to get InstanceProcAddr for xrGetVulkanInstanceExtensionsKHR.");
+            OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrGetVulkanDeviceExtensionsKHR", (PFN_xrVoidFunction *)&xrGetVulkanDeviceExtensionsKHR), "Failed to get InstanceProcAddr for xrGetVulkanDeviceExtensionsKHR.");
+            OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrGetVulkanGraphicsDeviceKHR", (PFN_xrVoidFunction *)&xrGetVulkanGraphicsDeviceKHR), "Failed to get InstanceProcAddr for xrGetVulkanGraphicsDeviceKHR.");
 
-            OPENXR_CHECK(xrGetInstanceProcAddr(m_xrInstance,"xrCreateFoveationProfileFB",(PFN_xrVoidFunction*)(&pfnCreateFoveationProfileFB)), "Could not find function xrCreateFoveationProfileFB");
-            OPENXR_CHECK(xrGetInstanceProcAddr(m_xrInstance, "xrDestroyFoveationProfileFB", (PFN_xrVoidFunction*)(&pfnDestroyFoveationProfileFB)), "Could not find function xrDestroyFoveationProfileFB");
-            OPENXR_CHECK(xrGetInstanceProcAddr(m_xrInstance, "xrUpdateSwapchainFB", (PFN_xrVoidFunction*)(&pfnUpdateSwapchainFB)), "Could not find function xrUpdateSwapchainFB");
+            OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance,"xrCreateFoveationProfileFB",(PFN_xrVoidFunction*)(&pfnCreateFoveationProfileFB)), "Could not find function xrCreateFoveationProfileFB");
+            OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrDestroyFoveationProfileFB", (PFN_xrVoidFunction*)(&pfnDestroyFoveationProfileFB)), "Could not find function xrDestroyFoveationProfileFB");
+            OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrUpdateSwapchainFB", (PFN_xrVoidFunction*)(&pfnUpdateSwapchainFB)), "Could not find function xrUpdateSwapchainFB");
         }
     }
 
@@ -728,7 +706,7 @@ namespace prev::xr {
         instanceCI.enabledExtensionNames = m_activeInstanceExtensions.data();
         OPENXR_CHECK(xrCreateInstance(&instanceCI, &m_xrInstance), "Failed to create Instance.");
 
-        LoadXrFunctions(m_xrInstance);
+        LoadXrExtensionFunctions(m_xrInstance);
     }
 
     void OpenXr::DestroyInstance()
@@ -789,7 +767,7 @@ namespace prev::xr {
             }
         }
         if (m_viewConfiguration == XR_VIEW_CONFIGURATION_TYPE_MAX_ENUM) {
-            LOGE("Failed to find a view configuration type. Defaulting to XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO.\n");
+            LOGE("Failed to find a view configuration type. Defaulting to XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO.");
             m_viewConfiguration = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
         }
 
@@ -893,13 +871,13 @@ namespace prev::xr {
                 // Log the number of lost events from the runtime.
                 case XR_TYPE_EVENT_DATA_EVENTS_LOST: {
                     XrEventDataEventsLost *eventsLost = reinterpret_cast<XrEventDataEventsLost *>(&eventData);
-                    LOGI("OPENXR: Events Lost: %d\n", eventsLost->lostEventCount);
+                    LOGI("OPENXR: Events Lost: %d", eventsLost->lostEventCount);
                     break;
                 }
                     // Log that an instance loss is pending and shutdown the application.
                 case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING: {
                     XrEventDataInstanceLossPending *instanceLossPending = reinterpret_cast<XrEventDataInstanceLossPending *>(&eventData);
-                    LOGI("OPENXR: Instance Loss Pending at: %ld\n", instanceLossPending->lossTime);
+                    LOGI("OPENXR: Instance Loss Pending at: %ld", instanceLossPending->lossTime);
                     m_sessionRunning = false;
                     m_applicationRunning = false;
                     break;
@@ -907,7 +885,7 @@ namespace prev::xr {
                     // Log that the interaction profile has changed.
                 case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED: {
                     XrEventDataInteractionProfileChanged *interactionProfileChanged = reinterpret_cast<XrEventDataInteractionProfileChanged *>(&eventData);
-                    LOGI("OPENXR: Interaction Profile changed for Session: %p\n", interactionProfileChanged->session);
+                    LOGI("OPENXR: Interaction Profile changed for Session: %p", interactionProfileChanged->session);
                     if (interactionProfileChanged->session != m_session) {
                         LOGW("XrEventDataInteractionProfileChanged for unknown Session");
                         break;
@@ -918,7 +896,7 @@ namespace prev::xr {
                     // Log that there's a reference space change pending.
                 case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING: {
                     XrEventDataReferenceSpaceChangePending *referenceSpaceChangePending = reinterpret_cast<XrEventDataReferenceSpaceChangePending *>(&eventData);
-                    LOGI("OPENXR: Reference Space Change pending for Session: %p\n", referenceSpaceChangePending->session);
+                    LOGI("OPENXR: Reference Space Change pending for Session: %p", referenceSpaceChangePending->session);
                     if (referenceSpaceChangePending->session != m_session) {
                         LOGW("XrEventDataReferenceSpaceChangePending for unknown Session");
                         break;
