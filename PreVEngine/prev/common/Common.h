@@ -3,7 +3,10 @@
 
 #if defined(TARGET_PLATFORM_WINDOWS)
 #define NOMINMAX
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
+#include <unknwn.h>
 #include <Windows.h>
 #define TICK_CHARACTER "\xFB" // On Windows, use Square-root as tick mark
 #define PAUSE system("pause")
