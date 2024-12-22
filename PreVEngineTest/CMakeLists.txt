@@ -228,6 +228,9 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Linux/libassimp.so")
     if(ENABLE_XR)
         target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/openxr/lib/Linux/libopenxr_loader.so")
+
+        find_library(JSONCPP "jsoncpp" DOC "JsonCpp library")
+        target_link_libraries(${PROJECT_NAME} ${JSONCPP})
     endif()
 
     # Copy assimp so to output bin dir.
