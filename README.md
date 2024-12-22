@@ -12,6 +12,12 @@ A multiplatform Vulkan based rendering engine. This repository is under active d
 | MacOS | [![MacOS - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-macos.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-macos.yml) |
 | iOS | [![iOS - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-ios.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-ios.yml) |
 
+| OpenXR Platform | Status |
+|---|---:|
+| Windows | [![Windows OpenXR - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-windows%20openxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-windows%20openxr.yml) |
+| Linux | [![Linux OpenXR - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux%20openxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux%20openxr.yml) |
+| Android | [![Android OpenXR - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-android%20openxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-android%20openxr.yml) |
+
 Here is a video:
 
 [![PreVEngine In Action](http://img.youtube.com/vi/lSp1hOncLVs/0.jpg)](http://www.youtube.com/watch?v=lSp1hOncLVs "PreVEngine In Action")
