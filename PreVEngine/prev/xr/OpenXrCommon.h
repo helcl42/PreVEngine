@@ -4,6 +4,7 @@
 #ifdef ENABLE_XR
 
 #include "../core/Core.h"
+#include "../common/Common.h"
 #include "../common/Logger.h"
 
 #if defined(TARGET_PLATFORM_ANDROID)
