@@ -102,6 +102,7 @@ endif()
 if(WIN32)
     message("${PROJECT_NAME} - Windows")
     add_definitions(-DTARGET_PLATFORM_WINDOWS)
+    add_definitions(-DWIN32_LEAN_AND_MEAN)
 
     file(GLOB COMMON_SRC_LIST 
         "platform/common/*.h" "platform/common/*.cpp"
