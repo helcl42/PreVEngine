@@ -236,7 +236,7 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
 
     if(ENABLE_XR)
-        file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/openxr/lib/Windows/libopenxr_loader.so" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+        file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/openxr/lib/Linux/libopenxr_loader.so" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
     endif()
 
 elseif(ANDROID)
