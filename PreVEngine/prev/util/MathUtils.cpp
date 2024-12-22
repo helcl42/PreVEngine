@@ -228,9 +228,9 @@ glm::mat4 CreatePerspectiveProjectionMatrix(const Fov& fov, const float nearClip
 
 glm::vec2 GetClippingPlanes(const glm::mat4& projectionMatrix)
 {
-    const float near{ projectionMatrix[3][2] / projectionMatrix[2][2] };
-    const float far{ projectionMatrix[3][2] / (projectionMatrix[2][2] + 1.0f) };
-    return { near, far };
+    const float nearPlane{ projectionMatrix[3][2] / projectionMatrix[2][2] };
+    const float farPlane{ projectionMatrix[3][2] / (projectionMatrix[2][2] + 1.0f) };
+    return { nearPlane, farPlane };
 }
 
 Fov CreateFovFromProjectionMatrix(const glm::mat4& projectionMatrix)
