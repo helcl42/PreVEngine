@@ -53,7 +53,7 @@ option(ENABLE_LOGGING "Prints LOG* messages to Terminal or Android Logcat." ON)
 option(ENABLE_MULTITOUCH "Multi-touch screen support" OFF)
 option(ENABLE_REVERSE_DEPTH "Enable reverse depth" OFF)
 option(ENABLE_VK_LOADER "Enable Vulkan loader" ON)
-option(ENABLE_XR "Enable XR" ON)
+option(ENABLE_XR "Enable XR" OFF)
 
 if (ENABLE_LOGGING)
     add_definitions(-DENABLE_LOGGING)
