@@ -151,7 +151,8 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     message("${PROJECT_NAME} - Linux")
     add_definitions(-DTARGET_PLATFORM_LINUX)
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lstdc++")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
 
     option(BUILD_PREVENGINE_XCB_SUPPORT "Build XCB PREVENGINE support" ON)
     #option(BUILD_PREVENGINE_XLIB_SUPPORT "Build Xlib PREVENGINE support" OFF)
