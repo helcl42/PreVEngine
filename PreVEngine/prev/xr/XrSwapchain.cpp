@@ -123,13 +123,13 @@ namespace prev::xr {
 
     void XrSwapchain::Print() const
     {
-        LOGI("XSwapchain:\n");
+        LOGI("XSwapchain:");
 
-        LOGI("\tColor   = %3d : %s\n", m_renderPass.GetColorFormat(), util::vk::FormatToString(m_renderPass.GetColorFormat()).c_str());
-        LOGI("\tDepth   = %3d : %s\n", m_renderPass.GetDepthFormat(), util::vk::FormatToString(m_renderPass.GetDepthFormat()).c_str());
+        LOGI("\tColor   = %3d : %s", m_renderPass.GetColorFormat(), util::vk::FormatToString(m_renderPass.GetColorFormat()).c_str());
+        LOGI("\tDepth   = %3d : %s", m_renderPass.GetDepthFormat(), util::vk::FormatToString(m_renderPass.GetDepthFormat()).c_str());
 
-        LOGI("\tExtent  = %d x %d\n", m_extent.width, m_extent.height);
-        LOGI("\tBuffers = %d\n", (int)m_swapchainBuffers.size());
+        LOGI("\tExtent  = %d x %d", m_extent.width, m_extent.height);
+        LOGI("\tBuffers = %d", static_cast<int>(m_swapchainBuffers.size()));
     }
 
     const VkExtent2D& XrSwapchain::GetExtent() const
