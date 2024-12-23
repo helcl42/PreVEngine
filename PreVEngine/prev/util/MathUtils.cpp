@@ -176,23 +176,11 @@ glm::mat4 CreatePerspectiveProjectionMatrixWithReverseDepth(const float aspectRa
     const float A{ nearClippingPlane / (farClippingPlane - nearClippingPlane) };
     const float B{ (nearClippingPlane * farClippingPlane) / (farClippingPlane - nearClippingPlane) };
 
-    glm::mat4 projectionMatrix = glm::mat4{
-        x,
-        0.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        y,
-        0.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        A,
-        -1.0f,
-        0.0f,
-        0.0f,
-        B,
-        0.0f,
+    const glm::mat4 projectionMatrix = glm::mat4{
+        x, 0.0f, 0.0f, 0.0f,
+        0.0f, y, 0.0f, 0.0f,
+        0.0f, 0.0f, A, -1.0f,
+        0.0f, 0.0f, B, 0.0f
     };
     return projectionMatrix;
 }
@@ -206,7 +194,7 @@ glm::mat4 CreateOrthographicProjectionMatrix(const float leftPlane, const float 
     const float B{ -(bottomPlane + topPlane) / (bottomPlane - topPlane) };
     const float C{ nearPlane / (nearPlane - farPlane) };
 
-    glm::mat4 projectionMatrix = glm::mat4{
+    const glm::mat4 projectionMatrix = glm::mat4{
         x, 0.0f, 0.0f, 0.0f,
         0.0f, y, 0.0f, 0.0f,
         0.0f, 0.0f, z, 0.0f,
