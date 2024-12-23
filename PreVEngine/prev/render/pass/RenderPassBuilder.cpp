@@ -86,7 +86,7 @@ std::unique_ptr<RenderPass> RenderPassBuilder::Build() const
     renderPassCreateInfo.dependencyCount = static_cast<uint32_t>(renderPass->m_dependencies.size());
     renderPassCreateInfo.pDependencies = renderPass->m_dependencies.data();
     renderPassCreateInfo.pNext = nullptr;
-
+#ifdef ENABLE_XR
     const uint32_t viewMask{ prev::util::math::SetBits<uint32_t>(m_viewCount) };
     const uint32_t correlationMask{ prev::util::math::SetBits<uint32_t>(m_viewCount) };
 
@@ -100,7 +100,7 @@ std::unique_ptr<RenderPass> RenderPassBuilder::Build() const
     if (m_viewCount > 1) {
         renderPassCreateInfo.pNext = &renderPassMultiviewCreateInfo;
     }
-
+#endif
     VKERRCHECK(vkCreateRenderPass(m_device, &renderPassCreateInfo, nullptr, &renderPass->m_renderPass));
 
     LOGI("Renderpass created");
