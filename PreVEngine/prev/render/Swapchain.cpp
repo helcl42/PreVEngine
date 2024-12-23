@@ -167,12 +167,12 @@ void Swapchain::Print() const
 {
     LOGI("Swapchain:");
 
-    LOGI("\tColor   = %3d : %s\n", m_swapchainCreateInfo.imageFormat, util::vk::FormatToString(m_swapchainCreateInfo.imageFormat).c_str());
-    LOGI("\tDepth   = %3d : %s\n", m_depthBuffer->GetFormat(), util::vk::FormatToString(m_depthBuffer->GetFormat()).c_str());
+    LOGI("\tColor   = %3d : %s", m_swapchainCreateInfo.imageFormat, util::vk::FormatToString(m_swapchainCreateInfo.imageFormat).c_str());
+    LOGI("\tDepth   = %3d : %s", m_depthBuffer->GetFormat(), util::vk::FormatToString(m_depthBuffer->GetFormat()).c_str());
 
     const auto& extent{ m_swapchainCreateInfo.imageExtent };
     LOGI("\tExtent  = %d x %d", extent.width, extent.height);
-    LOGI("\tBuffers = %d", (int)m_swapchainBuffers.size());
+    LOGI("\tBuffers = %d", static_cast<int>(m_swapchainBuffers.size()));
 
     const auto modes{ GetPresentModes() };
     LOGI("\tPresentMode:");

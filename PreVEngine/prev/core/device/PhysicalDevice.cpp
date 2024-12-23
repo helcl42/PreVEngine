@@ -194,13 +194,13 @@ void PhysicalDevice::Print(const bool showQueues) const
 
     const auto vendor{ prev::util::vk::VendorIdToString(m_availableProperties.properties.vendorID) };
     const auto& gpuProps{ GetProperties() };
-    LOGI("\t%s %s %s\n", deviceTypeToString(gpuProps.deviceType).c_str(), vendor.c_str(), gpuProps.deviceName);
+    LOGI("\t%s %s %s", deviceTypeToString(gpuProps.deviceType).c_str(), vendor.c_str(), gpuProps.deviceName);
 
     if (showQueues) {
         const auto queueFamilies{ GetQueueFamilies() };
         for (size_t i = 0; i < queueFamilies.size(); ++i) {
             const auto& queueProps{ queueFamilies[i] };
-            LOGI("\t\tQueue-family: %zd count: %2d flags: [ %s]\n", i, queueProps.queueCount, prev::util::vk::QueueFlagsToString(queueProps.queueFlags).c_str());
+            LOGI("\t\tQueue-family: %zd count: %2d flags: [ %s]", i, queueProps.queueCount, prev::util::vk::QueueFlagsToString(queueProps.queueFlags).c_str());
         }
     }
 }
