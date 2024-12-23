@@ -706,6 +706,10 @@ namespace prev::xr {
         instanceCI.enabledExtensionNames = m_activeInstanceExtensions.data();
         OPENXR_CHECK(xrCreateInstance(&instanceCI, &m_xrInstance), "Failed to create Instance.");
 
+        if (!m_xrInstance) {
+            throw std::runtime_error("Could not create XR instance.");
+        }
+
         LoadXrExtensionFunctions(m_xrInstance);
     }
 
