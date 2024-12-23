@@ -15,7 +15,7 @@ public:
     ~DeviceFactory() = default;
 
 public:
-    std::shared_ptr<Device> Create(const std::shared_ptr<PhysicalDevice>& gpu, const VkSurfaceKHR surface) const;
+    std::unique_ptr<Device> Create(const PhysicalDevice& gpu, const VkSurfaceKHR surface) const;
 };
 } // namespace prev::core::device
 

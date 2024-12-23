@@ -15,7 +15,7 @@
 #include <external/vk_mem_alloc.h>
 
 namespace prev::core::memory {
-Allocator::Allocator(prev::core::instance::Instance& instance, prev::core::device::Device& device, prev::core::device::Queue& queue, const VkDeviceSize blockSize)
+Allocator::Allocator(const prev::core::instance::Instance& instance, const prev::core::device::Device& device, const prev::core::device::Queue& queue, const VkDeviceSize blockSize)
     : m_instance(instance)
     , m_device(device)
     , m_queue(queue)
@@ -45,7 +45,7 @@ Allocator::Allocator(prev::core::instance::Instance& instance, prev::core::devic
 
     VmaAllocatorCreateInfo allocatorInfo{};
     allocatorInfo.instance = m_instance;
-    allocatorInfo.physicalDevice = *m_device.GetGPU();
+    allocatorInfo.physicalDevice = m_device.GetGPU();
     allocatorInfo.device = m_device;
     allocatorInfo.preferredLargeHeapBlockSize = blockSize;
     allocatorInfo.pVulkanFunctions = &fn;
@@ -206,12 +206,12 @@ void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format,
     }
 }
 
-prev::core::device::Device& Allocator::GetDevice() const
+const prev::core::device::Device& Allocator::GetDevice() const
 {
     return m_device;
 }
 
-prev::core::device::Queue& Allocator::GetQueue() const
+const prev::core::device::Queue& Allocator::GetQueue() const
 {
     return m_queue;
 }

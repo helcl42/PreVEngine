@@ -10,7 +10,7 @@
 namespace prev::core {
 class CommandsExecutor final {
 public:
-    CommandsExecutor(device::Device& device, device::Queue& queue);
+    CommandsExecutor(const device::Device& device, const device::Queue& queue);
 
     ~CommandsExecutor();
 
@@ -18,9 +18,9 @@ public:
     void ExecuteImmediate(const std::function<void(VkCommandBuffer)>& func);
 
 private:
-    prev::core::device::Device& m_device;
+    const prev::core::device::Device& m_device;
 
-    prev::core::device::Queue& m_queue;
+    const prev::core::device::Queue& m_queue;
 
     VkCommandPool m_immediateCommandPool{};
 

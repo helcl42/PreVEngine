@@ -118,6 +118,9 @@ void TransitionImageLayout(const VkCommandBuffer commandBuffer, const VkImage im
         } else if (oldLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL) {
             barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
             srcStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+        } else if (oldLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL) {
+            barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            srcStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
         } else { // FULL barrier
             LOGW("Performance - full barrier is used(src).");
             barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
@@ -158,7 +161,6 @@ void TransitionImageLayout(const VkCommandBuffer commandBuffer, const VkImage im
 
 void GenerateMipmaps(const VkCommandBuffer commandBuffer, const VkImage image, const VkExtent3D& extent, const uint32_t mipLevels, const uint32_t layersCount, const VkImageAspectFlags aspectMask, const VkFilter filter, const VkImageLayout layout)
 {
-    // TODO: this function uses internally linear filter -> it might not be supported for the desired imageFormat
     for (uint32_t layerIndex = 0; layerIndex < layersCount; ++layerIndex) {
         VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
         barrier.image = image;
@@ -573,6 +575,11 @@ VkFormatProperties GetFormatProperties(const VkPhysicalDevice physicalDevice, co
     VkFormatProperties formatProperties;
     vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &formatProperties);
     return formatProperties;
+}
+
+VkImageViewType GetImageViewType(const uint32_t viewCount)
+{
+    return viewCount > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
 }
 
 } // namespace prev::util::vk

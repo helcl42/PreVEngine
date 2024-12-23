@@ -16,8 +16,7 @@ Sun::Sun(prev::core::device::Device& device, prev::core::memory::Allocator& allo
 
 void Sun::Init()
 {
-    prev_test::component::sky::SunComponentFactory componentFactory{ m_device, m_allocator };
-    m_sunComponent = componentFactory.Create();
+    m_sunComponent = prev_test::component::sky::SunComponentFactory{ m_device, m_allocator }.Create();
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::sky::ISunComponent>(GetThis(), m_sunComponent, TAG_SUN_RENDER_COMPONENT);
 
     SceneNode::Init();
@@ -25,11 +24,6 @@ void Sun::Init()
 
 void Sun::Update(float deltaTime)
 {
-    const auto lightComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
-    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
-
-    m_sunComponent->Update(cameraComponent->GetViewFrustum().CreateProjectionMatrix(m_viewPortSize.x / m_viewPortSize.y), cameraComponent->LookAt(), cameraComponent->GetPosition(), lightComponent->GetPosition());
-
     SceneNode::Update(deltaTime);
 }
 

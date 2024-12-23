@@ -1,5 +1,6 @@
 #include "Root.h"
 
+#include "Camera.h"
 #include "Cube.h"
 #include "Fire.h"
 #include "Plane.h"
@@ -27,10 +28,11 @@
 #include <prev/util/Utils.h>
 
 namespace prev_test::scene {
-Root::Root(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
+Root::Root(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, uint32_t viewCount)
     : SceneNode()
     , m_device{ device }
     , m_allocator{ allocator }
+    , m_viewCount{ viewCount }
 {
 }
 
@@ -68,22 +70,22 @@ void Root::Init()
     shadows->SetTags({ TAG_SHADOW });
     AddChild(shadows);
 
-    // auto freeCamera = std::make_shared<Camera>();
-    // freeCamera->SetTags({ TAG_MAIN_CAMERA });
-    // AddChild(freeCamera);
+    const int32_t MAX_GENERATED_HEIGHT{ 1 };
+    const float DISTANCE{ 40.0f };
+    for (int32_t i = 0; i <= MAX_GENERATED_HEIGHT; i++) {
+        for (int32_t j = 0; j <= MAX_GENERATED_HEIGHT; j++) {
+            for (int32_t k = 0; k <= MAX_GENERATED_HEIGHT; k++) {
+                auto robot = std::make_shared<robot::CubeRobot>(m_device, m_allocator, glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+                AddChild(robot);
+            }
+        }
+    }
 
-    // const int32_t MAX_GENERATED_HEIGHT{ 1 };
-    // const float DISTANCE{ 40.0f };
-    // for (int32_t i = 0; i <= MAX_GENERATED_HEIGHT; i++) {
-    //     for (int32_t j = 0; j <= MAX_GENERATED_HEIGHT; j++) {
-    //         for (int32_t k = 0; k <= MAX_GENERATED_HEIGHT; k++) {
-    //             auto robot = std::make_shared<robot::CubeRobot>(m_device, m_allocator, glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
-    //             AddChild(robot);
-    //         }
-    //     }
-    // }
-
+#ifdef ENABLE_XR
+    auto player = std::make_shared<Camera>(m_viewCount);
+#else
     auto player = std::make_shared<Player>(m_device, m_allocator, glm::vec3(0.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(0.06f));
+#endif
     player->SetTags({ TAG_MAIN_CAMERA, TAG_PLAYER });
     AddChild(player);
 
@@ -92,7 +94,7 @@ void Root::Init()
     auto terrainManager = std::make_shared<terrain::TerrainManager>(m_device, m_allocator, TERRAIN_GRID_MAX_X, TERRAIN_GRID_MAX_Z);
     AddChild(terrainManager);
 
-    auto water = std::make_shared<water::WaterManager>(m_device, m_allocator, TERRAIN_GRID_MAX_X, TERRAIN_GRID_MAX_Z);
+    auto water = std::make_shared<water::WaterManager>(m_device, m_allocator, TERRAIN_GRID_MAX_X, TERRAIN_GRID_MAX_Z, m_viewCount);
     AddChild(water);
 
     auto sun = std::make_shared<sky::Sun>(m_device, m_allocator);

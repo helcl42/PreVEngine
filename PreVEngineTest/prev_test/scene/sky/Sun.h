@@ -33,7 +33,7 @@ private:
     prev::core::memory::Allocator& m_allocator;
 
 private:
-    std::shared_ptr<prev_test::component::sky::ISunComponent> m_sunComponent;
+    std::shared_ptr<prev_test::component::sky::ISunComponent> m_sunComponent{};
 
     glm::vec2 m_viewPortSize{};
 

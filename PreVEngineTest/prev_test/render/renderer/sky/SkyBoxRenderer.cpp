@@ -61,10 +61,10 @@ void SkyBoxRenderer::Init()
     LOGI("Skybox Pipeline created");
 
     m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsVS>>(m_allocator);
-    m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
     m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsFS>>(m_allocator);
-    m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
 void SkyBoxRenderer::BeforeRender(const NormalRenderContext& renderContext)
@@ -90,12 +90,11 @@ void SkyBoxRenderer::Render(const NormalRenderContext& renderContext, const std:
         auto uboVS = m_uniformsPoolVS->GetNext();
 
         UniformsVS uniformsVS{};
-        uniformsVS.projectionMatrix = renderContext.projectionMatrix;
-        uniformsVS.viewMatrix = renderContext.viewMatrix;
         uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
-
-        // TODO should we use CLIP_PLANE here?
-
+        for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
+            uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
+            uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
+        }
         uboVS->Update(&uniformsVS);
 
         auto uboFS = m_uniformsPoolFS->GetNext();

@@ -17,7 +17,7 @@ OffScreenRenderPassComponentFactory::OffScreenRenderPassComponentFactory(prev::c
 {
 }
 
-std::unique_ptr<IOffScreenRenderPassComponent> OffScreenRenderPassComponentFactory::Create(const VkExtent2D& extent, const VkFormat depthFormat, const std::vector<VkFormat>& colorFormats) const
+std::unique_ptr<IOffScreenRenderPassComponent> OffScreenRenderPassComponentFactory::Create(const VkExtent2D& extent, const VkFormat depthFormat, const std::vector<VkFormat>& colorFormats, const uint32_t viewCount) const
 {
     // create render pass
     const uint32_t depthDependenciesOffset{ (depthFormat != VK_FORMAT_UNDEFINED) ? 2u : 0u };
@@ -64,6 +64,7 @@ std::unique_ptr<IOffScreenRenderPassComponent> OffScreenRenderPassComponentFacto
     uint32_t attachmentIndex{ 0 };
 
     prev::render::pass::RenderPassBuilder renderPassBuilder{ m_device };
+    renderPassBuilder.SetViewCount(viewCount);
     if (depthFormat != VK_FORMAT_UNDEFINED) {
         renderPassBuilder.AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, { MAX_DEPTH, 0 }, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
         attachmentIndices.push_back(attachmentIndex);
@@ -89,6 +90,8 @@ std::unique_ptr<IOffScreenRenderPassComponent> OffScreenRenderPassComponentFacto
                           .SetExtent({ extent.width, extent.height, 1 })
                           .SetFormat(depthFormat)
                           .SetType(VK_IMAGE_TYPE_2D)
+                          .SetViewType(prev::util::vk::GetImageViewType(viewCount))
+                          .SetLayerCount(viewCount)
                           .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
                           .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL)
                           .Build();
@@ -103,6 +106,8 @@ std::unique_ptr<IOffScreenRenderPassComponent> OffScreenRenderPassComponentFacto
                                     .SetExtent({ extent.width, extent.height, 1 })
                                     .SetFormat(colorFormat)
                                     .SetType(VK_IMAGE_TYPE_2D)
+                                    .SetViewType(prev::util::vk::GetImageViewType(viewCount))
+                                    .SetLayerCount(viewCount)
                                     .SetUsageFlags(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
                                     .SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
                                     .Build();

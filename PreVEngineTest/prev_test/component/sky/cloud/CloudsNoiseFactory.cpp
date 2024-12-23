@@ -19,7 +19,7 @@ CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t widt
 {
     const auto noiseImageFormat{ VK_FORMAT_R8G8B8A8_UNORM };
 
-    auto computeQueue{ m_device.GetQueue(prev::core::device::QueueType::COMPUTE) };
+    const auto& computeQueue{ m_device.GetQueue(prev::core::device::QueueType::COMPUTE) };
 
     // clang-format off
     auto shader = prev::render::shader::ShaderBuilder{ m_device }
@@ -48,7 +48,7 @@ CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t widt
                                 .Build();
     auto sampler = std::make_unique<prev::render::sampler::Sampler>(m_device, static_cast<float>(noiseImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR);
 
-    prev::core::CommandsExecutor commandsExecutor{ m_device, *computeQueue };
+    prev::core::CommandsExecutor commandsExecutor{ m_device, computeQueue };
     commandsExecutor.ExecuteImmediate([&](VkCommandBuffer commandBuffer) {
         shader->Bind("outVolumeTexture", *noiseImageBuffer, *sampler, VK_IMAGE_LAYOUT_GENERAL);
         const VkDescriptorSet descriptorSet = shader->UpdateNextDescriptorSet();

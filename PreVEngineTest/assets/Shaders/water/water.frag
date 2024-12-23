@@ -1,6 +1,9 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive : enable
+#ifdef ENABLE_XR
+#extension GL_EXT_multiview : enable
+#endif
 
 #include "../common/utils.glsl"
 #include "../common/shadows_use.glsl"
@@ -26,11 +29,17 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 } uboFS;
 
 layout(binding = 2) uniform sampler2DArray depthSampler;
+#ifdef ENABLE_XR
+layout(binding = 3) uniform sampler2DArray reflectionTexture;
+layout(binding = 4) uniform sampler2DArray refractionTexture;
+layout(binding = 5) uniform sampler2DArray depthMapTexture;
+#else
 layout(binding = 3) uniform sampler2D reflectionTexture;
 layout(binding = 4) uniform sampler2D refractionTexture;
-layout(binding = 5) uniform sampler2D dudvMapTexture;
-layout(binding = 6) uniform sampler2D normalMapTexture;
-layout(binding = 7) uniform sampler2D depthMapTexture;
+layout(binding = 5) uniform sampler2D depthMapTexture;
+#endif
+layout(binding = 6) uniform sampler2D dudvMapTexture;
+layout(binding = 7) uniform sampler2D normalMapTexture;
 
 const float waveStrength = 0.04;
 const float shineDamper = 20.0;
@@ -46,9 +55,39 @@ layout(location = 3) in vec3 inViewPosition;
 layout(location = 4) in vec3 inToCameraVector;
 layout(location = 5) in float inVisibility;
 
+float SampleDepth(in vec2 texCoords)
+{
+#ifdef ENABLE_XR
+	float depth = texture(depthMapTexture, vec3(texCoords, gl_ViewIndex)).r;
+#else
+	float depth = texture(depthMapTexture, texCoords).r;
+#endif
+	return depth;
+}
+
+vec4 SampleRefraction(in vec2 texCoord)
+{
+#ifdef ENABLE_XR
+	vec4 refractColor = texture(refractionTexture, vec3(texCoord, gl_ViewIndex));
+#else
+	vec4 refractColor = texture(refractionTexture, texCoord);
+#endif
+	return refractColor;
+}
+
+vec4 SampleReflection(in vec2 texCoord)
+{
+	#ifdef ENABLE_XR
+	vec4 reflectColor = texture(reflectionTexture, vec3(texCoord, gl_ViewIndex));
+	#else
+	vec4 reflectColor = texture(reflectionTexture, texCoord);
+	#endif
+	return reflectColor;
+}
+
 float CalculateWaterDepth(in vec2 texCoords)
 {
-	float depth = texture(depthMapTexture, texCoords).r;
+	float depth = SampleDepth(texCoords);
 	float floorDistance = LinearizeDepth(depth, uboFS.nearFarClippinPlane.x, uboFS.nearFarClippinPlane.y);
 	depth = gl_FragCoord.z;
 	float waterDistance = LinearizeDepth(depth, uboFS.nearFarClippinPlane.x, uboFS.nearFarClippinPlane.y);
@@ -81,8 +120,8 @@ void main()
 	refractTexCoord += totalDistortion;
 	refractTexCoord = clamp(refractTexCoord, 0.001, 0.999);
 
-	vec4 reflectColor = texture(reflectionTexture, reflectTexCoord);
-	vec4 refractColor = texture(refractionTexture, refractTexCoord);
+	vec4 reflectColor = SampleReflection(reflectTexCoord);
+	vec4 refractColor = SampleRefraction(refractTexCoord);
 	vec4 finalWaterColor = uboFS.waterColor * shadow;
 
 	// normal

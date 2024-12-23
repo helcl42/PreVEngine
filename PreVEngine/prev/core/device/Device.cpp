@@ -1,4 +1,4 @@
-#include "Device.h"
+﻿#include "Device.h"
 
 #include "../../common/Logger.h"
 #include "../../util/VkUtils.h"
@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <iterator>
 #include <sstream>
+#include <stdexcept>
 
 namespace prev::core::device {
 // QueueMetadata
@@ -28,7 +29,7 @@ void QueuesMetadata::Add(const std::vector<QueueType>& queueTypes, const QueueMe
     }
 }
 
-std::vector<uint32_t> QueuesMetadata::GetQueueFamiies() const
+std::vector<uint32_t> QueuesMetadata::GetQueueFamilies() const
 {
     std::set<uint32_t> distinctQueueFamilies;
     for (const auto& [queueType, queues] : queueGroups) {
@@ -67,13 +68,13 @@ bool QueuesMetadata::HasAny(const QueueType queueType) const
 }
 
 // Device
-Device::Device(const std::shared_ptr<PhysicalDevice>& gpu, const QueuesMetadata& queuesMetadata)
+Device::Device(const PhysicalDevice& gpu, const QueuesMetadata& queuesMetadata)
     : m_gpu{ gpu }
 {
-    LOGI("Logical Device using GPU: %s", m_gpu->GetProperties().deviceName);
-    m_gpu->GetExtensions().Print();
+    LOGI("Logical Device based on GPU: %s", m_gpu.GetProperties().deviceName);
+    m_gpu.GetExtensions().Print();
 
-    const auto queueFamilyIndices{ queuesMetadata.GetQueueFamiies() };
+    const auto queueFamilyIndices{ queuesMetadata.GetQueueFamilies() };
 
     const float DefaultQueuePriority{ 1.0f };
     std::vector<std::vector<float>> allQueuesPriorities(queueFamilyIndices.size());
@@ -96,14 +97,17 @@ Device::Device(const std::shared_ptr<PhysicalDevice>& gpu, const QueuesMetadata&
         queueCreateInfoList.push_back(info);
     }
 
-    const auto& extensions{ m_gpu->GetExtensions() };
+    const auto& extensions{ m_gpu.GetExtensions() };
+    const auto& features{ m_gpu.GetEnabledFeatures2() };
+
     VkDeviceCreateInfo deviceCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
     deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfoList.size());
     deviceCreateInfo.pQueueCreateInfos = queueCreateInfoList.data();
     deviceCreateInfo.enabledExtensionCount = extensions.GetPickCount();
     deviceCreateInfo.ppEnabledExtensionNames = extensions.GetPickListRaw();
-    deviceCreateInfo.pEnabledFeatures = &m_gpu->GetEnabledFeatures();
-    VKERRCHECK(vkCreateDevice(*m_gpu, &deviceCreateInfo, nullptr, &m_handle)); // create device
+    deviceCreateInfo.pEnabledFeatures = nullptr;
+    deviceCreateInfo.pNext = &features;
+    VKERRCHECK(vkCreateDevice(m_gpu, &deviceCreateInfo, nullptr, &m_handle)); // create device
 
 #ifdef ENABLE_VK_LOADER
     volkLoadDevice(m_handle);
@@ -111,7 +115,9 @@ Device::Device(const std::shared_ptr<PhysicalDevice>& gpu, const QueuesMetadata&
 
     for (const auto& [queueGroupKey, queueGroupList] : queuesMetadata.queueGroups) {
         for (const auto& groupItem : queueGroupList) {
-            m_queues[queueGroupKey].push_back(std::make_shared<Queue>(m_handle, groupItem.family, groupItem.index, groupItem.flags, groupItem.surface));
+            VkQueue qHandle{};
+            vkGetDeviceQueue(m_handle, groupItem.family, groupItem.index, &qHandle);
+            m_queues[queueGroupKey].push_back(Queue{ qHandle, groupItem.family, groupItem.index, groupItem.flags, groupItem.surface });
         }
     }
 }
@@ -129,34 +135,37 @@ void Device::WaitIdle() const
     vkDeviceWaitIdle(m_handle);
 }
 
-std::shared_ptr<Queue> Device::GetQueue(const QueueType queueType, const uint32_t index) const
+bool Device::HasQueue(const QueueType queueType, const uint32_t index) const
 {
     const auto queuesIter{ m_queues.find(queueType) };
     if (queuesIter == m_queues.cend()) {
-        LOGE("Trying to retrieve invalid QueueType.");
-        return nullptr;
+        LOGW("Trying to retrieve non existing QueueType.");
+        return false;
     }
 
     const auto& queuesGroup{ queuesIter->second };
     if (index >= queuesGroup.size()) {
-        LOGE("Trying access queue at invalid index %ud.", index);
-        return nullptr;
+        LOGW("Trying access queue at invalid index %ud.", index);
+        return false;
     }
-
-    return queuesGroup[index];
+    return true;
 }
 
-std::vector<std::shared_ptr<Queue>> Device::GetQueues(const QueueType queueType) const
+const Queue& Device::GetQueue(const QueueType queueType, const uint32_t index) const
 {
     const auto queuesIter{ m_queues.find(queueType) };
     if (queuesIter == m_queues.cend()) {
-        LOGE("Trying to retrieve invalid QueueType.");
-        return {};
+        throw std::runtime_error("Trying to retrieve non existing QueueType.");
     }
-    return queuesIter->second;
+
+    const auto& queuesGroup{ queuesIter->second };
+    if (index >= queuesGroup.size()) {
+        throw std::runtime_error("Trying access queue at invalid index " + std::to_string(index) + ".");
+    }
+    return queuesGroup[index];
 }
 
-std::map<QueueType, std::vector<std::shared_ptr<Queue>>> Device::GetAllQueues() const
+const std::map<QueueType, std::vector<Queue>>& Device::GetAllQueues() const
 {
     return m_queues;
 }
@@ -168,7 +177,7 @@ std::vector<QueueType> Device::GetAllQueueTypes() const
     return result;
 }
 
-std::shared_ptr<PhysicalDevice> Device::GetGPU() const
+const PhysicalDevice& Device::GetGPU() const
 {
     return m_gpu;
 }
@@ -191,10 +200,10 @@ void Device::Print() const
         return surface ? "(can present)" : "";
     };
 
-    LOGI("Logical Device used queues:\n");
+    LOGI("Logical Device used queues:");
     for (const auto& [qGroupKey, gQroupList] : m_queues) {
         for (const auto& qGroupItem : gQroupList) {
-            LOGI("Queue purpose: %s family: %d index: %d flags: [ %s] %s", queueTypeToString(qGroupKey).c_str(), qGroupItem->family, qGroupItem->index, prev::util::vk::QueueFlagsToString(qGroupItem->flags).c_str(), canPresentToString(qGroupItem->surface).c_str());
+            LOGI("Queue purpose: %s family: %d index: %d flags: [ %s] %s", queueTypeToString(qGroupKey).c_str(), qGroupItem.family, qGroupItem.index, prev::util::vk::QueueFlagsToString(qGroupItem.flags).c_str(), canPresentToString(qGroupItem.surface).c_str());
         }
     }
 }

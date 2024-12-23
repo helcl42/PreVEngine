@@ -8,7 +8,6 @@ Flare::Flare(prev::core::device::Device& device, const std::shared_ptr<prev::ren
     , m_imageBuffer{ imageBuffer }
     , m_sampler{ sampler }
     , m_scale{ scale }
-    , m_screenSpacePosition{ 0.0f, 0.0f }
 {
 }
 
@@ -34,15 +33,5 @@ std::shared_ptr<prev::render::sampler::Sampler> Flare::GetSampler() const
 float Flare::GetScale() const
 {
     return m_scale;
-}
-
-const glm::vec2& Flare::GetScreenSpacePosition() const
-{
-    return m_screenSpacePosition;
-}
-
-void Flare::SetScreenSpacePosition(const glm::vec2& position)
-{
-    m_screenSpacePosition = position;
 }
 } // namespace prev_test::component::sky

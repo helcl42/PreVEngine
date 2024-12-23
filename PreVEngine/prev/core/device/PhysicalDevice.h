@@ -13,9 +13,18 @@ class PhysicalDevice {
 public:
     PhysicalDevice();
 
-    PhysicalDevice(const VkPhysicalDevice gpu);
+    PhysicalDevice(const VkPhysicalDevice gpu, const std::vector<std::string>& extensions = {});
 
     virtual ~PhysicalDevice() = default;
+
+public:
+    PhysicalDevice(const PhysicalDevice& other);
+
+    PhysicalDevice& operator=(const PhysicalDevice& other);
+
+    PhysicalDevice(PhysicalDevice&& other);
+
+    PhysicalDevice& operator=(PhysicalDevice&& other);
 
 public:
     int32_t FindQueueFamily(const VkQueueFlags flags, const VkQueueFlags unwantedFlags = 0, const VkSurfaceKHR surface = VK_NULL_HANDLE) const; // Returns a QueueFamlyIndex, or -1 if none found.
@@ -42,6 +51,8 @@ public:
 
     const VkPhysicalDeviceFeatures& GetEnabledFeatures() const;
 
+    const VkPhysicalDeviceFeatures2& GetEnabledFeatures2() const;
+
     void Print(const bool showQueues) const;
 
 public:
@@ -50,15 +61,17 @@ public:
 private:
     VkPhysicalDevice m_handle{};
 
-    VkPhysicalDeviceProperties m_availableProperties{}; // properties and limits
+    VkPhysicalDeviceProperties2 m_availableProperties{}; // properties and limits
 
-    VkPhysicalDeviceFeatures m_availableFeatures{}; // list of available features
+    VkPhysicalDeviceFeatures2 m_availableFeatures{}; // list of available features
 
     std::vector<VkQueueFamilyProperties> m_queueFamilies; // array of queue families
 
     DeviceExtensions m_extensions{};
 
-    VkPhysicalDeviceFeatures m_enabledFeatures{}; // Set required features.   TODO: finish this.
+    VkPhysicalDeviceFeatures2 m_enabledFeatures{};
+
+    VkPhysicalDeviceMultiviewFeatures m_physicalDeviceMultiviewFeatures{};
 };
 } // namespace prev::core::device
 

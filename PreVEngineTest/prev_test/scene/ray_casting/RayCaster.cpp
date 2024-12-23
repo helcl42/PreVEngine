@@ -24,19 +24,26 @@ void RayCaster::Init()
 
 void RayCaster::Update(float deltaTime)
 {
+    // TODO: use first view camera(left eye?)
     const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
     const auto playerTransformComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::transform::ITransformComponent>({ TAG_PLAYER });
 
+#ifdef ENABLE_XR
+    const glm::vec3 rayStartOffset{ 0.0f, 0.0f, 0.0f };
+#else
+    const glm::vec3 rayStartOffset{ 0.0f, 8.0f, 0.0f };
+#endif
+
     if (m_inputFacade.IsMouseLocked()) {
         m_rayCasterComponent->SetRayLength(RAY_LENGTH);
-        m_rayCasterComponent->SetRayStartPosition(playerTransformComponent->GetPosition() + glm::vec3(0.0f, 8.0f, 0.0f));
+        m_rayCasterComponent->SetRayStartPosition(playerTransformComponent->GetPosition() + rayStartOffset);
         m_rayCasterComponent->SetRayDirection(cameraComponent->GetForwardDirection());
         m_rayCasterComponent->SetOrientationOffsetAngles({ -12.0f, 0.0f });
         m_rayCasterComponent->Update(deltaTime);
     } else {
         m_mouseRayCasterComponent->SetRayLength(RAY_LENGTH);
         m_mouseRayCasterComponent->SetViewPortDimensions(m_viewPortSize);
-        m_mouseRayCasterComponent->SetProjectionMatrix(cameraComponent->GetViewFrustum().CreateProjectionMatrix(m_viewPortSize.x / m_viewPortSize.y));
+        m_mouseRayCasterComponent->SetProjectionMatrix(cameraComponent->GetViewFrustum().CreateProjectionMatrix());
         m_mouseRayCasterComponent->SetViewMatrix(cameraComponent->LookAt());
         m_mouseRayCasterComponent->SetRayStartPosition(cameraComponent->GetPosition());
         m_mouseRayCasterComponent->Update(deltaTime);

@@ -40,4 +40,14 @@ const glm::vec3& SkyComponent::GetCloudBaseColor() const
 {
     return m_cloudBaseColor;
 }
+
+float SkyComponent::GetElapsedTime() const
+{
+    return m_elapsedTime;
+}
+
+void SkyComponent::Update(float deltaTime)
+{
+    m_elapsedTime += deltaTime;
+}
 } // namespace prev_test::component::sky

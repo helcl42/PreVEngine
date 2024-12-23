@@ -11,7 +11,7 @@
 namespace prev_test::scene::water {
 class WaterRefraction final : public prev::scene::graph::SceneNode {
 public:
-    WaterRefraction(prev::core::device::Device& device, prev::core::memory::Allocator& allocator);
+    WaterRefraction(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, uint32_t viewCount);
 
     ~WaterRefraction() = default;
 
@@ -34,6 +34,8 @@ private:
     prev::core::device::Device& m_device;
 
     prev::core::memory::Allocator& m_allocator;
+
+    uint32_t m_viewCount;
 
 private:
     std::shared_ptr<prev_test::component::common::IOffScreenRenderPassComponent> m_refractionComponent;

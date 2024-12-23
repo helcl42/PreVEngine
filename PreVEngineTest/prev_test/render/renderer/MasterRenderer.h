@@ -20,14 +20,14 @@
 namespace prev_test::render::renderer {
 class MasterRenderer final : public prev::render::IRootRenderer {
 public:
-    MasterRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, uint32_t swapchainImageCount);
+    MasterRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, uint32_t swapchainImageCount, uint32_t viewCount);
 
     ~MasterRenderer() = default;
 
 public:
     void Init() override;
 
-    void Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::IScene>& scene) override;
+    void Render(const prev::render::RenderContext& renderContext, const prev::scene::IScene& scene) override;
 
     void ShutDown() override;
 
@@ -86,6 +86,8 @@ private:
     prev::render::pass::RenderPass& m_defaultRenderPass;
 
     uint32_t m_swapchainImageCount;
+
+    uint32_t m_viewCount;
 
 private:
     // Default

@@ -17,7 +17,7 @@ public:
 
     const glm::quat& GetOrientation() const;
 
-    bool IsAwaysFacingCamera() const;
+    bool IsAlwaysFacingCamera() const;
 
 private:
     glm::vec3 m_position;

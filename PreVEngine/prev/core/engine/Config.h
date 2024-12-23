@@ -1,10 +1,10 @@
 #ifndef __ENGINE_CONFIG_H__
 #define __ENGINE_CONFIG_H__
 
-#include "../common/Common.h"
+#include "../../common/Common.h"
 
-namespace prev::core {
-struct EngineConfig {
+namespace prev::core::engine {
+struct Config {
     bool validation{ true };
 
     std::string appName{ "PreVEngine - Demo" };
@@ -23,6 +23,6 @@ struct EngineConfig {
 
     int32_t gpuIndex{ -1 };
 };
-} // namespace prev::core
+} // namespace prev::core::engine
 
 #endif // !__ENGINE_CONFIG_H__

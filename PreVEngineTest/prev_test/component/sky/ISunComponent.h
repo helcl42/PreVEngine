@@ -8,11 +8,11 @@
 namespace prev_test::component::sky {
 class ISunComponent {
 public:
-    virtual void Update(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, const glm::vec3& eyePosition, const glm::vec3& sunPosition) = 0;
-
     virtual std::shared_ptr<Flare> GetFlare() const = 0;
 
     virtual std::shared_ptr<prev_test::render::IModel> GetModel() const = 0;
+
+    virtual glm::vec2 ComputeFlarePosition(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, const glm::vec3& eyePosition, const glm::vec3& sunPosition) const = 0;
 
 public:
     virtual ~ISunComponent() = default;

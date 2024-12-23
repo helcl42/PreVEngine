@@ -19,7 +19,6 @@ SunComponentFactory::SunComponentFactory(prev::core::device::Device& device, pre
 std::unique_ptr<ISunComponent> SunComponentFactory::Create() const
 {
     auto flare{ CreateFlare(prev_test::common::AssetManager::Instance().GetAssetPath("Textures/sun.png"), 0.2f) };
-    flare->SetScreenSpacePosition(glm::vec2(-100.0f, -100.0f));
 
     auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateQuad() };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };

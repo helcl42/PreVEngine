@@ -2,6 +2,7 @@
 #include "SkyEvents.h"
 
 #include "../../../common/AssetManager.h"
+#include "../../../component/light/ILightComponent.h"
 #include "../../../component/sky/ISunComponent.h"
 
 #include <prev/event/EventChannel.h>
@@ -59,9 +60,9 @@ void SunRenderer::Init()
     LOGI("Sun Pipeline created");
 
     m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsVS>>(m_allocator);
-    m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
-    m_queryPool = std::make_unique<prev::render::query::QueryPool>(m_device, VK_QUERY_TYPE_OCCLUSION, QueryPoolCount, 1);
+    m_queryPool = std::make_unique<prev::render::query::QueryPool>(m_device, VK_QUERY_TYPE_OCCLUSION, QueryPoolCount, MAX_VIEW_COUNT);
     m_queryPoolIndex = prev::util::CircularIndex<uint32_t>{ QueryPoolCount };
 
     m_passedSamples = 0;
@@ -99,18 +100,23 @@ void SunRenderer::Render(const NormalRenderContext& renderContext, const std::sh
 {
     if (node->GetTags().HasAll({ TAG_SUN_RENDER_COMPONENT })) {
         const auto sunComponent{ prev::scene::component::ComponentRepository<prev_test::component::sky::ISunComponent>::Instance().Get(node->GetId()) };
+        const auto lightComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT }) };
 
-        const float aspectRatio{ static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) / static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y) };
+        const float aspectRatio{
+            static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) / static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y)
+        };
         const float xScale{ sunComponent->GetFlare()->GetScale() };
         const float yScale{ xScale * aspectRatio };
 
         m_maxNumberOfSamples = static_cast<uint64_t>(xScale * static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) * yScale * static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y));
-
         m_queryPool->BeginQuery(m_queryPoolIndex, 0, renderContext.commandBuffer);
 
         auto uboVS = m_uniformsPoolVS->GetNext();
         UniformsVS uniformsVS{};
-        uniformsVS.translation = glm::vec4(sunComponent->GetFlare()->GetScreenSpacePosition(), MAX_DEPTH, 1.0f);
+        for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
+            const auto sunPosition{ sunComponent->ComputeFlarePosition(renderContext.projectionMatrices[viewIndex], renderContext.viewMatrices[viewIndex], renderContext.cameraPositions[viewIndex], lightComponent->GetPosition()) };
+            uniformsVS.translations[viewIndex] = glm::vec4(sunPosition, MAX_DEPTH, 1.0f);
+        }
         uniformsVS.scale = glm::vec4(xScale, yScale, 0.0f, 0.0f);
         uboVS->Update(&uniformsVS);
 

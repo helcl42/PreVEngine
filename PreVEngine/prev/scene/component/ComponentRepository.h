@@ -19,50 +19,68 @@ public:
 public:
     std::shared_ptr<ItemType> Get(const uint64_t id) const
     {
-        if (!Contains(id)) {
-            throw std::runtime_error("Entitity with id = " + std::to_string(id) + " does not exist in this repository.");
+        if (auto result = FindFirst(id)) {
+            return result;
+        } else {
+            throw std::runtime_error("Entity with id = " + std::to_string(id) + " does not exist in this repository.");
         }
-
-        return m_components.at(id).front();
     }
 
-    const std::vector<std::shared_ptr<ItemType>>& GetAll(const uint64_t id) const
+    std::vector<std::shared_ptr<ItemType>> GetAll(const uint64_t id) const
     {
-        if (!Contains(id)) {
-            throw std::runtime_error("Entitity with id = " + std::to_string(id) + " does not exist in this repository.");
+        const auto& result{ FindAll(id) };
+        if (!result.empty()) {
+            return result;
+        } else {
+            throw std::runtime_error("Entity with id = " + std::to_string(id) + " does not exist in this repository.");
         }
-
-        return m_components.at(id);
     }
 
     void Add(const uint64_t id, const std::vector<std::shared_ptr<ItemType>>& components)
     {
-        if (Contains(id)) {
-            const auto& addedComponents{ m_components.at(id) };
+        auto addedComponents{ FindAll(id) };
+        if (!addedComponents.empty()) {
             for (const auto component : components) {
                 if (std::find(addedComponents.cbegin(), addedComponents.cend(), component) != std::end(addedComponents)) {
-                    throw std::runtime_error("Entitity with id = " + std::to_string(id) + " already exist in this repository.");
+                    throw std::runtime_error("Entity with id = " + std::to_string(id) + " already exist in this repository.");
                 }
             }
         }
 
-        for (const auto component : components) {
-            m_components[id].push_back(component);
-        }
+        auto& currentComponents{ m_components[id] };
+        currentComponents.insert(currentComponents.end(), components.cbegin(), components.cend());
     }
 
     void Remove(const uint64_t id)
     {
-        if (!Contains(id)) {
-            throw std::runtime_error("Entitity with id = " + std::to_string(id) + " does not exist in this repository.");
+        if (FindFirst(id)) {
+            m_components.erase(id);
+        } else {
+            throw std::runtime_error("Entity with id = " + std::to_string(id) + " does not exist in this repository.");
         }
-
-        m_components.erase(id);
     }
 
     bool Contains(const uint64_t id) const
     {
-        return m_components.find(id) != m_components.cend();
+        return !!FindFirst(id);
+    }
+
+    std::shared_ptr<ItemType> FindFirst(const uint64_t id) const
+    {
+        auto iter{ m_components.find(id) };
+        if (iter != m_components.cend()) {
+            return iter->second.front();
+        }
+        return {};
+    }
+
+    std::vector<std::shared_ptr<ItemType>> FindAll(const uint64_t id) const
+    {
+        auto iter{ m_components.find(id) };
+        if (iter != m_components.cend()) {
+            return iter->second;
+        }
+        return {};
     }
 
 public:

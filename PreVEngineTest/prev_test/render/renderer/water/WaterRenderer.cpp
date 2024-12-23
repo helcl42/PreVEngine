@@ -1,9 +1,10 @@
 #include "WaterRenderer.h"
 
+#include "../RendererUtils.h"
+
 #include "../../../common/AssetManager.h"
 #include "../../../component/common/IOffScreenRenderPassComponent.h"
 #include "../../../component/light/ILightComponent.h"
-#include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../../component/shadow/IShadowsComponent.h"
 #include "../../../component/sky/SkyCommon.h"
 #include "../../../component/transform/ITransformComponent.h"
@@ -16,9 +17,10 @@
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::water {
-
-constexpr uint32_t COLOR_INDEX{ 0 };
-constexpr uint32_t NORMAL_INDEX{ 1 };
+namespace {
+    constexpr uint32_t COLOR_INDEX{ 0 };
+    constexpr uint32_t NORMAL_INDEX{ 1 };
+} // namespace
 
 WaterRenderer::WaterRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass)
     : m_device{ device }
@@ -49,9 +51,9 @@ void WaterRenderer::Init()
             { "depthSampler", 2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT },
             { "reflectionTexture", 3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT },
             { "refractionTexture", 4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT },
-            { "dudvMapTexture", 5, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT },
-            { "normalMapTexture", 6, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT },
-            { "depthMapTexture", 7, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }
+            { "depthMapTexture", 5, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT },
+            { "dudvMapTexture", 6, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT },
+            { "normalMapTexture", 7, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }
         })
 	    .SetDescriptorPoolCapacity(m_descriptorCount)
         .Build();
@@ -74,10 +76,10 @@ void WaterRenderer::Init()
     LOGI("Water Pipeline created");
 
     m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsVS>>(m_allocator);
-    m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
     m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsFS>>(m_allocator);
-    m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
 void WaterRenderer::BeforeRender(const NormalRenderContext& renderContext)
@@ -97,12 +99,7 @@ void WaterRenderer::PreRender(const NormalRenderContext& renderContext)
 void WaterRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAll({ TAG_WATER_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
-        bool visible{ true };
-        if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContext.frustum);
-        }
-
-        if (visible) {
+        if (prev_test::render::renderer::IsVisible(renderContext.frustums, renderContext.cameraCount, node->GetId())) {
             const auto waterComponent = prev::scene::component::ComponentRepository<prev_test::component::water::IWaterComponent>::Instance().Get(node->GetId());
             const auto waterReflectionComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::common::IOffScreenRenderPassComponent>({ TAG_WATER_REFLECTION_RENDER_COMPONENT });
             const auto waterRefractionComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::common::IOffScreenRenderPassComponent>({ TAG_WATER_REFRACTION_RENDER_COMPONENT });
@@ -114,10 +111,12 @@ void WaterRenderer::Render(const NormalRenderContext& renderContext, const std::
             auto uboVS = m_uniformsPoolVS->GetNext();
 
             UniformsVS uniformsVS{};
-            uniformsVS.projectionMatrix = renderContext.projectionMatrix;
-            uniformsVS.viewMatrix = renderContext.viewMatrix;
             uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
-            uniformsVS.cameraPosition = glm::vec4(renderContext.cameraPosition, 1.0f);
+            for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
+                uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
+                uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
+                uniformsVS.cameraPositions[i] = glm::vec4(renderContext.cameraPositions[i], 1.0f);
+            }
             uniformsVS.density = prev_test::component::sky::FOG_DENSITY;
             uniformsVS.gradient = prev_test::component::sky::FOG_GRADIENT;
 
@@ -130,10 +129,10 @@ void WaterRenderer::Render(const NormalRenderContext& renderContext, const std::
             uniformsFS.waterColor = waterComponent->GetMaterial()->GetColor();
             uniformsFS.light.color = glm::vec4(mainLightComponent->GetColor(), 1.0f);
             uniformsFS.light.position = glm::vec4(mainLightComponent->GetPosition(), 1.0f);
-            uniformsFS.nearFarClippingPlane = glm::vec4(renderContext.nearFarClippingPlane, 0.0f, 0.0f);
+            uniformsFS.nearFarClippingPlane = glm::vec4(renderContext.nearFarClippingPlanes[0], 0.0f, 0.0f);
             uniformsFS.moveFactor = waterComponent->GetMoveFactor();
             // shadows
-            for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; i++) {
+            for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; ++i) {
                 const auto& cascade{ shadowsComponent->GetCascade(i) };
                 uniformsFS.shadows.cascades[i].split = glm::vec4(cascade.endSplitDepth);
                 uniformsFS.shadows.cascades[i].viewProjectionMatrix = cascade.GetBiasedViewProjectionMatrix();
