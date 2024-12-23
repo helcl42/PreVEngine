@@ -19,7 +19,7 @@ public:
 public:
     std::shared_ptr<ItemType> Get(const uint64_t id) const
     {
-        if(auto result = FindFirst(id)) {
+        if (auto result = FindFirst(id)) {
             return result;
         } else {
             throw std::runtime_error("Entity with id = " + std::to_string(id) + " does not exist in this repository.");
@@ -29,7 +29,7 @@ public:
     std::vector<std::shared_ptr<ItemType>> GetAll(const uint64_t id) const
     {
         const auto& result{ FindAll(id) };
-        if(!result.empty()) {
+        if (!result.empty()) {
             return result;
         } else {
             throw std::runtime_error("Entity with id = " + std::to_string(id) + " does not exist in this repository.");
@@ -39,7 +39,7 @@ public:
     void Add(const uint64_t id, const std::vector<std::shared_ptr<ItemType>>& components)
     {
         auto addedComponents{ FindAll(id) };
-        if(!addedComponents.empty()) {
+        if (!addedComponents.empty()) {
             for (const auto component : components) {
                 if (std::find(addedComponents.cbegin(), addedComponents.cend(), component) != std::end(addedComponents)) {
                     throw std::runtime_error("Entity with id = " + std::to_string(id) + " already exist in this repository.");
@@ -53,7 +53,7 @@ public:
 
     void Remove(const uint64_t id)
     {
-        if(FindFirst(id)) {
+        if (FindFirst(id)) {
             m_components.erase(id);
         } else {
             throw std::runtime_error("Entity with id = " + std::to_string(id) + " does not exist in this repository.");
@@ -68,7 +68,7 @@ public:
     std::shared_ptr<ItemType> FindFirst(const uint64_t id) const
     {
         auto iter{ m_components.find(id) };
-        if(iter != m_components.cend()) {
+        if (iter != m_components.cend()) {
             return iter->second.front();
         }
         return {};
@@ -77,7 +77,7 @@ public:
     std::vector<std::shared_ptr<ItemType>> FindAll(const uint64_t id) const
     {
         auto iter{ m_components.find(id) };
-        if(iter != m_components.cend()) {
+        if (iter != m_components.cend()) {
             return iter->second;
         }
         return {};

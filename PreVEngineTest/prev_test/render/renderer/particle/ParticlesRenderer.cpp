@@ -98,7 +98,7 @@ void ParticlesRenderer::Render(const NormalRenderContext& renderContext, const s
 
             auto uboVS = m_uniformsPoolVS->GetNext();
             UniformsVS uniformsVS{};
-            for(uint32_t i = 0; i < renderContext.cameraCount; ++i) {
+            for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
                 uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
                 uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
             }

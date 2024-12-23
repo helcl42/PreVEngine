@@ -99,7 +99,7 @@ void RayCastDebugRenderer::Render(const NormalRenderContext& renderContext, cons
 
         UniformsGS uniformsGS{};
         uniformsGS.modelMatrix = glm::mat4(1.0f);
-        for(uint32_t i = 0; i < renderContext.cameraCount; ++i) {
+        for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
             uniformsGS.viewMatrices[i] = renderContext.viewMatrices[i];
             uniformsGS.projectionMatrices[i] = renderContext.projectionMatrices[i];
         }

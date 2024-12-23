@@ -16,7 +16,7 @@ Instance::Instance(const bool enableValidation, const std::vector<std::string>& 
         layers.Pick("VK_LAYER_KHRONOS_validation");
     }
 
-    for(const auto& layer : extLayers) {
+    for (const auto& layer : extLayers) {
         layers.Pick(layer);
     }
     layers.Print();
@@ -55,7 +55,7 @@ Instance::Instance(const bool enableValidation, const std::vector<std::string>& 
 #endif
     }
 
-    for(const auto& ext : extExtensions) {
+    for (const auto& ext : extExtensions) {
         extensions.Pick(ext);
     }
     extensions.Print();

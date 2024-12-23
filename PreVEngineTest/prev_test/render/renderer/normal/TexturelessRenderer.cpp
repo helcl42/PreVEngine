@@ -134,7 +134,7 @@ void TexturelessRenderer::RenderMeshNode(const NormalRenderContext& renderContex
         UniformsVS uniformsVS{};
         uniformsVS.modelMatrix = modelMatrix;
         uniformsVS.normalMatrix = glm::transpose(glm::inverse(modelMatrix));
-        for(uint32_t i = 0; i < renderContext.cameraCount; ++i) {
+        for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
             uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
             uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
             uniformsVS.cameraPositions[i] = glm::vec4(renderContext.cameraPositions[i], 1.0f);
@@ -179,7 +179,8 @@ void TexturelessRenderer::RenderMeshNode(const NormalRenderContext& renderContex
         // common
         uniformsFS.fogColor = prev_test::component::sky::FOG_COLOR;
         uniformsFS.selectedColor = prev_test::component::ray_casting::SELECTED_COLOR;
-        uniformsFS.selected = uniformsFS.selected = prev_test::render::renderer::IsSelected(node->GetId());;
+        uniformsFS.selected = uniformsFS.selected = prev_test::render::renderer::IsSelected(node->GetId());
+        ;
         uniformsFS.castedByShadows = nodeRenderComponent->IsCastedByShadows();
 
         uboFS->Update(&uniformsFS);

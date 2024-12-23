@@ -18,10 +18,10 @@
 
 namespace prev_test::render::renderer::terrain {
 namespace {
-    constexpr uint32_t COLOR_INDEX{0};
-    constexpr uint32_t NORMAL_INDEX{1};
-    constexpr uint32_t HEIGHT_AND_CONE_INDEX{2};
-}
+    constexpr uint32_t COLOR_INDEX{ 0 };
+    constexpr uint32_t NORMAL_INDEX{ 1 };
+    constexpr uint32_t HEIGHT_AND_CONE_INDEX{ 2 };
+} // namespace
 
 TerrainConeStepMappedRenderer::TerrainConeStepMappedRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass)
     : m_device{ device }
@@ -113,7 +113,7 @@ void TerrainConeStepMappedRenderer::Render(const NormalRenderContext& renderCont
             UniformsVS uniformsVS{};
             uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
             uniformsVS.normalMatrix = glm::transpose(glm::inverse(transformComponent->GetWorldTransformScaled()));
-            for(uint32_t i = 0; i < renderContext.cameraCount; ++i) {
+            for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
                 uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
                 uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
                 uniformsVS.cameraPositions[i] = glm::vec4(renderContext.cameraPositions[i], 1.0f);

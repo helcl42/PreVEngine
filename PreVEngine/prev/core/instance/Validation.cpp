@@ -66,11 +66,11 @@ ValidationReporter::ValidationReporter(VkInstance instance)
     m_vkDestroyDebugCallbackEXT = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(m_instance, "vkDestroyDebugReportCallbackEXT");
 
     const VkDebugReportFlagsEXT flags = VK_DEBUG_REPORT_INFORMATION_BIT_EXT | // 1
-                                        VK_DEBUG_REPORT_WARNING_BIT_EXT | // 2
-                                        VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | // 4
-                                        VK_DEBUG_REPORT_ERROR_BIT_EXT | // 8
-                                        VK_DEBUG_REPORT_DEBUG_BIT_EXT | // 16
-                                        0;
+        VK_DEBUG_REPORT_WARNING_BIT_EXT | // 2
+        VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | // 4
+        VK_DEBUG_REPORT_ERROR_BIT_EXT | // 8
+        VK_DEBUG_REPORT_DEBUG_BIT_EXT | // 16
+        0;
 
     VkDebugReportCallbackCreateInfoEXT createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
@@ -89,8 +89,8 @@ ValidationReporter::ValidationReporter(VkInstance instance)
         | 0;
 
     const VkDebugUtilsMessageTypeFlagsEXT messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
-            | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT
-            | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+        | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT
+        | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 
     VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;

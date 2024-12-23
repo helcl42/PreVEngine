@@ -80,7 +80,7 @@ T SetBits(const uint32_t& leastSignificantBitCount)
     }
     return result;
 
-    //return (1 << leastSignificantBitCount) - 1;
+    // return (1 << leastSignificantBitCount) - 1;
 }
 
 glm::mat4 CreateTransformationMatrix(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale);

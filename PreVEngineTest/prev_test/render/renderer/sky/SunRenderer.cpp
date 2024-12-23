@@ -2,8 +2,8 @@
 #include "SkyEvents.h"
 
 #include "../../../common/AssetManager.h"
-#include "../../../component/sky/ISunComponent.h"
 #include "../../../component/light/ILightComponent.h"
+#include "../../../component/sky/ISunComponent.h"
 
 #include <prev/event/EventChannel.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
@@ -103,17 +103,18 @@ void SunRenderer::Render(const NormalRenderContext& renderContext, const std::sh
         const auto lightComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT }) };
 
         const float aspectRatio{
-                static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) / static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y)};
-        const float xScale{sunComponent->GetFlare()->GetScale()};
-        const float yScale{xScale * aspectRatio};
+            static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) / static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y)
+        };
+        const float xScale{ sunComponent->GetFlare()->GetScale() };
+        const float yScale{ xScale * aspectRatio };
 
         m_maxNumberOfSamples = static_cast<uint64_t>(xScale * static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) * yScale * static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y));
         m_queryPool->BeginQuery(m_queryPoolIndex, 0, renderContext.commandBuffer);
 
         auto uboVS = m_uniformsPoolVS->GetNext();
         UniformsVS uniformsVS{};
-        for(uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
-            const auto sunPosition{sunComponent->ComputeFlarePosition(renderContext.projectionMatrices[viewIndex], renderContext.viewMatrices[viewIndex], renderContext.cameraPositions[viewIndex], lightComponent->GetPosition())};
+        for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
+            const auto sunPosition{ sunComponent->ComputeFlarePosition(renderContext.projectionMatrices[viewIndex], renderContext.viewMatrices[viewIndex], renderContext.cameraPositions[viewIndex], lightComponent->GetPosition()) };
             uniformsVS.translations[viewIndex] = glm::vec4(sunPosition, MAX_DEPTH, 1.0f);
         }
         uniformsVS.scale = glm::vec4(xScale, yScale, 0.0f, 0.0f);
@@ -122,8 +123,8 @@ void SunRenderer::Render(const NormalRenderContext& renderContext, const std::sh
         m_shader->Bind("uboVS", *uboVS);
 
         const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-        const VkBuffer vertexBuffers[] = {*sunComponent->GetModel()->GetVertexBuffer()};
-        const VkDeviceSize offsets[] = {0};
+        const VkBuffer vertexBuffers[] = { *sunComponent->GetModel()->GetVertexBuffer() };
+        const VkDeviceSize offsets[] = { 0 };
 
         vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
         vkCmdBindIndexBuffer(renderContext.commandBuffer, *sunComponent->GetModel()->GetIndexBuffer(), 0, sunComponent->GetModel()->GetIndexBuffer()->GetIndexType());

@@ -141,7 +141,7 @@ void AnimationTexturelessRenderer::RenderMeshNode(const NormalRenderContext& ren
         }
         uniformsVS.modelMatrix = modelMatrix;
         uniformsVS.normalMatrix = glm::transpose(glm::inverse(modelMatrix));
-        for(uint32_t i = 0; i < renderContext.cameraCount; ++i) {
+        for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
             uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
             uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
             uniformsVS.cameraPositions[i] = glm::vec4(renderContext.cameraPositions[i], 1.0f);

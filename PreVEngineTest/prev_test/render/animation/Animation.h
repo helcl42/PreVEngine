@@ -12,7 +12,7 @@ namespace prev_test::render::animation {
 class AnimationFactory;
 
 // TODO -> rename to AnimationClip ???
-// TODO -> make AnimationClipImpl* member and hide there all the Assimp specific things 
+// TODO -> make AnimationClipImpl* member and hide there all the Assimp specific things
 class AnimationPart : public prev_test::render::IAnimationPart {
 public:
     AnimationPart(const aiScene* scene);

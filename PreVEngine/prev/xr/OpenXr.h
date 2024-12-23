@@ -8,8 +8,8 @@
 
 #include "../event/EventHandler.h"
 
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 namespace prev::xr {
 class OpenXr {
@@ -62,7 +62,7 @@ public:
     bool EndFrame();
 
 public:
-    void operator() (const XrCameraFeedbackEvent& event);
+    void operator()(const XrCameraFeedbackEvent& event);
 
 private:
     void CreateInstance();
@@ -106,25 +106,25 @@ private:
 
 private:
     XrInstance m_xrInstance = { XR_NULL_HANDLE };
-    std::vector<const char *> m_activeAPILayers = {};
-    std::vector<const char *> m_activeInstanceExtensions = {};
+    std::vector<const char*> m_activeAPILayers = {};
+    std::vector<const char*> m_activeInstanceExtensions = {};
     std::vector<std::string> m_apiLayers = {};
     std::vector<std::string> m_instanceExtensions = {};
 
     XrDebugUtilsMessengerEXT m_debugUtilsMessenger = { XR_NULL_HANDLE };
 
     XrSystemId m_systemID = {};
-    XrSystemProperties m_systemProperties = {XR_TYPE_SYSTEM_PROPERTIES};
+    XrSystemProperties m_systemProperties = { XR_TYPE_SYSTEM_PROPERTIES };
 
     const VkFormat m_preferredColorFormat = { VK_FORMAT_R8G8B8A8_UNORM };
     const VkFormat m_preferredDepthFormat = { VK_FORMAT_D32_SFLOAT };
 
-    std::vector<XrViewConfigurationType> m_applicationViewConfigurations = {XR_VIEW_CONFIGURATION_TYPE_PRIMARY_QUAD_VARJO, XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO};
+    std::vector<XrViewConfigurationType> m_applicationViewConfigurations = { XR_VIEW_CONFIGURATION_TYPE_PRIMARY_QUAD_VARJO, XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO };
     std::vector<XrViewConfigurationType> m_viewConfigurations;
     XrViewConfigurationType m_viewConfiguration = { XR_VIEW_CONFIGURATION_TYPE_MAX_ENUM };
     std::vector<XrViewConfigurationView> m_viewConfigurationViews;
 
-    std::vector<XrEnvironmentBlendMode> m_applicationEnvironmentBlendModes = {XR_ENVIRONMENT_BLEND_MODE_OPAQUE, XR_ENVIRONMENT_BLEND_MODE_ADDITIVE};
+    std::vector<XrEnvironmentBlendMode> m_applicationEnvironmentBlendModes = { XR_ENVIRONMENT_BLEND_MODE_OPAQUE, XR_ENVIRONMENT_BLEND_MODE_ADDITIVE };
     std::vector<XrEnvironmentBlendMode> m_environmentBlendModes = {};
     XrEnvironmentBlendMode m_environmentBlendMode = { XR_ENVIRONMENT_BLEND_MODE_MAX_ENUM };
 
@@ -156,8 +156,8 @@ private:
     // per frame data
     struct RenderLayerInfo {
         XrTime predictedDisplayTime{ 0 };
-        std::vector<XrCompositionLayerBaseHeader *> layers;
-        XrCompositionLayerProjection layerProjection = {XR_TYPE_COMPOSITION_LAYER_PROJECTION};
+        std::vector<XrCompositionLayerBaseHeader*> layers;
+        XrCompositionLayerProjection layerProjection = { XR_TYPE_COMPOSITION_LAYER_PROJECTION };
         std::vector<XrCompositionLayerProjectionView> layerProjectionViews;
         std::vector<XrCompositionLayerDepthInfoKHR> layerDepthInfos;
     };
@@ -176,22 +176,24 @@ private:
     XrActionSet m_actionSet{};
 
     XrAction m_squeezeAction{};
-    XrActionStateFloat m_squeezeState[2] = {{XR_TYPE_ACTION_STATE_FLOAT}, {XR_TYPE_ACTION_STATE_FLOAT}};
+    XrActionStateFloat m_squeezeState[2] = { { XR_TYPE_ACTION_STATE_FLOAT }, { XR_TYPE_ACTION_STATE_FLOAT } };
 
     XrAction m_triggerAction{};
-    XrActionStateBoolean m_triggerState[2] = {{XR_TYPE_ACTION_STATE_BOOLEAN}, {XR_TYPE_ACTION_STATE_BOOLEAN}};
+    XrActionStateBoolean m_triggerState[2] = { { XR_TYPE_ACTION_STATE_BOOLEAN }, { XR_TYPE_ACTION_STATE_BOOLEAN } };
 
     XrAction m_palmPoseAction{};
-    XrPath m_handPaths[2] = {0, 0};
+    XrPath m_handPaths[2] = { 0, 0 };
     XrSpace m_handPoseSpace[2];
-    XrActionStatePose m_handPoseState[2] = {{XR_TYPE_ACTION_STATE_POSE}, {XR_TYPE_ACTION_STATE_POSE}};
+    XrActionStatePose m_handPoseState[2] = { { XR_TYPE_ACTION_STATE_POSE }, { XR_TYPE_ACTION_STATE_POSE } };
     XrPosef m_handPose[2] = {
-            {{1.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}},
-            {{1.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}}};
+        { { 1.0f, 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } },
+        { { 1.0f, 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } }
+    };
+
 private:
     prev::event::EventHandler<OpenXr, XrCameraFeedbackEvent> m_cameraFeedbackHandler{ *this };
 };
-}
+} // namespace prev::xr
 
 #endif
 

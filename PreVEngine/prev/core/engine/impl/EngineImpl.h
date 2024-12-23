@@ -4,16 +4,16 @@
 #include "../Config.h"
 
 #include "../../Core.h"
-#include "../../memory/Allocator.h"
 #include "../../device/Device.h"
+#include "../../memory/Allocator.h"
 
 #include "../../../event/EventHandler.h"
-#include "../../../window/WindowEvents.h"
-#include "../../../scene/IScene.h"
+#include "../../../render/IRootRenderer.h"
 #include "../../../render/ISwapchain.h"
 #include "../../../render/pass/RenderPass.h"
-#include "../../../render/IRootRenderer.h"
+#include "../../../scene/IScene.h"
 #include "../../../util/Utils.h"
+#include "../../../window/WindowEvents.h"
 
 #include <memory>
 
@@ -127,6 +127,6 @@ protected:
 
     std::unique_ptr<prev::render::IRootRenderer> m_rootRenderer{};
 };
-}
+} // namespace prev::core::engine::impl
 
 #endif

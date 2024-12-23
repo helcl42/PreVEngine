@@ -12,8 +12,8 @@ CommandBuffersGroup::~CommandBuffersGroup()
 {
     vkDeviceWaitIdle(m_device);
 
-    for(auto& poolGroup : m_commandPoolGroups) {
-        for (auto &pool: poolGroup) {
+    for (auto& poolGroup : m_commandPoolGroups) {
+        for (auto& pool : poolGroup) {
             vkDestroyCommandPool(m_device, pool, nullptr);
         }
     }

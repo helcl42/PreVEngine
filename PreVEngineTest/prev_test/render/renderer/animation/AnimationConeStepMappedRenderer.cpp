@@ -19,10 +19,10 @@
 
 namespace prev_test::render::renderer::animation {
 namespace {
-    constexpr uint32_t COLOR_INDEX{0};
-    constexpr uint32_t NORMAL_INDEX{1};
-    constexpr uint32_t HEIGHT_AND_CONE_INDEX{2};
-}
+    constexpr uint32_t COLOR_INDEX{ 0 };
+    constexpr uint32_t NORMAL_INDEX{ 1 };
+    constexpr uint32_t HEIGHT_AND_CONE_INDEX{ 2 };
+} // namespace
 
 AnimationConeStepMappedRenderer::AnimationConeStepMappedRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass)
     : m_device{ device }
@@ -153,7 +153,7 @@ void AnimationConeStepMappedRenderer::RenderMeshNode(const NormalRenderContext& 
         }
         uniformsVS.modelMatrix = modelMatrix;
         uniformsVS.normalMatrix = glm::transpose(glm::inverse(modelMatrix));
-        for(uint32_t i = 0; i < renderContext.cameraCount; ++i) {
+        for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
             uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
             uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
             uniformsVS.cameraPositions[i] = glm::vec4(renderContext.cameraPositions[i], 1.0f);

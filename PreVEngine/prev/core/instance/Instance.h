@@ -5,9 +5,9 @@
 #include "Layers.h"
 #include "Validation.h"
 
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
 namespace prev::core::instance {
 class Instance {

@@ -10,6 +10,6 @@ class EngineImplFactory final {
 public:
     std::unique_ptr<EngineImpl> Create(const Config& config) const;
 };
-}
+} // namespace prev::core::engine::impl
 
 #endif

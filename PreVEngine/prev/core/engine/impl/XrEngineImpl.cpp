@@ -7,7 +7,7 @@
 
 namespace prev::core::engine::impl {
 XrEngineImpl::XrEngineImpl(const Config& config)
-        : EngineImpl(config)
+    : EngineImpl(config)
 {
 }
 
@@ -108,7 +108,7 @@ void XrEngineImpl::ResetDevice()
 
 void XrEngineImpl::ResetRenderPass()
 {
-    if(m_config.samplesCount > 1) {
+    if (m_config.samplesCount > 1) {
         m_renderPass = CreateDefaultMultisampledRenderPass(*m_device, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount), GetViewCount(), true, true);
     } else {
         m_renderPass = CreateDefaultRenderPass(*m_device, m_surface, GetViewCount(), true, true);
@@ -120,6 +120,6 @@ void XrEngineImpl::ResetSwapchain()
     m_swapchain = std::make_unique<prev::xr::XrSwapchain>(*m_device, *m_allocator, *m_renderPass, *m_openXr, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount));
     m_swapchain->Print();
 }
-}
+} // namespace prev::core::engine::impl
 
 #endif

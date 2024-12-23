@@ -128,7 +128,7 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
     // generate clouds using compute queue
     const VkExtent2D extent{ renderContext.rect.extent.width - renderContext.rect.offset.x, renderContext.rect.extent.height - renderContext.rect.offset.y };
 
-    for(uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
+    for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
         // TODO - put this work on dedicated compute queue if available, double buffering, ...
 
         auto& skyColorImageBuffer{ m_skyColorImageBuffer[viewIndex] };
@@ -155,12 +155,12 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
         skyAlphanessImageBuffer->UpdateLayout(VK_IMAGE_LAYOUT_GENERAL, renderContext.commandBuffer);
         skyCloudDistanceImageBuffer->UpdateLayout(VK_IMAGE_LAYOUT_GENERAL, renderContext.commandBuffer);
 
-        const float skyNearClippingPlane{std::min(renderContext.nearFarClippingPlanes[viewIndex].y * 100.0f, 10.0f)};
-        const float skyFarClippingPlane{renderContext.nearFarClippingPlanes[viewIndex].y};
+        const float skyNearClippingPlane{ std::min(renderContext.nearFarClippingPlanes[viewIndex].y * 100.0f, 10.0f) };
+        const float skyFarClippingPlane{ renderContext.nearFarClippingPlanes[viewIndex].y };
 
-        const auto fov{prev::util::math::CreateFovFromProjectionMatrix(renderContext.projectionMatrices[viewIndex])};
+        const auto fov{ prev::util::math::CreateFovFromProjectionMatrix(renderContext.projectionMatrices[viewIndex]) };
         const prev_test::render::ViewFrustum skyViewFrustum(fov.angleLeft, fov.angleRight, fov.angleUp, fov.angleDown, skyNearClippingPlane, skyFarClippingPlane);
-        const auto projectionMatrix{skyViewFrustum.CreateProjectionMatrix()};
+        const auto projectionMatrix{ skyViewFrustum.CreateProjectionMatrix() };
 
         auto uboCS = m_uniformsPoolSkyCS->GetNext();
 
@@ -230,7 +230,7 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
         uniformsPostCS.lisghtPosition = glm::vec4(lightPositionO1, 0.0f, 1.0f);
         uniformsPostCS.enableGodRays = 1;
         uniformsPostCS.lightDotCameraForward = glm::dot(glm::normalize(renderContext.cameraPositions[viewIndex] - mainLightComponent->GetPosition()),
-                                                        glm::normalize(prev::util::math::GetForwardVector(renderContext.viewMatrices[viewIndex])));
+            glm::normalize(prev::util::math::GetForwardVector(renderContext.viewMatrices[viewIndex])));
 
         uboPostCS->Update(&uniformsPostCS);
 
@@ -267,7 +267,7 @@ void SkyRenderer::Render(const NormalRenderContext& renderContext, const std::sh
     if (node->GetTags().HasAll({ TAG_SKY_RENDER_COMPONENT })) {
         const auto skyComponent = prev::scene::component::ComponentRepository<prev_test::component::sky::ISkyComponent>::Instance().Get(node->GetId());
 
-        for(uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
+        for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
             auto& skyCloudDistanceImageBuffer{ m_skyCloudDistanceImageBuffer[viewIndex] };
             auto& skyPostProcessColorImageBuffer{ m_skyPostProcessColorImageBuffer[viewIndex] };
 
@@ -306,7 +306,7 @@ void SkyRenderer::AfterRender(const NormalRenderContext& renderContext)
 
 void SkyRenderer::ShutDown()
 {
-    for(uint32_t viewIndex = 0; viewIndex < MAX_VIEW_COUNT; ++viewIndex) {
+    for (uint32_t viewIndex = 0; viewIndex < MAX_VIEW_COUNT; ++viewIndex) {
         m_skyPostProcessColorImageBuffer[viewIndex] = nullptr;
         m_skyCloudDistanceImageBuffer[viewIndex] = nullptr;
         m_skyAlphanessImageBuffer[viewIndex] = nullptr;
