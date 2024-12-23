@@ -3,8 +3,11 @@
 
 #if defined(TARGET_PLATFORM_WINDOWS)
 #define NOMINMAX
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
 #include <Windows.h>
+#include <unknwn.h>
 #define TICK_CHARACTER "\xFB" // On Windows, use Square-root as tick mark
 #define PAUSE system("pause")
 #elif defined(TARGET_PLATFORM_IOS)
@@ -51,5 +54,11 @@ constexpr bool REVERSE_DEPTH{ false };
 constexpr float MIN_DEPTH{ 0.0f };
 constexpr float MAX_DEPTH{ 1.0f };
 #endif // ENABLE_REVERSE_DEPTH
+
+#ifdef ENABLE_XR
+constexpr uint32_t MAX_VIEW_COUNT{ 2 };
+#else
+constexpr uint32_t MAX_VIEW_COUNT{ 1 };
+#endif
 
 #endif

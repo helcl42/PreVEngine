@@ -14,6 +14,8 @@ file(GLOB SRC_LIST
     "prev/common/*.h" "prev/common/*.cpp"
     "prev/common/pattern/*.h" "prev/common/pattern/*.cpp"
     "prev/core/*.h" "prev/core/*.cpp"
+    "prev/core/engine/*.h" "prev/core/engine/*.cpp"
+    "prev/core/engine/impl/*.h" "prev/core/engine/impl/*.cpp"
     "prev/core/memory/*.h" "prev/core/memory/*.cpp"
     "prev/core/device/*.h" "prev/core/device/*.cpp"
     "prev/core/instance/*.h" "prev/core/instance/*.cpp"
@@ -41,6 +43,7 @@ file(GLOB SRC_LIST
     "prev/window/impl/android/*.h" "prev/window/impl/android/*.cpp"
     "prev/window/impl/macos/*.h" "prev/window/impl/macos/*.cpp"
     "prev/window/impl/ios/*.h" "prev/window/impl/ios/*.cpp"
+    "prev/xr/*.h" "prev/xr/*.cpp"
 )
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")  # for find_package
@@ -50,6 +53,7 @@ option(ENABLE_LOGGING "Prints LOG* messages to Terminal or Android Logcat." ON)
 option(ENABLE_MULTITOUCH "Multi-touch screen support" OFF)
 option(ENABLE_REVERSE_DEPTH "Enable reverse depth" OFF)
 option(ENABLE_VK_LOADER "Enable Vulkan loader" ON)
+option(ENABLE_XR "Enable XR" OFF)
 
 if (ENABLE_LOGGING)
     add_definitions(-DENABLE_LOGGING)
@@ -62,19 +66,24 @@ if (ENABLE_REVERSE_DEPTH)
 endif()
 if (ENABLE_VK_LOADER)
     add_definitions(-DENABLE_VK_LOADER)
-endif()
-
-if(ENABLE_VK_LOADER)
     add_definitions(-DVK_NO_PROTOTYPES)
 endif()
+if(ENABLE_XR)
+    add_definitions(-DENABLE_XR)
+endif()
 
+include_directories("external")
 include_directories("external/worm_holes/WormHoles")
 include_directories("external/glm")
+if(ENABLE_XR)
+    include_directories("../Dependencies/openxr/include")
+endif()
 
 if(WIN32)
     message("${PROJECT_NAME} - Windows")
     add_definitions(-DTARGET_PLATFORM_WINDOWS)
     add_definitions(-DVK_USE_PLATFORM_WIN32_KHR)
+    add_definitions(-DWIN32_LEAN_AND_MEAN)
 
     add_library(${PROJECT_NAME} STATIC ${SRC_LIST})
 

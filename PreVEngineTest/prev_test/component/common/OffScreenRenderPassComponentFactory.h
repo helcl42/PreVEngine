@@ -14,7 +14,7 @@ public:
     ~OffScreenRenderPassComponentFactory() = default;
 
 public:
-    std::unique_ptr<IOffScreenRenderPassComponent> Create(const VkExtent2D& extent, const VkFormat depthFormat, const std::vector<VkFormat>& colorFormats) const;
+    std::unique_ptr<IOffScreenRenderPassComponent> Create(const VkExtent2D& extent, const VkFormat depthFormat, const std::vector<VkFormat>& colorFormats, const uint32_t viewCount) const;
 
 private:
     prev::core::device::Device& m_device;

@@ -13,7 +13,6 @@
 #include <prev/render/sampler/Sampler.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/graph/ISceneNode.h>
-#include <prev/util/Utils.h>
 
 namespace prev_test::render::renderer::sky {
 class SkyRenderer final : public IRenderer<NormalRenderContext> {
@@ -58,6 +57,8 @@ private:
         DEFAULT_ALIGNMENT glm::vec4 skyColorTop;
         DEFAULT_ALIGNMENT glm::vec4 windDirection;
 
+        DEFAULT_ALIGNMENT glm::vec4 worldOrigin;
+
         DEFAULT_ALIGNMENT float time;
         float coverageFactor;
         float cloudSpeed;
@@ -84,7 +85,7 @@ private:
     };
 
 private:
-    const uint32_t m_descriptorCount{ 10 };
+    const uint32_t m_descriptorCount{ 24 };
 
 private:
     prev::core::device::Device& m_device;
@@ -110,25 +111,26 @@ private:
 
     std::unique_ptr<prev::render::pipeline::Pipeline> m_compositePipeline;
 
-    std::shared_ptr<prev::render::buffer::ImageBuffer> m_skyColorImageBuffer;
+private:
+    std::shared_ptr<prev::render::buffer::ImageBuffer> m_skyColorImageBuffer[MAX_VIEW_COUNT];
 
-    std::shared_ptr<prev::render::sampler::Sampler> m_skyColorImageSampler;
+    std::shared_ptr<prev::render::sampler::Sampler> m_skyColorImageSampler[MAX_VIEW_COUNT];
 
-    std::shared_ptr<prev::render::buffer::ImageBuffer> m_skyBloomImageBuffer;
+    std::shared_ptr<prev::render::buffer::ImageBuffer> m_skyBloomImageBuffer[MAX_VIEW_COUNT];
 
-    std::shared_ptr<prev::render::sampler::Sampler> m_skyBloomImageSampler;
+    std::shared_ptr<prev::render::sampler::Sampler> m_skyBloomImageSampler[MAX_VIEW_COUNT];
 
-    std::shared_ptr<prev::render::buffer::ImageBuffer> m_skyAlphanessImageBuffer;
+    std::shared_ptr<prev::render::buffer::ImageBuffer> m_skyAlphanessImageBuffer[MAX_VIEW_COUNT];
 
-    std::shared_ptr<prev::render::sampler::Sampler> m_skyAlphanessImageSampler;
+    std::shared_ptr<prev::render::sampler::Sampler> m_skyAlphanessImageSampler[MAX_VIEW_COUNT];
 
-    std::shared_ptr<prev::render::buffer::ImageBuffer> m_skyCloudDistanceImageBuffer;
+    std::shared_ptr<prev::render::buffer::ImageBuffer> m_skyCloudDistanceImageBuffer[MAX_VIEW_COUNT];
 
-    std::shared_ptr<prev::render::sampler::Sampler> m_skyCloudDistanceImageSampler;
+    std::shared_ptr<prev::render::sampler::Sampler> m_skyCloudDistanceImageSampler[MAX_VIEW_COUNT];
 
-    std::shared_ptr<prev::render::buffer::ImageBuffer> m_skyPostProcessColorImageBuffer;
+    std::shared_ptr<prev::render::buffer::ImageBuffer> m_skyPostProcessColorImageBuffer[MAX_VIEW_COUNT];
 
-    std::shared_ptr<prev::render::sampler::Sampler> m_skyPostProcessImageSampler;
+    std::shared_ptr<prev::render::sampler::Sampler> m_skyPostProcessImageSampler[MAX_VIEW_COUNT];
 
 private:
     static const inline VkFormat COLOR_FORMAT{ VK_FORMAT_R8G8B8A8_UNORM };

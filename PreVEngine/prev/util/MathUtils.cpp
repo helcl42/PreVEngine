@@ -169,18 +169,18 @@ glm::mat4 CreatePerspectiveProjectionMatrix(const float aspectRatio, const float
 
 glm::mat4 CreatePerspectiveProjectionMatrixWithReverseDepth(const float aspectRatio, const float verticalFovInDegs, const float nearClippingPlane, const float farClippingPlane)
 {
-    //https://vincent-p.github.io/posts/vulkan_perspective_matrix/
+    // https://vincent-p.github.io/posts/vulkan_perspective_matrix/
     const float focalLength{ 1.0f / std::tan(glm::radians(verticalFovInDegs) * 0.5f) };
     const float x{ focalLength / aspectRatio };
     const float y{ -focalLength }; // invert Y in clip coordinates
     const float A{ nearClippingPlane / (farClippingPlane - nearClippingPlane) };
     const float B{ (nearClippingPlane * farClippingPlane) / (farClippingPlane - nearClippingPlane) };
 
-    glm::mat4 projectionMatrix = glm::mat4{
+    const glm::mat4 projectionMatrix = glm::mat4{
         x, 0.0f, 0.0f, 0.0f,
-        0.0f, y, 0.0f, 0.0f, 
-        0.0f, 0.0f, A, -1.0f, 
-        0.0f, 0.0f, B, 0.0f,
+        0.0f, y, 0.0f, 0.0f,
+        0.0f, 0.0f, A, -1.0f,
+        0.0f, 0.0f, B, 0.0f
     };
     return projectionMatrix;
 }
@@ -188,13 +188,13 @@ glm::mat4 CreatePerspectiveProjectionMatrixWithReverseDepth(const float aspectRa
 glm::mat4 CreateOrthographicProjectionMatrix(const float leftPlane, const float rightPlane, const float bottomPlane, const float topPlane, const float nearPlane, const float farPlane)
 {
     const float x{ 2.0f / (rightPlane - leftPlane) };
-    const float y{ -2.0f / (bottomPlane - topPlane) };  // invert Y in clip coordinates
+    const float y{ -2.0f / (bottomPlane - topPlane) }; // invert Y in clip coordinates
     const float z{ 1.0f / (nearPlane - farPlane) };
     const float A{ -(rightPlane + leftPlane) / (rightPlane - leftPlane) };
     const float B{ -(bottomPlane + topPlane) / (bottomPlane - topPlane) };
     const float C{ nearPlane / (nearPlane - farPlane) };
 
-    glm::mat4 projectionMatrix = glm::mat4{
+    const glm::mat4 projectionMatrix = glm::mat4{
         x, 0.0f, 0.0f, 0.0f,
         0.0f, y, 0.0f, 0.0f,
         0.0f, 0.0f, z, 0.0f,
@@ -203,4 +203,43 @@ glm::mat4 CreateOrthographicProjectionMatrix(const float leftPlane, const float 
     return projectionMatrix;
 }
 
+glm::mat4 CreatePerspectiveProjectionMatrix(const float tanAngleLeft, const float tanAngleRight, const float tanAngleUp, float const tanAngleDown, const float nearClippingPlane, const float farClippingPlane)
+{
+    const float tanAngleWidth{ tanAngleRight - tanAngleLeft };
+    const float tanAngleHeight{ tanAngleDown - tanAngleUp };
+
+    const glm::mat4 projectionMatrix = glm::mat4{
+        2.0f / tanAngleWidth, 0.0f, 0.0f, 0.0f,
+        0.0f, 2.0f / tanAngleHeight, 0.0f, 0.0f,
+        (tanAngleRight + tanAngleLeft) / tanAngleWidth, (tanAngleUp + tanAngleDown) / tanAngleHeight, -farClippingPlane / (farClippingPlane - nearClippingPlane), -1.0f,
+        0.0f, 0.0f, -(farClippingPlane * nearClippingPlane) / (farClippingPlane - nearClippingPlane), 0.0f
+    };
+    return projectionMatrix;
+}
+
+glm::mat4 CreatePerspectiveProjectionMatrix(const Fov& fov, const float nearClippingPlane, const float farClippingPlane)
+{
+    const float tanLeft{ std::tan(fov.angleLeft) };
+    const float tanRight{ std::tan(fov.angleRight) };
+    const float tanUp{ std::tan(fov.angleUp) };
+    const float tanDown{ std::tan(fov.angleDown) };
+    return CreatePerspectiveProjectionMatrix(tanLeft, tanRight, tanUp, tanDown, nearClippingPlane, farClippingPlane);
+}
+
+glm::vec2 GetClippingPlanes(const glm::mat4& projectionMatrix)
+{
+    const float nearPlane{ projectionMatrix[3][2] / projectionMatrix[2][2] };
+    const float farPlane{ projectionMatrix[3][2] / (projectionMatrix[2][2] + 1.0f) };
+    return { nearPlane, farPlane };
+}
+
+Fov CreateFovFromProjectionMatrix(const glm::mat4& projectionMatrix)
+{
+    const float left{ (projectionMatrix[2][0] - 1.0f) / projectionMatrix[0][0] };
+    const float right{ (projectionMatrix[2][0] + 1.0f) / projectionMatrix[0][0] };
+    const float up{ (projectionMatrix[2][1] - 1.0f) / projectionMatrix[1][1] };
+    const float down{ (projectionMatrix[2][1] + 1.0f) / projectionMatrix[1][1] };
+
+    return Fov{ std::atan(left), std::atan(right), std::atan(up), std::atan(down) };
+}
 } // namespace prev::util::math

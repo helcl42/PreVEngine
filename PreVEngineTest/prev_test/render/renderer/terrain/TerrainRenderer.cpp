@@ -1,8 +1,9 @@
 #include "TerrainRenderer.h"
 
+#include "../RendererUtils.h"
+
 #include "../../../common/AssetManager.h"
 #include "../../../component/light/ILightComponent.h"
-#include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../../component/ray_casting/RayCastingCommon.h"
 #include "../../../component/shadow/IShadowsComponent.h"
 #include "../../../component/sky/SkyCommon.h"
@@ -66,10 +67,10 @@ void TerrainRenderer::Init()
     LOGI("Terrain Pipeline created");
 
     m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsVS>>(m_allocator);
-    m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
     m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsFS>>(m_allocator);
-    m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
 void TerrainRenderer::BeforeRender(const NormalRenderContext& renderContext)
@@ -89,12 +90,7 @@ void TerrainRenderer::PreRender(const NormalRenderContext& renderContext)
 void TerrainRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAll({ TAG_TERRAIN_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
-        bool visible{ true };
-        if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContext.frustum);
-        }
-
-        if (visible) {
+        if (prev_test::render::renderer::IsVisible(renderContext.frustums, renderContext.cameraCount, node->GetId())) {
             const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
             const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
             const auto lightComponents = prev::scene::component::NodeComponentHelper::FindAll<prev_test::component::light::ILightComponent>({ TAG_LIGHT });
@@ -105,12 +101,14 @@ void TerrainRenderer::Render(const NormalRenderContext& renderContext, const std
             auto uboVS = m_uniformsPoolVS->GetNext();
 
             UniformsVS uniformsVS{};
-            uniformsVS.projectionMatrix = renderContext.projectionMatrix;
-            uniformsVS.viewMatrix = renderContext.viewMatrix;
             uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
             uniformsVS.normalMatrix = glm::transpose(glm::inverse(transformComponent->GetWorldTransformScaled()));
-            uniformsVS.cameraPosition = glm::vec4(renderContext.cameraPosition, 1.0f);
-            for (size_t i = 0; i < lightComponents.size(); i++) {
+            for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
+                uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
+                uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
+                uniformsVS.cameraPositions[i] = glm::vec4(renderContext.cameraPositions[i], 1.0f);
+            }
+            for (size_t i = 0; i < lightComponents.size(); ++i) {
                 const auto& lightComponent{ lightComponents[i] };
                 uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponent->GetPosition(), 1.0f), glm::vec4(lightComponent->GetColor(), 1.0f), glm::vec4(lightComponent->GetAttenuation(), 1.0f));
             }
@@ -126,7 +124,7 @@ void TerrainRenderer::Render(const NormalRenderContext& renderContext, const std
 
             UniformsFS uniformsFS{};
             // shadows
-            for (size_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; i++) {
+            for (size_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; ++i) {
                 const auto& cascade{ shadowsComponent->GetCascade(i) };
                 uniformsFS.shadows.cascades[i] = ShadowsCascadeUniform(cascade.GetBiasedViewProjectionMatrix(), glm::vec4(cascade.endSplitDepth));
             }
@@ -134,7 +132,7 @@ void TerrainRenderer::Render(const NormalRenderContext& renderContext, const std
             uniformsFS.shadows.useReverseDepth = REVERSE_DEPTH;
 
             // lightning
-            for (size_t i = 0; i < lightComponents.size(); i++) {
+            for (size_t i = 0; i < lightComponents.size(); ++i) {
                 const auto& lightComponent{ lightComponents[i] };
                 uniformsFS.lightning.lights[i] = LightUniform(glm::vec4(lightComponent->GetPosition(), 1.0f), glm::vec4(lightComponent->GetColor(), 1.0f), glm::vec4(lightComponent->GetAttenuation(), 1.0f));
             }
@@ -148,7 +146,7 @@ void TerrainRenderer::Render(const NormalRenderContext& renderContext, const std
             uniformsFS.castedByShadows = true;
             uniformsFS.minHeight = terrainComponent->GetHeightMapInfo()->GetGlobalMinHeight();
             uniformsFS.maxHeight = terrainComponent->GetHeightMapInfo()->GetGlobalMaxHeight();
-            for (size_t i = 0; i < terrainComponent->GetMaterials().size(); i++) {
+            for (size_t i = 0; i < terrainComponent->GetMaterials().size(); ++i) {
                 const auto material{ terrainComponent->GetMaterials().at(i) };
                 uniformsFS.heightSteps[i] = glm::vec4(terrainComponent->GetHeightSteps().at(i));
                 uniformsFS.material[i] = MaterialUniform(material->GetColor(), material->GetShineDamper(), material->GetReflectivity());
@@ -158,7 +156,7 @@ void TerrainRenderer::Render(const NormalRenderContext& renderContext, const std
             uboFS->Update(&uniformsFS);
 
             m_shader->Bind("depthSampler", *shadowsComponent->GetImageBuffer(), *shadowsComponent->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-            for (size_t i = 0; i < 4; i++) {
+            for (size_t i = 0; i < terrainComponent->GetMaterials().size(); ++i) {
                 const auto material{ terrainComponent->GetMaterials().at(i) };
                 m_shader->Bind("colorSampler[" + std::to_string(i) + "]", *material->GetImageBuffer(), *material->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             }

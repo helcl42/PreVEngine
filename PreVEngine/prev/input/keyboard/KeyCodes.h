@@ -45,7 +45,7 @@ enum class KeyCode {
     KEY_9 = 38, // 9 and (
     KEY_0 = 39, // 0 and )
     KEY_Enter = 40, // (Return)
-    KEY_Escape = 41,	
+    KEY_Escape = 41,
     KEY_Delete = 42,
     KEY_Tab = 43,
     KEY_Space = 44,

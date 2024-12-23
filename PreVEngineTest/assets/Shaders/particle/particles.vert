@@ -1,14 +1,15 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive : enable
+#ifdef ENABLE_XR
+#extension GL_EXT_multiview : enable
+#endif
 
 #include "../common/utils.glsl"
 
 layout(std140, binding = 0) uniform UniformBufferObject {
-    mat4 viewMatrix;
-
-	mat4 projectionMatrix;
-
+    mat4 viewMatrices[MAX_VIEW_COUNT];
+    mat4 projectionMatrices[MAX_VIEW_COUNT];
     uint textureNumberOfRows;
 } uboVS;
 
@@ -29,14 +30,23 @@ layout(location = 2) out float outCurrentNextStageBlendFactor;
 
 void main()
 {
-    const vec3 cameraRightWorldSpace = vec3(uboVS.viewMatrix[0][0], uboVS.viewMatrix[1][0], uboVS.viewMatrix[2][0]);
-    const vec3 cameraUpWorldSpace = vec3(uboVS.viewMatrix[0][1], uboVS.viewMatrix[1][1], uboVS.viewMatrix[2][1]);
+#ifdef ENABLE_XR
+    const int viewIndex = gl_ViewIndex;
+#else
+    const int viewIndex = 0;
+#endif
+
+    const mat4 viewMatrix = uboVS.viewMatrices[viewIndex];
+    const mat4 projectionMatrix = uboVS.projectionMatrices[viewIndex];
+
+    const vec3 cameraRightWorldSpace = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
+    const vec3 cameraUpWorldSpace = vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
 
     vec2 localPosition = MakeRotation(rotation) * vec2(inPosition.x * scale.x, inPosition.y * scale.y);
 
     vec3 vertexPositionWorldspace = position + cameraRightWorldSpace * -localPosition.x + cameraUpWorldSpace * localPosition.y;
 
-	gl_Position = uboVS.projectionMatrix * uboVS.viewMatrix * vec4(vertexPositionWorldspace, 1.0);
+	gl_Position = projectionMatrix * viewMatrix * vec4(vertexPositionWorldspace, 1.0);
 
 	vec2 textureCoordBase = inTextureCoord / uboVS.textureNumberOfRows;
     outCurrentStageTextureCoord = textureCoordBase + textureOffsetsCurrent;

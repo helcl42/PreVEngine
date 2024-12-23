@@ -9,15 +9,15 @@ static constexpr bool QUERY_DEDICATED_COMPUTE_QUEUE{ true };
 
 namespace prev::core::device {
 namespace {
-    bool FindQueue(const std::shared_ptr<PhysicalDevice>& gpu, const VkQueueFlags flags, const VkQueueFlags unwantedFlags, const VkSurfaceKHR surface, const QueuesMetadata& queuesMetadata, QueueMetadata& outQueueMeta)
+    bool FindQueue(const PhysicalDevice& gpu, const VkQueueFlags flags, const VkQueueFlags unwantedFlags, const VkSurfaceKHR surface, const QueuesMetadata& queuesMetadata, QueueMetadata& outQueueMeta)
     {
-        const auto familyIndex{ gpu->FindQueueFamily(flags, unwantedFlags, surface) };
+        const auto familyIndex{ gpu.FindQueueFamily(flags, unwantedFlags, surface) };
         if (familyIndex < 0) {
             LOGW("Could not find queueFamily with requested properties.");
             return false;
         }
 
-        const auto& queueFamilyProps{ gpu->GetQueueFamilies().at(familyIndex) };
+        const auto& queueFamilyProps{ gpu.GetQueueFamilies().at(familyIndex) };
 
         uint32_t queueIndex{ 0 };
         const uint32_t usedFamilyQueueCount{ queuesMetadata.GetQueueFamilyCount(familyIndex) };
@@ -32,7 +32,7 @@ namespace {
     }
 } // namespace
 
-std::shared_ptr<Device> DeviceFactory::Create(const std::shared_ptr<PhysicalDevice>& gpu, const VkSurfaceKHR surface) const
+std::unique_ptr<Device> DeviceFactory::Create(const PhysicalDevice& gpu, const VkSurfaceKHR surface) const
 {
     QueuesMetadata queuesMetadata{};
 
@@ -93,6 +93,6 @@ std::shared_ptr<Device> DeviceFactory::Create(const std::shared_ptr<PhysicalDevi
         return nullptr;
     }
 
-    return std::make_shared<Device>(gpu, queuesMetadata);
+    return std::make_unique<Device>(gpu, queuesMetadata);
 }
 } // namespace prev::core::device

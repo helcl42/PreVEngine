@@ -5,29 +5,46 @@
 #include <prev/util/MathUtils.h>
 
 namespace prev_test::render {
-ViewFrustum::ViewFrustum(const float verticalFov, const float nearClippingPlane, const float farClippingPlane)
-    : m_verticalFov(verticalFov)
-    , m_nearClippingPlane(nearClippingPlane)
-    , m_farClippingPlane(farClippingPlane)
+namespace {
+    float ScaleAngle(const float angle, const float scale)
+    {
+        return std::atan(std::tan(angle) * scale);
+    }
+} // namespace
+
+ViewFrustum::ViewFrustum(const float verticalFov, const float aspectRatio, const float nearClippingPlane, const float farClippingPlane)
+    : m_angleFovLeft{ ScaleAngle(-verticalFov / 2.0f, aspectRatio) }
+    , m_angleFovRight{ ScaleAngle(verticalFov / 2.0f, aspectRatio) }
+    , m_angleFovUp{ verticalFov / 2.0f }
+    , m_angleFovDown{ -verticalFov / 2.0f }
+    , m_nearClippingPlane{ nearClippingPlane }
+    , m_farClippingPlane{ farClippingPlane }
 {
 }
 
-glm::mat4 ViewFrustum::CreateProjectionMatrix(const uint32_t w, const uint32_t h) const
+ViewFrustum::ViewFrustum(const float angleFovLeft, const float angleFovRight, const float angleFovUp, const float angleFovDown, const float nearClippingPlane, const float farClippingPlane)
+    : m_angleFovLeft{ angleFovLeft }
+    , m_angleFovRight{ angleFovRight }
+    , m_angleFovUp{ angleFovUp }
+    , m_angleFovDown{ angleFovDown }
+    , m_nearClippingPlane{ nearClippingPlane }
+    , m_farClippingPlane{ farClippingPlane }
 {
-    const float aspectRatio{ static_cast<float>(w) / static_cast<float>(h) };
-    return CreateProjectionMatrix(aspectRatio);
 }
 
-glm::mat4 ViewFrustum::CreateProjectionMatrix(const float aspectRatio) const
+glm::mat4 ViewFrustum::CreateProjectionMatrix() const
 {
-    // TODO - this is workaround for corner cases - should be removed in the future
-    const float finalAspectRatio{ std::max(0.0001f, aspectRatio) };
-    return prev::util::math::CreatePerspectiveProjectionMatrix(finalAspectRatio, m_verticalFov, m_nearClippingPlane, m_farClippingPlane);
+    return prev::util::math::CreatePerspectiveProjectionMatrix(prev::util::math::Fov{ m_angleFovLeft, m_angleFovRight, m_angleFovUp, m_angleFovDown }, m_nearClippingPlane, m_farClippingPlane);
 }
 
 float ViewFrustum::GetVerticalFov() const
 {
-    return m_verticalFov;
+    return m_angleFovRight - m_angleFovLeft;
+}
+
+float ViewFrustum::GetHorizontalFov() const
+{
+    return m_angleFovDown - m_angleFovUp;
 }
 
 float ViewFrustum::GetNearClippingPlane() const

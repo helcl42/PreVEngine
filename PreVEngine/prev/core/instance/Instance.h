@@ -5,12 +5,16 @@
 #include "Layers.h"
 #include "Validation.h"
 
+#include <memory>
+#include <string>
+#include <vector>
+
 namespace prev::core::instance {
 class Instance {
 public:
-    Instance(const Layers& layers, const Extensions& extensions, const char* appName = "PreVEngineApp", const char* engineName = "PreVEngine");
+    Instance(const bool enableValidation = true, const std::vector<std::string>& extLayers = {}, const std::vector<std::string>& extExtensions = {}, const char* appName = "PreVEngineApp", const char* engineName = "PreVEngine");
 
-    Instance(const bool enableValidation = true, const char* appName = "PreVEngineApp", const char* engineName = "PreVEngine");
+    Instance(const Layers& layers, const Extensions& extensions, const char* appName = "PreVEngineApp", const char* engineName = "PreVEngine");
 
     ~Instance();
 
@@ -25,7 +29,7 @@ private:
 private:
     VkInstance m_instance{};
 
-    ValidationReporter m_validationReporter{};
+    std::unique_ptr<ValidationReporter> m_validationReporter{};
 };
 } // namespace prev::core::instance
 

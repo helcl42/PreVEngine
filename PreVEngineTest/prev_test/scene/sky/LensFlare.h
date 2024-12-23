@@ -33,7 +33,7 @@ private:
     prev::core::memory::Allocator& m_allocator;
 
 private:
-    std::shared_ptr<prev_test::component::sky::ILensFlareComponent> m_lensFlareComponent;
+    std::shared_ptr<prev_test::component::sky::ILensFlareComponent> m_lensFlareComponent{};
 
     glm::vec2 m_viewPortSize{};
 

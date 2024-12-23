@@ -2,10 +2,11 @@
 
 #include "../../common/Logger.h"
 #include "../../core/Formats.h"
+#include "../../util/MathUtils.h"
 
 namespace prev::render::pass {
 RenderPassBuilder::RenderPassBuilder(VkDevice device)
-    : m_device(device)
+    : m_device{ device }
 {
 }
 
@@ -39,6 +40,13 @@ RenderPassBuilder& RenderPassBuilder::AddSubpass(const std::vector<uint32_t>& at
 RenderPassBuilder& RenderPassBuilder::AddSubpassDependencies(const std::vector<VkSubpassDependency>& dependencies)
 {
     m_dependencies.insert(m_dependencies.end(), dependencies.cbegin(), dependencies.cend());
+
+    return *this;
+}
+
+RenderPassBuilder& RenderPassBuilder::SetViewCount(const uint32_t viewCount)
+{
+    m_viewCount = viewCount;
 
     return *this;
 }
@@ -77,6 +85,22 @@ std::unique_ptr<RenderPass> RenderPassBuilder::Build() const
     renderPassCreateInfo.pSubpasses = subpassDescriptions.data();
     renderPassCreateInfo.dependencyCount = static_cast<uint32_t>(renderPass->m_dependencies.size());
     renderPassCreateInfo.pDependencies = renderPass->m_dependencies.data();
+    renderPassCreateInfo.pNext = nullptr;
+#ifdef ENABLE_XR
+    const uint32_t viewMask{ prev::util::math::SetBits<uint32_t>(m_viewCount) };
+    const uint32_t correlationMask{ prev::util::math::SetBits<uint32_t>(m_viewCount) };
+
+    VkRenderPassMultiviewCreateInfo renderPassMultiviewCreateInfo{ VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO };
+    renderPassMultiviewCreateInfo.subpassCount = static_cast<uint32_t>(subpassDescriptions.size());
+    renderPassMultiviewCreateInfo.pViewMasks = &viewMask;
+    renderPassMultiviewCreateInfo.correlationMaskCount = 1;
+    renderPassMultiviewCreateInfo.pCorrelationMasks = &correlationMask;
+    renderPassMultiviewCreateInfo.pNext = nullptr;
+
+    if (m_viewCount > 1) {
+        renderPassCreateInfo.pNext = &renderPassMultiviewCreateInfo;
+    }
+#endif
     VKERRCHECK(vkCreateRenderPass(m_device, &renderPassCreateInfo, nullptr, &renderPass->m_renderPass));
 
     LOGI("Renderpass created");

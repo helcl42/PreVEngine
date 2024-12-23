@@ -1,8 +1,9 @@
 #include "ParticlesRenderer.h"
 
+#include "../RendererUtils.h"
+
 #include "../../../common/AssetManager.h"
 #include "../../../component/particle/IParticleSystemComponent.h"
-#include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
@@ -68,10 +69,10 @@ void ParticlesRenderer::Init()
     LOGI("Particles Pipeline created");
 
     m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsVS>>(m_allocator);
-    m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
     m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsFS>>(m_allocator);
-    m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
 void ParticlesRenderer::BeforeRender(const NormalRenderContext& renderContext)
@@ -85,12 +86,7 @@ void ParticlesRenderer::PreRender(const NormalRenderContext& renderContext)
 void ParticlesRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAll({ TAG_PARTICLE_SYSTEM_COMPONENT })) {
-        bool visible{ true };
-        if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContext.frustum);
-        }
-
-        if (visible) {
+        if (prev_test::render::renderer::IsVisible(renderContext.frustums, renderContext.cameraCount, node->GetId())) {
             const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
             const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
 
@@ -102,8 +98,10 @@ void ParticlesRenderer::Render(const NormalRenderContext& renderContext, const s
 
             auto uboVS = m_uniformsPoolVS->GetNext();
             UniformsVS uniformsVS{};
-            uniformsVS.projectionMatrix = renderContext.projectionMatrix;
-            uniformsVS.viewMatrix = renderContext.viewMatrix;
+            for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
+                uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
+                uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
+            }
             uniformsVS.textureNumberOfRows = particlesComponent->GetMaterial()->GetAtlasNumberOfRows();
             uboVS->Update(&uniformsVS);
 

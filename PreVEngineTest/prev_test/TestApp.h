@@ -6,14 +6,14 @@
 namespace prev_test {
 class TestApp final : public prev::App {
 public:
-    TestApp(const prev::core::EngineConfig& config);
+    TestApp(const prev::core::engine::Config& config);
 
     ~TestApp() = default;
 
 protected:
-    std::shared_ptr<prev::scene::IScene> CreateScene() const override;
+    std::unique_ptr<prev::scene::IScene> CreateScene() const override;
 
-    std::shared_ptr<prev::render::IRootRenderer> CreateRootRenderer() const override;
+    std::unique_ptr<prev::render::IRootRenderer> CreateRootRenderer() const override;
 };
 } // namespace prev_test
 

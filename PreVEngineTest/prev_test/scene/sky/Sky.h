@@ -3,6 +3,8 @@
 
 #include "../../General.h"
 
+#include "../../component/sky/ISkyComponent.h"
+
 #include <prev/core/device/Device.h>
 #include <prev/core/memory/Allocator.h>
 #include <prev/scene/graph/SceneNode.h>
@@ -25,6 +27,8 @@ private:
     prev::core::device::Device& m_device;
 
     prev::core::memory::Allocator& m_allocator;
+
+    std::shared_ptr<prev_test::component::sky::ISkyComponent> m_skyComponent;
 };
 } // namespace prev_test::scene::sky
 

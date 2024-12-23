@@ -1,5 +1,9 @@
 #include "android_native.h"
 
+#ifdef ENABLE_XR
+#include "../prev/xr/OpenXrCommon.h"
+#endif
+
 //----------------------------------------printf for Android---------------------
 // Uses a 256 byte buffer to allow concatenating multiple printf's onto one log line.
 // The buffer gets flushed when the printf string ends in a '\n', or the buffer is full.
@@ -10,14 +14,29 @@ struct printBuf {
     static const int SIZE = 256;
     char buf[SIZE];
     printBuf() { clear(); }
-    printBuf(const char* c) { memset(buf, 0, SIZE); strncpy(buf, c, SIZE - 1); }
-    printBuf& operator+=(const char* c) { strncat(buf, c, SIZE - len() - 1); if(len() >= SIZE - 1) flush(); return *this;}
+    printBuf(const char* c)
+    {
+        memset(buf, 0, SIZE);
+        strncpy(buf, c, SIZE - 1);
+    }
+    printBuf& operator+=(const char* c)
+    {
+        strncat(buf, c, SIZE - len() - 1);
+        if (len() >= SIZE - 1)
+            flush();
+        return *this;
+    }
     int len() { return strlen(buf); }
-    void clear(){ memset(buf, 0, SIZE); }
-    void flush() { __android_log_print(ANDROID_LOG_INFO, "PreVEngine", "%s", buf); clear(); }
+    void clear() { memset(buf, 0, SIZE); }
+    void flush()
+    {
+        __android_log_print(ANDROID_LOG_INFO, "PreVEngine", "%s", buf);
+        clear();
+    }
 } printBuf;
 
-int printf(const char* format, ...) {  // printf for Android
+int printf(const char* format, ...)
+{ // printf for Android
     char buf[printBuf.SIZE];
     va_list argptr;
     va_start(argptr, format);
@@ -25,7 +44,8 @@ int printf(const char* format, ...) {  // printf for Android
     va_end(argptr);
     printBuf += buf;
     int len = strlen(buf);
-    if ((len >= printBuf.SIZE - 1) || (buf[len - 1] == '\n')) printBuf.flush();  // flush on
+    if ((len >= printBuf.SIZE - 1) || (buf[len - 1] == '\n'))
+        printBuf.flush(); // flush on
     return strlen(buf);
 }
 //--------------------------------------------------------------------------------------------------
@@ -35,10 +55,11 @@ android_app* g_AndroidApp = NULL; // Android native-actvity state
 //====================Main====================
 int PreVMain(int argc, char** argv); // Forward declaration of main function
 
-static void activity_force_finish(void) {
+static void activity_force_finish(void)
+{
     JavaVM* javaVM = g_AndroidApp->activity->vm;
     JNIEnv* jniEnv = g_AndroidApp->activity->env;
-    JavaVMAttachArgs Args = {JNI_VERSION_1_6, "NativeThread", NULL};
+    JavaVMAttachArgs Args = { JNI_VERSION_1_6, "NativeThread", NULL };
     javaVM->AttachCurrentThread(&jniEnv, &Args);
 
     jclass classActivity = jniEnv->GetObjectClass(g_AndroidApp->activity->clazz);
@@ -53,29 +74,48 @@ static void activity_force_finish(void) {
     pthread_exit(NULL);
 }
 
-void android_main(struct android_app* state) {
-    printf("Native Activity\n");
+void android_main(struct android_app* state)
+{
+    printf("Native Activity");
 
     g_AndroidApp = state; // Pass android app state to window_andoid.cpp
 
     android_fopen_set_asset_manager(state->activity->assetManager); // Re-direct fopen to read assets from our APK.
 
+#ifdef ENABLE_XR
+    // https://registry.khronos.org/OpenXR/specs/1.0/html/xrspec.html#XR_KHR_loader_init
+    // Load xrInitializeLoaderKHR() function pointer. On Android, the loader must be initialized with variables from android_app *.
+    // Without this, there's is no loader and thus our function calls to OpenXR would fail.
+    PFN_xrInitializeLoaderKHR xrInitializeLoaderKHR{};
+    OPENXR_CHECK(xrGetInstanceProcAddr(XR_NULL_HANDLE, "xrInitializeLoaderKHR", (PFN_xrVoidFunction*)&xrInitializeLoaderKHR), "Failed to get InstanceProcAddr for xrInitializeLoaderKHR.");
+    if (!xrInitializeLoaderKHR) {
+        return;
+    }
+
+    // Fill out an XrLoaderInitInfoAndroidKHR structure and initialize the loader for Android.
+    XrLoaderInitInfoAndroidKHR loaderInitializeInfoAndroid{ XR_TYPE_LOADER_INIT_INFO_ANDROID_KHR };
+    loaderInitializeInfoAndroid.applicationVM = state->activity->vm;
+    loaderInitializeInfoAndroid.applicationContext = state->activity->clazz;
+    OPENXR_CHECK(xrInitializeLoaderKHR((XrLoaderInitInfoBaseHeaderKHR*)&loaderInitializeInfoAndroid), "Failed to initialize Loader for Android.");
+#endif
+
     PreVMain(0, NULL); // call the common main
 
-    printf("Exiting.\n");
+    printf("Exiting.");
     ANativeActivity_finish(state->activity);
 
-//    activity_force_finish();
-//    exit(0);
+    //    activity_force_finish();
+    //    exit(0);
 }
 //============================================
 
 //========================UGLY JNI code for showing the Keyboard========================
 
-#define CALL_OBJ_METHOD( OBJ,METHOD,SIGNATURE, ...) jniEnv->CallObjectMethod (OBJ, jniEnv->GetMethodID(jniEnv->GetObjectClass(OBJ),METHOD,SIGNATURE), __VA_ARGS__)
-#define CALL_BOOL_METHOD(OBJ,METHOD,SIGNATURE, ...) jniEnv->CallBooleanMethod(OBJ, jniEnv->GetMethodID(jniEnv->GetObjectClass(OBJ),METHOD,SIGNATURE), __VA_ARGS__)
+#define CALL_OBJ_METHOD(OBJ, METHOD, SIGNATURE, ...) jniEnv->CallObjectMethod(OBJ, jniEnv->GetMethodID(jniEnv->GetObjectClass(OBJ), METHOD, SIGNATURE), __VA_ARGS__)
+#define CALL_BOOL_METHOD(OBJ, METHOD, SIGNATURE, ...) jniEnv->CallBooleanMethod(OBJ, jniEnv->GetMethodID(jniEnv->GetObjectClass(OBJ), METHOD, SIGNATURE), __VA_ARGS__)
 
-void ShowKeyboard(bool visible, int flags) {
+void ShowKeyboard(bool visible, int flags)
+{
     // Attach current thread to the JVM.
     JavaVM* javaVM = g_AndroidApp->activity->vm;
     JNIEnv* jniEnv = g_AndroidApp->activity->env;
@@ -97,12 +137,12 @@ void ShowKeyboard(bool visible, int flags) {
     jobject lInputMethodManager = CALL_OBJ_METHOD(lNativeActivity, "getSystemService", "(Ljava/lang/String;)Ljava/lang/Object;", INPUT_METHOD_SERVICE);
 
     // getWindow().getDecorView().
-    jobject lWindow = CALL_OBJ_METHOD(lNativeActivity,"getWindow", "()Landroid/view/Window;",0);
-    jobject lDecorView = CALL_OBJ_METHOD(lWindow, "getDecorView", "()Landroid/view/View;",0);
+    jobject lWindow = CALL_OBJ_METHOD(lNativeActivity, "getWindow", "()Landroid/view/Window;", 0);
+    jobject lDecorView = CALL_OBJ_METHOD(lWindow, "getDecorView", "()Landroid/view/View;", 0);
     if (visible) {
         jboolean lResult = CALL_BOOL_METHOD(lInputMethodManager, "showSoftInput", "(Landroid/view/View;I)Z", lDecorView, flags);
     } else {
-        jobject  lBinder = CALL_OBJ_METHOD (lDecorView, "getWindowToken", "()Landroid/os/IBinder;",0);
+        jobject lBinder = CALL_OBJ_METHOD(lDecorView, "getWindowToken", "()Landroid/os/IBinder;", 0);
         jboolean lResult = CALL_BOOL_METHOD(lInputMethodManager, "hideSoftInputFromWindow", "(Landroid/os/IBinder;I)Z", lBinder, flags);
     }
     // Finished with the JVM.
@@ -111,7 +151,8 @@ void ShowKeyboard(bool visible, int flags) {
 //======================================================================================
 
 //===============================Get Unicode from Keyboard==============================
-int GetUnicodeChar(int eventType, int keyCode, int metaState) {
+int GetUnicodeChar(int eventType, int keyCode, int metaState)
+{
     JavaVM* javaVM = g_AndroidApp->activity->vm;
     JNIEnv* jniEnv = g_AndroidApp->activity->env;
 

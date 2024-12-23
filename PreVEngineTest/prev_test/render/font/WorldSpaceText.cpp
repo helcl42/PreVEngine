@@ -27,7 +27,7 @@ const glm::quat& WorldSpaceText::GetOrientation() const
     return m_orientation;
 }
 
-bool WorldSpaceText::IsAwaysFacingCamera() const
+bool WorldSpaceText::IsAlwaysFacingCamera() const
 {
     return m_alwaysFaceCamera;
 }

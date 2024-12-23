@@ -4,10 +4,10 @@
 const int MAX_BONES_COUNT = 100;
 
 layout(std140, binding = 0) uniform UniformBufferObject {
+	mat4 bones[MAX_BONES_COUNT];
     mat4 modelMatrix;
     mat4 viewMatrix;
-    mat4 projMatrix;
-    mat4 bones[MAX_BONES_COUNT];
+    mat4 projectionMatrix;
 } ubo;
 
 layout(location = 0) in vec3 inPosition;
@@ -24,5 +24,5 @@ void main() {
 
 	vec4 positionL = boneTransform * vec4(inPosition, 1.0);
 
-	gl_Position = ubo.projMatrix * ubo.viewMatrix * ubo.modelMatrix * vec4(positionL.xyz, 1.0);
+	gl_Position = ubo.projectionMatrix * ubo.viewMatrix * ubo.modelMatrix * vec4(positionL.xyz, 1.0);
 }

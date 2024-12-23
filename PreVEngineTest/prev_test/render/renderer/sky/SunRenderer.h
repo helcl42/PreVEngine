@@ -38,7 +38,7 @@ public:
 
 private:
     struct DEFAULT_ALIGNMENT UniformsVS {
-        DEFAULT_ALIGNMENT glm::vec4 translation;
+        DEFAULT_ALIGNMENT glm::vec4 translations[MAX_VIEW_COUNT];
 
         DEFAULT_ALIGNMENT glm::vec4 scale;
     };
@@ -65,7 +65,7 @@ private:
 
     uint64_t m_maxNumberOfSamples{ 0 };
 
-    static const uint32_t QueryPoolCount{ 3 };
+    static const inline uint32_t QueryPoolCount{ 3 };
 
     prev::util::CircularIndex<uint32_t> m_queryPoolIndex{ QueryPoolCount };
 

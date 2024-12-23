@@ -1,6 +1,7 @@
 #include "LensFlareRenderer.h"
 
 #include "../../../common/AssetManager.h"
+#include "../../../component/light/ILightComponent.h"
 #include "../../../component/sky/ILensFlareComponent.h"
 
 #include <prev/render/pipeline/PipelineBuilder.h>
@@ -59,10 +60,10 @@ void LensFlareRenderer::Init()
     LOGI("LensFlare Pipeline created");
 
     m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsVS>>(m_allocator);
-    m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
     m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsFS>>(m_allocator);
-    m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
 void LensFlareRenderer::BeforeRender(const NormalRenderContext& renderContext)
@@ -83,15 +84,27 @@ void LensFlareRenderer::Render(const NormalRenderContext& renderContext, const s
 {
     if (node->GetTags().HasAll({ TAG_LENS_FLARE_RENDER_COMPONENT })) {
         const auto lensFlareComponent{ prev::scene::component::ComponentRepository<prev_test::component::sky::ILensFlareComponent>::Instance().Get(node->GetId()) };
+        const auto lightComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT }) };
 
-        for (const auto& lensFlare : lensFlareComponent->GetFlares()) {
-            const float aspectRatio{ static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) / static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y) };
-            const float xScale{ lensFlare->GetScale() };
+        std::vector<glm::vec2> flarePositions[MAX_VIEW_COUNT];
+        for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
+            flarePositions[viewIndex] = lensFlareComponent->ComputeFlarePositions(renderContext.projectionMatrices[viewIndex], renderContext.viewMatrices[viewIndex], renderContext.cameraPositions[viewIndex], lightComponent->GetPosition());
+        }
+
+        const auto& flares{ lensFlareComponent->GetFlares() };
+        for (size_t i = 0; i < flares.size(); ++i) {
+            const auto& flare{ flares[i] };
+            const float aspectRatio{
+                static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) / static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y)
+            };
+            const float xScale{ flare->GetScale() };
             const float yScale{ xScale * aspectRatio };
 
             auto uboVS = m_uniformsPoolVS->GetNext();
             UniformsVS uniformsVS{};
-            uniformsVS.translation = glm::vec4(lensFlare->GetScreenSpacePosition(), MAX_DEPTH, 1.0f);
+            for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
+                uniformsVS.translations[viewIndex] = glm::vec4(flarePositions[viewIndex][i], MIN_DEPTH, 1.0f);
+            }
             uniformsVS.scale = glm::vec4(xScale, yScale, 0.0f, 0.0f);
             uboVS->Update(&uniformsVS);
 
@@ -100,7 +113,7 @@ void LensFlareRenderer::Render(const NormalRenderContext& renderContext, const s
             uniformsFS.brightness = glm::vec4(m_sunVisibilityFactor);
             uboFS->Update(&uniformsFS);
 
-            m_shader->Bind("colorSampler", *lensFlare->GetImageBuffer(), *lensFlare->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            m_shader->Bind("colorSampler", *flare->GetImageBuffer(), *flare->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             m_shader->Bind("uboVS", *uboVS);
             m_shader->Bind("uboFS", *uboFS);
 

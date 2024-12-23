@@ -13,7 +13,7 @@
 namespace prev_test::scene {
 class Root final : public prev::scene::graph::SceneNode {
 public:
-    Root(prev::core::device::Device& device, prev::core::memory::Allocator& allocator);
+    Root(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, uint32_t viewCount);
 
     ~Root() = default;
 
@@ -38,6 +38,8 @@ private:
     prev::core::device::Device& m_device;
 
     prev::core::memory::Allocator& m_allocator;
+
+    uint32_t m_viewCount{};
 
 private:
     prev::event::EventHandler<Root, prev::input::keyboard::KeyEvent> m_keyEventHnadler{ *this };

@@ -10,13 +10,13 @@
 
 namespace prev::core::device {
 struct QueueMetadata {
-    uint32_t family; // queue family
+    uint32_t family{}; // queue family
 
-    uint32_t index; // queue index
+    uint32_t index{}; // queue index
 
-    VkQueueFlags flags; // Graphics / Compute / Transfer / Sparse / Protected
+    VkQueueFlags flags{}; // Graphics / Compute / Transfer / Sparse / Protected
 
-    VkSurfaceKHR surface; // VK_NULL_HANDLE if queue can not present
+    VkSurfaceKHR surface{}; // VK_NULL_HANDLE if queue can not present
 
     friend bool operator<(const QueueMetadata& a, const QueueMetadata& b);
 };
@@ -24,7 +24,7 @@ struct QueueMetadata {
 struct QueuesMetadata {
     void Add(const std::vector<QueueType>& queueTypes, const QueueMetadata& queueMetadata);
 
-    std::vector<uint32_t> GetQueueFamiies() const;
+    std::vector<uint32_t> GetQueueFamilies() const;
 
     uint32_t GetQueueFamilyCount(const uint32_t family) const;
 
@@ -37,22 +37,22 @@ struct QueuesMetadata {
 
 class Device {
 public:
-    Device(const std::shared_ptr<PhysicalDevice>& gpu, const QueuesMetadata& queuesMetadata);
+    Device(const PhysicalDevice& gpu, const QueuesMetadata& queuesMetadata);
 
     ~Device();
 
 public:
     void WaitIdle() const;
 
-    std::shared_ptr<Queue> GetQueue(const QueueType queueType, const uint32_t index = 0) const;
+    bool HasQueue(const QueueType queueType, const uint32_t index = 0) const;
 
-    std::vector<std::shared_ptr<Queue>> GetQueues(const QueueType queueType) const;
+    const Queue& GetQueue(const QueueType queueType, const uint32_t index = 0) const;
 
-    std::map<QueueType, std::vector<std::shared_ptr<Queue>>> GetAllQueues() const;
+    const std::map<QueueType, std::vector<Queue>>& GetAllQueues() const;
 
     std::vector<QueueType> GetAllQueueTypes() const;
 
-    std::shared_ptr<PhysicalDevice> GetGPU() const;
+    const PhysicalDevice& GetGPU() const;
 
     void Print() const;
 
@@ -60,11 +60,11 @@ public:
     operator VkDevice() const;
 
 private:
-    std::shared_ptr<PhysicalDevice> m_gpu;
+    PhysicalDevice m_gpu{};
 
-    VkDevice m_handle;
+    VkDevice m_handle{};
 
-    std::map<QueueType, std::vector<std::shared_ptr<Queue>>> m_queues;
+    std::map<QueueType, std::vector<Queue>> m_queues;
 };
 } // namespace prev::core::device
 

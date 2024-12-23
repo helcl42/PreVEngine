@@ -1,6 +1,9 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive : enable
+#ifdef ENABLE_XR
+#extension GL_EXT_multiview : enable
+#endif
 
 #include "../common/common.glsl"
 #include "../common/lights.glsl"
@@ -12,15 +15,15 @@ layout(std140, binding = 0) uniform UniformBufferObject {
 
     mat4 modelMatrix;
 
-    mat4 viewMatrix;
-
-	mat4 projectionMatrix;
-
 	mat4 normalMatrix;
 
-	vec4 clipPlane;
+	mat4 viewMatrices[MAX_VIEW_COUNT];
 
-	vec4 cameraPosition;
+	mat4 projectionMatrices[MAX_VIEW_COUNT];
+
+	vec4 cameraPositions[MAX_VIEW_COUNT];
+
+	vec4 clipPlane;
 
 	Lightning lightning;
 
@@ -50,6 +53,12 @@ layout(location = 6) out vec3 outToLightVectorTangentSpace[MAX_LIGHT_COUNT];
 
 void main() 
 {
+#ifdef ENABLE_XR
+	const int viewIndex = gl_ViewIndex;
+#else
+	const int viewIndex = 0;
+#endif
+
 	mat4 boneTransform = uboVS.bones[inBoneIds[0]] * inWeights[0];
 	boneTransform += uboVS.bones[inBoneIds[1]] * inWeights[1];
 	boneTransform += uboVS.bones[inBoneIds[2]] * inWeights[2];
@@ -63,10 +72,10 @@ void main()
 
 	gl_ClipDistance[0] = dot(worldPosition, uboVS.clipPlane);
 
-	vec4 viewPosition = uboVS.viewMatrix * worldPosition;
+	vec4 viewPosition = uboVS.viewMatrices[viewIndex] * worldPosition;
 	outViewPosition = viewPosition.xyz;
 
-	gl_Position = uboVS.projectionMatrix * viewPosition;
+	gl_Position = uboVS.projectionMatrices[viewIndex] * viewPosition;
 
 	outTextureCoord = (inTextureCoord / uboVS.textureNumberOfRows) + uboVS.textureOffset.xy;
 
@@ -74,7 +83,7 @@ void main()
 
 	mat3 TBN = CreateTBNMatrix(mat3(uboVS.modelMatrix), inNormal, inTangent, inBiTangent);
 
-	outToCameraVectorTangentSpace = TBN * uboVS.cameraPosition.xyz;
+	outToCameraVectorTangentSpace = TBN * uboVS.cameraPositions[viewIndex].xyz;
 	outPositionTangentSpace = TBN * worldPosition.xyz;
 
 	for (int i = 0; i < uboVS.lightning.realCountOfLights; i++)

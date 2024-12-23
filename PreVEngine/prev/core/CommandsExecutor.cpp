@@ -1,7 +1,7 @@
 #include "CommandsExecutor.h"
 
 namespace prev::core {
-CommandsExecutor::CommandsExecutor(device::Device& device, device::Queue& queue)
+CommandsExecutor::CommandsExecutor(const device::Device& device, const device::Queue& queue)
     : m_device{ device }
     , m_queue{ queue }
 {

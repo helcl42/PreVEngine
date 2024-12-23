@@ -8,19 +8,19 @@
 #include <algorithm>
 
 namespace prev::render {
-Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount)
+Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount, uint32_t viewCount)
     : m_device{ device }
     , m_allocator{ allocator }
     , m_renderPass{ renderPass }
     , m_surface{ surface }
     , m_sampleCount{ sampleCount }
+    , m_viewCount{ viewCount }
+    , m_graphicsQueue{ m_device.GetQueue(core::device::QueueType::GRAPHICS) }
+    , m_presentQueue{ m_device.GetQueue(core::device::QueueType::PRESENT) }
+    , m_swapchain{ VK_NULL_HANDLE }
+    , m_acquiredIndex{ 0 }
+    , m_isAcquired{ false }
 {
-    m_graphicsQueue = m_device.GetQueue(core::device::QueueType::GRAPHICS);
-    m_presentQueue = m_device.GetQueue(core::device::QueueType::PRESENT);
-
-    m_swapchain = VK_NULL_HANDLE;
-    m_isAcquired = false;
-
     const VkSurfaceCapabilitiesKHR surfaceCapabilities{ GetSurfaceCapabilities() };
     assert(surfaceCapabilities.supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
     assert(surfaceCapabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR);
@@ -30,7 +30,7 @@ Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allo
     m_swapchainCreateInfo.surface = m_surface;
     m_swapchainCreateInfo.imageFormat = m_renderPass.GetColorFormat();
     m_swapchainCreateInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-    m_swapchainCreateInfo.imageArrayLayers = 1; // 2 for stereo
+    m_swapchainCreateInfo.imageArrayLayers = m_viewCount;
     m_swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     m_swapchainCreateInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
     m_swapchainCreateInfo.clipped = VK_TRUE;
@@ -40,7 +40,7 @@ Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allo
     UpdateExtent();
     SetImageCount(3);
 
-    m_commandPool = prev::util::vk::CreateCommandPool(m_device, m_graphicsQueue->family);
+    m_commandPool = prev::util::vk::CreateCommandPool(m_device, m_graphicsQueue.family);
 
     Apply();
 }
@@ -124,9 +124,9 @@ bool Swapchain::SetImageCount(uint32_t imageCount)
 std::vector<VkPresentModeKHR> Swapchain::GetPresentModes() const
 {
     uint32_t count{};
-    VKERRCHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(*m_device.GetGPU(), m_surface, &count, nullptr));
+    VKERRCHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(m_device.GetGPU(), m_surface, &count, nullptr));
     std::vector<VkPresentModeKHR> modes(count);
-    VKERRCHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(*m_device.GetGPU(), m_surface, &count, modes.data()));
+    VKERRCHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(m_device.GetGPU(), m_surface, &count, modes.data()));
     return modes;
 }
 
@@ -167,12 +167,12 @@ void Swapchain::Print() const
 {
     LOGI("Swapchain:");
 
-    LOGI("\tFormat  = %3d : %s", m_swapchainCreateInfo.imageFormat, util::vk::FormatToString(m_swapchainCreateInfo.imageFormat).c_str());
+    LOGI("\tColor   = %3d : %s", m_swapchainCreateInfo.imageFormat, util::vk::FormatToString(m_swapchainCreateInfo.imageFormat).c_str());
     LOGI("\tDepth   = %3d : %s", m_depthBuffer->GetFormat(), util::vk::FormatToString(m_depthBuffer->GetFormat()).c_str());
 
     const auto& extent{ m_swapchainCreateInfo.imageExtent };
     LOGI("\tExtent  = %d x %d", extent.width, extent.height);
-    LOGI("\tBuffers = %d", (int)m_swapchainBuffers.size());
+    LOGI("\tBuffers = %d", static_cast<int>(m_swapchainBuffers.size()));
 
     const auto modes{ GetPresentModes() };
     LOGI("\tPresentMode:");
@@ -190,15 +190,15 @@ const VkExtent2D& Swapchain::GetExtent() const
 
 uint32_t Swapchain::GetImageCount() const
 {
-    return m_frameIndex.GetCount();
+    return static_cast<uint32_t>(m_swapchainBuffers.size());
 }
 
 void Swapchain::Apply()
 {
     m_swapchainCreateInfo.oldSwapchain = m_swapchain;
 
-    const std::vector<uint32_t> families = { m_presentQueue->family, m_graphicsQueue->family };
-    if (m_presentQueue->family != m_graphicsQueue->family) {
+    const std::vector<uint32_t> families = { m_presentQueue.family, m_graphicsQueue.family };
+    if (m_presentQueue.family != m_graphicsQueue.family) {
         m_swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         m_swapchainCreateInfo.queueFamilyIndexCount = static_cast<uint32_t>(families.size());
         m_swapchainCreateInfo.pQueueFamilyIndices = families.data();
@@ -216,11 +216,14 @@ void Swapchain::Apply()
     }
 
     const VkExtent3D newExtent{ m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height, 1 };
+    const auto imageViewType{ prev::util::vk::GetImageViewType(m_viewCount) };
 
     m_depthBuffer = buffer::ImageBufferBuilder{ m_allocator }
                         .SetExtent(newExtent)
                         .SetFormat(m_renderPass.GetDepthFormat())
                         .SetType(VK_IMAGE_TYPE_2D)
+                        .SetViewType(imageViewType)
+                        .SetLayerCount(m_viewCount)
                         .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
                         .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
                         .Build();
@@ -229,6 +232,8 @@ void Swapchain::Apply()
                                 .SetExtent(newExtent)
                                 .SetFormat(m_renderPass.GetColorFormat())
                                 .SetType(VK_IMAGE_TYPE_2D)
+                                .SetViewType(imageViewType)
+                                .SetLayerCount(m_viewCount)
                                 .SetSampleCount(m_sampleCount)
                                 .SetUsageFlags(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
                                 .SetLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
@@ -237,6 +242,8 @@ void Swapchain::Apply()
                                 .SetExtent(newExtent)
                                 .SetFormat(m_renderPass.GetDepthFormat())
                                 .SetType(VK_IMAGE_TYPE_2D)
+                                .SetViewType(imageViewType)
+                                .SetLayerCount(m_viewCount)
                                 .SetSampleCount(m_sampleCount)
                                 .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
                                 .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
@@ -249,9 +256,9 @@ void Swapchain::Apply()
     m_frameIndex = util::CircularIndex{ swapchainImagesCount };
 
     m_swapchainBuffers.resize(swapchainImagesCount);
-    for (uint32_t i = 0; i < swapchainImagesCount; i++) {
+    for (uint32_t i = 0; i < swapchainImagesCount; ++i) {
         auto image{ swapchainImages[i] };
-        auto imageView{ util::vk::CreateImageView(m_device, image, m_swapchainCreateInfo.imageFormat, VK_IMAGE_VIEW_TYPE_2D, 1, VK_IMAGE_ASPECT_COLOR_BIT) };
+        auto imageView{ util::vk::CreateImageView(m_device, image, m_swapchainCreateInfo.imageFormat, imageViewType, 1, VK_IMAGE_ASPECT_COLOR_BIT, m_viewCount) };
 
         std::vector<VkImageView> swapchainImageViews;
         if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
@@ -280,7 +287,7 @@ void Swapchain::Apply()
 VkSurfaceCapabilitiesKHR Swapchain::GetSurfaceCapabilities() const
 {
     VkSurfaceCapabilitiesKHR surfaceCapabilities;
-    VKERRCHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(*m_device.GetGPU(), m_surface, &surfaceCapabilities));
+    VKERRCHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_device.GetGPU(), m_surface, &surfaceCapabilities));
     return surfaceCapabilities;
 }
 
@@ -338,7 +345,7 @@ void Swapchain::Submit()
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = &swapchainBuffer.renderSemaphore;
 
-    VKERRCHECK(m_graphicsQueue->Submit(1, &submitInfo, swapchainBuffer.fence));
+    VKERRCHECK(m_graphicsQueue.Submit(1, &submitInfo, swapchainBuffer.fence));
 }
 
 void Swapchain::Present()
@@ -356,7 +363,7 @@ void Swapchain::Present()
 
     bool swapchainChanged{ false };
 
-    const auto result{ m_presentQueue->Present(&presentInfo) };
+    const auto result{ m_presentQueue.Present(&presentInfo) };
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
         swapchainChanged = UpdateExtent();
     } else if (result != VK_SUCCESS) {
@@ -370,7 +377,7 @@ void Swapchain::Present()
     m_isAcquired = false;
 }
 
-bool Swapchain::BeginFrame(SwapChainFrameContext& outContex)
+bool Swapchain::BeginFrame(SwapChainFrameContext& outContext)
 {
     SwapchainBuffer swapchainBuffer;
     if (!AcquireNext(swapchainBuffer)) {
@@ -381,7 +388,7 @@ bool Swapchain::BeginFrame(SwapChainFrameContext& outContex)
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
     VKERRCHECK(vkBeginCommandBuffer(swapchainBuffer.commandBuffer, &beginInfo));
 
-    outContex = { swapchainBuffer.framebuffer, swapchainBuffer.commandBuffer, m_acquiredIndex };
+    outContext = { swapchainBuffer.framebuffer, swapchainBuffer.commandBuffer, m_acquiredIndex };
     return true;
 }
 

@@ -1,8 +1,9 @@
 #include "AnimationNormalMappedRenderer.h"
 
+#include "../RendererUtils.h"
+
 #include "../../../common/AssetManager.h"
 #include "../../../component/light/ILightComponent.h"
-#include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../../component/ray_casting/RayCastingCommon.h"
 #include "../../../component/render/IAnimationRenderComponent.h"
 #include "../../../component/shadow/IShadowsComponent.h"
@@ -16,9 +17,10 @@
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::animation {
-
-constexpr uint32_t COLOR_INDEX{ 0 };
-constexpr uint32_t NORMAL_INDEX{ 1 };
+namespace {
+    constexpr uint32_t COLOR_INDEX{ 0 };
+    constexpr uint32_t NORMAL_INDEX{ 1 };
+} // namespace
 
 AnimationNormalMappedRenderer::AnimationNormalMappedRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass)
     : m_device{ device }
@@ -75,10 +77,10 @@ void AnimationNormalMappedRenderer::Init()
     LOGI("Animation Normal Mapped Pipeline created");
 
     m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsVS>>(m_allocator);
-    m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
     m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsFS>>(m_allocator);
-    m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU()->GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolFS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 }
 
 void AnimationNormalMappedRenderer::BeforeRender(const NormalRenderContext& renderContext)
@@ -98,13 +100,7 @@ void AnimationNormalMappedRenderer::PreRender(const NormalRenderContext& renderC
 void AnimationNormalMappedRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (node->GetTags().HasAll({ TAG_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
-
-        bool visible{ true };
-        if (prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Contains(node->GetId())) {
-            visible = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId())->IsInFrustum(renderContext.frustum);
-        }
-
-        if (visible) {
+        if (prev_test::render::renderer::IsVisible(renderContext.frustums, renderContext.cameraCount, node->GetId())) {
             const auto nodeRenderComponent = prev::scene::component::ComponentRepository<prev_test::component::render::IAnimationRenderComponent>::Instance().Get(node->GetId());
             RenderMeshNode(renderContext, node, nodeRenderComponent->GetModel()->GetMesh()->GetRootNode());
         }
@@ -149,17 +145,19 @@ void AnimationNormalMappedRenderer::RenderMeshNode(const NormalRenderContext& re
 
         UniformsVS uniformsVS{};
         const auto& bones = animationPart->GetBoneTransforms();
-        for (size_t i = 0; i < bones.size(); i++) {
+        for (size_t i = 0; i < bones.size(); ++i) {
             uniformsVS.bones[i] = bones[i];
         }
-        uniformsVS.projectionMatrix = renderContext.projectionMatrix;
-        uniformsVS.viewMatrix = renderContext.viewMatrix;
         uniformsVS.modelMatrix = modelMatrix;
         uniformsVS.normalMatrix = glm::transpose(glm::inverse(modelMatrix));
+        for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
+            uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
+            uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
+            uniformsVS.cameraPositions[i] = glm::vec4(renderContext.cameraPositions[i], 1.0f);
+        }
         uniformsVS.textureNumberOfRows = material->GetAtlasNumberOfRows();
         uniformsVS.textureOffset = glm::vec4(material->GetTextureOffset(), 0.0f, 0.0f);
-        uniformsVS.cameraPosition = glm::vec4(renderContext.cameraPosition, 1.0f);
-        for (size_t i = 0; i < lightComponents.size(); i++) {
+        for (size_t i = 0; i < lightComponents.size(); ++i) {
             const auto& lightComponent{ lightComponents[i] };
             uniformsVS.lightning.lights[i] = LightUniform(glm::vec4(lightComponent->GetPosition(), 1.0f), glm::vec4(lightComponent->GetColor(), 1.0f), glm::vec4(lightComponent->GetAttenuation(), 1.0f));
         }
@@ -175,7 +173,7 @@ void AnimationNormalMappedRenderer::RenderMeshNode(const NormalRenderContext& re
 
         UniformsFS uniformsFS{};
         // shadows
-        for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; i++) {
+        for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; ++i) {
             const auto& cascade{ shadowsComponent->GetCascade(i) };
             uniformsFS.shadows.cascades[i] = ShadowsCascadeUniform(cascade.GetBiasedViewProjectionMatrix(), glm::vec4(cascade.endSplitDepth));
         }
@@ -183,7 +181,7 @@ void AnimationNormalMappedRenderer::RenderMeshNode(const NormalRenderContext& re
         uniformsFS.shadows.useReverseDepth = REVERSE_DEPTH;
 
         // lightning
-        for (size_t i = 0; i < lightComponents.size(); i++) {
+        for (size_t i = 0; i < lightComponents.size(); ++i) {
             const auto& lightComponent{ lightComponents[i] };
             uniformsFS.lightning.lights[i] = LightUniform(glm::vec4(lightComponent->GetPosition(), 1.0f), glm::vec4(lightComponent->GetColor(), 1.0f), glm::vec4(lightComponent->GetAttenuation(), 1.0f));
         }

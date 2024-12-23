@@ -47,7 +47,7 @@ private:
 
 private:
     struct DEFAULT_ALIGNMENT UniformsVS {
-        DEFAULT_ALIGNMENT glm::vec4 translation;
+        DEFAULT_ALIGNMENT glm::vec4 translations[MAX_VIEW_COUNT];
 
         DEFAULT_ALIGNMENT glm::vec4 scale;
     };

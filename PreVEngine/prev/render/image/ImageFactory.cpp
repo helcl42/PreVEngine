@@ -20,7 +20,7 @@ std::unique_ptr<Image> ImageFactory::CreateImage(const std::string& filename, bo
 #ifdef TARGET_PLATFORM_IOS
     stbi_convert_iphone_png_to_rgb(true);
 #endif
-    
+
     int w, h, c;
     uint8_t* imageBytes = reinterpret_cast<uint8_t*>(stbi_load(filename.c_str(), &w, &h, &c, STBI_rgb_alpha));
     if (!imageBytes) {
@@ -44,7 +44,7 @@ std::unique_ptr<Image> ImageFactory::CreateImageFromMemory(const uint8_t* data, 
 #ifdef TARGET_PLATFORM_IOS
     stbi_convert_iphone_png_to_rgb(true);
 #endif
-    
+
     int w, h, c;
     uint8_t* imageBytes = reinterpret_cast<uint8_t*>(stbi_load_from_memory(data, dataLength, &w, &h, &c, STBI_rgb_alpha));
     if (!imageBytes) {

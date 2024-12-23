@@ -84,20 +84,25 @@ if (ENABLE_LOGGING)
 endif()
 if (ENABLE_VK_LOADER)
     add_definitions(-DENABLE_VK_LOADER)
-endif()
-
-if(ENABLE_VK_LOADER)
     add_definitions(-DVK_NO_PROTOTYPES)
+endif()
+if(ENABLE_XR)
+    add_definitions(-DENABLE_XR)
 endif()
 
 include_directories("../PreVEngine")
+include_directories("../PreVEngine/external")
 include_directories("../PreVEngine/external/worm_holes/WormHoles")
 include_directories("../PreVEngine/external/glm")
 include_directories("../Dependencies/assimp/include")
+if(ENABLE_XR)
+    include_directories("../Dependencies/openxr/include")
+endif()
 
 if(WIN32)
     message("${PROJECT_NAME} - Windows")
     add_definitions(-DTARGET_PLATFORM_WINDOWS)
+    add_definitions(-DWIN32_LEAN_AND_MEAN)
 
     file(GLOB COMMON_SRC_LIST 
         "platform/common/*.h" "platform/common/*.cpp"
@@ -110,6 +115,9 @@ if(WIN32)
 
     target_link_libraries(${PROJECT_NAME} PreVEngine)
     target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Windows/assimp-vc142-mt.lib")
+    if(ENABLE_XR)
+        target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/openxr/lib/Windows/openxr_loader.lib")
+    endif()
 
     # Copy assimp dll to output bin dir.
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Windows/assimp-vc142-mt.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
@@ -219,11 +227,18 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
 
     target_link_libraries(${PROJECT_NAME} PreVEngine)
     target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Linux/libassimp.so")
+    if(ENABLE_XR)
+        target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/openxr/lib/Linux/libopenxr_loader.so")
+    endif()
 
     # Copy assimp so to output bin dir.
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Linux/libassimp.so" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
     #  Copy all files from ./Assets to the binary directory.
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
+
+    if(ENABLE_XR)
+        file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/openxr/lib/Linux/libopenxr_loader.so" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+    endif()
 
 elseif(ANDROID)
     message("${PROJECT_NAME} - Android")
@@ -242,12 +257,26 @@ elseif(ANDROID)
 
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/assimp/lib/Android/libassimp.so" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/platform/android/app/src/main/jniLibs/${ANDROID_ABI}/")
 
+    if(ENABLE_XR)
+        file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../Dependencies/openxr/lib/Android/libopenxr_loader.so" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/platform/android/app/src/main/jniLibs/${ANDROID_ABI}/")
+    endif()
+
     # add external library
     add_library(assimp SHARED IMPORTED)
     set_target_properties(assimp PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/platform/android/app/src/main/jniLibs/${ANDROID_ABI}/libassimp.so")
 
+    if(ENABLE_XR)
+        add_library(openxr_loader SHARED IMPORTED)
+        set_target_properties(openxr_loader PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/platform/android/app/src/main/jniLibs/${ANDROID_ABI}/libopenxr_loader.so")
+    endif()
+
     # Link to external libraries
     target_link_libraries(${PROJECT_NAME} log android assimp)
+
+    if(ENABLE_XR)
+        # Link to external libraries
+        target_link_libraries(${PROJECT_NAME} openxr_loader)
+    endif()
 
 else()
     message(FATAL_ERROR "Unsupported plaform.")

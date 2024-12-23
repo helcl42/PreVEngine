@@ -33,7 +33,6 @@ std::unique_ptr<ILensFlareComponent> LensFlareComponentFactory::Create() const
     std::vector<std::shared_ptr<Flare>> flares{};
     for (const auto& flareCreateInfo : flareCreateInfos) {
         auto flare = CreateFlare(flareCreateInfo.path, flareCreateInfo.scale);
-        flare->SetScreenSpacePosition(glm::vec2(-100.0f, -100.0f));
         flares.emplace_back(std::move(flare));
     }
 

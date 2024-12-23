@@ -6,6 +6,17 @@
 #include <vector>
 
 namespace prev::util::math {
+struct Pose {
+    glm::quat orientation{};
+    glm::vec3 position{};
+};
+
+struct Fov {
+    float angleLeft{};
+    float angleRight{};
+    float angleUp{};
+    float angleDown{};
+};
 
 template <typename T>
 inline constexpr T Clamp(T val, T min, T max)
@@ -57,6 +68,19 @@ template <typename T>
 inline constexpr T AlmostZero(T value1, T epsilon = T(1e-7))
 {
     return AlmostEqual(value1, static_cast<T>(0.0), epsilon);
+}
+
+template <typename T>
+T SetBits(const uint32_t& leastSignificantBitCount)
+{
+    T result{ 0 };
+    for (uint32_t i = 0; i < leastSignificantBitCount; ++i) {
+        result <<= 1;
+        result ^= 1;
+    }
+    return result;
+
+    // return (1 << leastSignificantBitCount) - 1;
 }
 
 glm::mat4 CreateTransformationMatrix(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale);
@@ -111,6 +135,13 @@ glm::mat4 CreatePerspectiveProjectionMatrixWithReverseDepth(const float aspectRa
 
 glm::mat4 CreateOrthographicProjectionMatrix(const float leftPlane, const float rightPlane, const float bottomPlane, const float topPlane, const float nearPlane, const float farPlane);
 
+glm::mat4 CreatePerspectiveProjectionMatrix(const float tanAngleLeft, const float tanAngleRight, const float tanAngleUp, float const tanAngleDown, const float nearClippingPlane, const float farClippingPlane);
+
+glm::mat4 CreatePerspectiveProjectionMatrix(const Fov& fov, const float nearClippingPlane, const float farClippingPlane);
+
+glm::vec2 GetClippingPlanes(const glm::mat4& projectionMatrix);
+
+Fov CreateFovFromProjectionMatrix(const glm::mat4& projectionMatrix);
 } // namespace prev::util::math
 
 #endif
