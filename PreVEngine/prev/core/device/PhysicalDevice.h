@@ -18,6 +18,15 @@ public:
     virtual ~PhysicalDevice() = default;
 
 public:
+    PhysicalDevice(const PhysicalDevice& other);
+
+    PhysicalDevice& operator=(const PhysicalDevice& other);
+
+    PhysicalDevice(PhysicalDevice&& other);
+
+    PhysicalDevice& operator=(PhysicalDevice&& other);
+
+public:
     int32_t FindQueueFamily(const VkQueueFlags flags, const VkQueueFlags unwantedFlags = 0, const VkSurfaceKHR surface = VK_NULL_HANDLE) const; // Returns a QueueFamlyIndex, or -1 if none found.
 
     std::vector<VkSurfaceFormatKHR> SurfaceFormats(const VkSurfaceKHR surface) const; // Returns list of supported surface formats.
@@ -60,13 +69,9 @@ private:
 
     DeviceExtensions m_extensions{};
 
-#ifdef ENABLE_XR
-    mutable VkPhysicalDeviceFeatures2 m_enabledFeatures{};
-
-    mutable VkPhysicalDeviceMultiviewFeatures m_physicalDeviceMultiviewFeatures{};
-#else
     VkPhysicalDeviceFeatures2 m_enabledFeatures{};
-#endif
+
+    VkPhysicalDeviceMultiviewFeatures m_physicalDeviceMultiviewFeatures{};
 };
 } // namespace prev::core::device
 

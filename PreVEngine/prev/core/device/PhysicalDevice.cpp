@@ -75,6 +75,43 @@ PhysicalDevice::PhysicalDevice(const VkPhysicalDevice gpu, const std::vector<std
     }
 }
 
+PhysicalDevice::PhysicalDevice(const PhysicalDevice& other)
+{
+    *this = other;
+}
+
+PhysicalDevice& PhysicalDevice::operator=(const PhysicalDevice& other)
+{
+    if(this != &other) {
+        m_handle = other.m_handle;
+        m_availableProperties = other.m_availableProperties;
+        m_availableFeatures = other.m_availableFeatures;
+        m_queueFamilies = other.m_queueFamilies;
+        m_extensions = other.m_extensions;
+        m_enabledFeatures = other.m_enabledFeatures;
+        m_physicalDeviceMultiviewFeatures = other.m_physicalDeviceMultiviewFeatures;
+
+        // The copy + move stuff needs to be implemented due to this line :/
+        m_enabledFeatures.pNext = &m_physicalDeviceMultiviewFeatures;
+    }
+    return *this;
+}
+
+PhysicalDevice::PhysicalDevice(PhysicalDevice&& other)
+{
+    *this = other;
+    other = {};
+}
+
+PhysicalDevice& PhysicalDevice::operator=(PhysicalDevice&& other)
+{
+    if(this != &other) {
+        *this = other;
+        other = {};
+    }
+    return *this;
+}
+
 // Find queue-family with requred flags, and can present to given surface. (if provided)
 // Returns the QueueFamily index, or -1 if not found.
 int32_t PhysicalDevice::FindQueueFamily(const VkQueueFlags flags, const VkQueueFlags unwantedFlags, const VkSurfaceKHR surface) const
@@ -168,9 +205,6 @@ const VkPhysicalDeviceFeatures& PhysicalDevice::GetEnabledFeatures() const
 
 const VkPhysicalDeviceFeatures2& PhysicalDevice::GetEnabledFeatures2() const
 {
-#ifdef ENABLE_XR
-    m_enabledFeatures.pNext = &m_physicalDeviceMultiviewFeatures;
-#endif
     return m_enabledFeatures;
 }
 
