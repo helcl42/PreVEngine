@@ -11,7 +11,7 @@
 namespace prev::render::pass {
 class RenderPassBuilder final {
 public:
-    RenderPassBuilder(VkDevice device, uint32_t viewCount);
+    RenderPassBuilder(VkDevice device);
 
     ~RenderPassBuilder() = default;
 
@@ -23,6 +23,8 @@ public:
     RenderPassBuilder& AddSubpass(const std::vector<uint32_t>& attachmentIndices = {}, const std::vector<uint32_t>& resolveIndices = {});
 
     RenderPassBuilder& AddSubpassDependencies(const std::vector<VkSubpassDependency>& dependencies);
+
+    RenderPassBuilder& SetViewCount(const uint32_t viewCount);
 
     std::unique_ptr<RenderPass> Build() const;
 
@@ -48,7 +50,7 @@ private:
 private:
     VkDevice m_device;
 
-    uint32_t m_viewCount;
+    uint32_t m_viewCount{ 1 };
 
     std::vector<AttachmentCreateInfo> m_attachmentInfos;
 

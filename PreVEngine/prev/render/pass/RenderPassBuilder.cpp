@@ -5,9 +5,8 @@
 #include "../../util/MathUtils.h"
 
 namespace prev::render::pass {
-RenderPassBuilder::RenderPassBuilder(VkDevice device, uint32_t viewCount)
-    : m_device(device)
-    , m_viewCount(viewCount)
+RenderPassBuilder::RenderPassBuilder(VkDevice device)
+    : m_device{ device }
 {
 }
 
@@ -41,6 +40,13 @@ RenderPassBuilder& RenderPassBuilder::AddSubpass(const std::vector<uint32_t>& at
 RenderPassBuilder& RenderPassBuilder::AddSubpassDependencies(const std::vector<VkSubpassDependency>& dependencies)
 {
     m_dependencies.insert(m_dependencies.end(), dependencies.cbegin(), dependencies.cend());
+
+    return *this;
+}
+
+RenderPassBuilder& RenderPassBuilder::SetViewCount(const uint32_t viewCount)
+{
+    m_viewCount = viewCount;
 
     return *this;
 }
