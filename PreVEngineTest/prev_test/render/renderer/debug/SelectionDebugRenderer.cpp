@@ -96,7 +96,7 @@ void SelectionDebugRenderer::Render(const NormalRenderContext& renderContext, co
 
             UniformsVS uniformsVS{};
             uniformsVS.modelMatrix = prev::util::math::CreateTransformationMatrix(selectableComponent->GetPostiion(), glm::quat(), 0.6f);
-            for(uint32_t i = 0; i < renderContext.cameraCount; ++i) {
+            for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
                 uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
                 uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
             }

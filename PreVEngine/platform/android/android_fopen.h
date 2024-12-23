@@ -1,8 +1,8 @@
 #ifndef __ANDROID_FOPEN_H__
 #define __ANDROID_FOPEN_H__
 
-#include <stdio.h>
 #include <android/asset_manager.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,4 +23,3 @@ AAsset* android_open_asset(const char* fname, const int mode);
 #endif
 
 #endif
-

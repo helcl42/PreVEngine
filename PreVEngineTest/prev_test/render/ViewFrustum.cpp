@@ -10,7 +10,7 @@ namespace {
     {
         return std::atan(std::tan(angle) * scale);
     }
-}
+} // namespace
 
 ViewFrustum::ViewFrustum(const float verticalFov, const float aspectRatio, const float nearClippingPlane, const float farClippingPlane)
     : m_angleFovLeft{ ScaleAngle(-verticalFov / 2.0f, aspectRatio) }

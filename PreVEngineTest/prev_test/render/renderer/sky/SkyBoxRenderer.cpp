@@ -91,7 +91,7 @@ void SkyBoxRenderer::Render(const NormalRenderContext& renderContext, const std:
 
         UniformsVS uniformsVS{};
         uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
-        for(uint32_t i = 0; i < renderContext.cameraCount; ++i) {
+        for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
             uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
             uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
         }

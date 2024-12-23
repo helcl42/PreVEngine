@@ -70,16 +70,16 @@ void Root::Init()
     shadows->SetTags({ TAG_SHADOW });
     AddChild(shadows);
 
-     const int32_t MAX_GENERATED_HEIGHT{ 1 };
-     const float DISTANCE{ 40.0f };
-     for (int32_t i = 0; i <= MAX_GENERATED_HEIGHT; i++) {
-         for (int32_t j = 0; j <= MAX_GENERATED_HEIGHT; j++) {
-             for (int32_t k = 0; k <= MAX_GENERATED_HEIGHT; k++) {
-                 auto robot = std::make_shared<robot::CubeRobot>(m_device, m_allocator, glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
-                 AddChild(robot);
-             }
-         }
-     }
+    const int32_t MAX_GENERATED_HEIGHT{ 1 };
+    const float DISTANCE{ 40.0f };
+    for (int32_t i = 0; i <= MAX_GENERATED_HEIGHT; i++) {
+        for (int32_t j = 0; j <= MAX_GENERATED_HEIGHT; j++) {
+            for (int32_t k = 0; k <= MAX_GENERATED_HEIGHT; k++) {
+                auto robot = std::make_shared<robot::CubeRobot>(m_device, m_allocator, glm::vec3(i * DISTANCE, j * DISTANCE, k * DISTANCE), glm::quat(1, 0, 0, 0), glm::vec3(1, 1, 1), prev_test::common::AssetManager::Instance().GetAssetPath("Textures/texture.jpg"));
+                AddChild(robot);
+            }
+        }
+    }
 
 #ifdef ENABLE_XR
     auto player = std::make_shared<Camera>(m_viewCount);

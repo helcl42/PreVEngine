@@ -1,8 +1,8 @@
 #include "RendererUtils.h"
 
 #include "../../component/ray_casting/IBoundingVolumeComponent.h"
-#include "../../component/ray_casting/RayCastingCommon.h"
 #include "../../component/ray_casting/ISelectableComponent.h"
+#include "../../component/ray_casting/RayCastingCommon.h"
 
 #include <prev/scene/component/ComponentRepository.h>
 
@@ -12,7 +12,7 @@ bool IsVisible(const prev_test::common::intersection::Frustum* frustums, const u
     bool visible{ true };
     if (auto boundingVolumeComponent = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().FindFirst(nodeId)) {
         bool checkedVisible{ false };
-        for(uint32_t view = 0; view < frustumCount; ++view) {
+        for (uint32_t view = 0; view < frustumCount; ++view) {
             const auto& frustum{ frustums[view] };
             checkedVisible |= boundingVolumeComponent->IsInFrustum(frustum);
         }
@@ -29,4 +29,4 @@ bool IsSelected(const uint64_t nodeId)
     }
     return selected;
 }
-}
+} // namespace prev_test::render::renderer

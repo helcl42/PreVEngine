@@ -36,11 +36,10 @@ void Engine::MainLoop()
 {
     m_engineImpl->BeginMainLoop();
 
-    while (m_engineImpl->Update())
-    {
+    while (m_engineImpl->Update()) {
         prev::event::EventChannel::DispatchQueued();
 
-        if(!m_engineImpl->BeginFrame()) {
+        if (!m_engineImpl->BeginFrame()) {
             continue;
         }
 
@@ -119,4 +118,4 @@ uint32_t Engine::GetViewCount() const
 {
     return m_engineImpl->GetViewCount();
 }
-} // namespace prev::core
+} // namespace prev::core::engine

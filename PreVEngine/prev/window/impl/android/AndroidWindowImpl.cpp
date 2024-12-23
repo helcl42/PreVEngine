@@ -52,15 +52,15 @@ AndroidWindowImpl::AndroidWindowImpl(const prev::core::instance::Instance& insta
             }
 
             switch (cmd) {
-                case APP_CMD_INIT_WINDOW:
-                    m_eventQueue.Push(OnInitEvent());
-                    m_eventQueue.Push(OnResizeEvent(static_cast<uint32_t>(ANativeWindow_getWidth(m_app->window)), static_cast<uint32_t>(ANativeWindow_getHeight(m_app->window)))); // post window-resize event
-                    break;
-                case APP_CMD_GAINED_FOCUS:
-                    m_eventQueue.Push(OnFocusEvent(true)); // post focus-event
-                    break;
-                default:
-                    break;
+            case APP_CMD_INIT_WINDOW:
+                m_eventQueue.Push(OnInitEvent());
+                m_eventQueue.Push(OnResizeEvent(static_cast<uint32_t>(ANativeWindow_getWidth(m_app->window)), static_cast<uint32_t>(ANativeWindow_getHeight(m_app->window)))); // post window-resize event
+                break;
+            case APP_CMD_GAINED_FOCUS:
+                m_eventQueue.Push(OnFocusEvent(true)); // post focus-event
+                break;
+            default:
+                break;
             }
 
             android_app_post_exec_cmd(m_app, cmd);
@@ -84,8 +84,8 @@ bool AndroidWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
     int timeoutMillis = waitForEvent ? -1 : 0; // Blocking or non-blocking mode
     int id;
     do {
-       id = ALooper_pollOnce(timeoutMillis, NULL, &events, (void **) &source);
-    } while(id == ALOOPER_POLL_CALLBACK);
+        id = ALooper_pollOnce(timeoutMillis, NULL, &events, (void**)&source);
+    } while (id == ALOOPER_POLL_CALLBACK);
 
     if (id == LOOPER_ID_MAIN) {
         int8_t cmd = android_app_read_cmd(m_app);
@@ -106,7 +106,7 @@ bool AndroidWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
         case APP_CMD_INIT_WINDOW:
         case APP_CMD_CONFIG_CHANGED:
             // THIS is workaround
-            if(m_app->window == NULL) {
+            if (m_app->window == NULL) {
                 LOGW("APP_CMD_CONFIG_CHANGED - but window is NULL - skipping event.");
                 break;
             }
@@ -201,7 +201,7 @@ bool AndroidWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
                 handled = 0;
             }
 
-            if(!handled) {
+            if (!handled) {
                 AInputQueue_finishEvent(m_app->inputQueue, aEvent, handled);
             }
         }
@@ -210,10 +210,10 @@ bool AndroidWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
         // handle events from other event queues (sensors, ...)
     }
 
-    //if (m_app->destroyRequested) {
-    //  LOGI("destroyRequested");
+    // if (m_app->destroyRequested) {
+    //   LOGI("destroyRequested");
     //	m_eventQueue.Push({ Event::EventType::CLOSE });
-    //}
+    // }
 
     if (!m_eventQueue.IsEmpty()) {
         outEvent = m_eventQueue.Pop();

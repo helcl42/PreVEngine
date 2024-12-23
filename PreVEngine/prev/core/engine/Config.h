@@ -23,6 +23,6 @@ struct Config {
 
     int32_t gpuIndex{ -1 };
 };
-} // namespace prev::core
+} // namespace prev::core::engine
 
 #endif // !__ENGINE_CONFIG_H__

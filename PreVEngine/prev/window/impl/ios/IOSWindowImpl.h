@@ -29,7 +29,7 @@ public:
 
 private:
     std::unique_ptr<IOSState> m_state{};
-    
+
     MultiTouch m_MTouch{}; // Multi-Touch device
 };
 } // namespace prev::window::impl::ios

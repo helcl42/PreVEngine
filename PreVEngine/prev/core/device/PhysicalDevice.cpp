@@ -70,7 +70,7 @@ PhysicalDevice::PhysicalDevice(const VkPhysicalDevice gpu, const std::vector<std
     m_extensions.Pick(VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME); // VK_KHR_external_memory_fd
     m_extensions.Pick(VK_EXT_FRAGMENT_DENSITY_MAP_EXTENSION_NAME); // VK_EXT_fragment_density_map
 #endif
-    for(const auto& ext : extensions) {
+    for (const auto& ext : extensions) {
         m_extensions.Pick(ext);
     }
 }
@@ -82,7 +82,7 @@ PhysicalDevice::PhysicalDevice(const PhysicalDevice& other)
 
 PhysicalDevice& PhysicalDevice::operator=(const PhysicalDevice& other)
 {
-    if(this != &other) {
+    if (this != &other) {
         m_handle = other.m_handle;
         m_availableProperties = other.m_availableProperties;
         m_availableFeatures = other.m_availableFeatures;
@@ -92,7 +92,7 @@ PhysicalDevice& PhysicalDevice::operator=(const PhysicalDevice& other)
         m_physicalDeviceMultiviewFeatures = other.m_physicalDeviceMultiviewFeatures;
 
         // The copy + move stuff needs to be implemented due to this line :/
-        if(m_physicalDeviceMultiviewFeatures.multiview) {
+        if (m_physicalDeviceMultiviewFeatures.multiview) {
             m_enabledFeatures.pNext = &m_physicalDeviceMultiviewFeatures;
         }
     }
@@ -113,7 +113,7 @@ PhysicalDevice::PhysicalDevice(PhysicalDevice&& other)
 
 PhysicalDevice& PhysicalDevice::operator=(PhysicalDevice&& other)
 {
-    if(this != &other) {
+    if (this != &other) {
         *this = other;
         other.m_handle = VK_NULL_HANDLE;
         other.m_availableFeatures = {};

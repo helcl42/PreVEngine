@@ -43,7 +43,7 @@ private:
 private:
     std::unique_ptr<prev::xr::OpenXr> m_openXr{};
 };
-}
+} // namespace prev::core::engine::impl
 
 #endif
 

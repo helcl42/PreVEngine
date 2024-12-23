@@ -19,10 +19,10 @@
 
 namespace prev_test::render::renderer::normal {
 namespace {
-    constexpr uint32_t COLOR_INDEX{0};
-    constexpr uint32_t NORMAL_INDEX{1};
-    constexpr uint32_t HEIGHT_AND_CONE_INDEX{2};
-}
+    constexpr uint32_t COLOR_INDEX{ 0 };
+    constexpr uint32_t NORMAL_INDEX{ 1 };
+    constexpr uint32_t HEIGHT_AND_CONE_INDEX{ 2 };
+} // namespace
 
 ConeStepMappedRenderer::ConeStepMappedRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass)
     : m_device{ device }
@@ -145,7 +145,7 @@ void ConeStepMappedRenderer::RenderMeshNode(const NormalRenderContext& renderCon
         UniformsVS uniformsVS{};
         uniformsVS.modelMatrix = modelMatrix;
         uniformsVS.normalMatrix = glm::transpose(glm::inverse(modelMatrix));
-        for(uint32_t i = 0; i < renderContext.cameraCount; ++i) {
+        for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
             uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
             uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
             uniformsVS.cameraPositions[i] = glm::vec4(renderContext.cameraPositions[i], 1.0f);
@@ -189,7 +189,8 @@ void ConeStepMappedRenderer::RenderMeshNode(const NormalRenderContext& renderCon
         // common
         uniformsFS.fogColor = prev_test::component::sky::FOG_COLOR;
         uniformsFS.selectedColor = prev_test::component::ray_casting::SELECTED_COLOR;
-        uniformsFS.selected = uniformsFS.selected = prev_test::render::renderer::IsSelected(node->GetId());;
+        uniformsFS.selected = uniformsFS.selected = prev_test::render::renderer::IsSelected(node->GetId());
+        ;
         uniformsFS.castedByShadows = nodeRenderComponent->IsCastedByShadows();
         uniformsFS.heightScale = material->GetHeightScale();
         uniformsFS.numLayers = 15;

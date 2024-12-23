@@ -7,10 +7,10 @@
 #include "../component/render/IAnimationRenderComponent.h"
 #include "../component/transform/ITransformComponent.h"
 
+#include <prev/core/CoreEvents.h>
 #include <prev/core/device/Device.h>
 #include <prev/core/memory/Allocator.h>
 #include <prev/event/EventHandler.h>
-#include <prev/core/CoreEvents.h>
 #include <prev/input/keyboard/KeyboardEvents.h>
 #include <prev/input/mouse/MouseEvents.h>
 #include <prev/input/touch/TouchEvents.h>

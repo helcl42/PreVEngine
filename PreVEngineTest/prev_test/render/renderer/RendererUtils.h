@@ -9,6 +9,6 @@ bool IsVisible(const prev_test::common::intersection::Frustum* frustums, const u
 
 bool IsSelected(const uint64_t nodeId);
 
-}
+} // namespace prev_test::render::renderer
 
 #endif

@@ -169,7 +169,7 @@ glm::mat4 CreatePerspectiveProjectionMatrix(const float aspectRatio, const float
 
 glm::mat4 CreatePerspectiveProjectionMatrixWithReverseDepth(const float aspectRatio, const float verticalFovInDegs, const float nearClippingPlane, const float farClippingPlane)
 {
-    //https://vincent-p.github.io/posts/vulkan_perspective_matrix/
+    // https://vincent-p.github.io/posts/vulkan_perspective_matrix/
     const float focalLength{ 1.0f / std::tan(glm::radians(verticalFovInDegs) * 0.5f) };
     const float x{ focalLength / aspectRatio };
     const float y{ -focalLength }; // invert Y in clip coordinates
@@ -177,10 +177,22 @@ glm::mat4 CreatePerspectiveProjectionMatrixWithReverseDepth(const float aspectRa
     const float B{ (nearClippingPlane * farClippingPlane) / (farClippingPlane - nearClippingPlane) };
 
     glm::mat4 projectionMatrix = glm::mat4{
-        x, 0.0f, 0.0f, 0.0f,
-        0.0f, y, 0.0f, 0.0f, 
-        0.0f, 0.0f, A, -1.0f, 
-        0.0f, 0.0f, B, 0.0f,
+        x,
+        0.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        y,
+        0.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        A,
+        -1.0f,
+        0.0f,
+        0.0f,
+        B,
+        0.0f,
     };
     return projectionMatrix;
 }
@@ -188,7 +200,7 @@ glm::mat4 CreatePerspectiveProjectionMatrixWithReverseDepth(const float aspectRa
 glm::mat4 CreateOrthographicProjectionMatrix(const float leftPlane, const float rightPlane, const float bottomPlane, const float topPlane, const float nearPlane, const float farPlane)
 {
     const float x{ 2.0f / (rightPlane - leftPlane) };
-    const float y{ -2.0f / (bottomPlane - topPlane) };  // invert Y in clip coordinates
+    const float y{ -2.0f / (bottomPlane - topPlane) }; // invert Y in clip coordinates
     const float z{ 1.0f / (nearPlane - farPlane) };
     const float A{ -(rightPlane + leftPlane) / (rightPlane - leftPlane) };
     const float B{ -(bottomPlane + topPlane) / (bottomPlane - topPlane) };
@@ -209,10 +221,10 @@ glm::mat4 CreatePerspectiveProjectionMatrix(const float tanAngleLeft, const floa
     const float tanAngleHeight{ tanAngleDown - tanAngleUp };
 
     const glm::mat4 projectionMatrix = glm::mat4{
-            2.0f / tanAngleWidth, 0.0f, 0.0f, 0.0f,
-            0.0f, 2.0f / tanAngleHeight, 0.0f, 0.0f,
-            (tanAngleRight + tanAngleLeft) / tanAngleWidth, (tanAngleUp + tanAngleDown) / tanAngleHeight, -farClippingPlane / (farClippingPlane - nearClippingPlane), -1.0f,
-            0.0f, 0.0f, -(farClippingPlane * nearClippingPlane) / (farClippingPlane - nearClippingPlane), 0.0f
+        2.0f / tanAngleWidth, 0.0f, 0.0f, 0.0f,
+        0.0f, 2.0f / tanAngleHeight, 0.0f, 0.0f,
+        (tanAngleRight + tanAngleLeft) / tanAngleWidth, (tanAngleUp + tanAngleDown) / tanAngleHeight, -farClippingPlane / (farClippingPlane - nearClippingPlane), -1.0f,
+        0.0f, 0.0f, -(farClippingPlane * nearClippingPlane) / (farClippingPlane - nearClippingPlane), 0.0f
     };
     return projectionMatrix;
 }

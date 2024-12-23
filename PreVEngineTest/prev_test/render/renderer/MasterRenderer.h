@@ -86,7 +86,7 @@ private:
     prev::render::pass::RenderPass& m_defaultRenderPass;
 
     uint32_t m_swapchainImageCount;
-    
+
     uint32_t m_viewCount;
 
 private:

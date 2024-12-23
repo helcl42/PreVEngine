@@ -1,8 +1,8 @@
 #include "LensFlareRenderer.h"
 
 #include "../../../common/AssetManager.h"
-#include "../../../component/sky/ILensFlareComponent.h"
 #include "../../../component/light/ILightComponent.h"
+#include "../../../component/sky/ILensFlareComponent.h"
 
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
@@ -87,7 +87,7 @@ void LensFlareRenderer::Render(const NormalRenderContext& renderContext, const s
         const auto lightComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT }) };
 
         std::vector<glm::vec2> flarePositions[MAX_VIEW_COUNT];
-        for(uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
+        for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
             flarePositions[viewIndex] = lensFlareComponent->ComputeFlarePositions(renderContext.projectionMatrices[viewIndex], renderContext.viewMatrices[viewIndex], renderContext.cameraPositions[viewIndex], lightComponent->GetPosition());
         }
 
@@ -95,13 +95,14 @@ void LensFlareRenderer::Render(const NormalRenderContext& renderContext, const s
         for (size_t i = 0; i < flares.size(); ++i) {
             const auto& flare{ flares[i] };
             const float aspectRatio{
-                    static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) / static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y)};
-            const float xScale{flare->GetScale()};
-            const float yScale{xScale * aspectRatio};
+                static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) / static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y)
+            };
+            const float xScale{ flare->GetScale() };
+            const float yScale{ xScale * aspectRatio };
 
             auto uboVS = m_uniformsPoolVS->GetNext();
             UniformsVS uniformsVS{};
-            for(uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
+            for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
                 uniformsVS.translations[viewIndex] = glm::vec4(flarePositions[viewIndex][i], MIN_DEPTH, 1.0f);
             }
             uniformsVS.scale = glm::vec4(xScale, yScale, 0.0f, 0.0f);
@@ -117,8 +118,8 @@ void LensFlareRenderer::Render(const NormalRenderContext& renderContext, const s
             m_shader->Bind("uboFS", *uboFS);
 
             const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-            const VkBuffer vertexBuffers[] = {*lensFlareComponent->GetModel()->GetVertexBuffer()};
-            const VkDeviceSize offsets[] = {0};
+            const VkBuffer vertexBuffers[] = { *lensFlareComponent->GetModel()->GetVertexBuffer() };
+            const VkDeviceSize offsets[] = { 0 };
 
             vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
             vkCmdBindIndexBuffer(renderContext.commandBuffer, *lensFlareComponent->GetModel()->GetIndexBuffer(), 0, lensFlareComponent->GetModel()->GetIndexBuffer()->GetIndexType());

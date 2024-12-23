@@ -140,7 +140,7 @@ void AnimationRenderer::RenderMeshNode(const NormalRenderContext& renderContext,
         for (size_t i = 0; i < bones.size(); ++i) {
             uniformsVS.bones[i] = bones[i];
         }
-        for(uint32_t i = 0; i < renderContext.cameraCount; ++i) {
+        for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
             uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
             uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
             uniformsVS.cameraPositions[i] = glm::vec4(renderContext.cameraPositions[i], 1.0f);

@@ -1,8 +1,8 @@
 #include "DefaultEngineImpl.h"
 
 #include "../../../render/Swapchain.h"
-#include "../../device/PhysicalDevices.h"
 #include "../../device/DeviceFactory.h"
+#include "../../device/PhysicalDevices.h"
 
 namespace prev::core::engine::impl {
 DefaultEngineImpl::DefaultEngineImpl(const Config& config)
@@ -99,7 +99,7 @@ void DefaultEngineImpl::ResetDevice()
 
 void DefaultEngineImpl::ResetRenderPass()
 {
-    if(m_config.samplesCount > 1) {
+    if (m_config.samplesCount > 1) {
         m_renderPass = CreateDefaultMultisampledRenderPass(*m_device, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount), GetViewCount(), true, false);
     } else {
         m_renderPass = CreateDefaultRenderPass(*m_device, m_surface, GetViewCount(), true, false);
@@ -117,4 +117,4 @@ void DefaultEngineImpl::ResetSwapchain()
     m_swapchain->SetImageCount(m_config.swapchainFrameCount);
     m_swapchain->Print();
 }
-}
+} // namespace prev::core::engine::impl
