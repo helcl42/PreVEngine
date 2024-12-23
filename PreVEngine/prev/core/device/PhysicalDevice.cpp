@@ -103,7 +103,7 @@ PhysicalDevice::PhysicalDevice(PhysicalDevice&& other)
 {
     *this = other;
     other.m_handle = VK_NULL_HANDLE;
-    other.m_availableFeatures = {};
+    other.m_availableProperties = {};
     other.m_availableFeatures = {};
     other.m_queueFamilies = {};
     other.m_extensions = {};
@@ -116,7 +116,7 @@ PhysicalDevice& PhysicalDevice::operator=(PhysicalDevice&& other)
     if (this != &other) {
         *this = other;
         other.m_handle = VK_NULL_HANDLE;
-        other.m_availableFeatures = {};
+        other.m_availableProperties = {};
         other.m_availableFeatures = {};
         other.m_queueFamilies = {};
         other.m_extensions = {};
