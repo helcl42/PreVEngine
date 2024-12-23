@@ -29,7 +29,7 @@ Here is a video:
  - Install Vulkan SDK for you platform: [link](https://vulkan.lunarg.com/).
  - Run `python Scripts/download_dependencies.py` to download platform prebuilt binaries (assimp).
 
- **Note:** If you have a problem with the script, the package is hosted on `Google Drive`. You can download it directly from the [link](https://drive.google.com/file/d/1gCBUoxs2g7fL087xvAVCrUlq72IA0Sgt/view?usp=sharing). Just unpack it in the root folder.
+ **Note:** If you have a problem with the script, the package is hosted on `Google Drive`. You can download it directly from the [link](https://drive.google.com/file/d/1johmeEaVQ9SZTi13mAfJxbq17QztL-DS/view?usp=drive_link). Just unpack it in the root folder.
 
 ## Build Linux & Windows & MacOS
 
