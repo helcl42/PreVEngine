@@ -92,7 +92,9 @@ PhysicalDevice& PhysicalDevice::operator=(const PhysicalDevice& other)
         m_physicalDeviceMultiviewFeatures = other.m_physicalDeviceMultiviewFeatures;
 
         // The copy + move stuff needs to be implemented due to this line :/
-        m_enabledFeatures.pNext = &m_physicalDeviceMultiviewFeatures;
+        if(m_physicalDeviceMultiviewFeatures.multiview) {
+            m_enabledFeatures.pNext = &m_physicalDeviceMultiviewFeatures;
+        }
     }
     return *this;
 }
@@ -100,14 +102,26 @@ PhysicalDevice& PhysicalDevice::operator=(const PhysicalDevice& other)
 PhysicalDevice::PhysicalDevice(PhysicalDevice&& other)
 {
     *this = other;
-    other = {};
+    other.m_handle = VK_NULL_HANDLE;
+    other.m_availableFeatures = {};
+    other.m_availableFeatures = {};
+    other.m_queueFamilies = {};
+    other.m_extensions = {};
+    other.m_enabledFeatures = {};
+    other.m_physicalDeviceMultiviewFeatures = {};
 }
 
 PhysicalDevice& PhysicalDevice::operator=(PhysicalDevice&& other)
 {
     if(this != &other) {
         *this = other;
-        other = {};
+        other.m_handle = VK_NULL_HANDLE;
+        other.m_availableFeatures = {};
+        other.m_availableFeatures = {};
+        other.m_queueFamilies = {};
+        other.m_extensions = {};
+        other.m_enabledFeatures = {};
+        other.m_physicalDeviceMultiviewFeatures = {};
     }
     return *this;
 }
