@@ -144,7 +144,8 @@ std::unique_ptr<prev::render::pass::RenderPass> EngineImpl::CreateDefaultMultisa
     dependencies[1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
     dependencies[1].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
-    return prev::render::pass::RenderPassBuilder{ device, viewCount }
+    return prev::render::pass::RenderPassBuilder{ device }
+        .SetViewCount(viewCount)
         .AddColorAttachment(colorFormat, sampleCount, clearColor, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_ATTACHMENT_LOAD_OP_CLEAR,
             VK_ATTACHMENT_STORE_OP_DONT_CARE) // color buffer, multisampled
         .AddDepthAttachment(depthFormat, sampleCount, clearDepth, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_ATTACHMENT_LOAD_OP_CLEAR,
@@ -181,7 +182,8 @@ std::unique_ptr<prev::render::pass::RenderPass> EngineImpl::CreateDefaultRenderP
     dependencies[1].srcAccessMask = VK_ACCESS_NONE;
     dependencies[1].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
-    return prev::render::pass::RenderPassBuilder{ device, viewCount }
+    return prev::render::pass::RenderPassBuilder{ device }
+        .SetViewCount(viewCount)
         .AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, clearColor, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_ATTACHMENT_LOAD_OP_CLEAR, storeColor ? VK_ATTACHMENT_STORE_OP_STORE : VK_ATTACHMENT_STORE_OP_DONT_CARE)
         .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, clearDepth, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_ATTACHMENT_LOAD_OP_CLEAR, storeDepth ? VK_ATTACHMENT_STORE_OP_STORE : VK_ATTACHMENT_STORE_OP_DONT_CARE)
         .AddSubpass({ 0, 1 })
