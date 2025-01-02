@@ -4,8 +4,8 @@
 
 namespace prev::window {
 Window::Window(const prev::core::instance::Instance& instance, const WindowCreateInfo& createInfo)
+    : m_windowImpl{ impl::WindowImplFactory{}.Create(instance, impl::WindowInfo{ createInfo.title, { createInfo.left, createInfo.top }, { createInfo.width, createInfo.height }, createInfo.fullScreen }) }
 {
-    m_windowImpl = impl::WindowImplFactory{}.Create(instance, impl::WindowInfo{ createInfo.title, { createInfo.left, createInfo.top }, { createInfo.width, createInfo.height }, createInfo.fullScreen });
 }
 
 impl::Surface& Window::ResetSurface()
