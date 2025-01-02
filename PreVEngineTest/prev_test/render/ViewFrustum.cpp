@@ -39,12 +39,12 @@ glm::mat4 ViewFrustum::CreateProjectionMatrix() const
 
 float ViewFrustum::GetVerticalFov() const
 {
-    return m_angleFovRight - m_angleFovLeft;
+    return std::abs(m_angleFovDown) + std::abs(m_angleFovUp);
 }
 
 float ViewFrustum::GetHorizontalFov() const
 {
-    return m_angleFovDown - m_angleFovUp;
+    return std::abs(m_angleFovRight) + std::abs(m_angleFovLeft);
 }
 
 float ViewFrustum::GetNearClippingPlane() const
