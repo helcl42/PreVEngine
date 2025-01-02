@@ -85,7 +85,7 @@ private:
 
     float m_cameraPitch{ 20.0f };
 
-    float m_cameraDistanceFromPerson{ 15.0f };
+    float m_cameraDistanceFromPerson{ 30.0f };
 
     float m_cameraPositionOffset{ 8.0 };
 
