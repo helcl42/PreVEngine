@@ -85,7 +85,7 @@ private:
 
     glm::mat4 m_viewMatrix{ 1.0f };
 
-    prev_test::render::ViewFrustum m_viewFrustum{ 45.0f, 16.0f / 9.0f, REVERSE_DEPTH ? FAR_CLIPPING_PLANE : NEAR_CLIPPING_PLANE, REVERSE_DEPTH ? NEAR_CLIPPING_PLANE : FAR_CLIPPING_PLANE };
+    prev_test::render::ViewFrustum m_viewFrustum{ glm::radians(45.0f), 16.0f / 9.0f, REVERSE_DEPTH ? FAR_CLIPPING_PLANE : NEAR_CLIPPING_PLANE, REVERSE_DEPTH ? NEAR_CLIPPING_PLANE : FAR_CLIPPING_PLANE };
 
     bool m_orientationChanged{ false };
 
