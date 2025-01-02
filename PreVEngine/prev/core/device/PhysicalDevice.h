@@ -61,13 +61,13 @@ public:
 private:
     VkPhysicalDevice m_handle{};
 
+    DeviceExtensions m_extensions{};
+
     VkPhysicalDeviceProperties2 m_availableProperties{}; // properties and limits
 
     VkPhysicalDeviceFeatures2 m_availableFeatures{}; // list of available features
 
     std::vector<VkQueueFamilyProperties> m_queueFamilies; // array of queue families
-
-    DeviceExtensions m_extensions{};
 
     VkPhysicalDeviceFeatures2 m_enabledFeatures{};
 

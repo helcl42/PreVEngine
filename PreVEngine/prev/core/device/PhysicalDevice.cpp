@@ -5,20 +5,19 @@
 namespace prev::core::device {
 PhysicalDevice::PhysicalDevice()
     : m_handle{ VK_NULL_HANDLE }
+    , m_extensions{}
     , m_availableProperties{}
     , m_availableFeatures{}
-    , m_extensions{}
 {
 }
 
 PhysicalDevice::PhysicalDevice(const VkPhysicalDevice gpu, const std::vector<std::string>& extensions)
     : m_handle{ gpu }
     , m_extensions{ gpu }
+    , m_availableProperties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2, {}, {} }
+    , m_availableFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, {}, {} }
+    , m_enabledFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, {}, {} }
 {
-    m_availableProperties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2, {}, {} };
-    m_availableFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, {}, {} };
-    m_enabledFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, {}, {} };
-
     vkGetPhysicalDeviceFeatures2(gpu, &m_availableFeatures);
     vkGetPhysicalDeviceProperties2(gpu, &m_availableProperties);
 

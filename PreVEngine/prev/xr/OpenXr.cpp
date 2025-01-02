@@ -813,7 +813,7 @@ void OpenXr::CreateActionSet()
     strncpy(actionSetCI.localizedActionSetName, "pre-v-engine-action-set", XR_MAX_LOCALIZED_ACTION_SET_NAME_SIZE);
     OPENXR_CHECK(xrCreateActionSet(m_xrInstance, &actionSetCI, &m_actionSet), "Failed to create ActionSet.");
 
-    auto CreateAction = [this](const char* name, const XrActionType xrActionType, std::vector<const char*> subactionPaths = {}) -> XrAction {
+    auto CreateAction = [this](const char* name, const XrActionType xrActionType, const std::vector<const char*>& subactionPaths = {}) -> XrAction {
         XrActionCreateInfo actionCI{ XR_TYPE_ACTION_CREATE_INFO };
         actionCI.actionType = xrActionType;
         std::vector<XrPath> subactionXrPaths;
