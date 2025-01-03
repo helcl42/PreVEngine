@@ -182,7 +182,7 @@ std::optional<std::tuple<std::shared_ptr<prev::scene::graph::ISceneNode>, prev_t
     float minDistance = std::numeric_limits<float>::max();
 
     auto selectableNodes = prev::scene::graph::GraphTraversal::Instance().FindAllWithTags({ TAG_SELECTABLE_COMPONENT, TAG_BOUNDING_VOLUME_COMPONENT }, prev::scene::graph::LogicOperation::AND);
-    for (auto selectable : selectableNodes) {
+    for (const auto& selectable : selectableNodes) {
         const auto boundingVolume = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(selectable->GetId());
 
         prev_test::common::intersection::RayCastResult rayCastResult{};
