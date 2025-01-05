@@ -101,7 +101,7 @@ std::vector<std::shared_ptr<prev_test::render::IMaterial>> MaterialFactory::Crea
     std::vector<std::shared_ptr<prev_test::render::IMaterial>> result;
 
     Assimp::Importer importer{};
-    const aiScene* scene;
+    const aiScene* scene{};
 
     prev_test::render::util::assimp::AssimpSceneLoader assimpSceneLoader{};
     if (!assimpSceneLoader.LoadScene(modelPath, &importer, &scene)) {
@@ -111,22 +111,22 @@ std::vector<std::shared_ptr<prev_test::render::IMaterial>> MaterialFactory::Crea
     const VkSamplerAddressMode DefaultAddressMode{ VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE };
 
     prev_test::render::util::assimp::AssimpMaterialFactory assimpMaterialFactory{};
-    for (uint32_t i = 0; i < scene->mNumMaterials; i++) {
+    for (uint32_t i = 0; i < scene->mNumMaterials; ++i) {
         const auto& material{ *scene->mMaterials[i] };
 
-        ImagePair colorImage;
+        ImagePair colorImage{};
         if (auto image = assimpMaterialFactory.CreateModelImage(*scene, material, aiTextureType_DIFFUSE)) {
             colorImage.imageBuffer = CreateImageBuffer(image, true);
             colorImage.imageSampler = std::make_shared<prev::render::sampler::Sampler>(m_device, static_cast<float>(colorImage.imageBuffer->GetMipLevels()), DefaultAddressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, ANISOTROPIC_FILTERING_ENABLED, MAX_ANISOTROPY_LEVEL);
         }
 
-        ImagePair normalImage;
+        ImagePair normalImage{};
         if (auto image = assimpMaterialFactory.CreateModelImage(*scene, material, aiTextureType_NORMALS)) {
             normalImage.imageBuffer = CreateImageBuffer(image, true);
             normalImage.imageSampler = std::make_shared<prev::render::sampler::Sampler>(m_device, static_cast<float>(normalImage.imageBuffer->GetMipLevels()), DefaultAddressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR);
         }
 
-        ImagePair heightImage;
+        ImagePair heightImage{};
         if (auto image = assimpMaterialFactory.CreateModelImage(*scene, material, aiTextureType_HEIGHT)) {
             heightImage.imageBuffer = CreateImageBuffer(image, true);
             heightImage.imageSampler = std::make_shared<prev::render::sampler::Sampler>(m_device, static_cast<float>(heightImage.imageBuffer->GetMipLevels()), DefaultAddressMode, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR);
@@ -141,7 +141,7 @@ std::vector<std::shared_ptr<prev_test::render::IMaterial>> MaterialFactory::Crea
         float reflectivity{ 1.0f };
         material.Get(AI_MATKEY_REFLECTIVITY, reflectivity);
 
-        MaterialProperties materialProperties{ { color.r, color.g, color.b, 1.0 }, shineness, std::max(reflectivity, 1.0f), DefaultAddressMode };
+        const MaterialProperties materialProperties{ { color.r, color.g, color.b, 1.0f }, shineness, std::max(reflectivity, 1.0f), DefaultAddressMode };
 
         result.emplace_back(std::make_unique<prev_test::render::material::Material>(materialProperties, std::vector<ImagePair>{ colorImage, normalImage, heightImage }));
     }
