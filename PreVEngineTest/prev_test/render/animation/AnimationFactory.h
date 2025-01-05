@@ -8,7 +8,7 @@
 namespace prev_test::render::animation {
 class AnimationFactory {
 public:
-    std::unique_ptr<prev_test::render::IAnimation> Create(const std::string& modelPath, const unsigned int animationIndex = 0) const;
+    std::unique_ptr<prev_test::render::IAnimation> Create(const std::string& modelPath, const uint32_t clipIndex = 0) const;
 };
 } // namespace prev_test::render::animation
 
