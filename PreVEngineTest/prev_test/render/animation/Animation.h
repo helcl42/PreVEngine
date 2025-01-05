@@ -11,13 +11,12 @@
 namespace prev_test::render::animation {
 class AnimationFactory;
 
-// TODO -> rename to AnimationClip ???
 // TODO -> make AnimationClipImpl* member and hide there all the Assimp specific things
-class AnimationPart : public prev_test::render::IAnimationPart {
+class AnimationClip : public prev_test::render::IAnimationClip {
 public:
-    AnimationPart(const aiScene* scene);
+    AnimationClip(const aiScene* scene);
 
-    ~AnimationPart() = default;
+    ~AnimationClip() = default;
 
 public:
     void Update(const float deltaTime) override;
@@ -58,7 +57,7 @@ private:
     };
 
 private:
-    const aiScene* m_scene;
+    const aiScene* m_scene{};
 
     float m_elapsedTime{ 0.0f };
 
@@ -87,9 +86,9 @@ public:
 public:
     void Update(const float deltaTime) override;
 
-    std::shared_ptr<IAnimationPart> GetAnimationPart(unsigned int partIndex) const override;
+    std::shared_ptr<IAnimationClip> GetClip(unsigned int partIndex) const override;
 
-    const std::vector<std::shared_ptr<IAnimationPart>>& GetAnimationParts() const override;
+    const std::vector<std::shared_ptr<IAnimationClip>>& GetClips() const override;
 
     void SetState(const AnimationState state) override;
 
@@ -101,11 +100,11 @@ private:
     friend AnimationFactory;
 
 private:
-    const aiScene* m_scene{ nullptr };
+    const aiScene* m_scene{};
 
     Assimp::Importer m_importer; // TODO get rid of that
 
-    std::vector<std::shared_ptr<IAnimationPart>> m_parts;
+    std::vector<std::shared_ptr<IAnimationClip>> m_parts;
 };
 
 } // namespace prev_test::render::animation

@@ -15,9 +15,9 @@ enum class AnimationState {
     STOPPED
 };
 
-class IAnimationPart {
+class IAnimationClip {
 public:
-    virtual ~IAnimationPart() = default;
+    virtual ~IAnimationClip() = default;
 
 public:
     virtual void Update(const float deltaTime) = 0;
@@ -38,9 +38,9 @@ public:
 public:
     virtual void Update(const float deltaTime) = 0;
 
-    virtual std::shared_ptr<IAnimationPart> GetAnimationPart(unsigned int partIndex) const = 0;
+    virtual std::shared_ptr<IAnimationClip> GetClip(unsigned int partIndex) const = 0;
 
-    virtual const std::vector<std::shared_ptr<IAnimationPart>>& GetAnimationParts() const = 0;
+    virtual const std::vector<std::shared_ptr<IAnimationClip>>& GetClips() const = 0;
 
     virtual void SetState(const AnimationState animationState) = 0;
 

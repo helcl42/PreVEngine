@@ -137,14 +137,14 @@ void AnimationNormalMappedRenderer::RenderMeshNode(const NormalRenderContext& re
     const auto& meshParts{ mesh->GetMeshParts() };
     for (const auto meshPartIndex : meshNode.meshPartIndices) {
         const auto& meshPart = meshParts[meshPartIndex];
-        const auto& animationPart = animation->GetAnimationPart(meshPartIndex);
+        const auto& animationClip = animation->GetClip(meshPartIndex);
         const auto material = nodeRenderComponent->GetMaterial(meshPart.materialIndex);
         const auto modelMatrix = transformComponent->GetWorldTransformScaled() * meshNode.transform;
 
         auto uboVS = m_uniformsPoolVS->GetNext();
 
         UniformsVS uniformsVS{};
-        const auto& bones = animationPart->GetBoneTransforms();
+        const auto& bones = animationClip->GetBoneTransforms();
         for (size_t i = 0; i < bones.size(); ++i) {
             uniformsVS.bones[i] = bones[i];
         }

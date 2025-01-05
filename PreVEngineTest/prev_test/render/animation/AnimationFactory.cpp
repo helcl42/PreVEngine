@@ -17,26 +17,26 @@ std::unique_ptr<prev_test::render::IAnimation> AnimationFactory::Create(const st
         throw std::runtime_error("Could not load model: " + modelPath);
     }
 
-    for (unsigned int meshIndex = 0; meshIndex < animation->m_scene->mNumMeshes; meshIndex++) {
+    for (unsigned int meshIndex = 0; meshIndex < animation->m_scene->mNumMeshes; ++meshIndex) {
         const auto mesh = animation->m_scene->mMeshes[meshIndex];
 
-        auto animationPart = std::make_shared<AnimationPart>(animation->m_scene);
-        animationPart->m_globalInverseTransform = glm::inverse(prev_test::render::util::assimp::AssimpGlmConvertor::ToGlmMat4(animation->m_scene->mRootNode->mTransformation));
-        animationPart->m_animationIndex = animationIndex;
+        auto animationClip = std::make_shared<AnimationClip>(animation->m_scene);
+        animationClip->m_globalInverseTransform = glm::inverse(prev_test::render::util::assimp::AssimpGlmConvertor::ToGlmMat4(animation->m_scene->mRootNode->mTransformation));
+        animationClip->m_animationIndex = animationIndex;
 
-        for (unsigned int i = 0; i < mesh->mNumBones; i++) {
+        for (unsigned int i = 0; i < mesh->mNumBones; ++i) {
             const auto bone = mesh->mBones[i];
             const std::string boneName{ bone->mName.data };
-            if (animationPart->m_boneMapping.find(boneName) == animationPart->m_boneMapping.cend()) {
-                animationPart->m_boneMapping[boneName] = static_cast<unsigned int>(animationPart->m_boneInfos.size());
+            if (animationClip->m_boneMapping.find(boneName) == animationClip->m_boneMapping.cend()) {
+                animationClip->m_boneMapping[boneName] = static_cast<unsigned int>(animationClip->m_boneInfos.size());
 
-                AnimationPart::BoneInfo boneInfo{};
+                AnimationClip::BoneInfo boneInfo{};
                 boneInfo.boneOffset = prev_test::render::util::assimp::AssimpGlmConvertor::ToGlmMat4(bone->mOffsetMatrix);
-                animationPart->m_boneInfos.push_back(boneInfo);
+                animationClip->m_boneInfos.push_back(boneInfo);
             }
         }
 
-        animation->m_parts.push_back(animationPart);
+        animation->m_parts.push_back(animationClip);
     }
 
     return animation;
