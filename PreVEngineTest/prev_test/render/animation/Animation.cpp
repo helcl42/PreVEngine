@@ -4,14 +4,14 @@
 
 namespace prev_test::render::animation {
 
-/// ANIMATION PART
+/// ANIMATION CLIP
 
-AnimationPart::AnimationPart(const aiScene* scene)
+AnimationClip::AnimationClip(const aiScene* scene)
     : m_scene(scene)
 {
 }
 
-void AnimationPart::Update(const float deltaTime)
+void AnimationClip::Update(const float deltaTime)
 {
     m_animationIndex %= m_scene->mNumAnimations;
 
@@ -35,32 +35,32 @@ void AnimationPart::Update(const float deltaTime)
     UpdateNodeHeirarchy(animationTime, m_scene->mRootNode, glm::mat4(1.0f));
 
     m_boneTransforms.resize(m_boneInfos.size());
-    for (size_t i = 0; i < m_boneInfos.size(); i++) {
+    for (size_t i = 0; i < m_boneInfos.size(); ++i) {
         m_boneTransforms[i] = m_boneInfos[i].finalTransformation;
     }
 }
 
-const std::vector<glm::mat4>& AnimationPart::GetBoneTransforms() const
+const std::vector<glm::mat4>& AnimationClip::GetBoneTransforms() const
 {
     return m_boneTransforms;
 }
 
-void AnimationPart::SetState(const prev_test::render::AnimationState state)
+void AnimationClip::SetState(const prev_test::render::AnimationState state)
 {
     m_animationState = state;
 }
 
-void AnimationPart::SetSpeed(const float speed)
+void AnimationClip::SetSpeed(const float speed)
 {
     m_animationSpeed = speed;
 }
 
-void AnimationPart::SetTime(const float elapsed)
+void AnimationClip::SetTime(const float elapsed)
 {
     m_elapsedTime = elapsed;
 }
 
-unsigned int AnimationPart::FindPosition(const float animationTime, const aiNodeAnim* nodeAnimation) const
+unsigned int AnimationClip::FindPosition(const float animationTime, const aiNodeAnim* nodeAnimation) const
 {
     for (unsigned int i = 0; i < nodeAnimation->mNumPositionKeys - 1; i++) {
         if (animationTime < static_cast<float>(nodeAnimation->mPositionKeys[i + 1].mTime)) {
@@ -71,7 +71,7 @@ unsigned int AnimationPart::FindPosition(const float animationTime, const aiNode
     return 0;
 }
 
-unsigned int AnimationPart::FindRotation(const float animationTime, const aiNodeAnim* nodeAnimation) const
+unsigned int AnimationClip::FindRotation(const float animationTime, const aiNodeAnim* nodeAnimation) const
 {
     assert(nodeAnimation->mNumRotationKeys > 0);
     for (unsigned int i = 0; i < nodeAnimation->mNumRotationKeys - 1; i++) {
@@ -83,7 +83,7 @@ unsigned int AnimationPart::FindRotation(const float animationTime, const aiNode
     return 0;
 }
 
-unsigned int AnimationPart::FindScaling(const float animationTime, const aiNodeAnim* nodeAnimation) const
+unsigned int AnimationClip::FindScaling(const float animationTime, const aiNodeAnim* nodeAnimation) const
 {
     assert(nodeAnimation->mNumScalingKeys > 0);
     for (unsigned int i = 0; i < nodeAnimation->mNumScalingKeys - 1; i++) {
@@ -95,7 +95,7 @@ unsigned int AnimationPart::FindScaling(const float animationTime, const aiNodeA
     return 0;
 }
 
-const aiNodeAnim* AnimationPart::FindNodeAnimByName(const aiAnimation* animation, const std::string& nodeName) const
+const aiNodeAnim* AnimationClip::FindNodeAnimByName(const aiAnimation* animation, const std::string& nodeName) const
 {
     for (unsigned int i = 0; i < animation->mNumChannels; i++) {
         const auto nodeAnimation = animation->mChannels[i];
@@ -106,7 +106,7 @@ const aiNodeAnim* AnimationPart::FindNodeAnimByName(const aiAnimation* animation
     return nullptr;
 }
 
-aiVector3D AnimationPart::CalculateInterpolatedPosition(const float animationTime, const aiNodeAnim* nodeAnimation) const
+aiVector3D AnimationClip::CalculateInterpolatedPosition(const float animationTime, const aiNodeAnim* nodeAnimation) const
 {
     aiVector3D outVector;
     if (nodeAnimation->mNumPositionKeys == 1) {
@@ -126,7 +126,7 @@ aiVector3D AnimationPart::CalculateInterpolatedPosition(const float animationTim
     return outVector;
 }
 
-aiQuaternion AnimationPart::CalculateInterpolatedRotation(const float animationTime, const aiNodeAnim* nodeAnimation) const
+aiQuaternion AnimationClip::CalculateInterpolatedRotation(const float animationTime, const aiNodeAnim* nodeAnimation) const
 {
     aiQuaternion outQuanternion;
     if (nodeAnimation->mNumRotationKeys == 1) {
@@ -146,7 +146,7 @@ aiQuaternion AnimationPart::CalculateInterpolatedRotation(const float animationT
     return outQuanternion;
 }
 
-aiVector3D AnimationPart::CalculateInterpolatedScaling(const float animationTime, const aiNodeAnim* nodeAnimation) const
+aiVector3D AnimationClip::CalculateInterpolatedScaling(const float animationTime, const aiNodeAnim* nodeAnimation) const
 {
     aiVector3D outVector;
     if (nodeAnimation->mNumScalingKeys == 1) {
@@ -166,7 +166,7 @@ aiVector3D AnimationPart::CalculateInterpolatedScaling(const float animationTime
     return outVector;
 }
 
-void AnimationPart::UpdateNodeHeirarchy(const float animationTime, const aiNode* node, const glm::mat4& parentTransformation)
+void AnimationClip::UpdateNodeHeirarchy(const float animationTime, const aiNode* node, const glm::mat4& parentTransformation)
 {
     const std::string nodeName{ node->mName.data };
     const auto currentAnimation = m_scene->mAnimations[m_animationIndex];
@@ -206,12 +206,12 @@ void Animation::Update(const float deltaTime)
     }
 }
 
-std::shared_ptr<IAnimationPart> Animation::GetAnimationPart(unsigned int partIndex) const
+std::shared_ptr<IAnimationClip> Animation::GetClip(unsigned int partIndex) const
 {
     return m_parts[partIndex];
 }
 
-const std::vector<std::shared_ptr<IAnimationPart>>& Animation::GetAnimationParts() const
+const std::vector<std::shared_ptr<IAnimationClip>>& Animation::GetClips() const
 {
     return m_parts;
 }

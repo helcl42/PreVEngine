@@ -114,12 +114,12 @@ void AnimationShadowsRenderer::RenderMeshNode(const ShadowsRenderContext& render
     const auto& meshParts{ mesh->GetMeshParts() };
     for (const auto meshPartIndex : meshNode.meshPartIndices) {
         const auto& meshPart = meshParts[meshPartIndex];
-        const auto& animationPart = animation->GetAnimationPart(meshPartIndex);
+        const auto& animationClip = animation->GetClip(meshPartIndex);
 
         auto ubo = m_uniformsPool->GetNext();
 
         Uniforms uniforms{};
-        const auto& bones = animationPart->GetBoneTransforms();
+        const auto& bones = animationClip->GetBoneTransforms();
         for (size_t i = 0; i < bones.size(); ++i) {
             uniforms.bones[i] = bones[i];
         }
