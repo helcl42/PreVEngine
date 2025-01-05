@@ -147,7 +147,7 @@ void AnimationConeStepMappedRenderer::RenderMeshNode(const NormalRenderContext& 
         auto uboVS = m_uniformsPoolVS->GetNext();
 
         UniformsVS uniformsVS{};
-        const auto& bones = animationClip->GetBoneTransforms();
+        const auto& bones = animationClip.GetBoneTransforms();
         for (size_t i = 0; i < bones.size(); ++i) {
             uniformsVS.bones[i] = bones[i];
         }

@@ -7,6 +7,7 @@
 #include <assimp/scene.h>
 
 #include <map>
+#include <memory>
 
 namespace prev_test::render::animation {
 class AnimationFactory;
@@ -30,11 +31,11 @@ public:
     void SetTime(const float elapsed) override;
 
 private:
-    unsigned int FindPosition(const float animationTime, const aiNodeAnim* nodeAnimation) const;
+    uint32_t FindPosition(const float animationTime, const aiNodeAnim* nodeAnimation) const;
 
-    unsigned int FindRotation(const float animationTime, const aiNodeAnim* nodeAnimation) const;
+    uint32_t FindRotation(const float animationTime, const aiNodeAnim* nodeAnimation) const;
 
-    unsigned int FindScaling(const float animationTime, const aiNodeAnim* nodeAnimation) const;
+    uint32_t FindScaling(const float animationTime, const aiNodeAnim* nodeAnimation) const;
 
     const aiNodeAnim* FindNodeAnimByName(const aiAnimation* animation, const std::string& nodeName) const;
 
@@ -61,7 +62,7 @@ private:
 
     float m_elapsedTime{ 0.0f };
 
-    std::map<std::string, unsigned int> m_boneMapping; // maps a bone name to its index
+    std::map<std::string, uint32_t> m_boneMapping; // maps a bone name to its index
 
     std::vector<BoneInfo> m_boneInfos;
 
@@ -71,7 +72,7 @@ private:
 
     prev_test::render::AnimationState m_animationState{ prev_test::render::AnimationState::RUNNING };
 
-    unsigned int m_animationIndex{ 0 };
+    uint32_t m_index{ 0 };
 
     float m_animationSpeed{ 1.0f };
 };
@@ -86,9 +87,9 @@ public:
 public:
     void Update(const float deltaTime) override;
 
-    std::shared_ptr<IAnimationClip> GetClip(unsigned int partIndex) const override;
+    IAnimationClip& GetClip(const uint32_t clipIndex) const override;
 
-    const std::vector<std::shared_ptr<IAnimationClip>>& GetClips() const override;
+    uint32_t GetClipCount() const override;
 
     void SetState(const AnimationState state) override;
 
@@ -104,7 +105,7 @@ private:
 
     Assimp::Importer m_importer; // TODO get rid of that
 
-    std::vector<std::shared_ptr<IAnimationClip>> m_parts;
+    std::vector<std::shared_ptr<IAnimationClip>> m_clips;
 };
 
 } // namespace prev_test::render::animation

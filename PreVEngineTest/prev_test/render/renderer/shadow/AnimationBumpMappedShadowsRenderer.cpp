@@ -121,7 +121,7 @@ void AnimationBumpMappedShadowsRenderer::RenderMeshNode(const ShadowsRenderConte
         auto ubo = m_uniformsPool->GetNext();
 
         Uniforms uniforms{};
-        const auto& bones = animationClip->GetBoneTransforms();
+        const auto& bones = animationClip.GetBoneTransforms();
         for (size_t i = 0; i < bones.size(); ++i) {
             uniforms.bones[i] = bones[i];
         }

@@ -13,10 +13,10 @@ AnimationClip::AnimationClip(const aiScene* scene)
 
 void AnimationClip::Update(const float deltaTime)
 {
-    m_animationIndex %= m_scene->mNumAnimations;
+    m_index %= m_scene->mNumAnimations;
 
     const float scaledDeltaTime = deltaTime * m_animationSpeed;
-    const auto currentAnimation = m_scene->mAnimations[m_animationIndex];
+    const auto currentAnimation = m_scene->mAnimations[m_index];
     const float animationDuration = static_cast<float>(currentAnimation->mDuration);
 
     if (m_animationState == prev_test::render::AnimationState::RUNNING) {
@@ -60,9 +60,9 @@ void AnimationClip::SetTime(const float elapsed)
     m_elapsedTime = elapsed;
 }
 
-unsigned int AnimationClip::FindPosition(const float animationTime, const aiNodeAnim* nodeAnimation) const
+uint32_t AnimationClip::FindPosition(const float animationTime, const aiNodeAnim* nodeAnimation) const
 {
-    for (unsigned int i = 0; i < nodeAnimation->mNumPositionKeys - 1; i++) {
+    for (uint32_t i = 0; i < nodeAnimation->mNumPositionKeys - 1; ++i) {
         if (animationTime < static_cast<float>(nodeAnimation->mPositionKeys[i + 1].mTime)) {
             return i;
         }
@@ -71,10 +71,10 @@ unsigned int AnimationClip::FindPosition(const float animationTime, const aiNode
     return 0;
 }
 
-unsigned int AnimationClip::FindRotation(const float animationTime, const aiNodeAnim* nodeAnimation) const
+uint32_t AnimationClip::FindRotation(const float animationTime, const aiNodeAnim* nodeAnimation) const
 {
     assert(nodeAnimation->mNumRotationKeys > 0);
-    for (unsigned int i = 0; i < nodeAnimation->mNumRotationKeys - 1; i++) {
+    for (uint32_t i = 0; i < nodeAnimation->mNumRotationKeys - 1; ++i) {
         if (animationTime < static_cast<float>(nodeAnimation->mRotationKeys[i + 1].mTime)) {
             return i;
         }
@@ -83,10 +83,10 @@ unsigned int AnimationClip::FindRotation(const float animationTime, const aiNode
     return 0;
 }
 
-unsigned int AnimationClip::FindScaling(const float animationTime, const aiNodeAnim* nodeAnimation) const
+uint32_t AnimationClip::FindScaling(const float animationTime, const aiNodeAnim* nodeAnimation) const
 {
     assert(nodeAnimation->mNumScalingKeys > 0);
-    for (unsigned int i = 0; i < nodeAnimation->mNumScalingKeys - 1; i++) {
+    for (uint32_t i = 0; i < nodeAnimation->mNumScalingKeys - 1; ++i) {
         if (animationTime < static_cast<float>(nodeAnimation->mScalingKeys[i + 1].mTime)) {
             return i;
         }
@@ -97,7 +97,7 @@ unsigned int AnimationClip::FindScaling(const float animationTime, const aiNodeA
 
 const aiNodeAnim* AnimationClip::FindNodeAnimByName(const aiAnimation* animation, const std::string& nodeName) const
 {
-    for (unsigned int i = 0; i < animation->mNumChannels; i++) {
+    for (uint32_t i = 0; i < animation->mNumChannels; ++i) {
         const auto nodeAnimation = animation->mChannels[i];
         if (std::string(nodeAnimation->mNodeName.data) == nodeName) {
             return nodeAnimation;
@@ -112,8 +112,8 @@ aiVector3D AnimationClip::CalculateInterpolatedPosition(const float animationTim
     if (nodeAnimation->mNumPositionKeys == 1) {
         outVector = nodeAnimation->mPositionKeys[0].mValue;
     } else {
-        const unsigned int positionIndex = FindPosition(animationTime, nodeAnimation);
-        const unsigned int nextPositionIndex = (positionIndex + 1);
+        const auto positionIndex = FindPosition(animationTime, nodeAnimation);
+        const auto nextPositionIndex = (positionIndex + 1);
         assert(nextPositionIndex < nodeAnimation->mNumPositionKeys);
         const float deltaTime = static_cast<float>(nodeAnimation->mPositionKeys[nextPositionIndex].mTime - nodeAnimation->mPositionKeys[positionIndex].mTime);
         const float factor = (animationTime - static_cast<float>(nodeAnimation->mPositionKeys[positionIndex].mTime)) / deltaTime;
@@ -169,7 +169,7 @@ aiVector3D AnimationClip::CalculateInterpolatedScaling(const float animationTime
 void AnimationClip::UpdateNodeHeirarchy(const float animationTime, const aiNode* node, const glm::mat4& parentTransformation)
 {
     const std::string nodeName{ node->mName.data };
-    const auto currentAnimation = m_scene->mAnimations[m_animationIndex];
+    const auto currentAnimation = m_scene->mAnimations[m_index];
     auto nodeTransformation = prev_test::render::util::assimp::AssimpGlmConvertor::ToGlmMat4(node->mTransformation);
 
     const auto nodeAnimation = FindNodeAnimByName(currentAnimation, nodeName);
@@ -192,7 +192,7 @@ void AnimationClip::UpdateNodeHeirarchy(const float animationTime, const aiNode*
         m_boneInfos[boneIndex].finalTransformation = m_globalInverseTransform * globalTransformation * m_boneInfos[boneIndex].boneOffset;
     }
 
-    for (unsigned int i = 0; i < node->mNumChildren; i++) {
+    for (uint32_t i = 0; i < node->mNumChildren; ++i) {
         UpdateNodeHeirarchy(animationTime, node->mChildren[i], globalTransformation);
     }
 }
@@ -201,39 +201,39 @@ void AnimationClip::UpdateNodeHeirarchy(const float animationTime, const aiNode*
 
 void Animation::Update(const float deltaTime)
 {
-    for (auto& part : m_parts) {
-        part->Update(deltaTime);
+    for (auto& clip : m_clips) {
+        clip->Update(deltaTime);
     }
 }
 
-std::shared_ptr<IAnimationClip> Animation::GetClip(unsigned int partIndex) const
+IAnimationClip& Animation::GetClip(const uint32_t clipIndex) const
 {
-    return m_parts[partIndex];
+    return *m_clips[clipIndex];
 }
 
-const std::vector<std::shared_ptr<IAnimationClip>>& Animation::GetClips() const
+uint32_t Animation::GetClipCount() const
 {
-    return m_parts;
+    return static_cast<uint32_t>(m_clips.size());
 }
 
 void Animation::SetState(const AnimationState state)
 {
-    for (auto& part : m_parts) {
-        part->SetState(state);
+    for (auto& clip : m_clips) {
+        clip->SetState(state);
     }
 }
 
 void Animation::SetSpeed(const float speed)
 {
-    for (auto& part : m_parts) {
-        part->SetSpeed(speed);
+    for (auto& clip : m_clips) {
+        clip->SetSpeed(speed);
     }
 }
 
 void Animation::SetTime(const float elapsed)
 {
-    for (auto& part : m_parts) {
-        part->SetTime(elapsed);
+    for (auto& clip : m_clips) {
+        clip->SetTime(elapsed);
     }
 }
 

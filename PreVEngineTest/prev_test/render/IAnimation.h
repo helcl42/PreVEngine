@@ -3,7 +3,6 @@
 
 #include <prev/common/Common.h>
 
-#include <memory>
 #include <vector>
 
 namespace prev_test::render {
@@ -38,9 +37,9 @@ public:
 public:
     virtual void Update(const float deltaTime) = 0;
 
-    virtual std::shared_ptr<IAnimationClip> GetClip(unsigned int partIndex) const = 0;
+    virtual IAnimationClip& GetClip(const uint32_t partIndex) const = 0;
 
-    virtual const std::vector<std::shared_ptr<IAnimationClip>>& GetClips() const = 0;
+    virtual uint32_t GetClipCount() const = 0;
 
     virtual void SetState(const AnimationState animationState) = 0;
 
