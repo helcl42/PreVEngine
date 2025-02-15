@@ -108,7 +108,9 @@ void DefaultEngineImpl::ResetRenderPass()
 
 void DefaultEngineImpl::ResetSwapchain()
 {
-    m_swapchain = std::make_unique<prev::render::Swapchain>(*m_device, *m_allocator, *m_renderPass, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount), 1);
+    const VkColorSpaceKHR colorSpace{ m_device->GetGPU().FindSurfaceFormat(m_surface).colorSpace };
+
+    m_swapchain = std::make_unique<prev::render::Swapchain>(*m_device, *m_allocator, *m_renderPass, m_surface, colorSpace, prev::util::vk::GetSampleCountBit(m_config.samplesCount), 1);
 #if defined(__ANDROID__)
     m_swapchain->SetPresentMode(m_config.VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_MAILBOX_KHR);
 #else

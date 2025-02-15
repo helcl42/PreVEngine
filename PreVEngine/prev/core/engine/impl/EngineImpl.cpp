@@ -123,7 +123,7 @@ void EngineImpl::ResetAllocator()
 
 std::unique_ptr<prev::render::pass::RenderPass> EngineImpl::CreateDefaultMultisampledRenderPass(const prev::core::device::Device& device, const VkSurfaceKHR surface, const VkSampleCountFlagBits sampleCount, const uint32_t viewCount, const bool storeColor, const bool storeDepth)
 {
-    const auto colorFormat{ device.GetGPU().FindSurfaceFormat(surface) };
+    const auto colorFormat{ device.GetGPU().FindSurfaceFormat(surface).format };
     const auto depthFormat{ device.GetGPU().FindDepthFormat() };
 
     const VkClearColorValue clearColor{ { 0.5f, 0.5f, 0.5f, 1.0f } };
@@ -161,7 +161,7 @@ std::unique_ptr<prev::render::pass::RenderPass> EngineImpl::CreateDefaultMultisa
 
 std::unique_ptr<prev::render::pass::RenderPass> EngineImpl::CreateDefaultRenderPass(const prev::core::device::Device& device, const VkSurfaceKHR surface, const uint32_t viewCount, const bool storeColor, const bool storeDepth)
 {
-    const auto colorFormat{ device.GetGPU().FindSurfaceFormat(surface) };
+    const auto colorFormat{ device.GetGPU().FindSurfaceFormat(surface).format };
     const auto depthFormat{ device.GetGPU().FindDepthFormat() };
 
     const VkClearColorValue clearColor{ { 0.5f, 0.5f, 0.5f, 1.0f } };
