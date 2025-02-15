@@ -83,7 +83,7 @@ class WindowImpl : public Surface {
 public:
     WindowImpl(const prev::core::instance::Instance& instance);
 
-    virtual ~WindowImpl();
+    virtual ~WindowImpl() = default;
 
 public:
     bool IsKeyPressed(const prev::input::keyboard::KeyCode key) const;

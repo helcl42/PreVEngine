@@ -13,11 +13,6 @@ WindowImpl::WindowImpl(const prev::core::instance::Instance& instance)
 {
 }
 
-WindowImpl::~WindowImpl()
-{
-    DestroySurface();
-}
-
 bool WindowImpl::IsKeyPressed(const prev::input::keyboard::KeyCode key) const
 {
     const auto keyIndex{ static_cast<uint32_t>(key) };
