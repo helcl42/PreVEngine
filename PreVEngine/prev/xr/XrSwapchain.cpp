@@ -96,7 +96,7 @@ XrSwapchain::~XrSwapchain()
     LOGI("Swapchain destroyed\n");
 }
 
-bool XrSwapchain::UpdateExtent()
+bool XrSwapchain::UpdateExtent(uint32_t width, uint32_t height)
 {
     return false;
 }

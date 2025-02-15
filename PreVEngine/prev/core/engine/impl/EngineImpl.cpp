@@ -85,7 +85,7 @@ void EngineImpl::operator()(const prev::window::WindowChangeEvent& windowChangeE
 
 void EngineImpl::operator()(const prev::window::WindowResizeEvent& resizeEvent)
 {
-    m_swapchain->UpdateExtent();
+    m_swapchain->UpdateExtent(resizeEvent.width, resizeEvent.height);
 }
 
 void EngineImpl::ResetTiming()
