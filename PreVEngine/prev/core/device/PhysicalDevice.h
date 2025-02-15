@@ -29,9 +29,9 @@ public:
 public:
     int32_t FindQueueFamily(const VkQueueFlags flags, const VkQueueFlags unwantedFlags = 0, const VkSurfaceKHR surface = VK_NULL_HANDLE) const; // Returns a QueueFamlyIndex, or -1 if none found.
 
-    std::vector<VkSurfaceFormatKHR> SurfaceFormats(const VkSurfaceKHR surface) const; // Returns list of supported surface formats.
+    std::vector<VkSurfaceFormatKHR> GetSurfaceFormats(const VkSurfaceKHR surface) const; // Returns list of supported surface formats.
 
-    VkFormat FindSurfaceFormat(const VkSurfaceKHR surface, const std::vector<VkFormat>& preferredFormats = { VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_B8G8R8A8_UNORM }) const; // Returns first supported format from given list, or VK_FORMAT_UNDEFINED if no match was found.
+    VkSurfaceFormatKHR FindSurfaceFormat(const VkSurfaceKHR surface, const std::vector<VkFormat>& preferredFormats = { /*VK_FORMAT_R8G8B8A8_SRGB,*/ VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_B8G8R8A8_UNORM }) const; // Returns first supported format from given list, or VK_FORMAT_UNDEFINED if no match was found.
 
     VkFormat FindDepthFormat(const std::vector<VkFormat>& preferredFormats = {
                                  VK_FORMAT_D32_SFLOAT,

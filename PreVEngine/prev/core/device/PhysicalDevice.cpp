@@ -148,7 +148,7 @@ int32_t PhysicalDevice::FindQueueFamily(const VkQueueFlags flags, const VkQueueF
     return -1;
 }
 
-std::vector<VkSurfaceFormatKHR> PhysicalDevice::SurfaceFormats(const VkSurfaceKHR surface) const
+std::vector<VkSurfaceFormatKHR> PhysicalDevice::GetSurfaceFormats(const VkSurfaceKHR surface) const
 {
     uint32_t count{ 0 };
     vkGetPhysicalDeviceSurfaceFormatsKHR(m_handle, surface, &count, nullptr);
@@ -162,19 +162,17 @@ std::vector<VkSurfaceFormatKHR> PhysicalDevice::SurfaceFormats(const VkSurfaceKH
 }
 
 //--Returns the first supported surface color format from the preferredFormats list, or VK_FORMAT_UNDEFINED if no match found.
-VkFormat PhysicalDevice::FindSurfaceFormat(const VkSurfaceKHR surface, const std::vector<VkFormat>& preferredFormats) const
+VkSurfaceFormatKHR PhysicalDevice::FindSurfaceFormat(const VkSurfaceKHR surface, const std::vector<VkFormat>& preferredFormats) const
 {
-    const auto formats{ SurfaceFormats(surface) }; // get list of supported surface formats
+    const auto formats{ GetSurfaceFormats(surface) }; // get list of supported surface formats
     for (const auto& preferedFormat : preferredFormats) {
         for (const auto& format : formats) {
             if (format.format == preferedFormat) {
-                return format.format;
+                return format;
             }
         }
     }
-
-    // return formats[0].format;  //first supported format
-    return VK_FORMAT_UNDEFINED;
+    return { VK_FORMAT_UNDEFINED, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
 }
 
 VkFormat PhysicalDevice::FindDepthFormat(const std::vector<VkFormat>& preferredFormats) const

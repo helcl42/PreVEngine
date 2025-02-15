@@ -8,11 +8,12 @@
 #include <algorithm>
 
 namespace prev::render {
-Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount, uint32_t viewCount)
+Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkColorSpaceKHR colorSpace, VkSampleCountFlagBits sampleCount, uint32_t viewCount)
     : m_device{ device }
     , m_allocator{ allocator }
     , m_renderPass{ renderPass }
     , m_surface{ surface }
+    , m_colorSpace{ colorSpace }
     , m_sampleCount{ sampleCount }
     , m_viewCount{ viewCount }
     , m_graphicsQueue{ m_device.GetQueue(core::device::QueueType::GRAPHICS) }
@@ -29,7 +30,7 @@ Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allo
     m_swapchainCreateInfo = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
     m_swapchainCreateInfo.surface = m_surface;
     m_swapchainCreateInfo.imageFormat = m_renderPass.GetColorFormat();
-    m_swapchainCreateInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+    m_swapchainCreateInfo.imageColorSpace = colorSpace;
     m_swapchainCreateInfo.imageArrayLayers = m_viewCount;
     m_swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     m_swapchainCreateInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
