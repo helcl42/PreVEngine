@@ -22,7 +22,7 @@ public:
 
     virtual bool SetImageCount(uint32_t imageCount) = 0;
 
-    virtual bool UpdateExtent() = 0;
+    virtual bool UpdateExtent(uint32_t width, uint32_t height) = 0;
 
     virtual bool BeginFrame(SwapChainFrameContext& outContext) = 0;
 

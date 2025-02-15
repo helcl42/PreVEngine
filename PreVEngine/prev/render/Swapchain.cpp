@@ -38,7 +38,7 @@ Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allo
     m_swapchainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
     m_swapchainCreateInfo.compositeAlpha = (surfaceCapabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR) ? VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR : VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 
-    UpdateExtent();
+    UpdateExtent(512, 512);
     SetImageCount(3);
 
     m_commandPool = prev::util::vk::CreateCommandPool(m_device, m_graphicsQueue.family);
@@ -68,7 +68,7 @@ Swapchain::~Swapchain()
     m_depthBuffer = nullptr;
 }
 
-bool Swapchain::UpdateExtent()
+bool Swapchain::UpdateExtent(uint32_t width, uint32_t height)
 {
     const VkSurfaceCapabilitiesKHR surfaceCapabilities{ GetSurfaceCapabilities() };
     const VkExtent2D& currentSurfaceExtent{ surfaceCapabilities.currentExtent };
@@ -82,14 +82,10 @@ bool Swapchain::UpdateExtent()
         return false;
     }
 
-    if (currentSurfaceExtent.width == 0xFFFFFFFF) { // 0xFFFFFFFF indicates surface size is set from extent
-        const uint32_t defaultWidth = 256;
-        const uint32_t defaultHeight = 256;
-
-        LOGW("Can't determine current window surface extent from surface caps. Using defaults instead. (%d x %d)", defaultWidth, defaultHeight);
-
-        m_swapchainCreateInfo.imageExtent.width = util::math::Clamp(defaultWidth, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width);
-        m_swapchainCreateInfo.imageExtent.height = util::math::Clamp(defaultHeight, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
+    if (currentSurfaceExtent.width == std::numeric_limits<uint32_t>::max() || currentSurfaceExtent.height == std::numeric_limits<uint32_t>::min()) {
+        LOGW("Can't determine current window surface extent from surface caps. Using provided extent instead. (%d x %d)", width, height);
+        m_swapchainCreateInfo.imageExtent.width = util::math::Clamp(width, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width);
+        m_swapchainCreateInfo.imageExtent.height = util::math::Clamp(height, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
     } else {
         m_swapchainCreateInfo.imageExtent = currentSurfaceExtent;
     }
@@ -316,7 +312,7 @@ bool Swapchain::AcquireNext(SwapchainBuffer& next)
     uint32_t acquireIndex;
     const auto result{ vkAcquireNextImageKHR(m_device, m_swapchain, UINT64_MAX, swapchainBuffer.presentSemaphore, VK_NULL_HANDLE, &acquireIndex) };
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-        UpdateExtent();
+        UpdateExtent(m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height);
         return false;
     } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
         ASSERT(true, "failed to acquire swap chain image!");
@@ -366,7 +362,7 @@ void Swapchain::Present()
 
     const auto result{ m_presentQueue.Present(&presentInfo) };
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
-        swapchainChanged = UpdateExtent();
+        swapchainChanged = UpdateExtent(m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height);
     } else if (result != VK_SUCCESS) {
         ShowVkResult(result);
     }
