@@ -156,6 +156,8 @@ MacOSWindowImpl::MacOSWindowImpl(const prev::core::instance::Instance& instance,
 
 MacOSWindowImpl::~MacOSWindowImpl()
 {
+    DestroySurface();
+
     m_state = nullptr;
 }
 

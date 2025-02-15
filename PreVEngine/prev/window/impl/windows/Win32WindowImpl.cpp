@@ -154,6 +154,8 @@ Win32WindowImpl::Win32WindowImpl(const prev::core::instance::Instance& instance,
 
 Win32WindowImpl::~Win32WindowImpl()
 {
+    DestroySurface();
+
     DestroyWindow(m_hWnd);
 }
 

@@ -73,6 +73,8 @@ IOSWindowImpl::IOSWindowImpl(const prev::core::instance::Instance& instance, con
 
 IOSWindowImpl::~IOSWindowImpl()
 {
+    DestroySurface();
+
     m_state = nullptr;
 }
 

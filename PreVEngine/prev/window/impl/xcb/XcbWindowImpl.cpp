@@ -146,6 +146,8 @@ XcbWindowImpl::XcbWindowImpl(const prev::core::instance::Instance& instance, con
 
 XcbWindowImpl::~XcbWindowImpl()
 {
+    DestroySurface();
+
     ShutDownTouch();
 
     xkb_state_unref(m_keyboardState); // xcb keyboard state

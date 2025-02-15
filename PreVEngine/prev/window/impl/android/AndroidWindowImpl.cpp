@@ -70,6 +70,7 @@ AndroidWindowImpl::AndroidWindowImpl(const prev::core::instance::Instance& insta
 
 AndroidWindowImpl::~AndroidWindowImpl()
 {
+    DestroySurface();
 }
 
 bool AndroidWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
