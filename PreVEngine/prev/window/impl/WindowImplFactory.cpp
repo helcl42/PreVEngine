@@ -6,6 +6,9 @@
 #ifdef VK_USE_PLATFORM_XCB_KHR
 #include "xcb/XcbWindowImpl.h"
 #endif
+#ifdef VK_USE_PLATFORM_WAYLAND_KHR
+#include "wayland/WaylandWindowImpl.h"
+#endif
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #include "windows/Win32WindowImpl.h"
 #endif
@@ -23,6 +26,8 @@ std::unique_ptr<WindowImpl> WindowImplFactory::Create(const prev::core::instance
     return std::make_unique<android::AndroidWindowImpl>(instance, info);
 #elif VK_USE_PLATFORM_XCB_KHR
     return std::make_unique<xcb::XcbWindowImpl>(instance, info);
+#elif VK_USE_PLATFORM_WAYLAND_KHR
+    return std::make_unique<wayland::WaylandWindowImpl>(instance, info);
 #elif VK_USE_PLATFORM_WIN32_KHR
     return std::make_unique<win32::Win32WindowImpl>(instance, info);
 #elif VK_USE_PLATFORM_MACOS_MVK
@@ -30,12 +35,7 @@ std::unique_ptr<WindowImpl> WindowImplFactory::Create(const prev::core::instance
 #elif VK_USE_PLATFORM_IOS_MVK
     return std::make_unique<ios::IOSWindowImpl>(instance, info);
 #else
-#error NOT IMPLEMENTED PLATFORM!
+#error Not Implemented Window System!
 #endif
-
-    // TODO:
-    // #ifdef VK_USE_PLATFORM_XLIB_KHR
-    // #ifdef VK_USE_PLATFORM_MIR_KHR
-    // #ifdef VK_USE_PLATFORM_WAYLAND_KHR
 }
 } // namespace prev::window::impl

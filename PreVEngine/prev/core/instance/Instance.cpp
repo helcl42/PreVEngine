@@ -35,8 +35,6 @@ Instance::Instance(const bool enableValidation, const std::vector<std::string>& 
     extensions.Pick(VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
 #elif defined(VK_USE_PLATFORM_WAYLAND_KHR)
     extensions.Pick(VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
-#elif defined(VK_USE_PLATFORM_MIR_KHR)
-    extensions.Pick(VK_KHR_MIR_SURFACE_EXTENSION_NAME);
 #elif defined(VK_USE_PLATFORM_MACOS_MVK)
     extensions.Pick(VK_MVK_MACOS_SURFACE_EXTENSION_NAME);
     extensions.Pick(VK_EXT_METAL_SURFACE_EXTENSION_NAME);

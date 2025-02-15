@@ -40,6 +40,7 @@ file(GLOB SRC_LIST
     "prev/window/impl/*.h" "prev/window/impl/*.cpp"
     "prev/window/impl/windows/*.h" "prev/window/impl/windows/*.cpp"
     "prev/window/impl/xcb/*.h" "prev/window/impl/xcb/*.cpp"
+    "prev/window/impl/wayland/*.h" "prev/window/impl/wayland/*.cpp"
     "prev/window/impl/android/*.h" "prev/window/impl/android/*.cpp"
     "prev/window/impl/macos/*.h" "prev/window/impl/macos/*.cpp"
     "prev/window/impl/ios/*.h" "prev/window/impl/ios/*.cpp"
@@ -151,17 +152,16 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     message("${PROJECT_NAME} - Linux")
     add_definitions(-DTARGET_PLATFORM_LINUX)
 
-    option(BUILD_PREVENGINE_XCB_SUPPORT "Build XCB PREVENGINE support" ON)
-    #option(BUILD_PREVENGINE_XLIB_SUPPORT "Build Xlib PREVENGINE support" OFF)
-    #option(BUILD_PREVENGINE_WAYLAND_SUPPORT "Build Wayland PREVENGINE support" OFF)
-    #option(BUILD_PREVENGINE_MIR_SUPPORT "Build Mir PREVENGINE support" OFF)
-
-    add_library(${PROJECT_NAME} STATIC ${SRC_LIST})
-
-    target_link_libraries(${PROJECT_NAME} pthread)
-
-    if (BUILD_PREVENGINE_XCB_SUPPORT)
+    option(ENABLE_XCB "Enable XCB support" OFF)
+    option(ENABLE_WAYLAND "Enable Wayland support" ON)
+    
+    if (ENABLE_XCB)
         add_definitions(-DVK_USE_PLATFORM_XCB_KHR)
+
+        add_library(${PROJECT_NAME} STATIC ${SRC_LIST})
+
+        target_link_libraries(${PROJECT_NAME} pthread)
+
         #---XCB---  (window)
         find_package(XCB REQUIRED)
         include_directories(${XCB_INCLUDE_DIRS})                 # /usr/include
@@ -183,19 +183,26 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
             target_link_libraries(${PROJECT_NAME} ${X11_Xinput_LIB})
             add_definitions(-DENABLE_MULTITOUCH)
         endif()
+    elseif(ENABLE_WAYLAND)
+        add_definitions(-DVK_USE_PLATFORM_WAYLAND_KHR)
+
+        include_directories("platform/wayland")
+
+        file(GLOB WAYLAND_SRC_LIST 
+            "platform/wayland/*.h" "platform/wayland/*.c"
+        )
+    
+        add_library(${PROJECT_NAME} STATIC 
+            ${SRC_LIST}
+            ${WAYLAND_SRC_LIST}
+        )
+
+        find_package(Wayland REQUIRED)
+        include_directories(${WAYLAND_CLIENT_INCLUDE_DIR})
+        target_link_libraries(${PROJECT_NAME} ${WAYLAND_CLIENT_LIBRARIES})
+    else()
+        message(FATAL_ERROR "Unsupported Linux Window System.")
     endif()
-
-#    if (BUILD_PREVENGINE_XLIB_SUPPORT)
-#        add_definitions(-DVK_USE_PLATFORM_XLIB_KHR)
-#    endif()
-
-#    if (BUILD_PREVENGINE_WAYLAND_SUPPORT)
-#        add_definitions(-DVK_USE_PLATFORM_WAYLAND_KHR)
-#    endif()
-
-#    if (BUILD_PREVENGINE_MIR_SUPPORT)
-#        add_definitions(-DVK_USE_PLATFORM_MIR_KHR)
-#    endif()
 
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
     target_include_directories(${PROJECT_NAME} PUBLIC "$ENV{VULKAN_SDK}/include")

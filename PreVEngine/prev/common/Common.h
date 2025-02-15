@@ -24,7 +24,6 @@
 #define PAUSE
 #elif defined(TARGET_PLATFORM_LINUX)
 #include <stdlib.h>
-#include <xkbcommon/xkbcommon.h>
 #define TICK_CHARACTER "\u2713"
 #define PAUSE
 #endif
