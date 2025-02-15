@@ -7,7 +7,8 @@ A multiplatform Vulkan based rendering engine. This repository is under active d
 | Platform | Status |
 |---|---:|
 | Windows | [![Windows - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-windows.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-windows.yml) |
-| Linux | [![Linux - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux.yml) |
+| Linux (Wayland) | [![Linux (Wayland) - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux%20wayland.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux%20wayland.yml) |
+| Linux (XCB) | [![Linux (XCB) - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux.yml) |
 | Android  | [![Android - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-android.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-android.yml) |
 | MacOS | [![MacOS - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-macos.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-macos.yml) |
 | iOS | [![iOS - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-ios.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-ios.yml) |
@@ -15,7 +16,8 @@ A multiplatform Vulkan based rendering engine. This repository is under active d
 | OpenXR Platform | Status |
 |---|---:|
 | Windows | [![Windows OpenXR - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-windows%20openxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-windows%20openxr.yml) |
-| Linux | [![Linux OpenXR - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux%20openxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux%20openxr.yml) |
+| Linux (Wayland) | [![Linux (Wayland) OpenXR - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux%20wayland%20openxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux%20wayland%20openxr.yml) |
+| Linux (XCB) | [![Linux (XCB) OpenXR - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux%20openxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux%20openxr.yml) |
 | Android | [![Android OpenXR - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-android%20openxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-android%20openxr.yml) |
 
 Here is a video:
