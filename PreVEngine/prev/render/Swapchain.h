@@ -12,7 +12,7 @@
 namespace prev::render {
 class Swapchain final : public ISwapchain {
 public:
-    Swapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkColorSpaceKHR colorSpace, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT, uint32_t viewCount = 1);
+    Swapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT, uint32_t viewCount = 1);
 
     ~Swapchain();
 
@@ -86,8 +86,6 @@ private:
     pass::RenderPass& m_renderPass;
 
     VkSurfaceKHR m_surface{};
-
-    VkColorSpaceKHR m_colorSpace{};
 
     VkSampleCountFlagBits m_sampleCount{ VK_SAMPLE_COUNT_1_BIT };
 
