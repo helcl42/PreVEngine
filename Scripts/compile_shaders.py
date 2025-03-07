@@ -32,19 +32,23 @@ def compile_shader(shader_path, compile_serial, compiler_args):
         return None
     return handle
 
-def compile_shaders_with_extension(input_folder, extension, compile_serial, compiler_args):
+def compile_shaders_with_extension(input_folder, extension, force_compile_all, compile_serial, compiler_args):
     handles = []
     shader_paths = glob.glob(input_folder + f'/**/*.{extension}', recursive=True)
+    current_time = time.time();
     for shader_path in shader_paths:
-        handle = compile_shader(shader_path, compile_serial, compiler_args)
-        handles.append(handle)
+        time_delta = current_time - os.path.getmtime(shader_path)
+        time_delta_hours = time_delta / (60 * 60)
+        if time_delta_hours < 24 or force_compile_all:
+            handle = compile_shader(shader_path, compile_serial, compiler_args)
+            handles.append(handle)
     return handles
 
-def compile_shaders(input_folder, compile_serial, compiler_args):
+def compile_shaders(input_folder, force_compile_all, compile_serial, compiler_args):
     all_handles = []
     extensions = ['vert', 'tesc', 'tese', 'geom', 'frag', 'comp']
     for ext in extensions:
-        group_handles = compile_shaders_with_extension(input_folder, ext, compile_serial, compiler_args)
+        group_handles = compile_shaders_with_extension(input_folder, ext, force_compile_all, compile_serial, compiler_args)
         all_handles.extend(group_handles)
 
     print('Waiting for', len(all_handles), 'tasks...')
@@ -57,9 +61,9 @@ def copy_to_output(input_folder, output_folder):
         shutil.rmtree(output_folder)
     shutil.copytree(input_folder, output_folder)
 
-def process(input_folder, output_folder, compile_serial, compiler_args):
+def process(input_folder, output_folder, force_compile_all, compile_serial, compiler_args):
     start = time.time()
-    compile_shaders(input_folder, compile_serial, compiler_args)
+    compile_shaders(input_folder, force_compile_all, compile_serial, compiler_args)
     copy_to_output(input_folder, output_folder)
     end = time.time()
     print('Execution took:', (end - start), 's.')
@@ -70,15 +74,17 @@ if __name__ == '__main__':
                         help='Path to a folder with shaders to compile.', required=True)
     parser.add_argument('--output_folder',
                         help='Path to a folder where outputs will be copied.', required=True)
-    parser.add_argument('--compiler_args', action='append',
-                        help='Specifies optional compiler args.', required=False)
+    parser.add_argument('--force_compile_all',
+                        help='This invokes compilation for all shaders (even for unmodified ones).', required=False, default=False, action='store_true')
     parser.add_argument('--compile_serial',
                         help='This arguments ensures that all shader compilation task will run in serial manner(meant for debugging).', required=False, default=False, action='store_true')
+    parser.add_argument('--compiler_args', action='append',
+                        help='Specifies optional compiler args.', required=False)
     args = parser.parse_args()
     print(args)
-    process(args.input_folder, args.output_folder, args.compile_serial, args.compiler_args)
+    process(args.input_folder, args.output_folder, args.force_compile_all, args.compile_serial, args.compiler_args)
 
 # Example usage
-#  python .\compile_shaders.py --input_folder "<a_path>" --output_folder "<a_path>" --compiler_args="-O" --compile_serial
+#  python .\compile_shaders.py --input_folder "<a_path>" --output_folder "<a_path>" --compiler_args="-O" --compile_serial --force_compile_all
 
-# python compile_shaders.py --input_folder ../PreVEngineTest/assets/Shaders/ --output_folder ../build_linux/PreVEngineTest/assets/Shaders/ --compile_serial --compiler_args '-DMAX_VIEW_COUNT=2 ' --compiler_args '-DENABLE_XR=1 '
+# python compile_shaders.py --input_folder ../PreVEngineTest/assets/Shaders/ --output_folder ../build_linux/PreVEngineTest/assets/Shaders/ --compile_serial --force_compile_all --compiler_args '-DMAX_VIEW_COUNT=2 ' --compiler_args '-DENABLE_XR=1 '
