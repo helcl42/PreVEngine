@@ -128,7 +128,12 @@ void CameraComponent::UpdatePosition()
 
 void CameraComponent::UpdateOrientation()
 {
+    const auto prevOrientation{ m_orientation };
     m_orientation = glm::normalize(m_orientationDelta * m_orientation);
+
+    if (glm::dot(prevOrientation, m_orientation) < 0.0f) {
+        m_orientation = glm::conjugate(m_orientation);
+    }
 
     m_forwardDirection = prev::util::math::GetForwardVector(m_orientation);
     if (m_useFixedUp) {
