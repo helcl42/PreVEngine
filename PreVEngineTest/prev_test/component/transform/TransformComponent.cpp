@@ -40,7 +40,12 @@ std::shared_ptr<ITransformComponent> TransformComponent::GetParent() const
 
 void TransformComponent::Rotate(const glm::quat& rotationDiff)
 {
+    const auto prevOrientation{ m_orientation };
     m_orientation = glm::normalize(m_orientation * rotationDiff);
+
+    if (glm::dot(prevOrientation, m_orientation) < 0.0f) {
+        m_orientation = glm::conjugate(m_orientation);
+    }
 }
 
 void TransformComponent::Translate(const glm::vec3& positionDiff)
