@@ -49,16 +49,16 @@ void Camera::Update(float deltaTime)
             positionDelta -= cameraComponent->GetForwardDirection() * deltaTime * m_moveSpeed;
         }
         if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_A)) {
-            positionDelta += cameraComponent->GetRightDirection() * deltaTime * m_moveSpeed;
-        }
-        if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_D)) {
             positionDelta -= cameraComponent->GetRightDirection() * deltaTime * m_moveSpeed;
         }
+        if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_D)) {
+            positionDelta += cameraComponent->GetRightDirection() * deltaTime * m_moveSpeed;
+        }
         if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_Q)) {
-            positionDelta += cameraComponent->GetUpDirection() * deltaTime * m_moveSpeed;
+            positionDelta -= cameraComponent->GetUpDirection() * deltaTime * m_moveSpeed;
         }
         if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_E)) {
-            positionDelta -= cameraComponent->GetUpDirection() * deltaTime * m_moveSpeed;
+            positionDelta += cameraComponent->GetUpDirection() * deltaTime * m_moveSpeed;
         }
 
 #if defined(__ANDROID__)
@@ -75,11 +75,8 @@ void Camera::Update(float deltaTime)
         cameraComponent->SetViewFrustum(prev_test::render::ViewFrustum{ cameraComponent->GetViewFrustum().GetVerticalFov(), static_cast<float>(m_viewPortSize.x) / static_cast<float>(m_viewPortSize.y), cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane() });
 #endif
 
-        const glm::mat4 viewMatrix{ cameraComponent->LookAt() };
-        const glm::mat4 cameraTransformInWorldSpace{ glm::inverse(viewMatrix) };
-
-        transformComponent->SetPosition(prev::util::math::ExtractTranslation(cameraTransformInWorldSpace));
-        transformComponent->SetOrientation(prev::util::math::ExtractRotationAsQuaternion(cameraTransformInWorldSpace));
+        transformComponent->SetPosition(cameraComponent->GetPosition());
+        transformComponent->SetOrientation(cameraComponent->GetOrientation());
 
         transformComponent->Update(deltaTime);
     }
