@@ -23,7 +23,7 @@ public:
 public:
     bool AdjustDescriptorPoolCapacity(const uint32_t desiredCount);
 
-    void Bind(const std::string& name, const prev::render::buffer::UniformBuffer& uniformBuffer);
+    void Bind(const std::string& name, const prev::render::buffer::UnifomRingBufferItem& uniformBuffer);
 
     void Bind(const std::string& name, const prev::render::buffer::Buffer& buffer);
 

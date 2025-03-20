@@ -139,7 +139,7 @@ VkDescriptorSet Shader::UpdateNextDescriptorSet()
     return descriptorSet;
 }
 
-void Shader::Bind(const std::string& name, const prev::render::buffer::UniformBuffer& uniformBuffer)
+void Shader::Bind(const std::string& name, const prev::render::buffer::UnifomRingBufferItem& uniformBuffer)
 {
     const auto descriptorSetInfoIter{ m_descriptorSetInfos.find(name) };
     if (descriptorSetInfoIter == m_descriptorSetInfos.cend()) {

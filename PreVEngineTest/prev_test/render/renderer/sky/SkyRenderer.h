@@ -99,13 +99,13 @@ private:
 
     std::unique_ptr<prev::render::pipeline::Pipeline> m_skyPipeline;
 
-    std::unique_ptr<prev::render::buffer::UniformBufferRing<UniformsSkyCS>> m_uniformsPoolSkyCS;
+    std::unique_ptr<prev::render::buffer::UniformRingBuffer<UniformsSkyCS>> m_uniformsPoolSkyCS;
 
     std::unique_ptr<prev::render::shader::Shader> m_skyPostProcessShader;
 
     std::unique_ptr<prev::render::pipeline::Pipeline> m_skyPostProcessPipeline;
 
-    std::unique_ptr<prev::render::buffer::UniformBufferRing<UniformsSkyPostProcessCS>> m_uniformsPoolSkyPostProcessCS;
+    std::unique_ptr<prev::render::buffer::UniformRingBuffer<UniformsSkyPostProcessCS>> m_uniformsPoolSkyPostProcessCS;
 
     std::unique_ptr<prev::render::shader::Shader> m_compositeShader;
 

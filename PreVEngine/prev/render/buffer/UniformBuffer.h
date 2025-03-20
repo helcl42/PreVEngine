@@ -4,13 +4,14 @@
 #include "Buffer.h"
 
 #include "../../util/MathUtils.h"
+#include "../../util/Utils.h"
 
 namespace prev::render::buffer {
-class UniformBuffer final {
+class UnifomRingBufferItem final {
 public:
-    UniformBuffer(VkBuffer buffer, void* data, const uint32_t offset, const uint32_t range);
+    UnifomRingBufferItem(VkBuffer buffer, void* data, const uint32_t offset, const uint32_t range);
 
-    ~UniformBuffer() = default;
+    ~UnifomRingBufferItem() = default;
 
 public:
     void Update(const void* data);
@@ -32,49 +33,44 @@ private:
 };
 
 template <typename ItemType>
-class UniformBufferRing final : public Buffer {
+class UniformRingBuffer final : public Buffer {
 public:
-    UniformBufferRing(prev::core::memory::Allocator& allocator)
+    UniformRingBuffer(prev::core::memory::Allocator& allocator)
         : Buffer(allocator)
-        , m_capacity(0)
-        , m_index(0)
         , m_mapped(nullptr)
     {
     }
 
-    ~UniformBufferRing() = default;
+    ~UniformRingBuffer() = default;
 
 public:
-    void AdjustCapactity(const uint32_t capacity, const uint32_t alignment = 32)
+    void UpdateCapacity(const uint32_t capacity, const uint32_t alignment = 32, const VkBufferUsageFlags usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
     {
         Clear();
 
         m_buffers.clear();
 
-        m_capacity = capacity;
-        m_index = 0;
+        m_index = prev::util::CircularIndex<uint32_t>{ capacity };
 
-        const uint32_t itemSize = prev::util::math::RoundUp(static_cast<uint32_t>(sizeof(ItemType)), alignment);
-        Data(nullptr, capacity, itemSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, prev::core::memory::MemoryType::HOST_MAPPED, &m_mapped);
+        const uint32_t itemSize{ prev::util::math::RoundUp(static_cast<uint32_t>(sizeof(ItemType)), alignment) };
+        Data(nullptr, capacity, itemSize, usage, prev::core::memory::MemoryType::HOST_MAPPED, &m_mapped);
 
-        for (uint32_t i = 0; i < capacity; i++) {
-            auto ubo = std::make_shared<UniformBuffer>(m_buffer, m_mapped, i * itemSize, itemSize);
+        for (uint32_t i = 0; i < capacity; ++i) {
+            auto ubo = std::make_shared<UnifomRingBufferItem>(m_buffer, m_mapped, i * itemSize, itemSize);
             m_buffers.emplace_back(ubo);
         }
     }
 
-    std::shared_ptr<UniformBuffer> GetNext()
+    std::shared_ptr<UnifomRingBufferItem> GetNext()
     {
-        m_index = (m_index + 1) % m_buffers.size();
+        ++m_index;
         return m_buffers[m_index];
     }
 
 private:
-    std::vector<std::shared_ptr<UniformBuffer>> m_buffers;
+    std::vector<std::shared_ptr<UnifomRingBufferItem>> m_buffers;
 
-    uint32_t m_capacity;
-
-    uint32_t m_index;
+    prev::util::CircularIndex<uint32_t> m_index{ 0 };
 
     void* m_mapped;
 };
