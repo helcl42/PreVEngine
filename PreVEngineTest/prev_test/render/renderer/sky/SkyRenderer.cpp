@@ -49,8 +49,8 @@ void SkyRenderer::Init()
 
     LOGI("Sky Compute Pipeline created");
 
-    m_uniformsPoolSkyCS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsSkyCS>>(m_allocator);
-    m_uniformsPoolSkyCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolSkyCS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsSkyCS>>(m_allocator);
+    m_uniformsPoolSkyCS->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
     // compute sky post process
     // clang-format off
@@ -77,8 +77,8 @@ void SkyRenderer::Init()
 
     LOGI("Sky PostProcess Compute Pipeline created");
 
-    m_uniformsPoolSkyPostProcessCS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsSkyPostProcessCS>>(m_allocator);
-    m_uniformsPoolSkyPostProcessCS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolSkyPostProcessCS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsSkyPostProcessCS>>(m_allocator);
+    m_uniformsPoolSkyPostProcessCS->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
     // compositor
     // clang-format off

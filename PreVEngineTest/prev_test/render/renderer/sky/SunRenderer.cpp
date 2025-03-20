@@ -59,8 +59,8 @@ void SunRenderer::Init()
 
     LOGI("Sun Pipeline created");
 
-    m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformBufferRing<UniformsVS>>(m_allocator);
-    m_uniformsPoolVS->AdjustCapactity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsVS>>(m_allocator);
+    m_uniformsPoolVS->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
     m_queryPool = std::make_unique<prev::render::query::QueryPool>(m_device, VK_QUERY_TYPE_OCCLUSION, QueryPoolCount, MAX_VIEW_COUNT);
     m_queryPoolIndex = prev::util::CircularIndex<uint32_t>{ QueryPoolCount };

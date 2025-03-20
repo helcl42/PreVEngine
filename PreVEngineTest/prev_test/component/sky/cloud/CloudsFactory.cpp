@@ -49,8 +49,8 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
         .Build();
     // clang-format on
 
-    auto uniformsPool = std::make_unique<prev::render::buffer::UniformBufferRing<Uniforms>>(m_allocator);
-    uniformsPool->AdjustCapactity(1, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    auto uniformsPool = std::make_unique<prev::render::buffer::UniformRingBuffer<Uniforms>>(m_allocator);
+    uniformsPool->UpdateCapacity(1, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
     auto weatherImageBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
                                   .SetExtent({ width, height, 1 })
