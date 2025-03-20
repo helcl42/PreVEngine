@@ -41,6 +41,21 @@ float SquareLength(in vec4 v)
 	return v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w;
 }
 
+vec2 VecMin(in vec2 a, in vec2 b)
+{
+	return SquareLength(a) < SquareLength(b) ? a : b;
+}
+
+vec3 VecMin(in vec3 a, in vec3 b)
+{
+	return SquareLength(a) < SquareLength(b) ? a : b;
+}
+
+vec4 VecMin(in vec4 a, in vec4 b)
+{
+	return SquareLength(a) < SquareLength(b) ? a : b;
+}
+
 vec2 VecMax(in vec2 a, in vec2 b)
 {
 	return SquareLength(a) > SquareLength(b) ? a : b;
@@ -54,6 +69,36 @@ vec3 VecMax(in vec3 a, in vec3 b)
 vec4 VecMax(in vec4 a, in vec4 b)
 {
 	return SquareLength(a) > SquareLength(b) ? a : b;
+}
+
+float VecMinElement(in vec2 v)
+{
+    return min(v.x, v.y);
+}
+
+float VecMinElement(in vec3 v)
+{
+    return min(min(v.x, v.y), v.z);
+}
+
+float VecMinElement(in vec4 v)
+{
+    return min(min(min(v.x, v.y), v.z), v.w);
+}
+
+float VecMaxElement(in vec2 v)
+{
+    return max(v.x, v.y);
+}
+
+float VecMaxElement(in vec3 v)
+{
+    return max(min(v.x, v.y), v.z);
+}
+
+float VecMaxElement(in vec4 v)
+{
+    return max(max(max(v.x, v.y), v.z), v.w);
 }
 
 float Luminance(in vec3 rgb)
