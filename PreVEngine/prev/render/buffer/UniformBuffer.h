@@ -44,7 +44,7 @@ public:
     ~UniformRingBuffer() = default;
 
 public:
-    void UpdateCapacity(const uint32_t capacity, const uint32_t alignment = 32, const VkBufferUsageFlags usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+    void UpdateCapacity(const uint32_t capacity, const uint32_t alignment = 32)
     {
         Clear();
 
@@ -53,7 +53,7 @@ public:
         m_index = prev::util::CircularIndex<uint32_t>{ capacity };
 
         const uint32_t itemSize{ prev::util::math::RoundUp(static_cast<uint32_t>(sizeof(ItemType)), alignment) };
-        Data(nullptr, capacity, itemSize, usage, prev::core::memory::MemoryType::HOST_MAPPED, &m_mapped);
+        Data(nullptr, capacity, itemSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, prev::core::memory::MemoryType::HOST_MAPPED, &m_mapped);
 
         for (uint32_t i = 0; i < capacity; ++i) {
             auto ubo = std::make_shared<UnifomRingBufferItem>(m_buffer, m_mapped, i * itemSize, itemSize);
