@@ -7,37 +7,44 @@
 #include "../../util/Utils.h"
 
 namespace prev::render::buffer {
-class UnifomRingBufferItem final {
+template <typename Type>
+class UnifomBuffer final : public Buffer {
 public:
-    UnifomRingBufferItem(VkBuffer buffer, void* data, const uint32_t offset, const uint32_t range);
+    UnifomBuffer(prev::core::memory::Allocator& allocator, const uint32_t alignment = 32)
+        : Buffer(allocator)
+    {
+        m_count = 1;
+        m_stride = prev::util::math::RoundUp(static_cast<uint32_t>(sizeof(Type)), alignment);
+    }
 
-    ~UnifomRingBufferItem() = default;
+    UnifomBuffer(prev::core::memory::Allocator& allocator, VkBuffer buffer, void* mappedPtr, const uint32_t offset, const uint32_t size)
+        : Buffer(allocator)
+    {
+        m_buffer = buffer;
+        m_count = 1;
+        m_stride = size;
+        m_offset = offset;
+        m_mapped = mappedPtr;
+    }
+
+    ~UnifomBuffer() = default;
 
 public:
-    void Update(const void* data);
+    void Data(const Type& data)
+    {
+        if (!m_mapped) {
+            Buffer::Data(nullptr, m_count, m_stride, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, prev::core::memory::MemoryType::HOST_MAPPED);
+        }
 
-    uint32_t GetOffset() const;
-
-    uint32_t GetRange() const;
-
-    operator VkBuffer() const;
-
-private:
-    VkBuffer m_buffer;
-
-    void* m_mapped;
-
-    uint32_t m_offset;
-
-    uint32_t m_range;
+        memcpy(m_mapped, &data, sizeof(Type));
+    }
 };
 
-template <typename ItemType>
+template <typename Type>
 class UniformRingBuffer final : public Buffer {
 public:
     UniformRingBuffer(prev::core::memory::Allocator& allocator)
         : Buffer(allocator)
-        , m_mapped(nullptr)
     {
     }
 
@@ -52,27 +59,26 @@ public:
 
         m_index = prev::util::CircularIndex<uint32_t>{ capacity };
 
-        const uint32_t itemSize{ prev::util::math::RoundUp(static_cast<uint32_t>(sizeof(ItemType)), alignment) };
-        Data(nullptr, capacity, itemSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, prev::core::memory::MemoryType::HOST_MAPPED, &m_mapped);
+        const uint32_t itemSize{ prev::util::math::RoundUp(static_cast<uint32_t>(sizeof(Type)), alignment) };
+        Buffer::Data(nullptr, capacity, itemSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, prev::core::memory::MemoryType::HOST_MAPPED);
 
         for (uint32_t i = 0; i < capacity; ++i) {
-            auto ubo = std::make_shared<UnifomRingBufferItem>(m_buffer, m_mapped, i * itemSize, itemSize);
+            const auto offset{ i * itemSize };
+            auto ubo = std::make_shared<UnifomBuffer<Type>>(m_allocator, m_buffer, static_cast<uint8_t*>(m_mapped) + offset, offset, itemSize);
             m_buffers.emplace_back(ubo);
         }
     }
 
-    std::shared_ptr<UnifomRingBufferItem> GetNext()
+    std::shared_ptr<UnifomBuffer<Type>> GetNext()
     {
         ++m_index;
         return m_buffers[m_index];
     }
 
 private:
-    std::vector<std::shared_ptr<UnifomRingBufferItem>> m_buffers;
+    std::vector<std::shared_ptr<UnifomBuffer<Type>>> m_buffers;
 
     prev::util::CircularIndex<uint32_t> m_index{ 0 };
-
-    void* m_mapped;
 };
 } // namespace prev::render::buffer
 

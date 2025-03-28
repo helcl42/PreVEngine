@@ -119,7 +119,7 @@ void DefaultShadowsRenderer::RenderMeshNode(const ShadowsRenderContext& renderCo
         uniforms.projectionMatrix = renderContext.projectionMatrix;
         uniforms.viewMatrix = renderContext.viewMatrix;
         uniforms.modelMatrix = modelMatrix;
-        ubo->Update(&uniforms);
+        ubo->Data(uniforms);
 
         m_shader->Bind("ubo", *ubo);
 

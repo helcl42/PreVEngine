@@ -93,7 +93,7 @@ void RayCastDebugRenderer::Render(const NormalRenderContext& renderContext, cons
         UniformsVS uniformsVS{};
         uniformsVS.color = glm::vec3(1.0, 0.0, 0.0);
 
-        uboVS->Update(&uniformsVS);
+        uboVS->Data(uniformsVS);
 
         auto uboGS = m_uniformsPoolGS->GetNext();
 
@@ -104,14 +104,14 @@ void RayCastDebugRenderer::Render(const NormalRenderContext& renderContext, cons
             uniformsGS.projectionMatrices[i] = renderContext.projectionMatrices[i];
         }
 
-        uboGS->Update(&uniformsGS);
+        uboGS->Data(uniformsGS);
 
         auto uboFS = m_uniformsPoolFS->GetNext();
 
         UniformsFS uniformsFS{};
         uniformsFS.alpha = 0.7f;
 
-        uboFS->Update(&uniformsFS);
+        uboFS->Data(uniformsFS);
 
         m_shader->Bind("uboVS", *uboVS);
         m_shader->Bind("uboGS", *uboGS);

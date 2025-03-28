@@ -49,8 +49,7 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
         .Build();
     // clang-format on
 
-    auto uniformsPool = std::make_unique<prev::render::buffer::UniformRingBuffer<Uniforms>>(m_allocator);
-    uniformsPool->UpdateCapacity(1, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    auto uniformBuffer = std::make_unique<prev::render::buffer::UnifomBuffer<Uniforms>>(m_allocator, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
     auto weatherImageBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
                                   .SetExtent({ width, height, 1 })
@@ -72,10 +71,9 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
         uniforms.perlinScale = 100.0f;
         uniforms.perlinOctaves = 4;
 
-        auto ubo = uniformsPool->GetNext();
-        ubo->Update(&uniforms);
+        uniformBuffer->Data(uniforms);
 
-        shader->Bind("uboCS", *ubo);
+        shader->Bind("uboCS", *uniformBuffer);
         shader->Bind("outWeatherTexture", *weatherImageBuffer, *sampler, VK_IMAGE_LAYOUT_GENERAL);
         const VkDescriptorSet descriptorSet = shader->UpdateNextDescriptorSet();
 

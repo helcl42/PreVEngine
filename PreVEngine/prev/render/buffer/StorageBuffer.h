@@ -7,20 +7,20 @@
 
 namespace prev::render::buffer {
 
-template <typename ItemType>
+template <typename Type>
 class StorageBuffer final : public Buffer {
 public:
     StorageBuffer(prev::core::memory::Allocator& allocator, const uint32_t alignment = 32)
         : Buffer(allocator)
-        , m_itemSize(prev::util::math::RoundUp(static_cast<uint32_t>(sizeof(ItemType)), alignment))
-        , m_mapped(nullptr)
     {
+        m_count = 1;
+        m_stride = prev::util::math::RoundUp(static_cast<uint32_t>(sizeof(Type)), alignment);
     }
 
     ~StorageBuffer() = default;
 
 public:
-    void WriteData(const ItemType& itemData)
+    void Data(const Type& itemData)
     {
         EnsureBuffer();
 
@@ -28,7 +28,7 @@ public:
         memcpy(m_mapped, &m_itemData, sizeof(m_itemData));
     }
 
-    ItemType& ReadData()
+    Type& Data()
     {
         EnsureBuffer();
 
@@ -41,16 +41,12 @@ private:
     void EnsureBuffer()
     {
         if (!m_mapped) {
-            Buffer::Data(nullptr, 1, m_itemSize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, prev::core::memory::MemoryType::HOST_MAPPED, &m_mapped);
+            Buffer::Data(nullptr, m_count, m_stride, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, prev::core::memory::MemoryType::HOST_MAPPED);
         }
     }
 
 private:
-    ItemType m_itemData;
-
-    uint32_t m_itemSize;
-
-    void* m_mapped;
+    Type m_itemData;
 };
 } // namespace prev::render::buffer
 

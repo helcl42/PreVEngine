@@ -118,7 +118,7 @@ void TerrainRenderer::Render(const NormalRenderContext& renderContext, const std
             uniformsVS.gradient = prev_test::component::sky::FOG_GRADIENT;
             uniformsVS.clipPlane = renderContext.clipPlane;
 
-            uboVS->Update(&uniformsVS);
+            uboVS->Data(uniformsVS);
 
             auto uboFS = m_uniformsPoolFS->GetNext();
 
@@ -153,7 +153,7 @@ void TerrainRenderer::Render(const NormalRenderContext& renderContext, const std
             }
             uniformsFS.heightTransitionRange = terrainComponent->GetTransitionRange();
 
-            uboFS->Update(&uniformsFS);
+            uboFS->Data(uniformsFS);
 
             m_shader->Bind("depthSampler", *shadowsComponent->GetImageBuffer(), *shadowsComponent->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
             for (size_t i = 0; i < terrainComponent->GetMaterials().size(); ++i) {

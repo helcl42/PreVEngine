@@ -9,14 +9,13 @@ void VertexBuffer::Data(const void* data, const uint32_t count, const uint32_t s
 HostMappedVertexBuffer::HostMappedVertexBuffer(prev::core::memory::Allocator& allocator, const uint32_t maxCount)
     : VertexBuffer(allocator)
     , m_maxCount(maxCount)
-    , m_mapped(nullptr)
 {
 }
 
 void HostMappedVertexBuffer::Data(const void* data, const uint32_t count, const uint32_t stride)
 {
     if (!m_mapped) {
-        Buffer::Data(nullptr, m_maxCount, stride, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, prev::core::memory::MemoryType::HOST_MAPPED, &m_mapped);
+        Buffer::Data(nullptr, m_maxCount, stride, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, prev::core::memory::MemoryType::HOST_MAPPED);
     }
 
     const uint32_t finalCount{ std::min(m_maxCount, count) };

@@ -94,7 +94,7 @@ void Font3dRenderer::Render(const NormalRenderContext& renderContext, const std:
                 uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
             }
             uniformsVS.clipPlane = renderContext.clipPlane;
-            uboVS->Update(&uniformsVS);
+            uboVS->Data(uniformsVS);
 
             auto uboFS = m_uniformsPoolFS->GetNext();
             UniformsFS uniformsFS{};
@@ -107,7 +107,7 @@ void Font3dRenderer::Render(const NormalRenderContext& renderContext, const std:
             uniformsFS.hasEffect = renderableText.text->HasEffect() ? 1 : 0;
             uniformsFS.outlineColor = glm::vec4(renderableText.text->GetOutlineColor(), 1.0f);
             uniformsFS.outlineOffset = glm::vec4(renderableText.text->GetOutlineOffset(), 0.0f, 1.0f);
-            uboFS->Update(&uniformsFS);
+            uboFS->Data(uniformsFS);
 
             m_shader->Bind("alphaSampler", *nodeFontRenderComponent->GetFontMetadata()->GetImageBuffer(), *nodeFontRenderComponent->GetFontMetadata()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             m_shader->Bind("uboVS", *uboVS);

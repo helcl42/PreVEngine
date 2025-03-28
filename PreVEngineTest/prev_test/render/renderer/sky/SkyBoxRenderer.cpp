@@ -95,7 +95,7 @@ void SkyBoxRenderer::Render(const NormalRenderContext& renderContext, const std:
             uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
             uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
         }
-        uboVS->Update(&uniformsVS);
+        uboVS->Data(uniformsVS);
 
         auto uboFS = m_uniformsPoolFS->GetNext();
 
@@ -103,7 +103,7 @@ void SkyBoxRenderer::Render(const NormalRenderContext& renderContext, const std:
         uniformsFS.fogColor = prev_test::component::sky::FOG_COLOR;
         uniformsFS.lowerLimit = glm::vec4(0.0f);
         uniformsFS.upperLimit = glm::vec4(0.03f);
-        uboFS->Update(&uniformsFS);
+        uboFS->Data(uniformsFS);
 
         m_shader->Bind("cubeMap1", *skyBoxComponent->GetMaterial()->GetImageBuffer(), *skyBoxComponent->GetMaterial()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         m_shader->Bind("uboVS", *uboVS);

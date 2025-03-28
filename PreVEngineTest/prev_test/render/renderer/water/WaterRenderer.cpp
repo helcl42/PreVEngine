@@ -120,7 +120,7 @@ void WaterRenderer::Render(const NormalRenderContext& renderContext, const std::
             uniformsVS.density = prev_test::component::sky::FOG_DENSITY;
             uniformsVS.gradient = prev_test::component::sky::FOG_GRADIENT;
 
-            uboVS->Update(&uniformsVS);
+            uboVS->Data(uniformsVS);
 
             auto uboFS = m_uniformsPoolFS->GetNext();
 
@@ -140,7 +140,7 @@ void WaterRenderer::Render(const NormalRenderContext& renderContext, const std::
             uniformsFS.shadows.enabled = prev_test::component::shadow::SHADOWS_ENABLED;
             uniformsFS.shadows.useReverseDepth = REVERSE_DEPTH ? 1 : 0;
 
-            uboFS->Update(&uniformsFS);
+            uboFS->Data(uniformsFS);
 
             m_shader->Bind("uboVS", *uboVS);
             m_shader->Bind("uboFS", *uboFS);

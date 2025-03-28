@@ -139,22 +139,6 @@ VkDescriptorSet Shader::UpdateNextDescriptorSet()
     return descriptorSet;
 }
 
-void Shader::Bind(const std::string& name, const prev::render::buffer::UnifomRingBufferItem& uniformBuffer)
-{
-    const auto descriptorSetInfoIter{ m_descriptorSetInfos.find(name) };
-    if (descriptorSetInfoIter == m_descriptorSetInfos.cend()) {
-        LOGE("Could not find uniform with name: %s", name.c_str());
-    }
-
-    auto& item{ descriptorSetInfoIter->second };
-
-    item.bufferInfo.buffer = uniformBuffer;
-    item.bufferInfo.offset = uniformBuffer.GetOffset();
-    item.bufferInfo.range = uniformBuffer.GetRange();
-
-    // LOGI("Bind UniformBuffer to shader-in: \"%s\"", name.c_str());
-}
-
 void Shader::Bind(const std::string& name, const prev::render::buffer::Buffer& buffer)
 {
     const auto descriptorSetInfoIter{ m_descriptorSetInfos.find(name) };
@@ -165,7 +149,7 @@ void Shader::Bind(const std::string& name, const prev::render::buffer::Buffer& b
     auto& item{ descriptorSetInfoIter->second };
 
     item.bufferInfo.buffer = buffer;
-    item.bufferInfo.offset = 0;
+    item.bufferInfo.offset = buffer.GetOffset();
     item.bufferInfo.range = buffer.GetSize();
 
     // LOGI("Bind Buffer to shader-in: \"%s\"", name.c_str());

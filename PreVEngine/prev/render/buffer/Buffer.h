@@ -11,14 +11,18 @@ public:
     virtual ~Buffer();
 
 public:
-    void Clear();
+    void Data(const void* data, const uint32_t count, const uint32_t stride, const VkBufferUsageFlags usage, const prev::core::memory::MemoryType memoryType = prev::core::memory::MemoryType::DEVICE_LOCAL);
 
-    void Data(const void* data, const uint32_t count, const uint32_t stride, const VkBufferUsageFlags usage, const prev::core::memory::MemoryType memtype = prev::core::memory::MemoryType::DEVICE_LOCAL, void** mapped = nullptr);
+    void Clear();
 
 public:
     uint32_t GetCount() const;
 
     uint32_t GetSize() const;
+
+    uint32_t GetOffset() const;
+
+    void* GetMappedPtr() const;
 
 public:
     operator VkBuffer() const;
@@ -33,6 +37,10 @@ protected:
     uint32_t m_count;
 
     uint32_t m_stride;
+
+    uint32_t m_offset;
+
+    void* m_mapped;
 };
 } // namespace prev::render::buffer
 

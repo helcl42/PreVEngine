@@ -167,7 +167,7 @@ void AnimationNormalMappedRenderer::RenderMeshNode(const NormalRenderContext& re
         uniformsVS.gradient = prev_test::component::sky::FOG_GRADIENT;
         uniformsVS.clipPlane = renderContext.clipPlane;
 
-        uboVS->Update(&uniformsVS);
+        uboVS->Data(uniformsVS);
 
         auto uboFS = m_uniformsPoolFS->GetNext();
 
@@ -197,7 +197,7 @@ void AnimationNormalMappedRenderer::RenderMeshNode(const NormalRenderContext& re
         uniformsFS.selected = false;
         uniformsFS.castedByShadows = nodeRenderComponent->IsCastedByShadows();
 
-        uboFS->Update(&uniformsFS);
+        uboFS->Data(uniformsFS);
 
         m_shader->Bind("colorSampler", *material->GetImageBuffer(COLOR_INDEX), *material->GetSampler(COLOR_INDEX), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         if (material->HasImageBuffer(NORMAL_INDEX)) {

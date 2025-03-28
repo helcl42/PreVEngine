@@ -60,7 +60,7 @@ public:
             const auto& newModel{ currentRenderableText.models[currentRenderableText.modelIndex] };
             auto indexBuffer{ newModel->GetIndexBuffer() };
             auto vertexBuffer{ newModel->GetVertexBuffer() };
-            newModel->GetVertexBuffer()->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
+            vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
             indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
 
             currentRenderableText.models[currentRenderableText.modelIndex] = modelFactory.Create(mesh, vertexBuffer, indexBuffer);

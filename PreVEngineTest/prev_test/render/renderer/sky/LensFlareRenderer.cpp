@@ -106,12 +106,12 @@ void LensFlareRenderer::Render(const NormalRenderContext& renderContext, const s
                 uniformsVS.translations[viewIndex] = glm::vec4(flarePositions[viewIndex][i], MIN_DEPTH, 1.0f);
             }
             uniformsVS.scale = glm::vec4(xScale, yScale, 0.0f, 0.0f);
-            uboVS->Update(&uniformsVS);
+            uboVS->Data(uniformsVS);
 
             auto uboFS = m_uniformsPoolFS->GetNext();
             UniformsFS uniformsFS{};
             uniformsFS.brightness = glm::vec4(m_sunVisibilityFactor);
-            uboFS->Update(&uniformsFS);
+            uboFS->Data(uniformsFS);
 
             m_shader->Bind("colorSampler", *flare->GetImageBuffer(), *flare->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             m_shader->Bind("uboVS", *uboVS);
