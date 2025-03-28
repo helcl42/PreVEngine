@@ -101,14 +101,14 @@ void SelectionDebugRenderer::Render(const NormalRenderContext& renderContext, co
                 uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
             }
 
-            uboVS->Update(&uniformsVS);
+            uboVS->Data(uniformsVS);
 
             auto uboFS = m_uniformsPoolFS->GetNext();
 
             UniformsFS uniformsFS{};
             uniformsFS.color = glm::vec4(0.0f, 1.0f, 0.0f, 0.7f);
 
-            uboFS->Update(&uniformsFS);
+            uboFS->Data(uniformsFS);
 
             m_shader->Bind("uboVS", *uboVS);
             m_shader->Bind("uboFS", *uboFS);

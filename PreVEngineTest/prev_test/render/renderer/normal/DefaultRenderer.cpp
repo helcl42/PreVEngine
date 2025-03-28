@@ -153,7 +153,7 @@ void DefaultRenderer::RenderMeshNode(const NormalRenderContext& renderContext, c
         uniformsVS.gradient = prev_test::component::sky::FOG_GRADIENT;
         uniformsVS.clipPlane = renderContext.clipPlane;
 
-        uboVS->Update(&uniformsVS);
+        uboVS->Data(uniformsVS);
 
         auto uboFS = m_uniformsPoolFS->GetNext();
 
@@ -183,7 +183,7 @@ void DefaultRenderer::RenderMeshNode(const NormalRenderContext& renderContext, c
         uniformsFS.selected = prev_test::render::renderer::IsSelected(node->GetId());
         uniformsFS.castedByShadows = nodeRenderComponent->IsCastedByShadows();
 
-        uboFS->Update(&uniformsFS);
+        uboFS->Data(uniformsFS);
 
         m_shader->Bind("depthSampler", *shadowsComponent->GetImageBuffer(), *shadowsComponent->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
         m_shader->Bind("colorSampler", *material->GetImageBuffer(), *material->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);

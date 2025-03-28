@@ -118,7 +118,7 @@ void SunRenderer::Render(const NormalRenderContext& renderContext, const std::sh
             uniformsVS.translations[viewIndex] = glm::vec4(sunPosition, MAX_DEPTH, 1.0f);
         }
         uniformsVS.scale = glm::vec4(xScale, yScale, 0.0f, 0.0f);
-        uboVS->Update(&uniformsVS);
+        uboVS->Data(uniformsVS);
 
         m_shader->Bind("uboVS", *uboVS);
 

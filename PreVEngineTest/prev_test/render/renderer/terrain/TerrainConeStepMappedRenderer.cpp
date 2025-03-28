@@ -128,7 +128,7 @@ void TerrainConeStepMappedRenderer::Render(const NormalRenderContext& renderCont
             uniformsVS.gradient = prev_test::component::sky::FOG_GRADIENT;
             uniformsVS.clipPlane = renderContext.clipPlane;
 
-            uboVS->Update(&uniformsVS);
+            uboVS->Data(uniformsVS);
 
             auto uboFS = m_uniformsPoolFS->GetNext();
 
@@ -165,7 +165,7 @@ void TerrainConeStepMappedRenderer::Render(const NormalRenderContext& renderCont
             uniformsFS.heightTransitionRange = terrainComponent->GetTransitionRange();
             uniformsFS.numLayers = 15;
 
-            uboFS->Update(&uniformsFS);
+            uboFS->Data(uniformsFS);
 
             for (size_t i = 0; i < terrainComponent->GetMaterials().size(); i++) {
                 const auto material{ terrainComponent->GetMaterials().at(i) };

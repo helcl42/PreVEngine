@@ -103,12 +103,12 @@ void ParticlesRenderer::Render(const NormalRenderContext& renderContext, const s
                 uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
             }
             uniformsVS.textureNumberOfRows = particlesComponent->GetMaterial()->GetAtlasNumberOfRows();
-            uboVS->Update(&uniformsVS);
+            uboVS->Data(uniformsVS);
 
             auto uboFS = m_uniformsPoolFS->GetNext();
             UniformsFS uniformsFS{};
             uniformsFS.color = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
-            uboFS->Update(&uniformsFS);
+            uboFS->Data(uniformsFS);
 
             m_shader->Bind("uboVS", *uboVS);
             m_shader->Bind("uboFS", *uboFS);

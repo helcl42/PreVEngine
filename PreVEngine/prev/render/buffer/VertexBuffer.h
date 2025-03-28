@@ -21,8 +21,6 @@ public:
 
 private:
     uint32_t m_maxCount;
-
-    void* m_mapped;
 };
 } // namespace prev::render::buffer
 

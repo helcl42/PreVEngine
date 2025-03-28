@@ -122,7 +122,7 @@ void BumpMappedShadowsRenderer::RenderMeshNode(const ShadowsRenderContext& rende
         uniforms.projectionMatrix = renderContext.projectionMatrix;
         uniforms.viewMatrix = renderContext.viewMatrix;
         uniforms.modelMatrix = transformComponent->GetWorldTransformScaled();
-        ubo->Update(&uniforms);
+        ubo->Data(uniforms);
 
         m_shader->Bind("ubo", *ubo);
 

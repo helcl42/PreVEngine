@@ -93,7 +93,7 @@ void BoundingVolumeDebugRenderer::Render(const NormalRenderContext& renderContex
             uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
         }
 
-        uboVS->Update(&uniformsVS);
+        uboVS->Data(uniformsVS);
 
         auto uboFS = m_uniformsPoolFS->GetNext();
 
@@ -102,7 +102,7 @@ void BoundingVolumeDebugRenderer::Render(const NormalRenderContext& renderContex
         uniformsFS.selectedColor = prev_test::component::ray_casting::SELECTED_COLOR;
         uniformsFS.selected = false;
 
-        uboFS->Update(&uniformsFS);
+        uboFS->Data(uniformsFS);
 
         m_shader->Bind("uboVS", *uboVS);
         m_shader->Bind("uboFS", *uboFS);

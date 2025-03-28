@@ -21,14 +21,13 @@ VkIndexType IndexBuffer::GetIndexType() const
 HostMappedIndexBuffer::HostMappedIndexBuffer(prev::core::memory::Allocator& allocator, const uint32_t maxCount)
     : IndexBuffer(allocator)
     , m_maxCount(maxCount)
-    , m_mapped(nullptr)
 {
 }
 
 void HostMappedIndexBuffer::Data(const uint16_t* data, const uint32_t count)
 {
     if (!m_mapped) {
-        Buffer::Data(nullptr, m_maxCount, sizeof(uint16_t), VK_BUFFER_USAGE_INDEX_BUFFER_BIT, prev::core::memory::MemoryType::HOST_MAPPED, &m_mapped);
+        Buffer::Data(nullptr, m_maxCount, sizeof(uint16_t), VK_BUFFER_USAGE_INDEX_BUFFER_BIT, prev::core::memory::MemoryType::HOST_MAPPED);
     }
 
     uint32_t finalCount{ std::min(m_maxCount, count) };
@@ -41,7 +40,7 @@ void HostMappedIndexBuffer::Data(const uint16_t* data, const uint32_t count)
 void HostMappedIndexBuffer::Data(const uint32_t* data, const uint32_t count)
 {
     if (!m_mapped) {
-        Buffer::Data(nullptr, m_maxCount, sizeof(uint32_t), VK_BUFFER_USAGE_INDEX_BUFFER_BIT, prev::core::memory::MemoryType::HOST_MAPPED, &m_mapped);
+        Buffer::Data(nullptr, m_maxCount, sizeof(uint32_t), VK_BUFFER_USAGE_INDEX_BUFFER_BIT, prev::core::memory::MemoryType::HOST_MAPPED);
     }
 
     uint32_t finalCount{ std::min(m_maxCount, count) };

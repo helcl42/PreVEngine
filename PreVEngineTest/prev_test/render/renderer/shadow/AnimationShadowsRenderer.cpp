@@ -126,7 +126,7 @@ void AnimationShadowsRenderer::RenderMeshNode(const ShadowsRenderContext& render
         uniforms.projectionMatrix = renderContext.projectionMatrix;
         uniforms.viewMatrix = renderContext.viewMatrix;
         uniforms.modelMatrix = transformComponent->GetWorldTransformScaled() * meshNode.transform;
-        ubo->Update(&uniforms);
+        ubo->Data(uniforms);
 
         m_shader->Bind("ubo", *ubo);
 

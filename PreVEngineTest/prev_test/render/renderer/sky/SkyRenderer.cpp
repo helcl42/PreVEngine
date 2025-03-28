@@ -192,7 +192,7 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
         uniformsCS.cloudTopOffset = 750.0f;
         uniformsCS.maxDepth = MAX_DEPTH;
 
-        uboCS->Update(&uniformsCS);
+        uboCS->Data(uniformsCS);
 
         m_skyShader->Bind("uboCS", *uboCS);
 
@@ -232,7 +232,7 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
         uniformsPostCS.lightDotCameraForward = glm::dot(glm::normalize(renderContext.cameraPositions[viewIndex] - mainLightComponent->GetPosition()),
             glm::normalize(prev::util::math::GetForwardVector(renderContext.viewMatrices[viewIndex])));
 
-        uboPostCS->Update(&uniformsPostCS);
+        uboPostCS->Data(uniformsPostCS);
 
         m_skyPostProcessShader->Bind("uboCS", *uboPostCS);
 

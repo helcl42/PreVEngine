@@ -88,7 +88,7 @@ void FontRenderer::Render(const NormalRenderContext& renderContext, const std::s
             auto uboVS = m_uniformsPoolVS->GetNext();
             UniformsVS uniformsVS{};
             uniformsVS.translation = glm::vec4(renderableText.text->GetPosition(), 0.0f, 1.0f);
-            uboVS->Update(&uniformsVS);
+            uboVS->Data(uniformsVS);
 
             auto uboFS = m_uniformsPoolFS->GetNext();
             UniformsFS uniformsFS{};
@@ -101,7 +101,7 @@ void FontRenderer::Render(const NormalRenderContext& renderContext, const std::s
             uniformsFS.hasEffect = renderableText.text->HasEffect() ? 1 : 0;
             uniformsFS.outlineColor = glm::vec4(renderableText.text->GetOutlineColor(), 1.0f);
             uniformsFS.outlineOffset = glm::vec4(renderableText.text->GetOutlineOffset(), 0.0f, 1.0f);
-            uboFS->Update(&uniformsFS);
+            uboFS->Data(uniformsFS);
 
             m_shader->Bind("alphaSampler", *nodeFontRenderComponent->GetFontMetadata()->GetImageBuffer(), *nodeFontRenderComponent->GetFontMetadata()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             m_shader->Bind("uboVS", *uboVS);

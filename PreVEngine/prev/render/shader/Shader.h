@@ -23,8 +23,6 @@ public:
 public:
     bool AdjustDescriptorPoolCapacity(const uint32_t desiredCount);
 
-    void Bind(const std::string& name, const prev::render::buffer::UnifomRingBufferItem& uniformBuffer);
-
     void Bind(const std::string& name, const prev::render::buffer::Buffer& buffer);
 
     void Bind(const std::string& name, const prev::render::buffer::ImageBuffer& imageBuffer, const prev::render::sampler::Sampler& sampler, const VkImageLayout layout);

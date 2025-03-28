@@ -162,7 +162,7 @@ void ConeStepMappedRenderer::RenderMeshNode(const NormalRenderContext& renderCon
         uniformsVS.gradient = prev_test::component::sky::FOG_GRADIENT;
         uniformsVS.clipPlane = renderContext.clipPlane;
 
-        uboVS->Update(&uniformsVS);
+        uboVS->Data(uniformsVS);
 
         auto uboFS = m_uniformsPoolFS->GetNext();
 
@@ -195,7 +195,7 @@ void ConeStepMappedRenderer::RenderMeshNode(const NormalRenderContext& renderCon
         uniformsFS.heightScale = material->GetHeightScale();
         uniformsFS.numLayers = 15;
 
-        uboFS->Update(&uniformsFS);
+        uboFS->Data(uniformsFS);
 
         m_shader->Bind("depthSampler", *shadowsComponent->GetImageBuffer(), *shadowsComponent->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
         m_shader->Bind("colorSampler", *material->GetImageBuffer(COLOR_INDEX), *material->GetSampler(COLOR_INDEX), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
