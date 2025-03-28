@@ -113,6 +113,11 @@ float LinearizeDepth(in float depth, in float zNear, in float zFar)
 	return (zNear * zFar) / (zFar + depth * (zNear - zFar));
 }
 
+float DelinearizeDepth(in float linearDepth, in float zNear, in float zFar)
+{
+    return (((zNear * zFar) / linearDepth) - zFar) / (zNear - zFar);
+}
+
 float Median(in float r, in float g, in float b)
 {
 	return max(min(r, g), min(max(r, g), b));
