@@ -68,7 +68,7 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
         uniforms.seed = glm::vec4(10, 20, 0, 0);
         uniforms.perlinAmplitude = 0.5f;
         uniforms.perlinFrequency = 0.8f;
-        uniforms.perlinScale = 100.0f;
+        uniforms.perlinScale = 95.0f;
         uniforms.perlinOctaves = 4;
 
         uniformBuffer->Data(uniforms);
@@ -80,7 +80,7 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *pipeline);
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, &descriptorSet, 0, 0);
 
-        vkCmdDispatch(commandBuffer, 128, 128, 1);
+        vkCmdDispatch(commandBuffer, prev::util::vk::GetComputeGroupSize(width, 16), prev::util::vk::GetComputeGroupSize(height, 16), 1);
 
         weatherImageBuffer->GenerateMipMaps(commandBuffer);
         weatherImageBuffer->UpdateLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, commandBuffer);
