@@ -1,6 +1,7 @@
 #ifndef __COMPONENT_REPOSITORY_H__
 #define __COMPONENT_REPOSITORY_H__
 
+#include "../../common/Logger.h"
 #include "../../common/pattern/Singleton.h"
 #include "../SceneEvents.h"
 
@@ -14,7 +15,12 @@ namespace prev::scene::component {
 template <typename ItemType>
 class ComponentRepository final : public prev::common::pattern::Singleton<ComponentRepository<ItemType>> {
 public:
-    ~ComponentRepository() = default;
+    ~ComponentRepository()
+    {
+        for (const auto& [nodeId, components] : m_components) {
+            LOGW("ComponentRepository<%s>: For Node Id(%zu) there are %zu components left.", typeid(ItemType).name(), nodeId, components.size());
+        }
+    }
 
 public:
     std::shared_ptr<ItemType> Get(const uint64_t id) const
