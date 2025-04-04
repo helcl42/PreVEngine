@@ -28,15 +28,15 @@ public:
 
     void RemoveAllChildren() override;
 
-    std::shared_ptr<ISceneNode> GetThis() override;
+    std::shared_ptr<ISceneNode> GetThis() const override;
 
-    void SetParent(const std::shared_ptr<ISceneNode>& parent) override;
+    void SetParent(const std::weak_ptr<ISceneNode>& parent) override;
 
     std::shared_ptr<ISceneNode> GetParent() const override;
 
     bool IsRoot() const override;
 
-    std::shared_ptr<ISceneNode> GetRoot() override;
+    std::shared_ptr<ISceneNode> GetRoot() const override;
 
     uint64_t GetId() const override;
 

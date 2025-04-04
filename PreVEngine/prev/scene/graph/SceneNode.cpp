@@ -37,6 +37,7 @@ void SceneNode::ShutDown()
     }
     RemoveAllChildren();
 
+    // TODO - should not be here !!??
     prev::event::EventChannel::Post(prev::scene::SceneNodeShutDownEvent{ GetId() });
     m_tags = prev::common::TagSet();
 }
@@ -48,14 +49,14 @@ const std::vector<std::shared_ptr<ISceneNode>>& SceneNode::GetChildren() const
 
 void SceneNode::AddChild(const std::shared_ptr<ISceneNode>& child)
 {
-    child->SetParent(this->shared_from_this());
+    child->SetParent(GetThis());
 
     m_children.emplace_back(child);
 }
 
 void SceneNode::RemoveChild(const std::shared_ptr<ISceneNode>& child)
 {
-    child->SetParent(nullptr);
+    child->SetParent({});
 
     for (auto it = m_children.begin(); it != m_children.end(); ++it) {
         if ((*it)->GetId() == child->GetId()) {
@@ -68,17 +69,17 @@ void SceneNode::RemoveChild(const std::shared_ptr<ISceneNode>& child)
 void SceneNode::RemoveAllChildren()
 {
     for (auto& child : m_children) {
-        child->SetParent(nullptr);
+        child->SetParent({});
     }
     m_children.clear();
 }
 
-std::shared_ptr<ISceneNode> SceneNode::GetThis()
+std::shared_ptr<ISceneNode> SceneNode::GetThis() const
 {
-    return this->shared_from_this();
+    return const_cast<SceneNode*>(this)->shared_from_this();
 }
 
-void SceneNode::SetParent(const std::shared_ptr<ISceneNode>& parent)
+void SceneNode::SetParent(const std::weak_ptr<ISceneNode>& parent)
 {
     m_parent = parent;
 }
@@ -93,22 +94,15 @@ bool SceneNode::IsRoot() const
     return !m_parent.lock();
 }
 
-std::shared_ptr<ISceneNode> SceneNode::GetRoot()
+std::shared_ptr<ISceneNode> SceneNode::GetRoot() const
 {
-    auto parent = m_parent.lock();
-    if (parent == nullptr) {
-        return GetThis();
+    auto thizz{ GetThis() };
+    auto parent{ thizz->GetParent() };
+    while(parent) {
+        thizz = parent;
+        parent = parent->GetParent();
     }
-
-    while (parent != nullptr) {
-        auto tempParent = parent->GetParent();
-        if (tempParent == nullptr) {
-            break;
-        }
-        parent = tempParent;
-    }
-
-    return parent;
+    return thizz;
 }
 
 uint64_t SceneNode::GetId() const

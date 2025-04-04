@@ -1,7 +1,6 @@
 #ifndef __ISCENE_NODE_H__
 #define __ISCENE_NODE_H__
 
-#include "../../common/FlagSet.h"
 #include "../../common/TagSet.h"
 
 #include <memory>
@@ -24,13 +23,13 @@ public:
 
     virtual void RemoveAllChildren() = 0;
 
-    virtual void SetParent(const std::shared_ptr<ISceneNode>& parent) = 0;
+    virtual void SetParent(const std::weak_ptr<ISceneNode>& parent) = 0;
 
     virtual std::shared_ptr<ISceneNode> GetParent() const = 0;
 
-    virtual std::shared_ptr<ISceneNode> GetThis() = 0;
+    virtual std::shared_ptr<ISceneNode> GetThis() const = 0;
 
-    virtual std::shared_ptr<ISceneNode> GetRoot() = 0;
+    virtual std::shared_ptr<ISceneNode> GetRoot() const = 0;
 
     virtual bool IsRoot() const = 0;
 
