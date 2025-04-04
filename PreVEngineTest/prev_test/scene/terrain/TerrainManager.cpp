@@ -36,7 +36,7 @@ void TerrainManager::Init()
 
     float minHeight = std::numeric_limits<float>::max();
     float maxHeight = -std::numeric_limits<float>::max();
-    auto terrains = prev::scene::component::NodeComponentHelper::FindAll<prev_test::component::terrain::ITerrainComponenet>({ TAG_TERRAIN_RENDER_COMPONENT, TAG_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT, TAG_TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT });
+    auto terrains = prev::scene::component::NodeComponentHelper::FindAll<prev_test::component::terrain::ITerrainComponenet>(GetRoot(), { TAG_TERRAIN_RENDER_COMPONENT, TAG_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT, TAG_TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT });
     for (const auto& terrain : terrains) {
         auto heightInfo = terrain->GetHeightMapInfo();
         minHeight = std::min(minHeight, heightInfo->minHeight);

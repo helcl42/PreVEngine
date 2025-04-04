@@ -12,7 +12,6 @@
 
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
-#include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/VkUtils.h>
 
@@ -22,10 +21,11 @@ namespace {
     constexpr uint32_t NORMAL_INDEX{ 1 };
 } // namespace
 
-WaterRenderer::WaterRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass)
+WaterRenderer::WaterRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
     : m_device{ device }
     , m_allocator{ allocator }
     , m_renderPass{ renderPass }
+    , m_scene{ scene }
 {
 }
 
@@ -98,70 +98,73 @@ void WaterRenderer::PreRender(const NormalRenderContext& renderContext)
 
 void WaterRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
-    if (node->GetTags().HasAll({ TAG_WATER_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
-        if (prev_test::render::renderer::IsVisible(renderContext.frustums, renderContext.cameraCount, node->GetId())) {
-            const auto waterComponent = prev::scene::component::ComponentRepository<prev_test::component::water::IWaterComponent>::Instance().Get(node->GetId());
-            const auto waterReflectionComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::common::IOffScreenRenderPassComponent>({ TAG_WATER_REFLECTION_RENDER_COMPONENT });
-            const auto waterRefractionComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::common::IOffScreenRenderPassComponent>({ TAG_WATER_REFRACTION_RENDER_COMPONENT });
-            const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
-            const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
-
-            const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());
-
-            auto uboVS = m_uniformsPoolVS->GetNext();
-
-            UniformsVS uniformsVS{};
-            uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
-            for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
-                uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
-                uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
-                uniformsVS.cameraPositions[i] = glm::vec4(renderContext.cameraPositions[i], 1.0f);
-            }
-            uniformsVS.density = prev_test::component::sky::FOG_DENSITY;
-            uniformsVS.gradient = prev_test::component::sky::FOG_GRADIENT;
-
-            uboVS->Data(uniformsVS);
-
-            auto uboFS = m_uniformsPoolFS->GetNext();
-
-            UniformsFS uniformsFS{};
-            uniformsFS.fogColor = prev_test::component::sky::FOG_COLOR;
-            uniformsFS.waterColor = waterComponent->GetMaterial()->GetColor();
-            uniformsFS.light.color = glm::vec4(mainLightComponent->GetColor(), 1.0f);
-            uniformsFS.light.position = glm::vec4(mainLightComponent->GetPosition(), 1.0f);
-            uniformsFS.nearFarClippingPlane = glm::vec4(renderContext.nearFarClippingPlanes[0], 0.0f, 0.0f);
-            uniformsFS.moveFactor = waterComponent->GetMoveFactor();
-            // shadows
-            for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; ++i) {
-                const auto& cascade{ shadowsComponent->GetCascade(i) };
-                uniformsFS.shadows.cascades[i].split = glm::vec4(cascade.endSplitDepth);
-                uniformsFS.shadows.cascades[i].viewProjectionMatrix = cascade.GetBiasedViewProjectionMatrix();
-            }
-            uniformsFS.shadows.enabled = prev_test::component::shadow::SHADOWS_ENABLED;
-            uniformsFS.shadows.useReverseDepth = REVERSE_DEPTH ? 1 : 0;
-
-            uboFS->Data(uniformsFS);
-
-            m_shader->Bind("uboVS", *uboVS);
-            m_shader->Bind("uboFS", *uboFS);
-            m_shader->Bind("depthSampler", *shadowsComponent->GetImageBuffer(), *shadowsComponent->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-            m_shader->Bind("reflectionTexture", *waterReflectionComponent->GetColorImageBuffer(), *waterReflectionComponent->GetColorSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-            m_shader->Bind("refractionTexture", *waterRefractionComponent->GetColorImageBuffer(), *waterRefractionComponent->GetColorSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-            m_shader->Bind("dudvMapTexture", *waterComponent->GetMaterial()->GetImageBuffer(COLOR_INDEX), *waterComponent->GetMaterial()->GetSampler(COLOR_INDEX), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-            m_shader->Bind("normalMapTexture", *waterComponent->GetMaterial()->GetImageBuffer(NORMAL_INDEX), *waterComponent->GetMaterial()->GetSampler(NORMAL_INDEX), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-            m_shader->Bind("depthMapTexture", *waterRefractionComponent->GetDepthImageBuffer(), *waterRefractionComponent->GetDepthSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-
-            const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-            const VkBuffer vertexBuffers[] = { *waterComponent->GetModel()->GetVertexBuffer() };
-            const VkDeviceSize offsets[] = { 0 };
-
-            vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(renderContext.commandBuffer, *waterComponent->GetModel()->GetIndexBuffer(), 0, waterComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-            vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-
-            vkCmdDrawIndexed(renderContext.commandBuffer, waterComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
-        }
+    if (!node->GetTags().HasAll({ TAG_WATER_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
+        return;
     }
+
+    if (!prev_test::render::renderer::IsVisible(renderContext.frustums, renderContext.cameraCount, node)) {
+        return;
+    }
+
+    const auto waterComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::water::IWaterComponent>(node);
+    const auto transformComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(node);
+    const auto waterReflectionComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::common::IOffScreenRenderPassComponent>(m_scene.GetRootNode(), { TAG_WATER_REFLECTION_RENDER_COMPONENT });
+    const auto waterRefractionComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::common::IOffScreenRenderPassComponent>(m_scene.GetRootNode(), { TAG_WATER_REFRACTION_RENDER_COMPONENT });
+    const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>(m_scene.GetRootNode(), { TAG_MAIN_LIGHT });
+    const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>(m_scene.GetRootNode(), { TAG_SHADOW });
+
+    auto uboVS = m_uniformsPoolVS->GetNext();
+
+    UniformsVS uniformsVS{};
+    uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
+    for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
+        uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
+        uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
+        uniformsVS.cameraPositions[i] = glm::vec4(renderContext.cameraPositions[i], 1.0f);
+    }
+    uniformsVS.density = prev_test::component::sky::FOG_DENSITY;
+    uniformsVS.gradient = prev_test::component::sky::FOG_GRADIENT;
+
+    uboVS->Data(uniformsVS);
+
+    auto uboFS = m_uniformsPoolFS->GetNext();
+
+    UniformsFS uniformsFS{};
+    uniformsFS.fogColor = prev_test::component::sky::FOG_COLOR;
+    uniformsFS.waterColor = waterComponent->GetMaterial()->GetColor();
+    uniformsFS.light.color = glm::vec4(mainLightComponent->GetColor(), 1.0f);
+    uniformsFS.light.position = glm::vec4(mainLightComponent->GetPosition(), 1.0f);
+    uniformsFS.nearFarClippingPlane = glm::vec4(renderContext.nearFarClippingPlanes[0], 0.0f, 0.0f);
+    uniformsFS.moveFactor = waterComponent->GetMoveFactor();
+    // shadows
+    for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; ++i) {
+        const auto& cascade{ shadowsComponent->GetCascade(i) };
+        uniformsFS.shadows.cascades[i].split = glm::vec4(cascade.endSplitDepth);
+        uniformsFS.shadows.cascades[i].viewProjectionMatrix = cascade.GetBiasedViewProjectionMatrix();
+    }
+    uniformsFS.shadows.enabled = prev_test::component::shadow::SHADOWS_ENABLED;
+    uniformsFS.shadows.useReverseDepth = REVERSE_DEPTH ? 1 : 0;
+
+    uboFS->Data(uniformsFS);
+
+    m_shader->Bind("uboVS", *uboVS);
+    m_shader->Bind("uboFS", *uboFS);
+    m_shader->Bind("depthSampler", *shadowsComponent->GetImageBuffer(), *shadowsComponent->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+    m_shader->Bind("reflectionTexture", *waterReflectionComponent->GetColorImageBuffer(), *waterReflectionComponent->GetColorSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_shader->Bind("refractionTexture", *waterRefractionComponent->GetColorImageBuffer(), *waterRefractionComponent->GetColorSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_shader->Bind("dudvMapTexture", *waterComponent->GetMaterial()->GetImageBuffer(COLOR_INDEX), *waterComponent->GetMaterial()->GetSampler(COLOR_INDEX), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_shader->Bind("normalMapTexture", *waterComponent->GetMaterial()->GetImageBuffer(NORMAL_INDEX), *waterComponent->GetMaterial()->GetSampler(NORMAL_INDEX), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_shader->Bind("depthMapTexture", *waterRefractionComponent->GetDepthImageBuffer(), *waterRefractionComponent->GetDepthSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+
+    const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+    const VkBuffer vertexBuffers[] = { *waterComponent->GetModel()->GetVertexBuffer() };
+    const VkDeviceSize offsets[] = { 0 };
+
+    vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+    vkCmdBindIndexBuffer(renderContext.commandBuffer, *waterComponent->GetModel()->GetIndexBuffer(), 0, waterComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+    vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+    vkCmdDrawIndexed(renderContext.commandBuffer, waterComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
 }
 
 void WaterRenderer::PostRender(const NormalRenderContext& renderContext)

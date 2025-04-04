@@ -8,15 +8,15 @@
 
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
-#include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::shadow {
-TerrainShadowsRenderer::TerrainShadowsRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass)
+TerrainShadowsRenderer::TerrainShadowsRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
     : m_device{ device }
     , m_allocator{ allocator }
     , m_renderPass{ renderPass }
+    , m_scene{ scene }
 {
 }
 
@@ -78,31 +78,35 @@ void TerrainShadowsRenderer::PreRender(const ShadowsRenderContext& renderContext
 
 void TerrainShadowsRenderer::Render(const ShadowsRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
-    if (node->GetTags().HasAll({ TAG_TERRAIN_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
-        if (prev_test::render::renderer::IsVisible(&renderContext.frustum, 1, node->GetId())) {
-            const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());
-            const auto terrainComponent = prev::scene::component::ComponentRepository<prev_test::component::terrain::ITerrainComponenet>::Instance().Get(node->GetId());
-            auto ubo = m_uniformsPool->GetNext();
-
-            Uniforms uniforms{};
-            uniforms.projectionMatrix = renderContext.projectionMatrix;
-            uniforms.viewMatrix = renderContext.viewMatrix;
-            uniforms.modelMatrix = transformComponent->GetWorldTransformScaled();
-            ubo->Data(uniforms);
-
-            m_shader->Bind("ubo", *ubo);
-
-            const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-            const VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };
-            const VkDeviceSize offsets[] = { 0 };
-
-            vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(renderContext.commandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, terrainComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-            vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-
-            vkCmdDrawIndexed(renderContext.commandBuffer, terrainComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
-        }
+    if (!node->GetTags().HasAll({ TAG_TERRAIN_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
+        return;
     }
+
+    if (!prev_test::render::renderer::IsVisible(&renderContext.frustum, 1, node)) {
+        return;
+    }
+
+    const auto transformComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(node);
+    const auto terrainComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::terrain::ITerrainComponenet>(node);
+    auto ubo = m_uniformsPool->GetNext();
+
+    Uniforms uniforms{};
+    uniforms.projectionMatrix = renderContext.projectionMatrix;
+    uniforms.viewMatrix = renderContext.viewMatrix;
+    uniforms.modelMatrix = transformComponent->GetWorldTransformScaled();
+    ubo->Data(uniforms);
+
+    m_shader->Bind("ubo", *ubo);
+
+    const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+    const VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };
+    const VkDeviceSize offsets[] = { 0 };
+
+    vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+    vkCmdBindIndexBuffer(renderContext.commandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, terrainComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+    vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+    vkCmdDrawIndexed(renderContext.commandBuffer, terrainComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
 }
 
 void TerrainShadowsRenderer::PostRender(const ShadowsRenderContext& renderContext)

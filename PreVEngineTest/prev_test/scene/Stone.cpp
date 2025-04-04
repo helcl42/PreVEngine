@@ -47,7 +47,7 @@ void Stone::Init()
 
 void Stone::Update(float deltaTime)
 {
-    const auto terrain = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::terrain::ITerrainManagerComponent>({ TAG_TERRAIN_MANAGER_COMPONENT });
+    const auto terrain{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::terrain::ITerrainManagerComponent>(GetRoot(), { TAG_TERRAIN_MANAGER_COMPONENT }) };
 
     auto currentPosition = m_transformComponent->GetPosition();
 

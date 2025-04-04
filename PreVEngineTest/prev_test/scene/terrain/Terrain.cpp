@@ -36,7 +36,7 @@ void Terrain::Init()
 
     m_transformComponent->SetPosition(m_terrainComponent->GetPosition());
 
-    m_terrainManagerComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::terrain::ITerrainManagerComponent>({ TAG_TERRAIN_MANAGER_COMPONENT });
+    m_terrainManagerComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::terrain::ITerrainManagerComponent>(GetRoot(), { TAG_TERRAIN_MANAGER_COMPONENT });
     if (auto manager = m_terrainManagerComponent.lock()) {
         manager->AddTerrainComponent(m_terrainComponent);
     }

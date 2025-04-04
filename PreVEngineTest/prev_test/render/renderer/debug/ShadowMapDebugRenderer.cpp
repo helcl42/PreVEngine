@@ -8,15 +8,15 @@
 
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
-#include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::debug {
-ShadowMapDebugRenderer::ShadowMapDebugRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass)
+ShadowMapDebugRenderer::ShadowMapDebugRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
     : m_device{ device }
     , m_allocator{ allocator }
     , m_renderPass{ renderPass }
+    , m_scene{ scene }
 {
 }
 
@@ -87,7 +87,7 @@ void ShadowMapDebugRenderer::PreRender(const prev::render::RenderContext& render
 // make a node with quad model & shadowMap texture ???
 void ShadowMapDebugRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
-    const auto shadows = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOW });
+    const auto shadows = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>(m_scene.GetRootNode(), { TAG_SHADOW });
 
     const auto& cascade{ shadows->GetCascade(static_cast<uint32_t>(m_cascadeIndex)) };
     PushConstantBlock pushConstBlock{ static_cast<uint32_t>(m_cascadeIndex), -cascade.startSplitDepth, -cascade.endSplitDepth };

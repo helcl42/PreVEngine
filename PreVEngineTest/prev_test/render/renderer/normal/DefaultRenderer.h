@@ -1,7 +1,6 @@
 #ifndef __DEFAULT_RENDERER_H__
 #define __DEFAULT_RENDERER_H__
 
-#include "../../IMesh.h"
 #include "../IRenderer.h"
 #include "../RenderContexts.h"
 
@@ -15,12 +14,13 @@
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/pipeline/Pipeline.h>
 #include <prev/render/shader/Shader.h>
+#include <prev/scene/IScene.h>
 #include <prev/scene/graph/ISceneNode.h>
 
 namespace prev_test::render::renderer::normal {
 class DefaultRenderer final : public IRenderer<NormalRenderContext> {
 public:
-    DefaultRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass);
+    DefaultRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
 
     ~DefaultRenderer() = default;
 
@@ -38,9 +38,6 @@ public:
     void AfterRender(const NormalRenderContext& renderContext) override;
 
     void ShutDown() override;
-
-private:
-    void RenderMeshNode(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const prev_test::render::MeshNode& meshNode);
 
 private:
     struct ShadowsCascadeUniform {
@@ -154,6 +151,8 @@ private:
     prev::core::memory::Allocator& m_allocator;
 
     prev::render::pass::RenderPass& m_renderPass;
+
+    prev::scene::IScene& m_scene;
 
 private:
     std::unique_ptr<prev::render::shader::Shader> m_shader;

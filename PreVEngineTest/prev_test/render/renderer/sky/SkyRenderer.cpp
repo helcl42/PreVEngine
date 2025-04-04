@@ -7,15 +7,15 @@
 #include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
-#include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::sky {
-SkyRenderer::SkyRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass)
+SkyRenderer::SkyRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
     : m_device{ device }
     , m_allocator{ allocator }
     , m_renderPass{ renderPass }
+    , m_scene{ scene }
 {
 }
 
@@ -122,8 +122,8 @@ void SkyRenderer::Init()
 
 void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
 {
-    const auto skyComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::sky::ISkyComponent>({ TAG_SKY_RENDER_COMPONENT });
-    const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
+    const auto skyComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::sky::ISkyComponent>(m_scene.GetRootNode(), { TAG_SKY_RENDER_COMPONENT });
+    const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>(m_scene.GetRootNode(), { TAG_MAIN_LIGHT });
 
     // generate clouds using compute queue
     const VkExtent2D extent{ renderContext.rect.extent.width - renderContext.rect.offset.x, renderContext.rect.extent.height - renderContext.rect.offset.y };
@@ -161,6 +161,8 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
         const auto fov{ prev::util::math::CreateFovFromProjectionMatrix(renderContext.projectionMatrices[viewIndex]) };
         const prev_test::render::ViewFrustum skyViewFrustum(fov.angleLeft, fov.angleRight, fov.angleUp, fov.angleDown, skyNearClippingPlane, skyFarClippingPlane);
         const auto projectionMatrix{ skyViewFrustum.CreateProjectionMatrix() };
+
+        // const auto projectionMatrix{ renderContext.projectionMatrices[viewIndex] };
 
         auto uboCS = m_uniformsPoolSkyCS->GetNext();
 
@@ -264,36 +266,38 @@ void SkyRenderer::PreRender(const NormalRenderContext& renderContext)
 
 void SkyRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
-    if (node->GetTags().HasAll({ TAG_SKY_RENDER_COMPONENT })) {
-        const auto skyComponent = prev::scene::component::ComponentRepository<prev_test::component::sky::ISkyComponent>::Instance().Get(node->GetId());
-
-        for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
-            auto& skyCloudDistanceImageBuffer{ m_skyCloudDistanceImageBuffer[viewIndex] };
-            auto& skyPostProcessColorImageBuffer{ m_skyPostProcessColorImageBuffer[viewIndex] };
-
-            auto& skyCloudDistanceImageSampler{ m_skyCloudDistanceImageSampler[viewIndex] };
-            auto& skyPostProcessImageSampler{ m_skyPostProcessImageSampler[viewIndex] };
-#ifdef ENABLE_XR
-            const auto colorTexKey{ "colorTex[" + std::to_string(viewIndex) + "]" };
-            const auto depthTexKey{ "depthTex[" + std::to_string(viewIndex) + "]" };
-#else
-            const auto colorTexKey{ "colorTex" };
-            const auto depthTexKey{ "depthTex" };
-#endif
-            m_compositeShader->Bind(colorTexKey, *skyPostProcessColorImageBuffer, *skyPostProcessImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-            m_compositeShader->Bind(depthTexKey, *skyCloudDistanceImageBuffer, *skyCloudDistanceImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-        }
-
-        const VkDescriptorSet descriptorSet = m_compositeShader->UpdateNextDescriptorSet();
-        const VkBuffer vertexBuffers[] = { *skyComponent->GetModel()->GetVertexBuffer() };
-        const VkDeviceSize offsets[] = { 0 };
-
-        vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(renderContext.commandBuffer, *skyComponent->GetModel()->GetIndexBuffer(), 0, skyComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-        vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_compositePipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-
-        vkCmdDrawIndexed(renderContext.commandBuffer, skyComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+    if (!node->GetTags().HasAll({ TAG_SKY_RENDER_COMPONENT })) {
+        return;
     }
+
+    const auto skyComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::sky::ISkyComponent>(node);
+
+    for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
+        auto& skyCloudDistanceImageBuffer{ m_skyCloudDistanceImageBuffer[viewIndex] };
+        auto& skyPostProcessColorImageBuffer{ m_skyPostProcessColorImageBuffer[viewIndex] };
+
+        auto& skyCloudDistanceImageSampler{ m_skyCloudDistanceImageSampler[viewIndex] };
+        auto& skyPostProcessImageSampler{ m_skyPostProcessImageSampler[viewIndex] };
+#ifdef ENABLE_XR
+        const auto colorTexKey{ "colorTex[" + std::to_string(viewIndex) + "]" };
+        const auto depthTexKey{ "depthTex[" + std::to_string(viewIndex) + "]" };
+#else
+        const auto colorTexKey{ "colorTex" };
+        const auto depthTexKey{ "depthTex" };
+#endif
+        m_compositeShader->Bind(colorTexKey, *skyPostProcessColorImageBuffer, *skyPostProcessImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_compositeShader->Bind(depthTexKey, *skyCloudDistanceImageBuffer, *skyCloudDistanceImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    }
+
+    const VkDescriptorSet descriptorSet = m_compositeShader->UpdateNextDescriptorSet();
+    const VkBuffer vertexBuffers[] = { *skyComponent->GetModel()->GetVertexBuffer() };
+    const VkDeviceSize offsets[] = { 0 };
+
+    vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+    vkCmdBindIndexBuffer(renderContext.commandBuffer, *skyComponent->GetModel()->GetIndexBuffer(), 0, skyComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+    vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_compositePipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+    vkCmdDrawIndexed(renderContext.commandBuffer, skyComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
 }
 
 void SkyRenderer::PostRender(const NormalRenderContext& renderContext)

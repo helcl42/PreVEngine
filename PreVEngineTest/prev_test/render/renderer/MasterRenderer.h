@@ -15,12 +15,13 @@
 #include <prev/render/IRootRenderer.h>
 #include <prev/render/Swapchain.h>
 #include <prev/render/pass/RenderPass.h>
+#include <prev/scene/IScene.h>
 #include <prev/scene/graph/ISceneNode.h>
 
 namespace prev_test::render::renderer {
 class MasterRenderer final : public prev::render::IRootRenderer {
 public:
-    MasterRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, uint32_t swapchainImageCount, uint32_t viewCount);
+    MasterRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene, uint32_t swapchainImageCount, uint32_t viewCount);
 
     ~MasterRenderer() = default;
 
@@ -84,6 +85,8 @@ private:
     prev::core::memory::Allocator& m_allocator;
 
     prev::render::pass::RenderPass& m_defaultRenderPass;
+
+    prev::scene::IScene& m_scene;
 
     uint32_t m_swapchainImageCount;
 

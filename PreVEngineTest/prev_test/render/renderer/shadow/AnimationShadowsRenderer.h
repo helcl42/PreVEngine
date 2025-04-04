@@ -2,7 +2,6 @@
 #define __ANIMATION_SHADOWS_RENDERER_H__
 
 #include "../../IAnimation.h"
-#include "../../IMesh.h"
 #include "../IRenderer.h"
 #include "../RenderContexts.h"
 
@@ -14,12 +13,13 @@
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/pipeline/Pipeline.h>
 #include <prev/render/shader/Shader.h>
+#include <prev/scene/IScene.h>
 #include <prev/scene/graph/ISceneNode.h>
 
 namespace prev_test::render::renderer::shadow {
 class AnimationShadowsRenderer final : public IRenderer<ShadowsRenderContext> {
 public:
-    AnimationShadowsRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass);
+    AnimationShadowsRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
 
     ~AnimationShadowsRenderer() = default;
 
@@ -39,9 +39,6 @@ public:
     void ShutDown() override;
 
 private:
-    void RenderMeshNode(const ShadowsRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const prev_test::render::MeshNode& meshNode);
-
-private:
     struct Uniforms {
         DEFAULT_ALIGNMENT glm::mat4 bones[MAX_BONES_COUNT];
         DEFAULT_ALIGNMENT glm::mat4 modelMatrix;
@@ -58,6 +55,8 @@ private:
     prev::core::memory::Allocator& m_allocator;
 
     prev::render::pass::RenderPass& m_renderPass;
+
+    prev::scene::IScene& m_scene;
 
 private:
     std::unique_ptr<prev::render::shader::Shader> m_shader;
