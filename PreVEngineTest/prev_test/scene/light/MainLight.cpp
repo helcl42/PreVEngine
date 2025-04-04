@@ -38,7 +38,7 @@ void MainLight::Update(float deltaTime)
     transform = glm::rotate(transform, glm::radians(ROTATION_ANGLE), glm::vec3(0.0f, 1.0f, 0.0f));
     transform = glm::translate(transform, m_lightComponent->GetPosition());
 
-    glm::vec3 position{ transform[3][0], transform[3][1], transform[3][2] };
+    glm::vec3 position{ prev::util::math::ExtractTranslation(transform) };
 
     m_lightComponent->SetPosition(position);
 
