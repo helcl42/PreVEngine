@@ -1,22 +1,25 @@
 #ifndef __NODE_COMPONENT_HELPER_H__
 #define __NODE_COMPONENT_HELPER_H__
 
+#include "ComponentRepository.h"
+
+#include "../graph/ISceneNode.h"
+#include "../graph/GraphTraversal.h"
+
 #include "../../common/FlagSet.h"
 #include "../../common/TagSet.h"
-#include "../graph/GraphTraversal.h"
-#include "ComponentRepository.h"
 
 #include <memory>
 #include <sstream>
 #include <vector>
 
 namespace prev::scene::component {
-class NodeComponentHelper {
+class NodeComponentHelper final {
 public:
     template <typename ComponentType>
-    static std::shared_ptr<ComponentType> FindOne(const prev::common::TagSet& tagSet, const prev::scene::graph::LogicOperation operation = prev::scene::graph::LogicOperation::OR)
+    static std::shared_ptr<ComponentType> FindOne(const std::shared_ptr<graph::ISceneNode>& root, const prev::common::TagSet& tagSet, const prev::scene::graph::LogicOperation operation = prev::scene::graph::LogicOperation::OR)
     {
-        const auto node{ prev::scene::graph::GraphTraversal::Instance().FindOneWithTags(tagSet, operation) };
+        const auto node{ prev::scene::graph::GraphTraversal::FindOneWithTags(root, tagSet, operation) };
         if (node == nullptr) {
             std::stringstream ss;
             ss << tagSet;
@@ -26,10 +29,10 @@ public:
     }
 
     template <typename ComponentType>
-    static std::vector<std::shared_ptr<ComponentType>> FindAll(const prev::common::TagSet& tagSet, const prev::scene::graph::LogicOperation operation = prev::scene::graph::LogicOperation::OR)
+    static std::vector<std::shared_ptr<ComponentType>> FindAll(const std::shared_ptr<graph::ISceneNode>& root, const prev::common::TagSet& tagSet, const prev::scene::graph::LogicOperation operation = prev::scene::graph::LogicOperation::OR)
     {
         std::vector<std::shared_ptr<ComponentType>> resultComponents;
-        const auto nodes{ prev::scene::graph::GraphTraversal::Instance().FindAllWithTags(tagSet, operation) };
+        const auto nodes{ prev::scene::graph::GraphTraversal::FindAllWithTags(root, tagSet, operation) };
         for (const auto& node : nodes) {
             const auto nodeComponents{ ComponentRepository<ComponentType>::Instance().GetAll(node->GetId()) };
             resultComponents.insert(resultComponents.end(), nodeComponents.cbegin(), nodeComponents.cend());
@@ -82,6 +85,12 @@ public:
             return ComponentRepository<ComponentType>::Instance().Contains(node->GetId());
         }
         return false;
+    }
+
+    template <typename ComponentType>
+    static std::shared_ptr<ComponentType> FindComponent(const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
+    {
+        return ComponentRepository<ComponentType>::Instance().FindFirst(node->GetId());
     }
 };
 } // namespace prev::scene::component

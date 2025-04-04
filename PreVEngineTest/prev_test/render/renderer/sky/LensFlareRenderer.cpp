@@ -6,15 +6,15 @@
 
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
-#include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::sky {
-LensFlareRenderer::LensFlareRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass)
+LensFlareRenderer::LensFlareRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
     : m_device{ device }
     , m_allocator{ allocator }
     , m_renderPass{ renderPass }
+    , m_scene{ scene }
 {
 }
 
@@ -82,51 +82,53 @@ void LensFlareRenderer::PreRender(const NormalRenderContext& renderContext)
 
 void LensFlareRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
-    if (node->GetTags().HasAll({ TAG_LENS_FLARE_RENDER_COMPONENT })) {
-        const auto lensFlareComponent{ prev::scene::component::ComponentRepository<prev_test::component::sky::ILensFlareComponent>::Instance().Get(node->GetId()) };
-        const auto lightComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT }) };
+    if (!node->GetTags().HasAll({ TAG_LENS_FLARE_RENDER_COMPONENT })) {
+        return;
+    }
 
-        std::vector<glm::vec2> flarePositions[MAX_VIEW_COUNT];
+    const auto lensFlareComponent{ prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::sky::ILensFlareComponent>(node) };
+    const auto lightComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>(m_scene.GetRootNode(), { TAG_MAIN_LIGHT }) };
+
+    std::vector<glm::vec2> flarePositions[MAX_VIEW_COUNT];
+    for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
+        flarePositions[viewIndex] = lensFlareComponent->ComputeFlarePositions(renderContext.projectionMatrices[viewIndex], renderContext.viewMatrices[viewIndex], renderContext.cameraPositions[viewIndex], lightComponent->GetPosition());
+    }
+
+    const auto& flares{ lensFlareComponent->GetFlares() };
+    for (size_t i = 0; i < flares.size(); ++i) {
+        const auto& flare{ flares[i] };
+        const float aspectRatio{
+            static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) / static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y)
+        };
+        const float xScale{ flare->GetScale() };
+        const float yScale{ xScale * aspectRatio };
+
+        auto uboVS = m_uniformsPoolVS->GetNext();
+        UniformsVS uniformsVS{};
         for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
-            flarePositions[viewIndex] = lensFlareComponent->ComputeFlarePositions(renderContext.projectionMatrices[viewIndex], renderContext.viewMatrices[viewIndex], renderContext.cameraPositions[viewIndex], lightComponent->GetPosition());
+            uniformsVS.translations[viewIndex] = glm::vec4(flarePositions[viewIndex][i], MIN_DEPTH, 1.0f);
         }
+        uniformsVS.scale = glm::vec4(xScale, yScale, 0.0f, 0.0f);
+        uboVS->Data(uniformsVS);
 
-        const auto& flares{ lensFlareComponent->GetFlares() };
-        for (size_t i = 0; i < flares.size(); ++i) {
-            const auto& flare{ flares[i] };
-            const float aspectRatio{
-                static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) / static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y)
-            };
-            const float xScale{ flare->GetScale() };
-            const float yScale{ xScale * aspectRatio };
+        auto uboFS = m_uniformsPoolFS->GetNext();
+        UniformsFS uniformsFS{};
+        uniformsFS.brightness = glm::vec4(m_sunVisibilityFactor);
+        uboFS->Data(uniformsFS);
 
-            auto uboVS = m_uniformsPoolVS->GetNext();
-            UniformsVS uniformsVS{};
-            for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
-                uniformsVS.translations[viewIndex] = glm::vec4(flarePositions[viewIndex][i], MIN_DEPTH, 1.0f);
-            }
-            uniformsVS.scale = glm::vec4(xScale, yScale, 0.0f, 0.0f);
-            uboVS->Data(uniformsVS);
+        m_shader->Bind("colorSampler", *flare->GetImageBuffer(), *flare->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_shader->Bind("uboVS", *uboVS);
+        m_shader->Bind("uboFS", *uboFS);
 
-            auto uboFS = m_uniformsPoolFS->GetNext();
-            UniformsFS uniformsFS{};
-            uniformsFS.brightness = glm::vec4(m_sunVisibilityFactor);
-            uboFS->Data(uniformsFS);
+        const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+        const VkBuffer vertexBuffers[] = { *lensFlareComponent->GetModel()->GetVertexBuffer() };
+        const VkDeviceSize offsets[] = { 0 };
 
-            m_shader->Bind("colorSampler", *flare->GetImageBuffer(), *flare->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-            m_shader->Bind("uboVS", *uboVS);
-            m_shader->Bind("uboFS", *uboFS);
+        vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+        vkCmdBindIndexBuffer(renderContext.commandBuffer, *lensFlareComponent->GetModel()->GetIndexBuffer(), 0, lensFlareComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+        vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-            const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-            const VkBuffer vertexBuffers[] = { *lensFlareComponent->GetModel()->GetVertexBuffer() };
-            const VkDeviceSize offsets[] = { 0 };
-
-            vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(renderContext.commandBuffer, *lensFlareComponent->GetModel()->GetIndexBuffer(), 0, lensFlareComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-            vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-
-            vkCmdDrawIndexed(renderContext.commandBuffer, lensFlareComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
-        }
+        vkCmdDrawIndexed(renderContext.commandBuffer, lensFlareComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
     }
 }
 

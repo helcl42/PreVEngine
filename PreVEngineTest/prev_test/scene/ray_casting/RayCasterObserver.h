@@ -44,14 +44,20 @@ private:
 
     bool IntersectsInRange(const float start, const float finish, const prev_test::common::intersection::Ray& ray) const;
 
-    bool IsUnderGround(const std::shared_ptr<prev_test::component::terrain::ITerrainComponenet>& terrain, const glm::vec3& testPoint, bool shouldReturn) const;
+    bool IsUnderGround(const prev_test::component::terrain::ITerrainComponenet& terrain, const glm::vec3& testPoint, bool shouldReturn) const;
 
     std::shared_ptr<prev_test::component::terrain::ITerrainComponenet> GetTerrain(const glm::vec3& position) const;
 
     // Objects
-    std::vector<std::shared_ptr<prev::scene::graph::ISceneNode>> GetSelectableNodes() const;
+    struct IntersectionNodeResult {
+        prev_test::common::intersection::RayCastResult result{};
+        std::shared_ptr<prev::scene::graph::ISceneNode> node{};
+    };
 
-    std::optional<std::tuple<std::shared_ptr<prev::scene::graph::ISceneNode>, prev_test::common::intersection::RayCastResult>> FindTheClosestIntersectingNode(const prev_test::common::intersection::Ray& ray) const;
+    std::optional<IntersectionNodeResult> FindTheClosestIntersectingNode(const prev_test::common::intersection::Ray& ray) const;
+
+    // Common
+    void ResetAllSelectableNodes() const;
 
 public:
     void operator()(const prev_test::component::ray_casting::RayEvent& rayEvt);

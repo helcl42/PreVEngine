@@ -4,13 +4,13 @@
 #include "../../component/ray_casting/ISelectableComponent.h"
 #include "../../component/ray_casting/RayCastingCommon.h"
 
-#include <prev/scene/component/ComponentRepository.h>
+#include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::render::renderer {
-bool IsVisible(const prev_test::common::intersection::Frustum* frustums, const uint32_t frustumCount, const uint64_t nodeId)
+bool IsVisible(const prev_test::common::intersection::Frustum* frustums, const uint32_t frustumCount, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     bool visible{ true };
-    if (auto boundingVolumeComponent = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().FindFirst(nodeId)) {
+    if (auto boundingVolumeComponent = prev::scene::component::NodeComponentHelper::FindComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(node)) {
         bool checkedVisible{ false };
         for (uint32_t view = 0; view < frustumCount; ++view) {
             const auto& frustum{ frustums[view] };
@@ -21,10 +21,10 @@ bool IsVisible(const prev_test::common::intersection::Frustum* frustums, const u
     return visible;
 }
 
-bool IsSelected(const uint64_t nodeId)
+bool IsSelected(const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     bool selected{ false };
-    if (auto selectableComponent = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::ISelectableComponent>::Instance().FindFirst(nodeId)) {
+    if (auto selectableComponent = prev::scene::component::NodeComponentHelper::FindComponent<prev_test::component::ray_casting::ISelectableComponent>(node)) {
         selected = selectableComponent->IsSelected();
     }
     return selected;

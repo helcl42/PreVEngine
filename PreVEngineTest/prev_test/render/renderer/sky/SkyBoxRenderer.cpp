@@ -1,21 +1,21 @@
 #include "SkyBoxRenderer.h"
 
 #include "../../../common/AssetManager.h"
-#include "../../../component/sky//ISkyBoxComponent.h"
+#include "../../../component/sky/ISkyBoxComponent.h"
 #include "../../../component/sky/SkyCommon.h"
 #include "../../../component/transform/ITransformComponent.h"
 
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
-#include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::sky {
-SkyBoxRenderer::SkyBoxRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass)
+SkyBoxRenderer::SkyBoxRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
     : m_device{ device }
     , m_allocator{ allocator }
     , m_renderPass{ renderPass }
+    , m_scene{ scene }
 {
 }
 
@@ -83,42 +83,44 @@ void SkyBoxRenderer::PreRender(const NormalRenderContext& renderContext)
 
 void SkyBoxRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
-    if (node->GetTags().HasAll({ TAG_SKYBOX_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
-        const auto transformComponent = prev::scene::component::ComponentRepository<prev_test::component::transform::ITransformComponent>::Instance().Get(node->GetId());
-        const auto skyBoxComponent = prev::scene::component::ComponentRepository<prev_test::component::sky::ISkyBoxComponent>::Instance().Get(node->GetId());
-
-        auto uboVS = m_uniformsPoolVS->GetNext();
-
-        UniformsVS uniformsVS{};
-        uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
-        for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
-            uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
-            uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
-        }
-        uboVS->Data(uniformsVS);
-
-        auto uboFS = m_uniformsPoolFS->GetNext();
-
-        UniformsFS uniformsFS{};
-        uniformsFS.fogColor = prev_test::component::sky::FOG_COLOR;
-        uniformsFS.lowerLimit = glm::vec4(0.0f);
-        uniformsFS.upperLimit = glm::vec4(0.03f);
-        uboFS->Data(uniformsFS);
-
-        m_shader->Bind("cubeMap1", *skyBoxComponent->GetMaterial()->GetImageBuffer(), *skyBoxComponent->GetMaterial()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-        m_shader->Bind("uboVS", *uboVS);
-        m_shader->Bind("uboFS", *uboFS);
-
-        const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-        const VkBuffer vertexBuffers[] = { *skyBoxComponent->GetModel()->GetVertexBuffer() };
-        const VkDeviceSize offsets[] = { 0 };
-
-        vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(renderContext.commandBuffer, *skyBoxComponent->GetModel()->GetIndexBuffer(), 0, skyBoxComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-        vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-
-        vkCmdDrawIndexed(renderContext.commandBuffer, skyBoxComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+    if (!node->GetTags().HasAll({ TAG_SKYBOX_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
+        return;
     }
+
+    const auto transformComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(node);
+    const auto skyBoxComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::sky::ISkyBoxComponent>(node);
+
+    auto uboVS = m_uniformsPoolVS->GetNext();
+
+    UniformsVS uniformsVS{};
+    uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
+    for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
+        uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
+        uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
+    }
+    uboVS->Data(uniformsVS);
+
+    auto uboFS = m_uniformsPoolFS->GetNext();
+
+    UniformsFS uniformsFS{};
+    uniformsFS.fogColor = prev_test::component::sky::FOG_COLOR;
+    uniformsFS.lowerLimit = glm::vec4(0.0f);
+    uniformsFS.upperLimit = glm::vec4(0.03f);
+    uboFS->Data(uniformsFS);
+
+    m_shader->Bind("cubeMap1", *skyBoxComponent->GetMaterial()->GetImageBuffer(), *skyBoxComponent->GetMaterial()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_shader->Bind("uboVS", *uboVS);
+    m_shader->Bind("uboFS", *uboFS);
+
+    const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+    const VkBuffer vertexBuffers[] = { *skyBoxComponent->GetModel()->GetVertexBuffer() };
+    const VkDeviceSize offsets[] = { 0 };
+
+    vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+    vkCmdBindIndexBuffer(renderContext.commandBuffer, *skyBoxComponent->GetModel()->GetIndexBuffer(), 0, skyBoxComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+    vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+    vkCmdDrawIndexed(renderContext.commandBuffer, skyBoxComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
 }
 
 void SkyBoxRenderer::PostRender(const NormalRenderContext& renderContext)

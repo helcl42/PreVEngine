@@ -8,15 +8,15 @@
 
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
-#include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::debug {
-BoundingVolumeDebugRenderer::BoundingVolumeDebugRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass)
+BoundingVolumeDebugRenderer::BoundingVolumeDebugRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
     : m_device{ device }
     , m_allocator{ allocator }
     , m_renderPass{ renderPass }
+    , m_scene{ scene }
 {
 }
 
@@ -81,42 +81,44 @@ void BoundingVolumeDebugRenderer::PreRender(const NormalRenderContext& renderCon
 
 void BoundingVolumeDebugRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
-    if (node->GetTags().HasAll({ TAG_BOUNDING_VOLUME_COMPONENT })) {
-        const auto boundingVolumeComponent = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IBoundingVolumeComponent>::Instance().Get(node->GetId());
-
-        auto uboVS = m_uniformsPoolVS->GetNext();
-
-        UniformsVS uniformsVS{};
-        uniformsVS.modelMatrix = glm::mat4(1.0f);
-        for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
-            uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
-            uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
-        }
-
-        uboVS->Data(uniformsVS);
-
-        auto uboFS = m_uniformsPoolFS->GetNext();
-
-        UniformsFS uniformsFS{};
-        uniformsFS.color = glm::vec4(1.0f, 1.0f, 1.0f, 0.3f);
-        uniformsFS.selectedColor = prev_test::component::ray_casting::SELECTED_COLOR;
-        uniformsFS.selected = false;
-
-        uboFS->Data(uniformsFS);
-
-        m_shader->Bind("uboVS", *uboVS);
-        m_shader->Bind("uboFS", *uboFS);
-
-        const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-        const VkBuffer vertexBuffers[] = { *boundingVolumeComponent->GetModel()->GetVertexBuffer() };
-        const VkDeviceSize offsets[] = { 0 };
-
-        vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(renderContext.commandBuffer, *boundingVolumeComponent->GetModel()->GetIndexBuffer(), 0, boundingVolumeComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-        vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-
-        vkCmdDrawIndexed(renderContext.commandBuffer, boundingVolumeComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+    if (!node->GetTags().HasAll({ TAG_BOUNDING_VOLUME_COMPONENT })) {
+        return;
     }
+
+    const auto boundingVolumeComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(node);
+
+    auto uboVS = m_uniformsPoolVS->GetNext();
+
+    UniformsVS uniformsVS{};
+    uniformsVS.modelMatrix = glm::mat4(1.0f);
+    for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
+        uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
+        uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
+    }
+
+    uboVS->Data(uniformsVS);
+
+    auto uboFS = m_uniformsPoolFS->GetNext();
+
+    UniformsFS uniformsFS{};
+    uniformsFS.color = glm::vec4(1.0f, 1.0f, 1.0f, 0.3f);
+    uniformsFS.selectedColor = prev_test::component::ray_casting::SELECTED_COLOR;
+    uniformsFS.selected = false;
+
+    uboFS->Data(uniformsFS);
+
+    m_shader->Bind("uboVS", *uboVS);
+    m_shader->Bind("uboFS", *uboFS);
+
+    const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+    const VkBuffer vertexBuffers[] = { *boundingVolumeComponent->GetModel()->GetVertexBuffer() };
+    const VkDeviceSize offsets[] = { 0 };
+
+    vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+    vkCmdBindIndexBuffer(renderContext.commandBuffer, *boundingVolumeComponent->GetModel()->GetIndexBuffer(), 0, boundingVolumeComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+    vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+    vkCmdDrawIndexed(renderContext.commandBuffer, boundingVolumeComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
 }
 
 void BoundingVolumeDebugRenderer::PostRender(const NormalRenderContext& renderContext)

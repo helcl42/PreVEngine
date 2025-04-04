@@ -8,15 +8,15 @@
 #include <prev/event/EventChannel.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
-#include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::sky {
-SunRenderer::SunRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass)
+SunRenderer::SunRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
     : m_device{ device }
     , m_allocator{ allocator }
     , m_renderPass{ renderPass }
+    , m_scene{ scene }
 {
 }
 
@@ -98,42 +98,44 @@ void SunRenderer::PreRender(const NormalRenderContext& renderContext)
 
 void SunRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
-    if (node->GetTags().HasAll({ TAG_SUN_RENDER_COMPONENT })) {
-        const auto sunComponent{ prev::scene::component::ComponentRepository<prev_test::component::sky::ISunComponent>::Instance().Get(node->GetId()) };
-        const auto lightComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT }) };
-
-        const float aspectRatio{
-            static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) / static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y)
-        };
-        const float xScale{ sunComponent->GetFlare()->GetScale() };
-        const float yScale{ xScale * aspectRatio };
-
-        m_maxNumberOfSamples = static_cast<uint64_t>(xScale * static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) * yScale * static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y));
-        m_queryPool->BeginQuery(m_queryPoolIndex, 0, renderContext.commandBuffer);
-
-        auto uboVS = m_uniformsPoolVS->GetNext();
-        UniformsVS uniformsVS{};
-        for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
-            const auto sunPosition{ sunComponent->ComputeFlarePosition(renderContext.projectionMatrices[viewIndex], renderContext.viewMatrices[viewIndex], renderContext.cameraPositions[viewIndex], lightComponent->GetPosition()) };
-            uniformsVS.translations[viewIndex] = glm::vec4(sunPosition, MAX_DEPTH, 1.0f);
-        }
-        uniformsVS.scale = glm::vec4(xScale, yScale, 0.0f, 0.0f);
-        uboVS->Data(uniformsVS);
-
-        m_shader->Bind("uboVS", *uboVS);
-
-        const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-        const VkBuffer vertexBuffers[] = { *sunComponent->GetModel()->GetVertexBuffer() };
-        const VkDeviceSize offsets[] = { 0 };
-
-        vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(renderContext.commandBuffer, *sunComponent->GetModel()->GetIndexBuffer(), 0, sunComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-        vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-
-        vkCmdDrawIndexed(renderContext.commandBuffer, sunComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
-
-        m_queryPool->EndQuery(m_queryPoolIndex, 0, renderContext.commandBuffer);
+    if (!node->GetTags().HasAll({ TAG_SUN_RENDER_COMPONENT })) {
+        return;
     }
+
+    const auto sunComponent{ prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::sky::ISunComponent>(node) };
+    const auto lightComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>(m_scene.GetRootNode(), { TAG_MAIN_LIGHT }) };
+
+    const float aspectRatio{
+        static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) / static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y)
+    };
+    const float xScale{ sunComponent->GetFlare()->GetScale() };
+    const float yScale{ xScale * aspectRatio };
+
+    m_maxNumberOfSamples = static_cast<uint64_t>(xScale * static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) * yScale * static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y));
+    m_queryPool->BeginQuery(m_queryPoolIndex, 0, renderContext.commandBuffer);
+
+    auto uboVS = m_uniformsPoolVS->GetNext();
+    UniformsVS uniformsVS{};
+    for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
+        const auto sunPosition{ sunComponent->ComputeFlarePosition(renderContext.projectionMatrices[viewIndex], renderContext.viewMatrices[viewIndex], renderContext.cameraPositions[viewIndex], lightComponent->GetPosition()) };
+        uniformsVS.translations[viewIndex] = glm::vec4(sunPosition, MAX_DEPTH, 1.0f);
+    }
+    uniformsVS.scale = glm::vec4(xScale, yScale, 0.0f, 0.0f);
+    uboVS->Data(uniformsVS);
+
+    m_shader->Bind("uboVS", *uboVS);
+
+    const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+    const VkBuffer vertexBuffers[] = { *sunComponent->GetModel()->GetVertexBuffer() };
+    const VkDeviceSize offsets[] = { 0 };
+
+    vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+    vkCmdBindIndexBuffer(renderContext.commandBuffer, *sunComponent->GetModel()->GetIndexBuffer(), 0, sunComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+    vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+    vkCmdDrawIndexed(renderContext.commandBuffer, sunComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+
+    m_queryPool->EndQuery(m_queryPoolIndex, 0, renderContext.commandBuffer);
 }
 
 void SunRenderer::PostRender(const NormalRenderContext& renderContext)

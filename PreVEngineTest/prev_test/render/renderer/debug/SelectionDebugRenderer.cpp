@@ -8,15 +8,15 @@
 
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
-#include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::debug {
-SelectionDebugRenderer::SelectionDebugRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass)
+SelectionDebugRenderer::SelectionDebugRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
     : m_device{ device }
     , m_allocator{ allocator }
     , m_renderPass{ renderPass }
+    , m_scene{ scene }
 {
 }
 
@@ -89,40 +89,42 @@ void SelectionDebugRenderer::PreRender(const NormalRenderContext& renderContext)
 
 void SelectionDebugRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
-    if (node->GetTags().HasAll({ TAG_SELECTABLE_COMPONENT })) {
-        const auto selectableComponent = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::ISelectableComponent>::Instance().Get(node->GetId());
-        if (selectableComponent->IsSelected()) {
-            auto uboVS = m_uniformsPoolVS->GetNext();
+    if (!node->GetTags().HasAll({ TAG_SELECTABLE_COMPONENT })) {
+        return;
+    }
 
-            UniformsVS uniformsVS{};
-            uniformsVS.modelMatrix = prev::util::math::CreateTransformationMatrix(selectableComponent->GetPostiion(), glm::quat(), 0.6f);
-            for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
-                uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
-                uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
-            }
+    const auto selectableComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::ray_casting::ISelectableComponent>(node);
+    if (selectableComponent->IsSelected()) {
+        auto uboVS = m_uniformsPoolVS->GetNext();
 
-            uboVS->Data(uniformsVS);
-
-            auto uboFS = m_uniformsPoolFS->GetNext();
-
-            UniformsFS uniformsFS{};
-            uniformsFS.color = glm::vec4(0.0f, 1.0f, 0.0f, 0.7f);
-
-            uboFS->Data(uniformsFS);
-
-            m_shader->Bind("uboVS", *uboVS);
-            m_shader->Bind("uboFS", *uboFS);
-
-            const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-            const VkBuffer vertexBuffers[] = { *m_selectionPointModel->GetVertexBuffer() };
-            const VkDeviceSize offsets[] = { 0 };
-
-            vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(renderContext.commandBuffer, *m_selectionPointModel->GetIndexBuffer(), 0, m_selectionPointModel->GetIndexBuffer()->GetIndexType());
-            vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-
-            vkCmdDrawIndexed(renderContext.commandBuffer, m_selectionPointModel->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+        UniformsVS uniformsVS{};
+        uniformsVS.modelMatrix = prev::util::math::CreateTransformationMatrix(selectableComponent->GetPostiion(), glm::quat(), 0.6f);
+        for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
+            uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
+            uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
         }
+
+        uboVS->Data(uniformsVS);
+
+        auto uboFS = m_uniformsPoolFS->GetNext();
+
+        UniformsFS uniformsFS{};
+        uniformsFS.color = glm::vec4(0.0f, 1.0f, 0.0f, 0.7f);
+
+        uboFS->Data(uniformsFS);
+
+        m_shader->Bind("uboVS", *uboVS);
+        m_shader->Bind("uboFS", *uboFS);
+
+        const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+        const VkBuffer vertexBuffers[] = { *m_selectionPointModel->GetVertexBuffer() };
+        const VkDeviceSize offsets[] = { 0 };
+
+        vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+        vkCmdBindIndexBuffer(renderContext.commandBuffer, *m_selectionPointModel->GetIndexBuffer(), 0, m_selectionPointModel->GetIndexBuffer()->GetIndexType());
+        vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+        vkCmdDrawIndexed(renderContext.commandBuffer, m_selectionPointModel->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
     }
 }
 

@@ -1,7 +1,24 @@
 #include "GraphTraversal.h"
 
 namespace prev::scene::graph {
-bool GraphTraversal::HasTags(const std::shared_ptr<ISceneNode>& node, const prev::common::TagSet& tagsToCheck, const LogicOperation operation) const
+std::shared_ptr<ISceneNode> GraphTraversal::FindById(const std::shared_ptr<ISceneNode>& root, const uint64_t id)
+{
+    return FindByIdInternal(root, id);
+}
+
+std::shared_ptr<ISceneNode> GraphTraversal::FindOneWithTags(const std::shared_ptr<ISceneNode>& root, const prev::common::TagSet& tags, const LogicOperation operation)
+{
+    return FindOneWithTagsInternal(root, tags, operation);
+}
+
+std::vector<std::shared_ptr<ISceneNode>> GraphTraversal::FindAllWithTags(const std::shared_ptr<ISceneNode>& root, const prev::common::TagSet& tags, const LogicOperation operation)
+{
+    std::vector<std::shared_ptr<ISceneNode>> result;
+    FindAllWithTagsInternal(root, tags, operation, result);
+    return result;
+}
+
+bool GraphTraversal::HasTags(const std::shared_ptr<ISceneNode>& node, const prev::common::TagSet& tagsToCheck, const LogicOperation operation)
 {
     if (operation == LogicOperation::AND) {
         return node->GetTags().HasAll(tagsToCheck);
@@ -11,15 +28,15 @@ bool GraphTraversal::HasTags(const std::shared_ptr<ISceneNode>& node, const prev
     return false;
 }
 
-std::shared_ptr<ISceneNode> GraphTraversal::FindByIdInternal(const std::shared_ptr<ISceneNode>& parent, const uint64_t id) const
+std::shared_ptr<ISceneNode> GraphTraversal::FindByIdInternal(const std::shared_ptr<ISceneNode>& parent, const uint64_t id)
 {
     if (parent->GetId() == id) {
         return parent;
     }
 
-    const auto& children = parent->GetChildren();
+    const auto& children{ parent->GetChildren() };
     for (const auto& child : children) {
-        auto result = FindByIdInternal(child, id);
+        const auto result{ FindByIdInternal(child, id) };
         if (result != nullptr) {
             return result;
         }
@@ -27,15 +44,15 @@ std::shared_ptr<ISceneNode> GraphTraversal::FindByIdInternal(const std::shared_p
     return nullptr;
 }
 
-std::shared_ptr<ISceneNode> GraphTraversal::FindOneWithTagsInternal(const std::shared_ptr<ISceneNode>& parent, const prev::common::TagSet& tags, const LogicOperation operation) const
+std::shared_ptr<ISceneNode> GraphTraversal::FindOneWithTagsInternal(const std::shared_ptr<ISceneNode>& parent, const prev::common::TagSet& tags, const LogicOperation operation)
 {
     if (HasTags(parent, tags, operation)) {
         return parent;
     }
 
-    const auto& children = parent->GetChildren();
+    const auto& children{ parent->GetChildren() };
     for (const auto& child : children) {
-        auto result = FindOneWithTagsInternal(child, tags, operation);
+        const auto result{ FindOneWithTagsInternal(child, tags, operation) };
         if (result != nullptr) {
             return result;
         }
@@ -44,42 +61,15 @@ std::shared_ptr<ISceneNode> GraphTraversal::FindOneWithTagsInternal(const std::s
     return nullptr;
 }
 
-void GraphTraversal::FindAllWithTagsInternal(const std::shared_ptr<ISceneNode>& parent, const prev::common::TagSet& tags, const LogicOperation operation, std::vector<std::shared_ptr<ISceneNode>>& result) const
+void GraphTraversal::FindAllWithTagsInternal(const std::shared_ptr<ISceneNode>& parent, const prev::common::TagSet& tags, const LogicOperation operation, std::vector<std::shared_ptr<ISceneNode>>& result)
 {
     if (HasTags(parent, tags, operation)) {
         result.push_back(parent);
     }
 
-    const auto& children = parent->GetChildren();
+    const auto& children{ parent->GetChildren() };
     for (const auto& child : children) {
         FindAllWithTagsInternal(child, tags, operation, result);
     }
-}
-
-void GraphTraversal::SetRootNode(const std::shared_ptr<ISceneNode>& root)
-{
-    m_root = root;
-}
-
-std::shared_ptr<ISceneNode> GraphTraversal::GetRootNode() const
-{
-    return m_root;
-}
-
-std::shared_ptr<ISceneNode> GraphTraversal::FindById(const uint64_t id) const
-{
-    return FindByIdInternal(m_root, id);
-}
-
-std::shared_ptr<ISceneNode> GraphTraversal::FindOneWithTags(const prev::common::TagSet& tags, const LogicOperation operation) const
-{
-    return FindOneWithTagsInternal(m_root, tags, operation);
-}
-
-std::vector<std::shared_ptr<ISceneNode>> GraphTraversal::FindAllWithTags(const prev::common::TagSet& tags, const LogicOperation operation) const
-{
-    std::vector<std::shared_ptr<ISceneNode>> result;
-    FindAllWithTagsInternal(m_root, tags, operation, result);
-    return result;
 }
 } // namespace prev::scene::graph

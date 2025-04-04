@@ -11,12 +11,13 @@
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/pipeline/Pipeline.h>
 #include <prev/render/shader/Shader.h>
+#include <prev/scene/IScene.h>
 #include <prev/scene/graph/ISceneNode.h>
 
 namespace prev_test::render::renderer::water {
 class WaterRenderer final : public IRenderer<NormalRenderContext> {
 public:
-    WaterRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass);
+    WaterRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
 
     ~WaterRenderer() = default;
 
@@ -93,6 +94,8 @@ private:
     prev::core::memory::Allocator& m_allocator;
 
     prev::render::pass::RenderPass& m_renderPass;
+
+    prev::scene::IScene& m_scene;
 
 private:
     std::unique_ptr<prev::render::shader::Shader> m_shader;

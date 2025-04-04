@@ -24,9 +24,11 @@ void RayCaster::Init()
 
 void RayCaster::Update(float deltaTime)
 {
+    const auto rootNode{ GetRoot() };
+
     // TODO: use first view camera(left eye?)
-    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
-    const auto playerTransformComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::transform::ITransformComponent>({ TAG_PLAYER });
+    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>(rootNode, { TAG_MAIN_CAMERA });
+    const auto playerTransformComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::transform::ITransformComponent>(rootNode, { TAG_PLAYER });
 
 #ifdef ENABLE_XR
     const glm::vec3 rayStartOffset{ 0.0f, 0.0f, 0.0f };

@@ -7,15 +7,15 @@
 #include <prev/common/Common.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
-#include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::font {
-FontRenderer::FontRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass)
+FontRenderer::FontRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
     : m_device{ device }
     , m_allocator{ allocator }
     , m_renderPass{ renderPass }
+    , m_scene{ scene }
 {
 }
 
@@ -82,41 +82,43 @@ void FontRenderer::PreRender(const NormalRenderContext& renderContext)
 
 void FontRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
-    if (node->GetTags().HasAll({ TAG_FONT_RENDER_COMPONENT })) {
-        const auto nodeFontRenderComponent = prev::scene::component::ComponentRepository<prev_test::component::font::IFontRenderComponent<prev_test::render::font::ScreenSpaceText>>::Instance().Get(node->GetId());
-        for (const auto& [key, renderableText] : nodeFontRenderComponent->GetRenderableTexts()) {
-            auto uboVS = m_uniformsPoolVS->GetNext();
-            UniformsVS uniformsVS{};
-            uniformsVS.translation = glm::vec4(renderableText.text->GetPosition(), 0.0f, 1.0f);
-            uboVS->Data(uniformsVS);
+    if (!node->GetTags().HasAll({ TAG_FONT_RENDER_COMPONENT })) {
+        return;
+    }
 
-            auto uboFS = m_uniformsPoolFS->GetNext();
-            UniformsFS uniformsFS{};
-            uniformsFS.color = renderableText.text->GetColor();
-            uniformsFS.width = glm::vec4(renderableText.text->GetWidth());
-            uniformsFS.edge = glm::vec4(renderableText.text->GetEdge());
-            uniformsFS.bias = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
-            uniformsFS.borderWidth = glm::vec4(renderableText.text->GetBorderWidth());
-            uniformsFS.borderEdge = glm::vec4(renderableText.text->GetBorderEdge());
-            uniformsFS.hasEffect = renderableText.text->HasEffect() ? 1 : 0;
-            uniformsFS.outlineColor = glm::vec4(renderableText.text->GetOutlineColor(), 1.0f);
-            uniformsFS.outlineOffset = glm::vec4(renderableText.text->GetOutlineOffset(), 0.0f, 1.0f);
-            uboFS->Data(uniformsFS);
+    const auto nodeFontRenderComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::font::IFontRenderComponent<prev_test::render::font::ScreenSpaceText>>(node);
+    for (const auto& [key, renderableText] : nodeFontRenderComponent->GetRenderableTexts()) {
+        auto uboVS = m_uniformsPoolVS->GetNext();
+        UniformsVS uniformsVS{};
+        uniformsVS.translation = glm::vec4(renderableText.text->GetPosition(), 0.0f, 1.0f);
+        uboVS->Data(uniformsVS);
 
-            m_shader->Bind("alphaSampler", *nodeFontRenderComponent->GetFontMetadata()->GetImageBuffer(), *nodeFontRenderComponent->GetFontMetadata()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-            m_shader->Bind("uboVS", *uboVS);
-            m_shader->Bind("uboFS", *uboFS);
+        auto uboFS = m_uniformsPoolFS->GetNext();
+        UniformsFS uniformsFS{};
+        uniformsFS.color = renderableText.text->GetColor();
+        uniformsFS.width = glm::vec4(renderableText.text->GetWidth());
+        uniformsFS.edge = glm::vec4(renderableText.text->GetEdge());
+        uniformsFS.bias = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+        uniformsFS.borderWidth = glm::vec4(renderableText.text->GetBorderWidth());
+        uniformsFS.borderEdge = glm::vec4(renderableText.text->GetBorderEdge());
+        uniformsFS.hasEffect = renderableText.text->HasEffect() ? 1 : 0;
+        uniformsFS.outlineColor = glm::vec4(renderableText.text->GetOutlineColor(), 1.0f);
+        uniformsFS.outlineOffset = glm::vec4(renderableText.text->GetOutlineOffset(), 0.0f, 1.0f);
+        uboFS->Data(uniformsFS);
 
-            const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-            const VkBuffer vertexBuffers[] = { *renderableText.model->GetVertexBuffer() };
-            const VkDeviceSize offsets[] = { 0 };
+        m_shader->Bind("alphaSampler", *nodeFontRenderComponent->GetFontMetadata()->GetImageBuffer(), *nodeFontRenderComponent->GetFontMetadata()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_shader->Bind("uboVS", *uboVS);
+        m_shader->Bind("uboFS", *uboFS);
 
-            vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(renderContext.commandBuffer, *renderableText.model->GetIndexBuffer(), 0, renderableText.model->GetIndexBuffer()->GetIndexType());
-            vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+        const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+        const VkBuffer vertexBuffers[] = { *renderableText.model->GetVertexBuffer() };
+        const VkDeviceSize offsets[] = { 0 };
 
-            vkCmdDrawIndexed(renderContext.commandBuffer, renderableText.model->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
-        }
+        vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+        vkCmdBindIndexBuffer(renderContext.commandBuffer, *renderableText.model->GetIndexBuffer(), 0, renderableText.model->GetIndexBuffer()->GetIndexType());
+        vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+        vkCmdDrawIndexed(renderContext.commandBuffer, renderableText.model->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
     }
 }
 

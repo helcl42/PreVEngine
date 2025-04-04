@@ -25,10 +25,12 @@ void Shadows::Init()
 
 void Shadows::Update(float deltaTime)
 {
-    const auto lightComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>({ TAG_MAIN_LIGHT });
-    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>({ TAG_MAIN_CAMERA });
+    const auto rootNode{ GetRoot() };
 
-    auto shadowsComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>({ TAG_SHADOWS_COMPONENT }) };
+    const auto lightComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>(rootNode, { TAG_MAIN_LIGHT });
+    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>(rootNode, { TAG_MAIN_CAMERA });
+
+    auto shadowsComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>(rootNode, { TAG_SHADOWS_COMPONENT }) };
     shadowsComponent->Update(lightComponent->GetDirection(), lightComponent->GetViewFrustum(), cameraComponent->LookAt());
 
     SceneNode::Update(deltaTime);

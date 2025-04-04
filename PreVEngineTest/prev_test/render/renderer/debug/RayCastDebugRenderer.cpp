@@ -7,15 +7,15 @@
 
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
-#include <prev/scene/component/ComponentRepository.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::debug {
-RayCastDebugRenderer::RayCastDebugRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass)
+RayCastDebugRenderer::RayCastDebugRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
     : m_device{ device }
     , m_allocator{ allocator }
     , m_renderPass{ renderPass }
+    , m_scene{ scene }
 {
 }
 
@@ -85,48 +85,50 @@ void RayCastDebugRenderer::PreRender(const NormalRenderContext& renderContext)
 
 void RayCastDebugRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
-    if (node->GetTags().HasAll({ TAG_RAYCASTER_COMPONENT })) {
-        const auto rayCastingComponent = prev::scene::component::ComponentRepository<prev_test::component::ray_casting::IRayCasterComponent>::Instance().Get(node->GetId());
-
-        auto uboVS = m_uniformsPoolVS->GetNext();
-
-        UniformsVS uniformsVS{};
-        uniformsVS.color = glm::vec3(1.0, 0.0, 0.0);
-
-        uboVS->Data(uniformsVS);
-
-        auto uboGS = m_uniformsPoolGS->GetNext();
-
-        UniformsGS uniformsGS{};
-        uniformsGS.modelMatrix = glm::mat4(1.0f);
-        for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
-            uniformsGS.viewMatrices[i] = renderContext.viewMatrices[i];
-            uniformsGS.projectionMatrices[i] = renderContext.projectionMatrices[i];
-        }
-
-        uboGS->Data(uniformsGS);
-
-        auto uboFS = m_uniformsPoolFS->GetNext();
-
-        UniformsFS uniformsFS{};
-        uniformsFS.alpha = 0.7f;
-
-        uboFS->Data(uniformsFS);
-
-        m_shader->Bind("uboVS", *uboVS);
-        m_shader->Bind("uboGS", *uboGS);
-        m_shader->Bind("uboFS", *uboFS);
-
-        const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-        const VkBuffer vertexBuffers[] = { *rayCastingComponent->GetModel()->GetVertexBuffer() };
-        const VkDeviceSize offsets[] = { 0 };
-
-        vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(renderContext.commandBuffer, *rayCastingComponent->GetModel()->GetIndexBuffer(), 0, rayCastingComponent->GetModel()->GetIndexBuffer()->GetIndexType());
-        vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-
-        vkCmdDrawIndexed(renderContext.commandBuffer, rayCastingComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+    if (!node->GetTags().HasAll({ TAG_RAYCASTER_COMPONENT })) {
+        return;
     }
+
+    const auto rayCastingComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::ray_casting::IRayCasterComponent>(node);
+
+    auto uboVS = m_uniformsPoolVS->GetNext();
+
+    UniformsVS uniformsVS{};
+    uniformsVS.color = glm::vec3(1.0, 0.0, 0.0);
+
+    uboVS->Data(uniformsVS);
+
+    auto uboGS = m_uniformsPoolGS->GetNext();
+
+    UniformsGS uniformsGS{};
+    uniformsGS.modelMatrix = glm::mat4(1.0f);
+    for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
+        uniformsGS.viewMatrices[i] = renderContext.viewMatrices[i];
+        uniformsGS.projectionMatrices[i] = renderContext.projectionMatrices[i];
+    }
+
+    uboGS->Data(uniformsGS);
+
+    auto uboFS = m_uniformsPoolFS->GetNext();
+
+    UniformsFS uniformsFS{};
+    uniformsFS.alpha = 0.7f;
+
+    uboFS->Data(uniformsFS);
+
+    m_shader->Bind("uboVS", *uboVS);
+    m_shader->Bind("uboGS", *uboGS);
+    m_shader->Bind("uboFS", *uboFS);
+
+    const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
+    const VkBuffer vertexBuffers[] = { *rayCastingComponent->GetModel()->GetVertexBuffer() };
+    const VkDeviceSize offsets[] = { 0 };
+
+    vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
+    vkCmdBindIndexBuffer(renderContext.commandBuffer, *rayCastingComponent->GetModel()->GetIndexBuffer(), 0, rayCastingComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+    vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+
+    vkCmdDrawIndexed(renderContext.commandBuffer, rayCastingComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
 }
 
 void RayCastDebugRenderer::PostRender(const NormalRenderContext& renderContext)
