@@ -159,7 +159,7 @@ void MasterRenderer::RenderParallel(prev::render::pass::RenderPass& renderPass, 
             inheritanceInfo.framebuffer = renderContext.frameBuffer;
 
             VkCommandBufferBeginInfo commandBufferBeginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-                commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+                commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT | VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
             commandBufferBeginInfo.pInheritanceInfo = &inheritanceInfo;
 
             VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
