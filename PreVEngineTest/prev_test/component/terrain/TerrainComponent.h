@@ -7,7 +7,7 @@
 namespace prev_test::component::terrain {
 class TerrainComponentFactory;
 
-class TerrainComponent : public ITerrainComponenet {
+class TerrainComponent : public ITerrainComponent {
 public:
     TerrainComponent(const int gridX, const int gridZ);
 
@@ -19,8 +19,6 @@ public:
     std::vector<std::shared_ptr<prev_test::render::IMaterial>> GetMaterials() const override;
 
     bool GetHeightAt(const glm::vec3& position, float& outHeight) const override;
-
-    std::shared_ptr<VertexData> GetVertexData() const override;
 
     const glm::vec3& GetPosition() const override;
 
@@ -45,8 +43,6 @@ private:
     const glm::vec3 m_position;
 
     std::shared_ptr<HeightMapInfo> m_heightsInfo{};
-
-    std::shared_ptr<VertexData> m_vertexData{};
 
     std::shared_ptr<prev_test::render::IModel> m_model{};
 

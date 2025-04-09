@@ -43,11 +43,6 @@ bool TerrainComponent::GetHeightAt(const glm::vec3& position, float& outHeight) 
     return true;
 }
 
-std::shared_ptr<VertexData> TerrainComponent::GetVertexData() const
-{
-    return m_vertexData;
-}
-
 const glm::vec3& TerrainComponent::GetPosition() const
 {
     return m_position;

@@ -6,11 +6,11 @@
 namespace prev_test::component::terrain {
 class ITerrainManagerComponent {
 public:
-    virtual void AddTerrainComponent(const std::shared_ptr<ITerrainComponenet>& terrain) = 0;
+    virtual void AddTerrainComponent(const std::shared_ptr<ITerrainComponent>& terrain) = 0;
 
-    virtual void RemoveTerrain(const std::shared_ptr<ITerrainComponenet>& terrain) = 0;
+    virtual void RemoveTerrain(const std::shared_ptr<ITerrainComponent>& terrain) = 0;
 
-    virtual std::shared_ptr<ITerrainComponenet> GetTerrainAt(const glm::vec3& position) const = 0;
+    virtual std::shared_ptr<ITerrainComponent> GetTerrainAt(const glm::vec3& position) const = 0;
 
     virtual bool GetHeightAt(const glm::vec3& position, float& outHeight) const = 0;
 

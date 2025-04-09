@@ -9,16 +9,16 @@
 namespace prev_test::component::terrain {
 class TerrainManagerComponent : public ITerrainManagerComponent {
 public:
-    void AddTerrainComponent(const std::shared_ptr<ITerrainComponenet>& terrain) override;
+    void AddTerrainComponent(const std::shared_ptr<ITerrainComponent>& terrain) override;
 
-    void RemoveTerrain(const std::shared_ptr<ITerrainComponenet>& terrain) override;
+    void RemoveTerrain(const std::shared_ptr<ITerrainComponent>& terrain) override;
 
-    std::shared_ptr<ITerrainComponenet> GetTerrainAt(const glm::vec3& position) const override;
+    std::shared_ptr<ITerrainComponent> GetTerrainAt(const glm::vec3& position) const override;
 
     bool GetHeightAt(const glm::vec3& position, float& outHeight) const override;
 
 private:
-    std::map<TerrainKey, std::weak_ptr<ITerrainComponenet>> m_terrains;
+    std::map<TerrainKey, std::weak_ptr<ITerrainComponent>> m_terrains;
 };
 } // namespace prev_test::component::terrain
 

@@ -1,17 +1,17 @@
 #include "TerrainManagerComponent.h"
 
 namespace prev_test::component::terrain {
-void TerrainManagerComponent::AddTerrainComponent(const std::shared_ptr<ITerrainComponenet>& terrain)
+void TerrainManagerComponent::AddTerrainComponent(const std::shared_ptr<ITerrainComponent>& terrain)
 {
     m_terrains.insert({ TerrainKey{ terrain->GetPosition() }, terrain });
 }
 
-void TerrainManagerComponent::RemoveTerrain(const std::shared_ptr<ITerrainComponenet>& terrain)
+void TerrainManagerComponent::RemoveTerrain(const std::shared_ptr<ITerrainComponent>& terrain)
 {
     m_terrains.erase(TerrainKey{ terrain->GetPosition() });
 }
 
-std::shared_ptr<ITerrainComponenet> TerrainManagerComponent::GetTerrainAt(const glm::vec3& position) const
+std::shared_ptr<ITerrainComponent> TerrainManagerComponent::GetTerrainAt(const glm::vec3& position) const
 {
     const TerrainKey key{ position };
 

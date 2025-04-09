@@ -18,11 +18,26 @@ public:
     ~TerrainComponentFactory() = default;
 
 public:
-    std::unique_ptr<ITerrainComponenet> CreateRandomTerrain(const int x, const int z, const float size) const;
+    std::unique_ptr<ITerrainComponent> CreateRandomTerrain(const int x, const int z, const float size) const;
 
-    std::unique_ptr<ITerrainComponenet> CreateRandomTerrainNormalMapped(const int x, const int z, const float size) const;
+    std::unique_ptr<ITerrainComponent> CreateRandomTerrainNormalMapped(const int x, const int z, const float size) const;
 
-    std::unique_ptr<ITerrainComponenet> CreateRandomTerrainConeStepMapped(const int x, const int z, const float size) const;
+    std::unique_ptr<ITerrainComponent> CreateRandomTerrainConeStepMapped(const int x, const int z, const float size) const;
+
+private:
+    struct VertexData {
+        std::vector<glm::vec3> vertices;
+
+        std::vector<glm::vec2> textureCoords;
+
+        std::vector<glm::vec3> normals;
+
+        std::vector<glm::vec3> tangents;
+
+        std::vector<glm::vec3> biTangents;
+
+        std::vector<uint32_t> indices;
+    };
 
 private:
     std::unique_ptr<prev_test::render::IModel> CreateModel(const std::shared_ptr<VertexData>& vertexData, const bool normalMapped) const;
@@ -37,7 +52,6 @@ private:
 
     std::unique_ptr<HeightMapInfo> CreateHeightMap(const HeightGenerator& generator) const;
 
-private:
 private:
     prev::core::device::Device& m_device;
 

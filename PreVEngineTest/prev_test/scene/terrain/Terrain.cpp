@@ -28,7 +28,7 @@ void Terrain::Init()
 
     prev_test::component::terrain::TerrainComponentFactory terrainComponentFactory{ m_device, m_allocator };
     m_terrainComponent = terrainComponentFactory.CreateRandomTerrainConeStepMapped(m_xIndex, m_zIndex, prev_test::component::terrain::TERRAIN_TILE_SIZE);
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::terrain::ITerrainComponenet>(GetThis(), m_terrainComponent, TAG_TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::terrain::ITerrainComponent>(GetThis(), m_terrainComponent, TAG_TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT);
 
     prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{ m_allocator };
     m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(m_terrainComponent->GetModel()->GetMesh());
