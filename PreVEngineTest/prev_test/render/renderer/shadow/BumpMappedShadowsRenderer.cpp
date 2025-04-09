@@ -114,7 +114,7 @@ void BumpMappedShadowsRenderer::Render(const ShadowsRenderContext& renderContext
             Uniforms uniforms{};
             uniforms.projectionMatrix = renderContext.projectionMatrix;
             uniforms.viewMatrix = renderContext.viewMatrix;
-            uniforms.modelMatrix = transformComponent->GetWorldTransformScaled();
+            uniforms.modelMatrix = transformComponent->GetWorldTransformScaled() * meshNode.transform;
             ubo->Data(uniforms);
 
             m_shader->Bind("ubo", *ubo);
