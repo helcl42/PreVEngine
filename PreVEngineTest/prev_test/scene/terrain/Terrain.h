@@ -36,7 +36,7 @@ private:
 private:
     std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 
-    std::shared_ptr<prev_test::component::terrain::ITerrainComponenet> m_terrainComponent;
+    std::shared_ptr<prev_test::component::terrain::ITerrainComponent> m_terrainComponent;
 
     std::weak_ptr<prev_test::component::terrain::ITerrainManagerComponent> m_terrainManagerComponent;
 

@@ -17,7 +17,7 @@ TerrainComponentFactory::TerrainComponentFactory(prev::core::device::Device& dev
 {
 }
 
-std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain(const int x, const int z, const float size) const
+std::unique_ptr<ITerrainComponent> TerrainComponentFactory::CreateRandomTerrain(const int x, const int z, const float size) const
 {
     HeightGenerator heightGenerator(x, z, m_vertexCount, m_seed);
     const std::shared_ptr<HeightMapInfo> heightMap{ CreateHeightMap(heightGenerator) };
@@ -36,7 +36,6 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
     auto result{ std::make_unique<TerrainComponent>(x, z) };
     result->m_model = CreateModel(vertexData, false);
     result->m_heightsInfo = heightMap;
-    result->m_vertexData = vertexData;
     for (const auto& layer : terrainLayers) {
         result->m_materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, VK_SAMPLER_ADDRESS_MODE_REPEAT }, layer.materialPath));
         result->m_heightSteps.emplace_back(layer.heightStep);
@@ -45,7 +44,7 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
     return result;
 }
 
-std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrainNormalMapped(const int x, const int z, const float size) const
+std::unique_ptr<ITerrainComponent> TerrainComponentFactory::CreateRandomTerrainNormalMapped(const int x, const int z, const float size) const
 {
     HeightGenerator heightGenerator(x, z, m_vertexCount, m_seed);
     const std::shared_ptr<HeightMapInfo> heightMap{ CreateHeightMap(heightGenerator) };
@@ -64,7 +63,6 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
     auto result{ std::make_unique<TerrainComponent>(x, z) };
     result->m_model = CreateModel(vertexData, true);
     result->m_heightsInfo = heightMap;
-    result->m_vertexData = vertexData;
     for (const auto& layer : terrainLayers) {
         result->m_materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, VK_SAMPLER_ADDRESS_MODE_REPEAT }, layer.materialPath, layer.materialNormalPath));
         result->m_heightSteps.emplace_back(layer.heightStep);
@@ -73,7 +71,7 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
     return result;
 }
 
-std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrainConeStepMapped(const int x, const int z, const float size) const
+std::unique_ptr<ITerrainComponent> TerrainComponentFactory::CreateRandomTerrainConeStepMapped(const int x, const int z, const float size) const
 {
     HeightGenerator heightGenerator(x, z, m_vertexCount, m_seed);
     const std::shared_ptr<HeightMapInfo> heightMap{ CreateHeightMap(heightGenerator) };
@@ -92,7 +90,6 @@ std::unique_ptr<ITerrainComponenet> TerrainComponentFactory::CreateRandomTerrain
     auto result{ std::make_unique<TerrainComponent>(x, z) };
     result->m_model = CreateModel(vertexData, true);
     result->m_heightsInfo = heightMap;
-    result->m_vertexData = vertexData;
     for (const auto& layer : terrainLayers) {
         auto material{ materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, VK_SAMPLER_ADDRESS_MODE_REPEAT }, layer.materialPath, layer.materialNormalPath, layer.materialHeightPath) };
         material->SetHeightScale(layer.heightScale);
@@ -141,7 +138,7 @@ std::unique_ptr<prev_test::render::IMesh> TerrainComponentFactory::GenerateMesh(
     return mesh;
 }
 
-std::unique_ptr<VertexData> TerrainComponentFactory::GenerateVertexData(const std::shared_ptr<HeightMapInfo>& heightMap, const float size) const
+std::unique_ptr<TerrainComponentFactory::VertexData> TerrainComponentFactory::GenerateVertexData(const std::shared_ptr<HeightMapInfo>& heightMap, const float size) const
 {
     const auto verticesCount{ m_vertexCount * m_vertexCount };
     auto result{ std::make_unique<VertexData>() };

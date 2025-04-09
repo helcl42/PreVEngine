@@ -89,7 +89,7 @@ void TerrainRenderer::PreRender(const NormalRenderContext& renderContext)
 
 void TerrainRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
-    if (!node->GetTags().HasAll({ TAG_TERRAIN_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
+    if (!node->GetTags().HasAll({ TAG_TERRAIN_RENDER_COMPONENT, TAG_TERRAIN_DEFAULT_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
         return;
     }
 
@@ -102,7 +102,7 @@ void TerrainRenderer::Render(const NormalRenderContext& renderContext, const std
     const auto lightComponents = prev::scene::component::NodeComponentHelper::FindAll<prev_test::component::light::ILightComponent>(m_scene.GetRootNode(), { TAG_LIGHT });
 
     const auto transformComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(node);
-    const auto terrainComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::terrain::ITerrainComponenet>(node);
+    const auto terrainComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::terrain::ITerrainComponent>(node);
 
     auto uboVS = m_uniformsPoolVS->GetNext();
 
