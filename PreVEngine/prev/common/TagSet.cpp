@@ -63,9 +63,73 @@ bool TagSet::HasAll(const TagSet& tags) const
     return true;
 }
 
-bool TagSet::operator[](const std::string& val) const
+bool TagSet::operator[](const std::string& tag) const
 {
-    return m_tags.find(val) != m_tags.cend();
+    return m_tags.find(tag) != m_tags.cend();
+}
+
+TagSet TagSet::operator+(const std::string& tag) const
+{
+    auto tags{ m_tags };
+    tags.insert(tag);
+    return { tags };
+}
+
+TagSet TagSet::operator+(const TagSet& tagSet) const
+{
+    auto tags{ m_tags };
+    auto newTags{ tagSet.Get() };
+    for (const auto& tag : newTags) {
+        tags.insert(tag);
+    }
+    return tags;
+}
+
+TagSet& TagSet::operator+=(const std::string& tag)
+{
+    m_tags.insert(tag);
+    return *this;
+}
+
+TagSet& TagSet::operator+=(const TagSet& tagSet)
+{
+    auto newTags{ tagSet.Get() };
+    for (const auto& tag : newTags) {
+        m_tags.insert(tag);
+    }
+    return *this;
+}
+
+TagSet TagSet::operator-(const std::string& tag) const
+{
+    auto tags{ m_tags };
+    tags.erase(tag);
+    return { tags };
+}
+
+TagSet TagSet::operator-(const TagSet& tagSet) const
+{
+    auto tags{ m_tags };
+    auto newTags{ tagSet.Get() };
+    for (const auto& tag : newTags) {
+        tags.erase(tag);
+    }
+    return tags;
+}
+
+TagSet& TagSet::operator-=(const std::string& tag)
+{
+    m_tags.erase(tag);
+    return *this;
+}
+
+TagSet& TagSet::operator-=(const TagSet& tagSet)
+{
+    auto newTags{ tagSet.Get() };
+    for (const auto& tag : newTags) {
+        m_tags.erase(tag);
+    }
+    return *this;
 }
 
 std::ostream& operator<<(std::ostream& out, const TagSet& tagSet)

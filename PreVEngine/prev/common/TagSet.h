@@ -30,7 +30,23 @@ public:
 
     bool HasAll(const TagSet& tags) const;
 
-    bool operator[](const std::string& val) const;
+    bool operator[](const std::string& tag) const;
+
+    TagSet operator+(const std::string& tag) const;
+
+    TagSet operator+(const TagSet& tagSet) const;
+
+    TagSet& operator+=(const std::string& tag);
+
+    TagSet& operator+=(const TagSet& tagSet);
+
+    TagSet operator-(const std::string& tag) const;
+
+    TagSet operator-(const TagSet& tagSet) const;
+
+    TagSet& operator-=(const std::string& tag);
+
+    TagSet& operator-=(const TagSet& tagSet);
 
     friend std::ostream& operator<<(std::ostream& out, const TagSet& tagSet);
 
