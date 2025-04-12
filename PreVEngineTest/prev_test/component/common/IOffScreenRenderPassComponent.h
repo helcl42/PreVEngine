@@ -4,11 +4,12 @@
 #include <prev/render/buffer/ImageBuffer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/sampler/Sampler.h>
+#include <prev/scene/component/IComponent.h>
 
 #include <memory>
 
 namespace prev_test::component::common {
-class IOffScreenRenderPassComponent {
+class IOffScreenRenderPassComponent : public prev::scene::component::IComponent {
 public:
     virtual std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const = 0;
 

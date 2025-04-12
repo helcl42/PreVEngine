@@ -78,7 +78,11 @@ void TerrainShadowsRenderer::PreRender(const ShadowsRenderContext& renderContext
 
 void TerrainShadowsRenderer::Render(const ShadowsRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
-    if (!node->GetTags().HasAll({ TAG_TERRAIN_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
+    if (!node->GetTags().HasAll({ TAG_TERRAIN_RENDER_COMPONENT })) {
+        return;
+    }
+
+    if (!node->GetTags().HasAll({ TAG_TRANSFORM_COMPONENT })) {
         return;
     }
 

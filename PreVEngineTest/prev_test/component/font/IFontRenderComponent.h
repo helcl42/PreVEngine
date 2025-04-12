@@ -4,6 +4,7 @@
 #include "../../render/IModel.h"
 #include "../../render/font/FontMetadata.h"
 
+#include <prev/scene/component/IComponent.h>
 #include <prev/util/Utils.h>
 
 #include <map>
@@ -23,7 +24,7 @@ struct RenderableText {
 };
 
 template <typename TextType>
-class IFontRenderComponent {
+class IFontRenderComponent : public prev::scene::component::IComponent {
 public:
     virtual std::shared_ptr<prev_test::render::font::FontMetadata> GetFontMetadata() const = 0;
 

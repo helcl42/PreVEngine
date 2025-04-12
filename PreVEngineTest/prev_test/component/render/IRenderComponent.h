@@ -4,10 +4,12 @@
 #include "../../render/IMaterial.h"
 #include "../../render/IModel.h"
 
+#include <prev/scene/component/IComponent.h>
+
 #include <memory>
 
 namespace prev_test::component::render {
-class IRenderComponent {
+class IRenderComponent : public prev::scene::component::IComponent {
 public:
     virtual std::shared_ptr<prev_test::render::IModel> GetModel() const = 0;
 

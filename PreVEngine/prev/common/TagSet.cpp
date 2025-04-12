@@ -1,6 +1,7 @@
 #include "TagSet.h"
 
 #include <iostream>
+#include <sstream>
 
 namespace prev::common {
 TagSet::TagSet(const std::set<std::string>& tags)
@@ -61,6 +62,13 @@ bool TagSet::HasAll(const TagSet& tags) const
         }
     }
     return true;
+}
+
+std::string TagSet::ToString() const
+{
+    std::stringstream ss;
+    ss << *this;
+    return ss.str();
 }
 
 bool TagSet::operator[](const std::string& tag) const
@@ -134,9 +142,16 @@ TagSet& TagSet::operator-=(const TagSet& tagSet)
 
 std::ostream& operator<<(std::ostream& out, const TagSet& tagSet)
 {
+    out << "[";
+    size_t index{ 0 };
     for (const auto& tag : tagSet.m_tags) {
-        out << tag << ' ';
+        out << tag;
+        if (index < tagSet.m_tags.size() - 1) {
+            out << ' ';
+        }
+        ++index;
     }
+    out << "]";
     return out;
 }
 } // namespace prev::common

@@ -1,6 +1,8 @@
 #ifndef __ISCENE_NODE_H__
 #define __ISCENE_NODE_H__
 
+#include "../component/ComponentRepository.h"
+
 #include "../../common/TagSet.h"
 
 #include <memory>
@@ -35,9 +37,9 @@ public:
 
     virtual uint64_t GetId() const = 0;
 
-    virtual void SetTags(const prev::common::TagSet& tags) = 0;
+    virtual prev::common::TagSet& GetTags() = 0;
 
-    virtual const prev::common::TagSet& GetTags() const = 0;
+    virtual component::ComponentRepository& GetComponentRepository() = 0;
 
 public:
     virtual ~ISceneNode() = default;

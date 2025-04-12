@@ -4,8 +4,10 @@
 #include "../../common/intersection/Ray.h"
 #include "../../render/IModel.h"
 
+#include <prev/scene/component/IComponent.h>
+
 namespace prev_test::component::ray_casting {
-class IRayCasterComponent {
+class IRayCasterComponent : public prev::scene::component::IComponent {
 public:
     virtual void Update(float deltaTime) = 0;
 

@@ -90,7 +90,11 @@ void TexturelessRenderer::PreRender(const NormalRenderContext& renderContext)
 
 void TexturelessRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
-    if (!node->GetTags().HasAll({ TAG_RENDER_TEXTURELESS_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
+    if (!node->GetTags().HasAll({ TAG_RENDER_TEXTURELESS_COMPONENT })) {
+        return;
+    }
+
+    if (!node->GetTags().HasAll({ TAG_TRANSFORM_COMPONENT })) {
         return;
     }
 

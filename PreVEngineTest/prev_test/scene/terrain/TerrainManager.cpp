@@ -19,11 +19,11 @@ TerrainManager::TerrainManager(prev::core::device::Device& device, prev::core::m
 void TerrainManager::Init()
 {
     std::shared_ptr<prev_test::component::terrain::ITerrainManagerComponent> terrainManagerComponent = prev_test::component::terrain::TerrainManagerComponentFactory{}.Create();
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::terrain::ITerrainManagerComponent>(GetThis(), terrainManagerComponent, TAG_TERRAIN_MANAGER_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::terrain::ITerrainManagerComponent>(GetThis(), terrainManagerComponent, { TAG_TERRAIN_MANAGER_COMPONENT });
 
     prev_test::component::ray_casting::SelectableComponentFacrory selectableComponentFactory{};
     std::shared_ptr<prev_test::component::ray_casting::ISelectableComponent> selectableComponent = selectableComponentFactory.Create();
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::ISelectableComponent>(GetThis(), selectableComponent, TAG_SELECTABLE_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::ISelectableComponent>(GetThis(), selectableComponent, { TAG_SELECTABLE_COMPONENT });
 
     for (uint32_t x = 0; x < m_gridMaxX; x++) {
         for (uint32_t z = 0; z < m_gridMaxZ; z++) {

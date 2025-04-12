@@ -17,7 +17,7 @@ Sun::Sun(prev::core::device::Device& device, prev::core::memory::Allocator& allo
 void Sun::Init()
 {
     m_sunComponent = prev_test::component::sky::SunComponentFactory{ m_device, m_allocator }.Create();
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::sky::ISunComponent>(GetThis(), m_sunComponent, TAG_SUN_RENDER_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::sky::ISunComponent>(GetThis(), m_sunComponent, { TAG_SUN_RENDER_COMPONENT });
 
     SceneNode::Init();
 }

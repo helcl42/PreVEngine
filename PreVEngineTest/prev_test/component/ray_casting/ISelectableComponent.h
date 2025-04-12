@@ -2,9 +2,10 @@
 #define __ISELECTABLE_COMPONENT_H__
 
 #include <prev/common/Common.h>
+#include <prev/scene/component/IComponent.h>
 
 namespace prev_test::component::ray_casting {
-class ISelectableComponent {
+class ISelectableComponent : public prev::scene::component::IComponent {
 public:
     virtual bool IsSelected() const = 0;
 

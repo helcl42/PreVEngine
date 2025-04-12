@@ -99,7 +99,11 @@ void TerrainConeStepMappedRenderer::PreRender(const NormalRenderContext& renderC
 
 void TerrainConeStepMappedRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
-    if (!node->GetTags().HasAll({ TAG_TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
+    if (!node->GetTags().HasAll({ TAG_TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT })) {
+        return;
+    }
+
+    if (!node->GetTags().HasAll({ TAG_TRANSFORM_COMPONENT })) {
         return;
     }
 

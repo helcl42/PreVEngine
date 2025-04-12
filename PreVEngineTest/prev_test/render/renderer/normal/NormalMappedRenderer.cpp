@@ -99,7 +99,11 @@ void NormalMappedRenderer::PreRender(const NormalRenderContext& renderContext)
 
 void NormalMappedRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
-    if (!node->GetTags().HasAll({ TAG_RENDER_NORMAL_MAPPED_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
+    if (!node->GetTags().HasAll({ TAG_RENDER_NORMAL_MAPPED_COMPONENT })) {
+        return;
+    }
+
+    if (!node->GetTags().HasAll({ TAG_TRANSFORM_COMPONENT })) {
         return;
     }
 

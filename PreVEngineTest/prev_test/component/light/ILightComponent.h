@@ -3,8 +3,10 @@
 
 #include "../../render/ViewFrustum.h"
 
+#include <prev/scene/component/IComponent.h>
+
 namespace prev_test::component::light {
-class ILightComponent {
+class ILightComponent : public prev::scene::component::IComponent {
 public:
     virtual glm::mat4 LookAt() const = 0;
 

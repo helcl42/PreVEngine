@@ -3,8 +3,10 @@
 
 #include "../../render/ViewFrustum.h"
 
+#include <prev/scene/component/IComponent.h>
+
 namespace prev_test::component::camera {
-class ICameraComponent {
+class ICameraComponent : public prev::scene::component::IComponent {
 public:
     virtual const glm::mat4& LookAt() const = 0;
 

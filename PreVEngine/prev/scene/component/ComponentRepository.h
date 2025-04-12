@@ -1,112 +1,122 @@
 #ifndef __COMPONENT_REPOSITORY_H__
 #define __COMPONENT_REPOSITORY_H__
 
-#include "../../common/Logger.h"
-#include "../../common/pattern/Singleton.h"
-#include "../SceneEvents.h"
+#include "IComponent.h"
 
-#include <prev/event/EventHandler.h>
-
-#include <map>
+#include <unordered_map>
 #include <memory>
+#include <stdexcept>
+#include <typeindex>
 #include <vector>
 
 namespace prev::scene::component {
-template <typename ItemType>
-class ComponentRepository final : public prev::common::pattern::Singleton<ComponentRepository<ItemType>> {
+class ComponentRepository final {
 public:
-    ~ComponentRepository()
-    {
-        for (const auto& [nodeId, components] : m_components) {
-            LOGW("ComponentRepository<%s>: For Node Id(%zu) there are %zu components left.", typeid(ItemType).name(), nodeId, components.size());
-        }
-    }
+    ComponentRepository() = default;
+
+    ~ComponentRepository() = default;
 
 public:
-    std::shared_ptr<ItemType> Get(const uint64_t id) const
+    template <typename ComponentType>
+    std::shared_ptr<ComponentType> Get() const
     {
-        if (auto result = FindFirst(id)) {
-            return result;
-        } else {
-            throw std::runtime_error("Entity with id = " + std::to_string(id) + " does not exist in this repository.");
+        const auto result{ FindOne<ComponentType>() };
+        if (!result) {
+            throw std::runtime_error("Trying get component with tag = " + GetTypeName<ComponentType>() + " that does not exist in this repository.");
         }
+        return result;
     }
 
-    std::vector<std::shared_ptr<ItemType>> GetAll(const uint64_t id) const
+    template <typename ComponentType>
+    std::vector<std::shared_ptr<ComponentType>> GetAll() const
     {
-        const auto& result{ FindAll(id) };
-        if (!result.empty()) {
-            return result;
-        } else {
-            throw std::runtime_error("Entity with id = " + std::to_string(id) + " does not exist in this repository.");
+        const auto result{ FindAll<ComponentType>() };
+        if (result.empty()) {
+            throw std::runtime_error("Trying to get components with tag = " + GetTypeName<ComponentType>() + " that does not exist in this repository.");
         }
+        return result;
     }
 
-    void Add(const uint64_t id, const std::vector<std::shared_ptr<ItemType>>& components)
+    template <typename ComponentType>
+    void Add(const std::shared_ptr<ComponentType>& component)
     {
-        auto addedComponents{ FindAll(id) };
-        if (!addedComponents.empty()) {
-            for (const auto component : components) {
-                if (std::find(addedComponents.cbegin(), addedComponents.cend(), component) != std::end(addedComponents)) {
-                    throw std::runtime_error("Entity with id = " + std::to_string(id) + " already exist in this repository.");
-                }
-            }
-        }
+        auto& currentComponents{ m_components[GetTypeIndex<ComponentType>()] };
+        currentComponents.push_back(component);
+    }
 
-        auto& currentComponents{ m_components[id] };
+    template <typename ComponentType>
+    void Add(const std::vector<std::shared_ptr<IComponent>>& components)
+    {
+        auto& currentComponents{ m_components[GetTypeIndex<ComponentType>()] };
         currentComponents.insert(currentComponents.end(), components.cbegin(), components.cend());
     }
 
-    void Remove(const uint64_t id)
+    template <typename ComponentType>
+    void Remove()
     {
-        if (FindFirst(id)) {
-            m_components.erase(id);
-        } else {
-            throw std::runtime_error("Entity with id = " + std::to_string(id) + " does not exist in this repository.");
+        if (!Contains<ComponentType>()) {
+            throw std::runtime_error("Trying to remove component with tag = " + GetTypeName<ComponentType>() + " that does not exist in this repository.");
         }
+        m_components.erase(GetTypeIndex<ComponentType>());
     }
 
-    bool Contains(const uint64_t id) const
+    template <typename ComponentType>
+    bool Contains() const
     {
-        return !!FindFirst(id);
+        return m_components.find(GetTypeIndex<ComponentType>()) != m_components.cend();
     }
 
-    std::shared_ptr<ItemType> FindFirst(const uint64_t id) const
+    template <typename ComponentType>
+    std::shared_ptr<ComponentType> FindOne() const
     {
-        auto iter{ m_components.find(id) };
-        if (iter != m_components.cend()) {
-            return iter->second.front();
+        auto iter{ m_components.find(GetTypeIndex<ComponentType>()) };
+        if (iter == m_components.cend()) {
+            return {};
         }
-        return {};
+        return Cast<ComponentType>(iter->second.front());
     }
 
-    std::vector<std::shared_ptr<ItemType>> FindAll(const uint64_t id) const
+    template <typename ComponentType>
+    std::vector<std::shared_ptr<ComponentType>> FindAll() const
     {
-        auto iter{ m_components.find(id) };
-        if (iter != m_components.cend()) {
-            return iter->second;
+        auto iter{ m_components.find(GetTypeIndex<ComponentType>()) };
+        if (iter == m_components.cend()) {
+            return {};
         }
-        return {};
-    }
 
-public:
-    void operator()(const prev::scene::SceneNodeShutDownEvent& evt)
-    {
-        if (Contains(evt.id)) {
-            Remove(evt.id);
+        std::vector<std::shared_ptr<ComponentType>> result;
+        for (size_t i = 0; i < iter->second.size(); ++i) {
+            const auto component{ Cast<ComponentType>(iter->second[i]) };
+            if (component) {
+                result.push_back(component);
+            }
         }
+        return result;
     }
 
 private:
-    ComponentRepository() = default;
+    template <typename ComponentType>
+    static inline std::shared_ptr<ComponentType> Cast(const std::shared_ptr<IComponent>& component)
+    {
+        // TODO - static cast should be enough here - enable this in debug only ???
+        // return std::dynamic_pointer_cast<ComponentType>(component);
+        return std::static_pointer_cast<ComponentType>(component);
+    }
+
+    template <typename ComponentType>
+    static inline std::type_index GetTypeIndex()
+    {
+        return std::type_index(typeid(ComponentType));
+    }
+
+    template <typename ComponentType>
+    static inline std::string GetTypeName()
+    {
+        return std::string(GetTypeIndex<ComponentType>().name());
+    }
 
 private:
-    friend class prev::common::pattern::Singleton<ComponentRepository<ItemType>>;
-
-private:
-    std::map<uint64_t, std::vector<std::shared_ptr<ItemType>>> m_components;
-
-    prev::event::EventHandler<ComponentRepository<ItemType>, prev::scene::SceneNodeShutDownEvent> m_shutDownHandler{ *this };
+    std::unordered_map<std::type_index, std::vector<std::shared_ptr<IComponent>>> m_components;
 };
 } // namespace prev::scene::component
 

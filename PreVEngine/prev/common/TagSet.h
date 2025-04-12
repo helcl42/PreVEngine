@@ -30,6 +30,8 @@ public:
 
     bool HasAll(const TagSet& tags) const;
 
+    std::string ToString() const;
+
     bool operator[](const std::string& tag) const;
 
     TagSet operator+(const std::string& tag) const;

@@ -89,7 +89,11 @@ void TerrainRenderer::PreRender(const NormalRenderContext& renderContext)
 
 void TerrainRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
-    if (!node->GetTags().HasAll({ TAG_TERRAIN_RENDER_COMPONENT, TAG_TERRAIN_DEFAULT_RENDER_COMPONENT, TAG_TRANSFORM_COMPONENT })) {
+    if (!node->GetTags().HasAll({ TAG_TERRAIN_RENDER_COMPONENT })) {
+        return;
+    }
+
+    if (!node->GetTags().HasAll({ TAG_TRANSFORM_COMPONENT })) {
         return;
     }
 

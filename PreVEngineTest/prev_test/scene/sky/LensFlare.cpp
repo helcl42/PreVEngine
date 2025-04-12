@@ -17,7 +17,7 @@ LensFlare::LensFlare(prev::core::device::Device& device, prev::core::memory::All
 void LensFlare::Init()
 {
     m_lensFlareComponent = prev_test::component::sky::LensFlareComponentFactory{ m_device, m_allocator }.Create();
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::sky::ILensFlareComponent>(GetThis(), m_lensFlareComponent, TAG_LENS_FLARE_RENDER_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::sky::ILensFlareComponent>(GetThis(), m_lensFlareComponent, { TAG_LENS_FLARE_RENDER_COMPONENT });
 
     SceneNode::Init();
 }

@@ -6,6 +6,8 @@
 #include "../../common/intersection/RayCastResult.h"
 #include "../../render/IModel.h"
 
+#include <prev/scene/component/IComponent.h>
+
 namespace prev_test::component::ray_casting {
 enum class BoundingVolumeType {
     SPHERE = 0,
@@ -13,7 +15,7 @@ enum class BoundingVolumeType {
     OBB
 };
 
-class IBoundingVolumeComponent {
+class IBoundingVolumeComponent : public prev::scene::component::IComponent {
 public:
     virtual bool IsInFrustum(const prev_test::common::intersection::Frustum& frustum) = 0;
 

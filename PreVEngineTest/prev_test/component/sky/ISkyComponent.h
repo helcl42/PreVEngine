@@ -5,9 +5,10 @@
 
 #include <prev/render/buffer/ImageBuffer.h>
 #include <prev/render/sampler/Sampler.h>
+#include <prev/scene/component/IComponent.h>
 
 namespace prev_test::component::sky {
-class ISkyComponent {
+class ISkyComponent : public prev::scene::component::IComponent {
 public:
     virtual std::shared_ptr<prev_test::render::IModel> GetModel() const = 0;
 

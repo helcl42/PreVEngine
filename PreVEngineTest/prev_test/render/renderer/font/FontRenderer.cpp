@@ -82,7 +82,7 @@ void FontRenderer::PreRender(const NormalRenderContext& renderContext)
 
 void FontRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
-    if (!node->GetTags().HasAll({ TAG_FONT_RENDER_COMPONENT })) {
+    if (!node->GetTags().HasAll({ TAG_FONT_SCREEN_SPACE_RENDER_COMPONENT })) {
         return;
     }
 

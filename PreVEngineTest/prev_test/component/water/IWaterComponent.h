@@ -4,8 +4,10 @@
 #include "../../render/IMaterial.h"
 #include "../../render/IModel.h"
 
+#include <prev/scene/component/IComponent.h>
+
 namespace prev_test::component::water {
-class IWaterComponent {
+class IWaterComponent : public prev::scene::component::IComponent {
 public:
     virtual std::shared_ptr<prev_test::render::IModel> GetModel() const = 0;
 

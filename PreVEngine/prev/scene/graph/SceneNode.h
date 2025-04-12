@@ -40,14 +40,16 @@ public:
 
     uint64_t GetId() const override;
 
-    void SetTags(const prev::common::TagSet& tagSet) override;
+    prev::common::TagSet& GetTags() override;
 
-    const prev::common::TagSet& GetTags() const override;
+    component::ComponentRepository& GetComponentRepository() override;
 
 protected:
     uint64_t m_id;
 
     prev::common::TagSet m_tags;
+
+    component::ComponentRepository m_componentsRepository;
 
     std::weak_ptr<ISceneNode> m_parent;
 

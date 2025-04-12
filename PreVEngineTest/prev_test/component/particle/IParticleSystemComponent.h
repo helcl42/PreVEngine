@@ -7,11 +7,12 @@
 #include "../../render/IModel.h"
 
 #include <prev/render/buffer/VertexBuffer.h>
+#include <prev/scene/component/IComponent.h>
 
 #include <list>
 
 namespace prev_test::component::particle {
-class IParticleSystemComponent {
+class IParticleSystemComponent : public prev::scene::component::IComponent {
 public:
     virtual void Update(const float deltaTime, const glm::vec3& centerPosition) = 0;
 

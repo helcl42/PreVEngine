@@ -2,11 +2,12 @@
 #define __ITRANSFORM_COMPONENT_H__
 
 #include <prev/common/Common.h>
+#include <prev/scene/component/IComponent.h>
 
 #include <memory>
 
 namespace prev_test::component::transform {
-class ITransformComponent {
+class ITransformComponent : public prev::scene::component::IComponent {
 public:
     virtual void Update(float deltaTime) = 0;
 
