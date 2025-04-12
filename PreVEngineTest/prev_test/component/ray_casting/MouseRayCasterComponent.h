@@ -1,13 +1,10 @@
 #ifndef __MOUSE_RAY_CASTER_COMPONENT_H__
 #define __MOUSE_RAY_CASTER_COMPONENT_H__
 
-#include "../../common/intersection/Ray.h"
-#include "../../render/IModel.h"
 #include "IMouseRayCasterComponent.h"
 
-#include <prev/event/EventHandler.h>
-#include <prev/input/mouse/MouseEvents.h>
-#include <prev/window/WindowEvents.h>
+#include "../../common/intersection/Ray.h"
+#include "../../render/IModel.h"
 
 namespace prev_test::component::ray_casting {
 class MouseRayCasterComponent final : public IMouseRayCasterComponent {
@@ -20,6 +17,8 @@ public:
     void Update(float deltaTime) override;
 
     void SetViewPortDimensions(const glm::vec2& viewPortDimensions) override;
+
+    void SetMousePosition(const glm::vec2& mousePosition) override;
 
     void SetViewMatrix(const glm::mat4& viewMatrix) override;
 
@@ -38,10 +37,6 @@ public:
 #ifdef RENDER_RAYCASTS
     std::shared_ptr<prev_test::render::IModel> GetModel() const override;
 #endif
-public:
-    void operator()(const prev::input::mouse::MouseEvent& moveEvent);
-
-    void operator()(const prev::window::WindowResizeEvent& vwindowResizeEvent);
 
 protected:
     glm::mat4 m_viewMatrix;
@@ -62,10 +57,6 @@ protected:
 #ifdef RENDER_RAYCASTS
     std::shared_ptr<prev_test::render::IModel> m_model;
 #endif
-private:
-    prev::event::EventHandler<MouseRayCasterComponent, prev::input::mouse::MouseEvent> m_mouseMoveHandler{ *this };
-
-    prev::event::EventHandler<MouseRayCasterComponent, prev::window::WindowResizeEvent> m_viewFrustumChangeHandler{ *this };
 };
 } // namespace prev_test::component::ray_casting
 

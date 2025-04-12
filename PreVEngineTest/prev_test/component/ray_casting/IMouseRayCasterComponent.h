@@ -8,6 +8,8 @@ class IMouseRayCasterComponent : public IRayCasterComponent {
 public:
     virtual void SetViewPortDimensions(const glm::vec2& viewPortDimensions) = 0;
 
+    virtual void SetMousePosition(const glm::vec2& mousePosition) = 0;
+
     virtual void SetViewMatrix(const glm::mat4& viewMatrix) = 0;
 
     virtual void SetProjectionMatrix(const glm::mat4& projectionMatrix) = 0;

@@ -1,8 +1,5 @@
 #include "RayCasterComponent.h"
-#include "RayCastingEvents.h"
 #include "RayModelFactory.h"
-
-#include <prev/event/EventChannel.h>
 
 namespace prev_test::component::ray_casting {
 void RayCasterComponent::Update(float deltaTime)
@@ -20,12 +17,8 @@ void RayCasterComponent::Update(float deltaTime)
         m_rayDirection = glm::normalize(compensationTransform * glm::vec4(m_rayDirection, 0.0f));
     }
 
-    prev_test::common::intersection::Ray ray{ m_rayStartPosition, m_rayDirection, m_rayLength };
-    prev::event::EventChannel::Post(RayEvent{ ray });
-
 #ifdef RENDER_RAYCASTS
-    RayModelFactory modelFactory{};
-    m_model = modelFactory.Create(ray);
+    m_model = RayModelFactory{}.Create(GetRay());
 #endif
 }
 

@@ -33,6 +33,8 @@ private:
 public:
     void operator()(const prev::core::NewIterationEvent& newIterationEvent);
 
+    void operator()(const prev::input::mouse::MouseEvent& mouseEvent);
+
     void operator()(const prev::input::mouse::MouseLockRequest& lockRequest);
 
 private:
@@ -44,10 +46,14 @@ private:
 
     glm::vec2 m_viewPortSize;
 
+    glm::vec2 m_mousePosition;
+
     prev::input::InputsFacade m_inputFacade;
 
 private:
     prev::event::EventHandler<RayCaster, prev::core::NewIterationEvent> m_newIterationHandler{ *this };
+
+    prev::event::EventHandler<RayCaster, prev::input::mouse::MouseEvent> m_mouseEventHandler{ *this };
 
     prev::event::EventHandler<RayCaster, prev::input::mouse::MouseLockRequest> m_mouseLockHandler{ *this };
 };
