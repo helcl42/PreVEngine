@@ -66,13 +66,16 @@ private:
 
     glm::vec3 m_initialScale;
 
-    bool m_shouldGoForward{ false };
+    enum MovementFlags : uint32_t {
+        MOVE_FORWARD = 1 << 0,
+        MOVE_BACKWARD = 1 << 1,
+        MOVE_LEFT = 1 << 2,
+        MOVE_RIGHT = 1 << 3,
+        MOVE_UP = 1 << 4,
+        MOVE_DOWN = 1 << 5,
+    };
 
-    bool m_shouldGoBackward{ false };
-
-    bool m_shouldGoLeft{ false };
-
-    bool m_shouldGoRight{ false };
+    uint32_t m_moveFlags{};
 
     bool m_shouldRotate{ false };
 
