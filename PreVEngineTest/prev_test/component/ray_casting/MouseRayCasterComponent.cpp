@@ -1,5 +1,4 @@
 #include "MouseRayCasterComponent.h"
-#include "RayCastingEvents.h"
 #include "RayModelFactory.h"
 
 #include <prev/util/MathUtils.h>
@@ -7,7 +6,9 @@
 namespace prev_test::component::ray_casting {
 void MouseRayCasterComponent::Update(float deltaTime)
 {
-    const glm::vec2 normalizeDeviceCoords = prev::util::math::FromViewPortSpaceToNormalizedDeviceSpace(m_viewPortDimensions, glm::vec2(m_currentMousePosition.x, m_currentMousePosition.y));
+    const glm::vec2 correctedMousePosition = glm::clamp({ m_currentMousePosition.x, m_viewPortDimensions.y - m_currentMousePosition.y }, glm::vec2(0.0f, 0.0f), m_viewPortDimensions);
+
+    const glm::vec2 normalizeDeviceCoords = prev::util::math::FromViewPortSpaceToNormalizedDeviceSpace(m_viewPortDimensions, correctedMousePosition);
     const glm::vec4 clipSpaceCoords = prev::util::math::FromNormalizedDeviceSpaceToClipSpace(normalizeDeviceCoords);
     const glm::vec4 eyeSpaceCoords = prev::util::math::FromClipSpaceToCameraSpace(m_projectionMatrix, clipSpaceCoords);
     const glm::vec3 worldCoords = prev::util::math::FromCameraSpaceToWorldSpace(m_viewMatrix, eyeSpaceCoords);
@@ -25,18 +26,19 @@ void MouseRayCasterComponent::Update(float deltaTime)
         m_rayDirection = glm::normalize(compensationTransform * glm::vec4(m_rayDirection, 0.0f));
     }
 
-    prev_test::common::intersection::Ray ray{ m_rayStartPosition, m_rayDirection, m_rayLength };
-    prev::event::EventChannel::Post(RayEvent{ ray });
-
 #ifdef RENDER_RAYCASTS
-    RayModelFactory modelFactory{};
-    m_model = modelFactory.Create(ray);
+    m_model = RayModelFactory{}.Create(GetRay());
 #endif
 }
 
 void MouseRayCasterComponent::SetViewPortDimensions(const glm::vec2& viewPortDimensions)
 {
     m_viewPortDimensions = viewPortDimensions;
+}
+
+void MouseRayCasterComponent::SetMousePosition(const glm::vec2& mousePosition)
+{
+    m_currentMousePosition = mousePosition;
 }
 
 void MouseRayCasterComponent::SetViewMatrix(const glm::mat4& viewMatrix)
@@ -80,15 +82,4 @@ std::shared_ptr<prev_test::render::IModel> MouseRayCasterComponent::GetModel() c
     return m_model;
 }
 #endif
-
-void MouseRayCasterComponent::operator()(const prev::input::mouse::MouseEvent& moveEvent)
-{
-    const glm::vec2 position{ moveEvent.position.x, m_viewPortDimensions.y - moveEvent.position.y };
-    m_currentMousePosition = glm::clamp(position, glm::vec2(0.0f, 0.0f), m_viewPortDimensions);
-}
-
-void MouseRayCasterComponent::operator()(const prev::window::WindowResizeEvent& vwindowResizeEvent)
-{
-    m_viewPortDimensions = glm::vec2(vwindowResizeEvent.width, vwindowResizeEvent.height);
-}
 } // namespace prev_test::component::ray_casting

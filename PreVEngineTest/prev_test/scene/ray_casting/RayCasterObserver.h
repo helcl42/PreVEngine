@@ -1,9 +1,10 @@
 #ifndef __RAY_CASTER_OBSERVER_H__
 #define __RAY_CASTER_OBSERVER_H__
 
+#include "RayCasterEvents.h"
+
 #include "../../General.h"
 #include "../../common/intersection/RayCastResult.h"
-#include "../../component/ray_casting/RayCastingEvents.h"
 #include "../../component/terrain/ITerrainComponent.h"
 
 #include <prev/event/EventHandler.h>
@@ -60,14 +61,14 @@ private:
     void ResetAllSelectableNodes() const;
 
 public:
-    void operator()(const prev_test::component::ray_casting::RayEvent& rayEvt);
+    void operator()(const RayEvent& rayEvt);
 
 private:
     const uint32_t RECURSION_COUNT{ 200 };
 
     std::optional<prev_test::common::intersection::Ray> m_currentRay;
 
-    prev::event::EventHandler<RayCastObserver, prev_test::component::ray_casting::RayEvent> m_rayHandler{ *this };
+    prev::event::EventHandler<RayCastObserver, RayEvent> m_rayHandler{ *this };
 };
 } // namespace prev_test::scene::ray_casting
 

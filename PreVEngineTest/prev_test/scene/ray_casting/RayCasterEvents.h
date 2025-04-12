@@ -1,9 +1,9 @@
-#ifndef __RAYCASTING_EVENTS_H__
-#define __RAYCASTING_EVENTS_H__
+#ifndef __RAY_CASTER_EVENTS_H__
+#define __RAY_CASTER_EVENTS_H__
 
 #include "../../common/intersection/Ray.h"
 
-namespace prev_test::component::ray_casting {
+namespace prev_test::scene::ray_casting {
 struct RayEvent {
     prev_test::common::intersection::Ray ray;
 
@@ -16,6 +16,6 @@ struct RayEvent {
 
     ~RayEvent() = default;
 };
-} // namespace prev_test::component::ray_casting
+} // namespace prev_test::scene::ray_casting
 
-#endif // !__RAYCASTING_EVENTS_H__
+#endif // !__RAY_CASTER_EVENTS_H__

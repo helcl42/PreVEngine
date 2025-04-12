@@ -186,8 +186,8 @@ void RayCastObserver::ResetAllSelectableNodes() const
     }
 }
 
-void RayCastObserver::operator()(const prev_test::component::ray_casting::RayEvent& rayEvt)
+void RayCastObserver::operator()(const RayEvent& rayEvt)
 {
-    m_currentRay = prev_test::common::intersection::Ray{ rayEvt.ray };
+    m_currentRay = rayEvt.ray;
 }
 } // namespace prev_test::scene::ray_casting
