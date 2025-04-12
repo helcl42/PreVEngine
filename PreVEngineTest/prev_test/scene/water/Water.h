@@ -1,7 +1,6 @@
 #ifndef __WATER_H__
 #define __WATER_H__
 
-#include "../../General.h"
 #include "../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../component/transform/ITransformComponent.h"
 #include "../../component/water/IWaterComponent.h"

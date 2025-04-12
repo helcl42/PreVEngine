@@ -1,7 +1,6 @@
 #ifndef __TERRAIN_MANAGER_H__
 #define __TERRAIN_MANAGER_H__
 
-#include "../../General.h"
 #include "../../component/terrain/TerrainCommon.h"
 
 #include <prev/core/device/Device.h>

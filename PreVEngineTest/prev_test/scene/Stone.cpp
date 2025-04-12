@@ -1,5 +1,6 @@
 #include "Stone.h"
 
+#include "../Tags.h"
 #include "../common/AssetManager.h"
 #include "../component/ray_casting/BoundingVolumeComponentFactory.h"
 #include "../component/ray_casting/SelectableComponentFactory.h"

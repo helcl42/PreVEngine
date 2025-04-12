@@ -1,5 +1,6 @@
 #include "SkyBoxRenderer.h"
 
+#include "../../../Tags.h"
 #include "../../../common/AssetManager.h"
 #include "../../../component/sky/ISkyBoxComponent.h"
 #include "../../../component/sky/SkyCommon.h"

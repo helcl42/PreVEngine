@@ -1,5 +1,6 @@
 #include "ShadowMapDebugRenderer.h"
 
+#include "../../../Tags.h"
 #include "../../../common/AssetManager.h"
 #include "../../../component/shadow/IShadowsComponent.h"
 #include "../../../component/shadow/ShadowsCommon.h"

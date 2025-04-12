@@ -23,6 +23,7 @@
 #include "text/Text3d.h"
 #include "water/WaterManager.h"
 
+#include "../Tags.h"
 #include "../common/AssetManager.h"
 
 #include <prev/util/Utils.h>

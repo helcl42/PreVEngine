@@ -1,5 +1,6 @@
 #include "LensFlare.h"
 
+#include "../../Tags.h"
 #include "../../component/camera/ICameraComponent.h"
 #include "../../component/light/ILightComponent.h"
 #include "../../component/sky/LensFlareComponentFactory.h"

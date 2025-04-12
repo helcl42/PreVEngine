@@ -1,7 +1,6 @@
 #ifndef __TIME_H__
 #define __TIME_H__
 
-#include "../General.h"
 #include "../component/time/ITimeComponent.h"
 
 #include <prev/scene/graph/SceneNode.h>

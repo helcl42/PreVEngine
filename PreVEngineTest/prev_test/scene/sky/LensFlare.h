@@ -1,7 +1,6 @@
 #ifndef __LENS_FLARE_H__
 #define __LENS_FLARE_H__
 
-#include "../../General.h"
 #include "../../component/sky/ILensFlareComponent.h"
 
 #include <prev/core/CoreEvents.h>

@@ -1,5 +1,6 @@
 #include "WaterRefraction.h"
 
+#include "../../Tags.h"
 #include "../../component/common/OffScreenRenderPassComponentFactory.h"
 #include "../../component/water/WaterCommon.h"
 

@@ -1,5 +1,6 @@
 #include "MainLight.h"
 
+#include "../../Tags.h"
 #include "../../component/light/LightComponentFactory.h"
 #include "../../component/transform/TransformComponentFactory.h"
 

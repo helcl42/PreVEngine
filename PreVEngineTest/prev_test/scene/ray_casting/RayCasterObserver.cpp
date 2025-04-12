@@ -1,5 +1,6 @@
 #include "RayCasterObserver.h"
 
+#include "../../Tags.h"
 #include "../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../component/ray_casting/ISelectableComponent.h"
 #include "../../component/terrain/ITerrainManagerComponent.h"

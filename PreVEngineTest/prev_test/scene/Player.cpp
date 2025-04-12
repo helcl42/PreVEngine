@@ -1,4 +1,6 @@
 #include "Player.h"
+
+#include "../Tags.h"
 #include "../common/AssetManager.h"
 #include "../component/camera/CameraComponentFactory.h"
 #include "../component/ray_casting/BoundingVolumeComponentFactory.h"

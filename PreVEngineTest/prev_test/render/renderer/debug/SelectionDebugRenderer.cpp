@@ -1,6 +1,7 @@
 #include "SelectionDebugRenderer.h"
 
 #ifdef RENDER_SELECTION
+#include "../../../Tags.h"
 #include "../../../common/AssetManager.h"
 #include "../../../component/ray_casting/ISelectableComponent.h"
 #include "../../mesh/MeshFactory.h"

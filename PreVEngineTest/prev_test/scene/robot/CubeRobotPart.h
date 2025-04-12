@@ -1,7 +1,6 @@
 #ifndef __CUBE_ROBOT_BASE_H__
 #define __CUBE_ROBOT_BASE_H__
 
-#include "../../General.h"
 #include "../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../component/transform/ITransformComponent.h"
 

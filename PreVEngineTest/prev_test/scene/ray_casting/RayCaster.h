@@ -1,7 +1,6 @@
 #ifndef __RAY_CASTER_H__
 #define __RAY_CASTER_H__
 
-#include "../../General.h"
 #include "../../component/ray_casting/IMouseRayCasterComponent.h"
 #include "../../component/ray_casting/IRayCasterComponent.h"
 

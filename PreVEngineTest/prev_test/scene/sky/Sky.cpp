@@ -1,5 +1,6 @@
 #include "Sky.h"
 
+#include "../../Tags.h"
 #include "../../component/sky/SkyComponentFactory.h"
 
 #include <prev/scene/component/NodeComponentHelper.h>

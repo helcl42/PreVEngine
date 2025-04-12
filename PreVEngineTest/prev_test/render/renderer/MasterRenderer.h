@@ -5,8 +5,6 @@
 #include "IRenderer.h"
 #include "RenderContexts.h"
 
-#include "../../General.h"
-
 #include <prev/common/ThreadPool.h>
 #include <prev/core/device/Device.h>
 #include <prev/core/memory/Allocator.h>

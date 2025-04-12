@@ -1,5 +1,6 @@
 #include "Terrain.h"
 
+#include "../../Tags.h"
 #include "../../component/ray_casting/BoundingVolumeComponentFactory.h"
 #include "../../component/terrain/TerrainCommon.h"
 #include "../../component/terrain/TerrainComponentFactory.h"

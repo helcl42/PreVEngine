@@ -1,5 +1,6 @@
 #include "Font3dRenderer.h"
 
+#include "../../../Tags.h"
 #include "../../../common/AssetManager.h"
 #include "../../../component/font/IFontRenderComponent.h"
 #include "../../../render/font/WorldSpaceText.h"

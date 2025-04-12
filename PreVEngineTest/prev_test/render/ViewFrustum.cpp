@@ -1,7 +1,5 @@
 #include "ViewFrustum.h"
 
-#include "../General.h"
-
 #include <prev/util/MathUtils.h>
 
 namespace prev_test::render {
