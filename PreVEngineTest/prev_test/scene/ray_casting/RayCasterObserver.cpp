@@ -141,7 +141,7 @@ bool RayCastObserver::IntersectsInRange(const float start, const float finish, c
     return false;
 }
 
-bool RayCastObserver::IsUnderGround(const prev_test::component::terrain::ITerrainComponenet& terrain, const glm::vec3& testPoint, bool shouldReturn) const
+bool RayCastObserver::IsUnderGround(const prev_test::component::terrain::ITerrainComponent& terrain, const glm::vec3& testPoint, bool shouldReturn) const
 {
     float height{ 0.0f };
     if (!terrain.GetHeightAt(testPoint, height)) {
@@ -153,7 +153,7 @@ bool RayCastObserver::IsUnderGround(const prev_test::component::terrain::ITerrai
     return false;
 }
 
-std::shared_ptr<prev_test::component::terrain::ITerrainComponenet> RayCastObserver::GetTerrain(const glm::vec3& position) const
+std::shared_ptr<prev_test::component::terrain::ITerrainComponent> RayCastObserver::GetTerrain(const glm::vec3& position) const
 {
     const auto terrainManager{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::terrain::ITerrainManagerComponent>(GetRoot(), { TAG_TERRAIN_MANAGER_COMPONENT }) };
     return terrainManager->GetTerrainAt(position);
