@@ -93,7 +93,7 @@ void TerrainBumplMappedShadowsRenderer::Render(const ShadowsRenderContext& rende
     }
 
     const auto transformComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(node);
-    const auto terrainComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::terrain::ITerrainComponenet>(node);
+    const auto terrainComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::terrain::ITerrainComponent>(node);
     auto ubo = m_uniformsPool->GetNext();
 
     Uniforms uniforms{};

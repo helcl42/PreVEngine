@@ -44,9 +44,9 @@ private:
 
     bool IntersectsInRange(const float start, const float finish, const prev_test::common::intersection::Ray& ray) const;
 
-    bool IsUnderGround(const prev_test::component::terrain::ITerrainComponenet& terrain, const glm::vec3& testPoint, bool shouldReturn) const;
+    bool IsUnderGround(const prev_test::component::terrain::ITerrainComponent& terrain, const glm::vec3& testPoint, bool shouldReturn) const;
 
-    std::shared_ptr<prev_test::component::terrain::ITerrainComponenet> GetTerrain(const glm::vec3& position) const;
+    std::shared_ptr<prev_test::component::terrain::ITerrainComponent> GetTerrain(const glm::vec3& position) const;
 
     // Objects
     struct IntersectionNodeResult {
