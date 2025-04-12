@@ -1,8 +1,6 @@
 #ifndef __SHADOW_H__
 #define __SHADOW_H__
 
-#include "../../General.h"
-
 #include <prev/core/device/Device.h>
 #include <prev/core/memory/Allocator.h>
 #include <prev/scene/graph/SceneNode.h>

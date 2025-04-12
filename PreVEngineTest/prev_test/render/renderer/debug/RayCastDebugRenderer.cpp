@@ -2,6 +2,7 @@
 
 #ifdef RENDER_RAYCASTS
 
+#include "../../../Tags.h"
 #include "../../../common/AssetManager.h"
 #include "../../../component/ray_casting/IRayCasterComponent.h"
 

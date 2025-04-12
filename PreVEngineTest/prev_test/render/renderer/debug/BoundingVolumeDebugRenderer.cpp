@@ -2,6 +2,7 @@
 
 #ifdef RENDER_BOUNDING_VOLUMES
 
+#include "../../../Tags.h"
 #include "../../../common/AssetManager.h"
 #include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../../component/ray_casting/RayCastingCommon.h"

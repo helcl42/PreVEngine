@@ -1,6 +1,7 @@
 #include "RayCaster.h"
 #include "RayCasterEvents.h"
 
+#include "../../Tags.h"
 #include "../../component/camera/ICameraComponent.h"
 #include "../../component/ray_casting/RayCasterComponentFactory.h"
 #include "../../component/transform/ITransformComponent.h"

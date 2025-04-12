@@ -1,7 +1,6 @@
 #ifndef __STONE_H__
 #define __STONE_H__
 
-#include "../General.h"
 #include "../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../component/transform/ITransformComponent.h"
 

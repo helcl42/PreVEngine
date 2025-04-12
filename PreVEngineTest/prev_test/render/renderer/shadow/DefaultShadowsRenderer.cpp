@@ -3,6 +3,7 @@
 #include "../../IMesh.h"
 #include "../RendererUtils.h"
 
+#include "../../../Tags.h"
 #include "../../../common/AssetManager.h"
 #include "../../../component/render/IRenderComponent.h"
 #include "../../../component/transform/ITransformComponent.h"

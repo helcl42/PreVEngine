@@ -1,6 +1,7 @@
 #include "TerrainManager.h"
 #include "Terrain.h"
 
+#include "../../Tags.h"
 #include "../../component/ray_casting/SelectableComponentFactory.h"
 #include "../../component/terrain/TerrainManagerComponentFactory.h"
 

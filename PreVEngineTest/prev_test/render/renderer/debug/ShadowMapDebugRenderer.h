@@ -1,7 +1,6 @@
 #ifndef __SHADOW_MAP_DEBUG_RENDERER_H__
 #define __SHADOW_MAP_DEBUG_RENDERER_H__
 
-#include "../../../General.h"
 #include "../../IModel.h"
 #include "../IRenderer.h"
 

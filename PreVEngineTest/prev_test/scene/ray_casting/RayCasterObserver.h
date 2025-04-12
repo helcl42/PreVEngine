@@ -3,7 +3,6 @@
 
 #include "RayCasterEvents.h"
 
-#include "../../General.h"
 #include "../../common/intersection/RayCastResult.h"
 #include "../../component/terrain/ITerrainComponent.h"
 

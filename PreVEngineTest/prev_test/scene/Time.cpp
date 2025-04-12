@@ -1,5 +1,6 @@
 #include "Time.h"
 
+#include "../Tags.h"
 #include "../component/time/TimeComponentFactory.h"
 
 #include <prev/scene/component/NodeComponentHelper.h>

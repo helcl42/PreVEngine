@@ -1,5 +1,6 @@
 #include "Water.h"
 
+#include "../../Tags.h"
 #include "../../component/ray_casting/BoundingVolumeComponentFactory.h"
 #include "../../component/transform/TransformComponentFactory.h"
 #include "../../component/water/WaterCommon.h"

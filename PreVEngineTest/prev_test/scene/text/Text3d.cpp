@@ -1,5 +1,6 @@
 #include "Text3d.h"
 
+#include "../../Tags.h"
 #include "../../common/AssetManager.h"
 #include "../../component/font/FontRenderComponentsFactory.h"
 

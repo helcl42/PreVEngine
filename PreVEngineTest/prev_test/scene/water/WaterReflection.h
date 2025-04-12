@@ -1,7 +1,6 @@
 #ifndef __WATER_REFLECTION_H__
 #define __WATER_REFLECTION_H__
 
-#include "../../General.h"
 #include "../../component/common/IOffScreenRenderPassComponent.h"
 
 #include <prev/core/CoreEvents.h>

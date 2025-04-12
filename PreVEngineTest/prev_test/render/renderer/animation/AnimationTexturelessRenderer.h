@@ -5,7 +5,6 @@
 #include "../IRenderer.h"
 #include "../RenderContexts.h"
 
-#include "../../../General.h"
 #include "../../../component/light/LightCommon.h"
 #include "../../../component/shadow/ShadowsCommon.h"
 

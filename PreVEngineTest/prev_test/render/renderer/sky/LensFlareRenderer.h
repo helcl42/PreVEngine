@@ -6,8 +6,6 @@
 #include "../IRenderer.h"
 #include "../RenderContexts.h"
 
-#include "../../../General.h"
-
 #include <prev/event/EventHandler.h>
 #include <prev/render/buffer/UniformBuffer.h>
 #include <prev/render/pass/RenderPass.h>

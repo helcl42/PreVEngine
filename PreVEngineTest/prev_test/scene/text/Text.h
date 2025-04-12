@@ -1,7 +1,6 @@
 #ifndef __TEXT_H__
 #define __TEXT_H__
 
-#include "../../General.h"
 #include "../../component/font/IFontRenderComponent.h"
 #include "../../render/font/ScreenSpaceText.h"
 

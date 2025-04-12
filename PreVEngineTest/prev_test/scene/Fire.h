@@ -1,7 +1,6 @@
 #ifndef __FIRE_H__
 #define __FIRE_H__
 
-#include "../General.h"
 #include "../component/particle/IParticleSystemComponent.h"
 #include "../component/ray_casting/IBoundingVolumeComponent.h"
 

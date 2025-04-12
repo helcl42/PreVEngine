@@ -1,8 +1,6 @@
 #ifndef __ROOT_H__
 #define __ROOT_H__
 
-#include "../General.h"
-
 #include <prev/core/device/Device.h>
 #include <prev/core/memory/Allocator.h>
 #include <prev/event/EventHandler.h>

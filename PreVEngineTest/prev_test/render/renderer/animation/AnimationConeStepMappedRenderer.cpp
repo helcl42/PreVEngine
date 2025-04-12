@@ -3,6 +3,7 @@
 #include "../../IMesh.h"
 #include "../RendererUtils.h"
 
+#include "../../../Tags.h"
 #include "../../../common/AssetManager.h"
 #include "../../../component/light/ILightComponent.h"
 #include "../../../component/ray_casting/ISelectableComponent.h"

@@ -1,5 +1,6 @@
 #include "LensFlareRenderer.h"
 
+#include "../../../Tags.h"
 #include "../../../common/AssetManager.h"
 #include "../../../component/light/ILightComponent.h"
 #include "../../../component/sky/ILensFlareComponent.h"

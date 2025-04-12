@@ -1,7 +1,6 @@
 #ifndef __SKY_BOX_H__
 #define __SKY_BOX_H__
 
-#include "../../General.h"
 #include "../../component/sky/ISkyBoxComponent.h"
 #include "../../component/transform/ITransformComponent.h"
 

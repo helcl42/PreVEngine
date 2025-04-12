@@ -1,8 +1,6 @@
 #ifndef __INPUTS_HELPER_H__
 #define __INPUTS_HELPER_H__
 
-#include "../../General.h"
-
 #include <prev/event/EventHandler.h>
 #include <prev/input/InputFacade.h>
 #include <prev/input/keyboard/KeyboardEvents.h>

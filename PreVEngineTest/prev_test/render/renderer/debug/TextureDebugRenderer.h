@@ -1,11 +1,8 @@
 #ifndef __TEXTURE_DEBUG_RENDERER_H__
 #define __TEXTURE_DEBUG_RENDERER_H__
 
-#include "../../../General.h"
 #include "../../IModel.h"
 #include "../IRenderer.h"
-
-#include "../../../General.h"
 
 #include <prev/core/device/Device.h>
 #include <prev/core/memory/Allocator.h>

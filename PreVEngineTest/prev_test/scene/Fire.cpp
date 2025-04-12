@@ -1,5 +1,6 @@
 #include "Fire.h"
 
+#include "../Tags.h"
 #include "../component/particle/ParticleSystemComponentFactory.h"
 #include "../component/ray_casting/BoundingVolumeComponentFactory.h"
 #include "../component/terrain/ITerrainManagerComponent.h"

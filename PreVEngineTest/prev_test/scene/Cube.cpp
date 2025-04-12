@@ -1,5 +1,6 @@
 #include "Cube.h"
 
+#include "../Tags.h"
 #include "../component/ray_casting/BoundingVolumeComponentFactory.h"
 #include "../component/render/RenderComponentFactory.h"
 #include "../component/transform/TransformComponentFactory.h"

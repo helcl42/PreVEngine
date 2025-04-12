@@ -1,5 +1,6 @@
 #include "SkyBox.h"
 
+#include "../../Tags.h"
 #include "../../component/camera/ICameraComponent.h"
 #include "../../component/sky/SkyBoxComponentFactory.h"
 #include "../../component/sky/SkyCommon.h"

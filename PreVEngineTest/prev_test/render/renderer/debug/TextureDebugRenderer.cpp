@@ -1,5 +1,6 @@
 #include "TextureDebugRenderer.h"
 
+#include "../../../Tags.h"
 #include "../../../common/AssetManager.h"
 #include "../../../component/common/IOffScreenRenderPassComponent.h"
 #include "../../mesh/MeshFactory.h"

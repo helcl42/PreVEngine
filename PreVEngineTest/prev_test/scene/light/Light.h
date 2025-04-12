@@ -1,7 +1,6 @@
 #ifndef __LIGHT_H__
 #define __LIGHT_H__
 
-#include "../../General.h"
 #include "../../component/light/ILightComponent.h"
 #include "../../component/transform/ITransformComponent.h"
 

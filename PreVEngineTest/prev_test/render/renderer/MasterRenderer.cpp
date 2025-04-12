@@ -31,6 +31,7 @@
 #include "terrain/TerrainRenderer.h"
 #include "water/WaterRenderer.h"
 
+#include "../../Tags.h"
 #include "../../common/intersection/Frustum.h"
 #include "../../component/camera/ICameraComponent.h"
 #include "../../component/common/IOffScreenRenderPassComponent.h"

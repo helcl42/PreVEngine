@@ -1,5 +1,6 @@
 #include "Camera.h"
 
+#include "../Tags.h"
 #include "../component/camera/CameraComponentFactory.h"
 #include "../component/transform/TransformComponentFactory.h"
 

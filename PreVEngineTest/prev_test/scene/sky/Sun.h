@@ -1,7 +1,6 @@
 #ifndef __SUN_H__
 #define __SUN_H__
 
-#include "../../General.h"
 #include "../../component/sky/ISunComponent.h"
 
 #include <prev/core/CoreEvents.h>

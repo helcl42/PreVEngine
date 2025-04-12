@@ -1,8 +1,6 @@
 #ifndef __SKY_H__
 #define __SKY_H__
 
-#include "../../General.h"
-
 #include "../../component/sky/ISkyComponent.h"
 
 #include <prev/core/device/Device.h>

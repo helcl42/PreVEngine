@@ -2,6 +2,7 @@
 
 #include "../RendererUtils.h"
 
+#include "../../../Tags.h"
 #include "../../../common/AssetManager.h"
 #include "../../../component/common/IOffScreenRenderPassComponent.h"
 #include "../../../component/light/ILightComponent.h"

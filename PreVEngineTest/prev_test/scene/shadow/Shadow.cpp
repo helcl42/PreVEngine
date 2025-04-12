@@ -1,5 +1,6 @@
 #include "Shadow.h"
 
+#include "../../Tags.h"
 #include "../../component/camera/ICameraComponent.h"
 #include "../../component/light/ILightComponent.h"
 #include "../../component/shadow/ShadowsComponentFactory.h"
@@ -38,6 +39,7 @@ void Shadows::Update(float deltaTime)
 
 void Shadows::ShutDown()
 {
+    // TODO -> do I need to do this manually ? -> compoent repository should be destroyed with node
     prev::scene::component::NodeComponentHelper::RemoveComponents<prev_test::component::shadow::IShadowsComponent>(GetThis());
 
     SceneNode::ShutDown();

@@ -1,7 +1,6 @@
 #ifndef __CAMERA_H__
 #define __CAMERA_H__
 
-#include "../General.h"
 #include "../component/camera/ICameraComponent.h"
 #include "../component/transform/ITransformComponent.h"
 

@@ -1,7 +1,6 @@
 #ifndef __TEXT_3D_H__
 #define __TEXT_3D_H__
 
-#include "../../General.h"
 #include "../../component/font/IFontRenderComponent.h"
 #include "../../render/font/WorldSpaceText.h"
 

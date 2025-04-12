@@ -1,7 +1,6 @@
 #ifndef __TERRAIN_H__
 #define __TERRAIN_H__
 
-#include "../../General.h"
 #include "../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../component/terrain/ITerrainComponent.h"
 #include "../../component/terrain/ITerrainManagerComponent.h"
