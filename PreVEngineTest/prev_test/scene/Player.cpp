@@ -12,6 +12,12 @@
 #include <prev/util/MathUtils.h>
 
 namespace prev_test::scene {
+namespace {
+    auto AddRemoveFlag = [](const uint32_t flags, const uint32_t flag, const bool add) {
+        return add ? (flags | flag) : (flags & ~flag);
+    };
+} // namespace
+
 Player::Player(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
     : SceneNode({ TAG_MAIN_CAMERA, TAG_PLAYER })
     , m_device{ device }
@@ -58,21 +64,34 @@ void Player::Update(float deltaTime)
     m_animationRenderComponent->SetCurrentAnimationIndex(WALKING_ANIMATION_INDEX);
 
     auto walkingAnimation{ m_animationRenderComponent->GetAnimation(WALKING_ANIMATION_INDEX) };
-    if ((m_shouldGoForward || m_shouldGoBackward || m_shouldGoLeft || m_shouldGoRight) && !m_isInTheAir) {
+
+    if (m_shouldRotate) {
+        const auto pitchAmount{ glm::radians(PITCH_TURN_SPEED * m_pitchYawRollDiff.x * deltaTime) };
+        const auto yawAmount{ glm::radians(YAW_TURN_SPEED * m_pitchYawRollDiff.y * deltaTime) };
+
+        m_transformComponent->Rotate(glm::quat_cast(glm::rotate(glm::mat4(1.0f), yawAmount, glm::vec3(0.0f, 1.0f, 0.0f))));
+
+        m_cameraComponent->AddYaw(yawAmount);
+        m_cameraComponent->AddPitch(pitchAmount);
+
+        m_pitchYawRollDiff = {};
+    }
+
+    if (m_moveFlags && !m_isInTheAir) {
         walkingAnimation->SetState(prev_test::render::AnimationState::RUNNING);
-        walkingAnimation->Update(m_shouldGoBackward ? -deltaTime : deltaTime);
+        walkingAnimation->Update(m_moveFlags & MovementFlags::MOVE_BACKWARD ? -deltaTime : deltaTime);
 
         glm::vec3 positionOffset{ 0.0f };
-        if (m_shouldGoForward) {
+        if (m_moveFlags & MovementFlags::MOVE_FORWARD) {
             positionOffset -= deltaTime * prev::util::math::GetForwardVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
         }
-        if (m_shouldGoBackward) {
+        if (m_moveFlags & MovementFlags::MOVE_BACKWARD) {
             positionOffset += deltaTime * prev::util::math::GetForwardVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
         }
-        if (m_shouldGoLeft) {
+        if (m_moveFlags & MovementFlags::MOVE_LEFT) {
             positionOffset += deltaTime * prev::util::math::GetRightVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
         }
-        if (m_shouldGoRight) {
+        if (m_moveFlags & MovementFlags::MOVE_RIGHT) {
             positionOffset -= deltaTime * prev::util::math::GetRightVector(m_transformComponent->GetOrientation()) * RUN_SPEED;
         }
         m_transformComponent->Translate(positionOffset);
@@ -104,18 +123,6 @@ void Player::Update(float deltaTime)
         jumpAnimation->Update(deltaTime);
     }
 
-    if (m_shouldRotate) {
-        const auto pitchAmount{ glm::radians(PITCH_TURN_SPEED * m_pitchYawRollDiff.x * deltaTime) };
-        const auto yawAmount{ glm::radians(YAW_TURN_SPEED * m_pitchYawRollDiff.y * deltaTime) };
-
-        m_transformComponent->Rotate(glm::quat_cast(glm::rotate(glm::mat4(1.0f), yawAmount, glm::vec3(0.0f, 1.0f, 0.0f))));
-
-        m_cameraComponent->AddYaw(yawAmount);
-        m_cameraComponent->AddPitch(pitchAmount);
-
-        m_pitchYawRollDiff = {};
-    }
-
     m_transformComponent->Update(deltaTime);
 
     const glm::vec3 cameraPosition{ m_transformComponent->GetPosition() + (-m_cameraComponent->GetForwardDirection() * m_cameraDistanceFromPerson) + m_cameraComponent->GetDefaultUpDirection() * m_cameraPositionOffset };
@@ -143,37 +150,25 @@ void Player::operator()(const prev::core::NewIterationEvent& newIterationEvent)
 
 void Player::operator()(const prev::input::keyboard::KeyEvent& keyEvent)
 {
-    if (keyEvent.action == prev::input::keyboard::KeyActionType::PRESS) {
-        if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_W) {
-            m_shouldGoForward = true;
-        }
-        if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_S) {
-            m_shouldGoBackward = true;
-        }
-        if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_A) {
-            m_shouldGoLeft = true;
-        }
-        if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_D) {
-            m_shouldGoRight = true;
-        }
-        if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_Space) {
-            if (!m_isInTheAir) {
-                m_upwardSpeed = JUMP_POWER;
-                m_isInTheAir = true;
-            }
-        }
-    } else if (keyEvent.action == prev::input::keyboard::KeyActionType::RELEASE) {
-        if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_W) {
-            m_shouldGoForward = false;
-        }
-        if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_S) {
-            m_shouldGoBackward = false;
-        }
-        if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_A) {
-            m_shouldGoLeft = false;
-        }
-        if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_D) {
-            m_shouldGoRight = false;
+    const bool press{ keyEvent.action == prev::input::keyboard::KeyActionType::PRESS };
+
+    // move
+    if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_W) {
+        m_moveFlags = AddRemoveFlag(m_moveFlags, MovementFlags::MOVE_FORWARD, press);
+    }
+    if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_S) {
+        m_moveFlags = AddRemoveFlag(m_moveFlags, MovementFlags::MOVE_BACKWARD, press);
+    }
+    if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_A) {
+        m_moveFlags = AddRemoveFlag(m_moveFlags, MovementFlags::MOVE_LEFT, press);
+    }
+    if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_D) {
+        m_moveFlags = AddRemoveFlag(m_moveFlags, MovementFlags::MOVE_RIGHT, press);
+    }
+    if (keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_Space) {
+        if (!m_isInTheAir) {
+            m_upwardSpeed = JUMP_POWER;
+            m_isInTheAir = true;
         }
     }
 }
@@ -212,17 +207,17 @@ void Player::operator()(const prev::input::touch::TouchEvent& touchEvent)
         const auto MinPoint{ touchEvent.extent - touchEvent.extent * MAX_RATIO_FOR_MOVE_CONTROL };
         const auto MaxPoint{ touchEvent.extent * MAX_RATIO_FOR_MOVE_CONTROL };
         if (touchEvent.position.x > MinPoint.x && touchEvent.position.y < MaxPoint.y) {
-            m_shouldGoForward = true;
-            m_shouldGoBackward = false;
+            m_moveFlags = AddRemoveFlag(m_moveFlags, MovementFlags::MOVE_FORWARD, true);
+            m_moveFlags = AddRemoveFlag(m_moveFlags, MovementFlags::MOVE_BACKWARD, false);
         }
 
         if (touchEvent.position.x > MinPoint.x && touchEvent.position.y > MinPoint.y) {
-            m_shouldGoBackward = true;
-            m_shouldGoForward = false;
+            m_moveFlags = AddRemoveFlag(m_moveFlags, MovementFlags::MOVE_FORWARD, false);
+            m_moveFlags = AddRemoveFlag(m_moveFlags, MovementFlags::MOVE_BACKWARD, true);
         }
     } else {
-        m_shouldGoForward = false;
-        m_shouldGoBackward = false;
+        m_moveFlags = AddRemoveFlag(m_moveFlags, MovementFlags::MOVE_FORWARD, false);
+        m_moveFlags = AddRemoveFlag(m_moveFlags, MovementFlags::MOVE_BACKWARD, false);
     }
 
     if (touchEvent.action == prev::input::touch::TouchActionType::MOVE) {
