@@ -81,7 +81,7 @@ void AnimationShadowsRenderer::PreRender(const ShadowsRenderContext& renderConte
 
 void AnimationShadowsRenderer::Render(const ShadowsRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
-    if (!node->GetTags().HasAny({ TAG_ANIMATION_RENDER_COMPONENT, TAG_ANIMATION_TEXTURELESS_RENDER_COMPONENT })) {
+    if (!node->GetTags().HasAll({ TAG_ANIMATION_RENDER_COMPONENT, TAG_ANIMATION_TEXTURELESS_RENDER_COMPONENT })) {
         return;
     }
 

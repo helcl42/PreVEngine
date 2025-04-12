@@ -27,20 +27,20 @@ void Stone::Init()
     if (prev::scene::component::NodeComponentHelper::HasComponent<prev_test::component::transform::ITransformComponent>(GetParent())) {
         m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(GetParent()));
     }
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, TAG_TRANSFORM_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, { TAG_TRANSFORM_COMPONENT });
 
     prev_test::component::render::RenderComponentFactory componentFactory{ m_device, m_allocator };
     std::shared_ptr<prev_test::component::render::IRenderComponent> renderComponent = componentFactory.CreateModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.fbx"), { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.png") }, { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_normal.png") }, { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_cone.png") }, true, true);
     renderComponent->GetMaterial()->SetHeightScale(0.01f);
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::render::IRenderComponent>(GetThis(), renderComponent, TAG_RENDER_CONE_STEP_MAPPED_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::render::IRenderComponent>(GetThis(), renderComponent, { TAG_RENDER_CONE_STEP_MAPPED_COMPONENT });
 
     prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{ m_allocator };
     m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(renderComponent->GetModel()->GetMesh());
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, TAG_BOUNDING_VOLUME_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, { TAG_BOUNDING_VOLUME_COMPONENT });
 
     prev_test::component::ray_casting::SelectableComponentFacrory selectableComponentFactory{};
     std::shared_ptr<prev_test::component::ray_casting::ISelectableComponent> selectableComponent = selectableComponentFactory.Create();
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::ISelectableComponent>(GetThis(), selectableComponent, TAG_SELECTABLE_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::ISelectableComponent>(GetThis(), selectableComponent, { TAG_SELECTABLE_COMPONENT });
 
     SceneNode::Init();
 }

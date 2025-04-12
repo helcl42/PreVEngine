@@ -3,8 +3,8 @@
 
 #include "ComponentRepository.h"
 
-#include "../graph/ISceneNode.h"
 #include "../graph/GraphTraversal.h"
+#include "../graph/ISceneNode.h"
 
 #include "../../common/FlagSet.h"
 #include "../../common/TagSet.h"
@@ -20,12 +20,16 @@ public:
     static std::shared_ptr<ComponentType> FindOne(const std::shared_ptr<graph::ISceneNode>& root, const prev::common::TagSet& tagSet, const prev::scene::graph::LogicOperation operation = prev::scene::graph::LogicOperation::OR)
     {
         const auto node{ prev::scene::graph::GraphTraversal::FindOneWithTags(root, tagSet, operation) };
-        if (node == nullptr) {
-            std::stringstream ss;
-            ss << tagSet;
-            throw std::runtime_error("There is no such node with tags: " + ss.str());
+        if (!node) {
+            throw std::runtime_error("There is no such node with tags: " + tagSet.ToString());
         }
-        return ComponentRepository<ComponentType>::Instance().Get(node->GetId());
+
+        auto component{ node->GetComponentRepository().FindOne<ComponentType>() };
+        if (!component) {
+            throw std::runtime_error("Component with tags = " + tagSet.ToString() + " does not exist in node id = " + std::to_string(node->GetId()) + ", tags = " + node->GetTags().ToString());
+        }
+
+        return component;
     }
 
     template <typename ComponentType>
@@ -34,55 +38,63 @@ public:
         std::vector<std::shared_ptr<ComponentType>> resultComponents;
         const auto nodes{ prev::scene::graph::GraphTraversal::FindAllWithTags(root, tagSet, operation) };
         for (const auto& node : nodes) {
-            const auto nodeComponents{ ComponentRepository<ComponentType>::Instance().GetAll(node->GetId()) };
+            const auto nodeComponents{ node->GetComponentRepository().GetAll<ComponentType>() };
             resultComponents.insert(resultComponents.end(), nodeComponents.cbegin(), nodeComponents.cend());
         }
         return resultComponents;
     }
 
     template <typename ComponentType>
-    static void AddComponents(const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const std::vector<std::shared_ptr<ComponentType>>& components, const std::string& tag)
+    static void AddComponent(const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const std::shared_ptr<ComponentType>& component, const prev::common::TagSet& extraTagSet = {})
     {
-        ComponentRepository<ComponentType>::Instance().Add(node->GetId(), components);
-
-        auto tags = node->GetTags();
-        tags.Add(tag);
-        node->SetTags(tags);
+        node->GetComponentRepository().Add(component);
+        node->GetTags() += extraTagSet;
     }
 
     template <typename ComponentType>
-    static void AddComponent(const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const std::shared_ptr<ComponentType>& component, const std::string& tag)
+    static void AddComponents(const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const std::vector<std::shared_ptr<ComponentType>>& components, const prev::common::TagSet& extraTagSet = {})
     {
-        AddComponents<ComponentType>(node, { component }, tag);
+        node->GetComponentRepository().Add<ComponentType>(components);
+        node->GetTags() += extraTagSet;
     }
 
     template <typename ComponentType>
-    static void RemoveComponents(const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const std::string& tag)
+    static void RemoveComponents(const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const prev::common::TagSet& extraTagSet = {})
     {
-        ComponentRepository<ComponentType>::Instance().Remove(node->GetId());
-
-        auto tags = node->GetTags();
-        tags.Remove(tag);
-        node->SetTags(tags);
+        node->GetComponentRepository().Remove<ComponentType>();
+        node->GetTags() -= extraTagSet;
     }
 
     template <typename ComponentType>
     static std::shared_ptr<ComponentType> GetComponent(const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
     {
-        return ComponentRepository<ComponentType>::Instance().Get(node->GetId());
+        auto component{ node->GetComponentRepository().FindOne<ComponentType>() };
+        if (!component) {
+            throw std::runtime_error("Could not get component " + std::string(std::type_index(typeid(ComponentType)).name()) + " for node id = " + std::to_string(node->GetId()) + ", tags = " + node->GetTags().ToString());
+        }
+
+        return component;
     }
 
     template <typename ComponentType>
     static std::vector<std::shared_ptr<ComponentType>> GetComponents(const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
     {
-        return ComponentRepository<ComponentType>::Instance().GetAll(node->GetId());
+        const auto components{ node->GetComponentRepository().FindAll<ComponentType>() };
+        if (components.empty()) {
+            throw std::runtime_error("Could not get components for node id = " + std::to_string(node->GetId()) + ", tags = " + node->GetTags().ToString());
+        }
+
+        return components;
     }
 
     template <typename ComponentType>
     static bool HasComponent(const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
     {
         if (node) {
-            return ComponentRepository<ComponentType>::Instance().Contains(node->GetId());
+            const auto component{ node->GetComponentRepository().FindOne<ComponentType>() };
+            if (component) {
+                return true;
+            }
         }
         return false;
     }
@@ -90,7 +102,7 @@ public:
     template <typename ComponentType>
     static std::shared_ptr<ComponentType> FindComponent(const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
     {
-        return ComponentRepository<ComponentType>::Instance().FindFirst(node->GetId());
+        return node->GetComponentRepository().FindOne<ComponentType>();
     }
 };
 } // namespace prev::scene::component

@@ -8,7 +8,7 @@
 
 namespace prev_test::scene {
 Camera::Camera(uint32_t viewCount)
-    : SceneNode()
+    : SceneNode({ TAG_MAIN_CAMERA, TAG_PLAYER })
     , m_viewCount{ viewCount }
 {
 }
@@ -20,10 +20,10 @@ void Camera::Init()
         if (prev::scene::component::NodeComponentHelper::HasComponent<prev_test::component::transform::ITransformComponent>(GetParent())) {
             transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(GetParent()));
         }
-        prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), transformComponent, TAG_TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), transformComponent, { TAG_TRANSFORM_COMPONENT });
 
         std::shared_ptr<prev_test::component::camera::ICameraComponent> cameraComponent{ prev_test::component::camera::CameraComponentFactory{}.Create(glm::quat{}, glm::vec3{}, false) };
-        prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::camera::ICameraComponent>(GetThis(), cameraComponent, TAG_TRANSFORM_COMPONENT);
+        prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::camera::ICameraComponent>(GetThis(), cameraComponent, { TAG_CAMERA_COMPONENT });
 
         m_transformComponents.push_back(transformComponent);
         m_cameraComponents.push_back(cameraComponent);

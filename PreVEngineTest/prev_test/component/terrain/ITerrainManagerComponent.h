@@ -3,8 +3,10 @@
 
 #include "ITerrainComponent.h"
 
+#include <prev/scene/component/IComponent.h>
+
 namespace prev_test::component::terrain {
-class ITerrainManagerComponent {
+class ITerrainManagerComponent : public prev::scene::component::IComponent {
 public:
     virtual void AddTerrainComponent(const std::shared_ptr<ITerrainComponent>& terrain) = 0;
 

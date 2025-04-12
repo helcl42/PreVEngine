@@ -51,23 +51,18 @@ void Root::Init()
     AddChild(sky);
 
     auto sunLight = std::make_shared<light::MainLight>(glm::vec3(15000.0f, 5000.0f, 15000.0f));
-    sunLight->SetTags({ TAG_MAIN_LIGHT, TAG_LIGHT });
     AddChild(sunLight);
 
     // auto light1 = std::make_shared<light::Light>(glm::vec3(30.0f, 20.0f, 35.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    // light1->SetTags({ TAG_LIGHT });
     // AddChild(light1);
     //
     // auto light2 = std::make_shared<light::Light>(glm::vec3(-30.0f, 20.0f, 35.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    // light2->SetTags({ TAG_LIGHT });
     // AddChild(light2);
     //
-    // auto light3 = std::make_shared<light::Light>(glm::vec3(0.0f, 10.0f, -10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    // light3->SetTags({ TAG_LIGHT });
+    // auto light3 = std::make_shared<light::Light>(glm::vec3(0.0f, 10.0f, -10.0f), glm::vec3(0.0f, 0.0f, 1.0f));s
     // AddChild(light3);
 
     auto shadows = std::make_shared<shadow::Shadows>(m_device, m_allocator);
-    shadows->SetTags({ TAG_SHADOW });
     AddChild(shadows);
 
     const int32_t MAX_GENERATED_HEIGHT{ 1 };
@@ -86,7 +81,6 @@ void Root::Init()
 #else
     auto player = std::make_shared<Player>(m_device, m_allocator, glm::vec3(0.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(0.06f));
 #endif
-    player->SetTags({ TAG_MAIN_CAMERA, TAG_PLAYER });
     AddChild(player);
 
     const uint32_t TERRAIN_GRID_MAX_X{ 3 };

@@ -1,7 +1,5 @@
 #include "SceneNode.h"
-#include "../SceneEvents.h"
 
-#include "../../event/EventChannel.h"
 #include "../../util/Utils.h"
 
 namespace prev::scene::graph {
@@ -37,9 +35,8 @@ void SceneNode::ShutDown()
     }
     RemoveAllChildren();
 
-    // TODO - should not be here !!??
-    prev::event::EventChannel::Post(prev::scene::SceneNodeShutDownEvent{ GetId() });
-    m_tags = prev::common::TagSet();
+    m_componentsRepository = {};
+    m_tags = {};
 }
 
 const std::vector<std::shared_ptr<ISceneNode>>& SceneNode::GetChildren() const
@@ -110,13 +107,13 @@ uint64_t SceneNode::GetId() const
     return m_id;
 }
 
-void SceneNode::SetTags(const prev::common::TagSet& tagSet)
-{
-    m_tags = tagSet;
-}
-
-const prev::common::TagSet& SceneNode::GetTags() const
+prev::common::TagSet& SceneNode::GetTags()
 {
     return m_tags;
+}
+
+component::ComponentRepository& SceneNode::GetComponentRepository()
+{
+    return m_componentsRepository;
 }
 } // namespace prev::scene::graph

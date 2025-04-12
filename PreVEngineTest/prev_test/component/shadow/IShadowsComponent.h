@@ -8,11 +8,12 @@
 #include <prev/render/buffer/ImageBuffer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/sampler/Sampler.h>
+#include <prev/scene/component/IComponent.h>
 
 #include <memory>
 
 namespace prev_test::component::shadow {
-class IShadowsComponent {
+class IShadowsComponent : public prev::scene::component::IComponent {
 public:
     virtual void Update(const glm::vec3& lightDirection, const prev_test::render::ViewFrustum& viewFurstum, const glm::mat4& viewMatrix) = 0;
 

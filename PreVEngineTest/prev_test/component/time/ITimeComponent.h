@@ -1,8 +1,10 @@
 #ifndef __ITIME_COMPONENE_H__
 #define __ITIME_COMPONENE_H__
 
+#include <prev/scene/component/IComponent.h>
+
 namespace prev_test::component::time {
-class ITimeComponent {
+class ITimeComponent : public prev::scene::component::IComponent {
 public:
     virtual void Update(float deltaTime) = 0;
 

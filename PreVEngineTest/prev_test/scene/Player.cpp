@@ -11,7 +11,7 @@
 
 namespace prev_test::scene {
 Player::Player(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
-    : SceneNode()
+    : SceneNode({ TAG_MAIN_CAMERA, TAG_PLAYER })
     , m_device{ device }
     , m_allocator{ allocator }
     , m_initialPosition(position)
@@ -27,21 +27,21 @@ void Player::Init()
     if (prev::scene::component::NodeComponentHelper::HasComponent<prev_test::component::transform::ITransformComponent>(GetParent())) {
         m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(GetParent()));
     }
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, TAG_TRANSFORM_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, { TAG_TRANSFORM_COMPONENT });
 
     prev_test::component::render::RenderComponentFactory renderComponentFactory{ m_device, m_allocator };
     // m_animationRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Xbot/XBot.fbx"), { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Xbot/Walking.fbx"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Xbot/Jump.fbx") }, { glm::vec4(0.49f, 0.3f, 0.28f, 1.0f), glm::vec4(0.52f, 0.42f, 0.4f, 1.0f) }, true, true);
     m_animationRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Archer/erika_archer_bow_arrow.fbx"), { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Archer/Walking.fbx"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Archer/Jumping.fbx") }, true, true);
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::render::IAnimationRenderComponent>(GetThis(), m_animationRenderComponent, TAG_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::render::IAnimationRenderComponent>(GetThis(), m_animationRenderComponent, { TAG_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT });
 
     bool fixedCameraUp{ true };
     prev_test::component::camera::CameraComponentFactory cameraFactory{};
     m_cameraComponent = cameraFactory.Create(m_initialOrientation * glm::quat(glm::radians(glm::vec3(0.0f, 180.0f, 0.0f))), glm::vec3(0.0f, 0.0f, 0.0f), fixedCameraUp);
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::camera::ICameraComponent>(GetThis(), m_cameraComponent, TAG_CAMERA_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::camera::ICameraComponent>(GetThis(), m_cameraComponent, { TAG_CAMERA_COMPONENT });
 
     prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{ m_allocator };
     m_boundingVolumeComponent = bondingVolumeFactory.CreateOBB(m_animationRenderComponent->GetModel()->GetMesh(), glm::vec3(0.4f, 1.0f, 0.4f));
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, TAG_BOUNDING_VOLUME_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, { TAG_BOUNDING_VOLUME_COMPONENT });
 
     m_cameraComponent->AddPitch(glm::radians(m_cameraPitch));
 

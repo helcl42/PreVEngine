@@ -5,8 +5,10 @@
 
 #include "../../render/IModel.h"
 
+#include <prev/scene/component/IComponent.h>
+
 namespace prev_test::component::sky {
-class ISunComponent {
+class ISunComponent : public prev::scene::component::IComponent {
 public:
     virtual std::shared_ptr<Flare> GetFlare() const = 0;
 

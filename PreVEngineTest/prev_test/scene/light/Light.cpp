@@ -6,7 +6,7 @@
 
 namespace prev_test::scene::light {
 Light::Light(const glm::vec3& position, const glm::vec3& color)
-    : SceneNode()
+    : SceneNode({ TAG_LIGHT })
     , m_initialPosition(position)
     , m_color(color)
 {
@@ -19,11 +19,11 @@ void Light::Init()
     if (prev::scene::component::NodeComponentHelper::HasComponent<prev_test::component::transform::ITransformComponent>(GetParent())) {
         m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(GetParent()));
     }
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, TAG_TRANSFORM_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, { TAG_TRANSFORM_COMPONENT });
 
     prev_test::component::light::LightComponentFactory lightFactory{};
     m_lightComponent = lightFactory.CreateLightCompoennt(m_initialPosition, m_color, glm::vec3(0.1f, 0.005f, 0.001f));
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::light::ILightComponent>(GetThis(), m_lightComponent, TAG_LIGHT_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::light::ILightComponent>(GetThis(), m_lightComponent, { TAG_LIGHT_COMPONENT });
 
     SceneNode::Init();
 }

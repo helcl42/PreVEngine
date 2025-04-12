@@ -22,11 +22,11 @@ void SkyBox::Init()
     if (prev::scene::component::NodeComponentHelper::HasComponent<prev_test::component::transform::ITransformComponent>(GetParent())) {
         m_transformComponent->SetParent(prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(GetParent()));
     }
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, TAG_TRANSFORM_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, { TAG_TRANSFORM_COMPONENT });
 
     prev_test::component::sky::SkyBoxComponentFactory factory{ m_device, m_allocator };
     m_skyBoxComponent = factory.Create();
-    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::sky::ISkyBoxComponent>(GetThis(), m_skyBoxComponent, TAG_SKYBOX_RENDER_COMPONENT);
+    prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::sky::ISkyBoxComponent>(GetThis(), m_skyBoxComponent, { TAG_SKYBOX_RENDER_COMPONENT });
 
     SceneNode::Init();
 }
