@@ -37,7 +37,7 @@ void Engine::MainLoop()
     m_engineImpl->BeginMainLoop();
 
     while (m_engineImpl->Update()) {
-        prev::event::EventChannel::DispatchQueued();
+        prev::event::EventChannel::DispatchAll();
 
         if (!m_engineImpl->BeginFrame()) {
             continue;
