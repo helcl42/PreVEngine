@@ -48,6 +48,13 @@ jobs:
         ndk-version: r25c
         link-to-sdk: true
 
+    - name: Install dependencies
+      run: |
+          wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo tee /etc/apt/trusted.gpg.d/lunarg.asc
+          sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-noble.list http://packages.lunarg.com/vulkan/lunarg-vulkan-noble.list
+          sudo apt update
+          sudo apt-get install -y vulkan-sdk
+
     - name: Install PreVEngine dependencies
       run: |
           python3 -m pip install -U pip
