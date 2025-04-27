@@ -57,6 +57,10 @@ public:
 
     VkFormat GetDepthFormat() const;
 
+    XrViewConfigurationType GetViewConfiguration() const;
+
+    const XrGraphicsBindingVulkanKHR& GetGraphicsBinding() const;
+
 public:
     void OnOpenXrEvent(const XrEventDataBuffer& evt) override;
 
@@ -78,6 +82,7 @@ private:
     const VkFormat m_preferredColorFormat{ VK_FORMAT_R8G8B8A8_UNORM };
     const VkFormat m_preferredDepthFormat{ VK_FORMAT_D32_SFLOAT };
 
+    XrViewConfigurationType m_viewConfiguration{ XR_VIEW_CONFIGURATION_TYPE_MAX_ENUM };
     std::vector<XrViewConfigurationType> m_applicationViewConfigurations{ XR_VIEW_CONFIGURATION_TYPE_PRIMARY_QUAD_VARJO, XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO };
     std::vector<XrViewConfigurationType> m_viewConfigurations;
     std::vector<XrViewConfigurationView> m_viewConfigurationViews;
@@ -85,6 +90,8 @@ private:
     std::vector<XrEnvironmentBlendMode> m_applicationEnvironmentBlendModes{ XR_ENVIRONMENT_BLEND_MODE_OPAQUE, XR_ENVIRONMENT_BLEND_MODE_ADDITIVE };
     std::vector<XrEnvironmentBlendMode> m_environmentBlendModes{};
     XrEnvironmentBlendMode m_environmentBlendMode{ XR_ENVIRONMENT_BLEND_MODE_MAX_ENUM };
+
+    XrGraphicsBindingVulkanKHR m_graphicsBinding{};
 
     struct SwapchainInfo {
         XrSwapchain swapchain{ XR_NULL_HANDLE };

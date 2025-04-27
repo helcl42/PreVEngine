@@ -36,7 +36,7 @@ public:
 
     VkPhysicalDevice GetPhysicalDevice(VkInstance instance) const;
 
-    void CreateSession();
+    void CreateSession(const XrGraphicsBindingVulkanKHR& graphicsBinding, const XrViewConfigurationType viewConfiguration);
 
     void DestroySession();
 
@@ -66,6 +66,9 @@ private:
     std::vector<std::string> m_instanceExtensions;
 
     XrSystemProperties m_systemProperties{ XR_TYPE_SYSTEM_PROPERTIES };
+
+    XrGraphicsBindingVulkanKHR m_graphicsBinding{};
+    XrViewConfigurationType m_viewConfiguration{ XR_VIEW_CONFIGURATION_TYPE_MAX_ENUM };
 
     XrSessionState m_sessionState{ XR_SESSION_STATE_UNKNOWN };
 

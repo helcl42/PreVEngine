@@ -119,10 +119,13 @@ VkPhysicalDevice OpenXrCore::GetPhysicalDevice(VkInstance instance) const
     return physicalDeviceFromXR;
 }
 
-void OpenXrCore::CreateSession()
+void OpenXrCore::CreateSession(const XrGraphicsBindingVulkanKHR& graphicsBinding, const XrViewConfigurationType viewConfiguration)
 {
+    m_graphicsBinding = graphicsBinding;
+    m_viewConfiguration = viewConfiguration;
+
     XrSessionCreateInfo sessionCreateInfo{XR_TYPE_SESSION_CREATE_INFO };
-    sessionCreateInfo.next = &m_context.graphicsBinding;
+    sessionCreateInfo.next = &m_graphicsBinding;
     sessionCreateInfo.createFlags = 0;
     sessionCreateInfo.systemId = m_context.systemId;
 
@@ -187,7 +190,7 @@ void OpenXrCore::PollEvents()
 
                 if (sessionStateChanged->state == XR_SESSION_STATE_READY) {
                     XrSessionBeginInfo sessionBeginInfo{ XR_TYPE_SESSION_BEGIN_INFO };
-                    sessionBeginInfo.primaryViewConfigurationType = m_context.viewConfiguration;
+                    sessionBeginInfo.primaryViewConfigurationType = m_viewConfiguration;
                     OPENXR_CHECK(xrBeginSession(m_context.session, &sessionBeginInfo), "Failed to begin Session.");
                     m_sessionRunning = true;
                 }

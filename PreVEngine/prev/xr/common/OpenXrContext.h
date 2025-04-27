@@ -14,10 +14,6 @@ namespace prev::xr::common {
         XrSession session{ XR_NULL_HANDLE };
 
         XrSpace localSpace{ XR_NULL_HANDLE };
-
-        XrViewConfigurationType viewConfiguration{ XR_VIEW_CONFIGURATION_TYPE_MAX_ENUM };
-
-        XrGraphicsBindingVulkanKHR graphicsBinding{};
     };
 }
 

@@ -53,7 +53,7 @@ VkPhysicalDevice OpenXr::GetPhysicalDevice(VkInstance instance) const
 
 void OpenXr::CreateSession()
 {
-    m_core.CreateSession();
+    m_core.CreateSession(m_render.GetGraphicsBinding(), m_render.GetViewConfiguration());
 
     m_render.OnSessionCreate();
     m_input.OnSessionCreate();

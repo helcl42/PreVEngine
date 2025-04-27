@@ -54,7 +54,7 @@ void OpenXrRender::CreateSwapchains()
         LOGE("Failed to find depth format for Swapchain.");
     }
 
-    bool coherentViews = m_context.viewConfiguration == XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
+    bool coherentViews = m_viewConfiguration == XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
     for (const XrViewConfigurationView& viewConfigurationView : m_viewConfigurationViews) {
         // Check the current view size against the first view.
         coherentViews |= m_viewConfigurationViews[0].recommendedImageRectWidth == viewConfigurationView.recommendedImageRectWidth;
@@ -94,7 +94,7 @@ void OpenXrRender::CreateSwapchains()
 
     for (uint32_t j = 0; j < colorSwapchainImageCount; ++j) {
         const auto image{ swapchainImagesMap[m_colorSwapchainInfo.swapchain].second[j].image };
-        const auto imageView{ prev::util::vk::CreateImageView(m_context.graphicsBinding.device, image, m_preferredColorFormat, VK_IMAGE_VIEW_TYPE_2D_ARRAY, 1, VK_IMAGE_ASPECT_COLOR_BIT, viewCount, 0) };
+        const auto imageView{ prev::util::vk::CreateImageView(m_graphicsBinding.device, image, m_preferredColorFormat, VK_IMAGE_VIEW_TYPE_2D_ARRAY, 1, VK_IMAGE_ASPECT_COLOR_BIT, viewCount, 0) };
         m_colorSwapchainInfo.images.push_back(image);
         m_colorSwapchainInfo.imageViews.push_back(imageView);
     }
@@ -124,7 +124,7 @@ void OpenXrRender::CreateSwapchains()
 
     for (uint32_t j = 0; j < depthSwapchainImageCount; ++j) {
         const auto image{ swapchainImagesMap[m_depthSwapchainInfo.swapchain].second[j].image };
-        const auto imageView{ prev::util::vk::CreateImageView(m_context.graphicsBinding.device, image, m_preferredDepthFormat, VK_IMAGE_VIEW_TYPE_2D_ARRAY, 1, VK_IMAGE_ASPECT_DEPTH_BIT, viewCount, 0) };
+        const auto imageView{ prev::util::vk::CreateImageView(m_graphicsBinding.device, image, m_preferredDepthFormat, VK_IMAGE_VIEW_TYPE_2D_ARRAY, 1, VK_IMAGE_ASPECT_DEPTH_BIT, viewCount, 0) };
         m_depthSwapchainInfo.images.push_back(image);
         m_depthSwapchainInfo.imageViews.push_back(imageView);
     }
@@ -134,10 +134,10 @@ void OpenXrRender::DestroySwapchains()
 {
     // Destroy the color and depth image views from GraphicsAPI.
     for (auto& imageView : m_colorSwapchainInfo.imageViews) {
-        vkDestroyImageView(m_context.graphicsBinding.device, imageView, VK_NULL_HANDLE);
+        vkDestroyImageView(m_graphicsBinding.device, imageView, VK_NULL_HANDLE);
     }
     for (auto& imageView : m_depthSwapchainInfo.imageViews) {
-        vkDestroyImageView(m_context.graphicsBinding.device, imageView, VK_NULL_HANDLE);
+        vkDestroyImageView(m_graphicsBinding.device, imageView, VK_NULL_HANDLE);
     }
 
     // Free the Swapchain Image Data.
@@ -172,7 +172,7 @@ bool OpenXrRender::BeginFrame()
 
     XrViewState viewState{ XR_TYPE_VIEW_STATE }; // Will contain information on whether the position and/or orientation is valid and/or tracked.
     XrViewLocateInfo viewLocateInfo{ XR_TYPE_VIEW_LOCATE_INFO };
-    viewLocateInfo.viewConfigurationType = m_context.viewConfiguration;
+    viewLocateInfo.viewConfigurationType = m_viewConfiguration;
     viewLocateInfo.displayTime = frameState.predictedDisplayTime;
     viewLocateInfo.space = m_context.localSpace;
     uint32_t viewCount = 0;
@@ -276,12 +276,12 @@ bool OpenXrRender::EndFrame()
 
 void OpenXrRender::UpdateGraphicsBinding(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex)
 {
-    m_context.graphicsBinding = { XR_TYPE_GRAPHICS_BINDING_VULKAN_KHR };
-    m_context.graphicsBinding.instance = instance;
-    m_context.graphicsBinding.physicalDevice = physicalDevice;
-    m_context.graphicsBinding.device = device;
-    m_context.graphicsBinding.queueFamilyIndex = queueFamilyIndex;
-    m_context.graphicsBinding.queueIndex = queueIndex;
+    m_graphicsBinding = { XR_TYPE_GRAPHICS_BINDING_VULKAN_KHR };
+    m_graphicsBinding.instance = instance;
+    m_graphicsBinding.physicalDevice = physicalDevice;
+    m_graphicsBinding.device = device;
+    m_graphicsBinding.queueFamilyIndex = queueFamilyIndex;
+    m_graphicsBinding.queueIndex = queueIndex;
 }
 
 XrTime OpenXrRender::GetCurrentTime() const
@@ -339,6 +339,16 @@ VkFormat OpenXrRender::GetDepthFormat() const
     return m_preferredDepthFormat;
 }
 
+XrViewConfigurationType OpenXrRender::GetViewConfiguration() const
+{
+    return m_viewConfiguration;
+}
+
+const XrGraphicsBindingVulkanKHR& OpenXrRender::GetGraphicsBinding() const
+{
+    return m_graphicsBinding;
+}
+
 void OpenXrRender::OnOpenXrEvent(const XrEventDataBuffer& evt)
 {
 }
@@ -362,20 +372,20 @@ void OpenXrRender::GetViewConfigurationViews()
     // Pick the first application supported View Configuration Type con supported by the hardware.
     for (const XrViewConfigurationType& viewConfiguration : m_applicationViewConfigurations) {
         if (std::find(m_viewConfigurations.begin(), m_viewConfigurations.end(), viewConfiguration) != m_viewConfigurations.end()) {
-            m_context.viewConfiguration = viewConfiguration;
+            m_viewConfiguration = viewConfiguration;
             break;
         }
     }
-    if (m_context.viewConfiguration == XR_VIEW_CONFIGURATION_TYPE_MAX_ENUM) {
+    if (m_viewConfiguration == XR_VIEW_CONFIGURATION_TYPE_MAX_ENUM) {
         LOGE("Failed to find a view configuration type. Defaulting to XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO.");
-        m_context.viewConfiguration = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
+        m_viewConfiguration = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
     }
 
     // Gets the View Configuration Views. The first call gets the count of the array that will be returned. The next call fills out the array.
     uint32_t viewConfigurationViewCount{ 0 };
-    OPENXR_CHECK(xrEnumerateViewConfigurationViews(m_context.instance, m_context.systemId, m_context.viewConfiguration, 0, &viewConfigurationViewCount, nullptr), "Failed to enumerate ViewConfiguration Views.");
+    OPENXR_CHECK(xrEnumerateViewConfigurationViews(m_context.instance, m_context.systemId, m_viewConfiguration, 0, &viewConfigurationViewCount, nullptr), "Failed to enumerate ViewConfiguration Views.");
     m_viewConfigurationViews.resize(viewConfigurationViewCount, { XR_TYPE_VIEW_CONFIGURATION_VIEW });
-    OPENXR_CHECK(xrEnumerateViewConfigurationViews(m_context.instance, m_context.systemId, m_context.viewConfiguration, viewConfigurationViewCount, &viewConfigurationViewCount, m_viewConfigurationViews.data()), "Failed to enumerate ViewConfiguration Views.");
+    OPENXR_CHECK(xrEnumerateViewConfigurationViews(m_context.instance, m_context.systemId, m_viewConfiguration, viewConfigurationViewCount, &viewConfigurationViewCount, m_viewConfigurationViews.data()), "Failed to enumerate ViewConfiguration Views.");
 
     if (viewConfigurationCount > MAX_VIEW_COUNT) {
         LOGE("OpenXR view configuration count > maxViewCount: %d > %d", viewConfigurationCount, MAX_VIEW_COUNT);
@@ -386,9 +396,9 @@ void OpenXrRender::GetEnvironmentBlendModes()
 {
     // Retrieves the available blend modes. The first call gets the count of the array that will be returned. The next call fills out the array.
     uint32_t environmentBlendModeCount{ 0 };
-    OPENXR_CHECK(xrEnumerateEnvironmentBlendModes(m_context.instance, m_context.systemId, m_context.viewConfiguration, 0, &environmentBlendModeCount, nullptr), "Failed to enumerate EnvironmentBlend Modes.");
+    OPENXR_CHECK(xrEnumerateEnvironmentBlendModes(m_context.instance, m_context.systemId, m_viewConfiguration, 0, &environmentBlendModeCount, nullptr), "Failed to enumerate EnvironmentBlend Modes.");
     m_environmentBlendModes.resize(environmentBlendModeCount);
-    OPENXR_CHECK(xrEnumerateEnvironmentBlendModes(m_context.instance, m_context.systemId, m_context.viewConfiguration, environmentBlendModeCount, &environmentBlendModeCount, m_environmentBlendModes.data()), "Failed to enumerate EnvironmentBlend Modes.");
+    OPENXR_CHECK(xrEnumerateEnvironmentBlendModes(m_context.instance, m_context.systemId, m_viewConfiguration, environmentBlendModeCount, &environmentBlendModeCount, m_environmentBlendModes.data()), "Failed to enumerate EnvironmentBlend Modes.");
 
     // Pick the first application supported blend mode supported by the hardware.
     for (const XrEnvironmentBlendMode& environmentBlendMode : m_applicationEnvironmentBlendModes) {
