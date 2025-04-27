@@ -91,9 +91,9 @@ protected:
     virtual void ResetSwapchain() = 0;
 
 protected:
-    std::unique_ptr<prev::render::pass::RenderPass> CreateDefaultMultisampledRenderPass(const prev::core::device::Device& device, const VkSurfaceKHR surface, const VkSampleCountFlagBits sampleCount, const uint32_t viewCount, const bool storeColor, const bool storeDepth);
+    std::unique_ptr<prev::render::pass::RenderPass> CreateDefaultMultisampledRenderPass(const prev::core::device::Device& device, const VkFormat colorFormat, const VkFormat depthFormat, const VkSampleCountFlagBits sampleCount, const uint32_t viewCount, const bool storeColor, const bool storeDepth);
 
-    std::unique_ptr<prev::render::pass::RenderPass> CreateDefaultRenderPass(const prev::core::device::Device& device, const VkSurfaceKHR surface, const uint32_t viewCount, const bool storeColor, const bool storeDepth);
+    std::unique_ptr<prev::render::pass::RenderPass> CreateDefaultRenderPass(const prev::core::device::Device& device, const VkFormat colorFormat, const VkFormat depthFormat, const uint32_t viewCount, const bool storeColor, const bool storeDepth);
 
     void UpdateFps();
 

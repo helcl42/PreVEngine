@@ -108,10 +108,13 @@ void XrEngineImpl::ResetDevice()
 
 void XrEngineImpl::ResetRenderPass()
 {
+    const auto colorFormat{ m_openXr->GetColorFormat() };
+    const auto depthFormat{ m_openXr->GetDepthFormat() };
+
     if (m_config.samplesCount > 1) {
-        m_renderPass = CreateDefaultMultisampledRenderPass(*m_device, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount), GetViewCount(), true, true);
+        m_renderPass = CreateDefaultMultisampledRenderPass(*m_device, colorFormat, depthFormat, prev::util::vk::GetSampleCountBit(m_config.samplesCount), GetViewCount(), true, true);
     } else {
-        m_renderPass = CreateDefaultRenderPass(*m_device, m_surface, GetViewCount(), true, true);
+        m_renderPass = CreateDefaultRenderPass(*m_device, colorFormat, depthFormat, GetViewCount(), true, true);
     }
 }
 
