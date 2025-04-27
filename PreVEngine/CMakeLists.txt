@@ -45,6 +45,9 @@ file(GLOB SRC_LIST
     "prev/window/impl/macos/*.h" "prev/window/impl/macos/*.cpp"
     "prev/window/impl/ios/*.h" "prev/window/impl/ios/*.cpp"
     "prev/xr/*.h" "prev/xr/*.cpp"
+    "prev/xr/render/*.h" "prev/xr/render/*.cpp"
+    "prev/xr/input/*.h" "prev/xr/input/*.cpp"
+    "prev/xr/messenger/*.h" "prev/xr/messenger/*.cpp"
 )
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")  # for find_package

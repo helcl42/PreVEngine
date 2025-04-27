@@ -6,7 +6,7 @@
 #include "../util/VkUtils.h"
 
 namespace prev::xr {
-XrSwapchain::XrSwapchain(core::device::Device& device, core::memory::Allocator& allocator, render::pass::RenderPass& renderPass, xr::OpenXr& xr, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount)
+XrSwapchain::XrSwapchain(core::device::Device& device, core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, xr::OpenXr& xr, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount)
     : m_device{ device }
     , m_allocator{ allocator }
     , m_renderPass{ renderPass }
@@ -21,7 +21,7 @@ XrSwapchain::XrSwapchain(core::device::Device& device, core::memory::Allocator& 
     m_extent = m_openXr.GetExtent();
 
     if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
-        m_msaaColorBuffer = render::buffer::ImageBufferBuilder{ m_allocator }
+        m_msaaColorBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
                                 .SetExtent(VkExtent3D{ m_extent.width, m_extent.height, 1 })
                                 .SetFormat(m_renderPass.GetColorFormat())
                                 .SetType(VK_IMAGE_TYPE_2D)
@@ -31,7 +31,7 @@ XrSwapchain::XrSwapchain(core::device::Device& device, core::memory::Allocator& 
                                 .SetUsageFlags(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
                                 .SetLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
                                 .Build();
-        m_msaaDepthBuffer = render::buffer::ImageBufferBuilder{ m_allocator }
+        m_msaaDepthBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
                                 .SetExtent(VkExtent3D{ m_extent.width, m_extent.height, 1 })
                                 .SetFormat(m_renderPass.GetDepthFormat())
                                 .SetType(VK_IMAGE_TYPE_2D)
@@ -142,7 +142,7 @@ uint32_t XrSwapchain::GetImageCount() const
     return static_cast<uint32_t>(m_swapchainBuffers.size());
 }
 
-bool XrSwapchain::BeginFrame(render::SwapChainFrameContext& outContext)
+bool XrSwapchain::BeginFrame(prev::render::SwapChainFrameContext& outContext)
 {
     m_acquiredIndex = m_openXr.GetCurrentSwapchainIndex();
 

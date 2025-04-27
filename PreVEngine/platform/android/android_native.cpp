@@ -1,7 +1,7 @@
 #include "android_native.h"
 
 #ifdef ENABLE_XR
-#include "../prev/xr/OpenXrCommon.h"
+#include "../prev/xr/common/OpenXrCommon.h"
 #endif
 
 //----------------------------------------printf for Android---------------------

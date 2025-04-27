@@ -103,7 +103,7 @@ void XrEngineImpl::ResetDevice()
     m_device->Print();
 
     const auto& queue{ m_device->GetQueue(prev::core::device::QueueType::GRAPHICS) };
-    m_openXr->InitializeGraphicsBinding(*m_instance, m_device->GetGPU(), *m_device, queue.family, queue.index);
+    m_openXr->UpdateGraphicsBinding(*m_instance, m_device->GetGPU(), *m_device, queue.family, queue.index);
 }
 
 void XrEngineImpl::ResetRenderPass()

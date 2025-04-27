@@ -14,9 +14,9 @@
 #include "../util/Utils.h"
 
 namespace prev::xr {
-class XrSwapchain final : public render::ISwapchain {
+class XrSwapchain final : public prev::render::ISwapchain {
 public:
-    XrSwapchain(core::device::Device& device, core::memory::Allocator& allocator, render::pass::RenderPass& renderPass, xr::OpenXr& xr, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT);
+    XrSwapchain(core::device::Device& device, core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, xr::OpenXr& xr, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT);
 
     ~XrSwapchain();
 
@@ -31,7 +31,7 @@ public:
 
     bool UpdateExtent(uint32_t width, uint32_t height) override;
 
-    bool BeginFrame(render::SwapChainFrameContext& outContext) override;
+    bool BeginFrame(prev::render::SwapChainFrameContext& outContext) override;
 
     void EndFrame() override;
 
@@ -71,7 +71,7 @@ private:
 
     core::memory::Allocator& m_allocator;
 
-    render::pass::RenderPass& m_renderPass;
+    prev::render::pass::RenderPass& m_renderPass;
 
     xr::OpenXr& m_openXr;
 
