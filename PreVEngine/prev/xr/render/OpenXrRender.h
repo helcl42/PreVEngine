@@ -4,6 +4,7 @@
 #ifdef ENABLE_XR
 
 #include "../common/OpenXrCommon.h"
+#include "../common/OpenXrContext.h"
 #include "../common/IOpenXrEventObserver.h"
 
 #include "../XrEvents.h"
@@ -15,32 +16,24 @@
 namespace prev::xr::render {
 class OpenXrRender final : public common::IOpenXrEventObserver {
 public:
-    OpenXrRender(XrInstance instance, XrSystemId systemId);
+    explicit OpenXrRender(common::OpenXrContext& context);
 
     ~OpenXrRender();
 
 public:
-    void OnSessionCreate(XrSession session);
+    void Init();
+
+    void ShutDown();
+
+    void OnSessionCreate();
 
     void OnSessionDestroy();
-
-    void OnReferenceSpaceCreate(XrSpace space);
-
-    void OnReferenceSpaceDestroy();
-
-    void CreateSwapchains();
-
-    void DestroySwapchains();
 
     bool BeginFrame();
 
     bool EndFrame();
 
     void UpdateGraphicsBinding(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex);
-
-    XrViewConfigurationType GetViewConfiguration() const;
-
-    const XrGraphicsBindingVulkanKHR& GetGraphicsBinding() const;
 
     XrTime GetCurrentTime() const;
 
@@ -75,26 +68,23 @@ private:
 
     void GetEnvironmentBlendModes();
 
-private:
-    XrInstance m_instance{ XR_NULL_HANDLE };
-    XrSystemId m_systemId{ XR_NULL_SYSTEM_ID };
+    void CreateSwapchains();
 
-    XrSession  m_session{ XR_NULL_HANDLE };
-    XrSpace m_localSpace{ XR_NULL_HANDLE };
+    void DestroySwapchains();
+
+private:
+    common::OpenXrContext& m_context;
 
     const VkFormat m_preferredColorFormat{ VK_FORMAT_R8G8B8A8_UNORM };
     const VkFormat m_preferredDepthFormat{ VK_FORMAT_D32_SFLOAT };
 
     std::vector<XrViewConfigurationType> m_applicationViewConfigurations{ XR_VIEW_CONFIGURATION_TYPE_PRIMARY_QUAD_VARJO, XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO };
     std::vector<XrViewConfigurationType> m_viewConfigurations;
-    XrViewConfigurationType m_viewConfiguration{ XR_VIEW_CONFIGURATION_TYPE_MAX_ENUM };
     std::vector<XrViewConfigurationView> m_viewConfigurationViews;
 
     std::vector<XrEnvironmentBlendMode> m_applicationEnvironmentBlendModes{ XR_ENVIRONMENT_BLEND_MODE_OPAQUE, XR_ENVIRONMENT_BLEND_MODE_ADDITIVE };
     std::vector<XrEnvironmentBlendMode> m_environmentBlendModes{};
     XrEnvironmentBlendMode m_environmentBlendMode{ XR_ENVIRONMENT_BLEND_MODE_MAX_ENUM };
-
-    XrGraphicsBindingVulkanKHR m_graphicsBinding{};
 
     struct SwapchainInfo {
         XrSwapchain swapchain{ XR_NULL_HANDLE };

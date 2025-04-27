@@ -4,7 +4,7 @@
 
 #include <sstream>
 
-namespace prev::xr::messenger {
+namespace prev::xr::core {
 namespace {
     PFN_xrCreateDebugUtilsMessengerEXT xrCreateDebugUtilsMessengerEXT{};
     PFN_xrDestroyDebugUtilsMessengerEXT xrDestroyDebugUtilsMessengerEXT{};
@@ -20,7 +20,7 @@ namespace {
         return ((value & checkValue) == checkValue);
     }
 
-    XrBool32 OpenXrMessageCallbackFunction(XrDebugUtilsMessageSeverityFlagsEXT messageSeverity, XrDebugUtilsMessageTypeFlagsEXT messageType, const XrDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
+    XrBool32 OpenXrMessageCallback(XrDebugUtilsMessageSeverityFlagsEXT messageSeverity, XrDebugUtilsMessageTypeFlagsEXT messageType, const XrDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
     {
         // Lambda to covert an XrDebugUtilsMessageSeverityFlagsEXT to std::string. Bitwise check to concatenate multiple severities to the output string.
         auto GetMessageSeverityString = [](XrDebugUtilsMessageSeverityFlagsEXT messageSeverity) -> std::string {
@@ -98,7 +98,8 @@ namespace {
     }
 }
 
-OpenXrDebugMessenger::OpenXrDebugMessenger(XrInstance instance) {
+OpenXrDebugMessenger::OpenXrDebugMessenger(XrInstance instance)
+{
     LoadXrExtensionFunctions(instance);
 
     XrDebugUtilsMessengerCreateInfoEXT debugUtilsMessengerCI{XR_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT};
@@ -106,13 +107,14 @@ OpenXrDebugMessenger::OpenXrDebugMessenger(XrInstance instance) {
                                               XR_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
     debugUtilsMessengerCI.messageTypes = XR_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | XR_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | XR_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT |
                                          XR_DEBUG_UTILS_MESSAGE_TYPE_CONFORMANCE_BIT_EXT;
-    debugUtilsMessengerCI.userCallback = (PFN_xrDebugUtilsMessengerCallbackEXT)OpenXrMessageCallbackFunction;
+    debugUtilsMessengerCI.userCallback = (PFN_xrDebugUtilsMessengerCallbackEXT)OpenXrMessageCallback;
     debugUtilsMessengerCI.userData = nullptr;
 
     OPENXR_CHECK(xrCreateDebugUtilsMessengerEXT(instance, &debugUtilsMessengerCI, &m_debugUtilsMessenger), "Failed to create DebugUtilsMessenger.");
 }
 
-OpenXrDebugMessenger::~OpenXrDebugMessenger() {
+OpenXrDebugMessenger::~OpenXrDebugMessenger()
+{
     OPENXR_CHECK(xrDestroyDebugUtilsMessengerEXT(m_debugUtilsMessenger), "Failed to destroy DebugUtilsMessenger.");
 }
 }

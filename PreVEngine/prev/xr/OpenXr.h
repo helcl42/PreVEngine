@@ -4,13 +4,12 @@
 #ifdef ENABLE_XR
 
 #include "common/OpenXrCommon.h"
+#include "common/OpenXrContext.h"
 #include "common/IOpenXrEventObserver.h"
 
+#include "core/OpenXrCore.h"
 #include "render/OpenXrRender.h"
 #include "input/OpenXrInput.h"
-#include "messenger/OpenXrDebugMessenger.h"
-
-#include "../common/pattern/Observer.h"
 
 #include <vector>
 
@@ -63,43 +62,13 @@ public:
     float GetCurrentDeltaTime() const;
 
 private:
-    void CreateInstance();
+    common::OpenXrContext m_context;
 
-    void DestroyInstance();
+    core::OpenXrCore m_core;
 
-    void GetInstanceProperties();
+    render::OpenXrRender m_render;
 
-    void GetSystemId();
-
-    void CreateReferenceSpace();
-
-    void DestroyReferenceSpace();
-
-private:
-    std::vector<const char*> m_activeAPILayers;
-    std::vector<const char*> m_activeInstanceExtensions;
-    std::vector<std::string> m_apiLayers;
-    std::vector<std::string> m_instanceExtensions;
-    XrInstance m_instance{ XR_NULL_HANDLE };
-
-    XrSystemId m_systemId{ XR_NULL_SYSTEM_ID };
-    XrSystemProperties m_systemProperties{ XR_TYPE_SYSTEM_PROPERTIES };
-
-    XrSession m_session{ XR_NULL_HANDLE };
-    XrSessionState m_sessionState{ XR_SESSION_STATE_UNKNOWN };
-
-    XrSpace m_localSpace{ XR_NULL_HANDLE };
-
-    bool m_applicationRunning{ true };
-    bool m_sessionRunning{ false };
-
-    prev::common::pattern::Observer<common::IOpenXrEventObserver> m_eventObserver;
-
-    std::unique_ptr<messenger::OpenXrDebugMessenger> m_messenger{};
-
-    std::unique_ptr<render::OpenXrRender> m_render{};
-
-    std::unique_ptr<input::OpenXrInput> m_input{};
+    input::OpenXrInput m_input;
 };
 } // namespace prev::xr
 

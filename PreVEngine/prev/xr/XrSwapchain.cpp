@@ -6,15 +6,15 @@
 #include "../util/VkUtils.h"
 
 namespace prev::xr {
-XrSwapchain::XrSwapchain(core::device::Device& device, core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, xr::OpenXr& xr, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount)
+XrSwapchain::XrSwapchain(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, xr::OpenXr& xr, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount)
     : m_device{ device }
     , m_allocator{ allocator }
     , m_renderPass{ renderPass }
     , m_openXr{ xr }
     , m_surface{ surface }
     , m_sampleCount{ sampleCount }
-    , m_graphicsQueue{ m_device.GetQueue(core::device::QueueType::GRAPHICS) }
-    , m_presentQueue{ m_device.GetQueue(core::device::QueueType::PRESENT) }
+    , m_graphicsQueue{ m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
+    , m_presentQueue{ m_device.GetQueue(prev::core::device::QueueType::PRESENT) }
 {
     m_commandPool = prev::util::vk::CreateCommandPool(m_device, m_graphicsQueue.family);
 

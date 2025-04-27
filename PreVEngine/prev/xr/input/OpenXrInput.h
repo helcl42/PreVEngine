@@ -4,23 +4,24 @@
 #ifdef ENABLE_XR
 
 #include "../common/OpenXrCommon.h"
+#include "../common/OpenXrContext.h"
 #include "../common/IOpenXrEventObserver.h"
 
 namespace prev::xr::input {
 class OpenXrInput final : public common::IOpenXrEventObserver {
 public:
-    OpenXrInput(XrInstance instance, XrSystemId systemId);
+    explicit OpenXrInput(common::OpenXrContext& context);
 
     ~OpenXrInput();
 
 public:
-    void OnSessionCreate(XrSession session);
+    void Init();
+
+    void ShutDown();
+
+    void OnSessionCreate();
 
     void OnSessionDestroy();
-
-    void OnReferenceSpaceCreate(XrSpace space);
-
-    void OnReferenceSpaceDestroy();
 
 public:
     void CreateActionSet();
@@ -45,11 +46,7 @@ public:
     void OnOpenXrEvent(const XrEventDataBuffer& evt) override;
 
 private:
-    XrInstance m_instance{ XR_NULL_HANDLE };
-    XrSystemId m_systemId{ XR_NULL_SYSTEM_ID };
-
-    XrSession  m_session{ XR_NULL_HANDLE };
-    XrSpace m_localSpace{ XR_NULL_HANDLE };
+    common::OpenXrContext& m_context;
 
     XrActionSet m_actionSet{};
 

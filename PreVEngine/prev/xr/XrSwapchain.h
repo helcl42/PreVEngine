@@ -10,13 +10,14 @@
 #include "../render/buffer/ImageBuffer.h"
 #include "../render/pass/RenderPass.h"
 
+#include "../core/device/Device.h"
 #include "../core/memory/Allocator.h"
 #include "../util/Utils.h"
 
 namespace prev::xr {
 class XrSwapchain final : public prev::render::ISwapchain {
 public:
-    XrSwapchain(core::device::Device& device, core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, xr::OpenXr& xr, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT);
+    XrSwapchain(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, xr::OpenXr& xr, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT);
 
     ~XrSwapchain();
 
@@ -67,9 +68,9 @@ private:
     };
 
 private:
-    core::device::Device& m_device;
+    prev::core::device::Device& m_device;
 
-    core::memory::Allocator& m_allocator;
+    prev::core::memory::Allocator& m_allocator;
 
     prev::render::pass::RenderPass& m_renderPass;
 
