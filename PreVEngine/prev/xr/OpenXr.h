@@ -5,7 +5,6 @@
 
 #include "common/OpenXrCommon.h"
 #include "common/OpenXrContext.h"
-#include "common/IOpenXrEventObserver.h"
 
 #include "core/OpenXrCore.h"
 #include "render/OpenXrRender.h"
