@@ -4,7 +4,6 @@
 #ifdef ENABLE_XR
 
 #include "../common/OpenXrCommon.h"
-#include "../common/OpenXrContext.h"
 #include "../common/IOpenXrEventObserver.h"
 
 #include "../XrEvents.h"
@@ -16,18 +15,18 @@
 namespace prev::xr::render {
 class OpenXrRender final : public common::IOpenXrEventObserver {
 public:
-    explicit OpenXrRender(common::OpenXrContext& context);
+    OpenXrRender(XrInstance instance, XrSystemId systemId);
 
     ~OpenXrRender();
 
 public:
-    void Init();
-
-    void ShutDown();
-
-    void OnSessionCreate();
+    void OnSessionCreate(XrSession session);
 
     void OnSessionDestroy();
+
+    void OnReferenceSpaceCreate(XrSpace space);
+
+    void OnReferenceSpaceDestroy();
 
     bool BeginFrame();
 
@@ -68,30 +67,38 @@ public:
     void operator()(const XrCameraFeedbackEvent& event);
 
 private:
-    void GetViewConfigurationViews();
+    void CreateViewConfigurationViews();
 
-    void GetEnvironmentBlendModes();
+    void DestroyViewConfigurationViews();
+
+    void CreateEnvironmentBlendModes();
+
+    void DestroyEnvironmentBlendModes();
 
     void CreateSwapchains();
 
     void DestroySwapchains();
 
 private:
-    common::OpenXrContext& m_context;
+    XrInstance m_instance{ XR_NULL_HANDLE };
+    XrSystemId m_systemId{ XR_NULL_SYSTEM_ID };
 
-    const VkFormat m_preferredColorFormat{ VK_FORMAT_R8G8B8A8_UNORM };
-    const VkFormat m_preferredDepthFormat{ VK_FORMAT_D32_SFLOAT };
-
+    const std::vector<XrViewConfigurationType> m_preferredViewConfigurations{ XR_VIEW_CONFIGURATION_TYPE_PRIMARY_QUAD_VARJO, XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO };
     XrViewConfigurationType m_viewConfiguration{ XR_VIEW_CONFIGURATION_TYPE_MAX_ENUM };
-    std::vector<XrViewConfigurationType> m_applicationViewConfigurations{ XR_VIEW_CONFIGURATION_TYPE_PRIMARY_QUAD_VARJO, XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO };
     std::vector<XrViewConfigurationType> m_viewConfigurations;
     std::vector<XrViewConfigurationView> m_viewConfigurationViews;
 
-    std::vector<XrEnvironmentBlendMode> m_applicationEnvironmentBlendModes{ XR_ENVIRONMENT_BLEND_MODE_OPAQUE, XR_ENVIRONMENT_BLEND_MODE_ADDITIVE };
+    const std::vector<XrEnvironmentBlendMode> m_preferredEnvironmentBlendModes{ XR_ENVIRONMENT_BLEND_MODE_OPAQUE, XR_ENVIRONMENT_BLEND_MODE_ADDITIVE };
     std::vector<XrEnvironmentBlendMode> m_environmentBlendModes{};
     XrEnvironmentBlendMode m_environmentBlendMode{ XR_ENVIRONMENT_BLEND_MODE_MAX_ENUM };
 
     XrGraphicsBindingVulkanKHR m_graphicsBinding{};
+
+    XrSession m_session{ XR_NULL_HANDLE };
+    XrSpace m_localSpace{ XR_NULL_HANDLE };
+
+    const VkFormat m_preferredColorFormat{ VK_FORMAT_R8G8B8A8_UNORM };
+    const VkFormat m_preferredDepthFormat{ VK_FORMAT_D32_SFLOAT };
 
     struct SwapchainInfo {
         XrSwapchain swapchain{ XR_NULL_HANDLE };

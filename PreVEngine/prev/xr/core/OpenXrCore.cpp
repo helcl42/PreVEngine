@@ -39,14 +39,20 @@ namespace {
     }
 }
 
-OpenXrCore::OpenXrCore(common::OpenXrContext &context)
-    : m_context{context}
+OpenXrCore::OpenXrCore()
 {
+    CreateInstance();
+    CreateDebugMessenger();
+    CreateSystemId();
+
+    ShowRuntimeInfo();
 }
 
 OpenXrCore::~OpenXrCore() 
 {
-    ShutDown();
+    DestroySystemId();
+    DestroyDebugMessenger();
+    DestroyInstance();
 }
 
 bool OpenXrCore::RegisterOpenXrEventObserver(common::IOpenXrEventObserver& o)
@@ -59,29 +65,13 @@ bool OpenXrCore::UnregisterOpenXrEventObserver(common::IOpenXrEventObserver& o)
     return m_eventObserver.Unregister(o);
 }
 
-void OpenXrCore::Init() {
-    CreateInstance();
-
-    if (IsStringInVector(m_activeInstanceExtensions, XR_EXT_DEBUG_UTILS_EXTENSION_NAME)) {
-        m_debugMessenger = std::make_unique<OpenXrDebugMessenger>(m_context.instance);
-    }
-
-    GetInstanceProperties();
-    GetSystemId();
-}
-
-void OpenXrCore::ShutDown()
-{
-    m_debugMessenger = {};
-}
-
 std::vector<std::string> OpenXrCore::GetVulkanInstanceExtensions() const
 {
     uint32_t extensionNamesSize{};
-    OPENXR_CHECK(xrGetVulkanInstanceExtensionsKHR(m_context.instance, m_context.systemId, 0, &extensionNamesSize, nullptr), "Failed to get Vulkan Instance Extensions.");
+    OPENXR_CHECK(xrGetVulkanInstanceExtensionsKHR(m_instance, m_systemId, 0, &extensionNamesSize, nullptr), "Failed to get Vulkan Instance Extensions.");
 
     std::vector<char> extensionNames(extensionNamesSize);
-    OPENXR_CHECK(xrGetVulkanInstanceExtensionsKHR(m_context.instance, m_context.systemId, extensionNamesSize, &extensionNamesSize, extensionNames.data()), "Failed to get Vulkan Instance Extensions.");
+    OPENXR_CHECK(xrGetVulkanInstanceExtensionsKHR(m_instance, m_systemId, extensionNamesSize, &extensionNamesSize, extensionNames.data()), "Failed to get Vulkan Instance Extensions.");
 
     std::stringstream streamData(extensionNames.data());
     std::vector<std::string> extensions;
@@ -95,10 +85,10 @@ std::vector<std::string> OpenXrCore::GetVulkanInstanceExtensions() const
 std::vector<std::string> OpenXrCore::GetVulkanDeviceExtensions() const
 {
     uint32_t extensionNamesSize{};
-    OPENXR_CHECK(xrGetVulkanDeviceExtensionsKHR(m_context.instance, m_context.systemId, 0, &extensionNamesSize, nullptr), "Failed to get Vulkan Device Extensions.");
+    OPENXR_CHECK(xrGetVulkanDeviceExtensionsKHR(m_instance, m_systemId, 0, &extensionNamesSize, nullptr), "Failed to get Vulkan Device Extensions.");
 
     std::vector<char> extensionNames(extensionNamesSize);
-    OPENXR_CHECK(xrGetVulkanDeviceExtensionsKHR(m_context.instance, m_context.systemId, extensionNamesSize, &extensionNamesSize, extensionNames.data()), "Failed to get Vulkan Device Extensions.");
+    OPENXR_CHECK(xrGetVulkanDeviceExtensionsKHR(m_instance, m_systemId, extensionNamesSize, &extensionNamesSize, extensionNames.data()), "Failed to get Vulkan Device Extensions.");
 
     std::stringstream streamData(extensionNames.data());
     std::vector<std::string> extensions;
@@ -112,10 +102,10 @@ std::vector<std::string> OpenXrCore::GetVulkanDeviceExtensions() const
 VkPhysicalDevice OpenXrCore::GetPhysicalDevice(VkInstance instance) const
 {
     XrGraphicsRequirementsVulkanKHR graphicsRequirements{ XR_TYPE_GRAPHICS_REQUIREMENTS_VULKAN_KHR };
-    OPENXR_CHECK(xrGetVulkanGraphicsRequirementsKHR(m_context.instance, m_context.systemId, &graphicsRequirements), "Failed to get Graphics Requirements for Vulkan.");
+    OPENXR_CHECK(xrGetVulkanGraphicsRequirementsKHR(m_instance, m_systemId, &graphicsRequirements), "Failed to get Graphics Requirements for Vulkan.");
 
     VkPhysicalDevice physicalDeviceFromXR;
-    OPENXR_CHECK(xrGetVulkanGraphicsDeviceKHR(m_context.instance, m_context.systemId, instance, &physicalDeviceFromXR), "Failed to get Graphics Device for Vulkan.");
+    OPENXR_CHECK(xrGetVulkanGraphicsDeviceKHR(m_instance, m_systemId, instance, &physicalDeviceFromXR), "Failed to get Graphics Device for Vulkan.");
     return physicalDeviceFromXR;
 }
 
@@ -127,9 +117,9 @@ void OpenXrCore::CreateSession(const XrGraphicsBindingVulkanKHR& graphicsBinding
     XrSessionCreateInfo sessionCreateInfo{XR_TYPE_SESSION_CREATE_INFO };
     sessionCreateInfo.next = &m_graphicsBinding;
     sessionCreateInfo.createFlags = 0;
-    sessionCreateInfo.systemId = m_context.systemId;
+    sessionCreateInfo.systemId = m_systemId;
 
-    OPENXR_CHECK(xrCreateSession(m_context.instance, &sessionCreateInfo, &m_context.session), "Failed to create Session.");
+    OPENXR_CHECK(xrCreateSession(m_instance, &sessionCreateInfo, &m_session), "Failed to create Session.");
 
     CreateReferenceSpace();
 }
@@ -138,7 +128,7 @@ void OpenXrCore::DestroySession()
 {
     DestroyReferenceSpace();
 
-    OPENXR_CHECK(xrDestroySession(m_context.session), "Failed to destroy Session.");
+    OPENXR_CHECK(xrDestroySession(m_session), "Failed to destroy Session.");
 }
 
 void OpenXrCore::PollEvents()
@@ -149,7 +139,7 @@ void OpenXrCore::PollEvents()
     };
 
     XrEventDataBuffer eventData{ XR_TYPE_EVENT_DATA_BUFFER };
-    while (XrPollEvents(m_context.instance, eventData)) {
+    while (XrPollEvents(m_instance, eventData)) {
         switch (eventData.type) {
             case XR_TYPE_EVENT_DATA_EVENTS_LOST: {
                 XrEventDataEventsLost* eventsLost = reinterpret_cast<XrEventDataEventsLost*>(&eventData);
@@ -166,7 +156,7 @@ void OpenXrCore::PollEvents()
             case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED: {
                 XrEventDataInteractionProfileChanged* interactionProfileChanged = reinterpret_cast<XrEventDataInteractionProfileChanged*>(&eventData);
                 LOGI("OPENXR: Interaction Profile changed for Session: %p", interactionProfileChanged->session);
-                if (interactionProfileChanged->session != m_context.session) {
+                if (interactionProfileChanged->session != m_session) {
                     LOGW("XrEventDataInteractionProfileChanged for unknown Session");
                     break;
                 }
@@ -175,7 +165,7 @@ void OpenXrCore::PollEvents()
             case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING: {
                 XrEventDataReferenceSpaceChangePending* referenceSpaceChangePending = reinterpret_cast<XrEventDataReferenceSpaceChangePending*>(&eventData);
                 LOGI("OPENXR: Reference Space Change pending for Session: %p", referenceSpaceChangePending->session);
-                if (referenceSpaceChangePending->session != m_context.session) {
+                if (referenceSpaceChangePending->session != m_session) {
                     LOGW("XrEventDataReferenceSpaceChangePending for unknown Session");
                     break;
                 }
@@ -183,7 +173,7 @@ void OpenXrCore::PollEvents()
             }
             case XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: {
                 XrEventDataSessionStateChanged* sessionStateChanged = reinterpret_cast<XrEventDataSessionStateChanged*>(&eventData);
-                if (sessionStateChanged->session != m_context.session) {
+                if (sessionStateChanged->session != m_session) {
                     LOGW("XrEventDataSessionStateChanged for unknown Session");
                     break;
                 }
@@ -191,11 +181,11 @@ void OpenXrCore::PollEvents()
                 if (sessionStateChanged->state == XR_SESSION_STATE_READY) {
                     XrSessionBeginInfo sessionBeginInfo{ XR_TYPE_SESSION_BEGIN_INFO };
                     sessionBeginInfo.primaryViewConfigurationType = m_viewConfiguration;
-                    OPENXR_CHECK(xrBeginSession(m_context.session, &sessionBeginInfo), "Failed to begin Session.");
+                    OPENXR_CHECK(xrBeginSession(m_session, &sessionBeginInfo), "Failed to begin Session.");
                     m_sessionRunning = true;
                 }
                 if (sessionStateChanged->state == XR_SESSION_STATE_STOPPING) {
-                    OPENXR_CHECK(xrEndSession(m_context.session), "Failed to end Session.");
+                    OPENXR_CHECK(xrEndSession(m_session), "Failed to end Session.");
                     m_sessionRunning = false;
                 }
                 if (sessionStateChanged->state == XR_SESSION_STATE_EXITING) {
@@ -226,6 +216,26 @@ void OpenXrCore::PollEvents()
 bool OpenXrCore::IsSessionRunning() const
 {
     return m_sessionRunning;
+}
+
+XrSession OpenXrCore::GetSession() const
+{
+    return m_session;
+}
+
+XrSpace OpenXrCore::GetReferenceSpace() const
+{
+    return m_localSpace;
+}
+
+XrInstance OpenXrCore::GetInstance() const
+{
+    return m_instance;
+}
+
+XrSystemId OpenXrCore::GetSystemId() const
+{
+    return m_systemId;
 }
 
 void OpenXrCore::CreateInstance()
@@ -303,35 +313,52 @@ void OpenXrCore::CreateInstance()
     instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(m_activeInstanceExtensions.size());
     instanceCreateInfo.enabledExtensionNames = m_activeInstanceExtensions.data();
 
-    OPENXR_CHECK(xrCreateInstance(&instanceCreateInfo, &m_context.instance), "Failed to create Instance.");
+    OPENXR_CHECK(xrCreateInstance(&instanceCreateInfo, &m_instance), "Failed to create Instance.");
 
-    if (!m_context.instance) {
+    if (!m_instance) {
         throw std::runtime_error("Could not create XR instance.");
     }
 
-    LoadXrExtensionFunctions(m_context.instance);
+    LoadXrExtensionFunctions(m_instance);
 }
 
 void OpenXrCore::DestroyInstance()
 {
-    OPENXR_CHECK(xrDestroyInstance(m_context.instance), "Failed to destroy Instance.");
+    OPENXR_CHECK(xrDestroyInstance(m_instance), "Failed to destroy Instance.");
 }
 
-void OpenXrCore::GetInstanceProperties()
+void OpenXrCore::ShowRuntimeInfo()
 {
     XrInstanceProperties instanceProperties{ XR_TYPE_INSTANCE_PROPERTIES };
-    OPENXR_CHECK(xrGetInstanceProperties(m_context.instance, &instanceProperties), "Failed to get InstanceProperties.");
+    OPENXR_CHECK(xrGetInstanceProperties(m_instance, &instanceProperties), "Failed to get InstanceProperties.");
 
     LOGI("OpenXR Runtime: %s - %d.%d.%d", instanceProperties.runtimeName, XR_VERSION_MAJOR(instanceProperties.runtimeVersion), XR_VERSION_MINOR(instanceProperties.runtimeVersion), XR_VERSION_PATCH(instanceProperties.runtimeVersion));
 }
 
-void OpenXrCore::GetSystemId()
+void OpenXrCore::CreateSystemId()
 {
     XrSystemGetInfo systemGetInfo{ XR_TYPE_SYSTEM_GET_INFO };
     systemGetInfo.formFactor = XR_FORM_FACTOR_HEAD_MOUNTED_DISPLAY;
-    OPENXR_CHECK(xrGetSystem(m_context.instance, &systemGetInfo, &m_context.systemId), "Failed to get SystemID.");
+    OPENXR_CHECK(xrGetSystem(m_instance, &systemGetInfo, &m_systemId), "Failed to get SystemID.");
 
-    OPENXR_CHECK(xrGetSystemProperties(m_context.instance, m_context.systemId, &m_systemProperties), "Failed to get SystemProperties.");
+    OPENXR_CHECK(xrGetSystemProperties(m_instance, m_systemId, &m_systemProperties), "Failed to get SystemProperties.");
+}
+
+void OpenXrCore::DestroySystemId()
+{
+    m_systemId = XR_NULL_SYSTEM_ID;
+}
+
+void OpenXrCore::CreateDebugMessenger()
+{
+    if (IsStringInVector(m_activeInstanceExtensions, XR_EXT_DEBUG_UTILS_EXTENSION_NAME)) {
+        m_debugMessenger = std::make_unique<OpenXrDebugMessenger>(m_instance);
+    }
+}
+
+void OpenXrCore::DestroyDebugMessenger()
+{
+    m_debugMessenger = {};
 }
 
 void OpenXrCore::CreateReferenceSpace()
@@ -339,12 +366,12 @@ void OpenXrCore::CreateReferenceSpace()
     XrReferenceSpaceCreateInfo referenceSpaceCreateInfo{ XR_TYPE_REFERENCE_SPACE_CREATE_INFO };
     referenceSpaceCreateInfo.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_LOCAL;
     referenceSpaceCreateInfo.poseInReferenceSpace = { { 0.0f, 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f } };
-    OPENXR_CHECK(xrCreateReferenceSpace(m_context.session, &referenceSpaceCreateInfo, &m_context.localSpace), "Failed to create ReferenceSpace.");
+    OPENXR_CHECK(xrCreateReferenceSpace(m_session, &referenceSpaceCreateInfo, &m_localSpace), "Failed to create ReferenceSpace.");
 }
 
 void OpenXrCore::DestroyReferenceSpace()
 {
-    OPENXR_CHECK(xrDestroySpace(m_context.localSpace), "Failed to destroy Space.")
+    OPENXR_CHECK(xrDestroySpace(m_localSpace), "Failed to destroy Space.")
 }
 }
 

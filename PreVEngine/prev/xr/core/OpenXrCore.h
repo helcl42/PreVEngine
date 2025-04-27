@@ -6,7 +6,6 @@
 #include "OpenXrDebugMessenger.h"
 
 #include "../common/OpenXrCommon.h"
-#include "../common/OpenXrContext.h"
 #include "../common/IOpenXrEventObserver.h"
 
 #include "../../common/pattern/Observer.h"
@@ -17,7 +16,7 @@
 namespace prev::xr::core {
 class OpenXrCore final {
 public:
-    explicit OpenXrCore(common::OpenXrContext& context);
+    OpenXrCore();
 
     ~OpenXrCore();
 
@@ -25,10 +24,6 @@ public:
     bool RegisterOpenXrEventObserver(common::IOpenXrEventObserver& o);
 
     bool UnregisterOpenXrEventObserver(common::IOpenXrEventObserver& o);
-
-    void Init();
-
-    void ShutDown();
 
     std::vector<std::string> GetVulkanInstanceExtensions() const;
 
@@ -44,21 +39,36 @@ public:
 
     bool IsSessionRunning() const;
 
+    XrSession GetSession() const;
+
+    XrSpace GetReferenceSpace() const;
+
+    XrInstance GetInstance() const;
+
+    XrSystemId GetSystemId() const;
+
 private:
     void CreateInstance();
 
     void DestroyInstance();
 
-    void GetInstanceProperties();
+    void ShowRuntimeInfo();
 
-    void GetSystemId();
+    void CreateSystemId();
+
+    void DestroySystemId();
+
+    void CreateDebugMessenger();
+
+    void DestroyDebugMessenger();
 
     void CreateReferenceSpace();
 
     void DestroyReferenceSpace();
 
 private:
-    common::OpenXrContext& m_context;
+    XrInstance m_instance{ XR_NULL_HANDLE };
+    XrSystemId m_systemId{ XR_NULL_SYSTEM_ID };
 
     std::vector<const char*> m_activeAPILayers;
     std::vector<const char*> m_activeInstanceExtensions;
@@ -70,7 +80,10 @@ private:
     XrGraphicsBindingVulkanKHR m_graphicsBinding{};
     XrViewConfigurationType m_viewConfiguration{ XR_VIEW_CONFIGURATION_TYPE_MAX_ENUM };
 
+    XrSession m_session{ XR_NULL_HANDLE };
     XrSessionState m_sessionState{ XR_SESSION_STATE_UNKNOWN };
+
+    XrSpace m_localSpace{ XR_NULL_HANDLE };
 
     bool m_applicationRunning{ true };
     bool m_sessionRunning{ false };

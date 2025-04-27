@@ -4,12 +4,12 @@
 #ifdef ENABLE_XR
 
 #include "common/OpenXrCommon.h"
-#include "common/OpenXrContext.h"
 
 #include "core/OpenXrCore.h"
 #include "render/OpenXrRender.h"
 #include "input/OpenXrInput.h"
 
+#include <memory>
 #include <vector>
 
 namespace prev::xr {
@@ -61,13 +61,11 @@ public:
     float GetCurrentDeltaTime() const;
 
 private:
-    common::OpenXrContext m_context;
+    std::unique_ptr<core::OpenXrCore> m_core{};
 
-    core::OpenXrCore m_core;
+    std::unique_ptr<render::OpenXrRender> m_render{};
 
-    render::OpenXrRender m_render;
-
-    input::OpenXrInput m_input;
+    std::unique_ptr<input::OpenXrInput> m_input{};
 };
 } // namespace prev::xr
 
