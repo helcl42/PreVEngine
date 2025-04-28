@@ -282,3 +282,9 @@ else()
     message(FATAL_ERROR "Unsupported plaform.")
 endif()
 
+if(ENABLE_XR)
+    message("${PROJECT_NAME} - Using XR")
+else()
+    message("${PROJECT_NAME} - Not using XR")
+endif()
+

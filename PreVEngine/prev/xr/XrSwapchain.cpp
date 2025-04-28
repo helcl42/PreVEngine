@@ -76,6 +76,8 @@ XrSwapchain::XrSwapchain(prev::core::device::Device& device, prev::core::memory:
         swapchainBuffer.fence = util::vk::CreateFence(m_device, VK_FENCE_CREATE_SIGNALED_BIT);
         swapchainBuffer.extent = m_extent;
     }
+
+    LOGI("XR Swapchain created");
 }
 
 XrSwapchain::~XrSwapchain()
@@ -93,7 +95,7 @@ XrSwapchain::~XrSwapchain()
         swapchainBuffer.Destroy(m_device);
     }
 
-    LOGI("Swapchain destroyed\n");
+    LOGI("XR Swapchain destroyed\n");
 }
 
 bool XrSwapchain::UpdateExtent(uint32_t width, uint32_t height)
