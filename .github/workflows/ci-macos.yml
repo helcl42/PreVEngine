@@ -66,6 +66,10 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
+    - name: Compile Shaders
+      run: |
+        python3 Scripts/compile_shaders.py --input_folder PreVEngineTest/assets/Shaders/ --output_folder ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/assets/Shaders/ --compile_serial --compiler_args '-DMAX_VIEW_COUNT=1 ' --force_compile_all
+
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
