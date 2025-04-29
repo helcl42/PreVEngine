@@ -125,7 +125,7 @@ bool XrSwapchain::SetPresentMode(VkPresentModeKHR preferredMode)
 
 void XrSwapchain::Print() const
 {
-    LOGI("XSwapchain:");
+    LOGI("XR Swapchain:");
 
     LOGI("\tColor   = %3d : %s", m_renderPass.GetColorFormat(), util::vk::FormatToString(m_renderPass.GetColorFormat()).c_str());
     LOGI("\tDepth   = %3d : %s", m_renderPass.GetDepthFormat(), util::vk::FormatToString(m_renderPass.GetDepthFormat()).c_str());

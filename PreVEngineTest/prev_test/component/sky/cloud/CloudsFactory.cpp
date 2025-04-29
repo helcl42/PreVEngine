@@ -27,8 +27,6 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
         int perlinOctaves;
     };
 
-    const auto weatherImageFormat{ VK_FORMAT_R8G8B8A8_UNORM };
-
     const auto& computeQueue{ m_device.GetQueue(prev::core::device::QueueType::COMPUTE) };
 
     // clang-format off
