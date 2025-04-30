@@ -92,7 +92,7 @@ jobs:
       run: |
         cd PreVEngineTest/platform/android
         chmod a+x gradlew
-        ./gradlew clean assembleDebug
+        ./gradlew assembleDebug
 
     - name: Create Artifact
       run: |
