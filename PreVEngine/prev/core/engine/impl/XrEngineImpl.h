@@ -45,6 +45,8 @@ private:
 };
 } // namespace prev::core::engine::impl
 
+#else 
+#error "XR is not enabled. Please enable XR in the build configuration."
 #endif
 
 #endif
