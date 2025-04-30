@@ -36,11 +36,6 @@ jobs:
       with:
         python-version: 3.12.2
 
-    - name: Install Cmake
-      uses: ssrobins/install-cmake@v1
-      with:
-        version: 3.22.1
-        
     - name: Setup Android SDK
       uses: actions/setup-java@v4
       with:
@@ -97,7 +92,7 @@ jobs:
       run: |
         cd PreVEngineTest/platform/android
         chmod a+x gradlew
-        ./gradlew assembleDebug
+        ./gradlew clean assembleDebug -Pcmake.arg.ENABLE_XR=ON
 
     - name: Create Artifact
       run: |
