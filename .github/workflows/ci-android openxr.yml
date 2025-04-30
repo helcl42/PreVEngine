@@ -24,6 +24,7 @@ jobs:
       matrix:
         c_compiler: [clang]
         cpp_compiler: [clang++]
+        build_type: [Debug]
 
     steps:
     - uses: actions/checkout@v4
