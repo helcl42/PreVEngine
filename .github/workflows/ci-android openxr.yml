@@ -89,8 +89,10 @@ jobs:
     - name: Build
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       # run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+      # TODO fix the temporary hack with sed - this is a workaround for the fact that the gradle build system does not support passing in CMake arguments
       run: |
         cd PreVEngineTest/platform/android
+        sed -i "s/'-DANDROID_STL=c++_static'/'-DANDROID_STL=c++_static','-DENABLE_XR=ON'/g" app/build.gradle
         chmod a+x gradlew
         ./gradlew clean assembleDebug
 
