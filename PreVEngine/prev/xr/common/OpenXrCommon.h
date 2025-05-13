@@ -3,9 +3,9 @@
 
 #ifdef ENABLE_XR
 
-#include "../..//common/Common.h"
-#include "../..//common/Logger.h"
-#include "../..//core/Core.h"
+#include "../../common/Common.h"
+#include "../../common/Logger.h"
+#include "../../core/Core.h"
 
 #if defined(TARGET_PLATFORM_ANDROID)
 #define XR_USE_PLATFORM_ANDROID

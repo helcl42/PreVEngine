@@ -15,7 +15,7 @@ public:
 private:
     XrDebugUtilsMessengerEXT m_debugUtilsMessenger{};
 };
-}
+} // namespace prev::xr::core
 
 #endif
 

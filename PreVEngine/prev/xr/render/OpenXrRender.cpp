@@ -182,7 +182,7 @@ bool OpenXrRender::BeginFrame()
     viewLocateInfo.viewConfigurationType = m_viewConfiguration;
     viewLocateInfo.displayTime = frameState.predictedDisplayTime;
     viewLocateInfo.space = m_localSpace;
-    uint32_t viewCount = 0;
+    uint32_t viewCount{ 0 };
     XrResult result = xrLocateViews(m_session, &viewLocateInfo, &viewState, static_cast<uint32_t>(views.size()), &viewCount, views.data());
     if (result != XR_SUCCESS) {
         LOGE("Failed to locate Views.");
@@ -217,8 +217,8 @@ bool OpenXrRender::BeginFrame()
     OPENXR_CHECK(xrWaitSwapchainImage(m_depthSwapchainInfo.swapchain, &waitInfo), "Failed to wait for Image from the Depth Swapchain");
 
     // Get the width and height and construct the viewport and scissors.
-    const uint32_t& width{ m_viewConfigurationViews[0].recommendedImageRectWidth };
-    const uint32_t& height{ m_viewConfigurationViews[0].recommendedImageRectHeight };
+    const int32_t width{ static_cast<int32_t>(m_viewConfigurationViews[0].recommendedImageRectWidth) };
+    const int32_t height{ static_cast<int32_t>(m_viewConfigurationViews[0].recommendedImageRectHeight) };
 
     // Fill out the XrCompositionLayerProjectionView structure specifying the pose and fov from the view.
     // This also associates the swapchain image with this layer projection view.
@@ -231,8 +231,8 @@ bool OpenXrRender::BeginFrame()
         m_renderLayerInfo.layerProjectionViews[i].subImage.swapchain = m_colorSwapchainInfo.swapchain;
         m_renderLayerInfo.layerProjectionViews[i].subImage.imageRect.offset.x = 0;
         m_renderLayerInfo.layerProjectionViews[i].subImage.imageRect.offset.y = 0;
-        m_renderLayerInfo.layerProjectionViews[i].subImage.imageRect.extent.width = static_cast<int32_t>(width);
-        m_renderLayerInfo.layerProjectionViews[i].subImage.imageRect.extent.height = static_cast<int32_t>(height);
+        m_renderLayerInfo.layerProjectionViews[i].subImage.imageRect.extent.width = width;
+        m_renderLayerInfo.layerProjectionViews[i].subImage.imageRect.extent.height = height;
         m_renderLayerInfo.layerProjectionViews[i].subImage.imageArrayIndex = i; // Useful for multiview rendering.
 
         // depth layer
@@ -242,8 +242,8 @@ bool OpenXrRender::BeginFrame()
         m_renderLayerInfo.layerDepthInfos[i].subImage.swapchain = m_depthSwapchainInfo.swapchain;
         m_renderLayerInfo.layerDepthInfos[i].subImage.imageRect.offset.x = 0;
         m_renderLayerInfo.layerDepthInfos[i].subImage.imageRect.offset.y = 0;
-        m_renderLayerInfo.layerDepthInfos[i].subImage.imageRect.extent.width = static_cast<int32_t>(width);
-        m_renderLayerInfo.layerDepthInfos[i].subImage.imageRect.extent.height = static_cast<int32_t>(height);
+        m_renderLayerInfo.layerDepthInfos[i].subImage.imageRect.extent.width = width;
+        m_renderLayerInfo.layerDepthInfos[i].subImage.imageRect.extent.height = height;
         m_renderLayerInfo.layerDepthInfos[i].minDepth = m_minDepth;
         m_renderLayerInfo.layerDepthInfos[i].maxDepth = m_maxDepth;
         m_renderLayerInfo.layerDepthInfos[i].nearZ = m_nearClippingPlane;
@@ -303,7 +303,7 @@ float OpenXrRender::GetCurrentDeltaTime() const
 
 uint32_t OpenXrRender::GetCurrentSwapchainIndex() const
 {
-    return  m_currentSwapchainIndex;
+    return m_currentSwapchainIndex;
 }
 
 uint32_t OpenXrRender::GetViewCount() const
@@ -432,6 +432,6 @@ void OpenXrRender::DestroyEnvironmentBlendModes()
     m_environmentBlendModes.clear();
     m_environmentBlendMode = XR_ENVIRONMENT_BLEND_MODE_MAX_ENUM;
 }
-}
+} // namespace prev::xr::component::render
 
 #endif

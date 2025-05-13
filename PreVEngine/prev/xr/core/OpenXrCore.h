@@ -10,8 +10,8 @@
 
 #include "../../common/pattern/Observer.h"
 
-#include <vector>
 #include <memory>
+#include <vector>
 
 namespace prev::xr::core {
 class OpenXrCore final {
@@ -92,7 +92,7 @@ private:
 
     std::unique_ptr<OpenXrDebugMessenger> m_debugMessenger{};
 };
-}
+} // namespace prev::xr::core
 
 #endif
 

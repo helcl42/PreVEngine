@@ -4,8 +4,8 @@
 
 #include "../XrEvents.h"
 
-#include "../../util/MathUtils.h"
 #include "../../event/EventChannel.h"
+#include "../../util/MathUtils.h"
 
 #include <vector>
 
@@ -259,25 +259,6 @@ void OpenXrInput::PollActions(const XrTime time)
 
     prev::event::EventChannel::Post(handsEvent);
 }
-
-void OpenXrInput::OnOpenXrEvent(const XrEventDataBuffer& evt)
-{
-    switch (evt.type) {
-        case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED: {
-            const XrEventDataInteractionProfileChanged* interactionProfileChanged = reinterpret_cast<const XrEventDataInteractionProfileChanged*>(&evt);
-            LOGI("OPENXR: Interaction Profile changed for Session: %p", interactionProfileChanged->session);
-            if (interactionProfileChanged->session != m_session) {
-                LOGW("XrEventDataInteractionProfileChanged for unknown Session");
-                break;
-            }
-            RecordCurrentBindings();
-            break;
-        }
-        default: {
-            break;
-        }
-    }
-}
-}
+} // namespace prev::xr::input
 
 #endif

@@ -16,20 +16,22 @@ namespace {
     PFN_xrGetVulkanDeviceExtensionsKHR xrGetVulkanDeviceExtensionsKHR{};
     PFN_xrGetVulkanGraphicsDeviceKHR xrGetVulkanGraphicsDeviceKHR{};
 
-    void LoadXrExtensionFunctions(XrInstance xrInstance) {
-        OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrGetVulkanGraphicsRequirementsKHR", (PFN_xrVoidFunction *) &xrGetVulkanGraphicsRequirementsKHR),
+    inline void LoadXrExtensionFunctions(XrInstance xrInstance)
+    {
+        OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrGetVulkanGraphicsRequirementsKHR", (PFN_xrVoidFunction*)&xrGetVulkanGraphicsRequirementsKHR),
                      "Failed to get InstanceProcAddr for xrGetVulkanGraphicsRequirementsKHR.");
-        OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrGetVulkanInstanceExtensionsKHR", (PFN_xrVoidFunction *) &xrGetVulkanInstanceExtensionsKHR),
+        OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrGetVulkanInstanceExtensionsKHR", (PFN_xrVoidFunction*)&xrGetVulkanInstanceExtensionsKHR),
                      "Failed to get InstanceProcAddr for xrGetVulkanInstanceExtensionsKHR.");
-        OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrGetVulkanDeviceExtensionsKHR", (PFN_xrVoidFunction *) &xrGetVulkanDeviceExtensionsKHR),
+        OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrGetVulkanDeviceExtensionsKHR", (PFN_xrVoidFunction*)&xrGetVulkanDeviceExtensionsKHR),
                      "Failed to get InstanceProcAddr for xrGetVulkanDeviceExtensionsKHR.");
-        OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrGetVulkanGraphicsDeviceKHR", (PFN_xrVoidFunction *) &xrGetVulkanGraphicsDeviceKHR),
+        OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrGetVulkanGraphicsDeviceKHR", (PFN_xrVoidFunction*)&xrGetVulkanGraphicsDeviceKHR),
                      "Failed to get InstanceProcAddr for xrGetVulkanGraphicsDeviceKHR.");
     }
 
-    inline bool IsStringInVector(const std::vector<const char *> &list, const char *name) {
-        bool found{false};
-        for (const auto &item: list) {
+    inline bool IsStringInVector(const std::vector<const char*>& list, const char* name)
+    {
+        bool found{ false };
+        for (const auto& item : list) {
             if (strcmp(name, item) == 0) {
                 found = true;
                 break;
@@ -37,7 +39,7 @@ namespace {
         }
         return found;
     }
-}
+} // namespace
 
 OpenXrCore::OpenXrCore()
 {
@@ -114,7 +116,7 @@ void OpenXrCore::CreateSession(const XrGraphicsBindingVulkanKHR& graphicsBinding
     m_graphicsBinding = graphicsBinding;
     m_viewConfiguration = viewConfiguration;
 
-    XrSessionCreateInfo sessionCreateInfo{XR_TYPE_SESSION_CREATE_INFO };
+    XrSessionCreateInfo sessionCreateInfo{ XR_TYPE_SESSION_CREATE_INFO };
     sessionCreateInfo.next = &m_graphicsBinding;
     sessionCreateInfo.createFlags = 0;
     sessionCreateInfo.systemId = m_systemId;
@@ -373,6 +375,6 @@ void OpenXrCore::DestroyReferenceSpace()
 {
     OPENXR_CHECK(xrDestroySpace(m_localSpace), "Failed to destroy Space.")
 }
-}
+} // namespace prev::xr::core
 
 #endif
