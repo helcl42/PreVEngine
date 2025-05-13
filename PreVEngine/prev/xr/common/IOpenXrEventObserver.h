@@ -13,7 +13,7 @@ public:
 public:
     virtual ~IOpenXrEventObserver() = default;
 };
-}
+} // namespace prev::xr::common
 
 #endif
 

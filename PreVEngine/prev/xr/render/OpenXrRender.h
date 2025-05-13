@@ -136,7 +136,7 @@ private:
     float m_maxDepth{ 1.0f };
 
 private:
-    prev::event::EventHandler<OpenXrRender, XrCameraFeedbackEvent> m_cameraFeedbackHandler{*this };
+    prev::event::EventHandler<OpenXrRender, XrCameraFeedbackEvent> m_cameraFeedbackHandler{ *this };
 };
 } // namespace prev::xr::render
 

@@ -209,7 +209,7 @@ void OpenXrCore::PollEvents()
         }
         }
 
-        for(auto& o : m_eventObserver.GetObservers()) {
+        for (auto& o : m_eventObserver.GetObservers()) {
             o->OnEvent(eventData);
         }
     }

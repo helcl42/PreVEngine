@@ -8,13 +8,13 @@ namespace prev::xr::render {
 namespace {
     VkImageAspectFlags ToVkImageAspectFlags(const XrSwapchainUsageFlags xrUsageFlags)
     {
-        if(xrUsageFlags & XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) {
+        if (xrUsageFlags & XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) {
             return VK_IMAGE_ASPECT_DEPTH_BIT;
         } else {
             return VK_IMAGE_ASPECT_COLOR_BIT;
         }
     }
-}
+} // namespace
 
 OpenXrRender::OpenXrRender(XrInstance instance, XrSystemId systemId)
     : m_instance{ instance }
@@ -410,6 +410,6 @@ void OpenXrRender::DestroySwapchain(SwapchainInfo& swapchainInfo)
     OPENXR_CHECK(xrDestroySwapchain(swapchainInfo.swapchain), "Failed to destroy Color Swapchain");
     swapchainInfo = {};
 }
-} // namespace prev::xr::component::render
+} // namespace prev::xr::render
 
 #endif

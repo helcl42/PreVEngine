@@ -5,8 +5,8 @@
 
 #include "OpenXrDebugMessenger.h"
 
-#include "../common/OpenXrCommon.h"
 #include "../common/IOpenXrEventObserver.h"
+#include "../common/OpenXrCommon.h"
 
 #include "../../common/pattern/Observer.h"
 
