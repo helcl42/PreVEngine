@@ -332,7 +332,7 @@ void OpenXrRender::DestroyEnvironmentBlendModes()
 void OpenXrRender::CreateSwapchains()
 {
     // Get the supported swapchain formats as an array of int64_t and ordered by runtime preference.
-    uint32_t formatCount = 0;
+    uint32_t formatCount{ 0 };
     OPENXR_CHECK(xrEnumerateSwapchainFormats(m_session, 0, &formatCount, nullptr), "Failed to enumerate Swapchain Formats");
     std::vector<int64_t> formats(formatCount);
     OPENXR_CHECK(xrEnumerateSwapchainFormats(m_session, formatCount, &formatCount, formats.data()), "Failed to enumerate Swapchain Formats");
@@ -389,10 +389,8 @@ void OpenXrRender::CreateSwapchain(const XrViewConfigurationView viewConfigurati
     // Get the number of images in the color/depth swapchain and allocate Swapchain image data via GraphicsAPI to store the returned array.
     uint32_t swapchainImageCount{ 0 };
     OPENXR_CHECK(xrEnumerateSwapchainImages(outSwapchainInfo.swapchain, 0, &swapchainImageCount, nullptr), "Failed to enumerate Color Swapchain Images.");
-
     outSwapchainInfo.xrImages.resize(swapchainImageCount, { XR_TYPE_SWAPCHAIN_IMAGE_VULKAN_KHR });
     XrSwapchainImageBaseHeader* swapchainImages = reinterpret_cast<XrSwapchainImageBaseHeader*>(outSwapchainInfo.xrImages.data());
-
     OPENXR_CHECK(xrEnumerateSwapchainImages(outSwapchainInfo.swapchain, swapchainImageCount, &swapchainImageCount, swapchainImages), "Failed to enumerate Swapchain Images.");
 
     const VkImageAspectFlags vkImageAspectFlags{ ToVkImageAspectFlags(usageFlags) };
