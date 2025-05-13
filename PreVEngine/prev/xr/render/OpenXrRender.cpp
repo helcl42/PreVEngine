@@ -356,7 +356,7 @@ const XrGraphicsBindingVulkanKHR& OpenXrRender::GetGraphicsBinding() const
     return m_graphicsBinding;
 }
 
-void OpenXrRender::OnOpenXrEvent(const XrEventDataBuffer& evt)
+void OpenXrRender::OnEvent(const XrEventDataBuffer& evt)
 {
 }
 

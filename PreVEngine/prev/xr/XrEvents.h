@@ -8,9 +8,13 @@
 #include "../util/MathUtils.h"
 
 namespace prev::xr {
+
+constexpr const uint32_t MAX_HAND_COUNT{ 2 };
+constexpr const uint32_t MAX_HAND_TRACKING_JOINT_COUNT{ 26 };
+
 struct XrCameraEvent {
-    prev::util::math::Pose poses[MAX_VIEW_COUNT] = {};
-    prev::util::math::Fov fovs[MAX_VIEW_COUNT] = {};
+    prev::util::math::Pose poses[MAX_VIEW_COUNT]{};
+    prev::util::math::Fov fovs[MAX_VIEW_COUNT]{};
     uint32_t count{};
 };
 
@@ -34,7 +38,7 @@ enum class HandType : uint32_t {
     RIGHT = 1
 };
 
-struct XrHandEvent {
+struct XrHandControllerEvent {
     HandType type{};
     bool active{};
     prev::util::math::Pose pose{};
@@ -42,8 +46,24 @@ struct XrHandEvent {
     prev::common::FlagSet<HandEventFlags> flags{};
 };
 
+struct XrHandJoint {
+    bool active{};
+    prev::util::math::Pose pose{};
+    float radius{};
+};
+
+struct XrHandEvent {
+    HandType type{};
+    bool active{};
+    XrHandJoint joints[MAX_HAND_TRACKING_JOINT_COUNT]{};
+};
+
+struct XrHandControllersEvent {
+    XrHandControllerEvent handControllers[MAX_HAND_COUNT]{};
+};
+
 struct XrHandsEvent {
-    XrHandEvent hands[2] = {};
+    XrHandEvent hands[MAX_HAND_COUNT]{};
 };
 } // namespace prev::xr
 

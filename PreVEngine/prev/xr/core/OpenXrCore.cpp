@@ -19,13 +19,13 @@ namespace {
     inline void LoadXrExtensionFunctions(XrInstance xrInstance)
     {
         OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrGetVulkanGraphicsRequirementsKHR", (PFN_xrVoidFunction*)&xrGetVulkanGraphicsRequirementsKHR),
-                     "Failed to get InstanceProcAddr for xrGetVulkanGraphicsRequirementsKHR.");
+            "Failed to get InstanceProcAddr for xrGetVulkanGraphicsRequirementsKHR.");
         OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrGetVulkanInstanceExtensionsKHR", (PFN_xrVoidFunction*)&xrGetVulkanInstanceExtensionsKHR),
-                     "Failed to get InstanceProcAddr for xrGetVulkanInstanceExtensionsKHR.");
+            "Failed to get InstanceProcAddr for xrGetVulkanInstanceExtensionsKHR.");
         OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrGetVulkanDeviceExtensionsKHR", (PFN_xrVoidFunction*)&xrGetVulkanDeviceExtensionsKHR),
-                     "Failed to get InstanceProcAddr for xrGetVulkanDeviceExtensionsKHR.");
+            "Failed to get InstanceProcAddr for xrGetVulkanDeviceExtensionsKHR.");
         OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrGetVulkanGraphicsDeviceKHR", (PFN_xrVoidFunction*)&xrGetVulkanGraphicsDeviceKHR),
-                     "Failed to get InstanceProcAddr for xrGetVulkanGraphicsDeviceKHR.");
+            "Failed to get InstanceProcAddr for xrGetVulkanGraphicsDeviceKHR.");
     }
 
     inline bool IsStringInVector(const std::vector<const char*>& list, const char* name)
@@ -50,7 +50,7 @@ OpenXrCore::OpenXrCore()
     ShowRuntimeInfo();
 }
 
-OpenXrCore::~OpenXrCore() 
+OpenXrCore::~OpenXrCore()
 {
     DestroySystemId();
     DestroyDebugMessenger();
@@ -143,74 +143,74 @@ void OpenXrCore::PollEvents()
     XrEventDataBuffer eventData{ XR_TYPE_EVENT_DATA_BUFFER };
     while (XrPollEvents(m_instance, eventData)) {
         switch (eventData.type) {
-            case XR_TYPE_EVENT_DATA_EVENTS_LOST: {
-                XrEventDataEventsLost* eventsLost = reinterpret_cast<XrEventDataEventsLost*>(&eventData);
-                LOGI("OPENXR: Events Lost: %d", eventsLost->lostEventCount);
+        case XR_TYPE_EVENT_DATA_EVENTS_LOST: {
+            XrEventDataEventsLost* eventsLost = reinterpret_cast<XrEventDataEventsLost*>(&eventData);
+            LOGI("OPENXR: Events Lost: %d", eventsLost->lostEventCount);
+            break;
+        }
+        case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING: {
+            XrEventDataInstanceLossPending* instanceLossPending = reinterpret_cast<XrEventDataInstanceLossPending*>(&eventData);
+            LOGI("OPENXR: Instance Loss Pending at: %ld", instanceLossPending->lossTime);
+            m_sessionRunning = false;
+            m_applicationRunning = false;
+            break;
+        }
+        case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED: {
+            XrEventDataInteractionProfileChanged* interactionProfileChanged = reinterpret_cast<XrEventDataInteractionProfileChanged*>(&eventData);
+            LOGI("OPENXR: Interaction Profile changed for Session: %p", interactionProfileChanged->session);
+            if (interactionProfileChanged->session != m_session) {
+                LOGW("XrEventDataInteractionProfileChanged for unknown Session");
                 break;
             }
-            case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING: {
-                XrEventDataInstanceLossPending* instanceLossPending = reinterpret_cast<XrEventDataInstanceLossPending*>(&eventData);
-                LOGI("OPENXR: Instance Loss Pending at: %ld", instanceLossPending->lossTime);
+            break;
+        }
+        case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING: {
+            XrEventDataReferenceSpaceChangePending* referenceSpaceChangePending = reinterpret_cast<XrEventDataReferenceSpaceChangePending*>(&eventData);
+            LOGI("OPENXR: Reference Space Change pending for Session: %p", referenceSpaceChangePending->session);
+            if (referenceSpaceChangePending->session != m_session) {
+                LOGW("XrEventDataReferenceSpaceChangePending for unknown Session");
+                break;
+            }
+            break;
+        }
+        case XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: {
+            XrEventDataSessionStateChanged* sessionStateChanged = reinterpret_cast<XrEventDataSessionStateChanged*>(&eventData);
+            if (sessionStateChanged->session != m_session) {
+                LOGW("XrEventDataSessionStateChanged for unknown Session");
+                break;
+            }
+
+            if (sessionStateChanged->state == XR_SESSION_STATE_READY) {
+                XrSessionBeginInfo sessionBeginInfo{ XR_TYPE_SESSION_BEGIN_INFO };
+                sessionBeginInfo.primaryViewConfigurationType = m_viewConfiguration;
+                OPENXR_CHECK(xrBeginSession(m_session, &sessionBeginInfo), "Failed to begin Session.");
+                m_sessionRunning = true;
+            }
+            if (sessionStateChanged->state == XR_SESSION_STATE_STOPPING) {
+                OPENXR_CHECK(xrEndSession(m_session), "Failed to end Session.");
+                m_sessionRunning = false;
+            }
+            if (sessionStateChanged->state == XR_SESSION_STATE_EXITING) {
                 m_sessionRunning = false;
                 m_applicationRunning = false;
-                break;
             }
-            case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED: {
-                XrEventDataInteractionProfileChanged* interactionProfileChanged = reinterpret_cast<XrEventDataInteractionProfileChanged*>(&eventData);
-                LOGI("OPENXR: Interaction Profile changed for Session: %p", interactionProfileChanged->session);
-                if (interactionProfileChanged->session != m_session) {
-                    LOGW("XrEventDataInteractionProfileChanged for unknown Session");
-                    break;
-                }
-                break;
+            if (sessionStateChanged->state == XR_SESSION_STATE_LOSS_PENDING) {
+                // SessionState is loss pending. Exit the application.
+                // It's possible to try a reestablish an XrInstance and XrSession, but we will simply exit here.
+                m_sessionRunning = false;
+                m_applicationRunning = false;
             }
-            case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING: {
-                XrEventDataReferenceSpaceChangePending* referenceSpaceChangePending = reinterpret_cast<XrEventDataReferenceSpaceChangePending*>(&eventData);
-                LOGI("OPENXR: Reference Space Change pending for Session: %p", referenceSpaceChangePending->session);
-                if (referenceSpaceChangePending->session != m_session) {
-                    LOGW("XrEventDataReferenceSpaceChangePending for unknown Session");
-                    break;
-                }
-                break;
-            }
-            case XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: {
-                XrEventDataSessionStateChanged* sessionStateChanged = reinterpret_cast<XrEventDataSessionStateChanged*>(&eventData);
-                if (sessionStateChanged->session != m_session) {
-                    LOGW("XrEventDataSessionStateChanged for unknown Session");
-                    break;
-                }
-
-                if (sessionStateChanged->state == XR_SESSION_STATE_READY) {
-                    XrSessionBeginInfo sessionBeginInfo{ XR_TYPE_SESSION_BEGIN_INFO };
-                    sessionBeginInfo.primaryViewConfigurationType = m_viewConfiguration;
-                    OPENXR_CHECK(xrBeginSession(m_session, &sessionBeginInfo), "Failed to begin Session.");
-                    m_sessionRunning = true;
-                }
-                if (sessionStateChanged->state == XR_SESSION_STATE_STOPPING) {
-                    OPENXR_CHECK(xrEndSession(m_session), "Failed to end Session.");
-                    m_sessionRunning = false;
-                }
-                if (sessionStateChanged->state == XR_SESSION_STATE_EXITING) {
-                    m_sessionRunning = false;
-                    m_applicationRunning = false;
-                }
-                if (sessionStateChanged->state == XR_SESSION_STATE_LOSS_PENDING) {
-                    // SessionState is loss pending. Exit the application.
-                    // It's possible to try a reestablish an XrInstance and XrSession, but we will simply exit here.
-                    m_sessionRunning = false;
-                    m_applicationRunning = false;
-                }
-                // Store state for reference across the application.
-                m_sessionState = sessionStateChanged->state;
-                break;
-            }
-            default: {
-                break;
-            }
+            // Store state for reference across the application.
+            m_sessionState = sessionStateChanged->state;
+            break;
+        }
+        default: {
+            break;
+        }
         }
 
         for(auto& o : m_eventObserver.GetObservers()) {
-            o->OnOpenXrEvent(eventData);
+            o->OnEvent(eventData);
         }
     }
 }
@@ -240,6 +240,11 @@ XrSystemId OpenXrCore::GetSystemId() const
     return m_systemId;
 }
 
+bool OpenXrCore::IsHandTrackingSupported() const
+{
+    return m_handTrackingSystemProperties.supportsHandTracking;
+}
+
 void OpenXrCore::CreateInstance()
 {
     XrApplicationInfo applicationInfo{};
@@ -251,12 +256,12 @@ void OpenXrCore::CreateInstance()
 
     {
         m_instanceExtensions.push_back(XR_EXT_DEBUG_UTILS_EXTENSION_NAME);
+
         m_instanceExtensions.push_back(XR_KHR_VULKAN_ENABLE_EXTENSION_NAME);
+        m_instanceExtensions.push_back(XR_KHR_COMPOSITION_LAYER_DEPTH_EXTENSION_NAME);
 
         m_instanceExtensions.push_back(XR_EXT_HAND_TRACKING_EXTENSION_NAME);
         m_instanceExtensions.push_back(XR_EXT_HAND_INTERACTION_EXTENSION_NAME);
-
-        m_instanceExtensions.push_back(XR_KHR_COMPOSITION_LAYER_DEPTH_EXTENSION_NAME);
     }
 
     // Get all the API Layers from the OpenXR runtime.
@@ -307,7 +312,7 @@ void OpenXrCore::CreateInstance()
     }
 
     // Fill out an XrInstanceCreateInfo structure and create an XrInstance.
-    XrInstanceCreateInfo instanceCreateInfo{XR_TYPE_INSTANCE_CREATE_INFO };
+    XrInstanceCreateInfo instanceCreateInfo{ XR_TYPE_INSTANCE_CREATE_INFO };
     instanceCreateInfo.createFlags = 0;
     instanceCreateInfo.applicationInfo = applicationInfo;
     instanceCreateInfo.enabledApiLayerCount = static_cast<uint32_t>(m_activeAPILayers.size());
@@ -342,6 +347,8 @@ void OpenXrCore::CreateSystemId()
     XrSystemGetInfo systemGetInfo{ XR_TYPE_SYSTEM_GET_INFO };
     systemGetInfo.formFactor = XR_FORM_FACTOR_HEAD_MOUNTED_DISPLAY;
     OPENXR_CHECK(xrGetSystem(m_instance, &systemGetInfo, &m_systemId), "Failed to get SystemID.");
+
+    m_systemProperties.next = &m_handTrackingSystemProperties;
 
     OPENXR_CHECK(xrGetSystemProperties(m_instance, m_systemId, &m_systemProperties), "Failed to get SystemProperties.");
 }

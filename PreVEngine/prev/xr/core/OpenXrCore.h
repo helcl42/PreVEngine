@@ -47,6 +47,8 @@ public:
 
     XrSystemId GetSystemId() const;
 
+    bool IsHandTrackingSupported() const;
+
 private:
     void CreateInstance();
 
@@ -76,6 +78,7 @@ private:
     std::vector<std::string> m_instanceExtensions;
 
     XrSystemProperties m_systemProperties{ XR_TYPE_SYSTEM_PROPERTIES };
+    XrSystemHandTrackingPropertiesEXT m_handTrackingSystemProperties{ XR_TYPE_SYSTEM_HAND_TRACKING_PROPERTIES_EXT };
 
     XrGraphicsBindingVulkanKHR m_graphicsBinding{};
     XrViewConfigurationType m_viewConfiguration{ XR_VIEW_CONFIGURATION_TYPE_MAX_ENUM };

@@ -6,8 +6,9 @@
 #include "common/OpenXrCommon.h"
 
 #include "core/OpenXrCore.h"
-#include "render/OpenXrRender.h"
+
 #include "input/OpenXrInput.h"
+#include "render/OpenXrRender.h"
 
 #include <memory>
 #include <vector>

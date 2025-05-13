@@ -61,7 +61,7 @@ public:
     const XrGraphicsBindingVulkanKHR& GetGraphicsBinding() const;
 
 public:
-    void OnOpenXrEvent(const XrEventDataBuffer& evt) override;
+    void OnEvent(const XrEventDataBuffer& evt) override;
 
 public:
     void operator()(const XrCameraFeedbackEvent& event);

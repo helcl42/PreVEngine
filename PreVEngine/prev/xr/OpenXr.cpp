@@ -6,7 +6,7 @@ namespace prev::xr {
 OpenXr::OpenXr()
     : m_core{ std::make_unique<core::OpenXrCore>() }
     , m_render{ std::make_unique<render::OpenXrRender>(m_core->GetInstance(), m_core->GetSystemId()) }
-    , m_input{ std::make_unique<input::OpenXrInput>(m_core->GetInstance(), m_core->GetSystemId()) }
+    , m_input{ std::make_unique<input::OpenXrInput>(m_core->GetInstance(), m_core->GetSystemId(), m_core->IsHandTrackingSupported()) }
 {
     m_core->RegisterOpenXrEventObserver(*m_render);
     m_core->RegisterOpenXrEventObserver(*m_input);

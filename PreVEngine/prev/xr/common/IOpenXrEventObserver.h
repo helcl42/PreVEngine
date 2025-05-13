@@ -8,7 +8,7 @@
 namespace prev::xr::common {
 class IOpenXrEventObserver {
 public:
-    virtual void OnOpenXrEvent(const XrEventDataBuffer& evt) = 0;
+    virtual void OnEvent(const XrEventDataBuffer& evt) = 0;
 
 public:
     virtual ~IOpenXrEventObserver() = default;
