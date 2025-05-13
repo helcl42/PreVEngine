@@ -5,6 +5,17 @@
 #include "../../util/VkUtils.h"
 
 namespace prev::xr::render {
+namespace {
+    VkImageAspectFlags ToVkImageAspectFlags(const XrSwapchainUsageFlags xrUsageFlags)
+    {
+        if(xrUsageFlags & XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) {
+            return VK_IMAGE_ASPECT_DEPTH_BIT;
+        } else {
+            return VK_IMAGE_ASPECT_COLOR_BIT;
+        }
+    }
+}
+
 OpenXrRender::OpenXrRender(XrInstance instance, XrSystemId systemId)
     : m_instance{ instance }
     , m_systemId{ systemId }
@@ -41,121 +52,6 @@ void OpenXrRender::OnReferenceSpaceCreate(XrSpace space)
 void OpenXrRender::OnReferenceSpaceDestroy()
 {
     m_localSpace = XR_NULL_HANDLE;
-}
-
-void OpenXrRender::CreateSwapchains()
-{
-    // Get the supported swapchain formats as an array of int64_t and ordered by runtime preference.
-    uint32_t formatCount = 0;
-    OPENXR_CHECK(xrEnumerateSwapchainFormats(m_session, 0, &formatCount, nullptr), "Failed to enumerate Swapchain Formats");
-    std::vector<int64_t> formats(formatCount);
-    OPENXR_CHECK(xrEnumerateSwapchainFormats(m_session, formatCount, &formatCount, formats.data()), "Failed to enumerate Swapchain Formats");
-
-    auto colorFormatIter = std::find(formats.begin(), formats.end(), m_preferredColorFormat);
-    if (colorFormatIter == formats.cend()) {
-        LOGE("Failed to find color format for Swapchain.");
-    }
-
-    auto depthFormatIter = std::find(formats.begin(), formats.end(), m_preferredDepthFormat);
-    if (depthFormatIter == formats.cend()) {
-        LOGE("Failed to find depth format for Swapchain.");
-    }
-
-    bool coherentViews = m_viewConfiguration == XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
-    for (const XrViewConfigurationView& viewConfigurationView : m_viewConfigurationViews) {
-        // Check the current view size against the first view.
-        coherentViews |= m_viewConfigurationViews[0].recommendedImageRectWidth == viewConfigurationView.recommendedImageRectWidth;
-        coherentViews |= m_viewConfigurationViews[0].recommendedImageRectHeight == viewConfigurationView.recommendedImageRectHeight;
-    }
-    if (!coherentViews) {
-        LOGE("The views are not coherent. Unable to create a single Swapchain.");
-    }
-
-    const XrViewConfigurationView& viewConfigurationView{ m_viewConfigurationViews[0] };
-    const uint32_t viewCount{ static_cast<uint32_t>(m_viewConfigurationViews.size()) };
-
-    // Color
-    XrSwapchainCreateInfo colorSwapchainCreateInfo{XR_TYPE_SWAPCHAIN_CREATE_INFO };
-    colorSwapchainCreateInfo.createFlags = 0;
-    colorSwapchainCreateInfo.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
-    colorSwapchainCreateInfo.format = m_preferredColorFormat;
-    colorSwapchainCreateInfo.sampleCount = viewConfigurationView.recommendedSwapchainSampleCount; // Use the recommended values from the XrViewConfigurationView.
-    colorSwapchainCreateInfo.width = viewConfigurationView.recommendedImageRectWidth;
-    colorSwapchainCreateInfo.height = viewConfigurationView.recommendedImageRectHeight;
-    colorSwapchainCreateInfo.faceCount = 1;
-    colorSwapchainCreateInfo.arraySize = viewCount;
-    colorSwapchainCreateInfo.mipCount = 1;
-
-    OPENXR_CHECK(xrCreateSwapchain(m_session, &colorSwapchainCreateInfo, &m_colorSwapchainInfo.swapchain), "Failed to create Color Swapchain");
-    m_colorSwapchainInfo.swapchainFormat = static_cast<VkFormat>(colorSwapchainCreateInfo.format); // Save the swapchain format for later use.
-
-    // Get the number of images in the color/depth swapchain and allocate Swapchain image data via GraphicsAPI to store the returned array.
-    uint32_t colorSwapchainImageCount{ 0 };
-    OPENXR_CHECK(xrEnumerateSwapchainImages(m_colorSwapchainInfo.swapchain, 0, &colorSwapchainImageCount, nullptr), "Failed to enumerate Color Swapchain Images.");
-
-    swapchainImagesMap[m_colorSwapchainInfo.swapchain].first = SwapchainType::COLOR;
-    swapchainImagesMap[m_colorSwapchainInfo.swapchain].second.resize(colorSwapchainImageCount, { XR_TYPE_SWAPCHAIN_IMAGE_VULKAN_KHR });
-    XrSwapchainImageBaseHeader* colorSwapchainImages = reinterpret_cast<XrSwapchainImageBaseHeader*>(swapchainImagesMap[m_colorSwapchainInfo.swapchain].second.data());
-
-    OPENXR_CHECK(xrEnumerateSwapchainImages(m_colorSwapchainInfo.swapchain, colorSwapchainImageCount, &colorSwapchainImageCount, colorSwapchainImages), "Failed to enumerate Color Swapchain Images.");
-
-    for (uint32_t j = 0; j < colorSwapchainImageCount; ++j) {
-        const auto image{ swapchainImagesMap[m_colorSwapchainInfo.swapchain].second[j].image };
-        const auto imageView{ prev::util::vk::CreateImageView(m_graphicsBinding.device, image, m_preferredColorFormat, VK_IMAGE_VIEW_TYPE_2D_ARRAY, 1, VK_IMAGE_ASPECT_COLOR_BIT, viewCount, 0) };
-        m_colorSwapchainInfo.images.push_back(image);
-        m_colorSwapchainInfo.imageViews.push_back(imageView);
-    }
-
-    // Depth.
-    XrSwapchainCreateInfo depthSwapchainCreateInfo{XR_TYPE_SWAPCHAIN_CREATE_INFO };
-    depthSwapchainCreateInfo.createFlags = 0;
-    depthSwapchainCreateInfo.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-    depthSwapchainCreateInfo.format = m_preferredDepthFormat;
-    depthSwapchainCreateInfo.sampleCount = viewConfigurationView.recommendedSwapchainSampleCount; // Use the recommended values from the XrViewConfigurationView.
-    depthSwapchainCreateInfo.width = viewConfigurationView.recommendedImageRectWidth;
-    depthSwapchainCreateInfo.height = viewConfigurationView.recommendedImageRectHeight;
-    depthSwapchainCreateInfo.faceCount = 1;
-    depthSwapchainCreateInfo.arraySize = viewCount;
-    depthSwapchainCreateInfo.mipCount = 1;
-    OPENXR_CHECK(xrCreateSwapchain(m_session, &depthSwapchainCreateInfo, &m_depthSwapchainInfo.swapchain), "Failed to create Depth Swapchain");
-    m_depthSwapchainInfo.swapchainFormat = static_cast<VkFormat>(depthSwapchainCreateInfo.format); // Save the swapchain format for later use.
-
-    uint32_t depthSwapchainImageCount{ 0 };
-    OPENXR_CHECK(xrEnumerateSwapchainImages(m_depthSwapchainInfo.swapchain, 0, &depthSwapchainImageCount, nullptr), "Failed to enumerate Depth Swapchain Images.");
-
-    swapchainImagesMap[m_depthSwapchainInfo.swapchain].first = SwapchainType::DEPTH;
-    swapchainImagesMap[m_depthSwapchainInfo.swapchain].second.resize(depthSwapchainImageCount, { XR_TYPE_SWAPCHAIN_IMAGE_VULKAN_KHR });
-    XrSwapchainImageBaseHeader* depthSwapchainImages = reinterpret_cast<XrSwapchainImageBaseHeader*>(swapchainImagesMap[m_depthSwapchainInfo.swapchain].second.data());
-
-    OPENXR_CHECK(xrEnumerateSwapchainImages(m_depthSwapchainInfo.swapchain, depthSwapchainImageCount, &depthSwapchainImageCount, depthSwapchainImages), "Failed to enumerate Depth Swapchain Images.");
-
-    for (uint32_t j = 0; j < depthSwapchainImageCount; ++j) {
-        const auto image{ swapchainImagesMap[m_depthSwapchainInfo.swapchain].second[j].image };
-        const auto imageView{ prev::util::vk::CreateImageView(m_graphicsBinding.device, image, m_preferredDepthFormat, VK_IMAGE_VIEW_TYPE_2D_ARRAY, 1, VK_IMAGE_ASPECT_DEPTH_BIT, viewCount, 0) };
-        m_depthSwapchainInfo.images.push_back(image);
-        m_depthSwapchainInfo.imageViews.push_back(imageView);
-    }
-}
-
-void OpenXrRender::DestroySwapchains()
-{
-    // Destroy the color and depth image views from GraphicsAPI.
-    for (auto& imageView : m_colorSwapchainInfo.imageViews) {
-        vkDestroyImageView(m_graphicsBinding.device, imageView, VK_NULL_HANDLE);
-    }
-    for (auto& imageView : m_depthSwapchainInfo.imageViews) {
-        vkDestroyImageView(m_graphicsBinding.device, imageView, VK_NULL_HANDLE);
-    }
-
-    // Free the Swapchain Image Data.
-    swapchainImagesMap[m_colorSwapchainInfo.swapchain].second.clear();
-    swapchainImagesMap.erase(m_colorSwapchainInfo.swapchain);
-    swapchainImagesMap[m_depthSwapchainInfo.swapchain].second.clear();
-    swapchainImagesMap.erase(m_depthSwapchainInfo.swapchain);
-
-    // Destroy the swapchains.
-    OPENXR_CHECK(xrDestroySwapchain(m_colorSwapchainInfo.swapchain), "Failed to destroy Color Swapchain");
-    OPENXR_CHECK(xrDestroySwapchain(m_depthSwapchainInfo.swapchain), "Failed to destroy Depth Swapchain");
 }
 
 bool OpenXrRender::BeginFrame()
@@ -431,6 +327,90 @@ void OpenXrRender::DestroyEnvironmentBlendModes()
 {
     m_environmentBlendModes.clear();
     m_environmentBlendMode = XR_ENVIRONMENT_BLEND_MODE_MAX_ENUM;
+}
+
+void OpenXrRender::CreateSwapchains()
+{
+    // Get the supported swapchain formats as an array of int64_t and ordered by runtime preference.
+    uint32_t formatCount = 0;
+    OPENXR_CHECK(xrEnumerateSwapchainFormats(m_session, 0, &formatCount, nullptr), "Failed to enumerate Swapchain Formats");
+    std::vector<int64_t> formats(formatCount);
+    OPENXR_CHECK(xrEnumerateSwapchainFormats(m_session, formatCount, &formatCount, formats.data()), "Failed to enumerate Swapchain Formats");
+
+    auto colorFormatIter = std::find(formats.begin(), formats.end(), m_preferredColorFormat);
+    if (colorFormatIter == formats.cend()) {
+        LOGE("Failed to find color format for Swapchain.");
+    }
+
+    auto depthFormatIter = std::find(formats.begin(), formats.end(), m_preferredDepthFormat);
+    if (depthFormatIter == formats.cend()) {
+        LOGE("Failed to find depth format for Swapchain.");
+    }
+
+    bool coherentViews = m_viewConfiguration == XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
+    for (const XrViewConfigurationView& viewConfigurationView : m_viewConfigurationViews) {
+        // Check the current view size against the first view.
+        coherentViews |= m_viewConfigurationViews[0].recommendedImageRectWidth == viewConfigurationView.recommendedImageRectWidth;
+        coherentViews |= m_viewConfigurationViews[0].recommendedImageRectHeight == viewConfigurationView.recommendedImageRectHeight;
+    }
+    if (!coherentViews) {
+        LOGE("The views are not coherent. Unable to create a single Swapchain.");
+    }
+
+    const XrViewConfigurationView& viewConfigurationView{ m_viewConfigurationViews[0] };
+    const uint32_t viewCount{ static_cast<uint32_t>(m_viewConfigurationViews.size()) };
+
+    CreateSwapchain(viewConfigurationView, viewCount, m_preferredColorFormat, XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT, m_colorSwapchainInfo);
+    CreateSwapchain(viewConfigurationView, viewCount, m_preferredDepthFormat, XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, m_depthSwapchainInfo);
+}
+
+void OpenXrRender::DestroySwapchains()
+{
+    DestroySwapchain(m_depthSwapchainInfo);
+    DestroySwapchain(m_colorSwapchainInfo);
+}
+
+void OpenXrRender::CreateSwapchain(const XrViewConfigurationView viewConfigurationView, const uint32_t viewCount, const VkFormat format, const XrSwapchainUsageFlags usageFlags, SwapchainInfo& outSwapchainInfo)
+{
+    XrSwapchainCreateInfo swapchainCreateInfo{ XR_TYPE_SWAPCHAIN_CREATE_INFO };
+    swapchainCreateInfo.createFlags = 0;
+    swapchainCreateInfo.usageFlags = usageFlags;
+    swapchainCreateInfo.format = format;
+    swapchainCreateInfo.sampleCount = viewConfigurationView.recommendedSwapchainSampleCount; // Use the recommended values from the XrViewConfigurationView.
+    swapchainCreateInfo.width = viewConfigurationView.recommendedImageRectWidth;
+    swapchainCreateInfo.height = viewConfigurationView.recommendedImageRectHeight;
+    swapchainCreateInfo.faceCount = 1;
+    swapchainCreateInfo.arraySize = viewCount;
+    swapchainCreateInfo.mipCount = 1;
+
+    OPENXR_CHECK(xrCreateSwapchain(m_session, &swapchainCreateInfo, &outSwapchainInfo.swapchain), "Failed to create Swapchain");
+    outSwapchainInfo.swapchainFormat = static_cast<VkFormat>(swapchainCreateInfo.format); // Save the swapchain format for later use.
+
+    // Get the number of images in the color/depth swapchain and allocate Swapchain image data via GraphicsAPI to store the returned array.
+    uint32_t swapchainImageCount{ 0 };
+    OPENXR_CHECK(xrEnumerateSwapchainImages(outSwapchainInfo.swapchain, 0, &swapchainImageCount, nullptr), "Failed to enumerate Color Swapchain Images.");
+
+    outSwapchainInfo.xrImages.resize(swapchainImageCount, { XR_TYPE_SWAPCHAIN_IMAGE_VULKAN_KHR });
+    XrSwapchainImageBaseHeader* swapchainImages = reinterpret_cast<XrSwapchainImageBaseHeader*>(outSwapchainInfo.xrImages.data());
+
+    OPENXR_CHECK(xrEnumerateSwapchainImages(outSwapchainInfo.swapchain, swapchainImageCount, &swapchainImageCount, swapchainImages), "Failed to enumerate Swapchain Images.");
+
+    const VkImageAspectFlags vkImageAspectFlags{ ToVkImageAspectFlags(usageFlags) };
+    for (uint32_t i = 0; i < swapchainImageCount; ++i) {
+        const auto image{ outSwapchainInfo.xrImages[i].image };
+        const auto imageView{ prev::util::vk::CreateImageView(m_graphicsBinding.device, image, format, VK_IMAGE_VIEW_TYPE_2D_ARRAY, 1, vkImageAspectFlags, viewCount, 0) };
+        outSwapchainInfo.images.push_back(image);
+        outSwapchainInfo.imageViews.push_back(imageView);
+    }
+}
+
+void OpenXrRender::DestroySwapchain(SwapchainInfo& swapchainInfo)
+{
+    for (auto& imageView : swapchainInfo.imageViews) {
+        vkDestroyImageView(m_graphicsBinding.device, imageView, VK_NULL_HANDLE);
+    }
+    OPENXR_CHECK(xrDestroySwapchain(swapchainInfo.swapchain), "Failed to destroy Color Swapchain");
+    swapchainInfo = {};
 }
 } // namespace prev::xr::component::render
 

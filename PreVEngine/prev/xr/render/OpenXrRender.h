@@ -3,7 +3,6 @@
 
 #ifdef ENABLE_XR
 
-#include "../common/OpenXrCommon.h"
 #include "../common/IOpenXrEventObserver.h"
 
 #include "../XrEvents.h"
@@ -67,6 +66,9 @@ public:
     void operator()(const XrCameraFeedbackEvent& event);
 
 private:
+    struct SwapchainInfo;
+
+private:
     void CreateViewConfigurationViews();
 
     void DestroyViewConfigurationViews();
@@ -78,6 +80,10 @@ private:
     void CreateSwapchains();
 
     void DestroySwapchains();
+
+    void CreateSwapchain(const XrViewConfigurationView viewConfigurationView, const uint32_t viewCount, const VkFormat format, const XrSwapchainUsageFlags usageFlags, SwapchainInfo& outSwapchainInfo);
+
+    void DestroySwapchain(SwapchainInfo& swapchainInfo);
 
 private:
     XrInstance m_instance{ XR_NULL_HANDLE };
@@ -103,18 +109,12 @@ private:
     struct SwapchainInfo {
         XrSwapchain swapchain{ XR_NULL_HANDLE };
         VkFormat swapchainFormat{ VK_FORMAT_UNDEFINED };
+        std::vector<XrSwapchainImageVulkanKHR> xrImages;
         std::vector<VkImage> images;
         std::vector<VkImageView> imageViews;
     };
     SwapchainInfo m_colorSwapchainInfo{};
     SwapchainInfo m_depthSwapchainInfo{};
-
-    enum class SwapchainType : uint8_t {
-        COLOR,
-        DEPTH
-    };
-
-    std::unordered_map<XrSwapchain, std::pair<SwapchainType, std::vector<XrSwapchainImageVulkanKHR>>> swapchainImagesMap;
 
     // per frame data
     struct RenderLayerInfo {
@@ -136,9 +136,9 @@ private:
     float m_maxDepth{ 1.0f };
 
 private:
-    prev::event::EventHandler<OpenXrRender, XrCameraFeedbackEvent> m_cameraFeedbackHandler{ *this };
+    prev::event::EventHandler<OpenXrRender, XrCameraFeedbackEvent> m_cameraFeedbackHandler{*this };
 };
-}
+} // namespace prev::xr::render
 
 #endif
 
