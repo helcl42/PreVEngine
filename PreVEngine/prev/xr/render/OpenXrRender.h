@@ -81,7 +81,7 @@ private:
 
     void DestroySwapchains();
 
-    void CreateSwapchain(const XrViewConfigurationView viewConfigurationView, const uint32_t viewCount, const VkFormat format, const XrSwapchainUsageFlags usageFlags, SwapchainInfo& outSwapchainInfo);
+    SwapchainInfo CreateSwapchain(const XrViewConfigurationView& viewConfigurationView, const uint32_t viewCount, const VkFormat format, const XrSwapchainUsageFlags usageFlags);
 
     void DestroySwapchain(SwapchainInfo& swapchainInfo);
 

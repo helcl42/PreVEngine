@@ -360,8 +360,8 @@ void OpenXrRender::CreateSwapchains()
     const XrViewConfigurationView& viewConfigurationView{ m_viewConfigurationViews[0] };
     const uint32_t viewCount{ static_cast<uint32_t>(m_viewConfigurationViews.size()) };
 
-    CreateSwapchain(viewConfigurationView, viewCount, m_preferredColorFormat, XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT, m_colorSwapchainInfo);
-    CreateSwapchain(viewConfigurationView, viewCount, m_preferredDepthFormat, XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, m_depthSwapchainInfo);
+    m_colorSwapchainInfo = CreateSwapchain(viewConfigurationView, viewCount, m_preferredColorFormat, XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT);
+    m_depthSwapchainInfo = CreateSwapchain(viewConfigurationView, viewCount, m_preferredDepthFormat, XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
 }
 
 void OpenXrRender::DestroySwapchains()
@@ -370,8 +370,10 @@ void OpenXrRender::DestroySwapchains()
     DestroySwapchain(m_colorSwapchainInfo);
 }
 
-void OpenXrRender::CreateSwapchain(const XrViewConfigurationView viewConfigurationView, const uint32_t viewCount, const VkFormat format, const XrSwapchainUsageFlags usageFlags, SwapchainInfo& outSwapchainInfo)
+OpenXrRender::SwapchainInfo OpenXrRender::CreateSwapchain(const XrViewConfigurationView& viewConfigurationView, const uint32_t viewCount, const VkFormat format, const XrSwapchainUsageFlags usageFlags)
 {
+    SwapchainInfo swapchainInfo{};
+
     XrSwapchainCreateInfo swapchainCreateInfo{ XR_TYPE_SWAPCHAIN_CREATE_INFO };
     swapchainCreateInfo.createFlags = 0;
     swapchainCreateInfo.usageFlags = usageFlags;
@@ -383,23 +385,24 @@ void OpenXrRender::CreateSwapchain(const XrViewConfigurationView viewConfigurati
     swapchainCreateInfo.arraySize = viewCount;
     swapchainCreateInfo.mipCount = 1;
 
-    OPENXR_CHECK(xrCreateSwapchain(m_session, &swapchainCreateInfo, &outSwapchainInfo.swapchain), "Failed to create Swapchain");
-    outSwapchainInfo.swapchainFormat = static_cast<VkFormat>(swapchainCreateInfo.format); // Save the swapchain format for later use.
+    OPENXR_CHECK(xrCreateSwapchain(m_session, &swapchainCreateInfo, &swapchainInfo.swapchain), "Failed to create Swapchain");
+    swapchainInfo.swapchainFormat = static_cast<VkFormat>(swapchainCreateInfo.format); // Save the swapchain format for later use.
 
     // Get the number of images in the color/depth swapchain and allocate Swapchain image data via GraphicsAPI to store the returned array.
     uint32_t swapchainImageCount{ 0 };
-    OPENXR_CHECK(xrEnumerateSwapchainImages(outSwapchainInfo.swapchain, 0, &swapchainImageCount, nullptr), "Failed to enumerate Color Swapchain Images.");
-    outSwapchainInfo.xrImages.resize(swapchainImageCount, { XR_TYPE_SWAPCHAIN_IMAGE_VULKAN_KHR });
-    XrSwapchainImageBaseHeader* swapchainImages = reinterpret_cast<XrSwapchainImageBaseHeader*>(outSwapchainInfo.xrImages.data());
-    OPENXR_CHECK(xrEnumerateSwapchainImages(outSwapchainInfo.swapchain, swapchainImageCount, &swapchainImageCount, swapchainImages), "Failed to enumerate Swapchain Images.");
+    OPENXR_CHECK(xrEnumerateSwapchainImages(swapchainInfo.swapchain, 0, &swapchainImageCount, nullptr), "Failed to enumerate Color Swapchain Images.");
+    swapchainInfo.xrImages.resize(swapchainImageCount, { XR_TYPE_SWAPCHAIN_IMAGE_VULKAN_KHR });
+    XrSwapchainImageBaseHeader* swapchainImages{ reinterpret_cast<XrSwapchainImageBaseHeader*>(swapchainInfo.xrImages.data()) };
+    OPENXR_CHECK(xrEnumerateSwapchainImages(swapchainInfo.swapchain, swapchainImageCount, &swapchainImageCount, swapchainImages), "Failed to enumerate Swapchain Images.");
 
     const VkImageAspectFlags vkImageAspectFlags{ ToVkImageAspectFlags(usageFlags) };
     for (uint32_t i = 0; i < swapchainImageCount; ++i) {
-        const auto image{ outSwapchainInfo.xrImages[i].image };
+        const auto image{ swapchainInfo.xrImages[i].image };
         const auto imageView{ prev::util::vk::CreateImageView(m_graphicsBinding.device, image, format, VK_IMAGE_VIEW_TYPE_2D_ARRAY, 1, vkImageAspectFlags, viewCount, 0) };
-        outSwapchainInfo.images.push_back(image);
-        outSwapchainInfo.imageViews.push_back(imageView);
+        swapchainInfo.images.push_back(image);
+        swapchainInfo.imageViews.push_back(imageView);
     }
+    return swapchainInfo;
 }
 
 void OpenXrRender::DestroySwapchain(SwapchainInfo& swapchainInfo)
