@@ -11,19 +11,9 @@ std::shared_ptr<prev::render::buffer::ImageBuffer> SkyComponent::GetWeather() co
     return m_weatherImageBuffer;
 }
 
-std::shared_ptr<prev::render::sampler::Sampler> SkyComponent::GetWeatherSampler() const
-{
-    return m_weatehrImageSampler;
-}
-
 std::shared_ptr<prev::render::buffer::ImageBuffer> SkyComponent::GetPerlinWorleyNoise() const
 {
     return m_perlinWorleyNoiseImageBuffer;
-}
-
-std::shared_ptr<prev::render::sampler::Sampler> SkyComponent::GetPerlinWorleyNoiseSampler() const
-{
-    return m_perlinWorleyNoiseSampler;
 }
 
 const glm::vec3& SkyComponent::GetBottomColor() const

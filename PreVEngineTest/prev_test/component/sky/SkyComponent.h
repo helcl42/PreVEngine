@@ -12,11 +12,7 @@ public:
 
     std::shared_ptr<prev::render::buffer::ImageBuffer> GetWeather() const override;
 
-    std::shared_ptr<prev::render::sampler::Sampler> GetWeatherSampler() const override;
-
     std::shared_ptr<prev::render::buffer::ImageBuffer> GetPerlinWorleyNoise() const override;
-
-    std::shared_ptr<prev::render::sampler::Sampler> GetPerlinWorleyNoiseSampler() const override;
 
     const glm::vec3& GetBottomColor() const override;
 
@@ -36,11 +32,7 @@ private:
 
     std::shared_ptr<prev::render::buffer::ImageBuffer> m_weatherImageBuffer{};
 
-    std::shared_ptr<prev::render::sampler::Sampler> m_weatehrImageSampler{};
-
     std::shared_ptr<prev::render::buffer::ImageBuffer> m_perlinWorleyNoiseImageBuffer{};
-
-    std::shared_ptr<prev::render::sampler::Sampler> m_perlinWorleyNoiseSampler{};
 
     glm::vec3 m_bottomColor{};
 

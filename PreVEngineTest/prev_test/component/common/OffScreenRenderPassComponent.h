@@ -13,7 +13,7 @@
 namespace prev_test::component::common {
 class OffScreenRenderPassComponent final : public IOffScreenRenderPassComponent {
 public:
-    OffScreenRenderPassComponent(prev::core::device::Device& device, const VkExtent2D& extent, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, const std::shared_ptr<prev::render::sampler::Sampler>& depthSampler, const std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>>& colorBuffers, const std::vector<std::shared_ptr<prev::render::sampler::Sampler>>& colorSamplers, const VkFramebuffer frameBuffer);
+    OffScreenRenderPassComponent(prev::core::device::Device& device, const VkExtent2D& extent, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, const std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>>& colorBuffers, const VkFramebuffer frameBuffer);
 
     ~OffScreenRenderPassComponent();
 
@@ -24,11 +24,7 @@ public:
 
     std::shared_ptr<prev::render::buffer::ImageBuffer> GetColorImageBuffer(const uint32_t index = 0) const override;
 
-    std::shared_ptr<prev::render::sampler::Sampler> GetColorSampler(const uint32_t index = 0) const override;
-
     std::shared_ptr<prev::render::buffer::ImageBuffer> GetDepthImageBuffer() const override;
-
-    std::shared_ptr<prev::render::sampler::Sampler> GetDepthSampler() const override;
 
     VkFramebuffer GetFrameBuffer() const override;
 
@@ -41,11 +37,7 @@ private:
 
     std::shared_ptr<prev::render::buffer::ImageBuffer> m_depthBuffer{};
 
-    std::shared_ptr<prev::render::sampler::Sampler> m_depthSampler{};
-
     std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>> m_colorBuffers{};
-
-    std::vector<std::shared_ptr<prev::render::sampler::Sampler>> m_colorSamplers{};
 
     VkFramebuffer m_frameBuffer{};
 };

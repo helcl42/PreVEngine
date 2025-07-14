@@ -12,6 +12,7 @@
 #include "../../../component/water/IWaterComponent.h"
 
 #include <prev/render/pipeline/PipelineBuilder.h>
+#include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/VkUtils.h>
@@ -74,13 +75,33 @@ void WaterRenderer::Init()
         .Build();
     // clang-format on
 
-    LOGI("Water Pipeline created");
+    LOGI("Water Pipeline crGetSampler(eated");
 
     m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsVS>>(m_allocator);
     m_uniformsPoolVS->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
     m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsFS>>(m_allocator);
     m_uniformsPoolFS->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+
+    LOGI("Water Uniforms Pools created");
+
+    m_colorSampler = prev::render::sampler::SamplerBuilder{ m_device }
+                         .SetAddressMode(VK_SAMPLER_ADDRESS_MODE_REPEAT)
+                         .SetAnisotropyFilterEnabled(true)
+                         .Build();
+
+    m_normalSampler = prev::render::sampler::SamplerBuilder{ m_device }
+                          .SetAddressMode(VK_SAMPLER_ADDRESS_MODE_REPEAT)
+                          .Build();
+
+    m_depthSampler = prev::render::sampler::SamplerBuilder{ m_device }
+                         .SetAddressMode(VK_SAMPLER_ADDRESS_MODE_REPEAT)
+                         .SetMinFilter(VK_FILTER_NEAREST)
+                         .SetMagFilter(VK_FILTER_NEAREST)
+                         .SetMipMapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST)
+                         .Build();
+
+    LOGI("Water Samplers created");
 }
 
 void WaterRenderer::BeforeRender(const NormalRenderContext& renderContext)
@@ -154,12 +175,12 @@ void WaterRenderer::Render(const NormalRenderContext& renderContext, const std::
 
     m_shader->Bind("uboVS", *uboVS);
     m_shader->Bind("uboFS", *uboFS);
-    m_shader->Bind("depthSampler", *shadowsComponent->GetImageBuffer(), *shadowsComponent->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-    m_shader->Bind("reflectionTexture", *waterReflectionComponent->GetColorImageBuffer(), *waterReflectionComponent->GetColorSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    m_shader->Bind("refractionTexture", *waterRefractionComponent->GetColorImageBuffer(), *waterRefractionComponent->GetColorSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    m_shader->Bind("dudvMapTexture", *waterComponent->GetMaterial()->GetImageBuffer(COLOR_INDEX), *waterComponent->GetMaterial()->GetSampler(COLOR_INDEX), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    m_shader->Bind("normalMapTexture", *waterComponent->GetMaterial()->GetImageBuffer(NORMAL_INDEX), *waterComponent->GetMaterial()->GetSampler(NORMAL_INDEX), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    m_shader->Bind("depthMapTexture", *waterRefractionComponent->GetDepthImageBuffer(), *waterRefractionComponent->GetDepthSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+    m_shader->Bind("depthSampler", *shadowsComponent->GetImageBuffer(), *m_depthSampler, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+    m_shader->Bind("reflectionTexture", *waterReflectionComponent->GetColorImageBuffer(), *m_colorSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_shader->Bind("refractionTexture", *waterRefractionComponent->GetColorImageBuffer(), *m_colorSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_shader->Bind("dudvMapTexture", *waterComponent->GetMaterial()->GetImageBuffer(COLOR_INDEX), *m_colorSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_shader->Bind("normalMapTexture", *waterComponent->GetMaterial()->GetImageBuffer(NORMAL_INDEX), *m_normalSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_shader->Bind("depthMapTexture", *waterRefractionComponent->GetDepthImageBuffer(), *m_depthSampler, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 
     const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
     const VkBuffer vertexBuffers[] = { *waterComponent->GetModel()->GetVertexBuffer() };
@@ -182,7 +203,14 @@ void WaterRenderer::AfterRender(const NormalRenderContext& renderContext)
 
 void WaterRenderer::ShutDown()
 {
-    m_pipeline = nullptr;
-    m_shader = nullptr;
+    m_depthSampler = {};
+    m_normalSampler = {};
+    m_colorSampler = {};
+
+    m_uniformsPoolFS = {};
+    m_uniformsPoolVS = {};
+
+    m_pipeline = {};
+    m_shader = {};
 }
 } // namespace prev_test::render::renderer::water

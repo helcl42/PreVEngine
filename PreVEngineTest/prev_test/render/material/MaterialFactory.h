@@ -33,7 +33,7 @@ public:
 private:
     std::shared_ptr<prev::render::image::Image> CreateImage(const std::string& textureFilename) const;
 
-    std::shared_ptr<prev::render::buffer::ImageBuffer> CreateImageBuffer(const std::shared_ptr<prev::render::image::Image>& image, const bool generateMipMaps) const;
+    std::shared_ptr<prev::render::buffer::ImageBuffer> CreateImageBuffer(const prev::render::image::Image& image, const bool generateMipMaps) const;
 
 private:
     prev::core::device::Device& m_device;

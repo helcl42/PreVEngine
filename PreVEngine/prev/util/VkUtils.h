@@ -44,8 +44,6 @@ VkVertexInputBindingDescription CreateVertexInputBindingDescription(const uint32
 
 VkVertexInputAttributeDescription CreateVertexInputAttributeDescription(const uint32_t binding, const uint32_t location, const VkFormat format, const uint32_t offset);
 
-VkSampler CreateSampler(const VkDevice device, const float maxLod, const VkSamplerAddressMode addressMode, const VkFilter minFilter, const VkFilter magFilter, const VkSamplerMipmapMode mipMapMode, const bool enableAnisotropyFilter = false, const float maxAnisotropy = 16.0f);
-
 VkSampleCountFlagBits GetMaxUsableSampleCount(const VkPhysicalDevice physicalDevice);
 
 VkSampleCountFlagBits GetSampleCountBit(const uint32_t sampleCount);

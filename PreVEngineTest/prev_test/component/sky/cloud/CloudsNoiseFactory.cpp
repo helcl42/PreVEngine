@@ -5,6 +5,7 @@
 #include <prev/core/CommandsExecutor.h>
 #include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
+#include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/util/VkUtils.h>
 
@@ -15,7 +16,7 @@ CloudsNoiseFactory::CloudsNoiseFactory(prev::core::device::Device& device, prev:
 {
 }
 
-CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t width, const uint32_t height, const uint32_t depth) const
+CloudsNoise CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t width, const uint32_t height, const uint32_t depth) const
 {
     const auto noiseImageFormat{ VK_FORMAT_R8G8B8A8_UNORM };
 
@@ -46,7 +47,10 @@ CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t widt
                                 .SetUsageFlags(VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT)
                                 .SetLayout(VK_IMAGE_LAYOUT_GENERAL)
                                 .Build();
-    auto sampler = std::make_unique<prev::render::sampler::Sampler>(m_device, static_cast<float>(noiseImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR);
+
+    auto sampler = prev::render::sampler::SamplerBuilder{ m_device }
+                       .SetAddressMode(VK_SAMPLER_ADDRESS_MODE_REPEAT)
+                       .Build();
 
     prev::core::CommandsExecutor commandsExecutor{ m_device, computeQueue };
     commandsExecutor.ExecuteImmediate([&](VkCommandBuffer commandBuffer) {
@@ -65,6 +69,6 @@ CloudsNoiseImage CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t widt
     pipeline = nullptr;
     shader = nullptr;
 
-    return { std::move(noiseImageBuffer), std::move(sampler) };
+    return { std::move(noiseImageBuffer) };
 }
 } // namespace prev_test::component::sky::cloud

@@ -14,6 +14,7 @@
 #include "../../../component/transform/ITransformComponent.h"
 
 #include <prev/render/pipeline/PipelineBuilder.h>
+#include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/VkUtils.h>
@@ -73,6 +74,16 @@ void TexturelessRenderer::Init()
 
     m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsFS>>(m_allocator);
     m_uniformsPoolFS->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+
+    LOGI("Textureless Uniforms Pools created");
+
+    m_depthSampler = prev::render::sampler::SamplerBuilder{ m_device }
+                         .SetMinFilter(VK_FILTER_NEAREST)
+                         .SetMagFilter(VK_FILTER_NEAREST)
+                         .SetMipMapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST)
+                         .Build();
+
+    LOGI("Textureless Depth Sampler created");
 }
 
 void TexturelessRenderer::BeforeRender(const NormalRenderContext& renderContext)
@@ -176,7 +187,7 @@ void TexturelessRenderer::Render(const NormalRenderContext& renderContext, const
 
             uboFS->Data(uniformsFS);
 
-            m_shader->Bind("depthSampler", *shadowsComponent->GetImageBuffer(), *shadowsComponent->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+            m_shader->Bind("depthSampler", *shadowsComponent->GetImageBuffer(), *m_depthSampler, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
             m_shader->Bind("uboVS", *uboVS);
             m_shader->Bind("uboFS", *uboFS);
 
@@ -209,7 +220,12 @@ void TexturelessRenderer::AfterRender(const NormalRenderContext& renderContext)
 
 void TexturelessRenderer::ShutDown()
 {
-    m_pipeline = nullptr;
-    m_shader = nullptr;
+    m_depthSampler = {};
+
+    m_uniformsPoolFS = {};
+    m_uniformsPoolVS = {};
+
+    m_pipeline = {};
+    m_shader = {};
 }
 } // namespace prev_test::render::renderer::normal

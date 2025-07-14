@@ -20,10 +20,9 @@ std::unique_ptr<IShadowsComponent> ShadowsComponentFactory::Create() const
 
     std::shared_ptr<prev::render::pass::RenderPass> renderPass{ CreateRenderPass() };
     std::shared_ptr<prev::render::buffer::ImageBuffer> depthBuffer{ CreateDepthBuffer(extent, CASCADES_COUNT) };
-    std::shared_ptr<prev::render::sampler::Sampler> depthSampler{ CreateSampler(static_cast<float>(depthBuffer->GetMipLevels())) };
     auto cascades{ CreateCascades(extent, CASCADES_COUNT, *depthBuffer, *renderPass) };
 
-    auto result{ std::make_unique<ShadowsComponent>(m_device, CASCADES_COUNT, renderPass, depthBuffer, depthSampler, cascades) };
+    auto result{ std::make_unique<ShadowsComponent>(m_device, CASCADES_COUNT, renderPass, depthBuffer, cascades) };
     return result;
 }
 
@@ -66,11 +65,6 @@ std::unique_ptr<prev::render::buffer::ImageBuffer> ShadowsComponentFactory::Crea
                            .SetLayerCount(cascadesCount)
                            .Build();
     return depthBuffer;
-}
-
-std::unique_ptr<prev::render::sampler::Sampler> ShadowsComponentFactory::CreateSampler(const float maxLod) const
-{
-    return std::make_unique<prev::render::sampler::Sampler>(m_device, maxLod, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_NEAREST, VK_FILTER_NEAREST, VK_SAMPLER_MIPMAP_MODE_NEAREST);
 }
 
 std::vector<ShadowsCascade> ShadowsComponentFactory::CreateCascades(const VkExtent2D& extent, const uint32_t cascadesCount, const prev::render::buffer::ImageBuffer& depthBuffer, const prev::render::pass::RenderPass& renderPass) const

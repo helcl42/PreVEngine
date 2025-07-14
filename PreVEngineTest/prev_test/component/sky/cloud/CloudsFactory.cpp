@@ -6,6 +6,7 @@
 #include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/buffer/UniformBuffer.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
+#include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/util/VkUtils.h>
 
@@ -16,7 +17,7 @@ CloudsFactory::CloudsFactory(prev::core::device::Device& device, prev::core::mem
 {
 }
 
-CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) const
+Clouds CloudsFactory::Create(const uint32_t width, const uint32_t height) const
 {
     struct Uniforms {
         DEFAULT_ALIGNMENT glm::vec4 textureSize;
@@ -57,7 +58,10 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
                                   .SetUsageFlags(VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT)
                                   .SetLayout(VK_IMAGE_LAYOUT_GENERAL)
                                   .Build();
-    auto sampler = std::make_unique<prev::render::sampler::Sampler>(m_device, static_cast<float>(weatherImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR);
+
+    auto sampler = prev::render::sampler::SamplerBuilder{ m_device }
+                       .SetAddressMode(VK_SAMPLER_ADDRESS_MODE_REPEAT)
+                       .Build();
 
     prev::core::CommandsExecutor commandsExecutor{ m_device, computeQueue };
     commandsExecutor.ExecuteImmediate([&](VkCommandBuffer commandBuffer) {
@@ -87,6 +91,6 @@ CloudsImage CloudsFactory::Create(const uint32_t width, const uint32_t height) c
     pipeline = nullptr;
     shader = nullptr;
 
-    return { std::move(weatherImageBuffer), std::move(sampler) };
+    return { std::move(weatherImageBuffer) };
 }
 } // namespace prev_test::component::sky::cloud

@@ -4,14 +4,12 @@
 #include <prev/core/device/Device.h>
 #include <prev/core/memory/Allocator.h>
 #include <prev/render/buffer/ImageBuffer.h>
-#include <prev/render/sampler/Sampler.h>
 
 #include <memory>
 
 namespace prev_test::component::sky::cloud {
-struct CloudsNoiseImage {
+struct CloudsNoise {
     std::unique_ptr<prev::render::buffer::ImageBuffer> imageBuffer{};
-    std::unique_ptr<prev::render::sampler::Sampler> imageSampler{};
 };
 
 class CloudsNoiseFactory final {
@@ -21,7 +19,7 @@ public:
     ~CloudsNoiseFactory() = default;
 
 public:
-    CloudsNoiseImage CreatePerlinWorleyNoise(const uint32_t width, const uint32_t height, const uint32_t depth) const;
+    CloudsNoise CreatePerlinWorleyNoise(const uint32_t width, const uint32_t height, const uint32_t depth) const;
 
 private:
     prev::core::device::Device& m_device;

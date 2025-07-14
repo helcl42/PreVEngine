@@ -18,7 +18,7 @@ RenderComponentFactory::RenderComponentFactory(prev::core::device::Device& devic
 
 std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateCubeRenderComponent(const glm::vec4& color, const bool castsShadows, const bool isCastedByShadows) const
 {
-    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ color, 10.0f, 1.0f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE }) };
+    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ color, 10.0f, 1.0f }) };
     auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateCube() };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 
@@ -27,7 +27,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateCubeRenderCompon
 
 std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateCubeRenderComponent(const std::string& texturePath, const bool castsShadows, const bool isCastedByShadows) const
 {
-    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 10.0f, 1.0f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE }, texturePath) };
+    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 10.0f, 1.0f }, texturePath) };
     auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateCube() };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 
@@ -36,7 +36,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateCubeRenderCompon
 
 std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateCubeRenderComponent(const std::string& texturePath, const std::string& normalPath, const bool castsShadows, const bool isCastedByShadows) const
 {
-    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 10.0f, 1.0f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE }, texturePath, normalPath) };
+    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 10.0f, 1.0f }, texturePath, normalPath) };
     auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateCube(true) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 
@@ -45,7 +45,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateCubeRenderCompon
 
 std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateCubeRenderComponent(const std::string& texturePath, const std::string& normalPath, const std::string& heightOrConeMapPath, const bool castsShadows, const bool isCastedByShadows) const
 {
-    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 10.0f, 1.0f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE }, texturePath, normalPath, heightOrConeMapPath) };
+    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 10.0f, 1.0f }, texturePath, normalPath, heightOrConeMapPath) };
     auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateCube(true) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 
@@ -54,7 +54,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateCubeRenderCompon
 
 std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderComponent(const glm::vec4& color, const bool castsShadows, const bool isCastedByShadows) const
 {
-    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ color, 2.0f, 0.3f, VK_SAMPLER_ADDRESS_MODE_REPEAT }) };
+    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ color, 2.0f, 0.3f }) };
     auto mesh{ prev_test::render::mesh::MeshFactory{}.CreatePlane(40.0f, 40.0f, 1, 1, 10.0f, 10.0f, prev_test::render::FlatMeshConstellation::ZERO_Y, false) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 
@@ -63,7 +63,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderCompo
 
 std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderComponent(const std::string& texturePath, const bool castsShadows, const bool isCastedByShadows) const
 {
-    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 2.0f, 0.3f, VK_SAMPLER_ADDRESS_MODE_REPEAT }, texturePath) };
+    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 2.0f, 0.3f }, texturePath) };
     auto mesh{ prev_test::render::mesh::MeshFactory{}.CreatePlane(40.0f, 40.0f, 1, 1, 10.0f, 10.0f, prev_test::render::FlatMeshConstellation::ZERO_Y, false) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 
@@ -72,7 +72,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderCompo
 
 std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const bool castsShadows, const bool isCastedByShadows) const
 {
-    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 2.0f, 0.3f, VK_SAMPLER_ADDRESS_MODE_REPEAT }, texturePath, normalMapPath) };
+    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 2.0f, 0.3f }, texturePath, normalMapPath) };
     auto mesh{ prev_test::render::mesh::MeshFactory{}.CreatePlane(40.0f, 40.0f, 1, 1, 1.0f, 1.0f, prev_test::render::FlatMeshConstellation::ZERO_Y, true) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 
@@ -81,7 +81,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderCompo
 
 std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const std::string& heightOrConeMapPath, const bool castsShadows, const bool isCastedByShadows) const
 {
-    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 2.0f, 0.3f, VK_SAMPLER_ADDRESS_MODE_REPEAT }, texturePath, normalMapPath, heightOrConeMapPath) };
+    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 2.0f, 0.3f }, texturePath, normalMapPath, heightOrConeMapPath) };
     auto mesh{ prev_test::render::mesh::MeshFactory{}.CreatePlane(40.0f, 40.0f, 1, 1, 1.0f, 1.0f, prev_test::render::FlatMeshConstellation::ZERO_Y, true) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 
@@ -90,7 +90,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderCompo
 
 std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateSphereRenderComponent(const glm::vec4& color, const bool castsShadows, const bool isCastedByShadows) const
 {
-    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ color, 2.0f, 0.3f, VK_SAMPLER_ADDRESS_MODE_REPEAT }) };
+    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ color, 2.0f, 0.3f }) };
     auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateSphere(1.0f, 64, 64, 360.0f, 180.0f, false) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 
@@ -99,7 +99,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateSphereRenderComp
 
 std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateSphereRenderComponent(const std::string& texturePath, const bool castsShadows, const bool isCastedByShadows) const
 {
-    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 2.0f, 0.3f, VK_SAMPLER_ADDRESS_MODE_REPEAT }, texturePath) };
+    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 2.0f, 0.3f }, texturePath) };
     auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateSphere(1.0f, 64, 64, 360.0f, 180.0f, false) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 
@@ -108,7 +108,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateSphereRenderComp
 
 std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateSphereRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const bool castsShadows, const bool isCastedByShadows) const
 {
-    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 2.0f, 0.3f, VK_SAMPLER_ADDRESS_MODE_REPEAT }, texturePath, normalMapPath) };
+    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 2.0f, 0.3f }, texturePath, normalMapPath) };
     auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateSphere(1.0f, 64, 64, 360.0f, 180.0f, true) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 
@@ -117,7 +117,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateSphereRenderComp
 
 std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateSphereRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const std::string& heightOrConeMapPath, const bool castsShadows, const bool isCastedByShadows) const
 {
-    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 2.0f, 0.3f, VK_SAMPLER_ADDRESS_MODE_REPEAT }, texturePath, normalMapPath, heightOrConeMapPath) };
+    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 2.0f, 0.3f }, texturePath, normalMapPath, heightOrConeMapPath) };
     auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateSphere(1.0f, 64, 64, 360.0f, 180.0f, true) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 
@@ -129,7 +129,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateModelRenderCompo
     std::vector<std::shared_ptr<prev_test::render::IMaterial>> materials;
     prev_test::render::material::MaterialFactory materialFactory{ m_device, m_allocator };
     for (const auto& color : colors) {
-        materials.emplace_back(materialFactory.Create({ color, 2.0f, 0.3f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE }));
+        materials.emplace_back(materialFactory.Create({ color, 2.0f, 0.3f }));
     }
     auto mesh{ prev_test::render::mesh::ModelMeshFactory{}.Create(modelPath) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
@@ -142,7 +142,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateModelRenderCompo
     std::vector<std::shared_ptr<prev_test::render::IMaterial>> materials;
     prev_test::render::material::MaterialFactory materialFactory{ m_device, m_allocator };
     for (const auto& texturePath : texturePaths) {
-        materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), 2.0f, 0.3f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE }, texturePath));
+        materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), 2.0f, 0.3f }, texturePath));
     }
     auto mesh{ prev_test::render::mesh::ModelMeshFactory{}.Create(modelPath) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
@@ -155,7 +155,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateModelRenderCompo
     std::vector<std::shared_ptr<prev_test::render::IMaterial>> materials;
     prev_test::render::material::MaterialFactory materialFactory{ m_device, m_allocator };
     for (size_t i = 0; i < texturePaths.size(); ++i) {
-        materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), 10.0f, 0.7f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE }, texturePaths[i], normalMapPaths[i]));
+        materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), 10.0f, 0.7f }, texturePaths[i], normalMapPaths[i]));
     }
     auto mesh{ prev_test::render::mesh::ModelMeshFactory{}.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT }) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
@@ -168,7 +168,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateModelRenderCompo
     std::vector<std::shared_ptr<prev_test::render::IMaterial>> materials;
     prev_test::render::material::MaterialFactory materialFactory{ m_device, m_allocator };
     for (size_t i = 0; i < texturePaths.size(); ++i) {
-        materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), 10.0f, 0.7f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE }, texturePaths[i], normalMapPaths[i], heightOrConeMapPaths[i]));
+        materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), 10.0f, 0.7f }, texturePaths[i], normalMapPaths[i], heightOrConeMapPaths[i]));
     }
     auto mesh{ prev_test::render::mesh::ModelMeshFactory{}.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT }) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
@@ -190,7 +190,7 @@ std::unique_ptr<IAnimationRenderComponent> RenderComponentFactory::CreateAnimate
     std::vector<std::shared_ptr<prev_test::render::IMaterial>> materials;
     prev_test::render::material::MaterialFactory materialFactory{ m_device, m_allocator };
     for (const auto& color : colors) {
-        materials.emplace_back(materialFactory.Create({ color, 1.5f, 0.3f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE }));
+        materials.emplace_back(materialFactory.Create({ color, 1.5f, 0.3f }));
     }
     auto mesh{ prev_test::render::mesh::ModelMeshFactory{}.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION }) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
@@ -209,7 +209,7 @@ std::unique_ptr<IAnimationRenderComponent> RenderComponentFactory::CreateAnimate
     std::vector<std::shared_ptr<prev_test::render::IMaterial>> materials;
     prev_test::render::material::MaterialFactory materialFactory{ m_device, m_allocator };
     for (const auto& texturePath : texturePaths) {
-        materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), 1.5f, 0.3f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE }, texturePath));
+        materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), 1.5f, 0.3f }, texturePath));
     }
     auto mesh{ prev_test::render::mesh::ModelMeshFactory{}.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION }) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
@@ -228,7 +228,7 @@ std::unique_ptr<IAnimationRenderComponent> RenderComponentFactory::CreateAnimate
     std::vector<std::shared_ptr<prev_test::render::IMaterial>> materials;
     prev_test::render::material::MaterialFactory materialFactory{ m_device, m_allocator };
     for (size_t i = 0; i < texturePaths.size(); ++i) {
-        materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), 1.5f, 0.3f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE }, texturePaths[i], normalMapPaths[i]));
+        materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), 1.5f, 0.3f }, texturePaths[i], normalMapPaths[i]));
     }
     auto mesh{ prev_test::render::mesh::ModelMeshFactory{}.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT }) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
@@ -247,7 +247,7 @@ std::unique_ptr<IAnimationRenderComponent> RenderComponentFactory::CreateAnimate
     std::vector<std::shared_ptr<prev_test::render::IMaterial>> materials;
     prev_test::render::material::MaterialFactory materialFactory{ m_device, m_allocator };
     for (size_t i = 0; i < texturePaths.size(); ++i) {
-        materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), 1.5f, 0.3f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE }, texturePaths[i], normalMapPaths[i], heightOrConeMapPaths[i]));
+        materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), 1.5f, 0.3f }, texturePaths[i], normalMapPaths[i], heightOrConeMapPaths[i]));
     }
     auto mesh{ prev_test::render::mesh::ModelMeshFactory{}.Create(modelPath, prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>{ prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION | prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT }) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };

@@ -24,9 +24,7 @@ std::unique_ptr<ISkyComponent> SkyComponentFactory::Create() const
     auto sky{ std::make_unique<SkyComponent>() };
     sky->m_model = std::move(model);
     sky->m_weatherImageBuffer = std::move(cloudsImage.imageBuffer);
-    sky->m_weatehrImageSampler = std::move(cloudsImage.imageSampler);
     sky->m_perlinWorleyNoiseImageBuffer = std::move(cloudsNoise.imageBuffer);
-    sky->m_perlinWorleyNoiseSampler = std::move(cloudsNoise.imageSampler);
     sky->m_bottomColor = glm::vec3(FOG_COLOR.x, FOG_COLOR.y, FOG_COLOR.z);
     sky->m_topColor = glm::vec3(0.521f, 0.619f, 0.839f);
     sky->m_cloudBaseColor = glm::vec3(0.38f, 0.41f, 0.47f);

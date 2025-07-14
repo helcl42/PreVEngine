@@ -8,6 +8,7 @@
 #include <prev/core/memory/Allocator.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
+#include <prev/render/sampler/Sampler.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/IScene.h>
 #include <prev/scene/graph/ISceneNode.h>
@@ -50,6 +51,8 @@ private:
     std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<prev::render::pipeline::Pipeline> m_pipeline;
+
+    std::unique_ptr<prev::render::sampler::Sampler> m_colorSampler;
 
 private:
     std::unique_ptr<prev_test::render::IModel> m_quadModel;

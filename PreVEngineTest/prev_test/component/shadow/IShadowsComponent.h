@@ -7,7 +7,6 @@
 
 #include <prev/render/buffer/ImageBuffer.h>
 #include <prev/render/pass/RenderPass.h>
-#include <prev/render/sampler/Sampler.h>
 #include <prev/scene/component/IComponent.h>
 
 #include <memory>
@@ -24,8 +23,6 @@ public:
     virtual VkExtent2D GetExtent() const = 0;
 
     virtual std::shared_ptr<prev::render::buffer::ImageBuffer> GetImageBuffer() const = 0;
-
-    virtual std::shared_ptr<prev::render::sampler::Sampler> GetSampler() const = 0;
 
 public:
     virtual ~IShadowsComponent() = default;

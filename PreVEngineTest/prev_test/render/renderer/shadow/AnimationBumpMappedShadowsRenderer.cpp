@@ -66,6 +66,8 @@ void AnimationBumpMappedShadowsRenderer::Init()
 
     m_uniformsPool = std::make_unique<prev::render::buffer::UniformRingBuffer<Uniforms>>(m_allocator);
     m_uniformsPool->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+
+    LOGI("Animation Bump Mapped Shadows Uniforms Pools created");
 }
 
 void AnimationBumpMappedShadowsRenderer::BeforeRender(const ShadowsRenderContext& renderContext)
@@ -156,7 +158,9 @@ void AnimationBumpMappedShadowsRenderer::AfterRender(const ShadowsRenderContext&
 
 void AnimationBumpMappedShadowsRenderer::ShutDown()
 {
-    m_pipeline = nullptr;
-    m_shader = nullptr;
+    m_uniformsPool = {};
+
+    m_pipeline = {};
+    m_shader = {};
 }
 } // namespace prev_test::render::renderer::shadow

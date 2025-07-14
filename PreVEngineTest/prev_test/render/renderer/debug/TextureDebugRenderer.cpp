@@ -7,6 +7,7 @@
 #include "../../model/ModelFactory.h"
 
 #include <prev/render/pipeline/PipelineBuilder.h>
+#include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/VkUtils.h>
@@ -59,6 +60,11 @@ void TextureDebugRenderer::Init()
 
     LOGI("Texture Debug Pipeline created");
 
+    m_colorSampler = prev::render::sampler::SamplerBuilder{ m_device }
+                         .Build();
+
+    LOGI("Creating Texture Debug Sampler");
+
     // create quad model
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto quadMesh{ meshFactory.CreateQuad() };
@@ -85,7 +91,7 @@ void TextureDebugRenderer::Render(const prev::render::RenderContext& renderConte
 {
     const auto component = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::common::IOffScreenRenderPassComponent>(m_scene.GetRootNode(), { TAG_WATER_REFLECTION_RENDER_COMPONENT });
 
-    m_shader->Bind("imageSampler", *component->GetColorImageBuffer(), *component->GetColorSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_shader->Bind("imageSampler", *component->GetColorImageBuffer(), *m_colorSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
     const VkBuffer vertexBuffers[] = { *m_quadModel->GetVertexBuffer() };
@@ -108,7 +114,9 @@ void TextureDebugRenderer::AfterRender(const prev::render::RenderContext& render
 
 void TextureDebugRenderer::ShutDown()
 {
-    m_pipeline = nullptr;
-    m_shader = nullptr;
+    m_colorSampler = {};
+
+    m_pipeline = {};
+    m_shader = {};
 }
 } // namespace prev_test::render::renderer::debug

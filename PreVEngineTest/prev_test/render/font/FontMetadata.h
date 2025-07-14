@@ -4,7 +4,6 @@
 #include "Character.h"
 
 #include <prev/render/buffer/ImageBuffer.h>
-#include <prev/render/sampler/Sampler.h>
 
 #include <map>
 #include <memory>
@@ -29,8 +28,6 @@ public:
 
     std::shared_ptr<prev::render::buffer::ImageBuffer> GetImageBuffer() const;
 
-    std::shared_ptr<prev::render::sampler::Sampler> GetSampler() const;
-
     bool GetCharacter(const int charCode, Character& outCharacter) const;
 
 private:
@@ -42,8 +39,6 @@ private:
     std::map<int, Character> m_characterMetaData;
 
     std::shared_ptr<prev::render::buffer::ImageBuffer> m_imageBuffer{};
-
-    std::shared_ptr<prev::render::sampler::Sampler> m_sampler{};
 };
 } // namespace prev_test::render::font
 

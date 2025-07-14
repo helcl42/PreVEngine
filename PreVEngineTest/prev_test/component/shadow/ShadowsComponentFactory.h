@@ -24,8 +24,6 @@ private:
 
     std::unique_ptr<prev::render::buffer::ImageBuffer> CreateDepthBuffer(const VkExtent2D& extent, const uint32_t cascadesCount) const;
 
-    std::unique_ptr<prev::render::sampler::Sampler> CreateSampler(const float maxMipMapLevels) const;
-
     std::vector<ShadowsCascade> CreateCascades(const VkExtent2D& extent, const uint32_t cascadesCount, const prev::render::buffer::ImageBuffer& depthBuffer, const prev::render::pass::RenderPass& renderPass) const;
 
 private:

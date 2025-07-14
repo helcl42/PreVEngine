@@ -25,7 +25,6 @@ std::unique_ptr<FontMetadata> FontMetadataFactory::CreateFontMetadata(const std:
 
     auto metaData{ std::make_unique<FontMetadata>() };
     metaData->m_imageBuffer = CreateImageBuffer(textureFilePath);
-    metaData->m_sampler = CreateSampler(static_cast<float>(metaData->m_imageBuffer->GetMipLevels()));
     metaData->m_spaceWidth = state.spaceWidth;
     metaData->m_characterMetaData = characterMetaData;
 
@@ -51,11 +50,6 @@ void FontMetadataFactory::ExtractMeasureInfo(FontMetadataFile& metaDataFile, Fon
 
     state.imageWidth = metaDataFile.GetValueAsInt("scaleW");
     state.imageHeight = metaDataFile.GetValueAsInt("scaleH");
-}
-
-std::unique_ptr<prev::render::sampler::Sampler> FontMetadataFactory::CreateSampler(const float maxLod) const
-{
-    return std::make_unique<prev::render::sampler::Sampler>(m_device, maxLod, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR);
 }
 
 std::shared_ptr<prev::render::buffer::ImageBuffer> FontMetadataFactory::CreateImageBuffer(const std::string& textureFilePath) const

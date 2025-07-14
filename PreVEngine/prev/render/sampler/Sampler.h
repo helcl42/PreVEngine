@@ -6,7 +6,7 @@
 namespace prev::render::sampler {
 class Sampler {
 public:
-    Sampler(const VkDevice device, const float maxLod, const VkSamplerAddressMode addressMode, const VkFilter minFilter, const VkFilter magFilter, const VkSamplerMipmapMode mipMapMode, const bool enableAnisotropyFilter = false, const float maxAnisotropy = 16.0f);
+    Sampler(const VkDevice device, const VkSampler sampler);
 
     ~Sampler();
 

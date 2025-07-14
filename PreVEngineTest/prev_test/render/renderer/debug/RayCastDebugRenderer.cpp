@@ -68,6 +68,8 @@ void RayCastDebugRenderer::Init()
 
     m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsFS>>(m_allocator);
     m_uniformsPoolFS->UpdateCapacity(m_descriptorCount, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+
+    LOGI("RayCast Debug Uniforms Pools created");
 }
 
 void RayCastDebugRenderer::BeforeRender(const NormalRenderContext& renderContext)
@@ -142,8 +144,12 @@ void RayCastDebugRenderer::AfterRender(const NormalRenderContext& renderContext)
 
 void RayCastDebugRenderer::ShutDown()
 {
-    m_pipeline = nullptr;
-    m_shader = nullptr;
+    m_uniformsPoolFS = {};
+    m_uniformsPoolGS = {};
+    m_uniformsPoolVS = {};
+
+    m_pipeline = {};
+    m_shader = {};
 }
 } // namespace prev_test::render::renderer::debug
 

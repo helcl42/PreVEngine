@@ -7,12 +7,11 @@
 #include <prev/util/MathUtils.h>
 
 namespace prev_test::component::shadow {
-ShadowsComponent::ShadowsComponent(prev::core::device::Device& device, const uint32_t cascadesCount, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, const std::shared_ptr<prev::render::sampler::Sampler>& sampler, const std::vector<ShadowsCascade>& cascades)
+ShadowsComponent::ShadowsComponent(prev::core::device::Device& device, const uint32_t cascadesCount, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, const std::vector<ShadowsCascade>& cascades)
     : m_device{ device }
     , m_cascadesCount{ cascadesCount }
     , m_renderPass{ renderPass }
     , m_depthBuffer{ depthBuffer }
-    , m_sampler{ sampler }
     , m_cascades{ cascades }
 {
 }
@@ -21,7 +20,6 @@ ShadowsComponent::~ShadowsComponent()
 {
     m_device.WaitIdle();
 
-    m_sampler = nullptr;
     m_renderPass = nullptr;
 
     for (uint32_t i = 0; i < m_cascadesCount; ++i) {
@@ -68,11 +66,6 @@ VkExtent2D ShadowsComponent::GetExtent() const
 std::shared_ptr<prev::render::buffer::ImageBuffer> ShadowsComponent::GetImageBuffer() const
 {
     return m_depthBuffer;
-}
-
-std::shared_ptr<prev::render::sampler::Sampler> ShadowsComponent::GetSampler() const
-{
-    return m_sampler;
 }
 
 std::vector<float> ShadowsComponent::GenerateCaascadeSplits(const float nearClippingPlane, const float farClippingPlane) const

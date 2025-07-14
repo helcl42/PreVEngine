@@ -38,7 +38,7 @@ std::unique_ptr<Flare> SunComponentFactory::CreateFlare(const std::string& fileP
                            .SetLayerData({ reinterpret_cast<uint8_t*>(image->GetBuffer()) })
                            .SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
                            .Build();
-    auto sampler{ std::make_unique<prev::render::sampler::Sampler>(m_device, static_cast<float>(imageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, true, 4.0f) };
-    return std::make_unique<Flare>(m_device, std::move(imageBuffer), std::move(sampler), scale);
+
+    return std::make_unique<Flare>(m_device, std::move(imageBuffer), scale);
 }
 } // namespace prev_test::component::sky

@@ -16,11 +16,6 @@ std::shared_ptr<prev::render::buffer::ImageBuffer> FontMetadata::GetImageBuffer(
     return m_imageBuffer;
 }
 
-std::shared_ptr<prev::render::sampler::Sampler> FontMetadata::GetSampler() const
-{
-    return m_sampler;
-}
-
 bool FontMetadata::GetCharacter(const int charCode, Character& outCharacter) const
 {
     const auto charIter{ m_characterMetaData.find(charCode) };

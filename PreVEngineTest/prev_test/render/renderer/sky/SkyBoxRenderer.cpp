@@ -7,6 +7,7 @@
 #include "../../../component/transform/ITransformComponent.h"
 
 #include <prev/render/pipeline/PipelineBuilder.h>
+#include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/VkUtils.h>
@@ -66,6 +67,13 @@ void SkyBoxRenderer::Init()
 
     m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsFS>>(m_allocator);
     m_uniformsPoolFS->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+
+    LOGI("Skybox Uniforms Pools created");
+
+    m_colorSampler = prev::render::sampler::SamplerBuilder{ m_device }
+                         .Build();
+
+    LOGI("Skybox Sampler created");
 }
 
 void SkyBoxRenderer::BeforeRender(const NormalRenderContext& renderContext)
@@ -113,7 +121,7 @@ void SkyBoxRenderer::Render(const NormalRenderContext& renderContext, const std:
     uniformsFS.upperLimit = glm::vec4(0.03f);
     uboFS->Data(uniformsFS);
 
-    m_shader->Bind("cubeMap1", *skyBoxComponent->GetMaterial()->GetImageBuffer(), *skyBoxComponent->GetMaterial()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_shader->Bind("cubeMap1", *skyBoxComponent->GetMaterial()->GetImageBuffer(), *m_colorSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     m_shader->Bind("uboVS", *uboVS);
     m_shader->Bind("uboFS", *uboFS);
 
@@ -138,7 +146,12 @@ void SkyBoxRenderer::AfterRender(const NormalRenderContext& renderContext)
 
 void SkyBoxRenderer::ShutDown()
 {
-    m_pipeline = nullptr;
-    m_shader = nullptr;
+    m_colorSampler = {};
+
+    m_uniformsPoolFS = {};
+    m_uniformsPoolVS = {};
+
+    m_pipeline = {};
+    m_shader = {};
 }
 } // namespace prev_test::render::renderer::sky

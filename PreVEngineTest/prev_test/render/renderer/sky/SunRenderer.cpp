@@ -63,10 +63,13 @@ void SunRenderer::Init()
     m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsVS>>(m_allocator);
     m_uniformsPoolVS->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
+    LOGI("Sun Uniforms Pools created");
+
     m_queryPool = std::make_unique<prev::render::query::QueryPool>(m_device, VK_QUERY_TYPE_OCCLUSION, QueryPoolCount, MAX_VIEW_COUNT);
     m_queryPoolIndex = prev::util::CircularIndex<uint32_t>{ QueryPoolCount };
-
     m_passedSamples = 0;
+
+    LOGI("Sun Query Pool created");
 }
 
 void SunRenderer::BeforeRender(const NormalRenderContext& renderContext)
@@ -150,9 +153,11 @@ void SunRenderer::AfterRender(const NormalRenderContext& renderContext)
 
 void SunRenderer::ShutDown()
 {
-    m_queryPool = nullptr;
+    m_queryPool = {};
 
-    m_pipeline = nullptr;
-    m_shader = nullptr;
+    m_uniformsPoolVS = {};
+
+    m_pipeline = {};
+    m_shader = {};
 }
 } // namespace prev_test::render::renderer::sky

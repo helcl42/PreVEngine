@@ -6,23 +6,16 @@
 #include <vector>
 
 namespace prev_test::render::material {
-struct ImagePair {
-    std::shared_ptr<prev::render::buffer::ImageBuffer> imageBuffer{};
-    std::shared_ptr<prev::render::sampler::Sampler> imageSampler{};
-};
-
 class Material : public IMaterial {
 public:
     Material(const MaterialProperties& materialPros);
 
-    Material(const MaterialProperties& materialProps, const std::vector<ImagePair>& imagePairs);
+    Material(const MaterialProperties& materialProps, const std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>>& images);
 
     virtual ~Material() = default;
 
 public:
     std::shared_ptr<prev::render::buffer::ImageBuffer> GetImageBuffer(uint32_t index = 0) const override;
-
-    std::shared_ptr<prev::render::sampler::Sampler> GetSampler(uint32_t index = 0) const override;
 
     bool HasImageBuffer(uint32_t index) override;
 
@@ -59,9 +52,7 @@ private:
 
     float m_reflectivity{ 1.0f };
 
-    std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>> m_imageBuffers;
-
-    std::vector<std::shared_ptr<prev::render::sampler::Sampler>> m_samplers;
+    std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>> m_images;
 
     bool m_hasTransparency{ false };
 

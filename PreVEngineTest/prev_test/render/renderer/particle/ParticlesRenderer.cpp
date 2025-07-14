@@ -7,6 +7,7 @@
 #include "../../../component/particle/IParticleSystemComponent.h"
 
 #include <prev/render/pipeline/PipelineBuilder.h>
+#include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/VkUtils.h>
@@ -74,6 +75,14 @@ void ParticlesRenderer::Init()
 
     m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsFS>>(m_allocator);
     m_uniformsPoolFS->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+
+    LOGI("Particles Uniforms Pools created");
+
+    m_colorSampler = prev::render::sampler::SamplerBuilder{ m_device }
+                         .SetAddressMode(VK_SAMPLER_ADDRESS_MODE_REPEAT)
+                         .Build();
+
+    LOGI("Creating Particles Sampler");
 }
 
 void ParticlesRenderer::BeforeRender(const NormalRenderContext& renderContext)
@@ -119,7 +128,7 @@ void ParticlesRenderer::Render(const NormalRenderContext& renderContext, const s
 
     m_shader->Bind("uboVS", *uboVS);
     m_shader->Bind("uboFS", *uboFS);
-    m_shader->Bind("colorSampler", *particlesComponent->GetMaterial()->GetImageBuffer(), *particlesComponent->GetMaterial()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_shader->Bind("colorSampler", *particlesComponent->GetMaterial()->GetImageBuffer(), *m_colorSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
     const VkBuffer vertexBuffers[] = { *particlesComponent->GetModel()->GetVertexBuffer() };
@@ -145,7 +154,12 @@ void ParticlesRenderer::AfterRender(const NormalRenderContext& renderContext)
 
 void ParticlesRenderer::ShutDown()
 {
-    m_pipeline = nullptr;
-    m_shader = nullptr;
+    m_colorSampler = {};
+
+    m_uniformsPoolFS = {};
+    m_uniformsPoolVS = {};
+
+    m_pipeline = {};
+    m_shader = {};
 }
 } // namespace prev_test::render::renderer::particle

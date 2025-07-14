@@ -13,6 +13,7 @@
 #include <prev/render/buffer/UniformBuffer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/pipeline/Pipeline.h>
+#include <prev/render/sampler/Sampler.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/IScene.h>
 #include <prev/scene/graph/ISceneNode.h>
@@ -164,6 +165,10 @@ private:
     std::unique_ptr<prev::render::buffer::UniformRingBuffer<UniformsVS>> m_uniformsPoolVS;
 
     std::unique_ptr<prev::render::buffer::UniformRingBuffer<UniformsFS>> m_uniformsPoolFS;
+
+    std::unique_ptr<prev::render::sampler::Sampler> m_colorSampler;
+
+    std::unique_ptr<prev::render::sampler::Sampler> m_depthSampler;
 };
 } // namespace prev_test::render::renderer::animation
 

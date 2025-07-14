@@ -14,6 +14,7 @@
 #include "../../../component/transform/ITransformComponent.h"
 
 #include <prev/render/pipeline/PipelineBuilder.h>
+#include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/VkUtils.h>
@@ -74,6 +75,20 @@ void DefaultRenderer::Init()
 
     m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsFS>>(m_allocator);
     m_uniformsPoolFS->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+
+    LOGI("Default Uniforms Pools created");
+
+    m_colorSampler = prev::render::sampler::SamplerBuilder{ m_device }
+                         .SetAnisotropyFilterEnabled(true)
+                         .Build();
+
+    m_depthSampler = prev::render::sampler::SamplerBuilder{ m_device }
+                         .SetMinFilter(VK_FILTER_NEAREST)
+                         .SetMagFilter(VK_FILTER_NEAREST)
+                         .SetMipMapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST)
+                         .Build();
+
+    LOGI("Default Samplers created");
 }
 
 void DefaultRenderer::BeforeRender(const NormalRenderContext& renderContext)
@@ -176,8 +191,8 @@ void DefaultRenderer::Render(const NormalRenderContext& renderContext, const std
 
             uboFS->Data(uniformsFS);
 
-            m_shader->Bind("depthSampler", *shadowsComponent->GetImageBuffer(), *shadowsComponent->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-            m_shader->Bind("colorSampler", *material->GetImageBuffer(), *material->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            m_shader->Bind("depthSampler", *shadowsComponent->GetImageBuffer(), *m_depthSampler, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+            m_shader->Bind("colorSampler", *material->GetImageBuffer(), *m_colorSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             m_shader->Bind("uboVS", *uboVS);
             m_shader->Bind("uboFS", *uboFS);
 
@@ -210,7 +225,13 @@ void DefaultRenderer::AfterRender(const NormalRenderContext& renderContext)
 
 void DefaultRenderer::ShutDown()
 {
-    m_pipeline = nullptr;
-    m_shader = nullptr;
+    m_depthSampler = {};
+    m_colorSampler = {};
+
+    m_uniformsPoolFS = {};
+    m_uniformsPoolVS = {};
+
+    m_pipeline = {};
+    m_shader = {};
 }
 } // namespace prev_test::render::renderer::normal

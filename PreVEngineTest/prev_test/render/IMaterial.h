@@ -12,14 +12,11 @@ struct MaterialProperties {
     glm::vec4 color{};
     float shineDamper{};
     float reflectivity{};
-    VkSamplerAddressMode addressMode{};
 };
 
 class IMaterial {
 public:
     virtual std::shared_ptr<prev::render::buffer::ImageBuffer> GetImageBuffer(uint32_t index = 0) const = 0;
-
-    virtual std::shared_ptr<prev::render::sampler::Sampler> GetSampler(uint32_t index = 0) const = 0;
 
     virtual bool HasImageBuffer(uint32_t index) = 0;
 

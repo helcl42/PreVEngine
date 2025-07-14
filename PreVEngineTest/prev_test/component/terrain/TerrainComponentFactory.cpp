@@ -37,7 +37,7 @@ std::unique_ptr<ITerrainComponent> TerrainComponentFactory::CreateRandomTerrain(
     result->m_model = CreateModel(vertexData, false);
     result->m_heightsInfo = heightMap;
     for (const auto& layer : terrainLayers) {
-        result->m_materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, VK_SAMPLER_ADDRESS_MODE_REPEAT }, layer.materialPath));
+        result->m_materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity }, layer.materialPath));
         result->m_heightSteps.emplace_back(layer.heightStep);
     }
     result->m_transitionRange = layerTransitionWidth;
@@ -64,7 +64,7 @@ std::unique_ptr<ITerrainComponent> TerrainComponentFactory::CreateRandomTerrainN
     result->m_model = CreateModel(vertexData, true);
     result->m_heightsInfo = heightMap;
     for (const auto& layer : terrainLayers) {
-        result->m_materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, VK_SAMPLER_ADDRESS_MODE_REPEAT }, layer.materialPath, layer.materialNormalPath));
+        result->m_materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity }, layer.materialPath, layer.materialNormalPath));
         result->m_heightSteps.emplace_back(layer.heightStep);
     }
     result->m_transitionRange = layerTransitionWidth;
@@ -91,7 +91,7 @@ std::unique_ptr<ITerrainComponent> TerrainComponentFactory::CreateRandomTerrainC
     result->m_model = CreateModel(vertexData, true);
     result->m_heightsInfo = heightMap;
     for (const auto& layer : terrainLayers) {
-        auto material{ materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity, VK_SAMPLER_ADDRESS_MODE_REPEAT }, layer.materialPath, layer.materialNormalPath, layer.materialHeightPath) };
+        auto material{ materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity }, layer.materialPath, layer.materialNormalPath, layer.materialHeightPath) };
         material->SetHeightScale(layer.heightScale);
         result->m_materials.emplace_back(std::move(material));
         result->m_heightSteps.emplace_back(layer.heightStep);

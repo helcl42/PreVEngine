@@ -6,6 +6,7 @@
 #include "../../../component/sky/ILensFlareComponent.h"
 
 #include <prev/render/pipeline/PipelineBuilder.h>
+#include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/VkUtils.h>
@@ -65,6 +66,13 @@ void LensFlareRenderer::Init()
 
     m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsFS>>(m_allocator);
     m_uniformsPoolFS->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+
+    LOGI("LensFlare Uniforms Pools created");
+
+    m_colorSampler = prev::render::sampler::SamplerBuilder{ m_device }
+                         .Build();
+
+    LOGI("LensFlare Sampler created");
 }
 
 void LensFlareRenderer::BeforeRender(const NormalRenderContext& renderContext)
@@ -117,7 +125,7 @@ void LensFlareRenderer::Render(const NormalRenderContext& renderContext, const s
         uniformsFS.brightness = glm::vec4(m_sunVisibilityFactor);
         uboFS->Data(uniformsFS);
 
-        m_shader->Bind("colorSampler", *flare->GetImageBuffer(), *flare->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_shader->Bind("colorSampler", *flare->GetImageBuffer(), *m_colorSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         m_shader->Bind("uboVS", *uboVS);
         m_shader->Bind("uboFS", *uboFS);
 
@@ -143,8 +151,13 @@ void LensFlareRenderer::AfterRender(const NormalRenderContext& renderContext)
 
 void LensFlareRenderer::ShutDown()
 {
-    m_pipeline = nullptr;
-    m_shader = nullptr;
+    m_colorSampler = {};
+
+    m_uniformsPoolFS = {};
+    m_uniformsPoolVS = {};
+
+    m_pipeline = {};
+    m_shader = {};
 }
 
 void LensFlareRenderer::operator()(const prev_test::render::renderer::sky::SunVisibilityEvent& evt)

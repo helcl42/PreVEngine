@@ -7,6 +7,7 @@
 
 #include <prev/common/Common.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
+#include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/VkUtils.h>
@@ -65,6 +66,13 @@ void Font3dRenderer::Init()
 
     m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsFS>>(m_allocator);
     m_uniformsPoolFS->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+
+    LOGI("Fonts 3d Uniforms Pools created");
+
+    m_alphaSampler = prev::render::sampler::SamplerBuilder{ m_device }
+                         .Build();
+
+    LOGI("Fonts 3d Sampler created");
 }
 
 void Font3dRenderer::BeforeRender(const NormalRenderContext& renderContext)
@@ -113,7 +121,7 @@ void Font3dRenderer::Render(const NormalRenderContext& renderContext, const std:
         uniformsFS.outlineOffset = glm::vec4(renderableText.text->GetOutlineOffset(), 0.0f, 1.0f);
         uboFS->Data(uniformsFS);
 
-        m_shader->Bind("alphaSampler", *nodeFontRenderComponent->GetFontMetadata()->GetImageBuffer(), *nodeFontRenderComponent->GetFontMetadata()->GetSampler(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_shader->Bind("alphaSampler", *nodeFontRenderComponent->GetFontMetadata()->GetImageBuffer(), *m_alphaSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         m_shader->Bind("uboVS", *uboVS);
         m_shader->Bind("uboFS", *uboFS);
 
@@ -139,7 +147,12 @@ void Font3dRenderer::AfterRender(const NormalRenderContext& renderContext)
 
 void Font3dRenderer::ShutDown()
 {
-    m_pipeline = nullptr;
-    m_shader = nullptr;
+    m_alphaSampler = {};
+
+    m_uniformsPoolFS = {};
+    m_uniformsPoolVS = {};
+
+    m_pipeline = {};
+    m_shader = {};
 }
 } // namespace prev_test::render::renderer::font

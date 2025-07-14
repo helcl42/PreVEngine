@@ -396,39 +396,6 @@ VkVertexInputAttributeDescription CreateVertexInputAttributeDescription(const ui
     return inputAttrDescription;
 }
 
-VkSampler CreateSampler(const VkDevice device, const float maxLod, const VkSamplerAddressMode addressMode, const VkFilter minFilter, const VkFilter magFilter, const VkSamplerMipmapMode mipMapMode, const bool enableAnisotropyFilter, const float maxAnisotropy)
-{
-    VkSampler sampler;
-
-    VkSamplerCreateInfo samplerCreateInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
-    if (enableAnisotropyFilter) {
-        samplerCreateInfo.anisotropyEnable = VK_TRUE;
-        samplerCreateInfo.maxAnisotropy = maxAnisotropy;
-    } else {
-        samplerCreateInfo.anisotropyEnable = VK_FALSE;
-        samplerCreateInfo.maxAnisotropy = 1.0;
-    }
-
-    samplerCreateInfo.minFilter = minFilter;
-    samplerCreateInfo.magFilter = magFilter;
-    samplerCreateInfo.mipmapMode = mipMapMode;
-
-    samplerCreateInfo.addressModeU = addressMode;
-    samplerCreateInfo.addressModeV = addressMode;
-    samplerCreateInfo.addressModeW = addressMode;
-    samplerCreateInfo.mipLodBias = 0.0f;
-
-    samplerCreateInfo.compareEnable = VK_FALSE;
-    samplerCreateInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-    samplerCreateInfo.minLod = 0.0f;
-    samplerCreateInfo.maxLod = maxLod;
-    samplerCreateInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-    samplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
-    VKERRCHECK(vkCreateSampler(device, &samplerCreateInfo, nullptr, &sampler));
-
-    return sampler;
-}
-
 VkSampleCountFlagBits GetMaxUsableSampleCount(const VkPhysicalDevice physicalDevice)
 {
     VkPhysicalDeviceProperties physicalDeviceProperties;

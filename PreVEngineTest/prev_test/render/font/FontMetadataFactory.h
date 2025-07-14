@@ -51,8 +51,6 @@ private:
 
     std::shared_ptr<prev::render::buffer::ImageBuffer> CreateImageBuffer(const std::string& textureFilePath) const;
 
-    std::unique_ptr<prev::render::sampler::Sampler> CreateSampler(const float maxLod) const;
-
     void ExtractCharactersData(FontMetadataFile& metaDataFile, FontMetadataState& state, std::map<int, Character>& characters) const;
 
     Character CreateSingleCharacter(FontMetadataFile& metaDataFile, const FontMetadataState& state, const int charCode) const;

@@ -13,6 +13,8 @@
 #include <prev/scene/IScene.h>
 #include <prev/scene/graph/ISceneNode.h>
 
+#include <array>
+
 namespace prev_test::render::renderer::sky {
 class SkyRenderer final : public IRenderer<NormalRenderContext> {
 public:
@@ -36,7 +38,37 @@ public:
     void ShutDown() override;
 
 private:
-    void UpdateImageBufferExtents(const VkExtent2D& extent, const VkFormat format, std::shared_ptr<prev::render::buffer::ImageBuffer>& imageBuffer, std::shared_ptr<prev::render::sampler::Sampler>& sampler);
+    enum SamplerType {
+        LINEAR = 0,
+        NEAREST = 1,
+        LINEAR_REPEATED = 2,
+        COUNT = 3,
+    };
+
+    std::array<std::shared_ptr<prev::render::sampler::Sampler>, SamplerType::COUNT> m_samplers;
+
+    struct ImageBufferData {
+        std::shared_ptr<prev::render::buffer::ImageBuffer> image;
+        SamplerType samplerType;
+    };
+
+    ImageBufferData m_skyColorImageBuffer[MAX_VIEW_COUNT];
+
+    ImageBufferData m_skyBloomImageBuffer[MAX_VIEW_COUNT];
+
+    ImageBufferData m_skyAlphanessImageBuffer[MAX_VIEW_COUNT];
+
+    ImageBufferData m_skyCloudDistanceImageBuffer[MAX_VIEW_COUNT];
+
+    ImageBufferData m_skyPostProcessColorImageBuffer[MAX_VIEW_COUNT];
+
+private:
+    static const inline VkFormat COLOR_FORMAT{ VK_FORMAT_R8G8B8A8_UNORM };
+
+    static const inline VkFormat DEPTH_FORMAT{ VK_FORMAT_R32_SFLOAT };
+
+private:
+    void UpdateImageBufferExtents(const VkExtent2D& extent, const VkFormat format, ImageBufferData& imageBuffer);
 
 private:
     struct DEFAULT_ALIGNMENT UniformsSkyCS {
@@ -111,32 +143,6 @@ private:
     std::unique_ptr<prev::render::shader::Shader> m_compositeShader;
 
     std::unique_ptr<prev::render::pipeline::Pipeline> m_compositePipeline;
-
-private:
-    std::shared_ptr<prev::render::buffer::ImageBuffer> m_skyColorImageBuffer[MAX_VIEW_COUNT];
-
-    std::shared_ptr<prev::render::sampler::Sampler> m_skyColorImageSampler[MAX_VIEW_COUNT];
-
-    std::shared_ptr<prev::render::buffer::ImageBuffer> m_skyBloomImageBuffer[MAX_VIEW_COUNT];
-
-    std::shared_ptr<prev::render::sampler::Sampler> m_skyBloomImageSampler[MAX_VIEW_COUNT];
-
-    std::shared_ptr<prev::render::buffer::ImageBuffer> m_skyAlphanessImageBuffer[MAX_VIEW_COUNT];
-
-    std::shared_ptr<prev::render::sampler::Sampler> m_skyAlphanessImageSampler[MAX_VIEW_COUNT];
-
-    std::shared_ptr<prev::render::buffer::ImageBuffer> m_skyCloudDistanceImageBuffer[MAX_VIEW_COUNT];
-
-    std::shared_ptr<prev::render::sampler::Sampler> m_skyCloudDistanceImageSampler[MAX_VIEW_COUNT];
-
-    std::shared_ptr<prev::render::buffer::ImageBuffer> m_skyPostProcessColorImageBuffer[MAX_VIEW_COUNT];
-
-    std::shared_ptr<prev::render::sampler::Sampler> m_skyPostProcessImageSampler[MAX_VIEW_COUNT];
-
-private:
-    static const inline VkFormat COLOR_FORMAT{ VK_FORMAT_R8G8B8A8_UNORM };
-
-    static const inline VkFormat DEPTH_FORMAT{ VK_FORMAT_R32_SFLOAT };
 };
 } // namespace prev_test::render::renderer::sky
 

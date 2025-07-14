@@ -67,6 +67,8 @@ void SelectionDebugRenderer::Init()
     m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsFS>>(m_allocator);
     m_uniformsPoolFS->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
 
+    LOGI("Selection Debug Uniforms Pools created");
+
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh = meshFactory.CreateSphere(1.0f, 32, 32);
 
@@ -139,8 +141,11 @@ void SelectionDebugRenderer::AfterRender(const NormalRenderContext& renderContex
 
 void SelectionDebugRenderer::ShutDown()
 {
-    m_pipeline = nullptr;
-    m_shader = nullptr;
+    m_uniformsPoolFS = {};
+    m_uniformsPoolVS = {};
+
+    m_pipeline = {};
+    m_shader = {};
 }
 } // namespace prev_test::render::renderer::debug
 

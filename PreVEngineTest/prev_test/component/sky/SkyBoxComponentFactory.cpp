@@ -24,7 +24,7 @@ std::unique_ptr<ISkyBoxComponent> SkyBoxComponentFactory::Create() const
         prev_test::common::AssetManager::Instance().GetAssetPath("SkyBoxes/Sky/front.png"),
     };
 
-    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.CreateCubeMap({ glm::vec4{ 1.0f }, 1.0f, 0.0f, VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE }, materialPaths) };
+    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.CreateCubeMap({ glm::vec4{ 1.0f }, 1.0f, 0.0f }, materialPaths) };
     auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateCube() };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 

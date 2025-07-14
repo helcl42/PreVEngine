@@ -83,7 +83,6 @@ std::unique_ptr<IOffScreenRenderPassComponent> OffScreenRenderPassComponentFacto
                                                                      .Build();
 
     std::shared_ptr<prev::render::buffer::ImageBuffer> depthBuffer{};
-    std::shared_ptr<prev::render::sampler::Sampler> depthSampler{};
     // create image buffers and corresponding samplers
     if (depthFormat != VK_FORMAT_UNDEFINED) {
         depthBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
@@ -95,11 +94,9 @@ std::unique_ptr<IOffScreenRenderPassComponent> OffScreenRenderPassComponentFacto
                           .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
                           .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL)
                           .Build();
-        depthSampler = std::make_shared<prev::render::sampler::Sampler>(m_device, 1.0f, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_NEAREST, VK_FILTER_NEAREST, VK_SAMPLER_MIPMAP_MODE_NEAREST);
     }
 
     std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>> colorBuffers{};
-    std::vector<std::shared_ptr<prev::render::sampler::Sampler>> colorSamplers{};
     for (uint32_t i = 0; i < colorFormats.size(); ++i) {
         const auto colorFormat{ colorFormats[i] };
         auto colorImageBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
@@ -111,10 +108,8 @@ std::unique_ptr<IOffScreenRenderPassComponent> OffScreenRenderPassComponentFacto
                                     .SetUsageFlags(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
                                     .SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
                                     .Build();
-        auto colorImageBufferSampler{ std::make_shared<prev::render::sampler::Sampler>(m_device, static_cast<float>(colorImageBuffer->GetMipLevels()), VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_LINEAR, ANISOTROPIC_FILTERING_ENABLED, MAX_ANISOTROPY_LEVEL) };
 
         colorBuffers.emplace_back(std::move(colorImageBuffer));
-        colorSamplers.emplace_back(std::move(colorImageBufferSampler));
     }
 
     std::vector<VkImageView> imageViews;
@@ -127,6 +122,6 @@ std::unique_ptr<IOffScreenRenderPassComponent> OffScreenRenderPassComponentFacto
 
     auto frameBuffer = prev::util::vk::CreateFrameBuffer(m_device, *renderPass, imageViews, extent);
 
-    return std::make_unique<OffScreenRenderPassComponent>(m_device, extent, renderPass, depthBuffer, depthSampler, colorBuffers, colorSamplers, frameBuffer);
+    return std::make_unique<OffScreenRenderPassComponent>(m_device, extent, renderPass, depthBuffer, colorBuffers, frameBuffer);
 }
 } // namespace prev_test::component::common

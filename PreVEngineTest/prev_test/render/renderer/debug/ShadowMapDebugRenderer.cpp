@@ -8,6 +8,7 @@
 #include "../../model/ModelFactory.h"
 
 #include <prev/render/pipeline/PipelineBuilder.h>
+#include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/VkUtils.h>
@@ -63,6 +64,15 @@ void ShadowMapDebugRenderer::Init()
 
     LOGI("ShadowMapDebug Pipeline created");
 
+    m_depthSampler = prev::render::sampler::SamplerBuilder{ m_device }
+                         .SetAddressMode(VK_SAMPLER_ADDRESS_MODE_REPEAT)
+                         .SetMinFilter(VK_FILTER_NEAREST)
+                         .SetMagFilter(VK_FILTER_NEAREST)
+                         .SetMipMapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST)
+                         .Build();
+
+    LOGI("ShadowMapDebug Sampler created");
+
     // create quad model
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto quadMesh{ meshFactory.CreateQuad() };
@@ -94,7 +104,7 @@ void ShadowMapDebugRenderer::Render(const prev::render::RenderContext& renderCon
     PushConstantBlock pushConstBlock{ static_cast<uint32_t>(m_cascadeIndex), -cascade.startSplitDepth, -cascade.endSplitDepth };
     vkCmdPushConstants(renderContext.commandBuffer, m_pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantBlock), &pushConstBlock);
 
-    m_shader->Bind("depthSampler", *shadows->GetImageBuffer(), *shadows->GetSampler(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+    m_shader->Bind("depthSampler", *shadows->GetImageBuffer(), *m_depthSampler, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 
     const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
     const VkBuffer vertexBuffers[] = { *m_quadModel->GetVertexBuffer() };
@@ -117,8 +127,10 @@ void ShadowMapDebugRenderer::AfterRender(const prev::render::RenderContext& rend
 
 void ShadowMapDebugRenderer::ShutDown()
 {
-    m_pipeline = nullptr;
-    m_shader = nullptr;
+    m_depthSampler = {};
+
+    m_pipeline = {};
+    m_shader = {};
 }
 
 void ShadowMapDebugRenderer::operator()(const prev::input::keyboard::KeyEvent& keyEvent)

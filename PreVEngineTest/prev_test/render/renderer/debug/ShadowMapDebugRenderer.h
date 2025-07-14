@@ -10,6 +10,7 @@
 #include <prev/input/keyboard/KeyboardEvents.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/pipeline/Pipeline.h>
+#include <prev/render/sampler/Sampler.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/IScene.h>
 #include <prev/scene/graph/ISceneNode.h>
@@ -65,6 +66,8 @@ private:
     std::unique_ptr<prev::render::shader::Shader> m_shader;
 
     std::unique_ptr<prev::render::pipeline::Pipeline> m_pipeline;
+
+    std::unique_ptr<prev::render::sampler::Sampler> m_depthSampler;
 
 private:
     std::unique_ptr<IModel> m_quadModel;

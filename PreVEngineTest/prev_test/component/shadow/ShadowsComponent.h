@@ -8,7 +8,7 @@
 namespace prev_test::component::shadow {
 class ShadowsComponent : public IShadowsComponent {
 public:
-    ShadowsComponent(prev::core::device::Device& device, const uint32_t cascadesCount, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, const std::shared_ptr<prev::render::sampler::Sampler>& sampler, const std::vector<ShadowsCascade>& cascades);
+    ShadowsComponent(prev::core::device::Device& device, const uint32_t cascadesCount, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, const std::vector<ShadowsCascade>& cascades);
 
     ~ShadowsComponent();
 
@@ -23,8 +23,6 @@ public:
 
     std::shared_ptr<prev::render::buffer::ImageBuffer> GetImageBuffer() const override;
 
-    std::shared_ptr<prev::render::sampler::Sampler> GetSampler() const override;
-
 private:
     std::vector<float> GenerateCaascadeSplits(const float nearClippingPlane, const float farClippingPlane) const;
 
@@ -38,8 +36,6 @@ private:
     std::shared_ptr<prev::render::pass::RenderPass> m_renderPass{};
 
     std::shared_ptr<prev::render::buffer::ImageBuffer> m_depthBuffer{};
-
-    std::shared_ptr<prev::render::sampler::Sampler> m_sampler{};
 
     std::vector<ShadowsCascade> m_cascades;
 

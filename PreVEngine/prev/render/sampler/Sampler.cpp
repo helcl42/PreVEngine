@@ -3,9 +3,9 @@
 #include "../../util/VkUtils.h"
 
 namespace prev::render::sampler {
-Sampler::Sampler(const VkDevice device, const float maxLod, const VkSamplerAddressMode addressMode, const VkFilter minFilter, const VkFilter magFilter, const VkSamplerMipmapMode mipMapMode, const bool enableAnisotropyFilter, const float maxAnisotropy)
+Sampler::Sampler(const VkDevice device, const VkSampler sampler)
     : m_device{ device }
-    , m_sampler{ prev::util::vk::CreateSampler(device, maxLod, addressMode, minFilter, magFilter, mipMapMode, enableAnisotropyFilter, maxAnisotropy) }
+    , m_sampler{ sampler }
 {
 }
 

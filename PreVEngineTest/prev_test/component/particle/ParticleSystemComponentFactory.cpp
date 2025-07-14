@@ -26,7 +26,7 @@ std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::Create
 {
     prev_test::render::material::MaterialFactory materialFactory{ m_device, m_allocator };
 
-    std::shared_ptr<prev_test::render::IMaterial> material{ materialFactory.Create({ glm::vec4{ 1.0f }, 0.0f, 0.0f, VK_SAMPLER_ADDRESS_MODE_REPEAT }, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fire-ember-particles-png-4-transparent.png")) };
+    std::shared_ptr<prev_test::render::IMaterial> material{ materialFactory.Create({ glm::vec4{ 1.0f }, 0.0f, 0.0f }, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fire-ember-particles-png-4-transparent.png")) };
     material->SetAtlasNumberOfRows(8);
 
     prev_test::render::mesh::MeshFactory meshFactory{};
@@ -52,7 +52,7 @@ std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::Create
 std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::CreateRandomInCone(const glm::vec3& coneDirection, const float angle) const
 {
     prev_test::render::material::MaterialFactory materialFactory{ m_device, m_allocator };
-    std::shared_ptr<prev_test::render::IMaterial> material{ materialFactory.Create({ glm::vec4{ 1.0f }, 0.0f, 0.0f, VK_SAMPLER_ADDRESS_MODE_REPEAT }, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fire-texture-atlas.png")) };
+    std::shared_ptr<prev_test::render::IMaterial> material{ materialFactory.Create({ glm::vec4{ 1.0f }, 0.0f, 0.0f }, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fire-texture-atlas.png")) };
     material->SetAtlasNumberOfRows(4);
 
     prev_test::render::mesh::MeshFactory meshFactory{};

@@ -4,7 +4,6 @@
 #include "../../render/IModel.h"
 
 #include <prev/render/buffer/ImageBuffer.h>
-#include <prev/render/sampler/Sampler.h>
 #include <prev/scene/component/IComponent.h>
 
 namespace prev_test::component::sky {
@@ -14,11 +13,7 @@ public:
 
     virtual std::shared_ptr<prev::render::buffer::ImageBuffer> GetWeather() const = 0;
 
-    virtual std::shared_ptr<prev::render::sampler::Sampler> GetWeatherSampler() const = 0;
-
     virtual std::shared_ptr<prev::render::buffer::ImageBuffer> GetPerlinWorleyNoise() const = 0;
-
-    virtual std::shared_ptr<prev::render::sampler::Sampler> GetPerlinWorleyNoiseSampler() const = 0;
 
     virtual const glm::vec3& GetBottomColor() const = 0;
 

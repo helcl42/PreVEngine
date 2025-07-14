@@ -63,6 +63,8 @@ void TerrainBumplMappedShadowsRenderer::Init()
 
     m_uniformsPool = std::make_unique<prev::render::buffer::UniformRingBuffer<Uniforms>>(m_allocator);
     m_uniformsPool->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+
+    LOGI("Terrain Bump Mapped Shadows Uniforms Pools created");
 }
 
 void TerrainBumplMappedShadowsRenderer::BeforeRender(const ShadowsRenderContext& renderContext)
@@ -126,7 +128,9 @@ void TerrainBumplMappedShadowsRenderer::AfterRender(const ShadowsRenderContext& 
 
 void TerrainBumplMappedShadowsRenderer::ShutDown()
 {
-    m_pipeline = nullptr;
-    m_shader = nullptr;
+    m_uniformsPool = {};
+
+    m_pipeline = {};
+    m_shader = {};
 }
 } // namespace prev_test::render::renderer::shadow
