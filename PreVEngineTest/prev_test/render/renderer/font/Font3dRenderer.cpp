@@ -97,7 +97,7 @@ void Font3dRenderer::Render(const NormalRenderContext& renderContext, const std:
 
     const auto nodeFontRenderComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::font::IFontRenderComponent<prev_test::render::font::WorldSpaceText>>(node);
     for (const auto& [key, renderableText] : nodeFontRenderComponent->GetRenderableTexts()) {
-        auto uboVS = m_uniformsPoolVS->GetNext();
+        auto& uboVS = m_uniformsPoolVS->GetNext();
         UniformsVS uniformsVS{};
         // TODO - get rid of this crap!!
         uniformsVS.modelMatrix = prev::util::math::CreateTransformationMatrix(renderableText.text->GetPosition(), renderableText.text->IsAlwaysFacingCamera() ? (glm::inverse(glm::quat_cast(renderContext.viewMatrices[0])) * renderableText.text->GetOrientation()) : (renderableText.text->GetOrientation() * glm::quat(glm::radians(glm::vec3(0.0f, 180.0f, 0.0f)))));
@@ -106,9 +106,9 @@ void Font3dRenderer::Render(const NormalRenderContext& renderContext, const std:
             uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
         }
         uniformsVS.clipPlane = renderContext.clipPlane;
-        uboVS->Data(uniformsVS);
+        uboVS.Data(uniformsVS);
 
-        auto uboFS = m_uniformsPoolFS->GetNext();
+        auto& uboFS = m_uniformsPoolFS->GetNext();
         UniformsFS uniformsFS{};
         uniformsFS.color = renderableText.text->GetColor();
         uniformsFS.width = glm::vec4(renderableText.text->GetWidth());
@@ -119,11 +119,11 @@ void Font3dRenderer::Render(const NormalRenderContext& renderContext, const std:
         uniformsFS.hasEffect = renderableText.text->HasEffect() ? 1 : 0;
         uniformsFS.outlineColor = glm::vec4(renderableText.text->GetOutlineColor(), 1.0f);
         uniformsFS.outlineOffset = glm::vec4(renderableText.text->GetOutlineOffset(), 0.0f, 1.0f);
-        uboFS->Data(uniformsFS);
+        uboFS.Data(uniformsFS);
 
         m_shader->Bind("alphaSampler", *nodeFontRenderComponent->GetFontMetadata()->GetImageBuffer(), *m_alphaSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-        m_shader->Bind("uboVS", *uboVS);
-        m_shader->Bind("uboFS", *uboFS);
+        m_shader->Bind("uboVS", uboVS);
+        m_shader->Bind("uboFS", uboFS);
 
         const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
         const VkBuffer vertexBuffers[] = { *renderableText.model->GetVertexBuffer() };

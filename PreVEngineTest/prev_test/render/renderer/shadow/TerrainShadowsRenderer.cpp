@@ -95,15 +95,15 @@ void TerrainShadowsRenderer::Render(const ShadowsRenderContext& renderContext, c
 
     const auto transformComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(node);
     const auto terrainComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::terrain::ITerrainComponent>(node);
-    auto ubo = m_uniformsPool->GetNext();
+    auto& ubo = m_uniformsPool->GetNext();
 
     Uniforms uniforms{};
     uniforms.projectionMatrix = renderContext.projectionMatrix;
     uniforms.viewMatrix = renderContext.viewMatrix;
     uniforms.modelMatrix = transformComponent->GetWorldTransformScaled();
-    ubo->Data(uniforms);
+    ubo.Data(uniforms);
 
-    m_shader->Bind("ubo", *ubo);
+    m_shader->Bind("ubo", ubo);
 
     const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
     const VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };

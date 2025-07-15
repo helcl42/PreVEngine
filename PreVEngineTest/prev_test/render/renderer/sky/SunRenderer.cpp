@@ -118,16 +118,16 @@ void SunRenderer::Render(const NormalRenderContext& renderContext, const std::sh
     m_maxNumberOfSamples = static_cast<uint64_t>(xScale * static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) * yScale * static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y));
     m_queryPool->BeginQuery(m_queryPoolIndex, 0, renderContext.commandBuffer);
 
-    auto uboVS = m_uniformsPoolVS->GetNext();
+    auto& uboVS = m_uniformsPoolVS->GetNext();
     UniformsVS uniformsVS{};
     for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
         const auto sunPosition{ sunComponent->ComputeFlarePosition(renderContext.projectionMatrices[viewIndex], renderContext.viewMatrices[viewIndex], renderContext.cameraPositions[viewIndex], lightComponent->GetPosition()) };
         uniformsVS.translations[viewIndex] = glm::vec4(sunPosition, MAX_DEPTH, 1.0f);
     }
     uniformsVS.scale = glm::vec4(xScale, yScale, 0.0f, 0.0f);
-    uboVS->Data(uniformsVS);
+    uboVS.Data(uniformsVS);
 
-    m_shader->Bind("uboVS", *uboVS);
+    m_shader->Bind("uboVS", uboVS);
 
     const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
     const VkBuffer vertexBuffers[] = { *sunComponent->GetModel()->GetVertexBuffer() };

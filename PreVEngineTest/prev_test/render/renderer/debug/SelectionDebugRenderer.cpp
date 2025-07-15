@@ -98,7 +98,7 @@ void SelectionDebugRenderer::Render(const NormalRenderContext& renderContext, co
 
     const auto selectableComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::ray_casting::ISelectableComponent>(node);
     if (selectableComponent->IsSelected()) {
-        auto uboVS = m_uniformsPoolVS->GetNext();
+        auto& uboVS = m_uniformsPoolVS->GetNext();
 
         UniformsVS uniformsVS{};
         uniformsVS.modelMatrix = prev::util::math::CreateTransformationMatrix(selectableComponent->GetPostiion(), glm::quat(), 0.6f);
@@ -107,17 +107,17 @@ void SelectionDebugRenderer::Render(const NormalRenderContext& renderContext, co
             uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
         }
 
-        uboVS->Data(uniformsVS);
+        uboVS.Data(uniformsVS);
 
-        auto uboFS = m_uniformsPoolFS->GetNext();
+        auto& uboFS = m_uniformsPoolFS->GetNext();
 
         UniformsFS uniformsFS{};
         uniformsFS.color = glm::vec4(0.0f, 1.0f, 0.0f, 0.7f);
 
-        uboFS->Data(uniformsFS);
+        uboFS.Data(uniformsFS);
 
-        m_shader->Bind("uboVS", *uboVS);
-        m_shader->Bind("uboFS", *uboFS);
+        m_shader->Bind("uboVS", uboVS);
+        m_shader->Bind("uboFS", uboFS);
 
         const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
         const VkBuffer vertexBuffers[] = { *m_selectionPointModel->GetVertexBuffer() };

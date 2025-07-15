@@ -139,7 +139,7 @@ void WaterRenderer::Render(const NormalRenderContext& renderContext, const std::
     const auto mainLightComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>(m_scene.GetRootNode(), { TAG_MAIN_LIGHT });
     const auto shadowsComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>(m_scene.GetRootNode(), { TAG_SHADOW });
 
-    auto uboVS = m_uniformsPoolVS->GetNext();
+    auto& uboVS = m_uniformsPoolVS->GetNext();
 
     UniformsVS uniformsVS{};
     uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
@@ -151,9 +151,9 @@ void WaterRenderer::Render(const NormalRenderContext& renderContext, const std::
     uniformsVS.density = prev_test::component::sky::FOG_DENSITY;
     uniformsVS.gradient = prev_test::component::sky::FOG_GRADIENT;
 
-    uboVS->Data(uniformsVS);
+    uboVS.Data(uniformsVS);
 
-    auto uboFS = m_uniformsPoolFS->GetNext();
+    auto& uboFS = m_uniformsPoolFS->GetNext();
 
     UniformsFS uniformsFS{};
     uniformsFS.fogColor = prev_test::component::sky::FOG_COLOR;
@@ -171,10 +171,10 @@ void WaterRenderer::Render(const NormalRenderContext& renderContext, const std::
     uniformsFS.shadows.enabled = prev_test::component::shadow::SHADOWS_ENABLED;
     uniformsFS.shadows.useReverseDepth = REVERSE_DEPTH ? 1 : 0;
 
-    uboFS->Data(uniformsFS);
+    uboFS.Data(uniformsFS);
 
-    m_shader->Bind("uboVS", *uboVS);
-    m_shader->Bind("uboFS", *uboFS);
+    m_shader->Bind("uboVS", uboVS);
+    m_shader->Bind("uboFS", uboFS);
     m_shader->Bind("depthSampler", *shadowsComponent->GetImageBuffer(), *m_depthSampler, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
     m_shader->Bind("reflectionTexture", *waterReflectionComponent->GetColorImageBuffer(), *m_colorSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     m_shader->Bind("refractionTexture", *waterRefractionComponent->GetColorImageBuffer(), *m_colorSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);

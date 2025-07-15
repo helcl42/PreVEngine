@@ -112,22 +112,22 @@ void ParticlesRenderer::Render(const NormalRenderContext& renderContext, const s
 
     const auto particlesComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::particle::IParticleSystemComponent>(node);
 
-    auto uboVS = m_uniformsPoolVS->GetNext();
+    auto& uboVS = m_uniformsPoolVS->GetNext();
     UniformsVS uniformsVS{};
     for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
         uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
         uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
     }
     uniformsVS.textureNumberOfRows = particlesComponent->GetMaterial()->GetAtlasNumberOfRows();
-    uboVS->Data(uniformsVS);
+    uboVS.Data(uniformsVS);
 
-    auto uboFS = m_uniformsPoolFS->GetNext();
+    auto& uboFS = m_uniformsPoolFS->GetNext();
     UniformsFS uniformsFS{};
     uniformsFS.color = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
-    uboFS->Data(uniformsFS);
+    uboFS.Data(uniformsFS);
 
-    m_shader->Bind("uboVS", *uboVS);
-    m_shader->Bind("uboFS", *uboFS);
+    m_shader->Bind("uboVS", uboVS);
+    m_shader->Bind("uboFS", uboFS);
     m_shader->Bind("colorSampler", *particlesComponent->GetMaterial()->GetImageBuffer(), *m_colorSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();

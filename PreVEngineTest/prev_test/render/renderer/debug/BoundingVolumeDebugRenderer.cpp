@@ -90,7 +90,7 @@ void BoundingVolumeDebugRenderer::Render(const NormalRenderContext& renderContex
 
     const auto boundingVolumeComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(node);
 
-    auto uboVS = m_uniformsPoolVS->GetNext();
+    auto& uboVS = m_uniformsPoolVS->GetNext();
 
     UniformsVS uniformsVS{};
     uniformsVS.modelMatrix = glm::mat4(1.0f);
@@ -99,19 +99,19 @@ void BoundingVolumeDebugRenderer::Render(const NormalRenderContext& renderContex
         uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
     }
 
-    uboVS->Data(uniformsVS);
+    uboVS.Data(uniformsVS);
 
-    auto uboFS = m_uniformsPoolFS->GetNext();
+    auto& uboFS = m_uniformsPoolFS->GetNext();
 
     UniformsFS uniformsFS{};
     uniformsFS.color = glm::vec4(1.0f, 1.0f, 1.0f, 0.3f);
     uniformsFS.selectedColor = prev_test::component::ray_casting::SELECTED_COLOR;
     uniformsFS.selected = false;
 
-    uboFS->Data(uniformsFS);
+    uboFS.Data(uniformsFS);
 
-    m_shader->Bind("uboVS", *uboVS);
-    m_shader->Bind("uboFS", *uboFS);
+    m_shader->Bind("uboVS", uboVS);
+    m_shader->Bind("uboFS", uboFS);
 
     const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
     const VkBuffer vertexBuffers[] = { *boundingVolumeComponent->GetModel()->GetVertexBuffer() };

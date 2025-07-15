@@ -115,7 +115,7 @@ void AnimationBumpMappedShadowsRenderer::Render(const ShadowsRenderContext& rend
             const auto& meshPart = meshParts[meshPartIndex];
             const auto& animationClip = animation->GetClip(meshPartIndex);
 
-            auto ubo = m_uniformsPool->GetNext();
+            auto& ubo = m_uniformsPool->GetNext();
 
             Uniforms uniforms{};
             const auto& bones = animationClip.GetBoneTransforms();
@@ -125,9 +125,9 @@ void AnimationBumpMappedShadowsRenderer::Render(const ShadowsRenderContext& rend
             uniforms.projectionMatrix = renderContext.projectionMatrix;
             uniforms.viewMatrix = renderContext.viewMatrix;
             uniforms.modelMatrix = transformComponent->GetWorldTransformScaled() * meshNode.transform;
-            ubo->Data(uniforms);
+            ubo.Data(uniforms);
 
-            m_shader->Bind("ubo", *ubo);
+            m_shader->Bind("ubo", ubo);
 
             const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
             const VkBuffer vertexBuffers[] = { *model->GetVertexBuffer() };

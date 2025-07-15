@@ -112,22 +112,22 @@ void LensFlareRenderer::Render(const NormalRenderContext& renderContext, const s
         const float xScale{ flare->GetScale() };
         const float yScale{ xScale * aspectRatio };
 
-        auto uboVS = m_uniformsPoolVS->GetNext();
+        auto& uboVS = m_uniformsPoolVS->GetNext();
         UniformsVS uniformsVS{};
         for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
             uniformsVS.translations[viewIndex] = glm::vec4(flarePositions[viewIndex][i], MIN_DEPTH, 1.0f);
         }
         uniformsVS.scale = glm::vec4(xScale, yScale, 0.0f, 0.0f);
-        uboVS->Data(uniformsVS);
+        uboVS.Data(uniformsVS);
 
-        auto uboFS = m_uniformsPoolFS->GetNext();
+        auto& uboFS = m_uniformsPoolFS->GetNext();
         UniformsFS uniformsFS{};
         uniformsFS.brightness = glm::vec4(m_sunVisibilityFactor);
-        uboFS->Data(uniformsFS);
+        uboFS.Data(uniformsFS);
 
         m_shader->Bind("colorSampler", *flare->GetImageBuffer(), *m_colorSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-        m_shader->Bind("uboVS", *uboVS);
-        m_shader->Bind("uboFS", *uboFS);
+        m_shader->Bind("uboVS", uboVS);
+        m_shader->Bind("uboFS", uboFS);
 
         const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
         const VkBuffer vertexBuffers[] = { *lensFlareComponent->GetModel()->GetVertexBuffer() };

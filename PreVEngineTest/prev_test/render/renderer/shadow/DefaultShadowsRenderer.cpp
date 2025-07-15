@@ -110,15 +110,15 @@ void DefaultShadowsRenderer::Render(const ShadowsRenderContext& renderContext, c
             const auto& meshPart = meshParts[meshPartIndex];
             const auto modelMatrix = transformComponent->GetWorldTransformScaled() * meshNode.transform;
 
-            auto ubo = m_uniformsPool->GetNext();
+            auto& ubo = m_uniformsPool->GetNext();
 
             Uniforms uniforms{};
             uniforms.projectionMatrix = renderContext.projectionMatrix;
             uniforms.viewMatrix = renderContext.viewMatrix;
             uniforms.modelMatrix = modelMatrix;
-            ubo->Data(uniforms);
+            ubo.Data(uniforms);
 
-            m_shader->Bind("ubo", *ubo);
+            m_shader->Bind("ubo", ubo);
 
             const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
             const VkBuffer vertexBuffers[] = { *model->GetVertexBuffer() };

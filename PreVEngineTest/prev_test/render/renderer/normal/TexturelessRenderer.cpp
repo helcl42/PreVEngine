@@ -131,7 +131,7 @@ void TexturelessRenderer::Render(const NormalRenderContext& renderContext, const
             const auto material = nodeRenderComponent->GetMaterial(meshPart.materialIndex);
             const auto modelMatrix = transformComponent->GetWorldTransformScaled() * meshNode.transform;
 
-            auto uboVS = m_uniformsPoolVS->GetNext();
+            auto& uboVS = m_uniformsPoolVS->GetNext();
 
             UniformsVS uniformsVS{};
             uniformsVS.modelMatrix = modelMatrix;
@@ -154,9 +154,9 @@ void TexturelessRenderer::Render(const NormalRenderContext& renderContext, const
             uniformsVS.gradient = prev_test::component::sky::FOG_GRADIENT;
             uniformsVS.clipPlane = renderContext.clipPlane;
 
-            uboVS->Data(uniformsVS);
+            uboVS.Data(uniformsVS);
 
-            auto uboFS = m_uniformsPoolFS->GetNext();
+            auto& uboFS = m_uniformsPoolFS->GetNext();
 
             UniformsFS uniformsFS{};
             // shadows
@@ -185,11 +185,11 @@ void TexturelessRenderer::Render(const NormalRenderContext& renderContext, const
             ;
             uniformsFS.castedByShadows = nodeRenderComponent->IsCastedByShadows();
 
-            uboFS->Data(uniformsFS);
+            uboFS.Data(uniformsFS);
 
             m_shader->Bind("depthSampler", *shadowsComponent->GetImageBuffer(), *m_depthSampler, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-            m_shader->Bind("uboVS", *uboVS);
-            m_shader->Bind("uboFS", *uboFS);
+            m_shader->Bind("uboVS", uboVS);
+            m_shader->Bind("uboFS", uboFS);
 
             const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
             const VkBuffer vertexBuffers[] = { *model->GetVertexBuffer() };

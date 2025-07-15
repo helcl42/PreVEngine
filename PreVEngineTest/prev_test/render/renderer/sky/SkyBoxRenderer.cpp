@@ -103,7 +103,7 @@ void SkyBoxRenderer::Render(const NormalRenderContext& renderContext, const std:
     const auto transformComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(node);
     const auto skyBoxComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::sky::ISkyBoxComponent>(node);
 
-    auto uboVS = m_uniformsPoolVS->GetNext();
+    auto& uboVS = m_uniformsPoolVS->GetNext();
 
     UniformsVS uniformsVS{};
     uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
@@ -111,19 +111,19 @@ void SkyBoxRenderer::Render(const NormalRenderContext& renderContext, const std:
         uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
         uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
     }
-    uboVS->Data(uniformsVS);
+    uboVS.Data(uniformsVS);
 
-    auto uboFS = m_uniformsPoolFS->GetNext();
+    auto& uboFS = m_uniformsPoolFS->GetNext();
 
     UniformsFS uniformsFS{};
     uniformsFS.fogColor = prev_test::component::sky::FOG_COLOR;
     uniformsFS.lowerLimit = glm::vec4(0.0f);
     uniformsFS.upperLimit = glm::vec4(0.03f);
-    uboFS->Data(uniformsFS);
+    uboFS.Data(uniformsFS);
 
     m_shader->Bind("cubeMap1", *skyBoxComponent->GetMaterial()->GetImageBuffer(), *m_colorSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    m_shader->Bind("uboVS", *uboVS);
-    m_shader->Bind("uboFS", *uboFS);
+    m_shader->Bind("uboVS", uboVS);
+    m_shader->Bind("uboFS", uboFS);
 
     const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
     const VkBuffer vertexBuffers[] = { *skyBoxComponent->GetModel()->GetVertexBuffer() };

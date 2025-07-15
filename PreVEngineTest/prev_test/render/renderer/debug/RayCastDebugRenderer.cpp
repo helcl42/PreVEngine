@@ -94,14 +94,14 @@ void RayCastDebugRenderer::Render(const NormalRenderContext& renderContext, cons
 
     const auto rayCastingComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::ray_casting::IRayCasterComponent>(node);
 
-    auto uboVS = m_uniformsPoolVS->GetNext();
+    auto& uboVS = m_uniformsPoolVS->GetNext();
 
     UniformsVS uniformsVS{};
     uniformsVS.color = glm::vec3(1.0, 0.0, 0.0);
 
-    uboVS->Data(uniformsVS);
+    uboVS.Data(uniformsVS);
 
-    auto uboGS = m_uniformsPoolGS->GetNext();
+    auto& uboGS = m_uniformsPoolGS->GetNext();
 
     UniformsGS uniformsGS{};
     uniformsGS.modelMatrix = glm::mat4(1.0f);
@@ -110,18 +110,18 @@ void RayCastDebugRenderer::Render(const NormalRenderContext& renderContext, cons
         uniformsGS.projectionMatrices[i] = renderContext.projectionMatrices[i];
     }
 
-    uboGS->Data(uniformsGS);
+    uboGS.Data(uniformsGS);
 
-    auto uboFS = m_uniformsPoolFS->GetNext();
+    auto& uboFS = m_uniformsPoolFS->GetNext();
 
     UniformsFS uniformsFS{};
     uniformsFS.alpha = 0.7f;
 
-    uboFS->Data(uniformsFS);
+    uboFS.Data(uniformsFS);
 
-    m_shader->Bind("uboVS", *uboVS);
-    m_shader->Bind("uboGS", *uboGS);
-    m_shader->Bind("uboFS", *uboFS);
+    m_shader->Bind("uboVS", uboVS);
+    m_shader->Bind("uboGS", uboGS);
+    m_shader->Bind("uboFS", uboFS);
 
     const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
     const VkBuffer vertexBuffers[] = { *rayCastingComponent->GetModel()->GetVertexBuffer() };

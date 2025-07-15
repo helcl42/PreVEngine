@@ -185,7 +185,7 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
 
         // const auto projectionMatrix{ renderContext.projectionMatrices[viewIndex] };
 
-        auto uboCS = m_uniformsPoolSkyCS->GetNext();
+        auto& uboCS = m_uniformsPoolSkyCS->GetNext();
 
         UniformsSkyCS uniformsCS{};
         uniformsCS.resolution = glm::vec4(extent.width, extent.height, 0.0f, 0.0f);
@@ -215,9 +215,9 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
         uniformsCS.cloudTopOffset = 750.0f;
         uniformsCS.maxDepth = MAX_DEPTH;
 
-        uboCS->Data(uniformsCS);
+        uboCS.Data(uniformsCS);
 
-        m_skyShader->Bind("uboCS", *uboCS);
+        m_skyShader->Bind("uboCS", uboCS);
 
         m_skyShader->Bind("perlinNoiseTex", *skyComponent->GetPerlinWorleyNoise(), *linearRepeatedSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         m_skyShader->Bind("weatherTex", *skyComponent->GetWeather(), *linearRepeatedSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -242,7 +242,7 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
         // sky post process render
         skyPostProcessColorImageBuffer.image->UpdateLayout(VK_IMAGE_LAYOUT_GENERAL, renderContext.commandBuffer);
 
-        auto uboPostCS = m_uniformsPoolSkyPostProcessCS->GetNext();
+        auto& uboPostCS = m_uniformsPoolSkyPostProcessCS->GetNext();
 
         glm::vec4 lightPositionClipSpace = renderContext.projectionMatrices[viewIndex] * renderContext.viewMatrices[viewIndex] * glm::vec4(mainLightComponent->GetPosition(), 1.0f);
         glm::vec3 lightPositionNdc = lightPositionClipSpace / lightPositionClipSpace.w;
@@ -255,9 +255,9 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
         uniformsPostCS.lightDotCameraForward = glm::dot(glm::normalize(renderContext.cameraPositions[viewIndex] - mainLightComponent->GetPosition()),
             glm::normalize(prev::util::math::GetForwardVector(renderContext.viewMatrices[viewIndex])));
 
-        uboPostCS->Data(uniformsPostCS);
+        uboPostCS.Data(uniformsPostCS);
 
-        m_skyPostProcessShader->Bind("uboCS", *uboPostCS);
+        m_skyPostProcessShader->Bind("uboCS", uboPostCS);
 
         m_skyPostProcessShader->Bind("skyTex", *skyColorImageBuffer.image, *skyColorImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         m_skyPostProcessShader->Bind("bloomTex", *skyBloomImageBuffer.image, *skyBloomImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);

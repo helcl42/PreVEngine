@@ -69,10 +69,9 @@ public:
         }
     }
 
-    std::shared_ptr<UnifomBuffer<Type>> GetNext()
+    UnifomBuffer<Type>& GetNext()
     {
-        ++m_index;
-        return m_buffers[m_index];
+        return *m_buffers[++m_index];
     }
 
 private:

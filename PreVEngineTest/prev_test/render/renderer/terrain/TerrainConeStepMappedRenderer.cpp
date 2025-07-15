@@ -143,7 +143,7 @@ void TerrainConeStepMappedRenderer::Render(const NormalRenderContext& renderCont
     const auto transformComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(node);
     const auto terrainComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::terrain::ITerrainComponent>(node);
 
-    auto uboVS = m_uniformsPoolVS->GetNext();
+    auto& uboVS = m_uniformsPoolVS->GetNext();
 
     UniformsVS uniformsVS{};
     uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
@@ -163,9 +163,9 @@ void TerrainConeStepMappedRenderer::Render(const NormalRenderContext& renderCont
     uniformsVS.gradient = prev_test::component::sky::FOG_GRADIENT;
     uniformsVS.clipPlane = renderContext.clipPlane;
 
-    uboVS->Data(uniformsVS);
+    uboVS.Data(uniformsVS);
 
-    auto uboFS = m_uniformsPoolFS->GetNext();
+    auto& uboFS = m_uniformsPoolFS->GetNext();
 
     UniformsFS uniformsFS{};
     // shadows
@@ -200,7 +200,7 @@ void TerrainConeStepMappedRenderer::Render(const NormalRenderContext& renderCont
     uniformsFS.heightTransitionRange = terrainComponent->GetTransitionRange();
     uniformsFS.numLayers = 15;
 
-    uboFS->Data(uniformsFS);
+    uboFS.Data(uniformsFS);
 
     for (size_t i = 0; i < terrainComponent->GetMaterials().size(); i++) {
         const auto material{ terrainComponent->GetMaterials().at(i) };
@@ -209,8 +209,8 @@ void TerrainConeStepMappedRenderer::Render(const NormalRenderContext& renderCont
         m_shader->Bind("heightSampler[" + std::to_string(i) + "]", *material->GetImageBuffer(HEIGHT_AND_CONE_INDEX), *m_coneSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     }
     m_shader->Bind("depthSampler", *shadowsComponent->GetImageBuffer(), *m_depthSampler, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-    m_shader->Bind("uboVS", *uboVS);
-    m_shader->Bind("uboFS", *uboFS);
+    m_shader->Bind("uboVS", uboVS);
+    m_shader->Bind("uboFS", uboFS);
 
     const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
     const VkBuffer vertexBuffers[] = { *terrainComponent->GetModel()->GetVertexBuffer() };
