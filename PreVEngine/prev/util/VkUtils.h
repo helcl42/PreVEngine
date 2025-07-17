@@ -60,7 +60,7 @@ std::string VendorIdToString(const uint32_t vendorId);
 
 VkFormatProperties GetFormatProperties(const VkPhysicalDevice physicalDevice, const VkFormat format);
 
-VkImageViewType GetImageViewType(const uint32_t viewCount);
+VkFormat ToImageFormat(const uint32_t channels, const uint32_t bitDepth, const bool isFloatingPoint);
 
 } // namespace prev::util::vk
 

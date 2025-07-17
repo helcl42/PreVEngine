@@ -3,7 +3,7 @@
 #include <prev/render/image/ImageFactory.h>
 
 namespace prev_test::render::util::assimp {
-std::shared_ptr<prev::render::image::Image> AssimpMaterialFactory::CreateModelImage(const aiScene& scene, const aiMaterial& material, const aiTextureType textureType) const
+std::shared_ptr<prev::render::image::IImage> AssimpMaterialFactory::CreateModelImage(const aiScene& scene, const aiMaterial& material, const aiTextureType textureType) const
 {
     aiString textureFilePath;
     if (material.Get(AI_MATKEY_TEXTURE(textureType, 0), textureFilePath) != aiReturn_SUCCESS) {
@@ -17,23 +17,21 @@ std::shared_ptr<prev::render::image::Image> AssimpMaterialFactory::CreateModelIm
     }
 }
 
-std::shared_ptr<prev::render::image::Image> AssimpMaterialFactory::CreateImage(const std::string& textureFilename) const
+std::shared_ptr<prev::render::image::IImage> AssimpMaterialFactory::CreateImage(const std::string& textureFilename) const
 {
-    std::shared_ptr<prev::render::image::Image> image;
+    std::shared_ptr<prev::render::image::IImage> image;
     if (s_imagesCache.find(textureFilename) != s_imagesCache.cend()) {
         image = s_imagesCache[textureFilename];
     } else {
-        prev::render::image::ImageFactory imageFactory;
-        image = imageFactory.CreateImage(textureFilename);
+        image = prev::render::image::ImageFactory{}.CreateImage(textureFilename);
         s_imagesCache[textureFilename] = image;
     }
     return image;
 }
 
-std::shared_ptr<prev::render::image::Image> AssimpMaterialFactory::CreateImage(const aiTexture& texture) const
+std::shared_ptr<prev::render::image::IImage> AssimpMaterialFactory::CreateImage(const aiTexture& texture) const
 {
-    prev::render::image::ImageFactory imageFactory;
-    std::shared_ptr<prev::render::image::Image> image = imageFactory.CreateImageFromMemory(reinterpret_cast<uint8_t*>(texture.pcData), texture.mWidth);
+    auto image = prev::render::image::ImageFactory{}.CreateImageFromMemory(reinterpret_cast<uint8_t*>(texture.pcData), texture.mWidth);
     return image;
 }
 } // namespace prev_test::render::util::assimp

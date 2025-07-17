@@ -77,6 +77,8 @@ std::unique_ptr<IOffScreenRenderPassComponent> OffScreenRenderPassComponentFacto
         ++attachmentIndex;
     }
 
+    const VkImageViewType imageViewType{ viewCount > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D };
+
     std::shared_ptr<prev::render::pass::RenderPass> renderPass = renderPassBuilder
                                                                      .AddSubpass(attachmentIndices)
                                                                      .AddSubpassDependencies(dependencies)
@@ -89,7 +91,7 @@ std::unique_ptr<IOffScreenRenderPassComponent> OffScreenRenderPassComponentFacto
                           .SetExtent({ extent.width, extent.height, 1 })
                           .SetFormat(depthFormat)
                           .SetType(VK_IMAGE_TYPE_2D)
-                          .SetViewType(prev::util::vk::GetImageViewType(viewCount))
+                          .SetViewType(imageViewType)
                           .SetLayerCount(viewCount)
                           .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
                           .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL)
@@ -103,7 +105,7 @@ std::unique_ptr<IOffScreenRenderPassComponent> OffScreenRenderPassComponentFacto
                                     .SetExtent({ extent.width, extent.height, 1 })
                                     .SetFormat(colorFormat)
                                     .SetType(VK_IMAGE_TYPE_2D)
-                                    .SetViewType(prev::util::vk::GetImageViewType(viewCount))
+                                    .SetViewType(imageViewType)
                                     .SetLayerCount(viewCount)
                                     .SetUsageFlags(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
                                     .SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)

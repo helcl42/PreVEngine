@@ -212,7 +212,7 @@ void Swapchain::Apply()
     }
 
     const VkExtent3D newExtent{ m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height, 1 };
-    const auto imageViewType{ prev::util::vk::GetImageViewType(m_viewCount) };
+    const VkImageViewType imageViewType{ m_viewCount > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D };
 
     m_depthBuffer = buffer::ImageBufferBuilder{ m_allocator }
                         .SetExtent(newExtent)

@@ -1,4 +1,5 @@
 #include "ImageFactory.h"
+#include "Image.h"
 
 #include "../../common/Logger.h"
 #include "../../util/Utils.h"
@@ -7,7 +8,43 @@
 #include <external/stb_image.h>
 
 namespace prev::render::image {
-std::unique_ptr<Image> ImageFactory::CreateImage(const std::string& filename, bool flipVertically) const
+namespace {
+    template <typename T, size_t Channels>
+    std::unique_ptr<Image<T, Channels>> CreateImageFromData(const uint32_t width, const uint32_t height, const uint8_t* data)
+    {
+        if (!data) {
+            LOGE("Image: Failed to create image from data: data is null");
+            return nullptr;
+        }
+
+        auto image = std::make_unique<Image<T, Channels>>(width, height, data);
+        if (!image) {
+            LOGE("Image: Failed to create image from data: memory allocation failed");
+            return nullptr;
+        }
+
+        return image;
+    }
+
+    std::unique_ptr<IImage> CreateUint8ImageFromData(const uint32_t width, const uint32_t height, const uint32_t channelCount, const uint8_t* data)
+    {
+        switch (channelCount) {
+        case 1:
+            return CreateImageFromData<uint8_t, 1>(width, height, data);
+        case 2:
+            return CreateImageFromData<uint8_t, 2>(width, height, data);
+        case 3:
+            return CreateImageFromData<uint8_t, 3>(width, height, data);
+        case 4:
+            return CreateImageFromData<uint8_t, 4>(width, height, data);
+        default:
+            LOGE("Image: Unsupported channel count: %d", channelCount);
+            return nullptr;
+        }
+    }
+} // namespace
+
+std::unique_ptr<IImage> ImageFactory::CreateImage(const std::string& filename, bool flipVertically) const
 {
     if (!prev::util::file::Exists(filename)) {
         LOGE("Image: File not found: %s", filename.c_str());
@@ -22,22 +59,27 @@ std::unique_ptr<Image> ImageFactory::CreateImage(const std::string& filename, bo
 #endif
 
     int w, h, c;
-    uint8_t* imageBytes = reinterpret_cast<uint8_t*>(stbi_load(filename.c_str(), &w, &h, &c, STBI_rgb_alpha));
+    if (!stbi_info(filename.c_str(), &w, &h, &c)) {
+        LOGE("Image: Failed to get image info for: %s", filename.c_str());
+        return nullptr;
+    }
+
+    uint8_t* imageBytes = reinterpret_cast<uint8_t*>(stbi_load(filename.c_str(), &w, &h, &c, c));
     if (!imageBytes) {
         LOGE("Image: Failed to load texture: %s", filename.c_str());
         return nullptr;
     }
 
-    auto image = std::make_unique<Image>(w, h, imageBytes);
+    auto image = CreateUint8ImageFromData(w, h, c, imageBytes);
 
-    LOGI("Loaded image: %s (%dx%d)", filename.c_str(), w, h);
+    LOGI("Loaded image: %s (%dx%d|%d)", filename.c_str(), w, h, c);
 
     stbi_image_free(imageBytes);
 
     return image;
 }
 
-std::unique_ptr<Image> ImageFactory::CreateImageFromMemory(const uint8_t* data, const int dataLength) const
+std::unique_ptr<IImage> ImageFactory::CreateImageFromMemory(const uint8_t* data, const uint32_t dataLength) const
 {
     LOGI("Loading image from memory: %d bytes", dataLength);
 
@@ -46,33 +88,36 @@ std::unique_ptr<Image> ImageFactory::CreateImageFromMemory(const uint8_t* data, 
 #endif
 
     int w, h, c;
-    uint8_t* imageBytes = reinterpret_cast<uint8_t*>(stbi_load_from_memory(data, dataLength, &w, &h, &c, STBI_rgb_alpha));
+    if (!stbi_info_from_memory(data, dataLength, &w, &h, &c)) {
+        LOGE("Image: Failed to get image info for image in memory with size %d", dataLength);
+        return nullptr;
+    }
+
+    uint8_t* imageBytes = reinterpret_cast<uint8_t*>(stbi_load_from_memory(data, dataLength, &w, &h, &c, 0));
     if (!imageBytes) {
         LOGE("Image: Failed to load texture from memory");
         return nullptr;
     }
 
-    auto image = std::make_unique<Image>(w, h, imageBytes);
+    auto image = CreateUint8ImageFromData(w, h, c, imageBytes);
 
-    LOGI("Loaded image from memory: %d bytes (%dx%d)", dataLength, w, h);
+    LOGI("Loaded image from memory: %d bytes (%dx%d|%d)", dataLength, w, h, c);
 
     stbi_image_free(imageBytes);
 
     return image;
 }
 
-std::unique_ptr<Image> ImageFactory::CreateImageWithPattern(const uint32_t width, const uint32_t height, const bool gradient, const int checkers) const
+std::unique_ptr<IImage> ImageFactory::CreateImageWithPattern(const uint32_t width, const uint32_t height, const bool gradient, const uint32_t checkers) const
 {
-    auto image = std::make_unique<Image>(width, height);
+    auto image = std::make_unique<Image<uint8_t, 4>>(width, height);
     if (!image) {
         return nullptr;
     }
 
-    auto buffer = image->GetBuffer();
-
     for (uint32_t y = 0; y < image->GetHeight(); ++y) {
         for (uint32_t x = 0; x < image->GetWidth(); ++x) {
-            auto& pix{ buffer[y * width + x] };
+            auto& pix{ image->GetPixel(x, y) };
 
             pix = { 0, 0, 0, 255 };
 
@@ -82,7 +127,7 @@ std::unique_ptr<Image> ImageFactory::CreateImageWithPattern(const uint32_t width
 
             if (checkers) {
                 if ((x / (width / checkers)) % 2 == (y / (height / checkers)) % 2) {
-                    pix.B = 128;
+                    pix[2] = 128;
                 }
             }
         }
@@ -91,9 +136,9 @@ std::unique_ptr<Image> ImageFactory::CreateImageWithPattern(const uint32_t width
     return image;
 }
 
-std::unique_ptr<Image> ImageFactory::CreateImageWithColor(const uint32_t width, const uint32_t height, const PixelRGBA& color) const
+std::unique_ptr<IImage> ImageFactory::CreateImageWithColor(const uint32_t width, const uint32_t height, const Pixel<uint8_t, 4>& color) const
 {
-    auto image = std::make_unique<Image>(width, height);
+    auto image = std::make_unique<Image<uint8_t, 4>>(width, height);
     if (!image) {
         return nullptr;
     }

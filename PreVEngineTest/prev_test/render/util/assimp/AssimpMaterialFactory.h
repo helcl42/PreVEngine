@@ -13,15 +13,15 @@
 namespace prev_test::render::util::assimp {
 class AssimpMaterialFactory final {
 public:
-    std::shared_ptr<prev::render::image::Image> CreateModelImage(const aiScene& scene, const aiMaterial& material, const aiTextureType textureType) const;
+    std::shared_ptr<prev::render::image::IImage> CreateModelImage(const aiScene& scene, const aiMaterial& material, const aiTextureType textureType) const;
 
 private:
-    std::shared_ptr<prev::render::image::Image> CreateImage(const std::string& textureFilename) const;
+    std::shared_ptr<prev::render::image::IImage> CreateImage(const std::string& textureFilename) const;
 
-    std::shared_ptr<prev::render::image::Image> CreateImage(const aiTexture& texture) const;
+    std::shared_ptr<prev::render::image::IImage> CreateImage(const aiTexture& texture) const;
 
 private:
-    static inline std::map<std::string, std::shared_ptr<prev::render::image::Image>> s_imagesCache;
+    static inline std::map<std::string, std::shared_ptr<prev::render::image::IImage>> s_imagesCache;
 };
 } // namespace prev_test::render::util::assimp
 

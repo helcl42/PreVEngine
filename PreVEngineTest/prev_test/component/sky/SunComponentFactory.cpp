@@ -31,11 +31,11 @@ std::unique_ptr<Flare> SunComponentFactory::CreateFlare(const std::string& fileP
     auto image{ prev::render::image::ImageFactory{}.CreateImage(filePath) };
     auto imageBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
                            .SetExtent({ image->GetWidth(), image->GetHeight(), 1 })
-                           .SetFormat(VK_FORMAT_R8G8B8A8_UNORM)
+                           .SetFormat(prev::util::vk::ToImageFormat(image->GetChannels(), image->GetBitDepth(), image->IsFloatingPoint()))
                            .SetType(VK_IMAGE_TYPE_2D)
                            .SetMipMapEnabled(true)
                            .SetUsageFlags(VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
-                           .SetLayerData({ reinterpret_cast<uint8_t*>(image->GetBuffer()) })
+                           .SetLayerData({ image->GetRawDataPtr() })
                            .SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
                            .Build();
 

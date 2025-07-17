@@ -31,9 +31,9 @@ public:
     std::vector<std::shared_ptr<prev_test::render::IMaterial>> Create(const std::string& modelPath) const;
 
 private:
-    std::shared_ptr<prev::render::image::Image> CreateImage(const std::string& textureFilename) const;
+    std::shared_ptr<prev::render::image::IImage> CreateImage(const std::string& textureFilename) const;
 
-    std::shared_ptr<prev::render::buffer::ImageBuffer> CreateImageBuffer(const prev::render::image::Image& image, const bool generateMipMaps) const;
+    std::shared_ptr<prev::render::buffer::ImageBuffer> CreateImageBuffer(const prev::render::image::IImage& image, const bool generateMipMaps) const;
 
 private:
     prev::core::device::Device& m_device;
@@ -41,7 +41,7 @@ private:
     prev::core::memory::Allocator& m_allocator;
 
 private:
-    static inline std::map<std::string, std::shared_ptr<prev::render::image::Image>> s_imagesCache;
+    static inline std::map<std::string, std::shared_ptr<prev::render::image::IImage>> s_imagesCache;
 };
 } // namespace prev_test::render::material
 

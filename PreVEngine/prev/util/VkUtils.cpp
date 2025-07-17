@@ -544,9 +544,35 @@ VkFormatProperties GetFormatProperties(const VkPhysicalDevice physicalDevice, co
     return formatProperties;
 }
 
-VkImageViewType GetImageViewType(const uint32_t viewCount)
+VkFormat ToImageFormat(const uint32_t channels, const uint32_t bitDepth, const bool isFloatingPoint)
 {
-    return viewCount > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
+    if (isFloatingPoint) {
+        switch (channels) {
+        case 1:
+            return VK_FORMAT_R32_SFLOAT;
+        case 2:
+            return VK_FORMAT_R32G32_SFLOAT;
+        case 3:
+            return VK_FORMAT_R32G32B32_SFLOAT;
+        case 4:
+            return VK_FORMAT_R32G32B32A32_SFLOAT;
+        default:
+            throw std::invalid_argument("Unsupported number of channels: " + std::to_string(channels) + " for floating point format.");
+        }
+    } else {
+        switch (channels) {
+        case 1:
+            return VK_FORMAT_R8_UNORM;
+        case 2:
+            return VK_FORMAT_R8G8_UNORM;
+        case 3:
+            return VK_FORMAT_R8G8B8_UNORM;
+        case 4:
+            return VK_FORMAT_R8G8B8A8_UNORM;
+        default:
+            throw std::invalid_argument("Unsupported number of channels: " + std::to_string(channels));
+        }
+    }
 }
 
 } // namespace prev::util::vk

@@ -60,19 +60,19 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::CreateCubeMap(con
 {
     prev::render::image::ImageFactory imageFactory{};
 
-    std::vector<std::shared_ptr<prev::render::image::Image>> images{};
+    std::vector<std::shared_ptr<prev::render::image::IImage>> images{};
     for (const auto& faceFilePath : sidePaths) {
         images.emplace_back(imageFactory.CreateImage(faceFilePath));
     }
 
     std::vector<const uint8_t*> layersData{};
     for (const auto& image : images) {
-        layersData.emplace_back(reinterpret_cast<const uint8_t*>(image->GetBuffer()));
+        layersData.emplace_back(image->GetRawDataPtr());
     }
 
     auto cubeMapImageBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
                                   .SetExtent({ images[0]->GetWidth(), images[0]->GetHeight(), 1 })
-                                  .SetFormat(VK_FORMAT_R8G8B8A8_UNORM)
+                                  .SetFormat(prev::util::vk::ToImageFormat(images[0]->GetChannels(), images[0]->GetBitDepth(), images[0]->IsFloatingPoint()))
                                   .SetType(VK_IMAGE_TYPE_2D)
                                   .SetMipMapEnabled(true)
                                   .SetUsageFlags(VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
@@ -110,7 +110,7 @@ std::vector<std::shared_ptr<prev_test::render::IMaterial>> MaterialFactory::Crea
             aiTextureType_HEIGHT
         };
 
-        for(const auto& textureType : textureTypes) {
+        for (const auto& textureType : textureTypes) {
             if (auto image = assimpMaterialFactory.CreateModelImage(*scene, material, textureType)) {
                 imageBuffers.emplace_back(CreateImageBuffer(*image, true));
             }
@@ -133,9 +133,9 @@ std::vector<std::shared_ptr<prev_test::render::IMaterial>> MaterialFactory::Crea
     return result;
 }
 
-std::shared_ptr<prev::render::image::Image> MaterialFactory::CreateImage(const std::string& textureFilename) const
+std::shared_ptr<prev::render::image::IImage> MaterialFactory::CreateImage(const std::string& textureFilename) const
 {
-    std::shared_ptr<prev::render::image::Image> image;
+    std::shared_ptr<prev::render::image::IImage> image;
     const auto imageIter{ s_imagesCache.find(textureFilename) };
     if (imageIter != s_imagesCache.cend()) {
         image = imageIter->second;
@@ -146,15 +146,15 @@ std::shared_ptr<prev::render::image::Image> MaterialFactory::CreateImage(const s
     return image;
 }
 
-std::shared_ptr<prev::render::buffer::ImageBuffer> MaterialFactory::CreateImageBuffer(const prev::render::image::Image& image, const bool generateMipMaps) const
+std::shared_ptr<prev::render::buffer::ImageBuffer> MaterialFactory::CreateImageBuffer(const prev::render::image::IImage& image, const bool generateMipMaps) const
 {
     auto imageBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
                            .SetExtent({ image.GetWidth(), image.GetHeight(), 1 })
-                           .SetFormat(VK_FORMAT_R8G8B8A8_UNORM)
+                           .SetFormat(prev::util::vk::ToImageFormat(image.GetChannels(), image.GetBitDepth(), image.IsFloatingPoint()))
                            .SetType(VK_IMAGE_TYPE_2D)
                            .SetMipMapEnabled(generateMipMaps)
                            .SetUsageFlags(VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
-                           .SetLayerData({ reinterpret_cast<uint8_t*>(image.GetBuffer()) })
+                           .SetLayerData({ image.GetRawDataPtr() })
                            .SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
                            .Build();
     return imageBuffer;
