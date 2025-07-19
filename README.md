@@ -87,6 +87,6 @@ python Scripts/compile_shaders.py --input_folder PreVEngineTest/assets/Shaders/ 
  - [GLM](https://github.com/g-truc/glm): Great Math library.
  - [VMA](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator): Vulkan Memory Allocator.
  - [stb_image](https://github.com/nothings/stb): Used for image loading.
- - [volk](https://github.com/zeux/volk): Multiplaform meta loader for Vulkan.
+ - [volk](https://github.com/zeux/volk): Multiplatform loader for Vulkan.
 
 
