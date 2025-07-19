@@ -3,12 +3,14 @@
 
 #include "../IMaterial.h"
 
+#include <prev/common/Cache.h>
 #include <prev/core/device/Device.h>
 #include <prev/core/memory/Allocator.h>
 #include <prev/render/buffer/ImageBuffer.h>
 #include <prev/render/image/Image.h>
 
-#include <map>
+#include <memory>
+#include <vector>
 
 namespace prev_test::render::material {
 class MaterialFactory final {
@@ -41,7 +43,7 @@ private:
     prev::core::memory::Allocator& m_allocator;
 
 private:
-    static inline std::map<std::string, std::shared_ptr<prev::render::image::IImage>> s_imagesCache;
+    static inline prev::common::Cache<std::string, std::shared_ptr<prev::render::image::IImage>> s_imagesCache;
 };
 } // namespace prev_test::render::material
 

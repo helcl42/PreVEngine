@@ -98,7 +98,7 @@ std::vector<std::shared_ptr<prev_test::render::IMaterial>> MaterialFactory::Crea
         throw std::runtime_error("Could not load model: " + modelPath);
     }
 
-    prev_test::render::util::assimp::AssimpMaterialFactory assimpMaterialFactory{};
+    prev_test::render::util::assimp::AssimpMaterialFactory assimpMaterialFactory{ s_imagesCache };
     for (uint32_t i = 0; i < scene->mNumMaterials; ++i) {
         const auto& material{ *scene->mMaterials[i] };
 
@@ -135,13 +135,14 @@ std::vector<std::shared_ptr<prev_test::render::IMaterial>> MaterialFactory::Crea
 
 std::shared_ptr<prev::render::image::IImage> MaterialFactory::CreateImage(const std::string& textureFilename) const
 {
+    using ImageCache = prev::common::Cache<std::string, std::shared_ptr<prev::render::image::IImage>>;
+
     std::shared_ptr<prev::render::image::IImage> image;
-    const auto imageIter{ s_imagesCache.find(textureFilename) };
-    if (imageIter != s_imagesCache.cend()) {
-        image = imageIter->second;
+    if(auto optValue = s_imagesCache.Find(textureFilename)) {
+        image = *optValue;
     } else {
         image = prev::render::image::ImageFactory{}.CreateImage(textureFilename);
-        s_imagesCache[textureFilename] = image;
+        s_imagesCache.Add(textureFilename, image);
     }
     return image;
 }

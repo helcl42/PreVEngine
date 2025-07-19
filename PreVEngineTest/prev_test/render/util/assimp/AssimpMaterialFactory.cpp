@@ -3,6 +3,11 @@
 #include <prev/render/image/ImageFactory.h>
 
 namespace prev_test::render::util::assimp {
+AssimpMaterialFactory::AssimpMaterialFactory(prev::common::Cache<std::string, std::shared_ptr<prev::render::image::IImage>>& imageCache)
+    : m_imageCache{ imageCache }
+{
+}
+
 std::shared_ptr<prev::render::image::IImage> AssimpMaterialFactory::CreateModelImage(const aiScene& scene, const aiMaterial& material, const aiTextureType textureType) const
 {
     aiString textureFilePath;
@@ -19,12 +24,14 @@ std::shared_ptr<prev::render::image::IImage> AssimpMaterialFactory::CreateModelI
 
 std::shared_ptr<prev::render::image::IImage> AssimpMaterialFactory::CreateImage(const std::string& textureFilename) const
 {
+    using ImageCache = prev::common::Cache<std::string, std::shared_ptr<prev::render::image::IImage>>;
+
     std::shared_ptr<prev::render::image::IImage> image;
-    if (s_imagesCache.find(textureFilename) != s_imagesCache.cend()) {
-        image = s_imagesCache[textureFilename];
+    if (auto optValue = m_imageCache.Find(textureFilename)) {
+        image = *optValue;
     } else {
         image = prev::render::image::ImageFactory{}.CreateImage(textureFilename);
-        s_imagesCache[textureFilename] = image;
+        m_imageCache.Add(textureFilename, image);
     }
     return image;
 }
