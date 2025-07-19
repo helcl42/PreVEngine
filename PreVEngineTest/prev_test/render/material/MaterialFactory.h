@@ -3,11 +3,8 @@
 
 #include "../IMaterial.h"
 
-#include <prev/common/Cache.h>
 #include <prev/core/device/Device.h>
 #include <prev/core/memory/Allocator.h>
-#include <prev/render/buffer/ImageBuffer.h>
-#include <prev/render/image/Image.h>
 
 #include <memory>
 #include <vector>
@@ -33,17 +30,9 @@ public:
     std::vector<std::shared_ptr<prev_test::render::IMaterial>> Create(const std::string& modelPath) const;
 
 private:
-    std::shared_ptr<prev::render::image::IImage> CreateImage(const std::string& textureFilename) const;
-
-    std::shared_ptr<prev::render::buffer::ImageBuffer> CreateImageBuffer(const prev::render::image::IImage& image, const bool generateMipMaps) const;
-
-private:
     prev::core::device::Device& m_device;
 
     prev::core::memory::Allocator& m_allocator;
-
-private:
-    static inline prev::common::Cache<std::string, std::shared_ptr<prev::render::image::IImage>> s_imagesCache;
 };
 } // namespace prev_test::render::material
 
