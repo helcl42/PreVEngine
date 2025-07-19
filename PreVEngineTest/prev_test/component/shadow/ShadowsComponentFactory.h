@@ -7,7 +7,6 @@
 #include <prev/core/device/Device.h>
 #include <prev/core/memory/Allocator.h>
 #include <prev/render/buffer/ImageBuffer.h>
-#include <prev/render/sampler/Sampler.h>
 
 namespace prev_test::component::shadow {
 class ShadowsComponentFactory final {

@@ -6,7 +6,6 @@
 #include "../../render/model/ModelFactory.h"
 
 #include <prev/render/buffer/ImageBufferBuilder.h>
-#include <prev/render/sampler/Sampler.h>
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::component::sky {
