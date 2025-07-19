@@ -17,9 +17,6 @@ public:
     std::unique_ptr<ISunComponent> Create() const;
 
 private:
-    std::unique_ptr<Flare> CreateFlare(const std::string& filePath, const float scale) const;
-
-private:
     prev::core::device::Device& m_device;
 
     prev::core::memory::Allocator& m_allocator;

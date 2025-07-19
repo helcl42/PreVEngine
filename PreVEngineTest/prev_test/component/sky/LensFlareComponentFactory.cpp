@@ -2,11 +2,9 @@
 #include "LensFlareComponent.h"
 
 #include "../../common/AssetManager.h"
+#include "../../render/material/MaterialFactory.h"
 #include "../../render/mesh/MeshFactory.h"
 #include "../../render/model/ModelFactory.h"
-
-#include <prev/render/buffer/ImageBufferBuilder.h>
-#include <prev/util/VkUtils.h>
 
 namespace prev_test::component::sky {
 LensFlareComponentFactory::LensFlareComponentFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
@@ -17,6 +15,11 @@ LensFlareComponentFactory::LensFlareComponentFactory(prev::core::device::Device&
 
 std::unique_ptr<ILensFlareComponent> LensFlareComponentFactory::Create() const
 {
+    struct FlareCreateInfo {
+        std::string path{};
+        float scale{};
+    };
+
     const float spacing{ 0.16f };
     const std::vector<FlareCreateInfo> flareCreateInfos = {
         { prev_test::common::AssetManager::Instance().GetAssetPath("LensFlares/tex2.png"), 0.0f },
@@ -29,34 +32,22 @@ std::unique_ptr<ILensFlareComponent> LensFlareComponentFactory::Create() const
         { prev_test::common::AssetManager::Instance().GetAssetPath("LensFlares/tex9.png"), 0.24f },
     };
 
-    std::vector<std::shared_ptr<Flare>> flares{};
-    for (const auto& flareCreateInfo : flareCreateInfos) {
-        auto flare = CreateFlare(flareCreateInfo.path, flareCreateInfo.scale);
-        flares.emplace_back(std::move(flare));
-    }
-
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh{ meshFactory.CreateQuad() };
 
     prev_test::render::model::ModelFactory modelFactory{ m_allocator };
     auto model{ modelFactory.Create(std::move(mesh)) };
 
-    return std::make_unique<LensFlareComponent>(flares, spacing, std::move(model));
-}
+    prev_test::render::material::MaterialFactory materialFactory{ m_device, m_allocator };
 
-std::unique_ptr<Flare> LensFlareComponentFactory::CreateFlare(const std::string& filePath, const float scale) const
-{
-    auto image{ prev::render::image::ImageFactory{}.CreateImage(filePath) };
-    auto imageBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
-                           .SetExtent({ image->GetWidth(), image->GetHeight(), 1 })
-                           .SetFormat(prev::util::vk::ToImageFormat(image->GetChannels(), image->GetBitDepth(), image->IsFloatingPoint()))
-                           .SetType(VK_IMAGE_TYPE_2D)
-                           .SetMipMapEnabled(true)
-                           .SetUsageFlags(VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
-                           .SetLayerData({ image->GetRawDataPtr() })
-                           .SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-                           .Build();
+    std::vector<std::shared_ptr<prev_test::render::IMaterial>> materials{};
+    std::vector<Flare> flares{};
+    for (const auto& flareCreateInfo : flareCreateInfos) {
+        const prev_test::render::MaterialProperties flareMaterialProperties{ { 1.0f, 1.0f, 1.0f, 1.0f }, 1.0f, 1.0f };
+        materials.emplace_back(materialFactory.Create(flareMaterialProperties, flareCreateInfo.path));
+        flares.emplace_back(Flare{ flareCreateInfo.scale });
+    }
 
-    return std::make_unique<Flare>(m_device, std::move(imageBuffer), scale);
+    return std::make_unique<LensFlareComponent>(flares, spacing, materials, std::move(model));
 }
 } // namespace prev_test::component::sky

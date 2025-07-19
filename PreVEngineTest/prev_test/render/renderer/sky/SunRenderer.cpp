@@ -112,7 +112,7 @@ void SunRenderer::Render(const NormalRenderContext& renderContext, const std::sh
     const float aspectRatio{
         static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) / static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y)
     };
-    const float xScale{ sunComponent->GetFlare()->GetScale() };
+    const float xScale{ sunComponent->GetFlare().GetScale() };
     const float yScale{ xScale * aspectRatio };
 
     m_maxNumberOfSamples = static_cast<uint64_t>(xScale * static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) * yScale * static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y));

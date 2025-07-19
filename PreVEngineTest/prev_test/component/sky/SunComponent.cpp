@@ -34,15 +34,21 @@ namespace {
     }
 } // namespace
 
-SunComponent::SunComponent(const std::shared_ptr<Flare>& flare, const std::shared_ptr<prev_test::render::IModel>& model)
+SunComponent::SunComponent(const Flare& flare, const std::shared_ptr<prev_test::render::IMaterial>& material, const std::shared_ptr<prev_test::render::IModel>& model)
     : m_flare(flare)
+    , m_material(material)
     , m_model(model)
 {
 }
 
-std::shared_ptr<Flare> SunComponent::GetFlare() const
+const Flare& SunComponent::GetFlare() const
 {
     return m_flare;
+}
+
+std::shared_ptr<prev_test::render::IMaterial> SunComponent::GetMaterial() const
+{
+    return m_material;
 }
 
 std::shared_ptr<prev_test::render::IModel> SunComponent::GetModel() const

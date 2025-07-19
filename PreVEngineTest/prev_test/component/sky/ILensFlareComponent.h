@@ -3,6 +3,7 @@
 
 #include "Flare.h"
 
+#include "../../render/IMaterial.h"
 #include "../../render/IModel.h"
 
 #include <prev/scene/component/IComponent.h>
@@ -10,7 +11,9 @@
 namespace prev_test::component::sky {
 class ILensFlareComponent : public prev::scene::component::IComponent {
 public:
-    virtual const std::vector<std::shared_ptr<Flare>>& GetFlares() const = 0;
+    virtual const std::vector<Flare>& GetFlares() const = 0;
+
+    virtual const std::vector<std::shared_ptr<prev_test::render::IMaterial>>& GetMaterials() const = 0;
 
     virtual std::shared_ptr<prev_test::render::IModel> GetModel() const = 0;
 

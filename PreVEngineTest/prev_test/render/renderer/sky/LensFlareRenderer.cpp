@@ -104,12 +104,14 @@ void LensFlareRenderer::Render(const NormalRenderContext& renderContext, const s
     }
 
     const auto& flares{ lensFlareComponent->GetFlares() };
+    const auto& flareMaterials{ lensFlareComponent->GetMaterials() };
     for (size_t i = 0; i < flares.size(); ++i) {
         const auto& flare{ flares[i] };
+        const auto& flareMaterial{ flareMaterials[i] };
         const float aspectRatio{
             static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) / static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y)
         };
-        const float xScale{ flare->GetScale() };
+        const float xScale{ flare.GetScale() };
         const float yScale{ xScale * aspectRatio };
 
         auto& uboVS = m_uniformsPoolVS->GetNext();
@@ -125,7 +127,7 @@ void LensFlareRenderer::Render(const NormalRenderContext& renderContext, const s
         uniformsFS.brightness = glm::vec4(m_sunVisibilityFactor);
         uboFS.Data(uniformsFS);
 
-        m_shader->Bind("colorSampler", *flare->GetImageBuffer(), *m_colorSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_shader->Bind("colorSampler", *flareMaterial->GetImageBuffer(), *m_colorSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         m_shader->Bind("uboVS", uboVS);
         m_shader->Bind("uboFS", uboFS);
 

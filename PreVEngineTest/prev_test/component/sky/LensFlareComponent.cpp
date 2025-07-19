@@ -36,16 +36,22 @@ namespace {
     }
 } // namespace
 
-LensFlareComponent::LensFlareComponent(const std::vector<std::shared_ptr<Flare>>& flares, const float spacing, const std::shared_ptr<prev_test::render::IModel>& model)
+LensFlareComponent::LensFlareComponent(const std::vector<Flare>& flares, const float spacing, const std::vector<std::shared_ptr<prev_test::render::IMaterial>>& materials, const std::shared_ptr<prev_test::render::IModel>& model)
     : m_flares(flares)
     , m_spacing(spacing)
+    , m_materials(materials)
     , m_model(model)
 {
 }
 
-const std::vector<std::shared_ptr<Flare>>& LensFlareComponent::GetFlares() const
+const std::vector<Flare>& LensFlareComponent::GetFlares() const
 {
     return m_flares;
+}
+
+const std::vector<std::shared_ptr<prev_test::render::IMaterial>>& LensFlareComponent::GetMaterials() const
+{
+    return m_materials;
 }
 
 std::shared_ptr<prev_test::render::IModel> LensFlareComponent::GetModel() const
