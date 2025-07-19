@@ -13,7 +13,7 @@ std::unique_ptr<prev_test::render::IAnimation> AnimationFactory::Create(const st
     auto animation = std::make_unique<Animation>();
 
     prev_test::render::util::assimp::AssimpSceneLoader assimpSceneLoader{};
-    if (!assimpSceneLoader.LoadScene(modelPath, &animation->m_importer, &animation->m_scene)) {
+    if (!assimpSceneLoader.LoadScene(modelPath, animation->m_importer, &animation->m_scene)) {
         throw std::runtime_error("Could not load model: " + modelPath);
     }
 
