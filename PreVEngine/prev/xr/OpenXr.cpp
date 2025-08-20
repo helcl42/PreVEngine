@@ -89,6 +89,11 @@ std::vector<VkImageView> OpenXr::GetDepthImagesViews() const
     return m_render->GetDepthImagesViews();
 }
 
+bool OpenXr::HasDepthImages() const
+{
+    return !m_render->GetDepthImages().empty();
+}
+
 VkExtent2D OpenXr::GetExtent() const
 {
     return m_render->GetExtent();

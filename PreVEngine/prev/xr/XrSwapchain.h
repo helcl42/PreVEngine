@@ -96,6 +96,9 @@ private:
     std::unique_ptr<prev::render::buffer::ImageBuffer> m_msaaColorBuffer{};
 
     std::unique_ptr<prev::render::buffer::ImageBuffer> m_msaaDepthBuffer{};
+
+    // Depth buffer (created when OpenXR does not provide it)
+    std::unique_ptr<prev::render::buffer::ImageBuffer> m_depthBuffer{};
 };
 } // namespace prev::xr
 

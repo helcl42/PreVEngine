@@ -111,10 +111,13 @@ void XrEngineImpl::ResetRenderPass()
     const auto colorFormat{ m_openXr->GetColorFormat() };
     const auto depthFormat{ m_openXr->GetDepthFormat() };
 
+    const bool storeColor{ true };
+    const bool storeDepth{ m_openXr->HasDepthImages() };
+
     if (m_config.samplesCount > 1) {
-        m_renderPass = CreateDefaultMultisampledRenderPass(*m_device, colorFormat, depthFormat, prev::util::vk::GetSampleCountBit(m_config.samplesCount), GetViewCount(), true, true);
+        m_renderPass = CreateDefaultMultisampledRenderPass(*m_device, colorFormat, depthFormat, prev::util::vk::GetSampleCountBit(m_config.samplesCount), GetViewCount(), storeColor, storeDepth);
     } else {
-        m_renderPass = CreateDefaultRenderPass(*m_device, colorFormat, depthFormat, GetViewCount(), true, true);
+        m_renderPass = CreateDefaultRenderPass(*m_device, colorFormat, depthFormat, GetViewCount(), storeColor, storeDepth);
     }
 }
 

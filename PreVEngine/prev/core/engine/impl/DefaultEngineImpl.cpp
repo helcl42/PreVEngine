@@ -102,10 +102,13 @@ void DefaultEngineImpl::ResetRenderPass()
     const auto colorFormat{ m_device->GetGPU().FindSurfaceFormat(m_surface).format };
     const auto depthFormat{ m_device->GetGPU().FindDepthFormat() };
 
+    const bool storeColor{ true };
+    const bool storeDepth{ false };
+
     if (m_config.samplesCount > 1) {
-        m_renderPass = CreateDefaultMultisampledRenderPass(*m_device, colorFormat, depthFormat, prev::util::vk::GetSampleCountBit(m_config.samplesCount), GetViewCount(), true, false);
+        m_renderPass = CreateDefaultMultisampledRenderPass(*m_device, colorFormat, depthFormat, prev::util::vk::GetSampleCountBit(m_config.samplesCount), GetViewCount(), storeColor, storeDepth);
     } else {
-        m_renderPass = CreateDefaultRenderPass(*m_device, colorFormat, depthFormat, GetViewCount(), true, false);
+        m_renderPass = CreateDefaultRenderPass(*m_device, colorFormat, depthFormat, GetViewCount(), storeColor, storeDepth);
     }
 }
 

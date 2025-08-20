@@ -49,6 +49,8 @@ public:
 
     std::vector<VkImageView> GetDepthImagesViews() const;
 
+    bool HasDepthImages() const;
+
     VkExtent2D GetExtent() const;
 
     VkFormat GetColorFormat() const;

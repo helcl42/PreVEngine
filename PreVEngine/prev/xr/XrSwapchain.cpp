@@ -43,13 +43,25 @@ XrSwapchain::XrSwapchain(prev::core::device::Device& device, prev::core::memory:
                                 .Build();
     }
 
+    if (!m_openXr.HasDepthImages()) {
+        m_depthBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
+                            .SetExtent(VkExtent3D{ m_extent.width, m_extent.height, 1 })
+                            .SetFormat(m_renderPass.GetDepthFormat())
+                            .SetType(VK_IMAGE_TYPE_2D)
+                            .SetViewType(VK_IMAGE_VIEW_TYPE_2D_ARRAY)
+                            .SetLayerCount(m_openXr.GetViewCount())
+                            .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
+                            .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+                            .Build();
+    }
+
     const auto colorImages{ m_openXr.GetColorImages() };
     const auto colorImageViews{ m_openXr.GetColorImagesViews() };
 
-    const auto depthImages{ m_openXr.GetDepthImages() };
-    const auto depthImageViews{ m_openXr.GetDepthImagesViews() };
-
     const auto swapchainImagesCount{ static_cast<uint32_t>(colorImages.size()) };
+
+    const auto depthImages{ m_openXr.HasDepthImages() ? m_openXr.GetDepthImages() : std::vector<VkImage>(swapchainImagesCount, m_depthBuffer->GetImage()) };
+    const auto depthImageViews{ m_openXr.HasDepthImages() ? m_openXr.GetDepthImagesViews() : std::vector<VkImageView>(swapchainImagesCount, m_depthBuffer->GetImageView()) };
 
     m_swapchainBuffers.resize(swapchainImagesCount);
     for (uint32_t i = 0; i < swapchainImagesCount; ++i) {
@@ -83,6 +95,8 @@ XrSwapchain::XrSwapchain(prev::core::device::Device& device, prev::core::memory:
 XrSwapchain::~XrSwapchain()
 {
     m_device.WaitIdle();
+
+    m_depthBuffer = nullptr;
 
     m_msaaDepthBuffer = nullptr;
     m_msaaColorBuffer = nullptr;
