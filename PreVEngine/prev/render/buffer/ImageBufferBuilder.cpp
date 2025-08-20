@@ -148,8 +148,8 @@ std::unique_ptr<ImageBuffer> ImageBufferBuilder::Build() const
     const auto mipMapLevels{ m_mipMapEnabled ? prev::util::math::Log2(std::max(m_extent.width, m_extent.height)) + 1 : 1 };
     const auto memoryType{ m_hostMapped ? prev::core::memory::MemoryType::HOST_MAPPED : prev::core::memory::MemoryType::DEVICE_LOCAL };
 
-    VkImage image;
-    VmaAllocation allocation;
+    VkImage image{};
+    VmaAllocation allocation{};
     void* mappedData{};
     m_allocator.CreateImage(m_extent, m_type, m_format, m_sampleCount, mipMapLevels, m_layerCount, m_tiling, m_usageFlags, memoryType, m_createFlags, image, allocation, &mappedData);
 

@@ -15,7 +15,7 @@ namespace prev_test::render::material {
 namespace {
     using ImageCache = prev::common::Cache<std::string, std::shared_ptr<prev::render::image::IImage>>;
 
-    static ImageCache s_imagesCache;
+    static ImageCache s_imagesCache{};
 
     std::shared_ptr<prev::render::image::IImage> CreateImage(const aiTexture& texture)
     {
