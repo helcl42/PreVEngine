@@ -42,6 +42,13 @@ namespace {
             return nullptr;
         }
     }
+
+    int OverrideDesiredChannelCount(int c) {
+#ifdef TARGET_PLATFORM_ANDROID
+        c = STBI_rgb_alpha;
+#endif
+        return c;
+    }
 } // namespace
 
 std::unique_ptr<IImage> ImageFactory::CreateImage(const std::string& filename, bool flipVertically) const
@@ -63,12 +70,14 @@ std::unique_ptr<IImage> ImageFactory::CreateImage(const std::string& filename, b
         LOGE("Image: Failed to get image info for: %s", filename.c_str());
         return nullptr;
     }
+    c = OverrideDesiredChannelCount(c);
 
     uint8_t* imageBytes = reinterpret_cast<uint8_t*>(stbi_load(filename.c_str(), &w, &h, &c, c));
     if (!imageBytes) {
         LOGE("Image: Failed to load texture: %s", filename.c_str());
         return nullptr;
     }
+    c = OverrideDesiredChannelCount(c);
 
     auto image = CreateUint8ImageFromData(w, h, c, imageBytes);
 
@@ -92,12 +101,14 @@ std::unique_ptr<IImage> ImageFactory::CreateImageFromMemory(const uint8_t* data,
         LOGE("Image: Failed to get image info for image in memory with size %d", dataLength);
         return nullptr;
     }
+    c = OverrideDesiredChannelCount(c);
 
-    uint8_t* imageBytes = reinterpret_cast<uint8_t*>(stbi_load_from_memory(data, dataLength, &w, &h, &c, 0));
+    uint8_t* imageBytes = reinterpret_cast<uint8_t*>(stbi_load_from_memory(data, dataLength, &w, &h, &c, c));
     if (!imageBytes) {
         LOGE("Image: Failed to load texture from memory");
         return nullptr;
     }
+    c = OverrideDesiredChannelCount(c);
 
     auto image = CreateUint8ImageFromData(w, h, c, imageBytes);
 
