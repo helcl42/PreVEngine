@@ -3,7 +3,6 @@
 
 #include <prev/common/Common.h>
 #include <prev/render/buffer/ImageBuffer.h>
-#include <prev/render/sampler/Sampler.h>
 
 #include <memory>
 
