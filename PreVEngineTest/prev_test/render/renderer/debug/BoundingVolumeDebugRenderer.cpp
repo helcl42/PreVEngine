@@ -7,6 +7,7 @@
 #include "../../../component/ray_casting/IBoundingVolumeComponent.h"
 #include "../../../component/ray_casting/RayCastingCommon.h"
 
+#include <prev/render/buffer/BufferPoolBuilder.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
@@ -59,11 +60,21 @@ void BoundingVolumeDebugRenderer::Init()
 
     LOGI("Bounding Volume Debug Pipeline created");
 
-    m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsVS>>(m_allocator);
-    m_uniformsPoolVS->UpdateCapacity(m_descriptorCount, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolVS = prev::render::buffer::BufferPoolBuilder{ m_allocator }
+                           .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
+                           .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+                           .SetCount(m_descriptorCount)
+                           .SetStride(sizeof(UniformsVS))
+                           .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                           .Build();
 
-    m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsFS>>(m_allocator);
-    m_uniformsPoolFS->UpdateCapacity(m_descriptorCount, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolFS = prev::render::buffer::BufferPoolBuilder{ m_allocator }
+                           .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
+                           .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+                           .SetCount(m_descriptorCount)
+                           .SetStride(sizeof(UniformsFS))
+                           .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                           .Build();
 
     LOGI("Bounding Volume Debug Uniforms Pools created");
 }
@@ -90,7 +101,9 @@ void BoundingVolumeDebugRenderer::Render(const NormalRenderContext& renderContex
 
     const auto boundingVolumeComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(node);
 
-    auto& uboVS = m_uniformsPoolVS->GetNext();
+    m_uniformsPoolVS->MoveToNext();
+
+    auto& uboVS = m_uniformsPoolVS->GetCurrent();
 
     UniformsVS uniformsVS{};
     uniformsVS.modelMatrix = glm::mat4(1.0f);
@@ -98,17 +111,17 @@ void BoundingVolumeDebugRenderer::Render(const NormalRenderContext& renderContex
         uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
         uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
     }
+    uboVS.Write(uniformsVS);
 
-    uboVS.Data(uniformsVS);
+    m_uniformsPoolFS->MoveToNext();
 
-    auto& uboFS = m_uniformsPoolFS->GetNext();
+    auto& uboFS = m_uniformsPoolFS->GetCurrent();
 
     UniformsFS uniformsFS{};
     uniformsFS.color = glm::vec4(1.0f, 1.0f, 1.0f, 0.3f);
     uniformsFS.selectedColor = prev_test::component::ray_casting::SELECTED_COLOR;
     uniformsFS.selected = false;
-
-    uboFS.Data(uniformsFS);
+    uboFS.Write(uniformsFS);
 
     m_shader->Bind("uboVS", uboVS);
     m_shader->Bind("uboFS", uboFS);
@@ -118,10 +131,10 @@ void BoundingVolumeDebugRenderer::Render(const NormalRenderContext& renderContex
     const VkDeviceSize offsets[] = { 0 };
 
     vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-    vkCmdBindIndexBuffer(renderContext.commandBuffer, *boundingVolumeComponent->GetModel()->GetIndexBuffer(), 0, boundingVolumeComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+    vkCmdBindIndexBuffer(renderContext.commandBuffer, *boundingVolumeComponent->GetModel()->GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
     vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-    vkCmdDrawIndexed(renderContext.commandBuffer, boundingVolumeComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+    vkCmdDrawIndexed(renderContext.commandBuffer, boundingVolumeComponent->GetModel()->GetMesh()->GetIndicesCount(), 1, 0, 0, 0);
 }
 
 void BoundingVolumeDebugRenderer::PostRender(const NormalRenderContext& renderContext)

@@ -8,6 +8,7 @@
 #include "../../../component/render/IAnimationRenderComponent.h"
 #include "../../../component/transform/ITransformComponent.h"
 
+#include <prev/render/buffer/BufferPoolBuilder.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
@@ -62,8 +63,13 @@ void AnimationShadowsRenderer::Init()
 
     LOGI("Animation Shadows Pipeline created");
 
-    m_uniformsPool = std::make_unique<prev::render::buffer::UniformRingBuffer<Uniforms>>(m_allocator);
-    m_uniformsPool->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPool = prev::render::buffer::BufferPoolBuilder{ m_allocator }
+                         .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
+                         .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+                         .SetCount(m_descriptorCount)
+                         .SetStride(sizeof(Uniforms))
+                         .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                         .Build();
 
     LOGI("Animation Shadows Uniforms Pools created");
 }
@@ -113,7 +119,9 @@ void AnimationShadowsRenderer::Render(const ShadowsRenderContext& renderContext,
             const auto& meshPart = meshParts[meshPartIndex];
             const auto& animationClip = animation->GetClip(meshPartIndex);
 
-            auto& ubo = m_uniformsPool->GetNext();
+            m_uniformsPool->MoveToNext();
+
+            auto& ubo = m_uniformsPool->GetCurrent();
 
             Uniforms uniforms{};
             const auto& bones = animationClip.GetBoneTransforms();
@@ -123,7 +131,7 @@ void AnimationShadowsRenderer::Render(const ShadowsRenderContext& renderContext,
             uniforms.projectionMatrix = renderContext.projectionMatrix;
             uniforms.viewMatrix = renderContext.viewMatrix;
             uniforms.modelMatrix = transformComponent->GetWorldTransformScaled() * meshNode.transform;
-            ubo.Data(uniforms);
+            ubo.Write(uniforms);
 
             m_shader->Bind("ubo", ubo);
 
@@ -132,7 +140,7 @@ void AnimationShadowsRenderer::Render(const ShadowsRenderContext& renderContext,
             const VkDeviceSize offsets[] = { meshPart.firstVertexIndex * mesh->GetVertexLayout().GetStride() };
 
             vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(renderContext.commandBuffer, *model->GetIndexBuffer(), 0, model->GetIndexBuffer()->GetIndexType());
+            vkCmdBindIndexBuffer(renderContext.commandBuffer, *model->GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
             vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
             vkCmdDrawIndexed(renderContext.commandBuffer, meshPart.indicesCount, 1, meshPart.firstIndicesIndex, 0, 0);

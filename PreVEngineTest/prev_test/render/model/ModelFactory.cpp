@@ -2,6 +2,8 @@
 
 #include "Model.h"
 
+#include <prev/render/buffer/BufferBuilder.h>
+
 namespace prev_test::render::model {
 ModelFactory::ModelFactory(prev::core::memory::Allocator& allocator)
     : m_allocator{ allocator }
@@ -10,16 +12,24 @@ ModelFactory::ModelFactory(prev::core::memory::Allocator& allocator)
 
 std::unique_ptr<prev_test::render::IModel> ModelFactory::Create(const std::shared_ptr<IMesh>& mesh) const
 {
-    auto vertexBuffer{ std::make_unique<prev::render::buffer::VertexBuffer>(m_allocator) };
-    vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
+    auto vertexBuffer = prev::render::buffer::BufferBuilder{ m_allocator }
+                            .SetMemoryType(prev::core::memory::MemoryType::DEVICE_LOCAL)
+                            .SetUsageFlags(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
+                            .SetSize(mesh->GetVertexLayout().GetStride() * mesh->GerVerticesCount())
+                            .SetData(mesh->GetVertexData())
+                            .Build();
 
-    auto indexBuffer{ std::make_unique<prev::render::buffer::IndexBuffer>(m_allocator) };
-    indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
+    auto indexBuffer = prev::render::buffer::BufferBuilder{ m_allocator }
+                           .SetMemoryType(prev::core::memory::MemoryType::DEVICE_LOCAL)
+                           .SetUsageFlags(VK_BUFFER_USAGE_INDEX_BUFFER_BIT)
+                           .SetSize(sizeof(uint32_t) * mesh->GetIndicesCount())
+                           .SetData(mesh->GetIndices().data())
+                           .Build();
 
     return std::make_unique<prev_test::render::model::Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));
 }
 
-std::unique_ptr<prev_test::render::IModel> ModelFactory::Create(const std::shared_ptr<IMesh>& mesh, const std::shared_ptr<prev::render::buffer::VertexBuffer>& vertexBuffer, const std::shared_ptr<prev::render::buffer::IndexBuffer>& indexBuffer) const
+std::unique_ptr<prev_test::render::IModel> ModelFactory::Create(const std::shared_ptr<IMesh>& mesh, const std::shared_ptr<prev::render::buffer::Buffer>& vertexBuffer, const std::shared_ptr<prev::render::buffer::Buffer>& indexBuffer) const
 {
     return std::make_unique<prev_test::render::model::Model>(mesh, vertexBuffer, indexBuffer);
 }
@@ -29,11 +39,19 @@ std::unique_ptr<prev_test::render::IModel> ModelFactory::CreateHostVisible(const
     const uint32_t finalVertexCount{ std::max(mesh->GerVerticesCount(), maxVertexCount) };
     const uint32_t finalIndexCount{ std::max(static_cast<uint32_t>(mesh->GetIndices().size()), maxIndexCount) };
 
-    auto vertexBuffer{ std::make_unique<prev::render::buffer::HostMappedVertexBuffer>(m_allocator, finalVertexCount) };
-    vertexBuffer->Data(mesh->GetVertexData(), mesh->GerVerticesCount(), mesh->GetVertexLayout().GetStride());
+    auto vertexBuffer = prev::render::buffer::BufferBuilder{ m_allocator }
+                            .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
+                            .SetUsageFlags(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
+                            .SetSize(mesh->GetVertexLayout().GetStride() * finalVertexCount)
+                            .SetData(mesh->GetVertexData())
+                            .Build();
 
-    auto indexBuffer{ std::make_unique<prev::render::buffer::HostMappedIndexBuffer>(m_allocator, finalIndexCount) };
-    indexBuffer->Data(mesh->GetIndices().data(), static_cast<uint32_t>(mesh->GetIndices().size()));
+    auto indexBuffer = prev::render::buffer::BufferBuilder{ m_allocator }
+                           .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
+                           .SetUsageFlags(VK_BUFFER_USAGE_INDEX_BUFFER_BIT)
+                           .SetSize(sizeof(uint32_t) * finalIndexCount)
+                           .SetData(mesh->GetIndices().data())
+                           .Build();
 
     return std::make_unique<prev_test::render::model::Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));
 }

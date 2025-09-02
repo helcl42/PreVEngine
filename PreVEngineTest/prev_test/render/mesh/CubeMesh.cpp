@@ -46,6 +46,11 @@ const std::vector<uint32_t>& CubeMesh::GetIndices() const
     return indices;
 }
 
+uint32_t CubeMesh::GetIndicesCount() const
+{
+    return static_cast<uint32_t>(indices.size());
+}
+
 const std::vector<prev_test::render::MeshPart>& CubeMesh::GetMeshParts() const
 {
     return meshParts;

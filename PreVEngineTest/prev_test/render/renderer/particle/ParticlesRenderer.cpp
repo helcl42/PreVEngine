@@ -6,6 +6,7 @@
 #include "../../../common/AssetManager.h"
 #include "../../../component/particle/IParticleSystemComponent.h"
 
+#include <prev/render/buffer/BufferPoolBuilder.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
@@ -70,11 +71,21 @@ void ParticlesRenderer::Init()
 
     LOGI("Particles Pipeline created");
 
-    m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsVS>>(m_allocator);
-    m_uniformsPoolVS->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolVS = prev::render::buffer::BufferPoolBuilder{ m_allocator }
+                           .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
+                           .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+                           .SetCount(m_descriptorCount)
+                           .SetStride(sizeof(UniformsVS))
+                           .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                           .Build();
 
-    m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsFS>>(m_allocator);
-    m_uniformsPoolFS->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolFS = prev::render::buffer::BufferPoolBuilder{ m_allocator }
+                           .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
+                           .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+                           .SetCount(m_descriptorCount)
+                           .SetStride(sizeof(UniformsFS))
+                           .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                           .Build();
 
     LOGI("Particles Uniforms Pools created");
 
@@ -112,19 +123,25 @@ void ParticlesRenderer::Render(const NormalRenderContext& renderContext, const s
 
     const auto particlesComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::particle::IParticleSystemComponent>(node);
 
-    auto& uboVS = m_uniformsPoolVS->GetNext();
+    m_uniformsPoolVS->MoveToNext();
+
+    auto& uboVS = m_uniformsPoolVS->GetCurrent();
+
     UniformsVS uniformsVS{};
     for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
         uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
         uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
     }
     uniformsVS.textureNumberOfRows = particlesComponent->GetMaterial()->GetAtlasNumberOfRows();
-    uboVS.Data(uniformsVS);
+    uboVS.Write(uniformsVS);
 
-    auto& uboFS = m_uniformsPoolFS->GetNext();
+    m_uniformsPoolFS->MoveToNext();
+
+    auto& uboFS = m_uniformsPoolFS->GetCurrent();
+
     UniformsFS uniformsFS{};
     uniformsFS.color = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
-    uboFS.Data(uniformsFS);
+    uboFS.Write(uniformsFS);
 
     m_shader->Bind("uboVS", uboVS);
     m_shader->Bind("uboFS", uboFS);
@@ -139,9 +156,9 @@ void ParticlesRenderer::Render(const NormalRenderContext& renderContext, const s
 
     vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
     vkCmdBindVertexBuffers(renderContext.commandBuffer, 1, 1, instanceBuffers, offsets);
-    vkCmdBindIndexBuffer(renderContext.commandBuffer, *particlesComponent->GetModel()->GetIndexBuffer(), 0, particlesComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+    vkCmdBindIndexBuffer(renderContext.commandBuffer, *particlesComponent->GetModel()->GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
 
-    vkCmdDrawIndexed(renderContext.commandBuffer, particlesComponent->GetModel()->GetIndexBuffer()->GetCount(), static_cast<uint32_t>(particlesComponent->GetParticles().size()), 0, 0, 0);
+    vkCmdDrawIndexed(renderContext.commandBuffer, particlesComponent->GetModel()->GetMesh()->GetIndicesCount(), static_cast<uint32_t>(particlesComponent->GetParticles().size()), 0, 0, 0);
 }
 
 void ParticlesRenderer::PostRender(const NormalRenderContext& renderContext)

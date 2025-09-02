@@ -3,7 +3,6 @@
 
 #include "../buffer/Buffer.h"
 #include "../buffer/ImageBuffer.h"
-#include "../buffer/UniformBuffer.h"
 #include "../sampler/Sampler.h"
 
 #include "../../core/Core.h"

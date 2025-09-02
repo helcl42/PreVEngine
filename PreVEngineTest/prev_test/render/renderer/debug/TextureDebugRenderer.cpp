@@ -98,10 +98,10 @@ void TextureDebugRenderer::Render(const prev::render::RenderContext& renderConte
     const VkDeviceSize offsets[] = { 0 };
 
     vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-    vkCmdBindIndexBuffer(renderContext.commandBuffer, *m_quadModel->GetIndexBuffer(), 0, m_quadModel->GetIndexBuffer()->GetIndexType());
+    vkCmdBindIndexBuffer(renderContext.commandBuffer, *m_quadModel->GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
     vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-    vkCmdDrawIndexed(renderContext.commandBuffer, m_quadModel->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+    vkCmdDrawIndexed(renderContext.commandBuffer, m_quadModel->GetMesh()->GetIndicesCount(), 1, 0, 0, 0);
 }
 
 void TextureDebugRenderer::PostRender(const prev::render::RenderContext& renderContext)

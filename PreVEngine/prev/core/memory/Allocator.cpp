@@ -16,9 +16,9 @@
 
 namespace prev::core::memory {
 Allocator::Allocator(const prev::core::instance::Instance& instance, const prev::core::device::Device& device, const prev::core::device::Queue& queue, const VkDeviceSize blockSize)
-    : m_instance(instance)
-    , m_device(device)
-    , m_queue(queue)
+    : m_instance{ instance }
+    , m_device{ device }
+    , m_queue{ queue }
 {
     VmaVulkanFunctions fn{};
     fn.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
@@ -62,54 +62,70 @@ Allocator::~Allocator()
     vmaDestroyAllocator(m_allocator);
 }
 
-void Allocator::CreateBuffer(const void* data, const uint64_t size, const VkBufferUsageFlags usage, const MemoryType memoryType, VkBuffer& outBuffer, VmaAllocation& outAlloc, void** outMapped)
+void Allocator::CreateBuffer(const void* data, const uint64_t dataSize, const uint64_t bufferSize, const VkBufferUsageFlags usage, const MemoryType memoryType, VkBuffer& outBuffer, VmaAllocation& outAlloc, void** outMapped)
 {
-    if (memoryType != MemoryType::DEVICE_LOCAL) { // For CPU-visible memory, skip staging buffer
-        VkBufferCreateInfo bufInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-        bufInfo.size = size;
+    if (memoryType == MemoryType::HOST_MAPPED) { // For CPU-visible memory, skip staging buffer
+        VkBufferCreateInfo bufInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+        bufInfo.size = bufferSize;
         bufInfo.usage = usage;
         bufInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        VmaAllocationCreateInfo allocCreateInfo = {};
+        VmaAllocationCreateInfo allocCreateInfo{};
         allocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
         allocCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
-        VmaAllocationInfo allocInfo = {};
+        VmaAllocationInfo allocInfo{};
         VKERRCHECK(vmaCreateBuffer(m_allocator, &bufInfo, &allocCreateInfo, &outBuffer, &outAlloc, &allocInfo));
 
+        if (dataSize > bufferSize) {
+            LOGW("Data size is larger than buffer size! Data will be truncated.");
+        }
+
+        const auto sizeToInit{ std::min(dataSize, bufferSize) };
         if (data) {
-            memcpy(allocInfo.pMappedData, data, size);
+            std::memcpy(allocInfo.pMappedData, data, sizeToInit);
         } else {
-            memset(allocInfo.pMappedData, 0, size);
+            std::memset(allocInfo.pMappedData, 0, sizeToInit);
         }
 
         if (outMapped) {
             *outMapped = allocInfo.pMappedData;
+        } else {
+            LOGW("Buffer created with mapped memory, but outMapped is nullptr!");
         }
-    } else { // For GPU-only memory, copy via staging buffer.
-        VkBufferCreateInfo stagingBufferCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-        stagingBufferCreateInfo.size = size;
+    } else if (memoryType == MemoryType::DEVICE_LOCAL) { // For GPU-only memory, copy via staging buffer.
+        VkBufferCreateInfo stagingBufferCreateInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+        stagingBufferCreateInfo.size = bufferSize;
         stagingBufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
         stagingBufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        VmaAllocationCreateInfo stagingAllocCreateInfo = {};
+        VmaAllocationCreateInfo stagingAllocCreateInfo{};
         stagingAllocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
         stagingAllocCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
-        VkBuffer stageBuffer = VK_NULL_HANDLE;
-        VmaAllocation stageBufferAlloc = VK_NULL_HANDLE;
+        VkBuffer stageBuffer{ VK_NULL_HANDLE };
+        VmaAllocation stageBufferAlloc{ VK_NULL_HANDLE };
 
-        VmaAllocationInfo allocInfo = {};
+        VmaAllocationInfo allocInfo{};
         VKERRCHECK(vmaCreateBuffer(m_allocator, &stagingBufferCreateInfo, &stagingAllocCreateInfo, &stageBuffer, &stageBufferAlloc, &allocInfo));
 
-        memcpy(allocInfo.pMappedData, data, size);
+        if (dataSize > bufferSize) {
+            LOGW("Data size is larger than buffer size! Data will be truncated.");
+        }
 
-        VkBufferCreateInfo bufferCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-        bufferCreateInfo.size = size;
+        const auto sizeToInit{ std::min(dataSize, bufferSize) };
+        if (data) {
+            std::memcpy(allocInfo.pMappedData, data, sizeToInit);
+        } else {
+            std::memset(allocInfo.pMappedData, 0, sizeToInit);
+        }
+
+        VkBufferCreateInfo bufferCreateInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+        bufferCreateInfo.size = bufferSize;
         bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage;
 
-        VmaAllocationCreateInfo allocCreateInfo = {};
+        VmaAllocationCreateInfo allocCreateInfo{};
         allocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
         allocCreateInfo.flags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
         VKERRCHECK(vmaCreateBuffer(m_allocator, &bufferCreateInfo, &allocCreateInfo, &outBuffer, &outAlloc, nullptr));
@@ -117,6 +133,8 @@ void Allocator::CreateBuffer(const void* data, const uint64_t size, const VkBuff
         CopyBuffer(stageBuffer, bufferCreateInfo.size, outBuffer);
 
         vmaDestroyBuffer(m_allocator, stageBuffer, stageBufferAlloc);
+    } else {
+        LOGE("Uknown memory type!");
     }
 }
 
@@ -127,7 +145,7 @@ void Allocator::DestroyBuffer(VkBuffer buffer, VmaAllocation alloc)
 
 void Allocator::CreateImage(const VkExtent3D& extent, const VkImageType imageType, const VkFormat format, const VkSampleCountFlagBits sampleCount, const uint32_t mipLevels, const uint32_t layerCount, const VkImageTiling tiling, const VkImageUsageFlags usage, const MemoryType memoryType, const VkImageCreateFlags flags, VkImage& outImage, VmaAllocation& outAlloc, void** outMapped)
 {
-    VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+    VkImageCreateInfo imageInfo{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
     imageInfo.flags = flags;
     imageInfo.imageType = imageType;
     imageInfo.format = format;
@@ -140,7 +158,7 @@ void Allocator::CreateImage(const VkExtent3D& extent, const VkImageType imageTyp
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-    VmaAllocationCreateInfo allocCreateInfo = {};
+    VmaAllocationCreateInfo allocCreateInfo{};
     allocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
     if (memoryType != MemoryType::DEVICE_LOCAL) {
         allocCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
@@ -148,7 +166,7 @@ void Allocator::CreateImage(const VkExtent3D& extent, const VkImageType imageTyp
         allocCreateInfo.flags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
     }
 
-    VmaAllocationInfo allocInfo = {};
+    VmaAllocationInfo allocInfo{};
     vmaCreateImage(m_allocator, &imageInfo, &allocCreateInfo, &outImage, &outAlloc, &allocInfo);
 
     if (outMapped && memoryType != MemoryType::DEVICE_LOCAL) {
@@ -182,16 +200,16 @@ void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format,
         const uint32_t formatSize{ format::FormatSize(format) };
         const uint64_t size{ extent.width * extent.height * extent.depth * formatSize };
 
-        VkBufferCreateInfo bufferCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+        VkBufferCreateInfo bufferCreateInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
         bufferCreateInfo.size = size;
         bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
         bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        VmaAllocationCreateInfo allocStagingMemoryCreateInfo = {};
+        VmaAllocationCreateInfo allocStagingMemoryCreateInfo{};
         allocStagingMemoryCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
         allocStagingMemoryCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
-        VmaAllocationInfo allocStagingBufferInfo = {};
+        VmaAllocationInfo allocStagingBufferInfo{};
         VkBuffer stageBuffer = VK_NULL_HANDLE;
         VmaAllocation stageBufferAlloc = VK_NULL_HANDLE;
         VKERRCHECK(vmaCreateBuffer(m_allocator, &bufferCreateInfo, &allocStagingMemoryCreateInfo, &stageBuffer, &stageBufferAlloc, &allocStagingBufferInfo));

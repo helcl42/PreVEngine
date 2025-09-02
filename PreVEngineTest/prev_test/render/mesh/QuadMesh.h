@@ -20,6 +20,8 @@ public:
 
     const std::vector<uint32_t>& GetIndices() const override;
 
+    uint32_t GetIndicesCount() const override;
+
     const std::vector<MeshPart>& GetMeshParts() const override;
 
     const MeshNode& GetRootNode() const override;

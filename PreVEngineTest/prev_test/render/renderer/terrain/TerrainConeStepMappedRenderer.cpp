@@ -11,6 +11,7 @@
 #include "../../../component/terrain/ITerrainComponent.h"
 #include "../../../component/transform/ITransformComponent.h"
 
+#include <prev/render/buffer/BufferPoolBuilder.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
@@ -78,11 +79,21 @@ void TerrainConeStepMappedRenderer::Init()
 
     LOGI("Terrain Cone Step Mapped Pipeline created");
 
-    m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsVS>>(m_allocator);
-    m_uniformsPoolVS->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolVS = prev::render::buffer::BufferPoolBuilder{ m_allocator }
+                           .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
+                           .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+                           .SetCount(m_descriptorCount)
+                           .SetStride(sizeof(UniformsVS))
+                           .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                           .Build();
 
-    m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsFS>>(m_allocator);
-    m_uniformsPoolFS->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolFS = prev::render::buffer::BufferPoolBuilder{ m_allocator }
+                           .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
+                           .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+                           .SetCount(m_descriptorCount)
+                           .SetStride(sizeof(UniformsFS))
+                           .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                           .Build();
 
     LOGI("Terrain Cone Step Mapped Uniforms Pools created");
 
@@ -143,7 +154,9 @@ void TerrainConeStepMappedRenderer::Render(const NormalRenderContext& renderCont
     const auto transformComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(node);
     const auto terrainComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::terrain::ITerrainComponent>(node);
 
-    auto& uboVS = m_uniformsPoolVS->GetNext();
+    m_uniformsPoolVS->MoveToNext();
+
+    auto& uboVS = m_uniformsPoolVS->GetCurrent();
 
     UniformsVS uniformsVS{};
     uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
@@ -163,9 +176,11 @@ void TerrainConeStepMappedRenderer::Render(const NormalRenderContext& renderCont
     uniformsVS.gradient = prev_test::component::sky::FOG_GRADIENT;
     uniformsVS.clipPlane = renderContext.clipPlane;
 
-    uboVS.Data(uniformsVS);
+    uboVS.Write(uniformsVS);
 
-    auto& uboFS = m_uniformsPoolFS->GetNext();
+    m_uniformsPoolFS->MoveToNext();
+
+    auto& uboFS = m_uniformsPoolFS->GetCurrent();
 
     UniformsFS uniformsFS{};
     // shadows
@@ -200,7 +215,7 @@ void TerrainConeStepMappedRenderer::Render(const NormalRenderContext& renderCont
     uniformsFS.heightTransitionRange = terrainComponent->GetTransitionRange();
     uniformsFS.numLayers = 15;
 
-    uboFS.Data(uniformsFS);
+    uboFS.Write(uniformsFS);
 
     for (size_t i = 0; i < terrainComponent->GetMaterials().size(); i++) {
         const auto material{ terrainComponent->GetMaterials().at(i) };
@@ -217,10 +232,10 @@ void TerrainConeStepMappedRenderer::Render(const NormalRenderContext& renderCont
     const VkDeviceSize offsets[] = { 0 };
 
     vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-    vkCmdBindIndexBuffer(renderContext.commandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, terrainComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+    vkCmdBindIndexBuffer(renderContext.commandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
     vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-    vkCmdDrawIndexed(renderContext.commandBuffer, terrainComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+    vkCmdDrawIndexed(renderContext.commandBuffer, terrainComponent->GetModel()->GetMesh()->GetIndicesCount(), 1, 0, 0, 0);
 }
 
 void TerrainConeStepMappedRenderer::PostRender(const NormalRenderContext& renderContext)
