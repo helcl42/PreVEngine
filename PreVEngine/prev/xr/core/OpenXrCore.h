@@ -60,10 +60,6 @@ private:
 
     void DestroySystemId();
 
-    void CreateDebugMessenger();
-
-    void DestroyDebugMessenger();
-
     void CreateReferenceSpace();
 
     void DestroyReferenceSpace();
@@ -71,11 +67,6 @@ private:
 private:
     XrInstance m_instance{ XR_NULL_HANDLE };
     XrSystemId m_systemId{ XR_NULL_SYSTEM_ID };
-
-    std::vector<const char*> m_activeAPILayers;
-    std::vector<const char*> m_activeInstanceExtensions;
-    std::vector<std::string> m_apiLayers;
-    std::vector<std::string> m_instanceExtensions;
 
     XrSystemProperties m_systemProperties{ XR_TYPE_SYSTEM_PROPERTIES };
     XrSystemHandTrackingPropertiesEXT m_handTrackingSystemProperties{ XR_TYPE_SYSTEM_HAND_TRACKING_PROPERTIES_EXT };

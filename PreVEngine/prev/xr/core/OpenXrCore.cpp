@@ -28,23 +28,86 @@ namespace {
             "Failed to get InstanceProcAddr for xrGetVulkanGraphicsDeviceKHR.");
     }
 
-    inline bool IsStringInVector(const std::vector<const char*>& list, const char* name)
+    inline std::vector<XrApiLayerProperties> GetAllApiLayers()
     {
-        bool found{ false };
-        for (const auto& item : list) {
-            if (strcmp(name, item) == 0) {
-                found = true;
-                break;
+        uint32_t apiLayerCount{ 0 };
+        std::vector<XrApiLayerProperties> apiLayerProperties;
+        OPENXR_CHECK(xrEnumerateApiLayerProperties(0, &apiLayerCount, nullptr), "Failed to enumerate ApiLayerProperties.");
+        apiLayerProperties.resize(apiLayerCount, { XR_TYPE_API_LAYER_PROPERTIES });
+        OPENXR_CHECK(xrEnumerateApiLayerProperties(apiLayerCount, &apiLayerCount, apiLayerProperties.data()), "Failed to enumerate ApiLayerProperties.");
+        return apiLayerProperties;
+    }
+
+    inline std::vector<XrExtensionProperties> GetAllInstanceExtensions()
+    {
+        uint32_t extensionCount{ 0 };
+        std::vector<XrExtensionProperties> extensionProperties;
+        OPENXR_CHECK(xrEnumerateInstanceExtensionProperties(nullptr, 0, &extensionCount, nullptr), "Failed to enumerate InstanceExtensionProperties.");
+        extensionProperties.resize(extensionCount, { XR_TYPE_EXTENSION_PROPERTIES });
+        OPENXR_CHECK(xrEnumerateInstanceExtensionProperties(nullptr, extensionCount, &extensionCount, extensionProperties.data()), "Failed to enumerate InstanceExtensionProperties.");
+        return extensionProperties;
+    }
+
+    inline bool ContainsApiLayer(const std::vector<XrApiLayerProperties>& items, const char* name)
+    {
+        for (const auto& item : items) {
+            if (strcmp(name, item.layerName) == 0) {
+                return true;
             }
         }
-        return found;
+        return false;
+    }
+
+    inline bool ContainsInstanceExtension(const std::vector<XrExtensionProperties>& items, const char* name)
+    {
+        for (const auto& item : items) {
+            if (strcmp(name, item.extensionName) == 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    inline bool ContainsString(const std::vector<const char*>& list, const char* name)
+    {
+        for (const auto& item : list) {
+            if (strcmp(name, item) == 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    inline std::vector<const char*> GetActiveInstanceExtension(const std::vector<XrExtensionProperties>& availableInstanceExtension, const std::vector<const char*>& requestedItemNames)
+    {
+        std::vector<const char*> activeInstanceExtensions;
+        for (const auto& requestedItemName : requestedItemNames) {
+            if (ContainsInstanceExtension(availableInstanceExtension, requestedItemName)) {
+                activeInstanceExtensions.push_back(requestedItemName);
+            } else {
+                LOGE("Failed to find OpenXR Instance extension: %s", requestedItemName);
+            }
+        }
+        return activeInstanceExtensions;
+    }
+
+    inline std::vector<const char*> GetActiveApiLayers(const std::vector<XrApiLayerProperties>& availableApiLayers, const std::vector<const char*>& requestedApiLayerNames)
+    {
+        std::vector<const char*> activeApiLayers;
+        for (auto& requestedApiLayerName : requestedApiLayerNames) {
+            if (ContainsApiLayer(availableApiLayers, requestedApiLayerName)) {
+                activeApiLayers.push_back(requestedApiLayerName);
+            } else {
+                LOGE("Failed to find OpenXR API layer: %s", requestedApiLayerName);
+            }
+        }
+        return activeApiLayers;
     }
 } // namespace
 
 OpenXrCore::OpenXrCore()
 {
     CreateInstance();
-    CreateDebugMessenger();
     CreateSystemId();
 
     ShowRuntimeInfo();
@@ -53,7 +116,6 @@ OpenXrCore::OpenXrCore()
 OpenXrCore::~OpenXrCore()
 {
     DestroySystemId();
-    DestroyDebugMessenger();
     DestroyInstance();
 }
 
@@ -247,6 +309,29 @@ bool OpenXrCore::IsHandTrackingSupported() const
 
 void OpenXrCore::CreateInstance()
 {
+    const std::vector<const char*> requestedApiLayerNames = {
+        // no API layers
+    };
+
+    const std::vector<const char*> requestedInstanceExtensionNames = {
+        // #ifdef TARGET_PLATFORM_ANDROID
+        //        XR_KHR_ANDROID_CREATE_INSTANCE_EXTENSION_NAME,
+        // #endif
+        XR_EXT_DEBUG_UTILS_EXTENSION_NAME,
+
+        XR_KHR_VULKAN_ENABLE_EXTENSION_NAME,
+        XR_KHR_COMPOSITION_LAYER_DEPTH_EXTENSION_NAME,
+
+        XR_EXT_HAND_TRACKING_EXTENSION_NAME,
+        XR_EXT_HAND_INTERACTION_EXTENSION_NAME,
+    };
+
+    const auto allApiLayers{ GetAllApiLayers() };
+    const auto activeApiLayers{ GetActiveApiLayers(allApiLayers, requestedApiLayerNames) };
+
+    const auto allInstanceExtensions{ GetAllInstanceExtensions() };
+    const auto activeInstanceExtensions{ GetActiveInstanceExtension(allInstanceExtensions, requestedInstanceExtensionNames) };
+
     XrApplicationInfo applicationInfo{};
     strncpy(applicationInfo.applicationName, "OpenXR PreVEngineTest", XR_MAX_APPLICATION_NAME_SIZE);
     applicationInfo.applicationVersion = 1;
@@ -254,71 +339,13 @@ void OpenXrCore::CreateInstance()
     applicationInfo.engineVersion = 1;
     applicationInfo.apiVersion = XR_CURRENT_API_VERSION;
 
-    {
-        m_instanceExtensions.push_back(XR_EXT_DEBUG_UTILS_EXTENSION_NAME);
-
-        m_instanceExtensions.push_back(XR_KHR_VULKAN_ENABLE_EXTENSION_NAME);
-        m_instanceExtensions.push_back(XR_KHR_COMPOSITION_LAYER_DEPTH_EXTENSION_NAME);
-
-        m_instanceExtensions.push_back(XR_EXT_HAND_TRACKING_EXTENSION_NAME);
-        m_instanceExtensions.push_back(XR_EXT_HAND_INTERACTION_EXTENSION_NAME);
-    }
-
-    // Get all the API Layers from the OpenXR runtime.
-    uint32_t apiLayerCount{ 0 };
-    std::vector<XrApiLayerProperties> apiLayerProperties;
-    OPENXR_CHECK(xrEnumerateApiLayerProperties(0, &apiLayerCount, nullptr), "Failed to enumerate ApiLayerProperties.");
-    apiLayerProperties.resize(apiLayerCount, { XR_TYPE_API_LAYER_PROPERTIES });
-    OPENXR_CHECK(xrEnumerateApiLayerProperties(apiLayerCount, &apiLayerCount, apiLayerProperties.data()), "Failed to enumerate ApiLayerProperties.");
-
-    // Check the requested API layers against the ones from the OpenXR. If found add it to the Active API Layers.
-    for (auto& requestLayer : m_apiLayers) {
-        for (auto& layerProperty : apiLayerProperties) {
-            // strcmp returns 0 if the strings match.
-            if (strcmp(requestLayer.c_str(), layerProperty.layerName) != 0) {
-                continue;
-            } else {
-                m_activeAPILayers.push_back(requestLayer.c_str());
-                break;
-            }
-        }
-    }
-
-    // Get all the Instance Extensions from the OpenXR instance.
-    uint32_t extensionCount{ 0 };
-    std::vector<XrExtensionProperties> extensionProperties;
-    OPENXR_CHECK(xrEnumerateInstanceExtensionProperties(nullptr, 0, &extensionCount, nullptr), "Failed to enumerate InstanceExtensionProperties.");
-    extensionProperties.resize(extensionCount, { XR_TYPE_EXTENSION_PROPERTIES });
-    OPENXR_CHECK(xrEnumerateInstanceExtensionProperties(nullptr, extensionCount, &extensionCount, extensionProperties.data()), "Failed to enumerate InstanceExtensionProperties.");
-
-    // Check the requested Instance Extensions against the ones from the OpenXR runtime.
-    // If an extension is found add it to Active Instance Extensions.
-    // Log error if the Instance Extension is not found.
-    for (auto& requestedInstanceExtension : m_instanceExtensions) {
-        bool found{ false };
-        for (auto& extensionProperty : extensionProperties) {
-            // strcmp returns 0 if the strings match.
-            if (strcmp(requestedInstanceExtension.c_str(), extensionProperty.extensionName) != 0) {
-                continue;
-            } else {
-                m_activeInstanceExtensions.push_back(requestedInstanceExtension.c_str());
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            LOGE("Failed to find OpenXR instance extension: %s", requestedInstanceExtension.c_str());
-        }
-    }
-
-    // Fill out an XrInstanceCreateInfo structure and create an XrInstance.
     XrInstanceCreateInfo instanceCreateInfo{ XR_TYPE_INSTANCE_CREATE_INFO };
     instanceCreateInfo.createFlags = 0;
     instanceCreateInfo.applicationInfo = applicationInfo;
-    instanceCreateInfo.enabledApiLayerCount = static_cast<uint32_t>(m_activeAPILayers.size());
-    instanceCreateInfo.enabledApiLayerNames = m_activeAPILayers.data();
-    instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(m_activeInstanceExtensions.size());
-    instanceCreateInfo.enabledExtensionNames = m_activeInstanceExtensions.data();
+    instanceCreateInfo.enabledApiLayerCount = static_cast<uint32_t>(activeApiLayers.size());
+    instanceCreateInfo.enabledApiLayerNames = activeApiLayers.data();
+    instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(activeInstanceExtensions.size());
+    instanceCreateInfo.enabledExtensionNames = activeInstanceExtensions.data();
 
     OPENXR_CHECK(xrCreateInstance(&instanceCreateInfo, &m_instance), "Failed to create Instance.");
 
@@ -326,11 +353,17 @@ void OpenXrCore::CreateInstance()
         throw std::runtime_error("Could not create XR instance.");
     }
 
+    if (ContainsString(activeInstanceExtensions, XR_EXT_DEBUG_UTILS_EXTENSION_NAME)) {
+        m_debugMessenger = std::make_unique<OpenXrDebugMessenger>(m_instance);
+    }
+
     LoadXrExtensionFunctions(m_instance);
 }
 
 void OpenXrCore::DestroyInstance()
 {
+    m_debugMessenger = {};
+
     OPENXR_CHECK(xrDestroyInstance(m_instance), "Failed to destroy Instance.");
 }
 
@@ -356,18 +389,6 @@ void OpenXrCore::CreateSystemId()
 void OpenXrCore::DestroySystemId()
 {
     m_systemId = XR_NULL_SYSTEM_ID;
-}
-
-void OpenXrCore::CreateDebugMessenger()
-{
-    if (IsStringInVector(m_activeInstanceExtensions, XR_EXT_DEBUG_UTILS_EXTENSION_NAME)) {
-        m_debugMessenger = std::make_unique<OpenXrDebugMessenger>(m_instance);
-    }
-}
-
-void OpenXrCore::DestroyDebugMessenger()
-{
-    m_debugMessenger = {};
 }
 
 void OpenXrCore::CreateReferenceSpace()
