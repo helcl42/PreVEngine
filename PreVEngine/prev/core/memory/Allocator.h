@@ -11,6 +11,7 @@
 
 namespace prev::core::memory {
 enum class MemoryType {
+    UNDEFINED = -1,
     DEVICE_LOCAL = 0,
     HOST_MAPPED = 1
 };
@@ -22,7 +23,7 @@ public:
     ~Allocator();
 
 public:
-    void CreateBuffer(const void* data, const uint64_t size, const VkBufferUsageFlags usage, const MemoryType memoryType, VkBuffer& outBuffer, VmaAllocation& outAlloc, void** outMapped = nullptr);
+    void CreateBuffer(const void* data, const uint64_t dataSize, const uint64_t bufferSize, const VkBufferUsageFlags usage, const MemoryType memoryType, VkBuffer& outBuffer, VmaAllocation& outAlloc, void** outMapped = nullptr);
 
     void DestroyBuffer(VkBuffer buffer, VmaAllocation alloc);
 

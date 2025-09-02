@@ -10,7 +10,7 @@
 namespace prev_test::component::particle {
 class ParticleSystemComponent : public IParticleSystemComponent {
 public:
-    ParticleSystemComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::vector<std::shared_ptr<prev::render::buffer::VertexBuffer>>& vertexBuffers, const std::shared_ptr<prev_test::render::IMaterial>& material, const std::shared_ptr<IParticleFactory>& particleFactory, const float particlesPerSecond);
+    ParticleSystemComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::vector<std::shared_ptr<prev::render::buffer::Buffer>>& vertexBuffers, const std::shared_ptr<prev_test::render::IMaterial>& material, const std::shared_ptr<IParticleFactory>& particleFactory, const float particlesPerSecond);
 
     virtual ~ParticleSystemComponent() = default;
 
@@ -29,9 +29,12 @@ public:
 
     std::list<std::shared_ptr<Particle>> GetParticles() const override;
 
-    std::shared_ptr<prev::render::buffer::VertexBuffer> GetVertexBuffer() const override;
+    std::shared_ptr<prev::render::buffer::Buffer> GetVertexBuffer() const override;
 
     const prev_test::common::intersection::AABB& GetBoundingBox() const override;
+
+public:
+    static size_t GetParticleDataStride();
 
 private:
     void AddNewParticles(const float deltaTime, const glm::vec3& centerPosition);
@@ -41,7 +44,7 @@ private:
 private:
     std::shared_ptr<prev_test::render::IModel> m_model;
 
-    std::vector<std::shared_ptr<prev::render::buffer::VertexBuffer>> m_vertexBuffers;
+    std::vector<std::shared_ptr<prev::render::buffer::Buffer>> m_vertexBuffers;
 
     std::shared_ptr<prev_test::render::IMaterial> m_material;
 

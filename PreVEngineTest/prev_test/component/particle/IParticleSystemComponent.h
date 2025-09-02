@@ -6,7 +6,7 @@
 #include "../../common/intersection/AABB.h"
 #include "../../render/IModel.h"
 
-#include <prev/render/buffer/VertexBuffer.h>
+#include <prev/render/buffer/Buffer.h>
 #include <prev/scene/component/IComponent.h>
 
 #include <list>
@@ -28,7 +28,7 @@ public:
 
     virtual std::list<std::shared_ptr<Particle>> GetParticles() const = 0;
 
-    virtual std::shared_ptr<prev::render::buffer::VertexBuffer> GetVertexBuffer() const = 0;
+    virtual std::shared_ptr<prev::render::buffer::Buffer> GetVertexBuffer() const = 0;
 
     virtual const prev_test::common::intersection::AABB& GetBoundingBox() const = 0;
 

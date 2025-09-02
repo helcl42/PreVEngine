@@ -6,6 +6,7 @@
 #include "../../../common/AssetManager.h"
 #include "../../../component/ray_casting/IRayCasterComponent.h"
 
+#include <prev/render/buffer/BufferPoolBuilder.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
@@ -60,14 +61,29 @@ void RayCastDebugRenderer::Init()
 
     LOGI("RayCast Debug Pipeline created");
 
-    m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsVS>>(m_allocator);
-    m_uniformsPoolVS->UpdateCapacity(m_descriptorCount, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolVS = prev::render::buffer::BufferPoolBuilder{ m_allocator }
+                           .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
+                           .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+                           .SetCount(m_descriptorCount)
+                           .SetStride(sizeof(UniformsVS))
+                           .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                           .Build();
 
-    m_uniformsPoolGS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsGS>>(m_allocator);
-    m_uniformsPoolGS->UpdateCapacity(m_descriptorCount, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolGS = prev::render::buffer::BufferPoolBuilder{ m_allocator }
+                           .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
+                           .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+                           .SetCount(m_descriptorCount)
+                           .SetStride(sizeof(UniformsGS))
+                           .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                           .Build();
 
-    m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsFS>>(m_allocator);
-    m_uniformsPoolFS->UpdateCapacity(m_descriptorCount, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolFS = prev::render::buffer::BufferPoolBuilder{ m_allocator }
+                           .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
+                           .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+                           .SetCount(m_descriptorCount)
+                           .SetStride(sizeof(UniformsFS))
+                           .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                           .Build();
 
     LOGI("RayCast Debug Uniforms Pools created");
 }
@@ -94,14 +110,17 @@ void RayCastDebugRenderer::Render(const NormalRenderContext& renderContext, cons
 
     const auto rayCastingComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::ray_casting::IRayCasterComponent>(node);
 
-    auto& uboVS = m_uniformsPoolVS->GetNext();
+    m_uniformsPoolVS->MoveToNext();
+
+    auto& uboVS = m_uniformsPoolVS->GetCurrent();
 
     UniformsVS uniformsVS{};
     uniformsVS.color = glm::vec3(1.0, 0.0, 0.0);
+    uboVS.Write(uniformsVS);
 
-    uboVS.Data(uniformsVS);
+    m_uniformsPoolGS->MoveToNext();
 
-    auto& uboGS = m_uniformsPoolGS->GetNext();
+    auto& uboGS = m_uniformsPoolGS->GetCurrent();
 
     UniformsGS uniformsGS{};
     uniformsGS.modelMatrix = glm::mat4(1.0f);
@@ -109,15 +128,15 @@ void RayCastDebugRenderer::Render(const NormalRenderContext& renderContext, cons
         uniformsGS.viewMatrices[i] = renderContext.viewMatrices[i];
         uniformsGS.projectionMatrices[i] = renderContext.projectionMatrices[i];
     }
+    uboGS.Write(uniformsGS);
 
-    uboGS.Data(uniformsGS);
+    m_uniformsPoolFS->MoveToNext();
 
-    auto& uboFS = m_uniformsPoolFS->GetNext();
+    auto& uboFS = m_uniformsPoolFS->GetCurrent();
 
     UniformsFS uniformsFS{};
     uniformsFS.alpha = 0.7f;
-
-    uboFS.Data(uniformsFS);
+    uboFS.Write(uniformsFS);
 
     m_shader->Bind("uboVS", uboVS);
     m_shader->Bind("uboGS", uboGS);
@@ -128,10 +147,10 @@ void RayCastDebugRenderer::Render(const NormalRenderContext& renderContext, cons
     const VkDeviceSize offsets[] = { 0 };
 
     vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-    vkCmdBindIndexBuffer(renderContext.commandBuffer, *rayCastingComponent->GetModel()->GetIndexBuffer(), 0, rayCastingComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+    vkCmdBindIndexBuffer(renderContext.commandBuffer, *rayCastingComponent->GetModel()->GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
     vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-    vkCmdDrawIndexed(renderContext.commandBuffer, rayCastingComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+    vkCmdDrawIndexed(renderContext.commandBuffer, rayCastingComponent->GetModel()->GetMesh()->GetIndicesCount(), 1, 0, 0, 0);
 }
 
 void RayCastDebugRenderer::PostRender(const NormalRenderContext& renderContext)

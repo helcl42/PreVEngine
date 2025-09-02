@@ -7,7 +7,7 @@
 
 #include <prev/core/device/Device.h>
 #include <prev/core/memory/Allocator.h>
-#include <prev/render/buffer/UniformBuffer.h>
+#include <prev/render/buffer/BufferPool.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/pipeline/Pipeline.h>
 #include <prev/render/shader/Shader.h>
@@ -61,7 +61,7 @@ private:
 
     std::unique_ptr<prev::render::pipeline::Pipeline> m_pipeline;
 
-    std::unique_ptr<prev::render::buffer::UniformRingBuffer<Uniforms>> m_uniformsPool;
+    std::unique_ptr<prev::render::buffer::BufferPool> m_uniformsPool;
 };
 } // namespace prev_test::render::renderer::shadow
 

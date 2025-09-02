@@ -12,6 +12,7 @@
 #include "../../../component/sky/SkyCommon.h"
 #include "../../../component/transform/ITransformComponent.h"
 
+#include <prev/render/buffer/BufferPoolBuilder.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
@@ -70,11 +71,21 @@ void AnimationTexturelessRenderer::Init()
 
     LOGI("Animation Textureless Pipeline created");
 
-    m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsVS>>(m_allocator);
-    m_uniformsPoolVS->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolVS = prev::render::buffer::BufferPoolBuilder{ m_allocator }
+                           .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
+                           .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+                           .SetCount(m_descriptorCount)
+                           .SetStride(sizeof(UniformsVS))
+                           .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                           .Build();
 
-    m_uniformsPoolFS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsFS>>(m_allocator);
-    m_uniformsPoolFS->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolFS = prev::render::buffer::BufferPoolBuilder{ m_allocator }
+                           .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
+                           .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+                           .SetCount(m_descriptorCount)
+                           .SetStride(sizeof(UniformsFS))
+                           .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                           .Build();
 
     LOGI("Animation Textureless Uniforms Pools created");
 
@@ -134,7 +145,9 @@ void AnimationTexturelessRenderer::Render(const NormalRenderContext& renderConte
             const auto material = nodeRenderComponent->GetMaterial(meshPart.materialIndex);
             const auto modelMatrix = transformComponent->GetWorldTransformScaled() * meshNode.transform;
 
-            auto& uboVS = m_uniformsPoolVS->GetNext();
+            m_uniformsPoolVS->MoveToNext();
+
+            auto& uboVS = m_uniformsPoolVS->GetCurrent();
 
             UniformsVS uniformsVS{};
             const auto& bones = animationClip.GetBoneTransforms();
@@ -157,10 +170,11 @@ void AnimationTexturelessRenderer::Render(const NormalRenderContext& renderConte
             uniformsVS.density = prev_test::component::sky::FOG_DENSITY;
             uniformsVS.gradient = prev_test::component::sky::FOG_GRADIENT;
             uniformsVS.clipPlane = renderContext.clipPlane;
+            uboVS.Write(uniformsVS);
 
-            uboVS.Data(uniformsVS);
+            m_uniformsPoolFS->MoveToNext();
 
-            auto& uboFS = m_uniformsPoolFS->GetNext();
+            auto& uboFS = m_uniformsPoolFS->GetCurrent();
 
             UniformsFS uniformsFS{};
             // shadows
@@ -187,8 +201,7 @@ void AnimationTexturelessRenderer::Render(const NormalRenderContext& renderConte
             uniformsFS.selectedColor = prev_test::component::ray_casting::SELECTED_COLOR;
             uniformsFS.selected = false;
             uniformsFS.castedByShadows = nodeRenderComponent->IsCastedByShadows();
-
-            uboFS.Data(uniformsFS);
+            uboFS.Write(uniformsFS);
 
             m_shader->Bind("depthSampler", *shadowsComponent->GetImageBuffer(), *m_depthSampler, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
             m_shader->Bind("uboVS", uboVS);
@@ -199,7 +212,7 @@ void AnimationTexturelessRenderer::Render(const NormalRenderContext& renderConte
             const VkDeviceSize offsets[] = { meshPart.firstVertexIndex * mesh->GetVertexLayout().GetStride() };
 
             vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(renderContext.commandBuffer, *model->GetIndexBuffer(), 0, model->GetIndexBuffer()->GetIndexType());
+            vkCmdBindIndexBuffer(renderContext.commandBuffer, *model->GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
             vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
             vkCmdDrawIndexed(renderContext.commandBuffer, meshPart.indicesCount, 1, meshPart.firstIndicesIndex, 0, 0);

@@ -3,8 +3,8 @@
 #include "../../../common/AssetManager.h"
 
 #include <prev/core/CommandsExecutor.h>
+#include <prev/render/buffer/BufferBuilder.h>
 #include <prev/render/buffer/ImageBufferBuilder.h>
-#include <prev/render/buffer/UniformBuffer.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
@@ -48,7 +48,12 @@ Clouds CloudsFactory::Create(const uint32_t width, const uint32_t height) const
         .Build();
     // clang-format on
 
-    auto uniformBuffer = std::make_unique<prev::render::buffer::UnifomBuffer<Uniforms>>(m_allocator, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    auto uniformBuffer = prev::render::buffer::BufferBuilder{ m_allocator }
+                             .SetSize(sizeof(Uniforms))
+                             .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+                             .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
+                             .SetAlignment(static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment))
+                             .Build();
 
     auto weatherImageBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
                                   .SetExtent({ width, height, 1 })
@@ -72,8 +77,7 @@ Clouds CloudsFactory::Create(const uint32_t width, const uint32_t height) const
         uniforms.perlinFrequency = 0.8f;
         uniforms.perlinScale = 95.0f;
         uniforms.perlinOctaves = 4;
-
-        uniformBuffer->Data(uniforms);
+        uniformBuffer->Write(uniforms);
 
         shader->Bind("uboCS", *uniformBuffer);
         shader->Bind("outWeatherTexture", *weatherImageBuffer, *sampler, VK_IMAGE_LAYOUT_GENERAL);

@@ -21,6 +21,11 @@ const std::vector<uint32_t>& TerrainMesh::GetIndices() const
     return m_indices;
 }
 
+uint32_t TerrainMesh::GetIndicesCount() const
+{
+    return static_cast<uint32_t>(m_indices.size());
+}
+
 const std::vector<prev_test::render::MeshPart>& TerrainMesh::GetMeshParts() const
 {
     return m_meshParts;

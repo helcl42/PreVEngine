@@ -3,15 +3,7 @@
 #include "../../render/VertexDataBuffer.h"
 
 namespace prev_test::component::particle {
-namespace {
-    uint32_t GetStride()
-    {
-        // position + scale + rotation + currentTextureOffset + nextTextureOffset + blendFactor
-        return sizeof(glm::vec3) + sizeof(glm::vec2) + sizeof(float) + sizeof(glm::vec2) + sizeof(glm::vec2) + sizeof(float);
-    }
-} // namespace
-
-ParticleSystemComponent::ParticleSystemComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::vector<std::shared_ptr<prev::render::buffer::VertexBuffer>>& vertexBuffers, const std::shared_ptr<prev_test::render::IMaterial>& material, const std::shared_ptr<IParticleFactory>& particleFactory, const float particlesPerSecond)
+ParticleSystemComponent::ParticleSystemComponent(const std::shared_ptr<prev_test::render::IModel>& model, const std::vector<std::shared_ptr<prev::render::buffer::Buffer>>& vertexBuffers, const std::shared_ptr<prev_test::render::IMaterial>& material, const std::shared_ptr<IParticleFactory>& particleFactory, const float particlesPerSecond)
     : m_model(model)
     , m_vertexBuffers(vertexBuffers)
     , m_material(material)
@@ -28,7 +20,7 @@ void ParticleSystemComponent::Update(const float deltaTime, const glm::vec3& cen
 
     m_currentBufferIndex = (m_currentBufferIndex + 1) % static_cast<uint32_t>(m_vertexBuffers.size());
 
-    prev_test::render::VertexDataBuffer instanceDataBuffer(GetStride() * m_particles.size());
+    prev_test::render::VertexDataBuffer instanceDataBuffer(GetParticleDataStride() * m_particles.size());
     for (const auto& particle : m_particles) {
         instanceDataBuffer.Add(particle->GetPosition());
         instanceDataBuffer.Add(glm::vec2(particle->GetScale())); // TODO do we want non-square particles ??
@@ -39,7 +31,7 @@ void ParticleSystemComponent::Update(const float deltaTime, const glm::vec3& cen
     }
 
     auto& currentVetexBuffer{ m_vertexBuffers[m_currentBufferIndex] };
-    currentVetexBuffer->Data(instanceDataBuffer.GetData(), static_cast<uint32_t>(m_particles.size()), GetStride());
+    currentVetexBuffer->Write(instanceDataBuffer.GetData(), GetParticleDataStride() * m_particles.size());
 }
 
 void ParticleSystemComponent::SetParticlesPerSecond(const float pps)
@@ -72,7 +64,7 @@ std::list<std::shared_ptr<Particle>> ParticleSystemComponent::GetParticles() con
     return m_particles;
 }
 
-std::shared_ptr<prev::render::buffer::VertexBuffer> ParticleSystemComponent::GetVertexBuffer() const
+std::shared_ptr<prev::render::buffer::Buffer> ParticleSystemComponent::GetVertexBuffer() const
 {
     return m_vertexBuffers[m_currentBufferIndex];
 }
@@ -103,7 +95,7 @@ void ParticleSystemComponent::UpdateParticles(const float deltaTime)
         } else {
             boundingBox.minExtents = glm::min(boundingBox.minExtents, particle->GetPosition());
             boundingBox.maxExtents = glm::max(boundingBox.maxExtents, particle->GetPosition());
-            pi++;
+            ++pi;
         }
     }
     m_boundingBox = boundingBox;
@@ -112,5 +104,11 @@ void ParticleSystemComponent::UpdateParticles(const float deltaTime)
 const prev_test::common::intersection::AABB& ParticleSystemComponent::GetBoundingBox() const
 {
     return m_boundingBox;
+}
+
+size_t ParticleSystemComponent::GetParticleDataStride()
+{
+    // position + scale + rotation + currentTextureOffset + nextTextureOffset + blendFactor
+    return sizeof(glm::vec3) + sizeof(glm::vec2) + sizeof(float) + sizeof(glm::vec2) + sizeof(glm::vec2) + sizeof(float);
 }
 } // namespace prev_test::component::particle

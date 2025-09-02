@@ -122,6 +122,11 @@ const std::vector<uint32_t>& PlaneMesh::GetIndices() const
     return m_indices;
 }
 
+uint32_t PlaneMesh::GetIndicesCount() const
+{
+    return static_cast<uint32_t>(m_indices.size());
+}
+
 const std::vector<prev_test::render::MeshPart>& PlaneMesh::GetMeshParts() const
 {
     return m_meshParts;

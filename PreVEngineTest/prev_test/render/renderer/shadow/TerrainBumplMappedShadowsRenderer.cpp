@@ -7,6 +7,7 @@
 #include "../../../component/terrain/ITerrainComponent.h"
 #include "../../../component/transform/ITransformComponent.h"
 
+#include <prev/render/buffer/BufferPoolBuilder.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
@@ -61,8 +62,13 @@ void TerrainBumplMappedShadowsRenderer::Init()
 
     LOGI("Terrain Bump Mapped Shadows Pipeline created");
 
-    m_uniformsPool = std::make_unique<prev::render::buffer::UniformRingBuffer<Uniforms>>(m_allocator);
-    m_uniformsPool->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPool = prev::render::buffer::BufferPoolBuilder{ m_allocator }
+                         .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
+                         .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+                         .SetCount(m_descriptorCount)
+                         .SetStride(sizeof(Uniforms))
+                         .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                         .Build();
 
     LOGI("Terrain Bump Mapped Shadows Uniforms Pools created");
 }
@@ -97,13 +103,16 @@ void TerrainBumplMappedShadowsRenderer::Render(const ShadowsRenderContext& rende
 
     const auto transformComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(node);
     const auto terrainComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::terrain::ITerrainComponent>(node);
-    auto& ubo = m_uniformsPool->GetNext();
+
+    m_uniformsPool->MoveToNext();
+
+    auto& ubo = m_uniformsPool->GetCurrent();
 
     Uniforms uniforms{};
     uniforms.projectionMatrix = renderContext.projectionMatrix;
     uniforms.viewMatrix = renderContext.viewMatrix;
     uniforms.modelMatrix = transformComponent->GetWorldTransformScaled();
-    ubo.Data(uniforms);
+    ubo.Write(uniforms);
 
     m_shader->Bind("ubo", ubo);
 
@@ -112,10 +121,10 @@ void TerrainBumplMappedShadowsRenderer::Render(const ShadowsRenderContext& rende
     const VkDeviceSize offsets[] = { 0 };
 
     vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-    vkCmdBindIndexBuffer(renderContext.commandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, terrainComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+    vkCmdBindIndexBuffer(renderContext.commandBuffer, *terrainComponent->GetModel()->GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
     vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-    vkCmdDrawIndexed(renderContext.commandBuffer, terrainComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+    vkCmdDrawIndexed(renderContext.commandBuffer, terrainComponent->GetModel()->GetMesh()->GetIndicesCount(), 1, 0, 0, 0);
 }
 
 void TerrainBumplMappedShadowsRenderer::PostRender(const ShadowsRenderContext& renderContext)

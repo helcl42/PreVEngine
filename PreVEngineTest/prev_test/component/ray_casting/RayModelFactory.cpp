@@ -1,8 +1,8 @@
 #include "RayModelFactory.h"
+
 #include "../../render/model/Model.h"
 
-#include <prev/render/buffer/IndexBuffer.h>
-#include <prev/render/buffer/VertexBuffer.h>
+#include <prev/render/buffer/BufferBuilder.h>
 
 namespace prev_test::component::ray_casting {
 RayModelFactory::RayModelFactory(prev::core::memory::Allocator& allocator)
@@ -22,10 +22,19 @@ std::unique_ptr<prev_test::render::IModel> RayModelFactory::Create(const prev_te
         indices.emplace_back(i);
     }
 
-    auto vertexBuffer{ std::make_unique<prev::render::buffer::VertexBuffer>(m_allocator) };
-    vertexBuffer->Data(vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(glm::vec3));
-    auto indexBuffer{ std::make_unique<prev::render::buffer::IndexBuffer>(m_allocator) };
-    indexBuffer->Data(indices.data(), static_cast<uint32_t>(indices.size()));
+    auto vertexBuffer = prev::render::buffer::BufferBuilder{ m_allocator }
+                            .SetMemoryType(prev::core::memory::MemoryType::DEVICE_LOCAL)
+                            .SetUsageFlags(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
+                            .SetSize(sizeof(glm::vec3) * vertices.size())
+                            .SetData(vertices.data())
+                            .Build();
+
+    auto indexBuffer = prev::render::buffer::BufferBuilder{ m_allocator }
+                           .SetMemoryType(prev::core::memory::MemoryType::DEVICE_LOCAL)
+                           .SetUsageFlags(VK_BUFFER_USAGE_INDEX_BUFFER_BIT)
+                           .SetSize(sizeof(uint32_t) * indices.size())
+                           .SetData(indices.data())
+                           .Build();
 
     return std::make_unique<prev_test::render::model::Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
 }

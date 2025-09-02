@@ -7,6 +7,7 @@
 #include "../../../component/sky/ISunComponent.h"
 
 #include <prev/event/EventChannel.h>
+#include <prev/render/buffer/BufferPoolBuilder.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
@@ -60,8 +61,13 @@ void SunRenderer::Init()
 
     LOGI("Sun Pipeline created");
 
-    m_uniformsPoolVS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsVS>>(m_allocator);
-    m_uniformsPoolVS->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolVS = prev::render::buffer::BufferPoolBuilder{ m_allocator }
+                           .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
+                           .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+                           .SetCount(m_descriptorCount)
+                           .SetStride(sizeof(UniformsVS))
+                           .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                           .Build();
 
     LOGI("Sun Uniforms Pools created");
 
@@ -118,14 +124,16 @@ void SunRenderer::Render(const NormalRenderContext& renderContext, const std::sh
     m_maxNumberOfSamples = static_cast<uint64_t>(xScale * static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) * yScale * static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y));
     m_queryPool->BeginQuery(m_queryPoolIndex, 0, renderContext.commandBuffer);
 
-    auto& uboVS = m_uniformsPoolVS->GetNext();
+    m_uniformsPoolVS->MoveToNext();
+
+    auto& uboVS = m_uniformsPoolVS->GetCurrent();
     UniformsVS uniformsVS{};
     for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
         const auto sunPosition{ sunComponent->ComputeFlarePosition(renderContext.projectionMatrices[viewIndex], renderContext.viewMatrices[viewIndex], renderContext.cameraPositions[viewIndex], lightComponent->GetPosition()) };
         uniformsVS.translations[viewIndex] = glm::vec4(sunPosition, MAX_DEPTH, 1.0f);
     }
     uniformsVS.scale = glm::vec4(xScale, yScale, 0.0f, 0.0f);
-    uboVS.Data(uniformsVS);
+    uboVS.Write(uniformsVS);
 
     m_shader->Bind("uboVS", uboVS);
 
@@ -134,10 +142,10 @@ void SunRenderer::Render(const NormalRenderContext& renderContext, const std::sh
     const VkDeviceSize offsets[] = { 0 };
 
     vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-    vkCmdBindIndexBuffer(renderContext.commandBuffer, *sunComponent->GetModel()->GetIndexBuffer(), 0, sunComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+    vkCmdBindIndexBuffer(renderContext.commandBuffer, *sunComponent->GetModel()->GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
     vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-    vkCmdDrawIndexed(renderContext.commandBuffer, sunComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+    vkCmdDrawIndexed(renderContext.commandBuffer, sunComponent->GetModel()->GetMesh()->GetIndicesCount(), 1, 0, 0, 0);
 
     m_queryPool->EndQuery(m_queryPoolIndex, 0, renderContext.commandBuffer);
 }

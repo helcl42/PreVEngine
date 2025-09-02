@@ -7,7 +7,7 @@
 #include "../../../component/light/LightCommon.h"
 #include "../../../component/shadow/ShadowsCommon.h"
 
-#include <prev/render/buffer/UniformBuffer.h>
+#include <prev/render/buffer/BufferPool.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/pipeline/Pipeline.h>
 #include <prev/render/sampler/Sampler.h>
@@ -158,9 +158,9 @@ private:
 
     std::unique_ptr<prev::render::pipeline::Pipeline> m_pipeline;
 
-    std::unique_ptr<prev::render::buffer::UniformRingBuffer<UniformsVS>> m_uniformsPoolVS;
+    std::unique_ptr<prev::render::buffer::BufferPool> m_uniformsPoolVS;
 
-    std::unique_ptr<prev::render::buffer::UniformRingBuffer<UniformsFS>> m_uniformsPoolFS;
+    std::unique_ptr<prev::render::buffer::BufferPool> m_uniformsPoolFS;
 
     std::unique_ptr<prev::render::sampler::Sampler> m_colorSampler;
 

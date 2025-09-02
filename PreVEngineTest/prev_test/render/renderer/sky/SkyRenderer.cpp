@@ -5,11 +5,13 @@
 #include "../../../component/light/ILightComponent.h"
 #include "../../../component/sky/ISkyComponent.h"
 
+#include <prev/render/buffer/BufferPoolBuilder.h>
 #include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/pipeline/PipelineBuilder.h>
 #include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
+#include <prev/util/MathUtils.h>
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::sky {
@@ -51,8 +53,13 @@ void SkyRenderer::Init()
 
     LOGI("Sky Compute Pipeline created");
 
-    m_uniformsPoolSkyCS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsSkyCS>>(m_allocator);
-    m_uniformsPoolSkyCS->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolSkyCS = prev::render::buffer::BufferPoolBuilder{ m_allocator }
+                              .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
+                              .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+                              .SetCount(m_descriptorCount)
+                              .SetStride(sizeof(UniformsSkyCS))
+                              .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                              .Build();
 
     // compute sky post process
     // clang-format off
@@ -79,8 +86,13 @@ void SkyRenderer::Init()
 
     LOGI("Sky PostProcess Compute Pipeline created");
 
-    m_uniformsPoolSkyPostProcessCS = std::make_unique<prev::render::buffer::UniformRingBuffer<UniformsSkyPostProcessCS>>(m_allocator);
-    m_uniformsPoolSkyPostProcessCS->UpdateCapacity(m_descriptorCount, static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment));
+    m_uniformsPoolSkyPostProcessCS = prev::render::buffer::BufferPoolBuilder{ m_allocator }
+                                         .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
+                                         .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+                                         .SetCount(m_descriptorCount)
+                                         .SetStride(sizeof(UniformsSkyPostProcessCS))
+                                         .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                                         .Build();
 
     // compositor
     // clang-format off
@@ -185,7 +197,9 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
 
         // const auto projectionMatrix{ renderContext.projectionMatrices[viewIndex] };
 
-        auto& uboCS = m_uniformsPoolSkyCS->GetNext();
+        m_uniformsPoolSkyCS->MoveToNext();
+
+        auto& uboCS = m_uniformsPoolSkyCS->GetCurrent();
 
         UniformsSkyCS uniformsCS{};
         uniformsCS.resolution = glm::vec4(extent.width, extent.height, 0.0f, 0.0f);
@@ -215,7 +229,7 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
         uniformsCS.cloudTopOffset = 750.0f;
         uniformsCS.maxDepth = MAX_DEPTH;
 
-        uboCS.Data(uniformsCS);
+        uboCS.Write(uniformsCS);
 
         m_skyShader->Bind("uboCS", uboCS);
 
@@ -242,7 +256,9 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
         // sky post process render
         skyPostProcessColorImageBuffer.image->UpdateLayout(VK_IMAGE_LAYOUT_GENERAL, renderContext.commandBuffer);
 
-        auto& uboPostCS = m_uniformsPoolSkyPostProcessCS->GetNext();
+        m_uniformsPoolSkyPostProcessCS->MoveToNext();
+
+        auto& uboPostCS = m_uniformsPoolSkyPostProcessCS->GetCurrent();
 
         glm::vec4 lightPositionClipSpace = renderContext.projectionMatrices[viewIndex] * renderContext.viewMatrices[viewIndex] * glm::vec4(mainLightComponent->GetPosition(), 1.0f);
         glm::vec3 lightPositionNdc = lightPositionClipSpace / lightPositionClipSpace.w;
@@ -255,7 +271,7 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
         uniformsPostCS.lightDotCameraForward = glm::dot(glm::normalize(renderContext.cameraPositions[viewIndex] - mainLightComponent->GetPosition()),
             glm::normalize(prev::util::math::GetForwardVector(renderContext.viewMatrices[viewIndex])));
 
-        uboPostCS.Data(uniformsPostCS);
+        uboPostCS.Write(uniformsPostCS);
 
         m_skyPostProcessShader->Bind("uboCS", uboPostCS);
 
@@ -315,10 +331,10 @@ void SkyRenderer::Render(const NormalRenderContext& renderContext, const std::sh
     const VkDeviceSize offsets[] = { 0 };
 
     vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-    vkCmdBindIndexBuffer(renderContext.commandBuffer, *skyComponent->GetModel()->GetIndexBuffer(), 0, skyComponent->GetModel()->GetIndexBuffer()->GetIndexType());
+    vkCmdBindIndexBuffer(renderContext.commandBuffer, *skyComponent->GetModel()->GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
     vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_compositePipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
 
-    vkCmdDrawIndexed(renderContext.commandBuffer, skyComponent->GetModel()->GetIndexBuffer()->GetCount(), 1, 0, 0, 0);
+    vkCmdDrawIndexed(renderContext.commandBuffer, skyComponent->GetModel()->GetMesh()->GetIndicesCount(), 1, 0, 0, 0);
 }
 
 void SkyRenderer::PostRender(const NormalRenderContext& renderContext)

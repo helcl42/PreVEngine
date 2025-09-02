@@ -8,7 +8,7 @@
 #include "../../render/mesh/MeshFactory.h"
 #include "../../render/model/ModelFactory.h"
 
-#include <prev/render/buffer/VertexBuffer.h>
+#include <prev/render/buffer/BufferBuilder.h>
 
 namespace prev_test::component::particle {
 
@@ -35,9 +35,13 @@ std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::Create
     prev_test::render::model::ModelFactory modelFactory{ m_allocator };
     auto model{ modelFactory.Create(std::move(mesh)) };
 
-    std::vector<std::shared_ptr<prev::render::buffer::VertexBuffer>> vertexBuffers(BufferCount);
+    std::vector<std::shared_ptr<prev::render::buffer::Buffer>> vertexBuffers(BufferCount);
     for (uint32_t i = 0; i < BufferCount; ++i) {
-        vertexBuffers[i] = std::make_shared<prev::render::buffer::HostMappedVertexBuffer>(m_allocator, MaxParticleCount);
+        vertexBuffers[i] = prev::render::buffer::BufferBuilder{ m_allocator }
+                               .SetSize(ParticleSystemComponent::GetParticleDataStride() * MaxParticleCount)
+                               .SetUsageFlags(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
+                               .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
+                               .Build();
     }
 
     auto particleFactory{ std::make_shared<RandomDirectionParticleFactory>(material, 0.1f, 5.0f, 4.0f, 10.0f) };
@@ -61,9 +65,13 @@ std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::Create
     prev_test::render::model::ModelFactory modelFactory{ m_allocator };
     auto model{ modelFactory.Create(std::move(mesh)) };
 
-    std::vector<std::shared_ptr<prev::render::buffer::VertexBuffer>> vertexBuffers(BufferCount);
+    std::vector<std::shared_ptr<prev::render::buffer::Buffer>> vertexBuffers(BufferCount);
     for (uint32_t i = 0; i < BufferCount; ++i) {
-        vertexBuffers[i] = std::make_shared<prev::render::buffer::HostMappedVertexBuffer>(m_allocator, MaxParticleCount);
+        vertexBuffers[i] = prev::render::buffer::BufferBuilder{ m_allocator }
+                               .SetSize(ParticleSystemComponent::GetParticleDataStride() * MaxParticleCount)
+                               .SetUsageFlags(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
+                               .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
+                               .Build();
     }
 
     auto particleFactory{ std::make_shared<RandomInConeParticleFactory>(material, -0.1f, 4.0f, 4.0f, 7.0f) };
