@@ -122,7 +122,6 @@ private:
         DEFAULT_ALIGNMENT glm::vec4 textureOffset;
 
         DEFAULT_ALIGNMENT uint32_t textureNumberOfRows;
-        uint32_t useFakeLightning;
         float density;
         float gradient;
     };

@@ -23,15 +23,7 @@ public:
 
     float GetReflectivity() const override;
 
-    bool HasTransparency() const override;
-
-    void SetHasTransparency(const bool transparency) override;
-
-    bool UsesFakeLightning() const override;
-
-    void SetUsesFakeLightning(const bool fake) override;
-
-    unsigned int GetAtlasNumberOfRows() const override;
+    uint32_t GetAtlasNumberOfRows() const override;
 
     void SetAtlasNumberOfRows(const uint32_t rows) override;
 
@@ -53,10 +45,6 @@ private:
     float m_reflectivity{ 1.0f };
 
     std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>> m_images;
-
-    bool m_hasTransparency{ false };
-
-    bool m_usesFakeLightning{ false };
 
     uint32_t m_atlasNumberOfRows{ 1 };
 

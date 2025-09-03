@@ -23,15 +23,7 @@ public:
 
     virtual float GetReflectivity() const = 0;
 
-    virtual bool HasTransparency() const = 0;
-
-    virtual void SetHasTransparency(bool transparency) = 0;
-
-    virtual bool UsesFakeLightning() const = 0;
-
-    virtual void SetUsesFakeLightning(bool fake) = 0;
-
-    virtual unsigned int GetAtlasNumberOfRows() const = 0;
+    virtual uint32_t GetAtlasNumberOfRows() const = 0;
 
     virtual void SetAtlasNumberOfRows(uint32_t rows) = 0;
 

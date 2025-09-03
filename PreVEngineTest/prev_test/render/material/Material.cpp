@@ -41,27 +41,7 @@ float Material::GetReflectivity() const
     return m_reflectivity;
 }
 
-bool Material::HasTransparency() const
-{
-    return m_hasTransparency;
-}
-
-void Material::SetHasTransparency(const bool transparency)
-{
-    m_hasTransparency = transparency;
-}
-
-bool Material::UsesFakeLightning() const
-{
-    return m_usesFakeLightning;
-}
-
-void Material::SetUsesFakeLightning(const bool fake)
-{
-    m_usesFakeLightning = fake;
-}
-
-unsigned int Material::GetAtlasNumberOfRows() const
+uint32_t Material::GetAtlasNumberOfRows() const
 {
     return m_atlasNumberOfRows;
 }

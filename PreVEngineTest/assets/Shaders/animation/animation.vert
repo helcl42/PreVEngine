@@ -30,8 +30,6 @@ layout(std140, binding = 0) uniform UniformBufferObject {
 	vec4 textureOffset;
 
 	uint textureNumberOfRows;
-	uint useFakeLightning;
-
 	float density;
 	float gradient;
 } uboVS;
@@ -77,13 +75,7 @@ void main()
 	gl_Position = uboVS.projectionMatrices[viewIndex] * viewPosition;
 
 	outTextureCoord = (inTextureCoord / uboVS.textureNumberOfRows) + uboVS.textureOffset.xy;
-
-	vec3 normal = normalL.xyz;
-	if (uboVS.useFakeLightning != 0)
-	{
-		normal = vec3(0.0, 1.0, 0.0);
-	}
-	outNormal = (uboVS.normalMatrix * vec4(normal, 0.0)).xyz;
+	outNormal = (uboVS.normalMatrix * vec4(normalL.xyz, 0.0)).xyz;
 
 	for (int i = 0; i < uboVS.lightning.realCountOfLights; i++)
 	{

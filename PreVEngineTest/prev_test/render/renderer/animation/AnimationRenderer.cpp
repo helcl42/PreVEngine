@@ -174,7 +174,6 @@ void AnimationRenderer::Render(const NormalRenderContext& renderContext, const s
             }
             uniformsVS.lightning.realCountOfLights = static_cast<uint32_t>(lightComponents.size());
             uniformsVS.lightning.ambientFactor = prev_test::component::light::AMBIENT_LIGHT_INTENSITY;
-            uniformsVS.useFakeLightning = material->UsesFakeLightning();
             uniformsVS.density = prev_test::component::sky::FOG_DENSITY;
             uniformsVS.gradient = prev_test::component::sky::FOG_GRADIENT;
             uniformsVS.clipPlane = renderContext.clipPlane;
