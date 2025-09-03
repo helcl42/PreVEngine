@@ -40,10 +40,11 @@ public:
         if (!m_queryPoolsValid[poolIndex]) {
             return false;
         }
-        outQueryResults.resize(m_queryCount); // TODO - this changes output vector eventhough the following call might fail
-        if (vkGetQueryPoolResults(m_device, m_queryPools[poolIndex], 0, m_queryCount, sizeof(ResultType) * outQueryResults.size(), outQueryResults.data(), sizeof(ResultType), flags) != VK_SUCCESS) {
+        std::vector<ResultType> result(m_queryCount);
+        if (vkGetQueryPoolResults(m_device, m_queryPools[poolIndex], 0, m_queryCount, sizeof(ResultType) * result.size(), result.data(), sizeof(ResultType), flags) != VK_SUCCESS) {
             return false;
         }
+        outQueryResults = result;
         return true;
     }
 
