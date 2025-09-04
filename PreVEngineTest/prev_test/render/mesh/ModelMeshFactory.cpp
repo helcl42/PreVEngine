@@ -1,9 +1,9 @@
 #include "ModelMeshFactory.h"
 #include "ModelMesh.h"
 
-#include "../VertexDataBuffer.h"
 #include "VertexBoneData.h"
 
+#include "../VertexDataBuffer.h"
 #include "../util/assimp/AssimpGlmConvertor.h"
 #include "../util/assimp/AssimpSceneLoader.h"
 
@@ -17,7 +17,7 @@ namespace prev_test::render::mesh {
 namespace {
     void ReadNodeHierarchy(const aiNode& node, const glm::mat4& parentTransform, MeshNode& meshNode)
     {
-        const auto currentTransform{ parentTransform * prev_test::render::util::assimp::AssimpGlmConvertor::ToGlmMat4(node.mTransformation) };
+        const auto currentTransform{ parentTransform * prev_test::render::util::assimp::ToGlmMat4(node.mTransformation) };
 
         meshNode.transform = currentTransform;
         for (uint32_t i = 0; i < node.mNumMeshes; ++i) {
@@ -34,7 +34,7 @@ namespace {
     MeshNode ReadNodeHierarchy(const aiScene& scene)
     {
         MeshNode rootNodeMesh;
-        ReadNodeHierarchy(*scene.mRootNode, prev_test::render::util::assimp::AssimpGlmConvertor::ToGlmMat4(scene.mRootNode->mTransformation), rootNodeMesh);
+        ReadNodeHierarchy(*scene.mRootNode, prev_test::render::util::assimp::ToGlmMat4(scene.mRootNode->mTransformation), rootNodeMesh);
         return rootNodeMesh;
     }
 

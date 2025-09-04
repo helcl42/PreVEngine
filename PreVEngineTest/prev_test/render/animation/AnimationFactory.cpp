@@ -12,12 +12,12 @@ namespace prev_test::render::animation {
 namespace {
     VectorKey CreateVectorKey(const aiVectorKey& aiVectorKey)
     {
-        return { prev_test::render::util::assimp::AssimpGlmConvertor::ToGlmVec3(aiVectorKey.mValue), static_cast<float>(aiVectorKey.mTime) };
+        return { prev_test::render::util::assimp::ToGlmVec3(aiVectorKey.mValue), static_cast<float>(aiVectorKey.mTime) };
     }
 
     QuaternionKey CreateQuaternionKey(const aiQuatKey& aiQuaternionKey)
     {
-        return { prev_test::render::util::assimp::AssimpGlmConvertor::ToGlmQuat(aiQuaternionKey.mValue), static_cast<float>(aiQuaternionKey.mTime) };
+        return { prev_test::render::util::assimp::ToGlmQuat(aiQuaternionKey.mValue), static_cast<float>(aiQuaternionKey.mTime) };
     }
 
     AnimationNodeKeyFrames ConvertToNodeToAnimationNode(const aiNodeAnim& aiNode)
@@ -42,7 +42,7 @@ namespace {
     void CreateNodeHierarchy(const aiNode& aiNode, AnimationNode& outNode)
     {
         outNode.name = std::string(aiNode.mName.data);
-        outNode.transform = prev_test::render::util::assimp::AssimpGlmConvertor::ToGlmMat4(aiNode.mTransformation);
+        outNode.transform = prev_test::render::util::assimp::ToGlmMat4(aiNode.mTransformation);
         outNode.children.resize(aiNode.mNumChildren);
         for (uint32_t i = 0; i < aiNode.mNumChildren; ++i) {
             CreateNodeHierarchy(*aiNode.mChildren[i], outNode.children[i]);
@@ -51,7 +51,7 @@ namespace {
 
     std::unique_ptr<AnimationClip> CreateAnimationClip(const aiScene& scene, const aiAnimation& animation, const std::vector<BoneInfo>& bones)
     {
-        const auto globalInverseTransform{ prev_test::render::util::assimp::AssimpGlmConvertor::ToGlmMat4(scene.mRootNode->mTransformation) };
+        const auto globalInverseTransform{ prev_test::render::util::assimp::ToGlmMat4(scene.mRootNode->mTransformation) };
 
         AnimationNode rootNode{};
         CreateNodeHierarchy(*scene.mRootNode, rootNode);
@@ -79,7 +79,7 @@ namespace {
         bones.resize(mesh.mNumBones);
         for (uint32_t i = 0; i < mesh.mNumBones; ++i) {
             const auto& bone{ *mesh.mBones[i] };
-            bones[i] = BoneInfo{ bone.mName.data, prev_test::render::util::assimp::AssimpGlmConvertor::ToGlmMat4(bone.mOffsetMatrix) };
+            bones[i] = BoneInfo{ bone.mName.data, prev_test::render::util::assimp::ToGlmMat4(bone.mOffsetMatrix) };
         }
 
         std::vector<std::unique_ptr<AnimationClip>> clips;
@@ -93,8 +93,8 @@ namespace {
 
 std::unique_ptr<prev_test::render::IAnimation> AnimationFactory::Create(const std::string& modelPath) const
 {
-    const aiScene* scene{};
     Assimp::Importer importer{};
+    const aiScene* scene{};
 
     prev_test::render::util::assimp::AssimpSceneLoader assimpSceneLoader{};
     if (!assimpSceneLoader.LoadScene(modelPath, importer, &scene)) {
