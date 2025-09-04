@@ -35,9 +35,9 @@ public:
 
     ShaderBuilder& AddDescriptorSets(const std::vector<Shader::DescriptorSet>& descriptorSets);
 
-    ShaderBuilder& AddPushConstantBlock(const Shader::PushConstantBlock& pushConstantBlock);
+    ShaderBuilder& AddPushConstantBlock(const VkPushConstantRange& pushConstantBlock);
 
-    ShaderBuilder& AddPushConstantBlocks(const std::vector<Shader::PushConstantBlock>& pushConstantBlocks);
+    ShaderBuilder& AddPushConstantBlocks(const std::vector<VkPushConstantRange>& pushConstantBlocks);
 
     ShaderBuilder& SetDescriptorPoolCapacity(const uint32_t size);
 
@@ -54,8 +54,6 @@ private:
 
     VkDescriptorSetLayout CreateDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& layoutBindings) const;
 
-    VkPushConstantRange CreatePushConstantRange(const VkShaderStageFlags stageFlags, const uint32_t offset, const uint32_t size) const;
-
 private:
     VkDevice m_device;
 
@@ -69,7 +67,7 @@ private:
 
     std::vector<Shader::DescriptorSet> m_descriptorSets;
 
-    std::vector<Shader::PushConstantBlock> m_pushConstantBlocks;
+    std::vector<VkPushConstantRange> m_pushConstantBlocks;
 
     uint32_t m_descriptorPoolSize{};
 

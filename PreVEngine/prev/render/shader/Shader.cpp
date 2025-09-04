@@ -5,10 +5,27 @@
 #include "../../util/VkUtils.h"
 
 namespace prev::render::shader {
-Shader::Shader(const VkDevice device)
+Shader::Shader(const VkDevice device,
+    const std::map<VkShaderStageFlagBits, VkShaderModule>& shaderModules,
+    const std::vector<VkPipelineShaderStageCreateInfo>& shaderStages,
+    const std::vector<VkVertexInputBindingDescription>& vertexInputBindingDescriptions,
+    const std::vector<VkVertexInputAttributeDescription>& vertexInputAttributeDescriptions,
+    const VkDescriptorSetLayout descriptorSetLayout,
+    const std::vector<VkDescriptorSetLayoutBinding>& layoutBindings,
+    const std::vector<VkWriteDescriptorSet>& descriptorWrites,
+    const std::map<std::string, DescriptorSetInfo>& descriptorSetInfos,
+    const std::vector<VkPushConstantRange>& pushConstantRanges)
     : m_device{ device }
+    , m_shaderModules{ shaderModules }
+    , m_shaderStages{ shaderStages }
+    , m_vertexInputBindingDescriptions{ vertexInputBindingDescriptions }
+    , m_vertexInputAttributeDescriptions{ vertexInputAttributeDescriptions }
+    , m_descriptorSetLayout{ descriptorSetLayout }
+    , m_layoutBindings{ layoutBindings }
+    , m_descriptorWrites{ descriptorWrites }
+    , m_descriptorSetInfos{ descriptorSetInfos }
+    , m_pushConstantRanges{ pushConstantRanges }
     , m_descriptorPool{ VK_NULL_HANDLE }
-    , m_descriptorSetLayout{ VK_NULL_HANDLE }
     , m_poolCapacity{ 0 }
     , m_currentDescriptorSetIndex{ 0 }
 {
@@ -194,12 +211,12 @@ const std::vector<VkPushConstantRange>& Shader::GetPushConstantsRanges() const
 
 const std::vector<VkVertexInputBindingDescription>& Shader::GetVertexInputBindingDescriptions() const
 {
-    return m_inputBindingDescriptions;
+    return m_vertexInputBindingDescriptions;
 }
 
 const std::vector<VkVertexInputAttributeDescription>& Shader::GetVertexInputAttributeDescriptions() const
 {
-    return m_inputAttributeDescriptions;
+    return m_vertexInputAttributeDescriptions;
 }
 
 const std::vector<VkPipelineShaderStageCreateInfo>& Shader::GetShaderStages() const

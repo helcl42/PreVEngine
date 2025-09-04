@@ -85,13 +85,13 @@ ShaderBuilder& ShaderBuilder::AddDescriptorSets(const std::vector<Shader::Descri
     return *this;
 }
 
-ShaderBuilder& ShaderBuilder::AddPushConstantBlock(const Shader::PushConstantBlock& pushConstantBlock)
+ShaderBuilder& ShaderBuilder::AddPushConstantBlock(const VkPushConstantRange& pushConstantBlock)
 {
     m_pushConstantBlocks.push_back(pushConstantBlock);
     return *this;
 }
 
-ShaderBuilder& ShaderBuilder::AddPushConstantBlocks(const std::vector<Shader::PushConstantBlock>& pushConstantBlocks)
+ShaderBuilder& ShaderBuilder::AddPushConstantBlocks(const std::vector<VkPushConstantRange>& pushConstantBlocks)
 {
     for (const auto& pushConstantBlock : pushConstantBlocks) {
         AddPushConstantBlock(pushConstantBlock);
@@ -145,24 +145,9 @@ std::unique_ptr<Shader> ShaderBuilder::Build() const
         }
     }
 
-    std::vector<VkPushConstantRange> pushConstantRanges;
-    for (const auto& pcb : m_pushConstantBlocks) {
-        const auto pushConstantRange{ CreatePushConstantRange(pcb.stageFlags, pcb.offset, pcb.size) };
-        pushConstantRanges.emplace_back(pushConstantRange);
-    }
-
     const auto descriptorSetLayout{ CreateDescriptorSetLayout(layoutBindings) };
 
-    auto shader{ std::make_unique<Shader>(m_device) };
-    shader->m_shaderModules = shaderModules;
-    shader->m_shaderStages = shaderStages;
-    shader->m_inputBindingDescriptions = m_vertexInputBindingDescriptors;
-    shader->m_inputAttributeDescriptions = m_vertexInputAttributeDescriptions;
-    shader->m_layoutBindings = layoutBindings;
-    shader->m_descriptorWrites = descriptorWrites;
-    shader->m_descriptorSetInfos = descriptorSetInfos;
-    shader->m_descriptorSetLayout = descriptorSetLayout;
-    shader->m_pushConstantRanges = pushConstantRanges;
+    auto shader{ std::make_unique<Shader>(m_device, shaderModules, shaderStages, m_vertexInputBindingDescriptors, m_vertexInputAttributeDescriptions, descriptorSetLayout, layoutBindings, descriptorWrites, descriptorSetInfos, m_pushConstantBlocks) };
     if (m_descriptorPoolSize > 0) {
         shader->AdjustDescriptorPoolCapacity(m_descriptorPoolSize);
     }
@@ -214,15 +199,6 @@ VkDescriptorSetLayout ShaderBuilder::CreateDescriptorSetLayout(const std::vector
     VkDescriptorSetLayout descriptorSetLayout;
     VKERRCHECK(vkCreateDescriptorSetLayout(m_device, &createInfo, nullptr, &descriptorSetLayout));
     return descriptorSetLayout;
-}
-
-VkPushConstantRange ShaderBuilder::CreatePushConstantRange(const VkShaderStageFlags stageFlags, const uint32_t offset, const uint32_t size) const
-{
-    VkPushConstantRange pushConstantRange = {};
-    pushConstantRange.stageFlags = stageFlags;
-    pushConstantRange.offset = offset;
-    pushConstantRange.size = size;
-    return pushConstantRange;
 }
 
 } // namespace prev::render::shader
