@@ -53,38 +53,43 @@ RenderPassBuilder& RenderPassBuilder::SetViewCount(const uint32_t viewCount)
 
 std::unique_ptr<RenderPass> RenderPassBuilder::Build() const
 {
-    auto renderPass{ std::make_unique<RenderPass>(m_device) };
-    renderPass->m_dependencies = m_dependencies;
+    std::vector<VkFormat> colorFormats;
+    std::vector<VkFormat> depthFormats;
+    std::vector<bool> colorResolveAttachments;
+    std::vector<bool> depthResolveAttachments;
+    std::vector<VkClearValue> clearValues;
+    std::vector<VkAttachmentDescription> attachments;
 
     for (const auto& attachmentCreateInfo : m_attachmentInfos) {
-        renderPass->m_clearValues.push_back(attachmentCreateInfo.clearValue);
+        clearValues.push_back(attachmentCreateInfo.clearValue);
         if (prev::core::format::HasDepthComponent(attachmentCreateInfo.format)) {
-            renderPass->m_depthFormats.push_back(attachmentCreateInfo.format);
-            renderPass->m_depthResolveAttachments.push_back(attachmentCreateInfo.resolveAttachment);
+            depthFormats.push_back(attachmentCreateInfo.format);
+            depthResolveAttachments.push_back(attachmentCreateInfo.resolveAttachment);
         } else {
-            renderPass->m_colorFormats.push_back(attachmentCreateInfo.format);
-            renderPass->m_colorResolveAttachments.push_back(attachmentCreateInfo.resolveAttachment);
+            colorFormats.push_back(attachmentCreateInfo.format);
+            colorResolveAttachments.push_back(attachmentCreateInfo.resolveAttachment);
         }
-        renderPass->m_attachments.push_back(CreateAttachmentDescription(attachmentCreateInfo.format, attachmentCreateInfo.sampleCount, attachmentCreateInfo.finalLayout, attachmentCreateInfo.loadOp, attachmentCreateInfo.storeOp));
+        attachments.push_back(CreateAttachmentDescription(attachmentCreateInfo.format, attachmentCreateInfo.sampleCount, attachmentCreateInfo.finalLayout, attachmentCreateInfo.loadOp, attachmentCreateInfo.storeOp));
     }
 
+    std::vector<SubPass> subpasses;
     for (const auto& subPassCreateInfo : m_subPassCreateInfos) {
-        renderPass->m_subpasses.push_back(SubPass(*renderPass));
-        auto& subpass{ renderPass->m_subpasses.back() };
+        SubPass subpass{ attachments };
         subpass.UseAttachments(subPassCreateInfo.attachmentIndices);
         subpass.UseResolveAttachments(subPassCreateInfo.resolveIndices);
+        subpasses.emplace_back(subpass);
     }
 
     std::vector<VkSubpassDescription> subpassDescriptions;
-    subpassDescriptions.insert(subpassDescriptions.end(), renderPass->m_subpasses.begin(), renderPass->m_subpasses.end());
+    subpassDescriptions.insert(subpassDescriptions.end(), subpasses.begin(), subpasses.end());
 
     VkRenderPassCreateInfo renderPassCreateInfo{ VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
-    renderPassCreateInfo.attachmentCount = static_cast<uint32_t>(renderPass->m_attachments.size());
-    renderPassCreateInfo.pAttachments = renderPass->m_attachments.data();
+    renderPassCreateInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+    renderPassCreateInfo.pAttachments = attachments.data();
     renderPassCreateInfo.subpassCount = static_cast<uint32_t>(subpassDescriptions.size());
     renderPassCreateInfo.pSubpasses = subpassDescriptions.data();
-    renderPassCreateInfo.dependencyCount = static_cast<uint32_t>(renderPass->m_dependencies.size());
-    renderPassCreateInfo.pDependencies = renderPass->m_dependencies.data();
+    renderPassCreateInfo.dependencyCount = static_cast<uint32_t>(m_dependencies.size());
+    renderPassCreateInfo.pDependencies = m_dependencies.data();
     renderPassCreateInfo.pNext = nullptr;
 #ifdef ENABLE_XR
     const uint32_t viewMask{ prev::util::math::SetBits<uint32_t>(m_viewCount) };
@@ -101,7 +106,11 @@ std::unique_ptr<RenderPass> RenderPassBuilder::Build() const
         renderPassCreateInfo.pNext = &renderPassMultiviewCreateInfo;
     }
 #endif
-    VKERRCHECK(vkCreateRenderPass(m_device, &renderPassCreateInfo, nullptr, &renderPass->m_renderPass));
+
+    VkRenderPass vkRenderPass{};
+    VKERRCHECK(vkCreateRenderPass(m_device, &renderPassCreateInfo, nullptr, &vkRenderPass));
+
+    auto renderPass{ std::make_unique<RenderPass>(m_device, vkRenderPass, attachments, subpasses, clearValues, colorFormats, colorResolveAttachments, depthFormats, depthResolveAttachments, m_dependencies) };
 
     LOGI("Renderpass created");
 

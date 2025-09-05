@@ -6,11 +6,9 @@
 #include <vector>
 
 namespace prev::render::pass {
-class RenderPass;
-
 class SubPass final {
 public:
-    explicit SubPass(const RenderPass& renderpass);
+    explicit SubPass(const std::vector<VkAttachmentDescription>& attachments);
 
     ~SubPass() = default;
 
@@ -31,7 +29,7 @@ public:
     operator VkSubpassDescription();
 
 private:
-    const RenderPass& m_renderPass;
+    const std::vector<VkAttachmentDescription>& m_attachments;
 
     std::vector<VkAttachmentReference> m_inputReferences;
 

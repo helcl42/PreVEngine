@@ -3,9 +3,26 @@
 #include "../../common/Logger.h"
 
 namespace prev::render::pass {
-RenderPass::RenderPass(VkDevice device)
-    : m_device(device)
-    , m_renderPass(VK_NULL_HANDLE)
+RenderPass::RenderPass(const VkDevice device,
+    const VkRenderPass renderPass,
+    const std::vector<VkAttachmentDescription>& attachments,
+    const std::vector<SubPass>& subpasses,
+    const std::vector<VkClearValue>& clearValues,
+    const std::vector<VkFormat>& colorFormats,
+    const std::vector<bool>& colorResolveAttachments,
+    const std::vector<VkFormat>& depthFormats,
+    const std::vector<bool>& depthResolveAttachments,
+    const std::vector<VkSubpassDependency>& dependencies)
+    : m_device{ device }
+    , m_renderPass{ renderPass }
+    , m_attachments{ attachments }
+    , m_subpasses{ subpasses }
+    , m_clearValues{ clearValues }
+    , m_colorFormats{ colorFormats }
+    , m_colorResolveAttachments{ colorResolveAttachments }
+    , m_depthFormats{ depthFormats }
+    , m_depthResolveAttachments{ depthResolveAttachments }
+    , m_dependencies{ dependencies }
 {
 }
 
@@ -32,6 +49,21 @@ void RenderPass::Begin(const VkFramebuffer frameBuffer, const VkCommandBuffer co
 void RenderPass::End(const VkCommandBuffer commandBuffer)
 {
     vkCmdEndRenderPass(commandBuffer);
+}
+
+const std::vector<VkAttachmentDescription>& RenderPass::GetAttachments() const
+{
+    return m_attachments;
+}
+
+const std::vector<SubPass>& RenderPass::GetSubPasses() const
+{
+    return m_subpasses;
+}
+
+const std::vector<VkClearValue>& RenderPass::GetClearValues() const
+{
+    return m_clearValues;
 }
 
 VkFormat RenderPass::GetColorFormat(const int attachmentIndex) const
@@ -76,21 +108,6 @@ VkSampleCountFlagBits RenderPass::GetSamplesCount() const
     return samplesCount;
 }
 
-const std::vector<VkClearValue>& RenderPass::GetClearValues() const
-{
-    return m_clearValues;
-}
-
-const std::vector<SubPass>& RenderPass::GetSubPasses() const
-{
-    return m_subpasses;
-}
-
-const std::vector<VkAttachmentDescription>& RenderPass::GetAttachments() const
-{
-    return m_attachments;
-}
-
 const std::vector<VkSubpassDependency>& RenderPass::GetSubPassDependencies() const
 {
     return m_dependencies;
@@ -98,8 +115,6 @@ const std::vector<VkSubpassDependency>& RenderPass::GetSubPassDependencies() con
 
 RenderPass::operator VkRenderPass() const
 {
-    ASSERT(m_renderPass, "Renderpass has to be created first: Use RenderPassBuilder.");
-
     return m_renderPass;
 }
 } // namespace prev::render::pass

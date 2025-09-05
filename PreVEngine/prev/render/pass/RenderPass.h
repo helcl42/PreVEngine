@@ -8,11 +8,19 @@
 #include <vector>
 
 namespace prev::render::pass {
-class RenderPassBuilder;
-
 class RenderPass final {
 public:
-    RenderPass(VkDevice device); // TODO - this should be private - accesible from builder only!
+    RenderPass(
+        const VkDevice device,
+        const VkRenderPass renderPass,
+        const std::vector<VkAttachmentDescription>& attachments,
+        const std::vector<SubPass>& subpasses,
+        const std::vector<VkClearValue>& clearValues,
+        const std::vector<VkFormat>& colorFormats,
+        const std::vector<bool>& colorResolveAttachments,
+        const std::vector<VkFormat>& depthFormats,
+        const std::vector<bool>& depthResolveAttachments,
+        const std::vector<VkSubpassDependency>& dependencies);
 
     ~RenderPass();
 
@@ -22,6 +30,12 @@ public:
     void End(VkCommandBuffer commadBuffer);
 
 public:
+    const std::vector<VkAttachmentDescription>& GetAttachments() const;
+
+    const std::vector<SubPass>& GetSubPasses() const;
+
+    const std::vector<VkClearValue>& GetClearValues() const;
+
     VkFormat GetColorFormat(const int attachmentIndex = 0) const;
 
     std::vector<VkFormat> GetColorFormats(const bool includeResolveAttachments = false) const;
@@ -30,24 +44,19 @@ public:
 
     VkSampleCountFlagBits GetSamplesCount() const;
 
-    const std::vector<VkClearValue>& GetClearValues() const;
-
-    const std::vector<SubPass>& GetSubPasses() const;
-
-    const std::vector<VkAttachmentDescription>& GetAttachments() const;
-
     const std::vector<VkSubpassDependency>& GetSubPassDependencies() const;
 
 public:
     operator VkRenderPass() const;
 
 private:
-    friend class RenderPassBuilder;
-
-private:
     VkDevice m_device;
 
     VkRenderPass m_renderPass;
+
+    std::vector<VkAttachmentDescription> m_attachments;
+
+    std::vector<SubPass> m_subpasses;
 
     std::vector<VkClearValue> m_clearValues;
 
@@ -58,10 +67,6 @@ private:
     std::vector<VkFormat> m_depthFormats;
 
     std::vector<bool> m_depthResolveAttachments;
-
-    std::vector<SubPass> m_subpasses;
-
-    std::vector<VkAttachmentDescription> m_attachments;
 
     std::vector<VkSubpassDependency> m_dependencies;
 };

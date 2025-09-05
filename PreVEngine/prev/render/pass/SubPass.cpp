@@ -18,8 +18,8 @@ namespace {
     }
 } // namespace
 
-SubPass::SubPass(const RenderPass& renderpass)
-    : m_renderPass(renderpass)
+SubPass::SubPass(const std::vector<VkAttachmentDescription>& attachments)
+    : m_attachments{ attachments }
 {
 }
 
@@ -40,7 +40,7 @@ SubPass::operator VkSubpassDescription()
 
 void SubPass::UseAttachment(const uint32_t attachmentIndex)
 {
-    const auto& attachment{ m_renderPass.GetAttachments().at(attachmentIndex) };
+    const auto& attachment{ m_attachments.at(attachmentIndex) };
     const auto ref{ CreateAttachmentReference(attachmentIndex, attachment.format) };
     if (prev::core::format::HasDepthComponent(attachment.format)) {
         m_depthReference = ref;
@@ -58,7 +58,7 @@ void SubPass::UseAttachments(const std::vector<uint32_t>& attachmentIndices)
 
 void SubPass::UseResolveAttachment(const uint32_t attachmentIndex)
 {
-    const auto& attachment{ m_renderPass.GetAttachments().at(attachmentIndex) };
+    const auto& attachment{ m_attachments.at(attachmentIndex) };
     const auto ref{ CreateAttachmentReference(attachmentIndex, attachment.format) };
     m_resolveReferences.push_back(ref);
 }
@@ -72,7 +72,7 @@ void SubPass::UseResolveAttachments(const std::vector<uint32_t>& attachmentIndic
 
 void SubPass::InputAttachment(const uint32_t attachmentIndex)
 {
-    const auto& attachment{ m_renderPass.GetAttachments().at(attachmentIndex) };
+    const auto& attachment{ m_attachments.at(attachmentIndex) };
     const auto ref{ CreateAttachmentReference(attachmentIndex, attachment.format) };
     m_inputReferences.push_back(ref);
 }
