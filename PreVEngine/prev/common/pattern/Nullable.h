@@ -1,18 +1,20 @@
 #ifndef __NULLABLE_H__
 #define __NULLABLE_H__
 
+#include <assert.h>
+
 namespace prev::common::pattern {
 template <typename ObjectType>
 class Nullable {
 public:
     Nullable()
-        : m_null(true)
+        : m_null{ true }
     {
     }
 
     Nullable(const ObjectType& value)
-        : m_null(false)
-        , m_value(value)
+        : m_null{ false }
+        , m_value{ &value }
     {
     }
 
@@ -26,13 +28,14 @@ public:
 
     const ObjectType& GetValue() const
     {
-        return m_value;
+        assert(m_value);
+        return *m_value;
     }
 
 private:
-    bool m_null;
+    bool m_null{};
 
-    ObjectType m_value;
+    const ObjectType* m_value{};
 };
 } // namespace prev::common::pattern
 #endif
