@@ -5,39 +5,11 @@
 #include "Queue.h"
 
 #include <map>
-#include <memory>
-#include <set>
 
 namespace prev::core::device {
-struct QueueMetadata {
-    uint32_t family{}; // queue family
-
-    uint32_t index{}; // queue index
-
-    VkQueueFlags flags{}; // Graphics / Compute / Transfer / Sparse / Protected
-
-    VkSurfaceKHR surface{}; // VK_NULL_HANDLE if queue can not present
-
-    friend bool operator<(const QueueMetadata& a, const QueueMetadata& b);
-};
-
-struct QueuesMetadata {
-    void Add(const std::vector<QueueType>& queueTypes, const QueueMetadata& queueMetadata);
-
-    std::vector<uint32_t> GetQueueFamilies() const;
-
-    uint32_t GetQueueFamilyCount(const uint32_t family) const;
-
-    std::vector<QueueMetadata> GetAllQueues() const;
-
-    bool HasAny(const QueueType queueType) const;
-
-    std::map<QueueType, std::set<QueueMetadata>> queueGroups;
-};
-
 class Device {
 public:
-    Device(const PhysicalDevice& gpu, const QueuesMetadata& queuesMetadata);
+    Device(const PhysicalDevice& gpu, const VkDevice handle, std::map<QueueType, std::vector<Queue>>&& queues);
 
     ~Device();
 

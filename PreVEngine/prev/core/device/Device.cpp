@@ -5,121 +5,16 @@
 
 #include <algorithm>
 #include <iterator>
-#include <sstream>
 #include <stdexcept>
 
 namespace prev::core::device {
-// QueueMetadata
-bool operator<(const QueueMetadata& a, const QueueMetadata& b)
-{
-    if (a.family >= b.family) {
-        return false;
-    }
-    if (a.index >= b.index) {
-        return false;
-    }
-    return true;
-}
-
-// QueuesMetadata
-void QueuesMetadata::Add(const std::vector<QueueType>& queueTypes, const QueueMetadata& queueMetadata)
-{
-    for (const auto& queueType : queueTypes) {
-        queueGroups[queueType].insert(queueMetadata);
-    }
-}
-
-std::vector<uint32_t> QueuesMetadata::GetQueueFamilies() const
-{
-    std::set<uint32_t> distinctQueueFamilies;
-    for (const auto& [queueType, queues] : queueGroups) {
-        for (const auto& queue : queues) {
-            distinctQueueFamilies.insert(queue.family);
-        }
-    }
-    return std::vector<uint32_t>(distinctQueueFamilies.cbegin(), distinctQueueFamilies.cend());
-}
-
-uint32_t QueuesMetadata::GetQueueFamilyCount(const uint32_t family) const
-{
-    std::set<uint32_t> distinctQueues;
-    for (const auto& [queueType, queues] : queueGroups) {
-        for (const auto& queue : queues) {
-            if (queue.family == family) {
-                distinctQueues.insert(queue.index);
-            }
-        }
-    }
-    return static_cast<uint32_t>(distinctQueues.size());
-}
-
-std::vector<QueueMetadata> QueuesMetadata::GetAllQueues() const
-{
-    std::vector<QueueMetadata> result;
-    for (const auto& group : queueGroups) {
-        result.insert(result.end(), group.second.cbegin(), group.second.cend());
-    }
-    return result;
-}
-
-bool QueuesMetadata::HasAny(const QueueType queueType) const
-{
-    return queueGroups.find(queueType) != queueGroups.cend();
-}
-
-// Device
-Device::Device(const PhysicalDevice& gpu, const QueuesMetadata& queuesMetadata)
+Device::Device(const PhysicalDevice& gpu, const VkDevice handle, std::map<QueueType, std::vector<Queue>>&& queues)
     : m_gpu{ gpu }
+    , m_handle{ handle }
+    , m_queues{ std::move(queues) }
 {
-    LOGI("Logical Device based on GPU: %s", m_gpu.GetProperties().deviceName);
+    LOGI("Logical Device created based on GPU: %s", m_gpu.GetProperties().deviceName);
     m_gpu.GetExtensions().Print();
-
-    const auto queueFamilyIndices{ queuesMetadata.GetQueueFamilies() };
-
-    const float DefaultQueuePriority{ 1.0f };
-    std::vector<std::vector<float>> allQueuesPriorities(queueFamilyIndices.size());
-    for (size_t i = 0; i < queueFamilyIndices.size(); ++i) {
-        const auto queueFamilyIndex{ queueFamilyIndices[i] };
-        const auto queueCount{ queuesMetadata.GetQueueFamilyCount(queueFamilyIndex) };
-        allQueuesPriorities[i] = std::vector<float>(queueCount, DefaultQueuePriority);
-    }
-
-    std::vector<VkDeviceQueueCreateInfo> queueCreateInfoList;
-    for (size_t i = 0; i < queueFamilyIndices.size(); ++i) {
-        const auto queueFamilyIndex{ queueFamilyIndices[i] };
-        const auto queueCount{ queuesMetadata.GetQueueFamilyCount(queueFamilyIndex) };
-        const auto& priorities{ allQueuesPriorities[i] };
-
-        VkDeviceQueueCreateInfo info = { VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
-        info.queueFamilyIndex = queueFamilyIndex;
-        info.queueCount = queueCount;
-        info.pQueuePriorities = priorities.data();
-        queueCreateInfoList.push_back(info);
-    }
-
-    const auto& extensions{ m_gpu.GetExtensions() };
-    const auto& features{ m_gpu.GetEnabledFeatures2() };
-
-    VkDeviceCreateInfo deviceCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
-    deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfoList.size());
-    deviceCreateInfo.pQueueCreateInfos = queueCreateInfoList.data();
-    deviceCreateInfo.enabledExtensionCount = extensions.GetPickCount();
-    deviceCreateInfo.ppEnabledExtensionNames = extensions.GetPickListRaw();
-    deviceCreateInfo.pEnabledFeatures = nullptr;
-    deviceCreateInfo.pNext = &features;
-    VKERRCHECK(vkCreateDevice(m_gpu, &deviceCreateInfo, nullptr, &m_handle)); // create device
-
-#ifdef ENABLE_VK_LOADER
-    volkLoadDevice(m_handle);
-#endif
-
-    for (const auto& [queueGroupKey, queueGroupList] : queuesMetadata.queueGroups) {
-        for (const auto& groupItem : queueGroupList) {
-            VkQueue qHandle{};
-            vkGetDeviceQueue(m_handle, groupItem.family, groupItem.index, &qHandle);
-            m_queues[queueGroupKey].push_back(Queue{ qHandle, groupItem.family, groupItem.index, groupItem.flags, groupItem.surface });
-        }
-    }
 }
 
 Device::~Device()
