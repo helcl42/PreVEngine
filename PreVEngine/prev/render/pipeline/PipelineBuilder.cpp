@@ -11,7 +11,7 @@ namespace {
     {
         VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
         pipelineLayoutInfo.setLayoutCount = 1;
-        pipelineLayoutInfo.pSetLayouts = shader.GetDescriptorSetLayout();
+        pipelineLayoutInfo.pSetLayouts = &shader.GetDescriptorSetLayout();
         pipelineLayoutInfo.pPushConstantRanges = shader.GetPushConstantsRanges().data();
         pipelineLayoutInfo.pushConstantRangeCount = static_cast<uint32_t>(shader.GetPushConstantsRanges().size());
 

@@ -377,6 +377,51 @@ VkWriteDescriptorSet CreateWriteDescriptorSet(const uint32_t dstBinding, const V
     return vertexZeroWriteDescriptorSet;
 }
 
+std::vector<VkDescriptorSet> CreateDescriptorSets(const VkDevice device, const uint32_t size, const VkDescriptorPool descriptorPool, const VkDescriptorSetLayout descriptorSetLayout)
+{
+    std::vector<VkDescriptorSet> descriptorSets(size);
+    for (uint32_t i = 0; i < size; ++i) {
+        VkDescriptorSetAllocateInfo allocInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = 1;
+        allocInfo.pSetLayouts = &descriptorSetLayout;
+
+        VkDescriptorSet descriptorSet;
+        VKERRCHECK(vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet));
+        descriptorSets[i] = descriptorSet;
+    }
+    return descriptorSets;
+}
+
+VkDescriptorPool CreateDescriptorPool(const VkDevice device, const uint32_t size, const std::vector<VkDescriptorSetLayoutBinding>& layoutBindings)
+{
+    const size_t itemsSize{ layoutBindings.size() * size };
+
+    std::vector<VkDescriptorPoolSize> poolSizes(itemsSize);
+    for (size_t i = 0; i < itemsSize; ++i) {
+        const auto& binding{ layoutBindings[i % layoutBindings.size()] };
+
+        poolSizes[i].type = binding.descriptorType;
+        poolSizes[i].descriptorCount = binding.descriptorCount;
+    }
+
+    VkDescriptorPoolCreateInfo poolInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
+    poolInfo.maxSets = static_cast<uint32_t>(size);
+    poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+    poolInfo.pPoolSizes = poolSizes.data();
+
+    VkDescriptorPool descriptorPool;
+    VKERRCHECK(vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool));
+    return descriptorPool;
+}
+
+void DestroyDescriptorPool(const VkDevice device, VkDescriptorPool descriptorPool)
+{
+    if (descriptorPool != VK_NULL_HANDLE) {
+        vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+    }
+}
+
 VkVertexInputBindingDescription CreateVertexInputBindingDescription(const uint32_t binding, const uint32_t stride, const VkVertexInputRate inputRate)
 {
     VkVertexInputBindingDescription inputBinding = {};

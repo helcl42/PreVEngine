@@ -5,25 +5,16 @@
 #include "../../util/VkUtils.h"
 
 namespace prev::render::shader {
-Shader::Shader(const VkDevice device,
-    const std::map<VkShaderStageFlagBits, VkShaderModule>& shaderModules,
-    const std::vector<VkPipelineShaderStageCreateInfo>& shaderStages,
-    const std::vector<VkVertexInputBindingDescription>& vertexInputBindingDescriptions,
-    const std::vector<VkVertexInputAttributeDescription>& vertexInputAttributeDescriptions,
-    const VkDescriptorSetLayout descriptorSetLayout,
-    const std::vector<VkDescriptorSetLayoutBinding>& layoutBindings,
-    const std::vector<VkWriteDescriptorSet>& descriptorWrites,
-    const std::map<std::string, DescriptorSetInfo>& descriptorSetInfos,
-    const std::vector<VkPushConstantRange>& pushConstantRanges)
+Shader::Shader(const VkDevice device, const ShadersInfo& shadersInfo, const VertexInputsInfo& vertexInputInfo, const DescriptorSetsInfo& descriptorSetsInfo, const std::vector<VkPushConstantRange>& pushConstantRanges)
     : m_device{ device }
-    , m_shaderModules{ shaderModules }
-    , m_shaderStages{ shaderStages }
-    , m_vertexInputBindingDescriptions{ vertexInputBindingDescriptions }
-    , m_vertexInputAttributeDescriptions{ vertexInputAttributeDescriptions }
-    , m_descriptorSetLayout{ descriptorSetLayout }
-    , m_layoutBindings{ layoutBindings }
-    , m_descriptorWrites{ descriptorWrites }
-    , m_descriptorSetInfos{ descriptorSetInfos }
+    , m_shaderModules{ shadersInfo.modules }
+    , m_shaderStages{ shadersInfo.stages }
+    , m_vertexInputBindingDescriptions{ vertexInputInfo.bindingDescriptions }
+    , m_vertexInputAttributeDescriptions{ vertexInputInfo.attributeDescriptions }
+    , m_descriptorSetLayout{ descriptorSetsInfo.layout }
+    , m_layoutBindings{ descriptorSetsInfo.layoutBindings }
+    , m_descriptorWrites{ descriptorSetsInfo.writes }
+    , m_descriptorSetInfos{ descriptorSetsInfo.infos }
     , m_pushConstantRanges{ pushConstantRanges }
     , m_descriptorPool{ VK_NULL_HANDLE }
     , m_poolCapacity{ 0 }
@@ -48,33 +39,6 @@ Shader::~Shader()
     for (auto& shaderModule : m_shaderModules) {
         vkDestroyShaderModule(m_device, shaderModule.second, nullptr);
     }
-    m_shaderModules.clear();
-}
-
-void Shader::RecreateDescriptorPool(const uint32_t size)
-{
-    if (m_descriptorPool != VK_NULL_HANDLE) {
-        vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
-    }
-
-    m_descriptorPool = CreateDescriptorPool(size);
-    m_poolCapacity = size;
-}
-
-void Shader::RecreateDescriptorSets(const uint32_t size)
-{
-    m_descriptorSets.resize(size);
-
-    for (uint32_t i = 0; i < size; ++i) {
-        VkDescriptorSetAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
-        allocInfo.descriptorPool = m_descriptorPool;
-        allocInfo.descriptorSetCount = 1;
-        allocInfo.pSetLayouts = &m_descriptorSetLayout;
-
-        VkDescriptorSet descriptorSet;
-        VKERRCHECK(vkAllocateDescriptorSets(m_device, &allocInfo, &descriptorSet));
-        m_descriptorSets[i] = descriptorSet;
-    }
 }
 
 bool Shader::ShouldAdjustCapacity(const uint32_t size) const
@@ -90,48 +54,28 @@ bool Shader::ShouldAdjustCapacity(const uint32_t size) const
     return shouldAdjust;
 }
 
-bool Shader::AdjustDescriptorPoolCapacity(const uint32_t desiredCount)
+bool Shader::AdjustDescriptorPoolCapacity(const uint32_t size)
 {
-    bool shouldRecreate{ ShouldAdjustCapacity(desiredCount) };
-    if (shouldRecreate) {
-        RecreateDescriptorPool(desiredCount);
-        RecreateDescriptorSets(desiredCount);
-        return true;
+    bool shouldRecreate{ ShouldAdjustCapacity(size) };
+    if (!shouldRecreate) {
+        return false;
     }
-    return false;
-}
-
-VkDescriptorPool Shader::CreateDescriptorPool(const uint32_t size) const
-{
-    const size_t itemsSize{ m_layoutBindings.size() * size };
-
-    std::vector<VkDescriptorPoolSize> poolSizes(itemsSize);
-    for (size_t i = 0; i < itemsSize; ++i) {
-        const auto& binding{ m_layoutBindings[i % m_layoutBindings.size()] };
-
-        poolSizes[i].type = binding.descriptorType;
-        poolSizes[i].descriptorCount = binding.descriptorCount;
-    }
-
-    VkDescriptorPoolCreateInfo poolInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
-    poolInfo.maxSets = static_cast<uint32_t>(size);
-    poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-    poolInfo.pPoolSizes = poolSizes.data();
-
-    VkDescriptorPool descriptorPool;
-    VKERRCHECK(vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &descriptorPool));
-    return descriptorPool;
+    prev::util::vk::DestroyDescriptorPool(m_device, m_descriptorPool);
+    m_descriptorPool = prev::util::vk::CreateDescriptorPool(m_device, size, m_layoutBindings);
+    m_descriptorSets = prev::util::vk::CreateDescriptorSets(m_device, size, m_descriptorPool, m_descriptorSetLayout);
+    m_poolCapacity = size;
+    return true;
 }
 
 VkDescriptorSet Shader::UpdateNextDescriptorSet()
 {
     CheckBindings();
 
-    VkDescriptorSet descriptorSet = m_descriptorSets[m_currentDescriptorSetIndex];
+    VkDescriptorSet descriptorSet{ m_descriptorSets[m_currentDescriptorSetIndex] };
 
     std::vector<std::vector<VkDescriptorBufferInfo>> bufferInfos(m_descriptorWrites.size());
     std::vector<std::vector<VkDescriptorImageInfo>> imageInfos(m_descriptorWrites.size());
-    for (size_t writeIndex = 0; writeIndex < m_descriptorWrites.size(); writeIndex++) {
+    for (size_t writeIndex = 0; writeIndex < m_descriptorWrites.size(); ++writeIndex) {
 
         auto& currentBufferInfos{ bufferInfos[writeIndex] };
         auto& currentImageInfos{ imageInfos[writeIndex] };
@@ -199,9 +143,9 @@ void Shader::CheckBindings() const
     }
 }
 
-const VkDescriptorSetLayout* Shader::GetDescriptorSetLayout() const
+const VkDescriptorSetLayout& Shader::GetDescriptorSetLayout() const
 {
-    return &m_descriptorSetLayout;
+    return m_descriptorSetLayout;
 }
 
 const std::vector<VkPushConstantRange>& Shader::GetPushConstantsRanges() const

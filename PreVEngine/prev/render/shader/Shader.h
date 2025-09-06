@@ -29,23 +29,30 @@ public:
         };
     };
 
+    struct ShadersInfo {
+        std::map<VkShaderStageFlagBits, VkShaderModule> modules;
+        std::vector<VkPipelineShaderStageCreateInfo> stages;
+    };
+
+    struct VertexInputsInfo {
+        std::vector<VkVertexInputBindingDescription> bindingDescriptions;
+        std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
+    };
+
+    struct DescriptorSetsInfo {
+        VkDescriptorSetLayout layout{};
+        std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
+        std::vector<VkWriteDescriptorSet> writes;
+        std::map<std::string, DescriptorSetInfo> infos;
+    };
+
 public:
-    Shader(
-        const VkDevice device,
-        const std::map<VkShaderStageFlagBits, VkShaderModule>& shaderModules,
-        const std::vector<VkPipelineShaderStageCreateInfo>& shaderStages,
-        const std::vector<VkVertexInputBindingDescription>& vertexInputBindingDescriptions,
-        const std::vector<VkVertexInputAttributeDescription>& vertexInputAttributeDescriptions,
-        const VkDescriptorSetLayout descriptorSetLayout,
-        const std::vector<VkDescriptorSetLayoutBinding>& layoutBindings,
-        const std::vector<VkWriteDescriptorSet>& descriptorWrites,
-        const std::map<std::string, DescriptorSetInfo>& descriptorSetInfos,
-        const std::vector<VkPushConstantRange>& pushConstantRanges);
+    Shader(const VkDevice device, const ShadersInfo& shadersInfo, const VertexInputsInfo& vertexInputsInfo, const DescriptorSetsInfo& descriptorSetsInfo, const std::vector<VkPushConstantRange>& pushConstantRanges);
 
     ~Shader();
 
 public:
-    bool AdjustDescriptorPoolCapacity(const uint32_t desiredCount);
+    bool AdjustDescriptorPoolCapacity(const uint32_t size);
 
     void Bind(const std::string& name, const prev::render::buffer::Buffer& buffer);
 
@@ -54,7 +61,7 @@ public:
     VkDescriptorSet UpdateNextDescriptorSet();
 
 public:
-    const VkDescriptorSetLayout* GetDescriptorSetLayout() const;
+    const VkDescriptorSetLayout& GetDescriptorSetLayout() const;
 
     const std::vector<VkPushConstantRange>& GetPushConstantsRanges() const;
 
@@ -67,12 +74,6 @@ public:
 private:
     void CheckBindings() const;
 
-    VkDescriptorPool CreateDescriptorPool(const uint32_t size) const;
-
-    void RecreateDescriptorPool(const uint32_t size);
-
-    void RecreateDescriptorSets(const uint32_t size);
-
     bool ShouldAdjustCapacity(const uint32_t size) const;
 
 private:
@@ -81,6 +82,8 @@ private:
     std::map<VkShaderStageFlagBits, VkShaderModule> m_shaderModules;
 
     std::vector<VkPipelineShaderStageCreateInfo> m_shaderStages;
+
+    ShadersInfo m_shaders;
 
     std::vector<VkVertexInputBindingDescription> m_vertexInputBindingDescriptions;
 

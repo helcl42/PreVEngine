@@ -54,6 +54,12 @@ private:
 
     VkDescriptorSetLayout CreateDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& layoutBindings) const;
 
+    Shader::ShadersInfo CreateShadersInfo() const;
+
+    Shader::VertexInputsInfo CreateVertexInputsInfo() const;
+
+    Shader::DescriptorSetsInfo CreateDescriptorSetsInfo() const;
+
 private:
     VkDevice m_device;
 

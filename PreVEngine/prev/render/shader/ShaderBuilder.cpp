@@ -113,41 +113,11 @@ ShaderBuilder& ShaderBuilder::SetEntryPointName(const std::string& name)
 
 std::unique_ptr<Shader> ShaderBuilder::Build() const
 {
-    auto byteCodes{ m_stageByteCodes };
-    for (const auto& [stage, path] : m_stagePaths) {
-        const auto spirv{ prev::util::file::ReadBinaryFile(path) };
-        byteCodes.insert({ stage, spirv });
-    }
+    const Shader::ShadersInfo shadersInfo{ CreateShadersInfo() };
+    const Shader::VertexInputsInfo vertexInputsInfo{ CreateVertexInputsInfo() };
+    const Shader::DescriptorSetsInfo descriptorSetsInfo{ CreateDescriptorSetsInfo() };
 
-    std::map<VkShaderStageFlagBits, VkShaderModule> shaderModules;
-    for (const auto& [stage, byteCode] : byteCodes) {
-        shaderModules.insert({ stage, CreateShaderModule(byteCode) });
-    }
-
-    std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
-    for (const auto& [stage, module] : shaderModules) {
-        const auto stageCreateInfo{ CreateShaderStageCreateInfo(stage, module) };
-        shaderStages.emplace_back(stageCreateInfo);
-    }
-
-    std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
-    std::vector<VkWriteDescriptorSet> descriptorWrites;
-    std::map<std::string, Shader::DescriptorSetInfo> descriptorSetInfos;
-    for (const auto& ds : m_descriptorSets) {
-        layoutBindings.emplace_back(prev::util::vk::CreteDescriptorSetLayoutBinding(ds.binding, ds.descType, ds.descCount, ds.stageFlags));
-        descriptorWrites.emplace_back(prev::util::vk::CreateWriteDescriptorSet(ds.binding, ds.descType, ds.descCount));
-        if (ds.descCount > 1) {
-            for (uint32_t i = 0; i < ds.descCount; ++i) {
-                descriptorSetInfos[ds.name + "[" + std::to_string(i) + "]"] = { descriptorWrites.size() - 1 };
-            }
-        } else {
-            descriptorSetInfos[ds.name] = { descriptorWrites.size() - 1 };
-        }
-    }
-
-    const auto descriptorSetLayout{ CreateDescriptorSetLayout(layoutBindings) };
-
-    auto shader{ std::make_unique<Shader>(m_device, shaderModules, shaderStages, m_vertexInputBindingDescriptors, m_vertexInputAttributeDescriptions, descriptorSetLayout, layoutBindings, descriptorWrites, descriptorSetInfos, m_pushConstantBlocks) };
+    auto shader{ std::make_unique<Shader>(m_device, shadersInfo, vertexInputsInfo, descriptorSetsInfo, m_pushConstantBlocks) };
     if (m_descriptorPoolSize > 0) {
         shader->AdjustDescriptorPoolCapacity(m_descriptorPoolSize);
     }
@@ -199,6 +169,54 @@ VkDescriptorSetLayout ShaderBuilder::CreateDescriptorSetLayout(const std::vector
     VkDescriptorSetLayout descriptorSetLayout;
     VKERRCHECK(vkCreateDescriptorSetLayout(m_device, &createInfo, nullptr, &descriptorSetLayout));
     return descriptorSetLayout;
+}
+
+Shader::ShadersInfo ShaderBuilder::CreateShadersInfo() const
+{
+    auto byteCodes{ m_stageByteCodes };
+    for (const auto& [stage, path] : m_stagePaths) {
+        const auto spirv{ prev::util::file::ReadBinaryFile(path) };
+        byteCodes.insert({ stage, spirv });
+    }
+
+    std::map<VkShaderStageFlagBits, VkShaderModule> shaderModules;
+    for (const auto& [stage, byteCode] : byteCodes) {
+        shaderModules.insert({ stage, CreateShaderModule(byteCode) });
+    }
+
+    std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+    for (const auto& [stage, module] : shaderModules) {
+        const auto stageCreateInfo{ CreateShaderStageCreateInfo(stage, module) };
+        shaderStages.emplace_back(stageCreateInfo);
+    }
+
+    return { shaderModules, shaderStages };
+}
+
+Shader::VertexInputsInfo ShaderBuilder::CreateVertexInputsInfo() const
+{
+    return { m_vertexInputBindingDescriptors, m_vertexInputAttributeDescriptions };
+}
+
+Shader::DescriptorSetsInfo ShaderBuilder::CreateDescriptorSetsInfo() const
+{
+    std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
+    std::vector<VkWriteDescriptorSet> descriptorWrites;
+    std::map<std::string, Shader::DescriptorSetInfo> descriptorSetInfos;
+    for (const auto& ds : m_descriptorSets) {
+        layoutBindings.emplace_back(prev::util::vk::CreteDescriptorSetLayoutBinding(ds.binding, ds.descType, ds.descCount, ds.stageFlags));
+        descriptorWrites.emplace_back(prev::util::vk::CreateWriteDescriptorSet(ds.binding, ds.descType, ds.descCount));
+        if (ds.descCount > 1) {
+            for (uint32_t i = 0; i < ds.descCount; ++i) {
+                descriptorSetInfos[ds.name + "[" + std::to_string(i) + "]"] = { descriptorWrites.size() - 1 };
+            }
+        } else {
+            descriptorSetInfos[ds.name] = { descriptorWrites.size() - 1 };
+        }
+    }
+
+    const auto descriptorSetLayout{ CreateDescriptorSetLayout(layoutBindings) };
+    return { descriptorSetLayout, layoutBindings, descriptorWrites, descriptorSetInfos };
 }
 
 } // namespace prev::render::shader

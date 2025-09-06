@@ -40,6 +40,12 @@ VkDescriptorSetLayoutBinding CreteDescriptorSetLayoutBinding(const uint32_t bind
 
 VkWriteDescriptorSet CreateWriteDescriptorSet(const uint32_t dstBinding, const VkDescriptorType descType, const uint32_t descCount, const uint32_t dstArrayElement = 0);
 
+std::vector<VkDescriptorSet> CreateDescriptorSets(const VkDevice device, const uint32_t size, const VkDescriptorPool descriptorPool, const VkDescriptorSetLayout descriptorSetLayout);
+
+VkDescriptorPool CreateDescriptorPool(const VkDevice device, const uint32_t size, const std::vector<VkDescriptorSetLayoutBinding>& layoutBindings);
+
+void DestroyDescriptorPool(const VkDevice device, VkDescriptorPool descriptorPool);
+
 VkVertexInputBindingDescription CreateVertexInputBindingDescription(const uint32_t binding, const uint32_t stride, const VkVertexInputRate inputRate);
 
 VkVertexInputAttributeDescription CreateVertexInputAttributeDescription(const uint32_t binding, const uint32_t location, const VkFormat format, const uint32_t offset);
