@@ -105,58 +105,40 @@ bool AnimationClip::FindAnimationNodeKeyFrames(const std::string& nodeName, Anim
     return true;
 }
 
-glm::vec3 AnimationClip::CalculateInterpolatedPosition(const AnimationNodeKeyFrames& keyFrames, const float animationTime) const
+glm::vec3 AnimationClip::CalculateInterpolatedVector3(const std::vector<VectorKey>& vector3KeyFrames, const float animationTime) const
 {
-    glm::vec3 outPosition;
-    if (keyFrames.positions.size() == 1) {
-        outPosition = keyFrames.positions[0].value;
+    glm::vec3 outVector3;
+    if (vector3KeyFrames.size() == 1) {
+        outVector3 = vector3KeyFrames[0].value;
     } else {
-        const auto positionIndex{ FindKeyFrameIndexAfter(keyFrames.positions, animationTime) };
-        const auto nextPositionIndex{ positionIndex + 1 };
-        assert(nextPositionIndex < static_cast<uint32_t>(keyFrames.positions.size()));
+        const auto vector3Index{ FindKeyFrameIndexAfter(vector3KeyFrames, animationTime) };
+        const auto nextVector3Index{ vector3Index + 1 };
+        assert(nextVector3Index < static_cast<uint32_t>(vector3KeyFrames.size()));
 
-        const auto& position{ keyFrames.positions[positionIndex] };
-        const auto& nextPosition{ keyFrames.positions[nextPositionIndex] };
+        const auto& vector3{ vector3KeyFrames[vector3Index] };
+        const auto& nextVector3{ vector3KeyFrames[nextVector3Index] };
 
-        outPosition = Interpolate(position, nextPosition, animationTime);
+        outVector3 = Interpolate(vector3, nextVector3, animationTime);
     }
-    return outPosition;
+    return outVector3;
 }
 
-glm::quat AnimationClip::CalculateInterpolatedRotation(const AnimationNodeKeyFrames& keyFrames, const float animationTime) const
+glm::quat AnimationClip::CalculateInterpolatedQuaternion(const std::vector<QuaternionKey>& quaternionKeyFrames, const float animationTime) const
 {
-    glm::quat outRotation;
-    if (keyFrames.rotations.size() == 1) {
-        outRotation = keyFrames.rotations[0].value;
+    glm::quat outQuaternion;
+    if (quaternionKeyFrames.size() == 1) {
+        outQuaternion = quaternionKeyFrames[0].value;
     } else {
-        const auto rotationIndex{ FindKeyFrameIndexAfter(keyFrames.rotations, animationTime) };
-        const auto nextRotationIndex{ rotationIndex + 1 };
-        assert(nextRotationIndex < static_cast<uint32_t>(keyFrames.rotations.size()));
+        const auto quaternionIndex{ FindKeyFrameIndexAfter(quaternionKeyFrames, animationTime) };
+        const auto nextQuaternionIndex{ quaternionIndex + 1 };
+        assert(nextQuaternionIndex < static_cast<uint32_t>(quaternionKeyFrames.size()));
 
-        const auto rotation{ keyFrames.rotations[rotationIndex] };
-        const auto nextRotation{ keyFrames.rotations[nextRotationIndex] };
+        const auto& quaternion{ quaternionKeyFrames[quaternionIndex] };
+        const auto& nextQuaternion{ quaternionKeyFrames[nextQuaternionIndex] };
 
-        outRotation = Interpolate(rotation, nextRotation, animationTime);
+        outQuaternion = Interpolate(quaternion, nextQuaternion, animationTime);
     }
-    return outRotation;
-}
-
-glm::vec3 AnimationClip::CalculateInterpolatedScaling(const AnimationNodeKeyFrames& keyFrames, const float animationTime) const
-{
-    glm::vec3 outScaling;
-    if (keyFrames.scales.size() == 1) {
-        outScaling = keyFrames.scales[0].value;
-    } else {
-        const auto scalingIndex{ FindKeyFrameIndexAfter(keyFrames.scales, animationTime) };
-        const auto nextScalingIndex{ scalingIndex + 1 };
-        assert(nextScalingIndex < static_cast<uint32_t>(keyFrames.scales.size()));
-
-        const auto scaling{ keyFrames.scales[scalingIndex] };
-        const auto nextScaling{ keyFrames.scales[nextScalingIndex] };
-
-        outScaling = Interpolate(scaling, nextScaling, animationTime);
-    }
-    return outScaling;
+    return outQuaternion;
 }
 
 glm::mat4 AnimationClip::ComputeNodeTransform(const AnimationNode& node, const float animationTime) const
@@ -165,13 +147,13 @@ glm::mat4 AnimationClip::ComputeNodeTransform(const AnimationNode& node, const f
 
     AnimationNodeKeyFrames nodeKeyFrames;
     if (FindAnimationNodeKeyFrames(node.name, nodeKeyFrames)) {
-        const auto scaling{ CalculateInterpolatedScaling(nodeKeyFrames, animationTime) };
+        const auto scaling{ CalculateInterpolatedVector3(nodeKeyFrames.scales, animationTime) };
         const auto scaleMatrix{ glm::scale(glm::mat4(1.0), glm::vec3(scaling.x, scaling.y, scaling.z)) };
 
-        const auto rotationQuat{ CalculateInterpolatedRotation(nodeKeyFrames, animationTime) };
+        const auto rotationQuat{ CalculateInterpolatedQuaternion(nodeKeyFrames.rotations, animationTime) };
         const auto rotationMatrix{ glm::mat4_cast(rotationQuat) };
 
-        const auto translation{ CalculateInterpolatedPosition(nodeKeyFrames, animationTime) };
+        const auto translation{ CalculateInterpolatedVector3(nodeKeyFrames.positions, animationTime) };
         const auto translationMatrix{ glm::translate(glm::mat4(1.0), glm::vec3(translation.x, translation.y, translation.z)) };
 
         nodeTransform = translationMatrix * rotationMatrix * scaleMatrix;

@@ -55,11 +55,9 @@ public:
 private:
     bool FindAnimationNodeKeyFrames(const std::string& nodeName, AnimationNodeKeyFrames& outNodeKeyFrames) const;
 
-    glm::vec3 CalculateInterpolatedPosition(const AnimationNodeKeyFrames& keyFrames, const float animationTime) const;
+    glm::vec3 CalculateInterpolatedVector3(const std::vector<VectorKey>& vector3KeyFrames, const float animationTime) const;
 
-    glm::quat CalculateInterpolatedRotation(const AnimationNodeKeyFrames& keyFrames, const float animationTime) const;
-
-    glm::vec3 CalculateInterpolatedScaling(const AnimationNodeKeyFrames& keyFrames, const float animationTime) const;
+    glm::quat CalculateInterpolatedQuaternion(const std::vector<QuaternionKey>& quaternionKeyFrames, const float animationTime) const;
 
     glm::mat4 ComputeNodeTransform(const AnimationNode& node, const float animationTime) const;
 
