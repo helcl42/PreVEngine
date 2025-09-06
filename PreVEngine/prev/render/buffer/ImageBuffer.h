@@ -7,9 +7,10 @@ namespace prev::render::buffer {
 class ImageBufferBuilder;
 
 class ImageBuffer final {
-public:
+private:
     ImageBuffer(prev::core::memory::Allocator& allocator);
 
+public:
     ~ImageBuffer();
 
 public:
@@ -49,7 +50,7 @@ public:
 
     operator VkImage() const;
 
-private:
+public:
     friend class ImageBufferBuilder;
 
 private:

@@ -5,6 +5,8 @@
 #include "../../util/MathUtils.h"
 #include "../../util/VkUtils.h"
 
+#include <stdexcept>
+
 namespace prev::render::buffer {
 namespace {
     VkImageAspectFlags DeduceApectMaskFromFormat(const VkFormat format)
@@ -126,21 +128,7 @@ ImageBufferBuilder& ImageBufferBuilder::SetHostMapped(bool hostMapped)
 
 std::unique_ptr<ImageBuffer> ImageBufferBuilder::Build() const
 {
-    if (m_extent.width == 0 || m_extent.height == 0 || m_extent.depth == 0) {
-        LOGE("Invalid image buffer extent - all components must have nonzero value.");
-    }
-
-    if (m_format == VK_FORMAT_UNDEFINED) {
-        LOGE("Invalid image format - undefined.");
-    }
-
-    if (m_layout == VK_IMAGE_LAYOUT_UNDEFINED) {
-        LOGE("Invalid image layout - undefined.");
-    }
-
-    if (m_type == VK_IMAGE_TYPE_MAX_ENUM) {
-        LOGE("Invalid image type - undefined.");
-    }
+    Validate();
 
     // some logic is automatic to minimize boiler plate code for common usa cases
     const auto imageViewType{ m_viewType == VK_IMAGE_VIEW_TYPE_MAX_ENUM ? DeduceImageViewTypeFromImageType(m_type) : m_viewType };
@@ -155,7 +143,7 @@ std::unique_ptr<ImageBuffer> ImageBufferBuilder::Build() const
 
     auto imageView{ m_hostMapped ? nullptr : prev::util::vk::CreateImageView(m_allocator.GetDevice(), image, m_format, imageViewType, mipMapLevels, aspectMask, m_layerCount) };
 
-    auto imageBuffer{ std::make_unique<ImageBuffer>(m_allocator) };
+    auto imageBuffer{ std::unique_ptr<ImageBuffer>(new ImageBuffer(m_allocator)) };
     imageBuffer->m_extent = m_extent;
     imageBuffer->m_format = m_format;
     imageBuffer->m_mipLevels = mipMapLevels;
@@ -192,6 +180,25 @@ std::unique_ptr<ImageBuffer> ImageBufferBuilder::Build() const
     });
 
     return imageBuffer;
+}
+
+void ImageBufferBuilder::Validate() const
+{
+    if (m_extent.width == 0 || m_extent.height == 0 || m_extent.depth == 0) {
+        throw std::runtime_error("Invalid image buffer extent - all components must have nonzero value.");
+    }
+
+    if (m_format == VK_FORMAT_UNDEFINED) {
+        throw std::runtime_error("Invalid image format - undefined.");
+    }
+
+    if (m_layout == VK_IMAGE_LAYOUT_UNDEFINED) {
+        throw std::runtime_error("Invalid image layout - undefined.");
+    }
+
+    if (m_type == VK_IMAGE_TYPE_MAX_ENUM) {
+        throw std::runtime_error("Invalid image type - undefined.");
+    }
 }
 
 } // namespace prev::render::buffer

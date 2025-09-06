@@ -43,6 +43,9 @@ public:
     std::unique_ptr<ImageBuffer> Build() const;
 
 private:
+    void Validate() const;
+
+private:
     prev::core::memory::Allocator& m_allocator;
 
     VkExtent3D m_extent{};
