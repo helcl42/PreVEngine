@@ -17,13 +17,11 @@ enum class QueueType {
 };
 
 struct Queue {
-    Queue() = default;
-
-    Queue(VkQueue q, uint32_t f, uint32_t idx, VkQueueFlags flgs, VkSurfaceKHR surf) noexcept;
+    Queue(VkQueue q, uint32_t f, uint32_t idx, VkQueueFlags flgs, VkSurfaceKHR surf);
 
     operator VkQueue() const;
 
-    VkResult Submit(uint32_t submitCount, const VkSubmitInfo* submitInfo, VkFence fence) const;
+    VkResult Submit(uint32_t submitCount, const VkSubmitInfo* submitInfos, VkFence fence) const;
 
     VkResult Present(const VkPresentInfoKHR* presentInfo) const;
 
@@ -39,7 +37,7 @@ struct Queue {
 
     VkSurfaceKHR surface{}; // VK_NULL_HANDLE if queue can not present
 
-    std::unique_ptr<std::mutex> mutex;
+    mutable std::mutex mutex;
 };
 } // namespace prev::core::device
 

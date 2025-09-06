@@ -5,11 +5,13 @@
 #include "Queue.h"
 
 #include <map>
+#include <memory>
+#include <vector>
 
 namespace prev::core::device {
 class Device {
 public:
-    Device(const PhysicalDevice& gpu, const VkDevice handle, std::map<QueueType, std::vector<Queue>>&& queues);
+    Device(const PhysicalDevice& gpu, const VkDevice handle, std::map<QueueType, std::vector<std::unique_ptr<Queue>>>&& queues);
 
     ~Device();
 
@@ -20,9 +22,9 @@ public:
 
     const Queue& GetQueue(const QueueType queueType, const uint32_t index = 0) const;
 
-    const std::map<QueueType, std::vector<Queue>>& GetAllQueues() const;
-
     std::vector<QueueType> GetAllQueueTypes() const;
+
+    uint32_t GetQueueTypeCount(const QueueType queueType) const;
 
     const PhysicalDevice& GetGPU() const;
 
@@ -36,7 +38,7 @@ private:
 
     VkDevice m_handle{};
 
-    std::map<QueueType, std::vector<Queue>> m_queues;
+    std::map<QueueType, std::vector<std::unique_ptr<Queue>>> m_queues;
 };
 } // namespace prev::core::device
 

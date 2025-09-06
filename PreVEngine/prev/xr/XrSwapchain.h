@@ -80,9 +80,9 @@ private:
 
     VkSampleCountFlagBits m_sampleCount{ VK_SAMPLE_COUNT_1_BIT };
 
-    const prev::core::device::Queue& m_graphicsQueue{};
+    const prev::core::device::Queue& m_graphicsQueue;
 
-    const prev::core::device::Queue& m_presentQueue{};
+    const prev::core::device::Queue& m_presentQueue;
 
     VkCommandPool m_commandPool{};
 

@@ -212,12 +212,12 @@ std::unique_ptr<Device> DeviceFactory::Create(const PhysicalDevice& gpu, const V
     volkLoadDevice(device);
 #endif
 
-    std::map<QueueType, std::vector<Queue>> queues;
+    std::map<QueueType, std::vector<std::unique_ptr<Queue>>> queues;
     for (const auto& [queueGroupKey, queueGroupList] : queuesMetadata.queueGroups) {
         for (const auto& groupItem : queueGroupList) {
             VkQueue qHandle{};
             vkGetDeviceQueue(device, groupItem.family, groupItem.index, &qHandle);
-            queues[queueGroupKey].emplace_back(Queue{ qHandle, groupItem.family, groupItem.index, groupItem.flags, groupItem.surface });
+            queues[queueGroupKey].emplace_back(std::make_unique<Queue>(qHandle, groupItem.family, groupItem.index, groupItem.flags, groupItem.surface));
         }
     }
 

@@ -8,7 +8,7 @@
 #include <stdexcept>
 
 namespace prev::core::device {
-Device::Device(const PhysicalDevice& gpu, const VkDevice handle, std::map<QueueType, std::vector<Queue>>&& queues)
+Device::Device(const PhysicalDevice& gpu, const VkDevice handle, std::map<QueueType, std::vector<std::unique_ptr<Queue>>>&& queues)
     : m_gpu{ gpu }
     , m_handle{ handle }
     , m_queues{ std::move(queues) }
@@ -57,12 +57,7 @@ const Queue& Device::GetQueue(const QueueType queueType, const uint32_t index) c
     if (index >= queuesGroup.size()) {
         throw std::runtime_error("Trying access queue at invalid index " + std::to_string(index) + ".");
     }
-    return queuesGroup[index];
-}
-
-const std::map<QueueType, std::vector<Queue>>& Device::GetAllQueues() const
-{
-    return m_queues;
+    return *queuesGroup[index];
 }
 
 std::vector<QueueType> Device::GetAllQueueTypes() const
@@ -70,6 +65,15 @@ std::vector<QueueType> Device::GetAllQueueTypes() const
     std::vector<QueueType> result;
     std::transform(m_queues.begin(), m_queues.end(), std::back_inserter(result), [](const auto& pair) { return pair.first; });
     return result;
+}
+
+uint32_t Device::GetQueueTypeCount(const QueueType queueType) const
+{
+    const auto queuesIter{ m_queues.find(queueType) };
+    if (queuesIter == m_queues.cend()) {
+        return 0;
+    }
+    return static_cast<uint32_t>(queuesIter->second.size());
 }
 
 const PhysicalDevice& Device::GetGPU() const
@@ -98,7 +102,7 @@ void Device::Print() const
     LOGI("Logical Device used queues:");
     for (const auto& [qGroupKey, gQroupList] : m_queues) {
         for (const auto& qGroupItem : gQroupList) {
-            LOGI("Queue purpose: %s family: %d index: %d flags: [ %s] %s", queueTypeToString(qGroupKey).c_str(), qGroupItem.family, qGroupItem.index, prev::util::vk::QueueFlagsToString(qGroupItem.flags).c_str(), canPresentToString(qGroupItem.surface).c_str());
+            LOGI("Queue purpose: %s family: %d index: %d flags: [ %s] %s", queueTypeToString(qGroupKey).c_str(), qGroupItem->family, qGroupItem->index, prev::util::vk::QueueFlagsToString(qGroupItem->flags).c_str(), canPresentToString(qGroupItem->surface).c_str());
         }
     }
 }
