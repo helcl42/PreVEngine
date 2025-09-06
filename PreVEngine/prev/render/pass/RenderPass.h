@@ -10,17 +10,18 @@
 namespace prev::render::pass {
 class RenderPass final {
 public:
-    RenderPass(
-        const VkDevice device,
-        const VkRenderPass renderPass,
-        const std::vector<VkAttachmentDescription>& attachments,
-        const std::vector<SubPass>& subpasses,
-        const std::vector<VkClearValue>& clearValues,
-        const std::vector<VkFormat>& colorFormats,
-        const std::vector<bool>& colorResolveAttachments,
-        const std::vector<VkFormat>& depthFormats,
-        const std::vector<bool>& depthResolveAttachments,
-        const std::vector<VkSubpassDependency>& dependencies);
+    struct AttachmentInfo {
+        VkClearValue clearValue;
+        VkFormat format;
+        VkSampleCountFlagBits sampleCount;
+        VkImageLayout finalLayout;
+        VkAttachmentLoadOp loadOp;
+        VkAttachmentStoreOp storeOp;
+        bool resolveAttachment;
+    };
+
+public:
+    RenderPass(const VkDevice device, const VkRenderPass renderPass, const std::vector<AttachmentInfo>& attachmentInfos, const std::vector<SubPass>& subpasses, const std::vector<VkSubpassDependency>& dependencies);
 
     ~RenderPass();
 
@@ -30,17 +31,17 @@ public:
     void End(VkCommandBuffer commadBuffer);
 
 public:
-    const std::vector<VkAttachmentDescription>& GetAttachments() const;
+    const std::vector<AttachmentInfo>& GetAttachments() const;
 
     const std::vector<SubPass>& GetSubPasses() const;
 
     const std::vector<VkClearValue>& GetClearValues() const;
 
-    VkFormat GetColorFormat(const int attachmentIndex = 0) const;
+    VkFormat GetColorFormat(const uint32_t attachmentIndex = 0) const;
 
-    std::vector<VkFormat> GetColorFormats(const bool includeResolveAttachments = false) const;
+    const std::vector<VkFormat>& GetColorFormats(const bool includeResolveAttachments = false) const;
 
-    VkFormat GetDepthFormat(const int attachmentIndex = 0) const;
+    VkFormat GetDepthFormat(const uint32_t attachmentIndex = 0) const;
 
     VkSampleCountFlagBits GetSamplesCount() const;
 
@@ -54,21 +55,21 @@ private:
 
     VkRenderPass m_renderPass;
 
-    std::vector<VkAttachmentDescription> m_attachments;
+    std::vector<AttachmentInfo> m_attachmentInfos;
 
     std::vector<SubPass> m_subpasses;
+
+    std::vector<VkSubpassDependency> m_dependencies;
 
     std::vector<VkClearValue> m_clearValues;
 
     std::vector<VkFormat> m_colorFormats;
 
-    std::vector<bool> m_colorResolveAttachments;
+    std::vector<VkFormat> m_nonResolveColorFormats;
 
     std::vector<VkFormat> m_depthFormats;
 
-    std::vector<bool> m_depthResolveAttachments;
-
-    std::vector<VkSubpassDependency> m_dependencies;
+    VkSampleCountFlagBits m_sampleCount;
 };
 } // namespace prev::render::pass
 

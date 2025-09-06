@@ -37,22 +37,12 @@ private:
         std::vector<uint32_t> resolveIndices;
     };
 
-    struct AttachmentCreateInfo {
-        VkClearValue clearValue;
-        VkFormat format;
-        VkSampleCountFlagBits sampleCount;
-        VkImageLayout finalLayout;
-        VkAttachmentLoadOp loadOp;
-        VkAttachmentStoreOp storeOp;
-        bool resolveAttachment;
-    };
-
 private:
     VkDevice m_device;
 
     uint32_t m_viewCount{ 1 };
 
-    std::vector<AttachmentCreateInfo> m_attachmentInfos;
+    std::vector<RenderPass::AttachmentInfo> m_attachmentInfos;
 
     std::vector<SubPassCreateInfo> m_subPassCreateInfos;
 

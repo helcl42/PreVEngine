@@ -2,28 +2,31 @@
 
 #include "../../common/Logger.h"
 
+#include <prev/core/Formats.h>
+
+#include <algorithm>
+
 namespace prev::render::pass {
-RenderPass::RenderPass(const VkDevice device,
-    const VkRenderPass renderPass,
-    const std::vector<VkAttachmentDescription>& attachments,
-    const std::vector<SubPass>& subpasses,
-    const std::vector<VkClearValue>& clearValues,
-    const std::vector<VkFormat>& colorFormats,
-    const std::vector<bool>& colorResolveAttachments,
-    const std::vector<VkFormat>& depthFormats,
-    const std::vector<bool>& depthResolveAttachments,
-    const std::vector<VkSubpassDependency>& dependencies)
+RenderPass::RenderPass(const VkDevice device, const VkRenderPass renderPass, const std::vector<AttachmentInfo>& attachmentInfos, const std::vector<SubPass>& subpasses, const std::vector<VkSubpassDependency>& dependencies)
     : m_device{ device }
     , m_renderPass{ renderPass }
-    , m_attachments{ attachments }
+    , m_attachmentInfos{ attachmentInfos }
     , m_subpasses{ subpasses }
-    , m_clearValues{ clearValues }
-    , m_colorFormats{ colorFormats }
-    , m_colorResolveAttachments{ colorResolveAttachments }
-    , m_depthFormats{ depthFormats }
-    , m_depthResolveAttachments{ depthResolveAttachments }
     , m_dependencies{ dependencies }
 {
+    m_sampleCount = VK_SAMPLE_COUNT_1_BIT;
+    for (const auto& attachmentInfo : attachmentInfos) {
+        m_clearValues.push_back(attachmentInfo.clearValue);
+        if (prev::core::format::HasDepthComponent(attachmentInfo.format)) {
+            m_depthFormats.push_back(attachmentInfo.format);
+        } else {
+            m_colorFormats.push_back(attachmentInfo.format);
+            if (!attachmentInfo.resolveAttachment) {
+                m_nonResolveColorFormats.push_back(attachmentInfo.format);
+            }
+        }
+        m_sampleCount = std::max(m_sampleCount, attachmentInfo.sampleCount);
+    }
 }
 
 RenderPass::~RenderPass()
@@ -36,7 +39,7 @@ RenderPass::~RenderPass()
 
 void RenderPass::Begin(const VkFramebuffer frameBuffer, const VkCommandBuffer commandBuffer, const VkRect2D& renderArea, const VkSubpassContents contents)
 {
-    VkRenderPassBeginInfo renderPassInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+    VkRenderPassBeginInfo renderPassInfo{ VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
     renderPassInfo.renderPass = m_renderPass;
     renderPassInfo.framebuffer = frameBuffer;
     renderPassInfo.renderArea = renderArea;
@@ -51,9 +54,9 @@ void RenderPass::End(const VkCommandBuffer commandBuffer)
     vkCmdEndRenderPass(commandBuffer);
 }
 
-const std::vector<VkAttachmentDescription>& RenderPass::GetAttachments() const
+const std::vector<RenderPass::AttachmentInfo>& RenderPass::GetAttachments() const
 {
-    return m_attachments;
+    return m_attachmentInfos;
 }
 
 const std::vector<SubPass>& RenderPass::GetSubPasses() const
@@ -66,46 +69,34 @@ const std::vector<VkClearValue>& RenderPass::GetClearValues() const
     return m_clearValues;
 }
 
-VkFormat RenderPass::GetColorFormat(const int attachmentIndex) const
+VkFormat RenderPass::GetColorFormat(const uint32_t attachmentIndex) const
 {
-    if (attachmentIndex >= 0 && attachmentIndex < static_cast<int>(m_colorFormats.size())) {
-        return m_colorFormats[attachmentIndex];
+    if (attachmentIndex >= static_cast<uint32_t>(m_colorFormats.size())) {
+        return VkFormat::VK_FORMAT_UNDEFINED;
     }
-    return VkFormat::VK_FORMAT_UNDEFINED;
+    return m_colorFormats[attachmentIndex];
 }
 
-std::vector<VkFormat> RenderPass::GetColorFormats(const bool includeResolveAttachments) const
+const std::vector<VkFormat>& RenderPass::GetColorFormats(const bool includeResolveAttachments) const
 {
     if (includeResolveAttachments) {
         return m_colorFormats;
     } else {
-        std::vector<VkFormat> result;
-        for (size_t i = 0; i < m_colorFormats.size(); ++i) {
-            if (!m_colorResolveAttachments[i]) {
-                result.push_back(m_colorFormats[i]);
-            }
-        }
-        return result;
+        return m_nonResolveColorFormats;
     }
 }
 
-VkFormat RenderPass::GetDepthFormat(const int attachmentIndex) const
+VkFormat RenderPass::GetDepthFormat(const uint32_t attachmentIndex) const
 {
-    if (attachmentIndex >= 0 && attachmentIndex < static_cast<int>(m_depthFormats.size())) {
-        return m_depthFormats[attachmentIndex];
+    if (attachmentIndex >= static_cast<uint32_t>(m_depthFormats.size())) {
+        return VkFormat::VK_FORMAT_UNDEFINED;
     }
-    return VkFormat::VK_FORMAT_UNDEFINED;
+    return m_depthFormats[attachmentIndex];
 }
 
 VkSampleCountFlagBits RenderPass::GetSamplesCount() const
 {
-    VkSampleCountFlagBits samplesCount{ VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT };
-    for (const auto& a : m_attachments) {
-        if (a.samples > samplesCount) {
-            samplesCount = a.samples;
-        }
-    }
-    return samplesCount;
+    return m_sampleCount;
 }
 
 const std::vector<VkSubpassDependency>& RenderPass::GetSubPassDependencies() const

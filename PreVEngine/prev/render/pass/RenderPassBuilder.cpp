@@ -1,7 +1,6 @@
 #include "RenderPassBuilder.h"
 
 #include "../../common/Logger.h"
-#include "../../core/Formats.h"
 #include "../../util/MathUtils.h"
 
 namespace prev::render::pass {
@@ -15,7 +14,7 @@ RenderPassBuilder& RenderPassBuilder::AddColorAttachment(const VkFormat format, 
     VkClearValue clearColor{};
     clearColor.color = clearVal;
 
-    m_attachmentInfos.push_back(AttachmentCreateInfo{ clearColor, format, sampleCount, finalLayout, loadOp, storeOp, resolveAttachment });
+    m_attachmentInfos.push_back(RenderPass::AttachmentInfo{ clearColor, format, sampleCount, finalLayout, loadOp, storeOp, resolveAttachment });
 
     return *this;
 }
@@ -25,7 +24,7 @@ RenderPassBuilder& RenderPassBuilder::AddDepthAttachment(const VkFormat format, 
     VkClearValue clearDepth{};
     clearDepth.depthStencil = clearVal;
 
-    m_attachmentInfos.push_back(AttachmentCreateInfo{ clearDepth, format, sampleCount, finalLayout, loadOp, storeOp, resolveAttachment });
+    m_attachmentInfos.push_back(RenderPass::AttachmentInfo{ clearDepth, format, sampleCount, finalLayout, loadOp, storeOp, resolveAttachment });
 
     return *this;
 }
@@ -53,23 +52,10 @@ RenderPassBuilder& RenderPassBuilder::SetViewCount(const uint32_t viewCount)
 
 std::unique_ptr<RenderPass> RenderPassBuilder::Build() const
 {
-    std::vector<VkFormat> colorFormats;
-    std::vector<VkFormat> depthFormats;
-    std::vector<bool> colorResolveAttachments;
-    std::vector<bool> depthResolveAttachments;
-    std::vector<VkClearValue> clearValues;
-    std::vector<VkAttachmentDescription> attachments;
-
-    for (const auto& attachmentCreateInfo : m_attachmentInfos) {
-        clearValues.push_back(attachmentCreateInfo.clearValue);
-        if (prev::core::format::HasDepthComponent(attachmentCreateInfo.format)) {
-            depthFormats.push_back(attachmentCreateInfo.format);
-            depthResolveAttachments.push_back(attachmentCreateInfo.resolveAttachment);
-        } else {
-            colorFormats.push_back(attachmentCreateInfo.format);
-            colorResolveAttachments.push_back(attachmentCreateInfo.resolveAttachment);
-        }
-        attachments.push_back(CreateAttachmentDescription(attachmentCreateInfo.format, attachmentCreateInfo.sampleCount, attachmentCreateInfo.finalLayout, attachmentCreateInfo.loadOp, attachmentCreateInfo.storeOp));
+    std::vector<VkAttachmentDescription> attachments(m_attachmentInfos.size());
+    for (size_t i = 0; i < m_attachmentInfos.size(); ++i) {
+        const auto& attachmentInfo{ m_attachmentInfos[i] };
+        attachments[i] = CreateAttachmentDescription(attachmentInfo.format, attachmentInfo.sampleCount, attachmentInfo.finalLayout, attachmentInfo.loadOp, attachmentInfo.storeOp);
     }
 
     std::vector<SubPass> subpasses;
@@ -110,7 +96,7 @@ std::unique_ptr<RenderPass> RenderPassBuilder::Build() const
     VkRenderPass vkRenderPass{};
     VKERRCHECK(vkCreateRenderPass(m_device, &renderPassCreateInfo, nullptr, &vkRenderPass));
 
-    auto renderPass{ std::make_unique<RenderPass>(m_device, vkRenderPass, attachments, subpasses, clearValues, colorFormats, colorResolveAttachments, depthFormats, depthResolveAttachments, m_dependencies) };
+    auto renderPass{ std::make_unique<RenderPass>(m_device, vkRenderPass, m_attachmentInfos, subpasses, m_dependencies) };
 
     LOGI("Renderpass created");
 
