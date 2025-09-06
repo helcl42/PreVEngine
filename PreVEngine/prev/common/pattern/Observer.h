@@ -6,15 +6,19 @@
 
 namespace prev::common::pattern {
 template <typename ObserverType>
-class Observer {
+class Observer final {
 public:
     Observer() = default;
 
-    virtual ~Observer() = default;
+    ~Observer() = default;
 
 public:
     bool Register(ObserverType& o)
     {
+        auto it = std::find(m_observers.begin(), m_observers.end(), &o);
+        if (it != m_observers.end()) {
+            return false;
+        }
         m_observers.insert(&o);
         return true;
     }
@@ -29,7 +33,7 @@ public:
         return false;
     }
 
-    bool IsLRegistered(ObserverType& o) const
+    bool IsRegistered(ObserverType& o) const
     {
         return m_observers.find(&o) != m_observers.cend();
     }

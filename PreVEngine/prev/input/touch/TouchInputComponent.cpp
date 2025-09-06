@@ -19,7 +19,7 @@ bool TouchInputComponent::IsTouchActionListenerRegistered(ITouchActionListener& 
 {
     std::lock_guard<std::mutex> lock(m_mutex);
 
-    return m_touchObservers.IsLRegistered(listener);
+    return m_touchObservers.IsRegistered(listener);
 }
 
 std::map<uint8_t, Touch> TouchInputComponent::GetTouches() const

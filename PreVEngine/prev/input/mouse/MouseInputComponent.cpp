@@ -19,7 +19,7 @@ bool MouseInputComponent::IsMouseActionListenerRegistered(IMouseActionListener& 
 {
     std::lock_guard<std::mutex> lock(m_mutex);
 
-    return m_mouseActionObservers.IsLRegistered(listener);
+    return m_mouseActionObservers.IsRegistered(listener);
 }
 
 bool MouseInputComponent::RegisterMouseScrollListener(IMouseScrollListener& listener)
@@ -40,7 +40,7 @@ bool MouseInputComponent::IsMouseScrollListenerRegistered(IMouseScrollListener& 
 {
     std::lock_guard<std::mutex> lock(m_mutex);
 
-    return m_mouseScrollObservers.IsLRegistered(listener);
+    return m_mouseScrollObservers.IsRegistered(listener);
 }
 
 const std::set<MouseButtonType>& MouseInputComponent::GetPressedButtons() const

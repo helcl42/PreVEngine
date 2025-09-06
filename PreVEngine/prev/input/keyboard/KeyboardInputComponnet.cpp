@@ -19,7 +19,7 @@ bool KeyboardInputComponnet::IsKeyboardActionListenerRegistered(IKeyboardActionL
 {
     std::lock_guard<std::mutex> lock(m_mutex);
 
-    return m_keyActionObservers.IsLRegistered(listener);
+    return m_keyActionObservers.IsRegistered(listener);
 }
 
 bool KeyboardInputComponnet::RegisterTextListener(ITextListener& listener)
@@ -40,7 +40,7 @@ bool KeyboardInputComponnet::IsTextListenerRegistered(ITextListener& listener) c
 {
     std::lock_guard<std::mutex> lock(m_mutex);
 
-    return m_textObservers.IsLRegistered(listener);
+    return m_textObservers.IsRegistered(listener);
 }
 
 bool KeyboardInputComponnet::IsKeyPressed(const KeyCode keyCode) const
