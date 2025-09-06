@@ -6,7 +6,7 @@ BufferPool::BufferPool(prev::core::memory::Allocator& allocator, VkBuffer buffer
     , m_buffer{ buffer }
     , m_allocation{ allocation }
     , m_buffers{ std::move(buffers) }
-    , m_index{ prev::util::CircularIndex<uint32_t>(m_buffers.size()) }
+    , m_index{ prev::util::CircularIndex<uint32_t>(static_cast<uint32_t>(m_buffers.size())) }
 {
 }
 

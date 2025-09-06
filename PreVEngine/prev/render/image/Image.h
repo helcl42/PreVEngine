@@ -76,7 +76,7 @@ public:
 
     uint32_t GetSize() const override
     {
-        return m_pixels.size();
+        return static_cast<uint32_t>(m_pixels.size());
     }
 
     uint32_t GetPixelSize() const override
@@ -166,9 +166,9 @@ public:
     }
 
 private:
-    size_t m_width;
+    uint32_t m_width;
 
-    size_t m_height;
+    uint32_t m_height;
 
     std::vector<PixelType> m_pixels;
 };
