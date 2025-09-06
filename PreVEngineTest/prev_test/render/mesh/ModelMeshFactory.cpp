@@ -40,7 +40,7 @@ namespace {
 
     prev_test::render::VertexLayout GetVertexLayout(const prev::common::FlagSet<prev_test::render::mesh::ModelMeshFactory::CreateFlags>& flags)
     {
-        if (flags & prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION && flags & prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT) {
+        if ((flags & prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION) && (flags & prev_test::render::mesh::ModelMeshFactory::CreateFlags::TANGENT_BITANGENT)) {
             return { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC2, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC4, prev_test::render::VertexLayoutComponent::VEC4, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3 } };
         } else if (flags & prev_test::render::mesh::ModelMeshFactory::CreateFlags::ANIMATION) {
             return { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC2, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC4, prev_test::render::VertexLayoutComponent::VEC4 } };
