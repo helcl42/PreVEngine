@@ -128,18 +128,20 @@ std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateAAB
     const auto aabbPoints{ aabb.GetPoints() };
     const auto [vertices, indices] = GenerateBoxData(aabbPoints);
 
+    const auto verticesDataSize{ sizeof(glm::vec3) * vertices.size() };
     auto vertexBuffer = prev::render::buffer::BufferBuilder{ m_allocator }
                             .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
                             .SetUsageFlags(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
-                            .SetSize(sizeof(glm::vec3) * vertices.size())
-                            .SetData(vertices.data())
+                            .SetSize(verticesDataSize)
+                            .SetData(vertices.data(), verticesDataSize)
                             .Build();
 
+    const auto indicesDataSize{ sizeof(uint32_t) * indices.size() };
     auto indexBuffer = prev::render::buffer::BufferBuilder{ m_allocator }
                            .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
                            .SetUsageFlags(VK_BUFFER_USAGE_INDEX_BUFFER_BIT)
-                           .SetSize(sizeof(uint32_t) * indices.size())
-                           .SetData(indices.data())
+                           .SetSize(indicesDataSize)
+                           .SetData(indices.data(), indicesDataSize)
                            .Build();
 
     return std::make_unique<prev_test::render::model::Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
@@ -163,18 +165,20 @@ std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateOBB
     const auto obbPoints{ obb.GetPoints() };
     const auto [vertices, indices] = GenerateBoxData(obbPoints);
 
+    const auto verticesDataSize{ sizeof(glm::vec3) * vertices.size() };
     auto vertexBuffer = prev::render::buffer::BufferBuilder{ m_allocator }
                             .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
                             .SetUsageFlags(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
-                            .SetSize(sizeof(glm::vec3) * vertices.size())
-                            .SetData(vertices.data())
+                            .SetSize(verticesDataSize)
+                            .SetData(vertices.data(), verticesDataSize)
                             .Build();
 
+    const auto indicesDataSize{ sizeof(uint32_t) * indices.size() };
     auto indexBuffer = prev::render::buffer::BufferBuilder{ m_allocator }
                            .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
                            .SetUsageFlags(VK_BUFFER_USAGE_INDEX_BUFFER_BIT)
-                           .SetSize(sizeof(uint32_t) * indices.size())
-                           .SetData(indices.data())
+                           .SetSize(indicesDataSize)
+                           .SetData(indices.data(), indicesDataSize)
                            .Build();
 
     return std::make_unique<prev_test::render::model::Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
@@ -197,18 +201,20 @@ std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateSph
 {
     const auto [vertices, indices] = GenerateSphereData(sphere);
 
+    const auto verticesDataSize{ sizeof(glm::vec3) * vertices.size() };
     auto vertexBuffer = prev::render::buffer::BufferBuilder{ m_allocator }
                             .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
                             .SetUsageFlags(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
-                            .SetSize(sizeof(glm::vec3) * vertices.size())
-                            .SetData(vertices.data())
+                            .SetSize(verticesDataSize)
+                            .SetData(vertices.data(), verticesDataSize)
                             .Build();
 
+    const auto indicesDataSize{ sizeof(uint32_t) * indices.size() };
     auto indexBuffer = prev::render::buffer::BufferBuilder{ m_allocator }
                            .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
                            .SetUsageFlags(VK_BUFFER_USAGE_INDEX_BUFFER_BIT)
-                           .SetSize(sizeof(uint32_t) * indices.size())
-                           .SetData(indices.data())
+                           .SetSize(indicesDataSize)
+                           .SetData(indices.data(), indicesDataSize)
                            .Build();
 
     return std::make_unique<prev_test::render::model::Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));

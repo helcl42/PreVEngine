@@ -35,9 +35,10 @@ BufferBuilder& BufferBuilder::SetAlignment(const uint64_t alignment)
     return *this;
 }
 
-BufferBuilder& BufferBuilder::SetData(const void* data)
+BufferBuilder& BufferBuilder::SetData(const void* data, const uint64_t size)
 {
     m_data = data;
+    m_dataSize = size;
     return *this;
 }
 
@@ -52,7 +53,7 @@ std::unique_ptr<Buffer> BufferBuilder::Build() const
 
     VmaAllocation allocation{ nullptr };
     VkBuffer buffer{ VK_NULL_HANDLE };
-    m_allocator.CreateBuffer(m_data, m_size, alignedSize, m_usageFlags, m_memoryType, buffer, allocation, mappedDataPtr);
+    m_allocator.CreateBuffer(m_data, m_dataSize, alignedSize, m_usageFlags, m_memoryType, buffer, allocation, mappedDataPtr);
     if (!buffer) {
         throw std::runtime_error("Could not allocate buffer: size = " + std::to_string(alignedSize) + " bytes");
     }

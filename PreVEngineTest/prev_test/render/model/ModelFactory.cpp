@@ -12,18 +12,20 @@ ModelFactory::ModelFactory(prev::core::memory::Allocator& allocator)
 
 std::unique_ptr<prev_test::render::IModel> ModelFactory::Create(const std::shared_ptr<IMesh>& mesh) const
 {
+    const uint64_t verticesDataSize{ mesh->GetVertexLayout().GetStride() * mesh->GerVerticesCount() };
     auto vertexBuffer = prev::render::buffer::BufferBuilder{ m_allocator }
                             .SetMemoryType(prev::core::memory::MemoryType::DEVICE_LOCAL)
                             .SetUsageFlags(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
-                            .SetSize(mesh->GetVertexLayout().GetStride() * mesh->GerVerticesCount())
-                            .SetData(mesh->GetVertexData())
+                            .SetSize(verticesDataSize)
+                            .SetData(mesh->GetVertexData(), verticesDataSize)
                             .Build();
 
+    const uint64_t indidesDataSize{ sizeof(uint32_t) * mesh->GetIndicesCount() };
     auto indexBuffer = prev::render::buffer::BufferBuilder{ m_allocator }
                            .SetMemoryType(prev::core::memory::MemoryType::DEVICE_LOCAL)
                            .SetUsageFlags(VK_BUFFER_USAGE_INDEX_BUFFER_BIT)
-                           .SetSize(sizeof(uint32_t) * mesh->GetIndicesCount())
-                           .SetData(mesh->GetIndices().data())
+                           .SetSize(indidesDataSize)
+                           .SetData(mesh->GetIndices().data(), indidesDataSize)
                            .Build();
 
     return std::make_unique<prev_test::render::model::Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));
@@ -43,14 +45,14 @@ std::unique_ptr<prev_test::render::IModel> ModelFactory::CreateHostVisible(const
                             .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
                             .SetUsageFlags(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
                             .SetSize(mesh->GetVertexLayout().GetStride() * finalVertexCount)
-                            .SetData(mesh->GetVertexData())
+                            .SetData(mesh->GetVertexData(), mesh->GetVertexLayout().GetStride() * mesh->GerVerticesCount())
                             .Build();
 
     auto indexBuffer = prev::render::buffer::BufferBuilder{ m_allocator }
                            .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
                            .SetUsageFlags(VK_BUFFER_USAGE_INDEX_BUFFER_BIT)
                            .SetSize(sizeof(uint32_t) * finalIndexCount)
-                           .SetData(mesh->GetIndices().data())
+                           .SetData(mesh->GetIndices().data(), sizeof(uint32_t) * mesh->GetIndicesCount())
                            .Build();
 
     return std::make_unique<prev_test::render::model::Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));

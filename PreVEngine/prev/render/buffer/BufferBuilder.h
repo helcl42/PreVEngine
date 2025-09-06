@@ -21,7 +21,7 @@ public:
 
     BufferBuilder& SetAlignment(const uint64_t alignment);
 
-    BufferBuilder& SetData(const void* data);
+    BufferBuilder& SetData(const void* data, const uint64_t size);
 
     std::unique_ptr<Buffer> Build() const;
 
@@ -40,6 +40,8 @@ private:
     uint64_t m_alignment{ 8 };
 
     const void* m_data{ nullptr };
+
+    uint64_t m_dataSize{};
 };
 } // namespace prev::render::buffer
 
