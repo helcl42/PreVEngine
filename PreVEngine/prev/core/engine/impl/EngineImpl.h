@@ -5,6 +5,7 @@
 
 #include "../../Core.h"
 #include "../../device/Device.h"
+#include "../../instance/Instance.h"
 #include "../../memory/Allocator.h"
 
 #include "../../../event/EventHandler.h"

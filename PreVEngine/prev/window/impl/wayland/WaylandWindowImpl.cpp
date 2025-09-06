@@ -2,6 +2,8 @@
 
 #ifdef VK_USE_PLATFORM_WAYLAND_KHR
 
+#include "../../../common/Logger.h"
+
 #include <linux/input.h>
 
 #include <stdexcept>

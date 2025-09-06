@@ -2,8 +2,10 @@
 
 #ifdef ENABLE_XR
 
-#include "../../../xr/XrSwapchain.h"
 #include "../../device/DeviceFactory.h"
+#include "../../instance/InstanceFactory.h"
+
+#include "../../../xr/XrSwapchain.h"
 
 namespace prev::core::engine::impl {
 XrEngineImpl::XrEngineImpl(const Config& config)
@@ -86,7 +88,8 @@ bool XrEngineImpl::EndFrame()
 
 void XrEngineImpl::ResetInstance()
 {
-    m_instance = std::make_unique<prev::core::instance::Instance>(m_config.validation, std::vector<std::string>{}, m_openXr->GetVulkanInstanceExtensions());
+    prev::core::instance::InstanceFactory instanceFactory{};
+    m_instance = instanceFactory.Create(m_config.validation, m_config.appName, std::vector<std::string>{}, m_openXr->GetVulkanInstanceExtensions());
 }
 
 void XrEngineImpl::ResetDevice()

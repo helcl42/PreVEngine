@@ -1,5 +1,6 @@
 #include "WindowImpl.h"
 
+#include "../../common/Logger.h"
 #include "../../core/Core.h"
 
 namespace prev::window::impl {

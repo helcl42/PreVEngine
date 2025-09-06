@@ -1,8 +1,10 @@
 #include "DefaultEngineImpl.h"
 
-#include "../../../render/Swapchain.h"
 #include "../../device/DeviceFactory.h"
 #include "../../device/PhysicalDevices.h"
+#include "../../instance/InstanceFactory.h"
+
+#include "../../../render/Swapchain.h"
 
 namespace prev::core::engine::impl {
 DefaultEngineImpl::DefaultEngineImpl(const Config& config)
@@ -74,7 +76,8 @@ bool DefaultEngineImpl::EndFrame()
 
 void DefaultEngineImpl::ResetInstance()
 {
-    m_instance = std::make_unique<prev::core::instance::Instance>(m_config.validation);
+    prev::core::instance::InstanceFactory instanceFactory{};
+    m_instance = instanceFactory.Create(m_config.validation, m_config.appName);
 }
 
 void DefaultEngineImpl::ResetDevice()
