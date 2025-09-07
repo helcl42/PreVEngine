@@ -33,7 +33,6 @@ namespace {
         Extensions extensions;
         extensions.Pick(VK_KHR_SURFACE_EXTENSION_NAME);
         extensions.Pick(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-        extensions.Pick(VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME); // VK_KHR_external_memory_fd
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
         extensions.Pick(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
 #elif defined(VK_USE_PLATFORM_ANDROID_KHR)
