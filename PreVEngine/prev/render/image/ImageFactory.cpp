@@ -38,7 +38,7 @@ namespace {
         case 4:
             return CreateImageFromData<uint8_t, 4>(width, height, data);
         default:
-            LOGE("Image: Unsupported channel count: %d", channelCount);
+            LOGE("Image: Unsupported channel count: %u", channelCount);
             return nullptr;
         }
     }
@@ -90,7 +90,7 @@ std::unique_ptr<IImage> ImageFactory::CreateImage(const std::string& filename, b
 
 std::unique_ptr<IImage> ImageFactory::CreateImageFromMemory(const uint8_t* data, const uint32_t dataLength) const
 {
-    LOGI("Loading image from memory: %d bytes", dataLength);
+    LOGI("Loading image from memory: %u bytes", dataLength);
 
 #ifdef TARGET_PLATFORM_IOS
     stbi_convert_iphone_png_to_rgb(true);
@@ -98,7 +98,7 @@ std::unique_ptr<IImage> ImageFactory::CreateImageFromMemory(const uint8_t* data,
 
     int w, h, c;
     if (!stbi_info_from_memory(data, dataLength, &w, &h, &c)) {
-        LOGE("Image: Failed to get image info for image in memory with size %d", dataLength);
+        LOGE("Image: Failed to get image info for image in memory with size %u", dataLength);
         return nullptr;
     }
     c = OverrideDesiredChannelCount(c);
@@ -112,7 +112,7 @@ std::unique_ptr<IImage> ImageFactory::CreateImageFromMemory(const uint8_t* data,
 
     auto image = CreateUint8ImageFromData(w, h, c, imageBytes);
 
-    LOGI("Loaded image from memory: %d bytes (%dx%d|%d)", dataLength, w, h, c);
+    LOGI("Loaded image from memory: %u bytes (%dx%d|%d)", dataLength, w, h, c);
 
     stbi_image_free(imageBytes);
 

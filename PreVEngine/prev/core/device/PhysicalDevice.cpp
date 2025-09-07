@@ -245,7 +245,7 @@ void PhysicalDevice::Print(const bool showQueues) const
         const auto queueFamilies{ GetQueueFamilies() };
         for (size_t i = 0; i < queueFamilies.size(); ++i) {
             const auto& queueProps{ queueFamilies[i] };
-            LOGI("\t\tQueue-family: %zd count: %2d flags: [ %s]", i, queueProps.queueCount, prev::util::vk::QueueFlagsToString(queueProps.queueFlags).c_str());
+            LOGI("\t\tQueue-family: %zu count: %2d flags: [ %s]", i, queueProps.queueCount, prev::util::vk::QueueFlagsToString(queueProps.queueFlags).c_str());
         }
     }
 }

@@ -5,6 +5,7 @@ TerrainLayerCreateInfo::TerrainLayerCreateInfo(const std::string& matPath, const
     : materialPath(matPath)
     , shineDamper(shineDamperr)
     , reflectivity(reflectivityy)
+    , heightScale(0.0f)
     , heightStep(step)
 {
 }
@@ -14,6 +15,7 @@ TerrainLayerCreateInfo::TerrainLayerCreateInfo(const std::string& matPath, const
     , materialNormalPath(normalPath)
     , shineDamper(shineDamperr)
     , reflectivity(reflectivityy)
+    , heightScale(0.0f)
     , heightStep(step)
 {
 }

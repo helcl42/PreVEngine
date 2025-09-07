@@ -41,11 +41,11 @@ std::optional<PhysicalDevice> PhysicalDevices::FindPresentable(const VkSurfaceKH
 
 void PhysicalDevices::Print(bool showQueues) const
 {
-    LOGI("Physical Devices: %zd", GetCount());
+    LOGI("Physical Devices: %zu", GetCount());
 
     size_t j{ 0 };
     for (const auto& gpu : m_gpuList) {
-        LOGI("GPU: %zd:", j);
+        LOGI("GPU: %zu:", j);
         gpu.Print(true);
         ++j;
     }

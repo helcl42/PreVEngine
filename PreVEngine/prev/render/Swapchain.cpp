@@ -82,7 +82,7 @@ bool Swapchain::UpdateExtent(uint32_t width, uint32_t height)
     }
 
     if (currentSurfaceExtent.width == std::numeric_limits<uint32_t>::max() || currentSurfaceExtent.height == std::numeric_limits<uint32_t>::min()) {
-        LOGW("Can't determine current window surface extent from surface caps. Using provided extent instead. (%d x %d)", width, height);
+        LOGW("Can't determine current window surface extent from surface caps. Using provided extent instead. (%u x %u)", width, height);
         m_swapchainCreateInfo.imageExtent.width = util::math::Clamp(width, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width);
         m_swapchainCreateInfo.imageExtent.height = util::math::Clamp(height, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
     } else {
@@ -107,7 +107,7 @@ bool Swapchain::SetImageCount(uint32_t imageCount)
     m_swapchainCreateInfo.minImageCount = count;
 
     if (count != imageCount) {
-        LOGW("Swapchain using %d framebuffers, instead of %d.", count, imageCount);
+        LOGW("Swapchain using %u framebuffers, instead of %u.", count, imageCount);
     }
 
     if (!!m_swapchain) {

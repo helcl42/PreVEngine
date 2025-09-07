@@ -14,10 +14,10 @@ struct TerrainLayerCreateInfo {
     std::string materialPath;
     std::string materialNormalPath;
     std::string materialHeightPath;
-    float shineDamper;
-    float reflectivity;
-    float heightScale;
-    float heightStep;
+    float shineDamper{};
+    float reflectivity{};
+    float heightScale{};
+    float heightStep{};
 };
 } // namespace prev_test::component::terrain
 
