@@ -96,6 +96,6 @@ std::unique_ptr<Sampler> SamplerBuilder::Build() const
     VkSampler sampler;
     VKERRCHECK(vkCreateSampler(m_device, &samplerCreateInfo, nullptr, &sampler));
 
-    return std::make_unique<Sampler>(m_device, sampler);
+    return std::unique_ptr<Sampler>(new Sampler(m_device, sampler));
 }
 } // namespace prev::render::sampler

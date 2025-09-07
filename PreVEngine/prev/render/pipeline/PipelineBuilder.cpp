@@ -1,8 +1,8 @@
 #include "PipelineBuilder.h"
 
-#include "../../common/Logger.h"
 #include "../../util/Utils.h"
 
+#include <stdexcept>
 #include <vector>
 
 namespace prev::render::pipeline {
@@ -167,7 +167,8 @@ std::unique_ptr<Pipeline> ComputePipelineBuilder::Build() const
 {
     auto pipelineLayout{ CreatePipelineLayout(m_device, m_shader) };
     auto pipeline{ CreateComputePipeline(m_device, pipelineLayout, m_shader) };
-    return std::make_unique<Pipeline>(m_device, pipeline, pipelineLayout);
+
+    return std::unique_ptr<Pipeline>(new Pipeline(m_device, pipeline, pipelineLayout));
 }
 
 GraphicsPipelineBuilder::GraphicsPipelineBuilder(const VkDevice device, const shader::Shader& shader, const pass::RenderPass& renderPass)
@@ -245,25 +246,31 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetSampleShadingMinimumFractio
 
 std::unique_ptr<Pipeline> GraphicsPipelineBuilder::Build() const
 {
-    if (!m_depthTestEnabled && m_depthWriteEnabled) {
-        LOGW("Invalid pipeline configuration: Depth test is disabled but depth write enabled - depth write value will be ignored.");
-    }
-
-    if (!m_blendingEnabled && m_additiveBlendingEnabled) {
-        LOGW("Invalid pipeline configuration: Blending is disabled and additive blending enabled - additive blending will be ignored.");
-    }
-
-    if ((m_primitiveTopology != VK_PRIMITIVE_TOPOLOGY_PATCH_LIST && m_patchControlPointCount > 0) || (m_primitiveTopology == VK_PRIMITIVE_TOPOLOGY_PATCH_LIST && m_patchControlPointCount == 0)) {
-        LOGW("Invalid pipeline configuration: Invalid tesselation configuration - PrimitiveTopology = %d and PatchControlCount = %d.", m_primitiveTopology, m_patchControlPointCount);
-    }
-
-    if (m_sampleShadingEnabled && m_additiveBlendingEnabled && m_renderPass.GetSamplesCount() == VK_SAMPLE_COUNT_1_BIT) {
-        LOGW("Invalid pipeline configuration: sample shading is enabled while multisampling is disabled - sample shading will be ignored.");
-    }
+    Validate();
 
     auto pipelineLayout{ CreatePipelineLayout(m_device, m_shader) };
     auto pipeline{ CreateGraphicsPipeline(m_device, m_shader, m_renderPass, pipelineLayout, m_primitiveTopology, m_depthTestEnabled, m_depthWriteEnabled, m_blendingEnabled, m_additiveBlendingEnabled, m_polygonMode, m_cullingMode, m_frontFace, m_sampleShadingEnabled, m_sampleShadingMinFraction, m_patchControlPointCount) };
-    return std::make_unique<Pipeline>(m_device, pipeline, pipelineLayout);
+
+    return std::unique_ptr<Pipeline>(new Pipeline(m_device, pipeline, pipelineLayout));
+}
+
+void GraphicsPipelineBuilder::Validate() const
+{
+    if (!m_depthTestEnabled && m_depthWriteEnabled) {
+        throw std::runtime_error("Invalid pipeline configuration: Depth test is disabled but depth write enabled - depth write value will be ignored.");
+    }
+
+    if (!m_blendingEnabled && m_additiveBlendingEnabled) {
+        throw std::runtime_error("Invalid pipeline configuration: Blending is disabled and additive blending enabled - additive blending will be ignored.");
+    }
+
+    if ((m_primitiveTopology != VK_PRIMITIVE_TOPOLOGY_PATCH_LIST && m_patchControlPointCount > 0) || (m_primitiveTopology == VK_PRIMITIVE_TOPOLOGY_PATCH_LIST && m_patchControlPointCount == 0)) {
+        throw std::runtime_error("Invalid pipeline configuration: Invalid tesselation configuration - PrimitiveTopology = " + std::to_string(m_primitiveTopology) + " and PatchControlCount = " + std::to_string(m_patchControlPointCount) + ".");
+    }
+
+    if (m_sampleShadingEnabled && m_additiveBlendingEnabled && m_renderPass.GetSamplesCount() == VK_SAMPLE_COUNT_1_BIT) {
+        throw std::runtime_error("Invalid pipeline configuration: sample shading is enabled while multisampling is disabled - sample shading will be ignored.");
+    }
 }
 
 } // namespace prev::render::pipeline

@@ -26,7 +26,7 @@ public:
     std::unique_ptr<Buffer> Build() const;
 
 private:
-    void Valiadte() const;
+    void Valiadate() const;
 
 private:
     prev::core::memory::Allocator& m_allocator;

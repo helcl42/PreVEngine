@@ -54,6 +54,9 @@ public:
     std::unique_ptr<Pipeline> Build() const;
 
 private:
+    void Validate() const;
+
+private:
     const VkDevice m_device;
 
     const shader::Shader& m_shader;

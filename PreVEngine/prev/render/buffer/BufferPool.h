@@ -6,16 +6,22 @@
 #include "../../util/Utils.h"
 
 namespace prev::render::buffer {
+class BufferPoolBuilder;
+
 class BufferPool final {
-public:
+private:
     BufferPool(prev::core::memory::Allocator& allocator, VkBuffer buffer, VmaAllocation allocation, std::vector<std::unique_ptr<Buffer>>&& buffers);
 
+public:
     ~BufferPool() = default;
 
 public:
     Buffer& GetCurrent() const;
 
     void MoveToNext();
+
+public:
+    friend class BufferPoolBuilder;
 
 private:
     prev::core::memory::Allocator& m_allocator;

@@ -11,6 +11,8 @@
 #include <vector>
 
 namespace prev::render::shader {
+class ShaderBuilder;
+
 class Shader final {
 public:
     struct DescriptorSet {
@@ -46,9 +48,10 @@ public:
         std::map<std::string, DescriptorSetInfo> infos;
     };
 
-public:
+private:
     Shader(const VkDevice device, const ShadersInfo& shadersInfo, const VertexInputsInfo& vertexInputsInfo, const DescriptorSetsInfo& descriptorSetsInfo, const std::vector<VkPushConstantRange>& pushConstantRanges);
 
+public:
     ~Shader();
 
 public:
@@ -70,6 +73,9 @@ public:
     const std::vector<VkVertexInputBindingDescription>& GetVertexInputBindingDescriptions() const;
 
     const std::vector<VkVertexInputAttributeDescription>& GetVertexInputAttributeDescriptions() const;
+
+public:
+    friend class ShaderBuilder;
 
 private:
     void CheckBindings() const;

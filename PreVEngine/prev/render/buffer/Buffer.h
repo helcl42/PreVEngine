@@ -6,10 +6,14 @@
 #include <stdexcept>
 
 namespace prev::render::buffer {
+class BufferBuilder;
+class BufferPoolBuilder;
+
 class Buffer final {
-public:
+private:
     Buffer(prev::core::memory::Allocator& allocator, VkBuffer buffer, VmaAllocation allocation, prev::core::memory::MemoryType memoryType, uint64_t size, uint64_t offset, void* mappedPtr);
 
+public:
     ~Buffer();
 
 public:
@@ -48,6 +52,10 @@ public:
 
 public:
     operator VkBuffer() const;
+
+public:
+    friend class BufferBuilder;
+    friend class BufferPoolBuilder;
 
 protected:
     prev::core::memory::Allocator& m_allocator;

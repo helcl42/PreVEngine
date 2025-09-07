@@ -96,7 +96,7 @@ std::unique_ptr<RenderPass> RenderPassBuilder::Build() const
     VkRenderPass vkRenderPass{};
     VKERRCHECK(vkCreateRenderPass(m_device, &renderPassCreateInfo, nullptr, &vkRenderPass));
 
-    auto renderPass{ std::make_unique<RenderPass>(m_device, vkRenderPass, m_attachmentInfos, subpasses, m_dependencies) };
+    auto renderPass{ std::unique_ptr<RenderPass>(new RenderPass(m_device, vkRenderPass, m_attachmentInfos, subpasses, m_dependencies)) };
 
     LOGI("Renderpass created");
 

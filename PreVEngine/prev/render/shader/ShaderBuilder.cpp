@@ -117,7 +117,7 @@ std::unique_ptr<Shader> ShaderBuilder::Build() const
     const Shader::VertexInputsInfo vertexInputsInfo{ CreateVertexInputsInfo() };
     const Shader::DescriptorSetsInfo descriptorSetsInfo{ CreateDescriptorSetsInfo() };
 
-    auto shader{ std::make_unique<Shader>(m_device, shadersInfo, vertexInputsInfo, descriptorSetsInfo, m_pushConstantBlocks) };
+    auto shader{ std::unique_ptr<Shader>(new Shader(m_device, shadersInfo, vertexInputsInfo, descriptorSetsInfo, m_pushConstantBlocks)) };
     if (m_descriptorPoolSize > 0) {
         shader->AdjustDescriptorPoolCapacity(m_descriptorPoolSize);
     }

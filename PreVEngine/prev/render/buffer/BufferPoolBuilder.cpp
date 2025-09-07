@@ -43,7 +43,7 @@ BufferPoolBuilder& BufferPoolBuilder::SetAlignment(const uint64_t alignment)
 
 std::unique_ptr<BufferPool> BufferPoolBuilder::Build() const
 {
-    Valiadte();
+    Valiadate();
 
     const uint64_t alignedItemSize{ prev::util::math::RoundUp(m_stride, m_alignment) };
     const uint64_t alignedFullSize{ alignedItemSize * m_count };
@@ -64,13 +64,13 @@ std::unique_ptr<BufferPool> BufferPoolBuilder::Build() const
         const uint64_t offset{ i * alignedItemSize };
         // void* mappedPtr{ m_memoryType == prev::core::memory::MemoryType::HOST_MAPPED ? static_cast<uint8_t*>(mappedData) : nullptr };
         VmaAllocation allocation{ i == 0 ? wmaAllocation : nullptr }; // first instance in the pool clears the allocation
-        buffers[i] = std::move(std::make_unique<Buffer>(m_allocator, vkBuffer, allocation, m_memoryType, alignedItemSize, offset, mappedData));
+        buffers[i] = std::move(std::unique_ptr<Buffer>(new Buffer(m_allocator, vkBuffer, allocation, m_memoryType, alignedItemSize, offset, mappedData)));
     }
 
-    return std::make_unique<BufferPool>(m_allocator, vkBuffer, wmaAllocation, std::move(buffers));
+    return std::unique_ptr<BufferPool>(new BufferPool(m_allocator, vkBuffer, wmaAllocation, std::move(buffers)));
 }
 
-void BufferPoolBuilder::Valiadte() const
+void BufferPoolBuilder::Valiadate() const
 {
     if (m_memoryType == prev::core::memory::MemoryType::UNDEFINED) {
         throw std::runtime_error("Could not create buffer pool with UNDEFINED memory type");

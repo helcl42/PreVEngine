@@ -48,6 +48,7 @@ public:
 
     void* GetMappedData() const;
 
+public:
     operator VkImage() const;
 
 public:

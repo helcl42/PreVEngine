@@ -8,6 +8,8 @@
 #include <vector>
 
 namespace prev::render::pass {
+class RenderPassBuilder;
+
 class RenderPass final {
 public:
     struct AttachmentInfo {
@@ -49,6 +51,9 @@ public:
 
 public:
     operator VkRenderPass() const;
+
+public:
+    friend class RenderPassBuilder;
 
 private:
     VkDevice m_device;

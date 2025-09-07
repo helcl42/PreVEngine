@@ -44,7 +44,7 @@ BufferBuilder& BufferBuilder::SetData(const void* data, const uint64_t size)
 
 std::unique_ptr<Buffer> BufferBuilder::Build() const
 {
-    Valiadte();
+    Valiadate();
 
     const uint64_t alignedSize{ prev::util::math::RoundUp(m_size, m_alignment) };
 
@@ -58,10 +58,10 @@ std::unique_ptr<Buffer> BufferBuilder::Build() const
         throw std::runtime_error("Could not allocate buffer: size = " + std::to_string(alignedSize) + " bytes");
     }
 
-    return std::make_unique<Buffer>(m_allocator, buffer, allocation, m_memoryType, alignedSize, 0, mappedData);
+    return std::unique_ptr<Buffer>(new Buffer(m_allocator, buffer, allocation, m_memoryType, alignedSize, 0, mappedData));
 }
 
-void BufferBuilder::Valiadte() const
+void BufferBuilder::Valiadate() const
 {
     if (m_memoryType == prev::core::memory::MemoryType::UNDEFINED) {
         throw std::runtime_error("Could not create buffer with UNDEFINED memory type");

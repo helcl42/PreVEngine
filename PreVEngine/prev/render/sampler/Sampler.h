@@ -4,6 +4,8 @@
 #include "../../core/Core.h"
 
 namespace prev::render::sampler {
+class SamplerBuilder;
+
 class Sampler {
 public:
     Sampler(const VkDevice device, const VkSampler sampler);
@@ -12,6 +14,9 @@ public:
 
 public:
     operator VkSampler() const;
+
+public:
+    friend class SamplerBuilder;
 
 private:
     VkDevice m_device;
