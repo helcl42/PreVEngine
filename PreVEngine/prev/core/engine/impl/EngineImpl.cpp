@@ -121,7 +121,7 @@ void EngineImpl::ResetAllocator()
     LOGI("Allocator created");
 }
 
-std::unique_ptr<prev::render::pass::RenderPass> EngineImpl::CreateDefaultMultisampledRenderPass(const prev::core::device::Device& device, const VkFormat colorFormat, const VkFormat depthFormat, const VkSampleCountFlagBits sampleCount, const uint32_t viewCount, const bool storeColor, const bool storeDepth)
+std::unique_ptr<prev::render::pass::RenderPass> EngineImpl::CreateDefaultMultisampledRenderPass(const prev::core::device::Device& device, const VkFormat colorFormat, const VkFormat depthFormat, const VkSampleCountFlagBits sampleCount, const uint32_t viewCount, const bool storeColor, const bool storeDepth, const VkImageLayout colorLayout, const VkImageLayout depthLayout)
 {
     const VkClearColorValue clearColor{ { 0.5f, 0.5f, 0.5f, 1.0f } };
     const VkClearDepthStencilValue clearDepth{ MAX_DEPTH, 0 };
@@ -147,16 +147,16 @@ std::unique_ptr<prev::render::pass::RenderPass> EngineImpl::CreateDefaultMultisa
             VK_ATTACHMENT_STORE_OP_DONT_CARE) // color buffer, multisampled
         .AddDepthAttachment(depthFormat, sampleCount, clearDepth, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_ATTACHMENT_LOAD_OP_CLEAR,
             VK_ATTACHMENT_STORE_OP_DONT_CARE) // depth buffer, multisampled
-        .AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, clearColor, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_ATTACHMENT_LOAD_OP_CLEAR, storeColor ? VK_ATTACHMENT_STORE_OP_STORE : VK_ATTACHMENT_STORE_OP_DONT_CARE,
+        .AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, clearColor, colorLayout, VK_ATTACHMENT_LOAD_OP_CLEAR, storeColor ? VK_ATTACHMENT_STORE_OP_STORE : VK_ATTACHMENT_STORE_OP_DONT_CARE,
             true) // color buffer, resolve buffer
-        .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, clearDepth, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_ATTACHMENT_LOAD_OP_CLEAR, storeDepth ? VK_ATTACHMENT_STORE_OP_STORE : VK_ATTACHMENT_STORE_OP_DONT_CARE,
+        .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, clearDepth, depthLayout, VK_ATTACHMENT_LOAD_OP_CLEAR, storeDepth ? VK_ATTACHMENT_STORE_OP_STORE : VK_ATTACHMENT_STORE_OP_DONT_CARE,
             true) // depth buffer, resolve buffer
         .AddSubpass({ 0, 1 }, { 2, 3 }) // resolve ref will be at index 2 & 3
         .AddSubpassDependencies(dependencies)
         .Build();
 }
 
-std::unique_ptr<prev::render::pass::RenderPass> EngineImpl::CreateDefaultRenderPass(const prev::core::device::Device& device, const VkFormat colorFormat, const VkFormat depthFormat, const uint32_t viewCount, const bool storeColor, const bool storeDepth)
+std::unique_ptr<prev::render::pass::RenderPass> EngineImpl::CreateDefaultRenderPass(const prev::core::device::Device& device, const VkFormat colorFormat, const VkFormat depthFormat, const uint32_t viewCount, const bool storeColor, const bool storeDepth, const VkImageLayout colorLayout, const VkImageLayout depthLayout)
 {
     const VkClearColorValue clearColor{ { 0.5f, 0.5f, 0.5f, 1.0f } };
     const VkClearDepthStencilValue clearDepth{ MAX_DEPTH, 0 };
@@ -178,8 +178,8 @@ std::unique_ptr<prev::render::pass::RenderPass> EngineImpl::CreateDefaultRenderP
 
     return prev::render::pass::RenderPassBuilder{ device }
         .SetViewCount(viewCount)
-        .AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, clearColor, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_ATTACHMENT_LOAD_OP_CLEAR, storeColor ? VK_ATTACHMENT_STORE_OP_STORE : VK_ATTACHMENT_STORE_OP_DONT_CARE)
-        .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, clearDepth, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_ATTACHMENT_LOAD_OP_CLEAR, storeDepth ? VK_ATTACHMENT_STORE_OP_STORE : VK_ATTACHMENT_STORE_OP_DONT_CARE)
+        .AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, clearColor, colorLayout, VK_ATTACHMENT_LOAD_OP_CLEAR, storeColor ? VK_ATTACHMENT_STORE_OP_STORE : VK_ATTACHMENT_STORE_OP_DONT_CARE)
+        .AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, clearDepth, depthLayout, VK_ATTACHMENT_LOAD_OP_CLEAR, storeDepth ? VK_ATTACHMENT_STORE_OP_STORE : VK_ATTACHMENT_STORE_OP_DONT_CARE)
         .AddSubpass({ 0, 1 })
         .AddSubpassDependencies(dependencies)
         .Build();

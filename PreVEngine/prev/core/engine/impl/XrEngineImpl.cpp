@@ -114,13 +114,18 @@ void XrEngineImpl::ResetRenderPass()
     const auto colorFormat{ m_openXr->GetColorFormat() };
     const auto depthFormat{ m_openXr->GetDepthFormat() };
 
+    const uint32_t viewCount{ GetViewCount() };
+
     const bool storeColor{ true };
     const bool storeDepth{ m_openXr->HasDepthImages() };
 
+    const VkImageLayout colorLayout{ VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL };
+    const VkImageLayout depthLayout{ VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
+
     if (m_config.samplesCount > 1) {
-        m_renderPass = CreateDefaultMultisampledRenderPass(*m_device, colorFormat, depthFormat, prev::util::vk::GetSampleCountBit(m_config.samplesCount), GetViewCount(), storeColor, storeDepth);
+        m_renderPass = CreateDefaultMultisampledRenderPass(*m_device, colorFormat, depthFormat, prev::util::vk::GetSampleCountBit(m_config.samplesCount), viewCount, storeColor, storeDepth, colorLayout, depthLayout);
     } else {
-        m_renderPass = CreateDefaultRenderPass(*m_device, colorFormat, depthFormat, GetViewCount(), storeColor, storeDepth);
+        m_renderPass = CreateDefaultRenderPass(*m_device, colorFormat, depthFormat, GetViewCount(), storeColor, storeDepth, colorLayout, depthLayout);
     }
 }
 

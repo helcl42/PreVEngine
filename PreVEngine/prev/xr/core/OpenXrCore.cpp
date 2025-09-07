@@ -355,7 +355,6 @@ void OpenXrCore::CreateInstance()
 #endif
 
     OPENXR_CHECK(xrCreateInstance(&instanceCreateInfo, &m_instance), "Failed to create Instance.");
-
     if (!m_instance) {
         throw std::runtime_error("Could not create XR instance.");
     }
