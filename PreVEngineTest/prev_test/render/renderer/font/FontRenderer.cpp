@@ -6,7 +6,7 @@
 #include "../../../render/font/ScreenSpaceText.h"
 
 #include <prev/render/buffer/BufferPoolBuilder.h>
-#include <prev/render/pipeline/PipelineBuilder.h>
+#include <prev/render/pipeline/GraphicsPipelineBuilder.h>
 #include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>

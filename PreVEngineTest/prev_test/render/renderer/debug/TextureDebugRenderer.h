@@ -7,7 +7,7 @@
 #include <prev/core/device/Device.h>
 #include <prev/core/memory/Allocator.h>
 #include <prev/render/pass/RenderPass.h>
-#include <prev/render/pipeline/PipelineBuilder.h>
+#include <prev/render/pipeline/GraphicsPipelineBuilder.h>
 #include <prev/render/sampler/Sampler.h>
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/IScene.h>

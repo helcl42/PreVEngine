@@ -1,28 +1,12 @@
-#ifndef __PIPELINE_FACTORY_H__
-#define __PIPELINE_FACTORY_H__
+#ifndef __GRAPHICS_PIPELINE_BUILDER_H__
+#define __GRAPHICS_PIPELINE_BUILDER_H__
+
+#include "AbstractPipelineBuilder.h"
 
 #include "../pass/RenderPass.h"
-#include "../shader/Shader.h"
-
-#include "Pipeline.h"
 
 namespace prev::render::pipeline {
-class ComputePipelineBuilder final {
-public:
-    ComputePipelineBuilder(const VkDevice device, const shader::Shader& shader);
-
-    ~ComputePipelineBuilder() = default;
-
-public:
-    std::unique_ptr<Pipeline> Build() const;
-
-private:
-    const VkDevice m_device;
-
-    const shader::Shader& m_shader;
-};
-
-class GraphicsPipelineBuilder final {
+class GraphicsPipelineBuilder final : public AbstractPipelineBuilder {
 public:
     GraphicsPipelineBuilder(const VkDevice device, const shader::Shader& shader, const pass::RenderPass& renderPass);
 
@@ -51,16 +35,15 @@ public:
 
     GraphicsPipelineBuilder& SetSampleShadingMinimumFraction(float fraction);
 
-    std::unique_ptr<Pipeline> Build() const;
+    std::unique_ptr<Pipeline> Build() const override;
 
 private:
-    void Validate() const;
+    void Validate() const override;
 
 private:
-    const VkDevice m_device;
+    VkPipeline CreateGraphicsPipeline(const VkPipelineLayout pipelineLayout) const;
 
-    const shader::Shader& m_shader;
-
+private:
     const pass::RenderPass& m_renderPass;
 
     VkPrimitiveTopology m_primitiveTopology{ VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST };

@@ -5,7 +5,7 @@
 #include <prev/core/CommandsExecutor.h>
 #include <prev/render/buffer/BufferBuilder.h>
 #include <prev/render/buffer/ImageBufferBuilder.h>
-#include <prev/render/pipeline/PipelineBuilder.h>
+#include <prev/render/pipeline/ComputePipelineBuilder.h>
 #include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/util/VkUtils.h>
