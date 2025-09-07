@@ -17,13 +17,7 @@ namespace {
             return nullptr;
         }
 
-        auto image = std::make_unique<Image<T, Channels>>(width, height, data);
-        if (!image) {
-            LOGE("Image: Failed to create image from data: memory allocation failed");
-            return nullptr;
-        }
-
-        return image;
+        return std::make_unique<Image<T, Channels>>(width, height, data);
     }
 
     std::unique_ptr<IImage> CreateUint8ImageFromData(const uint32_t width, const uint32_t height, const uint32_t channelCount, const uint8_t* data)
@@ -122,10 +116,6 @@ std::unique_ptr<IImage> ImageFactory::CreateImageFromMemory(const uint8_t* data,
 std::unique_ptr<IImage> ImageFactory::CreateImageWithPattern(const uint32_t width, const uint32_t height, const bool gradient, const uint32_t checkers) const
 {
     auto image = std::make_unique<Image<uint8_t, 4>>(width, height);
-    if (!image) {
-        return nullptr;
-    }
-
     for (uint32_t y = 0; y < image->GetHeight(); ++y) {
         for (uint32_t x = 0; x < image->GetWidth(); ++x) {
             auto& pix{ image->GetPixel(x, y) };
@@ -150,12 +140,7 @@ std::unique_ptr<IImage> ImageFactory::CreateImageWithPattern(const uint32_t widt
 std::unique_ptr<IImage> ImageFactory::CreateImageWithColor(const uint32_t width, const uint32_t height, const Pixel<uint8_t, 4>& color) const
 {
     auto image = std::make_unique<Image<uint8_t, 4>>(width, height);
-    if (!image) {
-        return nullptr;
-    }
-
     image->Clear(color);
-
     return image;
 }
 } // namespace prev::render::image
