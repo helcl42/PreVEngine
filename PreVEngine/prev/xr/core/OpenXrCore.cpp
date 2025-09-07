@@ -212,7 +212,7 @@ void OpenXrCore::PollEvents()
         }
         case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING: {
             XrEventDataInstanceLossPending* instanceLossPending = reinterpret_cast<XrEventDataInstanceLossPending*>(&eventData);
-            LOGI("OPENXR: Instance Loss Pending at: %lld", instanceLossPending->lossTime);
+            LOGI("OPENXR: Instance Loss Pending at: %ld", instanceLossPending->lossTime);
             m_sessionRunning = false;
             m_applicationRunning = false;
             break;
