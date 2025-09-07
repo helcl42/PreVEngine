@@ -314,9 +314,9 @@ void OpenXrCore::CreateInstance()
     };
 
     const std::vector<const char*> requestedInstanceExtensionNames = {
-        // #ifdef TARGET_PLATFORM_ANDROID
-        //        XR_KHR_ANDROID_CREATE_INSTANCE_EXTENSION_NAME,
-        // #endif
+#ifdef TARGET_PLATFORM_ANDROID
+        XR_KHR_ANDROID_CREATE_INSTANCE_EXTENSION_NAME,
+#endif
         XR_EXT_DEBUG_UTILS_EXTENSION_NAME,
 
         XR_KHR_VULKAN_ENABLE_EXTENSION_NAME,
@@ -346,6 +346,13 @@ void OpenXrCore::CreateInstance()
     instanceCreateInfo.enabledApiLayerNames = activeApiLayers.data();
     instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(activeInstanceExtensions.size());
     instanceCreateInfo.enabledExtensionNames = activeInstanceExtensions.data();
+
+#ifdef TARGET_PLATFORM_ANDROID
+    XrInstanceCreateInfoAndroidKHR instanceCreateInfoAndroid{ XR_TYPE_INSTANCE_CREATE_INFO_ANDROID_KHR };
+    instanceCreateInfoAndroid.applicationActivity = g_AndroidApp->activity;
+    instanceCreateInfoAndroid.applicationVM = g_AndroidApp->activity->vm;
+    instanceCreateInfo.next = &instanceCreateInfoAndroid;
+#endif
 
     OPENXR_CHECK(xrCreateInstance(&instanceCreateInfo, &m_instance), "Failed to create Instance.");
 
