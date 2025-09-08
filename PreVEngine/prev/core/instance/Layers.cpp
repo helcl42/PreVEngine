@@ -1,35 +1,24 @@
 #include "Layers.h"
 
 namespace prev::core::instance {
+namespace {
+    std::vector<std::string> GetItemNames()
+    {
+        uint32_t count{ 0 };
+        VKERRCHECK(vkEnumerateInstanceLayerProperties(&count, nullptr));
+        std::vector<VkLayerProperties> items(count);
+        VKERRCHECK(vkEnumerateInstanceLayerProperties(&count, items.data()));
+
+        std::vector<std::string> itemNames(items.size());
+        for (size_t i = 0; i < items.size(); ++i) {
+            itemNames[i] = items[i].layerName;
+        }
+        return itemNames;
+    }
+} // namespace
+
 Layers::Layers()
+    : PickList("Layers", GetItemNames())
 {
-    uint32_t count{ 0 };
-    VKERRCHECK(vkEnumerateInstanceLayerProperties(&count, nullptr));
-
-    m_itemList.resize(count);
-    VKERRCHECK(vkEnumerateInstanceLayerProperties(&count, m_itemList.data()));
-}
-
-Layers::Layers(const Layers& other)
-    : PickList(other)
-{
-    Refresh();
-}
-
-Layers& Layers::operator=(const Layers& other)
-{
-    PickList::operator=(other);
-    Refresh();
-    return *this;
-}
-
-std::string Layers::GetNameByIndex(const uint32_t index) const
-{
-    return m_itemList[index].layerName;
-}
-
-std::string Layers::GetName() const
-{
-    return "Layers";
 }
 } // namespace prev::core::instance
