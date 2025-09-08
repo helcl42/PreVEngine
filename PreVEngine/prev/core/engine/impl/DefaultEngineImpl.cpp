@@ -91,12 +91,10 @@ void DefaultEngineImpl::ResetDevice()
     }
 
     prev::core::device::DeviceFactory deviceFactory{};
-    auto device{ deviceFactory.Create(*presentablePhysicalDevice, m_surface) };
-    if (!device) {
+    m_device = deviceFactory.Create(*presentablePhysicalDevice, m_surface);
+    if (!m_device) {
         throw std::runtime_error("Could not create logical device");
     }
-
-    m_device = std::move(device);
     m_device->Print();
 }
 

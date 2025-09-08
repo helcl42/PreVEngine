@@ -97,12 +97,10 @@ void XrEngineImpl::ResetDevice()
     prev::core::device::PhysicalDevice physicalDevice{ m_openXr->GetPhysicalDevice(*m_instance), m_openXr->GetVulkanDeviceExtensions() };
 
     prev::core::device::DeviceFactory deviceFactory{};
-    auto device{ deviceFactory.Create(physicalDevice, m_surface) };
-    if (!device) {
+    m_device = deviceFactory.Create(physicalDevice, m_surface);
+    if (!m_device) {
         throw std::runtime_error("Could not create logical device");
     }
-
-    m_device = std::move(device);
     m_device->Print();
 
     const auto& queue{ m_device->GetQueue(prev::core::device::QueueType::GRAPHICS) };
