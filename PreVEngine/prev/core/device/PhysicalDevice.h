@@ -1,7 +1,7 @@
 #ifndef __PHYSICAL_DEVICE_H__
 #define __PHYSICAL_DEVICE_H__
 
-#include "../instance/Validation.h"
+#include "../Core.h"
 
 #include "DeviceExtensions.h"
 
@@ -57,17 +57,20 @@ public:
     operator VkPhysicalDevice() const;
 
 private:
-    VkPhysicalDevice m_handle{};
+    void EnableMultiview();
 
-    DeviceExtensions m_extensions{};
+private:
+    VkPhysicalDevice m_handle;
 
-    VkPhysicalDeviceProperties2 m_availableProperties{}; // properties and limits
+    DeviceExtensions m_extensions;
 
-    VkPhysicalDeviceFeatures2 m_availableFeatures{}; // list of available features
+    std::vector<VkQueueFamilyProperties> m_queueFamilies;
 
-    std::vector<VkQueueFamilyProperties> m_queueFamilies; // array of queue families
+    VkPhysicalDeviceProperties2 m_availableProperties;
 
-    VkPhysicalDeviceFeatures2 m_enabledFeatures{};
+    VkPhysicalDeviceFeatures2 m_availableFeatures;
+
+    VkPhysicalDeviceFeatures2 m_enabledFeatures;
 
     VkPhysicalDeviceMultiviewFeatures m_physicalDeviceMultiviewFeatures{};
 };
