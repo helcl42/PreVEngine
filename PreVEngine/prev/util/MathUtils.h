@@ -71,6 +71,30 @@ inline constexpr T AlmostZero(T value1, T epsilon = T(1e-7))
 }
 
 template <typename T>
+bool HasAllFlagsSet(const T flags, const T value)
+{
+    return (flags & value) == value;
+}
+
+template <typename T>
+bool HasAnyFlagsSet(const T flags, const T value)
+{
+    return (flags & value) != 0;
+}
+
+template <typename T>
+void AddFlags(T& flags, const T value)
+{
+    flags |= value;
+}
+
+template <typename T>
+void RemoveFlags(T& flags, const T value)
+{
+    flags &= ~value;
+}
+
+template <typename T>
 T SetBits(const T& leastSignificantBitCount)
 {
     return (T(1) << leastSignificantBitCount) - T(1);
