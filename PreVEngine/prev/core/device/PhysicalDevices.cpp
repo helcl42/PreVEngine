@@ -16,7 +16,7 @@ PhysicalDevices::PhysicalDevices(const VkInstance instance)
 
     m_gpuList.resize(gpuCount);
     for (size_t i = 0; i < vkGpus.size(); ++i) {
-        m_gpuList[i] = PhysicalDevice(vkGpus[i]);
+        m_gpuList[i] = std::make_unique<PhysicalDevice>(vkGpus[i]);
     }
 }
 
@@ -24,15 +24,15 @@ std::optional<PhysicalDevice> PhysicalDevices::FindPresentable(const VkSurfaceKH
 {
     if (hintIndex < 0 || hintIndex >= static_cast<int32_t>(m_gpuList.size())) {
         for (const auto& gpu : m_gpuList) {
-            if (gpu.FindQueueFamily(0, 0, surface) >= 0) {
-                return gpu;
+            if (gpu->FindQueueFamily(0, 0, surface) >= 0) {
+                return *gpu;
             }
         }
         LOGW("No devices can present to this surface.");
     } else {
         const auto& gpu{ m_gpuList[hintIndex] };
-        if (gpu.FindQueueFamily(0, 0, surface) >= 0) {
-            return gpu;
+        if (gpu->FindQueueFamily(0, 0, surface) >= 0) {
+            return *gpu;
         }
         LOGW("Devices at index %d can not present to this surface.", hintIndex);
     }
@@ -46,7 +46,7 @@ void PhysicalDevices::Print(bool showQueues) const
     size_t j{ 0 };
     for (const auto& gpu : m_gpuList) {
         LOGI("GPU: %zu:", j);
-        gpu.Print(true);
+        gpu->Print(true);
         ++j;
     }
 }
@@ -58,6 +58,6 @@ size_t PhysicalDevices::GetCount() const
 
 const PhysicalDevice& PhysicalDevices::operator[](const size_t i) const
 {
-    return m_gpuList[i];
+    return *m_gpuList[i];
 }
 } // namespace prev::core::device

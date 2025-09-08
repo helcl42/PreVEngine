@@ -11,11 +11,9 @@
 namespace prev::core::device {
 class PhysicalDevice {
 public:
-    PhysicalDevice();
-
     PhysicalDevice(const VkPhysicalDevice gpu, const std::vector<std::string>& extensions = {});
 
-    virtual ~PhysicalDevice() = default;
+    ~PhysicalDevice() = default;
 
 public:
     PhysicalDevice(const PhysicalDevice& other);

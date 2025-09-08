@@ -3,14 +3,6 @@
 #include "../../util/VkUtils.h"
 
 namespace prev::core::device {
-PhysicalDevice::PhysicalDevice()
-    : m_handle{ VK_NULL_HANDLE }
-    , m_extensions{}
-    , m_availableProperties{}
-    , m_availableFeatures{}
-{
-}
-
 PhysicalDevice::PhysicalDevice(const VkPhysicalDevice gpu, const std::vector<std::string>& extensions)
     : m_handle{ gpu }
     , m_extensions{ gpu }

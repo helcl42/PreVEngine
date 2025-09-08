@@ -34,9 +34,9 @@ public:
     operator VkDevice() const;
 
 private:
-    PhysicalDevice m_gpu{};
+    PhysicalDevice m_gpu;
 
-    VkDevice m_handle{};
+    VkDevice m_handle;
 
     std::map<QueueType, std::vector<std::unique_ptr<Queue>>> m_queues;
 };

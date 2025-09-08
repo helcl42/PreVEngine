@@ -3,6 +3,7 @@
 
 #include "PhysicalDevice.h"
 
+#include <memory>
 #include <optional>
 #include <vector>
 
@@ -21,7 +22,7 @@ public:
     const PhysicalDevice& operator[](const size_t i) const;
 
 private:
-    std::vector<PhysicalDevice> m_gpuList;
+    std::vector<std::unique_ptr<PhysicalDevice>> m_gpuList;
 };
 } // namespace prev::core::device
 
