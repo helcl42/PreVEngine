@@ -141,7 +141,7 @@ bool PickList::Contains(const std::string& name) const
 
 void PickList::Print() const
 {
-    LOGI("%s picked: %d of %d", m_name.c_str(), GetPickCount(), GetCount());
+    LOGI("%s picked: %u of %u", m_name.c_str(), GetPickCount(), GetCount());
     for (uint32_t i = 0; i < GetCount(); ++i) {
         const auto& name{ m_pickListNames[i] };
         const auto picked{ IsPicked(name) };
