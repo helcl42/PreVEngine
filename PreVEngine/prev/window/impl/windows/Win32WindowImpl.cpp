@@ -3,6 +3,7 @@
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 
 #include "../../../common/Logger.h"
+#include "../../../util/VkUtils.h"
 
 #include <windowsx.h> // Mouse
 
