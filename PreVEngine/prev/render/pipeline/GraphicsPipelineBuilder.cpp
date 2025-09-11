@@ -1,6 +1,7 @@
 #include "GraphicsPipelineBuilder.h"
 
 #include "../../util/Utils.h"
+#include "../../util/VkUtils.h"
 
 #include <stdexcept>
 #include <vector>
@@ -9,7 +10,7 @@ namespace prev::render::pipeline {
 namespace {
     VkPipelineInputAssemblyStateCreateInfo CreatePipelineInputAssemblyStateCreateInfo(const VkPrimitiveTopology topology)
     {
-        VkPipelineInputAssemblyStateCreateInfo inputAssembly{ VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
+        VkPipelineInputAssemblyStateCreateInfo inputAssembly{ prev::util::vk::CreateStruct<VkPipelineInputAssemblyStateCreateInfo>(VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO) };
         inputAssembly.topology = topology;
         inputAssembly.primitiveRestartEnable = VK_FALSE;
         return inputAssembly;
@@ -17,7 +18,7 @@ namespace {
 
     VkPipelineVertexInputStateCreateInfo CreatePipelineVertexInputStateCreateInfo(const std::vector<VkVertexInputBindingDescription>& vertexInputBindingDescription, const std::vector<VkVertexInputAttributeDescription>& vertexInputAttributeDescription)
     {
-        VkPipelineVertexInputStateCreateInfo vertexInput{ VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
+        VkPipelineVertexInputStateCreateInfo vertexInput{ prev::util::vk::CreateStruct<VkPipelineVertexInputStateCreateInfo>(VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO) };
         vertexInput.vertexBindingDescriptionCount = static_cast<uint32_t>(vertexInputBindingDescription.size());
         vertexInput.pVertexBindingDescriptions = vertexInputBindingDescription.data();
         vertexInput.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexInputAttributeDescription.size());
@@ -27,7 +28,7 @@ namespace {
 
     VkPipelineViewportStateCreateInfo CreatePipelineViewportStateCreateInfo(const VkViewport& viewport, const VkRect2D& scissor)
     {
-        VkPipelineViewportStateCreateInfo viewportStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
+        VkPipelineViewportStateCreateInfo viewportStateCreateInfo{ prev::util::vk::CreateStruct<VkPipelineViewportStateCreateInfo>(VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO) };
         viewportStateCreateInfo.viewportCount = 1;
         viewportStateCreateInfo.pViewports = &viewport;
         viewportStateCreateInfo.scissorCount = 1;
@@ -37,7 +38,7 @@ namespace {
 
     VkPipelineRasterizationStateCreateInfo CreatePipelineRasterizationStateCreateInfo(const VkPolygonMode polygonMode, const VkCullModeFlagBits cullingMode, const VkFrontFace frontFace)
     {
-        VkPipelineRasterizationStateCreateInfo rasterizer{ VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
+        VkPipelineRasterizationStateCreateInfo rasterizer{ prev::util::vk::CreateStruct<VkPipelineRasterizationStateCreateInfo>(VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO) };
         rasterizer.depthClampEnable = VK_TRUE;
         rasterizer.rasterizerDiscardEnable = VK_FALSE;
         rasterizer.polygonMode = polygonMode;
@@ -50,7 +51,7 @@ namespace {
 
     VkPipelineMultisampleStateCreateInfo CreatePipelineMultisampleStateCreateInfo(const VkSampleCountFlagBits sampleCount, const bool sampleShadingEnabled, const float sampleShadingFraction)
     {
-        VkPipelineMultisampleStateCreateInfo multisampling{ VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
+        VkPipelineMultisampleStateCreateInfo multisampling{ prev::util::vk::CreateStruct<VkPipelineMultisampleStateCreateInfo>(VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO) };
         if (sampleCount > VK_SAMPLE_COUNT_1_BIT) {
             multisampling.sampleShadingEnable = sampleShadingEnabled;
             multisampling.rasterizationSamples = sampleCount;
@@ -64,7 +65,7 @@ namespace {
 
     VkPipelineDepthStencilStateCreateInfo CreatePipelineDepthStencilStateCreateInfo(const bool depthTestEnabled, const bool depthWriteEnabled)
     {
-        VkPipelineDepthStencilStateCreateInfo depthStencil{ VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
+        VkPipelineDepthStencilStateCreateInfo depthStencil{ prev::util::vk::CreateStruct<VkPipelineDepthStencilStateCreateInfo>(VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO) };
         depthStencil.depthTestEnable = depthTestEnabled ? VK_TRUE : VK_FALSE;
         depthStencil.depthWriteEnable = depthWriteEnabled ? VK_TRUE : VK_FALSE;
         if constexpr (REVERSE_DEPTH) {
@@ -106,7 +107,7 @@ namespace {
 
     VkPipelineColorBlendStateCreateInfo CreatePipelineColorBlendStateCreateInfo(const std::vector<VkPipelineColorBlendAttachmentState>& colorBlendAttachments)
     {
-        VkPipelineColorBlendStateCreateInfo colorBlending{ VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
+        VkPipelineColorBlendStateCreateInfo colorBlending{ prev::util::vk::CreateStruct<VkPipelineColorBlendStateCreateInfo>(VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO) };
         colorBlending.logicOpEnable = VK_FALSE;
         colorBlending.logicOp = VK_LOGIC_OP_COPY;
         colorBlending.attachmentCount = static_cast<uint32_t>(colorBlendAttachments.size());
@@ -120,7 +121,7 @@ namespace {
 
     VkPipelineDynamicStateCreateInfo CreatePipelineDynamicStateCreateInfo(const VkDynamicState* dynamicStates, const uint32_t dynamicStateCount)
     {
-        VkPipelineDynamicStateCreateInfo dynamicState{ VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
+        VkPipelineDynamicStateCreateInfo dynamicState{ prev::util::vk::CreateStruct<VkPipelineDynamicStateCreateInfo>(VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO) };
         dynamicState.pDynamicStates = dynamicStates;
         dynamicState.dynamicStateCount = dynamicStateCount;
         return dynamicState;
@@ -128,7 +129,7 @@ namespace {
 
     VkPipelineTessellationStateCreateInfo CreatePipelineTessellationStateCreateInfo(const uint32_t patchControlPointCount)
     {
-        VkPipelineTessellationStateCreateInfo tesselation{ VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO };
+        VkPipelineTessellationStateCreateInfo tesselation{ prev::util::vk::CreateStruct<VkPipelineTessellationStateCreateInfo>(VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO) };
         tesselation.patchControlPoints = patchControlPointCount;
         return tesselation;
     }
@@ -249,7 +250,7 @@ VkPipeline GraphicsPipelineBuilder::CreateGraphicsPipeline(const VkPipelineLayou
 
     const auto tesselationStateCreateInfo{ CreatePipelineTessellationStateCreateInfo(m_patchControlPointCount) };
 
-    VkGraphicsPipelineCreateInfo pipelineInfo{ VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
+    VkGraphicsPipelineCreateInfo pipelineInfo{ prev::util::vk::CreateStruct<VkGraphicsPipelineCreateInfo>(VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO) };
     pipelineInfo.stageCount = static_cast<uint32_t>(m_shader.GetShaderStages().size());
     pipelineInfo.pStages = m_shader.GetShaderStages().data();
     pipelineInfo.pVertexInputState = &vertexInputStateCreateInfo;

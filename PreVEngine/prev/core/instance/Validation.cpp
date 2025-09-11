@@ -1,6 +1,7 @@
 #include "Validation.h"
 
 #include "../../common/Logger.h"
+#include "../../util/VkUtils.h"
 
 namespace prev::core::instance {
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
@@ -72,9 +73,7 @@ ValidationReporter::ValidationReporter(VkInstance instance)
         VK_DEBUG_REPORT_DEBUG_BIT_EXT | // 16
         0;
 
-    VkDebugReportCallbackCreateInfoEXT createInfo = {};
-    createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
-    createInfo.pNext = nullptr;
+    VkDebugReportCallbackCreateInfoEXT createInfo{ prev::util::vk::CreateStruct<VkDebugReportCallbackCreateInfoEXT>(VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT) };
     createInfo.flags = flags;
     createInfo.pfnCallback = DebugCallback; // Callback function to call
     createInfo.pUserData = nullptr;
@@ -92,8 +91,7 @@ ValidationReporter::ValidationReporter(VkInstance instance)
         | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT
         | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 
-    VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
-    createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+    VkDebugUtilsMessengerCreateInfoEXT createInfo{ prev::util::vk::CreateStruct<VkDebugUtilsMessengerCreateInfoEXT>(VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT) };
     createInfo.messageType = messageType;
     createInfo.flags = 0;
     createInfo.messageSeverity = severity;

@@ -15,7 +15,7 @@ public:
 public:
     std::optional<PhysicalDevice> FindPresentable(const VkSurfaceKHR surface, const int32_t hintIndex = -1) const; // Returns first device able to present to surface, or null if none.
 
-    void Print(bool showQueues = false) const;
+    void Print() const;
 
     size_t GetCount() const;
 

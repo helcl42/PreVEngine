@@ -1,5 +1,6 @@
 #include "ShaderBuilder.h"
 
+#include "../../util/MathUtils.h"
 #include "../../util/Utils.h"
 #include "../../util/VkUtils.h"
 
@@ -139,10 +140,10 @@ void ShaderBuilder::CheckExistingStage(const VkShaderStageFlagBits stage) const
 
 VkShaderModule ShaderBuilder::CreateShaderModule(const std::vector<char>& spirv) const
 {
-    std::vector<uint32_t> codeAligned(spirv.size() / 4 + 1);
+    std::vector<uint32_t> codeAligned(prev::util::math::RoundUp<size_t>(spirv.size() / 4, 4));
     memcpy(codeAligned.data(), spirv.data(), spirv.size());
 
-    VkShaderModuleCreateInfo createInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
+    VkShaderModuleCreateInfo createInfo{ prev::util::vk::CreateStruct<VkShaderModuleCreateInfo>(VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO) };
     createInfo.codeSize = spirv.size();
     createInfo.pCode = codeAligned.data();
 
@@ -153,7 +154,7 @@ VkShaderModule ShaderBuilder::CreateShaderModule(const std::vector<char>& spirv)
 
 VkPipelineShaderStageCreateInfo ShaderBuilder::CreateShaderStageCreateInfo(const VkShaderStageFlagBits stage, const VkShaderModule& module) const
 {
-    VkPipelineShaderStageCreateInfo stageInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
+    VkPipelineShaderStageCreateInfo stageInfo{ prev::util::vk::CreateStruct<VkPipelineShaderStageCreateInfo>(VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO) };
     stageInfo.stage = stage;
     stageInfo.module = module;
     stageInfo.pName = m_entryPointName.empty() ? DEFAULT_ENTRY_POINT_NAME.c_str() : m_entryPointName.c_str(); // this changes name for all stages
@@ -162,7 +163,7 @@ VkPipelineShaderStageCreateInfo ShaderBuilder::CreateShaderStageCreateInfo(const
 
 VkDescriptorSetLayout ShaderBuilder::CreateDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& layoutBindings) const
 {
-    VkDescriptorSetLayoutCreateInfo createInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
+    VkDescriptorSetLayoutCreateInfo createInfo{ prev::util::vk::CreateStruct<VkDescriptorSetLayoutCreateInfo>(VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO) };
     createInfo.bindingCount = static_cast<uint32_t>(layoutBindings.size());
     createInfo.pBindings = layoutBindings.data();
 
@@ -208,10 +209,10 @@ Shader::DescriptorSetsInfo ShaderBuilder::CreateDescriptorSetsInfo() const
         descriptorWrites.emplace_back(prev::util::vk::CreateWriteDescriptorSet(ds.binding, ds.descType, ds.descCount));
         if (ds.descCount > 1) {
             for (uint32_t i = 0; i < ds.descCount; ++i) {
-                descriptorSetInfos[ds.name + "[" + std::to_string(i) + "]"] = { descriptorWrites.size() - 1 };
+                descriptorSetInfos[ds.name + "[" + std::to_string(i) + "]"] = { descriptorWrites.size() - 1, {} };
             }
         } else {
-            descriptorSetInfos[ds.name] = { descriptorWrites.size() - 1 };
+            descriptorSetInfos[ds.name] = { descriptorWrites.size() - 1, {} };
         }
     }
 

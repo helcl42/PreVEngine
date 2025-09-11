@@ -81,6 +81,18 @@ struct Event {
         UNKNOWN
     };
 
+    Event()
+        : tag{ EventType::UNKNOWN }
+        , body{}
+    {
+    }
+
+    Event(EventType t)
+        : tag{ t }
+        , body{}
+    {
+    }
+
     EventType tag;
 
     union {
@@ -151,7 +163,7 @@ struct Event {
         {
 
         } change;
-    };
+    } body;
 
     void Clear()
     {

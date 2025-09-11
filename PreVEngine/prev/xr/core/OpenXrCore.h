@@ -65,26 +65,26 @@ private:
     void DestroyReferenceSpace();
 
 private:
-    XrInstance m_instance{ XR_NULL_HANDLE };
-    XrSystemId m_systemId{ XR_NULL_SYSTEM_ID };
+    XrInstance m_instance;
+    XrSystemId m_systemId;
 
-    XrSystemProperties m_systemProperties{ XR_TYPE_SYSTEM_PROPERTIES };
-    XrSystemHandTrackingPropertiesEXT m_handTrackingSystemProperties{ XR_TYPE_SYSTEM_HAND_TRACKING_PROPERTIES_EXT };
+    XrSystemProperties m_systemProperties;
+    XrSystemHandTrackingPropertiesEXT m_handTrackingSystemProperties;
 
-    XrGraphicsBindingVulkanKHR m_graphicsBinding{};
-    XrViewConfigurationType m_viewConfiguration{ XR_VIEW_CONFIGURATION_TYPE_MAX_ENUM };
+    XrGraphicsBindingVulkanKHR m_graphicsBinding;
+    XrViewConfigurationType m_viewConfiguration;
 
-    XrSession m_session{ XR_NULL_HANDLE };
-    XrSessionState m_sessionState{ XR_SESSION_STATE_UNKNOWN };
+    XrSession m_session;
+    XrSessionState m_sessionState;
 
-    XrSpace m_localSpace{ XR_NULL_HANDLE };
+    XrSpace m_localSpace;
 
-    bool m_applicationRunning{ true };
-    bool m_sessionRunning{ false };
+    bool m_applicationRunning;
+    bool m_sessionRunning;
 
-    prev::common::pattern::Observer<common::IOpenXrEventObserver> m_eventObserver{};
+    prev::common::pattern::Observer<common::IOpenXrEventObserver> m_eventObserver;
 
-    std::unique_ptr<OpenXrDebugMessenger> m_debugMessenger{};
+    std::unique_ptr<OpenXrDebugMessenger> m_debugMessenger;
 };
 } // namespace prev::xr::core
 

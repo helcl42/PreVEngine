@@ -3,9 +3,9 @@
 
 #ifdef ENABLE_XR
 
-#include "../common/IOpenXrEventObserver.h"
-
 #include "../XrEvents.h"
+#include "../common/IOpenXrEventObserver.h"
+#include "../util/OpenXRUtil.h"
 
 #include <unordered_map>
 
@@ -120,7 +120,7 @@ private:
     struct RenderLayerInfo {
         XrTime predictedDisplayTime{ 0 };
         std::vector<XrCompositionLayerBaseHeader*> layers;
-        XrCompositionLayerProjection layerProjection{ XR_TYPE_COMPOSITION_LAYER_PROJECTION };
+        XrCompositionLayerProjection layerProjection{};
         std::vector<XrCompositionLayerProjectionView> layerProjectionViews;
         std::vector<XrCompositionLayerDepthInfoKHR> layerDepthInfos;
     };

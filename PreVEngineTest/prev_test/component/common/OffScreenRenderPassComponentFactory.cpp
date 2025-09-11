@@ -7,10 +7,6 @@
 #include <prev/util/VkUtils.h>
 
 namespace prev_test::component::common {
-
-constexpr bool ANISOTROPIC_FILTERING_ENABLED{ true };
-constexpr float MAX_ANISOTROPY_LEVEL{ 4.0f };
-
 OffScreenRenderPassComponentFactory::OffScreenRenderPassComponentFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
     : m_device{ device }
     , m_allocator{ allocator }

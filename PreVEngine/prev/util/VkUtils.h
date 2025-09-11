@@ -10,6 +10,15 @@
 
 namespace prev::util::vk {
 
+template <typename T>
+T CreateStruct(const VkStructureType structType, void* next = nullptr)
+{
+    T vkStruct = {}; // Uniform initialization to zero-out all members
+    vkStruct.sType = structType;
+    vkStruct.pNext = next;
+    return vkStruct;
+}
+
 uint32_t FindMemoryType(const VkPhysicalDevice gpu, const uint32_t typeFilter, const VkMemoryPropertyFlags properties);
 
 void CreateImage(const VkPhysicalDevice gpu, const VkDevice device, const VkExtent2D& extent, const VkImageType imageType, const VkFormat format, const VkSampleCountFlagBits samplesCount, const uint32_t mipLevels, const uint32_t arrayLayers, const VkImageTiling tiling, const VkImageUsageFlags usage, const VkImageCreateFlags flags, const VkMemoryPropertyFlags properties, VkImage& outImage, VkDeviceMemory& outImageMemory);

@@ -64,7 +64,7 @@ std::unique_ptr<BufferPool> BufferPoolBuilder::Build() const
         const uint64_t offset{ i * alignedItemSize };
         // void* mappedPtr{ m_memoryType == prev::core::memory::MemoryType::HOST_MAPPED ? static_cast<uint8_t*>(mappedData) : nullptr };
         VmaAllocation allocation{ i == 0 ? wmaAllocation : nullptr }; // first instance in the pool clears the allocation
-        buffers[i] = std::move(std::unique_ptr<Buffer>(new Buffer(m_allocator, vkBuffer, allocation, m_memoryType, alignedItemSize, offset, mappedData)));
+        buffers[i] = std::unique_ptr<Buffer>(new Buffer(m_allocator, vkBuffer, allocation, m_memoryType, alignedItemSize, offset, mappedData));
     }
 
     return std::unique_ptr<BufferPool>(new BufferPool(m_allocator, vkBuffer, wmaAllocation, std::move(buffers)));

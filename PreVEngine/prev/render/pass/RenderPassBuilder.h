@@ -29,6 +29,9 @@ public:
     std::unique_ptr<RenderPass> Build() const;
 
 private:
+    void Validate() const;
+
+private:
     static VkAttachmentDescription CreateAttachmentDescription(const VkFormat format, const VkSampleCountFlagBits sampleCount, const VkImageLayout finalLayout, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp);
 
 private:

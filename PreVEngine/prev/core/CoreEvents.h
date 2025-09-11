@@ -5,11 +5,11 @@
 
 namespace prev::core {
 struct NewIterationEvent {
-    float deltaTime;
+    float deltaTime{};
 
-    uint32_t windowWidth;
+    uint32_t windowWidth{};
 
-    uint32_t windowHeight;
+    uint32_t windowHeight{};
 };
 } // namespace prev::core
 

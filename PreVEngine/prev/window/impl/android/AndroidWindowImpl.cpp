@@ -3,6 +3,7 @@
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 
 #include "../../../common/Logger.h"
+#include "../../../util/VkUtils.h"
 
 #include <thread>
 
@@ -250,9 +251,7 @@ void AndroidWindowImpl::SetMouseCursorVisible(bool visible)
 Surface& AndroidWindowImpl::CreateSurface()
 {
     if (m_vkSurface == VK_NULL_HANDLE) {
-        VkAndroidSurfaceCreateInfoKHR androidCreateInfo;
-        androidCreateInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
-        androidCreateInfo.pNext = NULL;
+        VkAndroidSurfaceCreateInfoKHR androidCreateInfo{ prev::util::vk::CreateStruct<VkAndroidSurfaceCreateInfoKHR>(VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR) };
         androidCreateInfo.flags = 0;
         androidCreateInfo.window = m_app->window;
         VKERRCHECK(vkCreateAndroidSurfaceKHR(m_instance, &androidCreateInfo, NULL, &m_vkSurface));

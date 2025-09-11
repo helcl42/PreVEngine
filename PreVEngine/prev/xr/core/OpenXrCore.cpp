@@ -3,9 +3,9 @@
 #ifdef ENABLE_XR
 
 #include "../XrEvents.h"
+#include "../util/OpenXRUtil.h"
 
 #include "../../event/EventChannel.h"
-#include "../../util/VkUtils.h"
 
 #include <sstream>
 
@@ -33,7 +33,7 @@ namespace {
         uint32_t apiLayerCount{ 0 };
         std::vector<XrApiLayerProperties> apiLayerProperties;
         OPENXR_CHECK(xrEnumerateApiLayerProperties(0, &apiLayerCount, nullptr), "Failed to enumerate ApiLayerProperties.");
-        apiLayerProperties.resize(apiLayerCount, { XR_TYPE_API_LAYER_PROPERTIES });
+        apiLayerProperties.resize(apiLayerCount, prev::xr::util::CreateStruct<XrApiLayerProperties>(XR_TYPE_API_LAYER_PROPERTIES));
         OPENXR_CHECK(xrEnumerateApiLayerProperties(apiLayerCount, &apiLayerCount, apiLayerProperties.data()), "Failed to enumerate ApiLayerProperties.");
         return apiLayerProperties;
     }
@@ -43,7 +43,7 @@ namespace {
         uint32_t extensionCount{ 0 };
         std::vector<XrExtensionProperties> extensionProperties;
         OPENXR_CHECK(xrEnumerateInstanceExtensionProperties(nullptr, 0, &extensionCount, nullptr), "Failed to enumerate InstanceExtensionProperties.");
-        extensionProperties.resize(extensionCount, { XR_TYPE_EXTENSION_PROPERTIES });
+        extensionProperties.resize(extensionCount, prev::xr::util::CreateStruct<XrExtensionProperties>(XR_TYPE_EXTENSION_PROPERTIES));
         OPENXR_CHECK(xrEnumerateInstanceExtensionProperties(nullptr, extensionCount, &extensionCount, extensionProperties.data()), "Failed to enumerate InstanceExtensionProperties.");
         return extensionProperties;
     }
@@ -106,6 +106,19 @@ namespace {
 } // namespace
 
 OpenXrCore::OpenXrCore()
+    : m_instance{ XR_NULL_HANDLE }
+    , m_systemId{ XR_NULL_SYSTEM_ID }
+    , m_systemProperties{ prev::xr::util::CreateStruct<XrSystemProperties>(XR_TYPE_SYSTEM_PROPERTIES) }
+    , m_handTrackingSystemProperties{ prev::xr::util::CreateStruct<XrSystemHandTrackingPropertiesEXT>(XR_TYPE_SYSTEM_HAND_TRACKING_PROPERTIES_EXT) }
+    , m_graphicsBinding{}
+    , m_viewConfiguration{ XR_VIEW_CONFIGURATION_TYPE_MAX_ENUM }
+    , m_session{ XR_NULL_HANDLE }
+    , m_sessionState{ XR_SESSION_STATE_UNKNOWN }
+    , m_localSpace{ XR_NULL_HANDLE }
+    , m_applicationRunning{ true }
+    , m_sessionRunning{ false }
+    , m_eventObserver{}
+    , m_debugMessenger{}
 {
     CreateInstance();
     CreateSystemId();
@@ -165,7 +178,7 @@ std::vector<std::string> OpenXrCore::GetVulkanDeviceExtensions() const
 
 VkPhysicalDevice OpenXrCore::GetPhysicalDevice(VkInstance instance) const
 {
-    XrGraphicsRequirementsVulkanKHR graphicsRequirements{ XR_TYPE_GRAPHICS_REQUIREMENTS_VULKAN_KHR };
+    XrGraphicsRequirementsVulkanKHR graphicsRequirements{ prev::xr::util::CreateStruct<XrGraphicsRequirementsVulkanKHR>(XR_TYPE_GRAPHICS_REQUIREMENTS_VULKAN_KHR) };
     OPENXR_CHECK(xrGetVulkanGraphicsRequirementsKHR(m_instance, m_systemId, &graphicsRequirements), "Failed to get Graphics Requirements for Vulkan.");
 
     VkPhysicalDevice physicalDeviceFromXR;
@@ -178,7 +191,7 @@ void OpenXrCore::CreateSession(const XrGraphicsBindingVulkanKHR& graphicsBinding
     m_graphicsBinding = graphicsBinding;
     m_viewConfiguration = viewConfiguration;
 
-    XrSessionCreateInfo sessionCreateInfo{ XR_TYPE_SESSION_CREATE_INFO };
+    XrSessionCreateInfo sessionCreateInfo{ prev::xr::util::CreateStruct<XrSessionCreateInfo>(XR_TYPE_SESSION_CREATE_INFO) };
     sessionCreateInfo.next = &m_graphicsBinding;
     sessionCreateInfo.createFlags = 0;
     sessionCreateInfo.systemId = m_systemId;
@@ -202,7 +215,7 @@ void OpenXrCore::PollEvents()
         return xrPollEvent(instance, &outEvent) == XR_SUCCESS;
     };
 
-    XrEventDataBuffer eventData{ XR_TYPE_EVENT_DATA_BUFFER };
+    XrEventDataBuffer eventData{ prev::xr::util::CreateStruct<XrEventDataBuffer>(XR_TYPE_EVENT_DATA_BUFFER) };
     while (XrPollEvents(m_instance, eventData)) {
         switch (eventData.type) {
         case XR_TYPE_EVENT_DATA_EVENTS_LOST: {
@@ -219,7 +232,7 @@ void OpenXrCore::PollEvents()
         }
         case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED: {
             XrEventDataInteractionProfileChanged* interactionProfileChanged = reinterpret_cast<XrEventDataInteractionProfileChanged*>(&eventData);
-            LOGI("OPENXR: Interaction Profile changed for Session: %p", interactionProfileChanged->session);
+            LOGI("OPENXR: Interaction Profile changed for Session: %p", static_cast<void*>(interactionProfileChanged->session));
             if (interactionProfileChanged->session != m_session) {
                 LOGW("XrEventDataInteractionProfileChanged for unknown Session");
                 break;
@@ -228,7 +241,7 @@ void OpenXrCore::PollEvents()
         }
         case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING: {
             XrEventDataReferenceSpaceChangePending* referenceSpaceChangePending = reinterpret_cast<XrEventDataReferenceSpaceChangePending*>(&eventData);
-            LOGI("OPENXR: Reference Space Change pending for Session: %p", referenceSpaceChangePending->session);
+            LOGI("OPENXR: Reference Space Change pending for Session: %p", static_cast<void*>(referenceSpaceChangePending->session));
             if (referenceSpaceChangePending->session != m_session) {
                 LOGW("XrEventDataReferenceSpaceChangePending for unknown Session");
                 break;
@@ -339,7 +352,7 @@ void OpenXrCore::CreateInstance()
     applicationInfo.engineVersion = 1;
     applicationInfo.apiVersion = XR_CURRENT_API_VERSION;
 
-    XrInstanceCreateInfo instanceCreateInfo{ XR_TYPE_INSTANCE_CREATE_INFO };
+    XrInstanceCreateInfo instanceCreateInfo{ prev::xr::util::CreateStruct<XrInstanceCreateInfo>(XR_TYPE_INSTANCE_CREATE_INFO) };
     instanceCreateInfo.createFlags = 0;
     instanceCreateInfo.applicationInfo = applicationInfo;
     instanceCreateInfo.enabledApiLayerCount = static_cast<uint32_t>(activeApiLayers.size());
@@ -348,7 +361,7 @@ void OpenXrCore::CreateInstance()
     instanceCreateInfo.enabledExtensionNames = activeInstanceExtensions.data();
 
 #ifdef TARGET_PLATFORM_ANDROID
-    XrInstanceCreateInfoAndroidKHR instanceCreateInfoAndroid{ XR_TYPE_INSTANCE_CREATE_INFO_ANDROID_KHR };
+    XrInstanceCreateInfoAndroidKHR instanceCreateInfoAndroid{ prev::xr::util::CreateStruct<XrInstanceCreateInfoAndroidKHR>(XR_TYPE_INSTANCE_CREATE_INFO_ANDROID_KHR) };
     instanceCreateInfoAndroid.applicationActivity = g_AndroidApp->activity;
     instanceCreateInfoAndroid.applicationVM = g_AndroidApp->activity->vm;
     instanceCreateInfo.next = &instanceCreateInfoAndroid;
@@ -375,7 +388,7 @@ void OpenXrCore::DestroyInstance()
 
 void OpenXrCore::ShowRuntimeInfo()
 {
-    XrInstanceProperties instanceProperties{ XR_TYPE_INSTANCE_PROPERTIES };
+    XrInstanceProperties instanceProperties{ prev::xr::util::CreateStruct<XrInstanceProperties>(XR_TYPE_INSTANCE_PROPERTIES) };
     OPENXR_CHECK(xrGetInstanceProperties(m_instance, &instanceProperties), "Failed to get InstanceProperties.");
 
     LOGI("OpenXR Runtime: %s - %d.%d.%d", instanceProperties.runtimeName, XR_VERSION_MAJOR(instanceProperties.runtimeVersion), XR_VERSION_MINOR(instanceProperties.runtimeVersion), XR_VERSION_PATCH(instanceProperties.runtimeVersion));
@@ -383,7 +396,7 @@ void OpenXrCore::ShowRuntimeInfo()
 
 void OpenXrCore::CreateSystemId()
 {
-    XrSystemGetInfo systemGetInfo{ XR_TYPE_SYSTEM_GET_INFO };
+    XrSystemGetInfo systemGetInfo{ prev::xr::util::CreateStruct<XrSystemGetInfo>(XR_TYPE_SYSTEM_GET_INFO) };
     systemGetInfo.formFactor = XR_FORM_FACTOR_HEAD_MOUNTED_DISPLAY;
     OPENXR_CHECK(xrGetSystem(m_instance, &systemGetInfo, &m_systemId), "Failed to get SystemID.");
 
@@ -399,7 +412,7 @@ void OpenXrCore::DestroySystemId()
 
 void OpenXrCore::CreateReferenceSpace()
 {
-    XrReferenceSpaceCreateInfo referenceSpaceCreateInfo{ XR_TYPE_REFERENCE_SPACE_CREATE_INFO };
+    XrReferenceSpaceCreateInfo referenceSpaceCreateInfo{ prev::xr::util::CreateStruct<XrReferenceSpaceCreateInfo>(XR_TYPE_REFERENCE_SPACE_CREATE_INFO) };
     referenceSpaceCreateInfo.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_LOCAL;
     referenceSpaceCreateInfo.poseInReferenceSpace = { { 0.0f, 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f } };
     OPENXR_CHECK(xrCreateReferenceSpace(m_session, &referenceSpaceCreateInfo, &m_localSpace), "Failed to create ReferenceSpace.");

@@ -2,6 +2,8 @@
 
 #ifdef ENABLE_XR
 
+#include "util/OpenXRUtil.h"
+
 #include "../render/buffer/ImageBufferBuilder.h"
 #include "../util/VkUtils.h"
 
@@ -83,9 +85,9 @@ XrSwapchain::XrSwapchain(prev::core::device::Device& device, prev::core::memory:
         swapchainBuffer.colorImageView = colorImageView;
         swapchainBuffer.depthImage = depthImage;
         swapchainBuffer.depthImageView = depthImageView;
-        swapchainBuffer.framebuffer = util::vk::CreateFrameBuffer(m_device, m_renderPass, swapchainImageViews, m_extent);
-        swapchainBuffer.commandBuffer = util::vk::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-        swapchainBuffer.fence = util::vk::CreateFence(m_device, VK_FENCE_CREATE_SIGNALED_BIT);
+        swapchainBuffer.framebuffer = prev::util::vk::CreateFrameBuffer(m_device, m_renderPass, swapchainImageViews, m_extent);
+        swapchainBuffer.commandBuffer = prev::util::vk::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+        swapchainBuffer.fence = prev::util::vk::CreateFence(m_device, VK_FENCE_CREATE_SIGNALED_BIT);
         swapchainBuffer.extent = m_extent;
     }
 
@@ -141,8 +143,8 @@ void XrSwapchain::Print() const
 {
     LOGI("XR Swapchain:");
 
-    LOGI("\tColor   = %3d : %s", m_renderPass.GetColorFormat(), util::vk::FormatToString(m_renderPass.GetColorFormat()).c_str());
-    LOGI("\tDepth   = %3d : %s", m_renderPass.GetDepthFormat(), util::vk::FormatToString(m_renderPass.GetDepthFormat()).c_str());
+    LOGI("\tColor   = %3d : %s", m_renderPass.GetColorFormat(), prev::util::vk::FormatToString(m_renderPass.GetColorFormat()).c_str());
+    LOGI("\tDepth   = %3d : %s", m_renderPass.GetDepthFormat(), prev::util::vk::FormatToString(m_renderPass.GetDepthFormat()).c_str());
 
     LOGI("\tExtent  = %d x %d", m_extent.width, m_extent.height);
     LOGI("\tBuffers = %d", static_cast<int>(m_swapchainBuffers.size()));
@@ -167,7 +169,7 @@ bool XrSwapchain::BeginFrame(prev::render::SwapChainFrameContext& outContext)
     VKERRCHECK(vkWaitForFences(m_device, 1, &swapchainBuffer.fence, VK_TRUE, UINT64_MAX));
     VKERRCHECK(vkResetFences(m_device, 1, &swapchainBuffer.fence));
 
-    VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+    VkCommandBufferBeginInfo beginInfo{ prev::util::vk::CreateStruct<VkCommandBufferBeginInfo>(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO) };
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     VKERRCHECK(vkBeginCommandBuffer(swapchainBuffer.commandBuffer, &beginInfo));
 
@@ -180,7 +182,7 @@ void XrSwapchain::EndFrame()
     const auto& swapchainBuffer{ m_swapchainBuffers[m_acquiredIndex] };
     VKERRCHECK(vkEndCommandBuffer(swapchainBuffer.commandBuffer));
 
-    VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+    VkSubmitInfo submitInfo{ prev::util::vk::CreateStruct<VkSubmitInfo>(VK_STRUCTURE_TYPE_SUBMIT_INFO) };
     submitInfo.waitSemaphoreCount = 0;
     submitInfo.pWaitSemaphores = nullptr;
     submitInfo.pWaitDstStageMask = nullptr;

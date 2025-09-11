@@ -26,7 +26,7 @@ Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allo
     assert(surfaceCapabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR);
     assert(surfaceCapabilities.supportedCompositeAlpha & (VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR | VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR));
 
-    m_swapchainCreateInfo = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
+    m_swapchainCreateInfo = { prev::util::vk::CreateStruct<VkSwapchainCreateInfoKHR>(VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR) };
     m_swapchainCreateInfo.surface = m_surface;
     m_swapchainCreateInfo.imageFormat = m_renderPass.GetColorFormat();
     m_swapchainCreateInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
@@ -332,7 +332,7 @@ void Swapchain::Submit()
 
     VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
-    VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+    VkSubmitInfo submitInfo{ prev::util::vk::CreateStruct<VkSubmitInfo>(VK_STRUCTURE_TYPE_SUBMIT_INFO) };
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = &swapchainBuffer.presentSemaphore;
     submitInfo.pWaitDstStageMask = waitStages;
@@ -350,7 +350,7 @@ void Swapchain::Present()
 
     const auto& swapchainBuffer{ m_swapchainBuffers[m_frameIndex] };
 
-    VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
+    VkPresentInfoKHR presentInfo{ prev::util::vk::CreateStruct<VkPresentInfoKHR>(VK_STRUCTURE_TYPE_PRESENT_INFO_KHR) };
     presentInfo.waitSemaphoreCount = 1;
     presentInfo.pWaitSemaphores = &swapchainBuffer.renderSemaphore;
     presentInfo.swapchainCount = 1;
@@ -380,7 +380,7 @@ bool Swapchain::BeginFrame(SwapChainFrameContext& outContext)
         return false;
     }
 
-    VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+    VkCommandBufferBeginInfo beginInfo{ prev::util::vk::CreateStruct<VkCommandBufferBeginInfo>(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO) };
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     VKERRCHECK(vkBeginCommandBuffer(swapchainBuffer.commandBuffer, &beginInfo));
 

@@ -65,7 +65,7 @@ Allocator::~Allocator()
 void Allocator::CreateBuffer(const void* data, const uint64_t dataSize, const uint64_t bufferSize, const VkBufferUsageFlags usage, const MemoryType memoryType, VkBuffer& outBuffer, VmaAllocation& outAlloc, void** outMapped)
 {
     if (memoryType == MemoryType::HOST_MAPPED) { // For CPU-visible memory, skip staging buffer
-        VkBufferCreateInfo bufInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+        VkBufferCreateInfo bufInfo{ prev::util::vk::CreateStruct<VkBufferCreateInfo>(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO) };
         bufInfo.size = bufferSize;
         bufInfo.usage = usage;
         bufInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -94,7 +94,7 @@ void Allocator::CreateBuffer(const void* data, const uint64_t dataSize, const ui
             LOGW("Buffer created with mapped memory, but outMapped is nullptr!");
         }
     } else if (memoryType == MemoryType::DEVICE_LOCAL) { // For GPU-only memory, copy via staging buffer.
-        VkBufferCreateInfo stagingBufferCreateInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+        VkBufferCreateInfo stagingBufferCreateInfo{ prev::util::vk::CreateStruct<VkBufferCreateInfo>(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO) };
         stagingBufferCreateInfo.size = bufferSize;
         stagingBufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
         stagingBufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -105,7 +105,6 @@ void Allocator::CreateBuffer(const void* data, const uint64_t dataSize, const ui
 
         VkBuffer stageBuffer{ VK_NULL_HANDLE };
         VmaAllocation stageBufferAlloc{ VK_NULL_HANDLE };
-
         VmaAllocationInfo allocInfo{};
         VKERRCHECK(vmaCreateBuffer(m_allocator, &stagingBufferCreateInfo, &stagingAllocCreateInfo, &stageBuffer, &stageBufferAlloc, &allocInfo));
 
@@ -120,7 +119,7 @@ void Allocator::CreateBuffer(const void* data, const uint64_t dataSize, const ui
             std::memset(allocInfo.pMappedData, 0, sizeToInit);
         }
 
-        VkBufferCreateInfo bufferCreateInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+        VkBufferCreateInfo bufferCreateInfo{ prev::util::vk::CreateStruct<VkBufferCreateInfo>(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO) };
         bufferCreateInfo.size = bufferSize;
         bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage;
@@ -145,7 +144,7 @@ void Allocator::DestroyBuffer(VkBuffer buffer, VmaAllocation alloc)
 
 void Allocator::CreateImage(const VkExtent3D& extent, const VkImageType imageType, const VkFormat format, const VkSampleCountFlagBits sampleCount, const uint32_t mipLevels, const uint32_t layerCount, const VkImageTiling tiling, const VkImageUsageFlags usage, const MemoryType memoryType, const VkImageCreateFlags flags, VkImage& outImage, VmaAllocation& outAlloc, void** outMapped)
 {
-    VkImageCreateInfo imageInfo{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+    VkImageCreateInfo imageInfo{ prev::util::vk::CreateStruct<VkImageCreateInfo>(VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO) };
     imageInfo.flags = flags;
     imageInfo.imageType = imageType;
     imageInfo.format = format;
@@ -200,7 +199,7 @@ void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format,
         const uint32_t formatSize{ format::FormatSize(format) };
         const uint64_t size{ extent.width * extent.height * extent.depth * formatSize };
 
-        VkBufferCreateInfo bufferCreateInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+        VkBufferCreateInfo bufferCreateInfo{ prev::util::vk::CreateStruct<VkBufferCreateInfo>(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO) };
         bufferCreateInfo.size = size;
         bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
         bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -209,9 +208,9 @@ void Allocator::CopyDataToImage(const VkExtent3D& extent, const VkFormat format,
         allocStagingMemoryCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
         allocStagingMemoryCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
+        VkBuffer stageBuffer{ VK_NULL_HANDLE };
+        VmaAllocation stageBufferAlloc{ VK_NULL_HANDLE };
         VmaAllocationInfo allocStagingBufferInfo{};
-        VkBuffer stageBuffer = VK_NULL_HANDLE;
-        VmaAllocation stageBufferAlloc = VK_NULL_HANDLE;
         VKERRCHECK(vmaCreateBuffer(m_allocator, &bufferCreateInfo, &allocStagingMemoryCreateInfo, &stageBuffer, &stageBufferAlloc, &allocStagingBufferInfo));
 
         // Copy image data to staging memory

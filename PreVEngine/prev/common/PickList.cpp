@@ -27,7 +27,7 @@ PickList::PickList(PickList&& other)
     , m_pickListNames{ other.m_pickListNames }
 {
     Refresh();
-    other = {};
+    other.Clear();
 }
 
 PickList& PickList::operator=(PickList&& rhs)
@@ -35,7 +35,7 @@ PickList& PickList::operator=(PickList&& rhs)
     this->m_pickListIndices = rhs.m_pickListIndices;
     this->m_pickListNames = rhs.m_pickListNames;
     Refresh();
-    rhs = {};
+    rhs.Clear();
     return *this;
 }
 

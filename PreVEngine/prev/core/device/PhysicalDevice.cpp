@@ -19,9 +19,10 @@ PhysicalDevice::PhysicalDevice(const VkPhysicalDevice gpu, const std::vector<std
     : m_handle{ gpu }
     , m_extensions{ gpu }
     , m_queueFamilies{ GetQueueFamilyProperties(gpu) }
-    , m_availableProperties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2, {}, {} }
-    , m_availableFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, {}, {} }
-    , m_enabledFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, {}, {} }
+    , m_availableProperties{ prev::util::vk::CreateStruct<VkPhysicalDeviceProperties2>(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2) }
+    , m_availableFeatures{ prev::util::vk::CreateStruct<VkPhysicalDeviceFeatures2>(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2) }
+    , m_enabledFeatures{ prev::util::vk::CreateStruct<VkPhysicalDeviceFeatures2>(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2) }
+    , m_physicalDeviceMultiviewFeatures{ prev::util::vk::CreateStruct<VkPhysicalDeviceMultiviewFeatures>(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES_KHR) }
 {
     vkGetPhysicalDeviceFeatures2(gpu, &m_availableFeatures);
     vkGetPhysicalDeviceProperties2(gpu, &m_availableProperties);
@@ -96,7 +97,13 @@ PhysicalDevice::PhysicalDevice(PhysicalDevice&& other)
 PhysicalDevice& PhysicalDevice::operator=(PhysicalDevice&& other)
 {
     if (this != &other) {
-        *this = other;
+        m_handle = other.m_handle;
+        m_availableProperties = other.m_availableProperties;
+        m_availableFeatures = other.m_availableFeatures;
+        m_queueFamilies = other.m_queueFamilies;
+        m_extensions = other.m_extensions;
+        m_enabledFeatures = other.m_enabledFeatures;
+        m_physicalDeviceMultiviewFeatures = other.m_physicalDeviceMultiviewFeatures;
 #ifdef ENABLE_XR
         EnableMultiview();
 #endif
@@ -203,7 +210,7 @@ const VkPhysicalDeviceFeatures2& PhysicalDevice::GetEnabledFeatures2() const
     return m_enabledFeatures;
 }
 
-void PhysicalDevice::Print(const bool showQueues) const
+void PhysicalDevice::Print() const
 {
     auto deviceTypeToString = [](const VkPhysicalDeviceType type) -> std::string {
         static const std::string devTypea[] = {
@@ -219,12 +226,11 @@ void PhysicalDevice::Print(const bool showQueues) const
     const auto vendor{ prev::util::vk::VendorIdToString(m_availableProperties.properties.vendorID) };
     const auto& gpuProps{ GetProperties() };
     LOGI("\t%s %s %s", deviceTypeToString(gpuProps.deviceType).c_str(), vendor.c_str(), gpuProps.deviceName);
-    if (showQueues) {
-        const auto queueFamilies{ GetQueueFamilies() };
-        for (size_t i = 0; i < queueFamilies.size(); ++i) {
-            const auto& queueProps{ queueFamilies[i] };
-            LOGI("\t\tQueue-family: %zu count: %2d flags: [ %s]", i, queueProps.queueCount, prev::util::vk::QueueFlagsToString(queueProps.queueFlags).c_str());
-        }
+
+    const auto queueFamilies{ GetQueueFamilies() };
+    for (size_t i = 0; i < queueFamilies.size(); ++i) {
+        const auto& queueProps{ queueFamilies[i] };
+        LOGI("\t\tQueue-family: %zu count: %2d flags: [ %s]", i, queueProps.queueCount, prev::util::vk::QueueFlagsToString(queueProps.queueFlags).c_str());
     }
 }
 
@@ -235,7 +241,7 @@ PhysicalDevice::operator VkPhysicalDevice() const
 
 void PhysicalDevice::EnableMultiview()
 {
-    m_physicalDeviceMultiviewFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES_KHR, {} };
+    m_physicalDeviceMultiviewFeatures = { prev::util::vk::CreateStruct<VkPhysicalDeviceMultiviewFeatures>(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES_KHR) };
     m_physicalDeviceMultiviewFeatures.multiview = VK_TRUE;
 
     m_enabledFeatures.pNext = &m_physicalDeviceMultiviewFeatures;

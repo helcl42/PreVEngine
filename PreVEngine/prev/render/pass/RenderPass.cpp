@@ -1,6 +1,7 @@
 #include "RenderPass.h"
 
 #include "../../common/Logger.h"
+#include "../../util/VkUtils.h"
 
 #include <prev/core/Formats.h>
 
@@ -39,7 +40,7 @@ RenderPass::~RenderPass()
 
 void RenderPass::Begin(const VkFramebuffer frameBuffer, const VkCommandBuffer commandBuffer, const VkRect2D& renderArea, const VkSubpassContents contents)
 {
-    VkRenderPassBeginInfo renderPassInfo{ VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+    VkRenderPassBeginInfo renderPassInfo{ prev::util::vk::CreateStruct<VkRenderPassBeginInfo>(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO) };
     renderPassInfo.renderPass = m_renderPass;
     renderPassInfo.framebuffer = frameBuffer;
     renderPassInfo.renderArea = renderArea;

@@ -3,6 +3,7 @@
 #ifdef VK_USE_PLATFORM_IOS_MVK
 
 #include "../../../common/Logger.h"
+#include "../../../util/VkUtils.h"
 
 #import <IOSView.h>
 #import <IOSView.h>
@@ -156,9 +157,7 @@ void IOSWindowImpl::SetMouseCursorVisible(bool visible)
 Surface& IOSWindowImpl::CreateSurface()
 {
     if (m_vkSurface == VK_NULL_HANDLE) {
-        VkMetalSurfaceCreateInfoEXT iosSurfaceCreateInfo{};
-        iosSurfaceCreateInfo.sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
-        iosSurfaceCreateInfo.pNext = nullptr;
+        VkMetalSurfaceCreateInfoEXT iosSurfaceCreateInfo{ prev::util::vk::CreateStruct<VkMetalSurfaceCreateInfoEXT>(VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT) };
         iosSurfaceCreateInfo.flags = 0;
         iosSurfaceCreateInfo.pLayer = static_cast<CAMetalLayer*>(m_state->view.layer);
         VKERRCHECK(vkCreateMetalSurfaceEXT(m_instance, &iosSurfaceCreateInfo, nullptr, &m_vkSurface));

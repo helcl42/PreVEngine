@@ -1,5 +1,7 @@
 #include "ComputePipelineBuilder.h"
 
+#include "../../util/VkUtils.h"
+
 namespace prev::render::pipeline {
 ComputePipelineBuilder::ComputePipelineBuilder(const VkDevice device, const shader::Shader& shader)
     : AbstractPipelineBuilder(device, shader)
@@ -25,7 +27,7 @@ void ComputePipelineBuilder::Validate() const
 
 VkPipeline ComputePipelineBuilder::CreateComputePipeline(const VkPipelineLayout pipelineLayout) const
 {
-    VkComputePipelineCreateInfo computePipelineCreateInfo{ VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO };
+    VkComputePipelineCreateInfo computePipelineCreateInfo{ prev::util::vk::CreateStruct<VkComputePipelineCreateInfo>(VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO) };
     computePipelineCreateInfo.layout = pipelineLayout;
     computePipelineCreateInfo.flags = 0;
     computePipelineCreateInfo.stage = m_shader.GetShaderStages().at(0);

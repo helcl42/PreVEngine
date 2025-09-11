@@ -1,5 +1,7 @@
 #include "AbstractPipelineBuilder.h"
 
+#include "../../util/VkUtils.h"
+
 namespace prev::render::pipeline {
 AbstractPipelineBuilder::AbstractPipelineBuilder(const VkDevice device, const shader::Shader& shader)
     : m_device{ device }
@@ -9,7 +11,7 @@ AbstractPipelineBuilder::AbstractPipelineBuilder(const VkDevice device, const sh
 
 VkPipelineLayout AbstractPipelineBuilder::CreatePipelineLayout() const
 {
-    VkPipelineLayoutCreateInfo pipelineLayoutInfo{ VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo{ prev::util::vk::CreateStruct<VkPipelineLayoutCreateInfo>(VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO) };
     pipelineLayoutInfo.setLayoutCount = 1;
     pipelineLayoutInfo.pSetLayouts = &m_shader.GetDescriptorSetLayout();
     pipelineLayoutInfo.pPushConstantRanges = m_shader.GetPushConstantsRanges().data();

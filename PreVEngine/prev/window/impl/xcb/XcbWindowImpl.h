@@ -57,6 +57,7 @@ private:
     xkb_state* m_keyboardState{};
     //------------------
 
+#ifdef ENABLE_MULTITOUCH
     //---Touch Device---
     MultiTouch m_MTouch{};
 
@@ -64,6 +65,7 @@ private:
 
     int m_xiDevId{};
     //------------------
+#endif
 };
 } // namespace prev::window::impl::xcb
 

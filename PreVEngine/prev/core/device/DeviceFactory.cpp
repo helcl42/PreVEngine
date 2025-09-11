@@ -3,6 +3,7 @@
 #include "Queue.h"
 
 #include "../../common/Logger.h"
+#include "../../util/VkUtils.h"
 
 #include <set>
 
@@ -187,7 +188,7 @@ std::unique_ptr<Device> DeviceFactory::Create(const PhysicalDevice& gpu, const V
         const auto queueCount{ queuesMetadata.GetQueueFamilyCount(queueFamilyIndex) };
         const auto& priorities{ allQueuesPriorities[i] };
 
-        VkDeviceQueueCreateInfo info{ VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
+        VkDeviceQueueCreateInfo info{ prev::util::vk::CreateStruct<VkDeviceQueueCreateInfo>(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO) };
         info.queueFamilyIndex = queueFamilyIndex;
         info.queueCount = queueCount;
         info.pQueuePriorities = priorities.data();
@@ -197,7 +198,7 @@ std::unique_ptr<Device> DeviceFactory::Create(const PhysicalDevice& gpu, const V
     const auto& extensions{ gpu.GetExtensions() };
     const auto& features{ gpu.GetEnabledFeatures2() };
 
-    VkDeviceCreateInfo deviceCreateInfo{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+    VkDeviceCreateInfo deviceCreateInfo{ prev::util::vk::CreateStruct<VkDeviceCreateInfo>(VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO) };
     deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfoList.size());
     deviceCreateInfo.pQueueCreateInfos = queueCreateInfoList.data();
     deviceCreateInfo.enabledExtensionCount = extensions.GetPickCount();

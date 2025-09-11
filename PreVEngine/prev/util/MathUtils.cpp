@@ -160,31 +160,6 @@ glm::vec3 FromCameraSpaceToWorldSpace(const glm::mat4& viewMatrix, const glm::ve
     return glm::vec3(worldCoords.x, worldCoords.y, worldCoords.z);
 }
 
-glm::mat4 CreatePerspectiveProjectionMatrix(const float aspectRatio, const float verticalFovInDegs, const float nearClippingPlane, const float farClippingPlane)
-{
-    glm::mat4 projectionMatrix = glm::perspective(glm::radians(verticalFovInDegs), aspectRatio, nearClippingPlane, farClippingPlane);
-    projectionMatrix[1][1] *= -1; // invert Y in clip coordinates
-    return projectionMatrix;
-}
-
-glm::mat4 CreatePerspectiveProjectionMatrixWithReverseDepth(const float aspectRatio, const float verticalFovInDegs, const float nearClippingPlane, const float farClippingPlane)
-{
-    // https://vincent-p.github.io/posts/vulkan_perspective_matrix/
-    const float focalLength{ 1.0f / std::tan(glm::radians(verticalFovInDegs) * 0.5f) };
-    const float x{ focalLength / aspectRatio };
-    const float y{ -focalLength }; // invert Y in clip coordinates
-    const float A{ nearClippingPlane / (farClippingPlane - nearClippingPlane) };
-    const float B{ (nearClippingPlane * farClippingPlane) / (farClippingPlane - nearClippingPlane) };
-
-    const glm::mat4 projectionMatrix = glm::mat4{
-        x, 0.0f, 0.0f, 0.0f,
-        0.0f, y, 0.0f, 0.0f,
-        0.0f, 0.0f, A, -1.0f,
-        0.0f, 0.0f, B, 0.0f
-    };
-    return projectionMatrix;
-}
-
 glm::mat4 CreateOrthographicProjectionMatrix(const float leftPlane, const float rightPlane, const float bottomPlane, const float topPlane, const float nearPlane, const float farPlane)
 {
     const float x{ 2.0f / (rightPlane - leftPlane) };
@@ -200,6 +175,13 @@ glm::mat4 CreateOrthographicProjectionMatrix(const float leftPlane, const float 
         0.0f, 0.0f, z, 0.0f,
         A, B, C, 1.0f
     };
+    return projectionMatrix;
+}
+
+glm::mat4 CreatePerspectiveProjectionMatrix(const float aspectRatio, const float verticalFovInDegs, const float nearClippingPlane, const float farClippingPlane)
+{
+    glm::mat4 projectionMatrix = glm::perspective(glm::radians(verticalFovInDegs), aspectRatio, nearClippingPlane, farClippingPlane);
+    projectionMatrix[1][1] *= -1; // invert Y in clip coordinates
     return projectionMatrix;
 }
 

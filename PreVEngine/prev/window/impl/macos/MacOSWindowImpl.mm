@@ -3,6 +3,7 @@
 #ifdef VK_USE_PLATFORM_MACOS_MVK
 
 #include "../../../common/Logger.h"
+#include "../../../util/VkUtils.h"
 
 #import <MacApplication.h>
 #import <MacWindow.h>
@@ -342,16 +343,12 @@ Surface& MacOSWindowImpl::CreateSurface()
         // TODO - used due to deprecation warning. Has worse performance.
         auto FN_vkCreateMetalSurfaceEXT = PFN_vkCreateMetalSurfaceEXT(vkGetInstanceProcAddr(m_instance, "vkCreateMetalSurfaceEXT"));
         if(FN_vkCreateMetalSurfaceEXT) {
-            VkMetalSurfaceCreateInfoEXT macOsSurfaceCreateInfo{};
-            macOsSurfaceCreateInfo.sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
-            macOsSurfaceCreateInfo.pNext = nullptr;
+            VkMetalSurfaceCreateInfoEXT macOsSurfaceCreateInfo{ prev::util::vk::CreateStruct<VkMetalSurfaceCreateInfoEXT>(VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT) };
             macOsSurfaceCreateInfo.flags = 0;
             macOsSurfaceCreateInfo.pLayer = static_cast<CAMetalLayer*>(m_state->view.layer);
             VKERRCHECK(FN_vkCreateMetalSurfaceEXT(m_instance, &macOsSurfaceCreateInfo, nullptr, &m_vkSurface));
         } else {
-            VkMacOSSurfaceCreateInfoMVK macOsSurfaceCreateInfo{};
-            macOsSurfaceCreateInfo.sType = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
-            macOsSurfaceCreateInfo.pNext = nullptr;
+            VkMacOSSurfaceCreateInfoMVK macOsSurfaceCreateInfo{ prev::util::vk::CreateStruct<VkMacOSSurfaceCreateInfoMVK>(VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT) };
             macOsSurfaceCreateInfo.flags = 0;
             macOsSurfaceCreateInfo.pView = m_state->layer;
             VKERRCHECK(vkCreateMacOSSurfaceMVK(m_instance, &macOsSurfaceCreateInfo, nullptr, &m_vkSurface));

@@ -10,7 +10,6 @@ PhysicalDevices::PhysicalDevices(const VkInstance instance)
     if (gpuCount == 0) {
         LOGW("No GPU devices found."); // Vulkan driver missing?
     }
-
     std::vector<VkPhysicalDevice> vkGpus(gpuCount);
     vkEnumeratePhysicalDevices(instance, &gpuCount, vkGpus.data());
 
@@ -39,14 +38,14 @@ std::optional<PhysicalDevice> PhysicalDevices::FindPresentable(const VkSurfaceKH
     return {};
 }
 
-void PhysicalDevices::Print(bool showQueues) const
+void PhysicalDevices::Print() const
 {
     LOGI("Physical Devices: %zu", GetCount());
 
     size_t j{ 0 };
     for (const auto& gpu : m_gpuList) {
         LOGI("GPU: %zu:", j);
-        gpu->Print(true);
+        gpu->Print();
         ++j;
     }
 }

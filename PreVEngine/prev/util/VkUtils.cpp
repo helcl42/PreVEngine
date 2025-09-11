@@ -26,7 +26,7 @@ uint32_t FindMemoryType(const VkPhysicalDevice gpu, const uint32_t typeFilter, c
 
 void CreateImage(const VkPhysicalDevice gpu, const VkDevice device, const VkExtent2D& extent, const VkImageType imageType, const VkFormat format, const VkSampleCountFlagBits samplesCount, const uint32_t mipLevels, const uint32_t arrayLayers, const VkImageTiling tiling, const VkImageUsageFlags usage, const VkImageCreateFlags flags, const VkMemoryPropertyFlags properties, VkImage& outImage, VkDeviceMemory& outImageMemory)
 {
-    VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+    VkImageCreateInfo imageInfo{ CreateStruct<VkImageCreateInfo>(VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO) };
     imageInfo.flags = flags;
     imageInfo.imageType = imageType;
     imageInfo.format = format;
@@ -45,7 +45,7 @@ void CreateImage(const VkPhysicalDevice gpu, const VkDevice device, const VkExte
     VkMemoryRequirements memRequirements;
     vkGetImageMemoryRequirements(device, outImage, &memRequirements);
 
-    VkMemoryAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
+    VkMemoryAllocateInfo allocInfo{ CreateStruct<VkMemoryAllocateInfo>(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO) };
     allocInfo.allocationSize = memRequirements.size;
     allocInfo.memoryTypeIndex = FindMemoryType(gpu, memRequirements.memoryTypeBits, properties);
     VKERRCHECK(vkAllocateMemory(device, &allocInfo, nullptr, &outImageMemory));
@@ -55,7 +55,7 @@ void CreateImage(const VkPhysicalDevice gpu, const VkDevice device, const VkExte
 
 VkImageView CreateImageView(const VkDevice device, const VkImage image, const VkFormat format, const VkImageViewType viewType, const uint32_t mipLevels, const VkImageAspectFlags aspectFlags, const uint32_t arrayLayers, const uint32_t baseArrayLayer)
 {
-    VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+    VkImageViewCreateInfo viewInfo{ CreateStruct<VkImageViewCreateInfo>(VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO) };
     viewInfo.image = image;
     viewInfo.viewType = viewType;
     viewInfo.format = format;
@@ -77,7 +77,7 @@ VkImageView CreateImageView(const VkDevice device, const VkImage image, const Vk
 void TransitionImageLayout(const VkCommandBuffer commandBuffer, const VkImage image, const VkImageLayout oldLayout, const VkImageLayout newLayout, const uint32_t mipLevels, const VkImageAspectFlags aspectMask, const uint32_t layersCount)
 {
     for (uint32_t layerIndex = 0; layerIndex < layersCount; ++layerIndex) {
-        VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+        VkImageMemoryBarrier barrier{ CreateStruct<VkImageMemoryBarrier>(VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER) };
         barrier.oldLayout = oldLayout;
         barrier.newLayout = newLayout;
         barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -159,7 +159,7 @@ void TransitionImageLayout(const VkCommandBuffer commandBuffer, const VkImage im
 void GenerateMipmaps(const VkCommandBuffer commandBuffer, const VkImage image, const VkExtent3D& extent, const uint32_t mipLevels, const uint32_t layersCount, const VkImageAspectFlags aspectMask, const VkFilter filter, const VkImageLayout layout)
 {
     for (uint32_t layerIndex = 0; layerIndex < layersCount; ++layerIndex) {
-        VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+        VkImageMemoryBarrier barrier{ CreateStruct<VkImageMemoryBarrier>(VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER) };
         barrier.image = image;
         barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -168,9 +168,9 @@ void GenerateMipmaps(const VkCommandBuffer commandBuffer, const VkImage image, c
         barrier.subresourceRange.layerCount = 1;
         barrier.subresourceRange.levelCount = 1;
 
-        int32_t mipWidth = extent.width;
-        int32_t mipHeight = extent.height;
-        int32_t mipDepth = extent.depth;
+        int32_t mipWidth{ static_cast<int32_t>(extent.width) };
+        int32_t mipHeight{ static_cast<int32_t>(extent.height) };
+        int32_t mipDepth{ static_cast<int32_t>(extent.depth) };
 
         for (uint32_t i = 1; i < mipLevels; ++i) {
             barrier.subresourceRange.baseMipLevel = i - 1;
@@ -181,7 +181,7 @@ void GenerateMipmaps(const VkCommandBuffer commandBuffer, const VkImage image, c
 
             vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
-            VkImageBlit blit = {};
+            VkImageBlit blit{};
             blit.srcOffsets[0] = { 0, 0, 0 };
             blit.srcOffsets[1] = { mipWidth, mipHeight, mipDepth };
             blit.srcSubresource.aspectMask = aspectMask;
@@ -222,16 +222,14 @@ void GenerateMipmaps(const VkCommandBuffer commandBuffer, const VkImage image, c
 
 void CopyBufferToImage(const VkCommandBuffer commandBuffer, const VkExtent3D& extent, const VkBuffer buffer, const uint32_t layerIndex, const VkImageLayout dstImageLayout, VkImage dstImage)
 {
-    VkBufferImageCopy region = {};
+    VkBufferImageCopy region{};
     region.bufferOffset = 0;
     region.bufferRowLength = 0;
     region.bufferImageHeight = 0;
-
     region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     region.imageSubresource.mipLevel = 0;
     region.imageSubresource.baseArrayLayer = layerIndex;
     region.imageSubresource.layerCount = 1;
-
     region.imageOffset = { 0, 0, 0 };
     region.imageExtent = extent;
 
@@ -240,7 +238,7 @@ void CopyBufferToImage(const VkCommandBuffer commandBuffer, const VkExtent3D& ex
 
 void CopyBuffer(const VkCommandBuffer commandBuffer, const VkBuffer srcBuffer, const VkDeviceSize size, VkBuffer dstBuffer)
 {
-    VkBufferCopy bufCopyRegion = {};
+    VkBufferCopy bufCopyRegion{};
     bufCopyRegion.srcOffset = 0;
     bufCopyRegion.dstOffset = 0;
     bufCopyRegion.size = size;
@@ -251,7 +249,7 @@ void CopyBuffer(const VkCommandBuffer commandBuffer, const VkBuffer srcBuffer, c
 void CopyImage(const VkCommandBuffer commandBuffer, const VkImage srcImage, const VkExtent3D& extent, const uint32_t layersCount, const VkImageAspectFlags aspectMask, const VkFilter filter, const VkImageLayout layout, VkImage dstImage)
 {
     for (uint32_t layerIndex = 0; layerIndex < layersCount; ++layerIndex) {
-        VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+        VkImageMemoryBarrier barrier{ CreateStruct<VkImageMemoryBarrier>(VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER) };
         barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.subresourceRange.aspectMask = aspectMask;
@@ -293,7 +291,7 @@ void CopyImage(const VkCommandBuffer commandBuffer, const VkImage srcImage, cons
 
 VkCommandPool CreateCommandPool(const VkDevice device, const uint32_t queueFamilyIndex)
 {
-    VkCommandPoolCreateInfo poolInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
+    VkCommandPoolCreateInfo poolInfo{ CreateStruct<VkCommandPoolCreateInfo>(VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO) };
     poolInfo.queueFamilyIndex = queueFamilyIndex;
     poolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
@@ -306,7 +304,7 @@ VkFramebuffer CreateFrameBuffer(const VkDevice device, const VkRenderPass& rende
 {
     VkFramebuffer frameBuffer;
 
-    VkFramebufferCreateInfo frameBufferCreateInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
+    VkFramebufferCreateInfo frameBufferCreateInfo{ CreateStruct<VkFramebufferCreateInfo>(VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO) };
     frameBufferCreateInfo.renderPass = renderPass;
     frameBufferCreateInfo.attachmentCount = static_cast<uint32_t>(imageViews.size());
     frameBufferCreateInfo.pAttachments = imageViews.data();
@@ -322,7 +320,7 @@ VkCommandBuffer CreateCommandBuffer(const VkDevice device, const VkCommandPool c
 {
     VkCommandBuffer commandBuffer;
 
-    VkCommandBufferAllocateInfo commandBufferAllocInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
+    VkCommandBufferAllocateInfo commandBufferAllocInfo{ CreateStruct<VkCommandBufferAllocateInfo>(VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO) };
     commandBufferAllocInfo.commandPool = commandPool;
     commandBufferAllocInfo.level = level;
     commandBufferAllocInfo.commandBufferCount = 1;
@@ -335,7 +333,7 @@ VkFence CreateFence(const VkDevice device, const VkFenceCreateFlags createFlags)
 {
     VkFence fence;
 
-    VkFenceCreateInfo createInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
+    VkFenceCreateInfo createInfo{ CreateStruct<VkFenceCreateInfo>(VK_STRUCTURE_TYPE_FENCE_CREATE_INFO) };
     createInfo.flags = createFlags;
     VKERRCHECK(vkCreateFence(device, &createInfo, nullptr, &fence));
 
@@ -346,7 +344,7 @@ VkSemaphore CreateSemaphore(const VkDevice device, const VkSemaphoreCreateFlags 
 {
     VkSemaphore semaphore;
 
-    VkSemaphoreCreateInfo createInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
+    VkSemaphoreCreateInfo createInfo{ CreateStruct<VkSemaphoreCreateInfo>(VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO) };
     createInfo.flags = createFlags;
     VKERRCHECK(vkCreateSemaphore(device, &createInfo, nullptr, &semaphore));
 
@@ -355,7 +353,7 @@ VkSemaphore CreateSemaphore(const VkDevice device, const VkSemaphoreCreateFlags 
 
 VkDescriptorSetLayoutBinding CreteDescriptorSetLayoutBinding(const uint32_t binding, const VkDescriptorType descType, const uint32_t descCount, const VkShaderStageFlags stageFlags, const VkSampler* immutableSamplers)
 {
-    VkDescriptorSetLayoutBinding vertexZeroLayoutBinding = {};
+    VkDescriptorSetLayoutBinding vertexZeroLayoutBinding{};
     vertexZeroLayoutBinding.binding = binding;
     vertexZeroLayoutBinding.descriptorType = descType;
     vertexZeroLayoutBinding.descriptorCount = descCount;
@@ -366,7 +364,7 @@ VkDescriptorSetLayoutBinding CreteDescriptorSetLayoutBinding(const uint32_t bind
 
 VkWriteDescriptorSet CreateWriteDescriptorSet(const uint32_t dstBinding, const VkDescriptorType descType, const uint32_t descCount, const uint32_t dstArrayElement)
 {
-    VkWriteDescriptorSet vertexZeroWriteDescriptorSet = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
+    VkWriteDescriptorSet vertexZeroWriteDescriptorSet{ prev::util::vk::CreateStruct<VkWriteDescriptorSet>(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET) };
     vertexZeroWriteDescriptorSet.dstBinding = dstBinding;
     vertexZeroWriteDescriptorSet.descriptorType = descType;
     vertexZeroWriteDescriptorSet.descriptorCount = descCount;
@@ -378,7 +376,7 @@ std::vector<VkDescriptorSet> CreateDescriptorSets(const VkDevice device, const u
 {
     std::vector<VkDescriptorSet> descriptorSets(size);
     for (uint32_t i = 0; i < size; ++i) {
-        VkDescriptorSetAllocateInfo allocInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
+        VkDescriptorSetAllocateInfo allocInfo{ CreateStruct<VkDescriptorSetAllocateInfo>(VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO) };
         allocInfo.descriptorPool = descriptorPool;
         allocInfo.descriptorSetCount = 1;
         allocInfo.pSetLayouts = &descriptorSetLayout;
@@ -402,7 +400,7 @@ VkDescriptorPool CreateDescriptorPool(const VkDevice device, const uint32_t size
         poolSizes[i].descriptorCount = binding.descriptorCount;
     }
 
-    VkDescriptorPoolCreateInfo poolInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
+    VkDescriptorPoolCreateInfo poolInfo{ CreateStruct<VkDescriptorPoolCreateInfo>(VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO) };
     poolInfo.maxSets = static_cast<uint32_t>(size);
     poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
     poolInfo.pPoolSizes = poolSizes.data();
@@ -421,7 +419,7 @@ void DestroyDescriptorPool(const VkDevice device, VkDescriptorPool descriptorPoo
 
 VkVertexInputBindingDescription CreateVertexInputBindingDescription(const uint32_t binding, const uint32_t stride, const VkVertexInputRate inputRate)
 {
-    VkVertexInputBindingDescription inputBinding = {};
+    VkVertexInputBindingDescription inputBinding{};
     inputBinding.binding = binding;
     inputBinding.stride = stride;
     inputBinding.inputRate = inputRate;
@@ -430,7 +428,7 @@ VkVertexInputBindingDescription CreateVertexInputBindingDescription(const uint32
 
 VkVertexInputAttributeDescription CreateVertexInputAttributeDescription(const uint32_t binding, const uint32_t location, const VkFormat format, const uint32_t offset)
 {
-    VkVertexInputAttributeDescription inputAttrDescription = {};
+    VkVertexInputAttributeDescription inputAttrDescription{};
     inputAttrDescription.binding = binding;
     inputAttrDescription.location = location;
     inputAttrDescription.format = format;
@@ -443,7 +441,7 @@ VkSampleCountFlagBits GetMaxUsableSampleCount(const VkPhysicalDevice physicalDev
     VkPhysicalDeviceProperties physicalDeviceProperties;
     vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
 
-    const VkSampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts & physicalDeviceProperties.limits.framebufferDepthSampleCounts;
+    const VkSampleCountFlags counts{ physicalDeviceProperties.limits.framebufferColorSampleCounts & physicalDeviceProperties.limits.framebufferDepthSampleCounts };
     const VkSampleCountFlagBits bits[] = {
         VK_SAMPLE_COUNT_64_BIT,
         VK_SAMPLE_COUNT_32_BIT,

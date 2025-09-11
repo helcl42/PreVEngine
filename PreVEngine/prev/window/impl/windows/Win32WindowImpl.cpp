@@ -387,9 +387,7 @@ void Win32WindowImpl::SetMouseCursorVisible(bool visible)
 Surface& Win32WindowImpl::CreateSurface()
 {
     if (m_vkSurface == VK_NULL_HANDLE) {
-        VkWin32SurfaceCreateInfoKHR win32CreateInfo;
-        win32CreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-        win32CreateInfo.pNext = nullptr;
+        VkWin32SurfaceCreateInfoKHR win32CreateInfo{ prev::util::vk::CreateStruct<VkWin32SurfaceCreateInfoKHR>(VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR) };
         win32CreateInfo.flags = 0;
         win32CreateInfo.hinstance = m_hInstance;
         win32CreateInfo.hwnd = m_hWnd;

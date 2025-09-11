@@ -3,6 +3,7 @@
 #ifdef VK_USE_PLATFORM_XCB_KHR
 
 #include "../../../common/Logger.h"
+#include "../../../util/VkUtils.h"
 
 #include <string.h>
 
@@ -236,9 +237,7 @@ void XcbWindowImpl::SetMouseCursorVisible(bool visible)
 Surface& XcbWindowImpl::CreateSurface()
 {
     if (m_vkSurface == VK_NULL_HANDLE) {
-        VkXcbSurfaceCreateInfoKHR xcbCreateInfo;
-        xcbCreateInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
-        xcbCreateInfo.pNext = nullptr;
+        VkXcbSurfaceCreateInfoKHR xcbCreateInfo{ prev::util::vk::CreateStruct<VkXcbSurfaceCreateInfoKHR>(VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR) };
         xcbCreateInfo.flags = 0;
         xcbCreateInfo.connection = m_xcbConnection;
         xcbCreateInfo.window = m_xcbWindow;

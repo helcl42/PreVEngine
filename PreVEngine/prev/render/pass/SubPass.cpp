@@ -7,7 +7,7 @@ namespace prev::render::pass {
 namespace {
     VkAttachmentReference CreateAttachmentReference(const uint32_t attachmentIndex, const VkFormat format)
     {
-        VkAttachmentReference reference = {};
+        VkAttachmentReference reference{};
         reference.attachment = attachmentIndex;
         if (prev::core::format::HasDepthComponent(format)) {
             reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
@@ -25,7 +25,7 @@ SubPass::SubPass(const std::vector<VkAttachmentDescription>& attachments)
 
 SubPass::operator VkSubpassDescription()
 {
-    VkSubpassDescription subPass = {};
+    VkSubpassDescription subPass{};
     subPass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     subPass.inputAttachmentCount = static_cast<uint32_t>(m_inputReferences.size());
     subPass.pInputAttachments = m_inputReferences.data();

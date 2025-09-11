@@ -51,7 +51,7 @@ public:
 
     const VkPhysicalDeviceFeatures2& GetEnabledFeatures2() const;
 
-    void Print(const bool showQueues) const;
+    void Print() const;
 
 public:
     operator VkPhysicalDevice() const;
@@ -72,7 +72,7 @@ private:
 
     VkPhysicalDeviceFeatures2 m_enabledFeatures;
 
-    VkPhysicalDeviceMultiviewFeatures m_physicalDeviceMultiviewFeatures{};
+    VkPhysicalDeviceMultiviewFeatures m_physicalDeviceMultiviewFeatures;
 };
 } // namespace prev::core::device
 

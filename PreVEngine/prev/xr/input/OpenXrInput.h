@@ -55,12 +55,12 @@ private:
     void HandleHandTrackingActions(const XrTime time);
 
 private:
-    XrInstance m_instance{ XR_NULL_HANDLE };
-    XrSystemId m_systemId{ XR_NULL_SYSTEM_ID };
-    bool m_handTrackingEnabled{};
+    XrInstance m_instance;
+    XrSystemId m_systemId;
+    bool m_handTrackingEnabled;
 
-    XrSession m_session{ XR_NULL_HANDLE };
-    XrSpace m_localSpace{ XR_NULL_HANDLE };
+    XrSession m_session;
+    XrSpace m_localSpace;
 
     // Controllers
     XrActionSet m_actionSet{};

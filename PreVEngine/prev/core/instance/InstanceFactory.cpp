@@ -6,6 +6,7 @@
 #include "Validation.h"
 
 #include "../../common/Logger.h"
+#include "../../util/VkUtils.h"
 
 #if defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_IOS_MVK)
 #include <vulkan/vulkan_metal.h>
@@ -69,7 +70,7 @@ namespace {
 
     VkApplicationInfo CreateApplicationInfo(const std::string& appName)
     {
-        VkApplicationInfo appInfo{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
+        VkApplicationInfo appInfo{ prev::util::vk::CreateStruct<VkApplicationInfo>(VK_STRUCTURE_TYPE_APPLICATION_INFO) };
         appInfo.pNext = nullptr;
         appInfo.pApplicationName = appName.c_str();
         appInfo.applicationVersion = 1;
@@ -81,13 +82,16 @@ namespace {
 
     VkInstanceCreateInfo CreateInstanceCreateInfo(const Layers& layers, const Extensions& extensions, const VkApplicationInfo& appInfo)
     {
-        VkInstanceCreateInfo instanceInfo{ VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
-        instanceInfo.pNext = nullptr;
+        const VkInstanceCreateFlags flags{
 #if defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_IOS_MVK)
-        instanceInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+            VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR
 #else
-        instanceInfo.flags = 0;
+            0
 #endif
+        };
+
+        VkInstanceCreateInfo instanceInfo{ prev::util::vk::CreateStruct<VkInstanceCreateInfo>(VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO) };
+        instanceInfo.flags = flags;
         instanceInfo.pApplicationInfo = &appInfo;
         instanceInfo.enabledExtensionCount = extensions.GetPickCount();
         instanceInfo.ppEnabledExtensionNames = extensions.GetPickListRaw();

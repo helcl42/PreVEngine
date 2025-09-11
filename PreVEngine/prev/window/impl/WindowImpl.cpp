@@ -94,12 +94,12 @@ Event WindowImpl::OnMouseEvent(ActionType action, int32_t x, int32_t y, ButtonTy
     }
 
     Event e{ Event::EventType::MOUSE };
-    e.mouse.action = action;
-    e.mouse.x = x;
-    e.mouse.y = y;
-    e.mouse.btn = btn;
-    e.mouse.w = m_info.size.width;
-    e.mouse.h = m_info.size.height;
+    e.body.mouse.action = action;
+    e.body.mouse.x = x;
+    e.body.mouse.y = y;
+    e.body.mouse.btn = btn;
+    e.body.mouse.w = m_info.size.width;
+    e.body.mouse.h = m_info.size.height;
     return e;
 }
 
@@ -108,9 +108,9 @@ Event WindowImpl::OnMouseScrollEvent(int32_t delta, int32_t x, int32_t y)
     m_mousePosition = { x, y };
 
     Event e{ Event::EventType::MOUSE_SCROLL };
-    e.scroll.delta = delta;
-    e.scroll.x = x;
-    e.scroll.y = y;
+    e.body.scroll.delta = delta;
+    e.body.scroll.x = x;
+    e.body.scroll.y = y;
     return e;
 }
 
@@ -119,14 +119,14 @@ Event WindowImpl::OnKeyEvent(ActionType action, uint8_t key)
     m_keyboardKeysState[key] = (action == ActionType::DOWN);
 
     Event e{ Event::EventType::KEY };
-    e.key = { action, (prev::input::keyboard::KeyCode)key };
+    e.body.key = { action, (prev::input::keyboard::KeyCode)key };
     return e;
 }
 
 Event WindowImpl::OnTextEvent(uint32_t unicode)
 {
     Event e{ Event::EventType::TEXT };
-    e.text.unicode = unicode;
+    e.body.text.unicode = unicode;
     return e;
 }
 
@@ -135,7 +135,7 @@ Event WindowImpl::OnMoveEvent(int32_t x, int32_t y)
     m_info.position = { x, y };
 
     Event e{ Event::EventType::MOVE };
-    e.move = { x, y };
+    e.body.move = { x, y };
     return e;
 }
 
@@ -144,7 +144,7 @@ Event WindowImpl::OnResizeEvent(uint32_t width, uint32_t height)
     m_info.size = { width, height };
 
     Event e{ Event::EventType::RESIZE };
-    e.resize = { width, height };
+    e.body.resize = { width, height };
     return e;
 }
 
@@ -153,7 +153,7 @@ Event WindowImpl::OnFocusEvent(bool hasFocus)
     m_hasFocus = hasFocus;
 
     Event e{ Event::EventType::FOCUS };
-    e.focus.hasFocus = hasFocus;
+    e.body.focus.hasFocus = hasFocus;
     return e;
 }
 

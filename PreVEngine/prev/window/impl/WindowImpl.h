@@ -29,7 +29,7 @@ public:
 public:
     void Clear()
     {
-        for (int i = 0; i < MAX_POINTER_COUNT; ++i) {
+        for (uint32_t i = 0; i < MAX_POINTER_COUNT; ++i) {
             m_touchID[i] = 0;
             m_pointers[i] = {};
         }
@@ -40,7 +40,7 @@ public:
         return m_count;
     }
 
-    void SetCount(int cnt)
+    void SetCount(uint32_t cnt)
     {
         m_count = cnt;
     }
@@ -71,8 +71,8 @@ public:
         P.x = x;
         P.y = y;
 
-        Event e = { Event::EventType::TOUCH };
-        e.touch = { action, x, y, static_cast<uint8_t>(id), w, h };
+        Event e{ Event::EventType::TOUCH };
+        e.body.touch = { action, x, y, static_cast<uint8_t>(id), w, h };
         return e;
     }
 
@@ -93,7 +93,7 @@ private:
 
     Pointer m_pointers[MAX_POINTER_COUNT] = {};
 
-    int m_count{}; // number of active touch-id's
+    uint32_t m_count{}; // number of active touch-id's
 };
 
 class WindowImpl : public Surface {

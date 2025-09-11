@@ -117,28 +117,28 @@ bool Window::ProcessEvent(const impl::Event& e)
 {
     switch (e.tag) {
     case impl::Event::EventType::MOUSE:
-        prev::event::EventChannel::Post(prev::input::mouse::MouseEvent{ InputConvertor::GetMouseActionType(e.mouse.action), InputConvertor::GetMouseButtonType(e.mouse.btn), glm::vec2(e.mouse.x, e.mouse.y), glm::vec2(e.mouse.w, e.mouse.h) });
+        prev::event::EventChannel::Post(prev::input::mouse::MouseEvent{ InputConvertor::GetMouseActionType(e.body.mouse.action), InputConvertor::GetMouseButtonType(e.body.mouse.btn), glm::vec2(e.body.mouse.x, e.body.mouse.y), glm::vec2(e.body.mouse.w, e.body.mouse.h) });
         break;
     case impl::Event::EventType::MOUSE_SCROLL:
-        prev::event::EventChannel::Post(prev::input::mouse::MouseScrollEvent{ e.scroll.delta, glm::vec2(e.scroll.x, e.scroll.y) });
+        prev::event::EventChannel::Post(prev::input::mouse::MouseScrollEvent{ e.body.scroll.delta, glm::vec2(e.body.scroll.x, e.body.scroll.y) });
         break;
     case impl::Event::EventType::KEY:
-        prev::event::EventChannel::Post(prev::input::keyboard::KeyEvent{ InputConvertor::GetKeyActionType(e.key.action), e.key.keyCode });
+        prev::event::EventChannel::Post(prev::input::keyboard::KeyEvent{ InputConvertor::GetKeyActionType(e.body.key.action), e.body.key.keyCode });
         break;
     case impl::Event::EventType::TEXT:
-        prev::event::EventChannel::Post(prev::input::keyboard::TextEvent{ e.text.unicode });
+        prev::event::EventChannel::Post(prev::input::keyboard::TextEvent{ e.body.text.unicode });
         break;
     case impl::Event::EventType::MOVE:
-        prev::event::EventChannel::Post(WindowMovedEvent{ this, glm::vec2(e.move.x, e.move.y) });
+        prev::event::EventChannel::Post(WindowMovedEvent{ this, glm::vec2(e.body.move.x, e.body.move.y) });
         break;
     case impl::Event::EventType::RESIZE:
-        prev::event::EventChannel::Post(WindowResizeEvent{ this, e.resize.width, e.resize.height });
+        prev::event::EventChannel::Post(WindowResizeEvent{ this, e.body.resize.width, e.body.resize.height });
         break;
     case impl::Event::EventType::FOCUS:
-        prev::event::EventChannel::Post(WindowFocusChangeEvent{ this, e.focus.hasFocus });
+        prev::event::EventChannel::Post(WindowFocusChangeEvent{ this, e.body.focus.hasFocus });
         break;
     case impl::Event::EventType::TOUCH:
-        prev::event::EventChannel::Post(prev::input::touch::TouchEvent{ InputConvertor::GetTouchActionType(e.touch.action), e.touch.id, glm::vec2(e.touch.x, e.touch.y), glm::vec2(e.touch.w, e.touch.h) });
+        prev::event::EventChannel::Post(prev::input::touch::TouchEvent{ InputConvertor::GetTouchActionType(e.body.touch.action), e.body.touch.id, glm::vec2(e.body.touch.x, e.body.touch.y), glm::vec2(e.body.touch.w, e.body.touch.h) });
         break;
     case impl::Event::EventType::INIT:
         prev::event::EventChannel::Post(WindowCreatedEvent{ this });

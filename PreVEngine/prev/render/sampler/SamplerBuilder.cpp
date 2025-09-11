@@ -1,5 +1,7 @@
 #include "SamplerBuilder.h"
 
+#include "../../util/VkUtils.h"
+
 namespace prev::render::sampler {
 SamplerBuilder::SamplerBuilder(const VkDevice device)
     : m_device{ device }
@@ -68,7 +70,7 @@ SamplerBuilder& SamplerBuilder::SetAnisotropyFilterLevel(float level)
 
 std::unique_ptr<Sampler> SamplerBuilder::Build() const
 {
-    VkSamplerCreateInfo samplerCreateInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
+    VkSamplerCreateInfo samplerCreateInfo{ prev::util::vk::CreateStruct<VkSamplerCreateInfo>(VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO) };
     samplerCreateInfo.minFilter = m_minFilter;
     samplerCreateInfo.magFilter = m_magFilter;
     samplerCreateInfo.mipmapMode = m_mipMapMode;

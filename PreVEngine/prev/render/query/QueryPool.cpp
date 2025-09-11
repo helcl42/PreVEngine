@@ -1,5 +1,7 @@
 #include "QueryPool.h"
 
+#include "../../util/VkUtils.h"
+
 namespace prev::render::query {
 QueryPool::QueryPool(prev::core::device::Device& device, VkQueryType queryType, uint32_t poolCount, uint32_t queryCount)
     : m_device{ device }
@@ -10,7 +12,7 @@ QueryPool::QueryPool(prev::core::device::Device& device, VkQueryType queryType, 
     m_queryPoolsValid.resize(m_poolCount, false);
     m_queryPools.resize(m_poolCount);
     for (uint32_t i = 0; i < m_poolCount; ++i) {
-        VkQueryPoolCreateInfo queryPoolInfo = { VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO };
+        VkQueryPoolCreateInfo queryPoolInfo{ prev::util::vk::CreateStruct<VkQueryPoolCreateInfo>(VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO) };
         queryPoolInfo.queryType = m_queryType;
         queryPoolInfo.queryCount = m_queryCount;
         VKERRCHECK(vkCreateQueryPool(m_device, &queryPoolInfo, nullptr, &m_queryPools[i]));

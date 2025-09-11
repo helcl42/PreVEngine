@@ -68,17 +68,17 @@ private:
     // touch
     static void OnTouchDown(void* data, wl_touch* wl_touch, uint32_t serial, uint32_t time, wl_surface* surface, int32_t id, wl_fixed_t x, wl_fixed_t y);
 
-    static void OnTouchUp(void *data, wl_touch *wl_touch, uint32_t serial, uint32_t time, int32_t id);
+    static void OnTouchUp(void* data, wl_touch* wl_touch, uint32_t serial, uint32_t time, int32_t id);
 
-    static void OnTouchMotion(void *data, wl_touch *wl_touch, uint32_t time, int32_t id, wl_fixed_t x, wl_fixed_t y);
+    static void OnTouchMotion(void* data, wl_touch* wl_touch, uint32_t time, int32_t id, wl_fixed_t x, wl_fixed_t y);
 
-    static void OnTouchFrame(void *data, wl_touch *wl_touch);
+    static void OnTouchFrame(void* data, wl_touch* wl_touch);
 
-    static void OnTouchCancel(void *data, wl_touch *wl_touch);
+    static void OnTouchCancel(void* data, wl_touch* wl_touch);
 
-    static void OnTouchShape(void *data, wl_touch *wl_touch, int32_t id, wl_fixed_t major, wl_fixed_t minor);
+    static void OnTouchShape(void* data, wl_touch* wl_touch, int32_t id, wl_fixed_t major, wl_fixed_t minor);
 
-    static void OnTouchOrientation(void *data, wl_touch *wl_touch, int32_t id, wl_fixed_t orientation);
+    static void OnTouchOrientation(void* data, wl_touch* wl_touch, int32_t id, wl_fixed_t orientation);
 
     // seat
     static void OnSeatCapabilities(void* data, wl_seat* seat, uint32_t caps);

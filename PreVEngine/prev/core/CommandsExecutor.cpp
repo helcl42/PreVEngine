@@ -1,13 +1,15 @@
 #include "CommandsExecutor.h"
 
+#include "../util/VkUtils.h"
+
 namespace prev::core {
 CommandsExecutor::CommandsExecutor(const device::Device& device, const device::Queue& queue)
     : m_device{ device }
     , m_queue{ queue }
+    , m_immediateCommandPool{ prev::util::vk::CreateCommandPool(m_device, m_queue.family) }
+    , m_immediateCommandBuffer{ prev::util::vk::CreateCommandBuffer(m_device, m_immediateCommandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY) }
+    , m_fence{ prev::util::vk::CreateFence(m_device) }
 {
-    m_immediateCommandPool = prev::util::vk::CreateCommandPool(m_device, m_queue.family);
-    m_immediateCommandBuffer = prev::util::vk::CreateCommandBuffer(m_device, m_immediateCommandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-    m_fence = prev::util::vk::CreateFence(m_device);
 }
 
 CommandsExecutor::~CommandsExecutor()
@@ -19,7 +21,7 @@ CommandsExecutor::~CommandsExecutor()
 
 void CommandsExecutor::ExecuteImmediate(const std::function<void(VkCommandBuffer)>& func)
 {
-    VkCommandBufferBeginInfo cmdBufBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+    VkCommandBufferBeginInfo cmdBufBeginInfo{ prev::util::vk::CreateStruct<VkCommandBufferBeginInfo>(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO) };
     cmdBufBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     VKERRCHECK(vkBeginCommandBuffer(m_immediateCommandBuffer, &cmdBufBeginInfo));
 
@@ -29,7 +31,7 @@ void CommandsExecutor::ExecuteImmediate(const std::function<void(VkCommandBuffer
 
     vkResetFences(m_device, 1, &m_fence);
 
-    VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+    VkSubmitInfo submitInfo{ prev::util::vk::CreateStruct<VkSubmitInfo>(VK_STRUCTURE_TYPE_SUBMIT_INFO) };
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &m_immediateCommandBuffer;
     VKERRCHECK(m_queue.Submit(1, &submitInfo, m_fence));

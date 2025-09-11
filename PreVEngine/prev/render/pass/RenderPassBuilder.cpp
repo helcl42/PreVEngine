@@ -2,6 +2,9 @@
 
 #include "../../common/Logger.h"
 #include "../../util/MathUtils.h"
+#include "../../util/VkUtils.h"
+
+#include <stdexcept>
 
 namespace prev::render::pass {
 RenderPassBuilder::RenderPassBuilder(VkDevice device)
@@ -59,6 +62,7 @@ std::unique_ptr<RenderPass> RenderPassBuilder::Build() const
     }
 
     std::vector<SubPass> subpasses;
+    subpasses.reserve(m_subPassCreateInfos.size());
     for (const auto& subPassCreateInfo : m_subPassCreateInfos) {
         SubPass subpass{ attachments };
         subpass.UseAttachments(subPassCreateInfo.attachmentIndices);
@@ -69,24 +73,23 @@ std::unique_ptr<RenderPass> RenderPassBuilder::Build() const
     std::vector<VkSubpassDescription> subpassDescriptions;
     subpassDescriptions.insert(subpassDescriptions.end(), subpasses.begin(), subpasses.end());
 
-    VkRenderPassCreateInfo renderPassCreateInfo{ VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
+    VkRenderPassCreateInfo renderPassCreateInfo{ prev::util::vk::CreateStruct<VkRenderPassCreateInfo>(VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO) };
     renderPassCreateInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
     renderPassCreateInfo.pAttachments = attachments.data();
     renderPassCreateInfo.subpassCount = static_cast<uint32_t>(subpassDescriptions.size());
     renderPassCreateInfo.pSubpasses = subpassDescriptions.data();
     renderPassCreateInfo.dependencyCount = static_cast<uint32_t>(m_dependencies.size());
     renderPassCreateInfo.pDependencies = m_dependencies.data();
-    renderPassCreateInfo.pNext = nullptr;
+
 #ifdef ENABLE_XR
     const uint32_t viewMask{ prev::util::math::SetBits<uint32_t>(m_viewCount) };
     const uint32_t correlationMask{ prev::util::math::SetBits<uint32_t>(m_viewCount) };
 
-    VkRenderPassMultiviewCreateInfo renderPassMultiviewCreateInfo{ VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO };
+    VkRenderPassMultiviewCreateInfo renderPassMultiviewCreateInfo{ prev::util::vk::CreateStruct<VkRenderPassMultiviewCreateInfo>(VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO) };
     renderPassMultiviewCreateInfo.subpassCount = static_cast<uint32_t>(subpassDescriptions.size());
     renderPassMultiviewCreateInfo.pViewMasks = &viewMask;
     renderPassMultiviewCreateInfo.correlationMaskCount = 1;
     renderPassMultiviewCreateInfo.pCorrelationMasks = &correlationMask;
-    renderPassMultiviewCreateInfo.pNext = nullptr;
 
     if (m_viewCount > 1) {
         renderPassCreateInfo.pNext = &renderPassMultiviewCreateInfo;
@@ -101,6 +104,19 @@ std::unique_ptr<RenderPass> RenderPassBuilder::Build() const
     LOGI("Renderpass created");
 
     return renderPass;
+}
+
+void RenderPassBuilder::Validate() const
+{
+    if (m_attachmentInfos.empty()) {
+        throw std::runtime_error("Invalid RenderPass configuration: No attachments defined.");
+    }
+
+#ifdef ENABLE_XR
+    if (m_viewCount <= 1) {
+        throw std::runtime_error("Invalid RenderPass configuration: View count is <= 1 while XR is on.");
+    }
+#endif
 }
 
 VkAttachmentDescription RenderPassBuilder::CreateAttachmentDescription(const VkFormat format, const VkSampleCountFlagBits sampleCount, const VkImageLayout finalLayout, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp)

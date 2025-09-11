@@ -1,19 +1,13 @@
 #ifndef __DEVICE_FACTORY_H__
 #define __DEVICE_FACTORY_H__
 
+#include "Device.h"
 #include "PhysicalDevice.h"
 
 #include <memory>
 
 namespace prev::core::device {
-class Device;
-
-class DeviceFactory {
-public:
-    DeviceFactory() = default;
-
-    ~DeviceFactory() = default;
-
+class DeviceFactory final {
 public:
     std::unique_ptr<Device> Create(const PhysicalDevice& gpu, const VkSurfaceKHR surface) const;
 };

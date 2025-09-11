@@ -68,9 +68,9 @@ private:
 
     AnimationNode m_rootNode;
 
-    double m_ticksPerSecond;
+    float m_ticksPerSecond;
 
-    double m_duration;
+    float m_duration;
 
     std::map<std::string, AnimationNodeKeyFrames> m_keyFrames;
 
