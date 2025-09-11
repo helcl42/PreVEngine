@@ -3,6 +3,7 @@
 
 #include "../component/ComponentRepository.h"
 
+#include "../../common/Common.h"
 #include "../../common/TagSet.h"
 
 #include <memory>
