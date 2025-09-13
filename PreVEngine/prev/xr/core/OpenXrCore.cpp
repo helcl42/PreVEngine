@@ -327,9 +327,9 @@ void OpenXrCore::CreateInstance()
     };
 
     const std::vector<const char*> requestedInstanceExtensionNames = {
-#ifdef TARGET_PLATFORM_ANDROID
-        XR_KHR_ANDROID_CREATE_INSTANCE_EXTENSION_NAME,
-#endif
+ #if defined(TARGET_PLATFORM_ANDROID) && defined(ENABLE_XR_EXTENDED_INIT)
+         XR_KHR_ANDROID_CREATE_INSTANCE_EXTENSION_NAME,
+ #endif
         XR_EXT_DEBUG_UTILS_EXTENSION_NAME,
 
         XR_KHR_VULKAN_ENABLE_EXTENSION_NAME,
@@ -360,7 +360,7 @@ void OpenXrCore::CreateInstance()
     instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(activeInstanceExtensions.size());
     instanceCreateInfo.enabledExtensionNames = activeInstanceExtensions.data();
 
-#ifdef TARGET_PLATFORM_ANDROID
+#if defined(TARGET_PLATFORM_ANDROID) && defined(ENABLE_XR_EXTENDED_INIT)
     XrInstanceCreateInfoAndroidKHR instanceCreateInfoAndroid{ prev::xr::util::CreateStruct<XrInstanceCreateInfoAndroidKHR>(XR_TYPE_INSTANCE_CREATE_INFO_ANDROID_KHR) };
     instanceCreateInfoAndroid.applicationActivity = g_AndroidApp->activity;
     instanceCreateInfoAndroid.applicationVM = g_AndroidApp->activity->vm;
