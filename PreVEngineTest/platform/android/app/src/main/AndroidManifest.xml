@@ -16,6 +16,12 @@
       android:name="android.hardware.vr.headtracking"
       android:required="false" />
 
+  <!-- HandTracking -->
+  <uses-permission android:name="com.oculus.permission.HAND_TRACKING" />
+  <uses-feature android:name="oculus.software.handtracking" android:required="false" />
+  <uses-feature android:name="wave.feature.handtracking" android:required="false" />
+  <uses-feature android:name="com.oculus.feature.PASSTHROUGH" android:required="false" />
+
   <!-- This .apk has no Java code itself, so set hasCode to false. -->
   <application
       android:allowBackup="false"
@@ -25,6 +31,10 @@
       android:hasCode="false"
       android:testOnly="false"
       >
+
+    <meta-data 
+        android:name="com.oculus.handtracking.frequency"
+        android:value="HIGH"/>
 
     <!-- Our activity is the built-in NativeActivity framework class.
          This will take care of integrating with our NDK code. -->
