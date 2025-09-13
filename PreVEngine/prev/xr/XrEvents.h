@@ -65,6 +65,13 @@ struct XrHandControllersEvent {
 struct XrHandsEvent {
     XrHandEvent hands[MAX_HAND_COUNT]{};
 };
+
+struct XrHapticFeedback {
+    HandType type{};
+    float amplitude{};
+    int64_t duration{};
+};
+
 } // namespace prev::xr
 
 #endif

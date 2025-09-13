@@ -7,6 +7,11 @@
 
 #include "../XrEvents.h"
 
+#include <prev/event/EventHandler.h>
+
+#include <array>
+#include <optional>
+
 namespace prev::xr::input {
 class OpenXrInput final : public common::IOpenXrEventObserver {
 public:
@@ -47,6 +52,9 @@ public:
     void PollActions(const XrTime time);
 
 public:
+    void operator() (const XrHapticFeedback& hapticFeedback);
+
+public:
     void OnEvent(const XrEventDataBuffer& evt) override;
 
 private:
@@ -67,10 +75,17 @@ private:
     XrAction m_squeezeAction{};
     XrAction m_triggerAction{};
     XrAction m_palmPoseAction{};
+    XrAction m_quitAction{};
+    XrAction m_vibrateAction{};
     XrPath m_handPaths[MAX_HAND_COUNT]{};
     XrSpace m_handPoseSpace[MAX_HAND_COUNT]{};
 
     XrHandTrackerEXT m_hands[MAX_HAND_COUNT]{};
+
+private:
+    prev::event::EventHandler<OpenXrInput, XrHapticFeedback> m_vibrationEventHandler{ *this };
+
+    std::array<std::optional<XrHapticFeedback>, MAX_HAND_COUNT> m_hapticFeedbackEvents;
 };
 } // namespace prev::xr::input
 
