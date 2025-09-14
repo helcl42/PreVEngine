@@ -81,6 +81,17 @@ private:
     std::array<XrPath, MAX_HAND_COUNT> m_handPaths{};
     std::array<XrSpace, MAX_HAND_COUNT> m_handPoseSpace{};
 
+    // HandTracking
+    std::array<XrHandTrackerEXT, MAX_HAND_COUNT> m_hands{};
+    XrAction m_poseAction{};
+    std::array<XrAction, 3> poseActions{};
+    std::array<XrAction, 3> readyActions{};
+    std::array<XrAction, 3> valueActions{};
+
+    std::array<XrSpace, MAX_HAND_COUNT> handAimSpace{};
+    std::array<XrSpace, MAX_HAND_COUNT> handPinchSpace{};
+    std::array<XrSpace, MAX_HAND_COUNT> handPokeSpace{};
+
 private:
     prev::event::EventHandler<OpenXrInput, XrHapticFeedback> m_vibrationEventHandler{ *this };
 
