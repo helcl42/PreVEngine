@@ -38,11 +38,6 @@ namespace {
         OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrLocateHandJointsEXT", (PFN_xrVoidFunction*)&xrLocateHandJointsEXT), "Failed to get xrLocateHandJointsEXT.");
     }
 
-    static const std::vector<const char*> handPaths = {
-        "/user/hand/left",
-        "/user/hand/right"
-    };
-
 } // namespace
 
 OpenXrInput::OpenXrInput(XrInstance instance, XrSystemId systemId, bool handTrackingEnabled)
@@ -100,15 +95,11 @@ void OpenXrInput::CreateActionSet()
     strncpy(actionSetCreateInfo.localizedActionSetName, "prev-engine-action-set", XR_MAX_LOCALIZED_ACTION_SET_NAME_SIZE);
     OPENXR_CHECK(xrCreateActionSet(m_instance, &actionSetCreateInfo, &m_actionSet), "Failed to create ActionSet.");
 
-    auto CreateAction = [this](const char* name, const XrActionType xrActionType, const std::vector<const char*>& subactionPaths = {}) -> XrAction {
+    auto CreateAction = [this](const char* name, const XrActionType xrActionType, const std::array<XrPath, MAX_HAND_COUNT>& subactionPaths = {}) -> XrAction {
         XrActionCreateInfo actionCreateInfo{ prev::xr::util::CreateStruct<XrActionCreateInfo>(XR_TYPE_ACTION_CREATE_INFO) };
         actionCreateInfo.actionType = xrActionType;
-        std::vector<XrPath> subactionXrPaths;
-        for (const auto& p : subactionPaths) {
-            subactionXrPaths.push_back(ConvertStringToXrPath(m_instance, p));
-        }
-        actionCreateInfo.countSubactionPaths = static_cast<uint32_t>(subactionXrPaths.size());
-        actionCreateInfo.subactionPaths = subactionXrPaths.data();
+        actionCreateInfo.countSubactionPaths = static_cast<uint32_t>(subactionPaths.size());
+        actionCreateInfo.subactionPaths = subactionPaths.data();
         // The internal name the runtime uses for this Action.
         strncpy(actionCreateInfo.actionName, name, XR_MAX_ACTION_NAME_SIZE);
         // Localized names are required so there is a human-readable action name to show the user if they are rebinding the Action in an options screen.
@@ -119,15 +110,16 @@ void OpenXrInput::CreateActionSet()
         return xrAction;
     };
 
-    m_squeezeAction = CreateAction("squeeze", XR_ACTION_TYPE_FLOAT_INPUT, handPaths);
-    m_triggerAction = CreateAction("trigger", XR_ACTION_TYPE_BOOLEAN_INPUT, handPaths);
-    m_palmPoseAction = CreateAction("pose", XR_ACTION_TYPE_POSE_INPUT, handPaths);
-    m_quitAction = CreateAction("quit", XR_ACTION_TYPE_BOOLEAN_INPUT, handPaths);
-    m_vibrateAction = CreateAction("vibrate", XR_ACTION_TYPE_VIBRATION_OUTPUT, handPaths);
-
-    for (size_t i = 0; i < handPaths.size(); ++i) {
-        m_handPaths[i] = ConvertStringToXrPath(m_instance, handPaths[i]);
+    // Controllers
+    for (size_t i = 0; i < m_handPathStrings.size(); ++i) {
+        m_handPaths[i] = ConvertStringToXrPath(m_instance, m_handPathStrings[i]);
     }
+
+    m_squeezeAction = CreateAction("squeeze", XR_ACTION_TYPE_FLOAT_INPUT, m_handPaths);
+    m_triggerAction = CreateAction("trigger", XR_ACTION_TYPE_BOOLEAN_INPUT, m_handPaths);
+    m_palmPoseAction = CreateAction("pose", XR_ACTION_TYPE_POSE_INPUT, m_handPaths);
+    m_quitAction = CreateAction("quit", XR_ACTION_TYPE_BOOLEAN_INPUT, m_handPaths);
+    m_vibrateAction = CreateAction("vibrate", XR_ACTION_TYPE_VIBRATION_OUTPUT, m_handPaths);
 }
 
 void OpenXrInput::DestroyActionSet()
@@ -216,23 +208,21 @@ bool OpenXrInput::SuggestBindings()
 
 void OpenXrInput::CreateActionPoses()
 {
-    auto CreateActionPoseSpace = [](const XrInstance instance, const XrSession session, const XrAction xrAction, const char* subactionPath = nullptr) -> XrSpace {
+    auto CreateActionPoseSpace = [](const XrInstance instance, const XrSession session, const XrAction xrAction, const XrPath subactionPath) -> XrSpace {
         const XrPosef xrPoseIdentity{ { 0.0f, 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f } };
         // Create frame of reference for a pose action
         XrActionSpaceCreateInfo actionSpaceCI{ prev::xr::util::CreateStruct<XrActionSpaceCreateInfo>(XR_TYPE_ACTION_SPACE_CREATE_INFO) };
         actionSpaceCI.action = xrAction;
         actionSpaceCI.poseInActionSpace = xrPoseIdentity;
-        if (subactionPath) {
-            actionSpaceCI.subactionPath = ConvertStringToXrPath(instance, subactionPath);
-        }
+        actionSpaceCI.subactionPath = subactionPath;
 
         XrSpace xrSpace{};
         OPENXR_CHECK(xrCreateActionSpace(session, &actionSpaceCI, &xrSpace), "Failed to create ActionSpace.");
         return xrSpace;
     };
 
-    for (size_t i = 0; i < handPaths.size(); ++i) {
-        m_handPoseSpace[i] = CreateActionPoseSpace(m_instance, m_session, m_palmPoseAction, handPaths[i]);
+    for (size_t i = 0; i < m_handPaths.size(); ++i) {
+        m_handPoseSpace[i] = CreateActionPoseSpace(m_instance, m_session, m_palmPoseAction, m_handPaths[i]);
     }
 }
 
@@ -262,7 +252,7 @@ void OpenXrInput::CreateHandTrackers()
         return;
     }
 
-    for (size_t i = 0; i < handPaths.size(); ++i) {
+    for (size_t i = 0; i < m_handPaths.size(); ++i) {
         auto& hand{ m_hands[i] };
         XrHandTrackerCreateInfoEXT xrHandTrackerCreateInfo{ prev::xr::util::CreateStruct<XrHandTrackerCreateInfoEXT>(XR_TYPE_HAND_TRACKER_CREATE_INFO_EXT) };
         xrHandTrackerCreateInfo.hand = i == 0 ? XR_HAND_LEFT_EXT : XR_HAND_RIGHT_EXT;
@@ -277,7 +267,7 @@ void OpenXrInput::DestroyHandTrackers()
         return;
     }
 
-    for (uint32_t i = 0; i < handPaths.size(); ++i) {
+    for (uint32_t i = 0; i < m_handPaths.size(); ++i) {
         auto& hand{ m_hands[i] };
         OPENXR_CHECK(xrDestroyHandTrackerEXT(hand), "Failed to destroy Hand Tracker.");
         hand = {};
@@ -290,11 +280,11 @@ void OpenXrInput::RecordCurrentBindings()
         return;
     }
 
-    for (size_t i = 0; i < handPaths.size(); ++i) {
+    for (size_t i = 0; i < m_handPaths.size(); ++i) {
         XrInteractionProfileState interactionProfile{ prev::xr::util::CreateStruct<XrInteractionProfileState>(XR_TYPE_INTERACTION_PROFILE_STATE) };
         OPENXR_CHECK(xrGetCurrentInteractionProfile(m_session, m_handPaths[i], &interactionProfile), "Failed to get profile.");
         if (interactionProfile.interactionProfile) {
-            LOGI("%s ActiveProfile: %s", handPaths[i], ConvertXrPathToString(m_instance, interactionProfile.interactionProfile).c_str());
+            LOGI("%s ActiveProfile: %s", m_handPathStrings[i], ConvertXrPathToString(m_instance, interactionProfile.interactionProfile).c_str());
         }
     }
 }

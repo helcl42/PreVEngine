@@ -52,7 +52,7 @@ public:
     void PollActions(const XrTime time);
 
 public:
-    void operator() (const XrHapticFeedback& hapticFeedback);
+    void operator()(const XrHapticFeedback& hapticFeedback);
 
 public:
     void OnEvent(const XrEventDataBuffer& evt) override;
@@ -77,10 +77,9 @@ private:
     XrAction m_palmPoseAction{};
     XrAction m_quitAction{};
     XrAction m_vibrateAction{};
-    XrPath m_handPaths[MAX_HAND_COUNT]{};
-    XrSpace m_handPoseSpace[MAX_HAND_COUNT]{};
-
-    XrHandTrackerEXT m_hands[MAX_HAND_COUNT]{};
+    std::array<const char*, MAX_HAND_COUNT> m_handPathStrings{ "/user/hand/left", "/user/hand/right" };
+    std::array<XrPath, MAX_HAND_COUNT> m_handPaths{};
+    std::array<XrSpace, MAX_HAND_COUNT> m_handPoseSpace{};
 
 private:
     prev::event::EventHandler<OpenXrInput, XrHapticFeedback> m_vibrationEventHandler{ *this };
