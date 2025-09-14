@@ -10,6 +10,7 @@
 namespace prev::xr {
 
 constexpr const uint32_t MAX_HAND_COUNT{ 2 };
+constexpr const uint32_t MAX_ACTION_EVENT_COUNT{ 3 };
 constexpr const uint32_t MAX_HAND_TRACKING_JOINT_COUNT{ 26 };
 
 struct XrCameraEvent {
@@ -35,7 +36,7 @@ enum class HandEventFlags : uint32_t {
 
 enum class HandType : uint32_t {
     LEFT = 0,
-    RIGHT = 1
+    RIGHT = 1,
 };
 
 struct XrHandControllerEvent {
@@ -56,6 +57,8 @@ struct XrHandEvent {
     HandType type{};
     bool active{};
     XrHandJoint joints[MAX_HAND_TRACKING_JOINT_COUNT]{};
+    float squeeze{};
+    prev::util::math::Pose pose{};
 };
 
 struct XrHandControllersEvent {
@@ -64,6 +67,29 @@ struct XrHandControllersEvent {
 
 struct XrHandsEvent {
     XrHandEvent hands[MAX_HAND_COUNT]{};
+};
+
+enum class HandActionType {
+    PINCH = 0,
+    AIM = 1,
+    POKE = 2,
+};
+
+struct XrHandActionEvent {
+    HandType type{};
+    HandActionType actionType{};
+    bool active{};
+    prev::util::math::Pose pose{};
+    float value{};
+};
+
+struct XrHandActionsEvent {
+    XrHandActionEvent actions[MAX_ACTION_EVENT_COUNT];
+    uint32_t actionCount{};
+};
+
+struct XrHandsActionsEvent {
+    XrHandActionsEvent handsActions[MAX_HAND_COUNT]{};
 };
 
 struct XrHapticFeedback {

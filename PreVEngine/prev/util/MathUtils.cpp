@@ -112,6 +112,11 @@ glm::mat4 ExtractRotation(const glm::mat4& transform)
     return glm::mat4_cast(rotAsQuat);
 }
 
+glm::quat CreateQuaternion(const glm::vec3& v1, const glm::vec3& v2)
+{
+    return glm::normalize(glm::quat(1.0f + glm::dot(v1, v2), glm::cross(v1, v2)));
+}
+
 std::vector<glm::vec3> GetFrustumCorners(const glm::mat4& inverseWorldToClipSpaceTransform)
 {
     const std::vector<glm::vec3> cubeFrustumCorners{

@@ -28,14 +28,22 @@ public:
 
     void OnReferenceSpaceDestroy();
 
+    void PollActions(const XrTime time);
+
 public:
+    void OnEvent(const XrEventDataBuffer& evt) override;
+
+public:
+    void operator()(const XrHapticFeedback& hapticFeedback);
+
+private:
     void CreateActionSet();
 
     void DestroyActionSet();
 
-    void CreateActionPoses();
+    void CreateActionSpaces();
 
-    void DestroyActionPoses();
+    void DestroyActionSpaces();
 
     void AttachActionSet();
 
@@ -45,19 +53,10 @@ public:
 
     void DestroyHandTrackers();
 
-    bool SuggestBindings();
+    bool SuggestControllerBindings();
 
     void RecordCurrentBindings();
 
-    void PollActions(const XrTime time);
-
-public:
-    void operator()(const XrHapticFeedback& hapticFeedback);
-
-public:
-    void OnEvent(const XrEventDataBuffer& evt) override;
-
-private:
     void HandleControllerActions(const XrTime time);
 
     void HandleHandTrackingActions(const XrTime time);
@@ -70,32 +69,33 @@ private:
     XrSession m_session;
     XrSpace m_localSpace;
 
-    // Controllers
+    std::array<const char*, MAX_HAND_COUNT> m_handPathStrings{
+        "/user/hand/left",
+        "/user/hand/right",
+    };
+    std::array<XrPath, MAX_HAND_COUNT> m_handPaths{};
+
     XrActionSet m_actionSet{};
+
+    // Controllers
     XrAction m_squeezeAction{};
     XrAction m_triggerAction{};
     XrAction m_palmPoseAction{};
     XrAction m_quitAction{};
     XrAction m_vibrateAction{};
-    std::array<const char*, MAX_HAND_COUNT> m_handPathStrings{ "/user/hand/left", "/user/hand/right" };
-    std::array<XrPath, MAX_HAND_COUNT> m_handPaths{};
     std::array<XrSpace, MAX_HAND_COUNT> m_handPoseSpace{};
-
-    // HandTracking
-    std::array<XrHandTrackerEXT, MAX_HAND_COUNT> m_hands{};
-    XrAction m_poseAction{};
-    std::array<XrAction, 3> poseActions{};
-    std::array<XrAction, 3> readyActions{};
-    std::array<XrAction, 3> valueActions{};
-
-    std::array<XrSpace, MAX_HAND_COUNT> handAimSpace{};
-    std::array<XrSpace, MAX_HAND_COUNT> handPinchSpace{};
-    std::array<XrSpace, MAX_HAND_COUNT> handPokeSpace{};
 
 private:
     prev::event::EventHandler<OpenXrInput, XrHapticFeedback> m_vibrationEventHandler{ *this };
 
     std::array<std::optional<XrHapticFeedback>, MAX_HAND_COUNT> m_hapticFeedbackEvents;
+
+    // HandTracking
+    std::array<XrHandTrackerEXT, MAX_HAND_COUNT> m_hands{};
+    XrAction m_poseAction{};
+    XrAction m_grabAction{};
+
+    std::array<XrSpace, MAX_HAND_COUNT> m_handSpace{};
 };
 } // namespace prev::xr::input
 

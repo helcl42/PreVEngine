@@ -136,6 +136,8 @@ glm::quat ExtractRotationAsQuaternion(const glm::mat4& transform);
 
 glm::mat4 ExtractRotation(const glm::mat4& transform);
 
+glm::quat CreateQuaternion(const glm::vec3& v1, const glm::vec3& v2);
+
 std::vector<glm::vec3> GetFrustumCorners(const glm::mat4& inverseWorldToClipSpaceTransform);
 
 glm::vec2 FromViewPortSpaceToNormalizedDeviceSpace(const glm::vec2& viewPortDimensions, const glm::vec2& viewPortCoords);
