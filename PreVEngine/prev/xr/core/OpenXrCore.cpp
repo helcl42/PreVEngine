@@ -256,7 +256,7 @@ void OpenXrCore::PollEvents()
             }
 
             if (sessionStateChanged->state == XR_SESSION_STATE_READY) {
-                XrSessionBeginInfo sessionBeginInfo{ XR_TYPE_SESSION_BEGIN_INFO };
+                XrSessionBeginInfo sessionBeginInfo{ prev::xr::util::CreateStruct<XrSessionBeginInfo>(XR_TYPE_SESSION_BEGIN_INFO) };
                 sessionBeginInfo.primaryViewConfigurationType = m_viewConfiguration;
                 OPENXR_CHECK(xrBeginSession(m_session, &sessionBeginInfo), "Failed to begin Session.");
                 m_sessionRunning = true;
