@@ -31,6 +31,49 @@ namespace {
         return std::string(text);
     }
 
+    inline XrAction CreateAction(const XrActionSet& actionSet, const char* name, const XrActionType xrActionType, const XrPath* subactionPaths = nullptr, const uint32_t subactionPathCount = 0)
+    {
+        XrActionCreateInfo actionCreateInfo{ prev::xr::util::CreateStruct<XrActionCreateInfo>(XR_TYPE_ACTION_CREATE_INFO) };
+        actionCreateInfo.actionType = xrActionType;
+        actionCreateInfo.countSubactionPaths = subactionPathCount;
+        actionCreateInfo.subactionPaths = subactionPaths;
+        // The internal name the runtime uses for this Action.
+        strncpy(actionCreateInfo.actionName, name, XR_MAX_ACTION_NAME_SIZE);
+        // Localized names are required so there is a human-readable action name to show the user if they are rebinding the Action in an options screen.
+        strncpy(actionCreateInfo.localizedActionName, name, XR_MAX_LOCALIZED_ACTION_NAME_SIZE);
+
+        XrAction xrAction{};
+        OPENXR_CHECK(xrCreateAction(actionSet, &actionCreateInfo, &xrAction), "Failed to create Action.");
+        return xrAction;
+    }
+
+    inline bool SuggestProfileBindings(const XrInstance instance, const char* profilePath, const std::vector<XrActionSuggestedBinding>& bindings)
+    {
+        XrInteractionProfileSuggestedBinding interactionProfileSuggestedBinding{ prev::xr::util::CreateStruct<XrInteractionProfileSuggestedBinding>(XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING) };
+        interactionProfileSuggestedBinding.interactionProfile = ConvertStringToXrPath(instance, profilePath);
+        interactionProfileSuggestedBinding.suggestedBindings = bindings.data();
+        interactionProfileSuggestedBinding.countSuggestedBindings = static_cast<uint32_t>(bindings.size());
+        if (xrSuggestInteractionProfileBindings(instance, &interactionProfileSuggestedBinding) == XrResult::XR_SUCCESS) {
+            return true;
+        }
+        LOGI("Failed to suggest bindings with %s", profilePath);
+        return false;
+    };
+
+    inline XrSpace CreateActionPoseSpace(const XrInstance instance, const XrSession session, const XrAction xrAction, const XrPath subactionPath)
+    {
+        const XrPosef xrPoseIdentity{ { 0.0f, 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f } };
+        // Create frame of reference for a pose action
+        XrActionSpaceCreateInfo actionSpaceCI{ prev::xr::util::CreateStruct<XrActionSpaceCreateInfo>(XR_TYPE_ACTION_SPACE_CREATE_INFO) };
+        actionSpaceCI.action = xrAction;
+        actionSpaceCI.poseInActionSpace = xrPoseIdentity;
+        actionSpaceCI.subactionPath = subactionPath;
+
+        XrSpace xrSpace{};
+        OPENXR_CHECK(xrCreateActionSpace(session, &actionSpaceCI, &xrSpace), "Failed to create ActionSpace.");
+        return xrSpace;
+    };
+
     inline void LoadXrExtensionFunctions(XrInstance xrInstance)
     {
         OPENXR_CHECK(xrGetInstanceProcAddr(xrInstance, "xrCreateHandTrackerEXT", (PFN_xrVoidFunction*)&xrCreateHandTrackerEXT), "Failed to get xrCreateHandTrackerEXT.");
@@ -95,55 +138,36 @@ void OpenXrInput::CreateActionSet()
     strncpy(actionSetCreateInfo.localizedActionSetName, "prev-engine-action-set", XR_MAX_LOCALIZED_ACTION_SET_NAME_SIZE);
     OPENXR_CHECK(xrCreateActionSet(m_instance, &actionSetCreateInfo, &m_actionSet), "Failed to create ActionSet.");
 
-    auto CreateAction = [this](const char* name, const XrActionType xrActionType, const std::array<XrPath, MAX_HAND_COUNT>& subactionPaths = {}) -> XrAction {
-        XrActionCreateInfo actionCreateInfo{ prev::xr::util::CreateStruct<XrActionCreateInfo>(XR_TYPE_ACTION_CREATE_INFO) };
-        actionCreateInfo.actionType = xrActionType;
-        actionCreateInfo.countSubactionPaths = static_cast<uint32_t>(subactionPaths.size());
-        actionCreateInfo.subactionPaths = subactionPaths.data();
-        // The internal name the runtime uses for this Action.
-        strncpy(actionCreateInfo.actionName, name, XR_MAX_ACTION_NAME_SIZE);
-        // Localized names are required so there is a human-readable action name to show the user if they are rebinding the Action in an options screen.
-        strncpy(actionCreateInfo.localizedActionName, name, XR_MAX_LOCALIZED_ACTION_NAME_SIZE);
-
-        XrAction xrAction{};
-        OPENXR_CHECK(xrCreateAction(m_actionSet, &actionCreateInfo, &xrAction), "Failed to create Action.");
-        return xrAction;
-    };
-
     // Controllers
     for (size_t i = 0; i < m_handPathStrings.size(); ++i) {
         m_handPaths[i] = ConvertStringToXrPath(m_instance, m_handPathStrings[i]);
     }
 
-    m_squeezeAction = CreateAction("squeeze", XR_ACTION_TYPE_FLOAT_INPUT, m_handPaths);
-    m_triggerAction = CreateAction("trigger", XR_ACTION_TYPE_BOOLEAN_INPUT, m_handPaths);
-    m_palmPoseAction = CreateAction("pose", XR_ACTION_TYPE_POSE_INPUT, m_handPaths);
-    m_quitAction = CreateAction("quit", XR_ACTION_TYPE_BOOLEAN_INPUT, m_handPaths);
-    m_vibrateAction = CreateAction("vibrate", XR_ACTION_TYPE_VIBRATION_OUTPUT, m_handPaths);
+    m_squeezeAction = CreateAction(m_actionSet, "squeeze", XR_ACTION_TYPE_FLOAT_INPUT, m_handPaths.data(), static_cast<uint32_t>(m_handPaths.size()));
+    m_triggerAction = CreateAction(m_actionSet, "trigger", XR_ACTION_TYPE_BOOLEAN_INPUT, m_handPaths.data(), static_cast<uint32_t>(m_handPaths.size()));
+    m_palmPoseAction = CreateAction(m_actionSet, "pose", XR_ACTION_TYPE_POSE_INPUT, m_handPaths.data(), static_cast<uint32_t>(m_handPaths.size()));
+    m_quitAction = CreateAction(m_actionSet, "quit", XR_ACTION_TYPE_BOOLEAN_INPUT, m_handPaths.data(), static_cast<uint32_t>(m_handPaths.size()));
+    m_vibrateAction = CreateAction(m_actionSet, "vibrate", XR_ACTION_TYPE_VIBRATION_OUTPUT, m_handPaths.data(), static_cast<uint32_t>(m_handPaths.size()));
 }
 
 void OpenXrInput::DestroyActionSet()
 {
-    // nothing to do here ??
+    m_vibrateAction = {};
+    m_quitAction = {};
+    m_palmPoseAction = {};
+    m_triggerAction = {};
+    m_squeezeAction = {};
+
+    m_handPaths = {};
+
+    m_actionSet = {};
 }
 
 bool OpenXrInput::SuggestBindings()
 {
-    auto SuggestBindings = [](const XrInstance instance, const char* profilePath, const std::vector<XrActionSuggestedBinding>& bindings) -> bool {
-        XrInteractionProfileSuggestedBinding interactionProfileSuggestedBinding{ prev::xr::util::CreateStruct<XrInteractionProfileSuggestedBinding>(XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING) };
-        interactionProfileSuggestedBinding.interactionProfile = ConvertStringToXrPath(instance, profilePath);
-        interactionProfileSuggestedBinding.suggestedBindings = bindings.data();
-        interactionProfileSuggestedBinding.countSuggestedBindings = static_cast<uint32_t>(bindings.size());
-        if (xrSuggestInteractionProfileBindings(instance, &interactionProfileSuggestedBinding) == XrResult::XR_SUCCESS) {
-            return true;
-        }
-        LOGI("Failed to suggest bindings with %s", profilePath);
-        return false;
-    };
-
     bool anyOk{ false };
     // clang-format off
-    anyOk |= SuggestBindings(m_instance, "/interaction_profiles/khr/simple_controller", {
+    anyOk |= SuggestProfileBindings(m_instance, "/interaction_profiles/khr/simple_controller", {
         { m_triggerAction, ConvertStringToXrPath(m_instance, "/user/hand/left/input/select/click") },
         { m_squeezeAction, ConvertStringToXrPath(m_instance, "/user/hand/right/input/select/click") },
         { m_palmPoseAction, ConvertStringToXrPath(m_instance, "/user/hand/left/input/grip/pose") },
@@ -155,7 +179,7 @@ bool OpenXrInput::SuggestBindings()
     });
     // clang-format on
     // clang-format off
-    anyOk |= SuggestBindings(m_instance, "/interaction_profiles/oculus/touch_controller", { 
+    anyOk |= SuggestProfileBindings(m_instance, "/interaction_profiles/oculus/touch_controller", { 
         { m_squeezeAction, ConvertStringToXrPath(m_instance, "/user/hand/left/input/squeeze/value") }, 
         { m_squeezeAction, ConvertStringToXrPath(m_instance, "/user/hand/right/input/squeeze/value") }, 
         { m_triggerAction, ConvertStringToXrPath(m_instance, "/user/hand/left/input/trigger/value") }, 
@@ -168,7 +192,7 @@ bool OpenXrInput::SuggestBindings()
     });
     // clang-format on
     // clang-format off
-    anyOk |= SuggestBindings(m_instance, "/interaction_profiles/htc/vive_controller", { 
+    anyOk |= SuggestProfileBindings(m_instance, "/interaction_profiles/htc/vive_controller", { 
         { m_squeezeAction, ConvertStringToXrPath(m_instance, "/user/hand/left/input/trigger/value") }, 
         { m_squeezeAction, ConvertStringToXrPath(m_instance, "/user/hand/right/input/trigger/value") }, 
         { m_palmPoseAction, ConvertStringToXrPath(m_instance, "/user/hand/left/input/grip/pose") }, 
@@ -180,7 +204,7 @@ bool OpenXrInput::SuggestBindings()
     });
     // clang-format on
     // clang-format off
-    anyOk |= SuggestBindings(m_instance, "/interaction_profiles/valve/index_controller", { 
+    anyOk |= SuggestProfileBindings(m_instance, "/interaction_profiles/valve/index_controller", { 
         { m_squeezeAction, ConvertStringToXrPath(m_instance, "/user/hand/left/input/squeeze/value") }, 
         { m_squeezeAction, ConvertStringToXrPath(m_instance, "/user/hand/right/input/squeeze/value") },
         { m_palmPoseAction, ConvertStringToXrPath(m_instance, "/user/hand/left/input/grip/pose") }, 
@@ -192,7 +216,7 @@ bool OpenXrInput::SuggestBindings()
     });
     // clang-format on
     // clang-format off
-    anyOk |= SuggestBindings(m_instance, "/interaction_profiles/microsoft/motion_controller", {
+    anyOk |= SuggestProfileBindings(m_instance, "/interaction_profiles/microsoft/motion_controller", {
             { m_squeezeAction, ConvertStringToXrPath(m_instance, "/user/hand/left/input/trigger/value") },
             { m_squeezeAction, ConvertStringToXrPath(m_instance, "/user/hand/right/input/trigger/value") },
             { m_palmPoseAction, ConvertStringToXrPath(m_instance, "/user/hand/left/input/grip/pose") },
@@ -208,19 +232,6 @@ bool OpenXrInput::SuggestBindings()
 
 void OpenXrInput::CreateActionPoses()
 {
-    auto CreateActionPoseSpace = [](const XrInstance instance, const XrSession session, const XrAction xrAction, const XrPath subactionPath) -> XrSpace {
-        const XrPosef xrPoseIdentity{ { 0.0f, 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f } };
-        // Create frame of reference for a pose action
-        XrActionSpaceCreateInfo actionSpaceCI{ prev::xr::util::CreateStruct<XrActionSpaceCreateInfo>(XR_TYPE_ACTION_SPACE_CREATE_INFO) };
-        actionSpaceCI.action = xrAction;
-        actionSpaceCI.poseInActionSpace = xrPoseIdentity;
-        actionSpaceCI.subactionPath = subactionPath;
-
-        XrSpace xrSpace{};
-        OPENXR_CHECK(xrCreateActionSpace(session, &actionSpaceCI, &xrSpace), "Failed to create ActionSpace.");
-        return xrSpace;
-    };
-
     for (size_t i = 0; i < m_handPaths.size(); ++i) {
         m_handPoseSpace[i] = CreateActionPoseSpace(m_instance, m_session, m_palmPoseAction, m_handPaths[i]);
     }
@@ -228,7 +239,7 @@ void OpenXrInput::CreateActionPoses()
 
 void OpenXrInput::DestroyActionPoses()
 {
-    // nothing to do here
+    m_handPoseSpace = {};
 }
 
 void OpenXrInput::AttachActionSet()
