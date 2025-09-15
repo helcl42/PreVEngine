@@ -1,4 +1,4 @@
-#include "OpenXRUtil.h"
+#include "OpenXrUtils.h"
 
 #ifdef ENABLE_XR
 

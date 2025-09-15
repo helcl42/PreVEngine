@@ -2,8 +2,6 @@
 
 #ifdef ENABLE_XR
 
-#include "util/OpenXRUtil.h"
-
 #include "../render/buffer/ImageBufferBuilder.h"
 #include "../util/VkUtils.h"
 

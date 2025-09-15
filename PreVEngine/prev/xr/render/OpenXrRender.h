@@ -5,7 +5,6 @@
 
 #include "../XrEvents.h"
 #include "../common/IOpenXrEventObserver.h"
-#include "../util/OpenXRUtil.h"
 
 #include <unordered_map>
 

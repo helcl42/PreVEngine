@@ -3,7 +3,7 @@
 #ifdef ENABLE_XR
 
 #include "../XrEvents.h"
-#include "../util/OpenXRUtil.h"
+#include "../util/OpenXrUtils.h"
 
 #include "../../event/EventChannel.h"
 

@@ -2,7 +2,7 @@
 
 #ifdef ENABLE_XR
 
-#include "../util/OpenXRUtil.h"
+#include "../util/OpenXrUtils.h"
 
 #include "../../util/VkUtils.h"
 

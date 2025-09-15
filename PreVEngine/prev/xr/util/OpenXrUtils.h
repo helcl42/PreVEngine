@@ -1,5 +1,5 @@
-#ifndef __OPENXR_UTIL_H__
-#define __OPENXR_UTIL_H__
+#ifndef __OPENXR_UTILS_H__
+#define __OPENXR_UTILS_H__
 
 #ifdef ENABLE_XR
 
