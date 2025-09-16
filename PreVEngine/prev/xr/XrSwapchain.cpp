@@ -13,7 +13,6 @@ XrSwapchain::XrSwapchain(prev::core::device::Device& device, prev::core::memory:
     , m_xr{ xr }
     , m_sampleCount{ sampleCount }
     , m_graphicsQueue{ m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
-    , m_presentQueue{ m_device.GetQueue(prev::core::device::QueueType::PRESENT) }
 {
     m_commandPool = prev::util::vk::CreateCommandPool(m_device, m_graphicsQueue.family);
 
@@ -143,8 +142,8 @@ void XrSwapchain::Print() const
     LOGI("\tColor   = %3d : %s", m_renderPass.GetColorFormat(), prev::util::vk::FormatToString(m_renderPass.GetColorFormat()).c_str());
     LOGI("\tDepth   = %3d : %s", m_renderPass.GetDepthFormat(), prev::util::vk::FormatToString(m_renderPass.GetDepthFormat()).c_str());
 
-    LOGI("\tExtent  = %d x %d", m_extent.width, m_extent.height);
-    LOGI("\tBuffers = %d", static_cast<int>(m_swapchainBuffers.size()));
+    LOGI("\tExtent  = %u x %u", m_extent.width, m_extent.height);
+    LOGI("\tBuffers = %zu", m_swapchainBuffers.size());
 }
 
 const VkExtent2D& XrSwapchain::GetExtent() const

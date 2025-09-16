@@ -3,7 +3,9 @@
 #ifdef ENABLE_XR
 
 #include "open_xr/OpenXr.h"
+#ifdef TARGET_PLATFORM_ANDROID
 #include "open_xr/OpenXrLoader.h"
+#endif
 
 namespace prev::xr {
 std::unique_ptr<IXr> XrFactory::Create() const

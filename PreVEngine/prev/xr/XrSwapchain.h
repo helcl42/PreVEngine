@@ -80,8 +80,6 @@ private:
 
     const prev::core::device::Queue& m_graphicsQueue;
 
-    const prev::core::device::Queue& m_presentQueue;
-
     VkCommandPool m_commandPool{};
 
     std::vector<SwapchainBuffer> m_swapchainBuffers;
