@@ -2,7 +2,7 @@
 
 #ifdef ENABLE_XR
 
-namespace prev::xr::util {
+namespace prev::xr::open_xr::util {
 }
 
 #endif

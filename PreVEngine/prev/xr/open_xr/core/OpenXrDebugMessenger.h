@@ -5,7 +5,7 @@
 
 #include "../common/OpenXrCommon.h"
 
-namespace prev::xr::core {
+namespace prev::xr::open_xr::core {
 class OpenXrDebugMessenger final {
 public:
     explicit OpenXrDebugMessenger(XrInstance instance);
@@ -15,7 +15,7 @@ public:
 private:
     XrDebugUtilsMessengerEXT m_debugUtilsMessenger{};
 };
-} // namespace prev::xr::core
+} // namespace prev::xr::open_xr::core
 
 #endif
 

@@ -5,14 +5,14 @@
 
 #include "../common/IOpenXrEventObserver.h"
 
-#include "../XrEvents.h"
+#include "../../XrEvents.h"
 
 #include <prev/event/EventHandler.h>
 
 #include <array>
 #include <optional>
 
-namespace prev::xr::input {
+namespace prev::xr::open_xr::input {
 class OpenXrInput final : public common::IOpenXrEventObserver {
 public:
     OpenXrInput(XrInstance instance, XrSystemId systemId, bool handTrackingEnabled);
@@ -97,7 +97,7 @@ private:
 
     std::array<XrSpace, MAX_HAND_COUNT> m_handSpace{};
 };
-} // namespace prev::xr::input
+} // namespace prev::xr::open_xr::input
 
 #endif
 

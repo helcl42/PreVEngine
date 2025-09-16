@@ -5,6 +5,7 @@
 #include "../../device/DeviceFactory.h"
 #include "../../instance/InstanceFactory.h"
 
+#include "../../../xr/XrFactory.h"
 #include "../../../xr/XrSwapchain.h"
 
 namespace prev::core::engine::impl {
@@ -20,17 +21,17 @@ XrEngineImpl::~XrEngineImpl()
 
 uint32_t XrEngineImpl::GetViewCount() const
 {
-    return m_openXr->GetViewCount();
+    return m_xr->GetViewCount();
 }
 
 float XrEngineImpl::GetCurrentDeltaTime() const
 {
-    return m_openXr->GetCurrentDeltaTime();
+    return m_xr->GetCurrentDeltaTime();
 }
 
 void XrEngineImpl::Init()
 {
-    m_openXr = std::make_unique<prev::xr::OpenXr>();
+    m_xr = prev::xr::XrFactory{}.Create();
 
     ResetTiming();
     ResetInstance();
@@ -40,7 +41,7 @@ void XrEngineImpl::Init()
     ResetAllocator();
     ResetRenderPass();
 
-    m_openXr->CreateSession();
+    m_xr->CreateSession();
 
     ResetSwapchain();
 }
@@ -57,31 +58,31 @@ void XrEngineImpl::ShutDown()
     m_rootRenderer = nullptr;
     m_scene = nullptr;
 
-    m_openXr->DestroySession();
-    m_openXr = nullptr;
+    m_xr->DestroySession();
+    m_xr = nullptr;
 }
 
 bool XrEngineImpl::Update()
 {
     bool result{ m_window->ProcessEvents() };
-    m_openXr->PollEvents();
+    m_xr->PollEvents();
     m_clock->UpdateClock();
     return result;
 }
 
 bool XrEngineImpl::BeginFrame()
 {
-    return m_openXr->BeginFrame();
+    return m_xr->BeginFrame();
 }
 
 void XrEngineImpl::PollActions()
 {
-    m_openXr->PollActions();
+    m_xr->PollActions();
 }
 
 bool XrEngineImpl::EndFrame()
 {
-    bool result{ m_openXr->EndFrame() };
+    bool result{ m_xr->EndFrame() };
     UpdateFps();
     return result;
 }
@@ -89,12 +90,12 @@ bool XrEngineImpl::EndFrame()
 void XrEngineImpl::ResetInstance()
 {
     prev::core::instance::InstanceFactory instanceFactory{};
-    m_instance = instanceFactory.Create(m_config.validation, m_config.appName, std::vector<std::string>{}, m_openXr->GetVulkanInstanceExtensions());
+    m_instance = instanceFactory.Create(m_config.validation, m_config.appName, std::vector<std::string>{}, m_xr->GetVulkanInstanceExtensions());
 }
 
 void XrEngineImpl::ResetDevice()
 {
-    prev::core::device::PhysicalDevice physicalDevice{ m_openXr->GetPhysicalDevice(*m_instance), m_openXr->GetVulkanDeviceExtensions() };
+    prev::core::device::PhysicalDevice physicalDevice{ m_xr->GetPhysicalDevice(*m_instance), m_xr->GetVulkanDeviceExtensions() };
 
     prev::core::device::DeviceFactory deviceFactory{};
     m_device = deviceFactory.Create(physicalDevice, m_surface);
@@ -104,18 +105,18 @@ void XrEngineImpl::ResetDevice()
     m_device->Print();
 
     const auto& queue{ m_device->GetQueue(prev::core::device::QueueType::GRAPHICS) };
-    m_openXr->UpdateGraphicsBinding(*m_instance, m_device->GetGPU(), *m_device, queue.family, queue.index);
+    m_xr->UpdateGraphicsBinding(*m_instance, m_device->GetGPU(), *m_device, queue.family, queue.index);
 }
 
 void XrEngineImpl::ResetRenderPass()
 {
-    const auto colorFormat{ m_openXr->GetColorFormat() };
-    const auto depthFormat{ m_openXr->GetDepthFormat() };
+    const auto colorFormat{ m_xr->GetColorFormat() };
+    const auto depthFormat{ m_xr->GetDepthFormat() };
 
     const uint32_t viewCount{ GetViewCount() };
 
     const bool storeColor{ true };
-    const bool storeDepth{ m_openXr->HasDepthImages() };
+    const bool storeDepth{ m_xr->HasDepthImages() };
 
     const VkImageLayout colorLayout{ VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL };
     const VkImageLayout depthLayout{ VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
@@ -129,7 +130,7 @@ void XrEngineImpl::ResetRenderPass()
 
 void XrEngineImpl::ResetSwapchain()
 {
-    m_swapchain = std::make_unique<prev::xr::XrSwapchain>(*m_device, *m_allocator, *m_renderPass, *m_openXr, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount));
+    m_swapchain = std::make_unique<prev::xr::XrSwapchain>(*m_device, *m_allocator, *m_renderPass, *m_xr, prev::util::vk::GetSampleCountBit(m_config.samplesCount));
     m_swapchain->Print();
 }
 } // namespace prev::core::engine::impl

@@ -6,7 +6,7 @@
 
 #include <sstream>
 
-namespace prev::xr::core {
+namespace prev::xr::open_xr::core {
 namespace {
     PFN_xrCreateDebugUtilsMessengerEXT xrCreateDebugUtilsMessengerEXT{};
     PFN_xrDestroyDebugUtilsMessengerEXT xrDestroyDebugUtilsMessengerEXT{};
@@ -105,7 +105,7 @@ OpenXrDebugMessenger::OpenXrDebugMessenger(XrInstance instance)
 {
     LoadXrExtensionFunctions(instance);
 
-    XrDebugUtilsMessengerCreateInfoEXT debugUtilsMessengerCI{ prev::xr::util::CreateStruct<XrDebugUtilsMessengerCreateInfoEXT>(XR_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT) };
+    XrDebugUtilsMessengerCreateInfoEXT debugUtilsMessengerCI{ prev::xr::open_xr::util::CreateStruct<XrDebugUtilsMessengerCreateInfoEXT>(XR_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT) };
     debugUtilsMessengerCI.messageSeverities = XR_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | XR_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | XR_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | XR_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
     debugUtilsMessengerCI.messageTypes = XR_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | XR_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | XR_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT | XR_DEBUG_UTILS_MESSAGE_TYPE_CONFORMANCE_BIT_EXT;
     debugUtilsMessengerCI.userCallback = (PFN_xrDebugUtilsMessengerCallbackEXT)OpenXrMessageCallback;
@@ -118,6 +118,6 @@ OpenXrDebugMessenger::~OpenXrDebugMessenger()
 {
     OPENXR_CHECK(xrDestroyDebugUtilsMessengerEXT(m_debugUtilsMessenger), "Failed to destroy DebugUtilsMessenger.");
 }
-} // namespace prev::xr::core
+} // namespace prev::xr::open_xr::core
 
 #endif // ENABLE_XR

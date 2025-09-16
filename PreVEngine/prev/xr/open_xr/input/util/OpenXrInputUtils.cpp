@@ -1,10 +1,10 @@
-#include "InputUtils.h"
+#include "OpenXrInputUtils.h"
 
 #ifdef ENABLE_XR
 
 #include "../../util/OpenXrUtils.h"
 
-namespace prev::xr::input::util {
+namespace prev::xr::open_xr::input::util {
 XrPath ConvertStringToXrPath(const XrInstance& instance, const char* pathString)
 {
     XrPath xrPath;
@@ -22,7 +22,7 @@ std::string ConvertXrPathToString(const XrInstance& instance, const XrPath& path
 
 XrAction CreateAction(const XrActionSet& actionSet, const char* name, const XrActionType xrActionType, const std::vector<XrPath>& subactionPaths)
 {
-    XrActionCreateInfo actionCreateInfo{ prev::xr::util::CreateStruct<XrActionCreateInfo>(XR_TYPE_ACTION_CREATE_INFO) };
+    XrActionCreateInfo actionCreateInfo{ open_xr::util::CreateStruct<XrActionCreateInfo>(XR_TYPE_ACTION_CREATE_INFO) };
     actionCreateInfo.actionType = xrActionType;
     actionCreateInfo.countSubactionPaths = static_cast<uint32_t>(subactionPaths.size());
     actionCreateInfo.subactionPaths = subactionPaths.empty() ? XR_NULL_PATH : subactionPaths.data();
@@ -38,7 +38,7 @@ XrAction CreateAction(const XrActionSet& actionSet, const char* name, const XrAc
 
 bool SuggestProfileBindings(const XrInstance& instance, const char* profilePath, const std::vector<XrActionSuggestedBinding>& bindings)
 {
-    XrInteractionProfileSuggestedBinding interactionProfileSuggestedBinding{ prev::xr::util::CreateStruct<XrInteractionProfileSuggestedBinding>(XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING) };
+    XrInteractionProfileSuggestedBinding interactionProfileSuggestedBinding{ open_xr::util::CreateStruct<XrInteractionProfileSuggestedBinding>(XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING) };
     interactionProfileSuggestedBinding.interactionProfile = ConvertStringToXrPath(instance, profilePath);
     interactionProfileSuggestedBinding.suggestedBindings = bindings.data();
     interactionProfileSuggestedBinding.countSuggestedBindings = static_cast<uint32_t>(bindings.size());
@@ -53,7 +53,7 @@ XrSpace CreateActionSpace(const XrSession& session, const XrAction& xrAction, co
 {
     const XrPosef xrPoseIdentity{ { 0.0f, 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f } };
     // Create frame of reference for a pose action
-    XrActionSpaceCreateInfo actionSpaceCI{ prev::xr::util::CreateStruct<XrActionSpaceCreateInfo>(XR_TYPE_ACTION_SPACE_CREATE_INFO) };
+    XrActionSpaceCreateInfo actionSpaceCI{ open_xr::util::CreateStruct<XrActionSpaceCreateInfo>(XR_TYPE_ACTION_SPACE_CREATE_INFO) };
     actionSpaceCI.action = xrAction;
     actionSpaceCI.poseInActionSpace = xrPoseIdentity;
     actionSpaceCI.subactionPath = subactionPath;
@@ -87,13 +87,13 @@ XrPosef ConvertPoseToXrPose(const prev::util::math::Pose& pose)
 
 std::optional<prev::util::math::Pose> GetPoseState(const XrSession& session, const XrTime& time, const XrAction& action, const XrPath& subActionPath, const XrSpace& baseSpace, const XrSpace& space)
 {
-    XrActionStatePose poseState{ prev::xr::util::CreateStruct<XrActionStatePose>(XR_TYPE_ACTION_STATE_POSE) };
-    XrActionStateGetInfo poseActionStateGetInfo{ prev::xr::util::CreateStruct<XrActionStateGetInfo>(XR_TYPE_ACTION_STATE_GET_INFO) };
+    XrActionStatePose poseState{ open_xr::util::CreateStruct<XrActionStatePose>(XR_TYPE_ACTION_STATE_POSE) };
+    XrActionStateGetInfo poseActionStateGetInfo{ open_xr::util::CreateStruct<XrActionStateGetInfo>(XR_TYPE_ACTION_STATE_GET_INFO) };
     poseActionStateGetInfo.action = action;
     poseActionStateGetInfo.subactionPath = subActionPath;
     OPENXR_CHECK(xrGetActionStatePose(session, &poseActionStateGetInfo, &poseState), "Failed to get Pose state.");
     if (poseState.isActive) {
-        XrSpaceLocation spaceLocation{ prev::xr::util::CreateStruct<XrSpaceLocation>(XR_TYPE_SPACE_LOCATION) };
+        XrSpaceLocation spaceLocation{ open_xr::util::CreateStruct<XrSpaceLocation>(XR_TYPE_SPACE_LOCATION) };
         XrResult res = xrLocateSpace(space, baseSpace, time, &spaceLocation);
         if (XR_UNQUALIFIED_SUCCESS(res) && (spaceLocation.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) != 0 && (spaceLocation.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT) != 0) {
             return { ConvertXrPoseToPose(spaceLocation.pose) };
@@ -104,8 +104,8 @@ std::optional<prev::util::math::Pose> GetPoseState(const XrSession& session, con
 
 std::optional<float> GetFloatState(const XrSession& session, const XrAction& action, const XrPath& subActionPath)
 {
-    XrActionStateFloat floatState{ prev::xr::util::CreateStruct<XrActionStateFloat>(XR_TYPE_ACTION_STATE_FLOAT) };
-    XrActionStateGetInfo floatActionStateGetInfo{ prev::xr::util::CreateStruct<XrActionStateGetInfo>(XR_TYPE_ACTION_STATE_GET_INFO) };
+    XrActionStateFloat floatState{ open_xr::util::CreateStruct<XrActionStateFloat>(XR_TYPE_ACTION_STATE_FLOAT) };
+    XrActionStateGetInfo floatActionStateGetInfo{ open_xr::util::CreateStruct<XrActionStateGetInfo>(XR_TYPE_ACTION_STATE_GET_INFO) };
     floatActionStateGetInfo.action = action;
     floatActionStateGetInfo.subactionPath = subActionPath;
     OPENXR_CHECK(xrGetActionStateFloat(session, &floatActionStateGetInfo, &floatState), "Failed to get Float state.");
@@ -117,8 +117,8 @@ std::optional<float> GetFloatState(const XrSession& session, const XrAction& act
 
 std::optional<bool> GetBoolState(const XrSession& session, const XrAction& action, const bool invert, const XrPath& subActionPath)
 {
-    XrActionStateBoolean boolState{ prev::xr::util::CreateStruct<XrActionStateBoolean>(XR_TYPE_ACTION_STATE_BOOLEAN) };
-    XrActionStateGetInfo boolActionStateGetInfo{ prev::xr::util::CreateStruct<XrActionStateGetInfo>(XR_TYPE_ACTION_STATE_GET_INFO) };
+    XrActionStateBoolean boolState{ open_xr::util::CreateStruct<XrActionStateBoolean>(XR_TYPE_ACTION_STATE_BOOLEAN) };
+    XrActionStateGetInfo boolActionStateGetInfo{ open_xr::util::CreateStruct<XrActionStateGetInfo>(XR_TYPE_ACTION_STATE_GET_INFO) };
     boolActionStateGetInfo.action = action;
     boolActionStateGetInfo.subactionPath = subActionPath;
     OPENXR_CHECK(xrGetActionStateBoolean(session, &boolActionStateGetInfo, &boolState), "Failed to get Boolean state.");
@@ -172,20 +172,20 @@ bool DetectAimAction(const HandType hand, const XrHandJointLocationsEXT& joints,
     const float extendedThreshold{ 0.1f }; // 10 cm
 
     const auto indexDistance{ GetJointsDistance(joints, XR_HAND_JOINT_INDEX_METACARPAL_EXT, XR_HAND_JOINT_INDEX_TIP_EXT) };
-    const auto indexScore{ std::clamp(indexDistance / extendedThreshold, 0.0f, 1.0f) };
+    const auto indexScore{ glm::clamp(indexDistance / extendedThreshold, 0.0f, 1.0f) };
 
     // Check if the other fingers are curled.
     // We check if the distance from each finger tip to its base is small.
     const float curledThreshold{ 0.1f }; // 10 cm
 
     const auto middleDistance{ GetJointsDistance(joints, XR_HAND_JOINT_MIDDLE_METACARPAL_EXT, XR_HAND_JOINT_MIDDLE_TIP_EXT) };
-    const auto middleScore{ 1.0f - std::clamp(middleDistance / curledThreshold, 0.0f, 1.0f) };
+    const auto middleScore{ 1.0f - glm::clamp(middleDistance / curledThreshold, 0.0f, 1.0f) };
 
     const auto ringDistance{ GetJointsDistance(joints, XR_HAND_JOINT_RING_METACARPAL_EXT, XR_HAND_JOINT_RING_TIP_EXT) };
-    const auto ringScore{ 1.0f - std::clamp(ringDistance / curledThreshold, 0.0f, 1.0f) };
+    const auto ringScore{ 1.0f - glm::clamp(ringDistance / curledThreshold, 0.0f, 1.0f) };
 
     const auto littleDistance{ GetJointsDistance(joints, XR_HAND_JOINT_LITTLE_METACARPAL_EXT, XR_HAND_JOINT_LITTLE_TIP_EXT) };
-    const auto littleScore{ 1.0f - std::clamp(littleDistance / curledThreshold, 0.0f, 1.0f) };
+    const auto littleScore{ 1.0f - glm::clamp(littleDistance / curledThreshold, 0.0f, 1.0f) };
 
     const auto averageCurlScore{ (middleScore + ringScore + littleScore) / 3.0f };
 
@@ -220,25 +220,25 @@ bool DetectPokeAction(const HandType hand, const XrHandJointLocationsEXT& joints
     const float extendedThreshold{ 0.1f }; // 10 cm
 
     const auto indexDistance{ GetJointsDistance(joints, XR_HAND_JOINT_INDEX_METACARPAL_EXT, XR_HAND_JOINT_INDEX_TIP_EXT) };
-    const auto indexScore{ std::clamp(indexDistance / extendedThreshold, 0.0f, 1.0f) };
+    const auto indexScore{ glm::clamp(indexDistance / extendedThreshold, 0.0f, 1.0f) };
 
     const float curledThreshold{ 0.15f }; // 15 cm
 
     const auto middleDistance{ GetJointsDistance(joints, XR_HAND_JOINT_MIDDLE_METACARPAL_EXT, XR_HAND_JOINT_MIDDLE_TIP_EXT) };
-    const auto middleScore{ 1.0f - std::clamp(middleDistance / curledThreshold, 0.0f, 1.0f) };
+    const auto middleScore{ 1.0f - glm::clamp(middleDistance / curledThreshold, 0.0f, 1.0f) };
 
     const auto ringDistance{ GetJointsDistance(joints, XR_HAND_JOINT_RING_METACARPAL_EXT, XR_HAND_JOINT_RING_TIP_EXT) };
-    const auto ringScore{ 1.0f - std::clamp(ringDistance / curledThreshold, 0.0f, 1.0f) };
+    const auto ringScore{ 1.0f - glm::clamp(ringDistance / curledThreshold, 0.0f, 1.0f) };
 
     const auto littleDistance{ GetJointsDistance(joints, XR_HAND_JOINT_LITTLE_METACARPAL_EXT, XR_HAND_JOINT_LITTLE_TIP_EXT) };
-    const auto littleScore{ 1.0f - std::clamp(littleDistance / curledThreshold, 0.0f, 1.0f) };
+    const auto littleScore{ 1.0f - glm::clamp(littleDistance / curledThreshold, 0.0f, 1.0f) };
 
     const auto averageCurlScore{ (middleScore + ringScore + littleScore) / 3.0f };
 
     const float curledThumbThreshold{ 0.25f }; // 25 cm
 
     const auto thumbDistance{ GetJointsDistance(joints, XR_HAND_JOINT_THUMB_METACARPAL_EXT, XR_HAND_JOINT_THUMB_TIP_EXT) };
-    const auto thumbScore{ 1.0f - std::clamp(thumbDistance / curledThumbThreshold, 0.0f, 1.0f) };
+    const auto thumbScore{ 1.0f - glm::clamp(thumbDistance / curledThumbThreshold, 0.0f, 1.0f) };
 
     const float pokeActivationThreshold{ 0.4f };
     const auto pokeConfidence{ indexScore * averageCurlScore * thumbScore };
@@ -263,6 +263,6 @@ bool DetectPokeAction(const HandType hand, const XrHandJointLocationsEXT& joints
 
     return true;
 }
-} // namespace prev::xr::input::util
+} // namespace prev::xr::open_xr::input::util
 
 #endif

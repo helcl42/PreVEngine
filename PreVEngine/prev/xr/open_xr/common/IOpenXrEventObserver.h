@@ -5,7 +5,7 @@
 
 #include "OpenXrCommon.h"
 
-namespace prev::xr::common {
+namespace prev::xr::open_xr::common {
 class IOpenXrEventObserver {
 public:
     virtual void OnEvent(const XrEventDataBuffer& evt) = 0;
@@ -13,7 +13,7 @@ public:
 public:
     virtual ~IOpenXrEventObserver() = default;
 };
-} // namespace prev::xr::common
+} // namespace prev::xr::open_xr::common
 
 #endif
 

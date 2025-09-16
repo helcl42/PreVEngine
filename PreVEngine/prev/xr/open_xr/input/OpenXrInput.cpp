@@ -2,17 +2,16 @@
 
 #ifdef ENABLE_XR
 
-#include "util/InputUtils.h"
+#include "util/OpenXrInputUtils.h"
 
-#include "../XrEvents.h"
 #include "../util/OpenXrUtils.h"
 
-#include "../../event/EventChannel.h"
-#include "../../util/MathUtils.h"
+#include "../../../event/EventChannel.h"
+#include "../../../util/MathUtils.h"
 
 #include <vector>
 
-namespace prev::xr::input {
+namespace prev::xr::open_xr::input {
 namespace {
     PFN_xrCreateHandTrackerEXT xrCreateHandTrackerEXT{};
     PFN_xrDestroyHandTrackerEXT xrDestroyHandTrackerEXT{};
@@ -79,7 +78,7 @@ void OpenXrInput::PollActions(const XrTime time)
     activeActionSet.actionSet = m_actionSet;
     activeActionSet.subactionPath = XR_NULL_PATH;
 
-    XrActionsSyncInfo actionsSyncInfo{ prev::xr::util::CreateStruct<XrActionsSyncInfo>(XR_TYPE_ACTIONS_SYNC_INFO) };
+    XrActionsSyncInfo actionsSyncInfo{ open_xr::util::CreateStruct<XrActionsSyncInfo>(XR_TYPE_ACTIONS_SYNC_INFO) };
     actionsSyncInfo.countActiveActionSets = 1;
     actionsSyncInfo.activeActionSets = &activeActionSet;
     OPENXR_CHECK(xrSyncActions(m_session, &actionsSyncInfo), "Failed to sync Actions.");
@@ -90,7 +89,7 @@ void OpenXrInput::PollActions(const XrTime time)
 
 void OpenXrInput::operator()(const XrHapticFeedback& hapticFeedback)
 {
-    const auto handIndex{ prev::xr::input::util::ConvertHandTypeToIndex<uint32_t>(hapticFeedback.type) };
+    const auto handIndex{ open_xr::input::util::ConvertHandTypeToIndex<uint32_t>(hapticFeedback.type) };
     m_hapticFeedbackEvents[handIndex] = { hapticFeedback.type, hapticFeedback.amplitude, hapticFeedback.duration };
 }
 
@@ -115,26 +114,26 @@ void OpenXrInput::OnEvent(const XrEventDataBuffer& evt)
 
 void OpenXrInput::CreateActionSet()
 {
-    XrActionSetCreateInfo actionSetCreateInfo{ prev::xr::util::CreateStruct<XrActionSetCreateInfo>(XR_TYPE_ACTION_SET_CREATE_INFO) };
+    XrActionSetCreateInfo actionSetCreateInfo{ open_xr::util::CreateStruct<XrActionSetCreateInfo>(XR_TYPE_ACTION_SET_CREATE_INFO) };
     actionSetCreateInfo.priority = 0;
     strncpy(actionSetCreateInfo.actionSetName, "prev-engine-action-set", XR_MAX_ACTION_SET_NAME_SIZE);
     strncpy(actionSetCreateInfo.localizedActionSetName, "prev-engine-action-set", XR_MAX_LOCALIZED_ACTION_SET_NAME_SIZE);
     OPENXR_CHECK(xrCreateActionSet(m_instance, &actionSetCreateInfo, &m_actionSet), "Failed to create ActionSet.");
 
     for (size_t i = 0; i < m_handPathStrings.size(); ++i) {
-        m_handPaths[i] = prev::xr::input::util::ConvertStringToXrPath(m_instance, m_handPathStrings[i]);
+        m_handPaths[i] = open_xr::input::util::ConvertStringToXrPath(m_instance, m_handPathStrings[i]);
     }
 
     // Controllers
-    m_squeezeAction = prev::xr::input::util::CreateAction(m_actionSet, "squeeze", XR_ACTION_TYPE_FLOAT_INPUT, { m_handPaths.begin(), m_handPaths.end() });
-    m_triggerAction = prev::xr::input::util::CreateAction(m_actionSet, "trigger", XR_ACTION_TYPE_BOOLEAN_INPUT, { m_handPaths.begin(), m_handPaths.end() });
-    m_palmPoseAction = prev::xr::input::util::CreateAction(m_actionSet, "pose", XR_ACTION_TYPE_POSE_INPUT, { m_handPaths.begin(), m_handPaths.end() });
-    m_quitAction = prev::xr::input::util::CreateAction(m_actionSet, "quit", XR_ACTION_TYPE_BOOLEAN_INPUT, { m_handPaths.begin(), m_handPaths.end() });
-    m_vibrateAction = prev::xr::input::util::CreateAction(m_actionSet, "vibrate", XR_ACTION_TYPE_VIBRATION_OUTPUT, { m_handPaths.begin(), m_handPaths.end() });
+    m_squeezeAction = open_xr::input::util::CreateAction(m_actionSet, "squeeze", XR_ACTION_TYPE_FLOAT_INPUT, { m_handPaths.begin(), m_handPaths.end() });
+    m_triggerAction = open_xr::input::util::CreateAction(m_actionSet, "trigger", XR_ACTION_TYPE_BOOLEAN_INPUT, { m_handPaths.begin(), m_handPaths.end() });
+    m_palmPoseAction = open_xr::input::util::CreateAction(m_actionSet, "pose", XR_ACTION_TYPE_POSE_INPUT, { m_handPaths.begin(), m_handPaths.end() });
+    m_quitAction = open_xr::input::util::CreateAction(m_actionSet, "quit", XR_ACTION_TYPE_BOOLEAN_INPUT, { m_handPaths.begin(), m_handPaths.end() });
+    m_vibrateAction = open_xr::input::util::CreateAction(m_actionSet, "vibrate", XR_ACTION_TYPE_VIBRATION_OUTPUT, { m_handPaths.begin(), m_handPaths.end() });
 
     // HandsTracking
-    m_poseAction = prev::xr::input::util::CreateAction(m_actionSet, "hand_pose", XR_ACTION_TYPE_POSE_INPUT, { m_handPaths.begin(), m_handPaths.end() });
-    m_grabAction = prev::xr::input::util::CreateAction(m_actionSet, "hand_grab", XR_ACTION_TYPE_FLOAT_INPUT, { m_handPaths.begin(), m_handPaths.end() });
+    m_poseAction = open_xr::input::util::CreateAction(m_actionSet, "hand_pose", XR_ACTION_TYPE_POSE_INPUT, { m_handPaths.begin(), m_handPaths.end() });
+    m_grabAction = open_xr::input::util::CreateAction(m_actionSet, "hand_grab", XR_ACTION_TYPE_FLOAT_INPUT, { m_handPaths.begin(), m_handPaths.end() });
 }
 
 void OpenXrInput::DestroyActionSet()
@@ -158,64 +157,64 @@ bool OpenXrInput::SuggestControllerBindings()
 {
     bool anyOk{ false };
     // clang-format off
-    anyOk |= prev::xr::input::util::SuggestProfileBindings(m_instance, "/interaction_profiles/khr/simple_controller", {
-        { m_triggerAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/select/click") },
-        { m_squeezeAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/select/click") },
-        { m_palmPoseAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/grip/pose") },
-        { m_palmPoseAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
-        { m_quitAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/menu/click") },
-        { m_quitAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/menu/click") },
-        { m_vibrateAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/output/haptic") },
-        { m_vibrateAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/output/haptic") },
+    anyOk |= open_xr::input::util::SuggestProfileBindings(m_instance, "/interaction_profiles/khr/simple_controller", {
+        { m_triggerAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/select/click") },
+        { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/select/click") },
+        { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/grip/pose") },
+        { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
+        { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/menu/click") },
+        { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/menu/click") },
+        { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/output/haptic") },
+        { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/output/haptic") },
     });
     // clang-format on
     // clang-format off
-    anyOk |= prev::xr::input::util::SuggestProfileBindings(m_instance, "/interaction_profiles/oculus/touch_controller", {
-        { m_squeezeAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/squeeze/value") },
-        { m_squeezeAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/squeeze/value") },
-        { m_triggerAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/trigger/value") },
-        { m_triggerAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/trigger/value") },
-        { m_palmPoseAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/grip/pose") },
-        { m_palmPoseAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
-        { m_quitAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/menu/click") },
-        { m_vibrateAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/output/haptic") },
-        { m_vibrateAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/output/haptic") },
+    anyOk |= open_xr::input::util::SuggestProfileBindings(m_instance, "/interaction_profiles/oculus/touch_controller", {
+        { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/squeeze/value") },
+        { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/squeeze/value") },
+        { m_triggerAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/trigger/value") },
+        { m_triggerAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/trigger/value") },
+        { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/grip/pose") },
+        { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
+        { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/menu/click") },
+        { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/output/haptic") },
+        { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/output/haptic") },
     });
     // clang-format on
     // clang-format off
-    anyOk |= prev::xr::input::util::SuggestProfileBindings(m_instance, "/interaction_profiles/htc/vive_controller", {
-        { m_squeezeAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/trigger/value") },
-        { m_squeezeAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/trigger/value") },
-        { m_palmPoseAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/grip/pose") },
-        { m_palmPoseAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
-        { m_quitAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/menu/click") },
-        { m_quitAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/menu/click") },
-        { m_vibrateAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/output/haptic") },
-        { m_vibrateAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/output/haptic") },
+    anyOk |= open_xr::input::util::SuggestProfileBindings(m_instance, "/interaction_profiles/htc/vive_controller", {
+        { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/trigger/value") },
+        { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/trigger/value") },
+        { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/grip/pose") },
+        { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
+        { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/menu/click") },
+        { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/menu/click") },
+        { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/output/haptic") },
+        { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/output/haptic") },
     });
     // clang-format on
     // clang-format off
-    anyOk |= prev::xr::input::util::SuggestProfileBindings(m_instance, "/interaction_profiles/valve/index_controller", {
-        { m_squeezeAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/squeeze/value") },
-        { m_squeezeAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/squeeze/value") },
-        { m_palmPoseAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/grip/pose") },
-        { m_palmPoseAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
-        { m_quitAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/b/click") },
-        { m_quitAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/b/click") },
-        { m_vibrateAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/output/haptic") },
-        { m_vibrateAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/output/haptic") },
+    anyOk |= open_xr::input::util::SuggestProfileBindings(m_instance, "/interaction_profiles/valve/index_controller", {
+        { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/squeeze/value") },
+        { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/squeeze/value") },
+        { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/grip/pose") },
+        { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
+        { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/b/click") },
+        { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/b/click") },
+        { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/output/haptic") },
+        { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/output/haptic") },
     });
     // clang-format on
     // clang-format off
-    anyOk |= prev::xr::input::util::SuggestProfileBindings(m_instance, "/interaction_profiles/microsoft/motion_controller", {
-        { m_squeezeAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/trigger/value") },
-        { m_squeezeAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/trigger/value") },
-        { m_palmPoseAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/grip/pose") },
-        { m_palmPoseAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
-        { m_quitAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/menu/click") },
-        { m_quitAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/menu/click") },
-        { m_vibrateAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/output/haptic") },
-        { m_vibrateAction, prev::xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/output/haptic") },
+    anyOk |= open_xr::input::util::SuggestProfileBindings(m_instance, "/interaction_profiles/microsoft/motion_controller", {
+        { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/trigger/value") },
+        { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/trigger/value") },
+        { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/grip/pose") },
+        { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
+        { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/menu/click") },
+        { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/menu/click") },
+        { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/output/haptic") },
+        { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/output/haptic") },
     });
     // clang-format on
     return anyOk;
@@ -224,29 +223,29 @@ bool OpenXrInput::SuggestControllerBindings()
 void OpenXrInput::CreateActionSpaces()
 {
     for (size_t i = 0; i < m_handPaths.size(); ++i) {
-        m_handPoseSpace[i] = prev::xr::input::util::CreateActionSpace(m_session, m_palmPoseAction, m_handPaths[i]);
+        m_handPoseSpace[i] = open_xr::input::util::CreateActionSpace(m_session, m_palmPoseAction, m_handPaths[i]);
     }
 
     for (size_t i = 0; i < m_handPaths.size(); ++i) {
-        m_handSpace[i] = prev::xr::input::util::CreateActionSpace(m_session, m_poseAction, m_handPaths[i]);
+        m_handSpace[i] = open_xr::input::util::CreateActionSpace(m_session, m_poseAction, m_handPaths[i]);
     }
 }
 
 void OpenXrInput::DestroyActionSpaces()
 {
     for (size_t i = 0; i < m_handPaths.size(); ++i) {
-        prev::xr::input::util::DestroyActionSpace(m_handSpace[i]);
+        open_xr::input::util::DestroyActionSpace(m_handSpace[i]);
     }
 
     for (size_t i = 0; i < m_handPaths.size(); ++i) {
-        prev::xr::input::util::DestroyActionSpace(m_handPoseSpace[i]);
+        open_xr::input::util::DestroyActionSpace(m_handPoseSpace[i]);
     }
 }
 
 void OpenXrInput::AttachActionSet()
 {
     // Attach the action set we just made to the session. We could attach multiple action sets!
-    XrSessionActionSetsAttachInfo actionSetAttachInfo{ prev::xr::util::CreateStruct<XrSessionActionSetsAttachInfo>(XR_TYPE_SESSION_ACTION_SETS_ATTACH_INFO) };
+    XrSessionActionSetsAttachInfo actionSetAttachInfo{ open_xr::util::CreateStruct<XrSessionActionSetsAttachInfo>(XR_TYPE_SESSION_ACTION_SETS_ATTACH_INFO) };
     actionSetAttachInfo.countActionSets = 1;
     actionSetAttachInfo.actionSets = &m_actionSet;
     OPENXR_CHECK(xrAttachSessionActionSets(m_session, &actionSetAttachInfo), "Failed to attach ActionSet to Session.");
@@ -266,7 +265,7 @@ void OpenXrInput::CreateHandTrackers()
 
     for (size_t i = 0; i < m_handPaths.size(); ++i) {
         auto& hand{ m_hands[i] };
-        XrHandTrackerCreateInfoEXT xrHandTrackerCreateInfo{ prev::xr::util::CreateStruct<XrHandTrackerCreateInfoEXT>(XR_TYPE_HAND_TRACKER_CREATE_INFO_EXT) };
+        XrHandTrackerCreateInfoEXT xrHandTrackerCreateInfo{ open_xr::util::CreateStruct<XrHandTrackerCreateInfoEXT>(XR_TYPE_HAND_TRACKER_CREATE_INFO_EXT) };
         xrHandTrackerCreateInfo.hand = i == 0 ? XR_HAND_LEFT_EXT : XR_HAND_RIGHT_EXT;
         xrHandTrackerCreateInfo.handJointSet = XR_HAND_JOINT_SET_DEFAULT_EXT;
         OPENXR_CHECK(xrCreateHandTrackerEXT(m_session, &xrHandTrackerCreateInfo, &hand), "Failed to create Hand Tracker.");
@@ -293,10 +292,10 @@ void OpenXrInput::RecordCurrentBindings()
     }
 
     for (size_t i = 0; i < m_handPaths.size(); ++i) {
-        XrInteractionProfileState interactionProfile{ prev::xr::util::CreateStruct<XrInteractionProfileState>(XR_TYPE_INTERACTION_PROFILE_STATE) };
+        XrInteractionProfileState interactionProfile{ open_xr::util::CreateStruct<XrInteractionProfileState>(XR_TYPE_INTERACTION_PROFILE_STATE) };
         OPENXR_CHECK(xrGetCurrentInteractionProfile(m_session, m_handPaths[i], &interactionProfile), "Failed to get profile.");
         if (interactionProfile.interactionProfile) {
-            LOGI("%s ActiveProfile: %s", m_handPathStrings[i], prev::xr::input::util::ConvertXrPathToString(m_instance, interactionProfile.interactionProfile).c_str());
+            LOGI("%s ActiveProfile: %s", m_handPathStrings[i], open_xr::input::util::ConvertXrPathToString(m_instance, interactionProfile.interactionProfile).c_str());
         }
     }
 }
@@ -306,12 +305,12 @@ void OpenXrInput::HandleControllerActions(const XrTime time)
     // input events
     XrHandControllersEvent handControllersEvent{};
     for (size_t i = 0; i < m_handPaths.size(); ++i) {
-        const auto handPose{ prev::xr::input::util::GetPoseState(m_session, time, m_palmPoseAction, m_handPaths[i], m_localSpace, m_handPoseSpace[i]) };
-        const auto squeeze{ prev::xr::input::util::GetFloatState(m_session, m_squeezeAction, m_handPaths[i]) };
-        const auto trigger{ prev::xr::input::util::GetFloatState(m_session, m_squeezeAction, m_handPaths[i]) };
+        const auto handPose{ open_xr::input::util::GetPoseState(m_session, time, m_palmPoseAction, m_handPaths[i], m_localSpace, m_handPoseSpace[i]) };
+        const auto squeeze{ open_xr::input::util::GetFloatState(m_session, m_squeezeAction, m_handPaths[i]) };
+        const auto trigger{ open_xr::input::util::GetFloatState(m_session, m_squeezeAction, m_handPaths[i]) };
 
         auto& handControllerEvent{ handControllersEvent.handControllers[i] };
-        handControllerEvent.type = prev::xr::input::util::ConvertIndexToHandType(i);
+        handControllerEvent.type = open_xr::input::util::ConvertIndexToHandType(i);
         handControllerEvent.active = handPose.has_value();
         handControllerEvent.pose = handPose ? *handPose : prev::util::math::Pose{};
         handControllerEvent.flags = {};
@@ -321,7 +320,7 @@ void OpenXrInput::HandleControllerActions(const XrTime time)
     }
     prev::event::EventChannel::Post(handControllersEvent);
 
-    const auto quit{ prev::xr::input::util::GetBoolState(m_session, m_quitAction, true, XR_NULL_PATH) };
+    const auto quit{ open_xr::input::util::GetBoolState(m_session, m_quitAction, true, XR_NULL_PATH) };
     if (quit) {
         // TODO - should we just generate quit event or request exit session direcly?
         xrRequestExitSession(m_session);
@@ -331,11 +330,11 @@ void OpenXrInput::HandleControllerActions(const XrTime time)
     for (size_t i = 0; i < m_handPaths.size(); ++i) {
         const auto& hapticFeedbackEvent{ m_hapticFeedbackEvents[i] };
         if (hapticFeedbackEvent) {
-            XrHapticVibration hapticFeedback{ prev::xr::util::CreateStruct<XrHapticVibration>(XR_TYPE_HAPTIC_VIBRATION) };
+            XrHapticVibration hapticFeedback{ open_xr::util::CreateStruct<XrHapticVibration>(XR_TYPE_HAPTIC_VIBRATION) };
             hapticFeedback.amplitude = hapticFeedbackEvent->amplitude;
             hapticFeedback.duration = hapticFeedbackEvent->duration;
 
-            XrHapticActionInfo hapticAction{ prev::xr::util::CreateStruct<XrHapticActionInfo>(XR_TYPE_HAPTIC_ACTION_INFO) };
+            XrHapticActionInfo hapticAction{ open_xr::util::CreateStruct<XrHapticActionInfo>(XR_TYPE_HAPTIC_ACTION_INFO) };
             hapticAction.action = m_vibrateAction;
             hapticAction.subactionPath = m_handPaths[i];
             OPENXR_CHECK(xrApplyHapticFeedback(m_session, &hapticAction, reinterpret_cast<XrHapticBaseHeader*>(&hapticFeedback)), "Failed to apply happtic feedback action.");
@@ -354,25 +353,25 @@ void OpenXrInput::HandleHandTrackingActions(const XrTime time)
     for (size_t i = 0; i < m_handPaths.size(); ++i) {
         const auto& hand{ m_hands[i] };
 
-        const auto handPose{ prev::xr::input::util::GetPoseState(m_session, time, m_poseAction, m_handPaths[i], m_localSpace, m_handSpace[i]) };
-        const auto squeeze{ prev::xr::input::util::GetFloatState(m_session, m_grabAction, m_handPaths[i]) };
+        const auto handPose{ open_xr::input::util::GetPoseState(m_session, time, m_poseAction, m_handPaths[i], m_localSpace, m_handSpace[i]) };
+        const auto squeeze{ open_xr::input::util::GetFloatState(m_session, m_grabAction, m_handPaths[i]) };
 
-        XrHandJointsMotionRangeInfoEXT motionRangeInfo{ prev::xr::util::CreateStruct<XrHandJointsMotionRangeInfoEXT>(XR_TYPE_HAND_JOINTS_MOTION_RANGE_INFO_EXT) };
+        XrHandJointsMotionRangeInfoEXT motionRangeInfo{ open_xr::util::CreateStruct<XrHandJointsMotionRangeInfoEXT>(XR_TYPE_HAND_JOINTS_MOTION_RANGE_INFO_EXT) };
         motionRangeInfo.handJointsMotionRange = XR_HAND_JOINTS_MOTION_RANGE_UNOBSTRUCTED_EXT; // XR_HAND_JOINTS_MOTION_RANGE_CONFORMING_TO_CONTROLLER_EXT
 
-        XrHandJointsLocateInfoEXT locateInfo{ prev::xr::util::CreateStruct<XrHandJointsLocateInfoEXT>(XR_TYPE_HAND_JOINTS_LOCATE_INFO_EXT) };
+        XrHandJointsLocateInfoEXT locateInfo{ open_xr::util::CreateStruct<XrHandJointsLocateInfoEXT>(XR_TYPE_HAND_JOINTS_LOCATE_INFO_EXT) };
         locateInfo.next = &motionRangeInfo;
         locateInfo.baseSpace = m_localSpace;
         locateInfo.time = time;
 
         XrHandJointLocationEXT jointLocations[XR_HAND_JOINT_COUNT_EXT]{};
-        XrHandJointLocationsEXT locations{ prev::xr::util::CreateStruct<XrHandJointLocationsEXT>(XR_TYPE_HAND_JOINT_LOCATIONS_EXT) };
+        XrHandJointLocationsEXT locations{ open_xr::util::CreateStruct<XrHandJointLocationsEXT>(XR_TYPE_HAND_JOINT_LOCATIONS_EXT) };
         locations.jointCount = XR_HAND_JOINT_COUNT_EXT;
         locations.jointLocations = jointLocations;
         OPENXR_CHECK(xrLocateHandJointsEXT(hand, &locateInfo, &locations), "Failed to locate hand joints.");
 
         auto& handEvent{ handsEvent.hands[i] };
-        handEvent.type = prev::xr::input::util::ConvertIndexToHandType(i);
+        handEvent.type = open_xr::input::util::ConvertIndexToHandType(i);
         handEvent.active = locations.isActive;
         handEvent.pose = handPose ? *handPose : prev::util::math::Pose{};
         handEvent.squeeze = squeeze ? *squeeze : 1.0f;
@@ -380,7 +379,7 @@ void OpenXrInput::HandleHandTrackingActions(const XrTime time)
             const auto& jointLocation{ locations.jointLocations[j] };
             auto& handJoint{ handEvent.joints[j] };
             handJoint.active = (jointLocation.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) != 0 && (jointLocation.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT) != 0;
-            handJoint.pose = prev::xr::input::util::ConvertXrPoseToPose(jointLocation.pose);
+            handJoint.pose = open_xr::input::util::ConvertXrPoseToPose(jointLocation.pose);
             handJoint.radius = jointLocation.radius;
         }
     }
@@ -390,16 +389,16 @@ void OpenXrInput::HandleHandTrackingActions(const XrTime time)
     for (size_t i = 0; i < m_handPaths.size(); ++i) {
         const auto& hand{ m_hands[i] };
 
-        XrHandJointsMotionRangeInfoEXT motionRangeInfo{ prev::xr::util::CreateStruct<XrHandJointsMotionRangeInfoEXT>(XR_TYPE_HAND_JOINTS_MOTION_RANGE_INFO_EXT) };
+        XrHandJointsMotionRangeInfoEXT motionRangeInfo{ open_xr::util::CreateStruct<XrHandJointsMotionRangeInfoEXT>(XR_TYPE_HAND_JOINTS_MOTION_RANGE_INFO_EXT) };
         motionRangeInfo.handJointsMotionRange = XR_HAND_JOINTS_MOTION_RANGE_UNOBSTRUCTED_EXT;
 
-        XrHandJointsLocateInfoEXT locateInfo{ prev::xr::util::CreateStruct<XrHandJointsLocateInfoEXT>(XR_TYPE_HAND_JOINTS_LOCATE_INFO_EXT) };
+        XrHandJointsLocateInfoEXT locateInfo{ open_xr::util::CreateStruct<XrHandJointsLocateInfoEXT>(XR_TYPE_HAND_JOINTS_LOCATE_INFO_EXT) };
         locateInfo.next = &motionRangeInfo;
         locateInfo.baseSpace = m_localSpace;
         locateInfo.time = time;
 
         XrHandJointLocationEXT jointLocations[XR_HAND_JOINT_COUNT_EXT]{};
-        XrHandJointLocationsEXT locations{ prev::xr::util::CreateStruct<XrHandJointLocationsEXT>(XR_TYPE_HAND_JOINT_LOCATIONS_EXT) };
+        XrHandJointLocationsEXT locations{ open_xr::util::CreateStruct<XrHandJointLocationsEXT>(XR_TYPE_HAND_JOINT_LOCATIONS_EXT) };
         locations.jointCount = XR_HAND_JOINT_COUNT_EXT;
         locations.jointLocations = jointLocations;
         OPENXR_CHECK(xrLocateHandJointsEXT(hand, &locateInfo, &locations), "Failed to locate hand joints.");
@@ -409,21 +408,21 @@ void OpenXrInput::HandleHandTrackingActions(const XrTime time)
         uint32_t actionEventIndex{ 0 };
         {
             auto& actionEvent{ handsActions.actions[actionEventIndex] };
-            if (prev::xr::input::util::DetectPinchAction(prev::xr::input::util::ConvertIndexToHandType(i), locations, actionEvent)) {
+            if (open_xr::input::util::DetectPinchAction(open_xr::input::util::ConvertIndexToHandType(i), locations, actionEvent)) {
                 LOGI("Pinch detected! Value: %f, Position = (%f, %f, %f).", actionEvent.value, actionEvent.pose.position.x, actionEvent.pose.position.y, actionEvent.pose.position.z);
             }
             handsActions.actionCount = ++actionEventIndex;
         }
         {
             auto& actionEvent{ handsActions.actions[actionEventIndex] };
-            if (prev::xr::input::util::DetectAimAction(prev::xr::input::util::ConvertIndexToHandType(i), locations, actionEvent)) {
+            if (open_xr::input::util::DetectAimAction(open_xr::input::util::ConvertIndexToHandType(i), locations, actionEvent)) {
                 LOGI("Aim detected! Value: %f, Position = (%f, %f, %f).", actionEvent.value, actionEvent.pose.position.x, actionEvent.pose.position.y, actionEvent.pose.position.z);
             }
             handsActions.actionCount = ++actionEventIndex;
         }
         {
             auto& actionEvent{ handsActions.actions[actionEventIndex] };
-            if (prev::xr::input::util::DetectPokeAction(prev::xr::input::util::ConvertIndexToHandType(i), locations, actionEvent)) {
+            if (open_xr::input::util::DetectPokeAction(open_xr::input::util::ConvertIndexToHandType(i), locations, actionEvent)) {
                 LOGI("Poke detected! Value: %f, Position = (%f, %f, %f).", actionEvent.value, actionEvent.pose.position.x, actionEvent.pose.position.y, actionEvent.pose.position.z);
             }
             handsActions.actionCount = ++actionEventIndex;
@@ -431,6 +430,6 @@ void OpenXrInput::HandleHandTrackingActions(const XrTime time)
     }
     prev::event::EventChannel::Post(handsActionsEvent);
 }
-} // namespace prev::xr::input
+} // namespace prev::xr::open_xr::input
 
 #endif

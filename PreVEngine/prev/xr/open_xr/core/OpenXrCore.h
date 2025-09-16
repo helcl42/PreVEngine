@@ -8,12 +8,12 @@
 #include "../common/IOpenXrEventObserver.h"
 #include "../common/OpenXrCommon.h"
 
-#include "../../common/pattern/Observer.h"
+#include "../../../common/pattern/Observer.h"
 
 #include <memory>
 #include <vector>
 
-namespace prev::xr::core {
+namespace prev::xr::open_xr::core {
 class OpenXrCore final {
 public:
     OpenXrCore();
@@ -21,9 +21,9 @@ public:
     ~OpenXrCore();
 
 public:
-    bool RegisterOpenXrEventObserver(common::IOpenXrEventObserver& o);
+    bool RegisterOpenXrEventObserver(open_xr::common::IOpenXrEventObserver& o);
 
-    bool UnregisterOpenXrEventObserver(common::IOpenXrEventObserver& o);
+    bool UnregisterOpenXrEventObserver(open_xr::common::IOpenXrEventObserver& o);
 
     std::vector<std::string> GetVulkanInstanceExtensions() const;
 
@@ -82,11 +82,11 @@ private:
     bool m_applicationRunning;
     bool m_sessionRunning;
 
-    prev::common::pattern::Observer<common::IOpenXrEventObserver> m_eventObserver;
+    prev::common::pattern::Observer<open_xr::common::IOpenXrEventObserver> m_eventObserver;
 
-    std::unique_ptr<OpenXrDebugMessenger> m_debugMessenger;
+    std::unique_ptr<open_xr::core::OpenXrDebugMessenger> m_debugMessenger;
 };
-} // namespace prev::xr::core
+} // namespace prev::xr::open_xr::core
 
 #endif
 

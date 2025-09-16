@@ -6,19 +6,18 @@
 #include "../util/VkUtils.h"
 
 namespace prev::xr {
-XrSwapchain::XrSwapchain(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, xr::OpenXr& xr, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount)
+XrSwapchain::XrSwapchain(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, xr::IXr& xr, VkSampleCountFlagBits sampleCount)
     : m_device{ device }
     , m_allocator{ allocator }
     , m_renderPass{ renderPass }
-    , m_openXr{ xr }
-    , m_surface{ surface }
+    , m_xr{ xr }
     , m_sampleCount{ sampleCount }
     , m_graphicsQueue{ m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
     , m_presentQueue{ m_device.GetQueue(prev::core::device::QueueType::PRESENT) }
 {
     m_commandPool = prev::util::vk::CreateCommandPool(m_device, m_graphicsQueue.family);
 
-    m_extent = m_openXr.GetExtent();
+    m_extent = m_xr.GetExtent();
 
     if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
         m_msaaColorBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
@@ -26,7 +25,7 @@ XrSwapchain::XrSwapchain(prev::core::device::Device& device, prev::core::memory:
                                 .SetFormat(m_renderPass.GetColorFormat())
                                 .SetType(VK_IMAGE_TYPE_2D)
                                 .SetViewType(VK_IMAGE_VIEW_TYPE_2D_ARRAY)
-                                .SetLayerCount(m_openXr.GetViewCount())
+                                .SetLayerCount(m_xr.GetViewCount())
                                 .SetSampleCount(m_sampleCount)
                                 .SetUsageFlags(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
                                 .SetLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
@@ -36,32 +35,32 @@ XrSwapchain::XrSwapchain(prev::core::device::Device& device, prev::core::memory:
                                 .SetFormat(m_renderPass.GetDepthFormat())
                                 .SetType(VK_IMAGE_TYPE_2D)
                                 .SetViewType(VK_IMAGE_VIEW_TYPE_2D_ARRAY)
-                                .SetLayerCount(m_openXr.GetViewCount())
+                                .SetLayerCount(m_xr.GetViewCount())
                                 .SetSampleCount(m_sampleCount)
                                 .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
                                 .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
                                 .Build();
     }
 
-    if (!m_openXr.HasDepthImages()) {
+    if (!m_xr.HasDepthImages()) {
         m_depthBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
                             .SetExtent(VkExtent3D{ m_extent.width, m_extent.height, 1 })
                             .SetFormat(m_renderPass.GetDepthFormat())
                             .SetType(VK_IMAGE_TYPE_2D)
                             .SetViewType(VK_IMAGE_VIEW_TYPE_2D_ARRAY)
-                            .SetLayerCount(m_openXr.GetViewCount())
+                            .SetLayerCount(m_xr.GetViewCount())
                             .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
                             .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
                             .Build();
     }
 
-    const auto colorImages{ m_openXr.GetColorImages() };
-    const auto colorImageViews{ m_openXr.GetColorImagesViews() };
+    const auto colorImages{ m_xr.GetColorImages() };
+    const auto colorImageViews{ m_xr.GetColorImagesViews() };
 
     const auto swapchainImagesCount{ static_cast<uint32_t>(colorImages.size()) };
 
-    const auto depthImages{ m_openXr.HasDepthImages() ? m_openXr.GetDepthImages() : std::vector<VkImage>(swapchainImagesCount, m_depthBuffer->GetImage()) };
-    const auto depthImageViews{ m_openXr.HasDepthImages() ? m_openXr.GetDepthImagesViews() : std::vector<VkImageView>(swapchainImagesCount, m_depthBuffer->GetImageView()) };
+    const auto depthImages{ m_xr.HasDepthImages() ? m_xr.GetDepthImages() : std::vector<VkImage>(swapchainImagesCount, m_depthBuffer->GetImage()) };
+    const auto depthImageViews{ m_xr.HasDepthImages() ? m_xr.GetDepthImagesViews() : std::vector<VkImageView>(swapchainImagesCount, m_depthBuffer->GetImageView()) };
 
     m_swapchainBuffers.resize(swapchainImagesCount);
     for (uint32_t i = 0; i < swapchainImagesCount; ++i) {
@@ -160,7 +159,7 @@ uint32_t XrSwapchain::GetImageCount() const
 
 bool XrSwapchain::BeginFrame(prev::render::SwapChainFrameContext& outContext)
 {
-    m_acquiredIndex = m_openXr.GetCurrentSwapchainIndex();
+    m_acquiredIndex = m_xr.GetCurrentSwapchainIndex();
 
     const auto& swapchainBuffer{ m_swapchainBuffers[m_acquiredIndex] };
 

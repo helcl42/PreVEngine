@@ -1,17 +1,18 @@
-#ifndef __INPUT_UTILS_H__
-#define __INPUT_UTILS_H__
+#ifndef __OPENXR_INPUT_UTILS_H__
+#define __OPENXR_INPUT_UTILS_H__
 
 #ifdef ENABLE_XR
 
-#include "../../XrEvents.h"
 #include "../../common/OpenXrCommon.h"
 
-#include "../../../util/MathUtils.h"
+#include "../../../XrEvents.h"
+
+#include "../../../../util/MathUtils.h"
 
 #include <optional>
 #include <vector>
 
-namespace prev::xr::input::util {
+namespace prev::xr::open_xr::input::util {
 XrPath ConvertStringToXrPath(const XrInstance& instance, const char* pathString);
 
 std::string ConvertXrPathToString(const XrInstance& instance, const XrPath& path);
@@ -56,7 +57,7 @@ bool DetectPinchAction(const HandType hand, const XrHandJointLocationsEXT& joint
 bool DetectAimAction(const HandType hand, const XrHandJointLocationsEXT& joints, XrHandActionEvent& outPinchAction);
 
 bool DetectPokeAction(const HandType hand, const XrHandJointLocationsEXT& joints, XrHandActionEvent& outPinchAction);
-} // namespace prev::xr::input::util
+} // namespace prev::xr::open_xr::input::util
 
 #endif
 

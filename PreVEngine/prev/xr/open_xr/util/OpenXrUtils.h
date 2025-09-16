@@ -5,7 +5,7 @@
 
 #include "../common/OpenXrCommon.h"
 
-namespace prev::xr::util {
+namespace prev::xr::open_xr::util {
 template <typename T>
 T CreateStruct(const XrStructureType structType, void* next = nullptr)
 {
@@ -14,8 +14,7 @@ T CreateStruct(const XrStructureType structType, void* next = nullptr)
     vkStruct.next = next;
     return vkStruct;
 }
-
-} // namespace prev::xr::util
+} // namespace prev::xr::open_xr::util
 
 #endif
 

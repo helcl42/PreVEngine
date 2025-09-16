@@ -45,11 +45,13 @@ file(GLOB SRC_LIST
     "prev/window/impl/macos/*.h" "prev/window/impl/macos/*.cpp"
     "prev/window/impl/ios/*.h" "prev/window/impl/ios/*.cpp"
     "prev/xr/*.h" "prev/xr/*.cpp"
-    "prev/xr/common/*.h" "prev/xr/common/*.cpp"
-    "prev/xr/core/*.h" "prev/xr/core/*.cpp"
-    "prev/xr/render/*.h" "prev/xr/render/*.cpp"
-    "prev/xr/input/*.h" "prev/xr/input/*.cpp"
-    "prev/xr/util/*.h" "prev/xr/util/*.cpp"
+    "prev/xr/open_xr/*.h" "prev/xr/open_xr/*.cpp"
+    "prev/xr/open_xr/common/*.h" "prev/xr/open_xr/common/*.cpp"
+    "prev/xr/open_xr/core/*.h" "prev/xr/open_xr/core/*.cpp"
+    "prev/xr/open_xr/render/*.h" "prev/xr/open_xr/render/*.cpp"
+    "prev/xr/open_xr/input/*.h" "prev/xr/open_xr/input/*.cpp"
+    "prev/xr/open_xr/input/util/*.h" "prev/xr/open_xr/input/util/*.cpp"
+    "prev/xr/open_xr/util/*.h" "prev/xr/open_xr/util/*.cpp"
 )
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")  # for find_package

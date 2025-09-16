@@ -3,7 +3,7 @@
 
 #ifdef ENABLE_XR
 
-#include "OpenXr.h"
+#include "IXr.h"
 
 #include "../render/ISwapchain.h"
 
@@ -17,7 +17,7 @@
 namespace prev::xr {
 class XrSwapchain final : public prev::render::ISwapchain {
 public:
-    XrSwapchain(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, xr::OpenXr& xr, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT);
+    XrSwapchain(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, xr::IXr& xr, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT);
 
     ~XrSwapchain();
 
@@ -74,9 +74,7 @@ private:
 
     prev::render::pass::RenderPass& m_renderPass;
 
-    xr::OpenXr& m_openXr;
-
-    VkSurfaceKHR m_surface{};
+    xr::IXr& m_xr;
 
     VkSampleCountFlagBits m_sampleCount{ VK_SAMPLE_COUNT_1_BIT };
 
@@ -97,7 +95,7 @@ private:
 
     std::unique_ptr<prev::render::buffer::ImageBuffer> m_msaaDepthBuffer{};
 
-    // Depth buffer (created when OpenXR does not provide it)
+    // Depth buffer (created when XR does not provide it)
     std::unique_ptr<prev::render::buffer::ImageBuffer> m_depthBuffer{};
 };
 } // namespace prev::xr

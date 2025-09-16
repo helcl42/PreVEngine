@@ -3,14 +3,13 @@
 
 #ifdef ENABLE_XR
 
-#include "../XrEvents.h"
 #include "../common/IOpenXrEventObserver.h"
 
-#include <unordered_map>
+#include "../../XrEvents.h"
 
 #include <prev/event/EventHandler.h>
 
-namespace prev::xr::render {
+namespace prev::xr::open_xr::render {
 class OpenXrRender final : public common::IOpenXrEventObserver {
 public:
     OpenXrRender(XrInstance instance, XrSystemId systemId);
@@ -137,7 +136,7 @@ private:
 private:
     prev::event::EventHandler<OpenXrRender, XrCameraFeedbackEvent> m_cameraFeedbackHandler{ *this };
 };
-} // namespace prev::xr::render
+} // namespace prev::xr::open_xr::render
 
 #endif
 

@@ -2,7 +2,7 @@
 
 #ifdef ENABLE_XR
 
-namespace prev::xr {
+namespace prev::xr::open_xr {
 OpenXr::OpenXr()
     : m_core{ std::make_unique<core::OpenXrCore>() }
     , m_render{ std::make_unique<render::OpenXrRender>(m_core->GetInstance(), m_core->GetSystemId()) }
@@ -144,6 +144,6 @@ void OpenXr::PollActions()
 {
     m_input->PollActions(m_render->GetCurrentTime());
 }
-} // namespace prev::xr
+} // namespace prev::xr::open_xr
 
 #endif
