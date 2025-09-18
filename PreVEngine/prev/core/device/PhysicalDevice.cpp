@@ -57,7 +57,7 @@ PhysicalDevice::PhysicalDevice(const VkPhysicalDevice gpu, const std::vector<std
 #if defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_IOS_MVK)
     m_extensions.Pick("VK_KHR_portability_subset");
 #endif
-#if defined(ENABLE_XR)
+#ifdef ENABLE_XR
     m_extensions.Pick(VK_KHR_MULTIVIEW_EXTENSION_NAME);
     m_extensions.Pick(VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME); // VK_KHR_external_memory_fd
     m_extensions.Pick(VK_EXT_FRAGMENT_DENSITY_MAP_EXTENSION_NAME); // VK_EXT_fragment_density_map
