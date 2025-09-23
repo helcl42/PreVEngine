@@ -8,8 +8,8 @@ QueryPool::QueryPool(prev::core::device::Device& device, VkQueryType queryType, 
     , m_queryType{ queryType }
     , m_poolCount{ poolCount }
     , m_queryCount{ queryCount }
+    , m_index{ prev::util::CircularIndex<uint32_t>(poolCount) }
 {
-    m_queryPoolsValid.resize(m_poolCount, false);
     m_queryPools.resize(m_poolCount);
     for (uint32_t i = 0; i < m_poolCount; ++i) {
         VkQueryPoolCreateInfo queryPoolInfo{ prev::util::vk::CreateStruct<VkQueryPoolCreateInfo>(VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO) };
@@ -26,24 +26,32 @@ QueryPool::~QueryPool()
     }
 }
 
-void QueryPool::Reset(const uint32_t poolIndex, VkCommandBuffer commandBuffer)
+void QueryPool::BeginQuery(const uint32_t queryIndex, VkCommandBuffer commandBuffer)
 {
-    vkCmdResetQueryPool(commandBuffer, m_queryPools[poolIndex], 0, m_queryCount);
-    m_queryPoolsValid[poolIndex] = true;
+    vkCmdBeginQuery(commandBuffer, m_queryPools[m_index], queryIndex, 0);
 }
 
-void QueryPool::BeginQuery(const uint32_t poolIndex, const uint32_t queryIndex, VkCommandBuffer commandBuffer)
+void QueryPool::EndQuery(const uint32_t queryIndex, VkCommandBuffer commandBuffer)
 {
-    vkCmdBeginQuery(commandBuffer, m_queryPools[poolIndex], queryIndex, 0);
+    vkCmdEndQuery(commandBuffer, m_queryPools[m_index], queryIndex);
+    ++m_index;
 }
 
-void QueryPool::EndQuery(const uint32_t poolIndex, const uint32_t queryIndex, VkCommandBuffer commandBuffer)
+void QueryPool::Reset(VkCommandBuffer commandBuffer)
 {
-    vkCmdEndQuery(commandBuffer, m_queryPools[poolIndex], queryIndex);
+    vkCmdResetQueryPool(commandBuffer, m_queryPools[m_index], 0, m_queryCount);
 }
 
-VkQueryPool QueryPool::GetQueryPool(const uint32_t poolIndex) const
+void QueryPool::ResetAll(VkCommandBuffer commandBuffer)
 {
-    return m_queryPools[poolIndex];
+    for (uint32_t i = 0; i < m_poolCount; ++i) {
+        vkCmdResetQueryPool(commandBuffer, m_queryPools[i], 0, m_queryCount);
+    }
+    m_index.Reset();
+}
+
+QueryPool::operator VkQueryPool() const
+{
+    return m_queryPools[m_index];
 }
 } // namespace prev::render::query

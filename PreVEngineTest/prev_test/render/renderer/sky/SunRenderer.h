@@ -11,7 +11,6 @@
 #include <prev/render/shader/Shader.h>
 #include <prev/scene/IScene.h>
 #include <prev/scene/graph/ISceneNode.h>
-#include <prev/util/Utils.h>
 
 namespace prev_test::render::renderer::sky {
 class SunRenderer final : public IRenderer<NormalRenderContext> {
@@ -67,8 +66,6 @@ private:
     uint64_t m_maxNumberOfSamples{ 0 };
 
     static const inline uint32_t QueryPoolCount{ 3 };
-
-    prev::util::CircularIndex<uint32_t> m_queryPoolIndex{ QueryPoolCount };
 
     std::unique_ptr<prev::render::query::QueryPool> m_queryPool{};
 };

@@ -9,6 +9,7 @@
 #include <prev/event/EventChannel.h>
 #include <prev/render/buffer/BufferPoolBuilder.h>
 #include <prev/render/pipeline/GraphicsPipelineBuilder.h>
+#include <prev/render/query/QueryPoolBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/VkUtils.h>
@@ -71,8 +72,11 @@ void SunRenderer::Init()
 
     LOGI("Sun Uniforms Pools created");
 
-    m_queryPool = std::make_unique<prev::render::query::QueryPool>(m_device, VK_QUERY_TYPE_OCCLUSION, QueryPoolCount, MAX_VIEW_COUNT);
-    m_queryPoolIndex = prev::util::CircularIndex<uint32_t>{ QueryPoolCount };
+    m_queryPool = prev::render::query::QueryPoolBuilder{ m_device }
+                      .SetQueryType(VK_QUERY_TYPE_OCCLUSION)
+                      .SetPoolCount(QueryPoolCount)
+                      .SetQueryCount(MAX_VIEW_COUNT)
+                      .Build();
     m_passedSamples = 0;
 
     LOGI("Sun Query Pool created");
@@ -85,7 +89,7 @@ void SunRenderer::BeforeRender(const NormalRenderContext& renderContext)
 #else
     VkQueryResultFlags queryResultFlags{ VK_QUERY_RESULT_STATUS_COMPLETE_KHR };
 #endif
-    if (m_queryPool->GetQueryResult(m_queryPoolIndex.GetNext(), 0, queryResultFlags | VK_QUERY_RESULT_64_BIT, m_passedSamples)) {
+    if (m_queryPool->GetQueryResult(0, queryResultFlags | VK_QUERY_RESULT_64_BIT, m_passedSamples)) {
 #if defined(TARGET_PLATFORM_IOS) || defined(TARGET_PLATFORM_MACOS)
         const float ratio{ m_passedSamples > 0.0f ? 0.5f : 0.0f };
 #else
@@ -93,7 +97,7 @@ void SunRenderer::BeforeRender(const NormalRenderContext& renderContext)
 #endif
         prev::event::EventChannel::Post(prev_test::render::renderer::sky::SunVisibilityEvent{ ratio });
     }
-    m_queryPool->Reset(m_queryPoolIndex, renderContext.commandBuffer);
+    m_queryPool->Reset(renderContext.commandBuffer);
 }
 
 void SunRenderer::PreRender(const NormalRenderContext& renderContext)
@@ -122,7 +126,7 @@ void SunRenderer::Render(const NormalRenderContext& renderContext, const std::sh
     const float yScale{ xScale * aspectRatio };
 
     m_maxNumberOfSamples = static_cast<uint64_t>(xScale * static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) * yScale * static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y));
-    m_queryPool->BeginQuery(m_queryPoolIndex, 0, renderContext.commandBuffer);
+    m_queryPool->BeginQuery(0, renderContext.commandBuffer);
 
     m_uniformsPoolVS->MoveToNext();
 
@@ -147,7 +151,7 @@ void SunRenderer::Render(const NormalRenderContext& renderContext, const std::sh
 
     vkCmdDrawIndexed(renderContext.commandBuffer, sunComponent->GetModel()->GetMesh()->GetIndicesCount(), 1, 0, 0, 0);
 
-    m_queryPool->EndQuery(m_queryPoolIndex, 0, renderContext.commandBuffer);
+    m_queryPool->EndQuery(0, renderContext.commandBuffer);
 }
 
 void SunRenderer::PostRender(const NormalRenderContext& renderContext)
@@ -156,7 +160,6 @@ void SunRenderer::PostRender(const NormalRenderContext& renderContext)
 
 void SunRenderer::AfterRender(const NormalRenderContext& renderContext)
 {
-    ++m_queryPoolIndex;
 }
 
 void SunRenderer::ShutDown()
