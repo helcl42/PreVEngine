@@ -73,27 +73,35 @@ bool OpenXrRender::BeginFrame()
     m_frameState = frameState;
 
     // Locate the views from the view configuration within the (reference) space at the display time.
-    std::vector<XrView> views(m_viewConfigurationViews.size(), prev::xr::open_xr::util::CreateStruct<XrView>(XR_TYPE_VIEW));
-
     XrViewState viewState{ prev::xr::open_xr::util::CreateStruct<XrViewState>(XR_TYPE_VIEW_STATE) }; // Will contain information on whether the position and/or orientation is valid and/or tracked.
     XrViewLocateInfo viewLocateInfo{ prev::xr::open_xr::util::CreateStruct<XrViewLocateInfo>(XR_TYPE_VIEW_LOCATE_INFO) };
     viewLocateInfo.viewConfigurationType = m_viewConfiguration;
     viewLocateInfo.displayTime = frameState.predictedDisplayTime;
     viewLocateInfo.space = m_localSpace;
+
+    std::vector<XrView> views(static_cast<uint32_t>(m_viewConfigurationViews.size()), prev::xr::open_xr::util::CreateStruct<XrView>(XR_TYPE_VIEW));
+
     uint32_t viewCount{ 0 };
-    XrResult result = xrLocateViews(m_session, &viewLocateInfo, &viewState, static_cast<uint32_t>(views.size()), &viewCount, views.data());
-    if (result != XR_SUCCESS) {
-        LOGE("Failed to locate Views.");
+    if (XR_FAILED(xrLocateViews(m_session, &viewLocateInfo, &viewState, static_cast<uint32_t>(m_viewConfigurationViews.size()), &viewCount, views.data()))) {
+        LOGE("Failed to query view count.");
         return false;
     }
 
+    if (viewCount != static_cast<uint32_t>(m_viewConfigurationViews.size())) {
+        views.resize(viewCount, prev::xr::open_xr::util::CreateStruct<XrView>(XR_TYPE_VIEW));
+        if (XR_FAILED(xrLocateViews(m_session, &viewLocateInfo, &viewState, viewCount, &viewCount, views.data()))) {
+            LOGE("Failed to locate Views.");
+            return false;
+        }
+    }
+
     XrCameraEvent event{};
-    for (size_t i = 0; i < views.size(); ++i) {
+    for (size_t i = 0; i < viewCount; ++i) {
         const auto& view{ views[i] };
         event.poses[i] = prev::util::math::Pose{ { view.pose.orientation.w, view.pose.orientation.x, view.pose.orientation.y, view.pose.orientation.z }, { view.pose.position.x, view.pose.position.y, view.pose.position.z } };
         event.fovs[i] = prev::util::math::Fov{ view.fov.angleLeft, view.fov.angleRight, view.fov.angleUp, view.fov.angleDown };
     }
-    event.count = static_cast<uint32_t>(views.size());
+    event.count = viewCount;
     prev::event::EventChannel::Post(event);
 
     m_renderLayerInfo.predictedDisplayTime = frameState.predictedDisplayTime;
@@ -212,7 +220,7 @@ uint32_t OpenXrRender::GetCurrentSwapchainIndex() const
 
 uint32_t OpenXrRender::GetViewCount() const
 {
-    return static_cast<uint32_t>(m_viewConfigurationViews.size());
+    return MAX_VIEW_COUNT;
 }
 
 std::vector<VkImage> OpenXrRender::GetColorImages() const
@@ -361,7 +369,7 @@ void OpenXrRender::CreateSwapchains()
     }
 
     const XrViewConfigurationView& viewConfigurationView{ m_viewConfigurationViews[0] };
-    const uint32_t viewCount{ static_cast<uint32_t>(m_viewConfigurationViews.size()) };
+    const uint32_t viewCount{ MAX_VIEW_COUNT };
 
     m_colorSwapchainInfo = CreateSwapchain(viewConfigurationView, viewCount, m_preferredColorFormat, XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT);
 
