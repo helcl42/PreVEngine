@@ -15,14 +15,6 @@ class ShaderBuilder;
 
 class Shader final {
 public:
-    struct DescriptorSet {
-        std::string name{};
-        uint32_t binding{};
-        VkDescriptorType descType{};
-        uint32_t descCount{};
-        VkShaderStageFlags stageFlags{};
-    };
-
     struct DescriptorSetInfo {
         size_t writeIndex{};
         union {

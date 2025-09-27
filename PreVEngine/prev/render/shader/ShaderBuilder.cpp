@@ -72,13 +72,13 @@ ShaderBuilder& ShaderBuilder::AddVertexInputAttributeDescriptions(const std::vec
     return *this;
 }
 
-ShaderBuilder& ShaderBuilder::AddDescriptorSet(const Shader::DescriptorSet& descriptorSet)
+ShaderBuilder& ShaderBuilder::AddDescriptorSet(const DescriptorSet& descriptorSet)
 {
     m_descriptorSets.push_back(descriptorSet);
     return *this;
 }
 
-ShaderBuilder& ShaderBuilder::AddDescriptorSets(const std::vector<Shader::DescriptorSet>& descriptorSets)
+ShaderBuilder& ShaderBuilder::AddDescriptorSets(const std::vector<DescriptorSet>& descriptorSets)
 {
     for (const auto& descriptorSet : descriptorSets) {
         AddDescriptorSet(descriptorSet);

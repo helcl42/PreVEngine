@@ -10,6 +10,16 @@
 namespace prev::render::shader {
 class ShaderBuilder final {
 public:
+    struct DescriptorSet {
+        std::string name{};
+        uint32_t binding{};
+        VkDescriptorType descType{};
+        uint32_t descCount{};
+        VkShaderStageFlags stageFlags{};
+        bool optional{};
+    };
+
+public:
     ShaderBuilder(VkDevice device);
 
     ~ShaderBuilder() = default;
@@ -31,9 +41,9 @@ public:
 
     ShaderBuilder& AddVertexInputAttributeDescriptions(const std::vector<VkVertexInputAttributeDescription>& vertexAttributeDescriptions);
 
-    ShaderBuilder& AddDescriptorSet(const Shader::DescriptorSet& descriptorSet);
+    ShaderBuilder& AddDescriptorSet(const DescriptorSet& descriptorSet);
 
-    ShaderBuilder& AddDescriptorSets(const std::vector<Shader::DescriptorSet>& descriptorSets);
+    ShaderBuilder& AddDescriptorSets(const std::vector<DescriptorSet>& descriptorSets);
 
     ShaderBuilder& AddPushConstantBlock(const VkPushConstantRange& pushConstantBlock);
 
@@ -71,7 +81,7 @@ private:
 
     std::vector<VkVertexInputAttributeDescription> m_vertexInputAttributeDescriptions;
 
-    std::vector<Shader::DescriptorSet> m_descriptorSets;
+    std::vector<DescriptorSet> m_descriptorSets;
 
     std::vector<VkPushConstantRange> m_pushConstantBlocks;
 
