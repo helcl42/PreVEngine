@@ -164,10 +164,10 @@ bool AndroidWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
                 int32_t aAction = AMotionEvent_getAction(aEvent);
                 int action = (aAction & 255); // get action-code from bottom 8 bits
 
-                m_MTouch.SetCount((int)AMotionEvent_getPointerCount(aEvent));
+                m_MTouch.SetMaxCount((uint32_t)AMotionEvent_getPointerCount(aEvent));
 
                 if (action == AMOTION_EVENT_ACTION_MOVE) {
-                    for (int i = 0; i < m_MTouch.GetCount(); ++i) {
+                    for (int i = 0; i < (int)m_MTouch.GetMaxCount(); ++i) {
                         uint8_t fingerId = (uint8_t)AMotionEvent_getPointerId(aEvent, i);
                         float x = AMotionEvent_getX(aEvent, i);
                         float y = AMotionEvent_getY(aEvent, i);
@@ -189,7 +189,7 @@ bool AndroidWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
                         m_eventQueue.Push(m_MTouch.OnEvent(ActionType::UP, x, y, fingerId, (float)m_info.size.width, (float)m_info.size.height));
                         break;
                     case AMOTION_EVENT_ACTION_CANCEL:
-                        m_MTouch.Clear();
+                        m_MTouch.Reset();
                         break;
                     default:
                         break;

@@ -5,11 +5,11 @@
 #include "../../../common/Logger.h"
 #include "../../../util/VkUtils.h"
 
-#include <string.h>
-
 #ifdef ENABLE_MULTITOUCH
 #include <X11/extensions/XInput2.h> // MultiTouch
 #endif
+
+#include <string.h>
 
 namespace prev::window::impl::xcb {
 namespace {

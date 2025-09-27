@@ -1,6 +1,7 @@
 #ifndef __WINDOW_IMPL_COMMON_H__
 #define __WINDOW_IMPL_COMMON_H__
 
+#include <algorithm>
 #include <cinttypes>
 #include <string>
 
@@ -170,6 +171,91 @@ struct Event {
         tag = EventType::NONE;
     }
 };
+
+class MultiTouch {
+public:
+    struct Pointer {
+        bool active{};
+        float x{};
+        float y{};
+    };
+
+public:
+    MultiTouch()
+        : m_maxCount{ MAX_POINTER_COUNT }
+    {
+        Reset();
+    }
+
+public:
+    void Reset()
+    {
+        for (uint32_t i = 0; i < MAX_POINTER_COUNT; ++i) {
+            m_touchID[i] = 0;
+            m_pointers[i] = {};
+        }
+    }
+
+    uint32_t GetMaxCount() const
+    {
+        return m_maxCount;
+    }
+
+    void SetMaxCount(uint32_t maxCount)
+    {
+        m_maxCount = std::min(maxCount, MAX_POINTER_COUNT);
+    }
+
+    Event OnEventById(ActionType action, float x, float y, uint32_t id, uint32_t value, float w, float h)
+    {
+        for (uint32_t i = 0; i < m_maxCount; ++i) {
+            if (m_touchID[i] == id) { // lookup finger-id
+                m_touchID[i] = value;
+                return OnEvent(action, x, y, i, w, h);
+            }
+        }
+        return { Event::EventType::UNKNOWN };
+    }
+
+    Event OnEvent(ActionType action, float x, float y, uint32_t id, float w, float h)
+    {
+        if (id >= m_maxCount) {
+            return {}; // Exit if too many fingers
+        }
+
+        Pointer& pointer = m_pointers[id];
+        if (action != ActionType::MOVE) {
+            pointer.active = (action == ActionType::DOWN);
+        }
+
+        pointer.x = x;
+        pointer.y = y;
+
+        Event e{ Event::EventType::TOUCH };
+        e.body.touch = { action, x, y, static_cast<uint8_t>(id), w, h };
+        return e;
+    }
+
+    Pointer GetPointer(uint32_t id) const
+    {
+        if (id >= m_maxCount) {
+            return {};
+        }
+
+        return m_pointers[id];
+    }
+
+private:
+    static const inline uint32_t MAX_POINTER_COUNT{ 10 }; // Max 10 fingers
+
+private:
+    uint32_t m_touchID[MAX_POINTER_COUNT] = {}; // finger-id lookup table (Desktop)
+
+    Pointer m_pointers[MAX_POINTER_COUNT] = {};
+
+    uint32_t m_maxCount{}; // number of active touch-id's
+};
+
 } // namespace prev::window::impl
 
 #endif

@@ -406,7 +406,7 @@ void WaylandWindowImpl::OnTouchCancel(void* data, wl_touch* wl_touch)
 {
     WaylandWindowImpl* impl = static_cast<WaylandWindowImpl*>(data);
 
-    impl->m_MTouch.Clear();
+    impl->m_MTouch.Reset();
 }
 
 void WaylandWindowImpl::OnTouchShape(void* data, wl_touch* wl_touch, int32_t id, wl_fixed_t major, wl_fixed_t minor)
