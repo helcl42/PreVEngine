@@ -151,7 +151,7 @@ std::vector<std::shared_ptr<prev_test::render::IMaterial>> MaterialFactory::Crea
 
     prev_test::render::util::assimp::AssimpSceneLoader assimpSceneLoader{};
     if (!assimpSceneLoader.LoadScene(modelPath, importer, &scene)) {
-        throw std::runtime_error("Could not load model: " + modelPath);
+        throw std::runtime_error("Material - Could not load model: " + modelPath);
     }
 
     for (uint32_t i = 0; i < scene->mNumMaterials; ++i) {

@@ -98,7 +98,7 @@ std::unique_ptr<prev_test::render::IAnimation> AnimationFactory::Create(const st
 
     prev_test::render::util::assimp::AssimpSceneLoader assimpSceneLoader{};
     if (!assimpSceneLoader.LoadScene(modelPath, importer, &scene)) {
-        throw std::runtime_error("Could not load model: " + modelPath);
+        throw std::runtime_error("Animation - Could not load model: " + modelPath);
     }
 
     std::vector<std::unique_ptr<IAnimationClip>> clips{};
