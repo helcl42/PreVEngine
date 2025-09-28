@@ -32,6 +32,8 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 
 	float heightTransitionRange;
 	uint numLayers;
+	uint hasNormalMap;
+	uint hasConeMap;
 } uboFS;
 
 layout(binding = 2) uniform sampler2D colorSampler[MATERIAL_COUNT];
@@ -40,12 +42,13 @@ layout(binding = 4) uniform sampler2D heightSampler[MATERIAL_COUNT];
 layout(binding = 5) uniform sampler2DArray depthSampler;
 
 layout(location = 0) in vec2 inTextureCoord;
-layout(location = 1) in vec3 inWorldPosition;
-layout(location = 2) in vec3 inViewPosition;
-layout(location = 3) in float inVisibility;
-layout(location = 4) in vec3 inToCameraVectorTangentSpace;
-layout(location = 5) in vec3 inPositionTangentSpace;
-layout(location = 6) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
+layout(location = 1) in vec3 inNormal;
+layout(location = 2) in vec3 inWorldPosition;
+layout(location = 3) in vec3 inViewPosition;
+layout(location = 4) in float inVisibility;
+layout(location = 5) in vec3 inToCameraVectorTangentSpace;
+layout(location = 6) in vec3 inPositionTangentSpace;
+layout(location = 7) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
 
 layout(location = 0) out vec4 outColor;
 
@@ -72,11 +75,31 @@ void main()
             {
                 float ratio = (normalizedHeight - uboFS.heightSteps[i].x + uboFS.heightTransitionRange) / (2 * uboFS.heightTransitionRange);
 
-				vec2 uv1 = RelaxedConeStepMapping(heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
-				vec2 uv2 = RelaxedConeStepMapping(heightSampler[i + 1], uboFS.heightScale[i + 1].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
+				vec2 uv1;
+				vec2 uv2;
+				if (uboFS.hasConeMap != 0) 
+				{
+					uv1 = RelaxedConeStepMapping(heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
+					uv2 = RelaxedConeStepMapping(heightSampler[i + 1], uboFS.heightScale[i + 1].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
+				}
+				else
+				{
+					uv1 = inTextureCoord;
+					uv2 = inTextureCoord;
+				}
 
-				vec3 normal1 = NormalMapping(normalSampler[i], uv1, ddx, ddy);
-				vec3 normal2 = NormalMapping(normalSampler[i + 1], uv2, ddx, ddy);
+				vec3 normal1;
+				vec3 normal2;
+				if(uboFS.hasNormalMap != 0)
+				{
+					normal1 = NormalMapping(normalSampler[i], uv1, ddx, ddy);
+					normal2 = NormalMapping(normalSampler[i + 1], uv2, ddx, ddy);
+				}
+				else
+				{
+					normal1 = inNormal;
+					normal2 = inNormal;
+				}
 				normal = mix(normal1, normal2, ratio);
 
                 vec4 color1 = textureGrad(colorSampler[i], uv1, ddx, ddy);

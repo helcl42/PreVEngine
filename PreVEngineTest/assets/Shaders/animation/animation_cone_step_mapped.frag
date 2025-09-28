@@ -23,6 +23,9 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 	uint castedByShadows;
 	float heightScale;
 	uint numLayers;
+
+	uint hasNormalMap;
+	uint hasConeMap;
 } uboFS;
 
 layout(binding = 2) uniform sampler2D colorSampler;
@@ -31,12 +34,13 @@ layout(binding = 4) uniform sampler2D heightSampler;
 layout(binding = 5) uniform sampler2DArray depthSampler;
 
 layout(location = 0) in vec2 inTextureCoord;
-layout(location = 1) in vec3 inWorldPosition;
-layout(location = 2) in vec3 inViewPosition;
-layout(location = 3) in float inVisibility;
-layout(location = 4) in vec3 inToCameraVectorTangentSpace;
-layout(location = 5) in vec3 inPositionTangentSpace;
-layout(location = 6) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
+layout(location = 1) in vec3 inNormal;
+layout(location = 2) in vec3 inWorldPosition;
+layout(location = 3) in vec3 inViewPosition;
+layout(location = 4) in float inVisibility;
+layout(location = 5) in vec3 inToCameraVectorTangentSpace;
+layout(location = 6) in vec3 inPositionTangentSpace;
+layout(location = 7) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
 
 layout(location = 0) out vec4 outColor;
 
@@ -46,7 +50,7 @@ void main()
 	const vec2 ddy = dFdy(inTextureCoord);
 
 	const vec3 rayDirection = normalize(inPositionTangentSpace);
-	vec2 uv = RelaxedConeStepMapping(heightSampler, uboFS.heightScale.x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
+	vec2 uv = uboFS.hasConeMap != 0 ? RelaxedConeStepMapping(heightSampler, uboFS.heightScale.x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection) : inTextureCoord;
 
 	float shadow = 1.0;
 	if(uboFS.castedByShadows != 0)
@@ -54,7 +58,7 @@ void main()
 		shadow = GetShadow(depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.02);
 	}
 
-	const vec3 normal = NormalMapping(normalSampler, uv);
+	const vec3 normal = uboFS.hasNormalMap != 0 ? NormalMapping(normalSampler, uv) : inNormal;
 	const vec4 textureColor = texture(colorSampler, uv);
 
 	const vec3 unitToCameraVector = normalize(inToCameraVectorTangentSpace - inPositionTangentSpace);

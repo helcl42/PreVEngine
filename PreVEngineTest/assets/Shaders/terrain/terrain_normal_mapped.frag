@@ -27,6 +27,7 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 	vec4 heightSteps[MATERIAL_COUNT];
 
 	float heightTransitionRange;
+	uint hasNormalMap;
 } uboFS;
 
 layout(binding = 2) uniform sampler2D colorSampler[MATERIAL_COUNT];
@@ -34,12 +35,13 @@ layout(binding = 3) uniform sampler2D normalSampler[MATERIAL_COUNT];
 layout(binding = 4) uniform sampler2DArray depthSampler;
 
 layout(location = 0) in vec2 inTextureCoord;
-layout(location = 1) in vec3 inWorldPosition;
-layout(location = 2) in vec3 inViewPosition;
-layout(location = 3) in float inVisibility;
-layout(location = 4) in vec3 inToCameraVectorTangentSpace;
-layout(location = 5) in vec3 inPositionTangentSpace;
-layout(location = 6) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
+layout(location = 1) in vec3 inNormal;
+layout(location = 2) in vec3 inWorldPosition;
+layout(location = 3) in vec3 inViewPosition;
+layout(location = 4) in float inVisibility;
+layout(location = 5) in vec3 inToCameraVectorTangentSpace;
+layout(location = 6) in vec3 inPositionTangentSpace;
+layout(location = 7) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
 
 layout(location = 0) out vec4 outColor;
 
@@ -66,8 +68,18 @@ void main()
                 vec4 color2 = texture(colorSampler[i + 1], inTextureCoord);
                 textureColor = mix(color1, color2, ratio);
 
-				vec3 normal1 = NormalMapping(normalSampler[i], inTextureCoord);
-				vec3 normal2 = NormalMapping(normalSampler[i + 1], inTextureCoord);
+				vec3 normal1;
+				vec3 normal2;
+				if(uboFS.hasNormalMap != 0)
+				{
+					normal1 = NormalMapping(normalSampler[i], inTextureCoord);
+					normal2 = NormalMapping(normalSampler[i + 1], inTextureCoord);
+				}
+				else
+				{
+					normal1 = inNormal;
+					normal2 = inNormal;
+				}
 				normal = mix(normal1, normal2, ratio);
 
 				float shineDamper1 = uboFS.material[i].shineDamper;

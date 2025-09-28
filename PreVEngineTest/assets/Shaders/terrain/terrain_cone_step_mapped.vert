@@ -34,12 +34,13 @@ layout(location = 3) in vec3 inTangent;
 layout(location = 4) in vec3 inBiTangent;
 
 layout(location = 0) out vec2 outTextureCoord;
-layout(location = 1) out vec3 outWorldPosition;
-layout(location = 2) out vec3 outViewPosition;
-layout(location = 3) out float outVisibility;
-layout(location = 4) out vec3 outToCameraVectorTangentSpace;
-layout(location = 5) out vec3 outPositionTangentSpace;
-layout(location = 6) out vec3 outToLightVectorTangentSpace[MAX_LIGHT_COUNT];
+layout(location = 1) out vec3 outNormal;
+layout(location = 2) out vec3 outWorldPosition;
+layout(location = 3) out vec3 outViewPosition;
+layout(location = 4) out float outVisibility;
+layout(location = 5) out vec3 outToCameraVectorTangentSpace;
+layout(location = 6) out vec3 outPositionTangentSpace;
+layout(location = 7) out vec3 outToLightVectorTangentSpace[MAX_LIGHT_COUNT];
 
 void main()
 {
@@ -62,6 +63,7 @@ void main()
 	outTextureCoord = inTextureCoord;
 
 	outVisibility = GetVisibility(viewPosition.xyz, uboVS.gradient, uboVS.density);
+	outNormal = (uboVS.normalMatrix * vec4(inNormal, 0.0)).xyz;
 
 	mat3 mv3 = mat3(uboVS.viewMatrices[viewIndex]) * mat3(uboVS.modelMatrix);
 	mat3 TBN = CreateTBNMatrix(mv3, inNormal, inTangent, inBiTangent);

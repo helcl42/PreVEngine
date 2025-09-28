@@ -44,12 +44,13 @@ layout(location = 5) in vec3 inTangent;
 layout(location = 6) in vec3 inBiTangent;
 
 layout(location = 0) out vec2 outTextureCoord;
-layout(location = 1) out vec3 outWorldPosition;
-layout(location = 2) out vec3 outViewPosition;
-layout(location = 3) out float outVisibility;
-layout(location = 4) out vec3 outToCameraVectorTangentSpace;
-layout(location = 5) out vec3 outPositionTangentSpace;
-layout(location = 6) out vec3 outToLightVectorTangentSpace[MAX_LIGHT_COUNT];
+layout(location = 1) out vec3 outNormal;
+layout(location = 2) out vec3 outWorldPosition;
+layout(location = 3) out vec3 outViewPosition;
+layout(location = 4) out float outVisibility;
+layout(location = 5) out vec3 outToCameraVectorTangentSpace;
+layout(location = 6) out vec3 outPositionTangentSpace;
+layout(location = 7) out vec3 outToLightVectorTangentSpace[MAX_LIGHT_COUNT];
 
 void main() 
 {
@@ -78,6 +79,7 @@ void main()
 	gl_Position = uboVS.projectionMatrices[viewIndex] * viewPosition;
 
 	outTextureCoord = (inTextureCoord / uboVS.textureNumberOfRows) + uboVS.textureOffset.xy;
+	outNormal = (uboVS.normalMatrix * vec4(normalL.xyz, 0.0)).xyz;
 
 	outVisibility = GetVisibility(viewPosition.xyz, uboVS.gradient, uboVS.density);
 
