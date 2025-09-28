@@ -10,7 +10,7 @@ android {
             keyPassword 'prev'
         }
     }
-    compileSdk 31
+    compileSdkVersion 31
 
     defaultConfig {
         applicationId = 'com.prevengine.PreVEngineTest'
