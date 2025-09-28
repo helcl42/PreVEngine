@@ -14,6 +14,7 @@
 #include "../../../component/transform/ITransformComponent.h"
 
 #include <prev/render/buffer/BufferPoolBuilder.h>
+#include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/pipeline/GraphicsPipelineBuilder.h>
 #include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
@@ -116,6 +117,16 @@ void ConeStepMappedRenderer::Init()
                          .Build();
 
     LOGI("Cone Step Mapped Samplers created");
+
+    m_nullImage = prev::render::buffer::ImageBufferBuilder{ m_allocator }
+                      .SetExtent({ 1, 1, 1 })
+                      .SetType(VK_IMAGE_TYPE_2D)
+                      .SetFormat(VK_FORMAT_R8G8B8A8_UNORM)
+                      .SetSampleCount(VK_SAMPLE_COUNT_1_BIT)
+                      .SetTiling(VK_IMAGE_TILING_OPTIMAL)
+                      .SetUsageFlags(VK_IMAGE_USAGE_SAMPLED_BIT)
+                      .SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+                      .Build();
 }
 
 void ConeStepMappedRenderer::BeforeRender(const NormalRenderContext& renderContext)
@@ -219,16 +230,14 @@ void ConeStepMappedRenderer::Render(const NormalRenderContext& renderContext, co
             uniformsFS.castedByShadows = nodeRenderComponent->IsCastedByShadows();
             uniformsFS.heightScale = material->GetHeightScale();
             uniformsFS.numLayers = 15;
+            uniformsFS.hasNormalMap = material->HasImageBuffer(NORMAL_INDEX);
+            uniformsFS.hasConeMap = material->HasImageBuffer(HEIGHT_AND_CONE_INDEX);
             uboFS.Write(uniformsFS);
 
             m_shader->Bind("depthSampler", *shadowsComponent->GetImageBuffer(), *m_depthSampler, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
             m_shader->Bind("colorSampler", *material->GetImageBuffer(COLOR_INDEX), *m_colorSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-            if (material->HasImageBuffer(NORMAL_INDEX)) {
-                m_shader->Bind("normalSampler", *material->GetImageBuffer(NORMAL_INDEX), *m_normalSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-            }
-            if (material->HasImageBuffer(HEIGHT_AND_CONE_INDEX)) {
-                m_shader->Bind("heightSampler", *material->GetImageBuffer(HEIGHT_AND_CONE_INDEX), *m_coneSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-            }
+            m_shader->Bind("normalSampler", material->HasImageBuffer(NORMAL_INDEX) ? *material->GetImageBuffer(NORMAL_INDEX) : *m_nullImage, *m_normalSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            m_shader->Bind("heightSampler", material->HasImageBuffer(HEIGHT_AND_CONE_INDEX) ? *material->GetImageBuffer(HEIGHT_AND_CONE_INDEX) : *m_nullImage, *m_coneSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             m_shader->Bind("uboVS", uboVS);
             m_shader->Bind("uboFS", uboFS);
 
@@ -261,6 +270,8 @@ void ConeStepMappedRenderer::AfterRender(const NormalRenderContext& renderContex
 
 void ConeStepMappedRenderer::ShutDown()
 {
+    m_nullImage = {};
+
     m_depthSampler = {};
     m_coneSampler = {};
     m_normalSampler = {};

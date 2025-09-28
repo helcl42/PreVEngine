@@ -11,6 +11,7 @@
 #include <prev/core/device/Device.h>
 #include <prev/core/memory/Allocator.h>
 #include <prev/render/buffer/BufferPool.h>
+#include <prev/render/buffer/ImageBuffer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/pipeline/Pipeline.h>
 #include <prev/render/sampler/Sampler.h>
@@ -144,6 +145,9 @@ private:
         uint32_t castedByShadows;
         float heightScale;
         uint32_t numLayers;
+
+        DEFAULT_ALIGNMENT uint32_t hasNormalMap;
+        uint32_t hasConeMap;
     };
 
 private:
@@ -174,6 +178,8 @@ private:
     std::unique_ptr<prev::render::sampler::Sampler> m_coneSampler;
 
     std::unique_ptr<prev::render::sampler::Sampler> m_depthSampler;
+
+    std::unique_ptr<prev::render::buffer::ImageBuffer> m_nullImage;
 };
 } // namespace prev_test::render::renderer::animation
 

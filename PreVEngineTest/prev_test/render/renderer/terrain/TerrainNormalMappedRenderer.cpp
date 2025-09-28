@@ -12,6 +12,7 @@
 #include "../../../component/transform/ITransformComponent.h"
 
 #include <prev/render/buffer/BufferPoolBuilder.h>
+#include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/pipeline/GraphicsPipelineBuilder.h>
 #include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
@@ -109,6 +110,16 @@ void TerrainNormalMappedRenderer::Init()
                          .Build();
 
     LOGI("Terrain Normal Mapped Samplers created");
+
+    m_nullImage = prev::render::buffer::ImageBufferBuilder{ m_allocator }
+                      .SetExtent({ 1, 1, 1 })
+                      .SetType(VK_IMAGE_TYPE_2D)
+                      .SetFormat(VK_FORMAT_R8G8B8A8_UNORM)
+                      .SetSampleCount(VK_SAMPLE_COUNT_1_BIT)
+                      .SetTiling(VK_IMAGE_TILING_OPTIMAL)
+                      .SetUsageFlags(VK_IMAGE_USAGE_SAMPLED_BIT)
+                      .SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+                      .Build();
 }
 
 void TerrainNormalMappedRenderer::BeforeRender(const NormalRenderContext& renderContext)
@@ -204,13 +215,14 @@ void TerrainNormalMappedRenderer::Render(const NormalRenderContext& renderContex
         uniformsFS.material[i] = MaterialUniform(material->GetColor(), material->GetShineDamper(), material->GetReflectivity());
     }
     uniformsFS.heightTransitionRange = terrainComponent->GetTransitionRange();
+    uniformsFS.hasNormalMap = terrainComponent->GetMaterials().size() > 0 ? terrainComponent->GetMaterials().at(0)->HasImageBuffer(NORMAL_INDEX) : false;
 
     uboFS.Write(uniformsFS);
 
     for (size_t i = 0; i < terrainComponent->GetMaterials().size(); ++i) {
         const auto material{ terrainComponent->GetMaterials().at(i) };
         m_shader->Bind("colorSampler[" + std::to_string(i) + "]", *material->GetImageBuffer(COLOR_INDEX), *m_colorSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-        m_shader->Bind("normalSampler[" + std::to_string(i) + "]", *material->GetImageBuffer(NORMAL_INDEX), *m_normalSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_shader->Bind("normalSampler[" + std::to_string(i) + "]", material->HasImageBuffer(NORMAL_INDEX) ? *material->GetImageBuffer(NORMAL_INDEX) : *m_nullImage, *m_normalSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     }
     m_shader->Bind("depthSampler", *shadowsComponent->GetImageBuffer(), *m_depthSampler, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
     m_shader->Bind("uboVS", uboVS);
@@ -237,6 +249,8 @@ void TerrainNormalMappedRenderer::AfterRender(const NormalRenderContext& renderC
 
 void TerrainNormalMappedRenderer::ShutDown()
 {
+    m_nullImage = {};
+
     m_depthSampler = {};
     m_normalSampler = {};
     m_colorSampler = {};
