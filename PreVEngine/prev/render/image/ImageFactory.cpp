@@ -36,13 +36,6 @@ namespace {
             return nullptr;
         }
     }
-
-    int OverrideDesiredChannelCount(int c) {
-#ifdef TARGET_PLATFORM_ANDROID
-        c = STBI_rgb_alpha;
-#endif
-        return c;
-    }
 } // namespace
 
 std::unique_ptr<IImage> ImageFactory::CreateImage(const std::string& filename, bool flipVertically) const
@@ -59,23 +52,17 @@ std::unique_ptr<IImage> ImageFactory::CreateImage(const std::string& filename, b
     stbi_convert_iphone_png_to_rgb(true);
 #endif
 
-    int w, h, c;
-    if (!stbi_info(filename.c_str(), &w, &h, &c)) {
-        LOGE("Image: Failed to get image info for: %s", filename.c_str());
-        return nullptr;
-    }
-    c = OverrideDesiredChannelCount(c);
-
-    uint8_t* imageBytes = reinterpret_cast<uint8_t*>(stbi_load(filename.c_str(), &w, &h, &c, c));
+    const int ouputChannelCount{ STBI_rgb_alpha };
+    int width, height, channelCount;
+    uint8_t* imageBytes = reinterpret_cast<uint8_t*>(stbi_load(filename.c_str(), &width, &height, &channelCount, STBI_rgb_alpha));
     if (!imageBytes) {
-        LOGE("Image: Failed to load texture: %s", filename.c_str());
+        LOGE("Image: Failed to load image: %s", filename.c_str());
         return nullptr;
     }
-    c = OverrideDesiredChannelCount(c);
 
-    auto image = CreateUint8ImageFromData(w, h, c, imageBytes);
+    auto image = CreateUint8ImageFromData(width, height, ouputChannelCount, imageBytes);
 
-    LOGI("Loaded image: %s (%dx%d|%d)", filename.c_str(), w, h, c);
+    LOGI("Loaded image: %s (%dx%d|%d)", filename.c_str(), width, height, ouputChannelCount);
 
     stbi_image_free(imageBytes);
 
@@ -90,23 +77,17 @@ std::unique_ptr<IImage> ImageFactory::CreateImageFromMemory(const uint8_t* data,
     stbi_convert_iphone_png_to_rgb(true);
 #endif
 
-    int w, h, c;
-    if (!stbi_info_from_memory(data, dataLength, &w, &h, &c)) {
-        LOGE("Image: Failed to get image info for image in memory with size %u", dataLength);
-        return nullptr;
-    }
-    c = OverrideDesiredChannelCount(c);
-
-    uint8_t* imageBytes = reinterpret_cast<uint8_t*>(stbi_load_from_memory(data, dataLength, &w, &h, &c, c));
+    const int ouputChannelCount{ STBI_rgb_alpha };
+    int width, height, channelCount;
+    uint8_t* imageBytes = reinterpret_cast<uint8_t*>(stbi_load_from_memory(data, dataLength, &width, &height, &channelCount, ouputChannelCount));
     if (!imageBytes) {
-        LOGE("Image: Failed to load texture from memory");
+        LOGE("Image: Failed to load image from memory");
         return nullptr;
     }
-    c = OverrideDesiredChannelCount(c);
 
-    auto image = CreateUint8ImageFromData(w, h, c, imageBytes);
+    auto image = CreateUint8ImageFromData(width, height, ouputChannelCount, imageBytes);
 
-    LOGI("Loaded image from memory: %u bytes (%dx%d|%d)", dataLength, w, h, c);
+    LOGI("Loaded image from memory: %u bytes (%dx%d|%d)", dataLength, width, height, ouputChannelCount);
 
     stbi_image_free(imageBytes);
 
