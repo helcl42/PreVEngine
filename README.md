@@ -36,7 +36,7 @@ git clone --recurse-submodules <url>` # to clone with submodules.
  python Scripts/download_dependencies.py
  ```
 
- **Note:** If you have a problem with the script, the package is hosted on `Google Drive`. You can download it directly from the [link](https://drive.google.com/file/d/1johmeEaVQ9SZTi13mAfJxbq17QztL-DS/view?usp=drive_link). Just unpack it in the root folder of the repositor.
+ **Note:** If you have a problem with the script, the package is hosted on `Google Drive`. You can download it directly from the [link](https://drive.google.com/file/d/1j7djytvGP5_O5wHTdo0N_t0sL3X9zvbP/view?usp=drive_link). Just unpack it in the root folder of the repositor.
 
 ## Build Linux & Windows & MacOS
 ```bash
