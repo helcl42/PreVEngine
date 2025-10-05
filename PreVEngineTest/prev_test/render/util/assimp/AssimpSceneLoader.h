@@ -8,7 +8,7 @@
 namespace prev_test::render::util::assimp {
 class AssimpSceneLoader final {
 public:
-    bool LoadScene(const std::string& modelPath, Assimp::Importer& importer, const aiScene** scene) const;
+    bool LoadScene(const std::string& modelPath, Assimp::Importer& importer, const aiScene*& scene) const;
 };
 } // namespace prev_test::render::util::assimp
 
