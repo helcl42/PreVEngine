@@ -2,7 +2,6 @@
 #define __ASSIMP_SCENE_LOADER_H__
 
 #include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
 namespace prev_test::render::util::assimp {

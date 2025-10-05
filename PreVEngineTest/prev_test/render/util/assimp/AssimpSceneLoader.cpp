@@ -1,5 +1,7 @@
 #include "AssimpSceneLoader.h"
 
+#include <assimp/postprocess.h>
+
 #include <prev/util/Utils.h>
 
 namespace prev_test::render::util::assimp {
