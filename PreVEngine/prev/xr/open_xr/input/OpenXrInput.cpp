@@ -378,57 +378,13 @@ void OpenXrInput::HandleHandTrackingActions(const XrTime time)
         for (uint32_t j = 0; j < locations.jointCount; ++j) {
             const auto& jointLocation{ locations.jointLocations[j] };
             auto& handJoint{ handEvent.joints[j] };
+            handJoint.type = static_cast<HandJointType>(j);            
             handJoint.active = (jointLocation.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) != 0 && (jointLocation.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT) != 0;
             handJoint.pose = open_xr::input::util::ConvertXrPoseToPose(jointLocation.pose);
             handJoint.radius = jointLocation.radius;
         }
     }
     prev::event::EventChannel::Post(handsEvent);
-
-    XrHandsActionsEvent handsActionsEvent{};
-    for (size_t i = 0; i < m_handPaths.size(); ++i) {
-        const auto& hand{ m_hands[i] };
-
-        XrHandJointsMotionRangeInfoEXT motionRangeInfo{ open_xr::util::CreateStruct<XrHandJointsMotionRangeInfoEXT>(XR_TYPE_HAND_JOINTS_MOTION_RANGE_INFO_EXT) };
-        motionRangeInfo.handJointsMotionRange = XR_HAND_JOINTS_MOTION_RANGE_UNOBSTRUCTED_EXT;
-
-        XrHandJointsLocateInfoEXT locateInfo{ open_xr::util::CreateStruct<XrHandJointsLocateInfoEXT>(XR_TYPE_HAND_JOINTS_LOCATE_INFO_EXT) };
-        locateInfo.next = &motionRangeInfo;
-        locateInfo.baseSpace = m_localSpace;
-        locateInfo.time = time;
-
-        XrHandJointLocationEXT jointLocations[XR_HAND_JOINT_COUNT_EXT]{};
-        XrHandJointLocationsEXT locations{ open_xr::util::CreateStruct<XrHandJointLocationsEXT>(XR_TYPE_HAND_JOINT_LOCATIONS_EXT) };
-        locations.jointCount = XR_HAND_JOINT_COUNT_EXT;
-        locations.jointLocations = jointLocations;
-        OPENXR_CHECK(xrLocateHandJointsEXT(hand, &locateInfo, &locations), "Failed to locate hand joints.");
-
-        auto& handsActions{ handsActionsEvent.handsActions[i] };
-
-        uint32_t actionEventIndex{ 0 };
-        {
-            auto& actionEvent{ handsActions.actions[actionEventIndex] };
-            if (open_xr::input::util::DetectPinchAction(open_xr::input::util::ConvertIndexToHandType(i), locations, actionEvent)) {
-                LOGI("Pinch detected! Value: %f, Position = (%f, %f, %f).", actionEvent.value, actionEvent.pose.position.x, actionEvent.pose.position.y, actionEvent.pose.position.z);
-            }
-            handsActions.actionCount = ++actionEventIndex;
-        }
-        {
-            auto& actionEvent{ handsActions.actions[actionEventIndex] };
-            if (open_xr::input::util::DetectAimAction(open_xr::input::util::ConvertIndexToHandType(i), locations, actionEvent)) {
-                LOGI("Aim detected! Value: %f, Position = (%f, %f, %f).", actionEvent.value, actionEvent.pose.position.x, actionEvent.pose.position.y, actionEvent.pose.position.z);
-            }
-            handsActions.actionCount = ++actionEventIndex;
-        }
-        {
-            auto& actionEvent{ handsActions.actions[actionEventIndex] };
-            if (open_xr::input::util::DetectPokeAction(open_xr::input::util::ConvertIndexToHandType(i), locations, actionEvent)) {
-                LOGI("Poke detected! Value: %f, Position = (%f, %f, %f).", actionEvent.value, actionEvent.pose.position.x, actionEvent.pose.position.y, actionEvent.pose.position.z);
-            }
-            handsActions.actionCount = ++actionEventIndex;
-        }
-    }
-    prev::event::EventChannel::Post(handsActionsEvent);
 }
 } // namespace prev::xr::open_xr::input
 

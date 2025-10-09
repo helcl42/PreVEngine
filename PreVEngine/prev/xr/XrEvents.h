@@ -10,7 +10,6 @@
 namespace prev::xr {
 
 constexpr const uint32_t MAX_HAND_COUNT{ 2 };
-constexpr const uint32_t MAX_ACTION_EVENT_COUNT{ 3 };
 constexpr const uint32_t MAX_HAND_TRACKING_JOINT_COUNT{ 26 };
 
 struct XrCameraEvent {
@@ -39,15 +38,37 @@ enum class HandType : uint32_t {
     RIGHT = 1,
 };
 
-struct XrHandControllerEvent {
-    HandType type{};
-    bool active{};
-    prev::util::math::Pose pose{};
-    float squeeze{};
-    prev::common::FlagSet<HandEventFlags> flags{};
+enum class HandJointType : uint32_t {
+    PALM_EXT = 0,
+    WRIST_EXT = 1,
+    THUMB_METACARPAL_EXT = 2,
+    THUMB_PROXIMAL_EXT = 3,
+    THUMB_DISTAL_EXT = 4,
+    THUMB_TIP_EXT = 5,
+    INDEX_METACARPAL_EXT = 6,
+    INDEX_PROXIMAL_EXT = 7,
+    INDEX_INTERMEDIATE_EXT = 8,
+    INDEX_DISTAL_EXT = 9,
+    INDEX_TIP_EXT = 10,
+    MIDDLE_METACARPAL_EXT = 11,
+    MIDDLE_PROXIMAL_EXT = 12,
+    MIDDLE_INTERMEDIATE_EXT = 13,
+    MIDDLE_DISTAL_EXT = 14,
+    MIDDLE_TIP_EXT = 15,
+    RING_METACARPAL_EXT = 16,
+    RING_PROXIMAL_EXT = 17,
+    RING_INTERMEDIATE_EXT = 18,
+    RING_DISTAL_EXT = 19,
+    RING_TIP_EXT = 20,
+    LITTLE_METACARPAL_EXT = 21,
+    LITTLE_PROXIMAL_EXT = 22,
+    LITTLE_INTERMEDIATE_EXT = 23,
+    LITTLE_DISTAL_EXT = 24,
+    LITTLE_TIP_EXT = 25,
 };
 
 struct XrHandJoint {
+    HandJointType type{};
     bool active{};
     prev::util::math::Pose pose{};
     float radius{};
@@ -61,35 +82,20 @@ struct XrHandEvent {
     prev::util::math::Pose pose{};
 };
 
-struct XrHandControllersEvent {
-    XrHandControllerEvent handControllers[MAX_HAND_COUNT]{};
-};
-
 struct XrHandsEvent {
     XrHandEvent hands[MAX_HAND_COUNT]{};
 };
 
-enum class HandActionType {
-    PINCH = 0,
-    AIM = 1,
-    POKE = 2,
-};
-
-struct XrHandActionEvent {
+struct XrHandControllerEvent {
     HandType type{};
-    HandActionType actionType{};
     bool active{};
     prev::util::math::Pose pose{};
-    float value{};
+    float squeeze{};
+    prev::common::FlagSet<HandEventFlags> flags{};
 };
 
-struct XrHandActionsEvent {
-    XrHandActionEvent actions[MAX_ACTION_EVENT_COUNT];
-    uint32_t actionCount{};
-};
-
-struct XrHandsActionsEvent {
-    XrHandActionsEvent handsActions[MAX_HAND_COUNT]{};
+struct XrHandControllersEvent {
+    XrHandControllerEvent handControllers[MAX_HAND_COUNT]{};
 };
 
 struct XrHapticFeedback {

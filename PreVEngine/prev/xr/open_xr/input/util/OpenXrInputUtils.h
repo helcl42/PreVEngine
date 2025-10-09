@@ -46,17 +46,6 @@ HandType ConvertIndexToHandType(const IndexType index)
 {
     return static_cast<HandType>(index);
 }
-
-// HandTracking specific
-glm::vec3 GetJointPosition(const XrHandJointLocationsEXT& joints, const XrHandJointEXT jointId);
-
-float GetJointsDistance(const XrHandJointLocationsEXT& joints, const XrHandJointEXT jointId1, const XrHandJointEXT jointId2);
-
-bool DetectPinchAction(const HandType hand, const XrHandJointLocationsEXT& joints, XrHandActionEvent& outPinchAction);
-
-bool DetectAimAction(const HandType hand, const XrHandJointLocationsEXT& joints, XrHandActionEvent& outPinchAction);
-
-bool DetectPokeAction(const HandType hand, const XrHandJointLocationsEXT& joints, XrHandActionEvent& outPinchAction);
 } // namespace prev::xr::open_xr::input::util
 
 #endif
