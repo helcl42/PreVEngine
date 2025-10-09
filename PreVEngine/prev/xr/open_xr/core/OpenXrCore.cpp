@@ -211,13 +211,8 @@ void OpenXrCore::DestroySession()
 
 void OpenXrCore::PollEvents()
 {
-    auto XrPollEvents = [](XrInstance instance, XrEventDataBuffer& outEvent) -> bool {
-        outEvent = { XR_TYPE_EVENT_DATA_BUFFER };
-        return xrPollEvent(instance, &outEvent) == XR_SUCCESS;
-    };
-
     XrEventDataBuffer eventData{ open_xr::util::CreateStruct<XrEventDataBuffer>(XR_TYPE_EVENT_DATA_BUFFER) };
-    while (XrPollEvents(m_instance, eventData)) {
+    while (xrPollEvent(m_instance, &eventData) == XR_SUCCESS) {
         switch (eventData.type) {
         case XR_TYPE_EVENT_DATA_EVENTS_LOST: {
             XrEventDataEventsLost* eventsLost = reinterpret_cast<XrEventDataEventsLost*>(&eventData);
