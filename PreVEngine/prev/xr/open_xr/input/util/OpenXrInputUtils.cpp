@@ -115,6 +115,19 @@ std::optional<float> GetFloatState(const XrSession& session, const XrAction& act
     return {};
 }
 
+std::optional<XrVector2f> GetVector2State(const XrSession& session, const XrAction& action, const XrPath& subActionPath)
+{
+    XrActionStateVector2f vector2State{ open_xr::util::CreateStruct<XrActionStateVector2f>(XR_TYPE_ACTION_STATE_VECTOR2F) };
+    XrActionStateGetInfo vector2ActionStateGetInfo{ open_xr::util::CreateStruct<XrActionStateGetInfo>(XR_TYPE_ACTION_STATE_GET_INFO) };
+    vector2ActionStateGetInfo.action = action;
+    vector2ActionStateGetInfo.subactionPath = subActionPath;
+    OPENXR_CHECK(xrGetActionStateVector2f(session, &vector2ActionStateGetInfo, &vector2State), "Failed to get Vector2 state.");
+    if (vector2State.isActive) {
+        return { vector2State.currentState };
+    }
+    return {};
+}
+
 std::optional<bool> GetBoolState(const XrSession& session, const XrAction& action, const bool invert, const XrPath& subActionPath)
 {
     XrActionStateBoolean boolState{ open_xr::util::CreateStruct<XrActionStateBoolean>(XR_TYPE_ACTION_STATE_BOOLEAN) };

@@ -33,6 +33,8 @@ std::optional<prev::util::math::Pose> GetPoseState(const XrSession& session, con
 
 std::optional<float> GetFloatState(const XrSession& session, const XrAction& action, const XrPath& subActionPath);
 
+std::optional<XrVector2f> GetVector2State(const XrSession& session, const XrAction& action, const XrPath& subActionPath);
+
 std::optional<bool> GetBoolState(const XrSession& session, const XrAction& action, const bool invert, const XrPath& subActionPath);
 
 template <typename IndexType>
