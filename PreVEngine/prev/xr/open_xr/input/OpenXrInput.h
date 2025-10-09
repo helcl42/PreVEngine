@@ -34,7 +34,7 @@ public:
     void OnEvent(const XrEventDataBuffer& evt) override;
 
 public:
-    void operator()(const XrHapticFeedback& hapticFeedback);
+    void operator()(const HapticFeedback& hapticFeedback);
 
 private:
     void CreateActionSet();
@@ -86,9 +86,9 @@ private:
     std::array<XrSpace, MAX_HAND_COUNT> m_handPoseSpace{};
 
 private:
-    prev::event::EventHandler<OpenXrInput, XrHapticFeedback> m_vibrationEventHandler{ *this };
+    prev::event::EventHandler<OpenXrInput, HapticFeedback> m_vibrationEventHandler{ *this };
 
-    std::array<std::optional<XrHapticFeedback>, MAX_HAND_COUNT> m_hapticFeedbackEvents;
+    std::array<std::optional<HapticFeedback>, MAX_HAND_COUNT> m_hapticFeedbackEvents;
 
     // HandTracking
     std::array<XrHandTrackerEXT, MAX_HAND_COUNT> m_hands{};

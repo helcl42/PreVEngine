@@ -95,7 +95,7 @@ bool OpenXrRender::BeginFrame()
         }
     }
 
-    XrCameraEvent event{};
+    CameraEvent event{};
     for (size_t i = 0; i < viewCount; ++i) {
         const auto& view{ views[i] };
         event.poses[i] = prev::util::math::Pose{ { view.pose.orientation.w, view.pose.orientation.x, view.pose.orientation.y, view.pose.orientation.z }, { view.pose.position.x, view.pose.position.y, view.pose.position.z } };
@@ -272,7 +272,7 @@ void OpenXrRender::OnEvent(const XrEventDataBuffer& evt)
 {
 }
 
-void OpenXrRender::operator()(const XrCameraFeedbackEvent& event)
+void OpenXrRender::operator()(const CameraFeedbackEvent& event)
 {
     m_nearClippingPlane = event.nearClippingPlane;
     m_farClippingPlane = event.fatClippingPlane;

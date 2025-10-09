@@ -145,7 +145,7 @@ void Camera::operator()(const prev::input::keyboard::KeyEvent& keyEvent)
 }
 
 #ifdef ENABLE_XR
-void Camera::operator()(const prev::xr::XrCameraEvent& cameraEvent)
+void Camera::operator()(const prev::xr::CameraEvent& cameraEvent)
 {
     for (uint32_t view = 0; view < cameraEvent.count; ++view) {
         auto& cameraComponent{ m_cameraComponents[view] };
@@ -161,7 +161,7 @@ void Camera::operator()(const prev::xr::XrCameraEvent& cameraEvent)
     }
 
     const auto viewFrustum{ m_cameraComponents[0]->GetViewFrustum() };
-    prev::event::EventChannel::Post(prev::xr::XrCameraFeedbackEvent{ viewFrustum.GetNearClippingPlane(), viewFrustum.GetFarClippingPlane(), MIN_DEPTH, MAX_DEPTH });
+    prev::event::EventChannel::Post(prev::xr::CameraFeedbackEvent{ viewFrustum.GetNearClippingPlane(), viewFrustum.GetFarClippingPlane(), MIN_DEPTH, MAX_DEPTH });
 }
 #else
 void Camera::operator()(const prev::core::NewIterationEvent& newIterationEvent)

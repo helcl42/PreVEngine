@@ -61,7 +61,7 @@ public:
     void OnEvent(const XrEventDataBuffer& evt) override;
 
 public:
-    void operator()(const XrCameraFeedbackEvent& event);
+    void operator()(const CameraFeedbackEvent& event);
 
 private:
     struct SwapchainInfo;
@@ -134,7 +134,7 @@ private:
     float m_maxDepth{ 1.0f };
 
 private:
-    prev::event::EventHandler<OpenXrRender, XrCameraFeedbackEvent> m_cameraFeedbackHandler{ *this };
+    prev::event::EventHandler<OpenXrRender, CameraFeedbackEvent> m_cameraFeedbackHandler{ *this };
 };
 } // namespace prev::xr::open_xr::render
 

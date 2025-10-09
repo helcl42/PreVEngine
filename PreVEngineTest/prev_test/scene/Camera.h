@@ -36,7 +36,7 @@ public:
     void operator()(const prev::input::keyboard::KeyEvent& keyEvent);
 
 #ifdef ENABLE_XR
-    void operator()(const prev::xr::XrCameraEvent& cameraEvent);
+    void operator()(const prev::xr::CameraEvent& cameraEvent);
 #else
     void operator()(const prev::core::NewIterationEvent& newIterationEvent);
 #endif
@@ -52,7 +52,7 @@ private:
     prev::event::EventHandler<Camera, prev::input::keyboard::KeyEvent> m_keyHandler{ *this };
 
 #ifdef ENABLE_XR
-    prev::event::EventHandler<Camera, prev::xr::XrCameraEvent> m_xrCameraEventHandler{ *this };
+    prev::event::EventHandler<Camera, prev::xr::CameraEvent> m_xrCameraEventHandler{ *this };
 #else
     prev::event::EventHandler<Camera, prev::core::NewIterationEvent> m_newIterationEventHandler{ *this };
 #endif

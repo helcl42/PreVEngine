@@ -87,7 +87,7 @@ void OpenXrInput::PollActions(const XrTime time)
     HandleHandTrackingActions(time);
 }
 
-void OpenXrInput::operator()(const XrHapticFeedback& hapticFeedback)
+void OpenXrInput::operator()(const HapticFeedback& hapticFeedback)
 {
     const auto handIndex{ open_xr::input::util::ConvertHandTypeToIndex<uint32_t>(hapticFeedback.type) };
     m_hapticFeedbackEvents[handIndex] = { hapticFeedback.type, hapticFeedback.amplitude, hapticFeedback.duration };
@@ -303,7 +303,7 @@ void OpenXrInput::RecordCurrentBindings()
 void OpenXrInput::HandleControllerActions(const XrTime time)
 {
     // input events
-    XrHandControllersEvent handControllersEvent{};
+    HandControllersEvent handControllersEvent{};
     for (size_t i = 0; i < m_handPaths.size(); ++i) {
         const auto handPose{ open_xr::input::util::GetPoseState(m_session, time, m_palmPoseAction, m_handPaths[i], m_localSpace, m_handPoseSpace[i]) };
         const auto squeeze{ open_xr::input::util::GetFloatState(m_session, m_squeezeAction, m_handPaths[i]) };
@@ -349,7 +349,7 @@ void OpenXrInput::HandleHandTrackingActions(const XrTime time)
         return;
     }
 
-    XrHandsEvent handsEvent{};
+    HandsEvent handsEvent{};
     for (size_t i = 0; i < m_handPaths.size(); ++i) {
         const auto& hand{ m_hands[i] };
 
