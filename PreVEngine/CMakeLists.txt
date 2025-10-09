@@ -164,8 +164,8 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     message("${PROJECT_NAME} - Linux")
     add_definitions(-DTARGET_PLATFORM_LINUX)
 
-    option(ENABLE_XCB "Enable XCB support" OFF)
-    option(ENABLE_WAYLAND "Enable Wayland support" ON)
+    option(ENABLE_XCB "Enable XCB support" ON)
+    option(ENABLE_WAYLAND "Enable Wayland support" OFF)
     
     if (ENABLE_XCB)
         add_definitions(-DVK_USE_PLATFORM_XCB_KHR)
