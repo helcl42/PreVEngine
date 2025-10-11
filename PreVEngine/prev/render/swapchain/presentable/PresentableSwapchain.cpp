@@ -1,14 +1,14 @@
-#include "Swapchain.h"
+#include "PresentableSwapchain.h"
 
-#include "buffer/ImageBufferBuilder.h"
+#include "../../buffer/ImageBufferBuilder.h"
 
-#include "../util/MathUtils.h"
-#include "../util/VkUtils.h"
+#include "../../../util/MathUtils.h"
+#include "../../../util/VkUtils.h"
 
 #include <algorithm>
 
-namespace prev::render {
-Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount, uint32_t viewCount)
+namespace prev::render::swapchain::presentable {
+PresentableSwapchain::PresentableSwapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount, uint32_t viewCount)
     : m_device{ device }
     , m_allocator{ allocator }
     , m_renderPass{ renderPass }
@@ -45,7 +45,7 @@ Swapchain::Swapchain(core::device::Device& device, core::memory::Allocator& allo
     Apply();
 }
 
-Swapchain::~Swapchain()
+PresentableSwapchain::~PresentableSwapchain()
 {
     m_device.WaitIdle();
 
@@ -67,7 +67,7 @@ Swapchain::~Swapchain()
     m_depthBuffer = nullptr;
 }
 
-bool Swapchain::UpdateExtent(uint32_t width, uint32_t height)
+bool PresentableSwapchain::UpdateExtent(uint32_t width, uint32_t height)
 {
     const VkSurfaceCapabilitiesKHR surfaceCapabilities{ GetSurfaceCapabilities() };
     const VkExtent2D& currentSurfaceExtent{ surfaceCapabilities.currentExtent };
@@ -95,7 +95,7 @@ bool Swapchain::UpdateExtent(uint32_t width, uint32_t height)
     return true;
 }
 
-bool Swapchain::SetImageCount(uint32_t imageCount)
+bool PresentableSwapchain::SetImageCount(uint32_t imageCount)
 {
     const VkSurfaceCapabilitiesKHR surfaceCapabilities{ GetSurfaceCapabilities() };
 
@@ -117,7 +117,7 @@ bool Swapchain::SetImageCount(uint32_t imageCount)
     return count == imageCount;
 }
 
-std::vector<VkPresentModeKHR> Swapchain::GetPresentModes() const
+std::vector<VkPresentModeKHR> PresentableSwapchain::GetPresentModes() const
 {
     uint32_t count{};
     VKERRCHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(m_device.GetGPU(), m_surface, &count, nullptr));
@@ -129,13 +129,13 @@ std::vector<VkPresentModeKHR> Swapchain::GetPresentModes() const
 // ---------------------------- Present Mode ----------------------------
 // noTearing : TRUE = Wait for next vsync, to swap buffers.  FALSE = faster fps.
 // powersave  : TRUE = Limit framerate to vsync (60 fps).    FALSE = lower latency.
-bool Swapchain::SetPresentMode(bool noTearing, bool powerSave)
+bool PresentableSwapchain::SetPresentMode(bool noTearing, bool powerSave)
 {
     const VkPresentModeKHR mode{ static_cast<VkPresentModeKHR>((noTearing ? VK_PRESENT_MODE_MAILBOX_KHR : 0) ^ (powerSave ? VK_PRESENT_MODE_FIFO_RELAXED_KHR : 0)) };
     return SetPresentMode(mode); // if not found, use FIFO
 }
 
-bool Swapchain::SetPresentMode(VkPresentModeKHR preferredMode)
+bool PresentableSwapchain::SetPresentMode(VkPresentModeKHR preferredMode)
 {
     const auto modes{ GetPresentModes() };
 
@@ -159,7 +159,7 @@ bool Swapchain::SetPresentMode(VkPresentModeKHR preferredMode)
     return mode == preferredMode;
 }
 
-void Swapchain::Print() const
+void PresentableSwapchain::Print() const
 {
     LOGI("Swapchain:");
 
@@ -179,17 +179,17 @@ void Swapchain::Print() const
     LOGI("\tSharingMode: %s", m_swapchainCreateInfo.imageSharingMode == VK_SHARING_MODE_EXCLUSIVE ? "Exclusive" : "Shared");
 }
 
-const VkExtent2D& Swapchain::GetExtent() const
+const VkExtent2D& PresentableSwapchain::GetExtent() const
 {
     return m_swapchainCreateInfo.imageExtent;
 }
 
-uint32_t Swapchain::GetImageCount() const
+uint32_t PresentableSwapchain::GetImageCount() const
 {
     return static_cast<uint32_t>(m_swapchainBuffers.size());
 }
 
-void Swapchain::Apply()
+void PresentableSwapchain::Apply()
 {
     m_swapchainCreateInfo.oldSwapchain = m_swapchain;
 
@@ -280,14 +280,14 @@ void Swapchain::Apply()
     }
 }
 
-VkSurfaceCapabilitiesKHR Swapchain::GetSurfaceCapabilities() const
+VkSurfaceCapabilitiesKHR PresentableSwapchain::GetSurfaceCapabilities() const
 {
     VkSurfaceCapabilitiesKHR surfaceCapabilities;
     VKERRCHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_device.GetGPU(), m_surface, &surfaceCapabilities));
     return surfaceCapabilities;
 }
 
-std::vector<VkImage> Swapchain::GetSwapchainImages() const
+std::vector<VkImage> PresentableSwapchain::GetSwapchainImages() const
 {
     std::vector<VkImage> swapchainImages;
 
@@ -299,7 +299,7 @@ std::vector<VkImage> Swapchain::GetSwapchainImages() const
     return swapchainImages;
 }
 
-bool Swapchain::AcquireNext(SwapchainBuffer& next)
+bool PresentableSwapchain::AcquireNext(SwapchainBuffer& next)
 {
     ASSERT(!m_isAcquired, "Swapchain: Previous swapchain buffer has not yet been presented.");
 
@@ -324,7 +324,7 @@ bool Swapchain::AcquireNext(SwapchainBuffer& next)
     return true;
 }
 
-void Swapchain::Submit()
+void PresentableSwapchain::Submit()
 {
     ASSERT(!!m_isAcquired, "Swapchain: A buffer must be acquired before submitting.");
 
@@ -344,7 +344,7 @@ void Swapchain::Submit()
     VKERRCHECK(m_graphicsQueue.Submit(1, &submitInfo, swapchainBuffer.fence));
 }
 
-void Swapchain::Present()
+void PresentableSwapchain::Present()
 {
     ASSERT(!!m_isAcquired, "Swapchain: A buffer must be acquired before presenting.");
 
@@ -373,7 +373,7 @@ void Swapchain::Present()
     m_isAcquired = false;
 }
 
-bool Swapchain::BeginFrame(SwapChainFrameContext& outContext)
+bool PresentableSwapchain::BeginFrame(FrameContext& outContext)
 {
     SwapchainBuffer swapchainBuffer;
     if (!AcquireNext(swapchainBuffer)) {
@@ -388,7 +388,7 @@ bool Swapchain::BeginFrame(SwapChainFrameContext& outContext)
     return true;
 }
 
-void Swapchain::EndFrame()
+void PresentableSwapchain::EndFrame()
 {
     const auto& swapchainBuffer{ m_swapchainBuffers[m_frameIndex] };
     VKERRCHECK(vkEndCommandBuffer(swapchainBuffer.commandBuffer));
@@ -396,4 +396,4 @@ void Swapchain::EndFrame()
     Submit();
     Present();
 }
-} // namespace prev::render
+} // namespace prev::render::swapchain::presentable

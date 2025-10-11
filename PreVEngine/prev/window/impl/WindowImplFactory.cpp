@@ -1,5 +1,6 @@
 #include "WindowImplFactory.h"
 
+#include "headless/HeadlessWindowImpl.h"
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 #include "android/AndroidWindowImpl.h"
 #endif
@@ -22,6 +23,10 @@
 namespace prev::window::impl {
 std::unique_ptr<WindowImpl> WindowImplFactory::Create(const prev::core::instance::Instance& instance, const WindowInfo& info) const
 {
+    if (info.headless) {
+        return std::make_unique<headless::HeadlessWindowImpl>(instance, info);
+    }
+
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
     return std::make_unique<android::AndroidWindowImpl>(instance, info);
 #elif VK_USE_PLATFORM_XCB_KHR

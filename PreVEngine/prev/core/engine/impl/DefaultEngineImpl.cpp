@@ -4,7 +4,7 @@
 #include "../../device/PhysicalDevices.h"
 #include "../../instance/InstanceFactory.h"
 
-#include "../../../render/Swapchain.h"
+#include "../../../render/swapchain/SwapchainFactory.h"
 
 namespace prev::core::engine::impl {
 DefaultEngineImpl::DefaultEngineImpl(const Config& config)
@@ -120,7 +120,7 @@ void DefaultEngineImpl::ResetRenderPass()
 
 void DefaultEngineImpl::ResetSwapchain()
 {
-    m_swapchain = std::make_unique<prev::render::Swapchain>(*m_device, *m_allocator, *m_renderPass, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount), 1);
+    m_swapchain = prev::render::swapchain::SwapchainFactory{}.Create(*m_device, *m_allocator, *m_renderPass, m_surface, prev::util::vk::GetSampleCountBit(m_config.samplesCount), GetViewCount());
 #if defined(__ANDROID__)
     m_swapchain->SetPresentMode(m_config.VSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_MAILBOX_KHR);
 #else

@@ -5,17 +5,16 @@
 
 #include "IXr.h"
 
-#include "../render/ISwapchain.h"
-
 #include "../render/buffer/ImageBuffer.h"
 #include "../render/pass/RenderPass.h"
+#include "../render/swapchain/ISwapchain.h"
 
 #include "../core/device/Device.h"
 #include "../core/memory/Allocator.h"
 #include "../util/Utils.h"
 
 namespace prev::xr {
-class XrSwapchain final : public prev::render::ISwapchain {
+class XrSwapchain final : public prev::render::swapchain::ISwapchain {
 public:
     XrSwapchain(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, xr::IXr& xr, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT);
 
@@ -32,7 +31,7 @@ public:
 
     bool UpdateExtent(uint32_t width, uint32_t height) override;
 
-    bool BeginFrame(prev::render::SwapChainFrameContext& outContext) override;
+    bool BeginFrame(prev::render::swapchain::FrameContext& outContext) override;
 
     void EndFrame() override;
 

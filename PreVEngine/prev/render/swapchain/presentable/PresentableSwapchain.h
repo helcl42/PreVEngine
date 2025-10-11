@@ -1,20 +1,20 @@
-#ifndef __SWAPCHAIN_H__
-#define __SWAPCHAIN_H__
+#ifndef __PRESENTABLE_SWAPCHAIN_H__
+#define __PRESENTABLE_SWAPCHAIN_H__
 
-#include "ISwapchain.h"
+#include "../ISwapchain.h"
 
-#include "buffer/ImageBuffer.h"
-#include "pass/RenderPass.h"
+#include "../../buffer/ImageBuffer.h"
+#include "../../pass/RenderPass.h"
 
-#include "../core/memory/Allocator.h"
-#include "../util/Utils.h"
+#include "../../../core/memory/Allocator.h"
+#include "../../../util/Utils.h"
 
-namespace prev::render {
-class Swapchain final : public ISwapchain {
+namespace prev::render::swapchain::presentable {
+class PresentableSwapchain final : public ISwapchain {
 public:
-    Swapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT, uint32_t viewCount = 1);
+    PresentableSwapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT, uint32_t viewCount = 1);
 
-    ~Swapchain();
+    ~PresentableSwapchain();
 
 public:
     std::vector<VkPresentModeKHR> GetPresentModes() const override;
@@ -27,7 +27,7 @@ public:
 
     bool UpdateExtent(uint32_t width, uint32_t height) override;
 
-    bool BeginFrame(SwapChainFrameContext& outContext) override;
+    bool BeginFrame(FrameContext& outContext) override;
 
     void EndFrame() override;
 
@@ -116,6 +116,6 @@ private:
 
     std::unique_ptr<prev::render::buffer::ImageBuffer> m_msaaDepthBuffer{};
 };
-} // namespace prev::render
+} // namespace prev::render::swapchain::presentable
 
 #endif

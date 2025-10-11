@@ -9,6 +9,8 @@ struct Config {
 
     std::string appName{ "PreVEngine - Demo" };
 
+    bool headless{ false };
+
     bool fullScreen{ false };
 
     glm::ivec2 windowSize{ 1920, 1080 };

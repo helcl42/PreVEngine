@@ -23,7 +23,7 @@ prev::render::IRootRenderer& EngineImpl::GetRootRenderer() const
     return *m_rootRenderer;
 }
 
-prev::render::ISwapchain& EngineImpl::GetSwapchain() const
+prev::render::swapchain::ISwapchain& EngineImpl::GetSwapchain() const
 {
     return *m_swapchain;
 }
@@ -97,6 +97,7 @@ void EngineImpl::ResetTiming()
 void EngineImpl::ResetWindow()
 {
     prev::window::WindowCreateInfo windowCreateInfo{};
+    windowCreateInfo.headless = m_config.headless;
     windowCreateInfo.title = m_config.appName;
     windowCreateInfo.fullScreen = m_config.fullScreen;
     windowCreateInfo.left = m_config.windowPosition.x;

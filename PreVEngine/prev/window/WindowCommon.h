@@ -5,17 +5,19 @@
 
 namespace prev::window {
 struct WindowCreateInfo {
-    std::string title;
+    bool headless{};
 
-    int32_t left;
+    std::string title{};
 
-    int32_t top;
+    int32_t left{};
 
-    uint32_t width;
+    int32_t top{};
 
-    uint32_t height;
+    uint32_t width{};
 
-    bool fullScreen;
+    uint32_t height{};
+
+    bool fullScreen{};
 };
 } // namespace prev::window
 

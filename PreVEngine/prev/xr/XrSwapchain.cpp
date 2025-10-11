@@ -156,7 +156,7 @@ uint32_t XrSwapchain::GetImageCount() const
     return static_cast<uint32_t>(m_swapchainBuffers.size());
 }
 
-bool XrSwapchain::BeginFrame(prev::render::SwapChainFrameContext& outContext)
+bool XrSwapchain::BeginFrame(prev::render::swapchain::FrameContext& outContext)
 {
     m_acquiredIndex = m_xr.GetCurrentSwapchainIndex();
 

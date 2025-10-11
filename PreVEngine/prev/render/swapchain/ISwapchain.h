@@ -1,12 +1,12 @@
 #ifndef __ISWAPCHAIN_H__
 #define __ISWAPCHAIN_H__
 
-#include "../core/Core.h"
+#include "../../core/Core.h"
 
 #include <vector>
 
-namespace prev::render {
-struct SwapChainFrameContext {
+namespace prev::render::swapchain {
+struct FrameContext {
     VkFramebuffer frameBuffer{};
     VkCommandBuffer commandBuffer{};
     uint32_t index{};
@@ -24,7 +24,7 @@ public:
 
     virtual bool UpdateExtent(uint32_t width, uint32_t height) = 0;
 
-    virtual bool BeginFrame(SwapChainFrameContext& outContext) = 0;
+    virtual bool BeginFrame(FrameContext& outContext) = 0;
 
     virtual void EndFrame() = 0;
 
@@ -37,6 +37,6 @@ public:
 public:
     virtual ~ISwapchain() = default;
 };
-} // namespace prev::render
+} // namespace prev::render::swapchain
 
 #endif

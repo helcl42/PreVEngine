@@ -41,6 +41,8 @@ inline bool operator!=(const Size& a, const Size& b)
 }
 
 struct WindowInfo {
+    bool headless{};
+
     std::string title;
 
     Position position;
