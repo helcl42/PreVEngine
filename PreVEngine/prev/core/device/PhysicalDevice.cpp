@@ -13,6 +13,10 @@ namespace {
         vkGetPhysicalDeviceQueueFamilyProperties(gpu, &count, queueFamilyProperties.data());
         return queueFamilyProperties;
     }
+
+    static constexpr VkFormat DEFAULT_COLOR_FORMAT{ VK_FORMAT_R8G8B8A8_SNORM };
+
+    static constexpr VkFormat DEFAULT_DEPTH_FORMAT{ VK_FORMAT_D32_SFLOAT };
 } // namespace
 
 PhysicalDevice::PhysicalDevice(const VkPhysicalDevice gpu, const std::vector<std::string>& extensions)
@@ -147,6 +151,10 @@ int32_t PhysicalDevice::FindQueueFamily(const VkQueueFlags flags, const VkQueueF
 
 std::vector<VkSurfaceFormatKHR> PhysicalDevice::GetSurfaceFormats(const VkSurfaceKHR surface) const
 {
+    if (surface == VK_NULL_HANDLE) {
+        return {};
+    }
+
     uint32_t count{ 0 };
     vkGetPhysicalDeviceSurfaceFormatsKHR(m_handle, surface, &count, nullptr);
     std::vector<VkSurfaceFormatKHR> formats(count);
@@ -165,7 +173,7 @@ VkSurfaceFormatKHR PhysicalDevice::FindSurfaceFormat(const VkSurfaceKHR surface,
             }
         }
     }
-    return { VK_FORMAT_UNDEFINED, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
+    return { DEFAULT_COLOR_FORMAT, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
 }
 
 VkFormat PhysicalDevice::FindDepthFormat(const std::vector<VkFormat>& preferredFormats) const
@@ -177,7 +185,7 @@ VkFormat PhysicalDevice::FindDepthFormat(const std::vector<VkFormat>& preferredF
             return preferedFormat;
         }
     }
-    return VK_FORMAT_UNDEFINED;
+    return DEFAULT_DEPTH_FORMAT;
 }
 
 const VkPhysicalDeviceProperties& PhysicalDevice::GetProperties() const
