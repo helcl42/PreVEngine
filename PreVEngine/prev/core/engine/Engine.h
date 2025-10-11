@@ -6,8 +6,8 @@
 #include "impl/EngineImpl.h"
 
 #include "../../render/IRootRenderer.h"
-#include "../../render/ISwapchain.h"
 #include "../../render/pass/RenderPass.h"
+#include "../../render/swapchain/ISwapchain.h"
 #include "../../scene/IScene.h"
 #include "../memory/Allocator.h"
 
@@ -34,7 +34,7 @@ public:
 
     prev::render::IRootRenderer& GetRootRenderer() const;
 
-    prev::render::ISwapchain& GetSwapchain() const;
+    prev::render::swapchain::ISwapchain& GetSwapchain() const;
 
     prev::render::pass::RenderPass& GetRenderPass() const;
 

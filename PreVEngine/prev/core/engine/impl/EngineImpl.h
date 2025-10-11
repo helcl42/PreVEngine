@@ -10,8 +10,8 @@
 
 #include "../../../event/EventHandler.h"
 #include "../../../render/IRootRenderer.h"
-#include "../../../render/ISwapchain.h"
 #include "../../../render/pass/RenderPass.h"
+#include "../../../render/swapchain/ISwapchain.h"
 #include "../../../scene/IScene.h"
 #include "../../../util/Utils.h"
 #include "../../../window/WindowEvents.h"
@@ -30,7 +30,7 @@ public:
 
     prev::render::IRootRenderer& GetRootRenderer() const;
 
-    prev::render::ISwapchain& GetSwapchain() const;
+    prev::render::swapchain::ISwapchain& GetSwapchain() const;
 
     prev::render::pass::RenderPass& GetRenderPass() const;
 
@@ -122,7 +122,7 @@ protected:
 
     std::unique_ptr<prev::render::pass::RenderPass> m_renderPass{};
 
-    std::unique_ptr<prev::render::ISwapchain> m_swapchain{};
+    std::unique_ptr<prev::render::swapchain::ISwapchain> m_swapchain{};
 
     std::unique_ptr<prev::scene::IScene> m_scene{};
 

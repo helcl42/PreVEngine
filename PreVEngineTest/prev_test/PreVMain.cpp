@@ -3,6 +3,7 @@
 int PreVMain(int argc, char** argv)
 {
     prev::core::engine::Config config{};
+    config.headless = false;
     config.appName = "Test App";
     config.fullScreen = false;
     config.validation = true;

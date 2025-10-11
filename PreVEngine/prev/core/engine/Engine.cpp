@@ -57,9 +57,9 @@ void Engine::MainLoop()
         if (m_engineImpl->IsFocused()) {
             scene.Update(deltaTime);
 
-            prev::render::SwapChainFrameContext swapchainFrameContext;
-            if (swapchain.BeginFrame(swapchainFrameContext)) {
-                const prev::render::RenderContext renderContext{ swapchainFrameContext.frameBuffer, swapchainFrameContext.commandBuffer, swapchainFrameContext.index, { { 0, 0 }, extent } };
+            prev::render::swapchain::FrameContext frameContext;
+            if (swapchain.BeginFrame(frameContext)) {
+                const prev::render::RenderContext renderContext{ frameContext.frameBuffer, frameContext.commandBuffer, frameContext.index, { { 0, 0 }, extent } };
                 rootRenderer.Render(renderContext, scene);
                 swapchain.EndFrame();
             }
@@ -89,7 +89,7 @@ prev::render::IRootRenderer& Engine::GetRootRenderer() const
     return m_engineImpl->GetRootRenderer();
 }
 
-prev::render::ISwapchain& Engine::GetSwapchain() const
+prev::render::swapchain::ISwapchain& Engine::GetSwapchain() const
 {
     return m_engineImpl->GetSwapchain();
 }

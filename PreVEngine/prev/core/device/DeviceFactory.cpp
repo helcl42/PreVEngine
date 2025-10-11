@@ -167,7 +167,7 @@ namespace {
 std::unique_ptr<Device> DeviceFactory::Create(const PhysicalDevice& gpu, const VkSurfaceKHR surface) const
 {
     const QueuesMetadata queuesMetadata{ FindQueues(gpu, surface) };
-    if (!queuesMetadata.HasAny(QueueType::PRESENT) || !queuesMetadata.HasAny(QueueType::GRAPHICS) || !queuesMetadata.HasAny(QueueType::COMPUTE)) {
+    if ((surface && !queuesMetadata.HasAny(QueueType::PRESENT)) || !queuesMetadata.HasAny(QueueType::GRAPHICS) || !queuesMetadata.HasAny(QueueType::COMPUTE)) {
         LOGE("Could not find all necessary queues.");
         return nullptr;
     }

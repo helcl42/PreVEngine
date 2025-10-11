@@ -11,7 +11,6 @@
 #include <prev/event/EventHandler.h>
 #include <prev/input/keyboard/KeyboardEvents.h>
 #include <prev/render/IRootRenderer.h>
-#include <prev/render/Swapchain.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/scene/IScene.h>
 #include <prev/scene/graph/ISceneNode.h>
