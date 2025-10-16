@@ -35,6 +35,9 @@ struct WindowFocusChangeEvent {
 
     bool hasFocus{};
 };
+
+struct WindowCloseRequest {
+};
 } // namespace prev::window
 
 #endif

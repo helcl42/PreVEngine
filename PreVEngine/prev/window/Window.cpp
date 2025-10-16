@@ -113,6 +113,11 @@ void Window::operator()(const prev::input::mouse::MouseCursorVisibilityRequest& 
     SetMouseCursorVisible(cursorVisibility.visible);
 }
 
+void Window::operator()(const prev::window::WindowCloseRequest& windowCloseRequest)
+{
+    Close();
+}
+
 bool Window::ProcessEvent(const impl::Event& e)
 {
     switch (e.tag) {

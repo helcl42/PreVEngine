@@ -62,6 +62,8 @@ public:
 
     void operator()(const prev::input::mouse::MouseCursorVisibilityRequest& cursorVisibility);
 
+    void operator()(const prev::window::WindowCloseRequest& windowCloseRequest);
+
 private:
     bool ProcessEvent(const impl::Event& e);
 
@@ -72,6 +74,8 @@ private:
     prev::event::EventHandler<Window, prev::input::mouse::MouseLockRequest> m_mouseLockHandler{ *this };
 
     prev::event::EventHandler<Window, prev::input::mouse::MouseCursorVisibilityRequest> m_mouseCursorVisibilityHandler{ *this };
+
+    prev::event::EventHandler<Window, prev::window::WindowCloseRequest> m_closeHandler{ *this };
 };
 
 } // namespace prev::window
