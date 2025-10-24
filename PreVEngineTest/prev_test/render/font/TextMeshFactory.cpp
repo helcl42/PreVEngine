@@ -1,6 +1,6 @@
 #include "TextMeshFactory.h"
 
-#include "TextMesh.h"
+#include "../mesh/MeshFactory.h"
 
 namespace prev_test::render::font {
 std::unique_ptr<prev_test::render::IMesh> TextMeshFactory::CreateTextMesh(const std::shared_ptr<AbstractText>& text, const std::shared_ptr<FontMetadata> fontMetaData) const
@@ -81,7 +81,8 @@ std::unique_ptr<prev_test::render::IMesh> TextMeshFactory::CreateQuadVertices(co
         curserX = 0;
         curserY += FontMetadata::LINE_HEIGHT * text->GetFontSize();
     }
-    return std::make_unique<TextMesh>(vertices, textureCoords, indices);
+
+    return prev_test::render::mesh::MeshFactory{}.CreateFromData(vertices, textureCoords, indices);
 }
 
 void TextMeshFactory::AddVerticesForCharacter(const float curserX, const float curserY, const Character& character, const float fontSize, std::vector<glm::vec2>& inOutVertices) const

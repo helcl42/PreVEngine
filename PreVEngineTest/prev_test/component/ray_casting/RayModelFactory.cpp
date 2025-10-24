@@ -1,6 +1,7 @@
 #include "RayModelFactory.h"
 
-#include "../../render/model/Model.h"
+#include "../../render/mesh/MeshFactory.h"
+#include "../../render/model/ModelFactory.h"
 
 #include <prev/render/buffer/BufferBuilder.h>
 
@@ -22,6 +23,8 @@ std::unique_ptr<prev_test::render::IModel> RayModelFactory::Create(const prev_te
         indices.emplace_back(i);
     }
 
+    auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateFromData(vertices, indices) };
+
     const auto verticesDataSize{ sizeof(glm::vec3) * vertices.size() };
     auto vertexBuffer = prev::render::buffer::BufferBuilder{ m_allocator }
                             .SetMemoryType(prev::core::memory::MemoryType::DEVICE_LOCAL)
@@ -38,6 +41,6 @@ std::unique_ptr<prev_test::render::IModel> RayModelFactory::Create(const prev_te
                            .SetData(indices.data(), indicesDataSize)
                            .Build();
 
-    return std::make_unique<prev_test::render::model::Model>(nullptr, std::move(vertexBuffer), std::move(indexBuffer));
+    return prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
 }
 } // namespace prev_test::component::ray_casting

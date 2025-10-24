@@ -19,7 +19,7 @@ public:
 
     std::unique_ptr<prev_test::render::IModel> Create(const std::shared_ptr<IMesh>& mesh, const std::shared_ptr<prev::render::buffer::Buffer>& vertexBuffer, const std::shared_ptr<prev::render::buffer::Buffer>& indexBuffer) const;
 
-    std::unique_ptr<prev_test::render::IModel> CreateHostVisible(const std::shared_ptr<IMesh>& mesh, const uint32_t maxVertexCount, const uint32_t maxIndexCount) const;
+    std::unique_ptr<prev_test::render::IModel> CreateHostVisible(const std::shared_ptr<IMesh>& mesh, const uint32_t maxVertexCount = 0, const uint32_t maxIndexCount = 0) const;
 
 private:
     prev::core::memory::Allocator& m_allocator;

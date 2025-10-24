@@ -1,15 +1,15 @@
-#ifndef __TEXT_MESH_H__
-#define __TEXT_MESH_H__
+#ifndef __MESH_H__
+#define __MESH_H__
 
 #include "../IMesh.h"
 #include "../VertexDataBuffer.h"
 
-namespace prev_test::render::font {
-class TextMesh final : public prev_test::render::IMesh {
+namespace prev_test::render::mesh {
+class Mesh final : public prev_test::render::IMesh {
 public:
-    TextMesh(const std::vector<glm::vec2>& vertices, const std::vector<glm::vec2>& textureCoords, const std::vector<uint32_t>& indices);
+    Mesh(const prev_test::render::VertexLayout& vertexLayout, const prev_test::render::VertexDataBuffer& vertexDataBuffer, const std::vector<uint32_t>& indices, const prev_test::render::MeshNode& meshRootNode, const std::vector<prev_test::render::MeshPart>& meshParts);
 
-    ~TextMesh() = default;
+    ~Mesh() = default;
 
 public:
     const prev_test::render::VertexLayout& GetVertexLayout() const override;
@@ -29,18 +29,14 @@ public:
 private:
     prev_test::render::VertexLayout m_vertexLayout;
 
-    std::vector<glm::vec3> m_vertices;
-
-    uint32_t m_verticesCount;
+    prev_test::render::VertexDataBuffer m_vertexDataBuffer;
 
     std::vector<uint32_t> m_indices;
 
-    prev_test::render::VertexDataBuffer m_vertexDataBuffer;
+    prev_test::render::MeshNode m_meshRootNode;
 
     std::vector<prev_test::render::MeshPart> m_meshParts;
-
-    static const inline prev_test::render::MeshNode meshRootNode{ { 0 }, glm::mat4(1.0f), {} };
 };
-} // namespace prev_test::render::font
+} // namespace prev_test::render::mesh
 
-#endif // !__TEXT_MESH_H__
+#endif // !__MESH_H__

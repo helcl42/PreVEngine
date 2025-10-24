@@ -27,6 +27,8 @@ public:
 
     const uint8_t* GetData() const;
 
+    uint32_t GetSize() const;
+
 private:
     std::vector<uint8_t> m_buffer;
 };

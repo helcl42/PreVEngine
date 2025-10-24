@@ -33,7 +33,7 @@ struct MeshPart {
 struct MeshNode {
     std::vector<unsigned int> meshPartIndices;
 
-    glm::mat4 transform;
+    glm::mat4 transform{ 1.0f };
 
     std::vector<MeshNode> children;
 };

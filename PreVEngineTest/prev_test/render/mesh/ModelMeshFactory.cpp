@@ -1,5 +1,5 @@
 #include "ModelMeshFactory.h"
-#include "ModelMesh.h"
+#include "Mesh.h"
 
 #include "VertexBoneData.h"
 
@@ -205,11 +205,10 @@ std::unique_ptr<prev_test::render::IMesh> ModelMeshFactory::Create(const std::st
         throw std::runtime_error("Model - Could not load model: " + modelPath);
     }
 
-    auto mesh = std::make_unique<ModelMesh>();
-    mesh->m_vertexLayout = GetVertexLayout(flags);
-    mesh->m_verticesCount = GetSceneVertexCount(*scene);
-    mesh->m_meshRootNode = ReadNodeHierarchy(*scene);
-    std::tie(mesh->m_vertexDataBuffer, mesh->m_indices, mesh->m_meshParts) = ReadMeshes(*scene, flags);
-    return mesh;
+    const auto vertexLayout{ GetVertexLayout(flags) };
+    const auto nodeHierarchy{ ReadNodeHierarchy(*scene) };
+    const auto [vertexDataBuffer, indices, meshParts]{ ReadMeshes(*scene, flags) };
+
+    return std::make_unique<Mesh>(vertexLayout, vertexDataBuffer, indices, nodeHierarchy, meshParts);
 }
 } // namespace prev_test::render::mesh

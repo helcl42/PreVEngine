@@ -20,4 +20,9 @@ const uint8_t* VertexDataBuffer::GetData() const
 {
     return m_buffer.data();
 }
+
+uint32_t VertexDataBuffer::GetSize() const
+{
+    return static_cast<uint32_t>(m_buffer.size());
+}
 } // namespace prev_test::render

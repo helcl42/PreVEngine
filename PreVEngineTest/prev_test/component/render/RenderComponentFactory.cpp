@@ -91,7 +91,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreatePlaneRenderCompo
 std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateSphereRenderComponent(const glm::vec4& color, const bool castsShadows, const bool isCastedByShadows) const
 {
     auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ color, 2.0f, 0.3f }) };
-    auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateSphere(1.0f, 64, 64, 360.0f, 180.0f, false) };
+    auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateSphere(1.0f, 64, 64, 360.0f, 180.0f, {}, false) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -100,7 +100,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateSphereRenderComp
 std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateSphereRenderComponent(const std::string& texturePath, const bool castsShadows, const bool isCastedByShadows) const
 {
     auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 2.0f, 0.3f }, texturePath) };
-    auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateSphere(1.0f, 64, 64, 360.0f, 180.0f, false) };
+    auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateSphere(1.0f, 64, 64, 360.0f, 180.0f, {}, false) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -109,7 +109,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateSphereRenderComp
 std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateSphereRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const bool castsShadows, const bool isCastedByShadows) const
 {
     auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 2.0f, 0.3f }, texturePath, normalMapPath) };
-    auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateSphere(1.0f, 64, 64, 360.0f, 180.0f, true) };
+    auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateSphere(1.0f, 64, 64, 360.0f, 180.0f, {}, true) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);
@@ -118,7 +118,7 @@ std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateSphereRenderComp
 std::unique_ptr<IRenderComponent> RenderComponentFactory::CreateSphereRenderComponent(const std::string& texturePath, const std::string& normalMapPath, const std::string& heightOrConeMapPath, const bool castsShadows, const bool isCastedByShadows) const
 {
     auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ glm::vec4(1.0f), 2.0f, 0.3f }, texturePath, normalMapPath, heightOrConeMapPath) };
-    auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateSphere(1.0f, 64, 64, 360.0f, 180.0f, true) };
+    auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateSphere(1.0f, 64, 64, 360.0f, 180.0f, {}, true) };
     auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
 
     return std::make_unique<DefaultRenderComponent>(std::move(model), std::move(material), castsShadows, isCastedByShadows);

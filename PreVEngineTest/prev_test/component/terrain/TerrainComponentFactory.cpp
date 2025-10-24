@@ -1,10 +1,10 @@
 #include "TerrainComponentFactory.h"
 #include "HeightGenerator.h"
 #include "TerrainComponent.h"
-#include "TerrainMesh.h"
 
 #include "../../common/AssetManager.h"
 #include "../../render/material/MaterialFactory.h"
+#include "../../render/mesh/MeshFactory.h"
 #include "../../render/mesh/MeshUtil.h"
 #include "../../render/model/ModelFactory.h"
 
@@ -109,33 +109,11 @@ std::unique_ptr<prev_test::render::IModel> TerrainComponentFactory::CreateModel(
 
 std::unique_ptr<prev_test::render::IMesh> TerrainComponentFactory::GenerateMesh(const std::shared_ptr<VertexData>& vertexData, const bool normalMapped) const
 {
-    auto mesh{ std::make_unique<TerrainMesh>() };
-    mesh->m_indices = vertexData->indices;
-    mesh->m_verticesCount = static_cast<uint32_t>(vertexData->vertices.size());
     if (normalMapped) {
-        mesh->m_vertexLayout = { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3 } };
+        return prev_test::render::mesh::MeshFactory{}.CreateFromData(vertexData->vertices, vertexData->textureCoords, vertexData->normals, vertexData->tangents, vertexData->biTangents, vertexData->indices);
     } else {
-        mesh->m_vertexLayout = { { prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3, prev_test::render::VertexLayoutComponent::VEC3 } };
+        return prev_test::render::mesh::MeshFactory{}.CreateFromData(vertexData->vertices, vertexData->textureCoords, vertexData->normals, vertexData->indices);
     }
-
-    for (uint32_t z = 0; z < m_vertexCount; ++z) {
-        for (uint32_t x = 0; x < m_vertexCount; ++x) {
-            const auto vertexIndex{ z * m_vertexCount + x };
-            mesh->m_vertexDataBuffer.Add(vertexData->vertices[vertexIndex]);
-            mesh->m_vertexDataBuffer.Add(vertexData->textureCoords[vertexIndex]);
-            mesh->m_vertexDataBuffer.Add(vertexData->normals[vertexIndex]);
-            mesh->m_vertices.push_back(vertexData->vertices[vertexIndex]);
-            if (normalMapped) {
-                mesh->m_vertexDataBuffer.Add(vertexData->tangents[vertexIndex]);
-                mesh->m_vertexDataBuffer.Add(vertexData->biTangents[vertexIndex]);
-            }
-        }
-    }
-
-    mesh->m_meshParts.emplace_back(prev_test::render::MeshPart(static_cast<uint32_t>(vertexData->indices.size()), vertexData->vertices));
-    mesh->m_meshRootNode = prev_test::render::MeshNode{ { 0 }, glm::mat4(1.0f), {} };
-
-    return mesh;
 }
 
 std::unique_ptr<TerrainComponentFactory::VertexData> TerrainComponentFactory::GenerateVertexData(const std::shared_ptr<HeightMapInfo>& heightMap, const float size) const
