@@ -22,7 +22,7 @@ const void* Mesh::GetVertexData() const
 
 uint32_t Mesh::GerVerticesCount() const
 {
-    return m_vertexDataBuffer.GetSize() / m_vertexLayout.GetStride();
+    return static_cast<uint32_t>(m_vertexDataBuffer.GetSize() / static_cast<size_t>(m_vertexLayout.GetStride()));
 }
 
 const std::vector<uint32_t>& Mesh::GetIndices() const

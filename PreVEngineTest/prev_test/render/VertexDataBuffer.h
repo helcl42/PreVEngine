@@ -15,7 +15,7 @@ public:
     ~VertexDataBuffer() = default;
 
 public:
-    void Add(const void* data, const unsigned int size);
+    void Add(const void* data, const size_t size);
 
     template <typename Type>
     void Add(const Type& data)
@@ -27,7 +27,7 @@ public:
 
     const uint8_t* GetData() const;
 
-    uint32_t GetSize() const;
+    size_t GetSize() const;
 
 private:
     std::vector<uint8_t> m_buffer;
