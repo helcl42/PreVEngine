@@ -100,7 +100,7 @@ void ShadowMapDebugRenderer::Render(const prev::render::RenderContext& renderCon
 {
     const auto shadows = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>(m_scene.GetRootNode(), { TAG_SHADOW });
 
-    const auto& cascade{ shadows->GetCascade(static_cast<uint32_t>(m_cascadeIndex)) };
+    const auto& cascade{ shadows->GetCascadeFrameData(static_cast<uint32_t>(m_cascadeIndex)) };
     PushConstantBlock pushConstBlock{ static_cast<uint32_t>(m_cascadeIndex), -cascade.startSplitDepth, -cascade.endSplitDepth };
     vkCmdPushConstants(renderContext.commandBuffer, m_pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstantBlock), &pushConstBlock);
 

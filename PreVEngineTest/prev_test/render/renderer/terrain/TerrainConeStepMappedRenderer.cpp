@@ -195,8 +195,8 @@ void TerrainConeStepMappedRenderer::Render(const NormalRenderContext& renderCont
 
     UniformsFS uniformsFS{};
     // shadows
-    for (size_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; i++) {
-        const auto& cascade{ shadowsComponent->GetCascade(i) };
+    for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; ++i) {
+        const auto& cascade{ shadowsComponent->GetCascadeFrameData(i) };
         uniformsFS.shadows.cascades[i] = ShadowsCascadeUniform(cascade.GetBiasedViewProjectionMatrix(), glm::vec4(cascade.endSplitDepth));
     }
     uniformsFS.shadows.enabled = prev_test::component::shadow::SHADOWS_ENABLED;

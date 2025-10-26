@@ -20,15 +20,14 @@ std::unique_ptr<IShadowsComponent> ShadowsComponentFactory::Create() const
 
     std::shared_ptr<prev::render::pass::RenderPass> renderPass{ CreateRenderPass() };
     std::shared_ptr<prev::render::buffer::ImageBuffer> depthBuffer{ CreateDepthBuffer(extent, CASCADES_COUNT) };
-    auto cascades{ CreateCascades(extent, CASCADES_COUNT, *depthBuffer, *renderPass) };
-
-    auto result{ std::make_unique<ShadowsComponent>(m_device, CASCADES_COUNT, renderPass, depthBuffer, cascades) };
+    const auto cascadesRenderData{ CreateCascadesRenderData(extent, CASCADES_COUNT, *depthBuffer, *renderPass) };
+    auto result{ std::make_unique<ShadowsComponent>(m_device, renderPass, depthBuffer, cascadesRenderData) };
     return result;
 }
 
 std::unique_ptr<prev::render::pass::RenderPass> ShadowsComponentFactory::CreateRenderPass() const
 {
-    std::vector<VkSubpassDependency> dependencies{ 2 };
+    std::vector<VkSubpassDependency> dependencies(2);
     dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
     dependencies[0].dstSubpass = 0;
     dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
@@ -67,16 +66,14 @@ std::unique_ptr<prev::render::buffer::ImageBuffer> ShadowsComponentFactory::Crea
     return depthBuffer;
 }
 
-std::vector<ShadowsCascade> ShadowsComponentFactory::CreateCascades(const VkExtent2D& extent, const uint32_t cascadesCount, const prev::render::buffer::ImageBuffer& depthBuffer, const prev::render::pass::RenderPass& renderPass) const
+std::vector<ShadowsCascadeRenderData> ShadowsComponentFactory::CreateCascadesRenderData(const VkExtent2D& extent, const uint32_t cascadesCount, const prev::render::buffer::ImageBuffer& depthBuffer, const prev::render::pass::RenderPass& renderPass) const
 {
-    std::vector<ShadowsCascade> cascades;
-    cascades.resize(cascadesCount);
+    std::vector<ShadowsCascadeRenderData> cascades(cascadesCount);
     for (uint32_t i = 0; i < cascadesCount; ++i) {
-        auto& cascade{ cascades[i] };
-        cascade.imageView = prev::util::vk::CreateImageView(m_device, depthBuffer.GetImage(), depthBuffer.GetFormat(), VK_IMAGE_VIEW_TYPE_2D_ARRAY, depthBuffer.GetMipLevels(), VK_IMAGE_ASPECT_DEPTH_BIT, 1, i);
-        cascade.frameBuffer = prev::util::vk::CreateFrameBuffer(m_device, renderPass, { cascade.imageView }, extent);
+        const auto imageView{ prev::util::vk::CreateImageView(m_device, depthBuffer.GetImage(), depthBuffer.GetFormat(), VK_IMAGE_VIEW_TYPE_2D_ARRAY, depthBuffer.GetMipLevels(), VK_IMAGE_ASPECT_DEPTH_BIT, 1, i) };
+        const auto frameBuffer{ prev::util::vk::CreateFrameBuffer(m_device, renderPass, { imageView }, extent) };
+        cascades[i] = ShadowsCascadeRenderData{ frameBuffer, imageView };
     }
     return cascades;
 }
-
 } // namespace prev_test::component::shadow

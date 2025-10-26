@@ -23,7 +23,7 @@ private:
 
     std::unique_ptr<prev::render::buffer::ImageBuffer> CreateDepthBuffer(const VkExtent2D& extent, const uint32_t cascadesCount) const;
 
-    std::vector<ShadowsCascade> CreateCascades(const VkExtent2D& extent, const uint32_t cascadesCount, const prev::render::buffer::ImageBuffer& depthBuffer, const prev::render::pass::RenderPass& renderPass) const;
+    std::vector<ShadowsCascadeRenderData> CreateCascadesRenderData(const VkExtent2D& extent, const uint32_t cascadesCount, const prev::render::buffer::ImageBuffer& depthBuffer, const prev::render::pass::RenderPass& renderPass) const;
 
 private:
     prev::core::device::Device& m_device;

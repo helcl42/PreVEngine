@@ -179,9 +179,8 @@ void WaterRenderer::Render(const NormalRenderContext& renderContext, const std::
     uniformsFS.moveFactor = waterComponent->GetMoveFactor();
     // shadows
     for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; ++i) {
-        const auto& cascade{ shadowsComponent->GetCascade(i) };
-        uniformsFS.shadows.cascades[i].split = glm::vec4(cascade.endSplitDepth);
-        uniformsFS.shadows.cascades[i].viewProjectionMatrix = cascade.GetBiasedViewProjectionMatrix();
+        const auto& cascade{ shadowsComponent->GetCascadeFrameData(i) };
+        uniformsFS.shadows.cascades[i] = ShadowsCascadeUniform(cascade.GetBiasedViewProjectionMatrix(), glm::vec4(cascade.endSplitDepth));
     }
     uniformsFS.shadows.enabled = prev_test::component::shadow::SHADOWS_ENABLED;
     uniformsFS.shadows.useReverseDepth = REVERSE_DEPTH ? 1 : 0;

@@ -186,7 +186,7 @@ void AnimationRenderer::Render(const NormalRenderContext& renderContext, const s
             UniformsFS uniformsFS{};
             // shadows
             for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; ++i) {
-                const auto& cascade{ shadowsComponent->GetCascade(i) };
+                const auto& cascade{ shadowsComponent->GetCascadeFrameData(i) };
                 uniformsFS.shadows.cascades[i] = ShadowsCascadeUniform(cascade.GetBiasedViewProjectionMatrix(), glm::vec4(cascade.endSplitDepth));
             }
             uniformsFS.shadows.enabled = prev_test::component::shadow::SHADOWS_ENABLED;

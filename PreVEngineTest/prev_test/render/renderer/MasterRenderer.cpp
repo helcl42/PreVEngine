@@ -306,10 +306,11 @@ void MasterRenderer::RenderShadows(const prev::render::RenderContext& renderCont
 
     for (uint32_t cascadeIndex = 0; cascadeIndex < prev_test::component::shadow::CASCADES_COUNT; ++cascadeIndex) {
 
-        const auto& cascade{ shadows->GetCascade(cascadeIndex) };
+        const auto& cascadeRenderData{ shadows->GetCascadeRenderData(cascadeIndex) };
+        const auto& cascadeFrameData{ shadows->GetCascadeFrameData(cascadeIndex) };
 
-        const prev::render::RenderContext customRenderContextBase{ cascade.frameBuffer, renderContext.commandBuffer, renderContext.frameInFlightIndex, { { 0, 0 }, shadows->GetExtent() } };
-        const ShadowsRenderContext customRenderContext{ customRenderContextBase, cascade.viewMatrix, cascade.projectionMatrix, cascadeIndex, prev_test::common::intersection::Frustum{ cascade.projectionMatrix, cascade.viewMatrix } };
+        const prev::render::RenderContext customRenderContextBase{ cascadeRenderData.frameBuffer, renderContext.commandBuffer, renderContext.frameInFlightIndex, { { 0, 0 }, shadows->GetExtent() } };
+        const ShadowsRenderContext customRenderContext{ customRenderContextBase, cascadeFrameData.viewMatrix, cascadeFrameData.projectionMatrix, cascadeIndex, prev_test::common::intersection::Frustum{ cascadeFrameData.projectionMatrix, cascadeFrameData.viewMatrix } };
 
 #ifdef PARALLEL_RENDERING
         const auto& cascadeCommandBuffers{ m_shadowsCommandBufferGroups[cascadeIndex]->GetBuffersGroup(customRenderContext.frameInFlightIndex) };

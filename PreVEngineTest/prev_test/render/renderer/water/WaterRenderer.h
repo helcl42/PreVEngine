@@ -41,6 +41,14 @@ private:
         glm::mat4 viewProjectionMatrix;
 
         glm::vec4 split;
+
+        ShadowsCascadeUniform() = default;
+
+        ShadowsCascadeUniform(const glm::mat4& vpMat, const glm::vec4& spl)
+            : viewProjectionMatrix(vpMat)
+            , split(spl)
+        {
+        }
     };
 
     struct ShadowsUniform {

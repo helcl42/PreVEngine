@@ -4,20 +4,22 @@
 #include <prev/core/Core.h>
 
 namespace prev_test::component::shadow {
-struct ShadowsCascade {
-    VkFramebuffer frameBuffer;
+struct ShadowsCascadeRenderData {
+    VkFramebuffer frameBuffer{};
 
-    VkImageView imageView;
-
-    float startSplitDepth;
-
-    float endSplitDepth;
-
-    glm::mat4 viewMatrix;
-
-    glm::mat4 projectionMatrix;
+    VkImageView imageView{};
 
     void Destroy(VkDevice device);
+};
+
+struct ShadowsCascadeFrameData {
+    float startSplitDepth{};
+
+    float endSplitDepth{};
+
+    glm::mat4 viewMatrix{};
+
+    glm::mat4 projectionMatrix{};
 
     glm::mat4 GetBiasedViewProjectionMatrix() const;
 };
