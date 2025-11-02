@@ -37,7 +37,7 @@ public:
     {
         prev_test::render::model::ModelFactory modelFactory{ m_allocator };
 
-        std::shared_ptr<prev_test::render::IMesh> mesh{ prev_test::render::font::TextMeshFactory{}.CreateTextMesh(text, m_fontMetaData) };
+        std::shared_ptr<prev_test::render::IMesh> mesh{ prev_test::render::font::TextMeshFactory{}.CreateTextMesh(*text, *m_fontMetaData) };
 
         auto renderableTextIter{ m_renderableTexts.find(key) };
         if (renderableTextIter == m_renderableTexts.cend()) {

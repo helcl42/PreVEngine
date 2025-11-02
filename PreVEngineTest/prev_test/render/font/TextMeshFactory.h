@@ -12,14 +12,14 @@
 namespace prev_test::render::font {
 class TextMeshFactory {
 public:
-    std::unique_ptr<prev_test::render::IMesh> CreateTextMesh(const std::shared_ptr<AbstractText>& text, const std::shared_ptr<FontMetadata> fontMetaData) const;
+    std::unique_ptr<prev_test::render::IMesh> CreateTextMesh(const AbstractText& text, const FontMetadata& fontMetaData) const;
 
 private:
-    std::vector<TextLine> CreateStructure(const std::shared_ptr<AbstractText>& text, const std::shared_ptr<FontMetadata> fontMetaData) const;
+    std::vector<TextLine> CreateStructure(const AbstractText& text, const FontMetadata& fontMetaData) const;
 
-    std::unique_ptr<prev_test::render::IMesh> CreateQuadVertices(const std::shared_ptr<AbstractText>& text, const std::shared_ptr<FontMetadata> fontMetaData, const std::vector<TextLine>& lines) const;
+    std::unique_ptr<prev_test::render::IMesh> CreateQuadVertices(const AbstractText& text, const FontMetadata& fontMetaData, const std::vector<TextLine>& lines) const;
 
-    void AddVerticesForCharacter(const float curserX, const float curserY, const Character& character, const float fontSize, std::vector<glm::vec2>& vertices) const;
+    void AddVerticesForCharacter(const glm::vec2& curser, const Character& character, const float fontSize, std::vector<glm::vec2>& vertices) const;
 
     void AddQuadData(const glm::vec2& tl, const glm::vec2& br, std::vector<glm::vec2>& inOutVertices) const;
 

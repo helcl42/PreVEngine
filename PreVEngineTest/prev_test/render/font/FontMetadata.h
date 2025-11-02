@@ -24,7 +24,7 @@ public:
 public:
     float GetSpaceWidth() const;
 
-    float GetFontSizeScaledSpaceWidth(const float fontSize);
+    float GetFontSizeScaledSpaceWidth(const float fontSize) const;
 
     std::shared_ptr<prev::render::buffer::ImageBuffer> GetImageBuffer() const;
 

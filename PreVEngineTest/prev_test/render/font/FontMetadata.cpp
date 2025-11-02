@@ -6,7 +6,7 @@ float FontMetadata::GetSpaceWidth() const
     return m_spaceWidth;
 }
 
-float FontMetadata::GetFontSizeScaledSpaceWidth(const float fontSize)
+float FontMetadata::GetFontSizeScaledSpaceWidth(const float fontSize) const
 {
     return m_spaceWidth * fontSize;
 }
