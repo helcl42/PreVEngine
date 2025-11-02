@@ -74,9 +74,9 @@ private:
 
     void Present();
 
-    virtual VkSurfaceCapabilitiesKHR GetSurfaceCapabilities() const;
+    VkSurfaceCapabilitiesKHR GetSurfaceCapabilities() const;
 
-    virtual std::vector<VkImage> GetSwapchainImages() const;
+    std::vector<VkImage> GetSwapchainImages() const;
 
 private:
     core::device::Device& m_device;
