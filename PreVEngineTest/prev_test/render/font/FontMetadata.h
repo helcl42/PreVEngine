@@ -11,34 +11,36 @@
 namespace prev_test::render::font {
 class FontMetadata {
 public:
-    inline static const float LINE_HEIGHT{ 0.03f };
+    FontMetadata(const std::shared_ptr<prev::render::buffer::ImageBuffer>& imageBuffer, const std::map<int, Character>& characterMetaData, const float spaceWidth, const float lineHeight);
 
-    inline static const int NULL_CODE{ 0 };
-
-    inline static const int SPACE_CODE{ ' ' };
-
-    inline static const int NEW_LINE_CODE{ '\n' };
-
-    inline static const int FALLBACK_CODE{ '?' };
+    ~FontMetadata() = default;
 
 public:
-    float GetSpaceWidth() const;
+    float GetSpaceWidth(const float fontSize) const;
 
-    float GetFontSizeScaledSpaceWidth(const float fontSize) const;
+    float GetLineHeight(const float fontSize) const;
 
     std::shared_ptr<prev::render::buffer::ImageBuffer> GetImageBuffer() const;
 
     bool GetCharacter(const int charCode, Character& outCharacter) const;
 
-private:
-    friend class FontMetadataFactory;
+public:
+    inline static const int NULL_CHARACTER{ 0 };
+
+    inline static const int SPACE_CHARACTER{ ' ' };
+
+    inline static const int NEW_LINE_CHARACTER{ '\n' };
+
+    inline static const int UNKNOWN_CHARACTER{ '?' };
 
 private:
-    float m_spaceWidth{};
+    std::shared_ptr<prev::render::buffer::ImageBuffer> m_imageBuffer{};
 
     std::map<int, Character> m_characterMetaData;
 
-    std::shared_ptr<prev::render::buffer::ImageBuffer> m_imageBuffer{};
+    float m_spaceWidth{};
+
+    float m_lineHeight{};
 };
 } // namespace prev_test::render::font
 

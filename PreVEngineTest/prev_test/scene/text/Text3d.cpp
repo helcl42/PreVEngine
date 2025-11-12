@@ -20,7 +20,7 @@ Text3d::Text3d(prev::core::device::Device& device, prev::core::memory::Allocator
 void Text3d::Init()
 {
     prev_test::component::font::FontRenderComponentsFactory factory{ m_device, m_allocator };
-    m_fontComponent = factory.Create<prev_test::render::font::WorldSpaceText>(prev_test::common::AssetManager::Instance().GetAssetPath("Fonts/verdana.fnt"), prev_test::common::AssetManager::Instance().GetAssetPath("Fonts/verdana.png"), 16.0f / 9.0f, 2);
+    m_fontComponent = factory.Create<prev_test::render::font::WorldSpaceText>(prev_test::common::AssetManager::Instance().GetAssetPath("Fonts/verdana.fnt"), prev_test::common::AssetManager::Instance().GetAssetPath("Fonts/verdana.png"), 16.0f / 9.0f, 0.03f, 2);
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::font::IFontRenderComponent<prev_test::render::font::WorldSpaceText>>(GetThis(), m_fontComponent, { TAG_FONT_3D_RENDER_COMPONENT });
 
     SceneNode::Init();

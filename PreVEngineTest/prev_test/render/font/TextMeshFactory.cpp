@@ -13,24 +13,24 @@ std::vector<TextLine> TextMeshFactory::CreateStructure(const AbstractText& text,
 {
     std::vector<TextLine> lines;
 
-    TextLine currentLine{ text.GetMaxLineSize(), fontMetaData.GetFontSizeScaledSpaceWidth(text.GetFontSize()) };
+    TextLine currentLine{ text.GetMaxLineSize(), fontMetaData.GetSpaceWidth(text.GetFontSize()) };
 
     Word currentWord{ text.GetFontSize() };
     for (const auto& c : text.GetTextString()) {
         const int charCode{ static_cast<int>(c) };
-        if (charCode == FontMetadata::SPACE_CODE) {
+        if (charCode == FontMetadata::SPACE_CHARACTER) {
             const bool added = currentLine.AttemptToAddWord(currentWord);
             if (!added) {
                 lines.push_back(currentLine);
-                currentLine = TextLine{ text.GetMaxLineSize(), fontMetaData.GetFontSizeScaledSpaceWidth(text.GetFontSize()) };
+                currentLine = TextLine{ text.GetMaxLineSize(), fontMetaData.GetSpaceWidth(text.GetFontSize()) };
                 currentLine.AttemptToAddWord(currentWord);
             }
             currentWord = Word{ text.GetFontSize() };
             continue;
-        } else if (charCode == FontMetadata::NEW_LINE_CODE) {
+        } else if (charCode == FontMetadata::NEW_LINE_CHARACTER) {
             const bool added{ currentLine.AttemptToAddWord(currentWord) };
             lines.push_back(currentLine);
-            currentLine = TextLine{ text.GetMaxLineSize(), fontMetaData.GetFontSizeScaledSpaceWidth(text.GetFontSize()) };
+            currentLine = TextLine{ text.GetMaxLineSize(), fontMetaData.GetSpaceWidth(text.GetFontSize()) };
             if (!added) {
                 currentLine.AttemptToAddWord(currentWord);
             }
@@ -40,7 +40,7 @@ std::vector<TextLine> TextMeshFactory::CreateStructure(const AbstractText& text,
 
         Character character{};
         if (!fontMetaData.GetCharacter(charCode, character)) {
-            fontMetaData.GetCharacter(FontMetadata::FALLBACK_CODE, character);
+            fontMetaData.GetCharacter(FontMetadata::UNKNOWN_CHARACTER, character);
         }
         currentWord.AddCharacter(character);
     }
@@ -48,7 +48,7 @@ std::vector<TextLine> TextMeshFactory::CreateStructure(const AbstractText& text,
     const bool added{ currentLine.AttemptToAddWord(currentWord) };
     if (!added) {
         lines.push_back(currentLine);
-        currentLine = TextLine{ text.GetMaxLineSize(), fontMetaData.GetFontSizeScaledSpaceWidth(text.GetFontSize()) };
+        currentLine = TextLine{ text.GetMaxLineSize(), fontMetaData.GetSpaceWidth(text.GetFontSize()) };
         currentLine.AttemptToAddWord(currentWord);
     }
     lines.push_back(currentLine);
@@ -75,10 +75,10 @@ std::unique_ptr<prev_test::render::IMesh> TextMeshFactory::CreateQuadVertices(co
                 AddQuadData(character.GetTextureCoords(), character.GetMaxTextureCoords(), textureCoords);
                 curser.x += character.GetXAdvance() * text.GetFontSize();
             }
-            curser.x += fontMetaData.GetSpaceWidth() * text.GetFontSize();
+            curser.x += fontMetaData.GetSpaceWidth(text.GetFontSize());
         }
         curser.x = 0;
-        curser.y += FontMetadata::LINE_HEIGHT * text.GetFontSize();
+        curser.y += fontMetaData.GetLineHeight(text.GetFontSize());
     }
 
     return prev_test::render::mesh::MeshFactory{}.CreateFromData(vertices, textureCoords, indices);

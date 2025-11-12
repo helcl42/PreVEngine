@@ -15,14 +15,14 @@ public:
 
 public:
     template <typename TextType>
-    std::unique_ptr<IFontRenderComponent<TextType>> Create(const std::string& fontPath, const std::string& fontTexture, const float aspectRatio, const int padding) const
+    std::unique_ptr<IFontRenderComponent<TextType>> Create(const std::string& fontPath, const std::string& fontTexture, const float aspectRatio, const float lineHeight, const int padding) const
     {
-        auto fontMetaData{ CreateFontMetadata(fontPath, fontTexture, aspectRatio, padding) };
+        auto fontMetaData{ CreateFontMetadata(fontPath, fontTexture, aspectRatio, lineHeight, padding) };
         return std::make_unique<FontRenderComponent<TextType>>(m_allocator, std::move(fontMetaData));
     }
 
 private:
-    std::unique_ptr<prev_test::render::font::FontMetadata> CreateFontMetadata(const std::string& fontPath, const std::string& fontTexture, const float aspectRatio, const int padding) const;
+    std::unique_ptr<prev_test::render::font::FontMetadata> CreateFontMetadata(const std::string& fontPath, const std::string& fontTexture, const float aspectRatio, const float lineHeight, const int padding) const;
 
 private:
     prev::core::device::Device& m_device;
