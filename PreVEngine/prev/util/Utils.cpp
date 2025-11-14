@@ -1,7 +1,7 @@
 #include "Utils.h"
 
 #if defined(__ANDROID__)
-#include <android_native.h>
+#include <android_fopen.h>
 #endif
 
 #include <filesystem>

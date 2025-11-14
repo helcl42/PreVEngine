@@ -36,7 +36,7 @@ AndroidWindowImpl::AndroidWindowImpl(const prev::core::instance::Instance& insta
     m_info.size = {};
     m_info.fullScreen = true;
 
-    m_app = g_AndroidApp;
+    m_app = android_native_get_app_instance();
 
     //---Wait for window to be created AND gain focus---
     while (!m_hasFocus) {
@@ -146,7 +146,7 @@ bool AndroidWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
                 switch (aAction) {
                 case AKEY_EVENT_ACTION_DOWN: {
                     int metaState = AKeyEvent_getMetaState(aEvent);
-                    int unicode = GetUnicodeChar(AKEY_EVENT_ACTION_DOWN, keyCode, metaState);
+                    int unicode = android_native_get_unicode_char(AKEY_EVENT_ACTION_DOWN, keyCode, metaState);
                     m_eventQueue.Push(OnKeyEvent(ActionType::DOWN, hidCode)); // key pressed event
                     if (unicode) {
                         m_eventQueue.Push(OnTextEvent(static_cast<uint32_t>(unicode))); // text typed event
@@ -228,7 +228,7 @@ bool AndroidWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
 void AndroidWindowImpl::SetTextInput(bool enabled)
 {
     m_hasTextInput = enabled;
-    ShowKeyboard(enabled);
+    android_native_show_keyboard(enabled);
     LOGI("%s keyboard", enabled ? "Show" : "Hide");
 }
 

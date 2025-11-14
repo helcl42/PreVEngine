@@ -2,6 +2,7 @@
 #define __ANDROID_FOPEN_H__
 
 #include <android/asset_manager.h>
+
 #include <stdio.h>
 
 #ifdef __cplusplus

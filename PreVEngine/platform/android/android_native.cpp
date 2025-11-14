@@ -1,5 +1,14 @@
 #include "android_native.h"
 
+#include <android/log.h>
+
+#include <jni.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <streambuf>
+#include <string.h>
+
 //----------------------------------------printf for Android---------------------
 // Uses a 256 byte buffer to allow concatenating multiple printf's onto one log line.
 // The buffer gets flushed when the printf string ends in a '\n', or the buffer is full.
@@ -46,59 +55,25 @@ int printf(const char* format, ...)
 }
 //--------------------------------------------------------------------------------------------------
 
-android_app* g_AndroidApp = NULL; // Android native-actvity state
-
-//====================Main====================
-int PreVMain(int argc, char** argv); // Forward declaration of main function
-
-static void activity_force_finish(void)
+static android_app* g_androidApp = NULL;
+void android_native_set_app_instance(android_app* app)
 {
-    JavaVM* javaVM = g_AndroidApp->activity->vm;
-    JNIEnv* jniEnv = g_AndroidApp->activity->env;
-    JavaVMAttachArgs Args = { JNI_VERSION_1_6, "NativeThread", NULL };
-    javaVM->AttachCurrentThread(&jniEnv, &Args);
-
-    jclass classActivity = jniEnv->GetObjectClass(g_AndroidApp->activity->clazz);
-    jmethodID activityFinishID = jniEnv->GetMethodID(classActivity, "finish", "()V");
-
-    signal(SIGABRT, SIG_DFL);
-
-    jniEnv->CallVoidMethod(g_AndroidApp->activity->clazz, activityFinishID);
-
-    javaVM->DetachCurrentThread();
-
-    pthread_exit(NULL);
+    g_androidApp = app;
 }
 
-void android_main(struct android_app* state)
+android_app* android_native_get_app_instance()
 {
-    printf("Native Activity");
-
-    g_AndroidApp = state; // Pass android app state to window_andoid.cpp
-
-    android_fopen_set_asset_manager(state->activity->assetManager); // Re-direct fopen to read assets from our APK.
-
-
-    PreVMain(0, NULL); // call the common main
-
-    printf("Exiting.");
-    ANativeActivity_finish(state->activity);
-
-    //    activity_force_finish();
-    //    exit(0);
+    return g_androidApp;
 }
-//============================================
-
-//========================UGLY JNI code for showing the Keyboard========================
 
 #define CALL_OBJ_METHOD(OBJ, METHOD, SIGNATURE, ...) jniEnv->CallObjectMethod(OBJ, jniEnv->GetMethodID(jniEnv->GetObjectClass(OBJ), METHOD, SIGNATURE), __VA_ARGS__)
 #define CALL_BOOL_METHOD(OBJ, METHOD, SIGNATURE, ...) jniEnv->CallBooleanMethod(OBJ, jniEnv->GetMethodID(jniEnv->GetObjectClass(OBJ), METHOD, SIGNATURE), __VA_ARGS__)
 
-void ShowKeyboard(bool visible, int flags)
+void android_native_show_keyboard(bool visible, int flags)
 {
     // Attach current thread to the JVM.
-    JavaVM* javaVM = g_AndroidApp->activity->vm;
-    JNIEnv* jniEnv = g_AndroidApp->activity->env;
+    JavaVM* javaVM = g_androidApp->activity->vm;
+    JNIEnv* jniEnv = g_androidApp->activity->env;
     JavaVMAttachArgs Args = { JNI_VERSION_1_6, "NativeThread", NULL };
     jint result = javaVM->AttachCurrentThread(&jniEnv, &Args);
     if (result == JNI_ERR) {
@@ -106,7 +81,7 @@ void ShowKeyboard(bool visible, int flags)
     }
 
     // Retrieve NativeActivity.
-    jobject lNativeActivity = g_AndroidApp->activity->clazz;
+    jobject lNativeActivity = g_androidApp->activity->clazz;
 
     // Retrieve Context.INPUT_METHOD_SERVICE.
     jclass ClassContext = jniEnv->FindClass("android/content/Context");
@@ -128,13 +103,11 @@ void ShowKeyboard(bool visible, int flags)
     // Finished with the JVM.
     javaVM->DetachCurrentThread();
 }
-//======================================================================================
 
-//===============================Get Unicode from Keyboard==============================
-int GetUnicodeChar(int eventType, int keyCode, int metaState)
+int android_native_get_unicode_char(int eventType, int keyCode, int metaState)
 {
-    JavaVM* javaVM = g_AndroidApp->activity->vm;
-    JNIEnv* jniEnv = g_AndroidApp->activity->env;
+    JavaVM* javaVM = g_androidApp->activity->vm;
+    JNIEnv* jniEnv = g_androidApp->activity->env;
 
     JavaVMAttachArgs Args = { JNI_VERSION_1_6, "NativeThread", NULL };
     jint result = javaVM->AttachCurrentThread(&jniEnv, &Args);
@@ -154,4 +127,22 @@ int GetUnicodeChar(int eventType, int keyCode, int metaState)
     // LOGI("Keycode: %d  MetaState: %d Unicode: %d", keyCode, metaState, unicodeKey);
     return unicodeKey;
 }
-//======================================================================================
+
+void android_native_force_finish_activity()
+{
+    JavaVM* javaVM = g_androidApp->activity->vm;
+    JNIEnv* jniEnv = g_androidApp->activity->env;
+    JavaVMAttachArgs Args = { JNI_VERSION_1_6, "NativeThread", NULL };
+    javaVM->AttachCurrentThread(&jniEnv, &Args);
+
+    jclass classActivity = jniEnv->GetObjectClass(g_androidApp->activity->clazz);
+    jmethodID activityFinishID = jniEnv->GetMethodID(classActivity, "finish", "()V");
+
+    signal(SIGABRT, SIG_DFL);
+
+    jniEnv->CallVoidMethod(g_androidApp->activity->clazz, activityFinishID);
+
+    javaVM->DetachCurrentThread();
+
+    pthread_exit(NULL);
+}

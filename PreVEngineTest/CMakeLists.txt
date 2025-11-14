@@ -245,6 +245,10 @@ elseif(ANDROID)
     message("${PROJECT_NAME} - Android")
     add_definitions(-DTARGET_PLATFORM_ANDROID)
 
+    file(GLOB COMMON_SRC_LIST 
+        "platform/android/app/src/main/cpp/*.h" "platform/android/app/src/main/cpp/*.cpp"
+    )
+
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17 -O3")
 
     add_definitions(-DGLM_FORCE_CXX17)
@@ -252,7 +256,10 @@ elseif(ANDROID)
     include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../PreVEngine/platform/android")
     include_directories("${ANDROID_NDK}/sources/android/native_app_glue")
 
-    add_library(${PROJECT_NAME} SHARED ${SRC_LIST})
+    add_library(${PROJECT_NAME} SHARED 
+        ${SRC_LIST}
+        ${COMMON_SRC_LIST}
+    )
 
     target_link_libraries(${PROJECT_NAME} PreVEngine)
 

@@ -358,8 +358,8 @@ void OpenXrCore::CreateInstance()
 
 #if defined(TARGET_PLATFORM_ANDROID) && defined(ENABLE_XR_EXTENDED_INIT)
     XrInstanceCreateInfoAndroidKHR instanceCreateInfoAndroid{ open_xr::util::CreateStruct<XrInstanceCreateInfoAndroidKHR>(XR_TYPE_INSTANCE_CREATE_INFO_ANDROID_KHR) };
-    instanceCreateInfoAndroid.applicationActivity = g_AndroidApp->activity->clazz;
-    instanceCreateInfoAndroid.applicationVM = g_AndroidApp->activity->vm;
+    instanceCreateInfoAndroid.applicationActivity = android_native_get_app_instance()->activity->clazz;
+    instanceCreateInfoAndroid.applicationVM = android_native_get_app_instance()->activity->vm;
     instanceCreateInfo.next = &instanceCreateInfoAndroid;
 #endif
 
