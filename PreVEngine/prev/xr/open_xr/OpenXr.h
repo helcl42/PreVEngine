@@ -66,6 +66,8 @@ public:
     float GetCurrentDeltaTime() const override;
 
 private:
+    bool m_loaded{ false };
+
     std::unique_ptr<core::OpenXrCore> m_core{};
 
     std::unique_ptr<render::OpenXrRender> m_render{};

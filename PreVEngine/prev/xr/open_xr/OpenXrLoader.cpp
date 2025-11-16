@@ -11,8 +11,10 @@
 #include <android_native.h>
 #endif
 
+#include <stdexcept>
+
 namespace prev::xr::open_xr {
-bool LoadOpenXr()
+OpenXrLoader::OpenXrLoader()
 {
 #ifdef TARGET_PLATFORM_ANDROID
     // https://registry.khronos.org/OpenXR/specs/1.0/html/xrspec.html#XR_KHR_loader_init
@@ -21,12 +23,10 @@ bool LoadOpenXr()
     PFN_xrInitializeLoaderKHR xrInitializeLoaderKHR{};
     XrResult res = xrGetInstanceProcAddr(XR_NULL_HANDLE, "xrInitializeLoaderKHR", (PFN_xrVoidFunction*)&xrInitializeLoaderKHR);
     if (!XR_SUCCEEDED(res)) {
-        LOGW("Failed to get InstanceProcAddr for xrInitializeLoaderKHR.");
-        return false;
+        throw std::runtime_error("Failed to get InstanceProcAddr for xrInitializeLoaderKHR.");
     }
     if (!xrInitializeLoaderKHR) {
-        LOGW("Failed to get xrInitializeLoaderKHR.");
-        return false;
+        throw std::runtime_error("Failed to get xrInitializeLoaderKHR.");
     }
 
     // Fill out an XrLoaderInitInfoAndroidKHR structure and initialize the loader for Android.
@@ -35,10 +35,13 @@ bool LoadOpenXr()
     loaderInitializeInfoAndroid.applicationContext = android_native_get_app_instance()->activity->clazz;
     res = xrInitializeLoaderKHR((XrLoaderInitInfoBaseHeaderKHR*)&loaderInitializeInfoAndroid);
     if (!XR_SUCCEEDED(res)) {
-        LOGW("Failed to initialize Loader for Android.");
-        return false;
+        throw std::runtime_error("Failed to initialize Loader for Android.");
     }
 #endif
+}
+
+bool OpenXrLoader::IsLoaded() const
+{
     return true;
 }
 } // namespace prev::xr::open_xr
