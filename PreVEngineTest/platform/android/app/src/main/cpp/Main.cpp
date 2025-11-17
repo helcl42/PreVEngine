@@ -1,4 +1,3 @@
-#include <../platform/android/android_fopen.h>
 #include <../platform/android/android_native.h>
 
 // Forward declaration of main function
