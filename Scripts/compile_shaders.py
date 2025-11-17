@@ -87,4 +87,4 @@ if __name__ == '__main__':
 # Example usage
 #  python .\compile_shaders.py --input_folder "<a_path>" --output_folder "<a_path>" --compiler_args="-O" --compile_serial --force_compile_all
 
-# python compile_shaders.py --input_folder ../PreVEngineTest/assets/Shaders/ --output_folder ../build_linux/PreVEngineTest/assets/Shaders/ --compile_serial --force_compile_all --compiler_args '-DMAX_VIEW_COUNT=2 ' --compiler_args '-DENABLE_XR=1 '
+# python compile_shaders.py --input_folder ../Examples/PreVEngineExample/assets/Shaders/ --output_folder ../build_linux/Examples/PreVEngineExample/assets/Shaders/ --compile_serial --force_compile_all --compiler_args '-DMAX_VIEW_COUNT=2 ' --compiler_args '-DENABLE_XR=1 '

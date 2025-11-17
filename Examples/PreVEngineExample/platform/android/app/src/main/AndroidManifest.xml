@@ -45,7 +45,7 @@
               android:exported="true">
       <!-- Tell NativeActivity the name of our .so -->
       <meta-data android:name="android.app.lib_name"
-                 android:value="PreVEngineTest" />
+                 android:value="PreVEngineExample" />
 
       <!-- Standard Khronos OpenXR launcher intent filter. -->
       <intent-filter>

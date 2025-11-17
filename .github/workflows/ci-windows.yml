@@ -67,7 +67,7 @@ jobs:
 
     - name: Compile Shaders
       run: |
-        python3 Scripts/compile_shaders.py --input_folder PreVEngineTest/assets/Shaders/ --output_folder ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/assets/Shaders/ --compile_serial --compiler_args '-DMAX_VIEW_COUNT=1 ' --force_compile_all
+        python3 Scripts/compile_shaders.py --input_folder Examples/PreVEngineExample/assets/Shaders/ --output_folder ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets/Shaders/ --compile_serial --compiler_args '-DMAX_VIEW_COUNT=1 ' --force_compile_all
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -86,9 +86,9 @@ jobs:
     - name: Create Artifact
       run: |
         mkdir build-win32
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/assets build-win32
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/Release/PreVEngineTest.exe build-win32
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTest/*.dll build-win32
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets build-win32
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/Release/PreVEngineExample.exe build-win32
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/*.dll build-win32
 
     - name: Publish Artifact
       uses: actions/upload-artifact@v4

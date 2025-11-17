@@ -50,10 +50,10 @@ ninja
 ```bash
 mkdir build && cd build
 cmake -DANDROID=ON -DANDROID_ABI=arm64-v8a ..
-cd ../PreVEngineTest/platform/android
+cd ../Examples/PreVEngineExample/platform/android
 chmod a+x gradlew && ./gradlew clean build
 ```
-*Alternatively import to android studio from location `PreVEngineTest/platform/android` and deploy as usuall*
+*Alternatively import to android studio from location `Examples/PreVEngineExample/platform/android` and deploy as usuall*
 
  ## Build iOS
 - Generate Xcode project 
@@ -75,10 +75,10 @@ option(ENABLE_XR "Enable XR" ON)
 The project provides a script for batch shader compilation
 ```bash
 # without OpenXR
-python Scripts/compile_shaders.py --input_folder PreVEngineTest/assets/Shaders/ --output_folder build/PreVEngineTest/assets/Shaders/ --compile_serial --compiler_args '-DMAX_VIEW_COUNT=1 ' --force_compile_all
+python Scripts/compile_shaders.py --input_folder Examples/PreVEngineExample/assets/Shaders/ --output_folder build/Examples/PreVEngineExample/assets/Shaders/ --compile_serial --compiler_args '-DMAX_VIEW_COUNT=1 ' --force_compile_all
 
 # with OpenXR enabled 
-python Scripts/compile_shaders.py --input_folder PreVEngineTest/assets/Shaders/ --output_folder build/PreVEngineTest/assets/Shaders/ --compile_serial --compiler_args '-DMAX_VIEW_COUNT=2 ' --compiler_args '-DENABLE_XR=1 ' --force_compile_all
+python Scripts/compile_shaders.py --input_folder Examples/PreVEngineExample/assets/Shaders/ --output_folder build/Examples/PreVEngineExample/assets/Shaders/ --compile_serial --compiler_args '-DMAX_VIEW_COUNT=2 ' --compiler_args '-DENABLE_XR=1 ' --force_compile_all
 
 ```
 

@@ -342,7 +342,7 @@ void OpenXrCore::CreateInstance()
     const auto activeInstanceExtensions{ GetActiveInstanceExtension(allInstanceExtensions, requestedInstanceExtensionNames) };
 
     XrApplicationInfo applicationInfo{};
-    strncpy(applicationInfo.applicationName, "OpenXR PreVEngineTest", XR_MAX_APPLICATION_NAME_SIZE);
+    strncpy(applicationInfo.applicationName, "OpenXR PreVEngineApp", XR_MAX_APPLICATION_NAME_SIZE);
     applicationInfo.applicationVersion = 1;
     strncpy(applicationInfo.engineName, "OpenXR PreVEngine", XR_MAX_ENGINE_NAME_SIZE);
     applicationInfo.engineVersion = 1;

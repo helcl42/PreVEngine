@@ -13,7 +13,7 @@ android {
     compileSdkVersion 31
 
     defaultConfig {
-        applicationId = 'com.prevengine.PreVEngineTest'
+        applicationId = 'com.prevengine.PreVEngineExample'
         minSdkVersion 24
         targetSdkVersion 33
         externalNativeBuild {
@@ -35,7 +35,7 @@ android {
     externalNativeBuild {
         cmake {
             version '3.22.1'
-            path '../../../../CMakeLists.txt'
+            path '../../../../../CMakeLists.txt'
         }
     }
     sourceSets {
@@ -43,7 +43,7 @@ android {
             assets.srcDirs = ['../../../assets']
         }
     }
-    namespace 'com.prevengine.PreVEngineTest'
+    namespace 'com.prevengine.PreVEngineExample'
 
 //    // Enable prefab support for the OpenXR AAR
 //    buildFeatures {
