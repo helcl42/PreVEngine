@@ -96,3 +96,8 @@ jobs:
       with:
         name: build-linux-wayland-${{ matrix.c_compiler }}
         path: build-linux-wayland-${{ matrix.c_compiler }}
+
+    - name: Run Tests
+      run: |
+        cd ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTests
+        ./PreVEngineTests

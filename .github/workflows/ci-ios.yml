@@ -89,3 +89,8 @@ jobs:
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       run: cmake --build PreVEngineExample --config ${{ matrix.build_type }}
 
+    # - name: Run Tests
+    #   run: |
+    #     cd ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTests
+    #     ./PreVEngineTests
+
