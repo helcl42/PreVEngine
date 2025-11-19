@@ -1,8 +1,8 @@
 #include "OBB.h"
 
-#include <prev/util/Utils.h>
+#include "../Utils.h"
 
-namespace prev_test::common::intersection {
+namespace prev::util::intersection {
 OBB::OBB()
     : orientation()
     , position(-std::numeric_limits<float>::max())
@@ -57,4 +57,4 @@ std::ostream& operator<<(std::ostream& out, const OBB& aabb)
     out << "HalfExtents: " << prev::util::string::GetAsString(aabb.halfExtents, 2) << std::endl;
     return out;
 }
-} // namespace prev_test::common::intersection
+} // namespace prev::util::intersection

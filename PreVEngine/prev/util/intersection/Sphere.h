@@ -1,11 +1,11 @@
 #ifndef __SPHERE_H__
 #define __SPHERE_H__
 
-#include <prev/common/Common.h>
+#include "../../common/Common.h"
 
 #include <iostream>
 
-namespace prev_test::common::intersection {
+namespace prev::util::intersection {
 struct Sphere {
     glm::vec3 position;
 
@@ -17,6 +17,6 @@ struct Sphere {
 
     friend std::ostream& operator<<(std::ostream& out, const Sphere& sphere);
 };
-} // namespace prev_test::common::intersection
+} // namespace prev::util::intersection
 
 #endif // !__SPHERE_H__

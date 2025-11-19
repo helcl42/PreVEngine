@@ -1,12 +1,12 @@
 #ifndef __AABB_H__
 #define __AABB_H__
 
-#include <prev/common/Common.h>
+#include "../../common/Common.h"
 
 #include <iostream>
 #include <vector>
 
-namespace prev_test::common::intersection {
+namespace prev::util::intersection {
 struct AABB {
     glm::vec3 minExtents;
 
@@ -30,6 +30,6 @@ struct AABB {
 
     friend std::ostream& operator<<(std::ostream& out, const AABB& aabb);
 };
-} // namespace prev_test::common::intersection
+} // namespace prev::util::intersection
 
 #endif // !__AABB_H__

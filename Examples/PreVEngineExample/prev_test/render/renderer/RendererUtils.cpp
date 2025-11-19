@@ -7,7 +7,7 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::render::renderer {
-bool IsVisible(const prev_test::common::intersection::Frustum* frustums, const uint32_t frustumCount, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
+bool IsVisible(const prev::util::intersection::Frustum* frustums, const uint32_t frustumCount, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     bool visible{ true };
     if (auto boundingVolumeComponent = prev::scene::component::NodeComponentHelper::FindComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(node)) {

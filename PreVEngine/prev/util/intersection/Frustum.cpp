@@ -1,9 +1,9 @@
 #include "Frustum.h"
 
-#include <prev/util/MathUtils.h>
-#include <prev/util/Utils.h>
+#include "../MathUtils.h"
+#include "../Utils.h"
 
-namespace prev_test::common::intersection {
+namespace prev::util::intersection {
 Frustum::Frustum(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix)
 {
     const auto viewProjectionMatrix{ projectionMatrix * viewMatrix };
@@ -70,4 +70,4 @@ std::ostream& operator<<(std::ostream& out, const Frustum& frustum)
     }
     return out;
 }
-} // namespace prev_test::common::intersection
+} // namespace prev::util::intersection

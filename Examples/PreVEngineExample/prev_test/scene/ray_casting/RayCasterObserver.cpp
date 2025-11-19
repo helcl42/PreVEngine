@@ -59,7 +59,7 @@ void RayCastObserver::ShutDown()
     SceneNode::ShutDown();
 }
 
-std::optional<glm::vec3> RayCastObserver::FindTheClosestTerrainIntersection(const prev_test::common::intersection::Ray& ray) const
+std::optional<glm::vec3> RayCastObserver::FindTheClosestTerrainIntersection(const prev::util::intersection::Ray& ray) const
 {
     std::optional<glm::vec3> currentTerrainIntersectionPoint{};
     if (IntersectsInRange(0.0f, ray.length, ray)) {
@@ -70,7 +70,7 @@ std::optional<glm::vec3> RayCastObserver::FindTheClosestTerrainIntersection(cons
     return currentTerrainIntersectionPoint;
 }
 
-std::optional<glm::vec3> RayCastObserver::GetFirstPositionUnderAlongRay(const prev_test::common::intersection::Ray& ray) const
+std::optional<glm::vec3> RayCastObserver::GetFirstPositionUnderAlongRay(const prev::util::intersection::Ray& ray) const
 {
     const auto segmentPositions{ GenerateSegmentPositions(ray) };
     for (const auto& segmentPosition : segmentPositions) {
@@ -88,7 +88,7 @@ std::optional<glm::vec3> RayCastObserver::GetFirstPositionUnderAlongRay(const pr
     return {};
 }
 
-std::vector<glm::vec3> RayCastObserver::GenerateSegmentPositions(const prev_test::common::intersection::Ray& ray) const
+std::vector<glm::vec3> RayCastObserver::GenerateSegmentPositions(const prev::util::intersection::Ray& ray) const
 {
     const float distanceBetweenNodes{ ray.length / RECURSION_COUNT };
     std::vector<glm::vec3> result;
@@ -101,7 +101,7 @@ std::vector<glm::vec3> RayCastObserver::GenerateSegmentPositions(const prev_test
     return result;
 }
 
-std::optional<glm::vec3> RayCastObserver::BinarySearch(const uint32_t count, const float start, const float finish, const prev_test::common::intersection::Ray& ray) const
+std::optional<glm::vec3> RayCastObserver::BinarySearch(const uint32_t count, const float start, const float finish, const prev::util::intersection::Ray& ray) const
 {
     const float half{ start + ((finish - start) / 2.0f) };
     if (count >= RECURSION_COUNT) {
@@ -121,7 +121,7 @@ std::optional<glm::vec3> RayCastObserver::BinarySearch(const uint32_t count, con
     }
 }
 
-bool RayCastObserver::IntersectsInRange(const float start, const float finish, const prev_test::common::intersection::Ray& ray) const
+bool RayCastObserver::IntersectsInRange(const float start, const float finish, const prev::util::intersection::Ray& ray) const
 {
     const glm::vec3 startPoint{ ray.GetPointAtDistances(start) };
     const glm::vec3 endPoint{ ray.GetPointAtDistances(finish) };
@@ -160,14 +160,14 @@ std::shared_ptr<prev_test::component::terrain::ITerrainComponent> RayCastObserve
     return terrainManager->GetTerrainAt(position);
 }
 
-std::optional<RayCastObserver::IntersectionNodeResult> RayCastObserver::FindTheClosestIntersectingNode(const prev_test::common::intersection::Ray& ray) const
+std::optional<RayCastObserver::IntersectionNodeResult> RayCastObserver::FindTheClosestIntersectingNode(const prev::util::intersection::Ray& ray) const
 {
     std::optional<IntersectionNodeResult> theClosestNode;
     float minDistance{ std::numeric_limits<float>::max() };
     auto selectableNodes{ prev::scene::graph::GraphTraversal::FindAllWithTags(GetRoot(), { TAG_SELECTABLE_COMPONENT, TAG_BOUNDING_VOLUME_COMPONENT }, prev::scene::graph::LogicOperation::AND) };
     for (const auto& selectable : selectableNodes) {
         const auto boundingVolume{ prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(selectable) };
-        prev_test::common::intersection::RayCastResult rayCastResult{};
+        prev::util::intersection::RayCastResult rayCastResult{};
         if (boundingVolume->Intersects(ray, rayCastResult)) {
             if (rayCastResult.t < minDistance) {
                 theClosestNode = { rayCastResult, selectable };

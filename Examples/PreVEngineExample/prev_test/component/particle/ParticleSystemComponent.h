@@ -4,6 +4,7 @@
 #include "IParticleSystemComponent.h"
 
 #include <prev/util/Utils.h>
+#include <prev/util/intersection/AABB.h>
 
 #include <vector>
 
@@ -31,7 +32,7 @@ public:
 
     std::shared_ptr<prev::render::buffer::Buffer> GetVertexBuffer() const override;
 
-    const prev_test::common::intersection::AABB& GetBoundingBox() const override;
+    const prev::util::intersection::AABB& GetBoundingBox() const override;
 
 public:
     static size_t GetParticleDataStride();
@@ -56,7 +57,7 @@ private:
 
     uint32_t m_currentBufferIndex{};
 
-    prev_test::common::intersection::AABB m_boundingBox{};
+    prev::util::intersection::AABB m_boundingBox{};
 
     prev::util::RandomNumberGenerator m_rng{};
 };

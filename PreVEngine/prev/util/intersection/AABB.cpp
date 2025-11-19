@@ -1,8 +1,8 @@
 #include "AABB.h"
 
-#include <prev/util/Utils.h>
+#include "../Utils.h"
 
-namespace prev_test::common::intersection {
+namespace prev::util::intersection {
 AABB::AABB()
     : minExtents(glm::vec3(std::numeric_limits<float>::max()))
     , maxExtents(-glm::vec3(std::numeric_limits<float>::max()))
@@ -65,4 +65,4 @@ std::ostream& operator<<(std::ostream& out, const AABB& aabb)
     out << "MaxExtents:    " << prev::util::string::GetAsString(aabb.maxExtents, 2) << std::endl;
     return out;
 }
-} // namespace prev_test::common::intersection
+} // namespace prev::util::intersection

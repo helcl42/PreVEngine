@@ -1,11 +1,11 @@
 #ifndef __PLANE_H__
 #define __PLANE_H__
 
-#include <prev/common/Common.h>
+#include "../../common/Common.h"
 
 #include <iostream>
 
-namespace prev_test::common::intersection {
+namespace prev::util::intersection {
 struct Plane {
     glm::vec3 normal;
 
@@ -19,6 +19,6 @@ struct Plane {
 
     friend std::ostream& operator<<(std::ostream& out, const Plane& plane);
 };
-} // namespace prev_test::common::intersection
+} // namespace prev::util::intersection
 
 #endif // !__PLANE_H__

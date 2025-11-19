@@ -1,10 +1,10 @@
 #ifndef __IRAY_CASTER_COMPONENT_H__
 #define __IRAY_CASTER_COMPONENT_H__
 
-#include "../../common/intersection/Ray.h"
 #include "../../render/IModel.h"
 
 #include <prev/scene/component/IComponent.h>
+#include <prev/util/intersection/Ray.h>
 
 namespace prev_test::component::ray_casting {
 class IRayCasterComponent : public prev::scene::component::IComponent {
@@ -19,7 +19,7 @@ public:
 
     virtual void SetOrientationOffsetAngles(const glm::vec2& angles) = 0;
 
-    virtual prev_test::common::intersection::Ray GetRay() const = 0;
+    virtual prev::util::intersection::Ray GetRay() const = 0;
 
 #ifdef RENDER_RAYCASTS
     virtual std::shared_ptr<prev_test::render::IModel> GetModel() const = 0;

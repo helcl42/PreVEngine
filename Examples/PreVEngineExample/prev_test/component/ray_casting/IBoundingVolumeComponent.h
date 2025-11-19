@@ -1,12 +1,12 @@
 #ifndef __IBOUNDING_VOLUME_COMPONENT_H__
 #define __IBOUNDING_VOLUME_COMPONENT_H__
 
-#include "../../common/intersection/Frustum.h"
-#include "../../common/intersection/Ray.h"
-#include "../../common/intersection/RayCastResult.h"
 #include "../../render/IModel.h"
 
 #include <prev/scene/component/IComponent.h>
+#include <prev/util/intersection/Frustum.h>
+#include <prev/util/intersection/Ray.h>
+#include <prev/util/intersection/RayCastResult.h>
 
 namespace prev_test::component::ray_casting {
 enum class BoundingVolumeType {
@@ -17,9 +17,9 @@ enum class BoundingVolumeType {
 
 class IBoundingVolumeComponent : public prev::scene::component::IComponent {
 public:
-    virtual bool IsInFrustum(const prev_test::common::intersection::Frustum& frustum) = 0;
+    virtual bool IsInFrustum(const prev::util::intersection::Frustum& frustum) = 0;
 
-    virtual bool Intersects(const prev_test::common::intersection::Ray& ray, prev_test::common::intersection::RayCastResult& result) = 0;
+    virtual bool Intersects(const prev::util::intersection::Ray& ray, prev::util::intersection::RayCastResult& result) = 0;
 
     virtual void Update(const glm::mat4& worldTransform) = 0;
 

@@ -1,8 +1,8 @@
 #include "Ray.h"
 
-#include <prev/util/Utils.h>
+#include "../Utils.h"
 
-namespace prev_test::common::intersection {
+namespace prev::util::intersection {
 Ray::Ray()
     : origin(glm::vec3(0))
     , direction(glm::vec3(0))
@@ -39,4 +39,4 @@ std::ostream& operator<<(std::ostream& out, const Ray& ray)
     out << "Length:    " << ray.length << std::endl;
     return out;
 }
-} // namespace prev_test::common::intersection
+} // namespace prev::util::intersection

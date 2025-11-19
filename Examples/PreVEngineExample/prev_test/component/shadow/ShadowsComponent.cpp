@@ -1,10 +1,9 @@
 #include "ShadowsComponent.h"
 #include "ShadowsCommon.h"
 
-#include "../../common/intersection/AABB.h"
-#include "../../common/intersection/Frustum.h"
-
 #include <prev/util/MathUtils.h>
+#include <prev/util/intersection/AABB.h>
+#include <prev/util/intersection/Frustum.h>
 
 namespace prev_test::component::shadow {
 ShadowsComponent::ShadowsComponent(prev::core::device::Device& device, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, const std::vector<ShadowsCascadeRenderData>& cascadesRenderData)
@@ -102,8 +101,8 @@ std::vector<float> ShadowsComponent::GenerateCascadeSplits(const float nearClipp
 
 void ShadowsComponent::UpdateCascadeFrameData(const glm::vec3& lightDirection, const prev_test::render::ViewFrustum& cascadeViewFrustum, const glm::mat4& lightViewMatrix, ShadowsCascadeFrameData& inOutFrameData) const
 {
-    const prev_test::common::intersection::Frustum frustum{ cascadeViewFrustum.CreateProjectionMatrix(), lightViewMatrix }; // symmetric aspect ratio for shadows, thus 1.0f
-    const prev_test::common::intersection::AABB aabb{ frustum.GetRadius() };
+    const prev::util::intersection::Frustum frustum{ cascadeViewFrustum.CreateProjectionMatrix(), lightViewMatrix }; // symmetric aspect ratio for shadows, thus 1.0f
+    const prev::util::intersection::AABB aabb{ frustum.GetRadius() };
 
     const auto frustumCenter{ frustum.GetCenter().position };
     const glm::mat4 cascadeLightViewMatrix{ glm::lookAt(frustumCenter - lightDirection * -aabb.minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f)) };

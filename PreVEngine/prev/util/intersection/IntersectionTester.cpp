@@ -1,8 +1,8 @@
 #include "IntersectionTester.h"
 
-#include <prev/util/MathUtils.h>
+#include "../MathUtils.h"
 
-namespace prev_test::common::intersection::tester {
+namespace prev::util::intersection::tester {
 namespace {
     struct Interval {
         float min;
@@ -464,4 +464,4 @@ bool Intersects(const Ray& ray, const OBB& obb, RayCastResult& result)
 
     return true;
 }
-} // namespace prev_test::common::intersection::tester
+} // namespace prev::util::intersection::tester

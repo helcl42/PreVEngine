@@ -3,11 +3,11 @@
 
 #include "RayCasterEvents.h"
 
-#include "../../common/intersection/RayCastResult.h"
 #include "../../component/terrain/ITerrainComponent.h"
 
 #include <prev/event/EventHandler.h>
 #include <prev/scene/graph/SceneNode.h>
+#include <prev/util/intersection/RayCastResult.h>
 
 #include <optional>
 
@@ -34,15 +34,15 @@ public:
 
 private:
     // Terrain
-    std::optional<glm::vec3> FindTheClosestTerrainIntersection(const prev_test::common::intersection::Ray& ray) const;
+    std::optional<glm::vec3> FindTheClosestTerrainIntersection(const prev::util::intersection::Ray& ray) const;
 
-    std::optional<glm::vec3> GetFirstPositionUnderAlongRay(const prev_test::common::intersection::Ray& ray) const;
+    std::optional<glm::vec3> GetFirstPositionUnderAlongRay(const prev::util::intersection::Ray& ray) const;
 
-    std::vector<glm::vec3> GenerateSegmentPositions(const prev_test::common::intersection::Ray& ray) const;
+    std::vector<glm::vec3> GenerateSegmentPositions(const prev::util::intersection::Ray& ray) const;
 
-    std::optional<glm::vec3> BinarySearch(const uint32_t count, const float start, const float finish, const prev_test::common::intersection::Ray& ray) const;
+    std::optional<glm::vec3> BinarySearch(const uint32_t count, const float start, const float finish, const prev::util::intersection::Ray& ray) const;
 
-    bool IntersectsInRange(const float start, const float finish, const prev_test::common::intersection::Ray& ray) const;
+    bool IntersectsInRange(const float start, const float finish, const prev::util::intersection::Ray& ray) const;
 
     bool IsUnderGround(const prev_test::component::terrain::ITerrainComponent& terrain, const glm::vec3& testPoint, bool shouldReturn) const;
 
@@ -50,11 +50,11 @@ private:
 
     // Objects
     struct IntersectionNodeResult {
-        prev_test::common::intersection::RayCastResult result{};
+        prev::util::intersection::RayCastResult result{};
         std::shared_ptr<prev::scene::graph::ISceneNode> node{};
     };
 
-    std::optional<IntersectionNodeResult> FindTheClosestIntersectingNode(const prev_test::common::intersection::Ray& ray) const;
+    std::optional<IntersectionNodeResult> FindTheClosestIntersectingNode(const prev::util::intersection::Ray& ray) const;
 
     // Common
     void ResetAllSelectableNodes() const;
@@ -65,7 +65,7 @@ public:
 private:
     const uint32_t RECURSION_COUNT{ 200 };
 
-    std::optional<prev_test::common::intersection::Ray> m_currentRay;
+    std::optional<prev::util::intersection::Ray> m_currentRay;
 
     prev::event::EventHandler<RayCastObserver, RayEvent> m_rayHandler{ *this };
 };

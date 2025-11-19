@@ -4,23 +4,23 @@
 #include "IBoundingVolumeComponent.h"
 #include "RayCastingCommon.h"
 
-#include "../../common/intersection/Frustum.h"
-#include "../../common/intersection/Sphere.h"
 #include "../../render/IModel.h"
 
 #include <prev/core/memory/Allocator.h>
+#include <prev/util/intersection/Frustum.h>
+#include <prev/util/intersection/Sphere.h>
 
 namespace prev_test::component::ray_casting {
 class SphereBoundingVolumeComponent : public IBoundingVolumeComponent {
 public:
-    SphereBoundingVolumeComponent(prev::core::memory::Allocator& allocator, const prev_test::common::intersection::Sphere& sphere, const float scale, const glm::vec3& offset);
+    SphereBoundingVolumeComponent(prev::core::memory::Allocator& allocator, const prev::util::intersection::Sphere& sphere, const float scale, const glm::vec3& offset);
 
     ~SphereBoundingVolumeComponent() = default;
 
 public:
-    bool IsInFrustum(const prev_test::common::intersection::Frustum& frustum) override;
+    bool IsInFrustum(const prev::util::intersection::Frustum& frustum) override;
 
-    bool Intersects(const prev_test::common::intersection::Ray& ray, prev_test::common::intersection::RayCastResult& result) override;
+    bool Intersects(const prev::util::intersection::Ray& ray, prev::util::intersection::RayCastResult& result) override;
 
     void Update(const glm::mat4& worldTransform) override;
 
@@ -30,9 +30,9 @@ public:
     std::shared_ptr<prev_test::render::IModel> GetModel() const override;
 #endif
 private:
-    static prev_test::common::intersection::Sphere ScaleSphere(const prev_test::common::intersection::Sphere& sphere, const float scale);
+    static prev::util::intersection::Sphere ScaleSphere(const prev::util::intersection::Sphere& sphere, const float scale);
 
-    static prev_test::common::intersection::Sphere OffsetSphere(const prev_test::common::intersection::Sphere& sphere, const glm::vec3& offset);
+    static prev::util::intersection::Sphere OffsetSphere(const prev::util::intersection::Sphere& sphere, const glm::vec3& offset);
 
 private:
     prev::core::memory::Allocator& m_allocator;
@@ -44,9 +44,9 @@ private:
 #ifdef RENDER_BOUNDING_VOLUMES
     std::shared_ptr<prev_test::render::IModel> m_model;
 #endif
-    prev_test::common::intersection::Sphere m_original;
+    prev::util::intersection::Sphere m_original;
 
-    prev_test::common::intersection::Sphere m_working;
+    prev::util::intersection::Sphere m_working;
 };
 } // namespace prev_test::component::ray_casting
 

@@ -1,11 +1,11 @@
 #ifndef __RAY_H__
 #define __RAY_H__
 
-#include <prev/util/Utils.h>
+#include "../../common/Common.h"
 
 #include <iostream>
 
-namespace prev_test::common::intersection {
+namespace prev::util::intersection {
 struct Ray {
     glm::vec3 origin;
 
@@ -25,6 +25,6 @@ struct Ray {
 
     friend std::ostream& operator<<(std::ostream& out, const Ray& ray);
 };
-} // namespace prev_test::common::intersection
+} // namespace prev::util::intersection
 
 #endif // !__RAY_H__

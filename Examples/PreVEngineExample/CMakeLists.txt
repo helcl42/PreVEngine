@@ -12,7 +12,6 @@ set(DCMAKE_CXX_EXTENSIONS OFF)
 file(GLOB SRC_LIST 
     "prev_test/*.h" "prev_test/*.cpp"
     "prev_test/common/*.h" "prev_test/common/*.cpp"
-    "prev_test/common/intersection/*.h" "prev_test/common/intersection/*.cpp"
     "prev_test/component/*.h" "prev_test/component/*.cpp"
     "prev_test/component/transform/*.h" "prev_test/component/transform/*.cpp"
     "prev_test/component/common/*.h" "prev_test/component/common/*.cpp"

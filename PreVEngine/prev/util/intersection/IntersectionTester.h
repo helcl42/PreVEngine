@@ -10,7 +10,7 @@
 #include "RayCastResult.h"
 #include "Sphere.h"
 
-namespace prev_test::common::intersection::tester {
+namespace prev::util::intersection::tester {
 bool Intersects(const Sphere& sphere, const Plane& plane);
 
 bool Intersects(const AABB& box, const Plane& plane);
@@ -52,6 +52,6 @@ bool Intersects(const Ray& ray, const Sphere& sphere, RayCastResult& result);
 bool Intersects(const Ray& ray, const Plane& plane, RayCastResult& result);
 
 bool Intersects(const Ray& ray, const OBB& obb, RayCastResult& result);
-} // namespace prev_test::common::intersection::tester
+} // namespace prev::util::intersection::tester
 
 #endif // !__INTERSECTION_UTIL_H__

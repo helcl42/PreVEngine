@@ -8,7 +8,7 @@
 #include <iostream>
 #include <vector>
 
-namespace prev_test::common::intersection {
+namespace prev::util::intersection {
 struct Frustum {
     std::array<Plane, 6> planes;
 
@@ -26,6 +26,6 @@ struct Frustum {
 
     friend std::ostream& operator<<(std::ostream& out, const Frustum& frustum);
 };
-} // namespace prev_test::common::intersection
+} // namespace prev::util::intersection
 
 #endif // !__FRUSTUM_H__

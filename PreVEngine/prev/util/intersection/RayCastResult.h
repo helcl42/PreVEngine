@@ -1,11 +1,11 @@
 #ifndef __RAYCAST_RESULT_H__
 #define __RAYCAST_RESULT_H__
 
-#include <prev/common/Common.h>
+#include "../../common/Common.h"
 
 #include <iostream>
 
-namespace prev_test::common::intersection {
+namespace prev::util::intersection {
 struct RayCastResult {
     glm::vec3 point;
 
@@ -21,6 +21,6 @@ struct RayCastResult {
 
     friend std::ostream& operator<<(std::ostream& out, const RayCastResult& result);
 };
-} // namespace prev_test::common::intersection
+} // namespace prev::util::intersection
 
 #endif // !__RAYCAST_RESULT_H__

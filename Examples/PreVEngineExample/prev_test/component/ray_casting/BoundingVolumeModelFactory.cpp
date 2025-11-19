@@ -40,41 +40,41 @@ BoundingVolumeModelFactory::BoundingVolumeModelFactory(prev::core::memory::Alloc
 {
 }
 
-std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateAABBModel(const prev_test::common::intersection::AABB& aabb) const
+std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateAABBModel(const prev::util::intersection::AABB& aabb) const
 {
     const auto aabbPoints{ aabb.GetPoints() };
     auto boxMesh = GenerateBoxMesh(aabbPoints);
     return prev_test::render::model::ModelFactory{ m_allocator }.CreateHostVisible(std::move(boxMesh));
 }
 
-std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateAABBModel(const prev_test::common::intersection::AABB& aabb, const std::shared_ptr<prev_test::render::IModel>& model) const
+std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateAABBModel(const prev::util::intersection::AABB& aabb, const std::shared_ptr<prev_test::render::IModel>& model) const
 {
     const auto aabbPoints{ aabb.GetPoints() };
     auto boxMesh = GenerateBoxMesh(aabbPoints);
     return CreateModelFromMesh(std::move(boxMesh), model, m_allocator);
 }
 
-std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateOBBModel(const prev_test::common::intersection::OBB& obb) const
+std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateOBBModel(const prev::util::intersection::OBB& obb) const
 {
     const auto obbPoints{ obb.GetPoints() };
     auto boxMesh = GenerateBoxMesh(obbPoints);
     return prev_test::render::model::ModelFactory{ m_allocator }.CreateHostVisible(std::move(boxMesh));
 }
 
-std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateOBBModel(const prev_test::common::intersection::OBB& obb, const std::shared_ptr<prev_test::render::IModel>& model) const
+std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateOBBModel(const prev::util::intersection::OBB& obb, const std::shared_ptr<prev_test::render::IModel>& model) const
 {
     const auto obbPoints{ obb.GetPoints() };
     auto boxMesh = GenerateBoxMesh(obbPoints);
     return CreateModelFromMesh(std::move(boxMesh), model, m_allocator);
 }
 
-std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateSphereModel(const prev_test::common::intersection::Sphere& sphere) const
+std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateSphereModel(const prev::util::intersection::Sphere& sphere) const
 {
     auto sphereMesh = prev_test::render::mesh::MeshFactory{}.CreateSphere(sphere.radius, 16, 16, 360.0f, 180.0f, sphere.position, false);
     return prev_test::render::model::ModelFactory{ m_allocator }.CreateHostVisible(std::move(sphereMesh));
 }
 
-std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateSphereModel(const prev_test::common::intersection::Sphere& sphere, const std::shared_ptr<prev_test::render::IModel>& model) const
+std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateSphereModel(const prev::util::intersection::Sphere& sphere, const std::shared_ptr<prev_test::render::IModel>& model) const
 {
     auto sphereMesh = prev_test::render::mesh::MeshFactory{}.CreateSphere(sphere.radius, 16, 16, 360.0f, 180.0f, sphere.position, false);
     return CreateModelFromMesh(std::move(sphereMesh), model, m_allocator);

@@ -1,11 +1,11 @@
 #ifndef __POINT_H__
 #define __POINT_H__
 
-#include <prev/common/Common.h>
+#include "../../common/Common.h"
 
 #include <iostream>
 
-namespace prev_test::common::intersection {
+namespace prev::util::intersection {
 struct Point {
     glm::vec3 position;
 
@@ -15,6 +15,6 @@ struct Point {
 
     friend std::ostream& operator<<(std::ostream& out, const Point& point);
 };
-} // namespace prev_test::common::intersection
+} // namespace prev::util::intersection
 
 #endif // !__POINT_H__

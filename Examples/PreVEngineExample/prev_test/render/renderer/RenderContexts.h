@@ -1,10 +1,9 @@
 #ifndef __RENDER_CONTEXTS_H__
 #define __RENDER_CONTEXTS_H__
 
-#include "../../common/intersection/Frustum.h"
-
 #include <prev/core/Core.h>
 #include <prev/render/RenderContext.h>
+#include <prev/util/intersection/Frustum.h>
 
 namespace prev_test::render::renderer {
 struct ShadowsRenderContext : prev::render::RenderContext {
@@ -14,9 +13,9 @@ struct ShadowsRenderContext : prev::render::RenderContext {
 
     uint32_t cascadeIndex;
 
-    prev_test::common::intersection::Frustum frustum;
+    prev::util::intersection::Frustum frustum;
 
-    ShadowsRenderContext(const RenderContext& ctx, const glm::mat4& vm, const glm::mat4& pm, const uint32_t index, const prev_test::common::intersection::Frustum& frstm)
+    ShadowsRenderContext(const RenderContext& ctx, const glm::mat4& vm, const glm::mat4& pm, const uint32_t index, const prev::util::intersection::Frustum& frstm)
         : RenderContext{ ctx }
         , viewMatrix{ vm }
         , projectionMatrix{ pm }
@@ -39,7 +38,7 @@ struct NormalRenderContext : prev::render::RenderContext {
 
     glm::vec3 cameraPositions[MAX_VIEW_COUNT]{};
 
-    prev_test::common::intersection::Frustum frustums[MAX_VIEW_COUNT]{};
+    prev::util::intersection::Frustum frustums[MAX_VIEW_COUNT]{};
 
     NormalRenderContext(const RenderContext& ctx, const glm::vec4& cp, const uint32_t cc)
         : RenderContext{ ctx }

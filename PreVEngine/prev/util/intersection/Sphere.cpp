@@ -1,8 +1,8 @@
 #include "Sphere.h"
 
-#include <prev/util/Utils.h>
+#include "../Utils.h"
 
-namespace prev_test::common::intersection {
+namespace prev::util::intersection {
 Sphere::Sphere()
     : position(glm::vec3{ 0.0f })
     , radius(0)
@@ -21,4 +21,4 @@ std::ostream& operator<<(std::ostream& out, const Sphere& sphere)
     out << "Radius: " << sphere.radius << std::endl;
     return out;
 }
-} // namespace prev_test::common::intersection
+} // namespace prev::util::intersection

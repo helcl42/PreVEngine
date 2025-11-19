@@ -1,15 +1,14 @@
 #include "OBBBoundingVolumeComponent.h"
 
-#include "../../common/intersection/IntersectionTester.h"
-
 #ifdef RENDER_BOUNDING_VOLUMES
 #include "BoundingVolumeModelFactory.h"
 #endif
 
 #include <prev/util/MathUtils.h>
+#include <prev/util/intersection/IntersectionTester.h>
 
 namespace prev_test::component::ray_casting {
-OBBBoundingVolumeComponent::OBBBoundingVolumeComponent(prev::core::memory::Allocator& allocator, const prev_test::common::intersection::OBB& obb, const glm::vec3& scale, const glm::vec3& offset)
+OBBBoundingVolumeComponent::OBBBoundingVolumeComponent(prev::core::memory::Allocator& allocator, const prev::util::intersection::OBB& obb, const glm::vec3& scale, const glm::vec3& offset)
     : m_allocator{ allocator }
     , m_scale{ scale }
     , m_offset{ offset }
@@ -25,14 +24,14 @@ OBBBoundingVolumeComponent::OBBBoundingVolumeComponent(prev::core::memory::Alloc
 #endif
 }
 
-bool OBBBoundingVolumeComponent::IsInFrustum(const prev_test::common::intersection::Frustum& frustum)
+bool OBBBoundingVolumeComponent::IsInFrustum(const prev::util::intersection::Frustum& frustum)
 {
-    return prev_test::common::intersection::tester::Intersects(m_working, frustum);
+    return prev::util::intersection::tester::Intersects(m_working, frustum);
 }
 
-bool OBBBoundingVolumeComponent::Intersects(const prev_test::common::intersection::Ray& ray, prev_test::common::intersection::RayCastResult& result)
+bool OBBBoundingVolumeComponent::Intersects(const prev::util::intersection::Ray& ray, prev::util::intersection::RayCastResult& result)
 {
-    return prev_test::common::intersection::tester::Intersects(ray, m_working, result);
+    return prev::util::intersection::tester::Intersects(ray, m_working, result);
 }
 
 void OBBBoundingVolumeComponent::Update(const glm::mat4& worldTransform)
@@ -41,7 +40,7 @@ void OBBBoundingVolumeComponent::Update(const glm::mat4& worldTransform)
     glm::vec3 translation, scale;
     prev::util::math::DecomposeTransform(worldTransform, rotation, translation, scale);
 
-    m_working = prev_test::common::intersection::OBB{ rotation, m_original.position * scale + translation, m_original.GetHalfSize() * scale };
+    m_working = prev::util::intersection::OBB{ rotation, m_original.position * scale + translation, m_original.GetHalfSize() * scale };
 
 #ifdef RENDER_BOUNDING_VOLUMES
     m_model = BoundingVolumeModelFactory{ m_allocator }.CreateOBBModel(m_working, m_model);
@@ -60,13 +59,13 @@ std::shared_ptr<prev_test::render::IModel> OBBBoundingVolumeComponent::GetModel(
 }
 #endif
 
-prev_test::common::intersection::OBB OBBBoundingVolumeComponent::ScaleOBB(const prev_test::common::intersection::OBB& obb, const glm::vec3& scale)
+prev::util::intersection::OBB OBBBoundingVolumeComponent::ScaleOBB(const prev::util::intersection::OBB& obb, const glm::vec3& scale)
 {
-    return prev_test::common::intersection::OBB{ obb.orientation, obb.position, obb.halfExtents * scale };
+    return prev::util::intersection::OBB{ obb.orientation, obb.position, obb.halfExtents * scale };
 }
 
-prev_test::common::intersection::OBB OBBBoundingVolumeComponent::OffsetOBB(const prev_test::common::intersection::OBB& obb, const glm::vec3& offset)
+prev::util::intersection::OBB OBBBoundingVolumeComponent::OffsetOBB(const prev::util::intersection::OBB& obb, const glm::vec3& offset)
 {
-    return prev_test::common::intersection::OBB{ obb.orientation, obb.position + offset, obb.halfExtents };
+    return prev::util::intersection::OBB{ obb.orientation, obb.position + offset, obb.halfExtents };
 }
 } // namespace prev_test::component::ray_casting

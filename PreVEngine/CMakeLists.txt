@@ -39,6 +39,7 @@ file(GLOB SRC_LIST
     "prev/scene/component/*.h" "prev/scene/component/*.cpp"
     "prev/scene/graph/*.h" "prev/scene/graph/*.cpp"
     "prev/util/*.h" "prev/util/*.cpp"
+    "prev/util/intersection/*.h" "prev/util/intersection/*.cpp"
     "prev/window/*.h" "prev/window/*.cpp"
     "prev/window/impl/*.h" "prev/window/impl/*.cpp"
     "prev/window/impl/windows/*.h" "prev/window/impl/windows/*.cpp"
@@ -246,7 +247,7 @@ elseif(ANDROID)
 
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 else()
-    message(FATAL_ERROR "Unsupported plaform.")
+    message(FATAL_ERROR "Unsupported platform.")
 endif()
 
 if(ENABLE_XR)

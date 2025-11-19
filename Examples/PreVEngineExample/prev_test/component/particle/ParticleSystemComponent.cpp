@@ -86,7 +86,7 @@ void ParticleSystemComponent::AddNewParticles(const float deltaTime, const glm::
 
 void ParticleSystemComponent::UpdateParticles(const float deltaTime)
 {
-    prev_test::common::intersection::AABB boundingBox{};
+    prev::util::intersection::AABB boundingBox{};
     for (auto pi = m_particles.begin(); pi != m_particles.end();) {
         auto& particle{ *pi };
         particle->Update(deltaTime);
@@ -101,7 +101,7 @@ void ParticleSystemComponent::UpdateParticles(const float deltaTime)
     m_boundingBox = boundingBox;
 }
 
-const prev_test::common::intersection::AABB& ParticleSystemComponent::GetBoundingBox() const
+const prev::util::intersection::AABB& ParticleSystemComponent::GetBoundingBox() const
 {
     return m_boundingBox;
 }

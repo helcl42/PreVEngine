@@ -3,7 +3,6 @@
 #include "OBBBoundingVolumeComponent.h"
 #include "SphereBoundingVolumeComponent.h"
 
-#include "../../common/intersection/AABB.h"
 #include "../../render/mesh/MeshUtil.h"
 
 namespace prev_test::component::ray_casting {
@@ -12,7 +11,7 @@ BoundingVolumeComponentFactory::BoundingVolumeComponentFactory(prev::core::memor
 {
 }
 
-std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::CreateAABB(const prev_test::common::intersection::AABB& aabb, const glm::vec3& scale, const glm::vec3& offset) const
+std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::CreateAABB(const prev::util::intersection::AABB& aabb, const glm::vec3& scale, const glm::vec3& offset) const
 {
     return std::make_unique<AABBBoundingVolumeComponent>(m_allocator, aabb, scale, offset);
 }
@@ -24,7 +23,7 @@ std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::Create
     return CreateAABB(aabb, scale, offset);
 }
 
-std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::CreateOBB(const prev_test::common::intersection::OBB& obb, const glm::vec3& scale, const glm::vec3& offset) const
+std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::CreateOBB(const prev::util::intersection::OBB& obb, const glm::vec3& scale, const glm::vec3& offset) const
 {
     return std::make_unique<OBBBoundingVolumeComponent>(m_allocator, obb, scale, offset);
 }
@@ -37,7 +36,7 @@ std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::Create
     return CreateOBB(obb, scale, offset);
 }
 
-std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::CreateSphere(const prev_test::common::intersection::Sphere& sphere, const float scale, const glm::vec3& offset) const
+std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::CreateSphere(const prev::util::intersection::Sphere& sphere, const float scale, const glm::vec3& offset) const
 {
     return std::make_unique<SphereBoundingVolumeComponent>(m_allocator, sphere, scale, offset);
 }
@@ -50,9 +49,9 @@ std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::Create
     return CreateSphere(sphere, scale, offset);
 }
 
-prev_test::common::intersection::AABB BoundingVolumeComponentFactory::CreateAABBFromVertices(const std::vector<glm::vec3>& vertices) const
+prev::util::intersection::AABB BoundingVolumeComponentFactory::CreateAABBFromVertices(const std::vector<glm::vec3>& vertices) const
 {
-    prev_test::common::intersection::AABB aabb{};
+    prev::util::intersection::AABB aabb{};
     for (const auto& v : vertices) {
         aabb.minExtents = glm::min(aabb.minExtents, v);
         aabb.maxExtents = glm::max(aabb.maxExtents, v);
@@ -60,7 +59,7 @@ prev_test::common::intersection::AABB BoundingVolumeComponentFactory::CreateAABB
     return aabb;
 }
 
-prev_test::common::intersection::OBB BoundingVolumeComponentFactory::CreateOBBFromVertices(const std::vector<glm::vec3>& vertices) const
+prev::util::intersection::OBB BoundingVolumeComponentFactory::CreateOBBFromVertices(const std::vector<glm::vec3>& vertices) const
 {
     // https://stackoverflow.com/a/6189655
     glm::vec3 centroid{ 0.0f };
@@ -82,11 +81,11 @@ prev_test::common::intersection::OBB BoundingVolumeComponentFactory::CreateOBBFr
     }
     averageDistancesFromCentroid /= static_cast<float>(vertices.size());
 
-    prev_test::common::intersection::OBB obb{ glm::normalize(glm::quat_cast(glm::mat3(glm::normalize(covarianceMatrix[0]), glm::normalize(covarianceMatrix[1]), glm::normalize(covarianceMatrix[2])))), centroid, averageDistancesFromCentroid };
+    prev::util::intersection::OBB obb{ glm::normalize(glm::quat_cast(glm::mat3(glm::normalize(covarianceMatrix[0]), glm::normalize(covarianceMatrix[1]), glm::normalize(covarianceMatrix[2])))), centroid, averageDistancesFromCentroid };
     return obb;
 }
 
-prev_test::common::intersection::Sphere BoundingVolumeComponentFactory::CreateSphereFromVertices(const std::vector<glm::vec3>& vertices) const
+prev::util::intersection::Sphere BoundingVolumeComponentFactory::CreateSphereFromVertices(const std::vector<glm::vec3>& vertices) const
 {
     glm::vec3 centroid{ 0.0f };
     for (const auto& v : vertices) {
@@ -100,21 +99,21 @@ prev_test::common::intersection::Sphere BoundingVolumeComponentFactory::CreateSp
     }
     averageDistancesFromCentroid /= static_cast<float>(vertices.size());
 
-    return prev_test::common::intersection::Sphere{ centroid, averageDistancesFromCentroid };
+    return prev::util::intersection::Sphere{ centroid, averageDistancesFromCentroid };
 }
 
-prev_test::common::intersection::OBB BoundingVolumeComponentFactory::CreateOBBFromAABB(const prev_test::common::intersection::AABB& box) const
+prev::util::intersection::OBB BoundingVolumeComponentFactory::CreateOBBFromAABB(const prev::util::intersection::AABB& box) const
 {
-    return prev_test::common::intersection::OBB{ glm::quat{ 1.0f, 0.0f, 0.0f, 0.0f }, box.GetCenter(), box.GetHalfSize() };
+    return prev::util::intersection::OBB{ glm::quat{ 1.0f, 0.0f, 0.0f, 0.0f }, box.GetCenter(), box.GetHalfSize() };
 }
 
-prev_test::common::intersection::Sphere BoundingVolumeComponentFactory::CreateSphereFromAABB(const prev_test::common::intersection::AABB& box) const
+prev::util::intersection::Sphere BoundingVolumeComponentFactory::CreateSphereFromAABB(const prev::util::intersection::AABB& box) const
 {
     const auto boxHalfExtents{ box.GetHalfSize() };
     float maxExtent{ -std::numeric_limits<float>::max() };
     for (auto i = 0; i < boxHalfExtents.length(); i++) {
         maxExtent = std::max(maxExtent, boxHalfExtents[i]);
     }
-    return prev_test::common::intersection::Sphere{ box.GetCenter(), maxExtent };
+    return prev::util::intersection::Sphere{ box.GetCenter(), maxExtent };
 }
 } // namespace prev_test::component::ray_casting

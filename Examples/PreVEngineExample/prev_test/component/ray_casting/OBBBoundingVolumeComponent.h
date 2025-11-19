@@ -4,21 +4,22 @@
 #include "IBoundingVolumeComponent.h"
 #include "RayCastingCommon.h"
 
-#include "../../common/intersection/Frustum.h"
-#include "../../common/intersection/OBB.h"
 #include "../../render/IModel.h"
+
+#include <prev/util/intersection/Frustum.h>
+#include <prev/util/intersection/OBB.h>
 
 namespace prev_test::component::ray_casting {
 class OBBBoundingVolumeComponent : public IBoundingVolumeComponent {
 public:
-    OBBBoundingVolumeComponent(prev::core::memory::Allocator& allocator, const prev_test::common::intersection::OBB& obb, const glm::vec3& scale, const glm::vec3& offset);
+    OBBBoundingVolumeComponent(prev::core::memory::Allocator& allocator, const prev::util::intersection::OBB& obb, const glm::vec3& scale, const glm::vec3& offset);
 
     ~OBBBoundingVolumeComponent() = default;
 
 public:
-    bool IsInFrustum(const prev_test::common::intersection::Frustum& frustum) override;
+    bool IsInFrustum(const prev::util::intersection::Frustum& frustum) override;
 
-    bool Intersects(const prev_test::common::intersection::Ray& ray, prev_test::common::intersection::RayCastResult& result) override;
+    bool Intersects(const prev::util::intersection::Ray& ray, prev::util::intersection::RayCastResult& result) override;
 
     void Update(const glm::mat4& worldTransform) override;
 
@@ -28,9 +29,9 @@ public:
     std::shared_ptr<prev_test::render::IModel> GetModel() const override;
 #endif
 private:
-    static prev_test::common::intersection::OBB ScaleOBB(const prev_test::common::intersection::OBB& obb, const glm::vec3& scale);
+    static prev::util::intersection::OBB ScaleOBB(const prev::util::intersection::OBB& obb, const glm::vec3& scale);
 
-    static prev_test::common::intersection::OBB OffsetOBB(const prev_test::common::intersection::OBB& obb, const glm::vec3& offset);
+    static prev::util::intersection::OBB OffsetOBB(const prev::util::intersection::OBB& obb, const glm::vec3& offset);
 
 private:
     prev::core::memory::Allocator& m_allocator;
@@ -42,9 +43,9 @@ private:
 #ifdef RENDER_BOUNDING_VOLUMES
     std::shared_ptr<prev_test::render::IModel> m_model;
 #endif
-    prev_test::common::intersection::OBB m_original;
+    prev::util::intersection::OBB m_original;
 
-    prev_test::common::intersection::OBB m_working;
+    prev::util::intersection::OBB m_working;
 };
 } // namespace prev_test::component::ray_casting
 

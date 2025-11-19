@@ -11,7 +11,7 @@ RayModelFactory::RayModelFactory(prev::core::memory::Allocator& allocator)
 {
 }
 
-std::unique_ptr<prev_test::render::IModel> RayModelFactory::Create(const prev_test::common::intersection::Ray& ray) const
+std::unique_ptr<prev_test::render::IModel> RayModelFactory::Create(const prev::util::intersection::Ray& ray) const
 {
     const float DISTANCE_BETWEEN_POINTS{ 4.0f };
     const uint32_t pointsCount{ static_cast<uint32_t>(ray.length / DISTANCE_BETWEEN_POINTS) };

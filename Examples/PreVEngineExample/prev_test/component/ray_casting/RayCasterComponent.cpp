@@ -42,9 +42,9 @@ void RayCasterComponent::SetOrientationOffsetAngles(const glm::vec2& angles)
     m_orientationOffsetAngles = angles;
 }
 
-prev_test::common::intersection::Ray RayCasterComponent::GetRay() const
+prev::util::intersection::Ray RayCasterComponent::GetRay() const
 {
-    return prev_test::common::intersection::Ray{ m_rayStartPosition, m_rayDirection, m_rayLength };
+    return prev::util::intersection::Ray{ m_rayStartPosition, m_rayDirection, m_rayLength };
 }
 #ifdef RENDER_RAYCASTS
 std::shared_ptr<prev_test::render::IModel> RayCasterComponent::GetModel() const

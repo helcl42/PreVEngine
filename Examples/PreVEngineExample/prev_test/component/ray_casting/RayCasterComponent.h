@@ -3,8 +3,9 @@
 
 #include "IRayCasterComponent.h"
 
-#include "../../common/intersection/Ray.h"
 #include "../../render/IModel.h"
+
+#include <prev/util/intersection/Ray.h>
 
 namespace prev_test::component::ray_casting {
 class RayCasterComponent final : public IRayCasterComponent {
@@ -24,7 +25,7 @@ public:
 
     void SetOrientationOffsetAngles(const glm::vec2& angles) override;
 
-    prev_test::common::intersection::Ray GetRay() const override;
+    prev::util::intersection::Ray GetRay() const override;
 
 #ifdef RENDER_RAYCASTS
     std::shared_ptr<prev_test::render::IModel> GetModel() const override;

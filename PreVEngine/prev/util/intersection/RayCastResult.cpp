@@ -1,8 +1,8 @@
 #include "RayCastResult.h"
 
-#include <prev/util/Utils.h>
+#include "../Utils.h"
 
-namespace prev_test::common::intersection {
+namespace prev::util::intersection {
 RayCastResult::RayCastResult()
     : point(glm::vec3{ 0.0f })
     , normal(glm::vec3{ 0.0f, 0.0f, 1.0f })
@@ -27,4 +27,4 @@ std::ostream& operator<<(std::ostream& out, const RayCastResult& result)
     out << "Hit: " << (result.hit ? "True" : "False") << std::endl;
     return out;
 }
-} // namespace prev_test::common::intersection
+} // namespace prev::util::intersection

@@ -23,7 +23,7 @@ void Fire::Init()
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::particle::IParticleSystemComponent>(GetThis(), m_particleSystemComponent, { TAG_PARTICLE_SYSTEM_COMPONENT });
 
     prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{ m_allocator };
-    m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(prev_test::common::intersection::AABB(glm::vec3{ -0.5 }, glm::vec3{ 0.5 }), glm::vec3{ 1.0f }, {});
+    m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(prev::util::intersection::AABB(glm::vec3{ -0.5 }, glm::vec3{ 0.5 }), glm::vec3{ 1.0f }, {});
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, { TAG_BOUNDING_VOLUME_COMPONENT });
 
     SceneNode::Init();

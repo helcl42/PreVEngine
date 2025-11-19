@@ -4,21 +4,22 @@
 #include "IBoundingVolumeComponent.h"
 #include "RayCastingCommon.h"
 
-#include "../../common/intersection/AABB.h"
-#include "../../common/intersection/Frustum.h"
 #include "../../render/IModel.h"
+
+#include <prev/util/intersection/AABB.h>
+#include <prev/util/intersection/Frustum.h>
 
 namespace prev_test::component::ray_casting {
 class AABBBoundingVolumeComponent : public IBoundingVolumeComponent {
 public:
-    AABBBoundingVolumeComponent(prev::core::memory::Allocator& allocator, const prev_test::common::intersection::AABB& box, const glm::vec3& scale, const glm::vec3& offset);
+    AABBBoundingVolumeComponent(prev::core::memory::Allocator& allocator, const prev::util::intersection::AABB& box, const glm::vec3& scale, const glm::vec3& offset);
 
     ~AABBBoundingVolumeComponent() = default;
 
 public:
-    bool IsInFrustum(const prev_test::common::intersection::Frustum& frustum) override;
+    bool IsInFrustum(const prev::util::intersection::Frustum& frustum) override;
 
-    bool Intersects(const prev_test::common::intersection::Ray& ray, prev_test::common::intersection::RayCastResult& result) override;
+    bool Intersects(const prev::util::intersection::Ray& ray, prev::util::intersection::RayCastResult& result) override;
 
     void Update(const glm::mat4& worldTransform) override;
 
@@ -28,9 +29,9 @@ public:
     std::shared_ptr<prev_test::render::IModel> GetModel() const override;
 #endif
 private:
-    static prev_test::common::intersection::AABB ScaleBox(const prev_test::common::intersection::AABB& box, const glm::vec3& scale);
+    static prev::util::intersection::AABB ScaleBox(const prev::util::intersection::AABB& box, const glm::vec3& scale);
 
-    static prev_test::common::intersection::AABB OffsetBox(const prev_test::common::intersection::AABB& box, const glm::vec3& offset);
+    static prev::util::intersection::AABB OffsetBox(const prev::util::intersection::AABB& box, const glm::vec3& offset);
 
 private:
     prev::core::memory::Allocator& m_allocator;
@@ -42,11 +43,11 @@ private:
 #ifdef RENDER_BOUNDING_VOLUMES
     std::shared_ptr<prev_test::render::IModel> m_model;
 #endif
-    prev_test::common::intersection::AABB m_original;
+    prev::util::intersection::AABB m_original;
 
     std::vector<glm::vec3> m_originalAABBPoints;
 
-    prev_test::common::intersection::AABB m_working;
+    prev::util::intersection::AABB m_working;
 
     std::vector<glm::vec3> m_vorkingAABBPoints;
 };

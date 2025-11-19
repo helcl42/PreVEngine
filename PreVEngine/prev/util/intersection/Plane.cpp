@@ -1,8 +1,8 @@
 #include "Plane.h"
 
-#include <prev/util/Utils.h>
+#include "../Utils.h"
 
-namespace prev_test::common::intersection {
+namespace prev::util::intersection {
 Plane::Plane()
     : normal(glm::vec3{ 0.0f, 1.0f, 0.0f })
     , distance(0)
@@ -30,4 +30,4 @@ std::ostream& operator<<(std::ostream& out, const Plane& plane)
     out << "Distance: " << plane.distance << std::endl;
     return out;
 }
-} // namespace prev_test::common::intersection
+} // namespace prev::util::intersection

@@ -32,7 +32,6 @@
 #include "water/WaterRenderer.h"
 
 #include "../../Tags.h"
-#include "../../common/intersection/Frustum.h"
 #include "../../component/camera/ICameraComponent.h"
 #include "../../component/common/IOffScreenRenderPassComponent.h"
 #include "../../component/shadow/IShadowsComponent.h"
@@ -40,6 +39,7 @@
 #include "../../component/water/WaterCommon.h"
 
 #include <prev/scene/component/NodeComponentHelper.h>
+#include <prev/util/intersection/Frustum.h>
 
 namespace prev_test::render::renderer {
 MasterRenderer::MasterRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene, uint32_t swapchainImageCount, uint32_t viewCount)
@@ -310,7 +310,7 @@ void MasterRenderer::RenderShadows(const prev::render::RenderContext& renderCont
         const auto& cascadeFrameData{ shadows->GetCascadeFrameData(cascadeIndex) };
 
         const prev::render::RenderContext customRenderContextBase{ cascadeRenderData.frameBuffer, renderContext.commandBuffer, renderContext.frameInFlightIndex, { { 0, 0 }, shadows->GetExtent() } };
-        const ShadowsRenderContext customRenderContext{ customRenderContextBase, cascadeFrameData.viewMatrix, cascadeFrameData.projectionMatrix, cascadeIndex, prev_test::common::intersection::Frustum{ cascadeFrameData.projectionMatrix, cascadeFrameData.viewMatrix } };
+        const ShadowsRenderContext customRenderContext{ customRenderContextBase, cascadeFrameData.viewMatrix, cascadeFrameData.projectionMatrix, cascadeIndex, prev::util::intersection::Frustum{ cascadeFrameData.projectionMatrix, cascadeFrameData.viewMatrix } };
 
 #ifdef PARALLEL_RENDERING
         const auto& cascadeCommandBuffers{ m_shadowsCommandBufferGroups[cascadeIndex]->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
@@ -355,7 +355,7 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
         customRenderContext.viewMatrices[view] = viewMatrix;
         customRenderContext.projectionMatrices[view] = projectionMatrix;
         customRenderContext.cameraPositions[view] = newCameraPosition;
-        customRenderContext.frustums[view] = prev_test::common::intersection::Frustum{ projectionMatrix, viewMatrix };
+        customRenderContext.frustums[view] = prev::util::intersection::Frustum{ projectionMatrix, viewMatrix };
     }
 
 #ifdef PARALLEL_RENDERING
@@ -390,7 +390,7 @@ void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& re
         customRenderContext.viewMatrices[view] = viewMatrix;
         customRenderContext.projectionMatrices[view] = projectionMatrix;
         customRenderContext.cameraPositions[view] = cameraComponent->GetPosition();
-        customRenderContext.frustums[view] = prev_test::common::intersection::Frustum{ projectionMatrix, viewMatrix };
+        customRenderContext.frustums[view] = prev::util::intersection::Frustum{ projectionMatrix, viewMatrix };
     }
 
 #ifdef PARALLEL_RENDERING
@@ -422,7 +422,7 @@ void MasterRenderer::RenderScene(const prev::render::RenderContext& renderContex
         customRenderContext.viewMatrices[view] = viewMatrix;
         customRenderContext.projectionMatrices[view] = projectionMatrix;
         customRenderContext.cameraPositions[view] = cameraComponent->GetPosition();
-        customRenderContext.frustums[view] = prev_test::common::intersection::Frustum{ projectionMatrix, viewMatrix };
+        customRenderContext.frustums[view] = prev::util::intersection::Frustum{ projectionMatrix, viewMatrix };
     }
 
 #ifdef PARALLEL_RENDERING

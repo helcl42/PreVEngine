@@ -1,15 +1,15 @@
 #ifndef __RAY_CASTER_EVENTS_H__
 #define __RAY_CASTER_EVENTS_H__
 
-#include "../../common/intersection/Ray.h"
+#include <prev/util/intersection/Ray.h>
 
 namespace prev_test::scene::ray_casting {
 struct RayEvent {
-    prev_test::common::intersection::Ray ray;
+    prev::util::intersection::Ray ray;
 
     RayEvent() = default;
 
-    RayEvent(const prev_test::common::intersection::Ray& r)
+    RayEvent(const prev::util::intersection::Ray& r)
         : ray(r)
     {
     }
