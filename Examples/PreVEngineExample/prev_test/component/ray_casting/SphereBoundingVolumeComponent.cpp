@@ -26,12 +26,12 @@ SphereBoundingVolumeComponent::SphereBoundingVolumeComponent(prev::core::memory:
 
 bool SphereBoundingVolumeComponent::IsInFrustum(const prev_test::common::intersection::Frustum& frustum)
 {
-    return prev_test::common::intersection::IntersectionTester::Intersects(frustum, m_working);
+    return prev_test::common::intersection::tester::Intersects(frustum, m_working);
 }
 
 bool SphereBoundingVolumeComponent::Intersects(const prev_test::common::intersection::Ray& ray, prev_test::common::intersection::RayCastResult& result)
 {
-    return prev_test::common::intersection::IntersectionTester::Intersects(ray, m_working, result);
+    return prev_test::common::intersection::tester::Intersects(ray, m_working, result);
 }
 
 void SphereBoundingVolumeComponent::Update(const glm::mat4& worldTransform)

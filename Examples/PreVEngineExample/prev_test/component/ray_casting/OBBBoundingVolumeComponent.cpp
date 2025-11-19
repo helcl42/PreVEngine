@@ -27,12 +27,12 @@ OBBBoundingVolumeComponent::OBBBoundingVolumeComponent(prev::core::memory::Alloc
 
 bool OBBBoundingVolumeComponent::IsInFrustum(const prev_test::common::intersection::Frustum& frustum)
 {
-    return prev_test::common::intersection::IntersectionTester::Intersects(m_working, frustum);
+    return prev_test::common::intersection::tester::Intersects(m_working, frustum);
 }
 
 bool OBBBoundingVolumeComponent::Intersects(const prev_test::common::intersection::Ray& ray, prev_test::common::intersection::RayCastResult& result)
 {
-    return prev_test::common::intersection::IntersectionTester::Intersects(ray, m_working, result);
+    return prev_test::common::intersection::tester::Intersects(ray, m_working, result);
 }
 
 void OBBBoundingVolumeComponent::Update(const glm::mat4& worldTransform)

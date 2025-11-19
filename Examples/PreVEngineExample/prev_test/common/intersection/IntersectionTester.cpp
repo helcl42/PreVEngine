@@ -2,7 +2,7 @@
 
 #include <prev/util/MathUtils.h>
 
-namespace prev_test::common::intersection {
+namespace prev_test::common::intersection::tester {
 namespace {
     struct Interval {
         float min;
@@ -68,7 +68,7 @@ namespace {
     }
 } // namespace
 
-bool IntersectionTester::Intersects(const Sphere& sphere, const Plane& plane)
+bool Intersects(const Sphere& sphere, const Plane& plane)
 {
     if ((plane.normal.x * sphere.position.x) + (plane.normal.y * sphere.position.y) + (plane.normal.z * sphere.position.z) + plane.distance <= -sphere.radius) {
         return false;
@@ -76,7 +76,7 @@ bool IntersectionTester::Intersects(const Sphere& sphere, const Plane& plane)
     return true;
 }
 
-bool IntersectionTester::Intersects(const AABB& box, const Plane& plane)
+bool Intersects(const AABB& box, const Plane& plane)
 {
     const auto aabbPoints{ box.GetPoints() };
 
@@ -89,12 +89,12 @@ bool IntersectionTester::Intersects(const AABB& box, const Plane& plane)
     return missCount != aabbPoints.size();
 }
 
-bool IntersectionTester::Intersects(const Plane& plane, const Point& point)
+bool Intersects(const Plane& plane, const Point& point)
 {
     return prev::util::math::AlmostZero(glm::dot(point.position, plane.normal) - plane.distance);
 }
 
-bool IntersectionTester::Intersects(const AABB& box, const Point& point)
+bool Intersects(const AABB& box, const Point& point)
 {
     for (auto i = 0; i < point.position.length(); i++) {
         if (point.position[i] > box.maxExtents[i]) {
@@ -108,24 +108,24 @@ bool IntersectionTester::Intersects(const AABB& box, const Point& point)
     return true;
 }
 
-bool IntersectionTester::Intersects(const Sphere& sphere, const Point& point)
+bool Intersects(const Sphere& sphere, const Point& point)
 {
     return glm::distance(sphere.position, point.position) < sphere.radius;
 }
 
-bool IntersectionTester::Intersects(const AABB& box1, const AABB& box2)
+bool Intersects(const AABB& box1, const AABB& box2)
 {
     return (box1.minExtents.x <= box2.maxExtents.x && box1.maxExtents.x >= box2.minExtents.x)
         && (box1.minExtents.y <= box2.maxExtents.y && box1.maxExtents.y >= box2.minExtents.y)
         && (box1.minExtents.z <= box2.maxExtents.z && box1.maxExtents.z >= box2.minExtents.z);
 }
 
-bool IntersectionTester::Intersects(const Sphere& sphere1, const Sphere& sphere2)
+bool Intersects(const Sphere& sphere1, const Sphere& sphere2)
 {
     return glm::distance(sphere1.position, sphere2.position) < (sphere1.radius + sphere2.radius);
 }
 
-bool IntersectionTester::Intersects(const Sphere& sphere, const AABB& box)
+bool Intersects(const Sphere& sphere, const AABB& box)
 {
     // get box closest point to sphere center by clamping
     const float x{ std::max(box.minExtents.x, std::min(sphere.position.x, box.maxExtents.x)) };
@@ -135,7 +135,7 @@ bool IntersectionTester::Intersects(const Sphere& sphere, const AABB& box)
     return Intersects(sphere, Point{ glm::vec3{ x, y, z } });
 }
 
-bool IntersectionTester::Intersects(const Frustum& frustum, const Point& point)
+bool Intersects(const Frustum& frustum, const Point& point)
 {
     for (const auto& plane : frustum.planes) {
         if (glm::dot(point.position, plane.normal) + plane.distance < 0.0f) {
@@ -145,7 +145,7 @@ bool IntersectionTester::Intersects(const Frustum& frustum, const Point& point)
     return true;
 }
 
-bool IntersectionTester::Intersects(const Frustum& frustum, const Sphere& sphere)
+bool Intersects(const Frustum& frustum, const Sphere& sphere)
 {
     for (size_t i = 0; i < frustum.planes.size(); i++) {
         if (!Intersects(sphere, frustum.planes[i])) {
@@ -155,7 +155,7 @@ bool IntersectionTester::Intersects(const Frustum& frustum, const Sphere& sphere
     return true;
 }
 
-bool IntersectionTester::Intersects(const Frustum& frustum, const AABB& box)
+bool Intersects(const Frustum& frustum, const AABB& box)
 {
     // check box outside/inside of frustum
     for (const auto& plane : frustum.planes) {
@@ -178,7 +178,7 @@ bool IntersectionTester::Intersects(const Frustum& frustum, const AABB& box)
     return true;
 }
 
-bool IntersectionTester::Intersects(const OBB& obb1, const OBB& obb2)
+bool Intersects(const OBB& obb1, const OBB& obb2)
 {
     const glm::mat3 obbAOrientationMatrix{ glm::mat3_cast(obb1.orientation) };
     const glm::mat3 obbBOrientationMatrix{ glm::mat3_cast(obb2.orientation) };
@@ -206,7 +206,7 @@ bool IntersectionTester::Intersects(const OBB& obb1, const OBB& obb2)
     return true;
 }
 
-bool IntersectionTester::Intersects(const OBB& obb, const AABB& box)
+bool Intersects(const OBB& obb, const AABB& box)
 {
     const glm::mat3 obbOrientationMatrix{ glm::mat3_cast(obb.orientation) };
 
@@ -234,7 +234,7 @@ bool IntersectionTester::Intersects(const OBB& obb, const AABB& box)
     return true;
 }
 
-bool IntersectionTester::Intersects(const OBB& obb, const Sphere& sphere)
+bool Intersects(const OBB& obb, const Sphere& sphere)
 {
     const glm::vec3 closestPoint{ GetClosestPoint(obb, sphere.position) };
     const float distance{ glm::length(closestPoint - sphere.position) };
@@ -244,7 +244,7 @@ bool IntersectionTester::Intersects(const OBB& obb, const Sphere& sphere)
     return true;
 }
 
-bool IntersectionTester::Intersects(const OBB& obb, const Point& point)
+bool Intersects(const OBB& obb, const Point& point)
 {
     const glm::vec3 dir{ point.position - obb.position };
     const glm::mat3 orientationMatrix{ glm::mat3_cast(obb.orientation) };
@@ -261,7 +261,7 @@ bool IntersectionTester::Intersects(const OBB& obb, const Point& point)
     return true;
 }
 
-bool IntersectionTester::Intersects(const OBB& obb, const Frustum& frustum)
+bool Intersects(const OBB& obb, const Frustum& frustum)
 {
     // check box outside/inside of frustum
     for (const auto& plane : frustum.planes) {
@@ -284,7 +284,7 @@ bool IntersectionTester::Intersects(const OBB& obb, const Frustum& frustum)
     return true;
 }
 
-bool IntersectionTester::Intersects(const OBB& obb, const Plane& plane)
+bool Intersects(const OBB& obb, const Plane& plane)
 {
     const auto obbPoints{ obb.GetPoints() };
 
@@ -297,7 +297,7 @@ bool IntersectionTester::Intersects(const OBB& obb, const Plane& plane)
     return missCount != obbPoints.size();
 }
 
-bool IntersectionTester::Intersects(const Ray& ray, const AABB& box, RayCastResult& result)
+bool Intersects(const Ray& ray, const AABB& box, RayCastResult& result)
 {
     const glm::vec3 min = box.minExtents;
     const glm::vec3 max = box.maxExtents;
@@ -353,7 +353,7 @@ bool IntersectionTester::Intersects(const Ray& ray, const AABB& box, RayCastResu
     return true;
 }
 
-bool IntersectionTester::Intersects(const Ray& ray, const Sphere& sphere, RayCastResult& result)
+bool Intersects(const Ray& ray, const Sphere& sphere, RayCastResult& result)
 {
     const auto e{ sphere.position - ray.origin };
     const float radiusSquared{ sphere.radius * sphere.radius };
@@ -382,7 +382,7 @@ bool IntersectionTester::Intersects(const Ray& ray, const Sphere& sphere, RayCas
     return true;
 }
 
-bool IntersectionTester::Intersects(const Ray& ray, const Plane& plane, RayCastResult& result)
+bool Intersects(const Ray& ray, const Plane& plane, RayCastResult& result)
 {
     const float EPSILON{ 0.0001f };
     const float denom{ glm::dot(ray.direction, plane.normal) };
@@ -400,7 +400,7 @@ bool IntersectionTester::Intersects(const Ray& ray, const Plane& plane, RayCastR
     return false;
 }
 
-bool IntersectionTester::Intersects(const Ray& ray, const OBB& obb, RayCastResult& result)
+bool Intersects(const Ray& ray, const OBB& obb, RayCastResult& result)
 {
     const glm::vec3 size{ obb.halfExtents };
     const glm::vec3 p{ obb.position - ray.origin };
@@ -464,4 +464,4 @@ bool IntersectionTester::Intersects(const Ray& ray, const OBB& obb, RayCastResul
 
     return true;
 }
-} // namespace prev_test::common::intersection
+} // namespace prev_test::common::intersection::tester
