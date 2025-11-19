@@ -1,3 +1,6 @@
+#ifndef __MATH_UTILS_TESTS_H__
+#define __MATH_UTILS_TESTS_H__
+
 #include <prev/common/Common.h>
 #include <prev/util/MathUtils.h>
 
@@ -146,5 +149,4 @@ TEST(MathUtilsTests, CreatePerspectiveProjectionMatrix)
 
 } // namespace prev::util::math
 
-
-
+#endif // __MATH_UTILS_TESTS_H__
