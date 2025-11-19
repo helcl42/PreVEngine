@@ -25,7 +25,7 @@ public:
 
     void SetMouseCursorVisible(bool visible) override;
 
-    Surface& CreateSurface();
+    Surface& CreateSurface() override;
 
 private:
     std::unique_ptr<IOSState> m_state{};
