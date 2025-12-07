@@ -134,14 +134,14 @@ TEST(MathUtilsTests, GetForwardVector)
 
 TEST(MathUtilsTests, CreatePerspectiveProjectionMatrix)
 {
+    float verticalFov = glm::radians(45.0f);
     float aspectRatio = 16.0f / 9.0f;
-    float verticalFov = 45.0f;
     float nearPlane = 0.1f;
     float farPlane = 100.0f;
 
-    glm::mat4 result = CreatePerspectiveProjectionMatrix(aspectRatio, verticalFov, nearPlane, farPlane);
+    glm::mat4 result = CreatePerspectiveProjectionMatrix(verticalFov, aspectRatio, nearPlane, farPlane);
 
-    glm::mat4 expected = glm::perspective(glm::radians(verticalFov), aspectRatio, nearPlane, farPlane);
+    glm::mat4 expected = glm::perspective(verticalFov, aspectRatio, nearPlane, farPlane);
     expected[1][1] *= -1; // Adjust for inverted Y
 
     EXPECT_EQ(result, expected);

@@ -117,9 +117,9 @@ glm::quat CreateQuaternion(const glm::vec3& v1, const glm::vec3& v2)
     return glm::normalize(glm::quat(1.0f + glm::dot(v1, v2), glm::cross(v1, v2)));
 }
 
-std::vector<glm::vec3> GetFrustumCorners(const glm::mat4& inverseWorldToClipSpaceTransform)
+std::vector<glm::vec3> GetFrustumCorners(const glm::mat4& inverseViewProjectionTransform)
 {
-    const std::vector<glm::vec3> cubeFrustumCorners{
+    const std::vector<glm::vec3> frustumCornersNdc = {
         { -1.0f, 1.0f, 0.0f },
         { 1.0f, 1.0f, 0.0f },
         { 1.0f, -1.0f, 0.0f },
@@ -131,10 +131,10 @@ std::vector<glm::vec3> GetFrustumCorners(const glm::mat4& inverseWorldToClipSpac
     };
 
     // Project frustum corners into world space(from clip space)
-    std::vector<glm::vec3> result(cubeFrustumCorners.size());
-    for (uint32_t i = 0; i < 8; i++) {
-        const glm::vec4 invCorner{ inverseWorldToClipSpaceTransform * glm::vec4(cubeFrustumCorners[i], 1.0f) };
-        result[i] = invCorner / invCorner.w;
+    std::vector<glm::vec3> result(frustumCornersNdc.size());
+    for (size_t i = 0; i < frustumCornersNdc.size(); ++i) {
+        const glm::vec4 worldCorner{ inverseViewProjectionTransform * glm::vec4(frustumCornersNdc[i], 1.0f) };
+        result[i] = worldCorner / worldCorner.w;
     }
     return result;
 }
@@ -183,9 +183,9 @@ glm::mat4 CreateOrthographicProjectionMatrix(const float leftPlane, const float 
     return projectionMatrix;
 }
 
-glm::mat4 CreatePerspectiveProjectionMatrix(const float aspectRatio, const float verticalFovInDegs, const float nearClippingPlane, const float farClippingPlane)
+glm::mat4 CreatePerspectiveProjectionMatrix(const float verticalFov, const float aspectRatio, const float nearClippingPlane, const float farClippingPlane)
 {
-    glm::mat4 projectionMatrix = glm::perspective(glm::radians(verticalFovInDegs), aspectRatio, nearClippingPlane, farClippingPlane);
+    glm::mat4 projectionMatrix = glm::perspective(verticalFov, aspectRatio, nearClippingPlane, farClippingPlane);
     projectionMatrix[1][1] *= -1; // invert Y in clip coordinates
     return projectionMatrix;
 }

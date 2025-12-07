@@ -138,7 +138,7 @@ glm::mat4 ExtractRotation(const glm::mat4& transform);
 
 glm::quat CreateQuaternion(const glm::vec3& v1, const glm::vec3& v2);
 
-std::vector<glm::vec3> GetFrustumCorners(const glm::mat4& inverseWorldToClipSpaceTransform);
+std::vector<glm::vec3> GetFrustumCorners(const glm::mat4& inverseViewProjectionTransform);
 
 glm::vec2 FromViewPortSpaceToNormalizedDeviceSpace(const glm::vec2& viewPortDimensions, const glm::vec2& viewPortCoords);
 
@@ -150,7 +150,7 @@ glm::vec3 FromCameraSpaceToWorldSpace(const glm::mat4& viewMatrix, const glm::ve
 
 glm::mat4 CreateOrthographicProjectionMatrix(const float leftPlane, const float rightPlane, const float bottomPlane, const float topPlane, const float nearPlane, const float farPlane);
 
-glm::mat4 CreatePerspectiveProjectionMatrix(const float aspectRatio, const float verticalFovInDegs, const float nearClippingPlane, const float farClippingPlane);
+glm::mat4 CreatePerspectiveProjectionMatrix(const float verticalFov, const float aspectRatio, const float nearClippingPlane, const float farClippingPlane);
 
 glm::mat4 CreatePerspectiveProjectionMatrix(const float tanAngleLeft, const float tanAngleRight, const float tanAngleUp, float const tanAngleDown, const float nearClippingPlane, const float farClippingPlane);
 
