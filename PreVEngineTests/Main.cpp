@@ -1,5 +1,6 @@
 
 #include "prev/util/MathUtilsTests.h"
+#include "prev/util/intersection/IntersectionTesterTests.h"
 
 TEST(SampleTest, BasicAssertions)
 {
