@@ -89,4 +89,8 @@ python Scripts/compile_shaders.py --input_folder Examples/PreVEngineExample/asse
  - [stb_image](https://github.com/nothings/stb): Used for image loading.
  - [volk](https://github.com/zeux/volk): Multiplatform loader for Vulkan.
 
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
 
