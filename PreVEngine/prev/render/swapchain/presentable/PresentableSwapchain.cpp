@@ -58,6 +58,9 @@ PresentableSwapchain::~PresentableSwapchain()
         for (auto& swapchainBuffer : m_swapchainBuffers) {
             swapchainBuffer.Destroy(m_device);
         }
+        for (auto& frame : m_framesInFlight) {
+            frame.Destroy(m_device);
+        }
 
         LOGI("Swapchain destroyed");
     }
@@ -209,6 +212,9 @@ void PresentableSwapchain::Apply()
         for (auto& swapchainBuffer : m_swapchainBuffers) {
             swapchainBuffer.Destroy(m_device);
         }
+        for (auto& frame : m_framesInFlight) {
+            frame.Destroy(m_device);
+        }
     }
 
     const VkExtent3D newExtent{ m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height, 1 };
@@ -251,6 +257,14 @@ void PresentableSwapchain::Apply()
 
     m_frameIndex = util::CircularIndex{ swapchainImagesCount };
 
+    // Create per-frame-in-flight resources
+    m_framesInFlight.resize(swapchainImagesCount);
+    for (uint32_t i = 0; i < swapchainImagesCount; ++i) {
+        m_framesInFlight[i].commandBuffer = util::vk::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+        m_framesInFlight[i].acquireSemaphore = util::vk::CreateSemaphore(m_device);
+        m_framesInFlight[i].fence = util::vk::CreateFence(m_device, VK_FENCE_CREATE_SIGNALED_BIT);
+    }
+
     m_swapchainBuffers.resize(swapchainImagesCount);
     for (uint32_t i = 0; i < swapchainImagesCount; ++i) {
         auto image{ swapchainImages[i] };
@@ -268,11 +282,8 @@ void PresentableSwapchain::Apply()
         swapchainBuffer.image = image;
         swapchainBuffer.view = imageView;
         swapchainBuffer.framebuffer = util::vk::CreateFrameBuffer(m_device, m_renderPass, swapchainImageViews, m_swapchainCreateInfo.imageExtent);
-        swapchainBuffer.commandBuffer = util::vk::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-        swapchainBuffer.fence = util::vk::CreateFence(m_device, VK_FENCE_CREATE_SIGNALED_BIT);
         swapchainBuffer.extent = m_swapchainCreateInfo.imageExtent;
         swapchainBuffer.renderSemaphore = util::vk::CreateSemaphore(m_device);
-        swapchainBuffer.presentSemaphore = util::vk::CreateSemaphore(m_device);
     }
 
     if (m_swapchainCreateInfo.oldSwapchain == VK_NULL_HANDLE) {
@@ -303,13 +314,14 @@ bool PresentableSwapchain::AcquireNext(SwapchainBuffer& next)
 {
     ASSERT(!m_isAcquired, "Swapchain: Previous swapchain buffer has not yet been presented.");
 
-    const auto& swapchainBuffer{ m_swapchainBuffers[m_frameIndex] };
+    auto& frameInFlight{ m_framesInFlight[m_frameIndex] };
 
-    VKERRCHECK(vkWaitForFences(m_device, 1, &swapchainBuffer.fence, VK_TRUE, UINT64_MAX));
-    VKERRCHECK(vkResetFences(m_device, 1, &swapchainBuffer.fence));
+    // Wait for this frame-in-flight to complete before reusing it
+    VKERRCHECK(vkWaitForFences(m_device, 1, &frameInFlight.fence, VK_TRUE, UINT64_MAX));
+    VKERRCHECK(vkResetFences(m_device, 1, &frameInFlight.fence));
 
     uint32_t acquireIndex;
-    const auto result{ vkAcquireNextImageKHR(m_device, m_swapchain, UINT64_MAX, swapchainBuffer.presentSemaphore, VK_NULL_HANDLE, &acquireIndex) };
+    const auto result{ vkAcquireNextImageKHR(m_device, m_swapchain, UINT64_MAX, frameInFlight.acquireSemaphore, VK_NULL_HANDLE, &acquireIndex) };
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
         UpdateExtent(m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height);
         return false;
@@ -318,8 +330,16 @@ bool PresentableSwapchain::AcquireNext(SwapchainBuffer& next)
     }
 
     m_acquiredIndex = acquireIndex;
+
+    const auto& swapchainBuffer{ m_swapchainBuffers[m_acquiredIndex] };
     m_isAcquired = true;
-    next = swapchainBuffer;
+    
+    // Return swapchain image info
+    next.framebuffer = swapchainBuffer.framebuffer;
+    next.extent = swapchainBuffer.extent;
+    next.image = swapchainBuffer.image;
+    next.view = swapchainBuffer.view;
+    next.renderSemaphore = swapchainBuffer.renderSemaphore;
 
     return true;
 }
@@ -328,27 +348,28 @@ void PresentableSwapchain::Submit()
 {
     ASSERT(!!m_isAcquired, "Swapchain: A buffer must be acquired before submitting.");
 
-    const auto& swapchainBuffer{ m_swapchainBuffers[m_frameIndex] };
+    const auto& acquiredBuffer{ m_swapchainBuffers[m_acquiredIndex] };
+    const auto& frameInFlight{ m_framesInFlight[m_frameIndex] };
 
     VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
     VkSubmitInfo submitInfo{ prev::util::vk::CreateStruct<VkSubmitInfo>(VK_STRUCTURE_TYPE_SUBMIT_INFO) };
     submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = &swapchainBuffer.presentSemaphore;
+    submitInfo.pWaitSemaphores = &frameInFlight.acquireSemaphore;
     submitInfo.pWaitDstStageMask = waitStages;
     submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &swapchainBuffer.commandBuffer;
+    submitInfo.pCommandBuffers = &frameInFlight.commandBuffer;
     submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = &swapchainBuffer.renderSemaphore;
+    submitInfo.pSignalSemaphores = &acquiredBuffer.renderSemaphore;
 
-    VKERRCHECK(m_graphicsQueue.Submit(1, &submitInfo, swapchainBuffer.fence));
+    VKERRCHECK(m_graphicsQueue.Submit(1, &submitInfo, frameInFlight.fence));
 }
 
 void PresentableSwapchain::Present()
 {
     ASSERT(!!m_isAcquired, "Swapchain: A buffer must be acquired before presenting.");
 
-    const auto& swapchainBuffer{ m_swapchainBuffers[m_frameIndex] };
+    const auto& swapchainBuffer{ m_swapchainBuffers[m_acquiredIndex] };
 
     VkPresentInfoKHR presentInfo{ prev::util::vk::CreateStruct<VkPresentInfoKHR>(VK_STRUCTURE_TYPE_PRESENT_INFO_KHR) };
     presentInfo.waitSemaphoreCount = 1;
@@ -380,18 +401,20 @@ bool PresentableSwapchain::BeginFrame(FrameContext& outContext)
         return false;
     }
 
+    const auto& frameInFlight{ m_framesInFlight[m_frameIndex] };
+
     VkCommandBufferBeginInfo beginInfo{ prev::util::vk::CreateStruct<VkCommandBufferBeginInfo>(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO) };
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    VKERRCHECK(vkBeginCommandBuffer(swapchainBuffer.commandBuffer, &beginInfo));
+    VKERRCHECK(vkBeginCommandBuffer(frameInFlight.commandBuffer, &beginInfo));
 
-    outContext = { swapchainBuffer.framebuffer, swapchainBuffer.commandBuffer, m_frameIndex };
+    outContext = { swapchainBuffer.framebuffer, frameInFlight.commandBuffer, m_frameIndex };
     return true;
 }
 
 void PresentableSwapchain::EndFrame()
 {
-    const auto& swapchainBuffer{ m_swapchainBuffers[m_frameIndex] };
-    VKERRCHECK(vkEndCommandBuffer(swapchainBuffer.commandBuffer));
+    const auto& frameInFlight{ m_framesInFlight[m_frameIndex] };
+    VKERRCHECK(vkEndCommandBuffer(frameInFlight.commandBuffer));
 
     Submit();
     Present();

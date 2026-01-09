@@ -47,21 +47,25 @@ private:
 
         VkFramebuffer framebuffer{};
 
-        VkCommandBuffer commandBuffer{};
-
-        VkFence fence{};
-
         VkSemaphore renderSemaphore{};
-
-        VkSemaphore presentSemaphore{};
 
         void Destroy(VkDevice device)
         {
-            vkDestroySemaphore(device, presentSemaphore, nullptr);
             vkDestroySemaphore(device, renderSemaphore, nullptr);
-            vkDestroyFence(device, fence, nullptr);
             vkDestroyFramebuffer(device, framebuffer, nullptr);
             vkDestroyImageView(device, view, nullptr);
+        }
+    };
+
+    struct FrameInFlight {
+        VkCommandBuffer commandBuffer{};
+        VkSemaphore acquireSemaphore{};
+        VkFence fence{};
+
+        void Destroy(VkDevice device)
+        {
+            vkDestroySemaphore(device, acquireSemaphore, nullptr);
+            vkDestroyFence(device, fence, nullptr);
         }
     };
 
@@ -104,6 +108,8 @@ private:
     VkCommandPool m_commandPool{};
 
     std::vector<SwapchainBuffer> m_swapchainBuffers;
+
+    std::vector<FrameInFlight> m_framesInFlight;
 
     uint32_t m_acquiredIndex{}; // index of last acquired image
 
