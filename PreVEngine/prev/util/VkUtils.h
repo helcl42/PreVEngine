@@ -25,6 +25,10 @@ void CreateImage(const VkPhysicalDevice gpu, const VkDevice device, const VkExte
 
 VkImageView CreateImageView(const VkDevice device, const VkImage image, const VkFormat format, const VkImageViewType viewType, const uint32_t mipLevels, const VkImageAspectFlags aspectFlags, const uint32_t arrayLayers = 1, const uint32_t baseArrayLayer = 0);
 
+VkAccessFlags GetAccessFlagsForLayout(const VkImageLayout layout);
+
+VkPipelineStageFlags GetPipelineStageFlagsForLayout(const VkImageLayout layout);
+
 void TransitionImageLayout(const VkCommandBuffer commandBuffer, const VkImage image, const VkImageLayout oldLayout, const VkImageLayout newLayout, const uint32_t mipLevels, const VkImageAspectFlags aspectMask, const uint32_t layersCount);
 
 void GenerateMipmaps(const VkCommandBuffer commandBuffer, const VkImage image, const VkExtent3D& extent, const uint32_t mipLevels, const uint32_t layersCount, const VkImageAspectFlags aspectMask, const VkFilter filter, const VkImageLayout layout);
