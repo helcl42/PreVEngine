@@ -21,6 +21,8 @@ struct Config {
 
     uint32_t swapchainFrameCount{ 3 };
 
+    uint32_t maxFramesInFlight{ 0 }; // 0 = match swapchain image count
+
     uint32_t samplesCount{ 1 };
 
     int32_t gpuIndex{ -1 };

@@ -12,7 +12,7 @@
 namespace prev::render::swapchain::presentable {
 class PresentableSwapchain final : public ISwapchain {
 public:
-    PresentableSwapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT, uint32_t viewCount = 1);
+    PresentableSwapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT, uint32_t viewCount = 1, uint32_t maxFramesInFlight = 0);
 
     ~PresentableSwapchain();
 
@@ -94,6 +94,11 @@ private:
     VkSampleCountFlagBits m_sampleCount{ VK_SAMPLE_COUNT_1_BIT };
 
     uint32_t m_viewCount{ 1 };
+
+    // Default: frames-in-flight = swapchain image count (typically 2-3)
+    // Low latency: 2 frames in flight (more responsive)
+    // Max throughput: 4 frames in flight (higher latency but better GPU utilization)
+    uint32_t m_maxFramesInFlight{ 0 }; // 0 = match swapchain image count
 
     const prev::core::device::Queue& m_graphicsQueue;
 

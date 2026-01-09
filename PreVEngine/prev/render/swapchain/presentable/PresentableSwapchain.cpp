@@ -8,13 +8,14 @@
 #include <algorithm>
 
 namespace prev::render::swapchain::presentable {
-PresentableSwapchain::PresentableSwapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount, uint32_t viewCount)
+PresentableSwapchain::PresentableSwapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount, uint32_t viewCount, uint32_t maxFramesInFlight)
     : m_device{ device }
     , m_allocator{ allocator }
     , m_renderPass{ renderPass }
     , m_surface{ surface }
     , m_sampleCount{ sampleCount }
     , m_viewCount{ viewCount }
+    , m_maxFramesInFlight{ maxFramesInFlight }
     , m_graphicsQueue{ m_device.GetQueue(core::device::QueueType::GRAPHICS) }
     , m_presentQueue{ m_device.GetQueue(core::device::QueueType::PRESENT) }
     , m_swapchain{ VK_NULL_HANDLE }
@@ -255,11 +256,14 @@ void PresentableSwapchain::Apply()
     const auto swapchainImages{ GetSwapchainImages() };
     const auto swapchainImagesCount{ static_cast<uint32_t>(swapchainImages.size()) };
 
-    m_frameIndex = util::CircularIndex{ swapchainImagesCount };
+    // Use configured max frames in flight, or default to swapchain image count
+    const uint32_t framesInFlightCount = (m_maxFramesInFlight > 0) ? m_maxFramesInFlight : swapchainImagesCount;
+
+    m_frameIndex = util::CircularIndex{ framesInFlightCount };
 
     // Create per-frame-in-flight resources
-    m_framesInFlight.resize(swapchainImagesCount);
-    for (uint32_t i = 0; i < swapchainImagesCount; ++i) {
+    m_framesInFlight.resize(framesInFlightCount);
+    for (uint32_t i = 0; i < framesInFlightCount; ++i) {
         m_framesInFlight[i].commandBuffer = util::vk::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
         m_framesInFlight[i].acquireSemaphore = util::vk::CreateSemaphore(m_device);
         m_framesInFlight[i].fence = util::vk::CreateFence(m_device, VK_FENCE_CREATE_SIGNALED_BIT);

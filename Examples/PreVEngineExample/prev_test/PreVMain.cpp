@@ -12,6 +12,7 @@ int PreVMain(int argc, char** argv)
     config.VSync = true;
     config.samplesCount = 4;
     config.swapchainFrameCount = 3;
+    config.maxFramesInFlight = 2;
 
     try {
         prev_test::TestApp app{ config };
