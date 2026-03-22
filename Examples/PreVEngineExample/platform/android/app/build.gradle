@@ -1,8 +1,11 @@
 apply plugin: 'com.android.application'
 
 android {
-    ndkVersion '25.2.9519653'
+    ndkVersion '27.2.12479018'
     signingConfigs {
+        debug {
+            // Default debug keystore (automatically created by Android)
+        }
         release {
             storeFile file('/home/lubos/Documents/Vulkan/prev.keystore')
             storePassword 'prev'
@@ -10,12 +13,12 @@ android {
             keyPassword 'prev'
         }
     }
-    compileSdkVersion 31
+    compileSdkVersion 35
 
     defaultConfig {
         applicationId = 'com.prevengine.PreVEngineExample'
         minSdkVersion 24
-        targetSdkVersion 33
+        targetSdkVersion 35
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++17"
@@ -25,6 +28,9 @@ android {
         }
     }
     buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'),

@@ -55,6 +55,9 @@ namespace file {
     std::vector<char> ReadBinaryFile(const std::string& filePath)
     {
         AAsset* file = android_open_asset(filePath.c_str(), AASSET_MODE_BUFFER);
+        if (!file) {
+            throw std::runtime_error("Could not open file: " + filePath);
+        }
         size_t fileLength = AAsset_getLength(file);
         std::vector<char> binary(fileLength);
         AAsset_read(file, (void*)binary.data(), fileLength);
