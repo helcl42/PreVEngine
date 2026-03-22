@@ -26,7 +26,7 @@ Here is a video:
 
 ## Clone
 ```bash
-git clone --recurse-submodules <url>` # to clone with submodules.
+git clone --recurse-submodules https://github.com/helcl42/PreVEngine` # to clone with submodules.
 ```
 
 ## Download Dependencies
