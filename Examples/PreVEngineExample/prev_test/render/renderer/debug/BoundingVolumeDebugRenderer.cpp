@@ -55,7 +55,7 @@ void BoundingVolumeDebugRenderer::Init()
         .SetDepthWriteEnabled(true)
         .SetBlendingModeEnabled(false)
         .SetAdditiveBlendingEnabled(false)
-        .SetPolygonMode(VK_POLYGON_MODE_LINE)
+        .SetPolygonMode(m_device.GetGPU().GetEnabledFeatures().fillModeNonSolid ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL)
         .SetCullingMode(VK_CULL_MODE_NONE)
         .Build();
     // clang-format on

@@ -47,6 +47,7 @@ layout(location = 3) out vec3 outViewPosition;
 layout(location = 4) out vec3 outToCameraVector;
 layout(location = 5) out float outVisibility;
 layout(location = 6) out vec3 outToLightVector[MAX_LIGHT_COUNT];
+layout(location = 10) out float outClipDistance;
 
 void main() 
 {
@@ -67,7 +68,7 @@ void main()
 	vec4 worldPosition = uboVS.modelMatrix * vec4(positionL.xyz, 1.0);
 	outWorldPosition = worldPosition.xyz;
 
-	gl_ClipDistance[0] = dot(worldPosition, uboVS.clipPlane);
+	outClipDistance = dot(worldPosition, uboVS.clipPlane);
 
 	vec4 viewPosition = uboVS.viewMatrices[viewIndex] * worldPosition;
 	outViewPosition = viewPosition.xyz;

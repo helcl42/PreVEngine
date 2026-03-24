@@ -29,11 +29,17 @@ layout(location = 3) in vec3 inViewPosition;
 layout(location = 4) in vec3 inToCameraVector;
 layout(location = 5) in float inVisibility;
 layout(location = 6) in vec3 inToLightVector[MAX_LIGHT_COUNT];
+layout(location = 10) in float inClipDistance;
 
 layout(location = 0) out vec4 outColor;
 
 void main()
 {
+	if (inClipDistance < 0.0)
+	{
+		discard; 
+	}
+
 	float shadow = 1.0;
 	if(uboFS.castedByShadows != 0)
 	{

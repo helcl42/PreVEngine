@@ -50,6 +50,12 @@ android {
         }
     }
     namespace 'com.prevengine.PreVEngineExample'
+    
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
 
 //    // Enable prefab support for the OpenXR AAR
 //    buildFeatures {

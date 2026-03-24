@@ -49,11 +49,17 @@ layout(location = 4) in float inVisibility;
 layout(location = 5) in vec3 inToCameraVectorTangentSpace;
 layout(location = 6) in vec3 inPositionTangentSpace;
 layout(location = 7) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
+layout(location = 11) in float inClipDistance;
 
 layout(location = 0) out vec4 outColor;
 
 void main()
 {
+	if (inClipDistance < 0.0)
+	{
+		discard; 
+	}
+
     const float heightRange = abs(uboFS.maxHeight) + abs(uboFS.minHeight);
     const float normalizedHeight = (inWorldPosition.y + abs(uboFS.minHeight)) / heightRange;
 
