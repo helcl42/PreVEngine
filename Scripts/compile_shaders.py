@@ -57,6 +57,9 @@ def compile_shaders(input_folder, force_compile_all, compile_serial, compiler_ar
             handle.wait()
 
 def copy_to_output(input_folder, output_folder):
+    # Skip copying if input and output are the same folder
+    if os.path.abspath(input_folder) == os.path.abspath(output_folder):
+        return
     if os.path.exists(output_folder):
         shutil.rmtree(output_folder)
     shutil.copytree(input_folder, output_folder)
