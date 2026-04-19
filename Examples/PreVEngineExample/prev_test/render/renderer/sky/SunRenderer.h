@@ -65,7 +65,7 @@ private:
 
     uint64_t m_maxNumberOfSamples{ 0 };
 
-    static const inline uint32_t QueryPoolCount{ 3 };
+    static const inline uint32_t QueryPoolCount{ 5 };
 
     std::unique_ptr<prev::render::query::QueryPool> m_queryPool{};
 };
