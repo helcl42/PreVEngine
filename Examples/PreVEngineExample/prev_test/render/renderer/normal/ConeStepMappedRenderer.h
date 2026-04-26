@@ -8,7 +8,6 @@
 #include "../../../component/shadow//ShadowsCommon.h"
 
 #include <prev/core/device/Device.h>
-#include <prev/core/memory/Allocator.h>
 #include <prev/render/buffer/BufferPool.h>
 #include <prev/render/buffer/ImageBuffer.h>
 #include <prev/render/pass/RenderPass.h>
@@ -21,7 +20,7 @@
 namespace prev_test::render::renderer::normal {
 class ConeStepMappedRenderer final : public IRenderer<NormalRenderContext> {
 public:
-    ConeStepMappedRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
+    ConeStepMappedRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
 
     ~ConeStepMappedRenderer() = default;
 
@@ -153,7 +152,6 @@ private:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 
     prev::render::pass::RenderPass& m_renderPass;
 

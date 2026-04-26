@@ -11,10 +11,12 @@ layout(binding = 1, rgba8) uniform image2D outBloom;
 layout(binding = 2, rgba8) uniform image2D outAlphaness;
 layout(binding = 3, r32f) uniform image2D outCloudDistance;
 
-layout(binding = 4) uniform sampler3D perlinNoiseTex;
-layout(binding = 5) uniform sampler2D weatherTex;
+layout(binding = 4) uniform texture3D perlinNoiseTex;
+layout(binding = 5) uniform sampler perlinNoiseSampler;
+layout(binding = 6) uniform texture2D weatherTex;
+layout(binding = 7) uniform sampler weatherSampler;
 
-layout(std140, binding = 6) uniform UniformBufferObject {
+layout(std140, binding = 8) uniform UniformBufferObject {
 	vec4 resolution;
 
 	mat4 projectionMatrix;
@@ -157,21 +159,21 @@ float SampleCloudDensity(in vec3 inPos, in bool expensive, in float lod)
 	}
 
 	const vec3 noiseScaler = vec3(0.625, 0.25, 0.125);
-	vec4 lowFrequencyNoise = textureLod(perlinNoiseTex, vec3(uv * uboCS.crispiness, heightFraction), lod);
+	vec4 lowFrequencyNoise = textureLod(sampler3D(perlinNoiseTex, perlinNoiseSampler), vec3(uv * uboCS.crispiness, heightFraction), lod);
 	float lowFreqFBM = dot(lowFrequencyNoise.gba, noiseScaler);
 	float baseCloud = Remap(lowFrequencyNoise.r, -(1.0 - lowFreqFBM), 1.0, 0.0, 1.0);
 
 	float density = GetDensityForCloud(heightFraction, 1.0);
 	baseCloud *= (density / heightFraction);
 
-	vec3 weatherData = texture(weatherTex, movingUV).rgb;
+	vec3 weatherData = texture(sampler2D(weatherTex, weatherSampler), movingUV).rgb;
 	float cloudCoverage = weatherData.r * uboCS.coverageFactor;
 	float baseCloudWithCoverage = Remap(baseCloud, cloudCoverage, 1.0, 0.0, 1.0);
 	baseCloudWithCoverage *= cloudCoverage;
 
 	if(expensive)
 	{
-		vec3 erodeCloudNoise = textureLod(perlinNoiseTex, vec3(movingUV * uboCS.crispiness, heightFraction) * uboCS.curliness, lod).rgb;
+		vec3 erodeCloudNoise = textureLod(sampler3D(perlinNoiseTex, perlinNoiseSampler), vec3(movingUV * uboCS.crispiness, heightFraction) * uboCS.curliness, lod).rgb;
 		float highFreqFBM = dot(erodeCloudNoise.rgb, noiseScaler);
 		float highFreqNoiseModifier = mix(highFreqFBM, 1.0 - highFreqFBM, clamp(heightFraction * 10.0, 0.0, 1.0));
 

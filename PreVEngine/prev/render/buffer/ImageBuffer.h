@@ -1,91 +1,86 @@
 #ifndef __IMAGE_BUFFER_H__
 #define __IMAGE_BUFFER_H__
 
-#include "../../core/memory/Allocator.h"
+#include "../../core/device/Device.h"
+#include "../../core/device/Queue.h"
+
+#include <gfx/gfx.h>
 
 namespace prev::render::buffer {
 class ImageBufferBuilder;
 
 class ImageBuffer final {
 private:
-    ImageBuffer(prev::core::memory::Allocator& allocator);
+    ImageBuffer(GfxDevice device, GfxQueue queue);
 
 public:
     ~ImageBuffer();
 
 public:
-    void UpdateLayout(const VkImageLayout newLayout, VkCommandBuffer commandBuffer);
+    void UpdateLayout(const GfxTextureLayout newLayout, GfxCommandEncoder commandEncoder);
 
-    void GenerateMipMaps(VkCommandBuffer commandBuffer);
+    void GenerateMipMaps(GfxCommandEncoder commandEncoder);
 
-    void Copy(ImageBuffer& dstImage, VkCommandBuffer commandBuffer);
+    void Copy(ImageBuffer& dstImage, GfxCommandEncoder commandEncoder);
 
-    VkExtent3D GetExtent() const;
+    GfxExtent3D GetExtent() const;
 
-    VkFormat GetFormat() const;
+    GfxFormat GetFormat() const;
 
-    VkImage GetImage() const;
+    GfxTexture GetTexture() const;
 
-    VkImageType GetImageType() const;
+    GfxTextureType GetTextureType() const;
 
-    VkImageView GetImageView() const;
+    GfxTextureView GetTextureView() const;
 
-    VkImageViewType GetImageViewType() const;
+    GfxTextureViewType GetTextureViewType() const;
 
-    VkImageAspectFlags GetAspectMask() const;
-
-    VkSampleCountFlagBits GetSampleCount() const;
+    GfxSampleCount GetSampleCount() const;
 
     uint32_t GetMipLevels() const;
 
     uint32_t GetLayerCount() const;
 
-    VkImageCreateFlags GetCreateFlags() const;
+    GfxTextureUsageFlags GetUsageFlags() const;
 
-    VkImageUsageFlags GetUsageFlags() const;
-
-    VkImageLayout GetLayout() const;
+    GfxTextureLayout GetLayout() const;
 
     void* GetMappedData() const;
 
 public:
-    operator VkImage() const;
+    operator GfxTexture() const;
 
 public:
     friend class ImageBufferBuilder;
 
 private:
-    prev::core::memory::Allocator& m_allocator;
+    GfxDevice m_device;
 
-    VkExtent3D m_extent;
+    GfxQueue m_queue;
 
-    VkFormat m_format;
+    GfxExtent3D m_extent{};
 
-    VkImage m_image;
+    GfxFormat m_format{};
 
-    VmaAllocation m_allocation;
+    GfxTexture m_texture{};
 
-    VkImageType m_type;
+    GfxTextureView m_view{};
 
-    VkImageView m_view;
+    GfxTextureType m_type{};
 
-    VkImageViewType m_viewType;
+    GfxTextureViewType m_viewType{};
 
-    VkImageAspectFlags m_aspectMask;
+    GfxSampleCount m_samplesCount{};
 
-    VkSampleCountFlagBits m_samplesCount;
+    uint32_t m_mipLevels{};
 
-    uint32_t m_mipLevels;
+    uint32_t m_layerCount{};
 
-    uint32_t m_layerCount;
+    GfxTextureUsageFlags m_usageFlags{};
 
-    VkImageCreateFlags m_createFlags;
+    GfxTextureLayout m_layout{ GFX_TEXTURE_LAYOUT_UNDEFINED };
 
-    VkImageUsageFlags m_usageFlags;
-
-    VkImageLayout m_layout;
-
-    void* m_mappedData;
+    void* m_mappedData{};
 };
 
 } // namespace prev::render::buffer

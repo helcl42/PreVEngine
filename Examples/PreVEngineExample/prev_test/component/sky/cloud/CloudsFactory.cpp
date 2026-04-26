@@ -8,12 +8,10 @@
 #include <prev/render/pipeline/ComputePipelineBuilder.h>
 #include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
-#include <prev/util/VkUtils.h>
 
 namespace prev_test::component::sky::cloud {
-CloudsFactory::CloudsFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
+CloudsFactory::CloudsFactory(prev::core::device::Device& device)
     : m_device{ device }
-    , m_allocator{ allocator }
 {
 }
 
@@ -33,13 +31,13 @@ Clouds CloudsFactory::Create(const uint32_t width, const uint32_t height) const
     // clang-format off
     auto shader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { VK_SHADER_STAGE_COMPUTE_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/clouds_comp.spv") }
+            { GFX_SHADER_STAGE_COMPUTE, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/clouds_comp.spv") }
         })
         .AddDescriptorSets({
-            { "uboCS", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT },
-            { "outWeatherTexture", 1, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT }
+            { "uboCS", 0, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_COMPUTE },
+            { "outWeatherTexture", 1, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE }
         })
-	    .SetDescriptorPoolCapacity(1)
+	    .SetBindGroupCapacity(1)
         .Build();
     // clang-format on
 
@@ -48,28 +46,28 @@ Clouds CloudsFactory::Create(const uint32_t width, const uint32_t height) const
         .Build();
     // clang-format on
 
-    auto uniformBuffer = prev::render::buffer::BufferBuilder{ m_allocator }
+    auto uniformBuffer = prev::render::buffer::BufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                              .SetSize(sizeof(Uniforms))
-                             .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
-                             .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
-                             .SetAlignment(static_cast<uint32_t>(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment))
+                             .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM)
+                             .SetHostMapped(true)
+                             .SetAlignment(static_cast<uint32_t>(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment))
                              .Build();
 
-    auto weatherImageBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
+    auto weatherImageBuffer = prev::render::buffer::ImageBufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                                   .SetExtent({ width, height, 1 })
-                                  .SetFormat(VK_FORMAT_R8G8B8A8_UNORM)
-                                  .SetType(VK_IMAGE_TYPE_2D)
+                                  .SetFormat(GFX_FORMAT_R8G8B8A8_UNORM)
+                                  .SetType(GFX_TEXTURE_TYPE_2D)
                                   .SetMipMapEnabled(true)
-                                  .SetUsageFlags(VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT)
-                                  .SetLayout(VK_IMAGE_LAYOUT_GENERAL)
+                                  .SetUsageFlags(GFX_TEXTURE_USAGE_TEXTURE_BINDING | GFX_TEXTURE_USAGE_COPY_SRC | GFX_TEXTURE_USAGE_COPY_DST | GFX_TEXTURE_USAGE_STORAGE_BINDING)
+                                  .SetLayout(GFX_TEXTURE_LAYOUT_GENERAL)
                                   .Build();
 
     auto sampler = prev::render::sampler::SamplerBuilder{ m_device }
-                       .SetAddressMode(VK_SAMPLER_ADDRESS_MODE_REPEAT)
+                       .SetAddressMode(GFX_ADDRESS_MODE_REPEAT)
                        .Build();
 
     prev::core::CommandsExecutor commandsExecutor{ m_device, computeQueue };
-    commandsExecutor.ExecuteImmediate([&](VkCommandBuffer commandBuffer) {
+    commandsExecutor.ExecuteImmediate([&](GfxCommandEncoder commandBuffer) {
         Uniforms uniforms{};
         uniforms.textureSize = glm::vec4(width, height, 0, 0);
         uniforms.seed = glm::vec4(10, 20, 0, 0);
@@ -80,16 +78,19 @@ Clouds CloudsFactory::Create(const uint32_t width, const uint32_t height) const
         uniformBuffer->Write(uniforms);
 
         shader->Bind("uboCS", *uniformBuffer);
-        shader->Bind("outWeatherTexture", *weatherImageBuffer, *sampler, VK_IMAGE_LAYOUT_GENERAL);
-        const VkDescriptorSet descriptorSet = shader->UpdateNextDescriptorSet();
+        shader->Bind("outWeatherTexture", *weatherImageBuffer);
+        const GfxBindGroup bindGroup = shader->UpdateNextBindGroup();
 
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *pipeline);
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetLayout(), 0, 1, &descriptorSet, 0, 0);
-
-        vkCmdDispatch(commandBuffer, prev::util::vk::GetComputeGroupSize(width, 16), prev::util::vk::GetComputeGroupSize(height, 16), 1);
+        GfxComputePassEncoder computePassEncoder{};
+        GfxComputePassBeginDescriptor computePassDesc{};
+        gfxCommandEncoderBeginComputePass(commandBuffer, &computePassDesc, &computePassEncoder);
+        gfxComputePassEncoderSetPipeline(computePassEncoder, *pipeline);
+        gfxComputePassEncoderSetBindGroup(computePassEncoder, 0, bindGroup, nullptr, 0);
+        gfxComputePassEncoderDispatch(computePassEncoder, (width + 15) / 16, (height + 15) / 16, 1);
+        gfxComputePassEncoderEnd(computePassEncoder);
 
         weatherImageBuffer->GenerateMipMaps(commandBuffer);
-        weatherImageBuffer->UpdateLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, commandBuffer);
+        weatherImageBuffer->UpdateLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY, commandBuffer);
     });
 
     pipeline = nullptr;

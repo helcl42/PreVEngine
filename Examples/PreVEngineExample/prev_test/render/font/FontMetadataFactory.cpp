@@ -1,7 +1,9 @@
 #include "FontMetadataFactory.h"
 
+#include <prev/common/Logger.h>
 #include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/image/ImageFactory.h>
+#include <prev/util/GfxUtils.h>
 
 #include <prev/util/Utils.h>
 
@@ -183,25 +185,24 @@ namespace {
         return characters;
     }
 
-    std::shared_ptr<prev::render::buffer::ImageBuffer> CreateImageBuffer(prev::core::memory::Allocator& allocator, const std::string& textureFilePath)
+    std::shared_ptr<prev::render::buffer::ImageBuffer> CreateImageBuffer(const prev::core::device::Device& device, const std::string& textureFilePath)
     {
         const auto image{ prev::render::image::ImageFactory{}.CreateImage(textureFilePath) };
-        auto imageBuffer = prev::render::buffer::ImageBufferBuilder{ allocator }
+        auto imageBuffer = prev::render::buffer::ImageBufferBuilder{ device, device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                                .SetExtent({ image->GetWidth(), image->GetHeight(), 1 })
-                               .SetFormat(prev::util::vk::ToImageFormat(image->GetChannels(), image->GetBitDepth(), image->IsFloatingPoint()))
-                               .SetType(VK_IMAGE_TYPE_2D)
+                               .SetFormat(prev::util::gfx::ToImageFormat(image->GetChannels(), image->GetBitDepth(), image->IsFloatingPoint()))
+                               .SetType(GFX_TEXTURE_TYPE_2D)
                                .SetMipMapEnabled(true)
-                               .SetUsageFlags(VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
-                               .SetLayerData({ image->GetRawDataPtr() })
-                               .SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+                               .SetUsageFlags(GFX_TEXTURE_USAGE_COPY_SRC | GFX_TEXTURE_USAGE_COPY_DST | GFX_TEXTURE_USAGE_TEXTURE_BINDING)
+                               .SetLayerData({ image->GetRawDataPtr() }, static_cast<uint64_t>(image->GetSize()) * image->GetPixelSize())
+                               .SetLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY)
                                .Build();
         return imageBuffer;
     }
 } // namespace
 
-FontMetadataFactory::FontMetadataFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
+FontMetadataFactory::FontMetadataFactory(prev::core::device::Device& device)
     : m_device{ device }
-    , m_allocator{ allocator }
 {
 }
 
@@ -210,7 +211,7 @@ std::unique_ptr<FontMetadata> FontMetadataFactory::CreateFontMetadata(const std:
     const FontMetadataState metaDataState{ ParseFontMetadataFile(metadataFilePath) };
     const glm::vec2 perPixelSize{ FindPerPixelSizes(metaDataState, aspectRatio, lineHeight) };
 
-    const std::shared_ptr<prev::render::buffer::ImageBuffer> imageBuffer{ CreateImageBuffer(m_allocator, textureFilePath) };
+    const std::shared_ptr<prev::render::buffer::ImageBuffer> imageBuffer{ CreateImageBuffer(m_device, textureFilePath) };
     const std::map<int, Character> characters{ CreateCharacters(metaDataState, perPixelSize, extraPadding) };
     const float spaceWidth{ FindSpaceWidth(metaDataState, perPixelSize) };
 

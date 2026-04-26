@@ -4,12 +4,11 @@
 #include "ILensFlareComponent.h"
 
 #include <prev/core/device/Device.h>
-#include <prev/core/memory/Allocator.h>
 
 namespace prev_test::component::sky {
 class LensFlareComponentFactory final {
 public:
-    LensFlareComponentFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator);
+    LensFlareComponentFactory(prev::core::device::Device& device);
 
 public:
     std::unique_ptr<ILensFlareComponent> Create() const;
@@ -17,7 +16,6 @@ public:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 };
 } // namespace prev_test::component::sky
 

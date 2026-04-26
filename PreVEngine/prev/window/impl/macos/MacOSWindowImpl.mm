@@ -3,7 +3,6 @@
 #ifdef VK_USE_PLATFORM_MACOS_MVK
 
 #include "../../../common/Logger.h"
-#include "../../../util/VkUtils.h"
 
 #import <MacApplication.h>
 #import <MacWindow.h>
@@ -11,8 +10,6 @@
 
 #import <Cocoa/Cocoa.h>
 #import <QuartzCore/CAMetalLayer.h>
-
-#include <vulkan/vulkan_metal.h>
 
 namespace prev::window::impl::macos {
 namespace {
@@ -89,8 +86,8 @@ NSRect GetCurrentScreenResolution()
     return screenRect;
 }
 
-MacOSWindowImpl::MacOSWindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo)
-    : WindowImpl(instance)
+MacOSWindowImpl::MacOSWindowImpl(const WindowInfo& windowInfo)
+    : WindowImpl()
 {
     [NSApplication sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
@@ -157,7 +154,6 @@ MacOSWindowImpl::MacOSWindowImpl(const prev::core::instance::Instance& instance,
 
 MacOSWindowImpl::~MacOSWindowImpl()
 {
-    DestroySurface();
 
     m_state = nullptr;
 }
@@ -337,25 +333,9 @@ void MacOSWindowImpl::SetMouseCursorVisible(bool visible)
     }
 }
 
-Surface& MacOSWindowImpl::CreateSurface()
+GfxPlatformWindowHandle MacOSWindowImpl::GetNativeWindowHandle() const
 {
-    if (m_vkSurface == VK_NULL_HANDLE) {
-        // TODO - used due to deprecation warning. Has worse performance.
-        auto FN_vkCreateMetalSurfaceEXT = PFN_vkCreateMetalSurfaceEXT(vkGetInstanceProcAddr(m_instance, "vkCreateMetalSurfaceEXT"));
-        if(FN_vkCreateMetalSurfaceEXT) {
-            VkMetalSurfaceCreateInfoEXT macOsSurfaceCreateInfo{ prev::util::vk::CreateStruct<VkMetalSurfaceCreateInfoEXT>(VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT) };
-            macOsSurfaceCreateInfo.flags = 0;
-            macOsSurfaceCreateInfo.pLayer = static_cast<CAMetalLayer*>(m_state->view.layer);
-            VKERRCHECK(FN_vkCreateMetalSurfaceEXT(m_instance, &macOsSurfaceCreateInfo, nullptr, &m_vkSurface));
-        } else {
-            VkMacOSSurfaceCreateInfoMVK macOsSurfaceCreateInfo{ prev::util::vk::CreateStruct<VkMacOSSurfaceCreateInfoMVK>(VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT) };
-            macOsSurfaceCreateInfo.flags = 0;
-            macOsSurfaceCreateInfo.pView = m_state->layer;
-            VKERRCHECK(vkCreateMacOSSurfaceMVK(m_instance, &macOsSurfaceCreateInfo, nullptr, &m_vkSurface));
-        }
-        LOGI("MacOS - Vulkan Surface created");
-    }
-    return *this;
+    return gfxPlatformWindowHandleFromMetal((__bridge void*)m_state->window);
 }
 }
 

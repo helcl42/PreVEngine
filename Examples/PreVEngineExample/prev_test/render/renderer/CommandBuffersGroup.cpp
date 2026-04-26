@@ -1,7 +1,7 @@
 #include "CommandBuffersGroup.h"
 
 namespace prev_test::render::renderer {
-CommandBuffersGroup::CommandBuffersGroup(const prev::core::device::Device& device, const std::vector<std::vector<VkCommandPool>>& commandPools, const std::vector<std::vector<VkCommandBuffer>>& commandBuffers)
+CommandBuffersGroup::CommandBuffersGroup(const prev::core::device::Device& device, const std::vector<std::vector<void*>>& commandPools, const std::vector<std::vector<void*>>& commandBuffers)
     : m_device(device)
     , m_commandPoolGroups(commandPools)
     , m_commandBufferGroups(commandBuffers)
@@ -10,16 +10,11 @@ CommandBuffersGroup::CommandBuffersGroup(const prev::core::device::Device& devic
 
 CommandBuffersGroup::~CommandBuffersGroup()
 {
-    vkDeviceWaitIdle(m_device);
-
-    for (auto& poolGroup : m_commandPoolGroups) {
-        for (auto& pool : poolGroup) {
-            vkDestroyCommandPool(m_device, pool, nullptr);
-        }
-    }
+    gfxDeviceWaitIdle(m_device);
+    LOGW("CommandBuffersGroup cleanup: parallel rendering command pools not yet supported in gfx API");
 }
 
-const std::vector<VkCommandBuffer>& CommandBuffersGroup::GetBuffersGroup(const uint32_t index) const
+const std::vector<void*>& CommandBuffersGroup::GetBuffersGroup(const uint32_t index) const
 {
     return m_commandBufferGroups[index];
 }

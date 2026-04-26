@@ -3,19 +3,22 @@
 
 #include "BufferPool.h"
 
+#include "../../core/device/Device.h"
+#include "../../core/device/Queue.h"
+
 #include <memory>
 
 namespace prev::render::buffer {
 class BufferPoolBuilder final {
 public:
-    BufferPoolBuilder(prev::core::memory::Allocator& allocator);
+    BufferPoolBuilder(const prev::core::device::Device& device, const prev::core::device::Queue& queue);
 
     ~BufferPoolBuilder() = default;
 
 public:
-    BufferPoolBuilder& SetUsageFlags(const VkBufferUsageFlags usageFlags);
+    BufferPoolBuilder& SetUsageFlags(const GfxBufferUsageFlags usageFlags);
 
-    BufferPoolBuilder& SetMemoryType(const prev::core::memory::MemoryType memoryType);
+    BufferPoolBuilder& SetHostMapped(bool hostMapped);
 
     BufferPoolBuilder& SetCount(const uint64_t count);
 
@@ -26,14 +29,16 @@ public:
     std::unique_ptr<BufferPool> Build() const;
 
 private:
-    void Valiadate() const;
+    void Validate() const;
 
 private:
-    prev::core::memory::Allocator& m_allocator;
+    const prev::core::device::Device& m_device;
 
-    VkBufferUsageFlags m_usageFlags{};
+    const prev::core::device::Queue& m_queue;
 
-    prev::core::memory::MemoryType m_memoryType{ prev::core::memory::MemoryType::UNDEFINED };
+    GfxBufferUsageFlags m_usageFlags{};
+
+    bool m_hostMapped{ true };
 
     uint64_t m_count{ 0 };
 

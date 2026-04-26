@@ -5,7 +5,6 @@
 #include "../IRenderer.h"
 
 #include <prev/core/device/Device.h>
-#include <prev/core/memory/Allocator.h>
 #include <prev/event/EventHandler.h>
 #include <prev/input/keyboard/KeyboardEvents.h>
 #include <prev/render/pass/RenderPass.h>
@@ -18,7 +17,7 @@
 namespace prev_test::render::renderer::debug {
 class ShadowMapDebugRenderer final : public IRenderer<prev::render::RenderContext> {
 public:
-    ShadowMapDebugRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
+    ShadowMapDebugRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
 
     ~ShadowMapDebugRenderer() = default;
 
@@ -56,7 +55,6 @@ private:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 
     prev::render::pass::RenderPass& m_renderPass;
 

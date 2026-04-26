@@ -8,7 +8,7 @@
 namespace prev::render::pipeline {
 class AbstractPipelineBuilder {
 protected:
-    AbstractPipelineBuilder(const VkDevice device, const shader::Shader& shader);
+    AbstractPipelineBuilder(GfxDevice device, const shader::Shader& shader);
 
     virtual ~AbstractPipelineBuilder() = default;
 
@@ -19,10 +19,7 @@ protected:
     virtual void Validate() const = 0;
 
 protected:
-    VkPipelineLayout CreatePipelineLayout() const;
-
-protected:
-    const VkDevice m_device;
+    const GfxDevice m_device;
 
     const shader::Shader& m_shader;
 };

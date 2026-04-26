@@ -1,10 +1,10 @@
 #include "ShadowsCascade.h"
 
 namespace prev_test::component::shadow {
-void ShadowsCascadeRenderData::Destroy(VkDevice device)
+void ShadowsCascadeRenderData::Destroy()
 {
-    vkDestroyImageView(device, imageView, nullptr);
-    vkDestroyFramebuffer(device, frameBuffer, nullptr);
+    gfxTextureViewDestroy(textureView);
+    gfxFramebufferDestroy(frameBuffer);
 }
 
 glm::mat4 ShadowsCascadeFrameData::GetBiasedViewProjectionMatrix() const

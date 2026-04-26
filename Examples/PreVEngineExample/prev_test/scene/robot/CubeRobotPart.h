@@ -9,7 +9,7 @@
 namespace prev_test::scene::robot {
 class CubeRobotPart : public prev::scene::graph::SceneNode {
 public:
-    CubeRobotPart(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath);
+    CubeRobotPart(prev::core::device::Device& device, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath);
 
     virtual ~CubeRobotPart() = default;
 
@@ -22,8 +22,6 @@ public:
 
 protected:
     prev::core::device::Device& m_device;
-
-    prev::core::memory::Allocator& m_allocator;
 
 protected:
     glm::vec3 m_initialPosition;

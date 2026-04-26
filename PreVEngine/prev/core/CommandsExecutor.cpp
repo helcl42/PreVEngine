@@ -1,42 +1,52 @@
 #include "CommandsExecutor.h"
 
-#include "../util/VkUtils.h"
+#include "../common/Logger.h"
 
 namespace prev::core {
 CommandsExecutor::CommandsExecutor(const device::Device& device, const device::Queue& queue)
     : m_device{ device }
     , m_queue{ queue }
-    , m_immediateCommandPool{ prev::util::vk::CreateCommandPool(m_device, m_queue.family) }
-    , m_immediateCommandBuffer{ prev::util::vk::CreateCommandBuffer(m_device, m_immediateCommandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY) }
-    , m_fence{ prev::util::vk::CreateFence(m_device) }
 {
+    GfxCommandEncoderDescriptor ceDesc{};
+    ceDesc.sType = GFX_STRUCTURE_TYPE_COMMAND_ENCODER_DESCRIPTOR;
+    ceDesc.label = "ImmediateCommandEncoder";
+    GFXERRCHECK(gfxDeviceCreateCommandEncoder(m_device, &ceDesc, &m_commandEncoder));
+
+    GfxFenceDescriptor fenceDesc{};
+    fenceDesc.sType = GFX_STRUCTURE_TYPE_FENCE_DESCRIPTOR;
+    fenceDesc.label = "ImmediateFence";
+    fenceDesc.signaled = false;
+    GFXERRCHECK(gfxDeviceCreateFence(m_device, &fenceDesc, &m_fence));
 }
 
 CommandsExecutor::~CommandsExecutor()
 {
-    vkDestroyFence(m_device, m_fence, VK_NULL_HANDLE);
-    vkFreeCommandBuffers(m_device, m_immediateCommandPool, 1, &m_immediateCommandBuffer);
-    vkDestroyCommandPool(m_device, m_immediateCommandPool, VK_NULL_HANDLE);
+    if (m_fence) {
+        gfxFenceDestroy(m_fence);
+    }
+    if (m_commandEncoder) {
+        gfxCommandEncoderDestroy(m_commandEncoder);
+    }
 }
 
-void CommandsExecutor::ExecuteImmediate(const std::function<void(VkCommandBuffer)>& func)
+void CommandsExecutor::ExecuteImmediate(const std::function<void(GfxCommandEncoder)>& func)
 {
-    VkCommandBufferBeginInfo cmdBufBeginInfo{ prev::util::vk::CreateStruct<VkCommandBufferBeginInfo>(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO) };
-    cmdBufBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    VKERRCHECK(vkBeginCommandBuffer(m_immediateCommandBuffer, &cmdBufBeginInfo));
+    GFXERRCHECK(gfxCommandEncoderBegin(m_commandEncoder));
 
-    func(m_immediateCommandBuffer);
+    func(m_commandEncoder);
 
-    VKERRCHECK(vkEndCommandBuffer(m_immediateCommandBuffer));
+    GFXERRCHECK(gfxCommandEncoderEnd(m_commandEncoder));
 
-    vkResetFences(m_device, 1, &m_fence);
+    GfxCommandEncoder encoders[] = { m_commandEncoder };
 
-    VkSubmitInfo submitInfo{ prev::util::vk::CreateStruct<VkSubmitInfo>(VK_STRUCTURE_TYPE_SUBMIT_INFO) };
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &m_immediateCommandBuffer;
-    VKERRCHECK(m_queue.Submit(1, &submitInfo, m_fence));
+    GfxSubmitDescriptor submitDesc{};
+    submitDesc.sType = GFX_STRUCTURE_TYPE_SUBMIT_DESCRIPTOR;
+    submitDesc.commandEncoders = encoders;
+    submitDesc.commandEncoderCount = 1;
+    submitDesc.signalFence = m_fence;
+    GFXERRCHECK(m_queue.Submit(&submitDesc));
 
-    VKERRCHECK(vkWaitForFences(m_device, 1, &m_fence, VK_TRUE, UINT64_MAX));
+    GFXERRCHECK(gfxFenceWait(m_fence, UINT64_MAX));
+    GFXERRCHECK(gfxFenceReset(m_fence));
 }
-
 } // namespace prev::core

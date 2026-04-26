@@ -8,9 +8,8 @@
 #include "../../render/model/ModelFactory.h"
 
 namespace prev_test::component::water {
-WaterComponentFactory::WaterComponentFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
+WaterComponentFactory::WaterComponentFactory(prev::core::device::Device& device)
     : m_device{ device }
-    , m_allocator{ allocator }
 {
 }
 
@@ -19,9 +18,9 @@ std::unique_ptr<IWaterComponent> WaterComponentFactory::Create(const int x, cons
     const std::string dudvMapPath{ prev_test::common::AssetManager::Instance().GetAssetPath("Textures/waterDUDV.png") };
     const std::string normalMapPath{ prev_test::common::AssetManager::Instance().GetAssetPath("Textures/matchingNormalMap.png") };
 
-    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_allocator }.Create({ WATER_COLOR, 1.0f, 0.0f }, dudvMapPath, normalMapPath) };
+    auto material{ prev_test::render::material::MaterialFactory{ m_device }.Create({ WATER_COLOR, 1.0f, 0.0f }, dudvMapPath, normalMapPath) };
     auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateQuad(prev_test::render::FlatMeshConstellation::ZERO_Y, false) };
-    auto model{ prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh)) };
+    auto model{ prev_test::render::model::ModelFactory{ m_device }.Create(std::move(mesh)) };
 
     return std::make_unique<WaterComponent>(x, z, std::move(material), std::move(model));
 }

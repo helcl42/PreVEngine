@@ -6,20 +6,21 @@
 #include <stdexcept>
 
 namespace prev::render::buffer {
-BufferBuilder::BufferBuilder(prev::core::memory::Allocator& allocator)
-    : m_allocator{ allocator }
+BufferBuilder::BufferBuilder(const prev::core::device::Device& device, const prev::core::device::Queue& queue)
+    : m_device{ device }
+    , m_queue{ queue }
 {
 }
 
-BufferBuilder& BufferBuilder::SetUsageFlags(const VkBufferUsageFlags usageFlags)
+BufferBuilder& BufferBuilder::SetUsageFlags(const GfxBufferUsageFlags usageFlags)
 {
     m_usageFlags = usageFlags;
     return *this;
 }
 
-BufferBuilder& BufferBuilder::SetMemoryType(const prev::core::memory::MemoryType memoryType)
+BufferBuilder& BufferBuilder::SetHostMapped(const bool hostMapped)
 {
-    m_memoryType = memoryType;
+    m_hostMapped = hostMapped;
     return *this;
 }
 
@@ -44,29 +45,51 @@ BufferBuilder& BufferBuilder::SetData(const void* data, const uint64_t size)
 
 std::unique_ptr<Buffer> BufferBuilder::Build() const
 {
-    Valiadate();
+    Validate();
 
     const uint64_t alignedSize{ prev::util::math::RoundUp(m_size, m_alignment) };
 
-    void* mappedData{};
-    void** mappedDataPtr{ m_memoryType == prev::core::memory::MemoryType::HOST_MAPPED ? &mappedData : nullptr };
+    GfxBufferUsageFlags usageFlags{ m_usageFlags };
+    GfxMemoryPropertyFlags memProps{};
+    if (m_hostMapped) {
+        memProps = GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT;
+        usageFlags |= GFX_BUFFER_USAGE_MAP_WRITE | GFX_BUFFER_USAGE_MAP_READ;
+    } else {
+        memProps = GFX_MEMORY_PROPERTY_DEVICE_LOCAL;
+        usageFlags |= GFX_BUFFER_USAGE_COPY_DST;
+    }
 
-    VmaAllocation allocation{ nullptr };
-    VkBuffer buffer{ VK_NULL_HANDLE };
-    m_allocator.CreateBuffer(m_data, m_dataSize, alignedSize, m_usageFlags, m_memoryType, buffer, allocation, mappedDataPtr);
-    if (!buffer) {
+    GfxBufferDescriptor desc{};
+    desc.sType = GFX_STRUCTURE_TYPE_BUFFER_DESCRIPTOR;
+    desc.size = alignedSize;
+    desc.usage = usageFlags;
+    desc.memoryProperties = memProps;
+
+    GfxBuffer buffer{};
+    if (gfxDeviceCreateBuffer(m_device, &desc, &buffer) != GFX_RESULT_SUCCESS || !buffer) {
         throw std::runtime_error("Could not allocate buffer: size = " + std::to_string(alignedSize) + " bytes");
     }
 
-    return std::unique_ptr<Buffer>(new Buffer(m_allocator, buffer, allocation, m_memoryType, alignedSize, 0, mappedData));
-}
-
-void BufferBuilder::Valiadate() const
-{
-    if (m_memoryType == prev::core::memory::MemoryType::UNDEFINED) {
-        throw std::runtime_error("Could not create buffer with UNDEFINED memory type");
+    void* mappedPtr{};
+    if (m_hostMapped) {
+        gfxBufferMap(buffer, 0, GFX_WHOLE_SIZE, &mappedPtr);
+        const auto sizeToInit{ std::min(m_dataSize, alignedSize) };
+        if (m_data) {
+            std::memcpy(mappedPtr, m_data, sizeToInit);
+        } else {
+            std::memset(mappedPtr, 0, alignedSize);
+        }
+        gfxBufferFlushMappedRange(buffer, 0, alignedSize);
+    } else if (m_data && m_dataSize > 0) {
+        const uint64_t sizeToUpload{ std::min(m_dataSize, alignedSize) };
+        gfxQueueWriteBuffer(m_queue, buffer, 0, m_data, sizeToUpload);
     }
 
+    return std::unique_ptr<Buffer>(new Buffer(m_device, m_queue, buffer, m_hostMapped, alignedSize, mappedPtr));
+}
+
+void BufferBuilder::Validate() const
+{
     if (m_usageFlags == 0) {
         throw std::runtime_error("Could not create buffer with usage flags 0");
     }

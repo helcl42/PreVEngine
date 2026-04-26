@@ -17,25 +17,21 @@ enum class QueueType {
 };
 
 struct Queue {
-    Queue(VkQueue q, uint32_t f, uint32_t idx, VkQueueFlags flgs, VkSurfaceKHR surf);
+    Queue(GfxQueue q, uint32_t f, uint32_t idx, GfxQueueFlags flgs);
 
-    operator VkQueue() const;
+    operator GfxQueue() const;
 
-    VkResult Submit(uint32_t submitCount, const VkSubmitInfo* submitInfos, VkFence fence) const;
+    GfxResult Submit(const GfxSubmitDescriptor* submitDesc) const;
 
-    VkResult Present(const VkPresentInfoKHR* presentInfo) const;
+    GfxResult WaitIdle() const;
 
-    VkResult WaitIdle() const;
-
-    VkQueue handle{};
+    GfxQueue handle{};
 
     uint32_t family{}; // queue family
 
     uint32_t index{}; // queue index
 
-    VkQueueFlags flags{}; // Graphics / Compute / Transfer / Sparse / Protected
-
-    VkSurfaceKHR surface{}; // VK_NULL_HANDLE if queue can not present
+    GfxQueueFlags flags{}; // Graphics / Compute / Transfer / Sparse / Protected
 
     mutable std::mutex mutex;
 };

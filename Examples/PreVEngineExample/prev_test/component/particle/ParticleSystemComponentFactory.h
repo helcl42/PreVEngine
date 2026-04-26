@@ -4,12 +4,11 @@
 #include "IParticleSystemComponent.h"
 
 #include <prev/core/device/Device.h>
-#include <prev/core/memory/Allocator.h>
 
 namespace prev_test::component::particle {
 class ParticleSystemComponentFactory final {
 public:
-    ParticleSystemComponentFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator);
+    ParticleSystemComponentFactory(prev::core::device::Device& device);
 
     ~ParticleSystemComponentFactory() = default;
 
@@ -21,7 +20,6 @@ public:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 };
 } // namespace prev_test::component::particle
 

@@ -11,7 +11,7 @@
 namespace prev::core::device {
 class Device {
 public:
-    Device(const PhysicalDevice& gpu, const VkDevice handle, std::map<QueueType, std::vector<std::unique_ptr<Queue>>>&& queues);
+    Device(const PhysicalDevice& gpu, GfxDevice handle, std::map<QueueType, std::vector<std::unique_ptr<Queue>>>&& queues);
 
     ~Device();
 
@@ -31,12 +31,12 @@ public:
     void Print() const;
 
 public:
-    operator VkDevice() const;
+    operator GfxDevice() const;
 
 private:
     PhysicalDevice m_gpu;
 
-    VkDevice m_handle;
+    GfxDevice m_handle;
 
     std::map<QueueType, std::vector<std::unique_ptr<Queue>>> m_queues;
 };

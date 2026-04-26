@@ -6,14 +6,13 @@
 #include "../pass/RenderPass.h"
 
 #include "../../core/device/Device.h"
-#include "../../core/memory/Allocator.h"
 
 #include <memory>
 
 namespace prev::render::swapchain {
 class SwapchainFactory final {
 public:
-    std::unique_ptr<ISwapchain> Create(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT, uint32_t viewCount = 1, uint32_t maxFramesInFlight = 0) const;
+    std::unique_ptr<ISwapchain> Create(core::device::Device& device, pass::RenderPass& renderPass, GfxSurface surface, GfxExtent2D extent, GfxPresentMode presentMode, uint32_t imageCount, uint32_t viewCount = 1, uint32_t maxFramesInFlight = 0) const;
 };
 } // namespace prev::render::swapchain
 

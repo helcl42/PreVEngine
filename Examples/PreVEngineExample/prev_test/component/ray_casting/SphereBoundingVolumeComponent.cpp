@@ -8,8 +8,8 @@
 #include <prev/util/intersection/IntersectionTester.h>
 
 namespace prev_test::component::ray_casting {
-SphereBoundingVolumeComponent::SphereBoundingVolumeComponent(prev::core::memory::Allocator& allocator, const prev::util::intersection::Sphere& sphere, const float scale, const glm::vec3& offset)
-    : m_allocator{ allocator }
+SphereBoundingVolumeComponent::SphereBoundingVolumeComponent(const prev::core::device::Device& device, const prev::util::intersection::Sphere& sphere, const float scale, const glm::vec3& offset)
+    : m_device{ device }
     , m_scale{ scale }
     , m_offset{ offset }
 {
@@ -19,7 +19,7 @@ SphereBoundingVolumeComponent::SphereBoundingVolumeComponent(prev::core::memory:
     m_working = newSphere;
 
 #ifdef RENDER_BOUNDING_VOLUMES
-    m_model = BoundingVolumeModelFactory{ m_allocator }.CreateSphereModel(m_working);
+    m_model = BoundingVolumeModelFactory{ m_device }.CreateSphereModel(m_working);
 #endif
 }
 
@@ -41,7 +41,7 @@ void SphereBoundingVolumeComponent::Update(const glm::mat4& worldTransform)
 
     m_working = prev::util::intersection::Sphere{ translation + m_original.position * scale, m_original.radius * glm::length(scale) };
 #ifdef RENDER_BOUNDING_VOLUMES
-    m_model = BoundingVolumeModelFactory{ m_allocator }.CreateSphereModel(m_working, m_model);
+    m_model = BoundingVolumeModelFactory{ m_device }.CreateSphereModel(m_working, m_model);
 #endif
 }
 

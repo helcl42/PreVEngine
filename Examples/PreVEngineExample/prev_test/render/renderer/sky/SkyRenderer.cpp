@@ -13,12 +13,10 @@
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/MathUtils.h>
-#include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::sky {
-SkyRenderer::SkyRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
+SkyRenderer::SkyRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
     : m_device{ device }
-    , m_allocator{ allocator }
     , m_renderPass{ renderPass }
     , m_scene{ scene }
 {
@@ -30,18 +28,20 @@ void SkyRenderer::Init()
     // clang-format off
     m_skyShader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { VK_SHADER_STAGE_COMPUTE_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_comp.spv") }
+            { GFX_SHADER_STAGE_COMPUTE, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_comp.spv") }
         })
         .AddDescriptorSets({
-            { "outFragColor", 0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT },
-            { "outBloom", 1, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT },
-            { "outAlphaness", 2, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT },
-            { "outCloudDistance", 3, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT },
-            { "perlinNoiseTex", 4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_COMPUTE_BIT },
-            { "weatherTex", 5, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_COMPUTE_BIT },
-            { "uboCS", 6, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT }
+            { "outFragColor", 0, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE },
+            { "outBloom", 1, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE },
+            { "outAlphaness", 2, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE },
+            { "outCloudDistance", 3, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE },
+            { "perlinNoiseTex", 4, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_COMPUTE },
+            { "perlinNoiseSampler", 5, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_COMPUTE },
+            { "weatherTex", 6, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_COMPUTE },
+            { "weatherSampler", 7, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_COMPUTE },
+            { "uboCS", 8, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_COMPUTE }
         })
-        .SetDescriptorPoolCapacity(m_descriptorCount)
+        .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on
 
@@ -54,27 +54,29 @@ void SkyRenderer::Init()
 
     LOGI("Sky Compute Pipeline created");
 
-    m_uniformsPoolSkyCS = prev::render::buffer::BufferPoolBuilder{ m_allocator }
-                              .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
-                              .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+    m_uniformsPoolSkyCS = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
+                              .SetHostMapped(true)
+                              .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM)
                               .SetCount(m_descriptorCount)
                               .SetStride(sizeof(UniformsSkyCS))
-                              .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                              .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
                               .Build();
 
     // compute sky post process
     // clang-format off
     m_skyPostProcessShader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { VK_SHADER_STAGE_COMPUTE_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_post_process_comp.spv") }
+            { GFX_SHADER_STAGE_COMPUTE, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_post_process_comp.spv") }
         })
         .AddDescriptorSets({
-            { "outFragColor", 0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT },
-            { "skyTex", 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_COMPUTE_BIT },
-            { "bloomTex", 2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_COMPUTE_BIT },
-            { "uboCS", 3, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT }
+            { "outFragColor", 0, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE },
+            { "skyTex", 1, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_COMPUTE },
+            { "skySampler", 2, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_COMPUTE },
+            { "bloomTex", 3, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_COMPUTE },
+            { "bloomSampler", 4, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_COMPUTE },
+            { "uboCS", 5, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_COMPUTE }
         })
-        .SetDescriptorPoolCapacity(m_descriptorCount)
+        .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on
 
@@ -87,34 +89,36 @@ void SkyRenderer::Init()
 
     LOGI("Sky PostProcess Compute Pipeline created");
 
-    m_uniformsPoolSkyPostProcessCS = prev::render::buffer::BufferPoolBuilder{ m_allocator }
-                                         .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
-                                         .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+    m_uniformsPoolSkyPostProcessCS = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
+                                         .SetHostMapped(true)
+                                         .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM)
                                          .SetCount(m_descriptorCount)
                                          .SetStride(sizeof(UniformsSkyPostProcessCS))
-                                         .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                                         .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
                                          .Build();
 
     // compositor
     // clang-format off
     m_compositeShader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_composite_vert.spv") },
-            { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_composite_frag.spv") }
+            { GFX_SHADER_STAGE_VERTEX, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_composite_vert.spv") },
+            { GFX_SHADER_STAGE_FRAGMENT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_composite_frag.spv") }
         })
-        .AddVertexInputAttributeDescriptions({
-            prev::util::vk::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
-            prev::util::vk::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
-            prev::util::vk::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 }))
+        .AddVertexInputAttributes({
+            prev::render::shader::VertexInputAttribute{ 0, 0, GFX_FORMAT_R32G32B32_FLOAT, 0 },
+            prev::render::shader::VertexInputAttribute{ 0, 1, GFX_FORMAT_R32G32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })},
+            prev::render::shader::VertexInputAttribute{ 0, 2, GFX_FORMAT_R32G32B32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })}
         })
-        .AddVertexInputBindingDescriptions({
-            prev::util::vk::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        .AddVertexInputBindings({
+            prev::render::shader::VertexInputBinding{ 0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), GFX_VERTEX_STEP_MODE_VERTEX }
         })
         .AddDescriptorSets({
-            { "colorTex", 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, MAX_VIEW_COUNT, VK_SHADER_STAGE_FRAGMENT_BIT },
-            { "depthTex", 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, MAX_VIEW_COUNT, VK_SHADER_STAGE_FRAGMENT_BIT },
-        })
-        .SetDescriptorPoolCapacity(m_descriptorCount)
+{ "colorTex", 0, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
+{ "colorSampler", 1, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
+{ "depthTex", 2, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
+{ "depthSampler", 3, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT }
+})
+        .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on
 
@@ -122,29 +126,29 @@ void SkyRenderer::Init()
 
     // clang-format off
     m_compositePipeline = prev::render::pipeline::GraphicsPipelineBuilder{ m_device, *m_compositeShader, m_renderPass }
-        .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+        .SetPrimitiveTopology(GFX_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
         .SetDepthTestEnabled(true)
         .SetDepthWriteEnabled(true)
         .SetBlendingModeEnabled(false)
         .SetAdditiveBlendingEnabled(false)
-        .SetPolygonMode(VK_POLYGON_MODE_FILL)
-        .SetCullingMode(VK_CULL_MODE_BACK_BIT)
+        .SetPolygonMode(GFX_POLYGON_MODE_FILL)
+        .SetCullingMode(GFX_CULL_MODE_BACK)
         .Build();
     // clang-format on
 
     LOGI("Sky Composite Pipeline created");
 
     m_samplers[SamplerType::LINEAR] = prev::render::sampler::SamplerBuilder{ m_device }
-                                          .SetMipMapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST)
+                                          .SetMipMapMode(GFX_FILTER_MODE_NEAREST)
                                           .Build();
     m_samplers[SamplerType::NEAREST] = prev::render::sampler::SamplerBuilder{ m_device }
-                                           .SetMinFilter(VK_FILTER_NEAREST)
-                                           .SetMagFilter(VK_FILTER_NEAREST)
-                                           .SetMipMapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST)
+                                           .SetMinFilter(GFX_FILTER_MODE_NEAREST)
+                                           .SetMagFilter(GFX_FILTER_MODE_NEAREST)
+                                           .SetMipMapMode(GFX_FILTER_MODE_NEAREST)
                                            .Build();
     m_samplers[SamplerType::LINEAR_REPEATED] = prev::render::sampler::SamplerBuilder{ m_device }
-                                                   .SetMipMapMode(VK_SAMPLER_MIPMAP_MODE_LINEAR)
-                                                   .SetAddressMode(VK_SAMPLER_ADDRESS_MODE_REPEAT)
+                                                   .SetMipMapMode(GFX_FILTER_MODE_LINEAR)
+                                                   .SetAddressMode(GFX_ADDRESS_MODE_REPEAT)
                                                    .Build();
 
     LOGI("Sky Samplers created");
@@ -158,7 +162,7 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
     const float viewportScale{ 1.0f };
 
     // generate clouds using compute queue
-    const VkExtent2D extent{ static_cast<uint32_t>((renderContext.rect.extent.width - renderContext.rect.offset.x) * viewportScale), static_cast<uint32_t>((renderContext.rect.extent.height - renderContext.rect.offset.y) * viewportScale) };
+    const GfxExtent2D extent{ static_cast<uint32_t>((renderContext.rect.extent.width - renderContext.rect.origin.x) * viewportScale), static_cast<uint32_t>((renderContext.rect.extent.height - renderContext.rect.origin.y) * viewportScale) };
 
     for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
         // TODO - put this work on dedicated compute queue if available, double buffering, ...
@@ -184,10 +188,10 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
         auto& linearRepeatedSampler{ m_samplers[SamplerType::LINEAR_REPEATED] };
 
         // regular sky render
-        skyColorImageBuffer.image->UpdateLayout(VK_IMAGE_LAYOUT_GENERAL, renderContext.commandBuffer);
-        skyBloomImageBuffer.image->UpdateLayout(VK_IMAGE_LAYOUT_GENERAL, renderContext.commandBuffer);
-        skyAlphanessImageBuffer.image->UpdateLayout(VK_IMAGE_LAYOUT_GENERAL, renderContext.commandBuffer);
-        skyCloudDistanceImageBuffer.image->UpdateLayout(VK_IMAGE_LAYOUT_GENERAL, renderContext.commandBuffer);
+        skyColorImageBuffer.image->UpdateLayout(GFX_TEXTURE_LAYOUT_GENERAL, renderContext.commandEncoder);
+        skyBloomImageBuffer.image->UpdateLayout(GFX_TEXTURE_LAYOUT_GENERAL, renderContext.commandEncoder);
+        skyAlphanessImageBuffer.image->UpdateLayout(GFX_TEXTURE_LAYOUT_GENERAL, renderContext.commandEncoder);
+        skyCloudDistanceImageBuffer.image->UpdateLayout(GFX_TEXTURE_LAYOUT_GENERAL, renderContext.commandEncoder);
 
         const float skyNearClippingPlane{ std::min(renderContext.nearFarClippingPlanes[viewIndex].y * 100.0f, 10.0f) };
         const float skyFarClippingPlane{ renderContext.nearFarClippingPlanes[viewIndex].y };
@@ -234,28 +238,36 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
 
         m_skyShader->Bind("uboCS", uboCS);
 
-        m_skyShader->Bind("perlinNoiseTex", *skyComponent->GetPerlinWorleyNoise(), *linearRepeatedSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-        m_skyShader->Bind("weatherTex", *skyComponent->GetWeather(), *linearRepeatedSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_skyShader->Bind("perlinNoiseTex", *skyComponent->GetPerlinWorleyNoise());
+        m_skyShader->Bind("perlinNoiseSampler", *linearRepeatedSampler);
+        m_skyShader->Bind("weatherTex", *skyComponent->GetWeather());
+        m_skyShader->Bind("weatherSampler", *linearRepeatedSampler);
 
-        m_skyShader->Bind("outFragColor", *skyColorImageBuffer.image, *skyColorImageSampler, VK_IMAGE_LAYOUT_GENERAL);
-        m_skyShader->Bind("outBloom", *skyBloomImageBuffer.image, *skyBloomImageSampler, VK_IMAGE_LAYOUT_GENERAL);
-        m_skyShader->Bind("outAlphaness", *skyAlphanessImageBuffer.image, *skyAlphanessImageSampler, VK_IMAGE_LAYOUT_GENERAL);
-        m_skyShader->Bind("outCloudDistance", *skyCloudDistanceImageBuffer.image, *skyCloudDistanceImageSampler, VK_IMAGE_LAYOUT_GENERAL);
+        m_skyShader->Bind("outFragColor", *skyColorImageBuffer.image);
+        m_skyShader->Bind("outBloom", *skyBloomImageBuffer.image);
+        m_skyShader->Bind("outAlphaness", *skyAlphanessImageBuffer.image);
+        m_skyShader->Bind("outCloudDistance", *skyCloudDistanceImageBuffer.image);
 
-        const VkDescriptorSet descriptorSetCompute = m_skyShader->UpdateNextDescriptorSet();
+        const GfxBindGroup descriptorSetCompute = m_skyShader->UpdateNextBindGroup();
 
-        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *m_skyPipeline);
-        vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_skyPipeline->GetLayout(), 0, 1, &descriptorSetCompute, 0, 0);
+        GfxComputePassEncoder computePassEncoder{};
+        GfxComputePassBeginDescriptor computePassDesc{};
+        gfxCommandEncoderBeginComputePass(renderContext.commandEncoder, &computePassDesc, &computePassEncoder);
+        gfxComputePassEncoderSetPipeline(computePassEncoder, *m_skyPipeline);
+        gfxComputePassEncoderSetBindGroup(computePassEncoder, 0, descriptorSetCompute, nullptr, 0);
 
-        vkCmdDispatch(renderContext.commandBuffer, prev::util::vk::GetComputeGroupSize(extent.width, 16), prev::util::vk::GetComputeGroupSize(extent.height, 16), 1);
+        const uint32_t dispatchX = (extent.width + 16 - 1) / 16;
+        const uint32_t dispatchY = (extent.height + 16 - 1) / 16;
+        gfxComputePassEncoderDispatch(computePassEncoder, dispatchX, dispatchY, 1);
+        gfxComputePassEncoderEnd(computePassEncoder);
 
-        skyColorImageBuffer.image->UpdateLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, renderContext.commandBuffer);
-        skyBloomImageBuffer.image->UpdateLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, renderContext.commandBuffer);
-        skyAlphanessImageBuffer.image->UpdateLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, renderContext.commandBuffer);
-        skyCloudDistanceImageBuffer.image->UpdateLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, renderContext.commandBuffer);
+        skyColorImageBuffer.image->UpdateLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY, renderContext.commandEncoder);
+        skyBloomImageBuffer.image->UpdateLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY, renderContext.commandEncoder);
+        skyAlphanessImageBuffer.image->UpdateLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY, renderContext.commandEncoder);
+        skyCloudDistanceImageBuffer.image->UpdateLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY, renderContext.commandEncoder);
 
         // sky post process render
-        skyPostProcessColorImageBuffer.image->UpdateLayout(VK_IMAGE_LAYOUT_GENERAL, renderContext.commandBuffer);
+        skyPostProcessColorImageBuffer.image->UpdateLayout(GFX_TEXTURE_LAYOUT_GENERAL, renderContext.commandEncoder);
 
         m_uniformsPoolSkyPostProcessCS->MoveToNext();
 
@@ -276,30 +288,35 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
 
         m_skyPostProcessShader->Bind("uboCS", uboPostCS);
 
-        m_skyPostProcessShader->Bind("skyTex", *skyColorImageBuffer.image, *skyColorImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-        m_skyPostProcessShader->Bind("bloomTex", *skyBloomImageBuffer.image, *skyBloomImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_skyPostProcessShader->Bind("skyTex", *skyColorImageBuffer.image);
+        m_skyPostProcessShader->Bind("skySampler", *skyColorImageSampler);
+        m_skyPostProcessShader->Bind("bloomTex", *skyBloomImageBuffer.image);
+        m_skyPostProcessShader->Bind("bloomSampler", *skyBloomImageSampler);
 
-        m_skyPostProcessShader->Bind("outFragColor", *skyPostProcessColorImageBuffer.image, *skyPostProcessImageSampler, VK_IMAGE_LAYOUT_GENERAL);
+        m_skyPostProcessShader->Bind("outFragColor", *skyPostProcessColorImageBuffer.image);
 
-        const VkDescriptorSet descriptorSetComputePost = m_skyPostProcessShader->UpdateNextDescriptorSet();
+        const GfxBindGroup descriptorSetComputePost = m_skyPostProcessShader->UpdateNextBindGroup();
 
-        vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *m_skyPostProcessPipeline);
-        vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_skyPostProcessPipeline->GetLayout(), 0, 1, &descriptorSetComputePost, 0, 0);
+        GfxComputePassEncoder computePassEncoderPost{};
+        GfxComputePassBeginDescriptor computePassPostDesc{};
+        gfxCommandEncoderBeginComputePass(renderContext.commandEncoder, &computePassPostDesc, &computePassEncoderPost);
+        gfxComputePassEncoderSetPipeline(computePassEncoderPost, *m_skyPostProcessPipeline);
+        gfxComputePassEncoderSetBindGroup(computePassEncoderPost, 0, descriptorSetComputePost, nullptr, 0);
 
-        vkCmdDispatch(renderContext.commandBuffer, prev::util::vk::GetComputeGroupSize(extent.width, 16), prev::util::vk::GetComputeGroupSize(extent.height, 16), 1);
+        gfxComputePassEncoderDispatch(computePassEncoderPost, (extent.width + 16 - 1) / 16, (extent.height + 16 - 1) / 16, 1);
+        gfxComputePassEncoderEnd(computePassEncoderPost);
 
-        skyPostProcessColorImageBuffer.image->UpdateLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, renderContext.commandBuffer);
+        skyPostProcessColorImageBuffer.image->UpdateLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY, renderContext.commandEncoder);
     }
 }
 
 void SkyRenderer::PreRender(const NormalRenderContext& renderContext)
 {
-    const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
-    const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
+    const GfxViewport viewport{ static_cast<float>(renderContext.rect.origin.x), static_cast<float>(renderContext.rect.origin.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 1.0f };
 
-    vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_compositePipeline);
-    vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
-    vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
+    gfxRenderPassEncoderSetPipeline(renderContext.renderPassEncoder, *m_compositePipeline);
+    gfxRenderPassEncoderSetViewport(renderContext.renderPassEncoder, &viewport);
+    gfxRenderPassEncoderSetScissorRect(renderContext.renderPassEncoder, &renderContext.rect);
 }
 
 void SkyRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
@@ -323,19 +340,18 @@ void SkyRenderer::Render(const NormalRenderContext& renderContext, const std::sh
         const auto colorTexKey{ "colorTex" };
         const auto depthTexKey{ "depthTex" };
 #endif
-        m_compositeShader->Bind(colorTexKey, *skyPostProcessColorImageBuffer.image, *skyPostProcessImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-        m_compositeShader->Bind(depthTexKey, *skyCloudDistanceImageBuffer.image, *skyCloudDistanceImageSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_compositeShader->Bind(colorTexKey, *skyPostProcessColorImageBuffer.image);
+        m_compositeShader->Bind("colorSampler", *skyPostProcessImageSampler);
+        m_compositeShader->Bind(depthTexKey, *skyCloudDistanceImageBuffer.image);
+        m_compositeShader->Bind("depthSampler", *skyCloudDistanceImageSampler);
     }
 
-    const VkDescriptorSet descriptorSet = m_compositeShader->UpdateNextDescriptorSet();
-    const VkBuffer vertexBuffers[] = { *skyComponent->GetModel()->GetVertexBuffer() };
-    const VkDeviceSize offsets[] = { 0 };
+    const GfxBindGroup descriptorSet = m_compositeShader->UpdateNextBindGroup();
+    gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *skyComponent->GetModel()->GetVertexBuffer(), 0, skyComponent->GetModel()->GetVertexBuffer()->GetSize());
+    gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *skyComponent->GetModel()->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, skyComponent->GetModel()->GetIndexBuffer()->GetSize());
+    gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 
-    vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-    vkCmdBindIndexBuffer(renderContext.commandBuffer, *skyComponent->GetModel()->GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
-    vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_compositePipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-
-    vkCmdDrawIndexed(renderContext.commandBuffer, skyComponent->GetModel()->GetMesh()->GetIndicesCount(), 1, 0, 0, 0);
+    gfxRenderPassEncoderDrawIndexed(renderContext.renderPassEncoder, skyComponent->GetModel()->GetMesh()->GetIndicesCount(), 1, 0, 0, 0);
 }
 
 void SkyRenderer::PostRender(const NormalRenderContext& renderContext)
@@ -373,19 +389,19 @@ void SkyRenderer::ShutDown()
     m_skyShader = {};
 }
 
-void SkyRenderer::UpdateImageBufferExtents(const VkExtent2D& extent, const VkFormat format, ImageBufferData& imageBuffer)
+void SkyRenderer::UpdateImageBufferExtents(const GfxExtent2D& extent, const GfxFormat format, ImageBufferData& imageBuffer)
 {
     if (imageBuffer.image == nullptr || imageBuffer.image->GetExtent().width != extent.width || imageBuffer.image->GetExtent().height != extent.height) {
-        imageBuffer.image = prev::render::buffer::ImageBufferBuilder{ m_allocator }
+        imageBuffer.image = prev::render::buffer::ImageBufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                                 .SetExtent({ extent.width, extent.height, 1 })
                                 .SetFormat(format)
-                                .SetType(VK_IMAGE_TYPE_2D)
-                                .SetUsageFlags(VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT)
-                                .SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+                                .SetType(GFX_TEXTURE_TYPE_2D)
+                                .SetUsageFlags(GFX_TEXTURE_USAGE_TEXTURE_BINDING | GFX_TEXTURE_USAGE_STORAGE_BINDING)
+                                .SetLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY)
                                 .Build();
 
-        const auto formatProperties{ prev::util::vk::GetFormatProperties(m_device.GetGPU(), format) };
-        imageBuffer.samplerType = (formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT) ? SamplerType::LINEAR : SamplerType::NEAREST;
+        // TODO: gfx API doesn't expose format feature queries - assume linear filtering is available
+        imageBuffer.samplerType = SamplerType::LINEAR;
     }
 }
 } // namespace prev_test::render::renderer::sky

@@ -1,191 +1,334 @@
 #include "PresentableSwapchain.h"
 
-#include "../../buffer/ImageBufferBuilder.h"
+#include "../../../common/Logger.h"
 
-#include "../../../util/MathUtils.h"
-#include "../../../util/VkUtils.h"
-
-#include <algorithm>
+#include <vector>
 
 namespace prev::render::swapchain::presentable {
-PresentableSwapchain::PresentableSwapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSurfaceKHR surface, VkSampleCountFlagBits sampleCount, uint32_t viewCount, uint32_t maxFramesInFlight)
+PresentableSwapchain::PresentableSwapchain(core::device::Device& device, pass::RenderPass& renderPass, GfxSurface surface, GfxExtent2D extent, GfxPresentMode presentMode, uint32_t imageCount, uint32_t viewCount, uint32_t maxFramesInFlight)
     : m_device{ device }
-    , m_allocator{ allocator }
     , m_renderPass{ renderPass }
-    , m_surface{ surface }
-    , m_sampleCount{ sampleCount }
+    , m_graphicsQueue{ device.GetQueue(core::device::QueueType::GRAPHICS) }
+    , m_presentQueue{ device.GetQueue(core::device::QueueType::PRESENT) }
     , m_viewCount{ viewCount }
     , m_maxFramesInFlight{ maxFramesInFlight }
-    , m_graphicsQueue{ m_device.GetQueue(core::device::QueueType::GRAPHICS) }
-    , m_presentQueue{ m_device.GetQueue(core::device::QueueType::PRESENT) }
-    , m_swapchain{ VK_NULL_HANDLE }
-    , m_acquiredIndex{ 0 }
-    , m_isAcquired{ false }
 {
-    const VkSurfaceCapabilitiesKHR surfaceCapabilities{ GetSurfaceCapabilities() };
-    assert(surfaceCapabilities.supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
-    assert(surfaceCapabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR);
-    assert(surfaceCapabilities.supportedCompositeAlpha & (VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR | VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR));
+    GfxSwapchainDescriptor swapchainDesc{};
+    swapchainDesc.sType = GFX_STRUCTURE_TYPE_SWAPCHAIN_DESCRIPTOR;
+    swapchainDesc.pNext = nullptr;
+    swapchainDesc.label = "PresentableSwapchain";
+    swapchainDesc.surface = surface;
+    swapchainDesc.extent = extent;
+    swapchainDesc.format = m_renderPass.GetColorFormat();
+    swapchainDesc.usage = GFX_TEXTURE_USAGE_RENDER_ATTACHMENT;
+    swapchainDesc.presentMode = presentMode;
+    swapchainDesc.imageCount = imageCount;
+    GFXERRCHECK(gfxDeviceCreateSwapchain(m_device, &swapchainDesc, &m_swapchain));
 
-    m_swapchainCreateInfo = { prev::util::vk::CreateStruct<VkSwapchainCreateInfoKHR>(VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR) };
-    m_swapchainCreateInfo.surface = m_surface;
-    m_swapchainCreateInfo.imageFormat = m_renderPass.GetColorFormat();
-    m_swapchainCreateInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-    m_swapchainCreateInfo.imageArrayLayers = m_viewCount;
-    m_swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    m_swapchainCreateInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
-    m_swapchainCreateInfo.clipped = VK_TRUE;
-    m_swapchainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-    m_swapchainCreateInfo.compositeAlpha = (surfaceCapabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR) ? VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR : VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    GfxSwapchainInfo info{};
+    GFXERRCHECK(gfxSwapchainGetInfo(m_swapchain, &info));
+    m_extent = info.extent;
 
-    UpdateExtent(512, 512);
-    SetImageCount(3);
+    const uint32_t actualImageCount = info.imageCount;
+    const uint32_t framesInFlight = (m_maxFramesInFlight > 0) ? m_maxFramesInFlight : actualImageCount;
+    m_frameIndex = util::CircularIndex<uint32_t>{ framesInFlight };
 
-    m_commandPool = prev::util::vk::CreateCommandPool(m_device, m_graphicsQueue.family);
+    CreateResources();
 
-    Apply();
+    LOGI("PresentableSwapchain created: %ux%u, %u images, %u frames-in-flight",
+        m_extent.width, m_extent.height, actualImageCount, framesInFlight);
 }
 
 PresentableSwapchain::~PresentableSwapchain()
 {
     m_device.WaitIdle();
-
-    if (m_commandPool != VK_NULL_HANDLE) {
-        vkDestroyCommandPool(m_device, m_commandPool, nullptr);
+    DestroyResources();
+    if (m_swapchain) {
+        gfxSwapchainDestroy(m_swapchain);
     }
-
-    if (m_swapchain != VK_NULL_HANDLE) {
-        vkDestroySwapchainKHR(m_device, m_swapchain, 0);
-        for (auto& swapchainBuffer : m_swapchainBuffers) {
-            swapchainBuffer.Destroy(m_device);
-        }
-        for (auto& frame : m_framesInFlight) {
-            frame.Destroy(m_device);
-        }
-
-        LOGI("Swapchain destroyed");
-    }
-
-    m_msaaColorBuffer = nullptr;
-    m_msaaDepthBuffer = nullptr;
-    m_depthBuffer = nullptr;
+    LOGI("PresentableSwapchain destroyed");
 }
 
-bool PresentableSwapchain::UpdateExtent(uint32_t width, uint32_t height)
+void PresentableSwapchain::CreateResources()
 {
-    const VkSurfaceCapabilitiesKHR surfaceCapabilities{ GetSurfaceCapabilities() };
-    const VkExtent2D& currentSurfaceExtent{ surfaceCapabilities.currentExtent };
+    const GfxFormat colorFormat = m_renderPass.GetColorFormat();
+    const GfxFormat depthFormat = m_renderPass.GetDepthFormat();
+    const GfxSampleCount sampleCount = m_renderPass.GetSampleCount();
+    const GfxTextureViewType viewType = (m_viewCount > 1) ? GFX_TEXTURE_VIEW_TYPE_2D_ARRAY : GFX_TEXTURE_VIEW_TYPE_2D;
 
-    if (currentSurfaceExtent.width == 0 || currentSurfaceExtent.height == 0) {
+    // Depth texture
+    {
+        GfxTextureDescriptor texDesc{};
+        texDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_DESCRIPTOR;
+        texDesc.label = "PresentableDepth";
+        texDesc.type = GFX_TEXTURE_TYPE_2D;
+        texDesc.size = { m_extent.width, m_extent.height, 1 };
+        texDesc.arrayLayerCount = m_viewCount;
+        texDesc.mipLevelCount = 1;
+        texDesc.sampleCount = sampleCount;
+        texDesc.format = depthFormat;
+        texDesc.usage = GFX_TEXTURE_USAGE_RENDER_ATTACHMENT;
+        GFXERRCHECK(gfxDeviceCreateTexture(m_device, &texDesc, &m_depthTexture));
+
+        GfxTextureViewDescriptor viewDesc{};
+        viewDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_VIEW_DESCRIPTOR;
+        viewDesc.label = "PresentableDepthView";
+        viewDesc.viewType = viewType;
+        viewDesc.format = depthFormat;
+        viewDesc.baseMipLevel = 0;
+        viewDesc.mipLevelCount = 1;
+        viewDesc.baseArrayLayer = 0;
+        viewDesc.arrayLayerCount = m_viewCount;
+        GFXERRCHECK(gfxTextureCreateView(m_depthTexture, &viewDesc, &m_depthView));
+    }
+
+    if (sampleCount > GFX_SAMPLE_COUNT_1) {
+        // MSAA color texture
+        {
+            GfxTextureDescriptor texDesc{};
+            texDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_DESCRIPTOR;
+            texDesc.label = "PresentableMsaaColor";
+            texDesc.type = GFX_TEXTURE_TYPE_2D;
+            texDesc.size = { m_extent.width, m_extent.height, 1 };
+            texDesc.arrayLayerCount = m_viewCount;
+            texDesc.mipLevelCount = 1;
+            texDesc.sampleCount = sampleCount;
+            texDesc.format = colorFormat;
+            texDesc.usage = GFX_TEXTURE_USAGE_RENDER_ATTACHMENT;
+            GFXERRCHECK(gfxDeviceCreateTexture(m_device, &texDesc, &m_msaaColorTexture));
+
+            GfxTextureViewDescriptor viewDesc{};
+            viewDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_VIEW_DESCRIPTOR;
+            viewDesc.label = "PresentableMsaaColorView";
+            viewDesc.viewType = viewType;
+            viewDesc.format = colorFormat;
+            viewDesc.baseMipLevel = 0;
+            viewDesc.mipLevelCount = 1;
+            viewDesc.baseArrayLayer = 0;
+            viewDesc.arrayLayerCount = m_viewCount;
+            GFXERRCHECK(gfxTextureCreateView(m_msaaColorTexture, &viewDesc, &m_msaaColorView));
+        }
+
+        // MSAA depth texture
+        {
+            GfxTextureDescriptor texDesc{};
+            texDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_DESCRIPTOR;
+            texDesc.label = "PresentableMsaaDepth";
+            texDesc.type = GFX_TEXTURE_TYPE_2D;
+            texDesc.size = { m_extent.width, m_extent.height, 1 };
+            texDesc.arrayLayerCount = m_viewCount;
+            texDesc.mipLevelCount = 1;
+            texDesc.sampleCount = sampleCount;
+            texDesc.format = depthFormat;
+            texDesc.usage = GFX_TEXTURE_USAGE_RENDER_ATTACHMENT;
+            GFXERRCHECK(gfxDeviceCreateTexture(m_device, &texDesc, &m_msaaDepthTexture));
+
+            GfxTextureViewDescriptor viewDesc{};
+            viewDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_VIEW_DESCRIPTOR;
+            viewDesc.label = "PresentableMsaaDepthView";
+            viewDesc.viewType = viewType;
+            viewDesc.format = depthFormat;
+            viewDesc.baseMipLevel = 0;
+            viewDesc.mipLevelCount = 1;
+            viewDesc.baseArrayLayer = 0;
+            viewDesc.arrayLayerCount = m_viewCount;
+            GFXERRCHECK(gfxTextureCreateView(m_msaaDepthTexture, &viewDesc, &m_msaaDepthView));
+        }
+    }
+
+    // Per-swapchain-image resources
+    GfxSwapchainInfo info{};
+    GFXERRCHECK(gfxSwapchainGetInfo(m_swapchain, &info));
+    const uint32_t swapchainImageCount = info.imageCount;
+
+    m_swapchainBuffers.resize(swapchainImageCount);
+    for (uint32_t i = 0; i < swapchainImageCount; ++i) {
+        auto& sb = m_swapchainBuffers[i];
+
+        // View is owned by the swapchain, do not destroy it
+        GFXERRCHECK(gfxSwapchainGetTextureView(m_swapchain, i, &sb.view));
+
+        GfxFramebufferAttachment colorAttachment{};
+        GfxFramebufferAttachment depthAttachment{};
+        if (sampleCount > GFX_SAMPLE_COUNT_1) {
+            colorAttachment.view = m_msaaColorView;
+            colorAttachment.resolveTarget = sb.view;
+            depthAttachment.view = m_msaaDepthView;
+            depthAttachment.resolveTarget = nullptr;
+        } else {
+            colorAttachment.view = sb.view;
+            colorAttachment.resolveTarget = nullptr;
+            depthAttachment.view = m_depthView;
+            depthAttachment.resolveTarget = nullptr;
+        }
+
+        GfxFramebufferDescriptor fbDesc{};
+        fbDesc.sType = GFX_STRUCTURE_TYPE_FRAMEBUFFER_DESCRIPTOR;
+        fbDesc.label = "PresentableFramebuffer";
+        fbDesc.renderPass = m_renderPass;
+        fbDesc.colorAttachments = &colorAttachment;
+        fbDesc.colorAttachmentCount = 1;
+        fbDesc.depthStencilAttachment = depthAttachment;
+        fbDesc.extent = m_extent;
+        GFXERRCHECK(gfxDeviceCreateFramebuffer(m_device, &fbDesc, &sb.framebuffer));
+
+        GfxSemaphoreDescriptor semDesc{};
+        semDesc.sType = GFX_STRUCTURE_TYPE_SEMAPHORE_DESCRIPTOR;
+        semDesc.label = "RenderSemaphore";
+        semDesc.type = GFX_SEMAPHORE_TYPE_BINARY;
+        semDesc.initialValue = 0;
+        GFXERRCHECK(gfxDeviceCreateSemaphore(m_device, &semDesc, &sb.renderSemaphore));
+    }
+
+    // Per-frame-in-flight resources
+    const uint32_t framesInFlight = m_frameIndex.GetCount();
+    m_framesInFlight.resize(framesInFlight);
+    for (uint32_t i = 0; i < framesInFlight; ++i) {
+        auto& f = m_framesInFlight[i];
+
+        GfxCommandEncoderDescriptor ceDesc{};
+        ceDesc.sType = GFX_STRUCTURE_TYPE_COMMAND_ENCODER_DESCRIPTOR;
+        ceDesc.label = "SwapchainCommandEncoder";
+        GFXERRCHECK(gfxDeviceCreateCommandEncoder(m_device, &ceDesc, &f.commandEncoder));
+
+        GfxSemaphoreDescriptor semDesc{};
+        semDesc.sType = GFX_STRUCTURE_TYPE_SEMAPHORE_DESCRIPTOR;
+        semDesc.label = "AcquireSemaphore";
+        semDesc.type = GFX_SEMAPHORE_TYPE_BINARY;
+        semDesc.initialValue = 0;
+        GFXERRCHECK(gfxDeviceCreateSemaphore(m_device, &semDesc, &f.acquireSemaphore));
+
+        GfxFenceDescriptor fenceDesc{};
+        fenceDesc.sType = GFX_STRUCTURE_TYPE_FENCE_DESCRIPTOR;
+        fenceDesc.label = "FrameFence";
+        fenceDesc.signaled = true;
+        GFXERRCHECK(gfxDeviceCreateFence(m_device, &fenceDesc, &f.fence));
+    }
+}
+
+void PresentableSwapchain::DestroyResources()
+{
+    for (auto& sb : m_swapchainBuffers) {
+        if (sb.renderSemaphore) {
+            gfxSemaphoreDestroy(sb.renderSemaphore);
+            sb.renderSemaphore = nullptr;
+        }
+        if (sb.framebuffer) {
+            gfxFramebufferDestroy(sb.framebuffer);
+            sb.framebuffer = nullptr;
+        }
+        // sb.view is owned by the swapchain, do not destroy
+    }
+    m_swapchainBuffers.clear();
+
+    for (auto& f : m_framesInFlight) {
+        if (f.fence) {
+            gfxFenceDestroy(f.fence);
+            f.fence = nullptr;
+        }
+        if (f.acquireSemaphore) {
+            gfxSemaphoreDestroy(f.acquireSemaphore);
+            f.acquireSemaphore = nullptr;
+        }
+        if (f.commandEncoder) {
+            gfxCommandEncoderDestroy(f.commandEncoder);
+            f.commandEncoder = nullptr;
+        }
+    }
+    m_framesInFlight.clear();
+
+    if (m_msaaDepthView) {
+        gfxTextureViewDestroy(m_msaaDepthView);
+        m_msaaDepthView = nullptr;
+    }
+    if (m_msaaDepthTexture) {
+        gfxTextureDestroy(m_msaaDepthTexture);
+        m_msaaDepthTexture = nullptr;
+    }
+    if (m_msaaColorView) {
+        gfxTextureViewDestroy(m_msaaColorView);
+        m_msaaColorView = nullptr;
+    }
+    if (m_msaaColorTexture) {
+        gfxTextureDestroy(m_msaaColorTexture);
+        m_msaaColorTexture = nullptr;
+    }
+    if (m_depthView) {
+        gfxTextureViewDestroy(m_depthView);
+        m_depthView = nullptr;
+    }
+    if (m_depthTexture) {
+        gfxTextureDestroy(m_depthTexture);
+        m_depthTexture = nullptr;
+    }
+}
+
+bool PresentableSwapchain::BeginFrame(FrameContext& outContext)
+{
+    ASSERT(!m_isAcquired, "PresentableSwapchain: previous frame not ended");
+
+    auto& frameInFlight = m_framesInFlight[m_frameIndex];
+
+    GFXERRCHECK(gfxFenceWait(frameInFlight.fence, UINT64_MAX));
+    GFXERRCHECK(gfxFenceReset(frameInFlight.fence));
+
+    uint32_t acquireIndex{};
+    const GfxResult result = gfxSwapchainAcquireNextImage(m_swapchain, UINT64_MAX, frameInFlight.acquireSemaphore, nullptr, &acquireIndex);
+    if (result == GFX_RESULT_ERROR_OUT_OF_DATE || result == GFX_RESULT_ERROR_SURFACE_LOST) {
         return false;
     }
+    GFXERRCHECK(result);
 
-    // because of android notifies about SUBOPTIMAL presence -> it internaly transforms image(rotates) because we use preTransform == VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
-    if (currentSurfaceExtent.width == m_swapchainCreateInfo.imageExtent.width && currentSurfaceExtent.height == m_swapchainCreateInfo.imageExtent.height) {
-        return false;
-    }
+    m_acquiredIndex = acquireIndex;
+    m_isAcquired = true;
 
-    if (currentSurfaceExtent.width == std::numeric_limits<uint32_t>::max() || currentSurfaceExtent.height == std::numeric_limits<uint32_t>::min()) {
-        LOGW("Can't determine current window surface extent from surface caps. Using provided extent instead. (%u x %u)", width, height);
-        m_swapchainCreateInfo.imageExtent.width = util::math::Clamp(width, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width);
-        m_swapchainCreateInfo.imageExtent.height = util::math::Clamp(height, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
-    } else {
-        m_swapchainCreateInfo.imageExtent = currentSurfaceExtent;
-    }
+    GFXERRCHECK(gfxCommandEncoderBegin(frameInFlight.commandEncoder));
 
-    if (!!m_swapchain) {
-        Apply();
-    }
+    outContext.frameBuffer = m_swapchainBuffers[m_acquiredIndex].framebuffer;
+    outContext.commandEncoder = frameInFlight.commandEncoder;
+    outContext.index = m_frameIndex;
     return true;
 }
 
-bool PresentableSwapchain::SetImageCount(uint32_t imageCount)
+void PresentableSwapchain::EndFrame()
 {
-    const VkSurfaceCapabilitiesKHR surfaceCapabilities{ GetSurfaceCapabilities() };
+    ASSERT(m_isAcquired, "PresentableSwapchain: BeginFrame must succeed before EndFrame");
 
-    uint32_t count{ std::max(imageCount, surfaceCapabilities.minImageCount) };
-    if (surfaceCapabilities.maxImageCount > 0) {
-        count = std::min(count, surfaceCapabilities.maxImageCount);
-    }
+    auto& frameInFlight = m_framesInFlight[m_frameIndex];
+    auto& swapchainBuffer = m_swapchainBuffers[m_acquiredIndex];
 
-    m_swapchainCreateInfo.minImageCount = count;
+    GFXERRCHECK(gfxCommandEncoderEnd(frameInFlight.commandEncoder));
 
-    if (count != imageCount) {
-        LOGW("Swapchain using %u framebuffers, instead of %u.", count, imageCount);
-    }
+    GfxCommandEncoder encoders[] = { frameInFlight.commandEncoder };
+    GfxSemaphore waitSems[] = { frameInFlight.acquireSemaphore };
+    GfxSemaphore signalSems[] = { swapchainBuffer.renderSemaphore };
 
-    if (!!m_swapchain) {
-        Apply();
-    }
+    GfxSubmitDescriptor submitDesc{};
+    submitDesc.sType = GFX_STRUCTURE_TYPE_SUBMIT_DESCRIPTOR;
+    submitDesc.commandEncoders = encoders;
+    submitDesc.commandEncoderCount = 1;
+    submitDesc.waitSemaphores = waitSems;
+    submitDesc.waitSemaphoreCount = 1;
+    submitDesc.signalSemaphores = signalSems;
+    submitDesc.signalSemaphoreCount = 1;
+    submitDesc.signalFence = frameInFlight.fence;
+    GFXERRCHECK(m_graphicsQueue.Submit(&submitDesc));
 
-    return count == imageCount;
+    GfxSemaphore presentWaitSems[] = { swapchainBuffer.renderSemaphore };
+    GfxPresentDescriptor presentDesc{};
+    presentDesc.sType = GFX_STRUCTURE_TYPE_PRESENT_DESCRIPTOR;
+    presentDesc.waitSemaphores = presentWaitSems;
+    presentDesc.waitSemaphoreCount = 1;
+    // Ignore present result — OUT_OF_DATE is handled on next BeginFrame
+    gfxSwapchainPresent(m_swapchain, &presentDesc);
+
+    ++m_frameIndex;
+    m_isAcquired = false;
 }
 
-std::vector<VkPresentModeKHR> PresentableSwapchain::GetPresentModes() const
+GfxExtent2D PresentableSwapchain::GetExtent() const
 {
-    uint32_t count{};
-    VKERRCHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(m_device.GetGPU(), m_surface, &count, nullptr));
-    std::vector<VkPresentModeKHR> modes(count);
-    VKERRCHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(m_device.GetGPU(), m_surface, &count, modes.data()));
-    return modes;
-}
-
-// ---------------------------- Present Mode ----------------------------
-// noTearing : TRUE = Wait for next vsync, to swap buffers.  FALSE = faster fps.
-// powersave  : TRUE = Limit framerate to vsync (60 fps).    FALSE = lower latency.
-bool PresentableSwapchain::SetPresentMode(bool noTearing, bool powerSave)
-{
-    const VkPresentModeKHR mode{ static_cast<VkPresentModeKHR>((noTearing ? VK_PRESENT_MODE_MAILBOX_KHR : 0) ^ (powerSave ? VK_PRESENT_MODE_FIFO_RELAXED_KHR : 0)) };
-    return SetPresentMode(mode); // if not found, use FIFO
-}
-
-bool PresentableSwapchain::SetPresentMode(VkPresentModeKHR preferredMode)
-{
-    const auto modes{ GetPresentModes() };
-
-    VkPresentModeKHR& mode{ m_swapchainCreateInfo.presentMode };
-    mode = VK_PRESENT_MODE_FIFO_KHR; // default to FIFO mode
-    for (const auto& m : modes) {
-        if (m == preferredMode) {
-            mode = preferredMode; // if prefered mode is available, select it.
-            break;
-        }
-    }
-
-    if (mode != preferredMode) {
-        LOGW("Requested present-mode is not supported. Reverting to FIFO mode.");
-    }
-
-    if (!!m_swapchain) {
-        Apply();
-    }
-
-    return mode == preferredMode;
-}
-
-void PresentableSwapchain::Print() const
-{
-    LOGI("Swapchain:");
-
-    LOGI("\tColor   = %3d : %s", m_swapchainCreateInfo.imageFormat, util::vk::FormatToString(m_swapchainCreateInfo.imageFormat).c_str());
-    LOGI("\tDepth   = %3d : %s", m_depthBuffer->GetFormat(), util::vk::FormatToString(m_depthBuffer->GetFormat()).c_str());
-
-    const auto& extent{ m_swapchainCreateInfo.imageExtent };
-    LOGI("\tExtent  = %d x %d", extent.width, extent.height);
-    LOGI("\tBuffers = %d", static_cast<int>(m_swapchainBuffers.size()));
-
-    const auto modes{ GetPresentModes() };
-    LOGI("\tPresentMode:");
-    const auto& mode{ m_swapchainCreateInfo.presentMode };
-    for (auto m : modes) {
-        LOGI("\t\t%s %s", (m == mode) ? TICK_CHARACTER : " ", util::vk::PresentModeToString(m).c_str());
-    }
-    LOGI("\tSharingMode: %s", m_swapchainCreateInfo.imageSharingMode == VK_SHARING_MODE_EXCLUSIVE ? "Exclusive" : "Shared");
-}
-
-const VkExtent2D& PresentableSwapchain::GetExtent() const
-{
-    return m_swapchainCreateInfo.imageExtent;
+    return m_extent;
 }
 
 uint32_t PresentableSwapchain::GetImageCount() const
@@ -193,234 +336,11 @@ uint32_t PresentableSwapchain::GetImageCount() const
     return static_cast<uint32_t>(m_swapchainBuffers.size());
 }
 
-void PresentableSwapchain::Apply()
+void PresentableSwapchain::Print() const
 {
-    m_swapchainCreateInfo.oldSwapchain = m_swapchain;
-
-    const std::vector<uint32_t> families = { m_presentQueue.family, m_graphicsQueue.family };
-    if (m_presentQueue.family != m_graphicsQueue.family) {
-        m_swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-        m_swapchainCreateInfo.queueFamilyIndexCount = static_cast<uint32_t>(families.size());
-        m_swapchainCreateInfo.pQueueFamilyIndices = families.data();
-    } else {
-        m_swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    }
-    VKERRCHECK(vkCreateSwapchainKHR(m_device, &m_swapchainCreateInfo, nullptr, &m_swapchain));
-
-    if (m_swapchainCreateInfo.oldSwapchain != VK_NULL_HANDLE) {
-        m_device.WaitIdle();
-        vkDestroySwapchainKHR(m_device, m_swapchainCreateInfo.oldSwapchain, VK_NULL_HANDLE);
-        for (auto& swapchainBuffer : m_swapchainBuffers) {
-            swapchainBuffer.Destroy(m_device);
-        }
-        for (auto& frame : m_framesInFlight) {
-            frame.Destroy(m_device);
-        }
-    }
-
-    const VkExtent3D newExtent{ m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height, 1 };
-    const VkImageViewType imageViewType{ m_viewCount > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D };
-
-    m_depthBuffer = buffer::ImageBufferBuilder{ m_allocator }
-                        .SetExtent(newExtent)
-                        .SetFormat(m_renderPass.GetDepthFormat())
-                        .SetType(VK_IMAGE_TYPE_2D)
-                        .SetViewType(imageViewType)
-                        .SetLayerCount(m_viewCount)
-                        .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
-                        .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-                        .Build();
-    if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
-        m_msaaColorBuffer = buffer::ImageBufferBuilder{ m_allocator }
-                                .SetExtent(newExtent)
-                                .SetFormat(m_renderPass.GetColorFormat())
-                                .SetType(VK_IMAGE_TYPE_2D)
-                                .SetViewType(imageViewType)
-                                .SetLayerCount(m_viewCount)
-                                .SetSampleCount(m_sampleCount)
-                                .SetUsageFlags(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
-                                .SetLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
-                                .Build();
-        m_msaaDepthBuffer = buffer::ImageBufferBuilder{ m_allocator }
-                                .SetExtent(newExtent)
-                                .SetFormat(m_renderPass.GetDepthFormat())
-                                .SetType(VK_IMAGE_TYPE_2D)
-                                .SetViewType(imageViewType)
-                                .SetLayerCount(m_viewCount)
-                                .SetSampleCount(m_sampleCount)
-                                .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
-                                .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-                                .Build();
-    }
-
-    const auto swapchainImages{ GetSwapchainImages() };
-    const auto swapchainImagesCount{ static_cast<uint32_t>(swapchainImages.size()) };
-
-    // Use configured max frames in flight, or default to swapchain image count
-    const uint32_t framesInFlightCount = (m_maxFramesInFlight > 0) ? m_maxFramesInFlight : swapchainImagesCount;
-
-    m_frameIndex = util::CircularIndex{ framesInFlightCount };
-
-    // Create per-frame-in-flight resources
-    m_framesInFlight.resize(framesInFlightCount);
-    for (uint32_t i = 0; i < framesInFlightCount; ++i) {
-        m_framesInFlight[i].commandBuffer = util::vk::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-        m_framesInFlight[i].acquireSemaphore = util::vk::CreateSemaphore(m_device);
-        m_framesInFlight[i].fence = util::vk::CreateFence(m_device, VK_FENCE_CREATE_SIGNALED_BIT);
-    }
-
-    m_swapchainBuffers.resize(swapchainImagesCount);
-    for (uint32_t i = 0; i < swapchainImagesCount; ++i) {
-        auto image{ swapchainImages[i] };
-        auto imageView{ util::vk::CreateImageView(m_device, image, m_swapchainCreateInfo.imageFormat, imageViewType, 1, VK_IMAGE_ASPECT_COLOR_BIT, m_viewCount) };
-
-        std::vector<VkImageView> swapchainImageViews;
-        if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
-            swapchainImageViews.push_back(m_msaaColorBuffer->GetImageView());
-            swapchainImageViews.push_back(m_msaaDepthBuffer->GetImageView());
-        }
-        swapchainImageViews.push_back(imageView); // Add color buffer (unique)
-        swapchainImageViews.push_back(m_depthBuffer->GetImageView()); // Add depth buffer (shared)
-
-        auto& swapchainBuffer{ m_swapchainBuffers[i] };
-        swapchainBuffer.image = image;
-        swapchainBuffer.view = imageView;
-        swapchainBuffer.framebuffer = util::vk::CreateFrameBuffer(m_device, m_renderPass, swapchainImageViews, m_swapchainCreateInfo.imageExtent);
-        swapchainBuffer.extent = m_swapchainCreateInfo.imageExtent;
-        swapchainBuffer.renderSemaphore = util::vk::CreateSemaphore(m_device);
-    }
-
-    if (m_swapchainCreateInfo.oldSwapchain == VK_NULL_HANDLE) {
-        LOGI("Swapchain created");
-    }
-}
-
-VkSurfaceCapabilitiesKHR PresentableSwapchain::GetSurfaceCapabilities() const
-{
-    VkSurfaceCapabilitiesKHR surfaceCapabilities;
-    VKERRCHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_device.GetGPU(), m_surface, &surfaceCapabilities));
-    return surfaceCapabilities;
-}
-
-std::vector<VkImage> PresentableSwapchain::GetSwapchainImages() const
-{
-    std::vector<VkImage> swapchainImages;
-
-    uint32_t swapchainImagesCount{ 0 };
-    VKERRCHECK(vkGetSwapchainImagesKHR(m_device, m_swapchain, &swapchainImagesCount, nullptr));
-    swapchainImages.resize(swapchainImagesCount);
-    VKERRCHECK(vkGetSwapchainImagesKHR(m_device, m_swapchain, &swapchainImagesCount, swapchainImages.data()));
-
-    return swapchainImages;
-}
-
-bool PresentableSwapchain::AcquireNext(SwapchainBuffer& next)
-{
-    ASSERT(!m_isAcquired, "Swapchain: Previous swapchain buffer has not yet been presented.");
-
-    auto& frameInFlight{ m_framesInFlight[m_frameIndex] };
-
-    // Wait for this frame-in-flight to complete before reusing it
-    VKERRCHECK(vkWaitForFences(m_device, 1, &frameInFlight.fence, VK_TRUE, UINT64_MAX));
-    VKERRCHECK(vkResetFences(m_device, 1, &frameInFlight.fence));
-
-    uint32_t acquireIndex;
-    const auto result{ vkAcquireNextImageKHR(m_device, m_swapchain, UINT64_MAX, frameInFlight.acquireSemaphore, VK_NULL_HANDLE, &acquireIndex) };
-    if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-        UpdateExtent(m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height);
-        return false;
-    } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-        ASSERT(true, "failed to acquire swap chain image!");
-    }
-
-    m_acquiredIndex = acquireIndex;
-
-    const auto& swapchainBuffer{ m_swapchainBuffers[m_acquiredIndex] };
-    m_isAcquired = true;
-    
-    // Return swapchain image info
-    next.framebuffer = swapchainBuffer.framebuffer;
-    next.extent = swapchainBuffer.extent;
-    next.image = swapchainBuffer.image;
-    next.view = swapchainBuffer.view;
-    next.renderSemaphore = swapchainBuffer.renderSemaphore;
-
-    return true;
-}
-
-void PresentableSwapchain::Submit()
-{
-    ASSERT(!!m_isAcquired, "Swapchain: A buffer must be acquired before submitting.");
-
-    const auto& acquiredBuffer{ m_swapchainBuffers[m_acquiredIndex] };
-    const auto& frameInFlight{ m_framesInFlight[m_frameIndex] };
-
-    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-
-    VkSubmitInfo submitInfo{ prev::util::vk::CreateStruct<VkSubmitInfo>(VK_STRUCTURE_TYPE_SUBMIT_INFO) };
-    submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = &frameInFlight.acquireSemaphore;
-    submitInfo.pWaitDstStageMask = waitStages;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &frameInFlight.commandBuffer;
-    submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = &acquiredBuffer.renderSemaphore;
-
-    VKERRCHECK(m_graphicsQueue.Submit(1, &submitInfo, frameInFlight.fence));
-}
-
-void PresentableSwapchain::Present()
-{
-    ASSERT(!!m_isAcquired, "Swapchain: A buffer must be acquired before presenting.");
-
-    const auto& swapchainBuffer{ m_swapchainBuffers[m_acquiredIndex] };
-
-    VkPresentInfoKHR presentInfo{ prev::util::vk::CreateStruct<VkPresentInfoKHR>(VK_STRUCTURE_TYPE_PRESENT_INFO_KHR) };
-    presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = &swapchainBuffer.renderSemaphore;
-    presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = &m_swapchain;
-    presentInfo.pImageIndices = &m_acquiredIndex;
-
-    bool swapchainChanged{ false };
-
-    const auto result{ m_presentQueue.Present(&presentInfo) };
-    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
-        swapchainChanged = UpdateExtent(m_swapchainCreateInfo.imageExtent.width, m_swapchainCreateInfo.imageExtent.height);
-    } else if (result != VK_SUCCESS) {
-        ShowVkResult(result);
-    }
-
-    if (!swapchainChanged) {
-        ++m_frameIndex;
-    }
-
-    m_isAcquired = false;
-}
-
-bool PresentableSwapchain::BeginFrame(FrameContext& outContext)
-{
-    SwapchainBuffer swapchainBuffer;
-    if (!AcquireNext(swapchainBuffer)) {
-        return false;
-    }
-
-    const auto& frameInFlight{ m_framesInFlight[m_frameIndex] };
-
-    VkCommandBufferBeginInfo beginInfo{ prev::util::vk::CreateStruct<VkCommandBufferBeginInfo>(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO) };
-    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    VKERRCHECK(vkBeginCommandBuffer(frameInFlight.commandBuffer, &beginInfo));
-
-    outContext = { swapchainBuffer.framebuffer, frameInFlight.commandBuffer, m_frameIndex };
-    return true;
-}
-
-void PresentableSwapchain::EndFrame()
-{
-    const auto& frameInFlight{ m_framesInFlight[m_frameIndex] };
-    VKERRCHECK(vkEndCommandBuffer(frameInFlight.commandBuffer));
-
-    Submit();
-    Present();
+    LOGI("PresentableSwapchain:");
+    LOGI("\tExtent          = %u x %u", m_extent.width, m_extent.height);
+    LOGI("\tImages          = %u", static_cast<uint32_t>(m_swapchainBuffers.size()));
+    LOGI("\tFrames-in-flight= %u", m_frameIndex.GetCount());
 }
 } // namespace prev::render::swapchain::presentable

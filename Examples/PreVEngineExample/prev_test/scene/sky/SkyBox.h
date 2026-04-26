@@ -5,13 +5,12 @@
 #include "../../component/transform/ITransformComponent.h"
 
 #include <prev/core/device/Device.h>
-#include <prev/core/memory/Allocator.h>
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene::sky {
 class SkyBox final : public prev::scene::graph::SceneNode {
 public:
-    SkyBox(prev::core::device::Device& device, prev::core::memory::Allocator& allocator);
+    SkyBox(prev::core::device::Device& device);
 
     ~SkyBox() = default;
 
@@ -25,7 +24,6 @@ public:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 
 private:
     std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;

@@ -1,147 +1,56 @@
 #include "InstanceFactory.h"
 
-#include "Extensions.h"
-#include "InstanceFactory.h"
-#include "Layers.h"
-#include "Validation.h"
-
 #include "../../common/Logger.h"
-#include "../../util/VkUtils.h"
-
-#if defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_IOS_MVK)
-#include <vulkan/vulkan_metal.h>
-#endif
 
 #include <stdexcept>
 
 namespace prev::core::instance {
 namespace {
-    Layers CreateLayers(const bool enableValidation, const std::vector<std::string>& extLayers)
+    void GfxLogHandler(GfxLogLevel level, const char* message, void* /*userData*/)
     {
-        Layers layers;
-        if (enableValidation) {
-            layers.Pick("VK_LAYER_KHRONOS_validation");
+        switch (level) {
+        case GFX_LOG_LEVEL_ERROR:
+            LOGE("[gfx] %s", message);
+            break;
+        case GFX_LOG_LEVEL_WARNING:
+            LOGW("[gfx] %s", message);
+            break;
+        case GFX_LOG_LEVEL_DEBUG:
+        case GFX_LOG_LEVEL_INFO:
+        default:
+            LOGI("[gfx] %s", message);
+            break;
         }
-
-        for (const auto& layer : extLayers) {
-            layers.Pick(layer);
-        }
-        return layers;
-    }
-
-    Extensions CreateExtensions(const bool enableValidation, const std::vector<std::string>& extExtensions)
-    {
-        Extensions extensions;
-        extensions.Pick(VK_KHR_SURFACE_EXTENSION_NAME);
-        extensions.Pick(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-#if defined(VK_USE_PLATFORM_WIN32_KHR)
-        extensions.Pick(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
-#elif defined(VK_USE_PLATFORM_ANDROID_KHR)
-        extensions.Pick(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
-#elif defined(VK_USE_PLATFORM_XCB_KHR)
-        extensions.Pick(VK_KHR_XCB_SURFACE_EXTENSION_NAME);
-#elif defined(VK_USE_PLATFORM_XLIB_KHR)
-        extensions.Pick(VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
-#elif defined(VK_USE_PLATFORM_WAYLAND_KHR)
-        extensions.Pick(VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
-#elif defined(VK_USE_PLATFORM_MACOS_MVK)
-        extensions.Pick(VK_MVK_MACOS_SURFACE_EXTENSION_NAME);
-        extensions.Pick(VK_EXT_METAL_SURFACE_EXTENSION_NAME);
-        extensions.Pick(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-#elif defined(VK_USE_PLATFORM_IOS_MVK)
-        extensions.Pick(VK_MVK_IOS_SURFACE_EXTENSION_NAME);
-        extensions.Pick(VK_EXT_METAL_SURFACE_EXTENSION_NAME);
-        extensions.Pick(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-#endif
-
-        if (enableValidation) {
-#ifdef VK_USE_PLATFORM_ANDROID_KHR
-            extensions.Pick(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
-#else
-            extensions.Pick(VK_EXT_DEBUG_UTILS_EXTENSION_NAME); // in Debug mode, Enable Validation
-#endif
-        }
-
-        for (const auto& ext : extExtensions) {
-            extensions.Pick(ext);
-        }
-        return extensions;
-    }
-
-    VkApplicationInfo CreateApplicationInfo(const std::string& appName)
-    {
-        VkApplicationInfo appInfo{ prev::util::vk::CreateStruct<VkApplicationInfo>(VK_STRUCTURE_TYPE_APPLICATION_INFO) };
-        appInfo.pNext = nullptr;
-        appInfo.pApplicationName = appName.c_str();
-        appInfo.applicationVersion = 1;
-        appInfo.pEngineName = "PreVEngine";
-        appInfo.engineVersion = 1;
-        appInfo.apiVersion = VK_API_VERSION_1_1;
-        return appInfo;
-    }
-
-    VkInstanceCreateInfo CreateInstanceCreateInfo(const Layers& layers, const Extensions& extensions, const VkApplicationInfo& appInfo)
-    {
-        const VkInstanceCreateFlags flags{
-#if defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_IOS_MVK)
-            VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR
-#else
-            0
-#endif
-        };
-
-        VkInstanceCreateInfo instanceInfo{ prev::util::vk::CreateStruct<VkInstanceCreateInfo>(VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO) };
-        instanceInfo.flags = flags;
-        instanceInfo.pApplicationInfo = &appInfo;
-        instanceInfo.enabledExtensionCount = extensions.GetPickCount();
-        instanceInfo.ppEnabledExtensionNames = extensions.GetPickListRaw();
-        instanceInfo.enabledLayerCount = layers.GetPickCount();
-        instanceInfo.ppEnabledLayerNames = layers.GetPickListRaw();
-        return instanceInfo;
-    }
-
-    VkInstance CreateInstance(const VkInstanceCreateInfo& createInfo)
-    {
-        VkInstance vkInstance;
-        VKERRCHECK(vkCreateInstance(&createInfo, nullptr, &vkInstance));
-        if (!vkInstance) {
-            throw std::runtime_error("Could not create VK instance.");
-        }
-
-#ifdef ENABLE_VK_LOADER
-        volkLoadInstance(vkInstance);
-#endif
-        return vkInstance;
-    }
-
-    std::unique_ptr<ValidationReporter> CreateValidationReporter(const VkInstance instance, const Extensions& extensions)
-    {
-        std::unique_ptr<ValidationReporter> validationReporter{};
-        if (extensions.IsPicked(VK_EXT_DEBUG_REPORT_EXTENSION_NAME) || extensions.IsPicked(VK_EXT_DEBUG_UTILS_EXTENSION_NAME)) {
-            validationReporter = std::make_unique<ValidationReporter>(instance);
-        }
-        return validationReporter;
     }
 } // namespace
 
-std::unique_ptr<Instance> InstanceFactory::Create(const bool enableValidation, const std::string& appName, const std::vector<std::string>& extLayers, const std::vector<std::string>& extExtensions) const
+std::unique_ptr<Instance> InstanceFactory::Create(const std::string& appName, bool enableValidation) const
 {
-    const auto layers{ CreateLayers(enableValidation, extLayers) };
-    layers.Print();
+    const GfxBackend backend = GFX_BACKEND_VULKAN;
+    if (gfxLoadBackend(backend) != GFX_RESULT_SUCCESS) {
+        throw std::runtime_error("Failed to load Gfx backend");
+    }
 
-    const auto extensions{ CreateExtensions(enableValidation, extExtensions) };
-    extensions.Print();
+    if (enableValidation) {
+        gfxSetLogCallback(GfxLogHandler, nullptr);
+    }
 
-    const auto appInfo{ CreateApplicationInfo(appName) };
-    const auto instanceCreateInfo{ CreateInstanceCreateInfo(layers, extensions, appInfo) };
+    const char* extensions[] = { GFX_INSTANCE_EXTENSION_SURFACE, GFX_INSTANCE_EXTENSION_DEBUG };
+    GfxInstanceDescriptor desc{};
+    desc.sType = GFX_STRUCTURE_TYPE_INSTANCE_DESCRIPTOR;
+    desc.pNext = nullptr;
+    desc.backend = backend;
+    desc.applicationName = appName.c_str();
+    desc.applicationVersion = 1;
+    desc.enabledExtensions = extensions;
+    desc.enabledExtensionCount = enableValidation ? 2u : 1u;
 
-    const auto vkInstance{ CreateInstance(instanceCreateInfo) };
-    auto validationReporter{ CreateValidationReporter(vkInstance, extensions) };
+    GfxInstance instance{};
+    if (gfxCreateInstance(&desc, &instance) != GFX_RESULT_SUCCESS) {
+        throw std::runtime_error("Failed to create gfx instance");
+    }
 
-    auto instance{ std::make_unique<Instance>(vkInstance, std::move(validationReporter)) };
-
-    LOGI("Vulkan Instance created");
-
-    return instance;
+    LOGI("GFX instance created");
+    return std::make_unique<Instance>(instance);
 }
 } // namespace prev::core::instance

@@ -49,7 +49,7 @@ void Engine::MainLoop()
         auto& rootRenderer{ m_engineImpl->GetRootRenderer() };
         auto& swapchain{ m_engineImpl->GetSwapchain() };
 
-        const VkExtent2D extent{ swapchain.GetExtent() };
+        const GfxExtent2D extent{ swapchain.GetExtent() };
         const auto deltaTime{ m_engineImpl->GetCurrentDeltaTime() };
 
         prev::event::EventChannel::Post(NewIterationEvent{ deltaTime, extent.width, extent.height });
@@ -59,7 +59,7 @@ void Engine::MainLoop()
 
             prev::render::swapchain::FrameContext frameContext;
             if (swapchain.BeginFrame(frameContext)) {
-                const prev::render::RenderContext renderContext{ frameContext.frameBuffer, frameContext.commandBuffer, frameContext.index, { { 0, 0 }, extent } };
+                const prev::render::RenderContext renderContext{ frameContext.frameBuffer, frameContext.commandEncoder, frameContext.index, { { 0, 0 }, extent } };
                 rootRenderer.Render(renderContext, scene);
                 swapchain.EndFrame();
             }
@@ -97,11 +97,6 @@ prev::render::swapchain::ISwapchain& Engine::GetSwapchain() const
 prev::render::pass::RenderPass& Engine::GetRenderPass() const
 {
     return m_engineImpl->GetRenderPass();
-}
-
-prev::core::memory::Allocator& Engine::GetAllocator() const
-{
-    return m_engineImpl->GetAllocator();
 }
 
 prev::core::device::Device& Engine::GetDevice() const

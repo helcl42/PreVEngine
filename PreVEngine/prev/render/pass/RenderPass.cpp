@@ -1,58 +1,77 @@
 #include "RenderPass.h"
 
 #include "../../common/Logger.h"
-#include "../../util/VkUtils.h"
-
-#include <prev/core/Formats.h>
-
-#include <algorithm>
+#include "../../core/Formats.h"
 
 namespace prev::render::pass {
-RenderPass::RenderPass(const VkDevice device, const VkRenderPass renderPass, const std::vector<AttachmentInfo>& attachmentInfos, const std::vector<SubPass>& subpasses, const std::vector<VkSubpassDependency>& dependencies)
-    : m_device{ device }
-    , m_renderPass{ renderPass }
-    , m_attachmentInfos{ attachmentInfos }
-    , m_subpasses{ subpasses }
-    , m_dependencies{ dependencies }
+RenderPass::RenderPass(GfxDevice device, GfxRenderPass renderPass, GfxFormat colorFormat, GfxFormat depthFormat, GfxSampleCount sampleCount)
+    : m_gfxDevice{ device }
+    , m_gfxRenderPass{ renderPass }
+    , m_gfxColorFormat{ colorFormat }
+    , m_gfxDepthFormat{ depthFormat }
+    , m_gfxSampleCount{ sampleCount }
 {
-    m_sampleCount = VK_SAMPLE_COUNT_1_BIT;
-    for (const auto& attachmentInfo : attachmentInfos) {
-        m_clearValues.push_back(attachmentInfo.clearValue);
-        if (prev::core::format::HasDepthComponent(attachmentInfo.format)) {
-            m_depthFormats.push_back(attachmentInfo.format);
-        } else {
-            m_colorFormats.push_back(attachmentInfo.format);
-            if (!attachmentInfo.resolveAttachment) {
-                m_nonResolveColorFormats.push_back(attachmentInfo.format);
-            }
+}
+
+RenderPass::RenderPass(GfxDevice device, GfxRenderPass renderPass, const std::vector<AttachmentInfo>& attachmentInfos)
+    : m_gfxDevice{ device }
+    , m_gfxRenderPass{ renderPass }
+    , m_attachmentInfos{ attachmentInfos }
+{
+    for (const auto& info : attachmentInfos) {
+        if (prev::core::format::HasDepthComponent(info.format)) {
+            m_gfxDepthFormat = info.format;
+        } else if (!info.resolveAttachment) {
+            m_gfxColorFormat = info.format;
         }
-        m_sampleCount = std::max(m_sampleCount, attachmentInfo.sampleCount);
+        m_gfxSampleCount = static_cast<GfxSampleCount>(std::max(static_cast<int>(m_gfxSampleCount), static_cast<int>(info.sampleCount)));
     }
 }
 
 RenderPass::~RenderPass()
 {
-    vkDestroyRenderPass(m_device, m_renderPass, nullptr);
-    m_renderPass = VK_NULL_HANDLE;
-
+    if (m_gfxRenderPass) {
+        gfxRenderPassDestroy(m_gfxRenderPass);
+    }
     LOGI("Renderpass destroyed");
 }
 
-void RenderPass::Begin(const VkFramebuffer frameBuffer, const VkCommandBuffer commandBuffer, const VkRect2D& renderArea, const VkSubpassContents contents)
+void RenderPass::Begin(GfxFramebuffer framebuffer, GfxCommandEncoder commandEncoder)
 {
-    VkRenderPassBeginInfo renderPassInfo{ prev::util::vk::CreateStruct<VkRenderPassBeginInfo>(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO) };
-    renderPassInfo.renderPass = m_renderPass;
-    renderPassInfo.framebuffer = frameBuffer;
-    renderPassInfo.renderArea = renderArea;
-    renderPassInfo.clearValueCount = static_cast<uint32_t>(m_clearValues.size());
-    renderPassInfo.pClearValues = m_clearValues.data();
+    std::vector<GfxColor> colorClearValues;
+    float depthClearValue{ 1.0f };
+    uint32_t stencilClearValue{ 0 };
 
-    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, contents);
+    if (!m_attachmentInfos.empty()) {
+        for (const auto& info : m_attachmentInfos) {
+            if (prev::core::format::HasDepthComponent(info.format)) {
+                depthClearValue = info.depthClearValue;
+                stencilClearValue = info.stencilClearValue;
+            } else if (!info.resolveAttachment) {
+                colorClearValues.push_back(info.colorClearValue);
+            }
+        }
+    } else if (m_gfxColorFormat != GFX_FORMAT_UNDEFINED) {
+        // Fallback for render passes created without AttachmentInfo (e.g. default MSAA pass)
+        colorClearValues.push_back({ 0.0f, 0.0f, 0.0f, 1.0f });
+    }
+
+    GfxRenderPassBeginDescriptor desc{};
+    desc.sType = GFX_STRUCTURE_TYPE_RENDER_PASS_BEGIN_DESCRIPTOR;
+    desc.renderPass = m_gfxRenderPass;
+    desc.framebuffer = framebuffer;
+    desc.colorClearValues = colorClearValues.empty() ? nullptr : colorClearValues.data();
+    desc.colorClearValueCount = static_cast<uint32_t>(colorClearValues.size());
+    desc.depthClearValue = depthClearValue;
+    desc.stencilClearValue = stencilClearValue;
+
+    gfxCommandEncoderBeginRenderPass(commandEncoder, &desc, &m_activeEncoder);
 }
 
-void RenderPass::End(const VkCommandBuffer commandBuffer)
+void RenderPass::End()
 {
-    vkCmdEndRenderPass(commandBuffer);
+    gfxRenderPassEncoderEnd(m_activeEncoder);
+    m_activeEncoder = {};
 }
 
 const std::vector<RenderPass::AttachmentInfo>& RenderPass::GetAttachments() const
@@ -60,53 +79,42 @@ const std::vector<RenderPass::AttachmentInfo>& RenderPass::GetAttachments() cons
     return m_attachmentInfos;
 }
 
-const std::vector<SubPass>& RenderPass::GetSubPasses() const
+GfxFormat RenderPass::GetColorFormat() const
 {
-    return m_subpasses;
+    return m_gfxColorFormat;
 }
 
-const std::vector<VkClearValue>& RenderPass::GetClearValues() const
+GfxFormat RenderPass::GetDepthFormat() const
 {
-    return m_clearValues;
+    return m_gfxDepthFormat;
 }
 
-VkFormat RenderPass::GetColorFormat(const uint32_t attachmentIndex) const
+GfxSampleCount RenderPass::GetSampleCount() const
 {
-    if (attachmentIndex >= static_cast<uint32_t>(m_colorFormats.size())) {
-        return VkFormat::VK_FORMAT_UNDEFINED;
+    return m_gfxSampleCount;
+}
+
+RenderPass::operator GfxRenderPass() const
+{
+    return m_gfxRenderPass;
+}
+
+std::vector<GfxFormat> RenderPass::GetGfxColorFormats() const
+{
+    std::vector<GfxFormat> result;
+    for (const auto& info : m_attachmentInfos) {
+        if (!prev::core::format::HasDepthComponent(info.format) && !info.resolveAttachment) {
+            result.push_back(info.format);
+        }
     }
-    return m_colorFormats[attachmentIndex];
-}
-
-const std::vector<VkFormat>& RenderPass::GetColorFormats(const bool includeResolveAttachments) const
-{
-    if (includeResolveAttachments) {
-        return m_colorFormats;
-    } else {
-        return m_nonResolveColorFormats;
+    if (result.empty() && m_gfxColorFormat != GFX_FORMAT_UNDEFINED) {
+        result.push_back(m_gfxColorFormat);
     }
+    return result;
 }
 
-VkFormat RenderPass::GetDepthFormat(const uint32_t attachmentIndex) const
+GfxRenderPassEncoder RenderPass::GetEncoder() const
 {
-    if (attachmentIndex >= static_cast<uint32_t>(m_depthFormats.size())) {
-        return VkFormat::VK_FORMAT_UNDEFINED;
-    }
-    return m_depthFormats[attachmentIndex];
-}
-
-VkSampleCountFlagBits RenderPass::GetSamplesCount() const
-{
-    return m_sampleCount;
-}
-
-const std::vector<VkSubpassDependency>& RenderPass::GetSubPassDependencies() const
-{
-    return m_dependencies;
-}
-
-RenderPass::operator VkRenderPass() const
-{
-    return m_renderPass;
+    return m_activeEncoder;
 }
 } // namespace prev::render::pass

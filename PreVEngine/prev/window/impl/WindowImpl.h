@@ -1,17 +1,15 @@
 #ifndef __WINDOW_IMPL_H__
 #define __WINDOW_IMPL_H__
 
-#include "Surface.h"
 #include "WindowImplCommon.h"
 
-#include "../../core/instance/Instance.h"
-
+#include "../../core/Core.h"
 #include "../../util/Utils.h"
 
 namespace prev::window::impl {
-class WindowImpl : public Surface {
+class WindowImpl {
 public:
-    WindowImpl(const prev::core::instance::Instance& instance);
+    WindowImpl();
 
     virtual ~WindowImpl() = default;
 
@@ -34,8 +32,6 @@ public:
 
     bool IsMouseCursorVisible() const;
 
-    void DestroySurface();
-
 public:
     virtual void SetTextInput(bool enabled); // Shows the Android soft-keyboard. //TODO: Enable OnTextEvent?
 
@@ -54,7 +50,7 @@ public:
 
     virtual void SetMouseCursorVisible(bool visible) = 0;
 
-    virtual Surface& CreateSurface() = 0;
+    virtual GfxPlatformWindowHandle GetNativeWindowHandle() const = 0;
 
 protected:
     Event OnMouseEvent(ActionType action, int32_t x, int32_t y, ButtonType btn); // Mouse event
@@ -78,8 +74,6 @@ protected:
     Event OnChangeEvent();
 
 protected:
-    const prev::core::instance::Instance& m_instance;
-
     prev::util::CircularQueue<Event, 32> m_eventQueue{};
 
     bool m_running{};

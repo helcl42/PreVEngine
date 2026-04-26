@@ -5,7 +5,6 @@
 #include "../RenderContexts.h"
 
 #include <prev/core/device/Device.h>
-#include <prev/core/memory/Allocator.h>
 #include <prev/render/buffer/BufferPool.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/pipeline/Pipeline.h>
@@ -17,7 +16,7 @@
 namespace prev_test::render::renderer::font {
 class Font3dRenderer final : public IRenderer<NormalRenderContext> {
 public:
-    Font3dRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
+    Font3dRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
 
     ~Font3dRenderer() = default;
 
@@ -73,7 +72,6 @@ private:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 
     prev::render::pass::RenderPass& m_renderPass;
 

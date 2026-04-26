@@ -1,57 +1,79 @@
 #include "QueryPool.h"
 
-#include "../../util/VkUtils.h"
+#include "../../common/Logger.h"
 
 namespace prev::render::query {
-QueryPool::QueryPool(prev::core::device::Device& device, VkQueryType queryType, uint32_t poolCount, uint32_t queryCount)
+QueryPool::QueryPool(prev::core::device::Device& device, GfxQueryType queryType, uint32_t poolCount, uint32_t queryCount)
     : m_device{ device }
     , m_queryType{ queryType }
     , m_poolCount{ poolCount }
     , m_queryCount{ queryCount }
     , m_index{ prev::util::CircularIndex<uint32_t>(poolCount) }
 {
-    m_queryPools.resize(m_poolCount);
+    m_querySets.resize(m_poolCount);
+    m_resultBuffers.resize(m_poolCount);
     for (uint32_t i = 0; i < m_poolCount; ++i) {
-        VkQueryPoolCreateInfo queryPoolInfo{ prev::util::vk::CreateStruct<VkQueryPoolCreateInfo>(VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO) };
-        queryPoolInfo.queryType = m_queryType;
-        queryPoolInfo.queryCount = m_queryCount;
-        VKERRCHECK(vkCreateQueryPool(m_device, &queryPoolInfo, nullptr, &m_queryPools[i]));
+        GfxQuerySetDescriptor desc{};
+        desc.sType = GFX_STRUCTURE_TYPE_QUERY_SET_DESCRIPTOR;
+        desc.type = m_queryType;
+        desc.count = m_queryCount;
+        GFXERRCHECK(gfxDeviceCreateQuerySet(m_device, &desc, &m_querySets[i]));
+
+        // Create host-mapped result buffer for each pool
+        GfxBufferDescriptor bufDesc{};
+        bufDesc.sType = GFX_STRUCTURE_TYPE_BUFFER_DESCRIPTOR;
+        bufDesc.usage = GFX_BUFFER_USAGE_COPY_DST | GFX_BUFFER_USAGE_MAP_READ;
+        bufDesc.size = sizeof(uint64_t) * m_queryCount;
+        bufDesc.memoryProperties = GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT;
+        GFXERRCHECK(gfxDeviceCreateBuffer(m_device, &bufDesc, &m_resultBuffers[i]));
     }
 }
 
 QueryPool::~QueryPool()
 {
     for (uint32_t i = 0; i < m_poolCount; ++i) {
-        vkDestroyQueryPool(m_device, m_queryPools[i], nullptr);
+        if (m_resultBuffers[i]) {
+            gfxBufferDestroy(m_resultBuffers[i]);
+        }
+        if (m_querySets[i]) {
+            gfxQuerySetDestroy(m_querySets[i]);
+        }
     }
 }
 
-void QueryPool::BeginQuery(const uint32_t queryIndex, VkCommandBuffer commandBuffer)
+void QueryPool::BeginQuery(const uint32_t queryIndex, GfxRenderPassEncoder renderPassEncoder)
 {
-    vkCmdBeginQuery(commandBuffer, m_queryPools[m_index], queryIndex, 0);
+    gfxRenderPassEncoderBeginOcclusionQuery(renderPassEncoder, m_querySets[m_index], queryIndex);
 }
 
-void QueryPool::EndQuery(const uint32_t queryIndex, VkCommandBuffer commandBuffer)
+void QueryPool::EndQuery(const uint32_t queryIndex, GfxRenderPassEncoder renderPassEncoder)
 {
-    vkCmdEndQuery(commandBuffer, m_queryPools[m_index], queryIndex);
-    ++m_index;
+    gfxRenderPassEncoderEndOcclusionQuery(renderPassEncoder);
 }
 
-void QueryPool::Reset(VkCommandBuffer commandBuffer)
+void QueryPool::Reset(GfxCommandEncoder commandEncoder)
 {
-    vkCmdResetQueryPool(commandBuffer, m_queryPools[m_index], 0, m_queryCount);
+    gfxCommandEncoderResetQuerySet(commandEncoder, m_querySets[m_index], 0, m_queryCount);
 }
 
-void QueryPool::ResetAll(VkCommandBuffer commandBuffer)
+void QueryPool::ResetAll(GfxCommandEncoder commandEncoder)
 {
     for (uint32_t i = 0; i < m_poolCount; ++i) {
-        vkCmdResetQueryPool(commandBuffer, m_queryPools[i], 0, m_queryCount);
+        gfxCommandEncoderResetQuerySet(commandEncoder, m_querySets[i], 0, m_queryCount);
     }
     m_index.Reset();
 }
 
-QueryPool::operator VkQueryPool() const
+void QueryPool::Resolve(GfxCommandEncoder commandEncoder)
 {
-    return m_queryPools[m_index];
+    gfxCommandEncoderResolveQuerySet(commandEncoder, m_querySets[m_index], 0, m_queryCount, m_resultBuffers[m_index], 0);
+    ++m_index;
+    // Reset the next query set so it's ready for use
+    gfxCommandEncoderResetQuerySet(commandEncoder, m_querySets[m_index], 0, m_queryCount);
+}
+
+QueryPool::operator GfxQuerySet() const
+{
+    return m_querySets[m_index];
 }
 } // namespace prev::render::query

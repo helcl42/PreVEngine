@@ -22,9 +22,12 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 	uint hasNormalMap;
 } uboFS;
 
-layout(binding = 2) uniform sampler2D colorSampler;
-layout(binding = 3) uniform sampler2D normalSampler;
-layout(binding = 4) uniform sampler2DArray depthSampler;
+layout(binding = 2) uniform texture2D colorTexture;
+layout(binding = 3) uniform sampler colorSampler;
+layout(binding = 4) uniform texture2D normalTexture;
+layout(binding = 5) uniform sampler normalSampler;
+layout(binding = 6) uniform texture2DArray depthTexture;
+layout(binding = 7) uniform sampler depthSampler;
 
 layout(location = 0) in vec2 inTextureCoord;
 layout(location = 1) in vec3 inNormal;
@@ -48,11 +51,11 @@ void main()
 	float shadow = 1.0;
 	if(uboFS.castedByShadows != 0)
 	{
-		shadow = GetShadow(depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.02);
+		shadow = GetShadow(depthTexture, depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.02);
 	}
 
-	const vec3 normal = uboFS.hasNormalMap != 0 ? NormalMapping(normalSampler, inTextureCoord) : inNormal;
-	const vec4 textureColor = texture(colorSampler, inTextureCoord);
+	const vec3 normal = uboFS.hasNormalMap != 0 ? NormalMapping(normalTexture, normalSampler, inTextureCoord) : inNormal;
+	const vec4 textureColor = texture(sampler2D(colorTexture, colorSampler), inTextureCoord);
 
 	const vec3 unitToCameraVector = normalize(inToCameraVectorTangentSpace - inPositionTangentSpace);
 

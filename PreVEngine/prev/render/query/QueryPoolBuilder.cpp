@@ -10,7 +10,7 @@ QueryPoolBuilder::QueryPoolBuilder(prev::core::device::Device& device)
 {
 }
 
-QueryPoolBuilder& QueryPoolBuilder::SetQueryType(VkQueryType queryType)
+QueryPoolBuilder& QueryPoolBuilder::SetQueryType(GfxQueryType queryType)
 {
     m_queryType = queryType;
     return *this;
@@ -35,8 +35,8 @@ std::unique_ptr<QueryPool> QueryPoolBuilder::Build() const
     auto queryPool = std::unique_ptr<QueryPool>(new QueryPool(m_device, m_queryType, m_poolCount, m_queryCount));
 
     prev::core::CommandsExecutor commandsExectutor{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) };
-    commandsExectutor.ExecuteImmediate([&](VkCommandBuffer commandBuffer) {
-        queryPool->ResetAll(commandBuffer);
+    commandsExectutor.ExecuteImmediate([&](GfxCommandEncoder commandEncoder) {
+        queryPool->ResetAll(commandEncoder);
     });
 
     return queryPool;
@@ -50,7 +50,7 @@ void QueryPoolBuilder::Validate() const
     if (m_poolCount == 0) {
         throw std::runtime_error("QueryPoolBuilder: Pool count must be greater than 0");
     }
-    if (m_queryType == VK_QUERY_TYPE_MAX_ENUM) {
+    if (m_queryType == GFX_QUERY_TYPE_MAX_ENUM) {
         throw std::runtime_error("QueryPoolBuilder: Query type must be set");
     }
 }

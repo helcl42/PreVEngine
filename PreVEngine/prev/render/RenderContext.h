@@ -5,17 +5,19 @@
 
 namespace prev::render {
 struct RenderContext {
-    VkFramebuffer frameBuffer{};
+    GfxFramebuffer frameBuffer{};
 
-    VkCommandBuffer commandBuffer{};
+    GfxCommandEncoder commandEncoder{};
+
+    GfxRenderPassEncoder renderPassEncoder{};
 
     uint32_t frameInFlightIndex{};
 
-    VkRect2D rect{};
+    GfxScissorRect rect{};
 
-    RenderContext(const VkFramebuffer fb, const VkCommandBuffer cb, const uint32_t frameIndex, const VkRect2D& r)
+    RenderContext(const GfxFramebuffer fb, const GfxCommandEncoder ce, const uint32_t frameIndex, const GfxScissorRect& r)
         : frameBuffer{ fb }
-        , commandBuffer{ cb }
+        , commandEncoder{ ce }
         , frameInFlightIndex{ frameIndex }
         , rect{ r }
     {

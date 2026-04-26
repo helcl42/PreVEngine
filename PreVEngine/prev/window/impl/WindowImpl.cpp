@@ -1,12 +1,10 @@
 #include "WindowImpl.h"
 
 #include "../../common/Logger.h"
-#include "../../core/Core.h"
 
 namespace prev::window::impl {
-WindowImpl::WindowImpl(const prev::core::instance::Instance& instance)
-    : m_instance{ instance }
-    , m_running{ false }
+WindowImpl::WindowImpl()
+    : m_running{ false }
     , m_hasTextInput{ false }
     , m_hasFocus{ false }
     , m_mouseLocked{ false }
@@ -59,15 +57,6 @@ void WindowImpl::SetMouseLocked(bool locked)
 bool WindowImpl::IsMouseCursorVisible() const
 {
     return m_mouseCursorVisible;
-}
-
-void WindowImpl::DestroySurface()
-{
-    if (m_vkSurface != VK_NULL_HANDLE) {
-        vkDestroySurfaceKHR(m_instance, m_vkSurface, nullptr);
-        m_vkSurface = VK_NULL_HANDLE;
-        LOGI("Vulkan Surface destroyed");
-    }
 }
 
 void WindowImpl::SetTextInput(bool enabled)

@@ -8,16 +8,15 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::scene::shadow {
-Shadows::Shadows(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
+Shadows::Shadows(prev::core::device::Device& device)
     : SceneNode({ TAG_SHADOW })
     , m_device{ device }
-    , m_allocator{ allocator }
 {
 }
 
 void Shadows::Init()
 {
-    prev_test::component::shadow::ShadowsComponentFactory shadowsFactory{ m_device, m_allocator };
+    prev_test::component::shadow::ShadowsComponentFactory shadowsFactory{ m_device };
     auto shadowsCompoent{ shadowsFactory.Create() };
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::shadow::IShadowsComponent>(GetThis(), std::move(shadowsCompoent), { TAG_SHADOWS_COMPONENT });
 

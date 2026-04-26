@@ -4,10 +4,12 @@ layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
 layout(binding = 0, rgba8) uniform image2D outFragColor;
 
-layout(binding = 1) uniform sampler2D skyTex;
-layout(binding = 2) uniform sampler2D bloomTex;
+layout(binding = 1) uniform texture2D skyTex;
+layout(binding = 2) uniform sampler skySampler;
+layout(binding = 3) uniform texture2D bloomTex;
+layout(binding = 4) uniform sampler bloomSampler;
 
-layout(std140, binding = 3) uniform UniformBufferObject {
+layout(std140, binding = 5) uniform UniformBufferObject {
     vec4 resolution;
     vec4 lightPosition;
     uint enableGodRays;
@@ -17,7 +19,7 @@ layout(std140, binding = 3) uniform UniformBufferObject {
 #define BLUR_OFFSET_X (1.0 / uboCS.resolution.x)
 #define BLUR_OFFSET_Y (1.0 / uboCS.resolution.y)
 
-vec4 GaussianBlur(in sampler2D tex, in vec2 uv)
+vec4 GaussianBlur(in texture2D tex, in sampler texSampler, in vec2 uv)
 {
     vec2 offsets[9] = vec2[](
         vec2(-BLUR_OFFSET_X,  BLUR_OFFSET_Y),
@@ -40,7 +42,7 @@ vec4 GaussianBlur(in sampler2D tex, in vec2 uv)
     vec4 sampleTex[9];
     for(int i = 0; i < 9; i++)
     {
-		vec4 pixel = texture(tex, uv.st + offsets[i]);
+		vec4 pixel = texture(sampler2D(tex, texSampler), uv.st + offsets[i]);
         sampleTex[i] = pixel;
     }
 
@@ -57,7 +59,7 @@ void main()
     ivec2 fragCoord = ivec2(gl_GlobalInvocationID.xy);
     vec2 uv = vec2(fragCoord.xy) / uboCS.resolution.xy;
 
-	vec4 fragColor = GaussianBlur(skyTex, uv);
+	vec4 fragColor = GaussianBlur(skyTex, skySampler, uv);
 
 	// RADIAL BLUR + CREPUSCOLAR RAYS
 	if(uboCS.lightDotCameraForward > 0.0 && uboCS.enableGodRays != 0)
@@ -75,11 +77,11 @@ void main()
         vec2 textureCoordDelta = textureCoord - uboCS.lightPosition.xy;
         textureCoordDelta *= density / float(SAMPLES);
 
-        vec3 colRays = GaussianBlur(bloomTex, uv).rgb * 0.4;
+        vec3 colRays = GaussianBlur(bloomTex, bloomSampler, uv).rgb * 0.4;
         for(int i = 0; i < SAMPLES; i++)
         {
             uv -= textureCoordDelta;
-            colRays += texture(bloomTex, uv).rgb * illuminationDecay * weight;
+            colRays += texture(sampler2D(bloomTex, bloomSampler), uv).rgb * illuminationDecay * weight;
             illuminationDecay *= decay;
         }
 

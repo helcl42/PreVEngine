@@ -8,20 +8,20 @@ class SamplerBuilder;
 
 class Sampler {
 public:
-    Sampler(const VkDevice device, const VkSampler sampler);
+    Sampler(GfxDevice device, GfxSampler sampler);
 
     ~Sampler();
 
 public:
-    operator VkSampler() const;
+    operator GfxSampler() const;
 
 public:
     friend class SamplerBuilder;
 
 private:
-    VkDevice m_device;
+    GfxDevice m_device;
 
-    VkSampler m_sampler;
+    GfxSampler m_sampler;
 };
 } // namespace prev::render::sampler
 

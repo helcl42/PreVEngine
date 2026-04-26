@@ -1,9 +1,12 @@
 #ifndef __BUFFER_H__
 #define __BUFFER_H__
 
-#include "../../core/memory/Allocator.h"
+#include "../../core/device/Device.h"
+
+#include <gfx/gfx.h>
 
 #include <stdexcept>
+#include <string>
 
 namespace prev::render::buffer {
 class BufferBuilder;
@@ -11,7 +14,7 @@ class BufferPoolBuilder;
 
 class Buffer final {
 private:
-    Buffer(prev::core::memory::Allocator& allocator, VkBuffer buffer, VmaAllocation allocation, prev::core::memory::MemoryType memoryType, uint64_t size, uint64_t offset, void* mappedPtr);
+    Buffer(GfxDevice device, GfxQueue queue, GfxBuffer buffer, bool hostMapped, uint64_t size, void* mappedPtr);
 
 public:
     ~Buffer();
@@ -24,8 +27,6 @@ public:
 public:
     uint64_t GetSize() const;
 
-    uint64_t GetOffset() const;
-
     void* GetMappedPtr() const;
 
     template <typename T>
@@ -33,42 +34,40 @@ public:
     {
         static_assert(std::is_trivially_copyable<T>::value, "Mapped type must be trivially copyable.");
 
-        if (m_memoryType != prev::core::memory::MemoryType::HOST_MAPPED) {
-            throw std::runtime_error("Could not get mapped data from a non HOST_MAPPED buffer");
+        if (!m_mappedPtr) {
+            throw std::runtime_error("Could not get mapped data from a non host-mapped buffer");
         }
 
         if (sizeof(T) > m_size) {
             throw std::runtime_error("Could not get mapped data since mapped data type size (" + std::to_string(sizeof(T)) + ") exceeds the buffer size (" + std::to_string(m_size) + ").");
         }
 
-        return *reinterpret_cast<T*>(static_cast<uint8_t*>(m_mappedPtr) + m_offset);
+        return *reinterpret_cast<T*>(m_mappedPtr);
     }
 
     template <typename T>
     void Write(const T& data)
     {
-        Write(&data, sizeof(T), m_offset);
+        Write(&data, sizeof(T), 0);
     }
 
 public:
-    operator VkBuffer() const;
+    operator GfxBuffer() const;
 
 public:
     friend class BufferBuilder;
     friend class BufferPoolBuilder;
 
 protected:
-    prev::core::memory::Allocator& m_allocator;
+    GfxDevice m_device;
 
-    VkBuffer m_buffer;
+    GfxQueue m_queue;
 
-    VmaAllocation m_allocation;
+    GfxBuffer m_buffer;
 
-    prev::core::memory::MemoryType m_memoryType;
+    bool m_hostMapped;
 
     uint64_t m_size;
-
-    uint64_t m_offset;
 
     void* m_mappedPtr;
 };

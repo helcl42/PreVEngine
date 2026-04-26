@@ -6,8 +6,7 @@
 #include <prev/common/Cache.h>
 #include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/image/ImageFactory.h>
-
-#include <prev/util/VkUtils.h>
+#include <prev/util/GfxUtils.h>
 
 #include <stdexcept>
 
@@ -54,39 +53,38 @@ namespace {
         CUBE_MAP = 1,
     };
 
-    std::shared_ptr<prev::render::buffer::ImageBuffer> CreateImageBuffer(const std::vector<std::shared_ptr<prev::render::image::IImage>>& images, const ImageBufferViewType& imageViewType, const bool generateMipMaps, prev::core::memory::Allocator& allocator)
+    std::shared_ptr<prev::render::buffer::ImageBuffer> CreateImageBuffer(const prev::core::device::Device& device, const std::vector<std::shared_ptr<prev::render::image::IImage>>& images, const ImageBufferViewType& imageViewType, const bool generateMipMaps)
     {
         std::vector<const uint8_t*> layersData{};
         for (const auto& image : images) {
             layersData.emplace_back(image->GetRawDataPtr());
         }
 
-        VkImageCreateFlags createFlags{};
-        VkImageViewType viewType{ VK_IMAGE_VIEW_TYPE_2D };
+        GfxTextureViewType viewType{ GFX_TEXTURE_VIEW_TYPE_2D };
+        GfxTextureType texType{ GFX_TEXTURE_TYPE_2D };
         if (imageViewType == ImageBufferViewType::CUBE_MAP) {
-            createFlags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
-            viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+            viewType = GFX_TEXTURE_VIEW_TYPE_CUBE;
+            texType = GFX_TEXTURE_TYPE_CUBE;
         }
 
-        auto imageBuffer = prev::render::buffer::ImageBufferBuilder{ allocator }
+        auto imageBuffer = prev::render::buffer::ImageBufferBuilder{ device, device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                                .SetExtent({ images[0]->GetWidth(), images[0]->GetHeight(), 1 })
-                               .SetFormat(prev::util::vk::ToImageFormat(images[0]->GetChannels(), images[0]->GetBitDepth(), images[0]->IsFloatingPoint()))
-                               .SetType(VK_IMAGE_TYPE_2D)
+                               .SetFormat(prev::util::gfx::ToImageFormat(images[0]->GetChannels(), images[0]->GetBitDepth(), images[0]->IsFloatingPoint()))
+                               .SetType(texType)
                                .SetMipMapEnabled(generateMipMaps)
-                               .SetUsageFlags(VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
-                               .SetCreateFlags(createFlags)
-                               .SetLayerData(layersData)
+                               .SetUsageFlags(GFX_TEXTURE_USAGE_COPY_SRC | GFX_TEXTURE_USAGE_COPY_DST | GFX_TEXTURE_USAGE_TEXTURE_BINDING)
+                               .SetLayerData(layersData, static_cast<uint64_t>(images[0]->GetSize()) * images[0]->GetPixelSize())
+                               .SetLayerCount(static_cast<uint32_t>(images.size()))
                                .SetViewType(viewType)
-                               .SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+                               .SetLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY)
                                .Build();
         return imageBuffer;
     }
 
 } // namespace
 
-MaterialFactory::MaterialFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
+MaterialFactory::MaterialFactory(prev::core::device::Device& device)
     : m_device{ device }
-    , m_allocator{ allocator }
 {
 }
 
@@ -98,7 +96,7 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const Mate
 std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const MaterialProperties& materialProps, const std::string& colorImagePath) const
 {
     auto image{ CreateImage(colorImagePath) };
-    auto imageBuffer{ CreateImageBuffer({ image }, ImageBufferViewType::REGULAR, true, m_allocator) };
+    auto imageBuffer{ CreateImageBuffer(m_device, { image }, ImageBufferViewType::REGULAR, true) };
 
     return std::make_unique<prev_test::render::material::Material>(materialProps, std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>>{ imageBuffer });
 }
@@ -106,10 +104,10 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const Mate
 std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const MaterialProperties& materialProps, const std::string& colorImagePath, const std::string& normalMapPath) const
 {
     auto image{ CreateImage(colorImagePath) };
-    auto imageBuffer{ CreateImageBuffer({ image }, ImageBufferViewType::REGULAR, true, m_allocator) };
+    auto imageBuffer{ CreateImageBuffer(m_device, { image }, ImageBufferViewType::REGULAR, true) };
 
     auto normalImage{ CreateImage(normalMapPath) };
-    auto normalImageBuffer{ CreateImageBuffer({ normalImage }, ImageBufferViewType::REGULAR, true, m_allocator) };
+    auto normalImageBuffer{ CreateImageBuffer(m_device, { normalImage }, ImageBufferViewType::REGULAR, true) };
 
     return std::make_unique<prev_test::render::material::Material>(materialProps, std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>>{ imageBuffer, normalImageBuffer });
 }
@@ -117,13 +115,13 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const Mate
 std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const MaterialProperties& materialProps, const std::string& colorImagePath, const std::string& normalMapPath, const std::string& heightMapPath) const
 {
     auto image{ CreateImage(colorImagePath) };
-    auto imageBuffer{ CreateImageBuffer({ image }, ImageBufferViewType::REGULAR, true, m_allocator) };
+    auto imageBuffer{ CreateImageBuffer(m_device, { image }, ImageBufferViewType::REGULAR, true) };
 
     auto normalImage{ CreateImage(normalMapPath) };
-    auto normalImageBuffer{ CreateImageBuffer({ normalImage }, ImageBufferViewType::REGULAR, true, m_allocator) };
+    auto normalImageBuffer{ CreateImageBuffer(m_device, { normalImage }, ImageBufferViewType::REGULAR, true) };
 
     auto heightImage{ CreateImage(heightMapPath) };
-    auto heightImageBuffer{ CreateImageBuffer({ heightImage }, ImageBufferViewType::REGULAR, true, m_allocator) };
+    auto heightImageBuffer{ CreateImageBuffer(m_device, { heightImage }, ImageBufferViewType::REGULAR, true) };
 
     return std::make_unique<prev_test::render::material::Material>(materialProps, std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>>{ imageBuffer, normalImageBuffer, heightImageBuffer });
 }
@@ -137,7 +135,7 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::CreateCubeMap(con
         images.emplace_back(imageFactory.CreateImage(faceFilePath));
     }
 
-    auto cubeMapImageBuffer{ CreateImageBuffer(images, ImageBufferViewType::CUBE_MAP, true, m_allocator) };
+    auto cubeMapImageBuffer{ CreateImageBuffer(m_device, images, ImageBufferViewType::CUBE_MAP, true) };
 
     return std::make_unique<prev_test::render::material::Material>(materialProps, std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>>{ std::move(cubeMapImageBuffer) });
 }
@@ -167,7 +165,7 @@ std::vector<std::shared_ptr<prev_test::render::IMaterial>> MaterialFactory::Crea
 
         for (const auto& textureType : textureTypes) {
             if (auto image = CreateModelImage(*scene, material, textureType)) {
-                imageBuffers.emplace_back(CreateImageBuffer({ image }, ImageBufferViewType::REGULAR, true, m_allocator));
+                imageBuffers.emplace_back(CreateImageBuffer(m_device, { image }, ImageBufferViewType::REGULAR, true));
             }
         }
 

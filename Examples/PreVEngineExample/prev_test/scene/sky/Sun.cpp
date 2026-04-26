@@ -8,16 +8,15 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::scene::sky {
-Sun::Sun(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
+Sun::Sun(prev::core::device::Device& device)
     : SceneNode()
     , m_device{ device }
-    , m_allocator{ allocator }
 {
 }
 
 void Sun::Init()
 {
-    m_sunComponent = prev_test::component::sky::SunComponentFactory{ m_device, m_allocator }.Create();
+    m_sunComponent = prev_test::component::sky::SunComponentFactory{ m_device }.Create();
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::sky::ISunComponent>(GetThis(), m_sunComponent, { TAG_SUN_RENDER_COMPONENT });
 
     SceneNode::Init();

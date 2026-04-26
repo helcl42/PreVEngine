@@ -3,14 +3,11 @@
 #ifdef VK_USE_PLATFORM_IOS_MVK
 
 #include "../../../common/Logger.h"
-#include "../../../util/VkUtils.h"
 
 #import <IOSView.h>
 #import <IOSView.h>
 #import <IOSViewController.h>
 #import <IOSWindow.h>
-
-#include <vulkan/vulkan_metal.h>
 
 namespace prev::window::impl::ios {
 struct IOSState {
@@ -33,8 +30,8 @@ struct IOSState {
     }
 };
 
-IOSWindowImpl::IOSWindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo)
-    : WindowImpl(instance)
+IOSWindowImpl::IOSWindowImpl(const WindowInfo& windowInfo)
+    : WindowImpl()
 {
     float scale = [[UIScreen mainScreen] scale];
     CGRect rect = [[UIScreen mainScreen] bounds];
@@ -74,7 +71,6 @@ IOSWindowImpl::IOSWindowImpl(const prev::core::instance::Instance& instance, con
 
 IOSWindowImpl::~IOSWindowImpl()
 {
-    DestroySurface();
 
     m_state = nullptr;
 }
@@ -154,16 +150,9 @@ void IOSWindowImpl::SetMouseCursorVisible(bool visible)
     
 }
 
-Surface& IOSWindowImpl::CreateSurface()
+GfxPlatformWindowHandle IOSWindowImpl::GetNativeWindowHandle() const
 {
-    if (m_vkSurface == VK_NULL_HANDLE) {
-        VkMetalSurfaceCreateInfoEXT iosSurfaceCreateInfo{ prev::util::vk::CreateStruct<VkMetalSurfaceCreateInfoEXT>(VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT) };
-        iosSurfaceCreateInfo.flags = 0;
-        iosSurfaceCreateInfo.pLayer = static_cast<CAMetalLayer*>(m_state->view.layer);
-        VKERRCHECK(vkCreateMetalSurfaceEXT(m_instance, &iosSurfaceCreateInfo, nullptr, &m_vkSurface));
-        LOGI("iOS - Vulkan Surface created");
-    }
-    return *this;
+    return gfxPlatformWindowHandleFromMetal((__bridge void*)m_state->view.layer);
 }
 }
 

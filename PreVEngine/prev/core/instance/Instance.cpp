@@ -3,21 +3,24 @@
 #include "../../common/Logger.h"
 
 namespace prev::core::instance {
-Instance::Instance(const VkInstance instance, std::unique_ptr<ValidationReporter>&& validationReporter)
+Instance::Instance(GfxInstance instance)
     : m_instance{ instance }
-    , m_validationReporter{ std::move(validationReporter) }
 {
 }
 
 Instance::~Instance()
 {
-    m_validationReporter = nullptr; // Must be called BEFORE vkDestroyInstance()
-
-    vkDestroyInstance(m_instance, nullptr);
-    LOGI("Vulkan Instance destroyed");
+    gfxInstanceDestroy(m_instance);
+    m_instance = nullptr;
+    LOGI("GFX Instance destroyed");
 }
 
-Instance::operator VkInstance() const
+GfxInstance Instance::GetHandle() const
+{
+    return m_instance;
+}
+
+Instance::operator GfxInstance() const
 {
     return m_instance;
 }

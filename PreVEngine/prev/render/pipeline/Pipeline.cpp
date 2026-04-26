@@ -1,28 +1,38 @@
 #include "Pipeline.h"
 
+#include "../../common/Logger.h"
+
 namespace prev::render::pipeline {
-Pipeline::Pipeline(const VkDevice device, const VkPipeline pipeline, const VkPipelineLayout pipelineLayout)
+Pipeline::Pipeline(GfxDevice device, GfxRenderPipeline renderPipeline)
     : m_device{ device }
-    , m_pipeline{ pipeline }
-    , m_pipelineLayout{ pipelineLayout }
+    , m_renderPipeline{ renderPipeline }
+{
+}
+
+Pipeline::Pipeline(GfxDevice device, GfxComputePipeline computePipeline)
+    : m_device{ device }
+    , m_computePipeline{ computePipeline }
 {
 }
 
 Pipeline::~Pipeline()
 {
-    vkDeviceWaitIdle(m_device);
-
-    vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
-    vkDestroyPipeline(m_device, m_pipeline, nullptr);
+    GFXERRCHECK(gfxDeviceWaitIdle(m_device));
+    if (m_renderPipeline) {
+        gfxRenderPipelineDestroy(m_renderPipeline);
+    }
+    if (m_computePipeline) {
+        gfxComputePipelineDestroy(m_computePipeline);
+    }
 }
 
-VkPipelineLayout Pipeline::GetLayout() const
+Pipeline::operator GfxRenderPipeline() const
 {
-    return m_pipelineLayout;
+    return m_renderPipeline;
 }
 
-Pipeline::operator VkPipeline() const
+Pipeline::operator GfxComputePipeline() const
 {
-    return m_pipeline;
+    return m_computePipeline;
 }
 } // namespace prev::render::pipeline

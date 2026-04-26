@@ -13,38 +13,52 @@ class QueryPoolBuilder;
 
 class QueryPool final {
 private:
-    QueryPool(prev::core::device::Device& device, VkQueryType queryType, uint32_t poolCount, uint32_t queryCount);
+    QueryPool(prev::core::device::Device& device, GfxQueryType queryType, uint32_t poolCount, uint32_t queryCount);
 
 public:
     ~QueryPool();
 
 public:
-    void BeginQuery(const uint32_t queryIndex, VkCommandBuffer commandBuffer);
+    void BeginQuery(const uint32_t queryIndex, GfxRenderPassEncoder renderPassEncoder);
 
-    void EndQuery(const uint32_t queryIndex, VkCommandBuffer commandBuffer);
+    void EndQuery(const uint32_t queryIndex, GfxRenderPassEncoder renderPassEncoder);
 
-    void Reset(VkCommandBuffer commandBuffer);
+    void Reset(GfxCommandEncoder commandEncoder);
 
-    void ResetAll(VkCommandBuffer commandBuffer);
+    void ResetAll(GfxCommandEncoder commandEncoder);
 
-    operator VkQueryPool() const;
+    void Resolve(GfxCommandEncoder commandEncoder);
+
+    operator GfxQuerySet() const;
 
     template <typename ResultType>
-    bool GetQueryResult(const uint32_t queryIndex, const VkQueryResultFlags flags, ResultType& outQueryResult)
+    bool GetQueryResult(const uint32_t queryIndex, ResultType& outQueryResult)
     {
-        if (vkGetQueryPoolResults(m_device, m_queryPools[m_index], queryIndex, 1, sizeof(ResultType), &outQueryResult, sizeof(ResultType), flags) != VK_SUCCESS) {
+        if (!m_resultBuffers[m_index]) {
             return false;
         }
+        void* mapped{};
+        if (gfxBufferMap(m_resultBuffers[m_index], queryIndex * sizeof(ResultType), sizeof(ResultType), &mapped) != GFX_RESULT_SUCCESS || !mapped) {
+            return false;
+        }
+        memcpy(&outQueryResult, mapped, sizeof(ResultType));
+        gfxBufferUnmap(m_resultBuffers[m_index]);
         return true;
     }
 
     template <typename ResultType>
-    bool GetQueryResults(const VkQueryResultFlags flags, std::vector<ResultType>& outQueryResults)
+    bool GetQueryResults(std::vector<ResultType>& outQueryResults)
     {
-        std::vector<ResultType> result(m_queryCount);
-        if (vkGetQueryPoolResults(m_device, m_queryPools[m_index], 0, m_queryCount, sizeof(ResultType) * result.size(), result.data(), sizeof(ResultType), flags) != VK_SUCCESS) {
+        if (!m_resultBuffers[m_index]) {
             return false;
         }
+        std::vector<ResultType> result(m_queryCount);
+        void* mapped{};
+        if (gfxBufferMap(m_resultBuffers[m_index], 0, sizeof(ResultType) * m_queryCount, &mapped) != GFX_RESULT_SUCCESS || !mapped) {
+            return false;
+        }
+        memcpy(result.data(), mapped, sizeof(ResultType) * m_queryCount);
+        gfxBufferUnmap(m_resultBuffers[m_index]);
         outQueryResults = result;
         return true;
     }
@@ -55,7 +69,7 @@ public:
 private:
     prev::core::device::Device& m_device;
 
-    VkQueryType m_queryType{};
+    GfxQueryType m_queryType{};
 
     uint32_t m_poolCount{};
 
@@ -63,7 +77,9 @@ private:
 
     prev::util::CircularIndex<uint32_t> m_index{ 0 };
 
-    std::vector<VkQueryPool> m_queryPools;
+    std::vector<GfxQuerySet> m_querySets;
+
+    std::vector<GfxBuffer> m_resultBuffers;
 };
 } // namespace prev::render::query
 

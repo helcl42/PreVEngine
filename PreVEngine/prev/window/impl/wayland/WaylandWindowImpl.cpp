@@ -3,7 +3,6 @@
 #ifdef VK_USE_PLATFORM_WAYLAND_KHR
 
 #include "../../../common/Logger.h"
-#include "../../../util/VkUtils.h"
 
 #include <linux/input.h>
 
@@ -75,8 +74,8 @@ const xdg_toplevel_listener WaylandWindowImpl::toplevelListener = {
     WaylandWindowImpl::OnToplevelClose,
 };
 
-WaylandWindowImpl::WaylandWindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo)
-    : WindowImpl(instance)
+WaylandWindowImpl::WaylandWindowImpl(const WindowInfo& windowInfo)
+    : WindowImpl()
 {
     LOGI("Creating Wayland Window...");
 
@@ -153,8 +152,6 @@ WaylandWindowImpl::~WaylandWindowImpl()
         xdg_toplevel_destroy(m_topLevel);
     }
 
-    DestroySurface();
-
     if (m_shellSurface) {
         xdg_surface_destroy(m_shellSurface);
     }
@@ -211,17 +208,9 @@ void WaylandWindowImpl::SetMouseCursorVisible(bool visible)
 {
 }
 
-Surface& WaylandWindowImpl::CreateSurface()
+GfxPlatformWindowHandle WaylandWindowImpl::GetNativeWindowHandle() const
 {
-    if (m_vkSurface == VK_NULL_HANDLE) {
-        VkWaylandSurfaceCreateInfoKHR waylandSurfaceCreateInfo{ prev::util::vk::CreateStruct<VkWaylandSurfaceCreateInfoKHR>(VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR) };
-        waylandSurfaceCreateInfo.flags = 0;
-        waylandSurfaceCreateInfo.display = m_display;
-        waylandSurfaceCreateInfo.surface = m_surface;
-
-        VKERRCHECK(vkCreateWaylandSurfaceKHR(m_instance, &waylandSurfaceCreateInfo, VK_NULL_HANDLE, &m_vkSurface));
-    }
-    return *this;
+    return gfxPlatformWindowHandleFromWayland(m_display, m_surface);
 }
 
 // general

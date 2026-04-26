@@ -11,18 +11,16 @@
 namespace prev::render::pass {
 class RenderPassBuilder final {
 public:
-    RenderPassBuilder(VkDevice device);
+    RenderPassBuilder(GfxDevice device);
 
     ~RenderPassBuilder() = default;
 
 public:
-    RenderPassBuilder& AddColorAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, const VkClearColorValue clearVal = {}, const VkImageLayout finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE, const bool resolveAttachment = false);
+    RenderPassBuilder& AddColorAttachment(const GfxFormat format, const GfxSampleCount sampleCount = GFX_SAMPLE_COUNT_1, const GfxColor clearVal = {}, const GfxTextureLayout finalLayout = GFX_TEXTURE_LAYOUT_PRESENT_SRC, const GfxLoadOp loadOp = GFX_LOAD_OP_CLEAR, const GfxStoreOp storeOp = GFX_STORE_OP_STORE, const bool resolveAttachment = false);
 
-    RenderPassBuilder& AddDepthAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, const VkClearDepthStencilValue clearVal = { MAX_DEPTH, 0 }, const VkImageLayout finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE, const bool resolveAttachment = false);
+    RenderPassBuilder& AddDepthAttachment(const GfxFormat format, const GfxSampleCount sampleCount = GFX_SAMPLE_COUNT_1, const float depthClearVal = MAX_DEPTH, const uint32_t stencilClearVal = 0, const GfxTextureLayout finalLayout = GFX_TEXTURE_LAYOUT_DEPTH_STENCIL_READ_ONLY, const GfxLoadOp loadOp = GFX_LOAD_OP_CLEAR, const GfxStoreOp storeOp = GFX_STORE_OP_STORE, const bool resolveAttachment = false);
 
     RenderPassBuilder& AddSubpass(const std::vector<uint32_t>& attachmentIndices = {}, const std::vector<uint32_t>& resolveIndices = {});
-
-    RenderPassBuilder& AddSubpassDependencies(const std::vector<VkSubpassDependency>& dependencies);
 
     RenderPassBuilder& SetViewCount(const uint32_t viewCount);
 
@@ -32,24 +30,19 @@ private:
     void Validate() const;
 
 private:
-    static VkAttachmentDescription CreateAttachmentDescription(const VkFormat format, const VkSampleCountFlagBits sampleCount, const VkImageLayout finalLayout, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp);
-
-private:
     struct SubPassCreateInfo {
         std::vector<uint32_t> attachmentIndices;
         std::vector<uint32_t> resolveIndices;
     };
 
 private:
-    VkDevice m_device;
+    GfxDevice m_device;
 
     uint32_t m_viewCount{ 1 };
 
     std::vector<RenderPass::AttachmentInfo> m_attachmentInfos;
 
     std::vector<SubPassCreateInfo> m_subPassCreateInfos;
-
-    std::vector<VkSubpassDependency> m_dependencies;
 };
 } // namespace prev::render::pass
 

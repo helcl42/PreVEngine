@@ -1,32 +1,32 @@
 #include "SamplerBuilder.h"
 
-#include "../../util/VkUtils.h"
+#include "../../common/Logger.h"
 
 namespace prev::render::sampler {
-SamplerBuilder::SamplerBuilder(const VkDevice device)
+SamplerBuilder::SamplerBuilder(GfxDevice device)
     : m_device{ device }
 {
 }
 
-SamplerBuilder& SamplerBuilder::SetAddressMode(VkSamplerAddressMode addressMode)
+SamplerBuilder& SamplerBuilder::SetAddressMode(GfxAddressMode addressMode)
 {
     m_addressMode = addressMode;
     return *this;
 }
 
-SamplerBuilder& SamplerBuilder::SetMinFilter(VkFilter minFilter)
+SamplerBuilder& SamplerBuilder::SetMinFilter(GfxFilterMode minFilter)
 {
     m_minFilter = minFilter;
     return *this;
 }
 
-SamplerBuilder& SamplerBuilder::SetMagFilter(VkFilter magFilter)
+SamplerBuilder& SamplerBuilder::SetMagFilter(GfxFilterMode magFilter)
 {
     m_magFilter = magFilter;
     return *this;
 }
 
-SamplerBuilder& SamplerBuilder::SetMipMapMode(VkSamplerMipmapMode mipMapMode)
+SamplerBuilder& SamplerBuilder::SetMipMapMode(GfxFilterMode mipMapMode)
 {
     m_mipMapMode = mipMapMode;
     return *this;
@@ -44,18 +44,6 @@ SamplerBuilder& SamplerBuilder::SetMaxLod(float maxLod)
     return *this;
 }
 
-SamplerBuilder& SamplerBuilder::SetLodBias(float bias)
-{
-    m_lodBias = bias;
-    return *this;
-}
-
-SamplerBuilder& SamplerBuilder::SetBorderColor(VkBorderColor borderColor)
-{
-    m_borderColor = borderColor;
-    return *this;
-}
-
 SamplerBuilder& SamplerBuilder::SetAnisotropyFilterEnabled(bool enable)
 {
     m_enableAnisotropyFilter = enable;
@@ -70,33 +58,21 @@ SamplerBuilder& SamplerBuilder::SetAnisotropyFilterLevel(float level)
 
 std::unique_ptr<Sampler> SamplerBuilder::Build() const
 {
-    VkSamplerCreateInfo samplerCreateInfo{ prev::util::vk::CreateStruct<VkSamplerCreateInfo>(VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO) };
-    samplerCreateInfo.minFilter = m_minFilter;
-    samplerCreateInfo.magFilter = m_magFilter;
-    samplerCreateInfo.mipmapMode = m_mipMapMode;
+    GfxSamplerDescriptor desc{};
+    desc.sType = GFX_STRUCTURE_TYPE_SAMPLER_DESCRIPTOR;
+    desc.addressModeU = m_addressMode;
+    desc.addressModeV = m_addressMode;
+    desc.addressModeW = m_addressMode;
+    desc.magFilter = m_magFilter;
+    desc.minFilter = m_minFilter;
+    desc.mipmapFilter = m_mipMapMode;
+    desc.lodMinClamp = m_minLod;
+    desc.lodMaxClamp = m_maxLod;
+    desc.compare = GFX_COMPARE_FUNCTION_UNDEFINED;
+    desc.maxAnisotropy = m_enableAnisotropyFilter ? static_cast<uint16_t>(m_anisotropyFilterLevel) : 0;
 
-    samplerCreateInfo.addressModeU = m_addressMode;
-    samplerCreateInfo.addressModeV = m_addressMode;
-    samplerCreateInfo.addressModeW = m_addressMode;
-    samplerCreateInfo.mipLodBias = m_lodBias;
-
-    samplerCreateInfo.compareEnable = VK_FALSE;
-    samplerCreateInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-    samplerCreateInfo.minLod = m_minLod;
-    samplerCreateInfo.maxLod = m_maxLod;
-    samplerCreateInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-    samplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
-
-    if (m_enableAnisotropyFilter) {
-        samplerCreateInfo.anisotropyEnable = VK_TRUE;
-        samplerCreateInfo.maxAnisotropy = m_enableAnisotropyFilter;
-    } else {
-        samplerCreateInfo.anisotropyEnable = VK_FALSE;
-        samplerCreateInfo.maxAnisotropy = 1.0;
-    }
-
-    VkSampler sampler;
-    VKERRCHECK(vkCreateSampler(m_device, &samplerCreateInfo, nullptr, &sampler));
+    GfxSampler sampler{};
+    GFXERRCHECK(gfxDeviceCreateSampler(m_device, &desc, &sampler));
 
     return std::unique_ptr<Sampler>(new Sampler(m_device, sampler));
 }

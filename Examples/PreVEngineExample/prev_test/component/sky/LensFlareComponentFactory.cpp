@@ -7,9 +7,8 @@
 #include "../../render/model/ModelFactory.h"
 
 namespace prev_test::component::sky {
-LensFlareComponentFactory::LensFlareComponentFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
+LensFlareComponentFactory::LensFlareComponentFactory(prev::core::device::Device& device)
     : m_device{ device }
-    , m_allocator{ allocator }
 {
 }
 
@@ -35,10 +34,10 @@ std::unique_ptr<ILensFlareComponent> LensFlareComponentFactory::Create() const
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh{ meshFactory.CreateQuad() };
 
-    prev_test::render::model::ModelFactory modelFactory{ m_allocator };
+    prev_test::render::model::ModelFactory modelFactory{ m_device };
     auto model{ modelFactory.Create(std::move(mesh)) };
 
-    prev_test::render::material::MaterialFactory materialFactory{ m_device, m_allocator };
+    prev_test::render::material::MaterialFactory materialFactory{ m_device };
 
     std::vector<std::shared_ptr<prev_test::render::IMaterial>> materials{};
     std::vector<Flare> flares{};

@@ -4,13 +4,12 @@
 #include "../../component/sky/ISkyComponent.h"
 
 #include <prev/core/device/Device.h>
-#include <prev/core/memory/Allocator.h>
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene::sky {
 class Sky final : public prev::scene::graph::SceneNode {
 public:
-    Sky(prev::core::device::Device& device, prev::core::memory::Allocator& allocator);
+    Sky(prev::core::device::Device& device);
 
     ~Sky() = default;
 
@@ -24,7 +23,6 @@ public:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 
     std::shared_ptr<prev_test::component::sky::ISkyComponent> m_skyComponent;
 };

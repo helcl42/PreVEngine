@@ -8,8 +8,8 @@
 #include <prev/util/intersection/IntersectionTester.h>
 
 namespace prev_test::component::ray_casting {
-AABBBoundingVolumeComponent::AABBBoundingVolumeComponent(prev::core::memory::Allocator& allocator, const prev::util::intersection::AABB& box, const glm::vec3& scale, const glm::vec3& offset)
-    : m_allocator{ allocator }
+AABBBoundingVolumeComponent::AABBBoundingVolumeComponent(const prev::core::device::Device& device, const prev::util::intersection::AABB& box, const glm::vec3& scale, const glm::vec3& offset)
+    : m_device{ device }
     , m_scale{ scale }
     , m_offset{ offset }
 {
@@ -22,7 +22,7 @@ AABBBoundingVolumeComponent::AABBBoundingVolumeComponent(prev::core::memory::All
     m_vorkingAABBPoints = newBox.GetPoints();
 
 #ifdef RENDER_BOUNDING_VOLUMES
-    m_model = BoundingVolumeModelFactory{ m_allocator }.CreateAABBModel(m_working);
+    m_model = BoundingVolumeModelFactory{ m_device }.CreateAABBModel(m_working);
 #endif
 }
 
@@ -55,7 +55,7 @@ void AABBBoundingVolumeComponent::Update(const glm::mat4& worldTransform)
 
     m_working = prev::util::intersection::AABB(glm::vec3(translation + minBound), glm::vec3(translation + maxBound));
 #ifdef RENDER_BOUNDING_VOLUMES
-    m_model = BoundingVolumeModelFactory{ m_allocator }.CreateAABBModel(m_working, m_model);
+    m_model = BoundingVolumeModelFactory{ m_device }.CreateAABBModel(m_working, m_model);
 #endif
 }
 

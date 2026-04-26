@@ -28,18 +28,27 @@ layout(std140, binding = 1) uniform UniformBufferObject {
     float moveFactor;
 } uboFS;
 
-layout(binding = 2) uniform sampler2DArray depthSampler;
+layout(binding = 2) uniform texture2DArray depthTexture;
+layout(binding = 3) uniform sampler depthSampler;
 #ifdef ENABLE_XR
-layout(binding = 3) uniform sampler2DArray reflectionTexture;
-layout(binding = 4) uniform sampler2DArray refractionTexture;
-layout(binding = 5) uniform sampler2DArray depthMapTexture;
+layout(binding = 4) uniform texture2DArray reflectionTexture;
+layout(binding = 5) uniform sampler reflectionSampler;
+layout(binding = 6) uniform texture2DArray refractionTexture;
+layout(binding = 7) uniform sampler refractionSampler;
+layout(binding = 8) uniform texture2DArray depthMapTexture;
+layout(binding = 9) uniform sampler depthMapSampler;
 #else
-layout(binding = 3) uniform sampler2D reflectionTexture;
-layout(binding = 4) uniform sampler2D refractionTexture;
-layout(binding = 5) uniform sampler2D depthMapTexture;
+layout(binding = 4) uniform texture2D reflectionTexture;
+layout(binding = 5) uniform sampler reflectionSampler;
+layout(binding = 6) uniform texture2D refractionTexture;
+layout(binding = 7) uniform sampler refractionSampler;
+layout(binding = 8) uniform texture2D depthMapTexture;
+layout(binding = 9) uniform sampler depthMapSampler;
 #endif
-layout(binding = 6) uniform sampler2D dudvMapTexture;
-layout(binding = 7) uniform sampler2D normalMapTexture;
+layout(binding = 10) uniform texture2D dudvMapTexture;
+layout(binding = 11) uniform sampler dudvMapSampler;
+layout(binding = 12) uniform texture2D normalMapTexture;
+layout(binding = 13) uniform sampler normalMapSampler;
 
 const float waveStrength = 0.04;
 const float shineDamper = 20.0;
@@ -58,9 +67,9 @@ layout(location = 5) in float inVisibility;
 float SampleDepth(in vec2 texCoords)
 {
 #ifdef ENABLE_XR
-	float depth = texture(depthMapTexture, vec3(texCoords, gl_ViewIndex)).r;
+	float depth = texture(sampler2DArray(depthMapTexture, depthMapSampler), vec3(texCoords, gl_ViewIndex)).r;
 #else
-	float depth = texture(depthMapTexture, texCoords).r;
+	float depth = texture(sampler2D(depthMapTexture, depthMapSampler), texCoords).r;
 #endif
 	return depth;
 }
@@ -68,9 +77,9 @@ float SampleDepth(in vec2 texCoords)
 vec4 SampleRefraction(in vec2 texCoord)
 {
 #ifdef ENABLE_XR
-	vec4 refractColor = texture(refractionTexture, vec3(texCoord, gl_ViewIndex));
+	vec4 refractColor = texture(sampler2DArray(refractionTexture, refractionSampler), vec3(texCoord, gl_ViewIndex));
 #else
-	vec4 refractColor = texture(refractionTexture, texCoord);
+	vec4 refractColor = texture(sampler2D(refractionTexture, refractionSampler), texCoord);
 #endif
 	return refractColor;
 }
@@ -78,9 +87,9 @@ vec4 SampleRefraction(in vec2 texCoord)
 vec4 SampleReflection(in vec2 texCoord)
 {
 	#ifdef ENABLE_XR
-	vec4 reflectColor = texture(reflectionTexture, vec3(texCoord, gl_ViewIndex));
+	vec4 reflectColor = texture(sampler2DArray(reflectionTexture, reflectionSampler), vec3(texCoord, gl_ViewIndex));
 	#else
-	vec4 reflectColor = texture(reflectionTexture, texCoord);
+	vec4 reflectColor = texture(sampler2D(reflectionTexture, reflectionSampler), texCoord);
 	#endif
 	return reflectColor;
 }
@@ -96,7 +105,7 @@ float CalculateWaterDepth(in vec2 texCoords)
 
 void main()
 {
-	float shadow = GetShadow(depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.005);
+	float shadow = GetShadow(depthTexture, depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.005);
 	if(shadow < 0.999) {
 		shadow = 0.0;
 	}
@@ -110,9 +119,9 @@ void main()
 	float waterDepth = CalculateWaterDepth(refractTexCoord);
 
     // distortion
-	vec2 distortedTexCoords = texture(dudvMapTexture, vec2(inTextureCoord.x + uboFS.moveFactor, inTextureCoord.y)).rg * 0.1;
+	vec2 distortedTexCoords = texture(sampler2D(dudvMapTexture, dudvMapSampler), vec2(inTextureCoord.x + uboFS.moveFactor, inTextureCoord.y)).rg * 0.1;
 	distortedTexCoords = inTextureCoord + vec2(distortedTexCoords.x, distortedTexCoords.y + uboFS.moveFactor);
-	vec2 totalDistortion = (texture(dudvMapTexture, distortedTexCoords).rg * 2.0 - 1.0) * waveStrength * clamp(waterDepth / 12.0, 0.0, 1.0);
+	vec2 totalDistortion = (texture(sampler2D(dudvMapTexture, dudvMapSampler), distortedTexCoords).rg * 2.0 - 1.0) * waveStrength * clamp(waterDepth / 12.0, 0.0, 1.0);
 
 	reflectTexCoord += totalDistortion;
 	reflectTexCoord = clamp(reflectTexCoord, 0.001, 0.999);
@@ -125,7 +134,7 @@ void main()
 	vec4 finalWaterColor = uboFS.waterColor * shadow;
 
 	// normal
-	vec4 normalMapColor = texture(normalMapTexture, distortedTexCoords);
+	vec4 normalMapColor = texture(sampler2D(normalMapTexture, normalMapSampler), distortedTexCoords);
 	vec3 normal = vec3(normalMapColor.r * 2.0 - 1.0, normalMapColor.g * 3.0, normalMapColor.b * 2.0 - 1.0);
 	normal = normalize(normal);
 

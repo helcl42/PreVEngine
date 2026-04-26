@@ -6,8 +6,6 @@
 #include "WindowEvents.h"
 
 #include "impl/WindowImpl.h"
-
-#include "../core/instance/Instance.h"
 #include "../event/EventHandler.h"
 #include "../input/keyboard/KeyboardEvents.h"
 #include "../input/mouse/MouseEvents.h"
@@ -18,12 +16,12 @@
 namespace prev::window {
 class Window final : public IWindow {
 public:
-    Window(const prev::core::instance::Instance& instance, const WindowCreateInfo& createInfo);
+    Window(const WindowCreateInfo& createInfo);
 
-    virtual ~Window() = default;
+    ~Window() = default;
 
 public:
-    impl::Surface& ResetSurface() override;
+    GfxPlatformWindowHandle GetNativeWindowHandle() const override;
 
     impl::Position GetPosition() const override;
 

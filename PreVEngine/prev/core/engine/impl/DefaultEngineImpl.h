@@ -37,4 +37,5 @@ private:
     void ResetSwapchain() override;
 };
 } // namespace prev::core::engine::impl
+
 #endif

@@ -27,8 +27,10 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 	float heightTransitionRange;
 } uboFS;
 
-layout(binding = 2) uniform sampler2D colorSampler[MATERIAL_COUNT];
-layout(binding = 3) uniform sampler2DArray depthSampler;
+layout(binding = 2) uniform texture2D colorTexture[MATERIAL_COUNT];
+layout(binding = 3) uniform sampler colorSampler;
+layout(binding = 4) uniform texture2DArray depthTexture;
+layout(binding = 5) uniform sampler depthSampler;
 
 layout(location = 0) in vec2 inTextureCoord;
 layout(location = 1) in vec3 inNormal;
@@ -61,8 +63,8 @@ void main()
             if(normalizedHeight > uboFS.heightSteps[i].x - uboFS.heightTransitionRange && normalizedHeight < uboFS.heightSteps[i].x + uboFS.heightTransitionRange)
             {
                 float ratio = (normalizedHeight - uboFS.heightSteps[i].x + uboFS.heightTransitionRange) / (2 * uboFS.heightTransitionRange);
-                vec4 color1 = texture(colorSampler[i], inTextureCoord);
-                vec4 color2 = texture(colorSampler[i + 1], inTextureCoord);
+                vec4 color1 = texture(sampler2D(colorTexture[i], colorSampler), inTextureCoord);
+                vec4 color2 = texture(sampler2D(colorTexture[i + 1], colorSampler), inTextureCoord);
                 textureColor = mix(color1, color2, ratio);
 
 				float shineDamper1 = uboFS.material[i].shineDamper;
@@ -76,7 +78,7 @@ void main()
             }
 			else if(normalizedHeight < uboFS.heightSteps[i].x - uboFS.heightTransitionRange)
 			{
-				textureColor = texture(colorSampler[i], inTextureCoord);
+					textureColor = texture(sampler2D(colorTexture[i], colorSampler), inTextureCoord);
 				shineDamper = uboFS.material[i].shineDamper;
 				reflectivity = uboFS.material[i].reflectivity;
 				break;
@@ -84,7 +86,7 @@ void main()
         }
         else
         {
-			textureColor = texture(colorSampler[i], inTextureCoord);
+			textureColor = texture(sampler2D(colorTexture[i], colorSampler), inTextureCoord);
 			shineDamper = uboFS.material[i].shineDamper;
 			reflectivity = uboFS.material[i].reflectivity;
             break;
@@ -94,7 +96,7 @@ void main()
 	float shadow = 1.0;
 	if(uboFS.castedByShadows != 0)
 	{
-		shadow = GetShadow(depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.02);
+				shadow = GetShadow(depthTexture, depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.02);
 	}
 
 	const vec3 unitNormal = normalize(inNormal);

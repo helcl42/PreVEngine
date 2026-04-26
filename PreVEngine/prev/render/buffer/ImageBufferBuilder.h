@@ -3,40 +3,40 @@
 
 #include "ImageBuffer.h"
 
+#include "../../core/device/Device.h"
+#include "../../core/device/Queue.h"
+
+#include <gfx/gfx.h>
+#include <vector>
+
 namespace prev::render::buffer {
 
 class ImageBufferBuilder final {
 public:
-    ImageBufferBuilder(prev::core::memory::Allocator& allocator);
+    ImageBufferBuilder(const prev::core::device::Device& device, const prev::core::device::Queue& queue);
 
     ~ImageBufferBuilder() = default;
 
 public:
-    ImageBufferBuilder& SetExtent(const VkExtent3D& extent);
+    ImageBufferBuilder& SetExtent(const GfxExtent3D& extent);
 
-    ImageBufferBuilder& SetFormat(VkFormat format);
+    ImageBufferBuilder& SetFormat(GfxFormat format);
 
-    ImageBufferBuilder& SetType(VkImageType type);
+    ImageBufferBuilder& SetType(GfxTextureType type);
 
-    ImageBufferBuilder& SetViewType(VkImageViewType viewType);
+    ImageBufferBuilder& SetViewType(GfxTextureViewType viewType);
 
-    ImageBufferBuilder& SetSampleCount(VkSampleCountFlagBits samples);
+    ImageBufferBuilder& SetSampleCount(GfxSampleCount samples);
 
     ImageBufferBuilder& SetMipMapEnabled(bool enabled);
 
     ImageBufferBuilder& SetLayerCount(uint32_t layerCount);
 
-    ImageBufferBuilder& SetCreateFlags(VkImageCreateFlags createFlags);
+    ImageBufferBuilder& SetUsageFlags(GfxTextureUsageFlags usageFlags);
 
-    ImageBufferBuilder& SetUsageFlags(VkImageUsageFlags usageFlags);
+    ImageBufferBuilder& SetLayout(GfxTextureLayout layout);
 
-    ImageBufferBuilder& SetLayout(VkImageLayout layout);
-
-    ImageBufferBuilder& SetAspectMask(VkImageAspectFlags aspectMask);
-
-    ImageBufferBuilder& SetTiling(VkImageTiling tiling);
-
-    ImageBufferBuilder& SetLayerData(const std::vector<const uint8_t*>& layerData);
+    ImageBufferBuilder& SetLayerData(const std::vector<const uint8_t*>& layerData, uint64_t layerDataSize = 0);
 
     ImageBufferBuilder& SetHostMapped(bool hostMapped);
 
@@ -46,33 +46,31 @@ private:
     void Validate() const;
 
 private:
-    prev::core::memory::Allocator& m_allocator;
+    const prev::core::device::Device& m_device;
 
-    VkExtent3D m_extent{};
+    const prev::core::device::Queue& m_queue;
 
-    VkFormat m_format{ VK_FORMAT_UNDEFINED };
+    GfxExtent3D m_extent{};
 
-    VkImageType m_type{ VK_IMAGE_TYPE_MAX_ENUM };
+    GfxFormat m_format{ GFX_FORMAT_UNDEFINED };
 
-    VkImageViewType m_viewType{ VK_IMAGE_VIEW_TYPE_MAX_ENUM };
+    GfxTextureType m_type{ GFX_TEXTURE_TYPE_MAX_ENUM };
 
-    VkSampleCountFlagBits m_sampleCount{ VK_SAMPLE_COUNT_1_BIT };
+    GfxTextureViewType m_viewType{ GFX_TEXTURE_VIEW_TYPE_MAX_ENUM };
+
+    GfxSampleCount m_sampleCount{ GFX_SAMPLE_COUNT_1 };
 
     bool m_mipMapEnabled{ false };
 
     uint32_t m_layerCount{ 1 };
 
-    VkImageCreateFlags m_createFlags{};
+    GfxTextureUsageFlags m_usageFlags{};
 
-    VkImageUsageFlags m_usageFlags{};
-
-    VkImageLayout m_layout{ VK_IMAGE_LAYOUT_UNDEFINED };
-
-    VkImageAspectFlags m_aspectMask{ VK_IMAGE_ASPECT_NONE_KHR };
-
-    VkImageTiling m_tiling{ VK_IMAGE_TILING_OPTIMAL };
+    GfxTextureLayout m_layout{ GFX_TEXTURE_LAYOUT_UNDEFINED };
 
     std::vector<const uint8_t*> m_layersData;
+
+    uint64_t m_layerDataSize{ 0 };
 
     bool m_hostMapped{ false };
 };

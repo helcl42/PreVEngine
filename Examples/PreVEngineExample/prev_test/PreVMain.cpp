@@ -1,4 +1,5 @@
 #include "TestApp.h"
+#include <prev/common/Logger.h>
 
 int PreVMain(int argc, char** argv)
 {

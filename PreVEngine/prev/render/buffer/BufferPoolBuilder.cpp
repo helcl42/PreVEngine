@@ -1,25 +1,28 @@
 #include "BufferPoolBuilder.h"
 
+#include "BufferBuilder.h"
+
 #include "../../util/MathUtils.h"
 #include "../../util/Utils.h"
 
 #include <stdexcept>
 
 namespace prev::render::buffer {
-BufferPoolBuilder::BufferPoolBuilder(prev::core::memory::Allocator& allocator)
-    : m_allocator{ allocator }
+BufferPoolBuilder::BufferPoolBuilder(const prev::core::device::Device& device, const prev::core::device::Queue& queue)
+    : m_device{ device }
+    , m_queue{ queue }
 {
 }
 
-BufferPoolBuilder& BufferPoolBuilder::SetUsageFlags(const VkBufferUsageFlags usageFlags)
+BufferPoolBuilder& BufferPoolBuilder::SetUsageFlags(const GfxBufferUsageFlags usageFlags)
 {
     m_usageFlags = usageFlags;
     return *this;
 }
 
-BufferPoolBuilder& BufferPoolBuilder::SetMemoryType(const prev::core::memory::MemoryType memoryType)
+BufferPoolBuilder& BufferPoolBuilder::SetHostMapped(const bool hostMapped)
 {
-    m_memoryType = memoryType;
+    m_hostMapped = hostMapped;
     return *this;
 }
 
@@ -43,39 +46,27 @@ BufferPoolBuilder& BufferPoolBuilder::SetAlignment(const uint64_t alignment)
 
 std::unique_ptr<BufferPool> BufferPoolBuilder::Build() const
 {
-    Valiadate();
+    Validate();
 
     const uint64_t alignedItemSize{ prev::util::math::RoundUp(m_stride, m_alignment) };
-    const uint64_t alignedFullSize{ alignedItemSize * m_count };
-
-    void* mappedData{};
-    void** mappedDataPtr{ m_memoryType == prev::core::memory::MemoryType::HOST_MAPPED ? &mappedData : nullptr };
-
-    VmaAllocation wmaAllocation{ nullptr };
-    VkBuffer vkBuffer{ VK_NULL_HANDLE };
-    m_allocator.CreateBuffer(nullptr, alignedFullSize, alignedFullSize, m_usageFlags, m_memoryType, vkBuffer, wmaAllocation, mappedDataPtr);
-    if (!vkBuffer) {
-        throw std::runtime_error("Could not allocate buffer: size = " + std::to_string(alignedFullSize) + " bytes");
-    }
 
     std::vector<std::unique_ptr<Buffer>> buffers;
-    buffers.resize(m_count);
+    buffers.reserve(m_count);
     for (uint64_t i = 0; i < m_count; ++i) {
-        const uint64_t offset{ i * alignedItemSize };
-        // void* mappedPtr{ m_memoryType == prev::core::memory::MemoryType::HOST_MAPPED ? static_cast<uint8_t*>(mappedData) : nullptr };
-        VmaAllocation allocation{ i == 0 ? wmaAllocation : nullptr }; // first instance in the pool clears the allocation
-        buffers[i] = std::unique_ptr<Buffer>(new Buffer(m_allocator, vkBuffer, allocation, m_memoryType, alignedItemSize, offset, mappedData));
+        auto buf = BufferBuilder(m_device, m_queue)
+            .SetUsageFlags(m_usageFlags)
+            .SetHostMapped(m_hostMapped)
+            .SetSize(alignedItemSize)
+            .SetAlignment(m_alignment)
+            .Build();
+        buffers.push_back(std::move(buf));
     }
 
-    return std::unique_ptr<BufferPool>(new BufferPool(m_allocator, vkBuffer, wmaAllocation, std::move(buffers)));
+    return std::unique_ptr<BufferPool>(new BufferPool(std::move(buffers)));
 }
 
-void BufferPoolBuilder::Valiadate() const
+void BufferPoolBuilder::Validate() const
 {
-    if (m_memoryType == prev::core::memory::MemoryType::UNDEFINED) {
-        throw std::runtime_error("Could not create buffer pool with UNDEFINED memory type");
-    }
-
     if (m_usageFlags == 0) {
         throw std::runtime_error("Could not create buffer pool with usage flags 0");
     }

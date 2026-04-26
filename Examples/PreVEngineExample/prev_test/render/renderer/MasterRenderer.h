@@ -7,7 +7,6 @@
 
 #include <prev/common/ThreadPool.h>
 #include <prev/core/device/Device.h>
-#include <prev/core/memory/Allocator.h>
 #include <prev/event/EventHandler.h>
 #include <prev/input/keyboard/KeyboardEvents.h>
 #include <prev/render/IRootRenderer.h>
@@ -18,7 +17,7 @@
 namespace prev_test::render::renderer {
 class MasterRenderer final : public prev::render::IRootRenderer {
 public:
-    MasterRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene, uint32_t swapchainImageCount, uint32_t viewCount);
+    MasterRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene, uint32_t swapchainImageCount, uint32_t viewCount);
 
     ~MasterRenderer() = default;
 
@@ -68,7 +67,7 @@ private:
 
 #ifdef PARALLEL_RENDERING
     template <typename RenderContextType>
-    void RenderParallel(prev::render::pass::RenderPass& renderPass, const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<RenderContextType>>>& renderers, const std::vector<VkCommandBuffer>& commandBuffers);
+    void RenderParallel(prev::render::pass::RenderPass& renderPass, const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<RenderContextType>>>& renderers, const std::vector<void*>& commandBuffers);
 #else
     template <typename RenderContextType>
     void RenderSerial(prev::render::pass::RenderPass& renderPass, const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<RenderContextType>>>& renderers);
@@ -79,7 +78,6 @@ private:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 
     prev::render::pass::RenderPass& m_defaultRenderPass;
 
@@ -135,52 +133,28 @@ void MasterRenderer::TraverseScene(const RenderContextType& renderContext, const
 
 #ifdef PARALLEL_RENDERING
 template <typename RenderContextType>
-void MasterRenderer::RenderParallel(prev::render::pass::RenderPass& renderPass, const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<RenderContextType>>>& renderers, const std::vector<VkCommandBuffer>& commandBuffers)
+void MasterRenderer::RenderParallel(prev::render::pass::RenderPass& renderPass, const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<RenderContextType>>>& renderers, const std::vector<void*>& commandBuffers)
 {
+    // TODO: Parallel rendering with secondary command buffers is not yet supported in gfx API
+    // Fallback to serial path
     for (auto& renderer : renderers) {
         renderer->BeforeRender(renderContext);
     }
 
-    renderPass.Begin(renderContext.frameBuffer, renderContext.commandBuffer, renderContext.rect, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+    renderPass.Begin(renderContext.frameBuffer, renderContext.commandEncoder);
 
-    std::vector<std::future<void>> tasks;
-    tasks.reserve(renderers.size());
+    RenderContextType passContext{ renderContext };
+    passContext.renderPassEncoder = renderPass.GetEncoder();
 
-    for (size_t i = 0; i < renderers.size(); ++i) {
-        auto& renderer{ renderers[i] };
-        auto& commandBuffer{ commandBuffers[i] };
+    for (auto& renderer : renderers) {
+        renderer->PreRender(passContext);
 
-        tasks.emplace_back(m_threadPool.Enqueue([&]() {
-            VkCommandBufferInheritanceInfo inheritanceInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO };
-            inheritanceInfo.renderPass = renderPass;
-            inheritanceInfo.framebuffer = renderContext.frameBuffer;
+        TraverseScene(passContext, root, renderer);
 
-            VkCommandBufferBeginInfo commandBufferBeginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-            commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT | VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-            commandBufferBeginInfo.pInheritanceInfo = &inheritanceInfo;
-
-            VKERRCHECK(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
-
-            RenderContextType parallelRenderContext{ renderContext };
-            parallelRenderContext.commandBuffer = commandBuffer;
-
-            renderer->PreRender(parallelRenderContext);
-
-            TraverseScene(parallelRenderContext, root, renderer);
-
-            renderer->PostRender(parallelRenderContext);
-
-            VKERRCHECK(vkEndCommandBuffer(commandBuffer));
-        }));
+        renderer->PostRender(passContext);
     }
 
-    for (auto&& task : tasks) {
-        task.get();
-    }
-
-    vkCmdExecuteCommands(renderContext.commandBuffer, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
-
-    renderPass.End(renderContext.commandBuffer);
+    renderPass.End();
 
     for (auto& renderer : renderers) {
         renderer->AfterRender(renderContext);
@@ -194,17 +168,20 @@ void MasterRenderer::RenderSerial(prev::render::pass::RenderPass& renderPass, co
         renderer->BeforeRender(renderContext);
     }
 
-    renderPass.Begin(renderContext.frameBuffer, renderContext.commandBuffer, renderContext.rect);
+    renderPass.Begin(renderContext.frameBuffer, renderContext.commandEncoder);
+
+    RenderContextType passContext{ renderContext };
+    passContext.renderPassEncoder = renderPass.GetEncoder();
 
     for (auto& renderer : renderers) {
-        renderer->PreRender(renderContext);
+        renderer->PreRender(passContext);
 
-        TraverseScene(renderContext, root, renderer);
+        TraverseScene(passContext, root, renderer);
 
-        renderer->PostRender(renderContext);
+        renderer->PostRender(passContext);
     }
 
-    renderPass.End(renderContext.commandBuffer);
+    renderPass.End();
 
     for (auto& renderer : renderers) {
         renderer->AfterRender(renderContext);

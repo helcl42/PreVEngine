@@ -6,7 +6,7 @@
 namespace prev::window::impl::headless {
 class HeadlessWindowImpl final : public WindowImpl {
 public:
-    HeadlessWindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo);
+    HeadlessWindowImpl(const WindowInfo& windowInfo);
 
     ~HeadlessWindowImpl();
 
@@ -21,7 +21,7 @@ public:
 
     void SetMouseCursorVisible(bool visible) override;
 
-    Surface& CreateSurface() override;
+    GfxPlatformWindowHandle GetNativeWindowHandle() const override;
 };
 } // namespace prev::window::impl::headless
 

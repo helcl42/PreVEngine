@@ -10,7 +10,7 @@ constexpr const bool SHADOWS_ENABLED{ true };
 
 constexpr const uint32_t CASCADES_COUNT{ 4 };
 
-constexpr const VkFormat DEPTH_FORMAT{ VK_FORMAT_D32_SFLOAT };
+constexpr GfxFormat DEPTH_FORMAT{ GFX_FORMAT_DEPTH32_FLOAT };
 
 constexpr const uint32_t SHADOW_MAP_DIMENSIONS{ 2048 };
 

@@ -2,7 +2,6 @@
 #define __CLOUDS_NOISE_FACTORY_H__
 
 #include <prev/core/device/Device.h>
-#include <prev/core/memory/Allocator.h>
 #include <prev/render/buffer/ImageBuffer.h>
 
 #include <memory>
@@ -14,7 +13,7 @@ struct CloudsNoise {
 
 class CloudsNoiseFactory final {
 public:
-    CloudsNoiseFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator);
+    CloudsNoiseFactory(prev::core::device::Device& device);
 
     ~CloudsNoiseFactory() = default;
 
@@ -24,7 +23,6 @@ public:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 };
 } // namespace prev_test::component::sky::cloud
 

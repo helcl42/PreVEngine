@@ -36,10 +36,14 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 	uint hasConeMap;
 } uboFS;
 
-layout(binding = 2) uniform sampler2D colorSampler[MATERIAL_COUNT];
-layout(binding = 3) uniform sampler2D normalSampler[MATERIAL_COUNT];
-layout(binding = 4) uniform sampler2D heightSampler[MATERIAL_COUNT];
-layout(binding = 5) uniform sampler2DArray depthSampler;
+layout(binding = 2) uniform texture2D colorTexture[MATERIAL_COUNT];
+layout(binding = 3) uniform sampler colorSampler;
+layout(binding = 4) uniform texture2D normalTexture[MATERIAL_COUNT];
+layout(binding = 5) uniform sampler normalSampler;
+layout(binding = 6) uniform texture2D heightTexture[MATERIAL_COUNT];
+layout(binding = 7) uniform sampler heightSampler;
+layout(binding = 8) uniform texture2DArray depthTexture;
+layout(binding = 9) uniform sampler depthSampler;
 
 layout(location = 0) in vec2 inTextureCoord;
 layout(location = 1) in vec3 inNormal;
@@ -85,8 +89,8 @@ void main()
 				vec2 uv2;
 				if (uboFS.hasConeMap != 0) 
 				{
-					uv1 = RelaxedConeStepMapping(heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
-					uv2 = RelaxedConeStepMapping(heightSampler[i + 1], uboFS.heightScale[i + 1].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
+					uv1 = RelaxedConeStepMapping(heightTexture[i], heightSampler, uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
+					uv2 = RelaxedConeStepMapping(heightTexture[i + 1], heightSampler, uboFS.heightScale[i + 1].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
 				}
 				else
 				{
@@ -98,8 +102,8 @@ void main()
 				vec3 normal2;
 				if(uboFS.hasNormalMap != 0)
 				{
-					normal1 = NormalMapping(normalSampler[i], uv1, ddx, ddy);
-					normal2 = NormalMapping(normalSampler[i + 1], uv2, ddx, ddy);
+					normal1 = NormalMapping(normalTexture[i], normalSampler, uv1, ddx, ddy);
+					normal2 = NormalMapping(normalTexture[i + 1], normalSampler, uv2, ddx, ddy);
 				}
 				else
 				{
@@ -108,8 +112,8 @@ void main()
 				}
 				normal = mix(normal1, normal2, ratio);
 
-                vec4 color1 = textureGrad(colorSampler[i], uv1, ddx, ddy);
-                vec4 color2 = textureGrad(colorSampler[i + 1], uv2, ddx, ddy);
+                vec4 color1 = textureGrad(sampler2D(colorTexture[i], colorSampler), uv1, ddx, ddy);
+                vec4 color2 = textureGrad(sampler2D(colorTexture[i + 1], colorSampler), uv2, ddx, ddy);
                 textureColor = mix(color1, color2, ratio);
 
 				float shineDamper1 = uboFS.material[i].shineDamper;
@@ -123,10 +127,10 @@ void main()
             }
 			else if(normalizedHeight < uboFS.heightSteps[i].x - uboFS.heightTransitionRange)
 			{
-				vec2 uv = RelaxedConeStepMapping(heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
+				vec2 uv = RelaxedConeStepMapping(heightTexture[i], heightSampler, uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
 
-				normal = NormalMapping(normalSampler[i], uv, ddx, ddy);
-				textureColor = textureGrad(colorSampler[i], uv, ddx, ddy);
+				normal = NormalMapping(normalTexture[i], normalSampler, uv, ddx, ddy);
+				textureColor = textureGrad(sampler2D(colorTexture[i], colorSampler), uv, ddx, ddy);
 				shineDamper = uboFS.material[i].shineDamper;
 				reflectivity = uboFS.material[i].reflectivity;
 				break;
@@ -134,10 +138,10 @@ void main()
         }
         else
         {
-			vec2 uv = RelaxedConeStepMapping(heightSampler[i], uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
+			vec2 uv = RelaxedConeStepMapping(heightTexture[i], heightSampler, uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
 
-			normal = NormalMapping(normalSampler[i], uv, ddx, ddy);
-			textureColor = textureGrad(colorSampler[i], uv, ddx, ddy);
+			normal = NormalMapping(normalTexture[i], normalSampler, uv, ddx, ddy);
+			textureColor = textureGrad(sampler2D(colorTexture[i], colorSampler), uv, ddx, ddy);
 			shineDamper = uboFS.material[i].shineDamper;
 			reflectivity = uboFS.material[i].reflectivity;
         }
@@ -146,7 +150,7 @@ void main()
 	float shadow = 1.0;
 	if(uboFS.castedByShadows != 0)
 	{
-		shadow = GetShadow(depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.02);
+		shadow = GetShadow(depthTexture, depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.02);
 	}
 
 	const vec3 unitToCameraVector = normalize(inToCameraVectorTangentSpace - inPositionTangentSpace);

@@ -3,7 +3,6 @@
 
 #include "IBoundingVolumeComponent.h"
 
-#include <prev/core/memory/Allocator.h>
 #include <prev/util/intersection/AABB.h>
 #include <prev/util/intersection/OBB.h>
 #include <prev/util/intersection/Sphere.h>
@@ -11,7 +10,7 @@
 namespace prev_test::component::ray_casting {
 class BoundingVolumeComponentFactory final {
 public:
-    BoundingVolumeComponentFactory(prev::core::memory::Allocator& allocator);
+    BoundingVolumeComponentFactory(const prev::core::device::Device& device);
 
     ~BoundingVolumeComponentFactory() = default;
 
@@ -40,7 +39,7 @@ private:
     prev::util::intersection::Sphere CreateSphereFromAABB(const prev::util::intersection::AABB& box) const;
 
 private:
-    prev::core::memory::Allocator& m_allocator;
+    const prev::core::device::Device& m_device;
 };
 } // namespace prev_test::component::ray_casting
 

@@ -12,12 +12,10 @@
 #include <prev/render/pipeline/GraphicsPipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
-#include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::shadow {
-DefaultShadowsRenderer::DefaultShadowsRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
+DefaultShadowsRenderer::DefaultShadowsRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
     : m_device{ device }
-    , m_allocator{ allocator }
     , m_renderPass{ renderPass }
     , m_scene{ scene }
 {
@@ -28,20 +26,20 @@ void DefaultShadowsRenderer::Init()
     // clang-format off
     m_shader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/shadow/default_shadows_vert.spv") }
+            { GFX_SHADER_STAGE_VERTEX, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/shadow/default_shadows_vert.spv") }
         })
-        .AddVertexInputAttributeDescriptions({
-            prev::util::vk::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
-            prev::util::vk::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
-            prev::util::vk::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 }))
+        .AddVertexInputAttributes({
+            prev::render::shader::VertexInputAttribute{ 0, 0, GFX_FORMAT_R32G32B32_FLOAT, 0 },
+            prev::render::shader::VertexInputAttribute{ 0, 1, GFX_FORMAT_R32G32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })},
+            prev::render::shader::VertexInputAttribute{ 0, 2, GFX_FORMAT_R32G32B32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })}
         })
-        .AddVertexInputBindingDescriptions({
-            prev::util::vk::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        .AddVertexInputBindings({
+            prev::render::shader::VertexInputBinding{ 0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), GFX_VERTEX_STEP_MODE_VERTEX }
         })
         .AddDescriptorSets({
-            { "ubo", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT }
+            { "ubo", 0, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_VERTEX }
         })
-	    .SetDescriptorPoolCapacity(m_descriptorCount)
+	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on
 
@@ -49,24 +47,24 @@ void DefaultShadowsRenderer::Init()
 
     // clang-format off
     m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ m_device, *m_shader, m_renderPass }
-        .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+        .SetPrimitiveTopology(GFX_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
         .SetDepthTestEnabled(true)
         .SetDepthWriteEnabled(true)
         .SetBlendingModeEnabled(false)
         .SetAdditiveBlendingEnabled(false)
-        .SetPolygonMode(VK_POLYGON_MODE_FILL)
-        .SetCullingMode(VK_CULL_MODE_BACK_BIT)
+        .SetPolygonMode(GFX_POLYGON_MODE_FILL)
+        .SetCullingMode(GFX_CULL_MODE_BACK)
         .Build();
     // clang-format on
 
     LOGI("Default Shadows Pipeline created");
 
-    m_uniformsPool = prev::render::buffer::BufferPoolBuilder{ m_allocator }
-                         .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
-                         .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+    m_uniformsPool = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
+                         .SetHostMapped(true)
+                         .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM)
                          .SetCount(m_descriptorCount)
                          .SetStride(sizeof(Uniforms))
-                         .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                         .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
                          .Build();
 
     LOGI("Default Shadows Uniforms Pools created");
@@ -78,12 +76,11 @@ void DefaultShadowsRenderer::BeforeRender(const ShadowsRenderContext& renderCont
 
 void DefaultShadowsRenderer::PreRender(const ShadowsRenderContext& renderContext)
 {
-    const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
-    const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
+        const GfxViewport viewport{ static_cast<float>(renderContext.rect.origin.x), static_cast<float>(renderContext.rect.origin.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 1.0f };
 
-    vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-    vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
-    vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
+    gfxRenderPassEncoderSetPipeline(renderContext.renderPassEncoder, *m_pipeline);
+    gfxRenderPassEncoderSetViewport(renderContext.renderPassEncoder, &viewport);
+    gfxRenderPassEncoderSetScissorRect(renderContext.renderPassEncoder, &renderContext.rect);
 }
 
 void DefaultShadowsRenderer::Render(const ShadowsRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
@@ -128,15 +125,12 @@ void DefaultShadowsRenderer::Render(const ShadowsRenderContext& renderContext, c
 
             m_shader->Bind("ubo", ubo);
 
-            const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-            const VkBuffer vertexBuffers[] = { *model->GetVertexBuffer() };
-            const VkDeviceSize offsets[] = { meshPart.firstVertexIndex * mesh->GetVertexLayout().GetStride() };
+            const GfxBindGroup descriptorSet = m_shader->UpdateNextBindGroup();
+            gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *model->GetVertexBuffer(), static_cast<uint64_t>(meshPart.firstVertexIndex) * mesh->GetVertexLayout().GetStride(), model->GetVertexBuffer()->GetSize());
+            gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *model->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, model->GetIndexBuffer()->GetSize());
+            gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 
-            vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(renderContext.commandBuffer, *model->GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
-            vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-
-            vkCmdDrawIndexed(renderContext.commandBuffer, meshPart.indicesCount, 1, meshPart.firstIndicesIndex, 0, 0);
+            gfxRenderPassEncoderDrawIndexed(renderContext.renderPassEncoder, meshPart.indicesCount, 1, meshPart.firstIndicesIndex, 0, 0);
         }
 
         for (const auto& childMeshNode : meshNode.children) {

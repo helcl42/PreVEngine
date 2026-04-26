@@ -3,13 +3,12 @@
 
 #include "../../render/IModel.h"
 
-#include <prev/core/memory/Allocator.h>
 #include <prev/util/intersection/Ray.h>
 
 namespace prev_test::component::ray_casting {
 class RayModelFactory final {
 public:
-    RayModelFactory(prev::core::memory::Allocator& allocator);
+    RayModelFactory(const prev::core::device::Device& device);
 
     ~RayModelFactory() = default;
 
@@ -17,7 +16,7 @@ public:
     std::unique_ptr<prev_test::render::IModel> Create(const prev::util::intersection::Ray& ray) const;
 
 private:
-    prev::core::memory::Allocator& m_allocator;
+    const prev::core::device::Device& m_device;
 };
 } // namespace prev_test::component::ray_casting
 

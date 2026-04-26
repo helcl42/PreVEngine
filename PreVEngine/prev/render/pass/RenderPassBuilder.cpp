@@ -1,109 +1,123 @@
 #include "RenderPassBuilder.h"
 
 #include "../../common/Logger.h"
+#include "../../core/Formats.h"
 #include "../../util/MathUtils.h"
-#include "../../util/VkUtils.h"
 
 #include <stdexcept>
 
 namespace prev::render::pass {
-RenderPassBuilder::RenderPassBuilder(VkDevice device)
+RenderPassBuilder::RenderPassBuilder(GfxDevice device)
     : m_device{ device }
 {
 }
 
-RenderPassBuilder& RenderPassBuilder::AddColorAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount, const VkClearColorValue clearVal, const VkImageLayout finalLayout, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp, const bool resolveAttachment)
+RenderPassBuilder& RenderPassBuilder::AddColorAttachment(const GfxFormat format, const GfxSampleCount sampleCount, const GfxColor clearVal, const GfxTextureLayout finalLayout, const GfxLoadOp loadOp, const GfxStoreOp storeOp, const bool resolveAttachment)
 {
-    VkClearValue clearColor{};
-    clearColor.color = clearVal;
-
-    m_attachmentInfos.push_back(RenderPass::AttachmentInfo{ clearColor, format, sampleCount, finalLayout, loadOp, storeOp, resolveAttachment });
-
+    RenderPass::AttachmentInfo info{};
+    info.colorClearValue = clearVal;
+    info.format = format;
+    info.sampleCount = sampleCount;
+    info.finalLayout = finalLayout;
+    info.loadOp = loadOp;
+    info.storeOp = storeOp;
+    info.resolveAttachment = resolveAttachment;
+    m_attachmentInfos.push_back(info);
     return *this;
 }
 
-RenderPassBuilder& RenderPassBuilder::AddDepthAttachment(const VkFormat format, const VkSampleCountFlagBits sampleCount, const VkClearDepthStencilValue clearVal, const VkImageLayout finalLayout, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp, const bool resolveAttachment)
+RenderPassBuilder& RenderPassBuilder::AddDepthAttachment(const GfxFormat format, const GfxSampleCount sampleCount, const float depthClearVal, const uint32_t stencilClearVal, const GfxTextureLayout finalLayout, const GfxLoadOp loadOp, const GfxStoreOp storeOp, const bool resolveAttachment)
 {
-    VkClearValue clearDepth{};
-    clearDepth.depthStencil = clearVal;
-
-    m_attachmentInfos.push_back(RenderPass::AttachmentInfo{ clearDepth, format, sampleCount, finalLayout, loadOp, storeOp, resolveAttachment });
-
+    RenderPass::AttachmentInfo info{};
+    info.depthClearValue = depthClearVal;
+    info.stencilClearValue = stencilClearVal;
+    info.format = format;
+    info.sampleCount = sampleCount;
+    info.finalLayout = finalLayout;
+    info.loadOp = loadOp;
+    info.storeOp = storeOp;
+    info.resolveAttachment = resolveAttachment;
+    m_attachmentInfos.push_back(info);
     return *this;
 }
 
 RenderPassBuilder& RenderPassBuilder::AddSubpass(const std::vector<uint32_t>& attachmentIndices, const std::vector<uint32_t>& resolveIndices)
 {
     m_subPassCreateInfos.push_back({ attachmentIndices, resolveIndices });
-
-    return *this;
-}
-
-RenderPassBuilder& RenderPassBuilder::AddSubpassDependencies(const std::vector<VkSubpassDependency>& dependencies)
-{
-    m_dependencies.insert(m_dependencies.end(), dependencies.cbegin(), dependencies.cend());
-
     return *this;
 }
 
 RenderPassBuilder& RenderPassBuilder::SetViewCount(const uint32_t viewCount)
 {
     m_viewCount = viewCount;
-
     return *this;
 }
 
 std::unique_ptr<RenderPass> RenderPassBuilder::Build() const
 {
-    std::vector<VkAttachmentDescription> attachments(m_attachmentInfos.size());
+    // Classify attachments
+    std::vector<size_t> colorIndices, resolveIndices, depthIndices;
     for (size_t i = 0; i < m_attachmentInfos.size(); ++i) {
-        const auto& attachmentInfo{ m_attachmentInfos[i] };
-        attachments[i] = CreateAttachmentDescription(attachmentInfo.format, attachmentInfo.sampleCount, attachmentInfo.finalLayout, attachmentInfo.loadOp, attachmentInfo.storeOp);
+        const auto& info = m_attachmentInfos[i];
+        if (prev::core::format::HasDepthComponent(info.format)) {
+            depthIndices.push_back(i);
+        } else if (info.resolveAttachment) {
+            resolveIndices.push_back(i);
+        } else {
+            colorIndices.push_back(i);
+        }
     }
 
-    std::vector<SubPass> subpasses;
-    subpasses.reserve(m_subPassCreateInfos.size());
-    for (const auto& subPassCreateInfo : m_subPassCreateInfos) {
-        SubPass subpass{ attachments };
-        subpass.UseAttachments(subPassCreateInfo.attachmentIndices);
-        subpass.UseResolveAttachments(subPassCreateInfo.resolveIndices);
-        subpasses.emplace_back(subpass);
+    // Build resolve targets (keep alive for the descriptor call)
+    std::vector<GfxRenderPassColorAttachmentTarget> resolveTargets(resolveIndices.size());
+    for (size_t i = 0; i < resolveIndices.size(); ++i) {
+        const auto& info = m_attachmentInfos[resolveIndices[i]];
+        resolveTargets[i].format = info.format;
+        resolveTargets[i].sampleCount = info.sampleCount;
+        resolveTargets[i].ops = { info.loadOp, info.storeOp };
+        resolveTargets[i].finalLayout = info.finalLayout;
     }
 
-    std::vector<VkSubpassDescription> subpassDescriptions;
-    subpassDescriptions.insert(subpassDescriptions.end(), subpasses.begin(), subpasses.end());
-
-    VkRenderPassCreateInfo renderPassCreateInfo{ prev::util::vk::CreateStruct<VkRenderPassCreateInfo>(VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO) };
-    renderPassCreateInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-    renderPassCreateInfo.pAttachments = attachments.data();
-    renderPassCreateInfo.subpassCount = static_cast<uint32_t>(subpassDescriptions.size());
-    renderPassCreateInfo.pSubpasses = subpassDescriptions.data();
-    renderPassCreateInfo.dependencyCount = static_cast<uint32_t>(m_dependencies.size());
-    renderPassCreateInfo.pDependencies = m_dependencies.data();
-
-#ifdef ENABLE_XR
-    const uint32_t viewMask{ prev::util::math::SetBits<uint32_t>(m_viewCount) };
-    const uint32_t correlationMask{ prev::util::math::SetBits<uint32_t>(m_viewCount) };
-
-    VkRenderPassMultiviewCreateInfo renderPassMultiviewCreateInfo{ prev::util::vk::CreateStruct<VkRenderPassMultiviewCreateInfo>(VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO) };
-    renderPassMultiviewCreateInfo.subpassCount = static_cast<uint32_t>(subpassDescriptions.size());
-    renderPassMultiviewCreateInfo.pViewMasks = &viewMask;
-    renderPassMultiviewCreateInfo.correlationMaskCount = 1;
-    renderPassMultiviewCreateInfo.pCorrelationMasks = &correlationMask;
-
-    if (m_viewCount > 1) {
-        renderPassCreateInfo.pNext = &renderPassMultiviewCreateInfo;
+    // Build color attachments
+    std::vector<GfxRenderPassColorAttachment> colorAttachments(colorIndices.size());
+    for (size_t i = 0; i < colorIndices.size(); ++i) {
+        const auto& info = m_attachmentInfos[colorIndices[i]];
+        colorAttachments[i].target.format = info.format;
+        colorAttachments[i].target.sampleCount = info.sampleCount;
+        colorAttachments[i].target.ops = { info.loadOp, info.storeOp };
+        colorAttachments[i].target.finalLayout = info.finalLayout;
+        colorAttachments[i].resolveTarget = (i < resolveIndices.size()) ? &resolveTargets[i] : nullptr;
     }
-#endif
 
-    VkRenderPass vkRenderPass{};
-    VKERRCHECK(vkCreateRenderPass(m_device, &renderPassCreateInfo, nullptr, &vkRenderPass));
+    // Build depth/stencil attachment
+    GfxRenderPassDepthStencilAttachment depthAttachment{};
+    const bool hasDepth = !depthIndices.empty();
+    if (hasDepth) {
+        const auto& info = m_attachmentInfos[depthIndices[0]];
+        depthAttachment.target.format = info.format;
+        depthAttachment.target.sampleCount = info.sampleCount;
+        depthAttachment.target.depthOps = { info.loadOp, info.storeOp };
+        depthAttachment.target.stencilOps = { GFX_LOAD_OP_DONT_CARE, GFX_STORE_OP_DONT_CARE };
+        depthAttachment.target.finalLayout = info.finalLayout;
+        depthAttachment.resolveTarget = nullptr;
+    }
 
-    auto renderPass{ std::unique_ptr<RenderPass>(new RenderPass(m_device, vkRenderPass, m_attachmentInfos, subpasses, m_dependencies)) };
+    GfxRenderPassDescriptor desc{};
+    desc.sType = GFX_STRUCTURE_TYPE_RENDER_PASS_DESCRIPTOR;
+    desc.pNext = nullptr;
+    desc.label = "RenderPass";
+    desc.colorAttachments = colorAttachments.empty() ? nullptr : colorAttachments.data();
+    desc.colorAttachmentCount = static_cast<uint32_t>(colorAttachments.size());
+    desc.depthStencilAttachment = hasDepth ? &depthAttachment : nullptr;
+
+    GfxRenderPass renderPass{};
+    if (gfxDeviceCreateRenderPass(m_device, &desc, &renderPass) != GFX_RESULT_SUCCESS) {
+        throw std::runtime_error("Failed to create render pass");
+    }
 
     LOGI("Renderpass created");
 
-    return renderPass;
+    return std::make_unique<RenderPass>(m_device, renderPass, m_attachmentInfos);
 }
 
 void RenderPassBuilder::Validate() const
@@ -111,25 +125,6 @@ void RenderPassBuilder::Validate() const
     if (m_attachmentInfos.empty()) {
         throw std::runtime_error("Invalid RenderPass configuration: No attachments defined.");
     }
-
-#ifdef ENABLE_XR
-    if (m_viewCount <= 1) {
-        throw std::runtime_error("Invalid RenderPass configuration: View count is <= 1 while XR is on.");
-    }
-#endif
-}
-
-VkAttachmentDescription RenderPassBuilder::CreateAttachmentDescription(const VkFormat format, const VkSampleCountFlagBits sampleCount, const VkImageLayout finalLayout, const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp)
-{
-    VkAttachmentDescription attachment = {};
-    attachment.format = format;
-    attachment.samples = sampleCount;
-    attachment.loadOp = loadOp;
-    attachment.storeOp = storeOp;
-    attachment.stencilLoadOp = loadOp;
-    attachment.stencilStoreOp = storeOp;
-    attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    attachment.finalLayout = finalLayout;
-    return attachment;
 }
 } // namespace prev::render::pass
+

@@ -12,7 +12,7 @@
 namespace prev_test::scene::terrain {
 class Terrain final : public prev::scene::graph::SceneNode {
 public:
-    Terrain(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const int x, const int z);
+    Terrain(prev::core::device::Device& device, const int x, const int z);
 
     ~Terrain() = default;
 
@@ -26,7 +26,6 @@ public:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 
     int m_xIndex;
 

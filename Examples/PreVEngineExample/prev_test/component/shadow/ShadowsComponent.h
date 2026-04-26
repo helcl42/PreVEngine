@@ -21,7 +21,7 @@ public:
 
     const ShadowsCascadeFrameData& GetCascadeFrameData(const uint32_t cascadeIndex) const override;
 
-    VkExtent2D GetExtent() const override;
+    GfxExtent2D GetExtent() const override;
 
     std::shared_ptr<prev::render::buffer::ImageBuffer> GetImageBuffer() const override;
 

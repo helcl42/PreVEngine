@@ -22,7 +22,7 @@ ShadowsComponent::~ShadowsComponent()
     m_renderPass = nullptr;
 
     for (size_t i = 0; i < m_cascadesRenderData.size(); ++i) {
-        m_cascadesRenderData[i].Destroy(m_device);
+        m_cascadesRenderData[i].Destroy();
     }
 
     m_depthBuffer = nullptr;
@@ -62,7 +62,7 @@ const ShadowsCascadeFrameData& ShadowsComponent::GetCascadeFrameData(const uint3
     return m_cascadesFrameData[cascadeIndex];
 }
 
-VkExtent2D ShadowsComponent::GetExtent() const
+GfxExtent2D ShadowsComponent::GetExtent() const
 {
     return { m_depthBuffer->GetExtent().width, m_depthBuffer->GetExtent().height };
 }

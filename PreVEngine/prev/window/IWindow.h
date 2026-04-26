@@ -1,16 +1,16 @@
 #ifndef __IWINDOW_H__
 #define __IWINDOW_H__
 
-#include "impl/Surface.h"
 #include "impl/WindowImplCommon.h"
 
 #include "../common/Common.h"
+#include "../core/Core.h"
 #include "../input/keyboard/KeyCodes.h"
 
 namespace prev::window {
 class IWindow {
 public:
-    virtual impl::Surface& ResetSurface() = 0;
+    virtual GfxPlatformWindowHandle GetNativeWindowHandle() const = 0;
 
     virtual impl::Position GetPosition() const = 0;
 

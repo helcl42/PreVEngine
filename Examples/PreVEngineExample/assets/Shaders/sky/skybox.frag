@@ -7,7 +7,8 @@ layout(std140, binding = 1) uniform UniformBufferObject {
     vec4 upperLimit;
 } uboFS;
 
-layout(binding = 2) uniform samplerCube cubeMap1;
+layout(binding = 2) uniform textureCube cubeMap1Texture;
+layout(binding = 3) uniform sampler cubeMap1Sampler;
 
 layout(location = 0) in vec3 inTextureCoord;
 
@@ -16,7 +17,7 @@ layout(location = 0) out vec4 outColor;
 void main()
 {
     const vec3 tc = vec3(-inTextureCoord.x, inTextureCoord.y, inTextureCoord.z);
-    vec4 finalColor = texture(cubeMap1, tc);
+    vec4 finalColor = texture(samplerCube(cubeMap1Texture, cubeMap1Sampler), tc);
 
 	float factor = (inTextureCoord.y - uboFS.lowerLimit.x) / (uboFS.upperLimit.x - uboFS.lowerLimit.x);
 	factor = clamp(factor, 0.0, 1.0);

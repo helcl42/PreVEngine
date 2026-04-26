@@ -4,7 +4,6 @@
 #include "IAnimationRenderComponent.h"
 #include "IRenderComponent.h"
 
-#include <prev/core/memory/Allocator.h>
 
 namespace prev_test::component::render {
 struct RenderComponentShadowsCreateInfo {
@@ -21,7 +20,7 @@ struct RenderComponentMaterialCreateInfo {
 
 class RenderComponentFactory {
 public:
-    RenderComponentFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator);
+    RenderComponentFactory(prev::core::device::Device& device);
 
     ~RenderComponentFactory() = default;
 
@@ -73,7 +72,6 @@ public:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 };
 } // namespace prev_test::component::render
 

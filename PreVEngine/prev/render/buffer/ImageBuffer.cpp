@@ -1,96 +1,166 @@
 #include "ImageBuffer.h"
 
-#include "../../core/Formats.h"
-#include "../../util/MathUtils.h"
-#include "../../util/VkUtils.h"
-
 namespace prev::render::buffer {
+namespace {
+    // Deduce appropriate pipeline stage and access mask for a given texture layout.
+    void GetLayoutBarrierParams(const GfxTextureLayout layout, GfxPipelineStageFlags& stage, GfxAccessFlags& access)
+    {
+        switch (layout) {
+        case GFX_TEXTURE_LAYOUT_UNDEFINED:
+            stage = GFX_PIPELINE_STAGE_TOP_OF_PIPE;
+            access = GFX_ACCESS_NONE;
+            break;
+        case GFX_TEXTURE_LAYOUT_TRANSFER_DST:
+            stage = GFX_PIPELINE_STAGE_TRANSFER;
+            access = GFX_ACCESS_TRANSFER_WRITE;
+            break;
+        case GFX_TEXTURE_LAYOUT_TRANSFER_SRC:
+            stage = GFX_PIPELINE_STAGE_TRANSFER;
+            access = GFX_ACCESS_TRANSFER_READ;
+            break;
+        case GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY:
+            stage = GFX_PIPELINE_STAGE_FRAGMENT_SHADER | GFX_PIPELINE_STAGE_COMPUTE_SHADER;
+            access = GFX_ACCESS_SHADER_READ;
+            break;
+        case GFX_TEXTURE_LAYOUT_GENERAL:
+            stage = GFX_PIPELINE_STAGE_COMPUTE_SHADER;
+            access = GFX_ACCESS_SHADER_READ | GFX_ACCESS_SHADER_WRITE;
+            break;
+        case GFX_TEXTURE_LAYOUT_COLOR_ATTACHMENT:
+            stage = GFX_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+            access = GFX_ACCESS_COLOR_ATTACHMENT_READ | GFX_ACCESS_COLOR_ATTACHMENT_WRITE;
+            break;
+        case GFX_TEXTURE_LAYOUT_DEPTH_STENCIL_ATTACHMENT:
+            stage = GFX_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS | GFX_PIPELINE_STAGE_LATE_FRAGMENT_TESTS;
+            access = GFX_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ | GFX_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE;
+            break;
+        case GFX_TEXTURE_LAYOUT_DEPTH_STENCIL_READ_ONLY:
+            stage = GFX_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS;
+            access = GFX_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ;
+            break;
+        case GFX_TEXTURE_LAYOUT_PRESENT_SRC:
+            stage = GFX_PIPELINE_STAGE_BOTTOM_OF_PIPE;
+            access = GFX_ACCESS_MEMORY_READ;
+            break;
+        default:
+            stage = GFX_PIPELINE_STAGE_ALL_COMMANDS;
+            access = GFX_ACCESS_MEMORY_READ | GFX_ACCESS_MEMORY_WRITE;
+            break;
+        }
+    }
+} // namespace
 
-ImageBuffer::ImageBuffer(prev::core::memory::Allocator& allocator)
-    : m_allocator{ allocator }
+ImageBuffer::ImageBuffer(GfxDevice device, GfxQueue queue)
+    : m_device{ device }
+    , m_queue{ queue }
 {
 }
 
 ImageBuffer::~ImageBuffer()
 {
-    m_allocator.GetQueue().WaitIdle();
-
+    gfxQueueWaitIdle(m_queue);
     if (m_view) {
-        vkDestroyImageView(m_allocator.GetDevice(), m_view, VK_NULL_HANDLE);
+        gfxTextureViewDestroy(m_view);
     }
-    m_allocator.DestroyImage(m_image, m_allocation);
+    if (m_texture) {
+        gfxTextureDestroy(m_texture);
+    }
 }
 
-void ImageBuffer::UpdateLayout(const VkImageLayout newLayout, VkCommandBuffer commandBuffer)
+void ImageBuffer::UpdateLayout(const GfxTextureLayout newLayout, GfxCommandEncoder commandEncoder)
 {
-    util::vk::TransitionImageLayout(commandBuffer, m_image, m_layout, newLayout, m_mipLevels, m_aspectMask, m_layerCount);
+    if (m_layout == newLayout) {
+        return;
+    }
+
+    GfxPipelineStageFlags srcStage{}, dstStage{};
+    GfxAccessFlags srcAccess{}, dstAccess{};
+    GetLayoutBarrierParams(m_layout, srcStage, srcAccess);
+    GetLayoutBarrierParams(newLayout, dstStage, dstAccess);
+
+    GfxTextureBarrier barrier{};
+    barrier.texture = m_texture;
+    barrier.oldLayout = m_layout;
+    barrier.newLayout = newLayout;
+    barrier.srcStageMask = srcStage;
+    barrier.dstStageMask = dstStage;
+    barrier.srcAccessMask = srcAccess;
+    barrier.dstAccessMask = dstAccess;
+    barrier.baseMipLevel = 0;
+    barrier.mipLevelCount = m_mipLevels;
+    barrier.baseArrayLayer = 0;
+    barrier.arrayLayerCount = m_layerCount;
+
+    GfxPipelineBarrierDescriptor barrierDesc{};
+    barrierDesc.sType = GFX_STRUCTURE_TYPE_PIPELINE_BARRIER_DESCRIPTOR;
+    barrierDesc.textureBarriers = &barrier;
+    barrierDesc.textureBarrierCount = 1;
+    gfxCommandEncoderPipelineBarrier(commandEncoder, &barrierDesc);
+
     m_layout = newLayout;
 }
 
-void ImageBuffer::GenerateMipMaps(VkCommandBuffer commandBuffer)
+void ImageBuffer::GenerateMipMaps(GfxCommandEncoder commandEncoder)
 {
-    const auto newLayout{ m_layout != VK_IMAGE_LAYOUT_UNDEFINED ? m_layout : VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL };
-
-    const auto filter{ prev::core::format::HasDepthComponent(m_format) ? VK_FILTER_NEAREST : VK_FILTER_LINEAR };
-
-    m_mipLevels = prev::util::math::Log2(std::max(m_extent.width, m_extent.height)) + 1;
-
-    util::vk::TransitionImageLayout(commandBuffer, m_image, m_layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_mipLevels, m_aspectMask, m_layerCount);
-    util::vk::GenerateMipmaps(commandBuffer, m_image, m_extent, m_mipLevels, m_layerCount, m_aspectMask, filter, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-    util::vk::TransitionImageLayout(commandBuffer, m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, newLayout, m_mipLevels, m_aspectMask, m_layerCount);
-
-    m_layout = newLayout;
+    // gfx generateMipmaps handles all layout transitions internally:
+    // - transitions mip 0 from current layout to TRANSFER_SRC
+    // - transitions each subsequent mip from UNDEFINED to TRANSFER_DST, blits, then to TRANSFER_SRC
+    // - transitions all mips back to the initial layout
+    gfxCommandEncoderGenerateMipmaps(commandEncoder, m_texture);
 }
 
-void ImageBuffer::Copy(ImageBuffer& dstImage, VkCommandBuffer commandBuffer)
+void ImageBuffer::Copy(ImageBuffer& dstImage, GfxCommandEncoder commandEncoder)
 {
-    const auto newLayout{ m_layout != VK_IMAGE_LAYOUT_UNDEFINED ? m_layout : VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL };
+    const auto srcFinalLayout{ m_layout == GFX_TEXTURE_LAYOUT_UNDEFINED ? GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY : m_layout };
 
-    const auto filter{ prev::core::format::HasDepthComponent(m_format) ? VK_FILTER_NEAREST : VK_FILTER_LINEAR };
+    GfxBlitTextureToTextureDescriptor blitDesc{};
+    blitDesc.source = m_texture;
+    blitDesc.sourceOrigin = { 0, 0, 0 };
+    blitDesc.sourceExtent = m_extent;
+    blitDesc.sourceMipLevel = 0;
+    blitDesc.sourceFinalLayout = srcFinalLayout;
+    blitDesc.destination = dstImage.GetTexture();
+    blitDesc.destinationOrigin = { 0, 0, 0 };
+    blitDesc.destinationExtent = dstImage.GetExtent();
+    blitDesc.destinationMipLevel = 0;
+    blitDesc.destinationFinalLayout = dstImage.GetLayout();
+    blitDesc.filter = GFX_FILTER_MODE_LINEAR;
+    gfxCommandEncoderBlitTextureToTexture(commandEncoder, &blitDesc);
 
-    util::vk::TransitionImageLayout(commandBuffer, m_image, m_layout, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, m_mipLevels, m_aspectMask, m_layerCount);
-    prev::util::vk::CopyImage(commandBuffer, m_image, m_extent, m_layerCount, m_aspectMask, filter, dstImage.GetLayout(), dstImage);
-    util::vk::TransitionImageLayout(commandBuffer, m_image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, newLayout, m_mipLevels, m_aspectMask, m_layerCount);
-
-    m_layout = newLayout;
+    m_layout = srcFinalLayout;
 }
 
-VkExtent3D ImageBuffer::GetExtent() const
+GfxExtent3D ImageBuffer::GetExtent() const
 {
     return m_extent;
 }
 
-VkFormat ImageBuffer::GetFormat() const
+GfxFormat ImageBuffer::GetFormat() const
 {
     return m_format;
 }
 
-VkImage ImageBuffer::GetImage() const
+GfxTexture ImageBuffer::GetTexture() const
 {
-    return m_image;
+    return m_texture;
 }
 
-VkImageType ImageBuffer::GetImageType() const
+GfxTextureType ImageBuffer::GetTextureType() const
 {
     return m_type;
 }
 
-VkImageView ImageBuffer::GetImageView() const
+GfxTextureView ImageBuffer::GetTextureView() const
 {
     return m_view;
 }
 
-VkImageViewType ImageBuffer::GetImageViewType() const
+GfxTextureViewType ImageBuffer::GetTextureViewType() const
 {
     return m_viewType;
 }
 
-VkImageAspectFlags ImageBuffer::GetAspectMask() const
-{
-    return m_aspectMask;
-}
-
-VkSampleCountFlagBits ImageBuffer::GetSampleCount() const
+GfxSampleCount ImageBuffer::GetSampleCount() const
 {
     return m_samplesCount;
 }
@@ -105,17 +175,12 @@ uint32_t ImageBuffer::GetLayerCount() const
     return m_layerCount;
 }
 
-VkImageCreateFlags ImageBuffer::GetCreateFlags() const
-{
-    return m_createFlags;
-}
-
-VkImageUsageFlags ImageBuffer::GetUsageFlags() const
+GfxTextureUsageFlags ImageBuffer::GetUsageFlags() const
 {
     return m_usageFlags;
 }
 
-VkImageLayout ImageBuffer::GetLayout() const
+GfxTextureLayout ImageBuffer::GetLayout() const
 {
     return m_layout;
 }
@@ -125,9 +190,9 @@ void* ImageBuffer::GetMappedData() const
     return m_mappedData;
 }
 
-ImageBuffer::operator VkImage() const
+ImageBuffer::operator GfxTexture() const
 {
-    return m_image;
+    return m_texture;
 }
 
 } // namespace prev::render::buffer

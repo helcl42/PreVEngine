@@ -10,7 +10,7 @@ struct IOSState;
 
 class IOSWindowImpl final : public WindowImpl {
 public:
-    IOSWindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo);
+    IOSWindowImpl(const WindowInfo& windowInfo);
 
     ~IOSWindowImpl();
 
@@ -25,7 +25,7 @@ public:
 
     void SetMouseCursorVisible(bool visible) override;
 
-    Surface& CreateSurface() override;
+    GfxPlatformWindowHandle GetNativeWindowHandle() const override;
 
 private:
     std::unique_ptr<IOSState> m_state{};
