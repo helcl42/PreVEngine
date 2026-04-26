@@ -9,27 +9,28 @@ class ComputePipelineBuilder;
 
 class Pipeline final {
 private:
-    Pipeline(const VkDevice device, const VkPipeline pipeline, const VkPipelineLayout pipelineLayout);
+    Pipeline(GfxDevice device, GfxRenderPipeline renderPipeline);
+
+    Pipeline(GfxDevice device, GfxComputePipeline computePipeline);
 
 public:
     ~Pipeline();
 
 public:
-    VkPipelineLayout GetLayout() const;
+    operator GfxRenderPipeline() const;
 
-public:
-    operator VkPipeline() const;
+    operator GfxComputePipeline() const;
 
 public:
     friend class GraphicsPipelineBuilder;
     friend class ComputePipelineBuilder;
 
 private:
-    VkDevice m_device;
+    GfxDevice m_device;
 
-    VkPipeline m_pipeline;
+    GfxRenderPipeline m_renderPipeline{};
 
-    VkPipelineLayout m_pipelineLayout;
+    GfxComputePipeline m_computePipeline{};
 };
 } // namespace prev::render::pipeline
 

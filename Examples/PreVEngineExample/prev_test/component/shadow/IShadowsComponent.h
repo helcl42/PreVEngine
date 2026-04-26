@@ -22,7 +22,7 @@ public:
 
     virtual const ShadowsCascadeFrameData& GetCascadeFrameData(const uint32_t cascadeIndex) const = 0;
 
-    virtual VkExtent2D GetExtent() const = 0;
+    virtual GfxExtent2D GetExtent() const = 0;
 
     virtual std::shared_ptr<prev::render::buffer::ImageBuffer> GetImageBuffer() const = 0;
 

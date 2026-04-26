@@ -10,7 +10,7 @@
 namespace prev_test::component::ray_casting {
 class BoundingVolumeModelFactory final {
 public:
-    BoundingVolumeModelFactory(prev::core::memory::Allocator& allocator);
+    BoundingVolumeModelFactory(const prev::core::device::Device& device);
 
     ~BoundingVolumeModelFactory() = default;
 
@@ -28,7 +28,7 @@ public:
     std::unique_ptr<prev_test::render::IModel> CreateSphereModel(const prev::util::intersection::Sphere& sphere, const std::shared_ptr<prev_test::render::IModel>& model) const;
 
 private:
-    prev::core::memory::Allocator& m_allocator;
+    const prev::core::device::Device& m_device;
 };
 } // namespace prev_test::component::ray_casting
 

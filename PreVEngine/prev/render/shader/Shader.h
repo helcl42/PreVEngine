@@ -8,63 +8,70 @@
 #include "../../core/Core.h"
 
 #include <map>
+#include <string>
 #include <vector>
 
 namespace prev::render::shader {
 class ShaderBuilder;
 
+// Describes a single vertex buffer slot
+struct VertexInputBinding {
+    uint32_t binding{};
+    uint32_t stride{};
+    GfxVertexStepMode stepMode{ GFX_VERTEX_STEP_MODE_VERTEX };
+};
+
+// Describes a single vertex attribute within a buffer slot
+struct VertexInputAttribute {
+    uint32_t binding{};
+    uint32_t shaderLocation{};
+    GfxFormat format{ GFX_FORMAT_UNDEFINED };
+    uint32_t offset{};
+};
+
 class Shader final {
 public:
-    struct DescriptorSetInfo {
-        size_t writeIndex{};
-        union {
-            VkDescriptorBufferInfo bufferInfo;
-            VkDescriptorImageInfo imageInfo;
-        };
-    };
-
-    struct ShadersInfo {
-        std::map<VkShaderStageFlagBits, VkShaderModule> modules;
-        std::vector<VkPipelineShaderStageCreateInfo> stages;
-    };
-
-    struct VertexInputsInfo {
-        std::vector<VkVertexInputBindingDescription> bindingDescriptions;
-        std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
-    };
-
-    struct DescriptorSetsInfo {
-        VkDescriptorSetLayout layout{};
-        std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
-        std::vector<VkWriteDescriptorSet> writes;
-        std::map<std::string, DescriptorSetInfo> infos;
+    struct BindingInfo {
+        uint32_t binding{};
+        GfxBindGroupEntryType type{};
+        // Buffer
+        GfxBuffer buffer{};
+        uint64_t bufferSize{};
+        // Combined image + sampler
+        GfxTextureView textureView{};
+        GfxSampler sampler{};
     };
 
 private:
-    Shader(const VkDevice device, const ShadersInfo& shadersInfo, const VertexInputsInfo& vertexInputsInfo, const DescriptorSetsInfo& descriptorSetsInfo, const std::vector<VkPushConstantRange>& pushConstantRanges);
+    Shader(GfxDevice device,
+        const std::map<GfxShaderStageFlags, GfxShader>& shaderModules,
+        const std::vector<VertexInputBinding>& vertexBindings,
+        const std::vector<VertexInputAttribute>& vertexAttributes,
+        GfxBindGroupLayout bindGroupLayout,
+        const std::map<std::string, BindingInfo>& bindingInfos);
 
 public:
     ~Shader();
 
 public:
-    bool AdjustDescriptorPoolCapacity(const uint32_t size);
+    bool AdjustBindGroupCapacity(uint32_t size);
 
     void Bind(const std::string& name, const prev::render::buffer::Buffer& buffer);
 
-    void Bind(const std::string& name, const prev::render::buffer::ImageBuffer& imageBuffer, const prev::render::sampler::Sampler& sampler, const VkImageLayout layout);
+    void Bind(const std::string& name, const prev::render::buffer::ImageBuffer& imageBuffer);
 
-    VkDescriptorSet UpdateNextDescriptorSet();
+    void Bind(const std::string& name, const prev::render::sampler::Sampler& sampler);
+
+    GfxBindGroup UpdateNextBindGroup();
 
 public:
-    const VkDescriptorSetLayout& GetDescriptorSetLayout() const;
+    const std::map<GfxShaderStageFlags, GfxShader>& GetShaderModules() const;
 
-    const std::vector<VkPushConstantRange>& GetPushConstantsRanges() const;
+    GfxBindGroupLayout GetBindGroupLayout() const;
 
-    const std::vector<VkPipelineShaderStageCreateInfo>& GetShaderStages() const;
+    const std::vector<VertexInputBinding>& GetVertexInputBindings() const;
 
-    const std::vector<VkVertexInputBindingDescription>& GetVertexInputBindingDescriptions() const;
-
-    const std::vector<VkVertexInputAttributeDescription>& GetVertexInputAttributeDescriptions() const;
+    const std::vector<VertexInputAttribute>& GetVertexInputAttributes() const;
 
 public:
     friend class ShaderBuilder;
@@ -72,38 +79,26 @@ public:
 private:
     void CheckBindings() const;
 
-    bool ShouldAdjustCapacity(const uint32_t size) const;
+    bool ShouldAdjustCapacity(uint32_t size) const;
 
 private:
-    VkDevice m_device;
+    GfxDevice m_device;
 
-    std::map<VkShaderStageFlagBits, VkShaderModule> m_shaderModules;
+    std::map<GfxShaderStageFlags, GfxShader> m_shaderModules;
 
-    std::vector<VkPipelineShaderStageCreateInfo> m_shaderStages;
+    std::vector<VertexInputBinding> m_vertexInputBindings;
 
-    ShadersInfo m_shaders;
+    std::vector<VertexInputAttribute> m_vertexInputAttributes;
 
-    std::vector<VkVertexInputBindingDescription> m_vertexInputBindingDescriptions;
+    GfxBindGroupLayout m_bindGroupLayout{};
 
-    std::vector<VkVertexInputAttributeDescription> m_vertexInputAttributeDescriptions;
+    std::map<std::string, BindingInfo> m_bindingInfos;
 
-    VkDescriptorSetLayout m_descriptorSetLayout;
+    std::vector<GfxBindGroup> m_bindGroups;
 
-    std::vector<VkDescriptorSetLayoutBinding> m_layoutBindings;
+    uint32_t m_poolCapacity{};
 
-    std::vector<VkWriteDescriptorSet> m_descriptorWrites;
-
-    std::map<std::string, DescriptorSetInfo> m_descriptorSetInfos;
-
-    std::vector<VkPushConstantRange> m_pushConstantRanges;
-
-    VkDescriptorPool m_descriptorPool;
-
-    uint32_t m_poolCapacity;
-
-    uint32_t m_currentDescriptorSetIndex;
-
-    std::vector<VkDescriptorSet> m_descriptorSets;
+    uint32_t m_currentSlot{};
 };
 
 } // namespace prev::render::shader

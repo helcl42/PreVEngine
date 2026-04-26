@@ -32,6 +32,7 @@ file(GLOB SRC_LIST
     "prev/render/sampler/*.h" "prev/render/sampler/*.cpp"
     "prev/render/pipeline/*.h" "prev/render/pipeline/*.cpp"
     "prev/render/query/*.h" "prev/render/query/*.cpp"
+    "prev/render/surface/*.h" "prev/render/surface/*.cpp"
     "prev/render/swapchain/*.h" "prev/render/swapchain/*.cpp"
     "prev/render/swapchain/presentable/*.h" "prev/render/swapchain/presentable/*.cpp"
     "prev/render/swapchain/headless/*.h" "prev/render/swapchain/headless/*.cpp"
@@ -65,7 +66,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake") 
 option(ENABLE_LOGGING "Prints LOG* messages to Terminal or Android Logcat." ON)
 option(ENABLE_MULTITOUCH "Multi-touch screen support" OFF)
 option(ENABLE_REVERSE_DEPTH "Enable reverse depth" OFF)
-option(ENABLE_VK_LOADER "Enable Vulkan loader" ON)
 option(ENABLE_XR "Enable XR" OFF)
 option(ENABLE_XR_EXTENDED_INIT "Enable XR extended init (currently applicable on Android only)" OFF)
 option(ENABLE_XR_DEPTH "Enable XR Depth" OFF)
@@ -79,10 +79,6 @@ endif()
 if (ENABLE_REVERSE_DEPTH)
     add_definitions(-DENABLE_REVERSE_DEPTH)
 endif()
-if (ENABLE_VK_LOADER)
-    add_definitions(-DENABLE_VK_LOADER)
-    add_definitions(-DVK_NO_PROTOTYPES)
-endif()
 if(ENABLE_XR)
     add_definitions(-DENABLE_XR)
 endif()
@@ -91,6 +87,24 @@ if(ENABLE_XR_DEPTH)
 endif()
 
 include_directories("external")
+include_directories("external/gfx/gfx/include")
+include_directories("external/gfx/gfx/src")
+
+# Collect gfx backend source files
+file(GLOB_RECURSE GFX_SRC_LIST
+    "external/gfx/gfx/src/*.h" "external/gfx/gfx/src/*.cpp"
+)
+
+# Exclude webgpu backend (not yet supported)
+list(FILTER GFX_SRC_LIST EXCLUDE REGEX ".*/webgpu/.*")
+
+# Add gfx sources to main source list
+list(APPEND SRC_LIST ${GFX_SRC_LIST})
+
+# gfx sources require C++20 and Vulkan backend enabled
+set_source_files_properties(${GFX_SRC_LIST} PROPERTIES COMPILE_FLAGS "-std=c++20")
+add_definitions(-DGFX_ENABLE_VULKAN=1)
+
 include_directories("external/worm_holes/WormHoles")
 include_directories("external/glm")
 if(ENABLE_XR)
@@ -141,6 +155,7 @@ elseif(IOS)
 elseif(APPLE)
     message("${PROJECT_NAME} - MacOS")
     add_definitions(-DTARGET_PLATFORM_MACOS)
+    add_definitions(-DGFX_HAS_COCOA=1)
     add_definitions(-DVK_USE_PLATFORM_MACOS_MVK)
 
     include_directories("platform/macos")
@@ -164,6 +179,7 @@ elseif(APPLE)
     target_link_libraries(${PROJECT_NAME} 
         ${COCOA_LIB}
         ${QUARTZ_CORE_LIB}
+        "$ENV{VULKAN_SDK}/lib/libvulkan.dylib"
     )
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     message("${PROJECT_NAME} - Linux")
@@ -173,6 +189,7 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     option(ENABLE_WAYLAND "Enable Wayland support" OFF)
     
     if (ENABLE_XCB)
+        add_definitions(-DTARGET_PLATFORM_XCB)
         add_definitions(-DVK_USE_PLATFORM_XCB_KHR)
 
         add_library(${PROJECT_NAME} STATIC ${SRC_LIST})
@@ -201,6 +218,7 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
             add_definitions(-DENABLE_MULTITOUCH)
         endif()
     elseif(ENABLE_WAYLAND)
+        add_definitions(-DTARGET_PLATFORM_WAYLAND)
         add_definitions(-DVK_USE_PLATFORM_WAYLAND_KHR)
 
         include_directories("platform/wayland")

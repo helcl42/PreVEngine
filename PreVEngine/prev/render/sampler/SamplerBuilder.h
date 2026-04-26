@@ -8,26 +8,22 @@
 namespace prev::render::sampler {
 class SamplerBuilder final {
 public:
-    SamplerBuilder(const VkDevice device);
+    SamplerBuilder(GfxDevice device);
 
     ~SamplerBuilder() = default;
 
 public:
-    SamplerBuilder& SetAddressMode(VkSamplerAddressMode addressMode);
+    SamplerBuilder& SetAddressMode(GfxAddressMode addressMode);
 
-    SamplerBuilder& SetMinFilter(VkFilter minFilter);
+    SamplerBuilder& SetMinFilter(GfxFilterMode minFilter);
 
-    SamplerBuilder& SetMagFilter(VkFilter magFilter);
+    SamplerBuilder& SetMagFilter(GfxFilterMode magFilter);
 
-    SamplerBuilder& SetMipMapMode(VkSamplerMipmapMode mipMapMode);
+    SamplerBuilder& SetMipMapMode(GfxFilterMode mipMapMode);
 
     SamplerBuilder& SetMinLod(float minLod);
 
     SamplerBuilder& SetMaxLod(float maxLod);
-
-    SamplerBuilder& SetLodBias(float bias);
-
-    SamplerBuilder& SetBorderColor(VkBorderColor borderColor);
 
     SamplerBuilder& SetAnisotropyFilterEnabled(bool enable);
 
@@ -36,23 +32,19 @@ public:
     std::unique_ptr<Sampler> Build() const;
 
 private:
-    VkDevice m_device;
+    GfxDevice m_device;
 
-    VkSamplerAddressMode m_addressMode{ VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE };
+    GfxAddressMode m_addressMode{ GFX_ADDRESS_MODE_CLAMP_TO_EDGE };
 
-    VkFilter m_minFilter{ VK_FILTER_LINEAR };
+    GfxFilterMode m_minFilter{ GFX_FILTER_MODE_LINEAR };
 
-    VkFilter m_magFilter{ VK_FILTER_LINEAR };
+    GfxFilterMode m_magFilter{ GFX_FILTER_MODE_LINEAR };
 
-    VkSamplerMipmapMode m_mipMapMode{ VK_SAMPLER_MIPMAP_MODE_LINEAR };
+    GfxFilterMode m_mipMapMode{ GFX_FILTER_MODE_LINEAR };
 
     float m_minLod{ 0.0f };
 
-    float m_maxLod{ VK_LOD_CLAMP_NONE };
-
-    float m_lodBias{ 0.0f };
-
-    VkBorderColor m_borderColor{ VK_BORDER_COLOR_INT_OPAQUE_BLACK };
+    float m_maxLod{ 1000.0f };
 
     bool m_enableAnisotropyFilter{ false };
 

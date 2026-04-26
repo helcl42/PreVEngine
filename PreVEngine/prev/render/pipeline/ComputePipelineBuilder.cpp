@@ -1,9 +1,11 @@
 #include "ComputePipelineBuilder.h"
 
-#include "../../util/VkUtils.h"
+#include "../../common/Logger.h"
+
+#include <stdexcept>
 
 namespace prev::render::pipeline {
-ComputePipelineBuilder::ComputePipelineBuilder(const VkDevice device, const shader::Shader& shader)
+ComputePipelineBuilder::ComputePipelineBuilder(GfxDevice device, const shader::Shader& shader)
     : AbstractPipelineBuilder(device, shader)
 {
 }
@@ -12,28 +14,34 @@ std::unique_ptr<Pipeline> ComputePipelineBuilder::Build() const
 {
     Validate();
 
-    auto pipelineLayout{ CreatePipelineLayout() };
-    auto pipeline{ CreateComputePipeline(pipelineLayout) };
+    auto pipeline{ CreateComputePipeline() };
 
-    return std::unique_ptr<Pipeline>(new Pipeline(m_device, pipeline, pipelineLayout));
+    return std::unique_ptr<Pipeline>(new Pipeline(m_device, pipeline));
 }
 
 void ComputePipelineBuilder::Validate() const
 {
-    if (m_shader.GetShaderStages().size() != 1) {
-        throw std::runtime_error("Invalid pipeline configuration:Shader with shader stages count != 1 seems to be incompatible.");
+    if (m_shader.GetShaderModules().size() != 1) {
+        throw std::runtime_error("Invalid pipeline configuration: Shader with shader stages count != 1 seems to be incompatible.");
     }
 }
 
-VkPipeline ComputePipelineBuilder::CreateComputePipeline(const VkPipelineLayout pipelineLayout) const
+GfxComputePipeline ComputePipelineBuilder::CreateComputePipeline() const
 {
-    VkComputePipelineCreateInfo computePipelineCreateInfo{ prev::util::vk::CreateStruct<VkComputePipelineCreateInfo>(VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO) };
-    computePipelineCreateInfo.layout = pipelineLayout;
-    computePipelineCreateInfo.flags = 0;
-    computePipelineCreateInfo.stage = m_shader.GetShaderStages().at(0);
+    const auto& modules{ m_shader.GetShaderModules() };
+    const auto& [stage, gfxShader] = *modules.begin();
 
-    VkPipeline pipeline;
-    VKERRCHECK(vkCreateComputePipelines(m_device, nullptr, 1, &computePipelineCreateInfo, nullptr, &pipeline));
+    GfxBindGroupLayout bindGroupLayout{ m_shader.GetBindGroupLayout() };
+
+    GfxComputePipelineDescriptor desc{};
+    desc.sType = GFX_STRUCTURE_TYPE_COMPUTE_PIPELINE_DESCRIPTOR;
+    desc.compute = gfxShader;
+    desc.entryPoint = "main";
+    desc.bindGroupLayouts = &bindGroupLayout;
+    desc.bindGroupLayoutCount = 1;
+
+    GfxComputePipeline pipeline{};
+    GFXERRCHECK(gfxDeviceCreateComputePipeline(m_device, &desc, &pipeline));
     return pipeline;
 }
 } // namespace prev::render::pipeline

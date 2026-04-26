@@ -6,7 +6,7 @@
 namespace prev::render::pipeline {
 class ComputePipelineBuilder final : public AbstractPipelineBuilder {
 public:
-    ComputePipelineBuilder(const VkDevice device, const shader::Shader& shader);
+    ComputePipelineBuilder(GfxDevice device, const shader::Shader& shader);
 
     ~ComputePipelineBuilder() = default;
 
@@ -17,7 +17,7 @@ private:
     void Validate() const override;
 
 private:
-    VkPipeline CreateComputePipeline(const VkPipelineLayout pipelineLayout) const;
+    GfxComputePipeline CreateComputePipeline() const;
 };
 } // namespace prev::render::pipeline
 

@@ -19,7 +19,7 @@
 namespace prev_test::render::renderer::terrain {
 class TerrainConeStepMappedRenderer final : public IRenderer<NormalRenderContext> {
 public:
-    TerrainConeStepMappedRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
+    TerrainConeStepMappedRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
 
     ~TerrainConeStepMappedRenderer() = default;
 
@@ -153,7 +153,6 @@ private:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 
     prev::render::pass::RenderPass& m_renderPass;
 

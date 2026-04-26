@@ -12,7 +12,7 @@
 namespace prev::window::impl::wayland {
 class WaylandWindowImpl final : public WindowImpl {
 public:
-    WaylandWindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo);
+    WaylandWindowImpl(const WindowInfo& windowInfo);
 
     ~WaylandWindowImpl();
 
@@ -27,7 +27,7 @@ public:
 
     void SetMouseCursorVisible(bool visible) override;
 
-    Surface& CreateSurface() override;
+    GfxPlatformWindowHandle GetNativeWindowHandle() const override;
 
 private:
     // registry

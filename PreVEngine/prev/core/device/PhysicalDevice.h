@@ -3,76 +3,35 @@
 
 #include "../Core.h"
 
-#include "DeviceExtensions.h"
-
+#include <cstdint>
 #include <string>
 #include <vector>
 
 namespace prev::core::device {
 class PhysicalDevice {
 public:
-    PhysicalDevice(const VkPhysicalDevice gpu, const std::vector<std::string>& extensions = {});
+    PhysicalDevice(GfxAdapter adapter);
 
     ~PhysicalDevice() = default;
 
 public:
-    PhysicalDevice(const PhysicalDevice& other);
+    GfxAdapterInfo GetInfo() const;
 
-    PhysicalDevice& operator=(const PhysicalDevice& other);
+    GfxDeviceLimits GetLimits() const;
 
-    PhysicalDevice(PhysicalDevice&& other);
+    std::vector<GfxQueueFamilyProperties> GetQueueFamilies() const;
 
-    PhysicalDevice& operator=(PhysicalDevice&& other);
-
-public:
-    int32_t FindQueueFamily(const VkQueueFlags flags, const VkQueueFlags unwantedFlags = 0, const VkSurfaceKHR surface = VK_NULL_HANDLE) const; // Returns a QueueFamlyIndex, or -1 if none found.
-
-    std::vector<VkSurfaceFormatKHR> GetSurfaceFormats(const VkSurfaceKHR surface) const; // Returns list of supported surface formats.
-
-    VkSurfaceFormatKHR FindSurfaceFormat(const VkSurfaceKHR surface, const std::vector<VkFormat>& preferredFormats = { /*VK_FORMAT_R8G8B8A8_SRGB,*/ VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_B8G8R8A8_UNORM }) const; // Returns first supported format from given list, or DEFAULT_COLOR_FORMAT if no match was found.
-
-    VkFormat FindDepthFormat(const std::vector<VkFormat>& preferredFormats = {
-                                 VK_FORMAT_D32_SFLOAT,
-                                 VK_FORMAT_D32_SFLOAT_S8_UINT,
-                                 VK_FORMAT_D24_UNORM_S8_UINT,
-                                 VK_FORMAT_D16_UNORM_S8_UINT,
-                                 VK_FORMAT_D16_UNORM }) const; // Returns first supported depth format from list, or DEFAULT_DEFAULT_FORMAT if no match was found.
-
-public:
-    const VkPhysicalDeviceProperties& GetProperties() const;
-
-    const VkPhysicalDeviceFeatures& GetAvailableFeatures() const;
-
-    const std::vector<VkQueueFamilyProperties>& GetQueueFamilies() const;
-
-    const DeviceExtensions& GetExtensions() const;
-
-    const VkPhysicalDeviceFeatures& GetEnabledFeatures() const;
-
-    const VkPhysicalDeviceFeatures2& GetEnabledFeatures2() const;
+    // Returns the index of a queue family matching flags, or -1 if not found.
+    // Pass a valid surface to require present support.
+    int32_t FindQueueFamily(GfxQueueFlags flags, GfxQueueFlags unwantedFlags = 0, GfxSurface surface = nullptr) const;
 
     void Print() const;
 
 public:
-    operator VkPhysicalDevice() const;
+    operator GfxAdapter() const;
 
 private:
-    void EnableMultiview();
-
-private:
-    VkPhysicalDevice m_handle;
-
-    DeviceExtensions m_extensions;
-
-    std::vector<VkQueueFamilyProperties> m_queueFamilies;
-
-    VkPhysicalDeviceProperties2 m_availableProperties;
-
-    VkPhysicalDeviceFeatures2 m_availableFeatures;
-
-    VkPhysicalDeviceFeatures2 m_enabledFeatures;
-
-    VkPhysicalDeviceMultiviewFeatures m_physicalDeviceMultiviewFeatures;
+    GfxAdapter m_adapter;
 };
 } // namespace prev::core::device
 

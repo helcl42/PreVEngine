@@ -10,7 +10,7 @@
 namespace prev_test::scene::water {
 class WaterReflection final : public prev::scene::graph::SceneNode {
 public:
-    WaterReflection(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, uint32_t viewCount);
+    WaterReflection(prev::core::device::Device& device, uint32_t viewCount);
 
     ~WaterReflection() = default;
 
@@ -32,7 +32,6 @@ private:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 
     uint32_t m_viewCount;
 

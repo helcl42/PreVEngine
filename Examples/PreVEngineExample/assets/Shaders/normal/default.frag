@@ -20,8 +20,10 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 	uint castedByShadows;
 } uboFS;
 
-layout(binding = 2) uniform sampler2D colorSampler;
-layout(binding = 3) uniform sampler2DArray depthSampler;
+layout(binding = 2) uniform texture2D colorTexture;
+layout(binding = 3) uniform sampler colorSampler;
+layout(binding = 4) uniform texture2DArray depthTexture;
+layout(binding = 5) uniform sampler depthSampler;
 
 layout(location = 0) in vec2 inTextureCoord;
 layout(location = 1) in vec3 inNormal;
@@ -41,12 +43,12 @@ void main()
 		discard; 
 	}
 
-	vec4 textureColor = texture(colorSampler, inTextureCoord);
+vec4 textureColor = texture(sampler2D(colorTexture, colorSampler), inTextureCoord);
 
 	float shadow = 1.0;
 	if(uboFS.castedByShadows != 0)
 	{
-		shadow = GetShadow(depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.02);
+		shadow = GetShadow(depthTexture, depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.02);
 	}
 
 	const vec3 unitNormal = normalize(inNormal);

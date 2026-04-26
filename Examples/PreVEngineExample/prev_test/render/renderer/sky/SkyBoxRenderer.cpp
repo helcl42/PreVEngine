@@ -11,12 +11,10 @@
 #include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
-#include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::sky {
-SkyBoxRenderer::SkyBoxRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
+SkyBoxRenderer::SkyBoxRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
     : m_device{ device }
-    , m_allocator{ allocator }
     , m_renderPass{ renderPass }
     , m_scene{ scene }
 {
@@ -27,23 +25,24 @@ void SkyBoxRenderer::Init()
     // clang-format off
     m_shader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/skybox_vert.spv") },
-            { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/skybox_frag.spv") }
+            { GFX_SHADER_STAGE_VERTEX, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/skybox_vert.spv") },
+            { GFX_SHADER_STAGE_FRAGMENT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/skybox_frag.spv") }
         })
-        .AddVertexInputAttributeDescriptions({
-            prev::util::vk::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
-            prev::util::vk::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
-            prev::util::vk::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 }))
+        .AddVertexInputAttributes({
+            prev::render::shader::VertexInputAttribute{ 0, 0, GFX_FORMAT_R32G32B32_FLOAT, 0 },
+            prev::render::shader::VertexInputAttribute{ 0, 1, GFX_FORMAT_R32G32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })},
+            prev::render::shader::VertexInputAttribute{ 0, 2, GFX_FORMAT_R32G32B32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })}
         })
-        .AddVertexInputBindingDescriptions({
-            prev::util::vk::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        .AddVertexInputBindings({
+            prev::render::shader::VertexInputBinding{ 0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), GFX_VERTEX_STEP_MODE_VERTEX }
         })
         .AddDescriptorSets({
-            { "uboVS", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT },
-            { "uboFS", 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT },
-            { "cubeMap1", 2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }
+            { "uboVS", 0, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_VERTEX },
+            { "uboFS", 1, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_FRAGMENT },
+            { "cubeMap1Texture", 2, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
+            { "cubeMap1Sampler", 3, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT }
         })
-        .SetDescriptorPoolCapacity(m_descriptorCount)
+        .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on
 
@@ -51,32 +50,32 @@ void SkyBoxRenderer::Init()
 
     // clang-format off
     m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ m_device, *m_shader, m_renderPass }
-        .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+        .SetPrimitiveTopology(GFX_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
         .SetDepthTestEnabled(false)
         .SetDepthWriteEnabled(false)
         .SetBlendingModeEnabled(false)
         .SetAdditiveBlendingEnabled(false)
-        .SetPolygonMode(VK_POLYGON_MODE_FILL)
-        .SetCullingMode(VK_CULL_MODE_BACK_BIT)
+        .SetPolygonMode(GFX_POLYGON_MODE_FILL)
+        .SetCullingMode(GFX_CULL_MODE_FRONT)
         .Build();
     // clang-format on
 
     LOGI("Skybox Pipeline created");
 
-    m_uniformsPoolVS = prev::render::buffer::BufferPoolBuilder{ m_allocator }
-                           .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
-                           .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+    m_uniformsPoolVS = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
+                           .SetHostMapped(true)
+                           .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM)
                            .SetCount(m_descriptorCount)
                            .SetStride(sizeof(UniformsVS))
-                           .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                           .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
                            .Build();
 
-    m_uniformsPoolFS = prev::render::buffer::BufferPoolBuilder{ m_allocator }
-                           .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
-                           .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+    m_uniformsPoolFS = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
+                           .SetHostMapped(true)
+                           .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM)
                            .SetCount(m_descriptorCount)
                            .SetStride(sizeof(UniformsFS))
-                           .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                           .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
                            .Build();
 
     LOGI("Skybox Uniforms Pools created");
@@ -93,12 +92,11 @@ void SkyBoxRenderer::BeforeRender(const NormalRenderContext& renderContext)
 
 void SkyBoxRenderer::PreRender(const NormalRenderContext& renderContext)
 {
-    const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
-    const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
+    const GfxViewport viewport{ static_cast<float>(renderContext.rect.origin.x), static_cast<float>(renderContext.rect.origin.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 1.0f };
 
-    vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-    vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
-    vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
+    gfxRenderPassEncoderSetPipeline(renderContext.renderPassEncoder, *m_pipeline);
+    gfxRenderPassEncoderSetViewport(renderContext.renderPassEncoder, &viewport);
+    gfxRenderPassEncoderSetScissorRect(renderContext.renderPassEncoder, &renderContext.rect);
 }
 
 void SkyBoxRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
@@ -136,19 +134,17 @@ void SkyBoxRenderer::Render(const NormalRenderContext& renderContext, const std:
     uniformsFS.upperLimit = glm::vec4(0.03f);
     uboFS.Write(uniformsFS);
 
-    m_shader->Bind("cubeMap1", *skyBoxComponent->GetMaterial()->GetImageBuffer(), *m_colorSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_shader->Bind("cubeMap1Texture", *skyBoxComponent->GetMaterial()->GetImageBuffer());
+    m_shader->Bind("cubeMap1Sampler", *m_colorSampler);
     m_shader->Bind("uboVS", uboVS);
     m_shader->Bind("uboFS", uboFS);
 
-    const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-    const VkBuffer vertexBuffers[] = { *skyBoxComponent->GetModel()->GetVertexBuffer() };
-    const VkDeviceSize offsets[] = { 0 };
+    const GfxBindGroup descriptorSet = m_shader->UpdateNextBindGroup();
+    gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *skyBoxComponent->GetModel()->GetVertexBuffer(), 0, skyBoxComponent->GetModel()->GetVertexBuffer()->GetSize());
+    gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *skyBoxComponent->GetModel()->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, skyBoxComponent->GetModel()->GetIndexBuffer()->GetSize());
+    gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 
-    vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-    vkCmdBindIndexBuffer(renderContext.commandBuffer, *skyBoxComponent->GetModel()->GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
-    vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
-
-    vkCmdDrawIndexed(renderContext.commandBuffer, skyBoxComponent->GetModel()->GetMesh()->GetIndicesCount(), 1, 0, 0, 0);
+    gfxRenderPassEncoderDrawIndexed(renderContext.renderPassEncoder, skyBoxComponent->GetModel()->GetMesh()->GetIndicesCount(), 1, 0, 0, 0);
 }
 
 void SkyBoxRenderer::PostRender(const NormalRenderContext& renderContext)

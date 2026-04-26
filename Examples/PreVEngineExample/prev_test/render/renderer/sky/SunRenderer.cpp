@@ -12,12 +12,10 @@
 #include <prev/render/query/QueryPoolBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
-#include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::sky {
-SunRenderer::SunRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
+SunRenderer::SunRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
     : m_device{ device }
-    , m_allocator{ allocator }
     , m_renderPass{ renderPass }
     , m_scene{ scene }
 {
@@ -28,21 +26,21 @@ void SunRenderer::Init()
     // clang-format off
     m_shader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sun_occlusion_vert.spv") },
-            { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sun_occlusion_frag.spv") }
+            { GFX_SHADER_STAGE_VERTEX, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sun_occlusion_vert.spv") },
+            { GFX_SHADER_STAGE_FRAGMENT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sun_occlusion_frag.spv") }
         })
-        .AddVertexInputAttributeDescriptions({
-            prev::util::vk::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
-            prev::util::vk::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
-            prev::util::vk::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 }))
+        .AddVertexInputAttributes({
+            prev::render::shader::VertexInputAttribute{ 0, 0, GFX_FORMAT_R32G32B32_FLOAT, 0 },
+            prev::render::shader::VertexInputAttribute{ 0, 1, GFX_FORMAT_R32G32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })},
+            prev::render::shader::VertexInputAttribute{ 0, 2, GFX_FORMAT_R32G32B32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })}
         })
-        .AddVertexInputBindingDescriptions({
-            prev::util::vk::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX)
+        .AddVertexInputBindings({
+            prev::render::shader::VertexInputBinding{ 0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), GFX_VERTEX_STEP_MODE_VERTEX }
         })
         .AddDescriptorSets({
-            { "uboVS", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT }
+            { "uboVS", 0, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_VERTEX }
         })
-        .SetDescriptorPoolCapacity(m_descriptorCount)
+        .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on
 
@@ -50,30 +48,30 @@ void SunRenderer::Init()
 
     // clang-format off
     m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ m_device, *m_shader, m_renderPass }
-        .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+        .SetPrimitiveTopology(GFX_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
         .SetDepthTestEnabled(true)
         .SetDepthWriteEnabled(true)
         .SetBlendingModeEnabled(true)
         .SetAdditiveBlendingEnabled(false)
-        .SetPolygonMode(VK_POLYGON_MODE_FILL)
-        .SetCullingMode(VK_CULL_MODE_BACK_BIT)
+        .SetPolygonMode(GFX_POLYGON_MODE_FILL)
+        .SetCullingMode(GFX_CULL_MODE_BACK)
         .Build();
     // clang-format on
 
     LOGI("Sun Pipeline created");
 
-    m_uniformsPoolVS = prev::render::buffer::BufferPoolBuilder{ m_allocator }
-                           .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
-                           .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+    m_uniformsPoolVS = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
+                           .SetHostMapped(true)
+                           .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM)
                            .SetCount(m_descriptorCount)
                            .SetStride(sizeof(UniformsVS))
-                           .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                           .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
                            .Build();
 
     LOGI("Sun Uniforms Pools created");
 
     m_queryPool = prev::render::query::QueryPoolBuilder{ m_device }
-                      .SetQueryType(VK_QUERY_TYPE_OCCLUSION)
+                      .SetQueryType(GFX_QUERY_TYPE_OCCLUSION)
                       .SetPoolCount(QueryPoolCount)
                       .SetQueryCount(MAX_VIEW_COUNT)
                       .Build();
@@ -84,30 +82,23 @@ void SunRenderer::Init()
 
 void SunRenderer::BeforeRender(const NormalRenderContext& renderContext)
 {
-#if defined(TARGET_PLATFORM_ANDROID)
-    VkQueryResultFlags queryResultFlags{ VK_QUERY_RESULT_PARTIAL_BIT };
-#else
-    VkQueryResultFlags queryResultFlags{ VK_QUERY_RESULT_STATUS_COMPLETE_KHR };
-#endif
-    if (m_queryPool->GetQueryResult(0, queryResultFlags | VK_QUERY_RESULT_64_BIT, m_passedSamples)) {
+    if (m_queryPool->GetQueryResult<uint64_t>(0, m_passedSamples)) {
 #if defined(TARGET_PLATFORM_IOS) || defined(TARGET_PLATFORM_MACOS)
         const float ratio{ m_passedSamples > 0.0f ? 0.5f : 0.0f };
 #else
-        const float ratio{ glm::clamp((static_cast<float>(m_passedSamples) / static_cast<float>(m_maxNumberOfSamples * m_renderPass.GetSamplesCount())) * 0.5f, 0.0f, 1.0f) };
+        const float ratio{ glm::clamp((static_cast<float>(m_passedSamples) / static_cast<float>(m_maxNumberOfSamples * m_renderPass.GetSampleCount())) * 0.5f, 0.0f, 1.0f) };
 #endif
         prev::event::EventChannel::Post(prev_test::render::renderer::sky::SunVisibilityEvent{ ratio });
     }
-    m_queryPool->Reset(renderContext.commandBuffer);
 }
 
 void SunRenderer::PreRender(const NormalRenderContext& renderContext)
 {
-    const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
-    const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
+        const GfxViewport viewport{ static_cast<float>(renderContext.rect.origin.x), static_cast<float>(renderContext.rect.origin.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 1.0f };
 
-    vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-    vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
-    vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
+    gfxRenderPassEncoderSetPipeline(renderContext.renderPassEncoder, *m_pipeline);
+    gfxRenderPassEncoderSetViewport(renderContext.renderPassEncoder, &viewport);
+    gfxRenderPassEncoderSetScissorRect(renderContext.renderPassEncoder, &renderContext.rect);
 }
 
 void SunRenderer::Render(const NormalRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
@@ -120,13 +111,13 @@ void SunRenderer::Render(const NormalRenderContext& renderContext, const std::sh
     const auto lightComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>(m_scene.GetRootNode(), { TAG_MAIN_LIGHT }) };
 
     const float aspectRatio{
-        static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) / static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y)
+        static_cast<float>(renderContext.rect.extent.width - renderContext.rect.origin.x) / static_cast<float>(renderContext.rect.extent.height - renderContext.rect.origin.y)
     };
     const float xScale{ sunComponent->GetFlare().GetScale() };
     const float yScale{ xScale * aspectRatio };
 
-    m_maxNumberOfSamples = static_cast<uint64_t>(xScale * static_cast<float>(renderContext.rect.extent.width - renderContext.rect.offset.x) * yScale * static_cast<float>(renderContext.rect.extent.height - renderContext.rect.offset.y));
-    m_queryPool->BeginQuery(0, renderContext.commandBuffer);
+    m_maxNumberOfSamples = static_cast<uint64_t>(xScale * static_cast<float>(renderContext.rect.extent.width - renderContext.rect.origin.x) * yScale * static_cast<float>(renderContext.rect.extent.height - renderContext.rect.origin.y));
+    m_queryPool->BeginQuery(0, renderContext.renderPassEncoder);
 
     m_uniformsPoolVS->MoveToNext();
 
@@ -141,17 +132,14 @@ void SunRenderer::Render(const NormalRenderContext& renderContext, const std::sh
 
     m_shader->Bind("uboVS", uboVS);
 
-    const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-    const VkBuffer vertexBuffers[] = { *sunComponent->GetModel()->GetVertexBuffer() };
-    const VkDeviceSize offsets[] = { 0 };
+    const GfxBindGroup descriptorSet = m_shader->UpdateNextBindGroup();
+        gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *sunComponent->GetModel()->GetVertexBuffer(), 0, sunComponent->GetModel()->GetVertexBuffer()->GetSize());
+    gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *sunComponent->GetModel()->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, sunComponent->GetModel()->GetIndexBuffer()->GetSize());
+    gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 
-    vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-    vkCmdBindIndexBuffer(renderContext.commandBuffer, *sunComponent->GetModel()->GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
-    vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+    gfxRenderPassEncoderDrawIndexed(renderContext.renderPassEncoder, sunComponent->GetModel()->GetMesh()->GetIndicesCount(), 1, 0, 0, 0);
 
-    vkCmdDrawIndexed(renderContext.commandBuffer, sunComponent->GetModel()->GetMesh()->GetIndicesCount(), 1, 0, 0, 0);
-
-    m_queryPool->EndQuery(0, renderContext.commandBuffer);
+    m_queryPool->EndQuery(0, renderContext.renderPassEncoder);
 }
 
 void SunRenderer::PostRender(const NormalRenderContext& renderContext)
@@ -160,6 +148,7 @@ void SunRenderer::PostRender(const NormalRenderContext& renderContext)
 
 void SunRenderer::AfterRender(const NormalRenderContext& renderContext)
 {
+    m_queryPool->Resolve(renderContext.commandEncoder);
 }
 
 void SunRenderer::ShutDown()

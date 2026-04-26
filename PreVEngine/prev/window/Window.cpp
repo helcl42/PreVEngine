@@ -3,15 +3,14 @@
 #include "impl/WindowImplFactory.h"
 
 namespace prev::window {
-Window::Window(const prev::core::instance::Instance& instance, const WindowCreateInfo& createInfo)
-    : m_windowImpl{ impl::WindowImplFactory{}.Create(instance, impl::WindowInfo{ createInfo.headless, createInfo.title, { createInfo.left, createInfo.top }, { createInfo.width, createInfo.height }, createInfo.fullScreen }) }
+Window::Window(const WindowCreateInfo& createInfo)
+    : m_windowImpl{ impl::WindowImplFactory{}.Create(impl::WindowInfo{ createInfo.headless, createInfo.title, { createInfo.left, createInfo.top }, { createInfo.width, createInfo.height }, createInfo.fullScreen }) }
 {
 }
 
-impl::Surface& Window::ResetSurface()
+GfxPlatformWindowHandle Window::GetNativeWindowHandle() const
 {
-    m_windowImpl->DestroySurface();
-    return m_windowImpl->CreateSurface();
+    return m_windowImpl->GetNativeWindowHandle();
 }
 
 impl::Position Window::GetPosition() const

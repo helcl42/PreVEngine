@@ -4,12 +4,11 @@
 #include "FontRenderComponent.h"
 
 #include <prev/core/device/Device.h>
-#include <prev/core/memory/Allocator.h>
 
 namespace prev_test::component::font {
 class FontRenderComponentsFactory final {
 public:
-    FontRenderComponentsFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator);
+    FontRenderComponentsFactory(prev::core::device::Device& device);
 
     ~FontRenderComponentsFactory() = default;
 
@@ -18,7 +17,7 @@ public:
     std::unique_ptr<IFontRenderComponent<TextType>> Create(const std::string& fontPath, const std::string& fontTexture, const float aspectRatio, const float lineHeight, const int padding) const
     {
         auto fontMetaData{ CreateFontMetadata(fontPath, fontTexture, aspectRatio, lineHeight, padding) };
-        return std::make_unique<FontRenderComponent<TextType>>(m_allocator, std::move(fontMetaData));
+        return std::make_unique<FontRenderComponent<TextType>>(m_device, std::move(fontMetaData));
     }
 
 private:
@@ -27,7 +26,6 @@ private:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 };
 } // namespace prev_test::component::font
 

@@ -1,8 +1,8 @@
 #include "HeadlessWindowImpl.h"
 
 namespace prev::window::impl::headless {
-HeadlessWindowImpl::HeadlessWindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo)
-    : WindowImpl(instance)
+HeadlessWindowImpl::HeadlessWindowImpl(const WindowInfo& windowInfo)
+    : WindowImpl()
 {
     m_info = windowInfo;
 
@@ -46,8 +46,9 @@ void HeadlessWindowImpl::SetMouseCursorVisible(bool visible)
     m_mouseCursorVisible = visible;
 }
 
-Surface& HeadlessWindowImpl::CreateSurface()
+GfxPlatformWindowHandle HeadlessWindowImpl::GetNativeWindowHandle() const
 {
-    return *this;
+    GfxPlatformWindowHandle handle{};
+    return handle;
 }
 } // namespace prev::window::impl::headless

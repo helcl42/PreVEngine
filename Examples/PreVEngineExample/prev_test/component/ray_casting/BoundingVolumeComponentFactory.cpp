@@ -6,14 +6,14 @@
 #include "../../render/mesh/MeshUtil.h"
 
 namespace prev_test::component::ray_casting {
-BoundingVolumeComponentFactory::BoundingVolumeComponentFactory(prev::core::memory::Allocator& allocator)
-    : m_allocator{ allocator }
+BoundingVolumeComponentFactory::BoundingVolumeComponentFactory(const prev::core::device::Device& device)
+    : m_device{ device }
 {
 }
 
 std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::CreateAABB(const prev::util::intersection::AABB& aabb, const glm::vec3& scale, const glm::vec3& offset) const
 {
-    return std::make_unique<AABBBoundingVolumeComponent>(m_allocator, aabb, scale, offset);
+    return std::make_unique<AABBBoundingVolumeComponent>(m_device, aabb, scale, offset);
 }
 
 std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::CreateAABB(const std::shared_ptr<prev_test::render::IMesh>& mesh, const glm::vec3& scale, const glm::vec3& offset) const
@@ -25,7 +25,7 @@ std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::Create
 
 std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::CreateOBB(const prev::util::intersection::OBB& obb, const glm::vec3& scale, const glm::vec3& offset) const
 {
-    return std::make_unique<OBBBoundingVolumeComponent>(m_allocator, obb, scale, offset);
+    return std::make_unique<OBBBoundingVolumeComponent>(m_device, obb, scale, offset);
 }
 
 std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::CreateOBB(const std::shared_ptr<prev_test::render::IMesh>& mesh, const glm::vec3& scale, const glm::vec3& offset) const
@@ -38,7 +38,7 @@ std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::Create
 
 std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::CreateSphere(const prev::util::intersection::Sphere& sphere, const float scale, const glm::vec3& offset) const
 {
-    return std::make_unique<SphereBoundingVolumeComponent>(m_allocator, sphere, scale, offset);
+    return std::make_unique<SphereBoundingVolumeComponent>(m_device, sphere, scale, offset);
 }
 
 std::unique_ptr<IBoundingVolumeComponent> BoundingVolumeComponentFactory::CreateSphere(const std::shared_ptr<prev_test::render::IMesh>& mesh, const float scale, const glm::vec3& offset) const

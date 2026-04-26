@@ -10,7 +10,7 @@ struct MacState;
 
 class MacOSWindowImpl final : public WindowImpl {
 public:
-    MacOSWindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo);
+    MacOSWindowImpl(const WindowInfo& windowInfo);
 
     ~MacOSWindowImpl();
 
@@ -25,7 +25,7 @@ public:
 
     void SetMouseCursorVisible(bool visible) override;
 
-    Surface& CreateSurface() override;
+    GfxPlatformWindowHandle GetNativeWindowHandle() const override;
 
 private:
     std::unique_ptr<MacState> m_state{};

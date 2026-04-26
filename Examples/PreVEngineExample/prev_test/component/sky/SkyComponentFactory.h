@@ -4,12 +4,11 @@
 #include "ISkyComponent.h"
 
 #include <prev/core/device/Device.h>
-#include <prev/core/memory/Allocator.h>
 
 namespace prev_test::component::sky {
 class SkyComponentFactory final {
 public:
-    SkyComponentFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator);
+    SkyComponentFactory(prev::core::device::Device& device);
 
     ~SkyComponentFactory() = default;
 
@@ -19,7 +18,6 @@ public:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 };
 } // namespace prev_test::component::sky
 

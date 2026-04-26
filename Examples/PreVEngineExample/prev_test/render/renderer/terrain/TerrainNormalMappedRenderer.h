@@ -19,7 +19,7 @@
 namespace prev_test::render::renderer::terrain {
 class TerrainNormalMappedRenderer final : public IRenderer<NormalRenderContext> {
 public:
-    TerrainNormalMappedRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
+    TerrainNormalMappedRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
 
     ~TerrainNormalMappedRenderer() = default;
 
@@ -149,7 +149,6 @@ private:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 
     prev::render::pass::RenderPass& m_renderPass;
 

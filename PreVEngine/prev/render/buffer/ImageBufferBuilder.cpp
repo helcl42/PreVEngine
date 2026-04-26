@@ -1,72 +1,57 @@
 #include "ImageBufferBuilder.h"
 
 #include "../../core/CommandsExecutor.h"
-#include "../../core/Formats.h"
 #include "../../util/MathUtils.h"
-#include "../../util/VkUtils.h"
 
 #include <stdexcept>
 
 namespace prev::render::buffer {
 namespace {
-    VkImageAspectFlags DeduceApectMaskFromFormat(const VkFormat format)
+    GfxTextureViewType DeduceViewTypeFromTextureType(const GfxTextureType type)
     {
-        VkImageAspectFlags result{ VK_IMAGE_ASPECT_NONE_KHR };
-        if (core::format::HasDepthComponent(format)) {
-            result |= VK_IMAGE_ASPECT_DEPTH_BIT;
-            if (core::format::HasStencilComponent(format)) {
-                result |= VK_IMAGE_ASPECT_STENCIL_BIT;
-            }
-        } else {
-            result |= VK_IMAGE_ASPECT_COLOR_BIT;
-        }
-        return result;
-    }
-
-    VkImageViewType DeduceImageViewTypeFromImageType(const VkImageType imageType)
-    {
-        switch (imageType) {
-        case VK_IMAGE_TYPE_1D:
-            return VK_IMAGE_VIEW_TYPE_1D;
-        case VK_IMAGE_TYPE_3D:
-            return VK_IMAGE_VIEW_TYPE_3D;
-        case VK_IMAGE_TYPE_2D:
+        switch (type) {
+        case GFX_TEXTURE_TYPE_1D:
+            return GFX_TEXTURE_VIEW_TYPE_1D;
+        case GFX_TEXTURE_TYPE_3D:
+            return GFX_TEXTURE_VIEW_TYPE_3D;
+        case GFX_TEXTURE_TYPE_2D:
         default:
-            return VK_IMAGE_VIEW_TYPE_2D;
+            return GFX_TEXTURE_VIEW_TYPE_2D;
         }
     }
 } // namespace
 
-ImageBufferBuilder::ImageBufferBuilder(prev::core::memory::Allocator& allocator)
-    : m_allocator{ allocator }
+ImageBufferBuilder::ImageBufferBuilder(const prev::core::device::Device& device, const prev::core::device::Queue& queue)
+    : m_device{ device }
+    , m_queue{ queue }
 {
 }
 
-ImageBufferBuilder& ImageBufferBuilder::SetExtent(const VkExtent3D& extent)
+ImageBufferBuilder& ImageBufferBuilder::SetExtent(const GfxExtent3D& extent)
 {
     m_extent = extent;
     return *this;
 }
 
-ImageBufferBuilder& ImageBufferBuilder::SetFormat(VkFormat format)
+ImageBufferBuilder& ImageBufferBuilder::SetFormat(GfxFormat format)
 {
     m_format = format;
     return *this;
 }
 
-ImageBufferBuilder& ImageBufferBuilder::SetType(VkImageType type)
+ImageBufferBuilder& ImageBufferBuilder::SetType(GfxTextureType type)
 {
     m_type = type;
     return *this;
 }
 
-ImageBufferBuilder& ImageBufferBuilder::SetViewType(VkImageViewType viewType)
+ImageBufferBuilder& ImageBufferBuilder::SetViewType(GfxTextureViewType viewType)
 {
     m_viewType = viewType;
     return *this;
 }
 
-ImageBufferBuilder& ImageBufferBuilder::SetSampleCount(VkSampleCountFlagBits samples)
+ImageBufferBuilder& ImageBufferBuilder::SetSampleCount(GfxSampleCount samples)
 {
     m_sampleCount = samples;
     return *this;
@@ -84,39 +69,22 @@ ImageBufferBuilder& ImageBufferBuilder::SetLayerCount(uint32_t layerCount)
     return *this;
 }
 
-ImageBufferBuilder& ImageBufferBuilder::SetCreateFlags(VkImageCreateFlags createFlags)
-{
-    m_createFlags = createFlags;
-    return *this;
-}
-
-ImageBufferBuilder& ImageBufferBuilder::SetUsageFlags(VkImageUsageFlags usageFlags)
+ImageBufferBuilder& ImageBufferBuilder::SetUsageFlags(GfxTextureUsageFlags usageFlags)
 {
     m_usageFlags = usageFlags;
     return *this;
 }
 
-ImageBufferBuilder& ImageBufferBuilder::SetLayout(VkImageLayout layout)
+ImageBufferBuilder& ImageBufferBuilder::SetLayout(GfxTextureLayout layout)
 {
     m_layout = layout;
     return *this;
 }
 
-ImageBufferBuilder& ImageBufferBuilder::SetAspectMask(VkImageAspectFlags aspectMask)
-{
-    m_aspectMask = aspectMask;
-    return *this;
-}
-
-ImageBufferBuilder& ImageBufferBuilder::SetTiling(VkImageTiling tiling)
-{
-    m_tiling = tiling;
-    return *this;
-}
-
-ImageBufferBuilder& ImageBufferBuilder::SetLayerData(const std::vector<const uint8_t*>& layerData)
+ImageBufferBuilder& ImageBufferBuilder::SetLayerData(const std::vector<const uint8_t*>& layerData, uint64_t layerDataSize)
 {
     m_layersData = layerData;
+    m_layerDataSize = layerDataSize;
     return *this;
 }
 
@@ -130,54 +98,80 @@ std::unique_ptr<ImageBuffer> ImageBufferBuilder::Build() const
 {
     Validate();
 
-    // some logic is automatic to minimize boiler plate code for common usa cases
-    const auto imageViewType{ m_viewType == VK_IMAGE_VIEW_TYPE_MAX_ENUM ? DeduceImageViewTypeFromImageType(m_type) : m_viewType };
-    const auto aspectMask{ m_aspectMask == VK_IMAGE_ASPECT_NONE_KHR ? DeduceApectMaskFromFormat(m_format) : m_aspectMask };
-    const auto mipMapLevels{ m_mipMapEnabled ? prev::util::math::Log2(std::max(m_extent.width, m_extent.height)) + 1 : 1 };
-    const auto memoryType{ m_hostMapped ? prev::core::memory::MemoryType::HOST_MAPPED : prev::core::memory::MemoryType::DEVICE_LOCAL };
+    const auto viewType{ m_viewType == GFX_TEXTURE_VIEW_TYPE_MAX_ENUM ? DeduceViewTypeFromTextureType(m_type) : m_viewType };
+    const auto mipLevels{ m_mipMapEnabled ? prev::util::math::Log2(std::max(m_extent.width, m_extent.height)) + 1 : 1 };
 
-    VkImage image{};
-    VmaAllocation allocation{};
-    void* mappedData{};
-    m_allocator.CreateImage(m_extent, m_type, m_format, m_sampleCount, mipMapLevels, m_layerCount, m_tiling, m_usageFlags, memoryType, m_createFlags, image, allocation, &mappedData);
-
-    auto imageView{ m_hostMapped ? nullptr : prev::util::vk::CreateImageView(m_allocator.GetDevice(), image, m_format, imageViewType, mipMapLevels, aspectMask, m_layerCount) };
-
-    auto imageBuffer{ std::unique_ptr<ImageBuffer>(new ImageBuffer(m_allocator)) };
-    imageBuffer->m_extent = m_extent;
-    imageBuffer->m_format = m_format;
-    imageBuffer->m_mipLevels = mipMapLevels;
-    imageBuffer->m_image = image;
-    imageBuffer->m_allocation = allocation;
-    imageBuffer->m_type = m_type;
-    imageBuffer->m_view = imageView;
-    imageBuffer->m_viewType = imageViewType;
-    imageBuffer->m_aspectMask = aspectMask;
-    imageBuffer->m_samplesCount = m_sampleCount;
-    imageBuffer->m_mipLevels = mipMapLevels;
-    imageBuffer->m_layerCount = m_layerCount;
-    imageBuffer->m_createFlags = m_createFlags;
-    imageBuffer->m_usageFlags = m_usageFlags;
-    imageBuffer->m_layout = VK_IMAGE_LAYOUT_UNDEFINED;
-    imageBuffer->m_mappedData = mappedData;
-
-    prev::core::CommandsExecutor commandsExecutor{ m_allocator.GetDevice(), m_allocator.GetQueue() };
-    commandsExecutor.ExecuteImmediate([&](VkCommandBuffer commandBuffer) {
-        if (!m_layersData.empty()) {
-            imageBuffer->UpdateLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, commandBuffer);
-        }
-    });
-
-    if (!m_layersData.empty()) {
-        m_allocator.CopyDataToImage(m_extent, m_format, m_layersData, m_layerCount, image);
+    GfxTextureUsageFlags usageFlags{ m_usageFlags | GFX_TEXTURE_USAGE_COPY_DST };
+    if (mipLevels > 1) {
+        usageFlags |= GFX_TEXTURE_USAGE_COPY_SRC;
+    }
+    if (!m_hostMapped) {
+        usageFlags |= GFX_TEXTURE_USAGE_TEXTURE_BINDING;
     }
 
-    commandsExecutor.ExecuteImmediate([&](VkCommandBuffer commandBuffer) {
-        if (!m_layersData.empty() && mipMapLevels > 1) {
-            imageBuffer->GenerateMipMaps(commandBuffer);
+    GfxTextureDescriptor texDesc{};
+    texDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_DESCRIPTOR;
+    texDesc.type = m_type;
+    texDesc.size = m_extent;
+    texDesc.arrayLayerCount = m_layerCount;
+    texDesc.mipLevelCount = mipLevels;
+    texDesc.sampleCount = m_sampleCount;
+    texDesc.format = m_format;
+    texDesc.usage = usageFlags;
+
+    GfxTexture texture{};
+    if (gfxDeviceCreateTexture(m_device, &texDesc, &texture) != GFX_RESULT_SUCCESS || !texture) {
+        throw std::runtime_error("Could not create texture");
+    }
+
+    // Upload layer data per layer
+    if (!m_layersData.empty() && m_layerDataSize > 0) {
+        for (uint32_t layer = 0; layer < m_layerCount && layer < static_cast<uint32_t>(m_layersData.size()); ++layer) {
+            GfxOrigin3D origin{ 0, 0, 0 };
+            gfxQueueWriteTexture(m_queue, texture, &origin, &m_extent, 0 /* mipLevel */, layer, m_layersData[layer], m_layerDataSize, GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY);
         }
-        imageBuffer->UpdateLayout(m_layout, commandBuffer);
-    });
+    }
+
+    // Create texture view (not for host-mapped)
+    GfxTextureView view{};
+    if (!m_hostMapped) {
+        GfxTextureViewDescriptor viewDesc{};
+        viewDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_VIEW_DESCRIPTOR;
+        viewDesc.viewType = viewType;
+        viewDesc.format = m_format;
+        viewDesc.baseMipLevel = 0;
+        viewDesc.mipLevelCount = mipLevels;
+        viewDesc.baseArrayLayer = 0;
+        viewDesc.arrayLayerCount = m_layerCount;
+        gfxTextureCreateView(texture, &viewDesc, &view);
+    }
+
+    auto imageBuffer{ std::unique_ptr<ImageBuffer>(new ImageBuffer(m_device, m_queue)) };
+    imageBuffer->m_extent = m_extent;
+    imageBuffer->m_format = m_format;
+    imageBuffer->m_mipLevels = mipLevels;
+    imageBuffer->m_texture = texture;
+    imageBuffer->m_type = m_type;
+    imageBuffer->m_view = view;
+    imageBuffer->m_viewType = viewType;
+    imageBuffer->m_samplesCount = m_sampleCount;
+    imageBuffer->m_layerCount = m_layerCount;
+    imageBuffer->m_usageFlags = usageFlags;
+    imageBuffer->m_layout = m_layersData.empty() ? GFX_TEXTURE_LAYOUT_UNDEFINED : GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY;
+
+    // Transition to requested layout and optionally generate mipmaps
+    if (mipLevels > 1) {
+        prev::core::CommandsExecutor cmds{ m_device, m_queue };
+        cmds.ExecuteImmediate([&](GfxCommandEncoder enc) {
+            imageBuffer->GenerateMipMaps(enc);
+            imageBuffer->UpdateLayout(m_layout, enc);
+        });
+    } else if (imageBuffer->m_layout != m_layout) {
+        prev::core::CommandsExecutor cmds{ m_device, m_queue };
+        cmds.ExecuteImmediate([&](GfxCommandEncoder enc) {
+            imageBuffer->UpdateLayout(m_layout, enc);
+        });
+    }
 
     return imageBuffer;
 }
@@ -188,15 +182,15 @@ void ImageBufferBuilder::Validate() const
         throw std::runtime_error("Invalid image buffer extent - all components must have nonzero value.");
     }
 
-    if (m_format == VK_FORMAT_UNDEFINED) {
+    if (m_format == GFX_FORMAT_UNDEFINED) {
         throw std::runtime_error("Invalid image format - undefined.");
     }
 
-    if (m_layout == VK_IMAGE_LAYOUT_UNDEFINED) {
+    if (m_layout == GFX_TEXTURE_LAYOUT_UNDEFINED) {
         throw std::runtime_error("Invalid image layout - undefined.");
     }
 
-    if (m_type == VK_IMAGE_TYPE_MAX_ENUM) {
+    if (m_type == GFX_TEXTURE_TYPE_MAX_ENUM) {
         throw std::runtime_error("Invalid image type - undefined.");
     }
 }

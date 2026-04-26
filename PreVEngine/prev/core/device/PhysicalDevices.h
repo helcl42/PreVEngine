@@ -10,19 +10,21 @@
 namespace prev::core::device {
 class PhysicalDevices {
 public:
-    PhysicalDevices(const VkInstance instance);
+    PhysicalDevices(GfxInstance instance);
 
 public:
-    std::optional<PhysicalDevice> FindPresentable(const VkSurfaceKHR surface, const int32_t hintIndex = -1) const; // Returns first device able to present to surface, or null if none.
+    // Returns an adapter at hintIndex, or the first discrete/high-performance one if hintIndex < 0.
+    // If surface is provided, only adapters that can present to it are considered.
+    std::optional<PhysicalDevice> Find(GfxSurface surface, int32_t hintIndex = -1) const;
 
     void Print() const;
 
     size_t GetCount() const;
 
-    const PhysicalDevice& operator[](const size_t i) const;
+    const PhysicalDevice& operator[](size_t i) const;
 
 private:
-    std::vector<std::unique_ptr<PhysicalDevice>> m_gpuList;
+    std::vector<std::unique_ptr<PhysicalDevice>> m_adapters;
 };
 } // namespace prev::core::device
 

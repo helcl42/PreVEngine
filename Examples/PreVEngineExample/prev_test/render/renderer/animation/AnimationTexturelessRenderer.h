@@ -9,7 +9,6 @@
 #include "../../../component/shadow/ShadowsCommon.h"
 
 #include <prev/core/device/Device.h>
-#include <prev/core/memory/Allocator.h>
 #include <prev/render/buffer/BufferPool.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/pipeline/Pipeline.h>
@@ -21,7 +20,7 @@
 namespace prev_test::render::renderer::animation {
 class AnimationTexturelessRenderer final : public IRenderer<NormalRenderContext> {
 public:
-    AnimationTexturelessRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
+    AnimationTexturelessRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
 
     ~AnimationTexturelessRenderer() = default;
 
@@ -147,7 +146,6 @@ private:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 
     prev::render::pass::RenderPass& m_renderPass;
 

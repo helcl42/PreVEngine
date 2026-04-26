@@ -11,10 +11,9 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::scene {
-Stone::Stone(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
+Stone::Stone(prev::core::device::Device& device, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
     : SceneNode()
     , m_device{ device }
-    , m_allocator{ allocator }
     , m_initialPosition(position)
     , m_initialOrientation(orientation)
     , m_initialScale(scale)
@@ -30,12 +29,12 @@ void Stone::Init()
     }
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, { TAG_TRANSFORM_COMPONENT });
 
-    prev_test::component::render::RenderComponentFactory componentFactory{ m_device, m_allocator };
+    prev_test::component::render::RenderComponentFactory componentFactory{ m_device };
     std::shared_ptr<prev_test::component::render::IRenderComponent> renderComponent = componentFactory.CreateModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.fbx"), { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder.png") }, { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_normal.png") }, { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Boulder/boulder_cone.png") }, true, true);
     renderComponent->GetMaterial()->SetHeightScale(0.01f);
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::render::IRenderComponent>(GetThis(), renderComponent, { TAG_RENDER_CONE_STEP_MAPPED_COMPONENT });
 
-    prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{ m_allocator };
+    prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{ m_device };
     m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(renderComponent->GetModel()->GetMesh());
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, { TAG_BOUNDING_VOLUME_COMPONENT });
 

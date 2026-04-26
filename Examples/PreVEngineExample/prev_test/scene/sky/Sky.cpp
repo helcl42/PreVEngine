@@ -6,10 +6,9 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::scene::sky {
-Sky::Sky(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
+Sky::Sky(prev::core::device::Device& device)
     : SceneNode()
     , m_device{ device }
-    , m_allocator{ allocator }
 {
 }
 
@@ -17,7 +16,7 @@ void Sky::Init()
 {
     SceneNode::Init();
 
-    m_skyComponent = prev_test::component::sky::SkyComponentFactory{ m_device, m_allocator }.Create();
+    m_skyComponent = prev_test::component::sky::SkyComponentFactory{ m_device }.Create();
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::sky::ISkyComponent>(GetThis(), m_skyComponent, { TAG_SKY_RENDER_COMPONENT });
 }
 

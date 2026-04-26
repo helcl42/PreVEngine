@@ -9,10 +9,9 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::scene::robot {
-CubeRobotPart::CubeRobotPart(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
+CubeRobotPart::CubeRobotPart(prev::core::device::Device& device, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
     : SceneNode()
     , m_device{ device }
-    , m_allocator{ allocator }
     , m_initialPosition(position)
     , m_initialOrientation(orientation)
     , m_initialScale(scale)
@@ -22,11 +21,11 @@ CubeRobotPart::CubeRobotPart(prev::core::device::Device& device, prev::core::mem
 
 void CubeRobotPart::Init()
 {
-    prev_test::component::render::RenderComponentFactory renderComponentFactory{ m_device, m_allocator };
+    prev_test::component::render::RenderComponentFactory renderComponentFactory{ m_device };
     std::shared_ptr<prev_test::component::render::IRenderComponent> renderComponent = renderComponentFactory.CreateCubeRenderComponent(m_texturePath, true, true);
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::render::IRenderComponent>(GetThis(), renderComponent, { TAG_RENDER_COMPONENT });
 
-    prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{ m_allocator };
+    prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{ m_device };
     m_boundingVolumeComponent = bondingVolumeFactory.CreateOBB(renderComponent->GetModel()->GetMesh());
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, { TAG_BOUNDING_VOLUME_COMPONENT });
 

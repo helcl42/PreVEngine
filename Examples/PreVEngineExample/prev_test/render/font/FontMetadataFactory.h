@@ -4,7 +4,6 @@
 #include "FontMetadata.h"
 
 #include <prev/core/device/Device.h>
-#include <prev/core/memory/Allocator.h>
 #include <prev/render/buffer/ImageBuffer.h>
 
 #include <map>
@@ -13,7 +12,7 @@
 namespace prev_test::render::font {
 class FontMetadataFactory final {
 public:
-    FontMetadataFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator);
+    FontMetadataFactory(prev::core::device::Device& device);
 
     ~FontMetadataFactory() = default;
 
@@ -23,7 +22,6 @@ public:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 };
 
 } // namespace prev_test::render::font

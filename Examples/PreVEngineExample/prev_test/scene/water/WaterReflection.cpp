@@ -7,10 +7,9 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::scene::water {
-WaterReflection::WaterReflection(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, uint32_t viewCount)
+WaterReflection::WaterReflection(prev::core::device::Device& device, uint32_t viewCount)
     : SceneNode()
     , m_device{ device }
-    , m_allocator{ allocator }
     , m_viewCount{ viewCount }
 {
 }
@@ -48,10 +47,10 @@ void WaterReflection::operator()(const prev::core::NewIterationEvent& newIterati
 
 void WaterReflection::CreateReflectionComponent()
 {
-    const VkExtent2D extent{ m_viewPortSize.x / prev_test::component::water::REFLECTION_EXTENT_DIVIDER, m_viewPortSize.y / prev_test::component::water::REFLECTION_EXTENT_DIVIDER };
+    const GfxExtent2D extent{ m_viewPortSize.x / prev_test::component::water::REFLECTION_EXTENT_DIVIDER, m_viewPortSize.y / prev_test::component::water::REFLECTION_EXTENT_DIVIDER };
 
-    prev_test::component::common::OffScreenRenderPassComponentFactory componentFactory{ m_device, m_allocator };
-    m_reflectionComponent = componentFactory.Create(extent, VK_FORMAT_D32_SFLOAT, { VK_FORMAT_B8G8R8A8_UNORM }, m_viewCount);
+    prev_test::component::common::OffScreenRenderPassComponentFactory componentFactory{ m_device };
+    m_reflectionComponent = componentFactory.Create(extent, GFX_FORMAT_DEPTH32_FLOAT, { GFX_FORMAT_B8G8R8A8_UNORM }, m_viewCount);
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::common::IOffScreenRenderPassComponent>(GetThis(), m_reflectionComponent, { TAG_WATER_REFLECTION_RENDER_COMPONENT });
 }
 

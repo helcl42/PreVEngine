@@ -8,7 +8,6 @@
 
 #include <prev/core/CoreEvents.h>
 #include <prev/core/device/Device.h>
-#include <prev/core/memory/Allocator.h>
 #include <prev/event/EventHandler.h>
 #include <prev/input/keyboard/KeyboardEvents.h>
 #include <prev/input/mouse/MouseEvents.h>
@@ -18,7 +17,7 @@
 namespace prev_test::scene {
 class Player final : public prev::scene::graph::SceneNode {
 public:
-    Player(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale);
+    Player(prev::core::device::Device& device, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale);
 
     ~Player() = default;
 
@@ -58,7 +57,6 @@ private:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 
     glm::vec3 m_initialPosition;
 

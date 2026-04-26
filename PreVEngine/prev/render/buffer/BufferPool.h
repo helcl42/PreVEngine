@@ -10,7 +10,7 @@ class BufferPoolBuilder;
 
 class BufferPool final {
 private:
-    BufferPool(prev::core::memory::Allocator& allocator, VkBuffer buffer, VmaAllocation allocation, std::vector<std::unique_ptr<Buffer>>&& buffers);
+    explicit BufferPool(std::vector<std::unique_ptr<Buffer>>&& buffers);
 
 public:
     ~BufferPool() = default;
@@ -24,12 +24,6 @@ public:
     friend class BufferPoolBuilder;
 
 private:
-    prev::core::memory::Allocator& m_allocator;
-
-    VkBuffer m_buffer;
-
-    VmaAllocation m_allocation;
-
     std::vector<std::unique_ptr<Buffer>> m_buffers;
 
     prev::util::CircularIndex<uint32_t> m_index{ 0 };

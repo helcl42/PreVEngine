@@ -8,21 +8,20 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::scene {
-Fire::Fire(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const glm::vec3& initPosition)
+Fire::Fire(prev::core::device::Device& device, const glm::vec3& initPosition)
     : SceneNode()
     , m_device{ device }
-    , m_allocator{ allocator }
     , m_initialPosition(initPosition)
 {
 }
 
 void Fire::Init()
 {
-    prev_test::component::particle::ParticleSystemComponentFactory particleSystemComponentFactory{ m_device, m_allocator };
+    prev_test::component::particle::ParticleSystemComponentFactory particleSystemComponentFactory{ m_device };
     m_particleSystemComponent = particleSystemComponentFactory.CreateRandomInCone(glm::vec3(0.0f, 1.0f, 0.0f), 25.0f);
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::particle::IParticleSystemComponent>(GetThis(), m_particleSystemComponent, { TAG_PARTICLE_SYSTEM_COMPONENT });
 
-    prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{ m_allocator };
+    prev_test::component::ray_casting::BoundingVolumeComponentFactory bondingVolumeFactory{ m_device };
     m_boundingVolumeComponent = bondingVolumeFactory.CreateAABB(prev::util::intersection::AABB(glm::vec3{ -0.5 }, glm::vec3{ 0.5 }), glm::vec3{ 1.0f }, {});
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(GetThis(), m_boundingVolumeComponent, { TAG_BOUNDING_VOLUME_COMPONENT });
 

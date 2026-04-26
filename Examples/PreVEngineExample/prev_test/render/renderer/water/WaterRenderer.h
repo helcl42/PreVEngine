@@ -17,7 +17,7 @@
 namespace prev_test::render::renderer::water {
 class WaterRenderer final : public IRenderer<NormalRenderContext> {
 public:
-    WaterRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
+    WaterRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
 
     ~WaterRenderer() = default;
 
@@ -99,7 +99,6 @@ private:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 
     prev::render::pass::RenderPass& m_renderPass;
 

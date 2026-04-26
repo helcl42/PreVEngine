@@ -3,7 +3,6 @@
 #ifdef VK_USE_PLATFORM_XCB_KHR
 
 #include "../../../common/Logger.h"
-#include "../../../util/VkUtils.h"
 
 #ifdef ENABLE_MULTITOUCH
 #include <X11/extensions/XInput2.h> // MultiTouch
@@ -70,8 +69,8 @@ namespace {
     }
 } // namespace
 
-XcbWindowImpl::XcbWindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo)
-    : WindowImpl(instance)
+XcbWindowImpl::XcbWindowImpl(const WindowInfo& windowInfo)
+    : WindowImpl()
 {
     LOGI("Creating XCB-Window...");
 
@@ -147,7 +146,6 @@ XcbWindowImpl::XcbWindowImpl(const prev::core::instance::Instance& instance, con
 
 XcbWindowImpl::~XcbWindowImpl()
 {
-    DestroySurface();
 
     ShutDownTouch();
 
@@ -234,17 +232,9 @@ void XcbWindowImpl::SetMouseCursorVisible(bool visible)
     }
 }
 
-Surface& XcbWindowImpl::CreateSurface()
+GfxPlatformWindowHandle XcbWindowImpl::GetNativeWindowHandle() const
 {
-    if (m_vkSurface == VK_NULL_HANDLE) {
-        VkXcbSurfaceCreateInfoKHR xcbCreateInfo{ prev::util::vk::CreateStruct<VkXcbSurfaceCreateInfoKHR>(VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR) };
-        xcbCreateInfo.flags = 0;
-        xcbCreateInfo.connection = m_xcbConnection;
-        xcbCreateInfo.window = m_xcbWindow;
-        VKERRCHECK(vkCreateXcbSurfaceKHR(m_instance, &xcbCreateInfo, nullptr, &m_vkSurface));
-        LOGI("XCB - Vulkan Surface created");
-    }
-    return *this;
+    return gfxPlatformWindowHandleFromXCB(m_xcbConnection, static_cast<uint32_t>(m_xcbWindow));
 }
 
 //---------------------------------------------------------------------------

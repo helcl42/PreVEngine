@@ -10,7 +10,7 @@
 namespace prev::window::impl::android {
 class AndroidWindowImpl : public WindowImpl {
 public:
-    AndroidWindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo);
+    AndroidWindowImpl(const WindowInfo& windowInfo);
 
     ~AndroidWindowImpl();
 
@@ -27,7 +27,7 @@ public:
 
     void SetMouseCursorVisible(bool visible) override;
 
-    Surface& CreateSurface() override;
+    GfxPlatformWindowHandle GetNativeWindowHandle() const override;
 
 private:
     android_app* m_app{};

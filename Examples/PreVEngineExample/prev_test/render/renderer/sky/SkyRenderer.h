@@ -18,7 +18,7 @@
 namespace prev_test::render::renderer::sky {
 class SkyRenderer final : public IRenderer<NormalRenderContext> {
 public:
-    SkyRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
+    SkyRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
 
     ~SkyRenderer() = default;
 
@@ -63,12 +63,12 @@ private:
     ImageBufferData m_skyPostProcessColorImageBuffer[MAX_VIEW_COUNT];
 
 private:
-    static const inline VkFormat COLOR_FORMAT{ VK_FORMAT_R8G8B8A8_UNORM };
+    static const inline GfxFormat COLOR_FORMAT{ GFX_FORMAT_R8G8B8A8_UNORM };
 
-    static const inline VkFormat DEPTH_FORMAT{ VK_FORMAT_R32_SFLOAT };
+    static const inline GfxFormat DEPTH_FORMAT{ GFX_FORMAT_R32_FLOAT };
 
 private:
-    void UpdateImageBufferExtents(const VkExtent2D& extent, const VkFormat format, ImageBufferData& imageBuffer);
+    void UpdateImageBufferExtents(const GfxExtent2D& extent, const GfxFormat format, ImageBufferData& imageBuffer);
 
 private:
     struct DEFAULT_ALIGNMENT UniformsSkyCS {
@@ -121,7 +121,6 @@ private:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 
     prev::render::pass::RenderPass& m_renderPass;
 

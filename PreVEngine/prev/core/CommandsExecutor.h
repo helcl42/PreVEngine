@@ -3,7 +3,7 @@
 
 #include "device/Device.h"
 
-#include "../util/VkUtils.h"
+#include "../core/Core.h"
 
 #include <functional>
 
@@ -15,18 +15,16 @@ public:
     ~CommandsExecutor();
 
 public:
-    void ExecuteImmediate(const std::function<void(VkCommandBuffer)>& func);
+    void ExecuteImmediate(const std::function<void(GfxCommandEncoder)>& func);
 
 private:
     const prev::core::device::Device& m_device;
 
     const prev::core::device::Queue& m_queue;
 
-    VkCommandPool m_immediateCommandPool{};
+    GfxCommandEncoder m_commandEncoder{};
 
-    VkCommandBuffer m_immediateCommandBuffer{};
-
-    VkFence m_fence{};
+    GfxFence m_fence{};
 };
 } // namespace prev::core
 

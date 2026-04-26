@@ -3,96 +3,71 @@
 
 #include "../ISwapchain.h"
 
-#include "../../buffer/ImageBuffer.h"
 #include "../../pass/RenderPass.h"
 
-#include "../../../core/memory/Allocator.h"
+#include "../../../core/device/Device.h"
 #include "../../../util/Utils.h"
 
 namespace prev::render::swapchain::headless {
 class HeadlessSwapchain final : public ISwapchain {
 public:
-    HeadlessSwapchain(core::device::Device& device, core::memory::Allocator& allocator, pass::RenderPass& renderPass, VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT, uint32_t viewCount = 1);
+    HeadlessSwapchain(core::device::Device& device, pass::RenderPass& renderPass, GfxExtent2D extent = { 512, 512 }, uint32_t imageCount = 3, uint32_t viewCount = 1);
 
     ~HeadlessSwapchain();
 
 public:
-    std::vector<VkPresentModeKHR> GetPresentModes() const override;
-
-    bool SetPresentMode(bool noTearing, bool powerSave) override;
-
-    bool SetPresentMode(VkPresentModeKHR preferredMode) override;
-
-    bool SetImageCount(uint32_t imageCount) override;
-
-    bool UpdateExtent(uint32_t width, uint32_t height) override;
-
     bool BeginFrame(FrameContext& outContext) override;
 
     void EndFrame() override;
 
     void Print() const override;
 
-    const VkExtent2D& GetExtent() const override;
+    GfxExtent2D GetExtent() const override;
 
     uint32_t GetImageCount() const override;
 
 private:
     struct SwapchainBuffer {
-        std::shared_ptr<prev::render::buffer::ImageBuffer> colorBuffer{};
-
-        VkFramebuffer framebuffer{};
-
-        VkCommandBuffer commandBuffer{};
-
-        VkFence fence{};
-
-        void Destroy(VkDevice device)
-        {
-            vkDestroyFence(device, fence, nullptr);
-            vkDestroyFramebuffer(device, framebuffer, nullptr);
-            colorBuffer = nullptr;
-        }
+        GfxTexture colorTexture{};
+        GfxTextureView colorView{};
+        GfxFramebuffer framebuffer{};
+        GfxCommandEncoder commandEncoder{};
+        GfxFence fence{};
     };
 
 private:
-    void Apply();
+    void CreateResources();
 
-    bool AcquireNext(SwapchainBuffer& next);
-
-    void Submit();
+    void DestroyResources();
 
 private:
     core::device::Device& m_device;
 
-    core::memory::Allocator& m_allocator;
-
     pass::RenderPass& m_renderPass;
 
-    VkSampleCountFlagBits m_sampleCount{ VK_SAMPLE_COUNT_1_BIT };
+    const core::device::Queue& m_graphicsQueue;
+
+    GfxExtent2D m_extent{};
 
     uint32_t m_viewCount{ 1 };
 
-    const prev::core::device::Queue& m_graphicsQueue;
+    GfxTexture m_depthTexture{};
 
-    VkExtent2D m_extent{};
+    GfxTextureView m_depthView{};
 
-    uint32_t m_imageCount{ 3 };
+    GfxTexture m_msaaColorTexture{};
 
-    std::unique_ptr<prev::render::buffer::ImageBuffer> m_depthBuffer{};
+    GfxTextureView m_msaaColorView{};
 
-    VkCommandPool m_commandPool{};
+    GfxTexture m_msaaDepthTexture{};
+
+    GfxTextureView m_msaaDepthView{};
 
     std::vector<SwapchainBuffer> m_swapchainBuffers;
 
-    bool m_isAcquired{};
+    bool m_isAcquired{ false };
 
     util::CircularIndex<uint32_t> m_frameIndex{ 3 };
-
-    // MSAA
-    std::unique_ptr<prev::render::buffer::ImageBuffer> m_msaaColorBuffer{};
-
-    std::unique_ptr<prev::render::buffer::ImageBuffer> m_msaaDepthBuffer{};
 };
 } // namespace prev::render::swapchain::headless
 

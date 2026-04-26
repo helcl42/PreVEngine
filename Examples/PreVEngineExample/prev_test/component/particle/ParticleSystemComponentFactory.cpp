@@ -16,15 +16,14 @@ static const inline uint32_t BufferCount{ 2 };
 
 static const inline uint32_t MaxParticleCount{ 100000 };
 
-ParticleSystemComponentFactory::ParticleSystemComponentFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
+ParticleSystemComponentFactory::ParticleSystemComponentFactory(prev::core::device::Device& device)
     : m_device{ device }
-    , m_allocator{ allocator }
 {
 }
 
 std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::CreateRandom() const
 {
-    prev_test::render::material::MaterialFactory materialFactory{ m_device, m_allocator };
+    prev_test::render::material::MaterialFactory materialFactory{ m_device };
 
     std::shared_ptr<prev_test::render::IMaterial> material{ materialFactory.Create({ glm::vec4{ 1.0f }, 0.0f, 0.0f }, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fire-ember-particles-png-4-transparent.png")) };
     material->SetAtlasNumberOfRows(8);
@@ -32,15 +31,15 @@ std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::Create
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh{ meshFactory.CreateQuad() };
 
-    prev_test::render::model::ModelFactory modelFactory{ m_allocator };
+    prev_test::render::model::ModelFactory modelFactory{ m_device };
     auto model{ modelFactory.Create(std::move(mesh)) };
 
     std::vector<std::shared_ptr<prev::render::buffer::Buffer>> vertexBuffers(BufferCount);
     for (uint32_t i = 0; i < BufferCount; ++i) {
-        vertexBuffers[i] = prev::render::buffer::BufferBuilder{ m_allocator }
+        vertexBuffers[i] = prev::render::buffer::BufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                                .SetSize(ParticleSystemComponent::GetParticleDataStride() * MaxParticleCount)
-                               .SetUsageFlags(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
-                               .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
+                               .SetUsageFlags(GFX_BUFFER_USAGE_VERTEX)
+                               .SetHostMapped(true)
                                .Build();
     }
 
@@ -55,22 +54,22 @@ std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::Create
 
 std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::CreateRandomInCone(const glm::vec3& coneDirection, const float angle) const
 {
-    prev_test::render::material::MaterialFactory materialFactory{ m_device, m_allocator };
+    prev_test::render::material::MaterialFactory materialFactory{ m_device };
     std::shared_ptr<prev_test::render::IMaterial> material{ materialFactory.Create({ glm::vec4{ 1.0f }, 0.0f, 0.0f }, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fire-texture-atlas.png")) };
     material->SetAtlasNumberOfRows(4);
 
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh{ meshFactory.CreateQuad() };
 
-    prev_test::render::model::ModelFactory modelFactory{ m_allocator };
+    prev_test::render::model::ModelFactory modelFactory{ m_device };
     auto model{ modelFactory.Create(std::move(mesh)) };
 
     std::vector<std::shared_ptr<prev::render::buffer::Buffer>> vertexBuffers(BufferCount);
     for (uint32_t i = 0; i < BufferCount; ++i) {
-        vertexBuffers[i] = prev::render::buffer::BufferBuilder{ m_allocator }
+        vertexBuffers[i] = prev::render::buffer::BufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                                .SetSize(ParticleSystemComponent::GetParticleDataStride() * MaxParticleCount)
-                               .SetUsageFlags(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
-                               .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
+                               .SetUsageFlags(GFX_BUFFER_USAGE_VERTEX)
+                               .SetHostMapped(true)
                                .Build();
     }
 

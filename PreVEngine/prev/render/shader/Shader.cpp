@@ -1,170 +1,181 @@
 #include "Shader.h"
 
-#include "../../core/Formats.h"
-#include "../../util/MathUtils.h"
-#include "../../util/VkUtils.h"
+#include "../../common/Logger.h"
 
 namespace prev::render::shader {
-Shader::Shader(const VkDevice device, const ShadersInfo& shadersInfo, const VertexInputsInfo& vertexInputInfo, const DescriptorSetsInfo& descriptorSetsInfo, const std::vector<VkPushConstantRange>& pushConstantRanges)
+Shader::Shader(GfxDevice device,
+    const std::map<GfxShaderStageFlags, GfxShader>& shaderModules,
+    const std::vector<VertexInputBinding>& vertexBindings,
+    const std::vector<VertexInputAttribute>& vertexAttributes,
+    GfxBindGroupLayout bindGroupLayout,
+    const std::map<std::string, BindingInfo>& bindingInfos)
     : m_device{ device }
-    , m_shaderModules{ shadersInfo.modules }
-    , m_shaderStages{ shadersInfo.stages }
-    , m_vertexInputBindingDescriptions{ vertexInputInfo.bindingDescriptions }
-    , m_vertexInputAttributeDescriptions{ vertexInputInfo.attributeDescriptions }
-    , m_descriptorSetLayout{ descriptorSetsInfo.layout }
-    , m_layoutBindings{ descriptorSetsInfo.layoutBindings }
-    , m_descriptorWrites{ descriptorSetsInfo.writes }
-    , m_descriptorSetInfos{ descriptorSetsInfo.infos }
-    , m_pushConstantRanges{ pushConstantRanges }
-    , m_descriptorPool{ VK_NULL_HANDLE }
-    , m_poolCapacity{ 0 }
-    , m_currentDescriptorSetIndex{ 0 }
+    , m_shaderModules{ shaderModules }
+    , m_vertexInputBindings{ vertexBindings }
+    , m_vertexInputAttributes{ vertexAttributes }
+    , m_bindGroupLayout{ bindGroupLayout }
+    , m_bindingInfos{ bindingInfos }
 {
 }
 
 Shader::~Shader()
 {
-    vkDeviceWaitIdle(m_device);
+    GFXERRCHECK(gfxDeviceWaitIdle(m_device));
 
-    if (m_descriptorPool) {
-        vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
-        m_descriptorPool = VK_NULL_HANDLE;
+    for (auto& bg : m_bindGroups) {
+        if (bg) {
+            gfxBindGroupDestroy(bg);
+        }
     }
-
-    if (m_descriptorSetLayout) {
-        vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
-        m_descriptorSetLayout = VK_NULL_HANDLE;
+    if (m_bindGroupLayout) {
+        gfxBindGroupLayoutDestroy(m_bindGroupLayout);
     }
-
-    for (auto& shaderModule : m_shaderModules) {
-        vkDestroyShaderModule(m_device, shaderModule.second, nullptr);
+    for (auto& [stage, shader] : m_shaderModules) {
+        gfxShaderDestroy(shader);
     }
 }
 
-bool Shader::ShouldAdjustCapacity(const uint32_t size) const
+bool Shader::ShouldAdjustCapacity(uint32_t size) const
 {
     const float MIN_CAPACITY_RATIO_TO_SHRINK{ 0.5f };
-
-    bool shouldAdjust{ false };
     if (size > m_poolCapacity) {
-        shouldAdjust = true;
-    } else if (float(size) / float(m_poolCapacity) < MIN_CAPACITY_RATIO_TO_SHRINK) {
-        shouldAdjust = true;
+        return true;
     }
-    return shouldAdjust;
+    if (m_poolCapacity > 0 && float(size) / float(m_poolCapacity) < MIN_CAPACITY_RATIO_TO_SHRINK) {
+        return true;
+    }
+    return false;
 }
 
-bool Shader::AdjustDescriptorPoolCapacity(const uint32_t size)
+bool Shader::AdjustBindGroupCapacity(uint32_t size)
 {
-    bool shouldRecreate{ ShouldAdjustCapacity(size) };
-    if (!shouldRecreate) {
+    if (!ShouldAdjustCapacity(size)) {
         return false;
     }
-    prev::util::vk::DestroyDescriptorPool(m_device, m_descriptorPool);
-    m_descriptorPool = prev::util::vk::CreateDescriptorPool(m_device, size, m_layoutBindings);
-    m_descriptorSets = prev::util::vk::CreateDescriptorSets(m_device, size, m_descriptorPool, m_descriptorSetLayout);
+    for (auto& bg : m_bindGroups) {
+        if (bg) {
+            gfxBindGroupDestroy(bg);
+        }
+    }
+    m_bindGroups.assign(size, nullptr);
     m_poolCapacity = size;
+    m_currentSlot = 0;
     return true;
 }
 
-VkDescriptorSet Shader::UpdateNextDescriptorSet()
+GfxBindGroup Shader::UpdateNextBindGroup()
 {
     CheckBindings();
 
-    VkDescriptorSet descriptorSet{ m_descriptorSets[m_currentDescriptorSetIndex] };
-
-    std::vector<std::vector<VkDescriptorBufferInfo>> bufferInfos(m_descriptorWrites.size());
-    std::vector<std::vector<VkDescriptorImageInfo>> imageInfos(m_descriptorWrites.size());
-    for (size_t writeIndex = 0; writeIndex < m_descriptorWrites.size(); ++writeIndex) {
-
-        auto& currentBufferInfos{ bufferInfos[writeIndex] };
-        auto& currentImageInfos{ imageInfos[writeIndex] };
-
-        for (const auto& info : m_descriptorSetInfos) {
-            if (info.second.writeIndex == writeIndex) {
-                currentBufferInfos.push_back(info.second.bufferInfo);
-                currentImageInfos.push_back(info.second.imageInfo);
-            }
+    // Gather entries sorted by binding index (array entries auto-indexed by backend)
+    std::map<std::string, GfxBindGroupEntry> entriesByName;
+    for (auto& [name, info] : m_bindingInfos) {
+        GfxBindGroupEntry entry{};
+        entry.binding = info.binding;
+        entry.type = info.type;
+        if (info.type == GFX_BIND_GROUP_ENTRY_TYPE_BUFFER) {
+            entry.resource.buffer.buffer = info.buffer;
+            entry.resource.buffer.offset = 0;
+            entry.resource.buffer.size = info.bufferSize;
+        } else if (info.type == GFX_BIND_GROUP_ENTRY_TYPE_TEXTURE_VIEW) {
+            entry.resource.textureView = info.textureView;
+        } else if (info.type == GFX_BIND_GROUP_ENTRY_TYPE_SAMPLER) {
+            entry.resource.sampler = info.sampler;
         }
-
-        auto& write{ m_descriptorWrites[writeIndex] };
-        write.dstSet = descriptorSet;
-        write.pBufferInfo = currentBufferInfos.data();
-        write.pImageInfo = currentImageInfos.data();
+        entriesByName[name] = entry;
     }
 
-    vkUpdateDescriptorSets(m_device, static_cast<uint32_t>(m_descriptorWrites.size()), m_descriptorWrites.data(), 0, nullptr);
+    std::vector<GfxBindGroupEntry> entries;
+    entries.reserve(entriesByName.size());
+    for (auto& [key, entry] : entriesByName) {
+        entries.push_back(entry);
+    }
 
-    m_currentDescriptorSetIndex = (m_currentDescriptorSetIndex + 1) % m_poolCapacity;
+    // Sort entries by binding index to ensure correct descriptor ordering
+    std::sort(entries.begin(), entries.end(), [](const GfxBindGroupEntry& a, const GfxBindGroupEntry& b) {
+        return a.binding < b.binding;
+    });
 
-    return descriptorSet;
+    if (m_bindGroups[m_currentSlot]) {
+        gfxBindGroupDestroy(m_bindGroups[m_currentSlot]);
+        m_bindGroups[m_currentSlot] = nullptr;
+    }
+
+    GfxBindGroupDescriptor desc{};
+    desc.sType = GFX_STRUCTURE_TYPE_BIND_GROUP_DESCRIPTOR;
+    desc.layout = m_bindGroupLayout;
+    desc.entries = entries.data();
+    desc.entryCount = static_cast<uint32_t>(entries.size());
+
+    GFXERRCHECK(gfxDeviceCreateBindGroup(m_device, &desc, &m_bindGroups[m_currentSlot]));
+
+    GfxBindGroup result = m_bindGroups[m_currentSlot];
+    m_currentSlot = (m_currentSlot + 1) % m_poolCapacity;
+    return result;
 }
 
 void Shader::Bind(const std::string& name, const prev::render::buffer::Buffer& buffer)
 {
-    const auto descriptorSetInfoIter{ m_descriptorSetInfos.find(name) };
-    if (descriptorSetInfoIter == m_descriptorSetInfos.cend()) {
+    const auto it{ m_bindingInfos.find(name) };
+    if (it == m_bindingInfos.cend()) {
         LOGE("Could not find uniform with name: %s", name.c_str());
+        return;
     }
-
-    auto& item{ descriptorSetInfoIter->second };
-
-    item.bufferInfo.buffer = buffer;
-    item.bufferInfo.offset = buffer.GetOffset();
-    item.bufferInfo.range = buffer.GetSize();
-
-    // LOGI("Bind Buffer to shader-in: \"%s\"", name.c_str());
+    auto& info{ it->second };
+    info.buffer = static_cast<GfxBuffer>(buffer);
+    info.bufferSize = buffer.GetSize();
 }
 
-void Shader::Bind(const std::string& name, const prev::render::buffer::ImageBuffer& imageBuffer, const prev::render::sampler::Sampler& sampler, const VkImageLayout layout)
+void Shader::Bind(const std::string& name, const prev::render::buffer::ImageBuffer& imageBuffer)
 {
-    const auto descriptorSetInfoIter{ m_descriptorSetInfos.find(name) };
-    if (descriptorSetInfoIter == m_descriptorSetInfos.cend()) {
+    const auto it{ m_bindingInfos.find(name) };
+    if (it == m_bindingInfos.cend()) {
         LOGE("Could not find uniform with name: %s", name.c_str());
+        return;
     }
+    auto& info{ it->second };
+    info.textureView = imageBuffer.GetTextureView();
+}
 
-    auto& item{ descriptorSetInfoIter->second };
-
-    item.imageInfo.imageView = imageBuffer.GetImageView();
-    item.imageInfo.imageLayout = layout;
-    item.imageInfo.sampler = sampler;
-
-    // LOGI("Bind Image to shader-in: \"%s\"", name.c_str());
+void Shader::Bind(const std::string& name, const prev::render::sampler::Sampler& sampler)
+{
+    const auto it{ m_bindingInfos.find(name) };
+    if (it == m_bindingInfos.cend()) {
+        LOGE("Could not find uniform with name: %s", name.c_str());
+        return;
+    }
+    auto& info{ it->second };
+    info.sampler = static_cast<GfxSampler>(sampler);
 }
 
 void Shader::CheckBindings() const
 {
-    for (auto& item : m_descriptorSetInfos) {
-        if (item.second.bufferInfo.buffer == 0) {
-            LOGE("Shader item: \"%s\" was not bound. Set a binding before creating the DescriptorSet.", item.first.c_str());
+    for (const auto& [name, info] : m_bindingInfos) {
+        if (info.type == GFX_BIND_GROUP_ENTRY_TYPE_BUFFER && !info.buffer) {
+            LOGE("Shader item: \"%s\" was not bound. Set a binding before calling UpdateNextBindGroup.", name.c_str());
             PAUSE;
             exit(0);
         }
     }
 }
 
-const VkDescriptorSetLayout& Shader::GetDescriptorSetLayout() const
+const std::map<GfxShaderStageFlags, GfxShader>& Shader::GetShaderModules() const
 {
-    return m_descriptorSetLayout;
+    return m_shaderModules;
 }
 
-const std::vector<VkPushConstantRange>& Shader::GetPushConstantsRanges() const
+GfxBindGroupLayout Shader::GetBindGroupLayout() const
 {
-    return m_pushConstantRanges;
+    return m_bindGroupLayout;
 }
 
-const std::vector<VkVertexInputBindingDescription>& Shader::GetVertexInputBindingDescriptions() const
+const std::vector<VertexInputBinding>& Shader::GetVertexInputBindings() const
 {
-    return m_vertexInputBindingDescriptions;
+    return m_vertexInputBindings;
 }
 
-const std::vector<VkVertexInputAttributeDescription>& Shader::GetVertexInputAttributeDescriptions() const
+const std::vector<VertexInputAttribute>& Shader::GetVertexInputAttributes() const
 {
-    return m_vertexInputAttributeDescriptions;
-}
-
-const std::vector<VkPipelineShaderStageCreateInfo>& Shader::GetShaderStages() const
-{
-    return m_shaderStages;
+    return m_vertexInputAttributes;
 }
 } // namespace prev::render::shader

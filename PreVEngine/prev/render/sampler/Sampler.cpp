@@ -1,9 +1,9 @@
 #include "Sampler.h"
 
-#include "../../util/VkUtils.h"
+#include "../../common/Logger.h"
 
 namespace prev::render::sampler {
-Sampler::Sampler(const VkDevice device, const VkSampler sampler)
+Sampler::Sampler(GfxDevice device, GfxSampler sampler)
     : m_device{ device }
     , m_sampler{ sampler }
 {
@@ -11,12 +11,11 @@ Sampler::Sampler(const VkDevice device, const VkSampler sampler)
 
 Sampler::~Sampler()
 {
-    vkDeviceWaitIdle(m_device);
-
-    vkDestroySampler(m_device, m_sampler, nullptr);
+    GFXERRCHECK(gfxDeviceWaitIdle(m_device));
+    GFXERRCHECK(gfxSamplerDestroy(m_sampler));
 }
 
-Sampler::operator VkSampler() const
+Sampler::operator GfxSampler() const
 {
     return m_sampler;
 }

@@ -1,11 +1,8 @@
 #include "BufferPool.h"
 
 namespace prev::render::buffer {
-BufferPool::BufferPool(prev::core::memory::Allocator& allocator, VkBuffer buffer, VmaAllocation allocation, std::vector<std::unique_ptr<Buffer>>&& buffers)
-    : m_allocator{ allocator }
-    , m_buffer{ buffer }
-    , m_allocation{ allocation }
-    , m_buffers{ std::move(buffers) }
+BufferPool::BufferPool(std::vector<std::unique_ptr<Buffer>>&& buffers)
+    : m_buffers{ std::move(buffers) }
     , m_index{ prev::util::CircularIndex<uint32_t>(static_cast<uint32_t>(m_buffers.size())) }
 {
 }

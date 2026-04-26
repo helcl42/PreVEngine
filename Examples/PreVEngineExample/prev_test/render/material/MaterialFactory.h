@@ -4,7 +4,6 @@
 #include "../IMaterial.h"
 
 #include <prev/core/device/Device.h>
-#include <prev/core/memory/Allocator.h>
 
 #include <memory>
 #include <vector>
@@ -12,7 +11,7 @@
 namespace prev_test::render::material {
 class MaterialFactory final {
 public:
-    MaterialFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator);
+    MaterialFactory(prev::core::device::Device& device);
 
     ~MaterialFactory() = default;
 
@@ -32,7 +31,6 @@ public:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 };
 } // namespace prev_test::render::material
 

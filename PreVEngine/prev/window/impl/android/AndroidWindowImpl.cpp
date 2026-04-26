@@ -3,7 +3,6 @@
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 
 #include "../../../common/Logger.h"
-#include "../../../util/VkUtils.h"
 
 #include <thread>
 
@@ -30,8 +29,8 @@ namespace {
     };
 } // namespace
 
-AndroidWindowImpl::AndroidWindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo)
-    : WindowImpl(instance)
+AndroidWindowImpl::AndroidWindowImpl(const WindowInfo& windowInfo)
+    : WindowImpl()
 {
     m_info.size = {};
     m_info.fullScreen = true;
@@ -71,7 +70,6 @@ AndroidWindowImpl::AndroidWindowImpl(const prev::core::instance::Instance& insta
 
 AndroidWindowImpl::~AndroidWindowImpl()
 {
-    DestroySurface();
 }
 
 bool AndroidWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
@@ -248,16 +246,9 @@ void AndroidWindowImpl::SetMouseCursorVisible(bool visible)
 {
 }
 
-Surface& AndroidWindowImpl::CreateSurface()
+GfxPlatformWindowHandle AndroidWindowImpl::GetNativeWindowHandle() const
 {
-    if (m_vkSurface == VK_NULL_HANDLE) {
-        VkAndroidSurfaceCreateInfoKHR androidCreateInfo{ prev::util::vk::CreateStruct<VkAndroidSurfaceCreateInfoKHR>(VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR) };
-        androidCreateInfo.flags = 0;
-        androidCreateInfo.window = m_app->window;
-        VKERRCHECK(vkCreateAndroidSurfaceKHR(m_instance, &androidCreateInfo, NULL, &m_vkSurface));
-        LOGI("Android - Vulkan Surface created");
-    }
-    return *this;
+    return gfxPlatformWindowHandleFromAndroid(m_app->window);
 }
 } // namespace prev::window::impl::android
 

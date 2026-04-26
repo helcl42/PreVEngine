@@ -5,12 +5,14 @@
 #include "PhysicalDevice.h"
 
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace prev::core::device {
 class DeviceFactory final {
 public:
-    std::unique_ptr<Device> Create(const PhysicalDevice& gpu, const VkSurfaceKHR surface) const;
+    std::unique_ptr<Device> Create(const PhysicalDevice& gpu, const std::vector<std::string>& extensions = {}) const;
 };
 } // namespace prev::core::device
 
-#endif // !__DEVICE_FACTORY_H__
+#endif

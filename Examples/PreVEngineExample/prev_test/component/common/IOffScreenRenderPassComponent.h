@@ -12,13 +12,13 @@ class IOffScreenRenderPassComponent : public prev::scene::component::IComponent 
 public:
     virtual std::shared_ptr<prev::render::pass::RenderPass> GetRenderPass() const = 0;
 
-    virtual const VkExtent2D& GetExtent() const = 0;
+    virtual const GfxExtent2D& GetExtent() const = 0;
 
     virtual std::shared_ptr<prev::render::buffer::ImageBuffer> GetColorImageBuffer(const uint32_t index = 0) const = 0;
 
     virtual std::shared_ptr<prev::render::buffer::ImageBuffer> GetDepthImageBuffer() const = 0;
 
-    virtual VkFramebuffer GetFrameBuffer() const = 0;
+    virtual GfxFramebuffer GetFrameBuffer() const = 0;
 
 public:
     virtual ~IOffScreenRenderPassComponent() = default;

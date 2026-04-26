@@ -6,14 +6,15 @@
 #include "../../Core.h"
 #include "../../device/Device.h"
 #include "../../instance/Instance.h"
-#include "../../memory/Allocator.h"
 
 #include "../../../event/EventHandler.h"
+#include "../../../render/surface/Surface.h"
 #include "../../../render/IRootRenderer.h"
 #include "../../../render/pass/RenderPass.h"
 #include "../../../render/swapchain/ISwapchain.h"
 #include "../../../scene/IScene.h"
 #include "../../../util/Utils.h"
+#include "../../../window/IWindow.h"
 #include "../../../window/WindowEvents.h"
 
 #include <memory>
@@ -33,8 +34,6 @@ public:
     prev::render::swapchain::ISwapchain& GetSwapchain() const;
 
     prev::render::pass::RenderPass& GetRenderPass() const;
-
-    prev::core::memory::Allocator& GetAllocator() const;
 
     prev::core::device::Device& GetDevice() const;
 
@@ -80,8 +79,6 @@ protected:
 
     void ResetSurface();
 
-    void ResetAllocator();
-
 protected:
     virtual void ResetInstance() = 0;
 
@@ -92,9 +89,9 @@ protected:
     virtual void ResetSwapchain() = 0;
 
 protected:
-    std::unique_ptr<prev::render::pass::RenderPass> CreateDefaultMultisampledRenderPass(const prev::core::device::Device& device, const VkFormat colorFormat, const VkFormat depthFormat, const VkSampleCountFlagBits sampleCount, const uint32_t viewCount, const bool storeColor, const bool storeDepth, const VkImageLayout colorLayout, const VkImageLayout depthLayout);
+    std::unique_ptr<prev::render::pass::RenderPass> CreateDefaultMultisampledRenderPass(const prev::core::device::Device& device, GfxFormat colorFormat, GfxFormat depthFormat, GfxSampleCount sampleCount, uint32_t viewCount, bool storeColor, bool storeDepth);
 
-    std::unique_ptr<prev::render::pass::RenderPass> CreateDefaultRenderPass(const prev::core::device::Device& device, const VkFormat colorFormat, const VkFormat depthFormat, const uint32_t viewCount, const bool storeColor, const bool storeDepth, const VkImageLayout colorLayout, const VkImageLayout depthLayout);
+    std::unique_ptr<prev::render::pass::RenderPass> CreateDefaultRenderPass(const prev::core::device::Device& device, GfxFormat colorFormat, GfxFormat depthFormat, uint32_t viewCount, bool storeColor, bool storeDepth);
 
     void UpdateFps();
 
@@ -114,11 +111,9 @@ protected:
 
     std::unique_ptr<prev::window::IWindow> m_window{};
 
-    VkSurfaceKHR m_surface{};
+    std::unique_ptr<prev::render::surface::Surface> m_surface{};
 
     std::unique_ptr<prev::core::device::Device> m_device{};
-
-    std::unique_ptr<prev::core::memory::Allocator> m_allocator{};
 
     std::unique_ptr<prev::render::pass::RenderPass> m_renderPass{};
 

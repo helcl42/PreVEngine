@@ -8,7 +8,7 @@
 namespace prev::window::impl::win32 {
 class Win32WindowImpl final : public WindowImpl {
 public:
-    Win32WindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo);
+    Win32WindowImpl(const WindowInfo& windowInfo);
 
     ~Win32WindowImpl();
 
@@ -23,7 +23,7 @@ public:
 
     void SetMouseCursorVisible(bool visible) override;
 
-    Surface& CreateSurface() override;
+    GfxPlatformWindowHandle GetNativeWindowHandle() const override;
 
 private:
     static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

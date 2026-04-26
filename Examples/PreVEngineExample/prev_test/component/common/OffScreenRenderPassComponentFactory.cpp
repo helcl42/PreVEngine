@@ -4,121 +4,91 @@
 
 #include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/pass/RenderPassBuilder.h>
-#include <prev/util/VkUtils.h>
+
+#include <stdexcept>
 
 namespace prev_test::component::common {
-OffScreenRenderPassComponentFactory::OffScreenRenderPassComponentFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator)
+OffScreenRenderPassComponentFactory::OffScreenRenderPassComponentFactory(prev::core::device::Device& device)
     : m_device{ device }
-    , m_allocator{ allocator }
 {
 }
 
-std::unique_ptr<IOffScreenRenderPassComponent> OffScreenRenderPassComponentFactory::Create(const VkExtent2D& extent, const VkFormat depthFormat, const std::vector<VkFormat>& colorFormats, const uint32_t viewCount) const
+std::unique_ptr<IOffScreenRenderPassComponent> OffScreenRenderPassComponentFactory::Create(const GfxExtent2D& extent, const GfxFormat depthFormat, const std::vector<GfxFormat>& colorFormats, const uint32_t viewCount) const
 {
-    // create render pass
-    const uint32_t depthDependenciesOffset{ (depthFormat != VK_FORMAT_UNDEFINED) ? 2u : 0u };
-    const uint32_t allDependenciesCount{ depthDependenciesOffset + 2u * static_cast<uint32_t>(colorFormats.size()) };
+    const GfxTextureViewType imageViewType{ viewCount > 1 ? GFX_TEXTURE_VIEW_TYPE_2D_ARRAY : GFX_TEXTURE_VIEW_TYPE_2D };
 
-    std::vector<VkSubpassDependency> dependencies(allDependenciesCount);
-    if (depthFormat != VK_FORMAT_UNDEFINED) {
-        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependencies[0].dstSubpass = 0;
-        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        dependencies[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        dependencies[0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-        dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
-        dependencies[1].srcSubpass = 0;
-        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        dependencies[1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-        dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-    }
-
-    for (uint32_t index = depthDependenciesOffset; index < allDependenciesCount; index += 2) {
-        dependencies[index + 0].srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependencies[index + 0].dstSubpass = 0;
-        dependencies[index + 0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        dependencies[index + 0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependencies[index + 0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        dependencies[index + 0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        dependencies[index + 0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
-        dependencies[index + 1].srcSubpass = 0;
-        dependencies[index + 1].dstSubpass = VK_SUBPASS_EXTERNAL;
-        dependencies[index + 1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependencies[index + 1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        dependencies[index + 1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        dependencies[index + 1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        dependencies[index + 1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-    }
+    // Create render pass
+    prev::render::pass::RenderPassBuilder renderPassBuilder{ m_device };
+    renderPassBuilder.SetViewCount(viewCount);
 
     std::vector<uint32_t> attachmentIndices;
     uint32_t attachmentIndex{ 0 };
 
-    prev::render::pass::RenderPassBuilder renderPassBuilder{ m_device };
-    renderPassBuilder.SetViewCount(viewCount);
-    if (depthFormat != VK_FORMAT_UNDEFINED) {
-        renderPassBuilder.AddDepthAttachment(depthFormat, VK_SAMPLE_COUNT_1_BIT, { MAX_DEPTH, 0 }, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-        attachmentIndices.push_back(attachmentIndex);
-        ++attachmentIndex;
+    if (depthFormat != GFX_FORMAT_UNDEFINED) {
+        renderPassBuilder.AddDepthAttachment(depthFormat, GFX_SAMPLE_COUNT_1, MAX_DEPTH, GFX_TEXTURE_LAYOUT_DEPTH_STENCIL_READ_ONLY);
+        attachmentIndices.push_back(attachmentIndex++);
     }
-    for (size_t i = 0; i < colorFormats.size(); ++i) {
-        const auto colorFormat{ colorFormats[i] };
-        renderPassBuilder.AddColorAttachment(colorFormat, VK_SAMPLE_COUNT_1_BIT, { { 0.5f, 0.5f, 0.5f, 1.0f } }, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-        attachmentIndices.push_back(attachmentIndex);
-        ++attachmentIndex;
+    for (const auto colorFormat : colorFormats) {
+        renderPassBuilder.AddColorAttachment(colorFormat, GFX_SAMPLE_COUNT_1, { 0.5f, 0.5f, 0.5f, 1.0f }, GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY);
+        attachmentIndices.push_back(attachmentIndex++);
     }
-
-    const VkImageViewType imageViewType{ viewCount > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D };
 
     std::shared_ptr<prev::render::pass::RenderPass> renderPass = renderPassBuilder
                                                                      .AddSubpass(attachmentIndices)
-                                                                     .AddSubpassDependencies(dependencies)
                                                                      .Build();
 
+    // Create image buffers
     std::shared_ptr<prev::render::buffer::ImageBuffer> depthBuffer{};
-    // create image buffers and corresponding samplers
-    if (depthFormat != VK_FORMAT_UNDEFINED) {
-        depthBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
+    if (depthFormat != GFX_FORMAT_UNDEFINED) {
+        depthBuffer = prev::render::buffer::ImageBufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                           .SetExtent({ extent.width, extent.height, 1 })
                           .SetFormat(depthFormat)
-                          .SetType(VK_IMAGE_TYPE_2D)
+                          .SetType(GFX_TEXTURE_TYPE_2D)
                           .SetViewType(imageViewType)
                           .SetLayerCount(viewCount)
-                          .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
-                          .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL)
+                          .SetUsageFlags(GFX_TEXTURE_USAGE_RENDER_ATTACHMENT | GFX_TEXTURE_USAGE_TEXTURE_BINDING)
+                          .SetLayout(GFX_TEXTURE_LAYOUT_DEPTH_STENCIL_READ_ONLY)
                           .Build();
     }
 
     std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>> colorBuffers{};
-    for (uint32_t i = 0; i < colorFormats.size(); ++i) {
-        const auto colorFormat{ colorFormats[i] };
-        auto colorImageBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
+    for (const auto colorFormat : colorFormats) {
+        auto colorImageBuffer = prev::render::buffer::ImageBufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                                     .SetExtent({ extent.width, extent.height, 1 })
                                     .SetFormat(colorFormat)
-                                    .SetType(VK_IMAGE_TYPE_2D)
+                                    .SetType(GFX_TEXTURE_TYPE_2D)
                                     .SetViewType(imageViewType)
                                     .SetLayerCount(viewCount)
-                                    .SetUsageFlags(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)
-                                    .SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+                                    .SetUsageFlags(GFX_TEXTURE_USAGE_RENDER_ATTACHMENT | GFX_TEXTURE_USAGE_TEXTURE_BINDING)
+                                    .SetLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY)
                                     .Build();
-
         colorBuffers.emplace_back(std::move(colorImageBuffer));
     }
 
-    std::vector<VkImageView> imageViews;
-    if (depthFormat != VK_FORMAT_UNDEFINED) {
-        imageViews.push_back(depthBuffer->GetImageView());
-    }
-    for (const auto& colorBuffer : colorBuffers) {
-        imageViews.push_back(colorBuffer->GetImageView());
+    // Create framebuffer using gfx API
+    GfxFramebufferAttachment depthAttachment{};
+    if (depthBuffer) {
+        depthAttachment.view = depthBuffer->GetTextureView();
     }
 
-    auto frameBuffer = prev::util::vk::CreateFrameBuffer(m_device, *renderPass, imageViews, extent);
+    std::vector<GfxFramebufferAttachment> colorAttachments;
+    for (const auto& colorBuffer : colorBuffers) {
+        colorAttachments.push_back({ colorBuffer->GetTextureView(), {} });
+    }
+
+    GfxFramebufferDescriptor fbDesc{};
+    fbDesc.sType = GFX_STRUCTURE_TYPE_FRAMEBUFFER_DESCRIPTOR;
+    fbDesc.pNext = nullptr;
+    fbDesc.renderPass = *renderPass;
+    fbDesc.colorAttachments = colorAttachments.empty() ? nullptr : colorAttachments.data();
+    fbDesc.colorAttachmentCount = static_cast<uint32_t>(colorAttachments.size());
+    fbDesc.depthStencilAttachment = depthAttachment;
+    fbDesc.extent = { extent.width, extent.height };
+
+    GfxFramebuffer frameBuffer{};
+    if (gfxDeviceCreateFramebuffer(m_device, &fbDesc, &frameBuffer) != GFX_RESULT_SUCCESS) {
+        throw std::runtime_error("Failed to create off-screen framebuffer");
+    }
 
     return std::make_unique<OffScreenRenderPassComponent>(m_device, extent, renderPass, depthBuffer, colorBuffers, frameBuffer);
 }

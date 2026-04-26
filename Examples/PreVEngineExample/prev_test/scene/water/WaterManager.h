@@ -2,13 +2,12 @@
 #define __WATER_MANAGER_H__
 
 #include <prev/core/device/Device.h>
-#include <prev/core/memory/Allocator.h>
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene::water {
 class WaterManager final : public prev::scene::graph::SceneNode {
 public:
-    WaterManager(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const int maxX, const int maxZ, const uint32_t viewCount);
+    WaterManager(prev::core::device::Device& device, const int maxX, const int maxZ, const uint32_t viewCount);
 
     ~WaterManager() = default;
 
@@ -22,7 +21,6 @@ public:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 
     int m_gridMaxX;
 

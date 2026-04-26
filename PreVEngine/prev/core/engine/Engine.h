@@ -9,7 +9,6 @@
 #include "../../render/pass/RenderPass.h"
 #include "../../render/swapchain/ISwapchain.h"
 #include "../../scene/IScene.h"
-#include "../memory/Allocator.h"
 
 namespace prev::core::engine {
 class Engine final {
@@ -37,8 +36,6 @@ public:
     prev::render::swapchain::ISwapchain& GetSwapchain() const;
 
     prev::render::pass::RenderPass& GetRenderPass() const;
-
-    prev::core::memory::Allocator& GetAllocator() const;
 
     prev::core::device::Device& GetDevice() const;
 

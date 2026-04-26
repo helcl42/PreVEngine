@@ -5,7 +5,6 @@
 #include "../IRenderer.h"
 
 #include <prev/core/device/Device.h>
-#include <prev/core/memory/Allocator.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/pipeline/GraphicsPipelineBuilder.h>
 #include <prev/render/sampler/Sampler.h>
@@ -16,7 +15,7 @@
 namespace prev_test::render::renderer::debug {
 class TextureDebugRenderer final : public IRenderer<prev::render::RenderContext> {
 public:
-    TextureDebugRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
+    TextureDebugRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
 
     ~TextureDebugRenderer() = default;
 
@@ -41,7 +40,6 @@ private:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 
     prev::render::pass::RenderPass& m_renderPass;
 

@@ -5,11 +5,11 @@
 
 namespace prev_test::component::shadow {
 struct ShadowsCascadeRenderData {
-    VkFramebuffer frameBuffer{};
+    GfxFramebuffer frameBuffer{};
 
-    VkImageView imageView{};
+    GfxTextureView textureView{};
 
-    void Destroy(VkDevice device);
+    void Destroy();
 };
 
 struct ShadowsCascadeFrameData {

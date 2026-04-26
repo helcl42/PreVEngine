@@ -6,7 +6,7 @@
 #include "../../render/font/TextMeshFactory.h"
 #include "../../render/model/ModelFactory.h"
 
-#include <prev/core/memory/Allocator.h>
+#include <prev/core/device/Device.h>
 
 #include <map>
 
@@ -14,8 +14,8 @@ namespace prev_test::component::font {
 template <typename TextType>
 class FontRenderComponent : public IFontRenderComponent<TextType> {
 public:
-    FontRenderComponent(prev::core::memory::Allocator& allocator, const std::shared_ptr<prev_test::render::font::FontMetadata>& fontMetaData)
-        : m_allocator{ allocator }
+    FontRenderComponent(const prev::core::device::Device& device, const std::shared_ptr<prev_test::render::font::FontMetadata>& fontMetaData)
+        : m_device{ device }
         , m_fontMetaData(fontMetaData)
     {
     }
@@ -35,7 +35,7 @@ public:
 
     void AddText(const uint32_t key, const std::shared_ptr<TextType>& text) override
     {
-        prev_test::render::model::ModelFactory modelFactory{ m_allocator };
+        prev_test::render::model::ModelFactory modelFactory{ m_device };
 
         std::shared_ptr<prev_test::render::IMesh> mesh{ prev_test::render::font::TextMeshFactory{}.CreateTextMesh(*text, *m_fontMetaData) };
 
@@ -80,7 +80,8 @@ public:
     }
 
 private:
-    prev::core::memory::Allocator& m_allocator;
+
+    const prev::core::device::Device& m_device;
 
     std::shared_ptr<prev_test::render::font::FontMetadata> m_fontMetaData;
 

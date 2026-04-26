@@ -13,7 +13,7 @@ public:
     ~QueryPoolBuilder() = default;
 
 public:
-    QueryPoolBuilder& SetQueryType(VkQueryType queryType);
+    QueryPoolBuilder& SetQueryType(GfxQueryType queryType);
 
     QueryPoolBuilder& SetPoolCount(uint32_t poolCount);
 
@@ -27,7 +27,7 @@ private:
 private:
     prev::core::device::Device& m_device;
 
-    VkQueryType m_queryType{ VK_QUERY_TYPE_MAX_ENUM };
+    GfxQueryType m_queryType{ GFX_QUERY_TYPE_MAX_ENUM };
 
     uint32_t m_poolCount{ 1 };
 

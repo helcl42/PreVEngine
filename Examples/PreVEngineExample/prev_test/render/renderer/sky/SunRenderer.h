@@ -15,7 +15,7 @@
 namespace prev_test::render::renderer::sky {
 class SunRenderer final : public IRenderer<NormalRenderContext> {
 public:
-    SunRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
+    SunRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
 
     ~SunRenderer() = default;
 
@@ -47,7 +47,6 @@ private:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 
     prev::render::pass::RenderPass& m_renderPass;
 

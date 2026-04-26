@@ -6,14 +6,13 @@
 #include "TerrainLayerCreateInfo.h"
 
 #include <prev/core/device/Device.h>
-#include <prev/core/memory/Allocator.h>
 
 #include <map>
 
 namespace prev_test::component::terrain {
 class TerrainComponentFactory {
 public:
-    TerrainComponentFactory(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const unsigned int seed = 21236728, const unsigned int vertexCount = 28);
+    TerrainComponentFactory(prev::core::device::Device& device, const unsigned int seed = 21236728, const unsigned int vertexCount = 28);
 
     ~TerrainComponentFactory() = default;
 
@@ -55,7 +54,6 @@ private:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 
     unsigned int m_seed;
 

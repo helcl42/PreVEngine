@@ -10,7 +10,7 @@
 namespace prev_test::scene::water {
 class Water final : public prev::scene::graph::SceneNode {
 public:
-    Water(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const int x, const int z);
+    Water(prev::core::device::Device& device, const int x, const int z);
 
     ~Water() = default;
 
@@ -24,7 +24,6 @@ public:
 private:
     prev::core::device::Device& m_device;
 
-    prev::core::memory::Allocator& m_allocator;
 
     int m_x;
 

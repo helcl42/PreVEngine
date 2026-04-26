@@ -6,13 +6,14 @@
 
 #include "../../render/IModel.h"
 
+#include <prev/core/device/Device.h>
 #include <prev/util/intersection/AABB.h>
 #include <prev/util/intersection/Frustum.h>
 
 namespace prev_test::component::ray_casting {
 class AABBBoundingVolumeComponent : public IBoundingVolumeComponent {
 public:
-    AABBBoundingVolumeComponent(prev::core::memory::Allocator& allocator, const prev::util::intersection::AABB& box, const glm::vec3& scale, const glm::vec3& offset);
+    AABBBoundingVolumeComponent(const prev::core::device::Device& device, const prev::util::intersection::AABB& box, const glm::vec3& scale, const glm::vec3& offset);
 
     ~AABBBoundingVolumeComponent() = default;
 
@@ -34,7 +35,8 @@ private:
     static prev::util::intersection::AABB OffsetBox(const prev::util::intersection::AABB& box, const glm::vec3& offset);
 
 private:
-    prev::core::memory::Allocator& m_allocator;
+
+    const prev::core::device::Device& m_device;
 
     glm::vec3 m_scale;
 

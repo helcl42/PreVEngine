@@ -13,79 +13,63 @@ public:
     struct DescriptorSet {
         std::string name{};
         uint32_t binding{};
-        VkDescriptorType descType{};
-        uint32_t descCount{};
-        VkShaderStageFlags stageFlags{};
+        GfxBindingType bindingType{};
+        GfxShaderStageFlags stageFlags{};
         bool optional{};
+        uint32_t count{ 1 };
     };
 
 public:
-    ShaderBuilder(VkDevice device);
+    ShaderBuilder(GfxDevice device);
 
     ~ShaderBuilder() = default;
 
 public:
-    ShaderBuilder& AddShaderStagePath(const VkShaderStageFlagBits stage, const std::string& path);
+    ShaderBuilder& AddShaderStagePath(GfxShaderStageFlags stage, const std::string& path);
 
-    ShaderBuilder& AddShaderStagePaths(const std::map<VkShaderStageFlagBits, std::string>& stagePaths);
+    ShaderBuilder& AddShaderStagePaths(const std::map<GfxShaderStageFlags, std::string>& stagePaths);
 
-    ShaderBuilder& AddShaderStageByteCode(const VkShaderStageFlagBits stage, const std::vector<char>& byteCode);
+    ShaderBuilder& AddShaderStageByteCode(GfxShaderStageFlags stage, const std::vector<char>& byteCode);
 
-    ShaderBuilder& AddShaderStageByteCodes(const std::map<VkShaderStageFlagBits, std::vector<char>>& byteCodes);
+    ShaderBuilder& AddShaderStageByteCodes(const std::map<GfxShaderStageFlags, std::vector<char>>& byteCodes);
 
-    ShaderBuilder& AddVertexInputBindingDescription(const VkVertexInputBindingDescription& vertexBindingDescriptor);
+    ShaderBuilder& AddVertexInputBinding(const VertexInputBinding& desc);
 
-    ShaderBuilder& AddVertexInputBindingDescriptions(const std::vector<VkVertexInputBindingDescription>& vertexBindingDescriptions);
+    ShaderBuilder& AddVertexInputBindings(const std::vector<VertexInputBinding>& descs);
 
-    ShaderBuilder& AddVertexInputAttributeDescription(const VkVertexInputAttributeDescription& vertexAttributeDescription);
+    ShaderBuilder& AddVertexInputAttribute(const VertexInputAttribute& desc);
 
-    ShaderBuilder& AddVertexInputAttributeDescriptions(const std::vector<VkVertexInputAttributeDescription>& vertexAttributeDescriptions);
+    ShaderBuilder& AddVertexInputAttributes(const std::vector<VertexInputAttribute>& descs);
 
     ShaderBuilder& AddDescriptorSet(const DescriptorSet& descriptorSet);
 
     ShaderBuilder& AddDescriptorSets(const std::vector<DescriptorSet>& descriptorSets);
 
-    ShaderBuilder& AddPushConstantBlock(const VkPushConstantRange& pushConstantBlock);
-
-    ShaderBuilder& AddPushConstantBlocks(const std::vector<VkPushConstantRange>& pushConstantBlocks);
-
-    ShaderBuilder& SetDescriptorPoolCapacity(const uint32_t size);
+    ShaderBuilder& SetBindGroupCapacity(uint32_t size);
 
     ShaderBuilder& SetEntryPointName(const std::string& name);
 
     std::unique_ptr<Shader> Build() const;
 
 private:
-    void CheckExistingStage(const VkShaderStageFlagBits stage) const;
+    GfxShader CreateShaderModule(const std::vector<char>& spirv) const;
 
-    VkShaderModule CreateShaderModule(const std::vector<char>& spirv) const;
-
-    VkPipelineShaderStageCreateInfo CreateShaderStageCreateInfo(const VkShaderStageFlagBits stage, const VkShaderModule& module) const;
-
-    VkDescriptorSetLayout CreateDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& layoutBindings) const;
-
-    Shader::ShadersInfo CreateShadersInfo() const;
-
-    Shader::VertexInputsInfo CreateVertexInputsInfo() const;
-
-    Shader::DescriptorSetsInfo CreateDescriptorSetsInfo() const;
+    GfxBindGroupLayout CreateBindGroupLayout() const;
 
 private:
-    VkDevice m_device;
+    GfxDevice m_device;
 
-    std::map<VkShaderStageFlagBits, std::string> m_stagePaths;
+    std::map<GfxShaderStageFlags, std::string> m_stagePaths;
 
-    std::map<VkShaderStageFlagBits, std::vector<char>> m_stageByteCodes;
+    std::map<GfxShaderStageFlags, std::vector<char>> m_stageByteCodes;
 
-    std::vector<VkVertexInputBindingDescription> m_vertexInputBindingDescriptors;
+    std::vector<VertexInputBinding> m_vertexInputBindings;
 
-    std::vector<VkVertexInputAttributeDescription> m_vertexInputAttributeDescriptions;
+    std::vector<VertexInputAttribute> m_vertexInputAttributes;
 
     std::vector<DescriptorSet> m_descriptorSets;
 
-    std::vector<VkPushConstantRange> m_pushConstantBlocks;
-
-    uint32_t m_descriptorPoolSize{};
+    uint32_t m_bindGroupCapacity{};
 
     std::string m_entryPointName;
 

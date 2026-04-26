@@ -5,12 +5,11 @@
 
 #include <memory>
 #include <string>
-#include <vector>
 
 namespace prev::core::instance {
 class InstanceFactory final {
 public:
-    std::unique_ptr<Instance> Create(const bool enableValidation, const std::string& appName = "PreVEngineApp", const std::vector<std::string>& extLayers = {}, const std::vector<std::string>& extExtensions = {}) const;
+    std::unique_ptr<Instance> Create(const std::string& appName, bool enableValidation) const;
 };
 } // namespace prev::core::instance
 

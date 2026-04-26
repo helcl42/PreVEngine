@@ -5,13 +5,12 @@
 #include "../component/ray_casting/IBoundingVolumeComponent.h"
 
 #include <prev/core/device/Device.h>
-#include <prev/core/memory/Allocator.h>
 #include <prev/scene/graph/SceneNode.h>
 
 namespace prev_test::scene {
 class Fire final : public prev::scene::graph::SceneNode {
 public:
-    Fire(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, const glm::vec3& initPosition);
+    Fire(prev::core::device::Device& device, const glm::vec3& initPosition);
 
     ~Fire() = default;
 
@@ -24,8 +23,6 @@ public:
 
 private:
     prev::core::device::Device& m_device;
-
-    prev::core::memory::Allocator& m_allocator;
 
     glm::vec3 m_initialPosition;
 

@@ -6,8 +6,8 @@
 #include <prev/render/buffer/BufferBuilder.h>
 
 namespace prev_test::component::ray_casting {
-RayModelFactory::RayModelFactory(prev::core::memory::Allocator& allocator)
-    : m_allocator{ allocator }
+RayModelFactory::RayModelFactory(const prev::core::device::Device& device)
+    : m_device{ device }
 {
 }
 
@@ -26,21 +26,19 @@ std::unique_ptr<prev_test::render::IModel> RayModelFactory::Create(const prev::u
     auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateFromData(vertices, indices) };
 
     const auto verticesDataSize{ sizeof(glm::vec3) * vertices.size() };
-    auto vertexBuffer = prev::render::buffer::BufferBuilder{ m_allocator }
-                            .SetMemoryType(prev::core::memory::MemoryType::DEVICE_LOCAL)
-                            .SetUsageFlags(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
+    auto vertexBuffer = prev::render::buffer::BufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
+                            .SetUsageFlags(GFX_BUFFER_USAGE_VERTEX)
                             .SetSize(verticesDataSize)
                             .SetData(vertices.data(), verticesDataSize)
                             .Build();
 
     const auto indicesDataSize{ sizeof(uint32_t) * indices.size() };
-    auto indexBuffer = prev::render::buffer::BufferBuilder{ m_allocator }
-                           .SetMemoryType(prev::core::memory::MemoryType::DEVICE_LOCAL)
-                           .SetUsageFlags(VK_BUFFER_USAGE_INDEX_BUFFER_BIT)
+    auto indexBuffer = prev::render::buffer::BufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
+                           .SetUsageFlags(GFX_BUFFER_USAGE_INDEX)
                            .SetSize(indicesDataSize)
                            .SetData(indices.data(), indicesDataSize)
                            .Build();
 
-    return prev_test::render::model::ModelFactory{ m_allocator }.Create(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
+    return prev_test::render::model::ModelFactory{ m_device }.Create(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
 }
 } // namespace prev_test::component::ray_casting

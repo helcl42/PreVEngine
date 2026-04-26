@@ -24,19 +24,19 @@ namespace {
         return prev_test::render::mesh::MeshFactory{}.CreateFromData(boxPoints, textureCoords, normals, indices);
     }
 
-    std::unique_ptr<prev_test::render::IModel> CreateModelFromMesh(std::unique_ptr<prev_test::render::IMesh> mesh, const std::shared_ptr<prev_test::render::IModel>& model, prev::core::memory::Allocator& allocator)
+    std::unique_ptr<prev_test::render::IModel> CreateModelFromMesh(std::unique_ptr<prev_test::render::IMesh> mesh, const std::shared_ptr<prev_test::render::IModel>& model, const prev::core::device::Device& device)
     {
         auto vertexBuffer{ model->GetVertexBuffer() };
         auto indexBuffer{ model->GetIndexBuffer() };
         vertexBuffer->Write(mesh->GetVertexData(), mesh->GetVertexLayout().GetStride() * mesh->GerVerticesCount());
         indexBuffer->Write(mesh->GetIndices().data(), sizeof(uint32_t) * mesh->GetIndicesCount());
 
-        return prev_test::render::model::ModelFactory{ allocator }.Create(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
+        return prev_test::render::model::ModelFactory{ device }.Create(std::move(mesh), std::move(vertexBuffer), std::move(indexBuffer));
     }
 } // namespace
 
-BoundingVolumeModelFactory::BoundingVolumeModelFactory(prev::core::memory::Allocator& allocator)
-    : m_allocator{ allocator }
+BoundingVolumeModelFactory::BoundingVolumeModelFactory(const prev::core::device::Device& device)
+    : m_device{ device }
 {
 }
 
@@ -44,39 +44,39 @@ std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateAAB
 {
     const auto aabbPoints{ aabb.GetPoints() };
     auto boxMesh = GenerateBoxMesh(aabbPoints);
-    return prev_test::render::model::ModelFactory{ m_allocator }.CreateHostVisible(std::move(boxMesh));
+    return prev_test::render::model::ModelFactory{ m_device }.CreateHostVisible(std::move(boxMesh));
 }
 
 std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateAABBModel(const prev::util::intersection::AABB& aabb, const std::shared_ptr<prev_test::render::IModel>& model) const
 {
     const auto aabbPoints{ aabb.GetPoints() };
     auto boxMesh = GenerateBoxMesh(aabbPoints);
-    return CreateModelFromMesh(std::move(boxMesh), model, m_allocator);
+    return CreateModelFromMesh(std::move(boxMesh), model, m_device);
 }
 
 std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateOBBModel(const prev::util::intersection::OBB& obb) const
 {
     const auto obbPoints{ obb.GetPoints() };
     auto boxMesh = GenerateBoxMesh(obbPoints);
-    return prev_test::render::model::ModelFactory{ m_allocator }.CreateHostVisible(std::move(boxMesh));
+    return prev_test::render::model::ModelFactory{ m_device }.CreateHostVisible(std::move(boxMesh));
 }
 
 std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateOBBModel(const prev::util::intersection::OBB& obb, const std::shared_ptr<prev_test::render::IModel>& model) const
 {
     const auto obbPoints{ obb.GetPoints() };
     auto boxMesh = GenerateBoxMesh(obbPoints);
-    return CreateModelFromMesh(std::move(boxMesh), model, m_allocator);
+    return CreateModelFromMesh(std::move(boxMesh), model, m_device);
 }
 
 std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateSphereModel(const prev::util::intersection::Sphere& sphere) const
 {
     auto sphereMesh = prev_test::render::mesh::MeshFactory{}.CreateSphere(sphere.radius, 16, 16, 360.0f, 180.0f, sphere.position, false);
-    return prev_test::render::model::ModelFactory{ m_allocator }.CreateHostVisible(std::move(sphereMesh));
+    return prev_test::render::model::ModelFactory{ m_device }.CreateHostVisible(std::move(sphereMesh));
 }
 
 std::unique_ptr<prev_test::render::IModel> BoundingVolumeModelFactory::CreateSphereModel(const prev::util::intersection::Sphere& sphere, const std::shared_ptr<prev_test::render::IModel>& model) const
 {
     auto sphereMesh = prev_test::render::mesh::MeshFactory{}.CreateSphere(sphere.radius, 16, 16, 360.0f, 180.0f, sphere.position, false);
-    return CreateModelFromMesh(std::move(sphereMesh), model, m_allocator);
+    return CreateModelFromMesh(std::move(sphereMesh), model, m_device);
 }
 } // namespace prev_test::component::ray_casting

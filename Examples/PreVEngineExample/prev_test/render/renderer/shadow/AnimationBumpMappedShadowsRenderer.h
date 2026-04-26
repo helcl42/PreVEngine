@@ -6,7 +6,6 @@
 #include "../RenderContexts.h"
 
 #include <prev/core/device/Device.h>
-#include <prev/core/memory/Allocator.h>
 #include <prev/render/buffer/BufferPool.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/pipeline/Pipeline.h>
@@ -17,7 +16,7 @@
 namespace prev_test::render::renderer::shadow {
 class AnimationBumpMappedShadowsRenderer final : public IRenderer<ShadowsRenderContext> {
 public:
-    AnimationBumpMappedShadowsRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
+    AnimationBumpMappedShadowsRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
 
     ~AnimationBumpMappedShadowsRenderer() = default;
 
@@ -49,8 +48,6 @@ private:
 
 private:
     prev::core::device::Device& m_device;
-
-    prev::core::memory::Allocator& m_allocator;
 
     prev::render::pass::RenderPass& m_renderPass;
 

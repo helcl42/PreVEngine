@@ -1,24 +1,24 @@
 ﻿#ifndef __INSTANCE_H__
 #define __INSTANCE_H__
 
-#include "Validation.h"
+#include "../Core.h"
 
 #include <memory>
 
 namespace prev::core::instance {
 class Instance {
 public:
-    Instance(const VkInstance instance, std::unique_ptr<ValidationReporter>&& validationReporter);
+    Instance(GfxInstance instance);
 
     ~Instance();
 
 public:
-    operator VkInstance() const;
+    GfxInstance GetHandle() const;
+
+    operator GfxInstance() const;
 
 private:
-    VkInstance m_instance{};
-
-    std::unique_ptr<ValidationReporter> m_validationReporter{};
+    GfxInstance m_instance{};
 };
 } // namespace prev::core::instance
 

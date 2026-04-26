@@ -3,14 +3,13 @@
 
 #include "../IModel.h"
 
-#include <prev/core/memory/Allocator.h>
 
 #include <memory>
 
 namespace prev_test::render::model {
 class ModelFactory final {
 public:
-    ModelFactory(prev::core::memory::Allocator& allocator);
+    ModelFactory(const prev::core::device::Device& device);
 
     ~ModelFactory() = default;
 
@@ -22,7 +21,7 @@ public:
     std::unique_ptr<prev_test::render::IModel> CreateHostVisible(const std::shared_ptr<IMesh>& mesh, const uint32_t maxVertexCount = 0, const uint32_t maxIndexCount = 0) const;
 
 private:
-    prev::core::memory::Allocator& m_allocator;
+    const prev::core::device::Device& m_device;
 };
 } // namespace prev_test::render::model
 

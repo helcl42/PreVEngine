@@ -11,12 +11,10 @@
 #include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
-#include <prev/util/VkUtils.h>
 
 namespace prev_test::render::renderer::particle {
-ParticlesRenderer::ParticlesRenderer(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
+ParticlesRenderer::ParticlesRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
     : m_device{ device }
-    , m_allocator{ allocator }
     , m_renderPass{ renderPass }
     , m_scene{ scene }
 {
@@ -27,31 +25,32 @@ void ParticlesRenderer::Init()
     // clang-format off
     m_shader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { VK_SHADER_STAGE_VERTEX_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/particle/particles_vert.spv") },
-            { VK_SHADER_STAGE_FRAGMENT_BIT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/particle/particles_frag.spv") }
+            { GFX_SHADER_STAGE_VERTEX, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/particle/particles_vert.spv") },
+            { GFX_SHADER_STAGE_FRAGMENT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/particle/particles_frag.spv") }
         })
-        .AddVertexInputAttributeDescriptions({
-            prev::util::vk::CreateVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0),
-            prev::util::vk::CreateVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
-            prev::util::vk::CreateVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32B32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })),
+        .AddVertexInputAttributes({
+            prev::render::shader::VertexInputAttribute{ 0, 0, GFX_FORMAT_R32G32B32_FLOAT, 0 },
+            prev::render::shader::VertexInputAttribute{ 0, 1, GFX_FORMAT_R32G32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })},
+            prev::render::shader::VertexInputAttribute{ 0, 2, GFX_FORMAT_R32G32B32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })},
 
-            prev::util::vk::CreateVertexInputAttributeDescription(1, 3, VK_FORMAT_R32G32B32_SFLOAT, 0),
-            prev::util::vk::CreateVertexInputAttributeDescription(1, 4, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })),
-            prev::util::vk::CreateVertexInputAttributeDescription(1, 5, VK_FORMAT_R32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })),
-            prev::util::vk::CreateVertexInputAttributeDescription(1, 6, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::FLOAT })),
-            prev::util::vk::CreateVertexInputAttributeDescription(1, 7, VK_FORMAT_R32G32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::FLOAT, VertexLayoutComponent::VEC2 })),
-            prev::util::vk::CreateVertexInputAttributeDescription(1, 8, VK_FORMAT_R32_SFLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::FLOAT, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC2 }))
+            prev::render::shader::VertexInputAttribute{ 1, 3, GFX_FORMAT_R32G32B32_FLOAT, 0 },
+            prev::render::shader::VertexInputAttribute{ 1, 4, GFX_FORMAT_R32G32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })},
+            prev::render::shader::VertexInputAttribute{ 1, 5, GFX_FORMAT_R32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })},
+            prev::render::shader::VertexInputAttribute{ 1, 6, GFX_FORMAT_R32G32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::FLOAT })},
+            prev::render::shader::VertexInputAttribute{ 1, 7, GFX_FORMAT_R32G32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::FLOAT, VertexLayoutComponent::VEC2 })},
+            prev::render::shader::VertexInputAttribute{ 1, 8, GFX_FORMAT_R32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::FLOAT, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC2 })}
         })
-        .AddVertexInputBindingDescriptions({
-            prev::util::vk::CreateVertexInputBindingDescription(0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), VK_VERTEX_INPUT_RATE_VERTEX),
-            prev::util::vk::CreateVertexInputBindingDescription(1, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::FLOAT, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC2, VertexLayoutComponent::FLOAT }), VK_VERTEX_INPUT_RATE_INSTANCE)
+        .AddVertexInputBindings({
+            prev::render::shader::VertexInputBinding{ 0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), GFX_VERTEX_STEP_MODE_VERTEX },
+            prev::render::shader::VertexInputBinding{ 1, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::FLOAT, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC2, VertexLayoutComponent::FLOAT }), GFX_VERTEX_STEP_MODE_INSTANCE }
         })
         .AddDescriptorSets({
-            { "uboVS", 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT },
-            { "uboFS", 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT },
-            { "colorSampler", 2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }
+            { "uboVS", 0, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_VERTEX },
+            { "uboFS", 1, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_FRAGMENT },
+            { "colorTexture", 2, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
+            { "colorSampler", 3, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT }
         })
-	    .SetDescriptorPoolCapacity(m_descriptorCount)
+	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on
 
@@ -59,38 +58,38 @@ void ParticlesRenderer::Init()
 
     // clang-format off
     m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ m_device, *m_shader, m_renderPass }
-        .SetPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+        .SetPrimitiveTopology(GFX_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
         .SetDepthTestEnabled(true)
         .SetDepthWriteEnabled(false)
         .SetBlendingModeEnabled(true)
         .SetAdditiveBlendingEnabled(true)
-        .SetPolygonMode(VK_POLYGON_MODE_FILL)
-        .SetCullingMode(VK_CULL_MODE_BACK_BIT)
+        .SetPolygonMode(GFX_POLYGON_MODE_FILL)
+        .SetCullingMode(GFX_CULL_MODE_BACK)
         .Build();
     // clang-format on
 
     LOGI("Particles Pipeline created");
 
-    m_uniformsPoolVS = prev::render::buffer::BufferPoolBuilder{ m_allocator }
-                           .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
-                           .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+    m_uniformsPoolVS = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
+                           .SetHostMapped(true)
+                           .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM)
                            .SetCount(m_descriptorCount)
                            .SetStride(sizeof(UniformsVS))
-                           .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                           .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
                            .Build();
 
-    m_uniformsPoolFS = prev::render::buffer::BufferPoolBuilder{ m_allocator }
-                           .SetMemoryType(prev::core::memory::MemoryType::HOST_MAPPED)
-                           .SetUsageFlags(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+    m_uniformsPoolFS = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
+                           .SetHostMapped(true)
+                           .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM)
                            .SetCount(m_descriptorCount)
                            .SetStride(sizeof(UniformsFS))
-                           .SetAlignment(m_device.GetGPU().GetProperties().limits.minUniformBufferOffsetAlignment)
+                           .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
                            .Build();
 
     LOGI("Particles Uniforms Pools created");
 
     m_colorSampler = prev::render::sampler::SamplerBuilder{ m_device }
-                         .SetAddressMode(VK_SAMPLER_ADDRESS_MODE_REPEAT)
+                         .SetAddressMode(GFX_ADDRESS_MODE_REPEAT)
                          .Build();
 
     LOGI("Creating Particles Sampler");
@@ -114,14 +113,12 @@ void ParticlesRenderer::Render(const NormalRenderContext& renderContext, const s
         return;
     }
 
-    const VkRect2D scissor{ { renderContext.rect.offset.x, renderContext.rect.offset.y }, { renderContext.rect.extent.width, renderContext.rect.extent.height } };
-    const VkViewport viewport{ static_cast<float>(renderContext.rect.offset.x), static_cast<float>(renderContext.rect.offset.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0, 1 };
+        const GfxViewport viewport{ static_cast<float>(renderContext.rect.origin.x), static_cast<float>(renderContext.rect.origin.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 1.0f };
 
-    vkCmdBindPipeline(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
-    vkCmdSetViewport(renderContext.commandBuffer, 0, 1, &viewport);
-    vkCmdSetScissor(renderContext.commandBuffer, 0, 1, &scissor);
-
-    const auto particlesComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::particle::IParticleSystemComponent>(node);
+    gfxRenderPassEncoderSetPipeline(renderContext.renderPassEncoder, *m_pipeline);
+    gfxRenderPassEncoderSetViewport(renderContext.renderPassEncoder, &viewport);
+    gfxRenderPassEncoderSetScissorRect(renderContext.renderPassEncoder, &renderContext.rect);
+const auto particlesComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::particle::IParticleSystemComponent>(node);
 
     m_uniformsPoolVS->MoveToNext();
 
@@ -145,20 +142,17 @@ void ParticlesRenderer::Render(const NormalRenderContext& renderContext, const s
 
     m_shader->Bind("uboVS", uboVS);
     m_shader->Bind("uboFS", uboFS);
-    m_shader->Bind("colorSampler", *particlesComponent->GetMaterial()->GetImageBuffer(), *m_colorSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_shader->Bind("colorTexture", *particlesComponent->GetMaterial()->GetImageBuffer());
+    m_shader->Bind("colorSampler", *m_colorSampler);
 
-    const VkDescriptorSet descriptorSet = m_shader->UpdateNextDescriptorSet();
-    const VkBuffer vertexBuffers[] = { *particlesComponent->GetModel()->GetVertexBuffer() };
-    const VkBuffer instanceBuffers[] = { *particlesComponent->GetVertexBuffer() };
-    const VkDeviceSize offsets[] = { 0 };
+    const GfxBindGroup descriptorSet = m_shader->UpdateNextBindGroup();
+    gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 
-    vkCmdBindDescriptorSets(renderContext.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetLayout(), 0, 1, &descriptorSet, 0, nullptr);
+    gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *particlesComponent->GetModel()->GetVertexBuffer(), 0, particlesComponent->GetModel()->GetVertexBuffer()->GetSize());
+    gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 1, *particlesComponent->GetVertexBuffer(), 0, particlesComponent->GetVertexBuffer()->GetSize());
+    gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *particlesComponent->GetModel()->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, particlesComponent->GetModel()->GetIndexBuffer()->GetSize());
 
-    vkCmdBindVertexBuffers(renderContext.commandBuffer, 0, 1, vertexBuffers, offsets);
-    vkCmdBindVertexBuffers(renderContext.commandBuffer, 1, 1, instanceBuffers, offsets);
-    vkCmdBindIndexBuffer(renderContext.commandBuffer, *particlesComponent->GetModel()->GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
-
-    vkCmdDrawIndexed(renderContext.commandBuffer, particlesComponent->GetModel()->GetMesh()->GetIndicesCount(), static_cast<uint32_t>(particlesComponent->GetParticles().size()), 0, 0, 0);
+    gfxRenderPassEncoderDrawIndexed(renderContext.renderPassEncoder, particlesComponent->GetModel()->GetMesh()->GetIndicesCount(), static_cast<uint32_t>(particlesComponent->GetParticles().size()), 0, 0, 0);
 }
 
 void ParticlesRenderer::PostRender(const NormalRenderContext& renderContext)

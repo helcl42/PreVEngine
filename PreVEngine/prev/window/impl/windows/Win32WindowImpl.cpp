@@ -3,7 +3,6 @@
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 
 #include "../../../common/Logger.h"
-#include "../../../util/VkUtils.h"
 
 #include <windowsx.h> // Mouse
 
@@ -80,8 +79,8 @@ namespace {
     }
 } // namespace
 
-Win32WindowImpl::Win32WindowImpl(const prev::core::instance::Instance& instance, const WindowInfo& windowInfo)
-    : WindowImpl(instance)
+Win32WindowImpl::Win32WindowImpl(const WindowInfo& windowInfo)
+    : WindowImpl()
 {
     SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
@@ -155,7 +154,6 @@ Win32WindowImpl::Win32WindowImpl(const prev::core::instance::Instance& instance,
 
 Win32WindowImpl::~Win32WindowImpl()
 {
-    DestroySurface();
 
     DestroyWindow(m_hWnd);
 }
@@ -385,17 +383,9 @@ void Win32WindowImpl::SetMouseCursorVisible(bool visible)
     }
 }
 
-Surface& Win32WindowImpl::CreateSurface()
+GfxPlatformWindowHandle Win32WindowImpl::GetNativeWindowHandle() const
 {
-    if (m_vkSurface == VK_NULL_HANDLE) {
-        VkWin32SurfaceCreateInfoKHR win32CreateInfo{ prev::util::vk::CreateStruct<VkWin32SurfaceCreateInfoKHR>(VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR) };
-        win32CreateInfo.flags = 0;
-        win32CreateInfo.hinstance = m_hInstance;
-        win32CreateInfo.hwnd = m_hWnd;
-        VKERRCHECK(vkCreateWin32SurfaceKHR(m_instance, &win32CreateInfo, nullptr, &m_vkSurface));
-        LOGI("Win32 - Vulkan Surface created");
-    }
-    return *this;
+    return gfxPlatformWindowHandleFromWin32(m_hInstance, m_hWnd);
 }
 
 LRESULT CALLBACK Win32WindowImpl::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)

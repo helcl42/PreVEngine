@@ -6,13 +6,14 @@
 
 #include "../../render/IModel.h"
 
+#include <prev/core/device/Device.h>
 #include <prev/util/intersection/Frustum.h>
 #include <prev/util/intersection/OBB.h>
 
 namespace prev_test::component::ray_casting {
 class OBBBoundingVolumeComponent : public IBoundingVolumeComponent {
 public:
-    OBBBoundingVolumeComponent(prev::core::memory::Allocator& allocator, const prev::util::intersection::OBB& obb, const glm::vec3& scale, const glm::vec3& offset);
+    OBBBoundingVolumeComponent(const prev::core::device::Device& device, const prev::util::intersection::OBB& obb, const glm::vec3& scale, const glm::vec3& offset);
 
     ~OBBBoundingVolumeComponent() = default;
 
@@ -34,7 +35,8 @@ private:
     static prev::util::intersection::OBB OffsetOBB(const prev::util::intersection::OBB& obb, const glm::vec3& offset);
 
 private:
-    prev::core::memory::Allocator& m_allocator;
+
+    const prev::core::device::Device& m_device;
 
     glm::vec3 m_scale;
 

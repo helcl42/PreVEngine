@@ -1,8 +1,6 @@
 #ifndef __RENDER_PASS_H__
 #define __RENDER_PASS_H__
 
-#include "SubPass.h"
-
 #include "../../core/Core.h"
 
 #include <vector>
@@ -13,69 +11,63 @@ class RenderPassBuilder;
 class RenderPass final {
 public:
     struct AttachmentInfo {
-        VkClearValue clearValue;
-        VkFormat format;
-        VkSampleCountFlagBits sampleCount;
-        VkImageLayout finalLayout;
-        VkAttachmentLoadOp loadOp;
-        VkAttachmentStoreOp storeOp;
+        GfxColor colorClearValue{};
+        float depthClearValue{ 1.0f };
+        uint32_t stencilClearValue{ 0 };
+        GfxFormat format;
+        GfxSampleCount sampleCount;
+        GfxTextureLayout finalLayout;
+        GfxLoadOp loadOp;
+        GfxStoreOp storeOp;
         bool resolveAttachment;
     };
 
 public:
-    RenderPass(const VkDevice device, const VkRenderPass renderPass, const std::vector<AttachmentInfo>& attachmentInfos, const std::vector<SubPass>& subpasses, const std::vector<VkSubpassDependency>& dependencies);
+    RenderPass(GfxDevice device, GfxRenderPass renderPass, GfxFormat colorFormat, GfxFormat depthFormat, GfxSampleCount sampleCount);
+
+    RenderPass(GfxDevice device, GfxRenderPass renderPass, const std::vector<AttachmentInfo>& attachmentInfos);
 
     ~RenderPass();
 
 public:
-    void Begin(const VkFramebuffer frambuffer, const VkCommandBuffer commandBuffer, const VkRect2D& renderArea, const VkSubpassContents contents = VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
+    void Begin(GfxFramebuffer framebuffer, GfxCommandEncoder commandEncoder);
 
-    void End(VkCommandBuffer commadBuffer);
+    void End();
 
 public:
     const std::vector<AttachmentInfo>& GetAttachments() const;
 
-    const std::vector<SubPass>& GetSubPasses() const;
+    GfxFormat GetColorFormat() const;
 
-    const std::vector<VkClearValue>& GetClearValues() const;
+    GfxFormat GetDepthFormat() const;
 
-    VkFormat GetColorFormat(const uint32_t attachmentIndex = 0) const;
+    GfxSampleCount GetSampleCount() const;
 
-    const std::vector<VkFormat>& GetColorFormats(const bool includeResolveAttachments = false) const;
+    std::vector<GfxFormat> GetGfxColorFormats() const;
 
-    VkFormat GetDepthFormat(const uint32_t attachmentIndex = 0) const;
-
-    VkSampleCountFlagBits GetSamplesCount() const;
-
-    const std::vector<VkSubpassDependency>& GetSubPassDependencies() const;
+    GfxRenderPassEncoder GetEncoder() const;
 
 public:
-    operator VkRenderPass() const;
+    operator GfxRenderPass() const;
 
 public:
     friend class RenderPassBuilder;
 
 private:
-    VkDevice m_device;
+    GfxDevice m_gfxDevice{};
 
-    VkRenderPass m_renderPass;
+    GfxRenderPass m_gfxRenderPass{};
+
+    GfxFormat m_gfxColorFormat{ GFX_FORMAT_UNDEFINED };
+
+    GfxFormat m_gfxDepthFormat{ GFX_FORMAT_UNDEFINED };
+
+    GfxSampleCount m_gfxSampleCount{ GFX_SAMPLE_COUNT_1 };
 
     std::vector<AttachmentInfo> m_attachmentInfos;
 
-    std::vector<SubPass> m_subpasses;
-
-    std::vector<VkSubpassDependency> m_dependencies;
-
-    std::vector<VkClearValue> m_clearValues;
-
-    std::vector<VkFormat> m_colorFormats;
-
-    std::vector<VkFormat> m_nonResolveColorFormats;
-
-    std::vector<VkFormat> m_depthFormats;
-
-    VkSampleCountFlagBits m_sampleCount;
+    GfxRenderPassEncoder m_activeEncoder{};
 };
 } // namespace prev::render::pass
 
-#endif
+#endif // !__RENDER_PASS_H__

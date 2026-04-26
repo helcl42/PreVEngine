@@ -8,12 +8,12 @@
 namespace prev::render::pipeline {
 class GraphicsPipelineBuilder final : public AbstractPipelineBuilder {
 public:
-    GraphicsPipelineBuilder(const VkDevice device, const shader::Shader& shader, const pass::RenderPass& renderPass);
+    GraphicsPipelineBuilder(GfxDevice device, const shader::Shader& shader, const pass::RenderPass& renderPass);
 
     ~GraphicsPipelineBuilder() = default;
 
 public:
-    GraphicsPipelineBuilder& SetPrimitiveTopology(VkPrimitiveTopology primitiveTopology);
+    GraphicsPipelineBuilder& SetPrimitiveTopology(GfxPrimitiveTopology primitiveTopology);
 
     GraphicsPipelineBuilder& SetDepthTestEnabled(bool enabled);
 
@@ -23,17 +23,11 @@ public:
 
     GraphicsPipelineBuilder& SetAdditiveBlendingEnabled(bool enabled);
 
-    GraphicsPipelineBuilder& SetPatchControlPointCount(uint32_t count);
+    GraphicsPipelineBuilder& SetPolygonMode(GfxPolygonMode mode);
 
-    GraphicsPipelineBuilder& SetPolygonMode(VkPolygonMode mode);
+    GraphicsPipelineBuilder& SetCullingMode(GfxCullMode mode);
 
-    GraphicsPipelineBuilder& SetCullingMode(VkCullModeFlagBits mode);
-
-    GraphicsPipelineBuilder& SetFrontFace(VkFrontFace frontFace);
-
-    GraphicsPipelineBuilder& SetSampleShadingEnabled(bool enabled);
-
-    GraphicsPipelineBuilder& SetSampleShadingMinimumFraction(float fraction);
+    GraphicsPipelineBuilder& SetFrontFace(GfxFrontFace frontFace);
 
     std::unique_ptr<Pipeline> Build() const override;
 
@@ -41,12 +35,12 @@ private:
     void Validate() const override;
 
 private:
-    VkPipeline CreateGraphicsPipeline(const VkPipelineLayout pipelineLayout) const;
+    GfxRenderPipeline CreateGraphicsPipeline() const;
 
 private:
     const pass::RenderPass& m_renderPass;
 
-    VkPrimitiveTopology m_primitiveTopology{ VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST };
+    GfxPrimitiveTopology m_primitiveTopology{ GFX_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST };
 
     bool m_depthTestEnabled{ true };
 
@@ -56,17 +50,11 @@ private:
 
     bool m_additiveBlendingEnabled{ false };
 
-    uint32_t m_patchControlPointCount{ 0 };
+    GfxPolygonMode m_polygonMode{ GFX_POLYGON_MODE_FILL };
 
-    VkPolygonMode m_polygonMode{ VK_POLYGON_MODE_FILL };
+    GfxCullMode m_cullingMode{ GFX_CULL_MODE_NONE };
 
-    VkCullModeFlagBits m_cullingMode{ VK_CULL_MODE_NONE };
-
-    VkFrontFace m_frontFace{ VK_FRONT_FACE_COUNTER_CLOCKWISE };
-
-    bool m_sampleShadingEnabled{ false };
-
-    float m_sampleShadingMinFraction{ 0.2f };
+    GfxFrontFace m_frontFace{ GFX_FRONT_FACE_COUNTER_CLOCKWISE };
 };
 } // namespace prev::render::pipeline
 

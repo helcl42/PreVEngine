@@ -3,19 +3,22 @@
 
 #include "Buffer.h"
 
+#include "../../core/device/Device.h"
+#include "../../core/device/Queue.h"
+
 #include <memory>
 
 namespace prev::render::buffer {
 class BufferBuilder final {
 public:
-    BufferBuilder(prev::core::memory::Allocator& allocator);
+    BufferBuilder(const prev::core::device::Device& device, const prev::core::device::Queue& queue);
 
     ~BufferBuilder() = default;
 
 public:
-    BufferBuilder& SetUsageFlags(const VkBufferUsageFlags usageFlags);
+    BufferBuilder& SetUsageFlags(const GfxBufferUsageFlags usageFlags);
 
-    BufferBuilder& SetMemoryType(const prev::core::memory::MemoryType memoryType);
+    BufferBuilder& SetHostMapped(bool hostMapped);
 
     BufferBuilder& SetSize(const uint64_t size);
 
@@ -26,14 +29,16 @@ public:
     std::unique_ptr<Buffer> Build() const;
 
 private:
-    void Valiadate() const;
+    void Validate() const;
 
 private:
-    prev::core::memory::Allocator& m_allocator;
+    const prev::core::device::Device& m_device;
 
-    VkBufferUsageFlags m_usageFlags{};
+    const prev::core::device::Queue& m_queue;
 
-    prev::core::memory::MemoryType m_memoryType{ prev::core::memory::MemoryType::UNDEFINED };
+    GfxBufferUsageFlags m_usageFlags{};
+
+    bool m_hostMapped{ false };
 
     uint64_t m_size{ 0 };
 

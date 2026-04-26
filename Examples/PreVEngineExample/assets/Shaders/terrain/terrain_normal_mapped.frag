@@ -30,9 +30,12 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 	uint hasNormalMap;
 } uboFS;
 
-layout(binding = 2) uniform sampler2D colorSampler[MATERIAL_COUNT];
-layout(binding = 3) uniform sampler2D normalSampler[MATERIAL_COUNT];
-layout(binding = 4) uniform sampler2DArray depthSampler;
+layout(binding = 2) uniform texture2D colorTexture[MATERIAL_COUNT];
+layout(binding = 3) uniform sampler colorSampler;
+layout(binding = 4) uniform texture2D normalTexture[MATERIAL_COUNT];
+layout(binding = 5) uniform sampler normalSampler;
+layout(binding = 6) uniform texture2DArray depthTexture;
+layout(binding = 7) uniform sampler depthSampler;
 
 layout(location = 0) in vec2 inTextureCoord;
 layout(location = 1) in vec3 inNormal;
@@ -70,16 +73,16 @@ void main()
             {
                 float ratio = (normalizedHeight - uboFS.heightSteps[i].x + uboFS.heightTransitionRange) / (2 * uboFS.heightTransitionRange);
 
-                vec4 color1 = texture(colorSampler[i], inTextureCoord);
-                vec4 color2 = texture(colorSampler[i + 1], inTextureCoord);
+                vec4 color1 = texture(sampler2D(colorTexture[i], colorSampler), inTextureCoord);
+                vec4 color2 = texture(sampler2D(colorTexture[i + 1], colorSampler), inTextureCoord);
                 textureColor = mix(color1, color2, ratio);
 
 				vec3 normal1;
 				vec3 normal2;
 				if(uboFS.hasNormalMap != 0)
 				{
-					normal1 = NormalMapping(normalSampler[i], inTextureCoord);
-					normal2 = NormalMapping(normalSampler[i + 1], inTextureCoord);
+					normal1 = NormalMapping(normalTexture[i], normalSampler, inTextureCoord);
+					normal2 = NormalMapping(normalTexture[i + 1], normalSampler, inTextureCoord);
 				}
 				else
 				{
@@ -99,8 +102,8 @@ void main()
             }
 			else if(normalizedHeight < uboFS.heightSteps[i].x - uboFS.heightTransitionRange)
 			{
-				textureColor = texture(colorSampler[i], inTextureCoord);
-				normal = NormalMapping(normalSampler[i], inTextureCoord);
+				textureColor = texture(sampler2D(colorTexture[i], colorSampler), inTextureCoord);
+				normal = NormalMapping(normalTexture[i], normalSampler, inTextureCoord);
 				shineDamper = uboFS.material[i].shineDamper;
 				reflectivity = uboFS.material[i].reflectivity;
 				break;
@@ -108,8 +111,8 @@ void main()
         }
         else
         {
-			textureColor = texture(colorSampler[i], inTextureCoord);
-			normal = NormalMapping(normalSampler[i], inTextureCoord);
+			textureColor = texture(sampler2D(colorTexture[i], colorSampler), inTextureCoord);
+			normal = NormalMapping(normalTexture[i], normalSampler, inTextureCoord);
 			shineDamper = uboFS.material[i].shineDamper;
 			reflectivity = uboFS.material[i].reflectivity;
         }
@@ -118,7 +121,7 @@ void main()
 	float shadow = 1.0;
 	if(uboFS.castedByShadows != 0)
 	{
-		shadow = GetShadow(depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.02);
+		shadow = GetShadow(depthTexture, depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.02);
 	}
 
 	vec3 totalDiffuse = vec3(0.0);

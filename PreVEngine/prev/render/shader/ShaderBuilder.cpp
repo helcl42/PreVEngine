@@ -1,26 +1,24 @@
 #include "ShaderBuilder.h"
 
+#include "../../common/Logger.h"
 #include "../../util/MathUtils.h"
 #include "../../util/Utils.h"
-#include "../../util/VkUtils.h"
 
 #include <stdexcept>
 
 namespace prev::render::shader {
-ShaderBuilder::ShaderBuilder(VkDevice device)
+ShaderBuilder::ShaderBuilder(GfxDevice device)
     : m_device{ device }
 {
 }
 
-ShaderBuilder& ShaderBuilder::AddShaderStagePath(const VkShaderStageFlagBits stage, const std::string& path)
+ShaderBuilder& ShaderBuilder::AddShaderStagePath(GfxShaderStageFlags stage, const std::string& path)
 {
-    CheckExistingStage(stage);
-
     m_stagePaths.insert({ stage, path });
     return *this;
 }
 
-ShaderBuilder& ShaderBuilder::AddShaderStagePaths(const std::map<VkShaderStageFlagBits, std::string>& stagePaths)
+ShaderBuilder& ShaderBuilder::AddShaderStagePaths(const std::map<GfxShaderStageFlags, std::string>& stagePaths)
 {
     for (const auto& [stage, path] : stagePaths) {
         AddShaderStagePath(stage, path);
@@ -28,15 +26,13 @@ ShaderBuilder& ShaderBuilder::AddShaderStagePaths(const std::map<VkShaderStageFl
     return *this;
 }
 
-ShaderBuilder& ShaderBuilder::AddShaderStageByteCode(const VkShaderStageFlagBits stage, const std::vector<char>& byteCode)
+ShaderBuilder& ShaderBuilder::AddShaderStageByteCode(GfxShaderStageFlags stage, const std::vector<char>& byteCode)
 {
-    CheckExistingStage(stage);
-
     m_stageByteCodes.insert({ stage, byteCode });
     return *this;
 }
 
-ShaderBuilder& ShaderBuilder::AddShaderStageByteCodes(const std::map<VkShaderStageFlagBits, std::vector<char>>& byteCodes)
+ShaderBuilder& ShaderBuilder::AddShaderStageByteCodes(const std::map<GfxShaderStageFlags, std::vector<char>>& byteCodes)
 {
     for (const auto& [stage, byteCode] : byteCodes) {
         AddShaderStageByteCode(stage, byteCode);
@@ -44,30 +40,30 @@ ShaderBuilder& ShaderBuilder::AddShaderStageByteCodes(const std::map<VkShaderSta
     return *this;
 }
 
-ShaderBuilder& ShaderBuilder::AddVertexInputBindingDescription(const VkVertexInputBindingDescription& vertexBindingDescriptor)
+ShaderBuilder& ShaderBuilder::AddVertexInputBinding(const VertexInputBinding& desc)
 {
-    m_vertexInputBindingDescriptors.push_back(vertexBindingDescriptor);
+    m_vertexInputBindings.push_back(desc);
     return *this;
 }
 
-ShaderBuilder& ShaderBuilder::AddVertexInputBindingDescriptions(const std::vector<VkVertexInputBindingDescription>& vertexBindingDescriptions)
+ShaderBuilder& ShaderBuilder::AddVertexInputBindings(const std::vector<VertexInputBinding>& descs)
 {
-    for (const auto& vertexBindingDescription : vertexBindingDescriptions) {
-        AddVertexInputBindingDescription(vertexBindingDescription);
+    for (const auto& desc : descs) {
+        AddVertexInputBinding(desc);
     }
     return *this;
 }
 
-ShaderBuilder& ShaderBuilder::AddVertexInputAttributeDescription(const VkVertexInputAttributeDescription& vertexAttributeDescription)
+ShaderBuilder& ShaderBuilder::AddVertexInputAttribute(const VertexInputAttribute& desc)
 {
-    m_vertexInputAttributeDescriptions.push_back(vertexAttributeDescription);
+    m_vertexInputAttributes.push_back(desc);
     return *this;
 }
 
-ShaderBuilder& ShaderBuilder::AddVertexInputAttributeDescriptions(const std::vector<VkVertexInputAttributeDescription>& vertexAttributeDescriptions)
+ShaderBuilder& ShaderBuilder::AddVertexInputAttributes(const std::vector<VertexInputAttribute>& descs)
 {
-    for (const auto& vertexAttributeDescription : vertexAttributeDescriptions) {
-        AddVertexInputAttributeDescription(vertexAttributeDescription);
+    for (const auto& desc : descs) {
+        AddVertexInputAttribute(desc);
     }
     return *this;
 }
@@ -80,29 +76,15 @@ ShaderBuilder& ShaderBuilder::AddDescriptorSet(const DescriptorSet& descriptorSe
 
 ShaderBuilder& ShaderBuilder::AddDescriptorSets(const std::vector<DescriptorSet>& descriptorSets)
 {
-    for (const auto& descriptorSet : descriptorSets) {
-        AddDescriptorSet(descriptorSet);
+    for (const auto& ds : descriptorSets) {
+        AddDescriptorSet(ds);
     }
     return *this;
 }
 
-ShaderBuilder& ShaderBuilder::AddPushConstantBlock(const VkPushConstantRange& pushConstantBlock)
+ShaderBuilder& ShaderBuilder::SetBindGroupCapacity(uint32_t size)
 {
-    m_pushConstantBlocks.push_back(pushConstantBlock);
-    return *this;
-}
-
-ShaderBuilder& ShaderBuilder::AddPushConstantBlocks(const std::vector<VkPushConstantRange>& pushConstantBlocks)
-{
-    for (const auto& pushConstantBlock : pushConstantBlocks) {
-        AddPushConstantBlock(pushConstantBlock);
-    }
-    return *this;
-}
-
-ShaderBuilder& ShaderBuilder::SetDescriptorPoolCapacity(const uint32_t size)
-{
-    m_descriptorPoolSize = size;
+    m_bindGroupCapacity = size;
     return *this;
 }
 
@@ -114,110 +96,100 @@ ShaderBuilder& ShaderBuilder::SetEntryPointName(const std::string& name)
 
 std::unique_ptr<Shader> ShaderBuilder::Build() const
 {
-    const Shader::ShadersInfo shadersInfo{ CreateShadersInfo() };
-    const Shader::VertexInputsInfo vertexInputsInfo{ CreateVertexInputsInfo() };
-    const Shader::DescriptorSetsInfo descriptorSetsInfo{ CreateDescriptorSetsInfo() };
+    // Build shader modules
+    auto byteCodes{ m_stageByteCodes };
+    for (const auto& [stage, path] : m_stagePaths) {
+        byteCodes.insert({ stage, prev::util::file::ReadBinaryFile(path) });
+    }
 
-    auto shader{ std::unique_ptr<Shader>(new Shader(m_device, shadersInfo, vertexInputsInfo, descriptorSetsInfo, m_pushConstantBlocks)) };
-    if (m_descriptorPoolSize > 0) {
-        shader->AdjustDescriptorPoolCapacity(m_descriptorPoolSize);
+    std::map<GfxShaderStageFlags, GfxShader> shaderModules;
+    for (const auto& [stage, byteCode] : byteCodes) {
+        shaderModules[stage] = CreateShaderModule(byteCode);
+    }
+
+    // Build bind group layout
+    GfxBindGroupLayout bindGroupLayout{ CreateBindGroupLayout() };
+
+    // Build binding infos
+    std::map<std::string, Shader::BindingInfo> bindingInfos;
+    for (const auto& ds : m_descriptorSets) {
+        const auto entryType = [](GfxBindingType bt) -> GfxBindGroupEntryType {
+            switch (bt) {
+            case GFX_BINDING_TYPE_BUFFER:
+                return GFX_BIND_GROUP_ENTRY_TYPE_BUFFER;
+            case GFX_BINDING_TYPE_SAMPLER:
+                return GFX_BIND_GROUP_ENTRY_TYPE_SAMPLER;
+            default:
+                return GFX_BIND_GROUP_ENTRY_TYPE_TEXTURE_VIEW;
+            }
+        }(ds.bindingType);
+
+        if (ds.count > 1) {
+            for (uint32_t i = 0; i < ds.count; ++i) {
+                Shader::BindingInfo info{};
+                info.binding = ds.binding;
+                info.type = entryType;
+                bindingInfos[ds.name + "[" + std::to_string(i) + "]"] = info;
+            }
+        } else {
+            Shader::BindingInfo info{};
+            info.binding = ds.binding;
+            info.type = entryType;
+            bindingInfos[ds.name] = info;
+        }
+    }
+
+    auto shader{ std::unique_ptr<Shader>(new Shader(
+        m_device,
+        std::move(shaderModules),
+        m_vertexInputBindings,
+        m_vertexInputAttributes,
+        bindGroupLayout,
+        std::move(bindingInfos))) };
+
+    if (m_bindGroupCapacity > 0) {
+        shader->AdjustBindGroupCapacity(m_bindGroupCapacity);
     }
     return shader;
 }
 
-void ShaderBuilder::CheckExistingStage(const VkShaderStageFlagBits stage) const
-{
-    const auto pathIter{ m_stagePaths.find(stage) };
-    if (pathIter != m_stagePaths.cend()) {
-        throw std::runtime_error("Shader stage " + std::to_string(pathIter->first) + " is already present with path: " + pathIter->second + ".");
-    }
-
-    const auto byteCodeIter{ m_stageByteCodes.find(stage) };
-    if (byteCodeIter != m_stageByteCodes.cend()) {
-        throw std::runtime_error("Shader stage " + std::to_string(pathIter->first) + " is already present with byte code.");
-    }
-}
-
-VkShaderModule ShaderBuilder::CreateShaderModule(const std::vector<char>& spirv) const
+GfxShader ShaderBuilder::CreateShaderModule(const std::vector<char>& spirv) const
 {
     std::vector<uint32_t> codeAligned(prev::util::math::RoundUp<size_t>(spirv.size() / 4, 4));
     memcpy(codeAligned.data(), spirv.data(), spirv.size());
 
-    VkShaderModuleCreateInfo createInfo{ prev::util::vk::CreateStruct<VkShaderModuleCreateInfo>(VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO) };
-    createInfo.codeSize = spirv.size();
-    createInfo.pCode = codeAligned.data();
+    GfxShaderDescriptor desc{};
+    desc.sType = GFX_STRUCTURE_TYPE_SHADER_DESCRIPTOR;
+    desc.sourceType = GFX_SHADER_SOURCE_SPIRV;
+    desc.code = codeAligned.data();
+    desc.codeSize = spirv.size();
+    desc.entryPoint = m_entryPointName.empty() ? DEFAULT_ENTRY_POINT_NAME.c_str() : m_entryPointName.c_str();
 
-    VkShaderModule shaderModule;
-    VKERRCHECK(vkCreateShaderModule(m_device, &createInfo, nullptr, &shaderModule));
-    return shaderModule;
+    GfxShader shader{};
+    GFXERRCHECK(gfxDeviceCreateShader(m_device, &desc, &shader));
+    return shader;
 }
 
-VkPipelineShaderStageCreateInfo ShaderBuilder::CreateShaderStageCreateInfo(const VkShaderStageFlagBits stage, const VkShaderModule& module) const
+GfxBindGroupLayout ShaderBuilder::CreateBindGroupLayout() const
 {
-    VkPipelineShaderStageCreateInfo stageInfo{ prev::util::vk::CreateStruct<VkPipelineShaderStageCreateInfo>(VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO) };
-    stageInfo.stage = stage;
-    stageInfo.module = module;
-    stageInfo.pName = m_entryPointName.empty() ? DEFAULT_ENTRY_POINT_NAME.c_str() : m_entryPointName.c_str(); // this changes name for all stages
-    return stageInfo;
-}
-
-VkDescriptorSetLayout ShaderBuilder::CreateDescriptorSetLayout(const std::vector<VkDescriptorSetLayoutBinding>& layoutBindings) const
-{
-    VkDescriptorSetLayoutCreateInfo createInfo{ prev::util::vk::CreateStruct<VkDescriptorSetLayoutCreateInfo>(VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO) };
-    createInfo.bindingCount = static_cast<uint32_t>(layoutBindings.size());
-    createInfo.pBindings = layoutBindings.data();
-
-    VkDescriptorSetLayout descriptorSetLayout;
-    VKERRCHECK(vkCreateDescriptorSetLayout(m_device, &createInfo, nullptr, &descriptorSetLayout));
-    return descriptorSetLayout;
-}
-
-Shader::ShadersInfo ShaderBuilder::CreateShadersInfo() const
-{
-    auto byteCodes{ m_stageByteCodes };
-    for (const auto& [stage, path] : m_stagePaths) {
-        const auto spirv{ prev::util::file::ReadBinaryFile(path) };
-        byteCodes.insert({ stage, spirv });
-    }
-
-    std::map<VkShaderStageFlagBits, VkShaderModule> shaderModules;
-    for (const auto& [stage, byteCode] : byteCodes) {
-        shaderModules.insert({ stage, CreateShaderModule(byteCode) });
-    }
-
-    std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
-    for (const auto& [stage, module] : shaderModules) {
-        const auto stageCreateInfo{ CreateShaderStageCreateInfo(stage, module) };
-        shaderStages.emplace_back(stageCreateInfo);
-    }
-
-    return { shaderModules, shaderStages };
-}
-
-Shader::VertexInputsInfo ShaderBuilder::CreateVertexInputsInfo() const
-{
-    return { m_vertexInputBindingDescriptors, m_vertexInputAttributeDescriptions };
-}
-
-Shader::DescriptorSetsInfo ShaderBuilder::CreateDescriptorSetsInfo() const
-{
-    std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
-    std::vector<VkWriteDescriptorSet> descriptorWrites;
-    std::map<std::string, Shader::DescriptorSetInfo> descriptorSetInfos;
+    std::vector<GfxBindGroupLayoutEntry> entries;
     for (const auto& ds : m_descriptorSets) {
-        layoutBindings.emplace_back(prev::util::vk::CreteDescriptorSetLayoutBinding(ds.binding, ds.descType, ds.descCount, ds.stageFlags));
-        descriptorWrites.emplace_back(prev::util::vk::CreateWriteDescriptorSet(ds.binding, ds.descType, ds.descCount));
-        if (ds.descCount > 1) {
-            for (uint32_t i = 0; i < ds.descCount; ++i) {
-                descriptorSetInfos[ds.name + "[" + std::to_string(i) + "]"] = { descriptorWrites.size() - 1, {} };
-            }
-        } else {
-            descriptorSetInfos[ds.name] = { descriptorWrites.size() - 1, {} };
-        }
+        GfxBindGroupLayoutEntry entry{};
+        entry.binding = ds.binding;
+        entry.visibility = ds.stageFlags;
+        entry.type = ds.bindingType;
+        entry.count = ds.count;
+        entries.push_back(entry);
     }
 
-    const auto descriptorSetLayout{ CreateDescriptorSetLayout(layoutBindings) };
-    return { descriptorSetLayout, layoutBindings, descriptorWrites, descriptorSetInfos };
+    GfxBindGroupLayoutDescriptor desc{};
+    desc.sType = GFX_STRUCTURE_TYPE_BIND_GROUP_LAYOUT_DESCRIPTOR;
+    desc.entries = entries.data();
+    desc.entryCount = static_cast<uint32_t>(entries.size());
+
+    GfxBindGroupLayout layout{};
+    GFXERRCHECK(gfxDeviceCreateBindGroupLayout(m_device, &desc, &layout));
+    return layout;
 }
 
 } // namespace prev::render::shader
