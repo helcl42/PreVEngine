@@ -90,13 +90,16 @@ include_directories("external")
 include_directories("external/gfx/gfx/include")
 include_directories("external/gfx/gfx/src")
 
+option(BUILD_WEBGPU_BACKEND "Build WebGPU backend (requires Dawn)" OFF)
+
 # Collect gfx backend source files
 file(GLOB_RECURSE GFX_SRC_LIST
     "external/gfx/gfx/src/*.h" "external/gfx/gfx/src/*.cpp"
 )
 
-# Exclude webgpu backend (not yet supported)
-list(FILTER GFX_SRC_LIST EXCLUDE REGEX ".*/webgpu/.*")
+if(NOT BUILD_WEBGPU_BACKEND)
+    list(FILTER GFX_SRC_LIST EXCLUDE REGEX ".*/webgpu/.*")
+endif()
 
 # Add gfx sources to main source list
 list(APPEND SRC_LIST ${GFX_SRC_LIST})
@@ -104,6 +107,51 @@ list(APPEND SRC_LIST ${GFX_SRC_LIST})
 # gfx sources require C++20 and Vulkan backend enabled
 set_source_files_properties(${GFX_SRC_LIST} PROPERTIES COMPILE_FLAGS "-std=c++20")
 add_definitions(-DGFX_ENABLE_VULKAN=1)
+
+if(BUILD_WEBGPU_BACKEND)
+    set(DAWN_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/external/gfx/third_party/dawn")
+    if(NOT EXISTS "${DAWN_ROOT}/CMakeLists.txt")
+        message(FATAL_ERROR "Dawn not found at ${DAWN_ROOT}. Run: cd external/gfx && git submodule update --init third_party/dawn")
+    endif()
+
+    message(STATUS "Enabling WebGPU backend via Dawn: ${DAWN_ROOT}")
+    add_definitions(-DGFX_ENABLE_WEBGPU=1)
+
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+    set(DAWN_FETCH_DEPENDENCIES ON CACHE BOOL "" FORCE)
+    set(DAWN_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
+    set(DAWN_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
+    set(DAWN_USE_GLFW OFF CACHE BOOL "" FORCE)
+    set(TINT_BUILD_SPV_READER ON CACHE BOOL "" FORCE)
+    set(TINT_BUILD_SPV_WRITER ON CACHE BOOL "" FORCE)
+    set(TINT_BUILD_CMD_TOOLS OFF CACHE BOOL "" FORCE)
+
+    if(APPLE)
+        set(DAWN_ENABLE_METAL ON CACHE BOOL "" FORCE)
+        set(DAWN_ENABLE_VULKAN ON CACHE BOOL "" FORCE)
+    elseif(WIN32)
+        set(DAWN_ENABLE_D3D11 ON CACHE BOOL "" FORCE)
+        set(DAWN_ENABLE_D3D12 ON CACHE BOOL "" FORCE)
+        set(DAWN_ENABLE_VULKAN ON CACHE BOOL "" FORCE)
+    else()
+        set(DAWN_ENABLE_VULKAN ON CACHE BOOL "" FORCE)
+    endif()
+
+    set(GFX_SAVED_C_FLAGS "${CMAKE_C_FLAGS}")
+    set(GFX_SAVED_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    if(NOT MSVC)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w -Wno-unused-command-line-argument")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w -Wno-unused-command-line-argument")
+    endif()
+
+    add_subdirectory(${DAWN_ROOT} ${CMAKE_BINARY_DIR}/dawn EXCLUDE_FROM_ALL)
+
+    set(CMAKE_C_FLAGS "${GFX_SAVED_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${GFX_SAVED_CXX_FLAGS}")
+
+    include_directories("${DAWN_ROOT}/include")
+    include_directories("${CMAKE_BINARY_DIR}/dawn/gen/include")
+endif()
 
 include_directories("external/worm_holes/WormHoles")
 include_directories("external/glm")
@@ -266,6 +314,12 @@ elseif(ANDROID)
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 else()
     message(FATAL_ERROR "Unsupported platform.")
+endif()
+
+if(BUILD_WEBGPU_BACKEND)
+    target_link_libraries(${PROJECT_NAME} webgpu_dawn)
+    target_include_directories(${PROJECT_NAME} PUBLIC "${DAWN_ROOT}/include")
+    target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_BINARY_DIR}/dawn/gen/include")
 endif()
 
 if(ENABLE_XR)

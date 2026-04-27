@@ -59,9 +59,7 @@ ImageBuffer::ImageBuffer(GfxDevice device, GfxQueue queue)
 ImageBuffer::~ImageBuffer()
 {
     gfxQueueWaitIdle(m_queue);
-    if (m_view) {
-        gfxTextureViewDestroy(m_view);
-    }
+    m_view = ImageBufferView{ nullptr };
     if (m_texture) {
         gfxTextureDestroy(m_texture);
     }
@@ -150,7 +148,7 @@ GfxTextureType ImageBuffer::GetTextureType() const
     return m_type;
 }
 
-GfxTextureView ImageBuffer::GetTextureView() const
+const ImageBufferView& ImageBuffer::GetTextureView() const
 {
     return m_view;
 }

@@ -23,7 +23,6 @@ public:
 private:
     prev::core::device::Device& m_device;
 
-
     uint32_t m_gridMaxX;
 
     uint32_t m_gridMaxZ;

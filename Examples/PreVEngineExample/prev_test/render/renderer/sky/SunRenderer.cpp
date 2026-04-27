@@ -94,7 +94,7 @@ void SunRenderer::BeforeRender(const NormalRenderContext& renderContext)
 
 void SunRenderer::PreRender(const NormalRenderContext& renderContext)
 {
-        const GfxViewport viewport{ static_cast<float>(renderContext.rect.origin.x), static_cast<float>(renderContext.rect.origin.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 1.0f };
+    const GfxViewport viewport{ static_cast<float>(renderContext.rect.origin.x), static_cast<float>(renderContext.rect.origin.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 1.0f };
 
     gfxRenderPassEncoderSetPipeline(renderContext.renderPassEncoder, *m_pipeline);
     gfxRenderPassEncoderSetViewport(renderContext.renderPassEncoder, &viewport);
@@ -133,7 +133,9 @@ void SunRenderer::Render(const NormalRenderContext& renderContext, const std::sh
     m_shader->Bind("uboVS", uboVS);
 
     const GfxBindGroup descriptorSet = m_shader->UpdateNextBindGroup();
-        gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *sunComponent->GetModel()->GetVertexBuffer(), 0, sunComponent->GetModel()->GetVertexBuffer()->GetSize());
+    const uint64_t vertexOffset = 0;
+    const uint64_t vertexRange = sunComponent->GetModel()->GetVertexBuffer()->GetSize() - vertexOffset;
+    gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *sunComponent->GetModel()->GetVertexBuffer(), vertexOffset, vertexRange);
     gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *sunComponent->GetModel()->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, sunComponent->GetModel()->GetIndexBuffer()->GetSize());
     gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 

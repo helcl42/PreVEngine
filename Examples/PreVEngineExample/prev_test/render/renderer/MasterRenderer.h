@@ -78,7 +78,6 @@ private:
 private:
     prev::core::device::Device& m_device;
 
-
     prev::render::pass::RenderPass& m_defaultRenderPass;
 
     prev::scene::IScene& m_scene;

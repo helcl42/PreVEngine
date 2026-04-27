@@ -40,11 +40,15 @@ layout(location = 3) out vec3 outViewPosition;
 layout(location = 4) out float outVisibility;
 layout(location = 5) out vec3 outToCameraVectorTangentSpace;
 layout(location = 6) out vec3 outPositionTangentSpace;
-layout(location = 7) out vec3 outToLightVectorTangentSpace[MAX_LIGHT_COUNT];
+layout(location = 7) out vec3 outToLightVectorTangentSpace0;
+layout(location = 8) out vec3 outToLightVectorTangentSpace1;
+layout(location = 9) out vec3 outToLightVectorTangentSpace2;
+layout(location = 10) out vec3 outToLightVectorTangentSpace3;
 layout(location = 11) out float outClipDistance;
 
 void main()
 {
+	vec3 outToLightVectorTangentSpace_arr[4];
 #ifdef ENABLE_XR
 	const int viewIndex = gl_ViewIndex;
 #else
@@ -80,6 +84,11 @@ void main()
 		const Light light = uboVS.lightning.lights[i];
 
 		vec3 lightPositionViewSpace = (uboVS.viewMatrices[viewIndex] * vec4(light.position.xyz, 1.0)).xyz;
-		outToLightVectorTangentSpace[i] = TBN * lightPositionViewSpace;
+		outToLightVectorTangentSpace_arr[i] = TBN * lightPositionViewSpace;
 	}
+
+	outToLightVectorTangentSpace0 = outToLightVectorTangentSpace_arr[0];
+	outToLightVectorTangentSpace1 = outToLightVectorTangentSpace_arr[1];
+	outToLightVectorTangentSpace2 = outToLightVectorTangentSpace_arr[2];
+	outToLightVectorTangentSpace3 = outToLightVectorTangentSpace_arr[3];
 }

@@ -126,7 +126,9 @@ void BoundingVolumeDebugRenderer::Render(const NormalRenderContext& renderContex
     m_shader->Bind("uboFS", uboFS);
 
     const GfxBindGroup descriptorSet = m_shader->UpdateNextBindGroup();
-        gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *boundingVolumeComponent->GetModel()->GetVertexBuffer(), 0, boundingVolumeComponent->GetModel()->GetVertexBuffer()->GetSize());
+        const uint64_t vertexOffset = 0;
+        const uint64_t vertexRange = boundingVolumeComponent->GetModel()->GetVertexBuffer()->GetSize() - vertexOffset;
+        gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *boundingVolumeComponent->GetModel()->GetVertexBuffer(), vertexOffset, vertexRange);
     gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *boundingVolumeComponent->GetModel()->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, boundingVolumeComponent->GetModel()->GetIndexBuffer()->GetSize());
     gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 

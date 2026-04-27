@@ -5,6 +5,7 @@
 #include <prev/core/CommandsExecutor.h>
 #include <prev/render/buffer/BufferBuilder.h>
 #include <prev/render/buffer/ImageBufferBuilder.h>
+#include <prev/render/buffer/ImageBufferViewBuilder.h>
 #include <prev/render/pipeline/ComputePipelineBuilder.h>
 #include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
@@ -35,7 +36,7 @@ Clouds CloudsFactory::Create(const uint32_t width, const uint32_t height) const
         })
         .AddDescriptorSets({
             { "uboCS", 0, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_COMPUTE },
-            { "outWeatherTexture", 1, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE }
+            { "outWeatherTexture", 1, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE, false, 1, GFX_FORMAT_R8G8B8A8_UNORM, GFX_TEXTURE_VIEW_TYPE_2D, GFX_STORAGE_TEXTURE_ACCESS_WRITE_ONLY }
         })
 	    .SetBindGroupCapacity(1)
         .Build();
@@ -66,6 +67,10 @@ Clouds CloudsFactory::Create(const uint32_t width, const uint32_t height) const
                        .SetAddressMode(GFX_ADDRESS_MODE_REPEAT)
                        .Build();
 
+    auto weatherStorageView = prev::render::buffer::ImageBufferViewBuilder{ *weatherImageBuffer }
+                                  .SetMipLevelCount(1)
+                                  .Build();
+
     prev::core::CommandsExecutor commandsExecutor{ m_device, computeQueue };
     commandsExecutor.ExecuteImmediate([&](GfxCommandEncoder commandBuffer) {
         Uniforms uniforms{};
@@ -78,7 +83,7 @@ Clouds CloudsFactory::Create(const uint32_t width, const uint32_t height) const
         uniformBuffer->Write(uniforms);
 
         shader->Bind("uboCS", *uniformBuffer);
-        shader->Bind("outWeatherTexture", *weatherImageBuffer);
+    shader->Bind("outWeatherTexture", *weatherStorageView);
         const GfxBindGroup bindGroup = shader->UpdateNextBindGroup();
 
         GfxComputePassEncoder computePassEncoder{};

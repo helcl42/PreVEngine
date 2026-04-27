@@ -44,10 +44,13 @@ void TerrainRenderer::Init()
         .AddDescriptorSets({
             { "uboVS", 0, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_VERTEX },
             { "uboFS", 1, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_FRAGMENT },
-            { "colorTexture", 2, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT, false, 4 },
-            { "colorSampler", 3, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
-            { "depthTexture", 4, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
-            { "depthSampler", 5, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT }
+            { "colorTexture0", 2, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
+            { "colorTexture1", 3, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
+            { "colorTexture2", 4, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
+            { "colorTexture3", 5, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
+            { "colorSampler", 6, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
+            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("depthTexture", 7, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D_ARRAY, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("depthSampler", 8, GFX_SHADER_STAGE_FRAGMENT, true)
         })
 	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();
@@ -106,7 +109,7 @@ void TerrainRenderer::BeforeRender(const NormalRenderContext& renderContext)
 
 void TerrainRenderer::PreRender(const NormalRenderContext& renderContext)
 {
-        const GfxViewport viewport{ static_cast<float>(renderContext.rect.origin.x), static_cast<float>(renderContext.rect.origin.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 1.0f };
+    const GfxViewport viewport{ static_cast<float>(renderContext.rect.origin.x), static_cast<float>(renderContext.rect.origin.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 1.0f };
 
     gfxRenderPassEncoderSetPipeline(renderContext.renderPassEncoder, *m_pipeline);
     gfxRenderPassEncoderSetViewport(renderContext.renderPassEncoder, &viewport);
@@ -195,18 +198,20 @@ void TerrainRenderer::Render(const NormalRenderContext& renderContext, const std
 
     uboFS.Write(uniformsFS);
 
-    m_shader->Bind("depthTexture", *shadowsComponent->GetImageBuffer());
+    m_shader->Bind("depthTexture", shadowsComponent->GetImageBuffer()->GetTextureView());
     m_shader->Bind("depthSampler", *m_depthSampler);
     for (size_t i = 0; i < terrainComponent->GetMaterials().size(); ++i) {
         const auto material{ terrainComponent->GetMaterials().at(i) };
-        m_shader->Bind("colorTexture[" + std::to_string(i) + "]", *material->GetImageBuffer());
+        m_shader->Bind("colorTexture" + std::to_string(i), material->GetImageBuffer()->GetTextureView());
     }
     m_shader->Bind("colorSampler", *m_colorSampler);
     m_shader->Bind("uboVS", uboVS);
     m_shader->Bind("uboFS", uboFS);
 
     const GfxBindGroup descriptorSet = m_shader->UpdateNextBindGroup();
-        gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *terrainComponent->GetModel()->GetVertexBuffer(), 0, terrainComponent->GetModel()->GetVertexBuffer()->GetSize());
+    const uint64_t vertexOffset = 0;
+    const uint64_t vertexRange = terrainComponent->GetModel()->GetVertexBuffer()->GetSize() - vertexOffset;
+    gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *terrainComponent->GetModel()->GetVertexBuffer(), vertexOffset, vertexRange);
     gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *terrainComponent->GetModel()->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, terrainComponent->GetModel()->GetIndexBuffer()->GetSize());
     gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 

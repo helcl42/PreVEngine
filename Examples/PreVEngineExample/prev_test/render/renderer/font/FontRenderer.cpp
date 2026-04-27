@@ -129,13 +129,15 @@ void FontRenderer::Render(const NormalRenderContext& renderContext, const std::s
         uniformsFS.outlineOffset = glm::vec4(renderableText.text->GetOutlineOffset(), 0.0f, 1.0f);
         uboFS.Write(uniformsFS);
 
-        m_shader->Bind("alphaTexture", *nodeFontRenderComponent->GetFontMetadata()->GetImageBuffer());
+        m_shader->Bind("alphaTexture", nodeFontRenderComponent->GetFontMetadata()->GetImageBuffer()->GetTextureView());
         m_shader->Bind("alphaSampler", *m_alphaSampler);
         m_shader->Bind("uboVS", uboVS);
         m_shader->Bind("uboFS", uboFS);
 
         const GfxBindGroup descriptorSet = m_shader->UpdateNextBindGroup();
-        gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *renderableText.model->GetVertexBuffer(), 0, renderableText.model->GetVertexBuffer()->GetSize());
+        const uint64_t vertexOffset = 0;
+        const uint64_t vertexRange = renderableText.model->GetVertexBuffer()->GetSize() - vertexOffset;
+        gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *renderableText.model->GetVertexBuffer(), vertexOffset, vertexRange);
         gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *renderableText.model->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, renderableText.model->GetIndexBuffer()->GetSize());
         gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 

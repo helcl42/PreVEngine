@@ -73,6 +73,9 @@ std::unique_ptr<Buffer> BufferBuilder::Build() const
     void* mappedPtr{};
     if (m_hostMapped) {
         gfxBufferMap(buffer, 0, GFX_WHOLE_SIZE, &mappedPtr);
+    }
+
+    if (mappedPtr) {
         const auto sizeToInit{ std::min(m_dataSize, alignedSize) };
         if (m_data) {
             std::memcpy(mappedPtr, m_data, sizeToInit);
@@ -81,8 +84,7 @@ std::unique_ptr<Buffer> BufferBuilder::Build() const
         }
         gfxBufferFlushMappedRange(buffer, 0, alignedSize);
     } else if (m_data && m_dataSize > 0) {
-        const uint64_t sizeToUpload{ std::min(m_dataSize, alignedSize) };
-        gfxQueueWriteBuffer(m_queue, buffer, 0, m_data, sizeToUpload);
+        gfxQueueWriteBuffer(m_queue, buffer, 0, m_data, std::min(m_dataSize, alignedSize));
     }
 
     return std::unique_ptr<Buffer>(new Buffer(m_device, m_queue, buffer, m_hostMapped, alignedSize, mappedPtr));

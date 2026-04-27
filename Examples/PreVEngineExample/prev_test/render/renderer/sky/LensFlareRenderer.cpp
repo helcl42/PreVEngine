@@ -140,13 +140,15 @@ void LensFlareRenderer::Render(const NormalRenderContext& renderContext, const s
         uniformsFS.brightness = glm::vec4(m_sunVisibilityFactor);
         uboFS.Write(uniformsFS);
 
-        m_shader->Bind("colorTexture", *flareMaterial->GetImageBuffer());
+        m_shader->Bind("colorTexture", flareMaterial->GetImageBuffer()->GetTextureView());
         m_shader->Bind("colorSampler", *m_colorSampler);
         m_shader->Bind("uboVS", uboVS);
         m_shader->Bind("uboFS", uboFS);
 
         const GfxBindGroup descriptorSet = m_shader->UpdateNextBindGroup();
-        gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *lensFlareComponent->GetModel()->GetVertexBuffer(), 0, lensFlareComponent->GetModel()->GetVertexBuffer()->GetSize());
+        const uint64_t vertexOffset = 0;
+        const uint64_t vertexRange = lensFlareComponent->GetModel()->GetVertexBuffer()->GetSize() - vertexOffset;
+        gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *lensFlareComponent->GetModel()->GetVertexBuffer(), vertexOffset, vertexRange);
         gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *lensFlareComponent->GetModel()->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, lensFlareComponent->GetModel()->GetIndexBuffer()->GetSize());
         gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 

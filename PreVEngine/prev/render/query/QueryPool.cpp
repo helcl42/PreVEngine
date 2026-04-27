@@ -11,6 +11,7 @@ QueryPool::QueryPool(prev::core::device::Device& device, GfxQueryType queryType,
     , m_index{ prev::util::CircularIndex<uint32_t>(poolCount) }
 {
     m_querySets.resize(m_poolCount);
+    m_resolveBuffers.resize(m_poolCount);
     m_resultBuffers.resize(m_poolCount);
     for (uint32_t i = 0; i < m_poolCount; ++i) {
         GfxQuerySetDescriptor desc{};
@@ -19,13 +20,21 @@ QueryPool::QueryPool(prev::core::device::Device& device, GfxQueryType queryType,
         desc.count = m_queryCount;
         GFXERRCHECK(gfxDeviceCreateQuerySet(m_device, &desc, &m_querySets[i]));
 
-        // Create host-mapped result buffer for each pool
-        GfxBufferDescriptor bufDesc{};
-        bufDesc.sType = GFX_STRUCTURE_TYPE_BUFFER_DESCRIPTOR;
-        bufDesc.usage = GFX_BUFFER_USAGE_COPY_DST | GFX_BUFFER_USAGE_MAP_READ;
-        bufDesc.size = sizeof(uint64_t) * m_queryCount;
-        bufDesc.memoryProperties = GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT;
-        GFXERRCHECK(gfxDeviceCreateBuffer(m_device, &bufDesc, &m_resultBuffers[i]));
+        // Buffer for resolving query results (GPU-side)
+        GfxBufferDescriptor resolveDesc{};
+        resolveDesc.sType = GFX_STRUCTURE_TYPE_BUFFER_DESCRIPTOR;
+        resolveDesc.usage = GFX_BUFFER_USAGE_QUERY_RESOLVE | GFX_BUFFER_USAGE_COPY_SRC | GFX_BUFFER_USAGE_COPY_DST;
+        resolveDesc.size = sizeof(uint64_t) * m_queryCount;
+        resolveDesc.memoryProperties = GFX_MEMORY_PROPERTY_DEVICE_LOCAL;
+        GFXERRCHECK(gfxDeviceCreateBuffer(m_device, &resolveDesc, &m_resolveBuffers[i]));
+
+        // Staging buffer for CPU readback
+        GfxBufferDescriptor stagingDesc{};
+        stagingDesc.sType = GFX_STRUCTURE_TYPE_BUFFER_DESCRIPTOR;
+        stagingDesc.usage = GFX_BUFFER_USAGE_COPY_DST | GFX_BUFFER_USAGE_MAP_READ;
+        stagingDesc.size = sizeof(uint64_t) * m_queryCount;
+        stagingDesc.memoryProperties = GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT;
+        GFXERRCHECK(gfxDeviceCreateBuffer(m_device, &stagingDesc, &m_resultBuffers[i]));
     }
 }
 
@@ -34,6 +43,9 @@ QueryPool::~QueryPool()
     for (uint32_t i = 0; i < m_poolCount; ++i) {
         if (m_resultBuffers[i]) {
             gfxBufferDestroy(m_resultBuffers[i]);
+        }
+        if (m_resolveBuffers[i]) {
+            gfxBufferDestroy(m_resolveBuffers[i]);
         }
         if (m_querySets[i]) {
             gfxQuerySetDestroy(m_querySets[i]);
@@ -66,7 +78,15 @@ void QueryPool::ResetAll(GfxCommandEncoder commandEncoder)
 
 void QueryPool::Resolve(GfxCommandEncoder commandEncoder)
 {
-    gfxCommandEncoderResolveQuerySet(commandEncoder, m_querySets[m_index], 0, m_queryCount, m_resultBuffers[m_index], 0);
+    gfxCommandEncoderResolveQuerySet(commandEncoder, m_querySets[m_index], 0, m_queryCount, m_resolveBuffers[m_index], 0);
+    // Copy from resolve buffer to mappable staging buffer
+    GfxCopyBufferToBufferDescriptor copyDesc{};
+    copyDesc.source = m_resolveBuffers[m_index];
+    copyDesc.sourceOffset = 0;
+    copyDesc.destination = m_resultBuffers[m_index];
+    copyDesc.destinationOffset = 0;
+    copyDesc.size = sizeof(uint64_t) * m_queryCount;
+    gfxCommandEncoderCopyBufferToBuffer(commandEncoder, &copyDesc);
     ++m_index;
     // Reset the next query set so it's ready for use
     gfxCommandEncoderResetQuerySet(commandEncoder, m_querySets[m_index], 0, m_queryCount);

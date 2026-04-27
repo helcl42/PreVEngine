@@ -32,7 +32,6 @@ private:
 private:
     prev::core::device::Device& m_device;
 
-
     uint32_t m_viewCount;
 
 private:

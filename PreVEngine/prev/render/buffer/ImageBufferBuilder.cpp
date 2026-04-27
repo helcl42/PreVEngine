@@ -1,4 +1,5 @@
 #include "ImageBufferBuilder.h"
+#include "ImageBufferViewBuilder.h"
 
 #include "../../core/CommandsExecutor.h"
 #include "../../util/MathUtils.h"
@@ -104,6 +105,7 @@ std::unique_ptr<ImageBuffer> ImageBufferBuilder::Build() const
     GfxTextureUsageFlags usageFlags{ m_usageFlags | GFX_TEXTURE_USAGE_COPY_DST };
     if (mipLevels > 1) {
         usageFlags |= GFX_TEXTURE_USAGE_COPY_SRC;
+        usageFlags |= GFX_TEXTURE_USAGE_RENDER_ATTACHMENT;
     }
     if (!m_hostMapped) {
         usageFlags |= GFX_TEXTURE_USAGE_TEXTURE_BINDING;
@@ -132,35 +134,33 @@ std::unique_ptr<ImageBuffer> ImageBufferBuilder::Build() const
         }
     }
 
-    // Create texture view (not for host-mapped)
-    GfxTextureView view{};
-    if (!m_hostMapped) {
-        GfxTextureViewDescriptor viewDesc{};
-        viewDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_VIEW_DESCRIPTOR;
-        viewDesc.viewType = viewType;
-        viewDesc.format = m_format;
-        viewDesc.baseMipLevel = 0;
-        viewDesc.mipLevelCount = mipLevels;
-        viewDesc.baseArrayLayer = 0;
-        viewDesc.arrayLayerCount = m_layerCount;
-        gfxTextureCreateView(texture, &viewDesc, &view);
-    }
-
     auto imageBuffer{ std::unique_ptr<ImageBuffer>(new ImageBuffer(m_device, m_queue)) };
     imageBuffer->m_extent = m_extent;
     imageBuffer->m_format = m_format;
     imageBuffer->m_mipLevels = mipLevels;
     imageBuffer->m_texture = texture;
     imageBuffer->m_type = m_type;
-    imageBuffer->m_view = view;
+    imageBuffer->m_view = ImageBufferView{ nullptr };
     imageBuffer->m_viewType = viewType;
     imageBuffer->m_samplesCount = m_sampleCount;
     imageBuffer->m_layerCount = m_layerCount;
     imageBuffer->m_usageFlags = usageFlags;
     imageBuffer->m_layout = m_layersData.empty() ? GFX_TEXTURE_LAYOUT_UNDEFINED : GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY;
 
-    // Transition to requested layout and optionally generate mipmaps
-    if (mipLevels > 1) {
+    // Create default texture view (not for host-mapped) via the view builder.
+    // Keep full mip coverage to preserve existing behavior.
+    if (!m_hostMapped) {
+        auto defaultView = ImageBufferViewBuilder{ *imageBuffer }
+                               .SetMipLevelCount(mipLevels)
+                               .SetArrayLayerCount(m_layerCount)
+                               .Build();
+        imageBuffer->m_view = std::move(*defaultView);
+    }
+
+    // Transition to requested layout and optionally generate mipmaps.
+    // Only generate mipmaps during build when data was uploaded; otherwise the caller
+    // is responsible (e.g. after a compute pass fills the texture).
+    if (mipLevels > 1 && !m_layersData.empty()) {
         prev::core::CommandsExecutor cmds{ m_device, m_queue };
         cmds.ExecuteImmediate([&](GfxCommandEncoder enc) {
             imageBuffer->GenerateMipMaps(enc);

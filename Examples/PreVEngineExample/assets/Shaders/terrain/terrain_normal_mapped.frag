@@ -4,7 +4,6 @@
 
 #include "../common/shadows_use.glsl"
 #include "../common/lights.glsl"
-#include "../common/normal_mapping_use.glsl"
 
 const uint MATERIAL_COUNT = 4;
 
@@ -30,12 +29,34 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 	uint hasNormalMap;
 } uboFS;
 
-layout(binding = 2) uniform texture2D colorTexture[MATERIAL_COUNT];
-layout(binding = 3) uniform sampler colorSampler;
-layout(binding = 4) uniform texture2D normalTexture[MATERIAL_COUNT];
-layout(binding = 5) uniform sampler normalSampler;
-layout(binding = 6) uniform texture2DArray depthTexture;
-layout(binding = 7) uniform sampler depthSampler;
+layout(binding = 2) uniform texture2D colorTexture0;
+layout(binding = 3) uniform texture2D colorTexture1;
+layout(binding = 4) uniform texture2D colorTexture2;
+layout(binding = 5) uniform texture2D colorTexture3;
+layout(binding = 6) uniform sampler colorSampler;
+layout(binding = 7) uniform texture2D normalTexture0;
+layout(binding = 8) uniform texture2D normalTexture1;
+layout(binding = 9) uniform texture2D normalTexture2;
+layout(binding = 10) uniform texture2D normalTexture3;
+layout(binding = 11) uniform sampler normalSampler;
+layout(binding = 12) uniform texture2DArray depthTexture;
+layout(binding = 13) uniform sampler depthSampler;
+
+vec4 sampleColorTexture(uint idx, vec2 uv, vec2 ddx, vec2 ddy) {
+    if (idx == 0) return textureGrad(sampler2D(colorTexture0, colorSampler), uv, ddx, ddy);
+    else if (idx == 1) return textureGrad(sampler2D(colorTexture1, colorSampler), uv, ddx, ddy);
+    else if (idx == 2) return textureGrad(sampler2D(colorTexture2, colorSampler), uv, ddx, ddy);
+    else return textureGrad(sampler2D(colorTexture3, colorSampler), uv, ddx, ddy);
+}
+
+vec3 sampleNormalMap(uint idx, vec2 uv, vec2 ddx, vec2 ddy) {
+    vec3 n;
+    if (idx == 0) n = textureGrad(sampler2D(normalTexture0, normalSampler), uv, ddx, ddy).xyz;
+    else if (idx == 1) n = textureGrad(sampler2D(normalTexture1, normalSampler), uv, ddx, ddy).xyz;
+    else if (idx == 2) n = textureGrad(sampler2D(normalTexture2, normalSampler), uv, ddx, ddy).xyz;
+    else n = textureGrad(sampler2D(normalTexture3, normalSampler), uv, ddx, ddy).xyz;
+    return normalize(2.0 * normalize(n) - 1.0);
+}
 
 layout(location = 0) in vec2 inTextureCoord;
 layout(location = 1) in vec3 inNormal;
@@ -44,13 +65,17 @@ layout(location = 3) in vec3 inViewPosition;
 layout(location = 4) in float inVisibility;
 layout(location = 5) in vec3 inToCameraVectorTangentSpace;
 layout(location = 6) in vec3 inPositionTangentSpace;
-layout(location = 7) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
+layout(location = 7) in vec3 inToLightVectorTangentSpace0;
+layout(location = 8) in vec3 inToLightVectorTangentSpace1;
+layout(location = 9) in vec3 inToLightVectorTangentSpace2;
+layout(location = 10) in vec3 inToLightVectorTangentSpace3;
 layout(location = 11) in float inClipDistance;
 
 layout(location = 0) out vec4 outColor;
 
 void main()
 {
+	vec3 inToLightVectorTangentSpace_arr[4] = vec3[4](inToLightVectorTangentSpace0, inToLightVectorTangentSpace1, inToLightVectorTangentSpace2, inToLightVectorTangentSpace3);
 	if (inClipDistance < 0.0)
 	{
 		discard; 
@@ -65,6 +90,8 @@ void main()
 	vec3 normal = vec3(0.0, 1.0, 0.0);
 	float shineDamper = 1.0f;
 	float reflectivity = 1.0f;
+	vec2 ddx = dFdx(inTextureCoord);
+	vec2 ddy = dFdy(inTextureCoord);
     for(uint i = 0; i < MATERIAL_COUNT; i++)
     {
         if(i < MATERIAL_COUNT - 1)
@@ -73,16 +100,16 @@ void main()
             {
                 float ratio = (normalizedHeight - uboFS.heightSteps[i].x + uboFS.heightTransitionRange) / (2 * uboFS.heightTransitionRange);
 
-                vec4 color1 = texture(sampler2D(colorTexture[i], colorSampler), inTextureCoord);
-                vec4 color2 = texture(sampler2D(colorTexture[i + 1], colorSampler), inTextureCoord);
+                vec4 color1 = sampleColorTexture(i, inTextureCoord, ddx, ddy);
+                vec4 color2 = sampleColorTexture(i + 1, inTextureCoord, ddx, ddy);
                 textureColor = mix(color1, color2, ratio);
 
 				vec3 normal1;
 				vec3 normal2;
 				if(uboFS.hasNormalMap != 0)
 				{
-					normal1 = NormalMapping(normalTexture[i], normalSampler, inTextureCoord);
-					normal2 = NormalMapping(normalTexture[i + 1], normalSampler, inTextureCoord);
+					normal1 = sampleNormalMap(i, inTextureCoord, ddx, ddy);
+					normal2 = sampleNormalMap(i + 1, inTextureCoord, ddx, ddy);
 				}
 				else
 				{
@@ -102,8 +129,8 @@ void main()
             }
 			else if(normalizedHeight < uboFS.heightSteps[i].x - uboFS.heightTransitionRange)
 			{
-				textureColor = texture(sampler2D(colorTexture[i], colorSampler), inTextureCoord);
-				normal = NormalMapping(normalTexture[i], normalSampler, inTextureCoord);
+				textureColor = sampleColorTexture(i, inTextureCoord, ddx, ddy);
+				normal = sampleNormalMap(i, inTextureCoord, ddx, ddy);
 				shineDamper = uboFS.material[i].shineDamper;
 				reflectivity = uboFS.material[i].reflectivity;
 				break;
@@ -111,8 +138,8 @@ void main()
         }
         else
         {
-			textureColor = texture(sampler2D(colorTexture[i], colorSampler), inTextureCoord);
-			normal = NormalMapping(normalTexture[i], normalSampler, inTextureCoord);
+			textureColor = sampleColorTexture(i, inTextureCoord, ddx, ddy);
+			normal = sampleNormalMap(i, inTextureCoord, ddx, ddy);
 			shineDamper = uboFS.material[i].shineDamper;
 			reflectivity = uboFS.material[i].reflectivity;
         }
@@ -130,7 +157,7 @@ void main()
 	{
 		const Light light = uboFS.lightning.lights[i];
 
-		const vec3 toLightVector = inToLightVectorTangentSpace[i] - inPositionTangentSpace;
+		const vec3 toLightVector = inToLightVectorTangentSpace_arr[i] - inPositionTangentSpace;
 		const vec3 unitToLightVector = normalize(toLightVector);
 
 		const float attenuationFactor = GetAttenuationFactor(light.attenuation.xyz, toLightVector);

@@ -126,7 +126,9 @@ void DefaultShadowsRenderer::Render(const ShadowsRenderContext& renderContext, c
             m_shader->Bind("ubo", ubo);
 
             const GfxBindGroup descriptorSet = m_shader->UpdateNextBindGroup();
-            gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *model->GetVertexBuffer(), static_cast<uint64_t>(meshPart.firstVertexIndex) * mesh->GetVertexLayout().GetStride(), model->GetVertexBuffer()->GetSize());
+            const uint64_t vertexOffset = static_cast<uint64_t>(meshPart.firstVertexIndex) * mesh->GetVertexLayout().GetStride();
+            const uint64_t vertexRange = model->GetVertexBuffer()->GetSize() - vertexOffset;
+            gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *model->GetVertexBuffer(), vertexOffset, vertexRange);
             gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *model->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, model->GetIndexBuffer()->GetSize());
             gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 

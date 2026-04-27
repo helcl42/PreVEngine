@@ -36,13 +36,17 @@ layout(location = 3) in vec3 inViewPosition;
 layout(location = 4) in float inVisibility;
 layout(location = 5) in vec3 inToCameraVectorTangentSpace;
 layout(location = 6) in vec3 inPositionTangentSpace;
-layout(location = 7) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
+layout(location = 7) in vec3 inToLightVectorTangentSpace0;
+layout(location = 8) in vec3 inToLightVectorTangentSpace1;
+layout(location = 9) in vec3 inToLightVectorTangentSpace2;
+layout(location = 10) in vec3 inToLightVectorTangentSpace3;
 layout(location = 11) in float inClipDistance;
 
 layout(location = 0) out vec4 outColor;
 
 void main()
 {
+	vec3 inToLightVectorTangentSpace_arr[4] = vec3[4](inToLightVectorTangentSpace0, inToLightVectorTangentSpace1, inToLightVectorTangentSpace2, inToLightVectorTangentSpace3);
 		if (inClipDistance < 0.0)
 	{
 		discard; 
@@ -65,7 +69,7 @@ void main()
 	{
 		const Light light = uboFS.lightning.lights[i];
 
-		const vec3 toLightVector = inToLightVectorTangentSpace[i] - inPositionTangentSpace;
+		const vec3 toLightVector = inToLightVectorTangentSpace_arr[i] - inPositionTangentSpace;
 		const vec3 unitToLightVector = normalize(toLightVector);
 
 		const float attenuationFactor = GetAttenuationFactor(light.attenuation.xyz, toLightVector);

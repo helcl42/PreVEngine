@@ -96,15 +96,34 @@ ShaderBuilder& ShaderBuilder::SetEntryPointName(const std::string& name)
 
 std::unique_ptr<Shader> ShaderBuilder::Build() const
 {
+    // Determine preferred shader format
+    // Prefer WGSL when supported (avoids Dawn Tint SPIR-V reader issues on WebGPU)
+    bool useWgsl{ false };
+    bool wgslSupported{ false };
+    GfxResult result = gfxDeviceSupportsShaderFormat(m_device, GFX_SHADER_SOURCE_WGSL, &wgslSupported);
+    LOGI("ShaderBuilder: gfxDeviceSupportsShaderFormat result=%d, wgslSupported=%d", static_cast<int>(result), static_cast<int>(wgslSupported));
+    if (result == GFX_RESULT_SUCCESS && wgslSupported) {
+        useWgsl = true;
+        LOGI("ShaderBuilder: Using WGSL shader format");
+    }
+
     // Build shader modules
     auto byteCodes{ m_stageByteCodes };
     for (const auto& [stage, path] : m_stagePaths) {
-        byteCodes.insert({ stage, prev::util::file::ReadBinaryFile(path) });
+        std::string actualPath = path;
+        if (useWgsl) {
+            // Replace .spv extension with .wgsl
+            const auto pos = actualPath.rfind(".spv");
+            if (pos != std::string::npos) {
+                actualPath.replace(pos, 4, ".wgsl");
+            }
+        }
+        byteCodes.insert({ stage, prev::util::file::ReadBinaryFile(actualPath) });
     }
 
     std::map<GfxShaderStageFlags, GfxShader> shaderModules;
     for (const auto& [stage, byteCode] : byteCodes) {
-        shaderModules[stage] = CreateShaderModule(byteCode);
+        shaderModules[stage] = CreateShaderModule(byteCode, useWgsl ? GFX_SHADER_SOURCE_WGSL : GFX_SHADER_SOURCE_SPIRV);
     }
 
     // Build bind group layout
@@ -153,17 +172,24 @@ std::unique_ptr<Shader> ShaderBuilder::Build() const
     return shader;
 }
 
-GfxShader ShaderBuilder::CreateShaderModule(const std::vector<char>& spirv) const
+GfxShader ShaderBuilder::CreateShaderModule(const std::vector<char>& code, GfxShaderSourceType sourceType) const
 {
-    std::vector<uint32_t> codeAligned(prev::util::math::RoundUp<size_t>(spirv.size() / 4, 4));
-    memcpy(codeAligned.data(), spirv.data(), spirv.size());
-
     GfxShaderDescriptor desc{};
     desc.sType = GFX_STRUCTURE_TYPE_SHADER_DESCRIPTOR;
-    desc.sourceType = GFX_SHADER_SOURCE_SPIRV;
-    desc.code = codeAligned.data();
-    desc.codeSize = spirv.size();
+    desc.sourceType = sourceType;
     desc.entryPoint = m_entryPointName.empty() ? DEFAULT_ENTRY_POINT_NAME.c_str() : m_entryPointName.c_str();
+
+    std::vector<uint32_t> codeAligned;
+    if (sourceType == GFX_SHADER_SOURCE_SPIRV) {
+        codeAligned.resize(prev::util::math::RoundUp<size_t>(code.size() / 4, 4));
+        memcpy(codeAligned.data(), code.data(), code.size());
+        desc.code = codeAligned.data();
+        desc.codeSize = code.size();
+    } else {
+        // WGSL is text — pass as-is
+        desc.code = code.data();
+        desc.codeSize = code.size();
+    }
 
     GfxShader shader{};
     GFXERRCHECK(gfxDeviceCreateShader(m_device, &desc, &shader));
@@ -179,6 +205,16 @@ GfxBindGroupLayout ShaderBuilder::CreateBindGroupLayout() const
         entry.visibility = ds.stageFlags;
         entry.type = ds.bindingType;
         entry.count = ds.count;
+        if (entry.type == GFX_BINDING_TYPE_TEXTURE) {
+            entry.texture.viewDimension = ds.textureViewDimension;
+            entry.texture.sampleType = ds.textureSampleType;
+        } else if (entry.type == GFX_BINDING_TYPE_SAMPLER) {
+            entry.sampler.type = ds.samplerNonFiltering ? GFX_SAMPLER_BINDING_TYPE_NON_FILTERING : GFX_SAMPLER_BINDING_TYPE_FILTERING;
+        } else if (entry.type == GFX_BINDING_TYPE_STORAGE_TEXTURE) {
+            entry.storageTexture.format = ds.storageTextureFormat;
+            entry.storageTexture.viewDimension = ds.storageTextureViewDimension;
+            entry.storageTexture.access = ds.storageTextureAccess;
+        }
         entries.push_back(entry);
     }
 
