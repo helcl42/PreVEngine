@@ -126,7 +126,7 @@ void Shader::Bind(const std::string& name, const prev::render::buffer::Buffer& b
     info.bufferSize = buffer.GetSize();
 }
 
-void Shader::Bind(const std::string& name, const prev::render::buffer::ImageBuffer& imageBuffer)
+void Shader::Bind(const std::string& name, const prev::render::buffer::ImageBufferView& imageBufferView)
 {
     const auto it{ m_bindingInfos.find(name) };
     if (it == m_bindingInfos.cend()) {
@@ -134,7 +134,7 @@ void Shader::Bind(const std::string& name, const prev::render::buffer::ImageBuff
         return;
     }
     auto& info{ it->second };
-    info.textureView = imageBuffer.GetTextureView();
+    info.textureView = static_cast<GfxTextureView>(imageBufferView);
 }
 
 void Shader::Bind(const std::string& name, const prev::render::sampler::Sampler& sampler)

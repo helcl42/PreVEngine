@@ -27,10 +27,20 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 	float heightTransitionRange;
 } uboFS;
 
-layout(binding = 2) uniform texture2D colorTexture[MATERIAL_COUNT];
-layout(binding = 3) uniform sampler colorSampler;
-layout(binding = 4) uniform texture2DArray depthTexture;
-layout(binding = 5) uniform sampler depthSampler;
+layout(binding = 2) uniform texture2D colorTexture0;
+layout(binding = 3) uniform texture2D colorTexture1;
+layout(binding = 4) uniform texture2D colorTexture2;
+layout(binding = 5) uniform texture2D colorTexture3;
+layout(binding = 6) uniform sampler colorSampler;
+layout(binding = 7) uniform texture2DArray depthTexture;
+layout(binding = 8) uniform sampler depthSampler;
+
+vec4 sampleColorTexture(uint idx, vec2 uv, vec2 ddx, vec2 ddy) {
+    if (idx == 0) return textureGrad(sampler2D(colorTexture0, colorSampler), uv, ddx, ddy);
+    else if (idx == 1) return textureGrad(sampler2D(colorTexture1, colorSampler), uv, ddx, ddy);
+    else if (idx == 2) return textureGrad(sampler2D(colorTexture2, colorSampler), uv, ddx, ddy);
+    else return textureGrad(sampler2D(colorTexture3, colorSampler), uv, ddx, ddy);
+}
 
 layout(location = 0) in vec2 inTextureCoord;
 layout(location = 1) in vec3 inNormal;
@@ -38,13 +48,17 @@ layout(location = 2) in vec3 inWorldPosition;
 layout(location = 3) in vec3 inViewPosition;
 layout(location = 4) in vec3 inToCameraVector;
 layout(location = 5) in float inVisibility;
-layout(location = 6) in vec3 inToLightVector[MAX_LIGHT_COUNT];
+layout(location = 6) in vec3 inToLightVector0;
+layout(location = 7) in vec3 inToLightVector1;
+layout(location = 8) in vec3 inToLightVector2;
+layout(location = 9) in vec3 inToLightVector3;
 layout(location = 10) in float inClipDistance;
 
 layout(location = 0) out vec4 outColor;
 
 void main()
 {
+	vec3 inToLightVector_arr[4] = vec3[4](inToLightVector0, inToLightVector1, inToLightVector2, inToLightVector3);
 	if (inClipDistance < 0.0)
 	{
 		discard; 
@@ -56,6 +70,8 @@ void main()
     vec4 textureColor = vec4(1.0, 1.0, 0.0, 1.0);
 	float shineDamper = 1.0f;
 	float reflectivity = 1.0f;
+	vec2 ddx = dFdx(inTextureCoord);
+	vec2 ddy = dFdy(inTextureCoord);
     for(uint i = 0; i < MATERIAL_COUNT; i++)
     {
         if(i < MATERIAL_COUNT - 1)
@@ -63,8 +79,8 @@ void main()
             if(normalizedHeight > uboFS.heightSteps[i].x - uboFS.heightTransitionRange && normalizedHeight < uboFS.heightSteps[i].x + uboFS.heightTransitionRange)
             {
                 float ratio = (normalizedHeight - uboFS.heightSteps[i].x + uboFS.heightTransitionRange) / (2 * uboFS.heightTransitionRange);
-                vec4 color1 = texture(sampler2D(colorTexture[i], colorSampler), inTextureCoord);
-                vec4 color2 = texture(sampler2D(colorTexture[i + 1], colorSampler), inTextureCoord);
+                vec4 color1 = sampleColorTexture(i, inTextureCoord, ddx, ddy);
+                vec4 color2 = sampleColorTexture(i + 1, inTextureCoord, ddx, ddy);
                 textureColor = mix(color1, color2, ratio);
 
 				float shineDamper1 = uboFS.material[i].shineDamper;
@@ -78,7 +94,7 @@ void main()
             }
 			else if(normalizedHeight < uboFS.heightSteps[i].x - uboFS.heightTransitionRange)
 			{
-					textureColor = texture(sampler2D(colorTexture[i], colorSampler), inTextureCoord);
+				textureColor = sampleColorTexture(i, inTextureCoord, ddx, ddy);
 				shineDamper = uboFS.material[i].shineDamper;
 				reflectivity = uboFS.material[i].reflectivity;
 				break;
@@ -86,7 +102,7 @@ void main()
         }
         else
         {
-			textureColor = texture(sampler2D(colorTexture[i], colorSampler), inTextureCoord);
+			textureColor = sampleColorTexture(i, inTextureCoord, ddx, ddy);
 			shineDamper = uboFS.material[i].shineDamper;
 			reflectivity = uboFS.material[i].reflectivity;
             break;
@@ -108,7 +124,7 @@ void main()
 	{
 		const Light light = uboFS.lightning.lights[i];
 
-		const vec3 toLightVector = inToLightVector[i];
+		const vec3 toLightVector = inToLightVector_arr[i];
 		const vec3 unitToLightVector = normalize(toLightVector);
 
 		const float attenuationFactor = GetAttenuationFactor(light.attenuation.xyz, toLightVector);

@@ -53,14 +53,23 @@ void TerrainConeStepMappedRenderer::Init()
         .AddDescriptorSets({
             { "uboVS", 0, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_VERTEX },
             { "uboFS", 1, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_FRAGMENT },
-            { "colorTexture", 2, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT, false, 4 },
-            { "colorSampler", 3, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
-            { "normalTexture", 4, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT, false, 4 },
-            { "normalSampler", 5, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
-            { "heightTexture", 6, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT, false, 4 },
-            { "heightSampler", 7, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
-            { "depthTexture", 8, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
-            { "depthSampler", 9, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT }
+            { "colorTexture0", 2, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
+            { "colorTexture1", 3, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
+            { "colorTexture2", 4, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
+            { "colorTexture3", 5, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
+            { "colorSampler", 6, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
+            { "normalTexture0", 7, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
+            { "normalTexture1", 8, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
+            { "normalTexture2", 9, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
+            { "normalTexture3", 10, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
+            { "normalSampler", 11, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
+            { "heightTexture0", 12, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
+            { "heightTexture1", 13, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
+            { "heightTexture2", 14, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
+            { "heightTexture3", 15, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
+            { "heightSampler", 16, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
+            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("depthTexture", 17, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D_ARRAY, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("depthSampler", 18, GFX_SHADER_STAGE_FRAGMENT, true)
         })
 	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();
@@ -232,20 +241,22 @@ void TerrainConeStepMappedRenderer::Render(const NormalRenderContext& renderCont
 
     for (size_t i = 0; i < terrainComponent->GetMaterials().size(); i++) {
         const auto material{ terrainComponent->GetMaterials().at(i) };
-        m_shader->Bind("colorTexture[" + std::to_string(i) + "]", *material->GetImageBuffer(COLOR_INDEX));
-        m_shader->Bind("normalTexture[" + std::to_string(i) + "]", material->HasImageBuffer(NORMAL_INDEX) ? *material->GetImageBuffer(NORMAL_INDEX) : *m_nullImage);
-        m_shader->Bind("heightTexture[" + std::to_string(i) + "]", material->HasImageBuffer(HEIGHT_AND_CONE_INDEX) ? *material->GetImageBuffer(HEIGHT_AND_CONE_INDEX) : *m_nullImage);
+        m_shader->Bind("colorTexture" + std::to_string(i), material->GetImageBuffer(COLOR_INDEX)->GetTextureView());
+        m_shader->Bind("normalTexture" + std::to_string(i), material->HasImageBuffer(NORMAL_INDEX) ? material->GetImageBuffer(NORMAL_INDEX)->GetTextureView() : m_nullImage->GetTextureView());
+        m_shader->Bind("heightTexture" + std::to_string(i), material->HasImageBuffer(HEIGHT_AND_CONE_INDEX) ? material->GetImageBuffer(HEIGHT_AND_CONE_INDEX)->GetTextureView() : m_nullImage->GetTextureView());
     }
     m_shader->Bind("colorSampler", *m_colorSampler);
     m_shader->Bind("normalSampler", *m_normalSampler);
     m_shader->Bind("heightSampler", *m_coneSampler);
-    m_shader->Bind("depthTexture", *shadowsComponent->GetImageBuffer());
+    m_shader->Bind("depthTexture", shadowsComponent->GetImageBuffer()->GetTextureView());
     m_shader->Bind("depthSampler", *m_depthSampler);
     m_shader->Bind("uboVS", uboVS);
     m_shader->Bind("uboFS", uboFS);
 
     const GfxBindGroup descriptorSet = m_shader->UpdateNextBindGroup();
-        gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *terrainComponent->GetModel()->GetVertexBuffer(), 0, terrainComponent->GetModel()->GetVertexBuffer()->GetSize());
+        const uint64_t vertexOffset = 0;
+        const uint64_t vertexRange = terrainComponent->GetModel()->GetVertexBuffer()->GetSize() - vertexOffset;
+        gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *terrainComponent->GetModel()->GetVertexBuffer(), vertexOffset, vertexRange);
     gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *terrainComponent->GetModel()->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, terrainComponent->GetModel()->GetIndexBuffer()->GetSize());
     gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 

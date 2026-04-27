@@ -17,6 +17,36 @@ public:
         GfxShaderStageFlags stageFlags{};
         bool optional{};
         uint32_t count{ 1 };
+        GfxFormat storageTextureFormat{ GFX_FORMAT_UNDEFINED };
+        GfxTextureViewType storageTextureViewDimension{ GFX_TEXTURE_VIEW_TYPE_2D };
+        GfxStorageTextureAccess storageTextureAccess{ GFX_STORAGE_TEXTURE_ACCESS_WRITE_ONLY };
+        GfxTextureViewType textureViewDimension{ GFX_TEXTURE_VIEW_TYPE_2D };
+        GfxTextureSampleType textureSampleType{ GFX_TEXTURE_SAMPLE_TYPE_FLOAT };
+        bool samplerNonFiltering{};
+
+        static DescriptorSet Texture(const std::string& name, uint32_t binding, GfxShaderStageFlags stageFlags, GfxTextureViewType viewDimension, uint32_t count = 1, GfxTextureSampleType sampleType = GFX_TEXTURE_SAMPLE_TYPE_FLOAT)
+        {
+            DescriptorSet ds{};
+            ds.name = name;
+            ds.binding = binding;
+            ds.bindingType = GFX_BINDING_TYPE_TEXTURE;
+            ds.stageFlags = stageFlags;
+            ds.count = count;
+            ds.textureViewDimension = viewDimension;
+            ds.textureSampleType = sampleType;
+            return ds;
+        }
+
+        static DescriptorSet Sampler(const std::string& name, uint32_t binding, GfxShaderStageFlags stageFlags, bool nonFiltering = false)
+        {
+            DescriptorSet ds{};
+            ds.name = name;
+            ds.binding = binding;
+            ds.bindingType = GFX_BINDING_TYPE_SAMPLER;
+            ds.stageFlags = stageFlags;
+            ds.samplerNonFiltering = nonFiltering;
+            return ds;
+        }
     };
 
 public:
@@ -52,7 +82,7 @@ public:
     std::unique_ptr<Shader> Build() const;
 
 private:
-    GfxShader CreateShaderModule(const std::vector<char>& spirv) const;
+    GfxShader CreateShaderModule(const std::vector<char>& code, GfxShaderSourceType sourceType) const;
 
     GfxBindGroupLayout CreateBindGroupLayout() const;
 

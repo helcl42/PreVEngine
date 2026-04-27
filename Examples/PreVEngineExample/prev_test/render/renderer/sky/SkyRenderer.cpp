@@ -31,11 +31,11 @@ void SkyRenderer::Init()
             { GFX_SHADER_STAGE_COMPUTE, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_comp.spv") }
         })
         .AddDescriptorSets({
-            { "outFragColor", 0, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE },
-            { "outBloom", 1, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE },
-            { "outAlphaness", 2, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE },
-            { "outCloudDistance", 3, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE },
-            { "perlinNoiseTex", 4, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_COMPUTE },
+            { "outFragColor", 0, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE, false, 1, COLOR_FORMAT, GFX_TEXTURE_VIEW_TYPE_2D, GFX_STORAGE_TEXTURE_ACCESS_WRITE_ONLY },
+            { "outBloom", 1, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE, false, 1, COLOR_FORMAT, GFX_TEXTURE_VIEW_TYPE_2D, GFX_STORAGE_TEXTURE_ACCESS_WRITE_ONLY },
+            { "outAlphaness", 2, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE, false, 1, COLOR_FORMAT, GFX_TEXTURE_VIEW_TYPE_2D, GFX_STORAGE_TEXTURE_ACCESS_WRITE_ONLY },
+            { "outCloudDistance", 3, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE, false, 1, DEPTH_FORMAT, GFX_TEXTURE_VIEW_TYPE_2D, GFX_STORAGE_TEXTURE_ACCESS_WRITE_ONLY },
+            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("perlinNoiseTex", 4, GFX_SHADER_STAGE_COMPUTE, GFX_TEXTURE_VIEW_TYPE_3D),
             { "perlinNoiseSampler", 5, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_COMPUTE },
             { "weatherTex", 6, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_COMPUTE },
             { "weatherSampler", 7, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_COMPUTE },
@@ -69,7 +69,7 @@ void SkyRenderer::Init()
             { GFX_SHADER_STAGE_COMPUTE, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_post_process_comp.spv") }
         })
         .AddDescriptorSets({
-            { "outFragColor", 0, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE },
+            { "outFragColor", 0, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE, false, 1, COLOR_FORMAT, GFX_TEXTURE_VIEW_TYPE_2D, GFX_STORAGE_TEXTURE_ACCESS_WRITE_ONLY },
             { "skyTex", 1, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_COMPUTE },
             { "skySampler", 2, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_COMPUTE },
             { "bloomTex", 3, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_COMPUTE },
@@ -115,8 +115,8 @@ void SkyRenderer::Init()
         .AddDescriptorSets({
 { "colorTex", 0, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
 { "colorSampler", 1, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
-{ "depthTex", 2, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
-{ "depthSampler", 3, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT }
+prev::render::shader::ShaderBuilder::DescriptorSet::Texture("depthTex", 2, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
+prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("depthSampler", 3, GFX_SHADER_STAGE_FRAGMENT, true)
 })
         .SetBindGroupCapacity(m_descriptorCount)
         .Build();
@@ -238,15 +238,15 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
 
         m_skyShader->Bind("uboCS", uboCS);
 
-        m_skyShader->Bind("perlinNoiseTex", *skyComponent->GetPerlinWorleyNoise());
+        m_skyShader->Bind("perlinNoiseTex", skyComponent->GetPerlinWorleyNoise()->GetTextureView());
         m_skyShader->Bind("perlinNoiseSampler", *linearRepeatedSampler);
-        m_skyShader->Bind("weatherTex", *skyComponent->GetWeather());
+        m_skyShader->Bind("weatherTex", skyComponent->GetWeather()->GetTextureView());
         m_skyShader->Bind("weatherSampler", *linearRepeatedSampler);
 
-        m_skyShader->Bind("outFragColor", *skyColorImageBuffer.image);
-        m_skyShader->Bind("outBloom", *skyBloomImageBuffer.image);
-        m_skyShader->Bind("outAlphaness", *skyAlphanessImageBuffer.image);
-        m_skyShader->Bind("outCloudDistance", *skyCloudDistanceImageBuffer.image);
+        m_skyShader->Bind("outFragColor", skyColorImageBuffer.image->GetTextureView());
+        m_skyShader->Bind("outBloom", skyBloomImageBuffer.image->GetTextureView());
+        m_skyShader->Bind("outAlphaness", skyAlphanessImageBuffer.image->GetTextureView());
+        m_skyShader->Bind("outCloudDistance", skyCloudDistanceImageBuffer.image->GetTextureView());
 
         const GfxBindGroup descriptorSetCompute = m_skyShader->UpdateNextBindGroup();
 
@@ -288,12 +288,12 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
 
         m_skyPostProcessShader->Bind("uboCS", uboPostCS);
 
-        m_skyPostProcessShader->Bind("skyTex", *skyColorImageBuffer.image);
+        m_skyPostProcessShader->Bind("skyTex", skyColorImageBuffer.image->GetTextureView());
         m_skyPostProcessShader->Bind("skySampler", *skyColorImageSampler);
-        m_skyPostProcessShader->Bind("bloomTex", *skyBloomImageBuffer.image);
+        m_skyPostProcessShader->Bind("bloomTex", skyBloomImageBuffer.image->GetTextureView());
         m_skyPostProcessShader->Bind("bloomSampler", *skyBloomImageSampler);
 
-        m_skyPostProcessShader->Bind("outFragColor", *skyPostProcessColorImageBuffer.image);
+        m_skyPostProcessShader->Bind("outFragColor", skyPostProcessColorImageBuffer.image->GetTextureView());
 
         const GfxBindGroup descriptorSetComputePost = m_skyPostProcessShader->UpdateNextBindGroup();
 
@@ -340,14 +340,16 @@ void SkyRenderer::Render(const NormalRenderContext& renderContext, const std::sh
         const auto colorTexKey{ "colorTex" };
         const auto depthTexKey{ "depthTex" };
 #endif
-        m_compositeShader->Bind(colorTexKey, *skyPostProcessColorImageBuffer.image);
+        m_compositeShader->Bind(colorTexKey, skyPostProcessColorImageBuffer.image->GetTextureView());
         m_compositeShader->Bind("colorSampler", *skyPostProcessImageSampler);
-        m_compositeShader->Bind(depthTexKey, *skyCloudDistanceImageBuffer.image);
+        m_compositeShader->Bind(depthTexKey, skyCloudDistanceImageBuffer.image->GetTextureView());
         m_compositeShader->Bind("depthSampler", *skyCloudDistanceImageSampler);
     }
 
     const GfxBindGroup descriptorSet = m_compositeShader->UpdateNextBindGroup();
-    gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *skyComponent->GetModel()->GetVertexBuffer(), 0, skyComponent->GetModel()->GetVertexBuffer()->GetSize());
+    const uint64_t vertexOffset = 0;
+    const uint64_t vertexRange = skyComponent->GetModel()->GetVertexBuffer()->GetSize() - vertexOffset;
+    gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *skyComponent->GetModel()->GetVertexBuffer(), vertexOffset, vertexRange);
     gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *skyComponent->GetModel()->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, skyComponent->GetModel()->GetIndexBuffer()->GetSize());
     gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 
@@ -401,7 +403,7 @@ void SkyRenderer::UpdateImageBufferExtents(const GfxExtent2D& extent, const GfxF
                                 .Build();
 
         // TODO: gfx API doesn't expose format feature queries - assume linear filtering is available
-        imageBuffer.samplerType = SamplerType::LINEAR;
+        imageBuffer.samplerType = (format == DEPTH_FORMAT) ? SamplerType::NEAREST : SamplerType::LINEAR;
     }
 }
 } // namespace prev_test::render::renderer::sky

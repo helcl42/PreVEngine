@@ -5,8 +5,6 @@
 #include "../common/common.glsl"
 #include "../common/shadows_use.glsl"
 #include "../common/lights.glsl"
-#include "../common/cone_step_mapping_use.glsl"
-#include "../common/normal_mapping_use.glsl"
 
 const uint MATERIAL_COUNT = 4;
 
@@ -36,14 +34,111 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 	uint hasConeMap;
 } uboFS;
 
-layout(binding = 2) uniform texture2D colorTexture[MATERIAL_COUNT];
-layout(binding = 3) uniform sampler colorSampler;
-layout(binding = 4) uniform texture2D normalTexture[MATERIAL_COUNT];
-layout(binding = 5) uniform sampler normalSampler;
-layout(binding = 6) uniform texture2D heightTexture[MATERIAL_COUNT];
-layout(binding = 7) uniform sampler heightSampler;
-layout(binding = 8) uniform texture2DArray depthTexture;
-layout(binding = 9) uniform sampler depthSampler;
+layout(binding = 2) uniform texture2D colorTexture0;
+layout(binding = 3) uniform texture2D colorTexture1;
+layout(binding = 4) uniform texture2D colorTexture2;
+layout(binding = 5) uniform texture2D colorTexture3;
+layout(binding = 6) uniform sampler colorSampler;
+layout(binding = 7) uniform texture2D normalTexture0;
+layout(binding = 8) uniform texture2D normalTexture1;
+layout(binding = 9) uniform texture2D normalTexture2;
+layout(binding = 10) uniform texture2D normalTexture3;
+layout(binding = 11) uniform sampler normalSampler;
+layout(binding = 12) uniform texture2D heightTexture0;
+layout(binding = 13) uniform texture2D heightTexture1;
+layout(binding = 14) uniform texture2D heightTexture2;
+layout(binding = 15) uniform texture2D heightTexture3;
+layout(binding = 16) uniform sampler heightSampler;
+layout(binding = 17) uniform texture2DArray depthTexture;
+layout(binding = 18) uniform sampler depthSampler;
+
+const bool useDepthBias = true;
+
+vec3 GetRayDirection(in vec3 viewDirection, in float heightScale)
+{
+    vec3 v = normalize(viewDirection);
+    v.z = abs(v.z);
+    if (useDepthBias)
+    {
+        float db = 1.0 - v.z;
+        db *= db;
+        db *= db;
+        db = 1.0 - db * db;
+        v.xy *= db;
+    }
+    v.xy *= heightScale;
+    return v;
+}
+
+float GetInverseHeight(float height)
+{
+    return 1.0 - height;
+}
+
+vec2 sampleRelaxedConeStepMapping(uint idx, float heightScale, uint numLayers, vec2 uv, vec2 ddx, vec2 ddy, vec3 texDir3D)
+{
+    const uint binarySteps = 6;
+
+    vec3 rayPos = vec3(uv, 0.0);
+    vec3 rayDir = GetRayDirection(texDir3D, heightScale);
+
+    rayDir /= rayDir.z;
+    float rayRatio = length(rayDir.xy);
+    vec3 pos = rayPos;
+    for(uint i = 0; i < numLayers; ++i)
+    {
+        vec3 samplePoint = vec3(uv.xy, heightScale) + texDir3D * pos.z;
+
+        vec2 heightAndCone;
+        if (idx == 0) heightAndCone = clamp(textureGrad(sampler2D(heightTexture0, heightSampler), samplePoint.xy, ddx, ddy).rg, 0.0, 1.0);
+        else if (idx == 1) heightAndCone = clamp(textureGrad(sampler2D(heightTexture1, heightSampler), samplePoint.xy, ddx, ddy).rg, 0.0, 1.0);
+        else if (idx == 2) heightAndCone = clamp(textureGrad(sampler2D(heightTexture2, heightSampler), samplePoint.xy, ddx, ddy).rg, 0.0, 1.0);
+        else heightAndCone = clamp(textureGrad(sampler2D(heightTexture3, heightSampler), samplePoint.xy, ddx, ddy).rg, 0.0, 1.0);
+
+        float coneRatio = heightAndCone.g * heightAndCone.g;
+        float height = GetInverseHeight(heightAndCone.r) - pos.z;
+        float d = coneRatio * height / (rayRatio + coneRatio);
+        pos += rayDir * d;
+    }
+
+    vec3 bsRange = 0.5 * rayDir * pos.z;
+    vec3 bsPosition = rayPos + bsRange;
+    for(uint i = 0; i < binarySteps; ++i)
+    {
+        vec2 heightAndCone;
+        if (idx == 0) heightAndCone = clamp(textureGrad(sampler2D(heightTexture0, heightSampler), pos.xy, ddx, ddy).rg, 0.0, 1.0);
+        else if (idx == 1) heightAndCone = clamp(textureGrad(sampler2D(heightTexture1, heightSampler), pos.xy, ddx, ddy).rg, 0.0, 1.0);
+        else if (idx == 2) heightAndCone = clamp(textureGrad(sampler2D(heightTexture2, heightSampler), pos.xy, ddx, ddy).rg, 0.0, 1.0);
+        else heightAndCone = clamp(textureGrad(sampler2D(heightTexture3, heightSampler), pos.xy, ddx, ddy).rg, 0.0, 1.0);
+
+        bsRange *= 0.5;
+        if (bsPosition.z < GetInverseHeight(heightAndCone.r))
+        {
+            bsPosition += bsRange;
+        }
+        else
+        {
+            bsPosition -= bsRange;
+        }
+    }
+    return bsPosition.xy;
+}
+
+vec4 sampleColorTextureGrad(uint idx, vec2 uv, vec2 ddx, vec2 ddy) {
+    if (idx == 0) return textureGrad(sampler2D(colorTexture0, colorSampler), uv, ddx, ddy);
+    else if (idx == 1) return textureGrad(sampler2D(colorTexture1, colorSampler), uv, ddx, ddy);
+    else if (idx == 2) return textureGrad(sampler2D(colorTexture2, colorSampler), uv, ddx, ddy);
+    else return textureGrad(sampler2D(colorTexture3, colorSampler), uv, ddx, ddy);
+}
+
+vec3 sampleNormalMapGrad(uint idx, vec2 uv, vec2 ddx, vec2 ddy) {
+    vec3 n;
+    if (idx == 0) n = textureGrad(sampler2D(normalTexture0, normalSampler), uv, ddx, ddy).xyz;
+    else if (idx == 1) n = textureGrad(sampler2D(normalTexture1, normalSampler), uv, ddx, ddy).xyz;
+    else if (idx == 2) n = textureGrad(sampler2D(normalTexture2, normalSampler), uv, ddx, ddy).xyz;
+    else n = textureGrad(sampler2D(normalTexture3, normalSampler), uv, ddx, ddy).xyz;
+    return normalize(2.0 * normalize(n) - 1.0);
+}
 
 layout(location = 0) in vec2 inTextureCoord;
 layout(location = 1) in vec3 inNormal;
@@ -52,13 +147,17 @@ layout(location = 3) in vec3 inViewPosition;
 layout(location = 4) in float inVisibility;
 layout(location = 5) in vec3 inToCameraVectorTangentSpace;
 layout(location = 6) in vec3 inPositionTangentSpace;
-layout(location = 7) in vec3 inToLightVectorTangentSpace[MAX_LIGHT_COUNT];
+layout(location = 7) in vec3 inToLightVectorTangentSpace0;
+layout(location = 8) in vec3 inToLightVectorTangentSpace1;
+layout(location = 9) in vec3 inToLightVectorTangentSpace2;
+layout(location = 10) in vec3 inToLightVectorTangentSpace3;
 layout(location = 11) in float inClipDistance;
 
 layout(location = 0) out vec4 outColor;
 
 void main()
 {
+	vec3 inToLightVectorTangentSpace_arr[4] = vec3[4](inToLightVectorTangentSpace0, inToLightVectorTangentSpace1, inToLightVectorTangentSpace2, inToLightVectorTangentSpace3);
 	if (inClipDistance < 0.0)
 	{
 		discard; 
@@ -89,8 +188,8 @@ void main()
 				vec2 uv2;
 				if (uboFS.hasConeMap != 0) 
 				{
-					uv1 = RelaxedConeStepMapping(heightTexture[i], heightSampler, uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
-					uv2 = RelaxedConeStepMapping(heightTexture[i + 1], heightSampler, uboFS.heightScale[i + 1].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
+					uv1 = sampleRelaxedConeStepMapping(i, uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
+					uv2 = sampleRelaxedConeStepMapping(i + 1, uboFS.heightScale[i + 1].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
 				}
 				else
 				{
@@ -102,8 +201,8 @@ void main()
 				vec3 normal2;
 				if(uboFS.hasNormalMap != 0)
 				{
-					normal1 = NormalMapping(normalTexture[i], normalSampler, uv1, ddx, ddy);
-					normal2 = NormalMapping(normalTexture[i + 1], normalSampler, uv2, ddx, ddy);
+					normal1 = sampleNormalMapGrad(i, uv1, ddx, ddy);
+					normal2 = sampleNormalMapGrad(i + 1, uv2, ddx, ddy);
 				}
 				else
 				{
@@ -112,8 +211,8 @@ void main()
 				}
 				normal = mix(normal1, normal2, ratio);
 
-                vec4 color1 = textureGrad(sampler2D(colorTexture[i], colorSampler), uv1, ddx, ddy);
-                vec4 color2 = textureGrad(sampler2D(colorTexture[i + 1], colorSampler), uv2, ddx, ddy);
+                vec4 color1 = sampleColorTextureGrad(i, uv1, ddx, ddy);
+                vec4 color2 = sampleColorTextureGrad(i + 1, uv2, ddx, ddy);
                 textureColor = mix(color1, color2, ratio);
 
 				float shineDamper1 = uboFS.material[i].shineDamper;
@@ -127,10 +226,10 @@ void main()
             }
 			else if(normalizedHeight < uboFS.heightSteps[i].x - uboFS.heightTransitionRange)
 			{
-				vec2 uv = RelaxedConeStepMapping(heightTexture[i], heightSampler, uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
+				vec2 uv = sampleRelaxedConeStepMapping(i, uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
 
-				normal = NormalMapping(normalTexture[i], normalSampler, uv, ddx, ddy);
-				textureColor = textureGrad(sampler2D(colorTexture[i], colorSampler), uv, ddx, ddy);
+				normal = sampleNormalMapGrad(i, uv, ddx, ddy);
+				textureColor = sampleColorTextureGrad(i, uv, ddx, ddy);
 				shineDamper = uboFS.material[i].shineDamper;
 				reflectivity = uboFS.material[i].reflectivity;
 				break;
@@ -138,10 +237,10 @@ void main()
         }
         else
         {
-			vec2 uv = RelaxedConeStepMapping(heightTexture[i], heightSampler, uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
+			vec2 uv = sampleRelaxedConeStepMapping(i, uboFS.heightScale[i].x, uboFS.numLayers, inTextureCoord, ddx, ddy, rayDirection);
 
-			normal = NormalMapping(normalTexture[i], normalSampler, uv, ddx, ddy);
-			textureColor = textureGrad(sampler2D(colorTexture[i], colorSampler), uv, ddx, ddy);
+			normal = sampleNormalMapGrad(i, uv, ddx, ddy);
+			textureColor = sampleColorTextureGrad(i, uv, ddx, ddy);
 			shineDamper = uboFS.material[i].shineDamper;
 			reflectivity = uboFS.material[i].reflectivity;
         }
@@ -161,7 +260,7 @@ void main()
 	{
 		const Light light = uboFS.lightning.lights[i];
 
-		const vec3 toLightVector = inToLightVectorTangentSpace[i] - inPositionTangentSpace;
+		const vec3 toLightVector = inToLightVectorTangentSpace_arr[i] - inPositionTangentSpace;
 		const vec3 unitToLightVector = normalize(toLightVector);
 
 		const float attenuationFactor = GetAttenuationFactor(light.attenuation.xyz, toLightVector);

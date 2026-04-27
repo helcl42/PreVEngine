@@ -58,8 +58,8 @@ void NormalMappedRenderer::Init()
             { "colorSampler", 3, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
             { "normalTexture", 4, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
             { "normalSampler", 5, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
-            { "depthTexture", 6, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
-            { "depthSampler", 7, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT }
+            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("depthTexture", 6, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D_ARRAY, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("depthSampler", 7, GFX_SHADER_STAGE_FRAGMENT, true)
         })
 	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();
@@ -225,17 +225,19 @@ void NormalMappedRenderer::Render(const NormalRenderContext& renderContext, cons
             uniformsFS.hasNormalMap = material->HasImageBuffer(NORMAL_INDEX);
             uboFS.Write(uniformsFS);
 
-            m_shader->Bind("depthTexture", *shadowsComponent->GetImageBuffer());
+            m_shader->Bind("depthTexture", shadowsComponent->GetImageBuffer()->GetTextureView());
             m_shader->Bind("depthSampler", *m_depthSampler);
-            m_shader->Bind("colorTexture", *material->GetImageBuffer(COLOR_INDEX));
+            m_shader->Bind("colorTexture", material->GetImageBuffer(COLOR_INDEX)->GetTextureView());
             m_shader->Bind("colorSampler", *m_colorSampler);
-            m_shader->Bind("normalTexture", material->HasImageBuffer(NORMAL_INDEX) ? *material->GetImageBuffer(NORMAL_INDEX) : *m_nullImage);
+            m_shader->Bind("normalTexture", material->HasImageBuffer(NORMAL_INDEX) ? material->GetImageBuffer(NORMAL_INDEX)->GetTextureView() : m_nullImage->GetTextureView());
             m_shader->Bind("normalSampler", *m_normalSampler);
             m_shader->Bind("uboVS", uboVS);
             m_shader->Bind("uboFS", uboFS);
 
             const GfxBindGroup descriptorSet = m_shader->UpdateNextBindGroup();
-            gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *model->GetVertexBuffer(), static_cast<uint64_t>(meshPart.firstVertexIndex) * mesh->GetVertexLayout().GetStride(), model->GetVertexBuffer()->GetSize());
+            const uint64_t vertexOffset = static_cast<uint64_t>(meshPart.firstVertexIndex) * mesh->GetVertexLayout().GetStride();
+            const uint64_t vertexRange = model->GetVertexBuffer()->GetSize() - vertexOffset;
+            gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *model->GetVertexBuffer(), vertexOffset, vertexRange);
             gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *model->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, model->GetIndexBuffer()->GetSize());
             gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 

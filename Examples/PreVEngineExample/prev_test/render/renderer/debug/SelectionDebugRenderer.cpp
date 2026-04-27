@@ -131,7 +131,9 @@ void SelectionDebugRenderer::Render(const NormalRenderContext& renderContext, co
         m_shader->Bind("uboFS", uboFS);
 
         const GfxBindGroup descriptorSet = m_shader->UpdateNextBindGroup();
-            gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *m_selectionPointModel->GetVertexBuffer(), 0, m_selectionPointModel->GetVertexBuffer()->GetSize());
+                const uint64_t vertexOffset = 0;
+                const uint64_t vertexRange = m_selectionPointModel->GetVertexBuffer()->GetSize() - vertexOffset;
+                gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *m_selectionPointModel->GetVertexBuffer(), vertexOffset, vertexRange);
     gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *m_selectionPointModel->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, m_selectionPointModel->GetIndexBuffer()->GetSize());
         gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 

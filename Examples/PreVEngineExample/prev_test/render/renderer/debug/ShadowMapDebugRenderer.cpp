@@ -39,8 +39,8 @@ void ShadowMapDebugRenderer::Init()
             prev::render::shader::VertexInputBinding{ 0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), GFX_VERTEX_STEP_MODE_VERTEX }
         })
         .AddDescriptorSets({
-            { "depthTexture", 0, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
-            { "depthSampler", 1, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT }
+            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("depthTexture", 0, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D_ARRAY, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("depthSampler", 1, GFX_SHADER_STAGE_FRAGMENT, true)
         })
 	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();
@@ -102,11 +102,13 @@ void ShadowMapDebugRenderer::Render(const prev::render::RenderContext& renderCon
     // PushConstantBlock pushConstBlock{ static_cast<uint32_t>(m_cascadeIndex), -cascade.startSplitDepth, -cascade.endSplitDepth };
     (void)cascade;
 
-    m_shader->Bind("depthTexture", *shadows->GetImageBuffer());
+    m_shader->Bind("depthTexture", shadows->GetImageBuffer()->GetTextureView());
     m_shader->Bind("depthSampler", *m_depthSampler);
 
     const GfxBindGroup descriptorSet = m_shader->UpdateNextBindGroup();
-        gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *m_quadModel->GetVertexBuffer(), 0, m_quadModel->GetVertexBuffer()->GetSize());
+        const uint64_t vertexOffset = 0;
+        const uint64_t vertexRange = m_quadModel->GetVertexBuffer()->GetSize() - vertexOffset;
+        gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *m_quadModel->GetVertexBuffer(), vertexOffset, vertexRange);
     gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *m_quadModel->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, m_quadModel->GetIndexBuffer()->GetSize());
     gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 

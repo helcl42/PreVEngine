@@ -142,7 +142,9 @@ void RayCastDebugRenderer::Render(const NormalRenderContext& renderContext, cons
     m_shader->Bind("uboFS", uboFS);
 
     const GfxBindGroup descriptorSet = m_shader->UpdateNextBindGroup();
-        gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *rayCastingComponent->GetModel()->GetVertexBuffer(), 0, rayCastingComponent->GetModel()->GetVertexBuffer()->GetSize());
+        const uint64_t vertexOffset = 0;
+        const uint64_t vertexRange = rayCastingComponent->GetModel()->GetVertexBuffer()->GetSize() - vertexOffset;
+        gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *rayCastingComponent->GetModel()->GetVertexBuffer(), vertexOffset, vertexRange);
     gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *rayCastingComponent->GetModel()->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, rayCastingComponent->GetModel()->GetIndexBuffer()->GetSize());
     gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 

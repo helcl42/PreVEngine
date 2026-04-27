@@ -2,7 +2,7 @@
 #define __SHADER_H__
 
 #include "../buffer/Buffer.h"
-#include "../buffer/ImageBuffer.h"
+#include "../buffer/ImageBufferView.h"
 #include "../sampler/Sampler.h"
 
 #include "../../core/Core.h"
@@ -58,7 +58,7 @@ public:
 
     void Bind(const std::string& name, const prev::render::buffer::Buffer& buffer);
 
-    void Bind(const std::string& name, const prev::render::buffer::ImageBuffer& imageBuffer);
+    void Bind(const std::string& name, const prev::render::buffer::ImageBufferView& imageBufferView);
 
     void Bind(const std::string& name, const prev::render::sampler::Sampler& sampler);
 

@@ -79,6 +79,8 @@ private:
 
     std::vector<GfxQuerySet> m_querySets;
 
+    std::vector<GfxBuffer> m_resolveBuffers;
+
     std::vector<GfxBuffer> m_resultBuffers;
 };
 } // namespace prev::render::query

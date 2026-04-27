@@ -90,11 +90,13 @@ void TextureDebugRenderer::Render(const prev::render::RenderContext& renderConte
 {
     const auto component = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::common::IOffScreenRenderPassComponent>(m_scene.GetRootNode(), { TAG_WATER_REFLECTION_RENDER_COMPONENT });
 
-    m_shader->Bind("imageTexture", *component->GetColorImageBuffer());
+    m_shader->Bind("imageTexture", component->GetColorImageBuffer()->GetTextureView());
     m_shader->Bind("imageSampler", *m_colorSampler);
 
     const GfxBindGroup descriptorSet = m_shader->UpdateNextBindGroup();
-        gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *m_quadModel->GetVertexBuffer(), 0, m_quadModel->GetVertexBuffer()->GetSize());
+        const uint64_t vertexOffset = 0;
+        const uint64_t vertexRange = m_quadModel->GetVertexBuffer()->GetSize() - vertexOffset;
+        gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *m_quadModel->GetVertexBuffer(), vertexOffset, vertexRange);
     gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *m_quadModel->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, m_quadModel->GetIndexBuffer()->GetSize());
     gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 

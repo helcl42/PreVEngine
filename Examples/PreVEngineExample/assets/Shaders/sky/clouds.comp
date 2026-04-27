@@ -11,7 +11,7 @@ layout(std140, binding = 0) uniform UniformBufferObject {
     int perlinOctaves;
 } uboCS;
 
-layout (rgba8, binding = 1) uniform image2D outWeatherTexture;
+layout (rgba8, binding = 1) uniform writeonly image2D outWeatherTexture;
 
 float Random2D(in vec2 st)
 {

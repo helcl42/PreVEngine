@@ -49,14 +49,14 @@ void WaterRenderer::Init()
         .AddDescriptorSets({
 { "uboVS", 0, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_VERTEX },
 { "uboFS", 1, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_FRAGMENT },
-{ "depthTexture", 2, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
-{ "depthSampler", 3, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
-{ "reflectionTexture", 4, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
+prev::render::shader::ShaderBuilder::DescriptorSet::Texture("depthTexture", 2, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D_ARRAY, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
+prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("depthSampler", 3, GFX_SHADER_STAGE_FRAGMENT, true),
+prev::render::shader::ShaderBuilder::DescriptorSet::Texture("reflectionTexture", 4, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
 { "reflectionSampler", 5, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
-{ "refractionTexture", 6, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
+prev::render::shader::ShaderBuilder::DescriptorSet::Texture("refractionTexture", 6, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
 { "refractionSampler", 7, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
-{ "depthMapTexture", 8, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
-{ "depthMapSampler", 9, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
+prev::render::shader::ShaderBuilder::DescriptorSet::Texture("depthMapTexture", 8, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
+prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("depthMapSampler", 9, GFX_SHADER_STAGE_FRAGMENT, true),
 { "dudvMapTexture", 10, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
 { "dudvMapSampler", 11, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
 { "normalMapTexture", 12, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
@@ -192,21 +192,23 @@ void WaterRenderer::Render(const NormalRenderContext& renderContext, const std::
 
     m_shader->Bind("uboVS", uboVS);
     m_shader->Bind("uboFS", uboFS);
-    m_shader->Bind("depthTexture", *shadowsComponent->GetImageBuffer());
+    m_shader->Bind("depthTexture", shadowsComponent->GetImageBuffer()->GetTextureView());
     m_shader->Bind("depthSampler", *m_depthSampler);
-    m_shader->Bind("reflectionTexture", *waterReflectionComponent->GetColorImageBuffer());
+    m_shader->Bind("reflectionTexture", waterReflectionComponent->GetColorImageBuffer()->GetTextureView());
     m_shader->Bind("reflectionSampler", *m_colorSampler);
-    m_shader->Bind("refractionTexture", *waterRefractionComponent->GetColorImageBuffer());
+    m_shader->Bind("refractionTexture", waterRefractionComponent->GetColorImageBuffer()->GetTextureView());
     m_shader->Bind("refractionSampler", *m_colorSampler);
-    m_shader->Bind("dudvMapTexture", *waterComponent->GetMaterial()->GetImageBuffer(COLOR_INDEX));
+    m_shader->Bind("dudvMapTexture", waterComponent->GetMaterial()->GetImageBuffer(COLOR_INDEX)->GetTextureView());
     m_shader->Bind("dudvMapSampler", *m_colorSampler);
-    m_shader->Bind("normalMapTexture", *waterComponent->GetMaterial()->GetImageBuffer(NORMAL_INDEX));
+    m_shader->Bind("normalMapTexture", waterComponent->GetMaterial()->GetImageBuffer(NORMAL_INDEX)->GetTextureView());
     m_shader->Bind("normalMapSampler", *m_normalSampler);
-    m_shader->Bind("depthMapTexture", *waterRefractionComponent->GetDepthImageBuffer());
+    m_shader->Bind("depthMapTexture", waterRefractionComponent->GetDepthImageBuffer()->GetTextureView());
     m_shader->Bind("depthMapSampler", *m_depthSampler);
 
     const GfxBindGroup descriptorSet = m_shader->UpdateNextBindGroup();
-    gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *waterComponent->GetModel()->GetVertexBuffer(), 0, waterComponent->GetModel()->GetVertexBuffer()->GetSize());
+    const uint64_t vertexOffset = 0;
+    const uint64_t vertexRange = waterComponent->GetModel()->GetVertexBuffer()->GetSize() - vertexOffset;
+    gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *waterComponent->GetModel()->GetVertexBuffer(), vertexOffset, vertexRange);
     gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *waterComponent->GetModel()->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, waterComponent->GetModel()->GetIndexBuffer()->GetSize());
     gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 

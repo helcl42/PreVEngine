@@ -1,6 +1,8 @@
 #ifndef __IMAGE_BUFFER_H__
 #define __IMAGE_BUFFER_H__
 
+#include "ImageBufferView.h"
+
 #include "../../core/device/Device.h"
 #include "../../core/device/Queue.h"
 
@@ -31,7 +33,7 @@ public:
 
     GfxTextureType GetTextureType() const;
 
-    GfxTextureView GetTextureView() const;
+    const ImageBufferView& GetTextureView() const;
 
     GfxTextureViewType GetTextureViewType() const;
 
@@ -64,7 +66,7 @@ private:
 
     GfxTexture m_texture{};
 
-    GfxTextureView m_view{};
+    ImageBufferView m_view{ nullptr };
 
     GfxTextureType m_type{};
 

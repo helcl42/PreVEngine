@@ -39,7 +39,7 @@ void SkyBoxRenderer::Init()
         .AddDescriptorSets({
             { "uboVS", 0, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_VERTEX },
             { "uboFS", 1, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_FRAGMENT },
-            { "cubeMap1Texture", 2, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
+            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("cubeMap1Texture", 2, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_CUBE),
             { "cubeMap1Sampler", 3, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT }
         })
         .SetBindGroupCapacity(m_descriptorCount)
@@ -134,13 +134,15 @@ void SkyBoxRenderer::Render(const NormalRenderContext& renderContext, const std:
     uniformsFS.upperLimit = glm::vec4(0.03f);
     uboFS.Write(uniformsFS);
 
-    m_shader->Bind("cubeMap1Texture", *skyBoxComponent->GetMaterial()->GetImageBuffer());
+    m_shader->Bind("cubeMap1Texture", skyBoxComponent->GetMaterial()->GetImageBuffer()->GetTextureView());
     m_shader->Bind("cubeMap1Sampler", *m_colorSampler);
     m_shader->Bind("uboVS", uboVS);
     m_shader->Bind("uboFS", uboFS);
 
     const GfxBindGroup descriptorSet = m_shader->UpdateNextBindGroup();
-    gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *skyBoxComponent->GetModel()->GetVertexBuffer(), 0, skyBoxComponent->GetModel()->GetVertexBuffer()->GetSize());
+    const uint64_t vertexOffset = 0;
+    const uint64_t vertexRange = skyBoxComponent->GetModel()->GetVertexBuffer()->GetSize() - vertexOffset;
+    gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *skyBoxComponent->GetModel()->GetVertexBuffer(), vertexOffset, vertexRange);
     gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *skyBoxComponent->GetModel()->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, skyBoxComponent->GetModel()->GetIndexBuffer()->GetSize());
     gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 

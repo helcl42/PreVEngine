@@ -23,7 +23,6 @@ public:
 private:
     prev::core::device::Device& m_device;
 
-
     std::shared_ptr<prev_test::component::sky::ISkyComponent> m_skyComponent;
 };
 } // namespace prev_test::scene::sky

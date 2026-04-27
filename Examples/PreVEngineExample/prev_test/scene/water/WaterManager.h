@@ -21,7 +21,6 @@ public:
 private:
     prev::core::device::Device& m_device;
 
-
     int m_gridMaxX;
 
     int m_gridMaxZ;

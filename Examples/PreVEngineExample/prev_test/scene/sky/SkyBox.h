@@ -24,7 +24,6 @@ public:
 private:
     prev::core::device::Device& m_device;
 
-
 private:
     std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
 

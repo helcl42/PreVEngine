@@ -4,6 +4,7 @@
 
 #include <prev/core/CommandsExecutor.h>
 #include <prev/render/buffer/ImageBufferBuilder.h>
+#include <prev/render/buffer/ImageBufferViewBuilder.h>
 #include <prev/render/pipeline/ComputePipelineBuilder.h>
 #include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
@@ -26,7 +27,7 @@ CloudsNoise CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t width, co
             { GFX_SHADER_STAGE_COMPUTE, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/clouds_perlin_worley_noise_3d_comp.spv") }
         })
         .AddDescriptorSets({
-            { "outVolumeTexture", 0, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE }
+            { "outVolumeTexture", 0, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE, false, 1, noiseImageFormat, GFX_TEXTURE_VIEW_TYPE_3D, GFX_STORAGE_TEXTURE_ACCESS_WRITE_ONLY }
         })
 	    .SetBindGroupCapacity(1)
         .Build();
@@ -50,9 +51,13 @@ CloudsNoise CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t width, co
                        .SetAddressMode(GFX_ADDRESS_MODE_REPEAT)
                        .Build();
 
+    auto noiseStorageView = prev::render::buffer::ImageBufferViewBuilder{ *noiseImageBuffer }
+                                .SetMipLevelCount(1)
+                                .Build();
+
     prev::core::CommandsExecutor commandsExecutor{ m_device, computeQueue };
     commandsExecutor.ExecuteImmediate([&](GfxCommandEncoder commandBuffer) {
-        shader->Bind("outVolumeTexture", *noiseImageBuffer);
+        shader->Bind("outVolumeTexture", *noiseStorageView);
         const GfxBindGroup bindGroup = shader->UpdateNextBindGroup();
 
         GfxComputePassEncoder computePassEncoder{};

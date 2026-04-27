@@ -142,14 +142,18 @@ const auto particlesComponent = prev::scene::component::NodeComponentHelper::Get
 
     m_shader->Bind("uboVS", uboVS);
     m_shader->Bind("uboFS", uboFS);
-    m_shader->Bind("colorTexture", *particlesComponent->GetMaterial()->GetImageBuffer());
+    m_shader->Bind("colorTexture", particlesComponent->GetMaterial()->GetImageBuffer()->GetTextureView());
     m_shader->Bind("colorSampler", *m_colorSampler);
 
     const GfxBindGroup descriptorSet = m_shader->UpdateNextBindGroup();
     gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 
-    gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *particlesComponent->GetModel()->GetVertexBuffer(), 0, particlesComponent->GetModel()->GetVertexBuffer()->GetSize());
-    gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 1, *particlesComponent->GetVertexBuffer(), 0, particlesComponent->GetVertexBuffer()->GetSize());
+    const uint64_t modelVertexOffset = 0;
+    const uint64_t modelVertexRange = particlesComponent->GetModel()->GetVertexBuffer()->GetSize() - modelVertexOffset;
+    gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *particlesComponent->GetModel()->GetVertexBuffer(), modelVertexOffset, modelVertexRange);
+    const uint64_t particleVertexOffset = 0;
+    const uint64_t particleVertexRange = particlesComponent->GetVertexBuffer()->GetSize() - particleVertexOffset;
+    gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 1, *particlesComponent->GetVertexBuffer(), particleVertexOffset, particleVertexRange);
     gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *particlesComponent->GetModel()->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, particlesComponent->GetModel()->GetIndexBuffer()->GetSize());
 
     gfxRenderPassEncoderDrawIndexed(renderContext.renderPassEncoder, particlesComponent->GetModel()->GetMesh()->GetIndicesCount(), static_cast<uint32_t>(particlesComponent->GetParticles().size()), 0, 0, 0);
