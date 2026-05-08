@@ -111,6 +111,19 @@ std::unique_ptr<Shader> ShaderBuilder::Build() const
     auto byteCodes{ m_stageByteCodes };
     for (const auto& [stage, path] : m_stagePaths) {
         std::string actualPath = path;
+
+        // Support migrated shader layout by rewriting legacy paths:
+        // Shaders/<category>/<file>.spv -> Shaders/{spirv|wgsl}/<category>/<file>.{spv|wgsl}
+        const std::string legacyRoot{ "Shaders/" };
+        const std::string spirvRoot{ "Shaders/spirv/" };
+        const std::string wgslRoot{ "Shaders/wgsl/" };
+        if (actualPath.rfind(legacyRoot, 0) == 0
+            && actualPath.rfind(spirvRoot, 0) != 0
+            && actualPath.rfind(wgslRoot, 0) != 0) {
+            const std::string suffix = actualPath.substr(legacyRoot.size());
+            actualPath = (useWgsl ? wgslRoot : spirvRoot) + suffix;
+        }
+
         if (useWgsl) {
             // Replace .spv extension with .wgsl
             const auto pos = actualPath.rfind(".spv");

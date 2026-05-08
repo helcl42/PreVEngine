@@ -26,7 +26,7 @@ namespace {
 
 std::unique_ptr<Instance> InstanceFactory::Create(const std::string& appName, bool enableValidation) const
 {
-    const GfxBackend backend = GFX_BACKEND_VULKAN;
+    const GfxBackend backend = GFX_BACKEND_WEBGPU;
     if (gfxLoadBackend(backend) != GFX_RESULT_SUCCESS) {
         throw std::runtime_error("Failed to load Gfx backend");
     }
