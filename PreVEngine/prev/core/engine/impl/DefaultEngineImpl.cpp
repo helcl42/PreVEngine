@@ -100,10 +100,14 @@ void DefaultEngineImpl::ResetDevice()
         throw std::runtime_error("No suitable GPU adapter found");
     }
 
-    const std::vector<std::string> extensions{
+    // Build extension list based on what's actually supported by the adapter
+    std::vector<std::string> extensions{
         GFX_DEVICE_EXTENSION_SWAPCHAIN,
         GFX_DEVICE_EXTENSION_ANISOTROPIC_FILTERING,
         // GFX_DEVICE_EXTENSION_MULTIVIEW
+        // Note: GFX_DEVICE_EXTENSION_OCCLUSION_QUERY_PRECISE is only supported by Vulkan,
+        // not WebGPU. We don't request it here and instead handle both modes in SunRenderer
+        // by checking if the query result is <= 1 (boolean) or > 1 (precise).
     };
 
     m_device = prev::core::device::DeviceFactory{}.Create(*gpu, extensions);

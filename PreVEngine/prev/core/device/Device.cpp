@@ -7,10 +7,11 @@
 #include <stdexcept>
 
 namespace prev::core::device {
-Device::Device(const PhysicalDevice& gpu, GfxDevice handle, std::map<QueueType, std::vector<std::unique_ptr<Queue>>>&& queues)
+Device::Device(const PhysicalDevice& gpu, GfxDevice handle, std::map<QueueType, std::vector<std::unique_ptr<Queue>>>&& queues, std::vector<std::string> enabledExtensions)
     : m_gpu{ gpu }
     , m_handle{ handle }
     , m_queues{ std::move(queues) }
+    , m_enabledExtensions{ std::move(enabledExtensions) }
 {
     LOGI("Logical Device created");
 }
@@ -99,6 +100,11 @@ void Device::Print() const
             LOGI("Queue purpose: %s family: %d index: %d", queueTypeToString(qGroupKey).c_str(), qGroupItem->family, qGroupItem->index);
         }
     }
+}
+
+bool Device::HasExtension(const std::string& extension) const
+{
+    return std::find(m_enabledExtensions.begin(), m_enabledExtensions.end(), extension) != m_enabledExtensions.end();
 }
 
 Device::operator GfxDevice() const

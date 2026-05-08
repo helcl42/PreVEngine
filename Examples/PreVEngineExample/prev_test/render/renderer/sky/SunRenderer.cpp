@@ -74,6 +74,7 @@ void SunRenderer::Init()
                       .SetQueryType(GFX_QUERY_TYPE_OCCLUSION)
                       .SetPoolCount(QueryPoolCount)
                       .SetQueryCount(MAX_VIEW_COUNT)
+                      .SetPrecise(m_device.HasExtension(GFX_DEVICE_EXTENSION_OCCLUSION_QUERY_PRECISE))
                       .Build();
     m_passedSamples = 0;
 
@@ -82,12 +83,15 @@ void SunRenderer::Init()
 
 void SunRenderer::BeforeRender(const NormalRenderContext& renderContext)
 {
+    m_renderPass.SetOcclusionQuerySet(*m_queryPool);
+
     if (m_queryPool->GetQueryResult<uint64_t>(0, m_passedSamples)) {
-#if defined(TARGET_PLATFORM_IOS) || defined(TARGET_PLATFORM_MACOS)
-        const float ratio{ m_passedSamples > 0.0f ? 0.5f : 0.0f };
-#else
-        const float ratio{ glm::clamp((static_cast<float>(m_passedSamples) / static_cast<float>(m_maxNumberOfSamples * m_renderPass.GetSampleCount())) * 0.5f, 0.0f, 1.0f) };
-#endif
+        float ratio;
+        if (m_device.HasExtension(GFX_DEVICE_EXTENSION_OCCLUSION_QUERY_PRECISE)) {
+            ratio = glm::clamp((static_cast<float>(m_passedSamples) / static_cast<float>(m_maxNumberOfSamples * m_renderPass.GetSampleCount())) * 0.5f, 0.0f, 1.0f);
+        } else {
+            ratio = m_passedSamples > 0 ? 0.5f : 0.0f;
+        }
         prev::event::EventChannel::Post(prev_test::render::renderer::sky::SunVisibilityEvent{ ratio });
     }
 }
@@ -155,6 +159,8 @@ void SunRenderer::AfterRender(const NormalRenderContext& renderContext)
 
 void SunRenderer::ShutDown()
 {
+    m_renderPass.SetOcclusionQuerySet(nullptr);
+
     m_queryPool = {};
 
     m_uniformsPoolVS = {};

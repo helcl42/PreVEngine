@@ -34,6 +34,10 @@ public:
 
     void End();
 
+    void SetOcclusionQuerySet(GfxQuerySet querySet);
+
+    void SetTimestampQuerySet(GfxQuerySet querySet);
+
 public:
     const std::vector<AttachmentInfo>& GetAttachments() const;
 
@@ -67,6 +71,10 @@ private:
     std::vector<AttachmentInfo> m_attachmentInfos;
 
     GfxRenderPassEncoder m_activeEncoder{};
+
+    GfxQuerySet m_occlusionQuerySet{};
+
+    GfxQuerySet m_timestampQuerySet{};
 };
 } // namespace prev::render::pass
 

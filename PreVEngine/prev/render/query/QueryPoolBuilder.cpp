@@ -28,11 +28,17 @@ QueryPoolBuilder& QueryPoolBuilder::SetQueryCount(uint32_t queryCount)
     return *this;
 }
 
+QueryPoolBuilder& QueryPoolBuilder::SetPrecise(bool precise)
+{
+    m_precise = precise;
+    return *this;
+}
+
 std::unique_ptr<QueryPool> QueryPoolBuilder::Build() const
 {
     Validate();
 
-    auto queryPool = std::unique_ptr<QueryPool>(new QueryPool(m_device, m_queryType, m_poolCount, m_queryCount));
+    auto queryPool = std::unique_ptr<QueryPool>(new QueryPool(m_device, m_queryType, m_poolCount, m_queryCount, m_precise));
 
     prev::core::CommandsExecutor commandsExectutor{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) };
     commandsExectutor.ExecuteImmediate([&](GfxCommandEncoder commandEncoder) {

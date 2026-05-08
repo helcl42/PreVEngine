@@ -3,7 +3,7 @@
 #include "../../common/Logger.h"
 
 namespace prev::render::query {
-QueryPool::QueryPool(prev::core::device::Device& device, GfxQueryType queryType, uint32_t poolCount, uint32_t queryCount)
+QueryPool::QueryPool(prev::core::device::Device& device, GfxQueryType queryType, uint32_t poolCount, uint32_t queryCount, bool precise)
     : m_device{ device }
     , m_queryType{ queryType }
     , m_poolCount{ poolCount }
@@ -14,8 +14,14 @@ QueryPool::QueryPool(prev::core::device::Device& device, GfxQueryType queryType,
     m_resolveBuffers.resize(m_poolCount);
     m_resultBuffers.resize(m_poolCount);
     for (uint32_t i = 0; i < m_poolCount; ++i) {
+        GfxOcclusionQueryDescriptor occlusionDesc{};
+        occlusionDesc.sType = GFX_STRUCTURE_TYPE_OCCLUSION_QUERY_DESCRIPTOR;
+        occlusionDesc.pNext = nullptr;
+        occlusionDesc.mode = precise ? GFX_OCCLUSION_QUERY_MODE_PRECISE : GFX_OCCLUSION_QUERY_MODE_BOOLEAN;
+
         GfxQuerySetDescriptor desc{};
         desc.sType = GFX_STRUCTURE_TYPE_QUERY_SET_DESCRIPTOR;
+        desc.pNext = (m_queryType == GFX_QUERY_TYPE_OCCLUSION) ? &occlusionDesc : nullptr;
         desc.type = m_queryType;
         desc.count = m_queryCount;
         GFXERRCHECK(gfxDeviceCreateQuerySet(m_device, &desc, &m_querySets[i]));
@@ -73,6 +79,7 @@ void QueryPool::ResetAll(GfxCommandEncoder commandEncoder)
     for (uint32_t i = 0; i < m_poolCount; ++i) {
         gfxCommandEncoderResetQuerySet(commandEncoder, m_querySets[i], 0, m_queryCount);
     }
+    m_readIndex = 0;
     m_index.Reset();
 }
 
@@ -87,6 +94,7 @@ void QueryPool::Resolve(GfxCommandEncoder commandEncoder)
     copyDesc.destinationOffset = 0;
     copyDesc.size = sizeof(uint64_t) * m_queryCount;
     gfxCommandEncoderCopyBufferToBuffer(commandEncoder, &copyDesc);
+    m_readIndex = m_index; // remember which slot holds the latest result
     ++m_index;
     // Reset the next query set so it's ready for use
     gfxCommandEncoderResetQuerySet(commandEncoder, m_querySets[m_index], 0, m_queryCount);
