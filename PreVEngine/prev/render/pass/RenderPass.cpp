@@ -64,6 +64,8 @@ void RenderPass::Begin(GfxFramebuffer framebuffer, GfxCommandEncoder commandEnco
     desc.colorClearValueCount = static_cast<uint32_t>(colorClearValues.size());
     desc.depthClearValue = depthClearValue;
     desc.stencilClearValue = stencilClearValue;
+    desc.occlusionQuerySet = m_occlusionQuerySet;
+    desc.timestampQuerySet = m_timestampQuerySet;
 
     gfxCommandEncoderBeginRenderPass(commandEncoder, &desc, &m_activeEncoder);
 }
@@ -72,6 +74,16 @@ void RenderPass::End()
 {
     gfxRenderPassEncoderEnd(m_activeEncoder);
     m_activeEncoder = {};
+}
+
+void RenderPass::SetOcclusionQuerySet(GfxQuerySet querySet)
+{
+    m_occlusionQuerySet = querySet;
+}
+
+void RenderPass::SetTimestampQuerySet(GfxQuerySet querySet)
+{
+    m_timestampQuerySet = querySet;
 }
 
 const std::vector<RenderPass::AttachmentInfo>& RenderPass::GetAttachments() const

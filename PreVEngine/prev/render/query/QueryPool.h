@@ -13,7 +13,7 @@ class QueryPoolBuilder;
 
 class QueryPool final {
 private:
-    QueryPool(prev::core::device::Device& device, GfxQueryType queryType, uint32_t poolCount, uint32_t queryCount);
+    QueryPool(prev::core::device::Device& device, GfxQueryType queryType, uint32_t poolCount, uint32_t queryCount, bool precise);
 
 public:
     ~QueryPool();
@@ -34,31 +34,31 @@ public:
     template <typename ResultType>
     bool GetQueryResult(const uint32_t queryIndex, ResultType& outQueryResult)
     {
-        if (!m_resultBuffers[m_index]) {
+        if (!m_resultBuffers[m_readIndex]) {
             return false;
         }
         void* mapped{};
-        if (gfxBufferMap(m_resultBuffers[m_index], queryIndex * sizeof(ResultType), sizeof(ResultType), &mapped) != GFX_RESULT_SUCCESS || !mapped) {
+        if (gfxBufferMap(m_resultBuffers[m_readIndex], queryIndex * sizeof(ResultType), sizeof(ResultType), &mapped) != GFX_RESULT_SUCCESS || !mapped) {
             return false;
         }
         memcpy(&outQueryResult, mapped, sizeof(ResultType));
-        gfxBufferUnmap(m_resultBuffers[m_index]);
+        gfxBufferUnmap(m_resultBuffers[m_readIndex]);
         return true;
     }
 
     template <typename ResultType>
     bool GetQueryResults(std::vector<ResultType>& outQueryResults)
     {
-        if (!m_resultBuffers[m_index]) {
+        if (!m_resultBuffers[m_readIndex]) {
             return false;
         }
         std::vector<ResultType> result(m_queryCount);
         void* mapped{};
-        if (gfxBufferMap(m_resultBuffers[m_index], 0, sizeof(ResultType) * m_queryCount, &mapped) != GFX_RESULT_SUCCESS || !mapped) {
+        if (gfxBufferMap(m_resultBuffers[m_readIndex], 0, sizeof(ResultType) * m_queryCount, &mapped) != GFX_RESULT_SUCCESS || !mapped) {
             return false;
         }
         memcpy(result.data(), mapped, sizeof(ResultType) * m_queryCount);
-        gfxBufferUnmap(m_resultBuffers[m_index]);
+        gfxBufferUnmap(m_resultBuffers[m_readIndex]);
         outQueryResults = result;
         return true;
     }
@@ -76,6 +76,8 @@ private:
     uint32_t m_queryCount{};
 
     prev::util::CircularIndex<uint32_t> m_index{ 0 };
+
+    uint32_t m_readIndex{ 0 };
 
     std::vector<GfxQuerySet> m_querySets;
 

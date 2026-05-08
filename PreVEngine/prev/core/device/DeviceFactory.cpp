@@ -62,6 +62,6 @@ std::unique_ptr<Device> DeviceFactory::Create(const PhysicalDevice& gpu, const s
     }
 
     LOGI("GFX device created");
-    return std::make_unique<Device>(gpu, gfxDevice, std::move(queues));
+    return std::make_unique<Device>(gpu, gfxDevice, std::move(queues), extensions);
 }
 } // namespace prev::core::device

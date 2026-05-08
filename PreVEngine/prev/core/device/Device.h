@@ -11,7 +11,7 @@
 namespace prev::core::device {
 class Device {
 public:
-    Device(const PhysicalDevice& gpu, GfxDevice handle, std::map<QueueType, std::vector<std::unique_ptr<Queue>>>&& queues);
+    Device(const PhysicalDevice& gpu, GfxDevice handle, std::map<QueueType, std::vector<std::unique_ptr<Queue>>>&& queues, std::vector<std::string> enabledExtensions = {});
 
     ~Device();
 
@@ -33,12 +33,16 @@ public:
 public:
     operator GfxDevice() const;
 
+    bool HasExtension(const std::string& extension) const;
+
 private:
     PhysicalDevice m_gpu;
 
     GfxDevice m_handle;
 
     std::map<QueueType, std::vector<std::unique_ptr<Queue>>> m_queues;
+
+    std::vector<std::string> m_enabledExtensions;
 };
 } // namespace prev::core::device
 

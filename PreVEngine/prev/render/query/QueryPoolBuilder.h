@@ -19,6 +19,8 @@ public:
 
     QueryPoolBuilder& SetQueryCount(uint32_t queryCount);
 
+    QueryPoolBuilder& SetPrecise(bool precise);
+
     std::unique_ptr<QueryPool> Build() const;
 
 private:
@@ -32,6 +34,8 @@ private:
     uint32_t m_poolCount{ 1 };
 
     uint32_t m_queryCount{ 1 };
+
+    bool m_precise{ false };
 };
 } // namespace prev::render::query
 
