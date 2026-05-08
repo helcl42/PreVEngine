@@ -85,6 +85,8 @@ if(ENABLE_XR)
     add_definitions(-DENABLE_XR)
 endif()
 
+add_subdirectory(assets/Shaders)
+
 include_directories("../../PreVEngine")
 include_directories("../../PreVEngine/external")
 include_directories("../../PreVEngine/external/worm_holes/WormHoles")
@@ -283,6 +285,10 @@ elseif(ANDROID)
 
 else()
     message(FATAL_ERROR "Unsupported platform.")
+endif()
+
+if(TARGET CompileShaders AND TARGET ${PROJECT_NAME})
+    add_dependencies(${PROJECT_NAME} CompileShaders)
 endif()
 
 if(ENABLE_XR)
