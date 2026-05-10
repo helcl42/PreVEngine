@@ -12,7 +12,7 @@ class BufferPoolBuilder;
 
 class Buffer final {
 private:
-    Buffer(GfxDevice device, GfxQueue queue, GfxBuffer buffer, bool hostMapped, uint64_t size, void* mappedPtr);
+    Buffer(GfxDevice device, GfxQueue queue, GfxBuffer buffer, bool hostMapped, uint64_t size);
 
 public:
     ~Buffer();
@@ -24,24 +24,6 @@ public:
 
 public:
     uint64_t GetSize() const;
-
-    void* GetMappedPtr() const;
-
-    template <typename T>
-    T& GetMapped()
-    {
-        static_assert(std::is_trivially_copyable<T>::value, "Mapped type must be trivially copyable.");
-
-        if (!m_mappedPtr) {
-            throw std::runtime_error("Could not get mapped data from a non host-mapped buffer");
-        }
-
-        if (sizeof(T) > m_size) {
-            throw std::runtime_error("Could not get mapped data since mapped data type size (" + std::to_string(sizeof(T)) + ") exceeds the buffer size (" + std::to_string(m_size) + ").");
-        }
-
-        return *reinterpret_cast<T*>(m_mappedPtr);
-    }
 
     template <typename T>
     void Write(const T& data)
@@ -66,8 +48,6 @@ protected:
     bool m_hostMapped;
 
     uint64_t m_size;
-
-    void* m_mappedPtr;
 };
 } // namespace prev::render::buffer
 

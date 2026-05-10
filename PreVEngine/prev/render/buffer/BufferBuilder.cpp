@@ -70,24 +70,14 @@ std::unique_ptr<Buffer> BufferBuilder::Build() const
         throw std::runtime_error("Could not allocate buffer: size = " + std::to_string(alignedSize) + " bytes");
     }
 
-    void* mappedPtr{};
-    if (m_hostMapped) {
-        gfxBufferMap(buffer, 0, GFX_WHOLE_SIZE, &mappedPtr);
-    }
-
-    if (mappedPtr) {
-        const auto sizeToInit{ std::min(m_dataSize, alignedSize) };
-        if (m_data) {
-            std::memcpy(mappedPtr, m_data, sizeToInit);
-        } else {
-            std::memset(mappedPtr, 0, alignedSize);
-        }
-        gfxBufferFlushMappedRange(buffer, 0, alignedSize);
-    } else if (m_data && m_dataSize > 0) {
+    if (m_data && m_dataSize > 0) {
         gfxQueueWriteBuffer(m_queue, buffer, 0, m_data, std::min(m_dataSize, alignedSize));
+    } else if (m_hostMapped) {
+        std::vector<uint8_t> zeros(alignedSize, 0);
+        gfxQueueWriteBuffer(m_queue, buffer, 0, zeros.data(), alignedSize);
     }
 
-    return std::unique_ptr<Buffer>(new Buffer(m_device, m_queue, buffer, m_hostMapped, alignedSize, mappedPtr));
+    return std::unique_ptr<Buffer>(new Buffer(m_device, m_queue, buffer, m_hostMapped, alignedSize));
 }
 
 void BufferBuilder::Validate() const

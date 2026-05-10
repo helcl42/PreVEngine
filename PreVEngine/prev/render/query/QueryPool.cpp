@@ -80,6 +80,7 @@ void QueryPool::ResetAll(GfxCommandEncoder commandEncoder)
         gfxCommandEncoderResetQuerySet(commandEncoder, m_querySets[i], 0, m_queryCount);
     }
     m_readIndex = 0;
+    m_hasResolved = false;
     m_index.Reset();
 }
 
@@ -95,6 +96,7 @@ void QueryPool::Resolve(GfxCommandEncoder commandEncoder)
     copyDesc.size = sizeof(uint64_t) * m_queryCount;
     gfxCommandEncoderCopyBufferToBuffer(commandEncoder, &copyDesc);
     m_readIndex = m_index; // remember which slot holds the latest result
+    m_hasResolved = true;
     ++m_index;
     // Reset the next query set so it's ready for use
     gfxCommandEncoderResetQuerySet(commandEncoder, m_querySets[m_index], 0, m_queryCount);
