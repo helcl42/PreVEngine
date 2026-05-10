@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
 
 project(PreVEngine)
 
@@ -50,6 +50,7 @@ file(GLOB SRC_LIST
     "prev/window/impl/macos/*.h" "prev/window/impl/macos/*.cpp"
     "prev/window/impl/ios/*.h" "prev/window/impl/ios/*.cpp"
     "prev/window/impl/headless/*.h" "prev/window/impl/headless/*.cpp"
+    "prev/window/impl/emscripten/*.h" "prev/window/impl/emscripten/*.cpp"
     "prev/xr/*.h" "prev/xr/*.cpp"
     "prev/xr/open_xr/*.h" "prev/xr/open_xr/*.cpp"
     "prev/xr/open_xr/common/*.h" "prev/xr/open_xr/common/*.cpp"
@@ -87,71 +88,24 @@ if(ENABLE_XR_DEPTH)
 endif()
 
 include_directories("external")
-include_directories("external/gfx/gfx/include")
-include_directories("external/gfx/gfx/src")
 
 option(BUILD_WEBGPU_BACKEND "Build WebGPU backend (requires Dawn)" OFF)
 
-# Collect gfx backend source files
-file(GLOB_RECURSE GFX_SRC_LIST
-    "external/gfx/gfx/src/*.h" "external/gfx/gfx/src/*.cpp"
-)
-
-if(NOT BUILD_WEBGPU_BACKEND)
-    list(FILTER GFX_SRC_LIST EXCLUDE REGEX ".*/webgpu/.*")
+# Emscripten forces WebGPU-only build
+if(EMSCRIPTEN)
+    set(BUILD_WEBGPU_BACKEND ON CACHE BOOL "" FORCE)
+    add_definitions(-DWORM_HOLES_SINGLE_THREADED)
 endif()
 
-# Add gfx sources to main source list
-list(APPEND SRC_LIST ${GFX_SRC_LIST})
-
-# gfx sources require C++20 and Vulkan backend enabled
-set_source_files_properties(${GFX_SRC_LIST} PROPERTIES COMPILE_FLAGS "-std=c++20")
-add_definitions(-DGFX_ENABLE_VULKAN=1)
-
-if(BUILD_WEBGPU_BACKEND)
-    set(DAWN_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/external/gfx/third_party/dawn")
-    if(NOT EXISTS "${DAWN_ROOT}/CMakeLists.txt")
-        message(FATAL_ERROR "Dawn not found at ${DAWN_ROOT}. Run: cd external/gfx && git submodule update --init third_party/dawn")
-    endif()
-
-    message(STATUS "Enabling WebGPU backend via Dawn: ${DAWN_ROOT}")
-    add_definitions(-DGFX_ENABLE_WEBGPU=1)
-
-    set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-    set(DAWN_FETCH_DEPENDENCIES ON CACHE BOOL "" FORCE)
-    set(DAWN_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
-    set(DAWN_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
-    set(DAWN_USE_GLFW OFF CACHE BOOL "" FORCE)
-    set(TINT_BUILD_SPV_READER ON CACHE BOOL "" FORCE)
-    set(TINT_BUILD_SPV_WRITER ON CACHE BOOL "" FORCE)
-    set(TINT_BUILD_CMD_TOOLS OFF CACHE BOOL "" FORCE)
-
-    if(APPLE)
-        set(DAWN_ENABLE_METAL ON CACHE BOOL "" FORCE)
-        set(DAWN_ENABLE_VULKAN ON CACHE BOOL "" FORCE)
-    elseif(WIN32)
-        set(DAWN_ENABLE_D3D11 ON CACHE BOOL "" FORCE)
-        set(DAWN_ENABLE_D3D12 ON CACHE BOOL "" FORCE)
-        set(DAWN_ENABLE_VULKAN ON CACHE BOOL "" FORCE)
-    else()
-        set(DAWN_ENABLE_VULKAN ON CACHE BOOL "" FORCE)
-    endif()
-
-    set(GFX_SAVED_C_FLAGS "${CMAKE_C_FLAGS}")
-    set(GFX_SAVED_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    if(NOT MSVC)
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w -Wno-unused-command-line-argument")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w -Wno-unused-command-line-argument")
-    endif()
-
-    add_subdirectory(${DAWN_ROOT} ${CMAKE_BINARY_DIR}/dawn EXCLUDE_FROM_ALL)
-
-    set(CMAKE_C_FLAGS "${GFX_SAVED_C_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${GFX_SAVED_CXX_FLAGS}")
-
-    include_directories("${DAWN_ROOT}/include")
-    include_directories("${CMAKE_BINARY_DIR}/dawn/gen/include")
+# Add gfx as a subdirectory — it manages its own sources, backends, and Dawn
+set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(BUILD_CPP_WRAPPER OFF CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+if(NOT EMSCRIPTEN)
+    set(BUILD_VULKAN_BACKEND ON CACHE BOOL "" FORCE)
 endif()
+add_subdirectory(external/gfx)
 
 include_directories("external/worm_holes/WormHoles")
 include_directories("external/glm")
@@ -162,18 +116,16 @@ endif()
 if(WIN32)
     message("${PROJECT_NAME} - Windows")
     add_definitions(-DTARGET_PLATFORM_WINDOWS)
-    add_definitions(-DVK_USE_PLATFORM_WIN32_KHR)
     add_definitions(-DWIN32_LEAN_AND_MEAN)
 
     add_library(${PROJECT_NAME} STATIC ${SRC_LIST})
 
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-    target_include_directories(${PROJECT_NAME} PUBLIC "$ENV{VULKAN_SDK}/include")
+    target_link_libraries(${PROJECT_NAME} gfx)
 
 elseif(IOS)
     message("${PROJECT_NAME} - iOS")
     add_definitions(-DTARGET_PLATFORM_IOS)
-    add_definitions(-DVK_USE_PLATFORM_IOS_MVK)
 
     include_directories("platform/ios")
 
@@ -192,9 +144,9 @@ elseif(IOS)
     )
 
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-    target_include_directories(${PROJECT_NAME} PUBLIC "$ENV{VULKAN_SDK}/include")
 
     target_link_libraries(${PROJECT_NAME} 
+        gfx
         ${UIKIT_LIB}
         ${METALKIT_LIB}
         ${FOUNDATION_LIB}
@@ -203,8 +155,6 @@ elseif(IOS)
 elseif(APPLE)
     message("${PROJECT_NAME} - MacOS")
     add_definitions(-DTARGET_PLATFORM_MACOS)
-    add_definitions(-DGFX_HAS_COCOA=1)
-    add_definitions(-DVK_USE_PLATFORM_MACOS_MVK)
 
     include_directories("platform/macos")
 
@@ -222,12 +172,11 @@ elseif(APPLE)
     )
 
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-    target_include_directories(${PROJECT_NAME} PUBLIC "$ENV{VULKAN_SDK}/include")
 
     target_link_libraries(${PROJECT_NAME} 
+        gfx
         ${COCOA_LIB}
         ${QUARTZ_CORE_LIB}
-        "$ENV{VULKAN_SDK}/lib/libvulkan.dylib"
     )
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     message("${PROJECT_NAME} - Linux")
@@ -238,11 +187,10 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     
     if (ENABLE_XCB)
         add_definitions(-DTARGET_PLATFORM_XCB)
-        add_definitions(-DVK_USE_PLATFORM_XCB_KHR)
 
         add_library(${PROJECT_NAME} STATIC ${SRC_LIST})
 
-        target_link_libraries(${PROJECT_NAME} pthread)
+        target_link_libraries(${PROJECT_NAME} gfx pthread)
 
         #---XCB---  (window)
         find_package(XCB REQUIRED)
@@ -267,7 +215,6 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
         endif()
     elseif(ENABLE_WAYLAND)
         add_definitions(-DTARGET_PLATFORM_WAYLAND)
-        add_definitions(-DVK_USE_PLATFORM_WAYLAND_KHR)
 
         include_directories("platform/wayland")
 
@@ -280,6 +227,8 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
             ${WAYLAND_SRC_LIST}
         )
 
+        target_link_libraries(${PROJECT_NAME} gfx)
+
         find_package(Wayland REQUIRED)
         include_directories(${WAYLAND_CLIENT_INCLUDE_DIR})
         target_link_libraries(${PROJECT_NAME} ${WAYLAND_CLIENT_LIBRARIES})
@@ -288,7 +237,6 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     endif()
 
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-    target_include_directories(${PROJECT_NAME} PUBLIC "$ENV{VULKAN_SDK}/include")
 
 elseif(ANDROID)
     message("${PROJECT_NAME} - Android")
@@ -296,7 +244,6 @@ elseif(ANDROID)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17 -O3")
 
-    add_definitions(-DVK_USE_PLATFORM_ANDROID_KHR)
     add_definitions(-DGLM_FORCE_CXX17)
 
     include_directories("platform/android")
@@ -312,14 +259,20 @@ elseif(ANDROID)
     )
 
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(${PROJECT_NAME} gfx)
+
+elseif(EMSCRIPTEN)
+    message("${PROJECT_NAME} - Emscripten/Web")
+    add_definitions(-DTARGET_PLATFORM_EMSCRIPTEN)
+
+    add_library(${PROJECT_NAME} STATIC ${SRC_LIST})
+
+    target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(${PROJECT_NAME} gfx)
+    target_compile_options(${PROJECT_NAME} PUBLIC "SHELL:-sDISABLE_EXCEPTION_CATCHING=0")
+    target_link_options(${PROJECT_NAME} PUBLIC "SHELL:-sASYNCIFY=1" "SHELL:-sDISABLE_EXCEPTION_CATCHING=0")
 else()
     message(FATAL_ERROR "Unsupported platform.")
-endif()
-
-if(BUILD_WEBGPU_BACKEND)
-    target_link_libraries(${PROJECT_NAME} webgpu_dawn)
-    target_include_directories(${PROJECT_NAME} PUBLIC "${DAWN_ROOT}/include")
-    target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_BINARY_DIR}/dawn/gen/include")
 endif()
 
 if(ENABLE_XR)

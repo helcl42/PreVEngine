@@ -1,4 +1,4 @@
-#include "DefaultEngineImpl.h"
+#include "WebEngineImpl.h"
 
 #include "../../device/Device.h"
 #include "../../device/DeviceFactory.h"
@@ -14,27 +14,27 @@
 #include <vector>
 
 namespace prev::core::engine::impl {
-DefaultEngineImpl::DefaultEngineImpl(const Config& config)
+WebEngineImpl::WebEngineImpl(const Config& config)
     : EngineImpl(config)
 {
 }
 
-DefaultEngineImpl::~DefaultEngineImpl()
+WebEngineImpl::~WebEngineImpl()
 {
     ShutDown();
 }
 
-uint32_t DefaultEngineImpl::GetViewCount() const
+uint32_t WebEngineImpl::GetViewCount() const
 {
     return 1;
 }
 
-float DefaultEngineImpl::GetCurrentDeltaTime() const
+float WebEngineImpl::GetCurrentDeltaTime() const
 {
     return m_clock->GetDelta();
 }
 
-void DefaultEngineImpl::Init()
+void WebEngineImpl::Init()
 {
     ResetTiming();
     ResetInstance();
@@ -45,7 +45,7 @@ void DefaultEngineImpl::Init()
     ResetSwapchain();
 }
 
-void DefaultEngineImpl::ShutDown()
+void WebEngineImpl::ShutDown()
 {
     if (m_rootRenderer) {
         m_rootRenderer->ShutDown();
@@ -59,39 +59,39 @@ void DefaultEngineImpl::ShutDown()
 
     m_swapchain = nullptr;
     m_renderPass = nullptr;
-    m_surface = nullptr; // Surface destructor calls gfxSurfaceDestroy
-    m_device = nullptr; // Device destructor calls gfxDeviceDestroy
-    m_instance = nullptr; // Instance destructor calls gfxInstanceDestroy
+    m_surface = nullptr;
+    m_device = nullptr;
+    m_instance = nullptr;
 }
 
-bool DefaultEngineImpl::Update()
+bool WebEngineImpl::Update()
 {
     bool result{ m_window->ProcessEvents() };
     m_clock->UpdateClock();
     return result;
 }
 
-bool DefaultEngineImpl::BeginFrame()
+bool WebEngineImpl::BeginFrame()
 {
     return true;
 }
 
-void DefaultEngineImpl::PollActions()
+void WebEngineImpl::PollActions()
 {
 }
 
-bool DefaultEngineImpl::EndFrame()
+bool WebEngineImpl::EndFrame()
 {
     UpdateFps();
     return true;
 }
 
-void DefaultEngineImpl::ResetInstance()
+void WebEngineImpl::ResetInstance()
 {
     m_instance = prev::core::instance::InstanceFactory{}.Create(m_config.appName, m_config.validation, m_config.renderBackend);
 }
 
-void DefaultEngineImpl::ResetDevice()
+void WebEngineImpl::ResetDevice()
 {
     prev::core::device::PhysicalDevices physicalDevices{ m_instance->GetHandle() };
     physicalDevices.Print();
@@ -101,15 +101,12 @@ void DefaultEngineImpl::ResetDevice()
         throw std::runtime_error("No suitable GPU adapter found");
     }
 
-    // Build extension list based on what's actually supported by the adapter
     std::vector<std::string> extensions{
         GFX_DEVICE_EXTENSION_SWAPCHAIN,
         GFX_DEVICE_EXTENSION_ANISOTROPIC_FILTERING,
         GFX_DEVICE_EXTENSION_NON_SOLID_FILL,
-        // GFX_DEVICE_EXTENSION_MULTIVIEW
     };
 
-    // Enable precise occlusion queries only when the selected adapter reports support.
     uint32_t extensionCount{ 0 };
     gfxAdapterEnumerateExtensions(static_cast<GfxAdapter>(*gpu), &extensionCount, nullptr);
     std::vector<const char*> availableExtensions(extensionCount);
@@ -131,7 +128,7 @@ void DefaultEngineImpl::ResetDevice()
     m_device->Print();
 }
 
-void DefaultEngineImpl::ResetRenderPass()
+void WebEngineImpl::ResetRenderPass()
 {
     const auto formats{ m_surface->GetSupportedFormats(m_device->GetGPU()) };
     if (formats.empty()) {
@@ -149,7 +146,7 @@ void DefaultEngineImpl::ResetRenderPass()
     LOGI("GFX render pass created");
 }
 
-void DefaultEngineImpl::ResetSwapchain()
+void WebEngineImpl::ResetSwapchain()
 {
     const auto size{ m_window->GetSize() };
     const GfxExtent2D extent{ static_cast<uint32_t>(size.width), static_cast<uint32_t>(size.height) };
@@ -159,11 +156,7 @@ void DefaultEngineImpl::ResetSwapchain()
     uint32_t imageCount = m_config.swapchainFrameCount;
 
     if (surface) {
-#if defined(__ANDROID__)
-        const GfxPresentMode preferred = m_config.VSync ? GFX_PRESENT_MODE_FIFO : GFX_PRESENT_MODE_MAILBOX;
-#else
         const GfxPresentMode preferred = m_config.VSync ? GFX_PRESENT_MODE_FIFO : GFX_PRESENT_MODE_IMMEDIATE;
-#endif
         const auto presentModes{ m_surface->GetSupportedPresentModes(m_device->GetGPU()) };
         if (!presentModes.empty()) {
             presentMode = presentModes[0];

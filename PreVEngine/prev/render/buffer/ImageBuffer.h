@@ -6,8 +6,6 @@
 #include "../../core/device/Device.h"
 #include "../../core/device/Queue.h"
 
-#include <gfx/gfx.h>
-
 namespace prev::render::buffer {
 class ImageBufferBuilder;
 

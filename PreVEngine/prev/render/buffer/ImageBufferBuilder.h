@@ -5,8 +5,6 @@
 
 #include "../../core/device/Device.h"
 #include "../../core/device/Queue.h"
-
-#include <gfx/gfx.h>
 #include <vector>
 
 namespace prev::render::buffer {

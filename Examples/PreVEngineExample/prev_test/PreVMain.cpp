@@ -15,14 +15,21 @@ int PreVMain(int argc, char** argv)
     config.swapchainFrameCount = 3;
     config.maxFramesInFlight = 2;
 
+#ifdef __EMSCRIPTEN__
+    // On Emscripten, try/catch around Asyncify code is broken:
+    // C++ exceptions thrown after an Asyncify suspend/resume cannot be caught
+    // by a try/catch that was established before the suspension.
     try {
+#endif
         prev_test::TestApp app{ config };
         app.Init();
         app.Run();
         app.ShutDown();
+#ifdef __EMSCRIPTEN__
     } catch (const std::runtime_error& err) {
         LOGE("Unhandled error: %s", err.what());
     }
+#endif
 
     return 0;
 }

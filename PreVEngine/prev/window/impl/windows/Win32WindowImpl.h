@@ -1,4 +1,4 @@
-#ifdef VK_USE_PLATFORM_WIN32_KHR
+#ifdef GFX_HAS_WIN32
 
 #ifndef __WIN32_WINDOW_IMPL_H__
 #define __WIN32_WINDOW_IMPL_H__
@@ -39,4 +39,4 @@ private:
 
 #endif
 
-#endif // VK_USE_PLATFORM_WIN32_KHR
+#endif // GFX_HAS_WIN32

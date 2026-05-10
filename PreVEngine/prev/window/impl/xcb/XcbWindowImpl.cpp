@@ -1,6 +1,6 @@
 #include "XcbWindowImpl.h"
 
-#ifdef VK_USE_PLATFORM_XCB_KHR
+#ifdef GFX_HAS_XCB
 
 #include "../../../common/Logger.h"
 
@@ -146,7 +146,6 @@ XcbWindowImpl::XcbWindowImpl(const WindowInfo& windowInfo)
 
 XcbWindowImpl::~XcbWindowImpl()
 {
-
     ShutDownTouch();
 
     xkb_state_unref(m_keyboardState); // xcb keyboard state

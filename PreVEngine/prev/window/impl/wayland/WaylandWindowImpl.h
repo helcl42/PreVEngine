@@ -1,4 +1,4 @@
-#ifdef VK_USE_PLATFORM_WAYLAND_KHR
+#ifdef GFX_HAS_WAYLAND
 
 #ifndef __WAYLAND_WINDOW_IMPL_H__
 #define __WAYLAND_WINDOW_IMPL_H__
@@ -132,4 +132,4 @@ private:
 
 #endif
 
-#endif // VK_USE_PLATFORM_WAYLAND_KHR
+#endif // GFX_HAS_WAYLAND

@@ -1,6 +1,6 @@
 #include "IOSWindowImpl.h"
 
-#ifdef VK_USE_PLATFORM_IOS_MVK
+#ifdef GFX_HAS_UIKIT
 
 #include "../../../common/Logger.h"
 

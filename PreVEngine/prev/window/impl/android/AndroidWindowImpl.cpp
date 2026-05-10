@@ -1,6 +1,6 @@
 #include "AndroidWindowImpl.h"
 
-#ifdef VK_USE_PLATFORM_ANDROID_KHR
+#ifdef GFX_HAS_ANDROID
 
 #include "../../../common/Logger.h"
 

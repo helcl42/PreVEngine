@@ -7,6 +7,28 @@
 #include <stdexcept>
 
 namespace prev::render::shader {
+namespace {
+    GfxBindGroupEntryType ToBindGroupEntryType(GfxBindingType bindingType)
+    {
+        switch (bindingType) {
+        case GFX_BINDING_TYPE_BUFFER:
+            return GFX_BIND_GROUP_ENTRY_TYPE_BUFFER;
+        case GFX_BINDING_TYPE_SAMPLER:
+            return GFX_BIND_GROUP_ENTRY_TYPE_SAMPLER;
+        default:
+            return GFX_BIND_GROUP_ENTRY_TYPE_TEXTURE_VIEW;
+        }
+    }
+
+    GfxShaderSourceType GetShaderSourceType(const std::string& filePath)
+    {
+        static const std::string wgslSuffix = ".wgsl";
+        if (filePath.size() >= wgslSuffix.size() && filePath.substr(filePath.size() - wgslSuffix.size()) == wgslSuffix) {
+            return GFX_SHADER_SOURCE_WGSL;
+        }
+        return GFX_SHADER_SOURCE_SPIRV;
+    }
+} // namespace
 ShaderBuilder::ShaderBuilder(GfxDevice device)
     : m_device{ device }
 {
@@ -96,47 +118,19 @@ ShaderBuilder& ShaderBuilder::SetEntryPointName(const std::string& name)
 
 std::unique_ptr<Shader> ShaderBuilder::Build() const
 {
-    // Determine preferred shader format
-    // Prefer WGSL when supported (avoids Dawn Tint SPIR-V reader issues on WebGPU)
-    bool useWgsl{ false };
-    bool wgslSupported{ false };
-    GfxResult result = gfxDeviceSupportsShaderFormat(m_device, GFX_SHADER_SOURCE_WGSL, &wgslSupported);
-    LOGI("ShaderBuilder: gfxDeviceSupportsShaderFormat result=%d, wgslSupported=%d", static_cast<int>(result), static_cast<int>(wgslSupported));
-    if (result == GFX_RESULT_SUCCESS && wgslSupported) {
-        useWgsl = true;
-        LOGI("ShaderBuilder: Using WGSL shader format");
-    }
-
     // Build shader modules
     auto byteCodes{ m_stageByteCodes };
     for (const auto& [stage, path] : m_stagePaths) {
-        std::string actualPath = path;
-
-        // Support migrated shader layout by rewriting legacy paths:
-        // Shaders/<category>/<file>.spv -> Shaders/{spirv|wgsl}/<category>/<file>.{spv|wgsl}
-        const std::string legacyRoot{ "Shaders/" };
-        const std::string spirvRoot{ "Shaders/spirv/" };
-        const std::string wgslRoot{ "Shaders/wgsl/" };
-        if (actualPath.rfind(legacyRoot, 0) == 0
-            && actualPath.rfind(spirvRoot, 0) != 0
-            && actualPath.rfind(wgslRoot, 0) != 0) {
-            const std::string suffix = actualPath.substr(legacyRoot.size());
-            actualPath = (useWgsl ? wgslRoot : spirvRoot) + suffix;
-        }
-
-        if (useWgsl) {
-            // Replace .spv extension with .wgsl
-            const auto pos = actualPath.rfind(".spv");
-            if (pos != std::string::npos) {
-                actualPath.replace(pos, 4, ".wgsl");
-            }
-        }
-        byteCodes.insert({ stage, prev::util::file::ReadBinaryFile(actualPath) });
+        LOGI("ShaderBuilder: Loading shader: %s", path.c_str());
+        byteCodes.insert({ stage, prev::util::file::ReadBinaryFile(path) });
     }
 
+    // Determine shader source format from file extension
     std::map<GfxShaderStageFlags, GfxShader> shaderModules;
     for (const auto& [stage, byteCode] : byteCodes) {
-        shaderModules[stage] = CreateShaderModule(byteCode, useWgsl ? GFX_SHADER_SOURCE_WGSL : GFX_SHADER_SOURCE_SPIRV);
+        auto it = m_stagePaths.find(stage);
+        const GfxShaderSourceType sourceType = (it != m_stagePaths.end()) ? GetShaderSourceType(it->second) : GFX_SHADER_SOURCE_SPIRV;
+        shaderModules[stage] = CreateShaderModule(byteCode, sourceType);
     }
 
     // Build bind group layout
@@ -145,16 +139,7 @@ std::unique_ptr<Shader> ShaderBuilder::Build() const
     // Build binding infos
     std::map<std::string, Shader::BindingInfo> bindingInfos;
     for (const auto& ds : m_descriptorSets) {
-        const auto entryType = [](GfxBindingType bt) -> GfxBindGroupEntryType {
-            switch (bt) {
-            case GFX_BINDING_TYPE_BUFFER:
-                return GFX_BIND_GROUP_ENTRY_TYPE_BUFFER;
-            case GFX_BINDING_TYPE_SAMPLER:
-                return GFX_BIND_GROUP_ENTRY_TYPE_SAMPLER;
-            default:
-                return GFX_BIND_GROUP_ENTRY_TYPE_TEXTURE_VIEW;
-            }
-        }(ds.bindingType);
+        const auto entryType = ToBindGroupEntryType(ds.bindingType);
 
         if (ds.count > 1) {
             for (uint32_t i = 0; i < ds.count; ++i) {

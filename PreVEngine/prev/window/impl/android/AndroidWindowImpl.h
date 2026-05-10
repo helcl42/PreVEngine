@@ -1,4 +1,4 @@
-#ifdef VK_USE_PLATFORM_ANDROID_KHR
+#ifdef GFX_HAS_ANDROID
 
 #ifndef __ANDROID_WINDOW_IMPL_H__
 #define __ANDROID_WINDOW_IMPL_H__
@@ -38,4 +38,4 @@ private:
 
 #endif
 
-#endif // VK_USE_PLATFORM_ANDROID_KHR
+#endif // GFX_HAS_ANDROID

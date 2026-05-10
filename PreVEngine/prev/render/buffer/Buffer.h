@@ -3,8 +3,6 @@
 
 #include "../../core/device/Device.h"
 
-#include <gfx/gfx.h>
-
 #include <stdexcept>
 #include <string>
 

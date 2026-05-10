@@ -1,6 +1,6 @@
 #include "CloudsNoiseFactory.h"
 
-#include "../../../common/AssetManager.h"
+#include "../../../common/ShaderAssetManager.h"
 
 #include <prev/core/CommandsExecutor.h>
 #include <prev/render/buffer/ImageBufferBuilder.h>
@@ -24,7 +24,7 @@ CloudsNoise CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t width, co
     // clang-format off
     auto shader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { GFX_SHADER_STAGE_COMPUTE, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/clouds_perlin_worley_noise_3d_comp.spv") }
+            { GFX_SHADER_STAGE_COMPUTE, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "sky/clouds_perlin_worley_noise_3d_comp") }
         })
         .AddDescriptorSets({
             { "outVolumeTexture", 0, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE, false, 1, noiseImageFormat, GFX_TEXTURE_VIEW_TYPE_3D, GFX_STORAGE_TEXTURE_ACCESS_WRITE_ONLY }

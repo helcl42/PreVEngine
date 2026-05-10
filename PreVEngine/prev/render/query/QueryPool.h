@@ -63,6 +63,45 @@ public:
         return true;
     }
 
+    void StartAsyncMapRead()
+    {
+        if (m_asyncMapPending) {
+            return;
+        }
+        if (!m_resultBuffers[m_readIndex]) {
+            return;
+        }
+        gfxBufferAsyncMap(m_resultBuffers[m_readIndex], 0, sizeof(uint64_t) * m_queryCount);
+        m_asyncMapPending = true;
+        m_asyncMapIndex = m_readIndex;
+    }
+
+    bool IsAsyncResultReady()
+    {
+        if (!m_asyncMapPending) {
+            return false;
+        }
+        bool mapped = false;
+        gfxBufferIsAsyncMapped(m_resultBuffers[m_asyncMapIndex], &mapped);
+        return mapped;
+    }
+
+    template <typename ResultType>
+    bool GetAsyncQueryResult(const uint32_t queryIndex, ResultType& outQueryResult)
+    {
+        if (!m_asyncMapPending) {
+            return false;
+        }
+        void* ptr{};
+        if (gfxBufferGetAsyncMappedPointer(m_resultBuffers[m_asyncMapIndex], &ptr) != GFX_RESULT_SUCCESS || !ptr) {
+            return false;
+        }
+        memcpy(&outQueryResult, static_cast<uint8_t*>(ptr) + queryIndex * sizeof(ResultType), sizeof(ResultType));
+        gfxBufferUnmap(m_resultBuffers[m_asyncMapIndex]);
+        m_asyncMapPending = false;
+        return true;
+    }
+
 public:
     friend class QueryPoolBuilder;
 
@@ -84,6 +123,10 @@ private:
     std::vector<GfxBuffer> m_resolveBuffers;
 
     std::vector<GfxBuffer> m_resultBuffers;
+
+    bool m_asyncMapPending{ false };
+
+    uint32_t m_asyncMapIndex{ 0 };
 };
 } // namespace prev::render::query
 

@@ -1,6 +1,6 @@
 #include "WaylandWindowImpl.h"
 
-#ifdef VK_USE_PLATFORM_WAYLAND_KHR
+#ifdef GFX_HAS_WAYLAND
 
 #include "../../../common/Logger.h"
 

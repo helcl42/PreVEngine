@@ -1,4 +1,4 @@
-#ifdef VK_USE_PLATFORM_IOS_MVK
+#ifdef GFX_HAS_UIKIT
 
 #ifndef __IOS_WINDOW_IMPL_H__
 #define __IOS_WINDOW_IMPL_H__
@@ -36,4 +36,4 @@ private:
 
 #endif
 
-#endif // VK_USE_PLATFORM_IOS_MVK
+#endif // GFX_HAS_UIKIT
