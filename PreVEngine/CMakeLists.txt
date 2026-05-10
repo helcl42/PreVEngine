@@ -89,7 +89,7 @@ endif()
 
 include_directories("external")
 
-option(BUILD_WEBGPU_BACKEND "Build WebGPU backend (requires Dawn)" OFF)
+option(BUILD_WEBGPU_BACKEND "Build WebGPU backend (requires Dawn)" ON)
 
 # Emscripten forces WebGPU-only build
 if(EMSCRIPTEN)
