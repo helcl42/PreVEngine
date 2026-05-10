@@ -127,8 +127,10 @@ namespace {
 
             for (uint32_t i = 0; i < meshBone.mNumWeights; ++i) {
                 const auto& vertexWeight{ meshBone.mWeights[i] };
-                auto& singleVertexBoneData{ vertexBoneData[vertexWeight.mVertexId] };
-                singleVertexBoneData.AddBoneData(currentBoneIndex, vertexWeight.mWeight);
+                if (vertexWeight.mVertexId < vertexBoneData.size()) {
+                    auto& singleVertexBoneData{ vertexBoneData[vertexWeight.mVertexId] };
+                    singleVertexBoneData.AddBoneData(currentBoneIndex, vertexWeight.mWeight);
+                }
             }
         }
 

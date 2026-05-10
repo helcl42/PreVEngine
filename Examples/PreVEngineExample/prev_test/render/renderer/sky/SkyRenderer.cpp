@@ -1,7 +1,7 @@
 #include "SkyRenderer.h"
 
 #include "../../../Tags.h"
-#include "../../../common/AssetManager.h"
+#include "../../../common/ShaderAssetManager.h"
 #include "../../../component/light/ILightComponent.h"
 #include "../../../component/sky/ISkyComponent.h"
 
@@ -28,7 +28,7 @@ void SkyRenderer::Init()
     // clang-format off
     m_skyShader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { GFX_SHADER_STAGE_COMPUTE, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_comp.spv") }
+            { GFX_SHADER_STAGE_COMPUTE, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "sky/sky_comp") }
         })
         .AddDescriptorSets({
             { "outFragColor", 0, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE, false, 1, COLOR_FORMAT, GFX_TEXTURE_VIEW_TYPE_2D, GFX_STORAGE_TEXTURE_ACCESS_WRITE_ONLY },
@@ -66,7 +66,7 @@ void SkyRenderer::Init()
     // clang-format off
     m_skyPostProcessShader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { GFX_SHADER_STAGE_COMPUTE, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_post_process_comp.spv") }
+            { GFX_SHADER_STAGE_COMPUTE, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "sky/sky_post_process_comp") }
         })
         .AddDescriptorSets({
             { "outFragColor", 0, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE, false, 1, COLOR_FORMAT, GFX_TEXTURE_VIEW_TYPE_2D, GFX_STORAGE_TEXTURE_ACCESS_WRITE_ONLY },
@@ -101,8 +101,8 @@ void SkyRenderer::Init()
     // clang-format off
     m_compositeShader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { GFX_SHADER_STAGE_VERTEX, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_composite_vert.spv") },
-            { GFX_SHADER_STAGE_FRAGMENT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sky_composite_frag.spv") }
+            { GFX_SHADER_STAGE_VERTEX, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "sky/sky_composite_vert") },
+            { GFX_SHADER_STAGE_FRAGMENT, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "sky/sky_composite_frag") }
         })
         .AddVertexInputAttributes({
             prev::render::shader::VertexInputAttribute{ 0, 0, GFX_FORMAT_R32G32B32_FLOAT, 0 },

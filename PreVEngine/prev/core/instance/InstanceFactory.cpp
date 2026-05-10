@@ -22,11 +22,22 @@ namespace {
             break;
         }
     }
+
+    GfxBackend ToGfxBackend(prev::core::engine::RenderBackend renderBackend)
+    {
+        switch (renderBackend) {
+        case prev::core::engine::RenderBackend::WebGPU:
+            return GFX_BACKEND_WEBGPU;
+        case prev::core::engine::RenderBackend::Vulkan:
+        default:
+            return GFX_BACKEND_VULKAN;
+        }
+    }
 } // namespace
 
-std::unique_ptr<Instance> InstanceFactory::Create(const std::string& appName, bool enableValidation) const
+std::unique_ptr<Instance> InstanceFactory::Create(const std::string& appName, bool enableValidation, prev::core::engine::RenderBackend renderBackend) const
 {
-    const GfxBackend backend = GFX_BACKEND_WEBGPU;
+    const GfxBackend backend = ToGfxBackend(renderBackend);
     if (gfxLoadBackend(backend) != GFX_RESULT_SUCCESS) {
         throw std::runtime_error("Failed to load Gfx backend");
     }

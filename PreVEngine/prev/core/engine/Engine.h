@@ -44,6 +44,13 @@ public:
     uint32_t GetViewCount() const;
 
 private:
+    void RunOneFrame();
+
+#ifdef __EMSCRIPTEN__
+    static void EmscriptenMainLoopCallback(void* arg);
+#endif
+
+private:
     std::unique_ptr<prev::core::engine::impl::EngineImpl> m_engineImpl{};
 };
 } // namespace prev::core::engine

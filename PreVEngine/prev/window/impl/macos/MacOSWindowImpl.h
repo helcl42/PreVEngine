@@ -1,4 +1,4 @@
-#ifdef VK_USE_PLATFORM_MACOS_MVK
+#ifdef GFX_HAS_COCOA
 
 #ifndef __MACOS_WINDOW_IMPL_H__
 #define __MACOS_WINDOW_IMPL_H__
@@ -34,4 +34,4 @@ private:
 
 #endif
 
-#endif // VK_USE_PLATFORM_MACOS_MVK
+#endif // GFX_HAS_COCOA

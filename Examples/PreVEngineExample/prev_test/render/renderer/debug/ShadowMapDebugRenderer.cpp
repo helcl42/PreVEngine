@@ -3,7 +3,7 @@
 
 #include "../../../Tags.h"
 #include <prev/common/Logger.h>
-#include "../../../common/AssetManager.h"
+#include "../../../common/ShaderAssetManager.h"
 #include "../../../component/shadow/IShadowsComponent.h"
 #include "../../../component/shadow/ShadowsCommon.h"
 #include "../../mesh/MeshFactory.h"
@@ -27,8 +27,8 @@ void ShadowMapDebugRenderer::Init()
     // clang-format off
     m_shader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { GFX_SHADER_STAGE_VERTEX, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/debug/shadow_map_debug_vert.spv") },
-            { GFX_SHADER_STAGE_FRAGMENT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/debug/shadow_map_debug_frag.spv") }
+            { GFX_SHADER_STAGE_VERTEX, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "debug/shadow_map_debug_vert") },
+            { GFX_SHADER_STAGE_FRAGMENT, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "debug/shadow_map_debug_frag") }
         })
         .AddVertexInputAttributes({
             prev::render::shader::VertexInputAttribute{ 0, 0, GFX_FORMAT_R32G32B32_FLOAT, 0 },

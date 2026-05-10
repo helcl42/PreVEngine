@@ -6,6 +6,10 @@
 
 #include "../../common/Logger.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 namespace prev::core::engine {
 Engine::Engine(const Config& config)
     : m_engineImpl{ impl::EngineImplFactory{}.Create(config) }
@@ -32,46 +36,70 @@ void Engine::InitRenderer(std::unique_ptr<prev::render::IRootRenderer> rootRende
     m_engineImpl->InitRenderer(std::move(rootRenderer));
 }
 
+void Engine::RunOneFrame()
+{
+    prev::event::EventChannel::DispatchAll();
+
+    if (!m_engineImpl->BeginFrame()) {
+        return;
+    }
+
+    m_engineImpl->PollActions();
+
+    auto& scene{ m_engineImpl->GetScene() };
+    auto& rootRenderer{ m_engineImpl->GetRootRenderer() };
+    auto& swapchain{ m_engineImpl->GetSwapchain() };
+
+    const GfxExtent2D extent{ swapchain.GetExtent() };
+    const auto deltaTime{ m_engineImpl->GetCurrentDeltaTime() };
+
+    prev::event::EventChannel::Post(NewIterationEvent{ deltaTime, extent.width, extent.height });
+
+    if (m_engineImpl->IsFocused()) {
+        scene.Update(deltaTime);
+
+        prev::render::swapchain::FrameContext frameContext;
+        if (swapchain.BeginFrame(frameContext)) {
+            const prev::render::RenderContext renderContext{ frameContext.frameBuffer, frameContext.commandEncoder, frameContext.index, { { 0, 0 }, extent } };
+            rootRenderer.Render(renderContext, scene);
+            swapchain.EndFrame();
+        }
+    } else {
+        LOGW("No focus...");
+#ifndef __EMSCRIPTEN__
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+#endif
+    }
+
+    m_engineImpl->EndFrame();
+}
+
+#ifdef __EMSCRIPTEN__
+void Engine::EmscriptenMainLoopCallback(void* arg)
+{
+    auto* engine = static_cast<Engine*>(arg);
+    if (!engine->m_engineImpl->Update()) {
+        emscripten_cancel_main_loop();
+        engine->m_engineImpl->EndMainLoop();
+        return;
+    }
+    engine->RunOneFrame();
+}
+#endif
+
 void Engine::MainLoop()
 {
     m_engineImpl->BeginMainLoop();
 
+#ifdef __EMSCRIPTEN__
+    emscripten_set_main_loop_arg(EmscriptenMainLoopCallback, this, 0, 1);
+#else
     while (m_engineImpl->Update()) {
-        prev::event::EventChannel::DispatchAll();
-
-        if (!m_engineImpl->BeginFrame()) {
-            continue;
-        }
-
-        m_engineImpl->PollActions();
-
-        auto& scene{ m_engineImpl->GetScene() };
-        auto& rootRenderer{ m_engineImpl->GetRootRenderer() };
-        auto& swapchain{ m_engineImpl->GetSwapchain() };
-
-        const GfxExtent2D extent{ swapchain.GetExtent() };
-        const auto deltaTime{ m_engineImpl->GetCurrentDeltaTime() };
-
-        prev::event::EventChannel::Post(NewIterationEvent{ deltaTime, extent.width, extent.height });
-
-        if (m_engineImpl->IsFocused()) {
-            scene.Update(deltaTime);
-
-            prev::render::swapchain::FrameContext frameContext;
-            if (swapchain.BeginFrame(frameContext)) {
-                const prev::render::RenderContext renderContext{ frameContext.frameBuffer, frameContext.commandEncoder, frameContext.index, { { 0, 0 }, extent } };
-                rootRenderer.Render(renderContext, scene);
-                swapchain.EndFrame();
-            }
-        } else {
-            LOGW("No focus...");
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
-        }
-
-        m_engineImpl->EndFrame();
+        RunOneFrame();
     }
 
     m_engineImpl->EndMainLoop();
+#endif
 }
 
 void Engine::ShutDown()

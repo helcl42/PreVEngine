@@ -4,7 +4,7 @@
 #include "../RendererUtils.h"
 
 #include "../../../Tags.h"
-#include "../../../common/AssetManager.h"
+#include "../../../common/ShaderAssetManager.h"
 #include "../../../component/light/ILightComponent.h"
 #include "../../../component/ray_casting/RayCastingCommon.h"
 #include "../../../component/render/IAnimationRenderComponent.h"
@@ -37,8 +37,8 @@ void AnimationNormalMappedRenderer::Init()
     // clang-format off
      m_shader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { GFX_SHADER_STAGE_VERTEX, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/animation/animation_normal_mapped_vert.spv") },
-            { GFX_SHADER_STAGE_FRAGMENT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/animation/animation_normal_mapped_frag.spv") }
+            { GFX_SHADER_STAGE_VERTEX, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "animation/animation_normal_mapped_vert") },
+            { GFX_SHADER_STAGE_FRAGMENT, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "animation/animation_normal_mapped_frag") }
         })
         .AddVertexInputAttributes({
             prev::render::shader::VertexInputAttribute{ 0, 0, GFX_FORMAT_R32G32B32_FLOAT, 0 },

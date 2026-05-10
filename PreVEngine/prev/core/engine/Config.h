@@ -4,8 +4,19 @@
 #include "../../common/Common.h"
 
 namespace prev::core::engine {
+enum class RenderBackend {
+    Vulkan,
+    WebGPU
+};
+
 struct Config {
     bool validation{ true };
+
+#if defined(__EMSCRIPTEN__)
+    RenderBackend renderBackend{ RenderBackend::WebGPU };
+#else
+    RenderBackend renderBackend{ RenderBackend::Vulkan };
+#endif
 
     std::string appName{ "PreVEngine - Demo" };
 

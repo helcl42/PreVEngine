@@ -6,6 +6,7 @@
 #include "AnimationClip.h"
 
 #include <memory>
+#include <vector>
 
 namespace prev_test::render::animation {
 class Animation : public prev_test::render::IAnimation {

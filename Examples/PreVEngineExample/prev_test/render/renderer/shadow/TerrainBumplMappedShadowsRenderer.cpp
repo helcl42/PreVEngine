@@ -3,7 +3,7 @@
 #include "../RendererUtils.h"
 
 #include "../../../Tags.h"
-#include "../../../common/AssetManager.h"
+#include "../../../common/ShaderAssetManager.h"
 #include "../../../component/terrain/ITerrainComponent.h"
 #include "../../../component/transform/ITransformComponent.h"
 
@@ -25,7 +25,7 @@ void TerrainBumplMappedShadowsRenderer::Init()
     // clang-format off
     m_shader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { GFX_SHADER_STAGE_VERTEX, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/shadow/terrain_bump_mapped_shadows_vert.spv") }
+            { GFX_SHADER_STAGE_VERTEX, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "shadow/terrain_bump_mapped_shadows_vert") }
         })
         .AddVertexInputAttributes({
             prev::render::shader::VertexInputAttribute{ 0, 0, GFX_FORMAT_R32G32B32_FLOAT, 0 },

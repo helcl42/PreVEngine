@@ -1,6 +1,6 @@
 #include "MacOSWindowImpl.h"
 
-#ifdef VK_USE_PLATFORM_MACOS_MVK
+#ifdef GFX_HAS_COCOA
 
 #include "../../../common/Logger.h"
 

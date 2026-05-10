@@ -1,6 +1,6 @@
 #include "Win32WindowImpl.h"
 
-#ifdef VK_USE_PLATFORM_WIN32_KHR
+#ifdef GFX_HAS_WIN32
 
 #include "../../../common/Logger.h"
 

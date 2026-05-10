@@ -26,6 +26,10 @@
 #include <stdlib.h>
 #define TICK_CHARACTER "\u2713"
 #define PAUSE
+#elif defined(TARGET_PLATFORM_EMSCRIPTEN)
+#include <stdlib.h>
+#define TICK_CHARACTER "\u2713"
+#define PAUSE
 #endif
 
 #define GLM_ENABLE_EXPERIMENTAL

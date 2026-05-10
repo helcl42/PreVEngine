@@ -19,6 +19,9 @@
 #ifdef TARGET_PLATFORM_IOS
 #include "ios/IOSWindowImpl.h"
 #endif
+#ifdef TARGET_PLATFORM_EMSCRIPTEN
+#include "emscripten/EmscriptenWindowImpl.h"
+#endif
 
 namespace prev::window::impl {
 std::unique_ptr<WindowImpl> WindowImplFactory::Create(const WindowInfo& info) const
@@ -39,6 +42,8 @@ std::unique_ptr<WindowImpl> WindowImplFactory::Create(const WindowInfo& info) co
     return std::make_unique<macos::MacOSWindowImpl>(info);
 #elif defined(TARGET_PLATFORM_IOS)
     return std::make_unique<ios::IOSWindowImpl>(info);
+#elif defined(TARGET_PLATFORM_EMSCRIPTEN)
+    return std::make_unique<emscripten::EmscriptenWindowImpl>(info);
 #else
 #error Not Implemented Window System!
 #endif

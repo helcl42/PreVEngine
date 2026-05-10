@@ -1,4 +1,4 @@
-#ifdef VK_USE_PLATFORM_XCB_KHR
+#ifdef GFX_HAS_XCB
 
 #ifndef __XCB_WINDOW_IMPL_H__
 #define __XCB_WINDOW_IMPL_H__
@@ -71,4 +71,4 @@ private:
 
 #endif
 
-#endif // VK_USE_PLATFORM_XCB_KHR
+#endif // GFX_HAS_XCB

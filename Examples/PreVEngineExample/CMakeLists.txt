@@ -92,10 +92,30 @@ include_directories("../../PreVEngine/external")
 include_directories("../../PreVEngine/external/worm_holes/WormHoles")
 include_directories("../../PreVEngine/external/gfx/gfx/include")
 include_directories("../../PreVEngine/external/glm")
-include_directories("../../Dependencies/assimp/include")
 if(ENABLE_XR)
     include_directories("../D../ependencies/openxr/include")
 endif()
+
+# Build assimp from source (v6.0.5) for all platforms
+include(FetchContent)
+FetchContent_Declare(
+    assimp
+    GIT_REPOSITORY https://github.com/assimp/assimp.git
+    GIT_TAG        v6.0.5
+    GIT_SHALLOW    TRUE
+)
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INJECT_DEBUG_POSTFIX OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
+if(EMSCRIPTEN)
+    set(ASSIMP_BUILD_ZLIB ON CACHE BOOL "" FORCE)
+else()
+    set(ASSIMP_BUILD_ZLIB OFF CACHE BOOL "" FORCE)
+endif()
+set(ASSIMP_WARNINGS_AS_ERRORS OFF CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(assimp)
 
 if(WIN32)
     message("${PROJECT_NAME} - Windows")
@@ -111,14 +131,12 @@ if(WIN32)
         ${COMMON_SRC_LIST}
     )
 
-    target_link_libraries(${PROJECT_NAME} PreVEngine)
-    target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../../Dependencies/assimp/lib/Windows/assimp-vc142-mt.lib")
+    target_link_libraries(${PROJECT_NAME} PreVEngine assimp)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${assimp_SOURCE_DIR}/include ${assimp_BINARY_DIR}/include)
     if(ENABLE_XR)
         target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../../Dependencies/openxr/lib/Windows/openxr_loader.lib")
     endif()
 
-    # Copy assimp dll to output bin dir.
-    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../../Dependencies/assimp/lib/Windows/assimp-vc142-mt.dll" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
     # Copy all files from ./Assets to the binary directory.
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
 
@@ -161,12 +179,12 @@ elseif(IOS)
         ${IOS_SRC_LIST}
     )
 
-    target_link_libraries(${PROJECT_NAME} PreVEngine)
+    target_link_libraries(${PROJECT_NAME} PreVEngine assimp)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${assimp_SOURCE_DIR}/include ${assimp_BINARY_DIR}/include)
     if(${CMAKE_OSX_SYSROOT} MATCHES "iPhoneSimulator")
         message("${PROJECT_NAME} - simulator")
         if (${CMAKE_OSX_ARCHITECTURES} MATCHES "arm64")
             target_link_libraries(${PROJECT_NAME} "-framework $ENV{VULKAN_SDK}/../iOS/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator/MoltenVK.framework/MoltenVK")
-            target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../../Dependencies/assimp/lib/IOS_simulator/libassimp.5.dylib")
         else()
             message(FATAL_ERROR "Unsupported architecture: ${CMAKE_OSX_ARCHITECTURES}.")
         endif()    
@@ -174,7 +192,6 @@ elseif(IOS)
         message("${PROJECT_NAME} - iphone")
         if (${CMAKE_OSX_ARCHITECTURES} MATCHES "arm64")
             # target_link_libraries(${PROJECT_NAME} "-framework $ENV{VULKAN_SDK}/../iOS/lib/MoltenVK.xcframework/ios-arm64/MoltenVK.framework/MoltenVK")
-            # target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../../Dependencies/assimp/lib/IOS/libassimp.5.dylib")
         else()
             message(FATAL_ERROR "Unsupported architecture: ${CMAKE_OSX_ARCHITECTURES}.")
         endif()
@@ -202,11 +219,9 @@ elseif(APPLE)
         ${COMMON_SRC_LIST}
     )
 
-    target_link_libraries(${PROJECT_NAME} PreVEngine)
-    target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../../Dependencies/assimp/lib/MacOS/libassimp.5.dylib")
+    target_link_libraries(${PROJECT_NAME} PreVEngine assimp)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${assimp_SOURCE_DIR}/include ${assimp_BINARY_DIR}/include)
 
-    # Copy assimp so to output bin dir.
-    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../../Dependencies/assimp/lib/MacOS/libassimp.5.dylib" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
     #  Copy all files from ./Assets to the binary directory.
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
 
@@ -223,14 +238,12 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
         ${COMMON_SRC_LIST}
     )
 
-    target_link_libraries(${PROJECT_NAME} PreVEngine)
-    target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../../Dependencies/assimp/lib/Linux/libassimp.so")
+    target_link_libraries(${PROJECT_NAME} PreVEngine assimp)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${assimp_SOURCE_DIR}/include ${assimp_BINARY_DIR}/include)
     if(ENABLE_XR)
         target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../../Dependencies/openxr/lib/Linux/libopenxr_loader.so")
     endif()
 
-    # Copy assimp so to output bin dir.
-    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../../Dependencies/assimp/lib/Linux/libassimp.so" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
     #  Copy all files from ./Assets to the binary directory.
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
 
@@ -258,30 +271,48 @@ elseif(ANDROID)
         ${COMMON_SRC_LIST}
     )
 
-    target_link_libraries(${PROJECT_NAME} PreVEngine)
-
-    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../../Dependencies/assimp/lib/Android/libassimp.so" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/platform/android/app/src/main/jniLibs/${ANDROID_ABI}/")
+    target_link_libraries(${PROJECT_NAME} PreVEngine log android assimp)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${assimp_SOURCE_DIR}/include ${assimp_BINARY_DIR}/include)
 
     if(ENABLE_XR)
         file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../../Dependencies/openxr/lib/Android/libopenxr_loader.so" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/platform/android/app/src/main/jniLibs/${ANDROID_ABI}/")
-    endif()
-
-    # add external library
-    add_library(assimp SHARED IMPORTED)
-    set_target_properties(assimp PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/platform/android/app/src/main/jniLibs/${ANDROID_ABI}/libassimp.so")
-
-    if(ENABLE_XR)
         add_library(openxr_loader SHARED IMPORTED)
         set_target_properties(openxr_loader PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/platform/android/app/src/main/jniLibs/${ANDROID_ABI}/libopenxr_loader.so")
-    endif()
-
-    # Link to external libraries
-    target_link_libraries(${PROJECT_NAME} log android assimp)
-
-    if(ENABLE_XR)
-        # Link to external libraries
         target_link_libraries(${PROJECT_NAME} openxr_loader)
     endif()
+
+elseif(EMSCRIPTEN)
+    message("${PROJECT_NAME} - Emscripten/Web")
+    add_definitions(-DTARGET_PLATFORM_EMSCRIPTEN)
+    add_definitions(-DWORM_HOLES_SINGLE_THREADED)
+
+    file(GLOB COMMON_SRC_LIST 
+        "platform/common/*.h" "platform/common/*.cpp"
+    )
+
+    add_executable(${PROJECT_NAME} 
+        ${SRC_LIST}
+        ${COMMON_SRC_LIST}
+    )
+
+    target_link_libraries(${PROJECT_NAME} PreVEngine assimp)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${assimp_SOURCE_DIR}/include ${assimp_BINARY_DIR}/include)
+
+    # Emscripten link flags
+    target_compile_options(${PROJECT_NAME} PRIVATE "SHELL:-sDISABLE_EXCEPTION_CATCHING=0" -g2)
+    target_link_options(${PROJECT_NAME} PRIVATE
+        "SHELL:--use-port=emdawnwebgpu"
+        "SHELL:-sALLOW_MEMORY_GROWTH=1"
+        "SHELL:-sASYNCIFY=1"
+        "SHELL:-sASYNCIFY_STACK_SIZE=65536"
+        "SHELL:-sSTACK_SIZE=1048576"
+        "SHELL:-sASSERTIONS=2"
+        "SHELL:-sDISABLE_EXCEPTION_CATCHING=0"
+        "SHELL:-sEXCEPTION_STACK_TRACES=1"
+        -g2
+        "SHELL:--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/assets@assets"
+    )
+    set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
 
 else()
     message(FATAL_ERROR "Unsupported platform.")

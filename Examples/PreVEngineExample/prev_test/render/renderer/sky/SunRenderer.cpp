@@ -2,7 +2,7 @@
 #include "SkyEvents.h"
 
 #include "../../../Tags.h"
-#include "../../../common/AssetManager.h"
+#include "../../../common/ShaderAssetManager.h"
 #include "../../../component/light/ILightComponent.h"
 #include "../../../component/sky/ISunComponent.h"
 
@@ -26,8 +26,8 @@ void SunRenderer::Init()
     // clang-format off
     m_shader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { GFX_SHADER_STAGE_VERTEX, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sun_occlusion_vert.spv") },
-            { GFX_SHADER_STAGE_FRAGMENT, prev_test::common::AssetManager::Instance().GetAssetPath("Shaders/sky/sun_occlusion_frag.spv") }
+            { GFX_SHADER_STAGE_VERTEX, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "sky/sun_occlusion_vert") },
+            { GFX_SHADER_STAGE_FRAGMENT, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "sky/sun_occlusion_frag") }
         })
         .AddVertexInputAttributes({
             prev::render::shader::VertexInputAttribute{ 0, 0, GFX_FORMAT_R32G32B32_FLOAT, 0 },
@@ -85,15 +85,19 @@ void SunRenderer::BeforeRender(const NormalRenderContext& renderContext)
 {
     m_renderPass.SetOcclusionQuerySet(*m_queryPool);
 
-    if (m_queryPool->GetQueryResult<uint64_t>(0, m_passedSamples)) {
-        float ratio;
-        if (m_device.HasExtension(GFX_DEVICE_EXTENSION_OCCLUSION_QUERY_PRECISE)) {
-            ratio = glm::clamp((static_cast<float>(m_passedSamples) / static_cast<float>(m_maxNumberOfSamples * m_renderPass.GetSampleCount())) * 0.5f, 0.0f, 1.0f);
-        } else {
-            ratio = m_passedSamples > 0 ? 0.5f : 0.0f;
+    if (m_queryPool->IsAsyncResultReady()) {
+        if (m_queryPool->GetAsyncQueryResult<uint64_t>(0, m_passedSamples)) {
+            float ratio;
+            if (m_device.HasExtension(GFX_DEVICE_EXTENSION_OCCLUSION_QUERY_PRECISE)) {
+                ratio = glm::clamp((static_cast<float>(m_passedSamples) / static_cast<float>(m_maxNumberOfSamples * m_renderPass.GetSampleCount())) * 0.5f, 0.0f, 1.0f);
+            } else {
+                ratio = m_passedSamples > 0 ? 0.5f : 0.0f;
+            }
+            prev::event::EventChannel::Post(prev_test::render::renderer::sky::SunVisibilityEvent{ ratio });
         }
-        prev::event::EventChannel::Post(prev_test::render::renderer::sky::SunVisibilityEvent{ ratio });
     }
+
+    m_queryPool->StartAsyncMapRead();
 }
 
 void SunRenderer::PreRender(const NormalRenderContext& renderContext)
