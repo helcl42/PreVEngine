@@ -68,7 +68,13 @@ public:
         if (m_asyncMapPending) {
             return;
         }
+        if (!m_hasResolved) {
+            return;
+        }
         if (!m_resultBuffers[m_readIndex]) {
+            return;
+        }
+        if (m_readIndex == m_index) {
             return;
         }
         gfxBufferAsyncMap(m_resultBuffers[m_readIndex], 0, sizeof(uint64_t) * m_queryCount);
@@ -127,6 +133,8 @@ private:
     bool m_asyncMapPending{ false };
 
     uint32_t m_asyncMapIndex{ 0 };
+
+    bool m_hasResolved{ false };
 };
 } // namespace prev::render::query
 
