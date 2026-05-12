@@ -8,7 +8,7 @@
 #include <vector>
 
 namespace prev::core::device {
-std::unique_ptr<Device> DeviceFactory::Create(const PhysicalDevice& gpu, const std::vector<std::string>& extensions) const
+std::unique_ptr<Device> DeviceFactory::Create(const PhysicalDevice& gpu, const std::vector<std::string>& extensions, const std::vector<std::string>& nativeExtensions) const
 {
     std::vector<const char*> extPtrs;
     extPtrs.reserve(extensions.size());
@@ -16,9 +16,22 @@ std::unique_ptr<Device> DeviceFactory::Create(const PhysicalDevice& gpu, const s
         extPtrs.push_back(e.c_str());
     }
 
+    // Build native extensions pNext if needed
+    std::vector<const char*> nativeExtPtrs;
+    nativeExtPtrs.reserve(nativeExtensions.size());
+    for (const auto& ext : nativeExtensions) {
+        nativeExtPtrs.push_back(ext.c_str());
+    }
+
+    GfxNativeExtensionsDescriptor nativeExtsDesc{};
+    nativeExtsDesc.sType = GFX_STRUCTURE_TYPE_NATIVE_EXTENSIONS_DESCRIPTOR;
+    nativeExtsDesc.pNext = nullptr;
+    nativeExtsDesc.nativeExtensions = nativeExtPtrs.empty() ? nullptr : nativeExtPtrs.data();
+    nativeExtsDesc.nativeExtensionCount = static_cast<uint32_t>(nativeExtPtrs.size());
+
     GfxDeviceDescriptor deviceDesc{};
     deviceDesc.sType = GFX_STRUCTURE_TYPE_DEVICE_DESCRIPTOR;
-    deviceDesc.pNext = nullptr;
+    deviceDesc.pNext = nativeExtensions.empty() ? nullptr : &nativeExtsDesc;
     deviceDesc.label = "Main Device";
     deviceDesc.queueRequests = nullptr;
     deviceDesc.queueRequestCount = 0;

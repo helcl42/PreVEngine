@@ -30,9 +30,9 @@ void OpenXr::PollEvents()
     m_core->PollEvents();
 }
 
-void OpenXr::UpdateGraphicsBinding(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex)
+void OpenXr::UpdateGraphicsBinding(GfxInstance instance, GfxAdapter adapter, GfxDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex)
 {
-    m_render->UpdateGraphicsBinding(instance, physicalDevice, device, queueFamilyIndex, queueIndex);
+    m_render->UpdateGraphicsBinding(instance, adapter, device, queueFamilyIndex, queueIndex);
 }
 
 std::vector<std::string> OpenXr::GetVulkanInstanceExtensions() const
@@ -45,7 +45,7 @@ std::vector<std::string> OpenXr::GetVulkanDeviceExtensions() const
     return m_core->GetVulkanDeviceExtensions();
 }
 
-VkPhysicalDevice OpenXr::GetPhysicalDevice(VkInstance instance) const
+GfxAdapter OpenXr::GetPhysicalDevice(GfxInstance instance) const
 {
     return m_core->GetPhysicalDevice(instance);
 }
@@ -72,24 +72,14 @@ void OpenXr::DestroySession()
     m_core->DestroySession();
 }
 
-std::vector<VkImage> OpenXr::GetColorImages() const
+std::vector<GfxTexture> OpenXr::GetColorImages() const
 {
     return m_render->GetColorImages();
 }
 
-std::vector<VkImageView> OpenXr::GetColorImagesViews() const
-{
-    return m_render->GetColorImagesViews();
-}
-
-std::vector<VkImage> OpenXr::GetDepthImages() const
+std::vector<GfxTexture> OpenXr::GetDepthImages() const
 {
     return m_render->GetDepthImages();
-}
-
-std::vector<VkImageView> OpenXr::GetDepthImagesViews() const
-{
-    return m_render->GetDepthImagesViews();
 }
 
 bool OpenXr::HasDepthImages() const
@@ -97,17 +87,17 @@ bool OpenXr::HasDepthImages() const
     return !m_render->GetDepthImages().empty();
 }
 
-VkExtent2D OpenXr::GetExtent() const
+GfxExtent2D OpenXr::GetExtent() const
 {
     return m_render->GetExtent();
 }
 
-VkFormat OpenXr::GetColorFormat() const
+GfxFormat OpenXr::GetColorFormat() const
 {
     return m_render->GetColorFormat();
 }
 
-VkFormat OpenXr::GetDepthFormat() const
+GfxFormat OpenXr::GetDepthFormat() const
 {
     return m_render->GetDepthFormat();
 }

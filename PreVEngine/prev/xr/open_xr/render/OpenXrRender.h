@@ -29,7 +29,7 @@ public:
 
     bool EndFrame();
 
-    void UpdateGraphicsBinding(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex);
+    void UpdateGraphicsBinding(GfxInstance instance, GfxAdapter adapter, GfxDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex);
 
     XrTime GetCurrentTime() const;
 
@@ -39,19 +39,15 @@ public:
 
     uint32_t GetViewCount() const;
 
-    std::vector<VkImage> GetColorImages() const;
+    std::vector<GfxTexture> GetColorImages() const;
 
-    std::vector<VkImageView> GetColorImagesViews() const;
+    std::vector<GfxTexture> GetDepthImages() const;
 
-    std::vector<VkImage> GetDepthImages() const;
+    GfxExtent2D GetExtent() const;
 
-    std::vector<VkImageView> GetDepthImagesViews() const;
+    GfxFormat GetColorFormat() const;
 
-    VkExtent2D GetExtent() const;
-
-    VkFormat GetColorFormat() const;
-
-    VkFormat GetDepthFormat() const;
+    GfxFormat GetDepthFormat() const;
 
     XrViewConfigurationType GetViewConfiguration() const;
 
@@ -98,6 +94,8 @@ private:
 
     XrGraphicsBindingVulkanKHR m_graphicsBinding{};
 
+    GfxDevice m_gfxDevice{};
+
     XrSession m_session{ XR_NULL_HANDLE };
     XrSpace m_localSpace{ XR_NULL_HANDLE };
 
@@ -108,8 +106,7 @@ private:
         XrSwapchain swapchain{ XR_NULL_HANDLE };
         VkFormat swapchainFormat{ VK_FORMAT_UNDEFINED };
         std::vector<XrSwapchainImageVulkanKHR> xrImages;
-        std::vector<VkImage> images;
-        std::vector<VkImageView> imageViews;
+        std::vector<GfxTexture> textures;
     };
     SwapchainInfo m_colorSwapchainInfo{};
     SwapchainInfo m_depthSwapchainInfo{};

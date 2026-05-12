@@ -18,7 +18,9 @@ public:
 
     virtual std::vector<std::string> GetVulkanDeviceExtensions() const = 0;
 
-    virtual VkPhysicalDevice GetPhysicalDevice(VkInstance instance) const = 0;
+    virtual GfxAdapter GetPhysicalDevice(GfxInstance instance) const = 0;
+
+    virtual void UpdateGraphicsBinding(GfxInstance instance, GfxAdapter adapter, GfxDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex) = 0;
 
     virtual void CreateSession() = 0;
 
@@ -32,23 +34,17 @@ public:
 
     virtual bool EndFrame() = 0;
 
-    virtual void UpdateGraphicsBinding(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex) = 0;
+    virtual std::vector<GfxTexture> GetColorImages() const = 0;
 
-    virtual std::vector<VkImage> GetColorImages() const = 0;
-
-    virtual std::vector<VkImageView> GetColorImagesViews() const = 0;
-
-    virtual std::vector<VkImage> GetDepthImages() const = 0;
-
-    virtual std::vector<VkImageView> GetDepthImagesViews() const = 0;
+    virtual std::vector<GfxTexture> GetDepthImages() const = 0;
 
     virtual bool HasDepthImages() const = 0;
 
-    virtual VkExtent2D GetExtent() const = 0;
+    virtual GfxExtent2D GetExtent() const = 0;
 
-    virtual VkFormat GetColorFormat() const = 0;
+    virtual GfxFormat GetColorFormat() const = 0;
 
-    virtual VkFormat GetDepthFormat() const = 0;
+    virtual GfxFormat GetDepthFormat() const = 0;
 
     virtual uint32_t GetViewCount() const = 0;
 

@@ -177,14 +177,30 @@ std::vector<std::string> OpenXrCore::GetVulkanDeviceExtensions() const
     return extensions;
 }
 
-VkPhysicalDevice OpenXrCore::GetPhysicalDevice(VkInstance instance) const
+GfxAdapter OpenXrCore::GetPhysicalDevice(GfxInstance instance) const
 {
+    void* nativeInstance{};
+    gfxInstanceGetNativeHandle(instance, &nativeInstance);
+
     XrGraphicsRequirementsVulkanKHR graphicsRequirements{ open_xr::util::CreateStruct<XrGraphicsRequirementsVulkanKHR>(XR_TYPE_GRAPHICS_REQUIREMENTS_VULKAN_KHR) };
     OPENXR_CHECK(xrGetVulkanGraphicsRequirementsKHR(m_instance, m_systemId, &graphicsRequirements), "Failed to get Graphics Requirements for Vulkan.");
 
-    VkPhysicalDevice physicalDeviceFromXR;
-    OPENXR_CHECK(xrGetVulkanGraphicsDeviceKHR(m_instance, m_systemId, instance, &physicalDeviceFromXR), "Failed to get Graphics Device for Vulkan.");
-    return physicalDeviceFromXR;
+    VkPhysicalDevice xrPhysicalDevice;
+    OPENXR_CHECK(xrGetVulkanGraphicsDeviceKHR(m_instance, m_systemId, static_cast<VkInstance>(nativeInstance), &xrPhysicalDevice), "Failed to get Graphics Device for Vulkan.");
+
+    uint32_t adapterCount = 0;
+    gfxInstanceEnumerateAdapters(instance, &adapterCount, nullptr);
+    std::vector<GfxAdapter> adapters(adapterCount);
+    gfxInstanceEnumerateAdapters(instance, &adapterCount, adapters.data());
+
+    for (const auto& adapter : adapters) {
+        void* nativeHandle{};
+        gfxAdapterGetNativeHandle(adapter, &nativeHandle);
+        if (static_cast<VkPhysicalDevice>(nativeHandle) == xrPhysicalDevice) {
+            return adapter;
+        }
+    }
+    return nullptr;
 }
 
 void OpenXrCore::CreateSession(const XrGraphicsBindingVulkanKHR& graphicsBinding, const XrViewConfigurationType viewConfiguration)

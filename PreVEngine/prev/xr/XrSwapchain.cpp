@@ -2,151 +2,304 @@
 
 #ifdef ENABLE_XR
 
-#include "../render/buffer/ImageBufferBuilder.h"
-#include "../util/VkUtils.h"
+#include "../common/Logger.h"
 
 namespace prev::xr {
-XrSwapchain::XrSwapchain(prev::core::device::Device& device, prev::core::memory::Allocator& allocator, prev::render::pass::RenderPass& renderPass, xr::IXr& xr, VkSampleCountFlagBits sampleCount)
+XrSwapchain::XrSwapchain(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, xr::IXr& xr, GfxSampleCount sampleCount)
     : m_device{ device }
-    , m_allocator{ allocator }
     , m_renderPass{ renderPass }
     , m_xr{ xr }
     , m_sampleCount{ sampleCount }
     , m_graphicsQueue{ m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
 {
-    m_commandPool = prev::util::vk::CreateCommandPool(m_device, m_graphicsQueue.family);
-
     m_extent = m_xr.GetExtent();
-
-    if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
-        m_msaaColorBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
-                                .SetExtent(VkExtent3D{ m_extent.width, m_extent.height, 1 })
-                                .SetFormat(m_renderPass.GetColorFormat())
-                                .SetType(VK_IMAGE_TYPE_2D)
-                                .SetViewType(VK_IMAGE_VIEW_TYPE_2D_ARRAY)
-                                .SetLayerCount(m_xr.GetViewCount())
-                                .SetSampleCount(m_sampleCount)
-                                .SetUsageFlags(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
-                                .SetLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
-                                .Build();
-        m_msaaDepthBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
-                                .SetExtent(VkExtent3D{ m_extent.width, m_extent.height, 1 })
-                                .SetFormat(m_renderPass.GetDepthFormat())
-                                .SetType(VK_IMAGE_TYPE_2D)
-                                .SetViewType(VK_IMAGE_VIEW_TYPE_2D_ARRAY)
-                                .SetLayerCount(m_xr.GetViewCount())
-                                .SetSampleCount(m_sampleCount)
-                                .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
-                                .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-                                .Build();
-    }
-
-    if (!m_xr.HasDepthImages()) {
-        m_depthBuffer = prev::render::buffer::ImageBufferBuilder{ m_allocator }
-                            .SetExtent(VkExtent3D{ m_extent.width, m_extent.height, 1 })
-                            .SetFormat(m_renderPass.GetDepthFormat())
-                            .SetType(VK_IMAGE_TYPE_2D)
-                            .SetViewType(VK_IMAGE_VIEW_TYPE_2D_ARRAY)
-                            .SetLayerCount(m_xr.GetViewCount())
-                            .SetUsageFlags(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
-                            .SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-                            .Build();
-    }
-
-    const auto colorImages{ m_xr.GetColorImages() };
-    const auto colorImageViews{ m_xr.GetColorImagesViews() };
-
-    const auto swapchainImagesCount{ static_cast<uint32_t>(colorImages.size()) };
-
-    const auto depthImages{ m_xr.HasDepthImages() ? m_xr.GetDepthImages() : std::vector<VkImage>(swapchainImagesCount, m_depthBuffer->GetImage()) };
-    const auto depthImageViews{ m_xr.HasDepthImages() ? m_xr.GetDepthImagesViews() : std::vector<VkImageView>(swapchainImagesCount, m_depthBuffer->GetImageView()) };
-
-    m_swapchainBuffers.resize(swapchainImagesCount);
-    for (uint32_t i = 0; i < swapchainImagesCount; ++i) {
-        const auto& colorImage{ colorImages[i] };
-        const auto& colorImageView{ colorImageViews[i] };
-        const auto& depthImage{ depthImages[i] };
-        const auto& depthImageView{ depthImageViews[i] };
-
-        std::vector<VkImageView> swapchainImageViews;
-        if (m_sampleCount > VK_SAMPLE_COUNT_1_BIT) {
-            swapchainImageViews.push_back(m_msaaColorBuffer->GetImageView());
-            swapchainImageViews.push_back(m_msaaDepthBuffer->GetImageView());
-        }
-        swapchainImageViews.push_back(colorImageView);
-        swapchainImageViews.push_back(depthImageView);
-
-        auto& swapchainBuffer{ m_swapchainBuffers[i] };
-        swapchainBuffer.colorImage = colorImage;
-        swapchainBuffer.colorImageView = colorImageView;
-        swapchainBuffer.depthImage = depthImage;
-        swapchainBuffer.depthImageView = depthImageView;
-        swapchainBuffer.framebuffer = prev::util::vk::CreateFrameBuffer(m_device, m_renderPass, swapchainImageViews, m_extent);
-        swapchainBuffer.commandBuffer = prev::util::vk::CreateCommandBuffer(m_device, m_commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-        swapchainBuffer.fence = prev::util::vk::CreateFence(m_device, VK_FENCE_CREATE_SIGNALED_BIT);
-        swapchainBuffer.extent = m_extent;
-    }
-
-    LOGI("XR Swapchain created");
+    CreateResources();
+    LOGI("XR Swapchain created: %ux%u", m_extent.width, m_extent.height);
 }
 
 XrSwapchain::~XrSwapchain()
 {
     m_device.WaitIdle();
+    DestroyResources();
+    LOGI("XR Swapchain destroyed");
+}
 
-    m_depthBuffer = nullptr;
+void XrSwapchain::CreateResources()
+{
+    const GfxFormat colorFormat = m_xr.GetColorFormat();
+    const GfxFormat depthFormat = m_xr.GetDepthFormat();
+    const uint32_t viewCount = m_xr.GetViewCount();
+    const GfxTextureViewType viewType = (viewCount > 1) ? GFX_TEXTURE_VIEW_TYPE_2D_ARRAY : GFX_TEXTURE_VIEW_TYPE_2D;
 
-    m_msaaDepthBuffer = nullptr;
-    m_msaaColorBuffer = nullptr;
+    // MSAA resources (shared across all frames)
+    if (m_sampleCount > GFX_SAMPLE_COUNT_1) {
+        // MSAA color
+        {
+            GfxTextureDescriptor texDesc{};
+            texDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_DESCRIPTOR;
+            texDesc.label = "XrMsaaColor";
+            texDesc.type = GFX_TEXTURE_TYPE_2D;
+            texDesc.size = { m_extent.width, m_extent.height, 1 };
+            texDesc.arrayLayerCount = viewCount;
+            texDesc.mipLevelCount = 1;
+            texDesc.sampleCount = m_sampleCount;
+            texDesc.format = colorFormat;
+            texDesc.usage = GFX_TEXTURE_USAGE_RENDER_ATTACHMENT;
+            GFXERRCHECK(gfxDeviceCreateTexture(m_device, &texDesc, &m_msaaColorTexture));
 
-    if (m_commandPool != VK_NULL_HANDLE) {
-        vkDestroyCommandPool(m_device, m_commandPool, nullptr);
+            GfxTextureViewDescriptor viewDesc{};
+            viewDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_VIEW_DESCRIPTOR;
+            viewDesc.label = "XrMsaaColorView";
+            viewDesc.viewType = viewType;
+            viewDesc.format = colorFormat;
+            viewDesc.baseMipLevel = 0;
+            viewDesc.mipLevelCount = 1;
+            viewDesc.baseArrayLayer = 0;
+            viewDesc.arrayLayerCount = viewCount;
+            GFXERRCHECK(gfxTextureCreateView(m_msaaColorTexture, &viewDesc, &m_msaaColorView));
+        }
+
+        // MSAA depth
+        {
+            GfxTextureDescriptor texDesc{};
+            texDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_DESCRIPTOR;
+            texDesc.label = "XrMsaaDepth";
+            texDesc.type = GFX_TEXTURE_TYPE_2D;
+            texDesc.size = { m_extent.width, m_extent.height, 1 };
+            texDesc.arrayLayerCount = viewCount;
+            texDesc.mipLevelCount = 1;
+            texDesc.sampleCount = m_sampleCount;
+            texDesc.format = depthFormat;
+            texDesc.usage = GFX_TEXTURE_USAGE_RENDER_ATTACHMENT;
+            GFXERRCHECK(gfxDeviceCreateTexture(m_device, &texDesc, &m_msaaDepthTexture));
+
+            GfxTextureViewDescriptor viewDesc{};
+            viewDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_VIEW_DESCRIPTOR;
+            viewDesc.label = "XrMsaaDepthView";
+            viewDesc.viewType = viewType;
+            viewDesc.format = depthFormat;
+            viewDesc.baseMipLevel = 0;
+            viewDesc.mipLevelCount = 1;
+            viewDesc.baseArrayLayer = 0;
+            viewDesc.arrayLayerCount = viewCount;
+            GFXERRCHECK(gfxTextureCreateView(m_msaaDepthTexture, &viewDesc, &m_msaaDepthView));
+        }
     }
 
-    for (auto& swapchainBuffer : m_swapchainBuffers) {
-        swapchainBuffer.Destroy(m_device);
+    // Get pre-imported OpenXR color textures
+    const auto colorTextures = m_xr.GetColorImages();
+    const auto swapchainImagesCount = static_cast<uint32_t>(colorTextures.size());
+
+    // Get depth textures (from OpenXR or create our own)
+    const bool hasXrDepth = m_xr.HasDepthImages();
+    std::vector<GfxTexture> depthTextures;
+    GfxTexture ownedDepthTexture{};
+    GfxTextureView ownedDepthView{};
+
+    if (hasXrDepth) {
+        depthTextures = m_xr.GetDepthImages();
+    } else {
+        // Create a shared depth texture
+        GfxTextureDescriptor texDesc{};
+        texDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_DESCRIPTOR;
+        texDesc.label = "XrDepth";
+        texDesc.type = GFX_TEXTURE_TYPE_2D;
+        texDesc.size = { m_extent.width, m_extent.height, 1 };
+        texDesc.arrayLayerCount = viewCount;
+        texDesc.mipLevelCount = 1;
+        texDesc.sampleCount = (m_sampleCount > GFX_SAMPLE_COUNT_1) ? m_sampleCount : GFX_SAMPLE_COUNT_1;
+        texDesc.format = depthFormat;
+        texDesc.usage = GFX_TEXTURE_USAGE_RENDER_ATTACHMENT;
+        GFXERRCHECK(gfxDeviceCreateTexture(m_device, &texDesc, &ownedDepthTexture));
+
+        GfxTextureViewDescriptor viewDesc{};
+        viewDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_VIEW_DESCRIPTOR;
+        viewDesc.label = "XrDepthView";
+        viewDesc.viewType = viewType;
+        viewDesc.format = depthFormat;
+        viewDesc.baseMipLevel = 0;
+        viewDesc.mipLevelCount = 1;
+        viewDesc.baseArrayLayer = 0;
+        viewDesc.arrayLayerCount = viewCount;
+        GFXERRCHECK(gfxTextureCreateView(ownedDepthTexture, &viewDesc, &ownedDepthView));
     }
 
-    LOGI("XR Swapchain destroyed\n");
+    m_swapchainBuffers.resize(swapchainImagesCount);
+    for (uint32_t i = 0; i < swapchainImagesCount; ++i) {
+        auto& sb = m_swapchainBuffers[i];
+
+        // Color texture from OpenXR (already imported by IXr)
+        {
+            sb.colorTexture = colorTextures[i];
+
+            GfxTextureViewDescriptor viewDesc{};
+            viewDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_VIEW_DESCRIPTOR;
+            viewDesc.label = "XrColorView";
+            viewDesc.viewType = viewType;
+            viewDesc.format = colorFormat;
+            viewDesc.baseMipLevel = 0;
+            viewDesc.mipLevelCount = 1;
+            viewDesc.baseArrayLayer = 0;
+            viewDesc.arrayLayerCount = viewCount;
+            GFXERRCHECK(gfxTextureCreateView(sb.colorTexture, &viewDesc, &sb.colorView));
+        }
+
+        // Depth: use pre-imported from OpenXR or use shared owned depth
+        if (hasXrDepth) {
+            sb.depthTexture = depthTextures[i];
+
+            GfxTextureViewDescriptor viewDesc{};
+            viewDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_VIEW_DESCRIPTOR;
+            viewDesc.label = "XrDepthView";
+            viewDesc.viewType = viewType;
+            viewDesc.format = depthFormat;
+            viewDesc.baseMipLevel = 0;
+            viewDesc.mipLevelCount = 1;
+            viewDesc.baseArrayLayer = 0;
+            viewDesc.arrayLayerCount = viewCount;
+            GFXERRCHECK(gfxTextureCreateView(sb.depthTexture, &viewDesc, &sb.depthView));
+        } else {
+            // Use shared depth (store in first buffer, others reference same)
+            sb.depthTexture = ownedDepthTexture;
+            sb.depthView = ownedDepthView;
+        }
+
+        // Create framebuffer
+        GfxFramebufferAttachment colorAttachment{};
+        GfxFramebufferAttachment depthAttachment{};
+        if (m_sampleCount > GFX_SAMPLE_COUNT_1) {
+            colorAttachment.view = m_msaaColorView;
+            colorAttachment.resolveTarget = sb.colorView;
+            depthAttachment.view = m_msaaDepthView;
+            depthAttachment.resolveTarget = nullptr;
+        } else {
+            colorAttachment.view = sb.colorView;
+            colorAttachment.resolveTarget = nullptr;
+            depthAttachment.view = sb.depthView;
+            depthAttachment.resolveTarget = nullptr;
+        }
+
+        GfxFramebufferDescriptor fbDesc{};
+        fbDesc.sType = GFX_STRUCTURE_TYPE_FRAMEBUFFER_DESCRIPTOR;
+        fbDesc.label = "XrFramebuffer";
+        fbDesc.renderPass = m_renderPass;
+        fbDesc.colorAttachments = &colorAttachment;
+        fbDesc.colorAttachmentCount = 1;
+        fbDesc.depthStencilAttachment = depthAttachment;
+        fbDesc.extent = m_extent;
+        GFXERRCHECK(gfxDeviceCreateFramebuffer(m_device, &fbDesc, &sb.framebuffer));
+
+        // Command encoder
+        GfxCommandEncoderDescriptor ceDesc{};
+        ceDesc.sType = GFX_STRUCTURE_TYPE_COMMAND_ENCODER_DESCRIPTOR;
+        ceDesc.label = "XrCommandEncoder";
+        GFXERRCHECK(gfxDeviceCreateCommandEncoder(m_device, &ceDesc, &sb.commandEncoder));
+
+        // Fence (signaled initially)
+        GfxFenceDescriptor fenceDesc{};
+        fenceDesc.sType = GFX_STRUCTURE_TYPE_FENCE_DESCRIPTOR;
+        fenceDesc.label = "XrFence";
+        fenceDesc.signaled = true;
+        GFXERRCHECK(gfxDeviceCreateFence(m_device, &fenceDesc, &sb.fence));
+    }
 }
 
-bool XrSwapchain::UpdateExtent(uint32_t width, uint32_t height)
+void XrSwapchain::DestroyResources()
 {
-    return false;
+    // Track whether depth is shared (non-XR-provided)
+    const bool hasXrDepth = m_xr.HasDepthImages();
+    GfxTexture sharedDepthTexture{};
+    GfxTextureView sharedDepthView{};
+
+    if (!hasXrDepth && !m_swapchainBuffers.empty()) {
+        sharedDepthTexture = m_swapchainBuffers[0].depthTexture;
+        sharedDepthView = m_swapchainBuffers[0].depthView;
+    }
+
+    for (auto& sb : m_swapchainBuffers) {
+        if (sb.fence) {
+            gfxFenceDestroy(sb.fence);
+        }
+        if (sb.commandEncoder) {
+            gfxCommandEncoderDestroy(sb.commandEncoder);
+        }
+        if (sb.framebuffer) {
+            gfxFramebufferDestroy(sb.framebuffer);
+        }
+        if (sb.colorView) {
+            gfxTextureViewDestroy(sb.colorView);
+        }
+        // colorTexture owned by IXr - don't destroy
+        if (hasXrDepth) {
+            if (sb.depthView) {
+                gfxTextureViewDestroy(sb.depthView);
+            }
+            // depthTexture owned by IXr - don't destroy
+        }
+    }
+    m_swapchainBuffers.clear();
+
+    // Destroy shared depth (only once)
+    if (!hasXrDepth) {
+        if (sharedDepthView) {
+            gfxTextureViewDestroy(sharedDepthView);
+        }
+        if (sharedDepthTexture) {
+            gfxTextureDestroy(sharedDepthTexture);
+        }
+    }
+
+    if (m_msaaDepthView) {
+        gfxTextureViewDestroy(m_msaaDepthView);
+        m_msaaDepthView = nullptr;
+    }
+    if (m_msaaDepthTexture) {
+        gfxTextureDestroy(m_msaaDepthTexture);
+        m_msaaDepthTexture = nullptr;
+    }
+    if (m_msaaColorView) {
+        gfxTextureViewDestroy(m_msaaColorView);
+        m_msaaColorView = nullptr;
+    }
+    if (m_msaaColorTexture) {
+        gfxTextureDestroy(m_msaaColorTexture);
+        m_msaaColorTexture = nullptr;
+    }
 }
 
-bool XrSwapchain::SetImageCount(uint32_t imageCount)
+bool XrSwapchain::BeginFrame(prev::render::swapchain::FrameContext& outContext)
 {
-    return false;
+    m_acquiredIndex = m_xr.GetCurrentSwapchainIndex();
+
+    auto& sb = m_swapchainBuffers[m_acquiredIndex];
+
+    GFXERRCHECK(gfxFenceWait(sb.fence, UINT64_MAX));
+    GFXERRCHECK(gfxFenceReset(sb.fence));
+    GFXERRCHECK(gfxCommandEncoderBegin(sb.commandEncoder));
+
+    outContext.frameBuffer = sb.framebuffer;
+    outContext.commandEncoder = sb.commandEncoder;
+    outContext.index = m_acquiredIndex;
+    return true;
 }
 
-std::vector<VkPresentModeKHR> XrSwapchain::GetPresentModes() const
+void XrSwapchain::EndFrame()
 {
-    return {};
+    auto& sb = m_swapchainBuffers[m_acquiredIndex];
+
+    GFXERRCHECK(gfxCommandEncoderEnd(sb.commandEncoder));
+
+    GfxCommandEncoder encoders[] = { sb.commandEncoder };
+
+    GfxSubmitDescriptor submitDesc{};
+    submitDesc.sType = GFX_STRUCTURE_TYPE_SUBMIT_DESCRIPTOR;
+    submitDesc.commandEncoders = encoders;
+    submitDesc.commandEncoderCount = 1;
+    submitDesc.signalFence = sb.fence;
+    GFXERRCHECK(m_graphicsQueue.Submit(&submitDesc));
 }
 
-bool XrSwapchain::SetPresentMode(bool noTearing, bool powerSave)
-{
-    return false;
-}
-
-bool XrSwapchain::SetPresentMode(VkPresentModeKHR preferredMode)
-{
-    return false;
-}
-
-void XrSwapchain::Print() const
-{
-    LOGI("XR Swapchain:");
-
-    LOGI("\tColor   = %3d : %s", m_renderPass.GetColorFormat(), prev::util::vk::FormatToString(m_renderPass.GetColorFormat()).c_str());
-    LOGI("\tDepth   = %3d : %s", m_renderPass.GetDepthFormat(), prev::util::vk::FormatToString(m_renderPass.GetDepthFormat()).c_str());
-
-    LOGI("\tExtent  = %u x %u", m_extent.width, m_extent.height);
-    LOGI("\tBuffers = %zu", m_swapchainBuffers.size());
-}
-
-const VkExtent2D& XrSwapchain::GetExtent() const
+GfxExtent2D XrSwapchain::GetExtent() const
 {
     return m_extent;
 }
@@ -156,38 +309,12 @@ uint32_t XrSwapchain::GetImageCount() const
     return static_cast<uint32_t>(m_swapchainBuffers.size());
 }
 
-bool XrSwapchain::BeginFrame(prev::render::swapchain::FrameContext& outContext)
+void XrSwapchain::Print() const
 {
-    m_acquiredIndex = m_xr.GetCurrentSwapchainIndex();
-
-    const auto& swapchainBuffer{ m_swapchainBuffers[m_acquiredIndex] };
-
-    VKERRCHECK(vkWaitForFences(m_device, 1, &swapchainBuffer.fence, VK_TRUE, UINT64_MAX));
-    VKERRCHECK(vkResetFences(m_device, 1, &swapchainBuffer.fence));
-
-    VkCommandBufferBeginInfo beginInfo{ prev::util::vk::CreateStruct<VkCommandBufferBeginInfo>(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO) };
-    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    VKERRCHECK(vkBeginCommandBuffer(swapchainBuffer.commandBuffer, &beginInfo));
-
-    outContext = { swapchainBuffer.framebuffer, swapchainBuffer.commandBuffer, m_acquiredIndex };
-    return true;
-}
-
-void XrSwapchain::EndFrame()
-{
-    const auto& swapchainBuffer{ m_swapchainBuffers[m_acquiredIndex] };
-    VKERRCHECK(vkEndCommandBuffer(swapchainBuffer.commandBuffer));
-
-    VkSubmitInfo submitInfo{ prev::util::vk::CreateStruct<VkSubmitInfo>(VK_STRUCTURE_TYPE_SUBMIT_INFO) };
-    submitInfo.waitSemaphoreCount = 0;
-    submitInfo.pWaitSemaphores = nullptr;
-    submitInfo.pWaitDstStageMask = nullptr;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &swapchainBuffer.commandBuffer;
-    submitInfo.signalSemaphoreCount = 0;
-    submitInfo.pSignalSemaphores = nullptr;
-
-    VKERRCHECK(m_graphicsQueue.Submit(1, &submitInfo, swapchainBuffer.fence));
+    LOGI("XR Swapchain:");
+    LOGI("\tExtent  = %u x %u", m_extent.width, m_extent.height);
+    LOGI("\tBuffers = %zu", m_swapchainBuffers.size());
+    LOGI("\tViews   = %u", m_xr.GetViewCount());
 }
 } // namespace prev::xr
 

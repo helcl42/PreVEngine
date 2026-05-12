@@ -27,7 +27,7 @@ public:
 
     std::vector<std::string> GetVulkanDeviceExtensions() const override;
 
-    VkPhysicalDevice GetPhysicalDevice(VkInstance instance) const override;
+    GfxAdapter GetPhysicalDevice(GfxInstance instance) const override;
 
     void CreateSession() override;
 
@@ -41,23 +41,19 @@ public:
 
     bool EndFrame() override;
 
-    void UpdateGraphicsBinding(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex) override;
+    void UpdateGraphicsBinding(GfxInstance instance, GfxAdapter adapter, GfxDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex) override;
 
-    std::vector<VkImage> GetColorImages() const override;
+    std::vector<GfxTexture> GetColorImages() const override;
 
-    std::vector<VkImageView> GetColorImagesViews() const override;
-
-    std::vector<VkImage> GetDepthImages() const override;
-
-    std::vector<VkImageView> GetDepthImagesViews() const override;
+    std::vector<GfxTexture> GetDepthImages() const override;
 
     bool HasDepthImages() const override;
 
-    VkExtent2D GetExtent() const override;
+    GfxExtent2D GetExtent() const override;
 
-    VkFormat GetColorFormat() const override;
+    GfxFormat GetColorFormat() const override;
 
-    VkFormat GetDepthFormat() const override;
+    GfxFormat GetDepthFormat() const override;
 
     uint32_t GetViewCount() const override;
 

@@ -11,7 +11,7 @@
 namespace prev::core::device {
 class DeviceFactory final {
 public:
-    std::unique_ptr<Device> Create(const PhysicalDevice& gpu, const std::vector<std::string>& extensions = {}) const;
+    std::unique_ptr<Device> Create(const PhysicalDevice& gpu, const std::vector<std::string>& extensions = {}, const std::vector<std::string>& nativeExtensions = {}) const;
 };
 } // namespace prev::core::device
 
