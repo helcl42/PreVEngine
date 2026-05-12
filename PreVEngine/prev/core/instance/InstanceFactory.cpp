@@ -35,7 +35,7 @@ namespace {
     }
 } // namespace
 
-std::unique_ptr<Instance> InstanceFactory::Create(const std::string& appName, bool enableValidation, prev::core::engine::RenderBackend renderBackend) const
+std::unique_ptr<Instance> InstanceFactory::Create(const std::string& appName, bool enableValidation, prev::core::engine::RenderBackend renderBackend, const std::vector<std::string>& nativeExtensions) const
 {
     const GfxBackend backend = ToGfxBackend(renderBackend);
     if (gfxLoadBackend(backend) != GFX_RESULT_SUCCESS) {
@@ -46,10 +46,23 @@ std::unique_ptr<Instance> InstanceFactory::Create(const std::string& appName, bo
         gfxSetLogCallback(GfxLogHandler, nullptr);
     }
 
+    // Build native extensions pNext if needed
+    std::vector<const char*> nativeExtPtrs;
+    nativeExtPtrs.reserve(nativeExtensions.size());
+    for (const auto& ext : nativeExtensions) {
+        nativeExtPtrs.push_back(ext.c_str());
+    }
+
+    GfxNativeExtensionsDescriptor nativeExtsDesc{};
+    nativeExtsDesc.sType = GFX_STRUCTURE_TYPE_NATIVE_EXTENSIONS_DESCRIPTOR;
+    nativeExtsDesc.pNext = nullptr;
+    nativeExtsDesc.nativeExtensions = nativeExtPtrs.empty() ? nullptr : nativeExtPtrs.data();
+    nativeExtsDesc.nativeExtensionCount = static_cast<uint32_t>(nativeExtPtrs.size());
+
     const char* extensions[] = { GFX_INSTANCE_EXTENSION_SURFACE, GFX_INSTANCE_EXTENSION_DEBUG };
     GfxInstanceDescriptor desc{};
     desc.sType = GFX_STRUCTURE_TYPE_INSTANCE_DESCRIPTOR;
-    desc.pNext = nullptr;
+    desc.pNext = nativeExtensions.empty() ? nullptr : &nativeExtsDesc;
     desc.backend = backend;
     desc.applicationName = appName.c_str();
     desc.applicationVersion = 1;

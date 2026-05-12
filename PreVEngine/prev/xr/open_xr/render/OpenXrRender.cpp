@@ -4,16 +4,31 @@
 
 #include "../util/OpenXrUtils.h"
 
-#include "../../../util/VkUtils.h"
-
 namespace prev::xr::open_xr::render {
 namespace {
-    inline VkImageAspectFlags ToVkImageAspectFlags(const XrSwapchainUsageFlags xrUsageFlags)
+    GfxFormat VkFormatToGfxFormat(VkFormat format)
     {
-        if (xrUsageFlags & XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) {
-            return VK_IMAGE_ASPECT_DEPTH_BIT;
-        } else {
-            return VK_IMAGE_ASPECT_COLOR_BIT;
+        switch (format) {
+        case VK_FORMAT_R8G8B8A8_UNORM:
+            return GFX_FORMAT_R8G8B8A8_UNORM;
+        case VK_FORMAT_R8G8B8A8_SRGB:
+            return GFX_FORMAT_R8G8B8A8_UNORM_SRGB;
+        case VK_FORMAT_B8G8R8A8_UNORM:
+            return GFX_FORMAT_B8G8R8A8_UNORM;
+        case VK_FORMAT_B8G8R8A8_SRGB:
+            return GFX_FORMAT_B8G8R8A8_UNORM_SRGB;
+        case VK_FORMAT_D16_UNORM:
+            return GFX_FORMAT_DEPTH16_UNORM;
+        case VK_FORMAT_D32_SFLOAT:
+            return GFX_FORMAT_DEPTH32_FLOAT;
+        case VK_FORMAT_D24_UNORM_S8_UINT:
+            return GFX_FORMAT_DEPTH24_PLUS_STENCIL8;
+        case VK_FORMAT_D32_SFLOAT_S8_UINT:
+            return GFX_FORMAT_DEPTH32_FLOAT_STENCIL8;
+        case VK_FORMAT_R16G16B16A16_SFLOAT:
+            return GFX_FORMAT_R16G16B16A16_FLOAT;
+        default:
+            return GFX_FORMAT_UNDEFINED;
         }
     }
 } // namespace
@@ -193,14 +208,25 @@ bool OpenXrRender::EndFrame()
     return true;
 }
 
-void OpenXrRender::UpdateGraphicsBinding(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex)
+void OpenXrRender::UpdateGraphicsBinding(GfxInstance instance, GfxAdapter adapter, GfxDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex)
 {
+    void* nativeInstance{};
+    gfxInstanceGetNativeHandle(instance, &nativeInstance);
+
+    void* nativeAdapter{};
+    gfxAdapterGetNativeHandle(adapter, &nativeAdapter);
+
+    void* nativeDevice{};
+    gfxDeviceGetNativeHandle(device, &nativeDevice);
+
     m_graphicsBinding = { prev::xr::open_xr::util::CreateStruct<XrGraphicsBindingVulkanKHR>(XR_TYPE_GRAPHICS_BINDING_VULKAN_KHR) };
-    m_graphicsBinding.instance = instance;
-    m_graphicsBinding.physicalDevice = physicalDevice;
-    m_graphicsBinding.device = device;
+    m_graphicsBinding.instance = static_cast<VkInstance>(nativeInstance);
+    m_graphicsBinding.physicalDevice = static_cast<VkPhysicalDevice>(nativeAdapter);
+    m_graphicsBinding.device = static_cast<VkDevice>(nativeDevice);
     m_graphicsBinding.queueFamilyIndex = queueFamilyIndex;
     m_graphicsBinding.queueIndex = queueIndex;
+
+    m_gfxDevice = device;
 }
 
 XrTime OpenXrRender::GetCurrentTime() const
@@ -223,39 +249,29 @@ uint32_t OpenXrRender::GetViewCount() const
     return MAX_VIEW_COUNT;
 }
 
-std::vector<VkImage> OpenXrRender::GetColorImages() const
+std::vector<GfxTexture> OpenXrRender::GetColorImages() const
 {
-    return m_colorSwapchainInfo.images;
+    return m_colorSwapchainInfo.textures;
 }
 
-std::vector<VkImageView> OpenXrRender::GetColorImagesViews() const
+std::vector<GfxTexture> OpenXrRender::GetDepthImages() const
 {
-    return m_colorSwapchainInfo.imageViews;
+    return m_depthSwapchainInfo.textures;
 }
 
-std::vector<VkImage> OpenXrRender::GetDepthImages() const
-{
-    return m_depthSwapchainInfo.images;
-}
-
-std::vector<VkImageView> OpenXrRender::GetDepthImagesViews() const
-{
-    return m_depthSwapchainInfo.imageViews;
-}
-
-VkExtent2D OpenXrRender::GetExtent() const
+GfxExtent2D OpenXrRender::GetExtent() const
 {
     return { m_viewConfigurationViews[0].recommendedImageRectWidth, m_viewConfigurationViews[0].recommendedImageRectHeight };
 }
 
-VkFormat OpenXrRender::GetColorFormat() const
+GfxFormat OpenXrRender::GetColorFormat() const
 {
-    return m_preferredColorFormat;
+    return VkFormatToGfxFormat(m_preferredColorFormat);
 }
 
-VkFormat OpenXrRender::GetDepthFormat() const
+GfxFormat OpenXrRender::GetDepthFormat() const
 {
-    return m_preferredDepthFormat;
+    return VkFormatToGfxFormat(m_preferredDepthFormat);
 }
 
 XrViewConfigurationType OpenXrRender::GetViewConfiguration() const
@@ -414,22 +430,37 @@ OpenXrRender::SwapchainInfo OpenXrRender::CreateSwapchain(const XrViewConfigurat
     XrSwapchainImageBaseHeader* swapchainImages{ reinterpret_cast<XrSwapchainImageBaseHeader*>(swapchainInfo.xrImages.data()) };
     OPENXR_CHECK(xrEnumerateSwapchainImages(swapchainInfo.swapchain, swapchainImageCount, &swapchainImageCount, swapchainImages), "Failed to enumerate Swapchain Images.");
 
-    const VkImageAspectFlags vkImageAspectFlags{ ToVkImageAspectFlags(usageFlags) };
     for (uint32_t i = 0; i < swapchainImageCount; ++i) {
         const auto image{ swapchainInfo.xrImages[i].image };
-        const auto imageView{ prev::util::vk::CreateImageView(m_graphicsBinding.device, image, format, VK_IMAGE_VIEW_TYPE_2D_ARRAY, 1, vkImageAspectFlags, viewCount, 0) };
-        swapchainInfo.images.push_back(image);
-        swapchainInfo.imageViews.push_back(imageView);
+
+        GfxTexture texture{};
+        GfxTextureImportDescriptor importDesc{};
+        importDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_IMPORT_DESCRIPTOR;
+        importDesc.label = (usageFlags & XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) ? "XrDepthImage" : "XrColorImage";
+        importDesc.nativeHandle = static_cast<void*>(image);
+        importDesc.type = GFX_TEXTURE_TYPE_2D;
+        importDesc.size = { viewConfigurationView.recommendedImageRectWidth, viewConfigurationView.recommendedImageRectHeight, 1 };
+        importDesc.arrayLayerCount = viewCount;
+        importDesc.mipLevelCount = 1;
+        importDesc.sampleCount = GFX_SAMPLE_COUNT_1;
+        importDesc.format = VkFormatToGfxFormat(format);
+        importDesc.usage = GFX_TEXTURE_USAGE_RENDER_ATTACHMENT;
+        importDesc.currentLayout = (usageFlags & XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) ? GFX_TEXTURE_LAYOUT_DEPTH_STENCIL_ATTACHMENT : GFX_TEXTURE_LAYOUT_COLOR_ATTACHMENT;
+        GFXERRCHECK(gfxDeviceImportTexture(m_gfxDevice, &importDesc, &texture));
+
+        swapchainInfo.textures.push_back(texture);
     }
     return swapchainInfo;
 }
 
 void OpenXrRender::DestroySwapchain(SwapchainInfo& swapchainInfo)
 {
-    for (auto& imageView : swapchainInfo.imageViews) {
-        vkDestroyImageView(m_graphicsBinding.device, imageView, VK_NULL_HANDLE);
+    for (auto& texture : swapchainInfo.textures) {
+        if (texture) {
+            gfxTextureDestroy(texture);
+        }
     }
-    OPENXR_CHECK(xrDestroySwapchain(swapchainInfo.swapchain), "Failed to destroy Color Swapchain");
+    OPENXR_CHECK(xrDestroySwapchain(swapchainInfo.swapchain), "Failed to destroy Swapchain");
     swapchainInfo = {};
 }
 } // namespace prev::xr::open_xr::render

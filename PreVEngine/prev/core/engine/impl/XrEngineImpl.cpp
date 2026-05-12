@@ -38,7 +38,6 @@ void XrEngineImpl::Init()
     ResetWindow();
     ResetSurface();
     ResetDevice();
-    ResetAllocator();
     ResetRenderPass();
 
     m_xr->CreateSession();
@@ -58,8 +57,12 @@ void XrEngineImpl::ShutDown()
     m_rootRenderer = nullptr;
     m_scene = nullptr;
 
-    m_xr->DestroySession();
-    m_xr = nullptr;
+    m_swapchain = nullptr; // destroy swapchain before XR session (it references XR-owned textures)
+
+    if (m_xr) {
+        m_xr->DestroySession();
+        m_xr = nullptr;
+    }
 }
 
 bool XrEngineImpl::Update()
@@ -90,47 +93,50 @@ bool XrEngineImpl::EndFrame()
 void XrEngineImpl::ResetInstance()
 {
     prev::core::instance::InstanceFactory instanceFactory{};
-    m_instance = instanceFactory.Create(m_config.validation, m_config.appName, std::vector<std::string>{}, m_xr->GetVulkanInstanceExtensions());
+    m_instance = instanceFactory.Create(m_config.appName, m_config.validation, m_config.renderBackend, m_xr->GetVulkanInstanceExtensions());
 }
 
 void XrEngineImpl::ResetDevice()
 {
-    prev::core::device::PhysicalDevice physicalDevice{ m_xr->GetPhysicalDevice(*m_instance), m_xr->GetVulkanDeviceExtensions() };
+    // Ask OpenXR which adapter to use (internally matches VkPhysicalDevice)
+    GfxAdapter selectedAdapter = m_xr->GetPhysicalDevice(*m_instance);
+    if (!selectedAdapter) {
+        throw std::runtime_error("Could not find GfxAdapter matching OpenXR physical device");
+    }
+
+    prev::core::device::PhysicalDevice physicalDevice{ selectedAdapter };
 
     prev::core::device::DeviceFactory deviceFactory{};
-    m_device = deviceFactory.Create(physicalDevice, m_surface);
+    m_device = deviceFactory.Create(physicalDevice, {}, m_xr->GetVulkanDeviceExtensions());
     if (!m_device) {
         throw std::runtime_error("Could not create logical device");
     }
     m_device->Print();
 
-    const auto& queue{ m_device->GetQueue(prev::core::device::QueueType::GRAPHICS) };
-    m_xr->UpdateGraphicsBinding(*m_instance, m_device->GetGPU(), *m_device, queue.family, queue.index);
+    const auto& queue = m_device->GetQueue(prev::core::device::QueueType::GRAPHICS);
+    m_xr->UpdateGraphicsBinding(*m_instance, selectedAdapter, *m_device, queue.family, queue.index);
 }
 
 void XrEngineImpl::ResetRenderPass()
 {
-    const auto colorFormat{ m_xr->GetColorFormat() };
-    const auto depthFormat{ m_xr->GetDepthFormat() };
-
-    const uint32_t viewCount{ GetViewCount() };
-
-    const bool storeColor{ true };
-    const bool storeDepth{ m_xr->HasDepthImages() };
-
-    const VkImageLayout colorLayout{ VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL };
-    const VkImageLayout depthLayout{ VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
+    const auto colorFormat = m_xr->GetColorFormat();
+    const auto depthFormat = m_xr->GetDepthFormat();
+    const uint32_t viewCount = GetViewCount();
+    const bool storeColor = true;
+    const bool storeDepth = m_xr->HasDepthImages();
+    const GfxSampleCount sampleCount = static_cast<GfxSampleCount>(m_config.samplesCount);
 
     if (m_config.samplesCount > 1) {
-        m_renderPass = CreateDefaultMultisampledRenderPass(*m_device, colorFormat, depthFormat, prev::util::vk::GetSampleCountBit(m_config.samplesCount), viewCount, storeColor, storeDepth, colorLayout, depthLayout);
+        m_renderPass = CreateDefaultMultisampledRenderPass(*m_device, colorFormat, depthFormat, sampleCount, viewCount, storeColor, storeDepth);
     } else {
-        m_renderPass = CreateDefaultRenderPass(*m_device, colorFormat, depthFormat, GetViewCount(), storeColor, storeDepth, colorLayout, depthLayout);
+        m_renderPass = CreateDefaultRenderPass(*m_device, colorFormat, depthFormat, viewCount, storeColor, storeDepth);
     }
 }
 
 void XrEngineImpl::ResetSwapchain()
 {
-    m_swapchain = std::make_unique<prev::xr::XrSwapchain>(*m_device, *m_allocator, *m_renderPass, *m_xr, prev::util::vk::GetSampleCountBit(m_config.samplesCount));
+    const GfxSampleCount sampleCount = static_cast<GfxSampleCount>(m_config.samplesCount);
+    m_swapchain = std::make_unique<prev::xr::XrSwapchain>(*m_device, *m_renderPass, *m_xr, sampleCount);
     m_swapchain->Print();
 }
 } // namespace prev::core::engine::impl

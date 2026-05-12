@@ -97,6 +97,11 @@ if(EMSCRIPTEN)
     add_definitions(-DWORM_HOLES_SINGLE_THREADED)
 endif()
 
+# XR is Vulkan-only — disable WebGPU backend when XR is enabled
+if(ENABLE_XR AND NOT EMSCRIPTEN)
+    set(BUILD_WEBGPU_BACKEND OFF CACHE BOOL "WebGPU not supported with XR" FORCE)
+endif()
+
 # Add gfx as a subdirectory — it manages its own sources, backends, and Dawn
 set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -109,8 +114,18 @@ add_subdirectory(external/gfx)
 
 include_directories("external/worm_holes/WormHoles")
 include_directories("external/glm")
+
+# Fetch and build OpenXR loader from source when XR is enabled
 if(ENABLE_XR)
-    include_directories("../Dependencies/openxr/include")
+    include(FetchContent)
+    set(DYNAMIC_LOADER OFF CACHE BOOL "Build OpenXR loader as static library" FORCE)
+    set(BUILD_API_LAYERS OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(
+        openxr_sdk
+        GIT_REPOSITORY https://github.com/KhronosGroup/OpenXR-SDK.git
+        GIT_TAG        release-1.1.59
+    )
+    FetchContent_MakeAvailable(openxr_sdk)
 endif()
 
 if(WIN32)
@@ -277,6 +292,8 @@ endif()
 
 if(ENABLE_XR)
     message("${PROJECT_NAME} - Using XR")
+    target_link_libraries(${PROJECT_NAME} openxr_loader)
+    target_include_directories(${PROJECT_NAME} PUBLIC ${openxr_sdk_SOURCE_DIR}/include)
     if(ENABLE_XR_DEPTH)
         message("${PROJECT_NAME} - Using XR Depth")
     else()
