@@ -92,9 +92,6 @@ include_directories("../../PreVEngine/external")
 include_directories("../../PreVEngine/external/worm_holes/WormHoles")
 include_directories("../../PreVEngine/external/gfx/gfx/include")
 include_directories("../../PreVEngine/external/glm")
-if(ENABLE_XR)
-    include_directories("../D../ependencies/openxr/include")
-endif()
 
 # Build assimp from source (v6.0.5) for all platforms
 include(FetchContent)
