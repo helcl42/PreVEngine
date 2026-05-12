@@ -70,6 +70,8 @@ option(ENABLE_REVERSE_DEPTH "Enable reverse depth" OFF)
 option(ENABLE_XR "Enable XR" OFF)
 option(ENABLE_XR_EXTENDED_INIT "Enable XR extended init (currently applicable on Android only)" OFF)
 option(ENABLE_XR_DEPTH "Enable XR Depth" OFF)
+option(BUILD_VULKAN_BACKEND "Build Vulkan backend" ON)
+option(BUILD_WEBGPU_BACKEND "Build WebGPU backend (requires Dawn)" ON)
 
 if (ENABLE_LOGGING)
     add_definitions(-DENABLE_LOGGING)
@@ -89,17 +91,11 @@ endif()
 
 include_directories("external")
 
-option(BUILD_WEBGPU_BACKEND "Build WebGPU backend (requires Dawn)" ON)
-
 # Emscripten forces WebGPU-only build
 if(EMSCRIPTEN)
+    set(BUILD_VULKAN_BACKEND OFF CACHE BOOL "Vulkan not available on web" FORCE)
     set(BUILD_WEBGPU_BACKEND ON CACHE BOOL "" FORCE)
     add_definitions(-DWORM_HOLES_SINGLE_THREADED)
-endif()
-
-# XR is Vulkan-only — disable WebGPU backend when XR is enabled
-if(ENABLE_XR AND NOT EMSCRIPTEN)
-    set(BUILD_WEBGPU_BACKEND OFF CACHE BOOL "WebGPU not supported with XR" FORCE)
 endif()
 
 # Add gfx as a subdirectory — it manages its own sources, backends, and Dawn
@@ -107,16 +103,15 @@ set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(BUILD_CPP_WRAPPER OFF CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-if(NOT EMSCRIPTEN)
-    set(BUILD_VULKAN_BACKEND ON CACHE BOOL "" FORCE)
-endif()
 add_subdirectory(external/gfx)
 
 include_directories("external/worm_holes/WormHoles")
 include_directories("external/glm")
 
-# Fetch and build OpenXR loader from source when XR is enabled
+# XR: Vulkan-only, fetch OpenXR loader
 if(ENABLE_XR)
+    set(BUILD_WEBGPU_BACKEND OFF CACHE BOOL "WebGPU not supported with XR" FORCE)
+
     include(FetchContent)
     set(DYNAMIC_LOADER OFF CACHE BOOL "Build OpenXR loader as static library" FORCE)
     set(BUILD_API_LAYERS OFF CACHE BOOL "" FORCE)
