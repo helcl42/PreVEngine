@@ -96,7 +96,8 @@ void DefaultEngineImpl::ResetDevice()
     prev::core::device::PhysicalDevices physicalDevices{ m_instance->GetHandle() };
     physicalDevices.Print();
 
-    const auto gpu{ physicalDevices.Find(*m_surface, m_config.gpuIndex) };
+    const GfxSurface surface = m_surface ? static_cast<GfxSurface>(*m_surface) : nullptr;
+    const auto gpu{ physicalDevices.Find(surface, m_config.gpuIndex) };
     if (!gpu) {
         throw std::runtime_error("No suitable GPU adapter found");
     }
@@ -111,11 +112,9 @@ void DefaultEngineImpl::ResetDevice()
 
     // Enable precise occlusion queries only when the selected adapter reports support.
     uint32_t extensionCount{ 0 };
-    gfxAdapterEnumerateExtensions(static_cast<GfxAdapter>(*gpu), &extensionCount, nullptr);
+    gfxAdapterEnumerateExtensions(*gpu, &extensionCount, nullptr);
     std::vector<const char*> availableExtensions(extensionCount);
-    if (extensionCount > 0) {
-        gfxAdapterEnumerateExtensions(static_cast<GfxAdapter>(*gpu), &extensionCount, availableExtensions.data());
-    }
+    gfxAdapterEnumerateExtensions(*gpu, &extensionCount, availableExtensions.data());
     const bool hasPreciseOcclusion = std::find_if(availableExtensions.begin(), availableExtensions.end(), [](const char* ext) {
         return ext != nullptr && std::string(ext) == GFX_DEVICE_EXTENSION_OCCLUSION_QUERY_PRECISE;
     }) != availableExtensions.end();
@@ -133,11 +132,7 @@ void DefaultEngineImpl::ResetDevice()
 
 void DefaultEngineImpl::ResetRenderPass()
 {
-    const auto formats{ m_surface->GetSupportedFormats(m_device->GetGPU()) };
-    if (formats.empty()) {
-        throw std::runtime_error("No supported surface formats found for the GPU");
-    }
-    const GfxFormat colorFormat = formats[0];
+    const GfxFormat colorFormat = m_surface ? m_surface->GetPreferredFormat(m_device->GetGPU()) : GFX_FORMAT_B8G8R8A8_UNORM;
     const GfxFormat depthFormat = GFX_FORMAT_DEPTH32_FLOAT;
     const GfxSampleCount sampleCount = static_cast<GfxSampleCount>(m_config.samplesCount);
 
@@ -152,28 +147,15 @@ void DefaultEngineImpl::ResetRenderPass()
 void DefaultEngineImpl::ResetSwapchain()
 {
     const auto size{ m_window->GetSize() };
-    const GfxExtent2D extent{ static_cast<uint32_t>(size.width), static_cast<uint32_t>(size.height) };
+    const GfxExtent2D extent{ size.width, size.height };
     const GfxSurface surface = m_surface ? static_cast<GfxSurface>(*m_surface) : nullptr;
 
     GfxPresentMode presentMode = GFX_PRESENT_MODE_FIFO;
     uint32_t imageCount = m_config.swapchainFrameCount;
 
     if (surface) {
-#if defined(__ANDROID__)
-        const GfxPresentMode preferred = m_config.VSync ? GFX_PRESENT_MODE_FIFO : GFX_PRESENT_MODE_MAILBOX;
-#else
         const GfxPresentMode preferred = m_config.VSync ? GFX_PRESENT_MODE_FIFO : GFX_PRESENT_MODE_IMMEDIATE;
-#endif
-        const auto presentModes{ m_surface->GetSupportedPresentModes(m_device->GetGPU()) };
-        if (!presentModes.empty()) {
-            presentMode = presentModes[0];
-            for (const auto& m : presentModes) {
-                if (m == preferred) {
-                    presentMode = m;
-                    break;
-                }
-            }
-        }
+        presentMode = m_surface->GetPreferredPresentMode(m_device->GetGPU(), preferred);
 
         const auto surfaceInfo{ m_surface->GetInfo(m_device->GetGPU()) };
         imageCount = std::max(surfaceInfo.minImageCount,

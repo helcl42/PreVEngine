@@ -15,7 +15,11 @@ public:
 public:
     std::vector<GfxFormat> GetSupportedFormats(GfxAdapter adapter) const;
 
+    GfxFormat GetPreferredFormat(GfxAdapter adapter) const;
+
     std::vector<GfxPresentMode> GetSupportedPresentModes(GfxAdapter adapter) const;
+
+    GfxPresentMode GetPreferredPresentMode(GfxAdapter adapter, GfxPresentMode preferred) const;
 
     GfxSurfaceInfo GetInfo(GfxAdapter adapter) const;
 
