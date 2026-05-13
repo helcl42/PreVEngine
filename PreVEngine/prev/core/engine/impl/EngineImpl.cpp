@@ -112,6 +112,9 @@ void EngineImpl::ResetWindow()
 
 void EngineImpl::ResetSurface()
 {
+    if (m_config.headless) {
+        return;
+    }
     m_surface = std::make_unique<prev::render::surface::Surface>(*m_instance, m_window->GetNativeWindowHandle());
 }
 

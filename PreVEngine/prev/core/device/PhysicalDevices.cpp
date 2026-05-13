@@ -31,10 +31,10 @@ std::optional<PhysicalDevice> PhysicalDevices::Find(GfxSurface surface, int32_t 
             return true;
         }
         uint32_t familyCount{ 0 };
-        gfxAdapterEnumerateQueueFamilies(static_cast<GfxAdapter>(adapter), &familyCount, nullptr);
+        gfxAdapterEnumerateQueueFamilies(adapter, &familyCount, nullptr);
         for (uint32_t i = 0; i < familyCount; ++i) {
             bool supported{ false };
-            gfxAdapterGetQueueFamilySurfaceSupport(static_cast<GfxAdapter>(adapter), i, surface, &supported);
+            gfxAdapterGetQueueFamilySurfaceSupport(adapter, i, surface, &supported);
             if (supported) {
                 return true;
             }
