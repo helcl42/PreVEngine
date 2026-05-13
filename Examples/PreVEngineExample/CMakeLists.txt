@@ -130,9 +130,6 @@ if(WIN32)
 
     target_link_libraries(${PROJECT_NAME} PreVEngine assimp)
     target_include_directories(${PROJECT_NAME} PRIVATE ${assimp_SOURCE_DIR}/include ${assimp_BINARY_DIR}/include)
-    if(ENABLE_XR)
-        target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../../Dependencies/openxr/lib/Windows/openxr_loader.lib")
-    endif()
 
     # Copy all files from ./Assets to the binary directory.
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
@@ -237,16 +234,9 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
 
     target_link_libraries(${PROJECT_NAME} PreVEngine assimp)
     target_include_directories(${PROJECT_NAME} PRIVATE ${assimp_SOURCE_DIR}/include ${assimp_BINARY_DIR}/include)
-    if(ENABLE_XR)
-        target_link_libraries(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/../../Dependencies/openxr/lib/Linux/libopenxr_loader.so")
-    endif()
 
     #  Copy all files from ./Assets to the binary directory.
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
-
-    if(ENABLE_XR)
-        file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../../Dependencies/openxr/lib/Linux/libopenxr_loader.so" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
-    endif()
 
 elseif(ANDROID)
     message("${PROJECT_NAME} - Android")
@@ -270,13 +260,6 @@ elseif(ANDROID)
 
     target_link_libraries(${PROJECT_NAME} PreVEngine log android assimp)
     target_include_directories(${PROJECT_NAME} PRIVATE ${assimp_SOURCE_DIR}/include ${assimp_BINARY_DIR}/include)
-
-    if(ENABLE_XR)
-        file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../../Dependencies/openxr/lib/Android/libopenxr_loader.so" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/platform/android/app/src/main/jniLibs/${ANDROID_ABI}/")
-        add_library(openxr_loader SHARED IMPORTED)
-        set_target_properties(openxr_loader PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/platform/android/app/src/main/jniLibs/${ANDROID_ABI}/libopenxr_loader.so")
-        target_link_libraries(${PROJECT_NAME} openxr_loader)
-    endif()
 
 elseif(EMSCRIPTEN)
     message("${PROJECT_NAME} - Emscripten/Web")
