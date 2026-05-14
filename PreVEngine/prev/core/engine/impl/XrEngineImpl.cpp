@@ -106,8 +106,14 @@ void XrEngineImpl::ResetDevice()
 
     prev::core::device::PhysicalDevice physicalDevice{ selectedAdapter };
 
-    prev::core::device::DeviceFactory deviceFactory{};
-    m_device = deviceFactory.Create(physicalDevice, {}, m_xr->GetVulkanDeviceExtensions());
+    const std::vector<std::string> extensions{
+        GFX_DEVICE_EXTENSION_SWAPCHAIN,
+        GFX_DEVICE_EXTENSION_ANISOTROPIC_FILTERING,
+        GFX_DEVICE_EXTENSION_NON_SOLID_FILL,
+        GFX_DEVICE_EXTENSION_MULTIVIEW,
+    };
+
+    m_device = prev::core::device::DeviceFactory{}.Create(physicalDevice, extensions, m_xr->GetVulkanDeviceExtensions());
     if (!m_device) {
         throw std::runtime_error("Could not create logical device");
     }

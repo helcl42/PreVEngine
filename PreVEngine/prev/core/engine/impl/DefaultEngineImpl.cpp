@@ -107,7 +107,6 @@ void DefaultEngineImpl::ResetDevice()
         GFX_DEVICE_EXTENSION_SWAPCHAIN,
         GFX_DEVICE_EXTENSION_ANISOTROPIC_FILTERING,
         GFX_DEVICE_EXTENSION_NON_SOLID_FILL,
-        // GFX_DEVICE_EXTENSION_MULTIVIEW
     };
 
     // Enable precise occlusion queries only when the selected adapter reports support.
