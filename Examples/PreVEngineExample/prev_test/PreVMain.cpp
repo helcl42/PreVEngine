@@ -21,6 +21,7 @@ void PrintUsage(const char* programName)
     printf("  --swapchain-images <int>  Swapchain image count (default: 3)\n");
     printf("  --frames-in-flight <int>  Max frames in flight (default: 2)\n");
     printf("  --gpu <int>            GPU index to use (default: auto)\n");
+    printf("  --backend <string>     Render backend: vulkan, webgpu (default: platform)\n");
     printf("  --help                 Print this help message\n");
 }
 
@@ -43,9 +44,9 @@ prev::core::engine::Config GetDefaultConfig()
     return config;
 }
 
-prev::core::engine::Config ParseArgs(int argc, char** argv)
+bool ParseArgs(int argc, char** argv, prev::core::engine::Config& config)
 {
-    prev::core::engine::Config config{ GetDefaultConfig() };
+    config = GetDefaultConfig();
 
     for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "--width") == 0 && i + 1 < argc) {
@@ -72,23 +73,37 @@ prev::core::engine::Config ParseArgs(int argc, char** argv)
             config.maxFramesInFlight = static_cast<uint32_t>(std::stoi(argv[++i]));
         } else if (strcmp(argv[i], "--gpu-index") == 0 && i + 1 < argc) {
             config.gpuIndex = std::stoi(argv[++i]);
+        } else if (strcmp(argv[i], "--backend") == 0 && i + 1 < argc) {
+            const std::string backend{ argv[++i] };
+            if (backend == "vulkan") {
+                config.renderBackend = prev::core::engine::RenderBackend::Vulkan;
+            } else if (backend == "webgpu") {
+                config.renderBackend = prev::core::engine::RenderBackend::WebGPU;
+            } else {
+                printf("Unknown backend: %s\n", backend.c_str());
+                PrintUsage(argv[0]);
+                return false;
+            }
         } else if (strcmp(argv[i], "--help") == 0) {
             PrintUsage(argv[0]);
-            exit(0);
+            return false;
         } else {
             printf("Unknown option: %s\n", argv[i]);
             PrintUsage(argv[0]);
-            exit(1);
+            return false;
         }
     }
 
-    return config;
+    return true;
 }
 } // namespace
 
 int PreVMain(int argc, char** argv)
 {
-    const auto config = ParseArgs(argc, argv);
+    prev::core::engine::Config config{};
+    if (!ParseArgs(argc, argv, config)) {
+        return 1;
+    }
 
 #ifdef __EMSCRIPTEN__
     // On Emscripten, try/catch around Asyncify code is broken:
