@@ -87,13 +87,11 @@ vec2 sampleRelaxedConeStepMapping(uint idx, float heightScale, uint numLayers, v
     vec3 pos = rayPos;
     for(uint i = 0; i < numLayers; ++i)
     {
-        vec3 samplePoint = vec3(uv.xy, heightScale) + texDir3D * pos.z;
-
         vec2 heightAndCone;
-        if (idx == 0) heightAndCone = clamp(textureGrad(sampler2D(heightTexture0, heightSampler), samplePoint.xy, ddx, ddy).rg, 0.0, 1.0);
-        else if (idx == 1) heightAndCone = clamp(textureGrad(sampler2D(heightTexture1, heightSampler), samplePoint.xy, ddx, ddy).rg, 0.0, 1.0);
-        else if (idx == 2) heightAndCone = clamp(textureGrad(sampler2D(heightTexture2, heightSampler), samplePoint.xy, ddx, ddy).rg, 0.0, 1.0);
-        else heightAndCone = clamp(textureGrad(sampler2D(heightTexture3, heightSampler), samplePoint.xy, ddx, ddy).rg, 0.0, 1.0);
+        if (idx == 0) heightAndCone = clamp(textureGrad(sampler2D(heightTexture0, heightSampler), pos.xy, ddx, ddy).rg, 0.0, 1.0);
+        else if (idx == 1) heightAndCone = clamp(textureGrad(sampler2D(heightTexture1, heightSampler), pos.xy, ddx, ddy).rg, 0.0, 1.0);
+        else if (idx == 2) heightAndCone = clamp(textureGrad(sampler2D(heightTexture2, heightSampler), pos.xy, ddx, ddy).rg, 0.0, 1.0);
+        else heightAndCone = clamp(textureGrad(sampler2D(heightTexture3, heightSampler), pos.xy, ddx, ddy).rg, 0.0, 1.0);
 
         float coneRatio = heightAndCone.g * heightAndCone.g;
         float height = GetInverseHeight(heightAndCone.r) - pos.z;
