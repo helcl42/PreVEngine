@@ -65,9 +65,9 @@ private:
     template <typename RenderContextType>
     void TraverseScene(const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const std::unique_ptr<IRenderer<RenderContextType>>& renderer);
 
-#ifdef PARALLEL_RENDERING
+#ifdef PARALLEL_COMMAND_RECORDING
     template <typename RenderContextType>
-    void RenderParallel(prev::render::pass::RenderPass& renderPass, const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<RenderContextType>>>& renderers, const std::vector<void*>& commandBuffers);
+    void RenderParallel(prev::render::pass::RenderPass& renderPass, const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<RenderContextType>>>& renderers, const std::vector<GfxCommandEncoder>& bundleEncoders);
 #else
     template <typename RenderContextType>
     void RenderSerial(prev::render::pass::RenderPass& renderPass, const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<RenderContextType>>>& renderers);
@@ -102,7 +102,7 @@ private:
     // Refraction
     std::vector<std::unique_ptr<IRenderer<NormalRenderContext>>> m_refractionRenderers;
 
-#ifdef PARALLEL_RENDERING
+#ifdef PARALLEL_COMMAND_RECORDING
     // Parallel stuff
     std::unique_ptr<CommandBuffersGroup> m_defaultCommandBuffersGroup;
 
@@ -130,29 +130,57 @@ void MasterRenderer::TraverseScene(const RenderContextType& renderContext, const
     }
 }
 
-#ifdef PARALLEL_RENDERING
+#ifdef PARALLEL_COMMAND_RECORDING
 template <typename RenderContextType>
-void MasterRenderer::RenderParallel(prev::render::pass::RenderPass& renderPass, const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<RenderContextType>>>& renderers, const std::vector<void*>& commandBuffers)
+void MasterRenderer::RenderParallel(prev::render::pass::RenderPass& renderPass, const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<RenderContextType>>>& renderers, const std::vector<GfxCommandEncoder>& bundleEncoders)
 {
-    // TODO: Parallel rendering with secondary command buffers is not yet supported in gfx API
-    // Fallback to serial path
     for (auto& renderer : renderers) {
         renderer->BeforeRender(renderContext);
     }
 
-    renderPass.Begin(renderContext.frameBuffer, renderContext.commandEncoder);
+    auto recordBundle = [&](size_t i) {
+        auto& encoder = bundleEncoders[i];
 
-    RenderContextType passContext{ renderContext };
-    passContext.renderPassEncoder = renderPass.GetEncoder();
+        GfxRenderPassBeginDescriptor beginDesc{};
+        beginDesc.sType = GFX_STRUCTURE_TYPE_RENDER_PASS_BEGIN_DESCRIPTOR;
+        beginDesc.renderPass = renderPass;
+        beginDesc.framebuffer = renderContext.frameBuffer;
 
-    for (auto& renderer : renderers) {
-        renderer->PreRender(passContext);
+        GfxRenderPassEncoder passEncoder{};
+        gfxCommandEncoderBeginRenderPass(encoder, &beginDesc, &passEncoder);
 
-        TraverseScene(passContext, root, renderer);
+        RenderContextType passContext{ renderContext };
+        passContext.renderPassEncoder = passEncoder;
 
-        renderer->PostRender(passContext);
+        renderers[i]->PreRender(passContext);
+        TraverseScene(passContext, root, renderers[i]);
+        renderers[i]->PostRender(passContext);
+
+        gfxRenderPassEncoderEnd(passEncoder);
+        gfxCommandEncoderEnd(encoder);
+    };
+
+    // Vulkan supports parallel command buffer recording, WebGPU/Dawn does not
+    const bool parallel = m_device.GetGPU().GetInfo().backend != GFX_BACKEND_WEBGPU;
+
+    if (parallel) {
+        std::vector<std::future<void>> futures;
+        futures.reserve(renderers.size());
+        for (size_t i = 0; i < renderers.size(); ++i) {
+            futures.push_back(m_threadPool.Enqueue([&, i]() { recordBundle(i); }));
+        }
+        for (auto& future : futures) {
+            future.get();
+        }
+    } else {
+        for (size_t i = 0; i < renderers.size(); ++i) {
+            recordBundle(i);
+        }
     }
 
+    // Begin the primary render pass with bundle execution mode and execute all bundles
+    renderPass.Begin(renderContext.frameBuffer, renderContext.commandEncoder, true);
+    gfxRenderPassEncoderExecuteBundles(renderPass.GetEncoder(), bundleEncoders.data(), static_cast<uint32_t>(bundleEncoders.size()));
     renderPass.End();
 
     for (auto& renderer : renderers) {

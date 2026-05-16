@@ -3,16 +3,22 @@
 #include <prev/common/Logger.h>
 
 namespace prev_test::render::renderer {
-std::unique_ptr<CommandBuffersGroup> CommandBuffersGroupFactory::CreateGroup(const prev::core::device::Device& device, const prev::core::device::Queue& queue, const uint32_t dim0Size, const uint32_t groupSize) const
+std::unique_ptr<CommandBuffersGroup> CommandBuffersGroupFactory::CreateGroup(const prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, uint32_t groupCount, uint32_t groupSize) const
 {
-    LOGW("CommandBuffersGroupFactory: parallel rendering not yet supported in gfx API, creating empty group");
+    std::vector<std::vector<GfxCommandEncoder>> encoderGroups(groupCount);
 
-    std::vector<std::vector<void*>> commandPools(dim0Size);
-    std::vector<std::vector<void*>> commandBuffers(dim0Size);
-    for (uint32_t dim0Index = 0; dim0Index < dim0Size; ++dim0Index) {
-        commandPools[dim0Index].resize(groupSize, nullptr);
-        commandBuffers[dim0Index].resize(groupSize, nullptr);
+    GfxRenderBundleEncoderDescriptor desc{};
+    desc.sType = GFX_STRUCTURE_TYPE_RENDER_BUNDLE_ENCODER_DESCRIPTOR;
+    desc.renderPass = renderPass;
+
+    for (uint32_t groupIndex = 0; groupIndex < groupCount; ++groupIndex) {
+        encoderGroups[groupIndex].resize(groupSize);
+        for (uint32_t i = 0; i < groupSize; ++i) {
+            gfxDeviceCreateRenderBundleCommandEncoder(device, &desc, &encoderGroups[groupIndex][i]);
+        }
     }
-    return std::make_unique<CommandBuffersGroup>(device, commandPools, commandBuffers);
+
+    LOGI("CommandBuffersGroupFactory: created %u x %u render bundle encoders", groupCount, groupSize);
+    return std::make_unique<CommandBuffersGroup>(device, std::move(encoderGroups));
 }
 } // namespace prev_test::render::renderer
