@@ -56,11 +56,15 @@ RenderPassBuilder& RenderPassBuilder::SetViewCount(const uint32_t viewCount)
 std::unique_ptr<RenderPass> RenderPassBuilder::Build() const
 {
     // Classify attachments
-    std::vector<size_t> colorIndices, resolveIndices, depthIndices;
+    std::vector<size_t> colorIndices, resolveIndices, depthIndices, depthResolveIndices;
     for (size_t i = 0; i < m_attachmentInfos.size(); ++i) {
         const auto& info = m_attachmentInfos[i];
         if (prev::core::format::HasDepthComponent(info.format)) {
-            depthIndices.push_back(i);
+            if (info.resolveAttachment) {
+                depthResolveIndices.push_back(i);
+            } else {
+                depthIndices.push_back(i);
+            }
         } else if (info.resolveAttachment) {
             resolveIndices.push_back(i);
         } else {
@@ -91,6 +95,7 @@ std::unique_ptr<RenderPass> RenderPassBuilder::Build() const
 
     // Build depth/stencil attachment
     GfxRenderPassDepthStencilAttachment depthAttachment{};
+    GfxRenderPassDepthStencilAttachmentTarget depthResolveTarget{};
     const bool hasDepth = !depthIndices.empty();
     if (hasDepth) {
         const auto& info = m_attachmentInfos[depthIndices[0]];
@@ -99,16 +104,41 @@ std::unique_ptr<RenderPass> RenderPassBuilder::Build() const
         depthAttachment.target.depthOps = { info.loadOp, info.storeOp };
         depthAttachment.target.stencilOps = { GFX_LOAD_OP_DONT_CARE, GFX_STORE_OP_DONT_CARE };
         depthAttachment.target.finalLayout = info.finalLayout;
-        depthAttachment.resolveTarget = nullptr;
+
+        if (!depthResolveIndices.empty()) {
+            const auto& resolveInfo = m_attachmentInfos[depthResolveIndices[0]];
+            depthResolveTarget.format = resolveInfo.format;
+            depthResolveTarget.sampleCount = resolveInfo.sampleCount;
+            depthResolveTarget.depthOps = { resolveInfo.loadOp, resolveInfo.storeOp };
+            depthResolveTarget.stencilOps = { GFX_LOAD_OP_DONT_CARE, GFX_STORE_OP_DONT_CARE };
+            depthResolveTarget.finalLayout = resolveInfo.finalLayout;
+            depthAttachment.resolveTarget = &depthResolveTarget;
+        } else {
+            depthAttachment.resolveTarget = nullptr;
+        }
     }
 
     GfxRenderPassDescriptor desc{};
     desc.sType = GFX_STRUCTURE_TYPE_RENDER_PASS_DESCRIPTOR;
-    desc.pNext = nullptr;
     desc.label = "RenderPass";
     desc.colorAttachments = colorAttachments.empty() ? nullptr : colorAttachments.data();
     desc.colorAttachmentCount = static_cast<uint32_t>(colorAttachments.size());
     desc.depthStencilAttachment = hasDepth ? &depthAttachment : nullptr;
+
+    // Multiview
+    GfxRenderPassMultiviewDescriptor multiviewDesc{};
+    uint32_t viewMask = 0;
+    uint32_t correlationMask = 0;
+    if (m_viewCount > 1) {
+        viewMask = prev::util::math::SetBits<uint32_t>(m_viewCount);
+        correlationMask = viewMask;
+        multiviewDesc.sType = GFX_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_DESCRIPTOR;
+        multiviewDesc.pNext = nullptr;
+        multiviewDesc.viewMask = viewMask;
+        multiviewDesc.correlationMasks = &correlationMask;
+        multiviewDesc.correlationMaskCount = 1;
+        desc.pNext = &multiviewDesc;
+    }
 
     GfxRenderPass renderPass{};
     if (gfxDeviceCreateRenderPass(m_device, &desc, &renderPass) != GFX_RESULT_SUCCESS) {

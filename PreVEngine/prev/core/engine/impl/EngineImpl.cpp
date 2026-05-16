@@ -1,6 +1,7 @@
 #include "EngineImpl.h"
 
 #include "../../../common/Logger.h"
+#include "../../../render/pass/RenderPassBuilder.h"
 #include "../../../util/MathUtils.h"
 #include "../../../window/Window.h"
 
@@ -120,97 +121,22 @@ void EngineImpl::ResetSurface()
 
 std::unique_ptr<prev::render::pass::RenderPass> EngineImpl::CreateDefaultMultisampledRenderPass(const prev::core::device::Device& device, GfxFormat colorFormat, GfxFormat depthFormat, GfxSampleCount sampleCount, uint32_t viewCount, bool storeColor, bool storeDepth)
 {
-    GfxRenderPassColorAttachmentTarget resolveTarget{};
-    resolveTarget.format = colorFormat;
-    resolveTarget.sampleCount = GFX_SAMPLE_COUNT_1;
-    resolveTarget.ops = { GFX_LOAD_OP_CLEAR, storeColor ? GFX_STORE_OP_STORE : GFX_STORE_OP_DONT_CARE };
-    resolveTarget.finalLayout = GFX_TEXTURE_LAYOUT_PRESENT_SRC;
-
-    GfxRenderPassColorAttachment colorAttachment{};
-    colorAttachment.target.format = colorFormat;
-    colorAttachment.target.sampleCount = sampleCount;
-    colorAttachment.target.ops = { GFX_LOAD_OP_CLEAR, GFX_STORE_OP_DONT_CARE };
-    colorAttachment.target.finalLayout = GFX_TEXTURE_LAYOUT_COLOR_ATTACHMENT;
-    colorAttachment.resolveTarget = &resolveTarget;
-
-    GfxRenderPassDepthStencilAttachmentTarget depthResolveTarget{};
-    depthResolveTarget.format = depthFormat;
-    depthResolveTarget.sampleCount = GFX_SAMPLE_COUNT_1;
-    depthResolveTarget.depthOps = { GFX_LOAD_OP_CLEAR, storeDepth ? GFX_STORE_OP_STORE : GFX_STORE_OP_DONT_CARE };
-    depthResolveTarget.stencilOps = { GFX_LOAD_OP_DONT_CARE, GFX_STORE_OP_DONT_CARE };
-    depthResolveTarget.finalLayout = GFX_TEXTURE_LAYOUT_DEPTH_STENCIL_ATTACHMENT;
-
-    GfxRenderPassDepthStencilAttachment depthAttachment{};
-    depthAttachment.target.format = depthFormat;
-    depthAttachment.target.sampleCount = sampleCount;
-    depthAttachment.target.depthOps = { GFX_LOAD_OP_CLEAR, GFX_STORE_OP_DONT_CARE };
-    depthAttachment.target.stencilOps = { GFX_LOAD_OP_DONT_CARE, GFX_STORE_OP_DONT_CARE };
-    depthAttachment.target.finalLayout = GFX_TEXTURE_LAYOUT_DEPTH_STENCIL_ATTACHMENT;
-    depthAttachment.resolveTarget = &depthResolveTarget;
-
-    GfxRenderPassMultiviewDescriptor multiviewDesc{};
-    uint32_t viewMask = prev::util::math::SetBits<uint32_t>(viewCount);
-    uint32_t correlationMask = viewMask;
-    multiviewDesc.sType = GFX_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_DESCRIPTOR;
-    multiviewDesc.pNext = nullptr;
-    multiviewDesc.viewMask = viewMask;
-    multiviewDesc.correlationMasks = &correlationMask;
-    multiviewDesc.correlationMaskCount = 1;
-
-    GfxRenderPassDescriptor desc{};
-    desc.sType = GFX_STRUCTURE_TYPE_RENDER_PASS_DESCRIPTOR;
-    desc.pNext = (viewCount > 1) ? &multiviewDesc : nullptr;
-    desc.label = "Default MSAA RenderPass";
-    desc.colorAttachments = &colorAttachment;
-    desc.colorAttachmentCount = 1;
-    desc.depthStencilAttachment = &depthAttachment;
-
-    GfxRenderPass renderPass{};
-    if (gfxDeviceCreateRenderPass(device, &desc, &renderPass) != GFX_RESULT_SUCCESS) {
-        throw std::runtime_error("Failed to create MSAA render pass");
-    }
-    return std::make_unique<prev::render::pass::RenderPass>(device, renderPass, colorFormat, depthFormat, sampleCount);
+    return prev::render::pass::RenderPassBuilder(device)
+        .AddColorAttachment(colorFormat, sampleCount, {}, GFX_TEXTURE_LAYOUT_COLOR_ATTACHMENT, GFX_LOAD_OP_CLEAR, GFX_STORE_OP_DONT_CARE)
+        .AddColorAttachment(colorFormat, GFX_SAMPLE_COUNT_1, {}, GFX_TEXTURE_LAYOUT_PRESENT_SRC, GFX_LOAD_OP_CLEAR, storeColor ? GFX_STORE_OP_STORE : GFX_STORE_OP_DONT_CARE, true)
+        .AddDepthAttachment(depthFormat, sampleCount, 1.0f, 0, GFX_TEXTURE_LAYOUT_DEPTH_STENCIL_ATTACHMENT, GFX_LOAD_OP_CLEAR, GFX_STORE_OP_DONT_CARE)
+        .AddDepthAttachment(depthFormat, GFX_SAMPLE_COUNT_1, 1.0f, 0, GFX_TEXTURE_LAYOUT_DEPTH_STENCIL_ATTACHMENT, GFX_LOAD_OP_CLEAR, storeDepth ? GFX_STORE_OP_STORE : GFX_STORE_OP_DONT_CARE, true)
+        .SetViewCount(viewCount)
+        .Build();
 }
 
 std::unique_ptr<prev::render::pass::RenderPass> EngineImpl::CreateDefaultRenderPass(const prev::core::device::Device& device, GfxFormat colorFormat, GfxFormat depthFormat, uint32_t viewCount, bool storeColor, bool storeDepth)
 {
-    GfxRenderPassColorAttachment colorAttachment{};
-    colorAttachment.target.format = colorFormat;
-    colorAttachment.target.sampleCount = GFX_SAMPLE_COUNT_1;
-    colorAttachment.target.ops = { GFX_LOAD_OP_CLEAR, storeColor ? GFX_STORE_OP_STORE : GFX_STORE_OP_DONT_CARE };
-    colorAttachment.target.finalLayout = GFX_TEXTURE_LAYOUT_PRESENT_SRC;
-    colorAttachment.resolveTarget = nullptr;
-
-    GfxRenderPassDepthStencilAttachment depthAttachment{};
-    depthAttachment.target.format = depthFormat;
-    depthAttachment.target.sampleCount = GFX_SAMPLE_COUNT_1;
-    depthAttachment.target.depthOps = { GFX_LOAD_OP_CLEAR, storeDepth ? GFX_STORE_OP_STORE : GFX_STORE_OP_DONT_CARE };
-    depthAttachment.target.stencilOps = { GFX_LOAD_OP_DONT_CARE, GFX_STORE_OP_DONT_CARE };
-    depthAttachment.target.finalLayout = GFX_TEXTURE_LAYOUT_DEPTH_STENCIL_ATTACHMENT;
-    depthAttachment.resolveTarget = nullptr;
-
-    GfxRenderPassMultiviewDescriptor multiviewDesc{};
-    uint32_t viewMask = prev::util::math::SetBits<uint32_t>(viewCount);
-    uint32_t correlationMask = viewMask;
-    multiviewDesc.sType = GFX_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_DESCRIPTOR;
-    multiviewDesc.pNext = nullptr;
-    multiviewDesc.viewMask = viewMask;
-    multiviewDesc.correlationMasks = &correlationMask;
-    multiviewDesc.correlationMaskCount = 1;
-
-    GfxRenderPassDescriptor desc{};
-    desc.sType = GFX_STRUCTURE_TYPE_RENDER_PASS_DESCRIPTOR;
-    desc.pNext = (viewCount > 1) ? &multiviewDesc : nullptr;
-    desc.label = "Default RenderPass";
-    desc.colorAttachments = &colorAttachment;
-    desc.colorAttachmentCount = 1;
-    desc.depthStencilAttachment = &depthAttachment;
-
-    GfxRenderPass renderPass{};
-    if (gfxDeviceCreateRenderPass(device, &desc, &renderPass) != GFX_RESULT_SUCCESS) {
-        throw std::runtime_error("Failed to create render pass");
-    }
-    return std::make_unique<prev::render::pass::RenderPass>(device, renderPass, colorFormat, depthFormat, GFX_SAMPLE_COUNT_1);
+    return prev::render::pass::RenderPassBuilder(device)
+        .AddColorAttachment(colorFormat, GFX_SAMPLE_COUNT_1, {}, GFX_TEXTURE_LAYOUT_PRESENT_SRC, GFX_LOAD_OP_CLEAR, storeColor ? GFX_STORE_OP_STORE : GFX_STORE_OP_DONT_CARE)
+        .AddDepthAttachment(depthFormat, GFX_SAMPLE_COUNT_1, 1.0f, 0, GFX_TEXTURE_LAYOUT_DEPTH_STENCIL_ATTACHMENT, GFX_LOAD_OP_CLEAR, storeDepth ? GFX_STORE_OP_STORE : GFX_STORE_OP_DONT_CARE)
+        .SetViewCount(viewCount)
+        .Build();
 }
 
 void EngineImpl::UpdateFps()
