@@ -92,31 +92,6 @@ void main() {
 }
 ```
 
-**WebGPU (instancing workaround):**
-```wgsl
-// Use instance_index instead
-@vertex
-fn main(
-    @builtin(instance_index) instance_id: u32,
-    @location(0) pos: vec3<f32>,
-) -> @builtin(position) vec4<f32> {
-    let view_index = instance_id % 2u;  // 0 or 1 for stereo
-    // ...
-}
-```
-
-Use `ShaderLoader::SupportsNativeMultiview()` to select rendering path:
-
-```cpp
-if (ShaderLoader::SupportsNativeMultiview()) {
-    // Vulkan: render once with multiview
-    renderContext.cameraCount = 2;
-} else {
-    // WebGPU: render with instancing
-    renderPass.SetInstanceCount(2);
-}
-```
-
 ## Migration Path
 
 1. **Existing SPIR-V shaders**: Stay in `spirv/` directory as-is

@@ -8,6 +8,10 @@
 #include "../../render/mesh/MeshUtil.h"
 #include "../../render/model/ModelFactory.h"
 
+#include <prev/render/buffer/ImageBufferBuilder.h>
+#include <prev/render/image/ImageFactory.h>
+#include <prev/util/GfxUtils.h>
+
 namespace prev_test::component::terrain {
 TerrainComponentFactory::TerrainComponentFactory(prev::core::device::Device& device, const unsigned int seed, const unsigned int vertexCount)
     : m_device{ device }
@@ -35,10 +39,14 @@ std::unique_ptr<ITerrainComponent> TerrainComponentFactory::CreateRandomTerrain(
     auto result{ std::make_unique<TerrainComponent>(x, z) };
     result->m_model = CreateModel(vertexData, false);
     result->m_heightsInfo = heightMap;
+
+    std::vector<std::string> colorPaths;
     for (const auto& layer : terrainLayers) {
         result->m_materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity }, layer.materialPath));
         result->m_heightSteps.emplace_back(layer.heightStep);
+        colorPaths.push_back(layer.materialPath);
     }
+    result->m_textureArrays[0] = CreateTextureArray(colorPaths);
     result->m_transitionRange = layerTransitionWidth;
     return result;
 }
@@ -62,10 +70,17 @@ std::unique_ptr<ITerrainComponent> TerrainComponentFactory::CreateRandomTerrainN
     auto result{ std::make_unique<TerrainComponent>(x, z) };
     result->m_model = CreateModel(vertexData, true);
     result->m_heightsInfo = heightMap;
+
+    std::vector<std::string> colorPaths;
+    std::vector<std::string> normalPaths;
     for (const auto& layer : terrainLayers) {
         result->m_materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity }, layer.materialPath, layer.materialNormalPath));
         result->m_heightSteps.emplace_back(layer.heightStep);
+        colorPaths.push_back(layer.materialPath);
+        normalPaths.push_back(layer.materialNormalPath);
     }
+    result->m_textureArrays[0] = CreateTextureArray(colorPaths);
+    result->m_textureArrays[1] = CreateTextureArray(normalPaths);
     result->m_transitionRange = layerTransitionWidth;
     return result;
 }
@@ -89,12 +104,22 @@ std::unique_ptr<ITerrainComponent> TerrainComponentFactory::CreateRandomTerrainC
     auto result{ std::make_unique<TerrainComponent>(x, z) };
     result->m_model = CreateModel(vertexData, true);
     result->m_heightsInfo = heightMap;
+
+    std::vector<std::string> colorPaths;
+    std::vector<std::string> normalPaths;
+    std::vector<std::string> heightPaths;
     for (const auto& layer : terrainLayers) {
         auto material{ materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity }, layer.materialPath, layer.materialNormalPath, layer.materialHeightPath) };
         material->SetHeightScale(layer.heightScale);
         result->m_materials.emplace_back(std::move(material));
         result->m_heightSteps.emplace_back(layer.heightStep);
+        colorPaths.push_back(layer.materialPath);
+        normalPaths.push_back(layer.materialNormalPath);
+        heightPaths.push_back(layer.materialHeightPath);
     }
+    result->m_textureArrays[0] = CreateTextureArray(colorPaths);
+    result->m_textureArrays[1] = CreateTextureArray(normalPaths);
+    result->m_textureArrays[2] = CreateTextureArray(heightPaths);
     result->m_transitionRange = layerTransitionWidth;
     return result;
 }
@@ -186,5 +211,46 @@ std::unique_ptr<HeightMapInfo> TerrainComponentFactory::CreateHeightMap(const He
     heightMapInfo->minHeight = heightMapInfo->globalMinHeight = minHeight;
     heightMapInfo->maxHeight = heightMapInfo->globalMaxHeight = maxHeight;
     return heightMapInfo;
+}
+
+std::shared_ptr<prev::render::buffer::ImageBuffer> TerrainComponentFactory::CreateTextureArray(const std::vector<std::string>& paths) const
+{
+    prev::render::image::ImageFactory imageFactory{};
+
+    std::vector<std::shared_ptr<prev::render::image::IImage>> images;
+    uint32_t maxWidth = 0, maxHeight = 0;
+    for (const auto& path : paths) {
+        auto img = imageFactory.CreateImage(path);
+        maxWidth = std::max(maxWidth, img->GetWidth());
+        maxHeight = std::max(maxHeight, img->GetHeight());
+        images.push_back(std::move(img));
+    }
+
+    // Resize images that don't match the max dimensions
+    std::vector<std::shared_ptr<prev::render::image::IImage>> finalImages;
+    for (const auto& img : images) {
+        if (img->GetWidth() != maxWidth || img->GetHeight() != maxHeight) {
+            finalImages.push_back(imageFactory.CreateResizedImage(*img, maxWidth, maxHeight));
+        } else {
+            finalImages.push_back(img);
+        }
+    }
+
+    std::vector<const uint8_t*> layersData;
+    for (const auto& img : finalImages) {
+        layersData.push_back(img->GetRawDataPtr());
+    }
+
+    return prev::render::buffer::ImageBufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
+        .SetExtent({ maxWidth, maxHeight, 1 })
+        .SetFormat(prev::util::gfx::ToImageFormat(finalImages[0]->GetChannels(), finalImages[0]->GetBitDepth(), finalImages[0]->IsFloatingPoint()))
+        .SetType(GFX_TEXTURE_TYPE_2D)
+        .SetViewType(GFX_TEXTURE_VIEW_TYPE_2D_ARRAY)
+        .SetLayerCount(static_cast<uint32_t>(paths.size()))
+        .SetLayerData(layersData, static_cast<uint64_t>(finalImages[0]->GetSize()) * finalImages[0]->GetPixelSize())
+        .SetMipMapEnabled(true)
+        .SetUsageFlags(GFX_TEXTURE_USAGE_COPY_SRC | GFX_TEXTURE_USAGE_COPY_DST | GFX_TEXTURE_USAGE_TEXTURE_BINDING)
+        .SetLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY)
+        .Build();
 }
 } // namespace prev_test::component::terrain

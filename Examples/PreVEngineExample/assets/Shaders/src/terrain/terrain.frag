@@ -27,19 +27,13 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 	float heightTransitionRange;
 } uboFS;
 
-layout(binding = 2) uniform texture2D colorTexture0;
-layout(binding = 3) uniform texture2D colorTexture1;
-layout(binding = 4) uniform texture2D colorTexture2;
-layout(binding = 5) uniform texture2D colorTexture3;
-layout(binding = 6) uniform sampler colorSampler;
-layout(binding = 7) uniform texture2DArray depthTexture;
-layout(binding = 8) uniform sampler depthSampler;
+layout(binding = 2) uniform texture2DArray colorTextures;
+layout(binding = 3) uniform sampler colorSampler;
+layout(binding = 4) uniform texture2DArray depthTexture;
+layout(binding = 5) uniform sampler depthSampler;
 
 vec4 sampleColorTexture(uint idx, vec2 uv, vec2 ddx, vec2 ddy) {
-    if (idx == 0) return textureGrad(sampler2D(colorTexture0, colorSampler), uv, ddx, ddy);
-    else if (idx == 1) return textureGrad(sampler2D(colorTexture1, colorSampler), uv, ddx, ddy);
-    else if (idx == 2) return textureGrad(sampler2D(colorTexture2, colorSampler), uv, ddx, ddy);
-    else return textureGrad(sampler2D(colorTexture3, colorSampler), uv, ddx, ddy);
+    return textureGrad(sampler2DArray(colorTextures, colorSampler), vec3(uv, float(idx)), ddx, ddy);
 }
 
 layout(location = 0) in vec2 inTextureCoord;

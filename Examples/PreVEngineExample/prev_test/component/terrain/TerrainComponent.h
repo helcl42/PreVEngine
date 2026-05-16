@@ -4,6 +4,8 @@
 #include "ITerrainComponent.h"
 #include "TerrainCommon.h"
 
+#include <map>
+
 namespace prev_test::component::terrain {
 class TerrainComponentFactory;
 
@@ -17,6 +19,8 @@ public:
     std::shared_ptr<prev_test::render::IModel> GetModel() const override;
 
     std::vector<std::shared_ptr<prev_test::render::IMaterial>> GetMaterials() const override;
+
+    std::shared_ptr<prev::render::buffer::ImageBuffer> GetTextureArray(uint32_t index) const override;
 
     bool GetHeightAt(const glm::vec3& position, float& outHeight) const override;
 
@@ -47,6 +51,8 @@ private:
     std::shared_ptr<prev_test::render::IModel> m_model{};
 
     std::vector<std::shared_ptr<prev_test::render::IMaterial>> m_materials;
+
+    std::map<uint32_t, std::shared_ptr<prev::render::buffer::ImageBuffer>> m_textureArrays;
 
     std::vector<float> m_heightSteps;
 

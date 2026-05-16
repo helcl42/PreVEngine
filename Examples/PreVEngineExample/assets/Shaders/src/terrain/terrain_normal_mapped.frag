@@ -29,32 +29,19 @@ layout(std140, binding = 1) uniform UniformBufferObject {
 	uint hasNormalMap;
 } uboFS;
 
-layout(binding = 2) uniform texture2D colorTexture0;
-layout(binding = 3) uniform texture2D colorTexture1;
-layout(binding = 4) uniform texture2D colorTexture2;
-layout(binding = 5) uniform texture2D colorTexture3;
-layout(binding = 6) uniform sampler colorSampler;
-layout(binding = 7) uniform texture2D normalTexture0;
-layout(binding = 8) uniform texture2D normalTexture1;
-layout(binding = 9) uniform texture2D normalTexture2;
-layout(binding = 10) uniform texture2D normalTexture3;
-layout(binding = 11) uniform sampler normalSampler;
-layout(binding = 12) uniform texture2DArray depthTexture;
-layout(binding = 13) uniform sampler depthSampler;
+layout(binding = 2) uniform texture2DArray colorTextures;
+layout(binding = 3) uniform sampler colorSampler;
+layout(binding = 4) uniform texture2DArray normalTextures;
+layout(binding = 5) uniform sampler normalSampler;
+layout(binding = 6) uniform texture2DArray depthTexture;
+layout(binding = 7) uniform sampler depthSampler;
 
 vec4 sampleColorTexture(uint idx, vec2 uv, vec2 ddx, vec2 ddy) {
-    if (idx == 0) return textureGrad(sampler2D(colorTexture0, colorSampler), uv, ddx, ddy);
-    else if (idx == 1) return textureGrad(sampler2D(colorTexture1, colorSampler), uv, ddx, ddy);
-    else if (idx == 2) return textureGrad(sampler2D(colorTexture2, colorSampler), uv, ddx, ddy);
-    else return textureGrad(sampler2D(colorTexture3, colorSampler), uv, ddx, ddy);
+    return textureGrad(sampler2DArray(colorTextures, colorSampler), vec3(uv, float(idx)), ddx, ddy);
 }
 
 vec3 sampleNormalMap(uint idx, vec2 uv, vec2 ddx, vec2 ddy) {
-    vec3 n;
-    if (idx == 0) n = textureGrad(sampler2D(normalTexture0, normalSampler), uv, ddx, ddy).xyz;
-    else if (idx == 1) n = textureGrad(sampler2D(normalTexture1, normalSampler), uv, ddx, ddy).xyz;
-    else if (idx == 2) n = textureGrad(sampler2D(normalTexture2, normalSampler), uv, ddx, ddy).xyz;
-    else n = textureGrad(sampler2D(normalTexture3, normalSampler), uv, ddx, ddy).xyz;
+    vec3 n = textureGrad(sampler2DArray(normalTextures, normalSampler), vec3(uv, float(idx)), ddx, ddy).xyz;
     return normalize(2.0 * normalize(n) - 1.0);
 }
 
