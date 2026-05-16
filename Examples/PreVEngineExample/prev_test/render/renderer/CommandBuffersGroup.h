@@ -1,5 +1,5 @@
-#ifndef __COMMAND_BUFFER_FACTORY_H__
-#define __COMMAND_BUFFER_FACTORY_H__
+#ifndef __COMMAND_BUFFERS_GROUP_H__
+#define __COMMAND_BUFFERS_GROUP_H__
 
 #include <prev/core/device/Device.h>
 
@@ -8,20 +8,18 @@
 namespace prev_test::render::renderer {
 class CommandBuffersGroup {
 public:
-    CommandBuffersGroup(const prev::core::device::Device& device, const std::vector<std::vector<void*>>& commandPools, const std::vector<std::vector<void*>>& commandBuffers);
+    CommandBuffersGroup(const prev::core::device::Device& device, std::vector<std::vector<GfxCommandEncoder>>&& encoders);
 
     ~CommandBuffersGroup();
 
 public:
-    const std::vector<void*>& GetBuffersGroup(const uint32_t index) const;
+    const std::vector<GfxCommandEncoder>& GetEncoders(uint32_t index) const;
 
 private:
     const prev::core::device::Device& m_device;
 
-    std::vector<std::vector<void*>> m_commandPoolGroups{};
-
-    std::vector<std::vector<void*>> m_commandBufferGroups{};
+    std::vector<std::vector<GfxCommandEncoder>> m_encoderGroups;
 };
 } // namespace prev_test::render::renderer
 
-#endif // !__COMMAND_BUFFER_FACTORY_H__
+#endif // !__COMMAND_BUFFERS_GROUP_H__

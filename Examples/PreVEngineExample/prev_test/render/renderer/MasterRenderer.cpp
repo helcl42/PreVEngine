@@ -136,14 +136,14 @@ void MasterRenderer::InitDefault()
         renderer->Init();
     }
 
-#ifdef PARALLEL_RENDERING
-    m_defaultCommandBuffersGroup = CommandBuffersGroupFactory{}.CreateGroup(m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchainImageCount, static_cast<uint32_t>(m_defaultRenderers.size()));
+#ifdef PARALLEL_COMMAND_RECORDING
+    m_defaultCommandBuffersGroup = CommandBuffersGroupFactory{}.CreateGroup(m_device, m_defaultRenderPass, m_swapchainImageCount, static_cast<uint32_t>(m_defaultRenderers.size()));
 #endif
 }
 
 void MasterRenderer::ShutDownDefault()
 {
-#ifdef PARALLEL_RENDERING
+#ifdef PARALLEL_COMMAND_RECORDING
     m_defaultCommandBuffersGroup = nullptr;
 #endif
 
@@ -163,14 +163,14 @@ void MasterRenderer::InitDebug()
         renderer->Init();
     }
 
-#ifdef PARALLEL_RENDERING
-    m_debugCommandBuffersGroup = CommandBuffersGroupFactory{}.CreateGroup(m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchainImageCount, static_cast<uint32_t>(m_debugRenderers.size()));
+#ifdef PARALLEL_COMMAND_RECORDING
+    m_debugCommandBuffersGroup = CommandBuffersGroupFactory{}.CreateGroup(m_device, m_defaultRenderPass, m_swapchainImageCount, static_cast<uint32_t>(m_debugRenderers.size()));
 #endif
 }
 
 void MasterRenderer::ShutDownDebug()
 {
-#ifdef PARALLEL_RENDERING
+#ifdef PARALLEL_COMMAND_RECORDING
     m_debugCommandBuffersGroup = nullptr;
 #endif
 
@@ -196,17 +196,17 @@ void MasterRenderer::InitShadows()
         renderer->Init();
     }
 
-#ifdef PARALLEL_RENDERING
+#ifdef PARALLEL_COMMAND_RECORDING
     m_shadowsCommandBufferGroups.resize(prev_test::component::shadow::CASCADES_COUNT);
     for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; ++i) {
-        m_shadowsCommandBufferGroups[i] = CommandBuffersGroupFactory{}.CreateGroup(m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchainImageCount, static_cast<uint32_t>(m_shadowRenderers.size()));
+        m_shadowsCommandBufferGroups[i] = CommandBuffersGroupFactory{}.CreateGroup(m_device, *shadowsComponent->GetRenderPass(), m_swapchainImageCount, static_cast<uint32_t>(m_shadowRenderers.size()));
     }
 #endif
 }
 
 void MasterRenderer::ShutDownShadows()
 {
-#ifdef PARALLEL_RENDERING
+#ifdef PARALLEL_COMMAND_RECORDING
     m_shadowsCommandBufferGroups.clear();
 #endif
 
@@ -240,14 +240,14 @@ void MasterRenderer::InitReflection()
         renderer->Init();
     }
 
-#ifdef PARALLEL_RENDERING
-    m_reflectionCommandBufferGroups = CommandBuffersGroupFactory{}.CreateGroup(m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchainImageCount, static_cast<uint32_t>(m_reflectionRenderers.size()));
+#ifdef PARALLEL_COMMAND_RECORDING
+    m_reflectionCommandBufferGroups = CommandBuffersGroupFactory{}.CreateGroup(m_device, *reflectionComponent->GetRenderPass(), m_swapchainImageCount, static_cast<uint32_t>(m_reflectionRenderers.size()));
 #endif
 }
 
 void MasterRenderer::ShutDownReflection()
 {
-#ifdef PARALLEL_RENDERING
+#ifdef PARALLEL_COMMAND_RECORDING
     m_reflectionCommandBufferGroups = nullptr;
 #endif
 
@@ -281,14 +281,14 @@ void MasterRenderer::InitRefraction()
         renderer->Init();
     }
 
-#ifdef PARALLEL_RENDERING
-    m_refractionCommandBufferGroups = CommandBuffersGroupFactory{}.CreateGroup(m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS), m_swapchainImageCount, static_cast<uint32_t>(m_refractionRenderers.size()));
+#ifdef PARALLEL_COMMAND_RECORDING
+    m_refractionCommandBufferGroups = CommandBuffersGroupFactory{}.CreateGroup(m_device, *refractionComponent->GetRenderPass(), m_swapchainImageCount, static_cast<uint32_t>(m_refractionRenderers.size()));
 #endif
 }
 
 void MasterRenderer::ShutDownRefraction()
 {
-#ifdef PARALLEL_RENDERING
+#ifdef PARALLEL_COMMAND_RECORDING
     m_refractionCommandBufferGroups = nullptr;
 #endif
 
@@ -311,8 +311,8 @@ void MasterRenderer::RenderShadows(const prev::render::RenderContext& renderCont
         const prev::render::RenderContext customRenderContextBase{ cascadeRenderData.frameBuffer, renderContext.commandEncoder, renderContext.frameInFlightIndex, { { 0, 0 }, shadows->GetExtent() } };
         const ShadowsRenderContext customRenderContext{ customRenderContextBase, cascadeFrameData.viewMatrix, cascadeFrameData.projectionMatrix, cascadeIndex, prev::util::intersection::Frustum{ cascadeFrameData.projectionMatrix, cascadeFrameData.viewMatrix } };
 
-#ifdef PARALLEL_RENDERING
-        const auto& cascadeCommandBuffers{ m_shadowsCommandBufferGroups[cascadeIndex]->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
+#ifdef PARALLEL_COMMAND_RECORDING
+        const auto& cascadeCommandBuffers{ m_shadowsCommandBufferGroups[cascadeIndex]->GetEncoders(customRenderContext.frameInFlightIndex) };
         RenderParallel(*shadows->GetRenderPass(), customRenderContext, root, m_shadowRenderers, cascadeCommandBuffers);
 #else
         RenderSerial(*shadows->GetRenderPass(), customRenderContext, root, m_shadowRenderers);
@@ -357,8 +357,8 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
         customRenderContext.frustums[view] = prev::util::intersection::Frustum{ projectionMatrix, viewMatrix };
     }
 
-#ifdef PARALLEL_RENDERING
-    const auto& commandBuffers{ m_reflectionCommandBufferGroups->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
+#ifdef PARALLEL_COMMAND_RECORDING
+    const auto& commandBuffers{ m_reflectionCommandBufferGroups->GetEncoders(customRenderContext.frameInFlightIndex) };
     RenderParallel(*reflectionComponent->GetRenderPass(), customRenderContext, root, m_reflectionRenderers, commandBuffers);
 #else
     RenderSerial(*reflectionComponent->GetRenderPass(), customRenderContext, root, m_reflectionRenderers);
@@ -392,8 +392,8 @@ void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& re
         customRenderContext.frustums[view] = prev::util::intersection::Frustum{ projectionMatrix, viewMatrix };
     }
 
-#ifdef PARALLEL_RENDERING
-    const auto& commandBuffers{ m_refractionCommandBufferGroups->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
+#ifdef PARALLEL_COMMAND_RECORDING
+    const auto& commandBuffers{ m_refractionCommandBufferGroups->GetEncoders(customRenderContext.frameInFlightIndex) };
     RenderParallel(*refractionComponent->GetRenderPass(), customRenderContext, root, m_refractionRenderers, commandBuffers);
 #else
     RenderSerial(*refractionComponent->GetRenderPass(), customRenderContext, root, m_refractionRenderers);
@@ -424,8 +424,8 @@ void MasterRenderer::RenderScene(const prev::render::RenderContext& renderContex
         customRenderContext.frustums[view] = prev::util::intersection::Frustum{ projectionMatrix, viewMatrix };
     }
 
-#ifdef PARALLEL_RENDERING
-    const auto& defaultCommandBuffers{ m_defaultCommandBuffersGroup->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
+#ifdef PARALLEL_COMMAND_RECORDING
+    const auto& defaultCommandBuffers{ m_defaultCommandBuffersGroup->GetEncoders(customRenderContext.frameInFlightIndex) };
     RenderParallel(m_defaultRenderPass, customRenderContext, root, m_defaultRenderers, defaultCommandBuffers);
 #else
     RenderSerial(m_defaultRenderPass, customRenderContext, root, m_defaultRenderers);
@@ -436,8 +436,8 @@ void MasterRenderer::RenderDebug(const prev::render::RenderContext& renderContex
 {
     const prev::render::RenderContext customRenderContext{ renderContext.frameBuffer, renderContext.commandEncoder, renderContext.frameInFlightIndex, { { 0, 0 }, { renderContext.rect.extent.width / 2, renderContext.rect.extent.height / 2 } } };
 
-#ifdef PARALLEL_RENDERING
-    const auto& debugCommandBuffers{ m_debugCommandBuffersGroup->GetBuffersGroup(customRenderContext.frameInFlightIndex) };
+#ifdef PARALLEL_COMMAND_RECORDING
+    const auto& debugCommandBuffers{ m_debugCommandBuffersGroup->GetEncoders(customRenderContext.frameInFlightIndex) };
     RenderParallel(m_defaultRenderPass, customRenderContext, root, m_debugRenderers, debugCommandBuffers);
 #else
     RenderSerial(m_defaultRenderPass, customRenderContext, root, m_debugRenderers);

@@ -30,7 +30,7 @@ public:
     ~RenderPass();
 
 public:
-    void Begin(GfxFramebuffer framebuffer, GfxCommandEncoder commandEncoder);
+    void Begin(GfxFramebuffer framebuffer, GfxCommandEncoder commandEncoder, bool bundleExecution = false);
 
     void End();
 
