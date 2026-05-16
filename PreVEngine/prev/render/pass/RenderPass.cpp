@@ -4,26 +4,12 @@
 #include "../../core/Formats.h"
 
 namespace prev::render::pass {
-RenderPass::RenderPass(GfxDevice device, GfxRenderPass renderPass, GfxFormat colorFormat, GfxFormat depthFormat, GfxSampleCount sampleCount)
-    : m_gfxDevice{ device }
-    , m_gfxRenderPass{ renderPass }
-    , m_gfxColorFormat{ colorFormat }
-    , m_gfxDepthFormat{ depthFormat }
-    , m_gfxSampleCount{ sampleCount }
-{
-}
-
 RenderPass::RenderPass(GfxDevice device, GfxRenderPass renderPass, const std::vector<AttachmentInfo>& attachmentInfos)
     : m_gfxDevice{ device }
     , m_gfxRenderPass{ renderPass }
     , m_attachmentInfos{ attachmentInfos }
 {
     for (const auto& info : attachmentInfos) {
-        if (prev::core::format::HasDepthComponent(info.format)) {
-            m_gfxDepthFormat = info.format;
-        } else if (!info.resolveAttachment) {
-            m_gfxColorFormat = info.format;
-        }
         m_gfxSampleCount = static_cast<GfxSampleCount>(std::max(static_cast<int>(m_gfxSampleCount), static_cast<int>(info.sampleCount)));
     }
 }
@@ -42,18 +28,13 @@ void RenderPass::Begin(GfxFramebuffer framebuffer, GfxCommandEncoder commandEnco
     float depthClearValue{ 1.0f };
     uint32_t stencilClearValue{ 0 };
 
-    if (!m_attachmentInfos.empty()) {
-        for (const auto& info : m_attachmentInfos) {
-            if (prev::core::format::HasDepthComponent(info.format)) {
-                depthClearValue = info.depthClearValue;
-                stencilClearValue = info.stencilClearValue;
-            } else if (!info.resolveAttachment) {
-                colorClearValues.push_back(info.colorClearValue);
-            }
+    for (const auto& info : m_attachmentInfos) {
+        if (prev::core::format::HasDepthComponent(info.format)) {
+            depthClearValue = info.depthClearValue;
+            stencilClearValue = info.stencilClearValue;
+        } else if (!info.resolveAttachment) {
+            colorClearValues.push_back(info.colorClearValue);
         }
-    } else if (m_gfxColorFormat != GFX_FORMAT_UNDEFINED) {
-        // Fallback for render passes created without AttachmentInfo (e.g. default MSAA pass)
-        colorClearValues.push_back({ 0.0f, 0.0f, 0.0f, 1.0f });
     }
 
     GfxRenderPassBeginDescriptor desc{};
@@ -92,14 +73,28 @@ const std::vector<RenderPass::AttachmentInfo>& RenderPass::GetAttachments() cons
     return m_attachmentInfos;
 }
 
-GfxFormat RenderPass::GetColorFormat() const
+GfxFormat RenderPass::GetColorFormat(uint32_t index) const
 {
-    return m_gfxColorFormat;
+    uint32_t current = 0;
+    for (const auto& info : m_attachmentInfos) {
+        if (!prev::core::format::HasDepthComponent(info.format) && !info.resolveAttachment) {
+            if (current == index) {
+                return info.format;
+            }
+            ++current;
+        }
+    }
+    return GFX_FORMAT_UNDEFINED;
 }
 
 GfxFormat RenderPass::GetDepthFormat() const
 {
-    return m_gfxDepthFormat;
+    for (const auto& info : m_attachmentInfos) {
+        if (prev::core::format::HasDepthComponent(info.format) && !info.resolveAttachment) {
+            return info.format;
+        }
+    }
+    return GFX_FORMAT_UNDEFINED;
 }
 
 GfxSampleCount RenderPass::GetSampleCount() const
@@ -119,9 +114,6 @@ std::vector<GfxFormat> RenderPass::GetGfxColorFormats() const
         if (!prev::core::format::HasDepthComponent(info.format) && !info.resolveAttachment) {
             result.push_back(info.format);
         }
-    }
-    if (result.empty() && m_gfxColorFormat != GFX_FORMAT_UNDEFINED) {
-        result.push_back(m_gfxColorFormat);
     }
     return result;
 }

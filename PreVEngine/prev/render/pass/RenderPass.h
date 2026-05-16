@@ -23,8 +23,6 @@ public:
     };
 
 public:
-    RenderPass(GfxDevice device, GfxRenderPass renderPass, GfxFormat colorFormat, GfxFormat depthFormat, GfxSampleCount sampleCount);
-
     RenderPass(GfxDevice device, GfxRenderPass renderPass, const std::vector<AttachmentInfo>& attachmentInfos);
 
     ~RenderPass();
@@ -41,7 +39,7 @@ public:
 public:
     const std::vector<AttachmentInfo>& GetAttachments() const;
 
-    GfxFormat GetColorFormat() const;
+    GfxFormat GetColorFormat(uint32_t index = 0) const;
 
     GfxFormat GetDepthFormat() const;
 
@@ -61,10 +59,6 @@ private:
     GfxDevice m_gfxDevice{};
 
     GfxRenderPass m_gfxRenderPass{};
-
-    GfxFormat m_gfxColorFormat{ GFX_FORMAT_UNDEFINED };
-
-    GfxFormat m_gfxDepthFormat{ GFX_FORMAT_UNDEFINED };
 
     GfxSampleCount m_gfxSampleCount{ GFX_SAMPLE_COUNT_1 };
 
