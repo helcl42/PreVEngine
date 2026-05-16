@@ -17,6 +17,8 @@ public:
     std::unique_ptr<IImage> CreateImageWithPattern(const uint32_t width, const uint32_t height, const bool gradient = true, const uint32_t checkers = 64) const;
 
     std::unique_ptr<IImage> CreateImageWithColor(const uint32_t width, const uint32_t height, const Pixel<uint8_t, 4>& color) const;
+
+    std::unique_ptr<IImage> CreateResizedImage(const IImage& source, const uint32_t newWidth, const uint32_t newHeight) const;
 };
 } // namespace prev::render::image
 

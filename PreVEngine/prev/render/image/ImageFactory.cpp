@@ -124,4 +124,40 @@ std::unique_ptr<IImage> ImageFactory::CreateImageWithColor(const uint32_t width,
     image->Clear(color);
     return image;
 }
+
+std::unique_ptr<IImage> ImageFactory::CreateResizedImage(const IImage& source, const uint32_t newWidth, const uint32_t newHeight) const
+{
+    const uint32_t srcW = source.GetWidth();
+    const uint32_t srcH = source.GetHeight();
+    const uint32_t channels = source.GetChannels();
+    const uint8_t* src = source.GetRawDataPtr();
+
+    std::vector<uint8_t> resized(newWidth * newHeight * channels);
+    for (uint32_t y = 0; y < newHeight; ++y) {
+        for (uint32_t x = 0; x < newWidth; ++x) {
+            const float srcX = static_cast<float>(x) * (srcW - 1) / static_cast<float>(newWidth - 1);
+            const float srcY = static_cast<float>(y) * (srcH - 1) / static_cast<float>(newHeight - 1);
+
+            const uint32_t x0 = static_cast<uint32_t>(srcX);
+            const uint32_t y0 = static_cast<uint32_t>(srcY);
+            const uint32_t x1 = std::min(x0 + 1, srcW - 1);
+            const uint32_t y1 = std::min(y0 + 1, srcH - 1);
+
+            const float fx = srcX - x0;
+            const float fy = srcY - y0;
+
+            for (uint32_t c = 0; c < channels; ++c) {
+                const float v00 = src[(y0 * srcW + x0) * channels + c];
+                const float v10 = src[(y0 * srcW + x1) * channels + c];
+                const float v01 = src[(y1 * srcW + x0) * channels + c];
+                const float v11 = src[(y1 * srcW + x1) * channels + c];
+
+                const float value = v00 * (1.0f - fx) * (1.0f - fy) + v10 * fx * (1.0f - fy) + v01 * (1.0f - fx) * fy + v11 * fx * fy;
+                resized[(y * newWidth + x) * channels + c] = static_cast<uint8_t>(std::min(value + 0.5f, 255.0f));
+            }
+        }
+    }
+
+    return CreateUint8ImageFromData(newWidth, newHeight, channels, resized.data());
+}
 } // namespace prev::render::image
