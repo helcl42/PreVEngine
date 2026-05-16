@@ -1,0 +1,66 @@
+name: Web - CI Build
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
+
+    - name: Install Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install PreVEngine dependencies
+      run: |
+        python3 -m pip install -U pip
+        pip3 install requests
+        python3 Scripts/download_dependencies.py
+
+    - name: Setup Emscripten
+      uses: mymindstorm/setup-emsdk@v14
+      with:
+        version: 'latest'
+
+    - name: Set reusable strings
+      id: strings
+      shell: bash
+      run: |
+        echo "build-output-dir=${{ github.workspace }}/build_web" >> "$GITHUB_OUTPUT"
+
+    - name: Compile Shaders
+      run: |
+        python3 Scripts/compile_shaders.py --input_folder Examples/PreVEngineExample/assets/Shaders/ --output_folder ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets/Shaders/ --compile_serial --compiler_args '-DMAX_VIEW_COUNT=1 ' --force_compile_all
+
+    - name: Configure CMake
+      run: >
+        emcmake cmake -B ${{ steps.strings.outputs.build-output-dir }}
+        -DCMAKE_BUILD_TYPE=Release
+        -S ${{ github.workspace }}
+
+    - name: Build
+      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config Release
+
+    - name: Create Artifact
+      run: |
+        mkdir -p build-web
+        cp ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample.html build-web/
+        cp ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample.js build-web/
+        cp ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample.wasm build-web/
+        cp ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample.data build-web/
+
+    - name: Publish Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-web
+        path: build-web
+        retention-days: 7

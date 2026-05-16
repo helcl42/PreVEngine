@@ -291,6 +291,7 @@ elseif(EMSCRIPTEN)
         "SHELL:-sEXCEPTION_STACK_TRACES=1"
         -g2
         "SHELL:--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/assets@assets"
+        "SHELL:--shell-file ${CMAKE_CURRENT_SOURCE_DIR}/platform/web/shell.html"
     )
     set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
 
